@@ -57,25 +57,11 @@ UINT CountInterfaces() {
 }
 
 NTSTATUS GetInterfaceSpeed( PIP_INTERFACE Interface, PUINT Speed ) {
-    NDIS_STATUS NdisStatus;
     PLAN_ADAPTER IF = (PLAN_ADAPTER)Interface->Context;
+
+    *Speed = IF->Speed;
     
-#ifdef __NTDRIVER__
-    /* Get maximum link speed */
-    NdisStatus = NDISCall(IF,
-                          NdisRequestQueryInformation,
-                          OID_GEN_LINK_SPEED,
-                          Speed,
-                          sizeof(UINT));
-#else
-    (void)IF;
-    NdisStatus = NDIS_STATUS_SUCCESS;
-    *Speed = 10000;
-#endif
-    
-    return 
-	NdisStatus != NDIS_STATUS_SUCCESS ? 
-	STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, 

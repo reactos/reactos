@@ -1428,7 +1428,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
   BOOLEAN DoBreakIn;
   CONTEXT Context;
   KIRQL OldIrql;
-  CHAR Value;
+  UCHAR Value;
 
   DPRINT ("Break In\n");
 

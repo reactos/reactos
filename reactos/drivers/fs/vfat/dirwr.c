@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.42.2.3 2004/12/13 16:17:58 hyperion Exp $
+/* $Id: dirwr.c,v 1.42.2.4 2004/12/30 04:36:12 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

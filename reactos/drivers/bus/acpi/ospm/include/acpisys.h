@@ -11,7 +11,8 @@
 typedef ACPI_STATUS (*ACPI_DRIVER_FUNCTION)(VOID);
 
 
-typedef enum {
+typedef enum
+{
   dsStopped,
   dsStarted,
   dsPaused,
@@ -34,16 +35,20 @@ typedef struct _COMMON_DEVICE_EXTENSION
   PDEVICE_OBJECT Ldo;
 } COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
+
 /* Physical Device Object device extension for a child device */
 typedef struct _PDO_DEVICE_EXTENSION
 {
   // Common device data
   COMMON_DEVICE_EXTENSION Common;
+  // Device ID
+  UNICODE_STRING DeviceID;
+  // Instance ID
+  UNICODE_STRING InstanceID;
   // Hardware IDs
   UNICODE_STRING HardwareIDs;
-  // Compatible IDs
-  UNICODE_STRING CompatibleIDs;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+
 
 typedef struct _FDO_DEVICE_EXTENSION
 {
@@ -82,11 +87,7 @@ typedef struct _ACPI_DEVICE
 /* acpienum.c */
 
 NTSTATUS
-ACPIEnumerateRootBusses(
-  PFDO_DEVICE_EXTENSION DeviceExtension);
-
-NTSTATUS
-ACPIEnumerateNamespace(
+ACPIEnumerateDevices(
   PFDO_DEVICE_EXTENSION DeviceExtension);
 
 

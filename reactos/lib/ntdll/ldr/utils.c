@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.101.2.2 2004/12/30 01:59:58 hyperion Exp $
+/* $Id: utils.c,v 1.101.2.3 2004/12/30 04:36:41 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -68,7 +68,7 @@ static VOID LdrpDetachProcess(BOOL UnloadAll);
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
@@ -82,7 +82,7 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
     NULL);
 }
 
-#endif /* DBG */
+#endif /* DBG || KDBG */
 
 static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOL Locked)
 {
@@ -974,7 +974,7 @@ LdrFixupForward(PCHAR ForwardName)
 
         DPRINT("BaseAddress: %p\n", Module->BaseAddress);
 
-        return LdrGetExportByName(Module->BaseAddress, p+1, -1);
+        return LdrGetExportByName(Module->BaseAddress, (PUCHAR)(p+1), -1);
      }
 
    return NULL;
@@ -1110,7 +1110,7 @@ LdrGetExportByName(PVOID BaseAddress,
    if (Hint < ExportDir->NumberOfNames)
      {
         ExName = RVA(BaseAddress, ExNames[Hint]);
-        if (strcmp(ExName, SymbolName) == 0)
+        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
           {
              Ordinal = ExOrdinals[Hint];
              Function = RVA(BaseAddress, ExFunctions[Ordinal]);
@@ -1143,7 +1143,7 @@ LdrGetExportByName(PVOID BaseAddress,
         mid = (minn + maxn) / 2;
 
         ExName = RVA(BaseAddress, ExNames[mid]);
-        res = strcmp(ExName, SymbolName);
+        res = strcmp(ExName, (PCHAR)SymbolName);
         if (res == 0)
           {
              Ordinal = ExOrdinals[mid];
@@ -1184,7 +1184,7 @@ LdrGetExportByName(PVOID BaseAddress,
    for (i = 0; i < ExportDir->NumberOfNames; i++)
      {
         ExName = RVA(BaseAddress, ExNames[i]);
-        if (strcmp(ExName,SymbolName) == 0)
+        if (strcmp(ExName, (PCHAR)SymbolName) == 0)
           {
              Ordinal = ExOrdinals[i];
              Function = RVA(BaseAddress, ExFunctions[Ordinal]);
@@ -1504,7 +1504,7 @@ LdrpProcessImportDirectory(
 static NTSTATUS
 LdrpAdjustImportDirectory(PLDR_MODULE Module,
                           PLDR_MODULE ImportedModule,
-                          PUCHAR ImportedName)
+                          PCHAR ImportedName)
 {
    PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
    NTSTATUS Status;
@@ -1535,7 +1535,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
    while (ImportModuleDirectory->dwRVAModuleName)
      {
        Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
-       if (0 == _stricmp(Name, ImportedName))
+       if (0 == _stricmp(Name, (PCHAR)ImportedName))
          {
 
            /* Get the import address list. */
@@ -1727,7 +1727,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                    PIMAGE_BOUND_FORWARDER_REF BoundForwarderRef;
                    ULONG i;
                    PLDR_MODULE ForwarderModule;
-                   PUCHAR ForwarderName;
+                   PCHAR ForwarderName;
 
                    BoundForwarderRef = (PIMAGE_BOUND_FORWARDER_REF)(BoundImportDescriptorCurrent + 1);
                    for (i = 0; i < BoundImportDescriptorCurrent->NumberOfModuleForwarderRefs; i++, BoundForwarderRef++)
@@ -2017,7 +2017,6 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
           {
             DPRINT1("Failed to create or open dll section of '%wZ' (Status %lx)\n", &AdjustedName, Status);
             RtlFreeUnicodeString(&AdjustedName);
-            RtlFreeUnicodeString(&FullDosName);
             return Status;
           }
         RtlFreeUnicodeString(&AdjustedName);
@@ -2085,9 +2084,9 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
             DPRINT1("LdrFixupImports failed for %wZ, status=%x\n", &(*Module)->BaseDllName, Status);
             return Status;
           }
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
         LdrpLoadUserModuleSymbols(*Module);
-#endif
+#endif /* DBG || KDBG */
         RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
         InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
                        &(*Module)->InInitializationOrderModuleList);
@@ -2320,7 +2319,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    if (Name && Name->Length)
      {
        /* by name */
-       *ProcedureAddress = LdrGetExportByName(BaseAddress, Name->Buffer, 0xffff);
+       *ProcedureAddress = LdrGetExportByName(BaseAddress, (PUCHAR)Name->Buffer, 0xffff);
        if (*ProcedureAddress != NULL)
          {
            return STATUS_SUCCESS;

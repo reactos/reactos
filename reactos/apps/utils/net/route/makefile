@@ -6,6 +6,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = route
 
+TARGET_INSTALLDIR = system32
+
 TARGET_SDKLIBS = ws2_32.a iphlpapi.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o

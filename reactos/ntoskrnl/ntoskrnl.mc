@@ -979,6 +979,14 @@ Language=English
 SPIN_LOCK_INIT_FAILURE
 .
 
+MessageId=0x96
+Severity=Success
+Facility=System
+SymbolicName=INVALID_WORK_QUEUE_ITEM
+Language=English
+INVALID_WORK_QUEUE_ITEM
+.
+
 MessageId=0x9A
 Severity=Informational
 Facility=System

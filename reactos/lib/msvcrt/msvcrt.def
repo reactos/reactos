@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.36 2004/08/27 03:08:23 navaraf Exp $
+; $Id: msvcrt.def,v 1.36.6.1 2004/12/30 04:36:40 hyperion Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -119,9 +119,9 @@ __initenv DATA
 __isascii
 __iscsym
 __iscsymf
-;__lc_codepage
+__lc_codepage
 __lc_collate_cp
-;__lc_handle
+__lc_handle
 ;__lconv_init
 __mb_cur_max DATA
 __p___argc
@@ -156,14 +156,14 @@ __p__winver
 __pioinfo
 ;__pxcptinfoptrs
 __set_app_type
-;__setlc_active
+__setlc_active DATA
 __setusermatherr
 __threadhandle
 __threadid
 __toascii
 __unDName
 ;__unDNameEx
-;__unguarded_readlc_active
+__unguarded_readlc_active DATA
 __wargv
 __wgetmainargs
 __winitenv
@@ -183,15 +183,15 @@ _abnormal_termination
 _access
 _acmdln DATA
 ;_adj_fdiv_m16i
-;_adj_fdiv_m32
-;_adj_fdiv_m32i
-;_adj_fdiv_m64
-;_adj_fdiv_r
+_adj_fdiv_m32 = _adj_fdiv_m32@4
+_adj_fdiv_m32i = _adj_fdiv_m32i@4
+_adj_fdiv_m64 = _adj_fdiv_m64@8
+_adj_fdiv_r
 ;_adj_fdivr_m16i
-;_adj_fdivr_m32
-;_adj_fdivr_m32i
-;_adj_fdivr_m64
-;_adj_fpatan
+_adj_fdivr_m32 = _adj_fdivr_m32@4
+_adj_fdivr_m32i = _adj_fdivr_m32i@4
+_adj_fdivr_m64 = _adj_fdivr_m64@8
+_adj_fpatan
 ;_adj_fprem
 ;_adj_fprem1
 ;_adj_fptan

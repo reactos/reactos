@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.63.2.3 2004/12/13 16:18:02 hyperion Exp $
+/* $Id: reg.c,v 1.63.2.4 2004/12/30 04:36:29 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1730,6 +1730,7 @@ RegOpenKeyA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1780,6 +1781,7 @@ RegOpenKeyW (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1828,6 +1830,8 @@ RegOpenKeyExA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+         hKey, lpSubKey, ulOptions, samDesired, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1877,6 +1881,8 @@ RegOpenKeyExW (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+         hKey, lpSubKey, ulOptions, samDesired, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -2210,7 +2216,7 @@ RegQueryMultipleValuesA (HKEY hKey,
 					val_list[i].ve_valuename,
 					NULL,
 					&val_list[i].ve_type,
-					bufptr,
+					(LPBYTE)bufptr,
 					&val_list[i].ve_valuelen);
 	  if (ErrorCode != ERROR_SUCCESS)
 	    {
@@ -2274,7 +2280,7 @@ RegQueryMultipleValuesW (HKEY hKey,
 					val_list[i].ve_valuename,
 					NULL,
 					&val_list[i].ve_type,
-					bufptr,
+					(LPBYTE)bufptr,
 					&val_list[i].ve_valuelen);
 	  if (ErrorCode != ERROR_SUCCESS)
 	    {
@@ -2435,6 +2441,9 @@ RegQueryValueExA (HKEY hKey,
   DWORD Length;
   DWORD Type;
 
+  DPRINT("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
+	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
+
   if (lpData != NULL && lpcbData == NULL)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
@@ -2487,7 +2496,7 @@ RegQueryValueExA (HKEY hKey,
 	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
 	    {
 	      RtlInitAnsiString(&AnsiString, NULL);
-	      AnsiString.Buffer = lpData;
+	      AnsiString.Buffer = (LPSTR)lpData;
 	      AnsiString.MaximumLength = *lpcbData;
 	      ValueData.Length = Length;
 	      ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
@@ -2497,7 +2506,14 @@ RegQueryValueExA (HKEY hKey,
 	}
       else if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
 	{
-	  RtlMoveMemory(lpData, ValueData.Buffer, Length);
+          if (*lpcbData < Length)
+            {
+              ErrorCode = ERROR_MORE_DATA;
+            }
+          else
+            {
+              RtlMoveMemory(lpData, ValueData.Buffer, Length);
+            }
 	}
 
       if (lpcbData != NULL)
@@ -2532,6 +2548,9 @@ RegQueryValueA (HKEY hKey,
   ANSI_STRING AnsiString;
   LONG ValueSize;
   LONG ErrorCode;
+
+  DPRINT("hKey 0x%X lpSubKey %s lpValue %p lpcbValue %d\n",
+	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   if (lpValue != NULL &&
       lpcbValue == NULL)
@@ -2620,6 +2639,9 @@ RegQueryValueW (HKEY hKey,
   LONG ErrorCode;
   BOOL CloseRealKey;
   NTSTATUS Status;
+
+  DPRINT("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
+	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -37,8 +36,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
+#include "winglue.h"
 #include "build.h"
 
 /* Unicode string or integer id */

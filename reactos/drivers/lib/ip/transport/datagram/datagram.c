@@ -92,7 +92,7 @@ VOID DGDeliverData(
 			 DataBuffer,
 			 DataSize );
 
-	  RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo;
+	  RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo->RemoteAddress;
 	  RTAIPAddress->TAAddressCount = 1;
 	  RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
 	  RTAIPAddress->Address->Address->sin_port = SrcPort;

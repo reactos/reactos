@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.36 2004/11/14 18:47:10 hbirr Exp $
+/* $Id: process.c,v 1.36.2.1 2004/12/30 04:37:04 hyperion Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -204,6 +204,7 @@ CSR_API(CsrCreateProcess)
         Reply->Status = ApiReply.Status;
         if (! NT_SUCCESS(Reply->Status))
           {
+            CsrFreeProcessData(Request->Data.CreateProcessRequest.NewProcessId);
             return Reply->Status;
           }
         Reply->Data.CreateProcessReply.InputHandle = ApiReply.Data.AllocConsoleReply.InputHandle;
@@ -259,8 +260,6 @@ CSR_API(CsrCreateProcess)
 
 CSR_API(CsrTerminateProcess)
 {
-   NTSTATUS Status;
-
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
@@ -269,10 +268,8 @@ CSR_API(CsrTerminateProcess)
       return(Reply->Status = STATUS_INVALID_PARAMETER);
    }
 
-   Status = CsrFreeProcessData(ProcessData->ProcessId);
-
-   Reply->Status = Status;
-   return Status;
+   Reply->Status = STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 CSR_API(CsrConnectProcess)

@@ -264,7 +264,6 @@ BOOLEAN IPRegisterInterface(
     }
     
     /* Add interface to the global interface list */
-    ASSERT(&IF->ListEntry);
     TcpipInterlockedInsertTailList(&InterfaceListHead, 
 				   &IF->ListEntry, 
 				   &InterfaceListLock);

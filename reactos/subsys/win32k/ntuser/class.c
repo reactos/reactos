@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.60.2.2 2004/12/13 16:18:17 hyperion Exp $
+/* $Id: class.c,v 1.60.2.3 2004/12/30 04:37:10 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,14 +66,14 @@ ClassReferenceClassByAtom(
 {
    PWNDCLASS_OBJECT Current, BestMatch = NULL;
    PLIST_ENTRY CurrentEntry;
-  
-   /* HACK!! */
-   IntLockGlobalClassList();
-   CurrentEntry = GlobalClassListHead.Flink;
-   while (CurrentEntry != &GlobalClassListHead)
+   PW32PROCESS Process = PsGetWin32Process();
+
+   IntLockProcessClasses(Process);
+   CurrentEntry = Process->ClassListHead.Flink;
+   while (CurrentEntry != &Process->ClassListHead)
    {
-      Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, GlobalListEntry);
-      
+      Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
+
       if (Current->Atom == Atom && (hInstance == NULL || Current->hInstance == hInstance))
       {
          *Class = Current;
@@ -95,7 +95,7 @@ ClassReferenceClassByAtom(
       ObmReferenceObject(BestMatch);
       return TRUE;
    }
-  
+
    return FALSE;
 }
 
@@ -169,7 +169,7 @@ NtUserGetClassInfo(
       return 0;
    }
 
-   lpWndClassEx->cbSize = sizeof(LPWNDCLASSEXW);
+   lpWndClassEx->cbSize = sizeof(WNDCLASSEXW);
    lpWndClassEx->style = Class->style;
    if (Ansi)
       lpWndClassEx->lpfnWndProc = Class->lpfnWndProcA;
@@ -458,10 +458,6 @@ NtUserRegisterClassExWOW(
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   IntUnLockProcessClasses(PsGetWin32Process());
   
-  /* HACK!!! */
-  IntLockGlobalClassList();
-  InsertTailList(&GlobalClassListHead, &ClassObject->GlobalListEntry);
-  IntUnlockGlobalClassList();
   return(Atom);
 }
 

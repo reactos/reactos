@@ -83,6 +83,10 @@ EthFilterDprIndicateReceive(
  *     PacketSize          = Total size of received packet
  */
 {
+    /* Not sure if this is a valid thing to do, but we do arrive here early
+     * in the boot process with Filter NULL.  We need to investigate whether
+     * this should be handled or not allowed. */
+    if( !Filter ) return;
     MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
 		     MacReceiveContext,
 		     HeaderBuffer,

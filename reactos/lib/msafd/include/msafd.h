@@ -49,7 +49,7 @@ typedef struct _SOCK_SHARED_INFO {
     INT							Protocol;
     INT							SizeOfLocalAddress;
     INT							SizeOfRemoteAddress;
-    ULONG						LingerData;
+    struct linger				LingerData;
     ULONG						SendTimeout;
     ULONG						RecvTimeout;
     ULONG						SizeOfRecvBuffer;
@@ -154,7 +154,7 @@ WSPAsyncSelect(
 INT
 WSPAPI WSPBind(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name, 
+    IN  CONST SOCKADDR *name, 
     IN  INT namelen, 
     OUT LPINT lpErrno);
 
@@ -178,7 +178,7 @@ INT
 WSPAPI
 WSPConnect(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
+    IN  CONST SOCKADDR *name,
     IN  INT namelen,
     IN  LPWSABUF lpCallerData,
     OUT LPWSABUF lpCalleeData,
@@ -273,7 +273,7 @@ SOCKET
 WSPAPI
 WSPJoinLeaf(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
+    IN  CONST SOCKADDR *name,
     IN  INT namelen,
     IN  LPWSABUF lpCallerData,
     OUT LPWSABUF lpCalleeData,
@@ -362,7 +362,7 @@ WSPSendTo(
     IN  DWORD dwBufferCount,
     OUT LPDWORD lpNumberOfBytesSent,
     IN  DWORD dwFlags,
-    IN  CONST LPSOCKADDR lpTo,
+    IN  CONST SOCKADDR *lpTo,
     IN  INT iTolen,
     IN  LPWSAOVERLAPPED lpOverlapped,
     IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
@@ -460,6 +460,12 @@ VOID SockProcessQueuedAsyncSelect(
 	PIO_STATUS_BLOCK IoStatusBlock
 );
 
+VOID
+SockReenableAsyncSelectEvent (
+    IN PSOCKET_INFORMATION Socket,
+    IN ULONG Event
+    );
+    
 DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
 			    LPDWORD ReturnedBytes );
 

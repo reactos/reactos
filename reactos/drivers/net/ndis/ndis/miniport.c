@@ -18,6 +18,14 @@
 #include <buffer.h>
 #endif /* DBG */
 
+#undef NdisMSendComplete
+VOID
+EXPORT
+NdisMSendComplete(
+    IN  NDIS_HANDLE     MiniportAdapterHandle,
+    IN  PNDIS_PACKET    Packet,
+    IN  NDIS_STATUS     Status);
+
 /* Root of the scm database */
 #define SERVICES_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 
@@ -819,6 +827,8 @@ VOID STDCALL MiniportDpc(
                  */
                 (*Adapter->Miniport->Chars.SendPacketsHandler)(
                     Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+		NdisStatus = 
+		    NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's SendPackets handler\n"));
               }
@@ -830,12 +840,12 @@ VOID STDCALL MiniportDpc(
                     Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
-
-                if ((NdisStatus != NDIS_STATUS_PENDING) &&
-                    !(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)) 
-                    MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
               }
-
+	    if( NdisStatus != NDIS_STATUS_PENDING ) {
+		NdisMSendComplete
+		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
+		Adapter->MiniportBusy = FALSE;
+	    }
             break;
 
           case NdisWorkItemSendLoopback:
@@ -1127,7 +1137,7 @@ NdisMRegisterAdapterShutdownHandler(
   BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback, 
-      BugcheckContext, sizeof(BugcheckContext), "Ndis Miniport");
+      BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
 }
 
 
@@ -1246,7 +1256,8 @@ NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   IoCopyCurrentIrpStackLocationToNext(Irp);
-  IoSetCompletionRoutine(Irp, NdisIForwardIrpAndWaitCompletionRoutine, &Event, TRUE, TRUE, TRUE);
+  IoSetCompletionRoutine(Irp, NdisIForwardIrpAndWaitCompletionRoutine, &Event,
+                         TRUE, TRUE, TRUE);
   Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
   if (Status == STATUS_PENDING)
     {
@@ -1834,8 +1845,6 @@ NdisMResetComplete(
 {
   MiniResetComplete(MiniportAdapterHandle, Status, AddressingReset);
 }
-
-#undef NdisMSendComplete
 
 
 /*

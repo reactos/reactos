@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.58.10.2 2004/12/13 16:18:16 hyperion Exp $
+/* $Id: bitblt.c,v 1.58.10.3 2004/12/30 04:37:06 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -496,9 +496,13 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
   RECTL OutputRect;
   POINTL InputPoint;
   BOOLEAN UsesSource;
-  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *DestSurf;
   SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
   SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+
+  ASSERT(DestObj);
+  DestSurf = &DestObj->SurfObj;
+  ASSERT(DestSurf);
 
   InputClippedRect = *DestRect;
   if (InputClippedRect.right < InputClippedRect.left)
@@ -514,7 +518,7 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
   UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   if (UsesSource)
     {
-      if (NULL == SourcePoint || NULL == SourceObj)
+      if (NULL == SourcePoint || NULL == SourceSurf)
         {
           return FALSE;
         }
@@ -742,23 +746,29 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   BOOLEAN ret;
   COLORADJUSTMENT ca;
   POINT MaskOrigin;
-  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *DestSurf;
   SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
   SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+
+  ASSERT(DestObj);
+  DestSurf = &DestObj->SurfObj;
+  ASSERT(DestSurf);
 
   if (pMaskOrigin != NULL)
     {
       MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
     }
 
-  if (NULL != SourceObj)
+  if (NULL != SourceSurf)
     {
+    ASSERT(SourceRect);
     MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
                            SourceRect->right, SourceRect->bottom);
     }
 
   /* No success yet */
   ret = FALSE;
+  ASSERT(DestRect);
   MouseSafetyOnDrawStart(DestSurf, DestRect->left, DestRect->top,
                          DestRect->right, DestRect->bottom);
 
@@ -890,6 +900,8 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   POINTL             Pt;
   ULONG              Direction;
   POINTL             AdjustedBrushOrigin;
+
+  ASSERT ( Mask );
 
   if (NULL != SourcePoint)
     {
@@ -1082,6 +1094,8 @@ IntEngMaskBlt(SURFOBJ *DestObj,
   RECTL OutputRect;
   POINTL InputPoint;
 
+  ASSERT(Mask);
+
   if (NULL != SourcePoint)
     {
       InputPoint = *SourcePoint;
@@ -1105,6 +1119,7 @@ IntEngMaskBlt(SURFOBJ *DestObj,
 
   /* No success yet */
   ret = FALSE;
+  ASSERT(DestObj);
   MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 

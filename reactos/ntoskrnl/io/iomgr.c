@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.54 2004/11/21 21:53:07 ion Exp $
+/* $Id: iomgr.c,v 1.54.2.1 2004/12/30 04:36:56 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -535,6 +535,7 @@ IoInit (VOID)
   IoInitShutdownNotification();
   IopInitErrorLog();
   IopInitTimerImplementation();
+  IopInitIoCompletionImplementation();
 
   /*
    * Create link from '\DosDevices' to '\??' directory

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1.24.3 2004/12/13 16:18:06 hyperion Exp $
+# $Id: makefile,v 1.1.24.4 2004/12/30 04:36:37 hyperion Exp $
 # Kernel JavaScript
 # 
 # You can use this for various things but the most obvious is as a powerful
@@ -70,8 +70,7 @@ ORIG_OBJECTS = src/b_array.o \
 	       src/dl_dummy.o \
 	       src/heap.o \
 	       src/utils.o
-TARGET_OBJECTS = $(ORIG_OBJECTS) $(MOD_OBJECTS) $(ARCH_OBJECTS) \
-		../../dk/w32/lib/libntdll.a
+TARGET_OBJECTS = $(ORIG_OBJECTS) $(MOD_OBJECTS) $(ARCH_OBJECTS)
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak

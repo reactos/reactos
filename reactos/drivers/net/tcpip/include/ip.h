@@ -145,6 +145,7 @@ typedef struct _IP_INTERFACE {
     UINT  HeaderSize;             /* Size of link level header */
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
     UINT  MTU;                    /* Maximum transmission unit */
+    UINT  Speed;                  /* Link speed */
     IP_ADDRESS Unicast;           /* Unicast address */
     IP_ADDRESS PointToPoint;      /* Point to point address */
     IP_ADDRESS Netmask;           /* Netmask */
@@ -180,7 +181,7 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 /* Timeout timer constants */
 #define IP_TICKS_SECOND 2                   /* Two ticks per second */
 #define IP_TIMEOUT (1000 / IP_TICKS_SECOND) /* Timeout in milliseconds */
-
+#define IP_DEFAULT_LINK_SPEED  10000
 
 extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;

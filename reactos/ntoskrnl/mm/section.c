@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.166.2.5 2004/12/30 01:59:59 hyperion Exp $
+/* $Id: section.c,v 1.166.2.6 2004/12/30 04:37:00 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3261,6 +3261,116 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          return(Status);
       }
 
+      /*
+       * allocate the section segments to describe the mapping
+       */
+      NrSegments = PEHeader.FileHeader.NumberOfSections + 1;
+      Size = sizeof(MM_IMAGE_SECTION_OBJECT) + sizeof(MM_SECTION_SEGMENT) * NrSegments;
+      ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MM_SECTION_SEGMENT);
+      if (ImageSectionObject == NULL)
+      {
+         KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+         ObDereferenceObject(Section);
+         ObDereferenceObject(FileObject);
+         ExFreePool(ImageSections);
+         return(STATUS_NO_MEMORY);
+      }
+      Section->ImageSection = ImageSectionObject;
+      ImageSectionObject->NrSegments = NrSegments;
+      ImageSectionObject->ImageBase = (PVOID)PEHeader.OptionalHeader.ImageBase;
+      ImageSectionObject->EntryPoint = (PVOID)PEHeader.OptionalHeader.AddressOfEntryPoint;
+      ImageSectionObject->StackReserve = PEHeader.OptionalHeader.SizeOfStackReserve;
+      ImageSectionObject->StackCommit = PEHeader.OptionalHeader.SizeOfStackCommit;
+      ImageSectionObject->Subsystem = PEHeader.OptionalHeader.Subsystem;
+      ImageSectionObject->MinorSubsystemVersion = PEHeader.OptionalHeader.MinorSubsystemVersion;
+      ImageSectionObject->MajorSubsystemVersion = PEHeader.OptionalHeader.MajorSubsystemVersion;
+      ImageSectionObject->ImageCharacteristics = PEHeader.FileHeader.Characteristics;
+      ImageSectionObject->Machine = PEHeader.FileHeader.Machine;
+      ImageSectionObject->Executable = (PEHeader.OptionalHeader.SizeOfCode != 0);
+
+      SectionSegments = ImageSectionObject->Segments;
+      SectionSegments[0].FileOffset = 0;
+      SectionSegments[0].Characteristics = IMAGE_SECTION_CHAR_DATA;
+      SectionSegments[0].Protection = PAGE_READONLY;
+      SectionSegments[0].RawLength = PAGE_SIZE;
+      SectionSegments[0].Length = PAGE_SIZE;
+      SectionSegments[0].Flags = 0;
+      SectionSegments[0].ReferenceCount = 1;
+      SectionSegments[0].VirtualAddress = 0;
+      SectionSegments[0].WriteCopy = TRUE;
+      SectionSegments[0].Attributes = 0;
+      ExInitializeFastMutex(&SectionSegments[0].Lock);
+      RtlZeroMemory(&SectionSegments[0].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+      for (i = 1; i < NrSegments; i++)
+      {
+         SectionSegments[i].FileOffset = ImageSections[i-1].PointerToRawData;
+         SectionSegments[i].Characteristics = ImageSections[i-1].Characteristics;
+
+         /*
+          * Set up the protection and write copy variables.
+          */
+         Characteristics = ImageSections[i - 1].Characteristics;
+         if (Characteristics & (IMAGE_SECTION_CHAR_READABLE|IMAGE_SECTION_CHAR_WRITABLE|IMAGE_SECTION_CHAR_EXECUTABLE))
+         {
+            SectionSegments[i].Protection = SectionCharacteristicsToProtect[Characteristics >> 28];
+            SectionSegments[i].WriteCopy = !(Characteristics & IMAGE_SECTION_CHAR_SHARED);
+         }
+         else if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+         {
+            SectionSegments[i].Protection = PAGE_EXECUTE_READ;
+            SectionSegments[i].WriteCopy = TRUE;
+         }
+         else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+         {
+            SectionSegments[i].Protection = PAGE_READWRITE;
+            SectionSegments[i].WriteCopy = TRUE;
+         }
+         else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
+         {
+            SectionSegments[i].Protection = PAGE_READWRITE;
+            SectionSegments[i].WriteCopy = TRUE;
+         }
+         else
+         {
+            SectionSegments[i].Protection = PAGE_NOACCESS;
+            SectionSegments[i].WriteCopy = TRUE;
+         }
+
+         /*
+          * Set up the attributes.
+          */
+         if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+         {
+            SectionSegments[i].Attributes = 0;
+         }
+         else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+         {
+            SectionSegments[i].Attributes = 0;
+         }
+         else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
+         {
+            SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
+         }
+         else
+         {
+            SectionSegments[i].Attributes = 0;
+         }
+
+         SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
+         if (ImageSections[i-1].Misc.VirtualSize != 0)
+         {
+            SectionSegments[i].Length = ImageSections[i-1].Misc.VirtualSize;
+         }
+         else
+         {
+            SectionSegments[i].Length = ImageSections[i-1].SizeOfRawData;
+         }
+         SectionSegments[i].Flags = 0;
+         SectionSegments[i].ReferenceCount = 1;
+         SectionSegments[i].VirtualAddress = (PVOID)ImageSections[i-1].VirtualAddress;
+         ExInitializeFastMutex(&SectionSegments[i].Lock);
+         RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+      }
       if (0 != InterlockedCompareExchangeUL(&FileObject->SectionObjectPointer->ImageSectionObject,
                                             ImageSectionObject, 0))
       {

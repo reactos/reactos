@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 2004/11/01 22:54:23 ion Exp $
+/* $Id: create.c,v 1.6.2.1 2004/12/30 04:36:11 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -122,7 +122,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
-   Buffer = (PMAILSLOT_CREATE_PARAMETERS)Irp->Tail.Overlay.AuxiliaryBuffer;
+   Buffer = IoStack->Parameters.CreateMailslot.Parameters;
 
    DPRINT("Mailslot name: %wZ\n", &FileObject->FileName);
 

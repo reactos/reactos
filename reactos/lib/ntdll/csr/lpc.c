@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.13 2004/07/03 17:13:09 hbirr Exp $
+/* $Id: lpc.c,v 1.13.10.1 2004/12/30 04:36:41 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

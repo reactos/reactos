@@ -7,7 +7,7 @@ closesocket=ws2_32.closesocket @3
 connect=ws2_32.connect @4
 getpeername=ws2_32.getpeername @5
 getsockname=ws2_32.getsockname @6
-getsockopt@20 @ 7
+getsockopt@20=ws2_32.getsockopt @7
 htonl=ws2_32.htonl @8
 htons=ws2_32.htons @9
 inet_addr=ws2_32.inet_addr @10
@@ -16,12 +16,12 @@ ioctlsocket=ws2_32.ioctlsocket @12
 listen=ws2_32.listen @13
 ntohl=ws2_32.ntohl @14
 ntohs=ws2_32.ntohs @15
-recv@16 @16
-recvfrom@24 @17
+recv@16=ws2_32.recv @16
+recvfrom@24=ws2_32.recvfrom @17
 select=ws2_32.select @18
 send=ws2_32.send @19
 sendto=ws2_32.sendto @20
-setsockopt@20 @21
+setsockopt@20=ws2_32.setsockopt @21
 shutdown=ws2_32.shutdown @22
 socket=ws2_32.socket @23
 MigrateWinsockConfiguration=MSWSOCK.MigrateWinsockConfiguration @24

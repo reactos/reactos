@@ -1,4 +1,4 @@
-/* $Id: processor_mp.c,v 1.1.2.1 2004/12/13 16:18:24 hyperion Exp $
+/* $Id: processor_mp.c,v 1.1.2.2 2004/12/30 04:36:24 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -126,7 +126,7 @@ VOID Enable8259AIrq(ULONG irq)
 
 /* Functions for handling I/O APICs */
 
-volatile ULONG IOAPICRead(ULONG Apic, ULONG Offset)
+ULONG IOAPICRead(ULONG Apic, ULONG Offset)
 {
   PULONG Base;
 
@@ -616,7 +616,7 @@ VOID IOAPICSetupIrqs(VOID)
 	  */
 	 memset(&entry,0,sizeof(entry));
 
-	 entry.delivery_mode = APIC_DM_LOWEST;
+	 entry.delivery_mode = (APIC_DM_LOWEST >> 8);
 	 entry.dest_mode = 1;  /* logical delivery */
 	 entry.mask = 1;       /* disable IRQ */
 #if 0

@@ -1564,7 +1564,7 @@ static boolean at_endline_loc_p _RE_ARGS ((const char *p, const char *pend,
 					   reg_syntax_t syntax));
 static reg_errcode_t compile_range _RE_ARGS ((const char **p_ptr,
 					      const char *pend,
-					      char *translate,
+					      RE_TRANSLATE_TYPE translate,
 					      reg_syntax_t syntax,
 					      unsigned char *b));
 
@@ -3807,7 +3807,7 @@ static boolean common_op_match_null_string_p _RE_ARGS ((unsigned char **p,
 							unsigned char *end,
 						register_info_type *reg_info));
 static int bcmp_translate _RE_ARGS ((const char *s1, const char *s2,
-				     int len, char *translate));
+				     int len, RE_TRANSLATE_TYPE translate));
 
 /* re_match_2 matches the compiled pattern in BUFP against the
    the (virtual) concatenation of STRING1 and STRING2 (of length SIZE1

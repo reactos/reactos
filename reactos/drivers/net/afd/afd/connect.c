@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.5.2.3 2004/12/13 16:18:00 hyperion Exp $
+/* $Id: connect.c,v 1.5.2.4 2004/12/30 04:36:18 hyperion Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -40,12 +40,36 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     return Status;
 }
 
+NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
+    NTSTATUS Status;
+
+    /* Allocate the receive area and start receiving */
+    FCB->Recv.Window = 
+	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+    FCB->Send.Window = 
+	ExAllocatePool( NonPagedPool, FCB->Send.Size );
+
+    FCB->State = SOCKET_STATE_CONNECTED;
+    
+    if( FCB->Recv.Window ) {
+	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+			     FCB->Connection.Object,
+			     TDI_RECEIVE_NORMAL,
+			     FCB->Recv.Window,
+			     FCB->Recv.Size,
+			     &FCB->ReceiveIrp.Iosb,
+			     ReceiveComplete,
+			     FCB );
+    }
+    
+    return Status;
+}
+
 NTSTATUS DDKAPI StreamSocketConnectComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
     NTSTATUS Status = Irp->IoStatus.Status;
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
@@ -83,22 +107,7 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     }
 
     if( NT_SUCCESS(Status) ) {
-	/* Allocate the receive area and start receiving */
-	FCB->Recv.Window = 
-	    ExAllocatePool( NonPagedPool, FCB->Recv.Size );
-	FCB->Send.Window = 
-	    ExAllocatePool( NonPagedPool, FCB->Send.Size );
-
-	if( FCB->Recv.Window ) {
-	    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-				 IrpSp->FileObject,
-				 TDI_RECEIVE_NORMAL,
-				 FCB->Recv.Window,
-				 FCB->Recv.Size,
-				 &FCB->ReceiveIrp.Iosb,
-				 ReceiveComplete,
-				 FCB );
-	}
+	Status = MakeSocketIntoConnection( FCB );
 
 	if( FCB->Send.Window && 
 	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
@@ -184,8 +193,17 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_BOUND:
 	FCB->RemoteAddress = 
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
-	
+
+	if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
+	{
+	    Status = STATUS_SUCCESS;
+	    break;
+	}
+
 	Status = WarmSocketForConnection( FCB );
+
+	if( !NT_SUCCESS(Status) )
+	    break;
 
 	FCB->State = SOCKET_STATE_CONNECTING;
 
@@ -194,9 +212,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      &ConnectReq->RemoteAddress );
 	
 	if( TargetAddress ) {
-	    Status = TdiConnect( &FCB->PendingTdiIrp, 
+	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest, 
 				 FCB->Connection.Object,
 				 TargetAddress,
+				 &FCB->ConnectIrp.Iosb,
 				 StreamSocketConnectComplete,
 				 FCB );
 

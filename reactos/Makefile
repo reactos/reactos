@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.262.2.3 2004/12/13 16:17:57 hyperion Exp $
+# $Id: Makefile,v 1.262.2.4 2004/12/30 04:36:07 hyperion Exp $
 #
 # Global makefile
 #
@@ -6,6 +6,7 @@
 PATH_TO_TOP = .
 
 include $(PATH_TO_TOP)/rules.mak
+include $(PATH_TO_TOP)/config
 
 #
 # Define to build ReactOS external targets
@@ -99,7 +100,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
   services setup taskmgr userinit usetup welcome vmwinst winlogon \
-  regedit winefile
+  regedit winefile notepad reactos
 
 # System services
 # rpcss eventlog
@@ -773,6 +774,12 @@ hallib_bootcd:
 #
 # Hardware Abstraction Layers
 #
+ifeq ($(MP),1)
+halx86: halx86/mp
+else
+halx86: halx86/up
+endif
+
 $(HALS): %: $(IMPLIB)
 	$(MAKE) -C hal/$*
 

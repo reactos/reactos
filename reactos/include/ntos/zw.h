@@ -1,5 +1,4 @@
-
-/* $Id: zw.h,v 1.35.2.4 2004/12/13 16:18:01 hyperion Exp $
+/* $Id: zw.h,v 1.35.2.5 2004/12/30 04:36:26 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -830,9 +829,9 @@ NtCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
 		       IN ULONG ShareAccess,
 		       IN ULONG CreateDisposition,
 		       IN ULONG CreateOptions,
-		       IN BOOLEAN WriteModeMessage,
-		       IN BOOLEAN ReadModeMessage,
-		       IN BOOLEAN NonBlocking,
+		       IN ULONG NamedPipeType,
+		       IN ULONG ReadMode,
+		       IN ULONG CompletionMode,
 		       IN ULONG MaxInstances,
 		       IN ULONG InBufferSize,
 		       IN ULONG OutBufferSize,
@@ -846,9 +845,9 @@ ZwCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
 		       IN ULONG ShareAccess,
 		       IN ULONG CreateDisposition,
 		       IN ULONG CreateOptions,
-		       IN BOOLEAN WriteModeMessage,
-		       IN BOOLEAN ReadModeMessage,
-		       IN BOOLEAN NonBlocking,
+		       IN ULONG NamedPipeType,
+		       IN ULONG ReadMode,
+		       IN ULONG CompletionMode,
 		       IN ULONG MaxInstances,
 		       IN ULONG InBufferSize,
 		       IN ULONG OutBufferSize,
@@ -5838,7 +5837,7 @@ STDCALL
 NtDuplicateToken(  
 	IN HANDLE ExistingToken, 
   	IN ACCESS_MASK DesiredAccess, 
- 	IN POBJECT_ATTRIBUTES ObjectAttributes,
+ 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
 	IN BOOLEAN EffectiveOnly,
   	IN TOKEN_TYPE TokenType,  
   	OUT PHANDLE NewToken     
@@ -5849,8 +5848,8 @@ STDCALL
 ZwDuplicateToken(  
 	IN HANDLE ExistingToken, 
   	IN ACCESS_MASK DesiredAccess, 
- 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+ 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN BOOLEAN EffectiveOnly,
   	IN TOKEN_TYPE TokenType,  
   	OUT PHANDLE NewToken     
 	);

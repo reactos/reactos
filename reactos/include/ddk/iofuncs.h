@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.46.2.3 2004/12/13 16:18:01 hyperion Exp $ */
+/* $Id: iofuncs.h,v 1.46.2.4 2004/12/30 04:36:24 hyperion Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;

@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.86.2.3 2004/12/13 16:18:15 hyperion Exp $
+/* $Id: kill.c,v 1.86.2.4 2004/12/30 04:37:02 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -300,8 +300,8 @@ PiTerminateProcess(PEPROCESS Process,
 	   ObGetObjectHandleCount(Process));
    
    ObReferenceObject(Process);
-   if (InterlockedExchange((PLONG)&Process->Pcb.State, 
-			   PROCESS_STATE_TERMINATED) == 
+   if (InterlockedExchangeUL(&Process->Pcb.State, 
+			     PROCESS_STATE_TERMINATED) == 
        PROCESS_STATE_TERMINATED)
      {
         ObDereferenceObject(Process);

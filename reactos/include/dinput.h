@@ -14,40 +14,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
  */
-
-//#ifndef __DINPUT_INCLUDED__
-//#define __DINPUT_INCLUDED__
 
 #ifndef __WINE_DINPUT_H
 #define __WINE_DINPUT_H
 
-#ifndef DIJ_RINGZERO
 #include <objbase.h>
-#ifdef _WIN32
-#define COM_NO_WINDOWS_H
-#include <objbase.h>
-#endif
-
-#endif /* DIJ_RINGZERO */
 
 #ifndef DIRECTINPUT_VERSION
 #define DIRECTINPUT_VERSION	0x0800
 #endif
-#ifndef DIRECTINPUT_VERSION
-#define DIRECTINPUT_VERSION DIRECTINPUT_HEADER_VERSION
-#endif
 
-//#ifndef DIJ_RINGZERO
 /* Classes */
 DEFINE_GUID(CLSID_DirectInput,		0x25E609E0,0xB259,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(CLSID_DirectInputDevice,	0x25E609E1,0xB259,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 
 DEFINE_GUID(CLSID_DirectInput8,		0x25E609E4,0xB259,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(CLSID_DirectInputDevice8,	0x25E609E5,0xB259,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
-
-
 
 /* Interfaces */
 DEFINE_GUID(IID_IDirectInputA,		0x89521360,0xAA8A,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
@@ -58,7 +41,6 @@ DEFINE_GUID(IID_IDirectInput7A,		0x9A4CB684,0x236D,0x11D3,0x8E,0x9D,0x00,0xC0,0x
 DEFINE_GUID(IID_IDirectInput7W,		0x9A4CB685,0x236D,0x11D3,0x8E,0x9D,0x00,0xC0,0x4F,0x68,0x44,0xAE);
 DEFINE_GUID(IID_IDirectInput8A,		0xBF798030,0x483A,0x4DA2,0xAA,0x99,0x5D,0x64,0xED,0x36,0x97,0x00);
 DEFINE_GUID(IID_IDirectInput8W,		0xBF798031,0x483A,0x4DA2,0xAA,0x99,0x5D,0x64,0xED,0x36,0x97,0x00);
-
 DEFINE_GUID(IID_IDirectInputDeviceA,	0x5944E680,0xC92E,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(IID_IDirectInputDeviceW,	0x5944E681,0xC92E,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(IID_IDirectInputDevice2A,	0x5944E682,0xC92E,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
@@ -68,7 +50,6 @@ DEFINE_GUID(IID_IDirectInputDevice7W,	0x57D7C6BD,0x2356,0x11D3,0x8E,0x9D,0x00,0x
 DEFINE_GUID(IID_IDirectInputDevice8A,	0x54D41080,0xDC15,0x4833,0xA4,0x1B,0x74,0x8F,0x73,0xA3,0x81,0x79);
 DEFINE_GUID(IID_IDirectInputDevice8W,	0x54D41081,0xDC15,0x4833,0xA4,0x1B,0x74,0x8F,0x73,0xA3,0x81,0x79);
 DEFINE_GUID(IID_IDirectInputEffect,	0xE7E1F7C0,0x88D2,0x11D0,0x9A,0xD0,0x00,0xA0,0xC9,0xA0,0x6E,0x35);
-
 
 /* Predefined object types */
 DEFINE_GUID(GUID_XAxis,	0xA36D02E0,0xC9F3,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
@@ -83,7 +64,6 @@ DEFINE_GUID(GUID_Key,	0x55728220,0xD33C,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x0
 DEFINE_GUID(GUID_POV,	0xA36D02F2,0xC9F3,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(GUID_Unknown,0xA36D02F3,0xC9F3,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 
-
 /* Predefined product GUIDs */
 DEFINE_GUID(GUID_SysMouse,	0x6F1D2B60,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(GUID_SysKeyboard,	0x6F1D2B61,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
@@ -92,7 +72,6 @@ DEFINE_GUID(GUID_SysMouseEm,	0x6F1D2B80,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0
 DEFINE_GUID(GUID_SysMouseEm2,	0x6F1D2B81,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(GUID_SysKeyboardEm,	0x6F1D2B82,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
 DEFINE_GUID(GUID_SysKeyboardEm2,0x6F1D2B83,0xD5A0,0x11CF,0xBF,0xC7,0x44,0x45,0x53,0x54,0x00,0x00);
-
 
 /* predefined forcefeedback effects */
 DEFINE_GUID(GUID_ConstantForce,	0x13541C20,0x8E33,0x11D0,0x9A,0xD0,0x00,0xA0,0xC9,0xA0,0x6E,0x35);
@@ -108,9 +87,6 @@ DEFINE_GUID(GUID_Inertia,	0x13541C29,0x8E33,0x11D0,0x9A,0xD0,0x00,0xA0,0xC9,0xA0
 DEFINE_GUID(GUID_Friction,	0x13541C2A,0x8E33,0x11D0,0x9A,0xD0,0x00,0xA0,0xC9,0xA0,0x6E,0x35);
 DEFINE_GUID(GUID_CustomForce,	0x13541C2B,0x8E33,0x11D0,0x9A,0xD0,0x00,0xA0,0xC9,0xA0,0x6E,0x35);
 
-//#endif /* DIJ_RINGZERO */
-
-// ok yes ?
 typedef struct IDirectInputA *LPDIRECTINPUTA;
 typedef struct IDirectInputW *LPDIRECTINPUTW;
 typedef struct IDirectInput2A *LPDIRECTINPUT2A;
@@ -128,97 +104,23 @@ typedef struct IDirectInputDevice7W *LPDIRECTINPUTDEVICE7W;
 typedef struct IDirectInputDevice8A *LPDIRECTINPUTDEVICE8A;
 typedef struct IDirectInputDevice8W *LPDIRECTINPUTDEVICE8W;
 typedef struct IDirectInputEffect *LPDIRECTINPUTEFFECT;
-typedef struct SysKeyboardA SysKeyboardA,*LPSYSKEYBOARDA;
-typedef struct SysMouseA SysMouseA,*LPSYSMOUSEA;
+typedef struct SysKeyboardA *LPSYSKEYBOARDA;
+typedef struct SysMouseA *LPSYSMOUSEA;
 
-#ifdef UNICODE
-#define IID_IDirectInputDevice IID_IDirectInputDeviceW
-#define IDirectInputDevice IDirectInputDeviceW
-#define IDirectInputDeviceVtbl IDirectInputDeviceWVtbl
-#else
-#define IID_IDirectInputDevice IID_IDirectInputDeviceA
-#define IDirectInputDevice IDirectInputDeviceA
-#define IDirectInputDeviceVtbl IDirectInputDeviceAVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInput2 IID_IDirectInput2W
-#define IDirectInput2 IDirectInput2W
-#define IDirectInput2Vtbl IDirectInput2WVtbl
-#else
-#define IID_IDirectInput2 IID_IDirectInput2A
-#define IDirectInput2 IDirectInput2A
-#define IDirectInput2Vtbl IDirectInput2AVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInput7 IID_IDirectInput7W
-#define IDirectInput7 IDirectInput7W
-#define IDirectInput7Vtbl IDirectInput7WVtbl
-#else
-#define IID_IDirectInput7 IID_IDirectInput7A
-#define IDirectInput7 IDirectInput7A
-#define IDirectInput7Vtbl IDirectInput7AVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInputDevice IID_IDirectInputDeviceW
-#define IDirectInputDevice IDirectInputDeviceW
-#define IDirectInputDeviceVtbl IDirectInputDeviceWVtbl
-#else
-#define IID_IDirectInputDevice IID_IDirectInputDeviceA
-#define IDirectInputDevice IDirectInputDeviceA
-#define IDirectInputDeviceVtbl IDirectInputDeviceAVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInputDevice2 IID_IDirectInputDevice2W
-#define IDirectInputDevice2 IDirectInputDevice2W
-#define IDirectInputDevice2Vtbl IDirectInputDevice2WVtbl
-#else
-#define IID_IDirectInputDevice2 IID_IDirectInputDevice2A
-#define IDirectInputDevice2 IDirectInputDevice2A
-#define IDirectInputDevice2Vtbl IDirectInputDevice2AVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInputDevice7 IID_IDirectInputDevice7W
-#define IDirectInputDevice7 IDirectInputDevice7W
-#define IDirectInputDevice7Vtbl IDirectInputDevice7WVtbl
-#else
-#define IID_IDirectInputDevice7 IID_IDirectInputDevice7A
-#define IDirectInputDevice7 IDirectInputDevice7A
-#define IDirectInputDevice7Vtbl IDirectInputDevice7AVtbl
-#endif
-
-#ifdef UNICODE
-#define IID_IDirectInputDevice8 IID_IDirectInputDevice8W
-#define IDirectInputDevice8 IDirectInputDevice8W
-#define IDirectInputDevice8Vtbl IDirectInputDevice8WVtbl
-#else
-#define IID_IDirectInputDevice8 IID_IDirectInputDevice8A
-#define IDirectInputDevice8 IDirectInputDevice8A
-#define IDirectInputDevice8Vtbl IDirectInputDevice8AVtbl
-#endif
-
-// need to be fix
-// #define IID_IDirectInput WINELIB_NAME_AW(IID_IDirectInput)
-// DECL_WINELIB_TYPE_AW(LPDIRECTINPUT)
-// #define IID_IDirectInput2 WINELIB_NAME_AW(IID_IDirectInput2)
-// DECL_WINELIB_TYPE_AW(LPDIRECTINPUT2)
-// #define IID_IDirectInput7 WINELIB_NAME_AW(IID_IDirectInput7)
-// DECL_WINELIB_TYPE_AW(LPDIRECTINPUT7)
-//#define IID_IDirectInputDevice WINELIB_NAME_AW(IID_IDirectInputDevice)
-//DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE)
-//#define IID_IDirectInputDevice2 WINELIB_NAME_AW(IID_IDirectInputDevice2)
-//DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE2)
-
-// #define IID_IDirectInputDevice7 WINELIB_NAME_AW(IID_IDirectInputDevice7)
-// DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE7)
-
-//#define IID_IDirectInputDevice8 WINELIB_NAME_AW(IID_IDirectInputDevice8)
-//DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE8)
-
+#define IID_IDirectInput WINELIB_NAME_AW(IID_IDirectInput)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUT)
+#define IID_IDirectInput2 WINELIB_NAME_AW(IID_IDirectInput2)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUT2)
+#define IID_IDirectInput7 WINELIB_NAME_AW(IID_IDirectInput7)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUT7)
+#define IID_IDirectInputDevice WINELIB_NAME_AW(IID_IDirectInputDevice)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE)
+#define IID_IDirectInputDevice2 WINELIB_NAME_AW(IID_IDirectInputDevice2)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE2)
+#define IID_IDirectInputDevice7 WINELIB_NAME_AW(IID_IDirectInputDevice7)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE7)
+#define IID_IDirectInputDevice8 WINELIB_NAME_AW(IID_IDirectInputDevice8)
+DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE8)
 
 #define DI_OK                           S_OK
 #define DI_NOTATTACHED                  S_FALSE
@@ -895,7 +797,6 @@ typedef struct DIDEVCAPS {
 #define DISCL_FOREGROUND	0x00000004
 #define DISCL_BACKGROUND	0x00000008
 
-
 #define DIEFT_ALL		0x00000000
                                                                                 
 #define DIEFT_CONSTANTFORCE	0x00000001
@@ -1363,7 +1264,6 @@ DECL_WINELIB_TYPE_AW(LPCDIDEVICEIMAGEINFOHEADER)
 /*****************************************************************************
  * IDirectInputEffect interface
  */
-
 #define INTERFACE IDirectInputEffect
 DECLARE_INTERFACE_(IDirectInputEffect,IUnknown)
 {
@@ -2346,4 +2246,3 @@ HRESULT WINAPI DirectInputCreateEx(HINSTANCE,DWORD,REFIID,LPVOID *,LPUNKNOWN);
 #endif
 
 #endif /* __WINE_DINPUT_H */
-

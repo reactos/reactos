@@ -4,8 +4,10 @@
  * FILE:        transport/tcp/tcp.c
  * PURPOSE:     Transmission Control Protocol
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Art Yerkes (arty@users.sf.net)
  * REVISIONS:
- *   CSH 01/08-2000 Created
+ *   CSH 01/08-2000  Created
+ *   arty 12/21/2004 Added accept
  */
 
 #include "precomp.h"
@@ -25,11 +27,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
-    BOOLEAN CompletedOne = FALSE;
+    PIRP Irp;
+    PMDL Mdl;
 
     /* Things that can happen when we try the initial connection */
     if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
-
 	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
 	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
@@ -45,26 +47,55 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	}
     }
 
+    if( (NewState & SEL_ACCEPT) ) {
+	/* Handle readable on a listening socket -- 
+	 * TODO: Implement filtering 
+	 */
+
+	TI_DbgPrint(DEBUG_TCP,("Accepting new connection on %x (Queue: %s)\n",
+			       Connection,
+			       IsListEmpty(&Connection->ListenRequest) ? 
+			       "empty" : "nonempty"));
+
+	while( !IsListEmpty( &Connection->ListenRequest ) ) {
+	    PIO_STACK_LOCATION IrpSp;
+
+	    Entry = RemoveHeadList( &Connection->ListenRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+	    
+	    Irp = Bucket->Request.RequestContext;
+	    IrpSp = IoGetCurrentIrpStackLocation( Irp );
+	    
+	    TI_DbgPrint(DEBUG_TCP,("Getting the socket\n"));
+	    Status = TCPServiceListeningSocket
+		( Connection->AddressFile->Listener, 
+		  Bucket->AssociatedEndpoint, 
+		  (PTDI_REQUEST_KERNEL)&IrpSp->Parameters );
+
+	    TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
+
+	    if( Status == STATUS_PENDING ) {
+		InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
+		break;
+	    } else 
+		Complete( Bucket->Request.RequestContext, Status, 0 );
+	}
+    }
+
     /* Things that happen after we're connected */
     if( (NewState & SEL_READ) ) {
 	TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
 			       IsListEmpty(&Connection->ReceiveRequest) ?
 			       "empty" : "nonempty"));
-
+	
 	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
-	    PIRP Irp;
 	    OSK_UINT RecvLen = 0, Received = 0;
 	    OSK_PCHAR RecvBuffer = 0;
-	    PMDL Mdl;
-	    NTSTATUS Status;
 
 	    Entry = RemoveHeadList( &Connection->ReceiveRequest );
 	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 	    Complete = Bucket->Request.RequestNotifyObject;
-
-	    TI_DbgPrint(DEBUG_TCP,
-			("Readable, Completing read request %x\n", 
-			 Bucket->Request));
 
 	    Irp = Bucket->Request.RequestContext;
 	    Mdl = Irp->MdlAddress;
@@ -97,23 +128,17 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 		TI_DbgPrint(DEBUG_TCP,("Received %d bytes with status %x\n",
 				       Received, Status));
 		
-		TI_DbgPrint(DEBUG_TCP,
-			    ("Completing Receive Request: %x\n", 
-			     Bucket->Request));
-
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
-		CompletedOne = TRUE;
 	    } else if( Status == STATUS_PENDING ) {
-		InsertHeadList( &Connection->ReceiveRequest,
-				&Bucket->Entry );
+		InsertHeadList
+		    ( &Connection->ReceiveRequest, &Bucket->Entry );
 		break;
 	    } else {
 		TI_DbgPrint(DEBUG_TCP,
 			    ("Completing Receive request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
-		CompletedOne = TRUE;
 	    }
 	}
     }
@@ -479,7 +504,23 @@ NTSTATUS TCPClose
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-    Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
+    switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
+    case 0:
+    case TDI_DISCONNECT_ABORT:
+	Flags = 0;
+	break;
+
+    case TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE:
+	Flags = 2;
+	break;
+
+    case TDI_DISCONNECT_RELEASE:
+	Flags = 1;
+	break;
+    }
+
+    Status = TCPTranslateError
+	( OskitTCPShutdown( Connection->SocketContext, Flags ) );
 
     if( Connection->Signalled ) 
 	RemoveEntryList( &Connection->SignalList );
@@ -565,7 +606,7 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveFlags,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    PCHAR DataBuffer;
+    OSK_PCHAR DataBuffer;
     UINT DataLen, Received = 0;
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
@@ -636,7 +677,8 @@ NTSTATUS TCPSendData
 			   Connection->SocketContext));
 
     Status = OskitTCPSend( Connection->SocketContext, 
-			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
+			   (OSK_PCHAR)BufferData, PacketSize,
+			   (PUINT)DataUsed, 0 );
 
     TcpipRecursiveMutexLeave( &TCPLock );
 

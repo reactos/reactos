@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.8.8.3 2004/12/13 16:18:12 hyperion Exp $
+/* $Id: parttab.c,v 1.8.8.4 2004/12/30 04:36:56 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

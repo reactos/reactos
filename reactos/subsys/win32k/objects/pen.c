@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: pen.c,v 1.16.10.2 2004/12/13 16:18:19 hyperion Exp $
+ * $Id: pen.c,v 1.16.10.3 2004/12/30 04:37:15 hyperion Exp $
  */
 #include <w32k.h>
 

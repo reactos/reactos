@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31.2.3 2004/12/13 16:18:01 hyperion Exp $
+# $Id: makefile,v 1.31.2.4 2004/12/30 04:36:21 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,7 +14,6 @@ TARGET_PCH = include/precomp.h
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-D_SEH_NO_NATIVE_NLG \
-	-DMEMTRACK \
 	-DNDIS40 \
 	-Wall -Werror \
 	-I./include \

@@ -132,6 +132,8 @@ NTSTATUS BuildUDPPacket(
 				       NULL,
 				       Packet->TotalSize + MaxLLHeaderSize );
     
+    if( !NT_SUCCESS(Status) ) return Status;
+
     TI_DbgPrint(MID_TRACE, ("Allocated packet: %x\n", Packet->NdisPacket));
     TI_DbgPrint(MID_TRACE, ("Local Addr : %s\n", A2S(LocalAddress)));
     TI_DbgPrint(MID_TRACE, ("Remote Addr: %s\n", A2S(RemoteAddress)));

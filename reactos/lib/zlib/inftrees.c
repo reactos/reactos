@@ -127,6 +127,8 @@ uIntf *v;               /* working area: values in order of bit length */
   int y;                        /* number of dummy codes added */
   uInt z;                       /* number of entries in current table */
 
+  /* Make GCC 4.0 happy. */
+  r.base = 0;
 
   /* Generate counts for each bit length */
   p = c;

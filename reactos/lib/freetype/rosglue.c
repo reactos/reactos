@@ -1,4 +1,4 @@
-/* $Id: rosglue.c,v 1.3 2004/11/18 22:22:46 navaraf Exp $
+/* $Id: rosglue.c,v 1.3.2.1 2004/12/30 04:36:31 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS

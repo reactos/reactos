@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.75.2.2 2004/12/13 16:18:17 hyperion Exp $
+/* $Id: message.c,v 1.75.2.3 2004/12/30 04:37:10 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -81,6 +81,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
+    { WM_COPYDATA, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
   };
@@ -148,6 +149,9 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
         case WM_NCCALCSIZE:
           return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
           break;
+
+        case WM_COPYDATA:
+          return sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
 
         default:
           assert(FALSE);
@@ -521,7 +525,9 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
             Msg->hwnd = Wnd->Self;
             if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
             {
-              MsqPostMessage(Wnd->MessageQueue, Msg, FALSE);
+              MsqPostMessage(Wnd->MessageQueue, Msg, FALSE,
+                             Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
+                             QS_MOUSEBUTTON);
             }
             
             /* eat the message */
@@ -684,7 +690,14 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     return TRUE;
   }
   
-  /* FIXME - get WM_(SYS)TIMER messages */
+  /* Check for WM_(SYS)TIMER messages */
+  Present = MsqGetTimerMessage(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax,
+                               &Msg->Msg, RemoveMessages);
+  if (Present)
+  {
+    Msg->FreeLParam = FALSE;
+    goto MessageFound;
+  }
   
   if(Present)
   {
@@ -839,8 +852,8 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 
 static BOOL FASTCALL
 IntWaitMessage(HWND Wnd,
-                UINT MsgFilterMin,
-                UINT MsgFilterMax)
+               UINT MsgFilterMin,
+               UINT MsgFilterMax)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   NTSTATUS Status;
@@ -856,9 +869,9 @@ IntWaitMessage(HWND Wnd,
 	}
 
       /* Nothing found. Wait for new messages. */
-      Status = MsqWaitForNewMessages(ThreadQueue);
+      Status = MsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
     }
-  while (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63);
+  while ((STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
 
   SetLastNtError(Status);
 
@@ -1142,7 +1155,8 @@ NtUserPostMessage(HWND Wnd,
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
-                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
+                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
+                     QS_POSTMESSAGE);
       IntReleaseWindowObject(Window);
     }
 
@@ -1184,7 +1198,8 @@ NtUserPostThreadMessage(DWORD idThread,
         return FALSE;
       }
     MsqPostMessage(pThread->MessageQueue, &KernelModeMsg,
-                   NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
+                   NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
+                   QS_POSTMESSAGE);
     ObDereferenceObject( peThread );
     return TRUE;
   } else {
@@ -1610,7 +1625,7 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 
    IntLockMessageQueue(Queue);
 
-   Result = MAKELONG(Queue->ChangedBits, Queue->WakeBits);
+   Result = MAKELONG(Queue->QueueBits, Queue->ChangedBits);
    if (ClearChanges)
    {
       Queue->ChangedBits = 0;

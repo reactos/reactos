@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.17.8.3 2004/12/13 16:17:58 hyperion Exp $
+/* $Id: direntry.c,v 1.17.8.4 2004/12/30 04:36:12 hyperion Exp $
  *
  *
  * FILE:             DirEntry.c

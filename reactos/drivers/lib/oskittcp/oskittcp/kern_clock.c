@@ -85,7 +85,7 @@
 /* Exported to machdep.c. */
 struct callout *callfree, *callout;
 
-static struct callout calltodo;
+struct callout calltodo;
 
 long tk_cancc;
 long tk_nin;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.13.2.2 2004/12/13 16:18:09 hyperion Exp $
+/* $Id: display.c,v 1.13.2.3 2004/12/30 04:36:47 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -200,7 +200,6 @@ EnumDisplaySettingsExA(
 {
   BOOL rc;
   UNICODE_STRING DeviceName;
-  DEVMODEW DevModeW;
 
   if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
     {
@@ -208,12 +207,15 @@ EnumDisplaySettingsExA(
       return FALSE;
     }
 
-  RosRtlDevModeA2W ( &DevModeW, lpDevMode );
-
-  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &DevModeW, dwFlags );
+  /*
+   * NOTE: We don't need to convert between DEVMODEW and DEVMODEA because
+   * only dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags and
+   * dmDisplayFrequency fields are set.
+   */
+  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, (LPDEVMODEW)lpDevMode,
+                                   dwFlags );
 
   RtlFreeUnicodeString ( &DeviceName );
-  RosRtlDevModeW2A ( lpDevMode, &DevModeW );
 
   return rc;
 }

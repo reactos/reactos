@@ -1,8 +1,9 @@
-acpi.coff
-objects
+*.a
 *.d
 *.o
 *.sym
 *.sys
 *.map
 *.tmp
+acpi.coff
+objects

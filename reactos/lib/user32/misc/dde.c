@@ -262,7 +262,7 @@ BOOL WINAPI DdeSetQualityOfService(HWND hwndClient, CONST SECURITY_QUALITY_OF_SE
  */
 static void WDML_IncrementInstanceId(WDML_INSTANCE* pInstance)
 {
-    DWORD	id = InterlockedIncrement(&WDML_MaxInstanceID);
+    DWORD	id = InterlockedIncrement((PLONG)&WDML_MaxInstanceID);
 
     pInstance->instanceID = id;
     TRACE("New instance id %ld allocated\n", id);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7.2.3 2004/12/13 16:18:00 hyperion Exp $
+# $Id: makefile,v 1.7.2.4 2004/12/30 04:36:17 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -40,6 +40,7 @@ TARGET_OBJECTS = \
 	network/routines.o \
 	network/transmit.o \
 	transport/rawip/rawip.o \
+	transport/tcp/accept.o \
 	transport/tcp/event.o \
 	transport/tcp/if.o \
 	transport/tcp/tcp.o \

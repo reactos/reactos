@@ -82,7 +82,7 @@ IoSetCompletionRoutineEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -95,12 +95,28 @@ IoSetIoCompletion (
 	IN BOOLEAN Quota
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   PKQUEUE Queue = (PKQUEUE) IoCompletion;
+   PIO_COMPLETION_PACKET   Packet;
+
+   Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
+   if (NULL == Packet)
+   {
+     return STATUS_NO_MEMORY;
+   }
+
+   Packet->Key = KeyContext;
+   Packet->Context = ApcContext;
+   Packet->IoStatus.Status = IoStatus;
+   Packet->IoStatus.Information = IoStatusInformation;
+   
+   KeInsertQueue(Queue, &Packet->ListEntry);
+
+   return STATUS_SUCCESS;
 }
 
-VOID 
-NtInitializeIoCompletionImplementation(VOID)
+VOID
+FASTCALL
+IopInitIoCompletionImplementation(VOID)
 {
    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
@@ -279,36 +295,54 @@ NtRemoveIoCompletion(
 {
    PKQUEUE  Queue;
    NTSTATUS Status;
-      
+   PIO_COMPLETION_PACKET   Packet;
+   PLIST_ENTRY             ListEntry;
+
    Status = ObReferenceObjectByHandle( IoCompletionHandle,
                                        IO_COMPLETION_MODIFY_STATE,
                                        ExIoCompletionType,
                                        UserMode,
                                        (PVOID*)&Queue,
                                        NULL);
-   if (NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
-      PIO_COMPLETION_PACKET   Packet;
-      PLIST_ENTRY             ListEntry;
-
-      /*
-      Try 2 remove packet from queue. Wait (optionaly) if
-      no packet in queue or max num of threads allready running.
-      */
-      ListEntry = KeRemoveQueue(Queue, UserMode, Timeout );
-
-      ObDereferenceObject(Queue);
-
-      Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
-
-      if (CompletionKey) *CompletionKey = Packet->Key;
-      if (CompletionContext) *CompletionContext = Packet->Context;
-      if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
-
-      ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+      return Status;
    }
 
-   return Status;
+   /*
+   Try 2 remove packet from queue. Wait (optionaly) if
+   no packet in queue or max num of threads allready running.
+   */
+      
+   do {
+      
+      ListEntry = KeRemoveQueue(Queue, UserMode, Timeout );
+
+      /* Nebbets book says nothing about NtRemoveIoCompletion returning STATUS_USER_APC,
+      and the umode equivalent GetQueuedCompletionStatus says nothing about this either,
+      so my guess it we should restart the operation. Need further investigation. -Gunnar
+      */
+
+   } while((NTSTATUS)ListEntry == STATUS_USER_APC);
+
+   ObDereferenceObject(Queue);
+   
+   if ((NTSTATUS)ListEntry == STATUS_TIMEOUT)
+   {
+      return STATUS_TIMEOUT;
+   }
+   
+   ASSERT(ListEntry);
+   
+   Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
+
+   if (CompletionKey) *CompletionKey = Packet->Key;
+   if (CompletionContext) *CompletionContext = Packet->Context;
+   if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
+
+   ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -347,16 +381,8 @@ NtSetIoCompletion(
                                        NULL);
    if (NT_SUCCESS(Status))
    {
-      PIO_COMPLETION_PACKET   Packet;
-
-      Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
-
-      Packet->Key = CompletionKey;
-      Packet->Context = CompletionContext;
-      Packet->IoStatus.Status = CompletionStatus;
-      Packet->IoStatus.Information = CompletionInformation;
-   
-      KeInsertQueue(Queue, &Packet->ListEntry);
+      Status = IoSetIoCompletion(Queue, CompletionKey, CompletionContext,
+                                 CompletionStatus, CompletionInformation, TRUE);
       ObDereferenceObject(Queue);
    }
 

@@ -144,28 +144,6 @@ typedef struct _DATAGRAM_SEND_REQUEST {
     ULONG Flags;                          /* Protocol specific flags */
 } DATAGRAM_SEND_REQUEST, *PDATAGRAM_SEND_REQUEST;
 
-#if 0
-#define InitializeDatagramSendRequest( \
-  _SendRequest, \
-  _RemoteAddress, \
-  _RemotePort, \
-  _Buffer, \
-  _BufferSize, \
-  _Complete, \
-  _Context, \
-  _Build, \
-  _Flags) { \
-    (_SendRequest)->RemoteAddress = (_RemoteAddress); \
-    (_SendRequest)->RemotePort = (_RemotePort); \
-    (_SendRequest)->Buffer = (_Buffer); \
-    (_SendRequest)->BufferSize = (_BufferSize); \
-    (_SendRequest)->Complete = (_Complete); \
-    (_SendRequest)->Context = (_Context); \
-    (_SendRequest)->Build = (_Build); \
-    (_SendRequest)->Flags = (_Flags); \
-  }
-#endif /* These things bug me...  They hide the member names. */
-
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
 typedef struct _ADDRESS_FILE {
@@ -175,6 +153,7 @@ typedef struct _ADDRESS_FILE {
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
     USHORT Flags;                         /* Flags for address file (see below) */
     IP_ADDRESS Address;                   /* Address of this address file */
+    USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
@@ -184,8 +163,9 @@ typedef struct _ADDRESS_FILE {
     LIST_ENTRY ReceiveQueue;              /* List of outstanding receive requests */
     LIST_ENTRY TransmitQueue;             /* List of outstanding transmit requests */
     struct _CONNECTION_ENDPOINT *Connection;
-                                          /* Associated connection or NULL if no
-                                             associated connection exist */
+    /* Associated connection or NULL if no associated connection exist */
+    struct _CONNECTION_ENDPOINT *Listener;
+    /* Associated listener (see transport/tcp/accept.c) */
     IP_ADDRESS AddrCache;                 /* One entry address cache (destination
                                              address of last packet transmitted) */
 
@@ -302,6 +282,7 @@ typedef struct _TCP_SEGMENT {
 
 typedef struct _TDI_BUCKET {
     LIST_ENTRY Entry;
+    struct _CONNECTION_ENDPOINT *AssociatedEndpoint;
     TDI_REQUEST Request;
 } TDI_BUCKET, *PTDI_BUCKET;
 
@@ -316,7 +297,7 @@ typedef struct _CONNECTION_ENDPOINT {
     PVOID SocketContext;        /* Context for lower layer */
     
     UINT State;                 /* Socket state W.R.T. oskit */
-    
+
     /* Requests */
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */

@@ -6,6 +6,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = arp
 
+TARGET_INSTALLDIR = system32
+
 TARGET_CFLAGS = -D__USE_W32API
 
 TARGET_SDKLIBS = user32.a snmpapi.a

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.2.2.1 2004/12/13 09:39:20 hyperion Exp $ */
+/* $Id: cursoricon.c,v 1.2.2.2 2004/12/30 04:37:10 hyperion Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -81,8 +81,10 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       DC_UnlockDc(Screen);
       
       BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-      /* FIXME - BitmapObj can be NULL!!!!! */
+      if ( !BitmapObj )
+        return (HCURSOR)0;
       SurfObj = &BitmapObj->SurfObj;
+      ASSERT(SurfObj);
    }
   
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
@@ -164,7 +166,12 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
               MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
               MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
               NULL);
-            ASSERT(hMask);
+            if ( !hMask )
+            {
+              BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+              BITMAPOBJ_UnlockBitmap(dcbmp);
+              return (HCURSOR)0;
+            }
             soMask = EngLockSurface((HSURF)hMask);
             EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
               &DestRect, &SourcePoint);
@@ -412,7 +419,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   {
     return (HANDLE)0;
   }
-  
+
   CurIconObject = IntCreateCurIconHandle(WinStaObject);
   if(CurIconObject)
   {
@@ -436,16 +443,13 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
           BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
           GDIOBJ_SetOwnership(CurIconObject->IconInfo.hbmColor, NULL);
         }
-        else
+        if(CurIconObject->IconInfo.hbmMask && 
+          (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
         {
-          if(CurIconObject->IconInfo.hbmMask && 
-            (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
-          {
-            CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-            CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
-            BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
-            GDIOBJ_SetOwnership(CurIconObject->IconInfo.hbmMask, NULL);
-          }
+          CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
+          CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
+          BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
+          GDIOBJ_SetOwnership(CurIconObject->IconInfo.hbmMask, NULL);
         }
       }
       else

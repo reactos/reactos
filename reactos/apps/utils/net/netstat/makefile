@@ -6,6 +6,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = netstat
 
+TARGET_INSTALLDIR = system32
+
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-D_WIN32_IE=0x600 \

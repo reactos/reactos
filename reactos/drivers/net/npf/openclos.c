@@ -154,7 +154,7 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 	PacketItoa(NamedEventsCounter,(PUCHAR)(Open->ReadEventName.Buffer+21));
 
-	InterlockedIncrement(&NamedEventsCounter);
+	InterlockedIncrement((PLONG)&NamedEventsCounter);
 	
 	IF_LOUD(DbgPrint("\nCreated the named event for the read; name=%ws, counter=%d\n", Open->ReadEventName.Buffer,NamedEventsCounter-1);)
 

@@ -16,6 +16,7 @@
 UINT TransferDataCalled = 0;
 UINT TransferDataCompleteCalled = 0;
 UINT LanReceiveWorkerCalled = 0;
+BOOLEAN LanReceiveWorkerBusy = FALSE;
 
 #define NGFP(_Packet)                                             \
     {                                                             \
@@ -91,8 +92,8 @@ BOOLEAN LanShouldComplete( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
     }
     KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
 
-    TI_DbgPrint(MID_TRACE,("NDIS completed the same send packet twice "
-			   "(Adapter %x Packet %x)!!\n", Adapter, NdisPacket));
+    DbgPrint("NDIS completed the same send packet twice "
+	     "(Adapter %x Packet %x)!!\n", Adapter, NdisPacket);
 #ifdef BREAK_ON_DOUBLE_COMPLETE
     KeBugCheck(0);
 #endif
@@ -279,9 +280,8 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
 	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 
-	LanReceiveWorkerCalled++;
-	ASSERT(LanReceiveWorkerCalled <= TransferDataCompleteCalled);
-	
+	TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
+
 	Packet = WorkItem->Packet;
 	Adapter = WorkItem->Adapter;
 	BytesTransferred = WorkItem->BytesTransferred;
@@ -328,6 +328,40 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 
 	FreeNdisPacket( Packet );
     }
+    TI_DbgPrint(DEBUG_DATALINK, ("Leaving\n"));
+    LanReceiveWorkerBusy = FALSE;
+}
+
+VOID LanSubmitReceiveWork( 
+    NDIS_HANDLE BindingContext,
+    PNDIS_PACKET Packet,
+    NDIS_STATUS Status,
+    UINT BytesTransferred) {
+    PLAN_WQ_ITEM WQItem;
+    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+    KIRQL OldIrql;
+
+    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
+    
+    WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
+    if( !WQItem ) {
+	TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
+	return;
+    }
+
+    WQItem->Packet = Packet;
+    WQItem->Adapter = Adapter;
+    WQItem->BytesTransferred = BytesTransferred;
+    InsertTailList( &LanWorkList, &WQItem->ListEntry );
+    if( !LanReceiveWorkerBusy ) {
+	LanReceiveWorkerBusy = TRUE;
+	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
+	TI_DbgPrint(DEBUG_DATALINK,
+		    ("Work item inserted %x %x\n", &LanWorkItem, WQItem));
+    } else {
+	DbgPrint("LAN WORKER BUSY %x %x\n", &LanWorkItem, WQItem);
+    }
+    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
 }
 
 VOID STDCALL ProtocolTransferDataComplete(
@@ -347,34 +381,14 @@ VOID STDCALL ProtocolTransferDataComplete(
  *     type and pass it to the correct receive handler
  */
 {
-    BOOLEAN WorkStart;
-    PLAN_WQ_ITEM WQItem;
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    KIRQL OldIrql;
-
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-    if( Status != NDIS_STATUS_SUCCESS ) return;
-    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
-    
     TransferDataCompleteCalled++;
-
     ASSERT(TransferDataCompleteCalled <= TransferDataCalled);
 
-    WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-    if( !WQItem ) {
-	TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
-	return;
-    }
+    if( Status != NDIS_STATUS_SUCCESS ) return;
 
-    WorkStart = IsListEmpty( &LanWorkList );
-    WQItem->Packet = Packet;
-    WQItem->Adapter = Adapter;
-    WQItem->BytesTransferred = BytesTransferred;
-    InsertTailList( &LanWorkList, &WQItem->ListEntry );
-    if( WorkStart )
-	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
-    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
+    LanSubmitReceiveWork( BindingContext, Packet, Status, BytesTransferred );
 }
 
 NDIS_STATUS STDCALL ProtocolReceive(
@@ -610,6 +624,8 @@ VOID LANTransmit(
      * not needed immediately */
     GetDataPtr( NdisPacket, 0, &Data, &Size );
 
+    LanChainCompletion( Adapter, NdisPacket );    
+
     if (Adapter->State == LAN_STATE_STARTED) {
         switch (Adapter->Media) {
         case NdisMedium802_3:
@@ -669,10 +685,15 @@ VOID LANTransmit(
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
         NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
-	LanChainCompletion( Adapter, NdisPacket );
-	TI_DbgPrint(MID_TRACE, ("NdisSend Done\n"));
+	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n", 
+				NdisStatus == NDIS_STATUS_PENDING ?
+				"Pending" : "Complete"));
 	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
 
+	/* I had a talk with vizzini: these really ought to be here. 
+	 * we're supposed to see these completed by ndis *only* when 
+	 * status_pending is returned.  Note that this is different from
+	 * the situation with IRPs. */
         if (NdisStatus != NDIS_STATUS_PENDING)
             ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
     } else {
@@ -935,6 +956,16 @@ VOID BindAdapter(
 			   1 );
     }
 
+    /* Get maximum link speed */
+    NdisStatus = NDISCall(Adapter,
+                          NdisRequestQueryInformation,
+                          OID_GEN_LINK_SPEED,
+                          &IF->Speed,
+                          sizeof(UINT));
+
+    if( !NT_SUCCESS(NdisStatus) )
+	IF->Speed = IP_DEFAULT_LINK_SPEED;
+
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
 
@@ -944,6 +975,7 @@ VOID BindAdapter(
                           OID_GEN_CURRENT_PACKET_FILTER,
                           &Adapter->PacketFilter,
                           sizeof(UINT));
+
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MID_TRACE, ("Could not set packet filter (0x%X).\n", NdisStatus));
         IPDestroyInterface(IF);

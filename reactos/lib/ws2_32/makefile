@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18.2.3 2004/12/13 16:18:11 hyperion Exp $
+# $Id: makefile,v 1.18.2.4 2004/12/30 04:36:51 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -27,7 +27,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a dnsapi.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a advapi32.a dnsapi.a
 
 TARGET_OBJECTS = misc/bsd.o misc/catalog.o misc/dllmain.o \
   misc/event.o misc/handle.o misc/ns.o \

@@ -51,7 +51,7 @@ typedef struct {
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 static VOID
-SHA1Transform(ULONG State[5], CHAR Buffer[64])
+SHA1Transform(ULONG State[5], UCHAR Buffer[64])
 {
    ULONG a, b, c, d, e;
    ULONG *Block;
@@ -162,7 +162,7 @@ VOID WINAPI
 A_SHAFinal(PSHA_CTX Context, PULONG Result)
 {
    INT Pad, Index;
-   UCHAR Buffer[72];
+   CHAR Buffer[72];
    ULONG *Count;
    ULONG BufferContentSize, LengthHi, LengthLo;
 

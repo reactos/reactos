@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.105.2.3 2004/12/13 16:18:17 hyperion Exp $
+# $Id: makefile,v 1.105.2.4 2004/12/30 04:37:10 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,6 +13,9 @@ TARGET_ENTRY = _DllMain@8
 TARGET_PCH = w32k.h
 
 TARGET_DDKLIBS = freetype.a
+
+TARGET_LIBS = \
+	$(SDK_PATH_LIB)/libpseh.a
 
 TARGET_REGTESTS = yes
 

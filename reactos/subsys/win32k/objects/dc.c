@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.147.2.3 2004/12/13 16:18:18 hyperion Exp $
+/* $Id: dc.c,v 1.147.2.4 2004/12/30 04:37:14 hyperion Exp $
  *
  * DC.C - Device context functions
  *

@@ -23,19 +23,14 @@
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef WIN32
-#include "windef.h"
-#include "winbase.h"
-#else
 #include "winglue.h"
-#endif
+
 #define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
 #define EH_NONCONTINUABLE   0x01
 

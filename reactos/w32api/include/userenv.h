@@ -52,6 +52,8 @@ BOOL WINAPI AddItemA (LPCSTR, BOOL, LPCSTR, LPCSTR, LPCSTR, INT, LPCSTR, WORD, I
 BOOL WINAPI AddItemW (LPCWSTR, BOOL, LPCWSTR, LPCWSTR, LPCWSTR, INT, LPCWSTR, WORD, INT);
 BOOL WINAPI DeleteItemA (LPCSTR, BOOL, LPCSTR, BOOL);
 BOOL WINAPI DeleteItemW (LPCWSTR, BOOL, LPCWSTR, BOOL);
+BOOL WINAPI CopyProfileDirectoryA(LPCSTR, LPCSTR, DWORD);
+BOOL WINAPI CopyProfileDirectoryW(LPCWSTR, LPCWSTR, DWORD);
 /* end private */
 BOOL WINAPI LoadUserProfileA (HANDLE, LPPROFILEINFOA);
 BOOL WINAPI LoadUserProfileW (HANDLE, LPPROFILEINFOW);
@@ -80,6 +82,7 @@ typedef LPPROFILEINFOW LPPROFILEINFO;
 #define DeleteGroup  DeleteGroupW
 #define AddItem  AddItemW
 #define DeleteItem  DeleteItemW
+#define CopyProfileDirectory  CopyProfileDirectoryW
 /* end private */
 #define LoadUserProfile  LoadUserProfileW
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryW
@@ -97,6 +100,7 @@ typedef LPPROFILEINFOA LPPROFILEINFO;
 #define DeleteGroup  DeleteGroupA
 #define AddItem  AddItemA
 #define DeleteItem  DeleteItemA
+#define CopyProfileDirectory  CopyProfileDirectoryA
 /* end private */
 #define LoadUserProfile  LoadUserProfileA
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryA

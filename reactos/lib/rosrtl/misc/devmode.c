@@ -12,9 +12,8 @@
 void
 RosRtlDevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )
 {
-#define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, pA->f, len, pW->f, len )
+#define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, (LPSTR)pA->f, len, pW->f, len )
 #define COPYN(f) pW->f = pA->f
-  memset ( pW, 0, sizeof(DEVMODEW) );
   COPYS(dmDeviceName, CCHDEVICENAME );
   COPYN(dmSpecVersion);
   COPYN(dmDriverVersion);
@@ -78,9 +77,8 @@ RosRtlDevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )
 void
 RosRtlDevModeW2A( LPDEVMODEA pA, const LPDEVMODEW pW )
 {
-#define COPYS(f,len) WideCharToMultiByte( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
+#define COPYS(f,len) WideCharToMultiByte( CP_THREAD_ACP, 0, pW->f, len, (LPSTR)pA->f, len, NULL, NULL )
 #define COPYN(f) pA->f = pW->f
-  memset ( pA, 0, sizeof(DEVMODEA) );
   COPYS(dmDeviceName, CCHDEVICENAME );
   COPYN(dmSpecVersion);
   COPYN(dmDriverVersion);

@@ -155,9 +155,12 @@ typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS *PNAMED_PIPE_CREATE_PARAMETERS;
+typedef struct _MAILSLOT_CREATE_PARAMETERS *PMAILSLOT_CREATE_PARAMETERS;
+typedef struct _FILE_GET_QUOTA_INFORMATION *PFILE_GET_QUOTA_INFORMATION;
 
 /* Constants */
-#define	MAXIMUM_PROCESSORS                32
+#define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
@@ -2680,7 +2683,9 @@ typedef struct _IO_CSQ {
   PVOID  ReservePointer;
 } IO_CSQ, *PIO_CSQ;
 
+#if !defined(_ALPHA_)
 #include <pshpack4.h>
+#endif
 typedef struct _IO_STACK_LOCATION {
   UCHAR  MajorFunction;
   UCHAR  MinorFunction;
@@ -2695,6 +2700,20 @@ typedef struct _IO_STACK_LOCATION {
       ULONG POINTER_ALIGNMENT  EaLength;
     } Create;
     struct {
+      PIO_SECURITY_CONTEXT  SecurityContext;
+      ULONG  Options;
+      USHORT  Reserved;
+      USHORT  ShareAccess;
+      PNAMED_PIPE_CREATE_PARAMETERS  Parameters;
+    } CreatePipe;
+    struct {
+      PIO_SECURITY_CONTEXT  SecurityContext;
+      ULONG  Options;
+      USHORT  Reserved;
+      USHORT  ShareAccess;
+      PMAILSLOT_CREATE_PARAMETERS  Parameters;
+    } CreateMailslot;
+    struct {
       ULONG  Length;
       ULONG POINTER_ALIGNMENT  Key;
       LARGE_INTEGER  ByteOffset;
@@ -2704,6 +2723,16 @@ typedef struct _IO_STACK_LOCATION {
       ULONG POINTER_ALIGNMENT  Key;
       LARGE_INTEGER  ByteOffset;
     } Write;
+    struct {
+      ULONG  Length;
+      PUNICODE_STRING  FileName;
+      FILE_INFORMATION_CLASS  FileInformationClass;
+      ULONG  FileIndex;
+    } QueryDirectory;
+    struct {
+      ULONG  Length;
+      ULONG  CompletionFilter;
+    } NotifyDirectory;
     struct {
       ULONG  Length;
       FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
@@ -2723,8 +2752,32 @@ typedef struct _IO_STACK_LOCATION {
     } SetFile;
     struct {
       ULONG  Length;
+      PVOID  EaList;
+      ULONG  EaListLength;
+      ULONG  EaIndex;
+    } QueryEa;
+    struct {
+      ULONG  Length;
+    } SetEa;
+    struct {
+      ULONG  Length;
       FS_INFORMATION_CLASS POINTER_ALIGNMENT  FsInformationClass;
     } QueryVolume;
+    struct {
+      ULONG  Length;
+      FS_INFORMATION_CLASS  FsInformationClass;
+    } SetVolume;
+    struct {
+      ULONG  OutputBufferLength;
+      ULONG  InputBufferLength;
+      ULONG  FsControlCode;
+      PVOID  Type3InputBuffer;
+    } FileSystemControl;
+    struct {
+      PLARGE_INTEGER  Length;
+      ULONG  Key;
+      LARGE_INTEGER  ByteOffset;
+    } LockControl;
     struct {
       ULONG  OutputBufferLength;
       ULONG POINTER_ALIGNMENT  InputBufferLength;
@@ -2750,6 +2803,15 @@ typedef struct _IO_STACK_LOCATION {
     struct {
       struct _SCSI_REQUEST_BLOCK  *Srb;
     } Scsi;
+    struct {
+      ULONG  Length;
+      PSID  StartSid;
+      PFILE_GET_QUOTA_INFORMATION  SidList;
+      ULONG  SidListLength;
+    } QueryQuota;
+    struct {
+      ULONG  Length;
+    } SetQuota;
     struct {
       DEVICE_RELATION_TYPE  Type;
     } QueryDeviceRelations;
@@ -2821,7 +2883,9 @@ typedef struct _IO_STACK_LOCATION {
   PIO_COMPLETION_ROUTINE  CompletionRoutine;
   PVOID  Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+#if !defined(_ALPHA_)
 #include <poppack.h>
+#endif
 
 /* IO_STACK_LOCATION.Control */
 
@@ -3046,6 +3110,90 @@ typedef struct _PCI_COMMON_CONFIG {
 
 #define PCI_MULTIFUNCTION_DEVICE(PciData) \
   ((((PPCI_COMMON_CONFIG) (PciData))->HeaderType & PCI_MULTIFUNCTION) != 0)
+
+/* PCI device classes */
+
+#define PCI_CLASS_PRE_20                    0x00
+#define PCI_CLASS_MASS_STORAGE_CTLR         0x01
+#define PCI_CLASS_NETWORK_CTLR              0x02
+#define PCI_CLASS_DISPLAY_CTLR              0x03
+#define PCI_CLASS_MULTIMEDIA_DEV            0x04
+#define PCI_CLASS_MEMORY_CTLR               0x05
+#define PCI_CLASS_BRIDGE_DEV                0x06
+#define PCI_CLASS_SIMPLE_COMMS_CTLR         0x07
+#define PCI_CLASS_BASE_SYSTEM_DEV           0x08
+#define PCI_CLASS_INPUT_DEV                 0x09
+#define PCI_CLASS_DOCKING_STATION           0x0a
+#define PCI_CLASS_PROCESSOR                 0x0b
+#define PCI_CLASS_SERIAL_BUS_CTLR           0x0c
+
+/* PCI device subclasses for class 0 */
+
+#define PCI_SUBCLASS_PRE_20_NON_VGA         0x00
+#define PCI_SUBCLASS_PRE_20_VGA             0x01
+
+/* PCI device subclasses for class 1 (mass storage controllers)*/
+
+#define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
+#define PCI_SUBCLASS_MSC_IDE_CTLR           0x01
+#define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
+#define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
+#define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
+#define PCI_SUBCLASS_MSC_OTHER              0x80
+
+/* PCI device subclasses for class 2 (network controllers)*/
+
+#define PCI_SUBCLASS_NET_ETHERNET_CTLR      0x00
+#define PCI_SUBCLASS_NET_TOKEN_RING_CTLR    0x01
+#define PCI_SUBCLASS_NET_FDDI_CTLR          0x02
+#define PCI_SUBCLASS_NET_ATM_CTLR           0x03
+#define PCI_SUBCLASS_NET_OTHER              0x80
+
+/* PCI device subclasses for class 3 (display controllers)*/
+
+#define PCI_SUBCLASS_VID_VGA_CTLR           0x00
+#define PCI_SUBCLASS_VID_XGA_CTLR           0x01
+#define PCI_SUBLCASS_VID_3D_CTLR            0x02
+#define PCI_SUBCLASS_VID_OTHER              0x80
+
+/* PCI device subclasses for class 4 (multimedia device)*/
+
+#define PCI_SUBCLASS_MM_VIDEO_DEV           0x00
+#define PCI_SUBCLASS_MM_AUDIO_DEV           0x01
+#define PCI_SUBCLASS_MM_TELEPHONY_DEV       0x02
+#define PCI_SUBCLASS_MM_OTHER               0x80
+
+/* PCI device subclasses for class 5 (memory controller)*/
+
+#define PCI_SUBCLASS_MEM_RAM                0x00
+#define PCI_SUBCLASS_MEM_FLASH              0x01
+#define PCI_SUBCLASS_MEM_OTHER              0x80
+
+/* PCI device subclasses for class 6 (bridge device)*/
+
+#define PCI_SUBCLASS_BR_HOST                0x00
+#define PCI_SUBCLASS_BR_ISA                 0x01
+#define PCI_SUBCLASS_BR_EISA                0x02
+#define PCI_SUBCLASS_BR_MCA                 0x03
+#define PCI_SUBCLASS_BR_PCI_TO_PCI          0x04
+#define PCI_SUBCLASS_BR_PCMCIA              0x05
+#define PCI_SUBCLASS_BR_NUBUS               0x06
+#define PCI_SUBCLASS_BR_CARDBUS             0x07
+#define PCI_SUBCLASS_BR_OTHER               0x80
+
+/* PCI device subclasses for class C (serial bus controller)*/
+
+#define PCI_SUBCLASS_SB_IEEE1394            0x00
+#define PCI_SUBCLASS_SB_ACCESS              0x01
+#define PCI_SUBCLASS_SB_SSA                 0x02
+#define PCI_SUBCLASS_SB_USB                 0x03
+#define PCI_SUBCLASS_SB_FIBRE_CHANNEL       0x04
+
+#define PCI_MAX_DEVICES        32
+#define PCI_MAX_FUNCTION       8
+#define PCI_MAX_BRIDGE_NUMBER  0xFF
+#define PCI_INVALID_VENDORID   0xFFFF
+#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET(PCI_COMMON_CONFIG, DeviceSpecific))
 
 typedef struct _PCI_SLOT_NUMBER {
   union {

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.83 2004/11/14 18:47:09 hbirr Exp $
+/* $Id: console.c,v 1.83.2.1 2004/12/30 04:36:34 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,6 +31,7 @@ static BOOL IgnoreCtrlEvents = FALSE;
 
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 static ULONG NrCtrlHandlers = 0;
+static WCHAR InputExeName[MAX_PATH + 1] = L"";
 
 /* Default Console Control Handler *******************************************/
 
@@ -1271,7 +1272,7 @@ IntReadConsole(HANDLE hConsoleInput,
     nNumberOfCharsToRead -= Reply->Data.ReadConsoleReply.NrCharactersRead;
     memcpy((PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)(CharsRead * CharSize)),
            Reply->Data.ReadConsoleReply.Buffer,
-           Reply->Data.ReadConsoleReply.NrCharactersRead);
+           Reply->Data.ReadConsoleReply.NrCharactersRead * CharSize);
     CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
     
     if(Reply->Status == STATUS_NOTIFY_CLEANUP)
@@ -1290,7 +1291,7 @@ IntReadConsole(HANDLE hConsoleInput,
     *lpNumberOfCharsRead = CharsRead;
   }
   
-  return (nNumberOfCharsToRead == 0);
+  return TRUE;
 }
 
 
@@ -3410,6 +3411,177 @@ BOOL STDCALL SetConsoleIcon(HICON hicon)
     return FALSE;
   }
   return NT_SUCCESS(Status);
+}
+
+
+/*--------------------------------------------------------------
+ * 	SetConsoleInputExeNameW
+ *
+ * @implemented
+ */
+BOOL STDCALL
+SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
+{
+  BOOL Ret = FALSE;
+  int lenName = lstrlenW(lpInputExeName);
+
+  if(lenName < 1 ||
+     lenName > (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
+  {
+    /* Fail if string is empty or too long */
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  RtlEnterCriticalSection(&ConsoleLock);
+  /* wrap copying into SEH as we may copy from invalid buffer and in case of an
+     exception the console lock would've never been released, which would cause
+     further calls (if the exception was handled by the caller) to recursively
+     acquire the lock... */
+  _SEH_TRY
+  {
+    RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
+    InputExeName[lenName] = L'\0';
+    Ret = TRUE;
+  }
+  _SEH_HANDLE
+  {
+    lenName = 0;
+    SetLastErrorByStatus(_SEH_GetExceptionCode());
+  }
+  _SEH_END;
+  RtlLeaveCriticalSection(&ConsoleLock);
+  
+  return Ret;
+}
+
+
+/*--------------------------------------------------------------
+ * 	SetConsoleInputExeNameA
+ *
+ * @implemented
+ */
+BOOL STDCALL
+SetConsoleInputExeNameA(LPCSTR lpInputExeName)
+{
+  ANSI_STRING InputExeNameA;
+  UNICODE_STRING InputExeNameU;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  RtlInitAnsiString(&InputExeNameA, lpInputExeName);
+  
+  if(InputExeNameA.Length < sizeof(InputExeNameA.Buffer[0]) ||
+     InputExeNameA.Length >= (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
+  {
+    /* Fail if string is empty or too long */
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Status = RtlAnsiStringToUnicodeString(&InputExeNameU, &InputExeNameA, TRUE);
+  if(NT_SUCCESS(Status))
+  {
+    Ret = SetConsoleInputExeNameW(InputExeNameU.Buffer);
+    RtlFreeUnicodeString(&InputExeNameU);
+  }
+  else
+  {
+    SetLastErrorByStatus(Status);
+    Ret = FALSE;
+  }
+
+  return Ret;
+}
+
+
+/*--------------------------------------------------------------
+ * 	GetConsoleInputExeNameW
+ *
+ * @implemented
+ */
+DWORD STDCALL
+GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
+{
+  int lenName;
+
+  RtlEnterCriticalSection(&ConsoleLock);
+
+  lenName = lstrlenW(InputExeName);
+  if(lenName >= nBufferLength)
+  {
+    /* buffer is not large enough, return the required size */
+    RtlLeaveCriticalSection(&ConsoleLock);
+    return lenName + 1;
+  }
+
+  /* wrap copying into SEH as we may copy to invalid buffer and in case of an
+     exception the console lock would've never been released, which would cause
+     further calls (if the exception was handled by the caller) to recursively
+     acquire the lock... */
+  _SEH_TRY
+  {
+    RtlCopyMemory(lpBuffer, InputExeName, (lenName + 1) * sizeof(WCHAR));
+  }
+  _SEH_HANDLE
+  {
+    lenName = 0;
+    SetLastErrorByStatus(_SEH_GetExceptionCode());
+  }
+  _SEH_END;
+  
+  RtlLeaveCriticalSection(&ConsoleLock);
+
+  return lenName;
+}
+
+
+/*--------------------------------------------------------------
+ * 	GetConsoleInputExeNameA
+ *
+ * @implemented
+ */
+DWORD STDCALL
+GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
+{
+  WCHAR *Buffer;
+  DWORD Ret;
+  
+  if(nBufferLength > 0)
+  {
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nBufferLength * sizeof(WCHAR));
+    if(Buffer == NULL)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+    }
+  }
+  else
+  {
+    Buffer = NULL;
+  }
+  
+  Ret = GetConsoleInputExeNameW(nBufferLength, Buffer);
+  if(nBufferLength > 0)
+  {
+    if(Ret > 0)
+    {
+      UNICODE_STRING BufferU;
+      ANSI_STRING BufferA;
+      
+      RtlInitUnicodeString(&BufferU, Buffer);
+
+      BufferA.Length = 0;
+      BufferA.MaximumLength = nBufferLength;
+      BufferA.Buffer = lpBuffer;
+      
+      RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);
+    }
+    
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+  }
+  
+  return Ret;
 }
 
 /* EOF */

@@ -22,8 +22,8 @@ struct linker_set domain_set;
 
 OSKITTCP_EVENT_HANDLERS OtcpEvent = { 0 };
 
-//OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
-OSK_UINT OskitDebugTraceLevel = 0;
+OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
+//OSK_UINT OskitDebugTraceLevel = 0;
 
 /* SPL */
 unsigned cpl;
@@ -119,6 +119,7 @@ int OskitTCPSocket( void *context,
     if( !error ) {
 	so->so_connection = context;
 	so->so_state = SS_NBIO;
+	so->so_error = 0;
 	*aso = so;
     }
     return error;
@@ -137,6 +138,8 @@ int OskitTCPRecv( void *connection,
     int tocopy = 0;
 
     *OutLen = 0;
+
+    printf("so->so_state %x\n", ((struct socket *)connection)->so_state);
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
@@ -281,16 +284,117 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 }
 
 int OskitTCPAccept( void *socket, 
+		    void **new_socket,
 		    void *AddrOut, 
 		    OSK_UINT AddrLen,
-		    OSK_UINT *OutAddrLen ) {
-    struct mbuf nam;
-    int error;
+		    OSK_UINT *OutAddrLen,
+		    OSK_UINT FinishAccepting ) {
+    struct socket *head = (void *)socket;
+    struct sockaddr *name = (struct sockaddr *)AddrOut;
+    struct socket **newso = (struct socket **)new_socket;    
+    struct socket *so = socket;
+    struct sockaddr_in sa;
+    struct mbuf mnam;
+    int namelen = 0, error = 0, s;
 
-    nam.m_data = AddrOut;
-    nam.m_len  = AddrLen;
+    OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Doing accept (Finish %d)\n",
+			       FinishAccepting));
+                        
+    *OutAddrLen = AddrLen;
 
-    return soaccept( socket, &nam );
+    if (name) 
+	/* that's a copyin actually */
+	namelen = *OutAddrLen;
+
+    s = splnet();
+
+    OskitDumpBuffer( so, sizeof(*so) );
+
+#if 0
+    if ((head->so_options & SO_ACCEPTCONN) == 0) {
+	splx(s);
+	OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: head->so_options = %x, wanted bit %x\n",
+				   head->so_options, SO_ACCEPTCONN));
+	error = EINVAL;
+	goto out;
+    }
+#endif
+
+    OS_DbgPrint(OSK_MID_TRACE,("head->so_q = %x, head->so_state = %x\n", 
+			       head->so_q, head->so_state));
+
+    if ((head->so_state & SS_NBIO) && head->so_q == NULL) {
+	splx(s);
+	error = EWOULDBLOCK;
+	goto out;
+    }
+	
+    OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+    while (head->so_q == NULL && head->so_error == 0) {
+	if (head->so_state & SS_CANTRCVMORE) {
+	    head->so_error = ECONNABORTED;
+	    break;
+	}
+	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+	error = tsleep((caddr_t)&head->so_timeo, PSOCK | PCATCH,
+		       "accept", 0);
+	if (error) {
+	    splx(s);
+	    goto out;
+	}
+	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+    }
+    OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+
+#if 0
+    if (head->so_error) {
+	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+	error = head->so_error;
+	head->so_error = 0;
+	splx(s);
+	goto out;
+    }
+    OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+#endif
+
+    /*
+     * At this point we know that there is at least one connection
+     * ready to be accepted. Remove it from the queue.
+     */
+    so = head->so_q;
+
+    OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+    if( FinishAccepting ) {
+	head->so_q = so->so_q;
+	head->so_qlen--;
+	    
+	*newso = so;
+	    
+	/*so->so_state &= ~SS_COMP;*/
+	so->so_q = NULL;
+
+	mnam.m_data = &sa;
+	mnam.m_len = sizeof(sa);
+	
+	(void) soaccept(so, &mnam);
+
+	so->so_state = SS_NBIO | SS_ISCONNECTED;
+
+	OskitDumpBuffer( so, sizeof(*so) );
+
+	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+	if (name) {
+	    /* check sa_len before it is destroyed */
+	    memcpy( AddrOut, &sa, AddrLen < sizeof(sa) ? AddrLen : sizeof(sa) );
+	    OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+	    *OutAddrLen = namelen;	/* copyout actually */
+	}
+	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
+	splx(s);
+    }
+out:
+    OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Returning %d\n", error));
+    return (error);
 }
 
 /* The story so far

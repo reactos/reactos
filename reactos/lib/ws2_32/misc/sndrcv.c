@@ -8,6 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 
+#include <roscfg.h>
 #include <w32api.h>
 #include <ws2_32.h>
 #include <catalog.h>
@@ -93,7 +94,13 @@ send(
 
   Error = WSASend(s, &WSABuf, 1, &BytesSent, flags, NULL, NULL);
 
-  if( Error ) return -1; else return BytesSent;
+  if( Error ) {
+      WS_DbgPrint(MAX_TRACE,("Reporting error %d\n", Error));
+      return -1; 
+  } else {
+      WS_DbgPrint(MAX_TRACE,("Read %d bytes\n", BytesSent));
+      return BytesSent;
+  }
 }
 
 

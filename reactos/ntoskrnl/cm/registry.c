@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.128.2.2 2004/12/13 16:18:11 hyperion Exp $
+/* $Id: registry.c,v 1.128.2.3 2004/12/30 04:36:53 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

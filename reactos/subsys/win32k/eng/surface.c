@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.44.12.2 2004/12/13 16:18:16 hyperion Exp $
+/* $Id: surface.c,v 1.44.12.3 2004/12/30 04:37:07 hyperion Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -60,6 +60,7 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
   switch(Compression)
   {
     case BI_RGB:
+    case BI_BITFIELDS:
       switch(Bits)
       {
         case 1: return BMF_1BPP;
@@ -332,6 +333,9 @@ EngCreateBitmap(IN SIZEL Size,
   HBITMAP NewBitmap;
   
   NewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
+  if ( !NewBitmap )
+	  return 0;
+
   GDIOBJ_SetOwnership(NewBitmap, NULL);
 
   return NewBitmap;
@@ -472,6 +476,8 @@ EngEraseSurface(SURFOBJ *Surface,
 		RECTL *Rect,
 		ULONG iColor)
 {
+  ASSERT(Surface);
+  ASSERT(Rect);
   return FillSolid(Surface, Rect, iColor);
 }
 

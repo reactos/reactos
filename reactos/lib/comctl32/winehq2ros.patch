@@ -177,3 +177,44 @@ diff -u -r1.158 treeview.c
  	    {
  	        MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
  	        LineTo(hdc, centerx + plussize, centery);
+Index: status.c
+===================================================================
+RCS file: /CVS/ReactOS/reactos/lib/comctl32/status.c,v
+retrieving revision 1.7
+diff -u -r1.7 status.c
+--- status.c	5 Dec 2004 23:09:27 -0000	1.7
++++ status.c	14 Dec 2004 00:58:03 -0000
+@@ -650,6 +650,7 @@
+ {
+     STATUSWINDOWPART *part=NULL;
+     BOOL changed = FALSE;
++    WORD oldStyle;
+ 
+     if (style & SBT_OWNERDRAW) {
+          TRACE("part %d, text %p\n",nPart,text);
+@@ -671,6 +672,7 @@
+     if (part->style != style)
+ 	changed = TRUE;
+ 
++    oldStyle = part->style;
+     part->style = style;
+     if (style & SBT_OWNERDRAW) {
+ 	if (part->text == text)
+@@ -694,7 +696,7 @@
+ 	/* check if text is unchanged -> no need to redraw */
+ 	if (text) {
+ 	    if (!changed && part->text && !lstrcmpW(ntext, part->text)) {
+-		if (!isW) Free(ntext);
++		Free(ntext);
+ 		return TRUE;
+ 	    }
+ 	} else {
+@@ -702,7 +704,7 @@
+ 		return TRUE;
+ 	}
+ 
+-	if (part->text)
++	if (part->text && !(oldStyle & SBT_OWNERDRAW))
+ 	    Free (part->text);
+ 	part->text = ntext;
+     }

@@ -534,7 +534,10 @@ UINT MSI_RecordReadStream(MSIRECORD *rec, unsigned int iField, char *buf, DWORD 
     count = 0;
     r = IStream_Read( stm, buf, *sz, &count );
     if( FAILED( r ) )
+    {
+        *sz = 0;
         return ERROR_FUNCTION_FAILED;
+    }
 
     *sz = count;
 

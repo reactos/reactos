@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.14.16.3 2004/12/13 16:18:03 hyperion Exp $
+/* $Id: move.c,v 1.14.16.4 2004/12/30 04:36:34 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,14 +17,6 @@
 #include "../include/debug.h"
 
 /* GLOBALS *****************************************************************/
-
-#if defined(__GNUC__)
-void * alloca(size_t size);
-#elif defined(_MSC_VER)
-void* _alloca(size_t size);
-#else
-#error Unknown compiler for alloca intrinsic stack allocation "function"
-#endif
 
 /* FUNCTIONS ****************************************************************/
 

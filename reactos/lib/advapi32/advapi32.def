@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.25.2.2 2004/12/13 16:18:02 hyperion Exp $
+; $Id: advapi32.def,v 1.25.2.3 2004/12/30 04:36:29 hyperion Exp $
 ;
 ; advapi32.def
 ;
@@ -35,8 +35,8 @@ BackupEventLogW@8
 ;BuildExplicitAccessWithNameW@20
 ;BuildImpersonateExplicitAccessWithNameA@24
 ;BuildImpersonateExplicitAccessWithNameW@24
-;BuildImpersonateTrusteeA@8
-;BuildImpersonateTrusteeW@8
+BuildImpersonateTrusteeA@8
+BuildImpersonateTrusteeW@8
 ;BuildSecurityDescriptorA@36
 ;BuildSecurityDescriptorW@36
 BuildTrusteeWithNameA@8
@@ -122,6 +122,7 @@ EnumServicesStatusW@32
 EqualPrefixSid@8
 EqualSid@8
 FindFirstFreeAce@8
+FreeInheritedFromArray@12
 FreeSid@4
 GetAce@12
 GetAclInformation@16
@@ -143,12 +144,14 @@ GetCurrentHwProfileW@4
 ;GetExplicitEntriesFromAclW@12
 GetFileSecurityA@20
 GetFileSecurityW@20
+GetInheritanceSourceA@40
+GetInheritanceSourceW@40
 GetKernelObjectSecurity@20
 GetLengthSid@4
-;GetMultipleTrusteeA@4
-;GetMultipleTrusteeOperationA@4
-;GetMultipleTrusteeOperationW@4
-;GetMultipleTrusteeW@4
+GetMultipleTrusteeA@4
+GetMultipleTrusteeOperationA@4
+GetMultipleTrusteeOperationW@4
+GetMultipleTrusteeW@4
 GetNamedSecurityInfoA@32
 GetNamedSecurityInfoW@32
 GetNumberOfEventLogRecords@8
@@ -172,10 +175,12 @@ GetSidLengthRequired@4
 GetSidSubAuthority@8
 GetSidSubAuthorityCount@4
 GetTokenInformation@20
-;GetTrusteeNameA@4
-;GetTrusteeNameW@4
-;GetTrusteeTypeA@4
-;GetTrusteeTypeW@4
+GetTrusteeFormA@4
+GetTrusteeFormW@4
+GetTrusteeNameA@4
+GetTrusteeNameW@4
+GetTrusteeTypeA@4
+GetTrusteeTypeW@4
 GetUserNameA@8
 GetUserNameW@8
 ;GrantAccessRightsA@16
@@ -376,7 +381,7 @@ SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12
 SetSecurityDescriptorOwner@12
 SetSecurityDescriptorSacl@16
-;SetSecurityInfo@28
+SetSecurityInfo@28
 SetServiceBits@16
 SetServiceObjectSecurity@12
 SetServiceStatus@8

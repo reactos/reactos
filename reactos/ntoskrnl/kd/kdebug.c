@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.56.2.2 2004/12/13 16:18:12 hyperion Exp $
+/* $Id: kdebug.c,v 1.56.2.3 2004/12/30 04:36:56 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -127,7 +127,7 @@ KdInitSystem(ULONG BootPhase,
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOCHS;
 		}
-	      else if (!_strnicmp(p2, "GDB", 3) && BootPhase > 0)
+	      else if (!_strnicmp(p2, "GDB", 3) && BootPhase == 0)
 		{
 		  p2 += 3;
 		  KdDebuggerEnabled = TRUE;
@@ -255,7 +255,7 @@ KdInitSystem(ULONG BootPhase,
   /* Perform any initialization nescessary */
   if (KdDebuggerEnabled == TRUE)
     {
-      if (KdDebugState & KD_DEBUG_GDB && BootPhase > 0)
+      if (KdDebugState & KD_DEBUG_GDB && BootPhase == 0)
 	    KdPortInitializeEx(&GdbPortInfo, 0, 0);
 
       if (KdDebugState & KD_DEBUG_SERIAL  && BootPhase == 0)

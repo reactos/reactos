@@ -1,6 +1,8 @@
-# $Id: Makefile.ros-template,v 1.2.2.1 2004/12/08 21:57:07 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.2.2.2 2004/12/30 04:36:31 hyperion Exp $
 
 TARGET_NAME = dinput
+
+TARGET_BASE = $(TARGET_BASE_LIB_DINPUT)
 
 TARGET_OBJECTS = @C_SRCS@
 

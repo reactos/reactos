@@ -121,6 +121,7 @@ UINT WINAPI MsiDatabaseOpenViewA(MSIHANDLE hdb,
 
     r = MsiDatabaseOpenViewW( hdb, szwQuery, phView);
 
+    HeapFree( GetProcessHeap(), 0, szwQuery );
     return r;
 }
 

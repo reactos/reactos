@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.86.2.2 2004/12/13 16:18:14 hyperion Exp $
+/* $Id: create.c,v 1.86.2.3 2004/12/30 04:37:02 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -649,6 +649,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   PTEB TebBase;
   NTSTATUS Status;
   PKAPC LdrInitApc;
+  KIRQL oldIrql;
 
   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	 ThreadHandle,ThreadContext);
@@ -735,10 +736,13 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
    * We must do this manually. Do NOT attempt to set the Thread to Alertable before the call,
    * doing so is a blatant and erronous hack.
    */
-   Thread->Tcb.ApcState.UserApcPending = TRUE;
-   Thread->Tcb.Alerted[KernelMode] = TRUE;
+  Thread->Tcb.ApcState.UserApcPending = TRUE;
+  Thread->Tcb.Alerted[KernelMode] = TRUE;
 
+  oldIrql = KeAcquireDispatcherDatabaseLock ();
   PsUnblockThread(Thread, NULL);
+  KeReleaseDispatcherDatabaseLock(oldIrql);
+
 
   return(STATUS_SUCCESS);
 }
@@ -774,6 +778,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   KIRQL oldIrql;
    
    DPRINT("PsCreateSystemThread(ThreadHandle %x, ProcessHandle %x)\n",
 	    ThreadHandle,ProcessHandle);
@@ -801,7 +806,9 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 	*ClientId=Thread->Cid;
      }
 
-   PsUnblockThread(Thread, NULL);
+  oldIrql = KeAcquireDispatcherDatabaseLock ();
+  PsUnblockThread(Thread, NULL);
+  KeReleaseDispatcherDatabaseLock(oldIrql);
    
    return(STATUS_SUCCESS);
 }

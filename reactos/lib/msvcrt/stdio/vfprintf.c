@@ -723,7 +723,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 	long double _ldouble;
 	double _double;
 	const char *s;
-	const short int* sw;
+	const wchar_t *sw;
 	int result, done = 0;
 
 	int flags;		/* flags to number() */

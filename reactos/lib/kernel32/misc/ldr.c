@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.21 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: ldr.c,v 1.21.16.1 2004/12/30 04:36:35 hyperion Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries

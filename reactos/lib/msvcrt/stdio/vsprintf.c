@@ -13,7 +13,7 @@ vsprintf(char *str, const char *fmt, va_list ap)
   FILE f;
   int len;
 
-  f._flag = _IOWRT|_IOSTRG|_IOBINARY;;
+  f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = str;
   f._cnt = INT_MAX;
   f._file = -1;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.38.6.2 2004/12/13 16:18:17 hyperion Exp $
+/* $Id: input.c,v 1.38.6.3 2004/12/30 04:37:10 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -323,6 +323,12 @@ KeyboardThreadMain(PVOID StartContext)
 	    {
 	      /* Context mode. 1 if ALT if pressed while the key is pressed */
 	      lParam |= (1 << 29);
+	    }
+
+	  if (! KeyEvent.bKeyDown)
+	    {
+	      /* Transition state. 1 for KEY_UP etc, 0 for KEY_DOWN */
+	      lParam |= (1 << 31);
 	    }
 	  
 	  if (GetHotKey(InputWindowStation,

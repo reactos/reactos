@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.85 2004/11/18 11:46:07 ekohl Exp $
+/* $Id: device.c,v 1.85.2.1 2004/12/30 04:36:56 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -83,21 +83,9 @@ IopInitializeDevice(
           return Status;
       }
 
-      if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER)
-      {
-         DPRINT("Bus extender found\n");
-
-         Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
-
-         if (!NT_SUCCESS(Status))
-         {
-            ObDereferenceObject(Fdo);
-            return Status;
-         }
-      }
-      else if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-      {
 #ifdef ACPI
+      if (Fdo->DeviceType == FILE_DEVICE_ACPI)
+      {
          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
 
          /* There can be only one system power device */
@@ -106,7 +94,20 @@ IopInitializeDevice(
             PopSystemPowerDeviceNode = DeviceNode;
             SystemPowerDeviceNodeCreated = TRUE;
          }
+      }
 #endif /* ACPI */
+
+      if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
+          Fdo->DeviceType == FILE_DEVICE_ACPI)
+      {
+         DPRINT("Bus extender found\n");
+
+         Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
+         if (!NT_SUCCESS(Status))
+         {
+            ObDereferenceObject(Fdo);
+            return Status;
+         }
       }
 
       ObDereferenceObject(Fdo);
@@ -557,7 +558,7 @@ IoCreateDevice(
    {
       swprintf(AutoNameBuffer,
                L"\\Device\\%08lx",
-               InterlockedIncrement(&IopDeviceObjectNumber));
+               InterlockedIncrementUL(&IopDeviceObjectNumber));
       RtlInitUnicodeString(&AutoName,
                            AutoNameBuffer);
       DeviceName = &AutoName;

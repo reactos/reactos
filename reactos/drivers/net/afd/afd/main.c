@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13.2.3 2004/12/13 16:18:00 hyperion Exp $
+/* $Id: main.c,v 1.13.2.4 2004/12/30 04:36:18 hyperion Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -104,7 +104,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     InitializeListHead( &FCB->DatagramList );
-
+    InitializeListHead( &FCB->PendingConnections );
+    
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
     if( ConnectInfo ) {
@@ -243,16 +244,24 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0, NULL, FALSE );
 
-    Status = TdiBuildNullConnectionInfo
-	( &ConnInfo, FCB->RemoteAddress->Address[0].AddressType );
+    if (NULL == FCB->RemoteAddress)
+      {
+        ConnInfo = NULL;
+      }
+    else
+      {
+	Status = TdiBuildNullConnectionInfo
+	    ( &ConnInfo, FCB->RemoteAddress->Address[0].AddressType );
 
-    if( !NT_SUCCESS(Status) || !ConnInfo ) 
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, TRUE );
+	if( !NT_SUCCESS(Status) || !ConnInfo ) 
+	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+					   Irp, 0, NULL, TRUE );
+      }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
 	Flags |= TDI_DISCONNECT_RELEASE;
-    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV )
+    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
+	DisReq->DisconnectType & AFD_DISCONNECT_ABORT )
 	Flags |= TDI_DISCONNECT_ABORT;
 
     Status = TdiDisconnect( FCB->Connection.Object,
@@ -349,12 +358,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdSetContext( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_WAIT_FOR_LISTEN:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_WAIT_FOR_LISTEN\n"));
-	    break;
+	    return AfdWaitForListen( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_ACCEPT:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_ACCEPT\n"));
-	    break;
+	    return AfdAccept( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_DISCONNECT:
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );

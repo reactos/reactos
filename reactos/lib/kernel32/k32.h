@@ -3,6 +3,7 @@
 #define NTOS_MODE_USER
 #define __NO_CTYPE_INLINES
 #include <ntos.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <limits.h>
@@ -35,3 +36,5 @@
 #include <rosrtl/registry.h>
 
 #include "include/kernel32.h"
+
+#include <pseh/framebased.h>

@@ -1,4 +1,4 @@
-/* $Id: setjmp.s,v 1.1.34.3 2004/12/13 16:18:07 hyperion Exp $
+/* $Id: setjmp.s,v 1.1.34.4 2004/12/30 04:36:40 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries

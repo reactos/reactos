@@ -45,6 +45,7 @@ ExInit3 (VOID)
 {
   ExInitializeWorkerThreads();
   ExpWin32kInit();
+  ExpInitUuids();
 }
 
 

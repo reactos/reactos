@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47.2.3 2004/12/13 16:18:18 hyperion Exp $
+/* $Id: stubs.c,v 1.47.2.4 2004/12/30 04:37:11 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -108,9 +108,9 @@ NtUserChangeDisplaySettings(
   DWORD dwflags,
   LPVOID lParam)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  // UNIMPLEMENTED
+  DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ );
+  return DISP_CHANGE_BADMODE;
 }
 
 DWORD

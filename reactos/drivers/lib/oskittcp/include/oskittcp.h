@@ -133,6 +133,12 @@ extern int OskitTCPClose( void *socket );
 extern int OskitTCPBind( void *socket, void *connection,
 			 void *nam, OSK_UINT namelen );
 
+extern int OskitTCPAccept( void *socket, void **new_socket,
+			   void *addr_out, 
+			   OSK_UINT addr_len,
+			   OSK_UINT *out_addr_len,
+			   OSK_UINT finish_accept );
+
 extern int OskitTCPListen( void *socket, int backlog );
 
 extern int OskitTCPRecv( void *connection,

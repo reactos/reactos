@@ -8,7 +8,7 @@ OBJECTS = bin2res.o mkstemps.o
 
 CLEAN_FILES = *.o bin2res$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I$(PATH_TO_TOP)/include/wine -I$(PATH_TO_TOP)/include -D__REACTOS__ -Wall -Werror
+HOST_CFLAGS = -I$(PATH_TO_TOP)/include/wine -D__REACTOS__ -Wall -Werror
 
 bin2res.o: bin2res.c
 	$(HOST_CC) -g $(HOST_CFLAGS) -c bin2res.c -o bin2res.o

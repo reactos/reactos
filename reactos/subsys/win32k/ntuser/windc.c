@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.67.8.2 2004/12/13 16:18:18 hyperion Exp $
+/* $Id: windc.c,v 1.67.8.3 2004/12/30 04:37:11 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -138,6 +138,8 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
       GDIOBJ_SetOwnership(defaultDCstate, NULL);
     }
+  GDIOBJ_SetOwnership(Dce->Self, NULL);
+  DC_SetOwnership(Dce->hDC, NULL);
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;
   DCE_LockList();
@@ -213,6 +215,7 @@ DceDeleteClipRgn(DCE* Dce)
     }
   else if (Dce->hClipRgn > (HRGN) 1)
     {
+      GDIOBJ_SetOwnership(Dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(Dce->hClipRgn);
     }
 
@@ -467,18 +470,13 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       
       if (Dce == NULL)
 	{
-	  Dce = (DceEmpty == NULL) ? DceEmpty : DceUnused;
+	  Dce = (DceEmpty == NULL) ? DceUnused : DceEmpty;
 	}
 
       if (Dce == NULL)
 	{
 	  Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
 	}
-      else if (! GDIOBJ_OwnedByCurrentProcess(Dce->Self))
-        {
-          GDIOBJ_SetOwnership(Dce->Self, PsGetCurrentProcess());
-          DC_SetOwnership(Dce->hDC, PsGetCurrentProcess());
-        }
     }
   else
     {
@@ -519,6 +517,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (Dce->hClipRgn && Window->UpdateRegion)
         {
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
           if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
             NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
@@ -537,6 +536,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (!(Flags & DCX_WINDOW))
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           if(!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
           {
             NtGdiOffsetRgn(Dce->hClipRgn, -Window->ClientRect.left, -Window->ClientRect.top);
@@ -552,6 +552,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       else
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left,
              -Window->WindowRect.top);
           if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
@@ -563,6 +564,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (Dce->hClipRgn)
         {
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           if(!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
             NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
           else
@@ -669,7 +671,6 @@ PDCE FASTCALL
 DceFreeDCE(PDCE dce, BOOLEAN Force)
 {
   DCE *ret;
-  HANDLE hDce;
 
   if (NULL == dce)
     {
@@ -684,24 +685,18 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
 
   if(Force && !GDIOBJ_OwnedByCurrentProcess(dce->hDC))
   {
-    /* FIXME - changing ownership to current process only works for global objects! */
-    GDIOBJ_SetOwnership(dce->hDC, PsGetCurrentProcess());
+    GDIOBJ_SetOwnership(dce->Self, PsGetCurrentProcess());
     DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
   }
 
   NtGdiDeleteDC(dce->hDC);
   if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
     {
+      GDIOBJ_SetOwnership(dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(dce->hClipRgn);
     }
 
-  hDce = dce->Self;
-  if(Force && !GDIOBJ_OwnedByCurrentProcess(hDce))
-  {
-    /* FIXME - changing ownership to current process only works for global objects! */
-    GDIOBJ_SetOwnership(hDce, PsGetCurrentProcess());
-  }
-  DCEOBJ_FreeDCE(hDce);
+  DCEOBJ_FreeDCE(dce->Self);
 
   return ret;
 }
@@ -775,11 +770,13 @@ DceEmptyCache()
 }
 
 VOID FASTCALL 
-DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
+DceResetActiveDCEs(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
   PDC dc;
   PWINDOW_OBJECT CurrentWindow;
+  INT DeltaX;
+  INT DeltaY;
 
   if (NULL == Window)
     {
@@ -806,11 +803,6 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
                   continue;
                 }
             }
-          if (!GDIOBJ_OwnedByCurrentProcess(pDCE->hDC))
-            {
-              /* skip DCs we don't even own */
-              goto skip;
-            }
 
           dc = DC_LockDc(pDCE->hDC);
           if (dc == NULL)
@@ -823,11 +815,22 @@ skip:
               pDCE = pDCE->next;
               continue;
             }
-          if ((0 != DeltaX || 0 != DeltaY)
-              && (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self)))
+          if (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self))
             {
-              dc->w.DCOrgX += DeltaX;
-              dc->w.DCOrgY += DeltaY;
+              if (pDCE->DCXFlags & DCX_WINDOW)
+                {
+                  DeltaX = CurrentWindow->WindowRect.left - dc->w.DCOrgX;
+                  DeltaY = CurrentWindow->WindowRect.top - dc->w.DCOrgY;
+                  dc->w.DCOrgX = CurrentWindow->WindowRect.left;
+                  dc->w.DCOrgY = CurrentWindow->WindowRect.top;
+                }
+              else
+                {
+                  DeltaX = CurrentWindow->ClientRect.left - dc->w.DCOrgX;
+                  DeltaY = CurrentWindow->ClientRect.top - dc->w.DCOrgY;
+                  dc->w.DCOrgX = CurrentWindow->ClientRect.left;
+                  dc->w.DCOrgY = CurrentWindow->ClientRect.top;
+                }
               if (NULL != dc->w.hClipRgn)
                 {
                   NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);

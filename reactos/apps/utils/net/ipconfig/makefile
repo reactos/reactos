@@ -6,6 +6,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = ipconfig
 
+TARGET_INSTALLDIR = system32
+
 TARGET_CFLAGS = -D__USE_W32API
 
 TARGET_SDKLIBS = user32.a iphlpapi.a

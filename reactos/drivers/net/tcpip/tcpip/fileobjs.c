@@ -249,6 +249,7 @@ NTSTATUS FileOpenAddress(
   /* Locate address entry. If specified address is 0, a random address is chosen */
 
   /* FIXME: IPv4 only */
+  AddrFile->Family = Address->Address[0].AddressType;
   IPv4Address = Address->Address[0].Address[0].in_addr;
   if (IPv4Address == 0)
       Matched = IPGetDefaultAddress(&AddrFile->Address);
@@ -351,6 +352,8 @@ NTSTATUS FileCloseAddress(
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
+    if( AddrFile->Listener ) 
+	TCPClose( AddrFile->Listener );
     break;
 
   case IPPROTO_UDP:

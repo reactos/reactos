@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.17 2004/11/14 18:47:10 hbirr Exp $
+/* $Id: conio.c,v 1.17.2.1 2004/12/30 04:37:04 hyperion Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -219,6 +219,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   NewBuffer = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
   if (NULL == NewBuffer)
     {
+      ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
       RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
@@ -227,6 +228,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Status = CsrInitConsoleScreenBuffer(Console, NewBuffer);
   if (! NT_SUCCESS(Status))
     {
+      ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
       RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
@@ -530,7 +532,7 @@ CSR_API(CsrReadConsole)
 {
   PLIST_ENTRY CurrentEntry;
   ConsoleInput *Input;
-  PCHAR Buffer;
+  PUCHAR Buffer;
   PWCHAR UnicodeBuffer;
   int i;
   ULONG nNumberOfCharsToRead, CharSize;
@@ -892,7 +894,7 @@ ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
 CSR_API(CsrWriteConsole)
 {
   NTSTATUS Status;
-  BYTE *Buffer = Request->Data.WriteConsoleRequest.Buffer;
+  PCHAR Buffer = (PCHAR)Request->Data.WriteConsoleRequest.Buffer;
   PCSRSS_SCREEN_BUFFER Buff;
   PCSRSS_CONSOLE Console;
   ULONG CharSize = (Request->Data.WriteConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
@@ -1502,7 +1504,7 @@ ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, COORD *Start
 CSR_API(CsrWriteConsoleOutputChar)
 {
   NTSTATUS Status;
-  PBYTE String = Request->Data.WriteConsoleOutputCharRequest.String;
+  PCHAR String = (PCHAR)Request->Data.WriteConsoleOutputCharRequest.String;
   PBYTE Buffer;
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
@@ -1593,7 +1595,7 @@ CSR_API(CsrFillOutputChar)
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
   DWORD X, Y, Length, Written = 0;
-  BYTE Char;
+  CHAR Char;
   PBYTE Buffer;
   RECT UpdateRect;
 
@@ -1781,7 +1783,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
   Y = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
   Length = Request->Data.WriteConsoleOutputAttribRequest.Length;
   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X) + 1];
-  Attribute = Request->Data.WriteConsoleOutputAttribRequest.String;
+  Attribute = (PUCHAR)Request->Data.WriteConsoleOutputAttribRequest.String;
   while (Length--)
     {
       *Buffer = *Attribute++;
@@ -1820,7 +1822,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 CSR_API(CsrFillOutputAttrib)
 {
   PCSRSS_SCREEN_BUFFER Buff;
-  PCHAR Buffer;
+  PUCHAR Buffer;
   NTSTATUS Status;
   int X, Y, Length;
   UCHAR Attr;
@@ -2522,7 +2524,7 @@ CSR_API(CsrReadConsoleOutputChar)
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
   DWORD Xpos, Ypos;
-  BYTE* ReadBuffer;
+  PCHAR ReadBuffer;
   DWORD i;
   ULONG CharSize;
   CHAR Char;
@@ -2836,7 +2838,7 @@ CSR_API(CsrReadConsoleOutput)
           if (Request->Data.ReadConsoleOutputRequest.Unicode)
             {
               MultiByteToWideChar(CodePage, 0,
-                                  &GET_CELL_BUFFER(Buff, Offset), 1,
+                                  (PCHAR)&GET_CELL_BUFFER(Buff, Offset), 1,
                                   &CurCharInfo->Char.UnicodeChar, 1);
             }
           else

@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.18.2.2 2004/12/13 16:18:03 hyperion Exp $
+/* $Id: except.c,v 1.18.2.3 2004/12/30 04:36:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

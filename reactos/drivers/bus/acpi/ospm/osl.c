@@ -228,11 +228,11 @@ acpi_os_install_interrupt_handler(u32 irq, OSD_HANDLER handler, void *context)
     DIrql,
     DIrql,
     LevelSensitive, /* FIXME: LevelSensitive or Latched? */
-    FALSE,
+    TRUE,
     Affinity,
     FALSE);
   if (!NT_SUCCESS(Status)) {
-	  DPRINT("Could not connect to interrupt %d\n", Vector);
+    DPRINT("Could not connect to interrupt %d\n", Vector);
     return AE_ERROR;
   }
 

@@ -325,7 +325,7 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			goto error;
 		}
-		r = RegQueryValueExA(key, "Name", NULL, NULL, provname, &len);
+		r = RegQueryValueExA(key, "Name", NULL, NULL, (LPBYTE)provname, &len);
 		if (r != ERROR_SUCCESS)
 		{
 			DPRINT("error %ld reading 'Name' from registry\n", r );
@@ -381,7 +381,7 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		goto error;
 	}
-	r = RegQueryValueExA(key, "Image Path", NULL, NULL, temp, &len);
+	r = RegQueryValueExA(key, "Image Path", NULL, NULL, (LPBYTE)temp, &len);
 	if (r != ERROR_SUCCESS)
 	{
 		DPRINT("error %ld reading 'Image Path' from registry\n", r );
@@ -1124,7 +1124,7 @@ BOOL WINAPI CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
 	*pdwProvType += (*(--ch) - '0') * 100;
 	CRYPT_Free(keyname);
 	
-	result = RegQueryValueExA(hSubkey, "TypeName", NULL, &dwType, pszTypeName, pcbTypeName);
+	result = RegQueryValueExA(hSubkey, "TypeName", NULL, &dwType, (LPBYTE)pszTypeName, pcbTypeName);
 	if (result)
 		CRYPT_ReturnLastError(result);
 
@@ -1281,7 +1281,7 @@ BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 	}
 	CRYPT_Free(keyname);
 	
-	result = RegQueryValueExA(hKey, "Name", NULL, NULL, pszProvName, pcbProvName); 
+	result = RegQueryValueExA(hKey, "Name", NULL, NULL, (LPBYTE)pszProvName, pcbProvName); 
 	if (result)
 	{
 		if (result != ERROR_MORE_DATA)
@@ -1760,7 +1760,7 @@ BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pd
 		}
 		CRYPT_Free(keyname);
 		
-		if (RegSetValueExA(hTypeKey, "Name", 0, REG_SZ, pszProvName, strlen(pszProvName) + 1))
+		if (RegSetValueExA(hTypeKey, "Name", 0, REG_SZ, (LPBYTE)pszProvName, strlen(pszProvName) + 1))
 		{
 			RegCloseKey(hTypeKey);
 			RegCloseKey(hProvKey);

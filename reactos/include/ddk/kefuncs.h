@@ -358,6 +358,15 @@ KeRemoveQueueDpc(IN PKDPC Dpc);
 LONG STDCALL
 KeResetEvent(IN PKEVENT Event);
 
+VOID STDCALL
+KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
+
+ULONG STDCALL
+KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
+
+BOOLEAN STDCALL
+KeRosPrintAddress(PVOID address);
+
 LONG STDCALL
 KeSetBasePriorityThread(struct _KTHREAD* Thread,
 			LONG Increment);

@@ -702,7 +702,8 @@ UINT WINAPI MsiGetProductInfoA(LPCSTR szProduct, LPCSTR szAttribute, LPSTR szBuf
             goto end;
         MultiByteToWideChar( CP_ACP, 0, szAttribute, -1, szwAttribute, len );
     } else {
-      return ERROR_INVALID_PARAMETER;
+      hr = ERROR_INVALID_PARAMETER;
+      goto end;
     }
 
     if( szBuffer )
@@ -1266,7 +1267,10 @@ INSTALLSTATE WINAPI MsiGetComponentPathA(LPCSTR szProduct, LPCSTR szComponent,
         len = MultiByteToWideChar( CP_ACP, 0, szComponent, -1, NULL, 0 );
         szwComponent= HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
         if( !szwComponent)
+        {
+            HeapFree( GetProcessHeap(), 0, szwProduct);
             return ERROR_OUTOFMEMORY;
+        }
         MultiByteToWideChar( CP_ACP, 0, szComponent, -1, szwComponent, len );
     }
 
@@ -1319,7 +1323,10 @@ INSTALLSTATE WINAPI MsiQueryFeatureStateA(LPCSTR szProduct, LPCSTR szFeature)
         len = MultiByteToWideChar( CP_ACP, 0, szFeature, -1, NULL, 0 );
         szwFeature= HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
         if( !szwFeature)
+        {
+            HeapFree( GetProcessHeap(), 0, szwProduct);
             return ERROR_OUTOFMEMORY;
+        }
         MultiByteToWideChar( CP_ACP, 0, szFeature, -1, szwFeature, len );
     }
 
@@ -1356,13 +1363,19 @@ UINT WINAPI MsiGetFileVersionA(LPCSTR szFilePath, LPSTR lpVersionBuf, DWORD* pcc
     if(lpVersionBuf && pcchVersionBuf && *pcchVersionBuf) {
         lpwVersionBuff = HeapAlloc(GetProcessHeap(), 0, *pcchVersionBuf * sizeof(WCHAR));
         if( !lpwVersionBuff)
-            return ERROR_OUTOFMEMORY;
+        {
+            ret = ERROR_OUTOFMEMORY;
+            goto end;
+        }
     }
 
     if(lpLangBuf && pcchLangBuf && *pcchLangBuf) {
         lpwLangBuff = HeapAlloc(GetProcessHeap(), 0, *pcchVersionBuf * sizeof(WCHAR));
         if( !lpwLangBuff)
-            return ERROR_OUTOFMEMORY;
+        {
+            ret = ERROR_OUTOFMEMORY;
+            goto end;
+        }
     }
         
     ret = MsiGetFileVersionW(szwFilePath, lpwVersionBuff, pcchVersionBuf, lpwLangBuff, pcchLangBuf);
@@ -1372,6 +1385,7 @@ UINT WINAPI MsiGetFileVersionA(LPCSTR szFilePath, LPSTR lpVersionBuf, DWORD* pcc
     if(lpwLangBuff)
         WideCharToMultiByte(CP_ACP, 0, lpwLangBuff, -1, lpLangBuf, *pcchLangBuf, NULL, NULL);
     
+end:
     if(szwFilePath) HeapFree(GetProcessHeap(), 0, szwFilePath);
     if(lpwVersionBuff) HeapFree(GetProcessHeap(), 0, lpwVersionBuff);
     if(lpwLangBuff) HeapFree(GetProcessHeap(), 0, lpwLangBuff);
@@ -1395,7 +1409,7 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf, DWORD* p
           lpVersionBuf, pcchVersionBuf?*pcchVersionBuf:0,
           lpLangBuf, pcchLangBuf?*pcchLangBuf:0);
 
-    dwVerLen = GetFileVersionInfoSizeW( (LPWSTR) szFilePath, NULL);
+    dwVerLen = GetFileVersionInfoSizeW(szFilePath, NULL);
     if(!dwVerLen)
         return GetLastError();
 
@@ -1405,12 +1419,12 @@ UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf, DWORD* p
         goto end;
     }
 
-    if(!GetFileVersionInfoW((LPWSTR) szFilePath, 0, dwVerLen, lpVer)) {
+    if(!GetFileVersionInfoW(szFilePath, 0, dwVerLen, lpVer)) {
         ret = GetLastError();
         goto end;
     }
     if(lpVersionBuf && pcchVersionBuf && *pcchVersionBuf) {
-        if(VerQueryValueW(lpVer, (LPWSTR) szVersionResource, (LPVOID*)&ffi, &puLen) && puLen > 0) {
+        if(VerQueryValueW(lpVer, szVersionResource, (LPVOID*)&ffi, &puLen) && puLen > 0) {
             wsprintfW(tmp, szVersionFormat, HIWORD(ffi->dwFileVersionMS), LOWORD(ffi->dwFileVersionMS), HIWORD(ffi->dwFileVersionLS), LOWORD(ffi->dwFileVersionLS));
             lstrcpynW(lpVersionBuf, tmp, *pcchVersionBuf);
             *pcchVersionBuf = strlenW(lpVersionBuf);

@@ -79,40 +79,41 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
       StabEntry = StartEntry;
     }
 
-  for (; (ULONG_PTR)StabEntry < (ULONG_PTR)StabsEnd; StabEntry++)
+  if ( RelativeAddress != NULL )
+  {
+    for (; (ULONG_PTR)StabEntry < (ULONG_PTR)StabsEnd; StabEntry++)
     {
       ULONG_PTR SymbolRelativeAddress;
-      
+
       if (StabEntry->n_type != Type)
         continue;
 
       if (RelativeAddress != NULL)
-        {
-          if (StabEntry->n_value < (ULONG_PTR)SymbolInfo->ImageBase)
-            continue;
-          if (StabEntry->n_value >= ((ULONG_PTR)SymbolInfo->ImageBase + SymbolInfo->ImageSize))
-            continue;
+      {
+        if (StabEntry->n_value >= SymbolInfo->ImageSize)
+          continue;
 
-          SymbolRelativeAddress = StabEntry->n_value - (ULONG_PTR)SymbolInfo->ImageBase;
-          if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
-              (SymbolRelativeAddress > AddrFound))
-            {
-	      AddrFound = SymbolRelativeAddress;
-	      BestStabEntry = StabEntry;
-            }
-        }
-      else
+        SymbolRelativeAddress = StabEntry->n_value;
+        if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
+            (SymbolRelativeAddress > AddrFound))
         {
+          AddrFound = SymbolRelativeAddress;
           BestStabEntry = StabEntry;
-          break;
         }
+      }
     }
+  }
+  else
+    BestStabEntry = StabEntry;
 
   if (BestStabEntry == NULL)
+  {
     DPRINT("StabEntry not found!\n");
+  }
   else
+  {
     DPRINT("StabEntry found!\n");
+  }
 
   return BestStabEntry;
 }
-

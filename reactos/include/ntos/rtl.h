@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.38.2.3 2004/12/13 16:18:01 hyperion Exp $
+/* $Id: rtl.h,v 1.38.2.4 2004/12/30 04:36:26 hyperion Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -960,7 +960,7 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 NTSTATUS STDCALL
 RtlDestroyAtomTable (IN PRTL_ATOM_TABLE AtomTable);
 
-BOOLEAN STDCALL
+HANDLE STDCALL
 RtlDestroyHeap (HANDLE hheap);
 
 NTSTATUS

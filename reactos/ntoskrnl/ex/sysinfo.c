@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.59.2.4 2004/12/13 16:18:12 hyperion Exp $
+/* $Id: sysinfo.c,v 1.59.2.5 2004/12/30 04:36:54 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1513,8 +1513,8 @@ NtFlushInstructionCache (
 	IN	UINT	NumberOfBytesToFlush
 	)
 {
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
+	__asm__("wbinvd\n");
+	return STATUS_SUCCESS;
 }
 
 

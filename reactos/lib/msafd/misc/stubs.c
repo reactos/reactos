@@ -81,27 +81,11 @@ WSPGetQOSByName(
 }
 
 
-INT
-WSPAPI
-WSPGetSockOpt(
-    IN      SOCKET s,
-    IN      INT level,
-    IN      INT optname,
-    OUT	    CHAR FAR* optval,
-    IN OUT  LPINT optlen,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
 SOCKET
 WSPAPI
 WSPJoinLeaf(
     IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
+    IN  CONST SOCKADDR *name,
     IN  INT namelen,
     IN  LPWSABUF lpCallerData,
     OUT LPWSABUF lpCalleeData,

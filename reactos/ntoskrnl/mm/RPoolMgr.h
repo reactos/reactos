@@ -1,4 +1,4 @@
-/* $Id: RPoolMgr.h,v 1.4 2004/12/24 17:06:59 navaraf Exp $
+/* $Id: RPoolMgr.h,v 1.4.2.1 2004/12/30 04:37:01 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.56.12.2 2004/12/13 16:18:19 hyperion Exp $
+ * $Id: dib.c,v 1.56.12.3 2004/12/30 04:37:14 hyperion Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -159,7 +159,21 @@ IntSetDIBits(
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0 < bmi->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
                                  (PVOID) Bits);
+  if (0 == SourceBitmap)
+  {
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+  }
+
   SourceSurf = EngLockSurface((HSURF)SourceBitmap);
+  if (NULL == SourceSurf)
+  {
+	  EngDeleteSurface((HSURF)SourceBitmap);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+  }
 
   // Destination palette obtained from the hDC
   hDCPalette = PALETTE_LockPalette(DC->DevInfo->hpalDefault);
@@ -711,6 +725,10 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
       hSection, dwOffset, 0);
     DC_UnlockDc(hDC);
   }
+  else
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  }
 
   if (bDesktopDC)
     NtGdiDeleteDC(hDC);
@@ -760,6 +778,7 @@ DIB_CreateDIBSection(
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize); */
     DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
+    SetLastWin32Error(ERROR_INVALID_FUNCTION);
     return 0;
   }
   else if (ovr_pitch && offset)
@@ -825,11 +844,13 @@ DIB_CreateDIBSection(
                           bm.bmBits);
     if (! res)
       {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
       } 
     bmp = BITMAPOBJ_LockBitmap(res);
     if (NULL == bmp)
       {
+	SetLastWin32Error(ERROR_INVALID_HANDLE);
 	NtGdiDeleteObject(bmp);
 	return NULL;
       }

@@ -2113,8 +2113,11 @@ int FavoritesMenu::Command(int id, int code)
 			Bookmark& bookmark = *node._pbookmark;
 
 			String url = bookmark._url;
+			HWND hparent = GetParent(_hwnd);
+
 			CloseStartMenu(id);
-			launch_file(GetParent(_hwnd), url, SW_SHOWNORMAL);
+
+			launch_file(hparent, url, SW_SHOWNORMAL);
 		}
 
 		return 0;

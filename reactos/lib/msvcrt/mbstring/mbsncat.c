@@ -18,10 +18,10 @@ size_t _mbclen2(const unsigned int s);
  */
 unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
 {
-	char *d = (char *)dst;
-	char *s = (char *)src;
+	unsigned char *d = dst;
+	const unsigned char *s = src;
 	if (n != 0) {
-		d = dst + strlen(dst); // get the end of string 
+		d = dst + _mbslen(dst); // get the end of string 
 		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {
@@ -43,10 +43,10 @@ unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
  */
 unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n)
 {
-	char *d; 
-	char *s = (char *)src;
+	unsigned char *d; 
+	const unsigned char *s = src;
 	if (n != 0) {
-		d = dst + strlen(dst); // get the end of string 
+		d = dst + _mbslen(dst); // get the end of string 
 		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {

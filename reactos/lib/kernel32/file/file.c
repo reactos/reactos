@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.60.2.3 2004/12/13 16:18:03 hyperion Exp $
+/* $Id: file.c,v 1.60.2.4 2004/12/30 04:36:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

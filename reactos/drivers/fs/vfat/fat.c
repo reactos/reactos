@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.46.8.3 2004/12/13 16:17:58 hyperion Exp $
+ * $Id: fat.c,v 1.46.8.4 2004/12/30 04:36:12 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -606,9 +606,9 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
   if (DeviceExt->AvailableClustersValid)
   {
       if (OldValue && NewValue == 0)
-        InterlockedIncrement(&DeviceExt->AvailableClusters);
+        InterlockedIncrement((PLONG)&DeviceExt->AvailableClusters);
       else if (OldValue == 0 && NewValue)
-        InterlockedDecrement(&DeviceExt->AvailableClusters);
+        InterlockedDecrement((PLONG)&DeviceExt->AvailableClusters);
   }
   ExReleaseResourceLite(&DeviceExt->FatResource);
   return(Status);

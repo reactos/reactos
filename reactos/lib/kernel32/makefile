@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.89.2.3 2004/12/13 16:18:03 hyperion Exp $
+# $Id: makefile,v 1.89.2.4 2004/12/30 04:36:34 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -36,7 +36,6 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
                misc/muldiv.o misc/nls.o misc/computername.o \
                misc/perfcnt.o misc/lzexpand_main.o misc/lcformat.o \
                misc/chartype.o
-               
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
@@ -51,8 +50,8 @@ MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
 NLS_OBJECTS =
 
 THREAD_OBJECTS = \
-	thread/fiber.o	\
-	thread/thread.o	\
+	thread/fiber.o \
+	thread/thread.o \
 	thread/tls.o \
 	thread/fls.o
 

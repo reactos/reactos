@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.157.2.3 2004/12/13 16:18:16 hyperion Exp $
+/* $Id: process.c,v 1.157.2.4 2004/12/30 04:37:02 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -333,7 +333,7 @@ PsInitProcessManagment(VOID)
 #endif
 
    PsInitialSystemProcess->UniqueProcessId = 
-     InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
+     InterlockedIncrementUL(&PiNextProcessUniqueId); /* TODO */
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
@@ -499,7 +499,7 @@ PsCreatePeb(HANDLE ProcessHandle,
 
   Peb->OSMajorVersion = 4;
   Peb->OSMinorVersion = 0;
-  Peb->OSBuildNumber = 0;
+  Peb->OSBuildNumber = 1381;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
   Peb->SPMajorVersion = 6;
 
@@ -714,7 +714,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KProcess->AutoAlignment = 0;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
-   Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
+   Process->UniqueProcessId = InterlockedIncrementUL(&PiNextProcessUniqueId); /* TODO */
    Process->InheritedFromUniqueProcessId = 
      (HANDLE)pParentProcess->UniqueProcessId;
    ObCreateHandleTable(pParentProcess,
@@ -2251,12 +2251,12 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
       return STATUS_PROCESS_IS_TERMINATING;
     }
 
-    /* FIXME - why don't we have InterlockedCompareExchangePointer in ntoskrnl?! */
-    PrevLockOwner = (PKTHREAD)InterlockedCompareExchange((LONG*)&Process->LockOwner, (LONG)CallingThread, (LONG)NULL);
+    PrevLockOwner = (PKTHREAD)InterlockedCompareExchangePointer(
+      &Process->LockOwner, CallingThread, NULL);
     if(PrevLockOwner == NULL || PrevLockOwner == CallingThread)
     {
       /* we got the lock or already locked it */
-      if(InterlockedIncrement((LONG*)&Process->LockCount) == 1)
+      if(InterlockedIncrementUL(&Process->LockCount) == 1)
       {
         KeClearEvent(&Process->LockEvent);
       }
@@ -2293,10 +2293,9 @@ PsUnlockProcess(PEPROCESS Process)
 {
   ASSERT(Process->LockOwner == KeGetCurrentThread());
   
-  if(InterlockedDecrement((LONG*)&Process->LockCount) == 0)
+  if(InterlockedDecrementUL(&Process->LockCount) == 0)
   {
-    /* FIXME - why don't we have InterlockedExchangePointer in ntoskrnl?! */
-    InterlockedExchange((LONG*)&Process->LockOwner, (LONG)NULL);
+    InterlockedExchangePointer(&Process->LockOwner, NULL);
     KeSetEvent(&Process->LockEvent, IO_NO_INCREMENT, FALSE);
   }
   

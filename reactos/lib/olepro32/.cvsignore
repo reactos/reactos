@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 olepro32.spec.def
+olepro32.stubs.c

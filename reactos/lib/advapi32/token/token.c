@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.14.6.2 2004/12/13 16:18:02 hyperion Exp $
+/* $Id: token.c,v 1.14.6.3 2004/12/30 04:36:30 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -261,22 +261,27 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE NewToken;
   NTSTATUS Status;
+  SECURITY_QUALITY_OF_SERVICE Sqos;
+  
+  Sqos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+  Sqos.ImpersonationLevel = ImpersonationLevel;
+  Sqos.ContextTrackingMode = 0;
+  Sqos.EffectiveOnly = FALSE;
 
-  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  ObjectAttributes.RootDirectory = NULL;
-  ObjectAttributes.ObjectName = NULL;
-  ObjectAttributes.Attributes = 0;
-  if (lpTokenAttributes->bInheritHandle)
-    {
-      ObjectAttributes.Attributes |= OBJ_INHERIT;
-    }
-  ObjectAttributes.SecurityDescriptor = lpTokenAttributes->lpSecurityDescriptor;
-  ObjectAttributes.SecurityQualityOfService = NULL;
+  InitializeObjectAttributes(
+      &ObjectAttributes,
+      NULL,
+      lpTokenAttributes->bInheritHandle ? OBJ_INHERIT : 0,
+      NULL,
+      lpTokenAttributes->lpSecurityDescriptor
+      );
+ 
+  ObjectAttributes.SecurityQualityOfService = &Sqos;
 
   Status = NtDuplicateToken (ExistingTokenHandle,
 			     dwDesiredAccess,
 			     &ObjectAttributes,
-			     ImpersonationLevel,
+              Sqos.EffectiveOnly, /* why both here _and_ in Sqos? */
 			     TokenType,
 			     &NewToken);
   if (!NT_SUCCESS(Status))

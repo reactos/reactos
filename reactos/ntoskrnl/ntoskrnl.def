@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.201.2.3 2004/12/13 16:18:14 hyperion Exp $
+; $Id: ntoskrnl.def,v 1.201.2.4 2004/12/30 04:36:52 hyperion Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -142,6 +142,7 @@ ExReleaseResourceForThreadLite@8
 ExRosDumpPagedPoolByTag@4
 ExRosQueryPoolTag@4
 @ExRundownCompleted@4
+ExSemaphoreObjectType DATA
 ExSetResourceOwnerPointer@8
 ExSetTimerResolution@8
 ExSystemExceptionFilter@0
@@ -360,6 +361,12 @@ IoCreateStreamFileObjectLite@8
 IoCreateSymbolicLink@8
 IoCreateSynchronizationEvent@8
 IoCreateUnprotectedSymbolicLink@8
+IoCsqInitialize@28
+IoCsqInitializeEx@28
+IoCsqInsertIrp@12
+IoCsqInsertIrpEx@16
+IoCsqRemoveIrp@8
+IoCsqRemoveNextIrp@8
 IoDeleteController@4
 IoDeleteDevice@4
 IoDeleteDriver@4
@@ -958,6 +965,7 @@ READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT@12
 KeRosPrintAddress@4
 KeRosDumpStackFrames@8
+KeRosGetStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20

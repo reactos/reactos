@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.11.2.3 2004/12/13 16:18:16 hyperion Exp $
+/* $Id: desktopbg.c,v 1.11.2.4 2004/12/30 04:37:05 hyperion Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *

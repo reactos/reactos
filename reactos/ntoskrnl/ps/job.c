@@ -265,7 +265,7 @@ PsSetJobUIRestrictionsClass(PEJOB Job,
                             ULONG UIRestrictionsClass)
 {
   ASSERT(Job);
-  InterlockedExchange((LONG*)&Job->UIRestrictionsClass, (LONG)UIRestrictionsClass);
+  InterlockedExchangeUL(&Job->UIRestrictionsClass, UIRestrictionsClass);
   /* FIXME - walk through the job process list and update the restrictions? */
 }
 
