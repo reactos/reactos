@@ -326,7 +326,7 @@ NtUserDeferWindowPos                    8
 NtUserDefSetText                        2
 NtUserDeleteMenu                        3
 NtUserDestroyAcceleratorTable           1
-NtUserDestroyCursor                     2
+NtUserDestroyCursorIcon                 2
 NtUserDestroyMenu                       1
 NtUserDestroyWindow                     1
 NtUserDispatchMessage                   1
@@ -349,7 +349,7 @@ NtUserEnumDisplaySettings               4
 NtUserEvent                             1
 NtUserExcludeUpdateRgn                  2
 NtUserFillWindow                        4
-NtUserFindExistingCursorIcon            2
+NtUserFindExistingCursorIcon            4
 NtUserFindWindowEx                      4
 NtUserFlashWindowEx                     1
 NtUserGetActiveWindow			0
@@ -383,8 +383,8 @@ NtUserGetDoubleClickTime                0
 NtUserGetForegroundWindow               0
 NtUserGetGuiResources                   2
 NtUserGetGUIThreadInfo                  2
-NtUserGetIconInfo                       2
-NtUserGetIconSize                       3
+NtUserGetCursorIconInfo                 2
+NtUserGetCursorIconSize                 3
 NtUserGetImeHotKey                      4
 NtUserGetInternalWindowPos              3
 NtUserGetKeyboardLayoutList             2

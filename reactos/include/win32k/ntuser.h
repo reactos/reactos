@@ -276,7 +276,7 @@ NtUserCreateCaret(
   int nWidth,
   int nHeight);
 
-HICON
+HANDLE
 STDCALL
 NtUserCreateCursorIconHandle(
   PICONINFO IconInfo,
@@ -380,8 +380,8 @@ NtUserDestroyAcceleratorTable(
 
 BOOL
 STDCALL
-NtUserDestroyCursor(
-  HCURSOR hCursor,
+NtUserDestroyCursorIcon(
+  HANDLE Handle,
   DWORD Unknown);
 
 BOOL
@@ -551,7 +551,9 @@ HICON
 STDCALL
 NtUserFindExistingCursorIcon(
   HMODULE hModule,
-  HRSRC hRsrc);
+  HRSRC hRsrc,
+  LONG cx,
+  LONG cy);
 
 HWND
 STDCALL
@@ -712,14 +714,14 @@ NtUserGetGUIThreadInfo(
 
 BOOL
 STDCALL
-NtUserGetIconInfo(
-  HICON hIcon,
+NtUserGetCursorIconInfo(
+  HANDLE Handle,
   PICONINFO IconInfo);
 
 BOOL
 STDCALL
-NtUserGetIconSize(
-  HICON hIcon,
+NtUserGetCursorIconSize(
+  HANDLE Handle,
   BOOL *fIcon,
   SIZE *Size);
 
@@ -1332,13 +1334,13 @@ NtUserSetCursor(
 BOOL
 STDCALL
 NtUserSetCursorIconContents(
-  HCURSOR hCursor,
+  HANDLE Handle,
   PICONINFO IconInfo);
 
 BOOL
 STDCALL
 NtUserSetCursorIconData(
-  HICON hIcon,
+  HANDLE Handle,
   PBOOL fIcon,
   POINT *Hotspot,
   HMODULE hModule,

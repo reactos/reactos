@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.15 2003/12/09 19:45:37 gvg Exp $
+/* $Id: icon.c,v 1.16 2003/12/09 20:58:16 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -162,7 +162,7 @@ CopyIcon(
 {
   ICONINFO IconInfo;
   
-  if(NtUserGetIconInfo(hIcon, &IconInfo))
+  if(NtUserGetCursorIconInfo((HANDLE)hIcon, &IconInfo))
   {
     return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
   }
@@ -344,7 +344,7 @@ CreateIconIndirect(PICONINFO IconInfo)
     return (HICON)0;
   }*/
   
-  return NtUserCreateCursorIconHandle(IconInfo, TRUE);
+  return (HICON)NtUserCreateCursorIconHandle(IconInfo, TRUE);
 }
 
 
@@ -356,7 +356,7 @@ STDCALL
 DestroyIcon(
   HICON hIcon)
 {
-  return (WINBOOL)NtUserDestroyCursor(hIcon, 0);
+  return (WINBOOL)NtUserDestroyCursorIcon((HANDLE)hIcon, 0);
 }
 
 
@@ -406,7 +406,7 @@ GetIconInfo(
   PICONINFO IconInfo)
 {
   /* FIXME - copy bitmaps */
-  return (WINBOOL)NtUserGetIconInfo(hIcon, IconInfo);
+  return (WINBOOL)NtUserGetCursorIconInfo((HANDLE)hIcon, IconInfo);
 }
 
 

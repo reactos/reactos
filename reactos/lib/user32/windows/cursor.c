@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.16 2003/11/21 16:36:26 weiden Exp $
+/* $Id: cursor.c,v 1.17 2003/12/09 20:58:16 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -71,7 +71,7 @@ CopyCursor(HCURSOR pcur)
 {
   ICONINFO IconInfo;
   
-  if(NtUserGetIconInfo((HICON)pcur, &IconInfo))
+  if(NtUserGetCursorIconInfo((HANDLE)pcur, &IconInfo))
   {
     return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
   }
@@ -118,7 +118,7 @@ CreateCursor(HINSTANCE hInst,
 WINBOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
-  return (WINBOOL)NtUserDestroyCursor((HICON)hCursor, 0);
+  return (WINBOOL)NtUserDestroyCursorIcon((HANDLE)hCursor, 0);
 }
 
 

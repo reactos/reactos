@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.31 2003/12/09 19:38:47 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.32 2003/12/09 20:58:16 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -230,7 +230,7 @@ IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject)
 
 PCURICON_OBJECT FASTCALL
 IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule, 
-                             HRSRC hRsrc)
+                             HRSRC hRsrc, LONG cx, LONG cy)
 {
   PUSER_HANDLE_TABLE HandleTable;
   PLIST_ENTRY CurrentEntry;
@@ -250,6 +250,10 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
       Object = (PCURICON_OBJECT)Current->Handles[i].ObjectBody;
       if(Object && (Object->hModule == hModule) && (Object->hRsrc == hRsrc))
       {
+        if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
+        {
+          continue;
+        }
         ObmReferenceObject(Object);
         ExReleaseFastMutex(&HandleTable->ListLock);
         return Object;
@@ -313,7 +317,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
 /*
  * @implemented
  */
-HICON
+HANDLE
 STDCALL
 NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
 {
@@ -321,7 +325,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   PWINSTATION_OBJECT WinStaObject;
   PBITMAPOBJ bmp;
   NTSTATUS Status;
-  HICON Ret;
+  HANDLE Ret;
   
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
@@ -331,7 +335,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return (HICON)0;
+    return (HANDLE)0;
   }
   
   CurIconObject = IntCreateCurIconHandle(WinStaObject);
@@ -380,7 +384,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
 
   SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
   ObDereferenceObject(WinStaObject);
-  return (HICON)0;
+  return (HANDLE)0;
 }
 
 /*
@@ -388,8 +392,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
  */
 BOOL
 STDCALL
-NtUserGetIconInfo(
-  HICON hIcon,
+NtUserGetCursorIconInfo(
+  HANDLE Handle,
   PICONINFO IconInfo)
 {
   ICONINFO ii;
@@ -409,7 +413,7 @@ NtUserGetIconInfo(
     return FALSE;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, hIcon);
+  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
   if(CurIconObject)
   {
     if(IconInfo)
@@ -448,8 +452,8 @@ NtUserGetIconInfo(
  */
 BOOL
 STDCALL
-NtUserGetIconSize(
-  HICON hIcon,
+NtUserGetCursorIconSize(
+  HANDLE Handle,
   BOOL *fIcon,
   SIZE *Size)
 {
@@ -470,7 +474,7 @@ NtUserGetIconSize(
     return FALSE;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, hIcon);
+  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
   if(CurIconObject)
   {
     /* Copy fields */
@@ -645,8 +649,8 @@ NtUserClipCursor(
  */
 BOOL
 STDCALL
-NtUserDestroyCursor(
-  HCURSOR hCursor,
+NtUserDestroyCursorIcon(
+  HANDLE Handle,
   DWORD Unknown)
 {
   PWINSTATION_OBJECT WinStaObject;
@@ -663,7 +667,7 @@ NtUserDestroyCursor(
     return FALSE;
   }
   
-  if(IntDestroyCurIconObject(WinStaObject, hCursor))
+  if(IntDestroyCurIconObject(WinStaObject, Handle))
   {
     ObDereferenceObject(WinStaObject);
     return TRUE;
@@ -678,16 +682,18 @@ NtUserDestroyCursor(
 /*
  * @implemented
  */
-HICON
+HANDLE
 STDCALL
 NtUserFindExistingCursorIcon(
   HMODULE hModule,
-  HRSRC hRsrc)
+  HRSRC hRsrc,
+  LONG cx,
+  LONG cy)
 {
   PCURICON_OBJECT CurIconObject;
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
-  HICON Ret = (HICON)0;
+  HANDLE Ret = (HANDLE)0;
   
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
@@ -700,7 +706,7 @@ NtUserFindExistingCursorIcon(
     return Ret;
   }
   
-  CurIconObject = IntFindExistingCurIconObject(WinStaObject, hModule, hRsrc);
+  CurIconObject = IntFindExistingCurIconObject(WinStaObject, hModule, hRsrc, cx, cy);
   if(CurIconObject)
   {
     Ret = CurIconObject->Handle;
@@ -712,7 +718,7 @@ NtUserFindExistingCursorIcon(
   
   SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
   ObDereferenceObject(WinStaObject);
-  return (HICON)0;
+  return (HANDLE)0;
 }
 
 
@@ -775,7 +781,7 @@ NtUserGetClipCursor(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HCURSOR
 STDCALL
@@ -817,7 +823,7 @@ NtUserSetCursor(
 BOOL
 STDCALL
 NtUserSetCursorIconContents(
-  HCURSOR hCursor,
+  HANDLE Handle,
   PICONINFO IconInfo)
 {
   PCURICON_OBJECT CurIconObject;
@@ -837,7 +843,7 @@ NtUserSetCursorIconContents(
     return FALSE;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, (HICON)hCursor);
+  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
   if(CurIconObject)
   {
     /* Copy fields */
@@ -887,7 +893,7 @@ NtUserSetCursorIconContents(
 BOOL
 STDCALL
 NtUserSetCursorIconData(
-  HICON hIcon,
+  HANDLE Handle,
   PBOOL fIcon,
   POINT *Hotspot,
   HMODULE hModule,
@@ -911,9 +917,13 @@ NtUserSetCursorIconData(
     return FALSE;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, hIcon);
+  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
   if(CurIconObject)
   {
+    CurIconObject->hModule = hModule;
+    CurIconObject->hRsrc = hRsrc;
+    CurIconObject->hGroupRsrc = hGroupRsrc;
+    
     /* Copy fields */
     if(fIcon)
     {
@@ -938,10 +948,6 @@ NtUserSetCursorIconData(
         CurIconObject->IconInfo.xHotspot = SafeHotspot.x;
         CurIconObject->IconInfo.yHotspot = SafeHotspot.y;
         
-        CurIconObject->hModule = hModule;
-        CurIconObject->hRsrc = hRsrc;
-        CurIconObject->hGroupRsrc = hGroupRsrc;
-        
         Ret = TRUE;
       }
       else
@@ -950,9 +956,6 @@ NtUserSetCursorIconData(
     
     if(!fIcon && !Hotspot)
     {
-      CurIconObject->hModule = hModule;
-      CurIconObject->hRsrc = hRsrc;
-      CurIconObject->hGroupRsrc = hGroupRsrc;
       Ret = TRUE;
     }
     

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.22 2003/12/09 19:43:38 gvg Exp $
+/* $Id: bitmap.c,v 1.23 2003/12/09 20:58:16 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -109,7 +109,8 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 	  
 	  if (fuLoad & LR_SHARED)
       {
-        hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes);
+        /* FIXME - pass size! */
+        hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, 0, 0);
         if(hIcon)
           return hIcon;
       }
