@@ -300,10 +300,10 @@ WriteConsoleOutputCharacters(LPCSTR lpCharacter,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 Buffer,
-				 nLength + sizeof(COORD),
 				 NULL,
-				 0);
+				 0,
+				 Buffer,
+				 nLength + sizeof(COORD));
 
   RtlFreeHeap(ProcessHeap,
 	      0,
@@ -344,10 +344,10 @@ WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 Buffer,
-				 nLength + sizeof(COORD),
 				 NULL,
-				 0);
+				 0,
+				 Buffer,
+				 nLength + sizeof(COORD));
 
   RtlFreeHeap(ProcessHeap,
 	      0,
@@ -384,10 +384,10 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-				 Buffer,
-				 nLength * sizeof(USHORT) + sizeof(COORD),
 				 NULL,
-				 0);
+				 0,
+				 Buffer,
+				 nLength * sizeof(USHORT) + sizeof(COORD));
 
   RtlFreeHeap(ProcessHeap,
 	      0,
