@@ -47,6 +47,7 @@ typedef enum _KWAIT_REASON
    WrDelayExecution,
    WrSuspended,
    WrUserRequest,
+   WrEventPair,
    WrQueue,
    WrLpcReceive,
    WrLpcReply,
