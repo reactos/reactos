@@ -187,14 +187,14 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
                 PPOINTL SourcePoint, PPOINTL MaskPoint,
 		PBRUSHOBJ Brush, PPOINTL BrushPoint, ROP4 Rop4)
 {
-  UCHAR SolidColor;
+  UCHAR SolidColor = 0;
   ULONG Left;
   ULONG Right;
   ULONG Length;
   PUCHAR Video;
   UCHAR Mask;
   ULONG i, j;
-  ULONG RasterOp = 0;
+  ULONG RasterOp = VGA_NORMAL;
 
   /* Punt brush blts to non-device surfaces. */
   if (Dest->iType != STYPE_DEVICE)
@@ -203,30 +203,20 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
     }
 
   /* Punt pattern fills. */
-  if ((Rop4 == PATCOPY || Rop4 == DSTINVERT) && 
+  if ((Rop4 == PATCOPY || Rop4 == PATINVERT) && 
       Brush->iSolidColor == 0xFFFFFFFF)
     {
       return(FALSE);
     }
 
   /* Get the brush colour. */
-  if (Rop4 == PATCOPY || Rop4 == PATINVERT)
+  switch (Rop4)
     {
-      SolidColor = Brush->iSolidColor;
-    }
-  else if (Rop4 == WHITENESS)
-    {
-      SolidColor = 0xF;
-    }
-  else
-    {
-      SolidColor = 0x0;
-    }
-
-  /* Get the raster op. */
-  if (Rop4 == PATINVERT)
-    {
-      RasterOp = 3;
+    case PATCOPY: SolidColor = Brush->iSolidColor; break;
+    case PATINVERT: SolidColor = Brush->iSolidColor; RasterOp = VGA_XOR; break;
+    case WHITENESS: SolidColor = 0xF; break;
+    case BLACKNESS: SolidColor = 0x0; break;
+    case DSTINVERT: SolidColor = 0xF; RasterOp = VGA_XOR; break;
     }
 
   /* Select write mode 3. */
@@ -243,7 +233,7 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
 
   /* Set up data rotate. */
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, RasterOp << 3);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, RasterOp);
   
   /* Fill any pixels on the left which don't fall into a full row of eight. */
   if ((DestRect->left % 8) != 0)
@@ -262,13 +252,13 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
 	  (VOID)READ_REGISTER_UCHAR(Video);
 	  WRITE_REGISTER_UCHAR(Video, Mask);
 	}
-    }  
 
-  /* Have we finished. */
-  if ((DestRect->right - DestRect->left) < (8 - (DestRect->left % 8)))
-    {
-      return(TRUE);
-    }
+      /* Have we finished. */
+      if ((DestRect->right - DestRect->left) < (8 - (DestRect->left % 8)))
+	{
+	  return(TRUE);
+	}
+    }    
 
   /* Fill any whole rows of eight pixels. */
   Left = (DestRect->left + 7) & ~0x7;
@@ -412,6 +402,7 @@ DrvBitBlt(SURFOBJ *Dest,
     case PATCOPY:
     case WHITENESS:
     case PATINVERT:
+    case DSTINVERT:
       BltRectFunc = VGADDI_BltBrush;
       break;
 
