@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.1 2000/06/18 10:57:42 ea Exp $
+; $Id: msvcrt.def,v 1.1 2000/12/03 18:00:07 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -100,9 +100,9 @@ EXPORTS
 ; __fpecode
 ; __getmainargs
 ; __initenv
-; __isascii
-; __iscsym
-; __iscsymf
+__isascii
+__iscsym
+__iscsymf
 ; __lc_codepage
 ; __lc_collate_cp
 ; __lc_handle
@@ -126,9 +126,9 @@ EXPORTS
 ; __p__mbcasemap
 ; __p__mbctype
 ; __p__osver
-; __p__pctype
+__p__pctype DATA
 ; __p__pgmptr
-; __p__pwctype
+__p__pwctype DATA
 ; __p__timezone
 ; __p__tzname
 ; __p__wcmdln
@@ -144,7 +144,7 @@ EXPORTS
 ; __setusermatherr
 ; __threadhandle
 ; __threadid
-; __toascii
+__toascii
 ; __unDName
 ; __unDNameEx
 ; __unguarded_readlc_active
@@ -182,8 +182,8 @@ _beginthreadex
 ; _callnewh
 ; _cexit
 ; _cgets
-; _chdir
-; _chdrive
+_chdir
+_chdrive
 ; _chgsign
 ; _chkesp
 ; _chmod
@@ -199,7 +199,7 @@ _beginthreadex
 ; _cputs
 ; _creat
 ; _cscanf
-; _ctype
+_ctype DATA
 ; _cwait
 ; _daylight
 ; _dstbias
@@ -252,19 +252,19 @@ _endthreadex
 ; _fstati64
 ; _ftime
 ; _ftol
-; _fullpath
+_fullpath
 ; _futime
 ; _gcvt
 ; _get_osfhandle
 ; _get_sbh_threshold
 ; _getch
 ; _getche
-; _getcwd
-; _getdcwd
-; _getdiskfree
+_getcwd
+_getdcwd
+_getdiskfree
 ; _getdllprocaddr
-; _getdrive
-; _getdrives
+_getdrive
+_getdrives
 ; _getmaxstdio
 ; _getmbcp
 ; _getpid
@@ -287,7 +287,7 @@ _endthreadex
 ; _inpw
 ; _iob
 ; _isatty
-; _isctype
+_isctype
 ; _ismbbalnum
 ; _ismbbalpha
 ; _ismbbgraph
@@ -318,8 +318,8 @@ _endthreadex
 ; _ismbslead
 ; _ismbstrail
 ; _isnan
-; _itoa
-; _itow
+_itoa
+_itow
 ; _j0
 ; _j1
 ; _jn
@@ -331,14 +331,14 @@ _endthreadex
 ; _locking
 ; _logb
 ; _longjmpex
-; _lrotl
-; _lrotr
+_lrotl
+_lrotr
 ; _lsearch
 ; _lseek
 ; _lseeki64
-; _ltoa
-; _ltow
-; _makepath
+_ltoa
+_ltow
+_makepath
 ; _mbbtombc
 ; _mbbtype
 ; _mbcasemap
@@ -394,16 +394,16 @@ _endthreadex
 ; _mbstok
 ; _mbstrlen
 ; _mbsupr
-; _memccpy
-; _memicmp
-; _mkdir
+_memccpy
+_memicmp
+_mkdir
 ; _mktemp
 ; _msize
 ; _nextafter
 ; _onexit
 ; _open
 ; _open_osfhandle
-; _osver
+_osver DATA
 ; _outp
 ; _outpd
 ; _outpw
@@ -414,21 +414,21 @@ _endthreadex
 ; _popen
 ; _purecall
 ; _putch
-; _putenv
+_putenv
 ; _putw
 ; _putws
 ; _pwctype
 ; _read
-; _rmdir
+_rmdir
 ; _rmtmp
-; _rotl
-; _rotr
+_rotl
+_rotr
 ; _safe_fdiv
 ; _safe_fdivr
 ; _safe_fprem
 ; _safe_fprem1
 ; _scalb
-; _searchenv
+_searchenv
 ; _seh_longjmp_unwind
 ; _set_error_mode
 ; _set_sbh_threshold
@@ -451,25 +451,25 @@ _endthreadex
 ; _spawnve
 ; _spawnvp
 ; _spawnvpe
-; _splitpath
+_splitpath
 ; _stat
 ; _stati64
 ; _statusfp
-; _strcmpi
+_strcmpi
 ; _strdate
-; _strdup
-; _strerror
-; _stricmp
-; _stricoll
-; _strlwr
-; _strncoll
-; _strnicmp
-; _strnicoll
-; _strnset
-; _strrev
-; _strset
+_strdup
+_strerror
+_stricmp
+_stricoll
+_strlwr
+_strncoll
+_strnicmp
+_strnicoll
+_strnset
+_strrev
+_strset
 ; _strtime
-; _strupr
+_strupr
 ; _swab
 ; _sys_errlist
 ; _sys_nerr
@@ -477,14 +477,14 @@ _endthreadex
 ; _telli64
 ; _tempnam
 ; _timezone
-; _tolower
-; _toupper
+_tolower
+_toupper
 ; _tzname
 ; _tzset
 ; _ui64toa
 ; _ui64tow
-; _ultoa
-; _ultow
+_ultoa
+_ultow
 ; _umask
 ; _ungetch
 ; _unlink
@@ -495,21 +495,21 @@ _endthreadex
 ; _vsnwprintf
 ; _waccess
 ; _wasctime
-; _wchdir
+_wchdir
 ; _wchmod
 ; _wcmdln
 ; _wcreat
-; _wcsdup
-; _wcsicmp
-; _wcsicoll
-; _wcslwr
-; _wcsncoll
-; _wcsnicmp
-; _wcsnicoll
-; _wcsnset
-; _wcsrev
-; _wcsset
-; _wcsupr
+_wcsdup
+_wcsicmp
+_wcsicoll
+_wcslwr
+_wcsncoll
+_wcsnicmp
+_wcsnicoll
+_wcsnset
+_wcsrev
+_wcsset
+_wcsupr
 ; _wctime
 ; _wenviron
 ; _wexecl
@@ -528,26 +528,26 @@ _endthreadex
 ; _wfopen
 ; _wfreopen
 ; _wfsopen
-; _wfullpath
-; _wgetcwd
-; _wgetdcwd
-; _wgetenv
-; _winmajor
-; _winminor
-; _winver
-; _wmakepath
-; _wmkdir
+_wfullpath
+_wgetcwd
+_wgetdcwd
+_wgetenv
+_winmajor DATA
+_winminor DATA
+_winver DATA
+_wmakepath
+_wmkdir
 ; _wmktemp
 ; _wopen
 ; _wperror
 ; _wpgmptr
 ; _wpopen
-; _wputenv
+_wputenv
 ; _wremove
 ; _wrename
 ; _write
-; _wrmdir
-; _wsearchenv
+_wrmdir
+_wsearchenv
 ; _wsetlocale
 ; _wsopen
 ; _wspawnl
@@ -558,7 +558,7 @@ _endthreadex
 ; _wspawnve
 ; _wspawnvp
 ; _wspawnvpe
-; _wsplitpath
+_wsplitpath
 ; _wstat
 ; _wstati64
 ; _wstrdate
@@ -566,27 +566,27 @@ _endthreadex
 ; _wsystem
 ; _wtempnam
 ; _wtmpnam
-; _wtoi
+_wtoi
 ; _wtoi64
-; _wtol
+_wtol
 ; _wunlink
 ; _wutime
 ; _y0
 ; _y1
 ; _yn
 ; abort
-; abs
+abs
 ; acos
 ; asctime
 ; asin
 ; atan
 ; atan2
 ; atexit
-; atof
-; atoi
-; atol
-; bsearch
-; calloc
+atof
+atoi
+atol
+bsearch
+calloc
 ; ceil
 ; clearerr
 ; clock
@@ -594,7 +594,7 @@ _endthreadex
 ; cosh
 ; ctime
 ; difftime
-; div
+div
 ; exit
 ; exp
 ; fabs
@@ -616,7 +616,7 @@ _endthreadex
 ; fputwc
 ; fputws
 ; fread
-; free
+free
 ; freopen
 ; frexp
 ; fscanf
@@ -633,49 +633,49 @@ _endthreadex
 ; getwc
 ; getwchar
 ; gmtime
-; is_wctype
-; isalnum
-; isalpha
-; iscntrl
-; isdigit
-; isgraph
+is_wctype
+isalnum
+isalpha
+iscntrl
+isdigit
+isgraph
 ; isleadbyte
-; islower
-; isprint
-; ispunct
-; isspace
-; isupper
-; iswalnum
-; iswalpha
-; iswascii
-; iswcntrl
-; iswctype
-; iswdigit
-; iswgraph
-; iswlower
-; iswprint
-; iswpunct
-; iswspace
-; iswupper
-; iswxdigit
-; isxdigit
-; labs
+islower
+isprint
+ispunct
+isspace
+isupper
+iswalnum
+iswalpha
+iswascii
+iswcntrl
+iswctype
+iswdigit
+iswgraph
+iswlower
+iswprint
+iswpunct
+iswspace
+iswupper
+iswxdigit
+isxdigit
+labs
 ; ldexp
-; ldiv
+ldiv
 ; localeconv
 ; localtime
 ; log
 ; log10
 ; longjmp
-; malloc
+malloc
 ; mblen
 ; mbstowcs
 ; mbtowc
-; memchr
-; memcmp
-; memcpy
-; memmove
-; memset
+memchr
+memcmp
+memcpy
+memmove
+memset
 ; mktime
 ; modf
 ; perror
@@ -689,7 +689,7 @@ _endthreadex
 ; qsort
 ; raise
 ; rand
-; realloc
+realloc
 ; remove
 ; rename
 ; rewind
@@ -704,27 +704,27 @@ _endthreadex
 ; sqrt
 ; srand
 ; sscanf
-; strcat
-; strchr
-; strcmp
-; strcoll
-; strcpy
-; strcspn
-; strerror
+strcat
+strchr
+strcmp
+strcoll
+strcpy
+strcspn
+strerror
 ; strftime
-; strlen
-; strncat
-; strncmp
-; strncpy
-; strpbrk
-; strrchr
-; strspn
-; strstr
-; strtod
-; strtok
-; strtol
-; strtoul
-; strxfrm
+strlen
+strncat
+strncmp
+strncpy
+strpbrk
+strrchr
+strspn
+strstr
+strtod
+strtok
+strtol
+strtoul
+strxfrm
 ; swprintf
 ; swscanf
 ; system
@@ -733,10 +733,10 @@ _endthreadex
 ; time
 ; tmpfile
 ; tmpnam
-; tolower
-; toupper
-; towlower
-; towupper
+tolower
+toupper
+towlower
+towupper
 ; ungetc
 ; ungetwc
 ; vfprintf
@@ -745,27 +745,27 @@ _endthreadex
 ; vsprintf
 ; vswprintf
 ; vwprintf
-; wcscat
-; wcschr
-; wcscmp
-; wcscoll
-; wcscpy
-; wcscspn
+wcscat
+wcschr
+wcscmp
+wcscoll
+wcscpy
+wcscspn
 ; wcsftime
-; wcslen
-; wcsncat
-; wcsncmp
-; wcsncpy
-; wcspbrk
-; wcsrchr
-; wcsspn
-; wcsstr
-; wcstod
-; wcstok
-; wcstol
+wcslen
+wcsncat
+wcsncmp
+wcsncpy
+wcspbrk
+wcsrchr
+wcsspn
+wcsstr
+wcstod
+wcstok
+wcstol
 ; wcstombs
-; wcstoul
-; wcsxfrm
+wcstoul
+wcsxfrm
 ; wctomb
 ; wprintf
 ; wscanf
