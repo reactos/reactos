@@ -22,31 +22,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Menu
-//
-
-IDM_MAINMENU MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&Close",                      IDM_CLOSE
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "Large Icons",                 IDM_LARGEICONS
-        MENUITEM "Small Icons",                 IDM_SMALLICONS
-        MENUITEM "List",                        IDM_LIST
-        MENUITEM "Details",                     IDM_DETAILS
-    END
-    POPUP "Help"
-    BEGIN
-        MENUITEM "About",                       IDM_ABOUT
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Icon
 //
 
@@ -54,3 +29,17 @@ END
 // remains consistent on all systems.
 IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
 /////////////////////////////////////////////////////////////////////////////
+
+
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+
+#include "En.rc"
+#include "De.rc"
+
+
+
+
