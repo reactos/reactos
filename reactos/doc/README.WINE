@@ -32,7 +32,7 @@ reactos/tools/bin2res		# Resource to binary converter
 
 The following shared libraries are a 100% port from Winehq sourcs.
 
-reactos/lib/cabinet             # Synced to Wine-20040716
+reactos/lib/cabinet             #Synced to Wine-20040716
 reactos/lib/comctl32            # Synced to Wine-20040809
 reactos/lib/comdlg32		# Synced to Wine-20040716
 reactos/lib/imagehlp		# Out of sync
