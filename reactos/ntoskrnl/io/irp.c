@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.38 2001/08/27 01:20:50 ekohl Exp $
+/* $Id: irp.c,v 1.39 2002/01/21 22:30:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -53,7 +53,7 @@ IoFreeIrp (PIRP Irp)
  *      Irp = Irp to free
  */
 {
-   ExFreePool(Irp);
+	ExFreePool(Irp);
 }
 
 
@@ -90,7 +90,7 @@ IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
    Irp->Size = PacketSize;
    Irp->StackCount = StackSize;
    Irp->CurrentLocation = StackSize;
-   Irp->Tail.Overlay.CurrentStackLocation = IoGetCurrentIrpStackLocation(Irp);
+   Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
 }
 
 

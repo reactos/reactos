@@ -38,7 +38,7 @@ IopCompleteRequest1(struct _KAPC* Apc,
    Irp = (PIRP)(*SystemArgument1);
    PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
    
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
    
    (*SystemArgument1) = (PVOID)Irp->UserIosb;
    (*SystemArgument2) = (PVOID)Irp->IoStatus.Information;
@@ -174,8 +174,8 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n",
 	  Irp, PriorityBoost);
    
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
-   
+   IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
+
    DeviceObject = IoStack->DeviceObject;
    
    switch (IoStack->MajorFunction)
