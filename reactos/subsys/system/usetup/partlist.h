@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.18 2003/08/18 17:39:26 ekohl Exp $
+/* $Id: partlist.h,v 1.19 2003/08/19 15:54:47 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -81,6 +81,8 @@ typedef struct _DISKENTRY
   /* Has the partition list been modified? */
   BOOLEAN Modified;
 
+  BOOLEAN NewDisk;
+
   UNICODE_STRING DriverName;
 
   LIST_ENTRY PartListHead;
@@ -131,15 +133,15 @@ VOID
 ScrollUpPartitionList (PPARTLIST List);
 
 VOID
-SetActiveBootPartition (PPARTLIST List);
-
-VOID
 CreateNewPartition (PPARTLIST List,
 		    ULONGLONG PartitionSize,
 		    BOOLEAN AutoCreate);
 
 VOID
 DeleteCurrentPartition (PPARTLIST List);
+
+VOID
+CheckActiveBootPartition (PPARTLIST List);
 
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List);

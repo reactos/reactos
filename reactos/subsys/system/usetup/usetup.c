@@ -1580,6 +1580,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		return QUIT_PAGE;
 	    }
 
+	  CheckActiveBootPartition (PartitionList);
+
 //#ifndef NDEBUG
 	  PrintTextXY (6, 12,
 		       "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
@@ -1600,9 +1602,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		  for (i = 0; i < 4; i++)
 		    {
 		      PrintTextXY (6, Line,
-				   "%u:  %u  %12I64u  %12I64u  %u  %c",
+				   "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
 				   i,
 				   PartEntry->PartInfo[i].PartitionNumber,
+				   PartEntry->PartInfo[i].BootIndicator ? 'A' : '-',
 				   PartEntry->PartInfo[i].StartingOffset.QuadPart,
 				   PartEntry->PartInfo[i].PartitionLength.QuadPart,
 				   PartEntry->PartInfo[i].PartitionType,
@@ -1617,8 +1620,6 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	      Entry = Entry->Flink;
 	    }
 //#endif
-
-	  SetActiveBootPartition (PartitionList);
 
 	  if (WritePartitionsToDisk (PartitionList) == FALSE)
 	    {
@@ -1668,6 +1669,21 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		if (!NT_SUCCESS (Status))
 		  {
 		    DPRINT1 ("FormatPartition() failed with status 0x%.08x\n", Status);
+		    /* FIXME: show an error dialog */
+		    return QUIT_PAGE;
+		  }
+
+		/* FIXME: Install boot code. This is a hack! */
+		wcscpy (PathBuffer, SourceRootPath.Buffer);
+		wcscat (PathBuffer, L"\\loader\\fat32.bin");
+
+		DPRINT1 ("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
+			 DestinationRootPath.Buffer);
+		Status = InstallFat32BootCodeToDisk (PathBuffer,
+						     DestinationRootPath.Buffer);
+		if (!NT_SUCCESS (Status))
+		  {
+		    DPRINT1 ("InstallFat32BootCodeToDisk() failed with status 0x%.08x\n", Status);
 		    /* FIXME: show an error dialog */
 		    return QUIT_PAGE;
 		  }
@@ -2290,74 +2306,11 @@ BootLoaderPage(PINPUT_RECORD Ir)
   PINICACHE IniCache;
   PINICACHESECTION IniSection;
   NTSTATUS Status;
-  BOOLEAN InstallMBR = FALSE;
 
   SetTextXY(6, 8, "Installing the boot loader");
 
   SetStatusText("   Please wait...");
 
-#if 0
-  if (ActivePartitionValid == FALSE)
-    {
-      /* Mark the chosen partition as active since there is no active
-         partition now */
-     
-		if (!MarkPartitionActive(PartData.DiskNumber,
-			PartData.PartNumber, &ActivePartition))
-		{
-		      PopupError("Setup could not mark the system partiton active\n",
-				 "ENTER = Reboot computer");
-		
-		      while(TRUE)
-			{
-			  ConInKey(Ir);
-		
-			  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-			    {
-			      return(QUIT_PAGE);
-			    }
-			}
-		}
-        InstallMBR = TRUE;
-    }
-
-  if (InstallMBR)
-    {
-          WCHAR PathBuffer[MAX_PATH];
-	      UNICODE_STRING SystemRootMBRPath;
-	
-		  RtlFreeUnicodeString(&SystemRootMBRPath);
-		  swprintf(PathBuffer,
-			   L"\\Device\\Harddisk%lu\\Partition0",
-			   PartData.DiskNumber);
-		  RtlCreateUnicodeString(&SystemRootMBRPath,
-					 PathBuffer);
-
-		  /* Install MBR bootcode */
-		  wcscpy(SrcPath, SourceRootPath.Buffer);
-		  wcscat(SrcPath, L"\\loader\\dosmbr.bin");
-	
-		  DPRINT1("Install MBR bootcode: %S ==> %S\n", SrcPath, SystemRootMBRPath.Buffer);
-		  Status = InstallMBRBootCodeToDisk(SrcPath,
-						      SystemRootMBRPath.Buffer);
-		  if (!NT_SUCCESS(Status))
-		  {
-		    DPRINT1("InstallMBRBootCodeToDisk() failed (Status %lx)\n", Status);
-		    PopupError("Setup failed to install the MBR bootcode.",
-			       "ENTER = Reboot computer");
-	
-		    while(TRUE)
-		    {
-		      ConInKey(Ir);
-	
-		      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		      {
-			return(QUIT_PAGE);
-		      }
-		    }
-		  }
-    }
-#endif
 
   if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.18 2003/08/18 17:39:26 ekohl Exp $
+/* $Id: partlist.c,v 1.19 2003/08/19 15:54:47 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -479,6 +479,11 @@ AddDiskToList (HANDLE FileHandle,
 				  8192);
   if (NT_SUCCESS (Status))
     {
+      if (LayoutBuffer->PartitionCount == 0)
+	{
+	  DiskEntry->NewDisk = TRUE;
+	}
+
       AddPartitionToList (DiskNumber,
 			  DiskEntry,
 			  LayoutBuffer);
@@ -1135,53 +1140,6 @@ ScrollUpPartitionList (PPARTLIST List)
 }
 
 
-VOID
-SetActiveBootPartition (PPARTLIST List)
-{
-  PDISKENTRY DiskEntry;
-  PPARTENTRY PartEntry;
-
-  /* Check for empty disk list */
-  if (IsListEmpty (&List->DiskListHead))
-    {
-      List->ActiveBootDisk = NULL;
-      List->ActiveBootPartition = NULL;
-      return;
-    }
-
-  DiskEntry = CONTAINING_RECORD (List->DiskListHead.Flink,
-				 DISKENTRY,
-				 ListEntry);
-
-  /* Check for empty partition list */
-  if (IsListEmpty (&DiskEntry->PartListHead))
-    {
-      List->ActiveBootDisk = NULL;
-      List->ActiveBootPartition = NULL;
-      return;
-    }
-
-  PartEntry = CONTAINING_RECORD (DiskEntry->PartListHead.Flink,
-				 PARTENTRY,
-				 ListEntry);
-
-  /* Set active boot partition 1 */
-  if (PartEntry->PartInfo[0].BootIndicator == FALSE &&
-      PartEntry->PartInfo[1].BootIndicator == FALSE &&
-      PartEntry->PartInfo[2].BootIndicator == FALSE &&
-      PartEntry->PartInfo[3].BootIndicator == FALSE)
-    {
-      PartEntry->PartInfo[0].BootIndicator == TRUE;
-      PartEntry->PartInfo[0].RewritePartition == TRUE;
-      DiskEntry->Modified = TRUE;
-    }
-
-  /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
-  List->ActiveBootDisk = DiskEntry;
-  List->ActiveBootPartition = PartEntry;
-}
-
-
 static PPARTENTRY
 GetPrevPartitionedEntry (PDISKENTRY DiskEntry,
 			 PPARTENTRY CurrentEntry)
@@ -1632,13 +1590,71 @@ DeleteCurrentPartition (PPARTLIST List)
 }
 
 
+VOID
+CheckActiveBootPartition (PPARTLIST List)
+{
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+
+  /* Check for empty disk list */
+  if (IsListEmpty (&List->DiskListHead))
+    {
+      List->ActiveBootDisk = NULL;
+      List->ActiveBootPartition = NULL;
+      return;
+    }
+
+#if 0
+  if (List->ActiveBootDisk != NULL &&
+      List->ActiveBootPartition != NULL)
+    {
+      /* We already have an active boot partition */
+      return;
+    }
+#endif
+
+  DiskEntry = CONTAINING_RECORD (List->DiskListHead.Flink,
+				 DISKENTRY,
+				 ListEntry);
+
+  /* Check for empty partition list */
+  if (IsListEmpty (&DiskEntry->PartListHead))
+    {
+      List->ActiveBootDisk = NULL;
+      List->ActiveBootPartition = NULL;
+      return;
+    }
+
+  PartEntry = CONTAINING_RECORD (DiskEntry->PartListHead.Flink,
+				 PARTENTRY,
+				 ListEntry);
+
+  /* Set active boot partition */
+  if ((DiskEntry->NewDisk == TRUE) ||
+      (PartEntry->PartInfo[0].BootIndicator == FALSE &&
+       PartEntry->PartInfo[1].BootIndicator == FALSE &&
+       PartEntry->PartInfo[2].BootIndicator == FALSE &&
+       PartEntry->PartInfo[3].BootIndicator == FALSE))
+    {
+      PartEntry->PartInfo[0].BootIndicator = TRUE;
+      PartEntry->PartInfo[0].RewritePartition = TRUE;
+      DiskEntry->Modified = TRUE;
+    }
+
+  /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
+  List->ActiveBootDisk = DiskEntry;
+  List->ActiveBootPartition = PartEntry;
+}
+
+
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List)
 {
   PDRIVE_LAYOUT_INFORMATION DriveLayout;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK Iosb;
-  WCHAR Buffer[MAX_PATH];
+  WCHAR SrcPath[MAX_PATH];
+  WCHAR DstPath[MAX_PATH];
   UNICODE_STRING Name;
   HANDLE FileHandle;
   PDISKENTRY DiskEntry;
@@ -1716,11 +1732,11 @@ WritePartitionsToDisk (PPARTLIST List)
 		  Entry2 = Entry2->Flink;
 		}
 
-	      swprintf (Buffer,
+	      swprintf (DstPath,
 			L"\\Device\\Harddisk%d\\Partition0",
 			DiskEntry->DiskNumber);
 	      RtlInitUnicodeString (&Name,
-				    Buffer);
+				    DstPath);
 	      InitializeObjectAttributes (&ObjectAttributes,
 					  &Name,
 					  0,
@@ -1728,7 +1744,7 @@ WritePartitionsToDisk (PPARTLIST List)
 					  NULL);
 
 	      Status = NtOpenFile (&FileHandle,
-				   FILE_GENERIC_WRITE,
+				   FILE_ALL_ACCESS,
 				   &ObjectAttributes,
 				   &Iosb,
 				   0,
@@ -1760,9 +1776,29 @@ WritePartitionsToDisk (PPARTLIST List)
 			   0,
 			   DriveLayout);
 
-	      /* FIXME: Install MBR code */
-
 	      NtClose (FileHandle);
+
+	      /* Install MBR code if the disk is new */
+	      if (DiskEntry->NewDisk == TRUE)
+		{
+		  wcscpy (SrcPath, SourceRootPath.Buffer);
+		  wcscat (SrcPath, L"\\loader\\dosmbr.bin");
+
+		  DPRINT1 ("Install MBR bootcode: %S ==> %S\n",
+			   SrcPath, DstPath);
+
+		  /* Install MBR bootcode */
+		  Status = InstallMbrBootCodeToDisk (SrcPath,
+						     DstPath);
+		  if (!NT_SUCCESS (Status))
+		    {
+		      DPRINT1 ("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
+			       Status);
+		      return FALSE;
+		    }
+
+		  DiskEntry->NewDisk = FALSE;
+		}
 	    }
 	}
 

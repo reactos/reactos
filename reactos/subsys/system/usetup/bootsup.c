@@ -922,8 +922,8 @@ CHECKPOINT1;
 
 
 NTSTATUS
-InstallMbrCodeToDisk (PWSTR SrcPath,
-		      PWSTR RootPath)
+InstallMbrBootCodeToDisk (PWSTR SrcPath,
+			  PWSTR RootPath)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
@@ -1030,9 +1030,9 @@ InstallMbrCodeToDisk (PWSTR SrcPath,
   }
 
   /* Copy partition table from old MBR to new */
-  memcpy((NewBootSector + 446),
-	 (OrigBootSector + 446),
-	 4*16 /* Length of partition table */);
+  RtlCopyMemory ((NewBootSector + 446),
+		 (OrigBootSector + 446),
+		 4*16 /* Length of partition table */);
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
