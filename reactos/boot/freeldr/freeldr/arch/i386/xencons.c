@@ -25,6 +25,15 @@
 #include <ctrl_if.h>
 #include <evtchn.h>
 
+/*
+ * Extra ring macros to sync a consumer index up to the public producer index.
+ * Generally UNSAFE, but we use it for recovery and shutdown in some cases.
+ */
+#define RING_DROP_PENDING_RESPONSES(_r)                                 \
+    do {                                                                \
+        (_r)->rsp_cons = (_r)->sring->rsp_prod;                         \
+    } while (0)
+
 #define OUTPUT_BUFFER_SIZE 128
 static char OutputBuffer[OUTPUT_BUFFER_SIZE];
 static unsigned OutputPtr = 0;
@@ -34,23 +43,31 @@ FlushOutput()
 {
   ctrl_msg_t *msg;
 
-  /*
-   * Put message on the control interface ring and trigger virtual
-   * console writer.
-   */
-  msg = RING_GET_REQUEST(&XenCtrlIfTxRing, XenCtrlIfTxRing.req_prod_pvt);
+  while (0 != OutputPtr)
+    {
+      RING_DROP_PENDING_RESPONSES(&XenCtrlIfTxRing);
 
-  msg->type = CMSG_CONSOLE;
-  msg->subtype = CMSG_CONSOLE_DATA;
-  msg->length = OutputPtr + 1;
-  memcpy(msg->msg, OutputBuffer, OutputPtr);
-  msg->msg[OutputPtr + 1] = '\0';
-  msg->id      = 0xff;
-  XenCtrlIfTxRing.req_prod_pvt++;
-  RING_PUSH_REQUESTS(&XenCtrlIfTxRing);
-  notify_via_evtchn(XenCtrlIfEvtchn);
+      if (! RING_FULL(&XenCtrlIfTxRing))
+        {
+          /*
+           * Put message on the control interface ring and trigger virtual
+           * console writer.
+           */
+          msg = RING_GET_REQUEST(&XenCtrlIfTxRing,
+                                  XenCtrlIfTxRing.req_prod_pvt);
 
-  OutputPtr = 0;
+          msg->type = CMSG_CONSOLE;
+          msg->subtype = CMSG_CONSOLE_DATA;
+          msg->length = OutputPtr;
+          memcpy(msg->msg, OutputBuffer, OutputPtr);
+          msg->id      = 0xff;
+          XenCtrlIfTxRing.req_prod_pvt++;
+          RING_PUSH_REQUESTS(&XenCtrlIfTxRing);
+          notify_via_evtchn(XenCtrlIfEvtchn);
+
+          OutputPtr = 0;
+        }
+    }
 }
 
 static VOID

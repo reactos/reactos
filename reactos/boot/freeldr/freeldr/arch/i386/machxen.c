@@ -26,8 +26,6 @@
 #include <rosxen.h>
 #include <xen.h>
 #include <hypervisor.h>
-#include <page.h>
-#include <pgtable.h>
 
 BOOL XenActive = FALSE;
 ctrl_front_ring_t XenCtrlIfTxRing;
@@ -64,71 +62,58 @@ XenMachInit(VOID)
   MachVtbl.HwDetect = XenHwDetect;
 }
 
-start_info_t *HYPERVISOR_start_info;
-extern char shared_info[PAGE_SIZE];
-
 /* _start is the default name ld will use as the entry point.  When xen
  * loads the domain, it will start execution at the elf entry point.  */
 
+void *dummy;
 void _start()
 {
-  pgd_t *pgd;
-  int ptetab_ma;
-  int idx;
-  int pte_ma;
-  mmu_update_t req;
+  extern void *start;               /* Where is freeldr loaded? */
+  start_info_t *StartInfo;
   control_if_t *CtrlIf;
+  void *OldStackPtr, *NewStackPtr;
+  void *OldStackPage, *NewStackPage;
 
   /*
    * Grab start_info
-   */
-  /* The linux build setup_guest() put a start_info_t* into %esi.
+   * 
+   * The linux build setup_guest() put a start_info_t* into %esi.
    * =S is inline asm code for get output from reg %esi.
    */
-  asm("":"=S" (HYPERVISOR_start_info));
-
-  /* To write to the xen virtual console, we need to map in the
-   * shared page used by the the domain controller interface.  The
-   * HYPERVISOR_start_info struct identifies the page table and
-   * shared_info pages.
-   *
-   * The following code maps the shared_info mfn (machine frame number)
-   * into this domains address space over the shared_info[] page.
-   */
-
+  asm("":"=S" (StartInfo));
 
   /*
-   * map shared_info page
+   * Set up memory
    */
-  /* The pgd page (page global directory - level 2 page table) is
-   * constructed by setup_guest() in tools/libxc/xc_linux_build.c
-   * Lookup the machine address of ptetab in pgd to construct the
-   * machine address of the pte entry for shared_info,
-   * and then call mmu_update to change mapping.
-   */
-  pgd = (pgd_t*)HYPERVISOR_start_info->pt_base;
-  ptetab_ma = pgd_val(pgd[pgd_index((unsigned long)shared_info)])
-              & (PAGE_MASK);
-  idx = pte_index((unsigned long)shared_info);
-  pte_ma = ptetab_ma + (idx*sizeof(pte_t));
-
-  req.ptr  = pte_ma;
-  req.val  = HYPERVISOR_start_info->shared_info|7;
-  HYPERVISOR_mmu_update(&req, 1, NULL);
+  XenMemInit(StartInfo);
 
   /*
    * Setup control interface
    */
-  XenCtrlIfEvtchn = HYPERVISOR_start_info->domain_controller_evtchn;
-  CtrlIf = ((control_if_t *)((char *)shared_info + 2048));
+  XenCtrlIfEvtchn = XenStartInfo->domain_controller_evtchn;
+  CtrlIf = ((control_if_t *)((char *)XenSharedInfo + 2048));
 
   /* Sync up with shared indexes. */
   FRONT_RING_ATTACH(&XenCtrlIfTxRing, &CtrlIf->tx_ring);
   BACK_RING_ATTACH(&XenCtrlIfRxRing, &CtrlIf->rx_ring);
 
+  /* Now move the stack to low mem */
+  /* Copy the stack page */
+  __asm__ __volatile__("mov %%esp,%%eax\n" : "=a" (OldStackPtr));
+  OldStackPage = (void *) ROUND_DOWN((unsigned long) OldStackPtr, PAGE_SIZE);
+  NewStackPage = (void *)((char *) &start - PAGE_SIZE);
+  memcpy(NewStackPage, OldStackPage, PAGE_SIZE);
+  /* Switch the stack around. */
+  NewStackPtr = (void *)((char *) NewStackPage + (OldStackPtr - OldStackPage));
+  __asm__ __volatile__("mov %%eax,%%esp\n" : : "a"(NewStackPtr));
+  /* Don't use stack based variables after this */
+
   /* Start freeldr */
   XenActive = TRUE;
-  BootMain(NULL);
+  BootMain(XenStartInfo->cmd_line);
+
+  /* Shouldn't get here */
+  HYPERVISOR_shutdown();
 }
 
 #define XEN_UNIMPLEMENTED(routine) \
@@ -230,13 +215,6 @@ XenVideoPrepareForReactOS(VOID)
     XEN_UNIMPLEMENTED("XenVideoPrepareForReactOS");
   }
 
-ULONG
-XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
-  {
-    XEN_UNIMPLEMENTED("XenMemGetMemoryMap");
-    return 0;
-  }
-
 BOOL
 XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
                           ULONG SectorCount, PVOID Buffer)
@@ -279,12 +257,6 @@ XenHwDetect(VOID)
   {
     XEN_UNIMPLEMENTED("XenHwDetect");
   }
-
-/* Create shared_info page.  This page is mapped over by the real shared
- * info page
- */
-asm(".align 0x1000; shared_info:;.skip 0x1000;");
-
 
 /* emit the elf segment Xen builder expects in kernel image */ asm(".section __xen_guest;"
     ".ascii \"GUEST_OS=linux,GUEST_VER=2.6,XEN_VER=3.0,VIRT_BASE=0x00008000\";"

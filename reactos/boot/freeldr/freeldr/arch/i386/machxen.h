@@ -33,8 +33,11 @@ extern BOOL XenActive;
 extern ctrl_front_ring_t XenCtrlIfTxRing;
 extern ctrl_back_ring_t XenCtrlIfRxRing;
 extern int XenCtrlIfEvtchn;
+extern start_info_t *XenStartInfo;
+extern shared_info_t *XenSharedInfo;
 
 VOID XenMachInit(VOID);
+VOID XenMemInit(start_info_t *StartInfo);
 
 VOID XenConsPutChar(int Ch);
 BOOL XenConsKbHit();

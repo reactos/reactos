@@ -24,7 +24,7 @@ KDBG := 0
 #
 # Whether to compile for debugging
 #
-DBG := 0
+DBG := 1
 
 #
 # Whether to compile a multiprocessor or single processor version
@@ -36,3 +36,7 @@ CONFIG_SMP := 0
 #
 #NDISVERSION=NDIS50
 
+#
+# Whether to compile for Xen, and, if so, which version
+#
+XEN := 3
