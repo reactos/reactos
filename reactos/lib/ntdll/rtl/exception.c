@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.16 2003/09/13 06:17:51 vizzini Exp $
+/* $Id: exception.c,v 1.17 2004/04/08 21:14:18 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -39,8 +39,6 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
 {
   EXCEPTION_RECORD NestedExceptionRecord;
   NTSTATUS Status;
-
-  DPRINT("KiUserExceptionDispatcher()\n");
 
   if (RtlpDispatchException(ExceptionRecord, Context) != ExceptionContinueExecution)
     {
