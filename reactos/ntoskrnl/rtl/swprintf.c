@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.10 2003/07/11 01:23:16 royce Exp $
+/* $Id: swprintf.c,v 1.11 2003/09/02 18:19:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,8 +64,8 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 {
 	wchar_t c,sign, tmp[66];
 	const wchar_t *digits;
-	const wchar_t small_digits[] = L"0123456789abcdefghijklmnopqrstuvwxyz";
-	const wchar_t large_digits[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	const wchar_t *small_digits = L"0123456789abcdefghijklmnopqrstuvwxyz";
+	const wchar_t *large_digits = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	int i;
 
 	digits = (type & LARGE) ? large_digits : small_digits;

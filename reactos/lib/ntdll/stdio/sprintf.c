@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.11 2003/07/11 13:50:23 royce Exp $
+/* $Id: sprintf.c,v 1.12 2003/09/02 18:19:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,8 +62,8 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 {
 	char c,sign,tmp[66];
 	const char *digits;
-	const char small_digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	const char large_digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	const char *small_digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+	const char *large_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	int i;
 
 	digits = (type & LARGE) ? large_digits : small_digits;
