@@ -8,6 +8,8 @@
 #include <win32k/kapi.h>
 #include <rosrtl/logfont.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented
@@ -555,11 +557,15 @@ SetWindowOrgEx(
  */
 BOOL
 STDCALL
-DeleteObject(
-	HGDIOBJ		a0
-	)
+DeleteObject(HGDIOBJ Obj)
 {
-	return NtGdiDeleteObject(a0);
+  if (0 != ((DWORD) Obj & 0x00800000))
+    {
+      DPRINT1("Trying to delete system object 0x%x\n", Obj);
+      return FALSE;
+    }
+
+  return NtGdiDeleteObject(Obj);
 }
 
 
