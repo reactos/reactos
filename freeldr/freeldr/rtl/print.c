@@ -26,7 +26,7 @@ void print(char *str)
 {
 	int	i;
 
-	for(i=0; i<strlen(str); i++)
+	for (i = 0; i < strlen(str); i++)
 		putchar(str[i]);
 }
 
@@ -36,7 +36,7 @@ void print(char *str)
  */
 void printf(char *format, ... )
 {
-	int *dataptr = (int *) &format;
+	int *dataptr = (int *)(void *)&format;
 	char c, *ptr, str[16];
 	int ll;
 
@@ -102,7 +102,7 @@ void printf(char *format, ... )
 
 void sprintf(char *buffer, char *format, ... )
 {
-	int *dataptr = (int *) &format;
+	int *dataptr = (int *)(void *)&format;
 	char c, *ptr, str[16];
 	char *p = buffer;
 	int ll;

@@ -780,7 +780,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
       /* Add a new block */
       if (!CmiAddBin(RegistryHive,
 		     ((sizeof(HBIN) + CellSize - 1) / REG_BLOCK_SIZE) + 1,
-		     (PVOID *)&NewBlock,
+		     (PVOID *)(PVOID)&NewBlock,
 		     pBlockOffset))
 	return FALSE;
     }
@@ -844,7 +844,7 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
 		(SubKeyCount * sizeof(HASH_RECORD));
   Status = CmiAllocateCell (Hive,
 			    NewHashSize,
-			    (PVOID*) &HashCell,
+			    (PVOID*)(PVOID)&HashCell,
 			    HBOffset);
   if ((HashCell == NULL) || (Status == FALSE))
     {
@@ -937,7 +937,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
   NameSize = (ValueName == NULL) ? 0 : strlen (ValueName);
   Status = CmiAllocateCell (Hive,
 			    sizeof(VALUE_CELL) + NameSize,
-			    (PVOID*)&NewValueCell,
+			    (PVOID*)(PVOID)&NewValueCell,
 			    ValueCellOffset);
   if ((NewValueCell == NULL) || (Status == FALSE))
     {
@@ -1081,7 +1081,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
       /* Allocate data cell */
       if (!CmiAllocateCell (Hive,
 			    sizeof(CELL_HEADER) + DstDataSize,
-			    (PVOID *)&DataCell,
+			    (PVOID *)(PVOID)&DataCell,
 			    &DataCellOffset))
 	{
 	  return FALSE;

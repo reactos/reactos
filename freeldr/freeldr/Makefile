@@ -188,24 +188,25 @@ endif
 # fathelp.o must come first in the link line because it contains bootsector helper code
 # arch.o must come second in the link line because it contains the startup code
 ARCH_OBJS	=	fathelp.o	\
-				arch.o		\
-				i386idt.o	\
-				i386trap.o	\
-				i386cpu.o	\
-				i386pnp.o	\
-				boot.o		\
-				linux.o		\
-				mb.o		\
-				i386mem.o	\
-				i386rtl.o	\
-				i386vid.o	\
-				drvmap.o	\
-				int386.o	\
-				i386disk.o	\
-				portio.o	\
-				hardware.o	\
-				hwcpu.o		\
-				_alloca.o		# For Mingw32 builds
+			arch.o		\
+			i386idt.o	\
+			i386trap.o	\
+			i386cpu.o	\
+			i386pnp.o	\
+			boot.o		\
+			linux.o		\
+			mb.o		\
+			i386mem.o	\
+			i386rtl.o	\
+			i386vid.o	\
+			drvmap.o	\
+			int386.o	\
+			i386disk.o	\
+			portio.o	\
+			hardware.o	\
+			hwcpu.o		\
+			hwpci.o		\
+			_alloca.o		# For Mingw32 builds
 
 
 RTL_OBJS	=	print.o		\

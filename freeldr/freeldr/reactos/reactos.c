@@ -468,16 +468,14 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	char  szFileName[1024];
 	char  szBootPath[256];
 	int		i;
-//	int		nNumDriverFiles=0;
-//	int		nNumFilesLoaded=0;
 	char  MsgBuffer[256];
 	U32 SectionId;
 
 	char* Base;
 	U32 Size;
 
-        PARTITION_TABLE_ENTRY PartitionTableEntry;
-        U32 rosPartition;
+	PARTITION_TABLE_ENTRY PartitionTableEntry;
+	U32 rosPartition;
 
 	//
 	// Open the operating system section
@@ -500,7 +498,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
 	if (mb_info.mmap_length)
 	{
 		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
@@ -556,7 +554,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 			UiMessageBox(MsgBuffer);
 			return;
 		}
-	        
+
 		/* recalculate the boot partition for freeldr */
 		i = 0;
 		rosPartition = 0;
@@ -576,17 +574,18 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		      }
 		   }
 		}
+
 		if (BootPartition == 0)
 		{
 			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
 			UiMessageBox(MsgBuffer);
 			return;
 		}
-	        
+
 		/* copy ARC path into kernel command line */
 		strcpy(multiboot_kernel_cmdline, value);
 	}
-	        
+
 	/* Set boot drive and partition */
 	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;

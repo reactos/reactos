@@ -251,7 +251,7 @@ VOID RunLoader(VOID)
   mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
   mb_info.mods_count = 0;
   mb_info.mods_addr = (unsigned long)multiboot_modules;
-  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
   if (mb_info.mmap_length)
     {
       mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
@@ -497,77 +497,56 @@ for(;;);
       return;
     }
 
+#if 0
+  /* Load isapnp.sys */
+  if (!LoadDriver(SourcePath, "isapnp.sys"))
+    return;
+#endif
 
-  /* Load drivers */
-  if (BootDrive < 0x80)
-    {
-      /*
-       * Load floppy.sys
-       */
-      if (!LoadDriver(SourcePath, "floppy.sys"))
-	return;
+#if 0
+  /* Load pci.sys */
+  if (!LoadDriver(SourcePath, "pci.sys"))
+    return;
+#endif
 
-      /*
-       * Load vfatfs.sys (could be loaded by the setup prog!)
-       */
-      if (!LoadDriver(SourcePath, "vfatfs.sys"))
-	return;
-    }
-  else
-    {
-	/*
-	 * Load scsiport.sys
-	 */
-	if (!LoadDriver(SourcePath, "scsiport.sys"))
-		return;
+  /* Load scsiport.sys */
+  if (!LoadDriver(SourcePath, "scsiport.sys"))
+    return;
 
-	/*
-	 * Load atapi.sys (depends on hardware detection)
-	 */
-	if (!LoadDriver(SourcePath, "atapi.sys"))
-		return;
+  /* Load atapi.sys (depends on hardware detection) */
+  if (!LoadDriver(SourcePath, "atapi.sys"))
+    return;
 
-	/*
-	 * Load class2.sys
-	 */
-	if (!LoadDriver(SourcePath, "class2.sys"))
-		return;
+  /* Load class2.sys */
+  if (!LoadDriver(SourcePath, "class2.sys"))
+    return;
 
-	/*
-	 * Load cdrom.sys
-	 */
-	if (!LoadDriver(SourcePath, "cdrom.sys"))
-		return;
+  /* Load cdrom.sys */
+  if (!LoadDriver(SourcePath, "cdrom.sys"))
+    return;
 
-	/*
-	 * Load cdfs.sys
-	 */
-	if (!LoadDriver(SourcePath, "cdfs.sys"))
-		return;
+  /* Load cdfs.sys */
+  if (!LoadDriver(SourcePath, "cdfs.sys"))
+    return;
 
-	/*
-	 * Load disk.sys
-	 */
-	if (!LoadDriver(SourcePath, "disk.sys"))
-		return;
+  /* Load disk.sys */
+  if (!LoadDriver(SourcePath, "disk.sys"))
+    return;
 
-	/*
-	 * Load vfatfs.sys (could be loaded by the setup prog!)
-	 */
-	if (!LoadDriver(SourcePath, "vfatfs.sys"))
-		return;
-    }
+  /* Load floppy.sys */
+  if (!LoadDriver(SourcePath, "floppy.sys"))
+    return;
+
+  /* Load vfatfs.sys (could be loaded by the setup prog!) */
+  if (!LoadDriver(SourcePath, "vfatfs.sys"))
+    return;
 
 
-  /*
-   * Load keyboard driver
-   */
+  /* Load keyboard driver */
   if (!LoadDriver(SourcePath, "keyboard.sys"))
     return;
 
-  /*
-   * Load screen driver
-   */
+  /* Load screen driver */
   if (!LoadDriver(SourcePath, "blue.sys"))
     return;
 
@@ -575,9 +554,7 @@ for(;;);
   UiUnInitialize("Booting ReactOS...");
 #endif
 
-  /*
-   * Now boot the kernel
-   */
+  /* Now boot the kernel */
   DiskStopFloppyMotor();
   boot_reactos();
 }

@@ -1,3 +1,8 @@
+Changes in v1.8.23 (30/08/2004) (ekohl)
+
+- Fixed some compiler warnings.
+- Detect and report PCI-BIOS.
+
 Changes in v1.8.22 (21/05/2004) (navaraf)
 
 - Fixed lots of bugs in NTFS code and added correct update sequence

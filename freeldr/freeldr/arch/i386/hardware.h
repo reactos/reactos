@@ -163,6 +163,9 @@ VOID SetComponentInformation(HKEY ComponentKey,
 /* hwcpu.c */
 VOID DetectCPUs(HKEY SystemKey);
 
+/* hwpci.c */
+VOID DetectPciBios(HKEY SystemKey, U32 *BusNumber);
+
 /* i386cpu.S */
 U32 CpuidSupported(VOID);
 VOID GetCpuid(U32 Level,

@@ -374,6 +374,12 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   /* Increment bus number */
   (*BusNumber)++;
 
+  /* Set 'Component Information' value similar to my NT4 box */
+  SetComponentInformation(BusKey,
+                          0x0,
+                          0x0,
+                          0xFFFFFFFF);
+
   /* Set 'Identifier' value */
   Error = RegSetValue(BusKey,
 		      "Identifier",
@@ -1334,9 +1340,10 @@ DetectSerialPorts(HKEY BusKey)
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_SERIAL_DEVICE_DATA SerialDeviceData;
-  U32 Base[4] = {0x3F8, 0x2F8, 0x3E8, 0x2E8};
   U32 Irq[4] = {4, 3, 4, 3};
+  U32 Base;
   char Buffer[80];
+  PU16 BasePtr;
   U32 ControllerNumber = 0;
   HKEY ControllerKey;
   U32 i;
@@ -1345,122 +1352,124 @@ DetectSerialPorts(HKEY BusKey)
 
   DbgPrint((DPRINT_HWDETECT, "DetectSerialPorts()\n"));
 
-  for (i = 0; i < 4; i++)
+  ControllerNumber = 0;
+  BasePtr = (PU16)0x400;
+  for (i = 0; i < 4; i++, BasePtr++)
     {
-      WRITE_PORT_UCHAR ((PUCHAR)(Base[i] + 4), 0x10);
-      if (!(READ_PORT_UCHAR((PUCHAR)Base[i] + 6) & 0xf0))
+      Base = (U32)*BasePtr;
+      if (Base == 0)
+        continue;
+
+      DbgPrint((DPRINT_HWDETECT,
+		"Found COM%u port at 0x%x\n",
+		i + 1,
+		Base));
+
+      /* Create controller key */
+      sprintf(Buffer,
+	      "SerialController\\%u",
+	      ControllerNumber);
+
+      Error = RegCreateKey(BusKey,
+			   Buffer,
+			   &ControllerKey);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+	  continue;
+	}
+      DbgPrint((DPRINT_HWDETECT, "Created key: %s\n", Buffer));
+
+      /* Set 'ComponentInformation' value */
+      SetComponentInformation(ControllerKey,
+			      0x78,
+			      ControllerNumber,
+			      0xFFFFFFFF);
+
+      /* Build full device descriptor */
+      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+	     2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
+	     sizeof(CM_SERIAL_DEVICE_DATA);
+      FullResourceDescriptor = MmAllocateMemory(Size);
+      if (FullResourceDescriptor == NULL)
 	{
 	  DbgPrint((DPRINT_HWDETECT,
-		    "Found COM%u port at 0x%x\n",
-		    i + 1,
-		    Base[i]));
-
-	  /* Create controller key */
-	  sprintf(Buffer,
-		  "SerialController\\%u",
-		  ControllerNumber);
-
-	  Error = RegCreateKey(BusKey,
-			       Buffer,
-			       &ControllerKey);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-	      continue;
-	    }
-	  DbgPrint((DPRINT_HWDETECT, "Created key: %s\n", Buffer));
-
-	  /* Set 'ComponentInformation' value */
-	  SetComponentInformation(ControllerKey,
-				  0x78,
-				  ControllerNumber,
-				  0xFFFFFFFF);
-
-	  /* Build full device descriptor */
-	  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
-		 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
-		 sizeof(CM_SERIAL_DEVICE_DATA);
-	  FullResourceDescriptor = MmAllocateMemory(Size);
-	  if (FullResourceDescriptor == NULL)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"Failed to allocate resource descriptor\n"));
-	      continue;
-	    }
-	  memset(FullResourceDescriptor, 0, Size);
-
-	  /* Initialize resource descriptor */
-	  FullResourceDescriptor->InterfaceType = Isa;
-	  FullResourceDescriptor->BusNumber = 0;
-	  FullResourceDescriptor->PartialResourceList.Count = 3;
-
-	  /* Set IO Port */
-	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
-	  PartialDescriptor->Type = CmResourceTypePort;
-	  PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-	  PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-	  PartialDescriptor->u.Port.Start = (U64)Base[i];
-	  PartialDescriptor->u.Port.Length = 7;
-
-	  /* Set Interrupt */
-	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
-	  PartialDescriptor->Type = CmResourceTypeInterrupt;
-	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-	  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-	  PartialDescriptor->u.Interrupt.Level = Irq[i];
-	  PartialDescriptor->u.Interrupt.Vector = Irq[i];
-	  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
-
-	  /* Set serial data (device specific) */
-	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[2];
-	  PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
-	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-	  PartialDescriptor->Flags = 0;
-	  PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_SERIAL_DEVICE_DATA);
-
-	  SerialDeviceData =
-	   (PCM_SERIAL_DEVICE_DATA)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[3];
-	  SerialDeviceData->BaudClock = 1843200; /* UART Clock frequency (Hertz) */
-
-	  /* Set 'Configuration Data' value */
-	  Error = RegSetValue(ControllerKey,
-			      "Configuration Data",
-			      REG_FULL_RESOURCE_DESCRIPTOR,
-			      (PU8) FullResourceDescriptor,
-			      Size);
-	  MmFreeMemory(FullResourceDescriptor);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue(Configuration Data) failed (Error %u)\n",
-			(int)Error));
-	    }
-
-	  /* Set 'Identifier' value */
-	  sprintf(Buffer,
-		  "COM%u",
-		  i + 1);
-	  Error = RegSetValue(ControllerKey,
-			      "Identifier",
-			      REG_SZ,
-			      (PU8)Buffer,
-			      strlen(Buffer) + 1);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue() failed (Error %u)\n",
-			(int)Error));
-	      continue;
-	    }
-	  DbgPrint((DPRINT_HWDETECT,
-		    "Created value: Identifier %s\n",
-		    Buffer));
-
-	  /* Detect serial mouse */
-	  DetectSerialPointerPeripheral(ControllerKey, Base[i]);
-
-	  ControllerNumber++;
+		    "Failed to allocate resource descriptor\n"));
+	  continue;
 	}
+      memset(FullResourceDescriptor, 0, Size);
+
+      /* Initialize resource descriptor */
+      FullResourceDescriptor->InterfaceType = Isa;
+      FullResourceDescriptor->BusNumber = 0;
+      FullResourceDescriptor->PartialResourceList.Count = 3;
+
+      /* Set IO Port */
+      PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+      PartialDescriptor->Type = CmResourceTypePort;
+      PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+      PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+      PartialDescriptor->u.Port.Start = (U64)Base;
+      PartialDescriptor->u.Port.Length = 7;
+
+      /* Set Interrupt */
+      PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
+      PartialDescriptor->Type = CmResourceTypeInterrupt;
+      PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+      PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+      PartialDescriptor->u.Interrupt.Level = Irq[i];
+      PartialDescriptor->u.Interrupt.Vector = Irq[i];
+      PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+      /* Set serial data (device specific) */
+      PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[2];
+      PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+      PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+      PartialDescriptor->Flags = 0;
+      PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_SERIAL_DEVICE_DATA);
+
+      SerialDeviceData =
+	(PCM_SERIAL_DEVICE_DATA)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[3];
+      SerialDeviceData->BaudClock = 1843200; /* UART Clock frequency (Hertz) */
+
+      /* Set 'Configuration Data' value */
+      Error = RegSetValue(ControllerKey,
+			  "Configuration Data",
+			  REG_FULL_RESOURCE_DESCRIPTOR,
+			  (PU8) FullResourceDescriptor,
+			  Size);
+      MmFreeMemory(FullResourceDescriptor);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue(Configuration Data) failed (Error %u)\n",
+		    (int)Error));
+	}
+
+      /* Set 'Identifier' value */
+      sprintf(Buffer,
+	      "COM%u",
+	      i + 1);
+      Error = RegSetValue(ControllerKey,
+			  "Identifier",
+			  REG_SZ,
+			  (PU8)Buffer,
+			  strlen(Buffer) + 1);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue() failed (Error %u)\n",
+		    (int)Error));
+	  continue;
+	}
+      DbgPrint((DPRINT_HWDETECT,
+		"Created value: Identifier %s\n",
+		Buffer));
+
+      /* Detect serial mouse */
+      DetectSerialPointerPeripheral(ControllerKey, Base);
+
+      ControllerNumber++;
     }
 }
 
@@ -1474,6 +1483,7 @@ DetectParallelPorts(HKEY BusKey)
   char Buffer[80];
   HKEY ControllerKey;
   PU16 BasePtr;
+  U32 Base;
   U32 ControllerNumber;
   U32 i;
   S32 Error;
@@ -1485,13 +1495,14 @@ DetectParallelPorts(HKEY BusKey)
   BasePtr = (PU16)0x408;
   for (i = 0; i < 3; i++, BasePtr++)
     {
-      if (*BasePtr == 0)
+      Base = (U32)*BasePtr;
+      if (Base == 0)
         continue;
 
       DbgPrint((DPRINT_HWDETECT,
 		"Parallel port %u: %x\n",
 		ControllerNumber,
-		*BasePtr));
+		Base));
 
       /* Create controller key */
       sprintf(Buffer,
@@ -1510,7 +1521,7 @@ DetectParallelPorts(HKEY BusKey)
 
       /* Set 'ComponentInformation' value */
       SetComponentInformation(ControllerKey,
-			      0x78, /* FIXME */
+			      0x40,
 			      ControllerNumber,
 			      0xFFFFFFFF);
 
@@ -1538,7 +1549,7 @@ DetectParallelPorts(HKEY BusKey)
       PartialDescriptor->Type = CmResourceTypePort;
       PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
       PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-      PartialDescriptor->u.Port.Start = (U64)*BasePtr;
+      PartialDescriptor->u.Port.Start = (U64)Base;
       PartialDescriptor->u.Port.Length = 3;
 
       /* Set Interrupt */
@@ -2245,8 +2256,8 @@ DetectHardware(VOID)
   DetectCPUs(SystemKey);
 
   /* Detect buses */
+  DetectPciBios(SystemKey, &BusNumber);
 #if 0
-  DetectPciBios(&BusNumber);
   DetectApmBios(&BusNumber);
 #endif
   DetectPnpBios(SystemKey, &BusNumber);

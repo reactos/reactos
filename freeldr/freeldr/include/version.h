@@ -22,7 +22,7 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v1.8.22"
+#define VERSION			"FreeLoader v1.8.23"
 #define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
 #define AUTHOR_EMAIL	"<brianp@sginet.com>"
 #define BY_AUTHOR		"by Brian Palmer"
@@ -36,7 +36,7 @@
 //
 #define FREELOADER_MAJOR_VERSION	1
 #define FREELOADER_MINOR_VERSION	8
-#define FREELOADER_PATCH_VERSION	22
+#define FREELOADER_PATCH_VERSION	23
 
 
 #ifndef ASM

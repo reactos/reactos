@@ -38,39 +38,39 @@ EXTERN(_CpuidSupported)
 
 	pushl	%ecx			/* save ECX */
 
-	pushfl					/* push original EFLAGS */
+	pushfl				/* push original EFLAGS */
 	popl	%eax			/* get original EFLAGS */
 	movl	%eax,%ecx		/* save original EFLAGS */
-	xorl	$0x40000,%eax	/* flip AC bit in EFLAGS */
+	xorl	$0x40000,%eax		/* flip AC bit in EFLAGS */
 	pushl	%eax			/* save new EFLAGS value on stack */
-	popfl					/* replace current EFLAGS value */
+	popfl				/* replace current EFLAGS value */
 
-	pushfl					/* get new EFLAGS */
+	pushfl				/* get new EFLAGS */
 	popl	%eax			/* store new EFLAGS in EAX */
 	xorl	%ecx, %eax		/* can't toggle AC bit, processor=80386 */
 
 	movl	$0x300,%eax		/* return processor id */
-    jz		NoCpuid			/* jump if 80386 processor */
+	jz	NoCpuid			/* jump if 80386 processor */
 
 	pushl	%ecx
-	popfl					/* restore AC bit in EFLAGS first */
+	popfl				/* restore AC bit in EFLAGS first */
 
 	movl	%ecx,%eax		/* get original EFLAGS */
-	xorl	$0x200000,%eax	/* flip ID bit in EFLAGS */
+	xorl	$0x200000,%eax		/* flip ID bit in EFLAGS */
 	pushl	%eax			/* save new EFLAGS value on stack */
-	popfl					/* replace current EFLAGS value */
-	pushfl					/* get new EFLAGS */
+	popfl				/* replace current EFLAGS value */
+	pushfl				/* get new EFLAGS */
 	popl	%eax			/* store new EFLAGS in EAX */
 	xorl	%ecx,%eax		/* can't toggle ID bit, */
 
 	movl	$0x400,%eax		/* return processor id */
-	je		NoCpuid			/* processor=80486 */
+	je	NoCpuid			/* processor=80486 */
 
 	movl	$1,%eax			/* CPUID supported */
 
 NoCpuid:
 	pushl	%ecx
-	popfl					/* restore EFLAGS */
+	popfl				/* restore EFLAGS */
 	popl	%ecx			/* retore ECX */
 
 	ret
@@ -97,16 +97,16 @@ EXTERN(_GetCpuid)
 	cpuid
 
 	movl	0x0C(%ebp),%esi
-	movl	%eax, (%esi)
+	movl	%eax,(%esi)
 
 	movl	0x10(%ebp),%esi
-	movl	%ebx, (%esi)
+	movl	%ebx,(%esi)
 
 	movl	0x14(%ebp),%esi
-	movl	%ecx, (%esi)
+	movl	%ecx,(%esi)
 
 	movl	0x18(%ebp),%esi
-	movl	%edx, (%esi)
+	movl	%edx,(%esi)
 
 	popl	%esi
 	popl	%edx
