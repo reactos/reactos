@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.74 2004/05/21 10:09:31 weiden Exp $
+/* $Id: dllmain.c,v 1.75 2004/05/22 16:48:50 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -181,6 +181,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       UnregisterThreadHotKeys(Thread);
       DestroyThreadWindows(Thread);
       IntBlockInput(Win32Thread, FALSE);
+      MsqDestroyMessageQueue(Win32Thread->MessageQueue);
     }
 
   return STATUS_SUCCESS;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.98 2004/05/20 21:48:41 weiden Exp $
+/* $Id: msgqueue.c,v 1.99 2004/05/22 16:48:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -420,8 +420,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     return FALSE;
   }
 
-  DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
-
   WaitObjects[1] = &MessageQueue->NewMessages;
   WaitObjects[0] = &HardwareMessageQueueLock;
   do
@@ -434,6 +432,8 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
         }
     }
   while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+
+  DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
   /* Process messages in the message queue itself. */
   IntLockHardwareMessageQueue(MessageQueue);
@@ -729,6 +729,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
   LRESULT Result;
+  BOOL Freed;
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
   IntLockMessageQueue(MessageQueue);
@@ -737,19 +738,35 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       IntUnLockMessageQueue(MessageQueue);
       return(FALSE);
     }
+  
+  /* remove it from the list of pending messages */
   Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
   Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+  
+  /* insert it to the list of messages that are currently dispatched by this
+     message queue */
+  InsertTailList(&MessageQueue->LocalDispatchingMessagesHead,
+		 &Message->ListEntry);
+  
   IntUnLockMessageQueue(MessageQueue);
-
+  
   /* Call the window procedure. */
   Result = IntSendMessage(Message->Msg.hwnd,
                           Message->Msg.message,
                           Message->Msg.wParam,
                           Message->Msg.lParam);
+  
+  /* remove the message from the local dispatching list, because it doesn't need
+     to be cleaned up on thread termination anymore */
+  IntLockMessageQueue(MessageQueue);
+  RemoveEntryList(&Message->ListEntry);
+  IntUnLockMessageQueue(MessageQueue);
 
   /* remove the message from the dispatching list, so lock the sender's message queue */
   IntLockMessageQueue(Message->SenderQueue);
-  if(Message->DispatchingListEntry.Flink != NULL)
+  
+  Freed = (Message->DispatchingListEntry.Flink == NULL);
+  if(!Freed)
   {
     /* only remove it from the dispatching list if not already removed by a timeout */
     RemoveEntryList(&Message->DispatchingListEntry);
@@ -768,12 +785,12 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
     {
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
     }
-
+  
   /* unlock the sender's message queue, the safe operation is done */
   IntUnLockMessageQueue(Message->SenderQueue);
 
   /* Notify the sender if they specified a callback. */
-  if (Message->CompletionCallback != NULL)
+  if (!Freed && Message->CompletionCallback != NULL)
     {
       if(!(NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
 					         sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG)))
@@ -792,7 +809,13 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
     }
 
 Notified:
-  /* FIXME - decrease reference counter of sender's message queue here */
+  if(!Freed)
+  {
+    /* only dereference our message queue if the message has not been timed out */
+    IntDereferenceMessageQueue(MessageQueue);
+  }
+  
+  /* only free the message if not freed already */
   ExFreePool(Message);
   return(TRUE);
 }
@@ -845,6 +868,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   Message->Result = &Result;
   Message->SenderQueue = ThreadQueue;
   Message->CompletionCallback = NULL;
+  
+  IntReferenceMessageQueue(MessageQueue);
   
   /* add it to the list of pending messages */
   IntLockMessageQueue(ThreadQueue);
@@ -902,6 +927,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		Message->CompletionEvent = NULL;
                 Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
+                IntDereferenceMessageQueue(MessageQueue);
                 break;
               }
             Entry = Entry->Flink;
@@ -941,7 +967,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   }
                 Entry = Entry->Flink;
               }
-            IntUnLockMessageQueue(MessageQueue);
+	    IntUnLockMessageQueue(MessageQueue);
 	    
 	    /* remove from the local dispatching list so the other thread knows,
 	       it can't pass a result and it must not set the completion event anymore */
@@ -959,6 +985,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		    Message->CompletionEvent = NULL;
                     Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
+                    IntDereferenceMessageQueue(MessageQueue);
                     break;
                   }
                 Entry = Entry->Flink;
@@ -1085,6 +1112,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
   InitializeListHead(&MessageQueue->DispatchingMessagesHead);
+  InitializeListHead(&MessageQueue->LocalDispatchingMessagesHead);
   KeInitializeMutex(&MessageQueue->HardwareLock, 0);
   ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
@@ -1098,19 +1126,75 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
 }
 
 VOID FASTCALL
-MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
+MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY CurrentEntry;
   PUSER_MESSAGE CurrentMessage;
-
-  CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
-  while (CurrentEntry != &MessageQueue->PostedMessagesListHead)
+  PUSER_SENT_MESSAGE CurrentSentMessage;
+  
+  IntLockMessageQueue(MessageQueue);
+  
+  /* cleanup posted messages */
+  while (!IsListEmpty(&MessageQueue->PostedMessagesListHead))
     {
+      CurrentEntry = RemoveHeadList(&MessageQueue->PostedMessagesListHead);
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
 					 ListEntry);
-      CurrentEntry = CurrentEntry->Flink;
       MsqDestroyMessage(CurrentMessage);
     }
+  
+  /* remove the messages that have not yet been dispatched */
+  while (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, 
+                                             ListEntry);
+      
+      DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
+      
+      /* remove the message from the dispatching list */
+      if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
+      {
+        RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+      }
+      
+      /* wake the sender's thread */
+      if (CurrentSentMessage->CompletionEvent != NULL)
+      {
+        KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      }
+      
+      /* dereference our message queue */
+      IntDereferenceMessageQueue(MessageQueue);
+      
+      /* free the message */
+      ExFreePool(CurrentSentMessage);
+    }
+  
+  /* notify senders of dispatching messages. This needs to be cleaned up if e.g.
+     ExitThread() was called in a SendMessage() umode callback */
+  while (!IsListEmpty(&MessageQueue->LocalDispatchingMessagesHead))
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->LocalDispatchingMessagesHead);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
+                                             ListEntry);
+      
+      DPRINT("Notify the sender, the thread has been terminated while dispatching a message!\n");
+      
+      /* wake the sender's thread */
+      if (CurrentSentMessage->CompletionEvent != NULL)
+      {
+        KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      }
+      
+      /* dereference our message queue */
+      IntDereferenceMessageQueue(MessageQueue);
+      
+      /* free the message */
+      ExFreePool(CurrentSentMessage);
+    }
+  DbgPrint("Done cleaning up message queue...\n"); 
+  IntUnLockMessageQueue(MessageQueue);
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -1128,6 +1212,9 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
     }
 
   RtlZeroMemory(MessageQueue, sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
+  /* hold at least one reference until it'll be destroyed */
+  IntReferenceMessageQueue(MessageQueue);
+  /* initialize the queue */
   MsqInitializeMessageQueue(Thread, MessageQueue);
 
   return MessageQueue;
@@ -1136,8 +1223,9 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-  MsqFreeMessageQueue(MessageQueue);
-  ExFreePool(MessageQueue);
+  MsqCleanupMessageQueue(MessageQueue);
+  /* decrease the reference counter, if it hits zero, the queue will be freed */
+  IntDereferenceMessageQueue(MessageQueue);
 }
 
 PHOOKTABLE FASTCALL

@@ -42,6 +42,9 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
 
 typedef struct _USER_MESSAGE_QUEUE
 {
+  /* Reference counter, only access this variable with interlocked functions! */
+  LONG References;
+  
   /* Owner of the message queue */
   struct _ETHREAD *Thread;
   /* Queue of messages sent to the queue. */
@@ -99,6 +102,8 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
+  /* messages that are currently dispatched by this message queue, required for cleanup */
+  LIST_ENTRY LocalDispatchingMessagesHead;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL
@@ -127,7 +132,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
-MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqCreateMessageQueue(struct _ETHREAD *Thread);
 VOID FASTCALL
@@ -197,20 +202,32 @@ LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 
 #define IntLockMessageQueue(MsgQueue) \
-  ExAcquireFastMutex(&MsgQueue->Lock)
+  ExAcquireFastMutex(&(MsgQueue)->Lock)
 
 #define IntUnLockMessageQueue(MsgQueue) \
-  ExReleaseFastMutex(&MsgQueue->Lock)
+  ExReleaseFastMutex(&(MsgQueue)->Lock)
 
 #define IntLockHardwareMessageQueue(MsgQueue) \
-  KeWaitForMutexObject(&MsgQueue->HardwareLock, UserRequest, KernelMode, FALSE, NULL)
+  KeWaitForMutexObject(&(MsgQueue)->HardwareLock, UserRequest, KernelMode, FALSE, NULL)
 
 #define IntUnLockHardwareMessageQueue(MsgQueue) \
-  KeReleaseMutex(&MsgQueue->HardwareLock, FALSE)
+  KeReleaseMutex(&(MsgQueue)->HardwareLock, FALSE)
+
+#define IntReferenceMessageQueue(MsgQueue) \
+  InterlockedIncrement(&(MsgQueue)->References)
+
+#define IntDereferenceMessageQueue(MsgQueue) \
+  do { \
+    if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
+    { \
+      DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
+      ExFreePool((MsgQueue)); \
+    } \
+  } while(0)
 
 /* check the queue status */
 #define MsqIsSignaled(MsgQueue) \
-  ((MsgQueue->WakeBits & MsgQueue->WakeMask) || (MsgQueue->ChangedBits & MsgQueue->ChangedMask))
+  (((MsgQueue)->WakeBits & (MsgQueue)->WakeMask) || ((MsgQueue)->ChangedBits & (MsgQueue)->ChangedMask))
 
 #define IS_BTN_MESSAGE(message,code) \
   ((message) == WM_LBUTTON##code || \
