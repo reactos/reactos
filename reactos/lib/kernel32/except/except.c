@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.19 2004/12/12 22:39:45 weiden Exp $
+/* $Id: except.c,v 1.20 2004/12/12 23:03:56 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include "../include/debug.h"
 
 UINT GlobalErrMode = 0;
-LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
+LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
 
 UINT GetErrorMode(void)
 {
