@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.28 2004/04/22 01:55:49 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.29 2004/04/23 05:37:10 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,9 @@ extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
 VOID STDCALL KeQueryInterruptTime(PLARGE_INTEGER CurrentTime);
 
 VOID MmPrintMemoryStatistic(VOID);
+
+extern ULONG Ke386CpuidFlags;
+extern ULONG Ke386Cpuid;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -270,7 +273,6 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
 
 /* --- Query/Set System Information --- */
 
-
 /*
  * NOTE: QSI_DEF(n) and SSI_DEF(n) define _cdecl function symbols
  * so the stack is popped only in one place on x86 platform.
@@ -282,6 +284,7 @@ static NTSTATUS QSI_USE(n) (PVOID Buffer, ULONG Size, PULONG ReqSize)
 #define SSI_USE(n) SSI##n
 #define SSI_DEF(n) \
 static NTSTATUS SSI_USE(n) (PVOID Buffer, ULONG Size)
+
 
 /* Class 0 - Basic Information */
 QSI_DEF(SystemBasicInformation)
@@ -324,32 +327,19 @@ QSI_DEF(SystemProcessorInformation)
 	if (Size < sizeof (SYSTEM_PROCESSOR_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
+	}	
+	Spi->ProcessorArchitecture = ((Ke386Cpuid >> 8) & 0xf);
+	Spi->ProcessorLevel	   = ((Ke386Cpuid >> 4) & 0xf);
+	Spi->ProcessorRevision	   = (Ke386Cpuid & 0xf) | ((Ke386Cpuid >> 4) & 0x300);
+	Spi->Unknown 		   = 0;
+	Spi->FeatureBits	   = Ke386CpuidFlags;
 
-	/* FIXME: add CPU type detection code */
-	Spi->ProcessorArchitecture = 0; /* FIXME */
-	Spi->ProcessorLevel = 0; /* FIXME */
-	Spi->ProcessorRevision = 0; /* FIXME */
-	Spi->Unknown = 0;
-	Spi->FeatureBits = 0x00000000; /* FIXME */
-	
+	DPRINT("Arch %d Level %d Rev %d\n", Spi->ProcessorArchitecture,
+		Spi->ProcessorLevel, Spi->ProcessorRevision);
+
 	return (STATUS_SUCCESS);
 }
-/*
-typedef struct _MM_MEMORY_CONSUMER
-{
-   ULONG PagesUsed;
-   ULONG PagesTarget;
-   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
-}
-MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
 
-extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
-
-extern ULONG MiFreeSwapPages;
-extern ULONG MiUsedSwapPages;
-extern ULONG MmPagedPoolSize;
-*/
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
