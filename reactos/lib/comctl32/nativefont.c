@@ -28,12 +28,11 @@
  */
 
 #include <stdarg.h>
-#include <string.h>
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
@@ -42,11 +41,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(nativefont);
 
 typedef struct
 {
-    DWORD  dwDummy;   /* just to keep the compiler happy ;-) */
+    HWND     hwndSelf;        /* my own handle */
 } NATIVEFONT_INFO;
 
 #define NATIVEFONT_GetInfoPtr(hwnd) ((NATIVEFONT_INFO *)GetWindowLongPtrW (hwnd, 0))
-
 
 static LRESULT
 NATIVEFONT_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -57,45 +55,40 @@ NATIVEFONT_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr = (NATIVEFONT_INFO *)Alloc (sizeof(NATIVEFONT_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
-
     /* initialize info structure */
-
+    infoPtr->hwndSelf = hwnd;
 
     return 0;
 }
-
 
 static LRESULT
-NATIVEFONT_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
+NATIVEFONT_Destroy (NATIVEFONT_INFO *infoPtr)
 {
-    NATIVEFONT_INFO *infoPtr = NATIVEFONT_GetInfoPtr (hwnd);
-
-
-
-
-    /* free comboex info data */
+    /* free control info data */
+    SetWindowLongPtrW( infoPtr->hwndSelf, 0, 0 );
     Free (infoPtr);
-    SetWindowLongPtrW( hwnd, 0, 0 );
 
     return 0;
 }
-
-
 
 static LRESULT WINAPI
 NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!NATIVEFONT_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
-	return DefWindowProcA( hwnd, uMsg, wParam, lParam );
+    NATIVEFONT_INFO *infoPtr = NATIVEFONT_GetInfoPtr(hwnd);
+
+    TRACE("hwnd=%p msg=%04x wparam=%08x lparam=%08lx\n",
+	  hwnd, uMsg, wParam, lParam);
+
+    if (!infoPtr && (uMsg != WM_CREATE))
+	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
 
     switch (uMsg)
     {
-
 	case WM_CREATE:
 	    return NATIVEFONT_Create (hwnd, wParam, lParam);
 
 	case WM_DESTROY:
-	    return NATIVEFONT_Destroy (hwnd, wParam, lParam);
+	    return NATIVEFONT_Destroy (infoPtr);
 
         case WM_MOVE:
         case WM_SIZE:
@@ -105,12 +98,13 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_SETFONT:
         case WM_GETDLGCODE:
 	    /* FIXME("message %04x seen but stubbed\n", uMsg); */
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
 	default:
-	    ERR("unknown msg %04x wp=%08x lp=%08lx\n",
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
 		     uMsg, wParam, lParam);
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
@@ -119,23 +113,23 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 NATIVEFONT_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS;
-    wndClass.lpfnWndProc   = (WNDPROC)NATIVEFONT_WindowProc;
+    wndClass.lpfnWndProc   = NATIVEFONT_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(NATIVEFONT_INFO *);
-    wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wndClass.lpszClassName = WC_NATIVEFONTCTLA;
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndClass.lpszClassName = WC_NATIVEFONTCTLW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 }
 
 
 VOID
 NATIVEFONT_Unregister (void)
 {
-    UnregisterClassA (WC_NATIVEFONTCTLA, NULL);
+    UnregisterClassW (WC_NATIVEFONTCTLW, NULL);
 }

@@ -1927,16 +1927,25 @@ TOOLTIPS_SetTitleA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPCSTR pszTitle = (LPCSTR)lParam;
-    UINT uTitleIcon = (UINT)wParam;
+    UINT_PTR uTitleIcon = (UINT_PTR)wParam;
     UINT size;
 
-    TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, pszTitle, (void*)uTitleIcon);
+    TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, debugstr_a(pszTitle),
+        (void*)uTitleIcon);
 
-    size = sizeof(WCHAR)*MultiByteToWideChar(CP_ACP, 0, pszTitle, -1, NULL, 0);
-    infoPtr->pszTitle = Alloc(size);
-    if (!infoPtr->pszTitle)
-        return FALSE;
-    MultiByteToWideChar(CP_ACP, 0, pszTitle, -1, infoPtr->pszTitle, size/sizeof(WCHAR));
+    Free(infoPtr->pszTitle);
+
+    if (pszTitle)
+    {
+        size = sizeof(WCHAR)*MultiByteToWideChar(CP_ACP, 0, pszTitle, -1, NULL, 0);
+        infoPtr->pszTitle = Alloc(size);
+        if (!infoPtr->pszTitle)
+            return FALSE;
+        MultiByteToWideChar(CP_ACP, 0, pszTitle, -1, infoPtr->pszTitle, size/sizeof(WCHAR));
+    }
+    else
+        infoPtr->pszTitle = NULL;
+
     if (uTitleIcon <= TTI_ERROR)
         infoPtr->hTitleIcon = hTooltipIcons[uTitleIcon];
     else
@@ -1951,16 +1960,25 @@ TOOLTIPS_SetTitleW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPCWSTR pszTitle = (LPCWSTR)lParam;
-    UINT uTitleIcon = (UINT)wParam;
+    UINT_PTR uTitleIcon = (UINT_PTR)wParam;
     UINT size;
 
-    TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, debugstr_w(pszTitle), (void*)uTitleIcon);
+    TRACE("hwnd = %p, title = %s, icon = %p\n", hwnd, debugstr_w(pszTitle),
+        (void*)uTitleIcon);
 
-    size = (strlenW(pszTitle)+1)*sizeof(WCHAR);
-    infoPtr->pszTitle = Alloc(size);
-    if (!infoPtr->pszTitle)
-        return FALSE;
-    memcpy(infoPtr->pszTitle, pszTitle, size);
+    Free(infoPtr->pszTitle);
+
+    if (pszTitle)
+    {
+        size = (strlenW(pszTitle)+1)*sizeof(WCHAR);
+        infoPtr->pszTitle = Alloc(size);
+        if (!infoPtr->pszTitle)
+            return FALSE;
+        memcpy(infoPtr->pszTitle, pszTitle, size);
+    }
+    else
+        infoPtr->pszTitle = NULL;
+
     if (uTitleIcon <= TTI_ERROR)
         infoPtr->hTitleIcon = hTooltipIcons[uTitleIcon];
     else

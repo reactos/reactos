@@ -57,10 +57,8 @@ typedef struct tagHOTKEY_INFO
     WCHAR strNone[15]; /* hope its long enough ... */
 } HOTKEY_INFO;
 
-#define HOTKEY_GetInfoPtr(hwnd) ((HOTKEY_INFO *)GetWindowLongPtrA (hwnd, 0))
-
 static const WCHAR HOTKEY_plussep[] = { ' ', '+', ' ' };
-static LRESULT HOTKEY_SetFont (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam);
+static LRESULT HOTKEY_SetFont (HOTKEY_INFO *infoPtr, HFONT hFont, BOOL redraw);
 
 #define IsOnlySet(flags) (infoPtr->CurrMod == (flags))
 
@@ -94,7 +92,7 @@ HOTKEY_IsCombInv(HOTKEY_INFO *infoPtr)
 #undef IsOnlySet
 
 static void
-HOTKEY_DrawHotKey(HOTKEY_INFO *infoPtr, LPCWSTR KeyName, WORD NameLen, HDC hdc)
+HOTKEY_DrawHotKey(HOTKEY_INFO *infoPtr, HDC hdc, LPCWSTR KeyName, WORD NameLen)
 {
     SIZE TextSize;
     INT nXStart, nYStart;
@@ -142,7 +140,7 @@ HOTKEY_Refresh(HOTKEY_INFO *infoPtr, HDC hdc)
     TRACE("(infoPtr=%p hdc=%p)\n", infoPtr, hdc);
 
     if(!infoPtr->CurrMod && !infoPtr->HotKey) {
-	HOTKEY_DrawHotKey (infoPtr, infoPtr->strNone, 4, hdc);
+	HOTKEY_DrawHotKey (infoPtr, hdc, infoPtr->strNone, 4);
 	return;
     }
 	
@@ -182,7 +180,7 @@ HOTKEY_Refresh(HOTKEY_INFO *infoPtr, HDC hdc)
     else
 	KeyName[NameLen] = 0;
 
-    HOTKEY_DrawHotKey (infoPtr, KeyName, NameLen, hdc);
+    HOTKEY_DrawHotKey (infoPtr, hdc, KeyName, NameLen);
 }
 
 static void
@@ -207,39 +205,39 @@ HOTKEY_GetHotKey(HOTKEY_INFO *infoPtr)
 }
 
 static void
-HOTKEY_SetHotKey(HOTKEY_INFO *infoPtr, WPARAM wParam)
+HOTKEY_SetHotKey(HOTKEY_INFO *infoPtr, WORD hotKey)
 {
-    infoPtr->HotKey = (WORD)wParam;
+    infoPtr->HotKey = hotKey;
     infoPtr->ScanCode = 
         MAKELPARAM(0, MapVirtualKeyW(LOBYTE(infoPtr->HotKey), 0));
-    TRACE("(infoPtr=%p wParam=%x) Modifiers: 0x%x, Virtual Key: %d\n", infoPtr,
-          wParam, HIBYTE(infoPtr->HotKey), LOBYTE(infoPtr->HotKey));
+    TRACE("(infoPtr=%p hotKey=%x) Modifiers: 0x%x, Virtual Key: %d\n", infoPtr,
+          hotKey, HIBYTE(infoPtr->HotKey), LOBYTE(infoPtr->HotKey));
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 }
 
 static void 
-HOTKEY_SetRules(HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_SetRules(HOTKEY_INFO *infoPtr, WORD invComb, WORD invMod)
 {
-    infoPtr->InvComb = (WORD)wParam;
-    infoPtr->InvMod = (WORD)lParam;
+    infoPtr->InvComb = invComb;
+    infoPtr->InvMod = invMod;
     TRACE("(infoPtr=%p) Invalid Modifers: 0x%x, If Invalid: 0x%x\n", infoPtr,
           infoPtr->InvComb, infoPtr->InvMod);
 }
 
 
 static LRESULT
-HOTKEY_Create (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_Create (HOTKEY_INFO *infoPtr, LPCREATESTRUCTW lpcs)
 {
-    infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
+    infoPtr->hwndNotify = lpcs->hwndParent;
 
-    HOTKEY_SetFont(infoPtr, (WPARAM)GetStockObject(SYSTEM_FONT), 0);
+    HOTKEY_SetFont(infoPtr, GetStockObject(SYSTEM_FONT), 0);
 
     return 0;
 }
 
 
 static LRESULT
-HOTKEY_Destroy (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_Destroy (HOTKEY_INFO *infoPtr)
 {
     HWND hwnd = infoPtr->hwndSelf;
     /* free hotkey info data */
@@ -250,7 +248,7 @@ HOTKEY_Destroy (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, HDC hdc)
 {
     HBRUSH hBrush, hSolidBrush = NULL;
     RECT   rc;
@@ -260,14 +258,14 @@ HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     else
     {
         hBrush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLOREDIT,
-            wParam, (LPARAM)infoPtr->hwndSelf);
+                                      (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
         if (!hBrush)
             hBrush = hSolidBrush = CreateSolidBrush(comctl32_color.clrWindow);
     }
 
     GetClientRect (infoPtr->hwndSelf, &rc);
 
-    FillRect ((HDC)wParam, &rc, hBrush);
+    FillRect (hdc, &rc, hBrush);
 
     if (hSolidBrush)
         DeleteObject(hSolidBrush);
@@ -277,13 +275,13 @@ HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 inline static LRESULT
-HOTKEY_GetFont (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_GetFont (HOTKEY_INFO *infoPtr)
 {
     return (LRESULT)infoPtr->hFont;
 }
 
 static LRESULT
-HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
 {
     WORD wOldHotKey;
     BYTE bOldMod;
@@ -291,7 +289,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %d\n", wParam);
+    TRACE("() Key: %ld\n", key);
 
     wOldHotKey = infoPtr->HotKey;
     bOldMod = infoPtr->CurrMod;
@@ -299,7 +297,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     /* If any key is Pressed, we have to reset the hotkey in the control */
     infoPtr->HotKey = 0;
 
-    switch (wParam)
+    switch (key)
     {
 	case VK_RETURN:
 	case VK_TAB:
@@ -308,8 +306,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	case VK_ESCAPE:
 	case VK_BACK:
 	    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
-	    return DefWindowProcW (infoPtr->hwndSelf, WM_KEYDOWN, wParam, 
-	                           lParam);
+	    return DefWindowProcW (infoPtr->hwndSelf, WM_KEYDOWN, key, flags);
 
 	case VK_SHIFT:
 	    infoPtr->CurrMod |= HOTKEYF_SHIFT;
@@ -323,10 +320,10 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if(HOTKEY_IsCombInv(infoPtr))
-	        infoPtr->HotKey = MAKEWORD(wParam, infoPtr->InvMod);
+	        infoPtr->HotKey = MAKEWORD(key, infoPtr->InvMod);
 	    else
-	        infoPtr->HotKey = MAKEWORD(wParam, infoPtr->CurrMod);
-	    infoPtr->ScanCode = lParam;
+	        infoPtr->HotKey = MAKEWORD(key, infoPtr->CurrMod);
+	    infoPtr->ScanCode = flags;
 	    break;
     }
 
@@ -345,18 +342,18 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
 {
     BYTE bOldMod;
 
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %d\n", wParam);
+    TRACE("() Key: %ld\n", key);
 
     bOldMod = infoPtr->CurrMod;
 
-    switch (wParam)
+    switch (key)
     {
 	case VK_SHIFT:
 	    infoPtr->CurrMod &= ~HOTKEYF_SHIFT;
@@ -386,7 +383,7 @@ HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HOTKEY_KillFocus (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_KillFocus (HOTKEY_INFO *infoPtr, HWND receiveFocus)
 {
     infoPtr->bFocus = FALSE;
     DestroyCaret ();
@@ -396,7 +393,7 @@ HOTKEY_KillFocus (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HOTKEY_LButtonDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_LButtonDown (HOTKEY_INFO *infoPtr)
 {
     if (!(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED))
         SetFocus (infoPtr->hwndSelf);
@@ -406,7 +403,7 @@ HOTKEY_LButtonDown (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 inline static LRESULT
-HOTKEY_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HOTKEY_NCCreate (HWND hwnd, LPCREATESTRUCTW lpcs)
 {
     HOTKEY_INFO *infoPtr;
     DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
@@ -423,11 +420,11 @@ HOTKEY_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->hwndSelf = hwnd;
     LoadStringW(COMCTL32_hModule, HKY_NONE, infoPtr->strNone, 15);
 
-    return DefWindowProcW (infoPtr->hwndSelf, WM_NCCREATE, wParam, lParam);
+    return DefWindowProcW (infoPtr->hwndSelf, WM_NCCREATE, 0, (LPARAM)lpcs);
 }
 
 static LRESULT
-HOTKEY_SetFocus (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_SetFocus (HOTKEY_INFO *infoPtr, HWND lostFocus)
 {
     infoPtr->bFocus = TRUE;
 
@@ -440,13 +437,13 @@ HOTKEY_SetFocus (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HOTKEY_SetFont (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+HOTKEY_SetFont (HOTKEY_INFO *infoPtr, HFONT hFont, BOOL redraw)
 {
     TEXTMETRICW tm;
     HDC hdc;
     HFONT hOldFont = 0;
 
-    infoPtr->hFont = (HFONT)wParam;
+    infoPtr->hFont = hFont;
 
     hdc = GetDC (infoPtr->hwndSelf);
     if (infoPtr->hFont)
@@ -459,7 +456,7 @@ HOTKEY_SetFont (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	SelectObject (hdc, hOldFont);
     ReleaseDC (infoPtr->hwndSelf, hdc);
 
-    if (LOWORD(lParam))
+    if (redraw)
 	InvalidateRect (infoPtr->hwndSelf, NULL, TRUE);
 
     return 0;
@@ -468,7 +465,7 @@ HOTKEY_SetFont (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HOTKEY_INFO *infoPtr = HOTKEY_GetInfoPtr (hwnd);
+    HOTKEY_INFO *infoPtr = (HOTKEY_INFO *)GetWindowLongPtrW (hwnd, 0);
     TRACE("hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, uMsg, wParam, lParam);
     if (!infoPtr && (uMsg != WM_NCCREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
@@ -477,10 +474,10 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case HKM_GETHOTKEY:
 	    return HOTKEY_GetHotKey (infoPtr);
 	case HKM_SETHOTKEY:
-	    HOTKEY_SetHotKey (infoPtr, wParam);
+	    HOTKEY_SetHotKey (infoPtr, (WORD)wParam);
 	    break;
 	case HKM_SETRULES:
-            HOTKEY_SetRules (infoPtr, wParam, lParam);
+            HOTKEY_SetRules (infoPtr, (WORD)wParam, (WORD)lParam);
 	    break;
 
 	case WM_CHAR:
@@ -488,19 +485,19 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return HOTKEY_KeyDown (infoPtr, MapVirtualKeyW(LOBYTE(HIWORD(lParam)), 1), lParam);
 
 	case WM_CREATE:
-	    return HOTKEY_Create (infoPtr, wParam, lParam);
+	    return HOTKEY_Create (infoPtr, (LPCREATESTRUCTW)lParam);
 
 	case WM_DESTROY:
-	    return HOTKEY_Destroy (infoPtr, wParam, lParam);
+	    return HOTKEY_Destroy (infoPtr);
 
 	case WM_ERASEBKGND:
-	    return HOTKEY_EraseBackground (infoPtr, wParam, lParam);
+	    return HOTKEY_EraseBackground (infoPtr, (HDC)wParam);
 
 	case WM_GETDLGCODE:
 	    return DLGC_WANTCHARS | DLGC_WANTARROWS;
 
 	case WM_GETFONT:
-	    return HOTKEY_GetFont (infoPtr, wParam, lParam);
+	    return HOTKEY_GetFont (infoPtr);
 
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
@@ -511,23 +508,23 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return HOTKEY_KeyUp (infoPtr, wParam, lParam);
 
 	case WM_KILLFOCUS:
-	    return HOTKEY_KillFocus (infoPtr, wParam, lParam);
+	    return HOTKEY_KillFocus (infoPtr, (HWND)wParam);
 
 	case WM_LBUTTONDOWN:
-	    return HOTKEY_LButtonDown (infoPtr, wParam, lParam);
+	    return HOTKEY_LButtonDown (infoPtr);
 
 	case WM_NCCREATE:
-	    return HOTKEY_NCCreate (hwnd, wParam, lParam);
+	    return HOTKEY_NCCreate (hwnd, (LPCREATESTRUCTW)lParam);
 
 	case WM_PAINT:
 	    HOTKEY_Paint(infoPtr, (HDC)wParam);
 	    return 0;
 
 	case WM_SETFOCUS:
-	    return HOTKEY_SetFocus (infoPtr, wParam, lParam);
+	    return HOTKEY_SetFocus (infoPtr, (HWND)wParam);
 
 	case WM_SETFONT:
-	    return HOTKEY_SetFont (infoPtr, wParam, lParam);
+	    return HOTKEY_SetFont (infoPtr, (HFONT)wParam, LOWORD(lParam));
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))

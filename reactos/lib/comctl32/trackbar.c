@@ -1418,9 +1418,12 @@ TRACKBAR_KillFocus (TRACKBAR_INFO *infoPtr, HWND hwndGetFocus)
 }
 
 static LRESULT
-TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
+TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
 {
-    POINT clickPoint = { pts.x, pts.y };
+    POINT clickPoint;
+
+    clickPoint.x = x;
+    clickPoint.y = y;
 
     SetFocus(infoPtr->hwndSelf);
 
@@ -1444,7 +1447,7 @@ TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
 
 
 static LRESULT
-TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
+TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
 {
     if (infoPtr->flags & TB_DRAG_MODE) {
         notify_with_scroll (infoPtr, TB_THUMBPOSITION | (infoPtr->lPos<<16));
@@ -1526,17 +1529,18 @@ TRACKBAR_Timer (TRACKBAR_INFO *infoPtr, INT wTimerID, TIMERPROC *tmrpc)
 
 
 static LRESULT
-TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
+TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
 {
     DWORD dwStyle = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE);
-    INT clickPlace = (dwStyle & TBS_VERT) ? pts.y : pts.x;
+    INT clickPlace = (dwStyle & TBS_VERT) ? y : x;
     LONG dragPos, oldPos = infoPtr->lPos;
 
-    TRACE("(x=%d. y=%d)\n", pts.x, pts.y);
+    TRACE("(x=%d. y=%d)\n", x, y);
 
     if (infoPtr->flags & TB_AUTO_PAGE) {
 	POINT pt;
-	POINTSTOPOINT(pt, pts);
+	pt.x = x;
+	pt.y = y;
 	TRACKBAR_AutoPage (infoPtr, pt);
 	return TRUE;
     }
@@ -1778,13 +1782,13 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return TRACKBAR_KillFocus (infoPtr, (HWND)wParam);
 
     case WM_LBUTTONDOWN:
-        return TRACKBAR_LButtonDown (infoPtr, wParam, MAKEPOINTS(lParam));
+        return TRACKBAR_LButtonDown (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 
     case WM_LBUTTONUP:
-        return TRACKBAR_LButtonUp (infoPtr, wParam, MAKEPOINTS(lParam));
+        return TRACKBAR_LButtonUp (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 
     case WM_MOUSEMOVE:
-        return TRACKBAR_MouseMove (infoPtr, wParam, MAKEPOINTS(lParam));
+        return TRACKBAR_MouseMove (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 
     case WM_PAINT:
         return TRACKBAR_Paint (infoPtr, (HDC)wParam);

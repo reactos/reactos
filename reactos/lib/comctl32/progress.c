@@ -493,7 +493,7 @@ static DWORD PROGRESS_SetRange (PROGRESS_INFO *infoPtr, int low, int high)
  *           ProgressWindowProc
  */
 static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
-                                  WPARAM wParam, LPARAM lParam)
+                                         WPARAM wParam, LPARAM lParam)
 {
     PROGRESS_INFO *infoPtr;
 
@@ -654,7 +654,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
  *
  * Registers the progress bar window class.
  */
-VOID PROGRESS_Register (void)
+void PROGRESS_Register (void)
 {
     WNDCLASSW wndClass;
 
@@ -675,7 +675,7 @@ VOID PROGRESS_Register (void)
  *
  * Unregisters the progress bar window class.
  */
-VOID PROGRESS_Unregister (void)
+void PROGRESS_Unregister (void)
 {
     UnregisterClassW (PROGRESS_CLASSW, NULL);
 }

@@ -73,6 +73,7 @@ typedef struct
    CRITICAL_SECTION	cs;
    HANDLE		hStopEvent;
    HANDLE		hThread;
+   DWORD		threadId;
    UINT			uTimer;
    /* data for playing the file */
    int			nFromFrame;
@@ -149,14 +150,20 @@ static LRESULT ANIMATE_DoStop(ANIMATE_INFO *infoPtr)
         HANDLE handle = infoPtr->hThread;
 
         TRACE("stopping animation thread\n");
-        SetEvent( infoPtr->hStopEvent );
-        LeaveCriticalSection(&infoPtr->cs);  /* leave it a chance to run */
-        WaitForSingleObject( handle, INFINITE );
-        TRACE("animation thread stopped\n");
-        EnterCriticalSection(&infoPtr->cs);
-        CloseHandle( infoPtr->hThread );
-        CloseHandle( infoPtr->hStopEvent );
         infoPtr->hThread = 0;
+        SetEvent( infoPtr->hStopEvent );
+
+        if (infoPtr->threadId != GetCurrentThreadId())
+        {
+            LeaveCriticalSection(&infoPtr->cs);  /* leave it a chance to run */
+            WaitForSingleObject( handle, INFINITE );
+            TRACE("animation thread stopped\n");
+            EnterCriticalSection(&infoPtr->cs);
+        }
+
+        CloseHandle( handle );
+        CloseHandle( infoPtr->hStopEvent );
+        infoPtr->hStopEvent = 0;
     }
     if (infoPtr->uTimer) {
 	KillTimer(infoPtr->hwndSelf, infoPtr->uTimer);
@@ -399,7 +406,7 @@ static DWORD CALLBACK ANIMATE_AnimationThread(LPVOID ptr_)
         LeaveCriticalSection(&infoPtr->cs);
 
         /* time is in microseconds, we should convert it to milliseconds */
-        if (WaitForSingleObject( event, (timeout+500)/1000) == WAIT_OBJECT_0)
+        if ((event == 0) || WaitForSingleObject( event, (timeout+500)/1000) == WAIT_OBJECT_0)
             break;
     }
     return TRUE;
@@ -439,8 +446,6 @@ static LRESULT ANIMATE_Play(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	/* create a timer to display AVI */
 	infoPtr->uTimer = SetTimer(hWnd, 1, infoPtr->mah.dwMicroSecPerFrame / 1000, NULL);
     } else {
-        DWORD threadID;
-
         if(GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
         {
             infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
@@ -449,7 +454,7 @@ static LRESULT ANIMATE_Play(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	TRACE("Using an animation thread\n");
         infoPtr->hStopEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
-        infoPtr->hThread = CreateThread(0,0,ANIMATE_AnimationThread,(LPVOID)infoPtr, 0, &threadID);
+        infoPtr->hThread = CreateThread(0,0,ANIMATE_AnimationThread,(LPVOID)infoPtr, 0, &infoPtr->threadId);
         if(!infoPtr->hThread)
         {
            ERR("Could not create animation thread!\n");
@@ -950,7 +955,7 @@ void ANIMATE_Register(void)
 
     ZeroMemory(&wndClass, sizeof(WNDCLASSA));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
-    wndClass.lpfnWndProc   = (WNDPROC)ANIMATE_WindowProc;
+    wndClass.lpfnWndProc   = ANIMATE_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(ANIMATE_INFO *);
     wndClass.hCursor       = LoadCursorA(0, (LPSTR)IDC_ARROW);

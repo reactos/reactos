@@ -274,7 +274,7 @@ FLATSB_Register (void)
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSA));
     wndClass.style         = CS_GLOBALCLASS;
-    wndClass.lpfnWndProc   = (WNDPROC)FlatSB_WindowProc;
+    wndClass.lpfnWndProc   = FlatSB_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(FLATSB_INFO *);
     wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);

@@ -130,6 +130,7 @@ typedef struct tagTREEVIEW_INFO
   COLORREF      clrLine;
   COLORREF      clrInsertMark;
   HFONT         hFont;
+  HFONT         hDefaultFont;
   HFONT         hBoldFont;
   HWND          hwndToolTip;
 
@@ -255,11 +256,11 @@ TREEVIEW_ValidItem(TREEVIEW_INFO *infoPtr, HTREEITEM handle)
 static HFONT
 TREEVIEW_CreateBoldFont(HFONT hOrigFont)
 {
-    LOGFONTA font;
+    LOGFONTW font;
 
-    GetObjectA(hOrigFont, sizeof(font), &font);
+    GetObjectW(hOrigFont, sizeof(font), &font);
     font.lfWeight = FW_BOLD;
-    return CreateFontIndirectA(&font);
+    return CreateFontIndirectW(&font);
 }
 
 static inline HFONT
@@ -1809,7 +1810,7 @@ TREEVIEW_SetFont(TREEVIEW_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
 
     TRACE("%p %i\n", hFont, bRedraw);
 
-    infoPtr->hFont = hFont ? hFont : GetStockObject(SYSTEM_FONT);
+    infoPtr->hFont = hFont ? hFont : infoPtr->hDefaultFont;
 
     DeleteObject(infoPtr->hBoldFont);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
@@ -2328,7 +2329,7 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
 	    SelectObject(hdc, hOldPen);
 	    DeleteObject(hNewPen);
 
-	    if (height < 32 || width < 32)
+	    if (height < 18 || width < 18)
 	    {
 	        MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
 	        LineTo(hdc, centerx + plussize, centery);
@@ -4684,6 +4685,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     static const WCHAR szDisplayW[] = { 'D','I','S','P','L','A','Y','\0' };
     RECT rcClient;
     TREEVIEW_INFO *infoPtr;
+    LOGFONTW lf;
 
     TRACE("wnd %p, style %lx\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
 
@@ -4749,7 +4751,8 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
     infoPtr->items = DPA_Create(16);
 
-    infoPtr->hFont = GetStockObject(DEFAULT_GUI_FONT);
+    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
+    infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW(&lf);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
 
     infoPtr->uItemHeight = TREEVIEW_NaturalHeight(infoPtr);
@@ -4839,6 +4842,7 @@ TREEVIEW_Destroy(TREEVIEW_INFO *infoPtr)
     /* Deassociate treeview from the window before doing anything drastic. */
     SetWindowLongPtrW(infoPtr->hwnd, 0, (DWORD_PTR)NULL);
 
+    DeleteObject(infoPtr->hDefaultFont);
     DeleteObject(infoPtr->hBoldFont);
     Free(infoPtr);
 
@@ -5399,7 +5403,7 @@ TREEVIEW_Register(void)
 
     ZeroMemory(&wndClass, sizeof(WNDCLASSA));
     wndClass.style = CS_GLOBALCLASS | CS_DBLCLKS;
-    wndClass.lpfnWndProc = (WNDPROC)TREEVIEW_WindowProc;
+    wndClass.lpfnWndProc = TREEVIEW_WindowProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = sizeof(TREEVIEW_INFO *);
 

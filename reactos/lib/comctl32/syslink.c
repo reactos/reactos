@@ -1478,12 +1478,10 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     case WM_SETCURSOR:
     {
         LHITTESTINFO ht;
-        POINTS pt;
         DWORD mp = GetMessagePos();
         
-        pt = MAKEPOINTS(mp);
-        ht.pt.x = pt.x;
-        ht.pt.y = pt.y;
+        ht.pt.x = (short)LOWORD(mp);
+        ht.pt.y = (short)HIWORD(mp);
         
         ScreenToClient(infoPtr->Self, &ht.pt);
         if(SYSLINK_HitTest (infoPtr, &ht))
@@ -1662,7 +1660,7 @@ VOID SYSLINK_Register (void)
 
     ZeroMemory (&wndClass, sizeof(wndClass));
     wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)SysLinkWindowProc;
+    wndClass.lpfnWndProc   = SysLinkWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof (SYSLINK_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);

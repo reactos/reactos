@@ -19,7 +19,7 @@
  *
  *
  * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Mar. 14, 2004, by Robert Shearman.
+ * of Comctl32.dll version 6.0 on Oct. 19, 2004, by Robert Shearman.
  * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
@@ -194,8 +194,8 @@ typedef struct
     HCURSOR  hcurVert;    /* handle to the NS cursor */
     HCURSOR  hcurDrag;    /* handle to the drag cursor */
     INT      iVersion;    /* version number */
-    POINTS   dragStart;   /* x,y of button down */
-    POINTS   dragNow;     /* x,y of this MouseMove */
+    POINT    dragStart;   /* x,y of button down */
+    POINT    dragNow;     /* x,y of this MouseMove */
     INT      iOldBand;    /* last band that had the mouse cursor over it */
     INT      ihitoffset;  /* offset of hotspot from gripper.left */
     POINT    origin;      /* left/upper corner of client */
@@ -394,7 +394,7 @@ REBAR_DumpBand (REBAR_INFO *iP)
     TRACE("hwnd=%p: color=%08lx/%08lx, bands=%u, rows=%u, cSize=%ld,%ld\n",
 	  iP->hwndSelf, iP->clrText, iP->clrBk, iP->uNumBands, iP->uNumRows,
 	  iP->calcSize.cx, iP->calcSize.cy);
-    TRACE("hwnd=%p: flags=%08x, dragStart=%d,%d, dragNow=%d,%d, iGrabbedBand=%d\n",
+    TRACE("hwnd=%p: flags=%08x, dragStart=%ld,%ld, dragNow=%ld,%ld, iGrabbedBand=%d\n",
 	  iP->hwndSelf, iP->fStatus, iP->dragStart.x, iP->dragStart.y,
 	  iP->dragNow.x, iP->dragNow.y,
 	  iP->iGrabbedBand);
@@ -2418,7 +2418,7 @@ REBAR_Shrink (REBAR_INFO *infoPtr, REBAR_BAND *band, INT movement, INT i)
 
 
 static void
-REBAR_HandleLRDrag (REBAR_INFO *infoPtr, POINTS *ptsmove)
+REBAR_HandleLRDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
      /* Function:  This will implement the functionality of a     */
      /*  Gripper drag within a row. It will not implement "out-   */
      /*  of-row" drags. (They are detected and handled in         */
@@ -2491,7 +2491,7 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, POINTS *ptsmove)
 			     infoPtr->ihitoffset);
     infoPtr->dragNow = *ptsmove;
 
-    TRACE("before: movement=%d (%d,%d), imindBand=%d, ihitBand=%d, imaxdBand=%d, LSum=%d, RSum=%d\n",
+    TRACE("before: movement=%d (%ld,%ld), imindBand=%d, ihitBand=%d, imaxdBand=%d, LSum=%d, RSum=%d\n",
 	  movement, ptsmove->x, ptsmove->y, imindBand, ihitBand,
 	  imaxdBand, LHeaderSum, RHeaderSum);
     REBAR_DumpBand (infoPtr);
@@ -3874,7 +3874,8 @@ REBAR_LButtonDown (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         infoPtr->iGrabbedBand = iHitBand;
 
         /* save off the LOWORD and HIWORD of lParam as initial x,y */
-        infoPtr->dragStart = MAKEPOINTS(lParam);
+        infoPtr->dragStart.x = (short)LOWORD(lParam);
+        infoPtr->dragStart.y = (short)HIWORD(lParam);
         infoPtr->dragNow = infoPtr->dragStart;
         if (infoPtr->dwStyle & CCS_VERT)
             infoPtr->ihitoffset = infoPtr->dragStart.y - (lpBand->rcBand.top+REBAR_PRE_GRIPPER);
@@ -3935,9 +3936,10 @@ static LRESULT
 REBAR_MouseMove (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     REBAR_BAND *lpChevronBand;
-    POINTS ptsmove;
+    POINT ptMove;
 
-    ptsmove = MAKEPOINTS(lParam);
+    ptMove.x = (short)LOWORD(lParam);
+    ptMove.y = (short)HIWORD(lParam);
 
     /* if we are currently dragging a band */
     if (infoPtr->iGrabbedBand >= 0)
@@ -3951,40 +3953,37 @@ REBAR_MouseMove (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         band2 = &infoPtr->bands[infoPtr->iGrabbedBand];
 
         /* if mouse did not move much, exit */
-        if ((abs(ptsmove.x - infoPtr->dragNow.x) <= mindragx) &&
-            (abs(ptsmove.y - infoPtr->dragNow.y) <= mindragy)) return 0;
+        if ((abs(ptMove.x - infoPtr->dragNow.x) <= mindragx) &&
+            (abs(ptMove.y - infoPtr->dragNow.y) <= mindragy)) return 0;
 
         /* Test for valid drag case - must not be first band in row */
         if (infoPtr->dwStyle & CCS_VERT) {
-            if ((ptsmove.x < band2->rcBand.left) ||
-	      (ptsmove.x > band2->rcBand.right) ||
+            if ((ptMove.x < band2->rcBand.left) ||
+	      (ptMove.x > band2->rcBand.right) ||
               ((infoPtr->iGrabbedBand > 0) && (band1->iRow != band2->iRow))) {
                 FIXME("Cannot drag to other rows yet!!\n");
             }
             else {
-                REBAR_HandleLRDrag (infoPtr, &ptsmove);
+                REBAR_HandleLRDrag (infoPtr, &ptMove);
             }
         }
         else {
-            if ((ptsmove.y < band2->rcBand.top) ||
-              (ptsmove.y > band2->rcBand.bottom) ||
+            if ((ptMove.y < band2->rcBand.top) ||
+              (ptMove.y > band2->rcBand.bottom) ||
               ((infoPtr->iGrabbedBand > 0) && (band1->iRow != band2->iRow))) {
                 FIXME("Cannot drag to other rows yet!!\n");
             }
             else {
-                REBAR_HandleLRDrag (infoPtr, &ptsmove);
+                REBAR_HandleLRDrag (infoPtr, &ptMove);
             }
         }
     }
     else
     {
-        POINT ptMove;
         INT iHitBand;
         UINT htFlags;
         TRACKMOUSEEVENT trackinfo;
 
-        ptMove.x = (INT)ptsmove.x;
-        ptMove.y = (INT)ptsmove.y;
         REBAR_InternalHitTest(infoPtr, &ptMove, &htFlags, &iHitBand);
 
         if (infoPtr->iOldBand >= 0 && infoPtr->iOldBand == infoPtr->ichevronhotBand)
@@ -4152,8 +4151,7 @@ static LRESULT
 REBAR_NCHitTest (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     NMMOUSE nmmouse;
-    POINTS shortpt;
-    POINT clpt, pt;
+    POINT clpt;
     INT i;
     UINT scrap;
     LRESULT ret = HTCLIENT;
@@ -4166,9 +4164,8 @@ REBAR_NCHitTest (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
      * 3. native always seems to return HTCLIENT if notify return is 0.
      */
 
-    shortpt = MAKEPOINTS (lParam);
-    POINTSTOPOINT(pt, shortpt);
-    clpt = pt;
+    clpt.x = (short)LOWORD(lParam);
+    clpt.y = (short)HIWORD(lParam);
     ScreenToClient (infoPtr->hwndSelf, &clpt);
     REBAR_InternalHitTest (infoPtr, &clpt, &scrap,
 			   (INT *)&nmmouse.dwItemSpec);
@@ -4710,7 +4707,7 @@ REBAR_Register (void)
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSA));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
-    wndClass.lpfnWndProc   = (WNDPROC)REBAR_WindowProc;
+    wndClass.lpfnWndProc   = REBAR_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(REBAR_INFO *);
     wndClass.hCursor       = 0;

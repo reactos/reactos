@@ -45,9 +45,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(comboex);
 
 /* Item structure */
-typedef struct
+typedef struct _CBE_ITEMDATA
 {
-    VOID         *next;
+    struct _CBE_ITEMDATA *next;
     UINT         mask;
     LPWSTR       pszText;
     LPWSTR       pszTemp;
@@ -126,10 +126,8 @@ typedef struct
 
 
 /* Things common to the entire DLL */
-static LRESULT WINAPI
-COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT WINAPI
-COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT WINAPI COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT WINAPI COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr);
 typedef INT (WINAPI *cmp_func_t)(LPCWSTR, LPCWSTR);
 
@@ -458,7 +456,7 @@ static CBE_ITEMDATA * COMBOEX_FindItem(COMBOEX_INFO *infoPtr, INT index)
 
     /* find the item in the list */
     while (item && (i > index)) {
-	item = (CBE_ITEMDATA *)item->next;
+	item = item->next;
 	i--;
     }
     if (!item || (i != index)) {
@@ -579,7 +577,7 @@ static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
 	CBE_ITEMDATA *moving = infoPtr->items;
 
 	while ((i > index) && moving) {
-	    moving = (CBE_ITEMDATA *)moving->next;
+	    moving = moving->next;
 	    i--;
 	}
 	if (!moving) {
@@ -1252,7 +1250,7 @@ static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT *dis)
 
 	/* find the prior item in the list */
 	while (item->next && (i > dis->itemID)) {
-	    item = (CBE_ITEMDATA *)item->next;
+	    item = item->next;
 	    i--;
 	}
 	if (!item->next || (i != dis->itemID)) {
@@ -1260,7 +1258,7 @@ static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT *dis)
 	    return FALSE;
 	}
 	olditem = item->next;
-	item->next = (CBE_ITEMDATA *)((CBE_ITEMDATA *)item->next)->next;
+	item->next = item->next->next;
     }
     infoPtr->nb_items--;
 
@@ -1529,7 +1527,7 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 
 	item = infoPtr->items;
 	while (item) {
-	    next = (CBE_ITEMDATA *)item->next;
+	    next = item->next;
 	    COMBOEX_FreeText (item);
 	    Free (item);
 	    item = next;
@@ -1570,7 +1568,7 @@ static LRESULT COMBOEX_NCCreate (HWND hwnd)
     DWORD oldstyle, newstyle;
 
     oldstyle = (DWORD)GetWindowLongW (hwnd, GWL_STYLE);
-    newstyle = oldstyle & ~(WS_VSCROLL | WS_HSCROLL);
+    newstyle = oldstyle & ~(WS_VSCROLL | WS_HSCROLL | WS_BORDER);
     if (newstyle != oldstyle) {
 	TRACE("req style %08lx, reseting style %08lx\n",
 	      oldstyle, newstyle);
@@ -1912,7 +1910,8 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    rect.bottom = rect.top + SendMessageW(infoPtr->hwndSelf,
 			                          CB_GETITEMHEIGHT, -1, 0);
 	    rect.left = rect.right - GetSystemMetrics(SM_CXVSCROLL);
-	    POINTSTOPOINT(pt, MAKEPOINTS(lParam));
+	    pt.x = (short)LOWORD(lParam);
+	    pt.y = (short)HIWORD(lParam);
 	    if (PtInRect(&rect, pt))
 		return CallWindowProcW (infoPtr->prevComboWndProc,
 				        hwnd, uMsg, wParam, lParam);
@@ -2254,7 +2253,7 @@ void COMBOEX_Register (void)
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS;
-    wndClass.lpfnWndProc   = (WNDPROC)COMBOEX_WindowProc;
+    wndClass.lpfnWndProc   = COMBOEX_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(COMBOEX_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
