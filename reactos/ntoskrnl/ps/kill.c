@@ -23,6 +23,9 @@ NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread);
 
 LIST_ENTRY ThreadsToReapHead;
 
+#define TERMINATE_PROC	0x1
+#define TERMINATE_APC	0x2
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -110,9 +113,21 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    SIZE_T Length = PAGE_SIZE;
    PVOID TebBlock;
 
-   KeLowerIrql(PASSIVE_LEVEL);
+   DPRINT("PsTerminateCurrentThread(ExitStatus %x)\n", ExitStatus);
 
    CurrentThread = PsGetCurrentThread();
+
+   oldIrql = KeAcquireDispatcherDatabaseLock();
+   if (CurrentThread->HasTerminated & TERMINATE_PROC)
+   {
+      KeReleaseDispatcherDatabaseLock(oldIrql);
+      return;
+   }
+   CurrentThread->HasTerminated |= TERMINATE_PROC;
+   KeReleaseDispatcherDatabaseLock(oldIrql);
+
+   KeLowerIrql(PASSIVE_LEVEL);
+
    CurrentProcess = CurrentThread->ThreadsProcess;
 
    /* Can't terminate a thread if it attached another process */
@@ -130,7 +145,6 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    DPRINT("terminating %x\n",CurrentThread);
 
-   CurrentThread->HasTerminated = TRUE;
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
 
@@ -238,13 +252,7 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
-  PETHREAD EThread = PsGetCurrentThread();
-  if (EThread->HasTerminated)
-  {
-     /* Someone else has already called PsTerminateCurrentThread */
-     return;
-  }
-  PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
+  PsTerminateCurrentThread((NTSTATUS)SystemArgument1);
 }
 
 VOID
@@ -262,14 +270,13 @@ PsTerminateOtherThread(PETHREAD Thread,
 	 Thread, ExitStatus);
 
   OldIrql = KeAcquireDispatcherDatabaseLock();
-  if (Thread->HasTerminated)
+  if (Thread->HasTerminated & TERMINATE_APC)
   {
      KeReleaseDispatcherDatabaseLock (OldIrql);
      return;
   }
-  Thread->HasTerminated = TRUE;
+  Thread->HasTerminated |= TERMINATE_APC;
   KeReleaseDispatcherDatabaseLock (OldIrql);
-  Thread->ExitStatus = ExitStatus;
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
 		  &Thread->Tcb,
@@ -280,7 +287,7 @@ PsTerminateOtherThread(PETHREAD Thread,
 		  KernelMode,
 		  NULL);
   KeInsertQueueApc(Apc,
-		   NULL,
+		   (PVOID)ExitStatus,
 		   NULL,
 		   IO_NO_INCREMENT);
 
