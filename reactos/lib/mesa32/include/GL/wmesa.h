@@ -50,17 +50,19 @@ extern "C" {
 #endif
 
 
-#include "gl\gl.h"
+#include "GL/gl.h"
 
-#pragma warning (disable:4273)
-#pragma warning( disable : 4244 ) /* '=' : conversion from 'const double ' to 'float ', possible loss of data */
-#pragma warning( disable : 4018 ) /* '<' : signed/unsigned mismatch */
-#pragma warning( disable : 4305 ) /* '=' : truncation from 'const double ' to 'float ' */
-#pragma warning( disable : 4013 ) /* 'function' undefined; assuming extern returning int */
-#pragma warning( disable : 4761 ) /* integral size mismatch in argument; conversion supplied */
-#pragma warning( disable : 4273 ) /* 'identifier' : inconsistent DLL linkage. dllexport assumed */
-#if (MESA_WARNQUIET>1)
+#if !defined(__GNUC__)
+#  pragma warning (disable:4273)
+#  pragma warning( disable : 4244 ) /* '=' : conversion from 'const double ' to 'float ', possible loss of data */
+#  pragma warning( disable : 4018 ) /* '<' : signed/unsigned mismatch */
+#  pragma warning( disable : 4305 ) /* '=' : truncation from 'const double ' to 'float ' */
+#  pragma warning( disable : 4013 ) /* 'function' undefined; assuming extern returning int */
+#  pragma warning( disable : 4761 ) /* integral size mismatch in argument; conversion supplied */
+#  pragma warning( disable : 4273 ) /* 'identifier' : inconsistent DLL linkage. dllexport assumed */
+#  if (MESA_WARNQUIET>1)
 #	pragma warning( disable : 4146 ) /* unary minus operator applied to unsigned type, result still unsigned */
+#  endif
 #endif
 
 /*
