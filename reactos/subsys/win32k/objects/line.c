@@ -2,6 +2,7 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <internal/safe.h>
 #include <ddk/ntddk.h>
 #include <win32k/dc.h>
 #include <win32k/line.h>
