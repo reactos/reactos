@@ -1,4 +1,4 @@
-/* $Id: npfs.h,v 1.13 2002/09/08 10:22:11 chorns Exp $ */
+/* $Id: npfs.h,v 1.14 2003/06/21 19:55:55 hbirr Exp $ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
@@ -8,15 +8,10 @@ typedef struct
 {
   LIST_ENTRY PipeListHead;
   KMUTEX PipeListLock;
+  ULONG MinQuota;
+  ULONG DefaultQuota;
+  ULONG MaxQuota;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
-
-typedef struct
-{
-  LIST_ENTRY ListEntry;
-  ULONG Size;
-  PVOID Data;
-  ULONG Offset;
-} NPFS_PIPE_DATA, *PNPFS_PIPE_DATA;
 
 typedef struct
 {
@@ -44,13 +39,17 @@ typedef struct _NPFS_FCB
   struct _NPFS_FCB* OtherSide;
   PNPFS_PIPE Pipe;
   KEVENT ConnectEvent;
-  KEVENT ReadEvent;
+  KEVENT Event;
   ULONG PipeEnd;
   ULONG PipeState;
   ULONG ReadDataAvailable;
   ULONG WriteQuotaAvailable;
 
-  LIST_ENTRY DataListHead;	/* Data queue */
+  PVOID Data;
+  PVOID ReadPtr;
+  PVOID WritePtr;
+  ULONG MaxDataLength;
+
   KSPIN_LOCK DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
 
@@ -67,16 +66,6 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
 #define CP DPRINT("\n");
-
-static inline VOID
-NpfsFreePipeData(PNPFS_PIPE_DATA PipeData)
-{
-  if (PipeData->Data)
-    {
-      ExFreePool(PipeData->Data);
-    }
-  ExFreeToNPagedLookasideList(&NpfsPipeDataLookasideList, PipeData);
-}
 
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);

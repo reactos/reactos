@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 2003/01/19 01:13:04 gvg Exp $
+/* $Id: create.c,v 1.16 2003/06/21 19:55:55 hbirr Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -98,14 +98,39 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    ClientFcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
    
    /* initialize data list */
-   InitializeListHead(&ClientFcb->DataListHead);
+   if (Pipe->InboundQuota)
+     {
+       ClientFcb->Data = ExAllocatePool(NonPagedPool, Pipe->InboundQuota);
+       if (ClientFcb->Data == NULL)
+         {
+           ExFreePool(ClientFcb);
+           KeUnlockMutex(&DeviceExt->PipeListLock);
+	
+           Irp->IoStatus.Status = STATUS_NO_MEMORY;
+           Irp->IoStatus.Information = 0;
+	
+           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+           DPRINT("No memory!\n");
+	
+           return(STATUS_NO_MEMORY);
+	 }
+     }
+   else
+     {
+       ClientFcb->Data = NULL;
+     }
+   ClientFcb->ReadPtr = ClientFcb->Data;
+   ClientFcb->WritePtr = ClientFcb->Data;
+   ClientFcb->ReadDataAvailable = 0;
+   ClientFcb->WriteQuotaAvailable = Pipe->InboundQuota;
+   ClientFcb->MaxDataLength = Pipe->InboundQuota;
    KeInitializeSpinLock(&ClientFcb->DataListLock);
    
    KeInitializeEvent(&ClientFcb->ConnectEvent,
 		     SynchronizationEvent,
 		     FALSE);
    
-   KeInitializeEvent(&ClientFcb->ReadEvent,
+   KeInitializeEvent(&ClientFcb->Event,
 		     SynchronizationEvent,
 		     FALSE);
    
@@ -259,9 +284,85 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Pipe->MaximumInstances = Buffer->MaxInstances;
    Pipe->CurrentInstances = 0;
    Pipe->TimeOut = Buffer->TimeOut;
-   Pipe->InboundQuota = Buffer->InBufferSize;
-   Pipe->OutboundQuota = Buffer->OutBufferSize;
-   
+   if (!(IoStack->Parameters.Create.Options & FILE_PIPE_OUTBOUND) || 
+       IoStack->Parameters.Create.Options & FILE_PIPE_FULL_DUPLEX)
+     {
+       if (Buffer->InBufferSize == 0)
+         {
+           Pipe->InboundQuota = DeviceExt->DefaultQuota;
+         }
+       else
+         {
+           Pipe->InboundQuota = PAGE_ROUND_UP(Buffer->InBufferSize);
+           if (Pipe->InboundQuota < DeviceExt->MinQuota)
+             {
+               Pipe->InboundQuota = DeviceExt->MinQuota;
+             }
+           else if (Pipe->InboundQuota > DeviceExt->MaxQuota)
+             {
+               Pipe->InboundQuota = DeviceExt->MaxQuota;
+	     }
+	 }
+     }
+   else
+     {
+       Pipe->InboundQuota = 0;
+     }
+   if (IoStack->Parameters.Create.Options & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
+     {
+       if (Buffer->OutBufferSize == 0)
+         {
+           Pipe->OutboundQuota = DeviceExt->DefaultQuota;
+         }
+       else
+         {
+           Pipe->OutboundQuota = PAGE_ROUND_UP(Buffer->OutBufferSize);
+           if (Pipe->OutboundQuota < DeviceExt->MinQuota)
+             {
+               Pipe->OutboundQuota = DeviceExt->MinQuota;
+             }
+           else if (Pipe->OutboundQuota > DeviceExt->MaxQuota)
+             {
+               Pipe->OutboundQuota = DeviceExt->MaxQuota;
+	     }
+	 }
+     }
+   else
+     {
+       Pipe->OutboundQuota = 0;
+     }
+
+   if (Pipe->OutboundQuota)
+     {
+       Fcb->Data = ExAllocatePool(NonPagedPool, Pipe->OutboundQuota);
+       if (Fcb->Data == NULL)
+         {
+           ExFreePool(Fcb);
+           RtlFreeUnicodeString(&Pipe->PipeName);
+           ExFreePool(Pipe);
+
+           Irp->IoStatus.Status = STATUS_NO_MEMORY;
+           Irp->IoStatus.Information = 0;
+	
+           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+           return(STATUS_NO_MEMORY);
+	 }
+
+     }
+   else
+     {
+       Fcb->Data = NULL;
+     }
+
+   Fcb->ReadPtr = Fcb->Data;
+   Fcb->WritePtr = Fcb->Data;
+   Fcb->ReadDataAvailable = 0;
+   Fcb->WriteQuotaAvailable = Pipe->OutboundQuota;
+   Fcb->MaxDataLength = Pipe->OutboundQuota;
+   KeInitializeSpinLock(&Fcb->DataListLock);
+
+
    KeLockMutex(&DeviceExt->PipeListLock);
    current_entry = DeviceExt->PipeListHead.Flink;
    while (current_entry != &DeviceExt->PipeListHead)
@@ -300,18 +401,12 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Fcb->PipeEnd = FILE_PIPE_SERVER_END;
    Fcb->OtherSide = NULL;
    Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-   Fcb->ReadDataAvailable = 0;
-   Fcb->WriteQuotaAvailable = 0;
-
-   /* initialize data list */
-   InitializeListHead(&Fcb->DataListHead);
-   KeInitializeSpinLock(&Fcb->DataListLock);
 
    KeInitializeEvent(&Fcb->ConnectEvent,
 		     SynchronizationEvent,
 		     FALSE);
    
-   KeInitializeEvent(&Fcb->ReadEvent,
+   KeInitializeEvent(&Fcb->Event,
 		     SynchronizationEvent,
 		     FALSE);
 
@@ -339,9 +434,6 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
   PNPFS_FCB Fcb;
   PNPFS_PIPE Pipe;
   KIRQL oldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PNPFS_PIPE_DATA Current;
-
 
   DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -374,13 +466,17 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
       DPRINT("Server\n");
       Pipe->CurrentInstances--;
       if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-      {
-	   if (Fcb->OtherSide)
-	   {
+        {
+	  if (Fcb->OtherSide)
+	    {
 	      Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
-	   }
-           Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-      }
+	      /* Signaling the write event. If is possible that an other
+	       * thread waits of an empty buffer.
+	       */
+              KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
+	    }
+            Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+	}
     }
   Pipe->ReferenceCount--;
 
@@ -396,7 +492,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 	    /* Signaling the read event. If is possible that an other
 	     * thread waits of read data.
 	     */
-            KeSetEvent(&Fcb->OtherSide->ReadEvent, IO_NO_INCREMENT, FALSE);
+            KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
 	 }
          Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       }
@@ -414,27 +510,17 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
       RemoveEntryList(&Fcb->FcbListEntry);
       KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
       if (Fcb->OtherSide)
-      {  
-	 KeAcquireSpinLock(&Fcb->OtherSide->DataListLock, &oldIrql);
-	 while (!IsListEmpty(&Fcb->OtherSide->DataListHead))
-	 {
-	     CurrentEntry = RemoveHeadList(&Fcb->OtherSide->DataListHead);
-	     Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
-
-	     NpfsFreePipeData(Current);
-	 }
-         KeReleaseSpinLock(&Fcb->OtherSide->DataListLock, oldIrql);
-         ExFreePool(Fcb->OtherSide);
-      }
-
-      KeAcquireSpinLock(&Fcb->DataListLock, &oldIrql);
-      while (!IsListEmpty(&Fcb->DataListHead))
-      {
-         CurrentEntry = RemoveHeadList(&Fcb->DataListHead);
-	 Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
-	 NpfsFreePipeData(Current);
-      }
-      KeReleaseSpinLock(&Fcb->DataListLock, oldIrql);
+        {  
+          if (Fcb->OtherSide->Data)
+	    {
+	      ExFreePool(Fcb->OtherSide->Data);
+	    }
+          ExFreePool(Fcb->OtherSide);
+	}
+      if (Fcb->Data)
+        {
+          ExFreePool(Fcb->Data);
+	}
       ExFreePool(Fcb);
       RtlFreeUnicodeString(&Pipe->PipeName);
       RemoveEntryList(&Pipe->PipeListEntry);

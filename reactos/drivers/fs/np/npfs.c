@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.5 2002/09/08 10:22:11 chorns Exp $
+/* $Id: npfs.c,v 1.6 2003/06/21 19:55:55 hbirr Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -14,8 +14,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -78,14 +76,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    KeInitializeMutex(&DeviceExtension->PipeListLock,
 		     0);
 
-  ExInitializeNPagedLookasideList(
-    &NpfsPipeDataLookasideList,
-    NULL,
-    NULL,
-    0,
-    sizeof(NPFS_PIPE_DATA),
-    TAG('N', 'P', 'D', 'A'),
-    0);
+   /* set the size quotas */
+   DeviceExtension->MinQuota = PAGE_SIZE;
+   DeviceExtension->DefaultQuota = 8 * PAGE_SIZE;
+   DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
 
    return(STATUS_SUCCESS);
 }

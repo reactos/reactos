@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.8 2002/09/08 10:22:11 chorns Exp $
+/* $Id: rw.c,v 1.9 2003/06/21 19:55:55 hbirr Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -18,51 +18,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static inline PNPFS_PIPE_DATA
-NpfsAllocatePipeData(PVOID Data,
-		     ULONG Size)
-{
-  PNPFS_PIPE_DATA PipeData;
-
-  PipeData = ExAllocateFromNPagedLookasideList(&NpfsPipeDataLookasideList);
-  if (!PipeData)
-    {
-      return NULL;
-    }
-
-  PipeData->Data = Data;
-  PipeData->Size = Size;
-  PipeData->Offset = 0;
-
-  return PipeData;
-}
-
-
-static inline PNPFS_PIPE_DATA
-NpfsInitializePipeData(
-  PVOID Data,
-  ULONG Size)
-{
-  PNPFS_PIPE_DATA PipeData;
-  PVOID Buffer;
-
-  Buffer = ExAllocatePool(NonPagedPool, Size);
-  if (!Buffer)
-  {
-    return NULL;
-  }
-
-  RtlMoveMemory(Buffer, Data, Size);
-
-  PipeData = NpfsAllocatePipeData(Buffer, Size);
-  if (!PipeData)
-  {
-    ExFreePool(Buffer);
-  }
-
-  return PipeData;
-}
-
 
 NTSTATUS STDCALL
 NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -71,10 +26,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PNPFS_DEVICE_EXTENSION DeviceExt;
-  PWSTR PipeName;
   KIRQL OldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PNPFS_PIPE_DATA Current;
   ULONG Information;
   PNPFS_FCB Fcb;
   PNPFS_FCB ReadFcb;
@@ -82,6 +34,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
   ULONG Length;
   PVOID Buffer;
   ULONG CopyLength;
+  ULONG TempLength;
 
   DPRINT("NpfsRead(DeviceObject %p  Irp %p)\n", DeviceObject, Irp);
   
@@ -107,6 +60,15 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       Information = 0;
       goto done;
     }
+  
+  if (ReadFcb->Data == NULL)
+    {
+      DPRINT("Pipe is NOT readable!\n");
+      Status = STATUS_UNSUCCESSFUL;
+      Information = 0;
+      goto done;
+    }
+
 
   Status = STATUS_SUCCESS;
   Length = IoStack->Parameters.Read.Length;
@@ -117,107 +79,95 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
   KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
   while (1)
-  {
-     /* FIXME: check if in blocking mode */
-     if (IsListEmpty(&ReadFcb->DataListHead))
-     {
-        KeResetEvent(&Fcb->ReadEvent);
-        KeReleaseSpinLock(&ReadFcb->DataListLock, OldIrql);
-	if (Information > 0)
-	{
-	   Status = STATUS_SUCCESS;
-	   goto done;
+    {
+      /* FIXME: check if in blocking mode */
+      if (ReadFcb->ReadDataAvailable == 0)
+        {
+          KeResetEvent(&Fcb->Event);
+	  KeSetEvent(&ReadFcb->Event, IO_NO_INCREMENT, FALSE);
+          KeReleaseSpinLock(&ReadFcb->DataListLock, OldIrql);
+	  if (Information > 0)
+	    {
+	      Status = STATUS_SUCCESS;
+	      goto done;
+	    }
+          if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+	    {
+	      Status = STATUS_PIPE_BROKEN;
+	      goto done;
+	    }
+           /* Wait for ReadEvent to become signaled */
+           DPRINT("Waiting for readable data (%S)\n", Pipe->PipeName.Buffer);
+           Status = KeWaitForSingleObject(&Fcb->Event,
+				          UserRequest,
+				          KernelMode,
+				          FALSE,
+				          NULL);
+           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+           KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
 	}
-        if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
-	{
-	   Status = STATUS_PIPE_BROKEN;
-	   goto done;
-	}
-        /* Wait for ReadEvent to become signaled */
-        DPRINT("Waiting for readable data (%S)\n", Pipe->PipeName.Buffer);
-        Status = KeWaitForSingleObject(&Fcb->ReadEvent,
-				       UserRequest,
-				       KernelMode,
-				       FALSE,
-				       NULL);
-        DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
-        KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
-     }
 
      if (Pipe->PipeReadMode == FILE_PIPE_BYTE_STREAM_MODE)
-     {
-        DPRINT("Byte stream mode\n");
-
-        /* Byte stream mode */
-        CurrentEntry = NULL;
-        while (Length > 0 && !IsListEmpty(&ReadFcb->DataListHead))
-	{
-	   CurrentEntry = RemoveHeadList(&ReadFcb->DataListHead);
-	   Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
-
-	   DPRINT("Took pipe data at %p off the queue\n", Current);
-
-	   CopyLength = RtlMin(Current->Size, Length);
-	   RtlCopyMemory(Buffer,
-			 ((PVOID)((PVOID)Current->Data + Current->Offset)),
-			 CopyLength);
-	   Buffer += CopyLength;
-	   Length -= CopyLength;
-	   Information += CopyLength;
-
-	   /* Update the data buffer */
-	   Current->Offset += CopyLength;
-	   Current->Size -= CopyLength;
-	   if (Current->Size == 0)
+       {
+         DPRINT("Byte stream mode\n");
+         /* Byte stream mode */
+	 while (Length > 0 && ReadFcb->ReadDataAvailable > 0)
 	   {
-	       NpfsFreePipeData(Current);
-	       CurrentEntry = NULL;
+	     CopyLength = RtlMin(ReadFcb->ReadDataAvailable, Length);
+	     if (ReadFcb->ReadPtr + CopyLength <= ReadFcb->Data + ReadFcb->MaxDataLength)
+	       {
+                 memcpy(Buffer, ReadFcb->ReadPtr, CopyLength);
+		 ReadFcb->ReadPtr += CopyLength;
+		 if (ReadFcb->ReadPtr == ReadFcb->Data + ReadFcb->MaxDataLength)
+		   {
+		     ReadFcb->ReadPtr = ReadFcb->Data;
+		   }
+	       }
+	     else
+	       {
+	         TempLength = ReadFcb->Data + ReadFcb->MaxDataLength - ReadFcb->ReadPtr;
+		 memcpy(Buffer, ReadFcb->ReadPtr, TempLength);
+		 memcpy(Buffer + TempLength, ReadFcb->Data, CopyLength - TempLength);
+		 ReadFcb->ReadPtr = ReadFcb->Data + CopyLength - TempLength;
+	       }
+
+	     Buffer += CopyLength;
+	     Length -= CopyLength;
+	     Information += CopyLength;
+
+	     ReadFcb->ReadDataAvailable -= CopyLength;
+	     ReadFcb->WriteQuotaAvailable += CopyLength;
 	   }
-	}
-
-        if (CurrentEntry && Current->Size > 0)
-	{
-	   DPRINT("Putting pipe data at %p back in queue\n", Current);
-
-	   /* The caller's buffer could not contain the complete message,
-	      so put it back on the queue */
-	   InsertHeadList(&ReadFcb->DataListHead, &Current->ListEntry);
-	}
 
 	if (Length == 0)
-	{
-	   break;
-	}
-     }
+	  {
+	    KeSetEvent(&ReadFcb->Event, IO_NO_INCREMENT, FALSE);
+	    break;
+	  }
+       }
      else
-     {
-        DPRINT("Message mode\n");
+       {
+         DPRINT("Message mode\n");
 
-        /* Message mode */
-        if (!IsListEmpty(&ReadFcb->DataListHead))
-	{
-	   CurrentEntry = RemoveHeadList(&ReadFcb->DataListHead);
-	   Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
+         /* Message mode */
+	 if (ReadFcb->ReadDataAvailable)
+	   {
+	     /* Truncate the message if the receive buffer is too small */
+	     CopyLength = RtlMin(ReadFcb->ReadDataAvailable, Length);
+	     memcpy(Buffer, ReadFcb->Data, CopyLength);
 
-	   DPRINT("Took pipe data at %p off the queue\n", Current);
-
-	   /* Truncate the message if the receive buffer is too small */
-	   CopyLength = RtlMin(Current->Size, Length);
-	   RtlCopyMemory(Buffer, Current->Data, CopyLength);
-	   Information = CopyLength;
-
-	   Current->Offset += CopyLength;
-	   NpfsFreePipeData(Current);
-	}
-	if (Information > 0)
-	{
-	   break;
-	}
-     }
-  }
-  /* reset ReaderEvent */
+	     Information = CopyLength;
+	     ReadFcb->ReadDataAvailable = 0;
+	     ReadFcb->WriteQuotaAvailable = ReadFcb->MaxDataLength;
+	   }
+	 if (Information > 0)
+	   {
+	     KeSetEvent(&ReadFcb->Event, IO_NO_INCREMENT, FALSE);
+	     break;
+	   }
+       }
+    }
   KeReleaseSpinLock(&ReadFcb->DataListLock, OldIrql);
-
 
 done:
   Irp->IoStatus.Status = Status;
@@ -242,7 +192,9 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
   ULONG Length;
   ULONG Offset;
   KIRQL OldIrql;
-  PNPFS_PIPE_DATA PipeData;
+  ULONG Information;
+  ULONG CopyLength;
+  ULONG TempLength;
 
   DPRINT("NpfsWrite()\n");
 
@@ -256,6 +208,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
   Length = IoStack->Parameters.Write.Length;
   Offset = IoStack->Parameters.Write.ByteOffset.u.LowPart;
+  Information = 0;
 
   if (Irp->MdlAddress == NULL)
     {
@@ -272,36 +225,104 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
       Length = 0;
       goto done;
     }
+  
+  if (Fcb->Data == NULL)
+    {
+      DPRINT("Pipe is NOT writable!\n");
+      Status = STATUS_UNSUCCESSFUL;
+      Length = 0;
+      goto done;
+    }
 
+  Status = STATUS_SUCCESS;
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
   DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
 
-  PipeData = NpfsInitializePipeData(Buffer, Length);
-  if (PipeData)
+  KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
+  while(1)
     {
-      DPRINT("Attaching pipe data at %p (%d bytes)\n", PipeData, Length);
+      if (Fcb->WriteQuotaAvailable == 0)
+        {
+          KeResetEvent(&Fcb->Event);
+	  KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
+          KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
+          if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+	    {
+	      Status = STATUS_PIPE_BROKEN;
+	      goto done;
+	    }
+          DPRINT("Waiting for buffer space (%S)\n", Pipe->PipeName.Buffer);
+          Status = KeWaitForSingleObject(&Fcb->Event,
+				         UserRequest,
+				         KernelMode,
+				         FALSE,
+				         NULL);
+          DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+          KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
+        }
+      if (Pipe->PipeReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+        {
+          DPRINT("Byte stream mode\n");
+	  while (Length > 0 && Fcb->WriteQuotaAvailable > 0)
+	    {
+              CopyLength = RtlMin(Length, Fcb->WriteQuotaAvailable);
+              if (Fcb->WritePtr + CopyLength <= Fcb->Data + Fcb->MaxDataLength)
+	        {
+                  memcpy(Fcb->WritePtr, Buffer, CopyLength);
+		  Fcb->WritePtr += CopyLength;
+		  if (Fcb->WritePtr == Fcb->Data + Fcb->MaxDataLength)
+		    {
+		      Fcb->WritePtr = Fcb->Data;
+		    }
+		}
+	      else
+	        {
+		  TempLength = Fcb->Data + Fcb->MaxDataLength - Fcb->WritePtr;
+		  memcpy(Fcb->WritePtr, Buffer, TempLength);
+		  memcpy(Fcb->Data, Buffer + TempLength, CopyLength - TempLength);
+		  Fcb->WritePtr = Fcb->Data + CopyLength - TempLength;
+		}
+		  
+	      Buffer += CopyLength;
+	      Length -= CopyLength;
+              Information += CopyLength;
 
-      KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
-      InsertTailList(&Fcb->DataListHead, &PipeData->ListEntry);
+	      Fcb->ReadDataAvailable += CopyLength;
+	      Fcb->WriteQuotaAvailable -= CopyLength;
+	    }
 
-      /* signal the readers ReadEvent */
-      KeSetEvent(&Fcb->OtherSide->ReadEvent, IO_NO_INCREMENT, FALSE);
+	  if (Length == 0)
+	    {
+	      KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
+	      break;
+	    }
+	}
+      else
+        {
+          if (Length > 0)
+	    {
+              CopyLength = RtlMin(Length, Fcb->WriteQuotaAvailable);
+	      memcpy(Buffer, Fcb->Data, CopyLength);
 
-      KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
-
+	      Information = CopyLength;
+	      Fcb->ReadDataAvailable = CopyLength;
+	      Fcb->WriteQuotaAvailable = 0;
+	    }
+	  if (Information > 0)
+	    {
+	      KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
+	      break;
+	    }
+	}
     }
-  else
-    {
-      Length = 0;
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
+  KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
 
 done:
   Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = Length;
+  Irp->IoStatus.Information = Information;
   
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  
+
   return(Status);
 }
 
