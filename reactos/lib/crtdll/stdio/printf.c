@@ -17,3 +17,17 @@ printf(const char *fmt, ...)
 
   return ferror(stdout) ? EOF : len;
 }
+
+int wprintf(const wchar_t *fmt, ...)
+{
+  int len;
+
+  len = _dowprnt(fmt, (&fmt)+sizeof(wchar_t), stdout);
+
+  /* People were confused when printf() didn't flush stdout,
+     so we'll do it to reduce confusion */
+  if (stdout->_flag & _IOLBF)
+    fflush(stdout);
+
+  return ferror(stdout) ? EOF : len;
+}

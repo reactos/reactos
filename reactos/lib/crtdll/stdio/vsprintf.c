@@ -17,3 +17,16 @@ vsprintf(char *str, const char *fmt, va_list ap)
   *f._ptr = 0;
   return len;
 }
+
+vswprintf(wchar_t *str, const wchar_t *fmt, va_list ap)
+{
+  FILE f;
+  int len;
+
+  f._flag = _IOWRT|_IOSTRG;
+  f._ptr = str;
+  f._cnt = INT_MAX;
+  len = _dowprnt(fmt, ap, &f);
+  *f._ptr = 0;
+  return len;
+}

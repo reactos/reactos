@@ -315,5 +315,10 @@ int _doprnt(const char *fmt, va_list args, FILE *f)
 	return 0;
 }
 
+int _dowprnt(const wchar_t *fmt, va_list args, FILE *f)
+{
+	return 0;
+}
+
 
 

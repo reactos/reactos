@@ -10,16 +10,9 @@
 #include <stdlib.h>
 #include <windows.h>
 
-#undef fullpath
-char *fullpath( char *absPath, const char *relPath, size_t maxLength )
-{
-	return _fullpath(absPath,relPath,maxLength );
-}
 
 char *_fullpath( char *absPath, const char *relPath, size_t maxLength )
 {
-	
-
 	char *lpFilePart;
 	if ( GetFullPathName(relPath,maxLength,absPath,&lpFilePart) == 0 )
 		return NULL;
