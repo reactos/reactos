@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: nls.c,v 1.2 2004/11/27 16:36:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,7 +86,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return(STATUS_SUCCESS);
@@ -267,7 +267,7 @@ RtlMultiByteToUnicodeN(
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return(STATUS_SUCCESS);
@@ -346,7 +346,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -423,7 +423,7 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -466,7 +466,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -548,7 +548,7 @@ RtlUnicodeToOemN (PCHAR OemString,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -623,7 +623,7 @@ RtlUpcaseUnicodeToCustomCPN (IN PCPTABLEINFO CustomCP,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -667,7 +667,7 @@ RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
@@ -711,7 +711,7 @@ RtlUpcaseUnicodeToOemN (PCHAR OemString,
    {
       /* multi-byte code page */
       /* FIXME */
-      assert(FALSE);
+      ASSERT(FALSE);
    }
 
    return STATUS_SUCCESS;
