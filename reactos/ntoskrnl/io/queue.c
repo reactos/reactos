@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.13 2003/07/10 15:47:00 royce Exp $
+/* $Id: queue.c,v 1.14 2004/04/28 20:42:01 hbirr Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -134,13 +134,22 @@ IoStartPacket(PDEVICE_OBJECT DeviceObject,
 				   &Irp->Tail.Overlay.DeviceQueueEntry);
      }
    
-   IoReleaseCancelSpinLock(oldirql);
    
    if (!stat)
      {			   
+        IoReleaseCancelSpinLock(DISPATCH_LEVEL);
         DeviceObject->CurrentIrp = Irp;
 	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
+	if (oldirql < DISPATCH_LEVEL)
+	  {
+            KeLowerIrql(oldirql);
+        }
      }
+   else
+     {
+        IoReleaseCancelSpinLock(oldirql);
+     }
+
 }
 
 
