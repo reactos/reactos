@@ -29,27 +29,27 @@
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <ddk/i386/tss.h>
-			
+
 /* FUNCTIONS ****************************************************************/
 
 .globl _KeStackSwitchAndRet@4
 _KeStackSwitchAndRet@4:
 	pushl	%ebp
 	movl	%esp, %ebp
-	
+
 	cli
 
 	movl	8(%ebp), %esp
 
 	sti
-	
+
 	popl	%edi
 	popl	%esi
 	popl	%ebx
 
 	popl	%ebp
 	ret	$28
-		
+
 .globl _KePushAndStackSwitchAndSysRet@28
 _KePushAndStackSwitchAndSysRet@28:
 	pushl	%ebp
@@ -68,7 +68,7 @@ _KePushAndStackSwitchAndSysRet@28:
 	pushl	24(%ebp)
 	pushl	28(%ebp)
 
-	movl	%ebx, %fs:KPCR_CURRENT_THREAD
+	movl	%fs:KPCR_CURRENT_THREAD, %ebx
 	movl	%esp, KTHREAD_CALLBACK_STACK(%ebx)
 	movl	32(%ebp), %esp
 
@@ -78,4 +78,4 @@ _KePushAndStackSwitchAndSysRet@28:
 	call	_KeLowerIrql@4
 
 	jmp	KeReturnFromSystemCall
-	
+
