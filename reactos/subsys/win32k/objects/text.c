@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.58 2003/12/12 22:50:20 weiden Exp $ */
+/* $Id: text.c,v 1.59 2003/12/12 22:57:26 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1384,7 +1384,6 @@ TextIntRealizeFont(HFONT FontHandle)
       }
       Entry = Entry->Flink;
     }
-    ExReleaseFastMutex(&FontListLock);
 
     if (NULL == TextObj->GDIFontHandle)
     {
@@ -1404,6 +1403,8 @@ TextIntRealizeFont(HFONT FontHandle)
       }
       
     }
+    
+    ExReleaseFastMutex(&FontListLock);
 
     ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
 
