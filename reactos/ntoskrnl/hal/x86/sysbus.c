@@ -1,4 +1,4 @@
-/* $Id: sysbus.c,v 1.1 2000/04/09 15:58:13 ekohl Exp $
+/* $Id: sysbus.c,v 1.2 2001/02/25 12:54:37 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,6 +31,7 @@ HalpGetSystemInterruptVector (
 	)
 {
 	*Irql = HIGH_LEVEL - BusInterruptVector;
+   *Affinity = 0xFFFFFFFF;
 	return BusInterruptVector;
 }
 
