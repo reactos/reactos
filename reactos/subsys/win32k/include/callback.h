@@ -4,7 +4,7 @@
 LRESULT STDCALL
 IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
-                  HWND Wnd,
+                  PWINDOW_OBJECT Window,
                   UINT Message,
                   WPARAM wParam,
                   LPARAM lParam,

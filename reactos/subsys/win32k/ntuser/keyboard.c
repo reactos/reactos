@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.30 2004/07/04 17:08:40 navaraf Exp $
+/* $Id: keyboard.c,v 1.30.2.1 2004/07/07 18:03:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -593,7 +593,8 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 #undef XX_STATUS
 }
 
-PKBDTABLES W32kGetDefaultKeyLayout() {
+PKBDTABLES FASTCALL
+W32kGetDefaultKeyLayout(VOID) {
   PKBDTABLES pkKeyboardLayout = 0;
   InitKbdLayout( (PVOID) &pkKeyboardLayout );
   return pkKeyboardLayout;

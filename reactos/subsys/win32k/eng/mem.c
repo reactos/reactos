@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.17 2004/07/03 22:36:27 navaraf Exp $
+/* $Id: mem.c,v 1.17.2.1 2004/07/07 18:02:59 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -46,7 +46,7 @@ EngAllocMem(ULONG Flags,
 {
   PVOID newMem;
 
-  newMem = ExAllocatePoolWithTag(PagedPool, MemSize, Tag);
+  newMem = ExAllocatePoolWithTag(NonPagedPool, MemSize, Tag); // FIXME: Use PagedPool when it is implemented
 
   if (Flags == FL_ZERO_MEMORY && NULL != newMem)
   {

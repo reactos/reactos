@@ -14,6 +14,7 @@
 #define TAG_USRMSG	TAG('U', 'M', 'S', 'G') /* user message */
 #define TAG_WNDPROP	TAG('W', 'P', 'R', 'P') /* window property */
 #define TAG_WNAM	TAG('W', 'N', 'A', 'M') /* window name */
+#define TAG_CLASS	TAG('W', 'C', 'L', 'S') /* window class */
 #define TAG_WINLIST	TAG('W', 'N', 'L', 'S') /* window handle list */
 #define TAG_WININTLIST	TAG('W', 'N', 'I', 'P') /* window internal pos */
 #define TAG_WINPROCLST	TAG('W', 'N', 'P', 'L') /* window proc list */
