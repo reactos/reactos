@@ -1,3 +1,10 @@
+2004-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/regtests2xml: New directory.
+	* tools/regtests2xml/.cvsignore: New file.
+	* tools/regtests2xml/Makefile: Ditto.
+	* tools/regtests2xml/regtests2xml.c: Ditto.
+
 2004-08-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/depend.mk: Don't generate dependencies for implib target.
