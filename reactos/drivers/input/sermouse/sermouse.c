@@ -1,5 +1,5 @@
 /*
- * Serial Mouse driver 0.0.8
+ * Serial Mouse driver 0.0.9
  * Written by Jason Filby (jasonfilby@yahoo.com)
  * And heavily rewritten by Filip Navara (xnavara@volny.cz)
  * For ReactOS (www.reactos.com)
@@ -20,7 +20,7 @@
 /* Check for mouse on COM1? */
 #define SERMOUSE_COM1_SUPPORT
 /* Check for mouse on COM2? */
-//#define SERMOUSE_COM2_SUPPORT
+#define SERMOUSE_COM2_SUPPORT
 /* Create \??\Mouse* symlink for device? */
 #define SERMOUSE_MOUSESYMLINK_SUPPORT
 
@@ -41,7 +41,7 @@
 /* No Mouse */
 #define MOUSE_TYPE_NONE			0
 /* Microsoft Mouse with 2 buttons */
-#define MOUSE_TYPE_MICROSOFT	1
+#define MOUSE_TYPE_MICROSOFT		1
 /* Logitech Mouse with 3 buttons */
 #define MOUSE_TYPE_LOGITECH		2
 /* Microsoft Wheel Mouse (aka Z Mouse) */
@@ -391,20 +391,25 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 	CHAR Buffer[4];
 	ULONG i;
 	ULONG TimeOut = 250;
-    UCHAR LineControl;
+	UCHAR LineControl;
     
-    /* Shutdown mouse or something like that */ 
-    LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
-	WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
-    KeStallExecutionProcessor(500000);
+	/* Save original control */ 
+	LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
 
-    /* Clear buffer */
+	/* Inactivate RTS and set DTR */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
+	KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
+
+	/* Clear buffer */
 	while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
 		(void)READ_PORT_UCHAR((PUCHAR)Port);
 
-	/* Send modem control with 'Data Terminal Ready', 'Request To Send' and
-	 * 'Output Line 2' message. This enables mouse to identify. */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
+	/*
+	 * Send modem control with 'Data Terminal Ready' and 'Request To Send'
+	 * message. This enables mouse to identify.
+	 */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x03);
+
 	/* Wait 10 milliseconds for the mouse getting ready */
 	KeStallExecutionProcessor(10000);
 
@@ -421,12 +426,15 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 		Buffer[i] = READ_PORT_UCHAR((PUCHAR)Port);
 	}
 
+        /* Restore control */
+        WRITE_PORT_UCHAR((PUCHAR)Port + 4, LineControl);
+
 	/* Check that four bytes for signs */
 	for (i = 0; i < 4; ++i)
 	{
 		/* Sign for Microsoft Ballpoint */
-    	if (Buffer[i] == 'B')
-	    {
+    		if (Buffer[i] == 'B')
+		{
 			DbgPrint("Microsoft Ballpoint device detected");
 			DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET");
 			return MOUSE_TYPE_NONE;
@@ -544,16 +552,16 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	if (MouseType == MOUSE_TYPE_NONE)
 		return FALSE;
 
-    /* Allocate new device */
-    DeviceObject = AllocatePointerDevice(DriverObject);
-    if (!DeviceObject)
-    {
-    	DbgPrint("Oops, couldn't creat device object.\n");
-    	return FALSE;
-    }
-    DeviceExtension = DeviceObject->DeviceExtension;
+	/* Allocate new device */
+	DeviceObject = AllocatePointerDevice(DriverObject);
+	if (!DeviceObject)
+	{
+		DbgPrint("Oops, couldn't creat device object.\n");
+		return FALSE;
+	}
+	DeviceExtension = DeviceObject->DeviceExtension;
 
-    /* Setup device extension structure */
+	/* Setup device extension structure */
 	DeviceExtension->ActiveQueue = 0;
 	DeviceExtension->MouseType = MouseType;
 	DeviceExtension->MousePort = Port;
@@ -594,7 +602,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	BOOL MouseFound = FALSE;
 
-	DbgPrint("Serial Mouse Driver 0.0.8\n");
+	DbgPrint("Serial Mouse Driver 0.0.9\n");
 #ifdef SERMOUSE_COM1_SUPPORT
 	DbgPrint("Trying to find mouse on COM1\n");
 	MouseFound |= InitializeMouse(MOUSE_PORT_COM1, MOUSE_IRQ_COM1, DriverObject);
