@@ -19,9 +19,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:01 $
+ * $Revision: 1.7 $
+ * $Author: gvg $
+ * $Date: 2003/04/27 23:14:04 $
  *
  */
 
@@ -85,34 +85,29 @@ typedef __WCHAR_TYPE__      wchar_t;
  */
 struct stat
 {
-#ifdef _MSVCRT_LIB_
-    long    st_dev;     /* Equivalent to drive number 0=A 1=B ... */
-#else
-    short   st_dev;     /* Equivalent to drive number 0=A 1=B ... */
-    short   st_padding; /* Pad structure to equal msvcrt version req */
-#endif
-    short   st_ino;     /* Always zero ? */
-    short   st_mode;    /* See above constants */
-    short   st_nlink;   /* Number of links. */
-    int     st_uid;     /* User: Maybe significant on NT ? */
-    short   st_gid;     /* Group: Ditto */
-    short   st_rdev;    /* Seems useless (not even filled in) */
-    long    st_size;    /* File size in bytes */
-    time_t  st_atime;   /* Accessed date (always 00:00 hrs local on FAT) */
-    time_t  st_mtime;   /* Modified time */
-    time_t  st_ctime;   /* Creation time */
+    unsigned st_dev;     /* Equivalent to drive number 0=A 1=B ... */
+    short    st_ino;     /* Always zero ? */
+    short    st_mode;    /* See above constants */
+    short    st_nlink;   /* Number of links. */
+    short    st_uid;     /* User: Maybe significant on NT ? */
+    short    st_gid;     /* Group: Ditto */
+    unsigned st_rdev;    /* Seems useless (not even filled in) */
+    long     st_size;    /* File size in bytes */
+    time_t   st_atime;   /* Accessed date (always 00:00 hrs local on FAT) */
+    time_t   st_mtime;   /* Modified time */
+    time_t   st_ctime;   /* Creation time */
 };
 
 
 struct _stati64
 {
-    short   st_dev;     /* Equivalent to drive number 0=A 1=B ... */
-    short   st_ino;     /* Always zero ? */
-    short   st_mode;    /* See above constants */
-    short   st_nlink;   /* Number of links. */
-    int     st_uid;     /* User: Maybe significant on NT ? */
-    short   st_gid;     /* Group: Ditto */
-    short   st_rdev;    /* Seems useless (not even filled in) */
+    unsigned st_dev;     /* Equivalent to drive number 0=A 1=B ... */
+    short    st_ino;     /* Always zero ? */
+    short    st_mode;    /* See above constants */
+    short    st_nlink;   /* Number of links. */
+    short    st_uid;     /* User: Maybe significant on NT ? */
+    short    st_gid;     /* Group: Ditto */
+    unsigned st_rdev;    /* Seems useless (not even filled in) */
     __int64 st_size;    /* File size in bytes */
     time_t  st_atime;   /* Accessed date (always 00:00 hrs local on FAT) */
     time_t  st_mtime;   /* Modified time */
