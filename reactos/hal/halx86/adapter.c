@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.10 2003/12/31 05:33:03 jfilby Exp $
+/* $Id: adapter.c,v 1.11 2004/07/22 18:49:18 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,7 +66,7 @@ HalAllocateAdapterChannel(
   WaitContextBlock->NumberOfMapRegisters = NumberOfMapRegisters;
 
   /* returns true if queued, else returns false and sets the queue to busy */
-  if(KeInsertDeviceQueue(&AdapterObject->DeviceQueue, (PKDEVICE_QUEUE_ENTRY)WaitContextBlock))
+  if(KeInsertDeviceQueue(&AdapterObject->DeviceQueue, &WaitContextBlock->WaitQueueEntry))
     return STATUS_SUCCESS;
 
   /* 24-bit max address due to 16-bit dma controllers */
@@ -79,6 +79,10 @@ HalAllocateAdapterChannel(
    * X86 lacks map registers, so for now, we allocate a contiguous
    * block of physical memory <16MB and copy all DMA buffers into
    * that.  This can be optimized.
+   *
+   * FIXME: We propably shouldn't allocate the memory here for common
+   * buffer transfers. See a comment in IoMapTransfer about common buffer
+   * support.
    */
   AdapterObject->MapRegisterBase = MmAllocateContiguousAlignedMemory( 
       NumberOfMapRegisters * PAGE_SIZE,
@@ -159,25 +163,18 @@ IoFlushAdapterBuffers (
   if(!MapRegisterBase)
     return TRUE;
 
+  /* mask out (disable) the dma channel */
+  if (AdapterObject->Channel < 4)
+    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)(AdapterObject->Channel | 0x4) );
+  else
+    WRITE_PORT_UCHAR( (PVOID)0xD4, (UCHAR)((AdapterObject->Channel - 4) | 0x4) );
+
   if(WriteToDevice)
     return TRUE;
     
   memcpy( 
         (PVOID)((DWORD)MmGetSystemAddressForMdl( Mdl ) + (DWORD)CurrentVa - (DWORD)MmGetMdlVirtualAddress( Mdl )), 
       MapRegisterBase, Length );
-
-  /*
-  FIXME: mask off (disable) channel if doing System DMA?
-  
-    From linux:
-    
-    if (dmanr<=3)
-      dma_outb(dmanr | 4,  DMA1_MASK_REG 0x0A) ;
-    else
-      dma_outb((dmanr & 3) | 4,  DMA2_MASK_REG 0x0A);
-
-  */
-  
 
   return TRUE;
 }
@@ -304,14 +301,18 @@ IoMapTransfer (
  *     - If the controller supports scatter/gather, the copyover should not happen
  */
 {
-	PHYSICAL_ADDRESS Address;
+  PHYSICAL_ADDRESS Address;
+  PVOID MaskReg, ClearReg, ModeReg;
+  UCHAR ModeMask, LengthShift;
+  KIRQL OldIrql;
+
 #if defined(__GNUC__)
-	Address.QuadPart = 0ULL;
+  Address.QuadPart = 0ULL;
 #else
-	Address.QuadPart = 0;
+  Address.QuadPart = 0;
 #endif
 
-	/* Isa System (slave) DMA? */
+  /* Isa System (slave) DMA? */
   if (AdapterObject && AdapterObject->InterfaceType == Isa && !AdapterObject->Master)
   {
 #if 0
@@ -321,38 +322,76 @@ IoMapTransfer (
     assert(AdapterObject->Channel != 4);
 #endif
 
+    KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
+
     /*
-    FIXME: Handle case when doing common-buffer System DMA. In this case, the buffer described
-    by MDL is allready phys. contiguous and below 16 mega. Driver makes a one-shot call to 
-    IoMapTransfer during init. to program controller with the common-buffer.
-    */
-    
+     * FIXME: Handle case when doing common-buffer System DMA. In this case,
+     * the buffer described by MDL is already phys. contiguous and below
+     * 16 mega. Driver makes a one-shot call to IoMapTransfer during init.
+     * to program controller with the common-buffer.
+     *
+     * UPDATE: Common buffer support is in place, but it's not done in a
+     * clean way. We use the buffer passed by the MDL in case that the
+     * adapter object is marked as auto initialize. I'm not sure if this
+     * is correct and if not, how to do it properly. Note that it's also
+     * possible to allocate the common buffer with different adapter object
+     * and IoMapTransfer must still work in this case. Eventually this should
+     * be cleaned up somehow or at least this comment modified to reflect
+     * the reality.
+     * -- Filip Navara, 19/07/2004     
+     */
+
     /* if it is a write to the device, copy the caller buffer to the low buffer */
-    if( WriteToDevice )
+    if( WriteToDevice && !AdapterObject->AutoInitialize )
     {
       memcpy(MapRegisterBase,
              (char*)MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
 	           *Length );
     }
              
+    // 16-bit DMA
+    if( AdapterObject->Channel >= 4 )
+    {
+      MaskReg = (PVOID)0xD4; ClearReg = (PVOID)0xD8; ModeReg = (PVOID)0xD6;
+      LengthShift = 1;
+    }
+    else
+    {
+      MaskReg = (PVOID)0x0A; ClearReg = (PVOID)0x0C; ModeReg = (PVOID)0x0B;
+      LengthShift = 0;
+    }
+
+    // calculate the mask we will later set to the mode register
+    ModeMask = (AdapterObject->Channel & 3) | ( WriteToDevice ? 0x8 : 0x4 );
+    // FIXME: if not demand mode, which mode to use? 0x40 for single mode
+    if (!AdapterObject->DemandMode)
+      ModeMask |= 0x40;
+    if (AdapterObject->AutoInitialize)
+      ModeMask |= 0x10;
+
     // program up the dma controller, and return
-    Address = MmGetPhysicalAddress( MapRegisterBase );
-    // port 0xA is the dma mask register, or a 0x10 on to the channel number to mask it
-    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)(AdapterObject->Channel | 0x10));
+    if (!AdapterObject->AutoInitialize)
+      Address = MmGetPhysicalAddress( MapRegisterBase );
+    else
+      Address = MmGetPhysicalAddress( CurrentVa );
+    // disable and select the channel number
+    WRITE_PORT_UCHAR( MaskReg, (UCHAR)((AdapterObject->Channel & 3) | 0x4) );
     // write zero to the reset register
-    WRITE_PORT_UCHAR( (PVOID)0x0C, 0 );
-    // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for non auto initialize
-    WRITE_PORT_UCHAR( (PVOID)0x0B, (UCHAR)(AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 )) );
+    WRITE_PORT_UCHAR( ClearReg, 0 );
+    // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for auto initialize
+    WRITE_PORT_UCHAR( ModeReg, ModeMask);
     // set the 64k page register for the channel
-    WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)Address.QuadPart)>>16) );
+    WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(Address.u.LowPart >> 16) );
     // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
     WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
     WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
     // count is 1 less than length, low then high
-    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(*Length - 1) );
-    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length - 1)>>8) );
+    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length >> LengthShift) - 1) );
+    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(((*Length >> LengthShift) - 1)>>8) );
     // unmask the channel to let it rip
-    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)AdapterObject->Channel );
+    WRITE_PORT_UCHAR( MaskReg, AdapterObject->Channel & 3 );
+
+    KeReleaseSpinLock(&AdapterObject->SpinLock, OldIrql);
 
     /* 
     NOTE: Return value should be ignored when doing System DMA.
@@ -436,7 +475,7 @@ IoMapTransfer (
 
     return MmGetPhysicalAddress(MapRegisterBase);
   }
-  
+
   DPRINT1("IoMapTransfer: Unsupported operation\n");
   KEBUGCHECK(0);
   return Address;

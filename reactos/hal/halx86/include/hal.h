@@ -19,6 +19,7 @@ BOOLEAN Hal_bios32_is_service_present(ULONG service);
 VOID FASTCALL HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID FASTCALL HalClearDisplay (UCHAR CharAttribute);
 
+/* bus.c */
 VOID HalpInitBusHandlers (VOID);
 
 /* irql.c */
@@ -32,6 +33,9 @@ VOID HalpInitPciBus (VOID);
 
 /* enum.c */
 VOID HalpStartEnumerator (VOID);
+
+/* dma.c */
+VOID HalpInitDma (VOID);
 
 /*
  * ADAPTER_OBJECT - Track a busmaster DMA adapter and its associated resources
@@ -59,6 +63,15 @@ struct _ADAPTER_OBJECT {
   PWAIT_CONTEXT_BLOCK WaitContextBlock;
   KDEVICE_QUEUE DeviceQueue;
   BOOLEAN ScatterGather;
+
+  /*
+   * 18/07/04: Added these members. It's propably not the exact place where
+   * this should be stored, but I can't find better one. I haven't checked
+   * how Windows handles this.
+   * -- Filip Navara
+   */
+  BOOLEAN DemandMode;
+  BOOLEAN AutoInitialize;
 };
 
 /* sysinfo.c */
