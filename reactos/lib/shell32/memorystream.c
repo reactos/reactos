@@ -206,7 +206,7 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb
 	if( !pv )
 		return STG_E_INVALIDPOINTER;
 
-	/* WriteFile() doesn't allow to specify NULL as write count pointer. */
+	/* WriteFile() doesn't allow to specify NULL as write count pointer */
 	if (!pcbWritten)
 		pcbWritten = &dummy_count;
 

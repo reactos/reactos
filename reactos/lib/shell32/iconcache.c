@@ -264,11 +264,11 @@ BOOL SIC_Initialize(void)
 	  return(FALSE);
 	}
 
-	ShellSmallIconList = ImageList_Create(16,16,ILC_COLOR32|ILC_MASK,0,0x20);
-	ShellBigIconList = ImageList_Create(32,32,ILC_COLOR32|ILC_MASK,0,0x20);
+       ShellSmallIconList = ImageList_Create(16,16,ILC_COLOR32|ILC_MASK,0,0x20);
+       ShellBigIconList = ImageList_Create(32,32,ILC_COLOR32|ILC_MASK,0,0x20);
 
-	ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
-	ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
+       ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
+       ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
 
 	for (index=1; index<39; index++)
 	{
