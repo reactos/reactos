@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.51 2003/01/15 19:53:49 chorns Exp $
+/* $Id: create.c,v 1.52 2003/01/16 22:02:24 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -201,7 +201,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   if (wcslen (FileToFind) == 0)
   {
     CHECKPOINT;
-    TempStr[0] = (WCHAR) '.';
+    TempStr[0] = (WCHAR) '*';
     TempStr[1] = 0;
     FileToFind = (PWSTR)&TempStr;
   }
