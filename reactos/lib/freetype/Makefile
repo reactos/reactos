@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2003/09/12 17:51:46 vizzini Exp $
+# $Id: Makefile,v 1.7 2003/12/07 12:07:58 mf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -56,5 +56,12 @@ freetype_def: objs/libfreetype.a
 
 etags: TAGS
 TAGS: i386/TAGS
+
+
+docu:
+	doxygen Doxyfile
+
+.PHONY: docu
+
 
 # EOF

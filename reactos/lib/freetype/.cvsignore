@@ -4,3 +4,4 @@ nul
 *.dll
 *.map
 *.sym
+doxy-doc
