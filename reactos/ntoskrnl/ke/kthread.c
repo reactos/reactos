@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.61 2004/12/12 23:18:55 navaraf Exp $
+/* $Id$
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -237,9 +237,9 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->ApcState.UserApcPending = 0;
   Thread->ContextSwitches = 0;
   Thread->WaitStatus = STATUS_SUCCESS;
-  Thread->WaitIrql = 0;
+  Thread->WaitIrql = PASSIVE_LEVEL;
   Thread->WaitMode = 0;
-  Thread->WaitNext = 0;
+  Thread->WaitNext = FALSE;
   Thread->WaitBlockList = NULL;
   Thread->WaitListEntry.Flink = NULL;
   Thread->WaitListEntry.Blink = NULL;
@@ -310,6 +310,7 @@ VOID
 STDCALL
 KeRevertToUserAffinityThread(VOID)
 {
+#ifdef MP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 
@@ -335,6 +336,7 @@ KeRevertToUserAffinityThread(VOID)
            PsDispatchThreadNoLock(THREAD_STATE_READY);
            KeLowerIrql(oldIrql);
 	}
+#endif
 }
 
 /*
@@ -365,6 +367,7 @@ VOID
 STDCALL
 KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
+#ifdef MP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 
@@ -372,7 +375,6 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 
 	CurrentThread = KeGetCurrentThread();
 
-	ASSERT(CurrentThread->SystemAffinityActive == FALSE);
 	ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
 	
         /* Set the System Affinity Specified */
@@ -391,6 +393,7 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
            PsDispatchThreadNoLock(THREAD_STATE_READY);
            KeLowerIrql(oldIrql);
 	}
+#endif
 }
 
 /*

@@ -730,13 +730,21 @@ KeWaitForMultipleObjects(ULONG Count,
       PsBlockThread(&Status, Alertable, WaitMode, TRUE, OldIrql, (UCHAR)WaitReason);
 
       //kernel queues
-      //FIXME: dispatcher lock not held here!
+      OldIrql = KeAcquireDispatcherDatabaseLock ();
       if (CurrentThread->Queue && WaitReason != WrQueue)
       {
          DPRINT("queue: wake from something else\n");
          CurrentThread->Queue->CurrentCount++;
       }
-      
+      if (Status == STATUS_KERNEL_APC)
+      {
+         CurrentThread->WaitNext = TRUE;
+         CurrentThread->WaitIrql = OldIrql;
+      }
+      else
+      {
+         KeReleaseDispatcherDatabaseLock(OldIrql);
+      }
       
    } while (Status == STATUS_KERNEL_APC);
    

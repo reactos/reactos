@@ -98,7 +98,7 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
   else
     {
       KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = Wait;
+      Thread->WaitNext = TRUE;
       Thread->WaitIrql = OldIrql;
     }
 
@@ -128,7 +128,7 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
   else
     {
       KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = Wait;
+      Thread->WaitNext = TRUE;
       Thread->WaitIrql = OldIrql;
     }
 

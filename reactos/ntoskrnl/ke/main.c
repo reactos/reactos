@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.212 2004/12/24 17:06:58 navaraf Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -461,10 +461,10 @@ ExpInitializeExecutive(VOID)
 
   KeInit2();
   
-#if 1
+#if 0
   if (KeMemoryMapRangeCount > 0)
     {
-      DPRINT("MemoryMap:\n");
+      DPRINT1("MemoryMap:\n");
       for (i = 0; i < KeMemoryMapRangeCount; i++)
         {
           switch(KeMemoryMap[i].Type)
@@ -484,7 +484,7 @@ ExpInitializeExecutive(VOID)
 	      default:
 	        sprintf(str, "type %lu", KeMemoryMap[i].Type);
             }
-          DPRINT("%08x - %08x %s\n", KeMemoryMap[i].BaseAddrLow, KeMemoryMap[i].BaseAddrLow + KeMemoryMap[i].LengthLow, str);
+          DPRINT1("%08x - %08x %s\n", KeMemoryMap[i].BaseAddrLow, KeMemoryMap[i].BaseAddrLow + KeMemoryMap[i].LengthLow, str);
 	}
     }
 #endif
@@ -501,6 +501,8 @@ ExpInitializeExecutive(VOID)
   if (!SeInit2())
     KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
+  KeNumberProcessors = 1;
+
   PiInitProcessManager();
 
   if (KdPollBreakIn ())
@@ -509,8 +511,6 @@ ExpInitializeExecutive(VOID)
     }
 
   /* Initialize all processors */
-  KeNumberProcessors = 1;
-
   while (!HalAllProcessorsStarted())
     {
       PVOID ProcessorStack;

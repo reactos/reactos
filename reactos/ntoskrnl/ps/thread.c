@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.141 2004/12/12 17:25:53 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -243,9 +243,20 @@ PsIsThreadImpersonating(
 }
 
 static VOID
+KiRequestReschedule(CCHAR Processor)
+{
+   PKPCR Pcr;
+
+   Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
+   Pcr->PrcbData.QuantumEnd = TRUE;
+   KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
+}
+
+static VOID
 PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
    ASSERT(THREAD_STATE_READY == Thread->Tcb.State);
+   ASSERT(Thread->Tcb.Priority == Priority);
    if (Priority >= MAXIMUM_PRIORITY || Priority < LOW_PRIORITY)
      {
 	DPRINT1("Invalid thread priority (%d)\n", Priority);
@@ -298,7 +309,7 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
          {
            ULONG i = 0;
            PULONG Esp = (PULONG)Thread->Tcb.KernelStack;
-           PULONG Ebp = (PULONG)Esp[3];
+           PULONG Ebp = (PULONG)Esp[4];
            DbgPrint("Ebp 0x%.8X\n", Ebp);
            while(Ebp != 0 && Ebp >= (PULONG)Thread->Tcb.StackLimit)
            {
@@ -306,7 +317,7 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
              Ebp = (PULONG)Ebp[0];
              i++;
            }
-           if((i % 8) != 7)
+           if((i % 8) != 0)
            {
              DbgPrint("\n");
            }
@@ -427,7 +438,8 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    return;
 	  }
      }
-   CPRINT("CRITICAL: No threads are ready\n");
+   CPRINT("CRITICAL: No threads are ready (CPU%d)\n", KeGetCurrentProcessorNumber());
+   PsDumpThreads(TRUE);
    KEBUGCHECK(0);
 }
 
@@ -441,10 +453,6 @@ PsDispatchThread(ULONG NewThreadStatus)
 	return;
      }
    oldIrql = KeAcquireDispatcherDatabaseLock();
-   /*
-    * Save wait IRQL
-    */
-   KeGetCurrentThread()->WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -510,7 +518,6 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
     {
       Thread->Tcb.Alertable = Alertable;
       Thread->Tcb.WaitMode = (UCHAR)WaitMode;
-      Thread->Tcb.WaitIrql = WaitIrql;
       Thread->Tcb.WaitReason = WaitReason;
       PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
 
@@ -646,6 +653,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.Affinity = 1 << Id;
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
+  IdleThread->Tcb.BasePriority = LOW_PRIORITY;
   Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
   Pcr->PrcbData.CurrentThread = &IdleThread->Tcb;
   NtClose(IdleThreadHandle);
@@ -773,6 +781,8 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
    KIRQL oldIrql;
    PKTHREAD CurrentThread;
    ULONG Mask;
+   int i;
+   PKPCR Pcr;
 
    if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
      {
@@ -782,15 +792,15 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
    oldIrql = KeAcquireDispatcherDatabaseLock();
 
    OldPriority = Thread->Priority;
-   Thread->BasePriority = Thread->Priority = (CHAR)Priority;
 
    if (OldPriority != Priority)
      {
+       CurrentThread = KeGetCurrentThread();
        if (Thread->State == THREAD_STATE_READY)
          {
 	   PsRemoveFromThreadList((PETHREAD)Thread);
+           Thread->BasePriority = Thread->Priority = (CHAR)Priority;
 	   PsInsertIntoThreadList(Priority, (PETHREAD)Thread);
-	   CurrentThread = KeGetCurrentThread();
 	   if (CurrentThread->Priority < Priority)
 	     {
                PsDispatchThreadNoLock(THREAD_STATE_READY);
@@ -800,18 +810,40 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 	 }
        else if (Thread->State == THREAD_STATE_RUNNING)
          {
+           Thread->BasePriority = Thread->Priority = (CHAR)Priority;
 	   if (Priority < OldPriority)
 	     {
 	       /* Check for threads with a higher priority */
 	       Mask = ~((1 << (Priority + 1)) - 1);
 	       if (PriorityListMask & Mask)
 	         {
-                   PsDispatchThreadNoLock(THREAD_STATE_READY);
-                   KeLowerIrql(oldIrql);
-	           return (OldPriority);
+		   if (Thread == CurrentThread)
+		     {
+                       PsDispatchThreadNoLock(THREAD_STATE_READY);
+                       KeLowerIrql(oldIrql);
+	               return (OldPriority);
+		     }
+		   else
+		     {
+		       for (i = 0; i < KeNumberProcessors; i++)
+		       {
+		          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+			  if (Pcr->PrcbData.CurrentThread == Thread)
+			  {
+			    KeReleaseDispatcherDatabaseLockFromDpcLevel();
+                            KiRequestReschedule(i);
+                            KeLowerIrql(oldIrql);
+	                    return (OldPriority);
+			  }
+		       }
+		     }
 		 }
 	     }
 	 }
+       else
+         {
+            Thread->BasePriority = Thread->Priority = (CHAR)Priority;
+         }
      }
    KeReleaseDispatcherDatabaseLock(oldIrql);
    return(OldPriority);
@@ -822,14 +854,61 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
  */
 NTSTATUS STDCALL
 KeSetAffinityThread(PKTHREAD	Thread,
-		    PVOID	AfMask)
+		    KAFFINITY	Affinity)
 /*
  * Sets thread's affinity
  */
 {
-	DPRINT1("KeSetAffinityThread() is a stub returning STATUS_SUCCESS");
-	return STATUS_SUCCESS; // FIXME: Use function below
-	//return ZwSetInformationThread(handle, ThreadAffinityMask,<pointer to affinity mask>,sizeof(KAFFINITY));
+    KIRQL oldIrql;
+    ULONG i;
+    PKPCR Pcr;
+    KAFFINITY ProcessorMask;
+
+    DPRINT("KeSetAffinityThread(Thread %x, Affinity %x)\n", Thread, Affinity);
+
+    ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
+
+    oldIrql = KeAcquireDispatcherDatabaseLock();
+
+    Thread->UserAffinity = Affinity;
+    if (Thread->SystemAffinityActive == FALSE)
+    {
+       Thread->Affinity = Affinity;
+       if (Thread->State == THREAD_STATE_RUNNING)
+       {
+          ProcessorMask = 1 << KeGetCurrentKPCR()->ProcessorNumber;
+          if (Thread == KeGetCurrentThread())
+	  {
+	     if (!(Affinity & ProcessorMask))
+	     {
+                PsDispatchThreadNoLock(THREAD_STATE_READY);
+                KeLowerIrql(oldIrql);
+		return STATUS_SUCCESS;
+	     }
+	  }
+	  else
+	  {
+	     for (i = 0; i < KeNumberProcessors; i++)
+	     {
+		Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+		if (Pcr->PrcbData.CurrentThread == Thread)
+		{
+		   if (!(Affinity & ProcessorMask))
+		   {
+		      KeReleaseDispatcherDatabaseLockFromDpcLevel();
+                      KiRequestReschedule(i);
+                      KeLowerIrql(oldIrql);
+		      return STATUS_SUCCESS;
+		   }
+		   break;
+		}
+	     }
+	     ASSERT (i < KeNumberProcessors);
+	  }
+       }
+    }
+    KeReleaseDispatcherDatabaseLock(oldIrql);
+    return STATUS_SUCCESS;
 }
 
 

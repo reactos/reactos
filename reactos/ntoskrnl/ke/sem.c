@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.16 2004/11/21 18:33:54 gdalsnes Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -115,7 +115,7 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
   else
     {
       KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = Wait;
+      Thread->WaitNext = TRUE;
       Thread->WaitIrql = OldIrql;
     }
 

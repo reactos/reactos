@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.19 2004/11/21 18:33:54 gdalsnes Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -92,7 +92,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
   else
     {
       KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = Wait;
+      Thread->WaitNext = TRUE;
       Thread->WaitIrql = OldIrql;
     }
 
@@ -201,7 +201,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
   else
     {
       KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = Wait;
+      Thread->WaitNext = TRUE;
       Thread->WaitIrql = OldIrql;
     }
 
