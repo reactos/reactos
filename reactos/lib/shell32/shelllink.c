@@ -219,7 +219,7 @@ static HRESULT WINAPI IPersistFile_fnIsDirty(IPersistFile* iface)
 {
 	_ICOM_THIS_From_IPersistFile(IShellLinkImpl, iface);
 
-	FIXME("(%p)\n",This);
+	TRACE("(%p)\n",This);
 
 	if (This->bDirty)
 	    return S_OK;
@@ -1356,7 +1356,7 @@ static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
 {
     ICOM_THIS(IShellLinkImpl, iface);
     char buffer[MAX_PATH];
-    LPCSTR fname;
+    LPSTR fname;
 
     TRACE("(%p)->(path=%s)\n",This, pszFile);
 
@@ -1791,7 +1791,7 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
 {
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
     WCHAR buffer[MAX_PATH];
-    LPCSTR fname;
+    LPWSTR fname;
 
     TRACE("(%p)->(path=%s)\n",This, debugstr_w(pszFile));
 
