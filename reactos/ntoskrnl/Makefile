@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.91 2003/02/25 16:49:43 ekohl Exp $
+# $Id: Makefile,v 1.92 2003/04/01 18:58:59 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -519,6 +519,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
@@ -540,6 +541,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
@@ -556,6 +558,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
@@ -577,6 +580,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
@@ -596,6 +600,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).dbg.o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
@@ -617,6 +622,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).dbg.o -lgcc \
 		$(DDK_PATH_LIB)/hal.a
