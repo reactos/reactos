@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.5 2004/01/14 21:41:24 rcampbell Exp $
+/* $Id: lang.c,v 1.6 2004/01/15 22:10:29 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1208,7 +1208,10 @@ GetTimeFormatW (
 	{
 	  if (dwFlags & LOCALE_NOUSEROVERRIDE)
 		  Locale = GetSystemDefaultLCID();
-	  GetLocaleInfoW(Locale, LOCALE_STIMEFORMAT, Buffer, 40);
+
+	  if (!GetLocaleInfoW(Locale, LOCALE_STIMEFORMAT, Buffer, 40))
+		return 0;
+
 	  lpFormat = Buffer;
 	}
 	if (dwFlags & LOCALE_NOUSEROVERRIDE)
