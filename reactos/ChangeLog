@@ -1,3 +1,8 @@
+2004-06-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/helper.mk: Skip automatic dependency tracking if
+	DEPENDENCIES=no.
+
 2004-05-31  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/reactos/version.h (KERNEL_VERSION_BUILD_TYPE): Replace possible
