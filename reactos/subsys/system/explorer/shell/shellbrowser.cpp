@@ -536,7 +536,7 @@ String ShellBrowserChild::jump_to_int(LPCTSTR url)
 		if (jump_to_pidl(ShellPath(dir)))
 			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
 	}
-
+	
 	return String();
 }
 
@@ -564,7 +564,8 @@ bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
 		Entry* found = entry->find_entry(p);
 		p = entry->get_next_path_component(p);
 
-		hitem = select_entry(hitem, found);
+		if (found)
+			hitem = select_entry(hitem, found);
 
 		entry = found;
 	}

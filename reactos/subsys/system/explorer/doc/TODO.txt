@@ -1,3 +1,4 @@
+- rewrite autostart code and include all possible autostart locations
 - read "DESCRIPT.ION" files to display file descriptions
 - context menus for quick launch bar
 - detect display mode changes and adjust desktop bar size

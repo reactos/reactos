@@ -1172,9 +1172,11 @@ int ClockWindow::Notify(int id, NMHDR* pnmh)
 		TCHAR buffer[64];
 
 		GetLocalTime(&systime);
-		GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systime, NULL, buffer, 64);
 
-		_tcscpy(pdi->szText, buffer);
+		if (GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systime, NULL, buffer, 64))
+			_tcscpy(pdi->szText, buffer);
+		else
+			pdi->szText[0] = '\0';
 	}
 
 	return 0;
