@@ -40,6 +40,7 @@
      (P) == PARTITION_FAT_16       || \
      (P) == PARTITION_HUGE         || \
      (P) == PARTITION_IFS          || \
+     (P) == PARTITION_EXT2         || \
      (P) == PARTITION_FAT32        || \
      (P) == PARTITION_FAT32_XINT13 || \
      (P) == PARTITION_XINT13)
