@@ -21,14 +21,25 @@
  * FIXME: return values might be wrong
  */
 
+//#include "config.h"
+
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdarg.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include "windows.h"
 #include "lzexpand.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
 #include "wine/port.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(file);
 
 /* The readahead length of the decompressor. Reading single bytes
  * using _lread() would be SLOW.
@@ -445,7 +456,10 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 {
 	int	usedlzinit=0,ret,wret;
 	LONG	len;
-	HFILE	oldsrc = src;
+ 	HFILE	oldsrc = src, srcfd;
+ 	FILETIME filetime;
+ 	struct	lzstate	*lzs;
+
 #define BUFLEN	1000
 	BYTE	buf[BUFLEN];
 	/* we need that weird typedef, for i can't seem to get function pointer
@@ -482,6 +496,13 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 		if (wret!=ret)
 			return LZERROR_WRITE;
 	}
+
+ 	/* Maintain the timestamp of source file to destination file */
+ 	srcfd = (!(lzs = GET_LZ_STATE(src))) ? src : lzs->realfd;
+ 	GetFileTime((HANDLE)srcfd, NULL, NULL, &filetime);
+ 	SetFileTime((HANDLE)dest, NULL, NULL, &filetime);
+ 
+ 	/* close handle */
 	if (usedlzinit)
 		LZClose(src);
 	return len;
@@ -506,7 +527,6 @@ static LPSTR LZEXPAND_MangleName( LPCSTR fn )
     else strcat( mfn, "._" );	/* append "._" */
     return mfn;
 }
-
 
 /***********************************************************************
  *           LZOpenFileA   (LZ32.@)
