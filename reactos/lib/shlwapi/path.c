@@ -3002,7 +3002,7 @@ static BOOL WINAPI SHLWAPI_UseSystemForSystemFolders()
  *  TRUE  If the path was changed to/already was a system folder
  *  FALSE If the path is invalid or SetFileAttributesA() fails
  */
-BOOL WINAPI PathMakeSystemFolderA(LPSTR lpszPath)
+BOOL WINAPI PathMakeSystemFolderA(LPCSTR lpszPath)
 {
   BOOL bRet = FALSE;
 
@@ -3022,7 +3022,7 @@ BOOL WINAPI PathMakeSystemFolderA(LPSTR lpszPath)
  *
  * See PathMakeSystemFolderA.
  */
-BOOL WINAPI PathMakeSystemFolderW(LPWSTR lpszPath)
+BOOL WINAPI PathMakeSystemFolderW(LPCWSTR lpszPath)
 {
   DWORD dwDefaultAttr = FILE_ATTRIBUTE_READONLY, dwAttr;
   WCHAR buff[MAX_PATH];
@@ -3417,7 +3417,7 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
  *  Failure: FALSE, if lpszPath is NULL, empty, not a directory, or calling
  *           SetFileAttributesA() fails.
  */
-BOOL WINAPI PathUnmakeSystemFolderA(LPSTR lpszPath)
+BOOL WINAPI PathUnmakeSystemFolderA(LPCSTR lpszPath)
 {
   DWORD dwAttr;
 
@@ -3436,7 +3436,7 @@ BOOL WINAPI PathUnmakeSystemFolderA(LPSTR lpszPath)
  *
  * See PathUnmakeSystemFolderA.
  */
-BOOL WINAPI PathUnmakeSystemFolderW(LPWSTR lpszPath)
+BOOL WINAPI PathUnmakeSystemFolderW(LPCWSTR lpszPath)
 {
   DWORD dwAttr;
 

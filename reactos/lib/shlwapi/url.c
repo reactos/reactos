@@ -1403,7 +1403,7 @@ HRESULT WINAPI HashData(LPBYTE lpSrc, DWORD nSrcLen,
 
   if (IsBadReadPtr(lpSrc, nSrcLen) ||
       IsBadWritePtr(lpDest, nDestLen))
-    return ERROR_INVALID_PARAMETER;
+    return E_INVALIDARG;
 
   while (destCount >= 0)
   {
@@ -1421,7 +1421,7 @@ HRESULT WINAPI HashData(LPBYTE lpSrc, DWORD nSrcLen,
     }
     srcCount--;
   }
-  return ERROR_SUCCESS;
+  return S_OK;
 }
 
 /*************************************************************************

@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/istream.c,v
 retrieving revision 1.9
 diff -u -r1.9 istream.c
 --- istream.c	24 Sep 2003 05:14:39 -0000	1.9
-+++ istream.c	22 Jan 2004 20:39:18 -0000
++++ istream.c	22 Jan 2004 23:34:22 -0000
 @@ -163,12 +163,12 @@
    TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.s.LowPart, dwOrigin, pNewPos);
  
@@ -38,7 +38,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/ordinal.c,v
 retrieving revision 1.75
 diff -u -r1.75 ordinal.c
 --- ordinal.c	1 Oct 2003 03:10:42 -0000	1.75
-+++ ordinal.c	22 Jan 2004 20:39:20 -0000
++++ ordinal.c	22 Jan 2004 23:34:24 -0000
 @@ -3414,7 +3414,7 @@
   *  Success: A handle to the loaded module
   *  Failure: A NULL handle.
@@ -63,7 +63,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
 retrieving revision 1.40
 diff -u -r1.40 path.c
 --- path.c	19 Jan 2004 21:46:14 -0000	1.40
-+++ path.c	22 Jan 2004 20:39:22 -0000
++++ path.c	22 Jan 2004 23:34:26 -0000
 @@ -32,6 +32,7 @@
  #include "wingdi.h"
  #include "winuser.h"
@@ -72,24 +72,6 @@ diff -u -r1.40 path.c
  #define NO_SHLWAPI_STREAM
  #include "shlwapi.h"
  #include "wine/debug.h"
-@@ -3001,7 +3002,7 @@
-  *  TRUE  If the path was changed to/already was a system folder
-  *  FALSE If the path is invalid or SetFileAttributesA() fails
-  */
--BOOL WINAPI PathMakeSystemFolderA(LPCSTR lpszPath)
-+BOOL WINAPI PathMakeSystemFolderA(LPSTR lpszPath)
- {
-   BOOL bRet = FALSE;
- 
-@@ -3021,7 +3022,7 @@
-  *
-  * See PathMakeSystemFolderA.
-  */
--BOOL WINAPI PathMakeSystemFolderW(LPCWSTR lpszPath)
-+BOOL WINAPI PathMakeSystemFolderW(LPWSTR lpszPath)
- {
-   DWORD dwDefaultAttr = FILE_ATTRIBUTE_READONLY, dwAttr;
-   WCHAR buff[MAX_PATH];
 @@ -3268,7 +3269,7 @@
    if (lpszUrl[1] != ':' && lpszUrl[1] != '|' && isalphaW(*lpszUrl))
      return E_INVALIDARG;
@@ -98,24 +80,6 @@ diff -u -r1.40 path.c
 +  hr = UrlUnescapeW((LPWSTR) lpszUrl, lpszPath, pcchPath, dwFlags);
    if (lpszPath[1] == '|')
      lpszPath[1] = ':';
- 
-@@ -3416,7 +3417,7 @@
-  *  Failure: FALSE, if lpszPath is NULL, empty, not a directory, or calling
-  *           SetFileAttributesA() fails.
-  */
--BOOL WINAPI PathUnmakeSystemFolderA(LPCSTR lpszPath)
-+BOOL WINAPI PathUnmakeSystemFolderA(LPSTR lpszPath)
- {
-   DWORD dwAttr;
- 
-@@ -3435,7 +3436,7 @@
-  *
-  * See PathUnmakeSystemFolderA.
-  */
--BOOL WINAPI PathUnmakeSystemFolderW(LPCWSTR lpszPath)
-+BOOL WINAPI PathUnmakeSystemFolderW(LPWSTR lpszPath)
- {
-   DWORD dwAttr;
  
 @@ -3745,7 +3746,7 @@
   *  The match is made against the end of the suffix string, so for example:
@@ -167,135 +131,13 @@ diff -u -r1.40 path.c
  }
  
  /*************************************************************************
-Index: reg.c
-===================================================================
-RCS file: /home/wine/wine/dlls/shlwapi/reg.c,v
-retrieving revision 1.45
-diff -u -r1.45 reg.c
---- reg.c	18 Jan 2004 22:07:57 -0000	1.45
-+++ reg.c	22 Jan 2004 20:39:23 -0000
-@@ -232,7 +232,7 @@
-  *  Success: ERROR_SUCCESS
-  *  Failure: An error code from RegCloseKey().
-  */
--LONG WINAPI SHRegCloseUSKey(
-+DWORD WINAPI SHRegCloseUSKey(
-         HUSKEY hUSKey) /* [I] Key to close */
- {
-     LPInternal_HUSKEY mihk = (LPInternal_HUSKEY)hUSKey;
-@@ -634,7 +634,7 @@
-  *  Success: ERROR_SUCCESS
-  *  Failure: An error code from RegQueryInfoKeyA().
-  */
--LONG WINAPI SHRegQueryInfoUSKeyA(
-+DWORD WINAPI SHRegQueryInfoUSKeyA(
- 	HUSKEY hUSKey, /* [I] Key to query */
- 	LPDWORD pcSubKeys, /* [O] Destination for number of sub keys */
- 	LPDWORD pcchMaxSubKeyLen, /* [O] Destination for the length of the biggest sub key name */
-@@ -675,7 +675,7 @@
-  *
-  * See SHRegQueryInfoUSKeyA.
-  */
--LONG WINAPI SHRegQueryInfoUSKeyW(
-+DWORD WINAPI SHRegQueryInfoUSKeyW(
- 	HUSKEY hUSKey,
- 	LPDWORD pcSubKeys,
- 	LPDWORD pcchMaxSubKeyLen,
-@@ -720,7 +720,7 @@
-  *  Success: ERROR_SUCCESS
-  *  Failure: An error code from RegEnumKeyExA().
-  */
--LONG WINAPI SHRegEnumUSKeyA(
-+DWORD WINAPI SHRegEnumUSKeyA(
- 	HUSKEY hUSKey,                 /* [in] Key to enumerate */
- 	DWORD dwIndex,                 /* [in] Index within hUSKey */
- 	LPSTR pszName,                 /* [out] Name of the enumerated value */
-@@ -755,7 +755,7 @@
-  *
-  * See SHRegEnumUSKeyA.
-  */
--LONG WINAPI SHRegEnumUSKeyW(
-+DWORD WINAPI SHRegEnumUSKeyW(
- 	HUSKEY hUSKey,
- 	DWORD dwIndex,
- 	LPWSTR pszName,
-@@ -1104,8 +1104,8 @@
-  * RETURNS
-  *  The result of calling RegQueryInfoKeyA().
-  */
--LONG WINAPI SHQueryInfoKeyA(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
--                            LPDWORD pwValues, LPDWORD pwValueMax)
-+DWORD WINAPI SHQueryInfoKeyA(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
-+                             LPDWORD pwValues, LPDWORD pwValueMax)
- {
-   TRACE("(hkey=%p,%p,%p,%p,%p)\n", hKey, pwSubKeys, pwSubKeyMax,
-         pwValues, pwValueMax);
-@@ -1118,8 +1118,8 @@
-  *
-  * See SHQueryInfoKeyA.
-  */
--LONG WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
--                            LPDWORD pwValues, LPDWORD pwValueMax)
-+DWORD WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
-+                             LPDWORD pwValues, LPDWORD pwValueMax)
- {
-   TRACE("(hkey=%p,%p,%p,%p,%p)\n", hKey, pwSubKeys, pwSubKeyMax,
-         pwValues, pwValueMax);
-@@ -1593,8 +1593,8 @@
-  *   Success: ERROR_SUCCESS. lpszSubKey and pwLen are updated.
-  *   Failure: An error code from RegEnumKeyExA().
-  */
--LONG WINAPI SHEnumKeyExA(HKEY hKey, DWORD dwIndex, LPSTR lpszSubKey,
--                         LPDWORD pwLen)
-+DWORD WINAPI SHEnumKeyExA(HKEY hKey, DWORD dwIndex, LPSTR lpszSubKey,
-+                          LPDWORD pwLen)
- {
-   TRACE("(hkey=%p,%ld,%s,%p)\n", hKey, dwIndex, debugstr_a(lpszSubKey), pwLen);
- 
-@@ -1606,8 +1606,8 @@
-  *
-  * See SHEnumKeyExA.
-  */
--LONG WINAPI SHEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpszSubKey,
--                         LPDWORD pwLen)
-+DWORD WINAPI SHEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpszSubKey,
-+                          LPDWORD pwLen)
- {
-   TRACE("(hkey=%p,%ld,%s,%p)\n", hKey, dwIndex, debugstr_w(lpszSubKey), pwLen);
- 
-@@ -1632,9 +1632,9 @@
-  *   Success: ERROR_SUCCESS. Output parameters are updated.
-  *   Failure: An error code from RegEnumValueA().
-  */
--LONG WINAPI SHEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpszValue,
--                         LPDWORD pwLen, LPDWORD pwType,
--                         LPVOID pvData, LPDWORD pcbData)
-+DWORD WINAPI SHEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpszValue,
-+                          LPDWORD pwLen, LPDWORD pwType,
-+                          LPVOID pvData, LPDWORD pcbData)
- {
-   TRACE("(hkey=%p,%ld,%s,%p,%p,%p,%p)\n", hKey, dwIndex,
-         debugstr_a(lpszValue), pwLen, pwType, pvData, pcbData);
-@@ -1648,9 +1648,9 @@
-  *
-  * See SHEnumValueA.
-  */
--LONG WINAPI SHEnumValueW(HKEY hKey, DWORD dwIndex, LPWSTR lpszValue,
--                         LPDWORD pwLen, LPDWORD pwType,
--                         LPVOID pvData, LPDWORD pcbData)
-+DWORD WINAPI SHEnumValueW(HKEY hKey, DWORD dwIndex, LPWSTR lpszValue,
-+                          LPDWORD pwLen, LPDWORD pwType,
-+                          LPVOID pvData, LPDWORD pcbData)
- {
-   TRACE("(hkey=%p,%ld,%s,%p,%p,%p,%p)\n", hKey, dwIndex,
-         debugstr_w(lpszValue), pwLen, pwType, pvData, pcbData);
 Index: shlwapi.spec
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
 retrieving revision 1.83
 diff -u -r1.83 shlwapi.spec
 --- shlwapi.spec	19 Jan 2004 21:46:14 -0000	1.83
-+++ shlwapi.spec	22 Jan 2004 20:39:24 -0000
++++ shlwapi.spec	22 Jan 2004 23:34:28 -0000
 @@ -374,8 +374,8 @@
  374 stub -noname SHCheckDiskForMediaA
  375 stub -noname SHCheckDiskForMediaW
@@ -313,7 +155,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
 retrieving revision 1.39
 diff -u -r1.39 string.c
 --- string.c	22 Nov 2003 00:00:53 -0000	1.39
-+++ string.c	22 Jan 2004 20:39:25 -0000
++++ string.c	22 Jan 2004 23:34:30 -0000
 @@ -556,7 +556,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -356,7 +198,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
 retrieving revision 1.26
 diff -u -r1.26 url.c
 --- url.c	1 Oct 2003 03:10:42 -0000	1.26
-+++ url.c	22 Jan 2004 20:39:26 -0000
++++ url.c	22 Jan 2004 23:34:31 -0000
 @@ -34,9 +34,9 @@
  #include "shlwapi.h"
  #include "wine/debug.h"
@@ -402,7 +244,7 @@ diff -u -r1.26 url.c
    if (IsBadReadPtr(lpSrc, nSrcLen) ||
        IsBadWritePtr(lpDest, nDestLen))
 -    return FALSE;
-+    return ERROR_INVALID_PARAMETER;
++    return E_INVALIDARG;
  
    while (destCount >= 0)
    {
@@ -411,7 +253,7 @@ diff -u -r1.26 url.c
      srcCount--;
    }
 -  return TRUE;
-+  return ERROR_SUCCESS;
++  return S_OK;
  }
  
  /*************************************************************************
