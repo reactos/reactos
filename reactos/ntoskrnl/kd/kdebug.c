@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.16 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: kdebug.c,v 1.17 2001/01/06 21:40:13 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -221,7 +221,7 @@ KdInitSystem (
 
 
 	/* initialize debug port */
-	if (KdDebuggerEnabled && KdpDebugType == SerialDebug)
+	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
 	{
 		KdPortInitialize (&PortInfo,
 		                  0,

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.70 2000/12/26 05:34:27 dwelch Exp $
+/* $Id: main.c,v 1.71 2001/01/06 21:40:13 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -442,7 +442,14 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    memcpy (&KeLoaderModules, (PVOID)KeLoaderBlock.ModsAddr,
 	   sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
    KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
-   strcpy (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+
+   /*FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
+    * This should be done by the boot loader.
+    */
+   strcpy (KeLoaderCommandLine,
+	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos");
+   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+
    KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
    for (i = 0; i < KeLoaderBlock.ModsCount; i++)
      {
@@ -454,15 +461,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
      }
    
-   /*
-
-    * FIXME: Preliminary hack!!!!
-    * Initializes the kernel parameter line.
-    * This should be done by the boot loader.
-    */
-   strcpy ((PUCHAR)KeLoaderBlock.CommandLine,
-	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
-
    /*
     * Initialization phase 0
     */
