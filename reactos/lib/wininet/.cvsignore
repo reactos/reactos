@@ -1,5 +1,6 @@
 temp.exp
 *.a
+*.d
 *.o
 *.bin
 *.dll
