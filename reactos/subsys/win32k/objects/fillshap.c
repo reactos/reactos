@@ -28,7 +28,7 @@
        &BrushInst.BrushObject,         \
        x, y, (x)+1, y,                 \
        &RectBounds,                    \
-       dc->w.ROPmode);
+       ROP2_TO_MIX(dc->w.ROPmode));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(BitmapObj, \
@@ -36,7 +36,7 @@
        &BrushInst.BrushObject,         \
        x1, y1, x2, y2,                 \
        &RectBounds,                    \
-       dc->w.ROPmode);
+       ROP2_TO_MIX(dc->w.ROPmode));
 
 BOOL FASTCALL
 IntGdiPolygon(PDC    dc,
@@ -93,7 +93,7 @@ IntGdiPolygon(PDC    dc,
 	if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, dc->w.ROPmode, UnsafePoints, Count, DestRect );
+	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
 	}
 	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 
@@ -128,7 +128,7 @@ IntGdiPolygon(PDC    dc,
 			       To.x,
 			       To.y,
 			       &DestRect,
-			       dc->w.ROPmode); /* MIX */
+			       ROP2_TO_MIX(dc->w.ROPmode)); /* MIX */
 	  }
 	}
 	PENOBJ_UnlockPen( dc->w.hPen );
@@ -939,6 +939,7 @@ IntRectangle(PDC dc,
   GDIBRUSHINST PenBrushInst, FillBrushInst;
   BOOL       ret = FALSE; // default to failure
   RECTL      DestRect;
+  MIX        Mix;
 
   ASSERT ( dc ); // caller's responsibility to set this up
   /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
@@ -1001,33 +1002,34 @@ IntRectangle(PDC dc,
 
     if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
+      Mix = ROP2_TO_MIX(dc->w.ROPmode);
       ret = ret && IntEngLineTo(BitmapObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 LeftRect, TopRect, RightRect, TopRect,
 			 &DestRect, // Bounding rectangle
-			 dc->w.ROPmode); // MIX
+			 Mix);
 
       ret = ret && IntEngLineTo(BitmapObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 RightRect, TopRect, RightRect, BottomRect,
 			 &DestRect, // Bounding rectangle
-			 dc->w.ROPmode); // MIX
+			 Mix);
 
       ret = ret && IntEngLineTo(BitmapObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 RightRect, BottomRect, LeftRect, BottomRect,
 			 &DestRect, // Bounding rectangle
-			 dc->w.ROPmode); // MIX
+			 Mix);
 
       ret = ret && IntEngLineTo(BitmapObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
 			 LeftRect, BottomRect, LeftRect, TopRect,
 			 &DestRect, // Bounding rectangle
-			 dc->w.ROPmode); // MIX */
+			 Mix);
     }
 
     PENOBJ_UnlockPen(dc->w.hPen);

@@ -32,7 +32,7 @@ VOID FASTCALL
 IntEngCleanupDriverObjs(struct _EPROCESS *Process,
                         PW32PROCESS Win32Process);
 
-
+#define ROP2_TO_MIX(Rop2) (((Rop2) << 8) | (Rop2))
 BOOL STDCALL
 IntEngLineTo(BITMAPOBJ *Surface,
              CLIPOBJ *Clip,

@@ -488,7 +488,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 	     LONG x2,
 	     LONG y2,
 	     RECTL *RectBounds,
-	     MIX mix)
+	     MIX Mix)
 {
   BOOLEAN ret;
   SURFOBJ *DestSurf;
@@ -524,7 +524,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
     {
     /* Call the driver's DrvLineTo */
     ret = GDIDEVFUNCS(DestSurf).LineTo(
-      DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, mix);
+      DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, Mix);
     }
 
 #if 0
@@ -536,7 +536,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 
   if (! ret)
     {
-      ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+      ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, Mix);
     }
 
   MouseSafetyOnDrawEnd(DestSurf);
@@ -550,7 +550,7 @@ IntEngPolyline(BITMAPOBJ *DestObj,
 	       BRUSHOBJ *Brush,
 	       CONST LPPOINT  pt,
                LONG dCount,
-	       MIX mix)
+	       MIX Mix)
 {
   LONG i;
   RECTL rect;
@@ -571,7 +571,7 @@ IntEngPolyline(BITMAPOBJ *DestObj,
 	                 pt[i].x,
 	                 pt[i].y,
 	                 &rect,
-	                 mix);
+	                 Mix);
       if (!ret)
 	{
 	  break;

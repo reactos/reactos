@@ -212,6 +212,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->w.textAlign = OrigDC->w.textAlign;
   NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
   NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
+  NewDC->w.ROPmode = OrigDC->w.ROPmode;
   DC_UnlockDc( hDC );
   if (NULL != DisplayDC)
     {
@@ -774,8 +775,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->DMW.dmDisplayFrequency = 0;
 
   NewDC->w.bitsPerPixel = NewDC->DMW.dmBitsPerPel; // FIXME: set this here??
-
   NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
+  NewDC->w.ROPmode = R2_COPYPEN;
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
   
