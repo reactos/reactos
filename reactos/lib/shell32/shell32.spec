@@ -383,7 +383,7 @@
 @ stdcall SHFileOperationA(ptr)
 @ stdcall SHFileOperationW(ptr)
 @ stub SHFormatDrive
-@ stub SHFreeNameMappings
+@ stdcall SHFreeNameMappings(ptr)
 @ stdcall SHGetDesktopFolder(ptr)
 @ stdcall SHGetFileInfo(ptr long ptr long long)SHGetFileInfoAW
 @ stdcall SHGetFileInfoA(ptr long ptr long long)
