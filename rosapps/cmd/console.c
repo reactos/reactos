@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.10 1999/10/03 22:20:33 ekohl Exp $
+/* $Id: console.c,v 1.11 1999/10/22 20:35:02 ekohl Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -101,7 +101,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	hFile = GetStdHandle (STD_INPUT_HANDLE);
 	GetConsoleMode (hFile, &dwOldMode);
 
-	SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+	SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
 	ReadFile (hFile, lpInput, dwLength, &dwRead, NULL);
 

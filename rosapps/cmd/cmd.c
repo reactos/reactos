@@ -1,4 +1,5 @@
-/*
+/* $Id: cmd.c,v 1.12 1999/10/22 20:35:02 ekohl Exp $
+ *
  *  CMD.C - command-line interface.
  *
  *
@@ -103,6 +104,9 @@
  *
  *    27-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced spawnl() by CreateProcess().
+ *
+ *    22-Oct-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Added break handler.
  */
 
 #include "config.h"
@@ -126,6 +130,8 @@ BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Ignore 'newline' before 'cls' */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
+BOOL bChildProcessRunning = FALSE;
+DWORD dwChildProcessId = 0;
 OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
@@ -161,6 +167,7 @@ static VOID
 Execute (LPTSTR first, LPTSTR rest)
 {
 	TCHAR szFullName[MAX_PATH];
+	DWORD dwExitCode = 0;
 
 	/* check for a drive change */
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
@@ -220,15 +227,38 @@ Execute (LPTSTR first, LPTSTR rest)
 		stui.wShowWindow = SW_SHOWDEFAULT;
 
 #ifndef __REACTOS__
-		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-		                   0, NULL, NULL, &stui, &prci))
+		if (CreateProcess (NULL,
+		                   szFullCmdLine,
+		                   NULL,
+		                   NULL,
+		                   FALSE,
+		                   CREATE_NEW_PROCESS_GROUP,
+		                   NULL,
+		                   NULL,
+		                   &stui,
+		                   &prci))
 #else
-		if (CreateProcess (szFullName, rest, NULL, NULL, FALSE,
-		                   0, NULL, NULL, &stui, &prci))
+		if (CreateProcess (szFullName,
+		                   rest,
+		                   NULL,
+		                   NULL,
+		                   FALSE,
+		                   0,
+		                   NULL,
+		                   NULL,
+		                   &stui,
+		                   &prci))
 #endif
 		{
-			DWORD dwExitCode;
+			/* FIXME: Protect this with critical section */
+			bChildProcessRunning = TRUE;
+			dwChildProcessId = prci.dwProcessId;
+
 			WaitForSingleObject (prci.hProcess, INFINITE);
+
+			/* FIXME: Protect this with critical section */
+			bChildProcessRunning = TRUE;
+
 			GetExitCodeProcess (prci.hProcess, &dwExitCode);
 			nErrorLevel = (INT)dwExitCode;
 			CloseHandle (prci.hThread);
@@ -398,7 +428,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		HANDLE hFile;
 
 		hFile = CreateFile (in, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-							FILE_ATTRIBUTE_NORMAL, NULL);
+		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			ConErrPrintf ("Can't redirect input from file %s\n", in);
@@ -456,7 +486,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		/* open new stdin file */
 		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, NULL,
-							   OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
+		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		SetStdHandle (STD_INPUT_HANDLE, hFile[0]);
 
 		s = s + _tcslen (s) + 1;
@@ -470,8 +500,8 @@ VOID ParseCommandLine (LPTSTR cmd)
 		HANDLE hFile;
 
 		hFile = CreateFile (out, GENERIC_WRITE, 0, NULL,
-							(nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-							FILE_ATTRIBUTE_NORMAL, NULL);
+		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
+		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			ConErrPrintf ("Can't redirect to file %s\n", out);
@@ -516,15 +546,20 @@ VOID ParseCommandLine (LPTSTR cmd)
 #ifdef _DEBUG
 			DebugPrintf (_T("Stdout and stderr will use the same file!!\n"));
 #endif
-			DuplicateHandle (GetCurrentProcess (), GetStdHandle (STD_OUTPUT_HANDLE), GetCurrentProcess (),
-							 &hFile, 0, TRUE, DUPLICATE_SAME_ACCESS);
+			DuplicateHandle (GetCurrentProcess (),
+			                 GetStdHandle (STD_OUTPUT_HANDLE),
+			                 GetCurrentProcess (),
+			                 &hFile, 0, TRUE, DUPLICATE_SAME_ACCESS);
 		}
 		else
 		{
-			hFile =
-				CreateFile (err, GENERIC_WRITE, 0, NULL,
-							(nRedirFlags & ERROR_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-							FILE_ATTRIBUTE_NORMAL, NULL);
+			hFile = CreateFile (err,
+			                    GENERIC_WRITE,
+			                    0,
+			                    NULL,
+			                    (nRedirFlags & ERROR_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
+			                    FILE_ATTRIBUTE_NORMAL,
+			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
 				ConErrPrintf ("Can't redirect to file %s\n", err);
@@ -620,7 +655,6 @@ VOID ParseCommandLine (LPTSTR cmd)
 #ifdef _DEBUG
 					DebugPrintf (_T("hFile[0] and hIn dont match!!!\n"));
 #endif
-
 				}
 			}
 		}
@@ -771,13 +805,23 @@ ProcessInput (BOOL bFlag)
  */
 BOOL BreakHandler (DWORD dwCtrlType)
 {
-	if ((dwCtrlType == CTRL_C_EVENT) ||
-		(dwCtrlType == CTRL_BREAK_EVENT))
+	if ((dwCtrlType != CTRL_C_EVENT) &&
+	    (dwCtrlType != CTRL_BREAK_EVENT))
+		return FALSE;
+
+	if (bChildProcessRunning == TRUE)
 	{
-		bCtrlBreak = TRUE; /* indicate the break condition */
+		GenerateConsoleCtrlEvent (CTRL_C_EVENT,
+		                          dwChildProcessId);
 		return TRUE;
 	}
-	return FALSE;
+
+	/* FIXME: Handle batch files */
+
+	/* FIXME: Print "^C" */
+
+
+	return TRUE;
 }
 
 
@@ -867,6 +911,8 @@ Initialize (int argc, char *argv[])
 	/* get default input and output console handles */
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
 	hIn  = GetStdHandle (STD_INPUT_HANDLE);
+
+	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
@@ -972,9 +1018,10 @@ Initialize (int argc, char *argv[])
 		SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
 #endif
 
-	/* add ctrl handler */
-#if 0
-	SetConsoleCtrlHandler (NULL, TRUE);
+	/* add ctrl break handler */
+#ifndef __REACTOS__
+	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler,
+	                       TRUE);
 #endif
 }
 
@@ -1022,9 +1069,9 @@ static VOID Cleanup (int argc, char *argv[])
 	FreeLastPath ();
 #endif
 
-	/* remove ctrl handler */
-#if 0
-	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler, FALSE);
+	/* remove ctrl break handler */
+#ifndef __REACTOS__
+	SetConsoleCtrlHandler (NULL, FALSE);
 #endif
 }
 
