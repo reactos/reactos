@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.90 2003/01/15 19:58:06 chorns Exp $
+# $Id: Makefile,v 1.91 2003/02/25 16:49:43 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -215,7 +215,8 @@ OBJECTS_OB = \
 	ob/namespc.o \
 	ob/ntobj.o \
 	ob/object.o \
-	ob/security.o
+	ob/security.o \
+	ob/symlink.o
 
 # Process Manager (Ps)
 OBJECTS_PS = \

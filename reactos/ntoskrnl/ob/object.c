@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.57 2002/11/05 20:51:23 hbirr Exp $
+/* $Id: object.c,v 1.58 2003/02/25 16:49:08 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -17,7 +17,6 @@
 #include <internal/ps.h>
 #include <internal/id.h>
 #include <internal/ke.h>
-#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -170,7 +169,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
    RootObject = CurrentObject;
    Attributes = ObjectAttributes->Attributes;
-   if (ObjectType == IoSymbolicLinkType)
+   if (ObjectType == ObSymbolicLinkType)
      Attributes |= OBJ_OPENLINK;
 
    while (TRUE)

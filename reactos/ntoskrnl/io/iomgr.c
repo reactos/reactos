@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.30 2002/11/05 20:24:33 hbirr Exp $
+/* $Id: iomgr.c,v 1.31 2003/02/25 16:48:32 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -261,7 +261,6 @@ VOID IoInit (VOID)
    * Initialize remaining subsubsystem
    */
   IoInitCancelHandling();
-  IoInitSymbolicLinkImplementation();
   IoInitFileSystemImplementation();
   IoInitVpbImplementation();
   IoInitShutdownNotification();

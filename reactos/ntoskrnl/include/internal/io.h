@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.28 2003/02/25 16:43:45 ekohl Exp $
+/* $Id: io.h,v 1.29 2003/02/25 16:50:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -227,8 +227,6 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 
 
 extern PDEVICE_NODE IopRootDeviceNode;
-
-//extern POBJECT_TYPE IoSymbolicLinkType;
 
 VOID
 PnpInit(VOID);
