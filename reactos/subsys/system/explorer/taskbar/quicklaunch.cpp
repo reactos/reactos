@@ -234,7 +234,7 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CONTEXTMENU: {
 		TBBUTTON btn;
 		QuickLaunchMap::iterator it;
-		Point pt(lparam), clnt_pt=pt;
+		Point screen_pt(lparam), clnt_pt=screen_pt;
 		ScreenToClient(_hwnd, &clnt_pt);
 
 		Entry* entry = NULL;
@@ -247,7 +247,7 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 
 		if (entry)	// entry is NULL for desktop switch buttons
-			CHECKERROR(entry->do_context_menu(_hwnd, pt));
+			CHECKERROR(entry->do_context_menu(_hwnd, screen_pt));
 		else
 			goto def;
 		break;}

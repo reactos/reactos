@@ -428,6 +428,28 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		SelectButtonIndex(0, wparam?true:false);
 		break;
 
+#ifdef _LIGHT_STARTMENU
+	  case WM_CONTEXTMENU: {
+		Point screen_pt(lparam), clnt_pt=screen_pt;
+		ScreenToClient(_hwnd, &clnt_pt);
+
+		int id = ButtonHitTest(clnt_pt);
+
+		if (id) {
+			StartMenuEntry& sme = _entries[id];
+
+			for(ShellEntrySet::iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
+				Entry* entry = *it;
+
+				if (entry) {
+					CHECKERROR(entry->do_context_menu(_hwnd, screen_pt));	// may close start menu because of focus loss
+					break;	///@todo handle context menu for more than one entry
+				}
+			}
+		}
+		break;}
+#endif
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
