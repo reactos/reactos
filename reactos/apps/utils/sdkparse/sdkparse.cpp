@@ -373,8 +373,8 @@ char* skipsemi ( char* p )
 
 char* findend ( char* p, bool& externc )
 {
-	//if ( !strncmp ( p, "typedef enum _SE_OBJECT_TYPE", 28 ) )
-	//	_CrtDbgBreak();
+	if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb", 40 ) )
+		_CrtDbgBreak();
 	// special-case for 'extern "C"'
 	if ( !strncmp ( p, "extern", 6 ) )
 	{
@@ -411,7 +411,7 @@ char* findend ( char* p, bool& externc )
 		return end;
 	end = skipsemi ( semi );
 
-	const char* structs[] = { "struct", "enum", "class" };
+	const char* structs[] = { "struct", "enum", "class", "union" };
 	for ( int i = 0; i < sizeof(structs)/sizeof(structs[0]); i++ )
 	{
 		char* pStruct = strstr ( p, structs[i] );
