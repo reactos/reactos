@@ -1,15 +1,6 @@
-# configuration vars:
-#
-
-# MESA_HAVE_MMX
-# MESA_HAVE_SSE
-# MESA_HAVE_3DNOW
-# MESA_HAVE_X86
-
-#MESA_HAVE_MMX=1
-#MESA_HAVE_SSE=1
-#MESA_HAVE_3DNOW=1
-#MESA_HAVE_X86=1
+# configuration
+MESA_HAVE_X86 = 1
+MESA_OPTFLAGS = -msse
 
 MESA_INCLUDE_DIRS = \
 	-Iinclude \
@@ -18,6 +9,7 @@ MESA_INCLUDE_DIRS = \
 	-Isrc/glapi \
 	-Isrc/math \
 	-Isrc/tnl \
+	-Isrc/shader \
 	-Isrc/swrast \
 	-Isrc/swrast_setup
 
@@ -27,10 +19,6 @@ MESA_MAIN_OBJECTS = \
 	src/main/api_noop.o \
 	src/main/api_validate.o \
 	src/main/accum.o \
-	src/main/arbparse.o \
-	src/main/arbprogram.o \
-	src/main/arbfragparse.o \
-	src/main/arbvertparse.o \
 	src/main/attrib.o \
 	src/main/blend.o \
 	src/main/bufferobj.o \
@@ -59,25 +47,21 @@ MESA_MAIN_OBJECTS = \
 	src/main/light.o \
 	src/main/lines.o \
 	src/main/matrix.o \
-	src/main/nvprogram.o \
-	src/main/nvfragparse.o \
-	src/main/nvvertexec.o \
-	src/main/nvvertparse.o \
 	src/main/occlude.o \
 	src/main/pixel.o \
 	src/main/points.o \
 	src/main/polygon.o \
-	src/main/program.o \
 	src/main/rastpos.o \
 	src/main/state.o \
 	src/main/stencil.o \
 	src/main/texcompress.o \
+	src/main/texcompress_s3tc.o \
+	src/main/texcompress_fxt1.o \
 	src/main/texformat.o \
 	src/main/teximage.o \
 	src/main/texobj.o \
 	src/main/texstate.o \
 	src/main/texstore.o \
-	src/main/texutil.o \
 	src/main/varray.o \
 	src/main/vtxfmt.o
 
@@ -100,11 +84,13 @@ MESA_ARRAY_CACHE_OBJECTS = \
 	src/array_cache/ac_import.o
 
 MESA_SWRAST_OBJECTS = \
+	src/swrast/s_fragprog_to_c.o \
 	src/swrast/s_aaline.o \
 	src/swrast/s_aatriangle.o \
 	src/swrast/s_accum.o \
 	src/swrast/s_alpha.o \
 	src/swrast/s_alphabuf.o \
+	src/swrast/s_auxbuffer.o \
 	src/swrast/s_bitmap.o \
 	src/swrast/s_blend.o \
 	src/swrast/s_buffers.o \
@@ -124,6 +110,7 @@ MESA_SWRAST_OBJECTS = \
 	src/swrast/s_readpix.o \
 	src/swrast/s_span.o \
 	src/swrast/s_stencil.o \
+	src/swrast/s_tcc.o \
 	src/swrast/s_texture.o \
 	src/swrast/s_texstore.o \
 	src/swrast/s_triangle.o \
@@ -131,7 +118,7 @@ MESA_SWRAST_OBJECTS = \
 
 MESA_SWRAST_SETUP_OBJECTS = \
 	src/swrast_setup/ss_context.o \
-	src/swrast_setup/ss_triangle.o
+	src/swrast_setup/ss_triangle.o 
 
 MESA_TNL_OBJECTS = \
 	src/tnl/t_array_api.o \
@@ -151,80 +138,100 @@ MESA_TNL_OBJECTS = \
 	src/tnl/t_vb_texmat.o \
 	src/tnl/t_vb_vertex.o \
 	src/tnl/t_vertex.o \
+	src/tnl/t_vertex_c.o \
+	src/tnl/t_vertex_codegen.o \
 	src/tnl/t_vtx_api.o \
+	src/tnl/t_vtx_generic.o \
+	src/tnl/t_vtx_x86.o \
 	src/tnl/t_vtx_eval.o \
 	src/tnl/t_vtx_exec.o 
 
+MESA_SHADER_OBJECTS = \
+	src/shader/arbfragparse.o \
+	src/shader/arbprogparse.o \
+	src/shader/arbprogram.o \
+	src/shader/arbvertparse.o \
+	src/shader/grammar_mesa.o \
+	src/shader/nvfragparse.o \
+	src/shader/nvprogram.o \
+	src/shader/nvvertexec.o \
+	src/shader/nvvertparse.o \
+	src/shader/program.o
+
+MESA_ASM_C_OBJECTS =	\
+	src/x86/common_x86.o \
+	src/x86/x86.o \
+	src/x86/3dnow.o \
+	src/x86/sse.o \
+	src/sparc/sparc.o
+
+MESA_X86_OBJECTS =			\
+	src/x86/common_x86_asm.o	\
+	src/x86/x86_xform2.o	\
+	src/x86/x86_xform3.o	\
+	src/x86/x86_xform4.o	\
+	src/x86/x86_cliptest.o	\
+	src/x86/mmx_blend.o		\
+	src/x86/3dnow_xform1.o	\
+	src/x86/3dnow_xform2.o	\
+	src/x86/3dnow_xform3.o	\
+	src/x86/3dnow_xform4.o	\
+	src/x86/3dnow_normal.o	\
+	src/x86/sse_xform1.o	\
+	src/x86/sse_xform2.o	\
+	src/x86/sse_xform3.o	\
+	src/x86/sse_xform4.o	\
+	src/x86/sse_normal.o \
+	src/tnl/t_vtx_x86_gcc.o
+
+MESA_X86_API_OBJECTS =		\
+	src/x86/glapi_x86.o
+
 MESA_SPARC_OBJECTS =			\
 	src/sparc/clip.o		\
-	src/sparc/glapi_sparc.o	\
 	src/sparc/norm.o		\
 	src/sparc/xform.o
 
-MESA_X86_OBJECTS = \
-	src/x86/x86.o \
-	src/x86/glapi_x86.o \
-	src/x86/common_x86.o \
-	src/x86/common_x86_asm.o \
-	src/x86/x86_xform2.o \
-	src/x86/x86_xform3.o \
-	src/x86/x86_xform4.o \
-	src/x86/x86_cliptest.o
+MESA_SPARC_API_OBJECTS =		\
+	src/sparc/glapi_sparc.o
 
-MESA_X86_MMX_OBJECTS = \
-	src/x86/mmx_blend.o
+MESA_COMMON_DRIVER_OBJECTS =		\
+	src/drivers/common/driverfuncs.o
 
-MESA_X86_SSE_OBJECTS = \
-	src/x86/sse.o \
-	src/x86/sse_xform2.o \
-	src/x86/sse_xform3.o \
-	src/x86/sse_xform4.o \
-	src/x86/sse_normal.o
-
-MESA_X86_K3D_OBJECTS = \
-	src/x86/3dnow.o \
-	src/x86/3dnow_xform2.o \
-	src/x86/3dnow_xform3.o \
-	src/x86/3dnow_xform4.o \
-	src/x86/3dnow_normal.o
-
-MESA_CORE_OBJECTS = \
-	$(MESA_MAIN_OBJECTS) \
-	$(MESA_GLAPI_OBJECTS) \
-	$(MESA_MATH_OBJECTS) \
-	$(MESA_ARRAY_CACHE_OBJECTS) \
-	$(MESA_TNL_OBJECTS) \
-	$(MESA_SWRAST_OBJECTS) \
-	$(MESA_SWRAST_SETUP_OBJECTS)
-
-MESA_DRIVER_OBJECTS = \
+MESA_ICD_DRIVER_OBJECTS = \
 	src/drivers/windows/gdi/wmesa.o \
 	src/drivers/windows/icd/icd.o
 
-MESA_CFLAGS = -DBUILD_GL32 -D_OPENGL32_ -D_MSC_VER -DUSE_MGL_NAMESPACE $(MESA_INCLUDE_DIRS)
+### All the core C source-objects
 
-ifeq ($(MESA_HAVE_MMX),1)
-MESA_X86_OBJECTS += $(MESA_X86_MMX_OBJECTS)
-MESA_CFLAGS += -DUSE_MMX_ASM
-MESA_HAVE_X86 = 1
-endif
+MESA_CORE_OBJECTS = \
+	$(MESA_MAIN_OBJECTS)		\
+	$(MESA_GLAPI_OBJECTS)	\
+	$(MESA_MATH_OBJECTS)		\
+	$(MESA_ARRAY_CACHE_OBJECTS)	\
+	$(MESA_TNL_OBJECTS)		\
+	$(MESA_SHADER_OBJECTS)	\
+	$(MESA_SWRAST_OBJECTS)	\
+	$(MESA_SWRAST_SETUP_OBJECTS)	\
+	$(MESA_ASM_C_OBJECTS)
 
-ifeq ($(MESA_HAVE_SSE),1)
-MESA_X86_OBJECTS += $(MESA_X86_SSE_OBJECTS)
-MESA_CFLAGS += -DUSE_SSE_ASM
-MESA_HAVE_X86 = 1
-endif
+MESA_DRIVER_OBJECTS = \
+	$(MESA_ICD_DRIVER_OBJECTS) \
+	$(MESA_COMMON_DRIVER_OBJECTS)
 
-ifeq ($(MESA_HAVE_3DNOW),1)
-MESA_X86_OBJECTS += $(MESA_X86_K3D_OBJECTS)
-MESA_CFLAGS += -DUSE_3DNOW_ASM
-MESA_HAVE_X86 = 1
-endif
+
+MESA_CFLAGS = $(MESA_OPTFLAGS)
+MESA_CFLAGS += -DBUILD_GL32 -D_OPENGL32_ -D_MSC_VER -DUSE_MGL_NAMESPACE
+#MESA_CFLAGS += -pedantic -std=c99 -DWIN32
 
 ifeq ($(MESA_HAVE_X86),1)
-MESA_CFLAGS += -DUSE_X86_ASM
+  MESA_CFLAGS += -DUSE_X86_ASM
+  MESA_CFLAGS += -DUSE_MMX_ASM
+  MESA_CFLAGS += -DUSE_SSE_ASM
+  MESA_CFLAGS += -DUSE_3DNOW_ASM
+  MESA_X86_OBJECTS += $(MESA_X86_API_OBJECTS)
 else
-MESA_X86_OBJECTS =
+  MESA_X86_OBJECTS =
 endif
 
 
@@ -234,18 +241,24 @@ TARGET_TYPE = dynlink
 
 TARGET_NORC = yes
 
+TARGET_DEFONLY = yes
+
 TARGET_NAME = mesa32
 
 TARGET_BASE = $(TARGET_BASE_LIB_MESA32)
 
-TARGET_CFLAGS = -D__USE_W32API -Wall -Werror $(MESA_CFLAGS)
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror $(MESA_CFLAGS) $(MESA_INCLUDE_DIRS)
+
+TARGET_ASFLAGS = $(TARGET_CFLAGS)
+
+TARGET_LFLAGS = -Wl,--enable-stdcall-fixup
 
 TARGET_GCCLIBS = gdi32
 
 TARGET_OBJECTS = $(MESA_CORE_OBJECTS) $(MESA_X86_OBJECTS) $(MESA_DRIVER_OBJECTS)
 
-
 DEP_OBJECTS = $(TARGET_OBJECTS)
+
 
 include $(PATH_TO_TOP)/rules.mak
 
