@@ -649,8 +649,11 @@ l_ReadHeaderFromFile:
   if(pishSectionHeaders[i].SizeOfRawData != 0)
   {
    /* validate the alignment */
+#if 0 /* Yes, this should be a multiple of FileAlignment, but there's
+         stuff out there that isn't. We can cope with that */
    if(!IsAligned(pishSectionHeaders[i].SizeOfRawData, nFileAlignment))
     DIE(("SizeOfRawData[%u] is not aligned\n", i));
+#endif
 
    if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
     DIE(("PointerToRawData[%u] is not aligned\n", i));
