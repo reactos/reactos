@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.3 2002/12/09 20:06:24 hbirr Exp $ */
+/* $Id: process.c,v 1.4 2003/03/23 15:18:01 hbirr Exp $ */
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -150,6 +150,7 @@ valisttos(const char* arg0, va_list alist, char delim)
     {
 	len = strlen(arg0);
 	memcpy(ptr, arg0, len);
+	ptr += len;
 	*ptr++ = delim;
 	arg0 = va_arg(alist2, char*);
     }
@@ -384,6 +385,26 @@ int _spawnvp(int mode, const char* cmdname, char* const* argv)
 
     return _spawnv(mode, find_exec(cmdname, pathname), argv);
 }
+
+int _spawnlp(int mode, const char* cmdname, const char* arg0, .../*, NULL*/)
+{
+    va_list argp;
+    char* args;
+    int ret = -1;
+    char pathname[FILENAME_MAX];
+
+    DPRINT("_spawnlp('%s')\n", cmdname);
+
+    va_start(argp, arg0);
+    args = valisttos(arg0, argp, ' ');
+    if (args)
+    {
+	ret = do_spawn(mode, find_exec(cmdname, pathname), args, NULL);
+	free(args);
+    }
+    return ret;
+}
+
 
 int _spawnlpe(int mode, const char* cmdname, const char* arg0, .../*, NULL, const char* const* envp*/)
 {

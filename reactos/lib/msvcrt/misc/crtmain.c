@@ -1,4 +1,4 @@
-/* $Id: crtmain.c,v 1.3 2002/12/05 15:30:44 robd Exp $
+/* $Id: crtmain.c,v 1.4 2003/03/23 15:18:01 hbirr Exp $
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -31,20 +31,7 @@ _local_unwind2(void)
     return 0;
 }
 
-int
-STDCALL
-_spawnlp(int a, const char* b, const char* args, ...)
-{
-    return 0;
-}
-
 #else /*__GNUC__*/
-
-int
-_spawnlp(int a, const char* b, const char* args, ...)
-{
-    return 0;
-}
 
 #endif /*__GNUC__*/
 
