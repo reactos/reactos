@@ -68,10 +68,10 @@ NET_APPS = ping roshttpd
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
-all: tools buildno dk $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
+all: tools dk $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
 
-clean: buildno_clean dk_clean $(HALS:%=%_clean) \
+clean: dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean) clean_after tools_clean
@@ -79,8 +79,8 @@ clean: buildno_clean dk_clean $(HALS:%=%_clean) \
 clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
-install: tools buildno install_dirs install_before \
-	       $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
+install: tools install_dirs install_before \
+         $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(APPS:%=%_install)
@@ -91,21 +91,6 @@ dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist)
 
 .PHONY: all clean clean_before install dist
-
-#
-# Build number generator
-#
-buildno: include/reactos/version.h
-	make -C apps/buildno
-
-buildno_clean:
-	make -C apps/buildno clean
-
-buildno_dist:
-
-buildno_install:
-
-.PHONY: buildno buildno_clean buildno_dist buildno_install
 
 #
 # System Applications

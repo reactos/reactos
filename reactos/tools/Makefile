@@ -1,6 +1,7 @@
 PATH_TO_TOP = ..
 
 TOOLS = \
+  buildno$(EXE_POSTFIX) \
   depends$(EXE_POSTFIX) \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
@@ -10,6 +11,10 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS)
+
+buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
+	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
+	buildno$(EXE_POSTFIX)
 
 depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) $(CFLAGS) -o depends$(EXE_POSTFIX) depends.c

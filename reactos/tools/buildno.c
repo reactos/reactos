@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.6 2001/04/11 22:13:21 dwelch Exp $
+/* $Id: buildno.c,v 1.1 2001/08/23 21:41:35 ekohl Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -36,13 +36,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../../include/reactos/version.h"
+#include "../include/reactos/version.h"
 
 #define FALSE 0
 #define TRUE  1
 
 /* File to (over)write */
-#define BUILDNO_INCLUDE_FILE "../../include/reactos/buildno.h"
+#define BUILDNO_INCLUDE_FILE "../include/reactos/buildno.h"
 
 static char * argv0 = "";
 
