@@ -60,4 +60,5 @@ typedef struct _OBJECT_ATTRIBUTES {
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
 #define NOTHING
+#define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #endif /* _NTDEF_H */
