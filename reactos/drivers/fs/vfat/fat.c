@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.16 2001/01/16 23:22:03 dwelch Exp $
+ * $Id: fat.c,v 1.17 2001/02/06 00:41:19 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,25 +31,41 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
  *           disk read
  */
 {
-  ULONG FATsector;
-  ULONG FATeis;
-  PULONG Block;
+  PVOID BaseAddress;
+  BOOLEAN Valid;
+  PCACHE_SEGMENT CacheSeg;
   NTSTATUS Status;
+  ULONG FATOffset;
 
-  Block = ExAllocatePool (NonPagedPool, 1024);
-  FATsector = CurrentCluster / (512 / sizeof (ULONG));
-  FATeis = CurrentCluster - (FATsector * (512 / sizeof (ULONG)));
-  Status = VfatReadSectors (DeviceExt->StorageDevice,
-			    (ULONG) (DeviceExt->FATStart + FATsector), 1,
-			    (UCHAR *) Block);
+  FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + 
+    (CurrentCluster * sizeof(ULONG));
+
+  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+				 PAGE_ROUND_DOWN(FATOffset),
+				 &BaseAddress,
+				 &Valid,
+				 &CacheSeg);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
     }
-  CurrentCluster = Block[FATeis];
+  if (!Valid)
+    {
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			      PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
+			      PAGESIZE / BLOCKSIZE,
+			      BaseAddress);
+      if (!NT_SUCCESS(Status))
+	{
+	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	  return(Status);
+	}
+    }
+
+  CurrentCluster = *((PUSHORT)BaseAddress + (FATOffset % PAGESIZE));
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
-  ExFreePool (Block);
+  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
   *NextCluster = CurrentCluster;
   return (STATUS_SUCCESS);
 }
@@ -571,6 +587,7 @@ FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
  * FUNCTION: Writes a cluster to the FAT32 physical tables
  */
 {
+#if 0
   ULONG FATsector;
   ULONG FATeis;
   PUSHORT Block;
@@ -596,6 +613,8 @@ FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
       Start += pBoot->FATSectors;
     }
   ExFreePool (Block);
+#endif
+  KeBugCheck(0);
 }
 
 NTSTATUS
