@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.19 2002/02/09 23:29:50 ekohl Exp $
+/* $Id: unicode.c,v 1.20 2002/04/01 22:13:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,8 @@
 //#include <internal/nls.h>
 #include <ctype.h>
 #include <ntos/minmax.h>
+#define NDEBUG
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -88,8 +90,11 @@ RtlAnsiStringToUnicodeString(
 	}
 	else
 	{
-		if (Length >= DestinationString->MaximumLength)
+		if (Length + sizeof(WCHAR) > DestinationString->MaximumLength)
+		{
+			DPRINT("STATUS_BUFFER_TOO_SMALL\n");
 			return STATUS_BUFFER_TOO_SMALL;
+		}
 	}
 	DestinationString->Length = Length;
 
@@ -988,8 +993,11 @@ RtlOemStringToUnicodeString (
 	}
 	else
 	{
-		if (Length > DestinationString->MaximumLength)
+		if (Length + sizeof(WCHAR) > DestinationString->MaximumLength)
+		{
+			DPRINT("STATUS_BUFFER_TOO_SMALL\n");
 			return STATUS_BUFFER_TOO_SMALL;
+		}
 	}
 	DestinationString->Length = Length;
 

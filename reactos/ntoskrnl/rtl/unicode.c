@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.20 2002/02/09 23:29:12 ekohl Exp $
+/* $Id: unicode.c,v 1.21 2002/04/01 22:13:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,8 +88,11 @@ RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 	}
 	else
 	{
-		if (Length > DestinationString->MaximumLength)
+		if (Length + sizeof(WCHAR) > DestinationString->MaximumLength)
+		{
+			DPRINT("STATUS_BUFFER_TOO_SMALL\n");
 			return STATUS_BUFFER_TOO_SMALL;
+		}
 	}
 	DestinationString->Length = Length;
 
@@ -868,8 +871,11 @@ RtlOemStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
     }
   else
     {
-      if (Length >= DestinationString->MaximumLength)
+      if (Length + sizeof(WCHAR) > DestinationString->MaximumLength)
+      {
+	DPRINT("STATUS_BUFFER_TOO_SMALL\n");
 	return STATUS_BUFFER_TOO_SMALL;
+      }
     }
   DestinationString->Length = Length;
   
