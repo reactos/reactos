@@ -26,6 +26,7 @@
 #include "perfdata.h"
 #include "column.h"
 #include "proclist.h"
+#include <ctype.h>
 
 HWND		hProcessPage;						// Process List Property Page
 
@@ -197,9 +198,9 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 			{
 				time = PerfDataGetCPUTime(Index);
 
-				DWORD	dwHours = (DWORD)(time.QuadPart / 36000000000);
-				DWORD	dwMinutes = (DWORD)((time.QuadPart % 36000000000) / 600000000);
-				DWORD	dwSeconds = (DWORD)(((time.QuadPart % 36000000000) % 600000000) / 10000000);
+				DWORD	dwHours = (DWORD)(time.QuadPart / 36000000000LL);
+				DWORD	dwMinutes = (DWORD)((time.QuadPart % 36000000000LL) / 600000000LL);
+				DWORD	dwSeconds = (DWORD)(((time.QuadPart % 36000000000LL) % 600000000LL) / 10000000LL);
 
 				wsprintf(pnmdi->item.pszText, _T("%d:%02d:%02d"), dwHours, dwMinutes, dwSeconds);
 			}
@@ -452,7 +453,7 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 		if (RegQueryValueEx(hKey, "Debugger", NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) == ERROR_SUCCESS)
 		{
 			for (Idx=0; Idx<strlen(strDebugger); Idx++)
-				strDebugger[Idx] = (char) toupper(strDebugger[Idx]);
+				strDebugger[Idx] = toupper(strDebugger[Idx]);
 
 			if (strstr(strDebugger, "DRWTSN32"))
 				EnableMenuItem(hSubMenu, ID_PROCESS_PAGE_DEBUG, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
