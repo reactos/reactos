@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.180 2003/11/24 14:25:28 weiden Exp $
+# $Id: Makefile,v 1.181 2003/11/24 14:36:39 ekohl Exp $
 #
 # Global makefile
 #
@@ -146,19 +146,12 @@ install: tools install_dirs install_before \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
          $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
 
-dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
-      $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(LIB_STATIC:%=%_dist) $(LIB_FSLIB:%=%_dist) \
-	  $(DLLS:%=%_dist) $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) \
-      $(NET_APPS:%=%_dist) \
-      $(APPS:%=%_dist) $(EXT_MODULES:%=%_dist)
-
 FREELDR_DIR = ../freeldr
 
 freeldr:
 	$(MAKE) -C $(FREELDR_DIR)
 
-bootcd_directory_layout: freeldr
+bootcd_directory_layout:
 	$(RMKDIR) $(BOOTCD_DIR)
 	$(RMKDIR) $(BOOTCD_DIR)/bootdisk
 	$(RMKDIR) $(BOOTCD_DIR)/loader
@@ -190,7 +183,7 @@ bootcd_install_before:
 	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
 
-bootcd_basic: all bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
+bootcd_basic: bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
 
 bootcd_makecd:
 	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
@@ -224,16 +217,13 @@ $(SYS_APPS:%=%_implib): %_implib:
 $(SYS_APPS:%=%_clean): %_clean:
 	$(MAKE) -C subsys/system/$* clean
 
-$(SYS_APPS:%=%_dist): %_dist:
-	$(MAKE) -C subsys/system/$* dist
-
 $(SYS_APPS:%=%_install): %_install:
 	$(MAKE) -C subsys/system/$* install
 
 $(SYS_APPS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C subsys/system/$* bootcd
 
-.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist) $(SYS_APPS:%=%_bootcd)
+.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_bootcd)
 
 #
 # System Services
@@ -250,13 +240,10 @@ $(SYS_SVC:%=%_implib): %_implib:
 $(SYS_SVC:%=%_clean): %_clean:
 	$(MAKE) -C services/$* clean
 
-$(SYS_SVC:%=%_dist): %_dist:
-	$(MAKE) -C services/$* dist
-
 $(SYS_SVC:%=%_install): %_install:
 	$(MAKE) -C services/$* install
 
-.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install) $(SYS_SVC:%=%_dist)
+.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install)
 
 
 #
@@ -274,13 +261,10 @@ $(APPS:%=%_implib): %_implib:
 $(APPS:%=%_clean): %_clean:
 	$(MAKE) -C apps/$* clean
 
-$(APPS:%=%_dist): %_dist:
-	$(MAKE) -C apps/$* dist
-
 $(APPS:%=%_install): %_install:
 	$(MAKE) -C apps/$* install
 
-.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
+.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install)
 
 
 #
@@ -298,13 +282,10 @@ $(EXTERNALS:%=%_implib): %_implib:
 $(EXTERNALS:%=%_clean): %_clean:
 	$(MAKE) -C $(ROOT_PATH)/$* clean
 
-$(EXTERNALS:%=%_dist): %_dist:
-	$(MAKE) -C $(ROOT_PATH)/$* dist
-
 $(EXTERNALS:%=%_install): %_install:
 	$(MAKE) -C $(ROOT_PATH)/$* install
 
-.PHONY: $(EXTERNALS) $(EXTERNALS:%=%_depends) $(EXTERNALS:%=%_implib) $(EXTERNALS:%=%_clean) $(EXTERNALS:%=%_install) $(EXTERNALS:%=%_dist)
+.PHONY: $(EXTERNALS) $(EXTERNALS:%=%_depends) $(EXTERNALS:%=%_implib) $(EXTERNALS:%=%_clean) $(EXTERNALS:%=%_install)
 
 
 #
@@ -320,9 +301,7 @@ tools_clean:
 
 tools_install:
 
-tools_dist:
-
-.PHONY: tools tools_implib tools_clean tools_install tools_dist
+.PHONY: tools tools_implib tools_clean tools_install
 
 
 #
@@ -360,9 +339,7 @@ dk_clean:
 
 dk_install:
 
-dk_dist:
-
-.PHONY: dk dk_implib dk_clean dk_install dk_dist
+.PHONY: dk dk_implib dk_clean dk_install
 
 
 #
@@ -378,8 +355,6 @@ iface_native_clean:
 
 iface_native_install:
 
-iface_native_dist:
-
 iface_native_bootcd:
 
 iface_additional:
@@ -392,14 +367,13 @@ iface_additional_clean:
 
 iface_additional_install:
 
-iface_additional_dist:
-
 iface_additional_bootcd:
 
 .PHONY: iface_native iface_native_implib iface_native_clean iface_native_install \
-        iface_native_dist iface_native_bootcd \
+        iface_native_bootcd \
         iface_additional iface_additional_implib iface_additional_clean \
-        iface_additional_install iface_additional_dist iface_additional_bootcd
+        iface_additional_install iface_additional_bootcd
+
 
 #
 # Bus driver rules
@@ -416,14 +390,12 @@ $(BUS:%=%_clean): %_clean:
 $(BUS:%=%_install): %_install:
 	$(MAKE) -C drivers/bus/$* install
 
-$(BUS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/bus/$* dist
-
 $(BUS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/bus/$* bootcd
 
 .PHONY: $(BUS) $(BUS:%=%_implib) $(BUS:%=%_clean) \
-        $(BUS:%=%_install) $(BUS:%=%_dist) $(BUS:%=%_bootcd)
+        $(BUS:%=%_install) $(BUS:%=%_bootcd)
+
 
 #
 # Driver support libraries rules
@@ -440,14 +412,12 @@ $(DRIVERS_LIB:%=%_clean): %_clean:
 $(DRIVERS_LIB:%=%_install): %_install:
 	$(MAKE) -C drivers/lib/$* install
 
-$(DRIVERS_LIB:%=%_dist): %_dist:
-	$(MAKE) -C drivers/lib/$* dist
-
 $(DRIVERS_LIB:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/lib/$* bootcd
 
 .PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_clean) \
-        $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_dist) $(DRIVERS_LIB:%=%_bootcd)
+        $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_bootcd)
+
 
 #
 # Device driver rules
@@ -464,14 +434,12 @@ $(DEVICE_DRIVERS:%=%_clean): %_clean:
 $(DEVICE_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/dd/$* install
 
-$(DEVICE_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/dd/$* dist
-
 $(DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/dd/$* bootcd
 
 .PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
-        $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist) $(DEVICE_DRIVERS:%=%_bootcd)
+        $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_bootcd)
+
 
 #
 # Input driver rules
@@ -488,15 +456,16 @@ $(INPUT_DRIVERS:%=%_clean): %_clean:
 $(INPUT_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/input/$* install
 
-$(INPUT_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/input/$* dist
-
 $(INPUT_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/input/$* bootcd
 
 .PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
-        $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_dist) $(INPUT_DRIVERS:%=%_bootcd)
+        $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_bootcd)
 
+
+#
+# Filesystem driver rules
+#
 $(FS_DRIVERS): %:
 	$(MAKE) -C drivers/fs/$*
 
@@ -509,14 +478,12 @@ $(FS_DRIVERS:%=%_clean): %_clean:
 $(FS_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/fs/$* install
 
-$(FS_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/fs/$* dist
-
 $(FS_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/fs/$* bootcd
 
 .PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
-        $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_dist) $(FS_DRIVERS:%=%_bootcd)
+        $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_bootcd)
+
 
 #
 # Network driver rules
@@ -533,15 +500,16 @@ $(NET_DRIVERS:%=%_clean): %_clean:
 $(NET_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/net/$* install
 
-$(NET_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/net/$* dist
-
 $(NET_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/net/$* bootcd
 
 .PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
-        $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_dist) $(NET_DRIVERS:%=%_bootcd)
+        $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_bootcd)
 
+
+#
+# Network device driver rules
+#
 $(NET_DEVICE_DRIVERS): %:
 	$(MAKE) -C drivers/net/dd/$*
 
@@ -554,14 +522,12 @@ $(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
 $(NET_DEVICE_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/net/dd/$* install
 
-$(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/net/dd/$* dist
-
 $(NET_DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/net/dd/$* bootcd
 
 .PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
-        $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist) $(NET_DEVICE_DRIVERS:%=%_bootcd)
+        $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_bootcd)
+
 
 #
 # storage driver rules
@@ -578,19 +544,16 @@ $(STORAGE_DRIVERS:%=%_clean): %_clean:
 $(STORAGE_DRIVERS:%=%_install): %_install:
 	$(MAKE) -C drivers/storage/$* install
 
-$(STORAGE_DRIVERS:%=%_dist): %_dist:
-	$(MAKE) -C drivers/storage/$* dist
-
 $(STORAGE_DRIVERS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C drivers/storage/$* bootcd
 
 .PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) $(STORAGE_DRIVERS:%=%_implib) \
-		$(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_dist) $(STORAGE_DRIVERS:%=%_bootcd)
+		$(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_bootcd)
+
 
 #
 # Kernel loaders
 #
-
 $(LOADERS): %:
 	$(MAKE) -C loaders/$*
 
@@ -602,16 +565,12 @@ $(LOADERS:%=%_clean): %_clean:
 $(LOADERS:%=%_install): %_install:
 	$(MAKE) -C loaders/$* install
 
-$(LOADERS:%=%_dist): %_dist:
-	$(MAKE) -C loaders/$* dist
+.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_clean) $(LOADERS:%=%_install)
 
-.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_clean) $(LOADERS:%=%_install) \
-        $(LOADERS:%=%_dist)
 
 #
 # Required system components
 #
-
 ntoskrnl:
 	$(MAKE) -C ntoskrnl
 
@@ -624,18 +583,15 @@ ntoskrnl_clean:
 ntoskrnl_install:
 	$(MAKE) -C ntoskrnl install
 
-ntoskrnl_dist:
-	$(MAKE) -C ntoskrnl dist
-
 ntoskrnl_bootcd:
 	$(MAKE) -C ntoskrnl bootcd
 
-.PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_clean ntoskrnl_install ntoskrnl_dist ntoskrnl_bootcd
+.PHONY: ntoskrnl ntoskrnl_implib ntoskrnl_clean ntoskrnl_install ntoskrnl_bootcd
+
 
 #
 # Hardware Abstraction Layer import library
 #
-
 hallib:
 	$(MAKE) -C hal/hal
 
@@ -648,18 +604,15 @@ hallib_clean:
 hallib_install:
 	$(MAKE) -C hal/hal install
 
-hallib_dist:
-	$(MAKE) -C hal/hal dist
-
 hallib_bootcd:
 	$(MAKE) -C hal/hal bootcd
 
-.PHONY: hallib hallib_implib hallib_clean hallib_install hallib_dist hallib_bootcd
+.PHONY: hallib hallib_implib hallib_clean hallib_install hallib_bootcd
+
 
 #
 # Hardware Abstraction Layers
 #
-
 $(HALS): %:
 	$(MAKE) -C hal/$*
 
@@ -672,18 +625,15 @@ $(HALS:%=%_clean): %_clean:
 $(HALS:%=%_install): %_install:
 	$(MAKE) -C hal/$* install
 
-$(HALS:%=%_dist): %_dist:
-	$(MAKE) -C hal/$* dist
-
 $(HALS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C hal/$* bootcd
 
-.PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_dist) $(HALS:%=%_bootcd)
+.PHONY: $(HALS) $(HALS:%=%_implib) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_bootcd)
+
 
 #
 # File system libraries
 #
-
 $(LIB_FSLIB): %:
 	$(MAKE) -C lib/fslib/$*
 
@@ -699,19 +649,16 @@ $(LIB_FSLIB:%=%_clean): %_clean:
 $(LIB_FSLIB:%=%_install): %_install:
 	$(MAKE) -C lib/fslib/$* install
 
-$(LIB_FSLIB:%=%_dist): %_dist:
-	$(MAKE) -C lib/fslib/$* dist
-
 $(LIB_FSLIB:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/fslib/$* bootcd
 
 .PHONY: $(LIB_FSLIB) $(LIB_FSLIB:%=%_depends) $(LIB_FSLIB:%=%_implib) $(LIB_FSLIB:%=%_clean) \
-$(LIB_FSLIB:%=%_install) $(LIB_FSLIB:%=%_dist) $(LIB_FSLIB:%=%_bootcd)
+	$(LIB_FSLIB:%=%_install) $(LIB_FSLIB:%=%_bootcd)
+
 
 #
 # Static libraries
 #
-
 $(LIB_STATIC): %:
 	$(MAKE) -C lib/$*
 
@@ -727,19 +674,16 @@ $(LIB_STATIC:%=%_clean): %_clean:
 $(LIB_STATIC:%=%_install): %_install:
 	$(MAKE) -C lib/$* install
 
-$(LIB_STATIC:%=%_dist): %_dist:
-	$(MAKE) -C lib/$* dist
-
 $(LIB_STATIC:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/$* bootcd
 
 .PHONY: $(LIB_STATIC) $(LIB_STATIC:%=%_depends) $(LIB_STATIC:%=%_implib) $(LIB_STATIC:%=%_clean) \
-	$(LIB_STATIC:%=%_install) $(LIB_STATIC:%=%_dist) $(LIB_STATIC:%=%_bootcd)
+	$(LIB_STATIC:%=%_install) $(LIB_STATIC:%=%_bootcd)
+
 
 #
-# Required DLLs
+# DLLs
 #
-
 $(DLLS): %:
 	$(MAKE) -C lib/$*
 
@@ -755,18 +699,16 @@ $(DLLS:%=%_clean): %_clean:
 $(DLLS:%=%_install): %_install:
 	$(MAKE) -C lib/$* install
 
-$(DLLS:%=%_dist): %_dist:
-	$(MAKE) -C lib/$* dist
-
 $(DLLS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C lib/$* bootcd
 
-.PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist) $(DLLS:%=%_bootcd)
+.PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) \
+        $(DLLS:%=%_bootcd)
+
 
 #
 # Subsystem support modules
 #
-
 $(SUBSYS): %:
 	$(MAKE) -C subsys/$*
 
@@ -782,14 +724,11 @@ $(SUBSYS:%=%_clean): %_clean:
 $(SUBSYS:%=%_install): %_install:
 	$(MAKE) -C subsys/$* install
 
-$(SUBSYS:%=%_dist): %_dist:
-	$(MAKE) -C subsys/$* dist
-
 $(SUBSYS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C subsys/$* bootcd
 
 .PHONY: $(SUBSYS) $(SUBSYS:%=%_depends) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
-        $(SUBSYS:%=%_dist) $(SUBSYS:%=%_bootcd)
+        $(SUBSYS:%=%_bootcd)
 
 #
 # Regression testsuite
@@ -830,25 +769,6 @@ install_clean:
 	$(RMDIR) $(INSTALL_DIR)/bin
 	$(RMDIR) $(INSTALL_DIR)
 
-ifneq ($(BOOTCD_INSTALL),)
-
-install_dirs:
-	$(RMKDIR) $(INSTALL_DIR)
-
-install_before:
-	$(RLINE) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
-	$(RLINE) bootdata/readme.txt $(INSTALL_DIR)/../readme.txt
-	$(RLINE) bootdata/hivecls.inf $(INSTALL_DIR)/hivecls.inf
-	$(RLINE) bootdata/hivedef.inf $(INSTALL_DIR)/hivedef.inf
-	$(RLINE) bootdata/hivesft.inf $(INSTALL_DIR)/hivesft.inf
-	$(RLINE) bootdata/hivesys.inf $(INSTALL_DIR)/hivesys.inf
-	$(RLINE) bootdata/txtsetup.sif $(INSTALL_DIR)/txtsetup.sif
-	$(CP) bootdata/icon.ico $(INSTALL_DIR)/../icon.ico
-	$(CP) media/fonts $(INSTALL_DIR)
-	$(CP) media/nls $(INSTALL_DIR)
-
-else # !BOOTCD_INSTALL
-
 install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
 	$(RMKDIR) $(INSTALL_DIR)/bin
@@ -869,38 +789,8 @@ install_before:
 	$(CP) media/nls/c_437.nls $(INSTALL_DIR)/system32/oem.nls
 	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
 
-endif # BOOTCD_INSTALL
-
 .PHONY: install_clean install_dirs install_before
 
-
-#
-# Make a distribution saveset
-#
-
-dist_clean:
-	$(RM) $(DIST_DIR)/symbols/*.sym
-	$(RM) $(DIST_DIR)/drivers/*.sys
-	$(RM) $(DIST_DIR)/subsys/*.exe
-	$(RM) $(DIST_DIR)/dlls/*.dll
-	$(RM) $(DIST_DIR)/apps/*.exe
-	$(RM) $(DIST_DIR)/*.exe
-	$(RMDIR) $(DIST_DIR)/symbols
-	$(RMDIR) $(DIST_DIR)/subsys
-	$(RMDIR) $(DIST_DIR)/drivers
-	$(RMDIR) $(DIST_DIR)/dlls
-	$(RMDIR) $(DIST_DIR)/apps
-	$(RMDIR) $(DIST_DIR)
-
-dist_dirs:
-	$(RMKDIR) $(DIST_DIR)
-	$(RMKDIR) $(DIST_DIR)/apps
-	$(RMKDIR) $(DIST_DIR)/dlls
-	$(RMKDIR) $(DIST_DIR)/drivers
-	$(RMKDIR) $(DIST_DIR)/subsys
-	$(RMKDIR) $(DIST_DIR)/symbols
-
-.PHONY: dist_clean dist_dirs
 
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -

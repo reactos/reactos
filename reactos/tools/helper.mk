@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.44 2003/10/20 17:54:17 gvg Exp $
+# $Id: helper.mk,v 1.45 2003/11/24 14:41:29 ekohl Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -43,7 +43,7 @@
 #   $TARGET_LIBPATH    = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
 #   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
-#   $TARGET_BOOTSTRAP  = Wether this file is needed to bootstrap the installation (no,yes) (optional)
+#   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_GENREGTESTS = Generate regression test registrations (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
@@ -801,15 +801,13 @@ ifneq ($(TARGET_HEADERS),)
 $(TARGET_OBJECTS): $(TARGET_HEADERS)
 endif
 
-# install, dist and bootcd rules
+# install and bootcd rules
 
 ifeq ($(MK_IMPLIBONLY),yes)
 
 # Don't install import libraries
 
 install:
-
-dist:
 
 bootcd:
 
@@ -821,32 +819,23 @@ ifeq ($(MK_MODE),static)
 
 install:
 	
-dist:
-
 bootcd:	
 
 else # MK_MODE
 
-install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME) $(SUBDIRS:%=%_install)
+ifeq ($(INSTALL_SYMBOLS),yes)
 
-ifeq ($(INSTALL_SYMBOLS),no)
-
-$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME):
-	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+install:
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
 
 else # INSTALL_SYMBOLS
 
-$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
-	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
-	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+install:
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 
 endif # INSTALL_SYMBOLS
 
-dist: $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME) $(SUBDIRS:%=%_dist)
-
-$(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
-	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
-	$(CP) $(MK_BASENAME).sym $(DIST_DIR)/symbols/$(MK_BASENAME).sym
 
 # Bootstrap files for the bootable CD
 ifeq ($(TARGET_BOOTSTRAP),yes)
@@ -857,10 +846,8 @@ else # TARGET_BOOTSTRAP_NAME
 MK_BOOTSTRAP_NAME := $(MK_FULLNAME)
 endif # TARGET_BOOTSTRAP_NAME
 
-bootcd: $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME) $(SUBDIRS:%=%_bootcd)
-
-$(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME):
-	$(CP) $(MK_FULLNAME) $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
+bootcd: $(SUBDIRS:%=%_bootcd)
+	- $(CP) $(MK_FULLNAME) $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
 
 else # TARGET_BOOTSTRAP
 

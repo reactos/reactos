@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.107 2003/10/23 13:16:17 hbirr Exp $
+# $Id: Makefile,v 1.108 2003/11/24 14:37:11 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -697,37 +697,27 @@ clean:
 
 ifneq ($(BOOTCD_INSTALL),)
 
-install: all $(INSTALL_DIR)/$(TARGETNAME).exe
-
-$(INSTALL_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
+install:
+	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
 
 else # BOOTCD_INSTALL
 
-install: all $(INSTALL_DIR)/system32/$(TARGETNAME).exe $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
-
-$(INSTALL_DIR)/system32/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
-
-$(INSTALL_DIR)/symbols/$(TARGETNAME).sym: $(TARGETNAME).sym
-	$(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
+install:
+	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
+	- $(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
 endif # BOOTCD_INSTALL
 
 
 .PHONY: install
 
-dist: $(DIST_DIR)/$(TARGETNAME).exe
-
-$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(DIST_DIR)/$(TARGETNAME).exe
+dist:
+	- $(CP) $(TARGETNAME).exe $(DIST_DIR)/$(TARGETNAME).exe
 
 .PHONY: dist
 
-bootcd: all $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
-
-$(BOOTCD_DIR)/reactos/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
+bootcd:
+	- $(CP) $(TARGETNAME).exe $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
 
 .PHONY: bootcd
 

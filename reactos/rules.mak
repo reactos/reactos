@@ -9,7 +9,7 @@ HOST = mingw32-windows
 endif
 
 # Build map files which includes source and asm code
-FULL_MAP = yes
+# FULL_MAP = yes
 
 # Default to no PCH support
 ifeq ($(ROS_USE_PCH),)
@@ -59,15 +59,14 @@ endif
 
 # Use environment var ROS_INSTALL to override default install dir
 ifeq ($(ROS_INSTALL),)
+ifeq ($(HOST),mingw32-windows)
+INSTALL_DIR = C:/reactos
+else
 INSTALL_DIR = $(PATH_TO_TOP)/reactos
+endif
 else
 INSTALL_DIR = $(ROS_INSTALL)
 endif
-
-# Set DIST_DIR to default value if not already set
-# ifeq ($(DIST_DIR),)
-DIST_DIR = $(PATH_TO_TOP)/dist
-# endif
 
 # Directory to build a bootable CD image in
 BOOTCD_DIR=$(TOPDIR)/../bootcd/disk
