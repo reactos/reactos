@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.5 2001/05/04 01:21:44 rex Exp $ */
+/* $Id: cc.h,v 1.6 2001/10/10 21:55:13 hbirr Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -9,6 +9,8 @@ typedef struct _BCB
   PFILE_OBJECT FileObject;
   KSPIN_LOCK BcbLock;
   ULONG CacheSegmentSize;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
 } BCB;
 
 typedef struct _CACHE_SEGMENT
@@ -36,5 +38,12 @@ CcRosGetCacheSegment(PBCB Bcb,
 		  PCACHE_SEGMENT* CacheSeg);
 VOID
 CcInitView(VOID);
+
+
+NTSTATUS STDCALL CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
+
+NTSTATUS ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
+
+NTSTATUS WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 #endif
