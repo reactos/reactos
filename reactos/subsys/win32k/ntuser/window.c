@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.215 2004/04/13 23:12:29 weiden Exp $
+/* $Id: window.c,v 1.216 2004/04/13 23:25:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1250,11 +1250,22 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
     return NULL;
   }
   
-  Ret = NULL;
+  Pt.x = x;
+  Pt.y = y;
   
-  Pt.x = Parent->WindowRect.left + x;
-  Pt.y = Parent->WindowRect.top + y;
+  if(Parent->Self != IntGetDesktopWindow())
+  {
+    Pt.x += Parent->ClientRect.left;
+    Pt.y += Parent->ClientRect.top;
+  }
   
+  if(!IntPtInWindow(Parent, Pt.x, Pt.y))
+  {
+    IntReleaseWindowObject(Parent);
+    return NULL;
+  }
+  
+  Ret = Parent->Self;
   if((List = IntWinListChildren(Parent)))
   {
     for(phWnd = List; *phWnd; phWnd++)
@@ -1287,11 +1298,6 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
       }
     }
     ExFreePool(List);
-  }
-  
-  if((Ret == NULL) && IntPtInWindow(Parent, Pt.x, Pt.y))
-  {
-    Ret = Parent->Self;
   }
   
   IntReleaseWindowObject(Parent);
