@@ -221,7 +221,7 @@ static void putchar(char c)
 	memcpy(vidmem,&vidmem[NR_COLUMNS*2],
 	       NR_COLUMNS*(NR_ROWS-1)*2);
 	memset(&vidmem[NR_COLUMNS*(NR_ROWS-1)*2],0,NR_COLUMNS*2);
-	cursory=24;
+	cursory=NR_ROWS-1;
      }
    
    /*
