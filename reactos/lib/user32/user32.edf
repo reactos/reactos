@@ -627,7 +627,7 @@ ShowScrollBar=ShowScrollBar@12
 ;ShowStartGlass
 ShowWindow=ShowWindow@8
 ShowWindowAsync=ShowWindowAsync@8
-;SoftModalMessageBox
+SoftModalMessageBox=SoftModalMessageBox@4
 SubtractRect=SubtractRect@12
 SwapMouseButton=SwapMouseButton@4
 SwitchDesktop=SwitchDesktop@4
