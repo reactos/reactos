@@ -61,6 +61,10 @@ DrvLineTo(SURFOBJ *Surface,
      return vgaVLine(x1, vy, deltay, iSolidColor);
    }
 
+  // Using individual pixels to draw a line neither horizontal or vertical
+  // Set up the VGA masking for individual pixels
+
+
   error=0;
   i=0;
 
