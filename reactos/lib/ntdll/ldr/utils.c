@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.94 2004/06/26 14:37:05 navaraf Exp $
+/* $Id: utils.c,v 1.95 2004/06/26 15:11:14 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1226,8 +1226,8 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 {
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-  ULONG Count, ProtectSize, OldProtect, i;
-  PVOID Page, ProtectPage;
+  ULONG Count, ProtectSize, OldProtect, OldProtect2, i;
+  PVOID Page, ProtectPage, ProtectPage2;
   PWORD TypeOffset;
   ULONG Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
   NTSTATUS Status;
@@ -1258,7 +1258,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
       Page = ImageBase + RelocationDir->VirtualAddress;
       TypeOffset = (PWORD)(RelocationDir + 1);
 
-      /* Unprotect the page we're about to relocate. */
+      /* Unprotect the page(s) we're about to relocate. */
       ProtectPage = Page;
       Status = NtProtectVirtualMemory(NtCurrentProcess(),
                                       &ProtectPage,
@@ -1269,6 +1269,27 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
         {
           DPRINT1("Failed to unprotect relocation target.\n");
           return(Status);
+        }
+
+      if (RelocationDir->VirtualAddress + PAGE_SIZE <
+          NTHeaders->OptionalHeader.SizeOfImage)
+        {
+          ProtectPage2 = ProtectPage + PAGE_SIZE;
+          Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                          &ProtectPage2,
+                                          &ProtectSize,
+                                          PAGE_READWRITE,
+                                          &OldProtect2);
+          if (!NT_SUCCESS(Status))
+            {
+              DPRINT1("Failed to unprotect relocation target (2).\n");
+              NtProtectVirtualMemory(NtCurrentProcess(),
+                                     &ProtectPage,
+                                     &ProtectSize,
+                                     OldProtect,
+                                     &OldProtect);
+              return(Status);
+            }
         }
 
       /* Patch the page. */
@@ -1303,6 +1324,16 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                              &ProtectSize,
                              OldProtect,
                              &OldProtect);
+
+      if (RelocationDir->VirtualAddress + PAGE_SIZE <
+          NTHeaders->OptionalHeader.SizeOfImage)
+        {
+          NtProtectVirtualMemory(NtCurrentProcess(),
+                                 &ProtectPage2,
+                                 &ProtectSize,
+                                 OldProtect2,
+                                 &OldProtect2);
+        }
 
       RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)RelocationDir +
                       RelocationDir->SizeOfBlock);
