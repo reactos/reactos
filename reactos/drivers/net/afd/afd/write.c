@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: write.c,v 1.1.2.2 2004/07/11 23:04:35 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -144,6 +144,13 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
+
+    if( FCB->State != SOCKET_STATE_CONNECTED ) {
+	AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
+	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+    }
+
     AFD_DbgPrint(MID_TRACE,("We already have %d bytes waiting.\n", 
 			    FCB->Send.BytesUsed));
 
@@ -151,6 +158,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					SendReq->BufferCount,
 					FALSE );
     
+    AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", FCB->Send.BytesUsed));
+
     if( !FCB->Send.BytesUsed ) {
 	SpaceAvail = FCB->Send.Size - FCB->Send.BytesUsed;
 

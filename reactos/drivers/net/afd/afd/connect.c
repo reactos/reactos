@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: connect.c,v 1.1.2.2 2004/07/11 23:04:34 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -51,12 +51,17 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
      * not need to relock. */
     /* if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp ); */
 
+    AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n", 
+			    Irp->IoStatus.Status));
+
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	FCB->PollState |= AFD_EVENT_CONNECT;
 	FCB->State = SOCKET_STATE_CONNECTED;
+	AFD_DbgPrint(MID_TRACE,("Going to connected state %d\n", FCB->State));
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else {
 	FCB->PollState |= AFD_EVENT_CONNECT_FAIL;
+	AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
 	FCB->State = SOCKET_STATE_BOUND;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
@@ -87,6 +92,19 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
 				 &FCB->ReceiveIrp.Iosb,
 				 ReceiveComplete,
 				 FCB );
+	}
+
+	if( FCB->Send.Window && 
+	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
+	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, 
+					Tail.Overlay.ListEntry);
+	    AFD_DbgPrint(MID_TRACE,("Launching send request %x\n", NextIrp));
+	    Status = AfdConnectedSocketWriteData
+		( DeviceObject,
+		  NextIrp,
+		  IoGetCurrentIrpStackLocation( NextIrp ),
+		  FALSE );
 	}
 
 	if( Status == STATUS_PENDING )
@@ -155,6 +173,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->RemoteAddress = TaCopyTransportAddress( &ConnectReq->Address );
 	
 	Status = WarmSocketForConnection( FCB );
+
+	FCB->State = SOCKET_STATE_CONNECTING;
 	
 	if( NT_SUCCESS(Status) ) {
 	    Status = TdiConnect( &FCB->PendingTdiIrp, 
@@ -163,8 +183,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				 StreamSocketConnectComplete,
 				 FCB );
 	}
-	
-	FCB->State = SOCKET_STATE_CONNECTING;
 	break;
 
     default:
