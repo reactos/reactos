@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.11 2003/05/18 17:16:17 ea Exp $
+/* $Id: guicheck.c,v 1.12 2003/05/31 08:53:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,7 +95,7 @@ W32kGuiCheck(VOID)
 				    &PsGetWin32Process()->WindowStation);
       if (!NT_SUCCESS(Status))
 	{
-	  DbgPrint("W32K: Failed to reference a window station for "
+	  DPRINT1("W32K: Failed to reference a window station for "
 		   "process.\n");
 	}
     }
@@ -119,7 +119,7 @@ W32kGuiCheck(VOID)
 					 NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DbgPrint("W32K: Failed to reference a desktop for thread.\n");
+	  DPRINT1("W32K: Failed to reference a desktop for thread.\n");
 	}
     }
 }
