@@ -25,9 +25,9 @@ WINE_INCLUDE = ./
 TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \
-	gdi32.a \
-	$(COMCTL32_TARGET).a \
-	$(COMDLG32_TARGET).a
+	gdi32.a
+
+TARGET_GCCLIBS = comctl32 comdlg32
 
 TARGET_OBJECTS = \
 	about.o \
