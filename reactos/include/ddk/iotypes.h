@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.62 2004/01/05 14:28:19 weiden Exp $
+/* $Id: iotypes.h,v 1.63 2004/06/23 21:43:19 ion Exp $
  *
  */
 
@@ -1089,6 +1089,135 @@ typedef struct _PARTITION_INFORMATION
 } PARTITION_INFORMATION, *PPARTITION_INFORMATION;
 #endif
 
+typedef enum _PARTITION_STYLE {
+    PARTITION_STYLE_MBR,
+    PARTITION_STYLE_GPT,
+    PARTITION_STYLE_RAW
+} PARTITION_STYLE;
+
+typedef struct _PARTITION_INFORMATION_GPT {
+    GUID PartitionType;             
+    GUID PartitionId;                 
+    ULONG64 Attributes;                
+    WCHAR Name [36];                 
+} PARTITION_INFORMATION_GPT, *PPARTITION_INFORMATION_GPT;
+
+typedef struct _PARTITION_INFORMATION_MBR {
+    UCHAR PartitionType;
+    BOOLEAN BootIndicator;
+    BOOLEAN RecognizedPartition;
+    ULONG HiddenSectors;
+} PARTITION_INFORMATION_MBR, *PPARTITION_INFORMATION_MBR;
+
+typedef SET_PARTITION_INFORMATION SET_PARTITION_INFORMATION_MBR;
+typedef PARTITION_INFORMATION_GPT SET_PARTITION_INFORMATION_GPT;
+
+typedef struct _SET_PARTITION_INFORMATION_EX {
+    PARTITION_STYLE PartitionStyle;
+    union {
+        SET_PARTITION_INFORMATION_MBR Mbr;
+        SET_PARTITION_INFORMATION_GPT Gpt;
+    };
+} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
+
+typedef struct _CREATE_DISK_GPT {
+    GUID DiskId;                    
+    ULONG MaxPartitionCount;       
+} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
+
+typedef struct _CREATE_DISK_MBR {
+    ULONG Signature;
+} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
+
+
+typedef struct _CREATE_DISK {
+    PARTITION_STYLE PartitionStyle;
+    union {
+        CREATE_DISK_MBR Mbr;
+        CREATE_DISK_GPT Gpt;
+    };
+} CREATE_DISK, *PCREATE_DISK;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
+    GUID DiskId;
+    LARGE_INTEGER StartingUsableOffset;
+    LARGE_INTEGER UsableLength;
+    ULONG MaxPartitionCount;
+} DRIVE_LAYOUT_INFORMATION_GPT, *PDRIVE_LAYOUT_INFORMATION_GPT;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
+    ULONG Signature;
+} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
+
+typedef struct _PARTITION_INFORMATION_EX {
+    PARTITION_STYLE PartitionStyle;
+    LARGE_INTEGER StartingOffset;
+    LARGE_INTEGER PartitionLength;
+    ULONG PartitionNumber;
+    BOOLEAN RewritePartition;
+    union {
+        PARTITION_INFORMATION_MBR Mbr;
+        PARTITION_INFORMATION_GPT Gpt;
+    };
+} PARTITION_INFORMATION_EX, *PPARTITION_INFORMATION_EX;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
+    ULONG PartitionStyle;
+    ULONG PartitionCount;
+    union {
+        DRIVE_LAYOUT_INFORMATION_MBR Mbr;
+        DRIVE_LAYOUT_INFORMATION_GPT Gpt;
+    };
+    PARTITION_INFORMATION_EX PartitionEntry[1];
+} DRIVE_LAYOUT_INFORMATION_EX, *PDRIVE_LAYOUT_INFORMATION_EX;
+
+typedef struct _BOOTDISK_INFORMATION {
+    LONGLONG BootPartitionOffset;
+    LONGLONG SystemPartitionOffset;
+    ULONG BootDeviceSignature;
+    ULONG SystemDeviceSignature;
+} BOOTDISK_INFORMATION, *PBOOTDISK_INFORMATION;
+
+
+typedef struct _DISK_SIGNATURE {
+    ULONG PartitionStyle;
+    union {
+        struct {
+            ULONG Signature;
+            ULONG CheckSum;
+        } Mbr;
+
+        struct {
+            GUID DiskId;
+        } Gpt;
+    };
+} DISK_SIGNATURE, *PDISK_SIGNATURE;
+
+typedef struct _REPARSE_DATA_BUFFER {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR PathBuffer[1];
+        } MountPointReparseBuffer;
+        struct {
+            UCHAR  DataBuffer[1];
+        } GenericReparseBuffer;
+    };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
 typedef struct _DRIVER_LAYOUT_INFORMATION
 {
    ULONG PartitionCount;
@@ -1126,7 +1255,6 @@ typedef struct _IO_MAILSLOT_CREATE_BUFFER
    ULONG MaxMessageSize;
    LARGE_INTEGER TimeOut;
 } IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
-
 
 /* error logging */
 

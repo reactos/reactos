@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.41 2003/11/19 20:57:22 gdalsnes Exp $ */
+/* $Id: iofuncs.h,v 1.42 2004/06/23 21:43:19 ion Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -415,8 +415,8 @@ IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
 		      IN UCHAR MajorFunction,
 		      IN UCHAR MinorFunction,
 		      IN ULONG IoControlCode,
-		      IN PFILE_INFORMATION_CLASS FileInformationClass OPTIONAL,
-		      IN PFS_INFORMATION_CLASS FsInformationClass OPTIONAL);
+		      IN PVOID ExtraData OPTIONAL,
+		      IN PVOID ExtraData2 OPTIONAL);
 
 NTSTATUS
 STDCALL
@@ -788,11 +788,11 @@ STDCALL
 IoIsOperationSynchronous (
 	IN	PIRP	Irp
 	);
-BOOLEAN
 STDCALL
-IoIsSystemThread (
-	PVOID	Unknown0
-	);
+BOOLEAN
+IoIsSystemThread(
+    IN struct _ETHREAD* Thread
+    );
 PIRP
 STDCALL
 IoMakeAssociatedIrp (
@@ -1237,6 +1237,547 @@ IoWritePartitionTable (
 	ULONG				NumberOfHeads,
 	PDRIVE_LAYOUT_INFORMATION	PartitionBuffer
 	);
+
+/* STUBS*/
+
+STDCALL
+NTSTATUS
+IoAttachDeviceToDeviceStackSafe(
+    IN PDEVICE_OBJECT SourceDevice,
+    IN PDEVICE_OBJECT TargetDevice,
+    OUT PDEVICE_OBJECT *AttachedToDeviceObject
+    );
+
+STDCALL
+VOID
+IoCancelFileOpen(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PFILE_OBJECT    FileObject
+    );
+
+STDCALL
+NTSTATUS
+IoCheckQuerySetFileInformation(
+    IN FILE_INFORMATION_CLASS FileInformationClass,
+    IN ULONG Length,
+    IN BOOLEAN SetOperation
+    );
+
+STDCALL
+NTSTATUS
+IoCheckQuerySetVolumeInformation(
+    IN FS_INFORMATION_CLASS FsInformationClass,
+    IN ULONG Length,
+    IN BOOLEAN SetOperation
+    );
+
+
+STDCALL
+NTSTATUS
+IoCheckQuotaBufferValidity(
+    IN PFILE_QUOTA_INFORMATION QuotaBuffer,
+    IN ULONG QuotaLength,
+    OUT PULONG ErrorOffset
+    );
+
+STDCALL
+NTSTATUS
+IoCreateFileSpecifyDeviceObjectHint(
+    OUT PHANDLE FileHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN PLARGE_INTEGER AllocationSize OPTIONAL,
+    IN ULONG FileAttributes,
+    IN ULONG ShareAccess,
+    IN ULONG Disposition,
+    IN ULONG CreateOptions,
+    IN PVOID EaBuffer OPTIONAL,
+    IN ULONG EaLength,
+    IN CREATE_FILE_TYPE CreateFileType,
+    IN PVOID ExtraCreateParameters OPTIONAL,
+    IN ULONG Options,
+    IN PVOID DeviceObject
+    );
+
+STDCALL
+PFILE_OBJECT
+IoCreateStreamFileObjectEx(
+    IN PFILE_OBJECT FileObject OPTIONAL,
+    IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+    OUT PHANDLE FileObjectHandle OPTIONAL
+    );
+
+STDCALL
+PFILE_OBJECT
+IoCreateStreamFileObjectLite(
+    IN PFILE_OBJECT FileObject OPTIONAL,
+    IN PDEVICE_OBJECT DeviceObject OPTIONAL
+    );
+
+STDCALL
+NTSTATUS
+IoEnumerateDeviceObjectList(
+    IN  PDRIVER_OBJECT  DriverObject,
+    IN  PDEVICE_OBJECT  *DeviceObjectList,
+    IN  ULONG           DeviceObjectListSize,
+    OUT PULONG          ActualNumberDeviceObjects
+    );
+
+STDCALL
+BOOLEAN
+IoForwardIrpSynchronously(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
+#define IoForwardAndCatchIrp IoForwardIrpSynchronously
+
+STDCALL
+VOID
+IoFreeErrorLogEntry(
+    PVOID ElEntry
+    );
+
+STDCALL
+ULONG
+IoPnPDeliverServicePowerNotification(
+	ULONG		VetoedPowerOperation OPTIONAL,
+	ULONG		PowerNotification,
+	ULONG		Unknown OPTIONAL,
+	BOOLEAN  	Synchronous
+	);
+
+STDCALL
+NTSTATUS
+IoGetBootDiskInformation(
+    IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
+    IN ULONG Size
+    );
+
+STDCALL
+PDEVICE_OBJECT
+IoGetDeviceAttachmentBaseRef(
+    IN PDEVICE_OBJECT DeviceObject
+    );
+
+STDCALL
+NTSTATUS
+IoGetDiskDeviceObject(
+    IN  PDEVICE_OBJECT  FileSystemDeviceObject,
+    OUT PDEVICE_OBJECT  *DiskDeviceObject
+    );
+
+STDCALL
+PDEVICE_OBJECT
+IoGetLowerDeviceObject(
+    IN  PDEVICE_OBJECT  DeviceObject
+    );
+
+STDCALL
+ULONG
+IoGetRequestorProcessId(
+    IN PIRP Irp
+    );
+
+STDCALL
+BOOLEAN
+IoIsFileOriginRemote(
+    IN PFILE_OBJECT FileObject
+    );
+
+STDCALL
+BOOLEAN
+IoIsValidNameGraftingBuffer(
+    IN PIRP Irp,
+    IN PREPARSE_DATA_BUFFER ReparseBuffer
+    );
+
+STDCALL
+NTSTATUS
+IoQueryFileDosDeviceName(
+    IN PFILE_OBJECT FileObject,
+    OUT POBJECT_NAME_INFORMATION *ObjectNameInformation
+    );
+
+STDCALL
+VOID
+IoRegisterBootDriverReinitialization(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+    IN PVOID Context
+    );
+
+STDCALL
+NTSTATUS
+IoRegisterLastChanceShutdownNotification(
+    IN PDEVICE_OBJECT DeviceObject
+    );
+
+STDCALL
+VOID
+IoReuseIrp(
+    IN OUT PIRP Irp,
+    IN NTSTATUS Iostatus
+    );
+
+STDCALL
+NTSTATUS
+IoSetCompletionRoutineEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PIO_COMPLETION_ROUTINE CompletionRoutine,
+    IN PVOID Context,
+    IN BOOLEAN InvokeOnSuccess,
+    IN BOOLEAN InvokeOnError,
+    IN BOOLEAN InvokeOnCancel
+    );
+
+STDCALL
+NTSTATUS
+IoSetFileOrigin(
+    IN PFILE_OBJECT FileObject,
+    IN BOOLEAN Remote
+    );
+
+STDCALL
+NTSTATUS
+IoSetSystemPartition(
+    PUNICODE_STRING VolumeNameString
+    );
+
+STDCALL
+NTSTATUS
+IoVolumeDeviceToDosName(
+    IN  PVOID           VolumeDeviceObject,
+    OUT PUNICODE_STRING DosName
+    );
+
+
+STDCALL
+NTSTATUS
+IoSetPartitionInformationEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG PartitionNumber,
+    IN struct _SET_PARTITION_INFORMATION_EX* PartitionInfo
+    );
+
+STDCALL
+NTSTATUS
+IoWritePartitionTableEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _DRIVE_LAYOUT_INFORMATION_EX* DriveLayfout
+    );
+
+STDCALL
+NTSTATUS
+IoReadPartitionTableEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _DRIVE_LAYOUT_INFORMATION_EX** DriveLayout
+    );
+
+STDCALL
+NTSTATUS
+IoCreateDisk(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _CREATE_DISK* Disk
+    );
+
+STDCALL
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaces(
+    IN CONST GUID *InterfaceClassGuid,
+    IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
+    IN ULONG Flags,
+    OUT PWSTR *SymbolicLinkList
+    );
+
+STDCALL
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaceAlias(
+    IN PUNICODE_STRING SymbolicLinkName,
+    IN CONST GUID *AliasInterfaceClassGuid,
+    OUT PUNICODE_STRING AliasSymbolicLinkName
+    );
+
+STDCALL
+NTSTATUS
+IoOpenDeviceInterfaceRegistryKey(
+    IN PUNICODE_STRING SymbolicLinkName,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE DeviceInterfaceKey
+    );
+
+STDCALL
+NTSTATUS
+IoReadDiskSignature(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG BytesPerSector,
+    OUT PDISK_SIGNATURE Signature
+    );
+
+STDCALL
+NTSTATUS
+IoRegisterPlugPlayNotification(
+    IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
+    IN ULONG EventCategoryFlags,
+    IN PVOID EventCategoryData OPTIONAL,
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,
+    IN PVOID Context,
+    OUT PVOID *NotificationEntry
+    );
+
+STDCALL
+NTSTATUS
+IoUnregisterPlugPlayNotification(
+    IN PVOID NotificationEntry
+    );
+
+STDCALL
+NTSTATUS
+IoReportDetectedDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN INTERFACE_TYPE LegacyBusType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PCM_RESOURCE_LIST ResourceList,
+    IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements OPTIONAL,
+    IN BOOLEAN ResourceAssigned,
+    IN OUT PDEVICE_OBJECT *DeviceObject
+    );
+
+STDCALL
+NTSTATUS
+IoReportResourceForDetection(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PCM_RESOURCE_LIST DriverList OPTIONAL,
+    IN ULONG DriverListSize OPTIONAL,
+    IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+    IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
+    IN ULONG DeviceListSize OPTIONAL,
+    OUT PBOOLEAN ConflictDetected
+    );
+
+STDCALL
+NTSTATUS
+IoReportTargetDeviceChange(
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PVOID NotificationStructure
+    );
+
+STDCALL
+NTSTATUS
+IoReportTargetDeviceChangeAsynchronous(
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PVOID NotificationStructure,
+    IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback,       OPTIONAL
+    IN PVOID Context    OPTIONAL
+    );
+
+STDCALL
+VOID
+IoRequestDeviceEject(
+    IN PDEVICE_OBJECT PhysicalDeviceObject
+    );
+
+STDCALL
+NTSTATUS
+IoVerifyPartitionTable(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN FixErrors
+    );
+
+STDCALL
+VOID
+IoSetStartIoAttributes(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN DeferredStartIo,
+    IN BOOLEAN NonCancelable
+    );
+
+STDCALL
+VOID
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type
+    );
+
+STDCALL
+NTSTATUS
+IoCreateDriver (
+	IN PUNICODE_STRING DriverName,   OPTIONAL
+	IN PDRIVER_INITIALIZE InitializationFunction
+	);
+
+STDCALL
+NTSTATUS
+IoValidateDeviceIoControlAccess(
+    IN  PIRP    Irp,
+    IN  ULONG   RequiredAccess
+    );
+
+STDCALL
+VOID
+IoDeleteDriver (
+	IN PDRIVER_OBJECT DriverObject
+	);
+
+STDCALL
+NTSTATUS
+IoGetRequestorSessionId(
+	IN PIRP Irp,
+	OUT PULONG pSessionId
+	);
+
+STDCALL
+NTSTATUS
+IoSetIoCompletion (
+	IN PVOID IoCompletion,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG_PTR IoStatusInformation,
+	IN BOOLEAN Quota
+	);
+
+STDCALL
+NTSTATUS
+IoWMIRegistrationControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG Action
+	);
+
+STDCALL
+NTSTATUS
+IoWMIAllocateInstanceIds(
+    IN GUID *Guid,
+    IN ULONG InstanceCount,
+    OUT ULONG *FirstInstanceId
+    );
+
+STDCALL
+NTSTATUS
+IoWMISuggestInstanceName(
+    IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
+    IN PUNICODE_STRING SymbolicLinkName OPTIONAL,
+    IN BOOLEAN CombineNames,
+    OUT PUNICODE_STRING SuggestedInstanceName
+    );
+
+STDCALL
+NTSTATUS
+IoWMIWriteEvent(
+    IN PVOID WnodeEventItem
+    );
+
+STDCALL
+NTSTATUS IoWMIOpenBlock(
+    IN GUID *DataBlockGuid,
+    IN ULONG DesiredAccess,
+    OUT PVOID *DataBlockObject
+    );
+
+
+STDCALL
+NTSTATUS IoWMIQueryAllData(
+    IN PVOID DataBlockObject,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer
+);
+
+
+STDCALL
+NTSTATUS
+IoWMIQueryAllDataMultiple(
+    IN PVOID *DataBlockObjectList,
+    IN ULONG ObjectCount,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer
+);
+
+
+STDCALL
+NTSTATUS
+IoWMIQuerySingleInstance(
+    IN PVOID DataBlockObject,
+    IN PUNICODE_STRING InstanceName,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer
+);
+
+STDCALL
+NTSTATUS
+IoWMIQuerySingleInstanceMultiple(
+    IN PVOID *DataBlockObjectList,
+    IN PUNICODE_STRING InstanceNames,
+    IN ULONG ObjectCount,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer
+);
+
+STDCALL
+NTSTATUS
+IoWMISetSingleInstance(
+    IN PVOID DataBlockObject,
+    IN PUNICODE_STRING InstanceName,
+    IN ULONG Version,
+    IN ULONG ValueBufferSize,
+    IN PVOID ValueBuffer
+    );
+
+STDCALL
+NTSTATUS
+IoWMISetSingleItem(
+    IN PVOID DataBlockObject,
+    IN PUNICODE_STRING InstanceName,
+    IN ULONG DataItemId,
+    IN ULONG Version,
+    IN ULONG ValueBufferSize,
+    IN PVOID ValueBuffer
+    );
+
+STDCALL
+NTSTATUS
+IoWMIExecuteMethod(
+    IN PVOID DataBlockObject,
+    IN PUNICODE_STRING InstanceName,
+    IN ULONG MethodId,
+    IN ULONG InBufferSize,
+    IN OUT PULONG OutBufferSize,
+    IN OUT PUCHAR InOutBuffer
+    );
+
+typedef VOID (*WMI_NOTIFICATION_CALLBACK)(
+    PVOID Wnode,
+    PVOID Context
+    );
+
+STDCALL
+NTSTATUS
+IoWMISetNotificationCallback(
+    IN PVOID Object,
+    IN WMI_NOTIFICATION_CALLBACK Callback,
+    IN PVOID Context
+    );
+
+STDCALL
+NTSTATUS
+IoWMIHandleToInstanceName(
+    IN PVOID DataBlockObject,
+    IN HANDLE FileHandle,
+    OUT PUNICODE_STRING InstanceName
+    );
+
+STDCALL
+NTSTATUS
+IoWMIDeviceObjectToInstanceName(
+    IN PVOID DataBlockObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PUNICODE_STRING InstanceName
+    );
 
 
 /* --- --- --- INTERNAL or REACTOS ONLY --- --- --- */
