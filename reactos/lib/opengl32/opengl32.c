@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.4 2004/02/02 05:36:37 royce Exp $
+/* $Id: opengl32.c,v 1.5 2004/02/02 06:01:35 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -27,9 +27,10 @@
 #endif
 
 /* function prototypes */
+static BOOL OPENGL32_LoadDrivers();
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd );
 static void OPENGL32_RemoveICD( GLDRIVERDATA *icd );
-static GLDRIVERDATA *OPENGL32_LoadDriverW( LPCWSTR regKey );
+static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR regKey );
 static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd );
 static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd );
 
@@ -71,9 +72,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
 
-		/* FIXME - load mesa32 into first funclist */
-		/* FIXME - get list of ICDs from registry */
-		// No break: Initialize the index for first thread.
+		/* get list of ICDs from registry: */
+		OPENGL32_LoadDrivers();
+		/* No break: Initialize the index for first thread. */
 
 	/* The attached process creates a new thread. */
 	case DLL_THREAD_ATTACH:
@@ -147,9 +148,29 @@ static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 	}
 }
 
-
+/* FIXME - I'm assuming we want to return TRUE if we find at least *one* ICD */
 static BOOL OPENGL32_LoadDrivers()
 {
+	const WCHAR* OpenGLDrivers = L"SOFTWARE\\Microsoft\\Windows NT\\"
+		"CurrentVersion\\OpenGLDrivers\\";
+	HKEY hkey;
+	WCHAR name[1024];
+
+	/* FIXME - detect if we've already done this from another process */
+	/* FIXME - special-case load of MESA3D as generic implementation ICD.
+
+	if ( ERROR_SUCCESS != RegOpenKey ( HKEY_LOCAL_MACHINE, OpenGLDrivers, &hkey ) )
+		return FALSE;
+	for ( int i = 0; RegEnumKeyW(hkey,i,name,sizeof(name)/sizeof(name[0])) == ERROR_SUCCESS; i++ )
+	{
+		/* ignoring return value, because OPENGL32_LoadICD() is doing *all* the work...
+		/*GLDRIVERDATA* gldd =*/ OPENGL32_LoadICD ( name );
+	}
+	RegCloseKey ( hkey );
+	if ( i > 0 )
+		return TRUE;
+	else
+		return FALSE;
 }
 
 /* FUNCTION:  Load an ICD.
@@ -158,7 +179,7 @@ static BOOL OPENGL32_LoadDrivers()
  *
  * TODO: call SetLastError() where appropriate
  */
-static GLDRIVERDATA *OPENGL32_LoadDriverW( LPCWSTR driver )
+static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
 {
 	HKEY hKey;
 	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
@@ -344,7 +365,7 @@ static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 /* FUNCTION: Load ICD (shared ICD data)
  * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
  */
-GLDRIVERDATA *OPENGL32_LoadICDW( LPCWSTR driver )
+GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
 {
 	GLDRIVERDATA *icd;
 
@@ -359,7 +380,7 @@ GLDRIVERDATA *OPENGL32_LoadICDW( LPCWSTR driver )
 	}
 
 	/* not found - try to load */
-	icd = OPENGL32_LoadDriverW( driver );
+	icd = OPENGL32_LoadDriver ( driver );
 	if (icd)
 		icd->refcount = 1;
 	return icd;

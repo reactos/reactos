@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.4 2004/02/02 05:36:37 royce Exp $
+/* $Id: opengl32.h,v 1.5 2004/02/02 06:01:35 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -440,7 +440,7 @@ extern DWORD OPENGL32_tls;
 extern GLPROCESSDATA OPENGL32_processdata;
 
 /* function prototypes */
-GLDRIVERDATA *OPENGL32_LoadICDW( LPCWSTR driver );
+GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 
 #endif//OPENGL32_PRIVATE_H
