@@ -237,7 +237,7 @@ DirReadParam (LPTSTR line, LPTSTR *param, LPDWORD lpFlags)
 			{
 				if (_totupper (*line) == _T('S'))
 					*lpFlags |= DIR_RECURSE;
-				else if (_toupper (*line) == _T('P'))
+				else if (_totupper (*line) == _T('P'))
 					*lpFlags |= DIR_PAGE;
 				else if (_totupper (*line) == _T('W'))
 					*lpFlags |= DIR_WIDE;
@@ -811,8 +811,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				count = 0;
 			}
 
-	    uliSize.u.LowPart += file.nFileSizeLow;
-	    uliSize.u.HighPart += file.nFileSizeHigh;
+			uliSize.u.LowPart = file.nFileSizeLow;
+			uliSize.u.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else if (dwFlags & DIR_BARE)
@@ -842,8 +842,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 			if (IncLine (pLine, dwFlags))
 				return 1;
 
-	    uliSize.u.LowPart += file.nFileSizeLow;
-	    uliSize.u.HighPart += file.nFileSizeHigh;
+			uliSize.u.LowPart = file.nFileSizeLow;
+			uliSize.u.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else
@@ -867,8 +867,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-		    uliSize.u.LowPart = file.nFileSizeLow;
-		    uliSize.u.HighPart = file.nFileSizeHigh;
+					uliSize.u.LowPart = file.nFileSizeLow;
+					uliSize.u.HighPart = file.nFileSizeHigh;
 
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %20s"), buffer);
@@ -919,8 +919,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-		    uliSize.u.LowPart = file.nFileSizeLow;
-		    uliSize.u.HighPart = file.nFileSizeHigh;
+					uliSize.u.LowPart = file.nFileSizeLow;
+					uliSize.u.HighPart = file.nFileSizeHigh;
 
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %10s "), buffer);

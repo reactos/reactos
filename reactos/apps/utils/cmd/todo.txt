@@ -2,8 +2,6 @@ Things to do
 ~~~~~~~~~~~~
 Fix bugs :)
 
-Rewrite DIR command (Unicode aware / new structure).
-
 Optimize the code!  For size and speed.  There are numerous places
 where the code is hardly optimal for either.
 

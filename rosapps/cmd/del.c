@@ -21,8 +21,11 @@
  *    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
  *        Started major rewrite using a new structure.
  *
- *    03-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+ *    03-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
  *        First working version.
+ *
+ *    30-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+ *        Added quiet ("/Q"), wipe ("/W") and zap ("/Z") option.
  */
 
 #include "config.h"
@@ -33,7 +36,6 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "cmd.h"
 
@@ -44,13 +46,30 @@
 #define PROMPT_BREAK	3
 
 
+enum
+{
+	DEL_ATTRIBUTES = 0x001,   /* /A : not implemented */
+	DEL_ERROR      = 0x002,   /* /E : not implemented */
+	DEL_NOTHING    = 0x004,   /* /N */
+	DEL_PROMPT     = 0x008,   /* /P : not implemented */
+	DEL_QUIET      = 0x010,   /* /Q */
+	DEL_SUBDIR     = 0x020,   /* /S : not implemented */
+	DEL_TOTAL      = 0x040,   /* /T */
+	DEL_WIPE       = 0x080,   /* /W */
+	DEL_EMPTYDIR   = 0x100,   /* /X : not implemented */
+	DEL_YES        = 0x200,   /* /Y : not implemented */
+	DEL_ZAP        = 0x400    /* /Z */
+};
+
+
+
 static BOOL ConfirmDeleteAll (VOID)
 {
 	TCHAR inp[10];
 	LPTSTR p;
 
-	ConOutPrintf ("All files in directory will be deleted!\n"
-				  "Are you sure (Y/N)? ");
+	ConOutPrintf (_T("All files in directory will be deleted!\n"
+					 "Are you sure (Y/N)? "));
 	ConInString (inp, 10);
 
 	_tcsupr (inp);
@@ -101,46 +120,49 @@ static INT Prompt (LPTSTR str)
 }
 
 
+static BOOL
+RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
+{
+	if (dwFlags & DEL_WIPE)
+	{
+
+		/* FIXME: Wipe the given file */
+
+	}
+
+	return DeleteFile (lpFileName);
+}
+
 
 INT cmd_del (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR *arg = NULL;
 	INT args;
 	INT i;
-	INT  nEvalArgs = 0; /* nunber of evaluated arguments */
-	BOOL bNothing = FALSE;
-	BOOL bQuiet   = FALSE;
-	BOOL bPrompt  = FALSE;
+	INT   nEvalArgs = 0; /* nunber of evaluated arguments */
+	DWORD dwFlags = 0;
+	DWORD dwFiles = 0;
 
 	HANDLE hFile;
 	WIN32_FIND_DATA f;
-//	DWORD dwAttributes;
-
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-/*
-		ConOutPuts (_T("Deletes one or more files.\n\n"
-			"DEL [drive:][path]filename [/P]\n"
-			"DELETE [drive:][path]filename [/P]\n"
-			"ERASE [drive:][path]filename [/P]\n\n"
-			"  [drive:][path]filename  Specifies the file(s) to delete.  Specify multiple\n"
-			"                          files by using wildcards.\n"
-			"  /P        Prompts for confirmation before deleting each file."));
-*/
-
 		ConOutPuts (_T("Deletes one or more files.\n"
 					   "\n"
-					   "DEL [/N /P /Q] file ...\n"
-					   "DELETE [/N /P /Q] file ...\n"
-					   "ERASE [/N /P /Q] file ...\n"
+					   "DEL [/N /P /T /Q /W /Z] file ...\n"
+					   "DELETE [/N /P /T /Q /W /Z] file ...\n"
+					   "ERASE [/N /P /T /Q /W /Z] file ...\n"
 					   "\n"
 					   "  file  Specifies the file(s) to delete.\n"
 					   "\n"
 					   "  /N    Nothing.\n"
 					   "  /P    Prompts for confirmation before deleting each file.\n"
 					   "        (Not implemented yet!)\n"
-					   "  /Q    Quiet."
+					   "  /T    Display total number of deleted files and freed disk space.\n"
+					   "  /Q    Quiet.\n"
+					   "  /W    Wipe. Overwrite the file with zeros before deleting it.\n"
+					   "  /Z    Zap (delete hidden, read-only and system files).\n"
 					   ));
 
 		return 0;
@@ -160,15 +182,31 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 					switch (_totupper (arg[i][1]))
 					{
 						case _T('N'):
-							bNothing = TRUE;
+							dwFlags |= DEL_NOTHING;
 							break;
 
 						case _T('P'):
-							bPrompt = TRUE;
+							dwFlags |= DEL_PROMPT;
 							break;
 
 						case _T('Q'):
-							bQuiet = TRUE;
+							dwFlags |= DEL_QUIET;
+							break;
+
+						case _T('S'):
+							dwFlags |= DEL_SUBDIR;
+							break;
+
+						case _T('T'):
+							dwFlags |= DEL_TOTAL;
+							break;
+
+						case _T('W'):
+							dwFlags |= DEL_WIPE;
+							break;
+
+						case _T('Z'):
+							dwFlags |= DEL_ZAP;
 							break;
 					}
 
@@ -200,14 +238,14 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 			if (*arg[i] != _T('/'))
 			{
 #ifdef _DEBUG
-				ConErrPrintf ("File: %s\n", arg[i]);
+				ConErrPrintf (_T("File: %s\n"), arg[i]);
 #endif
 
 				if (_tcschr (arg[i], _T('*')) || _tcschr (arg[i], _T('?')))
 				{
 					/* wildcards in filespec */
 #ifdef _DEBUG
-					ConErrPrintf ("Wildcards!\n\n");
+					ConErrPrintf (_T("Wildcards!\n\n"));
 #endif
 
 					hFile = FindFirstFile (arg[i], &f);
@@ -220,18 +258,46 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 
 					do
 					{
+						/* ignore "." and ".." */
 						if (!_tcscmp (f.cFileName, _T(".")) ||
 							!_tcscmp (f.cFileName, _T("..")))
 							continue;
 
-#ifdef _DEBUG
-						ConErrPrintf ("Delete file: %s\n", f.cFileName);
-#endif
+						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
+							ConErrPrintf (_T("Deleting: %s\n"), f.cFileName);
 
-						if (!bNothing)
+						/* delete the file */
+						if (!(dwFlags & DEL_NOTHING))
 						{
-							if (!DeleteFile (f.cFileName))
-								ErrorMessage (GetLastError(), _T(""));
+							if (RemoveFile (f.cFileName, dwFlags))
+							{
+								dwFiles++;
+							}
+							else
+							{
+								if (dwFlags & DEL_ZAP)
+								{
+									if (SetFileAttributes (arg[i], 0))
+									{
+										if (RemoveFile (arg[i], dwFlags))
+										{
+											dwFiles++;
+										}
+										else
+										{
+											ErrorMessage (GetLastError(), _T(""));
+										}
+									}
+									else
+									{
+										ErrorMessage (GetLastError(), _T(""));
+									}
+								}
+								else
+								{
+									ErrorMessage (GetLastError(), _T(""));
+								}
+							}
 						}
 
 
@@ -242,15 +308,45 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 				else
 				{
 					/* no wildcards in filespec */
+
 #ifdef _DEBUG
-					ConErrPrintf ("No Wildcards!\n");
-					ConErrPrintf ("Delete file: %s\n", arg[i]);
+					ConErrPrintf (_T("No Wildcards!\n"));
 #endif
 
-					if (!bNothing)
+					if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
+						ConOutPrintf (_T("Deleting %s\n"), arg[i]);
+
+					if (!(dwFlags & DEL_NOTHING))
 					{
-						if (!DeleteFile (arg[i]))
-							ErrorMessage (GetLastError(), _T(""));
+						if (RemoveFile (arg[i], dwFlags))
+						{
+							dwFiles++;
+						}
+						else
+						{
+							if (dwFlags & DEL_ZAP)
+							{
+								if (SetFileAttributes (arg[i], 0))
+								{
+									if (RemoveFile (arg[i], dwFlags))
+									{
+										dwFiles++;
+									}
+									else
+									{
+										ErrorMessage (GetLastError(), _T(""));
+									}
+								}
+								else
+								{
+									ErrorMessage (GetLastError(), _T(""));
+								}
+							}
+							else
+							{
+								ErrorMessage (GetLastError(), _T(""));
+							}
+						}
 					}
 				}
 			}
@@ -265,6 +361,16 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 	}
 
 	freep (arg);
+
+
+	if (!(dwFlags & DEL_QUIET))
+	{
+		if (dwFiles == 0)
+			ConOutPrintf (_T("    0 files deleted\n"));
+		else
+			ConOutPrintf (_T("    %lu file%s deleted\n"),
+						  dwFiles, (dwFiles == 1) ? "s" : "");
+	}
 
 	return 0;
 }

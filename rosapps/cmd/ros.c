@@ -90,22 +90,4 @@ _makepath( char *path, const char *drive, const char *dir, const char *fname, co
 	}
 }
 
-#if 0
-int getch(void)
-{
-  DWORD  NumberOfCharsRead = 0;
-  DWORD dwWritten;
-  char c;
-
-  ReadConsoleA (GetStdHandle (STD_INPUT_HANDLE), &c, 1, &NumberOfCharsRead, NULL);
-	
-  if ( c == 10 )
-	c = 13;
-
-  WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), &c, 1, &dwWritten, NULL);
-
-  return c;
-}
-#endif
-
 #endif

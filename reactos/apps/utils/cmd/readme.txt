@@ -1,5 +1,5 @@
-ReactOS Command Line Interface "CMD" version 0.0.4
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ReactOS Command Line Interface "CMD" version 0.1 pre 2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is the fourth pre-alpha release of CMD.EXE for ReactOS.
 It was converted from the FreeDOS COMMAND.COM.
@@ -7,7 +7,7 @@ It was converted from the FreeDOS COMMAND.COM.
 
 Warning!! Warning!! Warning!!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This is a pre-alpha version! Many features have not been tested!
+This is an alpha version! Many features have not been tested!
 Be careful when you use commands that write to your disk drives,
 they might destroy your files or the file system!!!
 

@@ -30,7 +30,7 @@
 #include <tchar.h>
 
 
-#define CMD_VER      "0.1 pre 1"
+#define CMD_VER      "0.1 pre 2"
 
 #ifdef _MSC_VER
 #define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
@@ -58,8 +58,7 @@
 #define ERROR_E2BIG     "ERROR: Argument list too long"
 #define ERROR_EINVAL    "ERROR: Invalid argument"
 
-#define SHELLINFO    "ReactOS Command Line Interface"
-#define USAGE        "usage"
+#define SHELLINFO       "ReactOS Command Line Interface"
 
 
 #define D_ON         "on"
