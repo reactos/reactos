@@ -1,3 +1,19 @@
+2002-10-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* apps/tests/tokentest/tokentest.c (ROS_ACE_HEADER): Move field
+	AccessMask ...
+	(ROS_ACE): ... here.
+	(DisplayDacl): Make pAce an ROS_ACE*; Use new path for AceType; Use
+	sizeof(ACE) instead of sizeof(ACE_HEADER).
+	* include/ntos/security.h (ACE_HEADER): Move field AccessMask ...
+	(ACE): ... here.
+	* lib/ntdll/rtl/acl.c: Use new path for AccessMask.
+	* ntoskrnl/se/semgr.c: Ditto.
+	* ntoskrnl/se/acl.c (SepInitDACLs): Use new path for AccessMask; Use
+	sizeof(ACE) instead of sizeof(ACE_HEADER).
+	* ntoskrnl/se/token.c (SepCreateSystemProcessToken): Use sizeof(ACE)
+	instead of sizeof(ACE_HEADER).
+
 2002-10-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/napi/teb.h (RTL_USER_PROCESS_PARAMETERS): Use field names

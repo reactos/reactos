@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.21 2002/09/08 10:23:43 chorns Exp $
+/* $Id: token.c,v 1.22 2002/10/25 21:48:00 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1078,8 +1078,8 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   assert( i == 20 );
 
   uSize = sizeof(ACL);
-  uSize += sizeof(ACE_HEADER) + uLocalSystemLength;
-  uSize += sizeof(ACE_HEADER) + uAdminsLength;
+  uSize += sizeof(ACE) + uLocalSystemLength;
+  uSize += sizeof(ACE) + uAdminsLength;
   uSize = (uSize & (~3)) + 8;
   AccessToken->DefaultDacl =
     (PACL) ExAllocatePoolWithTag(NonPagedPool,

@@ -45,12 +45,12 @@ typedef struct _ROS_ACE_HEADER
   CHAR AceType;
   CHAR AceFlags;
   USHORT AceSize;
-  ACCESS_MASK AccessMask;
 } ROS_ACE_HEADER, *PROS_ACE_HEADER;
 
 typedef struct
 {
   ACE_HEADER Header;
+  ACCESS_MASK AccessMask;
 } ROS_ACE, *PROS_ACE;
 
 NTSYSAPI
@@ -247,7 +247,7 @@ DisplayDacl(PACL pAcl)
 	for (i = 0; i < pAcl->AceCount; i++)
 	{
 		UNICODE_STRING scSid;
-		ROS_ACE_HEADER* pAce;
+		ROS_ACE* pAce;
 		LPWSTR wszType = 0;
 		PSID pSid;
 
@@ -259,9 +259,9 @@ DisplayDacl(PACL pAcl)
 		}
 
 		pSid = (PSID) (pAce + 1);
-		if ( pAce->AceType == ACCESS_ALLOWED_ACE_TYPE )
+		if ( pAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE )
 			wszType = L"allow";
-		if ( pAce->AceType == ACCESS_DENIED_ACE_TYPE )
+		if ( pAce->Header.AceType == ACCESS_DENIED_ACE_TYPE )
 			wszType = L"deny ";
 
 		status = RtlConvertSidToUnicodeString(&scSid, pSid, TRUE);
@@ -437,8 +437,8 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 
 	// Calculate the length needed for the ACL
 	uSize = sizeof(ACL);
-	uSize += sizeof(ACE_HEADER) + sizeof(sidSystem);
-	uSize += sizeof(ACE_HEADER) + sizeof(sidAdministrators);
+	uSize += sizeof(ACE) + sizeof(sidSystem);
+	uSize += sizeof(ACE) + sizeof(sidAdministrators);
 	uSize = (uSize & (~3)) + 8;
 	tkDefaultDacl.DefaultDacl = (PACL) malloc(uSize);
 

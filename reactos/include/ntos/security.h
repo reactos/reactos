@@ -173,15 +173,15 @@ typedef SECURITY_QUALITY_OF_SERVICE* PSECURITY_QUALITY_OF_SERVICE;
 
 typedef struct _ACE_HEADER
 {
-  CHAR AceType;
-  CHAR AceFlags;
-  USHORT AceSize;
-  ACCESS_MASK AccessMask;
+  BYTE AceType;
+  BYTE AceFlags;
+  WORD AceSize;
 } ACE_HEADER, *PACE_HEADER;
 
 typedef struct
 {
   ACE_HEADER Header;
+  ACCESS_MASK AccessMask;
 } ACE, *PACE;
 
 typedef struct _SID_IDENTIFIER_AUTHORITY

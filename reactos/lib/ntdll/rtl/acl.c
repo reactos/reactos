@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.8 2002/09/08 10:23:04 chorns Exp $
+/* $Id: acl.c,v 1.9 2002/10/25 21:48:00 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -137,7 +137,7 @@ RtlpAddKnownAce(PACL Acl,
   Ace->Header.AceFlags = 0;
   Ace->Header.AceType = Type;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-  Ace->Header.AccessMask = AccessMask;
+  Ace->AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
   Acl->AceCount++;
   Acl->AclRevision = Revision;
@@ -320,7 +320,7 @@ RtlAddAuditAccessAce(PACL Acl,
   Ace->Header.AceFlags = Flags;
   Ace->Header.AceType = 2;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-  Ace->Header.AccessMask = AccessMask;
+  Ace->AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid),
 	     (PSID)(Ace + 1),
 	     Sid);

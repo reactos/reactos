@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.9 2002/09/08 10:23:43 chorns Exp $
+/* $Id: acl.c,v 1.10 2002/10/25 21:48:00 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -40,11 +40,11 @@ SepInitDACLs(VOID)
   ULONG AclLength4;
 
   AclLength2 = sizeof(ACL) +
-	       2 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+	       2 * (RtlLengthRequiredSid(1) + sizeof(ACE));
   AclLength3 = sizeof(ACL) +
-	       3 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+	       3 * (RtlLengthRequiredSid(1) + sizeof(ACE));
   AclLength4 = sizeof(ACL) +
-	       4 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+	       4 * (RtlLengthRequiredSid(1) + sizeof(ACE));
 
   /* create PublicDefaultDacl */
   SePublicDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
@@ -210,7 +210,7 @@ RtlpAddKnownAce(PACL Acl,
   Ace->Header.AceFlags = 0;
   Ace->Header.AceType = Type;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-  Ace->Header.AccessMask = AccessMask;
+  Ace->AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
   Acl->AceCount++;
   Acl->AclRevision = Revision;

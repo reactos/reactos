@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.22 2002/09/08 10:23:43 chorns Exp $
+/* $Id: semgr.c,v 1.23 2002/10/25 21:48:00 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -479,7 +479,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	     if (SepSidInToken(SubjectSecurityContext->ClientToken, Sid))
 	       {
 		  CurrentAccess = CurrentAccess | 
-		    CurrentAce->Header.AccessMask;
+		    CurrentAce->AccessMask;
 	       }
 	  }
      }
