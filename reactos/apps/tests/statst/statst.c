@@ -1,9 +1,8 @@
 //#define WIN32_LEAN_AND_MEAN
-#define UNICODE
 #include <windows.h>
 
-static LPWSTR STATIC_CLASS   = L"STATIC";
-static LPWSTR TEST_WND_CLASS = L"TESTWND";
+static LPSTR STATIC_CLASS   = "STATIC";
+static LPSTR TEST_WND_CLASS = "TESTWND";
 
 #ifdef NDEBUG
  #define DPRINT(s) (void)0
@@ -37,25 +36,25 @@ LRESULT WmCreate(
    // Test 5 - left-aligned text.
    DPRINT("test 5");
    CreateWindowEx(0, STATIC_CLASS,
-      L"&Left-aligned text &static control window",
+      "&Left-aligned text &static control window",
       WS_CHILD | WS_VISIBLE | SS_LEFT,
       10, 130, 100, 50, Wnd, NULL, AppInstance, NULL);
    // Test 6 - right-aligned text.
    DPRINT("test 6");
    CreateWindowEx(0, STATIC_CLASS,
-      L"&Right-aligned text &static control window",
+      "&Right-aligned text &static control window",
       WS_CHILD | WS_VISIBLE | SS_RIGHT,
       10, 185, 100, 50, Wnd, NULL, AppInstance, NULL);
    // Test 7 - centered text.
    DPRINT("test 7");
    CreateWindowEx(0, STATIC_CLASS,
-      L"&Centered text &static control window",
+      "&Centered text &static control window",
       WS_CHILD | WS_VISIBLE | SS_CENTER,
       10, 240, 100, 50, Wnd, NULL, AppInstance, NULL);
    // Test 8 - left-aligned text with no word wrap and no prefixes.
    DPRINT("test 8");
    CreateWindowEx(0, STATIC_CLASS,
-      L"&No prefix and no word wrapping",
+      "&No prefix and no word wrapping",
       WS_CHILD | WS_VISIBLE | SS_LEFTNOWORDWRAP | SS_NOPREFIX,
       10, 295, 100, 20, Wnd, NULL, AppInstance, NULL);
    // Test 9 - white rectangle.
@@ -85,7 +84,7 @@ LRESULT WmCreate(
    // Test 14 - sunken border.
    DPRINT("test 14");
    CreateWindowEx(0, STATIC_CLASS,
-      L"Sunken frame and word ellipsis",
+      "Sunken frame and word ellipsis",
       WS_CHILD | WS_VISIBLE | SS_SUNKEN | SS_WORDELLIPSIS,
       120, 160, 100, 20, Wnd, NULL, AppInstance, NULL);
    DPRINT("WM_CREATE (leave).");
@@ -132,21 +131,21 @@ int STDCALL WinMain(
    Result = RegisterClassEx(&TestWndClass);
    if (Result == 0) {
       DPRINT("Error registering class.");
-      MessageBox(0, L"Error registering test window class.",
-         L"Static control test", MB_ICONSTOP | MB_OK);
+      MessageBox(0, "Error registering test window class.",
+         "Static control test", MB_ICONSTOP | MB_OK);
       ExitProcess(0);
    }
    // Create main window.
    DPRINT("Creating main window.");
    MainWindow = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_CLIENTEDGE,
-      TEST_WND_CLASS, L"Static control test",
+      TEST_WND_CLASS, "Static control test",
       WS_OVERLAPPEDWINDOW, 50, 50, 245, 365,
       NULL, NULL, AppInstance, NULL);
    if (MainWindow == 0) {
       DPRINT("Error creating main window.");
       UnregisterClass(TEST_WND_CLASS, AppInstance);
-      MessageBox(0, L"Error creating test window.",
-         L"Static control test", MB_ICONSTOP | MB_OK);
+      MessageBox(0, "Error creating test window.",
+         "Static control test", MB_ICONSTOP | MB_OK);
       ExitProcess(0);
    }
    DPRINT("Showing main window.");
