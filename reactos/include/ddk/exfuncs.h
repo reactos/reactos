@@ -372,7 +372,7 @@ ExInterlockedAddLargeStatistic (
 	);
 
 ULONG
-FASTCALL
+STDCALL
 ExInterlockedAddUlong (
 	PULONG		Addend,
 	ULONG		Increment,
@@ -447,55 +447,47 @@ ExInterlockedIncrementLong (
 	PKSPIN_LOCK	Lock
 	);
 PLIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedInsertHeadList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
 	PKSPIN_LOCK	Lock
 	);
 PLIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedInsertTailList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
 	PKSPIN_LOCK	Lock
 	);
 PSINGLE_LIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedPopEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PKSPIN_LOCK		Lock
 	);
 PSINGLE_LIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedPopEntrySList (
 	PSLIST_HEADER	ListHead,
 	PKSPIN_LOCK	Lock
 	);
 PSINGLE_LIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedPushEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PSINGLE_LIST_ENTRY	ListEntry,
 	PKSPIN_LOCK		Lock
 	);
 PSINGLE_LIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedPushEntrySList (
 	PSLIST_HEADER		ListHead,
 	PSINGLE_LIST_ENTRY	ListEntry,
 	PKSPIN_LOCK		Lock
 	);
-
-VOID
-ExInterlockedRemoveEntryList (
-	PLIST_ENTRY	ListHead,
-	PLIST_ENTRY	Entry,
-	PKSPIN_LOCK	Lock
-	);
-
 PLIST_ENTRY
-FASTCALL
+STDCALL
 ExInterlockedRemoveHeadList (
 	PLIST_ENTRY	Head,
 	PKSPIN_LOCK	Lock

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.193 2004/09/24 16:18:28 weiden Exp $
+; $Id: ntoskrnl.def,v 1.194 2004/10/17 13:08:26 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -104,20 +104,20 @@ ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
 @ExInterlockedAddLargeStatistic@8
-@ExInterlockedAddUlong@12
+ExInterlockedAddUlong@12
 @ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
 ExInterlockedIncrementLong@8
 @ExInterlockedFlushSList@4
-@ExInterlockedInsertHeadList@12
-@ExInterlockedInsertTailList@12
-@ExInterlockedPopEntryList@8
-@ExInterlockedPopEntrySList@8
-@ExInterlockedPushEntryList@12
-@ExInterlockedPushEntrySList@12
-@ExInterlockedRemoveHeadList@8
+ExInterlockedInsertHeadList@12
+ExInterlockedInsertTailList@12
+ExInterlockedPopEntryList@8
+ExInterlockedPopEntrySList@8
+ExInterlockedPushEntryList@12
+ExInterlockedPushEntrySList@12
+ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4

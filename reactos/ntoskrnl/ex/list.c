@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.14 2004/10/12 00:56:46 ion Exp $
+/* $Id: list.c,v 1.15 2004/10/17 13:08:26 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,7 +41,8 @@ ExInterlockedFlushSList (
 /*
  * @implemented
  */
-PLIST_ENTRY FASTCALL
+PLIST_ENTRY
+STDCALL
 ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -76,7 +77,8 @@ ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PLIST_ENTRY FASTCALL
+PLIST_ENTRY
+STDCALL
 ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -111,7 +113,8 @@ ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PLIST_ENTRY FASTCALL
+PLIST_ENTRY
+STDCALL
 ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
 /*
@@ -140,6 +143,7 @@ ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 
 
 PLIST_ENTRY
+STDCALL
 ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
 /*
@@ -167,14 +171,13 @@ ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 }
 
 
-#ifdef ExInterlockedPopEntrySList
 #undef ExInterlockedPopEntrySList
-#endif
 
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY FASTCALL
+PSINGLE_LIST_ENTRY
+STDCALL
 ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 			   IN PKSPIN_LOCK Lock)
 /*
@@ -200,14 +203,13 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 }
 
 
-#ifdef ExInterlockedPushEntrySList
 #undef ExInterlockedPushEntrySList
-#endif
 
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY FASTCALL
+PSINGLE_LIST_ENTRY
+STDCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 			    IN PSINGLE_LIST_ENTRY ListEntry,
 			    IN PKSPIN_LOCK Lock)
@@ -236,7 +238,8 @@ ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY FASTCALL
+PSINGLE_LIST_ENTRY
+STDCALL
 ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			  IN PKSPIN_LOCK Lock)
 /*
@@ -260,7 +263,8 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY FASTCALL
+PSINGLE_LIST_ENTRY
+STDCALL
 ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			   IN PSINGLE_LIST_ENTRY ListEntry,
 			   IN PKSPIN_LOCK Lock)

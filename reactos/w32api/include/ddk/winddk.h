@@ -4348,7 +4348,7 @@ RtlConvertUlongToLuid(
  */
 #ifndef RtlCopyMemory
 #define RtlCopyMemory(Destination, Source, Length) \
-  memcpy(Destination, Source, Length);
+  memcpy(Destination, Source, Length)
 #endif
 
 #ifndef RtlCopyBytes
@@ -5343,7 +5343,7 @@ ExInterlockedAddLargeStatistic(
 
 NTOSAPI
 ULONG
-DDKFASTAPI
+DDKAPI
 ExInterlockedAddUlong(
   IN PULONG  Addend,
   IN ULONG  Increment,
@@ -5366,7 +5366,7 @@ ExInterlockedFlushSList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5374,7 +5374,7 @@ ExInterlockedInsertHeadList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5382,7 +5382,7 @@ ExInterlockedInsertTailList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPopEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -5399,7 +5399,7 @@ ExInterlockedPopEntryList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPushEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -5419,7 +5419,7 @@ ExInterlockedPushEntryList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedRemoveHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
