@@ -124,6 +124,12 @@ OsLoadOptions = "/NODEBUG"
 ;OsLoadOptions = "/DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/DEBUGPORT=BOCHS"
 
+[NLS]
+AnsiCodepage     = c_1252.nls
+OemCodepage      = c_437.nls
+UnicodeCasetable = l_intl.nls
+;DefaultLayout    =
+
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
 AddReg=hivedef.inf,AddReg
