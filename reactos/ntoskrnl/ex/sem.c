@@ -91,9 +91,9 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
    HANDLE hSemaphore;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if(PreviousMode == UserMode)
    {
      _SEH_TRY
@@ -123,42 +123,33 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 			   0,
 			   0,
 			   (PVOID*)&Semaphore);
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
    {
      KeInitializeSemaphore(Semaphore,
 			   InitialCount,
 			   MaximumCount);
-   }
 
-   Status = ObInsertObject ((PVOID)Semaphore,
+     Status = ObInsertObject ((PVOID)Semaphore,
 			      NULL,
 			      DesiredAccess,
 			      0,
 			      NULL,
 			      &hSemaphore);
 
-   if(NT_SUCCESS(Status))
-   {
-     _SEH_TRY
+     ObDereferenceObject(Semaphore);
+
+     if(NT_SUCCESS(Status))
      {
-       ObDereferenceObject(Semaphore);
-       *SemaphoreHandle = hSemaphore;
+       _SEH_TRY
+       {
+         *SemaphoreHandle = hSemaphore;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-   } else {
-     _SEH_TRY
-     {
-       *SemaphoreHandle = INVALID_HANDLE_VALUE;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
    }
 
    return Status;
