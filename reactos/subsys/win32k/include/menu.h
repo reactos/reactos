@@ -36,6 +36,7 @@ typedef struct _MENU_ITEM
 typedef struct _MENU_OBJECT
 {
   HANDLE Self;
+  LIST_ENTRY ListEntry;
   int MenuItemCount;
   FAST_MUTEX MenuItemsLock;
   PMENU_ITEM MenuItemList;
@@ -97,6 +98,9 @@ W32kCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
 
 BOOL FASTCALL
 W32kSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
+
+BOOL FASTCALL
+W32kCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
 
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.42 2003/08/11 19:06:25 gdalsnes Exp $
+/* $Id: dllmain.c,v 1.43 2003/08/18 13:37:54 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -94,6 +94,8 @@ W32kProcessCallback (struct _EPROCESS *Process,
       DbgPrint ("  Destroy process\n");
       DbgPrint ("  IRQ level: %lu\n", KeGetCurrentIrql ());
 #endif
+
+      W32kCleanupMenus(Process, Win32Process);
 
       CleanupForProcess(Process, Process->UniqueProcessId);
     }
