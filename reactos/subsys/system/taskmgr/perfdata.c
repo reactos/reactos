@@ -122,7 +122,6 @@ void PerfDataRefresh(void)
         return;
 
     /* Get processor time information */
-    /* SysProcessorTimeInfo = new SYSTEM_PROCESSORTIME_INFO[SystemBasicInfo.bKeNumberProcessors]; */
     SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors);
     status = NtQuerySystemInformation(SystemProcessorTimeInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors, &ulSize);
     if (status != NO_ERROR)
@@ -136,13 +135,11 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        /* SysHandleInfoData = new BYTE[BufferSize]; */
         SysHandleInfoData = (LPBYTE)malloc(BufferSize);
 
         status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
 
         if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
-            /* delete[] SysHandleInfoData; */
             free(SysHandleInfoData);
         }
 
@@ -156,13 +153,11 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        /* pBuffer = new BYTE[BufferSize]; */
         pBuffer = (LPBYTE)malloc(BufferSize);
 
         status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
 
         if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
-            /* delete[] pBuffer; */
             free(pBuffer);
         }
 
@@ -184,7 +179,6 @@ void PerfDataRefresh(void)
      * Save system processor time info
      */
     if (SystemProcessorTimeInfo) {
-        /* delete[] SystemProcessorTimeInfo; */
         free(SystemProcessorTimeInfo);
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
@@ -193,7 +187,6 @@ void PerfDataRefresh(void)
      * Save system handle info
      */
     memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
-    /* delete[] SysHandleInfoData; */
     free(SysHandleInfoData);
     
     for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.bKeNumberProcessors; Idx++) {
@@ -239,11 +232,9 @@ void PerfDataRefresh(void)
 
     /* Now alloc a new PERFDATA array and fill in the data */
     if (pPerfDataOld) {
-        /* delete[] pPerfDataOld; */
         free(pPerfDataOld);
     }
     pPerfDataOld = pPerfData;
-    /* pPerfData = new PERFDATA[ProcessCount]; */
     pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
@@ -329,7 +320,6 @@ int MultiByteToWideChar(
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
     }
-    /* delete[] pBuffer; */
     free(pBuffer);
     LeaveCriticalSection(&PerfDataCriticalSection);
 }

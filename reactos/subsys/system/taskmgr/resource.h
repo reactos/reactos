@@ -28,6 +28,9 @@
 #define IDB_TRAYMASK                    150
 #define IDB_TRAYICON                    153
 #define IDB_FONT                        154
+#define IDD_DEBUG_CHANNELS_DIALOG       155
+#define IDC_DEBUG_CHANNELS_LIST         156
+
 #define IDC_ENDTASK                     1012
 #define IDC_SWITCHTO                    1013
 #define IDC_NEWTASK                     1014
@@ -176,15 +179,16 @@
 #define ID_PROCESS_PAGE_SETPRIORITY_NORMAL 32812
 #define ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL 32813
 #define ID_PROCESS_PAGE_SETPRIORITY_LOW 32814
-#define IDS_LICENSE                     32815
+#define ID_PROCESS_PAGE_DEBUGCHANNELS   32815
+#define IDS_LICENSE                     32816
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        155
-#define _APS_NEXT_COMMAND_VALUE         32815
+#define _APS_NEXT_RESOURCE_VALUE        157
+#define _APS_NEXT_COMMAND_VALUE         32817
 #define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

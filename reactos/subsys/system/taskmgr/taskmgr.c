@@ -45,6 +45,7 @@
 #include "column.h"
 #include "about.h"
 #include "trayicon.h"
+#include "dbgchnl.h"
 
 #define STATUS_WINDOW   2001
 
@@ -247,6 +248,9 @@ LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
         case ID_PROCESS_PAGE_SETPRIORITY_LOW:
             ProcessPage_OnSetPriorityLow();
             break;
+        case ID_PROCESS_PAGE_DEBUGCHANNELS:
+            ProcessPage_OnDebugChannels();
+            break;
         case ID_HELP_ABOUT:
             OnAbout();
             break;
@@ -431,6 +435,7 @@ BOOL OnCreate(HWND hWnd)
     hProcessPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PROCESS_PAGE), hTabWnd, (DLGPROC)ProcessPageWndProc);
     hPerformancePage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PERFORMANCE_PAGE), hTabWnd, (DLGPROC)PerformancePageWndProc);
 #endif
+
     /* Insert tabs */
     _tcscpy(szTemp, _T("Applications"));
     memset(&item, 0, sizeof(TCITEM));
@@ -641,7 +646,6 @@ void OnSize( UINT nType, int cx, int cy )
     cx = (rc.right - rc.left) + nXDifference;
     cy = (rc.bottom - rc.top) + nYDifference;
     SetWindowPos(hPerformancePage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-
 }
 
 void LoadSettings(void)

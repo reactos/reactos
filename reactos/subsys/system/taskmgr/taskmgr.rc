@@ -171,6 +171,7 @@ BEGIN
 
         END
         MENUITEM "Set &Affinity...",            ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "Edit Debug &Channels...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -278,13 +279,24 @@ BEGIN
     GROUPBOX        "CPU Usage History",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Memory Usage History",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
     PUSHBUTTON      "CPU Usage Display",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
-                    WS_EX_CLIENTEDGE
+		    WS_EX_CLIENTEDGE
     PUSHBUTTON      "MEM Usage Display",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU Usage History",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,0,WS_EX_CLIENTEDGE
     PUSHBUTTON      "MEM Usage History",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,0,WS_EX_CLIENTEDGE
+END
+
+IDD_DEBUG_CHANNELS_DIALOG DIALOG DISCARDABLE  0, 0, 247, 210
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug Channels"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+		    LVS_SORTASCENDING,7,7,233,177
+    PUSHBUTTON      "Close",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOG DISCARDABLE  0, 0, 231, 154
@@ -537,6 +549,11 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+#ifdef WINE
+#define res_dir .
+#else
+#define res_dir res
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -546,7 +563,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 /* BINRES taskmgr.ico */
-IDI_TASKMANAGER         ICON    DISCARDABLE res/taskmgr.ico
+IDI_TASKMANAGER         ICON    DISCARDABLE res_dir/taskmgr.ico
 /* {
  '00 00 01 00 02 00 20 20 10 00 00 00 00 00 E8 02'
  '00 00 26 00 00 00 10 10 10 00 00 00 00 00 28 01'
@@ -619,7 +636,7 @@ IDI_TASKMANAGER         ICON    DISCARDABLE res/taskmgr.ico
 } */
 
 /* BINRES window.ico */
-IDI_WINDOW              ICON    DISCARDABLE res/window.ico
+IDI_WINDOW              ICON    DISCARDABLE res_dir/window.ico
 /* {
  '00 00 01 00 01 00 20 20 10 00 00 00 00 00 E8 02'
  '00 00 16 00 00 00 28 00 00 00 20 00 00 00 40 00'
@@ -672,7 +689,7 @@ IDI_WINDOW              ICON    DISCARDABLE res/window.ico
 } */
 
 /* BINRES windowsm.ico */
-IDI_WINDOWSM            ICON    DISCARDABLE res/windowsm.ico
+IDI_WINDOWSM            ICON    DISCARDABLE res_dir/windowsm.ico
 /* {
  '00 00 01 00 01 00 10 10 10 00 00 00 00 00 28 01'
  '00 00 16 00 00 00 28 00 00 00 10 00 00 00 20 00'
@@ -743,7 +760,7 @@ END
 // Bitmap
 //
 /* BINRES traymask.bmp */
-IDB_TRAYMASK            BITMAP  DISCARDABLE res/traymask.bmp
+IDB_TRAYMASK            BITMAP  DISCARDABLE res_dir/traymask.bmp
 /* {
  '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
  '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
@@ -764,7 +781,7 @@ IDB_TRAYMASK            BITMAP  DISCARDABLE res/traymask.bmp
 } */
         
 /* BINRES trayicon.bmp */
-IDB_TRAYICON            BITMAP  DISCARDABLE res/trayicon.bmp
+IDB_TRAYICON            BITMAP  DISCARDABLE res_dir/trayicon.bmp
 /* {
  '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
  '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
@@ -785,7 +802,7 @@ IDB_TRAYICON            BITMAP  DISCARDABLE res/trayicon.bmp
 } */
 
 /* BINRES font.bmp */
-IDB_FONT                BITMAP  DISCARDABLE res/font.bmp
+IDB_FONT                BITMAP  DISCARDABLE res_dir/font.bmp
 /* {
  '42 4D 86 02 00 00 00 00 00 00 76 00 00 00 28 00'
  '00 00 60 00 00 00 0B 00 00 00 01 00 04 00 00 00'
@@ -902,7 +919,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Sets process to the BELOW NORMAL priority class"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sets process to the LOW priority class"
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 #endif    // English (U.S.) resources

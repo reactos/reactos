@@ -299,8 +299,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     bHung = FALSE;
 
-    /*IsHungAppWindow =  */(IsHungAppWindowProc)(FARPROC)GetProcAddress(GetModuleHandle(_T("USER32.DLL")), _T("IsHungAppWindow"));
-    /*IsHungAppWindow = */ (IsHungAppWindowProc)(FARPROC)GetProcAddress(GetModuleHandle("USER32.DLL"), _T("IsHungAppWindow"));
     IsHungAppWindow = (IsHungAppWindowProc)(FARPROC)GetProcAddress(GetModuleHandle(_T("USER32.DLL")), "IsHungAppWindow");
 
     if (IsHungAppWindow)
@@ -369,7 +367,6 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
     /* It is not already in the list so add it */
     else
     {
-        /* pAPLI = new APPLICATION_PAGE_LIST_ITEM; */
         pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)malloc(sizeof(APPLICATION_PAGE_LIST_ITEM));
 
         pAPLI->hWnd = hWnd;
@@ -409,7 +406,6 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
             ImageList_Remove(hImageListSmall, item.iItem);
 
             ListView_DeleteItem(hApplicationPageListCtrl, item.iItem);
-            /* delete pAPLI; */
             free(pAPLI);
             bItemRemoved = TRUE;
         }
@@ -725,7 +721,6 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
         }
     }
     TileWindows(NULL, MDITILE_HORIZONTAL, NULL, nWndCount, hWndArray);
-    /* delete[] hWndArray; */
     free(hWndArray);
 }
 
@@ -737,7 +732,6 @@ void ApplicationPage_OnWindowsTileVertically(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    /* hWndArray = new HWND[ListView_GetItemCount(hApplicationPageListCtrl)]; */
     hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
@@ -758,7 +752,6 @@ void ApplicationPage_OnWindowsTileVertically(void)
     }
 
     TileWindows(NULL, MDITILE_VERTICAL, NULL, nWndCount, hWndArray);
-    /* delete[] hWndArray; */
     free(hWndArray);
 }
 
@@ -812,7 +805,6 @@ void ApplicationPage_OnWindowsCascade(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    /* hWndArray = new HWND[ListView_GetItemCount(hApplicationPageListCtrl)]; */
     hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
@@ -831,7 +823,6 @@ void ApplicationPage_OnWindowsCascade(void)
         }
     }
     CascadeWindows(NULL, 0, NULL, nWndCount, hWndArray);
-    /* delete[] hWndArray; */
     free(hWndArray);
 }
 

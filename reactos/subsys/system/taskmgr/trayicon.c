@@ -163,7 +163,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);
 
     if (hIcon)
-        DeleteObject(hIcon);
+        DestroyIcon(hIcon);
 
     return bRetVal;
 }
@@ -207,7 +207,7 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     bRetVal = Shell_NotifyIcon(NIM_MODIFY, &nid);
     
     if (hIcon)
-        DeleteObject(hIcon);
+        DestroyIcon(hIcon);
     
     return bRetVal;
 }

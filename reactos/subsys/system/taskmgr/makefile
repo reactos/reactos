@@ -25,6 +25,7 @@ TARGET_OBJECTS = \
 	affinity.o \
 	applpage.o \
 	column.o \
+	dbgchnl.o \
 	debug.o \
 	endproc.o \
 	font.o \

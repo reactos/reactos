@@ -35,6 +35,7 @@
 #include "perfdata.h"
 #include "column.h"
 #include "proclist.h"
+#include "dbgchnl.h"
 #include <ctype.h>
 
 HWND hProcessPage;                        /* Process List Property Page */
@@ -440,6 +441,9 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
     if (si.dwNumberOfProcessors < 2)
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_SETAFFINITY, MF_BYCOMMAND);
+    
+    if (!DebugChannelsAreSupported())
+        RemoveMenu(hSubMenu, ID_PROCESS_PAGE_DEBUGCHANNELS, MF_BYCOMMAND);
 
     switch (dwProcessPriorityClass)    {
     case REALTIME_PRIORITY_CLASS:
