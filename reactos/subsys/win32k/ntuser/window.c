@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.113 2003/10/15 20:48:19 weiden Exp $
+/* $Id: window.c,v 1.114 2003/10/17 17:38:38 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,7 +69,6 @@ static LIST_ENTRY RegisteredMessageListHead;
  /* globally stored handles to the shell windows */
 HWND hwndShellWindow = 0;
 HWND hwndShellListView = 0;
-DWORD pidShellWindow = 0;
 
 
 NTSTATUS FASTCALL
@@ -208,6 +207,13 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
        */
       NtUserSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
     }
+
+  /* reset shell window handles */
+  if (Window->Self == hwndShellWindow)
+    hwndShellWindow = 0;
+
+  if (Window->Self == hwndShellListView)
+    hwndShellListView = 0;
 
   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
@@ -1971,7 +1977,7 @@ NtUserGetParent(HWND hWnd)
 HWND STDCALL
 NtUserGetShellWindow()
 {
-	return hwndShellWindow;
+  return hwndShellWindow;
 }
 
 
@@ -2711,23 +2717,29 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
  * @implemented
  */
 DWORD STDCALL
-NtUserSetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
+NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
-	PEPROCESS my_current = IoGetCurrentProcess();
+    /* test if we are permitted to change the shell window */
+    if (hwndShellWindow)
+	return FALSE;
 
-	 /* test if we are permitted to change the shell window */
-	if (pidShellWindow && my_current->UniqueProcessId!=pidShellWindow)
-		return FALSE;
+    /* move shell window into background */
+    if (hwndListView && hwndListView!=hwndShell) {
+        WinPosSetWindowPos(hwndListView, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
-	hwndShellWindow = hwndShell;
-	hwndShellListView = hwndShellListView;
+	if (NtUserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+	    return FALSE;
+    }
 
-	if (hwndShell)
-		pidShellWindow = my_current->UniqueProcessId;	/* request shell window for the calling process */
-	else
-		pidShellWindow = 0;	/* shell window is now free for other processes. */
+    if (NtUserGetWindowLong(hwndShell, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+	return FALSE;
 
-	return TRUE;
+    WinPosSetWindowPos(hwndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+
+    hwndShellWindow = hwndShell;
+    hwndShellListView = hwndListView;
+
+    return TRUE;
 }
 
 
@@ -2824,6 +2836,11 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	  OldValue = (LONG) WindowObject->ExStyle;
 	  Style.styleOld = OldValue;
 	  Style.styleNew = NewValue;
+
+	   /* remove extended window style bit WS_EX_TOPMOST for shell windows */
+	  if (hWnd==hwndShellWindow || hWnd==hwndShellListView)
+	    Style.styleNew &= ~WS_EX_TOPMOST;
+
 	  IntSendSTYLECHANGINGMessage(hWnd, GWL_EXSTYLE, &Style);
 	  WindowObject->ExStyle = (DWORD)Style.styleNew;
 	  IntSendSTYLECHANGEDMessage(hWnd, GWL_EXSTYLE, &Style);

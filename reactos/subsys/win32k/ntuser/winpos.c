@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.31 2003/09/21 06:44:51 gvg Exp $
+/* $Id: winpos.c,v 1.32 2003/10/17 17:38:38 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -662,7 +662,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect,
 				&NewClientRect);
 
-  /* FIXME: Relink windows. */
+  /* FIXME: Relink windows. (also take into account shell window in hwndShellWindow) */
 
   /* FIXME: Reset active DCEs */
 
