@@ -27,8 +27,9 @@ RCFLAGS = -D_WIN32_IE=0x0400
 TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \
-	gdi32.a \
-	$(COMCTL32_TARGET).a
+	gdi32.a
+
+TARGET_GCCLIBS = comctl32
 
 TARGET_OBJECTS = \
 	settings.o \
