@@ -1,0 +1,61 @@
+# FreeType 2 top Jamfile (c) 2001, 2002 David Turner
+#
+
+# We need to invoke a SubDir rule if the FT2 source directory top is not the
+# current directory.  This allows us to build FreeType 2 as part of a larger
+# project easily.
+#
+if $(FT2_TOP) != $(DOT)
+{
+  SubDir  FT2_TOP ;
+}
+
+FT2_INCLUDE = [ FT2_SubDir include ] ;
+FT2_SRC     = [ FT2_SubDir src ] ;
+
+FT2_LIB     = $(LIBPREFIX)freetype ;
+
+
+# We don't support libtool just yet.  It seems that this is not
+# so simple with Jam, but I'll study this topic later.
+#
+
+# used only when trying to debug the hinter(s)
+#
+if $(DEBUG_HINTER)
+{
+  CCFLAGS += -DDEBUG_HINTER ;
+}
+
+
+# We need "freetype2/include" in the current include path in order to
+# compile any part of FreeType 2.
+#
+SubDirHdr  += $(FT2_INCLUDE) ;
+
+# Uncomment the following line if you want to build individual source files
+# for each FreeType 2 module.
+#
+# FT2_MULTI = true ;
+
+# The file <freetype/config/ftheader.h> is used to define macros that are
+# later used in #include statements.  It needs to be parsed in order to
+# record these definitions.
+#
+HDRMACRO  [ FT2_SubDir  include freetype config ftheader.h ] ;
+HDRMACRO  [ FT2_SubDir  include freetype internal internal.h ] ;
+
+# Now include the Jamfile in "freetype2/src", used to drive the compilation
+# of each FreeType 2 component and/or module.
+#
+SubInclude  FT2_TOP $(FT2_SRC_DIR) ;
+
+
+# tests files (hinter debugging)
+#
+if $(DEBUG_HINTER)
+{
+  SubInclude FT2_TOP tests ;
+}
+
+# end of top Jamfile

@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# Call the 'configure' script located in 'builds/unix'.
+#
+# This should re-generate the following files:
+#
+#   config.mk
+#   Jamfile
+#   install
+#
+
+if test "x$GNUMAKE" = x; then
+  GNUMAKE=make
+fi
+
+if test -z "`$GNUMAKE -v 2>/dev/null | grep GNU`"; then
+  echo "Sorry, GNU make is required to build FreeType2." >&2
+  echo "Please try \`GNUMAKE=<GNU make command name> $0'." >&2
+  exit 1
+fi
+
+# Uh, oh.  This is taken from autoconf.  They know what they are doing...
+
+if expr a : '\(a\)' >/dev/null 2>&1; then
+  ft_expr=expr
+else
+  ft_expr=false
+fi
+
+ft2_dir=`(dirname "$0") 2>/dev/null ||
+$ft_expr X"$0" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+         X"$0" : 'X\(//\)[^/]' \| \
+         X"$0" : 'X\(//\)$' \| \
+         X"$0" : 'X\(/\)' \| \
+         .     : '\(.\)' 2>/dev/null ||
+echo X"$0" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+         /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+         /^X\(\/\/\)$/{ s//\1/; q; }
+         /^X\(\/\).*/{ s//\1/; q; }
+         s/.*/./; q'`
+
+abs_curr_dir=`pwd`
+abs_ft2_dir=`cd "$ft2_dir" && pwd`
+
+# build a dummy Makefile if we are not building in the source tree
+
+if test "$abs_curr_dir" != "$abs_ft2_dir"; then
+  echo "OBJ_DIR=$abs_curr_dir"          > Makefile
+  echo "TOP_DIR=$abs_ft2_dir"          >> Makefile
+  echo "OBJ_BUILD=$abs_curr_dir"       >> Makefile
+  echo "LIBTOOL=$abs_curr_dir/libtool" >> Makefile
+  echo "include $abs_ft2_dir/Makefile" >> Makefile
+fi
+
+# call make
+
+CFG="$@" $GNUMAKE setup unix
+
+# eof

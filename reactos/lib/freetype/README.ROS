@@ -1,0 +1,68 @@
+CREDITS
+
+The code in this tree is based (it is actually an exact copy with some
+ReactOS specific extra files) on the FreeType library, version 2.1.3.
+It was written and is being maintained by the FreeType team. The projects
+website is http://www.freetype.org.
+
+
+NOTES
+
+Please note that there are two Makefiles in the freetype directory:
+- Makefile.freetype which is the original Makefile from the FreeType
+  distribution
+- Makefile which is the ReactOS specific Makefile. It will use the
+  original Makefile.freetype when needed.
+Normally you will just use Makefile and not worry about Makefile.freetype.
+There will also be 2 FreeType libraries, lib/freetype/objs/libfreetype.a
+and dk/nkm/lib/freetype.a. The second one is the import library for
+freetype.dll and is the one that is used in the rest of ReactOS.
+lib/freetype/objs/libfreetype.a is a static library which is used to
+create the DLL.
+
+
+PORTING A NEW VERSION
+
+Please note that the procedure below is a one-time only procedure, to be
+performed by whoever imports a new FreeType version into the ReactOS
+source tree. Once the new version has been committed to CVS all other
+developers can just use the normal build procedure.
+
+First, save the old version:
+
+move lib\freetype lib\freetype.old
+
+Unpack the FreeType distribution and copy the files to lib/freetype
+(note: without the version number which is present in the pathnames in
+the distribution archive).
+Setup the FreeType build by copying the correct configuration file:
+
+copy lib\freetype\builds\win32\w32-mingw32.mk lib\freetype\config.mk
+
+Copy the ReactOS specific files from the old directory to the new:
+
+move lib\freetype\Makefile lib\freetype\Makefile.freetype
+mkdir lib\freetype\i386
+copy lib\freetype.old\rosglue.c lib\freetype
+copy lib\freetype.old\i386\setjmplongjmp.s lib\freetype\i386
+copy lib\freetype.old\Makefile lib\freetype
+copy lib\freetype.old\README.ROS lib\freetype
+copy lib\freetype.old\.cvsignore lib\freetype
+copy lib\freetype.old\objs\.cvsignore lib\freetype\objs
+copy lib\freetype.old\i386\.cvsignore lib\freetype\i386
+
+Next you need to create the freetype.def file. Since this depends on the
+"gawk" command, you'll need to have MSYS installed, which is not one of
+the normally required packages to build ReactOS. You can get MSYS from the
+MinGW site at http://sourceforge.net/projects/mingw. Once you have MSYS
+installed you can create the new freetype.def file:
+
+make freetype_def
+
+Well, that's all there is to it. You can delete the old version in
+lib\freetype.old. Please adjust the version number in the heading of this
+file, so it is obvious to everyone which FreeType version we're using.
+After testing, you can commit the new/changed files to CVS. ALthough files
+config.mk and freetype.def are generated, they should be included in CVS.
+
+$Id: README.ROS,v 1.1 2003/04/01 08:38:28 gvg Exp $

@@ -1,0 +1,21 @@
+# FreeType 2 src/sfnt Jamfile (c) 2001, 2002 David Turner
+#
+
+SubDir  FT2_TOP $(FT2_SRC_DIR) sfnt ;
+
+{
+  local  _sources ;
+
+  if $(FT2_MULTI)
+  {
+    _sources = sfobjs sfdriver ttcmap ttcmap0 ttpost ttload ttsbit ;
+  }
+  else
+  {
+    _sources = sfnt ;
+  }
+
+  Library  $(FT2_LIB) : $(_sources).c ;
+}
+
+# end of src/sfnt Jamfile

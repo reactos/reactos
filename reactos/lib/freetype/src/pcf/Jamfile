@@ -1,0 +1,21 @@
+# FreeType 2 src/pcf Jamfile (c) 2001 David Turner
+#
+
+SubDir  FT2_TOP $(FT2_SRC_DIR) pcf ;
+
+{
+  local  _sources ;
+
+  if $(FT2_MULTI)
+  {
+    _sources = pcfdriver pcfread pcfutil ;
+  }
+  else
+  {
+    _sources = pcf ;
+  }
+
+  Library  $(FT2_LIB) : $(_sources).c ;
+}
+
+# end of src/pcf Jamfile

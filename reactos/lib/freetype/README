@@ -1,0 +1,43 @@
+
+  Special notes to Unix users
+  ===========================
+
+  Please   read  the  file   "README.UNX",  it   contains  important
+  information  regarding  the   installation  of  FreeType  on  Unix
+  systems, especially GNU based operating systems like GNU/Linux.
+
+  FreeType 2's library is called `libfreetype', FreeType 1's library
+  is called `libttf'.  They are *not* compatible!
+
+
+  FreeType 2.1.3
+  ==============
+
+  Please   read  the  docs/CHANGES   file,  it   contains  IMPORTANT
+  INFORMATION.
+
+  Read  the  files "docs/INSTALL"  or  "docs/BUILD" for installation
+  instructions.
+
+  Note  that the  FreeType 2  documentation  is now  available as  a
+  separate package from our sites.  See:
+
+    ftp://ftp.freetype.org/pub/freetype2/ftdocs-2.1.3.tar.bz2
+    ftp://ftp.freetype.org/pub/freetype2/ftdocs-2.1.3.tar.gz
+    ftp://ftp.freetype.org/pub/freetype2/ftdoc213.zip
+
+
+  Reports
+  =======
+
+  Please  report  bugs  by  e-mail to  `devel@freetype.org'.   Don't
+  forget to send  a detailed explanation of the  problem -- there is
+  nothing worse  than receiving a  terse message that only  says "it
+  doesn't work".
+
+
+
+  Enjoy!
+
+
+    The FreeType Team

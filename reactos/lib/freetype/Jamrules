@@ -1,0 +1,53 @@
+# FreeType 2 JamRules (c) 2001 David Turner
+#
+# This file contains the Jam rules needed to build the FreeType 2 library.
+# It is shared by all Jamfiles and is included only once in the build
+# process.
+#
+
+
+# Determine prefix of library file.  We must use "libxxxxx" on Unix systems,
+# while all other simply use the real name.
+#
+if $(UNIX)
+{
+  LIBPREFIX ?= lib ;
+}
+else
+{
+  LIBPREFIX ?= "" ;
+}
+
+# FT2_TOP contains the location of the FreeType source directory.  You can
+# set it to a specific value if you want to compile the library as part of a
+# larger project.
+#
+FT2_TOP ?= $(DOT) ;
+
+# Define a new rule used to declare a sub directory of the Nirvana source
+# tree.
+#
+rule FT2_SubDir
+{
+  if $(FT2_TOP) = $(DOT)
+  {
+    return [ FDirName  $(<) ] ;
+  }
+  else
+  {
+    return [ FDirName  $(FT2_TOP) $(<) ] ;
+  }
+}
+
+# The directory "include" must be in the current include path when compiling
+# any part of FreeType.  We thus update the HDRS variable there.
+#
+HDRS += [ FT2_SubDir  include ] ;
+
+# We also set ALL_LOCATE_TARGET in order to place all object and library
+# files in "objs".
+#
+ALL_LOCATE_TARGET ?= [ FT2_SubDir  objs ] ;
+
+
+# end of Jamrules
