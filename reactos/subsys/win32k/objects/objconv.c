@@ -13,7 +13,7 @@
 #include <win32k/pen.h>
 #include "../eng/objects.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 

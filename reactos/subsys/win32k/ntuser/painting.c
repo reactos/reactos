@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.9 2003/03/18 08:33:27 gvg Exp $
+/* $Id: painting.c,v 1.10 2003/03/20 08:22:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -760,7 +760,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     {
       return(NULL);
     }
-  if (Window->Flags & WINDOWOBJECT_NEED_ERASEBACKGRD) { DbgPrint("[ayes:0]"); } else { DbgPrint("[ano:0]"); } /*testing*/
   IsIcon = Window->Style & WS_MINIMIZE &&
     NtUserGetClassLong(Window->Self, GCL_HICON);
 
@@ -818,7 +817,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   if (Window->Flags & WINDOWOBJECT_NEED_ERASEBACKGRD)
     {
       BOOLEAN Result;
-DbgPrint("[dne:0]");
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
       Result = NtUserSendMessage(hWnd,
 				 IsIcon ? WM_ICONERASEBKGND : WM_ERASEBKGND,
@@ -828,7 +826,6 @@ DbgPrint("[dne:0]");
     }
   else
     {
-DbgPrint("[dne:1]");
       lPs->fErase = FALSE;
     }
 

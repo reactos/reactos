@@ -6,7 +6,7 @@
 //#include <win32k/debug.h>
 #include <win32k/paint.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL

@@ -4,7 +4,7 @@
 #include <win32k/gdiobj.h>
 #include <include/rect.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 /* FUNCTIONS *****************************************************************/

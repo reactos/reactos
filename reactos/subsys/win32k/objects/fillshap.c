@@ -95,7 +95,7 @@ W32kPolygon(HDC  hDC,
   RECTL     DestRect;
   int       CurrentPoint;
 
-  DbgPrint("In W32kPolygon()\n");
+  DPRINT("In W32kPolygon()\n");
   
   if(0 == dc)
    return FALSE;

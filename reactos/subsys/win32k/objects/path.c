@@ -12,7 +12,7 @@
 #include <math.h>
 #include <float.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 #define NUM_ENTRIES_INITIAL 16  /* Initial size of points / flags arrays  */

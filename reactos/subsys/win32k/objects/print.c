@@ -3,7 +3,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/print.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 INT

@@ -4,7 +4,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/wingl.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 INT
