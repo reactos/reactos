@@ -44,7 +44,7 @@ ntdll.coff: ntdll.rc ../../include/reactos/resource.h
 ntdll.a: $(OBJECTS)
 	$(AR) csr ntdll.a $(OBJECTS)
 
-ntdll.dll: $(DLLMAIN) $(OBJECTS) 
+ntdll.dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
 	$(LD) -r $(DLLMAIN) $(OBJECTS) -o ntdll.o
 	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
 	           --output-lib ntdll.a --add-stdcall-alias \
