@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.2 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: fcb.c,v 1.3 2002/04/26 23:21:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -283,7 +283,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
 			PVFATFCB  directoryFCB,
 			PWSTR  longName,
 			PFAT_DIR_ENTRY  dirEntry,
-            ULONG dirIndex,
+			ULONG dirIndex,
 			PVFATFCB * fileFCB)
 {
   PVFATFCB  rcFCB;

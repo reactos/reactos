@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: fsctl.c,v 1.2 2002/04/26 23:21:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,6 +118,8 @@ CdfsGetSVDData(PUCHAR Buffer,
       JolietLevel = 3;
     }
 
+  /* Don't support Joliet yet! */
+//#if 0
   Vcb->CdInfo.JolietLevel = JolietLevel;
 
   if (JolietLevel != 0)
@@ -128,6 +130,7 @@ CdfsGetSVDData(PUCHAR Buffer,
       DPRINT1("RootStart: %lu\n", Svd->RootDirRecord.ExtentLocationL);
       DPRINT1("RootSize: %lu\n", Svd->RootDirRecord.DataLengthL);
     }
+//#endif
 }
 
 
@@ -199,41 +202,47 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static BOOLEAN
+static NTSTATUS
 CdfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 /*
  * FUNCTION: Tests if the device contains a filesystem that can be mounted 
  * by this fsd
  */
 {
-  PUCHAR bytebuf; // [CDFS_BASIC_SECTOR];
+  PUCHAR Buffer;
   NTSTATUS Status;
-  int ret;
 
-  bytebuf = ExAllocatePool( NonPagedPool, CDFS_BASIC_SECTOR );
-  if( !bytebuf ) return FALSE;
+  Buffer = ExAllocatePool(NonPagedPool,
+			  CDFS_BASIC_SECTOR);
+  if (Buffer == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   DPRINT1("CDFS: Checking on mount of device %08x\n", DeviceToMount);
 
   Status = CdfsReadSectors(DeviceToMount,
 			   CDFS_PRIMARY_DESCRIPTOR_LOCATION,
 			   1,
-			   bytebuf);
-  bytebuf[6] = 0;
-  DPRINT1( "CD-identifier: [%.5s]\n", bytebuf + 1 );
+			   Buffer);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
-  ret = 
-    Status == STATUS_SUCCESS &&
-    bytebuf[0] == 1 &&
-    bytebuf[1] == 'C' &&
-    bytebuf[2] == 'D' &&
-    bytebuf[3] == '0' &&
-    bytebuf[4] == '0' &&
-    bytebuf[5] == '1';
+  Buffer[6] = 0;
+  DPRINT1("CD-identifier: [%.5s]\n", Buffer + 1);
 
-  ExFreePool( bytebuf );
+  Status = (Buffer[0] == 1 &&
+	    Buffer[1] == 'C' &&
+	    Buffer[2] == 'D' &&
+	    Buffer[3] == '0' &&
+	    Buffer[4] == '0' &&
+	    Buffer[5] == '1') ? STATUS_SUCCESS : STATUS_UNRECOGNIZED_VOLUME;
 
-  return ret;
+  ExFreePool(Buffer);
+
+  return(Status);
 }
 
 
@@ -260,9 +269,9 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Stack = IoGetCurrentIrpStackLocation(Irp);
   DeviceToMount = Stack->Parameters.MountVolume.DeviceObject;
 
-  if (CdfsHasFileSystem(DeviceToMount) == FALSE)
+  Status = CdfsHasFileSystem(DeviceToMount);
+  if (!NT_SUCCESS(Status))
     {
-      Status = STATUS_UNRECOGNIZED_VOLUME;
       goto ByeBye;
     }
 
@@ -358,6 +367,106 @@ ByeBye:
 	IoDeleteDevice(NewDeviceObject);
     }
 
+  DPRINT1("CdfsMountVolume() done (Status: %lx)\n", Status);
+
+  return(Status);
+}
+
+
+static NTSTATUS
+CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
+		PIRP Irp)
+{
+  PDEVICE_OBJECT DeviceToVerify;
+  PIO_STACK_LOCATION Stack;
+  PUCHAR Buffer;
+  ULONG Sector;
+  ULONG i;
+  NTSTATUS Status;
+
+  union
+    {
+      ULONG Value;
+      UCHAR Part[4];
+    } Serial;
+
+  DPRINT1("CdfsVerifyVolume() called\n");
+
+  if (DeviceObject != CdfsGlobalData->DeviceObject)
+    {
+      return(STATUS_INVALID_DEVICE_REQUEST);
+    }
+
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  DeviceToVerify = Stack->Parameters.VerifyVolume.DeviceObject;
+
+  Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION;
+
+  Buffer = ExAllocatePool(NonPagedPool,
+			  CDFS_BASIC_SECTOR);
+  if (Buffer == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  Status = STATUS_WRONG_VOLUME;
+
+  do
+    {
+      /* Read the Primary Volume Descriptor (PVD) */
+      Status = CdfsReadSectors(DeviceToVerify,
+			       Sector,
+			       1,
+			       Buffer);
+      if (!NT_SUCCESS(Status))
+	{
+	  goto ByeBye;
+	}
+
+      if (Buffer[0] == 1 &&
+	  Buffer[1] == 'C' &&
+	  Buffer[2] == 'D' &&
+	  Buffer[3] == '0' &&
+	  Buffer[4] == '0' &&
+	  Buffer[5] == '1')
+	{
+	  break;
+	}
+
+      Sector++;
+    }
+  while (Buffer[0] != 255);
+
+  if (Buffer[0] == 255)
+    goto ByeBye;
+
+
+  /* Calculate the volume serial number */
+  Serial.Value = 0;
+  for (i = 0; i < 2048; i += 4)
+    {
+      /* DON'T optimize this to ULONG!!! (breaks overflow) */
+      Serial.Part[0] += Buffer[i+3];
+      Serial.Part[1] += Buffer[i+2];
+      Serial.Part[2] += Buffer[i+1];
+      Serial.Part[3] += Buffer[i+0];
+    }
+
+  DPRINT1("Current serial number %08lx  Vpb serial number %08lx\n",
+	  Serial.Value, DeviceToVerify->Vpb->SerialNumber);
+
+  if (Serial.Value == DeviceToVerify->Vpb->SerialNumber)
+    Status = STATUS_SUCCESS;
+
+ByeBye:
+
+  ExFreePool(Buffer);
+
+
+//  Status = STATUS_INVALID_DEVICE_REQUEST;
+
+  DPRINT1("CdfsVerifyVolume() done (Status: %lx)\n", Status);
+
   return(Status);
 }
 
@@ -369,7 +478,7 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION Stack;
   NTSTATUS Status;
 
-  DPRINT1("CdfsFileSystemControl() called\n");
+  DPRINT("CdfsFileSystemControl() called\n");
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -386,8 +495,8 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       case IRP_MN_VERIFY_VOLUME:
-	DPRINT("CDFS: IRP_MN_VERIFY_VOLUME\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
+	DPRINT1("CDFS: IRP_MN_VERIFY_VOLUME\n");
+	Status = CdfsVerifyVolume(DeviceObject, Irp);
 	break;
 
       default:

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.2 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: common.c,v 1.3 2002/04/26 23:21:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,6 +93,19 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 
   if (!NT_SUCCESS(Status))
     {
+      if (Status == STATUS_VERIFY_REQUIRED)
+        {
+	  PDEVICE_OBJECT DeviceToVerify;
+	  NTSTATUS NewStatus;
+
+	  DPRINT1("STATUS_VERIFY_REQUIRED\n");
+	  DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
+	  IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
+
+	  NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
+	  DPRINT1("IoVerifyVolume() retuned (Status %lx)\n", NewStatus);
+        }
+
       DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
       DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
 	     DeviceObject, DiskSector, Buffer,
