@@ -1468,8 +1468,8 @@ STDCALL
 NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
-  LPSCROLLINFO lpsi, 
-  DWORD *Changed);
+  LPCSCROLLINFO lpsi, 
+  BOOL bRedraw);
 
 BOOL
 STDCALL

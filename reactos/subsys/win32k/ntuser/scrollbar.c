@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.19 2003/12/08 18:21:25 navaraf Exp $
+/* $Id: scrollbar.c,v 1.20 2003/12/22 19:55:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,6 +52,11 @@
 #define SBRG_SCROLLBOX     3 /* the scroll box */
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
+
+#define SA_SSI_HIDE		0x0001
+#define SA_SSI_SHOW		0x0002
+#define SA_SSI_REFRESH		0x0004
+#define SA_SSI_REPAINT_ARROWS	0x0008
 
 #define SBU_TOPRIGHT   0x10
 #define SBU_BOTTOMLEFT 0x20
@@ -307,8 +312,9 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
 }
 
 DWORD FASTCALL
-IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi, DWORD *Action)
+IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
+#if 0
   PSCROLLBARINFO Info = NULL;
   LPSCROLLINFO psi;
   BOOL Chg = FALSE;
@@ -428,6 +434,171 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi, DWORD *Acti
   Ret = psi->nPos;
   
   return Ret;
+#else
+   /*
+    * Update the scrollbar state and set action flags according to
+    * what has to be done graphics wise.
+    */
+
+   LPSCROLLINFO Info;
+/*   UINT new_flags;*/
+   BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
+
+   if (lpsi->cbSize != sizeof(SCROLLINFO) && 
+       lpsi->cbSize != (sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos)))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+   if (lpsi->fMask & ~(SIF_ALL | SIF_DISABLENOSCROLL))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+   switch(nBar)
+   {
+      case SB_HORZ:
+         if (Window->pHScroll == NULL)
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return 0;
+         }
+         Info = (LPSCROLLINFO)(Window->pHScroll + 1);
+         break;
+      case SB_VERT:
+         if (Window->pVScroll == NULL)
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return 0;
+         }
+         Info = (LPSCROLLINFO)(Window->pVScroll + 1);
+         break;
+      case SB_CTL:
+         UNIMPLEMENTED;
+         break;
+      default:
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return 0;
+   }
+
+   /* Set the page size */
+   if (lpsi->fMask & SIF_PAGE)
+   {
+      if (Info->nPage != lpsi->nPage)
+      {
+         Info->nPage = lpsi->nPage;
+#if 0
+         *Action |= SA_SSI_REFRESH;
+#endif
+         bChangeParams = TRUE;
+      }
+   }
+
+   /* Set the scroll pos */
+   if (lpsi->fMask & SIF_POS)
+   {
+      if (Info->nPos != lpsi->nPos)
+      {
+         Info->nPos = lpsi->nPos;
+#if 0
+         *Action |= SA_SSI_REFRESH;
+#endif
+      }
+   }
+
+   /* Set the scroll range */
+   if (lpsi->fMask & SIF_RANGE)
+   {
+      /* Invalid range -> range is set to (0,0) */
+      if (lpsi->nMin > lpsi->nMax ||
+          (UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000)
+      {
+         Info->nMin = 0;
+         Info->nMax = 0;
+         bChangeParams = TRUE;
+      }
+      else
+      {
+         if (Info->nMin != lpsi->nMin || Info->nMax != lpsi->nMax)
+         {
+#if 0
+            *Action |= SA_SSI_REFRESH;
+#endif
+            Info->nMin = lpsi->nMin;
+            Info->nMax = lpsi->nMax;
+            bChangeParams = TRUE;
+         }
+      }
+   }
+
+   /* Make sure the page size is valid */
+   if (Info->nPage < 0)
+   {
+      Info->nPage = 0;
+   }
+   else if (Info->nPage > Info->nMax - Info->nMin + 1)
+   {
+      Info->nPage = Info->nMax - Info->nMin + 1;
+   }
+
+   /* Make sure the pos is inside the range */
+   if (Info->nPos < Info->nMin)
+   {
+      Info->nPos = Info->nMin;
+   }
+   else if (Info->nPos > Info->nMax - max(Info->nPage - 1, 0))
+   {
+      Info->nPos = Info->nMax - max(Info->nPage - 1, 0);
+   }
+
+   /*
+    * Don't change the scrollbar state if SetScrollInfo is just called
+    * with SIF_DISABLENOSCROLL
+    */
+   if (!(lpsi->fMask & SIF_ALL))
+   {
+      return Info->nPos;
+   }
+
+   /* Check if the scrollbar should be hidden or disabled */
+   if (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL))
+   {
+/*      new_flags = Info->flags;*/
+      if (Info->nMin >= Info->nMax - max(Info->nPage - 1, 0))
+      {
+         /* Hide or disable scroll-bar */
+         if (lpsi->fMask & SIF_DISABLENOSCROLL)
+	 {
+/*            new_flags = ESB_DISABLE_BOTH;*/
+#if 0
+	    *Action |= SA_SSI_REFRESH;
+#endif
+	 }
+         else if ((nBar != SB_CTL) && bChangeParams)
+         {
+            NtUserShowScrollBar(Window->Self, nBar, FALSE);
+            return Info->nPos;
+         }
+      }
+      else  /* Show and enable scroll-bar */
+      {
+/*         new_flags = 0;*/
+         if ((nBar != SB_CTL) && bChangeParams)
+            NtUserShowScrollBar(Window->Self, nBar, TRUE);
+      }
+
+#if 0
+      if (infoPtr->flags != new_flags) /* check arrow flags */
+      {
+         infoPtr->flags = new_flags;
+         *Action |= SA_SSI_REPAINT_ARROWS;
+      }
+#endif
+   }
+
+   /* Return current position */
+   return Info->nPos;
+#endif
 }
 
 BOOL FASTCALL
@@ -750,13 +921,13 @@ STDCALL
 NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
-  LPSCROLLINFO lpsi, 
-  DWORD *Changed)
+  LPCSCROLLINFO lpsi, 
+  BOOL bRedraw)
 {
   PWINDOW_OBJECT Window;
   NTSTATUS Status;
   SCROLLINFO ScrollInfo;
-  DWORD Ret, Action;
+  DWORD Ret;
   
   Window = IntGetWindowObject(hwnd);
 
@@ -774,20 +945,7 @@ NtUserSetScrollInfo(
     return 0;
   }
   
-  Ret = IntSetScrollInfo(Window, fnBar, &ScrollInfo, &Action);
-  
-  if(Changed)
-  {
-    if(Action && (Window->Style & WS_VISIBLE))
-    {
-      MmCopyToCaller(Changed, &Action, sizeof(DWORD));
-    }
-    else
-    {
-      MmCopyToCaller(Changed, &Action, sizeof(DWORD));
-    }
-  }
-  
+  Ret = IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw);
   IntReleaseWindowObject(Window);
   
   return Ret;
@@ -798,68 +956,43 @@ DWORD
 STDCALL
 NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
 {
-  BOOL fShowV = (wBar == SB_VERT) ? 0 : bShow;
-  BOOL fShowH = (wBar == SB_HORZ) ? 0 : bShow;
-  PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
+   PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
 
-  switch (wBar)
-    {
-    case SB_CTL:
-      WinPosShowWindow (hWnd, fShowH ? SW_SHOW : SW_HIDE);
+   if (!Window)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   if (wBar == SB_CTL)
+   {
+      WinPosShowWindow(hWnd, bShow ? SW_SHOW : SW_HIDE);
+      IntReleaseWindowObject(Window);
       return TRUE;
+   }
 
-    case SB_BOTH:
-    case SB_HORZ:
-      if (fShowH)
-	{
-	  fShowH = !(Window->Style & WS_HSCROLL);
-	  Window->Style |= WS_HSCROLL;
-	}
-      else			/* hide it */
-	{
-	  fShowH = (Window->Style & WS_HSCROLL);
-	  Window->Style &= ~WS_HSCROLL;
-	}
-      if (wBar == SB_HORZ)
-	{
-	  fShowV = FALSE;
-	  break;
-	}
-      /* fall through */
+   if (wBar == SB_BOTH || wBar == SB_HORZ)
+   {
+      if (bShow)
+	 Window->Style |= WS_HSCROLL;
+      else
+	 Window->Style &= ~WS_HSCROLL;
+   }
 
-    case SB_VERT:
-      if (fShowV)
-	{
-	  fShowV = !(Window->Style & WS_VSCROLL);
-	  Window->Style |= WS_VSCROLL;
-	}
-      else			/* hide it */
-	{
-	  fShowV = (Window->Style & WS_VSCROLL);
-	  Window->Style &= ~WS_VSCROLL;
-	}
-      if (wBar == SB_VERT)
-	fShowH = FALSE;
-      break;
+   if (wBar == SB_BOTH || wBar == SB_VERT)
+   {
+      if (bShow)
+	 Window->Style |= WS_VSCROLL;
+      else
+	 Window->Style &= ~WS_VSCROLL;
+   }
 
-    default:
-      return FALSE;		/* Nothing to do! */
-    }
+   /* Frame has been changed, let the window redraw itself */
+   WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+      SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-  IntReleaseWindowObject(Window);
-  
-  if (fShowH || fShowV)		/* frame has been changed, let the window redraw itself */
-  {
-    WinPosSetWindowPos (hWnd, 0, 0, 0, 0, 0,
-                        SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-    return TRUE;
-  }
-  return FALSE;			/* no frame changes */
+   IntReleaseWindowObject(Window);
+   return TRUE;
 }
 
 /* EOF */
