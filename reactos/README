@@ -1,13 +1,21 @@
-About Reactos
+========================
+ReactOS Version 0.1.x
+Updated March 19th, 2003
+========================
 
-1. What is Reactos
+1. What is ReactOS?
 
-A project aiming to make an approximate clone of Windows NT, compatible
-with most Windows applications.
+   ReactOS is an Open Source effort to develop a quality operating system
+that is compatible with Windows NT applications and drivers.
 
-The project has a website at http://www.reactos.com/
+   The ReactOS project, although currently focused on Windows NT 4.0
+compatibility, is always keeping an eye towards compatibility with
+future Windows NT releases, that is, Windows 2000 (NT 5.0) and
+Windows XP (NT 5.1).
 
-2. Building Reactos
+More information is available at http://www.reactos.com.
+
+2. Building ReactOS
 
 See the INSTALL file for more details.
 
@@ -18,7 +26,3 @@ See the doc subdirectory for some sparse notes
 4. Who is responsible
 
 See the CREDITS file
-
-5. Recent developments
-
-See the NEWS file
