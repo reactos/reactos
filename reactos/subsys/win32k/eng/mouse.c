@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.51 2003/12/21 21:26:29 weiden Exp $
+/* $Id: mouse.c,v 1.52 2004/01/15 16:29:10 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -100,10 +100,6 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   }
   else
     return FALSE;
-  
-  ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-  CurInfo->SafetySwitch2 = TRUE;
-  ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
     
   if (SurfObj == NULL)
     {
@@ -146,10 +142,17 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       && CurInfo->y - (INT) Cursor->IconInfo.yHotspot <= HazardY2)
     {
       /* Mouse is not allowed to move if GDI is busy drawing */
-      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExAcquireFastMutex(&CurInfo->CursorMutex);
+      if (0 != CurInfo->SafetyRemoveCount++)
+        {
+          /* Was already removed */
+          ExReleaseFastMutex(&CurInfo->CursorMutex);
+          ObDereferenceObject(InputWindowStation);
+          return FALSE;
+        }
       CurInfo->SafetySwitch = TRUE;
       SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
-      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
   ObDereferenceObject(InputWindowStation);
@@ -173,11 +176,10 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   else
     return FALSE;
     
+  ExAcquireFastMutex(&CurInfo->CursorMutex);
   if(SurfObj == NULL)
   {
-    ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-    CurInfo->SafetySwitch2 = FALSE;
-    ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+    ExReleaseFastMutex(&CurInfo->CursorMutex);
     ObDereferenceObject(InputWindowStation);
     return FALSE;
   }
@@ -186,9 +188,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
 
   if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
     {
-      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-      CurInfo->SafetySwitch2 = FALSE;
-      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExReleaseFastMutex(&CurInfo->CursorMutex);
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
@@ -196,25 +196,25 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   if (SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus)
     {
       /* Hardware cursor, it wasn't removed so need to restore it */
-      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-      CurInfo->SafetySwitch2 = FALSE;
-      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExReleaseFastMutex(&CurInfo->CursorMutex);
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
   
-  ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
   if (CurInfo->SafetySwitch)
     {
+      if (1 < CurInfo->SafetyRemoveCount--)
+        {
+          /* Someone else removed it too, let them restore it */
+          ExReleaseFastMutex(&CurInfo->CursorMutex);
+          ObDereferenceObject(InputWindowStation);
+          return FALSE;
+        }
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
       CurInfo->SafetySwitch = FALSE;
-      CurInfo->SafetySwitch2 = FALSE;
     }
-  else
-    {
-      CurInfo->SafetySwitch2 = FALSE;      
-    }
-  ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+
+  ExReleaseFastMutex(&CurInfo->CursorMutex);
   ObDereferenceObject(InputWindowStation);
   return(TRUE);
 }
@@ -262,9 +262,9 @@ MouseMoveCursor(LONG X, LONG Y)
       CurInfo->y = Y;
       if(CurInfo->Enabled)
       {
-        ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+        ExAcquireFastMutex(&CurInfo->CursorMutex);
         SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
-        ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+        ExReleaseFastMutex(&CurInfo->CursorMutex);
       }
       /* send MOUSEMOVE message */
       KeQueryTickCount(&LargeTickCount);
@@ -417,12 +417,12 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         Moved = (0 != mouse_cx) || (0 != mouse_cy);
         if(Moved && MouseEnabled)
         {
-          if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
+          if (!CurInfo->SafetySwitch && 0 == CurInfo->SafetyRemoveCount &&
               ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
           {
-            ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+            ExAcquireFastMutex(&CurInfo->CursorMutex);
             SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
-            ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+            ExReleaseFastMutex(&CurInfo->CursorMutex);
             mouse_cx = 0;
             mouse_cy = 0;
           }
@@ -444,12 +444,12 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
     MsqInsertSystemMessage(&Msg, TRUE);
     
-    if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
+    if (!CurInfo->SafetySwitch && 0 == CurInfo->SafetyRemoveCount &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
     {
-      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExAcquireFastMutex(&CurInfo->CursorMutex);
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
-      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+      ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
   }
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.54 2003/12/13 22:38:29 weiden Exp $
+ *  $Id: winsta.c,v 1.55 2004/01/15 16:29:10 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -410,7 +410,7 @@ NtUserCreateWindowStation(
    /* FIXME: Obtain the following information from the registry */
    WindowStationObject->SystemCursor.SwapButtons = FALSE;
    WindowStationObject->SystemCursor.SafetySwitch = FALSE;
-   WindowStationObject->SystemCursor.SafetySwitch2 = TRUE;
+   WindowStationObject->SystemCursor.SafetyRemoveCount = 0;
    WindowStationObject->SystemCursor.DblClickSpeed = 500;
    WindowStationObject->SystemCursor.DblClickWidth = 4;
    WindowStationObject->SystemCursor.DblClickHeight = 4;
