@@ -71,9 +71,9 @@ typedef short SHORT;
 
 typedef INT32 INT, *PINT;
 typedef LONG32 LONG, *PLONG;
-typedef ULONG32 DWORD, *PDWORD;
+typedef unsigned long DWORD, *PDWORD;
 typedef UINT32 UINT, *PUINT;
-typedef ULONG32 ULONG, *PULONG;
+typedef unsigned long ULONG, *PULONG;
 
 #ifndef _WCHAR_T_
 #define _WCHAR_T_

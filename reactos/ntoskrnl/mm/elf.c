@@ -37,7 +37,7 @@ static __inline BOOLEAN Intsafe_CanAddULong32
 
 static __inline BOOLEAN Intsafe_AddULong32
 (
- OUT PULONG Result,
+ OUT PULONG32 Result,
  IN ULONG Addend1,
  IN ULONG Addend2
 )
@@ -83,7 +83,7 @@ static __inline BOOLEAN Intsafe_CanMulULong32
 
 static __inline BOOLEAN Intsafe_MulULong32
 (
- OUT PULONG Result,
+ OUT PULONG32 Result,
  IN ULONG Factor1,
  IN ULONG Factor2
 )
@@ -239,7 +239,7 @@ static __inline ULONG64 ElfFmtpSafeReadULong64
 )
 {
  PBYTE p;
- ULONG nSafeInput;
+ ULONG64 nSafeInput;
 
  RtlRetrieveUlonglong(&nSafeInput, Input);
 
@@ -257,7 +257,7 @@ static __inline ULONG64 ElfFmtpSafeReadULong64
 
 static __inline ULONG ElfFmtpSafeReadULong
 (
- IN CONST ULONG * Input,
+ IN CONST ULONG32 * Input,
  IN ULONG DataType
 )
 {
@@ -367,7 +367,7 @@ Elf64FmtCreateSection
  PMM_SECTION_SEGMENT pssSegments;
  Elf_Addr nImageBase = 0;
  Elf_Addr nEntryPoint;
- ULONG nPrevVirtualEndOfSegment;
+ ULONG32 nPrevVirtualEndOfSegment;
  ULONG i;
  ULONG j;
 
