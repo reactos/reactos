@@ -231,10 +231,10 @@ static char sccsid[] = "@(#)traceroute.c	8.1 (Berkeley) 6/6/93";
 #include <winsock.h>
 
 //void print(buf, cc, from);
-char * inetname(in);
-double deltaT(t1p, t2p);
+char * inetname(struct in_addr);
+double deltaT(struct timeval *, struct timeval *);
 void usage();
-void send_probe(seq, ttl);
+void send_probe(int, int);
 
 #define bzero( ptr, count ) memset( ptr, 0, count )
 #define bcopy(src,dest,len) memcpy(dest,src,len)
@@ -336,22 +336,22 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 #define Sprintf (void)sprintf
 #define Printf (void)printf
 
-// Define the UDP header
-//
-typedef struct udp_hdr
-{
-   unsigned short src_portno;       // Source port number
-   unsigned short dst_portno;       // Destination port number
-   unsigned short udp_length;       // UDP packet length
-   unsigned short udp_checksum;     // UDP checksum (optional)
-} UDP_HDR, *PUDP_HDR;
+/*
+ * Define the UDP header
+ */
+typedef struct udphdr {
+	u_short uh_dport;
+	u_short uh_sport;
+	u_short uh_sum;
+	u_short uh_ulen;
+} udphdr;
 
 /*
  * format of a (udp) probe packet.
  */
 struct opacket {
 	struct ip ip;
-	UDP_HDR            udp;
+	udphdr udp;
 	u_char seq;		/* sequence number of this packet */
 	u_char ttl;		/* ttl packet left with */
 	struct timeval tv;	/* time packet left */
@@ -427,12 +427,6 @@ main(argc, argv)
 	int ch, i, on, probe, seq, tos, ttl;
 	WSADATA wsadata;
 	INT status;
-
-	status = WSAStartup(MAKEWORD(2, 2), &wsadata);
-	if (status != 0) {
-		printf("Could not initialize winsock dll.\n");	
-		return FALSE;
-	}
 
 	on = 1;
 	seq = tos = 0;
@@ -511,6 +505,12 @@ main(argc, argv)
 
 	if (argc < 1)
 		usage();
+
+	status = WSAStartup(MAKEWORD(2, 2), &wsadata);
+	if (status != 0) {
+		printf("Could not initialize winsock dll.\n");	
+		return FALSE;
+	}
 
 	setlinebuf (stdout);
 
@@ -736,10 +736,10 @@ send_probe(seq, ttl)
 	ip->ip_v = IPVERSION;
 	ip->ip_id = htons(ident+seq);
 
-//	up->uh_sport = htons(ident);
-//	up->uh_dport = htons(port+seq);
-//	up->uh_ulen = htons((u_short)(datalen - sizeof(struct ip)));
-//	up->uh_sum = 0;
+	up->uh_sport = htons(ident);
+	up->uh_dport = htons(port+seq);
+	up->uh_ulen = htons((u_short)(datalen - sizeof(struct ip)));
+	up->uh_sum = 0;
 
 	op->seq = seq;
 	op->ttl = ttl;
@@ -826,9 +826,9 @@ packet_ok(buf, cc, from, seq)
 		hip = &icp->icmp_ip;
 		hlen = hip->ip_hl << 2;
 		up = (struct udphdr *)((u_char *)hip + hlen);
-//		if (hlen + 12 <= cc && hip->ip_p == IPPROTO_UDP &&
-//		    up->uh_sport == htons(ident) &&
-//		    up->uh_dport == htons(port+seq))
+		if (hlen + 12 <= cc && hip->ip_p == IPPROTO_UDP &&
+		    up->uh_sport == htons(ident) &&
+		    up->uh_dport == htons(port+seq))
 		if (hlen + 12 <= cc && hip->ip_p == IPPROTO_UDP)
 			return (type == ICMP_TIMXCEED? -1 : code+1);
 	}
