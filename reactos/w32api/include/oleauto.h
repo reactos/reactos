@@ -42,11 +42,16 @@
 #define V_UI1(X) V_UNION(X,bVal)
 #define V_UI1REF(X) V_UNION(X,pbVal)
 #define V_I2(X) V_UNION(X,iVal)
+#define V_UI2(X) V_UNION(X,uiVal)
 #define V_I2REF(X) V_UNION(X,piVal)
 #define V_I4(X) V_UNION(X,lVal)
+#define V_UI4(X) V_UNION(X,ulVal)
 #define V_I4REF(X) V_UNION(X,plVal)
+#define V_UI4REF(X) V_UNION(X,pulVal)
 #define V_I8(X) V_UNION(X,hVal)
+#define V_UI8(X) V_UNION(X,uhVal)
 #define V_I8REF(X) V_UNION(X,phVal)
+#define V_UI8REF(X) V_UNION(X,puhVal)
 #define V_R4(X) V_UNION(X,fltVal)
 #define V_R4REF(X) V_UNION(X,pfltVal)
 #define V_R8(X) V_UNION(X,dblVal)
@@ -80,6 +85,17 @@
 #define V_DECIMAL(X) V_UNION(X,decVal)
 #define V_DECIMALREF(X) V_UNION(X,pdecVal)
 #define V_I1(X) V_UNION(X,cVal)
+#ifdef _WIN64
+#define V_INT_PTR(X) V_I8(X)
+#define V_UINT_PTR(X) V_UI8(X)
+#define V_INT_PTRREF(X) V_I8REF(X)
+#define V_UINT_PTRREF(X) V_UI8REF(X)
+#else
+#define V_INT_PTR(X) V_I4(X)
+#define V_UINT_PTR(X) V_UI4(X)
+#define V_INT_PTRREF(X) V_I4REF(X)
+#define V_UINT_PTRREF(X) V_UI4REF(X)
+#endif
 
 #include <oaidl.h>
 
@@ -152,7 +168,7 @@ WINOLEAUTAPI VarUI1FromR8(double,unsigned char*);
 WINOLEAUTAPI VarUI1FromCy(CY,unsigned char*);
 WINOLEAUTAPI VarUI1FromDate(DATE,unsigned char*);
 WINOLEAUTAPI VarUI1FromStr(OLECHAR*,LCID,unsigned long,unsigned char*);
-WINOLEAUTAPI VarUI1FromDisp(LPDISPATCH*,LCID,unsigned char*);
+WINOLEAUTAPI VarUI1FromDisp(LPDISPATCH,LCID,unsigned char*);
 WINOLEAUTAPI VarUI1FromBool(VARIANT_BOOL,unsigned char*);
 WINOLEAUTAPI VarI2FromUI1(unsigned char,short*);
 WINOLEAUTAPI VarI2FromI4(long,short*);
@@ -161,7 +177,7 @@ WINOLEAUTAPI VarI2FromR8(double,short*);
 WINOLEAUTAPI VarI2FromCy(CY cyIn,short*);
 WINOLEAUTAPI VarI2FromDate(DATE,short*);
 WINOLEAUTAPI VarI2FromStr(OLECHAR*,LCID,unsigned long,short*);
-WINOLEAUTAPI VarI2FromDisp(LPDISPATCH*,LCID,short*);
+WINOLEAUTAPI VarI2FromDisp(LPDISPATCH,LCID,short*);
 WINOLEAUTAPI VarI2FromBool(VARIANT_BOOL,short*);
 WINOLEAUTAPI VarI4FromUI1(unsigned char,long*);
 WINOLEAUTAPI VarI4FromI2(short,long*);
@@ -170,7 +186,7 @@ WINOLEAUTAPI VarI4FromR8(double,long*);
 WINOLEAUTAPI VarI4FromCy(CY,long*);
 WINOLEAUTAPI VarI4FromDate(DATE,long*);
 WINOLEAUTAPI VarI4FromStr(OLECHAR*,LCID,unsigned long,long*);
-WINOLEAUTAPI VarI4FromDisp(LPDISPATCH*,LCID,long*);
+WINOLEAUTAPI VarI4FromDisp(LPDISPATCH,LCID,long*);
 WINOLEAUTAPI VarI4FromBool(VARIANT_BOOL,long*);
 WINOLEAUTAPI VarR4FromUI1(unsigned char,float*);
 WINOLEAUTAPI VarR4FromI2(short,float*);
@@ -179,7 +195,7 @@ WINOLEAUTAPI VarR4FromR8(double,float*);
 WINOLEAUTAPI VarR4FromCy(CY,float*);
 WINOLEAUTAPI VarR4FromDate(DATE,float*);
 WINOLEAUTAPI VarR4FromStr(OLECHAR*,LCID,unsigned long,float*);
-WINOLEAUTAPI VarR4FromDisp(LPDISPATCH*,LCID,float*);
+WINOLEAUTAPI VarR4FromDisp(LPDISPATCH,LCID,float*);
 WINOLEAUTAPI VarR4FromBool(VARIANT_BOOL,float*);
 WINOLEAUTAPI VarR8FromUI1(unsigned char,double*);
 WINOLEAUTAPI VarR8FromI2(short,double*);
@@ -188,7 +204,7 @@ WINOLEAUTAPI VarR8FromR4(float,double*);
 WINOLEAUTAPI VarR8FromCy(CY,double*);
 WINOLEAUTAPI VarR8FromDate(DATE,double*);
 WINOLEAUTAPI VarR8FromStr(OLECHAR*,LCID,unsigned long,double*);
-WINOLEAUTAPI VarR8FromDisp(LPDISPATCH*,LCID,double*);
+WINOLEAUTAPI VarR8FromDisp(LPDISPATCH,LCID,double*);
 WINOLEAUTAPI VarR8FromBool(VARIANT_BOOL,double*);
 WINOLEAUTAPI VarR8FromDec(DECIMAL*,double*);
 WINOLEAUTAPI VarDateFromUI1(unsigned char,DATE*);
@@ -198,7 +214,7 @@ WINOLEAUTAPI VarDateFromR4(float,DATE*);
 WINOLEAUTAPI VarDateFromR8(double,DATE*);
 WINOLEAUTAPI VarDateFromCy(CY,DATE*);
 WINOLEAUTAPI VarDateFromStr(OLECHAR*,LCID,unsigned long,DATE*);
-WINOLEAUTAPI VarDateFromDisp(LPDISPATCH*,LCID,DATE*);
+WINOLEAUTAPI VarDateFromDisp(LPDISPATCH,LCID,DATE*);
 WINOLEAUTAPI VarDateFromBool(VARIANT_BOOL,DATE*);
 WINOLEAUTAPI VarCyFromUI1(unsigned char,CY*);
 WINOLEAUTAPI VarCyFromI2(short,CY*);
@@ -207,7 +223,7 @@ WINOLEAUTAPI VarCyFromR4(float,CY*);
 WINOLEAUTAPI VarCyFromR8(double,CY*);
 WINOLEAUTAPI VarCyFromDate(DATE,CY*);
 WINOLEAUTAPI VarCyFromStr(OLECHAR*,LCID,unsigned long,CY*);
-WINOLEAUTAPI VarCyFromDisp(LPDISPATCH*,LCID,CY*);
+WINOLEAUTAPI VarCyFromDisp(LPDISPATCH,LCID,CY*);
 WINOLEAUTAPI VarCyFromBool(VARIANT_BOOL,CY*);
 WINOLEAUTAPI VarBstrFromUI1(unsigned char,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBstrFromI2(short,LCID,unsigned long,BSTR*);
@@ -216,7 +232,7 @@ WINOLEAUTAPI VarBstrFromR4(float,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBstrFromR8(double,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBstrFromCy(CY,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBstrFromDate(DATE,LCID,unsigned long,BSTR*);
-WINOLEAUTAPI VarBstrFromDisp(LPDISPATCH*,LCID,unsigned long,BSTR*);
+WINOLEAUTAPI VarBstrFromDisp(LPDISPATCH,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBstrFromBool(VARIANT_BOOL,LCID,unsigned long,BSTR*);
 WINOLEAUTAPI VarBoolFromUI1(unsigned char,VARIANT_BOOL*);
 WINOLEAUTAPI VarBoolFromI2(short,VARIANT_BOOL*);
@@ -226,7 +242,7 @@ WINOLEAUTAPI VarBoolFromR8(double,VARIANT_BOOL*);
 WINOLEAUTAPI VarBoolFromDate(DATE,VARIANT_BOOL*);
 WINOLEAUTAPI VarBoolFromCy(CY,VARIANT_BOOL*);
 WINOLEAUTAPI VarBoolFromStr(OLECHAR*,LCID,unsigned long,VARIANT_BOOL*);
-WINOLEAUTAPI VarBoolFromDisp(LPDISPATCH*,LCID,VARIANT_BOOL*);
+WINOLEAUTAPI VarBoolFromDisp(LPDISPATCH,LCID,VARIANT_BOOL*);
 WINOLEAUTAPI VarDecFromR8(double,DECIMAL*);
 WINOLEAUTAPI_(ULONG) LHashValOfNameSysA(SYSKIND,LCID,const char*);
 WINOLEAUTAPI_(ULONG) LHashValOfNameSys(SYSKIND,LCID,const OLECHAR*);
