@@ -31,7 +31,8 @@ __asm__ __volatile__ (
 	"popl	%%edx \n\t"
 
 
-	:"=a" (__res):"c" (unNew),"d" (unMask):"ax", "dx", "cx");
+	:"=r" (__res):"r" (unNew),"r" (unMask): "ax", "dx", "cx");
+/*	:"=a" (__res):"c" (unNew),"d" (unMask):"ax", "dx", "cx"); */
 
 	return __res;
 }
