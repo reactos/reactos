@@ -234,6 +234,17 @@ extern "C" {
 #define ERROR_LOCKED                     212L
 #define ERROR_TOO_MANY_MODULES           214L
 #define ERROR_NESTING_NOT_ALLOWED        215L
+#define ERROR_CANNOT_SHRINK              216L
+#define ERROR_ZOMBIE_PROCESS             217L
+#define ERROR_STACK_IN_HIGH_MEMORY       218L
+#define ERROR_INVALID_EXITROUTINE_RING   219L
+#define ERROR_GETBUF_FAILED              220L
+#define ERROR_FLUSHBUF_FAILED            221L
+#define ERROR_TRANSFER_TOO_LONG          222L
+#define ERROR_FORCENOSWAP_FAILED         223L
+#define ERROR_SMG_NO_TARGET_WINDOW       224L
+#define ERROR_NO_CHILDREN                228L
+#define ERROR_INVALID_SCREEN_GROUP       229L
 #define ERROR_BAD_PIPE                   230L
 #define ERROR_PIPE_BUSY                  231L
 #define ERROR_NO_DATA                    232L

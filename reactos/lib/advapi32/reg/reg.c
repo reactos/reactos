@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.27 2003/07/21 00:32:23 royce Exp $
+/* $Id: reg.c,v 1.28 2003/07/21 03:38:42 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1830,12 +1830,12 @@ RegQueryMultipleValuesW (HKEY hKey,
 
   *ldwTotsize = 0;
 
-  TRACE("(%p,%p,%ld,%p,%p=%ld)\n", hkey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
+  //TRACE("(%p,%p,%ld,%p,%p=%ld)\n", hKey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
 
   for(i=0; i < num_vals; ++i)
     {
       val_list[i].ve_valuelen=0;
-      status = RegQueryValueExW(hkey, val_list[i].ve_valuename, NULL, NULL, NULL, &val_list[i].ve_valuelen);
+      status = RegQueryValueExW(hKey, val_list[i].ve_valuename, NULL, NULL, NULL, &val_list[i].ve_valuelen);
       if(status != ERROR_SUCCESS)
 	{
           return status;
@@ -1843,7 +1843,7 @@ RegQueryMultipleValuesW (HKEY hKey,
 
       if(lpValueBuf != NULL && *ldwTotsize + val_list[i].ve_valuelen <= maxBytes)
 	{
-	  status = RegQueryValueExW(hkey, val_list[i].ve_valuename, NULL, &val_list[i].ve_type,
+	  status = RegQueryValueExW(hKey, val_list[i].ve_valuename, NULL, &val_list[i].ve_type,
 				    bufptr, &val_list[i].ve_valuelen);
 	  if(status != ERROR_SUCCESS)
 	    {
@@ -2214,10 +2214,10 @@ RegReplaceKeyA (HKEY hKey,
   UNICODE_STRING lpOldFileW;
   LONG ret;
 
-  RtlCreateUnicodeStringFromAsciiz( &lpSubKeyW, lpSubKey );
-  RtlCreateUnicodeStringFromAsciiz( &lpOldFileW, lpOldFile );
-  RtlCreateUnicodeStringFromAsciiz( &lpNewFileW, lpNewFile );
-  ret = RegReplaceKeyW( hkey, lpSubKeyW.Buffer, lpNewFileW.Buffer, lpOldFileW.Buffer );
+  RtlCreateUnicodeStringFromAsciiz( &lpSubKeyW, (PCSZ)lpSubKey );
+  RtlCreateUnicodeStringFromAsciiz( &lpOldFileW, (PCSZ)lpOldFile );
+  RtlCreateUnicodeStringFromAsciiz( &lpNewFileW, (PCSZ)lpNewFile );
+  ret = RegReplaceKeyW( hKey, lpSubKeyW.Buffer, lpNewFileW.Buffer, lpOldFileW.Buffer );
   RtlFreeUnicodeString( &lpOldFileW );
   RtlFreeUnicodeString( &lpNewFileW );
   RtlFreeUnicodeString( &lpSubKeyW );
@@ -2255,8 +2255,8 @@ RegRestoreKeyA (HKEY hKey,
   UNICODE_STRING lpFileW;
   LONG ret;
 
-  RtlCreateUnicodeStringFromAsciiz( &lpFileW, lpFile );
-  ret = RegRestoreKeyW( hkey, lpFileW.Buffer, dwFlags );
+  RtlCreateUnicodeStringFromAsciiz( &lpFileW, (PCSZ)lpFile );
+  ret = RegRestoreKeyW( hKey, lpFileW.Buffer, dwFlags );
   RtlFreeUnicodeString( &lpFileW );
   return ret;
 }
