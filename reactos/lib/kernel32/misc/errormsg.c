@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.14 2003/11/18 05:17:22 royce Exp $
+/* $Id: errormsg.c,v 1.15 2003/11/19 22:19:17 sedwards Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -24,57 +24,29 @@
  */
 
 #include <ddk/ntddk.h>
-
-// #define NDEBUG
 #include <kernel32/kernel32.h>
-/*#include <kernel32/error.h>*/
 
-#define USE_WINE_PORT
-
-#ifdef USE_WINE_PORT
-
-//#define NDEBUG
-//#include <ntdll/ntdll.h>
-
-//#define DPRINTF DPRINT
-//#define ERR DPRINT
-//#define SetLastError(x)
-//#define WARN DPRINT
 #define TRACE DPRINT
 #define FIXME DPRINT
 
-//#define MAKEINTRESOURCE(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
-//#define MAKEINTRESOURCEA(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
-//#define MAKEINTRESOURCEW(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
-
-//#define MAKEINTRESOURCEA(i) (LPSTR)((ULONG_PTR)((WORD)(i)))
-//#define MAKEINTRESOURCEW(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
-//#define MAKEINTRESOURCE WINELIB_NAME_AW(MAKEINTRESOURCE)
-
-
-
-int HEAP_strdupWtoA(HANDLE hHeap, int flags, LPWSTR lpSource)
+/* strdup macros */
+/* DO NOT USE IT!!  it will go away soon */
+inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
 {
-    return 0;
+    LPSTR ret;
+    INT len;
+
+    if (!str) return NULL;
+    len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
+    ret = RtlAllocateHeap(RtlGetProcessHeap(), flags, len );
+    if(ret) WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
+    return ret;
 }
 
 /* INTERNAL */
 
-//#include "config.h"
-
 #include <stdio.h>
 #include <string.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "wine/unicode.h"
-//#include "heap.h"
-//#include "wine/debug.h"
-
-//WINE_DEFAULT_DEBUG_CHANNEL(resource);
 
 typedef struct tagMESSAGE_RESOURCE_ENTRY {
         WORD    Length;
@@ -182,7 +154,7 @@ static INT load_messageA( HMODULE instance, UINT id, WORD lang,
     }
     if (buffer) {
         //TRACE("'%s' copied !\n", buffer);
-        TRACE("'%s'\n", buffer);
+        //TRACE("'%s'\n", buffer);
     }
     return i;
 }
@@ -215,6 +187,8 @@ static INT load_messageW( HMODULE instance, UINT id, WORD lang,
 /***********************************************************************
  *           FormatMessageA   (KERNEL32.@)
  * FIXME: missing wrap,
+ *
+ * @implemented
  */
 DWORD WINAPI FormatMessageA(
         DWORD   dwFlags,
@@ -243,7 +217,7 @@ DWORD WINAPI FormatMessageA(
            || (dwFlags & FORMAT_MESSAGE_FROM_HMODULE))) return 0;
 
     if (width && width != FORMAT_MESSAGE_MAX_WIDTH_MASK)
-        FIXME("line wrapping (%lu) not supported.\n", width);
+        //FIXME("line wrapping (%lu) not supported.\n", width);
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING)
     {
@@ -379,8 +353,8 @@ DWORD WINAPI FormatMessageA(
                             } else {
                                 b = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sz = 1000);
                                 /* CMF - This makes a BIG assumption about va_list */
-                                TRACE("A BIG assumption\n");
-                                //vsnprintf(b, sz, fmtstr, (va_list) argliststart);
+                                //TRACE("A BIG assumption\n");
+                                _vsnprintf(b, sz, fmtstr, (va_list) argliststart);
                             }
                             for (x=b; *x; x++) ADD_TO_T(*x);
 
@@ -467,6 +441,8 @@ DWORD WINAPI FormatMessageA(
 
 /***********************************************************************
  *           FormatMessageW   (KERNEL32.@)
+ *
+ * @implemented
  */
 DWORD WINAPI FormatMessageW(
         DWORD   dwFlags,
@@ -495,7 +471,7 @@ DWORD WINAPI FormatMessageW(
            || (dwFlags & FORMAT_MESSAGE_FROM_HMODULE))) return 0;
 
     if (width && width != FORMAT_MESSAGE_MAX_WIDTH_MASK) {
-        FIXME("line wrapping not supported.\n");
+        //FIXME("line wrapping not supported.\n");
     }
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING) {
@@ -713,95 +689,3 @@ DWORD WINAPI FormatMessageW(
 #endif /* __i386__ */
 }
 #undef ADD_TO_T
-
-
-#else
-
-/* EXPORTED */
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-FormatMessageW(
-    DWORD    dwFlags,
-    LPCVOID  lpSource,
-    DWORD    dwMessageId,
-    DWORD    dwLanguageId,
-    LPWSTR   lpBuffer,
-    DWORD    nSize,
-    va_list* Arguments)
-{
-
-// RtlFormatMessage
-
-    FIXME("FormatMessageW: unimplemented\n");
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-FormatMessageA(
-    DWORD    dwFlags,
-    LPCVOID  lpSource,
-    DWORD    dwMessageId,
-    DWORD    dwLanguageId,
-    LPSTR    lpBuffer,
-    DWORD    nSize,
-    va_list* Arguments)
-{
-    HLOCAL pBuf = NULL;
-    //LPSTR pBuf = NULL;
-
-#define MAX_MSG_STR_LEN 200
-
-    if (lpBuffer != NULL) {
-
-        if (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) {
-            pBuf = LocalAlloc(LPTR, max(nSize, MAX_MSG_STR_LEN));
-            if (pBuf == NULL) {
-                return 0;
-            }
-            *(LPSTR*)lpBuffer = pBuf;
-        } else {
-            pBuf = *(LPSTR*)lpBuffer;
-        }
-
-        if (dwFlags & FORMAT_MESSAGE_FROM_STRING) {
-        } else {
-        }
-
-//FORMAT_MESSAGE_IGNORE_INSERTS
-//FORMAT_MESSAGE_FROM_STRING
-//FORMAT_MESSAGE_FROM_HMODULE
-//FORMAT_MESSAGE_FROM_SYSTEM
-//FORMAT_MESSAGE_ARGUMENT_ARRAY 
-
-    }
-/*
-        if (FormatMessage(
-          FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-          0,
-          error,
-          MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-          (PTSTR)&msg,
-          0,
-          NULL)
-        )
- */
-    FIXME("FormatMessageA: unimplemented\n");
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-#endif
-
-/* EOF */
