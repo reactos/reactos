@@ -18,7 +18,8 @@ template <class T>
 class TArrayAsVector : public vector<T> {
 private:
 	const unsigned int growable;
-    typedef size_t size_type;
+	typedef size_t size_type;
+	typedef typename vector<T>::const_iterator const_iterator;
 	const size_type lowerbound;
 public:
 	TArrayAsVector(size_type upper,
@@ -27,7 +28,7 @@ public:
 	vector<T>( ),
 		growable(delta),
 		lowerbound(lower)
-	{ reserve(upper-lower + 1);}
+	{ vector<T>::reserve(upper-lower + 1);}
 	
 	~TArrayAsVector( )
 	{ // This call is unnecessary?  (Paul Brannan 5/7/98)
@@ -35,28 +36,28 @@ public:
 	}
 	
 	int Add(const T& item)
-	{ if(!growable && size( ) == capacity( ))
+	{ if(!growable && vector<T>::size( ) == vector<T>::capacity( ))
 	return 0;
 	else
-		insert(end( ), item);
+		insert(vector<T>::end( ), item);
 	return 1; }
 	
 	int AddAt(const T& item, size_type index)
 	{ if(!growable &&
-	((size( ) == capacity( )) ||
-	(ZeroBase(index > capacity( )) )))
+	((vector<T>::size( ) == vector<T>::capacity( )) ||
+	(ZeroBase(index > vector<T>::capacity( )) )))
 	return 0;
-	if(ZeroBase(index) > capacity( )) // out of bounds
-	{ insert(end( ), 
-	ZeroBase(index) - size( ), T( ));
-	insert(end( ), item); }
+	if(ZeroBase(index) > vector<T>::capacity( )) // out of bounds
+	{ insert(vector<T>::end( ), 
+	ZeroBase(index) - vector<T>::size( ), T( ));
+	insert(vector<T>::end( ), item); }
 	else
-	{ insert(begin( ) + ZeroBase(index), item); }
+	{ insert(vector<T>::begin( ) + ZeroBase(index), item); }
 	return 1;
 	}
 	
 	size_type ArraySize( )
-	{ return capacity( ); }
+	{ return vector<T>::capacity( ); }
 	
 	size_type BoundBase(size_type location) const
 	{ if(location == UINT_MAX)
@@ -64,34 +65,34 @@ public:
 	else
 		return location + lowerbound; }
 	void Detach(size_type index)
-	{ erase(begin( ) + ZeroBase(index)); }
+	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
 	
 	void Detach(const T& item)
 	{ Destroy(Find(item)); }
 	
 	void Destroy(size_type index)
-	{ erase(begin( ) + ZeroBase(index)); }
+	{ erase(vector<T>::begin( ) + ZeroBase(index)); }
 	
 	void Destroy(const T& item)
 	{ Destroy(Find(item)); }
 	
 	size_type Find(const T& item) const
-	{ const_iterator location = find(begin( ), 
-	end( ), item);
-	if(location != end( ))
+	{ const_iterator location = find(vector<T>::begin( ), 
+	vector<T>::end( ), item);
+	if(location != vector<T>::end( ))
 		return BoundBase(size_type(location - 
-		begin( )));
+		vector<T>::begin( )));
 	else
 		return INT_MAX; }
 	
 	size_type GetItemsInContainer( )
-	{ return size( ); }
+	{ return vector<T>::size( ); }
 	
 	void Grow(size_type index)
 	{ if( index < lowerbound )
 	Reallocate(ArraySize( ) + (index - 
 	lowerbound));
-	else if( index >= BoundBase(size( )))
+	else if( index >= BoundBase(vector<T>::size( )))
 		Reallocate(ZeroBase(index) ); }
 	
 	int HasMember(const T& item)
@@ -101,12 +102,12 @@ public:
 		return 0; }
 	
 	int IsEmpty( )
-	{ return empty( ); }
+	{ return vector<T>::empty( ); }
 	
 	int IsFull( )
 	{ if(growable)
 	return 0;
-	if(size( ) == capacity( ))
+	if(vector<T>::size( ) == vector<T>::capacity( ))
 		return 1;
 	else
 		return 0; }
@@ -124,25 +125,15 @@ public:
 	
 	void Flush( )
 	{
-		// changed this to get it to work with VC++
-		// (Paul Brannan 5/7/98)
-#ifdef _MSC_VER
-		_Destroy(begin(), end());
-		_Last = _First;
-		destroy(begin( ), end( ));
-#elif defined (__CYGWIN__) || defined (__MINGW32__)
-		_M_finish = _M_start;
-#else /* Anything else */
-		finish = start;
-#endif
+		vector<T>::clear();
 	}
 	
 	void Reallocate(size_type sz, 
 		size_type offset = 0)
 	{ if(offset)
-	insert(begin( ), offset, T( ));
-	reserve(sz);
-	erase(end( ) - offset, end( )); }
+	insert(vector<T>::begin( ), offset, T( ));
+	vector<T>::reserve(sz);
+	erase(vector<T>::end( ) - offset, vector<T>::end( )); }
 	
 	void RemoveEntry(size_type index)
 	{ Detach(index); }
@@ -151,7 +142,7 @@ public:
 	{ (*this)[index] = item; }
 	
 	size_type UpperBound( )
-	{ return BoundBase(capacity( )) - 1; }
+	{ return BoundBase(vector<T>::capacity( )) - 1; }
 	
 	size_type ZeroBase(size_type index) const
 	{ return index - lowerbound; }
