@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.1 2003/04/07 18:15:20 ekohl Exp $ */
+/* $Id: cdmake.c,v 1.2 2003/04/11 21:02:21 phreak Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -486,9 +486,9 @@ a negative value if p is before q, or a positive vlaue if p is after q.
 
 static int compare_path_table_order(PDIR_RECORD p, PDIR_RECORD q)
 {
+  int n = p->level - q->level;
   if (p == q)
     return 0;
-  int n = p->level - q->level;
   if (n == 0)
   {
     n = compare_path_table_order(p->parent, q->parent);
