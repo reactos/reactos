@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.14 2002/09/08 10:22:22 chorns Exp $
+/* $Id: cdrom.c,v 1.15 2002/09/15 22:19:16 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -512,7 +512,45 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   return(STATUS_SUCCESS);
 }
 
+/**********************************************************************
+ * NAME
+ *	CdromClassReadTocEntry
+ *
+ * ARGUMENTS:
+ *      DeviceObject
+ *      TrackNo
+ *      Buffer
+ *      Length
+ *
+ * RETURNS:
+ *	Status.
+ */
 
+static NTSTATUS
+CdromClassReadTocEntry(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, UINT Length)
+{
+  PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  SCSI_REQUEST_BLOCK Srb;
+  PCDB Cdb;
+
+  RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
+  Srb.CdbLength = 10;
+  Srb.TimeOutValue = DeviceExtension->TimeOutValue;
+
+  Cdb = (PCDB)Srb.Cdb;
+  Cdb->READ_TOC.OperationCode = SCSIOP_READ_TOC;
+  Cdb->READ_TOC.StartingTrack = TrackNo;
+  Cdb->READ_TOC.Format = 0;
+  Cdb->READ_TOC.AllocationLength[0] = Length >> 8;
+  Cdb->READ_TOC.AllocationLength[1] = Length & 0xff;
+  Cdb->READ_TOC.Msf = 1;
+ 
+  return ScsiClassSendSrbSynchronous(DeviceObject,
+				     &Srb,
+				     Buffer,
+				     Length,
+				     FALSE);
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -586,7 +624,43 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	  }
 	break;
+      case IOCTL_CDROM_READ_TOC:
+	  DPRINT("IOCTL_CDROM_READ_TOC\n");
+	  if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(CDROM_TOC))
+	  {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	  else
+	  {
+	      PCDROM_TOC TocBuffer;
+	      USHORT Length;
 
+	      TocBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+	      /* First read the lead out */
+	      Length = 4 + sizeof(TRACK_DATA);
+	      Status = CdromClassReadTocEntry(DeviceObject, 0xaa, TocBuffer, Length);
+
+	      if (NT_SUCCESS(Status))
+	      {
+		 if (TocBuffer->FirstTrack == 0xaa)
+		 {
+		    /* there is an empty cd */
+		    Information = Length; 
+		 }
+		 else
+		 {
+		    /* read the toc */
+		    Length = 4 + sizeof(TRACK_DATA) * (TocBuffer->LastTrack - TocBuffer->FirstTrack + 2);
+	            Status = CdromClassReadTocEntry(DeviceObject, TocBuffer->FirstTrack, TocBuffer, Length);
+	            if (NT_SUCCESS(Status))
+		    {
+		       Information = Length;
+		    }
+		 }
+	      }
+	  }
+	  break;
       default:
 	/* Call the common device control function */
 	return(ScsiClassDeviceControl(DeviceObject, Irp));
