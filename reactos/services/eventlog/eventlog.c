@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: eventlog.c,v 1.1 2002/06/25 21:10:14 ekohl Exp $
+/* $Id: eventlog.c,v 1.2 2002/07/20 13:32:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,7 +61,6 @@ PrintString(char* fmt,...)
 }
 
 
-#if 0
 VOID CALLBACK
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -72,12 +71,13 @@ ServiceMain(DWORD argc, LPTSTR *argv)
   PrintString("ServiceMain() done\n");
 
 }
-#endif
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-//  SERVICE_TABLE_ENTRY ServiceTable[] = {{"EventLog", ServiceMain},{NULL, NULL}};
+  SERVICE_TABLE_ENTRY ServiceTable[2] = {{L"EventLog", ServiceMain},
+					 {NULL, NULL}};
 
   HANDLE hEvent;
 //  NTSTATUS Status;
@@ -88,16 +88,19 @@ int main(int argc, char *argv[])
 
 
 
-//  StartServiceCtrlDispatcher(ServiceTable);
+  StartServiceCtrlDispatcher(ServiceTable);
+  PrintString("StartServiceCtrlDispatcher() done\n");
 
+#if 0
   if (StartPortThread() == FALSE)
     {
       PrintString("StartPortThread() failed\n");
     }
+#endif
 
 
 
-
+  PrintString("EventLog waiting\n");
   hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
   WaitForSingleObject(hEvent, INFINITE);
 
