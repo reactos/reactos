@@ -236,29 +236,41 @@ void WINAPI PathRemoveExtensionAW(LPVOID lpszPath)
 /*************************************************************************
  * PathGetShortPathA [internal]
  */
-LPSTR WINAPI PathGetShortPathA(LPSTR lpszPath)
+static void PathGetShortPathA(LPSTR pszPath)
 {
-	FIXME("%s stub\n", lpszPath);
-	return NULL;
+	CHAR path[MAX_PATH];
+
+	TRACE("%s\n", pszPath);
+
+	if (GetShortPathNameA(pszPath, path, MAX_PATH))
+	{
+	  lstrcpyA(pszPath, path);
+	}
 }
 
 /*************************************************************************
  * PathGetShortPathW [internal]
  */
-LPWSTR WINAPI PathGetShortPathW(LPWSTR lpszPath)
+static void PathGetShortPathW(LPWSTR pszPath)
 {
-	FIXME("%s stub\n", debugstr_w(lpszPath));
-	return NULL;
+	WCHAR path[MAX_PATH];
+
+	TRACE("%s\n", debugstr_w(pszPath));
+
+	if (GetShortPathNameW(pszPath, path, MAX_PATH))
+	{
+	  lstrcpyW(pszPath, path);
+	}
 }
 
 /*************************************************************************
  * PathGetShortPath [SHELL32.92]
  */
-LPVOID WINAPI PathGetShortPathAW(LPVOID lpszPath)
+VOID WINAPI PathGetShortPathAW(LPVOID pszPath)
 {
 	if(SHELL_OsIsUnicode())
-	  return PathGetShortPathW(lpszPath);
-	return PathGetShortPathA(lpszPath);
+	  PathGetShortPathW(pszPath);
+	PathGetShortPathA(pszPath);
 }
 
 /*************************************************************************

@@ -539,8 +539,6 @@ LPVOID WINAPI PathGetArgsAW(LPVOID lpszPath);
 
 BOOL WINAPI PathRemoveFileSpecAW(LPVOID lpszPath);
 
-LPVOID WINAPI PathGetShortPathAW(LPVOID lpszPath);
-
 void WINAPI PathRemoveBlanksAW(LPVOID lpszPath);
 
 VOID  WINAPI PathQuoteSpacesAW(LPVOID path);

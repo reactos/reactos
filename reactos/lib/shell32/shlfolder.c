@@ -398,7 +398,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	    char ext[MAX_PATH];
 
 	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || strcasecmp(ext, "lnk"))
-		*pdwAttributes &= ~SFGAO_READONLY;
+		*pdwAttributes &= ~SFGAO_LINK;
 	}
     } else {
 	*pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME|SFGAO_CANLINK;

@@ -28,6 +28,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -531,7 +533,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 * iface, 
 
     if (SUCCEEDED (hr)) {
 	strRet->uType = STRRET_CSTR;
-	lstrcpynA (strRet->cStr, szPath, MAX_PATH);
+	lstrcpynA (strRet->u.cStr, szPath, MAX_PATH);
     }
 
     TRACE ("-- (%p)->(%s)\n", This, szPath);
@@ -612,33 +614,33 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDetailsOf (IShellFolder2 * iface, LPCI
 	psd->fmt = MyComputerSFHeader[iColumn].fmt;
 	psd->cxChar = MyComputerSFHeader[iColumn].cxChar;
 	psd->str.uType = STRRET_CSTR;
-	LoadStringA (shell32_hInstance, MyComputerSFHeader[iColumn].colnameid, psd->str.cStr, MAX_PATH);
+	LoadStringA (shell32_hInstance, MyComputerSFHeader[iColumn].colnameid, psd->str.u.cStr, MAX_PATH);
 	return S_OK;
     } else {
 	char szPath[MAX_PATH];
 	ULARGE_INTEGER ulBytes;
 
-	psd->str.cStr[0] = 0x00;
+	psd->str.u.cStr[0] = 0x00;
 	psd->str.uType = STRRET_CSTR;
 	switch (iColumn) {
 	case 0:		/* name */
 	    hr = IShellFolder_GetDisplayNameOf (iface, pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
 	    break;
 	case 1:		/* type */
-	    _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+	    _ILGetFileType (pidl, psd->str.u.cStr, MAX_PATH);
 	    break;
 	case 2:		/* total size */
 	    if (_ILIsDrive (pidl)) {
 		_ILSimpleGetText (pidl, szPath, MAX_PATH);
 		GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
-		StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+		StrFormatByteSizeA (ulBytes.u.LowPart, psd->str.u.cStr, MAX_PATH);
 	    }
 	    break;
 	case 3:		/* free size */
 	    if (_ILIsDrive (pidl)) {
 		_ILSimpleGetText (pidl, szPath, MAX_PATH);
 		GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
-		StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+		StrFormatByteSizeA (ulBytes.u.LowPart, psd->str.u.cStr, MAX_PATH);
 	    }
 	    break;
 	}
