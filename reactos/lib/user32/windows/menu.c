@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.11 2003/07/28 08:09:51 ekohl Exp $
+/* $Id: menu.c,v 1.12 2003/07/31 23:06:43 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -139,11 +139,11 @@ MenuInit(VOID)
   return(TRUE);
 }
 
-static BOOL
+/*static BOOL
 MenuIsMenu(PPOPUP_MENU Menu)
 {
   return(Menu->Magic == MENU_MAGIC);
-}
+}*/
 
 static PPOPUP_MENU
 MenuGetMenu(HMENU hMenu)
@@ -311,13 +311,7 @@ CheckMenuRadioItem(HMENU hmenu,
 HMENU STDCALL
 CreateMenu(VOID)
 {
-  PPOPUP_MENU Menu;
-  
-  Menu = HeapAlloc(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(POPUP_MENU));
-  Menu->Magic = MENU_MAGIC;
-  Menu->FocusedItem = NO_SELECTED_ITEM;
-
-  return (HMENU)Menu;
+    return NtUserCreateMenu();
 }
 
 
@@ -371,48 +365,12 @@ MenuFreeItemData(PMENUITEM Item)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 DestroyMenu(HMENU hMenu)
 {
-  PPOPUP_MENU Menu;
-
-  if (hMenu == NULL || hMenu == hMenuDefSysPopup)
-    {
-      return(FALSE);
-    }
-  Menu = MenuGetMenu(hMenu);
-  if (hTopPopupWnd != NULL && hMenu == (HMENU)GetWindowLong(hTopPopupWnd, 0))
-    {
-      SetWindowLong(hTopPopupWnd, 0, 0);
-    }
-  if (!MenuIsMenu(Menu))
-    {
-      return(FALSE);
-    }
-  if ((Menu->Flags & MF_POPUP) && (Menu->hWnd != NULL) &&
-      (hTopPopupWnd == NULL || Menu->hWnd != hTopPopupWnd))
-    {
-      DestroyWindow(Menu->hWnd);
-    }
-  
-  if (Menu->Items != NULL)
-    {
-      PMENUITEM Item = Menu->Items;
-      ULONG i;
-      for (i = Menu->NrItems; i > 0; i--, Item++)
-	{
-	  if (Item->TypeData & MF_POPUP)
-	    {
-	      DestroyMenu(Item->SubMenu);
-	    }
-	  MenuFreeItemData(Item);
-	}
-      HeapFree(GetProcessHeap(), 0, Menu->Items);
-    }
-  HeapFree(GetProcessHeap(), 0, Menu);
-  return(TRUE);
+    return NtUserDestroyMenu(hMenu);
 }
 
 
@@ -1124,8 +1082,7 @@ STDCALL
 SetMenuContextHelpId(HMENU hmenu,
           DWORD dwContextHelpId)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+  return NtUserSetMenuContextHelpId(hmenu, dwContextHelpId);
 }
 
 
