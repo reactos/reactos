@@ -7,7 +7,7 @@ include hal/x86/sources
 
 NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
              nt/evtpair.o nt/ntsem.o nt/mutant.o nt/misc.o nt/plugplay.o \
-	     nt/profile.o
+	     nt/profile.o nt/nt.o
 
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
@@ -32,7 +32,7 @@ IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
 	     io/fs.o io/vpb.o io/buildirp.o io/flush.o io/dir.o io/iocomp.o \
 	     io/mailslot.o io/npipe.o io/lock.o io/page.o io/cleanup.o
 
-OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o
+OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o ob/ntobj.o ob/dirobj.o
 
 PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o ps/kill.o \
              ps/tinfo.o
@@ -45,7 +45,7 @@ SE_OBJECTS = se/semgr.o
 
 CM_OBJECTS = cm/registry.o
 
-TST_OBJECTS = tst/test.o tst/sshell.o tst/readline.o
+TST_OBJECTS = tst/test.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 

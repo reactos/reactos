@@ -13,7 +13,7 @@
 #include <internal/string.h>
 #include <wstring.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "ext2fs.h"
@@ -29,14 +29,23 @@ NTSTATUS Ext2CloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
  * FUNCTION: Closes a file
  */
 {
+   DPRINT("Ext2CloseFile(DeviceExt %x, FileObject %x)\n",
+	  DeviceExt,FileObject);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+   PIO_STACK_LOCATION Stack;   
+   PFILE_OBJECT FileObject;
+   PDEVICE_EXTENSION DeviceExtension;
    NTSTATUS Status;
+   
+   DPRINT("Ext2Close(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+   
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   FileObject = Stack->FileObject;
+   DeviceExtension = DeviceObject->DeviceExtension;
    
    Status = Ext2CloseFile(DeviceExtension,FileObject);
 

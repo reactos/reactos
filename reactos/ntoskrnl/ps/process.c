@@ -59,7 +59,7 @@ VOID PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   SystemProcess = ObGenericCreateObject(NULL,PROCESS_ALL_ACCESS,NULL,
+   SystemProcess = ObCreateObject(NULL,PROCESS_ALL_ACCESS,NULL,
 					 PsProcessType);
    KProcess = &SystemProcess->Pcb;  
    
@@ -172,10 +172,10 @@ NTSTATUS STDCALL ZwCreateProcess(
 	return(Status);
      }
 
-   Process = ObGenericCreateObject(ProcessHandle,
-                                   DesiredAccess,
-				   ObjectAttributes,
-                                   PsProcessType);
+   Process = ObCreateObject(ProcessHandle,
+			    DesiredAccess,
+			    ObjectAttributes,
+			    PsProcessType);
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
 				0,
 				sizeof(EPROCESS),

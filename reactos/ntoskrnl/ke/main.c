@@ -150,7 +150,7 @@ asmlinkage void _main(boot_param* _bp)
    KeInit();
    ObInit();
    PsInit();
-   IoInit();  
+   IoInit();
    LdrInitModuleManagement();
       
    /*
@@ -165,7 +165,7 @@ asmlinkage void _main(boot_param* _bp)
       	LdrProcessDriver(start);
         start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
-
+   
    /*
     * Load Auto configured drivers
     */

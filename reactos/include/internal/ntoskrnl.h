@@ -78,16 +78,18 @@ typedef struct
         unsigned int module_length[64];
 } boot_param;
 
+VOID NtInitializeEventImplementation(VOID);
+VOID NtInit(VOID);
 
 /*
  * Initalization functions (called once by main())
  */
-void MmInitialize(boot_param* bp);
-void HalInit(boot_param* bp);
-void IoInit(void);
-void ObInit(void);
-void PsInit(void);
-void TstBegin(void);
+VOID MmInitialize(boot_param* bp);
+VOID HalInit(boot_param* bp);
+VOID IoInit(VOID);
+VOID ObInit(VOID);
+VOID PsInit(VOID);
+VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID HalInitConsole(boot_param* bp);
 

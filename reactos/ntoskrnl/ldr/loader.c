@@ -16,7 +16,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <internal/i386/segment.h>
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
 #include <internal/linkage.h>
 #include <internal/module.h>
 #include <internal/ob.h>
@@ -957,10 +957,10 @@ LdrLoadImage(HANDLE ProcessHandle,
     }
 
   /*  Build a module structure for the image  */
-  Module = ObGenericCreateObject(ModuleHandle, 
-                                 PROCESS_ALL_ACCESS, 
-                                 NULL,
-                                 ObModuleType);
+  Module = ObCreateObject(ModuleHandle, 
+			  PROCESS_ALL_ACCESS, 
+			  NULL,
+			  ObModuleType);
   if (Module == NULL)
     {
       ZwClose(FileHandle);

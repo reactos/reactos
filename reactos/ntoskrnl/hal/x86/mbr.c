@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/hal/x86/mbr.c
+ * FILE:            ntoskrnl/hal/x86/mbr.c
  * PURPOSE:         Functions for reading the master boot record (MBR)
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */

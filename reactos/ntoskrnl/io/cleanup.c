@@ -24,12 +24,10 @@
 VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp,
 			   PIO_STACK_LOCATION IoStack)
-{
+{   
    PFILE_OBJECT FileObject;
    
    FileObject = IoStack->FileObject;
-   
-   DPRINT("FileObject %x\n",FileObject);
    
    if (DeviceObject->Flags & DO_BUFFERED_IO)     
      {
@@ -70,6 +68,7 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 {
    PIO_STACK_LOCATION IoStack;
    PDEVICE_OBJECT DeviceObject;
+   PFILE_OBJECT FileObject;
    
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    
@@ -96,6 +95,13 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    if (Irp->UserEvent!=NULL)
      {
 	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+     }
+
+   FileObject = IoStack->FileObject;
+   
+   if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
+     {
+	ObDereferenceObject(FileObject);
      }
    
    IoFreeIrp(Irp);

@@ -12,127 +12,97 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
+#include <internal/bitops.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
 
-#define CACHE_SEGMENT_SIZE     (0x10000)
-
-#define CACHE_SEGMENT_INVALID  (0)     // Isn't valid
-#define CACHE_SEGMENT_WRITTEN  (1)     // Written
-#define CACHE_SEGMENT_READ     (2)
+#define CACHE_SEGMENT_SIZE (0x10000)
 
 typedef struct _CACHE_SEGMENT
 {
-   ULONG Type;                    // Debugging
-   ULONG Size;
-   LIST_ENTRY ListEntry;          // Entry in the per-open list of segments
-   PVOID BaseAddress;             // Base address of the mapping   
-   ULONG ValidLength;                  // Length of the mapping
-   ULONG State;                   // Information
-   MEMORY_AREA* MemoryArea;       // Memory area for the mapping
-   ULONG FileOffset;              // Offset within the file of the mapping
-   KEVENT Event;
-   BOOLEAN Dirty;                 // Contains dirty data
+   PVOID BaseAddress;
+   PMEMORY_AREA MemoryArea;
+   ULONG ValidPages;
+   ULONG AllocatedPages;
+   LIST_ENTRY ListEntry;
+   ULONG FileOffset;
 } CACHE_SEGMENT, *PCACHE_SEGMENT;
 
-typedef struct _CC1_CCB
+typedef struct _BCB
 {
-   ULONG Type;
-   ULONG Size;
    LIST_ENTRY CacheSegmentListHead;
-   KSPIN_LOCK CacheSegmentListLock;
-   LIST_ENTRY ListEntry;
-} CC1_CCB, PCC1_CCB;
+   PFILE_OBJECT FileObject;
+   KSPIN_LOCK BcbLock;
+} BCB, *PBCB;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID Cc1FlushView(PCC1_CCB CacheDesc,
-		   ULONG FileOffset,
-		   ULONG Length)
+NTSTATUS CcRequestCachePage(PBCB Bcb,
+			    ULONG FileOffset,
+			    PVOID* BaseAddress,
+			    PBOOLEAN UptoDate)
 {
-}
-
-PVOID Cc1PurgeView(PCC1_CCB CacheDesc,
-		   ULONG FileOffset,
-		   ULONG Length)
-{
-}
-
-
- 
-NTSTATUS Cc1RequestView(PCC1_CCB CacheDesc,
-			ULONG FileOffset,
-			ULONG Length,
-			PCACHE_SEGMENT ReturnedSegments[],
-			PULONG NrSegments)
-/*
- * FUNCTION: Request a view for caching data
- */
-{
+   KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
-   PCACHE_SEGMENT new_segment;
-   ULONG MaxSegments;
-   ULONG LengthDelta;
+   ULONG InternalOffset;
    
-   MaxSegments = *NrSegments;
-   (*NrSegments) = 0;
+   KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
    
-   KeAcquireSpinLock(&CacheDesc->CacheSegmentListLock);
-   
-   current_entry = CacheDesc->CacheSegmentListHead.Flink;
-   while (current_entry != &(CacheDesc->CacheSegmentListHead))
+   current_entry = Bcb->CacheSegmentListHead.Flink;
+   while (current_entry != &Bcb->CacheSegmentListHead)
      {
-	current = CONTAING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
-	
+	current = CONTAING_RECORD(current, CACHE_SEGMENT, ListEntry);
 	if (current->FileOffset <= FileOffset &&
-	    (current->FileOffset + current->ValidLength) > FileOffset)
+	    (current->FileOffset + CACHE_SEGMENT_SIZE) > FileOffset)
 	  {
-	     ReturnedSegments[(*NrSegments)] = current;
-	     (*NrSegments)++;
-	     FileOffset = current->FileOffset + current->ValidLength;
-	     LengthDelta = (FileOffset - current->FileOffset);
-	     if (Length <= LengthDelta)
+	     InternalOffset = (FileOffset - current->FileOffset);
+	     
+	     if (!test_bit(InternalOffset / PAGESIZE,
+			   current->AllocatedPages))
 	       {
-		  KeReleaseSpinLock(&CacheDesc->CacheSegmentListLock);
-		  return(STATUS_SUCCESS);
+		  MmSetPageEntry(PsGetCurrentProcess(),
+				 current->BaseAddress + InternalOffset,
+				 PAGE_READWRITE,
+				 get_free_page());
 	       }
-	     Length = Length - LengthDelta;
+	     if (!test_bit(InternalOffset / PAGESIZE,
+			   current->ValidPages))
+	       {
+		  UptoDate = False;
+	       }
+	     else
+	       {
+		  UptoDate = True;
+	       }
+	     (*BaseAddress) = current->BaseAddress + InternalOffset;
+	     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+	     return(STATUS_SUCCESS);
 	  }
-	else if (current->FileOffset <= (FileOffset + Length) &&
-                 (current->FileOffset + current->ValidLength) >
-		 (FileOffset + Length))
-	  {
-	     ReturnedSegments[(*NrSegments)] = current;
-	     (*NrSegments)++;
-	     Length = Length - ((FileOffset + Length) - current->FileOffset);
-	  }
-	
 	current_entry = current_entry->Flink;
      }
    
-   KeReleaseSpinLock(&CacheDesc->CacheSegmentListLock);
+   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
 }
 
-PCC1_CCB Cc1InitializeFileCache(PFILE_OBJECT FileObject)
-/*
- * FUNCTION: Initialize caching for a file
- */
+NTSTATUS CcInitializeFileCache(PFILE_OBJECT FileObject,
+			       PBCB* Bcb)
 {
-   PCC1_CCB CacheDesc;
-   
-   CacheDesc = ExAllocatePool(NonPagedPool, sizeof(CC1_CCB));
-   if (CacheDesc == NULL)
+   (*Bcb) = ExAllocatePool(NonPagedPool, sizeof(BCB));
+   if ((*Bcb) == NULL)
      {
-	return(NULL);
+	return(STATUS_OUT_OF_MEMORY);
      }
    
-   CacheDesc->Type = CC1_CCB_ID;
-   InitializeListHead(&CacheDesc->CacheSegmentListHead);
-   KeInitializeSpinLock(&CacheDesc->CacheSegmentListLock);
+   (*Bcb)->FileObject = FileObject;
+   InitializeListHead(&(*Bcb)->CacheSegmentListHead);
+   KeInitializeSpinLock(&(*Bcb)->BcbLock);
    
-   return(CacheDesc);
+   return(STATUS_SUCCESS);
 }
+
+
+

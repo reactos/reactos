@@ -619,46 +619,32 @@ NtSetInformationKey(
                              KeyInformationLength);
 }
 
-NTSTATUS
-STDCALL
-ZwSetInformationKey(
-	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
-	IN PVOID KeyInformation,
-	IN ULONG KeyInformationLength
-	)
+NTSTATUS STDCALL ZwSetInformationKey(IN HANDLE KeyHandle,
+				     IN CINT KeyInformationClass,
+				     IN PVOID KeyInformation,
+				     IN ULONG KeyInformationLength)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
-NTSTATUS 
-STDCALL
-NtUnloadKey(
-	HANDLE KeyHandle
-	)
+NTSTATUS STDCALL NtUnloadKey(HANDLE KeyHandle)
 {
   return ZwUnloadKey(KeyHandle);
 }
 
-NTSTATUS 
-STDCALL
-ZwUnloadKey(
-	HANDLE KeyHandle
-	)
+NTSTATUS STDCALL ZwUnloadKey(HANDLE KeyHandle)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
-NtInitializeRegistry(BOOLEAN SetUpBoot)
+NTSTATUS STDCALL NtInitializeRegistry(BOOLEAN SetUpBoot)
 {
   return ZwInitializeRegistry(SetUpBoot);
 }
 
-NTSTATUS STDCALL 
-ZwInitializeRegistry(BOOLEAN SetUpBoot)
+NTSTATUS STDCALL ZwInitializeRegistry(BOOLEAN SetUpBoot)
 {
-  UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 NTSTATUS RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)

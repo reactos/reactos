@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/hal/eisa.c
- * PURPOSE:         Interfaces to the PCI bus
+ * FILE:            ntoskrnl/hal/pci
+ * PURPOSE:         Interfaces to BIOS32 interface
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *               05/06/98: Created
@@ -14,7 +14,6 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/string.h>

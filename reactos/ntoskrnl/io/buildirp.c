@@ -35,7 +35,7 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
 	     IoFreeIrp(Irp);
-	     return(NULL);
+	     return(STATUS_NOT_IMPLEMENTED);
 	  }
         /* FIXME: should copy buffer in on other ops */
         if (MajorFunction == IRP_MJ_WRITE)
@@ -262,11 +262,14 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->FileObject = NULL;
    StackPtr->CompletionRoutine = NULL;
    
-   IoPrepareIrpBuffer(Irp,
-		      DeviceObject,
-		      Buffer,
-		      Length,
-		      MajorFunction);
+   if (Buffer != NULL)
+     {
+	IoPrepareIrpBuffer(Irp,
+			   DeviceObject,
+			   Buffer,
+			   Length,
+			   MajorFunction);
+     }
    
    if (MajorFunction == IRP_MJ_READ)
      {

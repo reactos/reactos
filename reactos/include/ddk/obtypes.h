@@ -1,4 +1,5 @@
 struct _DIRECTORY_OBJECT;
+struct _OBJECT_ATTRIBUTES;
 
 typedef ULONG ACCESS_STATE, *PACCESS_STATE;
 
@@ -6,9 +7,6 @@ typedef struct _OBJECT_HANDLE_INFORMATION {
     ULONG HandleAttributes;
     ACCESS_MASK GrantedAccess;
 } OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
-
-struct _OBJECT;
-
 
 typedef struct _OBJECT_TYPE
 {   
@@ -62,18 +60,18 @@ typedef struct _OBJECT_TYPE
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
-   VOID (*Close)(PVOID ObjectBody);
+   VOID (*Close)(PVOID ObjectBody, ULONG HandleCount);
 
    /*
-    * PURPOSE: Called to close an object if OkayToClose returns true
+    * PURPOSE: Called to delete an object when the last reference is removed
     */
-   VOID (*Delete)(VOID);
+   VOID (*Delete)(PVOID ObjectBody);
 
    /*
     * PURPOSE: Called when an open attempts to open a file apparently
     * residing within the object
     */
-   PVOID (*Parse)(struct _OBJECT *ParsedObject, PWSTR UnparsedSection);
+   PVOID (*Parse)(PVOID ParsedObject, PWSTR* Path);
    
    /*
     */
@@ -87,7 +85,12 @@ typedef struct _OBJECT_TYPE
     * PURPOSE: Called when a process asks to close the object
     */
    VOID (*OkayToClose)(VOID);
-         
+   
+   NTSTATUS (*Create)(PVOID ObjectBody,
+		      PVOID Parent,
+		      PWSTR RemainingPath,
+		      struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+   
 } OBJECT_TYPE, *POBJECT_TYPE;
 
 
@@ -133,3 +136,5 @@ typedef struct _HANDLE_TABLE
    LIST_ENTRY ListHead;
    KSPIN_LOCK ListLock;
 } HANDLE_TABLE, *PHANDLE_TABLE;
+
+extern POBJECT_TYPE ObDirectoryType;

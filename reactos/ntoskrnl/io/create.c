@@ -57,6 +57,68 @@ NTSTATUS NtCreateFile(PHANDLE FileHandle,
 		       EaLength));
 }
 
+NTSTATUS IopCreateFile(PVOID ObjectBody,
+		       PVOID Parent,
+		       PWSTR RemainingPath,
+		       POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Parent;
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+   NTSTATUS Status;
+   
+   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+	  ObjectBody,Parent,RemainingPath);
+   
+   Status = ObReferenceObjectByPointer(DeviceObject,
+				       STANDARD_RIGHTS_REQUIRED,
+				       IoDeviceType,
+				       UserMode);
+   if (Status != STATUS_SUCCESS)
+     {
+	CHECKPOINT;
+	return(Status);
+     }
+   
+   DeviceObject = IoGetAttachedDevice(DeviceObject);
+   
+   DPRINT("DeviceObject %x\n",DeviceObject);
+   
+   if (RemainingPath == NULL)
+     {
+	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
+				   (ObjectAttributes->ObjectName->Length+1)*2);
+	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
+	FileObject->FileName.MaximumLength = 
+          ObjectAttributes->ObjectName->MaximumLength;
+	RtlCopyUnicodeString(&(FileObject->FileName),
+			     ObjectAttributes->ObjectName);
+     }
+   else
+     {
+	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
+	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	  {
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+	  {
+	     Status = IoTryToMountStorageDevice(DeviceObject);
+	     if (Status!=STATUS_SUCCESS)
+	       {
+		  return(Status);
+	       }
+	     DeviceObject = IoGetAttachedDevice(DeviceObject);
+	  }
+	RtlInitUnicodeString(&(FileObject->FileName),wstrdup(RemainingPath));
+     }
+   DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
+   FileObject->DeviceObject=DeviceObject;
+   FileObject->Vpb=DeviceObject->Vpb;
+   
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 		      ACCESS_MASK DesiredAccess,
 		      POBJECT_ATTRIBUTES ObjectAttributes,
@@ -91,14 +153,11 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
  * RETURNS: Status
  */
 {
-   PVOID Object;
+   PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PIRP Irp;
    KEVENT Event;
-   PDEVICE_OBJECT DeviceObject;
-   PFILE_OBJECT FileObject;   
    PIO_STACK_LOCATION StackLoc;
-   PWSTR Remainder;
    
    DPRINT("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
 	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
@@ -109,75 +168,14 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    
    *FileHandle=0;
 
-   FileObject = ObGenericCreateObject(FileHandle,
-				      DesiredAccess,
-				      NULL,
-				      IoFileType);
-   memset(FileObject,0,sizeof(FILE_OBJECT));
-
-   Status =  ObOpenObjectByName(ObjectAttributes,&Object,&Remainder);
-
-   if (Status != STATUS_SUCCESS && Status != STATUS_FS_QUERY_REQUIRED)
+   FileObject = ObCreateObject(FileHandle,
+			       DesiredAccess,
+			       ObjectAttributes,
+			       IoFileType);
+   if (FileObject == NULL)
      {
-	DPRINT("%s() = Failed to find object\n",__FUNCTION__);
-	ObDereferenceObject(FileObject);
-	ZwClose(*FileHandle);
-	*FileHandle=0;
 	return(STATUS_UNSUCCESSFUL);
      }
-   
-   
-   DeviceObject = (PDEVICE_OBJECT)Object;
-   DeviceObject = IoGetAttachedDevice(DeviceObject);
-   
-   if (Status == STATUS_SUCCESS)
-     {
-	CHECKPOINT;
-	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-				   (ObjectAttributes->ObjectName->Length+1)*2);
-	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
-	FileObject->FileName.MaximumLength = 
-          ObjectAttributes->ObjectName->MaximumLength;
-	RtlCopyUnicodeString(&(FileObject->FileName),
-			     ObjectAttributes->ObjectName);
-     }
-   else
-     {
-	CHECKPOINT;
-	DPRINT("DeviceObject %x\n",DeviceObject);
-	DPRINT("FileHandle %x\n",FileHandle);
-	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
-	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
-	  {
-	     ObDereferenceObject(FileObject);
-	     ZwClose(*FileHandle);
-	     *FileHandle=0;
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	DPRINT("DeviceObject->Vpb %x\n",DeviceObject->Vpb);
-	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-	  {
-	     CHECKPOINT;
-	     Status = IoTryToMountStorageDevice(DeviceObject);
-	     if (Status!=STATUS_SUCCESS)
-	       {
-		  ObDereferenceObject(FileObject);
-		  ZwClose(*FileHandle);
-		  *FileHandle=0;
-		  return(Status);
-	       }
-	     DeviceObject = IoGetAttachedDevice(DeviceObject);
-	  }
-	DPRINT("Remainder %x\n",Remainder);
-	DPRINT("Remainder %w\n",Remainder);
-	DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
-	RtlInitUnicodeString(&(FileObject->FileName),wstrdup(Remainder));
-	DPRINT("FileObject->FileName.Buffer %x %w\n",
-	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
-     }
-   CHECKPOINT;
-   DPRINT("FileObject->FileName.Buffer %x\n",FileObject->FileName.Buffer);
    
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
@@ -188,19 +186,12 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
      {
 	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
      }
-   
-   FileObject->DeviceObject=DeviceObject;
-   FileObject->Vpb=DeviceObject->Vpb;
-   
+      
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    
-   DPRINT("DevObj StackSize %d\n", DeviceObject->StackSize);
-   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+   Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
-	ObDereferenceObject(FileObject);
-	ZwClose(*FileHandle);
-	*FileHandle=0;
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -209,31 +200,26 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    StackLoc->MinorFunction = 0;
    StackLoc->Flags = 0;
    StackLoc->Control = 0;
-   StackLoc->DeviceObject = DeviceObject;
-   StackLoc->FileObject=FileObject;
-   StackLoc->Parameters.Create.Options=CreateOptions&FILE_VALID_OPTION_FLAGS;
-   StackLoc->Parameters.Create.Options|=CreateDisposition<<24;
-   Status = IoCallDriver(DeviceObject,Irp);
-   if (Status==STATUS_PENDING)
+   StackLoc->DeviceObject = FileObject->DeviceObject;
+   StackLoc->FileObject = FileObject;
+   StackLoc->Parameters.Create.Options = CreateOptions&FILE_VALID_OPTION_FLAGS;
+   StackLoc->Parameters.Create.Options |= CreateDisposition<<24;
+   
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   if (Status == STATUS_PENDING)
      {
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
 	Status = IoStatusBlock->Status;
      }
    
-   if (Status!=STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
-	DPRINT("FileObject->FileName.Buffer %x\n",FileObject->FileName.Buffer);
-	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
-	*FileHandle=0;
-	return(Status);
+	(*FileHandle) = 0;
      }
    
-   DPRINT("*FileHandle %x\n",*FileHandle);
-   ObDereferenceObject(FileObject);
-   
+   DPRINT("Finished ZwCreateFile()\n");
    return(Status);
-
 }
 
 NTSTATUS NtOpenFile(PHANDLE FileHandle,

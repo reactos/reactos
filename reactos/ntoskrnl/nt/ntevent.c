@@ -92,10 +92,10 @@ NTSTATUS STDCALL ZwCreateEvent(OUT PHANDLE EventHandle,
 {
    PKEVENT Event;
    
-   Event = ObGenericCreateObject(EventHandle,
-				 DesiredAccess,
-				 ObjectAttributes,
-				 ExEventType);
+   Event = ObCreateObject(EventHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  ExEventType);
    if (ManualReset == TRUE)
      {
 	KeInitializeEvent(Event,NotificationEvent,InitialState);
@@ -121,9 +121,16 @@ NTSTATUS STDCALL ZwOpenEvent(OUT PHANDLE EventHandle,
 {
    NTSTATUS Status;
    PKEVENT Event;   
-   PWSTR Ignored;
+
    
-   Status = ObOpenObjectByName(ObjectAttributes,(PVOID*)Event,&Ignored);
+   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
+				    ObjectAttributes->Attributes,
+				    NULL,
+				    DesiredAccess,
+				    ExEventType,
+				    UserMode,
+				    NULL,
+				    (PVOID*)&Event);
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);

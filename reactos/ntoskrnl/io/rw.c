@@ -107,7 +107,6 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
        return(IoStatusBlock->Status);
      }
-   ObDereferenceObject(FileObject);
    return(Status);
 }
 
@@ -188,8 +187,6 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;
      }
-   ObDereferenceObject(FileObject);
-   
    return(Status);
 }
 

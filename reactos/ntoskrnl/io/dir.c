@@ -204,7 +204,6 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
 	  }
 	Status = IoStatusBlock->Status;
      }
-   ObDereferenceObject(FileObject);
    return(Status);
 }
 

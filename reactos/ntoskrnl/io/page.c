@@ -30,7 +30,12 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
    
    DPRINT("IoPageRead(FileObject %x, Address %x)\n",
 	  FileObject,Address);
-
+   
+   ObReferenceObjectByPointer(FileObject,
+			      STANDARD_RIGHTS_REQUIRED,
+			      IoFileType,
+			      UserMode);
+   
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				      FileObject->DeviceObject,

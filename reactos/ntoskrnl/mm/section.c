@@ -25,6 +25,44 @@ POBJECT_TYPE MmSectionType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID MmpDeleteSection(PVOID ObjectBody)
+{
+}
+
+NTSTATUS MmpCreateSection(PVOID ObjectBody,
+			  PVOID Parent,
+			  PWSTR RemainingPath)
+{
+   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ObjectBody;
+   NTSTATUS Status;
+   
+   DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+	  ObjectBody, Parent, RemainingPath);
+   
+   if (RemainingPath == NULL)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
+   if (wcschr(RemainingPath+1, '\\') != NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   Status = ObReferenceObjectByPointer(Parent,
+				       STANDARD_RIGHTS_REQUIRED,
+				       ObDirectoryType,
+				       UserMode);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
+     
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS MmInitSectionImplementation(VOID)
 {
    ANSI_STRING AnsiString;
@@ -40,11 +78,12 @@ NTSTATUS MmInitSectionImplementation(VOID)
    MmSectionType->Dump = NULL;
    MmSectionType->Open = NULL;
    MmSectionType->Close = NULL;
-   MmSectionType->Delete = NULL;
+   MmSectionType->Delete = MmpDeleteSection;
    MmSectionType->Parse = NULL;
    MmSectionType->Security = NULL;
    MmSectionType->QueryName = NULL;
    MmSectionType->OkayToClose = NULL;
+   MmSectionType->Create = MmpCreateSection;
    
    RtlInitAnsiString(&AnsiString,"Section");
    RtlAnsiStringToUnicodeString(&MmSectionType->TypeName,
@@ -106,10 +145,10 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
    
    DbgPrint("ZwCreateSection()\n");
 
-   Section = ObGenericCreateObject(SectionHandle,
-				   DesiredAccess,
-				   ObjectAttributes,
-				   MmSectionType);
+   Section = ObCreateObject(SectionHandle,
+			    DesiredAccess,
+			    ObjectAttributes,
+			    MmSectionType);
    
    if (MaximumSize != NULL)
      {
@@ -120,19 +159,26 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
         LARGE_INTEGER_QUAD_PART(Section->MaximumSize) = 0xffffffff;
      }
    Section->SectionPageProtection = SectionPageProtection;
-   Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_READ_DATA,
-				      IoFileType,
-				      UserMode,
-				      (PVOID*)&Section->FileObject,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	DPRINT("ZwCreateSection() = %x\n",Status);
-	return(Status);
-     }
-   
    Section->AllocateAttributes = AllocationAttributes;
+   
+   if (FileHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(FileHandle,
+					   FILE_READ_DATA,
+					   IoFileType,
+					   UserMode,
+					   (PVOID*)&Section->FileObject,
+					   NULL);
+	if (Status != STATUS_SUCCESS)
+	  {
+	     DPRINT("ZwCreateSection() = %x\n",Status);
+	     return(Status);
+	  }
+     }
+   else
+     {
+	Section->FileObject = NULL;
+     }
    
    DPRINT("ZwCreateSection() = STATUS_SUCCESS\n");
    return(STATUS_SUCCESS);
@@ -153,23 +199,26 @@ NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
 {
    PVOID Object;
    NTSTATUS Status;
-   PWSTR Ignored;
    
    *SectionHandle = 0;
-   
-   Status = ObOpenObjectByName(ObjectAttributes,&Object,&Ignored);
+
+   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
+				    ObjectAttributes->Attributes,
+				    NULL,
+				    DesiredAccess,
+				    MmSectionType,
+				    UserMode,
+				    NULL,
+				    &Object);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
        
-   if (BODY_TO_HEADER(Object)->ObjectType!=MmSectionType)
-     {	
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   *SectionHandle = ObInsertHandle(KeGetCurrentProcess(),Object,
-				   DesiredAccess,FALSE);
+   *SectionHandle = ObInsertHandle(KeGetCurrentProcess(),
+				   Object,
+				   DesiredAccess,
+				   FALSE);
    return(STATUS_SUCCESS);
 }
 

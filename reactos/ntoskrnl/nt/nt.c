@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/cont.c
- * PURPOSE:         Manages continuous memory
- * PROGRAMMER:      David Welch (welch@cwcom.net)
+ * FILE:            ntoskrnl/nt/nt.c
+ * PURPOSE:         Initialization of system call interfaces
+ * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -16,13 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID MmAllocateContiguousMemory(ULONG NumberOfBytes,
-				 PHYSICAL_ADDRESS HighestAcceptableAddress)
+VOID NtInit(VOID)
 {
-   UNIMPLEMENTED;
-}
-
-VOID MmFreeContiguousMemory(PVOID BaseAddress)
-{
-   UNIMPLEMENTED;
+   NtInitializeEventImplementation();
 }

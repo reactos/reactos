@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
- * FILE:          mkernel/hal/x86/halinit.c
+ * FILE:          ntoskrnl/hal/x86/halinit.c
  * PURPOSE:       Initalize the uniprocessor, x86 hal
  * PROGRAMMER:    David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

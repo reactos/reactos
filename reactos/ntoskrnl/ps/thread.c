@@ -216,10 +216,10 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    
    PiNrThreads++;
    
-   Thread = ObGenericCreateObject(ThreadHandle,
-				  DesiredAccess,
-				  ThreadAttributes,
-				  PsThreadType);
+   Thread = ObCreateObject(ThreadHandle,
+			   DesiredAccess,
+			   ThreadAttributes,
+			   PsThreadType);
    DPRINT("Thread = %x\n",Thread);
    Thread->Tcb.LastTick = 0;
    Thread->Tcb.ThreadState=THREAD_STATE_SUSPENDED;

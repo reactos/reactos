@@ -17,12 +17,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
-NtQueryInformationFile(HANDLE FileHandle,
-                       PIO_STATUS_BLOCK IoStatusBlock,
-                       PVOID FileInformation,
-                       ULONG Length,
-                       FILE_INFORMATION_CLASS FileInformationClass)
+NTSTATUS NtQueryInformationFile(HANDLE FileHandle,
+				PIO_STATUS_BLOCK IoStatusBlock,
+				PVOID FileInformation,
+				ULONG Length,
+				FILE_INFORMATION_CLASS FileInformationClass)
 {
   return ZwQueryInformationFile(FileHandle,
                                 IoStatusBlock,
@@ -31,12 +30,11 @@ NtQueryInformationFile(HANDLE FileHandle,
                                 FileInformationClass);
 }
 
-NTSTATUS 
-ZwQueryInformationFile(HANDLE FileHandle,
-                       PIO_STATUS_BLOCK IoStatusBlock,
-                       PVOID FileInformation,
-                       ULONG Length,
-                       FILE_INFORMATION_CLASS FileInformationClass)
+NTSTATUS ZwQueryInformationFile(HANDLE FileHandle,
+				PIO_STATUS_BLOCK IoStatusBlock,
+				PVOID FileInformation,
+				ULONG Length,
+				FILE_INFORMATION_CLASS FileInformationClass)
 {
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
@@ -92,12 +90,11 @@ ZwQueryInformationFile(HANDLE FileHandle,
   return Status;
 }
 
-NTSTATUS 
-NtSetInformationFile(HANDLE FileHandle,
-                     PIO_STATUS_BLOCK IoStatusBlock,
-                     PVOID FileInformation,
-                     ULONG Length,
-                     FILE_INFORMATION_CLASS FileInformationClass)
+NTSTATUS NtSetInformationFile(HANDLE FileHandle,
+			      PIO_STATUS_BLOCK IoStatusBlock,
+			      PVOID FileInformation,
+			      ULONG Length,
+			      FILE_INFORMATION_CLASS FileInformationClass)
 {
   return ZwSetInformationFile(FileHandle,
                               IoStatusBlock,
@@ -106,57 +103,52 @@ NtSetInformationFile(HANDLE FileHandle,
                               FileInformationClass);
 }
 
-NTSTATUS 
-ZwSetInformationFile(HANDLE FileHandle,
-                     PIO_STATUS_BLOCK IoStatusBlock,
-                     PVOID FileInformation,
-                     ULONG Length,
-                     FILE_INFORMATION_CLASS FileInformationClass)
+NTSTATUS ZwSetInformationFile(HANDLE FileHandle,
+			      PIO_STATUS_BLOCK IoStatusBlock,
+			      PVOID FileInformation,
+			      ULONG Length,
+			      FILE_INFORMATION_CLASS FileInformationClass)
 {
   UNIMPLEMENTED;
 }
 
-PGENERIC_MAPPING 
-IoGetFileObjectGenericMapping(VOID)
+PGENERIC_MAPPING IoGetFileObjectGenericMapping(VOID)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
-NtQueryAttributesFile(IN HANDLE FileHandle,
-                      IN PVOID Buffer)
+NTSTATUS STDCALL NtQueryAttributesFile(IN HANDLE FileHandle,
+				       IN PVOID Buffer)
 {
   return ZwQueryAttributesFile(FileHandle, Buffer);
 }
 
-NTSTATUS STDCALL 
-ZwQueryAttributesFile(IN HANDLE FileHandle,	IN PVOID Buffer)
+NTSTATUS STDCALL ZwQueryAttributesFile(IN HANDLE FileHandle, IN PVOID Buffer)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
-NtQueryFullAttributesFile(IN HANDLE FileHandle, IN PVOID Attributes)
+NTSTATUS STDCALL NtQueryFullAttributesFile(IN HANDLE FileHandle, 
+					   IN PVOID Attributes)
 {
   return ZwQueryFullAttributesFile(FileHandle, Attributes);
 }
 
-NTSTATUS STDCALL 
-ZwQueryFullAttributesFile(IN HANDLE FileHandle, IN PVOID Attributes)
+NTSTATUS STDCALL ZwQueryFullAttributesFile(IN HANDLE FileHandle, 
+					   IN PVOID Attributes)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtQueryEaFile(IN HANDLE FileHandle,
-              OUT PIO_STATUS_BLOCK IoStatusBlock,
-              OUT PVOID Buffer,
-              IN ULONG Length,
-              IN BOOLEAN ReturnSingleEntry,
-              IN PVOID EaList OPTIONAL,
-              IN ULONG EaListLength,
-              IN PULONG EaIndex OPTIONAL,
-              IN BOOLEAN RestartScan)
+NTSTATUS STDCALL NtQueryEaFile(IN HANDLE FileHandle,
+			       OUT PIO_STATUS_BLOCK IoStatusBlock,
+			       OUT PVOID Buffer,
+			       IN ULONG Length,
+			       IN BOOLEAN ReturnSingleEntry,
+			       IN PVOID EaList OPTIONAL,
+			       IN ULONG EaListLength,
+			       IN PULONG EaIndex OPTIONAL,
+			       IN BOOLEAN RestartScan)
 {
   return NtQueryEaFile(FileHandle, 
                        IoStatusBlock, 
@@ -169,25 +161,23 @@ NtQueryEaFile(IN HANDLE FileHandle,
                        RestartScan);
 }
 
-NTSTATUS STDCALL
-ZwQueryEaFile(IN HANDLE FileHandle,
-              OUT PIO_STATUS_BLOCK IoStatusBlock,
-              OUT PVOID Buffer,
-              IN ULONG Length,
-              IN BOOLEAN ReturnSingleEntry,
-              IN PVOID EaList OPTIONAL,
-              IN ULONG EaListLength,
-              IN PULONG EaIndex OPTIONAL,
-              IN BOOLEAN RestartScan)
+NTSTATUS STDCALL ZwQueryEaFile(IN HANDLE FileHandle,
+			       OUT PIO_STATUS_BLOCK IoStatusBlock,
+			       OUT PVOID Buffer,
+			       IN ULONG Length,
+			       IN BOOLEAN ReturnSingleEntry,
+			       IN PVOID EaList OPTIONAL,
+			       IN ULONG EaListLength,
+			       IN PULONG EaIndex OPTIONAL,
+			       IN BOOLEAN RestartScan)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtSetEaFile(IN HANDLE FileHandle,
-            IN PIO_STATUS_BLOCK IoStatusBlock,	
-            PVOID EaBuffer, 
-            ULONG EaBufferSize)
+NTSTATUS STDCALL NtSetEaFile(IN HANDLE FileHandle,
+			     IN PIO_STATUS_BLOCK IoStatusBlock,	
+			     PVOID EaBuffer, 
+			     ULONG EaBufferSize)
 {
   return ZwSetEaFile(FileHandle,
                      IoStatusBlock,	
@@ -195,11 +185,10 @@ NtSetEaFile(IN HANDLE FileHandle,
                      EaBufferSize);
 }
 
-NTSTATUS STDCALL
-ZwSetEaFile(IN HANDLE FileHandle,
-            IN PIO_STATUS_BLOCK IoStatusBlock,	
-            PVOID EaBuffer, 
-            ULONG EaBufferSize)
+NTSTATUS STDCALL ZwSetEaFile(IN HANDLE FileHandle,
+			     IN PIO_STATUS_BLOCK IoStatusBlock,	
+			     PVOID EaBuffer, 
+			     ULONG EaBufferSize)
 {
   UNIMPLEMENTED;
 }

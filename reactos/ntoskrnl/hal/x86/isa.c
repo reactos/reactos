@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/hal/eisa.c
+ * FILE:            ntoskrnl/hal/isa.c
  * PURPOSE:         Interfaces to the ISA bus
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

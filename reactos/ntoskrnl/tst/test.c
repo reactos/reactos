@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/tst/test.c
  * PURPOSE:         Kernel regression tests
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                28/05/98: Created
  */
@@ -25,66 +25,8 @@
 
 #define IDE_SECTOR_SZ 512
 
-/* GLOBALS ******************************************************************/
-
-static KEVENT event = {};
-//static KEVENT event2;
-NTSTATUS TstShell(VOID);
-
 /* FUNCTIONS ****************************************************************/
-NTSTATUS TstPlaySound(VOID)
-{
-   HANDLE hfile;
-   
-//    * Open the parallel port
-   printk("Opening Waveout\n");
-//   hfile = CreateFile("\\Device\\WaveOut",0,0,0,0,0,0);
-   if (hfile == NULL)
-     {
-	printk("File open failed\n");
-     }
-   else
-     {
-//	WriteFile(hfile,wave,wavelength,NULL,NULL);
-     }
-}
 
-NTSTATUS TstFirstThread(PVOID start)
-{
-   int i;
-   
-   printk("Beginning Thread A\n");
-   for (;;)
-     {     
-	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
-	printk("AAA ");
-        KeSetEvent(&event,IO_NO_INCREMENT,FALSE);
-     }
-}
-
-NTSTATUS TstSecondThread(PVOID start)
-{
-   int i;
-   
-   printk("Beginning Thread B\n");
-   for(;;)
-     {
-	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
-	printk("BBB ");
-        KeSetEvent(&event,IO_NO_INCREMENT,FALSE);
-     }
-}
-
-NTSTATUS TstThreadSupport()
-{
-   HANDLE th1, th2;
-   
-   KeInitializeEvent(&event,SynchronizationEvent,TRUE);
-   PsCreateSystemThread(&th1,0,NULL,NULL,NULL,TstFirstThread,NULL);
-   PsCreateSystemThread(&th2,0,NULL,NULL,NULL,TstSecondThread,NULL);
-   printk("Ending main thread\n");
-   for(;;);
-}
 
 VOID ExExecuteShell(VOID)
 {
@@ -99,6 +41,7 @@ VOID ExExecuteShell(VOID)
    LARGE_INTEGER SectionOffset;
    ULONG Size, StackSize;
    CONTEXT Context;
+   NTSTATUS Status;
    
    ZwCreateProcess(&ShellHandle,
 		   PROCESS_ALL_ACCESS,
@@ -112,8 +55,8 @@ VOID ExExecuteShell(VOID)
    RtlInitAnsiString(&afilename,"\\??\\C:\\reactos\\system\\shell.bin");
    RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
    InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&hfile,FILE_ALL_ACCESS,&attr,NULL,0,0);
-   if (hfile==NULL)
+   Status = ZwOpenFile(&hfile,FILE_ALL_ACCESS,&attr,NULL,0,0);
+   if (!NT_SUCCESS(Status))
      {
 	DbgPrint("Failed to open file\n");
         return;
@@ -443,102 +386,8 @@ void TstIDERead(void)
     }
 }
 
-void 
-TstKeyboard(void)
-{
-  NTSTATUS Status;
-  HANDLE FileHandle;
-  ANSI_STRING AnsiDeviceName;
-  UNICODE_STRING UnicodeDeviceName;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  KEY_EVENT_RECORD KeyEvent[2];
-     
-  DbgPrint("Testing keyboard driver...\n");
-   
-  DbgPrint("Opening Keyboard device\n");
-  RtlInitAnsiString(&AnsiDeviceName, "\\Device\\Keyboard");
-  RtlAnsiStringToUnicodeString(&UnicodeDeviceName, &AnsiDeviceName, TRUE);
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &UnicodeDeviceName, 
-                             0,
-                             NULL,
-                             NULL);
-  Status = ZwOpenFile(&FileHandle, FILE_GENERIC_READ, &ObjectAttributes, NULL, 0, 0);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Failed to open keyboard\n");
-      return;
-    }
-
-  DbgPrint(">");
-  for(;;)
-    {
-      Status = ZwReadFile(FileHandle,
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &KeyEvent,
-                          sizeof(KeyEvent),
-                          0,
-                          0);
-      if (!NT_SUCCESS(Status))
-        {
-          DbgPrint("Failed to read key event, status %08x\n", Status);
-          return;
-        }
-      DbgPrint("%c",KeyEvent[0].AsciiChar);
-    }
-}
-
-static int TTcnt = 0;
-
-VOID TstTimerDpc(struct _KDPC* Dpc, 
-                 PVOID DeferredContext, 
-		 PVOID SystemArgument1, 
-                 PVOID SystemArgument2)
-{
-  TTcnt++;
-
-  DPRINT("Timer DPC cnt:%d\n", TTcnt);
-
-}
-
-void
-TstTimer(void)
-{
-   PIO_TIMER Timer = ExAllocatePool(NonPagedPool,sizeof(IO_TIMER));
-   long long int lli = -10000000;
-   LARGE_INTEGER li = *(LARGE_INTEGER *)&lli;
-   
-   CHECKPOINT;
-   KeInitializeTimer(&Timer->timer);
-   CHECKPOINT;
-   KeInitializeDpc(&Timer->dpc, TstTimerDpc, NULL);
-   CHECKPOINT;
-   KeSetTimerEx(&Timer->timer,
-                li,
-                1000,
-		&Timer->dpc);
-   CHECKPOINT;
-   while (TTcnt < 100)
-     ;
-   CHECKPOINT;
-   KeCancelTimer(&Timer->timer);
-   CHECKPOINT;
-
-}
-
 void TstBegin()
 {
    ExExecuteShell();
-//   TstFileRead();
-//   TstGeneralWrite();
-//   TstThreadSupport();
-//   TstKeyboard();
-//   TstIDERead();
-//   TstKeyboardRead();
-//   TstShell();
-//   TstTimer();
 }
 

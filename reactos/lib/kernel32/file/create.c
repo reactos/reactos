@@ -79,6 +79,28 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    WCHAR *FilePart;
    UINT Len = 0;
    
+   switch (dwCreationDisposition)
+     {
+      case CREATE_NEW:
+	dwCreationDisposition = FILE_CREATE;
+	break;
+	
+      case CREATE_ALWAYS:
+	dwCreationDisposition = FILE_OVERWRITE_IF;
+	break;
+	
+      case OPEN_EXISTING:
+	dwCreationDisposition = FILE_OPEN;
+	break;
+	
+      case OPEN_ALWAYS:
+	dwCreationDisposition = OPEN_ALWAYS;
+	break;
+	
+      case TRUNCATE_EXISTING:
+	dwCreationDisposition = FILE_OVERWRITE;
+     }
+   
    DPRINT("CreateFileW(lpFileName %w)\n",lpFileName);
   
    if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))

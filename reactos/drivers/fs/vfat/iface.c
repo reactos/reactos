@@ -758,9 +758,21 @@ NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 {
  PVfatFCB pFcb;
  PVfatCCB pCcb;
+   
+   DPRINT("FsdCloseFile(DeviceExt %x, FileObject %x)\n",
+	    DeviceExt,FileObject);
+  
  //FIXME : update entry in directory ?
    pCcb = (PVfatCCB)(FileObject->FsContext2);
+   
+   DPRINT("pCcb %x\n",pCcb);
+   if (pCcb == NULL)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
    pFcb = pCcb->pFcb;
+   
    pFcb->RefCount--;
    if(pFcb->RefCount<=0)
    {
@@ -1310,6 +1322,8 @@ NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    NTSTATUS Status;
 
+   DPRINT("FsdClose(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);
+   
    Status = FsdCloseFile(DeviceExtension,FileObject);
 
    Irp->IoStatus.Status = Status;

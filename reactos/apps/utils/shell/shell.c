@@ -18,33 +18,11 @@ void debug_printf(char* fmt, ...)
 }
 
 void ExecuteCd(char* cmdline)
-{
-   UCHAR Buffer[255];
-   
-   debug_printf("ExecuteCd(cmdline %s)\n",cmdline);
-   
-   if (cmdline[0] != '\\' &&
-       cmdline[1] != ':')
+{  
+   if (!SetCurrentDirectoryA(cmdline))
      {
-	GetCurrentDirectoryA(255,Buffer);
+	debug_printf("Invalid directory\n");
      }
-   else
-     {
-	Buffer[0] = 0;
-     }
-   debug_printf("Buffer %s\n",Buffer);
-   
-   lstrcatA(Buffer,cmdline);
-   
-   debug_printf("Buffer %s\n",Buffer);
-   
-   if (Buffer[lstrlenA(Buffer)-1] != '\\')
-     {
-	lstrcatA(Buffer,"\\");
-     }
-   debug_printf("Buffer %s\n",Buffer);
-   
-   SetCurrentDirectoryA(Buffer);
 }
 
 void ExecuteDir(char* cmdline)
@@ -136,7 +114,7 @@ void ExecuteCommand(char* line)
    char* cmd;
    char* tail;
    
-   if (line[1] == ':' && line[2] == 0)
+   if (isalpha(line[0]) && line[1] == ':' && line[2] == 0)
      {
 	line[2] = '\\';
 	line[3] = 0;
@@ -155,8 +133,7 @@ void ExecuteCommand(char* line)
 	tail++;
      }
    cmd = line;
-   
-//   debug_printf("cmd '%s' tail '%s'\n",cmd,tail);
+  
    
    if (cmd==NULL)
      {
@@ -196,11 +173,15 @@ void ReadLine(char* line)
    
    do
      {
-	ReadConsoleA(InputHandle,
+	if (!ReadConsoleA(InputHandle,
                      &KeyEvent,
                      sizeof(KEY_EVENT_RECORD),
                      &Result,
-                     NULL);
+                     NULL))
+	  {
+	     debug_printf("Failed to read from console\n");
+	     for(;;);
+	  }
 	if (KeyEvent.bKeyDown && KeyEvent.AsciiChar != 0)
 	  {
 	     debug_printf("%c", KeyEvent.AsciiChar);

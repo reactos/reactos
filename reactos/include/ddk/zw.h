@@ -1558,47 +1558,35 @@ ZwFlushVirtualMemory(
 	IN ULONG NumberOfBytesToFlush,
 	OUT PULONG NumberOfBytesFlushed OPTIONAL
 	);
+ 
 /*
  * FUNCTION: Flushes the dirty pages to file
- * RETURNS: Status 
+ * RETURNS: Status
+ * FIXME: Not sure this does (how is the file specified)
  */
-NTSTATUS
-STDCALL                                            
-NtFlushWriteBuffer (                            
-	VOID                                        
-	);
-NTSTATUS
-STDCALL                                            
-ZwFlushWriteBuffer (                            
-	VOID                                        
-	);                      
-/*
+NTSTATUS STDCALL NtFlushWriteBuffer(VOID);
+NTSTATUS STDCALL ZwFlushWriteBuffer(VOID);                      
+
+ /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
- *        ProcessHandle = Points to the process that allocated the virtual memory
- *        BaseAddress = Points to the memory address, rounded down to a multiple of the pagesize
- *        RegionSize = Limits the range to free, rounded up to a multiple of the paging size
+ *        ProcessHandle = Points to the process that allocated the virtual 
+ *                        memory
+ *        BaseAddress = Points to the memory address, rounded down to a 
+ *                      multiple of the pagesize
+ *        RegionSize = Limits the range to free, rounded up to a multiple of 
+ *                     the paging size
  *        FreeType = Can be one of the values:  MEM_DECOMMIT, or MEM_RELEASE
  * RETURNS: Status 
  */
-
-NTSTATUS
-STDCALL
-NtFreeVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID  *BaseAddress,	
-	IN PULONG  RegionSize,	
-	IN ULONG  FreeType
-	);
-
-NTSTATUS
-STDCALL
-ZwFreeVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID  *BaseAddress,	
-	IN PULONG  RegionSize,	
-	IN ULONG  FreeType
-	);  
+NTSTATUS STDCALL NtFreeVirtualMemory(IN HANDLE ProcessHandle,
+				     IN PVOID  *BaseAddress,	
+				     IN PULONG  RegionSize,	
+				     IN ULONG  FreeType);
+NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
+				     IN PVOID  *BaseAddress,	
+				     IN PULONG  RegionSize,	
+				     IN ULONG  FreeType);  
 
 /*
  * FUNCTION: Sends FSCTL to the filesystem

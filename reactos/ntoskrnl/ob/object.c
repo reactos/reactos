@@ -3,7 +3,7 @@
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/ob/object.c
  * PURPOSE:       Implements generic object managment functions
- * PROGRAMMER:    David Welch (welch@mcmail.com)
+ * PROGRAMMER:    David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *               10/06/98: Created
  */
@@ -20,222 +20,150 @@
 
 /* FUNCTIONS ************************************************************/
 
-NTSTATUS STDCALL NtSetInformationObject(IN HANDLE ObjectHandle,
-					IN CINT ObjectInformationClass,
-					IN PVOID ObjectInformation,
-					IN ULONG Length)
+VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
+			PHANDLE Handle,
+			ACCESS_MASK DesiredAccess,
+			POBJECT_TYPE Type,
+			POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   return(ZwSetInformationObject(ObjectHandle,
-				 ObjectInformationClass,
-				 ObjectInformation,
-				 Length));
-}
-
-NTSTATUS STDCALL ZwSetInformationObject(IN HANDLE ObjectHandle,
-					IN CINT ObjectInformationClass,
-					IN PVOID ObjectInformation,
-					IN ULONG Length)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtQueryObject(IN HANDLE ObjectHandle,
-			       IN CINT ObjectInformationClass,
-			       OUT PVOID ObjectInformation,
-			       IN ULONG Length,
-			       OUT PULONG ResultLength)
-{
-   return(ZwQueryObject(ObjectHandle,
-			ObjectInformationClass,
-			ObjectInformation,
-			Length,
-			ResultLength));
-}
-
-NTSTATUS STDCALL ZwQueryObject(IN HANDLE ObjectHandle,
-			       IN CINT ObjectInformationClass,
-			       OUT PVOID ObjectInformation,
-			       IN ULONG Length,
-			       OUT PULONG ResultLength)
-{
-   UNIMPLEMENTED
-}
-
-VOID ObMakeTemporaryObject(PVOID ObjectBody)
-{
-   POBJECT_HEADER ObjectHeader;
-   
-   ObjectHeader = BODY_TO_HEADER(ObjectBody);
-   ObjectHeader->Permanent = FALSE;
-}
-
-NTSTATUS NtMakeTemporaryObject(HANDLE Handle)
-{
-   return(ZwMakeTemporaryObject(Handle));
-}
-
-NTSTATUS ZwMakeTemporaryObject(HANDLE Handle)
-{
-   PVOID Object;
-   NTSTATUS Status;  
-   POBJECT_HEADER ObjectHeader;
-   
-   Status = ObReferenceObjectByHandle(Handle,
-				      0,
-				      NULL,
-				      KernelMode,
-				      &Object,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-
-   ObjectHeader = BODY_TO_HEADER(Object);
-   ObjectHeader->Permanent = FALSE;
-   
-   ObDereferenceObject(Object);
-   
-   return(STATUS_SUCCESS);
-}
-
-PVOID ObGenericCreateObject(PHANDLE Handle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    POBJECT_TYPE Type)
-/*
- * FUNCTION: Creates a new object
- */
-{
-   POBJECT_HEADER hdr = NULL;
-   PWSTR path;
-   PWSTR name;
-   PWSTR Ignored;
-   PULONG addr;
-   PWSTR Buffer;
-   
-   DPRINT("ObGenericCreateObject(Handle %x, DesiredAccess %x,"
-	  "ObjectAttributes %x, Type %x)\n",Handle,DesiredAccess,
-	  ObjectAttributes,Type);
-   
-   /*
-    * Allocate the object body and header
-    */
-   hdr=(POBJECT_HEADER)ExAllocatePool(NonPagedPool,OBJECT_ALLOC_SIZE(Type));
-   DPRINT("OBJECT_ALLOC_SIZE(Type) %d\n",OBJECT_ALLOC_SIZE(Type));
-   if (hdr==NULL)
-     {
-	return(NULL);
-     }
-   DPRINT("hdr %x\n",hdr);
-
-
-   /*
-    * If unnamed then initalize
-    */
-   if (ObjectAttributes==NULL || ObjectAttributes->ObjectName==NULL)
-     {
-	ObInitializeObjectHeader(Type,NULL,hdr);
-	if (Handle != NULL)
-	  {
-	     *Handle = ObInsertHandle(KeGetCurrentProcess(),
-				      HEADER_TO_BODY(hdr),
-				      DesiredAccess,
-				      FALSE);
-	  }
-	return(HEADER_TO_BODY(hdr));
-     }
-
-   
-   /*
-    * Copy the object name into a buffer
-    */
-//   DbgPrint("ObjectAttributes->ObjectName %x\n",ObjectAttributes->ObjectName);
-//   DbgPrint("ObjectAttributes->ObjectName->Length %d\n",
-//	    ObjectAttributes->ObjectName->Length);
-//   DbgPrint("ObjectAttributes->ObjectName->MaximumLength %d\n",
-//	    ObjectAttributes->ObjectName->MaximumLength);
-   Buffer = ExAllocatePool(NonPagedPool,
-			   ((ObjectAttributes->ObjectName->Length+1)*2));   
-   if (Buffer==NULL)
-     {
-	return(NULL);	
-     }
-   memcpy(Buffer, ObjectAttributes->ObjectName->Buffer,
-	  (ObjectAttributes->ObjectName->Length+1)*2);
-   
-   /*
-    * Seperate the name into a path and name 
-    */
-   name = wcsrchr(Buffer,'\\');
-   if (name==NULL)
-     {
-	name=Buffer;
-	path=NULL;
-     }
-   else
-     {
-	path=Buffer;
-	*name=0;
-	name=name+1;
-     }
-   DPRINT("name %w path %w\n",name,path);
-   
-   ObLookupObject(ObjectAttributes->RootDirectory,
-		  path,
-		  &hdr->Parent,
-		  &Ignored, 
-		  0L);
-
-   /*
-    * Initialize the object header
-    */
-   ObInitializeObjectHeader(Type,name,hdr);
-
-
-   ObCreateEntry(hdr->Parent,hdr);
-
-   DPRINT("Handle %x\n",Handle);
-   if (Handle != NULL)
-     {
-	*Handle = ObInsertHandle(KeGetCurrentProcess(),
-				 HEADER_TO_BODY(hdr),
-				 DesiredAccess,
-				 FALSE);
-     }
-   
-   return(HEADER_TO_BODY(hdr));
-}
-
-VOID ObInitializeObjectHeader(POBJECT_TYPE Type, PWSTR name,
-			      POBJECT_HEADER ObjectHeader)
-/*
- * FUNCTION: Creates a new object
- * ARGUMENT:
- *        id = Identifier for the type of object
- *        obj = Pointer to the header of the object
- */
-{
-   PWSTR temp_name;
-   
-   DPRINT("ObInitializeObjectHeader(id %x name %w obj %x)\n",Type,
-	  name,ObjectHeader);
-
    ObjectHeader->HandleCount = 1;
    ObjectHeader->RefCount = 1;
    ObjectHeader->ObjectType = Type;
    ObjectHeader->Permanent = FALSE;
-   if (name==NULL)
+   RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
+   if (Handle != NULL)
      {
-	ObjectHeader->Name.Length=0;
-	ObjectHeader->Name.Buffer=NULL;
-     }
-   else
-     {
-        RtlInitUnicodeString(&(ObjectHeader->Name),name);
+	*Handle = ObInsertHandle(KeGetCurrentProcess(),
+				 HEADER_TO_BODY(ObjectHeader),
+				 DesiredAccess,
+				 FALSE);
      }
 }
 
+NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+		      PVOID* ReturnedObject,
+		      PWSTR* RemainingPath)
+{
+   PVOID NextObject;
+   PVOID CurrentObject;
+   POBJECT_HEADER CurrentHeader;
+   NTSTATUS Status;
+   PWSTR Path;
+   PWSTR current;
+   
+   DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
+	  "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
+   DPRINT("ObjectAttributes->ObjectName->Buffer %x\n",
+	  ObjectAttributes->ObjectName->Buffer);
+   
+   if (ObjectAttributes->RootDirectory == NULL)
+     {
+	ObReferenceObjectByPointer(NameSpaceRoot,
+				   DIRECTORY_TRAVERSE,
+				   NULL,
+				   UserMode);
+	CurrentObject = NameSpaceRoot;
+     }
+   else
+     {
+	Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
+					   DIRECTORY_TRAVERSE,
+					   NULL,
+					   UserMode,
+					   &CurrentObject,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+     }
+   
+   Path = ObjectAttributes->ObjectName->Buffer;
+   
+   if (Path[0] == 0)
+     {
+	*ReturnedObject = CurrentObject;
+	return(STATUS_SUCCESS);
+     }
+   
+   if (Path[0] != '\\')
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   current = Path;
+
+   while (TRUE)
+     {
+	DPRINT("current %w\n",current);
+	CurrentHeader = BODY_TO_HEADER(CurrentObject);
+	if (CurrentHeader->ObjectType->Parse == NULL)
+	  {
+	     break;
+	  }
+	NextObject = CurrentHeader->ObjectType->Parse(CurrentObject,
+						      &current);
+	if (NextObject == NULL)
+	  {
+	     break;
+	  }
+	ObDereferenceObject(CurrentObject);
+	CurrentObject = NextObject;
+     }
+   
+   *RemainingPath = current;
+   *ReturnedObject = CurrentObject;
+   
+   return(STATUS_SUCCESS);
+}
+
+PVOID ObCreateObject(PHANDLE Handle,
+		     ACCESS_MASK DesiredAccess,
+		     POBJECT_ATTRIBUTES ObjectAttributes,
+		     POBJECT_TYPE Type)
+{
+   PVOID Parent = NULL;
+   PWSTR RemainingPath = NULL;
+   POBJECT_HEADER Header;
+   NTSTATUS Status;
+   
+   DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n");
+   if (ObjectAttributes != NULL &&
+       ObjectAttributes->ObjectName != NULL)
+     {
+	DPRINT("ObjectAttributes->ObjectName->Buffer %w\n",
+	       ObjectAttributes->ObjectName->Buffer);
+     }
+   
+   if (ObjectAttributes != NULL &&
+       ObjectAttributes->ObjectName != NULL)
+     {
+	ObFindObject(ObjectAttributes,
+		     &Parent,
+		     &RemainingPath);
+     }
+   
+   Header = (POBJECT_HEADER)ExAllocatePool(NonPagedPool,
+					   OBJECT_ALLOC_SIZE(Type));
+   ObInitializeObject(Header, 
+		      Handle, 
+		      DesiredAccess, 
+		      Type, 
+		      ObjectAttributes);
+   if (Header->ObjectType != NULL &&
+       Header->ObjectType->Create != NULL)
+     {
+	Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
+					    Parent,
+					    RemainingPath,
+					    ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(NULL);
+	  }
+     }
+   return(HEADER_TO_BODY(Header));
+}
 
 NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
 				    ACCESS_MASK DesiredAccess,
@@ -251,12 +179,21 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
  * RETURNS: Status
  */
 {
-   POBJECT_HEADER Object;
+   POBJECT_HEADER ObjectHeader;
 
-   DPRINT("ObReferenceObjectByPointer(%x)\n",ObjectBody);
+   DPRINT("ObReferenceObjectByPointer(ObjectBody %x, ObjectType %x)\n",
+	  ObjectBody,ObjectType);
    
-   Object = BODY_TO_HEADER(ObjectBody);
-   Object->RefCount++;
+   ObjectHeader = BODY_TO_HEADER(ObjectBody);
+   
+   if (ObjectType != NULL && ObjectHeader->ObjectType != ObjectType)
+     {
+	DPRINT("Failed (type was %x %w)\n",ObjectHeader->ObjectType,
+	       ObjectHeader->ObjectType->TypeName.Buffer);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   ObjectHeader->RefCount++;
    return(STATUS_SUCCESS);
 }
 
@@ -274,9 +211,9 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
        !Header->Permanent)
      {
 	if (Header->ObjectType != NULL &&
-	    Header->ObjectType->Close != NULL)
+	    Header->ObjectType->Delete != NULL)
 	  {
-	     Header->ObjectType->Close(HEADER_TO_BODY(Header));
+	     Header->ObjectType->Delete(HEADER_TO_BODY(Header));
 	  }
 	if (Header->Name.Buffer != NULL)
 	  {
@@ -303,45 +240,6 @@ VOID ObDereferenceObject(PVOID ObjectBody)
    
    Header->RefCount--;
    ObPerformRetentionChecks(Header);
-}
-
-
-NTSTATUS NtClose(HANDLE Handle)
-{
-   return(ZwClose(Handle));
-}
-
-NTSTATUS ZwClose(HANDLE Handle)
-/*
- * FUNCTION: Closes a handle reference to an object
- * ARGUMENTS:
- *         Handle = handle to close
- * RETURNS: Status
- */
-{
-   PVOID ObjectBody;
-   POBJECT_HEADER Header;
-   PHANDLE_REP HandleRep;
-   
-   assert_irql(PASSIVE_LEVEL);
-   
-   DPRINT("ZwClose(Handle %x)\n",Handle);
-   
-   HandleRep = ObTranslateHandle(KeGetCurrentProcess(),Handle);
-   if (HandleRep == NULL)
-     {
-	return(STATUS_INVALID_HANDLE);
-     }   
-   ObjectBody = HandleRep->ObjectBody;
-   
-   HandleRep->ObjectBody = NULL;
-   
-   Header = BODY_TO_HEADER(ObjectBody);
-   
-   Header->HandleCount--;
-   ObPerformRetentionChecks(Header);
-   
-   return(STATUS_SUCCESS);
 }
 
 NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,

@@ -17,7 +17,7 @@
 
 VOID ExRaiseStatus(NTSTATUS Status)
 {
-   DbgPrint("ExRaiseStatus(%d)\n",Status);
+   DbgPrint("ExRaiseStatus(%x)\n",Status);
    for(;;);
 }
 

@@ -1,18 +1,16 @@
 /*
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
- * FILE:                    mkernel/rtl/seqlist.c
+ * FILE:                    ntoskrnl/rtl/seqlist.c
  * PURPOSE:                 Implementing sequenced lists
- * PROGRAMMER:              David Welch (welch@mcmail.com)
+ * PROGRAMMER:              David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *             28/06/98: Created
  */
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 
 /* TYPES ********************************************************************/
 

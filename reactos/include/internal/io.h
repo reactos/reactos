@@ -45,4 +45,14 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 		     PLARGE_INTEGER Offset,
 		     PIO_STATUS_BLOCK StatusBlock);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
+
+NTSTATUS IopCreateFile(PVOID ObjectBody,
+		       PVOID Parent,
+		       PWSTR RemainingPath,
+		       POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS IopCreateDevice(PVOID ObjectBody,
+			 PVOID Parent,
+			 PWSTR RemainingPath,
+			 POBJECT_ATTRIBUTES ObjectAttributes);
+
 #endif

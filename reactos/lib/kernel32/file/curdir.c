@@ -63,7 +63,8 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
 {
    UINT i;
-
+   WCHAR TempStr[MAX_PATH];
+   
    DPRINT("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
    
    if ( lpPathName == NULL )
@@ -73,24 +74,59 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
    i = 0;
    while ((lpPathName[i])!=0 && i < MAX_PATH)
    {
-	CurrentDirectoryW[i] = (unsigned short)lpPathName[i];
+	TempStr[i] = (unsigned short)lpPathName[i];
 	i++;
    }
-   CurrentDirectoryW[i] = 0;
+   TempStr[i] = 0;
    
-   DPRINT("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
-   
-   return(TRUE);
+   return(SetCurrentDirectoryW(TempStr));
 }
 
 
 WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
 {
+   WCHAR TempDir[MAX_PATH];
+   HANDLE TempHandle;
+   ULONG Len;
+   
+   DPRINT("SetCurrentDirectoryW(lpPathName %w)\n",lpPathName);
+   
    if ( lpPathName == NULL )
 	return FALSE;
    if ( lstrlenW(lpPathName) > MAX_PATH )
 	return FALSE;
-   lstrcpyW(CurrentDirectoryW,lpPathName);
+   
+   lstrcpyW(TempDir, CurrentDirectoryW);
+   GetFullPathNameW(lpPathName,
+		    MAX_PATH,
+		    TempDir,
+		    NULL);
+   
+   Len = lstrlenW(TempDir);
+   if (TempDir[Len-1] != '\\')
+     {
+	TempDir[Len] = '\\';
+	TempDir[Len+1] = 0;
+     }
+   
+   DPRINT("TempDir %w\n",TempDir);
+   
+   TempHandle = CreateFileW(TempDir,
+			    FILE_TRAVERSE,
+			    0,
+			    NULL,
+			    OPEN_EXISTING,
+			    FILE_ATTRIBUTE_DIRECTORY,
+			    NULL);
+   if (TempHandle == NULL)
+     {
+	return(FALSE);
+     }
+   CloseHandle(TempHandle);
+   lstrcpyW(CurrentDirectoryW, TempDir);
+   
+   DPRINT("CurrentDirectoryW %w\n",CurrentDirectoryW);
+   
    return(TRUE);
 }
 

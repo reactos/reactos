@@ -71,7 +71,6 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 
 //  -------------------------------------------------------------------------
 
-#include <internal/kernel.h>
 #include <internal/i386/io.h>
 #include <internal/string.h>
 

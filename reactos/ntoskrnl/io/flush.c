@@ -45,7 +45,7 @@ NTSTATUS STDCALL ZwFlushBuffersFile(IN HANDLE FileHandle,
  *                       the flush buffers operation. The information field is
  *                       set to number of bytes flushed to disk.
  * RETURNS: Status 
- * REMARKS: This funciton maps to the win32 FlushFileBuffers
+ * REMARKS: This function maps to the win32 FlushFileBuffers
  */
 {
    PFILE_OBJECT FileObject = NULL;

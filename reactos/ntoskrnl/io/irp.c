@@ -150,10 +150,7 @@ PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
  * RETURNS: A pointer to the stack location 
  */
 {
-   DPRINT("IoGetNextIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
-          Irp,
-          Irp->CurrentLocation,
-          Irp->StackCount);
+   DPRINT("IoGetNextIrpStackLocation(Irp %x)\n",Irp);
 
    assert(Irp!=NULL);
    DPRINT("Irp %x Irp->StackPtr %x\n",Irp,Irp->CurrentLocation);
@@ -166,12 +163,19 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  */
 {
    NTSTATUS Status;
-   PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
-   PIO_STACK_LOCATION param = IoGetNextIrpStackLocation(Irp);
-
+   PDRIVER_OBJECT DriverObject;
+   PIO_STACK_LOCATION param;
+   
+   DPRINT("IoCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+   
+   DriverObject = DeviceObject->DriverObject;
+   param = IoGetNextIrpStackLocation(Irp);
+   
    Irp->Tail.Overlay.CurrentStackLocation--;
    Irp->CurrentLocation--;
-
+   
+   DPRINT("DriverObject->MajorFunction[param->MajorFunction] %x\n",
+	    DriverObject->MajorFunction[param->MajorFunction]);
    Status = DriverObject->MajorFunction[param->MajorFunction](DeviceObject,
 							      Irp);
    return Status;

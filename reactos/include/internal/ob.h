@@ -61,10 +61,10 @@ VOID ObDeleteHandle(HANDLE Handle);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 			 PWSTR* UnparsedSection, ULONG Attributes);
 
-PVOID ObGenericCreateObject(PHANDLE Handle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    POBJECT_TYPE Type);
+PVOID ObCreateObject(PHANDLE Handle,
+		     ACCESS_MASK DesiredAccess,
+		     POBJECT_ATTRIBUTES ObjectAttributes,
+		     POBJECT_TYPE Type);
 VOID ObInitializeHandleTable(PKPROCESS Parent, BOOLEAN Inherit,
 			     PKPROCESS Process);
 VOID ObRemoveEntry(POBJECT_HEADER Header);
@@ -101,5 +101,6 @@ typedef struct
 } HANDLE_REP, *PHANDLE_REP;
 
 PHANDLE_REP ObTranslateHandle(PKPROCESS Process, HANDLE h);
+extern PDIRECTORY_OBJECT NameSpaceRoot;
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

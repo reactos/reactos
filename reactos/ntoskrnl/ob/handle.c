@@ -215,8 +215,10 @@ VOID ObDeleteHandle(HANDLE Handle)
    DPRINT("Finished ObDeleteHandle()\n");
 }
 
-HANDLE ObInsertHandle(PKPROCESS Process, PVOID ObjectBody,
-		      ACCESS_MASK GrantedAccess, BOOLEAN Inherit)
+HANDLE ObInsertHandle(PKPROCESS Process, 
+		      PVOID ObjectBody,
+		      ACCESS_MASK GrantedAccess, 
+		      BOOLEAN Inherit)
 /*
  * FUNCTION: Add a handle referencing an object
  * ARGUMENTS:

@@ -171,84 +171,80 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
 	
 }
 
-#define IS_END_OF_NAME(ch)  (!(ch) || ((ch) == L'/') || ((ch) == L'\\'))
-
-
-DWORD
-STDCALL
-GetFullPathNameW(
-    LPCWSTR lpFileName,
-    DWORD nBufferLength,
-    LPWSTR lpBuffer,
-    LPWSTR *lpFilePart
-    )
+DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
+			       DWORD nBufferLength,
+			       LPWSTR lpBuffer,
+			       LPWSTR *lpFilePart)
 {
-
-	WCHAR buffer[MAX_PATH];
-     	WCHAR *p;
-
-     	if (!lpFileName || !lpBuffer) return 0;
-
-     	p = buffer;
-     
-     	if (IS_END_OF_NAME(*lpFileName) && (*lpFileName))  /* Absolute path */
-     	{
-         	while (*lpFileName == L'\\') 
-			lpFileName++;
-     	}
-     	else  /* Relative path or empty path */
-     	{
-		if ( GetCurrentDirectoryW(MAX_PATH,p) == 0 )
-			wcscpy( p, L"C:");
-         	if (*p) 
-			p += wcslen(p); 
-     	}
-     	if (!*lpFileName) /* empty path */
-       		*p++ = '\\';
-     	*p = '\0';
-
-     	while (*lpFileName)
-     	{
-		if (*lpFileName == '.')
-		{
-			if (IS_END_OF_NAME(lpFileName[1]))
-			{
-                 		lpFileName++;
-                 		while (*lpFileName == L'\\' ) lpFileName++;
-                 		continue;
-             		}
-             		else if ((lpFileName[1] == L'.') && IS_END_OF_NAME(lpFileName[2]))
-             		{
-                 		lpFileName += 2;
-                 		while ((*lpFileName == '\\') ) lpFileName++;
-                		while ((p > buffer + 2) && (*p != '\\')) p--;
-                 		*p = '\0';  /* Remove trailing separator */
-                 		continue;
-            		 }
-         	}
-         	if (p >= buffer + sizeof(buffer) - 1)
-         	{
-             		//DOS_ERROR( ER_PathNotFound, EC_NotFound, SA_Abort, EL_Disk);
-             		return 0;
-         	}
-         	*p++ = '\\';
-         	while (!IS_END_OF_NAME(*lpFileName) && (p < buffer + sizeof(buffer) -1))
-             		*p++ = *lpFileName++;
-        	*p = '\0';
-         	while ((*lpFileName == '\\') ) lpFileName++;
-	}
-
-	if (!buffer[2])
-     	{
-        	buffer[2] = '\\';
-        	buffer[3] = '\0';
-     	}
- 
-     
-	wcsncpy( lpBuffer, buffer, nBufferLength);
-
-	//TRACE(dosfs, "returning %s\n", buffer );
-	return wcslen(buffer);
+   PWSTR p;
+   PWSTR prev = NULL;
+   
+   DPRINT("GetFullPathNameW(lpFileName %w, nBufferLength %d, lpBuffer %w, "
+	  "lpFilePart %x)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+   
+   if (!lpFileName || !lpBuffer) return 0;
+   
+   if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
+     {
+	lstrcpyW(lpBuffer, lpFileName);
+     }
+   else if (lpFileName[0] == '\\')
+     {
+	lstrcpyW(&lpBuffer[2], lpFileName);
+     }
+   else
+     {
+	lstrcatW(lpBuffer, lpFileName);
+     }
+   
+   DPRINT("lpBuffer %w\n",lpBuffer);
+   
+   p = lpBuffer + 2;
+   
+   while ((*p) != 0) 
+     {
+	DPRINT("prev %w p %w\n",prev,p);
+	if (p[1] == '.' && (p[2] == '\\' || p[2] == 0))
+	  {
+	     lstrcpyW(p, p+2);
+	  }
+	else if (p[1] == '.' && p[2] == '.' && (p[3] == '\\' || p[3] == 0) && 
+		 prev != NULL)
+	  {
+	     lstrcpyW(prev, p+3);
+	     p = prev;
+	     if (prev == (lpBuffer+2))
+	       {
+		  prev = NULL;
+	       }
+	     else
+	       {
+		  prev--;
+		  while ((*prev) != '\\')
+		    {
+		       prev--;
+		    }
+	       }
+	  }
+	else
+	  {
+	     prev = p;
+	     do
+	       {
+		  p++;
+	       } 
+	     while ((*p) != 0 && (*p) != '\\');
+	  }
+     }
+   
+   if (lpFilePart != NULL)
+     {
+	(*lpFilePart) = prev;
+     }
+   
+   DPRINT("lpBuffer %w\n",lpBuffer);
+   
+   return wcslen(lpBuffer);
 }
 
 

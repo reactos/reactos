@@ -23,13 +23,62 @@
 POBJECT_TYPE IoDeviceType = NULL;
 POBJECT_TYPE IoFileType = NULL;
                            
-
 /* FUNCTIONS ****************************************************************/
 
-VOID IopCloseFile(PVOID ObjectBody)
+VOID IopCloseFile(PVOID ObjectBody, ULONG HandleCount)
 {
    PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
-    
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
+   
+   if (HandleCount > 0)
+     {
+	return;
+     }
+   
+   ObReferenceObjectByPointer(FileObject,
+			      STANDARD_RIGHTS_REQUIRED,
+			      IoFileType,
+			      UserMode);
+   
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
+				      FileObject->DeviceObject,
+				      NULL,
+				      0,
+				      NULL,
+				      NULL,
+				      NULL);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+}
+
+VOID IopDeleteFile(PVOID ObjectBody)
+{
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
+   
+   ObReferenceObjectByPointer(ObjectBody,
+			      STANDARD_RIGHTS_REQUIRED,
+			      IoFileType,
+			      UserMode);
+   
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
+				      FileObject->DeviceObject,
+				      NULL,
+				      0,
+				      NULL,
+				      NULL,
+				      NULL);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+   
    if (FileObject->FileName.Buffer != NULL)
      {
 	ExFreePool(FileObject->FileName.Buffer);
@@ -62,6 +111,7 @@ VOID IoInit(VOID)
    IoDeviceType->Security = NULL;
    IoDeviceType->QueryName = NULL;
    IoDeviceType->OkayToClose = NULL;
+   IoDeviceType->Create = IopCreateDevice;
    
    RtlInitAnsiString(&AnsiString,"Device");
    RtlAnsiStringToUnicodeString(&IoDeviceType->TypeName,&AnsiString,TRUE);
@@ -77,11 +127,12 @@ VOID IoInit(VOID)
    IoFileType->Dump = NULL;
    IoFileType->Open = NULL;
    IoFileType->Close = IopCloseFile;
-   IoFileType->Delete = NULL;
+   IoFileType->Delete = IopDeleteFile;
    IoFileType->Parse = NULL;
    IoFileType->Security = NULL;
    IoFileType->QueryName = NULL;
    IoFileType->OkayToClose = NULL;
+   IoFileType->Create = IopCreateFile;
    
    RtlInitAnsiString(&AnsiString,"File");
    RtlAnsiStringToUnicodeString(&IoFileType->TypeName,&AnsiString,TRUE);

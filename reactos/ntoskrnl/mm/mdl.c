@@ -125,7 +125,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
     */
    if (marea==NULL )
      {
-	printk("Area is invalid\n");
+	DbgPrint("(%s:%d) Area is invalid\n",__FILE__,__LINE__);
 	ExRaiseStatus(STATUS_INVALID_PARAMETER);
      }
       

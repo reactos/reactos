@@ -112,6 +112,15 @@ VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
+NTSTATUS IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
+				    PIRP Irp)
+{
+   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Information = 0;
+   
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   return(STATUS_NOT_IMPLEMENTED);
+}
 
 NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry)
 /*
@@ -121,6 +130,7 @@ NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry)
 {
    NTSTATUS ret;
    PDRIVER_OBJECT DriverObject;
+   ULONG i;
    
    /*
     * Allocate memory for a driver object
@@ -133,8 +143,12 @@ NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry)
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
-   memset(DriverObject, '\0', sizeof(DRIVER_OBJECT));
-   CHECKPOINT;
+   memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
+   
+   for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
+     {
+	DriverObject->MajorFunction[i] = IopDefaultDispatchFunction;
+     }
    
    /*
     * Initalize the driver
@@ -165,6 +179,29 @@ NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,
 {
    UNIMPLEMENTED;
 }
+
+NTSTATUS IopCreateDevice(PVOID ObjectBody,
+			 PVOID Parent,
+			 PWSTR RemainingPath,
+			 POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ObjectBody;
+   
+   DPRINT("IopCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+	  ObjectBody, Parent, RemainingPath);
+   
+   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   if (Parent != NULL && RemainingPath != NULL)
+     {
+	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
+     }
+   return(STATUS_SUCCESS);
+}
+
 
 NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 			ULONG DeviceExtensionSize,
@@ -209,11 +246,11 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    if (DeviceName!=NULL)
      {
 	InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
-	dev = ObGenericCreateObject(&devh,0,&dev_attr,IoDeviceType);
+	dev = ObCreateObject(&devh,0,&dev_attr,IoDeviceType);
      }
    else
      {
-	dev = ObGenericCreateObject(&devh,0,NULL,IoDeviceType);
+	dev = ObCreateObject(&devh,0,NULL,IoDeviceType);
      }
 					      
    *DeviceObject=NULL;

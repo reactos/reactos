@@ -43,5 +43,16 @@ NTSTATUS ObReferenceObjectByPointer(PVOID Object,
 				    POBJECT_TYPE ObjectType,
 				    KPROCESSOR_MODE AccessMode);
 
-NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
-			    PVOID* Object, PWSTR* UnparsedSection);
+NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+				 ULONG Attributes,
+				 PACCESS_STATE PassedAccessState,
+				 ACCESS_MASK DesiredAccess,
+				 POBJECT_TYPE ObjectType,
+				 KPROCESSOR_MODE AccessMode,
+				 PVOID ParseContext,
+				 PVOID* ObjectPtr);
+
+PVOID ObCreateObject(PHANDLE Handle,
+		     ACCESS_MASK DesiredAccess,
+		     POBJECT_ATTRIBUTES ObjectAttributes,
+		     POBJECT_TYPE Type);
