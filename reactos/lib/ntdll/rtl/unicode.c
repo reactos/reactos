@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.18 2001/03/01 15:30:36 ekohl Exp $
+/* $Id: unicode.c,v 1.19 2002/02/09 23:29:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -206,37 +206,34 @@ RtlAppendUnicodeStringToString (
 }
 
 
-NTSTATUS
-STDCALL
-RtlAppendUnicodeToString (
-	IN OUT	PUNICODE_STRING	Destination,
-	IN	PWSTR		Source
-	)
+NTSTATUS STDCALL
+RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
+			 IN PWSTR Source)
 {
-	PWCHAR Src;
-	PWCHAR Dest;
-	ULONG  i;
-	ULONG  slen;
+  PWCHAR Src;
+  PWCHAR Dest;
+  ULONG i;
+  ULONG slen;
 
-	slen = wcslen (Source);
+  slen = wcslen(Source) * sizeof(WCHAR);
 
-	if (Destination->Length + slen >= Destination->MaximumLength)
-		return STATUS_BUFFER_TOO_SMALL;
+  if (Destination->Length + slen >= Destination->MaximumLength)
+    return(STATUS_BUFFER_TOO_SMALL);
 
-	Src = Source;
-	Dest = Destination->Buffer + (Destination->Length / sizeof (WCHAR));
+  Src = Source;
+  Dest = Destination->Buffer + (Destination->Length / sizeof(WCHAR));
 
-	for (i = 0; i < slen; i++)
-	{
-		*Dest = *Src;
-		Dest++;
-		Src++;
-	}
-	*Dest = 0;
+  for (i = 0; i < (slen / sizeof(WCHAR)); i++)
+    {
+      *Dest = *Src;
+      Dest++;
+      Src++;
+    }
+  *Dest = 0;
 
-	Destination->Length += (slen * sizeof(WCHAR));
+  Destination->Length += slen;
 
-	return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 
