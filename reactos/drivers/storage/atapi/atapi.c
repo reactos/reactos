@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.6 2002/02/03 20:21:13 ekohl Exp $
+/* $Id: atapi.c,v 1.7 2002/02/04 01:21:03 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1227,7 +1227,7 @@ AtapiPolledRead(IN WORD Address,
 
 static ULONG
 AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
-		      IN PSCSI_REQUEST_BLOCK Srb);
+		      IN PSCSI_REQUEST_BLOCK Srb)
 {
   DPRINT1("AtapiSendAtapiComamnd() called!\n");
   DPRINT1("Not implemented yet!\n");
