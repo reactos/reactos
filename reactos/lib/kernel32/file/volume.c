@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.21 2001/11/02 22:08:28 hbirr Exp $
+/* $Id: volume.c,v 1.22 2002/04/26 13:07:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,7 +20,6 @@
  */
 
 #include <ddk/ntddk.h>
-#include <napi/shared_data.h>
 #include <windows.h>
 #include <ntos/minmax.h>
 
@@ -39,7 +38,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
    DWORD drive, count;
    DWORD dwDriveMap;
 
-   dwDriveMap = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap;
+   dwDriveMap = SharedUserData->DosDeviceMap;
 
    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
      {
@@ -73,7 +72,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
    DWORD drive, count;
    DWORD dwDriveMap;
 
-   dwDriveMap = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap;
+   dwDriveMap = SharedUserData->DosDeviceMap;
 
    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
      {
@@ -101,7 +100,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 DWORD STDCALL
 GetLogicalDrives(VOID)
 {
-   return (((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap);
+  return(SharedUserData->DosDeviceMap);
 }
 
 

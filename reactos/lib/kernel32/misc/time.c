@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.13 2001/05/30 20:03:28 ekohl Exp $
+/* $Id: time.c,v 1.14 2002/04/26 13:07:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,6 @@
 
 #include <ddk/ntddk.h>
 #include <windows.h>
-#include <napi/shared_data.h>
 #include <kernel32/error.h>
 //#include <string.h>
 
@@ -430,7 +429,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 	  &TimeZoneInformation,
 	  sizeof(TIME_ZONE_INFORMATION));
 
-   return ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->TimeZoneId;
+   return(SharedUserData->TimeZoneId);
 }
 
 

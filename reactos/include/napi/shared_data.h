@@ -44,7 +44,15 @@ typedef struct _KUSER_SHARED_DATA
    BOOLEAN KdDebuggerEnabled;
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
-#define KERNEL_SHARED_DATA_BASE    (0xFFDF0000)
-#define USER_SHARED_DATA_BASE      (0x7FFE0000)
+#define KERNEL_SHARED_DATA	(0xFFDF0000)
+#define USER_SHARED_DATA	(0x7FFE0000)
+
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
+#define KI_USER_SHARED_DATA	(0xFFDF0000)
+#define SharedUserData		((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
+#else
+#define SharedUserData		((KUSER_SHARED_DATA * const)USER_SHARED_DATA)
+#endif
+
 
 #endif /* __INCLUDE_NAPI_SHARED_DATA_H */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.78 2002/02/20 20:15:07 ekohl Exp $
+/* $Id: process.c,v 1.79 2002/04/26 13:12:34 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -24,7 +24,6 @@
 #include <internal/port.h>
 #include <napi/dbg.h>
 #include <internal/dbg.h>
-#include <napi/shared_data.h>
 #include <internal/pool.h>
 #include <roscfg.h>
 
@@ -581,7 +580,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     * Create the shared data page
     */
    MmLockAddressSpace(&Process->AddressSpace);
-   BaseAddress = (PVOID)USER_SHARED_DATA_BASE;
+   BaseAddress = (PVOID)USER_SHARED_DATA;
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_SHARED_DATA,

@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.27 2002/04/10 17:01:10 ekohl Exp $
+/* $Id: ntddk.h,v 1.28 2002/04/26 13:05:09 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -54,6 +54,7 @@ extern "C"
 #include <ddk/ioctrl.h>
 #include <ddk/rtltypes.h>
 #include <ddk/haltypes.h>
+#include <napi/shared_data.h>
 
 #include <ddk/zw.h>
 #include <ddk/rtl.h>

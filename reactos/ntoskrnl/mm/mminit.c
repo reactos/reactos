@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.30 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: mminit.c,v 1.31 2002/04/26 13:11:55 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -18,7 +18,6 @@
 #include <internal/ntoskrnl.h>
 #include <internal/io.h>
 #include <internal/ps.h>
-#include <napi/shared_data.h>
 #include <internal/pool.h>
 
 #define NDEBUG
@@ -170,7 +169,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    /*
     * Create the kernel mapping of the user/kernel shared memory.
     */
-   BaseAddress = (PVOID)KERNEL_SHARED_DATA_BASE;
+   BaseAddress = (PVOID)KI_USER_SHARED_DATA;
    Length = PAGESIZE;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
@@ -182,7 +181,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      FALSE);
    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &MmSharedDataPagePhysicalAddress);
    Status = MmCreateVirtualMapping(NULL,
-				   (PVOID)KERNEL_SHARED_DATA_BASE,
+				   (PVOID)KI_USER_SHARED_DATA,
 				   PAGE_READWRITE,
 				   (ULONG)MmSharedDataPagePhysicalAddress,
 				   TRUE);
@@ -191,7 +190,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 	DbgPrint("Unable to create virtual mapping\n");
 	KeBugCheck(0);
      }
-   ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
+   RtlZeroMemory(BaseAddress, Length);
 
    /*
     *

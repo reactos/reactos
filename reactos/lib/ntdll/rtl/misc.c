@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.2 2000/08/15 12:41:13 ekohl Exp $
+/* $Id: misc.c,v 1.3 2002/04/26 13:08:42 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-#include <napi/shared_data.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -41,7 +40,7 @@ extern ULONG NtGlobalFlag;
 ULONG STDCALL
 RtlGetNtGlobalFlags(VOID)
 {
-   return (NtGlobalFlag);
+  return(NtGlobalFlag);
 }
 
 
@@ -71,8 +70,8 @@ RtlGetNtGlobalFlags(VOID)
 BOOLEAN STDCALL
 RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 {
-   *ProductType = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->NtProductType;
-   return TRUE;
+  *ProductType = SharedUserData->NtProductType;
+  return(TRUE);
 }
 
 /* EOF */

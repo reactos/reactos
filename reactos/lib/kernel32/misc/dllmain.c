@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.19 2001/11/25 15:21:09 dwelch Exp $
+/* $Id: dllmain.c,v 1.20 2002/04/26 13:07:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
 #include <ntdll/ldr.h>
-#include <napi/shared_data.h>
 #include <windows.h>
 #include <wchar.h>
 
@@ -76,13 +75,13 @@ OpenBaseDirectory(PHANDLE DirHandle)
 }
 
 
-BOOL WINAPI 
+BOOL WINAPI
 DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
    return(DllMain(hDll,dwReason,lpReserved));
 }
 
-WINBOOL STDCALL 
+WINBOOL STDCALL
 DllMain(HANDLE hInst,
 	ULONG ul_reason_for_call,
 	LPVOID lpReserved)
@@ -95,8 +94,6 @@ DllMain(HANDLE hInst,
       case DLL_PROCESS_ATTACH:
 	  {
 	     NTSTATUS Status;
-	     PKUSER_SHARED_DATA SharedUserData = 
-		(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
 
 	     DPRINT("DLL_PROCESS_ATTACH\n");
 

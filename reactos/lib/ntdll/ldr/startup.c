@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.36 2002/02/08 02:57:06 chorns Exp $
+/* $Id: startup.c,v 1.37 2002/04/26 13:08:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,6 @@
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
-#include <napi/shared_data.h>
 #include <user32/callback.h>
 
 #define NDEBUG
@@ -54,8 +53,6 @@ LdrInitializeThunk (ULONG Unknown1,
    PPEB Peb;
    PLDR_MODULE NtModule;  // ntdll
    PLDR_MODULE ExeModule; // executable
-   PKUSER_SHARED_DATA SharedUserData = 
-	(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
    WCHAR FullNtDllPath[MAX_PATH];
 
    DPRINT("LdrInitializeThunk()\n");

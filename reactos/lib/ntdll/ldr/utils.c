@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.49 2001/10/31 01:03:04 dwelch Exp $
+/* $Id: utils.c,v 1.50 2002/04/26 13:08:18 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,6 @@
 #include <wchar.h>
 #include <ntdll/ldr.h>
 #include <ntos/minmax.h>
-#include <napi/shared_data.h>
 
 
 #ifdef DBG_NTDLL_LDR_UTILS
@@ -217,9 +216,6 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   
   if (SearchPath == NULL)
     {
-      PKUSER_SHARED_DATA SharedUserData = 
-	(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
-      
       SearchPath = SearchPathBuffer;
       wcscpy (SearchPathBuffer, SharedUserData->NtSystemRoot);
       wcscat (SearchPathBuffer, L"\\system32;");

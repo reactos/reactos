@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.32 2002/03/18 22:44:42 hbirr Exp $
+/* $Id: init.c,v 1.33 2002/04/26 13:09:21 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -29,7 +29,6 @@
 #include <ntos.h>
 #include <ntdll/rtl.h>
 #include <napi/lpc.h>
-#include <napi/shared_data.h>
 
 #include "smss.h"
 
@@ -174,8 +173,6 @@ SmSetEnvironmentVariables (VOID)
 	ULONG ExpandedLength;
 	WCHAR ExpandBuffer[512];
 	WCHAR ValueBuffer[MAX_PATH];
-	PKUSER_SHARED_DATA SharedUserData = 
-		(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
 
 	/*
 	 * The following environment variables are read from the registry.
@@ -273,8 +270,6 @@ BOOL InitSessionManager (HANDLE	Children[])
   HANDLE CsrssInitEvent;
   HANDLE WindowsDirectory;
   WCHAR UnicodeBuffer[MAX_PATH];
-  PKUSER_SHARED_DATA SharedUserData = 
-    (PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
 
   /*
    * FIXME: The '\Windows' directory is created by csrss.exe but

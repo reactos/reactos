@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.47 2001/08/27 01:21:50 ekohl Exp $
+/* $Id: timer.c,v 1.48 2002/04/26 13:11:28 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -32,22 +32,6 @@
 
 /* GLOBALS ****************************************************************/
 
-#define IDMAP_BASE         (0xd0000000)
-
-/*
- * Return a linear address which can be used to access the physical memory
- * starting at x 
- */
-unsigned int physical_to_linear(unsigned int x)
-{
-        return(x+IDMAP_BASE);
-}
-
-unsigned int linear_to_physical(unsigned int x)
-{
-        return(x-IDMAP_BASE);
-}
-
 /*
  * Current time
  */
@@ -57,7 +41,7 @@ static unsigned long long system_time = 0;
 /*
  * Number of timer interrupts since initialisation
  */
-volatile ULONGLONG KeTickCount;
+volatile ULONGLONG KeTickCount = 0;
 volatile ULONG KiRawTicks = 0;
 
 /*
@@ -90,32 +74,35 @@ static BOOLEAN TimerInitDone = FALSE;
 /* FUNCTIONS **************************************************************/
 
 
-NTSTATUS STDCALL NtQueryTimerResolution(OUT	PULONG	MinimumResolution,
-					OUT	PULONG	MaximumResolution, 
-					OUT	PULONG	ActualResolution)
+NTSTATUS STDCALL
+NtQueryTimerResolution(OUT PULONG MinimumResolution,
+		       OUT PULONG MaximumResolution,
+		       OUT PULONG ActualResolution)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtSetTimerResolution(IN	ULONG	RequestedResolution,
-				      IN	BOOL	SetOrUnset,
-				      OUT	PULONG	ActualResolution)
+NTSTATUS STDCALL
+NtSetTimerResolution(IN ULONG RequestedResolution,
+		     IN BOOL SetOrUnset,
+		     OUT PULONG ActualResolution)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtQueryPerformanceCounter (IN	PLARGE_INTEGER	Counter,
-					    IN	PLARGE_INTEGER	Frequency)
+NTSTATUS STDCALL
+NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
+			  IN PLARGE_INTEGER Frequency)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-
-NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
-				  IN TIME* Interval)
+NTSTATUS STDCALL
+NtDelayExecution(IN ULONG Alertable,
+		 IN TIME* Interval)
 {
    NTSTATUS Status;
    LARGE_INTEGER Timeout;
@@ -156,19 +143,21 @@ KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 				 NULL));
 }
 
+
 ULONG STDCALL
-KeQueryTimeIncrement (VOID)
+KeQueryTimeIncrement(VOID)
 /*
  * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to 
  * the system clock every time the clock interrupts
  * RETURNS: The increment
  */
 {
-   return(CLOCK_INCREMENT);
+  return(CLOCK_INCREMENT);
 }
 
+
 VOID STDCALL
-KeQuerySystemTime (PLARGE_INTEGER	CurrentTime)
+KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 /*
  * FUNCTION: Gets the current system time
  * ARGUMENTS:
@@ -343,7 +332,7 @@ KeInitializeTimerEx (PKTIMER		Timer,
 }
 
 VOID STDCALL
-KeQueryTickCount (PLARGE_INTEGER	TickCount)
+KeQueryTickCount(PLARGE_INTEGER TickCount)
 /*
  * FUNCTION: Returns the number of ticks since the system was booted
  * ARGUMENTS:
@@ -407,7 +396,7 @@ KeExpireTimers(PKDPC Dpc,
        if (system_time >= current->DueTime.QuadPart)
 	 {
 	   HandleExpiredTimer(current);
-	 }      
+	 }
      }
 
    KiAddProfileEvent(ProfileTime, Eip);
@@ -416,8 +405,9 @@ KeExpireTimers(PKDPC Dpc,
 }
 
 
-VOID 
-KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
+VOID
+KiUpdateSystemTime(KIRQL oldIrql,
+		   ULONG Eip)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -432,6 +422,7 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
     * Increment the number of timers ticks 
     */
    KeTickCount++;
+   SharedUserData->TickCountLow++;
    system_time = system_time + CLOCK_INCREMENT;
    
    /*
@@ -441,7 +432,7 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
 }
 
 
-VOID 
+VOID
 KeInitializeTimerImpl(VOID)
 /*
  * FUNCTION: Initializes timer irq handling

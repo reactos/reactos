@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.117 2002/04/17 11:56:33 ekohl Exp $
+/* $Id: main.c,v 1.118 2002/04/26 13:11:28 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -41,7 +41,6 @@
 #include <internal/po.h>
 #include <internal/cc.h>
 #include <internal/se.h>
-#include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
 #include <internal/trap.h>
@@ -402,8 +401,6 @@ RtlpCheckFileNameExtension(PCHAR FileName,
 static VOID
 InitSystemSharedUserPage (PCSZ ParameterLine)
 {
-   PKUSER_SHARED_DATA SharedPage;
-
    UNICODE_STRING ArcDeviceName;
    UNICODE_STRING ArcName;
    UNICODE_STRING BootPath;
@@ -420,13 +417,13 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    ULONG i;
    BOOLEAN BootDriveFound;
 
-   SharedPage = (PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE;
-   SharedPage->DosDeviceMap = 0;
-   SharedPage->NtProductType = NtProductWinNt;
-   for (i = 0; i < 32; i++)
-     {
-	SharedPage->DosDeviceDriveType[i] = 0;
-     }
+   /*
+    * NOTE:
+    *   The shared user page has been zeroed-out right after creation.
+    *   There is NO need to do this again.
+    */
+
+   SharedUserData->NtProductType = NtProductWinNt;
 
    BootDriveFound = FALSE;
 
@@ -557,8 +554,8 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	if (!RtlCompareUnicodeString (&ArcDeviceName, &DriveDeviceName, FALSE))
 	  {
 	     DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
-	     swprintf (SharedPage->NtSystemRoot,
-		       L"%C:%wZ", 'A' + i, &BootPath);
+	     swprintf(SharedUserData->NtSystemRoot,
+		      L"%C:%wZ", 'A' + i, &BootPath);
 
 		BootDriveFound = TRUE;
 	  }
@@ -566,7 +563,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	NtClose (Handle);
 
 	/* set bit in dos drives bitmap (drive available) */
-	SharedPage->DosDeviceMap |= (1<<i);
+	SharedUserData->DosDeviceMap |= (1<<i);
      }
 
    RtlFreeUnicodeString (&BootPath);
