@@ -47,6 +47,9 @@
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.xml" />
 	</directory>
+	<directory name="services">
+		<xi:include href="services/directory.xml" />
+	</directory>
 	<directory name="subsys">
 		<xi:include href="subsys/directory.xml" />
 	</directory>

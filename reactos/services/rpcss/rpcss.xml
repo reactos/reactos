@@ -1,0 +1,8 @@
+<module name="rpcss" type="win32cui">
+	<include base="rpcss">.</include>
+	<library>kernel32</library>
+	<library>advapi32</library>
+	<file>rpcss.c</file>
+	<file>endpoint.c</file>
+	<file>rpcss.rc</file>
+</module>
