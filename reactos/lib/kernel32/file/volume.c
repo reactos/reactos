@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.30 2003/07/20 09:40:13 hbirr Exp $
+/* $Id: volume.c,v 1.31 2003/07/20 18:05:46 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -646,7 +646,7 @@ GetVolumeInformationW(
 	  memcpy(lpVolumeNameBuffer, 
 		 FileFsVolume->VolumeLabel, 
 		 FileFsVolume->VolumeLabelLength);
-	  lpVolumeNameBuffer[FileFsVolume->VolumeLabelLength / sizeof(WCHAR)];
+	  lpVolumeNameBuffer[FileFsVolume->VolumeLabelLength / sizeof(WCHAR)] = 0;
 	}
       else
         {
