@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.3 2004/03/14 20:04:40 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.4 2004/03/14 20:13:46 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -451,6 +451,7 @@ VideoPortDispatchDeviceControl(
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    PVIDEO_REQUEST_PACKET vrp;
+   NTSTATUS Status;
 
    DPRINT("VidDispatchDeviceControl\n");
    IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -502,9 +503,10 @@ VideoPortDispatchDeviceControl(
       } 
    } 
 
+   Status = Irp->IoStatus.Status;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-   return /* Irp->IoStatus.Status */ STATUS_SUCCESS;
+   return Status;
 }
 
 NTSTATUS STDCALL
