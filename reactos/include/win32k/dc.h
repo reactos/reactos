@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <win32k/driver.h>
+#include <win32k/gdiobj.h>
 
 /*  (RJJ) Taken from WINE  */
 typedef struct _WIN_DC_INFO
@@ -79,9 +80,8 @@ typedef struct _WIN_DC_INFO
 
 typedef struct _DC
 {
-  WORD  Type;
-  struct _DC  *NextDC;
-  
+  GDIOBJHDR  header;
+  HDC  hSelf;
   DHPDEV  PDev;  
   DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
@@ -113,6 +113,8 @@ PDC  DC_FindOpenDC(LPCWSTR  Driver);
 void  DC_FreeDC(PDC  DCToFree);
 HDC  DC_PtrToHandle(PDC  pDC);
 PDC  DC_HandleToPtr(HDC  hDC);
+BOOL DC_LockDC(HDC  hDC);
+BOOL DC_UnlockDC(HDC  hDC);
 
 /*  User entry points */
 
@@ -148,6 +150,7 @@ HRGN STDCALL  W32kGetClipRgn(HDC  hDC);
 HGDIOBJ STDCALL  W32kGetCurrentObject(HDC  hDC, UINT  ObjectType);
 BOOL STDCALL  W32kGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point);
+HDC STDCALL  W32kGetDCState16(HDC  hDC);
 INT STDCALL  W32kGetDeviceCaps(HDC  hDC, INT  Index);
 INT STDCALL  W32kGetMapMode(HDC  hDC);
 INT STDCALL  W32kGetObject(HGDIOBJ  hGDIObj,

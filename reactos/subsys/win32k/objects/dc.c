@@ -21,10 +21,16 @@
 
 #define DC_GET_VAL( func_type, func_name, dc_field ) \
 func_type STDCALL  func_name( HDC hdc ) \
-{ \
-    PDC  dc = DC_HandleToPtr( hdc ); \
-    if (!dc) return 0; \
-    return dc->dc_field; \
+{                                   \
+  func_type  ft;                    \
+  PDC  dc = DC_HandleToPtr( hdc );  \
+  if (!dc)                          \
+    {                               \
+      return 0;                     \
+    }                               \
+  ft = dc->dc_field;                \
+  DC_UnlockDC(dc);                  \
+  return ft;                        \
 }
 
 /* DC_GET_VAL_EX is used to define functions returning a POINT or a SIZE. It is 
@@ -33,24 +39,35 @@ func_type STDCALL  func_name( HDC hdc ) \
  */
 #define DC_GET_VAL_EX( func_name, ret_x, ret_y, type ) \
 BOOL STDCALL  func_name( HDC hdc, LP##type pt ) \
-{ \
-    PDC  dc = DC_HandleToPtr( hdc ); \
-    if (!dc) return FALSE; \
-    ((LPPOINT)pt)->x = dc->ret_x; \
-    ((LPPOINT)pt)->y = dc->ret_y; \
-    return TRUE; \
+{                                   \
+  PDC  dc = DC_HandleToPtr( hdc );  \
+  if (!dc)                          \
+    {                               \
+      return FALSE;                 \
+    }                               \
+  ((LPPOINT)pt)->x = dc->ret_x;     \
+  ((LPPOINT)pt)->y = dc->ret_y;     \
+  DC_UnlockDC(dc);                  \
+  return  TRUE;                     \
 }
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
 INT STDCALL  func_name( HDC hdc, INT mode ) \
-{ \
-    INT prevMode; \
-    PDC  dc = DC_HandleToPtr( hdc ); \
-    if(!dc) return 0; \
-    if ((mode < min_val) || (mode > max_val)) return 0; \
-    prevMode = dc->dc_field; \
-    dc->dc_field = mode; \
-    return prevMode; \
+{                                           \
+  INT  prevMode;                            \
+  PDC  dc = DC_HandleToPtr( hdc );          \
+  if(!dc)                                   \
+    {                                       \
+      return 0;                             \
+    }                                       \
+  if ((mode < min_val) || (mode > max_val))  \
+    {                                       \
+      return 0;                             \
+    }                                       \
+    prevMode = dc->dc_field;                \
+    dc->dc_field = mode;                    \
+    DC_Unlock(dc);                          \
+    return prevMode;                        \
 }
 
 //  ---------------------------------------------------------  File Statics
@@ -66,6 +83,60 @@ BOOL STDCALL  W32kCancelDC(HDC  hDC)
 HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
 {
   UNIMPLEMENTED;
+
+  PDC  NewDC, OrigDC;
+  HBITMAP  hBitmap;
+
+  OrigDC = DC_HandleToPtr(hDC);
+
+  NewDC = DC_AllocDC(OrigDC->Driver);
+  if (NewDC == NULL) 
+    {
+      DC_UnlockDC(OrigDC);
+      
+      return  NULL;
+    }
+  if ((NewDC->DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
+    {
+      DC_FreeDC(NewDC);
+      DC_UnlockDC(OrigDC);
+      
+      return  NULL;
+    }
+  if ((GDEnableDriver = DRIVER_FindDDIDriver(Driver)) == NULL)
+    {
+      DC_FreeDC(NewDC);
+      DC_UnlockDC(OrigDC);
+      
+      return  NULL;
+    }
+
+  /* Create default bitmap */
+  if (!(hBitmap = CreateBitmap( 1, 1, 1, 1, NULL )))
+    {
+      DC_FreeDC(NewDC);
+      DC_UnlockDC(OrigDC);
+      
+      return NULL;
+    }
+  dc->w.flags        = DC_MEMORY;
+  dc->w.bitsPerPixel = 1;
+  dc->w.hBitmap      = hbitmap;
+  dc->w.hFirstBitmap = hbitmap;
+
+  /* Copy the driver-specific physical device info into
+   * the new DC. The driver may use this read-only info
+   * while creating the compatible DC below. */
+  if (origDC)
+    {
+      dc->physDev = origDC->physDev;
+    }
+
+  DC_InitDC(NewDC);
+  DC_Unlock(NewDC);
+  DC_UnlockDC(OrigDC);
+
+  return  DC_PtrToHandle(NewDC);
 }
 
 HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
@@ -172,7 +243,8 @@ HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
                          LPCWSTR  Output,
                          CONST PDEVMODEW  DevMode)
 {
-  UNIMPLEMENTED;
+  /* FIXME: this should probably do something else...  */
+  return  W32kCreateDC(Driver, Device, Output DevMode);
 }
 
 BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
@@ -230,6 +302,94 @@ BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
+HDC  W32kGetDCState16(HDC  hDC)
+{
+  PDC  newdc, dc;
+    
+  dc = DC_HandleToPtr(hDC);
+  if (dc == NULL) 
+    {
+      return 0;
+    }
+  
+  newdc = DC_AllocDC(NULL);
+  if (newdc == NULL)
+    {
+      DC_UnlockDC(dc);
+      return 0;
+    }
+
+  newdc->w.flags            = dc->w.flags | DC_SAVED;
+  newdc->w.devCaps          = dc->w.devCaps;
+  newdc->w.hPen             = dc->w.hPen;       
+  newdc->w.hBrush           = dc->w.hBrush;     
+  newdc->w.hFont            = dc->w.hFont;      
+  newdc->w.hBitmap          = dc->w.hBitmap;    
+  newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
+  newdc->w.hDevice          = dc->w.hDevice;
+  newdc->w.hPalette         = dc->w.hPalette;   
+  newdc->w.totalExtent      = dc->w.totalExtent;
+  newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
+  newdc->w.ROPmode          = dc->w.ROPmode;
+  newdc->w.polyFillMode     = dc->w.polyFillMode;
+  newdc->w.stretchBltMode   = dc->w.stretchBltMode;
+  newdc->w.relAbsMode       = dc->w.relAbsMode;
+  newdc->w.backgroundMode   = dc->w.backgroundMode;
+  newdc->w.backgroundColor  = dc->w.backgroundColor;
+  newdc->w.textColor        = dc->w.textColor;
+  newdc->w.brushOrgX        = dc->w.brushOrgX;
+  newdc->w.brushOrgY        = dc->w.brushOrgY;
+  newdc->w.textAlign        = dc->w.textAlign;
+  newdc->w.charExtra        = dc->w.charExtra;
+  newdc->w.breakTotalExtra  = dc->w.breakTotalExtra;
+  newdc->w.breakCount       = dc->w.breakCount;
+  newdc->w.breakExtra       = dc->w.breakExtra;
+  newdc->w.breakRem         = dc->w.breakRem;
+  newdc->w.MapMode          = dc->w.MapMode;
+  newdc->w.GraphicsMode     = dc->w.GraphicsMode;
+#if 0
+  /* Apparently, the DC origin is not changed by [GS]etDCState */
+  newdc->w.DCOrgX           = dc->w.DCOrgX;
+  newdc->w.DCOrgY           = dc->w.DCOrgY;
+#endif
+  newdc->w.CursPosX         = dc->w.CursPosX;
+  newdc->w.CursPosY         = dc->w.CursPosY;
+  newdc->w.ArcDirection     = dc->w.ArcDirection;
+  newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
+  newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
+  newdc->w.xformVport2World = dc->w.xformVport2World;
+  newdc->w.vport2WorldValid = dc->w.vport2WorldValid;
+  newdc->wndOrgX            = dc->wndOrgX;
+  newdc->wndOrgY            = dc->wndOrgY;
+  newdc->wndExtX            = dc->wndExtX;
+  newdc->wndExtY            = dc->wndExtY;
+  newdc->vportOrgX          = dc->vportOrgX;
+  newdc->vportOrgY          = dc->vportOrgY;
+  newdc->vportExtX          = dc->vportExtX;
+  newdc->vportExtY          = dc->vportExtY;
+
+  newdc->hSelf = DC_PtrToHandle(newdc);
+  newdc->saveLevel = 0;
+
+  PATH_InitGdiPath( &newdc->w.path );
+    
+  /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
+
+  newdc->w.hGCClipRgn = newdc->w.hVisRgn = 0;
+  if (dc->w.hClipRgn)
+    {
+      newdc->w.hClipRgn = CreateRectRgn( 0, 0, 0, 0 );
+      CombineRgn( newdc->w.hClipRgn, dc->w.hClipRgn, 0, RGN_COPY );
+    }
+  else
+    {
+      newdc->w.hClipRgn = 0;
+    }
+  DC_UnlockDC(dc);
+  
+  return  newdc->hSelf;
+}
+
 INT STDCALL W32kGetDeviceCaps(HDC  hDC,
                        INT  Index)
 {
@@ -272,14 +432,100 @@ HDC STDCALL W32kResetDC(HDC  hDC, CONST DEVMODE  *InitData)
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SavedDC)
+BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
 {
-  UNIMPLEMENTED;
+  PDC  dc, dcs;
+  BOOL  success;
+
+  dc = DC_HandleToPtr(hDC);
+  if(!dc) 
+    {
+      return FALSE;
+    }
+  
+  if (SaveLevel == -1) 
+    {
+      SaveLevel = dc->saveLevel;
+    }
+  
+  if ((SaveLevel < 1) || (SaveLevel > dc->saveLevel))
+    {
+      DC_UnlockDC(dc);
+      
+      return FALSE;
+    }
+    
+  success = TRUE;
+  while (dc->saveLevel >= SaveLevel)
+    {
+      HDC hdcs = dc->header.hNext;
+      
+      dcs = DC_HandleToPtr(hdcs);
+      if (dcs == NULL)
+        {
+          DC_UnlockDC(dc);
+          
+          return FALSE;
+        }
+      dc->header.hNext = dcs->header.hNext;
+      if (--dc->saveLevel < level)
+        {
+          W32kSetDCState16(hdc, hdcs);
+          if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
+            {
+              /* FIXME: This might not be quite right, since we're
+               * returning FALSE but still destroying the saved DC state */
+              success = FALSE;
+            }
+        }
+      W32kDeleteDC(hdcs);
+    }
+  DC_UnlockDC(hdc);
+  
+  return  success;
 }
 
 INT STDCALL W32kSaveDC(HDC  hDC)
 {
-  UNIMPLEMENTED;
+  HDC  hdcs;
+  DC  dc, dcs;
+  INT  ret;
+
+  dc = DC_HandleToPtr(hdc);
+  if (dc == NULL)
+    {
+      return 0;
+    }
+
+  if (!(hdcs = W32kGetDCState16(hdc)))
+    {
+      DC_UnlockDC(dc);
+      
+      return 0;
+    }
+  dcs = DC_HandleToPtr(hdcs);
+
+    /* Copy path. The reason why path saving / restoring is in SaveDC/
+     * RestoreDC and not in GetDCState/SetDCState is that the ...DCState
+     * functions are only in Win16 (which doesn't have paths) and that
+     * SetDCState doesn't allow us to signal an error (which can happen
+     * when copying paths).
+     */
+  if (!PATH_AssignGdiPath(&dcs->w.path, &dc->w.path))
+    {
+      DC_UnlockDC(hdc);
+      DC_UnlockDC(hdcs);
+      W32kDeleteDC(hdcs);
+      return 0;
+    }
+    
+  dcs->header.hNext = dc->header.hNext;
+  dc->header.hNext = hdcs;
+  ret = ++dc->saveLevel;
+  DC_UnlockDC(hdcs);
+  DC_UnlockDC(hdc);
+
+  return  ret;
 }
 
 HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  GDIObj)
@@ -305,8 +551,115 @@ COLORREF STDCALL W32kSetBkColor(HDC hDC, COLORREF color)
   
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
-
+  DC_UnlockDC(dc);
+  
   return  oldColor;
+}
+
+void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
+{
+  PDC  dc, dcs;
+    
+  dc = DC_HandleToPtr(hDC);
+  if (dc == NULL)
+    {
+      return;
+    }
+  
+  dcs = DC_HandleToPtr(hDCSave);
+  if (dcs == NULL)
+    {
+      DC_UnlockDC(dc);
+      
+      return;
+    }
+  if (!dcs->w.flags & DC_SAVED)
+    {
+      DC_UnlockDC(dc);
+      DC_UnlockDC(dcs);
+      
+      return;
+    }
+
+  dc->w.flags            = dcs->w.flags & ~DC_SAVED;
+  dc->w.devCaps          = dcs->w.devCaps;
+  dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
+  dc->w.hDevice          = dcs->w.hDevice;
+  dc->w.totalExtent      = dcs->w.totalExtent;
+  dc->w.ROPmode          = dcs->w.ROPmode;
+  dc->w.polyFillMode     = dcs->w.polyFillMode;
+  dc->w.stretchBltMode   = dcs->w.stretchBltMode;
+  dc->w.relAbsMode       = dcs->w.relAbsMode;
+  dc->w.backgroundMode   = dcs->w.backgroundMode;
+  dc->w.backgroundColor  = dcs->w.backgroundColor;
+  dc->w.textColor        = dcs->w.textColor;
+  dc->w.brushOrgX        = dcs->w.brushOrgX;
+  dc->w.brushOrgY        = dcs->w.brushOrgY;
+  dc->w.textAlign        = dcs->w.textAlign;
+  dc->w.charExtra        = dcs->w.charExtra;
+  dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
+  dc->w.breakCount       = dcs->w.breakCount;
+  dc->w.breakExtra       = dcs->w.breakExtra;
+  dc->w.breakRem         = dcs->w.breakRem;
+  dc->w.MapMode          = dcs->w.MapMode;
+  dc->w.GraphicsMode     = dcs->w.GraphicsMode;
+#if 0
+  /* Apparently, the DC origin is not changed by [GS]etDCState */
+  dc->w.DCOrgX           = dcs->w.DCOrgX;
+  dc->w.DCOrgY           = dcs->w.DCOrgY;
+#endif
+  dc->w.CursPosX         = dcs->w.CursPosX;
+  dc->w.CursPosY         = dcs->w.CursPosY;
+  dc->w.ArcDirection     = dcs->w.ArcDirection;
+  dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
+  dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
+  dc->w.xformVport2World = dcs->w.xformVport2World;
+  dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
+  
+  dc->wndOrgX            = dcs->wndOrgX;
+  dc->wndOrgY            = dcs->wndOrgY;
+  dc->wndExtX            = dcs->wndExtX;
+  dc->wndExtY            = dcs->wndExtY;
+  dc->vportOrgX          = dcs->vportOrgX;
+  dc->vportOrgY          = dcs->vportOrgY;
+  dc->vportExtX          = dcs->vportExtX;
+  dc->vportExtY          = dcs->vportExtY;
+  
+  if (!(dc->w.flags & DC_MEMORY)) 
+    {
+      dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
+    }
+  
+  if (dcs->w.hClipRgn)
+    {
+      if (!dc->w.hClipRgn) 
+        {
+          dc->w.hClipRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
+        }
+      W32kCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
+    }
+  else
+    {
+      if (dc->w.hClipRgn) 
+        {
+          W32kDeleteObject( dc->w.hClipRgn );
+        }
+      
+      dc->w.hClipRgn = 0;
+    }
+  CLIPPING_UpdateGCRegion( dc );
+  
+  W32kSelectObject( hdc, dcs->w.hBitmap );
+  W32kSelectObject( hdc, dcs->w.hBrush );
+  W32kSelectObject( hdc, dcs->w.hFont );
+  W32kSelectObject( hdc, dcs->w.hPen );
+  W32kSetBkColor( hdc, dcs->w.backgroundColor);
+  W32kSetTextColor( hdc, dcs->w.textColor);
+
+  GDISelectPalette16( hdc, dcs->w.hPalette, FALSE );
+  
+  DC_UnlockDC(dc);
+  DC_UnlockDC(dcs);
 }
 
 COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color)
@@ -321,31 +674,28 @@ COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color)
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
+  DC_UnlockDC(dc);
 
   return  oldColor;
 }
 
 //  ----------------------------------------------------  Private Interface
 
-PDC  DCList = NULL;
-
 PDC  DC_AllocDC(LPCWSTR  Driver)
 {
   PDC  NewDC;
   
-  NewDC = ExAllocatePool(NonPagedPool, sizeof(DC));
+  NewDC = (PDC) GDIOBJ_AllocObject(sizeof(DC), GO_DC_MAGIC);
   if (NewDC == NULL)
     {
       return  NULL;
     }
-
-  RtlZeroMemory(NewDC, sizeof(DC));
-  NewDC->Type = GDI_DC_TYPE;
-  NewDC->DriverName = ExAllocatePool(NonPagedPool, 
-                                     wcslen(Driver) * sizeof(WCHAR));
-  wcscpy(NewDC->DriverName, Driver);
-  NewDC->NextDC = DCList;
-  DCList = NewDC;
+  if (Driver != NULL)
+    {
+      NewDC->DriverName = ExAllocatePool(NonPagedPool, 
+                                         wcslen(Driver) * sizeof(WCHAR));
+      wcscpy(NewDC->DriverName, Driver);
+    }
 
   return  NewDC;
 }
@@ -364,45 +714,10 @@ void  DC_InitDC(PDC  DCToInit)
 //  CLIPPING_UpdateGCRegion(DCToInit);
 }
 
-PDC  DC_FindOpenDC(LPCWSTR  Driver)
-{
-  PDC  DCToReturn = DCList;
-  
-  if (Driver == NULL)
-    {
-      return  NULL;
-    }
-  
-  while (DCToReturn != NULL)
-    {
-      if (DCToReturn->DriverName != NULL && 
-          !wcscmp(DCToReturn->DriverName, Driver))
-        {
-          break;
-        }
-      DCToReturn = DCToReturn->NextDC;
-    }
-  
-  return DCToReturn;
-}
-
 void  DC_FreeDC(PDC  DCToFree)
 {
   PDC  Tmp;
   
-  if (DCList == DCToFree)
-    {
-      DCList = DCList->NextDC;
-    }
-  else
-    {
-      Tmp = DCList;
-      while (Tmp->NextDC != NULL && Tmp->NextDC != DCToFree)
-        {
-          Tmp = Tmp->NextDC;
-        }
-      Tmp->NextDC = Tmp->NextDC->NextDC;
-    }
   ExFreePool(DCToFree->DriverName);
   ExFreePool(DCToFree);
 }
@@ -418,6 +733,18 @@ PDC  DC_HandleToPtr(HDC  hDC)
 {
   /* FIXME: this should actually return a pointer obtained from the handle  */
   return (PDC) hDC;
+}
+
+BOOL DC_LockDC(HDC  hDC)
+{
+  /* FIXME */
+  return  TRUE;
+}
+
+BOOL DC_UnlockDC(HDC  hDC)
+{
+  /* FIXME */
+  return  TRUE;
 }
 
 
