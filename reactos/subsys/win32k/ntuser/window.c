@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.100 2003/08/21 20:29:44 weiden Exp $
+/* $Id: window.c,v 1.101 2003/08/21 21:52:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -302,11 +302,11 @@ IntReleaseWindowObject(PWINDOW_OBJECT Window)
 }
 
 HMENU FASTCALL
-IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
+IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 {
   PMENU_OBJECT MenuObject, NewMenuObject;
   PW32PROCESS W32Process;
-  HMENU NewMenu;
+  HMENU NewMenu, ret = (HMENU)0;
 
   if(bRevert)
   {
@@ -336,6 +336,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
       {
         WindowObject->SystemMenu = NewMenuObject->Self;
         NewMenuObject->IsSystemMenu = TRUE;
+        ret = NewMenuObject->Self;
         IntReleaseMenuObject(NewMenuObject);
       }
       IntReleaseMenuObject(MenuObject);
@@ -354,11 +355,15 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
       {
         WindowObject->SystemMenu = NewMenuObject->Self;
         NewMenuObject->IsSystemMenu = TRUE;
+        ret = NewMenuObject->Self;
         IntReleaseMenuObject(NewMenuObject);
       }
       IntDestroyMenuObject(MenuObject, FALSE, TRUE);
     }
-    return (HMENU)0;
+    if(RetMenu)
+      return ret;
+    else
+      return (HMENU)0;
   }
   else
   {
@@ -766,7 +771,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DbgPrint("1: Style is now %d\n", WindowObject->Style);
   
-  SystemMenu = IntGetSystemMenu(WindowObject, TRUE);
+  SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
   
   WindowObject->x = x;
   WindowObject->y = y;
@@ -1012,6 +1017,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	DbgPrint("Setting Active Window to %d\n\n\n",WindowObject->Self);
   NtUserSetActiveWindow(WindowObject->Self);
   DPRINT("NtUserCreateWindow(): = %X\n", Handle);
+  DbgPrint("WindowObject->SystemMenu = 0x%x\n", WindowObject->SystemMenu);
   return((HWND)Handle);
 }
 
@@ -2687,7 +2693,7 @@ NtUserGetSystemMenu(
     return (HMENU)0;
   }
   
-  res = IntGetSystemMenu(WindowObject, bRevert);
+  res = IntGetSystemMenu(WindowObject, bRevert, FALSE);
   
   IntReleaseWindowObject(WindowObject);
   return res;

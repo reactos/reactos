@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.24 2003/08/21 20:29:43 weiden Exp $
+/* $Id: menu.c,v 1.25 2003/08/21 21:52:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -289,16 +289,16 @@ BOOL FASTCALL
 IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
 {
   PMENU_ITEM MenuItem, NewMenuItem, Old = NULL;
-  DbgPrint("IntCloneMenuItems(1) = %d\n", Source->MenuItemCount);
+
   if(!Source->MenuItemCount)
     return FALSE;
-DbgPrint("IntCloneMenuItems(2)\n");
+
   ExAcquireFastMutexUnsafe(&Destination->MenuItemsLock);
   ExAcquireFastMutexUnsafe(&Source->MenuItemsLock);
-DbgPrint("IntCloneMenuItems(3)\n");
+
   MenuItem = Source->MenuItemList;
   while(MenuItem)
-  {DbgPrint("IntCloneMenuItems(%d)\n", Source->MenuItemCount + 1);
+  {
     Old = NewMenuItem;
     NewMenuItem = ExAllocatePool(PagedPool, sizeof(MENU_ITEM));
     if(!NewMenuItem)
