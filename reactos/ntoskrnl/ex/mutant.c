@@ -294,16 +294,19 @@ NtReleaseMutant(IN HANDLE MutantHandle,
                 IN PLONG PreviousCount  OPTIONAL)
 {
     PKMUTANT Mutant;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
    
     PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
+    
     DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n", 
             MutantHandle, 
             PreviousCount);
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode && PreviousCount) {
+    if(PreviousMode != KernelMode && PreviousCount) {
         
         _SEH_TRY {
             
@@ -330,7 +333,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     /* Check for Success and release if such */
     if(NT_SUCCESS(Status)) {
         
-        LONG Prev;
+        LONG Prev = 0;
         
         /* release the mutant. doing so might raise an exception which we're
            required to catch! */
