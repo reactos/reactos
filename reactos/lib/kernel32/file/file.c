@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.49 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: file.c,v 1.50 2004/03/14 13:11:55 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -203,6 +203,8 @@ SetFilePointer(HANDLE hFile,
    DPRINT("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
 	  hFile,lDistanceToMove,dwMoveMethod);
 
+   /* FIXME - should fail if hFile is a console handle */
+
    Distance.u.LowPart = lDistanceToMove;
    if (lpDistanceToMoveHigh)
    {
@@ -216,18 +218,18 @@ SetFilePointer(HANDLE hFile,
    {
       Distance.u.HighPart = -1;
    }
-
-   if (dwMoveMethod == FILE_CURRENT)
-     {
+   
+   switch(dwMoveMethod)
+   {
+     case FILE_CURRENT:
 	NtQueryInformationFile(hFile,
 			       &IoStatusBlock,
 			       &FilePosition,
 			       sizeof(FILE_POSITION_INFORMATION),
 			       FilePositionInformation);
 	FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
-     }
-   else if (dwMoveMethod == FILE_END)
-     {
+	break;
+     case FILE_END:
 	NtQueryInformationFile(hFile,
                                &IoStatusBlock,
                                &FileStandart,
@@ -235,11 +237,17 @@ SetFilePointer(HANDLE hFile,
                                FileStandardInformation);
         FilePosition.CurrentByteOffset.QuadPart =
                   FileStandart.EndOfFile.QuadPart + Distance.QuadPart;
-     }
-   else if ( dwMoveMethod == FILE_BEGIN )
-     {
+	break;
+     case FILE_BEGIN:
         FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
-     }
+	break;
+   }
+   
+   if(FilePosition.CurrentByteOffset.QuadPart < 0)
+   {
+     SetLastError(ERROR_NEGATIVE_SEEK);
+     return -1;
+   }
    
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
@@ -257,6 +265,72 @@ SetFilePointer(HANDLE hFile,
         *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
      }
    return FilePosition.CurrentByteOffset.u.LowPart;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetFilePointerEx(HANDLE hFile,
+		 LARGE_INTEGER liDistanceToMove,
+		 PLARGE_INTEGER lpNewFilePointer,
+		 DWORD dwMoveMethod)
+{
+   FILE_POSITION_INFORMATION FilePosition;
+   FILE_STANDARD_INFORMATION FileStandart;
+   NTSTATUS errCode;
+   IO_STATUS_BLOCK IoStatusBlock;
+
+   /* FIXME - should fail if hFile is a console handle */
+
+   switch(dwMoveMethod)
+   {
+     case FILE_CURRENT:
+	NtQueryInformationFile(hFile,
+			       &IoStatusBlock,
+			       &FilePosition,
+			       sizeof(FILE_POSITION_INFORMATION),
+			       FilePositionInformation);
+	FilePosition.CurrentByteOffset.QuadPart += liDistanceToMove.QuadPart;
+	break;
+     case FILE_END:
+	NtQueryInformationFile(hFile,
+                               &IoStatusBlock,
+                               &FileStandart,
+                               sizeof(FILE_STANDARD_INFORMATION),
+                               FileStandardInformation);
+        FilePosition.CurrentByteOffset.QuadPart =
+                  FileStandart.EndOfFile.QuadPart + liDistanceToMove.QuadPart;
+	break;
+     case FILE_BEGIN:
+        FilePosition.CurrentByteOffset.QuadPart = liDistanceToMove.QuadPart;
+	break;
+   }
+   
+   if(FilePosition.CurrentByteOffset.QuadPart < 0)
+   {
+     SetLastError(ERROR_NEGATIVE_SEEK);
+     return FALSE;
+   }
+   
+   errCode = NtSetInformationFile(hFile,
+				  &IoStatusBlock,
+				  &FilePosition,
+				  sizeof(FILE_POSITION_INFORMATION),
+				  FilePositionInformation);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastErrorByStatus(errCode);
+	return FALSE;
+     }
+   
+   if (lpNewFilePointer)
+     {
+       *lpNewFilePointer = FilePosition.CurrentByteOffset;
+     }
+   return TRUE;
 }
 
 

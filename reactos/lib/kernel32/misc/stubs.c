@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.64 2004/03/14 11:11:17 weiden Exp $
+/* $Id: stubs.c,v 1.65 2004/03/14 13:11:55 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1415,22 +1415,6 @@ STDCALL
 SetCriticalSectionSpinCount(
     LPCRITICAL_SECTION lpCriticalSection,
     DWORD dwSpinCount
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetFilePointerEx(
-    HANDLE hFile,
-    LARGE_INTEGER liDistanceToMove,
-    PLARGE_INTEGER lpNewFilePointer,
-    DWORD dwMoveMethod
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
