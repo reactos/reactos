@@ -140,8 +140,7 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
   // FIXME: Use fast blts instead of get and putpixels
-
-  int i, j, dx, dy, alterx, altery, BltDirection;
+  LONG i, j, dx, dy, alterx, altery, BltDirection;
 
   // Calculate deltas
 
@@ -179,16 +178,46 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   }
 
   // Do the VGA to VGA BitBlt
-  // FIXME: Right now we're only doing CN_LEFTDOWN and we're using slow
-  // get and put pixel routines
-
-  for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
-  {
-     for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-     {
-        vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
-     }
-  }
+  // FIXME: we're using slow get and put pixel routines
+  switch (BltDirection)
+    {
+    case CD_LEFTDOWN:
+      for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+	{
+	  for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+	    {
+	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
+	    }
+	}
+      break;
+    case CD_LEFTUP:
+      for(j=(SourcePoint->y+dy-1); j>=SourcePoint->y; j--)
+	{
+	  for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+	    {
+	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
+	    }
+	}
+      break;
+    case CD_RIGHTDOWN:
+      for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+	{
+	  for(i=(SourcePoint->x+dx-1); i>=SourcePoint->x; i--)
+	    {
+	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
+	    }
+	}
+      break;
+    case CD_RIGHTUP:
+      for(j=(SourcePoint->y+dy-1); j>=SourcePoint->y; j--)
+	{
+	  for(i=(SourcePoint->x+dx-1); i>=SourcePoint->x; i--)
+	    {
+	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
+	    }
+	}
+      break;
+    }
 
   return TRUE;
 }
@@ -413,6 +442,7 @@ DrvBitBlt(SURFOBJ *Dest,
 	{
 	  return FALSE;
 	}
+      break;
 
     case 0xAACC:
       BltRectFunc = VGADDI_BltMask;
