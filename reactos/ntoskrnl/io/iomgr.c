@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.27 2002/09/08 10:23:25 chorns Exp $
+/* $Id: iomgr.c,v 1.28 2002/10/03 19:34:50 robd Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -267,6 +267,11 @@ VOID IoInit (VOID)
    * Initialize PnP manager
    */
   PnpInit();
+
+  /*
+   * Start the Io worker threads
+   */
+  IoInitializeWorkerThreads();
 }
 
 
