@@ -9,7 +9,7 @@
 
 /* GLOBAL VARIABLES ****/
 
-extern HANDLE SmApiPort;
+//extern HANDLE SmApiPort;
 
 
 /* FUNCTIONS ***********/
@@ -25,6 +25,10 @@ void PrintString (char* fmt,...);
 
 
 /* smapi.c */
+
+NTSTATUS
+SmCreateApiPort(VOID);
+
 VOID STDCALL
 SmApiThread(HANDLE Port);
 

@@ -52,6 +52,7 @@ copy services\storage\scsiport\scsiport.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\cdrom\cdrom.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
+copy apps\system\autochk\autochk.exe %ROS_INSTALL%\system32
 copy apps\system\shell\shell.exe %ROS_INSTALL%\system32
 copy apps\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy apps\system\services\services.exe %ROS_INSTALL%\system32

@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.5 2002/04/27 19:00:14 ekohl Exp $
+/* $Id: import.c,v 1.6 2002/05/24 07:42:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -234,6 +234,14 @@ getKeyValueTypeFromChunk (PCHAR  regChunk, PCHAR  dataFormat, int *keyValueType)
     if (*regChunk == ':')
       regChunk++;
   }
+  else if (strncmp (regChunk, "expand", 6) == 0)
+  {
+    strcpy (dataFormat, "expand");
+    *keyValueType = REG_EXPAND_SZ;
+    regChunk += 6;
+    if (*regChunk == ':')
+      regChunk++;
+  }
   else
   {
     UNIMPLEMENTED;
@@ -311,6 +319,18 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
       }
       else
         break;
+    }
+    dataSize++;
+    dataSize++;
+  }
+  else if (strcmp (dataFormat, "expand") == 0)
+  {
+    regChunk++;
+    while (*regChunk != 0 && *regChunk != '\"')
+    {
+      dataSize++;
+      dataSize++;
+      regChunk++;
     }
     dataSize++;
     dataSize++;
@@ -416,6 +436,18 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
         break;
     }
     *ptr = 0;
+  }
+  else if (strcmp (dataFormat, "expand") == 0)
+  {
+    /* convert quoted string to zero-terminated Unicode string */
+    ptr = (PWCHAR)data;
+    regChunk++;
+    while (*regChunk != 0 && *regChunk != '\"')
+    {
+      *ptr++ = (WCHAR)*regChunk++;
+    }
+    *ptr = 0;
+    regChunk++;
   }
   else
   {
@@ -572,7 +604,7 @@ CmImportHive(PCHAR  ChunkBase,
     ExFreePool (data);
   }
 
-  return; 
+  return;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.10 2002/05/22 15:55:51 ekohl Exp $
+/* $Id: smss.c,v 1.11 2002/05/24 07:49:41 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -32,34 +32,33 @@
 
 
 void
-DisplayString( LPCWSTR lpwString )
+DisplayString(LPCWSTR lpwString)
 {
-	UNICODE_STRING us;
+  UNICODE_STRING us;
 
-	RtlInitUnicodeString (&us, lpwString);
-	NtDisplayString (&us);
+  RtlInitUnicodeString(&us, lpwString);
+  NtDisplayString(&us);
 }
 
 
 void
-PrintString (char* fmt,...)
+PrintString(char* fmt,...)
 {
-	char buffer[512];
-	va_list ap;
-	UNICODE_STRING UnicodeString;
-	ANSI_STRING AnsiString;
+  char buffer[512];
+  va_list ap;
+  UNICODE_STRING UnicodeString;
+  ANSI_STRING AnsiString;
 
-	va_start(ap, fmt);
-	vsprintf(buffer, fmt, ap);
-	va_end(ap);
+  va_start(ap, fmt);
+  vsprintf(buffer, fmt, ap);
+  va_end(ap);
 
-	RtlInitAnsiString (&AnsiString, buffer);
-	RtlAnsiStringToUnicodeString (
-		&UnicodeString,
-		&AnsiString,
-		TRUE);
-	NtDisplayString(&UnicodeString);
-	RtlFreeUnicodeString (&UnicodeString);
+  RtlInitAnsiString(&AnsiString, buffer);
+  RtlAnsiStringToUnicodeString(&UnicodeString,
+			       &AnsiString,
+			       TRUE);
+  NtDisplayString(&UnicodeString);
+  RtlFreeUnicodeString(&UnicodeString);
 }
 
 
@@ -78,20 +77,12 @@ NtProcessStartup(PPEB Peb)
       goto ByeBye;
     }
 
-#if 0
   Status = NtWaitForMultipleObjects(((LONG) sizeof(Children) / sizeof(HANDLE)),
 				    Children,
 				    WaitAny,
 				    TRUE,	/* alertable */
 				    NULL);	/* NULL for infinite */
-#endif
-
-  Status = NtWaitForSingleObject(Children[CHILD_WINLOGON],
-				 TRUE,		/* alertable */
-				 NULL);
-
-//  if (!NT_SUCCESS(Status))
-  if (Status > 1)
+  if (!NT_SUCCESS(Status))
     {
       PrintString("SM: NtWaitForMultipleObjects failed!\n");
     }

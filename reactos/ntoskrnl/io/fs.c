@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.26 2002/05/15 09:39:02 ekohl Exp $
+/* $Id: fs.c,v 1.27 2002/05/24 07:44:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -449,6 +449,8 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 			FALSE,
 			NULL);
 
+  DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
+
   if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
     {
       /* Issue verify request to the FSD */
@@ -469,7 +471,6 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 	}
 
       Irp->UserIosb = &IoStatusBlock;
-      DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
       Irp->UserEvent = Event;
       Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
@@ -505,10 +506,11 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 
   if (Status == STATUS_WRONG_VOLUME)
     {
-      /* FIXME: Replace existing VPB by a new one */
-      DPRINT1("Wrong volume!\n");
+      /* Clean existing VPB. This unmounts the filesystem (in an ugly way). */
+      DPRINT("Wrong volume!\n");
 
-
+      DeviceObject->Vpb->DeviceObject = NULL;
+      DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
     }
 
   /* Start mount sequence */

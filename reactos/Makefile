@@ -64,7 +64,7 @@ STORAGE_DRIVERS = class2 scsiport atapi disk cdrom
 # system applications (required for startup)
 #
 #SYS_APPS = lsass
-SYS_APPS = services shell winlogon
+SYS_APPS = services shell winlogon autochk
 
 #readfile
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
