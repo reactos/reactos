@@ -24,7 +24,7 @@ extern POBJECT_TYPE IoSymbolicLinkType;
  *          entry = pointer to the driver initialization routine
  * RETURNS: Success or failure
  */
-NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry);
+NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry);
 
 
 

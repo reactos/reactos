@@ -113,7 +113,7 @@ VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
 }
 
 
-NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry)
+NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -131,21 +131,25 @@ NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry)
    if (DriverObject==NULL)
      {
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	return(STATUS_INSUFFICIENT_RESOURCES);
+	return STATUS_INSUFFICIENT_RESOURCES;
      }
-   memset(DriverObject,sizeof(DRIVER_OBJECT),0);
+   memset(DriverObject, '\0', sizeof(DRIVER_OBJECT));
+   CHECKPOINT;
    
    /*
     * Initalize the driver
     * FIXME: Registry in general please
     */
-   if ((ret=entry(DriverObject,NULL))!=STATUS_SUCCESS)
+   DPRINT("Calling driver entrypoint at %08lx\n", entry);
+   if ((ret=entry(DriverObject,NULL)) != STATUS_SUCCESS)
      {
         DPRINT("Failed to load driver (status %x)\n",ret);
 	ExFreePool(DriverObject);
-	return(ret);
+	return ret;
      }
-   return(STATUS_SUCCESS);
+   CHECKPOINT;
+
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,

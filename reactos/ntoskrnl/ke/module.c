@@ -396,5 +396,5 @@ BOOLEAN process_boot_module(unsigned int start)
     * Call the module initalization routine
     */
    func = (PDRIVER_INITIALIZE)(mod->base + entry);
-   return(InitalizeLoadedDriver(func));
+   return(InitializeLoadedDriver(func));
 }

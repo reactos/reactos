@@ -77,7 +77,7 @@ typedef struct
 /*
  * Initalization functions (called once by main())
  */
-void MmInitalize(boot_param* bp);
+void MmInitialize(boot_param* bp);
 void HalInit(boot_param* bp);
 void IoInit(void);
 void ObInit(void);

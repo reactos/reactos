@@ -20,14 +20,14 @@ typedef struct _KEY_OBJECT
   ULONG NumSubKeys;
   ULONG MaxSubNameLength;
   ULONG MaxSubClassLength;
-  PKEY_OBJECT *SubKeys;
+  struct _KEY_OBJECT *SubKeys;
   ULONG NumValues;
   ULONG MaxValueNameLength;
   ULONG MaxValueDataLength;
   PKEY_VALUE *Values;
   WCHAR *Name;
   WCHAR *Class;
-  PKEY_OBJECT *NextKey;
+  struct _KEY_OBJECT *NextKey;
 } KEY_OBJECT, *PKEY_OBJECT;
 
 /* key query information class */

@@ -674,3 +674,4 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
    memset(block,0,size);
    return(block);
 }
+

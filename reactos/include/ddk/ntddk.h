@@ -26,7 +26,7 @@ extern "C"
 #include <ddk/ntdef.h>
 #include <ddk/defines.h>
 #include <ddk/types.h>
-#include <ddk/cfgtypes.h>
+// #include <ddk/cfgtypes.h>
 #include <ddk/cmtypes.h>
 #include <ddk/ketypes.h>
 #include <ddk/obtypes.h>

@@ -40,6 +40,7 @@ NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 
 /*  PE Driver load support  */
 static NTSTATUS LdrPEProcessDriver(PVOID ModuleLoadBase);
+static unsigned int LdrGetKernelSymbolAddr(char *Name);
 
 /*  COFF Driver load support  */
 static NTSTATUS LdrCOFFProcessDriver(PVOID ModuleLoadBase);
@@ -48,7 +49,6 @@ static BOOLEAN LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relo
 static BOOLEAN LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
 static void LdrCOFFGetSymbolName(module *Module, unsigned int Idx, char *Name);
 static unsigned int LdrCOFFGetSymbolValue(module *Module, unsigned int Idx);
-static unsigned int LdrCOFFGetKernelSymbolAddr(char *Name);
 static unsigned int LdrCOFFGetSymbolValueByName(module *Module, char *SymbolName, unsigned int Idx);
 
 /*  Image loader forward delcarations  */
@@ -188,7 +188,8 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 {
   unsigned int DriverSize, Idx;
   long int RelocDelta, NumRelocs;
-  PVOID DriverBase, RelocBase;
+  DWORD CurrentSize;
+  PVOID DriverBase, CurrentBase, EntryPoint;
   PULONG PEMagic;
   PIMAGE_DOS_HEADER PEDosHeader;
   PIMAGE_FILE_HEADER PEFileHeader;
@@ -196,7 +197,15 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   PIMAGE_SECTION_HEADER PESectionHeaders;
   PRELOCATION_DIRECTORY RelocDir;
   PRELOCATION_ENTRY RelocEntry;
+  PMODULE Library;
+  PVOID *ImportAddressList;
+  PULONG FunctionNameList;
+  PCHAR pName, SymbolNameBuf;
+  PWORD pHint;
   
+  /* FIXME: this could be used to load kernel DLLs also, however */
+  /*        the image headers should be preserved in such a case */
+
   DPRINT("Processing PE Driver at module base:%08lx\n", ModuleLoadBase);
 
   /*  Get header pointers  */
@@ -249,10 +258,10 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   /*  Determine the size of the module  */
   DPRINT("Sections: (section align:%08lx)\n", 
          PEOptionalHeader->SectionAlignment);
-  DriverSize = 0;
+  DriverSize = PESectionHeaders[0].PointerToRawData;
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
-      DPRINT("Name: %-8.8s VA:%08lx RawSize:%6d Offset:%08lx CHAR:%08lx OfsAdr: %08lx\n",
+      DPRINT("Name:%-8.8s VA:%08lx RawSz:%6d Offs:%08lx CHAR:%08lx OfsA: %08lx\n",
              PESectionHeaders[Idx].Name,
              PESectionHeaders[Idx].VirtualAddress,
              PESectionHeaders[Idx].SizeOfRawData,
@@ -266,7 +275,6 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
          DriverSize,
          DriverSize);
        
-#if 0
   /*  Allocate a virtual section for the module  */  
   DriverBase = MmAllocateSection(DriverSize);
   if (DriverBase == 0)
@@ -276,10 +284,12 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
     }
   CHECKPOINT;
 
-  CurrentBase = ModuleLoadBase;
+  /*  Copy image sections into virtual section  */
+  memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
+  CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
-      /* Copy current section into current offset of virtual section  */
+      /*  Copy current section into current offset of virtual section  */
       if (PESectionHeaders[Idx].Characteristics & 
           (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
         {
@@ -293,19 +303,19 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
         }
       CurrentSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
                               PEOptionalHeader->SectionAlignment);
+      CurrentBase = (PVOID)((DWORD)CurrentBase + 
+        ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+                 PEOptionalHeader->SectionAlignment));
     }
 
-#else
-  DriverBase = ModuleLoadBase;
-#endif
-
-  /* FIXME: Perform relocation fixups  */
+  /*  Perform relocation fixups  */
   RelocDelta = (DWORD) DriverBase - PEOptionalHeader->ImageBase;
   RelocDir = (PRELOCATION_DIRECTORY) ((DWORD)ModuleLoadBase +
     PEOptionalHeader->DataDirectory[
     IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
-  DPRINT("Relocs: ModuleLoadBase: %08lx RelocDelta %08lx\n", 
-         ModuleLoadBase,
+  DPRINT("DrvrBase:%08lx ImgBase:%08lx RelocDelta:%08lx\n", 
+         DriverBase,
+         PEOptionalHeader->ImageBase,
          RelocDelta);
   while (RelocDir->SizeOfBlock != 0)
     {
@@ -328,21 +338,108 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
                    (RelocEntry[Idx].TypeOffset & 0x0fff)),
                  (*(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
                    (RelocEntry[Idx].TypeOffset & 0x0fff))) + RelocDelta);
+          if (((RelocEntry[Idx].TypeOffset >> 12) & 0xf) == 3)
+            {
+              (*(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
+                   (RelocEntry[Idx].TypeOffset & 0x0fff))) += RelocDelta;
+            }
+          else if (((RelocEntry[Idx].TypeOffset >> 12) & 0xf) != 0)
+            {
+              DPRINT("Unknown relocation type %x\n", 
+                     (RelocEntry[Idx].TypeOffset >> 12) & 0xf);
+              return STATUS_UNSUCCESSFUL;
+            }
         }
       RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
         RelocDir->SizeOfBlock);
-getchar();
     }
 
-#if 0
+  /*  Perform import fixups  */
+  if (PEOptionalHeader->DataDirectory[
+      IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
+    {
+      PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
 
-  /* FIXME: perform import fixups  */
-  /* FIXME: compute address of entry point  */
+      SymbolNameBuf = ExAllocatePool(NonPagedPool, 512);
 
-#endif
+      /*  Process each import module  */
+      ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+        ((DWORD)ModuleLoadBase + PEOptionalHeader->
+          DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+      while (ImportModuleDirectory->dwRVAModuleName)
+        {
+          /* FIXME: handle kernel mode DLLs  */
 
-  /* return InitializeLoadedDriver(EntryPoint); */
-  return STATUS_NOT_IMPLEMENTED;
+          /*  Check to make sure that import lib is kernel  */
+          Library = NULL;
+          pName = (PCHAR) ModuleLoadBase + 
+            ImportModuleDirectory->dwRVAModuleName;
+          DPRINT("Import module: %s\n", pName);
+          if (strcmp(pName, "ntoskrnl.exe") && 
+              strcmp(pName, "HAL.dll"))
+            {
+              DPRINT("Kernel mode DLLs are currently unsupported\n");
+            }
+
+          /*  Get the import address list  */
+          ImportAddressList = (PVOID *) ((DWORD)ModuleLoadBase + 
+            ImportModuleDirectory->dwRVAFunctionAddressList);
+
+          /*  Get the list of functions to import  */
+          if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+            {
+              FunctionNameList = (PULONG) ((DWORD)ModuleLoadBase + 
+                ImportModuleDirectory->dwRVAFunctionNameList);
+            }
+          else
+            {
+              FunctionNameList = (PULONG) ((DWORD)ModuleLoadBase + 
+                ImportModuleDirectory->dwRVAFunctionAddressList);
+            }
+
+          /*  Walk through function list and fixup addresses  */
+          while(*FunctionNameList != 0L)
+            {
+              if ((*FunctionNameList) & 0x80000000) // hint
+                {
+                  DPRINT("  Hint: %08lx\n", *FunctionNameList);
+                  if (Library == NULL)
+                    {
+                      DPRINT("Hints for kernel symbols are not handled.\n");
+                      *ImportAddressList = 0;
+                    }
+                }
+              else // hint-name
+                {
+                  pName = (PCHAR)((DWORD)ModuleLoadBase + 
+                                  *FunctionNameList + 2);
+                  pHint = (PWORD)((DWORD)ModuleLoadBase + *FunctionNameList);
+                  DPRINT("  Hint:%04x  Name:%s\n", pHint, pName);
+                  
+                  /*  Get address for symbol  */
+                  if (Library == NULL)
+                    {
+                      *SymbolNameBuf = '_';
+                      strcpy(SymbolNameBuf + 1, pName);
+                      *ImportAddressList = (PVOID) LdrGetKernelSymbolAddr(SymbolNameBuf);                      if (*ImportAddressList == 0L)
+                        {
+                          DPRINT("Unresolved kernel symbol: %s\n", pName);
+                        }
+                    }
+                }
+              ImportAddressList++;
+              FunctionNameList++;
+            }
+          ImportModuleDirectory++;
+        }
+
+      ExFreePool(SymbolNameBuf);
+    }
+
+  /*  Compute address of entry point  */
+  EntryPoint = (PVOID) ((DWORD)DriverBase + PEOptionalHeader->AddressOfEntryPoint);
+
+  return InitializeLoadedDriver(EntryPoint); 
 }
 
 NTSTATUS 
@@ -491,7 +588,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
   /*  Cleanup  */
   ExFreePool(Module);
 
-  return InitalizeLoadedDriver(EntryRoutine);
+  return InitializeLoadedDriver(EntryRoutine);
 }
 
 /*   LdrCOFFDoRelocations
@@ -594,7 +691,7 @@ LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation)
    
   memset(Name, 0, 255);
   LdrCOFFGetSymbolName(Module, Relocation->r_symndx, Name);
-  Value = (unsigned int) LdrCOFFGetKernelSymbolAddr(Name);
+  Value = (unsigned int) LdrGetKernelSymbolAddr(Name);
   if (Value == 0L)
     {
       Value = LdrCOFFGetSymbolValueByName(Module, Name, Relocation->r_symndx);
@@ -691,7 +788,7 @@ LdrCOFFGetSymbolValue(module *Module, unsigned int Idx)
  */
 
 static unsigned int  
-LdrCOFFGetKernelSymbolAddr(char *Name)
+LdrGetKernelSymbolAddr(char *Name)
 {
   int i = 0;
 

@@ -24,6 +24,7 @@ PKEY_OBJECT RootKey = NULL;
 VOID
 CmInitializeRegistry(VOID)
 {
+#if 0
   ANSI_STRING AnsiString;
   
   CmKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -79,6 +80,7 @@ CmInitializeRegistry(VOID)
   /* FIXME: Create initial predefined symbolic links */
   /* HKEY_LOCAL_MACHINE */
   /* HKEY_USERS */
+#endif
 }
 
 NTSTATUS 
@@ -108,6 +110,7 @@ ZwCreateKey(PHANDLE KeyHandle,
             ULONG CreateOptions,
             PULONG Disposition)
 {
+#if 0
   /* FIXME: Should CurLevel be alloced to handle arbitrary size components? */
   WCHAR *S, *T, CurLevel[255];
   PKEY_OBJECT ParentKey, CurSubKey, NewKey;
@@ -253,7 +256,7 @@ ZwCreateKey(PHANDLE KeyHandle,
     {
       return STATUS_UNSUCCESSFUL;
     }
-  
+#endif  
   
   UNIMPLEMENTED;
 }

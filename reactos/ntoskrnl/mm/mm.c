@@ -48,7 +48,7 @@ MM_SYSTEM_SIZE MmQuerySystemSize()
    UNIMPLEMENTED;
 }
 
-void MmInitalize(boot_param* bp)
+void MmInitialize(boot_param* bp)
 /*
  * FUNCTION: Initalize memory managment
  */
