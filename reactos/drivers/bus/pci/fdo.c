@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.8 2004/06/09 14:22:53 ekohl Exp $
+/* $Id: fdo.c,v 1.9 2004/08/16 09:13:00 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -93,11 +93,19 @@ FdoEnumerateDevices(
       {
         SlotNumber.u.bits.FunctionNumber = FunctionNumber;
 
-        Size= HalGetBusData(PCIConfiguration,
-                            BusNumber,
-                            SlotNumber.u.AsULONG,
-                            &PciConfig,
-                            sizeof(PCI_COMMON_CONFIG));
+        DPRINT("Bus %1lu  Device %2lu  Func %1lu\n",
+          BusNumber,
+          DeviceNumber,
+          FunctionNumber);
+
+        RtlZeroMemory(&PciConfig,
+                      sizeof(PCI_COMMON_CONFIG));
+
+        Size = HalGetBusData(PCIConfiguration,
+                             BusNumber,
+                             SlotNumber.u.AsULONG,
+                             &PciConfig,
+                             sizeof(PCI_COMMON_CONFIG));
         DPRINT("Size %lu\n", Size);
         if (Size < sizeof(PCI_COMMON_CONFIG))
         {
@@ -151,6 +159,13 @@ FdoEnumerateDevices(
         Device->RemovePending = FALSE;
 
         DeviceExtension->DeviceListCount++;
+
+        /* Skip to next device if the current one is not a multifunction device */
+        if ((FunctionNumber == 0) &&
+            ((PciConfig.HeaderType & 0x80) == 0))
+        {
+          break;
+        }
       }
     }
   }
@@ -285,6 +300,24 @@ FdoQueryBusRelations(
       /* Add Compatible IDs string */
       if (!PciCreateCompatibleIDsString(&PdoDeviceExtension->CompatibleIDs,
                                         Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+        ErrorOccurred = TRUE;
+        break;
+      }
+
+      /* Add device description string */
+      if (!PciCreateDeviceDescriptionString(&PdoDeviceExtension->DeviceDescription,
+                                            Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+        ErrorOccurred = TRUE;
+        break;
+      }
+
+      /* Add device location string */
+      if (!PciCreateDeviceLocationString(&PdoDeviceExtension->DeviceLocation,
+                                         Device))
       {
         ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
         ErrorOccurred = TRUE;
@@ -449,7 +482,7 @@ FdoPnpControl(
     break;
 #endif
   default:
-    DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
+    DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
 
     /*
      * Do NOT complete the IRP as it will be processed by the lower

@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.7 2004/06/09 14:22:53 ekohl Exp $ */
+/* $Id: pci.h,v 1.8 2004/08/16 09:13:00 ekohl Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -69,9 +69,9 @@ typedef struct _PDO_DEVICE_EXTENSION
   // Compatible IDs
   UNICODE_STRING CompatibleIDs;
   // Textual description of device
-  UNICODE_STRING DeviceText;
-  // Textual description of device
-  UNICODE_STRING DeviceTextLocation;
+  UNICODE_STRING DeviceDescription;
+  // Textual description of device location
+  UNICODE_STRING DeviceLocation;
 } __attribute((packed)) PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* Functional Device Object device extension for the PCI driver device object */
@@ -136,6 +136,16 @@ PciCreateHardwareIDsString(
 BOOLEAN
 PciCreateCompatibleIDsString(
   PUNICODE_STRING HardwareIDs,
+  PPCI_DEVICE Device);
+
+BOOLEAN
+PciCreateDeviceDescriptionString(
+  PUNICODE_STRING DeviceDescription,
+  PPCI_DEVICE Device);
+
+BOOLEAN
+PciCreateDeviceLocationString(
+  PUNICODE_STRING DeviceLocation,
   PPCI_DEVICE Device);
 
 /* pdo.c */

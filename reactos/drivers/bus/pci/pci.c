@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.7 2004/06/09 14:22:53 ekohl Exp $
+/* $Id: pci.c,v 1.8 2004/08/16 09:13:00 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -266,19 +266,36 @@ PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
 
 
 BOOLEAN
-PciCreateInstanceIDString(PUNICODE_STRING DeviceID,
+PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
                           PPCI_DEVICE Device)
 {
-  /* FIXME */
-
 #if 0
-  swprintf(Buffer,
-           L"%02lx&%04lx",
-           Device->BusNumber,
-           Device->SlotNumber.SlotNumber.u.AsULONG);
-#endif
+  WCHAR Buffer[32];
+  ULONG Length;
+  ULONG Index;
 
-  return PciCreateUnicodeString(DeviceID, L"0000", PagedPool);
+  Index = swprintf(Buffer,
+                   L"%lX&%02lX",
+                   Device->BusNumber,
+                   (Device->SlotNumber.u.bits.DeviceNumber << 3) +
+                   Device->SlotNumber.u.bits.FunctionNumber);
+  Index++;
+  Buffer[Index] = UNICODE_NULL;
+
+  Length = (Index + 1) * sizeof(WCHAR);
+  InstanceID->Buffer = ExAllocatePool(PagedPool, Length);
+  if (InstanceID->Buffer == NULL)
+  {
+    return FALSE;
+  }
+
+  InstanceID->Length = Length - sizeof(WCHAR);
+  InstanceID->MaximumLength = Length;
+  RtlCopyMemory(InstanceID->Buffer, Buffer, Length);
+
+  return TRUE;
+#endif
+  return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
 }
 
 
@@ -312,7 +329,7 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
 
   Length = (Index + 1) * sizeof(WCHAR);
   HardwareIDs->Buffer = ExAllocatePool(PagedPool, Length);
-  if (Buffer == NULL)
+  if (HardwareIDs->Buffer == NULL)
   {
     return FALSE;
   }
@@ -326,7 +343,7 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
 
 
 BOOLEAN
-PciCreateCompatibleIDsString(PUNICODE_STRING HardwareIDs,
+PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
                              PPCI_DEVICE Device)
 {
   WCHAR Buffer[256];
@@ -396,15 +413,113 @@ PciCreateCompatibleIDsString(PUNICODE_STRING HardwareIDs,
   Buffer[Index] = UNICODE_NULL;
 
   Length = (Index + 1) * sizeof(WCHAR);
-  HardwareIDs->Buffer = ExAllocatePool(PagedPool, Length);
-  if (Buffer == NULL)
+  CompatibleIDs->Buffer = ExAllocatePool(PagedPool, Length);
+  if (CompatibleIDs->Buffer == NULL)
   {
     return FALSE;
   }
 
-  HardwareIDs->Length = Length - sizeof(WCHAR);
-  HardwareIDs->MaximumLength = Length;
-  RtlCopyMemory(HardwareIDs->Buffer, Buffer, Length);
+  CompatibleIDs->Length = Length - sizeof(WCHAR);
+  CompatibleIDs->MaximumLength = Length;
+  RtlCopyMemory(CompatibleIDs->Buffer, Buffer, Length);
+
+  return TRUE;
+}
+
+
+BOOLEAN
+PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
+                                 PPCI_DEVICE Device)
+{
+  PWSTR Description;
+  ULONG Length;
+
+  switch (Device->PciConfig.BaseClass)
+  {
+    case PCI_CLASS_MASS_STORAGE_CTLR:
+      switch (Device->PciConfig.BaseClass)
+      {
+        case PCI_SUBCLASS_MSC_SCSI_BUS_CTLR:
+          Description = L"SCSI controller";
+          break;
+
+        case PCI_SUBCLASS_MSC_IDE_CTLR:
+          Description = L"IDE controller";
+          break;
+
+        case PCI_SUBCLASS_MSC_FLOPPY_CTLR:
+          Description = L"Floppy disk controller";
+          break;
+
+        case PCI_SUBCLASS_MSC_IPI_CTLR:
+          Description = L"IPI controller";
+          break;
+
+        case PCI_SUBCLASS_MSC_RAID_CTLR:
+          Description = L"RAID controller";
+          break;
+
+        default:
+          Description = L"Mass storage controller";
+      }
+      break;
+
+    case PCI_CLASS_NETWORK_CTLR:
+      switch (Device->PciConfig.BaseClass)
+      {
+
+        default:
+          Description = L"Network controller";
+      }
+      break;
+
+    default:
+      Description = L"PCI-Device";
+  }
+
+  Length = (wcslen(Description) + 1) * sizeof(WCHAR);
+  DeviceDescription->Buffer = ExAllocatePool(PagedPool, Length);
+  if (DeviceDescription->Buffer == NULL)
+  {
+    return FALSE;
+  }
+
+  DeviceDescription->Length = Length - sizeof(WCHAR);
+  DeviceDescription->MaximumLength = Length;
+  RtlCopyMemory(DeviceDescription->Buffer, Description, Length);
+
+  return TRUE;
+}
+
+
+BOOLEAN
+PciCreateDeviceLocationString(PUNICODE_STRING DeviceLocation,
+                              PPCI_DEVICE Device)
+{
+  WCHAR Buffer[256];
+  ULONG Length;
+  ULONG Index;
+
+  Index = 0;
+  Index += swprintf(&Buffer[Index],
+                    L"PCI-Bus %lu, Device %u, Function %u",
+                    Device->BusNumber,
+                    Device->SlotNumber.u.bits.DeviceNumber,
+                    Device->SlotNumber.u.bits.FunctionNumber);
+  Index++;
+
+  Buffer[Index] = UNICODE_NULL;
+
+  Length = (Index + 1) * sizeof(WCHAR);
+  DeviceLocation->Buffer = ExAllocatePool(PagedPool, Length);
+  if (DeviceLocation->Buffer == NULL)
+  {
+    return FALSE;
+  }
+
+  DeviceLocation->Length = Length - sizeof(WCHAR);
+  DeviceLocation->MaximumLength = Length;
+  RtlCopyMemory(DeviceLocation->Buffer, Buffer, Length);
 
   return TRUE;
 }
