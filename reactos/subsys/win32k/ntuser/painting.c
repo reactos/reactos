@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.41 2003/12/06 20:58:27 navaraf Exp $
+ *  $Id: painting.c,v 1.42 2003/12/07 13:14:22 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -769,6 +769,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
    if (!lPs->hdc)
    {
+      IntReleaseWindowObject(Window);
       return NULL;
    }
 
