@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.24 2003/07/05 16:04:01 chorns Exp $
+/* $Id: stubs.c,v 1.25 2003/07/10 21:04:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,6 +12,9 @@
 #include <windows.h>
 #include <debug.h>
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 AnyPopup(VOID)
@@ -20,6 +23,9 @@ AnyPopup(VOID)
   return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 AttachThreadInput(
@@ -31,6 +37,10 @@ AttachThreadInput(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 long
 STDCALL
 BroadcastSystemMessage(
@@ -44,6 +54,10 @@ BroadcastSystemMessage(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 long
 STDCALL
 BroadcastSystemMessageA(
@@ -57,6 +71,10 @@ BroadcastSystemMessageA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 long
 STDCALL
 BroadcastSystemMessageW(
@@ -70,6 +88,10 @@ BroadcastSystemMessageW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CheckRadioButton(
@@ -82,6 +104,10 @@ CheckRadioButton(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ClientToScreen(
@@ -92,6 +118,10 @@ ClientToScreen(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ClipCursor(
@@ -101,6 +131,10 @@ ClipCursor(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 CopyImage(
@@ -114,6 +148,10 @@ CopyImage(
   return (HANDLE)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DragDetect(
@@ -124,6 +162,10 @@ DragDetect(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnableScrollBar(
@@ -135,6 +177,10 @@ EnableScrollBar(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetActiveWindow(VOID)
@@ -143,6 +189,10 @@ GetActiveWindow(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetCapture(VOID)
@@ -151,6 +201,10 @@ GetCapture(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetDoubleClickTime(VOID)
@@ -159,6 +213,10 @@ GetDoubleClickTime(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetFocus(VOID)
@@ -167,6 +225,10 @@ GetFocus(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetGuiResources(
@@ -177,6 +239,10 @@ GetGuiResources(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMouseMovePointsEx(
@@ -190,6 +256,10 @@ GetMouseMovePointsEx(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetQueueStatus(
@@ -199,6 +269,10 @@ GetQueueStatus(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 GetSystemMenu(
@@ -209,6 +283,10 @@ GetSystemMenu(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsWindowEnabled(
@@ -218,6 +296,10 @@ IsWindowEnabled(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 LockWindowUpdate(
@@ -227,6 +309,10 @@ LockWindowUpdate(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 LockWorkStation(VOID)
@@ -235,6 +321,10 @@ LockWorkStation(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 MessageBeep(
@@ -244,6 +334,10 @@ MessageBeep(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMONITOR
 STDCALL
 MonitorFromPoint(
@@ -254,6 +348,10 @@ MonitorFromPoint(
   return (HMONITOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMONITOR
 STDCALL
 MonitorFromRect(
@@ -264,6 +362,10 @@ MonitorFromRect(
   return (HMONITOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMONITOR
 STDCALL
 MonitorFromWindow(
@@ -274,6 +376,10 @@ MonitorFromWindow(
   return (HMONITOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 MsgWaitForMultipleObjects(
@@ -287,6 +393,10 @@ MsgWaitForMultipleObjects(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 MsgWaitForMultipleObjectsEx(
@@ -323,6 +433,10 @@ RegisterDeviceNotificationW(
   return (HDEVNOTIFY)0;
 }
 #endif
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 RegisterHotKey(
@@ -335,6 +449,10 @@ RegisterHotKey(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ReleaseCapture(VOID)
@@ -343,6 +461,10 @@ ReleaseCapture(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ScrollWindow(
@@ -356,6 +478,10 @@ ScrollWindow(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ScrollWindowEx(
@@ -372,6 +498,10 @@ ScrollWindowEx(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 SetActiveWindow(
@@ -381,6 +511,10 @@ SetActiveWindow(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 SetCapture(
@@ -390,6 +524,10 @@ SetCapture(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDoubleClickTime(
@@ -399,6 +537,10 @@ SetDoubleClickTime(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 SetLastErrorEx(
@@ -408,6 +550,10 @@ SetLastErrorEx(
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetSysColors(
@@ -419,6 +565,10 @@ SetSysColors(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SwapMouseButton(
@@ -428,6 +578,10 @@ SwapMouseButton(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 TrackMouseEvent(
@@ -437,6 +591,10 @@ TrackMouseEvent(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UnregisterDeviceNotification(
@@ -446,6 +604,10 @@ UnregisterDeviceNotification(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UnregisterHotKey(
@@ -456,6 +618,10 @@ UnregisterHotKey(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 WaitForInputIdle(
@@ -467,7 +633,9 @@ WaitForInputIdle(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HHOOK
 STDCALL
 SetWindowsHookExA(
@@ -480,6 +648,10 @@ SetWindowsHookExA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HHOOK
 STDCALL
 SetWindowsHookExW(
@@ -492,6 +664,10 @@ SetWindowsHookExW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 keybd_event(
@@ -505,6 +681,10 @@ keybd_event(
   UNIMPLEMENTED
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 mouse_event(
@@ -523,6 +703,8 @@ mouse_event(
  *
  * PARAMS
  *    dwLevel [I] Debugging error level
+ *
+ * @unimplemented
  */
 VOID
 STDCALL

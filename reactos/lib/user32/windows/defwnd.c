@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.54 2003/07/05 17:57:22 chorns Exp $
+/* $Id: defwnd.c,v 1.55 2003/07/10 21:04:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -121,11 +121,16 @@ UserSetupInternalPos( VOID )
   AtomInternalPos = GlobalAddAtomA(Str);
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetSysColor(int nIndex)
 {
   return SysColours[nIndex];
 }
+
 
 HPEN STDCALL
 GetSysColorPen( int nIndex )
@@ -133,6 +138,10 @@ GetSysColorPen( int nIndex )
   return(CreatePen(PS_SOLID, 1, SysColours[nIndex]));
 }
 
+
+/*
+ * @implemented
+ */
 HBRUSH STDCALL
 GetSysColorBrush( int nIndex )
 {
@@ -140,6 +149,9 @@ GetSysColorBrush( int nIndex )
 }
 
 
+/*
+ * @unimplemented
+ */
 LRESULT STDCALL
 DefFrameProcA( HWND hWnd,
 	      HWND hWndMDIClient,
@@ -151,6 +163,9 @@ DefFrameProcA( HWND hWnd,
   return((LRESULT)0);
 }
 
+/*
+ * @unimplemented
+ */
 LRESULT STDCALL
 DefFrameProcW(HWND hWnd,
 	      HWND hWndMDIClient,
@@ -180,11 +195,13 @@ DefWndRedrawIconTitle(HWND hWnd)
   return(FALSE);
 }
 
+
 BOOL
 UserHasMenu(HWND hWnd, ULONG Style)
 {
   return(!(Style & WS_CHILD) && GetWindowLong(hWnd, GWL_ID) != 0);
 }
+
 
 ULONG
 UserHasAnyFrameStyle(ULONG Style, ULONG ExStyle)
@@ -194,12 +211,14 @@ UserHasAnyFrameStyle(ULONG Style, ULONG ExStyle)
 	 (!(Style & (WS_CHILD | WS_POPUP))));
 }
 
+
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle)
 {
   return((ExStyle & WS_EX_DLGMODALFRAME) ||
 	 ((Style & WS_DLGFRAME) && (!(Style & WS_THICKFRAME))));
 }
+
 
 ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle)
@@ -208,6 +227,7 @@ UserHasThickFrameStyle(ULONG Style, ULONG ExStyle)
 	 (!((Style & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)));
 }
 
+
 ULONG
 UserHasThinFrameStyle(ULONG Style, ULONG ExStyle)
 {
@@ -215,12 +235,14 @@ UserHasThinFrameStyle(ULONG Style, ULONG ExStyle)
 	 (!(Style & (WS_CHILD | WS_POPUP))));
 }
 
+
 ULONG
 UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 {
   return((Style & (WS_THICKFRAME | WS_DLGFRAME)) ||
 	 (ExStyle & WS_EX_DLGMODALFRAME));
 }
+
 
 void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 {
@@ -266,6 +288,7 @@ void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 	  }
       }
 }
+
 
 void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 {
@@ -355,6 +378,7 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
     
 }
 
+
 static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
 {
 
@@ -425,6 +449,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
     }
 }
 
+
 VOID
 UserDrawFrameNC(HWND hWnd, RECT* rect, BOOL dlgFrame, BOOL active)
 {
@@ -432,6 +457,7 @@ UserDrawFrameNC(HWND hWnd, RECT* rect, BOOL dlgFrame, BOOL active)
     SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
     DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
+
 
 void SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
 
@@ -493,6 +519,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   
 }
 
+
 LRESULT
 DefWndPaintNC(HWND hWnd, HRGN clip)
 {
@@ -509,6 +536,7 @@ DefWndPaintNC(HWND hWnd, HRGN clip)
     }
   return(0);
 }
+
 
 LRESULT
 DefWndHitTestNC(HWND hWnd, POINT Point)
@@ -684,11 +712,13 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
   return(HTNOWHERE);
 }
 
+
 VOID
 DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
 {
   UNIMPLEMENTED;
 }
+
 
 LRESULT
 DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -765,12 +795,14 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
     return(0);
 }
 
+
 LRESULT
 DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   UNIMPLEMENTED;
   return(0);
 }
+
 
 LRESULT
 DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -799,6 +831,7 @@ DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
   return(0);
 }
 
+
 LRESULT
 DefWndHandleActiveNC(HWND hWnd, WPARAM wParam)
 {
@@ -806,11 +839,13 @@ DefWndHandleActiveNC(HWND hWnd, WPARAM wParam)
   return(0);
 }
 
+
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
   UNIMPLEMENTED;
 }
+
 
 LRESULT
 DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -872,6 +907,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
   return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
 }
 
+
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 {
@@ -888,6 +924,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 
   return(0);
 }
+
 
 VOID
 DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
@@ -939,6 +976,7 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
     }
 }
 
+
 LRESULT STDCALL
 DefWndNCCalcSize(HWND hWnd, RECT* Rect)
 {
@@ -970,12 +1008,14 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
   return(Result);
 }
 
+
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
   UNIMPLEMENTED;
   return 0;
 }
+
 
 LRESULT STDCALL
 User32DefWindowProc(HWND hWnd,
@@ -1408,6 +1448,7 @@ User32DefWindowProc(HWND hWnd,
   return 0;
 }
 
+
 LRESULT STDCALL
 DefWindowProcA(HWND hWnd,
 	       UINT Msg,
@@ -1514,6 +1555,7 @@ DefWindowProcA(HWND hWnd,
 
   return(Result);
 }
+
 
 LRESULT STDCALL
 DefWindowProcW(HWND hWnd,

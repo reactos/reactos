@@ -42,6 +42,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DrawFrameControl(HDC hDc, LPRECT Rect, UINT Type, UINT State)
 {

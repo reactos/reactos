@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.5 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: cursor.c,v 1.6 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 CreateCaret(HWND hWnd,
 	    HBITMAP hBitmap,
@@ -44,6 +47,10 @@ CreateCaret(HWND hWnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCURSOR STDCALL
 CreateCursor(HINSTANCE hInst,
 	     int xHotSpot,
@@ -58,6 +65,10 @@ CreateCursor(HINSTANCE hInst,
   return (HCURSOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DestroyCaret(VOID)
 {
@@ -65,6 +76,10 @@ DestroyCaret(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
@@ -72,6 +87,10 @@ DestroyCursor(HCURSOR hCursor)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetCaretBlinkTime(VOID)
 {
@@ -79,6 +98,10 @@ GetCaretBlinkTime(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetCaretPos(LPPOINT lpPoint)
 {
@@ -86,6 +109,10 @@ GetCaretPos(LPPOINT lpPoint)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetClipCursor(LPRECT lpRect)
 {
@@ -93,6 +120,10 @@ GetClipCursor(LPRECT lpRect)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCURSOR STDCALL
 GetCursor(VOID)
 {
@@ -100,6 +131,10 @@ GetCursor(VOID)
   return (HCURSOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetCursorInfo(PCURSORINFO pci)
 {
@@ -107,6 +142,10 @@ GetCursorInfo(PCURSORINFO pci)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetCursorPos(LPPOINT lpPoint)
 {
@@ -114,6 +153,10 @@ GetCursorPos(LPPOINT lpPoint)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 HideCaret(HWND hWnd)
 {
@@ -121,6 +164,10 @@ HideCaret(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 HCURSOR STDCALL
 LoadCursorA(HINSTANCE hInstance,
 	    LPCSTR lpCursorName)
@@ -129,6 +176,10 @@ LoadCursorA(HINSTANCE hInstance,
 		    LR_DEFAULTSIZE));
 }
 
+
+/*
+ * @implemented
+ */
 HCURSOR STDCALL
 LoadCursorFromFileA(LPCSTR lpFileName)
 {
@@ -141,6 +192,10 @@ LoadCursorFromFileA(LPCSTR lpFileName)
   return(Result);
 }
 
+
+/*
+ * @implemented
+ */
 HCURSOR STDCALL
 LoadCursorFromFileW(LPCWSTR lpFileName)
 {
@@ -148,6 +203,10 @@ LoadCursorFromFileW(LPCWSTR lpFileName)
 		    LR_LOADFROMFILE | LR_DEFAULTSIZE));
 }
 
+
+/*
+ * @implemented
+ */
 HCURSOR STDCALL
 LoadCursorW(HINSTANCE hInstance,
 	    LPCWSTR lpCursorName)
@@ -156,6 +215,10 @@ LoadCursorW(HINSTANCE hInstance,
 		    LR_DEFAULTSIZE));
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
@@ -163,6 +226,10 @@ SetCaretBlinkTime(UINT uMSeconds)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
@@ -171,6 +238,10 @@ SetCaretPos(int X,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCURSOR STDCALL
 SetCursor(HCURSOR hCursor)
 {
@@ -178,6 +249,10 @@ SetCursor(HCURSOR hCursor)
   return (HCURSOR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetCursorPos(int X,
 	     int Y)
@@ -186,6 +261,10 @@ SetCursorPos(int X,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetSystemCursor(HCURSOR hcur,
 		DWORD id)
@@ -194,6 +273,10 @@ SetSystemCursor(HCURSOR hcur,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 ShowCaret(HWND hWnd)
 {
@@ -201,6 +284,10 @@ ShowCaret(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 ShowCursor(WINBOOL bShow)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.7 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: prop.c,v 1.8 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 int STDCALL
 EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
@@ -42,6 +45,10 @@ EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
@@ -49,6 +56,10 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
@@ -56,6 +67,10 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
@@ -63,6 +78,10 @@ EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 GetPropA(HWND hWnd, LPCSTR lpString)
 {
@@ -87,6 +106,10 @@ GetPropA(HWND hWnd, LPCSTR lpString)
   return(Ret);
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 GetPropW(HWND hWnd, LPCWSTR lpString)
 {
@@ -102,6 +125,10 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
   return(NtUserGetProp(hWnd, Atom));
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 RemovePropA(HWND hWnd, LPCSTR lpString)
 {
@@ -127,6 +154,10 @@ RemovePropA(HWND hWnd, LPCSTR lpString)
   return(Ret);
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 RemovePropW(HWND hWnd,
 	    LPCWSTR lpString)
@@ -143,6 +174,10 @@ RemovePropW(HWND hWnd,
   return(NtUserRemoveProp(hWnd, Atom));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 {
@@ -168,6 +203,10 @@ SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
   return(Ret);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
 {

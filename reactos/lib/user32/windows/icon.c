@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.6 2003/06/05 11:57:12 chorns Exp $
+/* $Id: icon.c,v 1.7 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -102,6 +102,10 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
   return hIcon;
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 CopyIcon(
@@ -112,6 +116,10 @@ CopyIcon(
   return CreateIconIndirect(&IconInfo);
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 CreateIcon(
@@ -135,6 +143,10 @@ CreateIcon(
                         lpbXORbits);
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 CreateIconFromResource(
@@ -146,6 +158,10 @@ CreateIconFromResource(
   return CreateIconFromResourceEx( presbits, dwResSize, fIcon, dwVer, 0,0,0);
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 CreateIconFromResourceEx(
@@ -202,6 +218,10 @@ CreateIconFromResourceEx(
   return hIcon;
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 CreateIconIndirect(
@@ -224,6 +244,10 @@ CreateIconIndirect(
 			bmColor.bmBits);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DestroyIcon(
@@ -232,6 +256,10 @@ DestroyIcon(
   return W32kDeleteObject(hIcon);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DrawIcon(
@@ -244,6 +272,9 @@ DrawIcon(
 }
 
 /* Ported from WINE20030408 */
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DrawIconEx(
@@ -385,6 +416,10 @@ DrawIconEx(
     return result;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetIconInfo(
@@ -399,6 +434,10 @@ GetIconInfo(
                            &piconinfo->hbmColor);
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 LoadIconA(
@@ -408,6 +447,10 @@ LoadIconA(
   return(LoadImageA(hInstance, lpIconName, IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
 }
 
+
+/*
+ * @implemented
+ */
 HICON
 STDCALL
 LoadIconW(
@@ -417,6 +460,10 @@ LoadIconW(
   return(LoadImageW(hInstance, lpIconName, IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 LookupIconIdFromDirectory(
@@ -533,6 +580,9 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
 }
 
 /* Ported from WINE20030408 */
+/*
+ * @implemented
+ */
 int
 STDCALL
 LookupIconIdFromDirectoryEx(

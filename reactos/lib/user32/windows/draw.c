@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.12 2003/06/25 16:55:32 gvg Exp $
+/* $Id: draw.c,v 1.13 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1361,6 +1361,10 @@ BOOL WINAPI DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
       return UITOOLS95_DrawRectEdge(hdc, rc, edge, flags);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GrayStringA(
@@ -1378,6 +1382,10 @@ GrayStringA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GrayStringW(
@@ -1394,6 +1402,11 @@ GrayStringW(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InvertRect(
@@ -1404,6 +1417,10 @@ InvertRect(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 TabbedTextOutA(
@@ -1420,6 +1437,10 @@ TabbedTextOutA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 TabbedTextOutW(
@@ -1436,6 +1457,9 @@ TabbedTextOutW(
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 FrameRect(
@@ -1447,6 +1471,10 @@ FrameRect(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 FlashWindow(
@@ -1457,6 +1485,10 @@ FlashWindow(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 FlashWindowEx(
@@ -1466,6 +1498,10 @@ FlashWindowEx(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
@@ -1484,6 +1520,10 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
   return(TRUE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawAnimatedRects(
@@ -1496,6 +1536,10 @@ DrawAnimatedRects(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawCaption(
@@ -1508,6 +1552,10 @@ DrawCaption(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawFocusRect(
@@ -1518,6 +1566,10 @@ DrawFocusRect(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawStateA(
@@ -1536,6 +1588,10 @@ DrawStateA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawStateW(

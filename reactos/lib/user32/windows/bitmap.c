@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.10 2003/06/03 22:25:37 ekohl Exp $
+/* $Id: bitmap.c,v 1.11 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -41,6 +41,9 @@ CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int 
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 LoadImageA(HINSTANCE hinst,
 	   LPCSTR lpszName,
@@ -69,12 +72,14 @@ LoadImageA(HINSTANCE hinst,
   return(Handle);
 }
 
+
 HANDLE STATIC
 LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 {
   DbgPrint("FIXME: Need support for loading cursor images.\n");
   return(NULL);
 }
+
 
 HANDLE STATIC
 LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuLoad)
@@ -240,6 +245,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }
+
 
 HANDLE STATIC
 LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
@@ -438,12 +444,19 @@ LoadImageW(HINSTANCE hinst,
 }
 
 
+/*
+ * @implemented
+ */
 HBITMAP STDCALL
 LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
   return(LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0));
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP STDCALL
 LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 {

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.6 2002/08/27 06:40:15 robd Exp $
+/* $Id: sprintf.c,v 1.7 2003/07/10 21:04:31 chorns Exp $
  *
  * user32.dll
  *
@@ -511,6 +511,8 @@ wvsnprintfA(
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @implemented
  */
 INT
 CDECL
@@ -544,6 +546,8 @@ wsprintfA(
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @implemented
  */
 INT
 STDCALL
@@ -885,6 +889,8 @@ wvsnprintfW(
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @implemented
  */
 INT
 CDECL
@@ -918,6 +924,8 @@ wsprintfW(
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @implemented
  */
 INT
 STDCALL
@@ -934,7 +942,6 @@ wvsprintfW(
 			args
 			);
 }
-
 
 /* EOF */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: clipboard.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CloseClipboard(VOID)
@@ -41,6 +44,11 @@ CloseClipboard(VOID)
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 CountClipboardFormats(VOID)
@@ -48,6 +56,11 @@ CountClipboardFormats(VOID)
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EmptyClipboard(VOID)
@@ -55,6 +68,11 @@ EmptyClipboard(VOID)
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 EnumClipboardFormats(
@@ -63,6 +81,11 @@ EnumClipboardFormats(
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 GetClipboardData(
@@ -72,6 +95,10 @@ GetClipboardData(
   return (HANDLE)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetClipboardFormatNameA(
@@ -83,6 +110,10 @@ GetClipboardFormatNameA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetClipboardFormatNameW(
@@ -94,6 +125,10 @@ GetClipboardFormatNameW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetClipboardOwner(VOID)
@@ -102,6 +137,10 @@ GetClipboardOwner(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetClipboardSequenceNumber(VOID)
@@ -110,6 +149,10 @@ GetClipboardSequenceNumber(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetClipboardViewer(VOID)
@@ -118,6 +161,10 @@ GetClipboardViewer(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetOpenClipboardWindow(VOID)
@@ -126,6 +173,10 @@ GetOpenClipboardWindow(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetPriorityClipboardFormat(
@@ -135,6 +186,11 @@ GetPriorityClipboardFormat(
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsClipboardFormatAvailable(
@@ -144,6 +200,10 @@ IsClipboardFormatAvailable(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 OpenClipboard(
@@ -153,6 +213,10 @@ OpenClipboard(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 RegisterClipboardFormatA(
@@ -162,6 +226,10 @@ RegisterClipboardFormatA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 RegisterClipboardFormatW(
@@ -171,6 +239,10 @@ RegisterClipboardFormatW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 SetClipboardData(
@@ -181,6 +253,10 @@ SetClipboardData(
   return (HANDLE)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 SetClipboardViewer(
@@ -190,6 +266,10 @@ SetClipboardViewer(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ChangeClipboardChain(

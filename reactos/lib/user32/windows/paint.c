@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.15 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: paint.c,v 1.16 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 BeginPaint(
@@ -43,6 +46,11 @@ BeginPaint(
 {
   return NtUserBeginPaint(hwnd, lpPaint);
 }
+
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 EndPaint(
@@ -51,6 +59,11 @@ EndPaint(
 {
   return NtUserEndPaint(hWnd, lpPaint);
 }
+
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ExcludeUpdateRgn(
@@ -60,6 +73,11 @@ ExcludeUpdateRgn(
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetUpdateRect(
@@ -71,6 +89,10 @@ GetUpdateRect(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetUpdateRgn(
@@ -81,6 +103,10 @@ GetUpdateRgn(
   return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 InvalidateRect(
@@ -91,6 +117,10 @@ InvalidateRect(
   return NtUserInvalidateRect( hWnd, lpRect, bErase );
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 InvalidateRgn(
@@ -101,6 +131,10 @@ InvalidateRgn(
   return NtUserInvalidateRgn( hWnd, hRgn, bErase );
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 RedrawWindow(
@@ -112,6 +146,10 @@ RedrawWindow(
  return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ScrollDC(
@@ -126,6 +164,11 @@ ScrollDC(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetWindowRgn(
@@ -137,6 +180,10 @@ SetWindowRgn(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UpdateWindow(
@@ -145,6 +192,10 @@ UpdateWindow(
   return NtUserUpdateWindow( hWnd );
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ValidateRect(
@@ -155,6 +206,10 @@ ValidateRect(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 ValidateRgn(
@@ -166,6 +221,10 @@ ValidateRgn(
                                       TWOPARAM_ROUTINE_VALIDATERGN);
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetWindowRgn(

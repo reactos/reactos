@@ -1,4 +1,4 @@
-/* $Id: exit.c,v 1.1 2002/10/20 14:52:45 ekohl Exp $
+/* $Id: exit.c,v 1.2 2003/07/10 21:04:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,8 +12,9 @@
 
 #include <ntdll/csr.h>
 
-
-
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ExitWindowsEx(UINT uFlags,
 	      DWORD dwReserved)
@@ -40,6 +41,9 @@ ExitWindowsEx(UINT uFlags,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 RegisterServicesProcess(DWORD ServicesProcessId)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winhelp.c,v 1.3 2002/09/30 21:21:38 chorns Exp $
+/* $Id: winhelp.c,v 1.4 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/winhelp.c
@@ -47,6 +47,9 @@ typedef struct
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
@@ -127,6 +130,10 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
 	return SendMessage(hDest, WM_WINHELP, (WPARAM)hWnd, (LPARAM)hwh);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, DWORD dwData)

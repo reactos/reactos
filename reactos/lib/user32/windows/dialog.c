@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.8 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: dialog.c,v 1.9 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateDialogIndirectParamA(
@@ -47,6 +50,10 @@ CreateDialogIndirectParamA(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateDialogIndirectParamAorW(
@@ -60,6 +67,10 @@ CreateDialogIndirectParamAorW(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateDialogIndirectParamW(
@@ -73,6 +84,10 @@ CreateDialogIndirectParamW(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateDialogParamA(
@@ -86,6 +101,10 @@ CreateDialogParamA(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateDialogParamW(
@@ -98,6 +117,11 @@ CreateDialogParamW(
   UNIMPLEMENTED;
   return (HWND)0;
 }
+
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 DefDlgProcA(
@@ -110,6 +134,10 @@ DefDlgProcA(
   return (LRESULT)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 DefDlgProcW(
@@ -134,6 +162,10 @@ DialogBoxIndirectParamA(
   return (INT_PTR)NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT_PTR
 STDCALL
 DialogBoxIndirectParamAorW(
@@ -147,6 +179,10 @@ DialogBoxIndirectParamAorW(
   return (INT_PTR)NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT_PTR
 STDCALL
 DialogBoxIndirectParamW(
@@ -160,6 +196,10 @@ DialogBoxIndirectParamW(
   return (INT_PTR)NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT_PTR
 STDCALL
 DialogBoxParamA(
@@ -173,6 +213,10 @@ DialogBoxParamA(
   return (INT_PTR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT_PTR
 STDCALL
 DialogBoxParamW(
@@ -186,6 +230,10 @@ DialogBoxParamW(
   return (INT_PTR)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DlgDirListA(
@@ -199,6 +247,10 @@ DlgDirListA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DlgDirListComboBoxA(
@@ -212,6 +264,10 @@ DlgDirListComboBoxA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DlgDirListComboBoxW(
@@ -225,6 +281,10 @@ DlgDirListComboBoxW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DlgDirListW(
@@ -238,6 +298,10 @@ DlgDirListW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DlgDirSelectComboBoxExA(
@@ -250,6 +314,10 @@ DlgDirSelectComboBoxExA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DlgDirSelectComboBoxExW(
@@ -262,6 +330,10 @@ DlgDirSelectComboBoxExW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DlgDirSelectExA(
@@ -274,6 +346,10 @@ DlgDirSelectExA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DlgDirSelectExW(
@@ -286,6 +362,10 @@ DlgDirSelectExW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EndDialog(
@@ -295,6 +375,11 @@ EndDialog(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 GetDialogBaseUnits(VOID)
@@ -303,6 +388,10 @@ GetDialogBaseUnits(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetDlgCtrlID(
@@ -312,6 +401,10 @@ GetDlgCtrlID(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetDlgItem(
@@ -322,6 +415,10 @@ GetDlgItem(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetDlgItemInt(
@@ -334,6 +431,10 @@ GetDlgItemInt(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetDlgItemTextA(
@@ -346,6 +447,10 @@ GetDlgItemTextA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetDlgItemTextW(
@@ -357,6 +462,11 @@ GetDlgItemTextW(
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetNextDlgGroupItem(
@@ -368,6 +478,10 @@ GetNextDlgGroupItem(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 GetNextDlgTabItem(
@@ -390,6 +504,10 @@ IsDialogMessage(
 }
 #endif
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsDialogMessageA(
@@ -400,6 +518,10 @@ IsDialogMessageA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsDialogMessageW(
@@ -410,6 +532,10 @@ IsDialogMessageW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 IsDlgButtonChecked(
@@ -420,6 +546,10 @@ IsDlgButtonChecked(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 MapDialogRect(
@@ -430,6 +560,10 @@ MapDialogRect(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 SendDlgItemMessageA(
@@ -443,6 +577,10 @@ SendDlgItemMessageA(
   return (LRESULT)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 SendDlgItemMessageW(
@@ -456,6 +594,10 @@ SendDlgItemMessageW(
   return (LRESULT)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDlgItemInt(
@@ -468,6 +610,10 @@ SetDlgItemInt(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDlgItemTextA(
@@ -479,6 +625,10 @@ SetDlgItemTextA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDlgItemTextW(
@@ -490,6 +640,10 @@ SetDlgItemTextW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CheckDlgButton(
@@ -500,4 +654,3 @@ CheckDlgButton(
   UNIMPLEMENTED;
   return FALSE;
 }
-

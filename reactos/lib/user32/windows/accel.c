@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.7 2003/07/09 00:09:47 hyperion Exp $
+/* $Id: accel.c,v 1.8 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -199,9 +199,11 @@ BOOL WINAPI U32IsValidAccelMessage(UINT uMsg)
 /* WIN32 FUNCTIONS ***********************************************************/
 
 /*
- Dereference the specified accelerator table, removing it from the cache and
- deleting the associated NtUser object as appropriate
-*/
+ * Dereference the specified accelerator table, removing it from the cache and
+ * deleting the associated NtUser object as appropriate
+ *
+ * @implemented
+ */
 BOOL WINAPI DestroyAcceleratorTable(HACCEL hAccel)
 {
  U32_ACCEL_CACHE_ENTRY ** ppEntry;
@@ -239,7 +241,12 @@ BOOL WINAPI DestroyAcceleratorTable(HACCEL hAccel)
  return NtUserDestroyAcceleratorTable(hAccel);
 }
 
-/* Create an accelerator table from a named resource */
+
+/*
+ * Create an accelerator table from a named resource
+ *
+ * @implemented
+ */
 HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
 {
  return U32LoadAccelerators
@@ -248,7 +255,11 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
   FindResourceExW(hInstance, MAKEINTRESOURCEW(RT_ACCELERATOR), lpTableName, 0)
  );
 }
- 
+
+
+/*
+ * @implemented
+ */
 HACCEL WINAPI LoadAcceleratorsA(HINSTANCE hInstance, LPCSTR lpTableName)
 {
  return U32LoadAccelerators
@@ -258,7 +269,11 @@ HACCEL WINAPI LoadAcceleratorsA(HINSTANCE hInstance, LPCSTR lpTableName)
  );
 }
 
-/* Translate a key press into a WM_COMMAND message */
+/*
+ * Translate a key press into a WM_COMMAND message
+ *
+ * @implemented
+ */
 int WINAPI TranslateAcceleratorW(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
 {
  if(!U32IsValidAccelMessage(lpMsg->message)) return 0;
@@ -266,7 +281,9 @@ int WINAPI TranslateAcceleratorW(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
  return NtUserTranslateAccelerator(hWnd, hAccTable, lpMsg);
 }
 
-/* NTUSER STUBS */
+/*
+ * @implemented
+ */
 int WINAPI CopyAcceleratorTableW
 (
  HACCEL hAccelSrc,
@@ -277,12 +294,18 @@ int WINAPI CopyAcceleratorTableW
  return NtUserCopyAcceleratorTable(hAccelSrc, lpAccelDst, cAccelEntries);
 }
 
+/*
+ * @implemented
+ */
 HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccl, int cEntries)
 {
  return NtUserCreateAcceleratorTable(lpaccl, cEntries);
 }
 
-/* ANSI STUBS */
+
+/*
+ * @implemented
+ */
 int WINAPI CopyAcceleratorTableA
 (
  HACCEL hAccelSrc,
@@ -314,6 +337,10 @@ int WINAPI CopyAcceleratorTableA
  return cAccelEntries;
 }
 
+
+/*
+ * @implemented
+ */
 HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
 {
  int i;
@@ -336,6 +363,10 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
  return CreateAcceleratorTableW(lpaccl, cEntries);
 }
 
+
+/*
+ * @implemented
+ */
 int WINAPI TranslateAcceleratorA(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
 {
  MSG mCopy = *lpMsg;

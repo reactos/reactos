@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: display.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 EnumDisplayDevicesA(
   LPCSTR lpDevice,
@@ -45,6 +48,10 @@ EnumDisplayDevicesA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplayDevicesW(
@@ -57,6 +64,10 @@ EnumDisplayDevicesW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplayMonitors(
@@ -69,6 +80,10 @@ EnumDisplayMonitors(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplaySettingsA(
@@ -80,6 +95,10 @@ EnumDisplaySettingsA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplaySettingsExA(
@@ -92,6 +111,10 @@ EnumDisplaySettingsExA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplaySettingsExW(
@@ -104,6 +127,10 @@ EnumDisplaySettingsExW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDisplaySettingsW(
@@ -115,6 +142,10 @@ EnumDisplaySettingsW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMonitorInfoA(
@@ -125,6 +156,10 @@ GetMonitorInfoA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMonitorInfoW(
@@ -135,6 +170,10 @@ GetMonitorInfoW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 ChangeDisplaySettingsA(
@@ -145,6 +184,10 @@ ChangeDisplaySettingsA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 ChangeDisplaySettingsExA(
@@ -158,6 +201,10 @@ ChangeDisplaySettingsExA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 ChangeDisplaySettingsExW(
@@ -171,6 +218,10 @@ ChangeDisplaySettingsExW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 ChangeDisplaySettingsW(

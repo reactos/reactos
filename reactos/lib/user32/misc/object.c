@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: object.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetUserObjectInformationA(
@@ -46,6 +49,10 @@ SetUserObjectInformationA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetUserObjectInformationW(
@@ -57,6 +64,11 @@ SetUserObjectInformationW(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UserHandleGrantAccess(
@@ -67,6 +79,11 @@ UserHandleGrantAccess(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetUserObjectInformationA(
@@ -80,6 +97,10 @@ GetUserObjectInformationA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetUserObjectInformationW(

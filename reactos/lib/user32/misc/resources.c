@@ -87,6 +87,10 @@ BOOL STDCALL _InternalLoadString
  return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL LoadStringA
 (
  HINSTANCE hInstance,
@@ -155,6 +159,10 @@ int STDCALL LoadStringA
  }
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL LoadStringW
 (
  HINSTANCE hInstance,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.7 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: menu.c,v 1.8 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -109,6 +109,10 @@ MenuFindItem(HMENU* hMenu, UINT* nPos, UINT wFlags)
   return(NULL);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AppendMenuA(HMENU hMenu,
 	    UINT uFlags,
@@ -121,6 +125,10 @@ AppendMenuA(HMENU hMenu,
 		     lpNewItem));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AppendMenuW(HMENU hMenu,
 	    UINT uFlags,
@@ -133,6 +141,10 @@ AppendMenuW(HMENU hMenu,
 		     lpNewItem));
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 CheckMenuItem(HMENU hmenu,
 	      UINT uIDCheckItem,
@@ -159,6 +171,10 @@ CheckMenuItem(HMENU hmenu,
   return(Ret);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CheckMenuRadioItem(
@@ -172,6 +188,10 @@ CheckMenuRadioItem(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 CreateMenu(VOID)
@@ -180,6 +200,10 @@ CreateMenu(VOID)
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 CreatePopupMenu(VOID)
@@ -188,6 +212,10 @@ CreatePopupMenu(VOID)
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DeleteMenu(
@@ -199,6 +227,10 @@ DeleteMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DestroyMenu(
@@ -208,6 +240,10 @@ DestroyMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DrawMenuBar(
@@ -217,6 +253,10 @@ DrawMenuBar(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnableMenuItem(
@@ -228,6 +268,10 @@ EnableMenuItem(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EndMenu(VOID)
@@ -236,6 +280,10 @@ EndMenu(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 GetMenu(
@@ -245,6 +293,10 @@ GetMenu(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMenuBarInfo(
@@ -257,6 +309,10 @@ GetMenuBarInfo(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 GetMenuCheckMarkDimensions(VOID)
@@ -265,6 +321,10 @@ GetMenuCheckMarkDimensions(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetMenuDefaultItem(
@@ -276,6 +336,10 @@ GetMenuDefaultItem(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMenuInfo(
@@ -286,6 +350,10 @@ GetMenuInfo(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMenuItemCount(
@@ -295,6 +363,10 @@ GetMenuItemCount(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetMenuItemID(
@@ -305,6 +377,10 @@ GetMenuItemID(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMenuItemInfoA(
@@ -317,6 +393,10 @@ GetMenuItemInfoA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMenuItemInfoW(
@@ -329,6 +409,10 @@ GetMenuItemInfoW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetMenuItemRect(
@@ -341,6 +425,10 @@ GetMenuItemRect(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetMenuState(
@@ -352,6 +440,10 @@ GetMenuState(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMenuStringA(
@@ -365,6 +457,10 @@ GetMenuStringA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMenuStringW(
@@ -378,6 +474,10 @@ GetMenuStringW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 GetSubMenu(
@@ -388,6 +488,10 @@ GetSubMenu(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 HiliteMenuItem(
@@ -400,6 +504,10 @@ HiliteMenuItem(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InsertMenuA(
@@ -413,6 +521,10 @@ InsertMenuA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InsertMenuItemA(
@@ -425,6 +537,10 @@ InsertMenuItemA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InsertMenuItemW(
@@ -437,6 +553,10 @@ InsertMenuItemW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InsertMenuW(
@@ -450,6 +570,10 @@ InsertMenuW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsMenu(
@@ -459,6 +583,10 @@ IsMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 LoadMenuA(
@@ -469,6 +597,10 @@ LoadMenuA(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 LoadMenuIndirectA(
@@ -478,6 +610,10 @@ LoadMenuIndirectA(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 LoadMenuIndirectW(
@@ -487,6 +623,10 @@ LoadMenuIndirectW(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HMENU
 STDCALL
 LoadMenuW(
@@ -497,6 +637,10 @@ LoadMenuW(
   return (HMENU)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MenuItemFromPoint(
@@ -508,6 +652,10 @@ MenuItemFromPoint(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ModifyMenuA(
@@ -521,6 +669,10 @@ ModifyMenuA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ModifyMenuW(
@@ -534,6 +686,10 @@ ModifyMenuW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 RemoveMenu(
@@ -545,6 +701,10 @@ RemoveMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenu(
@@ -555,6 +715,10 @@ SetMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenuDefaultItem(
@@ -566,6 +730,10 @@ SetMenuDefaultItem(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenuInfo(
@@ -576,6 +744,10 @@ SetMenuInfo(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenuItemBitmaps(
@@ -589,6 +761,10 @@ SetMenuItemBitmaps(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenuItemInfoA(
@@ -601,6 +777,10 @@ SetMenuItemInfoA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetMenuItemInfoW(
@@ -613,6 +793,10 @@ SetMenuItemInfoW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 TrackPopupMenu(
@@ -628,6 +812,10 @@ TrackPopupMenu(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 TrackPopupMenuEx(

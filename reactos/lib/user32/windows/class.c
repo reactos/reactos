@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.19 2003/06/16 13:10:01 gvg Exp $
+/* $Id: class.c,v 1.20 2003/07/10 21:04:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,6 +13,9 @@
 #include <debug.h>
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetClassInfoA(
@@ -24,6 +27,10 @@ GetClassInfoA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetClassInfoExA(
@@ -35,6 +42,10 @@ GetClassInfoExA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetClassInfoExW(
@@ -46,6 +57,10 @@ GetClassInfoExW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetClassInfoW(
@@ -57,6 +72,10 @@ GetClassInfoW(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetClassLongA(HWND hWnd, int nIndex)
 {
@@ -73,12 +92,20 @@ GetClassLongA(HWND hWnd, int nIndex)
     }
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetClassLongW(HWND hWnd, int nIndex)
 {
   return(NtUserGetClassLong(hWnd, nIndex));
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetClassNameA(
@@ -90,6 +117,10 @@ GetClassNameA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetClassNameW(
@@ -101,6 +132,10 @@ GetClassNameW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WORD
 STDCALL
 GetClassWord(
@@ -114,18 +149,30 @@ GetClassWord(
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 LONG STDCALL
 GetWindowLongA(HWND hWnd, int nIndex)
 {
   return NtUserGetWindowLong(hWnd, nIndex);
 }
 
+
+/*
+ * @implemented
+ */
 LONG STDCALL
 GetWindowLongW(HWND hWnd, int nIndex)
 {
   return NtUserGetWindowLong(hWnd, nIndex);
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 RealGetWindowClass(
@@ -137,6 +184,10 @@ RealGetWindowClass(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 RealGetWindowClassA(
@@ -148,6 +199,10 @@ RealGetWindowClassA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 RealGetWindowClassW(
@@ -159,6 +214,10 @@ RealGetWindowClassW(
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 ATOM STDCALL
 RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
@@ -170,6 +229,10 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
   return RegisterClassExA(&Class);
 }
 
+
+/*
+ * @implemented
+ */
 ATOM STDCALL
 RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
@@ -209,6 +272,10 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
   return (ATOM)Atom;
 }
 
+
+/*
+ * @implemented
+ */
 ATOM STDCALL
 RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
@@ -224,6 +291,10 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
   return (ATOM)Atom;
 }
 
+
+/*
+ * @implemented
+ */
 ATOM STDCALL
 RegisterClassW(CONST WNDCLASSW *lpWndClass)
 {
@@ -235,6 +306,10 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
   return RegisterClassExW(&Class);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetClassLongA(
@@ -246,6 +321,10 @@ SetClassLongA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetClassLongW(
@@ -257,6 +336,10 @@ SetClassLongW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WORD
 STDCALL
 SetClassWord(
@@ -271,6 +354,10 @@ SetClassWord(
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 SetWindowLongA(
@@ -281,6 +368,10 @@ SetWindowLongA(
   return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 SetWindowLongW(
@@ -291,6 +382,10 @@ SetWindowLongW(
   return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UnregisterClassA(
@@ -301,6 +396,10 @@ UnregisterClassA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UnregisterClassW(

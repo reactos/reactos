@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.9 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: hook.c,v 1.10 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UnhookWindowsHookEx(
@@ -54,6 +57,10 @@ CallMsgFilter(
 }
 #endif
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CallMsgFilterA(
@@ -64,6 +71,10 @@ CallMsgFilterA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CallMsgFilterW(
@@ -74,6 +85,10 @@ CallMsgFilterW(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 CallNextHookEx(

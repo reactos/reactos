@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.11 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: dc.c,v 1.12 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 GetDC(
@@ -42,6 +45,10 @@ GetDC(
   return NtUserGetDC(hWnd);
 }
 
+
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 GetDCEx(
@@ -51,6 +58,11 @@ GetDCEx(
 {
   return NtUserGetDCEx(hWnd, hrgnClip, flags);
 }
+
+
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 GetWindowDC(
@@ -58,6 +70,11 @@ GetWindowDC(
 {
   return (HDC)NtUserGetWindowDC(hWnd);
 }
+
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ReleaseDC(
@@ -67,6 +84,11 @@ ReleaseDC(
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 WindowFromDC(

@@ -1,5 +1,42 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/misc/dde.c: Add @implemented and @unimplemented to APIs.
+	* lib/user32/misc/desktop.c: Ditto.
+	* lib/user32/misc/display.c: Ditto.
+	* lib/user32/misc/exit.c: Ditto.
+	* lib/user32/misc/object.c: Ditto.
+	* lib/user32/misc/resources.c: Ditto.
+	* lib/user32/misc/sprintf.c: Ditto.
+	* lib/user32/misc/stubs.c: Ditto.
+	* lib/user32/misc/timer.c: Ditto.
+	* lib/user32/misc/winhelp.c: Ditto.
+	* lib/user32/misc/winsta.c: Ditto.
+	* lib/user32/windows/accel.c: Ditto.
+	* lib/user32/windows/bitmap.c: Ditto.
+	* lib/user32/windows/class.c: Ditto.
+	* lib/user32/windows/clipboard.c: Ditto.
+	* lib/user32/windows/cursor.c: Ditto.
+	* lib/user32/windows/dc.c: Ditto.
+	* lib/user32/windows/defwnd.c: Ditto.
+	* lib/user32/windows/dialog.c: Ditto.
+	* lib/user32/windows/draw.c: Ditto.
+	* lib/user32/windows/font.c: Ditto.
+	* lib/user32/windows/hook.c: Ditto.
+	* lib/user32/windows/icon.c: Ditto.
+	* lib/user32/windows/input.c: Ditto.
+	* lib/user32/windows/mdi.c: Ditto.
+	* lib/user32/windows/menu.c: Ditto.
+	* lib/user32/windows/message.c: Ditto.
+	* lib/user32/windows/messagebox.c: Ditto.
+	* lib/user32/windows/nonclient.c: Ditto.
+	* lib/user32/windows/paint.c: Ditto.
+	* lib/user32/windows/prop.c: Ditto.
+	* lib/user32/windows/rect.c: Ditto.
+	* lib/user32/windows/text.c: Ditto.
+	* lib/user32/windows/window.c: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/net/tdi/cte/string.c: Add @implemented and @unimplemented to
 	APIs.
 	* drivers/net/tdi/cte/stubs.c: Ditto.

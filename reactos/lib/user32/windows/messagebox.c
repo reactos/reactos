@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: messagebox.c,v 1.7 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 int
 STDCALL
 MessageBoxA(
@@ -45,6 +48,10 @@ MessageBoxA(
   return MessageBoxExA(hWnd, lpText, lpCaption, uType, 0);
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MessageBoxExA(
@@ -58,6 +65,10 @@ MessageBoxExA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MessageBoxExW(
@@ -71,6 +82,10 @@ MessageBoxExW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MessageBoxIndirectA(
@@ -80,6 +95,10 @@ MessageBoxIndirectA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MessageBoxIndirectW(
@@ -89,6 +108,10 @@ MessageBoxIndirectW(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 MessageBoxW(
@@ -100,6 +123,10 @@ MessageBoxW(
   return MessageBoxExW(hWnd, lpText, lpCaption, uType, 0);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SoftModalMessageBox (DWORD Unknown0)
@@ -107,4 +134,5 @@ SoftModalMessageBox (DWORD Unknown0)
   UNIMPLEMENTED;
   return 0;
 }
+
 /* EOF */

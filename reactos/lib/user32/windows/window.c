@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.42 2003/07/10 00:24:04 chorns Exp $
+/* $Id: window.c,v 1.43 2003/07/10 21:04:32 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -29,6 +29,7 @@ ULONG
   return((Style & WS_THICKFRAME) &&
 	 (!((Style & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)));
 }
+
 
 NTSTATUS STDCALL
 User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -64,6 +65,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
+
 NTSTATUS STDCALL
 User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
@@ -88,6 +90,7 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
+
 NTSTATUS STDCALL
 User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
@@ -110,6 +113,7 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
+
 
 NTSTATUS STDCALL
 User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -134,6 +138,7 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
+
 NTSTATUS STDCALL
 User32SendWINDOWPOSCHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
@@ -156,6 +161,7 @@ User32SendWINDOWPOSCHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLengt
   DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
+
 
 NTSTATUS STDCALL
 User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -180,6 +186,7 @@ User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
+
 NTSTATUS STDCALL
 User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
@@ -202,6 +209,7 @@ User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
+
 
 NTSTATUS STDCALL
 User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -226,6 +234,7 @@ User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
+
 NTSTATUS STDCALL
 User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
@@ -241,6 +250,7 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 			 CallbackArgs->Context, CallbackArgs->Result);
   return(STATUS_SUCCESS);
 }
+
 
 NTSTATUS STDCALL
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -263,6 +273,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 			   CallbackArgs->lParam);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
+
 
 static void NC_AdjustRectOuter95 (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
 {
@@ -299,6 +310,7 @@ static void NC_AdjustRectOuter95 (LPRECT rect, DWORD style, BOOL menu, DWORD exS
     if (menu) rect->top -= GetSystemMetrics(SM_CYMENU);
 }
 
+
 static void
 NC_AdjustRectInner95 (LPRECT rect, DWORD style, DWORD exStyle)
 {
@@ -317,6 +329,10 @@ NC_AdjustRectInner95 (LPRECT rect, DWORD style, DWORD exStyle)
     if (style & WS_HSCROLL) rect->bottom += GetSystemMetrics(SM_CYHSCROLL);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
@@ -325,6 +341,10 @@ AdjustWindowRect(LPRECT lpRect,
   return(AdjustWindowRectEx(lpRect, dwStyle, bMenu, 0));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AdjustWindowRectEx(LPRECT lpRect, 
 		   DWORD dwStyle, 
@@ -343,6 +363,10 @@ AdjustWindowRectEx(LPRECT lpRect,
     return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
@@ -350,6 +374,10 @@ AllowSetForegroundWindow(DWORD dwProcessId)
   return(FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 AnimateWindow(HWND hwnd,
 	      DWORD dwTime,
@@ -359,6 +387,10 @@ AnimateWindow(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 ArrangeIconicWindows(HWND hWnd)
 {
@@ -366,6 +398,10 @@ ArrangeIconicWindows(HWND hWnd)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDWP STDCALL
 BeginDeferWindowPos(int nNumWindows)
 {
@@ -373,6 +409,10 @@ BeginDeferWindowPos(int nNumWindows)
   return (HDWP)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 BringWindowToTop(HWND hWnd)
 {
@@ -380,6 +420,10 @@ BringWindowToTop(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WORD STDCALL
 CascadeWindows(HWND hwndParent,
 	       UINT wHow,
@@ -391,6 +435,10 @@ CascadeWindows(HWND hwndParent,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 ChildWindowFromPoint(HWND hWndParent,
 		     POINT Point)
@@ -399,6 +447,10 @@ ChildWindowFromPoint(HWND hWndParent,
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 ChildWindowFromPointEx(HWND hwndParent,
 		       POINT pt,
@@ -408,6 +460,10 @@ ChildWindowFromPointEx(HWND hwndParent,
   return (HWND)0;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 CloseWindow(HWND hWnd)
 {
@@ -416,6 +472,9 @@ CloseWindow(HWND hWnd)
     return (WINBOOL)(hWnd);
 }
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 CreateWindowExA(DWORD dwExStyle,
 		LPCSTR lpClassName,
@@ -540,6 +599,10 @@ CreateWindowExA(DWORD dwExStyle,
   return Handle;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 CreateWindowExW(DWORD dwExStyle,
 		LPCWSTR lpClassName,
@@ -645,6 +708,10 @@ CreateWindowExW(DWORD dwExStyle,
   return (HWND)Handle;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDWP STDCALL
 DeferWindowPos(HDWP hWinPosInfo,
 	       HWND hWnd,
@@ -659,12 +726,20 @@ DeferWindowPos(HDWP hWinPosInfo,
   return (HDWP)0;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 DestroyWindow(HWND hWnd)
 {
   return NtUserDestroyWindow(hWnd);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
@@ -672,6 +747,10 @@ EndDeferWindowPos(HDWP hWinPosInfo)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 EnumChildWindows(HWND hWndParent,
 		 ENUMWINDOWSPROC lpEnumFunc,
@@ -681,6 +760,10 @@ EnumChildWindows(HWND hWndParent,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 EnumThreadWindows(DWORD dwThreadId,
 		  ENUMWINDOWSPROC lpfn,
@@ -690,6 +773,10 @@ EnumThreadWindows(DWORD dwThreadId,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
 	    LPARAM lParam)
@@ -698,6 +785,10 @@ EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
 {
@@ -706,6 +797,10 @@ FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
   return FindWindowExA (NULL, NULL, lpClassName, lpWindowName);
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 FindWindowExA(HWND hwndParent,
 	      HWND hwndChildAfter,
@@ -716,6 +811,10 @@ FindWindowExA(HWND hwndParent,
   return (HWND)0;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 {
@@ -733,6 +832,10 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
   return FindWindowExW (NULL, NULL, lpClassName, lpWindowName);
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 FindWindowExW(HWND hwndParent,
 	      HWND hwndChildAfter,
@@ -761,6 +864,10 @@ FindWindowExW(HWND hwndParent,
 	return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetAltTabInfo(HWND hwnd,
 	      int iItem,
@@ -772,6 +879,10 @@ GetAltTabInfo(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetAltTabInfoA(HWND hwnd,
 	       int iItem,
@@ -783,6 +894,10 @@ GetAltTabInfoA(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetAltTabInfoW(HWND hwnd,
 	       int iItem,
@@ -794,24 +909,40 @@ GetAltTabInfoW(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 GetAncestor(HWND hwnd, UINT gaFlags)
 {
   return(NtUserGetAncestor(hwnd, gaFlags));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
   return(NtUserGetClientRect(hWnd, lpRect));
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 GetDesktopWindow(VOID)
 {
 	return NtUserGetDesktopWindow();
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 GetForegroundWindow(VOID)
 {
@@ -819,6 +950,10 @@ GetForegroundWindow(VOID)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetGUIThreadInfo(DWORD idThread,
 		 LPGUITHREADINFO lpgui)
@@ -827,6 +962,10 @@ GetGUIThreadInfo(DWORD idThread,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
@@ -834,12 +973,20 @@ GetLastActivePopup(HWND hWnd)
   return (HWND)0;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 GetParent(HWND hWnd)
 {
   return NtUserGetAncestor(hWnd, GA_PARENT);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
@@ -847,6 +994,10 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetTitleBarInfo(HWND hwnd,
 		PTITLEBARINFO pti)
@@ -855,6 +1006,10 @@ GetTitleBarInfo(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 GetTopWindow(HWND hWnd)
 {
@@ -862,6 +1017,10 @@ GetTopWindow(HWND hWnd)
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 GetWindow(HWND hWnd,
 	  UINT uCmd)
@@ -870,6 +1029,10 @@ GetWindow(HWND hWnd,
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetWindowInfo(HWND hwnd,
 	      PWINDOWINFO pwi)
@@ -878,6 +1041,10 @@ GetWindowInfo(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetWindowModuleFileName(HWND hwnd,
 			LPSTR lpszFileName,
@@ -887,6 +1054,10 @@ GetWindowModuleFileName(HWND hwnd,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetWindowModuleFileNameA(HWND hwnd,
 			 LPSTR lpszFileName,
@@ -896,6 +1067,10 @@ GetWindowModuleFileNameA(HWND hwnd,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetWindowModuleFileNameW(HWND hwnd,
 			 LPWSTR lpszFileName,
@@ -905,6 +1080,10 @@ GetWindowModuleFileNameW(HWND hwnd,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetWindowPlacement(HWND hWnd,
 		   WINDOWPLACEMENT *lpwndpl)
@@ -913,6 +1092,10 @@ GetWindowPlacement(HWND hWnd,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetWindowRect(HWND hWnd,
 	      LPRECT lpRect)
@@ -920,18 +1103,30 @@ GetWindowRect(HWND hWnd,
   return(NtUserGetWindowRect(hWnd, lpRect));
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
   return(SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL
 GetWindowTextLengthA(HWND hWnd)
 {
   return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 GetWindowTextLengthW(HWND hWnd)
 {
@@ -939,6 +1134,10 @@ GetWindowTextLengthW(HWND hWnd)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 GetWindowTextW(HWND hWnd,
 	       LPWSTR lpString,
@@ -956,6 +1155,10 @@ GetWindowThreadProcessId(HWND hWnd,
 	return(NtUserQueryWindow(hWnd, 1));
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
@@ -964,6 +1167,10 @@ IsChild(HWND hWndParent,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 IsIconic(HWND hWnd)
 {
@@ -971,6 +1178,10 @@ IsIconic(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IsWindow(HWND hWnd)
 {
@@ -979,6 +1190,10 @@ IsWindow(HWND hWnd)
   return (0 != WndProc || ERROR_INVALID_HANDLE != GetLastError());
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
@@ -988,6 +1203,10 @@ IsWindowUnicode(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
@@ -1002,6 +1221,10 @@ IsWindowVisible(HWND hWnd)
   return(GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IsZoomed(HWND hWnd)
 {
@@ -1010,6 +1233,10 @@ IsZoomed(HWND hWnd)
   return (uStyle & WS_MAXIMIZE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 LockSetForegroundWindow(UINT uLockCode)
 {
@@ -1017,6 +1244,10 @@ LockSetForegroundWindow(UINT uLockCode)
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 MoveWindow(HWND hWnd,
 	   int X,
@@ -1028,6 +1259,10 @@ MoveWindow(HWND hWnd,
   return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 OpenIcon(HWND hWnd)
 {
@@ -1035,6 +1270,10 @@ OpenIcon(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 RealChildWindowFromPoint(HWND hwndParent,
 			 POINT ptParentClientCoords)
@@ -1043,6 +1282,10 @@ RealChildWindowFromPoint(HWND hwndParent,
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT
 RealGetWindowClass(HWND  hwnd,
 		   LPTSTR pszType,
@@ -1052,6 +1295,10 @@ RealGetWindowClass(HWND  hwnd,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetForegroundWindow(HWND hWnd)
 {
@@ -1059,6 +1306,10 @@ SetForegroundWindow(HWND hWnd)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetLayeredWindowAttributes(HWND hwnd,
 			   COLORREF crKey,
@@ -1069,6 +1320,10 @@ SetLayeredWindowAttributes(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 SetParent(HWND hWndChild,
 	  HWND hWndNewParent)
@@ -1077,6 +1332,10 @@ SetParent(HWND hWndChild,
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
@@ -1084,6 +1343,10 @@ SetProcessDefaultLayout(DWORD dwDefaultLayout)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetWindowPlacement(HWND hWnd,
 		   CONST WINDOWPLACEMENT *lpwndpl)
@@ -1092,6 +1355,10 @@ SetWindowPlacement(HWND hWnd,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetWindowPos(HWND hWnd,
 	     HWND hWndInsertAfter,
@@ -1104,6 +1371,10 @@ SetWindowPos(HWND hWnd,
   return NtUserSetWindowPos(hWnd,hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
@@ -1111,6 +1382,10 @@ SetWindowTextA(HWND hWnd,
   return SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
@@ -1118,6 +1393,10 @@ SetWindowTextW(HWND hWnd,
   return SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 ShowOwnedPopups(HWND hWnd,
 		WINBOOL fShow)
@@ -1126,6 +1405,10 @@ ShowOwnedPopups(HWND hWnd,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ShowWindow(HWND hWnd,
 	   int nCmdShow)
@@ -1133,6 +1416,10 @@ ShowWindow(HWND hWnd,
   return NtUserShowWindow(hWnd, nCmdShow);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 ShowWindowAsync(HWND hWnd,
 		int nCmdShow)
@@ -1141,6 +1428,10 @@ ShowWindowAsync(HWND hWnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WORD STDCALL
 TileWindows(HWND hwndParent,
 	    UINT wHow,
@@ -1152,6 +1443,10 @@ TileWindows(HWND hwndParent,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 UpdateLayeredWindow(HWND hwnd,
 		    HDC hdcDst,
@@ -1167,6 +1462,10 @@ UpdateLayeredWindow(HWND hwnd,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND STDCALL
 WindowFromPoint(POINT Point)
 {
@@ -1174,6 +1473,10 @@ WindowFromPoint(POINT Point)
   return (HWND)0;
 }
 
+
+/*
+ * @implemented
+ */
 int STDCALL
 MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 {
@@ -1195,6 +1498,9 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL 
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {

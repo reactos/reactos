@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dde.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: dde.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeAbandonTransaction(DWORD idInst,
 		      HCONV hConv,
@@ -43,6 +46,10 @@ DdeAbandonTransaction(DWORD idInst,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPBYTE STDCALL
 DdeAccessData(HDDEDATA hData,
 	      LPDWORD pcbDataSize)
@@ -51,6 +58,10 @@ DdeAccessData(HDDEDATA hData,
   return (LPBYTE)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDDEDATA STDCALL
 DdeAddData(HDDEDATA hData,
 	   LPBYTE pSrc,
@@ -61,6 +72,10 @@ DdeAddData(HDDEDATA hData,
   return (HDDEDATA)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDDEDATA STDCALL
 DdeClientTransaction(LPBYTE pData,
 		     DWORD cbData,
@@ -75,6 +90,10 @@ DdeClientTransaction(LPBYTE pData,
   return (HDDEDATA)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 DdeCmpStringHandles(HSZ hsz1,
 		    HSZ hsz2)
@@ -83,6 +102,10 @@ DdeCmpStringHandles(HSZ hsz1,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCONV STDCALL
 DdeConnect(DWORD idInst,
 	   HSZ hszService,
@@ -93,6 +116,10 @@ DdeConnect(DWORD idInst,
   return (HCONV)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCONVLIST STDCALL
 DdeConnectList(DWORD idInst,
 	       HSZ hszService,
@@ -104,6 +131,10 @@ DdeConnectList(DWORD idInst,
   return (HCONVLIST)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDDEDATA STDCALL
 DdeCreateDataHandle(DWORD idInst,
 		    LPBYTE pSrc,
@@ -117,6 +148,10 @@ DdeCreateDataHandle(DWORD idInst,
   return (HDDEDATA)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HSZ STDCALL
 DdeCreateStringHandleA(DWORD idInst,
 		       LPSTR psz,
@@ -126,6 +161,10 @@ DdeCreateStringHandleA(DWORD idInst,
   return (HSZ)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HSZ STDCALL
 DdeCreateStringHandleW(DWORD idInst,
 		       LPWSTR psz,
@@ -135,6 +174,10 @@ DdeCreateStringHandleW(DWORD idInst,
   return (HSZ)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeDisconnect(HCONV hConv)
 {
@@ -142,6 +185,10 @@ DdeDisconnect(HCONV hConv)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeDisconnectList(HCONVLIST hConvList)
 {
@@ -149,6 +196,10 @@ DdeDisconnectList(HCONVLIST hConvList)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeEnableCallback(DWORD idInst,
 		  HCONV hConv,
@@ -158,6 +209,10 @@ DdeEnableCallback(DWORD idInst,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeFreeDataHandle(HDDEDATA hData)
 {
@@ -165,6 +220,10 @@ DdeFreeDataHandle(HDDEDATA hData)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 DdeFreeStringHandle(DWORD idInst,
 		    HSZ hsz)
@@ -173,6 +232,10 @@ DdeFreeStringHandle(DWORD idInst,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 DdeGetData(HDDEDATA hData,
 	   LPBYTE pDst,
@@ -183,6 +246,10 @@ DdeGetData(HDDEDATA hData,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 DdeGetLastError(DWORD idInst)
 {
@@ -190,6 +257,10 @@ DdeGetLastError(DWORD idInst)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeImpersonateClient(HCONV hConv)
 {
@@ -197,6 +268,10 @@ DdeImpersonateClient(HCONV hConv)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 DdeInitializeA(LPDWORD pidInst,
 	       PFNCALLBACK pfnCallback,
@@ -207,6 +282,10 @@ DdeInitializeA(LPDWORD pidInst,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 DdeInitializeW(LPDWORD pidInst,
 	       PFNCALLBACK pfnCallback,
@@ -217,6 +296,10 @@ DdeInitializeW(LPDWORD pidInst,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeKeepStringHandle(DWORD idInst,
 		    HSZ hsz)
@@ -225,6 +308,10 @@ DdeKeepStringHandle(DWORD idInst,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HDDEDATA STDCALL
 DdeNameService(DWORD idInst,
 	       HSZ hsz1,
@@ -235,6 +322,10 @@ DdeNameService(DWORD idInst,
   return (HDDEDATA)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdePostAdvise(DWORD idInst,
 	      HSZ hszTopic,
@@ -244,6 +335,10 @@ DdePostAdvise(DWORD idInst,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 DdeQueryConvInfo(HCONV hConv,
 		 DWORD idTransaction,
@@ -253,6 +348,10 @@ DdeQueryConvInfo(HCONV hConv,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCONV STDCALL
 DdeQueryNextServer(HCONVLIST hConvList,
 		   HCONV hConvPrev)
@@ -261,6 +360,10 @@ DdeQueryNextServer(HCONVLIST hConvList,
   return (HCONV)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 DdeQueryStringA(DWORD idInst,
 		HSZ hsz,
@@ -272,6 +375,10 @@ DdeQueryStringA(DWORD idInst,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 DdeQueryStringW(DWORD idInst,
 		HSZ hsz,
@@ -283,6 +390,10 @@ DdeQueryStringW(DWORD idInst,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HCONV STDCALL
 DdeReconnect(HCONV hConv)
 {
@@ -290,6 +401,10 @@ DdeReconnect(HCONV hConv)
   return (HCONV)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeSetQualityOfService(HWND hwndClient,
 		       CONST SECURITY_QUALITY_OF_SERVICE *pqosNew,
@@ -299,6 +414,10 @@ DdeSetQualityOfService(HWND hwndClient,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeSetUserHandle(HCONV hConv,
 		 DWORD id,
@@ -308,6 +427,10 @@ DdeSetUserHandle(HCONV hConv,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeUnaccessData(HDDEDATA hData)
 {
@@ -315,6 +438,10 @@ DdeUnaccessData(HDDEDATA hData)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 DdeUninitialize(DWORD idInst)
 {
@@ -322,6 +449,10 @@ DdeUninitialize(DWORD idInst)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 FreeDDElParam(UINT msg,
 	      LPARAM lParam)
@@ -330,6 +461,10 @@ FreeDDElParam(UINT msg,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 ImpersonateDdeClientWindow(HWND hWndClient,
 			   HWND hWndServer)
@@ -338,6 +473,10 @@ ImpersonateDdeClientWindow(HWND hWndClient,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPARAM STDCALL
 PackDDElParam(UINT msg,
 	      UINT_PTR uiLo,
@@ -347,6 +486,10 @@ PackDDElParam(UINT msg,
   return (LPARAM)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPARAM STDCALL
 ReuseDDElParam(LPARAM lParam,
 	       UINT msgIn,
@@ -358,6 +501,10 @@ ReuseDDElParam(LPARAM lParam,
   return (LPARAM)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 UnpackDDElParam(UINT msg,
 		LPARAM lParam,

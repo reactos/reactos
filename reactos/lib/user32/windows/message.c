@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.17 2003/05/29 13:17:41 gvg Exp $
+/* $Id: message.c,v 1.18 2003/07/10 21:04:32 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,6 +13,10 @@
 #include <string.h>
 #include <debug.h>
 
+
+/*
+ * @unimplemented
+ */
 LPARAM
 STDCALL
 GetMessageExtraInfo(VOID)
@@ -21,6 +25,10 @@ GetMessageExtraInfo(VOID)
   return (LPARAM)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetMessagePos(VOID)
@@ -29,6 +37,10 @@ GetMessagePos(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 GetMessageTime(VOID)
@@ -37,6 +49,10 @@ GetMessageTime(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 InSendMessage(VOID)
@@ -44,6 +60,10 @@ InSendMessage(VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 InSendMessageEx(
@@ -53,6 +73,10 @@ InSendMessageEx(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ReplyMessage(
@@ -62,6 +86,10 @@ ReplyMessage(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPARAM
 STDCALL
 SetMessageExtraInfo(
@@ -70,6 +98,7 @@ SetMessageExtraInfo(
   UNIMPLEMENTED;
   return (LPARAM)0;
 }
+
 
 VOID STATIC
 User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -121,6 +150,7 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
+
 VOID STATIC
 User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 {
@@ -165,11 +195,13 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
   return;
 }
 
+
 VOID STATIC
 User32FreeUnicodeConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   UNIMPLEMENTED;
 }
+
 
 VOID STATIC
 User32ConvertToUnicodeMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
@@ -177,6 +209,10 @@ User32ConvertToUnicodeMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 CallWindowProcA(WNDPROC lpPrevWndFunc,
 		HWND hWnd,
@@ -198,6 +234,10 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
     }
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 CallWindowProcW(WNDPROC lpPrevWndFunc,
 		HWND hWnd,
@@ -249,6 +289,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
   return TRUE;
 }
 
+
 BOOL
 MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT Result)
 {
@@ -284,18 +325,29 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT Result)
 }
 
 
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 DispatchMessageA(CONST MSG *lpmsg)
 {
   return(NtUserDispatchMessage(lpmsg));
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 DispatchMessageW(CONST MSG *lpmsg)
 {
   return(NtUserDispatchMessage((LPMSG)lpmsg));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetMessageA(
@@ -307,6 +359,10 @@ GetMessageA(
   return NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetMessageW(
@@ -318,6 +374,10 @@ GetMessageW(
   return NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PeekMessageA(
@@ -330,6 +390,10 @@ PeekMessageA(
   return NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PeekMessageW(
@@ -342,6 +406,10 @@ PeekMessageW(
   return NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PostMessageA(
@@ -353,6 +421,10 @@ PostMessageA(
   return NtUserPostMessage(hWnd, Msg, wParam, lParam);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PostMessageW(
@@ -364,6 +436,10 @@ PostMessageW(
   return NtUserPostMessage(hWnd, Msg, wParam, lParam);
 }
 
+
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 PostQuitMessage(
@@ -372,6 +448,10 @@ PostQuitMessage(
   (void) NtUserPostMessage(NULL, WM_QUIT, nExitCode, 0);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PostThreadMessageA(
@@ -383,6 +463,10 @@ PostThreadMessageA(
   return NtUserPostThreadMessage(idThread, Msg, wParam, lParam);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PostThreadMessageW(
@@ -394,6 +478,10 @@ PostThreadMessageW(
   return NtUserPostThreadMessage(idThread, Msg, wParam, lParam);
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 SendMessageW(HWND hWnd,
 	     UINT Msg,
@@ -404,6 +492,9 @@ SendMessageW(HWND hWnd,
 }
 
 
+/*
+ * @implemented
+ */
 LRESULT STDCALL
 SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -428,6 +519,10 @@ SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   return(Result);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SendMessageCallbackA(
@@ -447,6 +542,10 @@ SendMessageCallbackA(
     dwData);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SendMessageCallbackW(
@@ -466,6 +565,10 @@ SendMessageCallbackW(
     dwData);
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT
 STDCALL
 SendMessageTimeoutA(
@@ -481,6 +584,10 @@ SendMessageTimeoutA(
   return (LRESULT)0;
 }
 
+
+/*
+ * @implemented
+ */
 LRESULT
 STDCALL
 SendMessageTimeoutW(
@@ -497,7 +604,9 @@ SendMessageTimeoutW(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SendNotifyMessageA(
@@ -510,6 +619,10 @@ SendNotifyMessageA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SendNotifyMessageW(
@@ -522,12 +635,20 @@ SendNotifyMessageW(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 TranslateMessage(CONST MSG *lpMsg)
 {
   return(NtUserTranslateMessage((LPMSG)lpMsg, 0));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 WaitMessage(VOID)
@@ -535,6 +656,10 @@ WaitMessage(VOID)
   return NtUserWaitMessage();
 }
 
+
+/*
+ * @implemented
+ */
 UINT STDCALL
 RegisterWindowMessageA(LPCSTR lpString)
 {
@@ -552,6 +677,10 @@ RegisterWindowMessageA(LPCSTR lpString)
   return(Atom);
 }
 
+
+/*
+ * @implemented
+ */
 UINT STDCALL
 RegisterWindowMessageW(LPCWSTR lpString)
 {
@@ -560,6 +689,5 @@ RegisterWindowMessageW(LPCWSTR lpString)
   RtlInitUnicodeString(&String, lpString);
   return(NtUserRegisterWindowMessage(&String));
 }
-
 
 /* EOF */

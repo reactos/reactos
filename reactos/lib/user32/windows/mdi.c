@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mdi.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: mdi.c,v 1.5 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateMDIWindowA(
@@ -52,6 +55,10 @@ CreateMDIWindowA(
   return (HWND)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 CreateMDIWindowW(
@@ -69,6 +76,11 @@ CreateMDIWindowW(
   UNIMPLEMENTED;
   return (HWND)0;
 }
+
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 DefMDIChildProcA(
@@ -81,6 +93,10 @@ DefMDIChildProcA(
   return (LRESULT)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LRESULT
 STDCALL
 DefMDIChildProcW(
@@ -92,6 +108,11 @@ DefMDIChildProcW(
   UNIMPLEMENTED;
   return (LRESULT)0;
 }
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 TranslateMDISysAccel(

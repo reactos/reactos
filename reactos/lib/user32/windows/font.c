@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: font.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: font.c,v 1.7 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetTabbedTextExtentA(
@@ -48,6 +51,10 @@ GetTabbedTextExtentA(
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetTabbedTextExtentW(
@@ -849,6 +856,9 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
  * the allowance in DrawTextExA.
  */
 #define MAX_STATIC_BUFFER 1024
+/*
+ * @implemented
+ */
 int STDCALL
 DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
              LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
@@ -1021,6 +1031,8 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  * If DT_MODIFYSTRING is specified then there must be room for up to
  * 4 extra characters.  We take great care about just how much modified
  * string we return.
+ *
+ * @unimplemented
  */
 int STDCALL
 DrawTextExA( HDC hdc, LPSTR str, INT count,
@@ -1071,6 +1083,8 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
 
 /***********************************************************************
  *           DrawTextW    (USER32.@)
+ *
+ * @implemented
  */
 int STDCALL
 DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
@@ -1088,6 +1102,8 @@ DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
 
 /***********************************************************************
  *           DrawTextA    (USER32.@)
+ *
+ * @implemented
  */
 int STDCALL
 DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )

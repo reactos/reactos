@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.12 2002/10/20 23:57:03 mdill Exp $
+/* $Id: rect.c,v 1.13 2003/07/10 21:04:32 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 {
@@ -44,6 +47,10 @@ CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 EqualRect(
@@ -62,6 +69,10 @@ EqualRect(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 InflateRect(LPRECT rect, int dx, int dy)
 {
@@ -72,6 +83,10 @@ InflateRect(LPRECT rect, int dx, int dy)
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IntersectRect(LPRECT lprcDst,
 	      CONST RECT *lprcSrc1,
@@ -93,12 +108,20 @@ IntersectRect(LPRECT lprcDst,
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IsRectEmpty(CONST RECT *lprc)
 {
   return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 OffsetRect(LPRECT rect, int dx, int dy)
 {
@@ -112,6 +135,10 @@ OffsetRect(LPRECT rect, int dx, int dy)
   return(TRUE);  
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 PtInRect(CONST RECT *lprc, POINT pt)
 {
@@ -129,6 +156,10 @@ SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom)
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetRectEmpty(LPRECT lprc)
 {
@@ -136,6 +167,10 @@ SetRectEmpty(LPRECT lprc)
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
@@ -167,6 +202,10 @@ SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
   return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 UnionRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {

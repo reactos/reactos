@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.7 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: timer.c,v 1.8 2003/07/10 21:04:31 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 KillTimer(
@@ -44,6 +47,10 @@ KillTimer(
  return NtUserKillTimer(hWnd, IDEvent); 
 }
 
+
+/*
+ * @implemented
+ */
 UINT_PTR
 STDCALL
 SetTimer(

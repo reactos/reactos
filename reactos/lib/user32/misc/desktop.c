@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.12 2003/05/26 10:52:15 rcampbell Exp $
+/* $Id: desktop.c,v 1.13 2003/07/10 21:04:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,12 +13,19 @@
 #include <user32.h>
 #include <debug.h>
 
+/*
+ * @implemented
+ */
 int STDCALL
 GetSystemMetrics(int nIndex)
 {
   return(NtUserGetSystemMetrics(nIndex));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SystemParametersInfoA(UINT uiAction,
 		      UINT uiParam,
@@ -28,6 +35,10 @@ SystemParametersInfoA(UINT uiAction,
   return(SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni));
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SystemParametersInfoW(UINT uiAction,
 		      UINT uiParam,
@@ -63,6 +74,9 @@ SystemParametersInfoW(UINT uiAction,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CloseDesktop(
@@ -71,6 +85,10 @@ CloseDesktop(
   return NtUserCloseDesktop(hDesktop);
 }
 
+
+/*
+ * @implemented
+ */
 HDESK STDCALL
 CreateDesktopA(LPCSTR lpszDesktop,
 	       LPCSTR lpszDevice,
@@ -105,6 +123,10 @@ CreateDesktopA(LPCSTR lpszDesktop,
   return(hDesktop);
 }
 
+
+/*
+ * @implemented
+ */
 HDESK STDCALL
 CreateDesktopW(LPCWSTR lpszDesktop,
 	       LPCWSTR lpszDevice,
@@ -130,6 +152,10 @@ CreateDesktopW(LPCWSTR lpszDesktop,
   return(hDesktop);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDesktopWindows(
@@ -141,6 +167,10 @@ EnumDesktopWindows(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDesktopsA(
@@ -152,6 +182,10 @@ EnumDesktopsA(
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDesktopsW(
@@ -163,6 +197,10 @@ EnumDesktopsW(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 HDESK
 STDCALL
 GetThreadDesktop(
@@ -171,6 +209,10 @@ GetThreadDesktop(
   return NtUserGetThreadDesktop(dwThreadId, 0);
 }
 
+
+/*
+ * @implemented
+ */
 HDESK
 STDCALL
 OpenDesktopA(
@@ -201,6 +243,10 @@ OpenDesktopA(
   return hDesktop;
 }
 
+
+/*
+ * @implemented
+ */
 HDESK
 STDCALL
 OpenDesktopW(
@@ -219,6 +265,10 @@ OpenDesktopW(
     dwDesiredAccess);
 }
 
+
+/*
+ * @implemented
+ */
 HDESK
 STDCALL
 OpenInputDesktop(
@@ -232,6 +282,10 @@ OpenInputDesktop(
     dwDesiredAccess);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PaintDesktop(
@@ -240,6 +294,10 @@ PaintDesktop(
   return NtUserPaintDesktop(hdc);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetThreadDesktop(
@@ -248,6 +306,10 @@ SetThreadDesktop(
   return NtUserSetThreadDesktop(hDesktop);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SwitchDesktop(
