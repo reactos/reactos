@@ -731,7 +731,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT1 ("NtOpenFile() failed  %x (Status %lx)\n", &ObjectAttributes, Status);
+      DPRINT ("NtOpenFile() failed  %x (Status %lx)\n", &ObjectAttributes, Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
