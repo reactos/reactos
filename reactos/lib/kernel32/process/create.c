@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.23 2000/03/16 01:14:37 ekohl Exp $
+/* $Id: create.c,v 1.24 2000/03/18 19:55:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,14 +11,12 @@
 
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_PEHDR
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-#include <pe.h>
 #include <internal/i386/segment.h>
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
@@ -203,63 +201,27 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 HANDLE KlMapFile(LPCWSTR lpApplicationName,
 		 LPCWSTR lpCommandLine)
 {
-   WCHAR TempApplicationName[256];
-   WCHAR TempFileName[256];
    HANDLE hFile;
    IO_STATUS_BLOCK IoStatusBlock;
-   ULONG i;
-   WCHAR TempDirectoryName[256];
    UNICODE_STRING ApplicationNameString;
    OBJECT_ATTRIBUTES ObjectAttributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    NTSTATUS Status;
    HANDLE hSection;
-   DWORD len = 0;
 
    hFile = NULL;
 
    /*
     * Find the application name
     */
-   TempApplicationName[0] = '\\';
-   TempApplicationName[1] = '?';
-   TempApplicationName[2] = '?';
-   TempApplicationName[3] = '\\';
-   TempApplicationName[4] = 0;
-   
-   DPRINT("TempApplicationName '%w'\n",TempApplicationName);
 
-   if (lpApplicationName != NULL)
-     {
-	wcscpy(TempFileName, lpApplicationName);
-	
-	DPRINT("TempFileName '%w'\n",TempFileName);
-     }
-   else
-     {
-	wcscpy(TempFileName, lpCommandLine);
-	
-	DPRINT("TempFileName '%w'\n",TempFileName);
-	
-	for (i=0; TempFileName[i]!=' ' && TempFileName[i] != 0; i++);
-	TempFileName[i]=0;
-	
-     }
-   if (TempFileName[1] != ':')
-     {
-        len = GetCurrentDirectoryW(MAX_PATH,TempDirectoryName);
-        if (TempDirectoryName[len - 1] != L'\\')
-	  {
-                TempDirectoryName[len] = L'\\';
-                TempDirectoryName[len + 1] = 0;
-	  }
-	wcscat(TempApplicationName,TempDirectoryName);
-     }
-   wcscat(TempApplicationName,TempFileName);
+   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpApplicationName,
+                                      &ApplicationNameString,
+                                      NULL,
+                                      NULL))
+	return NULL;
 
-   RtlInitUnicodeString(&ApplicationNameString, TempApplicationName);
-
-   DPRINT("ApplicationName %w\n",ApplicationNameString.Buffer);
+   DPRINT("ApplicationName %S\n",ApplicationNameString.Buffer);
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &ApplicationNameString,
@@ -277,6 +239,8 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
 			&IoStatusBlock,
 			FILE_SHARE_DELETE|FILE_SHARE_READ,
 			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
+
+   RtlFreeUnicodeString (&ApplicationNameString);
 
    if (!NT_SUCCESS(Status))
      {
@@ -415,51 +379,36 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    WCHAR TempCommandLine[256];
-//   PVOID BaseAddress;
-//   LARGE_INTEGER SectionOffset;
-//   IMAGE_NT_HEADERS Headers;
-//   IMAGE_DOS_HEADER DosHeader;
-//   HANDLE NTDllSection;
-//   ULONG InitialViewSize;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-   DWORD len = 0;
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    UNICODE_STRING CommandLine_U;
 
-   DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
+   DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
-   
+
    /*
-    * Process the application name and command line   
+    * Process the application name and command line
     */
-   
-   if (lpApplicationName[1] != ':')
-     {
-        len = GetCurrentDirectoryW(MAX_PATH,TempCommandLine);
-        if (TempCommandLine[len - 1] != L'\\')
-	  {
-                TempCommandLine[len] = L'\\';
-                TempCommandLine[len + 1] = 0;
-	  }
-        wcscat(TempCommandLine,lpApplicationName);
-     }
-   else
-        wcscpy(TempCommandLine, lpApplicationName);
+
+   RtlGetFullPathName_U ((LPWSTR)lpApplicationName,
+                         256 * sizeof(WCHAR),
+                         TempCommandLine,
+                         NULL);
 
    if (lpCommandLine != NULL)
      {
 	wcscat(TempCommandLine, L" ");
 	wcscat(TempCommandLine, lpCommandLine);
      }
-   
+
    /*
     * Create the PPB
     */
    
    RtlInitUnicodeString(&CommandLine_U, TempCommandLine);
 
-   DPRINT("CommandLine_U %w\n", CommandLine_U.Buffer);
+   DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
 
    RtlCreateProcessParameters(&Ppb,
 			      &CommandLine_U,
