@@ -68,6 +68,7 @@
 #include "commdlg.h"
 #include "dlgs.h"
 #include "cdlg.h"
+#include "filedlg31.h"
 #include "wine/debug.h"
 #include "cderr.h"
 #include "shellapi.h"
@@ -103,6 +104,11 @@ typedef struct tagLookInInfo
   int iMaxIndentation;
   UINT uSelectedItem;
 } LookInInfos;
+
+typedef struct tagFD32_PRIVATE
+{
+    OPENFILENAMEA *ofnA; /* original structure if 32bits ansi dialog */
+} FD32_PRIVATE, *PFD32_PRIVATE;
 
 
 /***********************************************************************
@@ -222,10 +228,6 @@ HRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
 HRESULT FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCount, UINT sizeUsed);
 static BOOL BrowseSelectedFolder(HWND hwnd);
-
-/* old style dialogs */
-extern BOOL GetFileName31A(LPOPENFILENAMEA lpofn, UINT dlgType);
-extern BOOL GetFileName31W(LPOPENFILENAMEW lpofn, UINT dlgType);
 
 /***********************************************************************
  *      GetFileName95
@@ -3272,6 +3274,321 @@ static void MemFree(void *mem)
     }
 }
 
+/*
+ * Old-style (win3.1) dialogs */
+
+/***********************************************************************
+ *           FD32_GetTemplate                                  [internal]
+ *
+ * Get a template (or FALSE if failure) when 16 bits dialogs are used
+ * by a 32 bits application
+ *
+ */
+static BOOL FD32_GetTemplate(PFD31_DATA lfs)
+{
+    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+    HANDLE hDlgTmpl;
+
+    if (ofnW->Flags & OFN_ENABLETEMPLATEHANDLE)
+    {
+	if (!(lfs->template = LockResource( ofnW->hInstance )))
+	{
+	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
+	    return FALSE;
+	}
+    }
+    else if (ofnW->Flags & OFN_ENABLETEMPLATE)
+    {
+	HRSRC hResInfo;
+        if (priv->ofnA)
+	    hResInfo = FindResourceA(priv->ofnA->hInstance,
+				 priv->ofnA->lpTemplateName,
+                                 (LPSTR)RT_DIALOG);
+        else
+	    hResInfo = FindResourceW(ofnW->hInstance,
+				 ofnW->lpTemplateName,
+                                 (LPWSTR)RT_DIALOG);
+        if (!hResInfo)
+	{
+	    COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
+	    return FALSE;
+	}
+	if (!(hDlgTmpl = LoadResource(ofnW->hInstance,
+				hResInfo)) ||
+		    !(lfs->template = LockResource(hDlgTmpl)))
+	{
+	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
+	    return FALSE;
+	}
+    } else { /* get it from internal Wine resource */
+	HRSRC hResInfo;
+	if (!(hResInfo = FindResourceA(COMDLG32_hInstance,
+             lfs->open? "OPEN_FILE":"SAVE_FILE", (LPSTR)RT_DIALOG)))
+	{
+	    COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
+	    return FALSE;
+        }
+        if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hResInfo )) ||
+                !(lfs->template = LockResource( hDlgTmpl )))
+        {
+            COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+
+/************************************************************************
+ *                              FD32_Init          [internal]
+ *      called from the common 16/32 code to initialize 32 bit data
+ */
+static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
+{
+    BOOL IsUnicode = (BOOL) data;
+    PFD32_PRIVATE priv;
+
+    priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FD32_PRIVATE));
+    lfs->private1632 = priv;
+    if (NULL == lfs->private1632) return FALSE;
+    if (IsUnicode)
+    {
+        lfs->ofnW = *((LPOPENFILENAMEW) lParam);
+        if (lfs->ofnW.Flags & OFN_ENABLEHOOK)
+            if (lfs->ofnW.lpfnHook)
+                lfs->hook = TRUE;
+    }
+    else
+    {
+        priv->ofnA = (LPOPENFILENAMEA) lParam;
+        if (priv->ofnA->Flags & OFN_ENABLEHOOK)
+            if (priv->ofnA->lpfnHook)
+                lfs->hook = TRUE;
+        FD31_MapOfnStructA(priv->ofnA, &lfs->ofnW, lfs->open);
+    }
+
+    if (! FD32_GetTemplate(lfs)) return FALSE;
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *                              FD32_CallWindowProc          [internal]
+ *
+ *      called from the common 16/32 code to call the appropriate hook
+ */
+BOOL CALLBACK FD32_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
+                                 LPARAM lParam)
+{
+    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+
+    if (priv->ofnA)
+    {
+        return (BOOL) CallWindowProcA(
+          (WNDPROC)priv->ofnA->lpfnHook, lfs->hwnd,
+          wMsg, wParam, lParam);
+    }
+
+    return (BOOL) CallWindowProcW(
+          (WNDPROC)lfs->ofnW.lpfnHook, lfs->hwnd,
+          wMsg, wParam, lParam);
+}
+
+/***********************************************************************
+ *                              FD32_UpdateResult            [internal]
+ *          update the real client structures if any
+ */
+static void CALLBACK FD32_UpdateResult(PFD31_DATA lfs)
+{
+    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+
+    if (priv->ofnA)
+    {
+        if (ofnW->nMaxFile &&
+            !WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFile, -1,
+                                  priv->ofnA->lpstrFile, ofnW->nMaxFile, NULL, NULL ))
+            priv->ofnA->lpstrFile[ofnW->nMaxFile-1] = 0;
+        priv->ofnA->nFileOffset = ofnW->nFileOffset;
+        priv->ofnA->nFileExtension = ofnW->nFileExtension;
+    }
+}
+
+/***********************************************************************
+ *                              FD32_UpdateFileTitle            [internal]
+ *          update the real client structures if any
+ */
+static void CALLBACK FD32_UpdateFileTitle(PFD31_DATA lfs)
+{
+    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+    LPOPENFILENAMEW ofnW = &lfs->ofnW;
+
+    if (priv->ofnA)
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFileTitle, -1,
+                                  priv->ofnA->lpstrFileTitle, ofnW->nMaxFileTitle, NULL, NULL ))
+            priv->ofnA->lpstrFileTitle[ofnW->nMaxFileTitle-1] = 0;
+    }
+}
+
+
+/***********************************************************************
+ *                              FD32_SendLbGetCurSel         [internal]
+ *          retrieve selected listbox item
+ */
+static LRESULT CALLBACK FD32_SendLbGetCurSel(PFD31_DATA lfs)
+{
+    return SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETCURSEL, 0, 0);
+}
+
+
+/************************************************************************
+ *                              FD32_Destroy          [internal]
+ *      called from the common 16/32 code to cleanup 32 bit data
+ */
+static void CALLBACK FD32_Destroy(PFD31_DATA lfs)
+{
+    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+
+    /* if ofnW has been allocated, have to free everything in it */
+    if (NULL != priv && NULL != priv->ofnA)
+        FD31_FreeOfnW(&lfs->ofnW);
+}
+
+static void FD32_SetupCallbacks(PFD31_CALLBACKS callbacks)
+{
+    callbacks->Init = FD32_Init;
+    callbacks->CWP = FD32_CallWindowProc;
+    callbacks->UpdateResult = FD32_UpdateResult;
+    callbacks->UpdateFileTitle = FD32_UpdateFileTitle;
+    callbacks->SendLbGetCurSel = FD32_SendLbGetCurSel;
+    callbacks->Destroy = FD32_Destroy;
+}
+
+/***********************************************************************
+ *                              FD32_WMMeasureItem           [internal]
+ */
+static LONG FD32_WMMeasureItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    LPMEASUREITEMSTRUCT lpmeasure;
+
+    lpmeasure = (LPMEASUREITEMSTRUCT)lParam;
+    lpmeasure->itemHeight = FD31_GetFldrHeight();
+    return TRUE;
+}
+
+
+/***********************************************************************
+ *           FileOpenDlgProc                                    [internal]
+ *      Used for open and save, in fact.
+ */
+static INT_PTR CALLBACK FD32_FileOpenDlgProc(HWND hWnd, UINT wMsg,
+                                             WPARAM wParam, LPARAM lParam)
+{
+    PFD31_DATA lfs = (PFD31_DATA)GetPropA(hWnd,FD31_OFN_PROP);
+
+    TRACE("msg=%x wparam=%x lParam=%lx\n", wMsg, wParam, lParam);
+    if ((wMsg != WM_INITDIALOG) && lfs && lfs->hook)
+        {
+            INT_PTR lRet;
+            lRet  = (INT_PTR)FD31_CallWindowProc(lfs, wMsg, wParam, lParam);
+            if (lRet)
+                return lRet;         /* else continue message processing */
+        }
+    switch (wMsg)
+    {
+    case WM_INITDIALOG:
+        return FD31_WMInitDialog(hWnd, wParam, lParam);
+
+    case WM_MEASUREITEM:
+        return FD32_WMMeasureItem(hWnd, wParam, lParam);
+
+    case WM_DRAWITEM:
+        return FD31_WMDrawItem(hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam);
+
+    case WM_COMMAND:
+        return FD31_WMCommand(hWnd, lParam, HIWORD(wParam), LOWORD(wParam), lfs);
+#if 0
+    case WM_CTLCOLOR:
+         SetBkColor((HDC16)wParam, 0x00C0C0C0);
+         switch (HIWORD(lParam))
+         {
+	 case CTLCOLOR_BTN:
+	     SetTextColor((HDC16)wParam, 0x00000000);
+             return hGRAYBrush;
+	case CTLCOLOR_STATIC:
+             SetTextColor((HDC16)wParam, 0x00000000);
+             return hGRAYBrush;
+	}
+      break;
+#endif
+    }
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *           GetFileName31A                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save.
+ */
+static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* addess of structure with data*/
+                           UINT dlgType /* type dialogue : open/save */
+                           )
+{
+    HINSTANCE hInst;
+    BOOL bRet = FALSE;
+    PFD31_DATA lfs;
+    FD31_CALLBACKS callbacks;
+
+    if (!lpofn || !FD31_Init()) return FALSE;
+
+    TRACE("ofn flags %08lx\n", lpofn->Flags);
+    FD32_SetupCallbacks(&callbacks);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
+    if (lfs)
+    {
+        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        bRet = DialogBoxIndirectParamA( hInst, lfs->template, lpofn->hwndOwner,
+                                        FD32_FileOpenDlgProc, (LPARAM)lfs);
+        FD31_DestroyPrivate(lfs);
+    }
+
+    TRACE("return lpstrFile='%s' !\n", lpofn->lpstrFile);
+    return bRet;
+}
+
+/***********************************************************************
+ *           GetFileName31W                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save
+ */
+static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* addess of structure with data*/
+                           UINT dlgType /* type dialogue : open/save */
+                           )
+{
+    HINSTANCE hInst;
+    BOOL bRet = FALSE;
+    PFD31_DATA lfs;
+    FD31_CALLBACKS callbacks;
+
+    if (!lpofn || !FD31_Init()) return FALSE;
+
+    FD32_SetupCallbacks(&callbacks);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
+    if (lfs)
+    {
+        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        bRet = DialogBoxIndirectParamW( hInst, lfs->template, lpofn->hwndOwner,
+                                        FD32_FileOpenDlgProc, (LPARAM)lfs);
+        FD31_DestroyPrivate(lfs);
+    }
+
+    TRACE("return lpstrFile=%s !\n", debugstr_w(lpofn->lpstrFile));
+    return bRet;
+}
+
 /* ------------------ APIs ---------------------- */
 
 /***********************************************************************
@@ -3287,7 +3604,6 @@ static void MemFree(void *mem)
 BOOL WINAPI GetOpenFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
-#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
     BOOL win16look = FALSE;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
@@ -3296,7 +3612,6 @@ BOOL WINAPI GetOpenFileNameA(
     if (win16look)
         return GetFileName31A(ofn, OPEN_DIALOG);
     else
-#endif
         return GetFileDialog95A(ofn, OPEN_DIALOG);
 }
 
@@ -3313,7 +3628,6 @@ BOOL WINAPI GetOpenFileNameA(
 BOOL WINAPI GetOpenFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
-#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
     BOOL win16look = FALSE;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
@@ -3322,7 +3636,6 @@ BOOL WINAPI GetOpenFileNameW(
     if (win16look)
         return GetFileName31W(ofn, OPEN_DIALOG);
     else
-#endif
         return GetFileDialog95W(ofn, OPEN_DIALOG);
 }
 
@@ -3340,7 +3653,6 @@ BOOL WINAPI GetOpenFileNameW(
 BOOL WINAPI GetSaveFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
-#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
     BOOL win16look = FALSE;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
@@ -3349,7 +3661,6 @@ BOOL WINAPI GetSaveFileNameA(
     if (win16look)
         return GetFileName31A(ofn, SAVE_DIALOG);
     else
-#endif
         return GetFileDialog95A(ofn, SAVE_DIALOG);
 }
 
@@ -3366,7 +3677,6 @@ BOOL WINAPI GetSaveFileNameA(
 BOOL WINAPI GetSaveFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
-#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
     BOOL win16look = FALSE;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
@@ -3375,6 +3685,5 @@ BOOL WINAPI GetSaveFileNameW(
     if (win16look)
         return GetFileName31W(ofn, SAVE_DIALOG);
     else
-#endif
         return GetFileDialog95W(ofn, SAVE_DIALOG);
 }

@@ -13,9 +13,10 @@ C_SRCS = \
 	cdlg32.c \
 	colordlg.c \
 	filedlg.c \
+	filedlg31.c \
 	filedlgbrowser.c \
-	finddlg32.c \
 	filetitle.c \
+	finddlg32.c \
 	fontdlg.c \
 	printdlg.c
 
