@@ -51,6 +51,11 @@
 #define IDS_OVERWRITEFILE_CAPTION 36
 #define IDS_OVERWRITEFILE_TEXT	37
 
+#define IDS_RESTART_TITLE      40
+#define IDS_RESTART_PROMPT     41
+#define IDS_SHUTDOWN_TITLE     42
+#define IDS_SHUTDOWN_PROMPT    43
+
 /* browse for folder dialog box */
 #define IDD_STATUS		0x3743
 #define IDD_TITLE		0x3742

@@ -36,6 +36,7 @@
 #include "shellapi.h"
 #include "shlobj.h"
 #include "shell32_main.h"
+#include "shresdef.h"
 #include "undocshell.h"
 
 typedef struct
@@ -379,30 +380,46 @@ void FillList (HWND hCb, char *pszLatest)
 
 
 /*************************************************************************
+ * ConfirmDialog				[internal]
+ *
+ * Put up a confirm box, return TRUE if the user confirmed
+ */
+static BOOL ConfirmDialog(HWND hWndOwner, UINT PromptId, UINT TitleId)
+{
+  WCHAR Prompt[256];
+  WCHAR Title[256];
+
+  LoadStringW(shell32_hInstance, PromptId, Prompt, sizeof(Prompt) / sizeof(WCHAR));
+  LoadStringW(shell32_hInstance, TitleId, Title, sizeof(Title) / sizeof(WCHAR));
+  return MessageBoxW(hWndOwner, Prompt, Title, MB_YESNO|MB_ICONQUESTION) == IDYES;
+}
+
+
+/*************************************************************************
  * RestartDialogEx				[SHELL32.730]
  */
 
-int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason)
+int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, DWORD uReason)
 {
-    TRACE("(%p)\n", hwndOwner);
+    TRACE("(%p)\n", hWndOwner);
 
     /*FIXME: use uReason */
 
-    if (MessageBoxA(hwndOwner, "Do you want to restart the system?", "Restart", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    if (ConfirmDialog(hWndOwner, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
     {
-	if (SHELL_OsIsUnicode())
-	{
-	    HANDLE hToken;
-	    TOKEN_PRIVILEGES npr = {1, {{{0, 0}, SE_PRIVILEGE_ENABLED}}};
+        HANDLE hToken;
+        TOKEN_PRIVILEGES npr;
 
-	    /* enable shutdown privilege for current process */
-	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
-	    LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
-	    AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
-	    CloseHandle(hToken);
-	}
-
-	ExitWindowsEx(EWX_REBOOT, 0);
+        /* enable shutdown privilege for current process */
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+        {
+            LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
+            npr.PrivilegeCount = 1;
+            npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
+            CloseHandle(hToken);
+        }
+        ExitWindowsEx(EWX_REBOOT, 0);
     }
 
     return 0;
@@ -413,9 +430,9 @@ int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UI
  * RestartDialog				[SHELL32.59]
  */
 
-int WINAPI RestartDialog(HWND hwndOwner, LPCWSTR lpstrReason, UINT uFlags)
+int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
 {
-    return RestartDialogEx(hwndOwner, lpstrReason, uFlags, 0);
+    return RestartDialogEx(hWndOwner, lpstrReason, uFlags, 0);
 }
 
 
@@ -429,22 +446,20 @@ void WINAPI ExitWindowsDialog (HWND hWndOwner)
 {
     TRACE("(%p)\n", hWndOwner);
 
-    if (MessageBoxA(hWndOwner, "Do you want to shutdown?", "Shutdown", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    if (ConfirmDialog(hWndOwner, IDS_SHUTDOWN_PROMPT, IDS_SHUTDOWN_TITLE))
     {
-	if (SHELL_OsIsUnicode())
-	{
-	    HANDLE hToken;
-	    TOKEN_PRIVILEGES npr = {1, {{{0, 0}, SE_PRIVILEGE_ENABLED}}};
+        HANDLE hToken;
+        TOKEN_PRIVILEGES npr;
 
-	    /* enable shutdown privilege for current process */
-	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
-	    LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
-	    AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
-	    CloseHandle(hToken);
-
-	    ExitWindowsEx(EWX_SHUTDOWN, 0);
-	}
-	else
-	    SendMessageA(hWndOwner, WM_QUIT, 0, 0);
+        /* enable shutdown privilege for current process */
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+        {
+            LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
+            npr.PrivilegeCount = 1;
+            npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
+            CloseHandle(hToken);
+        }
+        ExitWindowsEx(EWX_SHUTDOWN, 0);
     }
 }

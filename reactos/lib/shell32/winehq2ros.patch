@@ -1,0 +1,20 @@
+Index: shell32_En.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_En.rc,v
+retrieving revision 1.14
+diff -u -r1.14 shell32_En.rc
+--- shell32_En.rc	9 Jul 2004 22:51:19 -0000	1.14
++++ shell32_En.rc	12 Jul 2004 21:01:03 -0000
+@@ -181,8 +181,8 @@
+ /* message box strings */
+ STRINGTABLE DISCARDABLE
+ {
+-       IDS_RESTART_TITLE       "Restart"
+-       IDS_RESTART_PROMPT      "Do you want to simulate a Windows reboot?"
+-       IDS_SHUTDOWN_TITLE      "Shutdown"
+-       IDS_SHUTDOWN_PROMPT     "Do you want to shutdown your Wine session?"
++	IDS_RESTART_TITLE	"Restart"
++	IDS_RESTART_PROMPT	"Do you want to restart the system?"
++	IDS_SHUTDOWN_TITLE	"Shutdown"
++	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
+ }

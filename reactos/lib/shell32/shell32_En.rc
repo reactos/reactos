@@ -177,3 +177,12 @@ BEGIN
 	IDS_SHV_COLUMN8		"Name"
 	IDS_SHV_COLUMN9		"Comments"
 END
+
+/* message box strings */
+STRINGTABLE DISCARDABLE
+{
+	IDS_RESTART_TITLE	"Restart"
+	IDS_RESTART_PROMPT	"Do you want to restart the system?"
+	IDS_SHUTDOWN_TITLE	"Shutdown"
+	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
+}
