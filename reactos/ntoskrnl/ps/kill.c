@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.74 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: kill.c,v 1.75 2004/09/14 18:37:40 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,6 +123,15 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    CurrentThread = PsGetCurrentThread();
    CurrentProcess = CurrentThread->ThreadsProcess;
+
+   /* Can't terminate a thread if it attached another process */
+   if (AttachedApcEnvironment == CurrentThread->Tcb.ApcStateIndex)
+     {
+        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT, (ULONG) CurrentProcess,
+                     (ULONG) CurrentThread->Tcb.ApcState.Process,
+                     (ULONG) CurrentThread->Tcb.ApcStateIndex,
+                     (ULONG) CurrentThread);
+     }
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 
