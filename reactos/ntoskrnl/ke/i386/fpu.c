@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.10 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: fpu.c,v 1.11 2003/11/06 20:40:25 gvg Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -82,15 +82,16 @@ KiCheckFPU(VOID)
 NTSTATUS STDCALL
 KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 {
-  VOID **FpState = (VOID **) Save;
+  char *FpState;
 
-  *FpState = ExAllocatePool(PagedPool, FPU_STATE_SIZE);
-  if (NULL == *FpState)
+  FpState = ExAllocatePool(PagedPool, FPU_STATE_SIZE);
+  if (NULL == FpState)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
+  *((PVOID *) Save) = FpState;
 
-  __asm__("fsave %0\n\t" : /* no output */ : "m" (*FpState));
+  __asm__("fsave %0\n\t" : "=m" (*FpState));
 
   return STATUS_SUCCESS;
 }
@@ -98,10 +99,10 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 NTSTATUS STDCALL
 KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
-  VOID **FpState = (VOID **) Save;
+  char *FpState = *((PVOID *) Save);
 
-  __asm__("frstor %0\n\t" : /* no output */ : "m" (*FpState));
-  ExFreePool(*FpState);
+  __asm__("frstor %0\n\t" : "=m" (*FpState));
+  ExFreePool(FpState);
 
   return STATUS_SUCCESS;
 }
