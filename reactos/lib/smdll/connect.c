@@ -49,12 +49,12 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
 
   DPRINT("SMDLL: %s called\n", __FUNCTION__);
 
-  if (pSbApiPortName->Length > (sizeof pSbApiPortName->Buffer[0] * SM_SB_NAME_MAX_LENGTH))
-  {
-	  return STATUS_INVALID_PARAMETER_1;
-  }
   if (pSbApiPortName)
   {
+    if (pSbApiPortName->Length > (sizeof pSbApiPortName->Buffer[0] * SM_SB_NAME_MAX_LENGTH))
+    {
+	  return STATUS_INVALID_PARAMETER_1;
+    }
     if (NULL == hSbApiPort || IMAGE_SUBSYSTEM_UNKNOWN == dwSubsystem)
     {
       return STATUS_INVALID_PARAMETER_MIX;
@@ -73,7 +73,7 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
   SecurityQos.EffectiveOnly       = TRUE;
 
   RtlInitUnicodeString (& SmApiPortName, SM_API_PORT_NAME);
-
+DbgPrint("SMDLL: calling NtConnectPort\n");
   Status = NtConnectPort (
              phSmApiPort,
              & SmApiPortName,
