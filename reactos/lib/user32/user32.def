@@ -361,7 +361,7 @@ GetWindowTextLengthA@4
 GetWindowTextLengthW@4
 GetWindowTextW@12
 GetWindowThreadProcessId@8
-;GetWindowWord
+GetWindowWord@8
 GrayStringA@36
 GrayStringW@36
 HideCaret@4
