@@ -23,9 +23,11 @@ typedef struct _USER_SENT_MESSAGE
   MSG Msg;
   PKEVENT CompletionEvent;
   LRESULT* Result;
-  struct _USER_MESSAGE_QUEUE* CompletionQueue;
+  struct _USER_MESSAGE_QUEUE* SenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
+  /* entry in the dispatching list of the sender's message queue */
+  LIST_ENTRY DispatchingListEntry;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
@@ -95,6 +97,8 @@ typedef struct _USER_MESSAGE_QUEUE
   /* extra message information */
   LPARAM ExtraInfo;
 
+  /* messages that are currently dispatched by other threads */
+  LIST_ENTRY DispatchingMessagesHead;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL
