@@ -15,3 +15,10 @@
 - desktop switching
 - command line in explorer windows
 - printer and RAS connection icons in desktop notification area
+- make task buttons smaller when running many applications
+- use multi threading for launching of programs and filling start menu subdirectories
+- close start start menu when resizing explorer bar
+- adjust already open windows of all running applications when resizing explorer bar
+- implement blink effect in task bar for SetForegoundWindow() requests
+- implement more than one column for very crowded start menus
+
