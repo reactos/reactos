@@ -169,7 +169,7 @@ _multiboot_entry:
 	movl	%eax, (%esi, %edi)
 	addl	$0x1000, %eax
 	addl	$4, %edi
-	cmpl	$8192, %edi
+	cmpl	$6144, %edi
 	jl	.l4
 	
 #ifdef  MP
