@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.13 2004/10/22 20:25:54 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -454,7 +454,6 @@ RawFsCreateFile(IN PRAWFS_IRP_CONTEXT IrpContext)
       	  return (STATUS_INSUFFICIENT_RESOURCES);
       	}
 
-      FileObject->Flags |= FO_FCB_IS_VALID;
       FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;

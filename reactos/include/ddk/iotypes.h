@@ -642,15 +642,6 @@ typedef struct _IO_COMPLETION_CONTEXT
 #define FO_HANDLE_CREATED               0x00040000
 #define FO_FILE_FAST_IO_READ            0x00080000
 
-/*
- * ReactOS specific flags
- */
-#define FO_DIRECT_CACHE_READ            0x72000001
-#define FO_DIRECT_CACHE_WRITE           0x72000002
-#define FO_DIRECT_CACHE_PAGING_READ     0x72000004
-#define FO_DIRECT_CACHE_PAGING_WRITE    0x72000008
-#define FO_FCB_IS_VALID                 0x72000010
-
 typedef struct _FILE_OBJECT
 {
    CSHORT Type;

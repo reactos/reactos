@@ -516,7 +516,6 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  return (STATUS_INSUFFICIENT_RESOURCES);
 	}
       RtlZeroMemory(pCcb, sizeof(VFATCCB));
-      FileObject->Flags |= FO_FCB_IS_VALID;
       FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;

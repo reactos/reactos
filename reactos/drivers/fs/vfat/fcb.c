@@ -330,7 +330,6 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   }
   RtlZeroMemory(newCCB, sizeof (VFATCCB));
 
-  fileObject->Flags |= FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
@@ -535,8 +534,6 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   }
   RtlZeroMemory (newCCB, sizeof (VFATCCB));
 
-  fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
-      FO_DIRECT_CACHE_PAGING_READ;
   fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
