@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.14 2003/07/29 16:44:48 royce Exp $
+/* $Id: rtl.h,v 1.15 2003/08/14 10:32:09 ekohl Exp $
  * 
  */
 
@@ -481,15 +481,24 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 
 
 #if defined(__NTOSKRNL__) || defined(__NTDLL__)
+#define NLS_ANSI_CODE_PAGE       NlsAnsiCodePage
+#define NLS_LEAD_BYTE_INFO       NlsLeadByteInfo
 #define NLS_MB_CODE_PAGE_TAG     NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO   NlsOemLeadByteInfo
 #else
+#define NLS_ANSI_CODE_PAGE       (*NlsAnsiCodePage)
+#define NLS_LEAD_BYTE_INFO       (*NlsLeadByteInfo)
 #define NLS_MB_CODE_PAGE_TAG     (*NlsMbCodePageTag)
 #define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#define NLS_OEM_LEAD_BYTE_INFO   (*NlsOemLeadByteInfo)
 #endif /* __NTOSKRNL__ || __NTDLL__ */
 
+extern USHORT NLS_ANSI_CODE_PAGE;
+extern PUSHORT NLS_LEAD_BYTE_INFO;
 extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
+extern PUSHORT NLS_OEM_LEAD_BYTE_INFO;
 
 
 /*
