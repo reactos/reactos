@@ -238,7 +238,9 @@ static void InitFunctionPtrs()
 
     SET(ptype_info_dtor, "??1type_info@@UAE@XZ");
     SET(ptype_info_raw_name, "?raw_name@type_info@@QBEPBDXZ");
+#ifndef __REACTOS__
     SET(ptype_info_name, "?name@type_info@@QBEPBDXZ");
+#endif
     SET(ptype_info_before, "?before@type_info@@QBEHABV1@@Z");
     SET(ptype_info_opequals_equals, "??8type_info@@QBEHABV0@@Z");
     SET(ptype_info_opnot_equals, "??9type_info@@QBEHABV0@@Z");

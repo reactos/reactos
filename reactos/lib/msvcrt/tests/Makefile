@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/12/11 19:31:46 sedwards Exp $
+# $Id: Makefile,v 1.2 2004/12/11 19:51:31 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_APPTYPE = console
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API -D_WIN32_IE=0x0600 \
-	-D_WIN32_WINNT=0x0501
+	-D_WIN32_WINNT=0x0501 -D__REACTOS__
 
 TARGET_NAME = msvcrt_test
 
