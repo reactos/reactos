@@ -2350,13 +2350,13 @@ RtlSplay (
 	if ((ULONG_PTR)(Address) & LONG_MASK) \
 	{ \
 		((PUCHAR)(Address))[LONG_LEAST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
-		((PUCHAR)(Address))[LONG_3RD_MOST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
+		((PUCHAR)(Address))[LONG_3RD_MOST_SIGNIFICANT_BIT]=(UCHAR)(SECONDBYTE(Value)); \
 		((PUCHAR)(Address))[LONG_2ND_MOST_SIGNIFICANT_BIT]=(UCHAR)(THIRDBYTE(Value)); \
 		((PUCHAR)(Address))[LONG_MOST_SIGNIFICANT_BIT]=(UCHAR)(FOURTHBYTE(Value)); \
 	} \
 	else \
 	{ \
-		*((PULONG_PTR)(Address))=(ULONG_PTR)(Value); \
+		*((PULONG)(Address))=(ULONG)(Value); \
 	}
 
 /*
