@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2002/10/20 14:53:59 ekohl Exp $
+# $Id: makefile,v 1.18 2002/10/28 15:02:18 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,8 @@ TARGET_APPTYPE = native
 TARGET_NAME = csrss
 
 TARGET_INSTALLDIR = system32
+
+TARGET_SDKLIBS = win32k.a
 
 TARGET_CFLAGS = -D__NTAPP__
 
@@ -23,8 +25,7 @@ OBJECTS_MISC = \
   $(TARGET_NAME).o \
   init.o \
   print.o \
-  video.o \
-  win32k.o
+  video.o
 
 TARGET_OBJECTS = \
   $(OBJECTS_API) \
