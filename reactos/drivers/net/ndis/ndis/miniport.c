@@ -813,7 +813,8 @@ VOID STDCALL MiniportDpc(
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
 
-                if (NdisStatus != NDIS_STATUS_PENDING) 
+                if ((NdisStatus != NDIS_STATUS_PENDING) &&
+                    !(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)) 
                     MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
               }
 
