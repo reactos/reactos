@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.63 2004/07/09 20:09:35 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.64 2004/08/07 00:25:10 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -700,7 +700,7 @@ NtUserClipCursor(
     DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
   
   if((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
-     && DesktopWindow)
+     && DesktopWindow && UnsafeRect != NULL)
   {
     MOUSEINPUT mi;
     
