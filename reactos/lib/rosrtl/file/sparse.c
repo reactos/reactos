@@ -105,7 +105,7 @@ QueryAllocatedFileRanges(HANDLE hFile,
                      lpAllocatedRanges,
                      dwBufferSize,
                      &BytesRet,
-                      NULL))
+                     NULL) != 0)
   {
     return BytesRet;
   }
