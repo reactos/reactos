@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.35 2004/01/23 18:00:53 navaraf Exp $
+/* $Id: unicode.c,v 1.36 2004/01/24 11:59:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1062,28 +1062,37 @@ RtlStringFromGUID(
     OUT PUNICODE_STRING GuidString
     )
 {
+	STATIC CONST PWCHAR Hex = L"0123456789ABCDEF";
+	WCHAR Buffer[40];
+	PWCHAR BufferPtr;
+	INT i;
+	
 	if( Guid == NULL )
 	{
 		return FALSE;
 	}
-	PWCHAR Buffer;
-	PWCHAR String4;
-	PWCHAR String4a;
-	PWCHAR String4b;
-	
-	wcsncpy( String4a, String4, 4 );
-	wcsncpy( String4b, String4+4, wcslen(String4) );
-	
-	swprintf( Buffer, L"{%X-%X-%X-%X-%X}",
+
+	swprintf( Buffer, L"{%08lX-%04X-%04X-%02X%02X-",
 					  Guid->Data1,
 					  Guid->Data2,
 					  Guid->Data3,
-					  String4a,
-					  String4b );
+					  Guid->Data4[0],
+					  Guid->Data4[1]);
+	BufferPtr = Buffer + 25;
+
+	/* 6 hex bytes */
+	for (i = 2; i < 8; i++)
+	{
+		*BufferPtr++ = Hex[Guid->Data4[i] >> 4];
+		*BufferPtr++ = Hex[Guid->Data4[i] & 0xf];
+	}
+
+	*BufferPtr++ = '}';
+	*BufferPtr++ = '\0';
 		
-	RtlInitUnicodeString( GuidString, Buffer );
+	RtlCreateUnicodeString( GuidString, Buffer );
 	
-	return(TRUE);
+	return TRUE;
 }
 
 
