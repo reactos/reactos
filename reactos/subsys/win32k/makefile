@@ -29,12 +29,6 @@ else
 CFLAGS_DBG :=
 endif
 
-ifeq ($(OPTIMIZED), 1)
-CFLAGS_OPT := -O2 -Wno-strict-aliasing
-else
-CFLAGS_OPT :=
-endif
-
 TARGET_CFLAGS =\
  $(CFLAGS_DBG) \
  -I. \

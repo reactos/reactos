@@ -121,7 +121,7 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
 	DWORD ChannelSelect;
 	DWORD Controller;
 	ULONG MaximumLength;
-	BOOLEAN ChannelSetup;
+	BOOLEAN ChannelSetup = FALSE;
 	DMA_MODE DmaMode;	
 
 	DPRINT("Entered Function\n");

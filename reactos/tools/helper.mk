@@ -612,6 +612,15 @@ ifneq ($(TARGET_TYPE),kernel)
 endif
 endif
 
+#
+# Enable Tree-Wide Optimization.
+# Protect uncompatible files here with an ifneq
+# if needed, until their problems can be found
+#
+ifeq ($(OPTIMIZED), 1)
+  MK_CFLAGS += -O2 -Wno-strict-aliasing
+  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
+endif
 
 ifneq ($(TARGET_LIBS),)
   MK_LIBS := $(TARGET_LIBS) $(MK_LIBS)

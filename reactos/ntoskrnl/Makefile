@@ -26,12 +26,6 @@ endif
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
-ifeq ($(OPTIMIZED), 1)
-CFLAGS_OPT := -O2 -Wno-strict-aliasing
-else
-CFLAGS_OPT :=
-endif
-
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
                 dbg/i386/kdb_help.o \

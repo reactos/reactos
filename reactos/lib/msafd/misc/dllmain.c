@@ -66,7 +66,7 @@ WSPSocket(
 	PHELPER_DATA				HelperData;
 	PVOID						HelperDLLContext;
 	DWORD						HelperEvents;
-	DWORD						IOOptions;
+	DWORD						IOOptions = 0;
 	UNICODE_STRING				TransportName;
 	UNICODE_STRING				DevName;
 	LARGE_INTEGER				GroupData;
@@ -728,8 +728,8 @@ WSPAccept(
 	NTSTATUS					Status;
 	struct fd_set				ReadSet;
 	struct timeval				Timeout;
-	PVOID						PendingData;
-	ULONG						PendingDataLength;
+	PVOID						PendingData = NULL;
+	ULONG						PendingDataLength = 0;
 	PVOID						CalleeDataBuffer;
 	WSABUF						CallerData, CalleeID, CallerID, CalleeData;
 	PSOCKADDR					RemoteAddress =  NULL;

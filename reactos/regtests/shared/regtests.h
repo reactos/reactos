@@ -206,7 +206,7 @@ static inline PVOID
 FrameworkGetFunction(PAPI_DESCRIPTION ApiDescription)
 {
   HANDLE hModule;
-  PVOID function;
+  PVOID function = NULL;
   PCHAR exportedFunctionName;
 
   exportedFunctionName = FrameworkGetExportedFunctionNameInternal(ApiDescription);

@@ -41,7 +41,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_NO_MEMORY;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window = 

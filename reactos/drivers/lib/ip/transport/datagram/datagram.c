@@ -59,7 +59,7 @@ VOID DGDeliverData(
   if (!IsListEmpty(&AddrFile->ReceiveQueue))
     {
       PLIST_ENTRY CurrentEntry;
-      PDATAGRAM_RECEIVE_REQUEST Current;
+      PDATAGRAM_RECEIVE_REQUEST Current = NULL;
       BOOLEAN Found;
       PTA_IP_ADDRESS RTAIPAddress;
   

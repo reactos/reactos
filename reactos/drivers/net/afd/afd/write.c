@@ -22,7 +22,7 @@ NTSTATUS DDKAPI SendComplete
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp = NULL;
     PIO_STACK_LOCATION NextIrpSp;
-    PAFD_SEND_INFO SendReq;
+    PAFD_SEND_INFO SendReq = NULL;
     PAFD_MAPBUF Map;
     UINT TotalBytesCopied = 0, SpaceAvail, i, CopySize = 0;
 

@@ -737,7 +737,7 @@ GuiConsoleRightMouseDown(HWND hWnd)
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  LRESULT Result;
+  LRESULT Result = 0;
 
   switch(msg)
     {
@@ -746,7 +746,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
       case WM_PAINT:
         GuiConsoleHandlePaint(hWnd);
-        Result = 0;
         break;
       case WM_KEYDOWN:
       case WM_KEYUP:
@@ -754,19 +753,15 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_SYSKEYUP:
       case WM_CHAR:
         GuiConsoleHandleKey(hWnd, msg, wParam, lParam);
-        Result = 0;
         break;
       case WM_TIMER:
         GuiConsoleHandleTimer(hWnd);
-        Result = 0;
         break;
       case WM_CLOSE:
         GuiConsoleHandleClose(hWnd);
-        Result = 0;
         break;
       case WM_NCDESTROY:
         GuiConsoleHandleNcDestroy(hWnd);
-        Result = 0;
         break;
       case WM_LBUTTONDOWN:
           GuiConsoleLeftMouseDown(hWnd, lParam);
