@@ -1637,8 +1637,8 @@ void WINAPI ILFree(LPITEMIDLIST);
 HRESULT WINAPI SHCoCreateInstance(LPCWSTR,REFCLSID,IUnknown*,REFIID,void**);
 #endif
 
-int WINAPI RestartDialog(HWND,LPCWSTR,UINT);
-int WINAPI RestartDialogEx(HWND,LPCWSTR,UINT,UINT);
+int WINAPI RestartDialog(HWND,LPCWSTR,DWORD);
+int WINAPI RestartDialogEx(HWND,LPCWSTR,DWORD,DWORD);
 
 ULONG WINAPI SHChangeNotifyRegister(HWND,int,LONG,UINT,int,SHChangeNotifyEntry *);
 BOOL WINAPI SHChangeNotifyDeregister(ULONG);
