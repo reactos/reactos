@@ -24,3 +24,4 @@
 #include <ntos/minmax.h>
 #include <csrss/csrss.h>
 #include <reactos/buildno.h>
+#include <rosrtl/thread.h>

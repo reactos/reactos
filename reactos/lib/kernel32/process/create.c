@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.66 2003/04/26 23:13:28 hyperion Exp $
+/* $Id: create.c,v 1.67 2003/04/29 02:16:59 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -92,21 +92,6 @@ VOID STDCALL RtlRosR32AttribsToNativeAttribsNamed
   NativeAttribs->Attributes |= OBJ_CASE_INSENSITIVE;
  }
 }
-
-NTSTATUS CDECL RtlCreateUserThreadVa
-(
- HANDLE ProcessHandle,
- POBJECT_ATTRIBUTES ObjectAttributes,
- BOOLEAN CreateSuspended,
- LONG StackZeroBits,
- PULONG StackReserve,
- PULONG StackCommit,
- PTHREAD_START_ROUTINE StartAddress,
- PHANDLE ThreadHandle,
- PCLIENT_ID ClientId,
- ULONG ParameterCount,
- ...
-);
 
 BOOL STDCALL CreateProcessA
 (
@@ -408,8 +393,39 @@ HANDLE STDCALL KlCreateFirstThread
  else
   pTrueStartAddress = (PVOID)RtlBaseProcessStartRoutine;
 
+ DPRINT
+ (
+  "RtlRosCreateUserThreadVa\n"
+  "(\n"
+  " ProcessHandle    %p,\n"
+  " ObjectAttributes %p,\n"
+  " CreateSuspended  %d,\n"
+  " StackZeroBits    %d,\n"
+  " StackReserve     %lu,\n"
+  " StackCommit      %lu,\n"
+  " StartAddress     %p,\n"
+  " ThreadHandle     %p,\n"
+  " ClientId         %p,\n"
+  " ParameterCount   %u,\n"
+  " Parameters[0]    %p,\n"
+  " Parameters[1]    %p\n"
+  ")\n",
+  ProcessHandle,
+  &oaThreadAttribs,
+  dwCreationFlags & CREATE_SUSPENDED,
+  0,
+  Sii->StackReserve,
+  Sii->StackCommit,
+  pTrueStartAddress,
+  &hThread,
+  &cidClientId,
+  2,
+  lpStartAddress,
+  PEB_BASE
+ );
+
  /* create the first thread */
- nErrCode = RtlCreateUserThreadVa
+ nErrCode = RtlRosCreateUserThreadVa
  (
   ProcessHandle,
   &oaThreadAttribs,
@@ -431,8 +447,21 @@ HANDLE STDCALL KlCreateFirstThread
   SetLastErrorByStatus(nErrCode);
   return NULL;
  }
+ 
+ DPRINT
+ (
+  "StackReserve          %p\n"
+  "StackCommit           %p\n"
+  "ThreadHandle          %p\n"
+  "ClientId.UniqueThread %p\n",
+  Sii->StackReserve,
+  Sii->StackCommit,
+  hThread,
+  cidClientId.UniqueThread
+ );
 
  /* success */
+ if(lpThreadId) *lpThreadId = (DWORD)cidClientId.UniqueThread;
  return hThread;
 }
 

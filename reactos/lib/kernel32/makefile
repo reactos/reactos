@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.63 2003/04/14 01:19:06 hyperion Exp $
+# $Id: makefile,v 1.64 2003/04/29 02:16:59 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_BASE = 0x77f00000
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a
+TARGET_SDKLIBS = rosrtl.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.82 2003/04/27 14:45:52 chorns Exp $
+# $Id: makefile,v 1.83 2003/04/29 02:17:00 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,6 +15,8 @@ TARGET_ASFLAGS = -I $(PATH_TO_TOP)/include
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles
+
+TARGET_SDKLIBS = rosrtl.a
 
 TARGET_GCCLIBS = gcc
 

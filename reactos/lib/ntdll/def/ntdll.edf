@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.86 2003/04/26 23:13:29 hyperion Exp $
+; $Id: ntdll.edf,v 1.87 2003/04/29 02:16:59 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -347,8 +347,6 @@ RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread=RtlCreateUserThread@40
-RtlCreateUserThreadEx=RtlCreateUserThreadEx@44
-RtlCreateUserThreadVa=RtlCreateUserThreadVa
 RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
 RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
@@ -449,7 +447,6 @@ RtlInitUnicodeString=RtlInitUnicodeString@8
 ;RtlInitializeAtomPackage
 RtlInitializeBitMap=RtlInitializeBitMap@12
 RtlInitializeContext=RtlInitializeContext@20
-RtlInitializeContextEx=RtlInitializeContextEx@24
 RtlInitializeCriticalSection=RtlInitializeCriticalSection@4
 ;RtlInitializeGenericTable
 RtlInitializeHandleTable=RtlInitializeHandleTable@12

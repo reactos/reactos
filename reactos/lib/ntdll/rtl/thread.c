@@ -10,291 +10,23 @@
  *                    25/04/03: Near rewrite. Made code more readable, replaced
  *                              INITIAL_TEB with USER_STACK, added support for
  *                              fixed-size stacks
+ *                    28/04/03: Moved all code to a new statically linked
+ *                              library (ROSRTL) so it can be shared with
+ *                              kernel32.dll without exporting non-standard
+ *                              functions from ntdll.dll
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <napi/i386/segment.h>
 #include <napi/teb.h>
 #include <ntdll/rtl.h>
+#include <rosrtl/thread.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
-
 /* FUNCTIONS ***************************************************************/
-
-NTSTATUS STDCALL RtlInitializeContextEx
-(
- HANDLE ProcessHandle,
- PCONTEXT Context,
- PTHREAD_START_ROUTINE StartAddress,
- PUSER_STACK UserStack,
- ULONG ParameterCount,
- ULONG_PTR * Parameters
-);
-
-NTSTATUS STDCALL RtlCreateUserThreadEx
-(
- HANDLE ProcessHandle,
- POBJECT_ATTRIBUTES ObjectAttributes,
- BOOLEAN CreateSuspended,
- LONG StackZeroBits,
- PULONG StackReserve,
- PULONG StackCommit,
- PTHREAD_START_ROUTINE StartAddress,
- PHANDLE ThreadHandle,
- PCLIENT_ID ClientId,
- ULONG ParameterCount,
- ULONG_PTR * Parameters
-)
-{
- USER_STACK usUserStack;
- OBJECT_ATTRIBUTES oaThreadAttribs;
- /* FIXME: read the defaults from the executable image */
- ULONG_PTR nStackReserve = 0x100000;
- /* FIXME: when we finally have exception handling, make this PAGE_SIZE */
- ULONG_PTR nStackCommit = 0x100000;
- ULONG_PTR nSize = 0;
- PVOID pStackLowest = NULL;
- ULONG nDummy;
- CONTEXT ctxInitialContext;
- NTSTATUS nErrCode;
- HANDLE hThread;
- CLIENT_ID cidClientId;
-
- ULONG i;
-
- DPRINT("blah\n");
-
- for(i = 0; i < ParameterCount; ++ i)
-  DPRINT("parameter %lu = %p\n", i, Parameters[i]);
-
- DPRINT("doh\n");
-
- if(ThreadHandle == NULL) ThreadHandle = &hThread;
- if(ClientId == NULL) ClientId = &cidClientId;
- 
- if(StackReserve == NULL) StackReserve = &nStackReserve;
- else ROUNDUP(*StackReserve, PAGE_SIZE);
-
- if(StackCommit == NULL) StackCommit = &nStackCommit;
- else ROUNDUP(*StackCommit, PAGE_SIZE);
-
-#if 0
- /* the stack commit size must be equal to or less than the reserve size */
- if(*StackCommit > *StackReserve) *StackCommit = *StackReserve;
-#else
- /* FIXME: no SEH, no guard pages */
- *StackCommit = *StackReserve;
-#endif
-
- usUserStack.FixedStackBase = NULL;
- usUserStack.FixedStackLimit =  NULL;
- usUserStack.ExpandableStackBase = NULL;
- usUserStack.ExpandableStackLimit = NULL; 
- usUserStack.ExpandableStackBottom = NULL;
-
- /* FIXME: this code assumes a stack growing downwards */
- /* fixed stack */
- if(*StackCommit == *StackReserve)
- {
-  DPRINT("Fixed stack\n");
-
-  usUserStack.FixedStackLimit = NULL;
-
-  /* allocate the stack */
-  nErrCode = NtAllocateVirtualMemory
-  (
-   ProcessHandle,
-   &(usUserStack.FixedStackLimit),
-   StackZeroBits,
-   StackReserve,
-   MEM_RESERVE | MEM_COMMIT,
-   PAGE_READWRITE
-  );
-
-  /* failure */
-  if(!NT_SUCCESS(nErrCode)) goto l_Fail;
-
-  /* store the highest (first) address of the stack */
-  usUserStack.FixedStackBase =
-   (PUCHAR)(usUserStack.FixedStackLimit) + *StackReserve;
-
-  *StackCommit = *StackReserve;
-
-  DPRINT("Stack base %p\n", usUserStack.FixedStackBase);
-  DPRINT("Stack limit %p\n", usUserStack.FixedStackLimit);
- }
- /* expandable stack */
- else
- {
-  ULONG_PTR nGuardSize = PAGE_SIZE;
-  PVOID pGuardBase;
-
-  DPRINT("Expandable stack\n");
-
-  usUserStack.FixedStackLimit = NULL;
-  usUserStack.FixedStackBase = NULL;
-  usUserStack.ExpandableStackBottom = NULL;
-
-  /* reserve the stack */
-  nErrCode = NtAllocateVirtualMemory
-  (
-   ProcessHandle,
-   &(usUserStack.ExpandableStackBottom),
-   StackZeroBits,
-   StackReserve,
-   MEM_RESERVE,
-   PAGE_READWRITE
-  );
-
-  /* failure */
-  if(!NT_SUCCESS(nErrCode)) goto l_Fail;
-
-  DPRINT("Reserved %08X bytes\n", *StackReserve);
-
-  /* expandable stack base - the highest address of the stack */
-  usUserStack.ExpandableStackBase =
-   (PUCHAR)(usUserStack.ExpandableStackBottom) + *StackReserve;
-
-  /* expandable stack limit - the lowest committed address of the stack */
-  usUserStack.ExpandableStackLimit =
-   (PUCHAR)(usUserStack.ExpandableStackBase) - *StackCommit;
-
-  DPRINT("Stack base   %p\n", usUserStack.ExpandableStackBase);
-  DPRINT("Stack limit  %p\n", usUserStack.ExpandableStackLimit);
-  DPRINT("Stack bottom %p\n", usUserStack.ExpandableStackBottom);
-
-  /* commit as much stack as requested */
-  nErrCode = NtAllocateVirtualMemory
-  (
-   ProcessHandle,
-   &(usUserStack.ExpandableStackLimit),
-   0,
-   StackCommit,
-   MEM_COMMIT,
-   PAGE_READWRITE
-  );
-
-  /* failure */
-  if(!NT_SUCCESS(nErrCode)) goto l_Fail;
-
-  assert((*StackReserve - *StackCommit) >= PAGE_SIZE);
-  assert((*StackReserve - *StackCommit) % PAGE_SIZE == 0);
-
-  pGuardBase = (PUCHAR)(usUserStack.ExpandableStackLimit) - PAGE_SIZE;
-
-  DPRINT("Guard base %p\n", usUserStack.ExpandableStackBase);
-
-  /* set up the guard page */
-  nErrCode = NtAllocateVirtualMemory
-  (
-   ProcessHandle,
-   &pGuardBase,
-   0,
-   &nGuardSize,
-   MEM_COMMIT,
-   PAGE_READWRITE | PAGE_GUARD
-  );
-
-  /* failure */
-  if(!NT_SUCCESS(nErrCode)) goto l_Fail;
-
-  DPRINT("Guard base %p\n", usUserStack.ExpandableStackBase);
- }
-
- /* initialize the registers and stack for the thread */
- nErrCode = RtlInitializeContextEx
- (
-  ProcessHandle,
-  &ctxInitialContext,
-  StartAddress,
-  &usUserStack,
-  ParameterCount,
-  Parameters
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
- /* create the thread object */
- nErrCode = NtCreateThread
- (
-  ThreadHandle,
-  THREAD_ALL_ACCESS,
-  ObjectAttributes,
-  ProcessHandle,
-  ClientId,
-  &ctxInitialContext,
-  &usUserStack,
-  CreateSuspended
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
-
- /* success */
- return STATUS_SUCCESS;
-
- /* deallocate the stack */
-l_Cleanup:
- if(usUserStack.FixedStackLimit)
-  pStackLowest = usUserStack.FixedStackLimit;
- else if(usUserStack.ExpandableStackBottom)
-  pStackLowest = usUserStack.ExpandableStackBottom;
-
- /* free the stack, if it was allocated */
- if(pStackLowest != NULL)
-  NtFreeVirtualMemory(ProcessHandle, &pStackLowest, &nSize, MEM_RELEASE);
-
- /* failure */
-l_Fail:
- assert(!NT_SUCCESS(nErrCode));
- return nErrCode;
-}
-
-NTSTATUS CDECL RtlCreateUserThreadVa
-(
- HANDLE ProcessHandle,
- POBJECT_ATTRIBUTES ObjectAttributes,
- BOOLEAN CreateSuspended,
- LONG StackZeroBits,
- PULONG StackReserve,
- PULONG StackCommit,
- PTHREAD_START_ROUTINE StartAddress,
- PHANDLE ThreadHandle,
- PCLIENT_ID ClientId,
- ULONG ParameterCount,
- ...
-)
-{
- va_list vaArgs;
- NTSTATUS nErrCode;
- 
- va_start(vaArgs, ParameterCount);
- 
- /* FIXME: this code assumes a stack growing downwards */
- nErrCode = RtlCreateUserThreadEx
- (
-  ProcessHandle,
-  ObjectAttributes,
-  CreateSuspended,
-  StackZeroBits,
-  StackReserve,
-  StackCommit,
-  StartAddress,
-  ThreadHandle,
-  ClientId,
-  ParameterCount,
-  (ULONG_PTR *)vaArgs
- );
-
- va_end(vaArgs);
- 
- return nErrCode;
-}
 
 NTSTATUS STDCALL RtlCreateUserThread
 (
@@ -321,7 +53,7 @@ NTSTATUS STDCALL RtlCreateUserThread
   SecurityDescriptor
  );
  
- return RtlCreateUserThreadEx
+ return RtlRosCreateUserThreadEx
  (
   ProcessHandle,
   &oaThreadAttribs,
@@ -337,90 +69,6 @@ NTSTATUS STDCALL RtlCreateUserThread
  );
 }
 
-NTSTATUS STDCALL RtlInitializeContextEx
-(
- HANDLE ProcessHandle,
- PCONTEXT Context,
- PTHREAD_START_ROUTINE StartAddress,
- PUSER_STACK UserStack,
- ULONG ParameterCount,
- ULONG_PTR * Parameters
-)
-{
- ULONG nDummy;
- PCHAR pStackBase;
- PCHAR pStackLimit;
- ULONG_PTR nRetAddr = 0xDEADBEEF;
- SIZE_T nParamsSize = ParameterCount * sizeof(ULONG_PTR);
- NTSTATUS nErrCode;
- 
- if(UserStack->FixedStackBase != NULL && UserStack->FixedStackLimit != NULL)
- {
-  pStackBase = UserStack->FixedStackBase;
-  pStackLimit = UserStack->FixedStackLimit;
- }
- else if(UserStack->ExpandableStackBase != NULL)
- {
-  pStackBase = UserStack->ExpandableStackBase;
-  pStackLimit = UserStack->ExpandableStackLimit;
- }
- else
-  return STATUS_BAD_INITIAL_STACK;
-
- if(pStackBase <= pStackLimit)
-  return STATUS_BAD_INITIAL_STACK;
-
- /* too many parameters */
- if((nParamsSize + sizeof(ULONG_PTR)) > (SIZE_T)(pStackBase - pStackLimit))
-  return STATUS_STACK_OVERFLOW;
-
-#if defined(_M_IX86)
- memset(Context, 0, sizeof(CONTEXT));
-
- Context->ContextFlags = CONTEXT_FULL;
- Context->FloatSave.ControlWord = 0xffff037f;
- Context->FloatSave.StatusWord = 0xffff0000;
- Context->FloatSave.TagWord = 0xffffffff;
- Context->FloatSave.DataSelector = 0xffff0000;
- Context->Eip = (ULONG_PTR)StartAddress;
- Context->SegGs = USER_DS;
- Context->SegFs = TEB_SELECTOR;
- Context->SegEs = USER_DS;
- Context->SegDs = USER_DS;
- Context->SegCs = USER_CS;
- Context->SegSs = USER_DS;
- Context->Esp = (ULONG_PTR)pStackBase - (nParamsSize + sizeof(ULONG_PTR));
- Context->EFlags = ((ULONG_PTR)1 << 1) | ((ULONG_PTR)1 << 9);
-
- DPRINT("Effective stack base %p\n", Context->Esp);
-#else
-#error Unsupported architecture
-#endif
-
- /* write the parameters */
- nErrCode = NtWriteVirtualMemory
- (
-  ProcessHandle,
-  ((PUCHAR)pStackBase) - nParamsSize,
-  Parameters,
-  nParamsSize,
-  &nDummy
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode)) return nErrCode;
-
- /* write the return address */
- return NtWriteVirtualMemory
- (
-  ProcessHandle,
-  ((PUCHAR)pStackBase) - (nParamsSize + sizeof(ULONG_PTR)),
-  &nRetAddr,
-  sizeof(ULONG_PTR),
-  &nDummy
- );
-}
-
 NTSTATUS STDCALL RtlInitializeContext
 (
  HANDLE ProcessHandle,
@@ -430,7 +78,7 @@ NTSTATUS STDCALL RtlInitializeContext
  PUSER_STACK UserStack
 )
 {
- return RtlInitializeContextEx
+ return RtlRosInitializeContextEx
  (
   ProcessHandle,
   Context,

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.37 2003/04/26 23:13:28 hyperion Exp $
+/* $Id: thread.c,v 1.38 2003/04/29 02:16:59 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,21 +22,6 @@
 /* FUNCTIONS *****************************************************************/
 
 /* FIXME: please put this in some header */
-extern NTSTATUS CDECL RtlCreateUserThreadVa
-(
- HANDLE ProcessHandle,
- POBJECT_ATTRIBUTES ObjectAttributes,
- BOOLEAN CreateSuspended,
- LONG StackZeroBits,
- PULONG StackReserve,
- PULONG StackCommit,
- PTHREAD_START_ROUTINE StartAddress,
- PHANDLE ThreadHandle,
- PCLIENT_ID ClientId,
- ULONG ParameterCount,
- ...
-);
-
 static EXCEPTION_DISPOSITION __cdecl
 _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * EstablisherFrame,
@@ -113,6 +98,24 @@ HANDLE STDCALL CreateRemoteThread
  PIMAGE_NT_HEADERS pinhHeader =
   RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
 
+ DPRINT
+ (
+  "hProcess           %08X\n"
+  "lpThreadAttributes %08X\n"
+  "dwStackSize        %08X\n"
+  "lpStartAddress     %08X\n"
+  "lpParameter        %08X\n"
+  "dwCreationFlags    %08X\n"
+  "lpThreadId         %08X\n",
+  hProcess,
+  lpThreadAttributes,
+  dwStackSize,
+  lpStartAddress,
+  lpParameter,
+  dwCreationFlags,
+  lpThreadId
+ );
+
  /* FIXME: do more checks - e.g. the image may not have an optional header */
  if(pinhHeader == NULL)
  {
@@ -163,8 +166,39 @@ HANDLE STDCALL CreateRemoteThread
   oaThreadAttribs.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
  }
 
+ DPRINT
+ (
+  "RtlRosCreateUserThreadVa\n"
+  "(\n"
+  " ProcessHandle    %p,\n"
+  " ObjectAttributes %p,\n"
+  " CreateSuspended  %d,\n"
+  " StackZeroBits    %d,\n"
+  " StackReserve     %lu,\n"
+  " StackCommit      %lu,\n"
+  " StartAddress     %p,\n"
+  " ThreadHandle     %p,\n"
+  " ClientId         %p,\n"
+  " ParameterCount   %u,\n"
+  " Parameters[0]    %p,\n"
+  " Parameters[1]    %p\n"
+  ")\n",
+  hProcess,
+  &oaThreadAttribs,
+  dwCreationFlags & CREATE_SUSPENDED,
+  0,
+  nStackReserve,
+  nStackCommit,
+  ThreadStartup,
+  &hThread,
+  &cidClientId,
+  2,
+  lpStartAddress,
+  lpParameter
+ );
+
  /* create the thread */
- nErrCode = RtlCreateUserThreadVa
+ nErrCode = RtlRosCreateUserThreadVa
  (
   hProcess,
   &oaThreadAttribs,
@@ -186,6 +220,18 @@ HANDLE STDCALL CreateRemoteThread
   SetLastErrorByStatus(nErrCode);
   return NULL;
  }
+ 
+ DPRINT
+ (
+  "StackReserve          %p\n"
+  "StackCommit           %p\n"
+  "ThreadHandle          %p\n"
+  "ClientId.UniqueThread %p\n",
+  nStackReserve,
+  nStackCommit,
+  hThread,
+  cidClientId.UniqueThread
+ );
 
  /* success */
  if(lpThreadId) *lpThreadId = (DWORD)cidClientId.UniqueThread;
