@@ -2063,6 +2063,21 @@ typedef struct _TOKEN_GROUPS {
 	DWORD GroupCount;
 	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
 } TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
+	ULONG SidCount;
+	ULONG SidLength;
+	PSID_AND_ATTRIBUTES Sids;
+	ULONG RestrictedSidCount;
+	ULONG RestrictedSidLength;
+	PSID_AND_ATTRIBUTES RestrictedSids;
+	ULONG PrivilegeCount;
+	ULONG PrivilegeLength;
+	PLUID_AND_ATTRIBUTES Privileges;
+	LUID AuthenticationId;
+} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+typedef struct _TOKEN_ORIGIN {
+	LUID OriginatingLogonSession;
+} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
 typedef struct _TOKEN_OWNER {
 	PSID Owner;
 } TOKEN_OWNER,*PTOKEN_OWNER;
@@ -2107,7 +2122,8 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
 	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
 	TokenImpersonationLevel,TokenStatistics,TokenRestrictedSids,
-	TokenSessionId
+	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
+	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
 } TOKEN_INFORMATION_CLASS;
 typedef enum _SID_NAME_USE {
 	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.38 2004/08/03 19:20:39 ion Exp $
+/* $Id: token.c,v 1.39 2004/08/10 20:13:42 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -569,7 +569,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 			IN ULONG TokenInformationLength,
 			OUT PULONG ReturnLength)
 {
-  NTSTATUS Status;
+  NTSTATUS Status, LengthStatus;
   PVOID UnusedInfo;
   PVOID EndMem;
   PACCESS_TOKEN Token;
@@ -806,6 +806,50 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
 	    Status = STATUS_SUCCESS;
 	  }
+	break;
+
+      case TokenOrigin:
+	DPRINT1("NtQueryInformationToken(TokenOrigin)\n");
+	if (TokenInformationLength < sizeof(TOKEN_ORIGIN))
+	  {
+	    Status = STATUS_BUFFER_TOO_SMALL;
+	  }
+	else
+	  {
+	    Status = MmCopyToCaller(&((PTOKEN_ORIGIN)TokenInformation)->OriginatingLogonSession,
+	                            &Token->AuthenticationId, sizeof(LUID));
+	  }
+	Length = sizeof(TOKEN_ORIGIN);
+	LengthStatus = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
+	if (NT_SUCCESS(Status))
+	  {
+	    Status = LengthStatus;
+	  }
+	break;
+
+      case TokenGroupsAndPrivileges:
+	DPRINT1("NtQueryInformationToken(TokenGroupsAndPrivileges) not implemented\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case TokenRestrictedSids:
+	DPRINT1("NtQueryInformationToken(TokenRestrictedSids) not implemented\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case TokenSandBoxInert:
+	DPRINT1("NtQueryInformationToken(TokenSandboxInert) not implemented\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case TokenSessionId:
+	DPRINT1("NtQueryInformationToken(TokenSessionId) not implemented\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      default:
+	DPRINT1("NtQueryInformationToken(%d) invalid parameter\n");
+	Status = STATUS_INVALID_PARAMETER;
 	break;
     }
 

@@ -176,7 +176,14 @@ typedef enum _TOKEN_INFORMATION_CLASS
   TokenSource,
   TokenType,
   TokenImpersonationLevel,
-  TokenStatistics
+  TokenStatistics,
+  TokenRestrictedSids,
+  TokenSessionId,
+  TokenGroupsAndPrivileges,
+  TokenSessionReference,
+  TokenSandBoxInert,
+  TokenAuditPolicy,
+  TokenOrigin
 } TOKEN_INFORMATION_CLASS;
 
 typedef ULONG SECURITY_IMPERSONATION_LEVEL, *PSECURITY_IMPERSONATION_LEVEL;
@@ -342,6 +349,10 @@ typedef struct _TOKEN_STATISTICS
   DWORD PrivilegeCount;
   LUID  ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+
+typedef struct _TOKEN_ORIGIN {
+  LUID OriginatingLogonSession;
+} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
 
 typedef struct _GENERIC_MAPPING
 {
