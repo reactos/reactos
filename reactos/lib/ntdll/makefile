@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.49 2000/07/19 14:18:17 dwelch Exp $
+# $Id: makefile,v 1.50 2000/08/05 18:01:50 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -88,7 +88,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		-mdll \
 		-o $(TARGET).dll \
 		$(TARGET).o \
-		-Wl,--entry=_LdrStartup \
+		-Wl,--entry=_LdrInitializeThunk@16 \
 		-Wl,--image-base,$(IMAGE_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -121,6 +121,6 @@ else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 endif
 
-WITH_DEBUGGING=yes
+WITH_DEBUGGING = yes
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

@@ -28,6 +28,7 @@ VOID ProtocolWorker(
 
 VOID
 EXPORT
+STDCALL
 NdisCloseAdapter(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle)
@@ -188,15 +189,15 @@ NdisRegisterProtocol(
 
     switch (ProtocolCharacteristics->MajorNdisVersion) {
     case 0x03:
-        MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS);
+        MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS_S);
         break;
 
     case 0x04:
-        MinSize = sizeof(NDIS40_PROTOCOL_CHARACTERISTICS);
+        MinSize = sizeof(NDIS40_PROTOCOL_CHARACTERISTICS_S);
         break;
 
     case 0x05:
-        MinSize = sizeof(NDIS50_PROTOCOL_CHARACTERISTICS);
+        MinSize = sizeof(NDIS50_PROTOCOL_CHARACTERISTICS_S);
         break;
 
     default:

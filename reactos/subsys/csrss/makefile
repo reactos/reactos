@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2000/03/22 18:35:58 dwelch Exp $
+# $Id: makefile,v 1.7 2000/08/05 18:01:57 dwelch Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -63,7 +63,7 @@ else
 	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
 endif
 
-
+WITH_DEBUGGING = yes
 include ../../rules.mak
 
 # EOF

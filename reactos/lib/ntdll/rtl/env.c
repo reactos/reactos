@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.10 2000/06/29 23:35:29 dwelch Exp $
+/* $Id: env.c,v 1.11 2000/08/05 18:01:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -322,8 +322,11 @@ found:
 				                               NULL);
 				if (!NT_SUCCESS(Status))
 				{
+				   if (Environment == NULL)
+				     {
 					RtlReleasePebLock ();
-					return Status;
+				     }
+				   return Status;
 				}
 			}
 
@@ -338,8 +341,11 @@ found:
 				                                  PAGE_READWRITE);
 				if (!NT_SUCCESS(Status))
 				{
+				   if (Environment == NULL)
+				     {
 					RtlReleasePebLock ();
-					return Status;
+				     }
+				   return Status;
 				}
 
 				if (env)
@@ -404,9 +410,11 @@ found:
 		else
 			Status = STATUS_VARIABLE_NOT_FOUND;
 	}
-
+   if (Environment == NULL)
+     {
 	RtlReleasePebLock ();
-	return Status;
+     }
+   return Status;
 }
 
 

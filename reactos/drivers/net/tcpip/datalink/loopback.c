@@ -52,7 +52,7 @@ VOID RealTransmit(
         if (!NdisPacket)
             break;
 
-        LoopQueueHead = *(PNDIS_PACKET*)NdisPacket->MacReserved;
+        LoopQueueHead = *(PNDIS_PACKET*)NdisPacket->u.s3.MacReserved;
 
         KeReleaseSpinLockFromDpcLevel(&LoopLock);
 
@@ -114,7 +114,7 @@ VOID LoopTransmit(
     AdjustPacket(NdisPacket, Offset, 0);
     PC(NdisPacket)->DLOffset = Offset;
 
-    pNdisPacket  = (PNDIS_PACKET*)NdisPacket->MacReserved;
+    pNdisPacket  = (PNDIS_PACKET*)NdisPacket->u.s3.MacReserved;
     *pNdisPacket = NULL;
 
     KeAcquireSpinLock(&LoopLock, &OldIrql);
@@ -122,7 +122,7 @@ VOID LoopTransmit(
     /* Add packet to transmit queue */
     if (LoopQueueHead) {
         /* Transmit queue is not empty */
-        pNdisPacket  = (PNDIS_PACKET*)LoopQueueTail->MacReserved;
+        pNdisPacket  = (PNDIS_PACKET*)LoopQueueTail->u.s3.MacReserved;
         *pNdisPacket = NdisPacket;
     } else
         /* Transmit queue is empty */

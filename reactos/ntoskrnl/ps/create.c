@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20 2000/07/07 00:49:02 phreak Exp $
+/* $Id: create.c,v 1.21 2000/08/05 18:01:54 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -44,8 +44,7 @@ extern LIST_ENTRY PiThreadListHead;
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 PsAssignImpersonationToken(PETHREAD Thread,
 			   HANDLE TokenHandle)
 {
@@ -404,41 +403,48 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
 			     PETHREAD Thread,
 			     PINITIAL_TEB InitialTeb)
 {
-//   MEMORY_BASIC_INFORMATION Info;
+   MEMORY_BASIC_INFORMATION Info;
    NTSTATUS Status;
    ULONG ByteCount;
    ULONG RegionSize;
    ULONG TebSize;
    PVOID TebBase;
    NT_TEB Teb;
+   ULONG ResultLength;
 
    TebBase = (PVOID)0x7FFDE000;
    TebSize = PAGESIZE;
 
    while (TRUE)
      {
-        /* The TEB must reside in user space */
-        Status = NtAllocateVirtualMemory(ProcessHandle,
-                                         &TebBase,
-                                         0,
-                                         &TebSize,
-                                         MEM_COMMIT,
-                                         PAGE_READWRITE);
-        if (NT_SUCCESS(Status))
-          {
-//             DPRINT1 ("TEB allocated at %x\n", TebBase);
-             break;
-          }
-        else
-          {
-             DPRINT ("TEB allocation failed! Status %x\n",Status);
-	     for(;;);
-	     return(Status);
-          }
-
-//        TebBase = Info.BaseAddress - TebSize;
+	Status = NtQueryVirtualMemory(ProcessHandle,
+				      TebBase,
+				      MemoryBasicInformation,
+				      &Info,
+				      sizeof(Info),
+				      &ResultLength);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("NtQueryVirtualMemory (Status %x)\n", Status);
+	     KeBugCheck(0);
+	  }
+	if (Info.State == MEM_FREE)
+	  {
+	     /* The TEB must reside in user space */
+	     Status = NtAllocateVirtualMemory(ProcessHandle,
+					      &TebBase,
+					      0,
+					      &TebSize,
+					      MEM_COMMIT,
+					      PAGE_READWRITE);
+	     if (NT_SUCCESS(Status))
+	       {
+		  break;
+	       }
+	  }
+	     
 	TebBase = TebBase - TebSize;
-   }
+     }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
 
@@ -526,6 +532,20 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
      {
 	return(Status);
      }
+
+#if 0
+   Status = NtWriteVirtualMemory(ProcessHandle,
+				 (PVOID)(((ULONG)ThreadContext->Esp) - 8),
+				 &ThreadContext->Eip,
+				 sizeof(ULONG),
+				 &Length);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("NtWriteVirtualMemory failed\n");
+	KeBugCheck(0);
+     }
+   ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
+#endif   
    
    Status = HalInitTaskWithContext(Thread,ThreadContext);
    if (!NT_SUCCESS(Status))

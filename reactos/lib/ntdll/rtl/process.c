@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.19 2000/06/29 23:35:31 dwelch Exp $
+/* $Id: process.c,v 1.20 2000/08/05 18:01:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -304,6 +304,7 @@ RtlCreateUserProcess (
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    CHAR ImageFileName[8];
+   ANSI_STRING ProcedureName;
    
    DPRINT("RtlCreateUserProcess\n");
    
@@ -333,7 +334,7 @@ RtlCreateUserProcess (
     * Get some information about the process
     */
    
-   ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
+   NtQueryInformationProcess(ProcessInfo->ProcessHandle,
 			     ProcessBasicInformation,
 			     &ProcessBasicInfo,
 			     sizeof(ProcessBasicInfo),
@@ -353,12 +354,20 @@ RtlCreateUserProcess (
    DPRINT("Creating peb\n");
    KlInitPeb(ProcessInfo->ProcessHandle, Ppb);
 
+   DPRINT("Retrieving entry point address\n");
+   RtlInitAnsiString (&ProcedureName, "LdrInitializeThunk");
+   Status = LdrGetProcedureAddress ((PVOID)NTDLL_BASE,
+				    &ProcedureName,
+				    0,
+				    (PVOID*)&lpStartAddress);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	return (Status);
+     }
+   DPRINT("lpStartAddress 0x%08lx\n", (ULONG)lpStartAddress);
+
    DPRINT("Creating thread for process\n");
-   lpStartAddress = (LPTHREAD_START_ROUTINE)
-     ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
-     AddressOfEntryPoint + 
-     ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->ImageBase;
-   
    hThread =  KlCreateFirstThread(ProcessInfo->ProcessHandle,
 //				  Headers.OptionalHeader.SizeOfStackReserve,
 				  0x200000,

@@ -1,6 +1,9 @@
-/* $Id: obsolete.c,v 1.2 1999/11/21 23:48:14 ea Exp $
+/* $Id: obsolete.c,v 1.3 2000/08/05 18:01:57 dwelch Exp $
  *
  */
+
+#include <ntos.h>
+
 VOID
 STDCALL
 TdiMapBuffer (

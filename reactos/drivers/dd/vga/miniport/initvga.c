@@ -1,6 +1,6 @@
 #include <ntddk.h>
 #include <debug.h>
-#include "vgaVideo.h"
+#include "vgavideo.h"
 #include "../../../../ntoskrnl/include/internal/i386/io.h"
 
 void outxay(USHORT ad, UCHAR x, UCHAR y)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2000/07/01 23:18:58 dwelch Exp $
+# $Id: makefile,v 1.8 2000/08/05 18:01:55 dwelch Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
@@ -66,9 +66,9 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main\*.o
+CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main\*.o objects\*.o vgavideo\*.o *.a
 else
-CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main/*.o
+CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main/*.o objects/*.o vgavideo/*.o *.a
 endif
 
 clean: $(CLEAN_FILES:%=%_clean)

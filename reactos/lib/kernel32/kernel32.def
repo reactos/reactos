@@ -49,6 +49,7 @@ BuildCommDCBAndTimeoutsW@12
 BuildCommDCBW@8
 CallNamedPipeA@28
 CallNamedPipeW@28
+CancelWaitableTimer@4
 ClearCommBreak@4
 ClearCommError@12
 CloseConsoleHandle@4
@@ -95,6 +96,8 @@ CreateSemaphoreW@16
 CreateTapePartition@16
 CreateThread@24
 CreateVirtualBuffer@12
+CreateWaitableTimerA@12
+CreateWaitableTimerW@12
 DebugActiveProcess@4
 DebugBreak@0
 DefineDosDeviceA@12
@@ -390,8 +393,10 @@ HeapValidate@12
 HeapWalk@8
 InitAtomTable@4
 InitializeCriticalSection@4
+InterlockedCompareExchange@12
 InterlockedDecrement@4
 InterlockedExchange@8
+InterlockedExchangeAdd@8
 InterlockedIncrement@4
 InvalidateConsoleDIBits@8
 IsBadCodePtr@4
@@ -449,6 +454,8 @@ OpenProcess@12
 OpenProfileUserMapping@0
 OpenSemaphoreA@12
 OpenSemaphoreW@12
+OpenWaitableTimerA@12
+OpenWaitableTimerW@12
 OutputDebugStringA@4
 OutputDebugStringW@4
 PeekConsoleInputA@16
@@ -566,12 +573,14 @@ SetUnhandledExceptionFilter@4
 SetVDMCurrentDirectories@8
 SetVolumeLabelA@8
 SetVolumeLabelW@8
+SetWaitableTimer@24
 SetupComm@12
 ShowConsoleCursor@8
 SizeofResource@8
 Sleep@4
 SleepEx@8
 SuspendThread@4
+SwitchToThread@0
 SystemTimeToFileTime@8
 SystemTimeToTzSpecificLocalTime@12
 TerminateProcess@8
@@ -583,6 +592,7 @@ TlsSetValue@8
 TransactNamedPipe@28
 TransmitCommChar@8
 TrimVirtualBuffer@4
+TryEnterCriticalSection@4
 UnhandledExceptionFilter@4
 UnlockFile@20
 UnlockFileEx@20
@@ -595,8 +605,10 @@ VerLanguageNameA@12
 VerLanguageNameW@12
 VerifyConsoleIoHandle@4
 VirtualAlloc@16
+VirtualAllocEx@20
 VirtualBufferExceptionHandler@12
 VirtualFree@12
+VirtualFreeEx@16
 VirtualLock@8
 VirtualProtect@16
 VirtualProtectEx@20

@@ -1,4 +1,4 @@
-; $Id: tdi.edf,v 1.1 1999/11/21 23:48:13 ea Exp $
+; $Id: tdi.edf,v 1.2 2000/08/05 18:01:57 dwelch Exp $
 ;
 ; TDI.SYS Kernel Module - ReactOS Operating System
 ;
@@ -34,7 +34,7 @@ TdiDeregisterAddressChangeHandler=TdiDeregisterAddressChangeHandler@4
 TdiDeregisterDeviceObject=TdiDeregisterDeviceObject@4
 TdiDeregisterNetAddress=TdiDeregisterNetAddress@4
 TdiDeregisterNotificationHandler=TdiDeregisterNotificationHandler@4
-TdiInitialize=TdiInitialize@0
+TdiInitialize=TdiInitialize@4
 TdiMapBuffer=TdiMapBuffer@4
 TdiMapUserRequest=TdiMapUserRequest@12
 TdiOpenNetbiosAddress=TdiOpenNetbiosAddress@16

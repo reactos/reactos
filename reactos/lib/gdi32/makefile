@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2000/07/07 10:30:54 dwelch Exp $
+# $Id: makefile,v 1.13 2000/08/05 18:01:48 dwelch Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -67,10 +67,10 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.a *.o *.coff *.sym *.tmp *.dll main\*.o misc\*.o
+CLEAN_FILES = *.a *.o *.coff *.sym *.tmp *.dll main\*.o misc\*.o objects\*.o
 else
-CLEAN_FILES = *.a *.o *.coff *.sym *.tmp *.dll main/*.o misc/*.o
-endif
+CLEAN_FILES = *.a *.o *.coff *.sym *.tmp *.dll main/*.o misc/*.o objects/*.o
+endif 
 
 clean: $(CLEAN_FILES:%=%_clean)
 

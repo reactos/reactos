@@ -1,7 +1,9 @@
-/* $Id: stubs.c,v 1.3 1999/11/28 07:59:29 ea Exp $
+
+/* $Id: stubs.c,v 1.4 2000/08/05 18:01:57 dwelch Exp $
  *
  */
 #include <ntos.h>
+#include <net/tdi.h>
 
 VOID 
 STDCALL

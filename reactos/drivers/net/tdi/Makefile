@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000/03/08 22:37:02 ea Exp $
+# $Id: Makefile,v 1.6 2000/08/05 18:01:56 dwelch Exp $
 #
 # TDI.SYS build spec
 #
@@ -16,7 +16,7 @@ OBJECTS = $(OBJECTS_CTE) $(OBJECTS_TDI) $(OBJECTS_MISC)
 
 all: $(TARGETNAME).sys
 
-misc/$(TARGETNAME).coff: misc/$(TARGETNAME).rc ../../include/reactos/resource.h
+misc/$(TARGETNAME).coff: misc/$(TARGETNAME).rc ../../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = \

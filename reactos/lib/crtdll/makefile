@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2000/01/20 22:49:12 ekohl Exp $
+# $Id: makefile,v 1.36 2000/08/05 18:01:48 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -163,7 +163,7 @@ CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
 	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
 	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
 	time/*.o wchar/*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
-	$(TARGET).coff
+	$(TARGET).coff $(SIGNAL_OBJECTS)
 endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.10 2000/07/11 04:09:25 phreak Exp $
+/* $Id: conio.c,v 1.11 2000/08/05 18:01:58 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -520,7 +520,7 @@ VOID Console_Api( DWORD RefreshEvent )
   while( 1 )
     {
       KeyEventRecord = RtlAllocateHeap(CsrssApiHeap, 
-				       0, 
+				       0,
 				       sizeof(ConsoleInput));
        if ( KeyEventRecord == 0 )
 	{

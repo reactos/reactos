@@ -1,4 +1,4 @@
-; $Id: tdi.def,v 1.2 1999/11/21 23:48:13 ea Exp $
+; $Id: tdi.def,v 1.3 2000/08/05 18:01:57 dwelch Exp $
 ;
 ; TDI.SYS Kernel Module - ReactOS Operating System
 ;
@@ -34,7 +34,7 @@ TdiDeregisterAddressChangeHandler@4
 TdiDeregisterDeviceObject@4
 TdiDeregisterNetAddress@4
 TdiDeregisterNotificationHandler@4
-TdiInitialize@0
+TdiInitialize@4
 TdiMapBuffer@4
 TdiMapUserRequest@12
 TdiOpenNetbiosAddress@16

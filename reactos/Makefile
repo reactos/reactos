@@ -34,7 +34,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = vga blue ide keyboard null parallel serial vidport
+DEVICE_DRIVERS = vidport vga blue ide keyboard null parallel serial
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
 
 FS_DRIVERS = vfat

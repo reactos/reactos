@@ -375,9 +375,9 @@ typedef struct _NDIS_RW_LOCK
         {
             KSPIN_LOCK          SpinLock;
             PVOID               Context;
-        };
+        } s;
         UCHAR                   Reserved[16];
-        };
+    } u;
 
     NDIS_RW_LOCK_REFCOUNT       RefCount[MAXIMUM_PROCESSORS];
 } NDIS_RW_LOCK, *PNDIS_RW_LOCK;
@@ -508,7 +508,7 @@ typedef struct _NDIS_GUID
     {
         NDIS_OID    Oid;
         NDIS_STATUS Status;
-    };
+    } u;
     ULONG           Size;
     ULONG           Flags;
 } NDIS_GUID, *PNDIS_GUID;
@@ -552,15 +552,15 @@ typedef struct _NDIS_PACKET {
         struct {
              UCHAR       MiniportReserved[2*sizeof(PVOID)];
              UCHAR       WrapperReserved[2*sizeof(PVOID)];
-        };
+        } s1;
         struct {
              UCHAR       MiniportReservedEx[3*sizeof(PVOID)];
              UCHAR       WrapperReservedEx[sizeof(PVOID)];
-        };
+        } s2;
         struct {
              UCHAR       MacReserved[4*sizeof(PVOID)];
-        };
-    };
+        } s3;
+    } u;
     ULONG_PTR            Reserved[2];
     UCHAR                ProtocolReserved[1];
 } NDIS_PACKET, *PNDIS_PACKET, **PPNDIS_PACKET;
@@ -569,7 +569,7 @@ typedef struct _NDIS_PACKET_OOB_DATA {
     union {
         ULONGLONG  TimeToSend;
         ULONGLONG  TimeSent;
-    };
+    } u;
     ULONGLONG      TimeReceived;
     UINT           HeaderSize;
     UINT           SizeMediaSpecificInfo;
@@ -1105,7 +1105,7 @@ typedef struct _NDIS_IPSEC_PACKET_INFO
             ULONG    NEXT_CRYPTO_DONE:1;
             ULONG    CryptoStatus;
         } Receive;
-    };
+    } u;
 } NDIS_IPSEC_PACKET_INFO, *PNDIS_IPSEC_PACKET_INFO;
 
 
@@ -1473,6 +1473,7 @@ typedef VOID (*RECEIVE_COMPLETE_HANDLER)(
 
 
 /* Protocol characteristics for NDIS 3.0 protocols */
+#if 0
 typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS
 {
     UCHAR                           MajorNdisVersion;
@@ -1481,19 +1482,19 @@ typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS
     {
         UINT                        Reserved;
         UINT                        Flags;
-    };
+    } u1;
     OPEN_ADAPTER_COMPLETE_HANDLER   OpenAdapterCompleteHandler;
     CLOSE_ADAPTER_COMPLETE_HANDLER  CloseAdapterCompleteHandler;
     union
     {
         SEND_COMPLETE_HANDLER       SendCompleteHandler;
         WAN_SEND_COMPLETE_HANDLER   WanSendCompleteHandler;
-    };
+    } u2;
     union
     {
         TRANSFER_DATA_COMPLETE_HANDLER      TransferDataCompleteHandler;
         WAN_TRANSFER_DATA_COMPLETE_HANDLER  WanTransferDataCompleteHandler;
-	};
+    } u3;
 
     RESET_COMPLETE_HANDLER          ResetCompleteHandler;
     REQUEST_COMPLETE_HANDLER        RequestCompleteHandler;
@@ -1501,13 +1502,49 @@ typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS
     {
         RECEIVE_HANDLER	            ReceiveHandler;
         WAN_RECEIVE_HANDLER         WanReceiveHandler;
-    };
+    } u4;
     RECEIVE_COMPLETE_HANDLER        ReceiveCompleteHandler;
     STATUS_HANDLER                  StatusHandler;
     STATUS_COMPLETE_HANDLER	        StatusCompleteHandler;
     NDIS_STRING	                    Name;
 } NDIS30_PROTOCOL_CHARACTERISTICS;
-
+#else
+#define NDIS30_PROTOCOL_CHARACTERISTICS \
+    UCHAR                           MajorNdisVersion; \
+    UCHAR                           MinorNdisVersion; \
+    union \
+    { \
+        UINT                        Reserved; \
+        UINT                        Flags; \
+    } u1; \
+    OPEN_ADAPTER_COMPLETE_HANDLER   OpenAdapterCompleteHandler; \
+    CLOSE_ADAPTER_COMPLETE_HANDLER  CloseAdapterCompleteHandler; \
+    union \
+    { \
+        SEND_COMPLETE_HANDLER       SendCompleteHandler; \
+        WAN_SEND_COMPLETE_HANDLER   WanSendCompleteHandler; \
+    } u2; \
+    union \
+    { \
+        TRANSFER_DATA_COMPLETE_HANDLER      TransferDataCompleteHandler; \
+        WAN_TRANSFER_DATA_COMPLETE_HANDLER  WanTransferDataCompleteHandler; \
+    } u3; \
+    RESET_COMPLETE_HANDLER          ResetCompleteHandler; \
+    REQUEST_COMPLETE_HANDLER        RequestCompleteHandler; \
+    union \
+    { \
+        RECEIVE_HANDLER	            ReceiveHandler; \
+        WAN_RECEIVE_HANDLER         WanReceiveHandler; \
+    } u4; \
+    RECEIVE_COMPLETE_HANDLER        ReceiveCompleteHandler; \
+    STATUS_HANDLER                  StatusHandler; \
+    STATUS_COMPLETE_HANDLER	        StatusCompleteHandler; \
+    NDIS_STRING	                    Name; 
+typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS_S
+{
+   NDIS30_PROTOCOL_CHARACTERISTICS;
+} NDIS30_PROTOCOL_CHARACTERISTICS_S, *PNDIS30_PROTOCOL_CHARACTERISTICS_S;
+#endif
 
 /* Prototypes for NDIS 4.0 protocol characteristics */
 
@@ -1539,7 +1576,7 @@ typedef VOID (*UNLOAD_PROTOCOL_HANDLER)(
 
 
 /* Protocol characteristics for NDIS 4.0 protocols */
-
+#if 0
 typedef struct _NDIS40_PROTOCOL_CHARACTERISTICS
 {
     NDIS30_PROTOCOL_CHARACTERISTICS;
@@ -1550,7 +1587,19 @@ typedef struct _NDIS40_PROTOCOL_CHARACTERISTICS
     TRANSLATE_HANDLER       TranslateHandler;
     UNLOAD_PROTOCOL_HANDLER UnloadHandler;
 } NDIS40_PROTOCOL_CHARACTERISTICS;
-
+#else
+#define NDIS40_PROTOCOL_CHARACTERISTICS \
+    NDIS30_PROTOCOL_CHARACTERISTICS; \
+    RECEIVE_PACKET_HANDLER  ReceivePacketHandler; \
+    BIND_HANDLER            BindAdapterHandler; \
+    UNBIND_HANDLER          UnbindAdapterHandler; \
+    TRANSLATE_HANDLER       TranslateHandler; \
+    UNLOAD_PROTOCOL_HANDLER UnloadHandler; 
+typedef struct _NDIS40_PROTOCOL_CHARACTERISTICS_S
+{
+   NDIS40_PROTOCOL_CHARACTERISTICS;
+} NDIS40_PROTOCOL_CHARACTERISTICS_S, *PNDIS40_PROTOCOL_CHARACTERISTICS_S;
+#endif
 
 
 /* Prototypes for NDIS 5.0 protocol characteristics */
@@ -1578,7 +1627,7 @@ typedef VOID (*CO_AF_REGISTER_NOTIFY_HANDLER)(
     IN  NDIS_HANDLE         ProtocolBindingContext,
     IN  PCO_ADDRESS_FAMILY  AddressFamily);
 
-
+#if 0
 typedef struct _NDIS50_PROTOCOL_CHARACTERISTICS
 {
     NDIS40_PROTOCOL_CHARACTERISTICS;
@@ -1590,18 +1639,39 @@ typedef struct _NDIS50_PROTOCOL_CHARACTERISTICS
     CO_RECEIVE_PACKET_HANDLER       CoReceivePacketHandler;
     CO_AF_REGISTER_NOTIFY_HANDLER   CoAfRegisterNotifyHandler;
 } NDIS50_PROTOCOL_CHARACTERISTICS;
-
+#else
+#define NDIS50_PROTOCOL_CHARACTERISTICS \
+    NDIS40_PROTOCOL_CHARACTERISTICS; \
+    PVOID                           ReservedHandlers[4]; \
+    CO_SEND_COMPLETE_HANDLER        CoSendCompleteHandler; \
+    CO_STATUS_HANDLER               CoStatusHandler; \
+    CO_RECEIVE_PACKET_HANDLER       CoReceivePacketHandler; \
+    CO_AF_REGISTER_NOTIFY_HANDLER   CoAfRegisterNotifyHandler;
+typedef struct _NDIS50_PROTOCOL_CHARACTERISTICS_S
+{
+   NDIS50_PROTOCOL_CHARACTERISTICS;
+} NDIS50_PROTOCOL_CHARACTERISTICS_S, *PNDIS50_PROTOCOL_CHARACTERISTICS_S;
+#endif
 #endif /* NDIS50 */
 
 
 #ifndef NDIS50
 #ifndef NDIS40
-typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS NDIS_PROTOCOL_CHARACTERISTICS;
+typedef struct _NDIS_PROTOCOL_CHARACTERISTICS 
+{
+   NDIS30_PROTOCOL_CHARACTERISTICS;
+} NDIS_PROTOCOL_CHARACTERISTICS;
 #else /* NDIS40 */
-typedef struct _NDIS40_PROTOCOL_CHARACTERISTICS NDIS_PROTOCOL_CHARACTERISTICS;
+typedef struct _NDIS_PROTOCOL_CHARACTERISTICS 
+{
+   NDIS40_PROTOCOL_CHARACTERISTICS;
+} NDIS_PROTOCOL_CHARACTERISTICS;
 #endif /* NDIS40 */
 #else /* NDIS50 */
-typedef struct _NDIS50_PROTOCOL_CHARACTERISTICS NDIS_PROTOCOL_CHARACTERISTICS;
+typedef struct _NDIS_PROTOCOL_CHARACTERISTICS 
+{
+   NDIS50_PROTOCOL_CHARACTERISTICS;
+} NDIS_PROTOCOL_CHARACTERISTICS;
 #endif /* NDIS50 */
 
 typedef NDIS_PROTOCOL_CHARACTERISTICS *PNDIS_PROTOCOL_CHARACTERISTICS;
@@ -3971,6 +4041,7 @@ typedef NDIS_STATUS (*W_TRANSFER_DATA_HANDLER)(
 typedef NDIS_STATUS (*WM_TRANSFER_DATA_HANDLER)(
     VOID);
 
+#if 0
 typedef struct _NDIS30_MINIPORT_CHARACTERISTICS
 {
     UCHAR                           MajorNdisVersion;
@@ -3990,15 +4061,45 @@ typedef struct _NDIS30_MINIPORT_CHARACTERISTICS
     {
         W_SEND_HANDLER              SendHandler;
         WM_SEND_HANDLER             WanSendHandler;
-    };
+    } u1;
     W_SET_INFORMATION_HANDLER       SetInformationHandler;
     union
     {
         W_TRANSFER_DATA_HANDLER     TransferDataHandler;
         WM_TRANSFER_DATA_HANDLER    WanTransferDataHandler;
-    };
+    } u2;
 } NDIS30_MINIPORT_CHARACTERISTICS;
-
+#else
+#define NDIS30_MINIPORT_CHARACTERISTICS \
+    UCHAR                           MajorNdisVersion; \
+    UCHAR                           MinorNdisVersion; \
+    UINT                            Reserved; \
+    W_CHECK_FOR_HANG_HANDLER        CheckForHangHandler; \
+    W_DISABLE_INTERRUPT_HANDLER     DisableInterruptHandler; \
+    W_ENABLE_INTERRUPT_HANDLER      EnableInterruptHandler; \
+    W_HALT_HANDLER                  HaltHandler; \
+    W_HANDLE_INTERRUPT_HANDLER      HandleInterruptHandler; \
+    W_INITIALIZE_HANDLER            InitializeHandler; \
+    W_ISR_HANDLER                   ISRHandler; \
+    W_QUERY_INFORMATION_HANDLER     QueryInformationHandler; \
+    W_RECONFIGURE_HANDLER           ReconfigureHandler; \
+    W_RESET_HANDLER                 ResetHandler; \
+    union \
+    { \
+        W_SEND_HANDLER              SendHandler; \
+        WM_SEND_HANDLER             WanSendHandler; \
+    } u1; \
+    W_SET_INFORMATION_HANDLER       SetInformationHandler; \
+    union \
+    { \
+        W_TRANSFER_DATA_HANDLER     TransferDataHandler; \
+        WM_TRANSFER_DATA_HANDLER    WanTransferDataHandler; \
+    } u2; 
+typedef struct _NDIS30_MINIPORT_CHARACTERISTICS_S
+{
+   NDIS30_MINIPORT_CHARACTERISTICS;
+} NDIS30_MINIPORT_CHARACTERISTICS_S, *PSNDIS30_MINIPORT_CHARACTERISTICS_S;
+#endif
 
 /* Extensions for NDIS 4.0 miniports */
 #ifdef NDIS40
@@ -4019,6 +4120,7 @@ typedef VOID (*W_ALLOCATE_COMPLETE_HANDLER)(
     IN  ULONG                   Length,
     IN  PVOID                   Context);
 
+#if 0
 typedef struct _NDIS40_MINIPORT_CHARACTERISTICS
 {
     NDIS30_MINIPORT_CHARACTERISTICS;
@@ -4027,6 +4129,17 @@ typedef struct _NDIS40_MINIPORT_CHARACTERISTICS
     W_SEND_PACKETS_HANDLER      SendPacketsHandler;
     W_ALLOCATE_COMPLETE_HANDLER AllocateCompleteHandler;
 } NDIS40_MINIPORT_CHARACTERISTICS;
+#else
+#define NDIS40_MINIPORT_CHARACTERISTICS \
+    NDIS30_MINIPORT_CHARACTERISTICS; \
+    W_RETURN_PACKET_HANDLER     ReturnPacketHandler; \
+    W_SEND_PACKETS_HANDLER      SendPacketsHandler; \
+    W_ALLOCATE_COMPLETE_HANDLER AllocateCompleteHandler;
+typedef struct _NDIS40_MINIPORT_CHARACTERISTICS_S
+{
+   NDIS40_MINIPORT_CHARACTERISTICS;
+} NDIS40_MINIPORT_CHARACTERISTICS_S, *PSNDIS40_MINIPORT_CHARACTERISTICS_S;
+#endif
 
 #endif /* NDIS40 */
 
@@ -4059,6 +4172,7 @@ typedef NDIS_STATUS (*W_CO_REQUEST_HANDLER)(
     IN      NDIS_HANDLE     MiniportVcContext   OPTIONAL,
     IN OUT  PNDIS_REQUEST   NdisRequest);
 
+#if 0
 typedef struct _NDIS50_MINIPORT_CHARACTERISTICS
 {
     NDIS40_MINIPORT_CHARACTERISTICS;
@@ -4070,18 +4184,41 @@ typedef struct _NDIS50_MINIPORT_CHARACTERISTICS
     W_CO_SEND_PACKETS_HANDLER   CoSendPacketsHandler;
     W_CO_REQUEST_HANDLER        CoRequestHandler;
 } NDIS50_MINIPORT_CHARACTERISTICS;
+#else
+#define NDIS50_MINIPORT_CHARACTERISTICS \
+    NDIS40_MINIPORT_CHARACTERISTICS; \
+    W_CO_CREATE_VC_HANDLER      CoCreateVcHandler; \
+    W_CO_DELETE_VC_HANDLER	    CoDeleteVcHandler; \
+    W_CO_ACTIVATE_VC_HANDLER    CoActivateVcHandler; \
+    W_CO_DEACTIVATE_VC_HANDLER  CoDeactivateVcHandler; \
+    W_CO_SEND_PACKETS_HANDLER   CoSendPacketsHandler; \
+    W_CO_REQUEST_HANDLER        CoRequestHandler;
+typedef struct _NDIS50_MINIPORT_CHARACTERISTICS_S
+{
+   NDIS50_MINIPORT_CHARACTERISTICS;
+} NDIS50_MINIPORT_CHARACTERISTICS_S, *PSNDIS50_MINIPORT_CHARACTERISTICS_S;
+#endif
 
 #endif /* NDIS50 */
 
 
 #ifndef NDIS50
 #ifndef NDIS40
-typedef struct _NDIS30_MINIPORT_CHARACTERISTICS	NDIS_MINIPORT_CHARACTERISTICS;
+typedef struct _NDIS_MINIPORT_CHARACTERISTICS	
+{
+   NDIS30_MINIPORT_CHARACTERISTICS;
+} NDIS_MINIPORT_CHARACTERISTICS;
 #else /* NDIS40 */
-typedef struct _NDIS40_MINIPORT_CHARACTERISTICS	NDIS_MINIPORT_CHARACTERISTICS;
+typedef struct _NDIS_MINIPORT_CHARACTERISTICS 
+{
+   NDIS40_MINIPORT_CHARACTERISTICS;
+} NDIS_MINIPORT_CHARACTERISTICS;
 #endif /* NDIS40 */
 #else /* NDIS50 */
-typedef struct _NDIS50_MINIPORT_CHARACTERISTICS	NDIS_MINIPORT_CHARACTERISTICS;
+typedef struct _NDIS_MINIPORT_CHARACTERISTICS  
+{
+   NDIS50_MINIPORT_CHARACTERISTICS;
+} NDIS_MINIPORT_CHARACTERISTICS;
 #endif /* NDIS50 */
 
 typedef	NDIS_MINIPORT_CHARACTERISTICS *PNDIS_MINIPORT_CHARACTERISTICS;

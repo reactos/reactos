@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.5 2000/07/01 17:07:02 ea Exp $
+/* $Id: timer.c,v 1.6 2000/08/05 18:01:50 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,7 @@
 /* FUNCTIONS *****************************************************************/
 
 HANDLE
+STDCALL
 CreateWaitableTimerW (
 	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
 	WINBOOL			bManualReset,
@@ -51,6 +52,7 @@ CreateWaitableTimerW (
 
 
 HANDLE
+STDCALL
 CreateWaitableTimerA (
 	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
 	WINBOOL			bManualReset,
@@ -78,6 +80,7 @@ CreateWaitableTimerA (
 
 
 HANDLE
+STDCALL
 OpenWaitableTimerW (
 	DWORD	dwDesiredAccess,
 	WINBOOL	bInheritHandle,
@@ -112,6 +115,7 @@ OpenWaitableTimerW (
 
 
 HANDLE
+STDCALL
 OpenWaitableTimerA (
 	DWORD dwDesiredAccess,
 	WINBOOL bInheritHandle,
@@ -138,7 +142,7 @@ OpenWaitableTimerA (
 }
 
 
-WINBOOL SetWaitableTimer(
+WINBOOL STDCALL SetWaitableTimer(
   HANDLE hTimer,
   LARGE_INTEGER *pDueTime,
   LONG lPeriod,
@@ -161,7 +165,7 @@ WINBOOL SetWaitableTimer(
 	return TRUE;
 }
 
-WINBOOL CancelWaitableTimer(HANDLE hTimer)
+WINBOOL STDCALL CancelWaitableTimer(HANDLE hTimer)
 {
 	NTSTATUS errCode;
 	BOOLEAN CurrentState;

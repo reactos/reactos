@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2000/07/19 14:18:20 dwelch Exp $
+# $Id: makefile,v 1.19 2000/08/05 18:01:55 dwelch Exp $
 #
 #
 TARGET=vfatfs
@@ -22,7 +22,7 @@ ifeq ($(DOSCLI),yes)
 	- $(RM) temp.exp
 	- $(RM) $(TARGET).sys
 else
-	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys
+	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).nostrip.sys
 endif
 
 .phony: clean

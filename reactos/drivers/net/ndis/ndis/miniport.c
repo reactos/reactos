@@ -308,15 +308,15 @@ NdisMRegisterMiniport(
 
     switch (MiniportCharacteristics->MajorNdisVersion) {
     case 0x03:
-        MinSize = sizeof(NDIS30_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS30_MINIPORT_CHARACTERISTICS_S);
         break;
 
     case 0x04:
-        MinSize = sizeof(NDIS40_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS40_MINIPORT_CHARACTERISTICS_S);
         break;
 
     case 0x05:
-        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS_S);
         break;
 
     default:
@@ -340,13 +340,13 @@ NdisMRegisterMiniport(
     }
 
     if (MiniportCharacteristics->MajorNdisVersion == 0x03) {
-        if (!MiniportCharacteristics->SendHandler) {
+        if (!MiniportCharacteristics->u1.SendHandler) {
             NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
             return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     } else if (MiniportCharacteristics->MajorNdisVersion >= 0x04) {
         /* NDIS 4.0+ */
-        if ((!MiniportCharacteristics->SendHandler) &&
+        if ((!MiniportCharacteristics->u1.SendHandler) &&
             (!MiniportCharacteristics->SendPacketsHandler)) {
             NDIS_DbgPrint(DEBUG_MINIPORT, ("Bad miniport characteristics.\n"));
             return NDIS_STATUS_BAD_CHARACTERISTICS;

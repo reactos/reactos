@@ -335,6 +335,7 @@ extern "C" {
 #define GetFileAttributes  GetFileAttributesW
 #define GetCompressedFileSize  GetCompressedFileSizeW
 #define DeleteFile  DeleteFileW
+#define FindFirstFileEx  FindFirstFileExW
 #define FindFirstFile  FindFirstFileW
 #define FindNextFile  FindNextFileW
 #define SearchPath  SearchPathW
@@ -736,6 +737,7 @@ extern "C" {
 #define GetFileAttributes  GetFileAttributesA
 #define GetCompressedFileSize  GetCompressedFileSizeA
 #define DeleteFile  DeleteFileA
+#define FindFirstFileEx  FindFirstFileExA
 #define FindFirstFile  FindFirstFileA
 #define FindNextFile  FindNextFileA
 #define SearchPath  SearchPathA

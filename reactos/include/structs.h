@@ -1930,6 +1930,25 @@ typedef struct _FIND_NAME_HEADER {
   UCHAR unique_group; 
 } FIND_NAME_HEADER; 
  
+typedef
+enum _FINDEX_INFO_LEVELS
+{
+	FindExInfoStandard,
+	FindExInfoMaxInfoLevel
+} FINDEX_INFO_LEVELS;
+
+typedef
+enum _FINDEX_SEARCH_OPS
+{
+	FindExSearchNameMatch,
+	FindExSearchLimitToDirectories,
+	FindExSearchLimitToDevices,
+	FindExSearchMaxSearchOp
+		
+} FINDEX_SEARCH_OPS;
+
+#define FIND_FIRST_EX_CASE_SENSITIVE   0x00000001
+
 typedef struct {   
   DWORD        lStructSize; 
   HWND         hwndOwner; 
@@ -4216,4 +4235,5 @@ typedef struct
 #endif /* WIN32_LEAN_AND_MEAN */
 
 #endif /* _GNU_H_WINDOWS32_STRUCTURES */
+
 

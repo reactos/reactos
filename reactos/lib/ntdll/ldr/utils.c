@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.27 2000/07/01 17:06:22 ea Exp $
+/* $Id: utils.c,v 1.28 2000/08/05 18:01:51 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -67,13 +67,12 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 	PIMAGE_DOS_HEADER	DosHeader;
 	NTSTATUS		Status;
 	PIMAGE_NT_HEADERS	NTHeaders;
-	PEPFUNC			DllStartupAddr;
 	ULONG			ImageSize;
 	ULONG			InitialViewSize;
 	PVOID			ImageBase;
 	HANDLE			FileHandle;
 	HANDLE			SectionHandle;
-	PDLLMAIN_FUNC		Entrypoint;
+	PDLLMAIN_FUNC		Entrypoint = NULL;
 
 	if ( Dll == NULL )
 		return -1;
@@ -183,11 +182,6 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 
 	DPRINT("ImageBase 0x%08x\n", ImageBase);
 	
-	DllStartupAddr =
-		(PEPFUNC) (
-			ImageBase
-			+ NTHeaders->OptionalHeader.AddressOfEntryPoint
-			);
 	/*
 	 * Create a section for NTDLL.
 	 */
@@ -427,7 +421,7 @@ NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
  *
  */
 
-PVOID
+static PVOID
 LdrGetExportByOrdinal (
 	PDLL	Module,
 	ULONG	Ordinal
@@ -480,7 +474,7 @@ LdrGetExportByOrdinal (
  *
  */
 
-PVOID
+static PVOID
 LdrGetExportByName (
 	PDLL	Module,
 	PUCHAR	SymbolName
@@ -819,7 +813,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 		      HANDLE SectionHandle)
 {
    NTSTATUS		Status;
-   PEPFUNC			EntryPoint;
+   PEPFUNC		EntryPoint = NULL;
    PIMAGE_DOS_HEADER	DosHeader;
    PIMAGE_NT_HEADERS	NTHeaders;
    
@@ -876,8 +870,11 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
    /*
     * Compute the DLL's entry point's address.
     */
-   EntryPoint = (PEPFUNC) (ImageBase
+   if (NTHeaders->OptionalHeader.AddressOfEntryPoint != 0)
+     {
+	EntryPoint = (PEPFUNC) (ImageBase
 			   + NTHeaders->OptionalHeader.AddressOfEntryPoint);
+     }
    DPRINT("LdrPEStartup() = %x\n",EntryPoint);
    return EntryPoint;
 }
@@ -1090,5 +1087,60 @@ LdrDisableThreadCalloutsForDll (
 	return STATUS_NOT_IMPLEMENTED;
 }
 
+
+NTSTATUS STDCALL
+LdrGetProcedureAddress (IN PVOID BaseAddress,
+                        IN PANSI_STRING Name,
+                        IN ULONG Ordinal,
+                        OUT PVOID *ProcedureAddress)
+{
+   PIMAGE_EXPORT_DIRECTORY ExportDir;
+   PUSHORT OrdinalPtr;
+   PULONG NamePtr;
+   PULONG AddressPtr;
+   ULONG i = 0;
+
+   /* Get the pointer to the export directory */
+   ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+		RtlImageDirectoryEntryToData (BaseAddress,
+					      TRUE,
+					      IMAGE_DIRECTORY_ENTRY_EXPORT,
+					      &i);
+
+   if (!ExportDir || !i || !ProcedureAddress)
+     {
+	return STATUS_INVALID_PARAMETER;
+     }
+
+   AddressPtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfFunctions);
+   if (Name && Name->Length)
+     {
+	/* by name */
+	OrdinalPtr = (PUSHORT)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNameOrdinals);
+	NamePtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNames);
+	for( i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
+	  {
+	     if (!_strnicmp(Name->Buffer, (char*)(BaseAddress + *NamePtr), Name->Length))
+	       {
+		  *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
+		  return STATUS_SUCCESS;
+	       }
+	  }
+	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
+     }
+   else
+     {
+	/* by ordinal */
+	Ordinal &= 0x0000FFFF;
+	if (Ordinal - ExportDir->Base < ExportDir->NumberOfFunctions)
+	  {
+	     *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
+	     return STATUS_SUCCESS;
+	  }
+	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+  }
+
+   return STATUS_PROCEDURE_NOT_FOUND;
+}
 
 /* EOF */

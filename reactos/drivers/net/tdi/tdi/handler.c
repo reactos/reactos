@@ -1,9 +1,9 @@
-/* $Id: handler.c,v 1.1 1999/11/20 20:41:29 ea Exp $
+/* $Id: handler.c,v 1.2 2000/08/05 18:01:57 dwelch Exp $
  *
  * DESCRIPTION: Default TDI event handlers.
  */
 #include <ntos.h>
-
+#include <net/tdi.h>
 
 
 /* ClientEventChainedReceiveDatagram */

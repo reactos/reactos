@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.57 2000/07/06 14:34:48 dwelch Exp $
+; $Id: ntdll.def,v 1.58 2000/08/05 18:01:51 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -38,8 +38,8 @@ LdrDisableThreadCalloutsForDll@8
 ;LdrFindResourceDirectory_U
 LdrFindResource_U
 ;LdrGetDllHandle
-;LdrGetProcedureAddress
-;LdrInitializeThunk
+LdrGetProcedureAddress@16
+LdrInitializeThunk@16
 LdrLoadDll
 ;LdrProcessRelocationBlock
 ;LdrQueryImageFileExecutionOptions
@@ -929,5 +929,4 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
-LdrGetExportByName
-LdrGetExportByOrdinal
+;EOF

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2000/07/19 14:18:20 dwelch Exp $
+# $Id: makefile,v 1.13 2000/08/05 18:01:54 dwelch Exp $
 #
 #
 TARGET=ide
@@ -18,6 +18,7 @@ clean:
 	- $(RM) base.tmp
 	- $(RM) temp.exp
 	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGET).nostrip.sys
 
 .phony: clean
 

@@ -1,8 +1,8 @@
-/* $Id: dereg.c,v 1.1 1999/11/28 07:59:29 ea Exp $
+/* $Id: dereg.c,v 1.2 2000/08/05 18:01:57 dwelch Exp $
  *
  */
 #include <ntos.h>
-
+#include <net/tdi.h>
 
 /* De-/Register Action IDs for TdiDeRegister */
 
@@ -10,7 +10,7 @@ typedef
 enum 
 {
 	R_NOTIFICATION_HANDLER = 0,
-	D_NOTIFICATION_HANDLER,
+	DT_NOTIFICATION_HANDLER,
 	R_DEVICE_OBJECT,
 	D_DEVICE_OBJECT,
 	R_ADDRESS_CHANGE_HANDLER,
@@ -40,7 +40,7 @@ STDCALL
 TdiRegisterAddressChangeHandler (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
-	DWORD	Unknown2,
+	DWORD	Unknown2
 	)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
@@ -83,7 +83,7 @@ TdiRegisterDeviceObject (
 			DeviceObject
 			);
 #endif
-	return = STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
