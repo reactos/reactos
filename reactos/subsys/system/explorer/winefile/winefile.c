@@ -3538,7 +3538,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 
 	{
-		TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0};
+		TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
 		int btn = 1;
 		PTSTR p;
 
@@ -3599,7 +3599,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 	{
 		TBBUTTON toolbarBtns[] = {
-			{0, 0, 0, TBSTYLE_SEP, {0, 0}, 0, 0},
+			{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
 			{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 			{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 			{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},

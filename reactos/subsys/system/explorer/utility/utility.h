@@ -46,7 +46,8 @@
 
 
 #ifndef BTNS_BUTTON
-#define BTNS_BUTTON TBSTYLE_BUTTON //@@ -> wingw headers
+#define BTNS_BUTTON TBSTYLE_BUTTON //TODO: should be in mingw headers
+#define BTNS_SEP TBSTYLE_SEP
 #endif
 
 

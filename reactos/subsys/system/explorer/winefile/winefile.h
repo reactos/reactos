@@ -62,6 +62,7 @@
 
 #ifndef BTNS_BUTTON
 #define BTNS_BUTTON TBSTYLE_BUTTON
+#define BTNS_SEP TBSTYLE_SEP
 #endif
 
 
