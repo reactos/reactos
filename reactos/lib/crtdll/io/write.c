@@ -7,9 +7,9 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <windows.h>
-#include <msvcrt/io.h>
 
+#include "precomp.h"
+#include <msvcrt/io.h>
 
 
 /*

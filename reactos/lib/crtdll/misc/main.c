@@ -20,15 +20,15 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: robd $
- * $Date: 2002/11/29 12:27:48 $
+ * $Revision: 1.4 $
+ * $Author: chorns $
+ * $Date: 2004/08/15 17:34:27 $
  *
  */
 
+#include "precomp.h"
 #include <msvcrt/stdlib.h>
 #include <msvcrt/process.h>
-#include <windows.h>
 
 
 #define ISSPACE(a)	(a == ' ' || a == '\t')

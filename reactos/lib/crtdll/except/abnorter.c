@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/stdio.h>
 
 #ifdef __GNUC__

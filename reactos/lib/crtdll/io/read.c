@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.10 2003/07/11 17:25:16 royce Exp $
+/* $Id: read.c,v 1.11 2004/08/15 17:34:26 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,7 +8,8 @@
  * UPDATE HISTORY:
  *              28/12/1998: Created
  */
-#include <windows.h>
+
+#include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
 

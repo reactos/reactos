@@ -8,7 +8,7 @@
  *              04/03/99: Created
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/process.h>
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.65 2004/06/15 08:53:52 hbirr Exp $
+# $Id: makefile,v 1.66 2004/08/15 17:34:25 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,8 @@ TARGET_DEFONLY = yes
 TARGET_TYPE = dynlink
 
 TARGET_NAME = crtdll
+
+TARGET_PCH = precomp.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_CRTDLL)
 

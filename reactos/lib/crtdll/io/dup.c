@@ -1,5 +1,5 @@
-/* $Id: dup.c,v 1.8 2003/07/11 17:25:16 royce Exp $ */
-#include <windows.h>
+/* $Id: dup.c,v 1.9 2004/08/15 17:34:26 chorns Exp $ */
+#include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
 

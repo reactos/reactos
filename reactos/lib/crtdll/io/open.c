@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.14 2003/07/11 17:25:16 royce Exp $
+/* $Id: open.c,v 1.15 2004/08/15 17:34:26 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -13,7 +13,7 @@
 
 // possibly store extra information at the handle
 
-#include <windows.h>
+#include "precomp.h"
 #include <stdarg.h>
 #include <msvcrt/io.h>
 #include <msvcrt/fcntl.h>

@@ -19,19 +19,20 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: robd $
- * $Date: 2002/11/24 18:42:15 $
+ * $Revision: 1.5 $
+ * $Author: chorns $
+ * $Date: 2004/08/15 17:34:27 $
  *
  */
 
+#include "precomp.h"
 #include <msvcrt/stdlib.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/io.h>
 #include <msvcrt/fcntl.h>
 #include <msvcrt/process.h>
 #include <msvcrt/float.h>
-#include <windows.h>
+
 
 /* NOTE: The code for initializing the _argv, _argc, and environ variables
  *       has been moved to a separate .c file which is included in both

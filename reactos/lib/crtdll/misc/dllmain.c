@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.5 2002/11/24 18:42:15 robd Exp $
+/* $Id: dllmain.c,v 1.6 2004/08/15 17:34:27 chorns Exp $
  *
  * dllmain.c
  *
@@ -18,13 +18,13 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: robd $
- * $Date: 2002/11/24 18:42:15 $
+ * $Revision: 1.6 $
+ * $Author: chorns $
+ * $Date: 2004/08/15 17:34:27 $
  *
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <stdarg.h>
 #include <msvcrt/stdio.h>
 #include <string.h>

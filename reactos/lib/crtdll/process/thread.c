@@ -1,7 +1,8 @@
-/* $Id: thread.c,v 1.7 2003/07/11 17:25:32 royce Exp $
+/* $Id: thread.c,v 1.8 2004/08/15 17:34:27 chorns Exp $
  *
  */
-#include <windows.h>
+
+#include "precomp.h"
 #include <msvcrt/errno.h>
 #include <msvcrt/process.h>
 #include <msvcrt/internal/file.h>

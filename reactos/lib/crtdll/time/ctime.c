@@ -35,6 +35,7 @@
 ** (guy@auspex.com).
 */
 
+#include "precomp.h"
 #include <msvcrt/fcntl.h>
 #include <msvcrt/time.h>
 #include <msvcrt/string.h>
@@ -42,7 +43,6 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/stdlib.h>
 
-#include <windows.h>
 #include "tzfile.h"
 
 #include <msvcrt/io.h>
