@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.10 2002/09/08 10:23:25 chorns Exp $
+/* $Id: pnproot.c,v 1.11 2003/01/16 17:53:56 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <reactos/bugcodes.h>
 #include <internal/io.h>
 #include <internal/registry.h>
 

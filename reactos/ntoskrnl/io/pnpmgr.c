@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.9 2002/10/03 19:39:56 robd Exp $
+/* $Id: pnpmgr.c,v 1.10 2003/01/16 17:53:56 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <reactos/bugcodes.h>
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ldr.h>
