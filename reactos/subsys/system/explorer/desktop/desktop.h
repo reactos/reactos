@@ -26,6 +26,7 @@
  //
 
 
+ /// subclassed Background window behind the visible desktop window
 struct BackgroundWindow : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
@@ -37,6 +38,7 @@ protected:
 };
 
 
+ /// Implementation of the Explorer desktop window
 struct DesktopWindow : public Window, public IShellBrowserImpl
 {
 	typedef Window super;

@@ -64,6 +64,7 @@ protected:
 };
 
 
+ /// entry for the list in "find program" dialogs
 struct FPDEntry
 {
 	ShellEntry* _shell_entry;

@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 /* Based on the Wine "bootup" handler application
  *
  * This app handles the various "hooks" windows allows for applications to perform
@@ -32,16 +33,16 @@
  * - Services (NT, ?semi-synchronous?, not implemented yet)
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunServicesOnce (9x, asynch)
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunServices (9x, asynch)
- * 
+ *
  * After log in
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce (all, synch)
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run (all, asynch)
  * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run (all, asynch)
  * - Startup folders (all, ?asynch?, no imp)
  * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce (all, asynch)
- *   
+ *
  * Somewhere in there is processing the RunOnceEx entries (also no imp)
- * 
+ *
  * Bugs:
  * - If a pending rename registry does not start with \??\ the entry is
  *   processed anyways. I'm not sure that is the Windows behaviour.
@@ -55,7 +56,8 @@
 #include <windows.h>
 #include <ctype.h>
 
-/* Performs the rename operations dictated in %SystemRoot%\Wininit.ini.
+/**
+ * Performs the rename operations dictated in %SystemRoot%\Wininit.ini.
  * Returns FALSE if there was an error, or otherwise if all is ok.
  */
 static BOOL wininit()
@@ -198,7 +200,7 @@ static BOOL pendingRename()
         res=FALSE;
     } else
         res=TRUE;
-    
+
 end:
     if (buffer!=NULL)
         free(buffer);
@@ -222,7 +224,7 @@ const WCHAR runkeys_names[][30]=
 };
 
 #define INVALID_RUNCMD_RETURN -1
-/*
+/**
  * This function runs the specified command in the specified dir.
  * [in,out] cmdline - the command line to run. The function may change the passed buffer.
  * [in] dir - the dir to run the command in. If it is NULL, then the current dir is used.
@@ -270,7 +272,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     return exit_code;
 }
 
-/*
+/**
  * Process a "Run" type registry key.
  * hkRoot is the HKEY from which "Software\Microsoft\Windows\CurrentVersion" is
  *      opened.
@@ -318,7 +320,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
         goto end;
     }
-    
+
     if ((res=RegQueryInfoKeyW(hkRun, NULL, NULL, NULL, NULL, NULL, NULL, &i, &nMaxValue,
                     &nMaxCmdLine, NULL, NULL))!=ERROR_SUCCESS)
     {
@@ -334,7 +336,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         res=ERROR_SUCCESS;
         goto end;
     }
-    
+
     if ((szCmdLine=malloc(nMaxCmdLine))==NULL)
     {
         printf("Couldn't allocate memory for the commands to be executed\n");
@@ -350,7 +352,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         res=ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
-    
+
     while(i>0)
     {
         DWORD nValLength=nMaxValue, nDataLength=nMaxCmdLine;
@@ -370,7 +372,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         {
             printf("Couldn't delete value - %ld, %ld. Running command anyways.\n", i, res);
         }
-        
+
         if (type!=REG_SZ)
         {
             printf("Incorrect type of value #%ld (%ld)\n", i, type);
@@ -399,6 +401,7 @@ end:
     return res==ERROR_SUCCESS?TRUE:FALSE;
 }
 
+ /// structure holding startup flags
 struct op_mask {
     BOOL w9xonly; /* Perform only operations done on Windows 9x */
     BOOL ntonly; /* Perform only operations done on Windows NT */
@@ -408,8 +411,9 @@ struct op_mask {
     BOOL postlogin; /* Operations done after login */
 };
 
-static const struct op_mask SESSION_START={FALSE, FALSE, TRUE, TRUE, TRUE, TRUE},
-    SETUP={FALSE, FALSE, FALSE, TRUE, TRUE, TRUE};
+static const struct op_mask
+	SESSION_START	= {FALSE, FALSE, TRUE, TRUE, TRUE, TRUE},
+    SETUP			= {FALSE, FALSE, FALSE, TRUE, TRUE, TRUE};
 #define DEFAULT SESSION_START
 
 int startup(int argc, char *argv[])
@@ -420,7 +424,7 @@ int startup(int argc, char *argv[])
     DWORD res;
 
     res = GetWindowsDirectory(gen_path, sizeof(gen_path));
-    
+
     if (res==0)
     {
 		printf("Couldn't get the windows directory - error %ld\n",

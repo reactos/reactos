@@ -326,7 +326,7 @@ void ShellDirectory::read_directory()
 
 						if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
 							entry->_hIcon = sfi.hIcon;
-					} 
+					}
 
 					if (!entry->_hIcon)
 						entry->_hIcon = (HICON)-1;	// don't try again later

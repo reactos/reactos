@@ -9,6 +9,7 @@
 
 #include "dragdropimpl.h"
 
+ /// OLE drop target for tree controls
 class TreeDropTarget : public IDropTargetImpl
 {
 public:

@@ -46,6 +46,7 @@ protected:
 };
 
 
+ /// shell folder entry
 struct ShellDirectory : public ShellEntry, public Directory
 {
 	ShellDirectory(ShellFolder& root_folder, const ShellPath& shell_path, HWND hwnd)

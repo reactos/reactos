@@ -29,6 +29,7 @@
 #include "../utility/shellbrowserimpl.h"
 
 
+ /// Implementation of IShellBrowserImpl interface in explorer child windows
 struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 {
 	typedef ChildWindow super;

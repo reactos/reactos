@@ -44,6 +44,7 @@ enum COLUMN_FLAGS {
 };
 
 
+ /// Worker for drawing contents of file lists in child pane
 struct OutputWorker
 {
 	OutputWorker();

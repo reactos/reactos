@@ -1,3 +1,5 @@
+Debug
+Release
 *.coff
 *.exe
 *.d

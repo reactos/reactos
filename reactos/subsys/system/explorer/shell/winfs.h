@@ -26,6 +26,7 @@
  //
 
 
+ /// Windows File System file-entry
 struct WinEntry : public Entry
 {
 	WinEntry(Entry* parent) : Entry(parent) {}
@@ -36,6 +37,8 @@ protected:
 	virtual void get_path(PTSTR path) const;
 };
 
+
+ /// Windows File System directory-entry
 struct WinDirectory : public WinEntry, public Directory
 {
 	WinDirectory(LPCTSTR root_path)

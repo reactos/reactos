@@ -26,6 +26,7 @@
  //
 
 
+ /// structure containing global variable of Explorer
 extern struct ExplorerGlobals
 {
 	ExplorerGlobals();
@@ -75,6 +76,7 @@ protected:
 	HICON	_hIcon;
 };
 
+ /// convenient loading of icon resources with specified sizes
 struct ResIconEx
 {
 	ResIconEx(UINT nid, int w, int h);
@@ -85,8 +87,10 @@ protected:
 	HICON	_hIcon;
 };
 
+ /// set big and small icons out of the resources for a window
 extern void SetWindowIcon(HWND hwnd, UINT nid);
 
+ /// convenient loading of bitmap resources
 struct ResBitmap
 {
 	ResBitmap(UINT nid);

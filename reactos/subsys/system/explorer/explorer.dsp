@@ -362,6 +362,10 @@ SOURCE=.\res\logov.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\logov256.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\reactos.ico
 # End Source File
 # Begin Source File

@@ -114,6 +114,7 @@ protected:
 	static CREATORFUNC	s_window_creator;
 
 
+	 /// structure for managing critical sections as static class information in struct Window
 	struct StaticWindowData {
 		CritSect	_map_crit_sect;
 		CritSect	_create_crit_sect;
@@ -142,6 +143,7 @@ template<typename CLASS> struct GetWindowHelper
 #endif
 
 
+ /// dynamic casting of Window pointers
 template<typename CLASS> struct TypeCheck
 {
 	static CLASS* dyn_cast(Window* wnd)
@@ -171,6 +173,7 @@ protected:
 };
 
 
+ /// template class used in macro WINDOW_CREATOR to the define creater functions for Window objects
 template<typename WND_CLASS> struct WindowCreator
 {
 	static WND_CLASS* window_creator(HWND hwnd)
@@ -183,6 +186,7 @@ template<typename WND_CLASS> struct WindowCreator
 	(Window::CREATORFUNC) WindowCreator<WND_CLASS>::window_creator
 
 
+ /// template class used in macro WINDOW_CREATOR_INFO to the define creater functions for Window objects with additional creation information
 template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 {
 	static WND_CLASS* window_creator(HWND hwnd, const void* info)
@@ -348,6 +352,7 @@ protected:
 
  // Layouting of resizable windows
 
+ /// Flags to specify how to move and resize controls when resizing their parent window
 enum RESIZE_FLAGS {
 	MOVE_LEFT	= 0x1,
 	MOVE_RIGHT	= 0x2,
@@ -363,6 +368,7 @@ enum RESIZE_FLAGS {
 	RESIZE	= RESIZE_X | RESIZE_Y
 };
 
+ /// structure to assign RESIZE_FLAGS to dialogs control
 struct ResizeEntry
 {
 	ResizeEntry(UINT id, int flags)
@@ -375,6 +381,8 @@ struct ResizeEntry
 	int		_flags;
 };
 
+
+ /// Management of controls in resizable dialogs
 struct ResizeManager : public std::list<ResizeEntry>
 {
 	typedef std::list<ResizeEntry> super;
@@ -403,6 +411,8 @@ protected:
 	SIZE	_last_size;
 };
 
+
+ /// Controller base template class for resizable dialogs
 template<typename BASE> struct ResizeController : public BASE
 {
 	typedef BASE super;

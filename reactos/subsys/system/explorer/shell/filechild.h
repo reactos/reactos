@@ -38,6 +38,7 @@ struct FileChildWndInfo
 	int			_open_mode;	//OPEN_WINDOW_MODE
 };
 
+ /// information structure for creation of ShellBrowserChild
 struct ShellChildWndInfo : public FileChildWndInfo
 {
 	ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path);
@@ -91,6 +92,7 @@ public:
 };
 
 
+ /// The "Execute..."-dialog lets the user enter a command line to launch.
 struct ExecuteDialog {	///@todo use class Dialog
 	TCHAR	cmd[MAX_PATH];
 	int		cmdshow;

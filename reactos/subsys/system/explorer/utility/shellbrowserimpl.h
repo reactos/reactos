@@ -28,6 +28,7 @@
  //
 
 
+ /// Implementation of IShellBrowser and ICommDlgBrowser interfaces for explorer child windows (see ShellBrowserChild)
 struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
 {
 	IShellBrowserImpl()

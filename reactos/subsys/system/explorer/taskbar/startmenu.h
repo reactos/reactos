@@ -42,6 +42,7 @@
 #define	PM_STARTENTRY_LAUNCHED	(WM_APP+0x13)
 
 
+ /// StartMenuDirectory is used to store the base directory of start menus.
 struct StartMenuDirectory
 {
 	StartMenuDirectory(const ShellDirectory& dir, bool subfolders=true)
@@ -61,6 +62,7 @@ struct StartMenuDirectory
 typedef list<StartMenuDirectory> StartMenuShellDirs;
 typedef set<const ShellEntry*> ShellEntrySet;
 
+ /// structure holding information about one start menu entry
 struct StartMenuEntry
 {
 	StartMenuEntry() : _hIcon(0) {}
@@ -72,7 +74,7 @@ struct StartMenuEntry
 
 
  /**
-	StartMenuButton draws to face of a StartMenuCtrl button control.
+	StartMenuButton draws the face of a StartMenuCtrl button control.
  */
 struct StartMenuButton : public OwnerdrawnButton
 {
@@ -108,6 +110,7 @@ struct StartMenuCtrl : public Button
 };
 
 
+ /// separator between start menu entries
 struct StartMenuSeparator : public Static
 {
 	StartMenuSeparator(HWND parent, int x, int y, int w, DWORD style=WS_VISIBLE|WS_CHILD|WS_DISABLED|SS_ETCHEDHORZ, DWORD exStyle=0)
@@ -119,6 +122,7 @@ struct StartMenuSeparator : public Static
 
 typedef list<ShellPath> StartMenuFolders;
 
+ /// structor containing information for creating start menus
 struct StartMenuCreateInfo
 {
 	StartMenuCreateInfo() : _border_top(0) {}
@@ -136,7 +140,8 @@ typedef map<UINT, StartMenuEntry> ShellEntryMap;
 
 
  /**
-	Startmenu window
+	Startmenu window.
+	To create a start menu call its Create() function.
  */
 struct StartMenu : public OwnerDrawParent<DialogWindow>
 {
@@ -207,10 +212,10 @@ typedef	void (WINAPI* RUNFILEDLG)(HWND hwndOwner, HICON hIcon, LPCSTR lpstrDirec
  // Flags for RunFileDlg
  //
 
-#define	RFF_NOBROWSE		0x01	// Removes the browse button. 
-#define	RFF_NODEFAULT		0x02	// No default item selected. 
+#define	RFF_NOBROWSE		0x01	// Removes the browse button.
+#define	RFF_NODEFAULT		0x02	// No default item selected.
 #define	RFF_CALCDIRECTORY	0x04	// Calculates the working directory from the file name.
-#define	RFF_NOLABEL			0x08	// Removes the edit box label. 
+#define	RFF_NOLABEL			0x08	// Removes the edit box label.
 #define	RFF_NOSEPARATEMEM	0x20	// Removes the Separate Memory Space check box (Windows NT only).
 
 
@@ -221,7 +226,7 @@ typedef	BOOL (WINAPI* SHFINDFILES)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSav
 typedef	BOOL (WINAPI* SHFINDCOMPUTER)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch);
 
 
- // Startmenu root window
+ /// Startmenu root window
 struct StartMenuRoot : public StartMenu
 {
 	typedef StartMenu super;
@@ -248,7 +253,7 @@ protected:
 };
 
 
- // Settings sub-startmenu
+ /// Settings sub-startmenu
 struct SettingsMenu : public StartMenu
 {
 	typedef StartMenu super;
@@ -266,7 +271,7 @@ protected:
 };
 
 
- // "Browse Files..." sub-start menu
+ /// "Browse Files..." sub-start menu
 struct BrowseMenu : public StartMenu
 {
 	typedef StartMenu super;
@@ -284,6 +289,7 @@ protected:
 };
 
 
+ /// "Recent Files" sub-start menu
 struct RecentStartMenu : public StartMenu
 {
 	typedef StartMenu super;

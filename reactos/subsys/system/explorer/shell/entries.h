@@ -85,6 +85,8 @@ public:
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 };
 
+
+ /// base for all directory entries
 struct Directory {
 protected:
 	Directory() : _path(NULL) {}
@@ -94,6 +96,7 @@ protected:
 };
 
 
+ /// root entry for file system trees
 struct Root {
 	Root();
 	~Root();

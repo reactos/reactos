@@ -175,7 +175,7 @@ struct CommonShellMalloc
 };
 
 
- // wrapper class for IMalloc with usage of common allocator
+ /// wrapper class for IMalloc with usage of common allocator
 
 struct ShellMalloc
 {
@@ -194,7 +194,7 @@ struct ShellMalloc
 };
 
 
- // wrapper template class for pointers to shell objects managed by IMalloc
+ /// wrapper template class for pointers to shell objects managed by IMalloc
 
 template<typename T> struct SShellPtr
 {
@@ -255,7 +255,7 @@ private:
 };
 
 
- // wrapper class for COM interface pointers
+ /// wrapper class for COM interface pointers
 
 template<typename T> struct SIfacePtr
 {
@@ -473,7 +473,7 @@ extern "C" UINT ILGetSize(LPCITEMIDLIST pidl);
 #endif
 
 
- // wrapper class for item ID lists
+ /// wrapper class for item ID lists
 
 struct ShellPath : public SShellPtr<ITEMIDLIST>
 {
@@ -673,6 +673,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 extern LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count);
 extern LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count);
 
+ /// easy retrieval of multi byte strings out of STRRET structures
 struct StrRetA : public STRRET
 {
 	~StrRetA()
@@ -698,6 +699,7 @@ struct StrRetA : public STRRET
 	}
 };
 
+ /// easy retrieval of wide char strings out of STRRET structures
 struct StrRetW : public STRRET
 {
 	~StrRetW()
@@ -724,6 +726,7 @@ struct StrRetW : public STRRET
 };
 
 
+ /// Retreival of file system paths of ShellPath objects
 class FileSysShellPath : public ShellPath
 {
 	TCHAR	_fullpath[MAX_PATH];
@@ -829,6 +832,7 @@ protected:
 
 #else // _WIN32_IE<0x400 -> use SHGetSpecialFolderLocation()
 
+ /// file system path of special folder
 struct SpecialFolderFSPath : public FileSysShellPath
 {
 	SpecialFolderFSPath(int folder, HWND hwnd)
@@ -841,7 +845,7 @@ struct SpecialFolderFSPath : public FileSysShellPath
 #endif
 
 
- // wrapper class for enumerating shell namespace objects
+ /// wrapper class for enumerating shell namespace objects
 
 struct ShellItemEnumerator : public SIfacePtr<IEnumIDList>
 {
