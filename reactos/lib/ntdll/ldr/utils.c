@@ -186,8 +186,13 @@ LdrpInitializeTlsForThread(VOID)
    PTLS_DATA TlsInfo;
    PVOID TlsData;
    ULONG i;
-
+   PTEB Teb = NtCurrentTeb();
+   
    DPRINT("LdrpInitializeTlsForThread() called for %wZ\n", &ExeModule->BaseDllName);
+
+   Teb->StaticUnicodeString.Length = 0;
+   Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
+   Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
 
    if (LdrpTlsCount > 0)
      {
@@ -201,7 +206,7 @@ LdrpInitializeTlsForThread(VOID)
          }
 
        TlsData = (PVOID)TlsPointers + LdrpTlsCount * sizeof(PVOID);
-       NtCurrentTeb()->ThreadLocalStoragePointer = TlsPointers;
+       Teb->ThreadLocalStoragePointer = TlsPointers;
 
        TlsInfo = LdrpTlsArray;
        for (i = 0; i < LdrpTlsCount; i++, TlsInfo++)
