@@ -460,7 +460,7 @@ FATDrive::FATDrive(LPCTSTR path)
 	_CacheDty = NULL;
 	_Caches = 0;
 
-	_hDrive = CreateFile(path, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	_hDrive = CreateFile(path, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
 
 	if (_hDrive != INVALID_HANDLE_VALUE) {
 		_boot_sector.BytesPerSector = 512;

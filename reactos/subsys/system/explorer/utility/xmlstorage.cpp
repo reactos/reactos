@@ -54,6 +54,34 @@ bool XMLPos::go(const char* path)
 }
 
 
+ /// read XML stream into XML tree below _pos
+XML_Status XMLReader::read(std::istream& in)
+{
+	XML_Status status = XML_STATUS_OK;
+
+	while(in.good() && status==XML_STATUS_OK) {
+		char* buffer = (char*) XML_GetBuffer(_parser, BUFFER_LEN);
+
+		in.read(buffer, BUFFER_LEN);
+
+		status = XML_ParseBuffer(_parser, in.gcount(), false);
+	}
+
+	if (status != XML_STATUS_ERROR)
+		status = XML_ParseBuffer(_parser, 0, true);
+
+/*
+	if (status == XML_STATUS_ERROR)
+		cerr << get_error_string();
+*/
+
+	_pos->append_trailing(_content.c_str(), _content.length());
+	_content.erase();
+
+	return status;
+}
+
+
  /// store XML version and encoding into XML reader
 void XMLCALL XMLReader::XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone)
 {
@@ -65,12 +93,31 @@ void XMLCALL XMLReader::XML_XmlDeclHandler(void* userData, const XML_Char* versi
 	}
 }
 
- /// notifications about XML tag start
+ /// notifications about XML start tag
 void XMLCALL XMLReader::XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts)
 {
 	XMLReader* pThis = (XMLReader*) userData;
 
-	XMLNode* node = new XMLNode(String_from_XML_Char(name));
+	 // search for end of first line
+	const char* s = pThis->_content.c_str();
+	const char* p = s;
+	const char* e = p + pThis->_content.length();
+
+	for(; p<e; ++p)
+		if (*p == '\n') {
+			++p;
+			break;
+		}
+
+	if (p != s)
+		pThis->_pos->append_trailing(s, p-s);
+
+	std::string leading;
+
+	if (p != e)
+		leading.assign(p, e-p);
+
+	XMLNode* node = new XMLNode(String_from_XML_Char(name), leading);
 
 	pThis->_pos.add_down(node);
 
@@ -81,17 +128,41 @@ void XMLCALL XMLReader::XML_StartElementHandler(void* userData, const XML_Char* 
 		(*node)[String_from_XML_Char(attr_name)] = String_from_XML_Char(attr_value);
 	}
 
-	pThis->_in_tag = true;
+	pThis->_in_node = true;
+	pThis->_content.erase();
 }
 
- /// notifications about XML tag end
+ /// notifications about XML end tag
 void XMLCALL XMLReader::XML_EndElementHandler(void* userData, const XML_Char* name)
 {
 	XMLReader* pThis = (XMLReader*) userData;
 
+	 // search for end of first line
+	const char* s = pThis->_content.c_str();
+	const char* p = s;
+	const char* e = p + pThis->_content.length();
+
+	for(; p<e; ++p)
+		if (*p == '\n') {
+			++p;
+			break;
+		}
+
+	if (p != s)
+		pThis->_pos->append_content(s, p-s);
+
+	std::string leading;
+
+	if (p != e)
+		leading.assign(p, e-p);
+
+	if (leading.empty())
+		pThis->_pos->_end_leading = leading;
+
 	pThis->_pos.back();
 
-	pThis->_in_tag = false;
+	pThis->_in_node = false;
+	pThis->_content.erase();
 }
 
  /// store content, white space and comments
@@ -99,14 +170,11 @@ void XMLCALL XMLReader::XML_DefaultHandler(void* userData, const XML_Char* s, in
 {
 	XMLReader* pThis = (XMLReader*) userData;
 
-	if (pThis->_in_tag)
-		pThis->_pos->append_content(s, len);
-	else
-		pThis->_pos->append_trailing(s, len);
+	pThis->_content.append(s, len);
 }
 
 
-std::string XMLString(LPCTSTR s)
+std::string EncodeXMLString(LPCTSTR s)
 {
 	TCHAR buffer[BUFFER_LEN];
 	LPTSTR o = buffer;
@@ -132,22 +200,46 @@ std::string XMLString(LPCTSTR s)
 	return get_utf8(buffer, o-buffer);
 }
 
+String DecodeXMLString(LPCTSTR s)
+{
+	TCHAR buffer[BUFFER_LEN];
+	LPTSTR o = buffer;
+
+	for(LPCTSTR p=s; *p; ++p)
+		if (*p == '&') {
+			if (!_tcsnicmp(p+1, TEXT("amp;"), 4)) {
+				*o++ = '&';
+				p += 4;
+			} else if (!_tcsnicmp(p+1, TEXT("lt;"), 3)) {
+				*o++ = '<';
+				p += 3;
+			} else if (!_tcsnicmp(p+1, TEXT("gt;"), 3)) {
+				*o++ = '>';
+				p += 3;
+			} else
+				*o++ = *p;
+		} else
+			*o++ = *p;
+
+	return String(buffer, o-buffer);
+}
+
 
  /// write node with children tree to output stream using original white space
-void XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int indent) const
+void XMLNode::write_worker(std::ostream& out, int indent) const
 {
-	out << '<' << XMLString(*this);
+	out << _leading << '<' << EncodeXMLString(*this);
 
 	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
 
 	if (!_children.empty() || !_content.empty()) {
 		out << '>' << _content;
 
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			(*it)->write_worker(out, mode, indent+1);
+			(*it)->write_worker(out, indent+1);
 
-		out << "</" << XMLString(*this) << '>';
+		out << _end_leading << "</" << EncodeXMLString(*this) << '>';
 	} else
 		out << "/>";
 
@@ -156,81 +248,73 @@ void XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int indent) const
 
 
  /// pretty print node with children tree to output stream
-void XMLNode::pretty_write_worker(std::ostream& out, WRITE_MODE mode, int indent) const
+void XMLNode::pretty_write_worker(std::ostream& out, int indent) const
 {
 	for(int i=indent; i--; )
 		out << XML_INDENT_SPACE;
 
-	out << '<' << XMLString(*this);
+	out << '<' << EncodeXMLString(*this);
 
 	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
 
 	if (!_children.empty() || !_content.empty()) {
 		out << ">\n";
 
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			(*it)->pretty_write_worker(out, mode, indent+1);
+			(*it)->pretty_write_worker(out, indent+1);
 
 		for(int i=indent; i--; )
 			out << XML_INDENT_SPACE;
 
-		out << "</" << XMLString(*this) << ">\n";
+		out << "</" << EncodeXMLString(*this) << ">\n";
 	} else
 		out << "/>\n";
 }
 
 
-
  /// write node with children tree to output stream using smart formating
-bool XMLNode::smart_write_worker(std::ostream& out, int indent, bool next_format) const
+void XMLNode::smart_write_worker(std::ostream& out, int indent) const
 {
-	bool format_pre, format_mid, format_post;
-
-	format_pre = next_format;
-	format_mid = _content.empty();
-	format_post = _trailing.empty();
-
-	if (format_pre)
+	if (_leading.empty())
 		for(int i=indent; i--; )
 			out << XML_INDENT_SPACE;
+	else
+		out << _leading;
 
-	out << '<' << XMLString(*this);
+	out << '<' << EncodeXMLString(*this);
 
 	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
 
 	if (!_children.empty() || !_content.empty()) {
 		out << '>';
 
-		if (format_mid)
+		if (_content.empty())
 			out << '\n';
 		else
 			out << _content;
 
 		Children::const_iterator it = _children.begin();
 
-		if (it != _children.end()) {
-			next_format = (*it)->_content.empty() && (*it)->_trailing.empty();
-
+		if (it != _children.end())
 			for(; it!=_children.end(); ++it)
-				next_format = (*it)->smart_write_worker(out, indent+1, next_format);
-		}
+				(*it)->smart_write_worker(out, indent+1);
 
-		if (next_format)
+		if (_end_leading.empty())
 			for(int i=indent; i--; )
 				out << XML_INDENT_SPACE;
+		else
+			out << _end_leading;
 
-		out << "</" << XMLString(*this) << '>';
+		out << "</" << EncodeXMLString(*this) << '>';
 	} else
 		out << "/>";
 
-	if (format_post)
+	if (_trailing.empty())
 		out << '\n';
 	else
 		out << _trailing;
-
-	return format_post;
 }
 
 

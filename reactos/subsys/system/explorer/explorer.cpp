@@ -82,27 +82,31 @@ void ExplorerGlobals::init(HINSTANCE hInstance)
 }
 
 
-bool ExplorerGlobals::read_cfg()
+void ExplorerGlobals::read_persistent()
 {
 	 // read configuration file
 	_cfg_dir.printf(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
-	_cfg_path.printf(TEXT("%s\\ros-explorer.xml"), _cfg_dir.c_str());
+	_cfg_path.printf(TEXT("%s\\ros-explorer-cfg.xml"), _cfg_dir.c_str());
 
-	if (_cfg.read(_cfg_path))
-		return true;
+	if (!_cfg.read(_cfg_path))
+		_cfg.read(TEXT("explorer-cfg-template.xml"));
 
-	if (_cfg.read("explorer-cfg-template.xml"))
-		return true;
+	 // read bookmarks
+	_favorites_path.printf(TEXT("%s\\ros-explorer-bookmarks.xml"), _cfg_dir.c_str());
 
-	return false;
+	if (!_favorites.read(_favorites_path)) {
+		_favorites.import_IE_favorites(0);
+		_favorites.write(_favorites_path);
+	}
 }
 
-void ExplorerGlobals::write_cfg()
+void ExplorerGlobals::write_persistent()
 {
 	 // write configuration file
 	RecursiveCreateDirectory(_cfg_dir);
 
 	_cfg.write(_cfg_path);
+	_favorites.write(_favorites_path);
 }
 
 
@@ -110,7 +114,7 @@ XMLPos ExplorerGlobals::get_cfg()
 {
 	XMLPos pos(&_cfg);
 
-	pos.create("explorer-cfg");
+	pos.smart_create("explorer-cfg");
 
 	return pos;
 }
@@ -119,8 +123,8 @@ XMLPos ExplorerGlobals::get_cfg(const String& name)
 {
 	XMLPos pos(&_cfg);
 
-	pos.create("explorer-cfg");
-	pos.create(name);
+	pos.smart_create("explorer-cfg");
+	pos.smart_create(name);
 
 	return pos;
 }
@@ -790,7 +794,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // init common controls library
 	CommonControlInit usingCmnCtrl;
 
-	g_Globals.read_cfg();
+	g_Globals.read_persistent();
 
 	if (startup_desktop) {
 		g_Globals._desktops.init();
@@ -818,7 +822,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
 	 // write configuration file
-	g_Globals.write_cfg();
+	g_Globals.write_persistent();
 
 	return ret;
 }

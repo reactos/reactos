@@ -47,7 +47,7 @@
 #include <windows.h>	// for LPCTSTR
 
 #ifdef UNICODE
-#define	_UNICODE
+#define _UNICODE
 #endif
 #include <tchar.h>
 
@@ -202,11 +202,74 @@ inline std::string get_utf8(const String& s)
 	return get_utf8(s.c_str(), s.length());
 }
 
-extern std::string XMLString(LPCTSTR s);
+extern std::string EncodeXMLString(LPCTSTR s);
+extern String DecodeXMLString(LPCTSTR s);
+
+
+#ifdef __GNUC__
+#include <ext/stdio_filebuf.h>
+typedef __gnu_cxx::stdio_filebuf<char> STDIO_FILEBUF;
+#else
+typedef std::filebuf STDIO_FILEBUF;
+#endif
+
+struct tifstream : public std::istream
+{
+	typedef std::istream super;
+
+	tifstream(LPCTSTR path)
+	 :	super(&_buf),
+		_pfile(_tfopen(path, TEXT("r"))),
+#ifdef __GNUC__
+		_buf(_pfile, ios::in)
+#else
+		_buf(_pfile)
+#endif
+	{
+	}
+
+	~tifstream()
+	{
+		if (_pfile)
+			fclose(_pfile);
+	}
+
+protected:
+	FILE*	_pfile;
+	STDIO_FILEBUF _buf;
+};
+
+struct tofstream : public std::ostream
+{
+	typedef std::ostream super;
+
+	tofstream(LPCTSTR path)
+	 :	super(&_buf),
+		_pfile(_tfopen(path, TEXT("w"))),
+#ifdef __GNUC__
+		_buf(_pfile, ios::out)
+#else
+		_buf(_pfile)
+#endif
+	{
+	}
+
+	~tofstream()
+	{
+		flush();
+
+		if (_pfile)
+			fclose(_pfile);
+	}
+
+protected:
+	FILE*	_pfile;
+	STDIO_FILEBUF _buf;
+};
 
 
  // write XML files with 2 spaces indenting
-#define	XML_INDENT_SPACE "  "
+#define XML_INDENT_SPACE "  "
 
 
 #ifdef XML_UNICODE	// Are XML_Char strings UTF-16 encoded?
@@ -279,6 +342,7 @@ struct XMLNode : public String
 
 	 // access to protected class members for XMLPos and XMLReader
 	friend struct XMLPos;
+	friend struct const_XMLPos;
 	friend struct XMLReader;
 
 	XMLNode(const String& name)
@@ -286,9 +350,17 @@ struct XMLNode : public String
 	{
 	}
 
+	XMLNode(const String& name, const std::string& leading)
+	 :	String(name),
+		_leading(leading)
+	{
+	}
+
 	XMLNode(const XMLNode& other)
 	 :	_attributes(other._attributes),
+		_leading(other._leading),
 		_content(other._content),
+		_end_leading(other._end_leading),
 		_trailing(other._trailing)
 	{
 		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
@@ -312,7 +384,9 @@ struct XMLNode : public String
 
 		_attributes = other._attributes;
 
+		_leading = other._leading;
 		_content = other._content;
+		_end_leading = other._end_leading;
 		_trailing = other._trailing;
 
 		return *this;
@@ -401,10 +475,24 @@ struct XMLNode : public String
 		return _children;
 	}
 
+	String get_content() const
+	{
+		String ret;
+
+		assign_utf8(ret, _content.c_str());
+
+		return DecodeXMLString(ret);
+	}
+
+	void set_content(const String& s)
+	{
+		_content.assign(EncodeXMLString(s));
+	}
+
 	enum WRITE_MODE {
 		FORMAT_SMART	= 0,	/// preserve original white space and comments if present; pretty print otherwise
 		FORMAT_ORIGINAL = 1,	/// write XML stream preserving original white space and comments
-		FORMAT_PRETTY	= 2		/// pretty print node to stream without preserving original white space
+		FORMAT_PRETTY	= 2 	/// pretty print node to stream without preserving original white space
 	};
 
 	 /// write node with children tree to output stream
@@ -412,15 +500,15 @@ struct XMLNode : public String
 	{
 		switch(mode) {
 		  case FORMAT_PRETTY:
-			pretty_write_worker(out, mode, indent);
+			pretty_write_worker(out, indent);
 			break;
 
 		  case FORMAT_ORIGINAL:
-			write_worker(out, mode, indent);
+			write_worker(out, indent);
 			break;
 
 		default:	 // FORMAT_SMART
-			smart_write_worker(out, indent, _content.empty() && _trailing.empty());
+			smart_write_worker(out, indent);
 		}
 
 		return out;
@@ -430,8 +518,10 @@ protected:
 	Children _children;
 	AttributeMap _attributes;
 
-	std::string	_content;
-	std::string	_trailing;
+	std::string _leading;
+	std::string _content;
+	std::string _end_leading;
+	std::string _trailing;
 
 	XMLNode* get_first_child() const
 	{
@@ -488,10 +578,10 @@ protected:
 
 	void append_content(const char* s, int l)
 	{
-		if (_children.empty())
+		//if (_children.empty())
 			_content.append(s, l);
-		else
-			_children.back()->_content.append(s, l);
+		//else
+		//	_children.back()->_content.append(s, l);
 	}
 
 	void append_trailing(const char* s, int l)
@@ -502,9 +592,9 @@ protected:
 			_children.back()->_trailing.append(s, l);
 	}
 
-	void write_worker(std::ostream& out, WRITE_MODE mode, int indent) const;
-	void pretty_write_worker(std::ostream& out, WRITE_MODE mode, int indent) const;
-	bool smart_write_worker(std::ostream& out, int indent, bool next_format) const;
+	void write_worker(std::ostream& out, int indent) const;
+	void pretty_write_worker(std::ostream& out, int indent) const;
+	void smart_write_worker(std::ostream& out, int indent) const;
 };
 
 
@@ -606,6 +696,104 @@ protected:
 };
 
 
+ /// read only iterator access to children nodes with name filtering
+struct const_XMLChildrenFilter
+{
+	const_XMLChildrenFilter(const XMLNode::Children& children, const String& name)
+	 :	_begin(children.begin(), children.end(), name),
+		_end(children.end(), children.end(), name)
+	{
+	}
+
+	const_XMLChildrenFilter(const XMLNode* node, const String& name)
+	 :	_begin(node->get_children().begin(), node->get_children().end(), name),
+		_end(node->get_children().end(), node->get_children().end(), name)
+	{
+	}
+
+	struct const_iterator
+	{
+		typedef XMLNode::Children::const_iterator BaseIterator;
+
+		const_iterator(BaseIterator begin, BaseIterator end, const String& filter_name)
+		 :	_cur(begin),
+			_end(end),
+			_filter_name(filter_name)
+		{
+			search_next();
+		}
+
+		operator BaseIterator()
+		{
+			return _cur;
+		}
+
+		const XMLNode* operator*() const
+		{
+			return *_cur;
+		}
+
+		XMLNode* operator*()
+		{
+			return *_cur;
+		}
+
+		const_iterator& operator++()
+		{
+			++_cur;
+			search_next();
+
+			return *this;
+		}
+
+		const_iterator operator++(int)
+		{
+			const_iterator ret = *this;
+
+			++_cur;
+			search_next();
+
+			return ret;
+		}
+
+		bool operator==(const BaseIterator& other) const
+		{
+			return _cur == other;
+		}
+
+		bool operator!=(const BaseIterator& other) const
+		{
+			return _cur != other;
+		}
+
+	protected:
+		BaseIterator	_cur;
+		BaseIterator	_end;
+		String	_filter_name;
+
+		void search_next()
+		{
+			while(_cur!=_end && **_cur!=_filter_name)
+				++_cur;
+		}
+	};
+
+	const_iterator begin()
+	{
+		return _begin;
+	}
+
+	const_iterator end()
+	{
+		return _end;
+	}
+
+protected:
+	const_iterator	_begin;
+	const_iterator	_end;
+};
+
+
  /// iterator for XML trees
 struct XMLPos
 {
@@ -622,8 +810,8 @@ struct XMLPos
 	}
 
 	 /// access to current node
-	operator XMLNode*() {return _cur;}
 	operator const XMLNode*() const {return _cur;}
+	operator XMLNode*() {return _cur;}
 
 	const XMLNode* operator->() const {return _cur;}
 	XMLNode* operator->() {return _cur;}
@@ -632,8 +820,8 @@ struct XMLPos
 	XMLNode& operator*() {return *_cur;}
 
 	 /// attribute access
-	String& operator[](const String& attr_name) {return (*_cur)[attr_name];}
 	template<typename T> String get(const T& attr_name) const {return (*_cur)[attr_name];}
+	String& operator[](const String& attr_name) {return (*_cur)[attr_name];}
 
 	 /// insert children when building tree
 	void add_down(XMLNode* child)
@@ -680,8 +868,14 @@ struct XMLPos
 	 /// move X-Path like to position in XML tree
 	bool go(const char* path);
 
-	 /// create node if not already existing and move to it
+	 /// create node and move to it
 	void create(const String& name)
+	{
+		add_down(new XMLNode(name));
+	}
+
+	 /// create node if not already existing and move to it
+	void smart_create(const String& name)
 	{
 		XMLNode* node = _cur->find_first(name);
 
@@ -692,7 +886,7 @@ struct XMLPos
 	}
 
 	 /// search matching child node identified by key name and an attribute value
-	void create(const String& name, const String& attr_name, const String& attr_value)
+	void smart_create(const String& name, const String& attr_name, const String& attr_value)
 	{
 		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
 
@@ -718,8 +912,14 @@ struct XMLPos
 			return false;
 	}
 
-	 /// create node if not already existing and move to it
+	 /// create node and move to it
 	void create(const char* name)
+	{
+		add_down(new XMLNode(name));
+	}
+
+	 /// create node if not already existing and move to it
+	void smart_create(const char* name)
 	{
 		XMLNode* node = _cur->find_first(name);
 
@@ -731,7 +931,7 @@ struct XMLPos
 
 	 /// search matching child node identified by key name and an attribute value
 	template<typename T, typename U>
-	void create(const char* name, const T& attr_name, const U& attr_value)
+	void smart_create(const char* name, const T& attr_name, const U& attr_value)
 	{
 		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
 
@@ -752,6 +952,97 @@ protected:
 
 	 /// go to specified node
 	void go_to(XMLNode* child)
+	{
+		_stack.push(_cur);
+		_cur = child;
+	}
+};
+
+
+ /// iterator for XML trees
+struct const_XMLPos
+{
+	const_XMLPos(const XMLNode* root)
+	 :	_root(root),
+		_cur(root)
+	{
+	}
+
+	const_XMLPos(const const_XMLPos& other)
+	 :	_root(other._root),
+		_cur(other._cur)
+	{	// don't copy _stack
+	}
+
+	 /// access to current node
+	operator const XMLNode*() const {return _cur;}
+
+	const XMLNode* operator->() const {return _cur;}
+
+	const XMLNode& operator*() const {return *_cur;}
+
+	 /// attribute access
+	template<typename T> String get(const T& attr_name) const {return _cur->get(attr_name);}
+
+	 /// go back to previous position
+	bool back()
+	{
+		if (!_stack.empty()) {
+			_cur = _stack.top();
+			_stack.pop();
+			return true;
+		} else
+			return false;
+	}
+
+	 /// go down to first child
+	bool go_down()
+	{
+		const XMLNode* node = _cur->get_first_child();
+
+		if (node) {
+			go_to(node);
+			return true;
+		} else
+			return false;
+	}
+
+	 /// search for child and go down
+	bool go_down(const String& name)
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (node) {
+			go_to(node);
+			return true;
+		} else
+			return false;
+	}
+
+	 /// move X-Path like to position in XML tree
+	bool go(const char* path);
+
+#ifdef UNICODE
+	 /// search for child and go down
+	bool go_down(const char* name)
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (node) {
+			go_to(node);
+			return true;
+		} else
+			return false;
+	}
+#endif
+
+protected:
+	const XMLNode* _root;
+	const XMLNode* _cur;
+	std::stack<const XMLNode*> _stack;
+
+	 /// go to specified node
+	void go_to(const XMLNode* child)
 	{
 		_stack.push(_cur);
 		_cur = child;
@@ -789,6 +1080,11 @@ struct XMLBool
 		return _value;
 	}
 
+	bool operator!() const
+	{
+		return !_value;
+	}
+
 	operator LPCTSTR() const
 	{
 		return _value? TEXT("TRUE"): TEXT("FALSE");
@@ -798,7 +1094,7 @@ protected:
 	bool	_value;
 
 private:
-	void operator=(const XMLBool&);	// disallow assignment operations
+	void operator=(const XMLBool&); // disallow assignment operations
 };
 
 struct XMLBoolRef
@@ -813,6 +1109,11 @@ struct XMLBoolRef
 	operator bool() const
 	{
 		return !_tcsicmp(_ref, TEXT("TRUE"));
+	}
+
+	bool operator!() const
+	{
+		return _tcsicmp(_ref, TEXT("TRUE"))? true: false;
 	}
 
 	XMLBoolRef& operator=(bool value)
@@ -833,7 +1134,7 @@ struct XMLBoolRef
 	}
 
 protected:
-	String&	_ref;
+	String& _ref;
 };
 
 
@@ -875,10 +1176,10 @@ struct XMLNumber
 	}
 
 protected:
-	int	_value;
+	int _value;
 
 private:
-	void operator=(const XMLBool&);	// disallow assignment operations
+	void operator=(const XMLBool&); // disallow assignment operations
 };
 
 struct XMLNumberRef
@@ -911,7 +1212,7 @@ struct XMLNumberRef
 	}
 
 protected:
-	String&	_ref;
+	String& _ref;
 };
 
 
@@ -931,7 +1232,7 @@ struct XMLReader
 		XML_SetElementHandler(_parser, XML_StartElementHandler, XML_EndElementHandler);
 		XML_SetDefaultHandler(_parser, XML_DefaultHandler);
 
-		_in_tag = false;
+		_in_node = false;
 	}
 
 	~XMLReader()
@@ -939,28 +1240,7 @@ struct XMLReader
 		XML_ParserFree(_parser);
 	}
 
-	XML_Status read(std::istream& in)
-	{
-		XML_Status status = XML_STATUS_OK;
-
-		while(in.good() && status==XML_STATUS_OK) {
-			char* buffer = (char*) XML_GetBuffer(_parser, BUFFER_LEN);
-
-			in.read(buffer, BUFFER_LEN);
-
-			status = XML_ParseBuffer(_parser, in.gcount(), false);
-		}
-
-		if (status != XML_STATUS_ERROR)
-			status = XML_ParseBuffer(_parser, 0, true);
-
-	/*
-		if (status == XML_STATUS_ERROR)
-			cerr << path << get_error_string();
-	*/
-
-		return status;
-	}
+	XML_Status read(std::istream& in);
 
 	std::string get_position() const
 	{
@@ -986,14 +1266,39 @@ struct XMLReader
 protected:
 	XMLPos		_pos;
 	XML_Parser	_parser;
-	std::string	_xml_version;
-	std::string	_encoding;
-	bool		_in_tag;
+	std::string _xml_version;
+	std::string _encoding;
+
+	std::string _content;
+	bool		_in_node;
 
 	static void XMLCALL XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone);
 	static void XMLCALL XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts);
 	static void XMLCALL XML_EndElementHandler(void* userData, const XML_Char* name);
 	static void XMLCALL XML_DefaultHandler(void* userData, const XML_Char* s, int len);
+};
+
+
+struct XMLHeader : public std::string
+{
+	XMLHeader(const std::string& xml_version="1.0", const std::string& encoding="UTF-8", const std::string& doctype="")
+	 :	_version(xml_version),
+		_encoding(encoding),
+		_doctype(doctype)
+	{
+	}
+
+	void print(std::ostream& out) const
+	{
+		out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"?>\n";
+
+		if (!_doctype.empty())
+			out << _doctype << '\n';
+	}
+
+	std::string	_version;
+	std::string	_encoding;
+	std::string	_doctype;
 };
 
 
@@ -1004,7 +1309,7 @@ struct XMLDoc : public XMLNode
 	{
 	}
 
-	XMLDoc(const std::string& path)
+	XMLDoc(LPCTSTR path)
 	 :	XMLNode("")
 	{
 		read(path);
@@ -1012,23 +1317,33 @@ struct XMLDoc : public XMLNode
 
 	std::istream& read(std::istream& in)
 	{
-		XMLReader(this).read(in);
+		XMLReader reader(this);
 
+		/*XML_Status status = */reader.read(in);
+/*
+		if (status == XML_STATUS_ERROR)
+			cerr << reader.get_error_string();
+*/
 		return in;
 	}
 
-	bool read(const std::string& path)
+	bool read(LPCTSTR path)
 	{
-		std::ifstream in(path.c_str());
+		tifstream in(path);
+		XMLReader reader(this);
 
-		return XMLReader(this).read(in) != XML_STATUS_ERROR;
+		XML_Status status = reader.read(in);
+/*
+		if (status == XML_STATUS_ERROR)
+			cerr << path << reader.get_error_string();
+*/
+		return status != XML_STATUS_ERROR;
 	}
 
 	 /// write XML stream preserving previous white space and comments
-	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART,
-						const std::string& xml_version="1.0", const std::string& encoding="UTF-8") const
+	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART, const XMLHeader& header=XMLHeader()) const
 	{
-		out << "<?xml version=\"" << xml_version << "\" encoding=\"" << encoding << "\"?>\n";
+		header.print(out);
 
 		if (!_children.empty())
 			_children.front()->write(out);
@@ -1042,17 +1357,16 @@ struct XMLDoc : public XMLNode
 		return write(out, FORMAT_PRETTY);
 	}
 
-	void write(const std::string& path, WRITE_MODE mode=FORMAT_SMART,
-				const std::string& xml_version="1.0", const std::string& encoding="UTF-8") const
+	void write(LPCTSTR path, WRITE_MODE mode=FORMAT_SMART, const XMLHeader& header=XMLHeader()) const
 	{
-		std::ofstream out(path.c_str());
+		tofstream out(path);
 
-		write(out, mode, xml_version, encoding);
+		write(out, mode, header);
 	}
 
-	void write_formating(const std::string& path) const
+	void write_formating(LPCTSTR path) const
 	{
-		std::ofstream out(path.c_str());
+		tofstream out(path);
 
 		write_formating(out);
 	}

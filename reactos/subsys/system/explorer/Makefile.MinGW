@@ -68,6 +68,7 @@ OBJECTS = \
 	startmenu.o \
 	traynotify.o \
 	quicklaunch.o \
+	favorites.o \
 	searchprogram.o \
 	settings.o \
 	i386-stub-win32.o \

@@ -39,6 +39,7 @@ CPP_SRCS = \
 	taskbar/startmenu.cpp \
 	taskbar/traynotify.cpp \
 	taskbar/quicklaunch.cpp \
+	taskbar/favorites.cpp \
 	dialogs/searchprogram.cpp \
 	dialogs/settings.cpp
 

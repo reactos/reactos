@@ -554,6 +554,14 @@ SOURCE=.\taskbar\desktopbar.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\taskbar\favorites.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\taskbar\favorites.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\notifyhook\notifyhook.h
 # End Source File
 # Begin Source File

@@ -1616,7 +1616,7 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_FAVORITES:
-		CreateSubmenu(id, CSIDL_FAVORITES, ResString(IDS_FAVORITES));
+		CreateSubmenu(id, CSIDL_COMMON_FAVORITES, CSIDL_FAVORITES, ResString(IDS_FAVORITES));
 		break;
 
 	  case IDC_BROWSE:

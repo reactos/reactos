@@ -31,6 +31,7 @@ exe explorer :
 	taskbar/startmenu.cpp
 	taskbar/taskbar.cpp
 	taskbar/traynotify.cpp
+	taskbar/favorites.cpp
 	desktop/desktop.cpp
 #	utility/splitpath.c
 	utility/dragdropimpl.cpp

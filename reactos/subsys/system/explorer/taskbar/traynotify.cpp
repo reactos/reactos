@@ -259,11 +259,11 @@ void NotifyArea::write_config()
 	 // write notification icon settings to XML configuration file
 	XMLPos pos = g_Globals.get_cfg();
 
-	pos.create("desktopbar");
+	pos.smart_create("desktopbar");
 	XMLBoolRef(pos, "options", "show-clock") = _hwndClock!=0;
 	pos.back();
 
-	pos.create("notify-icons");
+	pos.smart_create("notify-icons");
 
 	XMLBoolRef(pos, "options", "hide-inactive") = _hide_inactive;
 	XMLBoolRef(pos, "options", "show-hidden") = _show_hidden;
@@ -272,7 +272,7 @@ void NotifyArea::write_config()
 		NotifyIconConfig& cfg = *it;
 
 		 // search for the corresponding node using the original name
-		pos.create("icon", "name", cfg._name);
+		pos.smart_create("icon", "name", cfg._name);
 
 		 // refresh unique name
 		cfg.create_name();
@@ -293,7 +293,7 @@ void NotifyArea::show_clock(bool flag)
 
 	if (vis != flag) {
 		if (flag) {
-			 // create clock window
+			 // smart_create clock window
 			_hwndClock = ClockWindow::Create(_hwnd);
 
 			if (_hwndClock) {

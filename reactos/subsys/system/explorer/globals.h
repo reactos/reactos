@@ -30,6 +30,8 @@
 
 using namespace XMLStorage;
 
+#include "taskbar/favorites.h"
+
 
  /// management of file types
 struct FileTypeInfo {
@@ -228,8 +230,8 @@ extern struct ExplorerGlobals
 
 	void	init(HINSTANCE hInstance);
 
-	bool	read_cfg();
-	void	write_cfg();
+	void	read_persistent();
+	void	write_persistent();
 
 	XMLPos	get_cfg();
 	XMLPos	get_cfg(const String& name);
@@ -259,6 +261,9 @@ extern struct ExplorerGlobals
 	XMLDoc		_cfg;
 	String		_cfg_dir;
 	String		_cfg_path;
+
+	Favorites	_favorites;
+	String		_favorites_path;
 } g_Globals;
 
 
