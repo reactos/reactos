@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.28 2003/07/21 01:20:53 jimtabor Exp $
+/* $Id: stubs.c,v 1.29 2003/07/21 04:04:20 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -549,20 +549,6 @@ STDCALL
 GetNearestPaletteIndex(
 	HPALETTE	a0,
 	COLORREF	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetObjectType(
-	HGDIOBJ		a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -11,6 +11,20 @@
 /*
  * @implemented
  */
+DWORD
+STDCALL
+GetObjectType(
+        HGDIOBJ         a0
+        )
+{
+        return W32kGetObjectType(a0);
+}
+
+
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 DPtoLP(
