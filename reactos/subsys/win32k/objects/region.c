@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.26 2003/07/11 00:16:47 chorns Exp $ */
+/* $Id: region.c,v 1.27 2003/07/11 09:48:24 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -84,9 +84,10 @@ static inline int xmemcheck(ROSRGNDATA *reg, LPRECT *rect, LPRECT *firstrect ) {
     return 1;
 }
 
-#define MEMCHECK(reg, rect, firstrect) xmemcheck(reg,&(rect),&(firstrect))
+#define MEMCHECK(reg, rect, firstrect) xmemcheck(reg,&(rect),(LPRECT *)&(firstrect))
 
-typedef void (*voidProcp)();
+typedef void FASTCALL (*overlapProcp)(PROSRGNDATA, PRECT, PRECT, PRECT, PRECT, INT, INT);
+typedef void FASTCALL (*nonOverlapProcp)(PROSRGNDATA, PRECT, PRECT, INT, INT);
 
 // Number of points to buffer before sending them off to scanlines() :  Must be an even number
 #define NUMPTSTOBUFFER 200
@@ -171,7 +172,7 @@ static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
-static BOOL STDCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
+static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
 {
   if(!rect) // just copy and offset
   {
@@ -386,7 +387,7 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
  *          - pReg->numRects will be decreased.
  *
  */
-static INT STDCALL REGION_Coalesce (
+static INT FASTCALL REGION_Coalesce (
 	     PROSRGNDATA pReg, /* Region to coalesce */
 	     INT prevStart,  /* Index of start of previous band */
 	     INT curStart    /* Index of start of current band */
@@ -527,13 +528,13 @@ static INT STDCALL REGION_Coalesce (
  *      to reduce the number of rectangles in the region.
  *
  */
-static void STDCALL REGION_RegionOp(
+static void FASTCALL REGION_RegionOp(
 	    ROSRGNDATA *newReg, /* Place to store result */
 	    ROSRGNDATA *reg1,   /* First region in operation */
-        ROSRGNDATA *reg2,   /* 2nd region in operation */
-	    void (*overlapFunc)(),     /* Function to call for over-lapping bands */
-	    void (*nonOverlap1Func)(), /* Function to call for non-overlapping bands in region 1 */
-	    void (*nonOverlap2Func)()  /* Function to call for non-overlapping bands in region 2 */
+	    ROSRGNDATA *reg2,   /* 2nd region in operation */
+	    overlapProcp overlapFunc,     /* Function to call for over-lapping bands */
+	    nonOverlapProcp nonOverlap1Func, /* Function to call for non-overlapping bands in region 1 */
+	    nonOverlapProcp nonOverlap2Func  /* Function to call for non-overlapping bands in region 2 */
 ) {
     RECT *r1;                         /* Pointer into first region */
     RECT *r2;                         /* Pointer into 2d region */
@@ -653,7 +654,7 @@ static void STDCALL REGION_RegionOp(
 		    top = max(r1->top,ybot);
 		    bot = min(r1->bottom,r2->top);
 
-		    if ((top != bot) && (nonOverlap1Func != (void (*)())NULL))
+		    if ((top != bot) && (nonOverlap1Func != NULL))
 		    {
 				(* nonOverlap1Func) (newReg, r1, r1BandEnd, top, bot);
 		    }
@@ -665,7 +666,7 @@ static void STDCALL REGION_RegionOp(
 		    top = max(r2->top,ybot);
 		    bot = min(r2->bottom,r1->top);
 
-		    if ((top != bot) && (nonOverlap2Func != (void (*)())NULL))
+		    if ((top != bot) && (nonOverlap2Func != NULL))
 		    {
 				(* nonOverlap2Func) (newReg, r2, r2BandEnd, top, bot);
 		    }
@@ -724,7 +725,7 @@ static void STDCALL REGION_RegionOp(
     curBand = newReg->rdh.nCount;
     if (r1 != r1End)
     {
-		if (nonOverlap1Func != (void (*)())NULL)
+		if (nonOverlap1Func != NULL)
 		{
 		    do
 		    {
@@ -739,7 +740,7 @@ static void STDCALL REGION_RegionOp(
 		    } while (r1 != r1End);
 		}
     }
-    else if ((r2 != r2End) && (nonOverlap2Func != (void (*)())NULL))
+    else if ((r2 != r2End) && (nonOverlap2Func != NULL))
     {
 		do
 		{
@@ -767,7 +768,7 @@ static void STDCALL REGION_RegionOp(
      * Only do this stuff if the number of rectangles allocated is more than
      * twice the number of rectangles in the region (a simple optimization...).
      */
-    if ((newReg->rdh.nCount*sizeof(RECT) < 2*newReg->rdh.nRgnSize && (newReg->rdh.nCount > 2)))
+    if ((2 * newReg->rdh.nCount*sizeof(RECT) < newReg->rdh.nRgnSize && (newReg->rdh.nCount > 2)))
     {
 		if (REGION_NOT_EMPTY(newReg))
 		{
@@ -819,7 +820,7 @@ static void STDCALL REGION_RegionOp(
  *      Rectangles may be added to the region.
  *
  */
-static void STDCALL REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
+static void FASTCALL REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 		RECT *r2, RECT *r2End, INT top, INT bottom)
 
 {
@@ -876,7 +877,7 @@ static void STDCALL REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 /***********************************************************************
  *	     REGION_IntersectRegion
  */
-static void STDCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+static void FASTCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 				   ROSRGNDATA *reg2)
 {
    /* check for trivial reject */
@@ -885,7 +886,7 @@ static void STDCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 		newReg->rdh.nCount = 0;
     else
 		REGION_RegionOp (newReg, reg1, reg2,
-	 		(voidProcp) REGION_IntersectO, (voidProcp) NULL, (voidProcp) NULL);
+	 		REGION_IntersectO, NULL, NULL);
 
     /*
      * Can't alter newReg's extents before we call miRegionOp because
@@ -915,7 +916,7 @@ static void STDCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *      with the rectangles we're passed.
  *
  */
-static void STDCALL REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
+static void FASTCALL REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 			      INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -948,7 +949,7 @@ static void STDCALL REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
  *      be changed.
  *
  */
-static void STDCALL REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
+static void FASTCALL REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 			   RECT *r2, RECT *r2End, INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -1007,7 +1008,7 @@ static void STDCALL REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 /***********************************************************************
  *	     REGION_UnionRegion
  */
-static void STDCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+static void FASTCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 			       ROSRGNDATA *reg2)
 {
     /*  checks all the simple cases */
@@ -1060,8 +1061,8 @@ static void STDCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 		return;
     }
 
-    REGION_RegionOp (newReg, reg1, reg2, (voidProcp) REGION_UnionO,
-		(voidProcp) REGION_UnionNonO, (voidProcp) REGION_UnionNonO);
+    REGION_RegionOp (newReg, reg1, reg2, REGION_UnionO,
+		REGION_UnionNonO, REGION_UnionNonO);
     newReg->rdh.rcBound.left = min(reg1->rdh.rcBound.left, reg2->rdh.rcBound.left);
     newReg->rdh.rcBound.top = min(reg1->rdh.rcBound.top, reg2->rdh.rcBound.top);
     newReg->rdh.rcBound.right = max(reg1->rdh.rcBound.right, reg2->rdh.rcBound.right);
@@ -1083,7 +1084,7 @@ static void STDCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *      pReg may be affected.
  *
  */
-static void STDCALL REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
+static void FASTCALL REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 		INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -1116,7 +1117,7 @@ static void STDCALL REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
  *      pReg may have rectangles added to it.
  *
  */
-static void STDCALL REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
+static void FASTCALL REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 		RECT *r2, RECT *r2End, INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -1242,7 +1243,7 @@ static void STDCALL REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
  *      regD is overwritten.
  *
  */
-static void STDCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
+static void FASTCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 				                       ROSRGNDATA *regS )
 {
    /* check for trivial reject */
@@ -1253,8 +1254,8 @@ static void STDCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 		return;
     }
 
-    REGION_RegionOp (regD, regM, regS, (voidProcp) REGION_SubtractO,
-		(voidProcp) REGION_SubtractNonO1, (voidProcp) NULL);
+    REGION_RegionOp (regD, regM, regS, REGION_SubtractO,
+		REGION_SubtractNonO1, NULL);
 
     /*
      * Can't alter newReg's extents before we call miRegionOp because
@@ -1269,7 +1270,7 @@ static void STDCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 /***********************************************************************
  *	     REGION_XorRegion
  */
-static void STDCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
+static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 							ROSRGNDATA *srb)
 {
 	HRGN htra, htrb;
