@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.49 2001/11/03 16:34:58 ekohl Exp $
+/* $Id: ide.c,v 1.50 2002/01/24 10:04:50 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -817,7 +817,7 @@ IDEGetDriveIdentification(IN int CommandPort,
 {
 
   /* Get the Drive Identify block from drive or die */
-  if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
+  if (IDEPolledRead(CommandPort, 0, 1, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
                     IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0)
     {
       return(FALSE);
@@ -1127,8 +1127,10 @@ IDEPolledRead(IN WORD Address,
               IN BYTE Command,
               OUT BYTE *Buffer)
 {
-  BYTE   Status;
-  int    RetryCount;
+  BYTE    Status;
+  int     RetryCount;
+  BOOLEAN ReadJunk = FALSE;
+  ULONG   SectorCount = 0;
 
   /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
@@ -1196,8 +1198,6 @@ IDEPolledRead(IN WORD Address,
   IDEWriteCommand(Address, Command);
   KeStallExecutionProcessor(50);
 
-  while (1)
-    {
       /*  wait for DRQ or error  */
       for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
         {
@@ -1224,9 +1224,20 @@ IDEPolledRead(IN WORD Address,
           return IDE_ER_ABRT;
         }
 
+  while (1)
+    {
       /*  Read data into buffer  */
-      IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
-      Buffer += IDE_SECTOR_BUF_SZ;
+      if (ReadJunk == TRUE)
+        {
+          UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
+          IDEReadBlock(Address, JunkBuffer, IDE_SECTOR_BUF_SZ);
+        }
+      else
+        {
+          IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
+          Buffer += IDE_SECTOR_BUF_SZ;
+        }
+      SectorCount++;
 
       /*  Check for more sectors to read  */
       for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
@@ -1240,6 +1251,8 @@ IDEPolledRead(IN WORD Address,
                 }
               if (Status & IDE_SR_DRQ)
                 {
+                  if (SectorCount >= SectorCnt)
+                    ReadJunk = TRUE;
                   break;
                 }
               else
