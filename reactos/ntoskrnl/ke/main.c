@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.53 2000/07/08 16:53:32 dwelch Exp $
+/* $Id: main.c,v 1.54 2000/07/08 18:47:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,7 @@
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors = 1;
-LOADER_PARAMETER_BLOCK KeLoaderBlock;
+LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -57,7 +57,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
  * ARGUMENTS:
- *          _bp = Pointer to boot parameters initialized by the boot loader
+ *          LoaderBlock = Pointer to boot parameters initialized by the boot loader
  * NOTE: The boot parameters are stored in low memory which will become
  * invalid after the memory managment is initialized so we make a local copy.
  */
