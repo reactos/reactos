@@ -33,7 +33,7 @@ STUB(LdrFindEntryForAddress)
 STUB(LdrFindResourceDirectory_U)
 
 STUB(LdrGetDllHandle)
-STUB(LdrGetProcedureAddress)
+//STUB(LdrGetProcedureAddress)
 STUB(LdrInitializeThunk)
 STUB(LdrProcessRelocationBlock)
 STUB(LdrQueryImageFileExecutionOptions)

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.52.2.1 2000/07/21 22:06:34 dwelch Exp $
+/* $Id: thread.c,v 1.52.2.2 2000/08/01 22:36:57 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -329,6 +329,10 @@ ULONG PsFreezeThread(PETHREAD Thread,
    if (r == 0)
      {
 	DPRINT("Not suspending thread\n");
+	if (Status != NULL)
+	  {
+	     *Status = STATUS_SUCCESS;
+	  }
 	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	return(r);
      }

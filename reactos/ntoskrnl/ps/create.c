@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20.2.1 2000/07/21 22:06:34 dwelch Exp $
+/* $Id: create.c,v 1.20.2.2 2000/08/01 22:36:56 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -532,6 +532,20 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
      {
 	return(Status);
      }
+
+#if 0
+   Status = NtWriteVirtualMemory(ProcessHandle,
+				 (PVOID)(((ULONG)ThreadContext->Esp) - 8),
+				 &ThreadContext->Eip,
+				 sizeof(ULONG),
+				 &Length);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("NtWriteVirtualMemory failed\n");
+	KeBugCheck(0);
+     }
+   ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
+#endif   
    
    Status = HalInitTaskWithContext(Thread,ThreadContext);
    if (!NT_SUCCESS(Status))

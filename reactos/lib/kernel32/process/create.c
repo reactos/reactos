@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.29 2000/06/29 23:35:26 dwelch Exp $
+/* $Id: create.c,v 1.29.2.1 2000/08/01 22:36:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -395,6 +395,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    PWCHAR s;
    PWCHAR e;
    ULONG i;
+   ANSI_STRING ProcedureName;
    
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
@@ -530,7 +531,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 				    ProcessImageFileName,
 				    ImageFileName,
 				    8);
-   
+#if 1
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
@@ -552,7 +553,34 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
      {
 	return FALSE;
      }
+#else
+   DPRINT("Retrieving entry point address\n");
+   RtlInitAnsiString (&ProcedureName, "LdrInitializeThunk");
+   Status = LdrGetProcedureAddress ((PVOID)NTDLL_BASE,
+				    &ProcedureName,
+				    0,
+				    (PVOID*)&lpStartAddress);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	return (FALSE);
+     }
+   DPRINT("lpStartAddress 0x%08lx\n", (ULONG)lpStartAddress);
 
+   DPRINT("Creating thread for process\n");
+   hThread =  KlCreateFirstThread(hProcess,
+				  lpThreadAttributes,
+//				  Headers.OptionalHeader.SizeOfStackReserve,
+				  0x200000,
+				  lpStartAddress,
+				  dwCreationFlags,
+				  &lpProcessInformation->dwThreadId);
+   if (hThread == NULL)
+     {
+	return FALSE;
+     }
+#endif
+   
    lpProcessInformation->hProcess = hProcess;
    lpProcessInformation->hThread = hThread;
 

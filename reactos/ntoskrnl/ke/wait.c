@@ -446,6 +446,10 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
 	KeCancelTimer(&KeGetCurrentThread()->Timer);
      }
    
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Not returning STATUS_SUCCESS from KeWaitForSingleObject\n");
+     }
    DPRINT("Returning from KeWaitForSingleObject()\n");
    return Status;
 }

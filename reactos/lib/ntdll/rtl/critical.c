@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.7.2.1 2000/07/21 22:06:33 dwelch Exp $
+/* $Id: critical.c,v 1.7.2.2 2000/08/01 22:36:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -104,7 +104,8 @@ RtlEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 				       0, FALSE);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("Failed to wait (Status %x)\n", Status);
+	     DbgPrint("RtlEnterCriticalSection: Failed to wait (Status %x)\n", 
+		      Status);
 	  }
 //	DbgPrint("Left wait for critical section\n");
      }
