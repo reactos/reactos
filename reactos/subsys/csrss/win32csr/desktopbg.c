@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.8 2004/05/08 19:35:32 weiden Exp $
+/* $Id: desktopbg.c,v 1.9 2004/08/17 14:57:52 weiden Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -43,63 +43,97 @@ typedef struct tagDTBG_THREAD_DATA
   NTSTATUS Status;
 } DTBG_THREAD_DATA, *PDTBG_THREAD_DATA;
 
+typedef struct tagPRIVATE_NOTIFY_DESKTOP
+{
+  NMHDR hdr;
+  union
+  {
+    struct /* PM_SHOW_DESKTOP */
+    {
+      int Width;
+      int Height;
+    } ShowDesktop;
+  };
+} PRIVATE_NOTIFY_DESKTOP, *PPRIVATE_NOTIFY_DESKTOP;
+
 static BOOL Initialized = FALSE;
 static HWND VisibleDesktopWindow = NULL;
 
 static LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  LRESULT Result;
-
   switch(Msg)
     {
       case WM_ERASEBKGND:
-        {
-          PaintDesktop((HDC)wParam);
-          Result = 1;
-        }
-        break;
+        return 1;
+
       case WM_PAINT:
+      {
+        PAINTSTRUCT PS;
+        RECT rc;
+        HDC hDC;
+        
+        if(GetUpdateRect(Wnd, &rc, FALSE) &&
+           (hDC = BeginPaint(Wnd, &PS)))
         {
-          PAINTSTRUCT PS;
-          BeginPaint(Wnd, &PS);
-          /* No need to paint, already done in WM_ERASEBKGND. */
+          PaintDesktop(hDC);
           EndPaint(Wnd, &PS);
-          Result = 0;
         }
-        break;
+        return 0;
+      }
+
       case WM_SETCURSOR:
-	Result = (LRESULT) SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
-        break;
+	return (LRESULT) SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+
       case WM_NCCREATE:
-        Result = (LRESULT) TRUE;
-        break;
+        return (LRESULT) TRUE;
+
       case WM_CREATE:
-        Result = 0;
-        break;
-      case PM_SHOW_DESKTOP:
-        Result = ! SetWindowPos(Wnd,
-                                NULL, 0, 0,
-                                (int)(short) LOWORD(lParam),
-                                (int)(short) HIWORD(lParam),
-                                SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOREDRAW);
-        UpdateWindow(Wnd);
-        VisibleDesktopWindow = Wnd;
-        break;
-      case PM_HIDE_DESKTOP:
-        Result = ! SetWindowPos(Wnd,
-                                NULL, 0, 0, 0, 0,
-                                SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE |
-                                SWP_HIDEWINDOW);
-        UpdateWindow(Wnd);
-        VisibleDesktopWindow = NULL;
-        break;
-      default:
-        Result = 0;
-        break;
+        return 0;
+
+      case WM_NOTIFY:
+      {
+        PPRIVATE_NOTIFY_DESKTOP nmh = (PPRIVATE_NOTIFY_DESKTOP)lParam;
+        
+        /* Use WM_NOTIFY for private messages since it can't be sent between
+           processes! */
+        switch(nmh->hdr.code)
+        {
+          case PM_SHOW_DESKTOP:
+          {
+            LRESULT Result;
+
+            Result = ! SetWindowPos(Wnd,
+                                    NULL, 0, 0,
+                                    nmh->ShowDesktop.Width,
+                                    nmh->ShowDesktop.Height,
+                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOREDRAW);
+            UpdateWindow(Wnd);
+            VisibleDesktopWindow = Wnd;
+            return Result;
+          }
+
+          case PM_HIDE_DESKTOP:
+          {
+            LRESULT Result;
+
+            Result = ! SetWindowPos(Wnd,
+                                    NULL, 0, 0, 0, 0,
+                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE |
+                                    SWP_HIDEWINDOW);
+            UpdateWindow(Wnd);
+            VisibleDesktopWindow = NULL;
+            return Result;
+          }
+          
+          default:
+            DPRINT("Unknown notification code 0x%x sent to the desktop window!\n", nmh->code);
+            return 0;
+        }
+      }
     }
 
-  return Result;
+  return 0;
 }
 
 static BOOL FASTCALL
@@ -253,16 +287,23 @@ CSR_API(CsrCreateDesktop)
 
 CSR_API(CsrShowDesktop)
 {
+  PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrShowDesktop\n");
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
+  nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
+  nmh.hdr.idFrom = 0;
+  nmh.hdr.code = PM_SHOW_DESKTOP;
+  
+  nmh.ShowDesktop.Width = (int)Request->Data.ShowDesktopRequest.Width;
+  nmh.ShowDesktop.Height = (int)Request->Data.ShowDesktopRequest.Height;
+
   Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
-                               PM_SHOW_DESKTOP,
-                               0,
-                               MAKELONG(Request->Data.ShowDesktopRequest.Width,
-                                        Request->Data.ShowDesktopRequest.Height))
+                               WM_NOTIFY,
+                               (WPARAM)nmh.hdr.hwndFrom,
+                               (LPARAM)&nmh)
                   ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
   return Reply->Status;
@@ -270,13 +311,20 @@ CSR_API(CsrShowDesktop)
 
 CSR_API(CsrHideDesktop)
 {
+  PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrHideDesktop\n");
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
+  nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
+  nmh.hdr.idFrom = 0;
+  nmh.hdr.code = PM_HIDE_DESKTOP;
+
   Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
-                               PM_HIDE_DESKTOP, 0, 0)
+                               WM_NOTIFY,
+                               (WPARAM)nmh.hdr.hwndFrom,
+                               (LPARAM)&nmh)
                   ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
   return Reply->Status;
