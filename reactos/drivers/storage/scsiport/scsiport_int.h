@@ -23,6 +23,26 @@ typedef struct _SCSI_PORT_DEVICE_BASE
   ULONG SystemIoBusNumber;
 } SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
 
+
+typedef struct _SCSI_PORT_LUN_EXTENSION
+{
+  LIST_ENTRY List;
+
+  UCHAR PathId;
+  UCHAR TargetId;
+  UCHAR Lun;
+
+  BOOLEAN DeviceClaimed;
+  PDEVICE_OBJECT DeviceObject;
+
+  INQUIRYDATA InquiryData;
+
+  /* More data? */
+
+  UCHAR MiniportLunExtension[1]; /* must be the last entry */
+} SCSI_PORT_LUN_EXTENSION, *PSCSI_PORT_LUN_EXTENSION;
+
+
 /*
  * SCSI_PORT_DEVICE_EXTENSION
  *
@@ -51,8 +71,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   LIST_ENTRY DeviceBaseListHead;
 
-  ULONG PortBusInfoSize;
-  PSCSI_ADAPTER_BUS_INFO PortBusInfo;
+  ULONG LunExtensionSize;
+  LIST_ENTRY LunExtensionListHead;
 
   PIO_SCSI_CAPABILITIES PortCapabilities;
 

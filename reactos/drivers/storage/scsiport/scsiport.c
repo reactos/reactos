@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.32 2003/09/04 11:30:42 ekohl Exp $
+/* $Id: scsiport.c,v 1.33 2003/09/04 23:33:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,8 +79,24 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 			 IN ULONG PortCount,
 			 IN OUT PSCSI_PORT_DEVICE_EXTENSION *RealDeviceExtension);
 
+static PSCSI_PORT_LUN_EXTENSION
+SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			 IN UCHAR PathId,
+			 IN UCHAR TargetId,
+			 IN UCHAR Lun);
+
+static PSCSI_PORT_LUN_EXTENSION
+SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		    IN UCHAR PathId,
+		    IN UCHAR TargetId,
+		    IN UCHAR Lun);
+
 static VOID
-ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+ScsiPortInquire(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+static ULONG
+SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		  OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo);
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
@@ -337,7 +353,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID STDCALL
 ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
@@ -345,8 +361,35 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
-  DPRINT("ScsiPortGetLogicalUnit()\n");
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  PLIST_ENTRY Entry;
+
+  DPRINT("ScsiPortGetLogicalUnit() called\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
+    return NULL;
+
+  Entry = DeviceExtension->LunExtensionListHead.Flink;
+  while (Entry != &DeviceExtension->LunExtensionListHead)
+    {
+      LunExtension = CONTAINING_RECORD(Entry,
+				       SCSI_PORT_LUN_EXTENSION,
+				       List);
+      if (LunExtension->PathId == PathId &&
+	  LunExtension->TargetId == TargetId &&
+	  LunExtension->Lun == Lun)
+	{
+	  return (PVOID)&LunExtension->MiniportLunExtension;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return NULL;
 }
 
 
@@ -479,6 +522,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 		ExtensionSize);
   PseudoDeviceExtension->Length = ExtensionSize;
   PseudoDeviceExtension->MiniPortExtensionSize = HwInitializationData->DeviceExtensionSize;
+  PseudoDeviceExtension->LunExtensionSize = HwInitializationData->SpecificLuExtensionSize;
   PseudoDeviceExtension->HwStartIo = HwInitializationData->HwStartIo;
   PseudoDeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
 
@@ -699,7 +743,7 @@ ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 ScsiPortValidateRange(IN PVOID HwDeviceExtension,
@@ -822,88 +866,47 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 
       case SRB_FUNCTION_CLAIM_DEVICE:
 	{
-	  PSCSI_ADAPTER_BUS_INFO AdapterInfo;
-	  PSCSI_INQUIRY_DATA UnitInfo;
-	  PINQUIRYDATA InquiryData;
+	  PSCSI_PORT_LUN_EXTENSION LunExtension;
 
 	  DPRINT("  SRB_FUNCTION_CLAIM_DEVICE\n");
 	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
-	  Srb->DataBuffer = NULL;
-
-	  if (DeviceExtension->PortBusInfo != NULL)
+	  LunExtension = SpiGetLunExtension(DeviceExtension,
+					    Srb->PathId,
+					    Srb->TargetId,
+					    Srb->Lun);
+	  if (LunExtension != NULL)
 	    {
-	      AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
-
-	      if (AdapterInfo->BusData[Srb->PathId].NumberOfLogicalUnits == 0)
-		break;
-
-	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
-		AdapterInfo->BusData[Srb->PathId].InquiryDataOffset);
-
-	      while (AdapterInfo->BusData[Srb->PathId].InquiryDataOffset)
-		{
-		  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
-
-		  if ((UnitInfo->TargetId == Srb->TargetId) &&
-		      (UnitInfo->Lun == Srb->Lun) &&
-		      (UnitInfo->DeviceClaimed == FALSE))
-		    {
-		      UnitInfo->DeviceClaimed = TRUE;
-		      DPRINT("Claimed device!\n");
-
-		      /* FIXME: Hack!!!!! */
-		      Srb->DataBuffer = DeviceObject;
-
-		      break;
-		    }
-
-		  if (UnitInfo->NextInquiryDataOffset == 0)
-		    break;
-
-		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo + UnitInfo->NextInquiryDataOffset);
-		}
+	      /* Reference device object and keep the pointer */
+	      ObReferenceObject(DeviceObject);
+	      LunExtension->DeviceObject = DeviceObject;
+	      LunExtension->DeviceClaimed = TRUE;
+	      Srb->DataBuffer = DeviceObject;
+	    }
+	  else
+	    {
+	      Srb->DataBuffer = NULL;
 	    }
 	}
 	break;
 
       case SRB_FUNCTION_RELEASE_DEVICE:
 	{
-	  PSCSI_ADAPTER_BUS_INFO AdapterInfo;
-	  PSCSI_INQUIRY_DATA UnitInfo;
-	  PINQUIRYDATA InquiryData;
+	  PSCSI_PORT_LUN_EXTENSION LunExtension;
 
 	  DPRINT("  SRB_FUNCTION_RELEASE_DEVICE\n");
 	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
-	  if (DeviceExtension->PortBusInfo != NULL)
+	  LunExtension = SpiGetLunExtension(DeviceExtension,
+					    Srb->PathId,
+					    Srb->TargetId,
+					    Srb->Lun);
+	  if (LunExtension != NULL)
 	    {
-	      AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
-
-	      if (AdapterInfo->BusData[Srb->PathId].NumberOfLogicalUnits == 0)
-		break;
-
-	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
-		AdapterInfo->BusData[Srb->PathId].InquiryDataOffset);
-
-	      while (AdapterInfo->BusData[Srb->PathId].InquiryDataOffset)
-		{
-		  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
-
-		  if ((UnitInfo->TargetId == Srb->TargetId) &&
-		      (UnitInfo->Lun == Srb->Lun) &&
-		      (UnitInfo->DeviceClaimed == TRUE))
-		    {
-		      UnitInfo->DeviceClaimed = FALSE;
-		      DPRINT("Released device!\n");
-		      break;
-		    }
-
-		  if (UnitInfo->NextInquiryDataOffset == 0)
-		    break;
-
-		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo + UnitInfo->NextInquiryDataOffset);
-		}
+	      /* Dereference device object */
+	      ObDereferenceObject(LunExtension->DeviceObject);
+	      LunExtension->DeviceObject = NULL;
+	      LunExtension->DeviceClaimed = FALSE;
 	    }
 	}
 	break;
@@ -967,7 +970,8 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  
 	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
 	}
-      break;
+	break;
+
       case IOCTL_SCSI_GET_CAPABILITIES:
 	{
 	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
@@ -984,12 +988,10 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
 
 	  /* Copy inquiry data to the port device extension */
-	  memcpy(Irp->AssociatedIrp.SystemBuffer,
-		 DeviceExtension->PortBusInfo,
-		 DeviceExtension->PortBusInfoSize);
-
-	  DPRINT("BufferSize: %lu\n", DeviceExtension->PortBusInfoSize);
-	  Irp->IoStatus.Information = DeviceExtension->PortBusInfoSize;
+	  Irp->IoStatus.Information =
+	    SpiGetInquiryData(DeviceExtension,
+			      Irp->AssociatedIrp.SystemBuffer);
+	  DPRINT("Inquiry data size: %lu\n", Irp->IoStatus.Information);
 	}
 	break;
 
@@ -1043,33 +1045,33 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 				      ScsiPortStartPacket,
 				      DeviceExtension))
 	    {
-		DPRINT("Synchronization failed!\n");
+	      DPRINT("Synchronization failed!\n");
 
-		Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp,
-				  IO_NO_INCREMENT);
-		IoStartNextPacket(DeviceObject,
-				  FALSE);
+	      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+	      Irp->IoStatus.Information = 0;
+	      IoCompleteRequest(Irp,
+				IO_NO_INCREMENT);
+	      IoStartNextPacket(DeviceObject,
+				FALSE);
 	    }
 	  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
 	  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
 	    {
-		DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
-		IoCompleteRequest(Irp,
-				  IO_NO_INCREMENT);
+	      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
+	      IoCompleteRequest(Irp,
+				IO_NO_INCREMENT);
 	    }
 
 	  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
 	    {
-		DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-	        KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-		IoStartNextPacket(DeviceObject,
-				  FALSE);
+	      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+	      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	      IoStartNextPacket(DeviceObject,
+				FALSE);
 	    }
 	  else
 	    {
-	      	KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
 	    }
 	}
 	break;
@@ -1278,12 +1280,10 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     PortDeviceExtension->PortConfig.AdapterScansDown;
   PortCapabilities->AdapterUsesPio = TRUE; /* FIXME */
 
-  /* Initialize inquiry data */
-  PortDeviceExtension->PortBusInfoSize = 0;
-  PortDeviceExtension->PortBusInfo = NULL;
+  /* Initialize LUN-Extension list */
+  InitializeListHead(&PortDeviceExtension->LunExtensionListHead);
 
   DPRINT("DeviceExtension %p\n", PortDeviceExtension);
-//  ScsiPortInquire(PortDeviceExtension);
 
   /* FIXME: Copy more configuration data? */
 
@@ -1306,31 +1306,91 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 }
 
 
+static PSCSI_PORT_LUN_EXTENSION
+SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			 IN UCHAR PathId,
+			 IN UCHAR TargetId,
+			 IN UCHAR Lun)
+{
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  ULONG LunExtensionSize;
+
+  DPRINT("SpiAllocateLunExtension (%p %u %u %u)\n",
+	 DeviceExtension, PathId, TargetId, Lun);
+
+  LunExtensionSize =
+    sizeof(SCSI_PORT_LUN_EXTENSION) + DeviceExtension->LunExtensionSize;
+  DPRINT("LunExtensionSize %lu\n", LunExtensionSize);
+
+  LunExtension = ExAllocatePool(NonPagedPool,
+				LunExtensionSize);
+  if (LunExtension == NULL)
+    {
+      return NULL;
+    }
+
+  RtlZeroMemory(LunExtension,
+		LunExtensionSize);
+
+  InsertTailList(&DeviceExtension->LunExtensionListHead,
+		 &LunExtension->List);
+
+  LunExtension->PathId = PathId;
+  LunExtension->TargetId = TargetId;
+  LunExtension->Lun = Lun;
+
+  return LunExtension;
+}
+
+
+static PSCSI_PORT_LUN_EXTENSION
+SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		    IN UCHAR PathId,
+		    IN UCHAR TargetId,
+		    IN UCHAR Lun)
+{
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  PLIST_ENTRY Entry;
+
+  DPRINT("SpiGetLunExtension(%p %u %u %u) called\n",
+	 DeviceExtension, PathId, TargetId, Lun);
+
+  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
+    return NULL;
+
+  Entry = DeviceExtension->LunExtensionListHead.Flink;
+  while (Entry != &DeviceExtension->LunExtensionListHead)
+    {
+      LunExtension = CONTAINING_RECORD(Entry,
+				       SCSI_PORT_LUN_EXTENSION,
+				       List);
+      if (LunExtension->PathId == PathId &&
+	  LunExtension->TargetId == TargetId &&
+	  LunExtension->Lun == Lun)
+	{
+	  return LunExtension;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return NULL;
+}
+
+
 static VOID
 ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
-  PSCSI_ADAPTER_BUS_INFO AdapterInfo;
-  PSCSI_INQUIRY_DATA UnitInfo, PrevUnit;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
   SCSI_REQUEST_BLOCK Srb;
   ULONG Bus;
   ULONG Target;
   ULONG Lun;
-  ULONG UnitCount;
-  ULONG DataSize;
   BOOLEAN Result;
 
   DPRINT("ScsiPortInquire() called\n");
 
   DeviceExtension->Initializing = TRUE;
-
-  /* Copy inquiry data to the port device extension */
-  AdapterInfo =(PSCSI_ADAPTER_BUS_INFO)ExAllocatePool(NonPagedPool, 4096);
-  RtlZeroMemory(AdapterInfo, 4096);
-  AdapterInfo->NumberOfBuses = DeviceExtension->PortConfig.NumberOfBuses;
-
-  UnitInfo = (PSCSI_INQUIRY_DATA)
-	((PUCHAR)AdapterInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
-	 (sizeof(SCSI_BUS_DATA) * (AdapterInfo->NumberOfBuses - 1)));
 
   RtlZeroMemory(&Srb,
 		sizeof(SCSI_REQUEST_BLOCK));
@@ -1339,17 +1399,9 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   Srb.DataTransferLength = 256;
   Srb.Cdb[0] = SCSIOP_INQUIRY;
 
-  for (Bus = 0; Bus < AdapterInfo->NumberOfBuses; Bus++)
+  for (Bus = 0; Bus < DeviceExtension->PortConfig.NumberOfBuses; Bus++)
     {
       Srb.PathId = Bus;
-
-      AdapterInfo->BusData[Bus].InitiatorBusId =
-	DeviceExtension->PortConfig.InitiatorBusId[Bus];
-      AdapterInfo->BusData[Bus].InquiryDataOffset =
-	(ULONG)((PUCHAR)UnitInfo - (PUCHAR)AdapterInfo);
-
-      PrevUnit = NULL;
-      UnitCount = 0;
 
       for (Target = 0; Target < DeviceExtension->PortConfig.MaximumNumberOfTargets; Target++)
 	{
@@ -1366,47 +1418,97 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	      if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
 		{
-		  UnitInfo->PathId = Bus;
-		  UnitInfo->TargetId = Target;
-		  UnitInfo->Lun = Lun;
-		  UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
-		  memcpy(&UnitInfo->InquiryData,
-			 Srb.DataBuffer,
-			 INQUIRYDATABUFFERSIZE);
-		  if (PrevUnit != NULL)
-		    PrevUnit->NextInquiryDataOffset = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterInfo);
-		  PrevUnit = UnitInfo;
-		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
-		  UnitCount++;
-		}
-	      else if (Lun == 0)
-		{
-		  break;
+		  LunExtension = SpiAllocateLunExtension(DeviceExtension,
+							 Bus,
+							 Target,
+							 Lun);
+		  if (LunExtension != NULL)
+		    {
+		      /* Copy inquiry data */
+		      memcpy(&LunExtension->InquiryData,
+			     Srb.DataBuffer,
+			     sizeof(INQUIRYDATA));
+		    }
 		}
 	    }
 	}
-      DPRINT("UnitCount: %lu\n", UnitCount);
-      AdapterInfo->BusData[Bus].NumberOfLogicalUnits = UnitCount;
-      if (UnitCount == 0)
-	AdapterInfo->BusData[Bus].InquiryDataOffset = 0;
     }
-  DataSize = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterInfo);
 
   ExFreePool(Srb.DataBuffer);
 
   DeviceExtension->Initializing = FALSE;
 
-  /* copy inquiry data to the port driver's device extension */
-  DeviceExtension->PortBusInfoSize = DataSize;
-  DeviceExtension->PortBusInfo = ExAllocatePool(NonPagedPool,
-						DataSize);
-  RtlCopyMemory(DeviceExtension->PortBusInfo,
-		AdapterInfo,
-		DataSize);
-
-  ExFreePool(AdapterInfo);
-
   DPRINT("ScsiPortInquire() done\n");
+}
+
+
+static ULONG
+SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		  OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo)
+{
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  PSCSI_INQUIRY_DATA UnitInfo, PrevUnit;
+  ULONG Bus;
+  ULONG Target;
+  ULONG Lun;
+  ULONG UnitCount;
+
+  DPRINT("SpiGetInquiryData() called\n");
+
+  /* Copy inquiry data to the port device extension */
+  AdapterBusInfo->NumberOfBuses = DeviceExtension->PortConfig.NumberOfBuses;
+
+  UnitInfo = (PSCSI_INQUIRY_DATA)
+	((PUCHAR)AdapterBusInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
+	 (sizeof(SCSI_BUS_DATA) * (AdapterBusInfo->NumberOfBuses - 1)));
+
+  for (Bus = 0; Bus < AdapterBusInfo->NumberOfBuses; Bus++)
+    {
+      AdapterBusInfo->BusData[Bus].InitiatorBusId =
+	DeviceExtension->PortConfig.InitiatorBusId[Bus];
+      AdapterBusInfo->BusData[Bus].InquiryDataOffset =
+	(ULONG)((PUCHAR)UnitInfo - (PUCHAR)AdapterBusInfo);
+
+      PrevUnit = NULL;
+      UnitCount = 0;
+
+      for (Target = 0; Target < DeviceExtension->PortConfig.MaximumNumberOfTargets; Target++)
+	{
+	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
+	    {
+	      LunExtension = SpiGetLunExtension(DeviceExtension,
+						Bus,
+						Target,
+						Lun);
+	      if (LunExtension != NULL)
+		{
+		  DPRINT("(Bus %lu Target %lu Lun %lu)\n",
+			 Bus, Target, Lun);
+
+		  UnitInfo->PathId = Bus;
+		  UnitInfo->TargetId = Target;
+		  UnitInfo->Lun = Lun;
+		  UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
+		  memcpy(&UnitInfo->InquiryData,
+			 &LunExtension->InquiryData,
+			 INQUIRYDATABUFFERSIZE);
+		  if (PrevUnit != NULL)
+		    PrevUnit->NextInquiryDataOffset = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterBusInfo);
+		  PrevUnit = UnitInfo;
+		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
+		  UnitCount++;
+		}
+	    }
+	}
+      DPRINT("UnitCount: %lu\n", UnitCount);
+      AdapterBusInfo->BusData[Bus].NumberOfLogicalUnits = UnitCount;
+      if (UnitCount == 0)
+	AdapterBusInfo->BusData[Bus].InquiryDataOffset = 0;
+    }
+
+  DPRINT("Data size: %lu\n", (ULONG)UnitInfo - (ULONG)AdapterBusInfo);
+
+  return (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterBusInfo);
 }
 
 
@@ -1638,6 +1740,7 @@ static NTSTATUS
 ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		       PUNICODE_STRING RegistryPath)
 {
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   UNICODE_STRING ValueName;
@@ -1650,10 +1753,9 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   HANDLE ScsiTargetKey;
   HANDLE ScsiLunKey;
   ULONG BusNumber;
-  UCHAR CurrentTarget;
-  PSCSI_ADAPTER_BUS_INFO AdapterInfo;
-  PSCSI_INQUIRY_DATA UnitInfo;
-  PINQUIRYDATA InquiryData;
+  ULONG Target;
+  ULONG CurrentTarget;
+  ULONG Lun;
   PWCHAR DriverName;
   ULONG UlongData;
   PWCHAR TypeName;
@@ -1854,39 +1956,70 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 
       /* Enumerate targets */
-      CurrentTarget = (UCHAR)-1;
+      CurrentTarget = (ULONG)-1;
       ScsiTargetKey = NULL;
-      AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
-      if (AdapterInfo->BusData[BusNumber].NumberOfLogicalUnits != 0)
+      for (Target = 0; Target < DeviceExtension->PortConfig.MaximumNumberOfTargets; Target++)
 	{
-	  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
-	    AdapterInfo->BusData[BusNumber].InquiryDataOffset);
-
-	  while (AdapterInfo->BusData[BusNumber].InquiryDataOffset)
+	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
 	    {
-	      if (UnitInfo->TargetId != CurrentTarget)
+	      LunExtension = SpiGetLunExtension(DeviceExtension,
+						BusNumber,
+						Target,
+						Lun);
+	      if (LunExtension != NULL)
 		{
-		  /* Close old target key */
-		  if (ScsiTargetKey != NULL)
+		  if (Target != CurrentTarget)
 		    {
-		      ZwClose(ScsiTargetKey);
-		      ScsiTargetKey = NULL;
+		      /* Close old target key */
+		      if (ScsiTargetKey != NULL)
+			{
+			  ZwClose(ScsiTargetKey);
+			  ScsiTargetKey = NULL;
+			}
+
+		      /* Create 'Target Id X' key */
+		      DPRINT("      Target Id %lu\n", Target);
+		      swprintf(NameBuffer,
+			       L"Target Id %lu",
+			       Target);
+		      RtlInitUnicodeString(&KeyName,
+					   NameBuffer);
+		      InitializeObjectAttributes(&ObjectAttributes,
+						 &KeyName,
+						 0,
+						 ScsiBusKey,
+						 NULL);
+		      Status = ZwCreateKey(&ScsiTargetKey,
+					   KEY_ALL_ACCESS,
+					   &ObjectAttributes,
+					   0,
+					   NULL,
+					   REG_OPTION_VOLATILE,
+					   &Disposition);
+		      if (!NT_SUCCESS(Status))
+			{
+			  DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
+			  ZwClose(ScsiBusKey);
+			  ZwClose(ScsiPortKey);
+			  return(Status);
+			}
+
+		      CurrentTarget = Target;
 		    }
 
-		  /* Create 'Target Id X' key */
-		  DPRINT("      Target Id %u\n",
-			 UnitInfo->TargetId);
+		  /* Create 'Logical Unit Id X' key */
+		  DPRINT("        Logical Unit Id %lu\n", Lun);
 		  swprintf(NameBuffer,
-			   L"Target Id %u",
-			   UnitInfo->TargetId);
+			   L"Logical Unit Id %lu",
+			   Lun);
 		  RtlInitUnicodeString(&KeyName,
 				       NameBuffer);
 		  InitializeObjectAttributes(&ObjectAttributes,
 					     &KeyName,
 					     0,
-					     ScsiBusKey,
+					     ScsiTargetKey,
 					     NULL);
-		  Status = ZwCreateKey(&ScsiTargetKey,
+		  Status = ZwCreateKey(&ScsiLunKey,
 				       KEY_ALL_ACCESS,
 				       &ObjectAttributes,
 				       0,
@@ -1896,132 +2029,92 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
+		      ZwClose(ScsiTargetKey);
 		      ZwClose(ScsiBusKey);
 		      ZwClose(ScsiPortKey);
 		      return(Status);
 		    }
 
-		  CurrentTarget = UnitInfo->TargetId;
-		}
-
-	      /* Create 'Logical Unit Id X' key */
-	      DPRINT("        Logical Unit Id %u\n",
-		     UnitInfo->Lun);
-	      swprintf(NameBuffer,
-		       L"Logical Unit Id %u",
-		       UnitInfo->Lun);
-	      RtlInitUnicodeString(&KeyName,
-				   NameBuffer);
-	      InitializeObjectAttributes(&ObjectAttributes,
-					 &KeyName,
+		  /* Set 'Identifier' (REG_SZ) value */
+		  swprintf(NameBuffer,
+			   L"%.8S%.16S%.4S",
+			   LunExtension->InquiryData.VendorId,
+			   LunExtension->InquiryData.ProductId,
+			   LunExtension->InquiryData.ProductRevisionLevel);
+		  DPRINT("          Identifier = '%S'\n", NameBuffer);
+		  RtlInitUnicodeString(&ValueName,
+				       L"Identifier");
+		  Status = ZwSetValueKey(ScsiLunKey,
+					 &ValueName,
 					 0,
-					 ScsiTargetKey,
-					 NULL);
-	      Status = ZwCreateKey(&ScsiLunKey,
-				   KEY_ALL_ACCESS,
-				   &ObjectAttributes,
-				   0,
-				   NULL,
-				   REG_OPTION_VOLATILE,
-				   &Disposition);
-	      if (!NT_SUCCESS(Status))
-		{
-		  DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-		  ZwClose(ScsiTargetKey);
-		  ZwClose(ScsiBusKey);
-		  ZwClose(ScsiPortKey);
-		  return(Status);
-		}
+					 REG_SZ,
+					 NameBuffer,
+					 (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
+		  if (!NT_SUCCESS(Status))
+		    {
+		      DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
+		      ZwClose(ScsiLunKey);
+		      ZwClose(ScsiTargetKey);
+		      ZwClose(ScsiBusKey);
+		      ZwClose(ScsiPortKey);
+		      return(Status);
+		    }
 
-	      /* Set values for logical unit */
-	      InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
+		  /* Set 'Type' (REG_SZ) value */
+		  switch (LunExtension->InquiryData.DeviceType)
+		    {
+		      case 0:
+			TypeName = L"DiskPeripheral";
+			break;
+		      case 1:
+			TypeName = L"TapePeripheral";
+			break;
+		      case 2:
+			TypeName = L"PrinterPeripheral";
+			break;
+		      case 4:
+			TypeName = L"WormPeripheral";
+			break;
+		      case 5:
+			TypeName = L"CdRomPeripheral";
+			break;
+		      case 6:
+			TypeName = L"ScannerPeripheral";
+			break;
+		      case 7:
+			TypeName = L"OpticalDiskPeripheral";
+			break;
+		      case 8:
+			TypeName = L"MediumChangerPeripheral";
+			break;
+		      case 9:
+			TypeName = L"CommunicationPeripheral";
+			break;
+		      default:
+			TypeName = L"OtherPeripheral";
+			break;
+		    }
+		  DPRINT("          Type = '%S'\n", TypeName);
+		  RtlInitUnicodeString(&ValueName,
+				       L"Type");
+		  Status = ZwSetValueKey(ScsiLunKey,
+					 &ValueName,
+					 0,
+					 REG_SZ,
+					 TypeName,
+					 (wcslen(TypeName) + 1) * sizeof(WCHAR));
+		  if (!NT_SUCCESS(Status))
+		    {
+		      DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);
+		      ZwClose(ScsiLunKey);
+		      ZwClose(ScsiTargetKey);
+		      ZwClose(ScsiBusKey);
+		      ZwClose(ScsiPortKey);
+		      return(Status);
+		    }
 
-	      /* Set 'Identifier' (REG_SZ) value */
-	      swprintf(NameBuffer,
-		       L"%.8S%.16S%.4S",
-		       InquiryData->VendorId,
-		       InquiryData->ProductId,
-		       InquiryData->ProductRevisionLevel);
-	      DPRINT("          Identifier = '%S'\n",
-		     NameBuffer);
-	      RtlInitUnicodeString(&ValueName,
-				   L"Identifier");
-	      Status = ZwSetValueKey(ScsiLunKey,
-				     &ValueName,
-				     0,
-				     REG_SZ,
-				     NameBuffer,
-				     (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
-	      if (!NT_SUCCESS(Status))
-		{
-		  DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
 		  ZwClose(ScsiLunKey);
-		  ZwClose(ScsiTargetKey);
-		  ZwClose(ScsiBusKey);
-		  ZwClose(ScsiPortKey);
-		  return(Status);
 		}
-
-	      /* Set 'Type' (REG_SZ) value */
-	      switch (InquiryData->DeviceType)
-		{
-		  case 0:
-		    TypeName = L"DiskPeripheral";
-		    break;
-		  case 1:
-		    TypeName = L"TapePeripheral";
-		    break;
-		  case 2:
-		    TypeName = L"PrinterPeripheral";
-		    break;
-		  case 4:
-		    TypeName = L"WormPeripheral";
-		    break;
-		  case 5:
-		    TypeName = L"CdRomPeripheral";
-		    break;
-		  case 6:
-		    TypeName = L"ScannerPeripheral";
-		    break;
-		  case 7:
-		    TypeName = L"OpticalDiskPeripheral";
-		    break;
-		  case 8:
-		    TypeName = L"MediumChangerPeripheral";
-		    break;
-		  case 9:
-		    TypeName = L"CommunicationPeripheral";
-		    break;
-		  default:
-		    TypeName = L"OtherPeripheral";
-		    break;
-		}
-	      DPRINT("          Type = '%S'\n", TypeName);
-	      RtlInitUnicodeString(&ValueName,
-				   L"Type");
-	      Status = ZwSetValueKey(ScsiLunKey,
-				     &ValueName,
-				     0,
-				     REG_SZ,
-				     TypeName,
-				     (wcslen(TypeName) + 1) * sizeof(WCHAR));
-	      if (!NT_SUCCESS(Status))
-		{
-		  DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);
-		  ZwClose(ScsiLunKey);
-		  ZwClose(ScsiTargetKey);
-		  ZwClose(ScsiBusKey);
-		  ZwClose(ScsiPortKey);
-		  return(Status);
-		}
-
-	      ZwClose(ScsiLunKey);
-
-	      if (UnitInfo->NextInquiryDataOffset == 0)
-		break;
-
-	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
-		UnitInfo->NextInquiryDataOffset);
 	    }
 
 	  /* Close old target key */
@@ -2032,8 +2125,8 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	    }
 	}
 
-	ZwClose(ScsiBusKey);
-     }
+      ZwClose(ScsiBusKey);
+    }
 
   ZwClose(ScsiPortKey);
 
