@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.19 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: palette.c,v 1.20 2004/06/22 20:08:17 gvg Exp $ */
 #include <w32k.h>
 
 #ifndef NO_MAPPING
@@ -92,6 +92,48 @@ PALETTE_AllocPalette(ULONG Mode,
       PalGDI->GreenMask = Green;
       PalGDI->BlueMask = Blue;
     }
+
+  PALETTE_UnlockPalette(NewPalette);
+
+  return NewPalette;
+}
+
+HPALETTE FASTCALL
+PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
+                               CONST RGBQUAD *Colors)
+{
+  HPALETTE NewPalette;
+  PPALGDI PalGDI;
+  unsigned i;
+
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(sizeof(PALGDI), GDI_OBJECT_TYPE_PALETTE, (GDICLEANUPPROC) PALETTE_InternalDelete);
+  if (NULL == NewPalette)
+    {
+      return NULL;
+    }
+
+  PalGDI = PALETTE_LockPalette(NewPalette);
+  ASSERT( PalGDI );
+
+  PalGDI->Self = NewPalette;
+  PalGDI->Mode = PAL_INDEXED;
+
+  PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
+  if (NULL == PalGDI->IndexedColors)
+    {
+      PALETTE_UnlockPalette(NewPalette);
+      PALETTE_FreePalette(NewPalette);
+      return NULL;
+    }
+  for (i = 0; i < NumColors; i++)
+    {
+      PalGDI->IndexedColors[i].peRed = Colors[i].rgbRed;
+      PalGDI->IndexedColors[i].peGreen = Colors[i].rgbGreen;
+      PalGDI->IndexedColors[i].peBlue = Colors[i].rgbBlue;
+      PalGDI->IndexedColors[i].peFlags = 0;
+    }
+
+  PalGDI->NumColors = NumColors;
 
   PALETTE_UnlockPalette(NewPalette);
 
