@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.66.12.3 2004/09/14 01:00:44 weiden Exp $
+/* $Id: windc.c,v 1.66.12.4 2004/09/26 15:19:33 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -601,6 +601,12 @@ DceFreeDCE(PDCE dce)
 
   ret = dce->next;
 
+  if ( FirstDce == dce )
+  {
+    DPRINT1("DceFreeDCE() asked to delete FirstDce(0x%x), setting it to 0x%x\n", FirstDce, ret );
+    FirstDce = ret;
+  }
+
 #if 0 /* FIXME */
   SetDCHook(dce->hDC, NULL, 0L);
 #endif
@@ -676,6 +682,7 @@ DceEmptyCache()
 {
   while (FirstDce != NULL)
     {
+	  DPRINT1 ( "DceEmptyCache() calling DceFreeDCE(%x)\n", FirstDce);
       DceFreeDCE(FirstDce);
     }
 }
