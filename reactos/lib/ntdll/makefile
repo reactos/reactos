@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.107 2004/08/09 18:17:22 jimtabor Exp $
+# $Id: makefile,v 1.108 2004/08/10 12:03:29 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -39,7 +39,6 @@ DBG_OBJECTS = \
 	dbg/brkpoint.o \
 	dbg/debug.o \
 	dbg/print.o
-#	dbg/winedbg.o
 
 LDR_OBJECTS = \
 	ldr/entry.o \
@@ -64,11 +63,10 @@ RTL_OBJECTS = \
 	rtl/access.o \
 	rtl/apc.o \
 	rtl/atom.o \
-	rtl/dbgbuffer.o \
-	rtl/bitmap.o \
 	rtl/callback.o \
 	rtl/crc32.o \
 	rtl/critical.o \
+	rtl/dbgbuffer.o \
 	rtl/exception.o \
 	rtl/handle.o \
 	rtl/intrlck.o \
@@ -86,6 +84,7 @@ RTL_OBJECTS = \
 	rtl/thread.o \
 	rtl/timerqueue.o \
 	rtl/libsupp.o
+
 
 STDIO_OBJECTS = \
 	stdio/sprintf.o \
