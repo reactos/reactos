@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.25 2001/08/07 14:13:45 ekohl Exp $
+/* $Id: thread.c,v 1.26 2001/08/15 20:35:39 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -415,16 +415,21 @@ WINBOOL STDCALL
 TerminateThread (HANDLE	hThread,
 		 DWORD	dwExitCode)
 {
-   NTSTATUS errCode;
-
-   errCode = NtTerminateThread(hThread,
-			    dwExitCode);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return  FALSE;
-     }
-   return TRUE;
+    if (0 == hThread)
+    {
+        SetLastError (ERROR_INVALID_HANDLE);
+    }
+    else
+    {
+        NTSTATUS Status = NtTerminateThread (hThread, dwExitCode);
+	
+        if (NT_SUCCESS(Status))
+	{
+            return TRUE;
+        }
+        SetLastErrorByStatus (Status);
+    }
+    return FALSE;
 }
 
 

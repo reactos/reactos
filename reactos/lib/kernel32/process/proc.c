@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.40 2001/03/31 01:17:30 dwelch Exp $
+/* $Id: proc.c,v 1.41 2001/08/15 20:35:38 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -523,15 +523,21 @@ TerminateProcess (
 	UINT	uExitCode
 	)
 {
-	NTSTATUS errCode;
-
-	errCode = NtTerminateProcess (hProcess, uExitCode);
-	if (!NT_SUCCESS(errCode))
+    if (0 == hProcess)
+    {
+        SetLastError (ERROR_INVALID_HANDLE);
+    }
+    else
+    {
+        NTSTATUS Status = NtTerminateProcess (hProcess, uExitCode);
+	
+        if (NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (errCode);
-		return FALSE;
-	}
-	return TRUE;
+            return TRUE;
+        }
+        SetLastErrorByStatus (Status);
+    }
+    return FALSE;
 }
 
 
