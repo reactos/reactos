@@ -6,6 +6,29 @@
 
 extern BOOL STDCALL GdiDllInitialize(HANDLE hInstance, DWORD Event, LPVOID Reserved);
 
+void __stdcall Background (HDC Desktop)
+{
+	HPEN Pen;
+	int x, y;
+	
+	Pen = CreatePen(PS_SOLID, 1, RGB(64, 64, 128));
+
+	SelectObject (Desktop, Pen);
+
+	MoveToEx (Desktop, 0, 0, NULL);
+	LineTo (Desktop, 640, 480);
+	for (y = 480, x = 0; x < 640; x+=2)
+	{
+		MoveToEx (Desktop, 0, 0, NULL);
+		LineTo (Desktop, x, y);
+	}
+	for (y = 0, x = 640; y < 480; y+=2)
+	{
+		MoveToEx (Desktop, 0, 0, NULL);
+		LineTo (Desktop, x, y);
+	}
+}
+
 int main (void)
 {
   HDC  Desktop, MyDC, DC24;
@@ -23,6 +46,9 @@ int main (void)
   Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
   if (Desktop == NULL)
     return 1;
+
+  // Background
+  Background (Desktop);
 
   // Create a blue pen and select it into the DC
   BluePen = CreatePen(PS_SOLID, 8, RGB(0, 0, 0xff));
