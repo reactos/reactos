@@ -886,6 +886,20 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
         }
         case TYPE_STUB:
         {
+            if (!kill_at)
+            {
+                const char *check = name + strlen(name);
+                while (name != check &&
+                       '0' <= check[-1] && check[-1] <= '9')
+                {
+                    check--;
+                }
+                if (name != check && check != name + strlen(name) &&
+                    '@' == check[-1])
+                {
+                    fprintf(outfile, "%s", check - 1);
+                }
+            }
             if (NULL != odp->name)
             {
                 fprintf(outfile, "=%s", make_internal_name( odp, spec, "stub" ));
