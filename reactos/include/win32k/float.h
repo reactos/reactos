@@ -3,7 +3,8 @@
 
 #include <win32k/math.h>
 #include <win32k/dc.h>
-#include <freetype/freetype.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 typedef struct tagFLOAT_POINT
 {
