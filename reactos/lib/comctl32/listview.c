@@ -7043,6 +7043,40 @@ static BOOL LISTVIEW_SetItemState(LISTVIEW_INFO *infoPtr, INT nItem, const LVITE
     else
 	bResult = LISTVIEW_SetItemT(infoPtr, &lvItem, TRUE);
 
+    /*
+     *update selection mark
+     *
+     * Investigation on windows 2k showed that selection mark was updated
+     * whenever a new selection was made, but if the selected item was
+     * unselected it was not updated.
+     *
+     * we are probably still not 100% accurate, but this at least sets the
+     * proper selection mark when it is needed
+     */
+
+    if (bResult && (lvItem.state & lvItem.stateMask & LVIS_SELECTED) &&
+        ((infoPtr->nSelectionMark == -1) || (lvItem.iItem <= infoPtr->nSelectionMark)))
+    {
+        int i;
+        infoPtr->nSelectionMark = -1;
+        for (i = 0; i < infoPtr->nItemCount; i++)
+        {
+            if (infoPtr->uCallbackMask & LVIS_SELECTED)
+            {
+                if (LISTVIEW_GetItemState(infoPtr, i, LVIS_SELECTED))
+                {
+                    infoPtr->nSelectionMark = i;
+                    break;
+                }
+            }
+            else if (ranges_contain(infoPtr->selectionRanges, i))
+            {
+                infoPtr->nSelectionMark = i;
+                break;
+            }
+        }
+    }
+
     return bResult;
 }
 
