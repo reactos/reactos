@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.9 2004/12/25 21:30:17 arty Exp $
+/* $Id: select.c,v 1.10 2004/12/27 11:00:01 gvg Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -91,11 +91,11 @@ VOID KillExclusiveSelects( PAFD_DEVICE_EXTENSION DeviceExt ) {
     PAFD_POLL_INFO PollReq;
 
     KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
-    
-    for( ListEntry = DeviceExt->Polls.Flink;
-	 ListEntry != &DeviceExt->Polls;
-	 ListEntry = ListEntry->Flink ) {
+
+    ListEntry = DeviceExt->Polls.Flink;
+    while ( ListEntry != &DeviceExt->Polls ) {
 	Poll = CONTAINING_RECORD(ListEntry, AFD_ACTIVE_POLL, ListEntry);
+	ListEntry = ListEntry->Flink;
 	if( Poll->Exclusive ) {
 	    Irp = Poll->Irp;
 	    PollReq = Irp->AssociatedIrp.SystemBuffer;
