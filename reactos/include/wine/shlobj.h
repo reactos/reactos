@@ -34,6 +34,8 @@ extern "C" {
 #include <shobjidl.h>
 
 
+HRESULT WINAPI SHCoCreateInstance(LPCWSTR, const CLSID*, LPUNKNOWN, REFIID, LPVOID*);
+
 BOOL WINAPI SHGetPathFromIDListA (LPCITEMIDLIST pidl,LPSTR pszPath);
 BOOL WINAPI SHGetPathFromIDListW (LPCITEMIDLIST pidl,LPWSTR pszPath);
 #define     SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
