@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: blockdev.c,v 1.1 2002/06/25 22:23:05 ekohl Exp $
+/* $Id: blockdev.c,v 1.2 2003/11/12 15:30:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,88 +42,8 @@ NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 		IN ULONG DiskSector,
 		IN ULONG SectorCount,
 		IN ULONG SectorSize,
-		IN OUT PUCHAR Buffer)
-{
-  IO_STATUS_BLOCK IoStatus;
-  LARGE_INTEGER Offset;
-  ULONG BlockSize;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
-
-  KeInitializeEvent(&Event,
-		    NotificationEvent,
-		    FALSE);
-
-  Offset.QuadPart = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
-  BlockSize = SectorCount * SectorSize;
-
-  DPRINT("NtfsReadSectors(DeviceObject %x, DiskSector %d, Buffer %x)\n",
-	 DeviceObject, DiskSector, Buffer);
-  DPRINT("Offset %I64x BlockSize %ld\n",
-	 Offset.QuadPart,
-	 BlockSize);
-
-  DPRINT("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				     DeviceObject,
-				     Buffer,
-				     BlockSize,
-				     &Offset,
-				     &Event,
-				     &IoStatus);
-  if (Irp == NULL)
-    {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  DPRINT("Calling IO Driver... with irp %x\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation for %x\n", Irp);
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("Operation pending\n");
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for %x\n", Irp);
-      Status = IoStatus.Status;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      if (Status == STATUS_VERIFY_REQUIRED)
-        {
-	  PDEVICE_OBJECT DeviceToVerify;
-	  NTSTATUS NewStatus;
-
-	  DPRINT1("STATUS_VERIFY_REQUIRED\n");
-	  DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
-	  IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
-
-	  NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
-	  DPRINT1("IoVerifyVolume() retuned (Status %lx)\n", NewStatus);
-        }
-
-      DPRINT("NtfsReadSectors() failed (Status %x)\n", Status);
-      DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
-	     DeviceObject, DiskSector, Buffer,
-	     Offset.QuadPart);
-      return(Status);
-    }
-
-  DPRINT("Block request succeeded for %x\n", Irp);
-
-  return(STATUS_SUCCESS);
-}
-
-
-NTSTATUS
-NtfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
-		   IN ULONG DiskSector,
-		   IN ULONG SectorCount,
-		   IN ULONG SectorSize,
-		   IN OUT PUCHAR Buffer)
+		IN OUT PUCHAR Buffer,
+		IN BOOLEAN Override)
 {
   PIO_STACK_LOCATION Stack;
   IO_STATUS_BLOCK IoStatus;
@@ -157,11 +77,14 @@ NtfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
   if (Irp == NULL)
     {
       DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-//  Stack = IoGetCurrentIrpStackLocation(Irp);
-//  Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+    }
 
   DPRINT("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver(DeviceObject, Irp);
@@ -175,18 +98,9 @@ NtfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
       Status = IoStatus.Status;
     }
 
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("NtfsReadSectors() failed (Status %x)\n", Status);
-      DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
-	     DeviceObject, DiskSector, Buffer,
-	     Offset.QuadPart);
-      return(Status);
-    }
+  DPRINT("NtfsReadSectors() done (Status %x)\n", Status);
 
-  DPRINT("Block request succeeded for %x\n", Irp);
-
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
@@ -196,26 +110,16 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 		    IN PVOID InputBuffer,
 		    IN ULONG InputBufferSize,
 		    IN OUT PVOID OutputBuffer,
-		    IN OUT PULONG OutputBufferSize)
+		    IN OUT PULONG OutputBufferSize,
+		    IN BOOLEAN Override)
 {
-  ULONG BufferSize = 0;
-  PKEVENT Event;
-  PIRP Irp;
+  PIO_STACK_LOCATION Stack;
   IO_STATUS_BLOCK IoStatus;
+  KEVENT Event;
+  PIRP Irp;
   NTSTATUS Status;
 
-  if (OutputBufferSize != NULL)
-    {
-      BufferSize = *OutputBufferSize;
-    }
-
-  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-  if (Event == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  KeInitializeEvent(Event, NotificationEvent, FALSE);
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
   DPRINT("Building device I/O control request ...\n");
   Irp = IoBuildDeviceIoControlRequest(ControlCode,
@@ -223,33 +127,36 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 				      InputBuffer,
 				      InputBufferSize,
 				      OutputBuffer,
-				      BufferSize,
+				      (OutputBufferSize) ? *OutputBufferSize : 0,
 				      FALSE,
-				      Event,
+				      &Event,
 				      &IoStatus);
   if (Irp == NULL)
     {
       DPRINT("IoBuildDeviceIoControlRequest() failed\n");
-      ExFreePool(Event);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
   DPRINT("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver(DeviceObject, Irp);
   if (Status == STATUS_PENDING)
     {
-      KeWaitForSingleObject(Event, Suspended, KernelMode, FALSE, NULL);
+      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
       Status = IoStatus.Status;
     }
 
   if (OutputBufferSize)
     {
-      *OutputBufferSize = BufferSize;
+      *OutputBufferSize = IoStatus.Information;
     }
 
-  ExFreePool(Event);
-
-  return(Status);
+  return Status;
 }
 
 /* EOF */
