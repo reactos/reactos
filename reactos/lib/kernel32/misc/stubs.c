@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.9 1999/10/18 21:50:45 ariadne Exp $
+/* $Id: stubs.c,v 1.10 1999/11/17 21:28:08 ariadne Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -929,71 +929,6 @@ FindNextChangeNotification (
 }
 
 
-HRSRC
-STDCALL
-FindResourceW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpName,
-	LPCWSTR		lpType
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HRSRC
-STDCALL
-FindResourceA (
-	HINSTANCE	hModule,
-	LPCSTR		lpName,
-	LPCSTR		lpType
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HRSRC
-STDCALL
-FindResourceExW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpType,
-	LPCWSTR		lpName,
-	WORD		wLanguage
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HRSRC
-STDCALL
-FindResourceExA (
-	HINSTANCE	hModule,
-	LPCSTR		lpType,
-	LPCSTR		lpName,
-	WORD		wLanguage
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-WINBOOL
-STDCALL
-FlushViewOfFile(
-	LPCVOID	lpBaseAddress,
-	DWORD		dwNumberOfBytesToFlush
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 int
 STDCALL
@@ -1062,15 +997,6 @@ FormatMessageA (
 
 
 
-WINBOOL
-STDCALL
-FreeResource (
-	HGLOBAL	hResData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 BOOL
@@ -2829,16 +2755,7 @@ LoadModule (
 }
 
 
-HGLOBAL
-STDCALL
-LoadResource (
-	HINSTANCE	hModule,
-	HRSRC		hResInfo
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 HLOCAL
@@ -2955,15 +2872,7 @@ LocalUnlock (
 }
 
 
-LPVOID
-STDCALL
-LockResource (
-	HGLOBAL	hResData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
-}
+
 
 
 int
@@ -3662,16 +3571,7 @@ ShowConsoleCursor (
 }
 
 
-DWORD
-STDCALL
-SizeofResource (
-	HINSTANCE	hModule,
-	HRSRC		hResInfo
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 
