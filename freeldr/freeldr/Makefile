@@ -33,7 +33,7 @@ LD			= mingw32-ld
 AR			= mingw32-ar
 NM			= mingw32-nm
 MKDIR		= mkdir
-SEP      = /
+SEP			= /
 else
 RM			= cmd /C del
 CP			= copy /Y 
@@ -42,7 +42,7 @@ LD			= ld
 AR			= ar
 NM			= nm
 MKDIR		= md
-SEP      = /
+SEP			= /
 endif
 
 #############################################
@@ -148,7 +148,7 @@ boot_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)freeldr.sys
 
 .PHONY : setup_loader
 setup_loader : $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys
-	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)reactos$(SEP)setupldr.sys
+	$(CP) $(OBJDIR)$(SEP)$(TARGET)$(SEP)setupldr.sys $(BOOTCD_DIR)$(SEP)disk$(SEP)loader$(SEP)setupldr.sys
 
 #############################################
 
