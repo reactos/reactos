@@ -49,6 +49,7 @@ VOID ObInit(VOID);
 VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmInitializeRegistry2(VOID);
+VOID CmShutdownRegistry(VOID);
 VOID CmImportHive(PCHAR);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 

@@ -31,16 +31,18 @@ NTSTATUS STDCALL NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    if (Action > ShutdownPowerOff)
      return STATUS_INVALID_PARAMETER;
-   
+
+   IoShutdownRegisteredDevices();
+   CmShutdownRegistry();
+   IoShutdownRegisteredFileSystems();
    PiShutdownProcessManager();
    MiShutdownMemoryManager();
-   IoShutdownIoManager();
    
    if (Action == ShutdownNoReboot)
      {
 #if 0
         /* Switch off */
-        HalReturnToFirmware (FIRMWARE_OFF);      
+        HalReturnToFirmware (FIRMWARE_OFF);
 #endif
      }
    else if (Action == ShutdownReboot)

@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.13 2000/05/13 13:51:00 dwelch Exp $
+/* $Id: fs.c,v 1.14 2000/10/05 19:15:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,6 +111,11 @@ VOID IoInitFileSystemImplementation(VOID)
 {
    InitializeListHead(&FileSystemListHead);
    KeInitializeSpinLock(&FileSystemListLock);
+}
+
+VOID IoShutdownRegisteredFileSystems(VOID)
+{
+   DPRINT("IoShutdownRegisteredFileSystems()\n");
 }
 
 NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,

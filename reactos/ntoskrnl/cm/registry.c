@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.39 2000/10/05 14:55:25 jean Exp $
+/* $Id: registry.c,v 1.40 2000/10/05 19:13:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -202,6 +202,11 @@ static KSPIN_LOCK  CmiKeyListLock;
 /*  -----------------------------------------  Forward Declarations  */
 
 
+static NTSTATUS RtlpGetRegistryHandle(ULONG RelativeTo,
+				      PWSTR Path,
+				      BOOLEAN Create,
+				      PHANDLE KeyHandle);
+
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
@@ -225,18 +230,18 @@ static ULONG  CmiGetMaxValueNameLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
 static ULONG  CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
-static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
-                                  IN PKEY_BLOCK  KeyBlock, 
+static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
+                                  IN PKEY_BLOCK  KeyBlock,
                                   OUT PKEY_BLOCK  *SubKeyBlock,
 				  OUT BLOCK_OFFSET *BlockOffset,
                                   IN PCHAR  KeyName,
                                   IN ACCESS_MASK  DesiredAccess);
-static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile, 
+static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile,
                               IN PKEY_BLOCK  CurKeyBlock,
                               OUT PKEY_BLOCK  *SubKeyBlock,
                               IN PCHAR  NewSubKeyName,
                               IN ULONG  TitleIndex,
-                              IN PWSTR  Class, 
+                              IN PWSTR  Class,
                               IN ULONG  CreateOptions);
 static NTSTATUS  CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
                                     IN PKEY_BLOCK  KeyBlock,
@@ -249,7 +254,7 @@ static NTSTATUS  CmiGetValueFromKeyByIndex(IN PREGISTRY_FILE  RegistryFile,
 static NTSTATUS  CmiAddValueToKey(IN PREGISTRY_FILE  RegistryFile,
                                   IN PKEY_BLOCK  KeyBlock,
                                   IN PCHAR  ValueNameBuf,
-                                  IN ULONG  Type, 
+                                  IN ULONG  Type,
                                   IN PVOID  Data,
                                   IN ULONG  DataSize);
 static NTSTATUS  CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
@@ -281,12 +286,12 @@ static NTSTATUS  CmiAllocateValueBlock(IN PREGISTRY_FILE  RegistryFile,
                                        OUT PVALUE_BLOCK  *ValueBlock,
                       		       OUT BLOCK_OFFSET  *VBOffset,
                                        IN PCHAR  ValueNameBuf,
-                                       IN ULONG  Type, 
+                                       IN ULONG  Type,
                                        IN PVOID  Data,
                                        IN ULONG  DataSize);
 static NTSTATUS  CmiReplaceValueData(IN PREGISTRY_FILE  RegistryFile,
                                      IN PVALUE_BLOCK  ValueBlock,
-                                     IN ULONG  Type, 
+                                     IN ULONG  Type,
                                      IN PVOID  Data,
                                      IN ULONG  DataSize);
 static NTSTATUS  CmiDestroyValueBlock(PREGISTRY_FILE  RegistryFile,
@@ -506,19 +511,25 @@ CmInitializeRegistry2(VOID)
   /* FIXME : initialize standards symbolic links */
 }
 
-VOID 
+VOID
+CmShutdownRegistry(VOID)
+{
+  DPRINT1("CmShutdownRegistry()...\n");
+}
+
+VOID
 CmImportHive(PCHAR  Chunk)
 {
   /*  FIXME: implemement this  */
-  return; 
+  return;
 }
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtCreateKey (
 	OUT	PHANDLE			KeyHandle,
 	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes, 
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	IN	ULONG			TitleIndex,
 	IN	PUNICODE_STRING		Class,
 	IN	ULONG			CreateOptions,
@@ -1000,7 +1011,7 @@ CHECKPOINT;
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtFlushKey (
 	IN	HANDLE	KeyHandle
@@ -1010,10 +1021,10 @@ NtFlushKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtOpenKey (
-	OUT	PHANDLE			KeyHandle, 
+	OUT	PHANDLE			KeyHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
@@ -1080,10 +1091,10 @@ NtOpenKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtQueryKey (
-	IN	HANDLE			KeyHandle, 
+	IN	HANDLE			KeyHandle,
 	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
 	OUT	PVOID			KeyInformation,
 	IN	ULONG			Length,
@@ -1227,7 +1238,7 @@ NtQueryKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtQueryValueKey (
 	IN	HANDLE				KeyHandle,
@@ -1384,13 +1395,13 @@ NtQueryValueKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 NtSetValueKey (
-	IN	HANDLE			KeyHandle, 
+	IN	HANDLE			KeyHandle,
 	IN	PUNICODE_STRING		ValueName,
 	IN	ULONG			TitleIndex,
-	IN	ULONG			Type, 
+	IN	ULONG			Type,
 	IN	PVOID			Data,
 	IN	ULONG			DataSize
 	)
@@ -1495,7 +1506,7 @@ NtDeleteValueKey (
 }
 
 NTSTATUS
-STDCALL 
+STDCALL
 NtLoadKey (
 	PHANDLE			KeyHandle,
 	OBJECT_ATTRIBUTES	ObjectAttributes
@@ -1524,11 +1535,11 @@ STDCALL
 NtNotifyChangeKey (
 	IN	HANDLE			KeyHandle,
 	IN	HANDLE			Event,
-	IN	PIO_APC_ROUTINE		ApcRoutine		OPTIONAL, 
-	IN	PVOID			ApcContext		OPTIONAL, 
+	IN	PIO_APC_ROUTINE		ApcRoutine		OPTIONAL,
+	IN	PVOID			ApcContext		OPTIONAL,
 	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
 	IN	ULONG			CompletionFilter,
-	IN	BOOLEAN			Asynchroneous, 
+	IN	BOOLEAN			Asynchroneous,
 	OUT	PVOID			ChangeBuffer,
 	IN	ULONG			Length,
 	IN	BOOLEAN			WatchSubtree
@@ -1602,7 +1613,7 @@ NtSetInformationKey (
 
 
 NTSTATUS
-STDCALL 
+STDCALL
 NtUnloadKey (
 	HANDLE	KeyHandle
 	)
@@ -1612,12 +1623,13 @@ NtUnloadKey (
 
 
 NTSTATUS
-STDCALL 
+STDCALL
 NtInitializeRegistry (
 	BOOLEAN	SetUpBoot
 	)
 {
-	UNIMPLEMENTED;
+//	UNIMPLEMENTED;
+   return STATUS_SUCCESS;
 }
 
 
@@ -1628,7 +1640,19 @@ RtlCheckRegistryKey (
 	IN	PWSTR	Path
 	)
 {
-	UNIMPLEMENTED;
+   HANDLE KeyHandle;
+   NTSTATUS Status;
+
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  FALSE,
+				  &KeyHandle);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   NtClose(KeyHandle);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -1639,7 +1663,19 @@ RtlCreateRegistryKey (
 	IN	PWSTR	Path
 	)
 {
-	UNIMPLEMENTED;
+   HANDLE KeyHandle;
+   NTSTATUS Status;
+
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  TRUE,
+				  &KeyHandle);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   NtClose(KeyHandle);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -1651,7 +1687,26 @@ RtlDeleteRegistryValue (
 	IN	PWSTR	ValueName
 	)
 {
-	UNIMPLEMENTED;
+   HANDLE KeyHandle;
+   NTSTATUS Status;
+   UNICODE_STRING Name;
+
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  TRUE,
+				  &KeyHandle);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   RtlInitUnicodeString(&Name,
+			ValueName);
+
+   NtDeleteValueKey(KeyHandle,
+		    &Name);
+
+   NtClose(KeyHandle);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -1680,10 +1735,130 @@ RtlWriteRegistryValue (
 	IN	ULONG	ValueLength
 	)
 {
-	UNIMPLEMENTED;
+   HANDLE KeyHandle;
+   NTSTATUS Status;
+   UNICODE_STRING Name;
+
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  TRUE,
+				  &KeyHandle);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   RtlInitUnicodeString(&Name,
+			ValueName);
+
+   NtSetValueKey(KeyHandle,
+		 &Name,
+		 0,
+		 ValueType,
+		 ValueData,
+		 ValueLength);
+
+   NtClose(KeyHandle);
+
+   return STATUS_SUCCESS;
 }
 
+
+NTSTATUS STDCALL
+RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
+{
+   return STATUS_UNSUCCESSFUL;
+}
+
+
 /*  ------------------------------------------  Private Implementation  */
+
+static NTSTATUS RtlpGetRegistryHandle(ULONG RelativeTo,
+				      PWSTR Path,
+				      BOOLEAN Create,
+				      PHANDLE KeyHandle)
+{
+   UNICODE_STRING KeyName;
+   WCHAR KeyBuffer[MAX_PATH];
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   NTSTATUS Status;
+
+   if (RelativeTo & RTL_REGISTRY_HANDLE)
+     {
+	*KeyHandle = (HANDLE)Path;
+	return STATUS_SUCCESS;
+     }
+
+   if (RelativeTo & RTL_REGISTRY_OPTIONAL)
+     RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
+
+   if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
+     return STATUS_INVALID_PARAMETER;
+
+   KeyName.Length = 0;
+   KeyName.MaximumLength = MAX_PATH;
+   KeyName.Buffer = KeyBuffer;
+   KeyBuffer[0] = 0;
+
+   switch (RelativeTo)
+     {
+	case RTL_REGISTRY_SERVICES:
+	  RtlAppendUnicodeToString(&KeyName,
+				   L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+	  break;
+
+	case RTL_REGISTRY_CONTROL:
+	  RtlAppendUnicodeToString(&KeyName,
+				   L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
+	  break;
+
+	case RTL_REGISTRY_WINDOWS_NT:
+	  RtlAppendUnicodeToString(&KeyName,
+				   L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
+	  break;
+
+	case RTL_REGISTRY_DEVICEMAP:
+	  RtlAppendUnicodeToString(&KeyName,
+				   L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
+	  break;
+
+	case RTL_REGISTRY_USER:
+	  Status = RtlFormatCurrentUserKeyPath(&KeyName);
+	  if (!NT_SUCCESS(Status))
+	    return Status;
+	  break;
+     }
+
+   if (Path[0] != L'\\')
+     RtlAppendUnicodeToString(&KeyName,
+			      L"\\");
+
+   RtlAppendUnicodeToString(&KeyName,
+			    Path);
+
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+
+   if (Create == TRUE)
+     {
+	Status = NtCreateKey(KeyHandle,
+			     KEY_ALL_ACCESS,
+			     &ObjectAttributes,
+			     0,
+			     NULL,
+			     0,
+			     NULL);
+     }
+   else
+     {
+	Status = NtOpenKey(KeyHandle,
+			   KEY_ALL_ACCESS,
+			   &ObjectAttributes);
+     }
+
+   return Status;
+}
 
 
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
@@ -1806,7 +1981,7 @@ static NTSTATUS CmiObjectCreate(PVOID ObjectBody,
    return STATUS_SUCCESS;
 }
 
-static VOID  
+static VOID
 CmiObjectDelete(PVOID  DeletedObject)
 {
   PKEY_OBJECT  KeyObject;

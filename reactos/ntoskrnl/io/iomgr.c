@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.15 2000/09/10 13:54:01 ekohl Exp $
+/* $Id: iomgr.c,v 1.16 2000/10/05 19:15:50 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -97,14 +97,6 @@ VOID IopDeleteFile(PVOID ObjectBody)
 	ExFreePool(FileObject->FileName.Buffer);
 	FileObject->FileName.Buffer = 0;
      }
-}
-
-VOID IoShutdownIoManager(VOID)
-{
-   /* shut down all registered devices */
-   IoShutdownRegisteredDevices();
-
-
 }
 
 
