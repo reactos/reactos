@@ -79,32 +79,35 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
       StabEntry = StartEntry;
     }
 
-  for (; (ULONG_PTR)StabEntry < (ULONG_PTR)StabsEnd; StabEntry++)
+  if ( RelativeAddress != NULL )
+  {
+    for (; (ULONG_PTR)StabEntry < (ULONG_PTR)StabsEnd; StabEntry++)
     {
       ULONG_PTR SymbolRelativeAddress;
-      
+    
       if (StabEntry->n_type != Type)
         continue;
 
       if (RelativeAddress != NULL)
-        {
-          if (StabEntry->n_value >= SymbolInfo->ImageSize)
-            continue;
+      {
+        if (StabEntry->n_value >= SymbolInfo->ImageSize)
+          continue;
 
-          SymbolRelativeAddress = StabEntry->n_value;
-          if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
-              (SymbolRelativeAddress > AddrFound))
-            {
-	      AddrFound = SymbolRelativeAddress;
-	      BestStabEntry = StabEntry;
-            }
-        }
-      else
-        {
-          BestStabEntry = StabEntry;
+        if (StabEntry->n_value > (ULONG_PTR)RelativeAddress )
           break;
+
+        SymbolRelativeAddress = StabEntry->n_value;
+        if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
+            (SymbolRelativeAddress > AddrFound))
+        {
+          AddrFound = SymbolRelativeAddress;
+          BestStabEntry = StabEntry;
         }
+      }
     }
+  }
+  else
+    BestStabEntry = StabEntry;
 
   if (BestStabEntry == NULL)
   {
@@ -117,4 +120,3 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
 
   return BestStabEntry;
 }
-
