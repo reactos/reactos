@@ -1,4 +1,4 @@
-/* $Id: mksystab.c,v 1.1 2002/04/06 16:07:34 ea Exp $
+/* $Id: mksystab.c,v 1.2 2002/04/10 21:13:30 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Subsystem
  * DESCRIPTION: Build the system calls table for
@@ -8,7 +8,7 @@
  * DATE       : 2001-05-26
  * REVISIONS
  *    2002-03-19 EA added stub file generation
- *    2002-04-02 EA added to the CVS repository
+ *    2002-04-06 EA added to the CVS repository
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -249,6 +249,7 @@ METHOD_TYPE psx_include_iter (int self, PPARSER_CONTEXT context)
 
 METHOD_TYPE psx_include_epilog (int self, PPARSER_CONTEXT context)
 {
+    fprintf (mf[self].fp, "#define PSX_SYSCALL_APIPORT_COUNT %d\n", context->id ++);
     fprintf (mf[self].fp, "#endif /* ndef _PSX_SYSCALL_H */\n");
     fputs ("/* EOF */", mf[self].fp);
     return METHOD_SUCCESS;
