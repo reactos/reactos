@@ -7,6 +7,8 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%
 ;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\bin\explorer.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x00010001,0x00000001
 
+HKCU, "Control Panel\Desktop", "CursorBlinkRate",0x00000000,"530"
+
 ; Common shell folder settings
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemRoot%\Desktop"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common AppData",0x00020000,"%SystemDrive%\Documents and Settings\All Users\Application Data"
