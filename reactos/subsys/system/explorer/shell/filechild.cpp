@@ -70,6 +70,8 @@ ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_p
 FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
  :	ChildWindow(hwnd)
 {
+	CONTEXT("FileChildWindow::FileChildWindow()");
+
 	TCHAR drv[_MAX_DRIVE+1];
 	Entry* entry;
 
@@ -147,6 +149,8 @@ FileChildWindow::~FileChildWindow()
 
 void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
 {
+	CONTEXT("FileChildWindow::set_curdir()");
+
 	_path[0] = TEXT('\0');
 
 	_left->_cur = entry;
@@ -243,6 +247,8 @@ void FileChildWindow::collapse_entry(Pane* pane, Entry* dir)
 
 FileChildWindow* FileChildWindow::create(HWND hmdiclient, const FileChildWndInfo& info)
 {
+	CONTEXT("FileChildWindow::create()");
+
 	MDICREATESTRUCT mcs;
 
 	mcs.szClass = CLASSNAME_WINEFILETREE;
@@ -336,14 +342,14 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 
 			switch(LOWORD(wparam)) {
-			  case ID_WINDOW_NEW:
+			  case ID_WINDOW_NEW: {CONTEXT("PM_DISPATCH_COMMAND ID_WINDOW_NEW");
 				if (_root._entry->_etype == ET_SHELL)
 					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, ShellChildWndInfo(_path,DesktopFolderPath()));
 				else
 					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, FileChildWndInfo(_path));
-				break;
+				break;}
 
-			  case ID_REFRESH: {
+			  case ID_REFRESH: {CONTEXT("ID_REFRESH");
 				bool expanded = _left->_cur->_expanded;
 
 				scan_entry(_left->_cur, _hwnd);
@@ -352,9 +358,9 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					expand_entry(_left->_cur);
 				break;}
 
-			  case ID_ACTIVATE:
+			  case ID_ACTIVATE: {CONTEXT("ID_ACTIVATE");
 				activate_entry(pane, _hwnd);
-				break;
+				break;}
 
 			  default:
 				return pane->command(LOWORD(wparam));

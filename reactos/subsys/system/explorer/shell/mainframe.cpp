@@ -286,7 +286,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_FRM_GET_MENUINFO:
 		return (LPARAM)&_menu_info;
 
-	  case PM_OPEN_WINDOW: {
+	  case PM_OPEN_WINDOW: {CONTEXT("PM_OPEN_WINDOW");
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
 		ShellPath shell_path = DesktopFolderPath();
@@ -307,6 +307,9 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			path = buffer;
 		}
 
+		{
+		OBJ_CONTEXT("create ShellChildWndInfo", path);
+
 		 // Shell Namespace as default view
 		ShellChildWndInfo create_info(path, shell_path);
 
@@ -319,7 +322,8 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
 
 	//	FileChildWindow::create(_hmdiclient, create_info);
-		return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);}
+		return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);
+		}}
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)

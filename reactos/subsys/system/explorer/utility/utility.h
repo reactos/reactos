@@ -498,10 +498,12 @@ struct String
 
 #ifdef UNICODE
 	String(LPCSTR s) {assign(s);}
+	String(const string& other) {assign(other.c_str());}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
 	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));}
 #else
 	String(LPCWSTR s) {assign(s);}
+	String(const wstring& other) {assign(other.c_str());}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
 	void assign(LPCWSTR s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));}
 #endif
@@ -554,6 +556,7 @@ struct String
 	}
 };
 
+
 struct FmtString : public String
 {
 	FmtString(LPCTSTR fmt, ...)
@@ -565,6 +568,57 @@ struct FmtString : public String
 		va_end(l);
 	}
 };
+
+
+#ifdef UNICODE
+
+struct ANS
+{
+	ANS(LPCWSTR s)
+	{
+		int l = wcslen(s) + 1;
+		_str = (LPSTR) malloc(2*l);
+		WideCharToMultiByte(CP_ACP, 0, s, -1, _str, 2*l, 0, 0);
+	}
+
+	~ANS()
+	{
+		free(_str);
+	}
+
+	operator LPCSTR() {return _str;}
+
+protected:
+	LPSTR	_str;
+};
+
+#define	UNC(x) ((LPCWSTR)(x))
+
+#else
+
+#define	ANS(x) ((LPCSTR)(x))
+
+struct UNC
+{
+	UNC(LPCSTR s)
+	{
+		int l = strlen(s) + 1;
+		_str = (LPWSTR) malloc(2*l);
+		MultiByteToWideChar(CP_ACP, 0, s, -1, _str, l);
+	}
+
+	~UNC()
+	{
+		free(_str);
+	}
+
+	operator LPCWSTR() {return _str;}
+
+protected:
+	LPWSTR	_str;
+};
+
+#endif
 
 
  /// link dynamicly to functions by using GetModuleHandle() and GetProcAddress()

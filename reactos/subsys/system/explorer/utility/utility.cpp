@@ -30,6 +30,7 @@
 #include <shellapi.h>
 
 #include <time.h>
+#include <sstream>
 
 
 DWORD WINAPI Thread::ThreadProc(void* para)
@@ -107,6 +108,38 @@ void display_error(HWND hwnd, DWORD error)	//@@ CONTEXT mit ausgeben -> display_
 	}
 
 	LocalFree(msg);
+}
+
+
+Context Context::s_main("-NO-CONTEXT-");
+Context* Context::s_current = &Context::s_main;
+
+String Context::toString() const
+{
+	String str = _ctx;
+
+	if (!_obj.empty())
+		str.appendf(TEXT("\nObject: %s"), (LPCTSTR)_obj);
+
+	return str;
+}
+
+String Context::getStackTrace() const
+{
+	ostringstream str;
+
+	str << "Context Trace:\n";
+
+	for(const Context*p=this; p!=&s_main; p=p->_last) {
+		str << "- " << p->_ctx;
+
+		if (!p->_obj.empty())
+			str << " obj=" << ANS(p->_obj);
+
+		str << '\n';
+	}
+
+	return str.str();
 }
 
 
