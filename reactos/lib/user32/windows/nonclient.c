@@ -1095,6 +1095,8 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     r.top ++;
     r.left += 2;
 
+    r.bottom = r.top + Height;
+
   if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
     if (!(uFlags & DC_SMALLCAP) && ((uFlags & DC_ICON) || (uFlags & DC_INBUTTON)))

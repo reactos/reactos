@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.19 2003/09/09 09:39:21 gvg Exp $
+/* $Id: coord.c,v 1.20 2003/12/21 18:38:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,7 +69,7 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
   return  TRUE;
 }
 
-VOID STATIC FASTCALL
+VOID FASTCALL
 CoordDPtoLP(PDC Dc, LPPOINT Point)
 {
 FLOAT x, y;
@@ -79,6 +79,18 @@ FLOAT x, y;
     y * Dc->w.xformVport2World.eM21 + Dc->w.xformVport2World.eDx;
   Point->y = x * Dc->w.xformVport2World.eM12 +
     y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy;
+}
+
+VOID
+FASTCALL
+IntDPtoLP ( PDC dc, LPPOINT Points, INT Count )
+{
+  INT i;
+
+  ASSERT ( Points );
+
+  for ( i = 0; i < Count; i++ )
+    CoordDPtoLP ( dc, &Points[i] );
 }
 
 /*!
@@ -94,38 +106,25 @@ NtGdiDPtoLP(HDC  hDC,
 	   LPPOINT  UnsafePoints,
 	   int  Count)
 {
-  PDC dc;
-  INT i;
-  LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
-  BOOL ret = FALSE; // default to failure
+   PDC dc;
+   LPPOINT Points = (LPPOINT)ExAllocatePool(PagedPool, Count * sizeof(POINT));
+   BOOL ret = FALSE; // default to failure
 
-  ASSERT(Points);
-  if ( !Points )
-    return ret;
+   if (!Points)
+      return FALSE;
 
-  MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
+   dc = DC_LockDc(hDC);
+   if (dc)
+   {
+      ret = TRUE;
+      MmCopyFromCaller(Points, UnsafePoints, Count * sizeof(POINT));
+      IntDPtoLP(dc, Points, Count);
+      MmCopyToCaller(UnsafePoints, Points, Count * sizeof(POINT));
+      DC_UnlockDc(hDC);
+   }
+   ExFreePool(Points);
 
-  dc = DC_LockDc (hDC);
-  if ( dc )
-  {
-    ret = TRUE;
-    if ( dc->w.vport2WorldValid )
-    {
-      for (i = 0; i < Count; i++)
-	{
-	  CoordDPtoLP ( dc, &Points[i] );
-	}
-    }
-
-    DC_UnlockDc( hDC );
-
-    MmCopyToCaller(  UnsafePoints, Points, Count*sizeof(POINT) );
-
-  }
-
-  ExFreePool ( Points );
-
-  return(TRUE);
+   return ret;
 }
 
 int

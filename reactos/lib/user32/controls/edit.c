@@ -293,7 +293,7 @@ const struct builtin_class_descr EDIT_builtin_class =
 {
 #ifdef __REACTOS__
     L"Edit",               /* name */
-    /*TODO: Fix ExtTextOut so that we can have the CS_PARENTDC style*/
+    /* FIXME: Add CS_PARENTDC when the handling of WM_ERASEBKGND will be fixed! */
     CS_GLOBALCLASS | CS_DBLCLKS, /* style */
     (WNDPROC)EditWndProcW, /* procW */
     (WNDPROC)EditWndProcA, /* procA */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.61 2003/12/13 10:34:13 weiden Exp $ */
+/* $Id: text.c,v 1.62 2003/12/21 18:38:37 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -467,19 +467,276 @@ NtGdiEnumFonts(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL
-STDCALL
-NtGdiExtTextOut(HDC  hdc,
-                     int  X,
-                     int  Y,
-                     UINT  fuOptions,
-                     CONST RECT  *lprc,
-                     LPCWSTR  lpString,
-                     UINT  cbCount,
-                     CONST INT  *lpDx)
+BOOL STDCALL
+NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
+   CONST RECT *lprc, LPCWSTR String, UINT Count, CONST INT *lpDx)
 {
   /* FIXME: Implement */
-  return NtGdiTextOut(hdc, X, Y, lpString, cbCount);
+//  return NtGdiTextOut(hdc, X, Y, lpString, cbCount);
+  // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
+
+  DC *dc;
+  SURFOBJ *SurfObj;
+  int error, glyph_index, n, i;
+  FT_Face face;
+  FT_GlyphSlot glyph;
+  ULONG TextLeft, TextTop, pitch, previous, BackgroundLeft;
+  FT_Bool use_kerning;
+  RECTL DestRect, MaskRect;
+  POINTL SourcePoint, BrushOrigin;
+  HBRUSH hBrushFg = NULL;
+  PBRUSHOBJ BrushFg = NULL;
+  HBRUSH hBrushBg = NULL;
+  PBRUSHOBJ BrushBg = NULL;
+  HBITMAP HSourceGlyph;
+  PSURFOBJ SourceGlyphSurf;
+  SIZEL bitSize;
+  FT_CharMap found = 0, charmap;
+  INT yoff;
+  PFONTOBJ FontObj;
+  PFONTGDI FontGDI;
+  PTEXTOBJ TextObj;
+  PPALGDI PalDestGDI;
+  PXLATEOBJ XlateObj;
+  ULONG Mode;
+
+  dc = DC_LockDc(hDC);
+  if( !dc )
+	return FALSE;
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+
+  XStart += dc->w.DCOrgX;
+  YStart += dc->w.DCOrgY;
+  TextLeft = XStart;
+  TextTop = YStart;
+  BackgroundLeft = XStart;
+
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+
+  if (! NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, &FontObj, &FontGDI)))
+  {
+    goto fail;
+  }
+  face = FontGDI->face;
+
+  if (face->charmap == NULL)
+  {
+    DPRINT("WARNING: No charmap selected!\n");
+    DPRINT("This font face has %d charmaps\n", face->num_charmaps);
+
+    for (n = 0; n < face->num_charmaps; n++)
+    {
+      charmap = face->charmaps[n];
+      DPRINT("found charmap encoding: %u\n", charmap->encoding);
+      if (charmap->encoding != 0)
+      {
+        found = charmap;
+        break;
+      }
+    }
+    if (!found) DPRINT1("WARNING: Could not find desired charmap!\n");
+    error = FT_Set_Charmap(face, found);
+    if (error) DPRINT1("WARNING: Could not set the charmap!\n");
+  }
+
+  error = FT_Set_Pixel_Sizes(face,
+                             /* FIXME should set character height if neg */
+                             (TextObj->logfont.lfHeight < 0 ?
+                              - TextObj->logfont.lfHeight :
+                              TextObj->logfont.lfHeight),
+                             TextObj->logfont.lfWidth);
+  if(error) {
+    DPRINT1("Error in setting pixel sizes: %u\n", error);
+	goto fail;
+  }
+
+  // Create the brushes
+  PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
+  Mode = PalDestGDI->Mode;
+  PALETTE_UnlockPalette(dc->w.hPalette);
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+  hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
+  BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
+  if (OPAQUE == dc->w.backgroundMode)
+    {
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
+      if(hBrushBg)
+      {
+        BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+      }
+      else
+      {
+        EngDeleteXlate(XlateObj);
+        goto fail;
+      }
+    }
+  EngDeleteXlate(XlateObj);
+
+  SourcePoint.x = 0;
+  SourcePoint.y = 0;
+  MaskRect.left = 0;
+  MaskRect.top = 0;
+  BrushOrigin.x = 0;
+  BrushOrigin.y = 0;
+
+  // Determine the yoff from the dc's w.textAlign
+  if (dc->w.textAlign & TA_BASELINE) {
+    yoff = 0;
+  }
+  else
+  if (dc->w.textAlign & TA_BOTTOM) {
+    yoff = -face->size->metrics.descender / 64;
+  }
+  else { // TA_TOP
+    yoff = face->size->metrics.ascender / 64;
+  }
+
+  use_kerning = FT_HAS_KERNING(face);
+  previous = 0;
+
+  for(i=0; i<Count; i++)
+  {
+    glyph_index = FT_Get_Char_Index(face, *String);
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    if(error) {
+      DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+      goto fail;
+    }
+    glyph = face->glyph;
+
+    // retrieve kerning distance and move pen position
+    if (use_kerning && previous && glyph_index)
+    {
+      FT_Vector delta;
+      FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+      TextLeft += delta.x >> 6;
+    }
+
+    if (glyph->format == ft_glyph_format_outline)
+    {
+      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+      if(error) {
+        DPRINT1("WARNING: Failed to render glyph!\n");
+		goto fail;
+      }
+      pitch = glyph->bitmap.pitch;
+    } else {
+      pitch = glyph->bitmap.width;
+    }
+
+    if (OPAQUE == dc->w.backgroundMode)
+      {
+	DestRect.left = BackgroundLeft;
+	DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
+	DestRect.top = TextTop + yoff - (face->size->metrics.ascender + 32) / 64;
+	DestRect.bottom = TextTop + yoff + (- face->size->metrics.descender + 32) / 64;
+	if (fuOptions & ETO_CLIPPED)
+	{
+	   if (DestRect.left > lprc->right || DestRect.right < lprc->left ||
+	       DestRect.top > lprc->bottom || DestRect.bottom < lprc->top)
+	   {
+	      DestRect.right = DestRect.left;
+	   }
+	   else
+	   {
+              DestRect.left = max(DestRect.left, lprc->left);
+              DestRect.right = min(DestRect.right, lprc->right);
+              DestRect.top = max(DestRect.top, lprc->top);
+              DestRect.bottom = min(DestRect.bottom, lprc->bottom);
+	   }
+	}
+	IntEngBitBlt(SurfObj,
+	             NULL,
+		     NULL,
+	             dc->CombinedClip,
+	             NULL,
+	             &DestRect,
+	             &SourcePoint,
+	             &SourcePoint,
+	             BrushBg,
+	             &BrushOrigin,
+		     PATCOPY);
+	BackgroundLeft = DestRect.right;
+      }
+
+    DestRect.left = TextLeft;
+    DestRect.right = TextLeft + glyph->bitmap.width;
+    DestRect.top = TextTop + yoff - glyph->bitmap_top;
+    DestRect.bottom = DestRect.top + glyph->bitmap.rows;
+	
+    if (fuOptions & ETO_CLIPPED)
+    {
+       if (DestRect.left > lprc->right || DestRect.right < lprc->left ||
+           DestRect.top > lprc->bottom || DestRect.bottom < lprc->top)
+       {
+          break;
+       }
+       else
+       {
+          DestRect.left = max(DestRect.left, lprc->left);
+          DestRect.right = min(DestRect.right, lprc->right);
+          DestRect.top = max(DestRect.top, lprc->top);
+          DestRect.bottom = min(DestRect.bottom, lprc->bottom);
+       }
+    }
+
+    bitSize.cx = glyph->bitmap.width;
+    bitSize.cy = glyph->bitmap.rows;
+    MaskRect.right = glyph->bitmap.width;
+    MaskRect.bottom = glyph->bitmap.rows;
+
+    // We should create the bitmap out of the loop at the biggest possible glyph size
+    // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
+
+    HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
+    SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
+
+    // Use the font data as a mask to paint onto the DCs surface using a brush
+    IntEngBitBlt (
+		SurfObj,
+		NULL,
+		SourceGlyphSurf,
+		dc->CombinedClip,
+		NULL,
+		&DestRect,
+		&SourcePoint,
+		(PPOINTL)&MaskRect,
+		BrushFg,
+		&BrushOrigin,
+		0xAACC );
+
+    EngDeleteSurface(HSourceGlyph);
+
+    TextLeft += (glyph->advance.x + 32) / 64;
+    previous = glyph_index;
+
+    String++;
+  }
+  TEXTOBJ_UnlockText(dc->w.hFont);
+  if (NULL != hBrushBg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushBg);
+      NtGdiDeleteObject(hBrushBg);
+    }
+  BRUSHOBJ_UnlockBrush(hBrushFg);
+  NtGdiDeleteObject(hBrushFg);
+  DC_UnlockDc(hDC);
+  return TRUE;
+
+fail:
+  TEXTOBJ_UnlockText( dc->w.hFont );
+  if (NULL != hBrushBg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushBg);
+      NtGdiDeleteObject(hBrushBg);
+    }
+  if (NULL != hBrushFg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushFg);
+      NtGdiDeleteObject(hBrushFg);
+    }
+  DC_UnlockDc( hDC );
+  return FALSE;
 }
 
 BOOL

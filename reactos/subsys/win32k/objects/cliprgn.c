@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.28 2003/12/15 20:47:57 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.29 2003/12/21 18:38:37 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -163,14 +163,13 @@ IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc)
 {
   int retval;
-  DC *dc;
+  PDC dc;
 
   if (!(dc = DC_LockDc(hDC)))
   	return ERROR;
   retval = UnsafeIntGetRgnBox(dc->w.hGCClipRgn, rc);
-
+  IntDPtoLP(dc, (LPPOINT)rc, 2);
   DC_UnlockDc( hDC );
-  NtGdiDPtoLP(hDC, (LPPOINT)rc, 2);
   return(retval);
 }
 
@@ -206,7 +205,42 @@ int STDCALL NtGdiIntersectClipRect(HDC  hDC,
                            int  RightRect,
                            int  BottomRect)
 {
-  UNIMPLEMENTED;
+   INT Result;
+   RECT Rect;
+   HRGN NewRgn;
+   PDC dc = DC_LockDc(hDC);
+
+   if (!dc)
+      return ERROR;
+
+   Rect.left = LeftRect;
+   Rect.top = TopRect;
+   Rect.right = RightRect;
+   Rect.bottom = BottomRect;
+
+   IntLPtoDP(dc, (LPPOINT)&Rect, 2);
+
+   NewRgn = UnsafeIntCreateRectRgnIndirect(&Rect);
+   if (!NewRgn)
+   {
+      Result = ERROR;
+   }
+   else if (!dc->w.hClipRgn)
+   {
+      dc->w.hClipRgn = NewRgn;
+      Result = SIMPLEREGION;
+   }
+   else
+   {
+      Result = NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hClipRgn, NewRgn, RGN_AND);
+      NtGdiDeleteObject(NewRgn);
+   }
+   if (Result != ERROR)
+      CLIPPING_UpdateGCRegion(dc);
+
+   DC_UnlockDc(hDC);
+
+   return Result;
 }
 
 int STDCALL NtGdiOffsetClipRgn(HDC  hDC,

@@ -10,6 +10,15 @@ NtGdiCombineTransform (
 	CONST LPXFORM	xform1,
 	CONST LPXFORM	xform2
 	);
+
+VOID
+FASTCALL
+IntDPtoLP ( PDC dc, LPPOINT Points, INT Count );
+
+VOID
+FASTCALL
+CoordDPtoLP ( PDC Dc, LPPOINT Point );
+
 BOOL
 STDCALL
 NtGdiDPtoLP (
