@@ -64,7 +64,9 @@ MainFrame::MainFrame(HWND hwnd)
 #endif
 
 	TBBUTTON toolbarBtns[] = {
+#ifdef _NO_REBAR
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
+#endif
 		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
@@ -76,106 +78,115 @@ MainFrame::MainFrame(HWND hwnd)
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
 		{7, ID_BROWSE_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{8, ID_BROWSE_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{9, ID_BROWSE_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{10, ID_BROWSE_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{11, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{12, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{9, ID_BROWSE_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{10, ID_BROWSE_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{11, ID_BROWSE_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{12, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{13, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 	};
 
 	_htoolbar = CreateToolbarEx(hwnd, 
 #ifndef _NO_REBAR
 		CCS_NOPARENTALIGN|CCS_NORESIZE|
 #endif
-		WS_CHILD|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
-		sizeof(toolbarBtns)/sizeof(TBBUTTON), 16, 15, 16, 15, sizeof(TBBUTTON));
+		WS_CHILD|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR,
+		toolbarBtns, sizeof(toolbarBtns)/sizeof(TBBUTTON),
+		16, 15, 16, 15, sizeof(TBBUTTON));
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
+	TBBUTTON extraBtns = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
+
+#ifndef _NO_REBAR
+	_hextrabar = CreateToolbarEx(hwnd,
+				CCS_NOPARENTALIGN|CCS_NORESIZE|
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
+				16, 13, 16, 13, sizeof(TBBUTTON));
+#else
+	_hextrabar = CreateToolbarEx(hwnd,
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &extraBtns, 1,
+				16, 13, 16, 13, sizeof(TBBUTTON));
+#endif
+
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_EXTRA_BAR, MF_BYCOMMAND|MF_CHECKED);
+
+
+	extraBtns.fsStyle = BTNS_BUTTON;
+
+#ifdef __WINE__
+	 // insert unix file system button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("/\0"));
+	extraBtns.idCommand = ID_DRIVE_UNIX_FS;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+#endif
+
+	 // insert explorer window button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Explore\0"));
+	extraBtns.idCommand = ID_DRIVE_DESKTOP;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+
+	 // insert shell namespace button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Shell\0"));
+	extraBtns.idCommand = ID_DRIVE_SHELL_NS;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+
+	 // insert web control button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
+	extraBtns.idCommand = ID_WEB_WINDOW;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+
+#define	W_VER_NT 0
+	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
+		 // insert NT object namespace button
+		extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
+		extraBtns.idCommand = ID_DRIVE_NTOBJ_NS;
+		SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+	}
+
+	 // insert Registry button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
+	extraBtns.idCommand = ID_DRIVE_REGISTRY;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+
+#ifdef _DEBUG
+	 // insert FAT direct file system access button
+	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
+	extraBtns.idCommand = ID_DRIVE_FAT;
+	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+#endif
+
+
 	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
-	int btn = 1;
 	PTSTR p;
 
-	_hdrivebar = CreateToolbarEx(hwnd,
 #ifndef _NO_REBAR
+	_hdrivebar = CreateToolbarEx(hwnd,
 				CCS_NOPARENTALIGN|CCS_NORESIZE|
-#endif
 				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
-				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn,
-				1, 16, 13, 16, 13, sizeof(TBBUTTON));
+				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
+				16, 13, 16, 13, sizeof(TBBUTTON));
+#else
+	_hdrivebar = CreateToolbarEx(hwnd,
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn, 1,
+				16, 13, 16, 13, sizeof(TBBUTTON));
+#endif
+
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
 	GetLogicalDriveStrings(BUFFER_LEN, _drives);
 
-	drivebarBtn.fsStyle = BTNS_BUTTON;
-
-#ifdef __WINE__
-	 // insert unix file system button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("/\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_UNIX_FS;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-#endif
-
-	 // insert explorer window button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Explore\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_DESKTOP;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-	 // insert shell namespace button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Shell\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_SHELL_NS;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-#define	W_VER_NT 0
-	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
-		 // insert NT object namespace button
-		SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
-
-		drivebarBtn.idCommand = ID_DRIVE_NTOBJ_NS;
-		SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-		++drivebarBtn.iString;
-	}
-
-	 // insert Registry button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_REGISTRY;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-#ifdef _DEBUG
-	 // insert FAT direct file system access button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_FAT;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-#endif
-
-	 // insert web control button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
-
-	drivebarBtn.idCommand = ID_WEB_WINDOW;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
 	 // register windows drive root strings
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
 
+	drivebarBtn.fsStyle = BTNS_BUTTON;
 	drivebarBtn.idCommand = ID_DRIVE_FIRST;
 
 	for(p=_drives; *p; ) {
-		 // insert drive letter
-		TCHAR b[3] = {tolower(*p)};
-		SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)b);
-
 		switch(GetDriveType(p)) {
 			case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
 			case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
@@ -184,7 +195,7 @@ MainFrame::MainFrame(HWND hwnd)
 			default:/*DRIVE_FIXED*/ drivebarBtn.iBitmap = 2;
 		}
 
-		SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+		SendMessage(_hdrivebar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&drivebarBtn);
 		++drivebarBtn.idCommand;
 		++drivebarBtn.iString;
 
@@ -209,7 +220,7 @@ MainFrame::MainFrame(HWND hwnd)
 #ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
 #define RBBS_HIDETITLE	0x400
 #endif
-	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE; //|RBBS_BREAK
+	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
 
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = 0;
@@ -221,10 +232,18 @@ MainFrame::MainFrame(HWND hwnd)
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt + 4;
-	rbBand.cx = 280;
+	rbBand.cx = 284;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
-	rbBand.lpText = NULL;//TEXT("Drivebar");
+	rbBand.lpText = TEXT("Extras");
+	rbBand.hwndChild = _hextrabar;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cx = 284;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+
+	rbBand.fStyle |= RBBS_BREAK;
+	rbBand.lpText = TEXT("Drives");
 	rbBand.hwndChild = _hdrivebar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt + 4;
@@ -571,6 +590,10 @@ int MainFrame::Command(int id, int code)
 		toggle_child(_hwnd, id, _htoolbar);
 		break;
 
+	  case ID_VIEW_EXTRA_BAR:
+		toggle_child(_hwnd, id, _hextrabar);
+		break;
+
 	  case ID_VIEW_DRIVE_BAR:
 		toggle_child(_hwnd, id, _hdrivebar);
 		break;
@@ -741,6 +764,15 @@ void MainFrame::resize_frame_rect(PRECT prect)
 			ClientRect rt(_htoolbar);
 			prect->top = rt.bottom+3;
 		//	prect->bottom -= rt.bottom+3;
+		}
+
+		if (IsWindowVisible(_hextrabar)) {
+			SendMessage(_hextrabar, WM_SIZE, 0, 0);
+			ClientRect rt(_hextrabar);
+			int new_top = --prect->top + rt.bottom+3;
+			MoveWindow(_hextrabar, 0, prect->top, rt.right, new_top, TRUE);
+			prect->top = new_top;
+		//	prect->bottom -= rt.bottom+2;
 		}
 
 		if (IsWindowVisible(_hdrivebar)) {

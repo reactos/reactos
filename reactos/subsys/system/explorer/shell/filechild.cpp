@@ -439,6 +439,15 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				activate_entry(pane, _hwnd);
 				break;}
 
+			  case ID_BROWSE_BACK:
+				break;//@todo
+
+			  case ID_BROWSE_FORWARD:
+				break;//@todo
+
+			  case ID_BROWSE_UP:
+				break;//@todo
+
 			  default:
 				return pane->command(LOWORD(wparam));
 			}

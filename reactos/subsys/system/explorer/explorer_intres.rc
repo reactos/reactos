@@ -35,6 +35,7 @@ BEGIN
     POPUP "&Prezentare"
     BEGIN
         MENUITEM "&Bara cu instrumente",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -311,6 +312,7 @@ BEGIN
     POPUP "&Ansicht"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -540,6 +542,7 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -888,6 +891,7 @@ BEGIN
     POPUP "&Affichage"
     BEGIN
         MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR

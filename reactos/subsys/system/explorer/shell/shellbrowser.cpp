@@ -421,6 +421,15 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			ShellBrowserChild::create(_create_info);
 			break;}
 
+		  case ID_BROWSE_BACK:
+			break;//@todo
+
+		  case ID_BROWSE_FORWARD:
+			break;//@todo
+
+		  case ID_BROWSE_UP:
+			break;//@todo
+
 		  default:
 			return FALSE;
 		}

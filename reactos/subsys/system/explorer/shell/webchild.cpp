@@ -247,6 +247,10 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 					hr = _control->GoForward();
 					break;
 
+				  case ID_BROWSE_UP:
+					///@todo
+					break;
+
 				  case ID_BROWSE_HOME:
 					hr = _control->GoHome();
 					break;

@@ -95,6 +95,7 @@
 #define ID_VIEW_STATUSBAR               503
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
+#define ID_VIEW_EXTRA_BAR               509
 #define IDC_ROS_EXPLORER                1000
 #define IDC_ICON_ALIGN_0                1002
 #define IDC_ICON_ALIGN_1                1003
@@ -138,6 +139,7 @@
 #define ID_EXPLORE                      40011
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_TASKMGR                      40012
+#define	ID_BROWSE_UP                    40013
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
 #define ID_WINDOW_CASCADE               0xE132
@@ -155,7 +157,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        161
-#define _APS_NEXT_COMMAND_VALUE         40013
+#define _APS_NEXT_COMMAND_VALUE         40014
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
