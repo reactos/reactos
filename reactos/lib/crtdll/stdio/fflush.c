@@ -99,6 +99,8 @@ int fflush(FILE *f)
     } while (rn > 0);
     f->_flag &= ~_IODIRTY;
 
+// commit flushed data
+//    _commit(fileno(f));
   }
   if (OPEN4READING(f) && OPEN4WRITING(f) )
   {
