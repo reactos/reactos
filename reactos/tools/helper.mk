@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.50 2004/02/09 07:03:16 vizzini Exp $
+# $Id: helper.mk,v 1.51 2004/02/19 22:24:58 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -150,7 +150,6 @@ ifeq ($(TARGET_TYPE),proglib)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
@@ -171,7 +170,6 @@ ifeq ($(TARGET_TYPE),dynlink)
 ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
 else
   MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
   MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
@@ -201,7 +199,6 @@ ifeq ($(TARGET_TYPE),library)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -218,7 +215,6 @@ ifeq ($(TARGET_TYPE),kmlibrary)
   MK_DEFEXT := .a
   MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -233,7 +229,6 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_SDKLIBS :=
   MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -253,7 +248,6 @@ ifeq ($(TARGET_TYPE),driver)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -273,7 +267,6 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -293,7 +286,6 @@ ifeq ($(TARGET_TYPE),hal)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTHAL__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -313,7 +305,6 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -333,7 +324,6 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -353,7 +343,6 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -418,7 +407,6 @@ ifeq ($(TARGET_TYPE),subsystem)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
@@ -437,7 +425,6 @@ ifeq ($(TARGET_TYPE),kmdll)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
   MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
