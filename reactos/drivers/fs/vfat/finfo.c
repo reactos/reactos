@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.28 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: finfo.c,v 1.29 2003/06/04 18:01:02 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -503,7 +503,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
-      Status = OffsetToCluster(DeviceExt, Cluster, 
+      Status = OffsetToCluster(DeviceExt, FirstCluster, 
 	          ROUND_DOWN(NewSize - 1, ClusterSize),
 		  &Cluster, FALSE);
 
