@@ -2,6 +2,25 @@
 
 	Changes for compiling with w32api
 
+	* include/ddk/obfuncs.h (ObCreateObject): Remove.
+	* include/ntos/zwtypes.h (ObRosCreateObject):
+	* ntoskrnl/ntoskrnl.def, ntoskrnl/ntoskrnl.edf: Export ObCreateObject@36
+	and ObRosCreateObject@20.
+	* ntoskrnl/cm/ntfunc.c, ntoskrnl/cm/registry.c, ntoskrnl/cm/regobj.c,
+	ntoskrnl/io/create.c, ntoskrnl/io/device.c, ntoskrnl/io/iocomp.c,
+	ntoskrnl/lpc/connect.c, ntoskrnl/lpc/create.c, ntoskrnl/mm/section.c,
+	ntoskrnl/nt/evtpair.c, ntoskrnl/nt/mutant.c, ntoskrnl/nt/ntevent.c,
+	ntoskrnl/nt/ntsem.c, ntoskrnl/nt/nttimer.c, ntoskrnl/nt/profile.c,
+	ntoskrnl/ob/dirobj.c, ntoskrnl/ob/namespc.c, ntoskrnl/ob/symlink.c,
+	ntoskrnl/ps/create.c, ntoskrnl/ps/process.c, ntoskrnl/se/token.c,
+	subsys/win32k/ntuser/winsta.c: Use ObRosCreateObject, not ObCreateObject.
+	* ntoskrnl/ob/object.c (ObRosCreateObject): Rename from ObCreateObject.
+	(ObCreateObject): Add stub.
+
+2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
+
 	* include/ddk/cctypes.h (PREACTOS_COMMON_FCB_HEADER): Remove.
 	(FSRTL_COMMON_FCB_HEADER): Add.
 	* include/ddk/iotypes.h (FILE_OBJECT): Rename field

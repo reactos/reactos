@@ -8,12 +8,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
-//#include <internal/pool.h>
 #include <internal/se.h>
 #include <internal/registry.h>
 
@@ -103,7 +103,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
-  Status = ObCreateObject(KeyHandle,
+  Status = ObRosCreateObject(KeyHandle,
 			  DesiredAccess,
 			  NULL,
 			  CmiKeyType,

@@ -6,7 +6,8 @@
  * UPDATE HISTORY:
 */
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
@@ -146,7 +147,7 @@ CmiObjectParse(PVOID ParsedObject,
 
       /* Create new key object and put into linked list */
       DPRINT("CmiObjectParse: %s\n", cPath);
-      Status = ObCreateObject(NULL,
+      Status = ObRosCreateObject(NULL,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
 			      CmiKeyType,

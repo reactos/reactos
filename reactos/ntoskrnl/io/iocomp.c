@@ -12,8 +12,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
-#include <ntos/synch.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
+//#include <ntos/synch.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -113,7 +114,7 @@ NtCreateIoCompletion(
    PKQUEUE     Queue;
    NTSTATUS    Status;
    
-   Status = ObCreateObject(IoCompletionHandle,
+   Status = ObRosCreateObject(IoCompletionHandle,
                            DesiredAccess,
                            ObjectAttributes,
                            ExIoCompletionType,

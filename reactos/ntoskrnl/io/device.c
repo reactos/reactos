@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.53 2003/06/04 21:35:37 gdalsnes Exp $
+/* $Id: device.c,v 1.54 2003/06/07 12:17:20 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ldr.h>
@@ -284,7 +285,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 			     NULL);
 
   /* Create module object */
-  Status = ObCreateObject(&DriverHandle,
+  Status = ObRosCreateObject(&DriverHandle,
                           STANDARD_RIGHTS_REQUIRED,
                           &ObjectAttributes,
                           IoDriverObjectType,
@@ -659,7 +660,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    if (DeviceName != NULL)
      {
 	InitializeObjectAttributes(&ObjectAttributes,DeviceName,0,NULL,NULL);
-	Status = ObCreateObject(NULL,
+	Status = ObRosCreateObject(NULL,
 				0,
 				&ObjectAttributes,
 				IoDeviceObjectType,
@@ -667,7 +668,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
      }
    else
      {
-	Status = ObCreateObject(NULL,
+	Status = ObRosCreateObject(NULL,
 				0,
 				NULL,
 				IoDeviceObjectType,
@@ -678,7 +679,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("IoCreateDevice() ObCreateObject failed, status: 0x%08X\n", Status);
+	DPRINT("IoCreateDevice() ObRosCreateObject failed, status: 0x%08X\n", Status);
 	return(Status);
      }
   

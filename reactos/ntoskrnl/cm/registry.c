@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.103 2003/06/03 07:28:01 ekohl Exp $
+/* $Id: registry.c,v 1.104 2003/06/07 12:17:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,8 @@
  *                  Created 22/05/98
  */
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <roscfg.h>
 #include <limits.h>
 #include <string.h>
@@ -289,7 +290,7 @@ CmInitializeRegistry(VOID)
   /* Create '\Registry' key. */
   RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
-  Status = ObCreateObject(&RootKeyHandle,
+  Status = ObRosCreateObject(&RootKeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		&ObjectAttributes,
 		CmiKeyType,
@@ -542,7 +543,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
-  Status = ObCreateObject(NULL,
+  Status = ObRosCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
 			  NULL,
 			  CmiKeyType,
@@ -554,7 +555,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
+      DPRINT1 ("ObRosCreateObject() failed (Status %lx)\n", Status);
       ObDereferenceObject (ParentKey);
       return Status;
     }

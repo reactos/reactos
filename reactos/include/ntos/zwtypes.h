@@ -1666,4 +1666,11 @@ typedef struct _KINTERRUPT *PKINTERRUPT;
 
 #endif /* __USE_W32API */
 
+NTSTATUS STDCALL
+ObRosCreateObject(OUT PHANDLE Handle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN POBJECT_TYPE Type,
+  OUT PVOID *Object);
+
 #endif
