@@ -1482,7 +1482,7 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	int h = min(_logo_size.cy, clnt.bottom);
 
 	RECT rect = {0, 0, _logo_size.cx, clnt.bottom-h};
-	HBRUSH hbr = CreateSolidBrush(clr_bits<=8? clr_bits<=4? RGB(192,192,192): RGB(166,202,240): RGB(71,103,121));	// same color as the background color in the logo bitmap
+	HBRUSH hbr = CreateSolidBrush(GetPixel(mem_dc, 0, 0));
 	FillRect(canvas, &rect, hbr);
 	DeleteObject(hbr);
 
