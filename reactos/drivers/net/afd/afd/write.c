@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.8 2004/10/03 20:36:45 arty Exp $
+/* $Id: write.c,v 1.9 2004/10/03 21:16:27 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -312,7 +312,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      FCB );
     
 	ExFreePool( TargetAddress );
-    }
+    } else Status = STATUS_NO_MEMORY;
 
     if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 

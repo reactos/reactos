@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.3 2004/07/18 22:53:59 arty Exp $
+/* $Id: connect.c,v 1.4 2004/10/03 21:16:27 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -124,6 +124,7 @@ NTSTATUS STDCALL
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PTDI_CONNECTION_INFORMATION TargetAddress;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_CONNECT_INFO ConnectReq;
@@ -181,14 +182,20 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = WarmSocketForConnection( FCB );
 
 	FCB->State = SOCKET_STATE_CONNECTING;
+
+	TdiBuildConnectionInfo
+	    ( &TargetAddress,
+	      ((PTRANSPORT_ADDRESS)&ConnectReq->RemoteAddress) );
 	
-	if( NT_SUCCESS(Status) ) {
+	if( TargetAddress ) {
 	    Status = TdiConnect( &FCB->PendingTdiIrp, 
 				 FCB->Connection.Object,
-				 FCB->RemoteAddress,
+				 TargetAddress,
 				 StreamSocketConnectComplete,
 				 FCB );
-	}
+
+	    ExFreePool( TargetAddress );
+	} else Status = STATUS_NO_MEMORY;
 	break;
 
     default:

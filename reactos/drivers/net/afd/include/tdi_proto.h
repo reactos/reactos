@@ -3,7 +3,7 @@
 
 NTSTATUS TdiConnect( PIRP *PendingIrp,
 		     PFILE_OBJECT ConnectionObject,
-		     PTRANSPORT_ADDRESS RemoteAddress,
+		     PTDI_CONNECTION_INFORMATION RemoteAddress,
 		     PIO_COMPLETION_ROUTINE CompletionRoutine,
 		     PVOID CompletionContext );
 

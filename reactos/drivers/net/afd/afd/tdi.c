@@ -271,7 +271,7 @@ NTSTATUS TdiOpenConnectionEndpointFile(
 NTSTATUS TdiConnect(
     PIRP *Irp,
     PFILE_OBJECT ConnectionObject,
-    PTRANSPORT_ADDRESS RemoteAddress,
+    PTDI_CONNECTION_INFORMATION RemoteAddress,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
 /*
@@ -283,8 +283,6 @@ NTSTATUS TdiConnect(
  *     Status of operation
  */
 {
-  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
-  PTDI_CONNECTION_INFORMATION ReturnConnectionInfo;
   PDEVICE_OBJECT DeviceObject;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
@@ -296,23 +294,6 @@ NTSTATUS TdiConnect(
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  /* Use same TDI address type for return connection information */
-  Status = TdiBuildConnectionInfo(&RequestConnectionInfo, 
-				  &RemoteAddress->Address[0]);
-  if (!NT_SUCCESS(Status)) {
-    ExFreePool(RequestConnectionInfo);
-    return Status;
-  }
-
-  /* Use same TDI address type for return connection information */
-  Status = TdiBuildConnectionInfo(&ReturnConnectionInfo, 
-				  &RemoteAddress->Address[0]);
-  if (!NT_SUCCESS(Status)) {
-    ExFreePool(RequestConnectionInfo);
-    ExFreePool(ReturnConnectionInfo);
-    return Status;
-  }
-
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
   *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,             /* Sub function */
@@ -321,7 +302,6 @@ NTSTATUS TdiConnect(
 					  &Event,                  /* Event */
 					  &Iosb);                  /* Status */
   if (!*Irp) {
-    ExFreePool(ReturnConnectionInfo);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -331,12 +311,10 @@ NTSTATUS TdiConnect(
                   CompletionRoutine,      /* Completion routine */
                   CompletionContext,      /* Completion routine context */
                   NULL,                   /* Time */
-                  RequestConnectionInfo,  /* Request connection information */
-                  ReturnConnectionInfo);  /* Return connection information */
+                  RemoteAddress,          /* Request connection information */
+                  RemoteAddress);         /* Return connection information */
 
   Status = TdiCall(*Irp, DeviceObject, &Event, &Iosb);
-
-  ExFreePool(ReturnConnectionInfo);
 
   return Status;
 }
