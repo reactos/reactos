@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.40 2003/12/09 10:38:05 gvg Exp $
+/* $Id: dir.c,v 1.41 2003/12/28 21:25:48 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -541,9 +541,9 @@ SearchPathA (
 	Buffer.MaximumLength = nBufferLength;
 	Buffer.Buffer = lpBuffer;
 
-	RetValue = SearchPathW (PathU.Buffer,
-	                        FileNameU.Buffer,
-	                        ExtensionU.Buffer,
+	RetValue = SearchPathW (NULL == lpPath ? NULL : PathU.Buffer,
+	                        NULL == lpFileName ? NULL : FileNameU.Buffer,
+	                        NULL == lpExtension ? NULL : ExtensionU.Buffer,
 	                        nBufferLength,
 	                        BufferU.Buffer,
 	                        &FilePartW);
@@ -558,15 +558,21 @@ SearchPathA (
 	             0,
 	             ExtensionU.Buffer);
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&Buffer,
-		                              &BufferU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&Buffer,
-		                             &BufferU,
-		                             FALSE);
+	if (0 != RetValue)
+	{
+		BufferU.Length = wcslen(BufferU.Buffer) * sizeof(WCHAR);
+		/* convert ansi (or oem) string to unicode */
+		if (bIsFileApiAnsi)
+			RtlUnicodeStringToAnsiString (&Buffer,
+			                              &BufferU,
+			                              FALSE);
+		else
+			RtlUnicodeStringToOemString (&Buffer,
+			                             &BufferU,
+			                             FALSE);
+		/* nul-terminate ascii string */
+		Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
+	}
 
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,
