@@ -38,6 +38,17 @@
 #define LATCH (CLOCK_TICK_RATE / HZ)
 
 
+/* No Mouse */
+#define MOUSE_TYPE_NONE			0
+/* Microsoft Mouse with 2 buttons */
+#define MOUSE_TYPE_MICROSOFT	1
+/* Logitech Mouse with 3 buttons */
+#define MOUSE_TYPE_LOGITECH		2
+/* Microsoft Wheel Mouse (aka Z Mouse) */
+#define MOUSE_TYPE_WHEELZ		3
+/* Mouse Systems Mouse */
+#define MOUSE_TYPE_MOUSESYSTEMS	4
+
 
 
 typedef struct _CM_INT13_DRIVE_PARAMETER
@@ -57,8 +68,6 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
   U32 SectorsPerTrack;
   U32 NumberOfHeads;
 } CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
-
-
 
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
@@ -88,6 +97,13 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
   U32 ProtectedModeDataBaseAddress;
 } __attribute__((packed)) CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
 
+
+typedef struct _CM_SERIAL_DEVICE_DATA
+{
+  U16 Version;
+  U16 Revision;
+  U32 BaudClock;
+} CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
 
 
 static char Hex[] = "0123456789ABCDEF";
@@ -411,7 +427,8 @@ SetHarddiskConfigurationData(HKEY DiskKey,
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = 0;
   FullResourceDescriptor->PartialResourceList.Count = 1;
-//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+    CmResourceTypeDeviceSpecific;
 //  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
 //  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
@@ -544,7 +561,7 @@ DetectBiosDisks(HKEY SystemKey,
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_INT13_DRIVE_PARAMETER Int13Drives;
   GEOMETRY Geometry;
-  char Buffer[80];
+  CHAR Buffer[80];
   HKEY DiskKey;
   U32 DiskCount;
   U32 Size;
@@ -578,7 +595,8 @@ DetectBiosDisks(HKEY SystemKey,
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = -1;
   FullResourceDescriptor->PartialResourceList.Count = 1;
-//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+    CmResourceTypeDeviceSpecific;
 //  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
 //  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
@@ -642,6 +660,495 @@ DetectBiosDisks(HKEY SystemKey,
       /* Set disk values */
       SetHarddiskConfigurationData(DiskKey, 0x80 + i);
       SetHarddiskIdentifier(DiskKey, 0x80 + i);
+    }
+}
+
+
+static VOID
+InitializeSerialPort(U32 Port,
+		     U32 LineControl)
+{
+  WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);  /* set DLAB on   */
+  WRITE_PORT_UCHAR((PUCHAR)Port,     0x60);  /* speed LO byte */
+  WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* speed HI byte */
+  WRITE_PORT_UCHAR((PUCHAR)Port + 3, LineControl);
+  WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* set comm and DLAB to 0 */
+  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);  /* DR int enable */
+  READ_PORT_UCHAR((PUCHAR)Port + 5);  /* clear error bits */
+}
+
+
+static U32
+DetectMicrosoftMouse(U32 Port)
+{
+  CHAR Buffer[4];
+  U32 i;
+  U32 TimeOut = 250;
+  U8 LineControl;
+
+  /* Shutdown mouse or something like that */ 
+  LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
+  WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
+  KeStallExecutionProcessor(500000);
+
+  /* Clear buffer */
+  while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
+    READ_PORT_UCHAR((PUCHAR)Port);
+
+  /*
+   * Send modem control with 'Data Terminal Ready', 'Request To Send' and
+   * 'Output Line 2' message. This enables mouse to identify.
+   */
+  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
+
+  /* Wait 10 milliseconds for the mouse getting ready */
+  KeStallExecutionProcessor(10000);
+
+  /* Read first four bytes, which contains Microsoft Mouse signs */
+  for (i = 0; i < 4; i++)
+    {
+      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+	{
+	  KeStallExecutionProcessor(1000);
+	  --TimeOut;
+	  if (TimeOut == 0)
+	    return MOUSE_TYPE_NONE;
+	}
+      Buffer[i] = READ_PORT_UCHAR((PUCHAR)Port);
+    }
+
+  DbgPrint((DPRINT_HWDETECT,
+	    "Mouse data: %x %x %x %x\n",
+	    Buffer[0],Buffer[1],Buffer[2],Buffer[3]));
+
+  /* Check that four bytes for signs */
+  for (i = 0; i < 4; ++i)
+    {
+      if (Buffer[i] == 'B')
+	{
+	  /* Sign for Microsoft Ballpoint */
+//	  DbgPrint("Microsoft Ballpoint device detected\n");
+//	  DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET\n");
+	  return MOUSE_TYPE_NONE;
+	}
+      else if (Buffer[i] == 'M')
+	{
+	  /* Sign for Microsoft Mouse protocol followed by button specifier */
+	  if (i == 3)
+	    {
+	      /* Overflow Error */
+	      return MOUSE_TYPE_NONE;
+	    }
+
+	  switch (Buffer[i + 1])
+	    {
+	      case '3':
+		DbgPrint((DPRINT_HWDETECT,
+			  "Microsoft Mouse with 3-buttons detected\n"));
+		return MOUSE_TYPE_LOGITECH;
+
+	      case 'Z':
+		DbgPrint((DPRINT_HWDETECT,
+			  "Microsoft Wheel Mouse detected\n"));
+		return MOUSE_TYPE_WHEELZ;
+
+	      /* case '2': */
+	      default:
+		DbgPrint((DPRINT_HWDETECT,
+			  "Microsoft Mouse with 2-buttons detected\n"));
+		return MOUSE_TYPE_MICROSOFT;
+	    }
+	}
+    }
+
+  return MOUSE_TYPE_NONE;
+}
+
+
+static U32
+GetMousePnpId(U32 Port, char *Buffer)
+{
+  U32 TimeOut;
+  U32 i = 0;
+  char c;
+  char x;
+
+  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);
+
+  /* Wait 10 milliseconds for the mouse getting ready */
+  KeStallExecutionProcessor(200000);
+
+  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
+
+  KeStallExecutionProcessor(200000);
+
+  for (;;)
+    {
+      TimeOut = 250;
+      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+	{
+	  KeStallExecutionProcessor(1000);
+	  --TimeOut;
+	  if (TimeOut == 0)
+	    {
+	      return 0;
+	    }
+	}
+
+      c = READ_PORT_UCHAR((PUCHAR)Port);
+      if (c == 0x08 || c == 0x28)
+	break;
+    }
+
+  Buffer[i++] = c;
+  x = c + 1;
+
+  for (;;)
+    {
+      TimeOut = 250;
+      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+	{
+	  KeStallExecutionProcessor(1000);
+	  --TimeOut;
+	  if (TimeOut == 0)
+	    return 0;
+	}
+      c = READ_PORT_UCHAR((PUCHAR)Port);
+      Buffer[i++] = c;
+      if (c == x)
+	break;
+      if (i >= 256)
+	break;
+    }
+
+  return i;
+}
+
+
+static VOID
+DetectSerialPointerPeripheral(HKEY ControllerKey,
+			      U32 Base)
+{
+  CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  char Buffer[256];
+  char Identifier[256];
+  HKEY PeripheralKey;
+  U32 MouseType;
+  U32 Length;
+  U32 i;
+  U32 j;
+  S32 Error;
+
+  DbgPrint((DPRINT_HWDETECT,
+	    "DetectSerialPointerPeripheral()\n"));
+
+  Identifier[0] = 0;
+
+  InitializeSerialPort(Base, 2);
+  MouseType = DetectMicrosoftMouse(Base);
+
+  if (MouseType != MOUSE_TYPE_NONE)
+    {
+      Length = GetMousePnpId(Base, Buffer);
+      DbgPrint((DPRINT_HWDETECT,
+		"PnP ID length: %u\n",
+		Length));
+
+      if (Length != 0)
+	{
+	  /* Convert PnP sting to ASCII */
+	  if (Buffer[0] == 0x08)
+	    {
+	      for (i = 0; i < Length; i++)
+		Buffer[i] += 0x20;
+	    }
+	  Buffer[Length] = 0;
+
+	  DbgPrint((DPRINT_HWDETECT,
+		    "PnP ID string: %s\n",
+		    Buffer));
+
+	  /* Copy PnpId string */
+	  memcpy(&Identifier[0],
+		 &Buffer[3],
+		 7);
+	  memcpy(&Identifier[7],
+		 " - ",
+		 4);
+
+	  /* Skip device serial number */
+	  i = 10;
+	  if (Buffer[i] == '\\')
+	    {
+	      for (j = ++i; i < Length; ++i)
+		{
+		  if (Buffer[i] == '\\')
+		    break;
+		}
+	      if (i >= Length)
+		i -= 3;
+	    }
+
+	  /* Skip PnP class */
+	  if (Buffer[i] == '\\')
+	    {
+	      for (j = ++i; i < Length; ++i)
+		{
+		  if (Buffer[i] == '\\')
+		    break;
+		}
+
+	      if (i >= Length)
+	        i -= 3;
+	    }
+
+	  /* Skip compatible PnP Id */
+	  if (Buffer[i] == '\\')
+	    {
+	      for (j = ++i; i < Length; ++i)
+		{
+		  if (Buffer[i] == '\\')
+		    break;
+		}
+	      if (Buffer[j] == '*')
+		++j;
+	      if (i >= Length)
+		i -= 3;
+	    }
+
+	  /* Get product description */
+	  if (Buffer[i] == '\\')
+	    {
+	      for (j = ++i; i < Length; ++i)
+		{
+		  if (Buffer[i] == ';')
+		    break;
+		}
+	      if (i >= Length)
+		i -= 3;
+	      if (i > j + 1)
+		{
+		  memcpy(&Identifier[10],
+			 &Buffer[j],
+			 i - j);
+		  Identifier[10 + (i-j)] = 0;
+		}
+	    }
+
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Identifier string: %s\n",
+		    Identifier));
+	}
+
+      if (Length == 0 || strlen(Identifier) < 11)
+	{
+	  switch (MouseType)
+	    {
+	      case MOUSE_TYPE_LOGITECH:
+		strcpy (Identifier,
+			"LOGITECH SERIAL MOUSE");
+		break;
+
+	      case MOUSE_TYPE_WHEELZ:
+		strcpy (Identifier,
+			"MICROSOFT SERIAL MOUSE WITH WHEEL");
+		break;
+
+	      case MOUSE_TYPE_MICROSOFT:
+	      default:
+		strcpy (Identifier,
+			"MICROSOFT SERIAL MOUSE");
+		break;
+	    }
+	}
+
+      /* Create 'PointerPeripheral' key */
+      Error = RegCreateKey(ControllerKey,
+			   "PointerPeripheral\\0",
+			   &PeripheralKey);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Failed to create peripheral key\n"));
+	  return;
+	}
+      DbgPrint((DPRINT_HWDETECT,
+		"Created key: PointerPeripheral\\0\n"));
+
+      /* Set 'ComponentInformation' value */
+      SetComponentInformation(PeripheralKey,
+			      0x20,
+			      0,
+			      0xFFFFFFFF);
+
+      /* Set 'Configuration Data' value */
+      memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+      FullResourceDescriptor.InterfaceType = Isa;
+      FullResourceDescriptor.BusNumber = 0;
+      FullResourceDescriptor.PartialResourceList.Count = 0;
+
+      Error = RegSetValue(PeripheralKey,
+			  "Configuration Data",
+			  REG_FULL_RESOURCE_DESCRIPTOR,
+			  (PU8)&FullResourceDescriptor,
+			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue(Configuration Data) failed (Error %u)\n",
+		    (int)Error));
+	}
+
+      /* Set 'Identifier' value */
+      Error = RegSetValue(PeripheralKey,
+			  "Identifier",
+			  REG_SZ,
+			  (PU8)Identifier,
+			  strlen(Identifier) + 1);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue() failed (Error %u)\n",
+		    (int)Error));
+	}
+    }
+}
+
+
+static VOID
+DetectSerialPorts(HKEY SystemKey,
+		  HKEY BusKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  PCM_SERIAL_DEVICE_DATA SerialDeviceData;
+  U32 Base[4] = {0x3F8, 0x2F8, 0x3E8, 0x2E8};
+  U32 Irq[4] = {4, 3, 4, 3};
+  char Buffer[80];
+  U32 ControllerNumber = 0;
+  HKEY ControllerKey;
+  U32 i;
+  S32 Error;
+  U32 Size;
+
+  DbgPrint((DPRINT_HWDETECT, "DetectSerialPorts()\n"));
+
+  for (i = 0; i < 4; i++)
+    {
+      WRITE_PORT_UCHAR ((PUCHAR)(Base[i] + 4), 0x10);
+      if (!(READ_PORT_UCHAR((PUCHAR)Base[i] + 6) & 0xf0))
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Found COM%u port at 0x%x\n",
+		    i + 1,
+		    Base[i]));
+
+	  /* Create controller key */
+	  sprintf(Buffer,
+		  "SerialController\\%u",
+		  ControllerNumber);
+
+	  Error = RegCreateKey(BusKey,
+			       Buffer,
+			       &ControllerKey);
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+	      continue;
+	    }
+	  DbgPrint((DPRINT_HWDETECT, "Created key: %s\n", Buffer));
+
+	  /* Set 'ComponentInformation' value */
+	  SetComponentInformation(ControllerKey,
+				  0x78,
+				  ControllerNumber,
+				  0xFFFFFFFF);
+
+	  /* Build full device descriptor */
+	  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+		 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
+		 sizeof(CM_SERIAL_DEVICE_DATA);
+	  FullResourceDescriptor = MmAllocateMemory(Size);
+	  if (FullResourceDescriptor == NULL)
+	    {
+	      DbgPrint((DPRINT_HWDETECT,
+			"Failed to allocate resource descriptor\n"));
+	      continue;
+	    }
+	  memset(FullResourceDescriptor, 0, Size);
+
+	  /* Initialize resource descriptor */
+	  FullResourceDescriptor->InterfaceType = Isa;
+	  FullResourceDescriptor->BusNumber = 0;
+	  FullResourceDescriptor->PartialResourceList.Count = 3;
+
+	  /* Set IO Port */
+	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+	  PartialDescriptor->Type = CmResourceTypePort;
+	  PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+	  PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+	  PartialDescriptor->u.Port.Start = (U64)Base[i];
+	  PartialDescriptor->u.Port.Length = 7;
+
+	  /* Set Interrupt */
+	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
+	  PartialDescriptor->Type = CmResourceTypeInterrupt;
+	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+	  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+	  PartialDescriptor->u.Interrupt.Level = Irq[i];
+	  PartialDescriptor->u.Interrupt.Vector = Irq[i];
+	  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+	  /* Set serial data (device specific) */
+	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[2];
+	  PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+	  PartialDescriptor->Flags = 0;
+	  PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_SERIAL_DEVICE_DATA);
+
+	  SerialDeviceData =
+	   (PCM_SERIAL_DEVICE_DATA)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[3];
+	  SerialDeviceData->BaudClock = 1843200; /* UART Clock frequency (Hertz) */
+
+	  /* Set 'Configuration Data' value */
+	  Error = RegSetValue(ControllerKey,
+			      "Configuration Data",
+			      REG_FULL_RESOURCE_DESCRIPTOR,
+			      (PU8) FullResourceDescriptor,
+			      Size);
+	  MmFreeMemory(FullResourceDescriptor);
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT,
+			"RegSetValue(Configuration Data) failed (Error %u)\n",
+			(int)Error));
+	    }
+
+	  /* Set 'Identifier' value */
+	  sprintf(Buffer,
+		  "COM%u",
+		  i + 1);
+	  Error = RegSetValue(BusKey,
+			      "Identifier",
+			      REG_SZ,
+			      (PU8)Buffer,
+			      5);
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT,
+			"RegSetValue() failed (Error %u)\n",
+			(int)Error));
+	      continue;
+	    }
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Created value: Identifier %s\n",
+		    Buffer));
+
+	  /* Detect serial mouse */
+	  DetectSerialPointerPeripheral(ControllerKey, Base[i]);
+
+	  ControllerNumber++;
+	}
     }
 }
 
@@ -719,8 +1226,10 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   DetectBiosDisks(SystemKey, BusKey);
 #if 0
   DetectBiosFloppyDisks(SystemKey, BusKey);
+#endif
 
-  DetectBiosSerialPorts();
+  DetectSerialPorts(SystemKey, BusKey);
+#if 0
   DetectBiosParallelPorts();
 
   DetectBiosKeyboard();

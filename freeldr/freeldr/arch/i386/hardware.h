@@ -66,6 +66,7 @@ typedef enum _CM_SHARE_DISPOSITION
 
 typedef U64 PHYSICAL_ADDRESS;
 
+
 typedef struct
 {
   U8 Type;
@@ -103,6 +104,14 @@ typedef struct
 	} __attribute__((packed)) DeviceSpecificData;
     } __attribute__((packed)) u;
 } __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags */
+#define CM_RESOURCE_PORT_MEMORY               0x0000
+#define CM_RESOURCE_PORT_IO                   0x0001
+
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
+#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
 
 
 typedef struct
