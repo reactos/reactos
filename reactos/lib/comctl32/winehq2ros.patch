@@ -1,13 +1,10 @@
-? Makefile.ros-template
-? makefile
-? winehq2ros.patch
 Index: comctl32.spec
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/comctl32.spec,v
 retrieving revision 1.46
 diff -u -r1.46 comctl32.spec
 --- comctl32.spec	19 Oct 2004 22:59:59 -0000	1.46
-+++ comctl32.spec	20 Oct 2004 08:27:55 -0000
++++ comctl32.spec	21 Oct 2004 08:50:24 -0000
 @@ -106,13 +106,13 @@
  412 stdcall RemoveWindowSubclass(long ptr long)
  413 stdcall DefSubclassProc(long long long long)
@@ -35,7 +32,7 @@ RCS file: /home/wine/wine/dlls/comctl32/listview.c,v
 retrieving revision 1.394
 diff -u -r1.394 listview.c
 --- listview.c	2 Sep 2004 23:00:53 -0000	1.394
-+++ listview.c	20 Oct 2004 08:27:58 -0000
++++ listview.c	21 Oct 2004 08:50:32 -0000
 @@ -146,6 +146,7 @@
  #include <assert.h>
  #include <ctype.h>
@@ -70,7 +67,7 @@ RCS file: /home/wine/wine/dlls/comctl32/string.c,v
 retrieving revision 1.5
 diff -u -r1.5 string.c
 --- string.c	22 Sep 2004 19:10:27 -0000	1.5
-+++ string.c	20 Oct 2004 08:27:59 -0000
++++ string.c	21 Oct 2004 08:50:38 -0000
 @@ -264,7 +264,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -89,3 +86,19 @@ diff -u -r1.5 string.c
  }
  
  /*************************************************************************
+Index: treeview.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/treeview.c,v
+retrieving revision 1.156
+diff -u -r1.156 treeview.c
+--- treeview.c	7 Oct 2004 17:34:31 -0000	1.156
++++ treeview.c	21 Oct 2004 08:50:45 -0000
+@@ -2328,7 +2328,7 @@
+ 	    SelectObject(hdc, hOldPen);
+ 	    DeleteObject(hNewPen);
+ 
+-	    if (height < 16 || width < 16)
++	    if (height < 32 || width < 32)
+ 	    {
+ 	        MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
+ 	        LineTo(hdc, centerx + plussize, centery);
