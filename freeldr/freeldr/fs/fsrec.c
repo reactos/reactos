@@ -98,7 +98,7 @@ BOOL FsRecIsExt2(U32 DriveNumber, U32 VolumeStartSector)
 BOOL FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector)
 {
 	PFAT_BOOTSECTOR	BootSector = (PFAT_BOOTSECTOR)DISKREADBUFFER;
-
+	PFAT32_BOOTSECTOR BootSector32 = (PFAT32_BOOTSECTOR)DISKREADBUFFER;
 	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
 	{
 		FileSystemError("Failed to read the boot sector.");
@@ -107,7 +107,7 @@ BOOL FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector)
 
 	if (strncmp(BootSector->FileSystemType, "FAT12   ", 8) == 0 ||
 		strncmp(BootSector->FileSystemType, "FAT16   ", 8) == 0 ||
-		strncmp(BootSector->FileSystemType, "FAT32   ", 8) == 0)
+		strncmp(BootSector32->FileSystemType, "FAT32   ", 8) == 0)
 	{
 		return TRUE;
 	}
