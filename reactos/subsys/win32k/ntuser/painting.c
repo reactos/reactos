@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.64 2004/01/21 17:23:55 navaraf Exp $
+ *  $Id: painting.c,v 1.65 2004/02/01 08:07:07 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -146,6 +146,8 @@ IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
    }
+
+   NtGdiDeleteObject(WindowRgn);
 
    return NonclientRgn;
 }
@@ -554,7 +556,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Cleanup ;-)
     */
 
-   if (NULL != hRgn)
+   if (hRgn != NULL)
    {
       NtGdiDeleteObject(hRgn);
    }
@@ -931,6 +933,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL fErase)
 
    NtUserGetUpdateRgn(hWnd, hRgn, fErase);
    NtGdiGetRgnBox(hRgn, lpRect);
+   NtGdiDeleteObject(hRgn);
 
    return lpRect->left < lpRect->right && lpRect->top < lpRect->bottom;
 }

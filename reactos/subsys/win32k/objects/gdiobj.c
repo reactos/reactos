@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.57 2004/01/30 13:11:52 rcampbell Exp $
+ * $Id: gdiobj.c,v 1.58 2004/02/01 08:07:07 navaraf Exp $
  *
  */
 
@@ -84,6 +84,7 @@ typedef struct _GDI_HANDLE_TABLE
 {
   WORD  wTableSize;
   PGDIOBJHDR Handles[1];
+  WORD AllocationHint;
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 /*  GDI stock objects */
@@ -176,6 +177,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
           0,
           sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size);
   handleTable->wTableSize = Size;
+  handleTable->AllocationHint = 1;
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
   KfLowerIrql(PrevIrql);
 
@@ -204,17 +206,31 @@ GDIOBJ_iGetObjectForIndex(WORD TableIndex)
 static WORD FASTCALL
 GDIOBJ_iGetNextOpenHandleIndex (void)
 {
-  WORD tableIndex;
+   WORD tableIndex;
 
-  for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
-    {
-      if (NULL == HandleTable->Handles[tableIndex])
-	{
-	  break;
-	}
-    }
+   for (tableIndex = HandleTable->AllocationHint;
+        tableIndex < HandleTable->wTableSize;
+        tableIndex++)
+   {
+      if (HandleTable->Handles[tableIndex] == NULL)
+      {
+         HandleTable->AllocationHint = tableIndex + 1;
+         return tableIndex;
+      }
+   }
 
-  return (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
+   for (tableIndex = 1;
+        tableIndex < HandleTable->AllocationHint;
+        tableIndex++)
+   {
+      if (HandleTable->Handles[tableIndex] == NULL)
+      {
+         HandleTable->AllocationHint = tableIndex + 1;
+         return tableIndex;
+      }
+   }
+
+   return 0;
 }
 
 /*!
