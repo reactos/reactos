@@ -377,6 +377,9 @@ MiniEthReceiveIndication(
  *     PacketSize          = Total size of received packet
  */
 {
+    /* If there is no filter, then we can't do any more */
+    if( !Filter ) return;
+
     MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
 		     MacReceiveContext,
 		     HeaderBuffer,
