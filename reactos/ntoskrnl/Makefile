@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.135 2004/08/02 15:04:24 navaraf Exp $
+# $Id: Makefile,v 1.136 2004/08/04 02:27:07 navaraf Exp $
 #
 # ReactOS Operating System
 #
@@ -26,7 +26,7 @@ STRIP_FLAGS := -Wl,-s
 endif
 
 ifeq ($(OPTIMIZED), 1)
-CFLAGS_OPT := -O2 -fno-strict-aliasing
+CFLAGS_OPT := -O2 -Wno-strict-aliasing
 else
 CFLAGS_OPT :=
 endif
@@ -46,10 +46,10 @@ endif
 
 ifeq ($(strip $(SDK_PATH_INC)),)
 ASFLAGS += -I./include
-CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_OPT) -Wall -Werror
+CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror $(CFLAGS_OPT)
 else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
-CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_OPT) -Wall -Werror
+CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror $(CFLAGS_OPT)
 endif
 
 # ASFLAGS += -D__USE_W32API -D_NTOSKRNL_
