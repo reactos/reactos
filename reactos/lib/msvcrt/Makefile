@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.29 2002/12/05 15:30:43 robd Exp $
+# $Id: Makefile,v 1.30 2002/12/09 20:11:56 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,8 +12,7 @@ TARGET_BASE = 0x78000000
 
 TARGET_LFLAGS = -nostartfiles
 
-TARGET_SDKLIBS = kernel32.a
-#TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
@@ -505,5 +504,9 @@ OBJECTS = \
 
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
+
+
+DEP_OBJECTS := $(OBJECTS)
+include $(PATH_TO_TOP)/tools/depend.mk
 
 # EOF
