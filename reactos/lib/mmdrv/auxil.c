@@ -36,43 +36,4 @@ APIENTRY DWORD auxMessage(UINT uDevice,
 	}
 
     return MMSYSERR_NOERROR;
-
-
-// WARNING: MS Code -- delete as soon as possible !
-/*    MMRESULT mRet;
-    AUX_DD_VOLUME Volume;
-
-    switch (uMsg) {
-    case AUXDM_GETDEVCAPS:
-        dprintf2(("AUXDM_GETDEVCAPS"));
-        return sndGetData(AuxDevice, uDevice, dwParam2, (LPBYTE)dwParam1,
-                          IOCTL_AUX_GET_CAPABILITIES);
-
-    case AUXDM_GETNUMDEVS:
-        dprintf2(("AUXDM_GETNUMDEVS"));
-        return sndGetNumDevs(AuxDevice);
-
-    case AUXDM_GETVOLUME:
-        dprintf2(("AUXDM_GETVOLUME"));
-
-        mRet = sndGetData(AuxDevice, uDevice, sizeof(Volume),
-                          (PBYTE)&Volume, IOCTL_AUX_GET_VOLUME);
-
-        if (mRet == MMSYSERR_NOERROR) {
-            *(LPDWORD)dwParam1 =
-                (DWORD)MAKELONG(HIWORD(Volume.Left),
-                                HIWORD(Volume.Right));
-        }
-
-        return mRet;
-
-    case AUXDM_SETVOLUME:
-        dprintf2(("AUXDM_SETVOLUME"));
-        Volume.Left = LOWORD(dwParam1) << 16;
-        Volume.Right = HIWORD(dwParam1) << 16;
-
-        return sndSetData(AuxDevice, uDevice, sizeof(Volume),
-                          (PBYTE)&Volume, IOCTL_AUX_SET_VOLUME);
-    }
-*/
 }
