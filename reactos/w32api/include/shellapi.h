@@ -46,6 +46,11 @@ extern "C" {
 #define NIM_ADD	0
 #define NIM_MODIFY	1
 #define NIM_DELETE	2
+#if _WIN32_IE >= 0x0500
+#define NOTIFYICON_VERSION 3
+#define NIM_SETFOCUS	3
+#define NIM_SETVERSION	4
+#endif
 #define NIF_MESSAGE	1
 #define NIF_ICON	2
 #define NIF_TIP	4
