@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.15 2003/09/10 07:24:31 gvg Exp $
+/* $Id: pointer.c,v 1.16 2003/11/10 19:42:57 weiden Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -219,6 +219,12 @@ DrvSetPointerShape(PSURFOBJ pso,
   ULONG NewWidth, NewHeight;
   PUCHAR Src, Dest;
   ULONG i, j;
+  
+  if(!psoMask)
+  {
+    VGADDI_HideCursor(ppdev);
+    return SPS_ACCEPT_EXCLUDE;
+  }
 
   NewWidth = psoMask->lDelta << 3;
   NewHeight = (psoMask->cjBits / psoMask->lDelta) / 2;
