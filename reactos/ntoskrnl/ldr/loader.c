@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.98 2002/02/10 13:35:37 chorns Exp $
+/* $Id: loader.c,v 1.99 2002/02/12 12:30:46 jfilby Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -948,10 +948,6 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     */
    LdrLoadAutoConfigDriver(L"vidport.sys");
    
-   /*
-    * 
-    */
-   LdrLoadAutoConfigDriver(L"vgamp.sys");
 #if 0
    /*
     * Minix filesystem driver
