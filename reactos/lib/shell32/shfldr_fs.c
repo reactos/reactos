@@ -592,7 +592,7 @@ IShellFolder_fnGetUIObjectOf (IShellFolder2 * iface,
     return hr;
 }
 
-void _FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags)
+void SHELL_FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags)
 {
     /*FIXME: MSDN also mentions SHGDN_FOREDITING which is not yet handled. */
     if (!(dwFlags & SHGDN_FORPARSING) &&
@@ -682,7 +682,7 @@ IShellFolder_fnGetDisplayNameOf (IShellFolder2 * iface, LPCITEMIDLIST pidl, DWOR
 	_ILSimpleGetText (pidl, szPath + len, MAX_PATH - len);	/* append my own path */
 
 	if (!_ILIsFolder(pidl))
-	    _FS_ProcessDisplayFilename(szPath, dwFlags);
+	    SHELL_FS_ProcessDisplayFilename(szPath, dwFlags);
     }
 
     if ((dwFlags & SHGDN_FORPARSING) && !bSimplePidl) {	/* go deeper if needed */
