@@ -1,0 +1,9 @@
+; IPHLPAPI.DLL - ReactOS Sockets 2 IP Helper API DLL
+
+LIBRARY iphlpapi.dll
+
+EXPORTS
+AddIPAddress
+SetIpNetEntry
+CreateIpForwardEntry
+; EOF
