@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.17 2001/06/20 19:59:35 ekohl Exp $
+/* $Id: resource.c,v 1.18 2002/06/05 19:36:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -245,7 +245,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	     KeBugCheck(0);
 	     return(FALSE);
 	  }
-	memset(Resource->OwnerTable,sizeof(OWNER_ENTRY)*3,0);
+	memset(Resource->OwnerTable,0,sizeof(OWNER_ENTRY)*3);
 	memcpy(&Resource->OwnerTable[0], &Resource->OwnerThreads[1],
 	       sizeof(OWNER_ENTRY));
 	
