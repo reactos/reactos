@@ -209,7 +209,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NIC drivers are like any other drivers - but no card-specific info here.  bind/route/export
-; should have one entry per child device object
+; should have one entry per child device object. Note that REG_MULTI_SZ is 0x00010000.
+; Comment the networking stuff out if you don't have hte card and don't want to see errors
 ; NE2000 NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
@@ -218,9 +219,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Test",0x00010001,0xbaadf00d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00000000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00000000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00000000,"Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00010000,"Ne20001"
 
 ; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
 ; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
@@ -240,7 +241,37 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","StringTest",0x00000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","NetworkAddress",0x00000000,"001122334455"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010001,"255.255.255.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
+
+; AMD PCNet NIC driver
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Bind",0x00010000,"\Device\PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Export",0x00010000,"\Device\PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Route",0x00010000,"PCNet1"
+
+; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
+; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
+; for the parent driver plus a globally-increasing serial number (i.e. across all ndis miniports)
+; TODO: create this with NDI
+; NE2000 Adapter 1
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Type",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Bind",0x00010000,"\Device\PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Export",0x00010000,"\Device\PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Route",0x00010000,"PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","Port",0x00010001,0x00000280
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","Irq",0x00010001,0x00000009
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","DwordTest",0x00010001,0xbaadf00d
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","StringTest",0x00000000,"StringTest"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","NetworkAddress",0x00000000,"001122334455"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.1.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.1.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
@@ -277,8 +308,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00020000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00020000,"\Device\packet"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00010000,"\Device\packet"
 
 ; Private ICE driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ErrorControl",0x00010001,0x00000000
@@ -324,18 +355,18 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; These bindings are of the windows 2000 type, and will probably need to be
 ; twiddled to get 3rd-party network-related software to work.
 ; NT4 puts additional stuff in the Bind, Export, and Route values.
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00020000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00020000,"\Device\Tcpip_Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00020000,"Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"203.13.174.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"10.0.0.1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","EnableSecurityFilters",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
+;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000

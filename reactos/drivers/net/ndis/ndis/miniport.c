@@ -754,14 +754,17 @@ NdisMCreateLog(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisMDeregisterAdapterShutdownHandler(
     IN  NDIS_HANDLE MiniportHandle)
 {
-    UNIMPLEMENTED
+	PLOGICAL_ADAPTER  Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
+
+	if(Adapter->BugcheckContext->ShutdownHandler)
+		KeDeregisterBugCheckCallback(Adapter->BugcheckContext->CallbackRecord);
 }
 
 
@@ -902,9 +905,19 @@ NdisMQueryInformationComplete(
         Status);
 }
 
+VOID NdisIBugcheckCallback(
+    IN PVOID   Buffer,
+    IN ULONG   Length)
+{
+	PMINIPORT_BUGCHECK_CONTEXT Context = (PMINIPORT_BUGCHECK_CONTEXT)Buffer;
+	ADAPTER_SHUTDOWN_HANDLER sh = (ADAPTER_SHUTDOWN_HANDLER)Context->ShutdownHandler;
+
+	if(sh)
+		sh(Context->DriverContext);
+} 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -913,7 +926,20 @@ NdisMRegisterAdapterShutdownHandler(
     IN  PVOID                       ShutdownContext,
     IN  ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler)
 {
-    UNIMPLEMENTED
+	PLOGICAL_ADAPTER            Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
+	PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext = Adapter->BugcheckContext;
+
+	if(BugcheckContext->ShutdownHandler)
+		return;
+
+	BugcheckContext->ShutdownHandler = ShutdownHandler;
+	BugcheckContext->DriverContext = ShutdownContext;
+
+	/* not sure if this needs to be initialized or not... oh well, it's a leak. */
+	BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
+
+	KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback, 
+		BugcheckContext, sizeof(BugcheckContext), "Ndis Miniport");
 }
 
 
@@ -1302,8 +1328,7 @@ NdisMRegisterMiniport(
             NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
         }
 
-        /* NextRouteOffset += wcslen((WCHAR *)RouteData->Data); */
-        RouteData->Data[NextRouteOffset] = 0;    /* will cause the while to break */
+        NextRouteOffset += wcslen((WCHAR *)RouteData->Data);
     }
 
     ExFreePool(RouteData);

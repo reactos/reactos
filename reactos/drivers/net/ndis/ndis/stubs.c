@@ -150,26 +150,6 @@ NdisMapFile(
     UNIMPLEMENTED
 }
 
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisWriteErrorLogEntry(
-    IN  NDIS_HANDLE     NdisAdapterHandle,
-    IN  NDIS_ERROR_CODE ErrorCode,
-    IN  ULONG           NumberOfErrorValues,
-    IN  ULONG           ERROR_LOG_MAXIMUM_SIZE)
-/*  IN  ULONG           ...) 
- *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
- */
-{
-	/*
-	 * let's just try not doing anything at all
-    UNIMPLEMENTED
-	 */
-}
-
 
 /*
  * @unimplemented
@@ -470,24 +450,6 @@ VOID
 EXPORT
 NdisGetSystemUptime(
     OUT PULONG  pSystemUpTime)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisInitializeReadWriteLock(
-    IN  PNDIS_RW_LOCK   Lock)
 /*
  * FUNCTION:
  * ARGUMENTS:
@@ -856,38 +818,6 @@ NdisReleaseReadWriteLock(
 {
     UNIMPLEMENTED
 }
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisWriteEventLogEntry(
-    IN  PVOID       LogHandle,
-    IN  NDIS_STATUS EventCode,
-    IN  ULONG       UniqueEventValue,
-    IN  USHORT      NumStrings,
-    IN  PVOID       StringsList OPTIONAL,
-    IN  ULONG       DataSize,
-    IN  PVOID       Data        OPTIONAL)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-	/*
-	 * gonna try just returning true
-	 *
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-	 */
-	return NDIS_STATUS_SUCCESS;
-}
-
 
 /*
  * @unimplemented

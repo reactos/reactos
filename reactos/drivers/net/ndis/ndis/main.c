@@ -69,4 +69,73 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisWriteErrorLogEntry(
+    IN  NDIS_HANDLE     NdisAdapterHandle,
+    IN  NDIS_ERROR_CODE ErrorCode,
+    IN  ULONG           NumberOfErrorValues,
+    IN  ULONG           ERROR_LOG_MAXIMUM_SIZE)
+/*  IN  ULONG           ...) 
+ *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
+ */
+{
+	/*
+	 * XXX This may be tricky due to the va_arg thing.  I don't
+	 * want to figure it out now so it's just gonna be disabled.
+    UNIMPLEMENTED
+	 */
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisInitializeReadWriteLock(
+    IN  PNDIS_RW_LOCK   Lock)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+	memset(Lock,0,sizeof(NDIS_RW_LOCK));
+}
+
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisWriteEventLogEntry(
+    IN  PVOID       LogHandle,
+    IN  NDIS_STATUS EventCode,
+    IN  ULONG       UniqueEventValue,
+    IN  USHORT      NumStrings,
+    IN  PVOID       StringsList OPTIONAL,
+    IN  ULONG       DataSize,
+    IN  PVOID       Data        OPTIONAL)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+	/*
+	 * gonna try just returning true
+	 *
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+	 */
+	return NDIS_STATUS_SUCCESS;
+}
+
+
 /* EOF */

@@ -44,6 +44,13 @@ typedef struct _MINIPORT_CONFIGURATION_CONTEXT {
     KSPIN_LOCK     ResourceLock;
 } MINIPORT_CONFIGURATION_CONTEXT, *PMINIPORT_CONFIGURATION_CONTEXT;
 
+/* Bugcheck callback context */
+typedef struct _MINIPORT_BUGCHECK_CONTEXT {
+    PVOID                       DriverContext;
+	 ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler;
+    PKBUGCHECK_CALLBACK_RECORD  CallbackRecord;
+} MINIPORT_BUGCHECK_CONTEXT, *PMINIPORT_BUGCHECK_CONTEXT;
+
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
 
 /* Information about a logical adapter */
@@ -81,6 +88,7 @@ typedef struct _LOGICAL_ADAPTER {
     PNDIS_PACKET                PacketQueueTail;        /* Head of packet queue */
 
     PNDIS_PACKET                LoopPacket;             /* Current packet beeing looped */
+	 PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
 #define GET_LOGICAL_ADAPTER(Handle)((PLOGICAL_ADAPTER)Handle)

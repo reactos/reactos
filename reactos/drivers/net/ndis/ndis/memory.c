@@ -144,27 +144,30 @@ NdisAllocateMemory(
  *     HighestAcceptableAddress = Specifies -1
  */
 {
-    PVOID Block;
-
-    if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) {
-        /* FIXME */
-        *VirtualAddress = NULL;
+  if (MemoryFlags & NDIS_MEMORY_NONCACHED) 
+    {
+      *VirtualAddress = MmAllocateNonCachedMemory(Length);
+      if(!*VirtualAddress)
         return NDIS_STATUS_FAILURE;
+
+      return NDIS_STATUS_SUCCESS;
     }
 
-    if (MemoryFlags & NDIS_MEMORY_NONCACHED) {
-        /* FIXME */
-        *VirtualAddress = NULL;
+  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) 
+    {
+      *VirtualAddress = MmAllocateContiguousMemory(Length, HighestAcceptableAddress);
+      if(!*VirtualAddress)
         return NDIS_STATUS_FAILURE;
+
+      return NDIS_STATUS_SUCCESS;
     }
 
-    /* Plain nonpaged memory */
-    Block           = ExAllocatePool(NonPagedPool, Length);
-    *VirtualAddress = Block;
-    if (!Block)
-        return NDIS_STATUS_FAILURE;
+  /* Plain nonpaged memory */
+  *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
+  if (!*VirtualAddress)
+    return NDIS_STATUS_FAILURE;
 
-	return NDIS_STATUS_SUCCESS;
+  return NDIS_STATUS_SUCCESS;
 }
 
 
@@ -185,18 +188,19 @@ NdisFreeMemory(
  *     MemoryFlags    = Memory flags passed to NdisAllocateMemory
  */
 {
-    if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) {
-        /* FIXME */
-        return;
+  if (MemoryFlags & NDIS_MEMORY_NONCACHED) 
+    {
+      MmFreeNonCachedMemory(VirtualAddress, Length);
+      return;
     }
 
-    if (MemoryFlags & NDIS_MEMORY_NONCACHED) {
-        /* FIXME */
-        return;
+  if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS) 
+    {
+      MmFreeContiguousMemory(VirtualAddress);
+      return;
     }
 
-    /* Plain nonpaged memory */
-    ExFreePool(VirtualAddress);
+  ExFreePool(VirtualAddress);
 }
 
 
@@ -211,6 +215,7 @@ NdisImmediateReadSharedMemory(
     OUT PUCHAR      Buffer,
     IN  ULONG       Length)
 {
+    UNIMPLEMENTED
 }
 
 
