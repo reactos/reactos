@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.11 2004/02/01 15:52:02 gvg Exp $
+/* $Id: static.c,v 1.12 2004/03/10 23:21:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -126,6 +126,7 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
 static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
 {
     HBITMAP hOldBitmap;
+    LONG full_style = GetWindowLongA( hwnd, GWL_STYLE );
 
     if ((style & SS_TYPEMASK) != SS_BITMAP) return 0;
     if (hBitmap && GetObjectType(hBitmap) != OBJ_BITMAP) {
@@ -133,7 +134,7 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
     	return 0;
     }
     hOldBitmap = (HBITMAP)SetWindowLongA( hwnd, HICON_GWL_OFFSET, (LONG)hBitmap );
-    if (hBitmap)
+    if (hBitmap && !(full_style & SS_REALSIZEIMAGE))
     {
         BITMAP bm;
         GetObjectW(hBitmap, sizeof(bm), &bm);
@@ -598,6 +599,7 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
     HBRUSH hbrush;
     HDC hMemDC;
     HBITMAP hBitmap, oldbitmap;
+    LONG full_style = GetWindowLongA( hwnd, GWL_STYLE );
 
     GetClientRect( hwnd, &rc );
     hbrush = (HBRUSH)SendMessageW( GetParent(hwnd), WM_CTLCOLORSTATIC,
@@ -612,8 +614,17 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
         if (!(hMemDC = CreateCompatibleDC( hdc ))) return;
 	GetObjectW(hBitmap, sizeof(bm), &bm);
 	oldbitmap = SelectObject(hMemDC, hBitmap);
-	BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0,
-	       SRCCOPY);
+        if (full_style & SS_CENTERIMAGE)
+        {
+            BitBlt(hdc, (rc.right - bm.bmWidth) >> 1,
+                   (rc.bottom - bm.bmHeight) >> 1,
+                   bm.bmWidth, bm.bmHeight, hMemDC, 0, 0, SRCCOPY);
+        }
+        else
+        {
+            BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0,
+                   SRCCOPY);
+        }
 	SelectObject(hMemDC, oldbitmap);
 	DeleteDC(hMemDC);
     }
