@@ -119,18 +119,18 @@ STDCALL
 KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
 {
     ULONG i, Processor, CurrentProcessor;
-    PKPCR Pcr, CurrentPcr;
+    PKPRCB Prcb, CurrentPrcb;
     KIRQL oldIrql;
 
 
     ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
 
-    CurrentPcr = KeGetCurrentKPCR();
-    InterlockedExchangeUL(&CurrentPcr->PrcbData.TargetSet, TargetSet);
-    InterlockedExchangeUL(&CurrentPcr->PrcbData.WorkerRoutine, (ULONG_PTR)WorkerRoutine);
-    InterlockedExchangePointer(&CurrentPcr->PrcbData.CurrentPacket[0], Argument);
-    InterlockedExchangeUL(&CurrentPcr->PrcbData.CurrentPacket[1], Count);
-    InterlockedExchangeUL(&CurrentPcr->PrcbData.CurrentPacket[2], Synchronize ? 1 : 0);
+    CurrentPrcb = KeGetCurrentPrcb();
+    InterlockedExchangeUL(&CurrentPrcb->TargetSet, TargetSet);
+    InterlockedExchangeUL(&CurrentPrcb->WorkerRoutine, (ULONG_PTR)WorkerRoutine);
+    InterlockedExchangePointer(&CurrentPrcb->CurrentPacket[0], Argument);
+    InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[1], Count);
+    InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[2], Synchronize ? 1 : 0);
 
     CurrentProcessor = 1 << KeGetCurrentProcessorNumber();
 
@@ -138,9 +138,9 @@ KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Arg
     {
        if (TargetSet & Processor)
        {
-          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-          while(0 != InterlockedCompareExchangeUL(&Pcr->PrcbData.SignalDone, (LONG)&CurrentPcr->PrcbData, 0));
-	  Ke386TestAndSetBit(IPI_REQUEST_FUNCTIONCALL, &Pcr->PrcbData.IpiFrozen);
+          Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
+          while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
+	  Ke386TestAndSetBit(IPI_REQUEST_FUNCTIONCALL, &Prcb->IpiFrozen);
 	  if (Processor != CurrentProcessor)
 	  {
 	     HalRequestIpi(i);

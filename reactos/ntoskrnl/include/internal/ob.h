@@ -377,10 +377,8 @@ typedef struct _INFORMATION_CLASS_INFO
     else if(ClassList[Class].RequiredSize##Mode > 0 &&                         \
             (BufferLen) != ClassList[Class].RequiredSize##Mode)                \
     {                                                                          \
-      if((!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&           \
-           (BufferLen) != ClassList[Class].RequiredSize##Mode) ||              \
-         ((ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
-          (BufferLen) < ClassList[Class].RequiredSize##Mode))                  \
+      if(!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
+           (BufferLen) != ClassList[Class].RequiredSize##Mode)                 \
       {                                                                        \
         *(StatusVar) = STATUS_INFO_LENGTH_MISMATCH;                            \
       }                                                                        \

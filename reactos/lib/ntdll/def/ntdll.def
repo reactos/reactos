@@ -363,7 +363,7 @@ RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
 RtlCutoverTimeToSystemTime@16
 RtlDeNormalizeProcessParams@4
-RtlDecodePointer@4=RtlEncodePointer@4
+RtlDecodePointer=RtlEncodePointer@4
 RtlDecompressBuffer@24
 RtlDecompressFragment@32
 RtlDelete@4

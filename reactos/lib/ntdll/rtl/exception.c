@@ -31,6 +31,10 @@ typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
   PVECTORED_EXCEPTION_HANDLER VectoredHandler;
 } RTL_VECTORED_EXCEPTION_HANDLER, *PRTL_VECTORED_EXCEPTION_HANDLER;
 
+/* FIXME - stupid ld won't resolve RtlDecodePointer! Since their implementation
+           is the same just use RtlEncodePointer for now! */
+#define RtlDecodePointer RtlEncodePointer
+
 /* FUNCTIONS ***************************************************************/
 
 VOID STDCALL
@@ -44,20 +48,63 @@ ULONG
 RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 	IN PCONTEXT  Context);
 
+EXCEPTION_DISPOSITION
+RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
+                                     IN PCONTEXT  Context)
+{
+  PLIST_ENTRY CurrentEntry;
+  PRTL_VECTORED_EXCEPTION_HANDLER veh;
+  PVECTORED_EXCEPTION_HANDLER VectoredHandler;
+  EXCEPTION_POINTERS ExceptionInfo;
+  
+  ExceptionInfo.ExceptionRecord = ExceptionRecord;
+  ExceptionInfo.ContextRecord = Context;
+  
+  if(RtlpVectoredExceptionHead.Flink != &RtlpVectoredExceptionHead)
+  {
+    RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+    for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
+        CurrentEntry != &RtlpVectoredExceptionHead;
+        CurrentEntry = CurrentEntry->Flink)
+    {
+      veh = CONTAINING_RECORD(CurrentEntry,
+                              RTL_VECTORED_EXCEPTION_HANDLER,
+                              ListEntry);
+      VectoredHandler = RtlDecodePointer(veh->VectoredHandler);
+      if(VectoredHandler(&ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
+      {
+        RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+        return ExceptionContinueSearch;
+      }
+    }
+    RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+  }
+  
+  return ExceptionContinueExecution;
+}
+
 VOID STDCALL
 KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
 			  PCONTEXT Context)
 {
   EXCEPTION_RECORD NestedExceptionRecord;
   NTSTATUS Status;
-
-  if (RtlpDispatchException(ExceptionRecord, Context) != ExceptionContinueExecution)
+  
+  if(RtlpExecuteVectoredExceptionHandlers(ExceptionRecord,
+                                          Context) != ExceptionContinueExecution)
     {
       Status = NtContinue(Context, FALSE);
     }
   else
     {
-      Status = NtRaiseException(ExceptionRecord, Context, FALSE);
+      if(RtlpDispatchException(ExceptionRecord, Context) != ExceptionContinueExecution)
+        {
+          Status = NtContinue(Context, FALSE);
+        }
+      else
+        {
+          Status = NtRaiseException(ExceptionRecord, Context, FALSE);
+        }
     }
 
   NestedExceptionRecord.ExceptionCode = Status;

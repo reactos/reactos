@@ -513,7 +513,7 @@ KiDispatchInterrupt(VOID)
 #endif
             Prcb->DpcRoutineActive = TRUE;
 
-        DPRINT("&Pcr->PrcbData.DpcData[0].DpcListHead: %x\n", &Prcb->DpcData[0].DpcListHead);
+        DPRINT("&Prcb->DpcData[0].DpcListHead: %x\n", &Prcb->DpcData[0].DpcListHead);
         /* Loop while we have entries */
         while (!IsListEmpty(&Prcb->DpcData[0].DpcListHead)) {
             

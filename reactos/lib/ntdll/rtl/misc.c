@@ -131,7 +131,7 @@ RtlEncodePointer(IN PVOID Pointer)
   if(!NT_SUCCESS(Status))
   {
     DPRINT1("Failed to receive the process cookie! Status: 0x%x\n", Status);
-    return NULL;
+    return Pointer;
   }
 
   return (PVOID)((ULONG_PTR)Pointer ^ Cookie);

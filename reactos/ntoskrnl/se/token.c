@@ -643,7 +643,6 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
   if(!NT_SUCCESS(Status))
   {
-    /* Invalid buffers */
     DPRINT("NtQueryInformationToken() failed, Status: 0x%x\n", Status);
     return Status;
   }
@@ -664,15 +663,15 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
         
         DPRINT("NtQueryInformationToken(TokenUser)\n");
         RequiredLength = sizeof(TOKEN_USER) +
-                         RtlLengthSidAndAttributes(1, Token->UserAndGroups);
+                         RtlLengthSid(Token->UserAndGroups[0].Sid);
 
         _SEH_TRY
         {
           if(TokenInformationLength >= RequiredLength)
           {
             Status = RtlCopySidAndAttributesArray(1,
-                                                  Token->UserAndGroups,
-                                                  RequiredLength,
+                                                  &Token->UserAndGroups[0],
+                                                  RequiredLength - sizeof(TOKEN_USER),
                                                   &tu->User,
                                                   (PSID)(tu + 1),
                                                   &Unused.Ptr,
@@ -702,21 +701,22 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
         PTOKEN_GROUPS tg = (PTOKEN_GROUPS)TokenInformation;
         
         DPRINT("NtQueryInformationToken(TokenGroups)\n");
-        RequiredLength = sizeof(TOKEN_GROUPS) +
-                         RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]) +
-                         sizeof(SID_AND_ATTRIBUTES);
+        RequiredLength = sizeof(tg->GroupCount) +
+                         RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]);
 
         _SEH_TRY
         {
           if(TokenInformationLength >= RequiredLength)
           {
-            PSID_AND_ATTRIBUTES Sid = (PSID_AND_ATTRIBUTES)((ULONG_PTR)TokenInformation +
-                                                            RequiredLength - sizeof(SID_AND_ATTRIBUTES));
+            ULONG SidLen = RequiredLength - sizeof(tg->GroupCount) -
+                           ((Token->UserAndGroupCount - 1) * sizeof(SID_AND_ATTRIBUTES));
+            PSID_AND_ATTRIBUTES Sid = (PSID_AND_ATTRIBUTES)((ULONG_PTR)TokenInformation + sizeof(tg->GroupCount) +
+                                                            ((Token->UserAndGroupCount - 1) * sizeof(SID_AND_ATTRIBUTES)));
 
             tg->GroupCount = Token->UserAndGroupCount - 1;
             Status = RtlCopySidAndAttributesArray(Token->UserAndGroupCount - 1,
                                                   &Token->UserAndGroups[1],
-                                                  RequiredLength,
+                                                  SidLen,
                                                   &tg->Groups[0],
                                                   (PSID)Sid,
                                                   &Unused.Ptr,
@@ -746,7 +746,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
         PTOKEN_PRIVILEGES tp = (PTOKEN_PRIVILEGES)TokenInformation;
         
         DPRINT("NtQueryInformationToken(TokenPrivileges)\n");
-        RequiredLength = sizeof(TOKEN_PRIVILEGES) +
+        RequiredLength = sizeof(tp->PrivilegeCount) +
                          (Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
 
         _SEH_TRY
@@ -1096,6 +1096,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
         {
           _SEH_TRY
           {
+            /* buffer size was already verified, no need to check here again */
             *(PULONG)TokenInformation = SessionId;
 
             if(ReturnLength != NULL)
@@ -1357,6 +1358,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
         _SEH_TRY
         {
+          /* buffer size was already verified, no need to check here again */
           SessionId = *(PULONG)TokenInformation;
         }
         _SEH_HANDLE
