@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.8 2003/03/02 16:30:07 rcampbell Exp $
+/* $Id: draw.c,v 1.9 2003/03/14 07:24:35 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -450,7 +450,6 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     BOOL retval = !(   ((uType & BDR_INNER) == BDR_INNER
                        || (uType & BDR_OUTER) == BDR_OUTER)
                       && !(uFlags & (BF_FLAT|BF_MONO)) );
-
     /* Init some vars */
     LTInnerPen = LTOuterPen = RBInnerPen = RBOuterPen = (HPEN)GetStockObject(NULL_PEN);
     SavePen = (HPEN)SelectObject(hdc, LTInnerPen);
@@ -1358,9 +1357,6 @@ BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
 /* Ported from WINE20020904 */
 BOOL WINAPI DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
 {
-    DbgPrint("%04x %d,%d-%d,%d %04x %04x\n",
-             hdc, rc->left, rc->top, rc->right, rc->bottom, edge, flags );
-
     if(flags & BF_DIAGONAL)
       return UITOOLS95_DrawDiagEdge(hdc, rc, edge, flags);
     else

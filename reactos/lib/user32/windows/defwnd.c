@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.34 2003/03/12 16:36:18 rcampbell Exp $
+/* $Id: defwnd.c,v 1.35 2003/03/14 07:24:35 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -250,15 +250,13 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
     INT iBmpWidth =  (bToolWindow ? GetSystemMetrics(SM_CXSMSIZE) :
                       GetSystemMetrics(SM_CXSIZE)) - 2;
     INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
-                      GetSystemMetrics(SM_CYSIZE)) - 4;
-    
-    UserGetInsideRectNC( hWnd, &rect );
-    
+                      GetSystemMetrics(SM_CYSIZE) - 4);
+    UserGetInsideRectNC(hWnd, &rect);
     SetRect(&rect,
-            rect.right - iBmpWidth,
-            rect.top + 1,
-            rect.right,
-            rect.top + iBmpHeight + 1 );
+            rect.right - iBmpWidth - GetSystemMetrics(SM_CXFIXEDFRAME),
+            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
+            rect.right - GetSystemMetrics(SM_CXFIXEDFRAME),
+            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
             
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                       (DFCS_CAPTIONCLOSE |
@@ -275,15 +273,15 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;    
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return; /* ToolWindows don't have min/max buttons */
+        return;  /* ToolWindows don't have min/max buttons */
         
     UserGetInsideRectNC(hWnd, &rect );
     
     SetRect(&rect,
-            rect.right - (iBmpWidth * 2) - 2,
-            rect.top + 1,
-            (rect.right - iBmpWidth) - 2,
-            rect.top + iBmpHeight + 1 );
+            rect.right - (iBmpWidth * 2) - (GetSystemMetrics(SM_CXFIXEDFRAME)) - 2,
+            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
+            rect.right - iBmpWidth - GetSystemMetrics(SM_CXFIXEDFRAME) - 2,
+            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
     
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
@@ -293,21 +291,23 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
 
 static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
 {
+
     RECT rect;
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return; /* ToolWindows don't have min/max buttons */
+        return; /*ToolWindows don't have min/max buttons */
         
     UserGetInsideRectNC(hWnd, &rect );
     
     SetRect(&rect,
-            rect.right - (iBmpWidth * 3) - 2,
-            rect.top + 1,
-            (rect.right - iBmpWidth * 2) - 2,
-            rect.top + iBmpHeight + 1 );
+            rect.right - (iBmpWidth * 3) - (GetSystemMetrics(SM_CXFIXEDFRAME)) - 2,
+            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
+            rect.right - (iBmpWidth * 2) - GetSystemMetrics(SM_CXFIXEDFRAME) - 2,
+            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
+
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
                      (bDown ? DFCS_PUSHED : 0) |
@@ -319,39 +319,37 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 {
     RECT r = *rect;
     char buffer[256];
-    /* REWRITE IN PROGRESS:  Don't touch -- rcampbell -- 03-12-2003 */
     /* Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-    PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFIXEDFRAME), rect->top + 3, rect->right - (GetSystemMetrics(SM_CXFIXEDFRAME) * 2), rect->bottom -  1, PATCOPY );
+    PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
+           GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2) - 1, rect->top + 
+           GetSystemMetrics(SM_CYCAPTION) - 1, PATCOPY );
     
     if (style & WS_SYSMENU)
     {
-      UserDrawSysMenuButton( hWnd, hDC, FALSE);
-      r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-      UserDrawCloseButton( hWnd, hDC, FALSE);
-      r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-      UserDrawMinButton(hWnd, hDC, FALSE);
-      UserDrawMaxButton(hWnd, hDC, FALSE);
+        UserDrawSysMenuButton( hWnd, hDC, FALSE);
+        r.left += GetSystemMetrics(SM_CXSIZE) + 1;
+        UserDrawCloseButton( hWnd, hDC, FALSE);
+        r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+        UserDrawMinButton(hWnd, hDC, FALSE);
+        UserDrawMaxButton(hWnd, hDC, FALSE);
     }
-  if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
+    if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
     {
-      NONCLIENTMETRICS nclm;
-      HFONT hFont, hOldFont;
+        NONCLIENTMETRICS nclm;
+        HFONT hFont, hOldFont;
 
-      nclm.cbSize = sizeof(NONCLIENTMETRICS);
-      SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
-      if (style & WS_EX_TOOLWINDOW)
-        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
-      else
-        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
-      hOldFont = SelectObject(hDC, hFont);
-      SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
-      SetBkMode( hDC, TRANSPARENT );
-      
-      /*FIXME:  Need verticle centering code and other fixups */
-      TextOutA(hDC, r.left, (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2), buffer, strlen(buffer));
-      //TextOutA(hDC, r.left, (r.top / 2) + (6), buffer, strlen(buffer));
-      DeleteObject (SelectObject (hDC, hOldFont));
+        nclm.cbSize = sizeof(NONCLIENTMETRICS);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
+        SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
+        SetBkMode( hDC, TRANSPARENT );
+        if (style & WS_EX_TOOLWINDOW)
+            hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
+        else
+            hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
+        hOldFont = SelectObject(hDC, hFont);
+        TextOutA(hDC, r.left, (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2), buffer, strlen(buffer));
+        DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
 
@@ -372,7 +370,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   RECT rect;
   ULONG Style;
   ULONG ExStyle;
-
   Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
   Style = GetWindowLong(hWnd, GWL_STYLE);
   ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
@@ -390,14 +387,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   rect.right = rect.right - rect.left;
   rect.bottom = rect.bottom - rect.top;
   rect.top = rect.left = 0;
-
   SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
-  if (UserHasAnyFrameStyle(Style, ExStyle))
-    {
-      SelectObject(hDC, GetStockObject(NULL_BRUSH));
-      InflateRect(&rect, -1, -1);
-    }
-
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
       UserDrawFrameNC(hDC, &rect, FALSE, Active);
@@ -406,7 +396,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       UserDrawFrameNC(hDC, &rect, TRUE, Active);
     }
-
   if (Style & WS_CAPTION)
     {
       RECT r = rect;
@@ -416,18 +405,19 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
     }
 
-  /* FIXME: Draw menu bar. */
+/*  FIXME: Draw menu bar.  */
 
-DbgPrint("drawing scrollbars..\n");
-  /* Draw scrollbars */
+  DbgPrint("drawing scrollbars..\n");
+/*  Draw scrollbars */
   if (Style & WS_VSCROLL)
       SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
   if (Style & WS_HSCROLL)
       SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
 
-  /* FIXME: Draw size box. */
+  /* FIXME: Draw size box.*/
 
   ReleaseDC(hWnd, hDC);
+  
 }
 
 LRESULT
@@ -1037,6 +1027,7 @@ User32DefWindowProc(HWND hWnd,
 	HDC hDC = BeginPaint(hWnd, &Ps);
 	if (hDC)
 	  {
+	  	
 	    HICON hIcon;
 	    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
 		(hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
@@ -1049,7 +1040,7 @@ User32DefWindowProc(HWND hWnd,
 		y = (WindowRect.bottom - WindowRect.top -
 		     GetSystemMetrics(SM_CYICON)) / 2;
 		DrawIcon(hDC, x, y, hIcon);
-	      }
+	      } 
 	    EndPaint(hWnd, &Ps);
 	  }
 	return(0);
@@ -1136,6 +1127,7 @@ User32DefWindowProc(HWND hWnd,
     case WM_ERASEBKGND:
     case WM_ICONERASEBKGND:
       {
+      	
 	RECT Rect;
 	HBRUSH hBrush = (HBRUSH)GetClassLongW(hWnd, GCL_HBRBACKGROUND);
 	GetClipBox((HDC)wParam, &Rect);
