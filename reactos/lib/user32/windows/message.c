@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.37 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: message.c,v 1.38 2004/04/10 00:54:35 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -477,7 +477,6 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
   BOOL IsHandle;
   WndProcHandle wphData;
 
-  DbgPrint("CallWindowProcA(%p,%x,%x,%x,%x)\n",lpPrevWndFunc,hWnd,Msg,wParam,lParam);
   if (lpPrevWndFunc == NULL)
     lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
 
