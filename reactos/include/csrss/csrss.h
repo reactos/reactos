@@ -27,7 +27,8 @@ typedef struct
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
+   HANDLE InputHandle;
+   HANDLE OutputHandle;
 } CSRSS_CREATE_PROCESS_REPLY, *PCSRSS_CREATE_PROCESS_REPLY;
 
 typedef struct
@@ -45,7 +46,8 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
-   ULONG NrCharactersToRead;
+   WORD NrCharactersToRead;
+   WORD nCharsCanBeDeleted;     // number of chars already in buffer that can be backspaced
 } CSRSS_READ_CONSOLE_REQUEST, *PCSRSS_READ_CONSOLE_REQUEST;
 
 typedef struct
@@ -57,7 +59,8 @@ typedef struct
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
+   HANDLE InputHandle;
+   HANDLE OutputHandle;
 } CSRSS_ALLOC_CONSOLE_REPLY, *PCSRSS_ALLOC_CONSOLE_REPLY;
 
 typedef struct
@@ -168,6 +171,21 @@ typedef struct
   DWORD ConsoleMode;
 } CSRSS_GET_CONSOLE_MODE_REPLY, *PCSRSS_GET_CONSOLE_MODE_REPLY;
 
+typedef struct
+{
+  /* may want to add some parameters here someday */
+} CSRSS_CREATE_SCREEN_BUFFER_REQUEST, *PCSRSS_CREATE_SCREEN_BUFFER_REQUEST;
+
+typedef struct
+{
+   HANDLE OutputHandle;  /* handle to newly created screen buffer */
+} CSRSS_CREATE_SCREEN_BUFFER_REPLY, *PCSRSS_CREATE_SCREEN_BUFFER_REPLY;
+
+typedef struct
+{
+   HANDLE OutputHandle;  /* handle to screen buffer to switch to */
+} CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST, *PCSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_REQUEST))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST ))
 
@@ -194,6 +212,8 @@ typedef struct
 #define CSRSS_SET_ATTRIB                (0x10)
 #define CSRSS_GET_MODE                  (0x11)
 #define CSRSS_SET_MODE                  (0x12)
+#define CSRSS_CREATE_SCREEN_BUFFER      (0x13)
+#define CSRSS_SET_SCREEN_BUFFER         (0x14)
 
 typedef struct
 {
@@ -217,6 +237,8 @@ typedef struct
 	CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
 	CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
 	CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
+	CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
+	CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST SetActiveScreenBufferRequest;
      } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -237,6 +259,7 @@ typedef struct
 	CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
 	CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
 	CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
+	CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
      } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
