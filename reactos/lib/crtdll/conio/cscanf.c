@@ -1,5 +1,6 @@
 #include <crtdll/conio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 int
 _cscanf(char *fmt, ...)
@@ -9,12 +10,10 @@ _cscanf(char *fmt, ...)
 	va_list ap;
 
 	//fixme cscanf should scan the console's keyboard
-  
-  	va_start(ap, fmt);
-  	cnt = __vscanf(fmt, ap);
-  	va_end(ap);
+	va_start(ap, fmt);
+	cnt = __vscanf(fmt, ap);
+	va_end(ap);
 	return cnt;
-  
 }
 
 
