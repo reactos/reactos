@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.7 2004/03/14 18:15:59 ekohl Exp $
+/* $Id: profile.c,v 1.8 2004/03/17 14:46:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -582,9 +582,42 @@ GetUserProfileDirectoryW (HANDLE hToken,
 	  szImagePath);
 
   return TRUE;
-#if 0
-  return GetDefaultUserProfileDirectoryW (lpProfileDir, lpcchSize);
-#endif
+}
+
+
+static BOOL
+CheckForLoadedProfile (HANDLE hToken)
+{
+  UNICODE_STRING SidString;
+  HKEY hKey;
+
+  DPRINT ("CheckForLoadedProfile() called \n");
+
+  if (!GetUserSidFromToken (hToken,
+			    &SidString))
+    {
+      DPRINT1 ("GetUserSidFromToken() failed\n");
+      return FALSE;
+    }
+
+  if (RegOpenKeyExW (HKEY_USERS,
+		     SidString.Buffer,
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT ("Profile not loaded\n");
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  RtlFreeUnicodeString (&SidString);
+
+  DPRINT ("Profile already loaded\n");
+
+  return TRUE;
 }
 
 
@@ -592,12 +625,9 @@ BOOL WINAPI
 LoadUserProfileW (HANDLE hToken,
 		  LPPROFILEINFOW lpProfileInfo)
 {
-  WCHAR szRawProfilesPath[MAX_PATH];
-  WCHAR szProfilesPath[MAX_PATH];
   WCHAR szUserHivePath[MAX_PATH];
   UNICODE_STRING SidString;
   DWORD dwLength;
-  HKEY hKey;
 
   DPRINT ("LoadUserProfileW() called\n");
 
@@ -610,43 +640,21 @@ LoadUserProfileW (HANDLE hToken,
       return FALSE;
     }
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  /* Don't load a profile twice */
+  if (CheckForLoadedProfile (hToken))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT ("Profile already loaded\n");
+      lpProfileInfo->hProfile = NULL;
+      return TRUE;
+    }
+
+  if (!GetProfilesDirectoryW (szUserHivePath,
+			      &dwLength))
+    {
+      DPRINT1("GetProfilesDirectoryW() failed\n", GetLastError());
       return FALSE;
     }
 
-  /* Get profiles path */
-  dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			L"ProfilesDirectory",
-			NULL,
-			NULL,
-			(LPBYTE)szRawProfilesPath,
-			&dwLength))
-    {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
-      return FALSE;
-    }
-
-  /* Expand it */
-  if (!ExpandEnvironmentStringsW (szRawProfilesPath,
-				  szProfilesPath,
-				  MAX_PATH))
-    {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hKey);
-
-  wcscpy (szUserHivePath, szProfilesPath);
   wcscat (szUserHivePath, L"\\");
   wcscat (szUserHivePath, lpProfileInfo->lpUserName);
   if (!AppendSystemPostfix (szUserHivePath, MAX_PATH))
