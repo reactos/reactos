@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.66 2003/08/01 20:22:58 dwelch Exp $
+/* $Id: dc.c,v 1.67 2003/08/04 00:18:21 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -570,8 +570,8 @@ W32kDeleteDC(HDC  DCHandle)
 #if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
 #endif
-  DC_ReleasePtr( DCToDelete );
-  DC_FreeDC (DCToDelete);
+  DC_ReleasePtr( DCHandle );
+  DC_FreeDC ( DCHandle );
 
   return TRUE;
 }
