@@ -82,6 +82,7 @@ UNICODE_STRING SourceRootPath;
 
 UNICODE_STRING InstallPath;
 UNICODE_STRING DestinationPath;
+UNICODE_STRING DestinationArcPath;
 UNICODE_STRING DestinationRootPath;
 
 UNICODE_STRING SystemRootPath; /* Path to the active partition */
@@ -927,6 +928,19 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	  RtlCreateUnicodeString(&DestinationPath,
 				 PathBuffer);
 
+	  /* Create 'DestinationArcPath' */
+	  RtlFreeUnicodeString(&DestinationArcPath);
+	  swprintf(PathBuffer,
+		   L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
+		   PartData.DiskNumber,
+		   PartData.PartNumber);
+	  if (InstallDir[0] != L'\\')
+	    wcscat(PathBuffer,
+		   L"\\");
+	  wcscat(PathBuffer, InstallDir);
+	  RtlCreateUnicodeString(&DestinationArcPath,
+				 PathBuffer);
+
 	  return(PREPARE_COPY_PAGE);
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
@@ -1397,6 +1411,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
   WCHAR DstPath[MAX_PATH];
   PINICACHE IniCache;
   PINICACHESECTION IniSection;
+  NTSTATUS Status;
 
   SetTextXY(6, 8, "Installing the boot loader");
 
@@ -1439,7 +1454,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	   (ActivePartition.PartType == PARTITION_FAT32) ||
 	   (ActivePartition.PartType == PARTITION_FAT32_XINT13))
     {
-      /* FAT or FAT 32 partition */
+      /* FAT or FAT32 partition */
       PrintTextXY(6, 10, "System path: '%wZ'", &SystemRootPath);
 
       if (DoesFileExist(SystemRootPath.Buffer, L"ntldr") == TRUE ||
@@ -1448,7 +1463,81 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  /* Search root directory for 'ntldr' and 'boot.ini'. */
 	  SetTextXY(6, 12, "Found Microsoft Windows NT/2000/XP boot loader");
 
+	  /* Copy FreeLoader to the boot partition */
+	  wcscpy(SrcPath, SourceRootPath.Buffer);
+	  wcscat(SrcPath, L"\\loader\\freeldr.sys");
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.sys");
 
+//	  PrintTextXY(6, 14, "Copy: %S ==> %S", SrcPath, DstPath);
+	  Status = SetupCopyFile(SrcPath, DstPath);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Create freeldr.ini */
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.ini");
+
+	  Status = CreateFreeLoaderIniForReactos(DstPath,
+						 DestinationArcPath.Buffer);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Install new bootsector */
+	  if ((ActivePartition.PartType == PARTITION_FAT32) ||
+	      (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat32.bin");
+
+	      wcscpy(DstPath, SystemRootPath.Buffer);
+	      wcscat(DstPath, L"\\bootsect.ros");
+
+//	      PrintTextXY(6, 16, "Install FAT32 bootcode: %S ==> %S",
+//			  SrcPath, DstPath);
+	      Status = InstallFat32BootCodeToFile(SrcPath,
+						  DstPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat32BootCodeToFile() failed (Status %lx)\n", Status);
+		}
+	    }
+	  else
+	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat.bin");
+
+	      wcscpy(DstPath, SystemRootPath.Buffer);
+	      wcscat(DstPath, L"\\bootsect.ros");
+
+//	      PrintTextXY(6, 16, "Install FAT bootcode: %S ==> %S",
+//			  SrcPath, DstPath);
+	      Status = InstallFat16BootCodeToFile(SrcPath,
+						  DstPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat16BootCodeToFile() failed (Status %lx)\n", Status);
+		}
+	    }
+
+	  /* Update 'boot.ini' */
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\boot.ini");
+
+//	  PrintTextXY(6, 18, "Update 'boot.ini': %S", DstPath);
+	  Status = UpdateBootIni(DstPath,
+				 L"C:\\bootsect.ros",
+				 L"\"ReactOS\"");
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("UpdateBootIni() failed (Status %lx)\n", Status);
+	    }
 	}
       else if (DoesFileExist(SystemRootPath.Buffer, L"io.sys") == TRUE ||
 	       DoesFileExist(SystemRootPath.Buffer, L"msdos.sys") == TRUE)
@@ -1462,33 +1551,144 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  wcscpy(DstPath, SystemRootPath.Buffer);
 	  wcscat(DstPath, L"\\freeldr.sys");
 
-	  PrintTextXY(6, 14, "Copy: %S ==> %S", SrcPath, DstPath);
-
-	  SetupCopyFile(SrcPath, DstPath);
+//	  PrintTextXY(6, 14, "Copy: %S ==> %S", SrcPath, DstPath);
+	  Status = SetupCopyFile(SrcPath, DstPath);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+	    }
 
 	  /* Create freeldr.ini */
 	  wcscpy(DstPath, SystemRootPath.Buffer);
 	  wcscat(DstPath, L"\\freeldr.ini");
 
-	  CreateFreeLoaderIniForDos(DstPath,
-				    DestinationPath.Buffer);
+	  Status = CreateFreeLoaderIniForDos(DstPath,
+					     DestinationArcPath.Buffer);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("CreateFreeLoaderIniForDos() failed (Status %lx)\n", Status);
+	    }
 
-	  /* Copy current bootsector to 'BOOTSECT.DOS' */
+	  /* Save current bootsector as 'BOOTSECT.DOS' */
+	  wcscpy(SrcPath, SystemRootPath.Buffer);
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\bootsect.dos");
+
+//	  PrintTextXY(6, 16, "Save bootsector: %S ==> %S", SrcPath, DstPath);
+	  Status = SaveCurrentBootSector(SrcPath,
+					 DstPath);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Install new bootsector */
 	  if ((ActivePartition.PartType == PARTITION_FAT32) ||
 	      (ActivePartition.PartType == PARTITION_FAT32_XINT13))
 	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat32.bin");
 
+//	      PrintTextXY(6, 18, "Install FAT32 bootcode: %S ==> %S",
+//			  SrcPath, SystemRootPath.Buffer);
+	      Status = InstallFat32BootCodeToDisk(SrcPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat32BootCodeToDisk() failed (Status %lx)\n", Status);
+		}
 	    }
 	  else
 	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat.bin");
 
+//	      PrintTextXY(6, 18, "Install FAT bootcode: %S ==> %S",
+//			  SrcPath, SystemRootPath.Buffer);
+	      Status = InstallFat16BootCodeToDisk(SrcPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat16BootCodeToDisk() failed (Status %lx)\n", Status);
+		}
 	    }
 	}
       else
 	{
-
 	  SetTextXY(6, 12, "No or unknown boot loader found");
 
+	  /* Copy FreeLoader to the boot partition */
+	  wcscpy(SrcPath, SourceRootPath.Buffer);
+	  wcscat(SrcPath, L"\\loader\\freeldr.sys");
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.sys");
+
+//	  PrintTextXY(6, 14, "Copy: %S ==> %S", SrcPath, DstPath);
+	  DPRINT1("Copy: %S ==> %S", SrcPath, DstPath);
+	  Status = SetupCopyFile(SrcPath, DstPath);
+	  DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Create freeldr.ini */
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.ini");
+
+//	  DPRINT1("Copy: %S ==> %S", SrcPath, DstPath);
+	  Status = CreateFreeLoaderIniForReactos(DstPath,
+						 DestinationArcPath.Buffer);
+	  DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Save current bootsector as 'BOOTSECT.OLD' */
+	  wcscpy(SrcPath, SystemRootPath.Buffer);
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\bootsect.old");
+
+//	  PrintTextXY(6, 16, "Save bootsector: %S ==> %S", SrcPath, DstPath);
+	  Status = SaveCurrentBootSector(SrcPath,
+					 DstPath);
+	  DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
+	    }
+
+	  /* Install new bootsector */
+	  if ((ActivePartition.PartType == PARTITION_FAT32) ||
+	      (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat32.bin");
+
+//	      PrintTextXY(6, 18, "Install FAT32 bootcode: %S ==> %S",
+//			  SrcPath, SystemRootPath.Buffer);
+	      Status = InstallFat32BootCodeToDisk(SrcPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat32BootCodeToDisk() failed (Status %lx)\n", Status);
+		}
+	    }
+	  else
+	    {
+	      wcscpy(SrcPath, SourceRootPath.Buffer);
+	      wcscat(SrcPath, L"\\loader\\fat.bin");
+
+//	      PrintTextXY(6, 18, "Install FAT bootcode: %S ==> %S",
+//			  SrcPath, SystemRootPath.Buffer);
+	      Status = InstallFat16BootCodeToDisk(SrcPath,
+						  SystemRootPath.Buffer);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("InstallFat16BootCodeToDisk() failed (Status %lx)\n", Status);
+		}
+	    }
 	}
     }
   else
@@ -1597,6 +1797,7 @@ NtProcessStartup(PPEB Peb)
   RtlInitUnicodeString(&SourceRootPath, NULL);
   RtlInitUnicodeString(&InstallPath, NULL);
   RtlInitUnicodeString(&DestinationPath, NULL);
+  RtlInitUnicodeString(&DestinationArcPath, NULL);
   RtlInitUnicodeString(&DestinationRootPath, NULL);
   RtlInitUnicodeString(&SystemRootPath, NULL);
 

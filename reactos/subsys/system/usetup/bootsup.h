@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bootsup.h,v 1.1 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: bootsup.h,v 1.2 2003/01/28 17:29:22 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/bootsup.h
@@ -29,8 +29,36 @@
 
 NTSTATUS
 CreateFreeLoaderIniForDos(PWCHAR IniPath,
-			  PWCHAR SystemPath);
+			  PWCHAR ArcPath);
 
+NTSTATUS
+CreateFreeLoaderIniForReactos(PWCHAR IniPath,
+			      PWCHAR ArcPath);
+
+
+NTSTATUS
+InstallFat16BootCodeToFile(PWSTR SrcPath,
+			   PWSTR DstPath,
+			   PWSTR RootPath);
+
+NTSTATUS
+InstallFat32BootCodeToFile(PWSTR SrcPath,
+			   PWSTR DstPath,
+			   PWSTR RootPath);
+
+NTSTATUS
+InstallFat16BootCodeToDisk(PWSTR SrcPath,
+			   PWSTR RootPath);
+
+NTSTATUS
+InstallFat32BootCodeToDisk(PWSTR SrcPath,
+			   PWSTR RootPath);
+
+
+NTSTATUS
+UpdateBootIni(PWSTR BootIniPath,
+	      PWSTR EntryName,
+	      PWSTR EntryValue);
 
 #endif /* __BOOTSUP_H__ */
 

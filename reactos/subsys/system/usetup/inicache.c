@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.2 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: inicache.c,v 1.3 2003/01/28 17:29:22 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -423,55 +423,38 @@ IniCacheGetKeyValue(PCHAR Ptr,
   *DataPtr = NULL;
   *DataSize = 0;
 
-  /* skip whitespace */
+  /* Skip whitespace */
   while (*Ptr != 0 && isspace(*Ptr))
     {
       Ptr++;
     }
 
-  /* check and skip '=' */
+  /* Check and skip '=' */
   if (*Ptr != '=')
     {
       return(NULL);
     }
   Ptr++;
 
-  /* skip whitespace */
+  /* Skip whitespace */
   while (*Ptr != 0 && isspace(*Ptr))
     {
       Ptr++;
     }
 
-  /* check for quoted data */
-  if (*Ptr == '\"')
+  /* Get data */
+  *DataPtr = Ptr;
+  while (*Ptr != 0 && *Ptr != '\r')
     {
       Ptr++;
-      *DataPtr = Ptr;
-
-      while (*Ptr != 0 && *Ptr != '\"')
-	{
-	  Ptr++;
-	  Size++;
-	}
-      Ptr++;
-    }
-  else
-    {
-      *DataPtr = Ptr;
-
-      while (*Ptr != 0 && !isspace(*Ptr) && *Ptr != '\n')
-	{
-	  Ptr++;
-	  Size++;
-	}
+      Size++;
     }
 
   /* Skip to next line */
-  while (*Ptr != 0 && *Ptr != '\n')
-    {
-      Ptr++;
-    }
-  Ptr++;
+  if (*Ptr == '\r')
+    Ptr++;
+  if (*Ptr == '\n')
+    Ptr++;
 
   *DataSize = Size;
 
@@ -1069,7 +1052,7 @@ IniCacheSave(PINICACHE Cache,
 			NULL,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
-			FILE_OVERWRITE_IF,
+			FILE_SUPERSEDE,
 			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
