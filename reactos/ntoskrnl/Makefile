@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2001/03/14 16:30:08 dwelch Exp $
+# $Id: Makefile,v 1.20 2001/03/15 18:37:29 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -19,10 +19,13 @@ CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror
 #	 -Wmissing-prototypes -Wshadow\
 #CFLAGS += -DDBGPRINT_FILE_LOG
 
-all: \
+all: depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe
+
+depends$(EXE_POSTFIX): depends.c
+	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
 
 #
 # Hardware Abstraction Layer (Hal)
@@ -569,15 +572,14 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 
 include $(D1_FILES)
 
-.%.d: %.c
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
+.%.d: %.c depends$(EXE_POSTFIX)
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@ 
 
 .%.d: %.s
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@ 
 
 .%.d: %.S
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
-
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) 
 
 include $(PATH_TO_TOP)/rules.mak
 
