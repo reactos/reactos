@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.134 2002/06/05 16:53:36 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.135 2002/06/10 21:11:56 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -16,6 +16,7 @@ CcMdlReadComplete@8
 CcSetDirtyPinnedData@8
 CcSetFileSizes@8
 CcUnpinData@4
+CcZeroData@16
 DbgBreakPoint@0
 DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols@12

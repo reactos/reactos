@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.5 2002/06/04 15:26:55 dwelch Exp $
+/* $Id: copy.c,v 1.6 2002/06/10 21:11:56 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,28 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
+static PHYSICAL_ADDRESS CcZeroPage = (PHYSICAL_ADDRESS)0LL;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID 
+InitCacheZeroPage(VOID)
+{
+   NTSTATUS Status;
+
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &CcZeroPage);
+   if (!NT_SUCCESS(Status))
+   {
+       DbgPrint("Can't allocate CcZeroPage.\n");
+       KeBugCheck(0);
+   }
+   Status = MiZeroPage(CcZeroPage);
+   if (!NT_SUCCESS(Status))
+   {
+       DbgPrint("Can't zero out CcZeroPage.\n");
+       KeBugCheck(0);
+   }
+}
 
 NTSTATUS
 ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
@@ -410,4 +431,195 @@ CcCopyWrite (
    return TRUE;
 }
 
+BOOLEAN STDCALL
+CcZeroData (
+    IN PFILE_OBJECT     FileObject,
+    IN PLARGE_INTEGER   StartOffset,
+    IN PLARGE_INTEGER   EndOffset,
+    IN BOOLEAN          Wait
+)
+{
+   NTSTATUS Status;
+   LARGE_INTEGER WriteOffset;
+   ULONG Length;
+   PMDL Mdl;
+   ULONG i;
+   IO_STATUS_BLOCK Iosb;
+
+   DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, Wait %d\n",
+          FileObject, StartOffset->QuadPart, EndOffset->QuadPart, Wait);
+
+   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
+
+   // FIXME: NT uses the shared chache map field for cached/non cached detection
+   if (((PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext)->Bcb == NULL)
+   {
+      // File is not cached
+
+      CHECKPOINT;
+      
+      WriteOffset.QuadPart = StartOffset->QuadPart;
+     
+      while (Length > 0)
+      {
+	 if (Length + WriteOffset.u.LowPart % PAGESIZE > 262144)
+	 {
+            Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 262144 - WriteOffset.u.LowPart % PAGESIZE);
+	    WriteOffset.QuadPart += (262144 - WriteOffset.u.LowPart % PAGESIZE);
+	    Length -= (262144 - WriteOffset.u.LowPart % PAGESIZE);
+	 }
+	 else
+	 {
+            Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, Length - WriteOffset.u.LowPart % PAGESIZE);
+	    WriteOffset.QuadPart += (Length - WriteOffset.u.LowPart % PAGESIZE);
+	    Length = 0;
+	 }
+         if (Mdl == NULL)
+	 {
+            return FALSE;
+	 }
+         Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
+	 for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
+	 {
+            ((PULONG)(Mdl + 1))[i] = CcZeroPage.u.LowPart;
+	 }
+         Status = IoPageWrite(FileObject, Mdl, StartOffset, &Iosb, TRUE);
+	 if (!NT_SUCCESS(Status))
+	 {
+	    return FALSE;
+	 }
+      }
+   }
+   else
+   {
+      // File is cached
+      KIRQL oldirql;
+      PBCB Bcb;
+      PLIST_ENTRY current_entry;
+      PCACHE_SEGMENT CacheSeg, current, previous;
+      ULONG TempLength;
+      ULONG Start;
+      ULONG count;
+      ULONG size;
+      PHYSICAL_ADDRESS page;
+
+      CHECKPOINT;
+      Start = StartOffset->u.LowPart;
+      Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+      if (Wait)
+      {
+          // testing, if the requested datas are available
+	  KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+	  current_entry = Bcb->BcbSegmentListHead.Flink;
+	  while (current_entry != &Bcb->BcbSegmentListHead)
+	  {
+	     CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+	     if (!CacheSeg->Valid)
+	     {
+		if ((Start >= CacheSeg->FileOffset && Start < CacheSeg->FileOffset + Bcb->CacheSegmentSize)
+		   || (Start + Length > CacheSeg->FileOffset && 
+		       Start + Length <= CacheSeg->FileOffset + Bcb->CacheSegmentSize))
+		{
+		   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+		   // datas not available
+		   return FALSE;
+		}
+	     }
+	     current_entry = current_entry->Flink;
+	  }
+	  KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+      }
+
+      while (Length > 0)
+      {
+	 WriteOffset.QuadPart = ROUND_DOWN(Start, Bcb->CacheSegmentSize);
+         if (Start % Bcb->CacheSegmentSize + Length > 262144)
+	 {
+	     Mdl = MmCreateMdl(NULL, NULL, 262144);
+	     if (Mdl == NULL)
+	     {
+		return FALSE;
+	     }
+	     Status = CcRosGetCacheSegmentChain (Bcb, ROUND_DOWN(Start, Bcb->CacheSegmentSize), 
+		                                 262144, &CacheSeg);
+	     if (!NT_SUCCESS(Status))
+	     {
+		ExFreePool(Mdl);
+		return FALSE;
+	     }
+	 }
+	 else
+	 {
+	     Mdl = MmCreateMdl(NULL, (PVOID)ROUND_DOWN(Start, Bcb->CacheSegmentSize), 
+		               ROUND_UP(Start % Bcb->CacheSegmentSize + Length, Bcb->CacheSegmentSize));
+	     if (Mdl == NULL)
+	     {
+		return FALSE;
+	     }
+	     Status = CcRosGetCacheSegmentChain (Bcb, ROUND_DOWN(Start, Bcb->CacheSegmentSize), 
+		                                 min(ROUND_UP(Start % Bcb->CacheSegmentSize 
+						   + Length, Bcb->CacheSegmentSize), 
+						 Bcb->AllocationSize.u.LowPart 
+						   - ROUND_DOWN(Start, Bcb->CacheSegmentSize)), 
+						 &CacheSeg);
+	     if (!NT_SUCCESS(Status))
+	     {
+		ExFreePool(Mdl);
+		return FALSE;
+	     }
+	 }
+	 Mdl->MdlFlags |= (MDL_PAGES_LOCKED|MDL_IO_PAGE_READ);
+	 current = CacheSeg;
+	 count = 0;
+	 while (current != NULL)
+	 {
+	    if (Start % Bcb->CacheSegmentSize || 
+		Start % Bcb->CacheSegmentSize + Length < Bcb->CacheSegmentSize)
+	    {
+	        if (!current->Valid)
+		{
+		   // Segment lesen
+		   Status = ReadCacheSegment(current);
+		   if (!NT_SUCCESS(Status))
+		   {
+		      DPRINT1("ReadCacheSegment failed, status %x\n", Status);
+		   }
+		}
+		TempLength = min (Length, Bcb->CacheSegmentSize - Start % Bcb->CacheSegmentSize);
+		memset (current->BaseAddress + Start % Bcb->CacheSegmentSize, 0, TempLength);
+	    }
+	    else
+	    {
+		TempLength = Bcb->CacheSegmentSize;
+	        memset (current->BaseAddress, 0, Bcb->CacheSegmentSize);
+	    }
+            Start += TempLength;
+	    Length -= TempLength;
+
+	    size = ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG));
+	    for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE) && count < size; i++)
+	    {
+	       page = MmGetPhysicalAddressForProcess(NULL, current->BaseAddress + (i * PAGESIZE));
+	       ((PULONG)(Mdl + 1))[count++] = page.u.LowPart;
+	    }
+	    current = current->NextInChain;
+	 }
+
+	 // Write the Segment
+	 Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Iosb, TRUE);
+	 if (!NT_SUCCESS(Status))
+	 {
+	    DPRINT1("IoPageWrite failed, status %x\n", Status);
+	 }
+	 current = CacheSeg;
+	 while (current != NULL)
+	 {
+	    previous = current;
+	    current = current->NextInChain;
+            CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
+	 }
+      }
+   }
+   return TRUE;
+}
 

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.10 2002/01/26 21:21:02 dwelch Exp $ */
+/* $Id: cc.h,v 1.11 2002/06/10 21:11:56 hbirr Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -76,4 +76,5 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG FileOffset,
 			  ULONG Length,
 			  PCACHE_SEGMENT* CacheSeg);
+VOID InitCacheZeroPage(VOID);
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.42 2002/06/04 15:26:55 dwelch Exp $
+/* $Id: view.c,v 1.43 2002/06/10 21:11:56 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -576,6 +576,7 @@ CcInitView(VOID)
   InitializeListHead(&CacheSegmentLRUListHead);
   ExInitializeFastMutex(&ViewLock);
   MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
+  InitCacheZeroPage();
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.120 2002/06/05 16:53:36 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.121 2002/06/10 21:11:56 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -16,6 +16,7 @@ CcMapData=CcMapData@24
 CcSetDirtyPinnedData=CcSetDirtyPinnedData@8
 CcUnpinData=CcUnpinData@4
 CcSetFileSizes=CcSetFileSizes@8
+CcZeroData=CcZeroData@16
 DbgBreakPoint=DbgBreakPoint@0
 DbgBreakPointWithStatus=DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols=DbgLoadImageSymbols@12
