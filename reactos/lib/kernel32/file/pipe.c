@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: pipe.c,v 1.11 2004/10/08 21:48:46 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,15 +37,16 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
    NTSTATUS Status;
    HANDLE ReadPipeHandle;
    HANDLE WritePipeHandle;
+   ULONG PipeId;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
    DefaultTimeout.QuadPart = 300000000; /* 30 seconds */
 
-   ProcessPipeId++;
+   PipeId = (ULONG)InterlockedIncrement((LONG*)&ProcessPipeId);
    swprintf(Buffer,
 	    L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
 	    NtCurrentTeb()->Cid.UniqueProcess,
-	    ProcessPipeId);
+	    PipeId);
    RtlInitUnicodeString (&PipeName,
 			 Buffer);
 
