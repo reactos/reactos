@@ -18,7 +18,7 @@
  * Updated for Mesa 4.0 by Karl Schultz (kschultz@sourceforge.net)
  */
 
-#ifdef NDEBUG
+#if defined(NDEBUG) && defined(_MSC_VER)
 #pragma auto_inline(on)
 #pragma inline_depth(255)
 #pragma inline_recursion(on)
@@ -112,9 +112,8 @@ WMesaContext WC = NULL;
 
 #if defined(_MSC_VER) && _MSC_VER >= 1200
 #define FORCEINLINE __forceinline
-#elif defined(__GNUC__) && (__GCC_MAJOR__ > 3 || (__GCC_MAJOR__ == 3 && __GCC_MINOR__ >= 1))
+#elif defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 #define FORCEINLINE __attribute__((always_inline))
-#error FORCEINLINE OK!!!
 #else
 #define FORCEINLINE __inline
 #endif
