@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.1 2004/12/12 01:40:38 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.2 2004/12/12 17:56:52 weiden Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -92,6 +92,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
          /* Remove the cursor if it was displayed */
          if (GDIDEV(SurfObj)->Pointer.MovePointer)
            GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, -1, -1, NULL);
+         else
+           EngMovePointer(SurfObj, -1, -1, NULL);
+         GDIDEV(SurfObj)->Pointer.Exclude.right = -1;
       }
 
       GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;

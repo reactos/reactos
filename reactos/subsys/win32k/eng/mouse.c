@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.78 2004/12/12 01:40:36 weiden Exp $
+/* $Id: mouse.c,v 1.79 2004/12/12 17:56:52 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -41,7 +41,6 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
   LONG tmp;
   GDIDEVICE *ppdev;
   GDIPOINTER *pgp;
-  POINTL pt;
 
   ASSERT(SurfObj != NULL);
 
@@ -54,7 +53,8 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
   
   pgp = &ppdev->Pointer;
 
-  if (SPS_ACCEPT_NOEXCLUDE == pgp->Status)
+  if (SPS_ACCEPT_NOEXCLUDE == pgp->Status ||
+      pgp->Exclude.right == -1)
     {
       return(FALSE);
     }
@@ -68,13 +68,10 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  pt.x = pgp->Pos.x - pgp->HotSpot.x;
-  pt.y = pgp->Pos.y - pgp->HotSpot.y;
-
-  if (pt.x + pgp->Size.cx >= HazardX1
-      && pt.x <= HazardX2
-      && pt.y + pgp->Size.cy >= HazardY1
-      && pt.y <= HazardY2)
+  if (pgp->Exclude.right >= HazardX1
+      && pgp->Exclude.left <= HazardX2
+      && pgp->Exclude.bottom >= HazardY1
+      && pgp->Exclude.top <= HazardY2)
     {
       if (0 != pgp->SafetyRemoveCount++)
         {
@@ -110,7 +107,8 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 
   pgp = &ppdev->Pointer;
 
-  if(SPS_ACCEPT_NOEXCLUDE == pgp->Status)
+  if(SPS_ACCEPT_NOEXCLUDE == pgp->Status ||
+     pgp->Exclude.right == -1)
   {
     return FALSE;
   }
@@ -122,10 +120,16 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
           /* Someone else removed it too, let them restore it */
           return FALSE;
         }
+      /* FIXME - this is wrong!!!!!! we must NOT access pgp->Pos from here, it's
+                 a private field for ENG/driver. This will paint the cursor to the
+                 wrong screen coordinates when a driver overrides DrvMovePointer()!
+                 We should store the coordinates before calling Drv/EngMovePointer()
+                 and Drv/EngSetPointerShape() separately in the GDIDEVICE structure
+                 or somewhere where ntuser can access it! */
       if (pgp->MovePointer)
-        pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, NULL);
+        pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
       else
-        EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, NULL);
+        EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
      pgp->SafetySwitch = FALSE;
     }
 
@@ -151,11 +155,6 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 
    pgp->Enabled = FALSE;
-   
-   if(pgp->Pos.x == -1)
-   {
-      return;
-   }
    
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
@@ -368,19 +367,14 @@ EngSetPointerShape(
    pgp->HotSpot.x = xHot;
    pgp->HotSpot.y = yHot;
 
-   pgp->Pos.x = x;
-   pgp->Pos.y = y;
+   if (x != -1)
+   {
+     pgp->Pos.x = x;
+     pgp->Pos.y = y;
+   }
+   
    pgp->Size.cx = abs(psoMask->lDelta) << 3;
    pgp->Size.cy = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
-
-   if (prcl != NULL)
-   {
-      /* FIXME - right rectangle when x == -1? */
-      prcl->left = pgp->Pos.x - pgp->HotSpot.x;
-      prcl->top = pgp->Pos.y - pgp->HotSpot.x;
-      prcl->right = prcl->left + pgp->Size.cx;
-      prcl->bottom = prcl->top + pgp->Size.cy;
-   }
 
    if (psoColor != NULL)
    {
@@ -474,7 +468,17 @@ EngSetPointerShape(
    if(x != -1)
    {
      IntShowMousePointer(ppdev, pso);
+     
+     if (prcl != NULL)
+     {
+       prcl->left = pgp->Pos.x - pgp->HotSpot.x;
+       prcl->top = pgp->Pos.y - pgp->HotSpot.x;
+       prcl->right = prcl->left + pgp->Size.cx;
+       prcl->bottom = prcl->top + pgp->Size.cy;
+     }
    }
+   
+   /* FIXME - touch prcl when x == -1? */
 
    return SPS_ACCEPT_EXCLUDE;
 }
@@ -501,23 +505,22 @@ EngMovePointer(
    
    pgp = &ppdev->Pointer;
    
-   
    IntHideMousePointer(ppdev, pso);
    if (x != -1)
    {
      pgp->Pos.x = x;
      pgp->Pos.y = y;
      IntShowMousePointer(ppdev, pso);
+     if (prcl != NULL)
+     {
+       prcl->left = pgp->Pos.x - pgp->HotSpot.x;
+       prcl->top = pgp->Pos.y - pgp->HotSpot.x;
+       prcl->right = prcl->left + pgp->Size.cx;
+       prcl->bottom = prcl->top + pgp->Size.cy;
+     }
    }
-
-   if (prcl != NULL)
-   {
-      /* FIXME - right rectangle when x == -1? */
-      prcl->left = pgp->Pos.x - pgp->HotSpot.x;
-      prcl->top = pgp->Pos.y - pgp->HotSpot.x;
-      prcl->right = prcl->left + pgp->Size.cx;
-      prcl->bottom = prcl->top + pgp->Size.cy;
-   }
+   
+   /* FIXME - touch prcl when x == -1? */
 }
 
 /* EOF */

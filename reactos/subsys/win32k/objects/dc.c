@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.149 2004/12/12 01:40:38 weiden Exp $
+/* $Id: dc.c,v 1.150 2004/12/12 17:56:52 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -622,6 +622,8 @@ IntCreatePrimarySurface()
          DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
          PrimarySurface.GDIInfo.ulLogPixelsY = 96;
       }
+      
+      PrimarySurface.Pointer.Exclude.right = -1;
 
       DPRINT("calling completePDev\n");
 
@@ -659,7 +661,8 @@ IntCreatePrimarySurface()
       SurfaceRect.left = SurfaceRect.top = 0;
       SurfaceRect.right = SurfObj->sizlBitmap.cx;
       SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
-      EngEraseSurface(SurfObj, &SurfaceRect, 0);
+      /* FIXME - why does EngEraseSurface() sometimes crash?
+        EngEraseSurface(SurfObj, &SurfaceRect, 0); */
       EngUnlockSurface(SurfObj);
       IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
       break;

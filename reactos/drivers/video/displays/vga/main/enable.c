@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.4 $
- * $Author: chorns $
- * $Date: 2004/11/27 00:46:24 $
+ * $Revision: 1.5 $
+ * $Author: weiden $
+ * $Date: 2004/12/12 17:56:51 $
  *
  */
 
@@ -258,12 +258,6 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     }
   PDev->KMDriver = Driver;
   DPRINT( "PDev: %x, Driver: %x\n", PDev, PDev->KMDriver );
-  PDev->xyCursor.x = 320;
-  PDev->xyCursor.y = 240;
-  PDev->ptlExtent.x = 0;
-  PDev->ptlExtent.y = 0;
-  PDev->cExtent = 0;
-  PDev->flCursor = CURSOR_DOWN;
 
   gaulCap.ulHorzRes = 640;
   gaulCap.ulVertRes = 480;

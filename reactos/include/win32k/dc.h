@@ -108,22 +108,22 @@ typedef struct _DC
   WIN_DC_INFO  w;
 } DC, *PDC;
 
-typedef struct _GDIPOINTER
+typedef struct _GDIPOINTER /* should stay private to ENG */
 {
+  /* private GDI pointer handling information, required for software emulation */
   BOOL Enabled;
   POINTL Pos;
   SIZEL Size;
   POINTL HotSpot;
-
-  PGD_MOVEPOINTER MovePointer;
-
   XLATEOBJ *XlateObject;
   HSURF ColorSurface;
   HSURF MaskSurface;
   HSURF SaveSurface;
-
+  
+  /* public pointer information */
+  RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
+  PGD_MOVEPOINTER MovePointer;
   ULONG Status;
-
   BOOL SafetySwitch;
   UINT SafetyRemoveCount;
 } GDIPOINTER, *PGDIPOINTER;

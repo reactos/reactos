@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.39 2004/12/12 01:40:37 weiden Exp $
+/* $Id: input.c,v 1.40 2004/12/12 17:56:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -650,8 +650,13 @@ IntMouseInput(MOUSEINPUT *mi)
 
         if (GDIDEV(SurfObj)->Pointer.MovePointer)
         {
-          GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, MousePos.x, MousePos.y, NULL);
+          GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
         }
+        /* FIXME - That's a bad thing! We should't access private gdi pointer fields
+                   from here. However it is required so MouseSafetyOnDrawEnd() can
+                   properly paint the mouse cursor to the screen again. See the
+                   comment in MouseSafetyOnDrawEnd() to fix this problem! */
+        GDIDEV(SurfObj)->Pointer.Pos = MousePos;
 
         BITMAPOBJ_UnlockBitmap(hBitmap);
       }
