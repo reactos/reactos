@@ -109,8 +109,8 @@ void WINAPI RunFileDlg(
         return;
         }
 
-    DialogBoxIndirectParamA((HINSTANCE)GetWindowLongA( hwndOwner,
-						       GWL_HINSTANCE ),
+    DialogBoxIndirectParamA((HINSTANCE)GetWindowLongPtrW( hwndOwner,
+						       GWLP_HINSTANCE ),
 			    template, hwndOwner, RunDlgProc, (LPARAM)&rfdp);
 
 }

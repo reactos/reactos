@@ -260,7 +260,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 					    WS_BORDER | WS_CHILD | WS_VSCROLL | LBS_HASSTRINGS | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 
 					    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 					    hwndParent, NULL, 
-					    (HINSTANCE)GetWindowLongA( hwndParent, GWL_HINSTANCE ), NULL);
+					    (HINSTANCE)GetWindowLongPtrW( hwndParent, GWLP_HINSTANCE ), NULL);
 					    
 	if (This->hwndListBox) {
 	    This->wpOrigLBoxProc = (WNDPROC) SetWindowLongPtrW( This->hwndListBox, GWLP_WNDPROC, (LONG_PTR) ACLBoxSubclassProc);

@@ -854,7 +854,7 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
     SystemParametersInfoW( SPI_GETICONTITLELOGFONT, 0, &logFont, 0 );
     info.hFont = CreateFontIndirectW( &logFont );
 
-    bRet = DialogBoxIndirectParamW((HINSTANCE)GetWindowLongW( hWnd, GWL_HINSTANCE ),
+    bRet = DialogBoxIndirectParamW((HINSTANCE)GetWindowLongPtrW( hWnd, GWLP_HINSTANCE ),
                                    template, hWnd, AboutDlgProc, (LPARAM)&info );
     DeleteObject(info.hFont);
     return bRet;
