@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.186 2003/12/06 23:10:50 mf Exp $
+# $Id: Makefile,v 1.187 2003/12/06 23:22:30 mf Exp $
 #
 # Global makefile
 #
@@ -809,6 +809,9 @@ docu:
 
 	echo generating ReactOS apps+tools documentation ...
 	$(MAKE) -C apps docu
+
+	echo generating ReactOS explorer documentation ...
+	$(MAKE) -C subsys/system/explorer
 
 	echo generating remaining ReactOS documentation ...
 	doxygen Doxyfile
