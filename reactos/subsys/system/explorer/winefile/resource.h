@@ -69,7 +69,7 @@
 
 
 /* range for drive bar command ids: 0x9000..0x90FF */
-#ifdef __linux__
+#ifdef __WINE__
 #define	ID_DRIVE_UNIX_FS				0x9000
 #endif
 #define	ID_DRIVE_SHELL_NS				0x9001
