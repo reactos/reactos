@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: sid.c,v 1.2 2004/06/20 23:30:47 gdalsnes Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -212,9 +212,7 @@ RtlAllocateAndInitializeSid (
    if (Sid == NULL)
       return STATUS_INVALID_PARAMETER;
 
-   pSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
-                                 0,
-                                 SubAuthorityCount * sizeof(DWORD) + 8);
+   pSid = (PSID)ExAllocatePool(PagedPool, SubAuthorityCount * sizeof(DWORD) + 8);
    if (pSid == NULL)
       return STATUS_NO_MEMORY;
 
@@ -253,14 +251,16 @@ RtlAllocateAndInitializeSid (
 
 /*
  * @implemented
+ *
+ * RETURNS
+ *  Docs says FreeSid does NOT return a value
+ *  even thou it's defined to return a PVOID...
  */
-PSID STDCALL
+PVOID STDCALL
 RtlFreeSid(IN PSID Sid)
 {
-   RtlFreeHeap(RtlGetProcessHeap(),
-               0,
-               Sid);
-   return(Sid);
+   ExFreePool(Sid);
+   return NULL;
 }
 
 
@@ -327,9 +327,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    Length = (wcs - Buffer) * sizeof(WCHAR);
    if (AllocateBuffer)
    {
-      String->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-                                        0,
-                                        Length + sizeof(WCHAR));
+      String->Buffer = ExAllocatePool(PagedPool,Length + sizeof(WCHAR));
       if (String->Buffer == NULL)
          return STATUS_NO_MEMORY;
       String->MaximumLength = Length + sizeof(WCHAR);
