@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.140 2004/06/28 17:03:35 navaraf Exp $
+/* $Id: dc.c,v 1.141 2004/06/29 21:09:16 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1904,13 +1904,12 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
           dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(NumColors, pb->ColorMap);
         }
-        else if ( 16 == pb->dib->dsBmih.biBitCount )
+        else
         {
-          dc->w.hPalette = PALETTE_AllocPalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0x7c00, 0x03e0, 0x001f);
-        }
-        else if(pb->dib->dsBmih.biBitCount >= 24)
-        {
-          dc->w.hPalette = PALETTE_AllocPalette(PAL_RGB, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
+          dc->w.hPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
+                                                pb->dib->dsBitfields[0],
+                                                pb->dib->dsBitfields[1],
+                                                pb->dib->dsBitfields[2]);
         }
       }
       else

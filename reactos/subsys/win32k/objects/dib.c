@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.54 2004/06/28 17:03:35 navaraf Exp $
+ * $Id: dib.c,v 1.55 2004/06/29 21:09:16 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1115,15 +1115,15 @@ DIB_CreateDIBSection(
         dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x001f;        break;
 
       case 24:
-        dib->dsBitfields[0] = 0xff;
-        dib->dsBitfields[1] = 0xff00;
-        dib->dsBitfields[2] = 0xff0000;
+        dib->dsBitfields[0] = 0xff0000;
+        dib->dsBitfields[1] = 0x00ff00;
+        dib->dsBitfields[2] = 0x0000ff;
         break;
 
       case 32:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0xff;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0xff00;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0xff0000;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0xff0000;
+        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0x00ff00;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x0000ff;
         break;
     }
     dib->dshSection = section;
