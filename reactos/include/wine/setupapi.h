@@ -37,6 +37,8 @@ typedef PVOID HDEVINFO;
 /* Define type for setup file queue */
 typedef PVOID HSPFILEQ;
 
+typedef PVOID HDSKSPC;
+
 /* inf structure. */
 typedef struct _INFCONTEXT
 {
@@ -112,10 +114,37 @@ typedef struct _SP_FILE_COPY_PARAMS_W
 DECL_WINELIB_SETUPAPI_TYPE_AW(SP_FILE_COPY_PARAMS)
 DECL_WINELIB_SETUPAPI_TYPE_AW(PSP_FILE_COPY_PARAMS)
 
+typedef struct _SP_REGISTER_CONTROL_STATUSA
+{
+    DWORD    cbSize;
+    PCSTR    FileName;
+    DWORD    Win32Error;
+    DWORD    FailureCode;
+} SP_REGISTER_CONTROL_STATUSA, *PSP_REGISTER_CONTROL_STATUSA;
+
+typedef struct _SP_REGISTER_CONTROL_STATUSW
+{
+    DWORD    cbSize;
+    PCWSTR   FileName;
+    DWORD    Win32Error;
+    DWORD    FailureCode;
+} SP_REGISTER_CONTROL_STATUSW, *PSP_REGISTER_CONTROL_STATUSW;
+
+DECL_WINELIB_TYPE_AW(SP_REGISTER_CONTROL_STATUS)
+DECL_WINELIB_TYPE_AW(PSP_REGISTER_CONTROL_STATUS)
+
+#define SPREG_SUCCESS       0x00000000
+#define SPREG_LOADLIBRARY   0x00000001
+#define SPREG_GETPROCADDR   0x00000002
+#define SPREG_REGSVR        0x00000003
+#define SPREG_DLLINSTALL    0x00000004
+#define SPREG_TIMEOUT       0x00000005
+#define SPREG_UNKNOWN       0xffffffff
+
 typedef UINT (CALLBACK *PSP_FILE_CALLBACK_A)( PVOID Context, UINT Notification,
-                                              UINT Param1, UINT Param2 );
+                                              UINT_PTR Param1, UINT_PTR Param2 );
 typedef UINT (CALLBACK *PSP_FILE_CALLBACK_W)( PVOID Context, UINT Notification,
-                                              UINT Param1, UINT Param2 );
+                                              UINT_PTR Param1, UINT_PTR Param2 );
 DECL_WINELIB_SETUPAPI_TYPE_AW(PSP_FILE_CALLBACK)
 
 #define LINE_LEN                    256
@@ -218,6 +247,12 @@ typedef struct _CABINET_INFO_W {
 
 DECL_WINELIB_SETUPAPI_TYPE_AW(CABINET_INFO);
 DECL_WINELIB_SETUPAPI_TYPE_AW(PCABINET_INFO);
+
+typedef struct _SP_INF_INFORMATION {
+    DWORD InfStyle;
+    DWORD InfCount;
+    BYTE VersionData[ANYSIZE_ARRAY];
+} SP_INF_INFORMATION, *PSP_INF_INFORMATION;
 
 #define INF_STYLE_NONE           0x00
 #define INF_STYLE_OLDNT          0x01
@@ -358,6 +393,9 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define FLG_DELREG_32BITKEY              FLG_ADDREG_32BITKEY
 #define FLG_DELREG_OPERATION_MASK        (0x000000FE)
 #define FLG_DELREG_MULTI_SZ_DELSTRING    (FLG_DELREG_TYPE_MULTI_SZ | FLG_ADDREG_DELREG_BIT | 0x00000002)
+
+#define FLG_REGSVR_DLLREGISTER           0x00000001
+#define FLG_REGSVR_DLLINSTALL            0x00000002
 
 /* Class installer function codes */
 #define DIF_SELECTDEVICE                    0x01
@@ -518,6 +556,54 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define ERROR_NO_SUCH_INTERFACE_DEVICE    ERROR_NO_SUCH_DEVICE_INTERFACE
 #define ERROR_NOT_INSTALLED               (APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x1000)
 
+/* flags for SetupDiGetClassDevs */
+#define DIGCF_DEFAULT         0x00000001
+#define DIGCF_PRESENT         0x00000002
+#define DIGCF_ALLCLASSES      0x00000004
+#define DIGCF_PROFILE         0x00000008
+#define DIGCF_DEVICEINTERFACE 0x00000010
+
+/* setup device registry property codes */
+#define SPDRP_DEVICEDESC                  0x00000000
+#define SPDRP_HARDWAREID                  0x00000001
+#define SPDRP_COMPATIBLEIDS               0x00000002
+#define SPDRP_UNUSED0                     0x00000003
+#define SPDRP_SERVICE                     0x00000004
+#define SPDRP_UNUSED1                     0x00000005
+#define SPDRP_UNUSED2                     0x00000006
+#define SPDRP_CLASS                       0x00000007
+#define SPDRP_CLASSGUID                   0x00000008
+#define SPDRP_DRIVER                      0x00000009
+#define SPDRP_CONFIGFLAGS                 0x0000000a
+#define SPDRP_MFG                         0x0000000b
+#define SPDRP_FRIENDLYNAME                0x0000000c
+#define SPDRP_LOCATION_INFORMATION        0x0000000d
+#define SPDRP_PHYSICAL_DEVICE_OBJECT_NAME 0x0000000e
+#define SPDRP_CAPABILITIES                0x0000000f
+#define SPDRP_UI_NUMBER                   0x00000010
+#define SPDRP_UPPERFILTERS                0x00000011
+#define SPDRP_LOWERFILTERS                0x00000012
+#define SPDRP_BUSTYPEGUID                 0x00000013
+#define SPDRP_LEGACYBUSTYPE               0x00000014
+#define SPDRP_BUSNUMBER                   0x00000015
+#define SPDRP_ENUMERATOR_NAME             0x00000016
+#define SPDRP_SECURITY                    0x00000017
+#define SPDRP_SECURITY_SDS                0x00000018
+#define SPDRP_DEVTYPE                     0x00000019
+#define SPDRP_EXCLUSIVE                   0x0000001a
+#define SPDRP_CHARACTERISTICS             0x0000001b
+#define SPDRP_ADDRESS                     0x0000001c
+#define SPDRP_UI_NUMBER_DESC_FORMAT       0x0000001d
+#define SPDRP_DEVICE_POWER_DATA           0x0000001e
+#define SPDRP_REMOVAL_POLICY              0x0000001f
+#define SPDRP_REMOVAL_POLICY_HW_DEFAULT   0x00000020
+#define SPDRP_REMOVAL_POLICY_OVERRIDE     0x00000021
+#define SPDRP_INSTALL_STATE               0x00000022
+#define SPDRP_MAXIMUM_PROPERTY            0x00000023
+
+void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show );
+void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show );
+#define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
 HINF     WINAPI SetupOpenInfFileA( PCSTR name, PCSTR pszclass, DWORD style, UINT *error );
 HINF     WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR pszclass, DWORD style, UINT *error );
 #define         SetupOpenInfFile WINELIB_NAME_AW(SetupOpenInfFile)
@@ -597,9 +683,17 @@ void     WINAPI SetupTermDefaultQueueCallback( PVOID );
 UINT     WINAPI SetupDefaultQueueCallbackA( PVOID, UINT, UINT_PTR, UINT_PTR );
 UINT     WINAPI SetupDefaultQueueCallbackW( PVOID, UINT, UINT_PTR, UINT_PTR );
 #define         SetupDefaultQueueCallback WINELIB_NAME_AW(SetupDefaultQueueCallback)
+BOOL     WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO);
+BOOL     WINAPI SetupDiEnumDeviceInterfaces(HDEVINFO, PSP_DEVINFO_DATA, const GUID *, DWORD, PSP_DEVICE_INTERFACE_DATA);
 HDEVINFO WINAPI SetupDiGetClassDevsA(CONST GUID *,LPCSTR,HWND,DWORD);
 HDEVINFO WINAPI SetupDiGetClassDevsW(CONST GUID *,LPCWSTR,HWND,DWORD);
 #define         SetupDiGetClassDevs WINELIB_NAME_AW(SetupDiGetClassDevs)
+BOOL     WINAPI SetupDiGetDeviceInterfaceDetailA(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_A,
+                                                 DWORD, PDWORD, PSP_DEVINFO_DATA);
+BOOL     WINAPI SetupDiGetDeviceInterfaceDetailW(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
+                                                 DWORD, PDWORD, PSP_DEVINFO_DATA);
+#define         SetupDiGetDeviceInterfaceDetail WINELIB_NAME_AW(SetupDiGetDeviceInterfaceDetail)
+BOOL     WINAPI SetupDiGetDeviceRegistryPropertyA(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
 BOOL     WINAPI SetupInstallFilesFromInfSectionA( HINF, HINF, HSPFILEQ, PCSTR, PCSTR, UINT );
 BOOL     WINAPI SetupInstallFilesFromInfSectionW( HINF, HINF, HSPFILEQ, PCWSTR, PCWSTR, UINT );
 #define         SetupInstallFilesFromInfSection WINELIB_NAME_AW(SetupInstallFilesFromInfSection)
