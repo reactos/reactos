@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.15 2003/10/22 19:02:13 weiden Exp $
+/* $Id: timer.c,v 1.16 2003/11/03 20:31:39 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,55 +69,17 @@ static CLIENT_ID     MsgTimerThreadId;
 BOOL FASTCALL
 IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer, BOOL SysTimer)
 {
-  PLIST_ENTRY EnumEntry, InsertAfter;
-  PMSG_TIMER_ENTRY MsgTimer;
+  PLIST_ENTRY ListHead;
   
-  InsertAfter = NULL;
-  
-  if(!SysTimer)
-  {
-    EnumEntry = TimerListHead.Flink;
-    while (EnumEntry != &TimerListHead)
-    {
-      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      if (NewTimer->Timeout.QuadPart > MsgTimer->Timeout.QuadPart)
-      {
-        InsertAfter = EnumEntry;
-      }
-      EnumEntry = EnumEntry->Flink;
-    }
-    
-    if (InsertAfter)
-    {
-      InsertTailList(InsertAfter, &NewTimer->ListEntry);
-      return FALSE;
-    }
-    //insert as first entry
-    InsertHeadList(&TimerListHead, &NewTimer->ListEntry);
-  }
-  else
-  {
-    EnumEntry = SysTimerListHead.Flink;
-    while (EnumEntry != &SysTimerListHead)
-    {
-      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      if (NewTimer->Timeout.QuadPart > MsgTimer->Timeout.QuadPart)
-      {
-        InsertAfter = EnumEntry;
-      }
-      EnumEntry = EnumEntry->Flink;
-    }
-    
-    if (InsertAfter)
-    {
-      InsertTailList(InsertAfter, &NewTimer->ListEntry);
-      return FALSE;
-    }
-    //insert as first entry
-    InsertHeadList(&SysTimerListHead, &NewTimer->ListEntry);
-  }
-  
-  return TRUE;
+  ListHead = SysTimer ? &SysTimerListHead : &TimerListHead;
+
+  InsertAscendingList(ListHead,
+                      &NewTimer->ListEntry,
+                      MSG_TIMER_ENTRY,
+                      ListEntry,
+                      Timeout.QuadPart);
+                      
+  return IsFirstEntry(ListHead, &NewTimer->ListEntry);
 }
 
 //must hold mutex while calling this
