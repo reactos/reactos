@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 2000/03/15 18:28:34 ekohl Exp $
+# $Id: makefile,v 1.32 2000/04/06 17:23:26 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -26,7 +26,8 @@ all: $(DLLTARGET)
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o synch/intrlck.o synch/timer.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o misc/res.o
+		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o misc/res.o \
+		misc/debug.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
@@ -58,12 +59,9 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
 
 THREAD_OBJECTS = thread/thread.o thread/tls.o
 
-PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o \
-                  process/lib.o
+PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o
 
 STRING_OBJECTS = string/lstring.o
-
-INTERNAL_OBJECTS = internal/dprintf.o
 
 EXCEPT_OBJECTS = except/except.o
 
@@ -72,16 +70,15 @@ RESOURCE_OBJECT = $(TARGET).coff
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) \
-	  $(RESOURCE_OBJECT)
+          $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(RESOURCE_OBJECT)
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o \
+CLEAN_FILES = except\*.o file\*.o mem\*.o misc\*.o nls\*.o \
               process\*.o string\*.o synch\*.o thread\*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
 	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
 else
-CLEAN_FILES = except/*.o file/*.o internal/*.o mem/*.o misc/*.o nls/*.o  \
+CLEAN_FILES = except/*.o file/*.o mem/*.o misc/*.o nls/*.o  \
               process/*.o string/*.o synch/*.o thread/*.o  \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
 	      $(TARGET).dll $(TARGET).sym $(TARGET).coff

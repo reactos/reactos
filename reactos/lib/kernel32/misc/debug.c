@@ -1,7 +1,20 @@
+/* $Id: debug.c,v 1.1 2000/04/06 17:23:06 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/kernel32/misc/debug.c
+ * PURPOSE:         Win32 server console functions
+ * PROGRAMMER:      ???
+ */
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+/* FUNCTIONS *****************************************************************/
 
 /*
  * NOTE: Don't call DbgService()!
@@ -31,8 +44,4 @@ VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
      DbgPrint( AnsiString.Buffer );
 }
 
-
-
-
-
-
+/* EOF */
