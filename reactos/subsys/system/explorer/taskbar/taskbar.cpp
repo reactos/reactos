@@ -63,8 +63,6 @@ TaskBar::TaskBar(HWND hwnd)
 TaskBar::~TaskBar()
 {
 	KillTimer(_hwnd, 0);
-
-	//DeinstallShellHook();
 }
 
 HWND TaskBar::Create(HWND hwndParent)
@@ -93,8 +91,6 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	//InstallShellHook(_hwnd, PM_SHELLHOOK_NOTIFY);
-
 	Refresh();
 
 	SetTimer(_hwnd, 0, 200, NULL);
@@ -112,23 +108,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_TIMER:
 		Refresh();
 		return 0;
-/*
-//#define PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
-	  case PM_SHELLHOOK_NOTIFY: {
-		int code = lparam;
-
-		switch(code) {
-		  case HSHELL_WINDOWCREATED:
-		  case HSHELL_WINDOWDESTROYED:
-		  case HSHELL_WINDOWACTIVATED:
-		  case HSHELL_WINDOWREPLACED:
-			Refresh();
-			break;
-		}
-		Refresh();
-		break;}
-*/
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

@@ -26,9 +26,6 @@
  //
 
 
-//#include "shellhook.h"
-
-
 #define	CLASSNAME_TASKBAR		TEXT("MSTaskSwWClass")
 #define	TITLE_TASKBAR			TEXT("Running Applications")
 
