@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.62 2004/12/14 03:23:14 royce Exp $
+/* $Id: bitblt.c,v 1.63 2004/12/14 03:28:34 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -496,9 +496,13 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
   RECTL OutputRect;
   POINTL InputPoint;
   BOOLEAN UsesSource;
-  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *DestSurf;
   SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
   SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+
+  ASSERT(DestObj);
+  DestSurf = &DestObj->SurfObj;
+  ASSERT(DestSurf);
 
   InputClippedRect = *DestRect;
   if (InputClippedRect.right < InputClippedRect.left)
