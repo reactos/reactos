@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.6 2003/07/11 13:50:23 royce Exp $
+/* $Id: misc.c,v 1.7 2003/07/24 14:25:33 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,6 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <windows.h>
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 
@@ -74,6 +75,55 @@ RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 {
   *ProductType = SharedUserData->NtProductType;
   return(TRUE);
+}
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	RtlGetNtVersionNumbers
+ *
+ * DESCRIPTION
+ *	Get the version numbers of the run time library.
+ *
+ * ARGUMENTS
+ *	major [OUT]	Destination for the Major version
+ *	minor [OUT]	Destination for the Minor version
+ *	build [OUT]	Destination for the Build version
+ *
+ * RETURN VALUE
+ *	Nothing.
+ *
+ * NOTE
+ *	Introduced in Windows XP (NT5.1)
+ *
+ * @implemented
+ */
+
+void STDCALL
+RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
+{
+	OSVERSIONINFOEXW versionInfo;
+	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+	GetVersionExW((OSVERSIONINFOW*)&versionInfo);
+
+	if (major)
+	{
+		/* msvcrt.dll as released with XP Home fails in DLLMain() if the
+		 * major version is not 5. So, we should never set a version < 5 ...
+		 * This makes sense since this call didn't exist before XP anyway.
+		 */
+		*major = versionInfo.dwMajorVersion < 5 ? 5 : versionInfo.dwMajorVersion;
+	}
+
+	if (minor)
+	{
+		*minor = versionInfo.dwMinorVersion;
+	}
+
+	if (build)
+	{
+		/* FIXME: Does anybody know the real formula? */
+		*build = (0xF0000000 | versionInfo.dwBuildNumber);
+	}
 }
 
 /* EOF */

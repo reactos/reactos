@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.104 2003/07/06 23:04:19 hyperion Exp $
+; $Id: ntdll.def,v 1.105 2003/07/24 14:25:32 royce Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -429,6 +429,7 @@ RtlGetGroupSecurityDescriptor@12
 RtlGetLongestNtPathLength@0
 RtlGetNtGlobalFlags@0
 RtlGetNtProductType@4
+RtlGetNtVersionNumbers@12
 RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
