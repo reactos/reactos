@@ -359,6 +359,7 @@ NtUserGetClassInfo                      5
 NtUserGetClassLong			2
 NtUserGetClassName                      3
 NtUserGetClientOrigin			2
+NtUserGetClientRect			2
 NtUserGetClipboardData                  2
 NtUserGetClipboardFormatName            3
 NtUserGetClipboardOwner                 0

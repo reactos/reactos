@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.23 2003/03/04 00:39:56 rcampbell Exp $
+/* $Id: window.c,v 1.24 2003/03/06 21:03:49 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/win32k.h>
 #include <include/object.h>
 #include <include/guicheck.h>
@@ -187,6 +188,27 @@ BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
 {
   return(W32kGetWindowRect(hWnd, Rect));
+}
+
+BOOL STDCALL
+NtUserGetClientRect(HWND hWnd, LPRECT Rect)
+{
+  PWINDOW_OBJECT WindowObject;
+  RECT SafeRect;
+
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return(FALSE);
+    }
+  W32kGetClientRect(WindowObject, &SafeRect);
+  if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
+    {
+      return(FALSE);
+    }
+
+  W32kReleaseWindowObject(WindowObject);
+  return(TRUE);
 }
 
 HWND

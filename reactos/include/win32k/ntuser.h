@@ -11,6 +11,8 @@ INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
 BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
+BOOL STDCALL
+NtUserGetClientRect(HWND hWnd, LPRECT Rect);
 HANDLE STDCALL
 NtUserGetProp(HWND hWnd, ATOM Atom);
 BOOL STDCALL

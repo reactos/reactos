@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.17 2003/03/04 22:34:48 rcampbell Exp $
+/* $Id: window.c,v 1.18 2003/03/06 21:03:49 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -577,7 +577,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 WINBOOL STDCALL
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
-  return FALSE;
+  return(NtUserGetClientRect(hWnd, lpRect));
 }
 
 HWND STDCALL
