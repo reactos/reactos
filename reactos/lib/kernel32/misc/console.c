@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.80 2004/09/10 22:14:52 gvg Exp $
+/* $Id: console.c,v 1.81 2004/09/14 22:30:56 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2237,7 +2237,7 @@ WriteConsoleOutputAttribute(
       {
 	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB : nLength;
 	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
-	 for( c = 0; c < ( Size * 2 ); c++ )
+	 for( c = 0; c < Size; c++ )
 	   Request->Data.WriteConsoleOutputAttribRequest.String[c] = (char)lpAttribute[c];
 	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + (Size * 2), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
