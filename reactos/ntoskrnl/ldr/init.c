@@ -344,7 +344,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		NULL
 		);
 	DPRINT(
-		"Opening image file %w\n",
+		"Opening image file %S\n",
 		FileObjectAttributes.ObjectName->Buffer
 		);
 	Status = ZwOpenFile(
@@ -649,7 +649,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    Status = LdrLoadImage(ProcessHandle, &ProcessName);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("Failed to load %W\n",&ProcessName);
+	DbgPrint("Failed to load %wZ\n",&ProcessName);
      }
    return Status;
 }

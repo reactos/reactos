@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.13 1999/11/24 11:51:50 dwelch Exp $
+/* $Id: device.c,v 1.14 2000/01/12 19:02:40 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -189,7 +189,7 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
-   DPRINT("IopCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("IopCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
@@ -239,7 +239,7 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    
    if (DeviceName != NULL)
      {
-	DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
+	DPRINT("IoCreateDevice(DriverObject %x, DeviceName %S)\n",DriverObject,
 	       DeviceName->Buffer);
      }
    else

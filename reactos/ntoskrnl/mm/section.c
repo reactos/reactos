@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.21 1999/12/30 01:51:39 dwelch Exp $
+/* $Id: section.c,v 1.22 2000/01/12 19:03:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,7 +81,7 @@ NTSTATUS MmpCreateSection(PVOID ObjectBody,
 {
    NTSTATUS Status;
    
-   DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath == NULL)

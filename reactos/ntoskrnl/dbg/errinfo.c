@@ -255,7 +255,7 @@ VOID DbgPrintErrorMessage(NTSTATUS ErrorCode)
   UNICODE_STRING ErrorText;
 
   DbgGetErrorText(ErrorCode, &ErrorText, 0xf);
-  DbgPrint("%W\n", &ErrorText);
+  DbgPrint("%wZ\n", &ErrorText);
   RtlFreeUnicodeString(&ErrorText);
 }
 

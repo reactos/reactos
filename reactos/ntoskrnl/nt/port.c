@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.15 1999/12/30 01:51:40 dwelch Exp $
+/* $Id: port.c,v 1.16 2000/01/12 19:04:01 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -265,7 +265,7 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
    KIRQL oldIrql;
    
    DPRINT("PortName %x\n", PortName);
-   DPRINT("NtConnectPort(PortName %w)\n", PortName->Buffer);
+   DPRINT("NtConnectPort(PortName %S)\n", PortName->Buffer);
    
    /*
     * Copy in user parameters

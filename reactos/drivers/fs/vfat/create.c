@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.1 1999/12/11 21:14:48 dwelch Exp $
+/* $Id: create.c,v 1.2 2000/01/12 19:05:32 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -213,7 +213,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
    ULONG NextCluster;
    WCHAR TempStr[2];
    
-   DPRINT("FindFile(Parent %x, FileToFind '%w')\n",Parent,FileToFind);
+   DPRINT("FindFile(Parent %x, FileToFind '%S')\n",Parent,FileToFind);
    
    if (wcslen(FileToFind)==0)
      {
@@ -227,7 +227,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	DPRINT("Parent->entry.FirstCluster %d\n",Parent->entry.FirstCluster);
      }
    
-   DPRINT("FindFile '%w'\n", FileToFind);
+   DPRINT("FindFile '%S'\n", FileToFind);
    if (Parent == NULL||Parent->entry.FirstCluster==1)
      {
 	CHECKPOINT;
@@ -294,7 +294,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	       }
 	     if (GetEntryName((PVOID)block,&i,name,&j,DeviceExt,&StartingSector))
 	       {
-		  DPRINT("Comparing '%w' '%w'\n",name,FileToFind);
+		  DPRINT("Comparing '%S' '%S'\n",name,FileToFind);
 		  if (wstrcmpjoki(name,FileToFind))
 		    {
 		       /* In the case of a long filename, the firstcluster is stored in
@@ -403,7 +403,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
    
-   DPRINT("FsdOpenFile(%08lx, %08lx, %w)\n", 
+   DPRINT("FsdOpenFile(%08lx, %08lx, %S)\n", 
           DeviceExt,
           FileObject,
           FileName);
@@ -411,7 +411,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   /* FIXME : treat relative name */
    if(FileObject->RelatedFileObject)
    {
-      DbgPrint("try related for %w\n",FileName);
+      DbgPrint("try related for %S\n",FileName);
      pRelFileObject=FileObject->RelatedFileObject;
      pRelCcb=pRelFileObject->FsContext2;
      assert(pRelCcb);
@@ -450,7 +450,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	Fcb = CONTAINING_RECORD(current_entry, VFATFCB, FcbListEntry);
 
 	DPRINT("Scanning %x\n", Fcb);
-	DPRINT("Scanning %w\n", Fcb->PathName);
+	DPRINT("Scanning %S\n", Fcb->PathName);
 	
 	if (DeviceExt==Fcb->pDevExt
 	    && wstrcmpi(FileName,Fcb->PathName))
@@ -491,7 +491,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	{
 	   *next=0;
 	}
-      DPRINT("current '%w'\n",current);
+      DPRINT("current '%S'\n",current);
       Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
       if (Status != STATUS_SUCCESS)
 	{

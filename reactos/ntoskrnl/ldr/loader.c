@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.41 1999/12/22 14:48:24 dwelch Exp $
+/* $Id: loader.c,v 1.42 2000/01/12 19:03:27 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,7 @@ VOID LdrInitModuleManagement(VOID)
                              0, 
                              NULL, 
                              NULL);
-  DPRINT("Create dir: %W\n", &ModuleName);
+  DPRINT("Create dir: %wZ\n", &ModuleName);
   Status = ZwCreateDirectoryObject(&DirHandle, 0, &ObjectAttributes);
   assert(NT_SUCCESS(Status));
 
@@ -124,7 +124,7 @@ VOID LdrInitModuleManagement(VOID)
   wcscat(NameBuffer, L"ntoskrnl.exe");
   ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
   ModuleName.Buffer = NameBuffer;
-  DPRINT("Kernel's Module name is: %W\n", &ModuleName);
+  DPRINT("Kernel's Module name is: %wZ\n", &ModuleName);
   
   /*  Initialize ObjectAttributes for ModuleObject  */
   InitializeObjectAttributes(&ObjectAttributes, 
@@ -174,7 +174,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
    NTSTATUS	Status;
    UNICODE_STRING	DriverName;
    
-   DbgPrint("Loading %w\n",RelativeDriverName);
+   DbgPrint("Loading %S\n",RelativeDriverName);
    
    LdrGetSystemDirectory(TmpFileName, (MAX_PATH * sizeof(WCHAR)));
    wcscat(TmpFileName, L"\\drivers\\");
@@ -223,7 +223,7 @@ LdrCreateModule(PVOID ObjectBody,
                 PWSTR RemainingPath,
                 POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  DPRINT("LdrCreateModule(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+  DPRINT("LdrCreateModule(ObjectBody %x, Parent %x, RemainingPath %S)\n",
          ObjectBody, 
          Parent, 
          RemainingPath);
@@ -281,7 +281,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
       return  ModuleObject;
     }
 
-  DPRINT("Loading Module %W...\n", Filename);
+  DPRINT("Loading Module %wZ...\n", Filename);
 
   /*  Open the Module  */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -297,7 +297,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not open module file: %W\n", Filename);
+      DbgPrint("Could not open module file: %wZ\n", Filename);
       return  0;
     }
   CHECKPOINT;
@@ -437,7 +437,7 @@ LdrOpenModule(PUNICODE_STRING  Filename)
   CHECKPOINT;
   if (NT_SUCCESS(Status) && (RemainingPath == NULL || *RemainingPath == 0))
     {
-      DPRINT("Module %W at %p\n", Filename, ModuleObject);
+      DPRINT("Module %wZ at %p\n", Filename, ModuleObject);
 
       return  ModuleObject;
     }
@@ -679,11 +679,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
           NameBuffer[Idx + Idx2] = 0;
           ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
           ModuleName.Buffer = NameBuffer;
-          DPRINT("Import module: %W\n", &ModuleName);
+          DPRINT("Import module: %wZ\n", &ModuleName);
           LibraryModuleObject = LdrLoadModule(&ModuleName);
           if (LibraryModuleObject == 0)
             {
-              DbgPrint("Unknown import module: %W\n", &ModuleName);
+              DbgPrint("Unknown import module: %wZ\n", &ModuleName);
             }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
@@ -766,7 +766,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
     }
   ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
   ModuleName.Buffer = NameBuffer;
-  DbgPrint("Module name is: %W\n", &ModuleName);
+  DbgPrint("Module name is: %wZ\n", &ModuleName);
   
   /*  Initialize ObjectAttributes for ModuleObject  */
   InitializeObjectAttributes(&ObjectAttributes, 

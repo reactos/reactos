@@ -148,7 +148,7 @@ int wcscmp(const wchar_t *cs, const wchar_t *ct)
 wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 {
    wchar_t* s = str1;
-   DPRINT("wcscpy(str1 %w, str2 %w)\n",str1,str2);
+   DPRINT("wcscpy(str1 %S, str2 %S)\n",str1,str2);
    while ((*str2)!=0)
      {
 	*s = *str2;

@@ -107,7 +107,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
    while (TRUE)
      {
-	DPRINT("current %w\n",current);
+	DPRINT("current %S\n",current);
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 	if (CurrentHeader->ObjectType->Parse == NULL)
 	  {
@@ -146,7 +146,7 @@ PVOID ObCreateObject(PHANDLE Handle,
    if (ObjectAttributes != NULL &&
        ObjectAttributes->ObjectName != NULL)
      {
-	DPRINT("ObjectAttributes->ObjectName->Buffer %w\n",
+	DPRINT("ObjectAttributes->ObjectName->Buffer %S\n",
 	       ObjectAttributes->ObjectName->Buffer);
      }
    
@@ -205,7 +205,7 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
    
    if (ObjectType != NULL && ObjectHeader->ObjectType != ObjectType)
      {
-	DPRINT("Failed %x (type was %x %w) should %x\n",
+	DPRINT("Failed %x (type was %x %S) should %x\n",
 		ObjectHeader,
 		ObjectHeader->ObjectType,
 		ObjectHeader->ObjectType->TypeName.Buffer,

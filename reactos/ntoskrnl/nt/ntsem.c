@@ -27,7 +27,7 @@ NTSTATUS NtpCreateSemaphore(PVOID ObjectBody,
 			    POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
-   DPRINT("NtpCreateSemaphore(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("NtpCreateSemaphore(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)

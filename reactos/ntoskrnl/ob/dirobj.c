@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.6 1999/11/27 03:31:08 ekohl Exp $
+/* $Id: dirobj.c,v 1.7 2000/01/12 19:04:22 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -202,7 +202,7 @@ NtQueryDirectoryObject (
 				Entry
 				);
 		DPRINT(
-			"Scanning %w\n",
+			"Scanning %S\n",
 			current->Name.Buffer
 			);
 		

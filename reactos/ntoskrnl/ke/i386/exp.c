@@ -146,7 +146,7 @@ static void print_address(PVOID address)
 	if (address >= current->Base &&
 	    address < (current->Base + current->Length))
 	  {
-	     DbgPrint("<%w: %x>", current->Name, 
+	     DbgPrint("<%S: %x>", current->Name, 
 		      address - current->Base);
 	     return;
 	  }

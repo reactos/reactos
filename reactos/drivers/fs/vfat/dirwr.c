@@ -50,7 +50,7 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
    if(FileName[0]==0 && DirName[0]==0)
      return STATUS_SUCCESS;//root : nothing to do ?
    memset(&FileObject,0,sizeof(FILE_OBJECT));
-DPRINT("open directory %w for update of entry %w\n",DirName,FileName);
+DPRINT("open directory %S for update of entry %S\n",DirName,FileName);
    status=FsdOpenFile(DeviceExt,&FileObject,DirName);
    pDirCcb=(PVFATCCB)FileObject.FsContext2;
    assert(pDirCcb);
@@ -95,7 +95,7 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
    KIRQL oldIrql;
    
    PathFileName=pFileObject->FileName.Buffer;
-   DPRINT("addEntry: Pathname=%w\n",PathFileName);
+   DPRINT("addEntry: Pathname=%S\n",PathFileName);
    //find last \ in PathFileName
    posCar=-1;
    for(i=0;PathFileName[i];i++)

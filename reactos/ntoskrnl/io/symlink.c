@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.9 1999/08/29 06:59:08 ea Exp $
+/* $Id: symlink.c,v 1.10 2000/01/12 19:02:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -324,7 +324,7 @@ IoCreateSymbolicLink (
 	assert_irql(PASSIVE_LEVEL);
    
 	DPRINT(
-		"IoCreateSymbolicLink(SymbolicLinkName %w, DeviceName %w)\n",
+		"IoCreateSymbolicLink(SymbolicLinkName %S, DeviceName %S)\n",
 		SymbolicLinkName->Buffer,
 		DeviceName->Buffer
 		);
@@ -362,7 +362,7 @@ IoCreateSymbolicLink (
 		DeviceName
 		);
 	
-	DPRINT("DeviceName %w\n", SymbolicLink->TargetName.Buffer);
+	DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
 	
 	InitializeObjectAttributes(
 		& (SymbolicLink->Target),

@@ -88,7 +88,7 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    PLIST_ENTRY current = DirectoryObject->head.Flink;
    POBJECT_HEADER current_obj;
 
-   DPRINT("ObDirLookup(dir %x, name %w)\n",DirectoryObject, Name);
+   DPRINT("ObDirLookup(dir %x, name %S)\n",DirectoryObject, Name);
    
    if (Name[0]==0)
      {
@@ -105,7 +105,7 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    while (current!=(&(DirectoryObject->head)))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	DPRINT("Scanning %w %w\n",current_obj->Name.Buffer, Name);
+	DPRINT("Scanning %S %S\n",current_obj->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
 	     if (_wcsicmp(current_obj->Name.Buffer, Name)==0)
@@ -134,7 +134,7 @@ PVOID ObpParseDirectory(PVOID Object, PWSTR* Path)
    PWSTR end;
    PVOID FoundObject;
    
-   DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %w)\n",
+   DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
 	  Object,Path,*Path);
    
    if ((*Path) == NULL)
@@ -184,7 +184,7 @@ NTSTATUS ObpCreateDirectory(PVOID ObjectBody,
 {
    PDIRECTORY_OBJECT DirectoryObject = (PDIRECTORY_OBJECT)ObjectBody;
    
-   DPRINT("ObpCreateDirectory(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("ObpCreateDirectory(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)

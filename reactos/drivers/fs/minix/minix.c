@@ -249,7 +249,7 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
    struct minix_inode current_dir;
    unsigned int current_ino;
    
-   DbgPrint("MinixOpen(DeviceObject %x, DeviceName %w, result %x)\n",
+   DbgPrint("MinixOpen(DeviceObject %x, DeviceName %S, result %x)\n",
 	  DeviceObject,DeviceName,result);
    DPRINT("DeviceName %x\n",DeviceName);
    
@@ -262,7 +262,7 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
      {	
 	MinixReadInode(DeviceObject,DeviceExt,current_ino,&current_dir);
 
-	DPRINT("current %w next %x\n",current,next);
+	DPRINT("current %S next %x\n",current,next);
 	
 	*next = '\\';
 	current = next+1;
@@ -387,7 +387,7 @@ NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    MINIX_DEVICE_EXTENSION* DeviceExt;
    
    DPRINT("MinixCreate(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   DPRINT("Opening file %x %w\n",FileObject->FileName.Buffer,
+   DPRINT("Opening file %x %S\n",FileObject->FileName.Buffer,
 	    FileObject->FileName.Buffer);
    DPRINT("FileObject->FileName.Buffer %x\n",
 	    FileObject->FileName.Buffer);

@@ -59,7 +59,7 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
    NTSTATUS Status;
    
-   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody,Parent,RemainingPath);
    
    if (DeviceObject == NULL)
@@ -116,7 +116,7 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
 	  }
 	RtlInitUnicodeString(&(FileObject->FileName),wcsdup(RemainingPath));
      }
-   DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
+   DPRINT("FileObject->FileName.Buffer %S\n",FileObject->FileName.Buffer);
    FileObject->DeviceObject = DeviceObject;
    DPRINT("FileObject %x DeviceObject %x\n", FileObject, DeviceObject);
    FileObject->Vpb = DeviceObject->Vpb;
@@ -205,7 +205,7 @@ NtCreateFile (
    PIO_STACK_LOCATION StackLoc;
    
    DPRINT("NtCreateFile(FileHandle %x, DesiredAccess %x, "
-	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
+	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
 	    FileHandle,DesiredAccess,ObjectAttributes,
 	    ObjectAttributes->ObjectName->Buffer);   
    

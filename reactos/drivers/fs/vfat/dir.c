@@ -248,7 +248,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
   else
     Buffer = Irp->UserBuffer;
-  DPRINT("Buffer=%x tofind=%w\n",Buffer,pSearchPattern->Buffer);
+  DPRINT("Buffer=%x tofind=%S\n",Buffer,pSearchPattern->Buffer);
   if (pSearchPattern==NULL)
   {
     star[0]='*';
@@ -263,7 +263,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
     OldEntry=pCcb->StartEntry;
     if(OldSector)pCcb->StartEntry++;
     RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartSector,&pCcb->StartEntry);
-DPRINT("Found %w,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
+DPRINT("Found %S,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
  ,pCcb->StartSector,pCcb->StartEntry);
     if (NT_SUCCESS(RC))
     {

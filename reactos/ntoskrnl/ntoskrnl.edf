@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.25 2000/01/10 22:46:37 ea Exp $
+; $Id: ntoskrnl.edf,v 1.26 2000/01/12 19:01:56 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -390,7 +390,7 @@ ZwYieldExecution=ZwYieldExecution@0
 _itoa
 ;_local_unwind2
 ;_purecall
-;_snprintf
+_snprintf
 ;_snwprintf
 _stricmp
 _strlwr
@@ -399,7 +399,7 @@ _strnset
 _strrev
 _strset
 _strupr
-;_vsnprintf
+_vsnprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp

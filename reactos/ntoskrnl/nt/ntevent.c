@@ -28,7 +28,7 @@ NTSTATUS NtpCreateEvent(PVOID ObjectBody,
 			POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
-   DPRINT("NtpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+   DPRINT("NtpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)

@@ -275,7 +275,7 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PEXT2_FCB Fcb;
    ULONG StartIndex = 0;
    
-   DPRINT("Ext2OpenFile(DeviceExt %x, FileObject %x, FileName %w)\n",
+   DPRINT("Ext2OpenFile(DeviceExt %x, FileObject %x, FileName %S)\n",
 	  DeviceExt,FileObject,FileName);
    
    Fcb = ExAllocatePool(NonPagedPool, sizeof(EXT2_FCB));
