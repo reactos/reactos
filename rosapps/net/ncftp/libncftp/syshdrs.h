@@ -225,10 +225,10 @@
 #endif
 
 #if USE_SIO
-#	include "sio\sio.h"			/* Library header. */
+#	include "sio/sio.h"			/* Library header. */
 #endif
 
-#include "Strn\Strn.h"			/* Library header. */
+#include "Strn/Strn.h"			/* Library header. */
 #include "ncftp.h"			/* Library header. */
 
 #include "util.h"

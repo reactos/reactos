@@ -190,5 +190,5 @@
 #endif
 
 
-#include "Strn\Strn.h"			/* Library header. */
-#include "libncftp\ncftp.h"			/* Library header. */
+#include "Strn/Strn.h"			/* Library header. */
+#include "libncftp/ncftp.h"			/* Library header. */
