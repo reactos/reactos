@@ -1,5 +1,3 @@
-
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -577,7 +575,7 @@ BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2)
  * return TRUE if s1==s2
  */
 {
-   while (wtolower(*s1)==wtolower(*s2))
+   while (towlower(*s1)==towlower(*s2))
      {
 	if ((*s1)==0 && (*s2)==0)
 	  {
@@ -595,7 +593,7 @@ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
  * return TRUE if s1 like s2
  */
 {
-   while ((*s2=='?')||(wtolower(*s1)==wtolower(*s2)))
+   while ((*s2=='?')||(towlower(*s1)==towlower(*s2)))
    {
       if ((*s1)==0 && (*s2)==0)
         return(TRUE);
@@ -1509,6 +1507,47 @@ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
    DeviceObject->Vpb->Flags |= VPB_MOUNTED;
    DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							  DeviceToMount);
+
+   // fill in missing information in vpb
+   if (DeviceExt->FatType == FAT12 || DeviceExt->FatType == FAT16)
+     {
+        struct _BootSector *BootSect = (PVOID)DeviceExt->Boot;
+        PSTR  s = BootSect->VolumeLabel;
+        PWSTR w = DeviceObject->Vpb->VolumeLabel;
+        int n=0;
+
+        // get serial number
+        DeviceObject->Vpb->SerialNumber = BootSect->VolumeID;
+
+        // copy drive label
+        while (*s != ' ' && n < 11)
+          {
+              *w++ = *s++;
+              n++;
+          }
+        *w = 0;
+        DeviceObject->Vpb->VolumeLabelLength = n;
+     }
+   else if (DeviceExt->FatType == FAT32)
+     {
+        struct _BootSector32 *BootSect = (PVOID)DeviceExt->Boot;
+        PSTR  s = BootSect->VolumeLabel;
+        PWSTR w = DeviceObject->Vpb->VolumeLabel;
+        int n=0;
+
+        // get serial number
+        DeviceObject->Vpb->SerialNumber = BootSect->VolumeID;
+
+        // copy drive label
+        while (*s != ' ' && n < 11)
+          {
+              *w++ = *s++;
+              n++;
+          }
+        *w = 0;
+        DeviceObject->Vpb->VolumeLabelLength = n;
+     }
+
    return(STATUS_SUCCESS);
 }
 
@@ -1757,12 +1796,15 @@ NTSTATUS FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
     if (!FsVolumeInfo)
         return(STATUS_SUCCESS);
 
+
+    /* valid entries */
+    FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
+    FsVolumeInfo->VolumeLabelLength  = DeviceObject->Vpb->VolumeLabelLength;
+    wcscpy (FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
+
     /* dummy entries */
     FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
-    FsVolumeInfo->VolumeSerialNumber = 0x01234567;
     FsVolumeInfo->SupportsObjects = FALSE;
-    FsVolumeInfo->VolumeLabelLength  = 5;
-    wcscpy (FsVolumeInfo->VolumeLabel, L"Label");
 
     DPRINT("Finished FsdGetFsVolumeInformation()\n");
 
@@ -1781,9 +1823,8 @@ NTSTATUS FsdGetFsAttributeInformation(PFILE_OBJECT FileObject,
     if (!FsAttributeInfo)
         return(STATUS_SUCCESS);
 
-    /* dummy entries */
-    FsAttributeInfo->FileSystemAttributes = 0;
-    FsAttributeInfo->MaximumComponentNameLength = 256;
+    FsAttributeInfo->FileSystemAttributes = FS_CASE_IS_PRESERVED;
+    FsAttributeInfo->MaximumComponentNameLength = 255;
     FsAttributeInfo->FileSystemNameLength = 3;
     wcscpy (FsAttributeInfo->FileSystemName, L"FAT");
 

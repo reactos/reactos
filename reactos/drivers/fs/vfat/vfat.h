@@ -32,7 +32,8 @@ struct _BootSector32 {
   unsigned short FATSectors, SectorsPerTrack, Heads;
   unsigned long  HiddenSectors, SectorsHuge;
   unsigned long  FATSectors32;
-  unsigned char  x[31];
+  unsigned char  x[27];
+  unsigned long  VolumeID;
   unsigned char  VolumeLabel[11], SysType[8];
   unsigned char  Res2[422];
 } __attribute__((packed));
