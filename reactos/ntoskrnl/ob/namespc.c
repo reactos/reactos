@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.45 2004/07/16 17:19:15 ekohl Exp $
+/* $Id: namespc.c,v 1.46 2004/07/17 20:34:42 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/pool.h>
+#include <internal/se.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -348,6 +349,7 @@ ObInit(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING Name;
+  SECURITY_DESCRIPTOR SecurityDescriptor;
 
   /* Initialize the security descriptor cache */
   ObpInitSdCache();
@@ -373,7 +375,7 @@ ObInit(VOID)
   ObDirectoryType->OkayToClose = NULL;
   ObDirectoryType->Create = ObpCreateDirectory;
   ObDirectoryType->DuplicationNotify = NULL;
-  
+
   RtlRosInitUnicodeStringFromLiteral(&ObDirectoryType->TypeName,
 		       L"Directory");
 
@@ -398,14 +400,36 @@ ObInit(VOID)
   ObTypeObjectType->OkayToClose = NULL;
   ObTypeObjectType->Create = NULL;
   ObTypeObjectType->DuplicationNotify = NULL;
-  
+
   RtlRosInitUnicodeStringFromLiteral(&ObTypeObjectType->TypeName,
 		       L"ObjectType");
 
-  /* create root directory */
+  /* Create security descriptor */
+  RtlCreateSecurityDescriptor(&SecurityDescriptor,
+			      SECURITY_DESCRIPTOR_REVISION1);
+
+  RtlSetOwnerSecurityDescriptor(&SecurityDescriptor,
+				SeAliasAdminsSid,
+				FALSE);
+
+  RtlSetGroupSecurityDescriptor(&SecurityDescriptor,
+				SeLocalSystemSid,
+				FALSE);
+
+  RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
+			       TRUE,
+			       SePublicDefaultDacl,
+			       FALSE);
+
+  /* Create root directory */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     NULL,
+			     OBJ_PERMANENT,
+			     NULL,
+			     &SecurityDescriptor);
   ObCreateObject(KernelMode,
 		 ObDirectoryType,
-		 NULL,
+		 &ObjectAttributes,
 		 KernelMode,
 		 NULL,
 		 sizeof(DIRECTORY_OBJECT),
@@ -413,14 +437,14 @@ ObInit(VOID)
 		 0,
 		 (PVOID*)&NameSpaceRoot);
 
-  /* create '\ObjectTypes' directory */
+  /* Create '\ObjectTypes' directory */
   RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L"\\ObjectTypes");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
 			     OBJ_PERMANENT,
 			     NULL,
-			     NULL);
+			     &SecurityDescriptor);
   ObCreateObject(KernelMode,
 		 ObDirectoryType,
 		 &ObjectAttributes,
