@@ -46,19 +46,19 @@ EXTERN(_GetExtendedMemorySize)
 	cmpw	$0,%ax
 	je		.cmem
 
-	andl	$0xffff,%ebx
+	movzwl	%bx,%ebx
 	shll	$6,%ebx
-	andl	$0xffff,%eax
-	add		%ebx,%eax
+	movzwl	%ax,%eax
+	addl	%ebx,%eax
 	jmp		.done_mem
 
 .cmem:
 	cmpw	$0,%cx
 	je		.oldstylemem
 
-	andl	$0xffff,%edx
+	movzwl	%dx,%edx
 	shll	$6,%edx
-	andl	$0xffff,%ecx
+	movzwl	%cx,%ecx
 	addl	%ecx,%edx
 	movl	%edx,%eax
 	jmp		.done_mem
