@@ -72,8 +72,9 @@ docu: doxy-footer.html
 full-docu:
 	doxygen Doxyfile-all
 
-doxy-footer.html: doxy-footer.htmt
+doxy-footer.html: ever
 	updatefooter
+ever:
 
 buildno.h: ../../../include/reactos/buildno.h
 	updatebuildno
