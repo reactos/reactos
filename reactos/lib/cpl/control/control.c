@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.2 2004/06/28 12:05:16 ekohl Exp $
+/* $Id: control.c,v 1.3 2004/06/29 12:03:56 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c
@@ -86,8 +86,8 @@ void PopulateCPLList(HWND hLisCtrl)
 	GetSystemDirectory(pszSearchPath,MAX_PATH);
 	_tcscat(pszSearchPath,_T("\\*.cpl"));
 	hFind = FindFirstFile(pszSearchPath,&fd);
-	hImgListSmall = ImageList_Create(16,16,ILC_COLOR,256,1000);
-	hImgListLarge = ImageList_Create(32,32,ILC_COLOR,256,1000);
+	hImgListSmall = ImageList_Create(16,16,ILC_COLOR | ILC_MASK,256,1000);
+	hImgListLarge = ImageList_Create(32,32,ILC_COLOR | ILC_MASK,256,1000);
 	while(hFind != INVALID_HANDLE_VALUE)
 	{
 		CPLLISTENTRY *pEntry;
@@ -114,11 +114,13 @@ void PopulateCPLList(HWND hLisCtrl)
 				int index;
 				pEntry->pFunc(hLisCtrl,CPL_INQUIRE,0,(LPARAM)&pEntry->CPLInfo);
 
-				hIcon = LoadIcon(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon));
+				hIcon = LoadImage(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 				index = ImageList_AddIcon(hImgListSmall,hIcon);
+				DestroyIcon(hIcon);
+				hIcon = LoadImage(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
 				ImageList_AddIcon(hImgListLarge,hIcon);
+				DestroyIcon(hIcon);
 
-				
 				LoadString(pEntry->hDLL,pEntry->CPLInfo.idName,Name,MAX_PATH);
 				if(_tcslen(Name))
 				{
@@ -221,22 +223,22 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
-		case CM_LARGEICONS:
+		case IDM_LARGEICONS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_SMALLICONS:
+		case IDM_SMALLICONS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_SMALLICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_LIST:
+		case IDM_LIST:
 			SetWindowLong(hListView,GWL_STYLE,LVS_LIST | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_DETAILS:
+		case IDM_DETAILS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_CLOSE:
+		case IDM_CLOSE:
 			DestroyWindow(hWnd);
 			break;
-		case CM_ABOUT:
+		case IDM_ABOUT:
 			MessageBox(hWnd,_T("Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"),_T("About the Control Panel"),MB_OK | MB_ICONINFORMATION);
 			break;
 		}
