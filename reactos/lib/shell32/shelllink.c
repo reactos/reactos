@@ -157,6 +157,7 @@ typedef struct
 #define _ICOM_THIS_From_IPersistStream(class, name) class* This = (class*)(((char*)name)-_IPersistStream_Offset)
 #define _IPersistStream_From_ICOM_THIS(class, name) class* StreamThis = (class*)(((char*)name)+_IPersistStream_Offset)
 
+static HRESULT ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath);
 
 /* strdup on the process heap */
 inline static LPWSTR HEAP_strdupAtoW( HANDLE heap, DWORD flags, LPCSTR str)
@@ -238,6 +239,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
         if( SUCCEEDED( r ) )
         {
             r = IPersistStream_Load(StreamThis, stm);
+            ShellLink_UpdatePath(This->sPathRel, pszFileName, This->sWorkDir, &This->sPath);
             IStream_Release( stm );
         }
 
@@ -828,10 +830,10 @@ static BOOL SHELL_ExistsFileW(LPCWSTR path)
 }
 
 /**************************************************************************
- *  SHELL_ShellLink_UpdatePath
+ *  ShellLink_UpdatePath
  *	update absolute path in sPath using relative path in sPathRel
  */
-static HRESULT SHELL_ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath)
+static HRESULT ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath)
 {
     if (!path || !psPath)
 	return E_INVALIDARG;
@@ -910,27 +912,13 @@ HRESULT WINAPI IShellLink_ConstructFromFile (
 	if (SUCCEEDED(hr)) {
 	    WCHAR path[MAX_PATH];
 
-	    if (SHGetPathFromIDListW(pidl, path)) {
+	    hr = SHELL_GetPathFromIDListW(pidl, path, MAX_PATH);
+
+	    if (SUCCEEDED(hr)) {
 		hr = IPersistFile_Load(ppf, path, 0);
 
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
 		    *ppv = (IUnknown*) psl;
-
-		    /*
-			The following code is here, not in IPersistStream_fnLoad() because
-			to be able to convert the relative path into the absolute path,
-			we need to know the path of the shell link file.
-		    */
-		    if (IsEqualIID(riid, &IID_IShellLinkW)) {
-			_ICOM_THIS_From_IShellLinkW(IShellLinkImpl, psl);
-
-			hr = SHELL_ShellLink_UpdatePath(This->sPathRel, path, This->sWorkDir, &This->sPath);
-		    } else {
-			ICOM_THIS(IShellLinkImpl, psl);
-
-			hr = SHELL_ShellLink_UpdatePath(This->sPathRel, path, This->sWorkDir, &This->sPath);
-		    }
-		}
 	    }
 
 	    IPersistFile_Release(ppf);
@@ -1320,7 +1308,7 @@ static HRESULT WINAPI IShellLinkA_fnSetRelativePath(IShellLinkA * iface, LPCSTR 
     This->sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
     This->bDirty = TRUE;
 
-    return SHELL_ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
+    return ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
 }
 
 static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWORD fFlags)
@@ -1367,12 +1355,18 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
 static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
 {
     ICOM_THIS(IShellLinkImpl, iface);
+    char buffer[MAX_PATH];
+    LPCSTR fname;
 
     TRACE("(%p)->(path=%s)\n",This, pszFile);
 
+    if (!GetFullPathNameA(pszFile, MAX_PATH, buffer, &fname))
+	return E_FAIL;
+
     if (This->sPath)
         HeapFree(GetProcessHeap(), 0, This->sPath);
-    This->sPath = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
+
+    This->sPath = HEAP_strdupAtoW(GetProcessHeap(), 0, buffer);
     if( !This->sPath )
         return E_OUTOFMEMORY;
 
@@ -1749,7 +1743,7 @@ static HRESULT WINAPI IShellLinkW_fnSetRelativePath(IShellLinkW * iface, LPCWSTR
     lstrcpyW( This->sPathRel, pszPathRel );
     This->bDirty = TRUE;
 
-    return SHELL_ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
+    return ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
 }
 
 static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWORD fFlags)
@@ -1796,17 +1790,23 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
 static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile)
 {
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
+    WCHAR buffer[MAX_PATH];
+    LPCSTR fname;
 
     TRACE("(%p)->(path=%s)\n",This, debugstr_w(pszFile));
 
+    if (!GetFullPathNameW(pszFile, MAX_PATH, buffer, &fname))
+	return E_FAIL;
+
     if (This->sPath)
         HeapFree(GetProcessHeap(), 0, This->sPath);
+
     This->sPath = HeapAlloc( GetProcessHeap(), 0,
-                             (lstrlenW( pszFile )+1) * sizeof (WCHAR) );
+                             (lstrlenW( buffer )+1) * sizeof (WCHAR) );
     if ( !This->sPath )
         return E_OUTOFMEMORY;
 
-    lstrcpyW( This->sPath, pszFile );
+    lstrcpyW( This->sPath, buffer );
     This->bDirty = TRUE;
 
     return S_OK;
