@@ -5,12 +5,14 @@
   
   #include <debug.h>
   
-  /* FIXME: this prototype MUST NOT be here! */
+  /* FIXME: these prototypes MUST NOT be here! */
   NTSTATUS STDCALL
   IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
     OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+  #define STATUS_ARRAY_BOUNDS_EXCEEDED 0xc000008c
+  
 #elif defined(_MSC_VER)
   #include <ntddk.h>
   #include <ntddser.h>
@@ -49,6 +51,14 @@ typedef enum {
   dsSurpriseRemoved
 } SERIAL_DEVICE_STATE;
 
+typedef struct _CIRCULAR_BUFFER
+{
+	PUCHAR Buffer;
+	ULONG Length;
+	ULONG ReadPosition;
+	ULONG WritePosition;
+} CIRCULAR_BUFFER, *PCIRCULAR_BUFFER;
+
 typedef struct _SERIAL_DEVICE_EXTENSION
 {
 	PDEVICE_OBJECT Pdo;
@@ -58,7 +68,7 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	
 	ULONG SerialPortNumber;
 	
-	ULONG ComPort; /* FIXME: move to serenum */
+	ULONG ComPort;
 	ULONG BaudRate;
 	ULONG BaseAddress;
 	ULONG Irq;
@@ -68,7 +78,10 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	ULONG WaitMask;
 	
 	SERIALPERF_STATS SerialPerfStats;
-	BOOL IsOpened;
+	SERIAL_TIMEOUTS SerialTimeOuts;
+	BOOLEAN IsOpened;	
+	CIRCULAR_BUFFER InputBuffer;
+	CIRCULAR_BUFFER OutputBuffer;
 	
 	/* Current values */
 	UCHAR IER; /* Base+1, Interrupt Enable Register */
@@ -77,6 +90,8 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 } SERIAL_DEVICE_EXTENSION, *PSERIAL_DEVICE_EXTENSION;
 
 #define SERIAL_TAG TAG('S', 'e', 'r', 'l')
+
+#define INFINITE ((ULONG)-1)
 
 /* Baud master clock */
 #define BAUD_CLOCK      1843200
@@ -88,14 +103,17 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 #define   SER_DLL(x)   ((x)+0)
 #define   SER_IER(x)   ((x)+1)
 #define   SER_DLM(x)   ((x)+1)
-#define   SER_FCR(x)   ((x)+1)
 #define   SER_IIR(x)   ((x)+2)
-#define     SR_IIR_SELF          0x01
+#define     SR_IIR_SELF          0x00
 #define     SR_IIR_ID_MASK       0x07
 #define     SR_IIR_MSR_CHANGE    SR_IIR_SELF
 #define     SR_IIR_THR_EMPTY     (SR_IIR_SELF | 2)
 #define     SR_IIR_DATA_RECEIVED (SR_IIR_SELF | 4)
 #define     SR_IIR_ERROR         (SR_IIR_SELF | 6)
+#define   SER_FCR(x)   ((x)+2)
+#define     SR_FCR_ENABLE_FIFO 0x01
+#define     SR_FCR_CLEAR_RCVR  0x02
+#define     SR_FCR_CLEAR_XMIT  0x04
 #define   SER_LCR(x)   ((x)+3)
 #define     SR_LCR_CS5 0x00
 #define     SR_LCR_CS6 0x01
@@ -120,6 +138,32 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 #define     SR_MSR_CTS 0x10
 #define     SR_MSR_DSR 0x20
 #define   SER_SCR(x)   ((x)+7)
+
+/************************************ circularbuffer.c */
+
+/* FIXME: transform these functions into #define? */
+NTSTATUS
+InitializeCircularBuffer(
+	IN PCIRCULAR_BUFFER pBuffer,
+	IN ULONG BufferSize);
+
+NTSTATUS
+FreeCircularBuffer(
+	IN PCIRCULAR_BUFFER pBuffer);
+
+BOOLEAN
+IsCircularBufferEmpty(
+	IN PCIRCULAR_BUFFER pBuffer);
+
+NTSTATUS
+PushCircularBufferEntry(
+	IN PCIRCULAR_BUFFER pBuffer,
+	IN UCHAR Entry);
+
+NTSTATUS
+PopCircularBufferEntry(
+	IN PCIRCULAR_BUFFER pBuffer,
+	OUT PUCHAR Entry);
 
 /************************************ cleanup.c */
 
@@ -166,10 +210,21 @@ SerialQueryInformation(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
+/************************************ legacy.c */
+
+NTSTATUS
+DetectLegacyDevices(
+	IN PDRIVER_OBJECT DriverObject);
+
 /************************************ misc.c */
 
 NTSTATUS
 ForwardIrpAndWait(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS STDCALL
+ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 

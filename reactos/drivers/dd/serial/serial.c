@@ -26,10 +26,13 @@ DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegPath)
 {
+	ULONG i;
+	
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
 	
-	/* FIXME: send all other major functions to lower driver */
+	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SerialClose;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = SerialCleanup;
@@ -40,5 +43,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerialPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;
 
-	return STATUS_SUCCESS;
+	return DetectLegacyDevices(DriverObject);
 }

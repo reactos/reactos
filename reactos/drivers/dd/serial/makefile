@@ -7,11 +7,13 @@ TARGET_TYPE = driver
 TARGET_NAME = serial
 
 TARGET_OBJECTS = \
+	circularbuffer.o \
 	cleanup.o \
 	close.o \
 	create.o \
 	devctrl.o \
 	info.o \
+	legacy.o \
 	misc.o \
 	pnp.o \
 	power.o \

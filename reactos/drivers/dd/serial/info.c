@@ -20,6 +20,7 @@ SerialQueryInformation(
 	PIO_STACK_LOCATION Stack;
 	PVOID SystemBuffer;
 	ULONG BufferLength;
+	ULONG Information = 0;
 	NTSTATUS Status;
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -45,9 +46,6 @@ SerialQueryInformation(
   				StandardInfo->DeletePending = FALSE; /* FIXME: should be TRUE sometimes */
   				Status = STATUS_SUCCESS;
 			}
-			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = Status;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			break;
 		}
 		case FilePositionInformation:
@@ -62,18 +60,17 @@ SerialQueryInformation(
 				PositionInfo->CurrentByteOffset.QuadPart = 0;
   				Status = STATUS_SUCCESS;
 			}
-			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = Status;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			break;
 		}
 		default:
 		{
 			DPRINT("Serial: IRP_MJ_QUERY_INFORMATION: Unexpected file information class 0x%02x\n", Stack->Parameters.QueryFile.FileInformationClass);
-			IoSkipCurrentIrpStackLocation(Irp);
-			Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
 	
+	Irp->IoStatus.Information = Information;
+	Irp->IoStatus.Status = Status;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return Status;
 }
