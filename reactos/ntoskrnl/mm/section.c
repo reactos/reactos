@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.122 2003/07/12 01:55:50 dwelch Exp $
+/* $Id: section.c,v 1.123 2003/07/14 20:14:11 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -279,8 +279,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       FileOffset = Offset + Segment->FileOffset;
    
       IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
-     
-      MmSetPageEntrySectionSegment(Segment, Offset, 0);
+    
       Page = (PHYSICAL_ADDRESS)(LONGLONG)PAGE_FROM_SSE(Entry);
       FileObject = Section->FileObject;
       if (FileObject != NULL)
@@ -302,10 +301,37 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
 	}
 
       SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
-      if (SavedSwapEntry != 0)
+      if (SavedSwapEntry == 0)
+        {
+	  if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+            {
+	      /* 
+	       * FIXME:
+	       *   Try to page out this page and set the swap entry 
+	       *   within the section segment. There exist no rmap entry
+	       *   for this page. The pager thread can't page out a 
+	       *   page without a rmap entry.
+	       */
+	      MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+	      MmReferencePage(Page);
+	    }
+	  else
+	    {
+	      MmSetPageEntrySectionSegment(Segment, Offset, 0);
+	    }
+	}
+      else
 	{
-	  MmFreeSwapPage(SavedSwapEntry);
 	  MmSetSavedSwapEntryPage(Page, 0);
+	  if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+	    {
+	      MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
+	    }
+	  else
+	    {
+	      MmSetPageEntrySectionSegment(Segment, Offset, 0);
+	      MmFreeSwapPage(SavedSwapEntry);
+	    }
 	}
     }
   else
@@ -689,9 +715,19 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        SWAPENTRY SwapEntry;
        PMDL Mdl;
 
+       /*
+        * Sanity check
+	*/
+       if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+         {
+	   DPRINT1("Found a swaped out private page in a pagefile section.\n");
+	   KeBugCheck(0);
+	 }
+
        MmUnlockSectionSegment(Segment);
        MmDeletePageFileMapping(AddressSpace->Process, (PVOID)PAddress, &SwapEntry);
 
+       MmUnlockAddressSpace(AddressSpace);
        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
        if (!NT_SUCCESS(Status))
 	 {
@@ -700,7 +736,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
        Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
        MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-       MmUnlockAddressSpace(AddressSpace);
        Status = MmReadFromSwapPage(SwapEntry, Mdl);
        if (!NT_SUCCESS(Status))
 	 {
@@ -923,9 +958,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	* Mark the offset within the section as having valid, in-memory
 	* data
 	*/
-       Entry = Page.u.LowPart;
+       Entry = MAKE_SSE(Page.u.LowPart, 1);
        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
-       MmSharePageEntrySectionSegment(Segment, Offset);
        MmUnlockSectionSegment(Segment);
 
        Status = MmCreateVirtualMapping(AddressSpace->Process,
@@ -1009,9 +1043,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	* Mark the offset within the section as having valid, in-memory
 	* data
 	*/
-       Entry = Page.u.LowPart;
+       Entry = MAKE_SSE(Page.u.LowPart, 1);
        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
-       MmSharePageEntrySectionSegment(Segment, Offset);
        MmUnlockSectionSegment(Segment);
 
        /*
@@ -1407,7 +1440,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * Paging out data mapped read-only is easy.
    */
-    if (Context.Segment->Protection & (PAGE_READONLY|PAGE_EXECUTE_READ))
+  if (Context.Segment->Protection & (PAGE_READONLY|PAGE_EXECUTE_READ))
     {
       /*
        * Read-only data should never be in the swapfile.
@@ -1474,15 +1507,24 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    */
   if (!Context.Private && MmGetPageEntrySectionSegment(Context.Segment, Context.Offset) != 0)
     {
-      KeBugCheck(0);
+      if (!(Context.Segment->Flags & MM_PAGEFILE_SEGMENT))
+        {
+	  CHECKPOINT1;
+          KeBugCheck(0);
+	}
     }
 
   /*
    * If the page wasn't dirty then we can just free it as for a readonly page.
    * Since we unmapped all the mappings above we know it will not suddenly
-   * become dirty.
+   * become dirty. 
+   * If the page is from a pagefile section and has no swap entry, 
+   * we can't free the page at this point.
    */
-  if (!Context.WasDirty)
+  SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
+  if (!Context.WasDirty && 
+      !(SwapEntry == 0 && Context.Segment->Flags & MM_PAGEFILE_SEGMENT))
+      
     {
       if (Context.Private)
 	{
@@ -1549,7 +1591,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * If necessary, allocate an entry in the paging file for this page
    */
-  SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
   if (SwapEntry == 0)
     {
       SwapEntry = MmAllocSwapPage();
@@ -1588,14 +1629,13 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	      MmInsertRmap(PhysicalAddress, 
 			   MemoryArea->Process,
 			   Address);
-	      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, 
-					   PhysicalAddress.u.LowPart);
-	      MmSharePageEntrySectionSegment(Context.Segment, Context.Offset);
+              Entry = MAKE_SSE(PhysicalAddress.u.LowPart, 1);
+	      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
 	    }
-	   PageOp->Status = STATUS_UNSUCCESSFUL;
-	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	   MmReleasePageOp(PageOp);
-	   return(STATUS_PAGEFILE_QUOTA);
+	  PageOp->Status = STATUS_UNSUCCESSFUL;
+	  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	  MmReleasePageOp(PageOp);
+	  return(STATUS_PAGEFILE_QUOTA);
 	}
     }
 
@@ -1636,9 +1676,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	  MmInsertRmap(PhysicalAddress, 
 			   MemoryArea->Process,
 			   Address);
-	  MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, 
-				       PhysicalAddress.u.LowPart);
-	  MmSharePageEntrySectionSegment(Context.Segment, Context.Offset);
+          Entry = MAKE_SSE(PhysicalAddress.u.LowPart, 1);
+	  MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
 	}
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -1787,7 +1826,6 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * If necessary, allocate an entry in the paging file for this page
    */
-  SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
   if (SwapEntry == 0)
     {
       SwapEntry = MmAllocSwapPage();
@@ -1984,6 +2022,30 @@ MmpDeleteSection(PVOID ObjectBody)
 
   if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
   {
+     ULONG Offset;
+     ULONG Length;
+     ULONG Entry;
+     PMM_SECTION_SEGMENT Segment;
+
+     Segment = Section->Segment;
+     Length = PAGE_ROUND_UP(Segment->Length);
+
+     for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
+       {
+         Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+	 if (Entry)
+	   {
+	     if (IS_SWAP_FROM_SSE(Entry))
+	       {
+		 MmFreeSwapPage(SWAPENTRY_FROM_SSE(Entry));
+	       }
+	     else
+	       {
+	         PHYSICAL_ADDRESS Page = (PHYSICAL_ADDRESS)(LONGLONG)PAGE_FROM_SSE(Entry);
+                 MmReleasePageMemoryConsumer(MC_USER, Page);
+	       }
+	   }
+       }
      MmFreePageTablesSectionSegment(Section->Segment);
      ExFreePool(Section->Segment);
   }
@@ -3149,6 +3211,14 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
   if (SwapEntry != 0)
     {
+      /*
+       * Sanity check
+       */
+      if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+        {
+	  DPRINT1("Found a swap entry for a page in a pagefile section.\n");
+	  KeBugCheck(0);
+	}
       MmFreeSwapPage(SwapEntry);
     }
   else if (PhysAddr.QuadPart != 0)
@@ -3156,6 +3226,14 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (IS_SWAP_FROM_SSE(Entry) || 
 	  PhysAddr.QuadPart != (PAGE_FROM_SSE(Entry)))
 	{
+          /*
+           * Sanity check
+           */
+          if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+            {
+	      DPRINT1("Found a private page in a pagefile section.\n");
+	      KeBugCheck(0);
+	    }
 	  /*
 	   * Just dereference private pages
 	   */
