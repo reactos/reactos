@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.8 2000/09/12 10:12:13 jean Exp $
+/* $Id: rw.c,v 1.9 2000/11/23 15:53:37 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -220,7 +220,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		  FileOffset < WriteOffset / DeviceExt->BytesPerCluster; 
 		  FileOffset++)
 	       {
-		  CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
+		  CurrentCluster = GetNextWriteCluster(DeviceExt,CurrentCluster);
 	       }
 	  }
 	CHECKPOINT;	
@@ -266,7 +266,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	else
 	  {
 	     VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
-	     CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+	     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
 	  }
 	Length2 -= TempLength;
 	Buffer = Buffer + TempLength;
@@ -294,7 +294,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	else
 	  {
 	     VFATWriteCluster(DeviceExt,Buffer,CurrentCluster);
-	     CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+	     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
 	  }
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
 	Length2 -= DeviceExt->BytesPerCluster;
