@@ -1082,20 +1082,45 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
     /* resolve shell shortcuts */
     ext = PathFindExtensionW(sei_tmp.lpFile);
 
-    if (ext && !strcmpiW(ext, wExtLnk))	/* or check for: shell_attribs & SFGAO_LINK */
+    if (ext && !strncmpiW(ext, wExtLnk, sizeof(wExtLnk) / sizeof(WCHAR) - 1) &&
+        (ext[sizeof(wExtLnk) / sizeof(WCHAR) - 1] == '\0' ||
+         (sei_tmp.lpFile[0] == '"' && ext[sizeof(wExtLnk) / sizeof(WCHAR) - 1] == '"')))	/* or check for: shell_attribs & SFGAO_LINK */
     {
 	HRESULT hr;
+	BOOL Quoted;
 
+	if (wszApplicationName[0] == '"')
+	{
+	    if (wszApplicationName[strlenW(wszApplicationName) - 1] == '"')
+	    {
+		wszApplicationName[strlenW(wszApplicationName) - 1] = '\0';
+		Quoted = TRUE;
+	    }
+	    else
+	    {
+		Quoted = FALSE;
+	    }
+	}
+	else
+	{
+	    Quoted = FALSE;
+	}
 	/* expand paths before reading shell link */
-	if (ExpandEnvironmentStringsW(sei_tmp.lpFile, buffer, MAX_PATH))
-	    lstrcpyW(wszApplicationName/*sei_tmp.lpFile*/, buffer);
+	if (ExpandEnvironmentStringsW(Quoted ? sei_tmp.lpFile + 1 : sei_tmp.lpFile, buffer, MAX_PATH))
+	    lstrcpyW(Quoted ? wszApplicationName + 1 : wszApplicationName/*sei_tmp.lpFile*/, buffer);
 
 	if (*sei_tmp.lpParameters)
 	    if (ExpandEnvironmentStringsW(sei_tmp.lpParameters, buffer, MAX_PATH))
 		lstrcpyW(wszParameters/*sei_tmp.lpParameters*/, buffer);
 
-	hr = SHELL_ResolveShortCutW((LPWSTR)sei_tmp.lpFile, (LPWSTR)sei_tmp.lpParameters, (LPWSTR)sei_tmp.lpDirectory,
-					    sei_tmp.hwnd, sei_tmp.lpVerb?sei_tmp.lpVerb:wszEmpty, &sei_tmp.nShow, (LPITEMIDLIST*)&sei_tmp.lpIDList);
+	hr = SHELL_ResolveShortCutW((LPWSTR)(Quoted ? sei_tmp.lpFile + 1 : sei_tmp.lpFile),
+	                            (LPWSTR)sei_tmp.lpParameters, (LPWSTR)sei_tmp.lpDirectory,
+				    sei_tmp.hwnd, sei_tmp.lpVerb?sei_tmp.lpVerb:wszEmpty, &sei_tmp.nShow, (LPITEMIDLIST*)&sei_tmp.lpIDList);
+	if (Quoted)
+	{
+	    wszApplicationName[strlenW(wszApplicationName) + 1] = '\0';
+	    wszApplicationName[strlenW(wszApplicationName)] = '"';
+	}
 
 	if (sei->lpIDList)
 	    sei->fMask |= SEE_MASK_IDLIST;
