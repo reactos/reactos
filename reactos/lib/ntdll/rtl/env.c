@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.21 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: env.c,v 1.22 2004/03/19 12:38:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,6 +29,7 @@ NTSTATUS STDCALL
 RtlCreateEnvironment(BOOLEAN Inherit,
 		     PWSTR *Environment)
 {
+  MEMORY_BASIC_INFORMATION MemInfo;
   PVOID EnvPtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG RegionSize = PAGE_SIZE;
@@ -36,7 +37,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
   if (Inherit == TRUE)
     {
       RtlAcquirePebLock();
-#if 0
+
       if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
 	{
 	  Status = NtQueryVirtualMemory(NtCurrentProcess(),
@@ -72,7 +73,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 
 	  *Environment = EnvPtr;
 	}
-#endif
+
       RtlReleasePebLock ();
     }
   else
@@ -326,9 +327,9 @@ found:
 	    {
 	      Status = NtQueryVirtualMemory(NtCurrentProcess(),
 					    env,
-					    0,
+					    MemoryBasicInformation,
 					    &mbi,
-					    sizeof(mbi),
+					    sizeof(MEMORY_BASIC_INFORMATION),
 					    NULL);
 	      if (!NT_SUCCESS(Status))
 		{
