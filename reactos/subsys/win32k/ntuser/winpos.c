@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.117 2004/06/20 00:45:37 navaraf Exp $
+/* $Id: winpos.c,v 1.118 2004/06/20 22:27:19 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -107,6 +107,7 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
+  int TryTopmost;
   
   if (!Window || IntIsDesktopWindow(Window))
   {
@@ -132,25 +133,30 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     
     if((List = IntWinListChildren(Wnd)))
     {
-      for(phWnd = List; *phWnd; phWnd++)
+      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
       {
-        PWINDOW_OBJECT Child;
-        
-        if((*phWnd) == Window->Self)
+        for(phWnd = List; *phWnd; phWnd++)
         {
-          continue;
-        }
+          PWINDOW_OBJECT Child;
         
-        if((Child = IntGetWindowObject(*phWnd)))
-        {
-          if(IntSetForegroundWindow(Child))
+          if((*phWnd) == Window->Self)
           {
-            ExFreePool(List);
-            IntReleaseWindowObject(Wnd);
-            IntReleaseWindowObject(Child);
-            return;
+            continue;
           }
-          IntReleaseWindowObject(Child);
+        
+          if((Child = IntGetWindowObject(*phWnd)))
+          {
+            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
+                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
+               && IntSetForegroundWindow(Child))
+            {
+              ExFreePool(List);
+              IntReleaseWindowObject(Wnd);
+              IntReleaseWindowObject(Child);
+              return;
+            }
+            IntReleaseWindowObject(Child);
+          }
         }
       }
       ExFreePool(List);
