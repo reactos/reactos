@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.30 2003/12/08 20:58:44 chorns Exp $
+/* $Id: draw.c,v 1.31 2003/12/11 19:36:20 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1008,12 +1008,20 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         return TRUE;
 
     case DFCS_CAPTIONMIN:
-        Line1[0].x = Line1[3].x = myr.left   +  96*SmallDiam/750+2;
-        Line1[1].x = Line1[2].x = Line1[0].x + 372*SmallDiam/750;
-        Line1[0].y = Line1[1].y = myr.top    + 563*SmallDiam/750+1;
-        Line1[2].y = Line1[3].y = Line1[0].y +  92*SmallDiam/750;
-        Line1N = 4;
-        Line2N = 0;
+        /*
+         * If the button goes from x 0 -- w-1, the leftmost point of the
+         * minimize line always starts at x>=4.
+         */
+        {
+            const int width = myr.right - myr.left;
+            const int xInsetPixels = (width>=9 ? width - 9 : 0) / 8 + 4;
+            Line1[0].x = Line1[3].x = myr.left   + xInsetPixels;
+            Line1[1].x = Line1[2].x = Line1[0].x + 372*SmallDiam/750;
+            Line1[0].y = Line1[1].y = myr.top    + 563*SmallDiam/750+1;
+            Line1[2].y = Line1[3].y = Line1[0].y +  92*SmallDiam/750;
+            Line1N = 4;
+            Line2N = 0;
+        }
         break;
 
     case DFCS_CAPTIONMAX:
