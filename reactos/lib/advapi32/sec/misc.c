@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.24 2004/09/08 11:36:24 ekohl Exp $
+/* $Id: misc.c,v 1.25 2004/09/26 20:26:13 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -571,6 +571,46 @@ LookupAccountSidW (LPCWSTR lpSystemName,
   lstrcpynW(lpName, L"Administrator", *cchName);
   lstrcpynW(lpReferencedDomainName, L"ReactOS", *cchReferencedDomainName);
   return TRUE;
+}
+
+
+/******************************************************************************
+ * LookupAccountNameA [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountNameA (LPCSTR SystemName,
+                    LPCSTR AccountName,
+		    PSID Sid,
+		    LPDWORD SidLength,
+		    LPSTR ReferencedDomainName,
+		    LPDWORD hReferencedDomainNameLength,
+		    PSID_NAME_USE SidNameUse)
+{
+  DPRINT1("LookupAccountNameA is unimplemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/******************************************************************************
+ * LookupAccountNameW [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountNameW (LPCWSTR SystemName,
+                    LPCWSTR AccountName,
+		    PSID Sid,
+		    LPDWORD SidLength,
+		    LPWSTR ReferencedDomainName,
+		    LPDWORD hReferencedDomainNameLength,
+		    PSID_NAME_USE SidNameUse)
+{
+  DPRINT1("LookupAccountNameW is unimplemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 

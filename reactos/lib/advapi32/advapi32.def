@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.23 2004/09/16 10:25:11 gvg Exp $
+; $Id: advapi32.def,v 1.24 2004/09/26 20:26:13 gvg Exp $
 ;
 ; advapi32.def
 ;
@@ -195,8 +195,8 @@ IsValidSid@4
 LockServiceDatabase@4
 LogonUserA@24
 LogonUserW@24
-;LookupAccountNameA@28
-;LookupAccountNameW@28
+LookupAccountNameA@28
+LookupAccountNameW@28
 LookupAccountSidA@28
 LookupAccountSidW@28
 LookupPrivilegeDisplayNameA@20
