@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.45 2003/07/23 06:14:12 jimtabor Exp $
+/* $Id: window.c,v 1.46 2003/07/25 19:37:14 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1151,8 +1151,7 @@ DWORD STDCALL
 GetWindowThreadProcessId(HWND hWnd,
 			 LPDWORD lpdwProcessId)
 {
-	if(lpdwProcessId) *lpdwProcessId = NtUserQueryWindow(hWnd, 0);
-	return(NtUserQueryWindow(hWnd, 1));
+   return NtUserGetWindowThreadProcessId(hWnd, lpdwProcessId);
 }
 
 
