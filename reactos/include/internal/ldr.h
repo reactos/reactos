@@ -10,17 +10,45 @@
 
 #include <pe.h>
 
-NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
-NTSTATUS LdrLoadInitialProcess(VOID);
-VOID LdrLoadAutoConfigDrivers(VOID);
-VOID LdrInitModuleManagement(VOID);
-NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
-NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
-			  PVOID* LdrStartupAddress);
-PVOID LdrpGetSystemDllEntryPoint(VOID);
-NTSTATUS LdrpMapImage(HANDLE ProcessHandle, 
-		      HANDLE SectionHandle,
-		      PVOID* ImageBase);
-
+NTSTATUS
+LdrLoadDriver (
+	IN	PUNICODE_STRING	Filename
+	);
+NTSTATUS
+LdrLoadInitialProcess (
+	VOID
+	);
+VOID
+LdrLoadAutoConfigDrivers (
+	VOID
+	);
+VOID
+LdrInitModuleManagement (
+	VOID
+	);
+NTSTATUS
+LdrProcessDriver (
+	IN	PVOID	ModuleLoadBase
+	);
+NTSTATUS
+LdrpMapSystemDll (
+	HANDLE	ProcessHandle,
+	PVOID	* LdrStartupAddress
+	);
+PIMAGE_NT_HEADERS
+STDCALL
+RtlImageNtHeader (
+	IN	PVOID	BaseAddress
+	);
+PVOID
+LdrpGetSystemDllEntryPoint (
+	VOID
+	);
+NTSTATUS
+LdrpMapImage (
+	HANDLE	ProcessHandle, 
+	HANDLE	SectionHandle,
+	PVOID	* ImageBase
+	);
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

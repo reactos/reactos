@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.59 2000/03/18 14:02:01 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.60 2000/03/18 15:12:18 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -611,7 +611,7 @@ memchr
 memcpy
 memmove
 memset
-;qsort
+qsort
 rand
 sprintf
 srand

@@ -1,4 +1,5 @@
-/*
+/* $Id: rtl.c,v 1.5 2000/03/18 15:12:18 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/loader.c
@@ -28,7 +29,7 @@
 
 PIMAGE_NT_HEADERS
 STDCALL
-RtlImageNtHeader(PVOID BaseAddress)
+RtlImageNtHeader (IN PVOID BaseAddress)
 {
    PIMAGE_DOS_HEADER DosHeader;
    PIMAGE_NT_HEADERS NTHeaders;
@@ -46,3 +47,6 @@ RtlImageNtHeader(PVOID BaseAddress)
      }
    return(NTHeaders);
 }
+
+
+/* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.60 2000/03/11 00:51:36 ea Exp $
+# $Id: makefile_rex,v 1.61 2000/03/18 15:12:18 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -24,7 +24,7 @@ RTL_OBJECTS = rtl/ctype.o rtl/interlck.o rtl/largeint.o  rtl/list.o \
               rtl/memmove.o rtl/memset.o  rtl/nls.o rtl/regio.o \
               rtl/return.o rtl/slist.o rtl/sprintf.o rtl/swprintf.o \
               rtl/stdlib.o rtl/string.o rtl/time.o rtl/unalign.o \
-              rtl/unicode.o rtl/wstring.o rtl/bitmap.o
+              rtl/unicode.o rtl/wstring.o rtl/bitmap.o rtl/qsort.o
 
 KE_OBJECTS = ke/head.o ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
