@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.4 2004/12/27 16:40:14 navaraf Exp $
+/* $Id: env.c,v 1.5 2004/12/27 20:43:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include <napi/teb.h>
+#include <ntos/minmax.h>
 #include <string.h>
 
 #define NDEBUG
@@ -231,6 +232,8 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
    /* NULL-terminate the buffer. */
    if (DestMax)
       *DestBuffer = 0;
+   else
+      ReturnStatus = STATUS_BUFFER_TOO_SMALL;
 
    Destination->Length = (DestBuffer - Destination->Buffer) * sizeof(WCHAR);
    if (Length != NULL)
@@ -285,6 +288,15 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
 
    DPRINT("RtlSetEnvironmentVariable(Environment %p Name %wZ Value %wZ)\n",
           Environment, Name, Value);
+
+   /* Variable names can't contain a '=' except as a first character. */
+   for (wcs = Name->Buffer + 1;
+        wcs < Name->Buffer + (Name->Length / sizeof(WCHAR));
+        wcs++)
+   {
+      if (*wcs == L'=')
+          return STATUS_INVALID_PARAMETER;
+   }
 
    if (Environment)
    {
@@ -346,7 +358,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    }
 
 found:
-   if (Value->Length > 0)
+   if (Value != NULL && Value->Length > 0)
    {
       hole_len = tail - hole;
       /* calculate new environment size */
@@ -492,7 +504,6 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    PWSTR wcs;
    UNICODE_STRING var;
    PWSTR val;
-   int len;
    BOOLEAN SysEnvUsed = FALSE;
 
    DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
@@ -512,7 +523,6 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
       RtlAcquirePebLock();
 
    wcs = Environment;
-   len = Name->Length / sizeof(WCHAR);
    while (*wcs)
    {
       var.Buffer = wcs++;
@@ -530,9 +540,10 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
          if (RtlEqualUnicodeString(&var, Name, TRUE))
          {
             Value->Length = (wcs - val) * sizeof(WCHAR);
-            if (Value->Length < Value->MaximumLength)
+            if (Value->Length <= Value->MaximumLength)
             {
-               memcpy(Value->Buffer, val, Value->Length + sizeof(WCHAR));
+               memcpy(Value->Buffer, val,
+                      min(Value->Length + sizeof(WCHAR), Value->MaximumLength));
                DPRINT("Value %S\n", val);
                DPRINT("Return STATUS_SUCCESS\n");
                Status = STATUS_SUCCESS;
