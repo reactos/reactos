@@ -544,7 +544,7 @@ NTSTATUS	Ext2CommonWrite(
 
 			LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVCB->LogBlockSize;
 		
-			if ( ByteOffset.QuadPart + WriteLength >= PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart )
+			if ( ByteOffset.QuadPart + WriteLength > PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart )
 			{
 				if( PagingIo )
 				{
@@ -621,7 +621,7 @@ NTSTATUS	Ext2CommonWrite(
 
 							//	Start offset is the New File size
 							StartOffsetForZeroing.QuadPart = 
-								PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart + WriteLength;
+								ByteOffset.QuadPart + WriteLength;
 							//	End offset is the New Allocation size
 							EndOffsetForZeroing.QuadPart = PtrReqdFCB->CommonFCBHeader.AllocationSize.QuadPart;
 						}
