@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.5 2001/01/15 15:40:58 jean Exp $
+/* $Id: dllmain.c,v 1.6 2001/01/18 13:21:51 jean Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -15,15 +15,40 @@ unsigned int _winmajor = 0;
 unsigned int _winver = 0;
 
 char *_acmdln = NULL;		/* pointer to ascii command line */
-#undef _environ;
+#undef _environ
 char **_environ = NULL;		/* pointer to environment block */
-char ***_environ_dll = &_environ;
+char ***_environ_dll = &_environ;/* pointer to environment block */
 char *_pgmptr = NULL;		/* pointer to program name */
 
 int __app_type = 0; //_UNKNOWN_APP;	/* application type */
 
+static int envAlloced = 0;
+
 
 /* FUNCTIONS **************************************************************/
+
+int BlockEnvToEnviron()
+{
+char * ptr;
+int i;
+  if (!envAlloced)
+  {
+    envAlloced = 50;
+    _environ = malloc (envAlloced * sizeof (char **));
+    if (!_environ) return -1;
+    _environ[0] =NULL;
+  }
+  ptr = (char *)GetEnvironmentStringsA();
+  if (!ptr) return -1;
+  for (i = 0 ; *ptr ; i++)
+  {
+    _environ[i] = ptr;
+    while(*ptr) ptr++;
+    ptr++;
+  }
+  _environ[i] =0;
+  return 0;
+}
 
 BOOLEAN __stdcall
 DllMain(PVOID hinstDll,
@@ -32,7 +57,7 @@ DllMain(PVOID hinstDll,
 {
 	switch (dwReason)
 	{
-		case DLL_PROCESS_ATTACH:
+		case DLL_PROCESS_ATTACH://1
 			/* initialize version info */
 			_osver = GetVersion();
 			_winmajor = (_osver >> 8) & 0xFF;
@@ -45,21 +70,22 @@ DllMain(PVOID hinstDll,
 				return FALSE;
 
 			_acmdln = (char *)GetCommandLineA();
-			_environ = (char **)GetEnvironmentStringsA();
+			if( BlockEnvToEnviron() )
+			  return FALSE;
 
 			/* FIXME: more initializations... */
 
 			nAttachCount++;
 			break;
 
-		case DLL_THREAD_ATTACH:
+		case DLL_THREAD_ATTACH://2
 			break;
 
-		case DLL_THREAD_DETACH:
+		case DLL_THREAD_DETACH://4
 			FreeThreadData(NULL);
 			break;
 
-		case DLL_PROCESS_DETACH:
+		case DLL_PROCESS_DETACH://0
 			if (nAttachCount > 0)
 			{
 				nAttachCount--;
@@ -90,7 +116,7 @@ char **__p__acmdln(void)
 
 char ***__p__environ(void)
 {
-   return &_environ;
+   return _environ_dll;
 }
 
 unsigned int *__p__osver(void)
