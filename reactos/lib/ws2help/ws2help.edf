@@ -1,0 +1,30 @@
+; WS2HELP.DLL - Windows Sockets 2 Helper DLL for TCP/IP
+
+LIBRARY ws2help.dll
+
+EXPORTS
+WahCloseApcHelper=WahCloseApcHelper@8
+WahCloseHandleHelper=WahCloseHandleHelper@8
+WahCloseNotificationHelper=WahCloseNotificationHelper@8
+WahCloseSocketHandle=WahCloseSocketHandle@8
+WahCloseThread=WahCloseThread@8
+WahCompleteRequest=WahCompleteRequest@8
+WahCreateHandleContextTable=WahCreateHandleContextTable@8
+WahCreateNotificationTable=WahCreateNotificationTable@8
+WahCreateSocketHandle=WahCreateSocketHandle@8
+WahDestroyHandleContextTable=WahDestroyHandleContextTable@8
+WahDisableNonIFSHandleSupport=WahDisableNonIFSHandleSupport@8
+WahEnableNonIFSHandleSupport=WahEnableNonIFSHandleSupport@8
+WahEnumerateHandleContexts=WahEnumerateHandleContexts@8
+WahInsertHandleContext=WahInsertHandleContext@8
+WahNotifyAllProcesses=WahNotifyAllProcesses@8
+WahOpenApcHelper=WahOpenApcHelper@8
+WahOpenCurrentThread=WahOpenCurrentThread@8
+WahOpenHandleHelper=WahOpenHandleHelper@8
+WahOpenNotificationHandleHelper=WahOpenNotificationHandleHelper@8
+WahQueueUserApc=WahQueueUserApc@8
+WahReferenceContextByHandle=WahReferenceContextByHandle@8
+WahRemoveHandleContext=WahRemoveHandleContext@8
+WahWaitForNotification=WahWaitForNotification@8
+
+; EOF
