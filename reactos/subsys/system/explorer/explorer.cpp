@@ -64,7 +64,7 @@ ExplorerGlobals::ExplorerGlobals()
 }
 
 
-void log(LPCTSTR txt)
+void _log_(LPCTSTR txt)
 {
 	FmtString msg(TEXT("%s\n"), txt);
 
@@ -256,7 +256,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._log = fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
 
-		LOG("starting explore debug log\n");
+		LOG(TEXT("starting explore debug log\n"));
 	}
 #endif
 

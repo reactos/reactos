@@ -66,9 +66,9 @@ extern "C" {
 #define	BUFFER_LEN				1024
 
 
-extern void log(LPCTSTR txt);
+extern void _log_(LPCTSTR txt);
 
-#define	LOG(txt) log(txt)
+#define	LOG(txt) _log_(txt)
 
 
 #ifdef _MSC_VER
