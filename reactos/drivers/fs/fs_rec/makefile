@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2002/05/15 09:40:47 ekohl Exp $
+# $Id: makefile,v 1.2 2002/09/23 20:09:10 guido Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,6 +14,8 @@ TARGET_OBJECTS = \
   ntfs.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
+
+TARGET_CLEAN = $(DEP_FILES) *.o *.sys *.sym
 
 TARGET_CFLAGS = -g
 
