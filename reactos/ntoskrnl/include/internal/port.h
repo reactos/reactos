@@ -11,9 +11,11 @@ typedef struct _EPORT
 {
   KSPIN_LOCK	Lock;
   KSEMAPHORE    Semaphore;
-  
-  ULONG		State;
-  
+ 
+  USHORT	Type;
+  USHORT	State;
+ 
+  struct _EPORT * RequestPort;
   struct _EPORT	* OtherPort;
   
   ULONG		QueueLength;
@@ -69,6 +71,11 @@ STDCALL
 LpcSendTerminationPort (PEPORT	Port,
 			TIME	CreationTime);
 
+/* EPORT.Type */
+
+#define EPORT_TYPE_SERVER_RQST_PORT   (0)
+#define EPORT_TYPE_SERVER_COMM_PORT   (1)
+#define EPORT_TYPE_CLIENT_COMM_PORT   (2)
 
 /* EPORT.State */
 
@@ -125,7 +132,9 @@ NiCreatePort (PVOID			ObjectBody,
 /* Code in ntoskrnl/lpc/port.c */
 
 NTSTATUS STDCALL
-NiInitializePort (IN OUT	PEPORT	Port);
+NiInitializePort (IN OUT  PEPORT	Port,
+		  IN      USHORT        Type,
+		  IN      PEPORT        Parent OPTIONAL);
 NTSTATUS
 NiInitPort (VOID);
 

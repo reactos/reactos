@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.16 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: port.c,v 1.17 2004/02/02 23:48:42 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,18 +89,28 @@ NiInitPort (VOID)
  *	otherwise.
  */
 NTSTATUS STDCALL
-NiInitializePort (IN OUT	PEPORT	Port)
+NiInitializePort (IN OUT  PEPORT Port,
+		  IN      USHORT Type,
+		  IN      PEPORT Parent OPTIONAL)
 {
+  if ((Type != EPORT_TYPE_SERVER_RQST_PORT) &&
+      (Type != EPORT_TYPE_SERVER_COMM_PORT) &&
+      (Type != EPORT_TYPE_CLIENT_COMM_PORT))
+  {
+	  return STATUS_INVALID_PARAMETER_2;
+  }
   memset (Port, 0, sizeof(EPORT));
   KeInitializeSpinLock (& Port->Lock);
   KeInitializeSemaphore( &Port->Semaphore, 0, LONG_MAX );
+  Port->RequestPort = Parent;
   Port->OtherPort = NULL;
   Port->QueueLength = 0;
   Port->ConnectQueueLength = 0;
+  Port->Type = Type;
   Port->State = EPORT_INACTIVE;
   InitializeListHead (& Port->QueueListHead);
   InitializeListHead (& Port->ConnectQueueListHead);
-   
+ 
   return (STATUS_SUCCESS);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.24 2004/02/01 18:19:28 ea Exp $
+/* $Id: connect.c,v 1.25 2004/02/02 23:48:42 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,7 +86,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
     {
       return (Status);
     }
-  NiInitializePort(OurPort);
+  NiInitializePort(OurPort, EPORT_TYPE_CLIENT_COMM_PORT, NamedPort);
 
   /*
    * Allocate a request message.
@@ -600,7 +600,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	  return(Status);
 	}
 
-      NiInitializePort(OurPort);
+      NiInitializePort(OurPort, EPORT_TYPE_SERVER_COMM_PORT, NamedPort);
     }
 
   /*

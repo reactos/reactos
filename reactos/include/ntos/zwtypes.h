@@ -1704,6 +1704,8 @@ typedef struct _LPC_MESSAGE
    ULONG SectionSize; /* CallbackID */
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
+typedef LPC_MESSAGE PORT_MESSAGE, *PPORT_MESSAGE;
+
 #define MAX_MESSAGE_DATA   (0x130)
 
 typedef struct _LPC_MAX_MESSAGE
@@ -1711,6 +1713,8 @@ typedef struct _LPC_MAX_MESSAGE
    LPC_MESSAGE Header;
    BYTE Data[MAX_MESSAGE_DATA];
 } LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+
+typedef LPC_MAX_MESSAGE PORT_MAX_MESSAGE, *PPORT_MAX_MESSAGE;
 
 #define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
 

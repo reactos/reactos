@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 2004/02/01 18:19:28 ea Exp $
+/* $Id: create.c,v 1.16 2004/02/02 23:48:42 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -163,7 +163,7 @@ NtCreatePort (PHANDLE		      PortHandle,
       return (Status);
     }
 
-  Status = NiInitializePort (Port);
+  Status = NiInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
   Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
   Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
   

@@ -1,4 +1,4 @@
-/* $Id: complete.c,v 1.10 2003/12/30 18:52:05 fireball Exp $
+/* $Id: complete.c,v 1.11 2004/02/02 23:48:42 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,34 +23,62 @@
 
 /***********************************************************************
  * NAME							EXPORTED
- *	NtCompleteConnectPort@4
+ *	NtCompleteConnectPort/1
  *
+ * DESCRIPTION
+ * 	Wake up the client thread that issued the NtConnectPort call
+ * 	this server-side port was created for communicating with.
+ *	To be used in LPC servers processes on reply ports only.
+ *
+ * ARGUMENTS
+ *	hServerSideCommPort: a reply port handle returned by
+ *	NtAcceptConnectPort.
+ *
+ * RETURN VALUE
+ *	STATUS_SUCCESS or an error code from Ob.
  */
-/*EXPORTED*/ NTSTATUS STDCALL
-NtCompleteConnectPort (HANDLE PortHandle)
+NTSTATUS STDCALL
+NtCompleteConnectPort (HANDLE hServerSideCommPort)
 {
   NTSTATUS	Status;
-  PEPORT		OurPort;
+  PEPORT	ReplyPort;
   
-  DPRINT("NtCompleteConnectPort(PortHandle %x)\n", PortHandle);
-  
-  Status = ObReferenceObjectByHandle (PortHandle,
+  DPRINT("NtCompleteConnectPort(hServerSideCommPort %x)\n", hServerSideCommPort);
+ 
+  /*
+   * Ask Ob to translate the port handle to EPORT
+   */
+  Status = ObReferenceObjectByHandle (hServerSideCommPort,
 				      PORT_ALL_ACCESS,
 				      ExPortType,
 				      UserMode,
-				      (PVOID*)&OurPort,
+				      (PVOID*)&ReplyPort,
 				      NULL);
   if (!NT_SUCCESS(Status))
     {
       return (Status);
     }
+  /*
+   * Verify EPORT type is a server-side reply port;
+   * otherwise tell the caller the port handle is not
+   * valid.
+   */
+  if (ReplyPort->Type != EPORT_TYPE_SERVER_COMM_PORT) 
+    {
+       ObDereferenceObject (ReplyPort);
+       return STATUS_INVALID_PORT_HANDLE;
+    }
   
-  OurPort->State = EPORT_CONNECTED_SERVER;
-  
-  KeReleaseSemaphore(&OurPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
+  ReplyPort->State = EPORT_CONNECTED_SERVER;
+  /*
+   * Wake up the client thread that issued NtConnectPort.
+   */ 
+  KeReleaseSemaphore(&ReplyPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
 		     FALSE);
-   
-  ObDereferenceObject (OurPort);
+  /*
+   * Tell Ob we are no more interested in ReplyPort
+   */   
+  ObDereferenceObject (ReplyPort);
   
   return (STATUS_SUCCESS);
 }
