@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.27 2004/12/10 16:52:04 navaraf Exp $
+ *  $Id: desktop.c,v 1.28 2004/12/12 01:40:37 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -287,6 +287,7 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
     PDC dc;
     BITMAPOBJ *BitmapObj;
     dc = DC_LockDc(ScreenDeviceContext);
+    /* FIXME - Handle dc == NULL!!!! */
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
     if(BitmapObj)
     {

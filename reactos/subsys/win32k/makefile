@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.106 2004/12/03 23:37:43 blight Exp $
+# $Id: makefile,v 1.107 2004/12/12 01:40:37 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -40,6 +40,7 @@ TARGET_CFLAGS =\
  -DUNICODE \
  -Wall -Werror \
  -D__USE_W32API -D_WIN32_WINNT=0x0501 \
+ -DGDI_DEBUG \
  -DWINVER=0x600 -D_WIN32K_ \
  $(CFLAGS_OPT)
 
@@ -49,7 +50,7 @@ TARGET_LFLAGS =\
  --disable-stdcall-fixup
 
 ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
-    eng/clip.o eng/copybits.o eng/device.o eng/handle.o eng/lineto.o \
+    eng/clip.o eng/copybits.o eng/device.o eng/lineto.o \
     eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
     eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/sort.o \
     eng/gradient.o eng/event.o eng/float.o
@@ -61,7 +62,7 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o
 
 NTUSER_OBJECTS = ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/class.o \
-                 ntuser/clipboard.o ntuser/csr.o ntuser/focus.o ntuser/desktop.o \
+                 ntuser/clipboard.o ntuser/csr.o ntuser/cursoricon.o ntuser/focus.o ntuser/desktop.o \
                  ntuser/guicheck.o ntuser/hook.o ntuser/hotkey.o ntuser/input.o \
                  ntuser/keyboard.o ntuser/menu.o ntuser/message.o ntuser/metric.o \
                  ntuser/misc.o ntuser/monitor.o ntuser/msgqueue.o ntuser/painting.o \
@@ -70,13 +71,13 @@ NTUSER_OBJECTS = ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/cl
                  ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
-                  objects/color.o objects/coord.o objects/dc.o  \
-                  objects/fillshap.o objects/gdiobj.o objects/icm.o  \
-                  objects/line.o objects/metafile.o objects/paint.o  \
+                  objects/color.o objects/coord.o  \
+                  objects/dc.o objects/fillshap.o objects/gdiobj.o  \
+                  objects/icm.o objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/dib.o objects/palette.o \
-                  objects/rect.o objects/polyfill.o objects/cursoricon.o
+                  objects/rect.o objects/polyfill.o objects/stockobj.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o

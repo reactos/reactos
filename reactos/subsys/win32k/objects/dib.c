@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.56 2004/07/03 13:55:36 navaraf Exp $
+ * $Id: dib.c,v 1.57 2004/12/12 01:40:38 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -385,11 +385,13 @@ NtGdiGetDIBits(HDC hDC,
          DestSurfObj = EngLockSurface((HSURF)DestBitmap);
 
          SourcePalette = PALETTE_LockPalette(hSourcePalette);
+         /* FIXME - SourcePalette can be NULL!!! Don't assert here! */
          ASSERT(SourcePalette);
          SourcePaletteType = SourcePalette->Mode;
          PALETTE_UnlockPalette(hSourcePalette);
 
          DestPalette = PALETTE_LockPalette(hDestPalette);
+         /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
          ASSERT(DestPalette);
          DestPaletteType = DestPalette->Mode;
          

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.38 2004/09/28 15:02:30 weiden Exp $
+/* $Id: input.c,v 1.39 2004/12/12 01:40:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -543,7 +543,6 @@ IntMouseInput(MOUSEINPUT *mi)
   BITMAPOBJ *BitmapObj;
   SURFOBJ *SurfObj;
   PDC dc;
-  RECTL PointerRect;
   PWINDOW_OBJECT DesktopWindow;
   NTSTATUS Status;
   
@@ -649,16 +648,12 @@ IntMouseInput(MOUSEINPUT *mi)
       {
         SurfObj = &BitmapObj->SurfObj;
 
-        if (GDIDEV(SurfObj)->MovePointer)
+        if (GDIDEV(SurfObj)->Pointer.MovePointer)
         {
-          GDIDEV(SurfObj)->MovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
+          GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, MousePos.x, MousePos.y, NULL);
         }
 
         BITMAPOBJ_UnlockBitmap(hBitmap);
-
-        ExAcquireFastMutex(&CurInfo->CursorMutex);
-        SetPointerRect(CurInfo, &PointerRect);
-        ExReleaseFastMutex(&CurInfo->CursorMutex);
       }
     }
   }

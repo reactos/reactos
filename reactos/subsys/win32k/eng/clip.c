@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.22 2004/05/30 14:01:12 weiden Exp $
+/* $Id: clip.c,v 1.23 2004/12/12 01:40:36 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -28,83 +28,7 @@
  */
 #include <w32k.h>
 
-VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
-{
-  HCLIP HClip      = AccessHandleFromUserObject(ClipObj);
-  FreeGDIHandle(HClip);
-}
-
-CLIPOBJ* STDCALL
-IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
-{
-  HCLIP hClip;
-  CLIPGDI* clipInt;
-  CLIPOBJ* clipUser;
-
-  DPRINT("IntEngCreateClipRegion count: %d\n", count);
-  if (1 < count)
-    {
-      hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI) + count * sizeof(RECTL),
-                                      sizeof(CLIPOBJ), (PVOID*)&clipInt, (PVOID*)&clipUser);
-
-      if (hClip)
-	{
-	  RtlCopyMemory(clipInt->EnumRects.arcl, pRect, count * sizeof(RECTL));
-	  clipInt->EnumRects.c = count;
-	  clipInt->EnumOrder = CD_ANY;
-
-	  clipUser->iDComplexity = DC_COMPLEX;
-	  clipUser->iFComplexity = (count <= 4) ? FC_RECT4: FC_COMPLEX;
-	  clipUser->iMode = TC_RECTANGLES;
-	  RtlCopyMemory(&(clipUser->rclBounds), rcBounds, sizeof(RECTL));
-
-	  return clipUser;
-	}
-    }
-  else
-    {
-      hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI),
-	                              sizeof(CLIPOBJ),
-				      (PVOID)&clipInt, (PVOID)&clipUser);
-      if (hClip)
-	{
-	  RtlCopyMemory(clipInt->EnumRects.arcl, rcBounds, sizeof(RECTL));
-	  clipInt->EnumRects.c = 1;
-	  clipInt->EnumOrder = CD_ANY;
-
-	  clipUser->iDComplexity = ((rcBounds->top==rcBounds->bottom)
-	                            && (rcBounds->left==rcBounds->right))
-	                           ? DC_TRIVIAL : DC_RECT;
-	  clipUser->iFComplexity = FC_RECT;
-	  clipUser->iMode = TC_RECTANGLES;
-	  DPRINT("IntEngCreateClipRegion: iDComplexity: %d\n", clipUser->iDComplexity);
-	  RtlCopyMemory(&(clipUser->rclBounds), rcBounds, sizeof(RECTL));
-	  return clipUser;
-	}
-    }
-
-  return NULL;
-}
-
-/*
- * @implemented
- */
-CLIPOBJ * STDCALL
-EngCreateClip(VOID)
-{
-  return EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
-EngDeleteClip(CLIPOBJ *ClipRegion)
-{
-  EngFreeMem(ClipRegion);
-}
-
-static int 
+static inline int
 CompareRightDown(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -117,7 +41,7 @@ CompareRightDown(const PRECT r1, const PRECT r2)
     {
       Cmp = +1;
     }
-  else 
+  else
     {
       ASSERT(r1->bottom == r2->bottom);
       if (r1->left < r2->left)
@@ -138,7 +62,7 @@ CompareRightDown(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static int 
+static inline int
 CompareRightUp(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -151,7 +75,7 @@ CompareRightUp(const PRECT r1, const PRECT r2)
     {
       Cmp = -1;
     }
-  else 
+  else
     {
       ASSERT(r1->top == r2->top);
       if (r1->left < r2->left)
@@ -172,7 +96,7 @@ CompareRightUp(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static int 
+static inline int
 CompareLeftDown(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -185,7 +109,7 @@ CompareLeftDown(const PRECT r1, const PRECT r2)
     {
       Cmp = +1;
     }
-  else 
+  else
     {
       ASSERT(r1->bottom == r2->bottom);
       if (r1->right < r2->right)
@@ -206,7 +130,7 @@ CompareLeftDown(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static int 
+static inline int
 CompareLeftUp(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -219,7 +143,7 @@ CompareLeftUp(const PRECT r1, const PRECT r2)
     {
       Cmp = -1;
     }
-  else 
+  else
     {
       ASSERT(r1->top == r2->top);
       if (r1->right < r2->right)
@@ -240,6 +164,122 @@ CompareLeftUp(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
+static inline int
+CompareSpans(const PSPAN Span1, const PSPAN Span2)
+{
+  int Cmp;
+
+  if (Span1->Y < Span2->Y)
+    {
+      Cmp = -1;
+    }
+  else if (Span2->Y < Span1->Y)
+    {
+      Cmp = +1;
+    }
+  else
+    {
+      if (Span1->X < Span2->X)
+	{
+	  Cmp = -1;
+	}
+      else if (Span2->X < Span1->X)
+	{
+	  Cmp = +1;
+	}
+      else
+	{
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
+VOID FASTCALL
+IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
+{
+  EngFreeMem(ObjToGDI(ClipObj, CLIP));
+}
+
+CLIPOBJ* FASTCALL
+IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
+{
+  CLIPGDI *Clip;
+  
+  if(count > 1)
+  {
+    RECTL *dest;
+    
+    Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
+    
+    if(Clip != NULL)
+    {
+      Clip->EnumRects.c = count;
+      Clip->EnumOrder = CD_ANY;
+      for(dest = Clip->EnumRects.arcl;
+          count > 0;
+          count--, dest++, pRect++)
+      {
+        *dest = *pRect;
+      }
+
+      Clip->ClipObj.iDComplexity = DC_COMPLEX;
+      Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
+      Clip->ClipObj.iMode = TC_RECTANGLES;
+      Clip->ClipObj.rclBounds = *rcBounds;
+      
+      return GDIToObj(Clip, CLIP);
+    }
+  }
+  else
+  {
+    Clip = EngAllocMem(0, sizeof(CLIPGDI), TAG_CLIPOBJ);
+
+    if(Clip != NULL)
+    {
+      Clip->EnumRects.c = 1;
+      Clip->EnumOrder = CD_ANY;
+      Clip->EnumRects.arcl[0] = *rcBounds;
+      
+      Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
+                                     (rcBounds->left == rcBounds->right))
+                                    ? DC_TRIVIAL : DC_RECT);
+      Clip->ClipObj.iFComplexity = FC_RECT;
+      Clip->ClipObj.iMode = TC_RECTANGLES;
+      Clip->ClipObj.rclBounds = *rcBounds;
+      
+      return GDIToObj(Clip, CLIP);
+    }
+  }
+
+  return NULL;
+}
+
+/*
+ * @implemented
+ */
+CLIPOBJ * STDCALL
+EngCreateClip(VOID)
+{
+  CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), TAG_CLIPOBJ);
+  if(Clip != NULL)
+  {
+    return GDIToObj(Clip, CLIP);
+  }
+
+  return NULL;
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+EngDeleteClip(CLIPOBJ *ClipRegion)
+{
+  EngFreeMem(ObjToGDI(ClipRegion, CLIP));
+}
+
 /*
  * @implemented
  */
@@ -250,7 +290,7 @@ CLIPOBJ_cEnumStart(IN CLIPOBJ* ClipObj,
 		   IN ULONG BuildOrder,
 		   IN ULONG MaxRects)
 {
-  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
+  CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
   SORTCOMP CompareFunc;
 
   ClipGDI->EnumPos = 0;
@@ -305,8 +345,9 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
 	      IN ULONG ObjSize,
 	      OUT ULONG *EnumRects)
 {
-  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
-  ULONG nCopy;
+  RECTL *dest, *src;
+  CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
+  ULONG nCopy, i;
   ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
 
   //calculate how many rectangles we should copy
@@ -317,45 +358,21 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   {
     return FALSE;
   }
-  RtlCopyMemory( pERects->arcl, ClipGDI->EnumRects.arcl + ClipGDI->EnumPos,
-                 nCopy * sizeof(RECTL) );
+  
+  /* copy rectangles */
+  src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
+  for(i = 0, dest = pERects->arcl;
+      i < nCopy;
+      i++, dest++, src++)
+  {
+    *dest = *src;
+  }
+  
   pERects->c = nCopy;
 
   ClipGDI->EnumPos+=nCopy;
 
   return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
-}
-
-static int 
-CompareSpans(const PSPAN Span1, const PSPAN Span2)
-{
-  int Cmp;
-
-  if (Span1->Y < Span2->Y)
-    {
-      Cmp = -1;
-    }
-  else if (Span2->Y < Span1->Y)
-    {
-      Cmp = +1;
-    }
-  else 
-    {
-      if (Span1->X < Span2->X)
-	{
-	  Cmp = -1;
-	}
-      else if (Span2->X < Span1->X)
-	{
-	  Cmp = +1;
-	}
-      else
-	{
-	  Cmp = 0;
-	}
-    }
-
-  return Cmp;
 }
 
 BOOLEAN FASTCALL
@@ -418,7 +435,14 @@ ClipobjToSpans(PSPAN *Spans, UINT *Count, CLIPOBJ *ClipRegion, PRECTL Boundary)
             }
           if (0 != *Count)
             {
-              RtlCopyMemory(NewSpans, *Spans, *Count * sizeof(SPAN));
+              PSPAN dest, src;
+              UINT i = *Count;
+              for(dest = NewSpans, src = *Spans;
+                  i > 0;
+                  i--)
+              {
+                *dest++ = *src++;
+              }
               ExFreePool(*Spans);
             }
           *Spans = NewSpans;

@@ -113,23 +113,10 @@ ObmCreateHandleTable(VOID);
 
 VOID  FASTCALL ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
 
-ULONG FASTCALL CreateGDIHandle (ULONG InternalSize, ULONG UserSize, PVOID *InternalObject, PVOID *UserObject);
-VOID  FASTCALL FreeGDIHandle (ULONG Handle);
-
-PVOID FASTCALL AccessUserObject (ULONG Handle);
-PVOID FASTCALL AccessInternalObject (ULONG Handle);
-
-ULONG FASTCALL AccessHandleFromUserObject (PVOID UserObject);
-
-#define AccessInternalObjectFromUserObject(UserObj) \
-  ((PVOID)( (PCHAR)(UserObj) - sizeof( ENGOBJ ) ) )
-
-VOID  FASTCALL InitEngHandleTable (VOID);
-VOID  FASTCALL InitGdiObjectHandleTable (VOID);
+VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
 
 VOID  FASTCALL CreateStockObjects (VOID);
-
-BOOL  FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
+VOID  FASTCALL CreateSysColorObjects (VOID);
 
 PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 

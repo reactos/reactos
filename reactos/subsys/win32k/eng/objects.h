@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.32 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: objects.h,v 1.33 2004/12/12 01:40:36 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -34,8 +34,6 @@
 
 /* Structure of internal gdi objects that win32k manages for ddi engine:
    |---------------------------------|
-   |           EngObj                |
-   |---------------------------------|
    |         Public part             |
    |      accessed from engine       |
    |---------------------------------|
@@ -45,21 +43,8 @@
 
 ---------------------------------------------------------------------------*/
 
-typedef struct _ENGOBJ {
-	ULONG  hObj;
-	ULONG  InternalSize;
-	ULONG  UserSize;
-} ENGOBJ, *PENGOBJ;
-
 typedef struct _CLIPGDI {
-  ENGOBJ 		Header;
-  CLIPOBJ		ClipObj;
-  /* ei what were these for?
-  ULONG NumRegionRects;
-  ULONG NumIntersectRects;
-  RECTL *RegionRects;
-  RECTL *IntersectRects;
-  */
+  CLIPOBJ ClipObj;
   ULONG EnumPos;
   ULONG EnumOrder;
   ULONG EnumMax;
@@ -73,12 +58,11 @@ typedef struct _DRVFUNCTIONSGDI {
 } DRVFUNCTIONSGDI;
 
 typedef struct _FLOATGDI {
-
+  ULONG Dummy;
 } FLOATGDI;
 
 typedef struct _FONTGDI {
-  ENGOBJ 		Header;
-  FONTOBJ		FontObj;
+  FONTOBJ FontObj;
 
   LPCWSTR Filename;
   FT_Face face;
@@ -86,13 +70,11 @@ typedef struct _FONTGDI {
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {
-  ENGOBJ 		Header;
-  PATHOBJ		PathObj;
+  PATHOBJ PathObj;
 } PATHGDI;
 
 typedef struct _STRGDI {
-  ENGOBJ 		Header;
-  STROBJ		StrObj;
+  STROBJ StrObj;
 } STRGDI;
 
 typedef BOOL STDCALL (*PFN_BitBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
@@ -141,12 +123,11 @@ typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*, ULONG, PVOID, ULONG, RECTL*, POINTL*, ULONG);
 
 typedef struct _XFORMGDI {
-  ENGOBJ 		Header;
+  ULONG Dummy;
   /* XFORMOBJ has no public members */
 } XFORMGDI;
 
 typedef struct _XLATEGDI {
-  ENGOBJ 		Header;
   XLATEOBJ		XlateObj;
   HPALETTE DestPal;
   HPALETTE SourcePal;
@@ -169,5 +150,11 @@ typedef struct _XLATEGDI {
 //    };
 //  };
 } XLATEGDI;
+
+/* as the *OBJ structures are located at the beginning of the *GDI structures
+   we can simply typecast the pointer */
+#define ObjToGDI(ClipObj, Type) (Type##GDI *)(ClipObj)
+#define GDIToObj(ClipGDI, Type) (Type##OBJ *)(ClipGDI)
+
 
 #endif //__ENG_OBJECTS_H

@@ -35,9 +35,10 @@ HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
                                        ULONG Blue);
 HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                                  CONST RGBQUAD *Colors);
-#define  PALETTE_FreePalette(hPalette)  GDIOBJ_FreeObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE, GDIOBJFLAG_DEFAULT)
+#define  PALETTE_FreePalette(hPalette)  GDIOBJ_FreeObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
 #define  PALETTE_LockPalette(hPalette) ((PPALGDI)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
-#define  PALETTE_UnlockPalette(hPalette) GDIOBJ_UnlockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
+#define  PALETTE_UnlockPalette(hPalette) GDIOBJ_UnlockObj((HGDIOBJ)hPalette)
+BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
 
 HPALETTE FASTCALL PALETTE_Init (VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);

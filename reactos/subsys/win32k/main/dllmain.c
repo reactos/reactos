@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.82 2004/11/20 16:46:05 weiden Exp $
+/* $Id: dllmain.c,v 1.83 2004/12/12 01:40:37 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -44,6 +44,8 @@ PsEstablishWin32Callouts(
    ULONG W32ThreadSize,
    ULONG W32ProcessSize);
 #endif
+
+BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 
 extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];
@@ -85,7 +87,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       IntCleanupCurIcons(Process, Win32Process);
       CleanupMonitorImpl();
 
-      CleanupForProcess(Process, Process->UniqueProcessId);
+      GDI_CleanupForProcess(Process);
 
       IntGraphicsCheck(FALSE);
       
@@ -331,6 +333,7 @@ DllMain (
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */
   CreateStockObjects();
+  CreateSysColorObjects();
   
   PREPARE_TESTS
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.125 2004/12/11 19:39:18 weiden Exp $
+/* $Id: winpos.c,v 1.126 2004/12/12 01:40:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1046,7 +1046,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           * there's nothing to copy. Also, it's no use copying bits onto
           * themselves.
           */
-         VisRgn = NULL;
          if ((VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(CopyRgn)) && 
              UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.81 2004/11/21 10:55:29 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.82 2004/12/12 01:40:38 weiden Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -126,6 +126,14 @@ NtGdiBitBlt(
 			{
 				DC_UnlockDc(hDCSrc);
 			}
+			if(BitmapDest != NULL)
+			{
+                                BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+			}
+			if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
+			{
+                                BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+			}
 			DC_UnlockDc(hDCDest);
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
@@ -173,6 +181,18 @@ NtGdiBitBlt(
 					DC_UnlockDc(hDCSrc);
 				}
 				DC_UnlockDc(hDCDest);
+				if(BitmapDest != NULL)
+				{
+                                	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+				}
+				if(BitmapSrc != NULL && BitmapSrc != BitmapDest)
+				{
+                                	BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+				}
+				if(BrushObj != NULL)
+				{
+                                        BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
+				}
 				SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 				return FALSE;
 			}
@@ -185,12 +205,16 @@ NtGdiBitBlt(
 
 	if (UsesSource && XlateObj != NULL)
 		EngDeleteXlate(XlateObj);
-	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
-	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
+		
+        if(BitmapDest != NULL)
+        {
+                BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
+        }
+	if (UsesSource && BitmapSrc != BitmapDest)
 	{
 		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
 	}
-	if (UsesPattern)
+	if (BrushObj != NULL)
 	{
 		BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
 	}
@@ -296,8 +320,10 @@ NtGdiTransparentBlt(
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
   
   BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
+  /* FIXME - BitmapDest can be NULL!!!! Don't assert here! */
   ASSERT(BitmapDest);
   BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
+  /* FIXME - BitmapSrc can be NULL!!!! Don't assert here! */
   ASSERT(BitmapSrc);
   
   rcDest.left = xDst;
@@ -374,6 +400,7 @@ NtGdiCreateBitmap(
           Size.cx, Size.cy, BitsPerPel, hBitmap);
 
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
+   /* FIXME - bmp can be NULL!!!!!! */
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
    BITMAPOBJ_UnlockBitmap( hBitmap );
 
@@ -391,11 +418,10 @@ NtGdiCreateBitmap(
    return hBitmap;
 }
 
-BOOL FASTCALL
-Bitmap_InternalDelete( PBITMAPOBJ pBmp )
+BOOL INTERNAL_CALL
+BITMAP_Cleanup(PVOID ObjectBody)
 {
-	ASSERT( pBmp );
-
+        PBITMAPOBJ pBmp = (PBITMAPOBJ)ObjectBody;
 	if (pBmp->SurfObj.pvBits != NULL &&
 	    (pBmp->flFlags & BITMAPOBJ_IS_APIBITMAP))
 	{
@@ -572,8 +598,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				}
 				EngDeleteXlate(XlateObj);
 			}
+			BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
 		}
-		BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
 	}
 	DC_UnlockDc(hDC);
 

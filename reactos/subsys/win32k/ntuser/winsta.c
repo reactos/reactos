@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.67 2004/11/21 13:02:02 weiden Exp $
+ *  $Id: winsta.c,v 1.68 2004/12/12 01:40:38 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -197,8 +197,6 @@ IntInitializeDesktopGraphics(VOID)
     }
   DC_SetOwnership(ScreenDeviceContext, NULL);
   
-  EnableMouse(ScreenDeviceContext);
-  
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 
   return TRUE;
@@ -208,7 +206,6 @@ VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
   NtUserAcquireOrReleaseInputOwnership(TRUE);
-  EnableMouse(FALSE);
   if (NULL != ScreenDeviceContext)
     {
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
@@ -401,8 +398,6 @@ NtUserCreateWindowStation(
   
    /* FIXME: Obtain the following information from the registry */
    CurInfo->SwapButtons = FALSE;
-   CurInfo->SafetySwitch = FALSE;
-   CurInfo->SafetyRemoveCount = 0;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;
    CurInfo->DblClickHeight = 4;

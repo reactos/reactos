@@ -1,0 +1,319 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998 - 2004 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
+ * STOCKOBJ.C - GDI Stock Objects
+ *
+ * $Id: stockobj.c,v 1.2 2004/12/12 01:40:39 weiden Exp $
+ *
+ */
+#include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
+
+static COLORREF SysColors[] =
+{
+  RGB(212, 208, 200), /* COLOR_SCROLLBAR  */
+  RGB(58, 110, 165),  /* COLOR_BACKGROUND  */
+  RGB(10, 36, 106),   /* COLOR_ACTIVECAPTION  */
+  RGB(128, 128, 128), /* COLOR_INACTIVECAPTION  */
+  RGB(212, 208, 200), /* COLOR_MENU  */
+  RGB(255, 255, 255), /* COLOR_WINDOW  */
+  RGB(0, 0, 0),       /* COLOR_WINDOWFRAME  */
+  RGB(0, 0, 0),       /* COLOR_MENUTEXT  */
+  RGB(0, 0, 0),       /* COLOR_WINDOWTEXT  */
+  RGB(255, 255, 255), /* COLOR_CAPTIONTEXT  */
+  RGB(212, 208, 200), /* COLOR_ACTIVEBORDER  */
+  RGB(212, 208, 200), /* COLOR_INACTIVEBORDER  */
+  RGB(128, 128, 128), /* COLOR_APPWORKSPACE  */
+  RGB(10, 36, 106),   /* COLOR_HIGHLIGHT  */
+  RGB(255, 255, 255), /* COLOR_HIGHLIGHTTEXT  */
+  RGB(212, 208, 200), /* COLOR_BTNFACE  */
+  RGB(128, 128, 128), /* COLOR_BTNSHADOW  */
+  RGB(128, 128, 128), /* COLOR_GRAYTEXT  */
+  RGB(0, 0, 0),       /* COLOR_BTNTEXT  */
+  RGB(212, 208, 200), /* COLOR_INACTIVECAPTIONTEXT  */
+  RGB(255, 255, 255), /* COLOR_BTNHIGHLIGHT  */
+  RGB(64, 64, 64),    /* COLOR_3DDKSHADOW  */
+  RGB(212, 208, 200), /* COLOR_3DLIGHT  */
+  RGB(0, 0, 0),       /* COLOR_INFOTEXT  */
+  RGB(255, 255, 225), /* COLOR_INFOBK  */
+  RGB(181, 181, 181), /* COLOR_UNKNOWN  */
+  RGB(0, 0, 128),     /* COLOR_HOTLIGHT  */
+  RGB(166, 202, 240), /* COLOR_GRADIENTACTIVECAPTION  */
+  RGB(192, 192, 192), /* COLOR_GRADIENTINACTIVECAPTION  */
+  RGB(49, 106, 197),  /* COLOR_MENUHILIGHT  */
+  RGB(236, 233, 216)  /* COLOR_MENUBAR  */
+};
+#define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
+
+static HPEN SysColorPens[NUM_SYSCOLORS];
+static HBRUSH SysColorBrushes[NUM_SYSCOLORS];
+
+/*  GDI stock objects */
+
+static LOGBRUSH WhiteBrush =
+{ BS_SOLID, RGB(255,255,255), 0 };
+
+static LOGBRUSH LtGrayBrush =
+/* FIXME : this should perhaps be BS_HATCHED, at least for 1 bitperpixel */
+{ BS_SOLID, RGB(192,192,192), 0 };
+
+static LOGBRUSH GrayBrush =
+/* FIXME : this should perhaps be BS_HATCHED, at least for 1 bitperpixel */
+{ BS_SOLID, RGB(128,128,128), 0 };
+
+static LOGBRUSH DkGrayBrush =
+/* This is BS_HATCHED, for 1 bitperpixel. This makes the spray work in pbrush */
+/* NB_HATCH_STYLES is an index into HatchBrushes */
+{ BS_HATCHED, RGB(0,0,0), NB_HATCH_STYLES };
+
+static LOGBRUSH BlackBrush =
+{ BS_SOLID, RGB(0,0,0), 0 };
+
+static LOGBRUSH NullBrush =
+{ BS_NULL, 0, 0 };
+
+static LOGPEN WhitePen =
+{ PS_SOLID, { 0, 0 }, RGB(255,255,255) };
+
+static LOGPEN BlackPen =
+{ PS_SOLID, { 0, 0 }, RGB(0,0,0) };
+
+static LOGPEN NullPen =
+{ PS_NULL, { 0, 0 }, 0 };
+
+static LOGFONTW OEMFixedFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
+
+static LOGFONTW AnsiFixedFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
+
+/*static LOGFONTW AnsiVarFont =
+ *{ 10, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+ *  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; */
+
+static LOGFONTW SystemFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
+
+static LOGFONTW DeviceDefaultFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
+
+static LOGFONTW SystemFixedFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
+
+/* FIXME: Is this correct? */
+static LOGFONTW DefaultGuiFont =
+{ 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
+
+#define NB_STOCK_OBJECTS (DEFAULT_GUI_FONT + 1)
+
+static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
+
+/*!
+ * Creates a bunch of stock objects: brushes, pens, fonts.
+*/
+VOID FASTCALL
+CreateStockObjects(void)
+{
+  UINT Object;
+
+  DPRINT("Beginning creation of stock objects\n");
+
+  /* Create GDI Stock Objects from the logical structures we've defined */
+
+  StockObjects[WHITE_BRUSH] =  IntGdiCreateBrushIndirect(&WhiteBrush);
+  StockObjects[LTGRAY_BRUSH] = IntGdiCreateBrushIndirect(&LtGrayBrush);
+  StockObjects[GRAY_BRUSH] =   IntGdiCreateBrushIndirect(&GrayBrush);
+  StockObjects[DKGRAY_BRUSH] = IntGdiCreateBrushIndirect(&DkGrayBrush);
+  StockObjects[BLACK_BRUSH] =  IntGdiCreateBrushIndirect(&BlackBrush);
+  StockObjects[NULL_BRUSH] =   IntGdiCreateBrushIndirect(&NullBrush);
+
+  StockObjects[WHITE_PEN] = IntGdiCreatePenIndirect(&WhitePen);
+  StockObjects[BLACK_PEN] = IntGdiCreatePenIndirect(&BlackPen);
+  StockObjects[NULL_PEN] =  IntGdiCreatePenIndirect(&NullPen);
+
+  (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
+  (void) TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
+  (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+
+  StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
+
+  for (Object = 0; Object < NB_STOCK_OBJECTS; Object++)
+    {
+      if (NULL != StockObjects[Object])
+	{
+	  GDIOBJ_ConvertToStockObj(&StockObjects[Object]);
+	}
+    }
+
+  DPRINT("Completed creation of stock objects\n");
+}
+
+/*!
+ * Return stock object.
+ * \param	Object - stock object id.
+ * \return	Handle to the object.
+*/
+HGDIOBJ STDCALL
+NtGdiGetStockObject(INT Object)
+{
+  DPRINT("NtGdiGetStockObject index %d\n", Object);
+
+  return ((Object < 0) || (NB_STOCK_OBJECTS <= Object)) ? NULL : StockObjects[Object];
+}
+
+BOOL FASTCALL
+IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
+{
+  UINT i;
+
+  ASSERT(Elements);
+  ASSERT(Colors);
+
+  for(i = 0; i < nColors; i++)
+  {
+    if((*Elements) >= 0 && (*Elements) < NUM_SYSCOLORS)
+    {
+      SysColors[*Elements] = *Colors;
+      /* FIXME - update the syscolor pens and brushes */
+    }
+    Elements++;
+    Colors++;
+  }
+  
+  return nColors > 0;
+}
+
+BOOL FASTCALL
+IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
+{
+  UINT i;
+  
+  ASSERT(Brushes);
+  
+  if(nBrushes > NUM_SYSCOLORS)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  for(i = 0; i < nBrushes; i++)
+  {
+    *(Brushes++) = SysColorBrushes[i];
+  }
+  
+  return nBrushes > 0;
+}
+
+BOOL FASTCALL
+IntGetSysColorPens(HPEN *Pens, UINT nPens)
+{
+  UINT i;
+  
+  ASSERT(Pens);
+
+  if(nPens > NUM_SYSCOLORS)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  for(i = 0; i < nPens; i++)
+  {
+    *(Pens++) = SysColorPens[i];
+  }
+
+  return nPens > 0;
+}
+
+BOOL FASTCALL
+IntGetSysColors(COLORREF *Colors, UINT nColors)
+{
+  UINT i;
+  COLORREF *col;
+  
+  ASSERT(Colors);
+  
+  if(nColors > NUM_SYSCOLORS)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  col = &SysColors[0];
+  for(i = 0; i < nColors; i++)
+  {
+    *(Colors++) = *(col++);
+  }
+  
+  return nColors > 0;
+}
+
+VOID FASTCALL
+CreateSysColorObjects(VOID)
+{
+  UINT i;
+  LOGBRUSH Brush;
+  LOGPEN Pen;
+  
+  /* Create the syscolor brushes */
+  Brush.lbStyle = BS_SOLID;
+  Brush.lbHatch = 0;
+  for(i = 0; i < NUM_SYSCOLORS; i++)
+  {
+    if(SysColorBrushes[i] == NULL)
+    {
+      Brush.lbColor = SysColors[i];
+      SysColorBrushes[i] = IntGdiCreateBrushIndirect(&Brush);
+      if(SysColorBrushes[i] != NULL)
+      {
+        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorBrushes[i]);
+      }
+    }
+  }
+  
+  /* Create the syscolor pens */
+  Pen.lopnStyle = PS_SOLID;
+  Pen.lopnWidth.x = 0;
+  Pen.lopnWidth.y = 0;
+  for(i = 0; i < NUM_SYSCOLORS; i++)
+  {
+    if(SysColorPens[i] == NULL)
+    {
+      Pen.lopnColor = SysColors[i];
+      SysColorPens[i] = IntGdiCreatePenIndirect(&Pen);
+      if(SysColorPens[i] != NULL)
+      {
+        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorPens[i]);
+      }
+    }
+  }
+}
+
+/* EOF */

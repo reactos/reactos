@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.23 2004/07/17 17:37:41 blight Exp $ */
+/* $Id: print.c,v 1.24 2004/12/12 01:40:38 weiden Exp $ */
 #include <w32k.h>
 
 INT
@@ -84,6 +84,8 @@ IntGdiExtEscape(
 {
    BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    INT Result;
+
+   /* FIXME - Handle BitmapObj == NULL !!!!!! */
 
    if ( NULL == dc->DriverFunctions.Escape )
    {

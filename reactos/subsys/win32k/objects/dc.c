@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.148 2004/12/07 19:53:44 royce Exp $
+/* $Id: dc.c,v 1.149 2004/12/12 01:40:38 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -465,6 +465,7 @@ IntCreatePrimarySurface()
    BOOL GotDriver;
    BOOL DoDefault;
    ULONG DisplayNumber;
+   RECTL SurfaceRect;
 
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
@@ -654,6 +655,11 @@ IntCreatePrimarySurface()
       SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
       SurfSize = SurfObj->sizlBitmap;
+      SurfSize = SurfObj->sizlBitmap;
+      SurfaceRect.left = SurfaceRect.top = 0;
+      SurfaceRect.right = SurfObj->sizlBitmap.cx;
+      SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
+      EngEraseSurface(SurfObj, &SurfaceRect, 0);
       EngUnlockSurface(SurfObj);
       IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
       break;
@@ -728,6 +734,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   }
 
   NewDC = DC_LockDc( hNewDC );
+  /* FIXME - NewDC can be NULL!!! Don't assert here! */
   ASSERT( NewDC );
 
   NewDC->DMW = PrimarySurface.DMW;
@@ -846,8 +853,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     {
       return  FALSE;
     }
-  DPRINT( "Deleting DC\n" );
-  CHECKPOINT;
+
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
   {
@@ -862,7 +868,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     }
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
-	DC_UnlockDc( savedHDC );
+    DC_UnlockDc( savedHDC );
     NtGdiDeleteDC (savedHDC);
   }
 
@@ -1064,6 +1070,7 @@ NtGdiGetDCState(HDC  hDC)
     return 0;
   }
   newdc = DC_LockDc( hnewdc );
+  /* FIXME - newdc can be NULL!!!! Don't assert here!!! */
   ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
@@ -1247,7 +1254,7 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
 #endif
       } else {
-	DC_UnlockDc(hDC);      
+	DC_UnlockDc(hDC);
       }
       DC_UnlockDc ( hDCSave );
     } else {
@@ -1472,7 +1479,7 @@ DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 INT FASTCALL
 IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 {
-  PGDIOBJHDR GdiObject;
+  PVOID GdiObject;
   INT Result = 0;
   DWORD ObjectType;
 
@@ -1517,7 +1524,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
         break;
     }
 
-  GDIOBJ_UnlockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(Handle);
 
   return Result;
 }
@@ -1558,7 +1565,7 @@ DWORD STDCALL
 NtGdiGetObjectType(HANDLE handle)
 {
   GDIOBJHDR * ptr;
-  INT result = 0;
+  INT result;
   DWORD objectType;
 
   ptr = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
@@ -1610,11 +1617,13 @@ NtGdiGetObjectType(HANDLE handle)
     case GDI_OBJECT_TYPE_MEMDC:
       result = OBJ_MEMDC;
       break;
+
     default:
       DPRINT1("Magic 0x%08x not implemented\n", objectType);
+      result = 0;
       break;
   }
-  GDIOBJ_UnlockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(handle);
   return result;
 }
 
@@ -1723,7 +1732,7 @@ NtGdiSaveDC(HDC  hDC)
   dc = DC_LockDc (hDC);
   if (dc == NULL)
   {
-    DC_UnlockDc(dc);
+    DC_UnlockDc(hdcs);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
@@ -1788,7 +1797,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, pen, &Failed);
-      PENOBJ_UnlockPen((HPEN) hGDIObj);
+      PENOBJ_UnlockPen(hGDIObj);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1811,7 +1820,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, brush, &Failed);
-      BRUSHOBJ_UnlockBrush((HPEN) hGDIObj);
+      BRUSHOBJ_UnlockBrush(hGDIObj);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1826,9 +1835,11 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       break;
 
     case GDI_OBJECT_TYPE_FONT:
-      objOrg = (HGDIOBJ)dc->w.hFont;
-      dc->w.hFont = (HFONT) hGDIObj;
-      TextIntRealizeFont(dc->w.hFont);
+      if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
+      {
+        objOrg = (HGDIOBJ)dc->w.hFont;
+        dc->w.hFont = (HFONT) hGDIObj;
+      }
       break;
 
     case GDI_OBJECT_TYPE_BITMAP:
@@ -1882,9 +1893,9 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       DC_UnlockDc ( hDC );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
+      BITMAPOBJ_UnlockBitmap( hGDIObj );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
-      BITMAPOBJ_UnlockBitmap(hGDIObj);
 
       return objOrg;
 
@@ -1963,7 +1974,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GDI_OBJECT_TYPE_DC, (GDICLEANUPPROC) DC_InternalDeleteDC);
+  hDC = (HDC) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DC);
   if (hDC == NULL)
   {
     if(Buf)
@@ -1974,6 +1985,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   }
 
   NewDC = DC_LockDc(hDC);
+  /* FIXME - Handle NewDC == NULL! */
   
   if (Driver != NULL)
   {
@@ -2038,17 +2050,17 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC, GDIOBJFLAG_DEFAULT))
+  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
   }
 }
 
-BOOL FASTCALL
-DC_InternalDeleteDC( PDC DCToDelete )
+BOOL INTERNAL_CALL
+DC_Cleanup(PVOID ObjectBody)
 {
-
-  RtlFreeUnicodeString(&DCToDelete->DriverName);
+  PDC pDC = (PDC)ObjectBody;
+  RtlFreeUnicodeString(&pDC->DriverName);
   return TRUE;
 }
 

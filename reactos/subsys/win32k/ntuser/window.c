@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.252 2004/12/11 21:19:41 weiden Exp $
+/* $Id: window.c,v 1.253 2004/12/12 01:40:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2506,7 +2506,10 @@ NtUserFindWindowEx(HWND hwndParent,
   }
 #endif
   
-  ClassDereferenceObject(ClassObject);
+  if (ClassObject != NULL)
+  {
+    ClassDereferenceObject(ClassObject);
+  }
   
   Cleanup:
   if(ClassName.Length > 0 && ClassName.Buffer)

@@ -6,16 +6,16 @@
 typedef struct
 {
    LOGFONTW   logfont;
-   HFONT      GDIFontHandle;
+   FONTOBJ    *Font;
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
 
 #define  TEXTOBJ_AllocText() \
-  ((HFONT) GDIOBJ_AllocObj (sizeof (TEXTOBJ), GDI_OBJECT_TYPE_FONT, NULL))
-#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT, GDIOBJFLAG_DEFAULT)
+  ((HFONT) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_FONT))
+#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
-#define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
+#define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj)
 
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.67 2004/08/03 19:55:57 blight Exp $
+/* $Id: windc.c,v 1.68 2004/12/12 01:40:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -586,25 +586,26 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   return(Dce->hDC);
 }
 
-BOOL FASTCALL
-DCE_InternalDelete(PDCE Dce)
+BOOL INTERNAL_CALL
+DCE_Cleanup(PVOID ObjectBody)
 {
   PDCE PrevInList;
+  PDCE pDce = (PDCE)ObjectBody;
   
   DCE_LockList();
   
-  if (Dce == FirstDce)
+  if (pDce == FirstDce)
     {
-      FirstDce = Dce->next;
-      PrevInList = Dce;
+      FirstDce = pDce->next;
+      PrevInList = pDce;
     }
   else
     {
       for (PrevInList = FirstDce; NULL != PrevInList; PrevInList = PrevInList->next)
 	{
-	  if (Dce == PrevInList->next)
+	  if (pDce == PrevInList->next)
 	    {
-	      PrevInList->next = Dce->next;
+	      PrevInList->next = pDce->next;
 	      break;
 	    }
 	}
@@ -665,7 +666,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
  *           DceFreeDCE
  */
 PDCE FASTCALL
-DceFreeDCE(PDCE dce)
+DceFreeDCE(PDCE dce, BOOLEAN Force)
 {
   DCE *ret;
   HANDLE hDce;
@@ -681,6 +682,13 @@ DceFreeDCE(PDCE dce)
   SetDCHook(dce->hDC, NULL, 0L);
 #endif
 
+  if(Force && !GDIOBJ_OwnedByCurrentProcess(dce->hDC))
+  {
+    /* FIXME - changing ownership to current process only works for global objects! */
+    GDIOBJ_SetOwnership(dce->hDC, PsGetCurrentProcess());
+    DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
+  }
+
   NtGdiDeleteDC(dce->hDC);
   if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
     {
@@ -688,6 +696,11 @@ DceFreeDCE(PDCE dce)
     }
 
   hDce = dce->Self;
+  if(Force && !GDIOBJ_OwnedByCurrentProcess(hDce))
+  {
+    /* FIXME - changing ownership to current process only works for global objects! */
+    GDIOBJ_SetOwnership(hDce, PsGetCurrentProcess());
+  }
   DCEOBJ_FreeDCE(hDce);
 
   return ret;
@@ -715,7 +728,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
             {
               if (Window->Class->style & CS_OWNDC) /* owned DCE*/
                 {
-                  pDCE = DceFreeDCE(pDCE);
+                  pDCE = DceFreeDCE(pDCE, FALSE);
                   Window->Dce = NULL;
                   continue;
                 }
@@ -756,7 +769,7 @@ DceEmptyCache()
   DCE_LockList();
   while (FirstDce != NULL)
     {
-      DceFreeDCE(FirstDce);
+      DceFreeDCE(FirstDce, TRUE);
     }
   DCE_UnlockList();
 }
@@ -793,9 +806,16 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
                   continue;
                 }
             }
+          if (!GDIOBJ_OwnedByCurrentProcess(pDCE->hDC))
+            {
+              /* skip DCs we don't even own */
+              goto skip;
+            }
+
           dc = DC_LockDc(pDCE->hDC);
           if (dc == NULL)
             {
+skip:
               if (Window->Self != pDCE->hwndCurrent)
                 {
                   IntReleaseWindowObject(CurrentWindow);

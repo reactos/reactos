@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.43 2004/12/07 19:53:44 royce Exp $ */
+/* $Id: cliprgn.c,v 1.44 2004/12/12 01:40:38 weiden Exp $ */
 #include <w32k.h>
 
 int FASTCALL
@@ -33,35 +33,38 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       NtGdiCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn, RGN_AND);
    NtGdiOffsetRgn(Dc->w.hGCClipRgn, Dc->w.DCOrgX, Dc->w.DCOrgY);
 
-   CombinedRegion = RGNDATA_LockRgn(Dc->w.hGCClipRgn);
-   ASSERT(CombinedRegion != NULL);
+   if((CombinedRegion = RGNDATA_LockRgn(Dc->w.hGCClipRgn)))
+   {
+     if (Dc->CombinedClip != NULL)
+        IntEngDeleteClipRegion(Dc->CombinedClip);
 
-   if (Dc->CombinedClip != NULL)
-      IntEngDeleteClipRegion(Dc->CombinedClip);
+     Dc->CombinedClip = IntEngCreateClipRegion(
+        CombinedRegion->rdh.nCount,
+        (PRECTL)CombinedRegion->Buffer,
+        (PRECTL)&CombinedRegion->rdh.rcBound);
 
-   Dc->CombinedClip = IntEngCreateClipRegion(
-      CombinedRegion->rdh.nCount,
-      (PRECTL)CombinedRegion->Buffer,
-      (PRECTL)&CombinedRegion->rdh.rcBound);
+     RGNDATA_UnlockRgn(Dc->w.hGCClipRgn);
+   }
 
-   RGNDATA_UnlockRgn(Dc->w.hGCClipRgn);
    if ( NULL == Dc->CombinedClip )
    {
 	   DPRINT1("IntEngCreateClipRegion() failed\n");
 	   return ERROR;
    }
+
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
 HRGN WINAPI SaveVisRgn(HDC hdc)
 {
   HRGN copy;
-  PROSRGNDATA obj, copyObj;
+  PROSRGNDATA obj;/*, copyObj;*/
   PDC dc = DC_LockDc(hdc);
 
   if (!dc) return 0;
 
   obj = RGNDATA_LockRgn(dc->w.hVisRgn);
+  /* FIXME - Handle obj == NULL!!! */
 
   if(!(copy = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
@@ -70,10 +73,10 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
     return 0;
   }
   NtGdiCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
-  copyObj = RGNDATA_LockRgn(copy);
+  /* copyObj = RGNDATA_LockRgn(copy); */
 /*  copyObj->header.hNext = obj->header.hNext;
   header.hNext = copy; */
-
+  DC_UnlockDc(hdc);
   return copy;
 }
 
@@ -104,7 +107,7 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
-    retval = CLIPPING_UpdateGCRegion(dc);
+    CLIPPING_UpdateGCRegion(dc);
   DC_UnlockDc( hdc );
 
   return retval;

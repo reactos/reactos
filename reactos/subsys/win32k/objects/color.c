@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.50 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: color.c,v 1.51 2004/12/12 01:40:38 weiden Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -123,6 +123,7 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 	  0, 0, 0);
 
   PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
+  /* FIXME - Handle PalGDI == NULL!!!! */
 
   PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
   PalGDI->logicalToSystem = NULL;
@@ -333,6 +334,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
   palPtr = (PALOBJ*) palGDI;
+  /* FIXME - Handle palGDI == NULL!!!! */
 
   // Step 1: Create mapping of system palette\DC palette
 #ifndef NO_MAPPING
@@ -345,6 +347,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
 
   sysGDI = PALETTE_LockPalette(systemPalette);
   sysPtr = (PALOBJ*) sysGDI;
+  /* FIXME - Handle sysGDI == NULL!!!!! */
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the

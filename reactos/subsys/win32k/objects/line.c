@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.37 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: line.c,v 1.38 2004/12/12 01:40:38 weiden Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -98,6 +98,7 @@ IntGdiLineTo(DC  *dc,
 
       /* get BRUSHOBJ from current pen. */
       PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
+      /* FIXME - PenBrushObj can be NULL!!!! Don't assert here! */
       ASSERT(PenBrushObj);
 
       if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
@@ -202,6 +203,7 @@ IntGdiPolyline(DC      *dc,
 
    /* Get BRUSHOBJ from current pen. */
    PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
+   /* FIXME - PenBrushObj can be NULL! Don't assert here! */
    ASSERT(PenBrushObj);
 
    if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
@@ -210,6 +212,7 @@ IntGdiPolyline(DC      *dc,
       if (Points != NULL)
       {
          BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+         /* FIXME - BitmapObj can be NULL!!!! Don't assert but handle this case gracefully! */
          ASSERT(BitmapObj);
 
          RtlCopyMemory(Points, pt, Count * sizeof(POINT));

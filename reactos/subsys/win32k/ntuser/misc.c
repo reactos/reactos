@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.90 2004/12/10 16:52:04 navaraf Exp $
+/* $Id: misc.c,v 1.91 2004/12/12 01:40:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -130,9 +130,9 @@ NtUserCallNoParam(DWORD Routine)
     case NOPARAM_ROUTINE_CSRSS_INITIALIZED:
       Result = (DWORD)CsrInit();
       break;
-
+    
     case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
-      /* not used yet */
+      Result = (DWORD)GDI_MapHandleTable(NtCurrentProcess());
       break;
     
     default:
@@ -222,7 +222,9 @@ NtUserCallOneParam(
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
 
-      Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param);
+      /* FIXME
+      Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param); */
+      Result = 0;
 
       ObDereferenceObject(WinStaObject);
       return Result;
@@ -512,6 +514,100 @@ NtUserCallTwoParam(
     
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
       return (DWORD)IntRegisterLogonProcess(Param1, (BOOL)Param2);
+
+    case TWOPARAM_ROUTINE_SETSYSCOLORS:
+    {
+      DWORD Ret = 0;
+      PVOID Buffer;
+      struct
+      {
+        INT *Elements;
+        COLORREF *Colors;
+      } ChangeSysColors;
+
+      /* FIXME - we should make use of SEH here... */
+      
+      Status = MmCopyFromCaller(&ChangeSysColors, (PVOID)Param1, sizeof(ChangeSysColors));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return 0;
+      }
+      
+      Buffer = ExAllocatePool(PagedPool, (Param2 * sizeof(INT)) + (Param2 * sizeof(COLORREF)));
+      if(Buffer != NULL)
+      {
+        INT *Elements = (INT*)Buffer;
+        COLORREF *Colors = (COLORREF*)Buffer + Param2;
+        
+        Status = MmCopyFromCaller(Elements, ChangeSysColors.Elements, Param2 * sizeof(INT));
+        if(NT_SUCCESS(Status))
+        {
+          Status = MmCopyFromCaller(Colors, ChangeSysColors.Colors, Param2 * sizeof(COLORREF));
+          if(NT_SUCCESS(Status))
+          {
+            Ret = (DWORD)IntSetSysColors((UINT)Param2, Elements, Colors);
+          }
+          else
+            SetLastNtError(Status);
+        }
+        else
+          SetLastNtError(Status);
+
+        ExFreePool(Buffer);
+      }
+      return Ret;
+    }
+
+    case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
+    case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
+    case TWOPARAM_ROUTINE_GETSYSCOLORS:
+    {
+      DWORD Ret;
+      union
+      {
+        PVOID Pointer;
+        HBRUSH *Brushes;
+        HPEN *Pens;
+        COLORREF *Colors;
+      } Buffer;
+
+      /* FIXME - we should make use of SEH here... */
+      
+      Buffer.Pointer = ExAllocatePool(PagedPool, Param2 * sizeof(HANDLE));
+      if(Buffer.Pointer != NULL)
+      {
+        switch(Routine)
+        {
+          case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
+            Ret = (DWORD)IntGetSysColorBrushes(Buffer.Brushes, (UINT)Param2);
+            break;
+          case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
+            Ret = (DWORD)IntGetSysColorPens(Buffer.Pens, (UINT)Param2);
+            break;
+          case TWOPARAM_ROUTINE_GETSYSCOLORS:
+            Ret = (DWORD)IntGetSysColors(Buffer.Colors, (UINT)Param2);
+            break;
+          default:
+            Ret = 0;
+            break;
+        }
+        
+        if(Ret > 0)
+        {
+          Status = MmCopyToCaller((PVOID)Param1, Buffer.Pointer, Param2 * sizeof(HANDLE));
+          if(!NT_SUCCESS(Status))
+          {
+            SetLastNtError(Status);
+            Ret = 0;
+          }
+        }
+
+        ExFreePool(Buffer.Pointer);
+      }
+
+      return Ret;
+    }
     
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
