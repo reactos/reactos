@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.58 2002/12/08 15:57:40 robd Exp $
+/* $Id: utils.c,v 1.59 2003/01/31 21:49:11 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1721,7 +1721,7 @@ LdrShutdownProcess (VOID)
      {
         Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
 
-        DPRINT("  Unloading %S\n",
+        DPRINT("  Unloading %wZ\n",
                &Module->BaseDllName);
         // PJS: only detach from static dlls, they should FreeLibrary() any dlls that
         // they loaded dynamically, and when the last reference is gone, that lib will
