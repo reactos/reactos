@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  * $Author: hyperion $
- * $Date: 2003/02/04 01:13:26 $
+ * $Date: 2003/02/09 21:15:29 $
  *
  */
 
@@ -51,7 +51,13 @@
  */
 #ifndef _TCHAR_DEFINED
 #ifndef RC_INVOKED
-typedef	wchar_t	TCHAR;
+typedef wchar_t _TCHAR;
+typedef signed wchar_t _TSCHAR;
+typedef unsigned wchar_t _TUCHAR;
+typedef wchar_t _TXCHAR;
+/* #if !__STDC__ */
+typedef wchar_t TCHAR;
+/* #endif */
 #endif	/* Not RC_INVOKED */
 #define _TCHAR_DEFINED
 #endif
@@ -71,6 +77,8 @@ typedef	wchar_t	TCHAR;
 /*
  * Unicode functions
  */
+
+#define _tmain _wmain
 
 #define	_tprintf		wprintf
 #define	_ftprintf		fwprintf
@@ -146,7 +154,15 @@ typedef	wchar_t	TCHAR;
  */
 #ifndef _TCHAR_DEFINED
 #ifndef RC_INVOKED
-typedef char	TCHAR;
+typedef char _TCHAR;
+typedef signed char _TSCHAR;
+typedef unsigned char _TUCHAR;
+typedef char _TXCHAR;
+
+/*#if !__STDC__*/
+typedef char TCHAR;
+/*#endif*/
+
 #endif
 #define _TCHAR_DEFINED
 #endif
@@ -165,6 +181,8 @@ typedef char	TCHAR;
 /*
  * Non-unicode (standard) functions
  */
+
+#define _tmain main
 
 #define	_tprintf	printf
 #define _ftprintf	fprintf
