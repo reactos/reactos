@@ -1,0 +1,5 @@
+#include <defines.h>
+#include <reactos/resource.h>
+#include "resource.h"
+
+IDB_CARET                BITMAP    DISCARDABLE     "caret.bmp"
