@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.67 2003/12/30 18:52:05 fireball Exp $
+/* $Id: mm.c,v 1.68 2004/02/15 19:03:29 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -251,7 +251,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    return(Status);
 }
 
-NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
+NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
   NTSTATUS Status;
   PHYSICAL_ADDRESS AllocatedPage;
@@ -278,6 +278,10 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 			       AllocatedPage,
 			       FALSE);
       MmLockAddressSpace(MmGetKernelAddressSpace());
+    }
+  if (Locked)
+    {
+      MmLockPage(AllocatedPage);
     }
   return(Status);
 }
@@ -348,7 +352,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	 {
 	 case MEMORY_AREA_PAGED_POOL:
 	   {
-	     Status = MmCommitPagedPoolAddress((PVOID)Address);
+	     Status = MmCommitPagedPoolAddress((PVOID)Address, Locked);
 	     break;
 	   }
 

@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.24 2003/12/30 18:52:05 fireball Exp $
+/* $Id: ppool.c,v 1.25 2004/02/15 19:03:29 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -80,7 +80,7 @@ MmInitializePagedPool(VOID)
    * We are still at a high IRQL level at this point so explicitly commit
    * the first page of the paged pool before writing the first block header.
    */
-  MmCommitPagedPoolAddress((PVOID)MmPagedPoolFirstFreeBlock);
+  MmCommitPagedPoolAddress((PVOID)MmPagedPoolFirstFreeBlock, FALSE);
   MmPagedPoolFirstFreeBlock->Size = MmPagedPoolSize;
   MmPagedPoolFirstFreeBlock->NextFree = NULL;
 

@@ -479,7 +479,7 @@ NTSTATUS
 MmCreateVirtualMappingForKernel(PVOID Address, 
 				ULONG flProtect,
 				PHYSICAL_ADDRESS PhysicalAddress);
-NTSTATUS MmCommitPagedPoolAddress(PVOID Address);
+NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked);
 NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
 				PVOID Address, 
 				ULONG flProtect,
