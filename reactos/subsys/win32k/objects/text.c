@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.69 2003/12/28 14:14:04 navaraf Exp $ */
+/* $Id: text.c,v 1.70 2004/01/29 22:17:54 rcampbell Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -243,49 +243,91 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 
 BOOL FASTCALL InitFontSupport(VOID)
 {
-  ULONG error;
-  UINT File;
-  UNICODE_STRING Filename;
-  
-  static WCHAR *FontFiles[] =
-  {
-  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
-  L"\\SystemRoot\\media\\fonts\\helb____.ttf",
-  L"\\SystemRoot\\media\\fonts\\timr____.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraBd.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraBI.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraIt.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoBd.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoBI.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoIt.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMono.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraSe.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraSeBd.ttf"
-  };
-  
-  InitializeListHead(&FontListHead);
-  ExInitializeFastMutex(&FontListLock);
-  ExInitializeFastMutex(&FreeTypeLock);
-
-  error = FT_Init_FreeType(&library);
-  if(error)
-  {
-    return FALSE;
-  }
-  
-  /* FIXME load fonts from registry */
-
-  for (File = 0; File < sizeof(FontFiles) / sizeof(WCHAR *); File++)
-    {
-    DPRINT("Loading font %S\n", FontFiles[File]);
+	ULONG ulError;
+	UNICODE_STRING cchDir, cchFilename, cchSearchPattern ;
+	OBJECT_ATTRIBUTES obAttr;
+	IO_STATUS_BLOCK Iosb;
+	HANDLE hDirectory;
+	NTSTATUS Status;
+	PFILE_DIRECTORY_INFORMATION iFileData;
+	PVOID   pBuff;
+	BOOLEAN bRestartScan = TRUE;
+	
+	
+	
+	if(pBuff)
+	{
+	    InitializeListHead(&FontListHead);
+        ExInitializeFastMutex(&FontListLock);
+        ExInitializeFastMutex(&FreeTypeLock);
+	
+        ulError = FT_Init_FreeType(&library);
     
-    RtlInitUnicodeString(&Filename, FontFiles[File]);
-    IntGdiAddFontResource(&Filename, 0);
-    }
+        if(!ulError)
+        {
+    	    RtlInitUnicodeString(&cchDir, L"\\SystemRoot\\Media\\Fonts\\");
 
-  DPRINT("All fonts loaded\n");
-
-  return TRUE;
+		    //RtlInitUnicodeString(&cchFilename, (PWCHAR)ExAllocatePool(NonPagedPool,0x4000));
+		    RtlInitUnicodeString(&cchSearchPattern,L"*.ttf");
+    
+		    InitializeObjectAttributes( &obAttr,
+			    			   			&cchDir,
+				    		   			OBJ_CASE_INSENSITIVE, 
+					    	   			NULL,
+						       			NULL );
+						   			
+            Status = ZwOpenFile( &hDirectory,
+                                 SYNCHRONIZE | FILE_LIST_DIRECTORY,
+                                 &obAttr,
+                                 &Iosb,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                 FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE );         
+            if( NT_SUCCESS(Status) )
+            {          
+                while(1)
+                {   
+                    iFileData = NULL;
+                    pBuff = ExAllocatePool(NonPagedPool,0x4000);
+                    RtlInitUnicodeString(&cchFilename,0);
+                    cchFilename.MaximumLength = 0x1000;
+                    cchFilename.Buffer = ExAllocatePool(PagedPool,cchFilename.MaximumLength);
+ 
+                    cchFilename.Length = 0;
+				    
+				    Status = NtQueryDirectoryFile( hDirectory,
+				                                   NULL,
+				                                   NULL,
+				                                   NULL,
+				                                   &Iosb,
+				                                   pBuff,
+				                                   0x4000,
+				                                   FileDirectoryInformation,
+				                                   TRUE,
+				                                   &cchSearchPattern,
+				                                   bRestartScan );
+				   
+                    iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
+                   
+                    RtlAppendUnicodeToString(&cchFilename, cchDir.Buffer);
+                    RtlAppendUnicodeToString(&cchFilename, iFileData->FileName);
+				    RtlAppendUnicodeToString(&cchFilename, L"\0");
+				    
+				    if( !NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES )
+				        break;
+				   
+				    DbgPrint("Adding Font:  \"%S\"\n", cchFilename.Buffer);
+				    //NtGdiAddFontResource(&cchFilename, 0);
+				    IntGdiAddFontResource(&cchFilename, 0);
+				    ExFreePool(pBuff);
+				    ExFreePool(cchFilename.Buffer);
+				    bRestartScan = FALSE;
+				}
+				ExFreePool(pBuff);
+				return TRUE;
+            }
+        }
+	}
+	return FALSE;
 }
 
 static NTSTATUS STDCALL
