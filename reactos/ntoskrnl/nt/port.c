@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.10 1999/11/25 10:47:58 dwelch Exp $
+/* $Id: port.c,v 1.11 1999/12/01 15:08:31 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,7 @@
 
 //#define NDEBUG
 #include <internal/debug.h>
+
 
 /* TYPES ********************************************************************/
 
@@ -69,7 +70,7 @@ NTSTATUS NiInitPort(VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeString(&ExPortType->TypeName,L"Event");
+   RtlInitUnicodeString(&ExPortType->TypeName,L"Port");
    
    ExPortType->MaxObjects = ULONG_MAX;
    ExPortType->MaxHandles = ULONG_MAX;
@@ -173,7 +174,7 @@ NTSTATUS STDCALL NtAcceptConnectPort (IN HANDLE	PortHandle,
    NamedPort->ConnectingPort = NULL;
    
    ObDereferenceObject(NamedPort);
-   
+    
    return(STATUS_SUCCESS);
 }
 
@@ -339,7 +340,6 @@ NTSTATUS STDCALL NtQueryInformationPort (IN HANDLE PortHandle,
 {
    UNIMPLEMENTED;
 }
-
 
 NTSTATUS STDCALL NtReplyPort (IN HANDLE PortHandle,
 			      IN PLPC_MESSAGE LpcReply	/* guess */)
