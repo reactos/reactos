@@ -40,7 +40,6 @@ copy drivers\bus\isapnp\isapnp.sys %ROS_INSTALL%\system32\drivers
 copy drivers\bus\pci\pci.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\floppy\floppy.sys %ROS_INSTALL%\system32\drivers
 copy drivers\lib\bzip2\unbzip2.sys %ROS_INSTALL%\system32\drivers
-copy drivers\lib\zlib\zlib.a %ROS_INSTALL%\system32
 copy drivers\input\keyboard\keyboard.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\mouclass\mouclass.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\psaux\psaux.sys %ROS_INSTALL%\system32\drivers
