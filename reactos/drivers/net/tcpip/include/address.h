@@ -73,8 +73,7 @@ PADDRESS_FILE AddrSearchFirst(
 PADDRESS_FILE AddrSearchNext(
     PAF_SEARCH SearchContext);
 
-ULONG inet_addr(
-    PCSTR AddrString);
+unsigned long PASCAL inet_addr(const char*);
 
 #endif /* __ADDRESS_H */
 

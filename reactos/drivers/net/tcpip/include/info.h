@@ -45,9 +45,13 @@ typedef struct IPADDR_ENTRY {
 } IPADDR_ENTRY, *PIPADDR_ENTRY;
 
 #define	IP_MIB_STATS_ID           1
+#ifndef IP_MIB_ADDRTABLE_ENTRY_ID
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
+#endif
 
+#ifndef MAX_PHYSADDR_SIZE
 #define	MAX_PHYSADDR_SIZE 8
+#endif
 
 
 /* Only UDP is supported */

@@ -444,9 +444,74 @@ NTSTATUS DispTdiDisconnect(
  *     Status of operation
  */
 {
+  PTDI_REQUEST_KERNEL_QUERY_INFORMATION Parameters;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-	return STATUS_NOT_IMPLEMENTED;
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  Parameters = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_CONNECTION;
+  }
+
+  switch (Parameters->QueryType)
+  {
+    case TDI_QUERY_ADDRESS_INFO:
+      {
+        PTDI_ADDRESS_INFO AddressInfo;
+        PADDRESS_FILE AddrFile;
+        PTA_IP_ADDRESS Address;
+
+        AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
+
+        switch ((ULONG)IrpSp->FileObject->FsContext2) {
+          case TDI_TRANSPORT_ADDRESS_FILE:
+            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            break;
+
+          case TDI_CONNECTION_FILE:
+            AddrFile = ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->AddressFile;
+            break;
+
+          default:
+            TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (!AddrFile) {
+          TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
+          return STATUS_INVALID_PARAMETER;
+        }
+
+        if (MmGetMdlByteCount(Irp->MdlAddress) <
+            (sizeof(TDI_ADDRESS_INFO) + sizeof(TDI_ADDRESS_IP))) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+          return STATUS_BUFFER_OVERFLOW;
+        }
+
+        /* FIXME: Is this count really the one we should return? */
+        AddressInfo->ActivityCount = AddrFile->RefCount;
+
+        Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
+        Address->TAAddressCount = 1;
+        Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+        Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+        Address->Address[0].Address[0].sin_port = AddrFile->Port;
+        Address->Address[0].Address[0].in_addr = AddrFile->ADE->Address->Address.IPv4Address;        
+        RtlZeroMemory(
+          &Address->Address[0].Address[0].sin_zero,
+          sizeof(Address->Address[0].Address[0].sin_zero));
+
+        return STATUS_SUCCESS;
+      }
+  }
+
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 

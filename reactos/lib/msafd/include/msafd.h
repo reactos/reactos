@@ -14,7 +14,7 @@
 #include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>
-#include <net/tdi.h>
+#include <ddk/tdi.h>
 #include <afd/shared.h>
 #include <debug.h>
 

@@ -19,24 +19,11 @@
 #include <ndis.h>
 #else /* _MSC_VER */
 #include <ddk/ntddk.h>
+#include <ddk/xfilter.h>
 #include <net/ndis.h>
 #endif /* _MSC_VER */
 
 #include <debug.h>
-
-
-#ifndef _MSC_VER
-/* FIXME: The following should be moved to ntddk.h */
-
-/*
- * ULONG MmGetMdlByteCount(
- *     IN  PMDL    Mdl)
- */
-#define MmGetMdlByteCount(Mdl)  \
-    ((Mdl)->ByteCount)
-
-#endif
-
 
 /* Exported functions */
 #ifdef _MSC_VER

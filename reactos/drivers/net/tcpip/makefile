@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/02/22 09:59:17 chorns Exp $
+# $Id: makefile,v 1.15 2004/03/02 18:18:14 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
 
-TARGET_CFLAGS = -I./include -DDBG=1 -DNDIS40
+TARGET_CFLAGS = -I./include -DDBG=1 -DNDIS40 -D__USE_W32API
 
 TARGET_DDKLIBS = ndis.a
 

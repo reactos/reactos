@@ -10,10 +10,13 @@
 #include <winsock2.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
-#include <net/tdikrnl.h>
-#include <net/tdiinfo.h>
+#include <ddk/tdiinfo.h>
+#include <ddk/tdikrnl.h>
 #include <afd/shared.h>
 #include <debug.h>
+
+#define	IP_MIB_STATS_ID				1
+#define	IP_MIB_ADDRTABLE_ENTRY_ID		0x102
 
 /* Forward declarations */
 struct _AFDFCB;

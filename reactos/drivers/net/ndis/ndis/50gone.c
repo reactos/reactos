@@ -451,6 +451,8 @@ NdisSetupDmaTransfer(
 }
 
 
+#undef NdisUpdateSharedMemory
+
 /*
  * @unimplemented
  */

@@ -152,7 +152,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
      * stabilizes.
      */
     do {
-        assert( !entitySet ); /* We must not have an entity set allocated */
+        ASSERT( !entitySet ); /* We must not have an entity set allocated */
         status = DeviceIoControl( tcpFile,
                                   IOCTL_TCP_QUERY_INFORMATION_EX,
                                   &req,

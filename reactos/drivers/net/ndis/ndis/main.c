@@ -89,10 +89,7 @@ NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
     IN  ULONG           NumberOfErrorValues,
-    IN  ULONG           ERROR_LOG_MAXIMUM_SIZE)
-/*  IN  ULONG           ...) 
- *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
- */
+    ...) 
 /*
  * FUNCTION: Write a syslog error
  * ARGUMENTS:

@@ -23,8 +23,8 @@
 #define _WIN32_WINNT 0x500
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
-#include <ntdll/rtl.h>
-#include <net/miniport.h>
+#include <ddk/miniport.h>
+#include <tcpmisc.h>
 #include <winsock2.h>
 #include <nspapi.h>
 #include <iptypes.h>
@@ -32,7 +32,7 @@
 #include "resinfo.h"
 #include "wine/debug.h"
 
-#include "net/tdiinfo.h"
+#include "ddk/tdiinfo.h"
 #include "tcpioctl.h"
 
 #ifndef ETH_ALEN

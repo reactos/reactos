@@ -414,7 +414,7 @@ PADDRESS_FILE AddrSearchNext(
         return NULL;
 }
 
-ULONG inet_addr(PCSTR AddrString)
+unsigned long PASCAL inet_addr(const char *AddrString)
 /*
  * Convert an ansi string dotted-quad address to a ulong
  * NOTES:

@@ -1,9 +1,9 @@
 
-/* $Id: stubs.c,v 1.8 2004/01/28 20:55:50 ekohl Exp $
+/* $Id: stubs.c,v 1.9 2004/03/02 18:18:14 navaraf Exp $
  *
  */
 #include <ddk/ntddk.h>
-#include <net/tdi.h>
+#include <ddk/tdi.h>
 
 /*
  * @unimplemented

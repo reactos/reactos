@@ -52,7 +52,7 @@ extern "C" {
 
 #include "ntddk.h"
 #include "ntddndis.h"
-#include "netpnp.h"
+#include <ddk/netpnp.h>
 
 #ifdef NDIS50
 #undef NDIS40
@@ -2626,10 +2626,7 @@ NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
     IN  ULONG           NumberOfErrorValues,
-    IN  ULONG           ERROR_LOG_MAXIMUM_SIZE);
-/*  IN  ULONG           ...); 
- *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
- */
+    ...); 
 
 /*
  * VOID

@@ -585,6 +585,54 @@ NTSTATUS TdiQueryDeviceControl(
 }
 
 
+NTSTATUS TdiQueryInformation(
+    PFILE_OBJECT FileObject,
+    LONG QueryType,
+    PMDL MdlBuffer)
+/*
+ * FUNCTION: Query for information
+ * ARGUMENTS:
+ *     FileObject   = Pointer to file object
+ *     QueryType    = Query type
+ *     MdlBuffer    = Pointer to MDL buffer specific for query type
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+    KEVENT Event;
+    PIRP Irp;
+
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    Irp = TdiBuildInternalDeviceControlIrp(IOCTL_TCP_QUERY_INFORMATION, /* Sub function */
+                                           DeviceObject,                /* Device object */
+                                           ConnectionObject,            /* File object */
+                                           &Event,                      /* Event */
+                                           &Iosb);                      /* Status */
+    if (!Irp) {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    TdiBuildQueryInformation(
+      Irp,
+      DeviceObject,
+      FileObject,
+      NULL,
+      NULL,
+      QueryType,
+      MdlBuffer);
+    
+    Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
+
+    return Status;
+}
+
+
 NTSTATUS TdiQueryInformationEx(
     PFILE_OBJECT FileObject,
     ULONG Entity,

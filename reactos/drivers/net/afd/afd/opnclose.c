@@ -143,8 +143,13 @@ AfdCreate(
             FCB->HelperContext      = SocketInfo->HelperContext;
             FCB->NotificationEvents = SocketInfo->NotificationEvents;
 
-            if (RtlCreateUnicodeString(&FCB->TdiDeviceName, SocketInfo->TdiDeviceName.Buffer)) {
+            FCB->TdiDeviceName.Length = 0;
+            FCB->TdiDeviceName.MaximumLength = SocketInfo->TdiDeviceName.MaximumLength;
+            FCB->TdiDeviceName.Buffer = ExAllocatePool(
+                NonPagedPool, 
+                FCB->TdiDeviceName.MaximumLength);
 
+            if (FCB->TdiDeviceName.Buffer) {
                 RtlCopyUnicodeString(&FCB->TdiDeviceName, &SocketInfo->TdiDeviceName);
 
                 AFD_DbgPrint(MAX_TRACE, ("TDI device name is (%wZ).\n", &FCB->TdiDeviceName));
