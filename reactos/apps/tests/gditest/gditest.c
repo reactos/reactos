@@ -8,7 +8,7 @@
 int main (void)
 {
 	HDC	Desktop, MyDC;
-        HPEN	RedPen, GreenPen;
+	HPEN	RedPen, GreenPen;
 	HBITMAP	MyBitmap;
 	DWORD shit;
 
@@ -16,6 +16,8 @@ int main (void)
 
 	// Set up a DC called Desktop that accesses DISPLAY
 	Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
+	if (Desktop == NULL)
+		return 1;
 
 	// Create a red pen and select it into the DC
 	RedPen = CreatePen(PS_SOLID, 8, 0x0000ff);
@@ -35,10 +37,10 @@ int main (void)
 	// Bitblt from the DISPLAY DC to MyDC and then back again in a different location
 	BitBlt(MyDC, 0, 0, 151, 251, Desktop, 50, 50, SRCCOPY);
 
-        // Draw a rectangle on the memory DC before bltting back with a green pen
+	// Draw a rectangle on the memory DC before bltting back with a green pen
 	GreenPen = CreatePen(PS_SOLID, 3, 0x00ff00);
 	SelectObject(MyDC, GreenPen);
-        Rectangle(MyDC, 10, 10, 50, 50);
+	Rectangle(MyDC, 10, 10, 50, 50);
 
 	BitBlt(Desktop, 400, 100, 151, 251, MyDC, 0, 0, SRCCOPY);
 
