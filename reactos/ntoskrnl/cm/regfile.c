@@ -87,18 +87,18 @@ NTSTATUS CmiCreateNewRegFile( HANDLE FileHandle )
   RootKeyBlock = (PKEY_BLOCK) (tBuf+REG_BLOCK_SIZE+REG_HEAP_BLOCK_DATA_OFFSET);
   FreeSubBlock = (PFREE_SUB_BLOCK) (tBuf+REG_BLOCK_SIZE+REG_HEAP_BLOCK_DATA_OFFSET+sizeof(KEY_BLOCK));
   
-  CmiCreateDefaultHeaderBlock(HeaderBlock);  
+  CmiCreateDefaultHeaderBlock(HeaderBlock);
   CmiCreateDefaultHeapBlock(HeapBlock);
   CmiCreateDefaultRootKeyBlock(RootKeyBlock);
   
   HeapBlock->BlockOffset = 0; //First block.
   HeaderBlock->RootKeyBlock = REG_HEAP_BLOCK_DATA_OFFSET; //Offset to root key block.
   //The rest of the block is free
-  FreeSubBlock->SubBlockSize = REG_BLOCK_SIZE-(REG_HEAP_BLOCK_DATA_OFFSET+sizeof(KEY_BLOCK)); 
+  FreeSubBlock->SubBlockSize = REG_BLOCK_SIZE-(REG_HEAP_BLOCK_DATA_OFFSET+sizeof(KEY_BLOCK));
   
-  Status = ZwWriteFile( FileHandle, NULL, NULL, NULL, 
+  Status = ZwWriteFile( FileHandle, NULL, NULL, NULL,
                         &IoStatusBlock, tBuf, 2*REG_BLOCK_SIZE, 0, NULL );
-                        
+  
   ExFreePool( tBuf );
   return Status;
 }
@@ -115,8 +115,12 @@ CmiCreateRegistry(PWSTR  Filename)
  DWORD  FreeOffset;
  int i, j;
  BLOCK_OFFSET BlockOffset;
-
+DPRINT1("CmiCreateRegistry() Filename '%S'\n", Filename);
   RegistryFile = ExAllocatePool(NonPagedPool, sizeof(REGISTRY_FILE));
+CHECKPOINT1;
+  if (RegistryFile == NULL)
+    return NULL;
+CHECKPOINT1;
   if (Filename != NULL)
    {
      UNICODE_STRING TmpFileName;
@@ -136,7 +140,7 @@ CmiCreateRegistry(PWSTR  Filename)
                              NULL,
                              NULL);
 
-      Status = NtCreateFile( &FileHandle, 
+      Status = NtCreateFile( &FileHandle,
                          FILE_ALL_ACCESS,
                          &ObjectAttributes,
                          &IoSB,
@@ -176,8 +180,21 @@ CmiCreateRegistry(PWSTR  Filename)
                       RegistryFile->HeaderBlock, 
                       sizeof(HEADER_BLOCK), 
                       &fileOffset, 0);
-      ZwQueryInformationFile(FileHandle,&IoSB,&fsi
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(RegistryFile->Filename);
+	  RegistryFile->Filename = NULL;
+	  return NULL;
+        }
+
+      Status = ZwQueryInformationFile(FileHandle,&IoSB,&fsi
 		,sizeof(fsi),FileStandardInformation);
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(RegistryFile->Filename);
+	  RegistryFile->Filename = NULL;
+	  return NULL;
+        }
       RegistryFile->FileSize = fsi.EndOfFile.u.LowPart;
       RegistryFile->BlockListSize = RegistryFile->FileSize / 4096 -1;
 //      RegistryFile->NumberOfBlocks = RegistryFile->BlockListSize;
@@ -196,7 +213,7 @@ CmiCreateRegistry(PWSTR  Filename)
 	ZwClose(FileHandle);
 	return NULL;
       }
-      Status = ZwReadFile(FileHandle, 
+      Status = ZwReadFile(FileHandle,
                       0, 0, 0, 0, 
                       RegistryFile->BlockList [0],
                       RegistryFile->FileSize-4096,
@@ -269,7 +286,7 @@ CmiCreateRegistry(PWSTR  Filename)
   return  RegistryFile;
 }
 
-ULONG  
+ULONG
 CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
                     PKEY_BLOCK  KeyBlock)
 {
