@@ -1,4 +1,4 @@
-/* $Id: disk.c,v 1.5 2002/02/03 20:21:45 ekohl Exp $
+/* $Id: disk.c,v 1.6 2002/03/01 23:18:35 ekohl Exp $
  *
  */
 
@@ -16,11 +16,14 @@
 #define VERSION "V0.0.1"
 
 
-typedef struct _DISK_DEVICE_EXTENSION
+typedef struct _DISK_DATA
 {
-  ULONG Dummy;
-} DISK_DEVICE_EXTENSION, *PDISK_DEVICE_EXTENSION;
-
+  ULONG HiddenSectors;
+  ULONG PartitionNumber;
+  UCHAR PartitionType;
+  BOOLEAN BootIndicator;
+  BOOLEAN DriveNotReady;
+} DISK_DATA, *PDISK_DATA;
 
 
 BOOLEAN STDCALL
@@ -94,11 +97,11 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 		sizeof(CLASS_INIT_DATA));
 
   InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
-  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION) + sizeof(DISK_DEVICE_EXTENSION);
+  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION) + sizeof(DISK_DATA);
   InitData.DeviceType = FILE_DEVICE_DISK;
   InitData.DeviceCharacteristics = 0;
 
-  InitData.ClassError = NULL;				// DiskClassProcessError;
+  InitData.ClassError = NULL;	// DiskClassProcessError;
   InitData.ClassReadWriteVerification = DiskClassCheckReadWrite;
   InitData.ClassFindDeviceCallBack = DiskClassCheckDevice;
   InitData.ClassFindDevices = DiskClassFindDevices;
@@ -334,7 +337,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
   HANDLE Handle;
   PPARTITION_INFORMATION PartitionEntry;
-  PDISK_DEVICE_EXTENSION DiskData;
+  PDISK_DATA DiskData;
   ULONG PartitionNumber;
   NTSTATUS Status;
 
@@ -435,6 +438,10 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->TargetId = InquiryData->TargetId;
   DiskDeviceExtension->Lun = InquiryData->Lun;
 
+  /* zero-out disk data */
+  DiskData = (PDISK_DATA)(DiskDeviceExtension + 1);
+  RtlZeroMemory(DiskData,
+		sizeof(DISK_DATA));
 
   /* Get disk geometry */
   DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
@@ -573,6 +580,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->LockCount = 0;
 	      PartitionDeviceExtension->DeviceNumber = DiskNumber;
 	      PartitionDeviceExtension->PortDeviceObject = PortDeviceObject;
+	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
 
 	  /* FIXME: Not yet! Will cause pointer corruption! */
 //	  PartitionDeviceExtension->PortCapabilities = PortCapabilities;
@@ -585,6 +593,13 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->PathId = InquiryData->PathId;
 	      PartitionDeviceExtension->TargetId = InquiryData->TargetId;
 	      PartitionDeviceExtension->Lun = InquiryData->Lun;
+
+	      DiskData = (PDISK_DATA)(PartitionDeviceExtension + 1);
+	      DiskData->PartitionType = PartitionEntry->PartitionType;
+	      DiskData->PartitionNumber = PartitionNumber + 1;
+	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
+	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
+	      DiskData->DriveNotReady = FALSE;
 
 
 	      /* assign arc name */
@@ -614,7 +629,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	    }
 	  else
 	    {
-	      DPRINT1("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
+	      DPRINT1("ScsiClassCreateDeviceObject() failed to create partition device object (Status %x)\n", Status);
 
 	      break;
 	    }
@@ -657,6 +672,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
   ULONG ControlCode, InputLength, OutputLength;
+  PDISK_DATA DiskData;
   NTSTATUS Status;
 
   DPRINT1("DiskClassDeviceControl() called!\n");
@@ -667,11 +683,13 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
   DeviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
+  DiskData = (PDISK_DATA)(DeviceExtension + 1);
 
   /* A huge switch statement in a Windows program?! who would have thought? */
   switch (ControlCode)
     {
       case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+	DPRINT1("IOCTL_DISK_GET_DRIVE_GEOMETRY\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
 	    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
@@ -706,6 +724,39 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case IOCTL_DISK_GET_PARTITION_INFO:
+	DPRINT1("IOCTL_DISK_GET_PARTITION_INFO\n");
+	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
+	    sizeof(PARTITION_INFORMATION))
+	  {
+	    Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+	    Irp->IoStatus.Information = 0;
+	  }
+	else if (DiskData->PartitionNumber == 0)
+	  {
+	    Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+	    Irp->IoStatus.Information = 0;
+	  }
+	else
+	  {
+	    PPARTITION_INFORMATION PartitionInfo;
+
+	    PartitionInfo = (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+	    PartitionInfo->PartitionType = DiskData->PartitionType;
+	    PartitionInfo->StartingOffset = DeviceExtension->StartingOffset;
+	    PartitionInfo->PartitionLength = DeviceExtension->PartitionLength;
+	    PartitionInfo->HiddenSectors = DiskData->HiddenSectors;
+	    PartitionInfo->PartitionNumber = DiskData->PartitionNumber;
+	    PartitionInfo->BootIndicator = DiskData->BootIndicator;
+	    PartitionInfo->RewritePartition = FALSE;
+	    PartitionInfo->RecognizedPartition =
+	      IsRecognizedPartition(DiskData->PartitionType);
+
+	    Irp->IoStatus.Status = STATUS_SUCCESS;
+	    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+	  }
+	break;
+
       case IOCTL_DISK_SET_PARTITION_INFO:
       case IOCTL_DISK_GET_DRIVE_LAYOUT:
       case IOCTL_DISK_SET_DRIVE_LAYOUT:
