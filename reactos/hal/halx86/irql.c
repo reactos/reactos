@@ -148,6 +148,8 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
     */
    if (CurrentIrql == PASSIVE_LEVEL)
      {
+       HiSetCurrentPICMask(0);
+       __asm__("sti");
        if (DpcQueueSize > 0)
 	 {
 	   CurrentIrql = DISPATCH_LEVEL;
