@@ -1,9 +1,9 @@
-/* $Id: psmgr.c,v 1.10 2001/05/01 23:08:20 chorns Exp $
+/* $Id: psmgr.c,v 1.11 2001/07/12 17:21:06 ekohl Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
  * FILE:                    ntoskrnl/ps/psmgr.c
- * PURPOSE:                 Process managment
+ * PURPOSE:                 Process management
  * PROGRAMMER:              David Welch (welch@mcmail.com)
  */
 

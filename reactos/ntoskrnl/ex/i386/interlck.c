@@ -1,13 +1,80 @@
-/* $Id: interlck.c,v 1.9 2001/07/06 21:30:33 ekohl Exp $
+/* $Id: interlck.c,v 1.1 2001/07/12 17:17:56 ekohl Exp $
  *
- * reactos/ntoskrnl/rtl/interlck.c
+ * reactos/ntoskrnl/ex/i386/interlck.c
  *
  */
-#include <reactos/config.h>
-#include <ntos.h>
-#include <internal/debug.h>
+#include <ddk/ntddk.h>
 
-#define USE_FASTCALL
+
+INTERLOCKED_RESULT FASTCALL
+Exfi386InterlockedIncrementLong(IN PLONG Addend);
+
+__asm__("\n\t.global @Exfi386InterlockedIncrementLong@4\n\t"
+	"@Exfi386InterlockedIncrementLong@4:\n\t"
+	"addl $1,(%ecx)\n\t"
+	"lahf\n\t"
+	"andl $0xC000, %eax\n\t"
+	"ret\n\t");
+
+
+INTERLOCKED_RESULT FASTCALL
+Exfi386InterlockedDecrementLong(IN PLONG Addend);
+
+__asm__("\n\t.global @Exfi386InterlockedDecrementLong@4\n\t"
+	"@Exfi386InterlockedDecrementLong@4:\n\t"
+	"subl $1,(%ecx)\n\t"
+	"lahf\n\t"
+	"andl $0xC000, %eax\n\t"
+	"ret\n\t");
+
+
+ULONG FASTCALL
+Exfi386InterlockedExchangeUlong(IN PULONG Target,
+				IN ULONG Value);
+
+__asm__("\n\t.global @Exfi386InterlockedExchangeUlong@8\n\t"
+	"@Exfi386InterlockedExchangeUlong@8:\n\t"
+	"movl (%ecx),%eax\n"
+	"xchgl %edx,(%ecx)\n\t"
+	"ret\n\t");
+
+
+
+INTERLOCKED_RESULT STDCALL
+Exi386InterlockedIncrementLong(IN PLONG Addend);
+
+__asm__("\n\t.global _Exi386InterlockedIncrementLong@4\n\t"
+	"_Exi386InterlockedIncrementLong@4:\n\t"
+	"movl 4(%esp),%eax\n\t"
+	"addl $1,(%eax)\n\t"
+	"lahf\n\t"
+	"andl $0xC000, %eax\n\t"
+	"ret $4\n\t");
+
+
+INTERLOCKED_RESULT STDCALL
+Exi386InterlockedDecrementLong(IN PLONG Addend);
+
+__asm__("\n\t.global _Exi386InterlockedDecrementLong@4\n\t"
+	"_Exi386InterlockedDecrementLong@4:\n\t"
+	"movl 4(%esp),%eax\n\t"
+	"subl $1,(%eax)\n\t"
+	"lahf\n\t"
+	"andl $0xC000, %eax\n\t"
+	"ret $4\n\t");
+
+
+ULONG STDCALL
+Exi386InterlockedExchangeUlong(IN PULONG Target,
+			       IN ULONG Value);
+
+__asm__("\n\t.global _Exi386InterlockedExchangeUlong@8\n\t"
+	"_Exi386InterlockedExchangeUlong@8:\n\t"
+	"movl 4(%esp),%edx\n\t"
+	"movl 8(%esp),%eax\n\t"
+	"xchgl %eax,(%edx)\n\t"
+	"ret $8\n\t");
+
 
 /**********************************************************************
  * FASTCALL: @InterlockedIncrement@4
@@ -18,7 +85,7 @@ InterlockedIncrement(PLONG Addend);
 /*
  * FUNCTION: Increments a caller supplied variable of type LONG as an 
  * atomic operation
- * ARGUMENTS;
+ * ARGUMENTS:
  *     Addend = Points to a variable whose value is to be increment
  * RETURNS: The incremented value
  */

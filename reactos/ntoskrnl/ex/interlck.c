@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.6 2000/12/23 02:37:39 dwelch Exp $
+/* $Id: interlck.c,v 1.7 2001/07/12 17:18:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -180,5 +180,37 @@ ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
 	return oldval;
 }
 
+ULONG FASTCALL
+ExfInterlockedAddUlong(PULONG Addend,
+		       ULONG Increment,
+		       PKSPIN_LOCK Lock)
+/*
+ * ExInterlockedAddUlong adds an unsigned long value to a given unsigned
+ * integer as an atomic operation.
+ * 
+ * ADDEND = Points to an unsigned long integer whose value is to be adjusted
+ * by the Increment value.
+ * 
+ * INCREMENT = Is an unsigned long integer to be added.
+ * 
+ * LOCK = Points to a spinlock to be used to synchronize access to ADDEND.
+ * 
+ * Returns: 
+ * 
+ * The original value of the unsigned integer pointed to by ADDEND.
+ */
+{
+  KIRQL oldlvl;
+  ULONG oldval;
+
+  KeAcquireSpinLock (Lock, &oldlvl);
+
+  oldval = *Addend;
+  *Addend += Increment;
+
+  KeReleaseSpinLock (Lock, oldlvl);
+
+  return oldval;
+}
 
 /* EOF */

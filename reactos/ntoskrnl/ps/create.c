@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.34 2001/07/04 20:40:21 chorns Exp $
+/* $Id: create.c,v 1.35 2001/07/12 17:21:05 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -406,10 +406,11 @@ PsInitializeThread(HANDLE ProcessHandle,
 }
 
 
-static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
-			     PNT_TEB *TebPtr,
-			     PETHREAD Thread,
-			     PINITIAL_TEB InitialTeb)
+static NTSTATUS
+PsCreateTeb(HANDLE ProcessHandle,
+	    PNT_TEB *TebPtr,
+	    PETHREAD Thread,
+	    PINITIAL_TEB InitialTeb)
 {
    MEMORY_BASIC_INFORMATION Info;
    NTSTATUS Status;
@@ -484,6 +485,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
    /* more initialization */
    Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
    Teb.Cid.UniqueProcess = Thread->Cid.UniqueProcess;
+   Teb.CurrentLocale = PsDefaultThreadLocaleId;
    
    DPRINT("sizeof(NT_TEB) %x\n", sizeof(NT_TEB));
    

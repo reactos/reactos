@@ -7,6 +7,9 @@ include hal/x86/sources
 
 OBJECTS_BOOT := ke/i386/multiboot.o
 
+OBJECTS_EX_I386 := \
+	ex/i386/interlck.o
+
 OBJECTS_KE_I386 := \
 	ke/i386/exp.o \
 	ke/i386/irq.o \
@@ -20,7 +23,7 @@ OBJECTS_KE_I386 := \
 	ke/i386/v86m.o \
 	ke/i386/v86m_sup.o \
 	ke/i386/bios.o \
-  ke/i386/i386-mcount.o \
+	ke/i386/i386-mcount.o \
 	ke/i386/gdt.o \
 	ke/i386/idt.o \
 	ke/i386/ldt.o \
@@ -34,4 +37,4 @@ OBJECTS_MM_I386 := \
 	mm/i386/page.o \
 	mm/i386/pfault.o
 
-OBJECTS_ARCH = $(OBJECTS_BOOT) $(OBJECTS_KE_I386) $(OBJECTS_MM_I386)
+OBJECTS_ARCH = $(OBJECTS_BOOT) $(OBJECTS_EX_I386) $(OBJECTS_KE_I386) $(OBJECTS_MM_I386)

@@ -713,6 +713,52 @@ ExInitializePagedLookasideList (
 	);
 
 
+ULONG
+FASTCALL
+ExfInterlockedAddUlong (
+	IN	PULONG		Addend,
+	IN	ULONG		Increment,
+	IN	PKSPIN_LOCK	Lock
+	);
+
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong (
+	IN	PLONG	Addend
+	);
+
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong (
+	IN	PLONG	Addend
+	);
+
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong (
+	IN	PULONG	Target,
+	IN	ULONG	Value
+	);
+
+INTERLOCKED_RESULT
+STDCALL
+Exi386InterlockedIncrementLong (
+	IN	PLONG	Addend
+	);
+
+INTERLOCKED_RESULT
+STDCALL
+Exi386InterlockedDecrementLong (
+	IN	PLONG	Addend
+	);
+
+ULONG
+STDCALL
+Exi386InterlockedExchangeUlong (
+	IN	PULONG	Target,
+	IN	ULONG	Value
+	);
+
 /*
 LONG
 FASTCALL

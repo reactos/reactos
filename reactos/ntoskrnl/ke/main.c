@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.99 2001/06/29 21:08:50 ea Exp $
+/* $Id: main.c,v 1.100 2001/07/12 17:23:42 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -645,6 +645,8 @@ ExpInitializeExecutive(VOID)
   
 
   CmInitializeRegistry2();
+
+  PiInitDefaultLocale();
 
   /*
    * Start the motherboard enumerator (the HAL)

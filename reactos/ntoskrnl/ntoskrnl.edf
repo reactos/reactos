@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.96 2001/07/06 21:30:59 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.97 2001/07/12 17:17:07 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -86,18 +86,18 @@ ExSystemTimeToLocalTime=ExSystemTimeToLocalTime@8
 ExTryToAcquireResourceExclusiveLite=ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback=ExUnregisterCallback@4
 ExWindowStationObjectType DATA
-;ExfInterlockedAddUlong
+ExfInterlockedAddUlong=@ExfInterlockedAddUlong@12
 ;ExfInterlockedInsertHeadList
 ;ExfInterlockedInsertTailList
 ;ExfInterlockedPopEntryList
 ;ExfInterlockedPushEntryList
 ;ExfInterlockedRemoveHeadList
-;Exfi386InterlockedDecrementLong
-;Exfi386InterlockedExchangeUlong
-;Exfi386InterlockedIncrementLong
-;Exi386InterlockedDecrementLong
-;Exi386InterlockedExchangeUlong
-;Exi386InterlockedIncrementLong
+Exfi386InterlockedDecrementLong=@Exfi386InterlockedDecrementLong@4
+Exfi386InterlockedExchangeUlong=@Exfi386InterlockedExchangeUlong@8
+Exfi386InterlockedIncrementLong=@Exfi386InterlockedIncrementLong@4
+Exi386InterlockedDecrementLong=Exi386InterlockedDecrementLong@4
+Exi386InterlockedExchangeUlong=Exi386InterlockedExchangeUlong@8
+Exi386InterlockedIncrementLong=Exi386InterlockedIncrementLong@4
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
 FsRtlAddToTunnelCache=FsRtlAddToTunnelCache@32

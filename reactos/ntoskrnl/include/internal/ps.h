@@ -95,6 +95,10 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
 
 extern HANDLE SystemProcessHandle;
 
+extern LCID PsDefaultThreadLocaleId;
+extern LCID PsDefaultSystemLocaleId;
+
+
 typedef struct _KAPC_STATE
 {
    LIST_ENTRY ApcListHead[2];
@@ -118,7 +122,7 @@ typedef struct _KTHREAD
    NT_TEB*           Teb;                 /* 20 */
    
    /* Pointer to the thread's TLS array */
-   PVOID             TlsArray;            /* 24 */      
+   PVOID             TlsArray;            /* 24 */
    PVOID             KernelStack;         /* 28 */
    UCHAR             DebugActive;         /* 2C */
    
@@ -443,7 +447,7 @@ struct _EPROCESS
   PVOID                 SectionBaseAddress;
   PVOID                 QuotaBlock;
   NTSTATUS              LastThreadExitStatus;
-  PVOID                 WorkingSetWatch;         
+  PVOID                 WorkingSetWatch;
   HANDLE                InheritedFromUniqueProcessId;
   ACCESS_MASK           GrantedAccess;
   ULONG                 DefaultHardErrorProcessing;
@@ -471,12 +475,13 @@ struct _EPROCESS
    /*
     * Added by Philip Susi for list of threads in process
     */
-   LIST_ENTRY           ThreadListHead;        
+   LIST_ENTRY           ThreadListHead;
 };
 
 #define PROCESS_STATE_TERMINATED (1)
 #define PROCESS_STATE_ACTIVE     (2)
 
+VOID PiInitDefaultLocale(VOID);
 VOID PiInitProcessManager(VOID);
 VOID PiShutdownProcessManager(VOID);
 VOID PsInitThreadManagment(VOID);

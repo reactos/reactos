@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.45 2001/07/04 20:40:20 chorns Exp $
+# $Id: Makefile,v 1.46 2001/07/12 17:17:06 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -55,7 +55,7 @@ TARGETNAME := ntoskrnl
 OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
-CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror 
+CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 
@@ -96,7 +96,6 @@ OBJECTS_RTL = \
 	rtl/ctype.o \
 	rtl/error.o \
 	rtl/handle.o \
-	rtl/interlck.o \
 	rtl/largeint.o \
 	rtl/mem.o \
 	rtl/memchr.o \
@@ -216,6 +215,7 @@ OBJECTS_PS = \
 	ps/create.o \
 	ps/idle.o \
 	ps/kill.o \
+	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
 	ps/thread.o \
@@ -230,7 +230,6 @@ OBJECTS_EX = \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
-	ex/locale.o \
 	ex/lookas.o \
 	ex/napi.o \
 	ex/power.o \
