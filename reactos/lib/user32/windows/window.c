@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.93 2003/12/26 22:52:11 gvg Exp $
+/* $Id: window.c,v 1.94 2004/01/15 20:59:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1023,8 +1023,13 @@ WINBOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
-    // Untested
-    return ((HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE)) == hWndParent;
+   do 
+   {
+      hWnd = (HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE);
+   }
+   while (hWnd != NULL && hWnd != hWndParent);
+    
+   return hWnd == hWndParent;
 }
 
 
