@@ -326,7 +326,7 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
     }
 
   /* Seek back to 0 */
-  if(HwSeek(DriveInfo, 1) != STATUS_SUCCESS)
+  if(HwSeek(DriveInfo, 0) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwSeek failed; returning STATUS_IO_DEVICE_ERROR\n"));
       StopMotor(DriveInfo->ControllerInfo);

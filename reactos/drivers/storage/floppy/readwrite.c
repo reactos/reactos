@@ -458,10 +458,12 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   /*
    * Check the change line, and if it's set, return
    */
+  StartMotor(DriveInfo);
   if(HwDiskChanged(DeviceObject->DeviceExtension, &DiskChanged) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ReadWritePassive(): unable to detect disk change; Completing with STATUS_UNSUCCESSFUL\n"));
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      StopMotor(DriveInfo->ControllerInfo);
       return;
     }
       
@@ -479,11 +481,9 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 	Irp->IoStatus.Status = STATUS_NO_MEDIA_IN_DEVICE;
 
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      StopMotor(DriveInfo->ControllerInfo);
       return;
     }
-
-  /* Start the motor and set the initial data rate */
-  StartMotor(DriveInfo);
 
   /* 
    * Figure out the media type, if we don't know it already 
