@@ -705,6 +705,8 @@ static const WCHAR szCurrentVersion[] = {'S','o','f','t','w','a','r','e','\\','M
 static const WCHAR Administrative_ToolsW[] = {'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
 static const WCHAR All_Users__Application_DataW[] = {'A','l','l',' ','U','s','e','r','s','\\',
                                                      'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
+static const WCHAR All_Users__DesktopW[] = {'A','l','l',' ','U','s','e','r','s','\\',
+                                              'D','e','s','k','t','o','p','\0'};
 static const WCHAR All_Users__DocumentsW[] = {'A','l','l',' ','U','s','e','r','s','\\',
                                               'D','o','c','u','m','e','n','t','s','\0'};
 static const WCHAR All_Users__Documents__My_MusicW[] = {'A','l','l',' ','U','s','e','r','s','\\',
@@ -716,6 +718,8 @@ static const WCHAR All_Users__Documents__My_PicturesW[] = {'A','l','l',' ','U','
 static const WCHAR All_Users__Documents__My_VideoW[] = {'A','l','l',' ','U','s','e','r','s','\\',
                                                         'D','o','c','u','m','e','n','t','s','\\',
                                                         'M','y',' ','V','i','d','e','o','\0'};
+static const WCHAR All_Users__Start_MenuW[] = {'A','l','l',' ','U','s','e','r','s','\\','S','t','a','r','t',' ','M','e','n','u','\0'};
+static const WCHAR All_Users__Start_Menu__ProgramsW[] = {'A','l','l',' ','U','s','e','r','s','\\','S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\0'};
 static const WCHAR All_Users__Start_Menu__Programs__Administrative_ToolsW[] = {'A','l','l',' ','U','s','e','r','s','\\',
                                 'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\\',
                                 'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
@@ -952,13 +956,13 @@ static const CSIDL_DATA CSIDL_Data[] =
 	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	Common_Start_MenuW,
-	Start_MenuW
+	All_Users__Start_MenuW
     },
     { /* CSIDL_COMMON_PROGRAMS */
 	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	Common_ProgramsW,
-	Empty_StringW
+	All_Users__Start_Menu__ProgramsW
     },
     { /* CSIDL_COMMON_STARTUP */
 	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
@@ -970,7 +974,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	Common_DesktopW,
-	DesktopW
+	All_Users__DesktopW
     },
     { /* CSIDL_APPDATA */
 	CSIDL_MYFLAG_SHFOLDER | CSIDL_MYFLAG_RELATIVE,
