@@ -28,20 +28,13 @@ typedef struct _FILE_INFO
   struct _FILE_INFO * Next;
   struct _FILE_INFO * StatInfoListNext;
   PEXTENSION_INFO ExtInfo;
-  TCHAR FileName[256];
+  TCHAR FileName[MAX_PATH];
   DWORD LineCount;
   DWORD FunctionCount;
 } FILE_INFO, *PFILE_INFO;
 
-
+HANDLE FileHandle;
 DWORD TotalLineCount;
-PCHAR FileBuffer;
-DWORD FileBufferSize;
-CHAR Line[256];
-DWORD CurrentOffset;
-DWORD CurrentChar;
-DWORD CurrentLine;
-DWORD LineLength;
 PEXTENSION_INFO ExtInfoList;
 PFILE_INFO StatInfoList;
 
@@ -50,11 +43,6 @@ VOID
 Initialize()
 {
   TotalLineCount = 0;
-  FileBuffer = NULL;
-  FileBufferSize = 0;
-  CurrentOffset = 0;
-  CurrentLine = 0;
-  LineLength = 0;
   ExtInfoList = NULL;
   StatInfoList = NULL;
 }
@@ -171,19 +159,14 @@ AddFile(LPTSTR FileName,
 VOID
 CleanupAfterFile()
 {
-  if (FileBuffer)
-  {
-    HeapFree (GetProcessHeap(), 0, FileBuffer);
-    FileBuffer = NULL;
-  }
+  if(FileHandle != INVALID_HANDLE_VALUE)
+    CloseHandle (FileHandle);
 }
 
 
 BOOL
 LoadFile(LPTSTR FileName)
 {
-  HANDLE FileHandle;
-  DWORD BytesRead;
   LONG FileSize;
 
   FileHandle = CreateFile (FileName, // Create this file
@@ -197,84 +180,53 @@ LoadFile(LPTSTR FileName)
     return FALSE;
 
   FileSize = GetFileSize (FileHandle, NULL);
-  if (FileSize < 0)
+  if (FileSize <= 0)
   {
     CloseHandle (FileHandle);
     return FALSE;
   }
-
-  FileBufferSize = (DWORD) FileSize;
-
-  FileBuffer = (PCHAR) HeapAlloc (GetProcessHeap(), 0, FileBufferSize);
-  if (!FileBuffer)
-  {
-    CloseHandle (FileHandle);
-    return FALSE;
-  }
-
-  if (!ReadFile (FileHandle, FileBuffer, FileBufferSize, &BytesRead, NULL))
-  {
-    CloseHandle(FileHandle);
-    HeapFree (GetProcessHeap(), 0, FileBuffer);
-    FileBuffer = NULL;
-    return FALSE;
-  }
-
-  CloseHandle (FileHandle);
-
-  CurrentOffset = 0;
-  CurrentLine = 0;
-  CurrentChar = 0;
 
   return TRUE;
 }
 
 
-BOOL
-ReadLine()
-/*
- * FUNCTION: Reads the next line into the line buffer
- * RETURNS:
- *     TRUE if there is a new line, FALSE if not
- */
+DWORD
+ReadLines()
 {
-  ULONG i, j;
-  TCHAR ch;
-
-  if (CurrentOffset >= FileBufferSize)
-    return FALSE;
-
-  i = 0;
-  while ((((j = CurrentOffset + i) < FileBufferSize) && (i < sizeof (Line)) &&
-    ((ch = FileBuffer[j]) != 0x0D && (ch = FileBuffer[j]) != 0x0A)))
-  {
-    Line[i] = ch;
-    i++;
-  }
-
-  Line[i]    = '\0';
-  LineLength = i;
+  DWORD ReadBytes, LineLen, Lines = 0;
+  static TCHAR FileBuffer[1024];
+  TCHAR LastChar = _T('\0');
+  TCHAR *Current;
   
-  if ((FileBuffer[CurrentOffset + i] == 0x0D) && (FileBuffer[CurrentOffset + i + 1] == 0x0A))
-    CurrentOffset++;
-
-  CurrentOffset += i + 1;
-
-  CurrentChar = 0;
-
-  CurrentLine++;
-
-  return TRUE;
+  LineLen = 0;
+  while(ReadFile (FileHandle, FileBuffer, sizeof(FileBuffer), &ReadBytes, NULL) && ReadBytes >= sizeof(TCHAR))
+  {
+    if(ReadBytes & 0x1)
+      ReadBytes--;
+    
+    for(Current = FileBuffer; ReadBytes > 0; ReadBytes -= sizeof(TCHAR), Current++)
+    {
+      if(*Current == 0x0A && LastChar == 0x0D)
+      {
+        LastChar = _T('\0');
+        if(LineLen > 0)
+          Lines++;
+        LineLen = 0;
+      }
+      LineLen++;
+      LastChar = *Current;
+    }
+  }
+  
+  Lines += (LineLen > 0);
+  return Lines;
 }
 
 
 VOID
 DoStatisticsForFile(PFILE_INFO StatInfo)
 {
-  while (ReadLine())
-  {
-  }
-  StatInfo->LineCount = CurrentLine;
+  StatInfo->LineCount = ReadLines();
 }
 
 
@@ -400,7 +352,7 @@ ProcessDirectories(LPTSTR Path)
   HANDLE SearchHandle;
   BOOL More;
 
-	_tprintf (_T("Processing directory %s\n"), Path);
+	_tprintf (_T("Processing %s ...\n"), Path);
 
   _tcscpy (SearchPath, Path);
   _tcscat (SearchPath, _T("\\*.*"));
