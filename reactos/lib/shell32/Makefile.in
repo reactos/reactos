@@ -76,7 +76,7 @@ shell.spec.c: shell.spec version16.res
 	$(WINEBUILD) $(DEFS) $(DLLFLAGS) -o $@ --main-module $(MODULE) --res version16.res --spec $(SRCDIR)/shell.spec
 
 authors.c: $(TOPSRCDIR)/AUTHORS
-	(echo 'const char * const SHELL_Authors[] = {' && \
+	(LANG=C; echo 'const char * const SHELL_Authors[] = {' && \
 	 sed -e '1,2d' -e 's/\(.*\)/  \"\1\",/' $(TOPSRCDIR)/AUTHORS && \
 	 echo '  0 };') >$@ || ($(RM) $@ && false)
 
