@@ -329,11 +329,6 @@ PiTerminateProcess(PEPROCESS Process,
    }
 
    ObDeleteHandleTable(Process);
-   if(Process->UniqueProcessId != NULL)
-   {
-     PsDeleteCidHandle(Process->UniqueProcessId, PsProcessType);
-   }
-
    if (Process != CurrentProcess)
    {
       KeDetachProcess();

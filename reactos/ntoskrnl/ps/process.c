@@ -243,15 +243,23 @@ NtOpenProcessTokenEx(
 			     &hToken);
      ObDereferenceObject(Token);
 
-     _SEH_TRY
+     if (NT_SUCCESS(Status))
      {
-       *TokenHandle = hToken;
+
+       _SEH_TRY
+       {
+         *TokenHandle = hToken;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+       if (!NT_SUCCESS(Status))
+       {
+         NtClose(hToken);
+       }
      }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
    }
    
    return Status;
@@ -516,6 +524,11 @@ PiDeleteProcessWorker(PVOID pContext)
   if (CurrentProcess != Process)
     {
       KeDetachProcess();
+    }
+
+  if(Process->UniqueProcessId != NULL)
+    {
+      PsDeleteCidHandle(Process->UniqueProcessId, PsProcessType);
     }
 
   MmReleaseMmInfo(Process);
@@ -1371,7 +1384,6 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	DPRINT("NtOpenProcess() = STATUS_UNSUCCESSFUL\n");
 	return(STATUS_UNSUCCESSFUL);
      }
-   return(STATUS_UNSUCCESSFUL);
 }
 
 
