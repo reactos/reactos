@@ -24,7 +24,14 @@
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 
+#include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
+#include <win32k/win32k.h>
+#include <windows.h>
+#include <internal/safe.h>
 #include <include/clipboard.h>
+#include <include/cleanup.h>
+#include <include/error.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -32,6 +39,13 @@
 PW32THREAD ClipboardThread;
 HWND ClipboardWindow;
 #endif
+
+INT FASTCALL
+IntGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
 
 UINT FASTCALL
 IntEnumClipboardFormats(UINT format)
@@ -118,8 +132,70 @@ INT STDCALL
 NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
    INT cchMaxCount)
 {
-   UNIMPLEMENTED
-   return 0;
+  INT Ret;
+  NTSTATUS Status;
+  PWSTR Buf;
+  UNICODE_STRING SafeFormatName, BufFormatName;
+  
+  if((cchMaxCount < 1) || !FormatName)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  /* copy the FormatName UNICODE_STRING structure */
+  Status = MmCopyFromCaller(&SafeFormatName, FormatName, sizeof(UNICODE_STRING));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  /* Allocate memory for the string */
+  Buf = ExAllocatePool(NonPagedPool, cchMaxCount * sizeof(WCHAR));
+  if(!Buf)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+  
+  /* Setup internal unicode string */
+  BufFormatName.Length = 0;
+  BufFormatName.MaximumLength = min(cchMaxCount * sizeof(WCHAR), SafeFormatName.MaximumLength);
+  BufFormatName.Buffer = Buf;
+  
+  if(BufFormatName.MaximumLength < sizeof(WCHAR))
+  {
+    ExFreePool(Buf);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  Ret = IntGetClipboardFormatName(format, &BufFormatName);
+  
+  /* copy the UNICODE_STRING buffer back to the user */
+  Status = MmCopyToCaller(SafeFormatName.Buffer, BufFormatName.Buffer, BufFormatName.MaximumLength);
+  if(!NT_SUCCESS(Status))
+  {
+    ExFreePool(Buf);
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  BufFormatName.MaximumLength = SafeFormatName.MaximumLength;
+  BufFormatName.Buffer = SafeFormatName.Buffer;
+  
+  /* update the UNICODE_STRING structure (only the Length member should change) */
+  Status = MmCopyToCaller(FormatName, &BufFormatName, sizeof(UNICODE_STRING));
+  if(!NT_SUCCESS(Status))
+  {
+    ExFreePool(Buf);
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  ExFreePool(Buf);
+  return Ret;
 }
 
 HWND STDCALL
