@@ -480,10 +480,9 @@ VOID
 MiFreeInitMemory(VOID)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                    (PVOID)&_init_start__,
-                    PAGE_ROUND_UP((ULONG)&_init_end__) - (ULONG)&_init_start__,
-                    MiFreeInitMemoryPage,
-                    NULL);
+   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                         (PVOID)&_init_start__,
+                         MiFreeInitMemoryPage,
+                         NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }

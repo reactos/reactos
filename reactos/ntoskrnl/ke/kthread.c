@@ -90,11 +90,10 @@ KeReleaseThread(PKTHREAD Thread)
   if (Thread->StackLimit != (ULONG_PTR)&init_stack)
     {       
       MmLockAddressSpace(MmGetKernelAddressSpace());
-      MmFreeMemoryArea(MmGetKernelAddressSpace(),
-		       (PVOID)Thread->StackLimit,
-		       MM_STACK_SIZE,
-		       KeFreeStackPage,
-		       NULL);
+      MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                            (PVOID)Thread->StackLimit,
+                            KeFreeStackPage,
+                            NULL);
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
     }
   Thread->StackLimit = 0;

@@ -35,331 +35,590 @@
 
 #define TAG_MAREA   TAG('M', 'A', 'R', 'E')
 
+/* #define VALIDATE_MEMORY_AREAS */
+
 /* FUNCTIONS *****************************************************************/
 
-VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead)
+/**
+ * @name MmIterateFirstNode
+ *
+ * @param Node
+ *        Head node of the MEMORY_AREA tree.
+ *
+ * @return The leftmost MEMORY_AREA node (ie. the one with lowest
+ *         address)
+ */
+
+static PMEMORY_AREA MmIterateFirstNode(PMEMORY_AREA Node)
 {
-   PLIST_ENTRY current_entry;
-   MEMORY_AREA* current;
+   while (Node->LeftChild != NULL)
+      Node = Node->LeftChild;
+
+   return Node;
+}
+
+/**
+ * @name MmIterateNextNode
+ *
+ * @param Node
+ *        Current node in the tree.
+ *
+ * @return Next node in the tree (sorted by address).
+ */
+
+static PMEMORY_AREA MmIterateNextNode(PMEMORY_AREA Node)
+{
+   if (Node->RightChild != NULL)
+   {
+      Node = Node->RightChild;
+      while (Node->LeftChild != NULL)
+         Node = Node->LeftChild;
+   }
+   else
+   {
+      PMEMORY_AREA TempNode = NULL;
+ 
+      do
+      {
+         /* Check if we're at the end of tree. */
+         if (Node->Parent == NULL)
+            return NULL;
+ 
+         TempNode = Node;
+         Node = Node->Parent;
+      }
+      while (TempNode == Node->RightChild);
+   }
+   return Node;
+}
+
+/**
+ * @name MmIterateFirstNode
+ *
+ * @param Node
+ *        Head node of the MEMORY_AREA tree.
+ *
+ * @return The rightmost MEMORY_AREA node (ie. the one with highest
+ *         address)
+ */
+
+static PMEMORY_AREA MmIterateLastNode(PMEMORY_AREA Node)
+{
+   while (Node->RightChild != NULL)
+      Node = Node->RightChild;
+
+   return Node;
+}
+
+/**
+ * @name MmIterateNextNode
+ *
+ * @param Node
+ *        Current node in the tree.
+ *
+ * @return Previous node in the tree (sorted by address).
+ */
+
+static PMEMORY_AREA MmIteratePrevNode(PMEMORY_AREA Node)
+{
+   if (Node->LeftChild != NULL)
+   {
+      Node = Node->LeftChild;
+      while (Node->RightChild != NULL)
+         Node = Node->RightChild;
+   }
+   else
+   {
+      PMEMORY_AREA TempNode = NULL;
+ 
+      do
+      {
+         /* Check if we're at the end of tree. */
+         if (Node->Parent == NULL)
+            return NULL;
+ 
+         TempNode = Node;
+         Node = Node->Parent;
+      }
+      while (TempNode == Node->LeftChild);
+   }
+   return Node;
+}
+
+#ifdef VALIDATE_MEMORY_AREAS
+static VOID MmVerifyMemoryAreas(PMADDRESS_SPACE AddressSpace)
+{
+   PMEMORY_AREA Node;
+
+   ASSERT(AddressSpace != NULL);
+   
+   /* Special case for empty tree. */
+   if (AddressSpace->MemoryAreaRoot == NULL)
+      return;
+
+   /* Traverse the tree from left to right. */
+   for (Node = MmIterateFirstNode(AddressSpace->MemoryAreaRoot);
+        Node != NULL;
+        Node = MmIterateNextNode(Node))
+   {
+      /* FiN: The starting address can be NULL if someone explicitely asks
+       * for NULL address. */
+      ASSERT(Node->StartingAddress >= AddressSpace->LowestAddress ||
+             Node->StartingAddress == NULL);
+      ASSERT(Node->EndingAddress >= Node->StartingAddress);
+   }
+}
+#else
+#define MmVerifyMemoryAreas(x) 
+#endif
+
+VOID STDCALL
+MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
+{
+   PMEMORY_AREA Node;
 
    DbgPrint("MmDumpMemoryAreas()\n");
+   
+   /* Special case for empty tree. */
+   if (AddressSpace->MemoryAreaRoot == NULL)
+      return;
 
-   current_entry = ListHead->Flink;
-   while (current_entry!=ListHead)
+   /* Traverse the tree from left to right. */
+   for (Node = MmIterateFirstNode(AddressSpace->MemoryAreaRoot);
+        Node != NULL;
+        Node = MmIterateNextNode(Node))
    {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      DbgPrint("Base %x Length %x End %x Attributes %x Flink %x\n",
-               current->BaseAddress,current->Length,
-               (char*)current->BaseAddress+current->Length,current->Attributes,
-               current->Entry.Flink);
-      current_entry = current_entry->Flink;
+      DbgPrint("Start %x End %x Attributes %x\n",
+               Node->StartingAddress, Node->EndingAddress,
+               Node->Attributes);
    }
+
    DbgPrint("Finished MmDumpMemoryAreas()\n");
 }
 
-MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
-                                       PVOID Address)
+PMEMORY_AREA STDCALL
+MmOpenMemoryAreaByAddress(
+   PMADDRESS_SPACE AddressSpace,
+   PVOID Address)
 {
-   PLIST_ENTRY current_entry;
-   MEMORY_AREA* current;
-   PLIST_ENTRY previous_entry;
+   PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
 
    DPRINT("MmOpenMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
-          AddressSpace, Address);
+           AddressSpace, Address);
 
-   previous_entry = &AddressSpace->MAreaListHead;
-   current_entry = AddressSpace->MAreaListHead.Flink;
-   while (current_entry != &AddressSpace->MAreaListHead)
+   if (!(KdDebugState & KD_DEBUG_SCREEN))
+      MmVerifyMemoryAreas(AddressSpace);
+
+   while (Node != NULL)
    {
-      current = CONTAINING_RECORD(current_entry,
-                                  MEMORY_AREA,
-                                  Entry);
-      ASSERT(current_entry->Blink->Flink == current_entry);
-      ASSERT(current_entry->Flink->Blink == current_entry);
-      ASSERT(previous_entry->Flink == current_entry);
-      if (current->BaseAddress <= Address &&
-            (PVOID)((char*)current->BaseAddress + current->Length) > Address)
+      if (Address < Node->StartingAddress)
+         Node = Node->LeftChild;
+      else if (Address >= Node->EndingAddress)
+         Node = Node->RightChild;
+      else
       {
-         DPRINT("%s() = %x\n",__FUNCTION__,current);
-         return(current);
+         DPRINT("MmOpenMemoryAreaByAddress(%x): %x [%x - %x]\n",
+                Address, Node, Node->StartingAddress, Node->EndingAddress);
+         return Node;
       }
-      if (current->BaseAddress > Address)
-      {
-         DPRINT("%s() = NULL\n",__FUNCTION__);
-         return(NULL);
-      }
-      previous_entry = current_entry;
-      current_entry = current_entry->Flink;
    }
-   DPRINT("%s() = NULL\n",__FUNCTION__);
-   return(NULL);
+
+   DPRINT("MmOpenMemoryAreaByAddress(%x): 0\n", Address);
+   return NULL;
 }
 
-MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace,
-                                      PVOID Address,
-                                      ULONG Length)
+PMEMORY_AREA STDCALL
+MmOpenMemoryAreaByRegion(
+   PMADDRESS_SPACE AddressSpace,
+   PVOID Address,
+   ULONG_PTR Length)
 {
-   PLIST_ENTRY current_entry;
-   MEMORY_AREA* current;
-   ULONG Extent;
+   PMEMORY_AREA Node;
+   PVOID Extent = (PVOID)((ULONG_PTR)Address + Length);
 
-   DPRINT("MmOpenMemoryByRegion(AddressSpace %x, Address %x, Length %x)\n",
-          AddressSpace, Address, Length);
+   MmVerifyMemoryAreas(AddressSpace);
 
-   current_entry = AddressSpace->MAreaListHead.Flink;
-   while (current_entry != &AddressSpace->MAreaListHead)
+   /* Special case for empty tree. */
+   if (AddressSpace->MemoryAreaRoot == NULL)
+      return NULL;
+
+   /* Traverse the tree from left to right. */
+   for (Node = MmIterateFirstNode(AddressSpace->MemoryAreaRoot);
+        Node != NULL;
+        Node = MmIterateNextNode(Node))
    {
-      current = CONTAINING_RECORD(current_entry,
-                                  MEMORY_AREA,
-                                  Entry);
-      DPRINT("current->BaseAddress %x current->Length %x\n",
-             current->BaseAddress,current->Length);
-      if (current->BaseAddress >= Address &&
-            current->BaseAddress < (PVOID)((char*)Address+Length))
+      if (Node->StartingAddress >= Address &&
+          Node->StartingAddress < Extent)
       {
-         DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
-                current);
-         return(current);
+         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+                Address, Address + Length, Node->StartingAddress,
+                Node->EndingAddress);
+         return Node;
       }
-      Extent = (ULONG)current->BaseAddress + current->Length;
-      if (Extent > (ULONG)Address &&
-            Extent < (ULONG)((char*)Address+Length))
+      if (Node->EndingAddress > Address &&
+          Node->EndingAddress < Extent)
       {
-         DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
-                current);
-         return(current);
+         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+                Address, Address + Length, Node->StartingAddress,
+                Node->EndingAddress);
+         return Node;
       }
-      if (current->BaseAddress <= Address &&
-            Extent >= (ULONG)((char*)Address+Length))
+      if (Node->StartingAddress <= Address &&
+          Node->EndingAddress >= Extent)
       {
-         DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
-                current);
-         return(current);
+         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+                Address, Address + Length, Node->StartingAddress,
+                Node->EndingAddress);
+         return Node;
       }
-      if (current->BaseAddress >= (PVOID)((char*)Address+Length))
+      if (Node->StartingAddress >= Extent)
       {
-         DPRINT("Finished MmOpenMemoryAreaByRegion()= NULL\n",0);
-         return(NULL);
+         DPRINT("Finished MmOpenMemoryAreaByRegion() = NULL\n");
+         return NULL;
       }
-      current_entry = current_entry->Flink;
    }
-   DPRINT("Finished MmOpenMemoryAreaByRegion() = NULL\n",0);
-   return(NULL);
+
+   return NULL;
 }
 
-static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
-                               MEMORY_AREA* marea)
+/*
+ * @name MmCompressHelper
+ *
+ * This is helper of MmRebalanceTree. Performs a compression transformation
+ * count times, starting at root. 
+ */
+
+static VOID
+MmCompressHelper(
+   PMADDRESS_SPACE AddressSpace,
+   ULONG Count) 
 {
-   PLIST_ENTRY ListHead;
-   PLIST_ENTRY current_entry;
-   PLIST_ENTRY inserted_entry = &marea->Entry;
-   MEMORY_AREA* current;
-   MEMORY_AREA* next;
+   PMEMORY_AREA Root = NULL;
+   PMEMORY_AREA Red = AddressSpace->MemoryAreaRoot;
+   PMEMORY_AREA Black = Red->LeftChild;
 
-   DPRINT("MmInsertMemoryArea(marea %x)\n", marea);
-   DPRINT("marea->BaseAddress %x\n", marea->BaseAddress);
-   DPRINT("marea->Length %x\n", marea->Length);
-
-   ListHead = &AddressSpace->MAreaListHead;
-
-   current_entry = ListHead->Flink;
-   if (IsListEmpty(ListHead))
+   while (Count--)
    {
-      InsertHeadList(ListHead,&marea->Entry);
+      if (Root)
+         Root->LeftChild = Black;
+      else
+         AddressSpace->MemoryAreaRoot = Black;
+      Black->Parent = Root;
+      Red->LeftChild = Black->RightChild;
+      if (Black->RightChild)
+         Black->RightChild->Parent = Red;
+      Black->RightChild = Red;
+      Red->Parent = Black;
+      Root = Black;
+
+      if (Count)
+      {
+         Red = Root->LeftChild;
+         Black = Red->LeftChild;
+      }
+   }
+}
+
+/*
+ * @name MmRebalanceTree
+ *
+ * Rebalance a memory area tree using the Tree->Vine->Balanced Tree
+ * method described in libavl documentation in chapter 4.12.
+ * (http://www.stanford.edu/~blp/avl/libavl.html/)
+ */
+
+static VOID
+MmRebalanceTree(
+   PMADDRESS_SPACE AddressSpace)
+{
+   PMEMORY_AREA PreviousNode;
+   PMEMORY_AREA CurrentNode;
+   PMEMORY_AREA TempNode;
+   ULONG NodeCount = 0;
+   ULONG Vine;   /* Number of nodes in main vine. */
+   ULONG Leaves; /* Nodes in incomplete bottom level, if any. */
+   INT Height;   /* Height of produced balanced tree. */
+
+   /* Transform the tree into Vine. */
+
+   PreviousNode = NULL;
+   CurrentNode = AddressSpace->MemoryAreaRoot;
+   while (CurrentNode != NULL)
+   {
+      if (CurrentNode->RightChild == NULL) 
+      {
+         PreviousNode = CurrentNode;
+         CurrentNode = CurrentNode->LeftChild;
+         NodeCount++;
+      }
+      else 
+      {
+         TempNode = CurrentNode->RightChild;
+
+         CurrentNode->RightChild = TempNode->LeftChild;
+         if (TempNode->LeftChild)
+            TempNode->LeftChild->Parent = CurrentNode;
+
+         TempNode->LeftChild = CurrentNode;
+         CurrentNode->Parent = TempNode;
+
+         CurrentNode = TempNode;
+
+         if (PreviousNode != NULL)
+            PreviousNode->LeftChild = TempNode;
+         else
+            AddressSpace->MemoryAreaRoot = TempNode;
+         TempNode->Parent = PreviousNode;
+      }
+   }
+
+   /* Transform Vine back into a balanced tree. */
+
+   Leaves = NodeCount + 1;
+   for (;;) 
+   {
+      ULONG Next = Leaves & (Leaves - 1);
+      if (Next == 0)
+         break;
+      Leaves = Next;
+   }
+   Leaves = NodeCount + 1 - Leaves;
+
+   MmCompressHelper(AddressSpace, Leaves);
+
+   Vine = NodeCount - Leaves;
+   Height = 1 + (Leaves > 0);
+   while (Vine > 1) 
+   {
+      MmCompressHelper(AddressSpace, Vine / 2);
+      Vine /= 2;
+      Height++;
+   }
+}
+
+static VOID
+MmInsertMemoryArea(
+   PMADDRESS_SPACE AddressSpace,
+   PMEMORY_AREA marea)
+{
+   PMEMORY_AREA Node;
+   PMEMORY_AREA PreviousNode;
+   ULONG Depth = 0;
+
+   MmVerifyMemoryAreas(AddressSpace);
+
+   if (AddressSpace->MemoryAreaRoot == NULL)
+   {
+      AddressSpace->MemoryAreaRoot = marea;
+      marea->LeftChild = marea->RightChild = marea->Parent = NULL;
       return;
    }
-   current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-   if (current->BaseAddress > marea->BaseAddress)
+
+   Node = AddressSpace->MemoryAreaRoot;
+   do
    {
-      InsertHeadList(ListHead,&marea->Entry);
-      return;
-   }
-   while (current_entry->Flink!=ListHead)
-   {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-      if (current->BaseAddress < marea->BaseAddress &&
-            current->Entry.Flink==ListHead)
+      DPRINT("marea->EndingAddress: %x Node->StartingAddress: %x\n",
+             marea->EndingAddress, Node->StartingAddress);
+      DPRINT("marea->StartingAddress: %x Node->EndingAddress: %x\n",
+             marea->StartingAddress, Node->EndingAddress);
+      ASSERT(marea->EndingAddress <= Node->StartingAddress ||
+             marea->StartingAddress >= Node->EndingAddress);
+      ASSERT(marea->StartingAddress != Node->StartingAddress);
+      
+      PreviousNode = Node;
+  
+      if (marea->StartingAddress < Node->StartingAddress)
+         Node = Node->LeftChild;
+      else
+         Node = Node->RightChild;
+      
+      if (Node)
       {
-         current_entry->Flink = inserted_entry;
-         inserted_entry->Flink=ListHead;
-         inserted_entry->Blink=current_entry;
-         ListHead->Blink = inserted_entry;
-         return;
-      }
-      if (current->BaseAddress < marea->BaseAddress &&
-            next->BaseAddress > marea->BaseAddress)
-      {
-         inserted_entry->Flink = current_entry->Flink;
-         inserted_entry->Blink = current_entry;
-         inserted_entry->Flink->Blink = inserted_entry;
-         current_entry->Flink=inserted_entry;
-         return;
-      }
-      current_entry = current_entry->Flink;
-   }
-   InsertTailList(ListHead,inserted_entry);
-}
-
-static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity)
-{
-   PLIST_ENTRY ListHead;
-   PLIST_ENTRY current_entry;
-   MEMORY_AREA* current;
-   MEMORY_AREA* next;
-   ULONG Gap;
-   PVOID Address;
-
-   DPRINT("MmFindGapBottomUp(Length %x)\n",Length);
-
-#ifdef DBG
-   Length += PAGE_SIZE; /* For a guard page following the area */
-#endif
-
-   ListHead = &AddressSpace->MAreaListHead;
-
-   current_entry = ListHead->Flink;
-   while (current_entry->Flink!=ListHead)
-   {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-      Address = (PVOID) ((char*)current->BaseAddress + PAGE_ROUND_UP(current->Length));
-#ifdef DBG
-      Address = (PVOID) ((char *) Address + PAGE_SIZE); /* For a guard page preceding the area */
-#endif
-      Address = (PVOID) MM_ROUND_UP(Address, Granularity);
-      if (Address < next->BaseAddress)
-      {
-         Gap = (char*)next->BaseAddress - ((char*)current->BaseAddress + PAGE_ROUND_UP(current->Length));
-         if (Gap >= Length)
+         Depth++;
+         if (Depth == 22)
          {
-            return Address;
+            MmRebalanceTree(AddressSpace);
+            PreviousNode = Node->Parent;
          }
       }
-      current_entry = current_entry->Flink;
    }
+   while (Node != NULL);
 
-   if (current_entry == ListHead)
-   {
-      Address = (PVOID) MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
-   }
+   marea->LeftChild = marea->RightChild = NULL;
+   marea->Parent = PreviousNode;
+   if (marea->StartingAddress < PreviousNode->StartingAddress)
+      PreviousNode->LeftChild = marea;
    else
-   {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      Address = (char*)current->BaseAddress + PAGE_ROUND_UP(current->Length);
-#ifdef DBG
-      Address = (PVOID) ((char *) Address + PAGE_SIZE); /* For a guard page preceding the area */
-#endif
-      Address = (PVOID) MM_ROUND_UP(Address, Granularity);
-   }
-   /* Check if enough space for the block */
-   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
-   {
-      if ((ULONG_PTR) Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG_PTR) Address)
-      {
-         DPRINT1("Failed to find gap\n");
-         return NULL;
-      }
-   }
-   else
-   {
-      if (Length >= ~ ((ULONG_PTR) 0) - (ULONG_PTR) Address)
-      {
-         DPRINT1("Failed to find gap\n");
-         return NULL;
-      }
-   }
-   return Address;
+      PreviousNode->RightChild = marea;
 }
 
-
-static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity)
+static PVOID
+MmFindGapBottomUp(
+   PMADDRESS_SPACE AddressSpace,
+   ULONG_PTR Length,
+   ULONG_PTR Granularity)
 {
-   PLIST_ENTRY ListHead;
-   PLIST_ENTRY current_entry;
-   MEMORY_AREA* current;
-   ULONG Gap;
-   PVOID Address;
-   PVOID TopAddress;
-   PVOID BottomAddress;
-   PVOID HighestAddress;
+   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
+                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
+   PVOID AlignedAddress;
+   PMEMORY_AREA Node;
+   PMEMORY_AREA FirstNode;
+   PMEMORY_AREA PreviousNode;
 
-   DPRINT("MmFindGapTopDown(Length %lx)\n",Length);
+   MmVerifyMemoryAreas(AddressSpace);
 
-#ifdef DBG
-   Length += PAGE_SIZE; /* For a guard page following the area */
-#endif
+   DPRINT("LowestAddress: %x HighestAddress: %x\n",
+          AddressSpace->LowestAddress, HighestAddress);
 
-   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE) //(ULONG_PTR)MmSystemRangeStart)
+   AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
+
+   /* Special case for empty tree. */
+   if (AddressSpace->MemoryAreaRoot == NULL)
    {
-      HighestAddress = MmHighestUserAddress;
-   }
-   else
-   {
-      HighestAddress = (PVOID)0xFFFFFFFF;
-   }
-
-   TopAddress = HighestAddress;
-
-   ListHead = &AddressSpace->MAreaListHead;
-   current_entry = ListHead->Blink;
-   while (current_entry->Blink != ListHead)
-   {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      BottomAddress = (char*)current->BaseAddress + PAGE_ROUND_UP(current->Length);
-#ifdef DBG
-      BottomAddress = (PVOID) ((char *) BottomAddress + PAGE_SIZE); /* For a guard page preceding the area */
-#endif
-      BottomAddress = (PVOID) MM_ROUND_UP(BottomAddress, Granularity);
-      DPRINT("Base %p  Length %lx\n", current->BaseAddress, PAGE_ROUND_UP(current->Length));
-
-      if (BottomAddress < TopAddress && BottomAddress < HighestAddress)
+      if (HighestAddress - AlignedAddress >= Length)
       {
-         Gap = (char*)TopAddress - (char*) BottomAddress + 1;
-         DPRINT("Bottom %p  Top %p  Gap %lx\n", BottomAddress, TopAddress, Gap);
-         if (Gap >= Length)
-         {
-            DPRINT("Found gap at %p\n", (char*) TopAddress - Length);
-            return (PVOID) MM_ROUND_DOWN((char*) TopAddress - Length + 1, Granularity);
-         }
+         DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+         return AlignedAddress;
       }
-      TopAddress = (char*)current->BaseAddress - 1;
-      current_entry = current_entry->Blink;
+      DPRINT("MmFindGapBottomUp: 0\n");
+      return 0;
    }
 
-   if (current_entry == ListHead)
-   {
-      Address = (PVOID) MM_ROUND_DOWN((char*) HighestAddress - Length + 1, Granularity);
-   }
-   else
-   {
-      Address = (PVOID) MM_ROUND_DOWN((char*)TopAddress - Length + 1, Granularity);
-   }
+   /* Go to the node with lowest address in the tree. */
+   FirstNode = Node = MmIterateFirstNode(AddressSpace->MemoryAreaRoot);
 
-   /* Check if enough space for the block */
-   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
+   /* Traverse the tree from left to right. */
+   PreviousNode = Node;
+   for (;;)
    {
-      if ((ULONG_PTR) Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG_PTR) Address)
+      Node = MmIterateNextNode(Node);
+      if (Node == NULL)
+         break;
+
+      AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
+      if (Node->StartingAddress > AlignedAddress &&
+          Node->StartingAddress - AlignedAddress >= Length)
       {
-         DPRINT1("Failed to find gap\n");
-         return NULL;
+         DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+         return AlignedAddress;
       }
-   }
-   else
-   {
-      if (Length >= ~ ((ULONG_PTR) 0) - (ULONG_PTR) Address)
-      {
-         DPRINT1("Failed to find gap\n");
-         return NULL;
-      }
+
+      PreviousNode = Node;
    }
 
-   DPRINT("Found gap at %p\n", Address);
-   return Address;
+   /* Check if there is enough space after the last memory area. */
+   AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
+   if (HighestAddress - AlignedAddress >= Length)
+   {
+      DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+      return AlignedAddress;
+   }
+
+   /* Check if there is enough space before the first memory area. */
+   AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
+   if (FirstNode->StartingAddress > AlignedAddress &&
+       FirstNode->StartingAddress - AlignedAddress >= Length)
+   {
+      DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+      return AlignedAddress;
+   }
+
+   DPRINT("MmFindGapBottomUp: 0\n");
+   return 0;
 }
 
 
-PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity, BOOL TopDown)
+static PVOID
+MmFindGapTopDown(
+   PMADDRESS_SPACE AddressSpace,
+   ULONG_PTR Length,
+   ULONG_PTR Granularity)
+{
+   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
+                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
+   PVOID AlignedAddress;
+   PMEMORY_AREA Node;
+   PMEMORY_AREA PreviousNode;
+
+   MmVerifyMemoryAreas(AddressSpace);
+
+   DPRINT("LowestAddress: %x HighestAddress: %x\n",
+          AddressSpace->LowestAddress, HighestAddress);
+
+   AlignedAddress = MM_ROUND_DOWN(HighestAddress - Length + 1, Granularity);
+
+   /* Check for overflow. */
+   if (AlignedAddress > HighestAddress)
+      return NULL;
+
+   /* Special case for empty tree. */
+   if (AddressSpace->MemoryAreaRoot == NULL)
+   {
+      if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
+      {
+         DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+         return AlignedAddress;
+      }
+      DPRINT("MmFindGapTopDown: 0\n");
+      return 0;
+   }
+
+   /* Go to the node with highest address in the tree. */
+   Node = MmIterateLastNode(AddressSpace->MemoryAreaRoot);
+
+   /* Check if there is enough space after the last memory area. */
+   if (Node->EndingAddress <= AlignedAddress)
+   {
+      DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+      return AlignedAddress;
+   }
+
+   /* Traverse the tree from left to right. */
+   PreviousNode = Node;
+   for (;;)
+   {
+      Node = MmIteratePrevNode(Node);
+      if (Node == NULL)
+         break;
+
+      AlignedAddress = MM_ROUND_DOWN(PreviousNode->StartingAddress - Length + 1, Granularity);
+
+      /* Check for overflow. */
+      if (AlignedAddress > PreviousNode->StartingAddress)
+         return NULL;
+      
+      if (Node->EndingAddress <= AlignedAddress)
+      {
+         DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+         return AlignedAddress;
+      }
+
+      PreviousNode = Node;
+   }
+
+   AlignedAddress = MM_ROUND_DOWN(PreviousNode->StartingAddress - Length + 1, Granularity);
+
+   /* Check for overflow. */
+   if (AlignedAddress > PreviousNode->StartingAddress)
+      return NULL;
+
+   if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
+   {
+      DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+      return AlignedAddress;
+   }
+
+   DPRINT("MmFindGapTopDown: 0\n");
+   return 0;
+}
+
+
+PVOID STDCALL
+MmFindGap(
+   PMADDRESS_SPACE AddressSpace,
+   ULONG_PTR Length,
+   ULONG_PTR Granularity,
+   BOOLEAN TopDown)
 {
    if (TopDown)
       return MmFindGapTopDown(AddressSpace, Length, Granularity);
@@ -367,12 +626,19 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity, B
    return MmFindGapBottomUp(AddressSpace, Length, Granularity);
 }
 
-ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
+ULONG_PTR STDCALL
+MmFindGapAtAddress(
+   PMADDRESS_SPACE AddressSpace,
+   PVOID Address)
 {
-   PLIST_ENTRY current_entry, ListHead;
-   PMEMORY_AREA current;
+   PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
+   PMEMORY_AREA RightNeighbour = NULL;
+   PVOID HighestAddress = AddressSpace->LowestAddress < (PVOID)KERNEL_BASE ?
+                          (PVOID)(KERNEL_BASE - 1) : (PVOID)MAXULONG_PTR;
 
-   Address = (PVOID)PAGE_ROUND_DOWN(Address);
+   MmVerifyMemoryAreas(AddressSpace);
+
+   Address = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
    if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
    {
@@ -383,65 +649,228 @@ ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
    }
    else
    {
-      if ((ULONG_PTR)Address < (ULONG_PTR)AddressSpace->LowestAddress)
+      if (Address < AddressSpace->LowestAddress)
       {
          return 0;
       }
    }
 
-   ListHead = &AddressSpace->MAreaListHead;
-
-   current_entry = ListHead->Flink;
-   while (current_entry != ListHead)
+   while (Node != NULL)
    {
-      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      if (current->BaseAddress <= Address && (char*)Address < (char*)current->BaseAddress + current->Length)
+      if (Address < Node->StartingAddress)
       {
+         RightNeighbour = Node;
+         Node = Node->LeftChild;
+      }
+      else if (Address >= Node->EndingAddress)
+      {
+         Node = Node->RightChild;
+      }
+      else
+      {
+         DPRINT("MmFindGapAtAddress: 0\n");
          return 0;
       }
-      else if (current->BaseAddress > Address)
-      {
-         return (ULONG_PTR)current->BaseAddress - (ULONG_PTR)Address;
-      }
-      current_entry = current_entry->Flink;
    }
-   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
+
+   if (RightNeighbour)
    {
-      return KERNEL_BASE - (ULONG_PTR)Address;
+      DPRINT("MmFindGapAtAddress: %x [%x]\n", Address, RightNeighbour->StartingAddress - Address);
+      return RightNeighbour->StartingAddress - Address;
    }
    else
    {
-      return 0 - (ULONG_PTR)Address;
+      DPRINT("MmFindGapAtAddress: %x [%x]\n", Address, HighestAddress - Address);
+      return HighestAddress - Address;
    }
 }
 
+/**
+ * @name MmInitMemoryAreas
+ *
+ * Initialize the memory area list implementation.
+ */
+
 NTSTATUS INIT_FUNCTION
 MmInitMemoryAreas(VOID)
-/*
- * FUNCTION: Initialize the memory area list
- */
 {
    DPRINT("MmInitMemoryAreas()\n",0);
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
-                 PVOID BaseAddress,
-                 ULONG Length,
-                 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea,
-                                  PVOID Address, PFN_TYPE Page,
-                                  SWAPENTRY SwapEntry, BOOLEAN Dirty),
-                 PVOID FreePageContext)
+
+/*
+ * @name MmFreeMemoryArea
+ *
+ * Free an existing memory area.
+ *
+ * @param AddressSpace 
+ *        Address space to free the area from.
+ * @param MemoryArea
+ *        Memory area we're about to free.
+ * @param FreePage
+ *        Callback function for each freed page.
+ * @param FreePageContext
+ *        Context passed to the callback function.
+ *
+ * @return Status
+ *
+ * @remarks Lock the address space before calling this function.
+ */
+
+NTSTATUS STDCALL
+MmFreeMemoryArea(
+   PMADDRESS_SPACE AddressSpace,
+   PMEMORY_AREA MemoryArea,
+   PMM_FREE_PAGE_FUNC FreePage,
+   PVOID FreePageContext)
 {
-   MEMORY_AREA* MemoryArea;
-   char* Address;
-   char* EndAddress;
+   PMEMORY_AREA *ParentReplace;
+   PVOID Address;
+   PVOID EndAddress;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+
+   if (AddressSpace->Process != NULL &&
+       AddressSpace->Process != CurrentProcess)
+   {
+      KeAttachProcess(&AddressSpace->Process->Pcb);
+   }
+
+   EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE); 
+   for (Address = MemoryArea->StartingAddress; Address < EndAddress; Address += PAGE_SIZE)
+   {
+      if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
+      {
+         MmRawDeleteVirtualMapping((PVOID)Address);
+      }
+      else
+      {
+         BOOL Dirty = FALSE;
+         SWAPENTRY SwapEntry = 0;
+         PFN_TYPE Page = 0;
+
+         if (MmIsPageSwapEntry(AddressSpace->Process, (PVOID)Address))
+         {
+            MmDeletePageFileMapping(AddressSpace->Process, (PVOID)Address, &SwapEntry);
+         }
+         else
+         {
+            MmDeleteVirtualMapping(AddressSpace->Process, (PVOID)Address, FALSE, &Dirty, &Page);
+         }
+         if (FreePage != NULL)
+         {
+            FreePage(FreePageContext, MemoryArea, (PVOID)Address,
+                     Page, SwapEntry, (BOOLEAN)Dirty);
+         }
+      }
+   }
+
+   if (AddressSpace->Process != NULL &&
+       AddressSpace->Process != CurrentProcess)
+   {
+      KeDetachProcess();
+   }
+
+   /* Remove the tree item. */ 
+   {
+      if (MemoryArea->Parent != NULL)
+      {
+         if (MemoryArea->Parent->LeftChild == MemoryArea)
+            ParentReplace = &MemoryArea->Parent->LeftChild;
+         else
+            ParentReplace = &MemoryArea->Parent->RightChild;
+      }
+      else
+         ParentReplace = &AddressSpace->MemoryAreaRoot;
+
+      if (MemoryArea->RightChild == NULL)
+      {
+         *ParentReplace = MemoryArea->LeftChild;
+         if (MemoryArea->LeftChild)
+            MemoryArea->LeftChild->Parent = MemoryArea->Parent;
+      }
+      else
+      {
+         if (MemoryArea->RightChild->LeftChild == NULL)
+         {
+            MemoryArea->RightChild->LeftChild = MemoryArea->LeftChild;
+            if (MemoryArea->LeftChild)
+               MemoryArea->LeftChild->Parent = MemoryArea->RightChild;
+
+            *ParentReplace = MemoryArea->RightChild;
+            MemoryArea->RightChild->Parent = MemoryArea->Parent;
+         }
+         else
+         {
+            PMEMORY_AREA LowestNode;
+
+            LowestNode = MemoryArea->RightChild->LeftChild;
+            while (LowestNode->LeftChild != NULL)
+               LowestNode = LowestNode->LeftChild;
+
+            LowestNode->Parent->LeftChild = LowestNode->RightChild;
+            if (LowestNode->RightChild)
+               LowestNode->RightChild->Parent = LowestNode->Parent;
+
+            LowestNode->LeftChild = MemoryArea->LeftChild;
+            if (MemoryArea->LeftChild)
+               MemoryArea->LeftChild->Parent = LowestNode;
+
+            LowestNode->RightChild = MemoryArea->RightChild;
+            MemoryArea->RightChild->Parent = LowestNode;
+
+            *ParentReplace = LowestNode;
+            LowestNode->Parent = MemoryArea->Parent;
+         }
+      }
+   }
+
+   ExFreePool(MemoryArea);
+
+   DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
+
+   return STATUS_SUCCESS;
+}
+
+/*
+ * @name MmFreeMemoryAreaByPtr
+ *
+ * Free an existing memory area given a pointer inside it.
+ *
+ * @param AddressSpace 
+ *        Address space to free the area from.
+ * @param BaseAddress
+ *        Address in the memory area we're about to free.
+ * @param FreePage
+ *        Callback function for each freed page.
+ * @param FreePageContext
+ *        Context passed to the callback function.
+ *
+ * @return Status
+ *
+ * @see MmFreeMemoryArea
+ *
+ * @todo Should we require the BaseAddress to be really the starting
+ *       address of the memory area or is the current relaxed check
+ *       (BaseAddress can point anywhere in the memory area) acceptable?
+ *
+ * @remarks Lock the address space before calling this function.
+ */
+
+NTSTATUS STDCALL
+MmFreeMemoryAreaByPtr(
+   PMADDRESS_SPACE AddressSpace,
+   PVOID BaseAddress,
+   PMM_FREE_PAGE_FUNC FreePage,
+   PVOID FreePageContext)
+{
+   PMEMORY_AREA MemoryArea;
 
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
           "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,
           FreePageContext);
+
+   MmVerifyMemoryAreas(AddressSpace);
 
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
                                           BaseAddress);
@@ -450,92 +879,69 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
       KEBUGCHECK(0);
       return(STATUS_UNSUCCESSFUL);
    }
-   if (AddressSpace->Process != NULL &&
-         AddressSpace->Process != CurrentProcess)
-   {
-      KeAttachProcess(&AddressSpace->Process->Pcb);
-   }
-   EndAddress = (char*)MemoryArea->BaseAddress + PAGE_ROUND_UP(MemoryArea->Length); 
-   for (Address = MemoryArea->BaseAddress; Address < EndAddress; Address += PAGE_SIZE)
-   {
 
-      if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
-      {
-         MmRawDeleteVirtualMapping(Address);
-      }
-      else
-      {
-	 BOOL Dirty = FALSE;
-         SWAPENTRY SwapEntry = 0;
-	 PFN_TYPE Page = 0;
-
-
-         if (MmIsPageSwapEntry(AddressSpace->Process, Address))
-         {
-            MmDeletePageFileMapping(AddressSpace->Process, Address, &SwapEntry);
-         }
-         else
-         {
-            MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, &Dirty, &Page);
-         }
-         if (FreePage != NULL)
-         {
-            FreePage(FreePageContext, MemoryArea, Address, 
-		     Page, SwapEntry, (BOOLEAN)Dirty);
-         }
-      }
-   }
-   if (AddressSpace->Process != NULL &&
-         AddressSpace->Process != CurrentProcess)
-   {
-      KeDetachProcess();
-   }
-   RemoveEntryList(&MemoryArea->Entry);
-   ExFreePool(MemoryArea);
-
-   DPRINT("MmFreeMemoryArea() succeeded\n");
-
-   return(STATUS_SUCCESS);
+   return MmFreeMemoryArea(AddressSpace, MemoryArea, FreePage, FreePageContext);
 }
 
-NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
-                            PMADDRESS_SPACE AddressSpace,
-                            ULONG Type,
-                            PVOID* BaseAddress,
-                            ULONG Length,
-                            ULONG Attributes,
-                            MEMORY_AREA** Result,
-                            BOOL FixedAddress,
-                            BOOL TopDown,
-                            PHYSICAL_ADDRESS BoundaryAddressMultiple)
 /*
- * FUNCTION: Create a memory area
- * ARGUMENTS:
- *     AddressSpace = Address space to create the area in
- *     Type = Type of the address space
- *     BaseAddress = 
- *     Length = Length to allocate
- *     Attributes = Protection attributes for the memory area
- *     Result = Receives a pointer to the memory area on exit
- * RETURNS: Status
- * NOTES: Lock the address space before calling this function
+ * @name MmCreateMemoryArea
+ *
+ * Create a memory area.
+ *
+ * @param AddressSpace 
+ *        Address space to create the area in.
+ * @param Type
+ *        Type of the memory area.
+ * @param BaseAddress
+ *        Base address for the memory area we're about the create. On
+ *        input it contains either 0 (auto-assign address) or preferred
+ *        address. On output it contains the starting address of the
+ *        newly created area.
+ * @param Length
+ *        Length of the area to allocate.
+ * @param Attributes
+ *        Protection attributes for the memory area.
+ * @param Result
+ *        Receives a pointer to the memory area on successful exit.
+ *
+ * @return Status
+ *
+ * @remarks Lock the address space before calling this function.
  */
+
+NTSTATUS STDCALL
+MmCreateMemoryArea(PEPROCESS Process,
+                   PMADDRESS_SPACE AddressSpace,
+                   ULONG Type,
+                   PVOID *BaseAddress,
+                   ULONG_PTR Length,
+                   ULONG Attributes,
+                   PMEMORY_AREA *Result,
+                   BOOLEAN FixedAddress,
+                   BOOLEAN TopDown,
+                   PHYSICAL_ADDRESS BoundaryAddressMultiple)
 {
    PVOID EndAddress;
    ULONG Granularity;
    ULONG tmpLength;
-   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x,"
-          "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
-          Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
+   PMEMORY_AREA MemoryArea;
+
+   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x, "
+          "*BaseAddress %x, Length %x, Attributes %x, TopDown: %x, "
+          "FixedAddress %x, Result %x)\n",
+          Type, BaseAddress, *BaseAddress, Length, Attributes, TopDown,
+          FixedAddress, Result);
+
+   MmVerifyMemoryAreas(AddressSpace);
 
    Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = PAGE_ROUND_UP(Length);
       *BaseAddress = MmFindGap(AddressSpace,
-                               PAGE_ROUND_UP(Length),
+                               tmpLength,
                                Granularity,
-                               TopDown);
+                               TopDown != 0);
       if ((*BaseAddress) == 0)
       {
          DPRINT("No suitable gap\n");
@@ -544,26 +950,28 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    }
    else
    {
-      tmpLength =  Length + ((ULONG_PTR) *BaseAddress
-                             - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
+      tmpLength = Length + ((ULONG_PTR) *BaseAddress
+                         - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (AddressSpace->LowestAddress == (PVOID)KERNEL_BASE &&
-            (*BaseAddress) < (PVOID)KERNEL_BASE)
+          *BaseAddress < (PVOID)KERNEL_BASE)
       {
+         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
       if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE &&
-            (PVOID)((char*)(*BaseAddress) + tmpLength) > (PVOID)KERNEL_BASE)
+          (ULONG_PTR)(*BaseAddress) + tmpLength > KERNEL_BASE)
       {
+         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
       if (BoundaryAddressMultiple.QuadPart != 0)
       {
          EndAddress = ((char*)(*BaseAddress)) + tmpLength-1;
-         ASSERT(((DWORD_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
+         ASSERT(((ULONG_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
       }
 
       if (MmOpenMemoryAreaByRegion(AddressSpace,
@@ -575,52 +983,56 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
       }
    }
 
-   *Result = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
-                                   TAG_MAREA);
-   RtlZeroMemory(*Result,sizeof(MEMORY_AREA));
-   (*Result)->Type = Type;
-   (*Result)->BaseAddress = *BaseAddress;
-   (*Result)->Length = tmpLength;
-   (*Result)->Attributes = Attributes;
-   (*Result)->LockCount = 0;
-   (*Result)->Process = Process;
-   (*Result)->PageOpCount = 0;
-   (*Result)->DeleteInProgress = FALSE;
+   MemoryArea = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
+                                      TAG_MAREA);
+   RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
+   MemoryArea->Type = Type;
+   MemoryArea->StartingAddress = *BaseAddress;
+   MemoryArea->EndingAddress = *BaseAddress + tmpLength;
+   MemoryArea->Attributes = Attributes;
+   MemoryArea->LockCount = 0;
+   MemoryArea->Process = Process;
+   MemoryArea->PageOpCount = 0;
+   MemoryArea->DeleteInProgress = FALSE;
 
-   MmInsertMemoryArea(AddressSpace, *Result);
+   MmInsertMemoryArea(AddressSpace, MemoryArea);
 
-   DPRINT("MmCreateMemoryArea() succeeded\n");
+   *Result = MemoryArea;
+
+   DPRINT("MmCreateMemoryArea() succeeded (%x)\n", *BaseAddress);
    return STATUS_SUCCESS;
 }
 
 
-void
+VOID STDCALL
 MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
                                  PMADDRESS_SPACE AddressSpace,
                                  PVOID BaseAddress)
 {
-  PMEMORY_AREA MemoryArea;
-  PLIST_ENTRY Entry;
-  PMM_REGION Region;
-  BOOLEAN Reserved;
+   PMEMORY_AREA MemoryArea;
+   PLIST_ENTRY Entry;
+   PMM_REGION Region;
+   BOOLEAN Reserved;
   
-  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
-  if (NULL != MemoryArea)
-    {
+   MmVerifyMemoryAreas(AddressSpace);
+
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
+   if (MemoryArea != NULL)
+   {
       Entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;
       Reserved = TRUE;
       while (Reserved && Entry != &MemoryArea->Data.VirtualMemoryData.RegionListHead)
-        {
-          Region = CONTAINING_RECORD(Entry, MM_REGION, RegionListEntry);
-          Reserved = (MEM_RESERVE == Region->Type);
-          Entry = Entry->Flink;
-        }
+      {
+         Region = CONTAINING_RECORD(Entry, MM_REGION, RegionListEntry);
+         Reserved = (MEM_RESERVE == Region->Type);
+         Entry = Entry->Flink;
+      }
 
       if (Reserved)
-        {
-          MmFreeVirtualMemory(Process, MemoryArea);
-        }
-    }
+      {
+         MmFreeVirtualMemory(Process, MemoryArea);
+      }
+   }
 }
 
 /* EOF */

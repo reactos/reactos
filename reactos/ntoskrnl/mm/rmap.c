@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.32 2004/12/24 17:06:59 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -91,7 +91,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    Process = entry->Process;
    Address = entry->Address;
-   if ((((ULONG)Address) & 0xFFF) != 0)
+   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
       KEBUGCHECK(0);
    }
@@ -131,7 +131,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
       /*
        * Get or create a pageop
@@ -220,7 +220,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    Process = entry->Process;
    Address = entry->Address;
-   if ((((ULONG)Address) & 0xFFF) != 0)
+   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
       KEBUGCHECK(0);
    }
@@ -255,7 +255,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
       /*
        * Get or create a pageop

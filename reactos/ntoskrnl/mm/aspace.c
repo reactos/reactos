@@ -68,7 +68,7 @@ NTSTATUS
 MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
-   InitializeListHead(&AddressSpace->MAreaListHead);
+   AddressSpace->MemoryAreaRoot = NULL;
    ExInitializeFastMutex(&AddressSpace->Lock);
    if (Process != NULL)
    {

@@ -99,13 +99,13 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
 
    DPRINT("Releasing %x between %x %x (type %d)\n",
-          Marea, Marea->BaseAddress, (char*)Marea->BaseAddress + Marea->Length,
+          Marea, Marea->StartingAddress, Marea->EndingAddress,
           Marea->Type);
 
    switch (Marea->Type)
    {
       case MEMORY_AREA_SECTION_VIEW:
-         Status = MmUnmapViewOfSection(Process, Marea->BaseAddress);
+         Status = MmUnmapViewOfSection(Process, (PVOID)Marea->StartingAddress);
          ASSERT(Status == STATUS_SUCCESS);
          return(STATUS_SUCCESS);
 
@@ -116,8 +116,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
       case MEMORY_AREA_SHARED_DATA:
       case MEMORY_AREA_NO_ACCESS:
          Status = MmFreeMemoryArea(&Process->AddressSpace,
-                                   Marea->BaseAddress,
-                                   0,
+                                   Marea,
                                    NULL,
                                    NULL);
          break;
@@ -135,20 +134,13 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 
 NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
 {
-   PLIST_ENTRY CurrentEntry;
-   PMEMORY_AREA Current;
-
    DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
    MmLockAddressSpace(&Process->AddressSpace);
 
-   while(!IsListEmpty(&Process->AddressSpace.MAreaListHead))
-   {
-      CurrentEntry = Process->AddressSpace.MAreaListHead.Flink;
-      Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
-      MmReleaseMemoryArea(Process, Current);
-   }
+   while (Process->AddressSpace.MemoryAreaRoot != NULL)
+      MmReleaseMemoryArea(Process, Process->AddressSpace.MemoryAreaRoot);
 
    Mmi386ReleaseMmInfo(Process);
 
@@ -208,7 +200,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 }
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-                       ULONG Address,
+                       ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
                        BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
@@ -330,7 +322,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-                           ULONG Address,
+                           ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
                            BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;

@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.35 2004/10/22 20:38:22 ekohl Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,7 +42,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
-   PVOID BaseAddress = 0;
+   PVOID BaseAddress = NULL;
    PFN_TYPE PBase;
    ULONG Attributes;
    ULONG i;
@@ -83,8 +83,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    {
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                       BaseAddress,
-                       0,
+                       MArea,
                        NULL,
                        NULL);
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
@@ -174,11 +173,10 @@ VOID STDCALL
 MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                    BaseAddress,
-                    0,
-                    MmFreeContinuousPage,
-                    NULL);
+   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                         BaseAddress,
+                         MmFreeContinuousPage,
+                         NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
@@ -260,11 +258,10 @@ MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
                                    IN MEMORY_CACHING_TYPE CacheType)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                    BaseAddress,
-                    NumberOfBytes,
-                    MmFreeContinuousPage,
-                    NULL);
+   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                         BaseAddress,
+                         MmFreeContinuousPage,
+                         NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 

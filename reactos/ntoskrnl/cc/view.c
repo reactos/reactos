@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.79 2004/10/22 20:11:12 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -813,8 +813,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
 #else
   MmLockAddressSpace(MmGetKernelAddressSpace());
   MmFreeMemoryArea(MmGetKernelAddressSpace(),
-		   CacheSeg->BaseAddress,
-		   CacheSeg->Bcb->CacheSegmentSize,
+		   CacheSeg->MemoryArea,
 		   CcFreeCachePage,
 		   NULL);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());

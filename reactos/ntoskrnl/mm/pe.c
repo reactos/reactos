@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pe.c,v 1.2 2004/12/30 05:59:11 hyperion Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
@@ -35,7 +35,7 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include <reactos/exeformat.h>
@@ -666,8 +666,10 @@ l_ReadHeaderFromFile:
     DIE(("PointerToRawData[%u] is not aligned\n", i));
 
    /* sections must be contiguous, ordered by base address and non-overlapping */
+#if 0
    if(pishSectionHeaders[i].PointerToRawData != nPrevFileEndOfSegment)
     DIE(("File gap between section %u and the previous\n", i));
+#endif
 
    /* conversion */
    pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;

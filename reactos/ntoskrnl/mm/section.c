@@ -611,7 +611,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Offset;
    PFN_TYPE Page;
    NTSTATUS Status;
-   ULONG PAddress;
+   PVOID PAddress;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    ULONG Entry;
@@ -635,12 +635,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       return(STATUS_SUCCESS);
    }
 
-   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
-   Offset = PAddress - (ULONG)MemoryArea->BaseAddress;
+   PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
-   Region = MmFindRegion(MemoryArea->BaseAddress,
+   Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          Address, NULL);
    /*
@@ -1129,7 +1129,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PFN_TYPE NewPage;
    PVOID NewAddress;
    NTSTATUS Status;
-   ULONG PAddress;
+   PVOID PAddress;
    ULONG Offset;
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
@@ -1148,12 +1148,12 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Find the offset of the page
     */
-   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
-   Offset = PAddress - (ULONG)MemoryArea->BaseAddress;
+   PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
-   Region = MmFindRegion(MemoryArea->BaseAddress,
+   Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          Address, NULL);
    /*
@@ -1181,7 +1181,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
        PFN_FROM_SSE(Entry) != OldPage)
    {
       /* This is a private page. We must only change the page protection. */
-      MmSetPageProtect(AddressSpace->Process, (PVOID)PAddress, Region->Protect);
+      MmSetPageProtect(AddressSpace->Process, PAddress, Region->Protect);
       return(STATUS_SUCCESS);
    }
 
@@ -1244,7 +1244,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     */
 
    NewAddress = ExAllocatePageWithPhysPage(NewPage);
-   memcpy(NewAddress, (PVOID)PAddress, PAGE_SIZE);
+   memcpy(NewAddress, PAddress, PAGE_SIZE);
    ExUnmapPage(NewAddress);
 
    /*
@@ -1267,7 +1267,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
       KEBUGCHECK(0);
       return(Status);
    }
-   MmInsertRmap(NewPage, AddressSpace->Process, (PVOID)PAddress);
+   MmInsertRmap(NewPage, AddressSpace->Process, PAddress);
    if (!NT_SUCCESS(Status))
    {
       DbgPrint("Unable to create virtual mapping\n");
@@ -1282,7 +1282,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Unshare the old page.
     */
-   MmDeleteRmap(OldPage, AddressSpace->Process, (PVOID)PAddress);
+   MmDeleteRmap(OldPage, AddressSpace->Process, PAddress);
    MmLockSectionSegment(Segment);
    MmUnsharePageEntrySectionSegment(Section, Segment, Offset, FALSE, FALSE);
    MmUnlockSectionSegment(Segment);
@@ -1351,7 +1351,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
-   Context.Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
+   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
    FileOffset = Context.Offset + Context.Segment->FileOffset;
 
    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
@@ -1691,7 +1691,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
+   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
    /*
     * Get the segment and section.
@@ -1855,7 +1855,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             ULONG Entry;
             PFN_TYPE Page;
 
-            Offset =  (ULONG)Address - (ULONG)MemoryArea->BaseAddress;
+            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
             Page = MmGetPfnForProcess(AddressSpace->Process, Address);
 
@@ -1887,14 +1887,17 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
 {
    PMM_REGION Region;
    NTSTATUS Status;
+   ULONG_PTR MaxLength;
 
-   Length =
-      min(Length, (ULONG) ((char*)MemoryArea->BaseAddress + MemoryArea->Length - (char*)BaseAddress));
-   Region = MmFindRegion(MemoryArea->BaseAddress,
+   MaxLength = (ULONG_PTR)MemoryArea->EndingAddress - (ULONG_PTR)BaseAddress;
+   if (Length > MaxLength)
+      Length = MaxLength;
+
+   Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          BaseAddress, NULL);
    *OldProtect = Region->Protect;
-   Status = MmAlterRegion(AddressSpace, MemoryArea->BaseAddress,
+   Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           BaseAddress, Length, Region->Type, Protect,
                           MmAlterViewAttributes);
@@ -1915,7 +1918,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    PMEMORY_AREA CurrentMArea;
    KIRQL oldIrql;
 
-   Region = MmFindRegion(MemoryArea->BaseAddress,
+   Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          Address, &RegionBaseAddress);
    if (Region == NULL)
@@ -1934,11 +1937,11 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
          CurrentEntry = CurrentEntry->Flink;
          if (Info->AllocationBase == NULL)
          {
-            Info->AllocationBase = CurrentMArea->BaseAddress;
+            Info->AllocationBase = CurrentMArea->StartingAddress;
          }
-         else if (CurrentMArea->BaseAddress < Info->AllocationBase)
+         else if (CurrentMArea->StartingAddress < Info->AllocationBase)
          {
-            Info->AllocationBase = CurrentMArea->BaseAddress;
+            Info->AllocationBase = CurrentMArea->StartingAddress;
          }
       }
       KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
@@ -1949,11 +1952,12 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    else
    {
       Info->BaseAddress = RegionBaseAddress;
-      Info->AllocationBase = MemoryArea->BaseAddress;
+      Info->AllocationBase = MemoryArea->StartingAddress;
       Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_MAPPED;
    }
-   Info->RegionSize = PAGE_ROUND_UP(MemoryArea->Length);
+   Info->RegionSize = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress -
+                                    (ULONG_PTR)MemoryArea->StartingAddress);
    Info->State = MEM_COMMIT;
    Info->Protect = Region->Protect;
 
@@ -3583,7 +3587,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MArea->BaseAddress) +
+   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MArea->StartingAddress) +
             MemoryArea->Data.SectionData.ViewOffset;
 
    Section = MArea->Data.SectionData.Section;
@@ -3711,16 +3715,14 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
    {
       Status = MmFreeMemoryArea(AddressSpace,
-                                BaseAddress,
-                                0,
+                                MemoryArea,
                                 NULL,
                                 NULL);
    }
    else
    {
       Status = MmFreeMemoryArea(AddressSpace,
-                                BaseAddress,
-                                0,
+                                MemoryArea,
                                 MmFreeSectionPage,
                                 MemoryArea);
    }
@@ -4087,7 +4089,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
          KEBUGCHECK(0);
       }
       Status = MmCreateVirtualMapping (NULL,
-                                       ((char*)Result + (i * PAGE_SIZE)),
+                                       (PVOID)(Result + (i * PAGE_SIZE)),
                                        PAGE_READWRITE,
                                        &Page,
                                        1);
@@ -4178,7 +4180,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    {
       ULONG i;
       ULONG NrSegments;
-      PVOID ImageBase;
+      ULONG_PTR ImageBase;
       ULONG ImageSize;
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
       PMM_SECTION_SEGMENT SectionSegments;
@@ -4188,10 +4190,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
       NrSegments = ImageSectionObject->NrSegments;
 
 
-      ImageBase = *BaseAddress;
-      if (ImageBase == NULL)
+      ImageBase = (ULONG_PTR)*BaseAddress;
+      if (ImageBase == 0)
       {
-         ImageBase = (PVOID)ImageSectionObject->ImageBase;
+         ImageBase = ImageSectionObject->ImageBase;
       }
 
       ImageSize = 0;
@@ -4207,7 +4209,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       /* Check there is enough space to map the section at that point. */
-      if (MmOpenMemoryAreaByRegion(AddressSpace, ImageBase,
+      if (MmOpenMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
                                    PAGE_ROUND_UP(ImageSize)) != NULL)
       {
          /* Fail if the user requested a fixed base address. */
@@ -4217,8 +4219,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
             return(STATUS_UNSUCCESSFUL);
          }
          /* Otherwise find a gap to map the image. */
-         ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
-         if (ImageBase == NULL)
+         ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
+         if (ImageBase == 0)
          {
             MmUnlockAddressSpace(AddressSpace);
             return(STATUS_UNSUCCESSFUL);
@@ -4250,7 +4252,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
          }
       }
 
-      *BaseAddress = ImageBase;
+      *BaseAddress = (PVOID)ImageBase;
    }
    else
    {

@@ -204,9 +204,10 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      Info->State = MEM_FREE;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
-                     Info->BaseAddress = MemoryArea->BaseAddress;
-	             Info->AllocationBase = MemoryArea->BaseAddress;
-	             Info->RegionSize = MemoryArea->Length;
+	             Info->BaseAddress = MemoryArea->StartingAddress;
+	             Info->AllocationBase = MemoryArea->StartingAddress;
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 	             break;
@@ -215,9 +216,10 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
-                     Info->BaseAddress = MemoryArea->BaseAddress;
-	             Info->AllocationBase = MemoryArea->BaseAddress;
-	             Info->RegionSize = MemoryArea->Length;
+	             Info->BaseAddress = MemoryArea->StartingAddress;
+	             Info->AllocationBase = MemoryArea->StartingAddress;
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
@@ -235,9 +237,10 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
-                     Info->BaseAddress = MemoryArea->BaseAddress;
-	             Info->AllocationBase = MemoryArea->BaseAddress;
-	             Info->RegionSize = MemoryArea->Length;
+	             Info->BaseAddress = MemoryArea->StartingAddress;
+	             Info->AllocationBase = MemoryArea->StartingAddress;
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;
@@ -255,9 +258,10 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
-                     Info->BaseAddress = MemoryArea->BaseAddress;
-	             Info->AllocationBase = MemoryArea->BaseAddress;
-	             Info->RegionSize = MemoryArea->Length;
+	             Info->BaseAddress = MemoryArea->StartingAddress;
+	             Info->AllocationBase = MemoryArea->StartingAddress;
+	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress - 
+	                                (ULONG_PTR)MemoryArea->StartingAddress;
                      Status = STATUS_SUCCESS;
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 		     break;

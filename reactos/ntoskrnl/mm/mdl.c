@@ -269,7 +269,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
          KEBUGCHECK(0);
       }
 
-      Base = (char*)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
+      Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
 
       if (MiMdlMappingRegionHint == StartingOffset)
       {
@@ -384,7 +384,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
                              NULL);
    }
 
-   if ((DWORD)BaseAddress >= KERNEL_BASE)
+   if ((ULONG_PTR)BaseAddress >= KERNEL_BASE)
    {
       ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
       
@@ -416,7 +416,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
          KEBUGCHECK(0);
       }
 
-      MmFreeMemoryArea( &Mdl->Process->AddressSpace, Marea->BaseAddress, 0, NULL, NULL );
+      MmFreeMemoryArea( &Mdl->Process->AddressSpace, Marea, NULL, NULL );
 
       Mdl->Process = NULL;
    }

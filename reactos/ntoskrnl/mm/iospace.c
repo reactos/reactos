@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.30 2004/08/15 16:39:07 chorns Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -127,7 +127,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
          KEBUGCHECK(0);
       }
    }
-   return ((PVOID)((char*)Result + Offset));
+   return (PVOID)((ULONG_PTR)Result + Offset);
 }
 
 
@@ -160,16 +160,17 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
                 IN ULONG NumberOfBytes)
 {
    ULONG Offset;
-   Offset = (ULONG_PTR)BaseAddress % PAGE_SIZE;
-   BaseAddress = (PVOID)((PUCHAR)BaseAddress - Offset);
+   PVOID Address = BaseAddress;
+
+   Offset = (ULONG_PTR)Address % PAGE_SIZE;
+   Address -= Offset;
    NumberOfBytes += Offset;
 
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                    BaseAddress,
-                    NumberOfBytes,
-                    NULL,
-                    NULL);
+   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                         Address,
+                         NULL,
+                         NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 

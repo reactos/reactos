@@ -184,15 +184,17 @@ typedef struct _PAGEFAULT_HISTORY
 
 #endif /* __USE_W32API */
 
-typedef struct
+typedef struct _MEMORY_AREA
 {
+  PVOID StartingAddress;
+  PVOID EndingAddress;
+  struct _MEMORY_AREA *Parent;
+  struct _MEMORY_AREA *LeftChild;
+  struct _MEMORY_AREA *RightChild;
   ULONG Type;
-  PVOID BaseAddress;
-  ULONG Length;
   ULONG Attributes;
-  LIST_ENTRY Entry;
   ULONG LockCount;
-  struct _EPROCESS* Process;
+  struct _EPROCESS* Process; /* FIXME: We don't need this! */
   BOOLEAN DeleteInProgress;
   ULONG PageOpCount;
   union
@@ -215,7 +217,7 @@ typedef struct
 
 typedef struct _MADDRESS_SPACE
 {
-  LIST_ENTRY MAreaListHead;
+  PMEMORY_AREA MemoryAreaRoot;
   FAST_MUTEX Lock;
   PVOID LowestAddress;
   struct _EPROCESS* Process;
@@ -333,6 +335,10 @@ typedef struct _MM_REGION
    LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
 
+typedef VOID (*PMM_FREE_PAGE_FUNC)(PVOID Context, PMEMORY_AREA MemoryArea, 
+                                   PVOID Address, PFN_TYPE Page,
+                                   SWAPENTRY SwapEntry, BOOLEAN Dirty);
+
 /* FUNCTIONS */
 
 /* aspace.c ******************************************************************/
@@ -354,48 +360,67 @@ NTSTATUS MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
 
 /* marea.c *******************************************************************/
 
-NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
-			    PMADDRESS_SPACE AddressSpace,
-			    ULONG Type,
-			    PVOID* BaseAddress,
-			    ULONG Length,
-			    ULONG Attributes,
-			    MEMORY_AREA** Result,
-			    BOOL FixedAddress,
-			    BOOL TopDown,
-			    PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL);
+NTSTATUS INIT_FUNCTION
+MmInitMemoryAreas(VOID);
 
-MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
-				       PVOID Address);
+NTSTATUS STDCALL
+MmCreateMemoryArea(
+   struct _EPROCESS* Process,
+   PMADDRESS_SPACE AddressSpace,
+   ULONG Type,
+   PVOID *BaseAddress,
+   ULONG_PTR Length,
+   ULONG Attributes,
+   PMEMORY_AREA *Result,
+   BOOLEAN FixedAddress,
+   BOOLEAN TopDown,
+   PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL);
 
-ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, 
-			 PVOID Address);
+PMEMORY_AREA STDCALL
+MmOpenMemoryAreaByAddress(
+   PMADDRESS_SPACE AddressSpace, 
+   PVOID Address);
 
-NTSTATUS MmInitMemoryAreas(VOID);
+ULONG STDCALL
+MmFindGapAtAddress(
+   PMADDRESS_SPACE AddressSpace, 
+   PVOID Address);
 
-NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
-			  PVOID BaseAddress,
-			  ULONG Length,
-			  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
-					   PVOID Address, PFN_TYPE Page, SWAPENTRY SwapEntry,
-					   BOOLEAN Dirty),
-			  PVOID FreePageContext);
+NTSTATUS STDCALL
+MmFreeMemoryArea(
+   PMADDRESS_SPACE AddressSpace,
+   PMEMORY_AREA MemoryArea,
+   PMM_FREE_PAGE_FUNC FreePage,
+   PVOID FreePageContext);
 
-VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
+NTSTATUS STDCALL
+MmFreeMemoryAreaByPtr(
+   PMADDRESS_SPACE AddressSpace,
+   PVOID BaseAddress,
+   PMM_FREE_PAGE_FUNC FreePage,
+   PVOID FreePageContext);
 
-NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
+VOID STDCALL
+MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace);
 
-NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
+PMEMORY_AREA STDCALL
+MmOpenMemoryAreaByRegion(
+   PMADDRESS_SPACE AddressSpace, 
+   PVOID Address,
+   ULONG_PTR Length);
 
-MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
-				      PVOID Address,
-				      ULONG Length);
+PVOID STDCALL
+MmFindGap(
+   PMADDRESS_SPACE AddressSpace,
+   ULONG_PTR Length,
+   ULONG_PTR Granularity,
+   BOOLEAN TopDown);
 
-PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG Granularity, BOOL TopDown);
-
-void MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
-                                      PMADDRESS_SPACE AddressSpace,
-                                      PVOID BaseAddress);
+VOID STDCALL
+MmReleaseMemoryAreaIfDecommitted(
+   PEPROCESS Process,
+   PMADDRESS_SPACE AddressSpace,
+   PVOID BaseAddress);
 
 /* npool.c *******************************************************************/
 

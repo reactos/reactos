@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.21 2004/11/28 18:14:02 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -163,11 +163,10 @@ VOID STATIC
 PsFreeCallbackStack(PVOID StackLimit)
 {
   MmLockAddressSpace(MmGetKernelAddressSpace());
-  MmFreeMemoryArea(MmGetKernelAddressSpace(),
-		   StackLimit,
-		   MM_STACK_SIZE,
-		   PsFreeCallbackStackPage,
-		   NULL);
+  MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+		        StackLimit,
+		        PsFreeCallbackStackPage,
+		        NULL);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 

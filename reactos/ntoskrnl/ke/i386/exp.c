@@ -320,7 +320,7 @@ KiDoubleFaultHandler(VOID)
 	{
 	  KeRosPrintAddress((PVOID)Frame[1]);
 	  Frame = (PULONG)Frame[0];
-          DbgPrint(" ");
+          DbgPrint("\n");
 	}
 #else
       DbgPrint("Frames: ");
@@ -663,7 +663,7 @@ KeDumpStackFrames(PULONG Frame)
 				break;
 			StackBase = Frame;
 			Frame = (PULONG)Frame[0];
-			DbgPrint(" ");
+			DbgPrint("\n");
 		}
 	}
 	_SEH_HANDLE

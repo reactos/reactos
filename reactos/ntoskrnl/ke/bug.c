@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.48 2004/12/12 17:42:00 hbirr Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -115,6 +115,11 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
   Ke386DisableInterrupts();
   DebugLogDumpMessages();
+
+  if (MmGetKernelAddressSpace()->Lock.Owner == KeGetCurrentThread())
+    {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+    }
 
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
