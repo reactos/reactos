@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.208 2004/11/27 11:42:56 ekohl Exp $
+/* $Id: main.c,v 1.209 2004/11/28 01:31:08 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -509,24 +509,23 @@ ExpInitializeExecutive(VOID)
     }
 
   /* Initialize all processors */
-  KeNumberProcessors = 0;
+  KeNumberProcessors = 1;
 
   while (!HalAllProcessorsStarted())
     {
       PVOID ProcessorStack;
 
-      if (KeNumberProcessors != 0)
-	{
-	  KePrepareForApplicationProcessorInit(KeNumberProcessors);
-	  PsPrepareForApplicationProcessorInit(KeNumberProcessors);
-	}
+      KePrepareForApplicationProcessorInit(KeNumberProcessors);
+      PsPrepareForApplicationProcessorInit(KeNumberProcessors);
+
       /* Allocate a stack for use when booting the processor */
       /* FIXME: The nonpaged memory for the stack is not released after use */
       ProcessorStack = 
 	(char*)ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
       Ki386InitialStackArray[((int)KeNumberProcessors)] = 
 	(PVOID)((char*)ProcessorStack - MM_STACK_SIZE);
-      HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
+
+      HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));
       KeNumberProcessors++;
     }
 
@@ -848,21 +847,30 @@ ExpInitializeExecutive(VOID)
 VOID __attribute((noinline))
 KiSystemStartup(BOOLEAN BootProcessor)
 {
-  HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  if (BootProcessor)
+  {
+  }
+  else
+  {
+     KeApplicationProcessorInit();
+  }
+
+  HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   if (BootProcessor)
-    {
-      ExpInitializeExecutive();
-      MiFreeInitMemory();
-      /* Never returns */
-      PsTerminateSystemThread(STATUS_SUCCESS);
-      KEBUGCHECK(0);
-    }
-  /* Do application processor initialization */
-  KeApplicationProcessorInit();
-  PsApplicationProcessorInit();
-  KeLowerIrql(PASSIVE_LEVEL);
-  PsIdleThreadMain(NULL);
+  {
+     ExpInitializeExecutive();
+     MiFreeInitMemory();
+     /* Never returns */
+     PsTerminateSystemThread(STATUS_SUCCESS);
+  }
+  else
+  {
+     /* Do application processor initialization */
+     PsApplicationProcessorInit();
+     KeLowerIrql(PASSIVE_LEVEL);
+     PsIdleThreadMain(NULL);
+  }
   KEBUGCHECK(0);
   for(;;);
 }
@@ -989,10 +997,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   /* Low level architecture specific initialization */
   KeInit1((PCHAR)KeLoaderBlock.CommandLine, &LastKernelAddress);
 
-#ifdef HAL_DBG
-  HalnInitializeDisplay((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-#endif
-
   HalBase = KeLoaderModules[1].ModStart;
   DriverBase = LastKernelAddress;
   LdrHalBase = (ULONG_PTR)DriverBase;
@@ -1036,8 +1040,17 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
           KeMemoryMapRangeCount++;
           i += size;
         }
+      KeLoaderBlock.MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
+      KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
-  
+  else
+    {
+      KeLoaderBlock.MmapLength = 0;
+      KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
+    }
+
+  HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
   KiSystemStartup(1);
 }
 

@@ -1,5 +1,6 @@
 #include <roscfg.h>
 #include <internal/ntoskrnl.h>
+#include <internal/i386/ke.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/i386/mm.h>
@@ -188,6 +189,30 @@ _multiboot_entry:
 #ifdef MP
 
 .m1:
+    	/*
+     	 * Check for pae mode (only possible for an application processor)
+     	 */
+     
+	movl	$(V2P(_Ke386Pae)), %eax
+	cmpb	$0, (%eax)
+	je		.m3
+	
+	/*
+	 * Set up the PDBR
+	 */
+	movl	$(V2P(_pae_pagedirtable)), %eax
+	movl	%eax, %cr3
+	
+	/*
+	 * Enable pae mode
+	 */
+	movl	%cr4, %eax
+	orl		$X86_CR4_PAE, %eax
+	movl	%eax, %cr4
+
+	jmp		.m4
+
+.m3:
 
 #endif /* MP */
 
@@ -196,6 +221,10 @@ _multiboot_entry:
 	 */
 	movl	$(V2P(startup_pagedirectory)), %eax
 	movl	%eax, %cr3
+	
+#ifdef MP
+.m4:
+#endif
 
 	/*
 	 * Enable paging and set write protect
@@ -245,6 +274,11 @@ _multiboot_entry:
 	 */
 	pushl	$0
 	popfl
+	
+	/*
+	 *  Reserve space for the floating point save area.
+	 */
+	subl    $SIZEOF_FX_SAVE_AREA, %esp
 
 	/*
 	 * Call the application processor initialization code

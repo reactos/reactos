@@ -132,7 +132,9 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
   PFN_TYPE PrcPfn;
   PKPCR Pcr;
+  PKPCR BootPcr;
 
+  BootPcr = (PKPCR)KPCR_BASE;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
 
   MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PrcPfn);
@@ -147,13 +149,13 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->ProcessorNumber = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
-  Pcr->Irql = HIGH_LEVEL;
+  Pcr->Irql = SYNCH_LEVEL;
+
+  Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
+  Pcr->StallScaleFactor = BootPcr->StallScaleFactor; 
 
   /* Mark the end of the exception handler list */
   Pcr->Tib.ExceptionList = (PVOID)-1;
-
-  KeInitDpc(Pcr);
-
 
   KiGdtPrepareForApplicationProcessorInit(Id);
 }
@@ -172,11 +174,6 @@ KeApplicationProcessorInit(VOID)
      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
   }
   
-  /* Enable PAE mode */
-  if (Ke386PaeEnabled)
-  {
-     MiEnablePAE(NULL);
-  }
 
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
@@ -191,6 +188,8 @@ KeApplicationProcessorInit(VOID)
 
   /* Check FPU/MMX/SSE support. */
   KiCheckFPU();
+
+  KeInitDpc(Pcr);
 
   /*
    * It is now safe to process interrupts
@@ -221,26 +220,16 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    extern USHORT KiBootGdt[];
    extern KTSS KiBootTss;
 
-   /* Get processor information. */
-   Ki386GetCpuId();
-
-   /* Check FPU/MMX/SSE support. */
-   KiCheckFPU();
-
-   KiInitializeGdt (NULL);
-   Ki386BootInitializeTSS();
-   KeInitExceptions ();
-   KeInitInterrupts ();
-
    /*
     * Initialize the initial PCR region. We can't allocate a page
     * with MmAllocPage() here because MmInit1() has not yet been
     * called, so we use a predefined page in low memory 
     */
+
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = KPCR;
-   KPCR->Irql = HIGH_LEVEL;
+   KPCR->Irql = SYNCH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
@@ -249,13 +238,24 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KiPcrInitDone = 1;
    PcrsAllocated++;
 
-   KeInitDpc(KPCR);
+   KiInitializeGdt (NULL);
+   Ki386BootInitializeTSS();
+   Ki386InitializeLdt();
+
+   /* Get processor information. */
+   Ki386GetCpuId();
+
+   /* Check FPU/MMX/SSE support. */
+   KiCheckFPU();
 
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
-   Ki386InitializeLdt();
-   
+   KeInitDpc(KPCR);
+
+   KeInitExceptions ();
+   KeInitInterrupts ();
+
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {
       ULONG Flags;
