@@ -30,8 +30,3 @@
 - Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
   with pressing Win-key, but can't close with another hit of Win-key.
 
-- > Despite of settings, the clock's always shown I set my Win-Explorer to hide the clock
-  > shown in the taskbar, but the ROS-Exp ignores the setting and always shows the clock.
-  Yes, ROS explorer doesn't read many settings from the registry currently,
-  as it doesn't have a way to configure them. (missing configuration dialogs)
-

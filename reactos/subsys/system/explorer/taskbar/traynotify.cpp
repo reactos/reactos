@@ -104,16 +104,33 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_HIDECLOCK))
 #endif
 	{
-		 // create clock window
-		_hwndClock = ClockWindow::Create(_hwnd);
+		HKEY hkeyStuckRects = 0;
+		DWORD buffer[10];
+		DWORD len = sizeof(buffer);
 
-		if (_hwndClock) {
-			ClientRect clock_size(_hwndClock);
-			_clock_width = clock_size.right;
+		bool hide_clock = false;
+
+		 // check if the clock should be hidden
+		if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects2"), &hkeyStuckRects) &&
+			!RegQueryValueEx(hkeyStuckRects, TEXT("Settings"), 0, NULL, (LPBYTE)buffer, &len) &&
+			len==sizeof(buffer) && buffer[0]==sizeof(buffer))
+			hide_clock = buffer[2] & 0x08? true: false;
+
+		if (!hide_clock) {
+			 // create clock window
+			_hwndClock = ClockWindow::Create(_hwnd);
+
+			if (_hwndClock) {
+				ClientRect clock_size(_hwndClock);
+				_clock_width = clock_size.right;
+			}
 		}
 
-		SetTimer(_hwnd, 0, 1000, NULL);
+		if (hkeyStuckRects)
+			RegCloseKey(hkeyStuckRects);
 	}
+
+	SetTimer(_hwnd, 0, 1000, NULL);
 
 	return 0;
 }
