@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.43 2003/12/27 10:08:31 gvg Exp $
+/* $Id: message.c,v 1.44 2003/12/28 13:53:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,45 +62,36 @@ IntCleanupMessageImpl(VOID)
   return STATUS_SUCCESS;
 }
 
-
-LRESULT STDCALL
-NtUserDispatchMessage(CONST MSG* UnsafeMsg)
+LRESULT FASTCALL
+IntDispatchMessage(MSG* Msg)
 {
   LRESULT Result;
   PWINDOW_OBJECT WindowObject;
-  NTSTATUS Status;
-  MSG Msg;
-
-  Status = MmCopyFromCaller(&Msg, (PVOID) UnsafeMsg, sizeof(MSG));
-  if (! NT_SUCCESS(Status))
-    {
-    SetLastNtError(Status);
-    return 0;
-    }
-
   /* Process timer messages. */
-  if (Msg.message == WM_TIMER)
+  if (Msg->message == WM_TIMER)
     {
-      if (Msg.lParam)
+      if (Msg->lParam)
 	{
+	  LARGE_INTEGER LargeTickCount;
 	  /* FIXME: Call hooks. */
 
 	  /* FIXME: Check for continuing validity of timer. */
-
-	  return IntCallWindowProc((WNDPROC)Msg.lParam,
+	  
+          KeQueryTickCount(&LargeTickCount);
+	  return IntCallWindowProc((WNDPROC)Msg->lParam,
                                       FALSE,
-                                      Msg.hwnd,
-                                      Msg.message,
-                                      Msg.wParam,
-                                      0 /* GetTickCount() */,
+                                      Msg->hwnd,
+                                      Msg->message,
+                                      Msg->wParam,
+                                      (LPARAM)LargeTickCount.u.LowPart,
                                       -1);
 	}
     }
 
-  if( Msg.hwnd == 0 ) return 0;
+  if( Msg->hwnd == 0 ) return 0;
 
   /* Get the window object. */
-  WindowObject = IntGetWindowObject(Msg.hwnd);
+  WindowObject = IntGetWindowObject(Msg->hwnd);
   if(!WindowObject)
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -119,26 +110,43 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
     {
       Result = IntCallWindowProc(WindowObject->WndProcW,
                                  FALSE,
-                                 Msg.hwnd,
-                                 Msg.message,
-                                 Msg.wParam,
-                                 Msg.lParam,
+                                 Msg->hwnd,
+                                 Msg->message,
+                                 Msg->wParam,
+                                 Msg->lParam,
                                  -1);
     }
   else
     {
       Result = IntCallWindowProc(WindowObject->WndProcA,
                                  TRUE,
-                                 Msg.hwnd,
-                                 Msg.message,
-                                 Msg.wParam,
-                                 Msg.lParam,
+                                 Msg->hwnd,
+                                 Msg->message,
+                                 Msg->wParam,
+                                 Msg->lParam,
                                  -1);
     }
   
   IntReleaseWindowObject(WindowObject);
   
   return Result;
+}
+
+
+LRESULT STDCALL
+NtUserDispatchMessage(CONST MSG* UnsafeMsg)
+{
+  NTSTATUS Status;
+  MSG Msg;
+
+  Status = MmCopyFromCaller(&Msg, (PVOID) UnsafeMsg, sizeof(MSG));
+  if (! NT_SUCCESS(Status))
+    {
+    SetLastNtError(Status);
+    return 0;
+    }
+  
+  return IntDispatchMessage(&Msg);
 }
 
 VOID FASTCALL

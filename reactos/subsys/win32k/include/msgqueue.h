@@ -145,6 +145,9 @@ IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam);
+LRESULT FASTCALL
+IntDispatchMessage(MSG* Msg);
+
 VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID STDCALL
