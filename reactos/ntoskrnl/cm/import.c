@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.9 2002/10/20 13:55:09 robd Exp $
+/* $Id: import.c,v 1.10 2002/11/10 14:00:41 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,9 @@
  * PROGRAMMERS:     Rex Jolliff
  */
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ctype.h>
 
 #include <ddk/ntddk.h>
@@ -21,6 +24,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 static PCHAR 
 checkAndSkipMagic (PCHAR  regChunk)

@@ -8,6 +8,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -20,6 +23,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 
 /* GLOBALS ******************************************************************/
