@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.72 2004/06/20 12:34:17 navaraf Exp $
+/* $Id: mouse.c,v 1.73 2004/06/24 19:43:48 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -554,7 +554,7 @@ EngSetPointerShape(
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
       ppdev->PointerColorSurface = (HSURF)EngCreateBitmap(Size,
-         psoColor->lDelta, psoColor->iBitmapFormat, 0, Bits);
+         psoColor->lDelta, psoColor->iBitmapFormat, BMF_TOPDOWN, Bits);
    }
    else
    {
@@ -571,7 +571,7 @@ EngSetPointerShape(
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
       ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,
-         psoMask->lDelta, psoMask->iBitmapFormat, 0, Bits);
+         psoMask->lDelta, psoMask->iBitmapFormat, BMF_TOPDOWN, Bits);
    }
 
    /*
@@ -626,7 +626,7 @@ EngSetPointerShape(
       }
 
       ppdev->PointerSaveSurface = (HSURF)EngCreateBitmap(
-         Size, lDelta, pso->iBitmapFormat, BMF_NOZEROINIT, NULL);
+         Size, lDelta, pso->iBitmapFormat, BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
    }
 
    IntShowMousePointer(ppdev, pso);

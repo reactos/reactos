@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.6 2004/05/10 17:07:17 weiden Exp $ */
+/* $Id: misc.c,v 1.7 2004/06/24 19:43:48 gvg Exp $ */
 #include <w32k.h>
 
 BOOL STDCALL
@@ -63,7 +63,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     Width = DIB_GetDIBWidthBytes(BitmapSize.cx, BitsPerFormat(DestObj->iBitmapFormat));
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
                                                DestObj->iBitmapFormat,
-                                               BMF_NOZEROINIT, NULL);
+                                               BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
     *OutputObj = (SURFOBJ *) AccessUserObject((ULONG) EnterLeave->OutputBitmap);
 
     EnterLeave->DestRect.left = 0;
