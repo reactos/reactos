@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.4 2004/01/12 00:22:34 gvg Exp $
+/* $Id: buildno.c,v 1.5 2004/02/21 15:34:51 ea Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -90,6 +90,7 @@ write_h (int build)
   
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%d\"\n", build);
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_RC\t\"%d\\0\"\n", build);
   s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR);
   if (0 != KERNEL_VERSION_PATCH_LEVEL)
