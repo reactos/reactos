@@ -14,11 +14,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-#ifdef __USE_W32API
-#include <initguid.h>
-#else
-#include <ole32/guiddef.h>
-#endif
 #include <ddk/wdmguid.h>
 
 typedef struct _DMA_ADAPTER_INTERNAL {

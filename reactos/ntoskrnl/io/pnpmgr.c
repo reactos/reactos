@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.52 2004/11/19 21:31:02 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ole32/guiddef.h>
 
 #define NDEBUG
 #include <internal/debug.h>
