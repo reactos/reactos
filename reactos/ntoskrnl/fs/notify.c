@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.2 2001/04/24 18:36:39 ea Exp $
+/* $Id: notify.c,v 1.3 2002/01/13 22:02:31 ea Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -21,13 +21,13 @@
 VOID
 STDCALL
 FsRtlNotifyChangeDirectory (
-	IN	PNOTIFY_SYNC			NotifySync,
-	IN	PLIST_ENTRY			NotifyList,
-	IN	PVOID				FsContext,
-	IN	PSTRING				FullDirectoryName,
-	IN	BOOLEAN				WatchTree,
-	IN	ULONG				CompletionFilter,
-	IN	PIRP				NotifyIrp
+    	IN	PNOTIFY_SYNC NotifySync,
+    	IN	PVOID        FsContext,
+    	IN	PSTRING      FullDirectoryName,
+    	IN	PLIST_ENTRY  NotifyList,
+    	IN	BOOLEAN      WatchTree,
+    	IN	ULONG        CompletionFilter,
+    	IN	PIRP         NotifyIrp
 	)
 {
 	FsRtlNotifyFullChangeDirectory (
@@ -93,6 +93,7 @@ FsRtlNotifyFullChangeDirectory (
 	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext		OPTIONAL
 	)
 {
+	DbgPrint("%s()\n", __FUNCTION__);
 }
 
 
@@ -138,9 +139,24 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyInitializeSync (
-	IN OUT	PVOID	* Unknown0
+	IN	PNOTIFY_SYNC	* NotifySync
 	)
 {
+	*NotifySync = NULL;
+	*NotifySync = ExAllocatePoolWithTag (
+			0x10,			// PoolType???
+			sizeof (NOTIFY_SYNC),	// NumberOfBytes = 0x28
+			FSRTL_TAG
+			);
+#if 0
+	*NotifySync->Unknown0 = 1;
+	*NotifySync->Unknown2 = 0;
+	*NotifySync->Unknown3 = 1;
+	*NotifySync->Unknown4 = 4;
+	*NotifySync->Unknown5 = 0;
+	*NotifySync->Unknown9 = 0;
+	*NotifySync->Unknown10 = 0;
+#endif
 }
 
 
@@ -161,7 +177,7 @@ FsRtlNotifyReportChange (
 	IN	PNOTIFY_SYNC	NotifySync,
 	IN	PLIST_ENTRY	NotifyList,
 	IN	PSTRING		FullTargetName,
-	IN	USHORT		TargetNameOffset,
+	IN	PUSHORT		FileNamePartLength,
 	IN	ULONG		FilterMatch
 	)
 {
@@ -169,7 +185,7 @@ FsRtlNotifyReportChange (
 		NotifySync,
 		NotifyList,
 		FullTargetName,
-		(FullTargetName->Length - TargetNameOffset), /*?*/
+		(FullTargetName->Length - *FileNamePartLength), /*?*/
 		NULL,
 		NULL,
 		FilterMatch,
@@ -184,19 +200,49 @@ FsRtlNotifyReportChange (
  *	FsRtlNotifyUninitializeSync@4
  *
  * DESCRIPTION
- *	
+ *	Uninitialize a NOTIFY_SYNC object.
+ *
+ * ARGUMENTS
+ *	NotifySync is the address of a pointer
+ *      to a PNOTIFY_SYNC object previously initialized by
+ *      FsRtlNotifyInitializeSync().
+ *
+ * RETURN VALUE
+ *	None.
+ */
+VOID
+STDCALL
+FsRtlNotifyUninitializeSync (
+	IN OUT	PNOTIFY_SYNC	* NotifySync
+	)
+{
+	if (NULL != *NotifySync) 
+	{
+		ExFreePool (*NotifySync);
+		*NotifySync = NULL;
+	}
+}
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlNotifyVolumeEvent@8
+ *
+ * DESCRIPTION
+ *	NOTE: Only present in NT 5+.
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
  *
  */
-VOID
+NTSTATUS
 STDCALL
-FsRtlNotifyUninitializeSync (
-	IN OUT	PVOID	* Unknown0
+FsRtlNotifyVolumeEvent (
+	IN	PFILE_OBJECT	FileObject,
+	IN	ULONG		EventCode
 	)
 {
+	return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.7 2001/09/24 00:51:16 chorns Exp $
+/* $Id: exception.c,v 1.8 2002/01/13 22:02:30 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,6 +18,18 @@
 VOID STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
+#if 0
+	CONTEXT	Context;
+
+	/* FIXME: fill in the CONTEXT */
+	NtRaiseException (
+		ExceptionRecord,
+		& Context,
+		TRUE
+		);
+	/* FIXME: ExceptionRecord */
+	RtlRaiseException (ExceptionRecord);
+#endif
 }
 
 ULONG

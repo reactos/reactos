@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.2 2001/04/24 18:36:39 ea Exp $
+/* $Id: filelock.c,v 1.3 2002/01/13 22:02:31 ea Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -17,13 +17,18 @@
  *
  * RETURN VALUE
  *
+ * NOTE (Bo Branten)
+ *	All this really does is pick out the lock parameters from
+ *	the irp (io stack location?), get IoGetRequestorProcess,
+ *	and pass values on to FsRtlFastCheckLockForRead.
+ *
  */
 BOOLEAN
 STDCALL
 FsRtlCheckLockForReadAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+    IN PFILE_LOCK   FileLock,
+    IN PIRP         Irp
+    )
 {
 	return FALSE;
 }
@@ -39,13 +44,17 @@ FsRtlCheckLockForReadAccess (
  *
  * RETURN VALUE
  *
+ * NOTE (Bo Branten)
+ *	All this really does is pick out the lock parameters from
+ *	the irp (io stack location?), get IoGetRequestorProcess,
+ *	and pass values on to FsRtlFastCheckLockForWrite.
  */
 BOOLEAN
 STDCALL
 FsRtlCheckLockForWriteAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+    IN PFILE_LOCK   FileLock,
+    IN PIRP         Irp
+    )
 {
 	return FALSE;
 }
@@ -65,13 +74,13 @@ FsRtlCheckLockForWriteAccess (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForRead (
-	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	PLARGE_INTEGER		Length,
-	IN	ULONG			Key,
-	IN	PFILE_OBJECT		FileObject,
-	IN	PEPROCESS		ProcessId
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN ULONG                Key,
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process
+    )
 {
 	return FALSE;
 }
@@ -91,13 +100,13 @@ FsRtlFastCheckLockForRead (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForWrite (
-	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	PLARGE_INTEGER		Length,
-	IN	ULONG			Key,
-	IN	PFILE_OBJECT		FileObject,
-	IN	PEPROCESS		ProcessId
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN ULONG                Key,
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process
+    )
 {
 	return FALSE;
 }
@@ -118,14 +127,14 @@ FsRtlFastCheckLockForWrite (
 static
 NTSTATUS
 STDCALL
-_FsRtlFastUnlockAllByKey (
-	IN	DWORD	Unknown0,
-	IN	DWORD	Unknown1,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	BOOLEAN	UseKey,	/* FIXME: guess */
-	IN	DWORD	Key	/* FIXME: guess */
-	)
+FsRtlpFastUnlockAllByKey (
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process,
+    IN DWORD                Key,      /* FIXME: guess */
+    IN BOOLEAN              UseKey,   /* FIXME: guess */
+    IN PVOID                Context OPTIONAL
+    )
 {
 	/* FIXME: */
 	return (STATUS_RANGE_NOT_LOCKED);
@@ -135,19 +144,19 @@ _FsRtlFastUnlockAllByKey (
 NTSTATUS
 STDCALL
 FsRtlFastUnlockAll (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process,
+    IN PVOID                Context OPTIONAL
+    )
 {
-	return _FsRtlFastUnlockAllByKey (
-			Unknown0,
-			Unknown1,
-			Unknown2,
-			Unknown3,
-			FALSE, /* DO NOT USE KEY? */
-			0
+	return FsRtlpFastUnlockAllByKey (
+			FileLock,
+			FileObject,
+			Process,
+			0,     /* Key */
+			FALSE, /* Do NOT use Key */
+			Context
 			);
 }
 
@@ -155,20 +164,20 @@ FsRtlFastUnlockAll (
 NTSTATUS
 STDCALL
 FsRtlFastUnlockAllByKey (
-	IN	DWORD	Unknown0,
-	IN	DWORD	Unknown1,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Key
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN PVOID                Context OPTIONAL
+    )
 {
-	return _FsRtlFastUnlockAllByKey (
-			Unknown0,
-			Unknown1,
-			Unknown2,
-			Unknown3,
-			TRUE, /* USE KEY? */
-			Key
+	return FsRtlpFastUnlockAllByKey (
+			FileLock,
+			FileObject,
+			Process,
+			Key,
+			TRUE, /* Use Key */
+			Context
 			);
 }
 
@@ -187,15 +196,15 @@ FsRtlFastUnlockAllByKey (
 NTSTATUS
 STDCALL
 FsRtlFastUnlockSingle (
-	IN	DWORD	Unknown0,
-	IN	DWORD	Unknown1,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Unknown4,
-	IN	DWORD	Unknown5,
-	IN	DWORD	Unknown6,
-	IN	DWORD	Unknown7
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN PVOID                Context OPTIONAL,
+    IN BOOLEAN              AlreadySynchronized
+    )
 {
 	return (STATUS_RANGE_NOT_LOCKED);
 }
@@ -210,16 +219,23 @@ FsRtlFastUnlockSingle (
  * ARGUMENTS
  *
  * RETURN VALUE
+ *	NULL if no more locks.
  *
+ * NOTE (Bo Branten)
+ *	Internals: FsRtlGetNextFileLock uses
+ *	FileLock->LastReturnedLockInfo and FileLock->LastReturnedLock
+ *	as storage. LastReturnedLock is a pointer to the 'raw' lock
+ *	inkl. double linked list, and FsRtlGetNextFileLock needs this
+ *	to get next lock on subsequent calls with Restart = FALSE.
  */
-NTSTATUS
+PFILE_LOCK_INFO
 STDCALL
 FsRtlGetNextFileLock (
-	IN	DWORD	Unknown0,
-	IN OUT	PVOID	Unknown1
-	)
+    IN PFILE_LOCK   FileLock,
+    IN BOOLEAN      Restart
+    )
 {
-	return (STATUS_NOT_IMPLEMENTED);
+	return (NULL);
 }
 
 
@@ -237,10 +253,10 @@ FsRtlGetNextFileLock (
 VOID
 STDCALL
 FsRtlInitializeFileLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+    IN PFILE_LOCK                   FileLock,
+    IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
+    IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
+    )
 {
 }
 
@@ -254,24 +270,29 @@ FsRtlInitializeFileLock (
  * ARGUMENTS
  *
  * RETURN VALUE
+ *	IoStatus->Status: STATUS_PENDING, STATUS_LOCK_NOT_GRANTED
  *
+ * NOTE (Bo Branten)
+ *	-Calls IoCompleteRequest if Irp
+ *	-Uses exception handling / ExRaiseStatus with
+ *	 STATUS_INSUFFICIENT_RESOURCES
  */
 BOOLEAN
 STDCALL
 FsRtlPrivateLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9,
-	DWORD	Unknown10,
-	DWORD	Unknown11
-	)
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN BOOLEAN              FailImmediately, 
+    IN BOOLEAN              ExclusiveLock,
+    OUT PIO_STATUS_BLOCK    IoStatus, 
+    IN PIRP                 Irp OPTIONAL,
+    IN PVOID                Context,
+    IN BOOLEAN              AlreadySynchronized
+    )
 {
 	return FALSE;
 }
@@ -286,15 +307,30 @@ FsRtlPrivateLock (
  * ARGUMENTS
  *
  * RETURN VALUE
+ *	-STATUS_INVALID_DEVICE_REQUEST
+ *	-STATUS_RANGE_NOT_LOCKED from unlock routines.
+ *	-STATUS_PENDING, STATUS_LOCK_NOT_GRANTED from FsRtlPrivateLock
+ *	 (redirected IoStatus->Status).
  *
+ * NOTE (Bo Branten)
+ *	-switch ( Irp->CurrentStackLocation->MinorFunction )
+ * 	 lock: return FsRtlPrivateLock;
+ *	 unlocksingle: return FsRtlFastUnlockSingle;
+ *	 unlockall: return FsRtlFastUnlockAll;
+ *	 unlockallbykey: return FsRtlFastUnlockAllByKey;
+ *	 default: IofCompleteRequest with STATUS_INVALID_DEVICE_REQUEST;
+ *	  return STATUS_INVALID_DEVICE_REQUEST;
+ *
+ *	-'AllwaysZero' is passed thru as 'AllwaysZero' to lock / unlock routines.
+ *	-'Irp' is passet thru as 'Irp' to FsRtlPrivateLock.
  */
 NTSTATUS
 STDCALL
 FsRtlProcessFileLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+    IN PFILE_LOCK   FileLock,
+    IN PIRP         Irp,
+    IN PVOID        Context OPTIONAL
+    )
 {
 	return (STATUS_NOT_IMPLEMENTED);
 }
@@ -314,10 +350,32 @@ FsRtlProcessFileLock (
 VOID
 STDCALL
 FsRtlUninitializeFileLock (
-	IN OUT	PVOID	lpUnknown0
-	)
+    IN PFILE_LOCK FileLock
+    )
 {
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlAllocateFileLock@8
+ *
+ * DESCRIPTION
+ * 	Only present in NT 5.0 or later.
+ *	
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ */
+PFILE_LOCK
+STDCALL
+FsRtlAllocateFileLock (
+    IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
+    IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
+    )
+{
+	return NULL;
+}
 
 /* EOF */

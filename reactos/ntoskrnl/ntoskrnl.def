@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.123 2002/01/04 13:09:37 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.124 2002/01/13 22:02:30 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -108,6 +108,7 @@ Exi386InterlockedIncrementLong@4
 FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry@16
 FsRtlAddToTunnelCache@32
+FsRtlAllocateFileLock@8
 FsRtlAllocatePool@8
 FsRtlAllocatePoolWithQuota@8
 FsRtlAllocatePoolWithQuotaTag@12
@@ -168,6 +169,7 @@ FsRtlNotifyFullReportChange@36
 FsRtlNotifyInitializeSync@4
 FsRtlNotifyReportChange@20
 FsRtlNotifyUninitializeSync@4
+FsRtlNotifyVolumeEvent@8
 FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
 FsRtlOplockFsctrl@12

@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.7 2001/04/24 18:36:39 ea Exp $
+/* $Id: util.c,v 1.8 2002/01/13 22:02:31 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -229,14 +229,14 @@ FsRtlCopyWrite (
  * RETURN VALUE
  * 
  */
-DWORD
+NTSTATUS
 STDCALL
 FsRtlGetFileSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+    IN PFILE_OBJECT         FileObject,
+    IN OUT PLARGE_INTEGER   FileSize
+    )
 {
-	return 0;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 

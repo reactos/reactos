@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.11 2001/04/24 18:36:38 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.12 2002/01/13 22:02:30 ea Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 VOID
 STDCALL
@@ -24,15 +24,14 @@ FsRtlAddMcbEntry (
 VOID
 STDCALL
 FsRtlAddToTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	);
+    IN PTUNNEL          Cache,
+    IN ULONGLONG        DirectoryKey,
+    IN PUNICODE_STRING  ShortName,
+    IN PUNICODE_STRING  LongName,
+    IN BOOLEAN          KeyByShortName,
+    IN ULONG            DataLength,
+    IN PVOID            Data
+    );
 PVOID
 STDCALL
 FsRtlAllocatePool (
@@ -80,14 +79,14 @@ FsRtlBalanceReads (
 BOOLEAN
 STDCALL
 FsRtlCheckLockForReadAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	IN PFILE_LOCK   FileLock,
+	IN PIRP         Irp
 	);
 BOOLEAN
 STDCALL
 FsRtlCheckLockForWriteAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	IN PFILE_LOCK   FileLock,
+	IN PIRP         Irp
 	);
 DWORD
 STDCALL
@@ -130,15 +129,14 @@ FsRtlCurrentBatchOplock (
 VOID
 STDCALL
 FsRtlDeleteKeyFromTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
+    IN PTUNNEL      Cache,
+    IN ULONGLONG    DirectoryKey
+    );
 VOID
 STDCALL
 FsRtlDeleteTunnelCache (
-	IN OUT	PVOID	lpTunnel
-	);
+    IN PTUNNEL Cache
+    );
 VOID
 STDCALL
 FsRtlDeregisterUncProvider (
@@ -173,75 +171,74 @@ FsRtlDoesNameContainWildCards (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForRead (
-	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PFILE_LOCK		FileLock,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	PLARGE_INTEGER		Length,
 	IN	ULONG			Key,
 	IN	PFILE_OBJECT		FileObject,
-	IN	PEPROCESS		ProcessId
+	IN	PEPROCESS		Process
 	);
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForWrite (
-	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PFILE_LOCK		FileLock,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	PLARGE_INTEGER		Length,
 	IN	ULONG			Key,
 	IN	PFILE_OBJECT		FileObject,
-	IN	PEPROCESS		ProcessId
+	IN	PEPROCESS		Process
 	);
 NTSTATUS
 STDCALL
 FsRtlFastUnlockAll (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	IN	PFILE_LOCK           FileLock,
+	IN	PFILE_OBJECT         FileObject,
+	IN	PEPROCESS            Process,
+	IN	PVOID                Context OPTIONAL
 	);
 NTSTATUS
 STDCALL
 FsRtlFastUnlockAllByKey (
-	IN	DWORD	Unknown0,
-	IN	DWORD	Unknown1,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Key
+	IN	PFILE_LOCK	FileLock,
+	IN	PFILE_OBJECT	FileObject,
+	IN	PEPROCESS	Process,
+	IN	DWORD		Key,
+	IN	PVOID		Context OPTIONAL
 	);
 NTSTATUS
 STDCALL
 FsRtlFastUnlockSingle (
-	IN	DWORD	Unknown0,
-	IN	DWORD	Unknown1,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Unknown4,
-	IN	DWORD	Unknown5,
-	IN	DWORD	Unknown6,
-	IN	DWORD	Unknown7
-	);
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN PVOID                Context OPTIONAL,
+    IN BOOLEAN              AlreadySynchronized
+    );
 VOID
 STDCALL
 FsRtlFindInTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	);
-DWORD
-STDCALL
-FsRtlGetFileSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
+    IN PTUNNEL          Cache,
+    IN ULONGLONG        DirectoryKey,
+    IN PUNICODE_STRING  Name,
+    OUT PUNICODE_STRING ShortName,
+    OUT PUNICODE_STRING LongName,
+    IN OUT PULONG       DataLength,
+    OUT PVOID           Data
+    );
 NTSTATUS
 STDCALL
+FsRtlGetFileSize (
+	IN	PFILE_OBJECT	FileObject,
+	IN OUT	PLARGE_INTEGER	FileSize
+	);
+PFILE_LOCK_INFO
+STDCALL
 FsRtlGetNextFileLock (
-	IN	DWORD	Unknown0,
-	IN OUT	PVOID	Unknown1
+	IN	PFILE_LOCK	FileLock,
+	IN	BOOLEAN		Restart
 	);
 VOID
 STDCALL
@@ -266,9 +263,9 @@ FsRtlGetNextMcbEntry (
 VOID
 STDCALL
 FsRtlInitializeFileLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	IN PFILE_LOCK                   FileLock,
+	IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
+	IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
 	);
 VOID
 STDCALL
@@ -290,8 +287,8 @@ FsRtlInitializeOplock (
 VOID
 STDCALL
 FsRtlInitializeTunnelCache (
-	IN OUT	PVOID	lpTunnel
-	);
+    IN PTUNNEL Cache
+    );
 BOOLEAN
 STDCALL
 FsRtlIsDbcsInExpression (
@@ -426,13 +423,13 @@ FsRtlMdlWriteCompleteDev (
 VOID
 STDCALL
 FsRtlNotifyChangeDirectory (
-	IN	PNOTIFY_SYNC			NotifySync,
-	IN	PLIST_ENTRY			NotifyList,
-	IN	PVOID				FsContext,
-	IN	PSTRING				FullDirectoryName,
-	IN	BOOLEAN				WatchTree,
-	IN	ULONG				CompletionFilter,
-	IN	PIRP				NotifyIrp
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PVOID		FsContext,
+	IN	PSTRING		FullDirectoryName,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	BOOLEAN		WatchTree,
+	IN	ULONG		CompletionFilter,
+	IN	PIRP		NotifyIrp
 	);
 VOID
 STDCALL
@@ -477,7 +474,7 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-	IN OUT	PVOID	* Unknown0
+	IN OUT	PNOTIFY_SYNC	* NotifySync
 	);
 VOID
 STDCALL
@@ -485,13 +482,19 @@ FsRtlNotifyReportChange (
 	IN	PNOTIFY_SYNC	NotifySync,
 	IN	PLIST_ENTRY	NotifyList,
 	IN	PSTRING		FullTargetName,
-	IN	USHORT		TargetNameOffset,
+	IN	PUSHORT		FileNamePartLength,
 	IN	ULONG		FilterMatch
 	);
 VOID
 STDCALL
 FsRtlNotifyInitializeSync (
-	IN OUT	PVOID	* Unknown0
+	IN OUT	PNOTIFY_SYNC	* NotifySync
+	);
+NTSTATUS
+STDCALL
+FsRtlNotifyVolumeEvent (
+	IN	PFILE_OBJECT	FileObject,
+	IN	ULONG	EventCode
 	);
 NTSTATUS
 STDCALL
@@ -559,26 +562,26 @@ FsRtlPostStackOverflow (
 BOOLEAN
 STDCALL
 FsRtlPrivateLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9,
-	DWORD	Unknown10,
-	DWORD	Unknown11
-	);
+    IN PFILE_LOCK           FileLock,
+    IN PFILE_OBJECT         FileObject,
+    IN PLARGE_INTEGER       FileOffset,
+    IN PLARGE_INTEGER       Length,
+    IN PEPROCESS            Process,
+    IN ULONG                Key,
+    IN BOOLEAN              FailImmediately, 
+    IN BOOLEAN              ExclusiveLock,
+    OUT PIO_STATUS_BLOCK    IoStatus, 
+    IN PIRP                 Irp OPTIONAL,
+    IN PVOID                Context,
+    IN BOOLEAN              AlreadySynchronized
+    );
 NTSTATUS
 STDCALL
 FsRtlProcessFileLock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
+    IN PFILE_LOCK   FileLock,
+    IN PIRP         Irp,
+    IN PVOID        Context OPTIONAL
+    );
 DWORD
 STDCALL
 FsRtlRegisterUncProvider (
@@ -634,8 +637,8 @@ FsRtlTruncateMcb (
 VOID
 STDCALL
 FsRtlUninitializeFileLock (
-	IN OUT	PVOID	lpUnknown0
-	);
+    IN PFILE_LOCK FileLock
+    );
 VOID
 STDCALL
 FsRtlUninitializeLargeMcb (

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.109 2002/01/04 13:09:37 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.110 2002/01/13 22:02:30 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -108,6 +108,7 @@ Exi386InterlockedIncrementLong=Exi386InterlockedIncrementLong@4
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
 FsRtlAddToTunnelCache=FsRtlAddToTunnelCache@32
+FsRtlAllocateFileLock=FsRtlAllocateFileLock@8
 FsRtlAllocatePool=FsRtlAllocatePool@8
 FsRtlAllocatePoolWithQuota=FsRtlAllocatePoolWithQuota@8
 FsRtlAllocatePoolWithQuotaTag=FsRtlAllocatePoolWithQuotaTag@12
@@ -168,6 +169,7 @@ FsRtlNotifyFullReportChange=FsRtlNotifyFullReportChange@36
 FsRtlNotifyInitializeSync=FsRtlNotifyInitializeSync@4
 FsRtlNotifyReportChange=FsRtlNotifyReportChange@20
 FsRtlNotifyUninitializeSync=FsRtlNotifyUninitializeSync@4
+FsRtlNotifyVolumeEvent=FsRtlNotifyVolumeEvent@8
 FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
 FsRtlOplockFsctrl=FsRtlOplockFsctrl@12

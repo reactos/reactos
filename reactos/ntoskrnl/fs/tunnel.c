@@ -1,4 +1,4 @@
-/* $Id: tunnel.c,v 1.1 2000/03/11 00:51:36 ea Exp $
+/* $Id: tunnel.c,v 1.2 2002/01/13 22:02:31 ea Exp $
  *
  * reactos/ntoskrnl/fs/tunnel.c
  *
@@ -21,15 +21,14 @@
 VOID
 STDCALL
 FsRtlAddToTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	)
+    IN PTUNNEL          Cache,
+    IN ULONGLONG        DirectoryKey,
+    IN PUNICODE_STRING  ShortName,
+    IN PUNICODE_STRING  LongName,
+    IN BOOLEAN          KeyByShortName,
+    IN ULONG            DataLength,
+    IN PVOID            Data
+    )
 {
 }
 
@@ -48,10 +47,9 @@ FsRtlAddToTunnelCache (
 VOID
 STDCALL
 FsRtlDeleteKeyFromTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+    IN PTUNNEL      Cache,
+    IN ULONGLONG    DirectoryKey
+    )
 {
 }
 
@@ -70,8 +68,8 @@ FsRtlDeleteKeyFromTunnelCache (
 VOID
 STDCALL
 FsRtlDeleteTunnelCache (
-	IN OUT	PVOID	lpTunnel
-	)
+    IN PTUNNEL Cache
+    )
 {
 }
 
@@ -90,15 +88,14 @@ FsRtlDeleteTunnelCache (
 VOID
 STDCALL
 FsRtlFindInTunnelCache (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	)
+    IN PTUNNEL          Cache,
+    IN ULONGLONG        DirectoryKey,
+    IN PUNICODE_STRING  Name,
+    OUT PUNICODE_STRING ShortName,
+    OUT PUNICODE_STRING LongName,
+    IN OUT PULONG       DataLength,
+    OUT PVOID           Data
+    )
 {
 }
 
@@ -117,8 +114,8 @@ FsRtlFindInTunnelCache (
 VOID
 STDCALL
 FsRtlInitializeTunnelCache (
-	IN OUT	PVOID	lpTunnel
-	)
+    IN PTUNNEL Cache
+    )
 {
 }
 
