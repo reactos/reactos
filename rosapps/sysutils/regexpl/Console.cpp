@@ -1,4 +1,4 @@
-/* $Id: Console.cpp,v 1.5 2001/05/03 22:41:16 narnaoud Exp $
+/* $Id: Console.cpp,v 1.6 2001/05/16 21:19:06 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -315,12 +315,17 @@ KeyRepeat:
 //		char Buf[1024];
 //		sprintf(Buf,"wVirtualKeyCode = %u\nchar = %u\n\n",InputRecord.Event.KeyEvent.wVirtualKeyCode,ch);
 //		OutputDebugString(Buf);
+
+#ifndef NO_PASTE
 		if ((ch == 0x16)&&(InputRecord.Event.KeyEvent.wVirtualKeyCode == 'V'))
 		{
 			goto Paste;
 		}
-		else if (ch == 0)
+		else
+#endif
+    if (ch == 0)
 		{
+#ifndef NO_PASTE
 			if (InputRecord.Event.KeyEvent.wVirtualKeyCode == VK_INSERT)
 			{
 				if (!(InputRecord.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED))
@@ -416,7 +421,9 @@ Paste:
 					}
 				}
 			}
-			else if (InputRecord.Event.KeyEvent.wVirtualKeyCode == VK_LEFT)
+			else
+#endif
+      if (InputRecord.Event.KeyEvent.wVirtualKeyCode == VK_LEFT)
 			{
 				if (blnCompletionMode) blnCompletionMode = FALSE;
 				if (dwCurrentCharOffset)
