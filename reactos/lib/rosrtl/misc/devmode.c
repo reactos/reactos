@@ -1,5 +1,5 @@
-#include <string.h>
 #include <windows.h>
+#include <string.h>
 
 void
 RosRtlDevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.28 2003/06/26 21:52:40 gvg Exp $
+# $Id: makefile,v 1.29 2003/07/21 02:36:00 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,15 +8,16 @@ TARGET_NAME = gdi32
 
 TARGET_BASE = 0x77ed0000
 
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a rosrtl.a
+
 TARGET_CFLAGS = \
  -I./include \
+ -DUNICODE \
  -Wall \
  -Werror \
  -fno-builtin
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
-
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 MAIN_OBJECTS = main/dllmain.o
 

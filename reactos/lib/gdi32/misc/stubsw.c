@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.11 2003/07/21 01:59:51 royce Exp $
+/* $Id: stubsw.c,v 1.12 2003/07/21 02:36:00 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -8,7 +8,9 @@
  * remove its stub from this file.
  *
  */
+#ifndef UNICODE
 #define UNICODE
+#endif//UNICODE
 #include <windows.h>
 #include <win32k/kapi.h>
 

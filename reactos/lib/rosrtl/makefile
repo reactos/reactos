@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2003/07/21 01:59:51 royce Exp $
+# $Id: makefile,v 1.5 2003/07/21 02:36:00 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,6 +14,10 @@ THREAD_OBJECTS = \
 MISC_OBJECTS = \
  misc/devmode.o \
  misc/qsort.o
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
+
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)
  

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.12 2003/07/21 01:59:51 royce Exp $
+/* $Id: stubsa.c,v 1.13 2003/07/21 02:36:00 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -17,6 +17,8 @@
 #include <ddk/ntddk.h>
 #include <win32k/text.h>
 #include <win32k/metafile.h>
+#include <win32k/dc.h>
+#include <rosrtl/devmode.h>
 
 /*
  * @implemented
@@ -86,7 +88,7 @@ CopyMetaFileA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
@@ -127,9 +129,18 @@ CreateICA(
     }
 
   if ( lpdvmInit )
-    RosRtlDevModeA2W ( &dvmInitW, lpdvmInit );
+    RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
 
-  return 0;
+  rc = W32kCreateIC ( Driver.Buffer,
+		      Device.Buffer,
+		      Output.Buffer,
+		      lpdvmInit ? &dvmInitW : NULL );
+
+  RtlFreeUnicodeString ( &Output );
+  RtlFreeUnicodeString ( &Device );
+  RtlFreeUnicodeString ( &Driver );
+
+  return rc;
 }
 
 
