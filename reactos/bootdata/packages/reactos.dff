@@ -58,7 +58,7 @@ lib\expat\libexpat.dll                  1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
-lib\imm32\imm32				1
+lib\imm32\imm32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
 lib\kbdfr\kbdfr.dll                     1
 lib\kbdgr\kbdgr.dll                     1
