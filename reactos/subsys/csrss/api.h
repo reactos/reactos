@@ -32,6 +32,9 @@ typedef struct CSRSS_CONSOLE_t
    BYTE DefaultAttrib;        /* default char attribute */
    LIST_ENTRY InputEvents;    /* List head for input event queue */
    CONSOLE_CURSOR_INFO CursorInfo;
+   DWORD ConsoleMode;
+   WORD WaitingChars;
+   WORD WaitingLines;        /* number of chars and lines in input queue */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct
@@ -93,6 +96,10 @@ NTSTATUS CsrGetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST R
 NTSTATUS CsrSetCursorInfo( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
 
 NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrSetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
+
+NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply );
 
 /* print.c */
 VOID DisplayString(LPCWSTR lpwString);

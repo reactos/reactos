@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.8 2000/05/26 05:40:20 phreak Exp $
+/* $Id: wapi.c,v 1.9 2000/07/11 04:09:25 phreak Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -42,6 +42,8 @@ static const CsrFunc CsrFuncs[] = {
    CsrGetCursorInfo,
    CsrSetCursorInfo,
    CsrSetTextAttrib,
+   CsrGetConsoleMode,
+   CsrSetConsoleMode,
    0 };
 
 static void Thread_Api2(HANDLE ServerPort)

@@ -152,6 +152,22 @@ typedef struct
    CHAR Attrib;
 } CSRSS_SET_ATTRIB_REQUEST, *PCSRSS_SET_ATTRIB_REQUEST;
 
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD Mode;
+} CSRSS_SET_CONSOLE_MODE_REQUEST, *PCSRSS_SET_CONSOLE_MODE_REQUEST;
+
+typedef struct
+{
+  HANDLE ConsoleHandle;
+} CSRSS_GET_CONSOLE_MODE_REQUEST, *PCSRSS_GET_CONSOLE_MODE_REQUEST;
+
+typedef struct
+{
+  DWORD ConsoleMode;
+} CSRSS_GET_CONSOLE_MODE_REPLY, *PCSRSS_GET_CONSOLE_MODE_REPLY;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_REQUEST))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST ))
 
@@ -176,6 +192,8 @@ typedef struct
 #define CSRSS_GET_CURSOR_INFO           (0xE)
 #define CSRSS_SET_CURSOR_INFO           (0xF)
 #define CSRSS_SET_ATTRIB                (0x10)
+#define CSRSS_GET_MODE                  (0x11)
+#define CSRSS_SET_MODE                  (0x12)
 
 typedef struct
 {
@@ -197,6 +215,8 @@ typedef struct
 	CSRSS_SET_CURSOR_INFO_REQUEST SetCursorInfoRequest;
 	CSRSS_GET_CURSOR_INFO_REQUEST GetCursorInfoRequest;
 	CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
+	CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
+	CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
      } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -216,6 +236,7 @@ typedef struct
 	CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY WriteConsoleOutputCharReply;
 	CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
 	CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
+	CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
      } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

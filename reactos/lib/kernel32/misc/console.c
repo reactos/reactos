@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.24 2000/07/01 17:07:00 ea Exp $
+/* $Id: console.c,v 1.25 2000/07/11 04:06:42 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -801,8 +801,20 @@ GetConsoleMode(
 	LPDWORD		lpMode
 	)
 {
-   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-   return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  
+  Request.Type = CSRSS_GET_MODE;
+  Request.Data.GetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
+  Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+  if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	SetLastErrorByStatus ( Status );
+	return FALSE;
+      }
+  *lpMode = Reply.Data.GetConsoleModeReply.ConsoleMode;
+  return TRUE;
 }
 
 
@@ -895,8 +907,20 @@ SetConsoleMode(
 	DWORD		dwMode
 	)
 {
-   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-   return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  
+  Request.Type = CSRSS_SET_MODE;
+  Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
+  Request.Data.SetConsoleModeRequest.Mode = dwMode;
+  Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+  if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	SetLastErrorByStatus ( Status );
+	return FALSE;
+      }
+  return TRUE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.9 2000/07/07 01:16:50 phreak Exp $
+/* $Id: conio.c,v 1.10 2000/07/11 04:09:25 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -105,7 +105,7 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 {
    ConsoleInput *Input;
    PCHAR Buffer;
-   int   i;
+   int   i = 0;
    ULONG nNumberOfCharsToRead;
    PCSRSS_CONSOLE Console;
    NTSTATUS Status;
@@ -128,16 +128,34 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 	 return Status;
       }
    RtlEnterCriticalSection( &ActiveConsoleLock );
-   for (i=0; i<nNumberOfCharsToRead && Console->InputEvents.Flink != &Console->InputEvents; i++ )     
-     {
-	Input = (ConsoleInput *)Console->InputEvents.Flink;
-	Input->ListEntry.Blink->Flink = Input->ListEntry.Flink;
-	Input->ListEntry.Flink->Blink = Input->ListEntry.Blink;
-	if( Input->InputEvent.Event.KeyEvent.bKeyDown == TRUE && Input->InputEvent.Event.KeyEvent.uChar.AsciiChar )
-	   Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
-	else i--;
-	RtlFreeHeap( CsrssApiHeap, 0, Input );
-     }
+   if( !(Console->ConsoleMode & ENABLE_LINE_INPUT) || Console->WaitingLines )
+      for (; i<nNumberOfCharsToRead && Console->InputEvents.Flink != &Console->InputEvents; i++ )     
+	 {
+	    // remove input event from queue
+	    Input = (ConsoleInput *)Console->InputEvents.Flink;
+	    Input->ListEntry.Blink->Flink = Input->ListEntry.Flink;
+	    Input->ListEntry.Flink->Blink = Input->ListEntry.Blink;
+	    // only pay attention to valid ascii chars, on key down
+	    if( Input->InputEvent.Event.KeyEvent.bKeyDown == TRUE &&
+		Input->InputEvent.Event.KeyEvent.uChar.AsciiChar )
+	       {
+		  Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+		  // process newline on line buffered mode
+		  if( Console->ConsoleMode & ENABLE_LINE_INPUT &&
+		      Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+		     {
+			Console->WaitingChars--;
+			Console->WaitingLines--;
+			RtlFreeHeap( CsrssApiHeap, 0, Input );
+			i++;
+			break;
+		     }
+	       }
+	    else i--;
+	    Console->WaitingChars--;
+	    RtlFreeHeap( CsrssApiHeap, 0, Input );
+	 }
+   Buffer[i] = 0;
    RtlLeaveCriticalSection( &ActiveConsoleLock );
    LpcReply->Data.ReadConsoleReply.NrCharactersRead = i;
    LpcReply->Status = i ? STATUS_SUCCESS : STATUS_PENDING;
@@ -282,7 +300,10 @@ NTSTATUS CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
   Console->CurrentX = 0;
   Console->CurrentY = 0;
   Console->ReferenceCount = 0;
+  Console->WaitingChars = 0;
+  Console->WaitingLines = 0;
   Console->Type = CSRSS_CONSOLE_MAGIC;
+  Console->ConsoleMode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->Buffer = RtlAllocateHeap( CsrssApiHeap, 0, Console->MaxX * Console->MaxY * 2 );
   if( Console->Buffer == 0 )
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -486,6 +507,7 @@ VOID Console_Api( DWORD RefreshEvent )
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
   HANDLE Events[2];     // 0 = keyboard, 1 = refresh
+  int c;
 
   Events[0] = 0;
   Status = NtCreateEvent( &Events[0], STANDARD_RIGHTS_ALL, NULL, FALSE, FALSE );
@@ -586,11 +608,48 @@ VOID Console_Api( DWORD RefreshEvent )
 	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
 	    continue;
 	 }
+      // echo to screen if enabled, but do not echo '\b' if there are no keys in buffer to delete
+      if( ActiveConsole->ConsoleMode & ENABLE_ECHO_INPUT &&
+	  KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE &&
+	  KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar &&
+	  ( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar != '\b' ||
+	    ActiveConsole->InputEvents.Flink != &ActiveConsole->InputEvents ) )
+	{
+	  CsrpWriteConsole( ActiveConsole, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );
+	}
+      // process special keys if enabled
+      if( ActiveConsole->ConsoleMode & ENABLE_PROCESSED_INPUT )
+	  switch( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar )
+	    {
+	    case '\b':
+	      if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
+		for( c = 0; c < 2; c++ )
+		  {
+		    ConsoleInput *Input = ActiveConsole->InputEvents.Blink;
+
+		    CHECKPOINT1;
+		    ActiveConsole->InputEvents.Blink->Blink->Flink = &ActiveConsole->InputEvents;
+		    ActiveConsole->InputEvents.Blink = ActiveConsole->InputEvents.Blink->Blink;
+		    RtlFreeHeap( CsrssApiHeap, 0, Input );
+		  }
+	      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	      RtlLeaveCriticalSection( &ActiveConsoleLock );
+	      continue;
+	    }
+      // add event to the queue
       KeyEventRecord->ListEntry.Flink = &ActiveConsole->InputEvents;
       KeyEventRecord->ListEntry.Blink = ActiveConsole->InputEvents.Blink;
       ActiveConsole->InputEvents.Blink->Flink = &KeyEventRecord->ListEntry;
       ActiveConsole->InputEvents.Blink = &KeyEventRecord->ListEntry;
-      NtSetEvent( ActiveConsole->ActiveEvent, 0 );
+      // if line input mode is enabled, only wake the client on enter key up
+      if( !(ActiveConsole->ConsoleMode & ENABLE_LINE_INPUT ) ||
+	  ( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' &&
+	    KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == FALSE ) )
+	{
+	  NtSetEvent( ActiveConsole->ActiveEvent, 0 );
+	  ActiveConsole->WaitingLines++;
+	}
+      ActiveConsole->WaitingChars++;
       RtlLeaveCriticalSection( &ActiveConsoleLock );
     }
 }
@@ -713,6 +772,7 @@ NTSTATUS CsrFillOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
    if( Console == ActiveConsole )
       CsrDrawConsole( Console );
    RtlLeaveCriticalSection( &ActiveConsoleLock );
+   return Reply->Status;
 }
 
 NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
@@ -735,12 +795,19 @@ NTSTATUS CsrReadInputEvent( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST 
 	 return Status;
       }
    RtlEnterCriticalSection( &ActiveConsoleLock );
-   if( Console->InputEvents.Flink != &Console->InputEvents )     
+   // only get input if there is input, and we are not in line input mode, or if we are, if we have a whole line
+   if( Console->InputEvents.Flink != &Console->InputEvents &&
+       ( !Console->ConsoleMode & ENABLE_LINE_INPUT || Console->WaitingLines ) )     
      {
 	Input = (ConsoleInput *)Console->InputEvents.Flink;
 	Input->ListEntry.Blink->Flink = Input->ListEntry.Flink;
 	Input->ListEntry.Flink->Blink = Input->ListEntry.Blink;
 	Reply->Data.ReadInputReply.Input = Input->InputEvent;
+	if( Console->ConsoleMode & ENABLE_LINE_INPUT &&
+	    Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
+	    Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+	  Console->WaitingLines--;
+	Console->WaitingChars--;
 	RtlFreeHeap( CsrssApiHeap, 0, Input );
 	Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
 	Status = STATUS_SUCCESS;
@@ -913,6 +980,56 @@ NTSTATUS CsrSetTextAttrib( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST R
       }
    return Reply->Status = STATUS_SUCCESS;
 }
+
+NTSTATUS CsrSetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+{
+   NTSTATUS Status;
+   PCSRSS_CONSOLE Console;
+
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
+   if( Request->Data.SetConsoleModeRequest.Mode & (~CONSOLE_MODE_VALID) ||
+       ( Request->Data.SetConsoleModeRequest.Mode & (ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT) &&
+	 !( Request->Data.SetConsoleModeRequest.Mode & ENABLE_LINE_INPUT ) ) )
+     {
+       Reply->Status = STATUS_INVALID_PARAMETER;
+       return Reply->Status;
+     }
+   Status = CsrGetObject( ProcessData, Request->Data.SetConsoleModeRequest.ConsoleHandle, (Object_t **)&Console );
+   if( !NT_SUCCESS( Status ) )
+      {
+	 Reply->Status = Status;
+	 return Status;
+      }
+   RtlEnterCriticalSection( &ActiveConsoleLock );
+   Console->ConsoleMode = Request->Data.SetConsoleModeRequest.Mode;
+   RtlLeaveCriticalSection( &ActiveConsoleLock );
+   Reply->Status = STATUS_SUCCESS;
+   return Reply->Status;
+}
+
+NTSTATUS CsrGetConsoleMode( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply )
+{
+   NTSTATUS Status;
+   PCSRSS_CONSOLE Console;
+
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
+   Status = CsrGetObject( ProcessData, Request->Data.GetConsoleModeRequest.ConsoleHandle, (Object_t **)&Console );
+   if( !NT_SUCCESS( Status ) )
+      {
+	 Reply->Status = Status;
+	 return Status;
+      }
+   RtlEnterCriticalSection( &ActiveConsoleLock );
+   Reply->Data.GetConsoleModeReply.ConsoleMode = Console->ConsoleMode;
+   RtlLeaveCriticalSection( &ActiveConsoleLock );
+   Reply->Status = STATUS_SUCCESS;
+   return Reply->Status;
+}
+
+
+
 
 
 
