@@ -250,7 +250,7 @@ LsaNtStatusToWinError@4
 LsaOpenPolicy@16
 ;LsaOpenSecret@16
 ;LsaOpenTrustedDomain@16
-;LsaQueryInfoTrustedDomain
+LsaQueryInfoTrustedDomain@12
 LsaQueryInformationPolicy@12
 ;LsaQuerySecret@20
 ;LsaQuerySecurityObject@12
