@@ -501,7 +501,7 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 			   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, 
 					    PULONG NrFreed));
 VOID
-MmInitializeBalancer(ULONG NrAvailablePages);
+MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages);
 NTSTATUS
 MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page);
 NTSTATUS

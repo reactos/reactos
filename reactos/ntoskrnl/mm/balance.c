@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.21 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: balance.c,v 1.22 2003/10/23 20:28:08 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -73,7 +73,7 @@ VOID MmPrintMemoryStatistic(VOID)
 }
 
 VOID INIT_FUNCTION
-MmInitializeBalancer(ULONG NrAvailablePages)
+MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
   memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
   InitializeListHead(&AllocationListHead);
@@ -88,6 +88,7 @@ MmInitializeBalancer(ULONG NrAvailablePages)
     NrAvailablePages - MiMinimumAvailablePages;
   MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
   MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
+  MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
 }
 
 VOID INIT_FUNCTION
