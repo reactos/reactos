@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.16 2003/07/20 05:32:19 jimtabor Exp $
+/* $Id: stubs.c,v 1.17 2003/07/25 23:02:21 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,21 +65,6 @@ NtUserBlockInput(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserBuildHwndList(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL

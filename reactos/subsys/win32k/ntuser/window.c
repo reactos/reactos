@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.67 2003/07/25 19:35:51 gdalsnes Exp $
+/* $Id: window.c,v 1.68 2003/07/25 23:02:21 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1997,5 +1997,144 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
    
    return tid;
 }
+
+
+/*
+ * As best as I can figure, this function is used by EnumWindows,
+ * EnumChildWindows, EnumDesktopWindows, & EnumThreadWindows.
+ *
+ * It's supposed to build a list of HWNDs to return to the caller.
+ * We can figure out what kind of list by what parameters are
+ * passed to us.
+ */
+ULONG
+STDCALL
+NtUserBuildHwndList(
+  HDESK hDesktop,
+  HWND hwndParent,
+  BOOLEAN bChildren,
+  ULONG dwThreadId,
+  ULONG lParam,
+  HWND* pWnd,
+  ULONG nBufSize)
+{
+  ULONG dwCount = 0;
+
+  /* FIXME handle bChildren */
+  if ( hwndParent )
+    {
+      PWINDOW_OBJECT WindowObject = NULL;
+      PLIST_ENTRY ChildListEntry;
+
+      WindowObject = W32kGetWindowObject ( hwndParent );
+      if ( !WindowObject )
+	{
+	  DPRINT("Bad window handle 0x%x\n", hWnd);
+	  SetLastWin32Error(ERROR_INVALID_HANDLE);
+	  return 0;
+	}
+
+      ExAcquireFastMutex ( &WindowObject->ChildrenListLock );
+      ChildListEntry = WindowObject->ChildrenListHead.Flink;
+      while (ChildListEntry != &WindowObject->ChildrenListHead)
+	{
+	  PWINDOW_OBJECT Child;
+	  Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
+				    SiblingListEntry);
+	  if ( pWnd && dwCount < nBufSize )
+	    pWnd[dwCount] = Child->Self;
+	  dwCount++;
+	  ChildListEntry = ChildListEntry->Flink;
+	}
+      ExReleaseFastMutex ( &WindowObject->ChildrenListLock );
+      W32kReleaseWindowObject ( WindowObject );
+    }
+  else if ( dwThreadId )
+    {
+      NTSTATUS Status;
+      struct _ETHREAD* Thread;
+      struct _EPROCESS* ThreadsProcess;
+      struct _W32PROCESS*   Win32Process;
+      struct _WINSTATION_OBJECT* WindowStation;
+      PUSER_HANDLE_TABLE HandleTable;
+      PLIST_ENTRY Current;
+      PUSER_HANDLE_BLOCK Block = NULL;
+      int i;
+
+      Status = PsLookupThreadByThreadId ( (PVOID)dwThreadId, &Thread );
+      if ( !NT_SUCCESS(Status) || !Thread )
+	{
+	  DPRINT("Bad ThreadId 0x%x\n", dwThreadId );
+	  SetLastWin32Error(ERROR_INVALID_HANDLE);
+	  return 0;
+	}
+      ThreadsProcess = Thread->ThreadsProcess;
+      ASSERT(ThreadsProcess);
+      Win32Process = ThreadsProcess->Win32Process;
+      ASSERT(Win32Process);
+      WindowStation = Win32Process->WindowStation;
+      ASSERT(WindowStation);
+      HandleTable = (PUSER_HANDLE_TABLE)(WindowStation->HandleTable);
+      ASSERT(HandleTable);
+
+      ExAcquireFastMutex(&HandleTable->ListLock);
+
+      Current = HandleTable->ListHead.Flink;
+      while ( Current != &HandleTable->ListHead )
+	{
+	  Block = CONTAINING_RECORD(Current, USER_HANDLE_BLOCK, ListEntry);
+	  for ( i = 0; i < HANDLE_BLOCK_ENTRIES; i++ )
+	    {
+	      PVOID ObjectBody = Block->Handles[i].ObjectBody;
+	      if ( ObjectBody )
+	      {
+		if ( pWnd && dwCount < nBufSize )
+		  {
+		    pWnd[dwCount] =
+		      (HWND)ObmReferenceObjectByPointer ( ObjectBody, otWindow );
+		  }
+		dwCount++;
+	      }
+	    }
+	  Current = Current->Flink;
+	}
+
+      ExReleaseFastMutex(&HandleTable->ListLock);
+    }
+  else
+    {
+      PDESKTOP_OBJECT DesktopObject = NULL;
+      KIRQL OldIrql;
+      PLIST_ENTRY WindowListEntry;
+
+      if ( hDesktop )
+	DesktopObject = W32kGetDesktopObject ( hDesktop );
+      else
+	DesktopObject = W32kGetActiveDesktop();
+      if (!DesktopObject)
+	{
+	  DPRINT("Bad desktop handle 0x%x\n", hDesktop );
+	  SetLastWin32Error(ERROR_INVALID_HANDLE);
+	  return 0;
+	}
+
+      KeAcquireSpinLock ( &DesktopObject->Lock, &OldIrql );
+      WindowListEntry = DesktopObject->WindowListHead.Flink;
+      while ( WindowListEntry != &DesktopObject->WindowListHead )
+	{
+	  PWINDOW_OBJECT Child;
+	  Child = CONTAINING_RECORD(WindowListEntry, WINDOW_OBJECT,
+				    SiblingListEntry);
+	  if ( pWnd && dwCount < nBufSize )
+	    pWnd[dwCount] = Child->Self;
+	  dwCount++;
+	  WindowListEntry = WindowListEntry->Flink;
+	}
+      KeReleaseSpinLock ( &DesktopObject->Lock, OldIrql );
+    }
+
+  return dwCount;
+}
+
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.15 2003/07/21 01:59:51 royce Exp $
+/* $Id: desktop.c,v 1.16 2003/07/25 23:02:21 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -153,21 +153,6 @@ CreateDesktopW(LPCWSTR lpszDesktop,
 				 hWinSta);
 
   return(hDesktop);
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-EnumDesktopWindows(
-  HDESK hDesktop,
-  ENUMWINDOWSPROC lpfn,
-  LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

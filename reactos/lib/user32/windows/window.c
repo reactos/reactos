@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.46 2003/07/25 19:37:14 gdalsnes Exp $
+/* $Id: window.c,v 1.47 2003/07/25 23:02:21 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -748,41 +748,128 @@ EndDeferWindowPos(HDWP hWinPosInfo)
 }
 
 
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
-EnumChildWindows(HWND hWndParent,
-		 ENUMWINDOWSPROC lpEnumFunc,
-		 LPARAM lParam)
+WINBOOL
+STATIC
+User32EnumWindows (
+	HDESK hDesktop,
+	HWND hWndparent,
+	ENUMWINDOWSPROC lpfn,
+	LPARAM lParam,
+	DWORD dwThreadId,
+	BOOL bChildren )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  DWORD i, dwCount = 0;
+  HWND* pHwnd = NULL;
+  HANDLE hHeap;
+
+  if ( !lpfn )
+    {
+      SetLastError ( ERROR_INVALID_PARAMETER );
+      return FALSE;
+    }
+
+  /* FIXME instead of always making two calls, should we use some
+     sort of persistent buffer and only grow it ( requiring a 2nd
+     call ) when the buffer wasn't already big enough? */
+  /* first get how many window entries there are */
+  SetLastError(0);
+  dwCount = NtUserBuildHwndList (
+    hDesktop, hWndparent, bChildren, dwThreadId, lParam, NULL, 0 );
+  if ( !dwCount || GetLastError() )
+    return FALSE;
+
+  /* allocate buffer to receive HWND handles */
+  hHeap = GetProcessHeap();
+  pHwnd = HeapAlloc ( hHeap, 0, sizeof(HWND)*(dwCount+1) );
+  if ( !pHwnd )
+    {
+      SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+      return FALSE;
+    }
+
+  /* now call kernel again to fill the buffer this time */
+  dwCount = NtUserBuildHwndList (
+    hDesktop, hWndparent, bChildren, dwThreadId, lParam, pHwnd, dwCount );
+  if ( !dwCount || GetLastError() )
+    {
+      if ( pHwnd )
+	HeapFree ( hHeap, 0, pHwnd );
+      return FALSE;
+    }
+
+  /* call the user's callback function until we're done or
+     they tell us to quit */
+  for ( i = 0; i < dwCount; i++ )
+  {
+    /* FIXME I'm only getting NULLs from Thread Enumeration, and it's
+     * probably because I'm not doing it right in NtUserBuildHwndList.
+     * Once that's fixed, we shouldn't have to check for a NULL HWND
+     * here
+     */
+    if ( !(ULONG)pHwnd[i] ) /* don't enumerate a NULL HWND */
+      continue;
+    if ( !(*lpfn)( pHwnd[i], lParam ) )
+      break;
+  }
+  if ( pHwnd )
+    HeapFree ( hHeap, 0, pHwnd );
+  return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-WINBOOL STDCALL
+WINBOOL
+STDCALL
+EnumChildWindows(
+	HWND hWndParent,
+	ENUMWINDOWSPROC lpEnumFunc,
+	LPARAM lParam)
+{
+  if ( !hWndParent )
+    hWndParent = GetDesktopWindow();
+  return User32EnumWindows ( NULL, hWndParent, lpEnumFunc, lParam, 0, FALSE );
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
 EnumThreadWindows(DWORD dwThreadId,
 		  ENUMWINDOWSPROC lpfn,
 		  LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  if ( !dwThreadId )
+    dwThreadId = GetCurrentThreadId();
+  return User32EnumWindows ( NULL, NULL, lpfn, lParam, dwThreadId, FALSE );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
 	    LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return User32EnumWindows ( NULL, NULL, lpEnumFunc, lParam, 0, FALSE );
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+EnumDesktopWindows(
+	HDESK hDesktop,
+	ENUMWINDOWSPROC lpfn,
+	LPARAM lParam)
+{
+  return User32EnumWindows ( hDesktop, NULL, lpfn, lParam, 0, FALSE );
 }
 
 

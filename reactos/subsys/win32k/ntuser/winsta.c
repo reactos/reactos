@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.17 2003/07/05 16:04:01 chorns Exp $
+/* $Id: winsta.c,v 1.18 2003/07/25 23:02:21 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -72,6 +72,13 @@ PDESKTOP_OBJECT FASTCALL
 W32kGetActiveDesktop(VOID)
 {
   return(InputDesktop);
+}
+
+PDESKTOP_OBJECT FASTCALL
+W32kGetDesktopObject ( HDESK hDesk )
+{
+  /* FIXME - this obviously isn't right */
+  return W32kGetActiveDesktop();
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL

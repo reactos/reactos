@@ -119,6 +119,7 @@ copy apps\tests\shm\shmclt.exe %ROS_INSTALL%\bin
 copy apps\tests\lpc\lpcsrv.exe %ROS_INSTALL%\bin
 copy apps\tests\lpc\lpcclt.exe %ROS_INSTALL%\bin
 copy apps\tests\thread\thread.exe %ROS_INSTALL%\bin
+copy apps\tests\enumwnd\enumwnd.exe %ROS_INSTALL%\bin
 copy apps\tests\event\event.exe %ROS_INSTALL%\bin
 copy apps\tests\file\file.exe %ROS_INSTALL%\bin
 copy apps\tests\pteb\pteb.exe %ROS_INSTALL%\bin

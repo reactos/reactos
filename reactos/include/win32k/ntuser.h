@@ -65,16 +65,16 @@ STDCALL
 NtUserBlockInput(
   DWORD Unknown0);
 
-DWORD
+ULONG
 STDCALL
 NtUserBuildHwndList(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+  HDESK hDesktop,
+  HWND hwndParent,
+  BOOLEAN bChildren,
+  ULONG dwThreadId,
+  ULONG lParam,
+  HWND* pWnd,
+  ULONG nBufSize);
 
 DWORD
 STDCALL
