@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.25 2002/08/18 04:20:21 hyperion Exp $
+/* $Id: create.c,v 1.26 2002/08/18 16:01:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -99,28 +99,37 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    switch (dwCreationDisposition)
      {
       case CREATE_NEW:
+        DPRINT("Creation disposition is CREATE_NEW\n");
 	dwCreationDisposition = FILE_CREATE;
 	break;
 	
       case CREATE_ALWAYS:
+        DPRINT("Creation disposition is CREATE_ALWAYS\n");
 	dwCreationDisposition = FILE_OVERWRITE_IF;
 	break;
 	
       case OPEN_EXISTING:
+        DPRINT("Creation disposition is OPEN_EXISTING\n");
 	dwCreationDisposition = FILE_OPEN;
 	break;
 	
       case OPEN_ALWAYS:
+        DPRINT("Creation disposition is OPEN_ALWAYS\n");
 	dwCreationDisposition = FILE_OPEN_IF;
 	break;
 
       case TRUNCATE_EXISTING:
+        DPRINT("Creation disposition is TRUNCATE_EXISTING\n");
 	dwCreationDisposition = FILE_OVERWRITE;
+        break;
       
       default:
+        DPRINT("Invalid creation disposition\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return (INVALID_HANDLE_VALUE);
      }
+
+#define DO_AND_DPRINT(__EXPR__) __EXPR__; DPRINT(#__EXPR__ "\n");
 
    /* validate & translate the flags */
    if (dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED)
@@ -130,7 +139,9 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
     return INVALID_HANDLE_VALUE;
    }
    else
-     Flags |= FILE_SYNCHRONOUS_IO_ALERT;
+   {
+     DO_AND_DPRINT(Flags |= FILE_SYNCHRONOUS_IO_ALERT)
+   }
    
    /* validate & translate the filename */
    if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
@@ -138,6 +149,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 				      NULL,
 				      NULL))
    {
+     DPRINT("Invalid path\n");
      SetLastError(ERROR_BAD_PATHNAME);
      return INVALID_HANDLE_VALUE;
    }
@@ -146,30 +158,53 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
    /* translate the flags that need no validation */
    if(dwFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH)
-    Flags |= FILE_WRITE_THROUGH;
+   {
+    DO_AND_DPRINT(Flags |= FILE_WRITE_THROUGH)
+   }
 
    if(dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING)
-    Flags |= FILE_NO_INTERMEDIATE_BUFFERING;
+   {
+    DO_AND_DPRINT(Flags |= FILE_NO_INTERMEDIATE_BUFFERING)
+   }
 
    if(dwFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS)
-    Flags |= FILE_RANDOM_ACCESS;
+   {
+    DO_AND_DPRINT(Flags |= FILE_RANDOM_ACCESS)
+   }
    
    if(dwFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN)
-    Flags |= FILE_SEQUENTIAL_ONLY;
+   {
+    DO_AND_DPRINT(Flags |= FILE_SEQUENTIAL_ONLY)
+   }
    
    if(dwFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE)
-    Flags |= FILE_DELETE_ON_CLOSE;
+   {
+    DO_AND_DPRINT(Flags |= FILE_DELETE_ON_CLOSE)
+   }
    
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
-    if(dwDesiredAccess & GENERIC_READ)
-     Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
-    
-    if(dwDesiredAccess & GENERIC_WRITE)
-     Flags |= FILE_OPEN_FOR_RECOVERY;
+    if(dwDesiredAccess & GENERIC_ALL)
+    {
+      DO_AND_DPRINT(Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_FOR_RECOVERY)
+    }
+    else
+    {
+      if(dwDesiredAccess & GENERIC_READ)
+      {
+        DO_AND_DPRINT(Flags |= FILE_OPEN_FOR_BACKUP_INTENT)
+      }
+      
+      if(dwDesiredAccess & GENERIC_WRITE)
+      {
+        DO_AND_DPRINT(Flags |= FILE_OPEN_FOR_RECOVERY)
+      }
+    }
    }
    else
-    Flags |= FILE_NON_DIRECTORY_FILE;
+   {
+    DO_AND_DPRINT(Flags |= FILE_NON_DIRECTORY_FILE)
+   }
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */
 
@@ -183,14 +218,27 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 #endif
 
    /* translate the desired access */
-   if (dwDesiredAccess & GENERIC_READ)
-     dwDesiredAccess |= FILE_GENERIC_READ;
-   
-   if (dwDesiredAccess & GENERIC_WRITE)
-     dwDesiredAccess |= FILE_GENERIC_WRITE;
-   
-   if (dwDesiredAccess & GENERIC_EXECUTE)
-     dwDesiredAccess |= FILE_GENERIC_EXECUTE;
+   if (dwDesiredAccess & GENERIC_ALL)
+   {
+     DO_AND_DPRINT(dwDesiredAccess |= FILE_ALL_ACCESS)
+   }
+   else
+   {
+     if (dwDesiredAccess & GENERIC_READ)
+     {
+       DO_AND_DPRINT(dwDesiredAccess |= FILE_GENERIC_READ);
+     }
+     
+     if (dwDesiredAccess & GENERIC_WRITE)
+     {
+       DO_AND_DPRINT(dwDesiredAccess |= FILE_GENERIC_WRITE);
+     }
+     
+     if (dwDesiredAccess & GENERIC_EXECUTE)
+     {
+       DO_AND_DPRINT(dwDesiredAccess |= FILE_GENERIC_EXECUTE);
+     }
+   }
 
    /* build the object attributes */
    InitializeObjectAttributes(
@@ -204,12 +252,17 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    if (lpSecurityAttributes)
    {
       if(lpSecurityAttributes->bInheritHandle)
-         ObjectAttributes.Attributes |= OBJ_INHERIT;
-      ObjectAttributes.SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
+      {
+         DO_AND_DPRINT(ObjectAttributes.Attributes |= OBJ_INHERIT)
+      }
+
+      DO_AND_DPRINT(ObjectAttributes.SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor)
    }
    
    if(!(dwFlagsAndAttributes & FILE_FLAG_POSIX_SEMANTICS))
-    ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
+   {
+    DO_AND_DPRINT(ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE)
+   }
 
    /* perform the call */
    Status = NtCreateFile (&FileHandle,
@@ -238,6 +291,9 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
     case FILE_OPENED:
     case FILE_CREATED:
      SetLastError(ERROR_ALREADY_EXISTS);
+     break;
+    
+    default:
    }
    
    return FileHandle;
