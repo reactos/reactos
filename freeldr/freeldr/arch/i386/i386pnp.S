@@ -44,17 +44,17 @@ EXTERN(_PnpBiosSupported)
 	xorl	%edi,%edi
 
 	/* init esi */
-	movl	$0xFFFF0,%esi
+	movl	$0xF0000,%esi
 
 pnp_again:
 	movl	(%esi),%eax
 	cmp		$0x506E5024,%eax			/* "$PnP" */
 	je		pnp_found
 
-	cmp		$0xF0000,%esi
+	cmp		$0xFFFF0,%esi
 	je		pnp_not_found
 
-	subl	$0x10,%esi
+	addl	$0x10,%esi
 	jmp		pnp_again
 
 pnp_found:
