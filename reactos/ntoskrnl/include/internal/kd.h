@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.21 2004/01/13 03:23:11 arty Exp $
+/* $Id: kd.h,v 1.22 2004/01/17 17:13:13 arty Exp $
  *
  * kernel debugger prototypes
  */
@@ -31,6 +31,12 @@ typedef enum _KD_CONTINUE_TYPE
   kdDoNotHandleException,
   kdHandleException
 } KD_CONTINUE_TYPE;
+
+VOID
+KbdDisableMouse();
+
+VOID
+KbdEnableMouse();
 
 ULONG
 KdpPrintString (PANSI_STRING String);

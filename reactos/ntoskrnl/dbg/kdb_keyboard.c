@@ -40,8 +40,12 @@
 #define KBD_CNTL_REG		0x64	
 #define KBD_DATA_REG		0x60	
 
+#define KBD_DISABLE_MOUSE       0xA7
+#define KBD_ENABLE_MOUSE        0xA8
+
 #define KBD_STAT_OBF 		0x01	/* Keyboard output buffer full */
 
+#define kbd_write_command(cmd) WRITE_PORT_UCHAR((PUCHAR)KBD_STATUS_REG,cmd)
 #define kbd_read_input() READ_PORT_UCHAR((PUCHAR)KBD_DATA_REG)
 #define kbd_read_status() READ_PORT_UCHAR((PUCHAR)KBD_STATUS_REG)
 
@@ -65,6 +69,16 @@ static unsigned char keyb_layout[2][128] =
 };
 
 typedef BYTE byte_t;
+
+VOID KbdEnableMouse()
+{
+    kbd_write_command(KBD_ENABLE_MOUSE);
+}
+
+VOID KbdDisableMouse()
+{
+    kbd_write_command(KBD_DISABLE_MOUSE);
+}
 
 CHAR
 KdbTryGetCharKeyboard()

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.16 2004/01/13 03:23:11 arty Exp $
+/* $Id: kdb.c,v 1.17 2004/01/17 17:13:13 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -47,11 +47,15 @@
 #define BS 8
 #define DEL 127
 
+BOOL KbdEchoOn = TRUE;
+
 int isalpha( int );
 VOID
 PsDumpThreads(BOOLEAN System);
 ULONG 
 DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgEchoToggle(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
 DbgRegsCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
@@ -89,6 +93,7 @@ struct
   ULONG (*Fn)(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 } DebuggerCommands[] = {
   {"cont", "cont", "Exit the debugger", DbgContCommand},
+  {"echo", "echo", "Toggle serial echo", DbgEchoToggle},
   {"regs", "regs", "Display general purpose registers", DbgRegsCommand},
   {"dregs", "dregs", "Display debug registers", DbgDRegsCommand},
   {"cregs", "cregs", "Display control registers", DbgCRegsCommand},
@@ -221,12 +226,16 @@ KdbGetCommand(PCH Buffer)
             {
               Buffer--;
               *Buffer = 0;
-              DbgPrint("%c %c", BS, BS);
+	      if (KbdEchoOn)
+		DbgPrint("%c %c", BS, BS);
+	      else
+		DbgPrint(" %c", BS);
 	    }
         }
       else
         {
-          DbgPrint("%c", Key);
+	  if (KbdEchoOn)
+	    DbgPrint("%c", Key);
 
           *Buffer = Key;
           Buffer++;
@@ -716,6 +725,13 @@ DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
   return(0);
 }
 
+ULONG
+DbgEchoToggle(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  KbdEchoOn = !KbdEchoOn;
+  return(TRUE);
+}
+
 VOID
 DbgPrintEflags(ULONG Eflags)
 {
@@ -975,7 +991,9 @@ VOID
 KdbInternalEnter(PKTRAP_FRAME Tf)
 {
   __asm__ __volatile__ ("cli\n\t");
+  KbdDisableMouse();
   (VOID)KdbMainLoop(Tf);
+  KbdEnableMouse();
   __asm__ __volatile__("sti\n\t");
 }
 
