@@ -38,10 +38,14 @@ extern void __cdecl _SEHUnwind(_SEHPortableFrame_t *);
 extern void __stdcall RtlUnwind(void *, void *, void *, void *);
 void const * _SEHRtlUnwind = RtlUnwind;
 
+extern void __cdecl DbgPrint(const char *, ...);
+
 __declspec(noreturn) void __cdecl _SEHCallHandler(_SEHPortableFrame_t * frame)
 {
  frame->SPF_Handling = 1;
+ DbgPrint("Before _SEHUnwind\n");
  _SEHUnwind(frame);
+ DbgPrint("After _SEHUnwind\n");
  frame->SPF_Handlers->SH_Handler(frame);
 }
 
@@ -62,52 +66,68 @@ int __cdecl _SEHFrameHandler
  /* Unwinding */
  if(ExceptionRecord->ExceptionFlags & (4 | 2))
  {
+  DbgPrint("_SEHFrameHandler unwinding\n");
+
   if(frame->SPF_Handlers->SH_Finally && !frame->SPF_Handling)
    frame->SPF_Handlers->SH_Finally(frame);
  }
  /* Handling */
  else
  {
+  int ret;
+
+  DbgPrint("_SEHFrameHandler handling\n");
+
   if(ExceptionRecord->ExceptionCode)
    frame->SPF_Code = ExceptionRecord->ExceptionCode;
   else
    frame->SPF_Code = 0xC0000001; 
 
-  if(frame->SPF_Handlers->SH_Filter)
+  switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
   {
-   int ret;
-
-   switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
+   case _SEH_EXECUTE_HANDLER + 1:
+   case _SEH_CONTINUE_SEARCH + 1:
+   case _SEH_CONTINUE_EXECUTION + 1:
    {
-    case _SEH_EXECUTE_HANDLER + 1:
-    case _SEH_CONTINUE_SEARCH + 1:
-    case _SEH_CONTINUE_EXECUTION + 1:
-    {
-     ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
-     break;
-    }
-
-    default:
-    {
-     EXCEPTION_POINTERS ep;
-
-     ep.ExceptionRecord = ExceptionRecord;
-     ep.ContextRecord = ContextRecord;
-
-     ret = frame->SPF_Handlers->SH_Filter(&ep, frame);
-     break;
-    }
+    ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
+    break;
    }
 
-   /* _SEH_CONTINUE_EXECUTION */
-   if(ret < 0)
-    return ExceptionContinueExecution;
-   /* _SEH_EXECUTE_HANDLER */
-   else if(ret > 0)
-    _SEHCallHandler(frame);
-   /* _SEH_CONTINUE_SEARCH */
-   else
-    /* fall through */;
+   default:
+   {
+    if(frame->SPF_Handlers->SH_Filter)
+    {
+     EXCEPTION_POINTERS ep;
+ 
+     ep.ExceptionRecord = ExceptionRecord;
+     ep.ContextRecord = ContextRecord;
+ 
+     ret = frame->SPF_Handlers->SH_Filter(&ep, frame);
+    }
+    else
+     ret = _SEH_CONTINUE_SEARCH;
+
+    break;
+   }
+  }
+
+  /* _SEH_CONTINUE_EXECUTION */
+  if(ret < 0)
+  {
+   DbgPrint("_SEHFrameHandler: ExceptionContinueExecution\n");
+   return ExceptionContinueExecution;
+  }
+  /* _SEH_EXECUTE_HANDLER */
+  else if(ret > 0)
+  {
+   DbgPrint("_SEHFrameHandler: call handler\n");
+   _SEHCallHandler(frame);
+  }
+  /* _SEH_CONTINUE_SEARCH */
+  else
+  {
+   DbgPrint("_SEHFrameHandler: ExceptionContinueSearch\n");
+   /* fall through */;
   }
  }
 
