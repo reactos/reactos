@@ -17,6 +17,7 @@ VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
 VOID PsDispatchThread(ULONG NewThreadStatus);
+VOID PsDispatchThreadNoLock(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
 VOID PsReleaseThread(PETHREAD Thread);
@@ -24,14 +25,26 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
 VOID PsBeginThreadWithContextInternal(VOID);
 VOID PiKillMostProcesses(VOID);
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
+ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus);
+ULONG PsFreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus,
+		     UCHAR Alertable, ULONG WaitMode);
+VOID PiInitApcManagement(VOID);
+VOID PiDeleteThread(PVOID ObjectBody);
+VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
+NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
+			    PETHREAD* ThreadPtr,
+			    PHANDLE ThreadHandle,
+			    ACCESS_MASK DesiredAccess,
+			    POBJECT_ATTRIBUTES ObjectAttributes);
 
 #define THREAD_STATE_INVALID      (0)
 #define THREAD_STATE_RUNNABLE     (1)
 #define THREAD_STATE_RUNNING      (2)
 #define THREAD_STATE_SUSPENDED    (3)
-#define THREAD_STATE_TERMINATED_1 (4)
-#define THREAD_STATE_TERMINATED_2 (5)
-#define THREAD_STATE_MAX          (6)
+#define THREAD_STATE_FROZEN       (4)
+#define THREAD_STATE_TERMINATED_1 (5)
+#define THREAD_STATE_TERMINATED_2 (6)
+#define THREAD_STATE_MAX          (7)
 
 
 // Internal thread priorities, added by Phillip Susi

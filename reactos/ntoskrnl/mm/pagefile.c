@@ -240,7 +240,7 @@ NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 	     break;
 	  }
      }
-   MiFreeSwapPages = MiFreeSwapPages + ActualSize;
+   MiFreeSwapPages = MiFreeSwapPages + MinimumSize;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
    
    return(STATUS_SUCCESS);

@@ -19,6 +19,7 @@
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
+static ULONG InBugCheck;
 
 VOID PsDumpThreads(VOID);
 
@@ -32,6 +33,7 @@ BOOLEAN KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 VOID KeInitializeBugCheck(VOID)
 {
    InitializeListHead(&BugcheckCallbackListHead);
+   InBugCheck = 0;
 }
 
 VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
@@ -72,7 +74,7 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
    PsDumpThreads();
-   KeDumpStackFrames(0,64);
+   KeDumpStackFrames(&((&BugCheckCode)[-1]),64);
    
    for(;;)
 	   __asm__("hlt\n\t");	//PJS: use HLT instruction, rather than busy wait
@@ -87,6 +89,19 @@ VOID KeBugCheck(ULONG BugCheckCode)
  * RETURNS: Doesn't
  */
 {
-   KeBugCheckEx(BugCheckCode,0,0,0,0);
+   __asm__("cli\n\t");
+   DbgPrint("Bug detected (code %x)\n", BugCheckCode);
+   if (InBugCheck == 1)
+     {
+	DbgPrint("Recursive bug check halting now\n");
+	for(;;);
+     }
+   InBugCheck = 1;
+   PsDumpThreads();
+   KeDumpStackFrames(&((&BugCheckCode)[-1]), 80);
+   for(;;)
+     {
+	__asm__("hlt\n\t");
+     }
 }
 

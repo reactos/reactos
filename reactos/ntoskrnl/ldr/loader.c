@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.39 1999/12/04 04:59:38 bpalmer Exp $
+/* $Id: loader.c,v 1.40 1999/12/13 22:04:37 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -467,7 +467,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   unsigned int DriverSize, Idx, Idx2;
   ULONG RelocDelta, NumRelocs;
   DWORD CurrentSize, TotalRelocs;
-  PVOID DriverBase, CurrentBase;
+  PVOID DriverBase;
   PULONG PEMagic;
   PIMAGE_DOS_HEADER PEDosHeader;
   PIMAGE_FILE_HEADER PEFileHeader;

@@ -28,10 +28,12 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
-VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames);
+VOID KeDumpStackFrames(PVOID Stack, ULONG NrFrames);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 BOOLEAN KiTestAlert(PKTHREAD Thread, PCONTEXT UserContext);
+VOID KeCallApcsThread(VOID);
+VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

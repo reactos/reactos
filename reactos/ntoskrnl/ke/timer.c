@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.23 1999/12/11 17:25:26 phreak Exp $
+/* $Id: timer.c,v 1.24 1999/12/13 22:04:36 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -132,8 +132,11 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
 				  IN TIME* Interval)
 {
-   UNIMPLEMENTED;
-   return(STATUS_UNSUCCESSFUL);
+   NTSTATUS Status;
+   
+   Status = KeDelayExecutionThread(UserMode, Alertable, 
+				   (PLARGE_INTEGER)Internal);
+   return(Status);
 }
 
 
@@ -396,7 +399,7 @@ VOID KeExpireTimers(VOID)
 //   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
 //   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
        
-   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
    while (current_entry!=(&TimerListHead))
@@ -411,7 +414,7 @@ VOID KeExpireTimers(VOID)
 	  }      
      }
    
-   KeReleaseSpinLock( &TimerListLock, oldlvl );
+   KeReleaseSpinLock(&TimerListLock, oldlvl);
 //   DPRINT("Finished KeExpireTimers()\n");
 }
 
@@ -429,7 +432,7 @@ VOID KiTimerInterrupt(VOID)
    extern unsigned int EiFreeNonPagedPool;
    extern unsigned int EiUsedNonPagedPool;
    extern ULONG PiNrThreads;
-   extern ULONG MiNrFreePages;
+//   extern ULONG MiNrFreePages;
    
    if (TimerInitDone == FALSE)
      {
@@ -462,7 +465,8 @@ VOID KiTimerInterrupt(VOID)
 //   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,(unsigned int)PiNrThreads);
+   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,
+	   (unsigned int)PiNrThreads);
 //   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
 //	   (unsigned int)MiNrFreePages);
    for (i=0;i<17;i++)

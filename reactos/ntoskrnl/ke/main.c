@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.31 1999/11/24 11:51:50 dwelch Exp $
+/* $Id: main.c,v 1.32 1999/12/13 22:04:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,7 @@
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -128,70 +128,6 @@ unsigned int old_idt[256][2];
 //extern unsigned int idt[];
 unsigned int old_idt_valid = 1;
 
-ERESOURCE TestResource;
-
-NTSTATUS thread_main(PVOID param)
-{
-   ULONG Id;
-   
-   Id = (ULONG)param;
-   
-   DbgPrint("THREAD(%d) Resource %x\n",Id,&TestResource);
-   
-   DbgPrint("THREAD(%d) Acquiring resource for shared access\n", Id);
-   
-   ExAcquireResourceExclusiveLite(&TestResource, TRUE);
-   
-   DbgPrint("THREAD(%d) Acquired resource for shared access\n", Id);
-   
-   return(STATUS_SUCCESS);
-}
-
-VOID resource_test(VOID)
-{
-   HANDLE thread1_handle;
-   CLIENT_ID thread1_cid;
-   HANDLE thread2_handle;
-   CLIENT_ID thread2_cid;
-   ULONG i;
-   
-   ExInitializeResourceLite(&TestResource);
-   
-   DbgPrint("Resource %x\n", &TestResource);
-   
-   ExAcquireResourceExclusiveLite(&TestResource, TRUE);
-   
-   DbgPrint("Acquired resource for exclusive access\n");
-      
-   PsCreateSystemThread(&thread1_handle,
-		     THREAD_ALL_ACCESS,
-		     NULL,
-		     NULL,
-		     &thread1_cid,
-		     thread_main,
-		     (PVOID)1);
-   PsCreateSystemThread(&thread2_handle,
-		     THREAD_ALL_ACCESS,
-		     NULL,
-		     NULL,
-		     &thread2_cid,
-		     thread_main,
-		     (PVOID)2);
-
-   DbgPrint("KeGetCurrentIrql() %d\n", KeGetCurrentIrql());
-   
-   for (i=0; i<10000000; i++)
-     {
-	__asm__("nop\n\t");
-     }
-   
-   ExReleaseResourceLite(&TestResource);
-   
-   DbgPrint("Released resource\n");
-   
-   for(;;);
-}
-
 asmlinkage void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -271,7 +207,7 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Initalize services loaded at boot time
     */
-   DPRINT("%d files loaded\n",bp.nr_files);
+   DPRINT1("%d files loaded\n",bp.nr_files);
 
   /*  Pass 1: load registry chunks passed in  */
   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
@@ -279,7 +215,7 @@ asmlinkage void _main(boot_param* _bp)
     {
       if (!strcmp ((PCHAR) start, "REGEDIT4"))
         {
-          DPRINT("process registry chunk at %08lx\n", start);
+          DPRINT1("process registry chunk at %08lx\n", start);
           CmImportHive((PCHAR) start);
         }
       start = start + bp.module_length[i];
@@ -292,7 +228,7 @@ asmlinkage void _main(boot_param* _bp)
     {
       if (strcmp ((PCHAR) start, "REGEDIT4"))
         {
-          DPRINT("process module at %08lx\n", start);
+          DPRINT1("process module at %08lx\n", start);
           LdrProcessDriver((PVOID)start);
         }
       start = start + bp.module_length[i];
@@ -301,13 +237,15 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Load Auto configured drivers
     */
+   CHECKPOINT;
    LdrLoadAutoConfigDrivers();
    
   /*
    *  Launch initial process
    */
-  LdrLoadInitialProcess();
-
+   CHECKPOINT;
+   LdrLoadInitialProcess();
+   
    /*
     * Enter idle loop
     */

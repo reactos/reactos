@@ -16,7 +16,7 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -32,17 +32,17 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
  * FUNCTION: Terminates the current thread
  */
 {
-   KIRQL oldlvl;
+   KIRQL oldIrql;
    PETHREAD CurrentThread;
    
    PiNrRunnableThreads--;
    
    CurrentThread = PsGetCurrentThread();
    
-   CurrentThread->ExitStatus = ExitStatus;
-   
    DPRINT("terminating %x\n",CurrentThread);
-   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   
+   CurrentThread->ExitStatus = ExitStatus;
    
    DPRINT("ObGetReferenceCount(CurrentThread) %d\n",
 	  ObGetReferenceCount(CurrentThread));
@@ -52,7 +52,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    
-   PsDispatchThread(THREAD_STATE_TERMINATED_1);
+   PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    KeBugCheck(0);
 }
 
@@ -69,6 +69,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 	PiNrRunnableThreads--;
 	RemoveEntryList(&Thread->Tcb.QueueListEntry);
      }
+   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
    Thread->Tcb.State = THREAD_STATE_TERMINATED_2;
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);

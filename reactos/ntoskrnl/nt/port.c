@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.13 1999/12/10 17:04:36 dwelch Exp $
+/* $Id: port.c,v 1.14 1999/12/13 22:04:39 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -351,7 +351,7 @@ NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE ServerPortHandle,
 {
    NTSTATUS Status;
    PEPORT NamedPort;
-   PEPORT OurPort;
+   PEPORT OurPort = NULL;
    PQUEUEDMESSAGE ConnectionRequest;
    KIRQL oldIrql;
    

@@ -71,4 +71,4 @@ _MmSafeCopyToUser:
 
 	ret
 
-_MemSafeCopyToUserEnd:
+_MmSafeCopyToUserEnd:

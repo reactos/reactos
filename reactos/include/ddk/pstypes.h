@@ -226,7 +226,7 @@ typedef struct _KTHREAD
    KAPC              SuspendApc;
    KSEMAPHORE        SuspendSemaphore;
    LIST_ENTRY        ThreadListEntry;
-   UCHAR             FreezeCount;
+   CHAR             FreezeCount;
    ULONG             SuspendCount;
    UCHAR             IdealProcessor;
    UCHAR             DisableBoost;

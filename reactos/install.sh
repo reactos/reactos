@@ -24,3 +24,4 @@ cp apps/shm/shmsrv.exe $1/reactos/bin
 cp apps/shm/shmclt.exe $1/reactos/bin
 cp apps/lpc/lpcsrv.exe $1/reactos/bin
 cp apps/lpc/lpcclt.exe $1/reactos/bin
+cp apps/thread/thread.exe $1/reactos/bin

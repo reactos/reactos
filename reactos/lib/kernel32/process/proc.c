@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.24 1999/12/06 00:23:40 ekohl Exp $
+/* $Id: proc.c,v 1.25 1999/12/13 22:04:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -290,36 +290,27 @@ WaitForInputIdle (
 }
 
 
-VOID
-STDCALL
-Sleep (
-	DWORD	dwMilliseconds
-	)
+VOID STDCALL Sleep (DWORD dwMilliseconds)
 {
-	SleepEx (dwMilliseconds, FALSE);
-	return;
+   SleepEx (dwMilliseconds, FALSE);
+   return;
 }
 
-
-DWORD
-STDCALL
-SleepEx (
-	DWORD	dwMilliseconds,
-	BOOL	bAlertable
-	)
+DWORD STDCALL SleepEx(DWORD	dwMilliseconds,
+		      BOOL	bAlertable)
 {
-	TIME Interval;
-	NTSTATUS errCode;	
-
-	Interval.QuadPart = dwMilliseconds * 1000;
-
-	errCode = NtDelayExecution(bAlertable,&Interval);
-	if ( !NT_SUCCESS(errCode) )
-	{
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return -1;
-	}
-	return 0;
+   TIME Interval;
+   NTSTATUS errCode;	
+   
+   Interval.QuadPart = dwMilliseconds * 1000;
+   
+   errCode = NtDelayExecution(bAlertable,&Interval);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return -1;
+     }
+   return 0;
 }
 
 

@@ -253,7 +253,7 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
 	  "(*SystemArgument1) %x\n", Apc, SystemArgument1,
 	  *SystemArgument1);
    IoSecondStageCompletion((PIRP)(*SystemArgument1),
-                           SystemArgument2);
+                           (KPRIORITY)(*SystemArgument2));
 }
 
 VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
@@ -270,8 +270,8 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
    NTSTATUS Status;
    PKTHREAD Thread;
    
-   DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d)\n",
-	   Irp,PriorityBoost);
+   DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
+	   Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
    for (i=0;i<Irp->StackCount;i++)
      {
@@ -307,14 +307,16 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 			(PVOID)
 			   Irp->Overlay.AsynchronousParameters.UserApcContext);
 	KeInsertQueueApc(&Irp->Tail.Apc,
-			 Irp,
-			 PriorityBoost,
+			 (PVOID)Irp,
+			 (PVOID)(ULONG)PriorityBoost,
 			 KernelMode);
+	DPRINT("Finished dispatching APC\n");
      }
    else
      {
 	DPRINT("Calling completion routine directly\n");
 	IoSecondStageCompletion(Irp,PriorityBoost);
+	DPRINT("Finished completition routine\n");
      }
 }
 

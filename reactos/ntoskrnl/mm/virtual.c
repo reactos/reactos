@@ -57,7 +57,7 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    PLIST_ENTRY CurrentEntry;
    PMEMORY_AREA Current;
    
-   DbgPrint("MmReleaseMmInfo(Process %x)\n",Process);
+   DPRINT("MmReleaseMmInfo(Process %x)\n",Process);
    
    while (!IsListEmpty(&Process->Pcb.MemoryAreaList))
      {

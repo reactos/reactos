@@ -242,7 +242,7 @@ asmlinkage void exception_handler(unsigned int edi,
      }
    DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
    DbgPrint("CS:EIP %x:", cs&0xffff);
-   print_address(eip);
+   print_address((PVOID)eip);
    DbgPrint("\n");
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
@@ -302,7 +302,7 @@ asmlinkage void exception_handler(unsigned int edi,
 		stack[i] <= ((ULONG)&init_stack_top)))
             {
 //              DbgPrint("  %.8x", stack[i]);
-	       print_address(stack[i]);
+	       print_address((PVOID)stack[i]);
 	       DbgPrint(" ");
             }
         }
@@ -328,6 +328,7 @@ asmlinkage void exception_handler(unsigned int edi,
    
    DbgPrint("\n");
    DbgPrint("Killing current task\n");
+//   for(;;);
    KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {
@@ -338,12 +339,13 @@ asmlinkage void exception_handler(unsigned int edi,
    for(;;);
 }
 
-VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
+VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
 {
-   PULONG Stack = &((&DummyArg)[-1]);
+   PULONG Stack = (PULONG)_Stack;
    ULONG i;
    
    Stack = (PVOID)(((ULONG)Stack) & (~0x3));
+   DbgPrint("Stack: %x\n", Stack);
    
    DbgPrint("Frames:\n");
    for (i=0; i<NrFrames; i++)
@@ -352,7 +354,7 @@ VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
 	if (Stack[i] > KERNEL_BASE)
 	  {
 //	     DbgPrint("%.8x  ",Stack[i]);
-	     print_address(Stack[i]);
+	     print_address((PVOID)Stack[i]);
 	     DbgPrint(" ");
 	  }
 	if (Stack[i] == 0xceafbeef)

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.19 1999/12/11 21:14:47 dwelch Exp $
+/* $Id: utils.c,v 1.20 1999/12/13 22:04:34 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -698,7 +698,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
    PDLL				Module;
    NTSTATUS			Status;
    
-   DPRINT1("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
+   DPRINT("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
 	   ImageBase);
    
    /*
@@ -708,7 +708,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 			       ImageBase + NTHeaders->OptionalHeader
 				 .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
 			     .VirtualAddress);
-   DPRINT1("ImportModuleDirectory %x\n", ImportModuleDirectory);
+   DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
    
    while (ImportModuleDirectory->dwRVAModuleName)
      {
@@ -717,7 +717,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	DWORD	pName;
 	PWORD	pHint;
 	
-	DPRINT1("ImportModule->Directory->dwRVAModuleName %s\n",
+	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
 	
 	Status = LdrLoadDll(&Module,

@@ -17,7 +17,7 @@
 #include <string.h>
 #include <internal/i386/segment.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 

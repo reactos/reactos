@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 1999/08/29 13:44:53 dwelch Exp $
+# $Id: makefile,v 1.34 1999/12/13 22:04:33 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -197,7 +197,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-o $(TARGET).dll \
 		$(TARGET).o  \
 		../kernel32/kernel32.a \
-		-Wl,--image-base,0x20000000 \
+		-Wl,--image-base,0x77630000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

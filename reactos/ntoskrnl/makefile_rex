@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.39 1999/12/10 17:04:35 dwelch Exp $
+# $Id: makefile_rex,v 1.40 1999/12/13 22:04:35 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -26,7 +26,7 @@ RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/time.o \
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
-	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o \
+	     ke/mutex.o ke/kernel.o ke/ldt.o \
 	     ke/process.o ke/gdt.o ke/idt.o ke/udelay.o
 
 KE_I386_OBJECTS = ke/i386/thread.o ke/i386/usercall.o ke/i386/exp.o
@@ -48,7 +48,7 @@ IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
 OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o ob/ntobj.o ob/dirobj.o
 
 PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o ps/kill.o \
-             ps/tinfo.o
+             ps/tinfo.o ps/create.o
 
 EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
              ex/callback.o ex/napi.o ex/power.o ex/sysinfo.o ex/locale.o \
@@ -226,6 +226,6 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 
 #WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
-#WARNINGS_ARE_ERRORS = yes
+WARNINGS_ARE_ERRORS = yes
 include ../rules.mak
 
