@@ -253,7 +253,7 @@ int QuickLaunchBar::Command(int id, int code)
 		}
 	}
 
-	return 1;
+	return 0; // Don't return 1 to avoid recursion with DesktopBar::Command()
 }
 
 int QuickLaunchBar::Notify(int id, NMHDR* pnmh)

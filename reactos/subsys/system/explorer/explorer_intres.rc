@@ -132,6 +132,7 @@ BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_VOLUME              "Volume"
 END
 
 #endif    // Romanian resources
@@ -443,6 +444,7 @@ IDI_SEARCH_DOC          ICON    DISCARDABLE     "res/search-doc.ico"
 IDI_PRINTER             ICON    DISCARDABLE     "res/printer.ico"
 IDI_NETWORK             ICON    DISCARDABLE     "res/network.ico"
 IDI_COMPUTER            ICON    DISCARDABLE     "res/computer.ico"
+IDI_SPEAKER             ICON    DISCARDABLE     "res/speaker.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -513,6 +515,7 @@ BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
     IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_VOLUME              "Lautstärke"
 END
 
 #endif    // German (Germany) resources
@@ -682,6 +685,15 @@ BEGIN
         MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
         MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Task Manager...",            ID_TASKMGR
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Open Volume Control",         ID_TRAY_VOLUME
+        MENUITEM "Adjust Audio Properties",     ID_VOLUME_PROPERTIES
     END
 END
 
@@ -862,6 +874,7 @@ BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_VOLUME              "Volume"
 END
 
 #endif    // English (U.S.) resources
@@ -988,6 +1001,7 @@ BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Bureau %d"
+    IDS_VOLUME              "Volume"
 END
 
 #endif    // French (France) resources
@@ -1190,6 +1204,7 @@ BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_VOLUME              "Volume"
 END
 
 #endif    // Portuguese (Portugal) resources

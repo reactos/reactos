@@ -953,3 +953,121 @@ protected:
 
 	static int CALLBACK CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort);
 };
+
+
+enum {TRAYBUTTON_LEFT=0, TRAYBUTTON_RIGHT, TRAYBUTTON_MIDDLE};
+
+#define	PM_TRAYICON		(WM_APP+0x1E)
+
+#define	WINMSG_TASKBARCREATED	TEXT("TaskbarCreated")
+
+
+struct TrayIcon
+{
+	TrayIcon(HWND hparent, UINT id)
+	 :	_hparent(hparent), _id(id) {}
+
+	~TrayIcon()
+		{Remove();}
+
+	void	Add(HICON hIcon, LPCTSTR tooltip=NULL)
+		{Set(NIM_ADD, _id, hIcon, tooltip);}
+
+	void	Modify(HICON hIcon, LPCTSTR tooltip=NULL)
+		{Set(NIM_MODIFY, _id, hIcon, tooltip);}
+
+	void	Remove()
+	{
+		NOTIFYICONDATA nid = {
+			sizeof(NOTIFYICONDATA),	// cbSize
+			_hparent,				// hWnd
+			_id,					// uID
+		};
+
+		Shell_NotifyIcon(NIM_DELETE, &nid);
+	}
+
+protected:
+	HWND	_hparent;
+	UINT	_id;
+
+	void	Set(DWORD dwMessage, UINT id, HICON hIcon, LPCTSTR tooltip=NULL)
+	{
+		NOTIFYICONDATA nid = {
+			sizeof(NOTIFYICONDATA),	// cbSize
+			_hparent,				// hWnd
+			id,						// uID
+			NIF_MESSAGE|NIF_ICON,	// uFlags
+			PM_TRAYICON,			// uCallbackMessage
+			hIcon					// hIcon
+		};
+
+		if (tooltip)
+			_tcsncpy(nid.szTip, tooltip, COUNTOF(nid.szTip));
+
+		if (nid.szTip[0])
+			nid.uFlags |= NIF_TIP;
+
+		Shell_NotifyIcon(dwMessage, &nid);
+	}
+};
+
+
+template<typename BASE> struct TrayIconControllerTemplate : public BASE
+{
+	typedef BASE super;
+
+	TrayIconControllerTemplate(HWND hwnd) : BASE(hwnd),
+		WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
+	{
+	}
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	{
+		if (message == PM_TRAYICON) {
+			switch(lparam) {
+			  case WM_MOUSEMOVE:
+				TrayMouseOver(wparam);
+				break;
+
+			  case WM_LBUTTONDOWN:
+				TrayClick(wparam, TRAYBUTTON_LEFT);
+				break;
+
+			  case WM_LBUTTONDBLCLK:
+				TrayDblClick(wparam, TRAYBUTTON_LEFT);
+				break;
+
+			  case WM_RBUTTONDOWN:
+				TrayClick(wparam, TRAYBUTTON_RIGHT);
+				break;
+
+			  case WM_RBUTTONDBLCLK:
+				TrayDblClick(wparam, TRAYBUTTON_RIGHT);
+				break;
+
+			  case WM_MBUTTONDOWN:
+				TrayClick(wparam, TRAYBUTTON_MIDDLE);
+				break;
+
+			  case WM_MBUTTONDBLCLK:
+				TrayDblClick(wparam, TRAYBUTTON_MIDDLE);
+				break;
+			}
+
+			return 0;
+		} else if (message == WM_TASKBARCREATED) {
+			AddTrayIcons();
+			return 0;
+		} else
+			return super::WndProc(message, wparam, lparam);
+	}
+
+	virtual void AddTrayIcons() = 0;
+	virtual void TrayMouseOver(UINT id) {}
+	virtual void TrayClick(UINT id, int btn) {}
+	virtual void TrayDblClick(UINT id, int btn) {}
+
+protected:
+	const UINT WM_TASKBARCREATED;
+};

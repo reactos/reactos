@@ -471,6 +471,12 @@ bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 */
 	TCHAR title[MAX_PATH];
 
+	if (entry._tipText == TEXT("FRITZ!fon"))
+		return true;
+
+	if (entry._tipText == TEXT("FRITZ!fax"))
+		return true;
+
 	if (GetWindowText(entry._hWnd, title, MAX_PATH)) {
 		if (_tcsstr(title, TEXT("Task Manager")))
 			return false;

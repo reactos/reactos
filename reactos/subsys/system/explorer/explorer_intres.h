@@ -36,6 +36,7 @@
 #define IDS_STARTMENU                   32
 #define IDS_MINIMIZE_ALL                33
 #define IDS_DESKTOP_NUM                 34
+#define IDS_VOLUME                      35
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -75,6 +76,7 @@
 #define IDI_NETWORK                     148
 #define IDI_COMPUTER                    149
 #define IDM_DESKTOPBAR                  150
+#define IDM_VOLUME                      151
 #define IDD_DESKBAR_TASKBAR             153
 #define IDB_ICON_ALIGN_0                153
 #define IDD_DESKBAR_STARTMENU           154
@@ -87,6 +89,7 @@
 #define IDB_ICON_ALIGN_7                160
 #define IDB_ICON_ALIGN_8                161
 #define IDB_ICON_ALIGN_9                162
+#define IDI_SPEAKER                     162
 #define IDB_ICON_ALIGN_10               163
 #define IDB_LOGOV16                     164
 #define ID_VIEW_NAME                    401
@@ -137,9 +140,11 @@
 #define ID_STOP                         40009
 #define ID_MINIMIZE_ALL                 40010
 #define ID_EXPLORE                      40011
-#define ID_SWITCH_DESKTOP_1             50000
 #define ID_TASKMGR                      40012
-#define	ID_BROWSE_UP                    40013
+#define ID_BROWSE_UP                    40013
+#define ID_TRAY_VOLUME                  40014
+#define ID_VOLUME_PROPERTIES            40015
+#define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
 #define ID_WINDOW_CASCADE               0xE132
@@ -156,8 +161,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        161
-#define _APS_NEXT_COMMAND_VALUE         40014
+#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_COMMAND_VALUE         40016
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

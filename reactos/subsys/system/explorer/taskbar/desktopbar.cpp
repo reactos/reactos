@@ -44,8 +44,7 @@
 
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
- 	 // initialize Common Controls library
-	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
+	_trayIcon(hwnd, ID_TRAY_VOLUME)
 {
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &_work_area_org, 0);
 }
@@ -239,6 +238,13 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return SendMessage(_hwndTaskBar, nmsg, wparam, lparam);
 		break;
 
+	  case WM_TIMER:
+		if (wparam == ID_TRAY_VOLUME) {
+			KillTimer(_hwnd, wparam);
+			WinExec("sndvol32.exe -t", SW_SHOWNORMAL);	// launch volume control in small mode
+		}
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -312,9 +318,13 @@ int DesktopBar::Command(int id, int code)
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);
 
-		if (_hwndQuickLaunch)
+ 		if (_hwndQuickLaunch)
 			PostMessage(_hwndQuickLaunch, PM_UPDATE_DESKTOP, desktop_idx, 0);
 		break;}
+
+	  case ID_TRAY_VOLUME:
+		WinExec("sndvol32.exe", SW_SHOWNORMAL);
+		break;
 
 	  default:
 		if (_hwndQuickLaunch)
@@ -356,4 +366,35 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 	}
 
 	return FALSE;
+}
+
+
+void DesktopBar::AddTrayIcons()
+{
+	_trayIcon.Add(SmallIcon(IDI_SPEAKER), ResString(IDS_VOLUME));
+}
+
+void DesktopBar::TrayClick(UINT id, int btn)
+{
+	switch(id) {
+	  case ID_TRAY_VOLUME:
+		if (btn == TRAYBUTTON_LEFT)
+			SetTimer(_hwnd, ID_TRAY_VOLUME, 500, NULL);	// wait a bit to correctly handle double clicks
+		else {
+			PopupMenu menu(IDM_VOLUME);
+			SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
+			menu.TrackPopupMenuAtPos(_hwnd, GetMessagePos());
+		}
+		break;
+	}
+}
+
+void DesktopBar::TrayDblClick(UINT id, int btn)
+{
+	switch(id) {
+	  case ID_TRAY_VOLUME:
+		KillTimer(_hwnd, ID_TRAY_VOLUME);	// finish one-click timer
+		WinExec("sndvol32.exe", SW_SHOWNORMAL);
+		break;
+	}
 }

@@ -30,9 +30,6 @@
 #define	TITLE_EXPLORERBAR		TEXT("")	// use an empty window title, so windows taskmanager does not show the window in its application list
 
 
-#define	WINMSG_TASKBARCREATED	TEXT("TaskbarCreated")
-
-
 #define	DESKTOPBARBAR_HEIGHT	29
 
 
@@ -64,9 +61,11 @@
 
 
  /// desktop bar window, also known as "system tray"
-struct DesktopBar : public OwnerDrawParent<Window>
+struct DesktopBar : public TrayIconControllerTemplate<
+						OwnerDrawParent<Window> >
 {
-	typedef OwnerDrawParent<Window> super;
+	typedef TrayIconControllerTemplate<
+				OwnerDrawParent<Window> > super;
 
 	DesktopBar(HWND hwnd);
 	~DesktopBar();
@@ -76,7 +75,6 @@ struct DesktopBar : public OwnerDrawParent<Window>
 protected:
 	CommonControlInit _usingCmnCtrl;
 
-	int		WM_TASKBARCREATED;
 	RECT	_work_area_org;
 	int		_taskbar_pos;
 
@@ -96,4 +94,10 @@ protected:
 	WindowHandle _hwndrebar;
 
 	struct StartMenuRoot* _startMenuRoot;
+
+	TrayIcon	_trayIcon;
+
+	void	AddTrayIcons();
+	virtual void TrayClick(UINT id, int btn);
+	virtual void TrayDblClick(UINT id, int btn);
 };

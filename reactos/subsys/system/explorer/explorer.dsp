@@ -494,6 +494,10 @@ SOURCE=.\res\search.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\speaker.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\startmenu.ico
 # End Source File
 # Begin Source File
