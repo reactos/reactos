@@ -628,6 +628,12 @@ Elf64FmtCreateSection
     else
      pssSegments[j].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
 
+    /*
+     FIXME: see the TODO above. This is the safest way to load ELF drivers, for
+     now, if a bit wasteful of memory
+    */
+    pssSegments[j].Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
+
     /* Copy-on-write */
     pssSegments[j].WriteCopy = TRUE;
 
