@@ -54,10 +54,15 @@ NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
   while (CurrentEntry != &Pipe->WaiterListHead)
     {
       Waiter = CONTAINING_RECORD(CurrentEntry, NPFS_WAITER_ENTRY, Entry);
-      if (Waiter->Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+      if (Waiter->Fcb->PipeState == FILE_PIPE_LISTENING_STATE &&
+          !Waiter->Irp->Cancel)
 	{
 	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
-	  return Waiter->Fcb;
+
+          if (IoSetCancelRoutine(Waiter->Irp, NULL) != NULL)
+            {
+              return Waiter->Fcb;
+            }
 	}
 
       CurrentEntry = CurrentEntry->Flink;
