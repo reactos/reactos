@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.231 2004/05/12 20:45:05 navaraf Exp $
+/* $Id: window.c,v 1.232 2004/05/14 16:50:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,10 +28,6 @@
  */
 /* INCLUDES ******************************************************************/
 #include <w32k.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
-#include <debug.h>
 
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
@@ -1556,7 +1552,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
-  DPRINT("1: Style is now %d\n", WindowObject->Style);
+  DPRINT("1: Style is now %lx\n", WindowObject->Style);
   
   WindowObject->SystemMenu = (HMENU)0;
   WindowObject->ContextHelpId = 0;
@@ -1622,12 +1618,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!(dwStyle & WS_CHILD))
     {
       WindowObject->Style |= WS_CLIPSIBLINGS;
-      DPRINT("3: Style is now %d\n", WindowObject->Style);
+      DPRINT("3: Style is now %lx\n", WindowObject->Style);
       if (!(dwStyle & WS_POPUP))
 	{
 	  WindowObject->Style |= WS_CAPTION;
           WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
-          DPRINT("4: Style is now %d\n", WindowObject->Style);
+          DPRINT("4: Style is now %lx\n", WindowObject->Style);
 	  /* FIXME: Note the window needs a size. */ 
 	}
     }
