@@ -18,7 +18,7 @@ TARGET_TYPE = library
 
 TARGET_NAME = kjs
 
-TARGET_CFLAGS = -g -D__NTKJS__ -Werror -Wall -I. -Isrc -Iinclude
+TARGET_CFLAGS = -g -D__NTKJS__ -D__NO_INLINE__ -Werror -Wall -I. -Isrc -Iinclude
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
