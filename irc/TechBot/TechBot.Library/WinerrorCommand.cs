@@ -24,13 +24,15 @@ namespace TechBot.Library
 			                 new string[] { "winerror" });
 		}
 
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
 			string winerrorText = parameters;
 			if (winerrorText.Equals(String.Empty))
 			{
-				serviceOutput.WriteLine("Please provide a valid System Error Code value.");
+				serviceOutput.WriteLine(context,
+				                        "Please provide a valid System Error Code value.");
 				return;
 			}
 
@@ -38,7 +40,8 @@ namespace TechBot.Library
 			long winerror = np.Parse(winerrorText);
 			if (np.Error)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is not a valid System Error Code value.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is not a valid System Error Code value.",
 				                                      winerrorText));
 				return;
 			}
@@ -46,13 +49,15 @@ namespace TechBot.Library
 			string description = GetWinerrorDescription(winerror);
 			if (description != null)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is {1}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is {1}.",
 				                                      winerrorText,
 				                                      description));
 			}
 			else
 			{
-				serviceOutput.WriteLine(String.Format("I don't know about System Error Code {0}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("I don't know about System Error Code {0}.",
 				                                      winerrorText));
 			}
 		}

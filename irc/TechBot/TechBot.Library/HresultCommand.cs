@@ -24,13 +24,15 @@ namespace TechBot.Library
 			                 new string[] { "hresult" });
 		}
 
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
 			string hresultText = parameters;
 			if (hresultText.Equals(String.Empty))
 			{
-				serviceOutput.WriteLine("Please provide a valid HRESULT value.");
+				serviceOutput.WriteLine(context,
+				                        "Please provide a valid HRESULT value.");
 				return;
 			}
 
@@ -38,7 +40,8 @@ namespace TechBot.Library
 			long hresult = np.Parse(hresultText);
 			if (np.Error)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is not a valid HRESULT value.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is not a valid HRESULT value.",
 				                                      hresultText));
 				return;
 			}
@@ -46,13 +49,15 @@ namespace TechBot.Library
 			string description = GetHresultDescription(hresult);
 			if (description != null)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is {1}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is {1}.",
 				                                      hresultText,
 				                                      description));
 			}
 			else
 			{
-				serviceOutput.WriteLine(String.Format("I don't know about HRESULT {0}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("I don't know about HRESULT {0}.",
 				                                      hresultText));
 			}
 		}

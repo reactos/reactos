@@ -24,13 +24,15 @@ namespace TechBot.Library
 			                 new string[] { "ntstatus" });
 		}
 
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
 			string ntstatusText = parameters;
 			if (ntstatusText.Equals(String.Empty))
 			{
-				serviceOutput.WriteLine("Please provide a valid NTSTATUS value.");
+				serviceOutput.WriteLine(context,
+				                        "Please provide a valid NTSTATUS value.");
 				return;
 			}
 
@@ -38,7 +40,8 @@ namespace TechBot.Library
 			long ntstatus = np.Parse(ntstatusText);
 			if (np.Error)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is not a valid NTSTATUS value.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is not a valid NTSTATUS value.",
 				                                      ntstatusText));
 				return;
 			}
@@ -46,13 +49,15 @@ namespace TechBot.Library
 			string description = GetNtstatusDescription(ntstatus);
 			if (description != null)
 			{
-				serviceOutput.WriteLine(String.Format("{0} is {1}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("{0} is {1}.",
 				                                      ntstatusText,
 				                                      description));
 			}
 			else
 			{
-				serviceOutput.WriteLine(String.Format("I don't know about NTSTATUS {0}.",
+				serviceOutput.WriteLine(context,
+				                        String.Format("I don't know about NTSTATUS {0}.",
 				                                      ntstatusText));
 			}
 		}

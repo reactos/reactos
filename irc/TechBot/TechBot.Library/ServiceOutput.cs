@@ -4,6 +4,7 @@ namespace TechBot.Library
 {
 	public interface IServiceOutput
 	{
-		void WriteLine(string message);
+		void WriteLine(MessageContext context,
+		               string message);
 	}
 }

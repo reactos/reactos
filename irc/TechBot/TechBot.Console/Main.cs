@@ -6,7 +6,8 @@ namespace TechBot.Console
 {
 	public class ConsoleServiceOutput : IServiceOutput
 	{
-		public void WriteLine(string message)
+		public void WriteLine(MessageContext context,
+		                      string message)
 		{
 			System.Console.WriteLine(message);
 		}
@@ -49,11 +50,11 @@ namespace TechBot.Console
 			}
 		}
 
-		private static string IRCChannelName
+		private static string IRCChannelNames
 		{
 			get
 			{
-				string optionName = "IRCChannelName";
+				string optionName = "IRCChannelNames";
 				string s = ConfigurationSettings.AppSettings[optionName];
 				VerifyRequiredOption(optionName,
 				                     s);
@@ -149,7 +150,7 @@ namespace TechBot.Console
 		{
 			IrcService ircService = new IrcService(IRCServerHostName,
 			                                       IRCServerHostPort,
-			                                       IRCChannelName,
+			                                       IRCChannelNames,
 			                                       IRCBotName,
 			                                       ChmPath,
 			                                       MainChm,
@@ -180,7 +181,8 @@ namespace TechBot.Console
 			while (true)
 			{
 				string s = System.Console.ReadLine();
-				service.InjectMessage(s);
+				service.InjectMessage(null,
+				                      s);
 			}
 		}
 	}

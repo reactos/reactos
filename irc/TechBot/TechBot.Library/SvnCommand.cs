@@ -20,10 +20,12 @@ namespace TechBot.Library
 			                 new string[] { "svn" });
 		}
 
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
-			serviceOutput.WriteLine(svnCommand);
+			serviceOutput.WriteLine(context,
+			                        svnCommand);
 		}
 		
 		public string Help()

@@ -9,7 +9,7 @@ namespace TechBot
 	{
 		private string IRCServerHostName;
 		private int IRCServerHostPort;
-		private string IRCChannelName;
+		private string IRCChannelNames;
 		private string IRCBotName;
 		private string ChmPath;
 		private string MainChm;
@@ -28,7 +28,7 @@ namespace TechBot
 		{
 			IRCServerHostName = ConfigurationSettings.AppSettings["IRCServerHostName"];
 			IRCServerHostPort = Int32.Parse(ConfigurationSettings.AppSettings["IRCServerHostPort"]);
-			IRCChannelName = ConfigurationSettings.AppSettings["IRCChannelName"];
+			IRCChannelNames = ConfigurationSettings.AppSettings["IRCChannelNames"];
 			IRCBotName = ConfigurationSettings.AppSettings["IRCBotName"];
 			ChmPath = ConfigurationSettings.AppSettings["ChmPath"];
 			MainChm = ConfigurationSettings.AppSettings["MainChm"];
@@ -45,7 +45,7 @@ namespace TechBot
 			
 			IrcService ircService = new IrcService(IRCServerHostName,
 			                                       IRCServerHostPort,
-			                                       IRCChannelName,
+			                                       IRCChannelNames,
 			                                       IRCBotName,
 			                                       ChmPath,
 			                                       MainChm,

@@ -21,12 +21,17 @@ namespace TechBot.Library
 			                 new string[] { "help" });
 		}
 		
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
-			serviceOutput.WriteLine("I support the following commands:");
+			serviceOutput.WriteLine(context,
+			                        "I support the following commands:");
 			foreach (ICommand command in commands)
-				serviceOutput.WriteLine(command.Help());
+			{
+				serviceOutput.WriteLine(context,
+				                        command.Help());
+			}
 		}
 		
 		public string Help()

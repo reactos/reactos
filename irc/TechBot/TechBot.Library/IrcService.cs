@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading;
 using TechBot.IRCLibrary;
 
@@ -8,7 +9,7 @@ namespace TechBot.Library
 	{
 		private string hostname;
 		private int port;
-		private string channelname;
+		private string channelnames;
 		private string botname;
 		private string chmPath;
 		private string mainChm;
@@ -17,13 +18,13 @@ namespace TechBot.Library
 		private string hresultXml;
 		private string svnCommand;
 		private IrcClient client;
-		private IrcChannel channel1;
+		private ArrayList channels = new ArrayList(); /* IrcChannel */
 		private TechBotService service;
 		private bool isStopped = false;
 
 		public IrcService(string hostname,
 		                  int port,
-		                  string channelname,
+		                  string channelnames,
 		                  string botname,
 		                  string chmPath,
 		                  string mainChm,
@@ -34,7 +35,7 @@ namespace TechBot.Library
 		{
 			this.hostname = hostname;
 			this.port = port;
-			this.channelname = channelname;
+			this.channelnames = channelnames;
 		    this.botname = botname;
 		    this.chmPath = chmPath;
 		    this.mainChm = mainChm;
@@ -65,28 +66,51 @@ namespace TechBot.Library
 			System.Console.WriteLine("Connected...");
 			client.Register(botname, null);
 			System.Console.WriteLine(String.Format("Registered as {0}...", botname));
-			channel1 = client.JoinChannel(channelname);
-			System.Console.WriteLine(String.Format("Joined channel {0}...", channelname));
+			JoinChannels();
 			
 			while (!isStopped)
 			{
 				Thread.Sleep(1000);
 			}
 
-			client.PartChannel(channel1, "Caught in the bitstream...");
+			PartChannels();
 			client.Diconnect();
 			System.Console.WriteLine("Disconnected...");
 		}
-		
+
 		public void Stop()
 		{
 			isStopped = true;
 		}
-	
-		public void WriteLine(string message)
+
+		private void JoinChannels()
 		{
-			Console.WriteLine(String.Format("Sending: {0}", message));
-			channel1.Talk(message);
+			foreach (string channelname in channelnames.Split(new char[] { ';' }))
+			{
+				IrcChannel channel = client.JoinChannel(channelname);
+				channels.Add(channel);
+				System.Console.WriteLine(String.Format("Joined channel #{0}...",
+				                                       channel.Name));
+			}
+		}
+
+		private void PartChannels()
+		{
+			foreach (IrcChannel channel in channels)
+			{
+				client.PartChannel(channel, "Caught in the bitstream...");
+				System.Console.WriteLine(String.Format("Parted channel #{0}...",
+				                                       channel.Name));
+			}
+		}
+
+		public void WriteLine(MessageContext context,
+		                      string message)
+		{
+			Console.WriteLine(String.Format("Sending: {0} to #{1}",
+			                                message,
+			                                context.Channel != null ? context.Channel.Name : "(null)"));
+			context.Channel.Talk(message);
 		}
 
 		private void ExtractMessage(string parameters,
@@ -102,22 +126,65 @@ namespace TechBot.Library
 				message = parameters;
 			}
 		}
-		
+
+		private bool GetChannelName(IrcMessage message,
+		                           out string channelName)
+		{
+			if (message.Parameters == null || !message.Parameters.StartsWith("#"))
+			{
+				channelName = null;
+				return false;
+			}
+
+			int index = message.Parameters.IndexOf(' ');
+			if (index == -1)
+				index = message.Parameters.Length;
+			channelName = message.Parameters.Substring(1, index - 1);
+			return true;
+		}
+
+		private bool ShouldAcceptMessage(IrcMessage message,
+		                                 out MessageContext context)
+		{
+			if (message.Command.ToUpper().Equals("PRIVMSG"))
+			{
+				string channelName;
+				if (GetChannelName(message,
+				                   out channelName))
+				{
+					foreach (IrcChannel channel in channels)
+					{
+						if (String.Compare(channel.Name, channelName, true) == 0)
+						{
+							context = new MessageContext(channel);
+							return true;
+						}
+					}
+				}
+			}
+			context = null;
+			return false;
+		}
+				
 		private void client_MessageReceived(IrcMessage message)
 		{
 			try
 			{
-				if (channel1 != null &&
-				    channel1.Name != null &&
+				if (message.Command != null &&
 				    message.Parameters != null)
 				{
 					string injectMessage;
-					ExtractMessage(message.Parameters, out injectMessage);
-					if ((message.Command.ToUpper().Equals("PRIVMSG")) &&
-					    (message.Parameters.ToLower().StartsWith("#" + channel1.Name.ToLower() + " ")))
+					ExtractMessage(message.Parameters,
+					               out injectMessage);
+					MessageContext context;
+					if (ShouldAcceptMessage(message,
+					                        out context))
 					{
-						Console.WriteLine("Injecting: " + injectMessage);
-						service.InjectMessage(injectMessage);
+						Console.WriteLine(String.Format("Injecting: {0} from #{1}",
+						                                injectMessage,
+						                                context.Channel.Name));
+						service.InjectMessage(context,
+						                      injectMessage);
 					}
 					else
 					{

@@ -26,10 +26,12 @@ namespace TechBot.Library
 			Run();
 		}
 		
-		private void WriteIfVerbose(string message)
+		private void WriteIfVerbose(MessageContext context,
+		                            string message)
 		{
 			if (IsVerbose)
-				serviceOutput.WriteLine(message);
+				serviceOutput.WriteLine(context,
+				                        message);
 		}
 
 		private void Run()
@@ -70,13 +72,15 @@ namespace TechBot.Library
 			                 new string[] { "api" });
 		}
 		
-		public void Handle(string commandName,
+		public void Handle(MessageContext context,
+		                   string commandName,
 		                   string parameters)
 		{
 			if (parameters.Trim().Equals(String.Empty))
-				DisplayNoKeyword();
+				DisplayNoKeyword(context);
 			else
-				Search(parameters);
+				Search(context,
+				       parameters);
 		}
 		
 		public string Help()
@@ -84,7 +88,8 @@ namespace TechBot.Library
 			return "!api <apiname>";
 		}
 		
-		private bool SearchIndex(string keyword)
+		private bool SearchIndex(MessageContext context,
+		                         string keyword)
 		{
 			if (chm.HasIndex)
 			{
@@ -92,14 +97,18 @@ namespace TechBot.Library
 				                                       IndexType.KeywordLinks);
 				if (item != null && item.Topics.Count > 0)
 				{
-					WriteIfVerbose(String.Format("Keyword {0} found in index",
+					WriteIfVerbose(context,
+					               String.Format("Keyword {0} found in index",
 					                             item.KeyWord));
 					IndexTopic indexTopic = item.Topics[0] as IndexTopic;
-					return DisplayResult(keyword, indexTopic);
+					return DisplayResult(context,
+					                     keyword,
+					                     indexTopic);
 				}
 				else
 				{
-					WriteIfVerbose(String.Format("Keyword {0} not found in index",
+					WriteIfVerbose(context,
+					               String.Format("Keyword {0} not found in index",
 					                             keyword));
 					return false;
 				}
@@ -108,14 +117,12 @@ namespace TechBot.Library
 				return false;
 		}
 
-		private void SearchFullText(string keyword)
+		private void SearchFullText(MessageContext context,
+		                            string keyword)
 		{
 			string sort = "Rating ASC";
-/*
-			sort = "Location ASC");
-			sort = "Title ASC");
-*/
-			WriteIfVerbose(String.Format("Searching fulltext database for {0}",
+			WriteIfVerbose(context,
+			               String.Format("Searching fulltext database for {0}",
                                          keyword));
 
 			bool partialMatches = false;
@@ -125,47 +132,58 @@ namespace TechBot.Library
 			                                      maxResults,
 			                                      partialMatches,
 			                                      titlesOnly);
-			WriteIfVerbose(String.Format("results.Rows.Count = {0}",
+			WriteIfVerbose(context,
+			               String.Format("results.Rows.Count = {0}",
 			                             results != null ?
 			                             results.Rows.Count.ToString() : "(none)"));
 			if (results != null && results.Rows.Count > 0)
 			{
 				results.DefaultView.Sort = sort;
-				if (!DisplayResult(keyword, results))
+				if (!DisplayResult(context,
+				                   keyword,
+				                   results))
 				{
-					DisplayNoResult(keyword);
+					DisplayNoResult(context,
+					                keyword);
 				}
 			}
 			else
 			{
-				DisplayNoResult(keyword);
+				DisplayNoResult(context,
+				                keyword);
 			}
 		}
 
-		private void Search(string keyword)
+		private void Search(MessageContext context,
+		                    string keyword)
 		{
-			if (!SearchIndex(keyword))
-			{
-				SearchFullText(keyword);
-			}
+			if (!SearchIndex(context,
+			                 keyword))
+				SearchFullText(context,
+				               keyword);
 		}
 		
-		private bool DisplayResult(string keyword,
+		private bool DisplayResult(MessageContext context,
+		                           string keyword,
 		                           IndexTopic indexTopic)
 		{
 			keyword = keyword.Trim().ToLower();
 			string url = indexTopic.URL;
-			WriteIfVerbose(String.Format("URL from index search {0}",
+			WriteIfVerbose(context,
+			               String.Format("URL from index search {0}",
                                          url));
-			string prototype = ExtractPrototype(url);
+			string prototype = ExtractPrototype(context,
+			                                    url);
 			if (prototype == null || prototype.Trim().Equals(String.Empty))
 				return false;
 			string formattedPrototype = FormatPrototype(prototype);
-			serviceOutput.WriteLine(formattedPrototype);
+			serviceOutput.WriteLine(context,
+			                        formattedPrototype);
 			return true;
 		}
 		
-		private bool DisplayResult(string keyword,
+		private bool DisplayResult(MessageContext context,
+		                           string keyword,
 		                           DataTable results)
 		{
 			keyword = keyword.Trim().ToLower();
@@ -173,31 +191,38 @@ namespace TechBot.Library
 			{
 				DataRowView row = results.DefaultView[i];
 				string title = row["Title"].ToString();
-				WriteIfVerbose(String.Format("Examining {0}", title));
+				WriteIfVerbose(context,
+				               String.Format("Examining {0}", title));
 				if (title.Trim().ToLower().Equals(keyword))
 				{
 					string location = row["Location"].ToString();
 					string rating = row["Rating"].ToString();
 					string url = row["Url"].ToString();
-					string prototype = ExtractPrototype(url);
+					string prototype = ExtractPrototype(context,
+					                                    url);
 					if (prototype == null || prototype.Trim().Equals(String.Empty))
 						continue;
 					string formattedPrototype = FormatPrototype(prototype);
-					serviceOutput.WriteLine(formattedPrototype);
+					serviceOutput.WriteLine(context,
+					                        formattedPrototype);
 					return true;
 				}
 			}
 			return false;
 		}
 
-		private void DisplayNoResult(string keyword)
+		private void DisplayNoResult(MessageContext context,
+		                             string keyword)
 		{
-			serviceOutput.WriteLine(String.Format("I don't know about keyword {0}", keyword));
+			serviceOutput.WriteLine(context,
+			                        String.Format("I don't know about keyword {0}",
+			                                      keyword));
 		}
 
-		private void DisplayNoKeyword()
+		private void DisplayNoKeyword(MessageContext context)
 		{
-			serviceOutput.WriteLine("Please give me a keyword.");
+			serviceOutput.WriteLine(context,
+			                        "Please give me a keyword.");
 		}
 
 		private string ReplaceComments(string s)
@@ -241,9 +266,11 @@ namespace TechBot.Library
 			return s;
 		}
 		
-		private string ExtractPrototype(string url)
+		private string ExtractPrototype(MessageContext context,
+		                                string url)
 		{
-			string page = GetPage(url);
+			string page = GetPage(context,
+			                      url);
 			Match match = Regex.Match(page,
 			                          "<PRE class=\"?syntax\"?>(.+)</PRE>",
 			                          RegexOptions.Multiline |
@@ -273,7 +300,8 @@ namespace TechBot.Library
 			return Regex.Replace(html, @"<(.|\n)*?>", String.Empty);
 		}
 
-		private string GetPage(string url)
+		private string GetPage(MessageContext context,
+		                       string url)
 		{
 			string CHMFileName = "";
 			string topicName = "";
@@ -288,7 +316,8 @@ namespace TechBot.Library
 			}
 			else
 			{
-				baseStream = GetBaseStreamFromCHMFileName(CHMFileName);
+				baseStream = GetBaseStreamFromCHMFileName(context,
+				                                          CHMFileName);
 			}
 
 			if ((topicName == "") || (CHMFileName == "") || (baseStream == null))
@@ -299,11 +328,13 @@ namespace TechBot.Library
 			return baseStream.ExtractTextFile(topicName);
 		}
 
-		private CHMStream.CHMStream GetBaseStreamFromCHMFileName(string CHMFileName)
+		private CHMStream.CHMStream GetBaseStreamFromCHMFileName(MessageContext context,
+		                                                         string CHMFileName)
 		{
 			foreach (CHMFile file in chm.FileList)
 			{
-				WriteIfVerbose(String.Format("Compare: {0} <> {1}",
+				WriteIfVerbose(context,
+				               String.Format("Compare: {0} <> {1}",
 				                             file.ChmFilePath,
 				                             CHMFileName));
 				if (file.ChmFilePath.ToLower().Equals(CHMFileName.ToLower()))
@@ -311,7 +342,8 @@ namespace TechBot.Library
 					return file.BaseStream;
 				}
 			}
-			WriteIfVerbose(String.Format("Could not find loaded CHM file in list: {0}",
+			WriteIfVerbose(context,
+			               String.Format("Could not find loaded CHM file in list: {0}",
 			                             CHMFileName));
 			return null;
 		}

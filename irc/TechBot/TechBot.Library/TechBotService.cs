@@ -9,8 +9,6 @@ namespace TechBot.Library
 {
 	public class TechBotService
 	{
-		private const bool IsVerbose = false;
-		
 		private IServiceOutput serviceOutput;
 		private string chmPath;
 		private string mainChm;
@@ -37,12 +35,6 @@ namespace TechBot.Library
 			this.svnCommand = svnCommand;
 		}
 		
-		private void WriteIfVerbose(string message)
-		{
-			if (IsVerbose)
-				serviceOutput.WriteLine(message);
-		}
-		
 		public void Run()
 		{
 			commands.Add(new HelpCommand(serviceOutput,
@@ -60,12 +52,12 @@ namespace TechBot.Library
 			                            svnCommand));
 		}
 		
-		public void InjectMessage(string message)
+		public void InjectMessage(MessageContext context,
+		                          string message)
 		{
 			if (message.StartsWith("!"))
-			{
-				ParseCommandMessage(message);
-			}
+				ParseCommandMessage(context,
+				                    message);
 		}
 		
 		private bool IsCommandMessage(string message)
@@ -73,7 +65,8 @@ namespace TechBot.Library
 			return message.StartsWith("!");
 		}
 
-		public void ParseCommandMessage(string message)
+		public void ParseCommandMessage(MessageContext context,
+		                                string message)
 		{
 			if (!IsCommandMessage(message))
 				return;
@@ -94,7 +87,8 @@ namespace TechBot.Library
 			{
 				if (command.CanHandle(commandName))
 				{
-					command.Handle(commandName, parameters);
+					command.Handle(context,
+					               commandName, parameters);
 					return;
 				}
 			}

@@ -5,7 +5,8 @@ namespace TechBot.Library
 	public interface ICommand
 	{
 		bool CanHandle(string commandName);
-		void Handle(string commandName,
+		void Handle(MessageContext context,
+		            string commandName,
 		            string parameters);
 		string Help();
 	}
