@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.38 2000/05/01 14:15:01 ea Exp $
+/* $Id: shell.c,v 1.39 2000/05/26 05:38:42 phreak Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -251,20 +251,22 @@ ExecuteKill(char * lpPid)
 
 void ExecuteHelp (void * dummy)
 {
-	debug_printf ("A:\t\t\tCurrent drive is A:\n");
-	debug_printf ("C:\t\t\tCurrent drive is C:\n");
-	debug_printf ("cd [directory]\t\tChange current directory\n");
-	debug_printf ("dir [directory]\t\tList directory\n");
-	debug_printf ("exit\t\t\tTerminate the shell\n");
-	debug_printf ("help\t\t\tPrint this help message\n");
-	debug_printf ("kill [pid]\t\tKill process which PID is pid\n");
-	debug_printf ("md [directory]\t\tCreate a new directory\n");
-	debug_printf ("reboot\t\t\tRestart the system\n");
-	debug_printf ("start [program.exe]\tDetach program.exe\n");
-	debug_printf ("type [file]\t\tPrint the file on console\n");
-	debug_printf ("validate\t\tValidate the process' heap\n");
-	debug_printf ("ver\t\t\tPrint version information\n");
-	debug_printf ("[program.exe]\t\tStart synchronously program.exe\n\n");
+	debug_printf (
+		"A:\t\t\tCurrent drive is A:\n"
+		"C:\t\t\tCurrent drive is C:\n"
+		"cd [directory]\t\tChange current directory\n"
+		"dir [directory]\t\tList directory\n"
+		"exit\t\t\tTerminate the shell\n"
+		"help\t\t\tPrint this help message\n"
+		"kill [pid]\t\tKill process which PID is pid\n"
+		"md [directory]\t\tCreate a new directory\n"
+		"reboot\t\t\tRestart the system\n"
+		"start [program.exe]\tDetach program.exe\n"
+		"type [file]\t\tPrint the file on console\n"
+		"validate\t\tValidate the process' heap\n"
+		"ver\t\t\tPrint version information\n"
+		"[program.exe]\t\tStart synchronously program.exe\n\n"
+		);
 }
 
 void ExecuteCommand(char* line)
@@ -397,43 +399,42 @@ void ReadLine(char* line)
 {
    DWORD Result;
    UCHAR CurrentDir[255];
-   char  ch;
    int   length = 0;
+   int c;
 
    GetCurrentDirectoryA(255,CurrentDir);
    debug_printf("%s>", CurrentDir);
 
    do
      {
-	if (!ReadConsoleA(InputHandle,
-			  &ch,
-			  1,
-			  &Result,
-			  NULL))
+       if ( !ReadConsoleA(InputHandle, line, 255 - length, &Result, NULL) )
 	  {
 	     debug_printf("Failed to read from console\n");
 	     for(;;);
 	  }
-        switch (ch)
-          {
-            case '\b':
-              if (length > 0)
-              {
-                debug_printf("\b \b");
-                line--;
-                length--;
-              }
-              break;
-
-            default:
-              *line = ch;
-	      debug_printf( "%c", ch );
-              line++;
+       for( c = 0; c < Result; c++ )
+	 switch ( line[c] )
+	   {
+	   case '\b':
+	     if (length > 0)
+	       {
+		 debug_printf("\b \b");
+		 memmove( &line[c-1], &line[c], Result - c - 1 );
+		 c-=2;
+		 length--;
+		 Result--;
+	       }
+	     break;
+	   case '\n': 
+	     line[c] = 0;
+	     debug_printf( "\n" );
+	     return;
+	   default:
+	      debug_printf( "%c", line[c] );
               length++;
           }
-     } while (ch != '\n');
-   line--;
-   *line = 0;
+       line += Result;
+     } while (1);
 }
 
 void ParseCommandLine (void)
