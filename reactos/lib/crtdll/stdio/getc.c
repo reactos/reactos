@@ -1,9 +1,10 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdio.h>
+#include <io.h>
 #include <windows.h>
 #include <libc/file.h>
 
-#undef getc
+
 int getc(FILE *f)
 {
   int c;

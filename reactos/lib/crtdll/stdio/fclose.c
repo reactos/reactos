@@ -7,9 +7,6 @@
 
 #include <libc/file.h>
 
-#ifndef __dj_include_stdio_h_
-#define _name_to_remove _tmpfname
-#endif
 
 int
 fclose(FILE *f)
