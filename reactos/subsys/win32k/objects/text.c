@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.53 2003/10/20 17:57:42 gvg Exp $ */
+/* $Id: text.c,v 1.54 2003/11/30 20:33:45 gdalsnes Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -157,7 +157,12 @@ NtGdiAddFontResource(LPCWSTR  Filename)
   //  Open the Module
   InitializeObjectAttributes(&ObjectAttributes, &uFileName, 0, NULL, NULL);
 
-  Status = NtOpenFile(&FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, &Iosb, 0, 0);
+  Status = ZwOpenFile(&FileHandle, 
+                      GENERIC_READ|SYNCHRONIZE, 
+                      &ObjectAttributes, 
+                      &Iosb, 
+                      0, //ShareAccess
+                      FILE_SYNCHRONOUS_IO_NONALERT);
 
   if (!NT_SUCCESS(Status))
   {
@@ -184,7 +189,16 @@ NtGdiAddFontResource(LPCWSTR  Filename)
   }
 
   //  Load driver into memory chunk
-  Status = NtReadFile(FileHandle, 0, 0, 0, &Iosb, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
+  Status = ZwReadFile(FileHandle, 
+                      NULL, 
+                      NULL, 
+                      NULL, 
+                      &Iosb, 
+                      buffer, 
+                      FileStdInfo.EndOfFile.u.LowPart, 
+                      NULL, 
+                      NULL);
+                      
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("could not read module file into memory");
@@ -192,7 +206,7 @@ NtGdiAddFontResource(LPCWSTR  Filename)
     return 0;
   }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   error = FT_New_Memory_Face(library, buffer, size, 0, &face);
   if (error == FT_Err_Unknown_File_Format)

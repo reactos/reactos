@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.74 2003/11/19 13:16:22 navaraf Exp $
+/* $Id: utils.c,v 1.75 2003/11/30 20:37:34 gdalsnes Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -389,11 +389,11 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   DPRINT("Opening dll \"%wZ\"\n", &FullNtFileName);
 
   Status = ZwOpenFile(&FileHandle,
-                      FILE_ALL_ACCESS,
+                      GENERIC_READ|SYNCHRONIZE,
                       &FileObjectAttributes,
                       &IoStatusBlock,
                       0,
-                      0);
+                      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Dll open of %wZ failed: Status = 0x%08x\n", 
@@ -404,14 +404,14 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   RtlFreeUnicodeString (&FullNtFileName);
 
   Status = ZwReadFile(FileHandle,
-                      0,
-                      0,
-                      0,
+                      NULL,
+                      NULL,
+                      NULL,
                       &IoStatusBlock,
                       BlockBuffer,
                       sizeof(BlockBuffer),
-                      0,
-                      0);
+                      NULL,
+                      NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Dll header read failed: Status = 0x%08x\n", Status);
