@@ -86,14 +86,11 @@ NtGdiCreateBrushIndirect(
    CONST LOGBRUSH *LogBrush);
 
 HBRUSH STDCALL
-NtGdiCreateDIBPatternBrush(
-   HGLOBAL hDIBPacked,
-   UINT ColorSpec);
-
-HBRUSH STDCALL
-NtGdiCreateDIBPatternBrushPt(
-   CONST VOID *PackedDIB,
-   UINT Usage);
+NtGdiCreateDIBBrush(
+   CONST BITMAPINFO *BitmapInfoAndData,
+   UINT ColorSpec,
+   UINT BitmapInfoSize,
+   CONST VOID *PackedDIB);
 
 HBRUSH STDCALL
 NtGdiCreateHatchBrush(

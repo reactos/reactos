@@ -40,6 +40,8 @@ MISC_OBJECTS = \
 
 OBJECTS_OBJECTS = \
  objects/bitblt.o \
+ objects/utils.o \
+ objects/brush.o \
  objects/dc.o \
  objects/font.o \
  objects/linedda.o \

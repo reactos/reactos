@@ -49,7 +49,7 @@ CopyMetaFileA@8
 CopyMetaFileW@8
 CreateBitmap@20=NtGdiCreateBitmap@20
 CreateBitmapIndirect@4=NtGdiCreateBitmapIndirect@4
-CreateBrushIndirect@4=NtGdiCreateBrushIndirect@4
+CreateBrushIndirect@4
 CreateColorSpaceA@4
 CreateColorSpaceW@4
 CreateCompatibleBitmap@12=NtGdiCreateCompatibleBitmap@12
@@ -57,7 +57,7 @@ CreateCompatibleDC@4=NtGdiCreateCompatableDC@4
 CreateDCA@16
 CreateDCW@16
 CreateDIBPatternBrush@8
-CreateDIBPatternBrushPt@8=NtGdiCreateDIBPatternBrushPt@8
+CreateDIBPatternBrushPt@8
 CreateDIBSection@24=NtGdiCreateDIBSection@24
 CreateDIBitmap@24=NtGdiCreateDIBitmap@24
 CreateDiscardableBitmap@12=NtGdiCreateDiscardableBitmap@12

@@ -53,7 +53,13 @@ BOOL FASTCALL NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw);
 BOOL FASTCALL NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw);
 
 /* == GDI HANDLES =========================================================== */
+
 BOOL GdiIsHandleValid(HGDIOBJ hGdiObj);
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
+
+/* == BITMAP UTILITY FUNCTIONS ============================================== */
+
+BOOL STDCALL CalculateColorTableSize(LPBITMAPINFOHEADER BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
+LPBITMAPINFO STDCALL ConvertBitmapInfo(LPBITMAPINFO BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
 
 /* EOF */

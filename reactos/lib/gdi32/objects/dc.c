@@ -290,26 +290,6 @@ GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
 /*
  * @implemented
  */
-BOOL
-STDCALL
-FixBrushOrgEx(
-	HDC	hdc,
-	int	nXOrg,
-	int	nYOrg,
-	LPPOINT	lppt
-	)
-{
-  #if 0
-  /* FIXME - Check if we're emulating win95, if so, forward to SetBrushOrgEx() */
-  return SetBrushOrgEx(hdc, nXOrg, nYOrg, lppt);
-  #endif
-  
-  return FALSE;
-}
-
-/*
- * @implemented
- */
 COLORREF 
 STDCALL
 GetDCBrushColor(

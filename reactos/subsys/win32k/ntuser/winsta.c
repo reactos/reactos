@@ -309,6 +309,13 @@ IntValidateWindowStationHandle(
 {
    NTSTATUS Status;
   
+   if (WindowStation == NULL)
+   {
+//      DPRINT1("Invalid window station handle\n");
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return STATUS_INVALID_HANDLE;
+   }
+
    Status = ObReferenceObjectByHandle(
       WindowStation,
       DesiredAccess,

@@ -72,6 +72,10 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (Dc->w.bitsPerPixel != 1)
             Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc->w.textColor, Dc->w.backgroundColor);
       }
+      else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
+      {
+         Result = IntEngCreateXlate(0, 0, Dc->w.hPalette, Pattern->hDIBPalette);
+      }
 
       BITMAPOBJ_UnlockBitmap(BrushObj->hbmPattern);
       *Failed = FALSE;
@@ -97,33 +101,291 @@ IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ
    BrushInst->XlateObject = XlateObj;
 }
 
-HBRUSH FASTCALL
-IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
+/**
+ * @name CalculateColorTableSize
+ *
+ * Internal routine to calculate the number of color table entries.
+ *
+ * @param BitmapInfoHeader
+ *        Input bitmap information header, can be any version of
+ *        BITMAPINFOHEADER or BITMAPCOREHEADER.
+ *
+ * @param ColorSpec
+ *        Pointer to variable which specifiing the color mode (DIB_RGB_COLORS
+ *        or DIB_RGB_COLORS). On successful return this value is normalized
+ *        according to the bitmap info.
+ *
+ * @param ColorTableSize
+ *        On successful return this variable is filled with number of
+ *        entries in color table for the image with specified parameters.
+ *
+ * @return
+ *    TRUE if the input values together form a valid image, FALSE otherwise.
+ */
+
+BOOL STDCALL
+CalculateColorTableSize(
+   CONST BITMAPINFOHEADER *BitmapInfoHeader,
+   UINT *ColorSpec,
+   UINT *ColorTableSize)
 {
-   PGDIBRUSHOBJ BrushObject;
-   HBRUSH hBrush;
-   HBITMAP hPattern = 0;
-   
-   switch (LogBrush->lbStyle)
+   WORD BitCount;
+   DWORD ClrUsed;
+   DWORD Compression;
+
+   /*
+    * At first get some basic parameters from the passed BitmapInfoHeader
+    * structure. It can have one of the following formats: 
+    * - BITMAPCOREHEADER (the oldest one with totally different layout
+    *                     from the others)
+    * - BITMAPINFOHEADER (the standard and most common header)
+    * - BITMAPV4HEADER (extension of BITMAPINFOHEADER)
+    * - BITMAPV5HEADER (extension of BITMAPV4HEADER)
+    */
+
+   if (BitmapInfoHeader->biSize == sizeof(BITMAPCOREHEADER))
    {
-      case BS_HATCHED:
-         hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[LogBrush->lbHatch]);
-         if (hPattern == NULL)
-         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-            return NULL;
-         }
-         break;
-     
-      case BS_PATTERN:
-         hPattern = BITMAPOBJ_CopyBitmap((HBITMAP)LogBrush->lbHatch);
-         if (hPattern == NULL)
-         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-            return NULL;
-         }
-         break;
+      BitCount = ((LPBITMAPCOREHEADER)BitmapInfoHeader)->bcBitCount;
+      ClrUsed = 0;
+      Compression = BI_RGB;
    }
+   else
+   {
+      BitCount = BitmapInfoHeader->biBitCount;
+      ClrUsed = BitmapInfoHeader->biClrUsed;
+      Compression = BitmapInfoHeader->biCompression;
+   }
+
+   switch (Compression)
+   {
+      case BI_BITFIELDS:
+         if (*ColorSpec == DIB_PAL_COLORS)
+            *ColorSpec = DIB_RGB_COLORS;
+
+         if (BitCount != 16 && BitCount != 32)
+            return FALSE;
+
+         /*
+          * For BITMAPV4HEADER/BITMAPV5HEADER the masks are included in
+          * the structure itself (bV4RedMask, bV4GreenMask, and bV4BlueMask).
+          * For BITMAPINFOHEADER the color masks are stored in the palette.
+          */
+
+         if (BitmapInfoHeader->biSize > sizeof(BITMAPINFOHEADER))
+            *ColorTableSize = 0;
+         else
+            *ColorTableSize = 3;
+         
+         return TRUE;
+
+      case BI_RGB:
+         switch (BitCount)
+         {
+            case 1:
+               *ColorTableSize = ClrUsed ? min(ClrUsed, 2) : 2;
+               return TRUE;
+
+            case 4:
+               *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
+               return TRUE;
+
+            case 8:
+               *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
+               return TRUE;
+
+            default:
+               if (*ColorSpec == DIB_PAL_COLORS)
+                  *ColorSpec = DIB_RGB_COLORS;
+               if (BitCount != 16 && BitCount != 24 && BitCount != 32)
+                  return FALSE;
+               *ColorTableSize = ClrUsed;
+               return TRUE;
+         }
+         
+      case BI_RLE4:
+         if (BitCount == 4)
+         {
+            *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
+            return TRUE;
+         }
+         return FALSE;
+
+      case BI_RLE8:
+         if (BitCount == 8)
+         {
+            *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
+            return TRUE;
+         }
+         return FALSE;
+
+      case BI_JPEG:
+      case BI_PNG:
+         *ColorTableSize = ClrUsed;
+         return TRUE;
+
+      default:
+         return FALSE;      
+   }
+}
+
+HBRUSH STDCALL
+IntGdiCreateDIBBrush(
+   CONST BITMAPINFO *BitmapInfo,
+   UINT ColorSpec,
+   UINT BitmapInfoSize,
+   CONST VOID *PackedDIB)
+{
+   HBRUSH hBrush;
+   PGDIBRUSHOBJ BrushObject;
+   HBITMAP hPattern;
+   ULONG_PTR DataPtr;
+   UINT PaletteEntryCount;
+   PBITMAPOBJ BitmapObject;
+   UINT PaletteType;
+
+   if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+   }
+
+   if (!CalculateColorTableSize(&BitmapInfo->bmiHeader, &ColorSpec,
+                                &PaletteEntryCount))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+   }
+
+   DataPtr = (ULONG_PTR)BitmapInfo + BitmapInfo->bmiHeader.biSize;
+   if (ColorSpec == DIB_RGB_COLORS)
+      DataPtr += PaletteEntryCount * sizeof(RGBQUAD);
+   else
+      DataPtr += PaletteEntryCount * sizeof(USHORT);
+
+   hPattern = NtGdiCreateBitmap(BitmapInfo->bmiHeader.biWidth,
+                                BitmapInfo->bmiHeader.biHeight,
+                                BitmapInfo->bmiHeader.biPlanes,
+                                BitmapInfo->bmiHeader.biBitCount,
+                                (PVOID)DataPtr);
+   if (hPattern == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   BitmapObject = BITMAPOBJ_LockBitmap(hPattern);
+   ASSERT(BitmapObject != NULL);
+   BitmapObject->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
+   BITMAPOBJ_UnlockBitmap(hPattern);
+
+   hBrush = BRUSHOBJ_AllocBrush();
+   if (hBrush == NULL)
+   {
+      NtGdiDeleteObject(hPattern);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   BrushObject = BRUSHOBJ_LockBrush(hBrush);
+   ASSERT(BrushObject != NULL);
+
+   BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP | GDIBRUSH_IS_DIB;
+   BrushObject->hbmPattern = hPattern;
+   /* FIXME: Fill in the rest of fields!!! */
+
+   GDIOBJ_SetOwnership(hPattern, NULL);
+
+   BRUSHOBJ_UnlockBrush(hBrush);
+   
+   return hBrush;
+}
+
+HBRUSH STDCALL
+IntGdiCreateHatchBrush(
+   INT Style,
+   COLORREF Color)
+{
+   HBRUSH hBrush;
+   PGDIBRUSHOBJ BrushObject;
+   HBITMAP hPattern;
+   
+   if (Style < 0 || Style >= NB_HATCH_STYLES)
+   {
+      return 0;
+   }
+
+   hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[Style]);
+   if (hPattern == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   hBrush = BRUSHOBJ_AllocBrush();
+   if (hBrush == NULL)
+   {
+      NtGdiDeleteObject(hPattern);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   BrushObject = BRUSHOBJ_LockBrush(hBrush);
+   ASSERT(BrushObject != NULL);
+
+   BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
+   BrushObject->hbmPattern = hPattern;
+   BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+
+   GDIOBJ_SetOwnership(hPattern, NULL);
+
+   BRUSHOBJ_UnlockBrush(hBrush);
+   
+   return hBrush;
+}
+
+HBRUSH STDCALL
+IntGdiCreatePatternBrush(
+   HBITMAP hBitmap)
+{
+   HBRUSH hBrush;
+   PGDIBRUSHOBJ BrushObject;
+   HBITMAP hPattern;
+   
+   hPattern = BITMAPOBJ_CopyBitmap(hBitmap);
+   if (hPattern == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+   
+   hBrush = BRUSHOBJ_AllocBrush();
+   if (hBrush == NULL)
+   {
+      NtGdiDeleteObject(hPattern);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   BrushObject = BRUSHOBJ_LockBrush(hBrush);
+   ASSERT(BrushObject != NULL);
+
+   BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
+   BrushObject->hbmPattern = hPattern;
+   /* FIXME: Fill in the rest of fields!!! */
+
+   GDIOBJ_SetOwnership(hPattern, NULL);
+
+   BRUSHOBJ_UnlockBrush(hBrush);
+   
+   return hBrush;
+}
+
+HBRUSH STDCALL
+IntGdiCreateSolidBrush(
+   COLORREF Color)
+{
+   HBRUSH hBrush;
+   PGDIBRUSHOBJ BrushObject;
    
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
@@ -133,43 +395,34 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
    }
 
    BrushObject = BRUSHOBJ_LockBrush(hBrush);
-   if(BrushObject != NULL)
+   ASSERT(BrushObject != NULL);
+
+   BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
+   BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+   /* FIXME: Fill in the rest of fields!!! */
+
+   BRUSHOBJ_UnlockBrush(hBrush);
+   
+   return hBrush;
+}
+
+HBRUSH STDCALL
+IntGdiCreateNullBrush(VOID)
+{
+   HBRUSH hBrush;
+   PGDIBRUSHOBJ BrushObject;
+   
+   hBrush = BRUSHOBJ_AllocBrush();
+   if (hBrush == NULL)
    {
-     switch (LogBrush->lbStyle)
-     {
-        case BS_NULL:
-           BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
-           break;
-
-        case BS_SOLID:
-           BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
-           BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
-           /* FIXME: Fill in the rest of fields!!! */
-           break;
-
-        case BS_HATCHED:
-           BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
-           BrushObject->hbmPattern = hPattern;
-           BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
-           break;
-
-        case BS_PATTERN:
-           BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-           BrushObject->hbmPattern = hPattern;
-           /* FIXME: Fill in the rest of fields!!! */
-           break;
-
-        default:
-           DPRINT1("Brush Style: %d\n", LogBrush->lbStyle);
-           UNIMPLEMENTED;
-           break;
-     }
-     
-     BRUSHOBJ_UnlockBrush(hBrush);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
    }
 
-   if (hPattern != 0)
-      GDIOBJ_SetOwnership(hPattern, NULL);
+   BrushObject = BRUSHOBJ_LockBrush(hBrush);
+   ASSERT(BrushObject != NULL);
+   BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
+   BRUSHOBJ_UnlockBrush(hBrush);
    
    return hBrush;
 }
@@ -299,80 +552,58 @@ IntGdiPolyPatBlt(
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 HBRUSH STDCALL
-NtGdiCreateBrushIndirect(CONST LOGBRUSH *LogBrush)
+NtGdiCreateDIBBrush(
+   CONST BITMAPINFO *BitmapInfoAndData,
+   UINT ColorSpec,
+   UINT BitmapInfoSize,
+   CONST VOID *PackedDIB)
 {
-   LOGBRUSH SafeLogBrush;
+   BITMAPINFO *SafeBitmapInfoAndData;
    NTSTATUS Status;
-  
-   Status = MmCopyFromCaller(&SafeLogBrush, LogBrush, sizeof(LOGBRUSH));
+   HBRUSH hBrush;
+
+   SafeBitmapInfoAndData = EngAllocMem(0, BitmapInfoSize, 0);
+   if (SafeBitmapInfoAndData == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+
+   Status = MmCopyFromCaller(SafeBitmapInfoAndData, BitmapInfoAndData,
+                             BitmapInfoSize);
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
       return 0;
    }
-  
-   return IntGdiCreateBrushIndirect(&SafeLogBrush);
+
+   hBrush = IntGdiCreateDIBBrush(SafeBitmapInfoAndData, ColorSpec,
+                                 BitmapInfoSize, PackedDIB);
+
+   EngFreeMem(SafeBitmapInfoAndData);
+
+   return hBrush;
 }
 
 HBRUSH STDCALL
-NtGdiCreateDIBPatternBrush(HGLOBAL hDIBPacked, UINT ColorSpec)
+NtGdiCreateHatchBrush(
+   INT Style,
+   COLORREF Color)
 {
-   UNIMPLEMENTED;
-   return 0;
+   return IntGdiCreateHatchBrush(Style, Color);
 }
 
 HBRUSH STDCALL
-NtGdiCreateDIBPatternBrushPt(CONST VOID *PackedDIB, UINT Usage)
+NtGdiCreatePatternBrush(
+   HBITMAP hBitmap)
 {
-   UNIMPLEMENTED;
-   return 0;
-}
-
-HBRUSH STDCALL
-NtGdiCreateHatchBrush(INT Style, COLORREF Color)
-{
-   LOGBRUSH LogBrush;
-
-   if (Style < 0 || Style >= NB_HATCH_STYLES)
-   {
-      return 0;
-   }
-
-   LogBrush.lbStyle = BS_HATCHED;
-   LogBrush.lbColor = Color;
-   LogBrush.lbHatch = Style;
-
-   return IntGdiCreateBrushIndirect(&LogBrush);
-}
-
-HBRUSH STDCALL
-NtGdiCreatePatternBrush(HBITMAP hBitmap)
-{
-   LOGBRUSH LogBrush;
-
-   LogBrush.lbStyle = BS_PATTERN;
-   LogBrush.lbColor = 0;
-   LogBrush.lbHatch = (ULONG)hBitmap;
-
-   return IntGdiCreateBrushIndirect(&LogBrush);
+   return IntGdiCreatePatternBrush(hBitmap);
 }
 
 HBRUSH STDCALL
 NtGdiCreateSolidBrush(COLORREF Color)
 {
-   LOGBRUSH LogBrush;
-
-   LogBrush.lbStyle = BS_SOLID;
-   LogBrush.lbColor = Color;
-   LogBrush.lbHatch = 0;
-
-   return IntGdiCreateBrushIndirect(&LogBrush);
-}
-
-BOOL STDCALL
-NtGdiFixBrushOrgEx(VOID)
-{
-   return FALSE;
+   return IntGdiCreateSolidBrush(Color);
 }
 
 /*

@@ -463,6 +463,10 @@ BITMAP_Cleanup(PVOID ObjectBody)
 		{
 			EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
+		if (pBmp->hDIBPalette)
+		{
+			NtGdiDeleteObject(pBmp->hDIBPalette);
+		}
 	}
 
 	return TRUE;

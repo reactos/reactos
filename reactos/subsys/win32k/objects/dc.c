@@ -1868,7 +1868,6 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PGDIBRUSHOBJ brush;
   XLATEOBJ *XlateObj;
   DWORD objectType;
-  ULONG NumColors = 0;
   HRGN hVisRgn;
   BOOLEAN Failed;
 
@@ -1962,21 +1961,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       if(pb->dib)
       {
         dc->w.bitsPerPixel = pb->dib->dsBmih.biBitCount;
-
-        if(pb->dib->dsBmih.biBitCount <= 8)
-        {
-          if(pb->dib->dsBmih.biBitCount == 1) { NumColors = 2; } else
-          if(pb->dib->dsBmih.biBitCount == 4) { NumColors = 16; } else
-          if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
-          dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(NumColors, pb->ColorMap);
-        }
-        else
-        {
-          dc->w.hPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
-                                                pb->dib->dsBitfields[0],
-                                                pb->dib->dsBitfields[1],
-                                                pb->dib->dsBitfields[2]);
-        }
+        dc->w.hPalette = pb->hDIBPalette;
       }
       else
       {
