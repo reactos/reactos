@@ -42,6 +42,12 @@ typedef struct _CONSOLE_FONT_INFO {
   COORD dwFontSize;
 } CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
 
+typedef struct _CONSOLE_SELECTION_INFO {
+  DWORD dwFlags;
+  COORD dwSelectionAnchor;
+  SMALL_RECT srSelection;
+} CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
+
 #endif /* __INCLUDE_CONSOLE_H */
 
 

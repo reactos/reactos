@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.43 2002/09/08 10:22:43 chorns Exp $
+/* $Id: console.c,v 1.44 2002/10/20 00:34:39 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,24 +35,18 @@ static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 /* FUNCTIONS *****************************************************************/
 
 BOOL STDCALL
-AddConsoleAliasA (DWORD a0,
-		  DWORD a1,
-		  DWORD a2)
-     /*
-      * Undocumented
-      */
+AddConsoleAliasA (LPSTR Source,
+		  LPSTR Target,
+		  LPSTR ExeName)
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
 
 BOOL STDCALL
-AddConsoleAliasW (DWORD a0,
-		  DWORD a1,
-		  DWORD a2)
-     /*
-      * Undocumented
-      */
+AddConsoleAliasW (LPWSTR Source,
+		  LPWSTR Target,
+		  LPWSTR ExeName)
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
@@ -1244,7 +1238,7 @@ ReadConsoleOutputCharacterA(
     }
 
   if (lpNumberOfCharsRead != NULL)
-    *lpNumberOfCharsRead = Size;
+    *lpNumberOfCharsRead = nLength;
 
   Request.Type = CSRSS_READ_CONSOLE_OUTPUT_CHAR;
   Request.Data.ReadConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
@@ -1315,8 +1309,58 @@ ReadConsoleOutputAttribute(
 	LPDWORD		lpNumberOfAttrsRead
 	)
 {
-   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-   return FALSE;
+  CSRSS_API_REQUEST Request;
+  PCSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  DWORD Size, i;
+  
+  Reply = RtlAllocateHeap(GetProcessHeap(),
+			  HEAP_ZERO_MEMORY,
+			  sizeof(CSRSS_API_REPLY) + CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB);
+  if (Reply == NULL)
+    {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return(FALSE);
+    }
+
+  if (lpNumberOfAttrsRead != NULL)
+    *lpNumberOfAttrsRead = nLength;
+
+  Request.Type = CSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
+  Request.Data.ReadConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
+  Request.Data.ReadConsoleOutputAttribRequest.ReadCoord = dwReadCoord;
+
+  while (nLength != 0)
+    {
+      if (nLength > CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB)
+	Size = CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB;
+      else
+	Size = nLength;
+
+      Request.Data.ReadConsoleOutputAttribRequest.NumAttrsToRead = Size;
+
+      Status = CsrClientCallServer(&Request,
+				   Reply,
+				   sizeof(CSRSS_API_REQUEST),
+				   sizeof(CSRSS_API_REPLY) + Size);
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Reply->Status))
+	{
+	  RtlFreeHeap(GetProcessHeap(), 0, Reply);
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+
+      // Convert CHARs to WORDs
+      for(i = 0; i < Size; ++i)
+        *lpAttribute++ = Reply->Data.ReadConsoleOutputAttribReply.String[i];
+      
+      nLength -= Size;
+      Request.Data.ReadConsoleOutputAttribRequest.ReadCoord = Reply->Data.ReadConsoleOutputAttribReply.EndCoord;
+    }
+
+  RtlFreeHeap(GetProcessHeap(), 0, Reply);
+
+  return(TRUE);
 }
 
 
@@ -1518,8 +1562,28 @@ GetNumberOfConsoleInputEvents(
 	LPDWORD		lpNumberOfEvents
 	)
 {
-/* TO DO */
-	return FALSE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+ 
+   if(lpNumberOfEvents == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+   
+   Request.Type = CSRSS_GET_NUM_INPUT_EVENTS;
+   Request.Data.GetNumInputEventsRequest.ConsoleHandle = hConsoleInput;
+   Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
+   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Reply.Status))
+   {
+      SetLastErrorByStatus(Reply.Status);
+      return FALSE;
+   }
+   
+   *lpNumberOfEvents = Reply.Data.GetNumInputEventsReply.NumInputEvents;
+   
+	return TRUE;
 }
 
 
@@ -2290,5 +2354,40 @@ SetConsoleOutputCP(
 	return FALSE;
 }
 
+
+/*--------------------------------------------------------------
+ * 	GetConsoleProcessList
+ */
+DWORD STDCALL
+GetConsoleProcessList(LPDWORD lpdwProcessList,
+                  DWORD dwProcessCount)
+{
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return 0;
+}
+
+
+
+/*--------------------------------------------------------------
+ * 	GetConsoleSelectionInfo
+ */
+BOOL STDCALL
+GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
+{
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return FALSE;
+}
+
+
+
+/*--------------------------------------------------------------
+ * 	AttachConsole
+ */
+BOOL STDCALL 
+AttachConsole(DWORD dwProcessId)
+{
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return FALSE;
+}
 
 /* EOF */

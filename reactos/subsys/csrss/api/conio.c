@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.34 2002/09/08 10:23:45 chorns Exp $
+/* $Id: conio.c,v 1.35 2002/10/20 00:34:40 mdill Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1962,6 +1962,118 @@ CSR_API(CsrReadConsoleOutputChar)
   UNLOCK;
 
   return(Reply->Status);
+}
+
+
+CSR_API(CsrReadConsoleOutputAttrib)
+{
+  NTSTATUS Status;
+  PCSRSS_SCREEN_BUFFER ScreenBuffer;
+  DWORD Xpos, Ypos;
+  CHAR* ReadBuffer;
+  DWORD i;
+
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE_HEADER);
+  ReadBuffer = Reply->Data.ReadConsoleOutputAttribReply.String;
+
+  LOCK;
+
+  Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+  if (!NT_SUCCESS(Status))
+    {
+      Reply->Status = Status;
+      UNLOCK;
+      return(Reply->Status);
+    }
+
+  if (ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+    {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return(Reply->Status);
+    }
+
+  Xpos = Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.X + ScreenBuffer->ShowX;
+  Ypos = Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.Y + ScreenBuffer->ShowY;
+
+  for (i = 0; i < Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead; ++i)
+    {
+      *ReadBuffer = ScreenBuffer->Buffer[(Xpos * 2) + (Ypos * 2 * ScreenBuffer->MaxX) + 1];
+
+      ReadBuffer++;
+      Xpos++;
+
+      if (Xpos == ScreenBuffer->MaxX)
+	{
+	  Xpos = 0;
+	  Ypos++;
+
+	  if (Ypos == ScreenBuffer->MaxY)
+	    Ypos = 0;
+	}
+    }
+
+  *ReadBuffer = 0;
+
+  Reply->Status = STATUS_SUCCESS;
+  Reply->Data.ReadConsoleOutputAttribReply.EndCoord.X = Xpos - ScreenBuffer->ShowX;
+  Reply->Data.ReadConsoleOutputAttribReply.EndCoord.Y = Ypos - ScreenBuffer->ShowY;
+  Reply->Header.MessageSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
+  Reply->Header.DataSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
+
+  UNLOCK;
+
+  return(Reply->Status);
+}
+
+
+CSR_API(CsrGetNumberOfConsoleInputEvents)
+{
+  NTSTATUS Status;
+  PCSRSS_CONSOLE Console;
+  PLIST_ENTRY CurrentItem;
+  DWORD NumEvents;
+  
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE_HEADER);
+
+  LOCK;
+
+  Status = CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
+  if (!NT_SUCCESS(Status))
+    {
+      Reply->Status = Status;
+      UNLOCK;
+      return(Reply->Status);
+    }
+
+  if (Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+    {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return(Reply->Status);
+    }
+  
+  CurrentItem = &Console->InputEvents;
+  NumEvents = 0;
+  
+  // If there are any events ...
+  if(CurrentItem->Flink != CurrentItem)
+  {
+    do
+    {
+      CurrentItem = CurrentItem->Flink;
+      ++NumEvents;
+    }while(CurrentItem != &Console->InputEvents);
+  }
+  
+  UNLOCK;
+  
+  Reply->Status = STATUS_SUCCESS;
+  Reply->Data.GetNumInputEventsReply.NumInputEvents = NumEvents;
+   
+  return Reply->Status;
 }
 
 /* EOF */
