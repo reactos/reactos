@@ -1609,7 +1609,6 @@ int SockAsyncThread(PVOID ThreadParam)
 	PASYNC_COMPLETION_ROUTINE AsyncCompletionRoutine;
 	IO_STATUS_BLOCK IOSB;
 	NTSTATUS Status;
-	LARGE_INTEGER Timeout;
                           
 	/* Make the Thread Higher Priority */
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -1620,11 +1619,11 @@ int SockAsyncThread(PVOID ThreadParam)
 						(PVOID*)&AsyncCompletionRoutine,
 						&AsyncContext,
 						&IOSB,
-						&Timeout);
+						NULL);
 						
 		/* Call the Async Function */
 		if (NT_SUCCESS(Status)) {
-			//(*AsyncCompletionRoutine)(AsyncContext, IOSB);
+			(*AsyncCompletionRoutine)(AsyncContext, &IOSB);
 		} else {
 			/* It Failed, sleep for a second */
 			Sleep(1000);
