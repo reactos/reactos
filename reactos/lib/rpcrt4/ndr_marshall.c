@@ -561,7 +561,7 @@ void WINAPI PointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("type=%d, attr=%d\n", type, attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
-  else desc = pFormat + *(SHORT*)pFormat;
+  else desc = pFormat + *(const SHORT*)pFormat;
   if (attr & RPC_FC_P_DEREF) {
     Pointer = *(unsigned char**)Pointer;
     TRACE("deref => %p\n", Pointer);
@@ -600,7 +600,7 @@ void WINAPI PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("type=%d, attr=%d\n", type, attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
-  else desc = pFormat + *(SHORT*)pFormat;
+  else desc = pFormat + *(const SHORT*)pFormat;
   if (attr & RPC_FC_P_DEREF) {
     pPointer = *(unsigned char***)pPointer;
     TRACE("deref => %p\n", pPointer);
@@ -636,7 +636,7 @@ void WINAPI PointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("type=%d, attr=%d\n", type, attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
-  else desc = pFormat + *(SHORT*)pFormat;
+  else desc = pFormat + *(const SHORT*)pFormat;
   if (attr & RPC_FC_P_DEREF) {
     Pointer = *(unsigned char**)Pointer;
     TRACE("deref => %p\n", Pointer);
@@ -669,7 +669,7 @@ unsigned long WINAPI PointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("type=%d, attr=%d\n", type, attr);
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
-  else desc = pFormat + *(SHORT*)pFormat;
+  else desc = pFormat + *(const SHORT*)pFormat;
   if (attr & RPC_FC_P_DEREF) {
     TRACE("deref\n");
   }
@@ -704,7 +704,7 @@ void WINAPI PointerFree(PMIDL_STUB_MESSAGE pStubMsg,
   if (attr & RPC_FC_P_DONTFREE) return;
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
-  else desc = pFormat + *(SHORT*)pFormat;
+  else desc = pFormat + *(const SHORT*)pFormat;
   if (attr & RPC_FC_P_DEREF) {
     Pointer = *(unsigned char**)Pointer;
     TRACE("deref => %p\n", Pointer);
@@ -776,18 +776,18 @@ unsigned char * WINAPI EmbeddedPointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
       pFormat += 2;
       break;
     case RPC_FC_FIXED_REPEAT:
-      rep = *(WORD*)&pFormat[2];
-      stride = *(WORD*)&pFormat[4];
-      ofs = *(WORD*)&pFormat[6];
-      count = *(WORD*)&pFormat[8];
+      rep = *(const WORD*)&pFormat[2];
+      stride = *(const WORD*)&pFormat[4];
+      ofs = *(const WORD*)&pFormat[6];
+      count = *(const WORD*)&pFormat[8];
       xofs = 0;
       pFormat += 10;
       break;
     case RPC_FC_VARIABLE_REPEAT:
       rep = pStubMsg->MaxCount;
-      stride = *(WORD*)&pFormat[2];
-      ofs = *(WORD*)&pFormat[4];
-      count = *(WORD*)&pFormat[6];
+      stride = *(const WORD*)&pFormat[2];
+      ofs = *(const WORD*)&pFormat[4];
+      count = *(const WORD*)&pFormat[6];
       xofs = (pFormat[1] == RPC_FC_VARIABLE_OFFSET) ? Offset * stride : 0;
       pFormat += 8;
       break;
@@ -798,8 +798,8 @@ unsigned char * WINAPI EmbeddedPointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
       unsigned char *membase = pMemory + xofs;
       unsigned u;
       for (u=0; u<count; u++,info+=8) {
-        unsigned char *memptr = membase + *(SHORT*)&info[0];
-        unsigned char *bufptr = Mark + *(SHORT*)&info[2];
+        unsigned char *memptr = membase + *(const SHORT*)&info[0];
+        unsigned char *bufptr = Mark + *(const SHORT*)&info[2];
         PointerMarshall(pStubMsg, bufptr, *(unsigned char**)memptr, info+4);
       }
       rep--;
@@ -842,18 +842,18 @@ unsigned char * WINAPI EmbeddedPointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
       pFormat += 2;
       break;
     case RPC_FC_FIXED_REPEAT:
-      rep = *(WORD*)&pFormat[2];
-      stride = *(WORD*)&pFormat[4];
-      ofs = *(WORD*)&pFormat[6];
-      count = *(WORD*)&pFormat[8];
+      rep = *(const WORD*)&pFormat[2];
+      stride = *(const WORD*)&pFormat[4];
+      ofs = *(const WORD*)&pFormat[6];
+      count = *(const WORD*)&pFormat[8];
       xofs = 0;
       pFormat += 10;
       break;
     case RPC_FC_VARIABLE_REPEAT:
       rep = pStubMsg->MaxCount;
-      stride = *(WORD*)&pFormat[2];
-      ofs = *(WORD*)&pFormat[4];
-      count = *(WORD*)&pFormat[6];
+      stride = *(const WORD*)&pFormat[2];
+      ofs = *(const WORD*)&pFormat[4];
+      count = *(const WORD*)&pFormat[6];
       xofs = (pFormat[1] == RPC_FC_VARIABLE_OFFSET) ? Offset * stride : 0;
       pFormat += 8;
       break;
@@ -864,8 +864,8 @@ unsigned char * WINAPI EmbeddedPointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
       unsigned char *membase = *ppMemory + xofs;
       unsigned u;
       for (u=0; u<count; u++,info+=8) {
-        unsigned char *memptr = membase + *(SHORT*)&info[0];
-        unsigned char *bufptr = Mark + *(SHORT*)&info[2];
+        unsigned char *memptr = membase + *(const SHORT*)&info[0];
+        unsigned char *bufptr = Mark + *(const SHORT*)&info[2];
         PointerUnmarshall(pStubMsg, bufptr, (unsigned char**)memptr, info+4, fMustAlloc);
       }
       rep--;
@@ -903,18 +903,18 @@ void WINAPI EmbeddedPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
       pFormat += 2;
       break;
     case RPC_FC_FIXED_REPEAT:
-      rep = *(WORD*)&pFormat[2];
-      stride = *(WORD*)&pFormat[4];
-      ofs = *(WORD*)&pFormat[6];
-      count = *(WORD*)&pFormat[8];
+      rep = *(const WORD*)&pFormat[2];
+      stride = *(const WORD*)&pFormat[4];
+      ofs = *(const WORD*)&pFormat[6];
+      count = *(const WORD*)&pFormat[8];
       xofs = 0;
       pFormat += 10;
       break;
     case RPC_FC_VARIABLE_REPEAT:
       rep = pStubMsg->MaxCount;
-      stride = *(WORD*)&pFormat[2];
-      ofs = *(WORD*)&pFormat[4];
-      count = *(WORD*)&pFormat[6];
+      stride = *(const WORD*)&pFormat[2];
+      ofs = *(const WORD*)&pFormat[4];
+      count = *(const WORD*)&pFormat[6];
       xofs = (pFormat[1] == RPC_FC_VARIABLE_OFFSET) ? Offset * stride : 0;
       pFormat += 8;
       break;
@@ -925,7 +925,7 @@ void WINAPI EmbeddedPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
       unsigned char *membase = pMemory + xofs;
       unsigned u;
       for (u=0; u<count; u++,info+=8) {
-        unsigned char *memptr = membase + *(SHORT*)&info[0];
+        unsigned char *memptr = membase + *(const SHORT*)&info[0];
         PointerBufferSize(pStubMsg, *(unsigned char**)memptr, info+4);
       }
       rep--;
@@ -961,18 +961,18 @@ unsigned long WINAPI EmbeddedPointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
       pFormat += 2;
       break;
     case RPC_FC_FIXED_REPEAT:
-      rep = *(WORD*)&pFormat[2];
-      stride = *(WORD*)&pFormat[4];
-      ofs = *(WORD*)&pFormat[6];
-      count = *(WORD*)&pFormat[8];
+      rep = *(const WORD*)&pFormat[2];
+      stride = *(const WORD*)&pFormat[4];
+      ofs = *(const WORD*)&pFormat[6];
+      count = *(const WORD*)&pFormat[8];
       xofs = 0;
       pFormat += 10;
       break;
     case RPC_FC_VARIABLE_REPEAT:
       rep = pStubMsg->MaxCount;
-      stride = *(WORD*)&pFormat[2];
-      ofs = *(WORD*)&pFormat[4];
-      count = *(WORD*)&pFormat[6];
+      stride = *(const WORD*)&pFormat[2];
+      ofs = *(const WORD*)&pFormat[4];
+      count = *(const WORD*)&pFormat[6];
       xofs = (pFormat[1] == RPC_FC_VARIABLE_OFFSET) ? Offset * stride : 0;
       pFormat += 8;
       break;
@@ -982,7 +982,7 @@ unsigned long WINAPI EmbeddedPointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
       PFORMAT_STRING info = pFormat;
       unsigned u;
       for (u=0; u<count; u++,info+=8) {
-        unsigned char *bufptr = Mark + *(SHORT*)&info[2];
+        unsigned char *bufptr = Mark + *(const SHORT*)&info[2];
         PointerMemorySize(pStubMsg, bufptr, info+4);
       }
       rep--;
@@ -1020,18 +1020,18 @@ void WINAPI EmbeddedPointerFree(PMIDL_STUB_MESSAGE pStubMsg,
       pFormat += 2;
       break;
     case RPC_FC_FIXED_REPEAT:
-      rep = *(WORD*)&pFormat[2];
-      stride = *(WORD*)&pFormat[4];
-      ofs = *(WORD*)&pFormat[6];
-      count = *(WORD*)&pFormat[8];
+      rep = *(const WORD*)&pFormat[2];
+      stride = *(const WORD*)&pFormat[4];
+      ofs = *(const WORD*)&pFormat[6];
+      count = *(const WORD*)&pFormat[8];
       xofs = 0;
       pFormat += 10;
       break;
     case RPC_FC_VARIABLE_REPEAT:
       rep = pStubMsg->MaxCount;
-      stride = *(WORD*)&pFormat[2];
-      ofs = *(WORD*)&pFormat[4];
-      count = *(WORD*)&pFormat[6];
+      stride = *(const WORD*)&pFormat[2];
+      ofs = *(const WORD*)&pFormat[4];
+      count = *(const WORD*)&pFormat[6];
       xofs = (pFormat[1] == RPC_FC_VARIABLE_OFFSET) ? Offset * stride : 0;
       pFormat += 8;
       break;
@@ -1042,7 +1042,7 @@ void WINAPI EmbeddedPointerFree(PMIDL_STUB_MESSAGE pStubMsg,
       unsigned char *membase = pMemory + xofs;
       unsigned u;
       for (u=0; u<count; u++,info+=8) {
-        unsigned char *memptr = membase + *(SHORT*)&info[0];
+        unsigned char *memptr = membase + *(const SHORT*)&info[0];
         PointerFree(pStubMsg, *(unsigned char**)memptr, info+4);
       }
       rep--;
@@ -1128,7 +1128,7 @@ unsigned char * WINAPI NdrSimpleStructMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                unsigned char *pMemory,
                                                PFORMAT_STRING pFormat)
 {
-  unsigned size = *(LPWORD)(pFormat+2);
+  unsigned size = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
   memcpy(pStubMsg->Buffer, pMemory, size);
@@ -1151,7 +1151,7 @@ unsigned char * WINAPI NdrSimpleStructUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                  PFORMAT_STRING pFormat,
                                                  unsigned char fMustAlloc)
 {
-  unsigned size = *(LPWORD)(pFormat+2);
+  unsigned size = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p,%d)\n", pStubMsg, ppMemory, pFormat, fMustAlloc);
 
   if (fMustAlloc) {
@@ -1204,7 +1204,7 @@ void WINAPI NdrSimpleStructBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
                                       unsigned char *pMemory,
                                       PFORMAT_STRING pFormat)
 {
-  unsigned size = *(LPWORD)(pFormat+2);
+  unsigned size = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   pStubMsg->BufferLength += size;
   if (pFormat[0] != RPC_FC_STRUCT)
@@ -1245,9 +1245,9 @@ unsigned long WINAPI EmbeddedComplexSize(PMIDL_STUB_MESSAGE pStubMsg,
   case RPC_FC_PSTRUCT:
   case RPC_FC_CSTRUCT:
   case RPC_FC_BOGUS_STRUCT:
-    return *(WORD*)&pFormat[2];
+    return *(const WORD*)&pFormat[2];
   case RPC_FC_USER_MARSHAL:
-    return *(WORD*)&pFormat[4];
+    return *(const WORD*)&pFormat[4];
   default:
     FIXME("unhandled embedded type %02x\n", *pFormat);
   }
@@ -1295,7 +1295,7 @@ unsigned char * WINAPI ComplexMarshall(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_EMBEDDED_COMPLEX:
       pMemory += pFormat[1];
       pFormat += 2;
-      desc = pFormat + *(SHORT*)pFormat;
+      desc = pFormat + *(const SHORT*)pFormat;
       size = EmbeddedComplexSize(pStubMsg, desc);
       TRACE("embedded complex (size=%ld) <= %p\n", size, pMemory);
       m = NdrMarshaller[*desc & NDR_TABLE_MASK];
@@ -1357,7 +1357,7 @@ unsigned char * WINAPI ComplexUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_EMBEDDED_COMPLEX:
       pMemory += pFormat[1];
       pFormat += 2;
-      desc = pFormat + *(SHORT*)pFormat;
+      desc = pFormat + *(const SHORT*)pFormat;
       size = EmbeddedComplexSize(pStubMsg, desc);
       TRACE("embedded complex (size=%ld) => %p\n", size, pMemory);
       m = NdrUnmarshaller[*desc & NDR_TABLE_MASK];
@@ -1413,7 +1413,7 @@ unsigned char * WINAPI ComplexBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_EMBEDDED_COMPLEX:
       pMemory += pFormat[1];
       pFormat += 2;
-      desc = pFormat + *(SHORT*)pFormat;
+      desc = pFormat + *(const SHORT*)pFormat;
       size = EmbeddedComplexSize(pStubMsg, desc);
       m = NdrBufferSizer[*desc & NDR_TABLE_MASK];
       if (m) m(pStubMsg, pMemory, desc);
@@ -1465,7 +1465,7 @@ unsigned char * WINAPI ComplexFree(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_EMBEDDED_COMPLEX:
       pMemory += pFormat[1];
       pFormat += 2;
-      desc = pFormat + *(SHORT*)pFormat;
+      desc = pFormat + *(const SHORT*)pFormat;
       size = EmbeddedComplexSize(pStubMsg, desc);
       m = NdrFreer[*desc & NDR_TABLE_MASK];
       if (m) m(pStubMsg, pMemory, desc);
@@ -1512,7 +1512,7 @@ unsigned long WINAPI ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_EMBEDDED_COMPLEX:
       size += pFormat[1];
       pFormat += 2;
-      desc = pFormat + *(SHORT*)pFormat;
+      desc = pFormat + *(const SHORT*)pFormat;
       size += EmbeddedComplexSize(pStubMsg, desc);
       pFormat += 2;
       continue;
@@ -1541,9 +1541,9 @@ unsigned char * WINAPI NdrComplexStructMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
   pFormat += 4;
-  if (*(WORD*)pFormat) conf_array = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) conf_array = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
-  if (*(WORD*)pFormat) pointer_desc = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) pointer_desc = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
 
   pStubMsg->Memory = pMemory;
@@ -1568,7 +1568,7 @@ unsigned char * WINAPI NdrComplexStructUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   PFORMAT_STRING pFormat,
                                                   unsigned char fMustAlloc)
 {
-  unsigned size = *(LPWORD)(pFormat+2);
+  unsigned size = *(const WORD*)(pFormat+2);
   PFORMAT_STRING conf_array = NULL;
   PFORMAT_STRING pointer_desc = NULL;
   unsigned char *pMemory;
@@ -1579,9 +1579,9 @@ unsigned char * WINAPI NdrComplexStructUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     *ppMemory = NdrAllocate(pStubMsg, size);
 
   pFormat += 4;
-  if (*(WORD*)pFormat) conf_array = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) conf_array = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
-  if (*(WORD*)pFormat) pointer_desc = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) pointer_desc = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
 
   pMemory = ComplexUnmarshall(pStubMsg, *ppMemory, pFormat, pointer_desc, fMustAlloc);
@@ -1606,9 +1606,9 @@ void WINAPI NdrComplexStructBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
   pFormat += 4;
-  if (*(WORD*)pFormat) conf_array = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) conf_array = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
-  if (*(WORD*)pFormat) pointer_desc = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) pointer_desc = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
 
   pStubMsg->Memory = pMemory;
@@ -1634,9 +1634,9 @@ unsigned long WINAPI NdrComplexStructMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   FIXME("(%p,%p): stub\n", pStubMsg, pFormat);
 
   pFormat += 4;
-  if (*(WORD*)pFormat) conf_array = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) conf_array = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
-  if (*(WORD*)pFormat) pointer_desc = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) pointer_desc = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
 
   return 0;
@@ -1656,9 +1656,9 @@ void WINAPI NdrComplexStructFree(PMIDL_STUB_MESSAGE pStubMsg,
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
   pFormat += 4;
-  if (*(WORD*)pFormat) conf_array = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) conf_array = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
-  if (*(WORD*)pFormat) pointer_desc = pFormat + *(WORD*)pFormat;
+  if (*(const WORD*)pFormat) pointer_desc = pFormat + *(const WORD*)pFormat;
   pFormat += 2;
 
   pStubMsg->Memory = pMemory;
@@ -1678,7 +1678,7 @@ unsigned char * WINAPI NdrConformantArrayMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   unsigned char *pMemory,
                                                   PFORMAT_STRING pFormat)
 {
-  DWORD size = 0, esize = *(LPWORD)(pFormat+2);
+  DWORD size = 0, esize = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   if (pFormat[0] != RPC_FC_CARRAY) FIXME("format=%d\n", pFormat[0]);
 
@@ -1707,7 +1707,7 @@ unsigned char * WINAPI NdrConformantArrayUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                     PFORMAT_STRING pFormat,
                                                     unsigned char fMustAlloc)
 {
-  DWORD size = 0, esize = *(LPWORD)(pFormat+2);
+  DWORD size = 0, esize = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p,%d)\n", pStubMsg, ppMemory, pFormat, fMustAlloc);
   if (pFormat[0] != RPC_FC_CARRAY) FIXME("format=%d\n", pFormat[0]);
 
@@ -1742,7 +1742,7 @@ void WINAPI NdrConformantArrayBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
                                          unsigned char *pMemory,
                                          PFORMAT_STRING pFormat)
 {
-  DWORD size = 0, esize = *(LPWORD)(pFormat+2);
+  DWORD size = 0, esize = *(const WORD*)(pFormat+2);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   if (pFormat[0] != RPC_FC_CARRAY) FIXME("format=%d\n", pFormat[0]);
 
@@ -1853,14 +1853,14 @@ unsigned char * WINAPI NdrComplexArrayMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   DWORD size = 0, count, def;
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
-  def = *(WORD*)&pFormat[2];
+  def = *(const WORD*)&pFormat[2];
   pFormat += 4;
 
   pFormat = ComputeConformance(pStubMsg, pMemory, pFormat, def);
   size = pStubMsg->MaxCount;
   TRACE("conformance=%ld\n", size);
 
-  if (*(DWORD*)pFormat != 0xffffffff)
+  if (*(const DWORD*)pFormat != 0xffffffff)
     FIXME("compute variance\n");
   pFormat += 4;
 
@@ -1917,14 +1917,14 @@ void WINAPI NdrComplexArrayBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   DWORD size = 0, count, def;
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
-  def = *(WORD*)&pFormat[2];
+  def = *(const WORD*)&pFormat[2];
   pFormat += 4;
 
   pFormat = ComputeConformance(pStubMsg, pMemory, pFormat, def);
   size = pStubMsg->MaxCount;
   TRACE("conformance=%ld\n", size);
 
-  if (*(DWORD*)pFormat != 0xffffffff)
+  if (*(const DWORD*)pFormat != 0xffffffff)
     FIXME("compute variance\n");
   pFormat += 4;
 
@@ -1962,14 +1962,14 @@ void WINAPI NdrComplexArrayFree(PMIDL_STUB_MESSAGE pStubMsg,
   DWORD size = 0, count, def;
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
 
-  def = *(WORD*)&pFormat[2];
+  def = *(const WORD*)&pFormat[2];
   pFormat += 4;
 
   pFormat = ComputeConformance(pStubMsg, pMemory, pFormat, def);
   size = pStubMsg->MaxCount;
   TRACE("conformance=%ld\n", size);
 
-  if (*(DWORD*)pFormat != 0xffffffff)
+  if (*(const DWORD*)pFormat != 0xffffffff)
     FIXME("compute variance\n");
   pFormat += 4;
 
@@ -1991,7 +1991,7 @@ unsigned char * WINAPI NdrUserMarshalMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                               PFORMAT_STRING pFormat)
 {
 /*  unsigned flags = pFormat[1]; */
-  unsigned index = *(WORD*)&pFormat[2];
+  unsigned index = *(const WORD*)&pFormat[2];
   unsigned long uflag = UserMarshalFlags(pStubMsg);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   TRACE("index=%d\n", index);
@@ -2014,8 +2014,8 @@ unsigned char * WINAPI NdrUserMarshalUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                  unsigned char fMustAlloc)
 {
 /*  unsigned flags = pFormat[1];*/
-  unsigned index = *(WORD*)&pFormat[2];
-  DWORD memsize = *(WORD*)&pFormat[4];
+  unsigned index = *(const WORD*)&pFormat[2];
+  DWORD memsize = *(const WORD*)&pFormat[4];
   unsigned long uflag = UserMarshalFlags(pStubMsg);
   TRACE("(%p,%p,%p,%d)\n", pStubMsg, ppMemory, pFormat, fMustAlloc);
   TRACE("index=%d\n", index);
@@ -2038,8 +2038,8 @@ void WINAPI NdrUserMarshalBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
                                       PFORMAT_STRING pFormat)
 {
 /*  unsigned flags = pFormat[1];*/
-  unsigned index = *(WORD*)&pFormat[2];
-  DWORD bufsize = *(WORD*)&pFormat[6];
+  unsigned index = *(const WORD*)&pFormat[2];
+  DWORD bufsize = *(const WORD*)&pFormat[6];
   unsigned long uflag = UserMarshalFlags(pStubMsg);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   TRACE("index=%d\n", index);
@@ -2061,8 +2061,8 @@ void WINAPI NdrUserMarshalBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 unsigned long WINAPI NdrUserMarshalMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
                                               PFORMAT_STRING pFormat)
 {
-  unsigned index = *(WORD*)&pFormat[2];
-/*  DWORD memsize = *(WORD*)&pFormat[4]; */
+  unsigned index = *(const WORD*)&pFormat[2];
+/*  DWORD memsize = *(const WORD*)&pFormat[4]; */
   FIXME("(%p,%p): stub\n", pStubMsg, pFormat);
   TRACE("index=%d\n", index);
 
@@ -2077,7 +2077,7 @@ void WINAPI NdrUserMarshalFree(PMIDL_STUB_MESSAGE pStubMsg,
                                 PFORMAT_STRING pFormat)
 {
 /*  unsigned flags = pFormat[1]; */
-  unsigned index = *(WORD*)&pFormat[2];
+  unsigned index = *(const WORD*)&pFormat[2];
   unsigned long uflag = UserMarshalFlags(pStubMsg);
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   TRACE("index=%d\n", index);
