@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.26 2000/02/18 00:47:28 ekohl Exp $
+/* $Id: rtl.h,v 1.27 2000/02/21 22:36:00 ekohl Exp $
  * 
  */
 
@@ -320,6 +320,7 @@ RtlConvertUlongToLargeInteger (
 	ULONG	UnsignedInteger
 	);
 
+#if 0
 VOID
 RtlCopyBytes (
 	PVOID		Destination,
@@ -333,6 +334,12 @@ RtlCopyMemory (
 	CONST VOID	* Source,
 	ULONG		Length
 	);
+#endif
+
+#define RtlCopyMemory(Destination,Source,Length) \
+	memcpy((Destination),(Source),(Length))
+
+#define RtlCopyBytes RtlCopyMemory
 
 VOID
 STDCALL
@@ -1242,17 +1249,18 @@ WRITE_REGISTER_BUFFER_ULONG (
 
 
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */
-#if 0
-_stricmp
-_strlwr
-_strnicmp
-_strnset
-_strrev
-_strset
-_strupr
-;_vsnprintf
-#endif
 
+char *_itoa (int value, char *string, int radix);
+int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
+int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...);
+int _stricmp(const char *s1, const char *s2);
+char * _strlwr(char *x);
+int _strnicmp(const char *s1, const char *s2, size_t n);
+char * _strnset(char* szToFill, int szFill, size_t sizeMaxFill);
+char * _strrev(char *s);
+char * _strset(char* szToFill, int szFill);
+char * _strupr(char *x);
+int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args);
 int _wcsicmp (const wchar_t* cs, const wchar_t* ct);
 wchar_t * _wcslwr (wchar_t *x);
 int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count);
@@ -1260,45 +1268,45 @@ wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill);
 wchar_t * _wcsrev(wchar_t *s);
 wchar_t *_wcsupr(wchar_t *x);
 
+int atoi(const char *str);
+long atol(const char *str);
+int isdigit(int c);
+int islower(int c);
+int isprint(int c);
+int isspace(int c);
+int isupper(int c);
+int isxdigit(int c);
+size_t mbstowcs (wchar_t *wcstr, const char *mbstr, size_t count);
+int mbtowc (wchar_t *wchar, const char *mbchar, size_t count);
+void * memchr(const void *s, int c, size_t n);
+void * memcpy(void *to, const void *from, size_t count);
+void * memmove(void *dest,const void *src, size_t count);
+void * memset(void *src, int val, size_t count);
+
 #if 0
-atoi
-atol
-isdigit
-islower
-isprint
-isspace
-isupper
-isxdigit
-;mbstowcs
-;mbtowc
-memchr
-memcpy
-memmove
-memset
-;qsort
-rand
-sprintf
-srand
-strcat
-strchr
-strcmp
-strcpy
-strlen
-strncat
-strncmp
-strcpy
-strrchr
-strspn
-strstr
-;strtok
-;swprintf
-tolower
-toupper
-towlower
-towupper
-vsprintf
+qsort
 #endif
 
+int rand(void);
+int sprintf(char * buf, const char *fmt, ...);
+void srand(unsigned seed);
+char * strcat(char *s, const char *append);
+char * strchr(const char *s, int c);
+int strcmp(const char *s1, const char *s2);
+char * strcpy(char *to, const char *from);
+size_t strlen(const char *str);
+char * strncat(char *dst, const char *src, size_t n);
+int strncmp(const char *s1, const char *s2, size_t n);
+char *strncpy(char *dst, const char *src, size_t n);
+char *strrchr(const char *s, int c);
+size_t strspn(const char *s1, const char *s2);
+char *strstr(const char *s, const char *find);
+int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
+int tolower(int c);
+int toupper(int c);
+wchar_t towlower(wchar_t c);
+wchar_t towupper(wchar_t c);
+int vsprintf(char *buf, const char *fmt, va_list args);
 wchar_t * wcscat(wchar_t *dest, const wchar_t *src);
 wchar_t * wcschr(const wchar_t *str, wchar_t ch);
 int wcscmp(const wchar_t *cs, const wchar_t *ct);
@@ -1311,5 +1319,7 @@ wchar_t * wcsncpy(wchar_t *dest, const wchar_t *src, size_t count);
 wchar_t * wcsrchr(const wchar_t *str, wchar_t ch);
 size_t wcsspn(const wchar_t *str,const wchar_t *accept);
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b);
+size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count);
+int wctomb (char *mbchar, wchar_t wchar);
 
 #endif /* __DDK_RTL_H */

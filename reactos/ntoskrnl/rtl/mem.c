@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.7 1999/12/01 15:22:49 ekohl Exp $
+/* $Id: mem.c,v 1.8 2000/02/21 22:41:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,6 +89,7 @@ VOID RtlCopyBytes(PVOID Destination,
 }
 #endif
 
+#if 0
 VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
 {
    DPRINT("RtlCopyMemory(Destination %x Source %x Length %d\n",
@@ -96,7 +97,7 @@ VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
    memcpy(Destination,Source,Length);
    DPRINT("*Destination %x\n",*(PULONG)Destination);
 }
-
+#endif
 
 VOID
 STDCALL

@@ -8,12 +8,9 @@
 
 */
 
+#include <ddk/ntddk.h>
 #include <wchar.h>
 #include <internal/string.h>
-#include <ddk/ntddk.h>
-#include <ddk/cctypes.h>
-#include <ddk/zwtypes.h>
-//#include <ddk/rtl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

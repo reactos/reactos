@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.29 2000/01/23 15:21:25 hochoa Exp $
+; $Id: ntoskrnl.edf,v 1.30 2000/02/21 22:39:46 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -107,7 +107,6 @@ FsRtlTruncateLargeMcb=FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb=FsRtlTruncateMcb@8
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
-HalRegisterServiceTable
 IoAllocateController
 IoAttachDeviceToDeviceStack
 IoBuildSynchronousFsdRequest
@@ -134,6 +133,7 @@ IoStartNextPacket
 IoStartNextPacketByKey
 IoStartTimer
 IoStopTimer
+KeAddSystemServiceTable
 KeBugCheck
 KeBugCheckEx
 KeClearEvent
@@ -231,7 +231,6 @@ RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
-RtlCopyMemory
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
@@ -433,7 +432,7 @@ strcpy
 strlen
 strncat
 strncmp
-strcpy
+strncpy
 strrchr
 strspn
 strstr

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.12 2000/02/19 19:37:13 ekohl Exp $
+/* $Id: init.c,v 1.13 2000/02/21 22:43:15 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -189,19 +189,20 @@ InitSessionManager (
 
 	/* FIXME: Process the file rename list */
 
+	/* FIXME: Load the well known DLLs */
+
 	/* Create paging files */
 #if 0
 	SmCreatePagingFiles ();
 #endif
 
-	/* FIXME: Load the well known DLLs */
-
-	/* FIXME: Load missing registry hives */
+	/* Load missing registry hives */
+//	NtInitializeRegistry (FALSE);
 
 	/* Set environment variables from registry */
 	SmSetEnvironmentVariables ();
 
-#if 0
+//#if 0
 	/* Load the kernel mode driver win32k.sys */
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
@@ -211,45 +212,49 @@ InitSessionManager (
 	{
 		return FALSE;
 	}
-#endif
+//#endif
 
 #if 0
-   /* Start the Win32 subsystem (csrss.exe) */
-   DisplayString (L"SM: Executing csrss.exe\n");
-   RtlInitUnicodeString (&UnicodeString,
-			 L"\\??\\C:\\reactos\\system32\\csrss.exe");
-   
-   RtlCreateProcessParameters (&ProcessParameters,
-			       &UnicodeString,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL);
-   
-   Status = RtlCreateUserProcess (&UnicodeString,
-				  0,
-				  ProcessParameters,
-				  NULL,
-				  NULL,
-				  FALSE,
-				  0,
-				  NULL,
-				  &Children[CHILD_CSRSS],
-				  NULL);
-   
-   if (!NT_SUCCESS(Status))
-     {
-	DisplayString (L"SM: Loading csrss.exe failed!\n");
-	return FALSE;
-     }
+	/* Start the Win32 subsystem (csrss.exe) */
+	DisplayString (L"SM: Executing csrss.exe\n");
 
-   RtlDestroyProcessParameters (ProcessParameters);
+	RtlInitUnicodeString (&UnicodeString,
+	                      L"\\??\\C:\\reactos\\system32\\csrss.exe");
 
+	/* initialize current directory */
+	RtlInitUnicodeString (&CurrentDirectoryW,
+	                      L"C:\\reactos\\system32\\");
+
+	RtlCreateProcessParameters (&ProcessParameters,
+	                            &UnicodeString,
+	                            NULL,
+	                            &CurrentDirectoryW,
+	                            NULL,
+	                            SmSystemEnvironment,
+	                            NULL,
+	                            NULL,
+	                            NULL,
+	                            NULL);
+
+	Status = RtlCreateUserProcess (&UnicodeString,
+	                               0,
+	                               ProcessParameters,
+	                               NULL,
+	                               NULL,
+	                               FALSE,
+	                               0,
+	                               NULL,
+	                               &Children[CHILD_CSRSS],
+	                               NULL);
+	if (!NT_SUCCESS(Status))
+	{
+		DisplayString (L"SM: Loading csrss.exe failed!\n");
+		return FALSE;
+	}
+
+	RtlDestroyProcessParameters (ProcessParameters);
 #endif
+
 
 	/* Start the simple shell (shell.exe) */
 	DisplayString (L"SM: Executing shell\n");

@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.3 2000/01/14 02:22:02 ekohl Exp $
+/* $Id: swprintf.c,v 1.4 2000/02/21 22:37:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,7 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -30,7 +31,7 @@
 #include <limits.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <ntdll/ntdll.h>
 
 
 #define ZEROPAD	1		/* pad with zero */

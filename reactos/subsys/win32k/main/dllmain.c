@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.11 2000/02/20 22:52:50 ea Exp $
+/* $Id: dllmain.c,v 1.12 2000/02/21 22:44:37 ekohl Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -9,7 +9,6 @@
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 #include <internal/service.h>
-#include <internal/hal.h>
 
 #include <win32k/win32k.h>
 
@@ -30,26 +29,27 @@ DllMain (
 	IN	PUNICODE_STRING	RegistryPath
 	)
 {
-	NTSTATUS	Status;
-  
+	BOOLEAN Result;
+
+	DbgPrint("Win32 kernel mode driver\n");
+
 	/*
 	 * Register user mode call interface
-	 * (svc mask is 0x10000000)
+	 * (system service table index = 1)
 	 */
-	Status = HalRegisterServiceTable (
-			0xF0000000, 
-			0x10000000, 
-			W32kServiceTable,
-			sizeof (W32kServiceTable)
-                        / sizeof(W32kServiceTable[0])
-			);
-	if (!NT_SUCCESS(Status))
+	Result = KeAddSystemServiceTable (Win32kSSDT,
+	                                  NULL,
+	                                  NUMBER_OF_SYSCALLS,
+	                                  Win32kSSPT,
+	                                  1);
+	if (Result == FALSE)
 	{
-		return FALSE;
+		DbgPrint("Adding system services failed!\n");
+		return STATUS_UNSUCCESSFUL;
 	}
-  
-	return TRUE;
-}
 
+	DbgPrint("System services added successfully!\n");
+	return STATUS_SUCCESS;
+}
 
 /* EOF */

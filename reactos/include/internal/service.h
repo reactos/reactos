@@ -3,11 +3,9 @@
 #define __INTERNAL_SERVICE_H
 
 
-typedef struct _SERVICE_TABLE
-{
-   unsigned long  ParametersSize;
-   unsigned long  Function;
-} SERVICE_TABLE, *PSERVICE_TABLE;
+/* number of entries in the service descriptor tables */
+#define SSDT_MAX_ENTRIES 4
+
 
 #pragma pack(1)
 
@@ -22,16 +20,23 @@ typedef struct t_SSPT   {
 } SSPT, *PSSPT;
 
 typedef struct t_KeServiceDescriptorTableEntry {
-                PSSDT               pSSDT;
+                PSSDT               SSDT;
                 unsigned long*      ServiceCounterTable;
                 unsigned int        NumberOfServices;
-                PSSPT               pSSPT;
+                PSSPT               SSPT;
 
 } KE_SERVICE_DESCRIPTOR_TABLE_ENTRY, *PKE_SERVICE_DESCRIPTOR_TABLE_ENTRY;
 
 #pragma pack()
 
-NTSTATUS KeAddSystemServiceTable( int SSDTindex, PSSDT pSSDT, PSSPT pSSPT, ULONG* SyscallsCountTable );
+BOOLEAN
+KeAddSystemServiceTable (
+	PSSDT	SSDT,
+	PULONG	ServiceCounterTable,
+	ULONG	NumberOfServices,
+	PSSPT	SSPT,
+	ULONG	TableIndex
+	);
 
 #endif
 

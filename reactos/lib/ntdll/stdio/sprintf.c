@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.1 2000/01/14 02:22:02 ekohl Exp $
+/* $Id: sprintf.c,v 1.2 2000/02/21 22:37:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,13 +22,15 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
 
-#include <internal/debug.h>
+#define NDEBUG
+#include <ntdll/ntdll.h>
 
 
 #define ZEROPAD	1		/* pad with zero */

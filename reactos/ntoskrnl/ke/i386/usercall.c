@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.5 2000/01/23 15:17:06 hochoa Exp $
+/* $Id: usercall.c,v 1.6 2000/02/21 22:41:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,53 +22,17 @@
 
 #include <ddk/defines.h>
 
-extern SERVICE_TABLE _SystemServiceTable[];
 
-extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable;
+extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable[];
 extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTableShadow[];
 
-/* The service dispatcher will take the service number passed in
- * by the user mode process, logical and it with ServiceNumberMask
- * and compare the resulting value with ServiceNumberValue.  If the
- * value matches, The passed service number will be and'ed with the
- * inverse of ServiceNumberMask to obtain the index into the ServiceTable
- * for the service to call
+/*
+ * These become obsolete when the interrupt handler uses
+ * the service descriptor tables.
  */
-typedef struct _HAL_DISPATCH_TABLE_ENTRY
-{
-  DWORD  ServiceNumberMask;
-  DWORD  ServiceNumberValue;
-  PSERVICE_TABLE  ServiceTable;
-  DWORD  TableCount;
-} HAL_DISPATCH_TABLE_ENTRY, *PHAL_DISPATCH_TABLE_ENTRY;
+extern SSDT MainSSDT[];
+extern SSPT MainSSPT[];
 
-static KSPIN_LOCK DispatchTableLock = {0,};
-static DWORD DispatchTableCount = 0;
-static HAL_DISPATCH_TABLE_ENTRY DispatchTables[16];
-
-NTSTATUS HalRegisterServiceTable(DWORD  Mask,
-                                 DWORD  Value,
-                                 PSERVICE_TABLE  Table,
-                                 DWORD  Count)
-{
-  NTSTATUS  Status;
-  KIRQL  OldLvl;
-
-  KeAcquireSpinLock(&DispatchTableLock, &OldLvl);
-
-  Status = STATUS_SUCCESS;
-
-  /* FIXME: should check for invalid/overlapping service tables  */
-  DispatchTables[DispatchTableCount].ServiceNumberMask = Mask;
-  DispatchTables[DispatchTableCount].ServiceNumberValue = Value;
-  DispatchTables[DispatchTableCount].ServiceTable = Table;
-  DispatchTables[DispatchTableCount].TableCount = Count;
-  DispatchTableCount++;
-
-  KeReleaseSpinLock(&DispatchTableLock, OldLvl);
-
-  return  Status;
-}
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
@@ -133,23 +97,43 @@ ULONG KiAfterSystemCallHook(ULONG NtStatus, PCONTEXT Context)
 }
 
 // This function should be used by win32k.sys to add its own user32/gdi32 services
-// SSDTIndex is 0 based
-// SyscallsCountTable its not used at the moment
-NTSTATUS KeAddSystemServiceTable( int SSDTindex, PSSDT pSSDT, PSSPT pSSPT, ULONG* SyscallsCountTable )
+// TableIndex is 0 based
+// ServiceCountTable its not used at the moment
+BOOLEAN
+KeAddSystemServiceTable (
+	PSSDT	SSDT,
+	PULONG	ServiceCounterTable,
+	ULONG	NumberOfServices,
+	PSSPT	SSPT,
+	ULONG	TableIndex
+	)
 {
+    if (TableIndex > SSDT_MAX_ENTRIES - 1)
+        return FALSE;
 
+    /* check if descriptor table entry is free */
+    if ((KeServiceDescriptorTable[TableIndex].SSDT != NULL) ||
+        (KeServiceDescriptorTableShadow[TableIndex].SSDT != NULL))
+        return FALSE;
 
-    // TODO: We could improve these checks to see if the pointers point to valid memory and so on...
-    // but we're in kernel mode, this function can get called only from kernel mode, so, why bother?
-    if(pSSDT == NULL || pSSPT == NULL || SSDTindex != 1)
-                    return STATUS_UNSUCCESSFUL;
+    /* initialize the shadow service descriptor table */
+    KeServiceDescriptorTableShadow[TableIndex].SSDT = SSDT;
+    KeServiceDescriptorTableShadow[TableIndex].SSPT = SSPT;
+    KeServiceDescriptorTableShadow[TableIndex].NumberOfServices = NumberOfServices;
+    KeServiceDescriptorTableShadow[TableIndex].ServiceCounterTable = ServiceCounterTable;
 
-    // We update the KeServiceDescriptorTableShadow
-    KeServiceDescriptorTableShadow[SSDTindex].pSSDT = pSSDT;
-    KeServiceDescriptorTableShadow[SSDTindex].pSSPT = pSSPT;
+    /* initialize the service descriptor table (not for win32k services) */
+    if (TableIndex != 1)
+    {
+        KeServiceDescriptorTable[TableIndex].SSDT = SSDT;
+        KeServiceDescriptorTable[TableIndex].SSPT = SSPT;
+        KeServiceDescriptorTable[TableIndex].NumberOfServices = NumberOfServices;
+        KeServiceDescriptorTable[TableIndex].ServiceCounterTable = ServiceCounterTable;
+    }
 
-    return STATUS_SUCCESS;
+    return TRUE;
 }
+
 
 void interrupt_handler2e(void);
    __asm__("\n\t.global _interrupt_handler2e\n\t"
@@ -195,7 +179,7 @@ void interrupt_handler2e(void);
            "movl %edx,%esi\n\t"
 
            /* FIXME: determine system service table to use  */
-           /* FIXME: chech to see if SS is valid/inrange  */
+           /* FIXME: check to see if SS is valid/inrange  */
 
            /*  Allocate room for argument list from kernel stack  */
            "movl %es:_MainSSPT(,%eax,4), %ecx\n\t"

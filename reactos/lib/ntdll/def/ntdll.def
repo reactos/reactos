@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.40 2000/02/18 00:48:50 ekohl Exp $
+; $Id: ntdll.def,v 1.41 2000/02/21 22:37:24 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -457,7 +457,7 @@ RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger@4
 ;RtlCopyMemory@12
-RtlCopyMemory
+;RtlCopyMemory
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlDeNormalizeProcessParams@4
