@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.3 2003/11/24 17:24:29 weiden Exp $
+/* $Id: msgina.c,v 1.4 2003/11/24 19:04:23 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -72,7 +72,7 @@ WlxInitialize(
   pgContext->hDllInstance = hDllInstance;
   
   /* save pointer to dispatch table */
-  pgContext->pWlxFuncs = (PWLX_DISPATCH_VERSION_1_3) pWinlogonFunctions;
+  pgContext->pWlxFuncs = (PWLX_DISPATCH_VERSION)pWinlogonFunctions;
   
   /* save the winlogon handle used to call the dispatch functions */
   pgContext->hWlx = hWlx;
@@ -84,6 +84,109 @@ WlxInitialize(
   pgContext->pWlxFuncs->WlxUseCtrlAltDel(hWlx);
   
   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxStartApplication(
+	PVOID pWlxContext,
+	PWSTR pszDesktopName,
+	PVOID pEnvironment,
+	PWSTR pszCmdLine)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+  BOOL Ret;
+  
+  si.cb = sizeof(STARTUPINFO);
+  si.lpReserved = NULL;
+  si.lpTitle = pszCmdLine;
+  si.dwX = si.dwY = si.dwXSize = si.dwYSize = 0L;
+  si.dwFlags = 0;
+  si.wShowWindow = SW_SHOW;  
+  si.lpReserved2 = NULL;
+  si.cbReserved2 = 0;
+  si.lpDesktop = pszDesktopName;
+  
+  Ret = CreateProcessAsUser(pgContext->UserToken,
+                            NULL,
+                            pszCmdLine,
+                            NULL,
+                            NULL,
+                            FALSE,
+                            CREATE_UNICODE_ENVIRONMENT,
+                            pEnvironment,
+                            NULL,
+                            &si,
+                            &pi);
+  
+  VirtualFree(pEnvironment, 0, MEM_RELEASE);
+  return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxActivateUserShell(
+	PVOID pWlxContext,
+	PWSTR pszDesktopName,
+	PWSTR pszMprLogonScript,
+	PVOID pEnvironment)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT) pWlxContext;
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+  HKEY hKey;
+  DWORD BufSize, ValueType;
+  WCHAR pszUserInitApp[MAX_PATH + 1];
+  BOOL Ret;
+  
+  /* get the path of userinit */
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
+                  0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+  {
+    return FALSE;
+  }
+  BufSize = MAX_PATH * sizeof(WCHAR);
+  if((RegQueryValueEx(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
+                     &BufSize) != ERROR_SUCCESS) || (ValueType != REG_SZ))
+  {
+    RegCloseKey(hKey);
+    return FALSE;
+  }
+  RegCloseKey(hKey);
+  
+  /* execute userinit */
+  si.cb = sizeof(STARTUPINFO);
+  si.lpReserved = NULL;
+  si.lpTitle = L"userinit";
+  si.dwX = si.dwY = si.dwXSize = si.dwYSize = 0L;
+  si.dwFlags = 0;
+  si.wShowWindow = SW_SHOW;  
+  si.lpReserved2 = NULL;
+  si.cbReserved2 = 0;
+  si.lpDesktop = pszDesktopName;
+  
+  Ret = CreateProcessAsUser(pgContext->UserToken,
+                            pszUserInitApp,
+                            NULL,
+                            NULL,
+                            NULL,
+                            FALSE,
+                            CREATE_UNICODE_ENVIRONMENT,
+                            pEnvironment,
+                            NULL,
+                            &si,
+                            &pi);
+  
+  VirtualFree(pEnvironment, 0, MEM_RELEASE);
+  return Ret;
 }
 
 

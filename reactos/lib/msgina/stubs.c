@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2003/11/24 17:24:29 weiden Exp $
+/* $Id: stubs.c,v 1.4 2003/11/24 19:04:23 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
@@ -33,20 +33,6 @@ ShellShutdownDialog(
    * 0x10: Standby
    * 0x40: Hibernate
    */
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxActivateUserShell(
-	PVOID pWlxContext,
-	PWSTR pszDesktopName,
-	PWSTR pszMprLogonScript,
-	PVOID pEnvironment)
-{
   UNIMPLEMENTED;
   return FALSE;
 }
@@ -178,21 +164,6 @@ BOOL WINAPI
 WlxScreenSaverNotify(
 	PVOID pWlxContext,
 	BOOL  *pSecure)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxStartApplication(
-	PVOID pWlxContext,
-	PWSTR pszDesktopName,
-	PVOID pEnvironment,
-	PWSTR pszCmdLine)
 {
   UNIMPLEMENTED;
   return FALSE;
