@@ -398,15 +398,55 @@ ConfirmQuit(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 StartPage(PINPUT_RECORD Ir)
 {
+  SYSTEM_DEVICE_INFORMATION Sdi;
   NTSTATUS Status;
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
   INFCONTEXT Context;
   PWCHAR Value;
   ULONG ErrorLine;
+  ULONG ReturnSize;
 
   SetStatusText("   Please wait...");
 
+
+  /* Check whether a harddisk is available */
+  Status = NtQuerySystemInformation (SystemDeviceInformation,
+				     &Sdi,
+				     sizeof(SYSTEM_DEVICE_INFORMATION),
+				     &ReturnSize);
+  if (!NT_SUCCESS (Status))
+    {
+      PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
+      PopupError("Setup could not retrieve system drive information.\n",
+		 "ENTER = Reboot computer");
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  if (Sdi.NumberOfDisks == 0)
+    {
+      PopupError("Setup could not find a harddisk.\n",
+		 "ENTER = Reboot computer");
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  /* Get the source path and source root path */
   Status = GetSourcePaths(&SourcePath,
 			  &SourceRootPath);
   if (!NT_SUCCESS(Status))
@@ -638,17 +678,19 @@ InstallIntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
   SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
-  SetTextXY(6, 12, "The following functions are missing:");
-  SetTextXY(8, 13, "- Creating and deleting harddisk partitions.");
-  SetTextXY(8, 14, "- Formatting partitions.");
-  SetTextXY(8, 15, "- Support for non-FAT file systems.");
-  SetTextXY(8, 16, "- Checking file systems.");
+  SetTextXY(6, 12, "The following limitations apply:");
+  SetTextXY(8, 13, "- Setup can not handle more than one primary partition per disk.");
+  SetTextXY(8, 14, "- Setup can not delete a primary partition from a disk");
+  SetTextXY(8, 15, "  as long as extended partitions exist on this disk.");
+  SetTextXY(8, 16, "- Setup can not delete the first extended partition from a disk");
+  SetTextXY(8, 17, "  as long as other extended partitions exist on this disk.");
+  SetTextXY(8, 18, "- Setup supports FAT file systems only.");
+  SetTextXY(8, 19, "- File system checks are not implemented yet.");
 
 
+  SetTextXY(8, 23, "\x07  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 21, "\x07  Press ENTER to install ReactOS.");
-
-  SetTextXY(8, 23, "\x07  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 25, "\x07  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -1538,10 +1580,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
   PLIST_ENTRY Entry;
   NTSTATUS Status;
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   ULONG Line;
   ULONG i;
-//#endif
+#endif
 
 
   SetTextXY(6, 8, "Format partition");
@@ -1636,7 +1678,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
 	  CheckActiveBootPartition (PartitionList);
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 	  PrintTextXY (6, 12,
 		       "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
 		       DiskEntry->DiskSize,
@@ -1676,7 +1718,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
 	  /* Restore the old entry */
 	  PartEntry = PartitionList->CurrentPartition;
-//#endif
+#endif
 
 	  if (WritePartitionsToDisk (PartitionList) == FALSE)
 	    {
@@ -1996,6 +2038,7 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
   PWCHAR FileKeyValue;
   PWCHAR DirKeyName;
   PWCHAR DirKeyValue;
+  PWCHAR TargetFileName;
 
   /* Search for the 'SourceFiles' section */
   if (!InfFindFirstLine (InfFile, L"SourceFiles", NULL, &FilesContext))
@@ -2021,11 +2064,17 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
    */
   do
     {
+      /* Get source file name and target directory id */
       if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
-        {
-          DPRINT("break\n");
-        	break;
-        }
+	{
+	  /* FIXME: Handle error! */
+	  DPRINT1("InfGetData() failed\n");
+	  break;
+	}
+
+      /* Get optional target file name */
+      if (!InfGetDataField (&FilesContext, 2, &TargetFileName))
+	TargetFileName = NULL;
 
       DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
@@ -2045,12 +2094,12 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
 	}
 
       if (!SetupQueueCopy(SetupFileQueue,
-        SourceCabinet,
+			  SourceCabinet,
 			  SourceRootPath.Buffer,
 			  L"\\reactos",
 			  FileKeyName,
 			  DirKeyValue,
-			  NULL))
+			  TargetFileName))
 	{
 	  /* FIXME: Handle error! */
 	  DPRINT1("SetupQueueCopy() failed\n");
@@ -2100,14 +2149,14 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
   if (!InfFindFirstLine(InfFile, L"Directories", NULL, &DirContext))
     {
       if (SourceCabinet)
-        {
-          PopupError("Setup failed to find the 'Directories' section\n"
-    		    "in the cabinet.\n", "ENTER = Reboot computer");
-        }
+	{
+	  PopupError("Setup failed to find the 'Directories' section\n"
+		     "in the cabinet.\n", "ENTER = Reboot computer");
+	}
       else
-        {
-          PopupError("Setup failed to find the 'Directories' section\n"
-    		    "in TXTSETUP.SIF.\n", "ENTER = Reboot computer");
+	{
+	  PopupError("Setup failed to find the 'Directories' section\n"
+		     "in TXTSETUP.SIF.\n", "ENTER = Reboot computer");
         }
 
       while(TRUE)
@@ -2125,19 +2174,19 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
   do
     {
       if (!InfGetData (&DirContext, NULL, &KeyValue))
-        {
-          DPRINT1("break\n");
-	        break;
-        }
+	{
+	  DPRINT1("break\n");
+	  break;
+	}
 
       if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
 	{
-	      DPRINT("Absolute Path: '%S'\n", KeyValue);
+	  DPRINT("Absolute Path: '%S'\n", KeyValue);
 
-	      wcscpy(PathBuffer, DestinationRootPath.Buffer);
-	      wcscat(PathBuffer, KeyValue);
+	  wcscpy(PathBuffer, DestinationRootPath.Buffer);
+	  wcscat(PathBuffer, KeyValue);
 
-	      DPRINT("FullPath: '%S'\n", PathBuffer);
+	  DPRINT("FullPath: '%S'\n", PathBuffer);
 	}
       else if (KeyValue[0] != L'\\')
 	{
@@ -2245,73 +2294,74 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   do
     {
       if (!InfGetData (&CabinetsContext, NULL, &KeyValue))
-    break;
+	break;
 
-	  wcscpy(PathBuffer, SourcePath.Buffer);
-	  wcscat(PathBuffer, L"\\");
-	  wcscat(PathBuffer, KeyValue);
+      wcscpy(PathBuffer, SourcePath.Buffer);
+      wcscat(PathBuffer, L"\\");
+      wcscat(PathBuffer, KeyValue);
 
-    CabinetInitialize();
-    CabinetSetEventHandlers(NULL, NULL, NULL);
-    CabinetSetCabinetName(PathBuffer);
+      CabinetInitialize();
+      CabinetSetEventHandlers(NULL, NULL, NULL);
+      CabinetSetCabinetName(PathBuffer);
 
-    if (CabinetOpen() == CAB_STATUS_SUCCESS)
-      {
-        DPRINT("Cabinet %S\n", CabinetGetCabinetName());
+      if (CabinetOpen() == CAB_STATUS_SUCCESS)
+	{
+	  DPRINT("Cabinet %S\n", CabinetGetCabinetName());
 
-        InfFileData = CabinetGetCabinetReservedArea(&InfFileSize);
-        if (InfFileData == NULL)
-          {
-            PopupError("Cabinet has no setup script.\n",
-      		    "ENTER = Reboot computer");
+	  InfFileData = CabinetGetCabinetReservedArea(&InfFileSize);
+	  if (InfFileData == NULL)
+	    {
+	      PopupError("Cabinet has no setup script.\n",
+			 "ENTER = Reboot computer");
 
-            while(TRUE)
-            	{
-            	  ConInKey(Ir);
-            
-            	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-            	    {
-            	      return(QUIT_PAGE);
-            	    }
-            	}
-          }
-      }
-    else
-      {
-        DPRINT("Cannot open cabinet: %S.\n", CabinetGetCabinetName());
+	      while(TRUE)
+		{
+		  ConInKey(Ir);
 
-        PopupError("Cabinet not found.\n", "ENTER = Reboot computer");
-  
-        while(TRUE)
-        	{
-        	  ConInKey(Ir);
-        
-        	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-        	    {
-        	      return(QUIT_PAGE);
-        	    }
-        	}
-      }
+		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		    {
+		      return(QUIT_PAGE);
+		    }
+		}
+	    }
+	}
+      else
+	{
+	  DPRINT("Cannot open cabinet: %S.\n", CabinetGetCabinetName());
 
-    Status = InfOpenBufferedFile(&InfHandle,
-	    InfFileData,
-      InfFileSize,
-	    &ErrorLine);
-    if (!NT_SUCCESS(Status))
-      {
-        PopupError("Cabinet has no valid inf file.\n",
-  		 "ENTER = Reboot computer");
-  
-        while(TRUE)
-  	{
-  	  ConInKey(Ir);
-  
-  	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-  	    {
-  	      return(QUIT_PAGE);
-  	    }
-  	}
-      }
+	  PopupError("Cabinet not found.\n",
+		     "ENTER = Reboot computer");
+
+	  while(TRUE)
+	    {
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		{
+		  return(QUIT_PAGE);
+		}
+	    }
+	}
+
+      Status = InfOpenBufferedFile(&InfHandle,
+				   InfFileData,
+				   InfFileSize,
+				   &ErrorLine);
+      if (!NT_SUCCESS(Status))
+	{
+	  PopupError("Cabinet has no valid inf file.\n",
+		     "ENTER = Reboot computer");
+
+	  while(TRUE)
+	    {
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		{
+		  return(QUIT_PAGE);
+		}
+	    }
+	}
 
       CabinetCleanup();
 
@@ -2547,6 +2597,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
+
   if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
     {
       /* OS/2 boot manager partition */
