@@ -467,6 +467,16 @@ Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int heig
 }
 
 
+LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+{
+	if (message == WM_DISPATCH_DRAWITEM) {
+		DrawItem((LPDRAWITEMSTRUCT)lparam);
+		return TRUE;
+	} else
+		return super::WndProc(message, wparam, lparam);
+}
+
+
 static RECT s_MyDrawText_Rect = {0, 0, 0, 0};
 
 static BOOL CALLBACK MyDrawText(HDC hdc, LPARAM data, int cnt)
@@ -475,223 +485,167 @@ static BOOL CALLBACK MyDrawText(HDC hdc, LPARAM data, int cnt)
 	return TRUE;
 }
 
-
-LRESULT ColorButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR text, int dt_flags)
 {
-	if (message == WM_DISPATCH_DRAWITEM) {
-		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT) lparam;
-		UINT style = DFCS_BUTTONPUSH;
+	COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
 
-		if (dis->itemState & ODS_DISABLED)
-			style |= DFCS_INACTIVE;
+	if (gray) {
+		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
+		RECT shadowRect = {pRect->left+1, pRect->top+1, pRect->right+1, pRect->bottom+1};
+		DrawText(dis->hDC, text, -1, &shadowRect, dt_flags);
 
-		RECT textRect = {dis->rcItem.left+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+		BkMode mode(dis->hDC, TRANSPARENT);
+		SetTextColor(dis->hDC, gray);
+		DrawText(dis->hDC, text, -1, pRect, dt_flags);
+	} else {
+		int old_r = pRect->right;
+		int old_b = pRect->bottom;
 
+		DrawText(dis->hDC, text, -1, pRect, dt_flags|DT_CALCRECT);
+
+		int x = pRect->left + (old_r-pRect->right)/2;
+		int y = pRect->top + (old_b-pRect->bottom)/2;
+		int w = pRect->right-pRect->left;
+		int h = pRect->bottom-pRect->top;
+		s_MyDrawText_Rect.right = w;
+		s_MyDrawText_Rect.bottom = h;
+
+		GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
+	}
+}
+
+
+/* not yet used
+void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
+{
+	UINT style = DFCS_BUTTONPUSH;
+
+	if (dis->itemState & ODS_DISABLED)
+		style |= DFCS_INACTIVE;
+
+	RECT textRect = {dis->rcItem.left+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+
+	if (dis->itemState & ODS_SELECTED) {
+		style |= DFCS_PUSHED;
+		++textRect.left;	++textRect.top;
+		++textRect.right;	++textRect.bottom;
+	}
+
+	DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
+
+	TCHAR text[BUFFER_LEN];
+	GetWindowText(_hwnd, text, BUFFER_LEN);
+
+	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
+		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	else {
+		TextColor lcColor(dis->hDC, _textColor);
+		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	}
+
+	if (dis->itemState & ODS_FOCUS) {
+		RECT rect = {
+			dis->rcItem.left+3, dis->rcItem.top+3,
+			dis->rcItem.right-dis->rcItem.left-4, dis->rcItem.bottom-dis->rcItem.top-4
+		};
 		if (dis->itemState & ODS_SELECTED) {
-			style |= DFCS_PUSHED;
-			++textRect.left;	++textRect.top;
-			++textRect.right;	++textRect.bottom;
+			++rect.left;	++rect.top;
+			++rect.right;	++rect.bottom;
 		}
+		DrawFocusRect(dis->hDC, &rect);
+	}
+}
+*/
 
+
+void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
+{
+	UINT style = DFCS_BUTTONPUSH;
+
+	if (dis->itemState & ODS_DISABLED)
+		style |= DFCS_INACTIVE;
+
+	POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
+	RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+
+	if (dis->itemState & ODS_SELECTED) {
+		style |= DFCS_PUSHED;
+		++iconPos.x;		++iconPos.y;
+		++textRect.left;	++textRect.top;
+		++textRect.right;	++textRect.bottom;
+	}
+
+	if (_flat) {
+		if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
+			DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
+	} else
 		DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
 
-		TCHAR text[BUFFER_LEN];
-		GetWindowText(_hwnd, text, BUFFER_LEN);
+	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
 
-		if (dis->itemState & (ODS_DISABLED|ODS_GRAYED)) {
-			COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
+	TCHAR text[BUFFER_LEN];
+	GetWindowText(_hwnd, text, BUFFER_LEN);
 
-			if (gray) {
-				{
-				TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
-				RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
-				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
-				}
+	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
+		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+	else {
+		//BkMode mode(dis->hDC, TRANSPARENT);
+		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
+		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+	}
 
-				BkMode mode(dis->hDC, TRANSPARENT);
-				TextColor lcColor(dis->hDC, gray);
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
-			} else {
-				int old_r = textRect.right;
-				int old_b = textRect.bottom;
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_CALCRECT);
-				int x = textRect.left + (old_r-textRect.right)/2;
-				int y = textRect.top + (old_b-textRect.bottom)/2;
-				int w = textRect.right-textRect.left;
-				int h = textRect.bottom-textRect.top;
-				s_MyDrawText_Rect.right = w;
-				s_MyDrawText_Rect.bottom = h;
-				GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
-			}
-		} else {
-			TextColor lcColor(dis->hDC, _textColor);
-			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	if (dis->itemState & ODS_FOCUS) {
+		RECT rect = {
+			dis->rcItem.left+3, dis->rcItem.top+3,
+			dis->rcItem.right-dis->rcItem.left-4, dis->rcItem.bottom-dis->rcItem.top-4
+		};
+		if (dis->itemState & ODS_SELECTED) {
+			++rect.left;	++rect.top;
+			++rect.right;	++rect.bottom;
 		}
-
-		if (dis->itemState & ODS_FOCUS) {
-			RECT rect = {
-				dis->rcItem.left+3, dis->rcItem.top+3,
-				dis->rcItem.right-dis->rcItem.left-4, dis->rcItem.bottom-dis->rcItem.top-4
-			};
-			if (dis->itemState & ODS_SELECTED) {
-				++rect.left;	++rect.top;
-				++rect.right;	++rect.bottom;
-			}
-			DrawFocusRect(dis->hDC, &rect);
-		}
-
-		return TRUE;
-	} else
-		return super::WndProc(message, wparam, lparam);
+		DrawFocusRect(dis->hDC, &rect);
+	}
 }
 
 
-LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+void StartmenuEntry::DrawItem(LPDRAWITEMSTRUCT dis)
 {
-	if (message == WM_DISPATCH_DRAWITEM) {
-		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT) lparam;
-		UINT style = DFCS_BUTTONPUSH;
+	UINT style = DFCS_BUTTONPUSH;
 
-		if (dis->itemState & ODS_DISABLED)
-			style |= DFCS_INACTIVE;
+	if (dis->itemState & ODS_DISABLED)
+		style |= DFCS_INACTIVE;
 
-		POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
-		RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+	POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
+	RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
 
-		if (dis->itemState & ODS_SELECTED) {
-			style |= DFCS_PUSHED;
-			++iconPos.x;		++iconPos.y;
-			++textRect.left;	++textRect.top;
-			++textRect.right;	++textRect.bottom;
-		}
+	if (dis->itemState & ODS_SELECTED) {
+		style |= DFCS_PUSHED;
+		++iconPos.x;		++iconPos.y;
+		++textRect.left;	++textRect.top;
+		++textRect.right;	++textRect.bottom;
+	}
 
-		if (_flat) {
-			if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
-				DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
-		} else
-			DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
+	int bk_color = COLOR_BTNFACE;
+	int text_color = COLOR_BTNTEXT;
 
-		DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
+	if (dis->itemState & ODS_FOCUS) {
+		bk_color = COLOR_HIGHLIGHT;
+		text_color = COLOR_HIGHLIGHTTEXT;
+	}
 
-		TCHAR text[BUFFER_LEN];
-		GetWindowText(_hwnd, text, BUFFER_LEN);
+	HBRUSH bk_brush = GetSysColorBrush(bk_color);
 
-		if (dis->itemState & (ODS_DISABLED|ODS_GRAYED)) {
-			COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
+	FillRect(dis->hDC, &dis->rcItem, bk_brush);
+	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, bk_brush, DI_NORMAL);
 
-			if (gray) {
-				{
-				TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
-				RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
-				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-				}
+	TCHAR text[BUFFER_LEN];
+	GetWindowText(_hwnd, text, BUFFER_LEN);
 
-				BkMode mode(dis->hDC, TRANSPARENT);
-				TextColor lcColor(dis->hDC, gray);
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-			} else {
-				int old_r = textRect.right;
-				int old_b = textRect.bottom;
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/|DT_CALCRECT);
-				int x = textRect.left + (old_r-textRect.right)/2;
-				int y = textRect.top + (old_b-textRect.bottom)/2;
-				int w = textRect.right-textRect.left;
-				int h = textRect.bottom-textRect.top;
-				s_MyDrawText_Rect.right = w;
-				s_MyDrawText_Rect.bottom = h;
-				GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
-			}
-		} else {
-			//BkMode mode(dis->hDC, TRANSPARENT);
-			TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
-			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-		}
-
-		if (dis->itemState & ODS_FOCUS) {
-			RECT rect = {
-				dis->rcItem.left+3, dis->rcItem.top+3,
-				dis->rcItem.right-dis->rcItem.left-4, dis->rcItem.bottom-dis->rcItem.top-4
-			};
-			if (dis->itemState & ODS_SELECTED) {
-				++rect.left;	++rect.top;
-				++rect.right;	++rect.bottom;
-			}
-			DrawFocusRect(dis->hDC, &rect);
-		}
-
-		return TRUE;
-	} else
-		return super::WndProc(message, wparam, lparam);
-}
-
-
-LRESULT StartmenuEntry::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
-{
-	if (message == WM_DISPATCH_DRAWITEM) {
-		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT) lparam;
-		UINT style = DFCS_BUTTONPUSH;
-
-		if (dis->itemState & ODS_DISABLED)
-			style |= DFCS_INACTIVE;
-
-		POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
-		RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
-
-		if (dis->itemState & ODS_SELECTED) {
-			style |= DFCS_PUSHED;
-			++iconPos.x;		++iconPos.y;
-			++textRect.left;	++textRect.top;
-			++textRect.right;	++textRect.bottom;
-		}
-
-		int bk_color = COLOR_BTNFACE;
-		int text_color = COLOR_BTNTEXT;
-
-		if (dis->itemState & ODS_FOCUS) {
-			bk_color = COLOR_HIGHLIGHT;
-			text_color = COLOR_HIGHLIGHTTEXT;
-		}
-
-		HBRUSH bk_brush = GetSysColorBrush(bk_color);
-
-		FillRect(dis->hDC, &dis->rcItem, bk_brush);
-		DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, bk_brush, DI_NORMAL);
-
-		TCHAR text[BUFFER_LEN];
-		GetWindowText(_hwnd, text, BUFFER_LEN);
-
-		if (dis->itemState & (ODS_DISABLED|ODS_GRAYED)) {
-			COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
-
-			if (gray) {
-				{
-				TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
-				RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
-				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-				}
-
-				BkMode mode(dis->hDC, TRANSPARENT);
-				TextColor lcColor(dis->hDC, gray);
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-			} else {
-				int old_r = textRect.right;
-				int old_b = textRect.bottom;
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/|DT_CALCRECT);
-				int x = textRect.left + (old_r-textRect.right)/2;
-				int y = textRect.top + (old_b-textRect.bottom)/2;
-				int w = textRect.right-textRect.left;
-				int h = textRect.bottom-textRect.top;
-				s_MyDrawText_Rect.right = w;
-				s_MyDrawText_Rect.bottom = h;
-				GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
-			}
-		} else {
-			BkMode mode(dis->hDC, TRANSPARENT);
-			TextColor lcColor(dis->hDC, GetSysColor(text_color));
-			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
-		}
-
-		return TRUE;
-	} else
-		return super::WndProc(message, wparam, lparam);
+	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
+		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	else {
+		BkMode mode(dis->hDC, TRANSPARENT);
+		TextColor lcColor(dis->hDC, GetSysColor(text_color));
+		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER);
+	}
 }

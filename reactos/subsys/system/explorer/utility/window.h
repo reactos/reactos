@@ -369,54 +369,77 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 
 
  /**
-	Subclass button controls to paint colored text labels.
-	The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+	Subclass button controls to draw them by using WM_DISPATCH_DRAWITEM
+	The owning window should use the OwnerDrawParent template to route owner draw messages to the buttons.
  */
-struct ColorButton : public SubclassedWindow
+struct OwnerdrawnButton : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
+
+	OwnerdrawnButton(HWND hwnd)
+	 : super(hwnd) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	void	DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR text, int dt_flags);
+
+	virtual void DrawItem(LPDRAWITEMSTRUCT dis) = 0;
+};
+
+
+ /**
+	Subclass button controls to paint colored text labels.
+	The owning window should use the OwnerDrawParent template to route owner draw messages to the buttons.
+ */
+/* not yet used
+struct ColorButton : public OwnerdrawnButton
+{
+	typedef OwnerdrawnButton super;
 
 	ColorButton(HWND hwnd, COLORREF textColor)
 	 : super(hwnd), _textColor(textColor) {}
 
 protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
 	COLORREF _textColor;
 };
+*/
 
 
  /**
 	Subclass button controls to paint pictures left to the labels.
 	The buttons should have set the style bit BS_OWNERDRAW.
-	The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+	The owning window should use the OwnerDrawParent template to route owner draw messages to the buttons.
  */
-struct PictureButton : public SubclassedWindow
+struct PictureButton : public OwnerdrawnButton
 {
-	typedef SubclassedWindow super;
+	typedef OwnerdrawnButton super;
 
 	PictureButton(HWND hwnd, HICON hicon, bool flat=false)
 	 :	super(hwnd), _hicon(hicon), _flat(flat) {}
 
 protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
 	HICON	_hicon;
 	bool	_flat;
 };
 
 
- /// start menu button
-struct StartmenuEntry : public SubclassedWindow
+ /**
+	implement start menu button as owner drawn buitton controls
+ */
+struct StartmenuEntry : public OwnerdrawnButton
 {
-	typedef SubclassedWindow super;
+	typedef OwnerdrawnButton super;
 
-	StartmenuEntry(HWND hwnd, HICON hicon, bool flat=false)
-	 :	super(hwnd), _hicon(hicon), _flat(flat) {}
+	StartmenuEntry(HWND hwnd, HICON hicon)
+	 :	super(hwnd), _hicon(hicon) {}
 
 protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
 	HICON	_hicon;
-	bool	_flat;
 };
