@@ -342,7 +342,6 @@ U32 MmCountFreePagesInLookupTable(PVOID PageLookupTable, U32 TotalPageCount)
 U32 MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	U32							AvailablePageStart;
 	U32							AvailablePagesSoFar;
 	U32							Index;
 
@@ -351,9 +350,41 @@ U32 MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 P
 		LastFreePageHint = TotalPageCount;
 	}
 
-	AvailablePageStart = 0;
 	AvailablePagesSoFar = 0;
 	for (Index=LastFreePageHint-1; Index>0; Index--)
+	{
+		if (RealPageLookupTable[Index].PageAllocated != 0)
+		{
+			AvailablePagesSoFar = 0;
+			continue;
+		}
+		else
+		{
+			AvailablePagesSoFar++;
+		}
+
+		if (AvailablePagesSoFar >= PagesNeeded)
+		{
+			return Index;
+		}
+	}
+
+	return 0;
+}
+
+U32 MmFindAvailablePagesBeforePage(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded, U32 LastPage)
+{
+	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+	U32							AvailablePagesSoFar;
+	U32							Index;
+
+	if (LastPage > TotalPageCount)
+	{
+		return MmFindAvailablePagesFromEnd(PageLookupTable, TotalPageCount, PagesNeeded);
+	}
+
+	AvailablePagesSoFar = 0;
+	for (Index=LastPage-1; Index>0; Index--)
 	{
 		if (RealPageLookupTable[Index].PageAllocated != 0)
 		{

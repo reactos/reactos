@@ -62,6 +62,7 @@ VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCoun
 VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount);	// Allocates the specified pages in the lookup table
 U32		MmCountFreePagesInLookupTable(PVOID PageLookupTable, U32 TotalPageCount);	// Returns the number of free pages in the lookup table
 U32		MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded);	// Returns the page number of the first available page range from the end of memory
+U32		MmFindAvailablePagesBeforePage(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded, U32 LastPage);	// Returns the page number of the first available page range before the specified page
 VOID	MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32* MapCount);	// Removes entries in the memory map that describe memory above 4G
 VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, U32 TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
 BOOL	MmAreMemoryPagesAvailable(PVOID PageLookupTable, U32 TotalPageCount, PVOID PageAddress, U32 PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE

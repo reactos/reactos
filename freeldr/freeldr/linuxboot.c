@@ -146,8 +146,15 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description)
 		LinuxBootSector->RootDevice = 0x0200;
 	}
 
-	LinuxBootSector->CommandLineMagic = LINUX_COMMAND_LINE_MAGIC;
-	LinuxBootSector->CommandLineOffset = 0x9000;
+	if (LinuxSetupSector->Version >= 0x0202)
+	{
+		LinuxSetupSector->CommandLinePointer = 0x99000;
+	}
+	else
+	{
+		LinuxBootSector->CommandLineMagic = LINUX_COMMAND_LINE_MAGIC;
+		LinuxBootSector->CommandLineOffset = 0x9000;
+	}
 
 	if (NewStyleLinuxKernel)
 	{
@@ -455,7 +462,17 @@ BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 	UiDrawStatusText(StatusText);
 
 	// Allocate memory for the ramdisk
-	LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
+	//LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
+	// Try to align it at the next MB boundary after the kernel
+	//LinuxInitrdLoadAddress = MmAllocateMemoryAtAddress(LinuxInitrdSize, (PVOID)ROUND_UP((LINUX_KERNEL_LOAD_ADDRESS + LinuxKernelSize), 0x100000));
+	if (LinuxSetupSector->Version <= 0x0202)
+	{
+		LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LINUX_MAX_INITRD_ADDRESS);
+	}
+	else
+	{
+		LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LinuxSetupSector->InitrdAddressMax);
+	}
 	if (LinuxInitrdLoadAddress == NULL)
 	{
 		return FALSE;
@@ -464,6 +481,14 @@ BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 	// Set the information in the setup struct
 	LinuxSetupSector->RamdiskAddress = (U32)LinuxInitrdLoadAddress;
 	LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
+
+	DbgPrint((DPRINT_LINUX, "RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress));
+	DbgPrint((DPRINT_LINUX, "RamdiskSize: 0x%x\n", LinuxSetupSector->RamdiskSize));
+
+	if (LinuxSetupSector->Version >= 0x0203)
+	{
+		DbgPrint((DPRINT_LINUX, "InitrdAddressMax: 0x%x\n", LinuxSetupSector->InitrdAddressMax));
+	}
 
 	// Read in the ramdisk
 	for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )

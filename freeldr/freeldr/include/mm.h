@@ -53,5 +53,6 @@ VOID	MmFreeMemory(PVOID MemoryPointer);
 //PVOID	MmAllocateLowMemory(U32 MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
 PVOID	MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress);
+PVOID	MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress);
 
 #endif // defined __MEMORY_H

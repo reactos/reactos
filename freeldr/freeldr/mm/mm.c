@@ -138,6 +138,61 @@ PVOID MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress)
 	return MemPointer;
 }
 
+PVOID MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress)
+{
+	U32		PagesNeeded;
+	U32		FirstFreePageFromEnd;
+	U32		DesiredAddressPageNumber;
+	PVOID	MemPointer;
+
+	if (MemorySize == 0)
+	{
+		DbgPrint((DPRINT_MEMORY, "MmAllocateHighestMemoryBelowAddress() called for 0 bytes. Returning NULL.\n"));
+		UiMessageBoxCritical("Memory allocation failed: MmAllocateHighestMemoryBelowAddress() called for 0 bytes.");
+		return NULL;
+	}
+
+	// Find out how many blocks it will take to
+	// satisfy this allocation
+	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
+
+	// Get the page number for their desired address
+	DesiredAddressPageNumber = (U32)DesiredAddress / MM_PAGE_SIZE;
+
+	// If we don't have enough available mem
+	// then return NULL
+	if (FreePagesInLookupTable < PagesNeeded)
+	{
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		return NULL;
+	}
+
+	FirstFreePageFromEnd = MmFindAvailablePagesBeforePage(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, DesiredAddressPageNumber);
+
+	if (FirstFreePageFromEnd == 0)
+	{
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		return NULL;
+	}
+
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded);
+
+	FreePagesInLookupTable -= PagesNeeded;
+	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
+
+#ifdef DEBUG
+	IncrementAllocationCount();
+	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, FirstFreePageFromEnd, AllocationCount));
+	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
+	//VerifyHeap();
+#endif // DEBUG
+
+	// Now return the pointer
+	return MemPointer;
+}
+
 VOID MmFreeMemory(PVOID MemoryPointer)
 {
 	U32							PageNumber;

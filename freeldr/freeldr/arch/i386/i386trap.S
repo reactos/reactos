@@ -22,6 +22,7 @@
 
 #define ASM
 #include <arch.h>
+#include <version.h>
 
 
 
@@ -80,7 +81,10 @@
 
 i386ExceptionHandlerText:
 	.ascii "FreeLoader i386 Exception Handler\n"
-	.asciz "Report bugs to Brian Palmer <brianp@reactos.org>\n\n"
+	.ascii VERSION
+	.ascii "\n"
+//	.asciz "Report bugs to Brian Palmer <brianp@reactos.org>\n\n"
+	.asciz "Report bugs to ReactOS Kernel mailing list <ros-kernel@reactos.com>\n\n"
 
 i386DivideByZeroText:
 	.asciz "Exception 00: DIVIDE BY ZERO\n\n"

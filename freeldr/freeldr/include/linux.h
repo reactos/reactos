@@ -41,6 +41,8 @@
 #define LINUX_FLAG_LOAD_HIGH			0x01
 #define LINUX_FLAG_CAN_USE_HEAP			0x80
 
+#define LINUX_MAX_INITRD_ADDRESS		0x38000000
+
 typedef struct
 {
 	U8		BootCode1[0x20];
@@ -115,6 +117,9 @@ typedef struct
 	U16		HeapEnd;				// space from here (exclusive) down to
 									// end of setup code can be used by setup
 									// for local heap purposes.
+	U16		Pad1;
+	U32		CommandLinePointer;		// 32-bit pointer to the kernel command line
+	U32		InitrdAddressMax;		// Highest legal initrd address
 
 
 } PACKED LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;

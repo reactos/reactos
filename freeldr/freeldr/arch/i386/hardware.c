@@ -736,7 +736,7 @@ DetectHardware(VOID)
 {
   HKEY SystemKey;
   U32 BusNumber = 0;
-  S32 Error
+  S32 Error;
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 

@@ -26,10 +26,10 @@
 #ifdef DEBUG
 
 //#define DEBUG_ALL
-#define DEBUG_INIFILE
+//#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
-//#define DEBUG_NONE
+#define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
 U32		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
@@ -40,7 +40,7 @@ U32		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 U32		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-U32		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM;
+U32		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM|DPRINT_MEMORY|DPRINT_LINUX;
 #else //#elif defined (DEBUG_NONE)
 U32		DebugPrintMask = 0;
 #endif
