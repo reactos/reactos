@@ -99,6 +99,8 @@ typedef enum
 	SHGDN_FORPARSING	= 0x8000	/* for ParseDisplayName or path */
 } SHGNO;
 
+typedef DWORD SHGDNF;
+
 /*****************************************************************************
  * IShellFolder::EnumObjects 
  */
@@ -106,6 +108,10 @@ typedef enum tagSHCONTF
 {	SHCONTF_FOLDERS		= 32,	/* for shell browser */
 	SHCONTF_NONFOLDERS	= 64,	/* for default view */
 	SHCONTF_INCLUDEHIDDEN	= 128	/* for hidden/system objects */
+    SHCONTF_INIT_ON_FIRST_NEXT = 256,   /* allow EnumObject() to return before validating enum */
+    SHCONTF_NETPRINTERSRCH  = 512,   /* hint that client is looking for printers */
+    SHCONTF_SHAREABLE       = 1024,   /* hint that client is looking sharable resources (remote shares) */
+    SHCONTF_STORAGE			= 2048   /* include all items with accessible storage and their ancestors */
 } SHCONTF;
 
 /*****************************************************************************
@@ -135,6 +141,9 @@ typedef enum tagSHCONTF
 #define SFGAO_BROWSABLE		0x08000000L	/* is in-place browsable */
 #define SFGAO_NONENUMERATED	0x00100000L	/* is a non-enumerated object */
 #define SFGAO_NEWCONTENT	0x00200000L	/* should show bold in explorer tree */
+#define SFGAO_COMPRESSED    0x04000000L /* Object is compressed (use alt color) */
+
+typedef ULONG SFGAOF;
 
 /************************************************************************
  *
