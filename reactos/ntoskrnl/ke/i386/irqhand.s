@@ -12,6 +12,8 @@ _irq_handler_0:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs
         inb	$0x21,%al
         orb	$1<<0,%al
         outb	%al,$0x21
@@ -38,6 +40,8 @@ _irq_handler_1:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<1,%al
         outb	%al,$0x21
@@ -64,6 +68,8 @@ _irq_handler_2:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<2,%al
         outb	%al,$0x21
@@ -90,6 +96,8 @@ _irq_handler_3:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<3,%al
         outb	%al,$0x21
@@ -116,6 +124,8 @@ _irq_handler_4:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<4,%al
         outb	%al,$0x21
@@ -142,6 +152,8 @@ _irq_handler_5:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<5,%al
         outb	%al,$0x21
@@ -168,6 +180,8 @@ _irq_handler_6:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<6,%al
         outb	%al,$0x21
@@ -194,6 +208,8 @@ _irq_handler_7:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0x21,%al
         orb	$1<<7,%al
         outb	%al,$0x21
@@ -220,6 +236,8 @@ _irq_handler_8:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(8-8),%al
         outb    %al,$0xa1
@@ -246,6 +264,8 @@ _irq_handler_9:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(9-8),%al
         outb    %al,$0xa1
@@ -272,6 +292,8 @@ _irq_handler_10:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(10-8),%al
         outb    %al,$0xa1
@@ -298,6 +320,8 @@ _irq_handler_11:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(11-8),%al
         outb    %al,$0xa1
@@ -324,6 +348,8 @@ _irq_handler_12:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(12-8),%al
         outb    %al,$0xa1
@@ -350,6 +376,8 @@ _irq_handler_13:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(13-8),%al
         outb    %al,$0xa1
@@ -376,6 +404,8 @@ _irq_handler_14:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(14-8),%al
         outb    %al,$0xa1
@@ -402,6 +432,8 @@ _irq_handler_15:
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs	
         inb	$0xa1,%al
         orb	$1<<(15-8),%al
         outb    %al,$0xa1
