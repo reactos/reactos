@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.45 2003/05/28 18:09:10 chorns Exp $
+/* $Id: handle.c,v 1.46 2003/06/24 11:34:28 gvg Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -626,6 +626,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    KIRQL oldIrql;
    PVOID ObjectBody;
    ACCESS_MASK GrantedAccess;
+   NTSTATUS Status;
    
    ASSERT_IRQL(PASSIVE_LEVEL);
    
@@ -642,13 +643,18 @@ ObReferenceObjectByHandle(HANDLE Handle,
      {
 	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
 	
-	ObReferenceObjectByPointer(PsGetCurrentProcess(),
-				   PROCESS_ALL_ACCESS,
-				   PsProcessType,
-				   UserMode);
+	Status = ObReferenceObjectByPointer(PsGetCurrentProcess(),
+	                                    PROCESS_ALL_ACCESS,
+	                                    PsProcessType,
+	                                    UserMode);
+	if (! NT_SUCCESS(Status))
+	  {
+	    return Status;
+	  }
+
 	*Object = PsGetCurrentProcess();
 	DPRINT("Referencing current process %x\n", PsGetCurrentProcess());
-	return(STATUS_SUCCESS);
+	return STATUS_SUCCESS;
      }
    else if (Handle == NtCurrentProcess())
      {
@@ -658,13 +664,18 @@ ObReferenceObjectByHandle(HANDLE Handle,
    if (Handle == NtCurrentThread() && 
        (ObjectType == PsThreadType || ObjectType == NULL))
      {
-	ObReferenceObjectByPointer(PsGetCurrentThread(),
-				   THREAD_ALL_ACCESS,
-				   PsThreadType,
-				   UserMode);
+	Status = ObReferenceObjectByPointer(PsGetCurrentThread(),
+	                                    THREAD_ALL_ACCESS,
+	                                    PsThreadType,
+	                                    UserMode);
+	if (! NT_SUCCESS(Status))
+	  {
+	    return Status;
+	  }
+
 	*Object = PsGetCurrentThread();
 	CHECKPOINT;
-	return(STATUS_SUCCESS);
+	return STATUS_SUCCESS;
      }
    else if (Handle == NtCurrentThread())
      {
