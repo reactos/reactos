@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.51 2003/01/22 02:24:10 ekohl Exp $
+/* $Id: proc.c,v 1.52 2003/03/06 15:05:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -33,38 +33,58 @@ GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL STDCALL
-GetProcessAffinityMask(HANDLE hProcess,
-		       LPDWORD lpProcessAffinityMask,
-		       LPDWORD lpSystemAffinityMask)
+BOOL STDCALL
+GetProcessAffinityMask (HANDLE hProcess,
+			LPDWORD lpProcessAffinityMask,
+			LPDWORD lpSystemAffinityMask)
 {
-  if ((NULL == lpProcessAffinityMask)
-      || (NULL == lpSystemAffinityMask))
+  PROCESS_BASIC_INFORMATION ProcessInfo;
+  ULONG BytesWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess (hProcess,
+				      ProcessBasicInformation,
+				      (PVOID)&ProcessInfo,
+				      sizeof(PROCESS_BASIC_INFORMATION),
+				      &BytesWritten);
+  if (!NT_SUCCESS(Status))
     {
-      SetLastError(ERROR_BAD_ARGUMENTS);
-      return(FALSE);
+      SetLastError (Status);
+      return FALSE;
     }
 
-  /* FIXME: check hProcess is actually a process */
-  /* FIXME: query the kernel process object */
-  *lpProcessAffinityMask = 0x00000001;
+  *lpProcessAffinityMask = (DWORD)ProcessInfo.AffinityMask;
+
+  /* FIXME */
   *lpSystemAffinityMask  = 0x00000001;
 
-  return(TRUE);
+  return TRUE;
 }
 
 
 BOOL STDCALL
-SetProcessAffinityMask(HANDLE hProcess,
-		       DWORD dwProcessAffinityMask)
+SetProcessAffinityMask (HANDLE hProcess,
+			DWORD dwProcessAffinityMask)
 {
-  return(FALSE);
+  NTSTATUS Status;
+
+  Status = NtSetInformationProcess (hProcess,
+				    ProcessAffinityMask,
+				    (PVOID)&dwProcessAffinityMask,
+				    sizeof(DWORD));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
 WINBOOL STDCALL
-GetProcessShutdownParameters(LPDWORD lpdwLevel,
-			     LPDWORD lpdwFlags)
+GetProcessShutdownParameters (LPDWORD lpdwLevel,
+			      LPDWORD lpdwFlags)
 {
   CSRSS_API_REQUEST CsrRequest;
   CSRSS_API_REPLY CsrReply;
@@ -89,8 +109,8 @@ GetProcessShutdownParameters(LPDWORD lpdwLevel,
 
 
 WINBOOL STDCALL
-SetProcessShutdownParameters(DWORD dwLevel,
-			     DWORD dwFlags)
+SetProcessShutdownParameters (DWORD dwLevel,
+			      DWORD dwFlags)
 {
   CSRSS_API_REQUEST CsrRequest;
   CSRSS_API_REPLY CsrReply;
@@ -115,9 +135,9 @@ SetProcessShutdownParameters(DWORD dwLevel,
 
 
 WINBOOL STDCALL
-GetProcessWorkingSetSize(HANDLE hProcess,
-			 LPDWORD lpMinimumWorkingSetSize,
-			 LPDWORD lpMaximumWorkingSetSize)
+GetProcessWorkingSetSize (HANDLE hProcess,
+			  LPDWORD lpMinimumWorkingSetSize,
+			  LPDWORD lpMaximumWorkingSetSize)
 {
   QUOTA_LIMITS QuotaLimits;
   NTSTATUS Status;
@@ -690,14 +710,14 @@ SetPriorityClass (HANDLE	hProcess,
 
 
 DWORD STDCALL
-GetProcessVersion (DWORD	ProcessId)
+GetProcessVersion (DWORD ProcessId)
 {
   DWORD			Version = 0;
   PIMAGE_NT_HEADERS	NtHeader = NULL;
   PVOID			BaseAddress = NULL;
 
   /* Caller's */
-  if (0 == ProcessId)
+  if (0 == ProcessId || GetCurrentProcessId() == ProcessId)
     {
       BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
       NtHeader = RtlImageNtHeader (BaseAddress);
