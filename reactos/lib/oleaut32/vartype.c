@@ -6195,7 +6195,6 @@ VARIANT_MakeDate_OK:
  *  the date is invalid in that format, in which the most compatible format
  *  that produces a valid date will be used.
  */
-#ifndef __REACTOS__ /*FIXME: no SystemTimeToVariantTime() yet */
 HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pdateOut)
 {
   static const USHORT ParseDateTokens[] =
@@ -6525,7 +6524,6 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     SysFreeString(tokens[i]);
   return hRet;
 }
-#endif
 
 /******************************************************************************
  * VarDateFromI1 (OLEAUT32.221)
