@@ -520,7 +520,7 @@ extern HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR b
 
 
 #ifdef __MINGW32__	// ILGetSize() is currently missing in MinGW.
-extern "C" UINT ILGetSize(LPCITEMIDLIST pidl);
+extern "C" UINT STDCALL ILGetSize(LPCITEMIDLIST pidl);
 
 #ifdef UNICODE		// CFSTR_FILENAME is defined wrong in MinGW.
 #define CFSTR_FILENAMEW TEXT("FileNameW")
