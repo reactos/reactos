@@ -2195,7 +2195,7 @@ DPA_CreateEx (INT nGrow, HANDLE hHeap)
 	hdpa = Alloc (sizeof(*hdpa));
 
     if (hdpa) {
-	hdpa->nGrow = min(8, nGrow);
+	hdpa->nGrow = max(8, nGrow);
 	hdpa->hHeap = hHeap ? hHeap : GetProcessHeap();
 	hdpa->nMaxCount = hdpa->nGrow * 2;
 	hdpa->ptrs = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
