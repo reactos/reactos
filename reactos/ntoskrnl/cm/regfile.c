@@ -358,7 +358,7 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive)
 }
 
 
-NTSTATUS
+static NTSTATUS
 CmiPopulateHive(HANDLE FileHandle)
 {
   IO_STATUS_BLOCK IoStatusBlock;
@@ -414,7 +414,7 @@ CmiPopulateHive(HANDLE FileHandle)
 }
 
 
-NTSTATUS
+static NTSTATUS
 CmiCreateNewRegFile(HANDLE FileHandle)
 {
   IO_STATUS_BLOCK IoStatusBlock;
@@ -447,7 +447,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   /* The rest of the block is free */
   FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
 
-  Status = ZwWriteFile(FileHandle,
+  Status = NtWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -461,6 +461,11 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
 #if 1
   if (NT_SUCCESS(Status))
     {
@@ -468,14 +473,17 @@ CmiCreateNewRegFile(HANDLE FileHandle)
     }
 #endif
 
-  return Status;
+  Status = NtFlushBuffersFile(FileHandle,
+			      &IoStatusBlock);
+
+  return(Status);
 }
 
 
-NTSTATUS
-CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
-			     PWSTR Filename,
-			     BOOLEAN CreateNew)
+static NTSTATUS
+CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
+			       PWSTR Filename,
+			       BOOLEAN CreateNew)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION fsi;
@@ -492,18 +500,35 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   ULONG BitmapSize;
   PULONG BitmapBuffer;
 
-  DPRINT1("CmiInitPermanentRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
+  DPRINT1("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
 
   /* Duplicate Filename */
-  Status = RtlCreateUnicodeString(&RegistryHive->Filename, Filename);
+  Status = RtlCreateUnicodeString(&RegistryHive->HiveFileName,
+				  Filename);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitPermanentRegistryHive() - Failed 1.\n");
+      DPRINT1("CmiInitNonVolatileRegistryHive() - Failed 1.\n");
       return Status;
     }
 
+  /* Create log file name */
+  RegistryHive->LogFileName.Length = (wcslen(Filename) + 4) * sizeof(WCHAR);
+  RegistryHive->LogFileName.MaximumLength = RegistryHive->LogFileName.Length + sizeof(WCHAR);
+  RegistryHive->LogFileName.Buffer = ExAllocatePool(NonPagedPool,
+						    RegistryHive->LogFileName.MaximumLength);
+  if (RegistryHive->LogFileName.Buffer == NULL)
+    {
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      DPRINT1("ExAllocatePool() failed\n");
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  wcscpy(RegistryHive->LogFileName.Buffer,
+	 Filename);
+  wcscat(RegistryHive->LogFileName.Buffer,
+	 L".log");
+
   InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->Filename,
+			     &RegistryHive->HiveFileName,
 			     0,
 			     NULL,
 			     NULL);
@@ -536,7 +561,8 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 			0);
   if (!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&RegistryHive->Filename);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
       DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
@@ -551,26 +577,11 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
-	  RtlFreeUnicodeString(&RegistryHive->Filename);
+	  NtClose(FileHandle);
+	  RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+	  RtlFreeUnicodeString(&RegistryHive->LogFileName);
 	  return(Status);
 	}
-    }
-
-  Status = ObReferenceObjectByHandle(FileHandle,
-				     FILE_ALL_ACCESS,
-				     IoFileObjectType,
-				     UserMode,
-				     (PVOID*)&RegistryHive->FileObject,
-				     NULL);
-
-  assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-
-  if (!NT_SUCCESS(Status))
-    {
-      NtClose(FileHandle);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT1("CmiInitPermanentRegistryHive() - ObReferenceObjectByHandle Failed with status %x.\n", Status);
-      return Status;
     }
 
   /* Read hive header */
@@ -589,9 +600,10 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
   if (!NT_SUCCESS(Status))
     {
-      ObDereferenceObject(RegistryHive->FileObject);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed 4.\n");
+      NtClose(FileHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 4.\n");
       return Status;
     }
 
@@ -600,39 +612,29 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 				  &fsi,
 				  sizeof(fsi),
 				  FileStandardInformation);
-
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-
   if (!NT_SUCCESS(Status))
     {
-      ObDereferenceObject(RegistryHive->FileObject);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed 5.\n");
+      NtClose(FileHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 5.\n");
       return Status;
     }
-
-#if 0
-  /* We have a reference to the file object so we don't need the handle anymore */
-  ZwClose(FileHandle);
-#endif
 
   RegistryHive->FileSize = fsi.EndOfFile.u.LowPart;
 #ifdef WIN32_REGDBG
 //  assert(RegistryHive->FileSize);
-  if (RegistryHive->FileSize)
-  {
-    RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
-  }
-  else
-  {
-    ObDereferenceObject(RegistryHive->FileObject);
-    RtlFreeUnicodeString(&RegistryHive->Filename);
-    DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-#else
-  RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
+  if (RegistryHive->FileSize == 0)
+    {
+      NtClose(FileHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
 #endif
+  RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
 
   DPRINT("Space needed for block list describing hive: 0x%x\n",
     sizeof(PHBIN *) * RegistryHive->BlockListSize);
@@ -643,35 +645,12 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   if (RegistryHive->BlockList == NULL)
     {
       ExFreePool(RegistryHive->BlockList);
-      ObDereferenceObject(RegistryHive->FileObject);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed 6.\n");
+      NtClose(FileHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 6.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-#if 0
-  /* Map hive into cache memory (readonly) (skip the base block) */
-	FileOffset.u.HighPart = 0;
-	FileOffset.u.LowPart = 4096;
-  Success = CcMapData(RegistryHive->FileObject,   /* File object */
-    &FileOffset,                                  /* File offset */
-    RegistryHive->FileSize - 4096,                /* Region length */
-    TRUE,                                         /* Wait if needed */
-    &RegistryHive->Bcb,                           /* OUT: Buffer Control Block */
-    (PVOID*) &RegistryHive->BlockList[0]);        /* OUT: Mapped data pointer */
-
-  assertmsg(Success, ("Success: %d\n", Success));
-
-  if (!Success)
-    {
-      ExFreePool(RegistryHive->BlockList);
-      ObDereferenceObject(RegistryHive->FileObject);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed 7.\n");
-      return Status;
-    }
-
-#else
 
   RegistryHive->BlockList[0] = ExAllocatePool(PagedPool,
 	  RegistryHive->FileSize - 4096);
@@ -682,16 +661,18 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   if (RegistryHive->BlockList[0] == NULL)
     {
       ExFreePool(RegistryHive->BlockList);
-      ObDereferenceObject(RegistryHive->FileObject);
-      RtlFreeUnicodeString(&RegistryHive->Filename);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed 8.\n");
+      NtClose(FileHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 8.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   FileOffset.u.HighPart = 0;
   FileOffset.u.LowPart = 4096;
 
-  DPRINT("    Attempting to ZwReadFile(%d) for %d bytes into %p\n", FileHandle, RegistryHive->FileSize - 4096, (PVOID)RegistryHive->BlockList[0]);
+  DPRINT("    Attempting to NtReadFile(%d) for %d bytes into %p\n",
+	 FileHandle, RegistryHive->FileSize - 4096, (PVOID)RegistryHive->BlockList[0]);
   Status = NtReadFile(FileHandle,
 		      0,
 		      0,
@@ -705,7 +686,6 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
   NtClose(FileHandle);
-#endif
 
   RegistryHive->FreeListSize = 0;
   RegistryHive->FreeListMax = 0;
@@ -762,27 +742,33 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       BlockOffset += tmpBin->BlockSize;
     }
 
-  /* Create block bitmap and clear all bits */
-
+  /*
+   * Create block bitmap and clear all bits
+   */
   /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
   BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  DPRINT1("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
-  DPRINT1("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+  DPRINT("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
+  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+
+  /* Allocate bitmap */
   BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
 					BitmapSize);
   RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
 		      BitmapBuffer,
 		      BitmapSize * 8);
+
+  /* Initialize bitmap */
   RtlClearAllBits(&RegistryHive->DirtyBitMap);
   RegistryHive->HiveDirty = FALSE;
 
-  DPRINT1("CmiInitPermanentRegistryHive(%p, %S, %d) - Finished.\n", RegistryHive, Filename, CreateNew);
+  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Finished.\n",
+	 RegistryHive, Filename, CreateNew);
 
   return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS
+static NTSTATUS
 CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
 {
   PKEY_CELL RootKeyCell;
@@ -790,7 +776,7 @@ CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
   RegistryHive->Flags |= HIVE_VOLATILE;
 
   CmiCreateDefaultHiveHeader(RegistryHive->HiveHeader);
-  
+
   RootKeyCell = (PKEY_CELL) ExAllocatePool(NonPagedPool, sizeof(KEY_CELL));
 
   if (RootKeyCell == NULL)
@@ -806,8 +792,8 @@ CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
 
 NTSTATUS
 CmiCreateRegistryHive(PWSTR Filename,
-  PREGISTRY_HIVE *RegistryHive,
-  BOOLEAN CreateNew)
+		      PREGISTRY_HIVE *RegistryHive,
+		      BOOLEAN CreateNew)
 {
   PREGISTRY_HIVE Hive;
   NTSTATUS Status;
@@ -835,7 +821,7 @@ CmiCreateRegistryHive(PWSTR Filename,
 
   if (Filename != NULL)
     {
-      Status = CmiInitPermanentRegistryHive(Hive, Filename, CreateNew);
+      Status = CmiInitNonVolatileRegistryHive(Hive, Filename, CreateNew);
     }
   else
     {
@@ -918,12 +904,15 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
       return(STATUS_SUCCESS);
     }
 
-  DPRINT1("Hive '%wZ' is dirty\n", &RegistryHive->Filename);
+  DPRINT1("Hive '%wZ' is dirty\n",
+	 &RegistryHive->HiveFileName);
 
+  DPRINT1("Log file: '%wZ'\n",
+	 &RegistryHive->LogFileName);
 
   /* Open hive for writing */
   InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->Filename,
+			     &RegistryHive->HiveFileName,
 			     0,
 			     NULL,
 			     NULL);
@@ -944,8 +933,6 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
       DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
-
-
 
   BlockIndex = 0;
   while (TRUE)
@@ -988,11 +975,9 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
 	  return(Status);
 	}
 
-
     }
 
   NtClose(FileHandle);
-
 
   /* Clear dirty flag */
   RegistryHive->HiveDirty = FALSE;
@@ -1953,16 +1938,35 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   if (IsVolatileHive(RegistryHive) &&
       (RegistryHive->BlockListSize % (sizeof(ULONG) * 8) == 0))
     {
-      DPRINT1("Grow hive bitmap - BlockListSize %lu\n", RegistryHive->BlockListSize);
+      PULONG BitmapBuffer;
+      ULONG BitmapSize;
 
-      /* FIXME */
+      DPRINT1("Grow hive bitmap\n");
 
+      /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+      BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
+      DPRINT1("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
+      DPRINT1("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+      BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
+					    BitmapSize);
+      RtlZeroMemory(BitmapBuffer, BitmapSize);
+      RtlCopyMemory(BitmapBuffer,
+		    RegistryHive->DirtyBitMap.Buffer,
+		    RegistryHive->DirtyBitMap.SizeOfBitMap);
+      ExFreePool(RegistryHive->DirtyBitMap.Buffer);
+      RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
+			  BitmapBuffer,
+			  BitmapSize * 8);
     }
 
   *NewBlock = (PVOID) tmpBlock;
 
   if (NewBlockOffset)
     *NewBlockOffset = tmpBin->BlockOffset + REG_HBIN_DATA_OFFSET;
+
+  /* Mark new bin dirty */
+  CmiMarkBinDirty(RegistryHive,
+		  tmpBin->BlockOffset);
 
   /* FIXME: set first dword to block_offset of another free bloc */
 
@@ -2381,20 +2385,70 @@ VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 		  BLOCK_OFFSET BlockOffset)
 {
-  ULONG Index;
+  PDATA_CELL Cell;
+  LONG CellSize;
+  ULONG BlockNumber;
+  ULONG BlockCount;
 
   if (IsVolatileHive(RegistryHive))
       return;
 
-  Index = (ULONG)BlockOffset / 4096;
+  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
 
-  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)  Index %lu\n",
-	  (ULONG)BlockOffset, Index);
+  BlockNumber = (ULONG)BlockOffset / 4096;
+
+  Cell = CmiGetBlock(RegistryHive,
+		     BlockOffset,
+		     NULL);
+
+  CellSize = Cell->CellSize;
+  if (CellSize < 0)
+    CellSize = -CellSize;
+
+  BlockCount = 1;
+
+  DPRINT1("  BlockNumber %lu  Size %lu (%s)  BlockCount %lu\n",
+	  BlockNumber,
+	  CellSize,
+	  (Cell->CellSize < 0) ? "used" : "free",
+	  BlockCount);
+
 
   RegistryHive->HiveDirty = TRUE;
   RtlSetBits(&RegistryHive->DirtyBitMap,
-	     Index,
-	     1);
+	     BlockNumber,
+	     BlockCount);
+}
+
+
+VOID
+CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
+		BLOCK_OFFSET BinOffset)
+{
+  ULONG BlockNumber;
+  ULONG BlockCount;
+  PHBIN Bin;
+
+  if (IsVolatileHive(RegistryHive))
+      return;
+
+  DPRINT1("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);
+
+  BlockNumber = (ULONG)BinOffset / 4096;
+
+  Bin = RegistryHive->BlockList[BlockNumber];
+
+  BlockCount = Bin->BlockSize / 4096;
+
+  DPRINT1("  BlockNumber %lu  Size %lu  BlockCount %lu\n",
+	  BlockNumber,
+	  Bin->BlockSize,
+	  BlockCount);
+
+  RegistryHive->HiveDirty = TRUE;
+  RtlSetBits(&RegistryHive->DirtyBitMap,
+	     BlockNumber,
+	     BlockCount);
 }
 
 

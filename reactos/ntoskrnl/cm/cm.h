@@ -241,12 +241,11 @@ typedef struct _DATA_CELL
 
 typedef struct _REGISTRY_HIVE
 {
-  LIST_ENTRY HiveList;
+  LIST_ENTRY  HiveList;
   ULONG  Flags;
-  UNICODE_STRING  Filename;
+  UNICODE_STRING  HiveFileName;
+  UNICODE_STRING  LogFileName;
   ULONG  FileSize;
-  PFILE_OBJECT  FileObject;
-  PVOID  Bcb;
   PHIVE_HEADER  HiveHeader;
   ULONG  BlockListSize;
   PHBIN  *BlockList;
@@ -254,13 +253,10 @@ typedef struct _REGISTRY_HIVE
   ULONG  FreeListMax;
   PCELL_HEADER *FreeList;
   BLOCK_OFFSET *FreeListOffset;
-  ERESOURCE HiveResource;
+  ERESOURCE  HiveResource;
 
-  RTL_BITMAP DirtyBitMap;
-  BOOLEAN HiveDirty;
-
-//  NTSTATUS  (*Extend)(ULONG NewSize);
-//  PVOID  (*Flush)(VOID);
+  RTL_BITMAP  DirtyBitMap;
+  BOOLEAN  HiveDirty;
 } REGISTRY_HIVE, *PREGISTRY_HIVE;
 
 /* REGISTRY_HIVE.Flags constants */
@@ -528,6 +524,10 @@ CmiReleaseBlock(PREGISTRY_HIVE  RegistryHive,
 VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 		  BLOCK_OFFSET BlockOffset);
+
+VOID
+CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
+		BLOCK_OFFSET BinOffset);
 
 NTSTATUS
 CmiAddFree(PREGISTRY_HIVE  RegistryHive,

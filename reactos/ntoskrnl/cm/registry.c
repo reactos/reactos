@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.83 2003/02/10 21:24:45 ekohl Exp $
+/* $Id: registry.c,v 1.84 2003/02/14 17:48:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -966,10 +966,6 @@ CmShutdownRegistry(VOID)
 
 	  /* Flush non-volatile hive */
 	  CmiFlushRegistryHive(Hive);
-
-	  /* Dereference file */
-	  ObDereferenceObject(Hive->FileObject);
-	  Hive->FileObject = NULL;
 
 	  /* Release hive resource */
 	  ExReleaseResourceLite(&Hive->HiveResource);
