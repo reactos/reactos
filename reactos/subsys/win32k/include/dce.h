@@ -53,5 +53,6 @@ BOOL FASTCALL DCE_InternalDelete(PDCE dce);
 HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
+void FASTCALL DceEmptyCache(void);
 
 #endif /* _WIN32K_DCE_H */

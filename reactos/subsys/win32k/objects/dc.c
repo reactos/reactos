@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.98 2003/11/17 08:20:24 navaraf Exp $
+/* $Id: dc.c,v 1.99 2003/11/24 21:20:35 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1928,6 +1928,8 @@ DC_InternalDeleteDC( PDC DCToDelete )
       DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
       CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+
+      DceEmptyCache();
 
       ObDereferenceObject(PrimarySurface.VideoDeviceObject);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.37 2003/11/20 21:21:29 navaraf Exp $
+/* $Id: windc.c,v 1.38 2003/11/24 21:20:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -610,7 +610,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
 PDCE FASTCALL
 DceFreeDCE(PDCE dce)
 {
-  DCE **ppDCE, *ret;
+  DCE *ret;
   HANDLE hDce;
 
   if (NULL == dce)
@@ -622,17 +622,7 @@ DceFreeDCE(PDCE dce)
   USER_Lock();
 #endif
 
-  ppDCE = &FirstDce;
-
-  while (*ppDCE && (*ppDCE != dce))
-    {
-      ppDCE = &(*ppDCE)->next;
-    }
-  if (*ppDCE == dce)
-    {
-      *ppDCE = dce->next;
-    }
-  ret = *ppDCE;
+  ret = dce->next;
 
 #if 0 /* FIXME */
   USER_Unlock();
@@ -706,6 +696,15 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
             }
         }
       pDCE = pDCE->next;
+    }
+}
+
+void FASTCALL
+DceEmptyCache()
+{
+  while (FirstDce != NULL)
+    {
+      DceFreeDCE(FirstDce);
     }
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.27 2003/10/04 21:09:29 gvg Exp $
+/* $Id: brush.c,v 1.28 2003/11/24 21:20:35 gvg Exp $
  */
 
 
@@ -211,6 +211,11 @@ BOOL STDCALL IntPatBlt(DC *dc,
   BOOL ret;
 
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  if (NULL == SurfObj)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
 
   assert(BrushObj);
   if (BrushObj->logbrush.lbStyle != BS_NULL)
@@ -247,7 +252,8 @@ BOOL STDCALL IntPatBlt(DC *dc,
 		         NULL,
 		         ROP);
     }
-  return(ret);
+
+  return ret;
 }
 
 BOOL STDCALL NtGdiPolyPatBlt(HDC hDC,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.13 2003/05/18 17:16:17 ea Exp $
+/* $Id: handle.c,v 1.14 2003/11/24 21:20:34 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -81,10 +81,12 @@ PVOID FASTCALL AccessInternalObject(ULONG Handle)
 {
   PENGOBJ pEngObj;
 
-  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT1("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
-	return NULL;
-  }
+  if (Handle == 0 || Handle >= MAX_GDI_HANDLES
+      || GDIHandles[Handle].pEngObj == NULL)
+    {
+      DPRINT1("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
+      return NULL;
+    }
 
   pEngObj = GDIHandles[Handle].pEngObj;
   return (PVOID)pEngObj;
@@ -94,10 +96,12 @@ PVOID FASTCALL AccessUserObject(ULONG Handle)
 {
   PENGOBJ pEngObj;
 
-  if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT1("AccessUserObject: invalid handle: %d!!!!\n", Handle);
-	return NULL;
-  }
+  if (Handle == 0 || Handle >= MAX_GDI_HANDLES
+      || GDIHandles[Handle].pEngObj == NULL)
+    {
+      DPRINT1("AccessUserObject: invalid handle: %d!!!!\n", Handle);
+      return NULL;
+    }
 
   pEngObj = GDIHandles[Handle].pEngObj;
   return (PVOID)( (PCHAR)pEngObj + sizeof( ENGOBJ ) );

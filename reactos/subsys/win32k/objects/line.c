@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.23 2003/08/28 19:41:37 gvg Exp $ */
+/* $Id: line.c,v 1.24 2003/11/24 21:20:35 gvg Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -159,6 +159,11 @@ NtGdiLineTo(HDC  hDC,
     }
 
   SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
+  if (NULL == SurfObj)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
 
   if (PATH_IsPathOpen(dc->w.path))
     {
