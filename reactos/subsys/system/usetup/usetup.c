@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ typedef enum _PAGE_NUMBER
   BOOT_LOADER_PAGE,
 
   REPAIR_INTRO_PAGE,
+
+  EMERGENCY_INTRO_PAGE,
 
   SUCCESS_PAGE,
   QUIT_PAGE,
@@ -391,11 +393,9 @@ StartPage(PINPUT_RECORD Ir)
   NTSTATUS Status;
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
-
   INFCONTEXT Context;
   PWCHAR Value;
   ULONG ErrorLine;
-
 
   SetStatusText("   Please wait...");
 
@@ -404,13 +404,25 @@ StartPage(PINPUT_RECORD Ir)
   if (!NT_SUCCESS(Status))
     {
       PrintTextXY(6, 15, "GetSourcePath() failed (Status 0x%08lx)", Status);
+      PopupError("Setup could not find its source drive.\n",
+		 "ENTER = Reboot computer");
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
+#if 0
   else
     {
       PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
       PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
     }
-
+#endif
 
   /* Load txtsetup.sif from install media. */
   wcscpy(FileNameBuffer, SourceRootPath.Buffer);
@@ -493,6 +505,91 @@ StartPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * First setup page
+ * RETURNS
+ *	Next page number.
+ */
+static PAGE_NUMBER
+IntroPage(PINPUT_RECORD Ir)
+{
+  SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
+
+  SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
+  SetTextXY(6, 12, "computer and prepares the second part of the setup.");
+
+  SetTextXY(8, 15, "\xfa  Press ENTER to install ReactOS.");
+
+  SetTextXY(8, 17, "\xfa  Press E to start the emergency console.");
+
+  SetTextXY(8, 19, "\xfa  Press R to repair ReactOS.");
+
+  SetTextXY(8, 21, "\xfa  Press F3 to quit without installing ReactOS.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return(INSTALL_INTRO_PAGE);
+	}
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
+	{
+	  return(EMERGENCY_INTRO_PAGE);
+	}
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
+	{
+	  return(REPAIR_INTRO_PAGE);
+	}
+    }
+
+  return(INTRO_PAGE);
+}
+
+
+static PAGE_NUMBER
+EmergencyIntroPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
+  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
+
+  SetTextXY(6, 12, "The emergency console is not implemented yet.");
+
+  SetTextXY(8, 15, "\xfa  Press ESC to return to the main page.");
+
+  SetTextXY(8, 17, "\xfa  Press ENTER to reboot your computer.");
+
+  SetStatusText("   ESC = Main page  ENTER = Reboot");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return(REBOOT_PAGE);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  return(INTRO_PAGE);
+	}
+    }
+
+  return(REPAIR_INTRO_PAGE);
+}
+
 
 static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
@@ -524,62 +621,6 @@ RepairIntroPage(PINPUT_RECORD Ir)
     }
 
   return(REPAIR_INTRO_PAGE);
-}
-
-
-/*
- * First setup page
- * RETURNS
- *	TRUE: setup/repair completed successfully
- *	FALSE: setup/repair terminated by user
- */
-static PAGE_NUMBER
-IntroPage(PINPUT_RECORD Ir)
-{
-  SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
-
-  SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
-  SetTextXY(6, 12, "computer and prepares the second part of the setup.");
-
-  SetTextXY(8, 15, "\xfa  Press ENTER to install ReactOS.");
-
-  SetTextXY(8, 17, "\xfa  Press E to start the emergency repair console.");
-
-  SetTextXY(8, 19, "\xfa  Press R to repair ReactOS.");
-
-  SetTextXY(8, 21, "\xfa  Press F3 to quit without installing ReactOS.");
-
-
-  SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return(INSTALL_INTRO_PAGE);
-	}
-#if 0
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
-	{
-	  return(RepairConsole());
-	}
-#endif
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
-	{
-	  return(REPAIR_INTRO_PAGE);
-	}
-    }
-
-  return(INTRO_PAGE);
 }
 
 
@@ -728,62 +769,62 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	{
 	  PartDataValid = GetSelectedPartition(PartList,
 					       &PartData);
-    if (PartDataValid)
-      {
-    	  ActivePartitionValid = GetActiveBootPartition(PartList,
-    							&ActivePartition);
-    
-    	  RtlFreeUnicodeString(&DestinationRootPath);
-    	  swprintf(PathBuffer,
-    		   L"\\Device\\Harddisk%lu\\Partition%lu",
-    		   PartData.DiskNumber,
-    		   PartData.PartNumber);
-    	  RtlCreateUnicodeString(&DestinationRootPath,
-    				 PathBuffer);
-    
-    	  RtlFreeUnicodeString(&SystemRootPath);
-    
-          if (ActivePartitionValid)
-            {
-    	      swprintf(PathBuffer,
-    		    L"\\Device\\Harddisk%lu\\Partition%lu",
-    		    ActivePartition.DiskNumber,
-    		    ActivePartition.PartNumber);
-            }
-          else
-            {
-              /* We mark the selected partition as bootable */
-    	      swprintf(PathBuffer,
-    		    L"\\Device\\Harddisk%lu\\Partition%lu",
-    		    PartData.DiskNumber,
-    		    PartData.PartNumber);
-            }
-    	  RtlCreateUnicodeString(&SystemRootPath,
-    				 PathBuffer);
-    
-    	  return(SELECT_FILE_SYSTEM_PAGE);
-      }
-    else
-      {
-        /* FIXME: show an error dialog */
-        return(SELECT_PARTITION_PAGE);
-      }
+	  if (PartDataValid)
+	    {
+	      ActivePartitionValid = GetActiveBootPartition(PartList,
+							    &ActivePartition);
+
+	      RtlFreeUnicodeString(&DestinationRootPath);
+	      swprintf(PathBuffer,
+		       L"\\Device\\Harddisk%lu\\Partition%lu",
+		       PartData.DiskNumber,
+		       PartData.PartNumber);
+	      RtlCreateUnicodeString(&DestinationRootPath,
+				     PathBuffer);
+
+	      RtlFreeUnicodeString(&SystemRootPath);
+
+	      if (ActivePartitionValid)
+		{
+		  swprintf(PathBuffer,
+			   L"\\Device\\Harddisk%lu\\Partition%lu",
+			   ActivePartition.DiskNumber,
+			   ActivePartition.PartNumber);
+		}
+	      else
+		{
+		  /* We mark the selected partition as bootable */
+		  swprintf(PathBuffer,
+			   L"\\Device\\Harddisk%lu\\Partition%lu",
+			   PartData.DiskNumber,
+			   PartData.PartNumber);
+		}
+	      RtlCreateUnicodeString(&SystemRootPath,
+				     PathBuffer);
+
+	      return(SELECT_FILE_SYSTEM_PAGE);
+	    }
+	  else
+	    {
+	      /* FIXME: show an error dialog */
+	      return(SELECT_PARTITION_PAGE);
+	    }
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
 	{
 #ifdef ENABLE_FORMAT
-    /* Don't destroy the parition list here */;
-    return(CREATE_PARTITION_PAGE);
+	  /* Don't destroy the parition list here */;
+	  return(CREATE_PARTITION_PAGE);
 #endif
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
 	{
 #ifdef ENABLE_FORMAT
 	  if (ConfirmDeletePartition(Ir) == TRUE)
-      {
-        (BOOLEAN) DeleteSelectedPartition(CurrentPartitionList);
-      }
-    return(SELECT_PARTITION_PAGE);
+	    {
+	      (BOOLEAN) DeleteSelectedPartition(CurrentPartitionList);
+	    }
+	  return(SELECT_PARTITION_PAGE);
 #endif
 	}
 
@@ -1343,17 +1384,18 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-    if (FileSystemList->CurrentFileSystem == FsKeep)
-      {
-        return(CHECK_FILE_SYSTEM_PAGE);
-      }
-    else
-      {
-        return(FORMAT_PARTITION_PAGE);
-      }
+	  if (FileSystemList->CurrentFileSystem == FsKeep)
+	    {
+	      return(CHECK_FILE_SYSTEM_PAGE);
+	    }
+	  else
+	    {
+	      return(FORMAT_PARTITION_PAGE);
+	    }
 	}
     }
 }
+
 
 static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
@@ -1605,19 +1647,10 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
 
-//  SetTextXY(8, 12, "Build file copy list");
-
-//  SetTextXY(8, 14, "Create directories");
-
-//  SetStatusText("   Please wait...");
-
   /*
    * Build the file copy list
    */
   SetStatusText("   Building the file copy list...");
-//  SetInvertedTextXY(8, 12, "Build file copy list");
-
-
 
   /* Search for the 'SourceFiles' section */
   if (!InfFindFirstLine (SetupInf, L"SourceFiles", NULL, &FilesContext))
@@ -2827,6 +2860,12 @@ NtProcessStartup(PPEB Peb)
 	  /* Repair pages */
 	  case REPAIR_INTRO_PAGE:
 	    Page = RepairIntroPage(&Ir);
+	    break;
+
+
+	  /* Emergency pages */
+	  case EMERGENCY_INTRO_PAGE:
+	    Page = EmergencyIntroPage(&Ir);
 	    break;
 
 
