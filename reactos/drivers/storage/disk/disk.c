@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.45 2004/07/13 02:43:06 jimtabor Exp $
+/* $Id: disk.c,v 1.46 2004/07/15 04:04:08 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -850,8 +850,8 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
                         IN PIRP Irp)
 {
   PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
-  PDEVICE_EXTENSION DiskDeviceExtension;
-  PDISK_DATA DiskData;
+  PDEVICE_EXTENSION DiskDeviceExtension, DDE;
+  PDISK_DATA DiskData, DD;
   PPARTITION_INFORMATION PartitionEntry;
   ULONG PartitionNumber;
   NTSTATUS Status;
@@ -860,6 +860,12 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 
   DiskDeviceExtension = (PDEVICE_EXTENSION)DiskDeviceObject->DeviceExtension;
   DiskData = (PDISK_DATA)(DiskDeviceExtension + 1);
+
+  DDE = (PDEVICE_EXTENSION) DiskDeviceExtension->PhysicalDevice->DeviceExtension;
+  DD = (PDISK_DATA)(DDE +1);
+
+  /* Clear flag for Partition0, just incase it was set. */
+  DD->DriveNotReady = FALSE;
 
   Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
   if (!NT_SUCCESS(Status))
@@ -870,25 +876,8 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       return Status;
     }
 
-/* 
-   A previous partition table may exist for this Device Object.
-   We will need to delete this data and force a rebuild.
- */
-  if(DiskDeviceExtension->StartingOffset.QuadPart)
-  {
-     DPRINT("Partition already installed!\n");
-     DiskData->PartitionType = 0;
-     DiskData->PartitionNumber = 0;
-     DiskData->PartitionOrdinal = 0;
-     DiskData->HiddenSectors = 0;
-     DiskData->BootIndicator = 0;
-     DiskData->DriveNotReady = FALSE;
-     DiskDeviceExtension->StartingOffset.QuadPart = 0;
-     DiskDeviceExtension->PartitionLength.QuadPart = 0;
-  }
-
   /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceObject,
+  Status = IoReadPartitionTable(DiskDeviceExtension->PhysicalDevice,
 				DiskDeviceExtension->DiskGeometry->BytesPerSector,
 				TRUE,
 				&PartitionList);
