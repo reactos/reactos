@@ -43,6 +43,7 @@ static KSPIN_LOCK LdtLock;
 
 BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
+  ULONG Base, SegLimit;
   /* 
      Allow invalid descriptors.
   */
@@ -60,10 +61,10 @@ BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 
   if(!ldt_entry->HighWord.Bits.Pres) return TRUE;
 
-  ULONG Base=ldt_entry->BaseLow | (ldt_entry->HighWord.Bytes.BaseMid << 16) |
+  Base=ldt_entry->BaseLow | (ldt_entry->HighWord.Bytes.BaseMid << 16) |
              (ldt_entry->HighWord.Bytes.BaseHi << 24);
 
-  ULONG SegLimit=ldt_entry->LimitLow |
+  SegLimit=ldt_entry->LimitLow |
                  (ldt_entry->HighWord.Bits.LimitHi << 16);
 
   if(ldt_entry->HighWord.Bits.Type & 0x4)
@@ -87,6 +88,9 @@ NtSetLdtEntries (ULONG Selector1,
 {
   KIRQL oldIrql;
   ULONG NewLdtSize = sizeof(LDT_ENTRY);
+  PUSHORT LdtDescriptor;
+  ULONG LdtBase;
+  ULONG LdtLimit;
 
   if((Selector1 & ~0xffff) || (Selector2 & ~0xffff)) return STATUS_INVALID_LDT_DESCRIPTOR;
 
@@ -101,11 +105,11 @@ NtSetLdtEntries (ULONG Selector1,
 
   KeAcquireSpinLock(&LdtLock, &oldIrql);
 
-  PUSHORT LdtDescriptor = (PUSHORT) &KeGetCurrentProcess()->LdtDescriptor[0];
-  ULONG LdtBase = LdtDescriptor[1] |
+  LdtDescriptor = (PUSHORT) &KeGetCurrentProcess()->LdtDescriptor[0];
+  LdtBase = LdtDescriptor[1] |
                   ((LdtDescriptor[2] & 0xff) << 16) |
                   ((LdtDescriptor[3] & ~0xff) << 16);
-  ULONG LdtLimit = LdtDescriptor[0] |
+  LdtLimit = LdtDescriptor[0] |
                    ((LdtDescriptor[3] & 0xf) << 16);
 
   if(LdtLimit < (NewLdtSize - 1))

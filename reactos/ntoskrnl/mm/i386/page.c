@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.57 2003/08/19 23:59:08 dwelch Exp $
+/* $Id: page.c,v 1.58 2003/08/21 04:17:15 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -122,10 +122,13 @@ ProtectToPTE(ULONG flProtect)
 
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
+   PUSHORT LdtDescriptor;
+   ULONG LdtBase;
+
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
 
-   PUSHORT LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor[0];
-   ULONG LdtBase = LdtDescriptor[1] |
+   LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor[0];
+   LdtBase = LdtDescriptor[1] |
                    ((LdtDescriptor[2] & 0xff) << 16) |
                    ((LdtDescriptor[3] & ~0xff) << 16);
 
