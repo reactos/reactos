@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.13 2003/11/22 11:01:28 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.14 2003/12/08 18:05:30 fireball Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -254,7 +254,7 @@ DIB_1BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
     default:
-      DbgPrint("DIB_1BPP_Bitblt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+      DbgPrint("DIB_1BPP_BitBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
       return FALSE;
   }
 
@@ -327,6 +327,16 @@ DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
     }
   return TRUE;
+}
+
+BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                            SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                            RECTL* DestRect, RECTL *SourceRect,
+                            POINTL* MaskOrigin, POINTL* BrushOrigin,
+			                XLATEOBJ *ColorTranslation, ULONG Mode)
+{
+  DbgPrint("DIB_1BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
+  return FALSE;
 }
 
 /* EOF */

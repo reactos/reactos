@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.21 2003/11/22 11:01:28 navaraf Exp $ */
+/* $Id: dib4bpp.c,v 1.22 2003/12/08 18:05:30 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -319,4 +319,15 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     }
   return TRUE;
 }
+
+BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                            SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                            RECTL* DestRect, RECTL *SourceRect,
+                            POINTL* MaskOrigin, POINTL* BrushOrigin,
+			                XLATEOBJ *ColorTranslation, ULONG Mode)
+{
+  DbgPrint("DIB_4BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
+  return FALSE;
+}
+
 /* EOF */
