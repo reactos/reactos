@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.44 2003/11/07 11:48:59 ekohl Exp $
+/* $Id: class2.c,v 1.45 2003/11/11 15:31:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,8 +64,15 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
 static VOID
-ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp, PSCSI_REQUEST_BLOCK Srb, BOOLEAN Associated);
+ScsiClassRetryRequest (PDEVICE_OBJECT DeviceObject,
+		       PIRP Irp,
+		       PSCSI_REQUEST_BLOCK Srb,
+		       BOOLEAN Associated);
+
+static NTSTATUS STDCALL
+ScsiClassCheckVerifyCompletion (IN PDEVICE_OBJECT DeviceObject,
+				IN PIRP Irp,
+				IN PVOID Context);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -454,6 +461,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   ULONG ModifiedControlCode;
   PSCSI_REQUEST_BLOCK Srb;
   PCDB Cdb;
+  PIRP SubIrp;
 
   DPRINT("ScsiClassDeviceControl() called\n");
 
@@ -571,7 +579,55 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   switch (ModifiedControlCode)
     {
       case IOCTL_DISK_CHECK_VERIFY:
-	DPRINT("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY\n");
+	DPRINT ("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY\n");
+
+	if (OutputBufferLength != 0)
+	  {
+	    if (OutputBufferLength < sizeof(ULONG))
+	      {
+		Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+		Irp->IoStatus.Information = 0;
+		ExFreePool (Srb);
+		IoCompleteRequest (Irp,
+				   IO_NO_INCREMENT);
+		return STATUS_BUFFER_TOO_SMALL;
+	      }
+
+	    /* Allocate new IRP for TEST UNIT READY scsi command */
+	    SubIrp = IoAllocateIrp ((CCHAR)DeviceObject->StackSize + 3,
+				    FALSE);
+	    if (SubIrp == NULL)
+	      {
+		Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+		Irp->IoStatus.Information = 0;
+		ExFreePool (Srb);
+		IoCompleteRequest (Irp,
+				   IO_NO_INCREMENT);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	      }
+
+	    SubIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
+	    IoSetNextIrpStackLocation (SubIrp);
+
+	    NextStack = IoGetCurrentIrpStackLocation (SubIrp);
+	    NextStack->Parameters.Others.Argument1 = Irp;
+	    NextStack->DeviceObject = DeviceObject;
+
+	    IoSetCompletionRoutine (SubIrp,
+				    ScsiClassCheckVerifyCompletion,
+				    NULL,
+				    TRUE,
+				    TRUE,
+				    TRUE);
+
+	    IoSetNextIrpStackLocation (SubIrp);
+	    NextStack = IoGetCurrentIrpStackLocation (SubIrp);
+	    NextStack->DeviceObject = DeviceObject;
+
+	    IoMarkIrpPending (Irp);
+
+	    Irp = SubIrp;
+	  }
 
 	/* Initialize SRB operation */
 	Srb->CdbLength = 6;
@@ -1286,6 +1342,16 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
 					  0,
 					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
 					  &Status);
+
+      /* Retry the request if verify should be overridden */
+      if ((IrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME) &&
+	  Status == STATUS_VERIFY_REQUIRED)
+	{
+	  Status = STATUS_IO_DEVICE_ERROR;
+	  Retry = TRUE;
+	}
+
+      /* Retry the request */
       if ((Retry) &&
 	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
 	{
@@ -1313,6 +1379,11 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
 	  IoSetHardErrorOrVerifyDevice(Irp,
 				       DeviceObject);
 	}
+    }
+
+  if (Irp->PendingReturned)
+    {
+      IoMarkIrpPending (Irp);
     }
 
   if (DeviceExtension->ClassStartIo != NULL)
@@ -1371,7 +1442,7 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
    */
 
   Srb = (PSCSI_REQUEST_BLOCK)Context;
-  
+
   DPRINT("Srb %p\n", Srb);
 
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
@@ -1394,6 +1465,15 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
 					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
 					  &Status);
 
+      /* Retry the request if verify should be overridden */
+      if ((IrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME) &&
+	  Status == STATUS_VERIFY_REQUIRED)
+	{
+	  Status = STATUS_IO_DEVICE_ERROR;
+	  Retry = TRUE;
+	}
+
+      /* Retry the request */
       if ((Retry) &&
 	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
 	{
@@ -1607,6 +1687,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
   NTSTATUS Status;
   ULONG LastSector;
   ULONG SectorSize;
+  ULONG RetryCount = 1;
 
   DPRINT("ScsiClassReadDriveCapacity() called\n");
 
@@ -1627,7 +1708,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
   Cdb = (PCDB)Srb.Cdb;
   Cdb->CDB10.OperationCode = SCSIOP_READ_CAPACITY;
 
-
+TryAgain:
   Status = ScsiClassSendSrbSynchronous(DeviceObject,
 				       &Srb,
 				       CapacityBuffer,
@@ -1670,7 +1751,18 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 
       DPRINT("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
     }
-  else
+
+  /* Try again if device needs to be verified */
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      if (RetryCount > 0)
+	{
+	  RetryCount--;
+	  goto TryAgain;
+	}
+    }
+
+  if (!NT_SUCCESS(Status))
     {
       /* Use default values if disk geometry cannot be read */
       RtlZeroMemory(DeviceExtension->DiskGeometry,
@@ -2298,29 +2390,27 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION CurrentIrpStack;
   PIO_STACK_LOCATION NextIrpStack;
 
-  ULONG TransferLength;
-
-  DPRINT("ScsiPortRetryRequest() called\n");
+  DPRINT ("ScsiPortRetryRequest() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   CurrentIrpStack = IoGetCurrentIrpStackLocation(Irp);
   NextIrpStack = IoGetNextIrpStackLocation(Irp);
 
-  if (CurrentIrpStack->MajorFunction != IRP_MJ_READ &&
-      CurrentIrpStack->MajorFunction != IRP_MJ_WRITE)
+  if (CurrentIrpStack->MajorFunction == IRP_MJ_READ)
     {
-      /* We shouldn't setup the buffer pointer and transfer length on read/write requests. */
-      if (Irp->MdlAddress != NULL)
-        {
-          TransferLength = Irp->MdlAddress->ByteCount;
-        }
-      else
-        {
-          TransferLength = 0;
-        }
-
-      Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-      Srb->DataTransferLength = TransferLength;
+      Srb->DataTransferLength = CurrentIrpStack->Parameters.Read.Length;
+    }
+  else if (CurrentIrpStack->MajorFunction == IRP_MJ_WRITE)
+    {
+      Srb->DataTransferLength = CurrentIrpStack->Parameters.Write.Length;
+    }
+  else if (Irp->MdlAddress != NULL)
+    {
+      Srb->DataTransferLength = Irp->MdlAddress->ByteCount;
+    }
+  else
+    {
+      Srb->DataTransferLength = 0;
     }
 
   Srb->SrbStatus = 0;
@@ -2356,6 +2446,44 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
 	       Irp);
 
   DPRINT("ScsiPortRetryRequest() done\n");
+}
+
+
+static NTSTATUS STDCALL
+ScsiClassCheckVerifyCompletion (IN PDEVICE_OBJECT DeviceObject,
+				IN PIRP Irp,
+				IN PVOID Context)
+{
+  PDEVICE_EXTENSION DeviceExtension;
+  PDEVICE_EXTENSION PhysicalExtension;
+  PIO_STACK_LOCATION Stack;
+  PIRP OrigIrp;
+
+  DPRINT ("ScsiClassCheckVerifyCompletion() called\n");
+
+  /* Get the physical device extension */
+  DeviceExtension = DeviceObject->DeviceExtension;
+  PhysicalExtension = DeviceExtension->PhysicalDevice->DeviceExtension;
+
+  /* Get the original IRP */
+  Stack = IoGetCurrentIrpStackLocation (Irp);
+  OrigIrp = (PIRP)Stack->Parameters.Others.Argument1;
+
+  /* Copy the media change count */
+  *((PULONG)(OrigIrp->AssociatedIrp.SystemBuffer)) =
+    PhysicalExtension->MediaChangeCount;
+
+  /* Complete the original IRP */
+  OrigIrp->IoStatus.Status = Irp->IoStatus.Status;
+  OrigIrp->IoStatus.Information = sizeof(ULONG);
+
+  IoCompleteRequest (OrigIrp,
+		     IO_DISK_INCREMENT);
+
+  /* Release the current IRP */
+  IoFreeIrp (Irp);
+
+  return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 /* EOF */
