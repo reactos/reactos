@@ -3,20 +3,13 @@
 
 LRESULT STDCALL
 IntCallWindowProc(WNDPROC Proc,
-		   HWND Wnd,
-		   UINT Message,
-		   WPARAM wParam,
-		   LPARAM lParam);
-LRESULT STDCALL
-IntCallTrampolineWindowProc(WNDPROC Proc,
-			     HWND Wnd,
-			     UINT Message,
-			     WPARAM wParam,
-			     LPARAM lParam);
-LRESULT STDCALL
-IntSendNCCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
-LRESULT STDCALL
-IntSendCREATEMessage(HWND Wnd, CREATESTRUCTW* CreateStruct);
+                  BOOLEAN IsAnsiProc,
+                  HWND Wnd,
+                  UINT Message,
+                  WPARAM wParam,
+                  LPARAM lParam,
+                  INT lParamBufferSize);
+
 VOID STDCALL
 IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
@@ -24,24 +17,6 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    ULONG_PTR CompletionCallbackContext,
 			    LRESULT Result);
 
-LRESULT STDCALL
-IntSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
-			  NCCALCSIZE_PARAMS* Params);
-
-LRESULT STDCALL
-IntSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
-
-LRESULT STDCALL
-IntSendWINDOWPOSCHANGINGMessage(HWND Wnd, WINDOWPOS* WindowPos);
-
-LRESULT STDCALL
-IntSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos);
-
-LRESULT STDCALL
-IntSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
-
-LRESULT STDCALL
-IntSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
 
 HMENU STDCALL
 IntLoadSysMenuTemplate();

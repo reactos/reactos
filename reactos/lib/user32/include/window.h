@@ -21,3 +21,6 @@ UserGetFrameSize(ULONG Style, ULONG ExStyle, SIZE *Size);
 DWORD
 SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging );
 
+LRESULT FASTCALL IntCallWindowProcW(BOOL IsAnsiProc, WNDPROC WndProc,
+                                    HWND hWnd, UINT Msg, WPARAM wParam,
+                                    LPARAM lParam);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.5 2003/12/14 11:36:42 gvg Exp $
+/* $Id: accelerator.c,v 1.6 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -351,12 +351,12 @@ IntTranslateAccelerator(HWND hWnd,
         nPos = cmd;
         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
         {
-			IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L, TRUE);
+			IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
             if(hSubMenu != hSysMenu)
             {
                 nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
                 TRACE_(accel)("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
-                IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE), TRUE);
+                IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
             }
             uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
         }
@@ -366,12 +366,12 @@ IntTranslateAccelerator(HWND hWnd,
             nPos = cmd;
             if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
             {
-                IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L, TRUE);
+                IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
                 if(hSubMenu != hMenu)
                 {
                     nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
                     TRACE_(accel)("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
-                    IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE), TRUE);
+                    IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
                 }
                 uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
             }
@@ -412,12 +412,12 @@ IntTranslateAccelerator(HWND hWnd,
   if (mesg == WM_COMMAND)
     {
       DPRINT(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
-      IntSendMessage(hWnd, mesg, 0x10000 | cmd, 0L, TRUE);
+      IntSendMessage(hWnd, mesg, 0x10000 | cmd, 0L);
     }
   else if (mesg == WM_SYSCOMMAND)
     {
       DPRINT(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
-      IntSendMessage(hWnd, mesg, cmd, 0x00010000L, TRUE);
+      IntSendMessage(hWnd, mesg, cmd, 0x00010000L);
     }
   else
     {

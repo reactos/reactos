@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.9 2003/12/20 15:42:47 weiden Exp $
+/* $Id: caret.c,v 1.10 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,7 +33,7 @@ IntHideCaret(PTHRDCARETINFO CaretInfo)
 {
   if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
   {
-    IntCallWindowProc(NULL, CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+    IntSendMessage(CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
     CaretInfo->Showing = 0;
     return TRUE;
   }
@@ -204,7 +204,7 @@ IntSetCaretPos(int X, int Y)
       ThreadQueue->CaretInfo->Showing = 0;
       ThreadQueue->CaretInfo->Pos.x = X;
       ThreadQueue->CaretInfo->Pos.y = Y;
-      IntCallWindowProc(NULL, ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+      IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       IntSetTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
     }
     return TRUE;
@@ -238,7 +238,7 @@ IntDrawCaret(HWND hWnd)
   if(ThreadQueue->CaretInfo->hWnd && ThreadQueue->CaretInfo->Visible && 
      ThreadQueue->CaretInfo->Showing)
   {
-    IntCallWindowProc(NULL, ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+    IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
     ThreadQueue->CaretInfo->Showing = 1;
   }
 }
@@ -402,7 +402,7 @@ NtUserShowCaret(
     ThreadQueue->CaretInfo->Visible = 1;
     if(!ThreadQueue->CaretInfo->Showing)
     {
-      IntCallWindowProc(NULL, ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+      IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
     }
     IntSetTimer(hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
   }

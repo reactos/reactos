@@ -144,8 +144,7 @@ LRESULT STDCALL
 IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
-		LPARAM lParam,
-		BOOL KernelMessage);
+		LPARAM lParam);
 VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID STDCALL

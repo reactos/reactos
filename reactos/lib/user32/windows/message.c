@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.31 2003/12/19 19:30:05 weiden Exp $
+/* $Id: message.c,v 1.32 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -399,7 +399,7 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-STATIC LRESULT FASTCALL
+LRESULT FASTCALL
 IntCallWindowProcW(BOOL IsAnsiProc,
                    WNDPROC WndProc,
                    HWND hWnd,

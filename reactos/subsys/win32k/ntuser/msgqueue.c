@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.57 2003/12/25 12:26:35 navaraf Exp $
+/* $Id: msgqueue.c,v 1.58 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -266,7 +266,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         
         if(Window)
         {
-          Result = IntSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam, TRUE);
+          Result = IntSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
           IntReleaseWindowObject(Window);
           
           switch (Result)
@@ -735,8 +735,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   Result = IntSendMessage(Message->Msg.hwnd,
                           Message->Msg.message,
                           Message->Msg.wParam,
-                          Message->Msg.lParam,
-                          TRUE);
+                          Message->Msg.lParam);
 
   /* Let the sender know the result. */
   if (Message->Result != NULL)

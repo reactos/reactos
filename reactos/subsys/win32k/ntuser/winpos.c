@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.73 2003/12/26 16:19:15 weiden Exp $
+/* $Id: winpos.c,v 1.74 2003/12/26 22:52:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -219,7 +219,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
     {
       if (WindowObject->Style & WS_MINIMIZE)
 	{
-	  if (!IntSendMessage(WindowObject->Self, WM_QUERYOPEN, 0, 0, TRUE))
+	  if (!IntSendMessage(WindowObject->Self, WM_QUERYOPEN, 0, 0))
 	    {
 	      return(SWP_NOSIZE | SWP_NOMOVE);
 	    }
@@ -366,7 +366,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   
   WinPosFillMinMaxInfoStruct(Window, &MinMax);
   
-  IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
+  IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
 				MinMax.ptMinTrackSize.x);
@@ -398,8 +398,7 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
       WM_ACTIVATE,
       MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
       (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
-      (LPARAM)IntGetDesktopWindow(),  /* FIXME: Previous active window */
-      TRUE);
+      (LPARAM)IntGetDesktopWindow());  /* FIXME: Previous active window */
 #endif
   IntSetForegroundWindow(WindowObject);
 
@@ -436,7 +435,7 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = IntSendNCCALCSIZEMessage(Window->Self, TRUE, NULL, &params);
+      wvrFlags = IntSendMessage(Window->Self, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
@@ -489,7 +488,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 
   if (!(WinPos->flags & SWP_NOSENDCHANGING))
     {
-      IntSendWINDOWPOSCHANGINGMessage(WindowObject->Self, WinPos);
+      IntSendMessage(WindowObject->Self, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
     }
   
   *WindowRect = WindowObject->WindowRect;
@@ -1046,7 +1045,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    {
       if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
       {
-         IntSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0, TRUE);
+         IntSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
       }
       else
       {
@@ -1055,7 +1054,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
-      IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
+      IntSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
 
    IntReleaseWindowObject(Window);
 
@@ -1066,7 +1065,7 @@ LRESULT FASTCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
   *ClientRect = *WindowRect;
-  return(IntSendNCCALCSIZEMessage(Wnd, FALSE, ClientRect, NULL));
+  return(IntSendMessage(Wnd, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect));
 }
 
 BOOLEAN FASTCALL
@@ -1169,7 +1168,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   ShowFlag = (Cmd != SW_HIDE);
   if (ShowFlag != WasVisible)
     {
-      IntSendMessage(Wnd, WM_SHOWWINDOW, ShowFlag, 0, TRUE);
+      IntSendMessage(Wnd, WM_SHOWWINDOW, ShowFlag, 0);
       /* 
        * FIXME: Need to check the window wasn't destroyed during the 
        * window procedure. 
@@ -1226,10 +1225,10 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
                      MAKELONG(Window->ClientRect.right - 
                               Window->ClientRect.left,
                               Window->ClientRect.bottom -
-                              Window->ClientRect.top), TRUE);
+                              Window->ClientRect.top));
       IntSendMessage(Wnd, WM_MOVE, 0,
                      MAKELONG(Window->ClientRect.left,
-                              Window->ClientRect.top), TRUE);
+                              Window->ClientRect.top));
     }
 
   /* Activate the window if activation is not requested and the window is not minimized */
@@ -1341,7 +1340,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
   if ((*Window)->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
       HitTest = IntSendMessage((*Window)->Self, WM_NCHITTEST, 0,
-				MAKELONG(Point.x, Point.y), FALSE);
+				MAKELONG(Point.x, Point.y));
       /* FIXME: Check for HTTRANSPARENT here. */
     }
   else

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.22 2003/12/23 08:48:59 navaraf Exp $
+/* $Id: scrollbar.c,v 1.23 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -582,7 +582,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
    }
 
    if (bRedraw)
-      IntSendMessage(Window->Self, WM_NCPAINT, 1, 0, TRUE);
+      IntSendMessage(Window->Self, WM_NCPAINT, 1, 0);
 
    /* Return current position */
    return Info->nPos;

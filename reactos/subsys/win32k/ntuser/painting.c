@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.52 2003/12/23 21:33:25 weiden Exp $
+ *  $Id: painting.c,v 1.53 2003/12/26 22:52:11 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -159,7 +159,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
-          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0, TRUE);
+          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -170,7 +170,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
                                            DCX_INTERSECTUPDATE);
               if (hDC != NULL)
                 {
-                  if (IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0, TRUE))
+                  if (IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                     {
                       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
                     }
@@ -184,7 +184,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           if (Window->UpdateRegion != NULL ||
               Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
-              IntSendMessage(hWnd, WM_PAINT, 0, 0, TRUE);
+              IntSendMessage(hWnd, WM_PAINT, 0, 0);
               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
                 {
                   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
@@ -774,7 +774,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
-      lPs->fErase = !IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)lPs->hdc, 0, TRUE);
+      lPs->fErase = !IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)lPs->hdc, 0);
    }
    else
    {

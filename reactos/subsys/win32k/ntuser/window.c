@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.173 2003/12/23 18:12:38 weiden Exp $
+/* $Id: window.c,v 1.174 2003/12/26 22:52:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -265,7 +265,7 @@ static void IntSendDestroyMsg(HWND Wnd)
   /*
    * Send the WM_DESTROY to the window.
    */
-  IntSendMessage(Wnd, WM_DESTROY, 0, 0, TRUE);
+  IntSendMessage(Wnd, WM_DESTROY, 0, 0);
 
   /*
    * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
@@ -358,7 +358,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       /*
        * Send the WM_NCDESTROY to the window being destroyed.
        */
-      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0, TRUE);
+      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
     }
 
   /* reset shell window handles */
@@ -1329,7 +1329,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
   DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
-  Result = IntSendNCCREATEMessage(WindowObject->Self, &Cs);
+  Result = IntSendMessage(WindowObject->Self, WM_NCCREATE, 0, (LPARAM) &Cs);
   if (!Result)
     {
       /* FIXME: Cleanup. */
@@ -1373,7 +1373,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   /* Send the WM_CREATE message. */
   DPRINT("NtUserCreateWindowEx(): about to send CREATE message.\n");
-  Result = IntSendCREATEMessage(WindowObject->Self, &Cs);
+  Result = IntSendMessage(WindowObject->Self, WM_CREATE, 0, (LPARAM) &Cs);
   if (Result == (LRESULT)-1)
     {
       /* FIXME: Cleanup. */
@@ -1400,7 +1400,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.bottom - 
 		  WindowObject->ClientRect.top);
-      IntCallWindowProc(NULL, WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
+      IntSendMessage(WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
           lParam);
 
       DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
@@ -1415,7 +1415,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	  lParam = MAKE_LONG(WindowObject->ClientRect.left,
 	      WindowObject->ClientRect.top);
 	}
-      IntCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
+      IntSendMessage(WindowObject->Self, WM_MOVE, 0, lParam);
     }
 
   /* Show or maybe minimize or maximize the window. */
@@ -1441,10 +1441,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
     {
       DPRINT("NtUserCreateWindow(): About to notify parent\n");
-      IntCallWindowProc(NULL, WindowObject->Parent->Self,
-			 WM_PARENTNOTIFY, 
-			 MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
-			 (LPARAM)WindowObject->Self);
+      IntSendMessage(WindowObject->Parent->Self,
+                     WM_PARENTNOTIFY, 
+                     MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
+                     (LPARAM)WindowObject->Self);
     }
 
   if (dwStyle & WS_VISIBLE)
@@ -2518,18 +2518,18 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
                  Style.styleNew &= ~WS_EX_TOPMOST;
             }
 
-            IntSendSTYLECHANGINGMessage(hWnd, GWL_EXSTYLE, &Style);
+            IntSendMessage(hWnd, WM_STYLECHANGING, GWL_EXSTYLE, (LPARAM) &Style);
             WindowObject->ExStyle = (DWORD)Style.styleNew;
-            IntSendSTYLECHANGEDMessage(hWnd, GWL_EXSTYLE, &Style);
+            IntSendMessage(hWnd, WM_STYLECHANGED, GWL_EXSTYLE, (LPARAM) &Style);
             break;
 
          case GWL_STYLE:
             OldValue = (LONG) WindowObject->Style;
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
-            IntSendSTYLECHANGINGMessage(hWnd, GWL_STYLE, &Style);
+            IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
             WindowObject->Style = (DWORD)Style.styleNew;
-            IntSendSTYLECHANGEDMessage(hWnd, GWL_STYLE, &Style);
+            IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;
 
          case GWL_WNDPROC:

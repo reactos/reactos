@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.5 2003/12/14 11:36:42 gvg Exp $
+ * $Id: focus.c,v 1.6 2003/12/26 22:52:11 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -56,10 +56,10 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0, TRUE);
+      IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
       IntSendMessage(hWndPrev, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
-         (LPARAM)NULL, TRUE);
+         (LPARAM)NULL);
    }
 }
 
@@ -69,10 +69,10 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
    if (hWnd)
    {
       /* Send palette messages */
-      if (IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0, TRUE))
+      if (IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
          IntSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
-            (WPARAM)hWnd, 0, TRUE);
+            (WPARAM)hWnd, 0);
       }
 
       WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
@@ -80,11 +80,11 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
 
       /* FIXME: IntIsWindow */
 
-      IntSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0, TRUE);
+      IntSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       IntSendMessage(hWnd, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
-         (LPARAM)hWndPrev, TRUE);
+         (LPARAM)hWndPrev);
    }
 }
 
@@ -93,7 +93,7 @@ IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      IntSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0, TRUE);
+      IntSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -102,7 +102,7 @@ IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWnd)
    {
-      IntSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0, TRUE);
+      IntSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -326,7 +326,7 @@ NtUserSetCapture(HWND hWnd)
       }
    }
    hWndPrev = ThreadQueue->CaptureWindow;
-   IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd, TRUE);
+   IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
 /*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
    ThreadQueue->CaptureWindow = hWnd;
 /*   ExReleaseFastMutex(&ThreadQueue->Lock);*/

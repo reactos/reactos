@@ -58,22 +58,6 @@ Init(VOID)
     (PVOID)User32CallWindowProcFromKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
     (PVOID)User32CallSendAsyncProcForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDNCCREATE] =
-    (PVOID)User32SendNCCREATEMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDCREATE] =
-    (PVOID)User32SendCREATEMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDGETMINMAXINFO] =
-    (PVOID)User32SendGETMINMAXINFOMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDNCCALCSIZE] =
-    (PVOID)User32SendNCCALCSIZEMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDWINDOWPOSCHANGING] =
-    (PVOID)User32SendWINDOWPOSCHANGINGMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDWINDOWPOSCHANGED] =
-    (PVOID)User32SendWINDOWPOSCHANGEDMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDSTYLECHANGING] =
-    (PVOID)User32SendSTYLECHANGINGMessageForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDSTYLECHANGED] =
-    (PVOID)User32SendSTYLECHANGEDMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
     (PVOID)User32LoadSysMenuTemplateForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
