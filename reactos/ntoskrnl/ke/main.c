@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.104 2001/09/01 15:36:44 chorns Exp $
+/* $Id: main.c,v 1.105 2001/09/04 21:06:27 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -905,12 +905,13 @@ ExpInitializeExecutive(VOID)
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
       name = (PCHAR)KeLoaderModules[i].String;
       if (RtlpCheckFileNameExtension(name, "") ||
 	  RtlpCheckFileNameExtension(name, ".hiv"))
 	{
 	  CPRINT("Process registry chunk at %08lx\n", start);
-	  CmImportHive((PCHAR) start);
+	  CmImportHive((PCHAR)start, length);
 	}
     }
 

@@ -50,7 +50,7 @@ VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmInitializeRegistry2(VOID);
 VOID CmShutdownRegistry(VOID);
-VOID CmImportHive(PCHAR);
+VOID CmImportHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 NTSTATUS RtlpInitNlsSections(ULONG Mod1Start,

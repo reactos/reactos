@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.2 2001/08/30 20:38:18 dwelch Exp $
+/* $Id: import.c,v 1.3 2001/09/04 21:05:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -237,8 +237,11 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
     while (*regChunk != 0 && *regChunk != '\"')
     {
       dataSize++;
+      dataSize++;
       regChunk++;
     }
+    dataSize++;
+    dataSize++;
   }
   else if (strcmp (dataFormat, "hex") == 0)
   {
@@ -252,6 +255,7 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
         regChunk++;
         if (*regChunk == '\\')
         {
+          regChunk++;
           regChunk = skipWhitespaceInChunk (regChunk);
         }
       }
@@ -278,19 +282,24 @@ allocateDataBuffer (PVOID * data, int * dataBufferSize, int dataSize)
 
   return  TRUE;
 }
-      
-static PCHAR 
+
+static PCHAR
 getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
 {
   char  dataValue;
-
+  PWCHAR ptr;
+  
   if (strcmp (dataFormat, "string") == 0)
   {
+    /* convert quoted string to zero-terminated Unicode string */
+    ptr = (PWCHAR)data;
     regChunk++;
     while (*regChunk != 0 && *regChunk != '\"')
     {
-      *data++ = *regChunk++;
+      *ptr++ = (WCHAR)*regChunk++;
     }
+    *ptr = 0;
+    regChunk++;
   }
   else if (strcmp (dataFormat, "hex") == 0)
   {
@@ -308,6 +317,7 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
         regChunk++;
         if (*regChunk == '\\')
         {
+          regChunk++;
           regChunk = skipWhitespaceInChunk (regChunk);
         }
       }
@@ -349,8 +359,9 @@ setKeyValue (HANDLE  currentKey,
   return  TRUE;
 }
 
-VOID 
-CmImportHive(PCHAR  regChunk)
+VOID
+CmImportHive(PCHAR  ChunkBase,
+	     ULONG  ChunkSize)
 {
   HANDLE  currentKey = INVALID_HANDLE_VALUE;
   int  newKeySize;
@@ -360,12 +371,15 @@ CmImportHive(PCHAR  regChunk)
   int  dataSize = 0;
   int  dataBufferSize = 0;
   PVOID  data = 0;
+  PCHAR regChunk;
 
-  regChunk = checkAndSkipMagic (regChunk);
+  DPRINT("ChunkBase %p  ChunkSize %lx\n", ChunkBase, ChunkSize);
+
+  regChunk = checkAndSkipMagic (ChunkBase);
   if (regChunk == 0)
     return;
 
-  while (regChunk != 0 && *regChunk != 0)
+  while (regChunk != 0 && *regChunk != 0 && (((ULONG)regChunk-(ULONG)ChunkBase) < ChunkSize))
   {
     regChunk = skipWhitespaceInChunk (regChunk);
     if (regChunk == 0)
@@ -375,6 +389,7 @@ CmImportHive(PCHAR  regChunk)
     {
       if (currentKey != INVALID_HANDLE_VALUE)
       {
+        DPRINT("Closing current key: 0x%lx\n", currentKey);
         NtClose (currentKey);
         currentKey = INVALID_HANDLE_VALUE;
       }
