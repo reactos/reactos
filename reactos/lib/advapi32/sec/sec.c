@@ -21,12 +21,11 @@ GetSecurityDescriptorControl (
 	LPDWORD				lpdwRevision
 	)
 {
-#if 0
 	NTSTATUS Status;
 
 	Status = RtlGetControlSecurityDescriptor (pSecurityDescriptor,
 	                                          pControl,
-	                                          lpdwRevision);
+	                                          (PULONG)lpdwRevision);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastError (RtlNtStatusToDosError (Status));
@@ -34,10 +33,6 @@ GetSecurityDescriptorControl (
 	}
 
 	return TRUE;
-#endif
-
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
@@ -133,7 +128,34 @@ GetSecurityDescriptorOwner (
 }
 
 
-/* GetSecurityDescriptorSacl */
+BOOL
+STDCALL
+GetSecurityDescriptorSacl (
+	PSECURITY_DESCRIPTOR	pSecurityDescriptor,
+	LPBOOL			lpbSaclPresent,
+	PACL			*pSacl,
+	LPBOOL			lpbSaclDefaulted
+	)
+{
+	BOOLEAN SaclPresent;
+	BOOLEAN SaclDefaulted;
+	NTSTATUS Status;
+
+	Status = RtlGetSaclSecurityDescriptor (pSecurityDescriptor,
+	                                       &SaclPresent,
+	                                       pSacl,
+	                                       &SaclDefaulted);
+	*lpbSaclPresent = (BOOL)SaclPresent;
+	*lpbSaclDefaulted = (BOOL)SaclDefaulted;
+
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 
 BOOL
@@ -162,13 +184,75 @@ IsValidSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor
 	)
 {
-	BOOL Result;
+	BOOLEAN Result;
 
 	Result = RtlValidSecurityDescriptor (pSecurityDescriptor);
 	if (Result == FALSE)
 		SetLastError (RtlNtStatusToDosError (STATUS_INVALID_SECURITY_DESCR));
 
-	return Result;
+	return (BOOL)Result;
+}
+
+
+WINBOOL
+STDCALL
+MakeAbsoluteSD (
+	PSECURITY_DESCRIPTOR	pSelfRelativeSecurityDescriptor,
+	PSECURITY_DESCRIPTOR	pAbsoluteSecurityDescriptor,
+	LPDWORD			lpdwAbsoluteSecurityDescriptorSize,
+	PACL			pDacl,
+	LPDWORD			lpdwDaclSize,
+	PACL			pSacl,
+	LPDWORD			lpdwSaclSize,
+	PSID			pOwner,
+	LPDWORD			lpdwOwnerSize,
+	PSID			pPrimaryGroup,
+	LPDWORD			lpdwPrimaryGroupSize
+	)
+{
+	NTSTATUS Status;
+
+	Status = RtlSelfRelativeToAbsoluteSD (pSelfRelativeSecurityDescriptor,
+	                                      pAbsoluteSecurityDescriptor,
+	                                      lpdwAbsoluteSecurityDescriptorSize,
+	                                      pDacl,
+	                                      lpdwDaclSize,
+	                                      pSacl,
+	                                      lpdwSaclSize,
+	                                      pOwner,
+	                                      lpdwOwnerSize,
+	                                      pPrimaryGroup,
+	                                      lpdwPrimaryGroupSize);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+WINBOOL
+STDCALL
+MakeSelfRelativeSD (
+	PSECURITY_DESCRIPTOR	pAbsoluteSecurityDescriptor,
+	PSECURITY_DESCRIPTOR	pSelfRelativeSecurityDescriptor,
+	LPDWORD			lpdwBufferLength
+	)
+{
+	NTSTATUS Status;
+
+	Status = RtlAbsoluteToSelfRelativeSD (pAbsoluteSecurityDescriptor,
+	                                      pSelfRelativeSecurityDescriptor,
+	                                      (PULONG)lpdwBufferLength);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -243,7 +327,28 @@ SetSecurityDescriptorOwner (
 }
 
 
-/* SetSecurityDescriptorSacl */
+BOOL
+STDCALL
+SetSecurityDescriptorSacl (
+	PSECURITY_DESCRIPTOR	pSecurityDescriptor,
+	BOOL			bSaclPresent,
+	PACL			pSacl,
+	BOOL			bSaclDefaulted
+	)
+{
+	NTSTATUS Status;
 
+	Status = RtlSetSaclSecurityDescriptor (pSecurityDescriptor,
+	                                       bSaclPresent,
+	                                       pSacl,
+	                                       bSaclDefaulted);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 /* EOF */

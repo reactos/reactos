@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.8 2000/04/05 15:47:40 ekohl Exp $ */
+/* $Id: sefuncs.h,v 1.9 2000/04/06 02:27:17 ekohl Exp $ */
 NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
 NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
 NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
@@ -15,6 +15,7 @@ BOOLEAN STDCALL RtlFirstFreeAce(PACL Acl, PACE* Ace);
 NTSTATUS STDCALL RtlGetAce(PACL Acl, ULONG AceIndex, PACE *Ace);
 
 NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
+NTSTATUS STDCALL RtlMakeSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
 NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
 BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
 ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
@@ -24,6 +25,20 @@ NTSTATUS STDCALL RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
 NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Owner, PBOOLEAN OwnerDefaulted);
 NTSTATUS STDCALL RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID Group, BOOLEAN GroupDefaulted);
 NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Group, PBOOLEAN GroupDefaulted);
+NTSTATUS STDCALL RtlGetControlSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSECURITY_DESCRIPTOR_CONTROL Control, PULONG Revision);
+NTSTATUS STDCALL RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, BOOLEAN SaclPresent, PACL Sacl, BOOLEAN SaclDefaulted);
+NTSTATUS STDCALL RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN SaclPresent, PACL* Sacl, PBOOLEAN SaclDefauted);
+NTSTATUS STDCALL RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
+					      PSECURITY_DESCRIPTOR AbsSD,
+					      LPDWORD AbsSDSize,
+					      PACL Dacl,
+					      LPDWORD DaclSize,
+					      PACL Sacl,
+					      LPDWORD SaclSize,
+					      PSID Owner,
+					      LPDWORD OwnerSize,
+					      PSID Group,
+					      LPDWORD GroupSize);
 
 NTSTATUS STDCALL RtlAllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 					      UCHAR SubAuthorityCount,
@@ -48,6 +63,10 @@ ULONG STDCALL RtlLengthSid (PSID Sid);
 PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
 PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid);
 BOOLEAN STDCALL RtlValidSid (PSID Sid);
+
+BOOLEAN STDCALL RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
+BOOLEAN STDCALL RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
+VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING GenericMapping);
 
 BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 		      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,

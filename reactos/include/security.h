@@ -28,16 +28,16 @@ typedef ULONG TOKEN_TYPE, *PTOKEN_TYPE;
 #define TokenPrimary           ((TOKEN_TYPE)1)
 #define TokenImpersonation     ((TOKEN_TYPE)2)
 
-typedef ULONG ACCESS_MASK;
+typedef ULONG ACCESS_MASK, *PACCESS_MASK;
 typedef ULONG ACCESS_MODE, *PACCESS_MODE;
 
-typedef struct _SECURITY_QUALITY_OF_SERVICE { 
-  DWORD Length; 
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
+typedef struct _SECURITY_QUALITY_OF_SERVICE {
+  DWORD Length;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
   /* SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode; */
-  WINBOOL ContextTrackingMode; 
-  BOOLEAN EffectiveOnly; 
-} SECURITY_QUALITY_OF_SERVICE; 
+  WINBOOL ContextTrackingMode;
+  BOOLEAN EffectiveOnly;
+} SECURITY_QUALITY_OF_SERVICE;
 
 typedef SECURITY_QUALITY_OF_SERVICE* PSECURITY_QUALITY_OF_SERVICE;
 
@@ -61,7 +61,7 @@ typedef struct _SID_IDENTIFIER_AUTHORITY
 
 #define SECURITY_WORLD_SID_AUTHORITY      {0,0,0,0,0,1}
 
-typedef struct _SID 
+typedef struct _SID
 {
    UCHAR  Revision;
    UCHAR  SubAuthorityCount;

@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.7 2000/04/05 01:40:35 ekohl Exp $
+; $Id: advapi32.edf,v 1.8 2000/04/06 02:29:43 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -151,7 +151,7 @@ GetSecurityDescriptorDacl=GetSecurityDescriptorDacl@16
 GetSecurityDescriptorGroup=GetSecurityDescriptorGroup@12
 GetSecurityDescriptorLength=GetSecurityDescriptorLength@4
 GetSecurityDescriptorOwner=GetSecurityDescriptorOwner@12
-;GetSecurityDescriptorSacl=GetSecurityDescriptorSacl@16
+GetSecurityDescriptorSacl=GetSecurityDescriptorSacl@16
 ;GetSecurityInfo=GetSecurityInfo@32
 GetServiceDisplayNameA=GetServiceDisplayNameA@16
 GetServiceDisplayNameW=GetServiceDisplayNameW@16
@@ -250,8 +250,8 @@ LockServiceDatabase=LockServiceDatabase@4
 ;LsaSetSystemAccessAccount=LsaSetSystemAccessAccount@8
 ;LsaSetTrustedDomainInformation=LsaSetTrustedDomainInformation@16
 ;LsaStorePrivateData=LsaStorePrivateData@12
-;MakeAbsoluteSD=MakeAbsoluteSD@44
-;MakeSelfRelativeSD=MakeSelfRelativeSD@12
+MakeAbsoluteSD=MakeAbsoluteSD@44
+MakeSelfRelativeSD=MakeSelfRelativeSD@12
 ;MapGenericMask=MapGenericMask@8
 ;NTAccessMaskToProvAccessRights=NTAccessMaskToProvAccessRights@12
 ;NotifyBootConfigStatus=NotifyBootConfigStatus@4
@@ -359,7 +359,7 @@ SetAclInformation=SetAclInformation@16
 SetSecurityDescriptorDacl=SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup=SetSecurityDescriptorGroup@12
 SetSecurityDescriptorOwner=SetSecurityDescriptorOwner@12
-;SetSecurityDescriptorSacl=SetSecurityDescriptorSacl@16
+SetSecurityDescriptorSacl=SetSecurityDescriptorSacl@16
 ;SetSecurityInfo=SetSecurityInfo@28
 ;SetServiceBits=SetServiceBits@16
 SetServiceObjectSecurity=SetServiceObjectSecurity@12

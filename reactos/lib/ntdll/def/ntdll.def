@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.49 2000/04/05 01:38:50 ekohl Exp $
+; $Id: ntdll.def,v 1.50 2000/04/06 02:28:45 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -253,8 +253,8 @@ RtlAppendUnicodeStringToString@12
 RtlAppendUnicodeToString@12
 ;RtlApplyRXact
 ;RtlApplyRXactNoFlush
-;RtlAreAllAccessesGranted
-;RtlAreAnyAccessesGranted
+RtlAreAllAccessesGranted@8
+RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 ;RtlAssert
@@ -384,7 +384,7 @@ RtlGetLongestNtPathLength@0
 RtlGetOwnerSecurityDescriptor@12
 ;RtlGetProcessHeaps
 RtlGetProcessHeap@0
-;RtlGetSaclSecurityDescriptor
+RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
 ;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid@4
@@ -432,8 +432,8 @@ RtlLengthSid@4
 RtlLockHeap@4
 ;RtlLookupAtomInAtomTable
 ;RtlLookupElementGenericTable
-;RtlMakeSelfRelativeSD
-;RtlMapGenericMask
+RtlMakeSelfRelativeSD@12
+RtlMapGenericMask@8
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
@@ -484,7 +484,7 @@ RtlReleasePebLock@0
 ;RtlRunEncodeUnicodeString
 RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime@8
-;RtlSelfRelatedToAbsoluteSD
+RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
 RtlSetBits@12
@@ -498,7 +498,7 @@ RtlSetOwnerSecurityDescriptor@12
 ;RtlSetProperties
 ;RtlSetPropertyNames
 ;RtlSetPropertySetClassId
-;RtlSetSaclSecurityDescriptor
+RtlSetSaclSecurityDescriptor@16
 ;RtlSetSecurityObject
 ;RtlSetTimeZoneInformation
 ;RtlSetUnicodeCallouts

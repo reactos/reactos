@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.38 2000/04/05 01:38:50 ekohl Exp $
+; $Id: ntdll.edf,v 1.39 2000/04/06 02:28:45 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -236,6 +236,8 @@ RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
 RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
+RtlAreAllAccessesGranted=RtlAreAllAccessesGranted@8
+RtlAreAnyAccessesGranted=RtlAreAnyAccessesGranted@8
 RtlAreBitsClear=RtlAreBitsClear@12
 RtlAreBitsSet=RtlAreBitsSet@12
 RtlCharToInteger=RtlCharToInteger@12
@@ -306,6 +308,7 @@ RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
 RtlGetLongestNtPathLength=RtlGetLongestNtPathLength@0
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap=RtlGetProcessHeap@0
+RtlGetSaclSecurityDescriptor=RtlGetSaclSecurityDescriptor@16
 RtlIdentifierAuthoritySid=RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData=RtlImageDirectoryEntryToData@16
 RtlImageNtHeader=RtlImageNtHeader@4
@@ -334,6 +337,8 @@ RtlLengthRequiredSid=RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLengthSid=RtlLengthSid@4
 RtlLockHeap=RtlLockHeap@4
+RtlMakeSelfRelativeSD=RtlMakeSelfRelativeSD@12
+RtlMapGenericMask=RtlMapGenericMask@8
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
@@ -351,6 +356,7 @@ RtlReAllocateHeap=RtlReAllocateHeap@16
 RtlReleasePebLock=RtlReleasePebLock@0
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
+RtlSelfRelativeToAbsoluteSD=RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits=RtlSetAllBits@4
 RtlSetBits=RtlSetBits@12
 RtlSetCurrentDirectory_U=RtlSetCurrentDirectory_U@4
@@ -360,6 +366,7 @@ RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
 RtlSetInformationAcl=RtlSetInformationAcl@16
 RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
+RtlSetSaclSecurityDescriptor=RtlSetSaclSecurityDescriptor@16
 RtlSizeHeap=RtlSizeHeap@12
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8

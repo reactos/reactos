@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.2 2000/03/12 01:17:59 ekohl Exp $
+/* $Id: sd.c,v 1.3 2000/04/06 02:29:16 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -41,9 +41,9 @@ ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescript
    ULONG Length;
    PACL Dacl;
    PACL Sacl;
-   
+
    Length = sizeof(SECURITY_DESCRIPTOR);
-   
+
    if (SecurityDescriptor->Owner != NULL)
      {
 	Owner = SecurityDescriptor->Owner;
@@ -153,7 +153,7 @@ NTSTATUS STDCALL RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDesc
    SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x8);
    if (DaclDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x80;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x8;
      }
    return(STATUS_SUCCESS);
 }
@@ -275,7 +275,6 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
    return(STATUS_SUCCESS);
 }
 
-
 NTSTATUS
 STDCALL
 RtlMakeSelfRelativeSD (
@@ -284,11 +283,8 @@ RtlMakeSelfRelativeSD (
 	PULONG			BufferLength
 	)
 {
-
    UNIMPLEMENTED;
-
 }
-
 
 NTSTATUS
 STDCALL
@@ -306,7 +302,6 @@ RtlAbsoluteToSelfRelativeSD (
 	return (RtlMakeSelfRelativeSD (AbsSD, RelSD, BufferLength));
 }
 
-
 NTSTATUS
 STDCALL
 RtlGetControlSecurityDescriptor (
@@ -323,6 +318,102 @@ RtlGetControlSecurityDescriptor (
 	*Control = SecurityDescriptor->Control;
 
 	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+STDCALL
+RtlGetSaclSecurityDescriptor (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	PBOOLEAN		SaclPresent,
+	PACL			*Sacl,
+	PBOOLEAN		SaclDefaulted)
+{
+   if (SecurityDescriptor->Revision != 1)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (!(SecurityDescriptor->Control & SE_SACL_PRESENT))
+     {
+	*SaclPresent = 0;
+	return(STATUS_SUCCESS);
+     }
+   *SaclPresent = 1;
+   if (SecurityDescriptor->Sacl == NULL)
+     {
+	*Sacl = NULL;
+     }
+   else
+     {
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+	  {
+	     *Sacl = (PACL)((ULONG)SecurityDescriptor->Sacl +
+			    (PVOID)SecurityDescriptor);
+	  }
+	else
+	  {
+	     *Sacl = SecurityDescriptor->Sacl;
+	  }
+     }
+   if (SecurityDescriptor->Control & SE_SACL_DEFAULTED)
+     {
+	*SaclDefaulted = 1;
+     }
+   else
+     {
+	*SaclDefaulted = 0;
+     }
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+STDCALL
+RtlSetSaclSecurityDescriptor (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	BOOLEAN			SaclPresent,
+	PACL			Sacl,
+	BOOLEAN			SaclDefaulted
+	)
+{
+   if (SecurityDescriptor->Revision != 1)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (!SaclPresent)
+     {
+	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_SACL_PRESENT);
+	return(STATUS_SUCCESS);
+     }
+   SecurityDescriptor->Control = SecurityDescriptor->Control | SE_SACL_PRESENT;
+   SecurityDescriptor->Sacl = Sacl;
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_SACL_DEFAULTED);
+   if (SaclDefaulted)
+     {
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_SACL_DEFAULTED;
+     }
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+STDCALL
+RtlSelfRelativeToAbsoluteSD (
+	PSECURITY_DESCRIPTOR	RelSD,
+	PSECURITY_DESCRIPTOR	AbsSD,
+	LPDWORD			AbsSDSize,
+	PACL			Dacl,
+	LPDWORD			DaclSize,
+	PACL			Sacl,
+	LPDWORD			SaclSize,
+	PSID			Owner,
+	LPDWORD			OwnerSize,
+	PSID			Group,
+	LPDWORD			GroupSize
+	)
+{
+   UNIMPLEMENTED;
 }
 
 /* EOF */
