@@ -99,10 +99,15 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
+	 // register ourselved as task manager window to make the following call to RegisterShellHookWindow working
+	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
+	if (SetTaskmanWindow)
+		(*SetTaskmanWindow)(_hwnd);
 
+	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
 	if (RegisterShellHookWindow) {
 		LOG(TEXT("Using shell hooks for notification of shell events."));
+
 		(*RegisterShellHookWindow)(_hwnd);
 	} else {
 		LOG(TEXT("Shell hooks not available."));
