@@ -42,6 +42,7 @@ copy drivers\lib\bzip2\unbzip2.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\keyboard\keyboard.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\mouclass\mouclass.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\psaux\psaux.sys %ROS_INSTALL%\system32\drivers
+copy drivers\input\sermouse\sermouse.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\blue\blue.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\beep\beep.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\debugout\debugout.sys %ROS_INSTALL%\system32\drivers

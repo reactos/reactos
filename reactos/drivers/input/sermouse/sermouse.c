@@ -177,8 +177,8 @@ microsoft_mouse_handler(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
               [DeviceExtension->InputDataCount[Queue]];
 
       /* Retrieve change in x and y from packet */
-      change_x = (int)(signed char)((mpacket[0] & 0x03) << 6) + mpacket[1];
-      change_y = (int)(signed char)((mpacket[0] & 0x0c) << 4) + mpacket[2];
+      change_x = - (int)(signed char)((mpacket[0] & 0x03) << 6) - mpacket[1];
+      change_y = - (int)(signed char)((mpacket[0] & 0x0c) << 4) - mpacket[2];
 
       /* Some mice need this */
       if (1 == coordinate)
@@ -186,18 +186,6 @@ microsoft_mouse_handler(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
         change_x-=128;
         change_y-=128;
       }
-
-#if 0
-      /* Change to signed */
-      if (128 <= change_x)
-      {
-	change_x = change_x - 256;
-      }
-      if (128 <= change_y)
-      {
-	change_y = change_y - 256;
-      }
-#endif
 
       Input->LastX = 2 * change_x;
       Input->LastY = - 3 * change_y;

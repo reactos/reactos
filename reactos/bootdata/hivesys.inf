@@ -267,6 +267,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
 
+; Serial mouse driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\serial.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
+
 ; RPC service
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"

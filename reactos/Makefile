@@ -62,8 +62,7 @@ DRIVERS_LIB = bzip2
 DEVICE_DRIVERS = beep blue debugout floppy null serial vga videoprt
 
 # Kernel mode input drivers
-# keyboard mouclass psaux sermouse
-INPUT_DRIVERS = keyboard mouclass psaux
+INPUT_DRIVERS = keyboard mouclass psaux sermouse
 
 # Kernel mode file system drivers
 # cdfs ext2 fs_rec ms np vfat

@@ -38,6 +38,7 @@ vfatfs.sys   = 3
 keyboard.sys = 3
 mouclass.sys = 3
 psaux.sys    = 3
+sermouse.sys = 3
 
 unbzip2.sys  = 3
 
