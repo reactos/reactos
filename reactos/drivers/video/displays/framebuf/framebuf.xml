@@ -1,4 +1,4 @@
-<module name="framebuf" type="kernelmodedriver">
+<module name="framebuf" type="kernelmodedll" entrypoint="_DrvEnableDriver@12">
 	<importlibrary definition="framebuf.def" />
 	<include base="framebuf">.</include>
 	<define name="__USE_W32API" />

@@ -61,10 +61,16 @@ Module::Module ( const Project& project,
 	type = GetModuleType ( node.location, *att );
 
 	att = moduleNode.GetAttribute ( "extension", false );
-	if (att != NULL)
+	if ( att != NULL )
 		extension = att->value;
 	else
 		extension = GetDefaultModuleExtension ();
+
+	att = moduleNode.GetAttribute ( "entrypoint", false );
+	if ( att != NULL )
+		entrypoint = att->value;
+	else
+		entrypoint = GetDefaultModuleEntrypoint ();
 }
 
 Module::~Module ()
@@ -265,6 +271,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Win32GUI;
 	if ( attribute.value == "bootloader" )
 		return BootLoader;
+	if ( attribute.value == "bootsector" )
+		return BootSector;
 	if ( attribute.value == "iso" )
 		return Iso;
 	throw InvalidAttributeValueException ( location,
@@ -293,8 +301,39 @@ Module::GetDefaultModuleExtension () const
 		case KernelModeDriver:
 		case BootLoader:
 			return ".sys";
+		case BootSector:
+			return ".o";
 		case Iso:
 			return ".iso";
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+string
+Module::GetDefaultModuleEntrypoint () const
+{
+	switch (type)
+	{
+		case Kernel:
+			return "_NtProcessStartup";
+		case Win32GUI:
+			return "_WinMainCRTStartup";
+		case KernelModeDLL:
+			return "_DriverEntry@8";
+		case NativeDLL:
+			return "_DllMainCRTStartup@12";
+		case Win32DLL:
+			return "_DllMain@12";
+		case KernelModeDriver:
+			return "_DriverEntry@8";
+		case BuildTool:
+		case StaticLibrary:
+		case ObjectLibrary:
+		case BootLoader:
+		case BootSector:
+		case Iso:
+			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );

@@ -80,6 +80,7 @@ enum ModuleType
 	Win32DLL,
 	Win32GUI,
 	BootLoader,
+	BootSector,
 	Iso
 };
 
@@ -91,6 +92,7 @@ public:
 	const XMLElement& node;
 	std::string name;
 	std::string extension;
+	std::string entrypoint;
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
@@ -123,6 +125,7 @@ public:
 	void ProcessXML();
 private:
 	std::string GetDefaultModuleExtension () const;
+	std::string GetDefaultModuleEntrypoint () const;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
 	                            If* pIf = NULL );

@@ -193,6 +193,8 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
 	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res\n" );
+	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman\n" );
+	fprintf ( fMakefile, "cdmake = tools" SSEP "cdmake" SSEP "cdmake\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
@@ -212,6 +214,8 @@ bool
 MingwBackend::IncludeInAllTarget ( const Module& module ) const
 {
 	if ( module.type == ObjectLibrary )
+		return false;
+	if ( module.type == BootSector )
 		return false;
 	if ( module.type == Iso )
 		return false;

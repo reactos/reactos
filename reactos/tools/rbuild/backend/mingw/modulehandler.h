@@ -42,7 +42,8 @@ protected:
 	void GenerateMacrosAndTargetsHost ( const Module& module ) const;
 	void GenerateMacrosAndTargetsTarget ( const Module& module ) const;
 	void GenerateMacrosAndTargetsTarget ( const Module& module,
-	                                      const std::string* clags ) const;
+	                                      const std::string* cflags,
+	                                      const std::string* nasmflags ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
@@ -141,7 +142,8 @@ private:
 	                                const std::string& cc,
 	                                const std::string& cppc,
 	                                const std::string& ar,
-	                                const std::string* clags ) const;
+	                                const std::string* clags,
+	                                const std::string* nasmflags ) const;
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
 };
@@ -245,6 +247,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateBootLoaderModuleTarget ( const Module& module );
+};
+
+
+class MingwBootSectorModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwBootSectorModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateBootSectorModuleTarget ( const Module& module );
 };
 
 

@@ -1,11 +1,4 @@
-<!--<module name="bootsector" type="bootsector">
-	<include base="bootsector">freeldr/include</include>
-	<compilerflag>-nostdlib</compilerflag>
-	<compilerflag>-nostdinc</compilerflag>
-	<compilerflag>-ffreestanding</compilerflag>
-	<compilerflag>-no-builtin</compilerflag>
-	<compilerflag>-no-inline</compilerflag>
-	<compilerflag>-no-zero-initialized-in-bss</compilerflag>
+<module name="bootsector" type="bootsector">
 	<directory name="bootsect">
 		<file>dosmbr.asm</file>
 		<file>ext2.asm</file>
@@ -15,7 +8,7 @@
 		<file>win2k.asm</file>
 		<file>wxpfat16.asm</file>
 	</directory>
-</module>-->
+</module>
 <directory name="freeldr">
 	<xi:include href="freeldr/freeldr_startup.xml" />
 	<xi:include href="freeldr/freeldr_base64k.xml" />

@@ -960,7 +960,8 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	const string& cc,
 	const string& cppc,
 	const string& ar,
-	const string* cflags ) const
+	const string* cflags,
+	const string* nasmflags ) const
 {
 	string cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	string nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
@@ -982,7 +983,15 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 		          cflagsMacro.c_str (),
 		          cflags->c_str () );
 	}
-	
+
+	if ( nasmflags != NULL )
+	{
+		fprintf ( fMakefile,
+		          "%s += %s\n\n",
+		          nasmflagsMacro.c_str (),
+		          nasmflags->c_str () );
+	}
+
 	// generate phony target for module name
 	fprintf ( fMakefile, ".PHONY: %s\n",
 		module.name.c_str () );
@@ -1021,21 +1030,33 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 void
 MingwModuleHandler::GenerateMacrosAndTargetsHost ( const Module& module ) const
 {
-	GenerateMacrosAndTargets ( module, "${host_gcc}", "${host_gpp}", "${host_ar}", NULL );
+	GenerateMacrosAndTargets ( module,
+	                           "${host_gcc}",
+	                           "${host_gpp}",
+	                           "${host_ar}",
+	                           NULL,
+	                           NULL );
 }
 
 void
 MingwModuleHandler::GenerateMacrosAndTargetsTarget ( const Module& module ) const
 {
 	GenerateMacrosAndTargetsTarget ( module,
+	                                 NULL,
 	                                 NULL );
 }
 
 void
 MingwModuleHandler::GenerateMacrosAndTargetsTarget ( const Module& module,
-	                                                 const string* clags ) const
+	                                                 const string* cflags,
+	                                                 const string* nasmflags ) const
 {
-	GenerateMacrosAndTargets ( module, "${gcc}", "${gpp}", "${ar}", clags );
+	GenerateMacrosAndTargets ( module,
+	                          "${gcc}",
+	                          "${gpp}",
+	                          "${ar}",
+	                          cflags,
+	                          nasmflags );
 }
 
 string
@@ -1306,8 +1327,9 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	string base_tmp = ros_junk + module.name + ".base.tmp";
 	string junk_tmp = ros_junk + module.name + ".junk.tmp";
 	string temp_exp = ros_junk + module.name + ".temp.exp";
-	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,_NtProcessStartup -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
-	                              module.GetBasePath ().c_str () );
+	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+	                              module.GetBasePath ().c_str (),
+	                              module.entrypoint.c_str () );
 
 	GenerateMacrosAndTargetsTarget ( module );
 
@@ -1429,7 +1451,8 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1476,7 +1499,8 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 	{
 		string* cflags = new string ( "-D__NTDRIVER__" );
 		GenerateMacrosAndTargetsTarget ( module,
-		                                 cflags );
+		                                 cflags,
+		                                 NULL );
 		delete cflags;
 
 		fprintf ( fMakefile, "%s: %s %s\n",
@@ -1484,7 +1508,8 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1546,7 +1571,8 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DllMainCRTStartup@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll" );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
+		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1618,7 +1644,8 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		          objectFilenames.c_str (),
 		          linkingDependencies.c_str () );
 
-		string linkerParameters ( "-Wl,--subsystem,console -Wl,--entry,_DllMain@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll" );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll",
+		                                    module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1669,7 +1696,8 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		          objectFilenames.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters ( "-Wl,--subsystem,windows -Wl,--entry,_WinMainCRTStartup -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000" );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
+		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1734,6 +1762,40 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ( const Module& mod
 }
 
 
+static MingwBootSectorModuleHandler bootsectormodule_handler;
+
+MingwBootSectorModuleHandler::MingwBootSectorModuleHandler ()
+	: MingwModuleHandler ( BootSector )
+{
+}
+
+void
+MingwBootSectorModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateBootSectorModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwBootSectorModuleHandler::GenerateBootSectorModuleTarget ( const Module& module )
+{
+	string objectsMacro = GetObjectsMacro ( module );
+
+	string* nasmflags = new string ( "-f bin" );
+	GenerateMacrosAndTargetsTarget ( module,
+	                                 NULL,
+	                                 nasmflags);
+
+	fprintf ( fMakefile, ".PHONY: %s\n\n",
+		      module.name.c_str ());
+	fprintf ( fMakefile,
+	          "%s: %s\n",
+	          module.name.c_str (),
+	          objectsMacro.c_str () );
+}
+
+
 static MingwIsoModuleHandler isomodule_handler;
 
 MingwIsoModuleHandler::MingwIsoModuleHandler ()
@@ -1752,10 +1814,28 @@ MingwIsoModuleHandler::Process ( const Module& module )
 void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 {
-	string target ( FixupTargetFilename ( module.GetPath ()) );
+	string isoboot = "$(ROS_INTERMEDIATE)" + FixupTargetFilename ( "boot/freeldr/bootsect/isoboot.o" );
 
-	fprintf ( fMakefile, "%s: all\n",
-	          target.c_str () );
+	fprintf ( fMakefile, ".PHONY: %s\n\n",
+		      module.name.c_str ());
 	fprintf ( fMakefile,
-	          "\t\n" );
+	          "%s: all %s\n",
+	          module.name.c_str (),
+	          isoboot.c_str () );
+	fprintf ( fMakefile,
+	          "\t${cabman} /C %s /L $(ROS_INTERMEDIATE)%s /I\n",
+	          FixupTargetFilename ( "bootdata/packages/reactos.dff" ).c_str (),
+	          FixupTargetFilename ( "bootcd/reactos" ).c_str () );
+	fprintf ( fMakefile,
+	          "\t${cabman} /C %s /RC $(ROS_INTERMEDIATE)%s /L $(BOOTCD_DIR)reactos /N\n",
+	          FixupTargetFilename ( "bootdata/packages/reactos.dff" ).c_str (),
+	          FixupTargetFilename ( "bootcd/reactos/reactos.inf" ).c_str () );
+	fprintf ( fMakefile,
+	          "\t- ${rm} $(ROS_INTERMEDIATE)%s\n",
+	          FixupTargetFilename ( "bootcd/reactos/reactos.inf" ).c_str () );
+	fprintf ( fMakefile,
+	          "\t${cdmake} -v -m -b %s $(ROS_INTERMEDIATE)bootcd REACTOS ReactOS.iso\n",
+	          isoboot.c_str () );
+	fprintf ( fMakefile,
+	          "\n" );
 }

@@ -1,4 +1,4 @@
-<module name="vgaddi" type="kernelmodedriver">
+<module name="vgaddi" type="kernelmodedll" entrypoint="_DrvEnableDriver@12">
 	<importlibrary definition="vgaddi.def" />
 	<include base="vgaddi">.</include>
 	<define name="__USE_W32API" />
