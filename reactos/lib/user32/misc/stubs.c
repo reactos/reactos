@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.53 2003/11/19 13:19:39 weiden Exp $
+/* $Id: stubs.c,v 1.54 2003/12/07 18:54:15 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -91,23 +91,6 @@ BroadcastSystemMessageW(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-CopyImage(
-  HANDLE hImage,
-  UINT uType,
-  int cxDesired,
-  int cyDesired,
-  UINT fuFlags)
-{
-  UNIMPLEMENTED;
-  return (HANDLE)0;
 }
 
 

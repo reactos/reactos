@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.20 2003/11/18 19:59:50 weiden Exp $
+/* $Id: bitmap.c,v 1.21 2003/12/07 18:54:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -656,4 +656,39 @@ HBITMAP STDCALL
 LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 {
   return(LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0));
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE WINAPI
+CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   switch (type)
+   {
+      case IMAGE_BITMAP:
+         {
+            HBITMAP res;
+            BITMAP bm;
+
+            if (!GetObjectW(hnd, sizeof(bm), &bm)) return 0;
+            bm.bmBits = NULL;
+            if ((res = CreateBitmapIndirect(&bm)))
+            {
+               char *buf = HeapAlloc(GetProcessHeap(), 0, bm.bmWidthBytes * bm.bmHeight);
+               GetBitmapBits(hnd, bm.bmWidthBytes * bm.bmHeight, buf);
+               SetBitmapBits(res, bm.bmWidthBytes * bm.bmHeight, buf);
+               HeapFree(GetProcessHeap(), 0, buf);
+            }
+            return (HICON)res;
+        }
+     case IMAGE_ICON:
+        DbgPrint("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
+        return CopyIcon(hnd);
+     case IMAGE_CURSOR:
+        DbgPrint("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
+        return CopyCursor(hnd);
+    }
+    return 0;
 }

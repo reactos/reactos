@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.83 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: window.c,v 1.84 2003/12/07 18:54:15 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -843,8 +843,30 @@ FindWindowExA(HWND hwndParent,
 	      LPCSTR lpszClass,
 	      LPCSTR lpszWindow)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+   UNICODE_STRING ucClassName;
+   UNICODE_STRING ucWindowName;
+   HWND Result;
+
+   if (IS_ATOM(lpszClass)) 
+   {
+      ucClassName.Buffer = (LPWSTR)lpszClass;
+      ucClassName.Length = 0;
+   } 
+   else 
+   {
+      RtlCreateUnicodeStringFromAsciiz(&ucClassName, (LPSTR)lpszClass);
+   }
+
+   RtlCreateUnicodeStringFromAsciiz(&ucWindowName, (LPSTR)lpszWindow);
+
+   Result = NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName,
+      &ucWindowName);
+
+   if (!IS_ATOM(lpszClass)) 
+      RtlFreeUnicodeString(&ucClassName);
+   RtlFreeUnicodeString(&ucWindowName);
+
+   return Result;
 }
 
 
