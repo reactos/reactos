@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.32 2003/03/12 06:32:44 rcampbell Exp $
+/* $Id: defwnd.c,v 1.33 2003/03/12 16:27:32 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -322,7 +322,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 
     /* Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-    PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
+    PatBlt(hDC,rect->left + GetSystemMetrics(SM_CYFIXEDFRAME), rect->top + 3, rect->right - (GetSystemMetrics(SM_CYFIXEDFRAME) * 2), rect->bottom - 1, PATCOPY );
     
     if (style & WS_SYSMENU)
     {
