@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.55 2004/11/10 02:51:00 ion Exp $
+/* $Id: irq.c,v 1.56 2004/11/27 19:24:15 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -182,9 +182,9 @@ static unsigned int irq_handler[NR_IRQS]=
  * be accessed at any irq level.
  */
 
-static LIST_ENTRY isr_table[NR_IRQS]={{NULL,NULL},};
-static PKSPIN_LOCK isr_lock[NR_IRQS] = {NULL,};
-static KSPIN_LOCK isr_table_lock = {0,};
+static LIST_ENTRY isr_table[NR_IRQS];
+static KSPIN_LOCK isr_lock[NR_IRQS];
+static KSPIN_LOCK isr_table_lock;
 
 #define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
 
@@ -207,7 +207,9 @@ KeInitInterrupts (VOID)
 	KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
 	                    I486_INTERRUPT_GATE;
 	InitializeListHead(&isr_table[i]);
+	KeInitializeSpinLock(&isr_lock[i]);
      }
+   KeInitializeSpinLock(&isr_table_lock);
 }
 
 STATIC VOID 
@@ -360,8 +362,10 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 	       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
 	       CurrentThread->TrapFrame = &KernelTrapFrame;
 	     }
-	   
+   
+	   Ke386EnableInterrupts();
            KiDeliverApc(KernelMode, NULL, NULL);
+           Ke386DisableInterrupts();
            
 	   ASSERT(KeGetCurrentThread() == CurrentThread);
            if (CurrentThread->TrapFrame == &KernelTrapFrame)
@@ -382,16 +386,15 @@ KeDumpIrqList(VOID)
    
    for (i=0;i<NR_IRQS;i++)
      {
-	DPRINT("For irq %x ",i);
+	DPRINT("For irq %x:\n",i);
 	current_entry = isr_table[i].Flink;
 	current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
 	while (current_entry!=(&isr_table[i]))
 	  {
-	     DPRINT("Isr %x ",current);
+	     DPRINT("   Isr %x\n",current);
 	     current_entry = current_entry->Flink;
 	     current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
 	  }
-	DPRINT("\n",0);
      }
 }
 
@@ -424,21 +427,14 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
     * Check if the vector is already in use that we can share it
     */
    ListHead = CONTAINING_RECORD(isr_table[Vector].Flink,KINTERRUPT,Entry);
-   if (!IsListEmpty(&isr_table[Vector]) &&
+   if (!IsListEmpty(&isr_table[Vector]) && 
        (InterruptObject->Shareable == FALSE || ListHead->Shareable==FALSE))
-     {
-	KeReleaseSpinLock(&isr_table_lock,oldlvl);
-	return FALSE;
-     }
-   else
-     {
-	isr_lock[Vector] =
-	  ExAllocatePoolWithTag(NonPagedPool, sizeof(KSPIN_LOCK),
-				TAG_ISR_LOCK);
-	KeInitializeSpinLock(isr_lock[Vector]);
-     }
+   {
+      KeReleaseSpinLock(&isr_table_lock,oldlvl);
+      return FALSE;
+   }
 
-   InterruptObject->IrqLock = isr_lock[Vector];
+   InterruptObject->IrqLock = &isr_lock[Vector];
 
    KeRaiseIrql(InterruptObject->SynchLevel,&synch_oldlvl);
    KiAcquireSpinLock(InterruptObject->IrqLock);
