@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.57 2004/04/02 21:03:25 weiden Exp $
+/* $Id: misc.c,v 1.58 2004/04/02 22:16:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -168,6 +168,17 @@ NtUserCallOneParam(
 
     case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
       return (DWORD)IntEnumClipboardFormats((UINT)Param);
+    
+    case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
+      if(!(WindowObject = IntGetWindowObject((HWND)Param)))
+      {
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        return FALSE;
+      }
+      
+      Result = (DWORD)WindowObject->Instance;
+      IntReleaseWindowObject(WindowObject);
+      return Result;
     
     case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
       return (DWORD)MsqSetMessageExtraInfo((LPARAM)Param);

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.103 2004/04/02 20:51:07 weiden Exp $
+/* $Id: window.c,v 1.104 2004/04/02 22:16:09 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,6 +15,7 @@
 #include <user32.h>
 #include <window.h>
 #include <string.h>
+#include <strpool.h>
 #include <user32/callback.h>
 #include <user32/regcontrol.h>
 
@@ -901,41 +902,40 @@ GetWindowInfo(HWND hwnd,
 
 
 /*
- * @unimplemented
- */
-UINT STDCALL
-GetWindowModuleFileName(HWND hwnd,
-			LPSTR lpszFileName,
-			UINT cchFileNameMax)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 GetWindowModuleFileNameA(HWND hwnd,
 			 LPSTR lpszFileName,
 			 UINT cchFileNameMax)
 {
-  UNIMPLEMENTED;
-  return 0;
+  HINSTANCE hWndInst;
+  
+  if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
+  {
+    return 0;
+  }
+  
+  return GetModuleFileNameA(hWndInst, lpszFileName, cchFileNameMax);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 GetWindowModuleFileNameW(HWND hwnd,
 			 LPWSTR lpszFileName,
 			 UINT cchFileNameMax)
 {
-  UNIMPLEMENTED;
-  return 0;
+  HINSTANCE hWndInst;
+  
+  if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
+  {
+    return 0;
+  }
+  
+  return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
 }
 
 
