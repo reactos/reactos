@@ -1,14 +1,11 @@
 /*
-
- ** PS/2 driver 0.0.1
+ ** PS/2 driver 0.0.2
  ** Written by Jason Filby (jasonfilby@yahoo.com)
  ** For ReactOS (www.reactos.com)
 
  ** Handles the keyboard and mouse on the PS/2 ports
 
  ** TODO: Fix detect_ps2_port(void) so that it works under BOCHs
-          Implement mouse button support
-
 */
 
 #include <ddk/ntddk.h>
@@ -159,7 +156,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    PDEVICE_EXTENSION DeviceExtension;
 
    if (detect_ps2_port() == TRUE) {
-     DbgPrint("PS2 Port Driver version 0.0.1\n");
+     DbgPrint("PS2 Port Driver version 0.0.2\n");
    } else {
      DbgPrint("PS2 port not found.\n");
      return STATUS_UNSUCCESSFUL;

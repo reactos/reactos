@@ -12,7 +12,7 @@
 */
 
 #include <ddk/ntddk.h>
-#include "../include/mouse.h"
+#include <ddk/ntddmou.h>
 #include "mouclass.h"
 
 #define NDEBUG

@@ -9,5 +9,6 @@ typedef struct _DEVICE_EXTENSION {
   CLASS_INFORMATION ClassInformation;
   
   PKINTERRUPT MouseInterrupt;
-   KDPC IsrDpc;
+  KDPC IsrDpc;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.18 2003/03/06 23:57:02 gvg Exp $
+/* $Id: mouse.c,v 1.19 2003/03/09 15:00:51 jfilby Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -29,8 +29,8 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
 #include <win32k/dc.h>
-#include "../../drivers/input/include/mouse.h"
 #include "objects.h"
 #include "include/msgqueue.h"
 
@@ -214,9 +214,9 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   TickCount = LargeTickCount.u.LowPart;
 
   if (hDC == 0)
-    {
-      return;
-    }
+  {
+    return;
+  }
 
   dc = DC_HandleToPtr(hDC);
   SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
@@ -225,56 +225,75 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
   /* Compile the total mouse movement change and dispatch button events. */
   for (i = 0; i < InputCount; i++)
+  {
+    mouse_cx += Data[i].LastX;
+    mouse_cy += Data[i].LastY;
+
+    Msg.wParam = ButtonsDown;
+    Msg.lParam = MAKELPARAM(mouse_x + mouse_cx, mouse_y + mouse_cy);
+    Msg.message = WM_MOUSEMOVE;
+    Msg.time = TickCount;
+    Msg.pt.x = mouse_x + mouse_cx;
+    Msg.pt.y = mouse_y + mouse_cy;
+    if ((mouse_cx > 0) || (mouse_cy > 0))
     {
-      mouse_cx += Data[i].LastX;
-      mouse_cy += Data[i].LastY;
-
-      Msg.wParam = ButtonsDown;
-      Msg.lParam = MAKELPARAM(mouse_x + mouse_cx, mouse_y + mouse_cy);
-      Msg.message = WM_MOUSEMOVE;
-      Msg.time = TickCount;
-      Msg.pt.x = mouse_x + mouse_cx;
-      Msg.pt.y = mouse_y + mouse_cy;
       MsqInsertSystemMessage(&Msg);
-
-      for (j = 0; j < 3; j++)
-	{
-	  ULONG Flag = MouseButtonFlag[j];
-	  if (Data[i].ButtonData & (1 << j) && !(ButtonsDown & Flag))
-	    {
-	      ButtonsDown |= Flag;
-
-	      Msg.wParam = ButtonsDown;
-	      Msg.message = MouseButtonDownMessage[j];
-	      MsqInsertSystemMessage(&Msg);
-	    }
-	  if (!(Data[i].ButtonData & (1 << j)) && (ButtonsDown & Flag))
-	    {
-	      ButtonsDown &= ~Flag;
-
-	      Msg.wParam = ButtonsDown;
-	      Msg.message = MouseButtonUpMessage[j];
-	      MsqInsertSystemMessage(&Msg);
-	    }
-	}
     }
+
+    if (Data[i].ButtonFlags != 0)
+    {
+      if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
+      {
+      	Msg.wParam  = MK_LBUTTON;
+        Msg.message = WM_LBUTTONDOWN;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
+      {
+      	Msg.wParam  = MK_MBUTTON;
+        Msg.message = WM_MBUTTONDOWN;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
+      {
+      	Msg.wParam  = MK_RBUTTON;
+        Msg.message = WM_RBUTTONDOWN;
+      }
+
+      if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
+      {
+      	Msg.wParam  = MK_LBUTTON;
+        Msg.message = WM_LBUTTONUP;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_UP) > 0)
+      {
+      	Msg.wParam  = MK_MBUTTON;
+        Msg.message = WM_MBUTTONUP;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_UP) > 0)
+      {
+      	Msg.wParam  = MK_RBUTTON;
+        Msg.message = WM_RBUTTONUP;
+      }
+
+      MsqInsertSystemMessage(&Msg);
+    }
+  }
 
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
+  {
+    mouse_x += mouse_cx;
+    mouse_y += mouse_cy;
+
+    mouse_x = max(mouse_x, 0);
+    mouse_y = max(mouse_y, 0);
+    mouse_x = min(mouse_x, 620);
+    mouse_y = min(mouse_y, 460);
+
+    if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
     {
-      mouse_x += mouse_cx;
-      mouse_y += mouse_cy;
-
-      mouse_x = max(mouse_x, 0);
-      mouse_y = max(mouse_y, 0);
-      mouse_x = min(mouse_x, 620);
-      mouse_y = min(mouse_y, 460);
-
-      if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
-	{
-	  SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
-	}
+      SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
     }
+  }
 }
 
 VOID
