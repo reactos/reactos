@@ -271,27 +271,24 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
 	AlreadyRead += ReadLength;
 
 	/*
-	 * Go to next run in the list. Note that we don't do it only for
-         * Length > 0 because of run pointer caching.
+	 * Go to next run in the list.
          */
 	
-	{
-	    if (*DataRun == 0)
-	        break;
-            DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunOffset != -1)
-            {
-                /* Normal data run. */
-                DataRunStartLCN = LastLCN + DataRunOffset;
-                LastLCN = DataRunStartLCN;
-            }
-            else
-            {
-                /* Sparse data run. */
-                DataRunStartLCN = -1;
-            }
-            CurrentOffset += DataRunLength * NtfsClusterSize;
-	}
+	if (*DataRun == 0)
+	    break;
+        DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+        if (DataRunOffset != -1)
+        {
+            /* Normal data run. */
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+        {
+            /* Sparse data run. */
+            DataRunStartLCN = -1;
+        }
+        CurrentOffset += DataRunLength * NtfsClusterSize;
     }
 
     Context->CacheRun = DataRun;
