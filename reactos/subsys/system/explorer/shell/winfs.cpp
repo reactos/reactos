@@ -45,7 +45,8 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 			WCHAR name_padding[_MAX_FNAME];	// room for reading stream name
 		} hdr;
 
-		if (!BackupRead(hFile, (LPBYTE)&hdr, (LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr, &read, FALSE, FALSE, &ctx) || (long)read!=(LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr)
+		if (!BackupRead(hFile, (LPBYTE)&hdr, (LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr, &read, FALSE, FALSE, &ctx) ||
+			(long)read!=(LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr)
 			break;
 
 		if (hdr.dwStreamId == BACKUP_ALTERNATE_DATA) {
@@ -73,7 +74,6 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 				Entry* stream_entry = new WinEntry(entry);
 
 				memcpy(&stream_entry->_data, &entry->_data, sizeof(WIN32_FIND_DATA));
-
 				lstrcpy(stream_entry->_data.cFileName, String(p, l));
 
 				stream_entry->_down = NULL;
@@ -85,13 +85,6 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 				*pnext = stream_entry;
 				pnext = &stream_entry->_next;
 			}
-		} else if (hdr.dwStreamId == BACKUP_SPARSE_BLOCK) {
-			DWORD sparse_buffer[2];
-
-			if (!BackupRead(hFile, (LPBYTE)&sparse_buffer, 8, &read, FALSE, FALSE, &ctx)) {
-				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);
-				THROW_EXCEPTION(GetLastError());
-			}
 		}
 
 		 // jump to the next stream header
@@ -102,6 +95,18 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);
 				THROW_EXCEPTION(error);
 				//break;
+			}
+
+			hdr.Size.QuadPart -= read;
+			hdr.Size.HighPart -= seek_high;
+
+			BYTE buffer[4096];
+
+			while(hdr.Size.QuadPart > 0) {
+				if (!BackupRead(hFile, buffer, sizeof(buffer), &read, FALSE, FALSE, &ctx))
+					break;
+
+				hdr.Size.QuadPart -= read;
 			}
 		}
 	}
