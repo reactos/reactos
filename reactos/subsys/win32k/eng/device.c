@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.13 2004/03/11 23:07:16 dwelch Exp $
+/* $Id: device.c,v 1.14 2004/03/14 18:36:14 dwelch Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/misc.h>
+#include <windows.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -68,7 +69,8 @@ EngDeviceIoControl(HANDLE  hDevice,
 
   if (Status == STATUS_PENDING)
     {
-      (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+      (VOID)KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+      Status = Iosb.Status;
     }
 
   DPRINT("EngDeviceIoControl(): Returning %X/%X\n", Iosb.Status,
@@ -76,7 +78,19 @@ EngDeviceIoControl(HANDLE  hDevice,
 
   /* Return information to the caller about the operation. */
   *lpBytesReturned = Iosb.Information;
-  return Iosb.Status;
+
+  /* Convert NT status values to win32 error codes. */
+  switch (Status)
+    {
+    case STATUS_INSUFFICIENT_RESOURCES: return ERROR_NOT_ENOUGH_MEMORY;
+    case STATUS_BUFFER_OVERFLOW: return ERROR_MORE_DATA;
+    case STATUS_NOT_IMPLEMENTED: return ERROR_INVALID_FUNCTION;
+    case STATUS_INVALID_PARAMETER: return ERROR_INVALID_PARAMETER;
+    case STATUS_BUFFER_TOO_SMALL: return ERROR_INSUFFICIENT_BUFFER;
+    case STATUS_DEVICE_DOES_NOT_EXIST: return ERROR_DEV_NOT_EXIST;
+    case STATUS_PENDING: return ERROR_IO_PENDING;
+    }
+  return Status;
 }
 
 /* EOF */
