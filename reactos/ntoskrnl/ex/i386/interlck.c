@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.1 2001/07/12 17:17:56 ekohl Exp $
+/* $Id: interlck.c,v 1.2 2002/08/28 07:08:25 hbirr Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
@@ -148,10 +148,10 @@ __asm__("\n\t.global @InterlockedExchangeAdd@8\n\t"
  * FASTCALL: @InterlockedCompareExchange@12
  * STDCALL: _InterlockedCompareExchange@12
  */
-PVOID FASTCALL
-InterlockedCompareExchange(PVOID *Destination,
-			   PVOID Exchange,
-			   PVOID Comperand);
+LONG FASTCALL
+InterlockedCompareExchange(PLONG Destination,
+			   LONG Exchange,
+			   LONG Comperand);
 
 __asm__("\n\t.global @InterlockedCompareExchange@12\n\t"
 	"@InterlockedCompareExchange@12:\n\t"

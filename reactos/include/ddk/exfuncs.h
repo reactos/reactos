@@ -761,22 +761,15 @@ ULONG STDCALL
 Exi386InterlockedExchangeUlong(IN PULONG Target,
 			       IN ULONG Value);
 
-/*
+
 LONG
 FASTCALL
 InterlockedCompareExchange (
-	PLONG	Target,
-	LONG	Value,
-	LONG	Reference
+	PLONG	Destination,
+	LONG	Exchange,
+	LONG	Comperand
 	);
-*/
-PVOID
-FASTCALL
-InterlockedCompareExchange (
-	PVOID	* Destination,
-	PVOID	Exchange,
-	PVOID	Comperand
-	);
+
 #ifdef _GNU_H_WINDOWS_H
 #ifdef InterlockedDecrement
 #undef InterlockedDecrement
