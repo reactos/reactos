@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/se/access.c
  * PURPOSE:         Access rights handling functions
  * 
- * PROGRAMMERS:     Eric Kohl <ekohl@rz-online.de>
+ * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 
 /* INCLUDES *****************************************************************/
