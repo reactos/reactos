@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.38 2001/03/17 11:11:10 dwelch Exp $
+/* $Id: create.c,v 1.39 2001/06/18 03:02:43 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -454,7 +454,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * Create the PPB
     */
    
-   RtlInitUnicodeString(&CommandLine_U, TempCommandLine);
+   RtlInitUnicodeString(&CommandLine_U, lpCommandLine);
 
    DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
 

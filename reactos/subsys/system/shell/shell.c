@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.5 2001/05/01 23:08:17 chorns Exp $
+/* $Id: shell.c,v 1.6 2001/06/18 03:02:43 phreak Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -155,8 +155,10 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
    memset(&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof (STARTUPINFO);
    StartupInfo.lpTitle = name;
+   if( cmdline && *cmdline  )
+     *(cmdline-1) = ' ';  // fix command line so it is the FULL command, including exe name
    ret = CreateProcessA(fullname,
-			cmdline,
+			name,
 			NULL,
 			NULL,
 			FALSE,
