@@ -35,16 +35,16 @@
 ; __builtin_new
 ; __builtin_delete
 ; _set_new_handler__FPFUi_i
-;
+; I commented out these, cause i dont get why they were added. -Gunnar
 ;
 LIBRARY CRTDLL.DLL
 EXPORTS
-__builtin_new
-__builtin_delete
-??2@YAPAXI@Z=malloc
-??3@YAXPAX@Z=free
-?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=_set_new_handler__FPFUi_i
-_set_new_handler__FPFUi_i
+;__builtin_new
+;__builtin_delete
+??2@YAPAXI@Z=MSVCRT_operator_new
+??3@YAXPAX@Z=MSVCRT_operator_delete
+?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler
+;_set_new_handler__FPFUi_i
 _CIacos
 _CIasin
 _CIatan
@@ -61,31 +61,31 @@ _CIsinh
 _CIsqrt
 _CItan
 _CItanh
-_HUGE_dll
+_HUGE_dll=_HUGE DATA
 _XcptFilter
 __GetMainArgs
-__argc_dll
-__argv_dll
+__argc_dll=__argc DATA
+__argv_dll=__argv DATA
 __dllonexit
 __doserrno
 __fpecode
 __isascii
 __iscsym=NTDLL.__iscsym
 __iscsymf=NTDLL.__iscsymf
-__mb_cur_max_dll
+__mb_cur_max_dll=__mb_cur_max DATA
 __pxcptinfoptrs
 __threadhandle
 __threadid
 __toascii=NTDLL.__toascii
 _abnormal_termination
 _access
-_acmdln_dll
-_aexit_rtn_dll
+_acmdln_dll=_acmdln DATA
+_aexit_rtn_dll=_aexit_rtn DATA
 _amsg_exit
 _assert
-_basemajor_dll
-_baseminor_dll
-_baseversion_dll
+_basemajor_dll=CRTDLL__basemajor_dll DATA
+_baseminor_dll=CRTDLL__baseminor_dll DATA
+_baseversion_dll=CRTDLL__baseversion_dll DATA
 _beep
 _beginthread
 _c_exit
@@ -100,23 +100,23 @@ _chsize
 _clearfp
 _close
 _commit
-_commode_dll
+_commode_dll=_commode DATA
 _control87
 _controlfp
 _copysign
 _cprintf
-_cpumode_dll
+_cpumode_dll=_cpumode DATA ;fixme: wine has CRTDLL__cpumode_dll
 _cputs
 _creat
 _cscanf
-_ctype
+_ctype DATA
 _cwait
-_daylight_dll
+_daylight_dll=_daylight DATA
 _dup
 _dup2
 _ecvt
 _endthread
-_environ_dll
+_environ_dll=_environ DATA
 _eof
 _errno
 _except_handler2
@@ -136,23 +136,23 @@ _fdopen
 _fgetchar
 _fgetwchar
 _filbuf
-_fileinfo_dll
+;_fileinfo_dll=_fileinfo DATA
 _filelength
-_fileno
+_fileno DATA
 _findclose
 _findfirst
 _findnext
 _finite
 _flsbuf
 _flushall
-_fmode_dll
+_fmode_dll=__fmode DATA
 _fpclass
 _fpieee_flt
 _fpreset
 _fputchar
 _fputwchar
 _fsopen
-_fstat
+_fstat=CRTDLL__fstat
 _ftime
 _ftol=NTDLL._ftol
 _fullpath
@@ -177,7 +177,7 @@ _heapset
 _heapwalk
 _hypot
 _initterm
-_iob
+_iob DATA
 _isatty
 _isctype
 _ismbbalnum
@@ -236,7 +236,7 @@ _mbctokata
 _mbctolower
 _mbctombb
 _mbctoupper
-_mbctype
+_mbctype DATA
 _mbsbtype
 _mbscat
 _mbschr
@@ -282,21 +282,21 @@ _nextafter
 _onexit
 _open
 _open_osfhandle
-_osmajor_dll
-_osminor_dll
-_osmode_dll
-_osver_dll
-_osversion_dll
+_osmajor_dll=CRTDLL__osmajor_dll DATA
+_osminor_dll=CRTDLL__osminor_dll DATA
+_osmode_dll=CRTDLL__osmode_dll DATA
+_osver_dll=_osver DATA
+_osversion_dll=CRTDLL__osversion_dll DATA
 _pclose
-_pctype_dll
-_pgmptr_dll
+_pctype_dll=_pctype DATA
+_pgmptr_dll=_pgmptr DATA
 _pipe
 _popen
 _purecall
 _putch
 _putenv
 _putw
-_pwctype_dll
+_pwctype_dll=_pwctype DATA
 _read
 _rmdir
 _rmtmp
@@ -321,7 +321,7 @@ _spawnve
 _spawnvp
 _spawnvpe
 _splitpath
-_stat
+_stat=CRTDLL__stat
 _statusfp
 _strcmpi=NTDLL._strcmpi
 _strdate
@@ -343,14 +343,14 @@ _strspnp
 _strtime
 _strupr=NTDLL._strupr
 _swab
-_sys_errlist
-_sys_nerr_dll
+_sys_errlist DATA
+_sys_nerr_dll=_sys_nerr DATA
 _tell
 _tempnam
-_timezone_dll
+_timezone_dll=_timezone
 _tolower=NTDLL._tolower
 _toupper=NTDLL._toupper
-_tzname
+_tzname DATA
 _tzset
 _ultoa=NTDLL._ultoa
 _ultow=NTDLL._ultow
@@ -370,9 +370,9 @@ _wcsnset
 _wcsrev
 _wcsset
 _wcsupr
-_winmajor_dll
-_winminor_dll
-_winver_dll
+_winmajor_dll=_winmajor DATA
+_winminor_dll=_winminor DATA
+_winver_dll=_winver DATA
 _write
 _wtoi=NTDLL._wtoi
 _wtol=NTDLL._wtol
