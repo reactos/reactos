@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.255 2004/12/12 23:08:11 navaraf Exp $
+/* $Id: window.c,v 1.256 2004/12/12 23:42:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -264,7 +264,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   HWND *ChildHandle;
   PWINDOW_OBJECT Child;
   PMENU_OBJECT Menu;
-  BOOL BelongsToThreadData;
+  BOOLEAN BelongsToThreadData;
   
   ASSERT(Window);
 
@@ -284,6 +284,17 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
      in IntDestroyWindow() */
   RemoveEntryList(&Window->ThreadListEntry);
   IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
+
+  if (Window->UpdateRegion != NULL ||
+      Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+  {
+     MsqDecPaintCountQueue(Window->MessageQueue);
+  }
+
+  if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+  {
+     MsqDecPaintCountQueue(Window->MessageQueue);
+  }
   
   BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
   
