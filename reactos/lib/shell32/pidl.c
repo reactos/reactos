@@ -1287,9 +1287,9 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 }
 
 /*************************************************************************
- * SHELL_SHGetPathFromIDListA
+ * SHELL_GetPathFromIDListA
  */
-HRESULT SHELL_SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
+HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 {
 	LPSTR pstr = pszPath;
 	LPSTR end = pszPath + uOutSize;
@@ -1364,15 +1364,15 @@ BOOL WINAPI SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath)
 	if (!pidl)
 	    return FALSE;
 
-	hr = SHELL_SHGetPathFromIDListA(pidl, pszPath, MAX_PATH);
+	hr = SHELL_GetPathFromIDListA(pidl, pszPath, MAX_PATH);
 
 	return SUCCEEDED(hr);
 }
 
 /*************************************************************************
- * SHELL_SHGetPathFromIDListW
+ * SHELL_GetPathFromIDListW
  */
-HRESULT SHELL_SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
+HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 {
 	LPWSTR pstr = pszPath;
 	LPWSTR end = pszPath + uOutSize;
@@ -1436,7 +1436,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 	if (!pidl)
 	    return FALSE;
 
-	hr = SHELL_SHGetPathFromIDListW(pidl, pszPath, MAX_PATH);
+	hr = SHELL_GetPathFromIDListW(pidl, pszPath, MAX_PATH);
 
 	TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
 	return SUCCEEDED(hr);

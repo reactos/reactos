@@ -222,7 +222,7 @@ HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	if (!pidl)
 		return 0;
 
-	hr = SHELL_SHGetPathFromIDListA(pidl, szTemp, MAX_PATH);
+	hr = SHELL_GetPathFromIDListA(pidl, szTemp, MAX_PATH);
 	SHFree(pidl);
 	if (FAILED(hr))
 		return 0;
@@ -254,7 +254,7 @@ HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	if (!pidl)
 		return 0;
 
-	hr = SHELL_SHGetPathFromIDListW(pidl, szTemp, MAX_PATH);
+	hr = SHELL_GetPathFromIDListW(pidl, szTemp, MAX_PATH);
 	SHFree(pidl);
 	if (FAILED(hr))
 		return 0;
