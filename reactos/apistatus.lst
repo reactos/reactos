@@ -6,6 +6,7 @@
 advapi32.dll reactos/lib/advapi32
 crtdll.dll reactos/lib/crtdll
 gdi32.dll reactos/lib/gdi32
+gdiplus.dll reactos/lib/gdiplus
 iphlpapi.dll reactos/lib/iphlpapi
 kernel32.dll reactos/lib/kernel32
 lz32.dll reactos/lib/lzexpand

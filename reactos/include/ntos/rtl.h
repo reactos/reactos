@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.30 2004/06/20 23:37:52 gdalsnes Exp $
+/* $Id: rtl.h,v 1.31 2004/07/23 21:54:54 chorns Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -145,11 +145,6 @@
 	(ListEntry)->Blink = OldBlink; \
 	OldBlink->Flink = (ListEntry); \
 	(ListHead)->Blink = (ListEntry); \
-	assert((ListEntry) != NULL); \
-	assert((ListEntry)->Blink != NULL); \
-	assert((ListEntry)->Blink->Flink == (ListEntry)); \
-	assert((ListEntry)->Flink != NULL); \
-	assert((ListEntry)->Flink->Blink == (ListEntry)); \
 }
 
 /*

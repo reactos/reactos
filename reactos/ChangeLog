@@ -1,3 +1,18 @@
+2004-07-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile (DLLS): Add gdiplus.
+	* apistatus.lst: Add gdiplus.dll.
+	* baseaddress.cfg (TARGET_BASE_LIB_GDIPLUS): Declare.
+	* bootdata/packages/reactos.dff: Add gdiplus.dll.
+	* include/ntos/rtl.h (InsertTailList): Remove dependency on RtlAssert.
+	* lib/gdiplus/(gdiplus, include, tests, tests/tests): New directories.
+	* lib/gdiplus/(.cvsignore, gdiplus.def, gdiplus.edf, gdiplus.rc,
+	makefile): New files.
+	* lib/gdiplus/gdiplus/(.cvsignore, *.c): Ditto.
+	* lib/gdiplus/include/(debug.h, GdiPlusPrivate.h): Ditto.
+	* lib/gdiplus/tests/(.cvsignore, Makefile, passthrough.c): Ditto.
+	* lib/gdiplus/tests/tests/(.cvsignore, test-1.c): Ditto.
+
 2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile, drivers/video/makefile, lib/cpl/Makefile, ntoskrnl/Makefile,
