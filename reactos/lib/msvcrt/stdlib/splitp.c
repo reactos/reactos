@@ -22,7 +22,8 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
     }
 
     tmp_dir = (char*)strrchr(path,'\\');
-    if( tmp_dir != NULL && tmp_dir != tmp_drive + 1 ) {
+//    if( tmp_dir != NULL && tmp_dir != tmp_drive + 1 ) {
+    if( tmp_dir != NULL ) {
         strncpy(dir,tmp_drive+1,tmp_dir - tmp_drive);
         *(dir + (tmp_dir - tmp_drive)) = 0;
     }
