@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.12 2002/09/08 10:23:07 chorns Exp $
+/* $Id: time.c,v 1.13 2002/09/30 20:57:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,7 +23,7 @@
 #define SECSPERMIN         60
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
-#define EPOCHWEEKDAY       0
+#define EPOCHWEEKDAY       1
 #define DAYSPERWEEK        7
 #define EPOCHYEAR          1601
 #define DAYSPERNORMALYEAR  365
@@ -139,6 +139,13 @@ RtlTimeToTimeFields(PLARGE_INTEGER liTime,
 
     /* compute year */
   CurYear = EPOCHYEAR;
+  CurYear += Days / DAYSPERLEAPYEAR;
+  Days -= (CurYear - EPOCHYEAR) * DAYSPERLEAPYEAR;
+  CurYear--; /* The next calculation needs CurYear - 1 */
+  Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
+  CurYear++;
+  Days -= EPOCHYEAR - 1 - (EPOCHYEAR -1) / 4 + (EPOCHYEAR -1) / 100 - (EPOCHYEAR - 1) / 400;
+
     /* FIXME: handle calendar modifications */
   while (1)
     {
@@ -153,6 +160,7 @@ RtlTimeToTimeFields(PLARGE_INTEGER liTime,
   TimeFields->Year = (CSHORT) CurYear;
 
     /* Compute month of year */
+  LeapYear = IsLeapYear(CurYear);
   Months = MonthLengths[LeapYear];
   for (CurMonth = 0; Days >= (long) Months[CurMonth]; CurMonth++)
     Days = Days - (long) Months[CurMonth];
