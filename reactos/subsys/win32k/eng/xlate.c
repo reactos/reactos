@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.27 2003/12/20 10:31:32 navaraf Exp $
+/* $Id: xlate.c,v 1.28 2003/12/20 14:19:47 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -214,7 +214,7 @@ VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
   XlateGDI = (XLATEGDI *) AccessInternalObjectFromUserObject(XlateObj);
   HXlate = (HANDLE) AccessHandleFromUserObject(XlateObj);
 
-  if(NULL != XlateGDI->translationTable)
+  if((XlateObj->flXlate & XO_TABLE) && NULL != XlateGDI->translationTable)
     {
       EngFreeMem(XlateGDI->translationTable);
     }
