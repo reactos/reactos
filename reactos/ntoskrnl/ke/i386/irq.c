@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.1 2000/07/10 21:54:51 ekohl Exp $
+/* $Id: irq.c,v 1.2 2000/07/24 23:51:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,7 +23,6 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/i386/segment.h>
-#include <internal/halio.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -93,13 +92,6 @@ VOID KeInitInterrupts (VOID)
    DPRINT("KeInitInterrupts ()\n",0);
    
    /*
-    * First mask off all interrupts from pic
-    */
-   outb(0x21,0xff);
-   outb(0xa1,0xff);
-   
-   
-   /*
     * Setup the IDT entries to point to the interrupt handlers
     */
    for (i=0;i<NR_IRQS;i++)
@@ -128,12 +120,9 @@ VOID KiInterruptDispatch (ULONG irq)
    /*
     * Notify the rest of the kernel of the raised irq level
     */
-   old_level = KeGetCurrentIrql();
-   if (irq != 0)
-     {
-	DPRINT("old_level %d\n",old_level);
-     }
-   KeSetCurrentIrql(HIGH_LEVEL - irq);
+   HalBeginSystemInterrupt (irq+IRQ_BASE,
+			    HIGH_LEVEL-irq,
+			    &old_level);
    
    /*
     * Enable interrupts
@@ -169,25 +158,9 @@ VOID KiInterruptDispatch (ULONG irq)
    __asm__("cli\n\t");
    
    /*
-    * Send EOI to the PIC
-    */
-   outb(0x20,0x20);
-   if (irq>=8)
-     {
-	outb(0xa0,0x20);
-     }
-   
-   /*
     * Unmask the related irq
     */
-   if (irq<8)
-     {
-	outb(0x21,inb(0x21)&(~(1<<irq)));
-     }
-   else
-     {
-	outb(0xa1,inb(0xa1)&(~(1<<(irq-8))));
-     }
+   HalEnableSystemInterrupt (irq + IRQ_BASE, 0, 0);
    
    /*
     * If the processor level will drop below dispatch level on return then
@@ -195,7 +168,7 @@ VOID KiInterruptDispatch (ULONG irq)
     */
    if (old_level < DISPATCH_LEVEL)
      {
-	KeSetCurrentIrql(DISPATCH_LEVEL);
+	HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
 	__asm__("sti\n\t");
 
 	if (irq == 0)
@@ -209,7 +182,8 @@ VOID KiInterruptDispatch (ULONG irq)
      {
 //	DbgPrint("$");
      }
-   KeSetCurrentIrql(old_level);
+
+   HalEndSystemInterrupt (old_level, 0);
 //   DbgPrint("}");
 }
 

@@ -19,6 +19,10 @@
 
 /* GLOBALS ******************************************************************/
 
+/* FIXME: this should be in a header file */
+#define NR_IRQS         (16)
+#define IRQ_BASE        (0x40)
+
 /*
  * PURPOSE: Current irq level
  */
@@ -26,7 +30,16 @@ static KIRQL CurrentIrql = HIGH_LEVEL;
 
 extern ULONG DpcQueueSize;
 
+static VOID KeSetCurrentIrql(KIRQL newlvl);
+
 /* FUNCTIONS ****************************************************************/
+
+VOID HalpInitPICs(VOID)
+{
+   /* Mask off all interrupts from PICs */
+   outb(0x21,0xff);
+   outb(0xa1,0xff);
+}
 
 #if 0
 static unsigned int HiGetCurrentPICMask(void)
@@ -118,16 +131,6 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 }
 
 
-VOID KeSetCurrentIrql(KIRQL newlvl)
-/*
- * PURPOSE: Sets the current irq level without taking any action
- */
-{
-//   DPRINT("KeSetCurrentIrql(newlvl %x)\n",newlvl);
-   CurrentIrql = newlvl;
-}
-
-
 KIRQL STDCALL KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
@@ -135,6 +138,16 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
  */
 {
    return(CurrentIrql);
+}
+
+
+static VOID KeSetCurrentIrql(KIRQL newlvl)
+/*
+ * PURPOSE: Sets the current irq level without taking any action
+ */
+{
+//   DPRINT("KeSetCurrentIrql(newlvl %x)\n",newlvl);
+   CurrentIrql = newlvl;
 }
 
 
@@ -280,6 +293,83 @@ KeRaiseIrql (
 	)
 {
 	*OldIrql = KfRaiseIrql (NewIrql);
+}
+
+
+BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
+					 KIRQL Irql,
+					 PKIRQL OldIrql)
+{
+   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+	return FALSE;
+
+   /* Send EOI to the PICs */
+   outb(0x20,0x20);
+   if ((Vector-IRQ_BASE)>=8)
+     {
+	outb(0xa0,0x20);
+     }
+
+   *OldIrql = KeGetCurrentIrql();
+   if (Vector-IRQ_BASE != 0)
+     {
+	DPRINT("old_level %d\n",*OldIrql);
+     }
+   KeSetCurrentIrql(Irql);
+
+   return TRUE;
+}
+
+
+VOID STDCALL HalEndSystemInterrupt (KIRQL Irql,
+				    ULONG Unknown2)
+{
+   KeSetCurrentIrql(Irql);
+}
+
+
+BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
+					   ULONG Unknown2)
+{
+   ULONG irq;
+
+   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+	return FALSE;
+
+   irq = Vector - IRQ_BASE;
+   if (irq<8)
+     {
+	outb(0x21,inb(0x21)|(1<<irq));
+     }
+   else
+     {
+	outb(0xa1,inb(0xa1)|(1<<(irq-8)));
+     }
+
+   return TRUE;
+}
+
+
+BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
+					  ULONG Unknown2,
+					  ULONG Unknown3)
+{
+   ULONG irq;
+
+   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+	return FALSE;
+
+   irq = Vector - IRQ_BASE;
+   if (irq<8)
+     {
+	outb(0x21,inb(0x21)&(~(1<<irq)));
+     }
+   else
+     {
+	outb(0xa1,inb(0xa1)&(~(1<<(irq-8))));
+     }
+
+   return TRUE;
 }
 
 /* EOF */

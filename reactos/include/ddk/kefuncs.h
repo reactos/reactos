@@ -66,6 +66,15 @@ VOID STDCALL KeDisconnectInterrupt(PKINTERRUPT InterruptObject);
 
 VOID STDCALL KeEnterCriticalRegion (VOID);
 
+/*
+ * FUNCTION: Enters the kernel debugger
+ * ARGUMENTS:
+ *	None
+ */
+VOID STDCALL KeEnterKernelDebugger (VOID);
+
+VOID STDCALL KeFlushWriteBuffer (VOID);
+
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
 ULONG KeGetCurrentProcessorNumber(VOID);
@@ -355,15 +364,6 @@ KeWaitForSingleObject (
 	);
 
 
-/*
- * FUNCTION: Sets the current irql without altering the current processor 
- * state
- * ARGUMENTS:
- *          newlvl = IRQ level to set
- * NOTE: This is for internal use only
- */
-VOID KeSetCurrentIrql(KIRQL newlvl);
-
 
 // io permission map has a 8k size
 // Each bit in the IOPM corresponds to an io port byte address. The bitmap
@@ -426,21 +426,6 @@ NTSTATUS KeI386ReleaseGdtSelectors(OUT PULONG SelArray,
 NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
 				    IN ULONG NumOfSelectors);
 
-/*
- * FUNCTION: Enters the kernel debugger
- * ARGUMENTS:
- *	None
- */
-VOID
-STDCALL
-KeEnterKernelDebugger (VOID);
-
-
-VOID
-STDCALL
-KeFlushWriteBuffer (
-	VOID
-	);
 
 KIRQL
 FASTCALL

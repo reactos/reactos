@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.4 2000/07/04 11:11:03 dwelch Exp $
+/* $Id: halddk.h,v 1.5 2000/07/24 23:48:24 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -344,9 +344,9 @@ HalAssignSlotResources (
 	PCM_RESOURCE_LIST	*AllocatedResources
 	);
 
-/*
-HalBeginSystemInterrupt
-*/
+BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
+					 KIRQL Irql,
+					 PKIRQL OldIrql);
 
 /*
 HalCalibratePerformanceCounter
@@ -357,9 +357,8 @@ FASTCALL
 HalClearSoftwareInterrupt
 */
 
-/*
-HalDisableSystemInterrupt
-*/
+BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
+					   ULONG Unknown2);
 
 VOID
 STDCALL
@@ -367,13 +366,13 @@ HalDisplayString (
 	IN	PCH	String
 	);
 
-/*
-HalEnableSystemInterrupt
-*/
+BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
+					  ULONG Unknown2,
+					  ULONG Unknown3);
 
-/*
-HalEndSystemInterrupt
-*/
+VOID STDCALL HalEndSystemInterrupt (KIRQL Irql,
+				    ULONG Unknown2);
+
 
 /* Is this function really exported ?? */
 VOID

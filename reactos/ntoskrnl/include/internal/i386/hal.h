@@ -29,6 +29,9 @@ VOID HalResetDisplay (VOID);
 
 VOID HalpInitBusHandlers (VOID);
 
+/* irql.c */
+VOID HalpInitPICs(VOID);
+
 /* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
 
