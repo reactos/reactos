@@ -1005,7 +1005,7 @@ ShellEntryMap::iterator StartMenu::AddEntry(const String& title, ICON_ID icon_id
 		for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
 			StartMenuEntry& sme = it->second;
 
-			if (sme._title == title)	///@todo speed up by using a map indexed by name
+			if (!_tcsicmp(sme._title, title))	///@todo speed up by using a map indexed by name
 				for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
 					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 						 // merge the new shell entry with the existing of the same name
