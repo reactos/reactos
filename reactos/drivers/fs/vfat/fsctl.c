@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.24 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: fsctl.c,v 1.25 2003/11/12 15:26:44 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,7 +64,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 				     NULL,
 				     0,
 				     &DiskGeometry,
-				     &Size);
+				     &Size,
+				     FALSE);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
@@ -79,7 +80,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 					NULL,
 					0,
 					&PartitionInfo,
-					&Size);
+					&Size,
+					FALSE);
       if (!NT_SUCCESS(Status))
       {
          DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
@@ -122,7 +124,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       return STATUS_INSUFFICIENT_RESOURCES;
    }
    Offset.QuadPart = 0;
-   Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot);
+   Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
       FatInfo.VolumeID = Boot->VolumeID;
@@ -399,7 +401,8 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 				    NULL,
 				    0,
 				    NULL,
-				    NULL);
+				    NULL,
+				    FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);

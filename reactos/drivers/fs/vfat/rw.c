@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.62 2003/10/12 01:13:23 weiden Exp $
+/* $Id: rw.c,v 1.63 2003/11/12 15:26:44 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,7 +162,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   if (Fcb->Flags & FCB_IS_FAT)
   {
     ReadOffset.QuadPart += DeviceExt->FatInfo.FATStart * BytesPerSector;
-    Status = VfatReadDisk(DeviceExt->StorageDevice, &ReadOffset, Length, Buffer);
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &ReadOffset, Length, Buffer, FALSE);
 
     if (NT_SUCCESS(Status))
     {
@@ -177,7 +177,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   /* Is this a read of the Volume ? */
   if (Fcb->Flags & FCB_IS_VOLUME)
   {
-    Status = VfatReadDisk(DeviceExt->StorageDevice, &ReadOffset, Length, Buffer);
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &ReadOffset, Length, Buffer, FALSE);
     if (NT_SUCCESS(Status))
     {
       *LengthRead = Length;
@@ -207,7 +207,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
 
     // Fire up the read command
     
-    Status = VfatReadDisk (DeviceExt->StorageDevice, &ReadOffset, Length, Buffer);
+    Status = VfatReadDisk (DeviceExt->StorageDevice, &ReadOffset, Length, Buffer, FALSE);
     if (NT_SUCCESS(Status))
     {
       *LengthRead += Length;
@@ -269,7 +269,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
     Ccb->LastOffset = ReadOffset.u.LowPart + (ClusterCount - 1) * BytesPerCluster;
 
     // Fire up the read command
-    Status = VfatReadDisk (DeviceExt->StorageDevice, &StartOffset, BytesDone, Buffer);
+    Status = VfatReadDisk (DeviceExt->StorageDevice, &StartOffset, BytesDone, Buffer, FALSE);
 
     if (NT_SUCCESS(Status))
     {

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.24 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: volume.c,v 1.25 2003/11/12 15:26:44 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@ FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
   DPRINT("BufferLength %lu\n", *BufferLength);
 
   DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
-  DPRINT("LabelLength %lu\n", DeviceObject->Vpb->VolumeLabelLength);
+  DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
   DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
   if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))

@@ -23,8 +23,10 @@ NTSTATUS
 VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 	      IN PLARGE_INTEGER ReadOffset,
 	      IN ULONG ReadLength,
-	      IN OUT PUCHAR Buffer)
+	      IN OUT PUCHAR Buffer,
+	      IN BOOLEAN Override)
 {
+  PIO_STACK_LOCATION Stack;
   PIRP Irp;
   IO_STATUS_BLOCK IoStatus;
   KEVENT event;
@@ -43,11 +45,16 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 				      ReadOffset,
 				      &event,
 				      &IoStatus);
-
   if (Irp == NULL)
     {
       DPRINT("IoBuildSynchronousFsdRequest failed\n");
       return(STATUS_UNSUCCESSFUL);
+    }
+
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
   DPRINT ("Calling IO Driver... with irp %x\n", Irp);
@@ -130,61 +137,65 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG CtlCode,
 			  IN PVOID InputBuffer,
 			  IN ULONG InputBufferSize,
-			  IN OUT PVOID OutputBuffer, 
-			  IN OUT PULONG pOutputBufferSize)
+			  IN OUT PVOID OutputBuffer,
+			  IN OUT PULONG OutputBufferSize,
+			  IN BOOLEAN Override)
 {
-	ULONG OutputBufferSize = 0;
-	KEVENT Event;
-	PIRP Irp;
-	IO_STATUS_BLOCK IoStatus;
-	NTSTATUS Status;
+  PIO_STACK_LOCATION Stack;
+  KEVENT Event;
+  PIRP Irp;
+  IO_STATUS_BLOCK IoStatus;
+  NTSTATUS Status;
 
-	DPRINT("VfatBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
-	       "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
-	       "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
-	       InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
-	       pOutputBufferSize ? *pOutputBufferSize : 0);
+  DPRINT("VfatBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
+         "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
+         "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+         InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize,
+         pOutputBufferSize ? *pOutputBufferSize : 0);
 
-	if (pOutputBufferSize)
-	{
-		OutputBufferSize = *pOutputBufferSize;
-	}
+  KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
-	KeInitializeEvent (&Event, NotificationEvent, FALSE);
+  DPRINT("Building device I/O control request ...\n");
+  Irp = IoBuildDeviceIoControlRequest(CtlCode,
+				      DeviceObject,
+				      InputBuffer,
+				      InputBufferSize,
+				      OutputBuffer,
+				      (OutputBufferSize) ? *OutputBufferSize : 0,
+				      FALSE,
+				      &Event,
+				      &IoStatus);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildDeviceIoControlRequest failed\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-	DPRINT("Building device I/O control request ...\n");
-	Irp = IoBuildDeviceIoControlRequest(CtlCode, 
-					    DeviceObject, 
-					    InputBuffer, 
-					    InputBufferSize, 
-					    OutputBuffer,
-					    OutputBufferSize, 
-					    FALSE, 
-					    &Event, 
-					    &IoStatus);
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+    }
 
-	if (Irp == NULL)
-	{
-		DPRINT("IoBuildDeviceIoControlRequest failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
+  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver(DeviceObject, Irp);
 
-	DPRINT ("Calling IO Driver... with irp %x\n", Irp);
-	Status = IoCallDriver(DeviceObject, Irp);
+  DPRINT ("Waiting for IO Operation for %x\n", Irp);
+  if (Status == STATUS_PENDING)
+    {
+      DPRINT ("Operation pending\n");
+      KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
+      DPRINT ("Getting IO Status... for %x\n", Irp);
 
-	DPRINT ("Waiting for IO Operation for %x\n", Irp);
-	if (Status == STATUS_PENDING)
-	{
-		DPRINT ("Operation pending\n");
-		KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-		DPRINT ("Getting IO Status... for %x\n", Irp);
+      Status = IoStatus.Status;
+    }
 
-		Status = IoStatus.Status;
-	}
-	if (OutputBufferSize)
-	{
-		*pOutputBufferSize = OutputBufferSize;
-	}
-	DPRINT("Returning Status %x\n", Status);
-	return Status;
+  if (OutputBufferSize)
+    {
+      *OutputBufferSize = IoStatus.Information;
+    }
+
+  DPRINT("Returning Status %x\n", Status);
+
+  return Status;
 }

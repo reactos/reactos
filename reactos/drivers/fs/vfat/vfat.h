@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.60 2003/10/11 17:51:56 hbirr Exp $ */
+/* $Id: vfat.h,v 1.61 2003/11/12 15:26:44 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -329,7 +329,8 @@ NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS VfatReadDisk(IN PDEVICE_OBJECT pDeviceObject,
                       IN PLARGE_INTEGER ReadOffset,
                       IN ULONG ReadLength,
-                      IN PUCHAR Buffer);
+                      IN PUCHAR Buffer,
+                      IN BOOLEAN Override);
 
 NTSTATUS VfatWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
                        IN PLARGE_INTEGER WriteOffset,
@@ -340,8 +341,9 @@ NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 				   IN ULONG CtlCode,
 				   IN PVOID InputBuffer,
 				   IN ULONG InputBufferSize,
-				   IN OUT PVOID OutputBuffer, 
-				   IN OUT PULONG pOutputBufferSize);
+				   IN OUT PVOID OutputBuffer,
+				   IN OUT PULONG pOutputBufferSize,
+				   IN BOOLEAN Override);
 
 /*  -----------------------------------------------------------  dir.c  */
 
