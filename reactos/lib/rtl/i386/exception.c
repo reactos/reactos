@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.2 2004/07/04 02:01:02 navaraf Exp $
+/* $Id: exception.c,v 1.3 2004/07/07 16:25:00 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -307,34 +307,25 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   Context.Eax = EaxValue;
  
   // Begin traversing the list of EXCEPTION_REGISTRATION
-  while ((ULONG_PTR)ERHead != -1)
+  while ((ULONG_PTR)ERHead != -1 && ERHead != RegistrationFrame)
   {
     EXCEPTION_RECORD er2;
  
     DPRINT("ERHead 0x%X\n", ERHead);
 
-    if (ERHead == RegistrationFrame)
+    // If there's an exception frame, but it's lower on the stack
+    // than the head of the exception list, something's wrong!
+    if (RegistrationFrame && (RegistrationFrame <= ERHead))
     {
-      DPRINT("Continueing execution\n");
-      ZwContinue(&Context, FALSE);
-      return;
-    }
-    else
-    {
-      // If there's an exception frame, but it's lower on the stack
-      // than the head of the exception list, something's wrong!
-      if (RegistrationFrame && (RegistrationFrame <= ERHead))
-      {
-        DPRINT("The exception frame is bad\n");
+      DPRINT("The exception frame is bad\n");
 
-        // Generate an exception to bail out
-        er2.ExceptionRecord = pExceptRec;
-        er2.NumberParameters = 0;
-        er2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
-        er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
+      // Generate an exception to bail out
+      er2.ExceptionRecord = pExceptRec;
+      er2.NumberParameters = 0;
+      er2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
+      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
  
-        RtlRaiseException(&er2);
-      }
+      RtlRaiseException(&er2);
     }
  
 #if 0
@@ -386,10 +377,10 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
       DPRINT("New ERHead is 0x%X\n", ERHead);
 
       DPRINT("Setting exception registration at 0x%X as current\n",
-        RegistrationFrame->prev);
+        /*RegistrationFrame->prev*/ pCurrExceptReg->prev);
 
       // Unlink the exception handler
-      SehpSetExceptionList(RegistrationFrame->prev);
+      SehpSetExceptionList(pCurrExceptReg->prev);
     }
     else // The stack looks goofy! Raise an exception to bail out
     {
@@ -403,17 +394,6 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
       RtlRaiseException(&er2);
     }
   }
- 
-  // If we get here, we reached the end of the EXCEPTION_REGISTRATION list.
-  // This shouldn't happen normally.
-
-  DPRINT("Ran out of exception registrations. RegistrationFrame is (0x%X)\n",
-    RegistrationFrame);
-
-  if ((ULONG_PTR)RegistrationFrame == -1)
-    ZwContinue(&Context, FALSE);
-  else
-    NtRaiseException(pExceptRec, &Context, 0);
 }
 
 /* EOF */
