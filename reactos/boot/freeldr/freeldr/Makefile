@@ -86,8 +86,9 @@ setup_loader : setupldr.sys
 	$(CP) setupldr.sys $(BOOTCD_DIR)/disk/loader/setupldr.sys
 
 
+COMPILER_ELF_OPTIONS = -fshort-wchar
 COMPILER_OPTIONS = -Wall -Werror -nostdlib -ffreestanding -fno-builtin -fno-inline \
-                   -fno-zero-initialized-in-bss -O1 -MD
+                   -fno-zero-initialized-in-bss -O1 -MD $(COMPILER_ELF_OPTIONS)
 # FreeLoader does not use any of the standard libraries, includes, or built-in functions
 
 ifeq ($(DEBUG),yes)

@@ -417,7 +417,6 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
     PNTFS_INDEX_ENTRY IndexEntry, IndexEntryEnd;
     ULONG RecordOffset;
     ULONG IndexBlockSize;
-    static WCHAR wI30[] = {'$','I','3','0',0};
 
     MftRecord = MmAllocateMemory(NtfsMftRecordSize);
     if (MftRecord == NULL)
@@ -429,7 +428,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
     {
         Magic = MftRecord->Magic;
 
-        if (!NtfsFindAttribute(&IndexRootCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, wI30))
+        if (!NtfsFindAttribute(&IndexRootCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30"))
         {
             MmFreeMemory(MftRecord);
             return FALSE;
@@ -469,7 +468,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 
             IndexBlockSize = IndexRoot->IndexBlockSize;
 
-            if (!NtfsFindAttribute(&IndexBitmapCtx, MftRecord, NTFS_ATTR_TYPE_BITMAP, wI30))
+            if (!NtfsFindAttribute(&IndexBitmapCtx, MftRecord, NTFS_ATTR_TYPE_BITMAP, L"$I30"))
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
                 MmFreeMemory(MftRecord);
@@ -489,7 +488,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
             }
             NtfsReadAttribute(&IndexBitmapCtx, 0, BitmapData, BitmapDataSize);
 
-            if (!NtfsFindAttribute(&IndexAllocationCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ALLOCATION, wI30))
+            if (!NtfsFindAttribute(&IndexAllocationCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ALLOCATION, L"$I30"))
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
                 MmFreeMemory(BitmapData);
@@ -570,7 +569,6 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
     UCHAR PathPart[261];
     ULONG CurrentMFTIndex;
     UCHAR i;
-    static WCHAR wEmpty[] = {0};
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile() FileName = %s\n", FileName));
 
@@ -599,7 +597,7 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
         return FALSE;
     }
 
-    if (!NtfsFindAttribute(DataContext, MftRecord, NTFS_ATTR_TYPE_DATA, wEmpty))
+    if (!NtfsFindAttribute(DataContext, MftRecord, NTFS_ATTR_TYPE_DATA, L""))
     {
         DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile: Can't find data attribute\n"));
         return FALSE;
@@ -610,8 +608,6 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
 
 BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
-    static WCHAR wEmpty[] = {0};
-
     NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsOpenVolume() DriveNumber = 0x%x VolumeStartSector = 0x%x\n", DriveNumber, VolumeStartSector));
@@ -675,7 +671,7 @@ BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
     RtlCopyMemory(NtfsMasterFileTable, (PCHAR)DISKREADBUFFER, NtfsMftRecordSize);
 
     DbgPrint((DPRINT_FILESYSTEM, "Searching for DATA attribute...\n"));
-    if (!NtfsFindAttribute(&NtfsMFTContext, NtfsMasterFileTable, NTFS_ATTR_TYPE_DATA, wEmpty))
+    if (!NtfsFindAttribute(&NtfsMFTContext, NtfsMasterFileTable, NTFS_ATTR_TYPE_DATA, L""))
     {
         FileSystemError("Can't find data attribute for Master File Table.");
         return FALSE;
