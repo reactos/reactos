@@ -1,5 +1,18 @@
 2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* include/fslib: New directory.
+	* lib/fslib: Ditto.
+	* lib/fslib/vfatlib: Ditto.
+	* include/fslib/vfatlib.h: New file.
+	* lib/fslib/vfatlib/.cvsignore: Ditto.
+	* lib/fslib/vfatlib/Makefile: Ditto.
+	* lib/fslib/vfatlib/vfatlib.c: Ditto.
+	* Makefile: Support file system libraries
+	* lib/zlib/Makefile: Remove nostrip target.
+	* tools/helper.mk: Add nostrip target.
+
+2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/.cvsignore: Ignore rline.
 
 2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>

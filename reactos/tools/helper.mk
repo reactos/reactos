@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.30 2003/04/05 09:37:45 chorns Exp $
+# $Id: helper.mk,v 1.31 2003/04/05 19:40:41 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -156,6 +156,7 @@ endif
 endif
 
 ifeq ($(TARGET_TYPE),library)
+  TARGET_NORC := yes
   MK_MODE := static
   MK_EXETYPE :=
   MK_DEFEXT := .a
@@ -645,6 +646,12 @@ ifeq ($(MK_MODE),static)
 
 $(MK_FULLNAME): $(TARGET_OBJECTS)
 	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
+
+# Static libraries dont have a nostrip version
+$(MK_NOSTRIPNAME):
+	-
+
+.phony: $(MK_NOSTRIPNAME)
 
 endif # MK_MODE
 
