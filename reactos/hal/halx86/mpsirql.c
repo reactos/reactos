@@ -383,8 +383,8 @@ BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
     DPRINT("Not a device interrupt\n");
 	  return FALSE;
   }
-
-  irq = VECTOR2IRQ(Vector);
+  // TODO FIXME - What happened to definition for VECTOR2IRQ ???
+  //irq = VECTOR2IRQ(Vector);
 
   IOAPICMaskIrq(0, irq);
 
@@ -406,7 +406,8 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
 	  return FALSE;
   }
 
-  irq = VECTOR2IRQ(Vector);
+  // TODO FIXME - What happened to definition for VECTOR2IRQ ???
+  //irq = VECTOR2IRQ(Vector);
 
   IOAPICUnmaskIrq(0, irq);
 
