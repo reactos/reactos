@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.111 2003/10/09 07:30:02 gvg Exp $
+/* $Id: window.c,v 1.112 2003/10/14 18:49:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -536,9 +536,13 @@ IntGetWindowObject(HWND hWnd)
 {
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
+
+  /* FIXME */
+  if (PsGetWin32Process() == NULL)
+    return NULL;
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->
-			       HandleTable,
+	    		       HandleTable,
 			       hWnd,
 			       otWindow,
 			       (PVOID*)&WindowObject);
@@ -1094,10 +1098,16 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
+#if 0
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
+#else
+  POINT MaxPos;
+#endif
   CREATESTRUCTW Cs;
   LRESULT Result;
   DPRINT("NtUserCreateWindowEx\n");
+
+  DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
 
   /* Initialize gui state if necessary. */
   IntGraphicsCheck(TRUE);
@@ -1261,6 +1271,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /*
    * Get the size and position of the window.
    */
+#if 0
   if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
     {
       /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
@@ -1271,6 +1282,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       x = max(MinTrack.x, x);
       y = max(MinTrack.y, y);
     }
+#endif
 
   WindowObject->WindowRect.left = x;
   WindowObject->WindowRect.top = y;
@@ -1311,6 +1323,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
 //  NtUserSetWindowLong(Handle, GWL_STYLE, WindowObject->Style, TRUE);
 //  NtUserSetWindowLong(Handle, GWL_EXSTYLE, WindowObject->ExStyle, TRUE);
+  DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
   // Any more?
 
   DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
