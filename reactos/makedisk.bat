@@ -9,4 +9,5 @@ copy /Y services\dd\keyboard\keyboard.sys a:
 copy /Y services\dd\ide\ide.sys a:
 copy /Y services\fs\vfat\vfatfsd.sys a:
 copy /Y lib\ntdll\ntdll.dll a:
+copy /Y lib\kernel32\kernel32.dll a:
 : copy /Y lib\crtdll\crtdll.dll a:

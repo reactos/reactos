@@ -2,8 +2,10 @@
 
 #ifdef NDEBUG
 #define DPRINT(args...) 
+#define CHECKPOINT
 #else
 #define DPRINT(args...) do { dprintf("(KERNEL32:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
+#define CHECKPOINT do { dprintf("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
 #endif
 
 void dprintf(char* fmt, ...);
