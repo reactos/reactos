@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.13 2003/07/10 21:04:31 chorns Exp $
+/* $Id: draw.c,v 1.14 2003/07/20 01:24:52 jimtabor Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -469,7 +469,7 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
 	 * middle (COLOR_BTNFACE). I believe it's the same for win95 but since
 	 * I don't know I go with Bertho and just sets it for win98 until proven
 	 * otherwise.
-	 *                                          Dennis Björklund, 10 June, 99
+	 *                                          Dennis BjÃ¶rklund, 10 June, 99
 	 */
 /*	if( TWEAK_WineLook == WIN98_LOOK && LTInnerI != -1 ) */
             LTInnerI = RBInnerI = COLOR_BTNFACE;
@@ -1405,7 +1405,7 @@ GrayStringW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1413,8 +1413,9 @@ InvertRect(
   HDC hDC,
   CONST RECT *lprc)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  
+  return PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+  			lprc->bottom - lprc->top, DSTINVERT);
 }
 
 
@@ -1458,7 +1459,7 @@ TabbedTextOutW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -1467,8 +1468,19 @@ FrameRect(
   CONST RECT *lprc,
   HBRUSH hbr)
 {
-  UNIMPLEMENTED;
-  return 0;
+HBRUSH oldbrush;
+RECT r = *lprc;
+
+	if ( (r.right <= r.left) || (r.bottom <= r.top) ) return 0;
+	if (!(oldbrush = SelectObject( hDC, hbr ))) return 0;
+        
+	PatBlt( hDC, r.left, r.top, 1, r.bottom - r.top, PATCOPY );
+	PatBlt( hDC, r.right - 1, r.top, 1, r.bottom - r.top, PATCOPY );
+	PatBlt( hDC, r.left, r.top, r.right - r.left, 1, PATCOPY );
+	PatBlt( hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY );
+                                                                            
+	W32kSelectObject( hDC, oldbrush );
+	return TRUE;
 }
 
 
@@ -1562,8 +1574,26 @@ DrawFocusRect(
   HDC hDC,
   CONST RECT *lprc)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    HBRUSH hOldBrush;
+    HPEN hOldPen, hNewPen;
+    INT oldDrawMode, oldBkMode;
+
+    hOldBrush = SelectObject(hDC, GetStockObject(NULL_BRUSH));
+    hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
+    hOldPen = SelectObject(hDC, hNewPen);
+    oldDrawMode = SetROP2(hDC, R2_XORPEN);
+    oldBkMode = SetBkMode(hDC, TRANSPARENT);
+
+    Rectangle(hDC, lprc->left, lprc->top, lprc->right, lprc->bottom);
+
+    SetBkMode(hDC, oldBkMode);
+    SetROP2(hDC, oldDrawMode);
+    SelectObject(hDC, hOldPen);
+    DeleteObject(hNewPen);
+    SelectObject(hDC, hOldBrush);
+
+    return TRUE;
+
 }
 
 
