@@ -12,11 +12,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-//#include <libc/file.h>
+#include <libc/file.h>
 #include <string.h>
 #include <share.h>
-
-#if 0
 
 typedef struct _fileno_modes_type
 {
@@ -25,14 +23,18 @@ typedef struct _fileno_modes_type
 	int fd;
 } fileno_modes_type;
 
-extern fileno_modes_type *fileno_modes;
+fileno_modes_type *fileno_modes = NULL;
+
+int maxfno = 5;
+int minfno = 5;
 
 char __is_text_file(FILE *p) {
+	if ( p == NULL || fileno_modes == NULL )
+		return FALSE;
 	return (!((p)->_flag&_IOSTRG) && (fileno_modes[(p)->_file].mode&O_TEXT));
 }
 
 
-extern int maxfno;
 
 
 int __fileno_alloc(HANDLE hFile, int mode);
@@ -123,10 +125,6 @@ _O_TEXT   Opens file in text (translated) mode. (For more information, see Text 
 }
 
 
-fileno_modes_type *fileno_modes = NULL;
-
-int maxfno = 5;
-int minfno = 5;
 
 
 int
@@ -254,4 +252,3 @@ int _open_osfhandle (void *osfhandle, int flags )
 {
 	return __fileno_alloc((HANDLE)osfhandle, flags);
 }	
-#endif
