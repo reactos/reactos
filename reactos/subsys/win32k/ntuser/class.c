@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.37 2003/10/22 14:02:54 navaraf Exp $
+/* $Id: class.c,v 1.38 2003/10/28 20:19:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -295,7 +295,20 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 {
 	PWNDCLASS_OBJECT ClassObject;
 	WORD  objectSize;
-	objectSize = sizeof(WNDCLASS_OBJECT);
+	NTSTATUS Status;
+
+	/* Check for double registration of the class. */
+	if (PsGetWin32Process() != NULL)
+	{
+		Status = ClassReferenceClassByAtom(&ClassObject, Atom);
+		if (NT_SUCCESS(Status))
+		{
+			ObmDereferenceObject(ClassObject);
+			return(NULL);
+		}
+	}
+	
+	objectSize = sizeof(WNDCLASS_OBJECT) + lpwcx->cbClsExtra;
 	ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
 	if (ClassObject == 0)
 	{          
@@ -332,6 +345,17 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 		ClassObject->lpszMenuName = ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));
 		RtlCreateUnicodeString(ClassObject->lpszMenuName,(LPWSTR)lpwcx->lpszMenuName);
 	}
+	/* Extra class data */
+	if (ClassObject->cbClsExtra != 0)
+	{
+		ClassObject->ExtraData = (PCHAR)(ClassObject + 1);
+		RtlZeroMemory(ClassObject->ExtraData, ClassObject->cbClsExtra);
+	}
+	else
+	{
+		ClassObject->ExtraData = NULL;
+	}
+
 	return(ClassObject);
 }
 
@@ -411,6 +435,20 @@ ULONG FASTCALL
 IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
 {
   LONG Ret;
+
+  if ((int)Offset >= 0)
+    {
+      DbgPrint("GetClassLong(%x, %d)\n", WindowObject->Self, Offset);
+      if (Offset > WindowObject->Class->cbClsExtra - sizeof(LONG))
+	{
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  return 0;
+	}
+      Ret = *((LONG *)(WindowObject->Class->ExtraData + Offset));
+      DbgPrint("Result: %x\n", Ret);
+      return Ret;
+    }
+
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
@@ -482,6 +520,19 @@ void FASTCALL
 IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   PUNICODE_STRING str;
+
+  if ((int)Offset >= 0)
+    {
+      DbgPrint("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
+      if (Offset > WindowObject->Class->cbClsExtra - sizeof(LONG))
+	{
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  return;
+	}
+      *((LONG *)(WindowObject->Class->ExtraData + Offset)) = dwNewLong;
+      return;
+    }
+  
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:

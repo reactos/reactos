@@ -25,6 +25,7 @@ typedef struct _WNDCLASS_OBJECT
   HICON   hIconSm;
   BOOL Unicode;
   LIST_ENTRY ListEntry;
+  PCHAR   ExtraData;
 } WNDCLASS_OBJECT, *PWNDCLASS_OBJECT;
 
 NTSTATUS FASTCALL
