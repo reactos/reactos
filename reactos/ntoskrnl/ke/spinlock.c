@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/spinlock.c
+ * FILE:            ntoskrnl/ke/spinlock.c
  * PURPOSE:         Implements spinlocks
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:

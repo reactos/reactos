@@ -1,8 +1,9 @@
-# $Id: makefile_rex,v 1.56 2000/03/03 00:43:28 ekohl Exp $
+# $Id: makefile_rex,v 1.57 2000/03/04 13:41:56 ekohl Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntoskrnl
+
 
 BASE_CFLAGS = -I../include -D__NTOSKRNL__
 
@@ -25,7 +26,7 @@ RTL_OBJECTS = rtl/ctype.o rtl/interlck.o rtl/largeint.o  rtl/list.o \
               rtl/stdlib.o rtl/string.o rtl/time.o rtl/unalign.o \
               rtl/unicode.o rtl/wstring.o rtl/bitmap.o
 
-KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
+KE_OBJECTS = ke/head.o ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
 	     ke/mutex.o ke/kernel.o ke/ldt.o ke/spinlock.o\
@@ -140,12 +141,14 @@ objects/kd.o: $(KD_OBJECTS)
 $(TARGET).coff: $(TARGET).rc ../include/reactos/resource.h
 
 
-OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
+OBJECTS = objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
           objects/se.o objects/cm.o objects/dbg.o objects/nt.o \
           objects/cc.o objects/kd.o objects/ldr.o objects/fs.o \
           objects/po.o objects/nls.o \
+          objects/hal.o \
           $(TARGET).coff
+
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
