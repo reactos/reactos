@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.31 2004/04/26 05:46:35 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.32 2004/04/28 20:50:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -446,7 +446,9 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->FirstLevelTbFills = 0; /* FIXME */
 	Spi->SecondLevelTbFills = 0; /* FIXME */
 	Spi->SystemCalls = 0; /* FIXME */
-	
+
+	ObDereferenceObject(TheIdleProcess);
+
 	return (STATUS_SUCCESS);
 }
 
@@ -653,6 +655,8 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000;
         Spi->TotalInterruptTime = CurrentTime;
         Spi->TotalInterrupts = CurrentTime.QuadPart / 100000; // Interrupt Count
+
+	ObDereferenceObject(TheIdleProcess);
         
 	return (STATUS_SUCCESS);
 }
@@ -830,6 +834,8 @@ QSI_DEF(SystemFullMemoryInformation)
 	MmPrintMemoryStatistic();
 	
 	*Spi = MiMemoryConsumers[MC_USER].PagesUsed;
+
+	ObDereferenceObject(TheIdleProcess);
 
 	return (STATUS_SUCCESS);
 }
