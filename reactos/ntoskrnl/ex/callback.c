@@ -24,7 +24,9 @@ VOID ExCallUserCallBack(PVOID fn)
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtCallbackReturn(VOID)
+NTSTATUS STDCALL NtCallbackReturn(PVOID Result,
+				  ULONG ResultLength,
+				  NTSTATUS Status)
 {
    UNIMPLEMENTED;
 }

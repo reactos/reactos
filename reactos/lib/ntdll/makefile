@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.46 2000/05/13 13:50:57 dwelch Exp $
+# $Id: makefile,v 1.47 2000/05/13 14:21:43 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -21,7 +21,7 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
               rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o rtl/ppb.o \
               rtl/bitmap.o rtl/time.o rtl/acl.o rtl/sid.o rtl/image.o \
-              rtl/access.o rtl/apc.o rtl/callback.o luid.o
+              rtl/access.o rtl/apc.o rtl/callback.o rtl/luid.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 
