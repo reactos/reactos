@@ -374,26 +374,23 @@ NtEnumerateKey (
 }
 
 
-NTSTATUS 
-STDCALL
-NtEnumerateValueKey (
-	IN	HANDLE				KeyHandle,
-	IN	ULONG				Index,
-	IN	KEY_VALUE_INFORMATION_CLASS	KeyValueInformationClass,
-	OUT	PVOID				KeyValueInformation,
-	IN	ULONG				Length,
-	OUT	PULONG				ResultLength
-	)
+NTSTATUS STDCALL
+NtEnumerateValueKey(IN HANDLE KeyHandle,
+		    IN ULONG Index,
+		    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+		    OUT PVOID KeyValueInformation,
+		    IN ULONG Length,
+		    OUT PULONG ResultLength)
 {
- NTSTATUS  Status;
- PKEY_OBJECT  KeyObject;
- PREGISTRY_FILE  RegistryFile;
- PKEY_BLOCK  KeyBlock;
- PVALUE_BLOCK  ValueBlock;
- PDATA_BLOCK  DataBlock;
- PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
- PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
- PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
+  NTSTATUS  Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_FILE  RegistryFile;
+  PKEY_BLOCK  KeyBlock;
+  PVALUE_BLOCK  ValueBlock;
+  PDATA_BLOCK  DataBlock;
+  PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
+  PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
+  PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
 
 
   /*  Verify that the handle is valid and is a registry key  */
@@ -494,14 +491,15 @@ NtEnumerateValueKey (
               ValueFullInformation->Type = ValueBlock->DataType;
               ValueFullInformation->DataOffset = 
                 (DWORD)ValueFullInformation->Name - (DWORD)ValueFullInformation
-                + (ValueBlock->NameSize ) * sizeof(WCHAR);
+                + (ValueBlock->NameSize + 1) * sizeof(WCHAR);
               ValueFullInformation->DataOffset =
 		(ValueFullInformation->DataOffset +3) &0xfffffffc;
               ValueFullInformation->DataLength = ValueBlock->DataSize & LONG_MAX;
               ValueFullInformation->NameLength =
-                (ValueBlock->NameSize ) * sizeof(WCHAR);
+                (ValueBlock->NameSize + 1) * sizeof(WCHAR);
               mbstowcs(ValueFullInformation->Name, ValueBlock->Name
 			,ValueBlock->NameSize*2);
+              ValueFullInformation->Name[ValueBlock->NameSize]=0;
               if(ValueBlock->DataSize >0)
               {
                 DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset,NULL);
@@ -853,16 +851,13 @@ NtQueryKey (
 }
 
 
-NTSTATUS 
-STDCALL
-NtQueryValueKey (
-	IN	HANDLE				KeyHandle,
-	IN	PUNICODE_STRING			ValueName,
-	IN	KEY_VALUE_INFORMATION_CLASS	KeyValueInformationClass,
-	OUT	PVOID				KeyValueInformation,
-	IN	ULONG				Length,
-	OUT	PULONG				ResultLength
-	)
+NTSTATUS STDCALL
+NtQueryValueKey(IN HANDLE KeyHandle,
+		IN PUNICODE_STRING ValueName,
+		IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+		OUT PVOID KeyValueInformation,
+		IN ULONG Length,
+		OUT PULONG ResultLength)
 {
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
@@ -979,13 +974,14 @@ NtQueryValueKey (
               ValueFullInformation->Type = ValueBlock->DataType;
               ValueFullInformation->DataOffset = 
                 (DWORD)ValueFullInformation->Name - (DWORD)ValueFullInformation
-                + (ValueBlock->NameSize ) * sizeof(WCHAR);
+                + (ValueBlock->NameSize + 1) * sizeof(WCHAR);
               ValueFullInformation->DataOffset =
 		(ValueFullInformation->DataOffset +3) &0xfffffffc;
               ValueFullInformation->DataLength = ValueBlock->DataSize & LONG_MAX;
               ValueFullInformation->NameLength =
-                (ValueBlock->NameSize ) * sizeof(WCHAR);
+                (ValueBlock->NameSize + 1) * sizeof(WCHAR);
               mbstowcs(ValueFullInformation->Name, ValueBlock->Name,ValueBlock->NameSize*2);
+              ValueFullInformation->Name[ValueBlock->NameSize] = 0;
               if(ValueBlock->DataSize >0)
               {
                 DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset,NULL);
