@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.21 2001/07/31 20:28:43 ea Exp $
+/* $Id: conio.c,v 1.22 2001/07/31 20:47:44 ea Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -293,7 +293,7 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 	      break;
 	    /* --- TAB --- */
 	    case '\t':
-	      CsrpWriteConsole(Buff, "        ", 8, Attrib);
+	      CsrpWriteConsole(Buff, "        ", (8 - (Buff->CurrentX % 8)), Attrib);
 	      break;
 	    /* --- */
 	    default:
