@@ -9,11 +9,9 @@ DELAYIMPORTS =
 EXTRALIBS = 
 
 C_SRCS = \
-	icmp_reactos.c \
 	ifenum_reactos.c \
 	ipstats_reactos.c \
 	iphlpapi_main.c \
-	iphlpv6_reactos.c \
 	media.c \
 	registry.c \
 	resinfo_reactos.c \

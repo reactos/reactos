@@ -1,4 +1,4 @@
-@ stdcall AddIPAddress( long long long ptr ptr )
+ 1 stdcall AddIPAddress( long long long ptr ptr )
 @ stub AllocateAndGetArpEntTableFromStack
 @ stdcall AllocateAndGetIfTableFromStack( ptr long long long )
 @ stdcall AllocateAndGetIpAddrTableFromStack( ptr long long long )
@@ -96,7 +96,6 @@
 @ stub _PfSetLogBuffer@28
 @ stub _PfTestPacket@20
 @ stub _PfUnBindInterface@4
-@ stdcall SendARP( long long ptr ptr )
 @ stub SetAdapterIpAddress
 @ stub SetBlockRoutes
 @ stdcall SetIfEntry( ptr )
@@ -107,11 +106,12 @@
 @ stdcall SetIpNetEntry( ptr )
 @ stub SetIpNetEntryToStack
 @ stub SetIpRouteEntryToStack
-@ stdcall SetIpStatistics( ptr )
+110 stdcall SetIpStatistics( ptr )
 @ stub SetIpStatsToStack
-@ stdcall SetIpTTL( long )
+112 stdcall SetIpTTL( long )
 @ stub SetProxyArpEntryToStack
 @ stub SetRouteWithRef
 @ stdcall SetTcpEntry( ptr )
 @ stub SetTcpEntryToStack
-@ stdcall UnenableRouter( ptr ptr )
+ 99 stdcall SendARP( long long ptr ptr )
+117 stdcall UnenableRouter( ptr ptr )
