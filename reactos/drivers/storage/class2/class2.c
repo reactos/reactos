@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.28 2002/12/15 14:33:09 ekohl Exp $
+/* $Id: class2.c,v 1.29 2003/01/02 16:03:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,9 +69,7 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp,
-		      PSCSI_REQUEST_BLOCK Srb,
-		      BOOLEAN Associated);
+		      PIRP Irp);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -773,7 +771,7 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
   DPRINT("ScsiClassInterpretSenseInfo() called\n");
 
   DPRINT("Srb->SrbStatus %lx\n", Srb->SrbStatus);
-
+  
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_PENDING)
     {
       *Status = STATUS_SUCCESS;
@@ -897,10 +895,10 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	  DeviceObject, Irp, Context);
 
   DeviceExtension = DeviceObject->DeviceExtension;
-  Srb = (PSCSI_REQUEST_BLOCK)Context;
-  DPRINT("Srb %p\n", Srb);
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  Srb = IrpStack->Parameters.Scsi.Srb;
+  DPRINT("Srb %p\n", Srb);
 
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
     {
@@ -920,9 +918,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
 	  ScsiClassRetryRequest(DeviceObject,
-				Irp,
-				Srb,
-				FALSE);
+				Irp);
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
     }
@@ -975,10 +971,10 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 
   MasterIrp = Irp->AssociatedIrp.MasterIrp;
   DeviceExtension = DeviceObject->DeviceExtension;
-  Srb = (PSCSI_REQUEST_BLOCK)Context;
-  DPRINT("Srb %p\n", Srb);
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  Srb = IrpStack->Parameters.Scsi.Srb;
+  DPRINT("Srb %p\n", Srb);
 
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
     {
@@ -1002,9 +998,7 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
 	  ScsiClassRetryRequest(DeviceObject,
-				Irp,
-				Srb,
-				TRUE);
+				Irp);
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
     }
@@ -1617,20 +1611,19 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp,
-		      PSCSI_REQUEST_BLOCK Srb,
-		      BOOLEAN Associated)
+		      PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentIrpStack;
-  PIO_STACK_LOCATION NextIrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+
   ULONG TransferLength;
 
   DPRINT("ScsiPortRetryRequest() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   CurrentIrpStack = IoGetCurrentIrpStackLocation(Irp);
-  NextIrpStack = IoGetNextIrpStackLocation(Irp);
+  Srb = CurrentIrpStack->Parameters.Scsi.Srb;
 
   if (CurrentIrpStack->MajorFunction == IRP_MJ_READ ||
       CurrentIrpStack->MajorFunction == IRP_MJ_WRITE)
@@ -1646,6 +1639,7 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
       TransferLength = 0;
     }
 
+  Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
   Srb->DataTransferLength = TransferLength;
   Srb->SrbStatus = 0;
   Srb->ScsiStatus = 0;
@@ -1654,27 +1648,12 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
 //  Srb->Flags = 
 //  Srb->QueueTag = SP_UNTAGGED;
 
-  NextIrpStack->MajorFunction = IRP_MJ_SCSI;
-  NextIrpStack->Parameters.Scsi.Srb = Srb;
-
-  if (Associated == FALSE)
-    {
-      IoSetCompletionRoutine(Irp,
-			     ScsiClassIoComplete,
-			     Srb,
-			     TRUE,
-			     TRUE,
-			     TRUE);
-    }
-  else
-    {
-      IoSetCompletionRoutine(Irp,
-			     ScsiClassIoCompleteAssociated,
-			     Srb,
-			     TRUE,
-			     TRUE,
-			     TRUE);
-    }
+  /* 
+   * Our function is called from a completion routine. We must 
+   * recall the driver with the same stack location. IoCallDriver 
+   * goes to the next location. So we go one step back. 
+   */
+  IoSkipCurrentIrpStackLocation(Irp);
 
   IoCallDriver(DeviceExtension->PortDeviceObject,
 	       Irp);
