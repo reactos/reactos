@@ -155,15 +155,28 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     }
 
     if( NewState & SEL_FIN ) {
+        PLIST_ENTRY ListsToErase[4];
+        NTSTATUS    IrpStatus[4];
+        UINT i;
+
 	TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 	
-	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
-	    Entry = RemoveHeadList( &Connection->ReceiveRequest );
-	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-	    Complete = Bucket->Request.RequestNotifyObject;
+        ListsToErase[0] = &Connection->ReceiveRequest;
+        IrpStatus   [0] = STATUS_SUCCESS;
+        ListsToErase[1] = &Connection->ListenRequest;
+        IrpStatus   [1] = STATUS_UNSUCCESSFUL;
+        ListsToErase[2] = &Connection->ConnectRequest;
+        IrpStatus   [2] = STATUS_UNSUCCESSFUL;
+        ListsToErase[3] = 0;
 
-	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
-	}
+        for( i = 0; ListsToErase[i]; i++ ) {
+            while( !IsListEmpty( ListsToErase[i] ) ) {
+                Entry = RemoveHeadList( ListsToErase[i] );
+                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+                Complete = Bucket->Request.RequestNotifyObject;
+                Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+            }
+        }
     }
 
     Connection->Signalled = FALSE;
@@ -371,39 +384,6 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     return Status;
 }
 
-#if 0
-NTSTATUS TCPBind
-( PCONNECTION_ENDPOINT Connection,
-  PTDI_CONNECTION_INFORMATION ConnInfo ) {
-    NTSTATUS Status;
-    SOCKADDR_IN AddressToConnect;
-    PIP_ADDRESS LocalAddress;
-    USHORT LocalPort;
-
-    TI_DbgPrint(DEBUG_TCP,("Called\n"));
-
-    Status = AddrBuildAddress
-	((PTA_ADDRESS)ConnInfo->LocalAddress,
-	 &LocalAddress,
-	 &LocalPort);
-
-    AddressToBind.sin_family = AF_INET;
-    memcpy( &AddressToBind.sin_addr, 
-	    &LocalAddress->Address.IPv4Address,
-	    sizeof(AddressToBind.sin_addr) );
-    AddressToBind.sin_port = LocalPort;
-
-    Status = OskitTCPBind( Connection->SocketContext,
-			   Connection,
-			   &AddressToBind, 
-			   sizeof(AddressToBind));
-
-    TI_DbgPrint(DEBUG_TCP,("Leaving %x\n", Status));
-
-    return Status;
-}
-#endif
-
 NTSTATUS TCPConnect
 ( PCONNECTION_ENDPOINT Connection,
   PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -518,8 +498,9 @@ NTSTATUS TCPClose
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 
-    if( Connection->Signalled ) 
-	RemoveEntryList( &Connection->SignalList );
+    /* Make our code remove all pending IRPs */
+    Connection->State |= SEL_FIN;
+    DrainSignals();
 
     TcpipRecursiveMutexLeave( &TCPLock );
     
@@ -648,6 +629,8 @@ NTSTATUS TCPGetPeerAddress
     OSK_UI16 LocalPort, RemotePort;
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
 
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
     OskitTCPGetAddress
         ( Connection->SocketContext,
           &LocalAddress, &LocalPort,
@@ -658,6 +641,8 @@ NTSTATUS TCPGetPeerAddress
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
     AddressIP->Address[0].Address[0].sin_port = RemotePort;
     AddressIP->Address[0].Address[0].in_addr = RemoteAddress;
+
+    TcpipRecursiveMutexLeave( &TCPLock );
     
     return STATUS_SUCCESS;
 }
