@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.8 2000/07/01 17:07:02 ea Exp $
+/* $Id: event.c,v 1.9 2000/10/08 12:56:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -73,9 +73,7 @@ CreateEventW (
 	       ObjectAttributes.Attributes |= OBJ_INHERIT;
 	  }
 
-	EventNameString.Buffer = (WCHAR *)lpName;
-	EventNameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-	EventNameString.MaximumLength = EventNameString.Length;
+	RtlInitUnicodeString(&EventNameString, (LPWSTR)lpName);
 	ObjectAttributes.ObjectName = &EventNameString;
      }
    else
@@ -120,9 +118,7 @@ OpenEventW (
 	
 	ObjectAttributes.Attributes = 0;
 	ObjectAttributes.SecurityDescriptor = NULL;
-	EventNameString.Buffer = (WCHAR *)lpName;
-	EventNameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-	EventNameString.MaximumLength = EventNameString.Length;
+	RtlInitUnicodeString(&EventNameString, (LPWSTR)lpName);
 	ObjectAttributes.ObjectName = &EventNameString;
 
 	if (bInheritHandle == TRUE )
