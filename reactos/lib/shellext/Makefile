@@ -26,7 +26,7 @@ bootcd: $(SHELL_EXTENSIONS:%=%_bootcd)
 
 
 #
-# Control Panels
+# Shell extensions
 #
 $(SHELL_EXTENSIONS): %:
 	$(MAKE) -C $*
