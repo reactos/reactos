@@ -42,8 +42,7 @@ PULONG MmGetPageEntry(PVOID Address);
 		    }
 
 #elif defined(_MSC_VER)
-/* TODO: Verify that this really WORKS. Perhaps it, as the GCC thing */
-/* above, needs to actually touch some memory too ? */
+/* TODO: Need some way to tell the compiler this is a memory barrier. */
 #define FLUSH_TLB __asm mov eax, cr3  __asm mov cr3, eax;
 #else
 #error Unknown compiler for inline assembler
@@ -51,17 +50,6 @@ PULONG MmGetPageEntry(PVOID Address);
 
 
 PULONG MmGetPageDirectory(VOID);
-
-#if 0
-extern inline PULONG get_page_directory(void)
-{
-        unsigned int page_dir=0;
-        __asm__("movl %%cr3,%0\n\t"
-                : "=r" (page_dir));
-        return((PULONG)page_dir);
-}
-#endif
-
 
 /*
  * Amount of memory that can be mapped by a page table
