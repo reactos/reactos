@@ -19,9 +19,9 @@ static BOOLEAN CheckEntry(PLIST_ENTRY ListEntry)
 {
    assert(ListEntry!=NULL);
    assert(ListEntry->Blink!=NULL);
-   assert(ListEntry->Blink->Flink!=NULL);
+   assert(ListEntry->Blink->Flink==ListEntry);
    assert(ListEntry->Flink!=NULL);
-   assert(ListEntry->Flink->Blink!=NULL);
+   assert(ListEntry->Flink->Blink==ListEntry);
    return(TRUE);
 }
 
@@ -51,7 +51,6 @@ VOID RemoveEntryList(PLIST_ENTRY ListEntry)
    OldFlink->Blink=OldBlink;
    OldBlink->Flink=OldFlink;
    
-   assert(CheckEntry(ListEntry));
    
    DPRINT("RemoveEntryList()\n");
 }
@@ -80,8 +79,6 @@ PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
    Old = ListHead->Flink;
    RemoveEntryList(ListHead->Flink);
    
-   assert(CheckEntry(ListHead));
-   
    DPRINT("RemoveHeadList()\n");
    
    return(Old);
@@ -106,12 +103,13 @@ VOID InsertTailList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
  */
 {
    PLIST_ENTRY Blink;
-   
+
    Blink = ListHead->Blink;
    ListEntry->Flink=ListHead;
    ListEntry->Blink=Blink;
    Blink->Flink=ListEntry;
    ListHead->Blink=ListEntry;
+   assert( CheckEntry( ListEntry ) );
 }
 
 VOID InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
@@ -123,6 +121,7 @@ VOID InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
    ListEntry->Blink = ListHead;
    OldFlink->Blink = ListEntry;
    ListHead->Flink = ListEntry;
+   assert( CheckEntry( ListEntry ) );
 }
 
 PLIST_ENTRY ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
