@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.11 2002/10/01 18:57:23 chorns Exp $
+/* $Id: ctype.c,v 1.12 2003/02/16 18:54:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -370,6 +370,11 @@ int iswalpha(wint_t c)
 int iswdigit(wint_t c)
 {
    return (iswctype (c, _DIGIT));
+}
+
+int iswspace(wint_t c)
+{
+   return (iswctype (c, _SPACE));
 }
 
 int iswlower(wint_t c)

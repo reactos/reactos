@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.91 2003/01/08 19:50:39 robd Exp $
+; $Id: ntdll.def,v 1.92 2003/02/16 18:54:26 hbirr Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -882,6 +882,7 @@ isspace
 isupper
 iswalpha
 iswctype
+iswspace
 isxdigit
 labs
 log
