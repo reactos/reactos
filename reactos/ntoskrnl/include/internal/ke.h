@@ -184,6 +184,9 @@ VOID
 STDCALL
 KeFlushCurrentTb(VOID);
 
+VOID
+KiSetSystemTime(PLARGE_INTEGER NewSystemTime);
+
 #endif /* not __ASM__ */
 
 #define MAXIMUM_PROCESSORS      32

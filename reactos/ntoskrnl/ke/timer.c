@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.91 2004/11/27 16:57:03 hbirr Exp $
+/* $Id: timer.c,v 1.92 2004/11/28 12:59:00 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -819,6 +819,60 @@ KeUpdateSystemTime(
     * Queue a DPC that will expire timers
     */
    KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
+}
+
+
+VOID
+KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
+{
+  LARGE_INTEGER OldSystemTime;
+  LARGE_INTEGER DeltaTime;
+  KIRQL OldIrql;
+  PLIST_ENTRY current_entry = NULL;
+  PKTIMER current = NULL;
+
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
+
+  do
+    {
+      OldSystemTime.u.HighPart = SharedUserData->SystemTime.High1Time;
+      OldSystemTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    }
+  while (OldSystemTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+
+  /* Set the new system time */
+  SharedUserData->SystemTime.LowPart = NewSystemTime->u.LowPart;
+  SharedUserData->SystemTime.High1Time = NewSystemTime->u.HighPart;
+  SharedUserData->SystemTime.High2Time = NewSystemTime->u.HighPart;
+
+  /* Calculate the difference between the new and the old time */
+  DeltaTime.QuadPart = NewSystemTime->QuadPart - OldSystemTime.QuadPart;
+
+  /* Update system boot time */
+  SystemBootTime.QuadPart += DeltaTime.QuadPart;
+
+  /* Update all relative timers */
+  current_entry = RelativeTimerListHead.Flink;
+  ASSERT(current_entry);
+  while (current_entry != &RelativeTimerListHead)
+    {
+      current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
+      ASSERT(current);
+      ASSERT(current_entry != &RelativeTimerListHead);
+      ASSERT(current_entry->Flink != current_entry);
+
+      current->DueTime.QuadPart += DeltaTime.QuadPart;
+
+      current_entry = current_entry->Flink;
+    }
+
+  KeReleaseDispatcherDatabaseLock(OldIrql);
+
+  /*
+   * NOTE: Expired timers will be processed at the next clock tick!
+   */
 }
 
 /* EOF */

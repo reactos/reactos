@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.24 2004/11/06 16:04:58 ekohl Exp $
+/* $Id: time.c,v 1.25 2004/11/28 12:59:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,7 +89,7 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 			    sizeof(NewSystemTime));
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
   
   if (UnsafeOldSystemTime != NULL)
@@ -102,10 +102,8 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 		      &TimeFields);
   HalSetRealTimeClock(&TimeFields);
 
-  /* FIXME: set system time */
-#if 0
-  KeSetSystemTime();
-#endif
+  /* Set system time */
+  KiSetSystemTime(&NewSystemTime);
 
   if (UnsafeOldSystemTime != NULL)
     {
@@ -113,10 +111,11 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 			      sizeof(OldSystemTime));
       if (!NT_SUCCESS(Status))
 	{
-	  return(Status);
+          return Status;
 	}
     }
-  return(STATUS_SUCCESS);
+
+  return STATUS_SUCCESS;
 }
 
 
