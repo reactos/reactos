@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.29 2004/11/19 19:34:11 weiden Exp $
+/* $Id: messagebox.c,v 1.30 2004/12/12 20:40:06 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -739,17 +739,22 @@ MessageBoxIndirectA(
     else
         captionW.Buffer = (LPWSTR)lpMsgBoxParams->lpszCaption;
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
+    if(lpMsgBoxParams->dwStyle & MB_USERICON)
     {
-        RtlCreateUnicodeStringFromAsciiz(&iconW, (PCSZ)lpMsgBoxParams->lpszIcon);
-        /*
-         * UNICODE_STRING objects are always allocated with an extra byte so you
-         * can null-term if you want
-         */
-        iconW.Buffer[iconW.Length / sizeof(WCHAR)] = L'\0';
+        if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
+        {
+            RtlCreateUnicodeStringFromAsciiz(&iconW, (PCSZ)lpMsgBoxParams->lpszIcon);
+            /*
+             * UNICODE_STRING objects are always allocated with an extra byte so you
+             * can null-term if you want
+             */
+            iconW.Buffer[iconW.Length / sizeof(WCHAR)] = L'\0';
+        }
+        else
+            iconW.Buffer = (LPWSTR)lpMsgBoxParams->lpszIcon;
     }
     else
-        iconW.Buffer = (LPWSTR)lpMsgBoxParams->lpszIcon;
+        iconW.Buffer = NULL;
 
     msgboxW.cbSize = sizeof(msgboxW);
     msgboxW.hwndOwner = lpMsgBoxParams->hwndOwner;
@@ -770,7 +775,7 @@ MessageBoxIndirectA(
     if (HIWORD((UINT)lpMsgBoxParams->lpszCaption))
         RtlFreeUnicodeString(&captionW);
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
+    if ((lpMsgBoxParams->dwStyle & MB_USERICON) && HIWORD((UINT)iconW.Buffer))
         RtlFreeUnicodeString(&iconW);
 
     return ret;
