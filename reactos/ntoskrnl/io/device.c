@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.65 2003/12/15 17:50:23 ekohl Exp $
+/* $Id: device.c,v 1.66 2004/03/07 11:59:10 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -717,10 +717,15 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 		    DeviceExtensionSize);
     }
 
+  CreatedDeviceObject->Size = sizeof(DEVICE_OBJECT) + DeviceExtensionSize;
+  CreatedDeviceObject->ReferenceCount = 1;
   CreatedDeviceObject->AttachedDevice = NULL;
   CreatedDeviceObject->DeviceType = DeviceType;
   CreatedDeviceObject->StackSize = 1;
   CreatedDeviceObject->AlignmentRequirement = 1;
+  CreatedDeviceObject->Characteristics = DeviceCharacteristics;
+  CreatedDeviceObject->Timer = NULL;
+  CreatedDeviceObject->Vpb = NULL;
   KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
   
   KeInitializeEvent(&CreatedDeviceObject->DeviceLock,

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.139 2004/01/05 14:28:21 weiden Exp $
+/* $Id: loader.c,v 1.140 2004/03/07 11:59:10 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -401,7 +401,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
                             &Module);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("Could not process module");
+      CPRINT("Could not process module\n");
       ExFreePool(ModuleLoadBase);
       return(Status);
     }
@@ -672,9 +672,7 @@ static VOID
 LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
 			PUNICODE_STRING FullName)
 {
-   UNICODE_STRING Name;
    PWCHAR p;
-   PWCHAR q;
 
    DPRINT("LdrpBuildModuleBaseName()\n");
    DPRINT("FullName %wZ\n", FullName);
@@ -691,18 +689,7 @@ LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
 
    DPRINT("p %S\n", p);
 
-   RtlCreateUnicodeString(&Name, p);
-
-   q = wcschr(Name.Buffer, L'.');
-   if (q != NULL)
-     {
-	*q = (WCHAR)0;
-     }
-
-   DPRINT("p %S\n", p);
-
-   RtlCreateUnicodeString(BaseName, Name.Buffer);
-   RtlFreeUnicodeString(&Name);
+   RtlCreateUnicodeString(BaseName, p);
 }
 
 
@@ -873,7 +860,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   WORD Hint;
   UNICODE_STRING ModuleName;
   UNICODE_STRING NameString;
-  WCHAR  NameBuffer[60];
+  WCHAR  NameBuffer[PATH_MAX];
   MODULE_TEXT_SECTION* ModuleTextSection;
   NTSTATUS Status;
   KIRQL Irql;
@@ -938,12 +925,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
       CPRINT("Failed to allocate a virtual section for driver\n");
       return STATUS_UNSUCCESSFUL;
     }
-#if 0
   DbgPrint("DriverBase for %wZ: %x\n", FileName, DriverBase);
-#else
-  DbgPrint("DriverBase for %wZ", FileName);
-  DbgPrint(": %x\n", DriverBase);
-#endif
   CHECKPOINT;
   /*  Copy headers over */
   memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);
@@ -1076,11 +1058,34 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           LibraryModuleObject = LdrGetModuleObject(&ModuleName);
           if (LibraryModuleObject == NULL)
             {
-              DPRINT("Module '%wZ' not loaded yet\n", &ModuleName);
-              wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
-              wcscat(NameBuffer, ModuleName.Buffer);
-              RtlInitUnicodeString(&NameString, NameBuffer);
-              Status = LdrLoadModule(&NameString, &LibraryModuleObject);
+              PWCHAR PathEnd;
+              ULONG PathLength;
+
+              PathEnd = wcsrchr(FileName->Buffer, L'\\');
+              if (PathEnd != NULL)
+                {
+                  PathLength = (PathEnd - FileName->Buffer + 1) * sizeof(WCHAR);
+                  RtlCopyMemory(
+                     NameBuffer,
+                     FileName->Buffer,
+                     PathLength);
+                  RtlCopyMemory(
+                     NameBuffer + (PathLength / sizeof(WCHAR)),
+                     ModuleName.Buffer,
+                     ModuleName.Length);
+                  NameString.Buffer = NameBuffer;
+                  NameString.MaximumLength = 
+                  NameString.Length = PathLength + ModuleName.Length;
+                  Status = LdrLoadModule(&NameString, &LibraryModuleObject);
+                }
+              else
+                {
+                  DPRINT("Module '%wZ' not loaded yet\n", &ModuleName);
+                  wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
+                  wcscat(NameBuffer, ModuleName.Buffer);
+                  RtlInitUnicodeString(&NameString, NameBuffer);
+                  Status = LdrLoadModule(&NameString, &LibraryModuleObject);
+                }
               if (!NT_SUCCESS(Status))
                 {
                   wcscpy(NameBuffer, L"\\SystemRoot\\system32\\");
@@ -1133,11 +1138,15 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
                   *ImportAddressList = LdrGetExportAddress(LibraryModuleObject, 
                                                            pName, 
                                                            Hint);
+                  if (*ImportAddressList == NULL)
+                    {
+                      return STATUS_PROCEDURE_NOT_FOUND;
+                    }
                 }
               else
                 {
                   CPRINT("Unresolved kernel symbol: %s\n", pName);
-                  return STATUS_UNSUCCESSFUL;
+                  return STATUS_PROCEDURE_NOT_FOUND;
                 }
               ImportAddressList++;
               FunctionNameList++;
@@ -1565,7 +1574,6 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
       DbgPrint("Export not found for %d:%s\n",
 	     Hint,
 	     Name != NULL ? Name : "(Ordinal)");
-      KEBUGCHECK(0);
     }
 
   return(ExportAddress);

@@ -83,6 +83,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	Status = RtlFormatCurrentUserKeyPath(&KeyName);
 	if (!NT_SUCCESS(Status))
 	  return(Status);
+	RtlAppendUnicodeToString(&KeyName, L"\\");
 	break;
 
       /* ReactOS specific */
@@ -212,8 +213,8 @@ NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 {
   /* FIXME: !!! */
-  RtlCreateUnicodeString(KeyPath,
-			 L"\\Registry\\User\\.Default");
+  KeyPath->Length = 0;
+  RtlAppendUnicodeToString(KeyPath, L"\\Registry\\User\\.Default");
 
   return(STATUS_SUCCESS);
 }
