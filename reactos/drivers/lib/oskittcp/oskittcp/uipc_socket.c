@@ -414,7 +414,6 @@ restart:
 			if (flags & MSG_EOR)
 				top->m_flags |= M_EOR;
 		    } else do {
-#ifndef __REACTOS__
 			if (top == 0) {
 				MGETHDR(m, M_WAIT, MT_DATA);
 				mlen = MHLEN;
@@ -424,12 +423,6 @@ restart:
 				MGET(m, M_WAIT, MT_DATA);
 				mlen = MLEN;
 			}
-#else
-			MGETHDR(m, M_WAIT, MT_DATA);
-			mlen = MLEN;
-			m->m_pkthdr.len = 0;
-			m->m_pkthdr.rcvif = (struct ifnet *)0;
-#endif
 			if (resid >= MINCLSIZE) {
 				MCLGET(m, M_WAIT);
 				if ((m->m_flags & M_EXT) == 0)
@@ -447,13 +440,8 @@ nopages:
 					MH_ALIGN(m, len);
 			}
 			space -= len;
-#ifndef __REACTOS__
 			error = uiomove(mtod(m, caddr_t), (int)len, uio);
 			resid = uio->uio_resid;
-#else
-			memcpy(mtod(m, caddr_t), mtod(top, caddr_t), len);
-			resid = 0;
-#endif
 			m->m_len = len;
 			*mp = m;
 			top->m_pkthdr.len += len;
