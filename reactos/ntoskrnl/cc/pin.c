@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.7 2002/09/08 10:23:16 chorns Exp $
+/* $Id: pin.c,v 1.8 2002/10/02 19:23:42 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,6 +85,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	}
       if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
 	{
+          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	  return(FALSE);
 	}
     }
