@@ -2,15 +2,13 @@
 
 PATH_TO_TOP = ../..
 
+include $(PATH_TO_TOP)/config
+
 TARGET_NAME = expat
 
-TARGET_TYPE = dynlink
-TARGET_BASE = $(TARGET_BASE_LIB_EXPAT)
-TARGET_NORC = yes
-TARGET_DEFONLY = yes
-TARGET_DEFNAME = lib/libexpat
+TARGET_TYPE = library
 
-TARGET_CFLAGS = -D__USE_W32API -DHAVE_EXPAT_CONFIG_H -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions
+TARGET_CFLAGS = -D__USE_W32API -DHAVE_EXPAT_CONFIG_H -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions
 TARGET_LFLAGS = -nostartfiles
 
 LIB_OBJECTS = \
