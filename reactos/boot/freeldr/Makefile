@@ -29,7 +29,7 @@ all:
 	$(MAKE) -C fdebug
 
 test:
-	
+
 clean:
 	$(MAKE) -C bootsect clean
 	$(MAKE) -C freeldr clean
@@ -38,6 +38,7 @@ clean:
 	$(MAKE) -C tools clean
 
 bootcd:
+ifeq ($(ARCH),i386)
 	$(CP) bootsect/isoboot.bin ${BOOTCD_DIR}/../isoboot.bin
 	$(CP) bootsect/dosmbr.bin ${BOOTCD_DIR}/loader/dosmbr.bin
 	$(CP) bootsect/ext2.bin ${BOOTCD_DIR}/loader/ext2.bin
@@ -46,5 +47,6 @@ bootcd:
 	$(CP) bootsect/isoboot.bin ${BOOTCD_DIR}/loader/isoboot.bin
 	$(CP) freeldr/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
 	$(CP) freeldr/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
+endif
 
 .PHONY : clean
