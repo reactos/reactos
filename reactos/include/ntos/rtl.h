@@ -2219,7 +2219,7 @@ RtlResetRtlTranslations (IN PNLSTABLEINFO NlsTable);
  *	);
  */
 #define RtlRetrieveUlong(DestAddress,SrcAddress) \
-	if ((ULONG)(SrcAddress) & LONG_MASK) \
+	if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
 	{ \
 		((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
 		((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
