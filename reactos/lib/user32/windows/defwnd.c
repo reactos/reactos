@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.35 2003/03/14 07:24:35 rcampbell Exp $
+/* $Id: defwnd.c,v 1.36 2003/03/14 08:34:25 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,6 +20,7 @@
 
 /* GLOBALS *******************************************************************/
 
+static HBITMAP hbSysMenu;
 /* TODO:  widgets will be cached here.
 static HBITMAP hbClose;
 static HBITMAP hbCloseD;
@@ -236,8 +237,20 @@ void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 
 void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 {
-    /* FIXME:  Implement AppIcon loading/displaying, if AppIcon isn't present,
-               load default (OIC_SAMPLE I believe, not sure */
+  RECT Rect;
+  HDC hDcMem;
+  HBITMAP hSavedBitmap;
+  
+  hbSysMenu = LoadBitmap(0, MAKEINTRESOURCE(OBM_CLOSE));
+  UserGetInsideRectNC(hWnd, &Rect);
+  hDcMem = CreateCompatibleDC(hDC);
+  hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
+  BitBlt(hDC, Rect.left + 2, Rect.top + 
+         2, 16, 14, hDcMem,
+         (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
+	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
+  SelectObject(hDcMem, hSavedBitmap);
+  DeleteDC(hDcMem);
 }
 
 /* FIXME:  Cache bitmaps, then just bitblt instead of calling DFC() (and
@@ -348,7 +361,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
         else
             hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
         hOldFont = SelectObject(hDC, hFont);
-        TextOutA(hDC, r.left, (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2), buffer, strlen(buffer));
+        TextOutA(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2) + (GetSystemMetrics(SM_CXDLGFRAME) / 2), buffer, strlen(buffer));
         DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
