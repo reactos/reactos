@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-03-13 ekohl
+
+   tools/widl/server.c
+
+Remove debug printf().
+
+
 2005-03-13 jimtabor
 
    tools/widl/write_msft.c
@@ -15,12 +22,6 @@ Fixup *nix port, added include fcntl.h and unistd.h.
 
 -Wall -Werror and fix warnings
 
-
-2005-03-13 ekohl
-
-   tools/widl/client.c
-
-Fix gcc warnings in generated client stub.
 
 
 2005-03-13 ekohl
