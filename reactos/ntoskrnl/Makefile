@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.140 2004/08/26 16:04:49 blight Exp $
+# $Id: Makefile,v 1.141 2004/09/07 08:20:06 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -386,6 +386,20 @@ DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 
 TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(DEP_OBJECTS))))
 
+TARGET_PCH = include/ntoskrnl.h
+
+# Precompiled header support
+# When using PCHs, use dependency tracking to keep the .gch files up-to-date.
+
+MK_PCHNAME =
+ifeq ($(ROS_USE_PCH),yes)
+MK_PCHNAME = $(TARGET_PCH).gch
+
+PCH_CC := $(CC)
+
+
+endif # ROS_USE_PCH
+
 #
 # Include automatic dependancy tracking
 #
@@ -731,38 +745,7 @@ ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
-TARGET_PCH = include/ntoskrnl.h
-
-# Precompiled header support
-# When using PCHs, use dependency tracking to keep the .gch files up-to-date.
-
-MK_PCHNAME =
-ifeq ($(ROS_USE_PCH),yes)
-MK_PCHNAME = $(TARGET_PCH).gch
-
-PCH_CC := $(CC)
-
-# GCC generates wrong dependencies for header files.
-MK_PCHFAKE = $(TARGET_PCH:.h=.o)
-ifneq ($(MAKECMDGOALS),clean)
-$(MK_PCHFAKE):
-	- $(RTOUCH) $(MK_PCHFAKE)
-
-$(MK_PCHNAME): depend.d
-	- $(RTOUCH) $(MK_PCHNAME)
-	- $(PCH_CC) $(CFLAGS) $(TARGET_PCH)
-
-depend.d: $(MK_PCHFAKE) $(PATH_TO_TOP)/include/reactos/bugcodes.h
-	- $(RTOUCH) depend.d
-	- $(PCH_CC) $(CFLAGS) $(TARGET_PCH) -M -MF depend.d
-
--include depend.d
-
-endif
-
-endif # ROS_USE_PCH
-
-%.o: %.cc
+%.o: %.cc $(MK_PCHNAME)
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c $(MK_PCHNAME)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -774,6 +757,9 @@ endif # ROS_USE_PCH
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(RCFLAGS) $< -o $@
+%.h.gch: %.h
+	$(PCH_CC) $(CFLAGS) $<
+
 
 #
 #

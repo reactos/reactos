@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.77 2004/08/27 18:24:28 arty Exp $
+# $Id: helper.mk,v 1.78 2004/09/07 08:20:06 hbirr Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -657,6 +657,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
 		--kill-at
 
+
 else # MK_IMPLIBONLY
 
 all: $(REGTEST_TARGETS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
@@ -722,8 +723,7 @@ endif
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
-	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
-	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 endif
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
@@ -809,8 +809,7 @@ endif
 $(MK_FULLNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
-	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
-	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 endif
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -894,31 +893,19 @@ else
 PCH_CC := $(CC)
 endif
 
-# GCC generates wrong dependencies for header files.
-MK_PCHFAKE = $(TARGET_PCH:.h=.o)
-$(MK_PCHFAKE):
-	- $(RTOUCH) $(MK_PCHFAKE)
-
-$(MK_PCHNAME): depend.d
-	- $(RTOUCH) $(MK_PCHNAME)
-	- $(PCH_CC) $(TARGET_CFLAGS) $(TARGET_PCH)
-
-depend.d: $(MK_PCHFAKE)
-	- $(RTOUCH) depend.d
-	- $(PCH_CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
-
--include depend.d
 
 endif # TARGET_PCH
+else  # 
+MK_PCHNAME =
 endif # ROS_USE_PCH
 
 # Be carefull not to clean non-object files
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
-MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
+MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d) $(TARGET_PCH:.h=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
-	- $(RM) *.o depend.d $(MK_PCHNAME) *.gch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
+	- $(RM) *.o $(MK_PCHNAME) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
 	  $(TARGET_CLEAN)
@@ -1062,11 +1049,11 @@ endif
 
 %.o: %.c $(MK_PCHNAME)
 	$(CC) $(TARGET_CFLAGS) -c $< -o $@
-%.o: %.cc
+%.o: %.cc $(MK_PCHNAME)
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
-%.o: %.cxx
+%.o: %.cxx $(MK_PCHNAME)
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
-%.o: %.cpp
+%.o: %.cpp $(MK_PCHNANE)
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.S
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
@@ -1082,7 +1069,8 @@ endif
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 %.i: %.c
 	$(CC) $(TARGET_CFLAGS) -E $< > $@
-
+%.h.gch: %.h
+	$(PCH_CC) $(CFLAGS) $<
 # rule for msvc conversion
 %.c: %_msvc.c
 	$(MS2PS) -try try -except except -finally finally < $< > $@
