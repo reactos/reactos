@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.120 2004/05/31 19:39:53 gdalsnes Exp $
+# $Id: Makefile,v 1.121 2004/05/31 23:37:22 gdalsnes Exp $
 #
 # ReactOS Operating System
 #
@@ -114,6 +114,7 @@ OBJECTS_RTL = \
 	rtl/swprintf.o \
 	rtl/wstring.o \
 	rtl/nls.o \
+	rtl/rangelist.o \
 	rtl/libsupp.o
 
 OBJECTS_RTL := $(filter-out $(RTL_EXCLUDE_FILTER), $(OBJECTS_RTL))
