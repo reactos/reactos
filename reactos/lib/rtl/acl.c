@@ -133,8 +133,7 @@ RtlpAddKnownAce (PACL Acl,
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
-   if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >=
-         ((PVOID)Acl + Acl->AclSize))
+   if (RtlLengthSid(Sid) + sizeof(ACE) > Acl->AclSize)
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
@@ -551,7 +550,7 @@ RtlCreateAcl(PACL Acl,
       return(STATUS_INVALID_PARAMETER);
    }
 
-   AclSize = AclSize & ~(0x3);
+   AclSize = (AclSize + 3) & ~(0x3);
    Acl->AclSize = AclSize;
    Acl->AclRevision = AclRevision;
    Acl->AceCount = 0;
