@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.1 2000/04/05 01:41:01 ekohl Exp $
+/* $Id: sid.c,v 1.2 2001/01/14 12:15:19 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -178,4 +178,35 @@ IsValidSid (
 	return (WINBOOL)RtlValidSid (pSid);
 }
 
+WINBOOL
+STDCALL
+LookupAccountSidA (
+	LPCSTR		lpSystemName,
+	PSID		Sid, 
+	LPSTR		Name, 
+	LPDWORD		cbName, 
+	LPSTR		ReferencedDomainName, 
+	LPDWORD		cbReferencedDomainName, 
+	PSID_NAME_USE	peUse 
+	)
+{
+	return (FALSE);
+}
+ 
+
+WINBOOL
+STDCALL
+LookupAccountSidW (
+	LPCWSTR		lpSystemName,
+	PSID		Sid, 
+	LPWSTR		Name, 
+	LPDWORD		cbName, 
+	LPWSTR		ReferencedDomainName, 
+	LPDWORD		cbReferencedDomainName, 
+	PSID_NAME_USE	peUse 
+	)
+{
+	return (FALSE);
+}
+ 
 /* EOF */
