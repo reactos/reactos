@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.63 2004/01/15 21:01:40 gvg Exp $
+/* $Id: msgqueue.c,v 1.64 2004/01/20 23:35:59 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -240,7 +240,7 @@ BOOL STATIC STDCALL
 MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
-			 PPOINT ScreenPoint, PBOOL MouseClick)
+			 PPOINT ScreenPoint, PBOOL MouseClick, BOOL FromGlobalQueue)
 {
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT CaptureWin, Window = NULL;
@@ -333,6 +333,17 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
   {
+    if (! FromGlobalQueue)
+    {
+      DPRINT("Moving msg between private queues\n");
+      /* This message is already queued in a private queue, but we need
+       * to move it to a different queue, perhaps because a new window
+       * was created which now covers the screen area previously taken
+       * by another window. To move it, we need to take it out of the
+       * old queue. Note that we're already holding the lock mutes of the
+       * old queue */
+      RemoveEntryList(&Message->ListEntry);
+    }
     ExAcquireFastMutex(&Window->MessageQueue->HardwareLock);
     InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
                    &Message->ListEntry);
@@ -448,7 +459,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
-					    &ScreenPoint, &MouseClick);
+					    &ScreenPoint, &MouseClick, FALSE);
 	  if (Accept)
 	    {
 	      if (Remove)
@@ -515,7 +526,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
-					    &ScreenPoint, &MouseClick);
+					    &ScreenPoint, &MouseClick, TRUE);
 	  ExAcquireFastMutex(&HardwareMessageQueueLock);
 	  if (Accept)
 	    {
