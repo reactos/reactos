@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <crtdll/stdio.h>
 #include <crtdll/wchar.h>
+#include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
 int putc(int c, FILE *fp)
@@ -9,10 +10,22 @@ int putc(int c, FILE *fp)
 	if ( c == 0 )
 		c = ' '; 
 
+// check for fp == NULL and for putc(fp,c)
+
+	if ( (int)fp < 256 ) {
+		__set_errno(EINVAL);
+		return -1;
+	}
+// check for write access on fp
+
+//	if ( (fp->_flag & _IOWRT) != _IOWRT ) {
+//		__set_errno(EINVAL);
+//		return -1;
+//	}
+
 	if (fp->_cnt > 0 ) {
 		fp->_cnt--;
        		*(fp)->_ptr++ = (char)c;
-		*(fp)->_ptr = 0;
 		return (int)c; 
 	}
 	else {

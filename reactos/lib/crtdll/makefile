@@ -61,6 +61,7 @@ STDIO_OBJECTS = stdio/getenv.o stdio/filbuf.o  \
 		stdio/ungetc.o stdio/vfprintf.o stdio/vprintf.o \
 		stdio/fdopen.o stdio/vsprintf.o stdio/frlist.o \
  
+QUAD_OBJECTS =  quad/qdivrem.o quad/divdi3.o quad/moddi3.o quad/udivdi3.o quad/umoddi3.o
 
 IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
 		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o\
@@ -106,7 +107,7 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 #	  $(MISC_OBJECTS) $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
 #	  $(IO_OBJECTS)  $(PROCESS_OBJECTS) $(TIME_OBJECTS)  $(MALLOC_OBJECTS)\
 #	  $(SYS_STAT_OBJECTS) $(SIGNAL_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS)\
-#	  $(SEARCH_OBJECTS)
+#	  $(SEARCH_OBJECTS) $(QUAD_OBJECTS)
 
 
 OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
@@ -115,7 +116,8 @@ OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
 	  stdio/vsprintf.o $(CTYPE_OBJECTS) stdlib/atoi.o stdlib/strtol.o \
 	  stdio/flsbuf.o stdio/putc.o stdio/vfprintf.o $(STRING_OBJECTS)\
 	  io/write.o io/isatty.o sys_stat/fstat.o misc/dllmain.o \
-	  stdlib/errno.o stdio/printf.o stdio/vprintf.o
+	  stdlib/errno.o stdio/printf.o stdio/vprintf.o\
+	  $(QUAD_OBJECTS)
 
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
           $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \

@@ -34,3 +34,17 @@ double floor (double __x)
 
   return __value;
 }
+
+typedef struct IEEExp {
+    unsigned manl:32;
+    unsigned manh:32;
+    unsigned exp:15;
+    unsigned sign:1;
+  } long_double_t;
+
+long double floorl(long double x )
+{
+	
+	return (long double)(long long int)x;
+}
+	

@@ -13,3 +13,9 @@ double ceil (double __x)
 
   return __value;
 }
+
+
+long double ceill (long double __x)
+{
+	return floor(__x)+1;
+}
