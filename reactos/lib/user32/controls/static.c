@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.10 2003/11/08 15:35:58 mf Exp $
+/* $Id: static.c,v 1.11 2004/02/01 15:52:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -101,17 +101,17 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
     if (hicon)
     {
         ICONINFO info;
-        SIZE bitmapSize;
+        BITMAP bm;
 
         if (!GetIconInfo(hicon, &info))
         {
             return 0;
         }
-        if (!GetBitmapDimensionEx(info.hbmColor, &bitmapSize))
+        if (!GetObjectW(info.hbmColor, sizeof(BITMAP), &bm))
         {
             return 0;
         }
-        SetWindowPos( hwnd, 0, 0, 0, bitmapSize.cx, bitmapSize.cy,
+        SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
                         SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
     }
     return prevIcon;
@@ -607,14 +607,12 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
     if ((hBitmap = (HBITMAP)GetWindowLongA( hwnd, HICON_GWL_OFFSET )))
     {
         BITMAP bm;
-	SIZE sz;
 
         if(GetObjectType(hBitmap) != OBJ_BITMAP) return;
         if (!(hMemDC = CreateCompatibleDC( hdc ))) return;
 	GetObjectW(hBitmap, sizeof(bm), &bm);
-	GetBitmapDimensionEx(hBitmap, &sz);
 	oldbitmap = SelectObject(hMemDC, hBitmap);
-	BitBlt(hdc, sz.cx, sz.cy, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0,
+	BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0,
 	       SRCCOPY);
 	SelectObject(hMemDC, oldbitmap);
 	DeleteDC(hMemDC);
