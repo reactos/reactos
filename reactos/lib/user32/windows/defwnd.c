@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.37 2003/03/16 06:43:09 rcampbell Exp $
+/* $Id: defwnd.c,v 1.38 2003/03/16 07:02:38 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -264,7 +264,7 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
   hDcMem = CreateCompatibleDC(hDC);
   hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
   BitBlt(hDC, Rect.left + 2, Rect.top + 
-         2, 16, 16, hDcMem,
+         2, 14, 14, hDcMem,
          (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
   SelectObject(hDcMem, hSavedBitmap);
@@ -282,16 +282,18 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
                       GetSystemMetrics(SM_CXSIZE)) - 2;
     INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
                       GetSystemMetrics(SM_CYSIZE) - 4);
+    int FrameSize = GetFrameSize(hWnd);
+    
     if(!(GetWindowLong( hWnd, GWL_STYLE ) & WS_SYSMENU))
     {
         return;
     }
     UserGetInsideRectNC(hWnd, &rect);
     SetRect(&rect,
-            rect.right - iBmpWidth - GetSystemMetrics(SM_CXFIXEDFRAME),
-            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
-            rect.right - GetSystemMetrics(SM_CXFIXEDFRAME),
-            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
+            rect.right - iBmpWidth - (FrameSize + 2),
+            rect.top + FrameSize + 1,
+            rect.right - FrameSize - 2,
+            rect.top + iBmpHeight + FrameSize + 1 );
             
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                       (DFCS_CAPTIONCLOSE |
@@ -305,6 +307,8 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
 
+    int FrameSize = GetFrameSize(hWnd);
+    
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;    
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
@@ -313,10 +317,10 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
     UserGetInsideRectNC(hWnd, &rect );
     
     SetRect(&rect,
-            rect.right - (iBmpWidth * 2) - (GetSystemMetrics(SM_CXFIXEDFRAME)) - 2,
-            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
-            rect.right - iBmpWidth - GetSystemMetrics(SM_CXFIXEDFRAME) - 2,
-            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
+            rect.right - (iBmpWidth * 2) - FrameSize - 4,
+            rect.top + FrameSize + 1,
+            rect.right - iBmpWidth - FrameSize - 4,
+            rect.top + iBmpHeight + FrameSize + 1);
     
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
@@ -330,6 +334,9 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
     RECT rect;
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
+    
+    int FrameSize = GetFrameSize(hWnd);
+    
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
@@ -338,10 +345,10 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
     UserGetInsideRectNC(hWnd, &rect );
     
     SetRect(&rect,
-            rect.right - (iBmpWidth * 3) - (GetSystemMetrics(SM_CXFIXEDFRAME)) - 2,
-            rect.top + GetSystemMetrics(SM_CYFIXEDFRAME),
-            rect.right - (iBmpWidth * 2) - GetSystemMetrics(SM_CXFIXEDFRAME) - 2,
-            rect.top + iBmpHeight + GetSystemMetrics(SM_CYFIXEDFRAME) );
+            rect.right - (iBmpWidth * 3) - FrameSize - 4,
+            rect.top + FrameSize + 1,
+            rect.right - (iBmpWidth * 2) - FrameSize - 4,
+            rect.top + iBmpHeight + FrameSize + 1 );
 
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
