@@ -1,7 +1,0 @@
-; Ancillary Function Driver - ReactOS Operating System
-
-LIBRARY AFDTEST.SYS
-
-EXPORTS
-
-; EOF
