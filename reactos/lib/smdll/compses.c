@@ -7,8 +7,8 @@
  */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <rosrtl/smapi.h>
-#include <rosrtl/smhelper.h>
+#include <sm/api.h>
+#include <sm/helper.h>
 
 NTSTATUS STDCALL
 SmCompleteSession (HANDLE hSmApiPort, HANDLE hSbApiPort, HANDLE hApiPort)

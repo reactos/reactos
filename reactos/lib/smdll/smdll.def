@@ -1,0 +1,5 @@
+LIBRARY SMDLL.DLL
+EXPORTS
+SmCompleteSession@12
+SmConnectApiPort@16
+SmExecPgm@8

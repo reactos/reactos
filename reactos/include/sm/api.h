@@ -1,6 +1,6 @@
 /* $Id$ */
-#ifndef __ROSRTL_SM_API_H
-#define __ROSRTL_SM_API_H
+#ifndef __SM_API_H
+#define __SM_API_H
 
 #define SM_API_PORT_NAME   L"\\SmApiPort"
 #define SM_DBGSS_PORT_NAME L"\\DbgSsApiPort"
@@ -69,4 +69,4 @@ typedef struct _SM_PORT_MESSAGE
 #define SM_PORT_MESSAGE_SIZE  (sizeof(SM_PORT_MESSAGE))
 
 
-#endif /* !def __ROSRTL_SM_API_H */
+#endif /* !def __SM_API_H */

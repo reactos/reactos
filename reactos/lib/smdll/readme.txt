@@ -1,6 +1,6 @@
 $Id$
 
-This is a helper library to talk to the ReactOS session manager (SM).
+This is SMDLL: a helper library to talk to the ReactOS session manager (SM).
 
 It should be linked in the following components:
 

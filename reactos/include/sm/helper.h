@@ -1,4 +1,4 @@
-#ifndef _ROSRTL_SM_HELPER_H
+#ifndef _SM_HELPER_H
 
 /*** DATA TYPES ******************************************************/
 
@@ -43,4 +43,4 @@ SmExecuteProgram (IN     HANDLE           hSmApiPort,
 		  IN     PUNICODE_STRING  Pgm
 		  );
 
-#endif /* ndef _ROSRTL_SM_HELPER_H */
+#endif /* ndef _SM_HELPER_H */

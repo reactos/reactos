@@ -1,7 +1,7 @@
 /* $Id$ */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <rosrtl/smapi.h>
+#include <sm/api.h>
 
 VOID STDCALL SmPrintPortMessage (PSM_PORT_MESSAGE SmMessage)
 {
