@@ -247,8 +247,6 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
                 DataRunStartLCN = -1;
             }
 
-            DbgPrint((DPRINT_FILESYSTEM, "YYY - %I64x\n", DataRunStartLCN));
-
             if (Offset >= CurrentOffset &&
                 Offset < CurrentOffset + (DataRunLength * NtfsClusterSize))
             {
