@@ -6,11 +6,15 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-TEST_APPS = alive apc args atomtest bench bitblt button button2 \
-combo consume copymove count dump_shared_data edit enumwnd event file \
-gditest hello isotest lineclip linetest lpc messagebox mstest mutex nptest pteb \
-regtest sectest shm thread tokentest vmtest winhello dibtest lock SampleWindow \
-hivetest shaptest wm_paint multiwin icontest suspend tests/volinfo terminate 
+# test_old tests
+TEST_APPS = SampleWindow alive apc args atomtest bench bitblt \
+button button2 combo consume copymove count dibtest dump_shared_data \
+edit enumwnd event file gditest hello hivetest icontest isotest \
+lineclip linetest lock lpc messagebox mktime mstest multiwin \
+mutex nptest patblt pipe primitives pteb regtest sectest sertest \
+shaptest shm statst statst2 stretchblt suspend tcpsvr terminate \
+txtscale thread thread_msg tokentest vmtest winhello wm_erasebkgnd \
+wm_paint
 
 TEST_MISC = 
 
