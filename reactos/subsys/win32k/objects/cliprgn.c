@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.42 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.43 2004/12/07 19:53:44 royce Exp $ */
 #include <w32k.h>
 
 int FASTCALL
@@ -43,9 +43,13 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       CombinedRegion->rdh.nCount,
       (PRECTL)CombinedRegion->Buffer,
       (PRECTL)&CombinedRegion->rdh.rcBound);
-   ASSERT(Dc->CombinedClip != NULL);
 
    RGNDATA_UnlockRgn(Dc->w.hGCClipRgn);
+   if ( NULL == Dc->CombinedClip )
+   {
+	   DPRINT1("IntEngCreateClipRegion() failed\n");
+	   return ERROR;
+   }
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
@@ -99,7 +103,8 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
     }
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
-  CLIPPING_UpdateGCRegion(dc);
+  if ( retval != ERROR )
+    retval = CLIPPING_UpdateGCRegion(dc);
   DC_UnlockDc( hdc );
 
   return retval;

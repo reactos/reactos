@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.147 2004/11/16 16:27:49 blight Exp $
+/* $Id: dc.c,v 1.148 2004/12/07 19:53:44 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -1223,7 +1223,11 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 
 	  dc->w.hClipRgn = 0;
 	}
-	CLIPPING_UpdateGCRegion( dc );
+	{
+		int res;
+		res = CLIPPING_UpdateGCRegion( dc );
+		ASSERT ( res != ERROR );
+	}
 	DC_UnlockDc ( hDC );
 #else
 	DC_UnlockDc ( hDC );
@@ -2022,8 +2026,13 @@ DC_InitDC(HDC  DCHandle)
   NtGdiSelectObject(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
   //NtGdiSelectObject(DCHandle, hFont);
 
-//  CLIPPING_UpdateGCRegion(DCToInit);
-
+/*
+  {
+    int res;
+    res = CLIPPING_UpdateGCRegion(DCToInit);
+    ASSERT ( res != ERROR );
+  }
+*/
 }
 
 VOID FASTCALL
