@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.96 2002/02/09 18:41:24 chorns Exp $
+/* $Id: loader.c,v 1.97 2002/02/09 19:20:44 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -976,7 +976,6 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Novell Eagle 2000 driver
     */
    //LdrLoadAutoConfigDriver(L"ne2000.sys");
-   LdrLoadAutoConfigDriver(L"pcntn3m.sys");
 
    /*
     * TCP/IP protocol driver
