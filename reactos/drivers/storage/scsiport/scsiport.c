@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.61 2004/06/15 09:29:41 hbirr Exp $
+/* $Id: scsiport.c,v 1.62 2004/06/21 21:00:37 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,6 +47,8 @@
 #define IRP_FLAG_NEXT_LU	0x00000004
 
 /* GLOBALS *******************************************************************/
+
+static ULONG InternalDebugLevel = 0;
 
 static VOID
 SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
@@ -202,10 +204,8 @@ ScsiDebugPrint(IN ULONG DebugPrintLevel,
   char Buffer[256];
   va_list ap;
 
-#if 0
-  if (DebugPrintLevel > InternalDebugLevel)
+  if (DebugPrintLevel >= InternalDebugLevel)
     return;
-#endif
 
   va_start(ap, DebugMessage);
   vsprintf(Buffer, DebugMessage, ap);
@@ -1787,8 +1787,6 @@ SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         {
 	  DeviceExtension->CurrentSrbExtensions++;  
           Srb->SrbExtension = DeviceExtension->VirtualAddress + index * DeviceExtension->SrbExtensionSize;
-//	  Srb->QueueTag = i;
-//	  Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
 	}
     }
   DPRINT("%x\n", Srb->SrbExtension);
@@ -2042,7 +2040,14 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      if (NT_SUCCESS(ScanData->Status) &&
 		  (Srb->SrbStatus == SRB_STATUS_SUCCESS || 
 		   (Srb->SrbStatus == SRB_STATUS_DATA_OVERRUN && 
-		    Srb->DataTransferLength >= INQUIRYDATABUFFERSIZE)) &&
+		   /*
+		    * FIXME: 
+		    *   The NT 4.0 driver from an inic950 based scsi controller 
+		    *   returns only 4 byte of inquiry data, but the device name 
+		    *   is visible on NT 4.0. We must implement an other way 
+		    *   to get the complete inquiry data. 
+		    */
+		    Srb->DataTransferLength >= /*INQUIRYDATABUFFERSIZE*/4)) &&
 		  ((PINQUIRYDATA)Srb->DataBuffer)->DeviceTypeQualifier == 0)
 		{
 		  /* Copy inquiry data */
@@ -2777,13 +2782,10 @@ SpiAddActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   PSCSI_REQUEST_BLOCK Srb;
   LunExtension = Irp->Tail.Overlay.DriverContext[2];
   Srb = Irp->Tail.Overlay.DriverContext[3];
-  Srb->SrbFlags |= SRB_FLAGS_IS_ACTIVE;
   Irp->Tail.Overlay.DriverContext[0] = (PVOID)DeviceExtension->NextIrp;
   InterlockedExchangePointer(&DeviceExtension->NextIrp, Irp);
   Irp->Tail.Overlay.DriverContext[1] = (PVOID)LunExtension->NextIrp;
   InterlockedExchangePointer(&LunExtension->NextIrp, Irp);
-  InterlockedIncrement((PLONG)&LunExtension->ActiveIrpCount);
-  InterlockedIncrement((PLONG)&DeviceExtension->ActiveIrpCount);
 }
 
 static VOID
@@ -2838,10 +2840,6 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
        * FIXME:
        *   Is this the right place to set this flag ?
        */
-      if (DeviceExtension->PortConfig->MultipleRequestPerLu)
-        {
-	  Srb->SrbFlags |= SRB_FLAGS_QUEUE_ACTION_ENABLE;
-	}
       NextIrp->Tail.Overlay.DriverContext[2] = (PVOID)Srb->QueueSortKey;
       LunExtension = Srb->OriginalRequest;
 
@@ -3021,6 +3019,10 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	        {
 		  LunExtension->PendingIrpCount--;
 		  DeviceExtension->PendingIrpCount--;
+		  Srb->SrbFlags |= SRB_FLAGS_IS_ACTIVE;
+                  LunExtension->ActiveIrpCount++;
+                  DeviceExtension->ActiveIrpCount++;
+
                   RemoveEntryList((PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
 		  Irp->Tail.Overlay.DriverContext[2] = LunExtension;
 		  Srb->OriginalRequest = Irp;
@@ -3058,6 +3060,10 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 	  LunExtension->PendingIrpCount--;
 	  DeviceExtension->PendingIrpCount--;
+          Srb->SrbFlags |= SRB_FLAGS_IS_ACTIVE;
+	  LunExtension->ActiveIrpCount++;
+          DeviceExtension->ActiveIrpCount++;
+
 	  SpiAllocateSrbExtension(DeviceExtension, Srb);
           KeReleaseSpinLockFromDpcLevel(&DeviceExtension->Lock);
 
