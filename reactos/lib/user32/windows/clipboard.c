@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.9 2003/12/14 17:59:15 navaraf Exp $
+/* $Id: clipboard.c,v 1.10 2003/12/24 11:24:29 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -206,7 +206,7 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
 UINT STDCALL
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-   ULONG Ret = RegisterClipboardFormatW(lpszFormat);
+   ULONG Ret = RegisterWindowMessageW(lpszFormat);
    DbgPrint("RegisterClipboardFormatW(%S) - %x\n", lpszFormat, Ret);
    return Ret;
 }
