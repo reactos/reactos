@@ -3014,8 +3014,8 @@ ZwQueryMutant(
 /*
  * FUNCTION: Queries the system ( high-resolution ) performance counter.
  * ARGUMENTS: 
- *        Counter = Performance counter
- *	  Frequency = Performance frequency
+ *        PerformanceCounter = Performance counter
+ *	  PerformanceFrequency = Performance frequency
  * REMARKS:
 	This procedure queries a tick count faster than 10ms ( The resolution for  Intel®-based CPUs is about 0.8 microseconds.)
 	This procedure maps to the win32 QueryPerformanceCounter, QueryPerformanceFrequency 
@@ -3025,15 +3025,15 @@ ZwQueryMutant(
 NTSTATUS
 STDCALL
 NtQueryPerformanceCounter(
-	IN PLARGE_INTEGER Counter,
-	IN PLARGE_INTEGER Frequency
+	OUT PLARGE_INTEGER PerformanceCounter,
+	OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQueryPerformanceCounter(
-	IN PLARGE_INTEGER Counter,
-	IN PLARGE_INTEGER Frequency
+	OUT PLARGE_INTEGER PerformanceCounter,
+	OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL
 	);
 
 /*
@@ -5240,8 +5240,8 @@ NtCreateThread(
 NTSTATUS
 STDCALL
 NtDelayExecution(
-	IN ULONG Alertable,
-	IN LARGE_INTEGER *Interval
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER DelayInterval
 	);
 
 /*
@@ -6439,7 +6439,7 @@ NTSTATUS
 STDCALL
 ZwDelayExecution(
 	IN BOOLEAN Alertable,
-	IN TIME *Interval
+	IN PLARGE_INTEGER DelayInterval
 	);
 
 /*

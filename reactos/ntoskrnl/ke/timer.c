@@ -71,8 +71,6 @@ static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
 
-extern HANDLE PsIdleThreadHandle;
-
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
 #define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
@@ -104,58 +102,100 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
 
 
 NTSTATUS STDCALL
-NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
-			  IN PLARGE_INTEGER Frequency)
+NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
+			  OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL)
 {
   LARGE_INTEGER PerfCounter;
   LARGE_INTEGER PerfFrequency;
-  NTSTATUS      Status;
-
-  PerfCounter = KeQueryPerformanceCounter(&PerfFrequency);
-
-  if (Counter != NULL)
-    {
-      Status = MmCopyToCaller(&Counter->QuadPart, &PerfCounter.QuadPart, sizeof(PerfCounter.QuadPart));
-      if (!NT_SUCCESS(Status))
-        {
-	  return(Status);
-        }
-    }
-
-  if (Frequency != NULL)
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
   {
-      Status = MmCopyToCaller(&Frequency->QuadPart, &PerfFrequency.QuadPart, sizeof(PerfFrequency.QuadPart));
-      if (!NT_SUCCESS(Status))
-        {
-	  return(Status);
-        }
+    _SEH_TRY
+    {
+      ProbeForWrite(PerformanceCounter,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+      if(PerformanceFrequency != NULL)
+      {
+        ProbeForWrite(PerformanceFrequency,
+                      sizeof(LARGE_INTEGER),
+                      sizeof(ULONG));
+      }
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
   }
 
-  return(STATUS_SUCCESS);
+  PerfCounter = KeQueryPerformanceCounter(&PerfFrequency);
+  
+  _SEH_TRY
+  {
+    *PerformanceCounter = PerfCounter;
+    if(PerformanceFrequency != NULL)
+    {
+      *PerformanceFrequency = PerfFrequency;
+    }
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  return Status;
 }
 
 
 NTSTATUS STDCALL
-NtDelayExecution(IN ULONG Alertable,
-		 IN LARGE_INTEGER* Interval)
+NtDelayExecution(IN BOOLEAN Alertable,
+		 IN PLARGE_INTEGER DelayInterval)
 {
-   NTSTATUS Status;
-   LARGE_INTEGER Timeout;
-
-   Status = MmCopyFromCaller(&Timeout, Interval, sizeof(Timeout));
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
-   Timeout = *((PLARGE_INTEGER)Interval);
-   DPRINT("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
-	  Alertable, Internal, Timeout);
+   KPROCESSOR_MODE PreviousMode;
+   LARGE_INTEGER SafeInterval;
    
-   DPRINT("Execution delay is %d/%d\n", 
-	  Timeout.u.HighPart, Timeout.u.LowPart);
-   Status = KeDelayExecutionThread(UserMode, (BOOLEAN)Alertable, &Timeout);
-   return(Status);
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     NTSTATUS Status = STATUS_SUCCESS;
+     
+     _SEH_TRY
+     {
+       ProbeForRead(DelayInterval,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the kernel stack and let DelayInterval point to it so
+          we don't need to wrap KeDelayExecutionThread in SEH! */
+       SafeInterval = *DelayInterval;
+       DelayInterval = &SafeInterval;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+
+   return KeDelayExecutionThread(PreviousMode,
+                                 Alertable,
+                                 DelayInterval);
 }
 
 
