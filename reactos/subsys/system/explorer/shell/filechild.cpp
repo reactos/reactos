@@ -323,7 +323,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			}
 
 			SetFocus(_focus_pane? _right_hwnd: _left_hwnd);
-			break;}
+			goto def;}
 
 		case PM_DISPATCH_COMMAND: {
 			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
@@ -355,7 +355,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			return TRUE;}
 
-		default:
+		default: def:
 			return super::WndProc(nmsg, wparam, lparam);
 	}
 

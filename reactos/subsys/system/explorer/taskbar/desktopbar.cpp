@@ -47,10 +47,10 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 #ifdef TASKBAR_AT_TOP
 	rect.top = -2;	// hide top border
 #else
-	rect.top = GetSystemMetrics(SM_CYSCREEN) - TASKBAR_HEIGHT;
+	rect.top = GetSystemMetrics(SM_CYSCREEN) - DESKTOPBARBAR_HEIGHT;
 #endif
 	rect.right = GetSystemMetrics(SM_CXSCREEN) + 2;
-	rect.bottom = rect.top + TASKBAR_HEIGHT + 2;
+	rect.bottom = rect.top + DESKTOPBARBAR_HEIGHT + 2;
 
 	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
 							BtnWindowClass(CLASSNAME_EXPLORERBAR), TITLE_EXPLORERBAR,
@@ -78,7 +78,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 		return 1;
 
 	 // create start button
-	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
+	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU));
 
 	ClientRect clnt(_hwnd);
@@ -86,9 +86,9 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create task bar
 	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
 							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), TASKBAR_HEIGHT, _hwnd);
+							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), DESKTOPBARBAR_HEIGHT, _hwnd);
 
-	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
+	TaskBar* taskbar = static_cast<TaskBar*>(get_window(_hwndTaskBar));
 	taskbar->_desktop_bar = this;
 
 	 // create tray notification area
@@ -96,7 +96,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, clnt.bottom-2, _hwnd);
 
-//	NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
+//	NotifyArea* notify_area = static_cast<NotifyArea*>(get_window(_hwndNotify));
 //	notify_area->_desktop_bar = this;
 
 	RegisterHotkeys();
@@ -171,8 +171,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			MoveWindow(_hwndNotify, cx-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
 
 		WindowRect rect(_hwnd);
-		int height = rect.bottom-rect.top;
-		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)-(height-1)};
+		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), rect.top};
 		SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);
 		PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
 		break;}
@@ -252,7 +251,7 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 
 		//TODO: process the differnt versions of the NOTIFYICONDATA structure (look at cbSize to decide which one)
 
-		NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
+		NotifyArea* notify_area = static_cast<NotifyArea*>(get_window(_hwndNotify));
 
 		if (notify_area)
 			return notify_area->ProcessTrayNotification(ptr->notify_code, &ptr->nicon_data);

@@ -76,6 +76,7 @@ struct NotifyArea : public Window
 	typedef Window super;
 
 	NotifyArea(HWND hwnd);
+	~NotifyArea();
 
 //	DesktopBar*	_desktop_bar;
 
@@ -93,6 +94,7 @@ protected:
 
 	void	Refresh();
 	void	Paint();
+	void	Tick();
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 };
@@ -104,6 +106,8 @@ struct ClockWindow : public Window
 	typedef Window super;
 
 	ClockWindow(HWND hwnd);
+
+	void	Tick();
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

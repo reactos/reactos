@@ -67,9 +67,9 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	// This next part could be improved by working out how much
 	// space the text actually needs...
 
-#define	TASKBAR_HEIGHT	30
+#define	DESKTOPBARBAR_HEIGHT	30
 	rect.left = rect.right - 280;
-	rect.top = rect.bottom - 56 - TASKBAR_HEIGHT;
+	rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
@@ -208,14 +208,6 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
-	  case WM_SETFOCUS:
-		 // close startup menu and other popup menus like that of tray notification icons
-		if (wparam)
-			PostMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
-		else
-			PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
-		goto def;
-
 	  case WM_GETISHELLBROWSER:
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
@@ -230,7 +222,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CLOSE:
 		break;	// Over-ride close. We need to close desktop some other way.
 
-	  default: def:
+	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

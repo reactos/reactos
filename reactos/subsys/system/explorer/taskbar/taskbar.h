@@ -34,7 +34,6 @@
 
 #define	IDC_FIRST_APP	0x2000
 
-#define	TASKBAR_HEIGHT			30
 #define	STARTBUTTON_WIDTH		60
 #define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP

@@ -98,7 +98,14 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
 							clnt.right-(CLOCKWINDOW_WIDTH+1), 1, CLOCKWINDOW_WIDTH, clnt.bottom-2, _hwnd);
 
+	SetTimer(_hwnd, 0, 1000, NULL);
+
 	return 0;
+}
+
+NotifyArea::~NotifyArea()
+{
+	KillTimer(_hwnd, 0);
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -108,6 +115,15 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Paint();
 		break;
 
+	  case WM_TIMER: {
+		Tick();
+
+		ClockWindow* clock_window = static_cast<ClockWindow*>(get_window(_hwndClock));
+
+		if (clock_window)
+			clock_window->Tick();
+		break;}
+
 	  default:
 		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
 			NotifyIconSet::iterator found = IconHitTest(Point(lparam));
@@ -116,13 +132,10 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
 
 				 // Notify the message the the owner if it's still alive
-				if (IsWindow(entry._hWnd))	//TODO: We could check this regularly for all icons by using WM_TIMER to prevent for hanging icons
+				if (IsWindow(entry._hWnd))
 					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
-				else {
-					 // delete icons without owner window
-					if (_icon_map.erase(entry))
-						Refresh();
-				}
+				else if (_icon_map.erase(entry))	// delete icons without valid owner window
+					Refresh();
 			}
 		}
 
@@ -199,6 +212,29 @@ void NotifyArea::Paint()
 	}
 }
 
+void NotifyArea::Tick()
+{
+	bool do_refresh = false;
+
+	 // Look for task icons without valid owner window.
+	 // This is an advanced feature, which is missing in MS Windows.
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
+	{
+		const NotifyInfo& entry = *it;
+
+#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+		if (!(entry._dwState & NIS_HIDDEN))
+#endif
+		{
+			if (!IsWindow(entry._hWnd))
+				if (_icon_map.erase(entry))	// delete icons without valid owner window
+					++do_refresh;
+		}
+	}
+
+	if (do_refresh)
+		Refresh();
+}
 
  /// search for a icon at a given client coordinate position
 NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
@@ -234,8 +270,6 @@ ClockWindow::ClockWindow(HWND hwnd)
 {
 	*_time = _T('\0');
 	FormatTime();
-
-	SetTimer(hwnd, 0, 1000, NULL);
 }
 
 LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -245,16 +279,17 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Paint();
 		break;
 
-	  case WM_TIMER: {
-		if (FormatTime())
-			InvalidateRect(_hwnd, NULL, TRUE);
-		break;}
-
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
+}
+
+void ClockWindow::Tick()
+{
+	if (FormatTime())
+		InvalidateRect(_hwnd, NULL, TRUE);	// refresh displayed time
 }
 
 bool ClockWindow::FormatTime()

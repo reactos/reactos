@@ -36,6 +36,9 @@
 #define	WINMSG_TASKBARCREATED	_T("TaskbarCreated")
 
 
+#define	DESKTOPBARBAR_HEIGHT	29
+
+
 #define	IDC_START		0x1000
 #define	IDC_LOGOFF		0x1001
 #define	IDC_SHUTDOWN	0x1002

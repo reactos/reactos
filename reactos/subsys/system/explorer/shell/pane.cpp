@@ -151,7 +151,7 @@ LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			child->switch_focus_pane();
 		}
 		break;}
-}
+	}
 
 	return super::WndProc(nmsg, wparam, lparam);
 }
