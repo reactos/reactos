@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.31 2003/09/09 15:49:59 gvg Exp $ */
+/* $Id: fillshap.c,v 1.32 2003/09/09 15:56:06 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -668,7 +668,6 @@ NtGdiRoundRect(
   DC   *dc = DC_LockDc(hDC);
   BOOL  ret = FALSE; /* default to failure */
 
-__asm__("int $3\n");
   DPRINT("NtGdiRoundRect(0x%x,%i,%i,%i,%i,%i,%i)\n",hDC,LeftRect,TopRect,RightRect,BottomRect,Width,Height);
   if ( !dc )
   {
