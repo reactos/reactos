@@ -3,12 +3,13 @@
 
 typedef struct
 {
-   PDEVICE_OBJECT StorageDevice;
+   LIST_ENTRY PipeListHead;
+   KMUTEX PipeListLock;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
 typedef struct
 {
-   PWCHAR Name;
+   UNICODE_STRING PipeName;
    LIST_ENTRY PipeListEntry;
    KSPIN_LOCK FcbListLock;
    LIST_ENTRY FcbListHead;
@@ -28,9 +29,9 @@ typedef struct _NPFS_FCB
    PNPFS_PIPE Pipe;
    struct _NPFS_FCB* OtherSide;
    BOOLEAN IsServer;
+   KEVENT ConnectEvent;
 } NPFS_FCB, *PNPFS_FCB;
 
-VOID NpfsPipeList(VOID);
 
 #define KeLockMutex(x) KeWaitForSingleObject(x, \
                                              UserRequest, \

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2001/05/07 22:03:27 chorns Exp $
+# $Id: Makefile,v 1.6 2001/05/10 23:38:31 ekohl Exp $
 #
 # Named Pipes File System
 #
@@ -8,21 +8,25 @@ TARGETNAME=npfs
 
 #BASE_CFLAGS = -I../../../include
 
-OBJECTS = create.o fsctrl.o mount.o rw.o npfs.coff \
-          ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = create.o fsctrl.o mount.o rw.o npfs.coff
+
+LIBS = ../../../ntoskrnl/ntoskrnl.a
 
 all: $(TARGETNAME).sys
 
 .phony: all
 
 clean:
-	- $(RM) create.o 
-	- $(RM) mount.o
+	- $(RM) *.o 
+	- $(RM) npfs.coff
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
 	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
 
-$(TARGETNAME).sys: $(OBJECTS)
+$(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -31,7 +35,7 @@ $(TARGETNAME).sys: $(OBJECTS)
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp \
-		$(OBJECTS)
+		$(OBJECTS) $(LIBS)
 	$(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).sys \
@@ -46,9 +50,10 @@ $(TARGETNAME).sys: $(OBJECTS)
 		-specs=../../svc_specs \
 		-mdll \
 		-o $(TARGETNAME).sys \
-		$(OBJECTS) \
+		$(OBJECTS) $(LIBS) \
 		-Wl,temp.exp
 	$(RM) temp.exp
+	$(NM) --numeric-sort npfs.sys > npfs.sym
 
 npfs.coff: ../../../include/reactos/buildno.h npfs.rc
 

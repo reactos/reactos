@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.5 2001/05/01 11:09:01 ekohl Exp $
+/* $Id: create.c,v 1.6 2001/05/10 23:38:31 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -19,16 +19,8 @@
 
 /* GLOBALS *******************************************************************/
 
-static LIST_ENTRY PipeListHead;
-static KMUTEX PipeListLock;
 
 /* FUNCTIONS *****************************************************************/
-
-VOID NpfsInitPipeList(VOID)
-{
-   InitializeListHead(&PipeListHead);
-   KeInitializeMutex(&PipeListLock, 0);
-}
 
 NTSTATUS STDCALL
 NpfsCreate(PDEVICE_OBJECT DeviceObject,
@@ -39,7 +31,6 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    NTSTATUS Status;
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
-   PWSTR PipeName;
    PNPFS_PIPE current;
    PLIST_ENTRY current_entry;
    PNPFS_DEVICE_EXTENSION DeviceExt;
@@ -50,8 +41,6 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
-   
-   PipeName = FileObject->FileName.Buffer;
    
    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
    if (Fcb == NULL)
@@ -64,15 +53,17 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
    
-   KeLockMutex(&PipeListLock);
-   current_entry = PipeListHead.Flink;
-   while (current_entry != &PipeListHead)
+   KeLockMutex(&DeviceExt->PipeListLock);
+   current_entry = DeviceExt->PipeListHead.Flink;
+   while (current_entry != &DeviceExt->PipeListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
 				    NPFS_PIPE,
 				    PipeListEntry);
 	
-	if (wcscmp(Pipe->Name, current->Name) == 0)
+	if (RtlCompareUnicodeString(&Pipe->PipeName,
+				    &current->PipeName,
+				    TRUE) == 0)
 	  {
 	     break;
 	  }
@@ -80,10 +71,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	current_entry = current_entry->Flink;
      }
    
-   if (current_entry == &PipeListHead)
+   if (current_entry == &DeviceExt->PipeListHead)
      {
 	ExFreePool(Fcb);
-	KeUnlockMutex(&PipeListLock);
+	KeUnlockMutex(&DeviceExt->PipeListLock);
 	
 	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
 	Irp->IoStatus.Information = 0;
@@ -109,7 +100,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    Pipe->ReferenceCount++;
    
-   KeUnlockMutex(&PipeListLock);
+   /* search for unconnected server fcb */
+   
+   
+   KeUnlockMutex(&DeviceExt->PipeListLock);
    
    FileObject->FsContext = Fcb;
    
@@ -121,6 +115,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    return(Status);
 }
 
+
 NTSTATUS STDCALL
 NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp)
@@ -129,7 +124,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    PFILE_OBJECT FileObject;
    NTSTATUS Status = STATUS_SUCCESS;
    PNPFS_DEVICE_EXTENSION DeviceExt;
-   PWSTR PipeName;
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
    KIRQL oldIrql;
@@ -142,8 +136,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
-   
-   PipeName = FileObject->FileName.Buffer;
    
    Buffer = (PIO_PIPE_CREATE_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
    
@@ -171,9 +163,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
    
-   Pipe->Name = ExAllocatePool(NonPagedPool,
-			       (wcslen(PipeName) + 1) * sizeof(WCHAR));
-   if (Pipe->Name == NULL)
+   if (RtlCreateUnicodeString(&Pipe->PipeName, FileObject->FileName.Buffer) == 0)
      {
 	ExFreePool(Pipe);
 	ExFreePool(Fcb);
@@ -186,7 +176,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
    
-   wcscpy(Pipe->Name, PipeName);
    Pipe->ReferenceCount = 0;
    InitializeListHead(&Pipe->FcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
@@ -194,15 +183,15 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Pipe->MaxInstances = Buffer->MaxInstances;
    Pipe->TimeOut = Buffer->TimeOut;
    
-   KeLockMutex(&PipeListLock);
-   current_entry = PipeListHead.Flink;
-   while (current_entry != &PipeListHead)
+   KeLockMutex(&DeviceExt->PipeListLock);
+   current_entry = DeviceExt->PipeListHead.Flink;
+   while (current_entry != &DeviceExt->PipeListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
 				    NPFS_PIPE,
 				    PipeListEntry);
 	
-	if (wcscmp(Pipe->Name, current->Name) == 0)
+	if (RtlCompareUnicodeString(&Pipe->PipeName, &current->PipeName, TRUE) == 0)
 	  {
 	     break;
 	  }
@@ -210,16 +199,16 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 	current_entry = current_entry->Flink;
      }
    
-   if (current_entry != &PipeListHead)
+   if (current_entry != &DeviceExt->PipeListHead)
      {
-	ExFreePool(Pipe->Name);
+	RtlFreeUnicodeString(&Pipe->PipeName);
 	ExFreePool(Pipe);
 	
 	Pipe = current;
      }
    else
      {
-	InsertTailList(&PipeListHead, &Pipe->PipeListEntry);
+	InsertTailList(&DeviceExt->PipeListHead, &Pipe->PipeListEntry);
      }
    Pipe->ReferenceCount++;
    
@@ -237,7 +226,11 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Fcb->IsServer = TRUE;
    Fcb->OtherSide = NULL;
    
-   KeUnlockMutex(&PipeListLock);
+   KeInitializeEvent(&Fcb->ConnectEvent,
+		     SynchronizationEvent,
+		     FALSE);
+   
+   KeUnlockMutex(&DeviceExt->PipeListLock);
    
    FileObject->FsContext = Fcb;
    
@@ -254,27 +247,48 @@ NTSTATUS STDCALL
 NpfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {
+   PNPFS_DEVICE_EXTENSION DeviceExt;
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PNPFS_FCB Fcb;
-   NTSTATUS Status;
+   PNPFS_PIPE Pipe;
+   KIRQL oldIrql;
 
-   DPRINT1("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
    IoStack = IoGetCurrentIrpStackLocation(Irp);
+   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
    Fcb =  FileObject->FsContext;
+   Pipe = Fcb->Pipe;
 
-   DPRINT1("Closing pipe %S\n", Fcb->Pipe->Name);
+   DPRINT("Closing pipe %wZ\n", &Pipe->PipeName);
 
-   Status = STATUS_SUCCESS;
+   KeLockMutex(&DeviceExt->PipeListLock);
 
-   Irp->IoStatus.Status = Status;
+   Pipe->ReferenceCount--;
+
+   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
+   RemoveEntryList(&Fcb->FcbListEntry);
+   KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+   ExFreePool(Fcb);
+   FileObject->FsContext = NULL;
+
+   if (Pipe->ReferenceCount == 0)
+     {
+	RtlFreeUnicodeString(&Pipe->PipeName);
+	RemoveEntryList(&Pipe->PipeListEntry);
+	ExFreePool(Pipe);
+     }
+
+   KeUnlockMutex(&DeviceExt->PipeListLock);
+
+   Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    
-   return(Status);
+   return(STATUS_SUCCESS);
 }
 
 /* EOF */
