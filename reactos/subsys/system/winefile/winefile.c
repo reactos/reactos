@@ -1827,7 +1827,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				case ID_WINDOW_ARRANGE:
 					SendMessage(Globals.hmdiclient, WM_MDIICONARRANGE, 0, 0);
 					break;
-					
+
 				case ID_SELECT_FONT: {
 					TCHAR dlg_name[BUFFER_LEN], dlg_info[BUFFER_LEN];
 					CHOOSEFONT chFont;
@@ -1861,6 +1861,8 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 							ChildWnd* child = (ChildWnd*) GetWindowLong(childWnd, GWL_USERDATA);
 							SetWindowFont(child->left.hwnd, Globals.hfont, TRUE);
 							SetWindowFont(child->right.hwnd, Globals.hfont, TRUE);
+							ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+							ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 							InvalidateRect(child->left.hwnd, NULL, TRUE);
 							InvalidateRect(child->right.hwnd, NULL, TRUE);
 						}
