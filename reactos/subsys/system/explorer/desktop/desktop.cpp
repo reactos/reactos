@@ -58,10 +58,12 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	RECT rect;
 	GetClientRect(hwnd, &rect);
 
+	PaintDesktop(hdc);
+/*
 	HBRUSH bkgndBrush = CreateSolidBrush(RGB(0,32,160));	// dark blue
-	FillRect(hdc, &rect, bkgndBrush/*GetStockBrush(BLACK_BRUSH)*/);
+	FillRect(hdc, &rect, bkgndBrush);
 	DeleteBrush(bkgndBrush);
-
+*/
 	// This next part could be improved by working out how much
 	// space the text actually needs...
 
@@ -217,7 +219,7 @@ HWND create_desktop_window(HINSTANCE hInstance)
 	WindowClass wcDesktop(_T("Program Manager"));
 
 	wcDesktop.style 		= CS_DBLCLKS;
-	wcDesktop.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
 	wcDesktop.hIcon			= LoadIcon(NULL, IDI_APPLICATION);
 	wcDesktop.hCursor		= LoadCursor(NULL, IDC_ARROW);
 
