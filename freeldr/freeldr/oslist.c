@@ -17,19 +17,19 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#include "freeldr.h"
-#include "inifile.h"
-#include "oslist.h"
-#include "rtl.h"
-#include "mm.h"
-#include "ui.h"
+#include <freeldr.h>
+#include <inifile.h>
+#include <oslist.h>
+#include <rtl.h>
+#include <mm.h>
+#include <ui.h>
 
 BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, PULONG OperatingSystemCountPointer)
 {
 	ULONG	Idx;
 	ULONG	CurrentOperatingSystemIndex;
-	UCHAR	SettingName[80];
-	UCHAR	SettingValue[80];
+	UCHAR	SettingName[260];
+	UCHAR	SettingValue[260];
 	ULONG	OperatingSystemCount;
 	ULONG	SectionId;
 	ULONG	OperatingSystemSectionId;
@@ -42,7 +42,7 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	//
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
-		MessageBox("Section [FreeLoader] not found in freeldr.ini.");
+		UiMessageBox("Section [FreeLoader] not found in freeldr.ini.");
 		return FALSE;
 	}
 
@@ -63,9 +63,9 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	CurrentOperatingSystemIndex = 0;
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
 
-		if (stricmp(SettingName, "OS") == 0)
+		if (stricmp(SettingName, "OS") == 0 && IniOpenSection(SettingValue, &OperatingSystemSectionId))
 		{
 			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingValue);
 
@@ -80,7 +80,7 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	{
 		if (IniOpenSection(OperatingSystemSectionNames[Idx], &OperatingSystemSectionId))
 		{
-			if (IniReadSettingByName(OperatingSystemSectionId, "Name", SettingValue, 80))
+			if (IniReadSettingByName(OperatingSystemSectionId, "Name", SettingValue, 260))
 			{
 				//
 				// Remove any quotes around the string
@@ -90,8 +90,8 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 			}
 			else
 			{
-				sprintf(SettingName, "Operating System '%s' has no Name= line in it's [section].", OperatingSystemSectionNames[Idx]);
-				MessageBox(SettingName);
+				sprintf(SettingName, "Operating System '%s' has no\nName= line in it's [section].", OperatingSystemSectionNames[Idx]);
+				UiMessageBox(SettingName);
 				strcpy(OperatingSystemDisplayNames[Idx], "");
 			}
 		}
@@ -107,8 +107,8 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 ULONG CountOperatingSystems(ULONG SectionId)
 {
 	ULONG	Idx;
-	UCHAR	SettingName[80];
-	UCHAR	SettingValue[80];
+	UCHAR	SettingName[260];
+	UCHAR	SettingValue[260];
 	ULONG	OperatingSystemCount = 0;
 	ULONG	SectionSettingCount;
 	
@@ -118,7 +118,7 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	SectionSettingCount = IniGetNumSectionItems(SectionId);
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
 
 		if (stricmp(SettingName, "OS") == 0)
 		{
@@ -128,8 +128,8 @@ ULONG CountOperatingSystems(ULONG SectionId)
 			}
 			else
 			{
-				sprintf(SettingName, "Operating System '%s' is listed in freeldr.ini but doesn't have a [section].", SettingValue);
-				MessageBox(SettingName);
+				sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
+				UiMessageBox(SettingName);
 			}
 		}
 	}
@@ -146,8 +146,8 @@ BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPoint
 	//
 	// Allocate memory to hold operating system list arrays
 	//
-	OperatingSystemSectionNames = (PUCHAR*) AllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
-	OperatingSystemDisplayNames = (PUCHAR*) AllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
+	OperatingSystemSectionNames = (PUCHAR*) MmAllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
+	OperatingSystemDisplayNames = (PUCHAR*) MmAllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
 	
 	//
 	// If either allocation failed then return FALSE
@@ -156,12 +156,12 @@ BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPoint
 	{
 		if (OperatingSystemSectionNames != NULL)
 		{
-			FreeMemory(OperatingSystemSectionNames);
+			MmFreeMemory(OperatingSystemSectionNames);
 		}
 
 		if (OperatingSystemDisplayNames != NULL)
 		{
-			FreeMemory(OperatingSystemDisplayNames);
+			MmFreeMemory(OperatingSystemDisplayNames);
 		}
 
 		return FALSE;
@@ -178,8 +178,8 @@ BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPoint
 	//
 	for (Idx=0; Idx<OperatingSystemCount; Idx++)
 	{
-		OperatingSystemSectionNames[Idx] = (PUCHAR) AllocateMemory(80);
-		OperatingSystemDisplayNames[Idx] = (PUCHAR) AllocateMemory(80);
+		OperatingSystemSectionNames[Idx] = (PUCHAR) MmAllocateMemory(80);
+		OperatingSystemDisplayNames[Idx] = (PUCHAR) MmAllocateMemory(80);
 
 		//
 		// If it failed then jump to the cleanup code
@@ -204,20 +204,20 @@ AllocateListMemoryFailed:
 	{
 		if (OperatingSystemSectionNames[Idx] != NULL)
 		{
-			FreeMemory(OperatingSystemSectionNames[Idx]);
+			MmFreeMemory(OperatingSystemSectionNames[Idx]);
 		}
 
 		if (OperatingSystemDisplayNames[Idx] != NULL)
 		{
-			FreeMemory(OperatingSystemDisplayNames[Idx]);
+			MmFreeMemory(OperatingSystemDisplayNames[Idx]);
 		}
 	}
 
 	//
 	// Free operating system list arrays
 	//
-	FreeMemory(OperatingSystemSectionNames);
-	FreeMemory(OperatingSystemDisplayNames);
+	MmFreeMemory(OperatingSystemSectionNames);
+	MmFreeMemory(OperatingSystemDisplayNames);
 
 	return FALSE;
 }

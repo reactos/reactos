@@ -55,7 +55,7 @@ BOOL DiskIsDriveCdRom(ULONG DriveNumber)
 		if (!BiosInt13ReadExtended(DriveNumber, 16, 1, Sector))
 		{
 			DiskError("Disk read error.");
-			FreeMemory(Sector);
+			MmFreeMemory(Sector);
 			return FALSE;
 		}
 
@@ -224,7 +224,9 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 
 BOOL DiskReadBootRecord(ULONG DriveNumber, ULONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
+#ifdef DEBUG
 	ULONG	Index;
+#endif
 
 	// Read master boot record
 	if (!DiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))

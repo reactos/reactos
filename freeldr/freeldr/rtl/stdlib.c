@@ -108,12 +108,29 @@ int atoi(char *string)
 
 	while(1)
 	{
-		if((*str < '0') || (*str > '9'))
-			break;
+		if(base == 16)
+		{
+			if(((*str < '0') || (*str > '9')) && ((*str < 'a') || (*str > 'f')) && ((*str < 'A') || (*str > 'F')))
+				break;
 
-		result *= base;
-		result += (*str - '0');
-		str++;
+			result *= base;
+			if((*str >= '0') && (*str <= '9'))
+				result += (*str - '0');
+			if((*str >= 'a') && (*str <= 'f'))
+				result += (*str - 'a') + 10;
+			if((*str >= 'A') && (*str <= 'F'))
+				result += (*str - 'A') + 10;
+			str++;
+		}
+		else //if(base == 10)
+		{
+			if((*str < '0') || (*str > '9'))
+				break;
+
+			result *= base;
+			result += (*str - '0');
+			str++;
+		}
 	}
 
 	return result;

@@ -21,7 +21,7 @@
 	.code16
 
 #define ASM
-#include "arch.h"
+#include <arch.h>
 
 
 /*
@@ -48,25 +48,20 @@ _biosdisk_error_code:
 EXTERN(_BiosInt13Read)
 	.code32
 
-	push	%ebp
-	push	%esi
-	push	%edi
-	push	%ebx
-	push	%ecx
-	push	%edx
+	pushal
 
 	/* Get parameters */
-	movl	0x1c(%esp),%eax
-	movl	%eax,_biosdisk_drive
-	movl	0x20(%esp),%eax
-	movl	%eax,_biosdisk_head
 	movl	0x24(%esp),%eax
-	movl	%eax,_biosdisk_track
+	movl	%eax,_biosdisk_drive
 	movl	0x28(%esp),%eax
-	movl	%eax,_biosdisk_sector
+	movl	%eax,_biosdisk_head
 	movl	0x2c(%esp),%eax
-	movl	%eax,_biosdisk_nsects
+	movl	%eax,_biosdisk_track
 	movl	0x30(%esp),%eax
+	movl	%eax,_biosdisk_sector
+	movl	0x34(%esp),%eax
+	movl	%eax,_biosdisk_nsects
+	movl	0x38(%esp),%eax
 	movl	%eax,_biosdisk_buffer
 
 	call	switch_to_real
@@ -138,15 +133,11 @@ _biosdisk_done:
 
 	.code32
 
+	popal
+
 	movl	_biosdisk_retval,%eax	// Get return value
 	//movl	$1,%eax
 
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
-	pop		%edi
-	pop		%esi
-	pop		%ebp
 	ret
 
 /*
@@ -178,25 +169,20 @@ _int13_extended_retrycount:
 EXTERN(_BiosInt13ReadExtended)
 	.code32
 
-	push	%ebp
-	push	%esi
-	push	%edi
-	push	%ebx
-	push	%ecx
-	push	%edx
+	pushal
 
 	/* Get parameters */
-	movl	0x1c(%esp),%eax
-	movl	%eax,_int13_extended_drive
-	movl	0x20(%esp),%eax
-	movl	%eax,_packet_lba_sector_number
 	movl	0x24(%esp),%eax
+	movl	%eax,_int13_extended_drive
+	movl	0x28(%esp),%eax
+	movl	%eax,_packet_lba_sector_number
+	movl	0x2c(%esp),%eax
 	movw	%ax,_packet_sector_count
 	movl	%eax,_int13_extended_sector_count
-	movl	0x28(%esp),%eax							// Get buffer address in eax
+	movl	0x30(%esp),%eax							// Get buffer address in eax
 	shrl	$4,%eax									// Make linear address into segment
 	movw	%ax,_packet_transfer_buffer_segment		// Save segment
-	movl	0x28(%esp),%eax							// Get buffer address in eax
+	movl	0x34(%esp),%eax							// Get buffer address in eax
 	andl	$0x0f,%eax								// Make linear address into offset
 	movw	%ax,_packet_transfer_buffer_offset		// Save offset
 
@@ -250,14 +236,10 @@ _int13_extended_done:
 
 	.code32
 
+	popal
+
 	movl	_int13_extended_retval,%eax				// Get return value
 
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
-	pop		%edi
-	pop		%esi
-	pop		%ebp
 	ret
 
 /*
@@ -270,15 +252,10 @@ _int13_extension_check_retval:
 EXTERN(_BiosInt13ExtensionsSupported)
 	.code32
 
-	push	%ebp
-	push	%esi
-	push	%edi
-	push	%ebx
-	push	%ecx
-	push	%edx
+	pushal
 
 	/* Get parameters */
-	movl	0x1c(%esp),%eax
+	movl	0x24(%esp),%eax
 	movl	%eax,_int13_extension_check_drive
 
 	call	switch_to_real
@@ -309,14 +286,10 @@ _int13_extension_check_done:
 
 	.code32
 
+	popal
+
 	movl	_int13_extension_check_retval,%eax				// Get return value
 
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
-	pop		%edi
-	pop		%esi
-	pop		%ebp
 	ret
 
 /*
@@ -331,16 +304,15 @@ EXTERN(_BiosInt13GetLastErrorCode)
 
 
 /*
- * void stop_floppy(void);
+ * void StopFloppyMotor(void);
  *
  * Stops the floppy drive from spinning, so that other software is
  * jumped to with a known state.
  */
-EXTERN(_stop_floppy)
+EXTERN(_StopFloppyMotor)
 	.code32
 
-	push	%eax
-	push	%edx
+	pushal
 
 	call	switch_to_real
 
@@ -354,8 +326,8 @@ EXTERN(_stop_floppy)
 
 	.code32
 
-	pop		%edx
-	pop		%eax
+	popal
+
 	ret
 
 /*
@@ -364,14 +336,11 @@ EXTERN(_stop_floppy)
 EXTERN(_get_heads)
 	.code32
 
-	push	%ebx
-	push	%ecx
-	push	%edx
-	push	%edi
+	pushal
 	push	%es
 
 	/* Get drive */
-	movl	0x18(%esp),%eax
+	movl	0x28(%esp),%eax
 	movl	%eax,_biosdisk_drive
 
 	call	switch_to_real
@@ -397,13 +366,10 @@ _get_heads_done:
 
 	.code32
 
-	movl	_biosdisk_retval,%eax	// Get return value
-
 	pop		%es
-	pop		%edi
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
+	popal
+
+	movl	_biosdisk_retval,%eax	// Get return value
 
 	ret
 
@@ -413,14 +379,11 @@ _get_heads_done:
 EXTERN(_get_cylinders)
 	.code32
 
-	push	%ebx
-	push	%ecx
-	push	%edx
-	push	%edi
+	pushal
 	push	%es
 
 	/* Get drive */
-	movl	0x18(%esp),%eax
+	movl	0x28(%esp),%eax
 	movl	%eax,_biosdisk_drive
 
 	call	switch_to_real
@@ -450,13 +413,10 @@ _get_cylinders_done:
 
 	.code32
 
-	movl	_biosdisk_retval,%eax	// Get return value
-
 	pop		%es
-	pop		%edi
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
+	popal
+
+	movl	_biosdisk_retval,%eax	// Get return value
 
 	ret
 
@@ -466,14 +426,11 @@ _get_cylinders_done:
 EXTERN(_get_sectors)
 	.code32
 
-	push	%ebx
-	push	%ecx
-	push	%edx
-	push	%edi
+	pushal
 	push	%es
 
 	/* Get drive */
-	movl	0x18(%esp),%eax
+	movl	0x28(%esp),%eax
 	movl	%eax,_biosdisk_drive
 
 	call	switch_to_real
@@ -499,13 +456,10 @@ _get_sectors_done:
 
 	.code32
 
-	movl	_biosdisk_retval,%eax	// Get return value
-
 	pop		%es
-	pop		%edi
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
+	popal
+
+	movl	_biosdisk_retval,%eax	// Get return value
 
 	ret
 
@@ -526,17 +480,13 @@ _bios_int13_drive_parameters_struct_address:
 EXTERN(_BiosInt13GetDriveParameters)
 	.code32
 
-	push	%ebx
-	push	%ecx
-	push	%edx
-	push	%edi
-	push	%esi
+	pushal
 	push	%es
 
 	/* Get drive */
-	movl	0x1c(%esp),%eax
+	movl	0x28(%esp),%eax
 	movl	%eax,_biosdisk_drive
-	movl	0x20(%esp),%eax
+	movl	0x2c(%esp),%eax
 	movl	%eax,_bios_int13_drive_parameters_struct_address
 
 	call	switch_to_real
@@ -589,14 +539,10 @@ _BiosInt13GetDriveParameters_Done:
 	cld
 	rep movsl
 
-	movl	_biosdisk_retval,%eax	// Get return value
-
 	pop		%es
-	pop		%esi
-	pop		%edi
-	pop		%edx
-	pop		%ecx
-	pop		%ebx
+	popal
+
+	movl	_biosdisk_retval,%eax	// Get return value
 
 	ret
 

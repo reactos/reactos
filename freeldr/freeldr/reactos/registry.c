@@ -39,14 +39,14 @@ static HKEY RootKey;
 VOID
 RegInitializeRegistry(VOID)
 {
-  RootKey = (HKEY)AllocateMemory(sizeof(KEY));
+  RootKey = (HKEY)MmAllocateMemory(sizeof(KEY));
 
   InitializeListHead(&RootKey->SubKeyList);
   InitializeListHead(&RootKey->ValueList);
   InitializeListHead(&RootKey->KeyList);
 
   RootKey->NameSize = 2;
-  RootKey->Name = (PUCHAR)AllocateMemory(2);
+  RootKey->Name = (PUCHAR)MmAllocateMemory(2);
   strcpy(RootKey->Name, "\\");
 
   RootKey->Type = 0;
@@ -131,7 +131,7 @@ RegCreateKey(HKEY ParentKey,
       if (Ptr == &CurrentKey->SubKeyList)
 	{
 	  /* no key found -> create new subkey */
-	  NewKey = (HKEY)AllocateMemory(sizeof(KEY));
+	  NewKey = (HKEY)MmAllocateMemory(sizeof(KEY));
 	  if (NewKey == NULL)
 	   return(ERROR_OUTOFMEMORY);
 
@@ -144,7 +144,7 @@ RegCreateKey(HKEY ParentKey,
 
 	  InsertTailList(&CurrentKey->SubKeyList, &NewKey->KeyList);
 	  NewKey->NameSize = subkeyLength + 1;
-	  NewKey->Name = (PCHAR)AllocateMemory(NewKey->NameSize);
+	  NewKey->Name = (PCHAR)MmAllocateMemory(NewKey->NameSize);
 	  if (NewKey->Name == NULL)
 	   return(ERROR_OUTOFMEMORY);
 	  memcpy(NewKey->Name, name, subkeyLength);
@@ -337,8 +337,8 @@ RegSetValue(HKEY Key,
     {
       /* set default value */
       if (Key->Data != NULL)
-        FreeMemory(Key->Data);
-      Key->Data = (PUCHAR)AllocateMemory(DataSize);
+        MmFreeMemory(Key->Data);
+      Key->Data = (PUCHAR)MmAllocateMemory(DataSize);
       Key->DataSize = DataSize;
       Key->Type = Type;
       memcpy(Key->Data, Data, DataSize);
@@ -367,12 +367,12 @@ RegSetValue(HKEY Key,
 #ifndef NDEBUG
 	  printf("No value found - adding new value\n");
 #endif
-	  Value = (PVALUE)AllocateMemory(sizeof(VALUE));
+	  Value = (PVALUE)MmAllocateMemory(sizeof(VALUE));
 	  if (Value == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  InsertTailList(&Key->ValueList, &Value->ValueList);
 	  Value->NameSize = strlen(ValueName)+1;
-	  Value->Name = (PCHAR)AllocateMemory(Value->NameSize);
+	  Value->Name = (PCHAR)MmAllocateMemory(Value->NameSize);
 	  if (Value->Name == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  strcpy(Value->Name, ValueName);
@@ -389,8 +389,8 @@ RegSetValue(HKEY Key,
       else
 	{
 	  if(Value->Data != NULL)
-	    FreeMemory(Value->Data);
-	  Value->Data = (PUCHAR)AllocateMemory(DataSize);
+	    MmFreeMemory(Value->Data);
+	  Value->Data = (PUCHAR)MmAllocateMemory(DataSize);
 	  if (Value->Data == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  Value->DataSize = DataSize;
@@ -483,7 +483,7 @@ RegDeleteValue(HKEY Key,
     {
       /* delete default value */
       if (Key->Data != NULL)
-	FreeMemory(Key->Data);
+	MmFreeMemory(Key->Data);
       Key->Data = NULL;
       Key->DataSize = 0;
       Key->Type = 0;
@@ -508,21 +508,21 @@ RegDeleteValue(HKEY Key,
 
       /* delete value */
       if (Value->Name != NULL)
-	FreeMemory(Value->Name);
+	MmFreeMemory(Value->Name);
       Value->Name = NULL;
       Value->NameSize = 0;
 
       if (Value->DataSize > sizeof(PUCHAR))
 	{
 	  if (Value->Data != NULL)
-	    FreeMemory(Value->Data);
+	    MmFreeMemory(Value->Data);
 	}
       Value->Data = NULL;
       Value->DataSize = 0;
       Value->Type = 0;
 
       RemoveEntryList(&Value->ValueList);
-      FreeMemory(Value);
+      MmFreeMemory(Value);
     }
   return(ERROR_SUCCESS);
 }

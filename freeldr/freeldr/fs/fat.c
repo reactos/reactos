@@ -53,7 +53,7 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 	//
 	if (FatVolumeBootSector != NULL)
 	{
-		FreeMemory(FatVolumeBootSector);
+		MmFreeMemory(FatVolumeBootSector);
 
 		FatVolumeBootSector = NULL;
 		Fat32VolumeBootSector = NULL;
@@ -62,7 +62,7 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 	//
 	// Now allocate the memory to hold the boot sector
 	//
-	FatVolumeBootSector = (PFAT_BOOTSECTOR) AllocateMemory(512);
+	FatVolumeBootSector = (PFAT_BOOTSECTOR) MmAllocateMemory(512);
 	Fat32VolumeBootSector = (PFAT32_BOOTSECTOR) FatVolumeBootSector;
 
 	//
@@ -76,10 +76,11 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 
 	// Now try to read the boot sector
 	// If this fails then abort
-	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, FatVolumeBootSector))
+	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
+	RtlCopyMemory(FatVolumeBootSector, (PVOID)DISKREADBUFFER, 512);
 
 	// Get the FAT type
 	FatType = FatDetermineFatType(FatVolumeBootSector);
@@ -302,7 +303,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 	// Attempt to allocate memory for directory buffer
 	//
 	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectorySize) %d bytes.\n", DirectorySize));
-	DirectoryBuffer = AllocateMemory(DirectorySize);
+	DirectoryBuffer = MmAllocateMemory(DirectorySize);
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -318,7 +319,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 		{
 			if (!FatReadClusterChain(Fat32VolumeBootSector->RootDirStartCluster, 0xFFFFFFFF, DirectoryBuffer))
 			{
-				FreeMemory(DirectoryBuffer);
+				MmFreeMemory(DirectoryBuffer);
 				return NULL;
 			}
 		}
@@ -332,7 +333,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 
 			if (!FatReadVolumeSectors(FatDriveNumber, RootDirectoryStartSector, RootDirectorySectorCount, DirectoryBuffer))
 			{
-				FreeMemory(DirectoryBuffer);
+				MmFreeMemory(DirectoryBuffer);
 				return NULL;
 			}
 		}
@@ -341,7 +342,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 	{
 		if (!FatReadClusterChain(DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
 		{
-			FreeMemory(DirectoryBuffer);
+			MmFreeMemory(DirectoryBuffer);
 			return NULL;
 		}
 	}
@@ -626,11 +627,11 @@ BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		//
 		if (!FatSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryEntryCount, PathPart, &FatFileInfo))
 		{
-			FreeMemory(DirectoryBuffer);
+			MmFreeMemory(DirectoryBuffer);
 			return FALSE;
 		}
 
-		FreeMemory(DirectoryBuffer);
+		MmFreeMemory(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then
@@ -639,7 +640,7 @@ BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		if ((i+1) < NumberOfPathParts)
 		{
 			DirectoryStartCluster = FatFileInfo.FileFatChain[0];
-			FreeMemory(FatFileInfo.FileFatChain);
+			MmFreeMemory(FatFileInfo.FileFatChain);
 		}
 	}
 
@@ -857,7 +858,7 @@ FILE* FatOpenFile(PUCHAR FileName)
 		return NULL;
 	}
 
-	FileHandle = AllocateMemory(sizeof(FAT_FILE_INFO));
+	FileHandle = MmAllocateMemory(sizeof(FAT_FILE_INFO));
 
 	if (FileHandle == NULL)
 	{
@@ -921,7 +922,7 @@ PUINT32 FatGetClusterChainArray(UINT32 StartCluster)
 	//
 	// Allocate array memory
 	//
-	ArrayPointer = AllocateMemory(ArraySize);
+	ArrayPointer = MmAllocateMemory(ArraySize);
 
 	if (ArrayPointer == NULL)
 	{
@@ -954,7 +955,7 @@ PUINT32 FatGetClusterChainArray(UINT32 StartCluster)
 		//
 		if (!FatGetFatEntry(StartCluster, &StartCluster))
 		{
-			FreeMemory(ArrayPointer);
+			MmFreeMemory(ArrayPointer);
 			return NULL;
 		}
 	}
@@ -1256,6 +1257,15 @@ ULONG FatGetFilePointer(FILE *FileHandle)
 
 BOOL FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	//return DiskReadMultipleLogicalSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, Buffer);
+	//GEOMETRY	DiskGeometry;
+	//BOOL		ReturnValue;
+	//if (!DiskGetDriveGeometry(DriveNumber, &DiskGeometry))
+	//{
+	//	return FALSE;
+	//}
+	//ReturnValue = DiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, (PVOID)DISKREADBUFFER);
+	//RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
+	//return ReturnValue;
+
 	return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, Buffer);
 }

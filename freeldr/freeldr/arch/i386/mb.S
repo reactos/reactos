@@ -21,8 +21,8 @@
 	.code16
 
 #define ASM
-#include "arch.h"
-#include "multiboot.h"
+#include <arch.h>
+#include <multiboot.h>
 
 	/*
      * Here we assume the kernel is loaded at 1mb

@@ -21,19 +21,29 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
 
-#include <multiboot.h>
+
+#define	MEMTYPE_USABLE			0x01
+#define	MEMTYPE_RESERVED		0x02
+#define MEMTYPE_ACPI_RECLAIM	0x03
+#define MEMTYPE_ACPI_NVS		0x04
+
+typedef struct
+{
+	ULONG	BaseAddressLow;
+	ULONG	BaseAddressHigh;
+	ULONG	LengthLow;
+	ULONG	LengthHigh;
+	ULONG	Type;
+	ULONG	Reserved;
+} PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
 
-VOID	InitMemoryManager(VOID);
-
-PVOID	AllocateMemory(ULONG NumberOfBytes);
-VOID	FreeMemory(PVOID MemBlock);
-ULONG	GetSystemMemorySize(VOID);					// Returns the amount of total usuable memory available to the memory manager
+ULONG	GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 
 // These functions are implemented in mem.S
-int		GetExtendedMemorySize(void);				// Returns extended memory size in KB
-int		GetConventionalMemorySize(void);			// Returns conventional memory size in KB
-int		GetBiosMemoryMap(memory_map_t *mem_map);	// Fills mem_map structure with BIOS memory map and returns length of memory map
+ULONG	GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
+ULONG	GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
+ULONG	GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32]);	// Fills mem_map structure with BIOS memory map and returns length of memory map
 
 
 
@@ -46,8 +56,9 @@ int		GetBiosMemoryMap(memory_map_t *mem_map);	// Fills mem_map structure with BI
 
 
 //BOOL	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
-//PVOID	MmAllocateMemory(ULONG MemorySize);
-//VOID	MmFreeMemory(PVOID MemoryPointer);
+BOOL	MmInitializeMemoryManager(VOID);
+PVOID	MmAllocateMemory(ULONG MemorySize);
+VOID	MmFreeMemory(PVOID MemoryPointer);
 //PVOID	MmAllocateLowMemory(ULONG MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
 //PVOID	MmAllocateMemoryFrom1Mb(ULONG MemorySize);

@@ -21,7 +21,7 @@
 	.code16
 
 #define ASM
-#include "arch.h"
+#include <arch.h>
 
 
 	.code32

@@ -17,141 +17,68 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __TUI_H
-#define __TUI_H
+#ifndef __UI_H
+#define __UI_H
 
-#define	SCREEN_MEM				0xB8000
-#define TITLE_BOX_HEIGHT		5
 
-// Initialize Textual-User-Interface
-BOOL	InitUserInterface(VOID);
-// Fills the entire screen with a backdrop
-void	DrawBackdrop(void);
-// Fills the area specified with cFillChar and cAttr
-void	FillArea(int nLeft, int nTop, int nRight, int nBottom, char cFillChar, char cAttr /* Color Attributes */);
-// Draws a shadow on the bottom and right sides of the area specified
-void	DrawShadow(int nLeft, int nTop, int nRight, int nBottom);
-// Draws a box around the area specified
-void	DrawBox(int nLeft, int nTop, int nRight, int nBottom, int nVertStyle, int nHorzStyle, int bFill, int bShadow, char cAttr);
-// Draws text at coordinates specified
-void	DrawText(int nX, int nY, char *text, char cAttr);
-// Draws text at the very bottom line on the screen
-void	DrawStatusText(char *text);
-// Updates the date and time
-void	UpdateDateTime(void);
-// Saves the screen so that it can be restored later
-void	SaveScreen(char *buffer);
-// Restores the screen from a previous save
-void	RestoreScreen(char *buffer);
-// Displays a message box on the screen with an ok button
-void	MessageBox(char *text);
-// Adds a line of text to the message box buffer
-void	MessageLine(char *text);
-// Returns true if color is valid
-BOOL	IsValidColor(char *color);
-// Converts the text color into it's equivalent color value
-char	TextToColor(char *color);
-// Returns true if fill is valid
-BOOL	IsValidFillStyle(char *fill);
-// Converts the text fill into it's equivalent fill value
-char	TextToFillStyle(char *fill);
-// Draws the progress bar showing nPos percent filled
-void	DrawProgressBar(int nPos);
-// Displays all the message boxes in a given section
-void	ShowMessageBoxesInSection(PUCHAR SectionName);
+extern	ULONG	UiScreenWidth;									// Screen Width
+extern	ULONG	UiScreenHeight;									// Screen Height
 
-/*
- * Combines the foreground and background colors into a single attribute byte
- */
-#define	ATTR(cFore, cBack)	((cBack << 4)|cFore)
+extern	UCHAR	UiStatusBarFgColor;								// Status bar foreground color
+extern	UCHAR	UiStatusBarBgColor;								// Status bar background color
+extern	UCHAR	UiBackdropFgColor;								// Backdrop foreground color
+extern	UCHAR	UiBackdropBgColor;								// Backdrop background color
+extern	UCHAR	UiBackdropFillStyle;							// Backdrop fill style
+extern	UCHAR	UiTitleBoxFgColor;								// Title box foreground color
+extern	UCHAR	UiTitleBoxBgColor;								// Title box background color
+extern	UCHAR	UiMessageBoxFgColor;							// Message box foreground color
+extern	UCHAR	UiMessageBoxBgColor;							// Message box background color
+extern	UCHAR	UiMenuFgColor;									// Menu foreground color
+extern	UCHAR	UiMenuBgColor;									// Menu background color
+extern	UCHAR	UiTextColor;									// Normal text color
+extern	UCHAR	UiSelectedTextColor;							// Selected text color
+extern	UCHAR	UiSelectedTextBgColor;							// Selected text background color
+extern	UCHAR	UiTitleBoxTitleText[260];						// Title box's title text
 
-/*
- * Fill styles for DrawBackdrop()
- */
-#define LIGHT_FILL			0xB0
-#define MEDIUM_FILL			0xB1
-#define DARK_FILL			0xB2
+extern	PUCHAR	UiMessageBoxLineText;
 
-/*
- * Screen colors
- */
-#define COLOR_BLACK			0
-#define COLOR_BLUE			1
-#define COLOR_GREEN			2
-#define COLOR_CYAN			3
-#define COLOR_RED			4
-#define COLOR_MAGENTA		5
-#define COLOR_BROWN			6
-#define COLOR_GRAY			7
+extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
 
-#define COLOR_DARKGRAY		8
-#define COLOR_LIGHTBLUE		9
-#define COLOR_LIGHTGREEN	10
-#define COLOR_LIGHTCYAN		11
-#define COLOR_LIGHTRED		12
-#define COLOR_LIGHTMAGENTA	13
-#define COLOR_YELLOW		14
-#define COLOR_WHITE			15
+extern	UCHAR	UiMonthNames[12][15];
 
-/* Add COLOR_BLINK to a background to cause blinking */
-#define COLOR_BLINK			8
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// User Interface Functions
+//
+///////////////////////////////////////////////////////////////////////////////////////
+BOOL	UiInitialize(VOID);										// Initialize User-Interface
+VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
+VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
+VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
+VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
+VOID	UiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
+VOID	UiUpdateDateTime(VOID);									// Updates the date and time
+VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
+VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
+VOID	UiMessageLine(PUCHAR MessageText);						// Adds a line of text to the message box buffer
+VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range);			// Draws the progress bar showing nPos percent filled
+VOID	UiShowMessageBoxesInSection(PUCHAR SectionName);		// Displays all the message boxes in a given section
 
-/*
- * Defines for IBM box drawing characters
- */
-#define HORZ	(0xc4)  /* Single horizontal line */
-#define D_HORZ	(0xcd)  /* Double horizontal line.*/
-#define VERT    (0xb3)  /* Single vertical line   */
-#define D_VERT  (0xba)  /* Double vertical line.  */
+UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
+UCHAR	UiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
-/* Definitions for corners, depending on HORIZ and VERT */
-#define UL		(0xda)
-#define UR		(0xbf)  /* HORZ and VERT */
-#define LL		(0xc0)
-#define LR		(0xd9)
-
-#define D_UL	(0xc9)
-#define D_UR	(0xbb)  /* D_HORZ and D_VERT */
-#define D_LL	(0xc8)
-#define D_LR	(0xbc)
-
-#define HD_UL	(0xd5)
-#define HD_UR	(0xb8)  /* D_HORZ and VERT */
-#define HD_LL	(0xd4)
-#define HD_LR	(0xbe)
-
-#define VD_UL	(0xd6)
-#define VD_UR	(0xb7)  /* HORZ and D_VERT */
-#define VD_LL	(0xd3)
-#define VD_LR	(0xbd)
-
-// Key codes
-#define KEY_EXTENDED	0x00
-#define	KEY_ENTER		0x0D
-#define KEY_SPACE		0x20
-#define KEY_UP			0x48
-#define KEY_DOWN		0x50
-#define KEY_LEFT		0x4B
-#define KEY_RIGHT		0x4D
-#define KEY_ESC			0x1B
-#define KEY_F1			0x3B
-#define KEY_F2			0x3C
-#define KEY_F3			0x3D
-#define KEY_F4			0x3E
-#define KEY_F5			0x3F
-#define KEY_F6			0x40
-#define KEY_F7			0x41
-#define KEY_F8			0x42
-#define KEY_F9			0x43
-#define KEY_F10			0x44
-
+VOID	UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
+BOOL	UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
 
 
-#endif // #defined __TUI_H
+
+#endif // #defined __UI_H

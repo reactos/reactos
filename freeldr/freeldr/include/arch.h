@@ -54,9 +54,7 @@
 
 #ifndef ASM
 
-void	enable_a20(void);
-void	stop_floppy(void);
-
-extern unsigned long FreeLoaderModuleEnd;
+void	EnableA20(void);
+void	StopFloppyMotor(void);
 
 #endif /* ! ASM */

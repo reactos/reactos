@@ -117,7 +117,7 @@ LoadExtraBootCode:
 ; CX has number of sectors to read
 ReadSectors:
 		cmp eax,DWORD [BiosCHSDriveSize]		; Check if they are reading a sector within CHS range
-		jbe ReadSectorsCHS						; Yes - go to the old CHS routine
+		jb  ReadSectorsCHS						; Yes - go to the old CHS routine
 
 ReadSectorsLBA:
 		pushad									; Save logical sector number & sector count
@@ -270,8 +270,8 @@ StartSearch:
 		jb	 ContinueSearch		; If not continue, if so then we didn't find freeldr.sys
 		jmp  PrintFileNotFound
 ContinueSearch:
-        mov  bx,800h
-        mov  es,bx				; Read cluster to [0000:8000h]
+        mov  bx,2000h
+        mov  es,bx				; Read cluster to [2000:0000h]
         call ReadCluster        ; Read the cluster
 
 
@@ -280,7 +280,7 @@ ContinueSearch:
 		xor  bx,bx
         mov  bl,[BYTE bp+SectsPerCluster]
 		shl  bx,4				; BX = BX * 512 / 32
-        mov  ax,800h            ; We loaded at 0800:0000
+        mov  ax,2000h            ; We loaded at 2000:0000
         mov  es,ax
         xor  di,di
         mov  si,filename

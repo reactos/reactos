@@ -53,23 +53,23 @@ LoadKernel(PCHAR szFileName, int nPos)
     {
       strcpy(szBuffer, szShortName);
       strcat(szBuffer, " not found.");
-      MessageBox(szBuffer);
+      UiMessageBox(szBuffer);
       return(FALSE);
     }
 
   /*
    * Update the status bar with the current file
    */
-  strcpy(szBuffer, " Reading ");
+  strcpy(szBuffer, "Reading ");
   strcat(szBuffer, szShortName);
-  DrawStatusText(szBuffer);
+  UiDrawStatusText(szBuffer);
 
   /*
    * Load the kernel
    */
   MultiBootLoadKernel(FilePointer);
 
-  DrawProgressBar(nPos);
+  UiDrawProgressBarCenter(nPos, 100);
 
   return(TRUE);
 }
@@ -87,27 +87,27 @@ LoadDriver(PCHAR szFileName, int nPos)
     {
       strcpy(value, szFileName);
       strcat(value, " not found.");
-      MessageBox(value);
+      UiMessageBox(value);
       return(FALSE);
     }
 
   /*
    * Update the status bar with the current file
    */
-  strcpy(value, " Reading ");
+  strcpy(value, "Reading ");
   p = strrchr(szFileName, '\\');
   if (p == NULL)
     strcat(value, szFileName);
   else
     strcat(value, p + 1);
-  DrawStatusText(value);
+  UiDrawStatusText(value);
 
   /*
    * Load the driver
    */
   MultiBootLoadModule(FilePointer, szFileName, NULL);
 
-  DrawProgressBar(nPos);
+  UiDrawProgressBarCenter(nPos, 100);
 
   return(TRUE);
 }
@@ -125,20 +125,20 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
     {
       strcpy(value, szFileName);
       strcat(value, " not found.");
-      MessageBox(value);
+      UiMessageBox(value);
       return(FALSE);
     }
 
   /*
    * Update the status bar with the current file
    */
-  strcpy(value, " Reading ");
+  strcpy(value, "Reading ");
   p = strrchr(szFileName, '\\');
   if (p == NULL)
     strcat(value, szFileName);
   else
     strcat(value, p + 1);
-  DrawStatusText(value);
+  UiDrawStatusText(value);
 
   /*
    * Load the driver
@@ -387,7 +387,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
-		MessageBox(MsgBuffer);
+		UiMessageBox(MsgBuffer);
 		return;
 	}
 
@@ -423,7 +423,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	if (!IniReadSettingByName(SectionId, "SystemPath", value, 1024))
 	{
-		MessageBox("System path not specified for selected operating system.");
+		UiMessageBox("System path not specified for selected operating system.");
 		return;
 	}
 
@@ -433,7 +433,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
 	{
 		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
-		MessageBox(MsgBuffer);
+		UiMessageBox(MsgBuffer);
 		return;
 	}
 
@@ -460,20 +460,20 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 #ifndef NDEBUG
 	sprintf(MsgBuffer,"SystemRoot: '%s'", szBootPath);
-	MessageBox(MsgBuffer);
+	UiMessageBox(MsgBuffer);
 #endif
 
-	DrawBackdrop();
+	UiDrawBackdrop();
 
-	DrawStatusText(" Loading...");
-	DrawProgressBar(0);
+	UiDrawStatusText("Loading...");
+	UiDrawProgressBarCenter(0, 100);
 
 	/*
 	 * Try to open boot drive
 	 */
 	if (!OpenDiskDrive(BootDrive, BootPartition))
 	{
-		MessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to open boot drive.");
 		return;
 	}
 
@@ -569,25 +569,25 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 #ifndef NDEBUG
 	sprintf(MsgBuffer,"SystemHive: '%s'", szFileName);
-	MessageBox(MsgBuffer);
+	UiMessageBox(MsgBuffer);
 #endif
 
 	FilePointer = OpenFile(szFileName);
 	if (FilePointer == NULL)
 	{
 		strcat(value, " not found.");
-		MessageBox(value);
+		UiMessageBox(value);
 		return;
 	}
 
 	/*
 	 * Update the status bar with the current file
 	 */
-	strcpy(name, " Reading ");
+	strcpy(name, "Reading ");
 	strcat(name, value);
 	while (strlen(name) < 80)
 		strcat(name, " ");
-	DrawStatusText(name);
+	UiDrawStatusText(name);
 
 	/*
 	 * Load the system hive
@@ -596,11 +596,11 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	RegInitializeRegistry();
 	RegImportHive(Base, Size);
 
-	DrawProgressBar(15);
+	UiDrawProgressBarCenter(15, 100);
 
 #ifndef NDEBUG
 	sprintf(MsgBuffer,"SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
-	MessageBox(MsgBuffer);
+	UiMessageBox(MsgBuffer);
 #endif
 
 	/*
@@ -611,7 +611,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 //	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
 //	MultiBootCloseModule(Base, Size);
 
-	DrawProgressBar(20);
+	UiDrawProgressBarCenter(20, 100);
 
 	/*
 	 * Load NLS files
@@ -624,7 +624,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	}
 #endif
 
-	DrawProgressBar(25);
+	UiDrawProgressBarCenter(25, 100);
 
 	/*
 	 * Load boot drivers
@@ -635,8 +635,8 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Clear the screen and redraw the backdrop and status bar
 	 */
-	DrawBackdrop();
-	DrawStatusText(" Press any key to boot");
+	UiDrawBackdrop();
+	UiDrawStatusText("Press any key to boot");
 
 	/*
 	 * Wait for user
@@ -649,7 +649,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Now boot the kernel
 	 */
-	stop_floppy();
+	StopFloppyMotor();
 	boot_reactos();
 }
 

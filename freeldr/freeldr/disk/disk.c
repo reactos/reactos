@@ -38,16 +38,7 @@ VOID DiskError(PUCHAR ErrorString)
 
 	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
 
-	if (UserInterfaceUp)
-	{
-		MessageBox(ErrorCodeString);
-	}
-	else
-	{
-		printf("%s", ErrorCodeString);
-		printf("\nPress any key\n");
-		getch();
-	}
+	UiMessageBox(ErrorCodeString);
 }
 
 BOOL DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)

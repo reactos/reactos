@@ -83,9 +83,9 @@ static BOOL
 allocateKeyName(PCHAR *newKeyName, int newKeySize)
 {
   if (*newKeyName != NULL)
-    FreeMemory(*newKeyName);
+    MmFreeMemory(*newKeyName);
 
-  *newKeyName = AllocateMemory(newKeySize + 1);
+  *newKeyName = MmAllocateMemory(newKeySize + 1);
   if (*newKeyName == NULL)
     return(FALSE);
 
@@ -282,8 +282,8 @@ allocateDataBuffer (PVOID * data, int * dataBufferSize, int dataSize)
   if (*dataBufferSize < dataSize)
   {
     if (*dataBufferSize > 0)
-      FreeMemory(*data);
-    *data = AllocateMemory(dataSize);
+      MmFreeMemory(*data);
+    *data = MmAllocateMemory(dataSize);
     *dataBufferSize = dataSize;
   }
 
@@ -497,11 +497,11 @@ RegImportHive(PCHAR ChunkBase,
 
   if (newKeyName != NULL)
   {
-    FreeMemory(newKeyName);
+    MmFreeMemory(newKeyName);
   }
   if (data != NULL)
   {
-    FreeMemory(data);
+    MmFreeMemory(data);
   }
 
   return;

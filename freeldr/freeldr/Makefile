@@ -22,8 +22,10 @@
 # CHANGE THESE FOR YOUR OUTPUT
 #
 TARGET		=	i386
-DEBUG		=	1			# Debugging information on (bigger binary)
-#DEBUG		=	0			# Debugging information off (smaller binary)
+# Debugging information on (bigger binary)
+DEBUG		=	yes
+# Debugging information off (smaller binary)
+#DEBUG		=	no
 
 OBJDIR		=	obj
 OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
@@ -34,14 +36,15 @@ OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
 CC			= gcc
 LD			= ld
 AR			= ar
+NM			= nm
 RM			= cmd /C del
 CP			= cmd /C copy
 MKDIR		= cmd /C md
 RMDIR		= cmd /C rd
-MAKE		= cmd /C make
+MAKE		= make
 NASM_CMD	= nasm
 OBJCOPY		= objcopy
-SED			= $(SRCDIR)/../sed
+DEPTOOL		= $(SRCDIR)/../tools/deptool
 
 #-----------------------------------------------------------------------------------------------------
 # TEST IF WE ARE IN THE TARGET DIRECTORY
@@ -60,6 +63,7 @@ MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
 
 .PHONY: CHANGE_TO_TARGET
 CHANGE_TO_TARGET: $(OBJDIR) $(OBJDIR)/$(TARGET)
+	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
 
 $(OBJDIR):
@@ -95,15 +99,15 @@ else
 #############################################
 # COMPILER COMMAND LINE OPTIONS
 #
-COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O3 -MD
+COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O1 -MD
 
 #############################################
 # COMPILER DEFINES
 #
-ifeq ($(DEBUG),1)
+ifeq ($(DEBUG),yes)
 COMPILER_DEFINES = -DDEBUG
 else
-COMPILERS_DEFINES =
+COMPILER_DEFINES =
 endif
 
 #############################################
@@ -134,14 +138,17 @@ LFLAGS	=	$(LINKER_OPTIONS)
 #
 # fathelp.o must come first in the link line because it contains bootsector helper code
 # arch.o must come second in the link line because it contains the startup code
-# end.o must come last in the link line
 ARCH_OBJS	=	fathelp.o	\
 				arch.o		\
+				i386idt.o	\
+				i386trap.o	\
 				boot.o		\
 				linux.o		\
 				mb.o		\
 				mem.o		\
-				diskint13.o
+				diskint13.o	\
+				rtlcode.o	\
+				biosvid.o
 
 RTL_OBJS	=	memory.o	\
 				print.o		\
@@ -154,7 +161,9 @@ FS_OBJS		=	fs.o		\
 				iso.o
 
 UI_OBJS		=	tui.o		\
-				menu.o
+				tuimenu.o	\
+				ui.o		\
+				gui.o
 
 REACTOS_OBJS=	reactos.o	\
 				arcname.o	\
@@ -170,7 +179,7 @@ DISK_OBJS	=	disk.o		\
 				partition.o
 
 MM_OBJS		=	mm.o		\
-				mm_init.o
+				meminit.o
 
 CACHE_OBJS	=	cache.o		\
 				blocklist.o
@@ -179,6 +188,9 @@ INIFILE_OBJS=	inifile.o	\
 				ini_init.o	\
 				parse.o
 
+VIDEO_OBJS	=	video.o		\
+				vidmode.o
+
 FREELDR_OBJS=	freeldr.o	\
 				miscboot.o	\
 				options.o	\
@@ -186,8 +198,7 @@ FREELDR_OBJS=	freeldr.o	\
 				multiboot.o	\
 				debug.o		\
 				oslist.o	\
-				version.o	\
-				end.o		# Must come last in the link line
+				version.o
 
 #############################################
 # ALL THE OBJECTS
@@ -202,6 +213,7 @@ OBJS		=	$(ARCH_OBJS)		\
 				$(MM_OBJS)			\
 				$(CACHE_OBJS)		\
 				$(INIFILE_OBJS)		\
+				$(VIDEO_OBJS)		\
 				$(FREELDR_OBJS)
 
 #############################################
@@ -218,19 +230,26 @@ VPATH		=	$(SRCDIR)/					\
 				$(SRCDIR)/mm				\
 				$(SRCDIR)/cache				\
 				$(SRCDIR)/inifile			\
+				$(SRCDIR)/video				\
 				$(SRCDIR)/include
 
 #############################################
 
-all : freeldr.sys
+all : $(DEPTOOL) freeldr.sys
 	@echo Make ALL done.
+
+#############################################
+
+$(DEPTOOL): $(DEPTOOL).c
+	@echo ===================================================== Compiling deptool
+	@$(CC) -Wall -O3 -o $@ $<
 
 #############################################
 
 freeldr.sys : $(OBJS)
 	@echo ===================================================== LINKING $@
 #	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(OBJS)
-	@$(LD) $(LFLAGS) -o freeldr.exe $(OBJS)
+	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(OBJS)
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 
 #############################################
@@ -238,14 +257,12 @@ freeldr.sys : $(OBJS)
 %.o :: %.c
 	@echo ===================================================== Compiling $*
 	@$(CC) $(CFLAGS) -o $@ -c $<
-	@$(SED) -e "s/\($*\)\.o[ :]*/\1.o $*.dep : /g" < $*.d > $*.dep
-#	@$(SED) -e "s/#.*//" -e "s/^[^:]*: *//" -e "s/ *\\$$//" -e "/^$$/ d" -e "s/$$/ :/" < $*.d >> $*.P
+	@$(DEPTOOL) $*.d
 
 %.o :: %.S
 	@echo ===================================================== Assembling $*
 	@$(CC) $(CFLAGS) -o $@ -c $<
-	@$(SED) -e "s/\($*\)\.o[ :]*/\1.o $*.dep : /g" < $*.d > $*.dep
-#	@$(SED) -e "s/#.*//" -e "s/^[^:]*: *//" -e "s/ *\\$$//" -e "/^$$/ d" -e "s/$$/ :/" < $*.d >> $*.P
+	@$(DEPTOOL) $*.d
 
 %.o :: %.asm
 	@echo ===================================================== Assembling $*
@@ -254,7 +271,7 @@ freeldr.sys : $(OBJS)
 #############################################
 
 # Include the automagically generated dependencies
--include $(OBJS:%.o=%.dep)
+-include $(OBJS:%.o=%.d)
 
 #############################################
 

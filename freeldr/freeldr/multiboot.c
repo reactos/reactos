@@ -18,14 +18,14 @@
  */
 
 	
-#include "freeldr.h"
-#include "arch.h"
-#include "rtl.h"
-#include "fs.h"
-#include "multiboot.h"
-#include "ui.h"
-#include "inifile.h"
-#include "mm.h"
+#include <freeldr.h>
+#include <arch.h>
+#include <rtl.h>
+#include <fs.h>
+#include <multiboot.h>
+#include <ui.h>
+#include <inifile.h>
+#include <mm.h>
 
 unsigned long				next_module_load_base = 0;
 module_t*	pOpenModule = NULL;
@@ -39,10 +39,9 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	DWORD				dwFileLoadOffset;
 	DWORD				dwDataSize;
 	DWORD				dwBssSize;
-	ULONG				BytesRead;
 
 	// Allocate 8192 bytes for multiboot header
-	ImageHeaders = (PDWORD)AllocateMemory(8192);
+	ImageHeaders = (PDWORD)MmAllocateMemory(8192);
 	if (ImageHeaders == NULL)
 	{
 		return FALSE;
@@ -54,7 +53,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	 */
 	if (!ReadFile(KernelImage, 8192, NULL, ImageHeaders))
 	{
-		FreeMemory(ImageHeaders);
+		MmFreeMemory(ImageHeaders);
 		return FALSE;
 	}
 
@@ -73,7 +72,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 		}
 	}
 
-	FreeMemory(ImageHeaders);
+	MmFreeMemory(ImageHeaders);
 
 	/*
 	 * If we reached the end of the 8192 bytes without
@@ -81,7 +80,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	 */
 	if (Idx == 2048)
 	{
-		MessageBox("No multiboot header found!");
+		UiMessageBox("No multiboot header found!");
 		return FALSE;
 	}
 
@@ -104,7 +103,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	dwHeaderChecksum += mb_header.checksum;
 	if (dwHeaderChecksum != 0)
 	{
-		MessageBox("Multiboot header checksum invalid!");
+		UiMessageBox("Multiboot header checksum invalid!");
 		return FALSE;
 	}
 	
@@ -254,7 +253,7 @@ BOOL MultiBootCloseModule(PVOID ModuleBase, DWORD dwModuleSize)
 	module_t*	pModule;
 
 	if ((pOpenModule != NULL) &&
-	    ((module_t*)ModuleBase == pOpenModule->mod_start) &&
+	    ((module_t*)ModuleBase == (module_t*)pOpenModule->mod_start) &&
 	    (pOpenModule->mod_end == -1))
 	{
 		pModule = pOpenModule;

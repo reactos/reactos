@@ -69,20 +69,14 @@ int		isxdigit(int c);
 char *	convert_to_ascii(char *buf, int c, ...);
 
 void	putchar(int ch);		// Implemented in asmcode.S
-void	clrscr(void);			// Implemented in asmcode.S
 int		kbhit(void);			// Implemented in asmcode.S
 int		getch(void);			// Implemented in asmcode.S
-void	gotoxy(int x, int y);	// Implemented in asmcode.S
 int		getyear(void);			// Implemented in asmcode.S
 int		getday(void);			// Implemented in asmcode.S
 int		getmonth(void);			// Implemented in asmcode.S
 int		gethour(void);			// Implemented in asmcode.S
 int		getminute(void);		// Implemented in asmcode.S
 int		getsecond(void);		// Implemented in asmcode.S
-void	hidecursor(void);		// Implemented in asmcode.S
-void	showcursor(void);		// Implemented in asmcode.S
-int		wherex(void);			// Implemented in asmcode.S
-int		wherey(void);			// Implemented in asmcode.S
 
 #ifndef max
 #define max(a, b)  (((a) > (b)) ? (a) : (b))

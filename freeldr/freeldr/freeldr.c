@@ -17,19 +17,19 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#include "freeldr.h"
-#include "rtl.h"
-#include "fs.h"
-#include "reactos.h"
-#include "ui.h"
-#include "arch.h"
-#include "miscboot.h"
-#include "linux.h"
-#include "mm.h"
-#include "inifile.h"
-#include "debug.h"
-#include "oslist.h"
-#include "cache.h"
+#include <freeldr.h>
+#include <rtl.h>
+#include <fs.h>
+#include <reactos.h>
+#include <ui.h>
+#include <arch.h>
+#include <miscboot.h>
+#include <linux.h>
+#include <mm.h>
+#include <inifile.h>
+#include <debug.h>
+#include <oslist.h>
+#include <video.h>
 
 // Variable BootDrive moved to asmcode.S
 //ULONG			BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
@@ -50,13 +50,18 @@ VOID BootMain(VOID)
 	LONG	TimeOut;
 	ULONG	SelectedOperatingSystem;
 
-	enable_a20();
+	EnableA20();
 
 #ifdef DEBUG
 	DebugInit();
 #endif
 
-	InitMemoryManager();
+	if (!MmInitializeMemoryManager())
+	{
+		printf("Press any key to reboot.\n");
+		getch();
+		return;
+	}
 
 	if (!IniFileInitialize())
 	{
@@ -72,7 +77,7 @@ VOID BootMain(VOID)
 		return;
 	}
 
-	if (!InitUserInterface())
+	if (!UiInitialize())
 	{
 		printf("Press any key to reboot.\n");
 		getch();
@@ -81,13 +86,13 @@ VOID BootMain(VOID)
 
 	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
 	{
-		MessageBox("Press ENTER to reboot.\n");
+		UiMessageBox("Press ENTER to reboot.\n");
 		goto reboot;
 	}
 	
 	if (OperatingSystemCount == 0)
 	{
-		MessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
+		UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
 		goto reboot;
 	}
 
@@ -97,23 +102,27 @@ VOID BootMain(VOID)
 	//
 	// Find all the message box settings and run them
 	//
-	ShowMessageBoxesInSection("FreeLoader");
+	UiShowMessageBoxesInSection("FreeLoader");
 
 	for (;;)
 	{
+		// Redraw the backdrop
+		UiDrawBackdrop();
+
 		// Show the operating system list menu
-		if (!DisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem))
+		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem))
 		{
-			MessageBox("Press ENTER to reboot.\n");
+			UiMessageBox("Press ENTER to reboot.\n");
 			goto reboot;
 		}
 		TimeOut = -1;
+		DefaultOperatingSystem = SelectedOperatingSystem;
 
 		// Try to open the operating system section in the .ini file
 		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
 		{
 			sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			MessageBox(SettingName);
+			UiMessageBox(SettingName);
 			continue;
 		}
 
@@ -121,7 +130,7 @@ VOID BootMain(VOID)
 		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, 80))
 		{
 			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			MessageBox(SettingName);
+			UiMessageBox(SettingName);
 			continue;
 		}
 
@@ -149,8 +158,8 @@ VOID BootMain(VOID)
 
 	
 reboot:
-	clrscr();
-	showcursor();
+	VideoClearScreen();
+	VideoShowTextCursor();
 	return;
 }
 

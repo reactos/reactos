@@ -42,16 +42,7 @@ VOID FileSystemError(PUCHAR ErrorString)
 {
 	DbgPrint((DPRINT_FILESYSTEM, "%s\n", ErrorString));
 
-	if (UserInterfaceUp)
-	{
-		MessageBox(ErrorString);
-	}
-	else
-	{
-		printf("%s", ErrorString);
-		printf("\nPress any key\n");
-		getch();
-	}
+	UiMessageBox(ErrorString);
 }
 
 /*

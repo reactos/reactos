@@ -68,8 +68,8 @@ BOOL CacheInitializeDrive(ULONG DriveNumber)
 		{
 			NextCacheBlock = (PCACHE_BLOCK)RtlListGetNext((PLIST_ITEM)CacheManagerDrive.CacheBlockHead);
 
-			FreeMemory(CacheManagerDrive.CacheBlockHead->BlockData);
-			FreeMemory(CacheManagerDrive.CacheBlockHead);
+			MmFreeMemory(CacheManagerDrive.CacheBlockHead->BlockData);
+			MmFreeMemory(CacheManagerDrive.CacheBlockHead);
 
 			CacheManagerDrive.CacheBlockHead = NextCacheBlock;
 		}

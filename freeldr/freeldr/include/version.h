@@ -22,19 +22,21 @@
 
 
 /* just some stuff */
-#define VERSION		"FreeLoader v1.2.2"
-#define COPYRIGHT	"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
+#define VERSION			"FreeLoader v1.3"
+#define COPYRIGHT		"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
+#define AUTHOR_EMAIL	"<brianp@sginet.com>"
+#define BY_AUTHOR		"by Brian Palmer"
 
 // FreeLoader version defines
 //
 // NOTE:
 // If you fix bugs then you increment the patch version
-// If you add features then you increment the minor version
-// If you add major functionality then you increment the major version
+// If you add features then you increment the minor version and zero the patch version
+// If you add major functionality then you increment the major version and zero the minor & patch versions
 //
 #define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	2
-#define FREELOADER_PATCH_VERSION	2
+#define FREELOADER_MINOR_VERSION	3
+#define FREELOADER_PATCH_VERSION	0
 
 
 PUCHAR	GetFreeLoaderVersionString(VOID);

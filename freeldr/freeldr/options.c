@@ -17,11 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#include "freeldr.h"
-#include "rtl.h"
-#include "ui.h"
-#include "options.h"
-#include "miscboot.h"
+#include <freeldr.h>
+#include <rtl.h>
+#include <ui.h>
+#include <options.h>
+#include <miscboot.h>
 
 #if 0
 void DoOptionsMenu(void)
@@ -126,10 +126,10 @@ void DoBootOptionsMenu(int BootDriveNum, char *BootDriveText)
 			}
 
 			RestoreScreen(ScreenBuffer);
-			showcursor();
+			VideoShowTextCursor();
 			gotoxy(CursorXPos, CursorYPos);
 
-			stop_floppy();
+			StopFloppyMotor();
 			JumpToBootCode();
 
 			break;
@@ -238,10 +238,10 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 			}
 
 			RestoreScreen(ScreenBuffer);
-			showcursor();
+			VideoShowTextCursor();
 			gotoxy(CursorXPos, CursorYPos);
 
-			stop_floppy();
+			StopFloppyMotor();
 			JumpToBootCode();
 		}
 	}*/
@@ -365,7 +365,7 @@ void DrawOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int 
 	int		space, space_left, space_right;
 
 	// Update the status bar
-	/*DrawStatusText(" Use \x18\x19 to select, then press ENTER. Press ESC to go back.");
+	/*DrawStatusText("Use \x18\x19 to select, then press ENTER. Press ESC to go back.");
 
 	DrawBox(nOptionsMenuBoxLeft, nOptionsMenuBoxTop, nOptionsMenuBoxRight, nOptionsMenuBoxBottom, D_VERT, D_HORZ, TRUE, TRUE, ATTR(cMenuFgColor, cMenuBgColor));
 	DrawText(nOptionsMenuBoxLeft + (((nOptionsMenuBoxRight - nOptionsMenuBoxLeft) - strlen(OptionsMenuTitle)) / 2) + 1, nOptionsMenuBoxTop, OptionsMenuTitle, ATTR(cMenuFgColor, cMenuBgColor));

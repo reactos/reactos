@@ -49,7 +49,7 @@ BOOL IniFileInitialize(VOID)
 
 	// Get the file size & allocate enough memory for it
 	FreeLoaderIniFileSize = GetFileSize(Freeldr_Ini);
-	FreeLoaderIniFileData = AllocateMemory(FreeLoaderIniFileSize);
+	FreeLoaderIniFileData = MmAllocateMemory(FreeLoaderIniFileSize);
 
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
@@ -63,7 +63,7 @@ BOOL IniFileInitialize(VOID)
 	if (!ReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData))
 	{
 		CloseFile(Freeldr_Ini);
-		FreeMemory(FreeLoaderIniFileData);
+		MmFreeMemory(FreeLoaderIniFileData);
 		return FALSE;
 	}
 
@@ -72,7 +72,7 @@ BOOL IniFileInitialize(VOID)
 	// Parse the .ini file data
 	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
 
-	FreeMemory(FreeLoaderIniFileData);
+	MmFreeMemory(FreeLoaderIniFileData);
 
 	return Success;
 }

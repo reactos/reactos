@@ -65,7 +65,9 @@ BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR Setting
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
+#ifdef DEBUG
 	ULONG				RealSettingNumber = SettingNumber;
+#endif
 
 	DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() SectionId = 0x%x\n", SectionId));
 

@@ -1,3 +1,9 @@
+Changes in v1.3 (6/5/2002)
+
+- Added protected mode exception handling in case FreeLoader crashes
+- Reworked memory manager to use all of extended memory
+- Reworked UI code, now supports multiple text-mode resolutions
+
 Changes in v1.2.2 (5/4/2002)
 
 - Fixed memory leak in menu.c

@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.1 2001/11/28 10:26:52 bpalmer Exp $
+/* $Id: portio.c,v 1.2 2002/06/06 05:58:35 bpalmer Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,7 @@
  */
 
 //#include <ddk/ntddk.h>
-#include "freeldr.h"
+#include <freeldr.h>
 
 
 /* FUNCTIONS ****************************************************************/

@@ -43,7 +43,7 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 
 	// Start with an 80-byte buffer
 	IniFileLineSize = 80;
-	IniFileLine = AllocateMemory(IniFileLineSize);
+	IniFileLine = MmAllocateMemory(IniFileLineSize);
 	if (!IniFileLine)
 	{
 		return FALSE;
@@ -58,8 +58,8 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 		if (IniFileLineSize < IniGetNextLineSize(IniFileData, IniFileSize, CurrentOffset))
 		{
 			IniFileLineSize = IniGetNextLineSize(IniFileData, IniFileSize, CurrentOffset);
-			FreeMemory(IniFileLine);
-			IniFileLine = AllocateMemory(IniFileLineSize);
+			MmFreeMemory(IniFileLine);
+			IniFileLine = MmAllocateMemory(IniFileLineSize);
 			if (!IniFileLine)
 			{
 				return FALSE;
@@ -81,21 +81,21 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 		if (IniIsSectionName(IniFileLine, LineLength))
 		{
 			// Allocate a new section structure
-			CurrentSection = AllocateMemory(sizeof(INI_SECTION));
+			CurrentSection = MmAllocateMemory(sizeof(INI_SECTION));
 			if (!CurrentSection)
 			{
-				FreeMemory(IniFileLine);
+				MmFreeMemory(IniFileLine);
 				return FALSE;
 			}
 
 			RtlZeroMemory(CurrentSection, sizeof(INI_SECTION));
 
 			// Allocate the section name buffer
-			CurrentSection->SectionName = AllocateMemory(IniGetSectionNameSize(IniFileLine, LineLength));
+			CurrentSection->SectionName = MmAllocateMemory(IniGetSectionNameSize(IniFileLine, LineLength));
 			if (!CurrentSection->SectionName)
 			{
-				FreeMemory(CurrentSection);
-				FreeMemory(IniFileLine);
+				MmFreeMemory(CurrentSection);
+				MmFreeMemory(IniFileLine);
 				return FALSE;
 			}
 
@@ -129,30 +129,30 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 			}
 
 			// Allocate a new item structure
-			CurrentItem = AllocateMemory(sizeof(INI_SECTION_ITEM));
+			CurrentItem = MmAllocateMemory(sizeof(INI_SECTION_ITEM));
 			if (!CurrentItem)
 			{
-				FreeMemory(IniFileLine);
+				MmFreeMemory(IniFileLine);
 				return FALSE;
 			}
 
 			RtlZeroMemory(CurrentItem, sizeof(INI_SECTION_ITEM));
 
 			// Allocate the setting name buffer
-			CurrentItem->ItemName = AllocateMemory(IniGetSettingNameSize(IniFileLine, LineLength));
+			CurrentItem->ItemName = MmAllocateMemory(IniGetSettingNameSize(IniFileLine, LineLength));
 			if (!CurrentItem->ItemName)
 			{
-				FreeMemory(CurrentItem);
-				FreeMemory(IniFileLine);
+				MmFreeMemory(CurrentItem);
+				MmFreeMemory(IniFileLine);
 				return FALSE;
 			}
 
 			// Allocate the setting value buffer
-			CurrentItem->ItemValue = AllocateMemory(IniGetSettingValueSize(IniFileLine, LineLength));
+			CurrentItem->ItemValue = MmAllocateMemory(IniGetSettingValueSize(IniFileLine, LineLength));
 			if (!CurrentItem->ItemValue)
 			{
-				FreeMemory(CurrentItem);
-				FreeMemory(IniFileLine);
+				MmFreeMemory(CurrentItem);
+				MmFreeMemory(IniFileLine);
 				return FALSE;
 			}
 

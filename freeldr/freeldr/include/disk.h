@@ -91,7 +91,7 @@ BOOL	BiosInt13ReadExtended(ULONG Drive, ULONG Sector, ULONG SectorCount, PVOID B
 BOOL	BiosInt13ExtensionsSupported(ULONG Drive);
 ULONG	BiosInt13GetLastErrorCode(VOID);
 
-void	stop_floppy(void);			// Implemented in asmcode.S
+void	StopFloppyMotor(void);		// Implemented in asmcode.S
 int		get_heads(int drive);		// Implemented in asmcode.S
 int		get_cylinders(int drive);	// Implemented in asmcode.S
 int		get_sectors(int drive);		// Implemented in asmcode.S

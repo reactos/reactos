@@ -20,53 +20,16 @@
 #include <freeldr.h>
 #include <rtl.h>
 #include <ui.h>
+#include "tui.h"
+#include "keycodes.h"
 #include <options.h>
 #include <mm.h>
 
 
-typedef struct
+BOOL TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem)
 {
-	PUCHAR *MenuItemList;
-	ULONG	MenuItemCount;
-	LONG	MenuTimeRemaining;
-	ULONG	SelectedMenuItem;
-
-	ULONG	Left;
-	ULONG	Top;
-	ULONG	Right;
-	ULONG	Bottom;
-
-} MENU_INFO, *PMENU_INFO;
-
-VOID	CalcMenuBoxSize(PMENU_INFO MenuInfo);
-VOID	DrawMenu(PMENU_INFO MenuInfo);
-VOID	DrawMenuBox(PMENU_INFO MenuInfo);
-VOID	DrawMenuItem(PMENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG	ProcessMenuKeyboardEvent(PMENU_INFO MenuInfo);
-
-extern	ULONG	nScreenWidth;		// Screen Width
-extern	ULONG	nScreenHeight;		// Screen Height
-
-extern	CHAR	cStatusBarFgColor;			// Status bar foreground color
-extern	CHAR	cStatusBarBgColor;			// Status bar background color
-extern	CHAR	cBackdropFgColor;			// Backdrop foreground color
-extern	CHAR	cBackdropBgColor;			// Backdrop background color
-extern	CHAR	cBackdropFillStyle;			// Backdrop fill style
-extern	CHAR	cTitleBoxFgColor;			// Title box foreground color
-extern	CHAR	cTitleBoxBgColor;			// Title box background color
-extern	CHAR	cMessageBoxFgColor;			// Message box foreground color
-extern	CHAR	cMessageBoxBgColor;			// Message box background color
-extern	CHAR	cMenuFgColor;			// Menu foreground color
-extern	CHAR	cMenuBgColor;			// Menu background color
-extern	CHAR	cTextColor;			// Normal text color
-extern	CHAR	cSelectedTextColor;			// Selected text color
-extern	CHAR	cSelectedTextBgColor;			// Selected text background color
-
-BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem)
-{
-	PUCHAR		ScreenBuffer;
-	MENU_INFO	MenuInformation;
-	ULONG		CurrentClockSecond;
+	TUI_MENU_INFO	MenuInformation;
+	ULONG			CurrentClockSecond;
 
 	//
 	// The first thing we need to check is the timeout
@@ -84,20 +47,6 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 	}
 
 	//
-	// Allocate memory to hold screen contents before menu is drawn
-	//
-	ScreenBuffer = AllocateMemory(4000);
-	if (ScreenBuffer == NULL)
-	{
-		return FALSE;
-	}
-
-	//
-	// Save screen contents to our buffer
-	//
-	SaveScreen(ScreenBuffer);
-
-	//
 	// Setup the MENU_INFO structure
 	//
 	MenuInformation.MenuItemList = MenuItemList;
@@ -108,12 +57,12 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 	//
 	// Calculate the size of the menu box
 	//
-	CalcMenuBoxSize(&MenuInformation);
+	TuiCalcMenuBoxSize(&MenuInformation);
 
 	//
 	// Draw the menu
 	//
-	DrawMenu(&MenuInformation);
+	TuiDrawMenu(&MenuInformation);
 
 	//
 	// Get the current second of time
@@ -128,7 +77,7 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 		//
 		// Process key presses
 		//
-		if (ProcessMenuKeyboardEvent(&MenuInformation) == KEY_ENTER)
+		if (TuiProcessMenuKeyboardEvent(&MenuInformation) == KEY_ENTER)
 		{
 			//
 			// If they pressed enter then exit this loop
@@ -139,7 +88,7 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 		//
 		// Update the date & time
 		//
-		UpdateDateTime();
+		UiUpdateDateTime();
 
 		if (MenuInformation.MenuTimeRemaining > 0)
 		{
@@ -154,7 +103,7 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 				//
 				// Update the menu
 				//
-				DrawMenuBox(&MenuInformation);
+				TuiDrawMenuBox(&MenuInformation);
 			}
 		}
 		else if (MenuInformation.MenuTimeRemaining == 0)
@@ -173,17 +122,11 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 	{
 		*SelectedMenuItem = MenuInformation.SelectedMenuItem;
 	}
-
-	//
-	// Restore screen and free the memory
-	//
-	RestoreScreen(ScreenBuffer);
-	FreeMemory(ScreenBuffer);
 	
 	return TRUE;
 }
 
-VOID CalcMenuBoxSize(PMENU_INFO MenuInfo)
+VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 {
 	ULONG	Idx;
 	ULONG	Width;
@@ -218,31 +161,31 @@ VOID CalcMenuBoxSize(PMENU_INFO MenuInfo)
 	//
 	// Calculate the menu box area
 	//
-	MenuInfo->Left = (nScreenWidth - Width) / 2;
+	MenuInfo->Left = (UiScreenWidth - Width) / 2;
 	MenuInfo->Right = (MenuInfo->Left) + Width;
-	MenuInfo->Top = (( (nScreenHeight - TITLE_BOX_HEIGHT) - Height) / 2 + 1) + (TITLE_BOX_HEIGHT / 2);
+	MenuInfo->Top = (( (UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT) - Height) / 2 + 1) + (TUI_TITLE_BOX_CHAR_HEIGHT / 2);
 	MenuInfo->Bottom = (MenuInfo->Top) + Height;
 }
 
-VOID DrawMenu(PMENU_INFO MenuInfo)
+VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
 	ULONG	Idx;
 
 	//
 	// Draw the menu box
 	//
-	DrawMenuBox(MenuInfo);
+	TuiDrawMenuBox(MenuInfo);
 
 	//
 	// Draw each line of the menu
 	//
 	for (Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
 	{
-		DrawMenuItem(MenuInfo, Idx);
+		TuiDrawMenuItem(MenuInfo, Idx);
 	}
 }
 
-VOID DrawMenuBox(PMENU_INFO MenuInfo)
+VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
 	UCHAR	MenuLineText[80];
 	UCHAR	TempString[80];
@@ -250,12 +193,12 @@ VOID DrawMenuBox(PMENU_INFO MenuInfo)
 	//
 	// Update the status bar
 	//
-	DrawStatusText(" Use \x18\x19 to select, ENTER to boot.");
+	UiDrawStatusText("Use \x18\x19 to select, ENTER to boot.");
 
 	//
 	// Draw the menu box
 	//
-	DrawBox(MenuInfo->Left,
+	UiDrawBox(MenuInfo->Left,
 		MenuInfo->Top,
 		MenuInfo->Right,
 		MenuInfo->Bottom,
@@ -263,7 +206,7 @@ VOID DrawMenuBox(PMENU_INFO MenuInfo)
 		D_HORZ,
 		FALSE,		// Filled
 		TRUE,		// Shadow
-		ATTR(cMenuFgColor, cMenuBgColor));
+		ATTR(UiMenuFgColor, UiMenuBgColor));
 
 	//
 	// If there is a timeout draw the time remaining
@@ -275,14 +218,14 @@ VOID DrawMenuBox(PMENU_INFO MenuInfo)
 		strcat(MenuLineText, TempString);
 		strcat(MenuLineText, " ]");
 
-		DrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
+		UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
 			MenuInfo->Bottom,
 			MenuLineText,
-			ATTR(cMenuFgColor, cMenuBgColor));
+			ATTR(UiMenuFgColor, UiMenuBgColor));
 	}
 }
 
-VOID DrawMenuItem(PMENU_INFO MenuInfo, ULONG MenuItemNumber)
+VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
 {
 	ULONG	Idx;
 	UCHAR	MenuLineText[80];
@@ -326,21 +269,21 @@ VOID DrawMenuItem(PMENU_INFO MenuInfo, ULONG MenuItemNumber)
 	//
 	if (MenuItemNumber == MenuInfo->SelectedMenuItem)
 	{
-		DrawText(MenuInfo->Left + 1,
+		UiDrawText(MenuInfo->Left + 1,
 			MenuInfo->Top + 1 + MenuItemNumber,
 			MenuLineText,
-			ATTR(cSelectedTextColor, cSelectedTextBgColor));
+			ATTR(UiSelectedTextColor, UiSelectedTextBgColor));
 	}
 	else
 	{
-		DrawText(MenuInfo->Left + 1,
+		UiDrawText(MenuInfo->Left + 1,
 			MenuInfo->Top + 1 + MenuItemNumber,
 			MenuLineText,
-			ATTR(cTextColor, cMenuBgColor));
+			ATTR(UiTextColor, UiMenuBgColor));
 	}
 }
 
-ULONG ProcessMenuKeyboardEvent(PMENU_INFO MenuInfo)
+ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 {
 	ULONG	KeyEvent = 0;
 
@@ -355,7 +298,7 @@ ULONG ProcessMenuKeyboardEvent(PMENU_INFO MenuInfo)
 		if (MenuInfo->MenuTimeRemaining != -1)
 		{
 			MenuInfo->MenuTimeRemaining = -1;
-			DrawMenuBox(MenuInfo);
+			TuiDrawMenuBox(MenuInfo);
 		}
 
 		//
@@ -383,8 +326,8 @@ ULONG ProcessMenuKeyboardEvent(PMENU_INFO MenuInfo)
 				//
 				// Update the menu
 				//
-				DrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem + 1);	// Deselect previous item
-				DrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
+				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem + 1);	// Deselect previous item
+				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
 			}
 
 			break;
@@ -398,8 +341,8 @@ ULONG ProcessMenuKeyboardEvent(PMENU_INFO MenuInfo)
 				//
 				// Update the menu
 				//
-				DrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem - 1);	// Deselect previous item
-				DrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
+				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem - 1);	// Deselect previous item
+				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
 			}
 
 			break;

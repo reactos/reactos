@@ -21,11 +21,12 @@
 	.code16
 
 #define ASM
-#include "arch.h"
+#include <arch.h>
 
 
-	.code32
 EXTERN(_ChainLoadBiosBootSectorCode)
+	.code32
+
 	call	switch_to_real
 	.code16
 

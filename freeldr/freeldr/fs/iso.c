@@ -49,19 +49,19 @@ BOOL IsoOpenVolume(ULONG DriveNumber)
 	IsoRootSector = 0;
 	IsoRootLength = 0;
 
-	Pvd = AllocateMemory(SECTORSIZE);
+	Pvd = MmAllocateMemory(SECTORSIZE);
 
 	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
 	{
 		FileSystemError("Failed to read the PVD.");
-		FreeMemory(Pvd);
+		MmFreeMemory(Pvd);
 		return FALSE;
 	}
 
 	IsoRootSector = Pvd->RootDirRecord.ExtentLocationL;
 	IsoRootLength = Pvd->RootDirRecord.DataLengthL;
 
-	FreeMemory(Pvd);
+	MmFreeMemory(Pvd);
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoRootSector = %u  IsoRootLegth = %u\n", IsoRootSector, IsoRootLength));
 
@@ -142,7 +142,7 @@ static PVOID IsoBufferDirectory(UINT32 DirectoryStartSector, UINT32 DirectoryLen
 	// Attempt to allocate memory for directory buffer
 	//
 	DbgPrint((DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength));
-	DirectoryBuffer = AllocateMemory(DirectoryLength);
+	DirectoryBuffer = MmAllocateMemory(DirectoryLength);
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -157,7 +157,7 @@ static PVOID IsoBufferDirectory(UINT32 DirectoryStartSector, UINT32 DirectoryLen
 	//
 	if (!DiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector, SectorCount, DirectoryBuffer))
 	{
-		FreeMemory(DirectoryBuffer);
+		MmFreeMemory(DirectoryBuffer);
 		return NULL;
 	}
 
@@ -290,11 +290,11 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		//
 		if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
 		{
-			FreeMemory(DirectoryBuffer);
+			MmFreeMemory(DirectoryBuffer);
 			return FALSE;
 		}
 
-		FreeMemory(DirectoryBuffer);
+		MmFreeMemory(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then
@@ -331,7 +331,7 @@ FILE* IsoOpenFile(PUCHAR FileName)
 		return NULL;
 	}
 
-	FileHandle = AllocateMemory(sizeof(ISO_FILE_INFO));
+	FileHandle = MmAllocateMemory(sizeof(ISO_FILE_INFO));
 
 	if (FileHandle == NULL)
 	{
@@ -354,7 +354,7 @@ static BOOL IsoReadPartialSector(ULONG SectorNumber, ULONG StartingOffset, ULONG
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoReadPartialSector() SectorNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", SectorNumber, StartingOffset, Length, Buffer));
 
-	SectorBuffer = AllocateMemory(SECTORSIZE);
+	SectorBuffer = MmAllocateMemory(SECTORSIZE);
 	if (SectorBuffer == NULL)
 	{
 		return FALSE;
@@ -362,13 +362,13 @@ static BOOL IsoReadPartialSector(ULONG SectorNumber, ULONG StartingOffset, ULONG
 
 	if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, SectorBuffer))
 	{
-		FreeMemory(SectorBuffer);
+		MmFreeMemory(SectorBuffer);
 		return FALSE;
 	}
 
 	memcpy(Buffer, ((PVOID)SectorBuffer + StartingOffset), Length);
 
-	FreeMemory(SectorBuffer);
+	MmFreeMemory(SectorBuffer);
 
 	return TRUE;
 }

@@ -18,17 +18,18 @@
  */
 
 	
-#include "freeldr.h"
-#include "arch.h"
-#include "miscboot.h"
-#include "rtl.h"
-#include "fs.h"
-#include "ui.h"
-#include "linux.h"
-#include "debug.h"
-#include "mm.h"
-#include "inifile.h"
-#include "oslist.h" // For RemoveQuotes()
+#include <freeldr.h>
+#include <arch.h>
+#include <miscboot.h>
+#include <rtl.h>
+#include <fs.h>
+#include <ui.h>
+#include <linux.h>
+#include <debug.h>
+#include <mm.h>
+#include <inifile.h>
+#include <oslist.h> // For RemoveQuotes()
+#include <video.h>
 
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
@@ -46,7 +47,7 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	PFILE	LinuxKernel = NULL;
 	UCHAR	TempString[260];
 
-	DrawBackdrop();
+	UiDrawBackdrop();
 
 	// Parse the .ini file section
 	if (!LinuxParseIniSection(OperatingSystemName))
@@ -57,7 +58,7 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	// Open the boot volume
 	if (!OpenDiskDrive(BootDrive, BootPartition))
 	{
-		MessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to open boot drive.");
 		goto LinuxBootFailed;
 	}
 
@@ -66,7 +67,7 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	if (LinuxKernel == NULL)
 	{
 		sprintf(TempString, "Linux kernel \'%s\' not found.", LinuxKernelName);
-		MessageBox(TempString);
+		UiMessageBox(TempString);
 		goto LinuxBootFailed;
 	}
 
@@ -119,10 +120,10 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
 	RtlCopyMemory((PVOID)0x99000, LinuxCommandLine, LinuxCommandLineSize);
 
-	showcursor();
-	clrscr();
+	VideoShowTextCursor();
+	VideoClearScreen();
 
-	stop_floppy();
+	StopFloppyMotor();
 
 	if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
 	{
@@ -143,11 +144,11 @@ LinuxBootFailed:
 
 	if (LinuxBootSector != NULL)
 	{
-		FreeMemory(LinuxBootSector);
+		MmFreeMemory(LinuxBootSector);
 	}
 	if (LinuxSetupSector != NULL)
 	{
-		FreeMemory(LinuxSetupSector);
+		MmFreeMemory(LinuxSetupSector);
 	}
 
 	LinuxBootSector = NULL;
@@ -167,19 +168,19 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 	ULONG	SectionId;
 
 	// Find all the message box settings and run them
-	ShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
-		MessageBox(SettingName);
+		UiMessageBox(SettingName);
 		return FALSE;
 	}
 
 	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 260))
 	{
-		MessageBox("Boot drive not specified for selected OS!");
+		UiMessageBox("Boot drive not specified for selected OS!");
 		return FALSE;
 	}
 
@@ -194,7 +195,7 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 	// Get the kernel name
 	if (!IniReadSettingByName(SectionId, "Kernel", LinuxKernelName, 260))
 	{
-		MessageBox("Linux kernel filename not specified for selected OS!");
+		UiMessageBox("Linux kernel filename not specified for selected OS!");
 		return FALSE;
 	}
 
@@ -217,7 +218,7 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 BOOL LinuxReadBootSector(PFILE LinuxKernelFile)
 {
 	// Allocate memory for boot sector
-	LinuxBootSector = (PLINUX_BOOTSECTOR)AllocateMemory(512);
+	LinuxBootSector = (PLINUX_BOOTSECTOR)MmAllocateMemory(512);
 	if (LinuxBootSector == NULL)
 	{
 		return FALSE;
@@ -233,7 +234,7 @@ BOOL LinuxReadBootSector(PFILE LinuxKernelFile)
 	// Check for validity
 	if (LinuxBootSector->BootFlag != LINUX_BOOT_SECTOR_MAGIC)
 	{
-		MessageBox("Invalid boot sector magic (0xaa55)");
+		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return FALSE;
 	}
 
@@ -280,7 +281,7 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 	}
 
 	// Allocate memory for setup sectors
-	LinuxSetupSector = (PLINUX_SETUPSECTOR)AllocateMemory(SetupSectorSize);
+	LinuxSetupSector = (PLINUX_SETUPSECTOR)MmAllocateMemory(SetupSectorSize);
 	if (LinuxSetupSector == NULL)
 	{
 		return FALSE;
@@ -323,9 +324,9 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 	ULONG	BytesLoaded;
 	UCHAR	StatusText[260];
 
-	sprintf(StatusText, " Loading %s", LinuxKernelName);
-	DrawStatusText(StatusText);
-	DrawProgressBar(0);
+	sprintf(StatusText, "Loading %s", LinuxKernelName);
+	UiDrawStatusText(StatusText);
+	UiDrawProgressBarCenter(0, 100);
 
 	// Calc kernel size
 	LinuxKernelSize = GetFileSize(LinuxKernelFile) - (512 + SetupSectorSize);
@@ -342,7 +343,7 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 		BytesLoaded += 0x4000;
 		LoadAddress += 0x4000;
 
-		DrawProgressBar( (BytesLoaded * 100) / LinuxKernelSize );
+		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize);
 	}
 
 	return TRUE;
@@ -378,7 +379,7 @@ BOOL LinuxCheckKernelVersion(VOID)
 
 	if ((NewStyleLinuxKernel == FALSE) && (LinuxHasInitrd == TRUE))
 	{
-		MessageBox("Error: Cannot load a ramdisk (initrd) with an old kernel image.");
+		UiMessageBox("Error: Cannot load a ramdisk (initrd) with an old kernel image.");
 		return FALSE;
 	}
 
@@ -394,16 +395,16 @@ BOOL LinuxReadInitrd(VOID)
 	ULONG	BytesLoaded;
 	UCHAR	StatusText[260];
 
-	sprintf(StatusText, " Loading %s", LinuxInitrdName);
-	DrawStatusText(StatusText);
-	DrawProgressBar(0);
+	sprintf(StatusText, "Loading %s", LinuxInitrdName);
+	UiDrawStatusText(StatusText);
+	UiDrawProgressBarCenter(0, 100);
 
 	// Open the initrd file image
 	LinuxInitrdFile = OpenFile(LinuxInitrdName);
 	if (LinuxInitrdFile == NULL)
 	{
 		sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
-		MessageBox(TempString);
+		UiMessageBox(TempString);
 		return FALSE;
 	}
 
@@ -436,7 +437,7 @@ BOOL LinuxReadInitrd(VOID)
 		BytesLoaded += 0x4000;
 		LinuxInitrdLoadAddress += 0x4000;
 
-		DrawProgressBar( (BytesLoaded * 100) / LinuxInitrdSize );
+		UiDrawProgressBarCenter(BytesLoaded, LinuxInitrdSize);
 	}
 
 	return TRUE;

@@ -35,133 +35,120 @@ VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DEBUG
 
-PVOID AllocateMemory(ULONG NumberOfBytes)
+PVOID MmAllocateMemory(ULONG MemorySize)
 {
-	ULONG	BlocksNeeded;
-	ULONG	Idx;
-	ULONG	NumFree;
+	ULONG	PagesNeeded;
+	ULONG	FirstFreePageFromEnd;
 	PVOID	MemPointer;
 
-	if (NumberOfBytes == 0)
+	if (MemorySize == 0)
 	{
-		DbgPrint((DPRINT_MEMORY, "AllocateMemory() called for 0 bytes. Returning NULL.\n"));
-		MessageBox("Memory allocation failed: AllocateMemory() called for 0 bytes.");
+		DbgPrint((DPRINT_MEMORY, "MmAllocateMemory() called for 0 bytes. Returning NULL.\n"));
+		UiMessageBoxCritical("Memory allocation failed: MmAllocateMemory() called for 0 bytes.");
 		return NULL;
 	}
 
 	// Find out how many blocks it will take to
 	// satisfy this allocation
-	BlocksNeeded = ROUND_UP(NumberOfBytes, MEM_BLOCK_SIZE) / MEM_BLOCK_SIZE;
-
-	// Now loop through our array of blocks and
-	// see if we have enough space
-	for (Idx=0,NumFree=0; Idx<HeapMemBlockCount; Idx++)
-	{
-		// Check this block and see if it is already allocated
-		// If so reset our counter and continue the loop
-		if (HeapMemBlockArray[Idx].MemBlockAllocated)
-		{
-			NumFree = 0;
-			continue;
-		}
-		else
-		{
-			// It is free memory so lets increment our count
-			NumFree++;
-		}
-
-		// If we have found enough blocks to satisfy the request
-		// then we're done searching
-		if (NumFree >= BlocksNeeded)
-		{
-			break;
-		}
-	}
-	Idx++;
+	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
 
 	// If we don't have enough available mem
 	// then return NULL
-	if (NumFree < BlocksNeeded)
+	if (FreePagesInLookupTable < PagesNeeded)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", NumberOfBytes, AllocationCount));
-		MessageBox("Memory allocation failed: out of memory.");
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
 
-	// Subtract the block count from Idx and we have
-	// the start block of the memory
-	Idx -= NumFree;
+	FirstFreePageFromEnd = MmFindAvailablePagesFromEnd(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded);
 
-	// Now we know which block to give them
-	MemPointer = HeapBaseAddress + (Idx * MEM_BLOCK_SIZE);
-
-	// Now loop through and mark all the blocks as allocated
-	for (NumFree=0; NumFree<BlocksNeeded; NumFree++)
+	if (FirstFreePageFromEnd == 0)
 	{
-		HeapMemBlockArray[Idx + NumFree].MemBlockAllocated = TRUE;
-		HeapMemBlockArray[Idx + NumFree].BlocksAllocated = NumFree ? 0 : BlocksNeeded; // Mark only the first block with the count
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		return NULL;
 	}
+
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded);
+
+	FreePagesInLookupTable -= PagesNeeded;
+	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
 
 #ifdef DEBUG
 	IncrementAllocationCount();
-	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d blocks) of memory starting at block %d. AllocCount: %d\n", NumberOfBytes, BlocksNeeded, Idx, AllocationCount));
+	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, FirstFreePageFromEnd, AllocationCount));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
-	VerifyHeap();
+	//VerifyHeap();
 #endif // DEBUG
 
 	// Now return the pointer
 	return MemPointer;
 }
 
-VOID FreeMemory(PVOID MemBlock)
+VOID MmFreeMemory(PVOID MemoryPointer)
 {
-	ULONG	BlockNumber;
-	ULONG	BlockCount;
-	ULONG	Idx;
+	ULONG						PageNumber;
+	ULONG						PageCount;
+	ULONG						Idx;
+	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 #ifdef DEBUG
 
 	// Make sure we didn't get a bogus pointer
-	if ((MemBlock < HeapBaseAddress) || (MemBlock > (HeapBaseAddress + HeapLengthInBytes)))
+	if (MemoryPointer >= (PVOID)(TotalPagesInLookupTable * MM_PAGE_SIZE))
 	{
-		BugCheck((DPRINT_MEMORY, "Bogus memory pointer (0x%x) passed to FreeMemory()\n", MemBlock));
+		BugCheck((DPRINT_MEMORY, "Bogus memory pointer (0x%x) passed to MmFreeMemory()\n", MemoryPointer));
 	}
 #endif // DEBUG
 
-	// Find out the block number if the first
-	// block of memory they allocated
-	BlockNumber = (MemBlock - HeapBaseAddress) / MEM_BLOCK_SIZE;
-	BlockCount = HeapMemBlockArray[BlockNumber].BlocksAllocated;
+	// Find out the page number of the first
+	// page of memory they allocated
+	PageNumber = MmGetPageNumberFromAddress(MemoryPointer);
+	PageCount = RealPageLookupTable[PageNumber].PageAllocationLength;
 
 #ifdef DEBUG
 	// Make sure we didn't get a bogus pointer
-	if ((BlockCount < 1) || (BlockCount > HeapMemBlockCount))
+	if ((PageCount < 1) || (PageCount > (TotalPagesInLookupTable - PageNumber)))
 	{
-		BugCheck((DPRINT_MEMORY, "Invalid block count in heap page header. HeapMemBlockArray[BlockNumber].BlocksAllocated = %d\n", HeapMemBlockArray[BlockNumber].BlocksAllocated));
+		BugCheck((DPRINT_MEMORY, "Invalid page count in lookup table. PageLookupTable[%d].PageAllocationLength = %d\n", PageNumber, RealPageLookupTable[PageNumber].PageAllocationLength));
 	}
+
+	// Loop through our array check all the pages
+	// to make sure they are allocated with a length of 0
+	for (Idx=PageNumber+1; Idx<(PageNumber + PageCount); Idx++)
+	{
+		if ((RealPageLookupTable[Idx].PageAllocated != 1) ||
+			(RealPageLookupTable[Idx].PageAllocationLength != 0))
+		{
+			BugCheck((DPRINT_MEMORY, "Invalid page entry in lookup table, PageAllocated should = 1 and PageAllocationLength should = 0 because this is not the first block in the run. PageLookupTable[%d].PageAllocated = %d PageLookupTable[%d].PageAllocationLength = %d\n", PageNumber, RealPageLookupTable[PageNumber].PageAllocated, PageNumber, RealPageLookupTable[PageNumber].PageAllocationLength));
+		}
+	}
+
 #endif
 
 	// Loop through our array and mark all the
 	// blocks as free
-	for (Idx=BlockNumber; Idx<(BlockNumber + BlockCount); Idx++)
+	for (Idx=PageNumber; Idx<(PageNumber + PageCount); Idx++)
 	{
-		HeapMemBlockArray[Idx].MemBlockAllocated = FALSE;
-		HeapMemBlockArray[Idx].BlocksAllocated = 0;
+		RealPageLookupTable[Idx].PageAllocated = 0;
+		RealPageLookupTable[Idx].PageAllocationLength = 0;
 	}
 
 #ifdef DEBUG
 	DecrementAllocationCount();
-	DbgPrint((DPRINT_MEMORY, "Freed %d blocks of memory starting at block %d. AllocationCount: %d\n", BlockCount, BlockNumber, AllocationCount));
-	VerifyHeap();
+	DbgPrint((DPRINT_MEMORY, "Freed %d pages of memory starting at page %d. AllocationCount: %d\n", PageCount, PageNumber, AllocationCount));
+	//VerifyHeap();
 #endif // DEBUG
 }
 
 #ifdef DEBUG
 VOID VerifyHeap(VOID)
 {
-	ULONG	Idx;
-	ULONG	Idx2;
-	ULONG	Count;
+	ULONG						Idx;
+	ULONG						Idx2;
+	ULONG						Count;
+	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	if (DUMP_MEM_MAP_ON_VERIFY)
 	{
@@ -170,35 +157,35 @@ VOID VerifyHeap(VOID)
 
 	// Loop through the array and verify that
 	// everything is kosher
-	for (Idx=0; Idx<HeapMemBlockCount; Idx++)
+	for (Idx=0; Idx<TotalPagesInLookupTable; Idx++)
 	{
-		// Check if this block is allocation
-		if (HeapMemBlockArray[Idx].MemBlockAllocated)
+		// Check if this block is allocated
+		if (RealPageLookupTable[Idx].PageAllocated != 0)
 		{
 			// This is the first block in the run so it
 			// had better have a length that is within range
-			if ((HeapMemBlockArray[Idx].BlocksAllocated < 1) || (HeapMemBlockArray[Idx].BlocksAllocated > (HeapMemBlockCount - Idx)))
+			if ((RealPageLookupTable[Idx].PageAllocationLength < 1) || (RealPageLookupTable[Idx].PageAllocationLength > (TotalPagesInLookupTable - Idx)))
 			{
-				BugCheck((DPRINT_MEMORY, "Allocation length out of range in heap table. HeapMemBlockArray[Idx].BlocksAllocated = %d\n", HeapMemBlockArray[Idx].BlocksAllocated));
+				BugCheck((DPRINT_MEMORY, "Allocation length out of range in heap table. PageLookupTable[Idx].PageAllocationLength = %d\n", RealPageLookupTable[Idx].PageAllocationLength));
 			}
 
 			// Now go through and verify that the rest of
 			// this run has the blocks marked allocated
 			// with a length of zero but don't check the
 			// first one because we already did
-			Count = HeapMemBlockArray[Idx].BlocksAllocated;
+			Count = RealPageLookupTable[Idx].PageAllocationLength;
 			for (Idx2=1; Idx2<Count; Idx2++)
 			{
 				// Make sure it's allocated
-				if (HeapMemBlockArray[Idx + Idx2].MemBlockAllocated != TRUE)
+				if (RealPageLookupTable[Idx + Idx2].PageAllocated == 0)
 				{
-					BugCheck((DPRINT_MEMORY, "Heap table indicates hole in memory allocation. HeapMemBlockArray[Idx + Idx2].MemBlockAllocated != TRUE\n"));
+					BugCheck((DPRINT_MEMORY, "Lookup table indicates hole in memory allocation. RealPageLookupTable[Idx + Idx2].PageAllocated == 0\n"));
 				}
 
 				// Make sure the length is zero
-				if (HeapMemBlockArray[Idx + Idx2].BlocksAllocated != 0)
+				if (RealPageLookupTable[Idx + Idx2].PageAllocationLength != 0)
 				{
-					BugCheck((DPRINT_MEMORY, "Allocation chain has non-zero value in non-first block in heap table. HeapMemBlockArray[Idx + Idx2].BlocksAllocated != 0\n"));
+					BugCheck((DPRINT_MEMORY, "Allocation chain has non-zero value in non-first block in lookup table. RealPageLookupTable[Idx + Idx2].PageAllocationLength != 0\n"));
 				}
 			}
 
@@ -208,9 +195,9 @@ VOID VerifyHeap(VOID)
 		else
 		{
 			// Nope, not allocated so make sure the length is zero
-			if (HeapMemBlockArray[Idx].BlocksAllocated != 0)
+			if (RealPageLookupTable[Idx].PageAllocationLength != 0)
 			{
-				BugCheck((DPRINT_MEMORY, "Free block is start of memory allocation. HeapMemBlockArray[Idx].BlocksAllocated != 0\n"));
+				BugCheck((DPRINT_MEMORY, "Free block is start of memory allocation. RealPageLookupTable[Idx].PageAllocationLength != 0\n"));
 			}
 		}
 	}
@@ -218,29 +205,43 @@ VOID VerifyHeap(VOID)
 
 VOID DumpMemoryAllocMap(VOID)
 {
-	ULONG	Idx;
+	ULONG						Idx;
+	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	DbgPrint((DPRINT_MEMORY, "----------- Memory Allocation Bitmap -----------\n"));
 
-	for (Idx=0; Idx<HeapMemBlockCount; Idx++)
+	for (Idx=0; Idx<TotalPagesInLookupTable; Idx++)
 	{
 		if ((Idx % 32) == 0)
 		{
 			DbgPrint((DPRINT_MEMORY, "\n"));
-			DbgPrint((DPRINT_MEMORY, "%x:\t", HeapBaseAddress + (Idx * 256)));
+			DbgPrint((DPRINT_MEMORY, "%x:\t", (Idx * MM_PAGE_SIZE)));
 		}
 		else if ((Idx % 4) == 0)
 		{
 			DbgPrint((DPRINT_MEMORY, " "));
 		}
 
-		if (HeapMemBlockArray[Idx].MemBlockAllocated)
+		switch (RealPageLookupTable[Idx].PageAllocated)
 		{
-			DbgPrint((DPRINT_MEMORY, "X"));
-		}
-		else
-		{
+		case 0:
 			DbgPrint((DPRINT_MEMORY, "*"));
+			break;
+		case 1:
+			DbgPrint((DPRINT_MEMORY, "A"));
+			break;
+		case MEMTYPE_RESERVED:
+			DbgPrint((DPRINT_MEMORY, "R"));
+			break;
+		case MEMTYPE_ACPI_RECLAIM:
+			DbgPrint((DPRINT_MEMORY, "M"));
+			break;
+		case MEMTYPE_ACPI_NVS:
+			DbgPrint((DPRINT_MEMORY, "N"));
+			break;
+		default:
+			DbgPrint((DPRINT_MEMORY, "X"));
+			break;
 		}
 	}
 
@@ -265,32 +266,31 @@ VOID MemAllocTest(VOID)
 	PVOID	MemPtr4;
 	PVOID	MemPtr5;
 
-	MemPtr1 = AllocateMemory(4096);
+	MemPtr1 = MmAllocateMemory(4096);
 	printf("MemPtr1: 0x%x\n", (int)MemPtr1);
 	getch();
-	MemPtr2 = AllocateMemory(4096);
+	MemPtr2 = MmAllocateMemory(4096);
 	printf("MemPtr2: 0x%x\n", (int)MemPtr2);
 	getch();
-	MemPtr3 = AllocateMemory(4096);
+	MemPtr3 = MmAllocateMemory(4096);
 	printf("MemPtr3: 0x%x\n", (int)MemPtr3);
 	DumpMemoryAllocMap();
 	VerifyHeap();
 	getch();
 
-	FreeMemory(MemPtr2);
+	MmFreeMemory(MemPtr2);
 	getch();
 
-	MemPtr4 = AllocateMemory(2048);
+	MemPtr4 = MmAllocateMemory(2048);
 	printf("MemPtr4: 0x%x\n", (int)MemPtr4);
 	getch();
-	MemPtr5 = AllocateMemory(4096);
+	MemPtr5 = MmAllocateMemory(4096);
 	printf("MemPtr5: 0x%x\n", (int)MemPtr5);
 	getch();
 }
 #endif // DEBUG
 
-// Returns the amount of total usuable memory available to the memory manager
 ULONG GetSystemMemorySize(VOID)
 {
-	return HeapLengthInBytes;
+	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
 }

@@ -18,14 +18,15 @@
  */
 
 	
-#include "freeldr.h"
-#include "arch.h"
-#include "miscboot.h"
-#include "rtl.h"
-#include "fs.h"
-#include "ui.h"
-#include "inifile.h"
-#include "disk.h"
+#include <freeldr.h>
+#include <arch.h>
+#include <miscboot.h>
+#include <rtl.h>
+#include <fs.h>
+#include <ui.h>
+#include <inifile.h>
+#include <disk.h>
+#include <video.h>
 
 VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
@@ -37,19 +38,19 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	ULONG	BytesRead;
 
 	// Find all the message box settings and run them
-	ShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
-		MessageBox(SettingName);
+		UiMessageBox(SettingName);
 		return;
 	}
 
 	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
-		MessageBox("Boot drive not specified for selected OS!");
+		UiMessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
@@ -63,13 +64,13 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 
 	if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, 260))
 	{
-		MessageBox("Boot sector file not specified for selected OS!");
+		UiMessageBox("Boot sector file not specified for selected OS!");
 		return;
 	}
 
 	if (!OpenDiskDrive(BootDrive, BootPartition))
 	{
-		MessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to open boot drive.");
 		return;
 	}
 
@@ -77,7 +78,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	if (FilePointer == NULL)
 	{
 		strcat(FileName, " not found.");
-		MessageBox(FileName);
+		UiMessageBox(FileName);
 		return;
 	}
 
@@ -90,13 +91,20 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	// Check for validity
 	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
-		MessageBox("Invalid boot sector magic (0xaa55)");
+		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;
 	}
 
-	clrscr();
-	showcursor();
-	stop_floppy();
+	VideoClearScreen();
+	VideoShowTextCursor();
+	// Don't stop the floppy drive motor when we
+	// are just booting a bootsector, or drive, or partition.
+	// If we were to stop the floppy motor then
+	// the BIOS wouldn't be informed and if the
+	// next read is to a floppy then the BIOS will
+	// still think the motor is on and this will
+	// result in a read error.
+	//StopFloppyMotor();
 	ChainLoadBiosBootSectorCode();
 }
 
@@ -108,20 +116,20 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 
 	// Find all the message box settings and run them
-	ShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
-		MessageBox(SettingName);
+		UiMessageBox(SettingName);
 		return;
 	}
 
 	// Read the boot drive
 	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
-		MessageBox("Boot drive not specified for selected OS!");
+		UiMessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
@@ -130,7 +138,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	// Read the boot partition
 	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
 	{
-		MessageBox("Boot partition not specified for selected OS!");
+		UiMessageBox("Boot partition not specified for selected OS!");
 		return;
 	}
 
@@ -152,13 +160,20 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	// Check for validity
 	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
-		MessageBox("Invalid boot sector magic (0xaa55)");
+		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;
 	}
 
-	clrscr();
-	showcursor();
-	stop_floppy();
+	VideoClearScreen();
+	VideoShowTextCursor();
+	// Don't stop the floppy drive motor when we
+	// are just booting a bootsector, or drive, or partition.
+	// If we were to stop the floppy motor then
+	// the BIOS wouldn't be informed and if the
+	// next read is to a floppy then the BIOS will
+	// still think the motor is on and this will
+	// result in a read error.
+	//StopFloppyMotor();
 	ChainLoadBiosBootSectorCode();
 }
 
@@ -169,19 +184,19 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	ULONG	SectionId;
 
 	// Find all the message box settings and run them
-	ShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
 	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
-		MessageBox(SettingName);
+		UiMessageBox(SettingName);
 		return;
 	}
 
 	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
-		MessageBox("Boot drive not specified for selected OS!");
+		UiMessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
@@ -197,12 +212,19 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	// Check for validity
 	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
-		MessageBox("Invalid boot sector magic (0xaa55)");
+		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;
 	}
 
-	clrscr();
-	showcursor();
-	stop_floppy();
+	VideoClearScreen();
+	VideoShowTextCursor();
+	// Don't stop the floppy drive motor when we
+	// are just booting a bootsector, or drive, or partition.
+	// If we were to stop the floppy motor then
+	// the BIOS wouldn't be informed and if the
+	// next read is to a floppy then the BIOS will
+	// still think the motor is on and this will
+	// result in a read error.
+	//StopFloppyMotor();
 	ChainLoadBiosBootSectorCode();
 }
