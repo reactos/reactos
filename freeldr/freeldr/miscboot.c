@@ -24,7 +24,7 @@
 #include "rtl.h"
 #include "fs.h"
 #include "ui.h"
-#include "parseini.h"
+#include "inifile.h"
 #include "disk.h"
 
 VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
@@ -40,14 +40,14 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	ShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
-	if (!OpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
 		MessageBox(SettingName);
 		return;
 	}
 
-	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -56,12 +56,12 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	BootDrive = atoi(SettingValue);
 
 	BootPartition = 0;
-	if (ReadSectionSettingByName(SectionId, "BootPartition", SettingValue, 80))
+	if (IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
 	{
 		BootPartition = atoi(SettingValue);
 	}
 
-	if (!ReadSectionSettingByName(SectionId, "BootSectorFile", FileName, 260))
+	if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, 260))
 	{
 		MessageBox("Boot sector file not specified for selected OS!");
 		return;
@@ -112,7 +112,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	ShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
-	if (!OpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
 		MessageBox(SettingName);
@@ -120,7 +120,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	}
 
 	// Read the boot drive
-	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -129,7 +129,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	BootDrive = atoi(SettingValue);
 
 	// Read the boot partition
-	if (!ReadSectionSettingByName(SectionId, "BootPartition", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
 	{
 		MessageBox("Boot partition not specified for selected OS!");
 		return;
@@ -173,14 +173,14 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	ShowMessageBoxesInSection(OperatingSystemName);
 
 	// Try to open the operating system section in the .ini file
-	if (!OpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
 		MessageBox(SettingName);
 		return;
 	}
 
-	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;

@@ -24,10 +24,10 @@ include rules.mk
 #	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
 #	mem.o memory.o debug.o parseini.o registry.o import.o
 #ASM_OBJS = asmcode.o mb.o boot.o mem.o
-OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o parseini.o oslist.o
-LIBS = arch rtl fs ui reactos comm disk mm cache
+OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o oslist.o
+LIBS = arch rtl fs ui reactos comm disk mm cache inifile
 LIB_FILES = arch/arch.a rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a
-LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a
+LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a inifile/inifile.a
 
 .PHONY : clean
 
@@ -67,9 +67,6 @@ multiboot.o:	multiboot.c freeldr.h rtl.h fs.h multiboot.h ui.h
 debug.o:	debug.c debug.h
 	$(CC) $(FLAGS) -o debug.o -c debug.c
 
-parseini.o:	parseini.c parseini.h
-	$(CC) $(FLAGS) -o parseini.o -c parseini.c
-
 oslist.o:	oslist.c oslist.h
 	$(CC) $(FLAGS) -o oslist.o -c oslist.c
 
@@ -103,6 +100,9 @@ mm:
 cache:
 	$(MAKE) -C cache
 
+inifile:
+	$(MAKE) -C inifile
+
 .PHONY : $(LIBS)
 
 clean:
@@ -118,3 +118,4 @@ clean:
 	$(MAKE) -C fs clean
 	$(MAKE) -C rtl clean
 	$(MAKE) -C cache clean
+	$(MAKE) -C inifile clean

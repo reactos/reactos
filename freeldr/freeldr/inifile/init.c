@@ -19,18 +19,18 @@
 
 #include <freeldr.h>
 #include "ini.h"
-#include <ui.h>
 #include <fs.h>
 #include <rtl.h>
 #include <mm.h>
 #include <debug.h>
 
 
-BOOL InitializeIniFile(VOID)
+BOOL IniFileInitialize(VOID)
 {
 	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
 	PUCHAR	FreeLoaderIniFileData;
 	ULONG	FreeLoaderIniFileSize;
+	BOOL	Success;
 
 	// Open the boot drive for file access
 	if (!OpenDiskDrive(BootDrive, 0))
@@ -68,7 +68,11 @@ BOOL InitializeIniFile(VOID)
 	}
 
 	CloseFile(Freeldr_Ini);
+
+	// Parse the .ini file data
+	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
+
 	FreeMemory(FreeLoaderIniFileData);
 
-	return TRUE;
+	return Success;
 }

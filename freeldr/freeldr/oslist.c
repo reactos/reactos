@@ -18,7 +18,7 @@
  */
 	
 #include "freeldr.h"
-#include "parseini.h"
+#include "inifile.h"
 #include "oslist.h"
 #include "rtl.h"
 #include "mm.h"
@@ -40,13 +40,13 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	//
 	// Open the [FreeLoader] section
 	//
-	if (!OpenSection("FreeLoader", &SectionId))
+	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		MessageBox("Section [FreeLoader] not found in freeldr.ini.");
 		return FALSE;
 	}
 
-	SectionSettingCount = GetNumSectionItems(SectionId);
+	SectionSettingCount = IniGetNumSectionItems(SectionId);
 	OperatingSystemCount = CountOperatingSystems(SectionId);
 
 	//
@@ -63,7 +63,7 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	CurrentOperatingSystemIndex = 0;
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
 
 		if (stricmp(SettingName, "OS") == 0)
 		{
@@ -78,9 +78,9 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	//
 	for (Idx=0; Idx<OperatingSystemCount; Idx++)
 	{
-		if (OpenSection(OperatingSystemSectionNames[Idx], &OperatingSystemSectionId))
+		if (IniOpenSection(OperatingSystemSectionNames[Idx], &OperatingSystemSectionId))
 		{
-			if (ReadSectionSettingByName(OperatingSystemSectionId, "Name", SettingValue, 80))
+			if (IniReadSettingByName(OperatingSystemSectionId, "Name", SettingValue, 80))
 			{
 				//
 				// Remove any quotes around the string
@@ -115,14 +115,14 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	//
 	// Loop through and count the operating systems
 	//
-	SectionSettingCount = GetNumSectionItems(SectionId);
+	SectionSettingCount = IniGetNumSectionItems(SectionId);
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
-		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
 
 		if (stricmp(SettingName, "OS") == 0)
 		{
-			if (OpenSection(SettingValue, NULL))
+			if (IniOpenSection(SettingValue, NULL))
 			{
 				OperatingSystemCount++;
 			}

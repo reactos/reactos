@@ -26,7 +26,7 @@
 #include "miscboot.h"
 #include "linux.h"
 #include "mm.h"
-#include "parseini.h"
+#include "inifile.h"
 #include "debug.h"
 #include "oslist.h"
 #include "cache.h"
@@ -58,14 +58,14 @@ VOID BootMain(VOID)
 
 	InitMemoryManager();
 
-	if (!ParseIniFile())
+	if (!IniFileInitialize())
 	{
 		printf("Press any key to reboot.\n");
 		getch();
 		return;
 	}
 
-	if (!OpenSection("FreeLoader", &SectionId))
+	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		printf("Section [FreeLoader] not found in freeldr.ini.\n");
 		getch();
@@ -109,7 +109,7 @@ VOID BootMain(VOID)
 		}
 
 		// Try to open the operating system section in the .ini file
-		if (!OpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
+		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
 		{
 			sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
 			MessageBox(SettingName);
@@ -117,7 +117,7 @@ VOID BootMain(VOID)
 		}
 
 		// Try to read the boot type
-		if (!ReadSectionSettingByName(SectionId, "BootType", SettingValue, 80))
+		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, 80))
 		{
 			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
 			MessageBox(SettingName);
@@ -160,12 +160,12 @@ ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSys
 	ULONG	DefaultOS = 0;
 	ULONG	Idx;
 
-	if (!OpenSection("FreeLoader", &SectionId))
+	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		return 0;
 	}
 
-	if (ReadSectionSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
+	if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
 	{
 		for (Idx=0; Idx<OperatingSystemCount; Idx++)
 		{
@@ -186,12 +186,12 @@ LONG GetTimeOut(VOID)
 	ULONG	TimeOut;
 	ULONG	SectionId;
 
-	if (!OpenSection("FreeLoader", &SectionId))
+	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		return -1;
 	}
 
-	if (ReadSectionSettingByName(SectionId, "TimeOut", TimeOutText, 20))
+	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, 20))
 	{
 		TimeOut = atoi(TimeOutText);
 	}

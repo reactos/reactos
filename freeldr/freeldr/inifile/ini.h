@@ -52,4 +52,21 @@ typedef struct
 
 } INI_SECTION, *PINI_SECTION;
 
+extern	PINI_SECTION		IniFileSectionListHead;
+extern	ULONG				IniFileSectionListCount;
+
+BOOL	IniParseFile(PUCHAR IniFileData, ULONG IniFileSize);
+ULONG	IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
+ULONG	IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
+BOOL	IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength);
+BOOL	IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength);
+BOOL	IniIsSectionName(PUCHAR LineOfText, ULONG TextLength);
+ULONG	IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength);
+VOID	IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG LineLength);
+BOOL	IniIsSetting(PUCHAR LineOfText, ULONG TextLength);
+ULONG	IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength);
+ULONG	IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength);
+VOID	IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG LineLength);
+VOID	IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, ULONG LineLength);
+
 #endif // defined __INI_H

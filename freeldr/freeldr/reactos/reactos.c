@@ -26,7 +26,7 @@
 #include <ui.h>
 #include <multiboot.h>
 #include <mm.h>
-#include <parseini.h>
+#include <inifile.h>
 
 #include "registry.h"
 #include "hwdetect.h"
@@ -384,7 +384,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	// Open the operating system section
 	// specified in the .ini file
 	//
-	if (!OpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(OperatingSystemName, &SectionId))
 	{
 		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
 		MessageBox(MsgBuffer);
@@ -421,7 +421,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Make sure the system path is set in the .ini file
 	 */
-	if (!ReadSectionSettingByName(SectionId, "SystemPath", value, 1024))
+	if (!IniReadSettingByName(SectionId, "SystemPath", value, 1024))
 	{
 		MessageBox("System path not specified for selected operating system.");
 		return;
@@ -447,7 +447,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	if (ReadSectionSettingByName(SectionId, "Options", value, 1024))
+	if (IniReadSettingByName(SectionId, "Options", value, 1024))
 	{
 		strcat(multiboot_kernel_cmdline, " ");
 		strcat(multiboot_kernel_cmdline, value);
@@ -481,7 +481,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Find the kernel image name
 	 * and try to load the kernel off the disk
 	 */
-	if(ReadSectionSettingByName(SectionId, "Kernel", value, 1024))
+	if(IniReadSettingByName(SectionId, "Kernel", value, 1024))
 	{
 		/*
 		 * Set the name and
@@ -512,7 +512,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Find the HAL image name
 	 * and try to load the kernel off the disk
 	 */
-	if(ReadSectionSettingByName(SectionId, "Hal", value, 1024))
+	if(IniReadSettingByName(SectionId, "Hal", value, 1024))
 	{
 		/*
 		 * Set the name and
@@ -543,7 +543,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Find the System hive image name
 	 * and try to load it off the disk
 	 */
-	if(ReadSectionSettingByName(SectionId, "SystemHive", value, 1024))
+	if(IniReadSettingByName(SectionId, "SystemHive", value, 1024))
 	{
 		/*
 		 * Set the name and

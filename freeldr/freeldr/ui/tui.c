@@ -22,7 +22,7 @@
 #include <ui.h>
 #include <mm.h>
 #include <debug.h>
-#include <parseini.h>
+#include <inifile.h>
 
 ULONG	nScreenWidth = 80;		// Screen Width
 ULONG	nScreenHeight = 25;		// Screen Height
@@ -64,65 +64,65 @@ BOOL InitUserInterface(VOID)
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
 
-	if (OpenSection("Display", &SectionId))
+	if (IniOpenSection("Display", &SectionId))
 	{
-		if (ReadSectionSettingByName(SectionId, "TitleText", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleText", SettingText, 260))
 		{
 			strcpy(szTitleBoxTitleText, SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "StatusBarColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, 260))
 		{
 			cStatusBarBgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "StatusBarTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "StatusBarTextColor", SettingText, 260))
 		{
 			cStatusBarFgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "BackdropTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropTextColor", SettingText, 260))
 		{
 			cBackdropFgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "BackdropColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropColor", SettingText, 260))
 		{
 			cBackdropBgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "BackdropFillStyle", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "BackdropFillStyle", SettingText, 260))
 		{
 			cBackdropFillStyle = TextToFillStyle(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "TitleBoxTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleBoxTextColor", SettingText, 260))
 		{
 			cTitleBoxFgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "TitleBoxColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TitleBoxColor", SettingText, 260))
 		{
 			cTitleBoxBgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "MessageBoxTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MessageBoxTextColor", SettingText, 260))
 		{
 			cMessageBoxFgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "MessageBoxColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MessageBoxColor", SettingText, 260))
 		{
 			cMessageBoxBgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "MenuTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MenuTextColor", SettingText, 260))
 		{
 			cMenuFgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "MenuColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "MenuColor", SettingText, 260))
 		{
 			cMenuBgColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "TextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "TextColor", SettingText, 260))
 		{
 			cTextColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "SelectedTextColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "SelectedTextColor", SettingText, 260))
 		{
 			cSelectedTextColor = TextToColor(SettingText);
 		}
-		if (ReadSectionSettingByName(SectionId, "SelectedColor", SettingText, 260))
+		if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, 260))
 		{
 			cSelectedTextBgColor = TextToColor(SettingText);
 		}
@@ -724,7 +724,7 @@ void ShowMessageBoxesInSection(PUCHAR SectionName)
 	UCHAR	SettingValue[80];
 	ULONG	SectionId;
 
-	if (!OpenSection(SectionName, &SectionId))
+	if (!IniOpenSection(SectionName, &SectionId))
 	{
 		sprintf(SettingName, "Section %s not found in freeldr.ini.\n", SectionName);
 		MessageBox(SettingName);
@@ -734,9 +734,9 @@ void ShowMessageBoxesInSection(PUCHAR SectionName)
 	//
 	// Find all the message box settings and run them
 	//
-	for (Idx=0; Idx<GetNumSectionItems(SectionId); Idx++)
+	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
 	{
-		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
 		
 		if (stricmp(SettingName, "MessageBox") == 0)
 		{

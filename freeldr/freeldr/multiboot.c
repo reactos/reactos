@@ -24,7 +24,7 @@
 #include "fs.h"
 #include "multiboot.h"
 #include "ui.h"
-#include "parseini.h"
+#include "inifile.h"
 
 unsigned long				next_module_load_base = 0;
 module_t*	pOpenModule = NULL;
@@ -200,9 +200,9 @@ int GetBootPartition(char *OperatingSystemName)
 	char	value[1024];
 	ULONG	SectionId;
 
-	if (OpenSection(OperatingSystemName, &SectionId))
+	if (IniOpenSection(OperatingSystemName, &SectionId))
 	{
-		if (ReadSectionSettingByName(SectionId, "BootPartition", value, 1024))
+		if (IniReadSettingByName(SectionId, "BootPartition", value, 1024))
 		{
 			BootPartitionNumber = atoi(value);
 		}

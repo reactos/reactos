@@ -17,417 +17,114 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "parseini.h"
-#include "ui.h"
-#include "fs.h"
-#include "rtl.h"
-#include "mm.h"
-#include "debug.h"
+#include <freeldr.h>
+#include "ini.h"
+#include <ui.h>
+#include <rtl.h>
+#include <debug.h>
 
-PUCHAR	FreeLoaderIniFileData = NULL;
-ULONG	FreeLoaderIniFileSize = 0;
-
-BOOL ParseIniFile(VOID)
+BOOL IniOpenSection(PUCHAR SectionName, PULONG SectionId)
 {
-	//int		i;
-	//char	name[1024];
-	//char	value[1024];
-	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
+	PINI_SECTION	Section;
 
-	// Open the boot drive for file access
-	if (!OpenDiskDrive(BootDrive, 0))
+	DbgPrint((DPRINT_INIFILE, "IniOpenSection() SectionName = %s\n", SectionName));
+
+	// Loop through each section and find the one they want
+	Section = (PINI_SECTION)RtlListGetHead((PLIST_ITEM)IniFileSectionListHead);
+	while (Section != NULL)
 	{
-		printf("Error opening boot drive for file access.\n");
-		return FALSE;
-	}
-
-	// Try to open freeldr.ini or fail
-	Freeldr_Ini = OpenFile("freeldr.ini");
-	if (Freeldr_Ini == NULL)
-	{
-		printf("FREELDR.INI not found.\nYou need to re-install FreeLoader.\n");
-		return FALSE;
-	}
-
-	// Get the file size & allocate enough memory for it
-	FreeLoaderIniFileSize = GetFileSize(Freeldr_Ini);
-	FreeLoaderIniFileData = AllocateMemory(FreeLoaderIniFileSize);
-
-	// If we are out of memory then return FALSE
-	if (FreeLoaderIniFileData == NULL)
-	{
-		printf("Out of memory while loading FREELDR.INI.\n");
-		CloseFile(Freeldr_Ini);
-		return FALSE;
-	}
-
-	// Read freeldr.ini off the disk
-	ReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData);
-	CloseFile(Freeldr_Ini);
-
-	// Make sure the [FREELOADER] section exists
-	/*if (OpenSection("FREELOADER", NULL))
-	{
-		printf("Section [FREELOADER] not found in FREELDR.INI.\nYou need to re-install FreeLoader.\n");
-		return FALSE;
-	}
-
-	// Validate the settings in the [FREELOADER] section
-	for (i=1; i<=GetNumSectionItems("FREELOADER"); i++)
-	{
-		ReadSectionSettingByNumber("FREELOADER", i, name, value);
-		if (!IsValidSetting(name, value))
+		// Compare against the section name
+		if (stricmp(SectionName, Section->SectionName) == 0)
 		{
-			printf("Invalid setting in freeldr.ini.\nName: \"%s\", Value: \"%s\"\n", name, value);
-			printf("Press any key to continue.\n");
-			getch();
-		}
-		else
-			SetSetting(name, value);
-	}*/
-
-	return TRUE;
-}
-
-ULONG GetNextLineOfFileData(PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
-{
-	ULONG	Idx;
-
-	// Loop through grabbing chars until we hit the end of the
-	// file or we encounter a new line char
-	for (Idx=0; (CurrentOffset < FreeLoaderIniFileSize); CurrentOffset++)
-	{
-		// If we haven't exceeded our buffer size yet
-		// then store another char
-		if (Idx < (BufferSize - 1))
-		{
-			Buffer[Idx++] = FreeLoaderIniFileData[CurrentOffset];
+			// We found it
+			*SectionId = (ULONG)Section;
+			DbgPrint((DPRINT_INIFILE, "IniOpenSection() Found it! SectionId = 0x%x\n", SectionId));
+			return TRUE;
 		}
 
-		// Check for new line char
-		if (FreeLoaderIniFileData[CurrentOffset] == '\n')
-		{
-			CurrentOffset++;
-			break;
-		}
+		// Get the next section in the list
+		Section = (PINI_SECTION)RtlListGetNext((PLIST_ITEM)Section);
 	}
 
-	// Terminate the string
-	Buffer[Idx] = '\0';
-
-	// Get rid of newline & linefeed characters (if any)
-	if((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r'))
-		Buffer[strlen(Buffer)-1] = '\0';
-	if((Buffer[strlen(Buffer)-1] == '\n') || (Buffer[strlen(Buffer)-1] == '\r'))
-		Buffer[strlen(Buffer)-1] = '\0';
-
-	// Send back new offset
-	return CurrentOffset;
-}
-
-BOOL OpenSection(PUCHAR SectionName, PULONG SectionId)
-{
-	UCHAR	TempString[80];
-	UCHAR	RealSectionName[80];
-	ULONG	FileOffset;
-	BOOL	SectionFound = FALSE;
-
-	//
-	// Get the real section name
-	//
-	strcpy(RealSectionName, "[");
-	strcat(RealSectionName, SectionName);
-	strcat(RealSectionName, "]");
-
-	//
-	// Get to the beginning of the file
-	//
-	FileOffset = 0;
-
-	//
-	// Find the section
-	//
-	while (FileOffset < FreeLoaderIniFileSize)
-	{
-		//
-		// Read a line
-		//
-		FileOffset = GetNextLineOfFileData(TempString, 80, FileOffset);
-
-		//
-		// If it isn't a section header then continue on
-		//
-		if (TempString[0] != '[')
-			continue;
-
-		//
-		// Check and see if we found it
-		//
-		if (stricmp(TempString, RealSectionName) == 0)
-		{
-			SectionFound = TRUE;
-			break;
-		}
-	}
-
-	if (SectionId)
-	{
-		*SectionId = FileOffset;
-	}
-
-	return SectionFound;
-}
-
-ULONG GetNumSectionItems(ULONG SectionId)
-{
-	UCHAR	TempString[80];
-	ULONG	SectionItemCount = 0;
-
-	// Now count how many settings are in this section
-	while (SectionId < FreeLoaderIniFileSize)
-	{
-		// Read a line
-		SectionId = GetNextLineOfFileData(TempString, 80, SectionId);
-
-		// If we hit a new section then we're done
-		if (TempString[0] == '[')
-			break;
-
-		// Skip comments
-		if (TempString[0] == '#')
-			continue;
-
-		// Skip blank lines
-		if (!strlen(TempString))
-			continue;
-
-		SectionItemCount++;
-	}
-
-	return SectionItemCount;
-}
-
-BOOL ReadSectionSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize)
-{
-	UCHAR	TempString[1024];
-	ULONG	SectionItemCount = 0;
-	ULONG	Idx;
-	ULONG	FileOffset;
-
-	//
-	// Get to the beginning of the section
-	//
-	FileOffset = SectionId;
-
-	//
-	// Now find the setting we are looking for
-	//
-	do
-	{
-		// Read a line
-		FileOffset = GetNextLineOfFileData(TempString, 1024, FileOffset);
-
-		// Skip comments
-		if (TempString[0] == '#')
-			continue;
-
-		// Skip blank lines
-		if (!strlen(TempString))
-			continue;
-
-		// If we hit a new section then we're done
-		if (TempString[0] == '[')
-			break;
-
-		// Check and see if we found the setting
-		if (SectionItemCount == SettingNumber)
-		{
-			for (Idx=0; Idx<strlen(TempString); Idx++)
-			{
-				// Check and see if this character is the separator
-				if (TempString[Idx] == '=')
-				{
-					SettingName[Idx] = '\0';
-
-					strncpy(SettingValue, TempString + Idx + 1, ValueSize);
-
-					return TRUE;
-				}
-				else if (Idx < NameSize)
-				{
-					SettingName[Idx] = TempString[Idx];
-				}
-			}
-		}
-
-		// Increment setting number
-		SectionItemCount++;
-	}
-	while (FileOffset < FreeLoaderIniFileSize);
+	DbgPrint((DPRINT_INIFILE, "IniOpenSection() Section not found.\n"));
 
 	return FALSE;
 }
 
-BOOL ReadSectionSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize)
+ULONG IniGetNumSectionItems(ULONG SectionId)
 {
-	UCHAR	TempString[1024];
-	UCHAR	TempBuffer[80];
-	ULONG	Idx;
-	ULONG	FileOffset;
+	PINI_SECTION	Section = (PINI_SECTION)SectionId;
 
-	//
-	// Get to the beginning of the section
-	//
-	FileOffset = SectionId;
+	DbgPrint((DPRINT_INIFILE, "IniGetNumSectionItems() SectionId = 0x%x\n", SectionId));
+	DbgPrint((DPRINT_INIFILE, "IniGetNumSectionItems() Item count = %d\n", Section->SectionItemCount));
 
-	//
-	// Now find the setting we are looking for
-	//
-	while (FileOffset < FreeLoaderIniFileSize)
+	return Section->SectionItemCount;
+}
+
+BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize)
+{
+	PINI_SECTION		Section = (PINI_SECTION)SectionId;
+	PINI_SECTION_ITEM	SectionItem;
+	ULONG				RealSettingNumber = SettingNumber;
+
+	DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() SectionId = 0x%x\n", SectionId));
+
+	// Loop through each section item and find the one they want
+	SectionItem = (PINI_SECTION_ITEM)RtlListGetHead((PLIST_ITEM)Section->SectionItemList);
+	while (SectionItem != NULL)
 	{
-		// Read a line
-		FileOffset = GetNextLineOfFileData(TempString, 1024, FileOffset);
-
-		// Skip comments
-		if (TempString[0] == '#')
-			continue;
-
-		// Skip blank lines
-		if (!strlen(TempString))
-			continue;
-
-		// If we hit a new section then we're done
-		if (TempString[0] == '[')
-			break;
-
-		// Extract the setting name
-		for (Idx=0; Idx<strlen(TempString); Idx++)
+		// Check to see if this is the setting they want
+		if (SettingNumber == 0)
 		{
-			if (TempString[Idx] != '=')
-				TempBuffer[Idx] = TempString[Idx];
-			else
-			{
-				TempBuffer[Idx] = '\0';
-				break;
-			}
+			DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() Setting number %d found.\n", RealSettingNumber));
+			DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() Setting name = %s\n", SectionItem->ItemName));
+			DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() Setting value = %s\n", SectionItem->ItemValue));
+
+			strncpy(SettingName, SectionItem->ItemName, NameSize);
+			strncpy(SettingValue, SectionItem->ItemValue, ValueSize);
+
+			return TRUE;
 		}
 
-		// Check and see if we found the setting
-		if (stricmp(TempBuffer, SettingName) == 0)
-		{
-			for (Idx=0; Idx<strlen(TempString); Idx++)
-			{
-				// Check and see if this character is the separator
-				if (TempString[Idx] == '=')
-				{
-					strcpy(Buffer, TempString + Idx + 1);
+		// Nope, keep going
+		SettingNumber--;
 
-					return TRUE;
-				}
-			}
-		}
+		// Get the next section item in the list
+		SectionItem = (PINI_SECTION_ITEM)RtlListGetNext((PLIST_ITEM)SectionItem);
 	}
+
+	DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() Setting number %d not found.\n", RealSettingNumber));
 
 	return FALSE;
 }
 
-BOOL IsValidSetting(char *setting, char *value)
+BOOL IniReadSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize)
 {
-	if(stricmp(setting, "MessageBox") == 0)
-		return TRUE;
-	else if(stricmp(setting, "MessageLine") == 0)
-		return TRUE;
-	else if(stricmp(setting, "TitleText") == 0)
-		return TRUE;
-	else if(stricmp(setting, "StatusBarColor") == 0)
+	PINI_SECTION		Section = (PINI_SECTION)SectionId;
+	PINI_SECTION_ITEM	SectionItem;
+
+	DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() SectionId = 0x%x\n", SectionId));
+
+	// Loop through each section item and find the one they want
+	SectionItem = (PINI_SECTION_ITEM)RtlListGetHead((PLIST_ITEM)Section->SectionItemList);
+	while (SectionItem != NULL)
 	{
-		if(IsValidColor(value))
+		// Check to see if this is the setting they want
+		if (stricmp(SettingName, SectionItem->ItemName) == 0)
+		{
+			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' found.\n", SettingName));
+			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting value = %s\n", SectionItem->ItemValue));
+
+			strncpy(Buffer, SectionItem->ItemValue, BufferSize);
+
 			return TRUE;
+		}
+
+		// Get the next section item in the list
+		SectionItem = (PINI_SECTION_ITEM)RtlListGetNext((PLIST_ITEM)SectionItem);
 	}
-	else if(stricmp(setting, "StatusBarTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "BackdropTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "BackdropColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "BackdropFillStyle") == 0)
-	{
-		if(IsValidFillStyle(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "TitleBoxTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "TitleBoxColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "MessageBoxTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "MessageBoxColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "MenuTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "MenuColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "TextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "SelectedTextColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "SelectedColor") == 0)
-	{
-		if(IsValidColor(value))
-			return TRUE;
-	}
-	else if(stricmp(setting, "OS") == 0)
-		return TRUE;
-	else if(stricmp(setting, "TimeOut") == 0)
-		return TRUE;
-	/*else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;
-	else if(stricmp(setting, "") == 0)
-		return TRUE;*/
+
+	DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' not found.\n", SettingName));
 
 	return FALSE;
 }
