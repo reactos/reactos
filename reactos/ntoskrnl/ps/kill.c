@@ -473,6 +473,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     if (PsIsSystemThread(Thread)) {
     
         DPRINT1("Trying to Terminate a system thread!\n");
+        ObDereferenceObject(Thread);
         return STATUS_INVALID_PARAMETER;
     }
      
@@ -490,9 +491,11 @@ NtTerminateThread(IN HANDLE ThreadHandle,
          }
         
     } else {
+        ObDereferenceObject(Thread);
             
         /* Terminate him, he's ours */
         PspExitThread(ExitStatus);
+        /* We do never reach this point */        
     }
     
     /* Dereference the Thread and return */
