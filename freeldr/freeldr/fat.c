@@ -698,14 +698,14 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 		if (ThisFatEntOffset == (FatVolumeBootSector->BytesPerSector - 1))
 		{
-			if (!ReadMultipleLogicalSectors(ThisFatSecNum, 2, DISKREADBUFFER))
+			if (!ReadMultipleLogicalSectors(ThisFatSecNum, 2, (PVOID)DISKREADBUFFER))
 			{
 				return NULL;
 			}
 		}
 		else
 		{
-			if (!ReadLogicalSector(ThisFatSecNum, DISKREADBUFFER))
+			if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 			{
 				return NULL;
 			}
@@ -725,7 +725,7 @@ DWORD FatGetFatEntry(DWORD nCluster)
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!ReadLogicalSector(ThisFatSecNum, DISKREADBUFFER))
+		if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 		{
 			return NULL;
 		}
@@ -740,7 +740,7 @@ DWORD FatGetFatEntry(DWORD nCluster)
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!ReadLogicalSector(ThisFatSecNum, DISKREADBUFFER))
+		if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 		{
 			return NULL;
 		}
@@ -885,12 +885,12 @@ BOOL FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector));
 
-	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, DISKREADBUFFER))
+	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
 
-	memcpy(Buffer, DISKREADBUFFER, FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector);
+	memcpy(Buffer, (PVOID)DISKREADBUFFER, FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector);
 
 	return TRUE;
 }
@@ -917,12 +917,12 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 		//
 		// Read cluster into memory
 		//
-		if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, DISKREADBUFFER))
+		if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
 
-		memcpy(Buffer, DISKREADBUFFER, FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector);
+		memcpy(Buffer, (PVOID)DISKREADBUFFER, FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector);
 
 		//
 		// Decrement count of clusters left to read
@@ -965,12 +965,12 @@ BOOL FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Leng
 
 	ClusterStartSector = ((ClusterNumber - 2) * FatVolumeBootSector->SectorsPerCluster) + DataSectorStart;
 
-	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, DISKREADBUFFER))
+	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
 
-	memcpy(Buffer, DISKREADBUFFER + StartingOffset, Length);
+	memcpy(Buffer, (PVOID)(DISKREADBUFFER + StartingOffset), Length);
 
 	return TRUE;
 }
