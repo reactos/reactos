@@ -151,6 +151,11 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
 
 #endif // defined DEBUG
 
+        //
+	// Set the correct partition offset
+	//
+	FatVolumeBootSector->HiddenSectors = VolumeStartSector;
+
 	//
 	// Check the boot sector magic
 	//
