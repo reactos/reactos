@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.154 2003/05/15 11:05:20 ekohl Exp $
+/* $Id: main.c,v 1.155 2003/05/16 17:35:12 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -333,10 +333,10 @@ ExpInitializeExecutive(VOID)
 	  LastKernelAddress,
 	  (PADDRESS_RANGE)&KeMemoryMap,
 	  KeMemoryMapRangeCount);
-  
+
   /* Create default nls tables */
-  RtlpInitNlsTables();
-  
+  RtlpCreateDefaultNlsTables();
+
   /*
    * Initialize the kernel debugger
    */
@@ -426,10 +426,6 @@ ExpInitializeExecutive(VOID)
   CmInitializeRegistry();
   NtInit();
   MmInit3();
-
-  /* Create the nls section */
-  RtlpInitNlsSection();
-
   CcInit();
   KdInit2();
   FsRtlpInitFileLockingImplementation();
@@ -448,6 +444,7 @@ ExpInitializeExecutive(VOID)
        KeLoaderModules[i].ModStart,
        KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
     }
+
 
   /*  Pass 2: import system hive registry chunk  */
   SetupBoot = TRUE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.110 2003/05/14 10:52:46 ekohl Exp $
+/* $Id: section.c,v 1.111 2003/05/16 17:36:23 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3584,113 +3584,16 @@ MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 			OUT	PVOID	* MappedBase,
 			IN OUT	PULONG	ViewSize)
 {
-  PSECTION_OBJECT Section;
-  PMADDRESS_SPACE AddressSpace;
-  NTSTATUS Status;
-
-  DPRINT("MmMapViewInSystemSpace() called\n");
-
-  Section = (PSECTION_OBJECT)SectionObject;
-  AddressSpace = MmGetKernelAddressSpace();
-
-  MmLockSection(SectionObject);
-  MmLockAddressSpace(AddressSpace);
-
-  if ((*ViewSize) == 0)
-    {
-      (*ViewSize) = Section->MaximumSize.u.LowPart;
-    }
-  else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
-    {
-      (*ViewSize) = Section->MaximumSize.u.LowPart;
-    }
-
-  MmLockSectionSegment(Section->Segments);
-
-  Status = MmMapViewOfSegment(NULL,
-			      AddressSpace,
-			      Section,
-			      Section->Segments,
-			      MappedBase,
-			      *ViewSize,
-			      PAGE_READWRITE,
-			      0);
-
-  MmUnlockSectionSegment(Section->Segments);
-  MmUnlockAddressSpace(AddressSpace);
-  MmUnlockSection(Section);
-
-  return Status;
+  UNIMPLEMENTED;
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
 
 NTSTATUS STDCALL
 MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 {
-  PMEMORY_AREA MemoryArea;
-  PMADDRESS_SPACE AddressSpace;
-  PSECTION_OBJECT Section;
-  PMM_SECTION_SEGMENT Segment;
-  KIRQL oldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PMM_REGION CurrentRegion;
-  NTSTATUS Status;
-
-  DPRINT("MmUnmapViewInSystemSpace() called\n");
-
-  AddressSpace = MmGetKernelAddressSpace();
-
-  DPRINT("Opening memory area at base address %x\n",
-	 MappedBase);
-  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					 MappedBase);
-  if (MemoryArea == NULL)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  MemoryArea->DeleteInProgress = TRUE;
-
-  MmLockSection(MemoryArea->Data.SectionData.Section);
-  MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
-  Section = MemoryArea->Data.SectionData.Section;
-  Segment = MemoryArea->Data.SectionData.Segment;
-  KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-  RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
-  KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-
-  CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
-  while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
-    {
-      CurrentRegion =
-	CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
-      CurrentEntry = CurrentEntry->Flink;
-      ExFreePool(CurrentRegion);
-    }
-
-  if (MemoryArea->Data.SectionData.Section->AllocationAttributes & 
-      SEC_PHYSICALMEMORY)
-    {
-      Status = MmFreeMemoryArea(AddressSpace,
-				MappedBase,
-				0,
-				NULL,
-				NULL);
-    }
-  else
-    {
-      Status = MmFreeMemoryArea(AddressSpace,
-				MappedBase,
-				0,
-				MmFreeSectionPage,
-				MemoryArea);
-    }
-
-  MmUnlockSectionSegment(Segment);
-  MmUnlockSection(Section);
-  ObDereferenceObject(Section);
-
-  return(STATUS_SUCCESS);
+  UNIMPLEMENTED;
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.8 2003/05/15 11:03:21 ekohl Exp $
+/* $Id: nls.c,v 1.9 2003/05/16 17:34:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,10 +123,10 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
 
 
 VOID STDCALL
-RtlInitNlsTables(OUT PNLSTABLEINFO NlsTable,
-		 IN PUSHORT CaseTableBase,
+RtlInitNlsTables(IN PUSHORT AnsiTableBase,
 		 IN PUSHORT OemTableBase,
-		 IN PUSHORT AnsiTableBase)
+		 IN PUSHORT CaseTableBase,
+		 OUT PNLSTABLEINFO NlsTable)
 {
   UNIMPLEMENTED;
 }

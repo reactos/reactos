@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.6 2003/05/15 11:01:02 ekohl Exp $
+/* $Id: rtltypes.h,v 1.7 2003/05/16 17:33:51 ekohl Exp $
  * 
  */
 
@@ -160,7 +160,7 @@ typedef struct _CPTABLEINFO
 {
   USHORT  CodePage;
   USHORT  MaximumCharacterSize;  // SBCS = 1, DBCS = 2
-  USHORT  DefaultCharacter;
+  USHORT  DefaultChar;
   USHORT  UniDefaultChar;
   USHORT  TransDefaultChar;
   USHORT  TransUniDefaultChar;
@@ -179,6 +179,19 @@ typedef struct _NLSTABLEINFO
   PUSHORT UpperCaseTable;
   PUSHORT LowerCaseTable;
 } NLSTABLEINFO, *PNLSTABLEINFO;
+
+typedef struct _NLS_FILE_HEADER
+{
+  USHORT  HeaderSize;
+  USHORT  CodePage;
+  USHORT  MaximumCharacterSize;  // SBCS = 1, DBCS = 2
+  USHORT  DefaultChar;
+  USHORT  UniDefaultChar;
+  USHORT  TransDefaultChar;
+  USHORT  TransUniDefaultChar;
+  USHORT  DBCSCodePage;
+  UCHAR   LeadByte[MAXIMUM_LEADBYTES];
+} PACKED NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 
 
 typedef struct _RTL_GENERIC_TABLE

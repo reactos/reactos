@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.11 2003/05/15 11:07:07 ekohl Exp $
+/* $Id: nls.c,v 1.12 2003/05/16 17:38:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,13 +49,11 @@ PCHAR UnicodeToOemTable =NULL; /* size: 65536*sizeof(CHAR) */
 PWCHAR UnicodeUpcaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
 PWCHAR UnicodeLowercaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
 
-PSECTION_OBJECT NlsSection = NULL;
-
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-RtlpInitNlsTables(VOID)
+RtlpCreateDefaultNlsTables(VOID)
 {
   INT i;
   PCHAR pc;
@@ -143,81 +141,6 @@ RtlpInitNlsTables(VOID)
     UnicodeLowercaseTable[i] = (WCHAR)i - (L'A' - L'a');
 
   /* FIXME: initialize codepage info */
-
-}
-
-
-NTSTATUS
-RtlpInitNlsSection(VOID)
-{
-  HANDLE SectionHandle;
-  LARGE_INTEGER SectionSize;
-  NTSTATUS Status;
-
-  PUCHAR MappedBuffer;
-  ULONG Size;
-  ULONG ViewSize;
-
-  DPRINT1("RtlpInitNlsSection() called\n");
-
-  Size = 4096;
-
-  DPRINT("Nls section size: 0x%lx\n", Size);
-
-  /* Create the nls section */
-  SectionSize.QuadPart = (ULONGLONG)Size;
-  Status = NtCreateSection(&SectionHandle,
-			   SECTION_ALL_ACCESS,
-			   NULL,
-			   &SectionSize,
-			   PAGE_READWRITE,
-			   SEC_COMMIT,
-			   NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtCreateSection() failed (Status %lx)\n", Status);
-      KeBugCheck(0);
-      return(Status);
-    }
-
-  /* Get the pointer to the nls section object */
-  Status = ObReferenceObjectByHandle(SectionHandle,
-				     SECTION_ALL_ACCESS,
-				     MmSectionObjectType,
-				     KernelMode,
-				     (PVOID*)&NlsSection,
-				     NULL);
-  NtClose(SectionHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
-      KeBugCheck(0);
-      return(Status);
-    }
-
-  /* Map the nls section into system address space */
-  ViewSize = 4096;
-  Status = MmMapViewInSystemSpace(NlsSection,
-				  (PVOID*)&MappedBuffer,
-				  &ViewSize);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("MmMapViewInSystemSpace() failed (Status %lx)\n", Status);
-      KeBugCheck(0);
-      return(Status);
-    }
-
-  DPRINT1("BaseAddress %p\n", MappedBuffer);
-
-  strcpy(MappedBuffer, "This is a teststring!");
-
-  /* ... */
-
-
-
-  DPRINT1("RtlpInitNlsSection() done\n");
-
-  return(STATUS_SUCCESS);
 }
 
 
@@ -273,15 +196,62 @@ VOID STDCALL
 RtlInitCodePageTable(IN PUSHORT TableBase,
 		     OUT PCPTABLEINFO CodePageTable)
 {
-  UNIMPLEMENTED;
+  PNLS_FILE_HEADER NlsFileHeader;
+  PUSHORT Ptr;
+  USHORT Offset;
+
+  DPRINT1("RtlInitCodePageTable() called\n");
+
+  NlsFileHeader = (PNLS_FILE_HEADER)TableBase;
+
+  CodePageTable->CodePage = NlsFileHeader->CodePage;
+  CodePageTable->MaximumCharacterSize = NlsFileHeader->MaximumCharacterSize;
+  CodePageTable->DefaultChar = NlsFileHeader->DefaultChar;
+  CodePageTable->UniDefaultChar = NlsFileHeader->UniDefaultChar;
+  CodePageTable->TransDefaultChar = NlsFileHeader->TransDefaultChar;
+  CodePageTable->TransUniDefaultChar = NlsFileHeader->TransUniDefaultChar;
+
+  RtlCopyMemory(&CodePageTable->LeadByte,
+		&NlsFileHeader->LeadByte,
+		MAXIMUM_LEADBYTES);
+
+  /* Set Pointer to start of multi byte table */
+  Ptr = (PUSHORT)((ULONG_PTR)TableBase + 2 * NlsFileHeader->HeaderSize);
+
+  /* Get offset to the wide char table */
+  Offset = (USHORT)(*Ptr++) + NlsFileHeader->HeaderSize + 1;
+
+  /* Set pointer to the multi byte table */
+  CodePageTable->MultiByteTable = Ptr;
+
+  /* Skip ANSI and OEM table */
+  Ptr += 256;
+  if (*Ptr++)
+    Ptr += 256;
+
+  /* Set pointer to DBCS ranges */
+  CodePageTable->DBCSRanges = (PUSHORT)Ptr;
+
+  if (*Ptr > 0)
+    {
+      CodePageTable->DBCSCodePage = 1;
+      CodePageTable->DBCSOffsets = (PUSHORT)++Ptr;
+    }
+  else
+    {
+      CodePageTable->DBCSCodePage = 0;
+      CodePageTable->DBCSOffsets = 0;
+    }
+
+  CodePageTable->WideCharTable = (PVOID)((ULONG_PTR)TableBase + 2 * Offset);
 }
 
 
 VOID STDCALL
-RtlInitNlsTables(OUT PNLSTABLEINFO NlsTable,
-		 IN PUSHORT CaseTableBase,
+RtlInitNlsTables(IN PUSHORT AnsiTableBase,
 		 IN PUSHORT OemTableBase,
-		 IN PUSHORT AnsiTableBase)
+		 IN PUSHORT CaseTableBase,
+		 OUT PNLSTABLEINFO NlsTable)
 {
   UNIMPLEMENTED;
 }

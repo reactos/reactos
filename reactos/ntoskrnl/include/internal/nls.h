@@ -20,13 +20,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
 
-
-extern PSECTION_OBJECT NlsSection;
-
-
-VOID RtlpInitNlsTables(VOID);
-NTSTATUS RtlpInitNlsSection(VOID);
-
+VOID RtlpCreateDefaultNlsTables(VOID);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.8 2003/05/15 11:01:02 ekohl Exp $
+/* $Id: rtl.h,v 1.9 2003/05/16 17:33:51 ekohl Exp $
  * 
  */
 
@@ -1218,10 +1218,10 @@ RtlInitCodePageTable (
 VOID
 STDCALL
 RtlInitNlsTables (
-	OUT	PNLSTABLEINFO	NlsTable,
-	IN	PUSHORT		CaseTableBase,
+	IN	PUSHORT		AnsiTableBase,
 	IN	PUSHORT		OemTableBase,
-	IN	PUSHORT		AnsiTableBase
+	IN	PUSHORT		CaseTableBase,
+	OUT	PNLSTABLEINFO	NlsTable
 	);
 
 VOID

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.98 2003/05/15 11:06:24 ekohl Exp $
+/* $Id: process.c,v 1.99 2003/05/16 17:37:17 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -28,7 +28,6 @@
 #include <roscfg.h>
 #include <internal/se.h>
 #include <internal/kd.h>
-#include <internal/nls.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -315,11 +314,8 @@ PsCreatePeb(HANDLE ProcessHandle,
 	    PEPROCESS Process,
 	    PVOID ImageBase)
 {
-  LARGE_INTEGER SectionOffset;
   ULONG PebSize;
   PPEB Peb;
-  PUCHAR BaseAddress;
-  ULONG ViewSize;
   NTSTATUS Status;
 
   /* Allocate the Process Environment Block (PEB) */
@@ -340,36 +336,9 @@ PsCreatePeb(HANDLE ProcessHandle,
 
   KeAttachProcess(Process);
 
-  /* Map the NLS section into the new process */
-  BaseAddress = NULL;
-  ViewSize = 0;
-  SectionOffset.QuadPart = 0LL;
-  Status = MmMapViewOfSection(NlsSection,
-			      Process,
-			      (PVOID*)&BaseAddress,
-			      0,
-			      0,
-			      &SectionOffset,
-			      &ViewSize,
-			      ViewShare,
-			      SEC_NO_CHANGE | MEM_TOP_DOWN,
-			      PAGE_READONLY);
-  if (!NT_SUCCESS(Status))
-    {
-	DPRINT1("MmMapViewOfSection() failed (Status %lx)\n", Status);
-	KeDetachProcess();
-	return(Status);
-    }
-
-  DPRINT("BaseAddress %p  ViewSize %lu\n", BaseAddress, ViewSize);
-
   /* Initialize the PEB */
   RtlZeroMemory(Peb, sizeof(PEB));
   Peb->ImageBaseAddress = ImageBase;
-
-  /* FIXME: Initialize more PEB variables */
-  Peb->AnsiCodePageData = BaseAddress;
-//  Peb->OemCodePageData =
 
 
   Process->Peb = Peb;
