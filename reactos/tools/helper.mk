@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.79 2004/09/12 10:22:31 navaraf Exp $
+# $Id: helper.mk,v 1.80 2004/09/16 10:25:17 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -41,7 +41,6 @@
 #   $TARGET_PATH       = Relative path for *.def, *.edf, and *.rc (optional)
 #   $TARGET_BASE       = Default base address (optional)
 #   $TARGET_ENTRY      = Entry point (optional)
-#   $TARGET_DEFONLY    = Use .def instead of .edf extension (no,yes) (optional)
 #   $TARGET_NORC       = Do not include standard resource file (no,yes) (optional)
 #   $TARGET_LIBPATH    = Destination path for static libraries (optional)
 #   $TARGET_IMPLIBPATH = Destination path for import libraries (optional)
@@ -442,8 +441,6 @@ ifeq ($(TARGET_DEFNAME),)
 else
   MK_DEFBASENAME := $(TARGET_DEFNAME)
 endif
-  MK_KILLAT := --kill-at
-  TARGET_DEFONLY := yes
   MK_RC_BINARIES = $(TARGET_RC_BINARIES)
 endif
 
@@ -474,8 +471,6 @@ ifeq ($(TARGET_DEFNAME),)
 else
   MK_DEFBASENAME := $(TARGET_DEFNAME)
 endif
-  MK_KILLAT := --kill-at
-  TARGET_DEFONLY := yes
   MK_RC_BINARIES = $(TARGET_RC_BINARIES)
 endif
 
@@ -539,12 +534,6 @@ endif
 endif
 
 MK_DEFNAME := $(TARGET_PATH)/$(MK_DEFBASENAME).def
-ifeq ($(TARGET_DEFONLY),yes)
-  MK_EDFNAME := $(MK_DEFNAME)
-else
-  MK_EDFNAME := $(TARGET_PATH)/$(MK_DEFBASENAME).edf
-endif
-
 
 ifeq ($(MK_MODE),user)
   ifeq ($(MK_EXETYPE),dll)
@@ -664,7 +653,7 @@ all: $(REGTEST_TARGETS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
 ifeq ($(MK_IMPLIB),yes)
-  MK_EXTRACMD := --def $(MK_EDFNAME)
+  MK_EXTRACMD := --def $(MK_DEFNAME)
 else
   MK_EXTRACMD :=
 endif
@@ -674,7 +663,7 @@ ifeq ($(MK_MODE),user)
 
 ifeq ($(MK_EXETYPE),dll)
   TARGET_LFLAGS += -mdll -Wl,--image-base,$(TARGET_BASE)
-  MK_EXTRADEP := $(MK_EDFNAME)
+  MK_EXTRADEP := $(MK_DEFNAME)
   MK_EXTRACMD2 := -Wl,temp.exp
 else
   MK_EXTRADEP :=
@@ -705,7 +694,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
+		--output-exp temp.exp --kill-at $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -747,7 +736,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
+		--output-exp temp.exp --kill-at $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -769,8 +758,7 @@ endif # KM_MODE
 ifeq ($(MK_MODE),kernel)
 
 ifeq ($(MK_IMPLIB),yes)
-  MK_EXTRACMD := --def $(MK_EDFNAME)
-  MK_EXTRADEP := $(MK_EDFNAME)
+  MK_EXTRACMD := --def $(MK_DEFNAME)
 else
   MK_EXTRACMD :=
   MK_EXTRADEP :=
@@ -786,7 +774,7 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_EXTRACMD) --kill-at
 	- $(RM) base.tmp
 	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
@@ -820,7 +808,7 @@ endif
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_EXTRACMD) --kill-at
 	- $(RM) base.tmp
 	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \

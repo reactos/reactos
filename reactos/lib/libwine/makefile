@@ -1,8 +1,6 @@
-# $Id: makefile,v 1.2 2004/01/10 00:39:52 sedwards Exp $
+# $Id: makefile,v 1.3 2004/09/16 10:25:15 gvg Exp $
 
 PATH_TO_TOP = ../..
-
-TARGET_DEFONLY = yes
 
 TARGET_TYPE = library
 

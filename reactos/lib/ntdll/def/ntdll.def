@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.129 2004/09/13 20:25:25 weiden Exp $
+; $Id: ntdll.def,v 1.130 2004/09/16 10:25:15 gvg Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -32,10 +32,10 @@ DbgUiIssueRemoteBreakin@4
 DbgUiRemoteBreakin@0
 DbgUiWaitStateChange@8
 DbgUserBreakPoint@0
-KiRaiseUserExceptionDispatcher
-KiUserApcDispatcher
-KiUserCallbackDispatcher
-KiUserExceptionDispatcher
+KiRaiseUserExceptionDispatcher@0
+KiUserApcDispatcher@20
+KiUserCallbackDispatcher@12
+KiUserExceptionDispatcher@8
 LdrAccessResource@16
 LdrDisableThreadCalloutsForDll@4
 ;LdrEnumResources@20
@@ -97,7 +97,7 @@ NtCreateThread@32
 NtCreateTimer@16
 NtCreateToken@52
 NtCreateWaitablePort@20
-_NtCurrentTeb@0
+NtCurrentTeb=_NtCurrentTeb@0
 NtDelayExecution@8
 NtDeleteAtom@4
 NtDeleteFile@4
@@ -488,6 +488,7 @@ RtlInitializeResource@4
 ;RtlInitializeRXact
 RtlInitializeSid@12
 ;RtlInsertElementGenericTable
+RtlInt64ToUnicodeString@16
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
 RtlInvertRangeList@8
@@ -572,6 +573,7 @@ RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
 RtlRaiseStatus@4
 RtlRandom@4
+RtlRandomEx=RtlRandom@4
 RtlReAllocateHeap@16
 ;RtlRealPredecessor
 ;RtlRealSuccessor

@@ -22,4 +22,8 @@ DevicePropertiesExW@20
 DeviceProblemWizard_RunDLLA@16
 DeviceProblemWizard_RunDLLW@16
 
+; Export these functions only for the sake of compatibility, they're obviously typos
+DeviceProblenWizard_RunDLLA@16=DeviceProblemWizard_RunDLLA@16
+DeviceProblenWizard_RunDLLW@16=DeviceProblemWizard_RunDLLW@16
+
 ; EOF

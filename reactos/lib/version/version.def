@@ -1,4 +1,4 @@
-; $Id: version.def,v 1.2 1999/10/26 19:47:06 ea Exp $
+; $Id: version.def,v 1.3 2004/09/16 10:25:16 gvg Exp $
 ; ReactOS Operating System
 ;
 LIBRARY version.dll
@@ -11,8 +11,8 @@ VerFindFileA@32
 VerFindFileW@32
 VerInstallFileA@32
 VerInstallFileW@32
-VerLanguageNameA@12
-VerLanguageNameW@12
+VerLanguageNameA@12=KERNEL32.VerLanguageNameA
+VerLanguageNameW@12=KERNEL32.VerLanguageNameW
 VerQueryValueA@16
 VerQueryValueIndexA@24
 VerQueryValueIndexW@24

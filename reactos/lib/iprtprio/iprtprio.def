@@ -3,7 +3,7 @@
 LIBRARY iprtprio.dll
 
 EXPORTS
-ComputeRouteMetric @1
-GetPriorityInfo @2
-SetPriorityInfo @3
+ComputeRouteMetric@16 @1
+GetPriorityInfo@4 @2
+SetPriorityInfo@4 @3
 ; EOF

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.189 2004/08/14 00:47:33 ion Exp $
+; $Id: ntoskrnl.def,v 1.190 2004/09/16 10:25:17 gvg Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -71,7 +71,7 @@ ExAcquireResourceSharedLite@8
 @ExAcquireRundownProtectionEx@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
-@ExiAllocateFromPagedLookasideList@4
+@ExAllocateFromPagedLookasideList@4=@ExiAllocateFromPagedLookasideList@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag@12
@@ -90,7 +90,7 @@ ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
 ExFreePoolWithTag@8
-ExiFreeToPagedLookasideList@8
+ExFreeToPagedLookasideList@8=ExiFreeToPagedLookasideList@8
 ExGetCurrentProcessorCounts@12
 ExGetCurrentProcessorCpuUsage@4
 ExGetExclusiveWaiterCount@4
@@ -242,7 +242,7 @@ FsRtlIsTotalDeviceFailure@4
 FsRtlLegalAnsiCharacterArray DATA
 FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
-FsRtlLookupLastLargeMcbEntryAndIndex@16
+FsRtlLookupLastLargeMcbEntryAndInde@16=FsRtlLookupLastLargeMcbEntryAndIndex@16
 FsRtlLookupLastMcbEntry@12
 FsRtlLookupMcbEntry@20
 FsRtlLookupPerFileObjectContext@12
@@ -291,7 +291,7 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 HalDispatchTable DATA
 HalPrivateDispatchTable DATA
-@xHalExamineMBR@16
+@HalExamineMBR=@xHalExamineMBR@16
 InbvAcquireDisplayOwnership@0
 InbvCheckDisplayOwnership@0
 InbvDisplayString@4
@@ -371,7 +371,7 @@ IoEnqueueIrp@4
 IoEnumerateDeviceObjectList@16
 IoFastQueryNetworkAttributes@20
 IoFileObjectType DATA
-IoForwardIrpSynchronously@8
+IoForwardAndCatchIrp@8=IoForwardIrpSynchronously@8
 IoForwardIrpSynchronously@8
 IoFreeController@4
 IoFreeErrorLogEntry@4
@@ -722,7 +722,7 @@ MmIsRecursiveIoFault@0
 MmIsThisAnNtAsSystem@0
 MmIsVerifierEnabled@4
 MmLockPagableDataSection@4
-MmLockPagableDataSection@4
+MmLockPagableImageSection@4=MmLockPagableDataSection@4
 MmLockPagableSectionByHandle@4
 MmMapIoSpace@16
 MmMapLockedPages@8
@@ -835,10 +835,10 @@ NtW32Call@20
 NtWaitForSingleObject@12
 NtWriteFile@36
 ObAssignSecurity@16
-ObCheckCreateObjectAccess@28
-ObCheckObjectAccess@20
+;ObCheckCreateObjectAccess@28
+;ObCheckObjectAccess@20
 ObCreateObject@36
-ObFindHandleForObject@20
+;ObFindHandleForObject@20
 ObGetObjectPointerCount@4
 ObGetObjectSecurity@12
 ObInsertObject@24
@@ -854,7 +854,7 @@ ObReferenceObjectByName@32
 ObReferenceObjectByPointer@16
 ObReleaseObjectSecurity@8
 ObDereferenceObject@4
-ObSetSecurityDescriptorInfo@24
+;ObSetSecurityDescriptorInfo@24
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix
@@ -872,13 +872,13 @@ ProbeForRead@12
 ProbeForWrite@12
 PsAssignImpersonationToken@8
 PsChargePoolQuota@12
-PsDereferenceImpersonationToken@4
+PsChargeProcessNonPagedPoolQuota@4=PsDereferenceImpersonationToken@4
 PsChargeProcessPagedPoolQuota@8
 PsChargeProcessPoolQuota@12
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
 PsCreateWin32Process@4
-PsDereferencePrimaryToken@4
+PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@24
@@ -1225,7 +1225,7 @@ RtlUpperString@8
 RtlValidRelativeSecurityDescriptor@12
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
-RtlVerifyVersionInfo@16
+;RtlVerifyVersionInfo@16
 RtlVolumeDeviceToDosName@8
 RtlWalkFrameChain@12
 RtlWriteRegistryValue@24

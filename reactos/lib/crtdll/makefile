@@ -1,10 +1,8 @@
-# $Id: makefile,v 1.66 2004/08/15 17:34:25 chorns Exp $
+# $Id: makefile,v 1.67 2004/09/16 10:25:12 gvg Exp $
 
 PATH_TO_TOP = ../..
 
 PATH_TO_MSVCRT = ../msvcrt
-
-TARGET_DEFONLY = yes
 
 TARGET_TYPE = dynlink
 

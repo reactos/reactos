@@ -17,14 +17,14 @@ BeginDeferWindowPos@4
 BeginPaint@8
 BlockInput@4
 BringWindowToTop@4
-BroadcastSystemMessage@20
+BroadcastSystemMessage=BroadcastSystemMessageA@20
 BroadcastSystemMessageA@20
 BroadcastSystemMessageExA@24
 BroadcastSystemMessageExW@24
 BroadcastSystemMessageW@20
 ;BuildReasonArray
 ;CalcMenuBar
-CallMsgFilter@8
+CallMsgFilter=CallMsgFilterA@8
 CallMsgFilterA@8
 CallMsgFilterW@8
 CallNextHookEx@16
@@ -194,7 +194,7 @@ DrawTextA@20
 DrawTextExA@24
 DrawTextExW@24
 DrawTextW@20
-EditWndProc@16
+EditWndProc=EditWndProcA@16
 EmptyClipboard@0
 EnableMenuItem@12
 EnableScrollBar@12
@@ -240,6 +240,7 @@ FreeDDElParam@8
 ;FullScreenControl
 GetAccCursorInfo@4
 GetActiveWindow@0
+GetAltTabInfo=GetAltTabInfoA@20
 GetAltTabInfoA@20
 GetAltTabInfoW@20
 GetAncestor@8
@@ -371,7 +372,7 @@ GetWindowDC@4
 GetWindowInfo@8
 GetWindowLongA@8
 GetWindowLongW@8
-GetWindowModuleFileName@12
+GetWindowModuleFileName=GetWindowModuleFileNameA@12
 GetWindowModuleFileNameA@12
 GetWindowModuleFileNameW@12
 GetWindowPlacement@8
@@ -419,7 +420,7 @@ IsCharUpperA@4
 IsCharUpperW@4
 IsChild@8
 IsClipboardFormatAvailable@4
-IsDialogMessage@8
+IsDialogMessage=IsDialogMessageA@8
 IsDialogMessageA@8
 IsDialogMessageW@8
 IsDlgButtonChecked@8
@@ -535,6 +536,7 @@ PtInRect@12
 ;QuerySendMessage
 ;QueryUserCounters
 RealChildWindowFromPoint@12
+RealGetWindowClass=RealGetWindowClassA@12
 RealGetWindowClassA@12
 RealGetWindowClassW@12
 ReasonCodeNeedsBugID@4
@@ -685,6 +687,7 @@ ToUnicodeEx@28
 TrackMouseEvent@4
 TrackPopupMenu@28
 TrackPopupMenuEx@24
+TranslateAccelerator=TranslateAcceleratorA@12
 TranslateAcceleratorA@12
 TranslateAcceleratorW@12
 TranslateMDISysAccel@8
@@ -707,7 +710,7 @@ UpdateLayeredWindow@36
 ;UpdatePerUserSystemParameters
 UpdateWindow@4
 ;User32InitializeImmEntryTable
-UserClientDllInitialize@12
+UserClientDllInitialize=DllMain@12
 UserHandleGrantAccess@12
 ;UserLpkPSMTextOut
 ;UserLpkTabbedTextOut
@@ -728,17 +731,15 @@ WINNLSGetIMEHotkey@4
 WaitForInputIdle@8
 WaitMessage@0
 ;Win32PoolAllocationStats
-WinHelpA
-WinHelpW
+WinHelpA@16
+WinHelpW@16
 WindowFromDC@4
 WindowFromPoint@8
-keybd_event
-mouse_event
+keybd_event@16
+mouse_event@20
 wsprintfA
 wsprintfW
 wvsprintfA@12
 wvsprintfW@12
-wvsnprintfA@16
-wvsnprintfW@16
 
 ; EOF

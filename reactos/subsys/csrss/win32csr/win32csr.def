@@ -1,8 +1,8 @@
-; $Id: win32csr.def,v 1.1 2003/12/02 11:38:46 gvg Exp $
+; $Id: win32csr.def,v 1.2 2004/09/16 10:25:17 gvg Exp $
 ;
 
 LIBRARY win32csr.dll
 
 EXPORTS
 
-Win32CsrInitialization
+Win32CsrInitialization@20

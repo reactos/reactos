@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.141 2004/09/07 08:20:06 hbirr Exp $
+# $Id: Makefile,v 1.142 2004/09/16 10:25:17 gvg Exp $
 #
 # ReactOS Operating System
 #
@@ -414,8 +414,7 @@ OBJECTS_RESOURCE = \
 
 # IMPORTS/EXPORTS
 IE_DATA = \
-	$(TARGETNAME).def \
-	$(TARGETNAME).edf
+	$(TARGETNAME).def
 
 $(OBJECTS_PATH):
 	mkdir $(OBJECTS_PATH)
@@ -589,7 +588,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).all.o $(IE_DATA) $(NTOSKRNL_LIBS)
 		--dllname $(TARGETNAME).exe \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGETNAME).edf \
+		--def $(TARGETNAME).def \
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
@@ -620,7 +619,7 @@ $(TARGETNAME).exe: $(TARGETNAME).all.o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
 		--dllname $(TARGETNAME).exe \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGETNAME).edf \
+		--def $(TARGETNAME).def \
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
@@ -654,7 +653,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(N
 		--dllname $(TARGETNAME).dbg \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGETNAME).edf \
+		--def $(TARGETNAME).def \
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \

@@ -1,6 +1,0 @@
-LIBRARY desk.cpl
-
-EXPORTS
-CPlApplet=CPlApplet@16
-
-; EOF

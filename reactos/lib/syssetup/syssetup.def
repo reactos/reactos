@@ -6,7 +6,7 @@ EXPORTS
 InitializeSetupActionLog@4
 InstallReactOS@4
 ;KeyboardClassInstaller
-;LogItem
+LogItem@8
 ;LogItem0
 ;LogItem1
 ;LogItem2
@@ -23,7 +23,7 @@ SetupChangeFontSize@8
 ;SetupInfObjectInstallActionW
 ;SetupSetLargeDialogFont
 ;TapeClassInstaller
-;TerminateSetupActionLog
+TerminateSetupActionLog@0
 ;UpgradePrinters
 ;ViewSetupActionLog
 ; EOF

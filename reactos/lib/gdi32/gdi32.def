@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.11 2003/10/28 19:30:08 gvg Exp $
+; $Id: gdi32.def,v 1.12 2004/09/16 10:25:14 gvg Exp $
 ;
 ; gdi32.def
 ;
@@ -217,22 +217,22 @@ GdiDllInitialize@12
 GdiDrawStream@12
 GdiEndDocEMF@4
 GdiEndPageEMF@8
-DdCreateDirectDrawObject@8
-DdQueryDirectDrawObject@44
-DdDeleteDirectDrawObject@4
-DdCreateSurfaceObject@8
-DdDeleteSurfaceObject@4
-DdResetVisrgn@8
-DdGetDC@8
-DdReleaseDC@4
-DdCreateDIBSection@24
-DdReenableDirectDrawObject@8
-DdAttachSurface@8
-DdUnattachSurface@8
-DdQueryDisplaySettingsUniqueness@0
-DdGetDxHandle@12
-DdSetGammaRamp@12
-DdSwapTextureHandles@12
+GdiEntry1@8=DdCreateDirectDrawObject@8
+GdiEntry2@44=DdQueryDirectDrawObject@44
+GdiEntry3@4=DdDeleteDirectDrawObject@4
+GdiEntry4@8=DdCreateSurfaceObject@8
+GdiEntry5@4=DdDeleteSurfaceObject@4
+GdiEntry6@8=DdResetVisrgn@8
+GdiEntry7@8=DdGetDC@8
+GdiEntry8@4=DdReleaseDC@4
+GdiEntry9@24=DdCreateDIBSection@24
+GdiEntry10@8=DdReenableDirectDrawObject@8
+GdiEntry11@8=DdAttachSurface@8
+GdiEntry12@8=DdUnattachSurface@8
+GdiEntry13@0=DdQueryDisplaySettingsUniqueness@0
+GdiEntry14@12=DdGetDxHandle@12
+GdiEntry15@12=DdSetGammaRamp@12
+GdiEntry16@12=DdSwapTextureHandles@12
 GdiFixUpHandle@4
 GdiFlush@0
 GdiFullscreenControl@20
@@ -335,7 +335,7 @@ GetFontResourceInfoW@16
 GetFontUnicodeRanges@8
 GetGlyphIndicesA@20
 GetGlyphIndicesW@20
-GetGlyphOutline@28
+GetGlyphOutline=GetGlyphOutlineA@28
 GetGlyphOutlineA@28
 GetGlyphOutlineW@28
 GetGlyphOutlineWow@28
@@ -343,7 +343,7 @@ GetGraphicsMode@4
 GetHFONT@4
 GetICMProfileA@12
 GetICMProfileW@12
-GetKerningPairs@12
+GetKerningPairs=GetKerningPairsA@12
 GetKerningPairsA@12
 GetKerningPairsW@12
 GetLayout@4

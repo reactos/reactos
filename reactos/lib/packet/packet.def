@@ -32,8 +32,3 @@ EXPORTS
 		PacketSetDumpName
 		PacketSetDumpLimits
 		PacketIsDumpEnded
-;PacketGetStatsEx
-;PacketIsDumpEnded
-;PacketSendPackets
-;PacketSetDumpLimits
-;PacketSetDumpName

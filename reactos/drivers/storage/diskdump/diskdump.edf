@@ -1,7 +1,0 @@
-; $Id: diskdump.edf,v 1.1 2003/08/27 21:28:08 dwelch Exp $
-;
-; diskdump.edf - export definition file for crash dump driver
-;
-LIBRARY DISKDUMP.SYS
-EXPORTS
-DiskDumpFunctions
