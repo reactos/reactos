@@ -106,9 +106,9 @@ void ClearMouse(ULONG Port)
 	unsigned int Restarts = 0, i;
 	for (i = 0; i < 60000; i++)
 	{
-    	unsigned Temp = READ_PORT_UCHAR((PUCHAR)Port);
-	    if (Temp != 0)
-    	{
+		unsigned Temp = READ_PORT_UCHAR((PUCHAR)Port);
+		if (Temp != 0)
+		{
 			Restarts++;
 			if (Restarts < 300000)
 				i = 0;
@@ -170,8 +170,8 @@ SerialMouseInterruptService(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 			if (DeviceExtension->PacketBufferPosition == 3)
 			{
 				/* Retrieve change in x and y from packet */
-    	        Input->LastX = (signed char)(PacketBuffer[1] | ((PacketBuffer[0] & 0x03) << 6));
-        	    Input->LastY = (signed char)(PacketBuffer[2] | ((PacketBuffer[0] & 0x0c) << 4));
+				Input->LastX = (signed char)(PacketBuffer[1] | ((PacketBuffer[0] & 0x03) << 6));
+				Input->LastY = (signed char)(PacketBuffer[2] | ((PacketBuffer[0] & 0x0c) << 4));
 	
 				/* Determine the current state of the buttons */
 				Input->RawButtons = (DeviceExtension->PreviousButtons & MOUSE_BUTTON_MIDDLE) |
@@ -300,8 +300,8 @@ SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 				*(PMOUSE_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer =
 					DeviceExtension->AttributesInformation;
 				Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
-                Status = STATUS_SUCCESS;				
-            } else {
+				Status = STATUS_SUCCESS;				
+			} else {
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
 			break;
@@ -354,86 +354,92 @@ SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		Irp->IoStatus.Status = Status;
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+	}
 
 	return Status;
 }
 
 VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
-   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-   ULONG Queue;
+	PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+	ULONG Queue;
 
-   Queue = DeviceExtension->ActiveQueue % 2;
-   InterlockedIncrement(&DeviceExtension->ActiveQueue);
-   (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
-			DeviceExtension->ClassInformation.DeviceObject,
-			DeviceExtension->MouseInputData[Queue],
-			NULL,
-			&DeviceExtension->InputDataCount[Queue]);
+	Queue = DeviceExtension->ActiveQueue % 2;
+	InterlockedIncrement(&DeviceExtension->ActiveQueue);
+	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
+		DeviceExtension->ClassInformation.DeviceObject,
+		DeviceExtension->MouseInputData[Queue],
+		NULL,
+		&DeviceExtension->InputDataCount[Queue]);
 
-   DeviceExtension->InputDataCount[Queue] = 0;
+	DeviceExtension->InputDataCount[Queue] = 0;
 }
 
-void InitializeSerialPort(ULONG Port, unsigned int LineControl)
+void InitializeSerialPort(ULONG Port)
 {
-	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);  /* set DLAB on   */
-	WRITE_PORT_UCHAR((PUCHAR)Port,     0x60);  /* speed LO byte */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* speed HI byte */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 3, LineControl);
-	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* set comm and DLAB to 0 */
+	ULONG LineControl;
+
+	/* Read old value from line control register */
+        LineControl = READ_PORT_UCHAR((PUCHAR)Port + 3);
+        /* NOT SURE WHAT IS THIS SUPPOSED TO DO! */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);
+	WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);
+        /* Set DLAB on */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);
+	/* Set serial port speed */
+	WRITE_PORT_UCHAR((PUCHAR)Port, 0x60);
+	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);
+        /* Set DLAB off and restore the old value of line control reg. */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 3, LineControl & ~0x80);
+
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);  /* DR int enable */
 	(void) READ_PORT_UCHAR((PUCHAR)Port + 5);  /* clear error bits */
+	KeStallExecutionProcessor(150000);         /* Wait > 100 ms */
 }
 
 ULONG DetectMicrosoftMouse(ULONG Port)
 {
+	/*
+	 * Detection method number two. CuteMouse (GPL DOS Mouse driver
+	 * cutemouse.sourceforge.net) assembler port to C by Logan_V8_TT
+	 */
+
 	CHAR Buffer[4];
-	ULONG i;
-	ULONG TimeOut = 250;
-	UCHAR LineControl;
-    
-	/* Save original control */ 
-	LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
+        ULONG i;
+	UCHAR LCR, MCR;
 
-	/* Inactivate RTS and set DTR */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
-	KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
+        /* Save original LCR/MCR */
+        LCR = READ_PORT_UCHAR((PUCHAR)Port + 3); /* LCR (line ctrl reg) */
+        MCR = READ_PORT_UCHAR((PUCHAR)Port + 4); /* MCR (modem ctrl reg) */
 
-	/* Clear buffer */
+        /* Reset UART */
+        WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0);  /* MCR: DTR/RTS/OUT2 off */
+        WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);  /* FCR: disable FIFO */
+        KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
+
+        /* Set communications parameters */
+        InitializeSerialPort(Port);
+
+	/* Enable DTR/RTS (OUT2 disabled) */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 3);
+
+	/* Discard serial buffer data */
 	while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
 		(void)READ_PORT_UCHAR((PUCHAR)Port);
+	KeStallExecutionProcessor(100000);      /* Wait */
 
-	/*
-	 * Send modem control with 'Data Terminal Ready' and 'Request To Send'
-	 * message. This enables mouse to identify.
-	 */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x03);
-
-	/* Wait 10 milliseconds for the mouse getting ready */
-	KeStallExecutionProcessor(10000);
-
-	/* Read first four bytes, which contains Microsoft Mouse signs */
+	/* Read the data */
 	for (i = 0; i < 4; i++)
-	{
-		while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
-		{
-			KeStallExecutionProcessor(1000);
-			--TimeOut;
-			if (TimeOut == 0)
-				return MOUSE_TYPE_NONE;
-		}
 		Buffer[i] = READ_PORT_UCHAR((PUCHAR)Port);
-	}
 
-        /* Restore control */
-        WRITE_PORT_UCHAR((PUCHAR)Port + 4, LineControl);
+	/* Restore LCR/MCR */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 3, LCR); /* LCR (line ctrl reg) */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, MCR); /* MCR (modem ctrl reg) */
 
-	/* Check that four bytes for signs */
 	for (i = 0; i < 4; ++i)
 	{
 		/* Sign for Microsoft Ballpoint */
-    		if (Buffer[i] == 'B')
+		if (Buffer[i] == 'B')
 		{
 			DbgPrint("Microsoft Ballpoint device detected");
 			DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET");
@@ -464,6 +470,7 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 	}
 
 	return MOUSE_TYPE_NONE;
+
 }
 
 PDEVICE_OBJECT
@@ -541,16 +548,23 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	ULONG MouseType;
 
 	/* Try to detect mouse on specified port */
-	InitializeSerialPort(Port, 2);
 	MouseType = DetectMicrosoftMouse(Port);
-
-	/* Enable interrupts */
-	WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
-	ClearMouse(Port);
 
 	/* No mouse, no need to continue */
 	if (MouseType == MOUSE_TYPE_NONE)
+	{
+		WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
+		InitializeSerialPort(Port);
 		return FALSE;
+	}
+
+	/* Enable interrupts */
+	WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
+	
+	ClearMouse(Port);
+
+        /* Enable RTS, DTR and OUT2 */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
 
 	/* Allocate new device */
 	DeviceObject = AllocatePointerDevice(DriverObject);
@@ -559,6 +573,7 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 		DbgPrint("Oops, couldn't creat device object.\n");
 		return FALSE;
 	}
+
 	DeviceExtension = DeviceObject->DeviceExtension;
 
 	/* Setup device extension structure */
