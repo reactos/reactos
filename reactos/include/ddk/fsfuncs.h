@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.3 2000/01/20 22:11:48 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.4 2000/02/24 23:27:52 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -25,6 +25,14 @@ STDCALL
 FsRtlAllocateResource (
 	VOID
 	);
+BOOLEAN
+STDCALL
+FsRtlAreNamesEqual (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	);
 DWORD
 STDCALL
 FsRtlBalanceReads (
@@ -33,31 +41,44 @@ FsRtlBalanceReads (
 BOOLEAN
 STDCALL
 FsRtlCopyRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	IN	ULONG			LockKey,
+	OUT	PVOID			Buffer,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	);
 BOOLEAN
 STDCALL
 FsRtlCopyWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	IN	ULONG			LockKey,
+	IN	PVOID			Buffer,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	);
 VOID
 STDCALL
 FsRtlDeregisterUncProvider (
 	DWORD	Unknown0
+	);
+VOID
+STDCALL
+FsRtlDissectName (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	);
+BOOLEAN
+STDCALL
+FsRtlDoesNameContainWildCards (
+	IN	PUNICODE_STRING	Name
 	);
 DWORD
 STDCALL
@@ -83,6 +104,8 @@ FsRtlGetNextMcbEntry (
 	DWORD	Unknown3,
 	DWORD	Unknown4
 	);
+#define FsRtlEnterFileSystem    KeEnterCriticalRegion
+#define FsRtlExitFileSystem     KeLeaveCriticalRegion
 VOID
 STDCALL
 FsRtlInitializeLargeMcb (
@@ -94,6 +117,14 @@ STDCALL
 FsRtlInitializeMcb (
 	DWORD	Unknown0,
 	DWORD	Unknown1
+	);
+BOOLEAN
+STDCALL
+FsRtlIsNameInExpression (
+	IN	PUNICODE_STRING	Expression,
+	IN	PUNICODE_STRING	Name,
+	IN	BOOLEAN		IgnoreCase,
+	IN	PWCHAR		UpcaseTable	OPTIONAL
 	);
 BOOLEAN
 STDCALL
