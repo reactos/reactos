@@ -1,4 +1,4 @@
-/* $Id: lzexpand_main.c,v 1.1 2003/08/28 19:34:10 gvg Exp $
+/* $Id: lzexpand_main.c,v 1.2 2004/01/23 21:16:03 ekohl Exp $
  *
  * LZ Decompression functions
  *
@@ -25,7 +25,7 @@
 //#include "config.h"
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>

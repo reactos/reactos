@@ -1,4 +1,4 @@
-/* $Id: fls.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
+/* $Id: fls.c,v 1.4 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -13,7 +13,7 @@
 
 #include <k32.h>
 
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /*
  * @unimplemented

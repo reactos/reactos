@@ -10,8 +10,6 @@
 #include <ddk/ntddbeep.h>
 #include <ddk/ntddser.h>
 #include <windows.h>
-#include <kernel32/proc.h>
-#include <kernel32/thread.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 #include <ntdll/dbg.h>
@@ -25,3 +23,5 @@
 #include <reactos/buildno.h>
 #include <rosrtl/thread.h>
 #include <rosrtl/string.h>
+
+#include "include/kernel32.h"

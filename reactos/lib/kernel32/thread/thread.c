@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.48 2003/12/30 05:10:32 hyperion Exp $
+/* $Id: thread.c,v 1.49 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,9 +16,8 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
-//static VOID ThreadAttachDlls (VOID);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -263,7 +262,7 @@ GetTeb(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SwitchToThread(VOID)
 {
   NTSTATUS errCode;
@@ -315,7 +314,7 @@ ExitThread(DWORD uExitCode)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetThreadTimes(HANDLE hThread,
 	       LPFILETIME lpCreationTime,
 	       LPFILETIME lpExitTime,
@@ -349,7 +348,7 @@ GetThreadTimes(HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetThreadContext(HANDLE hThread,
 		 LPCONTEXT lpContext)
 {
@@ -370,7 +369,7 @@ GetThreadContext(HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetThreadContext(HANDLE hThread,
 		 CONST CONTEXT *lpContext)
 {
@@ -391,7 +390,7 @@ SetThreadContext(HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetExitCodeThread(HANDLE hThread,
 		  LPDWORD lpExitCode)
 {
@@ -440,7 +439,7 @@ ResumeThread(HANDLE hThread)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 TerminateThread(HANDLE hThread,
 		DWORD dwExitCode)
 {
@@ -524,7 +523,7 @@ SetThreadAffinityMask(HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetThreadPriority(HANDLE hThread,
 		  int nPriority)
 {
@@ -574,7 +573,7 @@ GetThreadPriority(HANDLE hThread)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetThreadPriorityBoost(IN HANDLE hThread,
 		       OUT PBOOL pDisablePriorityBoost)
 {
@@ -593,7 +592,7 @@ GetThreadPriorityBoost(IN HANDLE hThread,
       return(FALSE);
     }
 
-  *pDisablePriorityBoost = !((WINBOOL)PriorityBoost);
+  *pDisablePriorityBoost = !((BOOL)PriorityBoost);
 
   return(TRUE);
 }
@@ -602,9 +601,9 @@ GetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetThreadPriorityBoost(IN HANDLE hThread,
-		       IN WINBOOL bDisablePriorityBoost)
+		       IN BOOL bDisablePriorityBoost)
 {
   ULONG PriorityBoost;
   NTSTATUS Status;
@@ -628,7 +627,7 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
 		       OUT LPLDT_ENTRY lpSelectorEntry)
@@ -641,7 +640,7 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetThreadIdealProcessor(HANDLE hThread,
 			DWORD dwIdealProcessor)
 {

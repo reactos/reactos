@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.9 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: sysinfo.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -6,7 +6,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 #define PV_NT351 0x00030033

@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.18 2004/01/23 17:16:26 ekohl Exp $
+/* $Id: cmdline.c,v 1.19 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 /* GLOBALS ******************************************************************/

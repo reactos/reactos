@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.7 2004/01/23 17:17:10 ekohl Exp $
+/* $Id: mutex.c,v 1.8 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,8 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
+
 
 /* FUNCTIONS *****************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.22 2004/01/23 17:13:36 ekohl Exp $
+/* $Id: section.c,v 1.23 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,7 +12,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /* FUNCTIONS *****************************************************************/
 

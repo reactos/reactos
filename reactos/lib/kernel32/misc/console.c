@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.72 2004/01/23 17:15:23 ekohl Exp $
+/* $Id: console.c,v 1.73 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,7 +17,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 #define _NOACHS(__X) (sizeof(__X) / sizeof((__X)[0]))
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);

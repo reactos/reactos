@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.15 2003/11/19 22:19:17 sedwards Exp $
+/* $Id: errormsg.c,v 1.16 2004/01/23 21:16:03 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -23,8 +23,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <ddk/ntddk.h>
-#include <kernel32/kernel32.h>
+#include <k32.h>
+
+#define NDEBUG
+#include "../include/debug.h"
 
 #define TRACE DPRINT
 #define FIXME DPRINT
@@ -45,8 +47,6 @@ inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
 
 /* INTERNAL */
 
-#include <stdio.h>
-#include <string.h>
 
 typedef struct tagMESSAGE_RESOURCE_ENTRY {
         WORD    Length;

@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.19 2004/01/21 18:57:21 navaraf Exp $
+/* $Id: global.c,v 1.20 2004/01/23 21:16:03 ekohl Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -13,7 +13,7 @@
 #include <time.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 #ifdef _GNUC_
 #define STRUCT_PACK __attribute__((packed))

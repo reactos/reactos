@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.58 2004/01/23 17:16:26 ekohl Exp $
+/* $Id: proc.c,v 1.59 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,7 +15,7 @@
 
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 /* GLOBALS *******************************************************************/

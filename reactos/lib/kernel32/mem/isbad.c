@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.9 2004/01/23 17:13:36 ekohl Exp $
+/* $Id: isbad.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
@@ -8,7 +8,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /* FIXME: Stubs. What is it for? */
 /*

@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.8 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: fiber.c,v 1.9 2004/01/23 21:16:04 ekohl Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -8,7 +8,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 struct _FIBER                                           /* Field offsets:  */
 {                                                       /* 32 bit   64 bit */

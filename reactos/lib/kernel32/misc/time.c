@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.25 2004/01/23 17:15:23 ekohl Exp $
+/* $Id: time.c,v 1.26 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,7 +15,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /* TYPES *********************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.34 2003/11/27 20:57:58 gdalsnes Exp $
+/* $Id: create.c,v 1.35 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,7 +18,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 /* FUNCTIONS ****************************************************************/

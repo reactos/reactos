@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.21 2004/01/23 17:15:23 ekohl Exp $
+/* $Id: error.c,v 1.22 2004/01/23 21:16:03 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -7,7 +7,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 /*

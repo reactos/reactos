@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.9 2004/01/23 16:37:11 ekohl Exp $
+/* $Id: mailslot.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
 

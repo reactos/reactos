@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.25 2004/01/23 17:13:36 ekohl Exp $
+/* $Id: heap.c,v 1.26 2004/01/23 21:16:03 ekohl Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -30,7 +30,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /*********************************************************************
 *                     HeapCreate -- KERNEL32                         *

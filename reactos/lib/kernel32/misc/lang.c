@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.10 2004/01/23 17:15:23 ekohl Exp $
+/* $Id: lang.c,v 1.11 2004/01/23 21:16:03 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -10,8 +10,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
-#include <string.h>
+#include "../include/debug.h"
 
 /* FIXME:  these are included in winnls.h, however including this file causes alot of 
            conflicting type errors. */

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.79 2004/01/06 13:47:01 mf Exp $
+/* $Id: create.c,v 1.80 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
 
@@ -789,14 +789,14 @@ GetFileName(LPCWSTR CurDir, LPCWSTR AppName, LPWSTR CmdLine, LPWSTR Buffer,
 /*
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 CreateProcessW
 (
  LPCWSTR lpApplicationName,
  LPWSTR lpCommandLine,
  LPSECURITY_ATTRIBUTES lpProcessAttributes,
  LPSECURITY_ATTRIBUTES lpThreadAttributes,
- WINBOOL bInheritHandles,
+ BOOL bInheritHandles,
  DWORD dwCreationFlags,
  LPVOID lpEnvironment,
  LPCWSTR lpCurrentDirectory,

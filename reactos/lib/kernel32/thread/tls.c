@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.13 2004/01/23 17:18:16 ekohl Exp $
+/* $Id: tls.c,v 1.14 2004/01/23 21:16:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,7 +15,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <kernel32/kernel32.h>
+#include "../include/debug.h"
 
 
 /* FUNCTIONS *****************************************************************/
