@@ -21,6 +21,7 @@ VOID ExCallUserCallBack(PVOID fn)
  * FUNCTION: Transfer control to a user callback
  */
 {
+   UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL NtCallbackReturn(VOID)
