@@ -45,7 +45,7 @@
 				<file>syscall.S</file>
 				<file>thread.c</file>
 				<file>tlbflush.S</file>
-				<file>trap.S</file>
+				<file>trap.s</file>
 				<file>tskswitch.S</file>
 				<file>tss.c</file>
 				<file>usercall.c</file>
