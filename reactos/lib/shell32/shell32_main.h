@@ -53,7 +53,7 @@ BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
 BOOL SIC_Initialize(void);
 void SIC_Destroy(void);
 BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex);
-INT SIC_GetIconIndex (LPCSTR sSourceFile, INT dwSourceIndex );
+INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex );
 
 /* Classes Root */
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, DWORD len, BOOL bPrependDot);
@@ -248,6 +248,5 @@ int WINAPI RestartDialog(HWND hwndOwner, LPCSTR lpstrReason, UINT uFlags);
 int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason);
 
 extern WCHAR swShell32Name[MAX_PATH];
-extern char sShell32Name[MAX_PATH];
 
 #endif

@@ -151,7 +151,6 @@ static ULONG WINAPI IExtractIconW_fnRelease(IExtractIconW * iface)
 }
 
 WCHAR swShell32Name[MAX_PATH];
-char sShell32Name[MAX_PATH];
 
 /**************************************************************************
 *  IExtractIconW_GetIconLocation
