@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.54 2004/05/10 17:07:18 weiden Exp $
+/* $Id: menu.c,v 1.55 2004/05/13 20:21:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -845,6 +845,9 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
       return FALSE;
     }
   
+  /* Force size recalculation! */
+  MenuObject->MenuInfo.Height = 0;
+
   pos = IntInsertMenuItemToList(MenuObject, MenuItem, pos);
 
   return pos >= 0;

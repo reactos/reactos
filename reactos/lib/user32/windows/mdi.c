@@ -1091,7 +1091,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     WND*	child = WIN_FindWndPtr(hChild);
 #endif
     HMENU  	hSysPopup = 0;
-  HBITMAP hSysMenuBitmap = 0;
+    HBITMAP hSysMenuBitmap = 0;
 
     TRACE("frame %p,child %p\n",frame,hChild);
 
@@ -1120,10 +1120,9 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
                    SC_RESTORE, (LPSTR)(DWORD)HBMMENU_MBAR_RESTORE );
 
   /* In Win 95 look, the system menu is replaced by the child icon */
-
-/* FIXME */
 #ifndef __REACTOS__
   if(TWEAK_WineLook > WIN31_LOOK)
+#endif
   {
     HICON hIcon = (HICON)GetClassLongA(hChild, GCL_HICONSM);
     if (!hIcon)
@@ -1154,6 +1153,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
       }
     }
   }
+#ifndef __REACTOS__
   else
     hSysMenuBitmap = hBmpClose;
 #endif

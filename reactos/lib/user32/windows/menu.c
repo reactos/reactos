@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.65 2004/05/03 22:16:09 gvg Exp $
+/* $Id: menu.c,v 1.66 2004/05/13 20:21:27 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -436,8 +436,9 @@ MenuGetBitmapItemSize(UINT Id, DWORD Data, SIZE *Size)
           case (INT_PTR) HBMMENU_MBAR_MINIMIZE_D:
           case (INT_PTR) HBMMENU_MBAR_CLOSE:
           case (INT_PTR) HBMMENU_MBAR_CLOSE_D:
-            Size->cx = GetSystemMetrics(SM_CXSIZE);
-            Size->cy = GetSystemMetrics(SM_CYSIZE);
+            /* FIXME: Why we need to subtract these magic values? */
+            Size->cx = GetSystemMetrics(SM_CXSIZE) - 2;
+            Size->cy = GetSystemMetrics(SM_CYSIZE) - 4;
             return;
           case (INT_PTR) HBMMENU_CALLBACK:
           case (INT_PTR) HBMMENU_POPUP_CLOSE:
@@ -480,6 +481,7 @@ MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect, BOOL MenuBar
       UINT Flags = 0;
       RECT r;
 
+      r = *Rect;
       switch ((int) Item->hbmpItem)
         {
           case (INT_PTR) HBMMENU_SYSTEM:
@@ -507,9 +509,11 @@ MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect, BOOL MenuBar
             Flags = DFCS_CAPTIONRESTORE;
             break;
           case (INT_PTR) HBMMENU_MBAR_MINIMIZE:
+            r.right += 1;
             Flags = DFCS_CAPTIONMIN;
             break;
           case (INT_PTR) HBMMENU_MBAR_MINIMIZE_D:
+            r.right += 1;
             Flags = DFCS_CAPTIONMIN | DFCS_INACTIVE;
             break;
           case (INT_PTR) HBMMENU_MBAR_CLOSE:
@@ -527,7 +531,6 @@ MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect, BOOL MenuBar
             FIXME("Magic menu bitmap not implemented\n");
             return;
         }
-      r = *Rect;
       InflateRect(&r, -1, -1);
       if (0 != (Item->fState & MF_HILITE))
         {
@@ -1238,6 +1241,11 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, HWND WndOwner,
       /* Leave space for the sunken border */
       ItemInfo->Rect.right  += 2;
       ItemInfo->Rect.bottom += 2;
+
+      /* Special case: Minimize button doesn't have a space behind it. */
+      if (ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE ||
+          ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE_D)
+        ItemInfo->Rect.right -= 1;
     }
 
   /* it must be a text item - unless it's the system menu */
@@ -1463,6 +1471,8 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
             }
 	}
 
+/* FIXME: Is this really needed? */
+#if 0
       /* Finish the line (set all items to the largest height found) */
       while (Start < i)
         {
@@ -1473,6 +1483,9 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
             }
           Start++;
         }
+#else
+     Start = i;
+#endif
     }
 
   Rect->bottom = MaxY;
