@@ -245,7 +245,7 @@ void rgntest( void )
 	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
-/*
+
 	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR );
 	if( i==ERROR ){
 		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ). LastError: %d\n", GetLastError);
@@ -259,7 +259,7 @@ void rgntest( void )
 	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
-*/
+
 	DeleteObject( hRgn1 );
 	DeleteObject( hRgn2 );
 	DeleteObject( hRgn3 );

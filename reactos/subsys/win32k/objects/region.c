@@ -51,6 +51,8 @@ static inline int xmemcheck(ROSRGNDATA *reg, LPRECT *rect, LPRECT *firstrect ) {
 		    return 0;
 		RtlCopyMemory( temp, *firstrect, reg->rdh.nRgnSize );
 		reg->rdh.nRgnSize *= 2;
+		ExFreePool( *firstrect );
+		*firstrect = temp;
 		*rect = (*firstrect)+reg->rdh.nCount;
     }
     return 1;
@@ -590,9 +592,6 @@ static void REGION_RegionOp(
      */
     newReg->rdh.nRgnSize = max(reg1->rdh.nCount,reg2->rdh.nCount) * 2 * sizeof(RECT);
 
-	if( newReg->Buffer )
-		ExFreePool( newReg->Buffer );
-
     if (! (newReg->Buffer = ExAllocatePool( PagedPool, newReg->rdh.nRgnSize )))
     {
 		newReg->rdh.nRgnSize = 0;
@@ -708,7 +707,6 @@ static void REGION_RegionOp(
 		if (ybot > ytop)
 		{
 		    (* overlapFunc) (newReg, r1, r1BandEnd, r2, r2BandEnd, ytop, ybot);
-
 		}
 
 		if (newReg->rdh.nCount != curBand)
@@ -790,6 +788,7 @@ static void REGION_RegionOp(
 				newReg->Buffer = (char*)prev_rects;
 			else{
 				newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
+				RtlCopyMemory( newReg->Buffer, prev_rects, newReg->rdh.nRgnSize );
 				ExFreePool( prev_rects );
 			}
 		}
@@ -901,6 +900,7 @@ static void REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
      * way there's no checking against rectangles that will be nuked
      * due to coalescing, so we have to examine fewer rectangles.
      */
+
     REGION_SetExtents(newReg);
 }
 
@@ -1072,7 +1072,6 @@ static void REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 
     REGION_RegionOp (newReg, reg1, reg2, (voidProcp) REGION_UnionO,
 		(voidProcp) REGION_UnionNonO, (voidProcp) REGION_UnionNonO);
-
     newReg->rdh.rcBound.left = min(reg1->rdh.rcBound.left, reg2->rdh.rcBound.left);
     newReg->rdh.rcBound.top = min(reg1->rdh.rcBound.top, reg2->rdh.rcBound.top);
     newReg->rdh.rcBound.right = max(reg1->rdh.rcBound.right, reg2->rdh.rcBound.right);
@@ -1473,6 +1472,7 @@ W32kCombineRgn(HRGN  hDest,
 	  		      break;
 	  		  }
 	  		  result = destRgn->rdh.iType;
+			  RGNDATA_UnlockRgn( hSrc2 );
 		  }
 		  RGNDATA_UnlockRgn( hSrc1 );
   		}
@@ -1716,7 +1716,6 @@ W32kOffsetRgn(HRGN  hRgn,
     int nbox = rgn->rdh.nCount;
 	PRECT pbox = (PRECT)rgn->Buffer;
 
-	DPRINT("nbox %d, pbox %x\n", nbox, pbox);
     if(nbox && pbox) {
       while(nbox--) {
         pbox->left += XOffset;
@@ -1725,12 +1724,10 @@ W32kOffsetRgn(HRGN  hRgn,
         pbox->bottom += YOffset;
         pbox++;
       }
-	  DPRINT("rgn->rdh.rcBound.left %d\n",rgn->rdh.rcBound.left);
       rgn->rdh.rcBound.left += XOffset;
       rgn->rdh.rcBound.right += XOffset;
       rgn->rdh.rcBound.top += YOffset;
       rgn->rdh.rcBound.bottom += YOffset;
-	  DPRINT("after rgn->rdh.rcBound.left %d\n",rgn->rdh.rcBound.left);
     }
   }
   ret = rgn->rdh.iType;
