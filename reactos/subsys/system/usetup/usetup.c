@@ -1589,34 +1589,38 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 			/* FAT12 CHS partition (disk is smaller than 4.1MB) */
 			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_12;
 		      }
-		    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
+		    else if (PartEntry->PartInfo[0].StartingOffset.QuadPart < (1024ULL * 255ULL * 63ULL * 512ULL))
 		      {
-			/* FAT16 CHS partition (disk is smaller than 32MB) */
-			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
-		      }
-		    else if (DiskEntry->UseLba == FALSE)
-		      {
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+			/* Partition starts below the 8.4GB boundary ==> CHS partition */
+
+			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
 			  {
-			    /* FAT16 CHS partition (disk is smaller than 512MB) */
+			    /* FAT16 CHS partition (partiton size < 32MB) */
+			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+			  }
+			else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+			  {
+			    /* FAT16 CHS partition (partition size < 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
 			  }
 			else
 			  {
-			    /* FAT32 CHS partition (partition size 512MB or larger) */
+			    /* FAT32 CHS partition (partition size >= 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32;
 			  }
 		      }
 		    else
 		      {
+			/* Partition starts above the 8.4GB boundary ==> LBA partition */
+
 			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
 			  {
-			    /* FAT16 LBA partition (partition size is smaller than 512MB) */
+			    /* FAT16 LBA partition (partition size < 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
 			  }
 			else
 			  {
-			    /* FAT32 LBA partition (partition size 512MB or larger) */
+			    /* FAT32 LBA partition (partition size >= 512MB) */
 			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
 			  }
 		      }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.21 2003/08/20 20:07:33 ekohl Exp $
+/* $Id: partlist.c,v 1.22 2003/08/25 11:56:07 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -253,6 +253,52 @@ AddPartitionToList (ULONG DiskNumber,
 			 sizeof(PARTITION_INFORMATION));
 	}
 
+      if (IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+	{
+	  PartEntry->FormatState = Unformatted;
+	}
+      else if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_HUGE) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_XINT13) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+	{
+#if 0
+	  if (CheckFatFormat())
+	    {
+	      PartEntry->FormatState = Preformatted;
+	    }
+	  else
+	    {
+	      PartEntry->FormatState = Unformatted;
+	    }
+#endif
+	  PartEntry->FormatState = Preformatted;
+	}
+      else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
+	{
+#if 0
+	  if (CheckNtfsFormat())
+	    {
+	      PartEntry->FormatState = Preformatted;
+	    }
+	  else if (CheckHpfsFormat())
+	    {
+	      PartEntry->FormatState = Preformatted;
+	    }
+	  else
+	    {
+	      PartEntry->FormatState = Unformatted;
+	    }
+#endif
+	  PartEntry->FormatState = Preformatted;
+	}
+      else
+	{
+	  PartEntry->FormatState = Unknown;
+	}
+
       InsertTailList (&DiskEntry->PartListHead,
 		      &PartEntry->ListEntry);
     }
@@ -286,6 +332,8 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
       PartEntry->Unpartitioned = TRUE;
       PartEntry->UnpartitionedOffset = 0ULL;
       PartEntry->UnpartitionedLength = DiskEntry->DiskSize;
+
+      PartEntry->FormatState = Unformatted;
 
       InsertTailList (&DiskEntry->PartListHead,
 		      &PartEntry->ListEntry);
@@ -331,6 +379,8 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
 		      NewPartEntry->UnpartitionedLength = LastUnusedPartitionLength;
 		      if (j == 0)
 			NewPartEntry->UnpartitionedLength -= DiskEntry->TrackSize;
+
+		      NewPartEntry->FormatState = Unformatted;
 
 		      /* Insert the table into the list */
 		      InsertTailList (&PartEntry->ListEntry,
@@ -464,8 +514,6 @@ AddDiskToList (HANDLE FileHandle,
   DiskEntry->Port = ScsiAddress.PortNumber;
   DiskEntry->Bus = ScsiAddress.PathId;
   DiskEntry->Id = ScsiAddress.TargetId;
-
-  DiskEntry->UseLba = (DiskEntry->DiskSize > (1024ULL * 255ULL * 63ULL * 512ULL));
 
   GetDriverName (DiskEntry);
 
@@ -1269,6 +1317,7 @@ CreateNewPartition (PPARTLIST List,
       PartitionSize == PartEntry->UnpartitionedLength)
     {
       /* Convert current entry to 'new (unformatted)' */
+      PartEntry->FormatState = Unformatted;
       PartEntry->PartInfo[0].StartingOffset.QuadPart =
 	PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
       PartEntry->PartInfo[0].PartitionLength.QuadPart =
@@ -1340,8 +1389,17 @@ CreateNewPartition (PPARTLIST List,
 		PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
 	    }
 
-	  PrevPartEntry->PartInfo[1].PartitionType =
-	    (DiskEntry->UseLba == TRUE) ? PARTITION_XINT13_EXTENDED : PARTITION_EXTENDED;
+	  if ((PartEntry->PartInfo[1].StartingOffset.QuadPart +
+	       PartEntry->PartInfo[1].PartitionLength.QuadPart) <
+	       (1024ULL * 255ULL * 63ULL * 512ULL))
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_EXTENDED;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_XINT13_EXTENDED;
+	    }
+
 	  PrevPartEntry->PartInfo[1].BootIndicator = FALSE;
 	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
 	}
@@ -1370,6 +1428,7 @@ CreateNewPartition (PPARTLIST List,
 
       NewPartEntry->New = TRUE;
 
+      NewPartEntry->FormatState = Unformatted;
       NewPartEntry->PartInfo[0].StartingOffset.QuadPart =
 	PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
       NewPartEntry->PartInfo[0].PartitionLength.QuadPart =
@@ -1441,8 +1500,17 @@ CreateNewPartition (PPARTLIST List,
 		NewPartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
 	    }
 
-	  PrevPartEntry->PartInfo[1].PartitionType =
-	    (DiskEntry->UseLba == TRUE) ? PARTITION_XINT13_EXTENDED : PARTITION_EXTENDED;
+	  if ((PartEntry->PartInfo[1].StartingOffset.QuadPart +
+	       PartEntry->PartInfo[1].PartitionLength.QuadPart) <
+	       (1024ULL * 255ULL * 63ULL * 512ULL))
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_EXTENDED;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionType = PARTITION_XINT13_EXTENDED;
+	    }
+
 	  PrevPartEntry->PartInfo[1].BootIndicator = FALSE;
 	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
 	}

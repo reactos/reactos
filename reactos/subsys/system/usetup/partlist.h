@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.20 2003/08/20 20:07:33 ekohl Exp $
+/* $Id: partlist.h,v 1.21 2003/08/25 11:56:07 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -26,6 +26,15 @@
 
 #ifndef __PARTLIST_H__
 #define __PARTLIST_H__
+
+typedef enum _FORMATSTATE
+{
+  Unformatted,
+  UnformattedOrDamaged,
+  UnknownFormat,
+  Preformatted,
+  Formatted
+} FORMATSTATE, *PFORMATSTATE;
 
 
 typedef struct _PARTENTRY
@@ -44,6 +53,8 @@ typedef struct _PARTENTRY
 
   /* Partition was created automatically. */
   BOOLEAN AutoCreate;
+
+  FORMATSTATE FormatState;
 
   /*
    * Raw offset and length of the unpartitioned disk space.
@@ -74,9 +85,6 @@ typedef struct _DISKENTRY
   USHORT Port;
   USHORT Bus;
   USHORT Id;
-
-  /* Use LBA or CHS? */
-  BOOLEAN UseLba;
 
   /* Has the partition list been modified? */
   BOOLEAN Modified;
