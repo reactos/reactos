@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.3 2002/09/08 10:23:12 chorns Exp $
+/* $Id: cursor.c,v 1.4 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -121,8 +121,13 @@ LoadCursorA(HINSTANCE hInstance,
 HCURSOR STDCALL
 LoadCursorFromFileA(LPCSTR lpFileName)
 {
-  return(LoadImageW(0, lpFileName, IMAGE_CURSOR, 0, 0, 
-		    LR_LOADFROMFILE | LR_DEFAULTSIZE));
+  UNICODE_STRING FileName;
+  HCURSOR Result;
+  RtlCreateUnicodeStringFromAsciiz(&FileName, (LPSTR)lpFileName);
+  Result = LoadImageW(0, FileName.Buffer, IMAGE_CURSOR, 0, 0, 
+		      LR_LOADFROMFILE | LR_DEFAULTSIZE);
+  RtlFreeUnicodeString(&FileName);
+  return(Result);
 }
 
 HCURSOR STDCALL

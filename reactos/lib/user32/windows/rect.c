@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.10 2002/09/08 10:23:12 chorns Exp $
+/* $Id: rect.c,v 1.11 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -87,6 +87,7 @@ IntersectRect(LPRECT lprcDst,
   lprcDst->right = min(lprcSrc1->right, lprcSrc2->right);
   lprcDst->top = max(lprcSrc1->top, lprcSrc2->top);
   lprcDst->bottom = min(lprcSrc1->bottom, lprcSrc2->bottom);
+  return(TRUE);
 }
 
 WINBOOL STDCALL

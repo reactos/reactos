@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.4 2002/09/08 10:23:12 chorns Exp $
+/* $Id: prop.c,v 1.5 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -63,20 +63,22 @@ HANDLE STDCALL
 GetPropA(HWND hWnd, LPCSTR lpString)
 {
   PWSTR lpWString;
+  UNICODE_STRING UString;
   HANDLE Ret;
   if (HIWORD(lpString))
     {
-      lpWString = User32ConvertString(lpString);
+      RtlCreateUnicodeStringFromAsciiz(&UString, (LPSTR)lpString);
+      lpWString = UString.Buffer;
       if (lpWString == NULL)
 	{
 	  return(FALSE);
 	}
       Ret = GetPropW(hWnd, lpWString);
-      User32FreeString(lpWString);
+      RtlFreeUnicodeString(&UString);
     }
   else
     {
-      Ret = GetPropW(hWnd, lpString);
+      Ret = GetPropW(hWnd, (LPWSTR)lpString);
     }  
   return(Ret);
 }
@@ -91,7 +93,7 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
     }
   else
     {
-      Atom = LOWORD(lpString);
+      Atom = LOWORD((DWORD)lpString);
     }
   return(NtUserGetProp(hWnd, Atom));
 }
@@ -100,17 +102,19 @@ HANDLE STDCALL
 RemovePropA(HWND hWnd, LPCSTR lpString)
 {
   PWSTR lpWString;
+  UNICODE_STRING UString;
   HANDLE Ret;
 
   if (HIWORD(lpString))
     {
-      lpWString = User32ConvertString(lpString);
+      RtlCreateUnicodeStringFromAsciiz(&UString, (LPSTR)lpString);
+      lpWString = UString.Buffer;
       if (lpWString == NULL)
 	{
 	  return(FALSE);
 	}
       Ret = RemovePropW(hWnd, lpWString);
-      User32FreeString(lpWString);
+      RtlFreeUnicodeString(&UString);
     }
   else
     {
@@ -130,7 +134,7 @@ RemovePropW(HWND hWnd,
     }
   else
     {
-      Atom = LOWORD(lpString);
+      Atom = LOWORD((DWORD)lpString);
     }
   return(NtUserRemoveProp(hWnd, Atom));
 }
@@ -139,21 +143,23 @@ WINBOOL STDCALL
 SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 {
   PWSTR lpWString;
+  UNICODE_STRING UString;
   BOOL Ret;
   
   if (HIWORD(lpString))
     {
-      lpWString = User32ConvertString(lpString);
+      RtlCreateUnicodeStringFromAsciiz(&UString, (LPSTR)lpString);
+      lpWString = UString.Buffer;
       if (lpWString == NULL)
 	{
 	  return(FALSE);
 	}
       Ret = SetPropW(hWnd, lpWString, hData);
-      User32FreeString(lpWString);
+      RtlFreeUnicodeString(&UString);
     }
   else
     {
-      Ret = SetPropW(hWnd, lpString, hData);
+      Ret = SetPropW(hWnd, (LPWSTR)lpString, hData);
     }
   return(Ret);
 }
@@ -168,7 +174,7 @@ SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
     }
   else
     {
-      Atom = LOWORD(lpString);
+      Atom = LOWORD((DWORD)lpString);
     }
   
   return(NtUserSetProp(hWnd, Atom, hData));

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.10 2002/09/08 10:23:12 chorns Exp $
+/* $Id: message.c,v 1.11 2002/09/17 23:46:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,6 +10,7 @@
  */
 #include <windows.h>
 #include <user32.h>
+#include <string.h>
 #include <debug.h>
 
 LPARAM
@@ -73,7 +74,7 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 	LPSTR TempString;
 	LPSTR InString;
 	InString = (LPSTR)lParam;
-	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(lParam));
+	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString));
 	strcpy(TempString, InString);
 	RtlInitAnsiString(&AnsiString, TempString);
 	UnicodeString.Length = wParam;
@@ -109,7 +110,7 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 	ANSI_STRING AString;
 
 	CsW = (CREATESTRUCTW*)(*lParam);
-	CsA = User32AllocHeap(sizeof(CREATESTRUCTA));
+	CsA = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(CREATESTRUCTA));
 	memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
 
 	RtlInitUnicodeString(&UString, CsW->lpszName);
@@ -476,7 +477,7 @@ RegisterWindowMessageA(LPCSTR lpString)
   BOOLEAN Result;
   UINT Atom;
 
-  Result = RtlCreateUnicodeStringFromAsciiz(&String, lpString);
+  Result = RtlCreateUnicodeStringFromAsciiz(&String, (PCSZ)lpString);
   if (!Result)
     {
       return(0);

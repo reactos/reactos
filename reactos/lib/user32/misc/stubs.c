@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.14 2002/09/08 10:23:10 chorns Exp $
+/* $Id: stubs.c,v 1.15 2002/09/17 23:46:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,11 +10,6 @@
  *      08-05-2001  CSH  Created
  */
 #include <windows.h>
-
-WINBOOL STDCALL 
-ScreenToClient(HWND hWnd, LPPOINT lpPoint)
-{
-}
 
 WINBOOL
 STDCALL
@@ -287,19 +282,6 @@ STDCALL
 LockWorkStation(VOID)
 {
   return FALSE;
-}
-
-
-
-int
-STDCALL
-MapWindowPoints(
-  HWND hWndFrom,
-  HWND hWndTo,
-  LPPOINT lpPoints,
-  UINT cPoints)
-{
-  return 0;
 }
 
 WINBOOL

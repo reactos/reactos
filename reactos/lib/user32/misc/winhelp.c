@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winhelp.c,v 1.1 2002/08/27 06:40:15 robd Exp $
+/* $Id: winhelp.c,v 1.2 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/winhelp.c
@@ -123,7 +123,7 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
 		lpwh->ofsData = 0;
 	}
 	GlobalUnlock(hwh);
-	return SendMessage(hDest, WM_WINHELP, hWnd, (LPARAM)hwh);
+	return SendMessage(hDest, WM_WINHELP, (WPARAM)hWnd, (LPARAM)hwh);
 }
 
 WINBOOL

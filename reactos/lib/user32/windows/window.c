@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.13 2002/09/08 10:23:12 chorns Exp $
+/* $Id: window.c,v 1.14 2002/09/17 23:46:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -50,8 +50,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       Result.Rect = CallbackArgs->Rect;
     }
   DbgPrint("Returning result %d.\n", Result);
-  ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
-  /* Doesn't return. */
+  return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
 NTSTATUS STDCALL
@@ -75,8 +74,7 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 				  0, (LPARAM)&CallbackArgs->MinMaxInfo);
   Result.MinMaxInfo = CallbackArgs->MinMaxInfo;
   DbgPrint("Returning result %d.\n", Result);
-  ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
-  /* Doesn't return. */
+  return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
 NTSTATUS STDCALL
@@ -99,8 +97,7 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_CREATE, 0, 
 			   (LPARAM)&CallbackArgs->CreateStruct);
   DbgPrint("Returning result %d.\n", Result);
-  ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
-  /* Doesn't return. */
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
 NTSTATUS STDCALL
@@ -123,8 +120,7 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCREATE, 0, 
 			   (LPARAM)&CallbackArgs->CreateStruct);
   DbgPrint("Returning result %d.\n", Result);
-  ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
-  /* Doesn't return. */
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
 NTSTATUS STDCALL
@@ -164,8 +160,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   Result = CallWindowProcW(CallbackArgs->Proc, CallbackArgs->Wnd, 
 			   CallbackArgs->Msg, CallbackArgs->wParam, 
 			   CallbackArgs->lParam);
-  ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
-  /* Doesn't return. */
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
 WINBOOL STDCALL
@@ -582,8 +577,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 }
 
 WINBOOL STDCALL
-GetClientRect(HWND hWnd,
-	      LPRECT lpRect)
+GetClientRect(HWND hWnd, LPRECT lpRect)
 {
   return FALSE;
 }
@@ -916,6 +910,32 @@ HWND STDCALL
 WindowFromPoint(POINT Point)
 {
   return (HWND)0;
+}
+
+int STDCALL
+MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
+{
+  POINT FromOffset, ToOffset;
+  LONG XMove, YMove;
+  ULONG i;
+
+  NtUserGetClientOrigin(hWndFrom, &FromOffset);
+  NtUserGetClientOrigin(hWndTo, &ToOffset);
+  XMove = ToOffset.x - FromOffset.x;
+  YMove = ToOffset.y - FromOffset.y;
+  for (i = 0; i < cPoints; i++)
+    {
+      lpPoints[i].x += XMove;
+      lpPoints[i].y += YMove;
+    }
+  return(MAKELONG(LOWORD(XMove), LOWORD(YMove))); 
+}
+
+
+WINBOOL STDCALL 
+ScreenToClient(HWND hWnd, LPPOINT lpPoint)
+{
+  return(MapWindowPoints(NULL, hWnd, lpPoint, 1));
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.5 2002/09/08 10:23:12 chorns Exp $
+/* $Id: menu.c,v 1.6 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -72,7 +72,7 @@ MenuFindItem(HMENU* hMenu, UINT* nPos, UINT wFlags)
   POPUP_MENU* Menu;
   ULONG i;
 
-  if ((*hMenu) == 0xFFFF || (Menu = MenuGetMenu(*hMenu)) == NULL)
+  if ((ULONG)(*hMenu) == 0xFFFF || (Menu = MenuGetMenu(*hMenu)) == NULL)
     {
       return(NULL);
     }

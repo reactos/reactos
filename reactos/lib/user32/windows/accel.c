@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.3 2002/09/08 10:23:11 chorns Exp $
+/* $Id: accel.c,v 1.4 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -67,7 +67,7 @@ CreateAcceleratorTableW(LPACCEL lpaccl,
 WINBOOL STDCALL
 DestroyAcceleratorTable(HACCEL hAccel)
 {
-  User32FreeHeap(hAccel);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, hAccel);
   return(TRUE);
 }
 
@@ -77,9 +77,11 @@ LoadAcceleratorsA(HINSTANCE hInstance,
 {
   LPWSTR lpTableNameW;
   HACCEL Res;
-  lpTableNameW = User32ConvertString(lpTableName);
+  UNICODE_STRING lpTableNameString;
+  RtlCreateUnicodeStringFromAsciiz(&lpTableNameString, (LPSTR)lpTableName);
+  lpTableNameW = lpTableNameString.Buffer;
   Res = LoadAcceleratorsW(hInstance, lpTableNameW);
-  User32FreeString(lpTableName);
+  RtlFreeUnicodeString(&lpTableNameString);
   return(Res);
 }
 
@@ -103,7 +105,7 @@ LoadAcceleratorsW(HINSTANCE hInstance,
       Mem = LoadResource(hInstance, Rsrc);
       Size = SizeofResource(hInstance, Rsrc);
       AccelTableRsrc = LockResource(Mem);
-      AccelTable = User32AllocHeap(Size);
+      AccelTable = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
       memcpy(AccelTable, AccelTableRsrc, Size);
       return((HACCEL)AccelTable);
     }

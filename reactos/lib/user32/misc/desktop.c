@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.6 2002/09/08 10:23:10 chorns Exp $
+/* $Id: desktop.c,v 1.7 2002/09/17 23:46:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -81,7 +81,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
   
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,
-			    pDevmode,
+			    (LPDEVMODEW)pDevmode,
 			    dwFlags,
 			    dwDesiredAccess,
 			    lpsa);

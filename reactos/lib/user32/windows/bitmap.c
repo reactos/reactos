@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.4 2002/09/08 10:23:11 chorns Exp $
+/* $Id: bitmap.c,v 1.5 2002/09/17 23:46:23 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -44,13 +44,15 @@ LoadImageA(HINSTANCE hinst,
 {
   LPWSTR lpszWName;
   HANDLE Handle;
+  UNICODE_STRING NameString;
 
   if (HIWORD(lpszName))
-    {
-      lpszWName = User32ConvertString(lpszName);
+    {      
+      RtlCreateUnicodeStringFromAsciiz(&NameString, (LPSTR)lpszName);
+      lpszWName = NameString.Buffer;
       Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
 			  cyDesired, fuLoad);
-      User32FreeString(lpszWName);
+      RtlFreeUnicodeString(&NameString);
     }
   else
     {
