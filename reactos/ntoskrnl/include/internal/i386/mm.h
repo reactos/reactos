@@ -23,13 +23,9 @@
 #endif
 
 
-#ifdef __3GB__
-#define KERNEL_BASE        (0xC0000000)
-#else
-#define KERNEL_BASE        (0x80000000)
-#endif
-
 #ifndef __ASM__
+
+#define KERNEL_BASE        (ULONG)MmSystemRangeStart
 
 #if defined(__GNUC__)
 
@@ -64,6 +60,14 @@ VOID MiEnablePAE(PVOID* LastKernelAddress);
 
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
+
+#else 
+
+#ifdef __3GB__
+#define KERNEL_BASE        (0xC0000000)
+#else
+#define KERNEL_BASE        (0x80000000)
+#endif
 
 #endif /* ASSEMBLER */
 

@@ -691,6 +691,7 @@ ExpInitializeExecutive(VOID)
 
   /* Create the SystemRoot symbolic link */
   CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+  DPRINT1("MmSystemRangeStart: 0x%x\n", MmSystemRangeStart);
   Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
   if (!NT_SUCCESS(Status))
   {
@@ -952,6 +953,18 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       strcpy(KeLoaderCommandLine, (PCHAR)_LoaderBlock->CommandLine);
     }
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+  
+  /* Gotta check 3GB setting right *here* before we use KERNEL_BASE! */
+  if (!_strnicmp(KeLoaderCommandLine, "3GB", 3)) {
+  
+    /* Use 3GB */
+    MmSystemRangeStart = (PVOID)0xC0000000;
+  
+  } else {
+   
+    /* Use 2GB */
+    MmSystemRangeStart = (PVOID)0x80000000;
+  }
   
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
