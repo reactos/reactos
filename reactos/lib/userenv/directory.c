@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: directory.c,v 1.7 2004/11/09 15:02:35 ion Exp $
+/* $Id: directory.c,v 1.8 2004/12/28 13:30:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,6 +29,54 @@
 
 
 /* FUNCTIONS ***************************************************************/
+
+BOOL STDCALL
+CopyProfileDirectoryA(LPCSTR lpSourcePath,
+		      LPCSTR lpDestinationPath,
+		      DWORD dwFlags)
+{
+  UNICODE_STRING SrcPath;
+  UNICODE_STRING DstPath;
+  NTSTATUS Status;
+  BOOL bResult;
+
+  Status = RtlCreateUnicodeStringFromAsciiz(&SrcPath,
+                                            (LPSTR)lpSourcePath);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz(&DstPath,
+                                            (LPSTR)lpDestinationPath);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&SrcPath);
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  bResult = CopyProfileDirectoryW(SrcPath.Buffer,
+                                  DstPath.Buffer,
+                                  dwFlags);
+
+  RtlFreeUnicodeString(&DstPath);
+  RtlFreeUnicodeString(&SrcPath);
+
+  return bResult;
+}
+
+
+BOOL STDCALL
+CopyProfileDirectoryW(LPCWSTR lpSourcePath,
+		      LPCWSTR lpDestinationPath,
+		      DWORD dwFlags)
+{
+  /* FIXME: dwFlags are ignored! */
+  return CopyDirectory(lpDestinationPath, lpSourcePath);
+}
+
 
 BOOL
 CopyDirectory (LPCWSTR lpDestinationPath,
