@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.39 2003/11/30 17:19:28 hbirr Exp $
+/* $Id: pagefile.c,v 1.40 2003/12/14 17:54:22 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -501,7 +501,7 @@ MmDumpToPagingFile(ULONG BugCode,
   Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
   /* Initialize the dump device. */
-  MmCoreDumpFunctions->DumpInit();
+  Status = MmCoreDumpFunctions->DumpInit();
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MM: Failed to initialize core dump device.\n");
