@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.61 2003/01/22 02:24:10 ekohl Exp $
+/* $Id: create.c,v 1.62 2003/03/09 21:38:40 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -199,7 +199,7 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 {
 	UINT uExitCode = 0;
 
-    DPRINT("\nBaseProcessStart(..) - setting up exception frame.\n\n");
+    DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
 
 	__try1(_except_handler)
 	{
@@ -208,7 +208,7 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 	{
 	}
 
-    DPRINT("\nBaseProcessStart(..) - cleaned up exception frame.\n\n");
+    DPRINT("BaseProcessStart(..) - cleaned up exception frame.\n");
 
 	ExitThread(uExitCode);
 }
@@ -641,7 +641,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    {
       if (lpCommandLine[0] == L'"')
       {
-         wcscpy(TempApplicationNameW, &lpCommandLine[0]);
+         wcscpy(TempApplicationNameW, lpCommandLine + 1);
          s = wcschr(TempApplicationNameW, L'"');
          if (s == NULL)
          {
@@ -672,7 +672,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       return FALSE;
    }
 
-   if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName), ImagePathName, &s))
+   if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName)/sizeof(WCHAR), ImagePathName, &s))
    {
      return FALSE;
    }
@@ -688,7 +688,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	  wcscat(TempCommandLineNameW, lpApplicationName);
 	  lpCommandLine = TempCommandLineNameW;
 	  wcscpy(TempApplicationNameW, L"cmd.exe");
-          if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName), ImagePathName, &s))
+          if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName)/sizeof(WCHAR), ImagePathName, &s))
 	  {
 	     return FALSE;
 	  }
@@ -926,7 +926,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Get some information about the process
     */
-   ZwQueryInformationProcess(hProcess,
+   NtQueryInformationProcess(hProcess,
 			     ProcessBasicInformation,
 			     &ProcessBasicInfo,
 			     sizeof(ProcessBasicInfo),
@@ -1007,7 +1007,21 @@ CreateProcessW(LPCWSTR lpApplicationName,
    }
    if (IsConsoleHandle(Ppb->hStdError))
    {
-      Ppb->hStdError = CsrReply.Data.CreateProcessReply.OutputHandle;
+      CsrRequest.Type = CSRSS_DUPLICATE_HANDLE;
+      CsrRequest.Data.DuplicateHandleRequest.ProcessId = ProcessBasicInfo.UniqueProcessId;
+      CsrRequest.Data.DuplicateHandleRequest.Handle = CsrReply.Data.CreateProcessReply.OutputHandle;
+      Status = CsrClientCallServer(&CsrRequest, 
+			  &CsrReply,
+			  sizeof(CSRSS_API_REQUEST),
+			  sizeof(CSRSS_API_REPLY));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+      {
+	 Ppb->hStdError = INVALID_HANDLE_VALUE;
+      }
+      else
+      {
+         Ppb->hStdError = CsrReply.Data.DuplicateHandleReply.Handle;
+      }
    }
    else
    {
