@@ -508,10 +508,20 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 			     NULL,
 			     NULL);
 
+  /*
+   * Note:
+   * This is a workaround to prevent a BSOD because of missing registry hives.
+   * The workaround is only useful for developers. An implementation for the
+   * ordinary user must bail out on missing registry hives because they are
+   * essential to booting and configuring the OS.
+   */
+#if 0
   if (CreateNew == TRUE)
     CreateDisposition = FILE_OPEN_IF;
   else
     CreateDisposition = FILE_OPEN;
+#endif
+  CreateDisposition = FILE_OPEN_IF;
 
   Status = NtCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
@@ -531,7 +541,11 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       return(Status);
     }
 
+  /* Note: Another workaround! See the note above! */
+#if 0
   if ((CreateNew) && (IoSB.Information == FILE_CREATED))
+#endif
+  if (IoSB.Information != FILE_OPENED)
     {
       Status = CmiCreateNewRegFile(FileHandle);
       if (!NT_SUCCESS(Status))
@@ -1219,13 +1233,13 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
-	PKEY_OBJECT Parent,
-	PKEY_OBJECT SubKey,
-	PWSTR NewSubKeyName,
-	USHORT NewSubKeyNameSize,
-	ULONG TitleIndex,
-	PUNICODE_STRING Class,
-	ULONG CreateOptions)
+	     PKEY_OBJECT Parent,
+	     PKEY_OBJECT SubKey,
+	     PWSTR NewSubKeyName,
+	     USHORT NewSubKeyNameSize,
+	     ULONG TitleIndex,
+	     PUNICODE_STRING Class,
+	     ULONG CreateOptions)
 {
   PHASH_TABLE_CELL NewHashBlock;
   PHASH_TABLE_CELL HashBlock;
@@ -1303,7 +1317,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   /* Don't modify hash table if key is volatile and parent is not */
   if (IsVolatileHive(RegistryHive) && (!IsVolatileHive(Parent->RegistryHive)))
     {
-      return Status;
+      return(Status);
     }
 
   if (KeyCell->HashTableOffset == (ULONG_PTR) -1)
@@ -1313,15 +1327,15 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 					 &KeyCell->HashTableOffset,
 					 REG_INIT_HASH_TABLE_SIZE);
       if (!NT_SUCCESS(Status))
-        {
-          return Status;
-        }
+	{
+	  return(Status);
+	}
     }
   else
     {
       HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
       if (((KeyCell->NumberOfSubKeys + 1) >= HashBlock->HashTableSize))
-        {
+	{
 	  BLOCK_OFFSET HTOffset;
 
 	  /* Reallocate the hash table block */
@@ -1335,24 +1349,84 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	      return Status;
 	    }
 
-          RtlZeroMemory(&NewHashBlock->Table[0],
-            sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
-          RtlCopyMemory(&NewHashBlock->Table[0],
-            &HashBlock->Table[0],
-            sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
-          CmiDestroyBlock(RegistryHive, HashBlock, KeyCell->HashTableOffset);
-          KeyCell->HashTableOffset = HTOffset;
-          HashBlock = NewHashBlock;
-        }
+	  RtlZeroMemory(&NewHashBlock->Table[0],
+			sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
+	  RtlCopyMemory(&NewHashBlock->Table[0],
+			&HashBlock->Table[0],
+			sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
+	  CmiDestroyBlock(RegistryHive,
+			  HashBlock,
+			  KeyCell->HashTableOffset);
+	  KeyCell->HashTableOffset = HTOffset;
+	  HashBlock = NewHashBlock;
+	}
     }
 
-  Status = CmiAddKeyToHashTable(RegistryHive, HashBlock, NewKeyCell, NKBOffset);
+  Status = CmiAddKeyToHashTable(RegistryHive,
+				HashBlock,
+				NewKeyCell,
+				NKBOffset);
   if (NT_SUCCESS(Status))
     {
       KeyCell->NumberOfSubKeys++;
     }
-  
-  return Status;
+
+  return(Status);
+}
+
+
+NTSTATUS
+CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
+		PKEY_OBJECT ParentKey,
+		PKEY_OBJECT SubKey)
+{
+  PHASH_TABLE_CELL HashBlock;
+
+  DPRINT1("CmiRemoveSubKey() called\n");
+
+  /* Remove the key from the parent key's hash block */
+  HashBlock = CmiGetBlock(RegistryHive,
+			  ParentKey->KeyCell->HashTableOffset,
+			  NULL);
+  if (HashBlock != NULL)
+    {
+      CmiRemoveKeyFromHashTable(RegistryHive,
+				HashBlock,
+				SubKey->BlockOffset);
+      CmiMarkBlockDirty(RegistryHive,
+			ParentKey->KeyCell->HashTableOffset);
+    }
+
+  /* Remove the key's hash block */
+  DPRINT1("HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
+  if (SubKey->KeyCell->HashTableOffset != 0)
+    {
+      HashBlock = CmiGetBlock(RegistryHive,
+			      SubKey->KeyCell->HashTableOffset,
+			      NULL);
+      DPRINT1("HashBlock %p\n", HashBlock)
+      if (HashBlock != NULL)
+	{
+	  CmiDestroyBlock(RegistryHive,
+			  HashBlock,
+			  SubKey->KeyCell->HashTableOffset);
+	}
+      SubKey->KeyCell->HashTableOffset = 0;
+    }
+
+CHECKPOINT1;
+  /* Remove the key from the parent key's hash block */
+  ParentKey->KeyCell->NumberOfSubKeys--;
+  CmiMarkBlockDirty(RegistryHive,
+		    ParentKey->BlockOffset);
+
+CHECKPOINT1;
+  /* Destroy key cell */
+  CmiDestroyBlock(RegistryHive,
+		  SubKey->KeyCell,
+		  SubKey->BlockOffset);
+
+  return(STATUS_SUCCESS);
 }
 
 

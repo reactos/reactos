@@ -438,6 +438,11 @@ CmiAddSubKey(IN PREGISTRY_HIVE  RegistryHive,
   IN ULONG  CreateOptions);
 
 NTSTATUS
+CmiRemoveSubKey(IN PREGISTRY_HIVE RegistryHive,
+		IN PKEY_OBJECT Parent,
+		IN PKEY_OBJECT SubKey);
+
+NTSTATUS
 CmiScanKeyForValue(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell,
   IN PUNICODE_STRING  ValueName,

@@ -976,11 +976,11 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 
 
 NTSTATUS STDCALL
-NtQueryKey(IN	HANDLE KeyHandle,
-	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
-	OUT	PVOID	KeyInformation,
-	IN	ULONG	Length,
-	OUT	PULONG ResultLength)
+NtQueryKey(IN HANDLE KeyHandle,
+	   IN KEY_INFORMATION_CLASS KeyInformationClass,
+	   OUT PVOID KeyInformation,
+	   IN ULONG Length,
+	   OUT PULONG ResultLength)
 {
   PKEY_BASIC_INFORMATION BasicInformation;
   PKEY_NODE_INFORMATION NodeInformation;
@@ -1007,22 +1007,26 @@ NtQueryKey(IN	HANDLE KeyHandle,
 		NULL);
   if (!NT_SUCCESS(Status))
     {
+CHECKPOINT1;
       return Status;
     }
+CHECKPOINT1;
 
   /* Acquire hive lock */
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+CHECKPOINT1;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Get pointer to KeyCell */
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
-    
+
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
     {
     case KeyBasicInformation:
+CHECKPOINT1;
       /* Check size of buffer */
       if (Length < sizeof(KEY_BASIC_INFORMATION) + 
           KeyObject->NameSize * sizeof(WCHAR))
@@ -1043,8 +1047,9 @@ NtQueryKey(IN	HANDLE KeyHandle,
           *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
             KeyObject->NameSize * sizeof(WCHAR);
         }
+CHECKPOINT1;
       break;
-      
+
     case KeyNodeInformation:
       /* Check size of buffer */
       if (Length < sizeof(KEY_NODE_INFORMATION)
@@ -1124,10 +1129,13 @@ NtQueryKey(IN	HANDLE KeyHandle,
       break;
     }
 
+CHECKPOINT1;
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+CHECKPOINT1;
   ObDereferenceObject(KeyObject);
+CHECKPOINT1;
 
-  return Status;
+  return(Status);
 }
 
 
