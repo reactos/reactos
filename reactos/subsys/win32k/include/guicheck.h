@@ -8,6 +8,8 @@ BOOL FASTCALL IntGraphicsCheck(BOOL Create);
 BOOL FASTCALL IntCreatePrimarySurface();
 VOID FASTCALL IntDestroyPrimarySurface();
 
+NTSTATUS FASTCALL InitGuiCheckImpl (VOID);
+
 #endif /* _WIN32K_GUICHECK_H */
 
 /* EOF */

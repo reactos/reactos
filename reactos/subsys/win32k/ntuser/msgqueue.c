@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.102 2004/08/04 22:31:17 weiden Exp $
+/* $Id: msgqueue.c,v 1.103 2004/08/08 17:57:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1223,6 +1223,15 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
+  PDESKTOP_OBJECT desk;
+  /* remove the message queue from any desktops */
+  if((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
+  {
+    InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
+    IntDereferenceMessageQueue(MessageQueue);
+  }
+  
+  /* clean it up */
   MsqCleanupMessageQueue(MessageQueue);
   /* decrease the reference counter, if it hits zero, the queue will be freed */
   IntDereferenceMessageQueue(MessageQueue);

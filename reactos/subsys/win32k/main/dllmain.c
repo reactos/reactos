@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.78 2004/08/02 15:07:26 blight Exp $
+/* $Id: dllmain.c,v 1.79 2004/08/08 17:57:34 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -295,6 +295,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize accelerator implementation.\n");
+      return(Status);
+    }
+
+  Status = InitGuiCheckImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize GUI check implementation.\n");
       return(Status);
     }
 

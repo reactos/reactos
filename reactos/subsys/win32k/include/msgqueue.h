@@ -104,6 +104,9 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY DispatchingMessagesHead;
   /* messages that are currently dispatched by this message queue, required for cleanup */
   LIST_ENTRY LocalDispatchingMessagesHead;
+  
+  /* Desktop that the message queue is attached to */
+  struct _DESKTOP_OBJECT *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL

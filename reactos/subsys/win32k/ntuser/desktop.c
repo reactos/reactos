@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17 2004/07/09 20:57:38 gvg Exp $
+ *  $Id: desktop.c,v 1.18 2004/08/08 17:57:34 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -186,13 +186,29 @@ IntGetFocusMessageQueue(VOID)
 VOID FASTCALL
 IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 {
+   PUSER_MESSAGE_QUEUE Old;
    PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
    if (!pdo)
    {
       DPRINT("No active desktop\n");
       return;
    }
-   pdo->ActiveMessageQueue = NewQueue;
+   if(NewQueue != NULL)
+   {
+      if(NewQueue->Desktop != NULL)
+      {
+        DPRINT("Message Queue already attached to another desktop!\n");
+        return;
+      }
+      IntReferenceMessageQueue(NewQueue);
+      InterlockedExchange((LONG*)&NewQueue->Desktop, (LONG)pdo);
+   }
+   Old = (PUSER_MESSAGE_QUEUE)InterlockedExchange((LONG*)&pdo->ActiveMessageQueue, (LONG)NewQueue);
+   if(Old != NULL)
+   {
+      InterlockedExchange((LONG*)&Old->Desktop, 0);
+      IntDereferenceMessageQueue(Old);
+   }
 }
 
 HWND FASTCALL IntGetDesktopWindow(VOID)
