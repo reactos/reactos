@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.133 2002/05/02 23:45:32 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.134 2002/06/05 16:53:36 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -731,7 +731,7 @@ RtlFreeAnsiString@4
 ;RtlFreeHeap
 RtlFreeOemString@4
 RtlFreeUnicodeString@4
-;RtlGenerate8dot3Name
+RtlGenerate8dot3Name@16
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
 RtlGetDaclSecurityDescriptor@16
@@ -752,7 +752,7 @@ RtlInitializeSid@12
 ;RtlInsertUnicodePrefix
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
-;RtlIsNameLegalDOS8Dot3
+RtlIsNameLegalDOS8Dot3@12
 RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide@20

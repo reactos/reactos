@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.119 2002/05/02 23:45:32 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.120 2002/06/05 16:53:36 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -731,7 +731,7 @@ RtlFreeAnsiString=RtlFreeAnsiString@4
 ;RtlFreeHeap
 RtlFreeOemString=RtlFreeOemString@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
-;RtlGenerate8dot3Name
+RtlGenerate8dot3Name=RtlGenerate8dot3Name@16
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
@@ -752,7 +752,7 @@ RtlInitializeSid=RtlInitializeSid@12
 ;RtlInsertUnicodePrefix
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
-;RtlIsNameLegalDOS8Dot3
+RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide=RtlLargeIntegerDivide@20

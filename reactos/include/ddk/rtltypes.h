@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.1 2002/01/14 01:41:08 ekohl Exp $
+/* $Id: rtltypes.h,v 1.2 2002/06/05 16:49:57 ekohl Exp $
  * 
  */
 
@@ -169,5 +169,16 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
   ULONG DefaultLength;
 } RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
 
+
+typedef struct _GENERATE_NAME_CONTEXT
+{
+  USHORT Checksum;
+  BOOLEAN CheckSumInserted;
+  UCHAR NameLength;
+  WCHAR NameBuffer[8];
+  ULONG ExtensionLength;
+  WCHAR ExtensionBuffer[4];
+  ULONG LastIndexValue;
+} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
 #endif /* __DDK_RTLTYPES_H */

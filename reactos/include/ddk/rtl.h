@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.60 2002/02/20 20:09:52 ekohl Exp $
+/* $Id: rtl.h,v 1.61 2002/06/05 16:49:56 ekohl Exp $
  * 
  */
 
@@ -646,6 +646,10 @@ RtlCopyMemory (
 
 #define RtlCopyBytes RtlCopyMemory
 
+VOID STDCALL
+RtlCopyLuid(IN PLUID LuidDest,
+	    IN PLUID LuidSrc);
+
 VOID
 STDCALL
 RtlCopyString (
@@ -780,6 +784,10 @@ RtlEnlargedUnsignedMultiply (
 	ULONG	Multiplicand,
 	ULONG	Multiplier
 	);
+
+BOOLEAN STDCALL
+RtlEqualLuid(IN PLUID Luid1,
+	     IN PLUID Luid2);
 
 BOOLEAN
 STDCALL
@@ -938,6 +946,12 @@ RtlFreeUnicodeString (
 	PUNICODE_STRING	UnicodeString
 	);
 
+VOID STDCALL
+RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
+		     IN BOOLEAN AllowExtendedCharacters,
+		     IN OUT PGENERATE_NAME_CONTEXT Context,
+		     OUT PUNICODE_STRING Name8dot3);
+
 VOID
 RtlGetCallersAddress (
 	PVOID	* CallersAddress
@@ -1069,13 +1083,10 @@ RtlIsGenericTableEmpty (
 	IN	PRTL_GENERIC_TABLE	Table
 	);
 
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3 (
-	IN	PUNICODE_STRING	UnicodeName,
-	IN OUT	PANSI_STRING	AnsiName,
-	IN OUT	PBOOLEAN	SpacesFound
-	);
+BOOLEAN STDCALL
+RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
+		       IN PANSI_STRING AnsiName,
+		       OUT PBOOLEAN SpacesFound);
 
 LARGE_INTEGER
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.11 2001/06/12 12:29:40 ekohl Exp $
+/* $Id: path.c,v 1.12 2002/06/05 16:50:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -799,79 +799,8 @@ RtlDosSearchPath_U (
 }
 
 
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3 (
-	PUNICODE_STRING	UnicodeName,
-	PANSI_STRING	AnsiName,
-	PBOOLEAN	SpacesFound
-	)
-{
-	PANSI_STRING name = AnsiName;
-	ANSI_STRING DummyString;
-	CHAR Buffer[12];
-	char *str;
-	ULONG Length;
-	ULONG i;
-	NTSTATUS Status;
-	BOOLEAN HasSpace = FALSE;
-	BOOLEAN HasDot = FALSE;
-
-	if (UnicodeName->Length > 24)
-		return FALSE; /* name too long */
-
-	if (!name)
-	{
-		name = &DummyString;
-		name->Length = 0;
-		name->MaximumLength = 12;
-		name->Buffer = Buffer;
-	}
-
-	Status = RtlUpcaseUnicodeStringToCountedOemString (name,
-	                                                   UnicodeName,
-	                                                   FALSE);
-	if (!NT_SUCCESS(Status))
-		return FALSE;
-
-	Length = name->Length;
-	str = name->Buffer;
-
-	if (!(Length == 1 && *str == '.') &&
-	    !(Length == 2 && *str == '.' && *(str + 1) == '.'))
-	{
-		for (i = 0; i < Length; i++, str++)
-		{
-			switch (*str)
-			{
-				case ' ':
-					HasSpace = TRUE;
-					break;
-
-				case '.':
-					if ((HasDot) ||		/* two points */
-					    (!i) ||		/* point is first char */
-					    (i + 1 == Length) ||/* point is last char */
-					    (Length - i > 4))	/* more than 3 chars of extension */
-						return FALSE;
-					HasDot = TRUE;
-					break;
-			}
-		}
-	}
-
-	if (SpacesFound)
-		*SpacesFound = HasSpace;
-
-	return TRUE;
-}
-
-
-BOOLEAN
-STDCALL
-RtlDoesFileExists_U (
-	IN	PWSTR	FileName
-	)
+BOOLEAN STDCALL
+RtlDoesFileExists_U(IN PWSTR FileName)
 {
 	UNICODE_STRING NtFileName;
 	OBJECT_ATTRIBUTES Attr;

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.71 2001/12/02 23:34:41 dwelch Exp $
+; $Id: ntdll.edf,v 1.72 2002/06/05 16:51:20 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -411,7 +411,7 @@ RtlFreeHeap=RtlFreeHeap@12
 RtlFreeSid=RtlFreeSid@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlFreeUserThreadStack=RtlFreeUserThreadStack@8
-;RtlGenerate8dot3Name
+RtlGenerate8dot3Name=RtlGenerate8dot3Name@16
 RtlGetAce=RtlGetAce@12
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
