@@ -120,7 +120,7 @@ ResBitmap::ResBitmap(UINT nid)
 }
 
 
-void explorer_show_frame(HWND hwndDesktop, int cmdshow)
+void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine)
 {
 	if (g_Globals._hMainWnd)
 		return;
@@ -136,8 +136,11 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 		ShowWindow(hMainFrame, cmdshow);
 		UpdateWindow(hMainFrame);
 
-		 // Open the first child window after initializing the whole application
-		PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
+		 // Open the first child window after initializing the application
+		if (lpCmdLine)
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)lpCmdLine);
+		else
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
 	}
 }
 
@@ -161,7 +164,7 @@ static void InitInstance(HINSTANCE hInstance)
 }
 
 
-int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
+int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, LPTSTR lpCmdLine, int cmdshow)
 {
 	CONTEXT("explorer_main");
 
@@ -188,7 +191,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 			cmdshow = SW_MAXIMIZE;
 */
 
-		explorer_show_frame(hwndDesktop, cmdshow);
+		explorer_show_frame(hwndDesktop, cmdshow, lpCmdLine);
 	}
 
 	return Window::MessageLoop();
@@ -300,7 +303,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		}
 	}
 
-	int ret = explorer_main(hInstance, hwndDesktop, nShowCmd);
+	/**TODO fix command line handling */
+	if (*lpCmdLine=='"' && lpCmdLine[_tcslen(lpCmdLine)-1]=='"') {
+		++lpCmdLine;
+		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
+	}
+
+	int ret = explorer_main(hInstance, hwndDesktop, lpCmdLine, nShowCmd);
 
 	return ret;
 }
