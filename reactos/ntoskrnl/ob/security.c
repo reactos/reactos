@@ -45,44 +45,46 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 
 NTSTATUS STDCALL
-NtQuerySecurityObject(IN HANDLE ObjectHandle,
-		      IN CINT SecurityObjectInformationClass,
-		      OUT PVOID SecurityObjectInformation,
+NtQuerySecurityObject(IN HANDLE Handle,
+		      IN SECURITY_INFORMATION SecurityInformation,
+		      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
 		      IN ULONG Length,
-		      OUT PULONG ReturnLength)
+		      OUT PULONG ResultLength)
 {
-   NTSTATUS Status;
-   PVOID Object;
-   OBJECT_HANDLE_INFORMATION HandleInfo;
-   POBJECT_HEADER Header;
-   
-   Status = ObReferenceObjectByHandle(ObjectHandle,
-				      0,
-				      NULL,
-				      KeGetPreviousMode(),
-				      &Object,
-				      &HandleInfo);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-  
-   Header = BODY_TO_HEADER(Object);
-   if (Header->ObjectType != NULL &&
-       Header->ObjectType->Security != NULL)
-     {
-	Status = Header->ObjectType->Security(Object,
-					      SecurityObjectInformationClass,
-					      SecurityObjectInformation,
-					      &Length);
-	*ReturnLength = Length;
-     }
-   else
-     {
-	Status = STATUS_NOT_IMPLEMENTED;
-     }
-   ObDereferenceObject(Object);
-   return(Status);
+  POBJECT_HEADER Header;
+  PVOID Object;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(Handle,
+				     0,
+				     NULL,
+				     KeGetPreviousMode(),
+				     &Object,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  Header = BODY_TO_HEADER(Object);
+  if (Header->ObjectType != NULL &&
+      Header->ObjectType->Security != NULL)
+    {
+      Status = Header->ObjectType->Security(Object,
+					    QuerySecurityDescriptor,
+					    SecurityInformation,
+					    SecurityDescriptor,
+					    &Length);
+      *ResultLength = Length;
+    }
+  else
+    {
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  ObDereferenceObject(Object);
+
+  return(Status);
 }
 
 
@@ -91,7 +93,39 @@ NtSetSecurityObject(IN HANDLE Handle,
 		    IN SECURITY_INFORMATION SecurityInformation,
 		    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-  UNIMPLEMENTED;
+  POBJECT_HEADER Header;
+  PVOID Object;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(Handle,
+				     0,
+				     NULL,
+				     KeGetPreviousMode(),
+				     &Object,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  Header = BODY_TO_HEADER(Object);
+  if (Header->ObjectType != NULL &&
+      Header->ObjectType->Security != NULL)
+    {
+      Status = Header->ObjectType->Security(Object,
+					    SetSecurityDescriptor,
+					    SecurityInformation,
+					    SecurityDescriptor,
+					    NULL);
+    }
+  else
+    {
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  ObDereferenceObject(Object);
+
+  return(Status);
 }
 
 /* EOF */

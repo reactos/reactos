@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.10 2002/11/24 18:26:40 robd Exp $
+/* $Id: setypes.h,v 1.11 2003/02/15 18:43:20 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -158,6 +158,15 @@ typedef struct _SE_EXPORTS
 
 typedef NTSTATUS STDCALL_FUNC
 (*PSE_LOGON_SESSION_TERMINATED_ROUTINE)(IN PLUID LogonId);
+
+
+typedef enum _SECURITY_OPERATION_CODE
+{
+  SetSecurityDescriptor,
+  QuerySecurityDescriptor,
+  DeleteSecurityDescriptor,
+  AssignSecurityDescriptor
+} SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
 
 #endif
 

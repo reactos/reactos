@@ -371,10 +371,17 @@ NTSTATUS STDCALL
 CmiObjectCreate(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
-		struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+		POBJECT_ATTRIBUTES ObjectAttributes);
 
 VOID STDCALL
 CmiObjectDelete(PVOID  DeletedObject);
+
+NTSTATUS STDCALL
+CmiObjectSecurity(PVOID ObjectBody,
+		  SECURITY_OPERATION_CODE OperationCode,
+		  SECURITY_INFORMATION SecurityInformation,
+		  PSECURITY_DESCRIPTOR SecurityDescriptor,
+		  PULONG BufferLength);
 
 VOID
 CmiAddKeyToList(PKEY_OBJECT ParentKey,

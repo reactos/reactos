@@ -234,7 +234,7 @@ NTSTATUS STDCALL
 CmiObjectCreate(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
-		struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+		POBJECT_ATTRIBUTES ObjectAttributes)
 {
   PKEY_OBJECT pKey = ObjectBody;
 
@@ -290,6 +290,19 @@ CmiObjectDelete(PVOID DeletedObject)
     {
       CmiReleaseBlock(KeyObject->RegistryHive, KeyObject->KeyCell);
     }
+}
+
+
+NTSTATUS STDCALL
+CmiObjectSecurity(PVOID ObjectBody,
+		  SECURITY_OPERATION_CODE OperationCode,
+		  SECURITY_INFORMATION SecurityInformation,
+		  PSECURITY_DESCRIPTOR SecurityDescriptor,
+		  PULONG BufferLength)
+{
+  DPRINT1("CmiObjectSecurity() called\n");
+
+  return(STATUS_SUCCESS);
 }
 
 

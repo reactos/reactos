@@ -198,7 +198,6 @@ NtDeleteKey(IN HANDLE KeyHandle)
   DPRINT("KeyHandle %x\n", KeyHandle);
 
   /* Verify that the handle is valid and is a registry key */
-CHECKPOINT1;
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_WRITE,
 				     CmiKeyType,
@@ -207,20 +206,25 @@ CHECKPOINT1;
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       return(Status);
     }
 
-CHECKPOINT1;
   /* Acquire hive lock */
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
-CHECKPOINT1;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
-  /*  Set the marked for delete bit in the key object  */
-  KeyObject->Flags |= KO_MARKED_FOR_DELETE;
-CHECKPOINT1;
+  /* Check for subkeys */
+  if (KeyObject->NumberOfSubKeys != 0)
+    {
+      Status = STATUS_CANNOT_DELETE;
+    }
+  else
+    {
+      /* Set the marked for delete bit in the key object */
+      KeyObject->Flags |= KO_MARKED_FOR_DELETE;
+      Status = STATUS_SUCCESS;
+    }
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
@@ -241,7 +245,7 @@ CHECKPOINT1;
    * have been released.
    */
 
-  return(STATUS_SUCCESS);
+  return(Status);
 }
 
 

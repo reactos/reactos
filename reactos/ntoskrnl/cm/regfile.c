@@ -1021,6 +1021,13 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
       BlockIndex++;
     }
 
+  Status = NtFlushBuffersFile(FileHandle,
+			      &IoStatusBlock);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+    }
+
   NtClose(FileHandle);
 
   return(Status);
@@ -1030,6 +1037,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 static NTSTATUS
 CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 {
+#if 0
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
   LARGE_INTEGER FileOffset;
@@ -1079,13 +1087,25 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 		       sizeof(HIVE_HEADER),
 		       &FileOffset,
 		       NULL);
-  NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+      NtClose(FileHandle);
+      return(Status);
     }
 
+  Status = NtFlushBuffersFile(FileHandle,
+			      &IoStatusBlock);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+    }
+
+  NtClose(FileHandle);
+
   return(Status);
+#endif
+  return(STATUS_SUCCESS);
 }
 
 
@@ -1533,8 +1553,61 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 		PKEY_OBJECT SubKey)
 {
   PHASH_TABLE_CELL HashBlock;
+  PVALUE_LIST_CELL ValueList;
+  PVALUE_CELL ValueCell;
+  PDATA_CELL DataCell;
+  ULONG i;
 
   DPRINT1("CmiRemoveSubKey() called\n");
+
+  /* Remove all values */
+  if (SubKey->KeyCell->NumberOfValues != 0)
+    {
+      /* Get pointer to the value list cell */
+      ValueList = CmiGetBlock(RegistryHive,
+			      SubKey->KeyCell->ValuesOffset,
+			      NULL);
+      if (ValueList != NULL)
+	{
+	  /* Enumerate all values */
+	  for (i = 0; i < SubKey->KeyCell->NumberOfValues; i++)
+	    {
+	      /* Get pointer to value cell */
+	      ValueCell = CmiGetBlock(RegistryHive,
+				      ValueList->Values[i],
+				      NULL);
+	      if (ValueCell != NULL)
+		{
+		  if (ValueCell->DataSize > 4)
+		    {
+		      DataCell = CmiGetBlock(RegistryHive,
+					     ValueCell->DataOffset,
+					     NULL);
+		      if (DataCell != NULL)
+			{
+			  /* Destroy data cell */
+			  CmiDestroyBlock(RegistryHive,
+					  DataCell,
+					  ValueCell->DataOffset);
+			}
+		    }
+
+		  /* Destroy value cell */
+		  CmiDestroyBlock(RegistryHive,
+				  ValueCell,
+				  ValueList->Values[i]);
+		}
+	    }
+	}
+
+      /* Destroy value list cell */
+      CmiDestroyBlock(RegistryHive,
+		      ValueList,
+		      SubKey->KeyCell->ValuesOffset);
+
+      SubKey->KeyCell->NumberOfValues = 0;
+      SubKey->KeyCell->ValuesOffset = -1;
+    }
 
   /* Remove the key from the parent key's hash block */
   if (ParentKey->KeyCell->HashTableOffset != -1)

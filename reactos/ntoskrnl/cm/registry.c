@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.84 2003/02/14 17:48:54 ekohl Exp $
+/* $Id: registry.c,v 1.85 2003/02/15 18:46:28 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -280,7 +280,7 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Close = NULL;
   CmiKeyType->Delete = CmiObjectDelete;
   CmiKeyType->Parse = CmiObjectParse;
-  CmiKeyType->Security = NULL;
+  CmiKeyType->Security = CmiObjectSecurity;
   CmiKeyType->QueryName = NULL;
   CmiKeyType->OkayToClose = NULL;
   CmiKeyType->Create = CmiObjectCreate;

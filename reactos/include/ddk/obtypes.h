@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.19 2002/11/24 18:26:40 robd Exp $ */
+/* $Id: obtypes.h,v 1.20 2003/02/15 18:43:20 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -94,13 +94,18 @@ typedef struct _OBJECT_TYPE
 			     PUNICODE_STRING FullPath,
 			     PWSTR *Path,
 			     ULONG Attributes);
-  
-   /*
-    */
-  NTSTATUS STDCALL_FUNC (*Security)(PVOID Object,
-			       ULONG InfoClass,
-			       PVOID Info,
-			       PULONG InfoLength);
+
+  /*
+   * PURPOSE: Called to set, query, delete or assign a security-descriptor
+   * to the object
+   * RETURNS
+   *     STATUS_SUCCESS       NextObject was found
+   */
+  NTSTATUS STDCALL_FUNC (*Security)(PVOID ObjectBody,
+				    SECURITY_OPERATION_CODE OperationCode,
+				    SECURITY_INFORMATION SecurityInformation,
+				    PSECURITY_DESCRIPTOR SecurityDescriptor,
+				    PULONG BufferLength);
   
   /*
    */

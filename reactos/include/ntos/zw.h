@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.5 2003/01/05 19:23:20 robd Exp $
+/* $Id: zw.h,v 1.6 2003/02/15 18:44:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3466,21 +3466,15 @@ ZwSetLowWaitHighEventPair(
 	HANDLE EventPair
 	);
 
-NTSTATUS
-STDCALL
-NtSetSecurityObject(
-	IN HANDLE Handle, 
-	IN SECURITY_INFORMATION SecurityInformation, 
-	IN PSECURITY_DESCRIPTOR SecurityDescriptor 
-	); 
+NTSTATUS STDCALL
+NtSetSecurityObject(IN HANDLE Handle,
+		    IN SECURITY_INFORMATION SecurityInformation,
+		    IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
-NTSTATUS
-STDCALL
-ZwSetSecurityObject(
-	IN HANDLE Handle, 
-	IN SECURITY_INFORMATION SecurityInformation, 
-	IN PSECURITY_DESCRIPTOR SecurityDescriptor 
-	); 
+NTSTATUS STDCALL
+ZwSetSecurityObject(IN HANDLE Handle,
+		    IN SECURITY_INFORMATION SecurityInformation,
+		    IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 
 /*
@@ -4963,25 +4957,19 @@ ZwQueryObject(
 	OUT PULONG ResultLength
 	);
 
-NTSTATUS
-STDCALL
-NtQuerySecurityObject(
-	IN HANDLE Object,
-	IN CINT SecurityObjectInformationClass,
-	OUT PVOID SecurityObjectInformation,
-	IN ULONG Length,
-	OUT PULONG ReturnLength
-	);
+NTSTATUS STDCALL
+NtQuerySecurityObject(IN HANDLE Handle,
+		      IN SECURITY_INFORMATION SecurityInformation,
+		      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+		      IN ULONG Length,
+		      OUT PULONG ResultLength);
 
-NTSTATUS
-STDCALL
-ZwQuerySecurityObject(
-	IN HANDLE Object,
-	IN CINT SecurityObjectInformationClass,
-	OUT PVOID SecurityObjectInformation,
-	IN ULONG Length,
-	OUT PULONG ReturnLength
-	);
+NTSTATUS STDCALL
+ZwQuerySecurityObject(IN HANDLE Handle,
+		      IN SECURITY_INFORMATION SecurityInformation,
+		      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+		      IN ULONG Length,
+		      OUT PULONG ResultLength);
 
 /*
  * FUNCTION: Queries the virtual memory information.
