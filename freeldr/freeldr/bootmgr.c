@@ -191,7 +191,7 @@ U32	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32	 OperatingSyste
 S32 GetTimeOut(VOID)
 {
 	UCHAR	TimeOutText[20];
-	U32		TimeOut;
+	S32		TimeOut;
 	U32		SectionId;
 
 	TimeOut = CmdLineGetTimeOut();
