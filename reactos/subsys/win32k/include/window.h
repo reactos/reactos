@@ -102,7 +102,7 @@ VOID     FASTCALL W32kReleaseWindowObject (PWINDOW_OBJECT Window);
 HWND     STDCALL  W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
 			PWNDCLASS_OBJECT DesktopClass,
 			ULONG Width, ULONG Height);
-BOOL     FASTCALL W32kIsDesktopWindow (HWND hWnd);
+BOOL     FASTCALL W32kIsDesktopWindow (PWINDOW_OBJECT Window);
 HWND     FASTCALL W32kGetActiveWindow (VOID);
 BOOL     FASTCALL W32kIsWindowVisible (HWND Wnd);
 BOOL     FASTCALL W32kIsChildWindow (HWND Parent, HWND Child);

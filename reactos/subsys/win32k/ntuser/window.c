@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.73 2003/08/01 14:44:03 dwelch Exp $
+/* $Id: window.c,v 1.74 2003/08/01 20:24:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,52 +69,44 @@ static LIST_ENTRY RegisteredMessageListHead;
 HWND STDCALL
 NtUserGetAncestor(HWND hWnd, UINT Flags)
 {
-  if (W32kIsDesktopWindow(hWnd))
+  PWINDOW_OBJECT WindowObject;
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return(NULL);
+    }
+  if (W32kIsDesktopWindow(WindowObject))
     {
       return(NULL);
     }
   if (Flags & GA_PARENT)
-    {
-      PWINDOW_OBJECT Window;
+    {      
       HWND hParent;
 
-      Window = W32kGetWindowObject(hWnd);
-      if (Window == NULL)
+      if (WindowObject->Parent == NULL)
 	{
-	  return(NULL);
-	}     
-
-      if (Window->Parent == NULL)
-	{
-	  W32kReleaseWindowObject(Window);
+	  W32kReleaseWindowObject(WindowObject);
 	}
 
-      hParent = Window->Parent->Self;
+      hParent = WindowObject->Parent->Self;
 
-      W32kReleaseWindowObject(Window);
+      W32kReleaseWindowObject(WindowObject);
 
       return(hParent);
     }
   else if (Flags & GA_ROOT)
   {
-	  PWINDOW_OBJECT Window;
 	  PWINDOW_OBJECT pChainEnumerator;
 	  HWND hRoot;
 
-	  Window = W32kGetWindowObject(hWnd);
-	  if(Window == NULL)
-	  {
-		  return(NULL);
-	  }
-
-	  pChainEnumerator = Window;
-	  while(!W32kIsDesktopWindow(pChainEnumerator->Parent->Self))
+	  pChainEnumerator = WindowObject;
+	  while(!W32kIsDesktopWindow(pChainEnumerator->Parent))
 	  {
 	    pChainEnumerator = pChainEnumerator->Parent;
 	  }
 
 	  hRoot = pChainEnumerator->Self;
-	  W32kReleaseWindowObject(Window);
+	  W32kReleaseWindowObject(WindowObject);
 
 	  return(hRoot);
   }	  
@@ -228,13 +220,10 @@ W32kIsWindowVisible(HWND Wnd)
 }
 
 BOOL FASTCALL
-W32kIsDesktopWindow(HWND hWnd)
+W32kIsDesktopWindow(PWINDOW_OBJECT WindowObject)
 {
-  PWINDOW_OBJECT WindowObject;
   BOOL IsDesktop;
-  WindowObject = W32kGetWindowObject(hWnd);
   IsDesktop = WindowObject->Parent == NULL;
-  W32kReleaseWindowObject(WindowObject);
   return(IsDesktop);
 }
 

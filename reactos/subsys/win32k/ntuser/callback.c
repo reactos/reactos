@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.10 2003/06/05 03:55:36 mdill Exp $
+/* $Id: callback.c,v 1.11 2003/08/01 20:24:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -176,11 +176,14 @@ W32kCallWindowProc(WNDPROC Proc,
   NTSTATUS Status;
   PVOID ResultPointer;
   ULONG ResultLength;
+  PWINDOW_OBJECT WindowObject = W32kGetWindowObject(Wnd);
 
-  if (W32kIsDesktopWindow(Wnd))
+  if (W32kIsDesktopWindow(WindowObject))
     {
+      W32kReleaseWindowObject(WindowObject);
       return(W32kDesktopWindowProc(Wnd, Message, wParam, lParam));
     }
+  W32kReleaseWindowObject(WindowObject);
 
   Arguments.Proc = Proc;
   Arguments.Wnd = Wnd;
