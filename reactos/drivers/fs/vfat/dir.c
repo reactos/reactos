@@ -166,14 +166,14 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 NTSTATUS
 VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 				     PDEVICE_EXTENSION DeviceExt,
-				     PFILE_FULL_DIRECTORY_INFORMATION pInfo,
+				     PFILE_FULL_DIR_INFORMATION pInfo,
 				     ULONG BufferLength)
 {
-  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
+  if ((sizeof (FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    ULONG_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+    ULONG_ROUND_UP (sizeof (FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length);
   RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
   if (DeviceExt->Flags & VCB_IS_FATX)
@@ -220,10 +220,10 @@ VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 NTSTATUS
 VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 			    PDEVICE_EXTENSION DeviceExt,
-			    PFILE_BOTH_DIRECTORY_INFORMATION pInfo,
+			    PFILE_BOTH_DIR_INFORMATION pInfo,
 			    ULONG BufferLength)
 {
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   
   if (DeviceExt->Flags & VCB_IS_FATX)
@@ -231,7 +231,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->FileNameLength = DirContext->LongNameU.Length;
     RtlCopyMemory(pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
     pInfo->NextEntryOffset = 
-      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     pInfo->ShortName[0] = 0;
     pInfo->ShortNameLength = 0;
     //      pInfo->FileIndex=;
@@ -264,7 +264,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   {
     pInfo->FileNameLength = DirContext->LongNameU.Length;
     pInfo->NextEntryOffset = 
-      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     RtlCopyMemory(pInfo->ShortName, DirContext->ShortNameU.Buffer, DirContext->ShortNameU.Length);
     pInfo->ShortNameLength = DirContext->ShortNameU.Length;
     RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
@@ -427,13 +427,13 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
              case FileFullDirectoryInformation:
                RC = VfatGetFileFullDirectoryInformation (&DirContext, 
 	                                                 IrpContext->DeviceExt,
-						         (PFILE_FULL_DIRECTORY_INFORMATION) Buffer, 
+						         (PFILE_FULL_DIR_INFORMATION) Buffer, 
 						         BufferLength);
                break;
              case FileBothDirectoryInformation:
                RC = VfatGetFileBothInformation (&DirContext, 
 	                                        IrpContext->DeviceExt,
-					        (PFILE_BOTH_DIRECTORY_INFORMATION) Buffer, 
+					        (PFILE_BOTH_DIR_INFORMATION) Buffer, 
 					        BufferLength);
                break;
              default:

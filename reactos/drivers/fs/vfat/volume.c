@@ -233,7 +233,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
    
   /* Search existing volume entry on disk */
   FileOffset.QuadPart = 0;
-  if (CcMapData(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+  if (CcPinRead(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
   {
     while (TRUE)
     {
@@ -256,7 +256,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
       {
 	     CcUnpinData(Context);
 	     FileOffset.u.LowPart += PAGE_SIZE;
-	     if (!CcMapData(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+	     if (!CcPinRead(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
 	     {
 	       Context = NULL;
 	       break;
@@ -277,7 +277,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
     {
       FileOffset.u.HighPart = 0;
       FileOffset.u.LowPart = VolumeLabelDirIndex * SizeDirEntry;
-      CcMapData(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
+      CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
                  TRUE, &Context, (PVOID*)&Entry);
       RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
       CcSetDirtyPinnedData(Context, NULL);

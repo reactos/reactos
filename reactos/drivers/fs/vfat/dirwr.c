@@ -49,7 +49,7 @@ VfatUpdateEntry (PVFATFCB pFcb)
 
   Offset.u.HighPart = 0;
   Offset.u.LowPart = dirIndex * SizeDirEntry;
-  if (CcMapData (pFcb->parentFcb->FileObject, &Offset, SizeDirEntry,
+  if (CcPinRead (pFcb->parentFcb->FileObject, &Offset, SizeDirEntry,
       TRUE, &Context, (PVOID*)&PinEntry))
     {
       pFcb->Flags &= ~FCB_IS_DIRTY;
@@ -99,7 +99,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
         CcUnpinData(Context);
       }
       // FIXME: check return value
-      CcMapData (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
+      CcPinRead (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       FileOffset.u.LowPart += DeviceExt->FatInfo.BytesPerCluster;
     }
@@ -153,7 +153,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
       // clear the new dir cluster
       FileOffset.u.LowPart = (ULONG)(pDirFcb->RFCB.FileSize.QuadPart -
                                      DeviceExt->FatInfo.BytesPerCluster);
-      CcMapData (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
+      CcPinRead (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (DeviceExt->Flags & VCB_IS_FATX)
         memset(pFatEntry, 0xff, DeviceExt->FatInfo.BytesPerCluster);
@@ -164,7 +164,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
     {
       // clear the entry after the last new entry
       FileOffset.u.LowPart = (*start + nbSlots) * SizeDirEntry;
-      CcMapData (pDirFcb->FileObject, &FileOffset, SizeDirEntry,
+      CcPinRead (pDirFcb->FileObject, &FileOffset, SizeDirEntry,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (DeviceExt->Flags & VCB_IS_FATX)
         memset(pFatEntry, 0xff, SizeDirEntry);
@@ -448,7 +448,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
     {
       /* one cluster */
       CHECKPOINT;
-      CcMapData (ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY),
+      CcPinRead (ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY),
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (nbSlots > 1)
         {
@@ -463,13 +463,13 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       size = DeviceExt->FatInfo.BytesPerCluster -
              (DirContext.StartIndex * sizeof(FAT_DIR_ENTRY)) % DeviceExt->FatInfo.BytesPerCluster;
       i = size / sizeof(FAT_DIR_ENTRY);
-      CcMapData (ParentFcb->FileObject, &FileOffset, size, TRUE,
+      CcPinRead (ParentFcb->FileObject, &FileOffset, size, TRUE,
                  &Context, (PVOID*)&pFatEntry);
       RtlCopyMemory(pFatEntry, Buffer, size);
       CcSetDirtyPinnedData(Context, NULL);
       CcUnpinData(Context);
       FileOffset.u.LowPart += size;
-      CcMapData (ParentFcb->FileObject, &FileOffset,
+      CcPinRead (ParentFcb->FileObject, &FileOffset,
                  nbSlots * sizeof(FAT_DIR_ENTRY) - size,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (nbSlots - 1 > i)
@@ -587,7 +587,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    /* add entry into parent directory */
    FileOffset.u.HighPart = 0;
    FileOffset.u.LowPart = DirContext.StartIndex * sizeof(FATX_DIR_ENTRY);
-   CcMapData(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY),
+   CcPinRead(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY),
              TRUE, &Context, (PVOID*)&pFatXDirEntry);
    RtlCopyMemory(pFatXDirEntry, &DirContext.DirEntry.FatX, sizeof(FATX_DIR_ENTRY));
    CcSetDirtyPinnedData(Context, NULL);
@@ -641,7 +641,7 @@ FATDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
             CcUnpinData(Context);
           }
           Offset.u.LowPart = (i * sizeof(FAT_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
-          CcMapData (pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
+          CcPinRead (pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
                      &Context, (PVOID*)&pDirEntry);
         }
       pDirEntry[i % (PAGE_SIZE / sizeof(FAT_DIR_ENTRY))].Filename[0] = 0xe5;
@@ -690,10 +690,10 @@ FATXDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
   DPRINT ("delete entry: %d\n", StartIndex);
   Offset.u.HighPart = 0;
   Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
-  if (!CcMapData (pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
+  if (!CcPinRead (pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
                      &Context, (PVOID*)&pDirEntry))
   {
-    DPRINT1("CcMapData(Offset %x:%x, Length %d) failed\n", Offset.u.HighPart, Offset.u.LowPart, PAGE_SIZE);
+    DPRINT1("CcPinRead(Offset %x:%x, Length %d) failed\n", Offset.u.HighPart, Offset.u.LowPart, PAGE_SIZE);
     return STATUS_UNSUCCESSFUL;
   }
   pDirEntry = &pDirEntry[StartIndex % (PAGE_SIZE / sizeof(FATX_DIR_ENTRY))];
