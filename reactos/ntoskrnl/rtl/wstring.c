@@ -60,7 +60,7 @@ wchar_t *_wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 {
 	wchar_t *t = wsToFill;
 	int i = 0;
-	while( *wsToFill != 0 && i < sizeMaxFill)
+	while( *wsToFill != 0 && i < (int) sizeMaxFill)
 	{
 		*wsToFill = wcFill;
 		wsToFill++;
@@ -193,7 +193,7 @@ size_t wcslen(const wchar_t *s)
 
 wchar_t * wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
 {
-  int i, j;
+  unsigned int i, j;
    
   for (j = 0; dest[j] != 0; j++)
     ;
@@ -224,7 +224,7 @@ int wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count)
 
 wchar_t *wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 {
-  int i;
+  unsigned int i;
    
   for (i = 0; i < count; i++)
     {

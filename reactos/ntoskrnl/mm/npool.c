@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.63 2002/11/05 20:47:05 hbirr Exp $
+/* $Id: npool.c,v 1.64 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -840,7 +840,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    ULONG nr_pages = PAGE_ROUND_UP(size + sizeof(BLOCK_HDR)) / PAGE_SIZE;
    ULONG start;
    BLOCK_HDR* blk=NULL;
-   int i;
+   ULONG i;
    KIRQL oldIrql;
    NTSTATUS Status;
    PVOID block = NULL;

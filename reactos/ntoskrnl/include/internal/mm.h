@@ -437,7 +437,7 @@ MiZeroPage(PHYSICAL_ADDRESS PhysPage);
 BOOLEAN 
 MmIsAccessedAndResetAccessPage(struct _EPROCESS* Process, PVOID Address);
 
-#define STATUS_MM_RESTART_OPERATION       (0xD0000001)
+#define STATUS_MM_RESTART_OPERATION       ((NTSTATUS)0xD0000001)
 
 NTSTATUS 
 MmCreateVirtualMappingForKernel(PVOID Address, 

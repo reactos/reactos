@@ -945,7 +945,7 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
-  ULONG MaxValueData;
+  LONG MaxValueData;
   ULONG i;
 
   VERIFY_KEY_CELL(KeyCell);
@@ -1010,7 +1010,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
       if (Attributes & OBJ_CASE_INSENSITIVE)
         {
           if ((HashBlock->Table[i].KeyOffset != 0) &&
-              (HashBlock->Table[i].KeyOffset != -1) &&
+              (HashBlock->Table[i].KeyOffset != (ULONG_PTR)-1) &&
               (_strnicmp(KeyName, (PCHAR) &HashBlock->Table[i].HashValue, 4) == 0))
             {
               CurSubKeyCell = CmiGetBlock(RegistryHive, 
@@ -1032,7 +1032,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
       else
         {
           if (HashBlock->Table[i].KeyOffset != 0 &&
-              HashBlock->Table[i].KeyOffset != -1 &&
+              HashBlock->Table[i].KeyOffset != (ULONG_PTR) -1 &&
               !strncmp(KeyName, (PCHAR) &HashBlock->Table[i].HashValue, 4))
             {
               CurSubKeyCell = CmiGetBlock(RegistryHive,
@@ -1147,7 +1147,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	    return Status;
 	  }
 
-  if (KeyCell->HashTableOffset == -1)
+  if (KeyCell->HashTableOffset == (ULONG_PTR) -1)
     {
       Status = CmiAllocateHashTableBlock(RegistryHive,
         &HashBlock,
@@ -1333,7 +1333,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
       KeyCell->ValuesOffset = VLBOffset;
     }
   else if ((KeyCell->NumberOfValues
-		>= ((LONG) (ValueListCell->CellSize - 4)) / (LONG) sizeof(BLOCK_OFFSET)))
+		>= (ULONG) ((LONG) (ValueListCell->CellSize - 4)) / (LONG) sizeof(BLOCK_OFFSET)))
     {
       Status = CmiAllocateBlock(RegistryHive,
 	      (PVOID) &NewValueListCell,
@@ -1896,7 +1896,7 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
   if (ppBin)
     *ppBin = NULL;
 
-  if ((BlockOffset == 0) || (BlockOffset == -1))
+  if ((BlockOffset == 0) || (BlockOffset == (ULONG_PTR) -1))
     return NULL;
 
   if (IsVolatileHive(RegistryHive))

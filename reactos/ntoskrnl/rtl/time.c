@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.14 2002/09/30 20:54:59 hbirr Exp $
+/* $Id: time.c,v 1.15 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,8 +32,8 @@
 #define DAYSPERLEAPYEAR    366
 #define MONSPERYEAR        12
 
-#define TICKSTO1970         0x019db1ded53e8000
-#define TICKSTO1980         0x01a8e79fe1d58000
+#define TICKSTO1970         0x019db1ded53e8000LL
+#define TICKSTO1980         0x01a8e79fe1d58000LL
 
 
 static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};

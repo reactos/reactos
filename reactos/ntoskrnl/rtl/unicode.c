@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.24 2002/10/20 03:13:51 robd Exp $
+/* $Id: unicode.c,v 1.25 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -735,7 +735,7 @@ RtlIntegerToChar(IN ULONG Value,
 		tp++;
 	}
 
-	if (tp - temp >= Length)
+	if ((ULONG) (tp - temp) >= Length)
 		return STATUS_BUFFER_TOO_SMALL;
 
 	sp = String;

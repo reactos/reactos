@@ -130,12 +130,16 @@
   /*************************************************************************/
 
 
+#if __GNUC__ >= 3
+#define FT_TRACE( level, varformat )         do ; while ( 0 )      /* nothing */
+#else
 #define FT_TRACE( level, varformat )                      \
           do                                              \
           {                                               \
             if ( ft_trace_levels[FT_COMPONENT] >= level ) \
               FT_XCAT( FT_Message, varformat );           \
           } while ( 0 )
+#endif
 
 
   FT_EXPORT_DEF( void )  FT_SetTraceLevel( FT_Trace  component,
@@ -190,8 +194,11 @@
   /* print a message and exit */
   FT_EXPORT_DEF( void )  FT_Panic( const char*  fmt, ... );
 
+#if __GNUC__ >= 3
+#define FT_ERROR( varformat )         do ; while ( 0 )      /* nothing */
+#else
 #define FT_ERROR( varformat )  FT_XCAT( FT_Message, varformat )
-
+#endif
 
 #endif /* FT_DEBUG_LEVEL_TRACE || FT_DEBUG_LEVEL_ERROR */
 

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.3 2002/09/08 10:23:31 chorns Exp $
+/* $Id: resource.c,v 1.4 2002/11/10 18:17:41 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -120,7 +120,7 @@ LdrFindResource_U(PVOID BaseAddress,
 		    {
 		       ws = (PWCHAR)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
 		       if (!wcsncmp((PWCHAR)Id, ws + 1, *ws ) &&
-			   wcslen((PWCHAR)Id) == (int)*ws )
+			   wcslen((PWCHAR)Id) == (ULONG)*ws )
 			 {
 			    goto found;
 			 }

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.2 2002/10/26 09:53:16 dwelch Exp $
+/* $Id: exception.c,v 1.3 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -152,7 +152,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
  
   DPRINT("RegistrationFrame is 0x%X\n", RegistrationFrame);
 
-  while ((ULONG_PTR)RegistrationFrame != -1)
+  while ((ULONG_PTR)RegistrationFrame != (ULONG_PTR)-1)
   {
     EXCEPTION_RECORD ExceptionRecord2;
     DWORD Temp = 0;
@@ -363,7 +363,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   Context.Eax = EaxValue;
  
   // Begin traversing the list of EXCEPTION_REGISTRATION
-  while ((ULONG_PTR)ERHead != -1)
+  while ((ULONG_PTR)ERHead != (ULONG_PTR)-1)
   {
     EXCEPTION_RECORD er2;
  
@@ -466,7 +466,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   DPRINT("Ran out of exception registrations. RegistrationFrame is (0x%X)\n",
     RegistrationFrame);
 
-  if ((ULONG_PTR)RegistrationFrame == -1)
+  if ((ULONG_PTR)RegistrationFrame == (ULONG_PTR)-1)
     NtContinue(&Context, FALSE);
   else
     NtRaiseException(pExceptRec, &Context, 0);

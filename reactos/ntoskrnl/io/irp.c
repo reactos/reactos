@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.45 2002/10/03 19:39:56 robd Exp $
+/* $Id: irp.c,v 1.46 2002/11/10 18:17:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -221,13 +221,13 @@ IofCompleteRequest(PIRP Irp,
  *                         thread making the request
  */
 {
-   unsigned int i;
+   ULONG i;
    NTSTATUS Status;
    
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
 	   Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
-   for (i=Irp->CurrentLocation;i<Irp->StackCount;i++)
+   for (i=Irp->CurrentLocation;i<(ULONG)Irp->StackCount;i++)
    {
       if (Irp->Stack[i].CompletionRoutine != NULL)
       {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.100 2002/11/05 20:50:02 hbirr Exp $
+/* $Id: section.c,v 1.101 2002/11/10 18:17:42 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1773,7 +1773,7 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
   NTSTATUS Status;
 
   Length = 
-    min(Length, MemoryArea->BaseAddress + MemoryArea->Length - BaseAddress);
+    min(Length, (ULONG) (MemoryArea->BaseAddress + MemoryArea->Length - BaseAddress));
   Region = MmFindRegion(MemoryArea->BaseAddress,
 			&MemoryArea->Data.SectionData.RegionListHead,
 			BaseAddress, NULL);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.13 2002/09/08 10:23:32 chorns Exp $
+/* $Id: balance.c,v 1.14 2002/11/10 18:17:42 chorns Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -171,7 +171,7 @@ MiRebalanceMemoryConsumers(VOID)
   NTSTATUS Status;
 
   Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
-  Target = min(Target, MiMinimumPagesPerRun);
+  Target = min(Target, (LONG) MiMinimumPagesPerRun);
 
   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.3 2002/09/08 10:23:29 chorns Exp $
+/* $Id: queue.c,v 1.4 2002/11/10 18:17:41 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -48,7 +48,7 @@ KeInitializeQueue(IN PKQUEUE Queue,
   InitializeListHead(&Queue->EntryListHead);
   InitializeListHead(&Queue->ThreadListEntry);
   Queue->CurrentCount = 0;
-  Queue->MaximumCount = (Count == 0) ? KeNumberProcessors : Count;
+  Queue->MaximumCount = (Count == 0) ? (ULONG) KeNumberProcessors : Count;
 }
 
 

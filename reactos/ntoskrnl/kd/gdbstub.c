@@ -406,7 +406,7 @@ GspMem2Hex (PCHAR Address,
 
   if (MayFault)
     MemoryFaultRoutine = GspSetMemoryError;
-  for (i = 0; i < Count; i++)
+  for (i = 0; i < (ULONG) Count; i++)
     {
       ch = GspGetChar (Address++);
       if (MayFault && GspMemoryError)

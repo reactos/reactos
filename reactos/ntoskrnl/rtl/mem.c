@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.16 2002/09/08 10:23:41 chorns Exp $
+/* $Id: mem.c,v 1.17 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,7 +78,7 @@ RtlCompareMemory (
  * RETURNS: Number of equal bytes
  */
 {
-   int i,total;
+   ULONG i,total;
 
    for (i=0,total=0;i<Length;i++)
      {
@@ -109,7 +109,7 @@ RtlCompareMemoryUlong (
 {
 	PULONG ptr = (PULONG)Source;
 	ULONG  len = Length / sizeof(ULONG);
-	int i;
+	ULONG i;
 
 	for (i = 0; i < len; i++)
 	{

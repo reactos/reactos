@@ -212,7 +212,7 @@ DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags)
         {
           for (i = 0; FacList[i].Name != NULL; i++)
             {
-              if (FacList[i].Code == NT_FACILITY(ErrorCode))
+              if (FacList[i].Code == (ULONG) NT_FACILITY(ErrorCode))
                 {
                   break;
                 }

@@ -1,3 +1,37 @@
+2002-11-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/defines.h: Fix warnings when bulding with gcc 3.3.
+	* include/ddk/status.h: Ditto.
+	* include/freetype/internal/ftdebug.h: Ditto.
+	* include/net/ndis.h: Ditto.
+	* lib/msafd/misc/helpers.c: Ditto.
+	* lib/user32/windows/defwnd.c: Ditto.
+	* lib/user32/windows/window.c: Ditto.
+	* ntoskrnl/cm/ntfunc.c: Ditto.
+	* ntoskrnl/cm/regfile.c: Ditto.
+	* ntoskrnl/cm/regobj.c: Ditto.
+	* ntoskrnl/dbg/errinfo.c: Ditto.
+	* ntoskrnl/ex/hashtab.c: Ditto.
+	* ntoskrnl/include/internal/mm.h: Ditto.
+	* ntoskrnl/io/irp.c: Ditto.
+	* ntoskrnl/kd/gdbstub.c: Ditto.
+	* ntoskrnl/ke/queue.c: Ditto.
+	* ntoskrnl/ke/sem.c: Ditto.
+	* ntoskrnl/ldr/resource.c: Ditto.
+	* ntoskrnl/mm/balance.c: Ditto.
+	* ntoskrnl/mm/freelist.c: Ditto.
+	* ntoskrnl/mm/mdl.c: Ditto.
+	* ntoskrnl/mm/npool.c: Ditto.
+	* ntoskrnl/mm/section.c: Ditto.
+	* ntoskrnl/rtl/error.c: Ditto.
+	* ntoskrnl/rtl/mem.c: Ditto.
+	* ntoskrnl/rtl/string.c: Ditto.
+	* ntoskrnl/rtl/time.c: Ditto.
+	* ntoskrnl/rtl/unicode.c: Ditto.
+	* ntoskrnl/rtl/wstring.c: Ditto.
+	* ntoskrnl/rtl/i386/exception.c: Ditto.
+	* subsys/win32k/freetype/src/base/ftinit.c: Ditto.
+
 2002-11-03  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apps/tests/lpc/lpcclt.c: Change LPC_MESSAGE_HEADER to LPC_MESSAGE.

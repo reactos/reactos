@@ -1292,7 +1292,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	  RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
 	}
       /* If new data size is <= current then overwrite current data */
-      else if (DataSize <= (ValueCell->DataSize & 0x7fffffff))
+      else if (DataSize <= (ULONG) (ValueCell->DataSize & 0x7fffffff))
 	{
 	  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset,&pBin);
 	  RtlCopyMemory(DataCell->Data, Data, DataSize);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.11 2002/09/08 10:23:29 chorns Exp $
+/* $Id: sem.c,v 1.12 2002/11/10 18:17:41 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -89,7 +89,7 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
    KeAcquireDispatcherDatabaseLock(Wait);
    
    InitialState = Semaphore->Header.SignalState;
-   if (Semaphore->Limit < InitialState + Adjustment ||
+   if (Semaphore->Limit < (LONG) InitialState + Adjustment ||
        InitialState > InitialState + Adjustment)
      {
 	ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);

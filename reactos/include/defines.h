@@ -570,7 +570,7 @@ extern "C" {
 #define TAPE_SHORT_FILEMARKS	(0x2L)
 
 /* CreateWindow */
-#define CW_USEDEFAULT	(0x80000000)
+#define CW_USEDEFAULT	(0x80000000L)
 #define WS_BORDER	(0x800000L)
 #define WS_CAPTION	(0xc00000L)
 #define WS_CHILD	(0x40000000L)

@@ -195,7 +195,7 @@ ExInitializeHashTable(IN PHASH_TABLE  HashTable,
   IN BOOLEAN  UseNonPagedPool)
 {
   BOOLEAN Status;
-  LONG Index;
+  ULONG Index;
 
   RtlZeroMemory(HashTable, sizeof(HASH_TABLE));
 

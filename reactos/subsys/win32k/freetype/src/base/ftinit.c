@@ -39,6 +39,7 @@
 
 #include <freetype/config/ftconfig.h>
 #include <freetype/internal/ftobjs.h>
+
 #include <freetype/internal/ftdebug.h>
 #include <freetype/ftmodule.h>
 

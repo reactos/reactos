@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.46 2002/11/05 20:45:09 hbirr Exp $
+/* $Id: mdl.c,v 1.47 2002/11/10 18:17:42 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -396,7 +396,7 @@ MmBuildMdlForNonPagedPool (PMDL	Mdl)
  *              byte offset and length
  */
 {
-   int va;
+   ULONG va;
    Mdl->MdlFlags = Mdl->MdlFlags | 
      (MDL_SOURCE_IS_NONPAGED_POOL | MDL_PAGES_LOCKED);
    for (va=0; va < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); va++)

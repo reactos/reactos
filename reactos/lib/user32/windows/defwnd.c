@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.14 2002/11/05 20:59:48 hbirr Exp $
+/* $Id: defwnd.c,v 1.15 2002/11/10 18:17:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -691,7 +691,7 @@ DefWndTrackMinMaxBox(HWND hWnd, WPARAM wParam)
 	  continue;
 	}
 
-      Pressed = DefWndHitTestNC(hWnd, Msg.pt) == wParam;
+      Pressed = DefWndHitTestNC(hWnd, Msg.pt) == (LRESULT) wParam;
       if (Pressed != OldState)
 	{
 	  if (wParam == HTMINBUTTON)

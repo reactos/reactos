@@ -466,7 +466,7 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
     }
 
   TargetPath->Length = min(TargetPath->MaximumLength - sizeof(WCHAR),
-			   ValueCell->DataSize);
+			   (ULONG) ValueCell->DataSize);
 
   if (ValueCell->DataSize > 0)
     {

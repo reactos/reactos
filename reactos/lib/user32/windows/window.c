@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.15 2002/10/31 00:02:01 dwelch Exp $
+/* $Id: window.c,v 1.16 2002/11/10 18:17:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -286,15 +286,15 @@ CreateWindowExA(DWORD dwExStyle,
 
   /* Fixup default coordinates. */
   sw = SW_SHOW;
-  if (x == CW_USEDEFAULT || nWidth == CW_USEDEFAULT)
+  if (x == (LONG) CW_USEDEFAULT || nWidth == (LONG) CW_USEDEFAULT)
     {
       if (dwStyle & (WS_CHILD | WS_POPUP))
 	{
-	  if (x == CW_USEDEFAULT)
+	  if (x == (LONG) CW_USEDEFAULT)
 	    {
 	      x = y = 0;
 	    }
-	  if (nWidth == CW_USEDEFAULT)
+	  if (nWidth == (LONG) CW_USEDEFAULT)
 	    {
 	      nWidth = nHeight = 0;
 	    }
@@ -305,9 +305,9 @@ CreateWindowExA(DWORD dwExStyle,
 
 	  GetStartupInfoA(&info);
 
-	  if (x == CW_USEDEFAULT)
+	  if (x == (LONG) CW_USEDEFAULT)
 	    {
-	      if (y != CW_USEDEFAULT)
+	      if (y != (LONG) CW_USEDEFAULT)
 		{
 		  sw = y;
 		}
@@ -315,7 +315,7 @@ CreateWindowExA(DWORD dwExStyle,
 	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
 	    }
 	  
-	  if (nWidth == CW_USEDEFAULT)
+	  if (nWidth == (LONG) CW_USEDEFAULT)
 	    {
 	      if (info.dwFlags & STARTF_USESIZE)
 		{
@@ -391,15 +391,15 @@ CreateWindowExW(DWORD dwExStyle,
 
   /* Fixup default coordinates. */
   sw = SW_SHOW;
-  if (x == CW_USEDEFAULT || nWidth == CW_USEDEFAULT)
+  if (x == (LONG) CW_USEDEFAULT || nWidth == (LONG) CW_USEDEFAULT)
     {
       if (dwStyle & (WS_CHILD | WS_POPUP))
 	{
-	  if (x == CW_USEDEFAULT)
+	  if (x == (LONG) CW_USEDEFAULT)
 	    {
 	      x = y = 0;
 	    }
-	  if (nWidth == CW_USEDEFAULT)
+	  if (nWidth == (LONG) CW_USEDEFAULT)
 	    {
 	      nWidth = nHeight = 0;
 	    }
@@ -410,9 +410,9 @@ CreateWindowExW(DWORD dwExStyle,
 
 	  GetStartupInfoW(&info);
 
-	  if (x == CW_USEDEFAULT)
+	  if (x == (LONG) CW_USEDEFAULT)
 	    {
-	      if (y != CW_USEDEFAULT)
+	      if (y != (LONG) CW_USEDEFAULT)
 		{
 		  sw = y;
 		}
@@ -420,7 +420,7 @@ CreateWindowExW(DWORD dwExStyle,
 	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
 	    }
 	  
-	  if (nWidth == CW_USEDEFAULT)
+	  if (nWidth == (LONG) CW_USEDEFAULT)
 	    {
 	      if (info.dwFlags & STARTF_USESIZE)
 		{

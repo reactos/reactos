@@ -122,7 +122,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 {
    ULONG NrPages;
    ULONG i;
-   ULONG start;
+   LONG start;
    ULONG length;
    KIRQL oldIrql;
    
