@@ -17,11 +17,8 @@
 #include <basetsd.h>
 
 #ifdef __GNUC__
-//#define STDCALL_FUNCPTR(a) STDCALL (* a)
-//#define STDCALL_FUNC(a) (STDCALL a )
 #define STDCALL_FUNC STDCALL
 #else
-//#define STDCALL_FUNCPTR(a) (STDCALL * a )
 #define STDCALL_FUNC(a) (__stdcall a )
 #endif /*__GNUC__*/
 
@@ -104,29 +101,7 @@ typedef float *PFLOAT;
 typedef unsigned short *PWCH;
 typedef unsigned short *PWORD;
 
-#ifdef __GNUC__
-//typedef long long LONGLONG;
-//typedef unsigned long long ULONGLONG;
-//typedef long long *PLONGLONG;
-//typedef unsigned long long *PULONGLONG;
-#define LONGLONG long long
-#define ULONGLONG unsigned long long
-#define PLONGLONG long long *
-#define PULONGLONG unsigned long long *
-#else
-//typedef double LONGLONG;
-//typedef double ULONGLONG;
-//typedef double *PLONGLONG;
-//typedef double *PULONGLONG;
-#include <msvcrt\crttypes.h>
-#define inline __inline
-#define __asm__
-#define __volatile__(a)
-#define __attribute__(a)
-struct _KTHREAD { int foobar; };
-struct _ETHREAD { int foobar; };
-struct _EPROCESS { int foobar; };
-#endif
+#include <msvcrt\crttypes.h> // for definition of LONGLONG, PLONGLONG etc
 
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;

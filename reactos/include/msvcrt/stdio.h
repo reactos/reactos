@@ -22,9 +22,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Date: 2002/11/25 15:47:52 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -213,9 +213,12 @@ FILE*   _wpopen(const wchar_t* szPipeName, const wchar_t* szMode);
 int fprintf(FILE* filePrintTo, const char* szFormat, ...);
 int printf(const char* szFormat, ...);
 int sprintf(char* caBuffer, const char* szFormat, ...);
+int _snprintf(char*, size_t, const char*, ...);
 int vfprintf(FILE* filePrintTo, const char* szFormat, va_list varg);
 int vprintf(const char* szFormat, va_list varg);
 int vsprintf(char* caBuffer, const char* szFormat, va_list varg);
+int _vsnprintf(char* caBuffer, size_t cnt, const char* szFormat, va_list varg);
+int _vsnwprintf (wchar_t*, size_t, const wchar_t*, va_list);
 
 /* Wide character versions */
 int fwprintf(FILE* filePrintTo, const wchar_t* wsFormat, ...);
