@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.50 2003/01/04 02:07:18 hbirr Exp $ */
+/* $Id: vfat.h,v 1.51 2003/01/11 16:02:29 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -174,7 +174,6 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_FAT              0x0004
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
-#define FCB_UPDATE_DIRENTRY	0x0020
 
 typedef struct _VFATFCB
 {
