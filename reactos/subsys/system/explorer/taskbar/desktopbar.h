@@ -54,6 +54,7 @@
 #define	IDC_CONTROL_PANEL		0x1012
 #define	IDC_PRINTERS			0x1013
 #define	IDC_SEARCH				0x1016
+#define	IDC_TERMINATE			0x1017
 
 #define	IDC_FIRST_MENU			0x3000
 

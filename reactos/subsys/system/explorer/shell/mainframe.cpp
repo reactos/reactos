@@ -188,7 +188,7 @@ void MainFrame::jump_to(LPCITEMIDLIST path, int mode)
 	} else {
 		_create_info._open_mode = mode;
 		_create_info._shell_path = path;
-		_create_info._root_shell_path = path;//DesktopFolderPath();	//@@
+		_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
 
 		update_explorer_view();
 	}

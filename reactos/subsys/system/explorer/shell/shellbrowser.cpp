@@ -662,9 +662,8 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 	}
 
 		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
-	if (!entry) {
+	if (!entry)
 		UpdateFolderView(ShellFolder(pidl));
-	}
 }
 
 void ShellBrowserChild::jump_to(Entry* entry)

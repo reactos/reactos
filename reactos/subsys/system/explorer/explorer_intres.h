@@ -34,6 +34,7 @@
 #define IDS_STARTMENU                   32
 #define IDS_MINIMIZE_ALL                33
 #define IDS_DESKTOP_NUM                 34
+#define IDS_TERMINATE                   45
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
