@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: mdi - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\Robert\LOCALS~1\Temp\RSP1EF.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fp"Debug/mdi.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"F:\DATAVOL\PROJECTS\REACTOS\source\rosapps\templates\mdi\childwnd.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\Robert\LOCALS~1\Temp\RSP1EF.tmp" 
+Creating temporary file "C:\DOCUME~1\Robert\LOCALS~1\Temp\RSP1F0.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib ../../lib/ros2win/Debug/ros2win.lib /nologo /subsystem:windows /incremental:yes /pdb:"Debug/mdi.pdb" /debug /machine:I386 /out:"Debug/mdi.exe" /pdbtype:sept 
+.\Debug\about.obj
+.\Debug\childwnd.obj
+.\Debug\framewnd.obj
+.\Debug\main.obj
+.\Debug\StdAfx.obj
+.\Debug\mdi.res
+.\Debug\panelwnd.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\Robert\LOCALS~1\Temp\RSP1F0.tmp"
+<h3>Output Window</h3>
+Compiling...
+childwnd.c
+F:\DATAVOL\PROJECTS\REACTOS\source\rosapps\templates\mdi\childwnd.c(267) : warning C4102: 'def' : unreferenced label
+Linking...
+
+
+
+<h3>Results</h3>
+mdi.exe - 0 error(s), 1 warning(s)
+</pre>
+</body>
+</html>
