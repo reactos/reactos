@@ -36,6 +36,17 @@ GetScreenSize (PSHORT maxx, PSHORT maxy)
 		*maxy = csbi.dwSize.Y;
 }
 
+
+static
+VOID ConOutPuts (LPTSTR szText)
+{
+	DWORD dwWritten;
+
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
+}
+
+
 static VOID
 ConInKey (VOID)
 {
@@ -86,10 +97,17 @@ int main (int argc, char **argv)
 
 	len = _tcslen (msg);
 	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	hKeyboard = CreateFile ("CONIN$", GENERIC_READ,
-	                        0,NULL,OPEN_ALWAYS,0,0);
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+
+	if (_tcsncmp (argv[1], _T("/?"), 2) == 0)
+	{
+		ConOutPuts(_T("Help text still missing!!"));
+		return 0;
+	}
+
+	hKeyboard = CreateFile ("CONIN$", GENERIC_READ,
+	                        0,NULL,OPEN_ALWAYS,0,0);
 
 	GetScreenSize(&maxx,&maxy);
 

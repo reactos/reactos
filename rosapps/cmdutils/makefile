@@ -2,7 +2,7 @@
 #  ReactOS cmdutils makefile
 #
 
-TARGET=more.exe tee.exe
+TARGET=more.exe tee.exe y.exe
 
 all: $(TARGET)
 
@@ -17,6 +17,9 @@ tee.exe: tee.o
 	$(CC) tee.o -lkernel32 -lcrtdll -o tee.exe
 	$(NM) --numeric-sort tee.exe > tee.sym
 
+y.exe: y.o
+	$(CC) y.o -lkernel32 -lcrtdll -o y.exe
+	$(NM) --numeric-sort y.exe > y.sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
