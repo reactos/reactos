@@ -25,6 +25,9 @@
 <directory name="comdlg32">
 	<xi:include href="comdlg32/comdlg32.xml" />
 </directory>
+<directory name="cpl">
+	<xi:include href="cpl/directory.xml" />
+</directory>
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
 </directory>
