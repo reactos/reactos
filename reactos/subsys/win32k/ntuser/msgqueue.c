@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.36 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: msgqueue.c,v 1.37 2003/11/23 12:08:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -269,10 +269,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (Window == NULL)
   {
-    /* set default cursor */
-    if(CaptureWin == NULL)
-      IntSendSetCursorMessage(NULL, Msg, HTNOWHERE);
-    
     ExFreePool(Message);
     return(FALSE);
   }
@@ -311,11 +307,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   
   *ScreenPoint = Message->Msg.pt;
   Point = Message->Msg.pt;
-  
-  if(!CaptureWin && !IntSendSetCursorMessage(Window, Msg, *HitTest))
-  {
-    /* FIXME - what should we do here? */
-  }
 
   if ((*HitTest) != HTCLIENT)
   {

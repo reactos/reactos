@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.25 2003/11/23 11:39:48 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.26 2003/11/23 12:08:00 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -62,21 +62,6 @@ IntCopyBitmap(HBITMAP bmp)
   
   return ret;
 }
-
-LPARAM FASTCALL
-IntSendSetCursorMessage(PWINDOW_OBJECT Window, USHORT Msg, USHORT HitTest)
-{
-  /* FIXME - high-order word of lParam is 0 if we're in menu mode */
-  if(Window)
-    return IntSendMessage(Window->Self, WM_SETCURSOR, (WPARAM)Window->Self, MAKELPARAM(HitTest, Msg), FALSE);
-  else
-  {
-    /* set default cursor */
-    IntLoadDefaultCursors(TRUE);
-    return 1;
-  }
-}
-
 
 #define COLORCURSORS_ALLOWED FALSE
 HCURSOR FASTCALL
