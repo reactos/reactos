@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.158 2003/07/12 10:24:45 chorns Exp $
+; $Id: ntoskrnl.def,v 1.159 2003/07/25 23:51:23 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -218,6 +218,7 @@ HalPrivateDispatchTable DATA
 @InterlockedExchangeAdd@8
 @InterlockedIncrement@4
 @InterlockedPopEntrySList@4
+@InterlockedPushEntrySList@8
 IoAcquireCancelSpinLock@4
 IoAcquireRemoveLockEx@20
 IoAcquireVpbSpinLock@4
