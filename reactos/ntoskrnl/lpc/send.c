@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.19 2004/11/11 22:37:05 ion Exp $
+/* $Id: send.c,v 1.20 2004/11/13 22:27:16 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -218,7 +218,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 			PLPC_MESSAGE UnsafeLpcReply)
 {
    PETHREAD CurrentThread;
-   struct _EPROCESS *AttachedProcess;
+   struct _KPROCESS *AttachedProcess;
    NTSTATUS Status;
    PEPORT Port;
    PQUEUEDMESSAGE Message;
@@ -257,7 +257,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      }
    else
      {
-       AttachedProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
+       AttachedProcess = CurrentThread->Tcb.ApcState.Process;
        KeDetachProcess();
      }
 
@@ -268,7 +268,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      {
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(Status);
@@ -277,7 +277,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      {
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
@@ -287,7 +287,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      {
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(STATUS_NO_MEMORY);
@@ -299,7 +299,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(Status);
@@ -310,7 +310,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
@@ -320,7 +320,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)
          {
-           KeAttachProcess((PKPROCESS)AttachedProcess);
+           KeAttachProcess(AttachedProcess);
          }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
@@ -336,7 +336,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 	ExFreePool(LpcRequest);
         if (NULL != AttachedProcess)
           {
-            KeAttachProcess((PKPROCESS)AttachedProcess);
+            KeAttachProcess(AttachedProcess);
           }
 	ObDereferenceObject(Port);
 	return(Status);
@@ -382,7 +382,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      }
    if (NULL != AttachedProcess)
      {
-       KeAttachProcess((PKPROCESS)AttachedProcess);
+       KeAttachProcess(AttachedProcess);
      }
    ObDereferenceObject(Port);
    

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.150 2004/11/11 22:40:30 ion Exp $
+/* $Id: process.c,v 1.151 2004/11/13 22:27:15 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -364,7 +364,7 @@ PiDeleteProcessWorker(PVOID pContext)
 
   if (CurrentProcess != Process)
     {
-      KeAttachProcess((PKPROCESS)Process);
+      KeAttachProcess(&Process->Pcb);
     }
 
   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
@@ -486,7 +486,7 @@ PsCreatePeb(HANDLE ProcessHandle,
     }
   DPRINT("TableBase %p  ViewSize %lx\n", TableBase, ViewSize);
 
-  KeAttachProcess((PKPROCESS)Process);
+  KeAttachProcess(&Process->Pcb);
 
   /* Initialize the PEB */
   RtlZeroMemory(Peb, sizeof(PEB));

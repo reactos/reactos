@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.84 2004/11/11 22:23:52 ion Exp $
+/* $Id: virtual.c,v 1.85 2004/11/13 22:27:16 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -425,7 +425,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                           UserMode,
                           IoWriteAccess);
 
-      KeAttachProcess((PKPROCESS)Process);
+      KeAttachProcess(&Process->Pcb);
 
       SystemAddress = MmGetSystemAddressForMdl(Mdl);
       memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
@@ -553,7 +553,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
          ObDereferenceObject(Process);
          return(STATUS_NO_MEMORY);
       }
-      KeAttachProcess((PKPROCESS)Process);
+      KeAttachProcess(&Process->Pcb);
 
       SystemAddress = MmGetSystemAddressForMdl(Mdl);
       memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);

@@ -453,7 +453,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    if (AddressSpace->Process != NULL &&
          AddressSpace->Process != CurrentProcess)
    {
-      KeAttachProcess((PKPROCESS)AddressSpace->Process);
+      KeAttachProcess(&AddressSpace->Process->Pcb);
    }
    EndAddress = (char*)MemoryArea->BaseAddress + PAGE_ROUND_UP(MemoryArea->Length); 
    for (Address = MemoryArea->BaseAddress; Address < EndAddress; Address += PAGE_SIZE)

@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.82 2004/11/11 22:40:30 ion Exp $
+/* $Id: kill.c,v 1.83 2004/11/13 22:27:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -288,7 +288,7 @@ PiTerminateProcess(PEPROCESS Process,
    CurrentProcess = PsGetCurrentProcess();
    if (Process != CurrentProcess)
    {
-      KeAttachProcess((PKPROCESS) Process );
+      KeAttachProcess(&Process->Pcb);
    }
    ObCloseAllHandles(Process);
    if (Process != CurrentProcess)
