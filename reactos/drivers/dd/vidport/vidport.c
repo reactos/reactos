@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.13 2000/03/19 13:31:36 ekohl Exp $
+/* $Id: vidport.c,v 1.14 2000/07/07 11:56:04 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -245,7 +245,7 @@ VideoPortInitialize(IN PVOID  Context1,
                                                    &Again);
       if (!NT_SUCCESS(Status))
         {
-          DbgPrint("HwFindAdapter call failed");
+          DbgPrint("HwFindAdapter call failed\n");
           IoDeleteDevice(MPDeviceObject);
 
           return  Status;
