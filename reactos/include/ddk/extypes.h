@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.24 2004/10/03 03:03:53 ion Exp $ */
+/* $Id: extypes.h,v 1.25 2004/10/22 22:49:00 weiden Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -39,16 +39,18 @@ typedef struct _ERESOURCE
 } ERESOURCE, *PERESOURCE;
 
 #define EX_RUNDOWN_ACTIVE       0x1
+#define EX_RUNDOWN_COUNT_SHIFT 0x1
+#define EX_RUNDOWN_COUNT_INC   (0x1 << EX_RUNDOWN_COUNT_SHIFT)
 
 typedef struct _RUNDOWN_DESCRIPTOR {
-    ULONG References;
-    PKEVENT RundownEvent;
+    ULONG_PTR References;
+    KEVENT RundownEvent;
 } RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
 
 typedef struct _EX_RUNDOWN_REF {
     union {
         ULONG_PTR Count;
-        PRUNDOWN_DESCRIPTOR Pointer;
+        PRUNDOWN_DESCRIPTOR Ptr;
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
