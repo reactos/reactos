@@ -1,3 +1,7 @@
+2002-07-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile (install_before): Install system.hiv to correct location.
+
 2002-07-04  David Welch  <welch@computer2.darkstar.org>
 
 	* subsys/win32k/include/callback.h: Fixed callback argument

@@ -745,7 +745,7 @@ install_before:
 	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
 	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
 	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
-	$(CP) system.hiv $(INSTALL_DIR)/system32/system.hiv
+	$(CP) system.hiv $(INSTALL_DIR)/system32/config/system.hiv
 	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/media/fonts/helb____.ttf
 	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/media/fonts/timr____.ttf
 
