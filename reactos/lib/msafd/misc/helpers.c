@@ -82,6 +82,7 @@ SockGetTdiName(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Can't get transport list\n"));
         return Status;
     }
     
@@ -95,6 +96,7 @@ SockGetTdiName(
         
         /* Check for error */
         if (Status) {
+            AFD_DbgPrint(MIN_TRACE, ("Can't get mapping\n"));
             HeapFree(GlobalHeap, 0, Transports);
             return Status;
         }
@@ -107,6 +109,7 @@ SockGetTdiName(
 
             /* Check for error */
             if (Status) {
+                AFD_DbgPrint(MIN_TRACE, ("Can't load helper DLL\n"));
                 HeapFree(GlobalHeap, 0, Transports);
                 HeapFree(GlobalHeap, 0, Mapping);
                 return Status;
@@ -162,6 +165,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (TransportKey == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         return WSAEINVAL;
     }
 
@@ -178,6 +182,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
         return WSAEINVAL;
     }
 
@@ -186,6 +191,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
         return WSAEINVAL;
     }
 
@@ -194,6 +200,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (*Mapping == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         return WSAEINVAL;
     }
 
@@ -202,6 +209,7 @@ SockLoadTransportMapping(
     
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
         HeapFree(GlobalHeap, 0, *Mapping);
         return WSAEINVAL;
     }
@@ -228,6 +236,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
         return WSAEINVAL;
     }
     
@@ -241,6 +250,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
         return WSAEINVAL;
     }
 
@@ -249,6 +259,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (*TransportList == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         return WSAEINVAL;
     }
 
@@ -262,6 +273,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
         HeapFree(GlobalHeap, 0, *TransportList);
         return WSAEINVAL;
     }
@@ -278,19 +290,20 @@ SockLoadHelperDll(
     PHELPER_DATA *HelperDllData)
 {
     PHELPER_DATA	HelperData;
-    PWSTR			HelperDllName;
-    PWSTR			FullHelperDllName;
-    ULONG			HelperDllNameSize;
-    PWSTR			HelperKey;
-    HKEY			KeyHandle;
-    ULONG			DataSize;
-    LONG			Status;
+    PWSTR               HelperDllName;
+    PWSTR               FullHelperDllName;
+    ULONG               HelperDllNameSize;
+    PWSTR               HelperKey;
+    HKEY                KeyHandle;
+    ULONG               DataSize;
+    LONG                Status;
     
     /* Allocate space for the Helper Structure and TransportName */
     HelperData = HeapAlloc(GlobalHeap, 0, sizeof(*HelperData) + (wcslen(TransportName) + 1) * sizeof(WCHAR));
 
     /* Check for error */
     if (HelperData == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         return WSAEINVAL;
     }
     
@@ -299,6 +312,7 @@ SockLoadHelperDll(
 	
     /* Check for error */
     if (HelperKey == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -315,6 +329,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -356,6 +371,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (HelperDllName == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -364,6 +380,7 @@ SockLoadHelperDll(
 	
     /* Check for error */
     if (FullHelperDllName == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
         HeapFree(GlobalHeap, 0, HelperDllName);
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
@@ -380,6 +397,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
         HeapFree(GlobalHeap, 0, FullHelperDllName);
         HeapFree(GlobalHeap, 0, HelperDllName);
         HeapFree(GlobalHeap, 0, HelperData);
@@ -398,6 +416,7 @@ SockLoadHelperDll(
     HeapFree(GlobalHeap, 0, FullHelperDllName);
 
     if (HelperData->hInstance == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Error loading helper DLL\n"));
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
