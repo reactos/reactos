@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.12 2003/05/07 21:41:03 gvg Exp $
+/* $Id: process.c,v 1.13 2003/05/08 05:26:36 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -44,6 +44,7 @@ KeAttachProcess (PEPROCESS Process)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
+   PVOID ESP;
    PULONG AttachedProcessPageDir;
    ULONG PageDir;
    
@@ -68,8 +69,11 @@ KeAttachProcess (PEPROCESS Process)
       To prevent this, make sure the page directory of the process we're
       attaching to is up-to-date. */
 
+   __asm__("mov %%esp,%0\n\t"
+            : "=r" (ESP));
+
    AttachedProcessPageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase);
-   MmUpdatePageDir(AttachedProcessPageDir);
+   MmUpdatePageDir(AttachedProcessPageDir, ESP);
    ExUnmapPage(AttachedProcessPageDir);
 
    CurrentThread->OldProcess = PsGetCurrentProcess();
@@ -77,7 +81,7 @@ KeAttachProcess (PEPROCESS Process)
    PageDir = Process->Pcb.DirectoryTableBase.u.LowPart;
    DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"
-	   : /* no inputs */
+	   : /* no outputs */
 	   : "r" (PageDir));
    
    

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.48 2003/05/07 21:41:03 gvg Exp $
+/* $Id: page.c,v 1.49 2003/05/08 05:26:36 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1214,21 +1214,13 @@ MmGetPhysicalAddress(PVOID vaddr)
 
 
 VOID
-MmUpdatePageDir(PULONG LocalPageDir)
+MmUpdatePageDir(PULONG LocalPageDir, PVOID Address)
 {
-  unsigned Entry;
+  unsigned Entry = ADDR_TO_PDE_OFFSET(Address);
 
-  for (Entry = ADDR_TO_PDE_OFFSET(KERNEL_BASE);
-       Entry < PAGE_SIZE / sizeof(LONG);
-       Entry++)
+  if (0 == LocalPageDir[Entry])
     {
-      /* Skip the page directory */
-      if (ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) != Entry &&
-          0 == LocalPageDir[Entry] &&
-          0 != MmGlobalKernelPageDirectory[Entry])
-	{
-	  LocalPageDir[Entry] = MmGlobalKernelPageDirectory[Entry];
-	}
+      LocalPageDir[Entry] = MmGlobalKernelPageDirectory[Entry];
     }
 }
 
