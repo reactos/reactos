@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.44 2003/12/21 22:41:00 navaraf Exp $
+/* $Id: stubs.c,v 1.45 2004/01/10 02:57:08 arty Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -213,43 +213,6 @@ ExtCreateRegion(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ExtFloodFill(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	COLORREF	a3,
-	UINT		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FloodFill(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	COLORREF	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 /*
  * @unimplemented
