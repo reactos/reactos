@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.14 2002/05/25 13:30:53 ekohl Exp $
+/* $Id: scsiport.c,v 1.15 2002/05/26 20:25:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -185,7 +185,7 @@ NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {
-  DbgPrint("ScsiPort Driver %s\n", VERSION);
+  DPRINT("ScsiPort Driver %s\n", VERSION);
   return(STATUS_SUCCESS);
 }
 
