@@ -110,12 +110,14 @@ LdrFindResource_U(PVOID BaseAddress,
     int j, pos = 0;
     LCID UserLCID, SystemLCID;
     LANGID UserLangID, SystemLangID;
+    BOOL MappedAsDataFile;
 
+    MappedAsDataFile = LdrMappedAsDataFile(&BaseAddress);
     DPRINT("LdrFindResource_U(%08x, %08x, %d, %08x)\n", BaseAddress, ResourceInfo, Level, ResourceDataEntry);
 
     /* Get the pointer to the resource directory */
     ResDir = (PIMAGE_RESOURCE_DIRECTORY)RtlImageDirectoryEntryToData(BaseAddress,
-                      TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &i);
+                      ! MappedAsDataFile, IMAGE_DIRECTORY_ENTRY_RESOURCE, &i);
     if (ResDir == NULL) {
         return STATUS_RESOURCE_DATA_NOT_FOUND;
     }
@@ -278,18 +280,20 @@ LdrAccessResource(IN  PVOID BaseAddress,
     ULONG DataSize;
     ULONG Offset = 0;
     ULONG Data;
+    BOOL MappedAsDataFile;
 
     if(!ResourceDataEntry)
         return STATUS_RESOURCE_DATA_NOT_FOUND;
 
+    MappedAsDataFile = LdrMappedAsDataFile(&BaseAddress);
     Data = (ULONG)RtlImageDirectoryEntryToData(BaseAddress,
                            TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &DataSize);
     if (Data == 0) {
         return STATUS_RESOURCE_DATA_NOT_FOUND;
     }
-    if ((ULONG)BaseAddress & 1) {
+    if (MappedAsDataFile) {
         /* loaded as ordinary file */
-        NtHeader = RtlImageNtHeader((PVOID)((ULONG)BaseAddress & ~1UL));
+        NtHeader = RtlImageNtHeader(BaseAddress);
         Offset = (ULONG)BaseAddress - Data + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
         Section = RtlImageRvaToSection(NtHeader, BaseAddress, NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
         if (Section == NULL) {
