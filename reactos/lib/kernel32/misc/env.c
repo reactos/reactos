@@ -336,12 +336,23 @@ GetVersionExA(
     lpVersionInformation->dwBuildNumber = viw.dwBuildNumber;
     lpVersionInformation->dwPlatformId = viw.dwPlatformId;
     
+    /* convert the win version string */
     RtlInitUnicodeString(&CSDVersionW, viw.szCSDVersion);
     
     CSDVersionA.Length = 0;
     CSDVersionA.MaximumLength = sizeof(lpVersionInformation->szCSDVersion);
     CSDVersionA.Buffer = lpVersionInformation->szCSDVersion;
     
+    RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
+
+    /* convert the ReactOS version string */
+    CSDVersionW.Buffer = viw.szCSDVersion + CSDVersionW.Length / sizeof(WCHAR) + 1;
+    CSDVersionW.MaximumLength = sizeof(viw.szCSDVersion) - (CSDVersionW.Length + sizeof(WCHAR));
+    CSDVersionW.Length = wcslen(CSDVersionW.Buffer) * sizeof(WCHAR);
+    CSDVersionA.Buffer = lpVersionInformation->szCSDVersion + CSDVersionA.Length + 1;
+    CSDVersionA.MaximumLength = sizeof(lpVersionInformation->szCSDVersion) - (CSDVersionA.Length + 1);
+    CSDVersionA.Length = 0;
+
     RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
     
     /* copy back the extended fields */
