@@ -1,2 +1,4 @@
 mouclass.coff
-mouclass.sys.unstripped
+*.o
+*.sym
+*.sys

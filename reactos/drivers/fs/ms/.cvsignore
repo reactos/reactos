@@ -1,2 +1,4 @@
 msfs.coff
-msfs.sys.unstripped
+*.o
+*.sym
+*.sys

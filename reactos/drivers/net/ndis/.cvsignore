@@ -3,3 +3,4 @@ ndis.coff
 *.d
 *.o
 *.sym
+*.sys

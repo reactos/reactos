@@ -1,4 +1,5 @@
 base.tmp
 junk.tmp
-ne2000.coff
 temp.exp
+ne2000.coff
+*.sym

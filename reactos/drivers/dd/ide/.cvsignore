@@ -2,4 +2,6 @@ base.tmp
 junk.tmp
 temp.exp
 ide.coff
-ide.sys.unstripped
+*.sys
+*.sym
+*.o

@@ -2,5 +2,6 @@ base.tmp
 junk.tmp
 temp.exp
 vfatfs.coff
-vfatfs.sys.unstripped
-*.d
+*.o
+*.sys
+*.sym

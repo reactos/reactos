@@ -1,3 +1,4 @@
 vgaddi.coff
-vgaddi.dll
-vgaddi.nostrip.dll
+*.sym
+*.o
+*.dll

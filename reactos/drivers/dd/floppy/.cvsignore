@@ -1,2 +1,4 @@
-floppy.sys.unstripped
 floppy.coff
+*.sys
+*.o
+*.sym

@@ -1,2 +1,4 @@
 keyboard.coff
-keyboard.sys.unstripped
+*.o
+*.sym
+*.sys

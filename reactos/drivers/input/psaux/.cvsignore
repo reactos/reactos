@@ -1,2 +1,4 @@
 psaux.coff
-psaux.sys.unstripped
+*.o
+*.sys
+*.sym

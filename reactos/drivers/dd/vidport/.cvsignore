@@ -1,2 +1,4 @@
 vidport.coff
-vidport.sys.unstripped
+*.o
+*.sym
+*.sys

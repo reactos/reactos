@@ -6,3 +6,4 @@ isapnp.sys.unstripped
 *.d
 *.o
 *.sym
+*.sys

@@ -2,5 +2,6 @@ junk.tmp
 base.tmp
 temp.exp
 vgamp.coff
-vgamp.sys
-vgamp.sys.unstripped
+*.o
+*.sym
+*.sys
