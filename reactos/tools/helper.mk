@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.13 2002/05/05 14:57:45 chorns Exp $
+# $Id: helper.mk,v 1.14 2002/06/14 13:20:08 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -553,7 +553,7 @@ endif
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 
 clean:
-	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
+	- $(RM) .*.d *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
