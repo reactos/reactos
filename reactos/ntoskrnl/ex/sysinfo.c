@@ -154,6 +154,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       RtlReleaseCapturedUnicodeString(&WName,
                                      PreviousMode,
                                      FALSE);
+      DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
       return STATUS_PRIVILEGE_NOT_HELD;
     }
     
@@ -295,6 +296,7 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       }
       else
       {
+        DPRINT1("NtSetSystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
         Status = STATUS_PRIVILEGE_NOT_HELD;
       }
       

@@ -1638,7 +1638,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       KeyCell->Flags |= REG_KEY_LINK_CELL;
     }
 
-  NtQuerySystemTime (&KeyCell->LastWriteTime);
+  ZwQuerySystemTime (&KeyCell->LastWriteTime);
   CmiMarkBlockDirty (RegistryHive, KeyObject->KeyCellOffset);
 
   ExReleaseResourceLite(&CmiRegistryLock);
@@ -1683,7 +1683,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 				 KeyObject->KeyCellOffset,
 				 ValueName);
 
-  NtQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
+  ZwQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
   CmiMarkBlockDirty (KeyObject->RegistryHive, KeyObject->KeyCellOffset);
 
   /* Release hive lock */

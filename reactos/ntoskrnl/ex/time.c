@@ -142,28 +142,57 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
  * RETURNS: Status
  */
 NTSTATUS STDCALL
-NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
-		OUT PLARGE_INTEGER UnsafeOldSystemTime OPTIONAL)
+NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
+		OUT PLARGE_INTEGER PreviousTime OPTIONAL)
 {
   LARGE_INTEGER OldSystemTime;
   LARGE_INTEGER NewSystemTime;
   LARGE_INTEGER LocalTime;
   TIME_FIELDS TimeFields;
-  NTSTATUS Status;
-
-  /* FIXME: Check for SeSystemTimePrivilege */
-
-  Status = MmCopyFromCaller(&NewSystemTime, UnsafeNewSystemTime,
-			    sizeof(NewSystemTime));
-  if (!NT_SUCCESS(Status))
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(SystemTime,
+                   sizeof(LARGE_INTEGER),
+                   sizeof(ULONG));
+      NewSystemTime = *SystemTime;
+      if(PreviousTime != NULL)
+      {
+        ProbeForWrite(PreviousTime,
+                      sizeof(LARGE_INTEGER),
+                      sizeof(ULONG));
+      }
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
     {
       return Status;
     }
+  }
+  
+  if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege,
+                             PreviousMode))
+  {
+    DPRINT1("NtSetSystemTime: Caller requires the SeSystemtimePrivilege privilege!\n");
+    return STATUS_PRIVILEGE_NOT_HELD;
+  }
+  
+  if(PreviousTime != NULL)
+  {
+    KeQuerySystemTime(&OldSystemTime);
+  }
 
-  if (UnsafeOldSystemTime != NULL)
-    {
-      KeQuerySystemTime(&OldSystemTime);
-    }
   ExSystemTimeToLocalTime(&NewSystemTime,
 			  &LocalTime);
   RtlTimeToTimeFields(&LocalTime,
@@ -173,15 +202,18 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
   /* Set system time */
   KiSetSystemTime(&NewSystemTime);
 
-  if (UnsafeOldSystemTime != NULL)
+  if(PreviousTime != NULL)
+  {
+    _SEH_TRY
     {
-      Status = MmCopyToCaller(UnsafeOldSystemTime, &OldSystemTime,
-			      sizeof(OldSystemTime));
-      if (!NT_SUCCESS(Status))
-	{
-          return Status;
-	}
+      *PreviousTime = OldSystemTime;
     }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
 
   return STATUS_SUCCESS;
 }
@@ -194,19 +226,38 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
  *          time of day in the standard time format.
  */
 NTSTATUS STDCALL
-NtQuerySystemTime(OUT PLARGE_INTEGER UnsafeCurrentTime)
+NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
-  LARGE_INTEGER CurrentTime;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  KeQuerySystemTime(&CurrentTime);
-  Status = MmCopyToCaller(UnsafeCurrentTime, &CurrentTime,
-			  sizeof(CurrentTime));
-  if (!NT_SUCCESS(Status))
+  PreviousMode = ExGetPreviousMode();
+
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
     {
-      return(Status);
+      ProbeForRead(SystemTime,
+                   sizeof(LARGE_INTEGER),
+                   sizeof(ULONG));
+
+      /* it's safe to pass the pointer directly to KeQuerySystemTime as it's just
+         a basic copy to these pointer, if it raises an exception nothing dangerous
+         can happen! */
+      KeQuerySystemTime(SystemTime);
     }
-  return STATUS_SUCCESS;
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+  else
+  {
+    KeQuerySystemTime(SystemTime);
+  }
+  
+  return Status;
 }
 
 

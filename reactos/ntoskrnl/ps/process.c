@@ -1932,6 +1932,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
                                        PreviousMode))
             {
+              DPRINT1("NtSetInformationProcess: Caller requires the SeTcbPrivilege privilege for setting ProcessSessionInformation!\n");
               /* can't set the session id, bail! */
               Status = STATUS_PRIVILEGE_NOT_HELD;
               break;

@@ -178,6 +178,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
       if(!SeSinglePrivilegeCheck(SeSystemProfilePrivilege,
                                  PreviousMode))
       {
+        DPRINT1("NtCreateProfile: Caller requires the SeSystemProfilePrivilege privilege!\n");
         return STATUS_PRIVILEGE_NOT_HELD;
       }
     }

@@ -256,7 +256,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
   DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
 
-  NtQuerySystemTime (&SymbolicLink->CreateTime);
+  ZwQuerySystemTime (&SymbolicLink->CreateTime);
 
   DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
   ObDereferenceObject(SymbolicLink);
