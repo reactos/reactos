@@ -103,72 +103,50 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 
 VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 {
-	char	name[260];
-	char	value[260];
-	int		head, sector, cylinder;
-	int		offset;
-	int		i;
+	UCHAR					SettingName[80];
+	UCHAR					SettingValue[80];
+	ULONG					SectionId;
+	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 
 	// Find all the message box settings and run them
-	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	ShowMessageBoxesInSection(OperatingSystemName);
+
+	// Try to open the operating system section in the .ini file
+	if (!OpenSection(OperatingSystemName, &SectionId))
 	{
-		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
-		if (stricmp(name, "MessageBox") == 0)
-			MessageBox(value);
-		if (stricmp(name, "MessageLine") == 0)
-			MessageLine(value);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		MessageBox(SettingName);
+		return;
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
+	// Read the boot drive
+	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
-	BootDrive = atoi(value);
+	BootDrive = atoi(SettingValue);
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", value))
+	// Read the boot partition
+	if (!ReadSectionSettingByName(SectionId, "BootPartition", SettingValue, 80))
 	{
 		MessageBox("Boot partition not specified for selected OS!");
 		return;
 	}
 
-	BootPartition = atoi(value);
+	BootPartition = atoi(SettingValue);
 
-	if (!BiosInt13Read(BootDrive, 0, 0, 1, 1, DISKREADBUFFER))
+	// Get the partition table entry
+	if (!DiskGetPartitionEntry(BootDrive, BootPartition, &PartitionTableEntry))
 	{
-		MessageBox("Disk Read Error");
 		return;
 	}
 
-	// Check for validity
-	if (*((WORD*)(DISKREADBUFFER + 0x1fe)) != 0xaa55)
+	// Now try to read the partition boot sector
+	// If this fails then abort
+	if (!DiskReadLogicalSectors(BootDrive, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
 	{
-		MessageBox("Invalid partition table magic (0xaa55)");
-		return;
-	}
-
-	offset = 0x1BE + ((BootPartition-1) * 0x10);
-
-	// Check for valid partition
-	if (SectorBuffer[offset + 4] == 0)
-	{
-		MessageBox("Invalid boot partition");
-		return;
-	}
-
-	head = SectorBuffer[offset + 1];
-	sector = (SectorBuffer[offset + 2] & 0x3F);
-	cylinder = SectorBuffer[offset + 3];
-	if (SectorBuffer[offset + 2] & 0x80)
-		cylinder += 0x200;
-	if (SectorBuffer[offset + 2] & 0x40)
-		cylinder += 0x100;
-
-	// Read partition boot sector
-	if (!biosdisk(_DISK_READ, BootDrive, head, cylinder, sector, 1, (void*)0x7c00))
-	{
-		MessageBox("Disk Read Error");
 		return;
 	}
 
@@ -179,12 +157,10 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	RestoreScreen(ScreenBuffer);
+	clrscr();
 	showcursor();
-	gotoxy(CursorXPos, CursorYPos);
-
 	stop_floppy();
-	JumpToBootCode();*/
+	JumpToBootCode();
 }
 
 VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
@@ -212,9 +188,10 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 
 	BootDrive = atoi(SettingValue);
 
-	if (!BiosInt13Read(BootDrive, 0, 0, 1, 1, (PVOID)0x7C00))
+	// Now try to read the boot sector (or mbr)
+	// If this fails then abort
+	if (!DiskReadLogicalSectors(BootDrive, 0, 1, (PVOID)0x7C00))
 	{
-		DiskError("Disk read error.");
 		return;
 	}
 

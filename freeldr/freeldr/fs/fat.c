@@ -76,7 +76,6 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 
 	// Now try to read the boot sector
 	// If this fails then abort
-
 	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, FatVolumeBootSector))
 	{
 		return FALSE;
