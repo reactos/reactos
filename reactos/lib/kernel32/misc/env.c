@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.25 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: env.c,v 1.26 2004/12/18 21:06:25 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -254,6 +254,7 @@ GetVersionExW(
     )
 {
  PPEB pPeb = NtCurrentPeb();
+ WCHAR *RosVersion;
 
  /* TODO: move this into RtlGetVersion */
  switch(lpVersionInformation->dwOSVersionInfoSize)
@@ -281,12 +282,18 @@ GetVersionExW(
    lpVersionInformation->dwBuildNumber = pPeb->OSBuildNumber;
    lpVersionInformation->dwPlatformId = pPeb->OSPlatformId;
 
-   /* version string is "ReactOS x.y.z" */
+   /* First the Windows compatible string */
+   _snwprintf(lpVersionInformation->szCSDVersion,
+              sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR),
+              L"Service Pack %u", pPeb->SPMajorVersion);
+   /* Add the Reactos-specific string */
+   RosVersion = lpVersionInformation->szCSDVersion + wcslen(lpVersionInformation->szCSDVersion) + 1;
    wcsncpy
    (
-    lpVersionInformation->szCSDVersion,
+    RosVersion,
     L"ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
-    sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR)
+    sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR) -
+    ((RosVersion - lpVersionInformation->szCSDVersion) + 1)
    );
 
    /* null-terminate, just in case */
@@ -377,7 +384,24 @@ GetVersionExA(
  ] = 0;
  wstrVerStr.Length = wcslen(wstrVerStr.Buffer) * sizeof(WCHAR);
 
- /* convert the version string */
+ /* convert the win version string */
+ nErrCode = RtlUnicodeStringToAnsiString(&strVerStr, &wstrVerStr, FALSE);
+ 
+ if(!NT_SUCCESS(nErrCode))
+ {
+  /* failure */
+  SetLastErrorByStatus(nErrCode);
+  return FALSE;
+ }
+
+ wstrVerStr.Buffer = oviVerInfo.szCSDVersion + wstrVerStr.Length / sizeof(WCHAR) + 1;
+ wstrVerStr.MaximumLength = sizeof(oviVerInfo.szCSDVersion) - (wstrVerStr.Length + sizeof(WCHAR));
+ wstrVerStr.Length = wcslen(wstrVerStr.Buffer) * sizeof(WCHAR);
+ strVerStr.Buffer = lpVersionInformation->szCSDVersion + strVerStr.Length + 1;
+ strVerStr.MaximumLength = sizeof(lpVersionInformation->szCSDVersion) - (strVerStr.Length + 1);
+ strVerStr.Length = 0;
+
+ /* convert the ReactOS version string */
  nErrCode = RtlUnicodeStringToAnsiString(&strVerStr, &wstrVerStr, FALSE);
  
  if(!NT_SUCCESS(nErrCode))

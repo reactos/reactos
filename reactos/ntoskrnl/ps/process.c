@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.158 2004/12/05 15:42:42 weiden Exp $
+/* $Id: process.c,v 1.159 2004/12/18 21:06:25 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -499,7 +499,7 @@ PsCreatePeb(HANDLE ProcessHandle,
 
   Peb->OSMajorVersion = 4;
   Peb->OSMinorVersion = 0;
-  Peb->OSBuildNumber = 0;
+  Peb->OSBuildNumber = 1381;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
   Peb->SPMajorVersion = 6;
 

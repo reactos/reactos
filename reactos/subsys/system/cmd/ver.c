@@ -27,17 +27,27 @@
 VOID ShortVersion (VOID)
 {
 	OSVERSIONINFO VersionInfo;
+	unsigned RosVersionLen;
+	LPTSTR RosVersion;
 
 	ConOutPuts (_T("\n"
 	               SHELLINFO));
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	if (GetVersionEx(&VersionInfo) && 0 == _tcsnicmp(VersionInfo.szCSDVersion, _T("ReactOS"), 7))
-	{
-		ConOutPrintf(_T("%S running on %s"), SHELLVER, VersionInfo.szCSDVersion);
-	}
-	else
-	{
+#ifdef _UNICODE
 		ConOutPrintf(_T("%S"), SHELLVER);
+#else
+		ConOutPrintf(_T("%s"), SHELLVER);
+#endif /* _UNICODE */
+	memset(VersionInfo.szCSDVersion, 0, sizeof(VersionInfo.szCSDVersion));
+	if (GetVersionEx(&VersionInfo))
+	{
+		RosVersion = VersionInfo.szCSDVersion + _tcslen(VersionInfo.szCSDVersion) + 1;
+		RosVersionLen = sizeof(VersionInfo.szCSDVersion) / sizeof(VersionInfo.szCSDVersion[0]) -
+	                        (RosVersion - VersionInfo.szCSDVersion);
+		if (7 <= RosVersionLen && 0 == _tcsnicmp(RosVersion, _T("ReactOS"), 7))
+		{
+			ConOutPrintf(_T(" running on %s"), RosVersion);
+		}
 	}
 	ConOutPuts (_T("\n"));
 }
