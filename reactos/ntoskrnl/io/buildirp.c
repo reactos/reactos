@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.25 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: buildirp.c,v 1.26 2002/03/17 17:21:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -114,7 +114,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 	break;
 	
       case IRP_MN_MOUNT_VOLUME:
-	StackPtr->Parameters.Mount.Vpb = DeviceObject->Vpb;
+	StackPtr->Parameters.Mount.Vpb = DeviceToMount->Vpb;
 	StackPtr->Parameters.Mount.DeviceObject = DeviceToMount;
 	break;
 	
