@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.20 2000/04/03 21:54:40 dwelch Exp $
+/* $Id: handle.c,v 1.21 2000/05/09 21:30:06 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -434,13 +434,13 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 }
 
 
-NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
-				   ACCESS_MASK DesiredAccess,
-				   POBJECT_TYPE ObjectType,
-				   KPROCESSOR_MODE AccessMode,
-				   PVOID* Object,
-				   POBJECT_HANDLE_INFORMATION 
-				           HandleInformationPtr)
+NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
+					   ACCESS_MASK DesiredAccess,
+					   POBJECT_TYPE ObjectType,
+					   KPROCESSOR_MODE AccessMode,
+					   PVOID* Object,
+					   POBJECT_HANDLE_INFORMATION 
+					           HandleInformationPtr)
 /*
  * FUNCTION: Increments the reference count for an object and returns a 
  * pointer to its body

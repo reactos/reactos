@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.10 2000/04/15 23:12:26 ekohl Exp $ */
+/* $Id: sefuncs.h,v 1.11 2000/05/09 21:29:44 ekohl Exp $ */
 NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
 NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
 NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
@@ -88,10 +88,10 @@ NTSTATUS STDCALL SeAssignSecurity (PSECURITY_DESCRIPTOR ParentDescriptor,
 				   POOL_TYPE PoolType);
 NTSTATUS STDCALL SeDeassignSecurity (PSECURITY_DESCRIPTOR* SecurityDescriptor);
 BOOLEAN STDCALL SeSinglePrivilegeCheck (LUID PrivilegeValue, KPROCESSOR_MODE PreviousMode);
-VOID SeImpersonateClient(PSE_SOME_STRUCT2 a,
-			 PETHREAD Thread);
+VOID STDCALL SeImpersonateClient(PSE_SOME_STRUCT2 a,
+				 PETHREAD Thread);
 
-NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
+NTSTATUS STDCALL SeCreateClientSecurity(PETHREAD Thread,
 				PSECURITY_QUALITY_OF_SERVICE Qos,
 				ULONG e,
 				PSE_SOME_STRUCT2 f);

@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.5 1999/08/29 06:59:11 ea Exp $
+/* $Id: ntobj.c,v 1.6 2000/05/09 21:30:06 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -49,6 +49,7 @@ NtQueryObject (
 
 
 VOID
+STDCALL
 ObMakeTemporaryObject (
 	PVOID	ObjectBody
 	)

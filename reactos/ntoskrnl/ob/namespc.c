@@ -27,14 +27,14 @@ PDIRECTORY_OBJECT NameSpaceRoot = NULL;
 
 /* FUNCTIONS **************************************************************/
 
-NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-				 ULONG Attributes,
-				 PACCESS_STATE PassedAccessState,
-				 ACCESS_MASK DesiredAccess,
-				 POBJECT_TYPE ObjectType,
-				 KPROCESSOR_MODE AccessMode,
-				 PVOID ParseContext,
-				 PVOID* ObjectPtr)
+NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+					 ULONG Attributes,
+					 PACCESS_STATE PassedAccessState,
+					 ACCESS_MASK DesiredAccess,
+					 POBJECT_TYPE ObjectType,
+					 KPROCESSOR_MODE AccessMode,
+					 PVOID ParseContext,
+					 PVOID* ObjectPtr)
 {
    PVOID Object;
    PWSTR RemainingPath;

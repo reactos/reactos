@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.4 2000/01/26 10:07:30 dwelch Exp $
+/* $Id: token.c,v 1.5 2000/05/09 21:30:39 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -91,10 +91,14 @@ NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
    return(Status);
 }
 
-NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
-				PSECURITY_QUALITY_OF_SERVICE Qos,
-				ULONG e,
-				PSE_SOME_STRUCT2 f)
+NTSTATUS
+STDCALL
+SeCreateClientSecurity (
+	PETHREAD			Thread,
+	PSECURITY_QUALITY_OF_SERVICE	Qos,
+	ULONG				e,
+	PSE_SOME_STRUCT2		f
+	)
 {
    TOKEN_TYPE TokenType;
    UCHAR b;
@@ -179,8 +183,12 @@ NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
 }
 
 
-VOID SeImpersonateClient(PSE_SOME_STRUCT2 a,
-			 PETHREAD Thread)
+VOID
+STDCALL
+SeImpersonateClient (
+	PSE_SOME_STRUCT2	a,
+	PETHREAD		Thread
+	)
 {
    UCHAR b;
    

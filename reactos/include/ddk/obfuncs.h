@@ -22,12 +22,12 @@ VOID STDCALL ObDereferenceObject(PVOID Object);
  *                                   information about the handle
  * RETURNS: Status
  */
-NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
-				   ACCESS_MASK DesiredAccess,
-				   POBJECT_TYPE ObjectType,
-				   KPROCESSOR_MODE AccessMode,
-				   PVOID* Object,
-				   POBJECT_HANDLE_INFORMATION HandleInfo);
+NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
+					   ACCESS_MASK DesiredAccess,
+					   POBJECT_TYPE ObjectType,
+					   KPROCESSOR_MODE AccessMode,
+					   PVOID* Object,
+					   POBJECT_HANDLE_INFORMATION HandleInfo);
 
 /*
  * FUNCTION: Increments the reference count for a given object
@@ -43,16 +43,18 @@ NTSTATUS STDCALL ObReferenceObjectByPointer(PVOID Object,
 				    POBJECT_TYPE ObjectType,
 				    KPROCESSOR_MODE AccessMode);
 
-NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-				 ULONG Attributes,
-				 PACCESS_STATE PassedAccessState,
-				 ACCESS_MASK DesiredAccess,
-				 POBJECT_TYPE ObjectType,
-				 KPROCESSOR_MODE AccessMode,
-				 PVOID ParseContext,
-				 PVOID* ObjectPtr);
+NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+					 ULONG Attributes,
+					 PACCESS_STATE PassedAccessState,
+					 ACCESS_MASK DesiredAccess,
+					 POBJECT_TYPE ObjectType,
+					 KPROCESSOR_MODE AccessMode,
+					 PVOID ParseContext,
+					 PVOID* ObjectPtr);
 
-PVOID ObCreateObject(PHANDLE Handle,
-		     ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes,
-		     POBJECT_TYPE Type);
+PVOID STDCALL ObCreateObject(PHANDLE Handle,
+			     ACCESS_MASK DesiredAccess,
+			     POBJECT_ATTRIBUTES ObjectAttributes,
+			     POBJECT_TYPE Type);
+
+VOID STDCALL ObMakeTemporaryObject(PVOID ObjectBody);

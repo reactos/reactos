@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.22 2000/04/03 21:54:40 dwelch Exp $
+/* $Id: object.c,v 1.23 2000/05/09 21:30:06 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -163,10 +163,10 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  *
  * RETURN VALUE
  */
-PVOID ObCreateObject(PHANDLE Handle,
-		     ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes,
-		     POBJECT_TYPE Type)
+PVOID STDCALL ObCreateObject(PHANDLE Handle,
+			     ACCESS_MASK DesiredAccess,
+			     POBJECT_ATTRIBUTES ObjectAttributes,
+			     POBJECT_TYPE Type)
 {
    PVOID Parent = NULL;
    PWSTR RemainingPath = NULL;

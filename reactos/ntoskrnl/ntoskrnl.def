@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.70 2000/05/09 16:16:07 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.71 2000/05/09 21:31:01 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -168,6 +168,8 @@ FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
+;HalDispatchTable DATA
+;HalPrivateDispatchTable DATA
 IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -301,6 +303,7 @@ KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
 KeWaitForSingleObject
+LdrLoadModule
 MmAdjustWorkingSetSize@12
 MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory@4
@@ -403,16 +406,39 @@ NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject@12
 NtWriteFile@36
-ObReferenceObjectByHandle
+;ObAssignSecurity@16
+;ObCheckCreateObjectAccess@28
+;ObCheckObjectAccess@20
+;ObCreateObject@36
+ObCreateObject@16
+ObDereferenceObject@4
+;ObFindHandleForObject@20
+;ObGetObjectPointerCount@4
+;ObGetObjectSecurity@12
+;ObInsertObject@24
+ObMakeTemporaryObject@4
+;ObOpenObjectByName@28
+;ObOpenObjectByPointer@28
+;ObQueryNameString@16
+;ObQueryObjectAuditingByHandle@8
+ObReferenceObjectByHandle@24
+ObReferenceObjectByName@32
+ObReferenceObjectByPointer@16
+;ObReleaseObjectSecurity@8
+;ObSetSecurityDescriptorInfo@24
+;@ObfDereferenceObject@4
+ObfDereferenceObject@4
+;@ObfReferenceObject@4
+ObfReferenceObject@4
 PoQueryPowerSequence@0
 PoRequestPowerChange@12
 PoSetDeviceIdleDetection@8
-READ_REGISTER_UCHAR
-READ_REGISTER_ULONG
-READ_REGISTER_USHORT
-READ_REGISTER_BUFFER_UCHAR
-READ_REGISTER_BUFFER_ULONG
-READ_REGISTER_BUFFER_USHORT
+READ_REGISTER_UCHAR@4
+READ_REGISTER_ULONG@4
+READ_REGISTER_USHORT@4
+READ_REGISTER_BUFFER_UCHAR@12
+READ_REGISTER_BUFFER_ULONG@12
+READ_REGISTER_BUFFER_USHORT@12
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20
@@ -602,13 +628,49 @@ RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize@4
-LdrLoadModule
-WRITE_REGISTER_UCHAR
-WRITE_REGISTER_ULONG
-WRITE_REGISTER_USHORT
-WRITE_REGISTER_BUFFER_UCHAR
-WRITE_REGISTER_BUFFER_ULONG
-WRITE_REGISTER_BUFFER_USHORT
+SeAccessCheck@40
+;SeAppendPrivileges@8
+SeAssignSecurity@28
+;SeAuditingFileEvents@8
+;SeAuditingFileOrGlobalEvents@18
+;SeCaptureSecurityDescriptor@20
+SeCaptureSubjectContext@4
+;SeCloseObjectAuditAlarm@12
+;SeCreateAccessState@16
+SeCreateClientSecurity@16
+SeDeassignSecurity@4
+;SeDeleteAccessState@4
+;SeDeleteObjectAuditAlarm@8
+;SeExports DATA ???
+;SeFreePrivileges@4
+SeImpersonateClient@8
+;SeLockSubjectContext@4
+;SeMarkLogonSessionForTerminationNotification@4
+;SeOpenObjectAuditAlarm@36
+;SeOpenObjectForDeleteAuditAlarm@36
+SePrivilegeCheck@12
+;SePrivilegeObjectAuditAlarm@24
+;SePublicDefaultDacl DATA
+;SeQueryAuthenticationIdToken@8
+;SeQuerySecurityDescriptorInfo@16
+;SeRegisterLogonSessionTerminatedRoutine@4
+;SeReleaseSecurityDescriptor@12
+SeReleaseSubjectContext@4
+;SeSetAccessStateGenericMapping@8
+;SeSetSecurityDescriptorInfo@24
+;SeSinglePrivilegeCheck@12
+;SeSystemDefaultDacl DATA
+;SeTokenImpersonationLevel@4
+;SeTokenType@4
+;SeUnlockSubjectContext@4
+;SeUnregisterLogonSessionTerminatedRoutine@4
+;SeValidSecurityDescriptor@8
+WRITE_REGISTER_UCHAR@8
+WRITE_REGISTER_ULONG@8
+WRITE_REGISTER_USHORT@8
+WRITE_REGISTER_BUFFER_UCHAR@12
+WRITE_REGISTER_BUFFER_ULONG@12
+WRITE_REGISTER_BUFFER_USHORT@12
 ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread@4
 ZwAllocateVirtualMemory@24

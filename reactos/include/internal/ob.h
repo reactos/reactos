@@ -54,10 +54,6 @@ BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 			 PWSTR* UnparsedSection, ULONG Attributes);
-PVOID ObCreateObject(PHANDLE Handle,
-		     ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes,
-		     POBJECT_TYPE Type);
 VOID ObRemoveEntry(POBJECT_HEADER Header);
 NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
 
