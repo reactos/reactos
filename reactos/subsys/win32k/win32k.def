@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.1 1999/05/20 17:26:02 ea Exp $
+; $Id: win32k.def,v 1.2 1999/05/22 23:55:56 rex Exp $
 ;
 ; win32k.def
 ;
@@ -30,7 +30,8 @@ EngCreatePalette
 EngCreatePath
 EngCreateSemaphore
 EngCreateWnd
-EngDebugBreak = NTOSKRNL.DbgBreakPoint
+; EngDebugBreak = NTOSKRNL.DbgBreakPoint
+EngDebugBreak
 EngDebugPrint
 EngDeleteClip
 EngDeleteDriverObj
@@ -76,7 +77,8 @@ EngMultiByteToUnicodeN
 EngMultiByteToWideChar
 EngPaint
 EngProbeForRead
-EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
+; EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
+EngProbeForReadAndWrite
 EngQueryLocalTime
 EngQueryPalette
 EngQueryPerformanceCounter
@@ -101,7 +103,8 @@ EngUnlockDriverObj
 EngUnlockSurface
 EngUnmapEvent
 EngUnmapFontFile
-EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
+; EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
+EngUnsecureMem
 EngWaitForSingleObject
 EngWideCharToMultiByte
 EngWritePrinter
@@ -150,14 +153,22 @@ PATHOBJ_bPolyLineTo
 PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
 PATHOBJ_vGetBounds
-RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
-RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
-RtlRaiseException = NTOSKRNL.RtlRaiseException
-RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
-RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
-RtlUnwind = NTOSKRNL.RtlUnwind
-RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
-RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+; RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlAnsiCharToUnicodeChar
+; RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
+RtlMultiByteToUnicodeN
+; RtlRaiseException = NTOSKRNL.RtlRaiseException
+RtlRaiseException
+; RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteN
+; RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnicodeToMultiByteSize
+; RtlUnwind = NTOSKRNL.RtlUnwind
+RtlUnwind
+; RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeChar
+; RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
@@ -170,8 +181,12 @@ XFORMOBJ_iGetXform
 XLATEOBJ_cGetPalette
 XLATEOBJ_iXlate
 XLATEOBJ_piVector
-_abnormal_termination = NTOSKRNL._abnormal_termination
-_except_handler2 = NTOSKRNL._except_handler2
-_global_unwind2 = NTOSKRNL._global_unwind2
-_local_unwind2 = NTOSKRNL._local_unwind2
+; _abnormal_termination = NTOSKRNL._abnormal_termination
+_abnormal_termination
+; _except_handler2 = NTOSKRNL._except_handler2
+_except_handler2
+; _global_unwind2 = NTOSKRNL._global_unwind2
+_global_unwind2
+; _local_unwind2 = NTOSKRNL._local_unwind2
+_local_unwind2
 
