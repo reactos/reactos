@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.107 2003/12/08 18:21:24 navaraf Exp $
+/* $Id: defwnd.c,v 1.108 2003/12/10 06:47:32 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1005,7 +1005,7 @@ User32DefWindowProc(HWND hWnd,
 	    }
             break;
         }
-
+        
         case WM_PRINT:
         {
             /* FIXME: Implement. */
@@ -1138,6 +1138,27 @@ User32DefWindowProc(HWND hWnd,
             FillRect((HDC)wParam, &Rect, hBrush);
             return (1);
         }
+       case WM_MDICREATE:
+        {
+            MDICREATESTRUCTW *cs =
+                (MDICREATESTRUCTW *)HeapAlloc( GetProcessHeap(), 0, sizeof(*cs) );
+            if (!cs) return -1;
+            *cs = *(MDICREATESTRUCTW *)lParam;
+            if (HIWORD(cs->szClass))
+            {
+                UNICODE_STRING usBuffer;
+                RtlCreateUnicodeStringFromAsciiz(&usBuffer,(LPCSTR)cs->szClass);
+                cs->szClass = usBuffer.Buffer;
+            }
+            if (HIWORD(cs->szTitle))
+            {
+                UNICODE_STRING usBuffer;
+                RtlCreateUnicodeStringFromAsciiz(&usBuffer,(LPCSTR)cs->szTitle);
+                cs->szTitle = usBuffer.Buffer;
+            }
+            lParam = (LPARAM)cs;
+        }
+        return 1;
 
         case WM_CTLCOLORMSGBOX:
         case WM_CTLCOLOREDIT:
@@ -1246,11 +1267,11 @@ User32DefWindowProc(HWND hWnd,
         case WM_VKEYTOITEM:
         case WM_CHARTOITEM:
             return (-1);
-
+/*
         case WM_DROPOBJECT:
-            /* FIXME: Implement this. */
+  
             break;
-
+*/
         case WM_QUERYDROPOBJECT:
         {
             if (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_ACCEPTFILES)
@@ -1485,4 +1506,3 @@ DefWindowProcW(HWND hWnd,
 
     return User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
 }
-
