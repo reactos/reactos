@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.13 2004/05/05 18:30:16 navaraf Exp $
+/* $Id: rw.c,v 1.14 2004/05/07 12:13:13 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -13,7 +13,7 @@
 #include <rosrtl/minmax.h>
 #include "npfs.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -99,15 +99,25 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	      Status = STATUS_PIPE_BROKEN;
 	      goto done;
 	    }
-           /* Wait for ReadEvent to become signaled */
-           DPRINT("Waiting for readable data (%S)\n", Pipe->PipeName.Buffer);
-           Status = KeWaitForSingleObject(&Fcb->Event,
-				          UserRequest,
-				          KernelMode,
-				          FALSE,
-				          NULL);
-           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
-           KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
+          /* Wait for ReadEvent to become signaled */
+          DPRINT("Waiting for readable data (%S)\n", Pipe->PipeName.Buffer);
+          Status = KeWaitForSingleObject(&Fcb->Event,
+				         UserRequest,
+				         KernelMode,
+				         FALSE,
+				         NULL);
+          DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+          /*
+           * It's possible that the event was signaled because the
+           * other side of pipe was closed.
+           */
+          if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+	    {
+	      DPRINT("PipeState: %x\n", Fcb->PipeState);
+	      Status = STATUS_PIPE_BROKEN;
+	      goto done;
+	    }
+          KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
 	}
 
      if (Pipe->PipeReadMode == FILE_PIPE_BYTE_STREAM_MODE)
@@ -288,6 +298,16 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				         FALSE,
 				         NULL);
           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+          /*
+           * It's possible that the event was signaled because the
+           * other side of pipe was closed.
+           */
+          if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+	    {
+	      DPRINT("PipeState: %x\n", Fcb->PipeState);
+	      Status = STATUS_PIPE_BROKEN;
+	      goto done;
+	    }
           KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
         }
       if (Pipe->PipeWriteMode == FILE_PIPE_BYTE_STREAM_MODE)

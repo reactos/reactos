@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.19 2004/05/05 18:30:16 navaraf Exp $
+/* $Id: create.c,v 1.20 2004/05/07 12:13:13 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -473,6 +473,7 @@ NpfsClose(
       if (Fcb->OtherSide)
       {
          Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
+         Fcb->OtherSide->OtherSide = NULL;
          /*
           * Signaling the write event. If is possible that an other
           * thread waits of an empty buffer.
