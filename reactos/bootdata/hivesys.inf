@@ -563,10 +563,12 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
 
-; AMD PCNet NIC driver
+; ReactOS PCNet NIC driver 
+; To use the AMD supplied driver change the driver name to pcntn5m.sys
+;
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcnet.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
