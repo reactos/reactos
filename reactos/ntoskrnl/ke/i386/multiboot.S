@@ -4,10 +4,6 @@
 #include <internal/ps.h>
 #include <internal/i386/mm.h>
 
-/* FIXME: These should be calculated from Command Line */
-#define KERNEL_PD_START (KERNEL_BASE / 0x100000) /* Page Directory Start. Only the High 3 bits. */
-#define KERNEL_PD_END ((KERNEL_BASE + 0x00400000) / 0x100000) /* Page Directory End. Only the High 3 bits. */
-
 #define MULTIBOOT_HEADER_MAGIC (0x1BADB002)
 
 #define MULTIBOOT_HEADER_FLAGS (0x00010003)
@@ -112,8 +108,8 @@ _multiboot_entry:
 	 */
 	movl	$V2P(startup_pagedirectory), %esi
 	movl	$(V2P(lowmem_pagetable) + 0x3), 0x0(%esi)
-	movl	$(V2P(kernel_pagetable) + 0x3), 0xC00(%esi)
-	movl	$(V2P(kernel_pagetable+4096) + 0x3), 0xC04(%esi)
+	movl	$(V2P(kernel_pagetable) + 0x3), (KERNEL_BASE >> 20)(%esi)
+	movl	$(V2P(kernel_pagetable+4096) + 0x3), ((KERNEL_BASE >> 20) + 4)(%esi)
 
 	movl	$(V2P(startup_pagedirectory) + 0x3), 0xF00(%esi) 
 	movl	$(V2P(kernelmap_pagetable) + 0x3), 0xF0C(%esi)
