@@ -16,7 +16,7 @@
  */
 int _aexit_rtn_dll(int exitcode)
 {
-	_exit(exitcode);
+    _exit(exitcode);
 }
 
 /*
@@ -24,7 +24,7 @@ int _aexit_rtn_dll(int exitcode)
  */
 void _amsg_exit(int errnum)
 {
-	fprintf(stderr,strerror(errnum));
-    _aexit_rtn_dll(-1);      
+    fprintf(stderr,strerror(errnum));
+    _aexit_rtn_dll(-1);
 }
 

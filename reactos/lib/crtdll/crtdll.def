@@ -19,9 +19,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.18 $
-; $Author: weiden $
-; $Date: 2003/08/26 12:28:53 $
+; $Revision: 1.19 $
+; $Author: ekohl $
+; $Date: 2004/02/26 12:23:29 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -69,7 +69,7 @@ __argv_dll
 __dllonexit
 __doserrno
 __fpecode
-__isascii=NTDLL.__isascii
+__isascii
 __iscsym=NTDLL.__iscsym
 __iscsymf=NTDLL.__iscsymf
 __mb_cur_max_dll
@@ -179,7 +179,7 @@ _hypot
 _initterm
 _iob
 _isatty
-_isctype=MSVCRT._isctype
+_isctype
 _ismbbalnum
 _ismbbalpha
 _ismbbgraph
@@ -326,19 +326,19 @@ _statusfp
 _strcmpi=NTDLL._strcmpi
 _strdate
 _strdec
-_strdup=MSVCRT._strdup
-_strerror=MSVCRT._strerror
+_strdup
+_strerror
 _stricmp=NTDLL._stricmp
-_stricoll=MSVCRT._stricoll
+_stricoll
 _strinc
 _strlwr=NTDLL._strlwr
 _strncnt
 _strnextc
 _strnicmp=NTDLL._strnicmp
 _strninc
-_strnset=MSVCRT._strnset
-_strrev=MSVCRT._strrev
-_strset=MSVCRT._strset
+_strnset
+_strrev
+_strset
 _strspnp
 _strtime
 _strupr=NTDLL._strupr
@@ -434,31 +434,31 @@ getchar
 getenv
 gets
 gmtime
-is_wctype=MSVCRT.is_wctype
-isalnum=NTDLL.isalnum
+is_wctype
+isalnum
 isalpha=NTDLL.isalpha
-iscntrl=NTDLL.iscntrl
+iscntrl
 isdigit=NTDLL.isdigit
-isgraph=NTDLL.isgraph
+isgraph
 isleadbyte
 islower=NTDLL.islower
-isprint=NTDLL.isprint
-ispunct=NTDLL.ispunct
+isprint
+ispunct
 isspace=NTDLL.isspace
-isupper=NTDLL.isupper
-iswalnum=MSVCRT.iswalnum
+isupper
+iswalnum
 iswalpha=NTDLL.iswalpha
-iswascii=MSVCRT.iswascii
-iswcntrl=MSVCRT.iswcntrl
-iswctype=MSVCRT.iswctype
-iswdigit=MSVCRT.iswdigit
-iswgraph=MSVCRT.iswgraph
-iswlower=MSVCRT.iswlower
-iswprint=MSVCRT.iswprint
-iswpunct=MSVCRT.iswpunct
+iswascii
+iswcntrl
+iswctype
+iswdigit
+iswgraph
+iswlower
+iswprint
+iswpunct
 iswspace=NTDLL.iswspace
-iswupper=MSVCRT.iswupper
-iswxdigit=MSVCRT.iswxdigit
+iswupper
+iswxdigit
 isxdigit=NTDLL.isxdigit
 labs
 ldexp
@@ -506,10 +506,10 @@ sscanf
 strcat
 strchr
 strcmp
-strcoll=MSVCRT.strcoll
+strcoll
 strcpy
 strcspn
-strerror=MSVCRT.strerror
+strerror
 strftime
 strlen
 strncat
@@ -523,7 +523,7 @@ strtod
 strtok
 strtol
 strtoul
-strxfrm=MSVCRT.strxfrm
+strxfrm
 swprintf
 swscanf
 system

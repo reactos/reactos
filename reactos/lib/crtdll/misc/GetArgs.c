@@ -4,11 +4,11 @@
 
 
 char *_pgmptr_dll;
-char *_acmdln_dll;   
-unsigned  int _commode_dll;     
-unsigned  int _winmajor_dll;   
+char *_acmdln_dll;
+unsigned  int _commode_dll;
+unsigned  int _winmajor_dll;
 unsigned  int _winminor_dll;
-unsigned  int _winver_dll;    
+unsigned  int _winver_dll;
 
 
 unsigned  int _osmajor_dll;
@@ -28,21 +28,22 @@ char *xargv[1024];
 
 char  **__argv = xargv;
 int   __argc = 0;
-int *__argc_dll = &__argc;        
-char ***__argv_dll = &__argv;  
+int *__argc_dll = &__argc;
+char ***__argv_dll = &__argv;
 
 
 #undef _environ
 char **_environ;
 #undef _environ_dll
-char *** _environ_dll = &_environ;    
+char *** _environ_dll = &_environ;
 static int envAlloced = 0;
- 
-        
-int BlockEnvToEnviron()
+
+
+int BlockEnvToEnviron(void)
 {
-char * ptr;
-int i;
+  char * ptr;
+  int i;
+
   if (!envAlloced)
   {
     envAlloced = 50;
@@ -90,13 +91,13 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
    afterlastspace=0;
    __argc=0;
    
-   while (_acmdln_dll[i]) 
+   while (_acmdln_dll[i])
      {
-	if (_acmdln_dll[i]==' ') 
+	if (_acmdln_dll[i]==' ')
 	  {
 	     __argc++;
 	     _acmdln_dll[i]='\0';
-	     __argv[__argc-1] = strdup(_acmdln_dll + afterlastspace);
+	     __argv[__argc-1] = _strdup(_acmdln_dll + afterlastspace);
 	     _acmdln_dll[i]=' ';
 	     i++;
 	     while (_acmdln_dll[i]==' ')
@@ -113,19 +114,19 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
      {
 	__argc++;
 	_acmdln_dll[i]='\0';
-	__argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
+	__argv[__argc-1] = _strdup(_acmdln_dll+afterlastspace);
      }
    HeapValidate(GetProcessHeap(),0,NULL);
    
    if( BlockEnvToEnviron() )
 	return FALSE;
-   _environ_dll = &_environ;    
-    
+   _environ_dll = &_environ;
+
    *argc = __argc;
    *argv = __argv;
    *env  = _environ;
- 
-   _pgmptr_dll = strdup((char *)argv[0]);
+
+   _pgmptr_dll = _strdup((char *)argv[0]);
 
    return 0;
 }

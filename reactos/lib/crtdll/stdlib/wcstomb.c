@@ -21,7 +21,8 @@
 
 #include <msvcrt/errno.h>
 #include <msvcrt/wchar.h>
-#include <msvcrt/internal/file.h>
+
+#include "libc/file.h"
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL
@@ -79,20 +80,10 @@ __wcrtomb (char *s, wchar_t wc)
   char fake[1];
   size_t written = 0;
 
- 
-
   if (s == NULL)
     {
       s = fake;
       wc = L'\0';
-    }
-
-  /* Store the UTF8 representation of WC.  */
-  if (wc < 0 || wc > 0x7fffffff)
-    {
-      /* This is no correct ISO 10646 character.  */
-      __set_errno (EILSEQ);
-      return (size_t) -1;
     }
 
   if (wc < 0x80)
