@@ -1,5 +1,16 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* include/napi/i386/segment.h (put_user, get_user,
+	bad_user_access_length, __segment_dummy, __sd, __const_sd, __put_user,
+	__get_user, __generic_memcpy_tofs, __constant_memcpy_tofs, COMMON,
+	__generic_memcpy_fromfs, __constant_memcpy_fromfs, memcpy_fromfs,
+	memcpy_tofs, get_fs_byte, get_fs_word, get_fs_long, put_fs_byte,
+	put_fs_word, put_fs_long, get_user_word, get_user_byte, get_user_long,
+	put_user_byte, put_user_word, put_user_long, get_fs, get_ds, set_fs,
+	set_ds): Remove.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/ddk/pstypes.h (TLS_OUT_OF_INDEXES): Define.
 
 2003-02-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
