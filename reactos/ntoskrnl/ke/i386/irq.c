@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.25 2002/12/09 18:40:45 robd Exp $
+/* $Id: irq.c,v 1.26 2002/12/09 19:53:44 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -454,13 +454,19 @@ KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
        * Iterate the list until one of the isr tells us its device interrupted
        */
       current = isr_table[Irq].Flink;
-      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-      while (current != &isr_table[Irq] && 
-	     !isr->ServiceRoutine(isr, isr->ServiceContext))
-	{
+      while (current != &isr_table[Irq])
+      { 
+          isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+#if 0
+	  if (isr->ServiceRoutine(isr, isr->ServiceContext))
+	  {
+	     break;
+	  }
+#else
+	  isr->ServiceRoutine(isr, isr->ServiceContext);
+#endif
 	  current = current->Flink;
-	  isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-	}
+      }
    }
 }
 
@@ -579,6 +585,10 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    KeRaiseIrql(InterruptObject->SynchLevel,&synch_oldlvl);
    KeAcquireSpinLockAtDpcLevel(InterruptObject->IrqLock);
    DPRINT("%x %x\n",isr_table[Vector].Flink,isr_table[Vector].Blink);
+   if (IsListEmpty(&isr_table[Vector]))
+   {
+      HalEnableSystemInterrupt(Vector + IRQ_BASE, 0, 0);
+   }
    InsertTailList(&isr_table[Vector],&InterruptObject->Entry);
    DPRINT("%x %x\n",InterruptObject->Entry.Flink,
           InterruptObject->Entry.Blink);
@@ -609,6 +619,10 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
    KeRaiseIrql(InterruptObject->SynchLevel,&oldlvl);
    KeAcquireSpinLockAtDpcLevel(InterruptObject->IrqLock);
    RemoveEntryList(&InterruptObject->Entry);
+   if (IsListEmpty(&isr_table[InterruptObject->Vector]))
+   {
+      HalDisableSystemInterrupt(InterruptObject->Vector + IRQ_BASE, 0);
+   }
    KeReleaseSpinLockFromDpcLevel(InterruptObject->IrqLock);
    KeLowerIrql(oldlvl);
 }
