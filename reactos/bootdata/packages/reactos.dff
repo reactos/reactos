@@ -96,6 +96,7 @@ subsys\system\format\format.exe         1
 subsys\system\regedit\regedit.exe       4
 subsys\system\services\services.exe     1
 subsys\system\setup\setup.exe           1
+subsys\system\taskmgr\taskmgr.exe       1
 subsys\system\userinit\userinit.exe     1
 subsys\system\winlogon\winlogon.exe     1
 services\eventlog\eventlog.exe          1
