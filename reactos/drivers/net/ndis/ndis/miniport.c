@@ -1275,7 +1275,16 @@ NdisMSetAttributesEx(
  *     AdapterType               = Specifies the I/O bus interface of the caller's NIC
  */
 {
-    UNIMPLEMENTED
+	// Currently just like NdisMSetAttributesEx
+	// TODO: Take CheckForHandTimeInSeconds into account!
+	PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
+	Adapter->Attributes = AttributeFlags & NDIS_ATTRIBUTE_BUS_MASTER;
+	Adapter->NdisMiniportBlock.AdapterType   = AdapterType;
+    Adapter->AttributesSet = TRUE;
 }
 
 
