@@ -19,24 +19,27 @@
 #include <wchar.h>
 #include <string.h>
 
+extern PLOCALE	__TebLocale;
+
+#define GetTebLocale() __TebLocale
  
 INT MultiByteToWideChar(UINT cpid, DWORD flags, LPCSTR src, int srclen,
                         LPWSTR dest, int destlen)
 {
-   PCODEPAGE pcodepage;
+   PCODEPAGE pcodepage =__CPFirst;
    INT       copylen;
    INT       retlen;  
    WCHAR     **atou;
    CHAR      c;  
   
-   aprintf("MultiByteToWideChar( %u, 0x%lX, %s, %d, 0x%lX, %d )\n", 
-           cpid, flags, src, srclen, (ULONG) dest, destlen);
+   //aprintf("MultiByteToWideChar( %u, 0x%lX, %s, %d, 0x%lX, %d )\n", 
+   //        cpid, flags, src, srclen, (ULONG) dest, destlen);
     
    /* get codepage */
    switch(cpid)
    {
-      case CP_ACP:   pcodepage=GetThreadLocale()->OemCodePage;  break;
-      case CP_OEMCP: pcodepage=GetThreadLocale()->AnsiCodePage; break;
+      case CP_ACP:   pcodepage= GetTebLocale()->OemCodePage;  break;
+      case CP_OEMCP: pcodepage= GetTebLocale()->AnsiCodePage; break;
       case CP_MACCP: pcodepage=&__CP10000;   break;
       default:
          pcodepage=__CPFirst;

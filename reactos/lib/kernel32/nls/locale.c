@@ -86,7 +86,7 @@ int OLE_GetFormatA(LCID locale,
 
 PLOCALE __UserLocale;
 PLOCALE __TebLocale;
-PLOCALE __Locale;
+LOCALE  __Locale[LOCALE_ARRAY];
 
 WINBOOL __LocaleInit(void)
 {
@@ -1300,6 +1300,7 @@ int STDCALL GetDateFormatA(LCID locale,DWORD flags,
   return ret;
 }
 
+
 int
 STDCALL
 GetTimeFormatW(
@@ -1333,14 +1334,17 @@ GetTimeFormatW(
  * tt time marker (AM, PM)
  *
  */
-INT STDCALL
-GetTimeFormatA(LCID locale,        /* in  */
-		 DWORD flags,        /* in  */
-		 LPSYSTEMTIME xtime, /* in  */ 
-		 LPCSTR format,      /* in  */
-		 LPSTR timestr,      /* out */
-		 INT timelen       /* in  */) 
-{ char format_buf[40];
+int
+STDCALL
+GetTimeFormatA(
+    LCID     Locale,
+    DWORD    dwFlags,
+    CONST SYSTEMTIME *lpTime,
+    LPCSTR lpFormat,
+    LPSTR  lpTimeStr,
+    int      cchTime)
+{ 
+  char format_buf[40];
   LPCSTR thisformat;
   SYSTEMTIME t;
   LPSYSTEMTIME thistime;
@@ -1348,34 +1352,35 @@ GetTimeFormatA(LCID locale,        /* in  */
   DWORD thisflags=LOCALE_STIMEFORMAT; /* standart timeformat */
   INT ret;
 
-  thislocale = OLE2NLS_CheckLocale ( locale );
+  thislocale = OLE2NLS_CheckLocale ( Locale );
 
-  if ( flags & (TIME_NOTIMEMARKER | TIME_FORCE24HOURFORMAT ))
-  { FIXME(ole,"TIME_NOTIMEMARKER or TIME_FORCE24HOURFORMAT not implemented\n");
+  if ( dwFlags & (TIME_NOTIMEMARKER | TIME_FORCE24HOURFORMAT ))
+  { 
+	//FIXME(ole,"TIME_NOTIMEMARKER or TIME_FORCE24HOURFORMAT not implemented\n");
   }
   
-  flags &= (TIME_NOSECONDS | TIME_NOMINUTESORSECONDS); /* mask for OLE_GetFormatA*/
+  dwFlags &= (TIME_NOSECONDS | TIME_NOMINUTESORSECONDS); /* mask for OLE_GetFormatA*/
 
-  if (format == NULL) 
-  { if (flags & LOCALE_NOUSEROVERRIDE)  /*use system default*/
+  if (lpFormat == NULL) 
+  { if (dwFlags & LOCALE_NOUSEROVERRIDE)  /*use system default*/
     { thislocale = GetSystemDefaultLCID();
     }
     GetLocaleInfoA(thislocale, thisflags, format_buf, sizeof(format_buf));
     thisformat = format_buf;
   }
   else 
-  { thisformat = format;
+  { thisformat = lpFormat;
   }
   
-  if (xtime == NULL) /* NULL means use the current local time*/
+  if (lpTime == NULL) /* NULL means use the current local time*/
   { GetSystemTime(&t);
     thistime = &t;
   } 
   else
-  { thistime = xtime;
+  { thistime = lpTime;
   }
-  ret = OLE_GetFormatA(thislocale, thisflags, flags, thistime, thisformat,
-  			 timestr, timelen);
+  ret = OLE_GetFormatA(thislocale, thisflags, dwFlags, thistime, thisformat,
+  			 lpTimeStr, cchTime);
   return ret;
 }
 

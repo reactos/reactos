@@ -20,12 +20,15 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 
+extern PLOCALE	__TebLocale;
+
+#define GetTebLocale() __TebLocale
  
 INT WideCharToMultiByte(UINT cpid, DWORD flags, LPCWSTR src, int srclen,
                         LPSTR dest, int destlen, LPCSTR pdefchar,
                         LPBOOL pdefused )
 {
-   PCODEPAGE pcodepage;
+   PCODEPAGE pcodepage = __CPFirst;
    BOOL      defused=FALSE;   
    INT       copylen;
    INT       retlen;  
@@ -34,13 +37,13 @@ INT WideCharToMultiByte(UINT cpid, DWORD flags, LPCWSTR src, int srclen,
    CHAR      d;
    WCHAR     c;  
   
-   aprintf("WideCharToMultiByte()\n");
+ //  aprintf("WideCharToMultiByte()\n");
     
    /* get codepage */
    switch(cpid)
    {
-      case CP_ACP:   pcodepage=GetThreadLocale()->OemCodePage;  break;
-      case CP_OEMCP: pcodepage=GetThreadLocale()->AnsiCodePage; break;
+      case CP_ACP:   pcodepage=GetTebLocale()->OemCodePage;  break;
+      case CP_OEMCP: pcodepage=GetTebLocale()->AnsiCodePage; break;
       case CP_MACCP: pcodepage=&__CP10000;   break;
       default:
          pcodepage=__CPFirst;

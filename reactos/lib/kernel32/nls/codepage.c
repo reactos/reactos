@@ -27,19 +27,24 @@
 #include <string.h>
 
 
+extern PLOCALE	__TebLocale;
+
+#define GetTebLocale() __TebLocale
+ 
+
 UINT STDCALL GetACP(void)
 {
    //aprintf("GetACP()\n");
    
    /* XXX: read from registry, take this as default */
-   return GetThreadLocale()->AnsiCodePage->Id;
+   return GetTebLocale()->AnsiCodePage->Id;
 }
 
 UINT STDCALL GetOEMCP(void)
 {
    //aprintf("GetOEMCP()\n");
    /* XXX: read from registry, take this as default */
-   return GetThreadLocale()->OemCodePage->Id;
+   return GetTebLocale()->OemCodePage->Id;
 }
 
 WINBOOL STDCALL IsValidCodePage(UINT codepage)
