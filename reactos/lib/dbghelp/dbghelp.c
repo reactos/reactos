@@ -26,6 +26,8 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+#define YDEBUG
+#define DBG
 
 /* TODO
  *  - support for symbols' types is still partly missing

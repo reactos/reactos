@@ -33,7 +33,6 @@
 #include "thread.h" /* FIXME: must be included before winternl.h */
 #include "winternl.h"
 #include "wine/debug.h"
-#include "stackframe.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -76,6 +75,7 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
                       PGET_MODULE_BASE_ROUTINE GetModuleBaseRoutine,
                       PTRANSLATE_ADDRESS_ROUTINE f_xlat_adr)
 {
+#if 0
     STACK32FRAME        frame32;
     STACK16FRAME        frame16;
     char                ch;
@@ -385,4 +385,5 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
 done_err:
     curr_mode = stm_done;
     return FALSE;
+#endif
 }

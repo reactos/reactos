@@ -371,10 +371,10 @@ BOOL WINAPI SymEnumTypes(HANDLE hProcess, ULONG64 BaseOfDll,
     struct symt*        type;
     void*               pos = NULL;
     
-    TRACE("(%p %s %p %p)\n",
+ /*   TRACE("(%p %s %p %p)\n",
           hProcess, wine_dbgstr_longlong(BaseOfDll), EnumSymbolsCallback,
           UserContext);
-
+*/
     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
     module = module_find_by_addr(pcs, BaseOfDll, DMT_UNKNOWN);
     if (!(module = module_get_debug(pcs, module))) return FALSE;
@@ -755,7 +755,7 @@ BOOL WINAPI SymGetTypeInfo(HANDLE hProcess, DWORD64 ModBase,
     module = module_find_by_addr(pcs, ModBase, DMT_UNKNOWN);
     if (!(module = module_get_debug(pcs, module)))
     {
-        FIXME("Someone didn't properly set ModBase (%s)\n", wine_dbgstr_longlong(ModBase));
+     //   FIXME("Someone didn't properly set ModBase (%s)\n", wine_dbgstr_longlong(ModBase));
         return FALSE;
     }
 
