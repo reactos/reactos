@@ -10,6 +10,180 @@
 /*
  * @implemented
  */
+int
+STDCALL
+GetROP2(
+        HDC     a0
+        )
+{
+        return W32kGetROP2(a0);
+
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetStretchBltMode(
+        HDC     a0
+        )
+{
+        return W32kGetStretchBltMode(a0);
+
+}
+
+
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetTextAlign(
+        HDC     hDc
+        )
+{
+        return W32kGetTextAlign(hDc);
+
+}
+
+
+/*
+ * @implemented
+ */
+COLORREF
+STDCALL
+GetTextColor(
+        HDC     hDc
+        )
+{
+        return W32kGetTextColor(hDc);
+
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetViewportExtEx(
+        HDC     hDc,
+        LPSIZE  lpSize
+        )
+{
+        return W32kGetViewportExtEx(hDc, lpSize);
+
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetViewportOrgEx(
+        HDC             hDc,
+        LPPOINT         lpPoint
+        )
+{
+        return W32kGetViewportOrgEx(hDc, lpPoint);
+
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetWindowExtEx(
+        HDC             hDc,
+        LPSIZE          lpSize
+        )
+{
+        return W32kGetWindowExtEx(hDc, lpSize);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetWindowOrgEx(
+        HDC             hDc,
+        LPPOINT         lpPoint
+        )
+{
+        return W32kGetWindowOrgEx(hDc, lpPoint);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetBkMode(
+        HDC     a0,
+        int     a1
+        )
+{
+        return W32kSetBkMode(a0, a1);
+
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetROP2(
+        HDC     a0,
+        int     a1
+        )
+{
+        return W32kSetROP2(a0, a1);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetStretchBltMode(
+        HDC     a0,
+        int     a1
+        )
+{
+        return W32kSetStretchBltMode(a0, a1);
+
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetRelAbs(
+         HDC  a0,
+         DWORD a1
+           )
+{
+        return W32kGetRelAbs(a0);
+
+}
+
+
+/*
+ * @implemented
+ */
 HGDIOBJ STDCALL
 GetStockObject(int Index)
 {

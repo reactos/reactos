@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.22 2003/07/14 06:34:38 jimtabor Exp $
+/* $Id: stubs.c,v 1.23 2003/07/19 22:53:21 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -434,20 +434,6 @@ FrameRgn(
 /*
  * @unimplemented
  */
-int
-STDCALL
-GetROP2(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 GetAspectRatioFilterEx(
@@ -748,22 +734,6 @@ GetRasterizerCaps(
 
 
 
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetStretchBltMode(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -801,34 +771,6 @@ GetSystemPaletteUse(
 int
 STDCALL
 GetTextCharacterExtra(
-	HDC	hDc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetTextAlign(
-	HDC	hDc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-COLORREF
-STDCALL
-GetTextColor(
 	HDC	hDc
 	)
 {
@@ -894,67 +836,6 @@ GetFontLanguageInfo(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetViewportExtEx(
-	HDC	hDc,
-	LPSIZE	lpSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetViewportOrgEx(
-	HDC		hDc,
-	LPPOINT		lpPoint
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetWindowExtEx(
-	HDC		hDc,
-	LPSIZE		lpSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetWindowOrgEx(
-	HDC		hDc,
-	LPPOINT		lpPoint
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
@@ -1254,21 +1135,6 @@ SetBkColor(
 /*
  * @unimplemented
  */
-int
-STDCALL
-SetBkMode(
-	HDC	a0,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 SetBoundsRect(
@@ -1374,36 +1240,6 @@ SetPixelFormat(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetROP2(
-	HDC	a0,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetStretchBltMode(
-	HDC	a0,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
@@ -2988,21 +2824,6 @@ GetRandomRgn(
 	DWORD	a0,
 	DWORD	a1,
 	DWORD	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetRelAbs(
-	DWORD	a0,
-	DWORD	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
