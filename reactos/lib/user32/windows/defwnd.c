@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.111 2003/12/19 23:20:05 weiden Exp $
+/* $Id: defwnd.c,v 1.112 2003/12/20 22:33:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -283,7 +283,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 
 
 LRESULT
-DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
+DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 {
   /* Not for child windows. */
   if (hWnd != (HWND)wParam)
@@ -318,24 +318,40 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
     case HTLEFT:
     case HTRIGHT:
       {
+        if (Style & WS_MAXIMIZE)
+        {
+          break;
+        }
 	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
       }
 
     case HTTOP:
     case HTBOTTOM:
       {
+        if (Style & WS_MAXIMIZE)
+        {
+          break;
+        }
 	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
       }
 
     case HTTOPLEFT:
     case HTBOTTOMRIGHT:
       {
+        if (Style & WS_MAXIMIZE)
+        {
+          break;
+        }
 	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
       }
 
     case HTBOTTOMLEFT:
     case HTTOPRIGHT:
       {
+        if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
+        {
+          break;
+        }
 	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
       }
     }
@@ -416,7 +432,7 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
       *capturePoint = pt;
     }
     SetCursorPos( pt.x, pt.y );
-    DefWndHandleSetCursor(hWnd, (WPARAM)hWnd, MAKELONG(hittest, WM_MOUSEMOVE));
+    DefWndHandleSetCursor(hWnd, (WPARAM)hWnd, MAKELONG(hittest, WM_MOUSEMOVE), Style);
     return hittest;
 }
 
@@ -1176,7 +1192,9 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETCURSOR:
         {
-            if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+            ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+            
+            if (Style & WS_CHILD)
             {
                 if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
                 {
@@ -1197,7 +1215,7 @@ User32DefWindowProc(HWND hWnd,
                     }
                 }
             }
-            return (DefWndHandleSetCursor(hWnd, wParam, lParam));
+            return (DefWndHandleSetCursor(hWnd, wParam, lParam, Style));
         }
 
         case WM_SYSCOMMAND:
