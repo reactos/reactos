@@ -175,6 +175,7 @@ NdisMFlushLog@4
 NdisMFreeMapRegisters@4
 NdisMFreeSharedMemory@24
 NdisMGetDeviceProperty@24
+NdisMGetDmaAlignment@4
 NdisMIndicateStatus@16
 NdisMIndicateStatusComplete@4
 NdisMInitializeScatterGatherDma@12

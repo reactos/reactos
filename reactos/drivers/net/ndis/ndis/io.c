@@ -736,16 +736,42 @@ NdisMMapIoSpace(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 EXPORT
 NdisMReadDmaCounter(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
-    UNIMPLEMENTED
+  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
 
-  return 0;
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (AdapterObject == NULL)
+    return 0;
+    
+  return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
+}
+
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisMGetDmaAlignment(
+    IN  NDIS_HANDLE MiniportDmaHandle)
+{
+  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (AdapterObject == NULL)
+    return 0;
+    
+  return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
 
 

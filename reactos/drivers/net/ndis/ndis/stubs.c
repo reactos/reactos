@@ -836,27 +836,6 @@ NdisQueryAdapterInstanceName(
 /*
  * @unimplemented
  */
-VOID
-EXPORT
-NdisQueryBufferSafe(
-    IN  PNDIS_BUFFER    Buffer,
-    OUT PVOID           *VirtualAddress OPTIONAL,
-    OUT PUINT           Length,
-    IN  UINT            Priority)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
 ULONG
 EXPORT
 NdisReadPcmciaAttributeMemory(

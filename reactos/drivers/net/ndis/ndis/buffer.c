@@ -1013,6 +1013,29 @@ NdisQueryBuffer(
  */
 VOID
 EXPORT
+NdisQueryBufferSafe(
+    IN  PNDIS_BUFFER    Buffer,
+    OUT PVOID           *VirtualAddress OPTIONAL,
+    OUT PUINT           Length,
+    IN  UINT            Priority)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    if (VirtualAddress != NULL)
+        *VirtualAddress = MmGetSystemAddressForMdlSafe(Buffer, Priority);
+    *Length = MmGetMdlByteCount(Buffer);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
 NdisQueryBufferOffset(
     IN  PNDIS_BUFFER    Buffer,
     OUT PUINT           Offset,
