@@ -30,9 +30,20 @@ typedef struct _THRDCARETINFO
   BYTE Showing;
 } THRDCARETINFO, *PTHRDCARETINFO;
 
+void InitStockObjects(void);
 VOID CreateFrameBrushes(VOID);
 VOID DeleteFrameBrushes(VOID);
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
+
+LONG WINAPI RegCloseKey(HKEY);
+LONG WINAPI RegOpenKeyExW(HKEY,LPCWSTR,DWORD,REGSAM,PHKEY);
+LONG WINAPI RegQueryValueExW(HKEY,LPCWSTR,LPDWORD,LPDWORD,LPBYTE,LPDWORD);
+
+#ifdef __USE_W32API
+NTSTATUS STDCALL ZwCallbackReturn(PVOID Result,
+				  ULONG ResultLength,
+				  NTSTATUS Status);
+#endif
 
 #define NtUserAnyPopup() \
   (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ANYPOPUP)
@@ -60,6 +71,18 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 
 #define NtUserRegisterLogonProcess(hproc, x) \
   (BOOL)NtUserCallTwoParam((DWORD)hproc, (DWORD)x, TWOPARAM_ROUTINE_REGISTERLOGONPROC)
+
+#define NtUserGetSysColorBrushes(HBrushes, count) \
+  (BOOL)NtUserCallTwoParam((DWORD)(HBrushes), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES)
+
+#define NtUserGetSysColorPens(HPens, count) \
+  (BOOL)NtUserCallTwoParam((DWORD)(HPens), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORPENS)
+
+#define NtUserGetSysColors(ColorRefs, count) \
+  (BOOL)NtUserCallTwoParam((DWORD)(ColorRefs), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORS)
+
+#define NtUserSetSysColors(ColorRefs, count) \
+  (BOOL)NtUserCallTwoParam((DWORD)(ColorRefs), (DWORD)(count), TWOPARAM_ROUTINE_SETSYSCOLORS)
 
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
@@ -100,12 +123,3 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 #define NtUserEnableProcessWindowGhosting(bEnable) \
   NtUserCallOneParam((DWORD)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 
-LONG WINAPI RegCloseKey(HKEY);
-LONG WINAPI RegOpenKeyExW(HKEY,LPCWSTR,DWORD,REGSAM,PHKEY);
-LONG WINAPI RegQueryValueExW(HKEY,LPCWSTR,LPDWORD,LPDWORD,LPBYTE,LPDWORD);
-
-#ifdef __USE_W32API
-NTSTATUS STDCALL ZwCallbackReturn(PVOID Result,
-				  ULONG ResultLength,
-				  NTSTATUS Status);
-#endif
