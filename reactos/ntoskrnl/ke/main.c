@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.143 2002/12/04 20:36:22 ekohl Exp $
+/* $Id: main.c,v 1.144 2002/12/07 14:47:10 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -297,6 +297,7 @@ ExpInitializeExecutive(VOID)
   PCHAR name;
   CHAR str[50];
   NTSTATUS Status;
+  BOOLEAN SetupBoot;
 
   /*
    * Fail at runtime if someone has changed various structures without
@@ -479,6 +480,7 @@ ExpInitializeExecutive(VOID)
     }
 
   /*  Pass 2: load registry chunks passed in  */
+  SetupBoot = TRUE;
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
@@ -490,10 +492,18 @@ ExpInitializeExecutive(VOID)
 	  CPRINT("Process registry chunk at %08lx\n", start);
 	  CmImportHive((PCHAR)start, length);
 	}
+      if (_stricmp(name, "system") == 0 ||
+	  _stricmp(name, "system.hiv") == 0)
+	{
+	  SetupBoot = FALSE;
+	}
     }
 
   /* Initialize volatile registry settings */
-  CmInit2((PCHAR)KeLoaderBlock.CommandLine);
+  if (SetupBoot == TRUE)
+    {
+      CmInit2((PCHAR)KeLoaderBlock.CommandLine);
+    }
 
   /*
    * Enter the kernel debugger before starting up the boot drivers
