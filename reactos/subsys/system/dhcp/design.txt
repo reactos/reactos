@@ -1,3 +1,7 @@
+Acknowledgements:
+
+	Tinus provided the initial port of these dhclient file.
+
 Ok I need these things:
 
 1) Adapter concept thingy
