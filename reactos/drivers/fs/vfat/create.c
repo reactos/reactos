@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.29 2001/07/25 08:58:21 ekohl Exp $
+/* $Id: create.c,v 1.30 2001/08/01 10:12:33 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,7 +69,7 @@ void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
   {
     pName [toIndex++] = L'.';
     fromIndex = 0;
-    while (fromIndex < 3 && pBasename [fromIndex] != ' ')
+    while (fromIndex < 3 && pExtension [fromIndex] != ' ')
     {
       pName [toIndex++] = pExtension [fromIndex++];
     }
