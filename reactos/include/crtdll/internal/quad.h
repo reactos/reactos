@@ -35,7 +35,7 @@
  * SUCH DAMAGE.
  *
  *      @(#)quad.h      8.1 (Berkeley) 6/4/93
- *      $Id: quad.h,v 1.1 1999/04/17 09:11:02 ariadne Exp $
+ *      $Id: quad.h,v 1.2 1999/04/23 18:43:00 ariadne Exp $
  */
 
 /*
@@ -58,8 +58,8 @@
 
 
 typedef unsigned long long       u_quad_t;       /* quads */
-typedef long long         	 quad_t;
-typedef unsigned long	         u_long;
+typedef long long         quad_t;
+typedef unsigned long	     u_long;
 
 
 

@@ -60,7 +60,6 @@ unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int
 # define TYPEMOD	(LONG|LONGDBL|SHORT)
 
 
-
 # define ungetc(c, s)	((void) (c != EOF && --read_in), ungetc (c, s))
 # define inchar()	((c = getc (s)), (void) (c != EOF && ++read_in), c)
 # define encode_error()	do {						      \
@@ -180,7 +179,8 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
       if (!isascii (*f))
 	{
 	  /* Non-ASCII, may be a multibyte.  */
-	  int len = mblen (f, strlen (f));
+	 // int len = mblen (f, strlen (f));
+	int len =1;
 	  if (len > 0)
 	    {
 	      do
@@ -1055,12 +1055,124 @@ double __strtod_internal  (const char *__nptr,char **__endptr, int __group)
 }
 float __strtof_internal (const char *__nptr, char **__endptr,int __group)
 {
-	return strtod(__nptr,__endptr);
+	return (float)strtod(__nptr,__endptr);
 }
-long double __strtold_internal  (const char *__nptr,char **__endptr, int __group)
+static double powten[] =
 {
-	return strtod(__nptr,__endptr);
-//	return strtold(__nptr,__endptr);
+  1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L,
+  1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
+};
+
+long double __strtold_internal  (const char *s,char **sret, int __group)
+{
+	
+  long double r;		/* result */
+  int e, ne;			/* exponent */
+  int sign;			/* +- 1.0 */
+  int esign;
+  int flags=0;
+  int l2powm1;
+
+  r = 0.0L;
+  sign = 1;
+  e = ne = 0;
+  esign = 1;
+
+  while(*s && isspace(*s))
+    s++;
+
+  if (*s == '+')
+    s++;
+  else if (*s == '-')
+  {
+    sign = -1;
+    s++;
+  }
+
+  while ((*s >= '0') && (*s <= '9'))
+  {
+    flags |= 1;
+    r *= 10.0L;
+    r += *s - '0';
+    s++;
+  }
+
+  if (*s == '.')
+  {
+    s++;
+    while ((*s >= '0') && (*s <= '9'))
+    {
+      flags |= 2;
+      r *= 10.0L;
+      r += *s - '0';
+      s++;
+      ne++;
+    }
+  }
+  if (flags == 0)
+  {
+    if (sret)
+      *sret = (char *)s;
+    return 0.0L;
+  }
+
+  if ((*s == 'e') || (*s == 'E'))
+  {
+    s++;
+    if (*s == '+')
+      s++;
+    else if (*s == '-')
+    {
+      s++;
+      esign = -1;
+    }
+    while ((*s >= '0') && (*s <= '9'))
+    {
+      e *= 10;
+      e += *s - '0';
+      s++;
+    }
+  }
+  if (esign < 0)
+  {
+    esign = -esign;
+    e = -e;
+  }
+  e = e - ne;
+  if (e < -4096)
+  {
+    /* possibly subnormal number, 10^e would overflow */
+    r *= 1.0e-2048L;
+    e += 2048;
+  }
+  if (e < 0)
+  {
+    e = -e;
+    esign = -esign;
+  }
+  if (e >= 8192)
+    e = 8191;
+  if (e)
+  {
+    double d = 1.0L;
+    l2powm1 = 0;
+    while (e)
+    {
+      if (e & 1)
+	d *= powten[l2powm1];
+      e >>= 1;
+      l2powm1++;
+    }
+    if (esign > 0)
+      r *= d;
+    else
+      r /= d;
+  }
+  if (sret)
+    *sret = (char *)s;
+  return r * sign;
+
+  return 0;
 }
 long int __strtol_internal (const char *__nptr, char **__endptr,	int __base, int __group)
 {

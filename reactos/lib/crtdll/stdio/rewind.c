@@ -11,7 +11,6 @@ void rewind(FILE *f)
   lseek(fileno(f), 0L, SEEK_SET);
   f->_cnt = 0;
   f->_ptr = f->_base;
-  f->_flag &= ~(_IOERR|_IOEOF);
-  if (f->_flag & _IORW)
-    f->_flag &= ~(_IOREAD|_IOWRT);
+  f->_flag &= ~(_IOERR|_IOEOF|_IOAHEAD);
+
 }

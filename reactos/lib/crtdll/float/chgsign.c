@@ -1,8 +1,13 @@
 #include <crtdll/float.h>
+#include <crtdll/internal/ieee.h>
 
-//Obvious fixme
-
-double _chgsign( double x )
+double _chgsign( double __x )
 {
-	return -1.0*x;
+	double_t *x = (double_t *)&x;
+	if ( x->sign == 1 )
+		x->sign = 0;
+	else 
+		x->sign = 1;
+
+	return __x;
 }

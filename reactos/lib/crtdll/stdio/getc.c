@@ -16,10 +16,10 @@ int getc(FILE *fp)
 	}
 // check for read access on stream
 
-//	if ( (fp->_flag & _IOREAD) != _IOREAD ) {
-//		__set_errno(EINVAL);
-//		return -1;
-//	}
+	//if ( !READ_STREAM(fp) ) {
+	//	__set_errno(EINVAL);
+	//	return -1;
+	//}
 
 	if(fp->_cnt > 0) {
 		fp->_cnt--;

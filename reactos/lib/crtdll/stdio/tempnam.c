@@ -5,13 +5,17 @@
 
 char *_tempnam(const char *dir,const char *prefix )
 {
-	char *TempFileName;
-	TempFileName = malloc(MAX_PATH);
-	GetTempFileName(
- 		dir,	
-    		prefix,	
-    		98,	
-    		TempFileName 	
-   	);
+	char *TempFileName = malloc(MAX_PATH);
+	char *d;
+	if ( dir == NULL )
+		d = getenv("TMP");
+	else 
+		d = (char *)dir;
+
+	if ( GetTempFileNameA(d, prefix, 0, TempFileName ) == 0 ) {
+		free(TempFileName);
+		return NULL;
+	}
+		
 	return TempFileName;
 }

@@ -7,22 +7,23 @@
 
 int putc(int c, FILE *fp)
 {
+
 	if ( c == 0 )
 		c = ' '; 
-
-// check for fp == NULL and for putc(fp,c)
-
-	if ( (int)fp < 256 ) {
+// valid stream macro should check that fp 
+// is dword aligned
+	if (  fp == NULL ) {
 		__set_errno(EINVAL);
 		return -1;
 	}
 // check for write access on fp
 
-//	if ( (fp->_flag & _IOWRT) != _IOWRT ) {
-//		__set_errno(EINVAL);
-//		return -1;
-//	}
-
+	//if ( !WRITE_STREAM(fp)  ) {
+	//	__set_errno(EINVAL);
+	//	return -1;
+	//}
+	
+	fp->_flag |= _IODIRTY;
 	if (fp->_cnt > 0 ) {
 		fp->_cnt--;
        		*(fp)->_ptr++ = (char)c;

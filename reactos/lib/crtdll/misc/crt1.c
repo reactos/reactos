@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:43:55 $
+ * $Date: 1999/04/23 18:42:21 $
  *
  */
 
@@ -49,7 +49,7 @@ extern int main(int, char**, char**);
 extern unsigned int _CRT_fmode;
 
 void
-_mingw32_init_fmode ()
+_mingw32_init_fmode (void)
 {
 	/* Don't set the file mode if the user hasn't set any value for it. */
 	if (_CRT_fmode)
@@ -83,7 +83,7 @@ _mingw32_init_fmode ()
  * The function mainCRTStartup is the entry point for all console programs.
  */
 int
-mainCRTStartup ()
+mainCRTStartup (void)
 {
 	int	nRet;
 
@@ -139,14 +139,13 @@ mainCRTStartup ()
  * to find WinMainCRTStartup when linking GUI applications.
  */
 int
-WinMainCRTStartup ()
+WinMainCRTStartup (void)
 {
 	return mainCRTStartup();
 }
 
 /* With the EGCS build from Mumit Khan (or apparently b19 from Cygnus) this
  * is no longer necessary. */
-#if 0
 #ifdef __GNUC__
 /*
  * This section terminates the list of imports under GCC. If you do not
@@ -154,6 +153,5 @@ WinMainCRTStartup ()
  *
  */
 asm (".section .idata$3\n" ".long 0,0,0,0,0,0,0,0");
-#endif
 #endif
 

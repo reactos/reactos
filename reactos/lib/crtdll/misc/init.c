@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:43:56 $
+ * $Date: 1999/04/23 18:42:21 $
  *
  */
 
@@ -56,7 +56,7 @@ extern void __GetMainArgs(int *, char***, char***, int);
  * Initialize the _argc, _argv and environ variables.
  */
 static void
-_mingw32_init_mainargs ()
+_mingw32_init_mainargs (void)
 {
 	/* The environ variable is provided directly in stdlib.h through
 	 * a dll function call. */

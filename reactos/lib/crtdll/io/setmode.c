@@ -12,11 +12,6 @@
 #include <crtdll/stdio.h>
 #include <crtdll/internal/file.h>
 
-#undef setmode
-int setmode(int _fd, int _newmode)
-{
-	return _setmode(_fd, _newmode);
-}
 
 int _setmode(int _fd, int _newmode)
 {

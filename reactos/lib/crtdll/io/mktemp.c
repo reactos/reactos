@@ -17,10 +17,6 @@
 #include <crtdll/string.h>
 #include <crtdll/io.h>
 
-char* mktemp (char *_template)
-{
-   return(_mktemp(_template));
-}
 
 char* _mktemp (char *_template)
 {

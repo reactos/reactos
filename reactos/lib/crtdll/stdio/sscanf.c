@@ -21,13 +21,6 @@
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
-#if 1
-
-int sscanf (const char *s,const char *format, ...)
-{
-}
-
-#else
 
 int __vsscanf (const char *s,const char *format,va_list arg);
 
@@ -52,6 +45,7 @@ strong_alias (sscanf, _IO_sscanf)
 #endif
 
 
+#if 0
 
 int
 swscanf(const wchar_t *str, const wchar_t *fmt, ...)
@@ -80,5 +74,6 @@ swscanf(const wchar_t *str, const wchar_t *fmt, ...)
 
 
 }
+
 
 #endif

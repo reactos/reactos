@@ -23,7 +23,7 @@ void exit(int status)
     djgpp_first_dtor[i]();
 */
   /* in case the program set it this way */
-  setmode(0, O_TEXT);
+  _setmode(0, O_TEXT);
   _exit(status);
   for(;;);
 }

@@ -7,7 +7,7 @@
 int
 fputs(const char *s, FILE *f)
 {
-	/*
+	
   int r = 0;
   int c;
   int unbuffered;
@@ -34,10 +34,5 @@ fputs(const char *s, FILE *f)
   }
 
   return(r);
-  */
-	int r = 0;
-	if ( !WriteFile(_get_osfhandle(f->_file),s,strlen(s),&r,NULL) ) 
-		return -1;
-
-  	return r;
+ 
 }

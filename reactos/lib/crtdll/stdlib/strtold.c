@@ -6,13 +6,12 @@
 static double powten[] =
 {
   1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L
-  //1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
+  1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
 };
 
-double
+long double
 _strtold(const char *s, char **sret)
-{
-#if 0	
+{	
   double r;		/* result */
   int e, ne;			/* exponent */
   int sign;			/* +- 1.0 */
@@ -119,6 +118,5 @@ _strtold(const char *s, char **sret)
     *sret = (char *)s;
   return r * sign;
 
-#endif
   return 0;
 }

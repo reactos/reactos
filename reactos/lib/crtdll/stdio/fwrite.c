@@ -1,88 +1,75 @@
-/* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/stdio.h>
 #include <crtdll/stdlib.h>
 #include <crtdll/string.h>
+#include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
+#if 0
 size_t
-fwrite(const void *vptr, size_t size, size_t count, FILE *f)
+fwrite(const void *p, size_t size, size_t count, FILE *iop)
 {
-  const char *ptr = (const char *)vptr;
-  register int s;
+  char *ptr = (char *)p;
+  size_t to_write;
 
-  s = size * count;
-  if(!__is_text_file(f))
-  {
-    if (f->_flag & _IOLBF)
-      while (s > 0) {
-	if (--f->_cnt > -f->_bufsiz && *(const char *)ptr != '\n')
-	  *f->_ptr++ = *(const char *)ptr++;
-	else if (_flsbuf(*(const char *)ptr++, f) == EOF)
-	  break;
-	s--;
-      }
-    else while (s > 0) {
-      if (f->_cnt < s) {
-	if (f->_cnt > 0) {
-	  memcpy(f->_ptr, ptr, f->_cnt);
-	  ptr += f->_cnt;
-	  f->_ptr += f->_cnt;
-	  s -= f->_cnt;
-	}
-	if (_flsbuf(*(const unsigned char *)ptr++, f) == EOF)
-	  break;
-	s--;
-      }
-      if (f->_cnt >= s) {
-	memcpy(f->_ptr, ptr, s);
-	f->_ptr += s;
-	f->_cnt -= s;
-	return count;
-      }
-    }
+
+  to_write = size * count;
+ 
+
+
+  while ( to_write > 0 ) {
+	if ( putc(*ptr,iop) == EOF )
+		break;
+	to_write--;
+	ptr++;
   }
-  else
-  {
-    if (f->_flag & _IOLBF)
-    {
-      while (s > 0) {
-        if (*ptr=='\n')
-        {
-          if (--f->_cnt > -f->_bufsiz)
-            *f->_ptr++ = '\r';
-          else
-            if (_flsbuf('\r', f) == EOF)
-	      break;
-        }
-	if (--f->_cnt > -f->_bufsiz && *ptr != '\n')
-	  *f->_ptr++ = *ptr++;
-	else if (_flsbuf(*(const unsigned char *)ptr++, f) == EOF)
-	  break;
-	s--;
-      }
-    }
-    else
-    {
-      while (s > 0)
-      {
-	if (*ptr == '\n')
-	{
-	  if(--f->_cnt >= 0)
-	    *f->_ptr++ = '\r';
-	  else
-	    if (_flsbuf('\r', f) == EOF)
-	      break;
-	}
-	if (--f->_cnt >= 0)
-	  *f->_ptr++ = *ptr++;
-	else
-	  if (_flsbuf(*(const unsigned char *)ptr++, f) == EOF)
-	    break;
-	s--;
-      }
-    }
-  }
-  return size != 0 ? count - ((s + size - 1) / size) : 0;
+	
+
+
+  return count -to_write/size;
+ 
 }
 
+
+#else
+size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
+ {
+ 	size_t to_write, n_written;
+ 	char *ptr = (char *)vptr;
+ 	
+ 	to_write = size*count;
+ 	//if (!WRITE_STREAM(iop) )
+	//{
+	//	__set_errno (EINVAL);
+	//	return 0;
+	//}
+
+
+	if (iop == NULL  )
+	{
+		__set_errno (EINVAL);
+		return 0;
+	}
+
+	if (ferror (iop))
+		return 0;
+	if (vptr == NULL || to_write == 0)
+		return 0;
+
+ 	
+ 	while(iop->_cnt > 0 ) {     
+                to_write--;
+                putc(*ptr++,iop);
+        }
+       
+      
+        n_written = _write(fileno(iop), ptr,to_write);
+        if ( n_written != -1 )
+        	to_write -= n_written;
+        
+        // check to see if this will work with in combination with ungetc
+        
+         return count - (to_write/size);      
+  
+}
+
+#endif

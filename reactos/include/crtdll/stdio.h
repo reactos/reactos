@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.8 $
+ * $Revision: 1.9 $
  * $Author: ariadne $
- * $Date: 1999/04/17 09:11:02 $
+ * $Date: 1999/04/23 18:43:00 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -47,18 +47,21 @@ extern "C" {
 
 
 /* Some flags for the iobuf structure provided by djgpp stdio.h */
-#define _IOREAD   000010
-#define _IOWRT    000020
-#define _IOMYBUF  000040
-#define _IOEOF    000100
-#define _IOERR    000200
-#define _IOSTRG   000400
-#define _IORW     001000
-#define _IOAPPEND 002000
-#define _IORMONCL 004000  /* remove on close, for temp files */
+#define _IOREAD   0x000010
+#define _IOWRT    0x000020
+#define _IOMYBUF  0x000040
+#define _IOEOF    0x000100
+#define _IOERR    0x000200
+#define _IOSTRG   0x000400
+#define _IORW     (_IOREAD | _IOWRT)
+#define _IOAPPEND 0x002000
+#define _IORMONCL 0x004000  /* remove on close, for temp files */
 /* if _flag & _IORMONCL, ._name_to_remove needs freeing */
-#define _IOUNGETC 010000  /* there is an ungetc'ed character in the buffer */
-#define _IOCOMMIT 0x4000
+#define _IOUNGETC 0x010000  /* there is an ungetc'ed character in the buffer */
+#define _IOCOMMIT 0x008000
+
+#define _IODIRTY  0x000080
+#define _IOAHEAD  0x000008
 
 
 /*
@@ -86,12 +89,11 @@ typedef struct {
   int   _ungotchar;
   int   _bufsiz;
   char *_name_to_remove;
-//  int 	_fillsize;
 } FILE;
 #define _FILE_DEFINED
 #endif
 
-#define _fillsize _bufsiz
+//#define _fillsize _bufsiz
 
 /*
  * The three standard file pointers provided by the run time library.

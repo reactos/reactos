@@ -21,13 +21,6 @@ Cambridge, MA 02139, USA.  */
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
-#if 1
-
-int scanf (const char *format, ...)
-{
-}
-
-#else
 
 /* The function `vscanf' is not defined in ISO C.  Therefore we must
    use the protected form here.  In stdio it is called `__vscanf' and
@@ -56,6 +49,7 @@ int scanf (const char *format, ...)
 }
 
 
+#if 0
 int
 wscanf(const wchar_t *fmt, ...)
 {
@@ -73,12 +67,6 @@ wscanf(const wchar_t *fmt, ...)
   va_end (arg);
 
   return done;
-}
-
-#include <crtdll/malloc.h>
-void *alloca(size_t x)
-{
-	return malloc(x);
 }
 
 #endif

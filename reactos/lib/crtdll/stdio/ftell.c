@@ -16,7 +16,8 @@ ftell(FILE *f)
 
   if (f->_cnt < 0)
     f->_cnt = 0;
-  if (f->_flag&_IOREAD)
+ 
+  else if (f->_flag&_IOREAD)
   {
     adjust = - f->_cnt;
   }
@@ -25,11 +26,15 @@ ftell(FILE *f)
     if (f->_flag&_IOWRT && f->_base && (f->_flag&_IONBF)==0)
       adjust = f->_ptr - f->_base;
   }
+
   else
     return -1;
-  tres = lseek(fileno(f), 0L, 1);
+  tres = lseek(fileno(f), 0L, SEEK_CUR);
   if (tres<0)
     return tres;
   tres += adjust;
+  
+  //f->_cnt = f->_bufsiz - tres;
+  //f->_ptr = f->_base + tres;
   return tres;
 }

@@ -1,9 +1,11 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/stdio.h>
-#include <stdarg.h>
+#include <crtdll/stdarg.h>
+#include <crtdll/malloc.h>
 #include <crtdll/internal/file.h>
 
-
+int _isnanl(double x);
+int _isinfl(double x);
 
 
 
@@ -61,8 +63,9 @@ vfprintf(FILE *f, const char *fmt, va_list ap)
 #include <crtdll/string.h>
 #include <crtdll/stdio.h>
 #include <crtdll/string.h>
+#include <crtdll/math.h>
+#include <crtdll/internal/ieee.h>
 
-//#undef isdigit
 
 size_t strnlen( const char *string, size_t count );
 
@@ -83,11 +86,11 @@ static int skip_atoi(const char **s)
 #define LEFT	16		/* left justified */
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
-
+#define ZEROTRUNC 128			/* truncate zero 's */
 
 static int __res;
 
-int do_div(int *n,int base) {
+int do_div(long *n,int base) {
 
 __res = ((unsigned long) *n) % (unsigned) base;
 *n = ((unsigned long) *n) / (unsigned) base; 
@@ -141,13 +144,15 @@ static char * number(FILE * f, long num, int base, int size, int precision
 			putc( ' ',f);
 	if (sign)
 		putc( sign,f);
-	if (type & SPECIAL)
-		if (base==8)
+	if (type & SPECIAL) {
+		if (base==8) {
 			putc( '0',f);
+		}
 		else if (base==16) {
 			putc( '0', f);
 			putc( digits[33],f);
 		}
+	}
 	if (!(type & LEFT))
 		while (size-- > 0)
 			putc( c,f);
@@ -161,13 +166,210 @@ static char * number(FILE * f, long num, int base, int size, int precision
 	return 0;
 }
 
+
+
+void numberf(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
+{
+
+	long double exponent = 0.0;
+	long double e;
+	long ie;
+
+	//int x;
+	char *buf, *tmp;
+	int i = 0;
+	int j = 0;
+	//int k = 0;
+
+	long double frac, intr;
+	long double p;
+	char sign;
+	char c;
+	char ro;
+
+	long_double_t *n = (long_double_t *)&__n;
+
+
+	if (  exp_sign == 'g' ||  exp_sign == 'G' || exp_sign == 'e' ||  exp_sign == 'E' ) {
+		ie = ((unsigned int)n->exponent - (unsigned int)0x3fff);
+		exponent = ie/3.321928;
+	}
+
+	if (   exp_sign == 'g' ||  exp_sign == 'G' ) {
+		type |= ZEROTRUNC;
+		if ( exponent < -4 || fabs(exponent) >= precision ) 
+			 exp_sign -= 2; // g -> e and G -> E
+
+	}
+	
+	if (  exp_sign == 'e' ||  exp_sign == 'E' ) {
+		frac = modfl(exponent,&e);
+		if ( frac > 0.5 )
+			e++;
+		else if (  frac < -0.5  )
+			e--;
+
+
+
+		numberf(f,__n/powl(10.0L,e),'f',size-4, precision, type);
+		putc( exp_sign,f);
+		size--;
+		ie = (long)e;
+		type = LEFT | PLUS;
+		if ( ie < 0 )
+			type |= SIGN;
+
+		number(f,ie, 10,2, 2,type );
+		return;
+	}			
+			
+			
+	if (  exp_sign == 'f' ) {
+		
+		buf = alloca(4096);
+		if (type & LEFT) {
+                	type &= ~ZEROPAD;
+		}
+    
+        	c = (type & ZEROPAD) ? '0' : ' ';
+        	sign = 0;
+        	if (type & SIGN) {
+                	if (__n < 0) {
+                        	sign = '-';
+                        	__n = fabs(__n);
+                        	size--;
+                	} else if (type & PLUS) {
+                        	sign = '+';
+                       		size--;
+                	} else if (type & SPACE) {
+                        	sign = ' ';
+                        	size--;
+                	}
+        	}
+	
+
+	
+	
+		frac = modfl(__n,&intr);
+	
+		
+
+		// # flags forces a . and prevents trucation of trailing zero's
+		
+		if ( precision > 0 ) {
+		
+
+			frac = modfl(__n,&intr);
+	
+			i = precision-1;
+			while (  i >= 0  ) {		
+				frac*=10.0L;
+				frac = modfl((long double)frac, &p);
+				buf[i] = (int)p + '0';
+				i--;
+			}
+			i = precision;
+			size -= precision;
+
+			ro = 0;
+			if ( frac > 0.5 ) {
+				ro = 1;
+			}
+
+			if ( precision >= 1 || type & SPECIAL) {
+				buf[i++] = '.';
+				size--;
+			}
+		}
+
+
+
+		if ( intr == 0.0 ) {
+			buf[i++] = '0';
+			size--;
+		}
+		else {
+		
+		
+			while ( intr > 0.0 ) {
+
+				intr/=10.0L;
+				p = modfl(intr, &intr);
+				
+				p *=10;
+			
+				buf[i++] = (int)p + '0';
+				size--;
+			}
+	
+		}
+
+
+		j = 0;
+		while ( j < i && ro == 1) {
+			if ( buf[j] >= '0' && buf[j] <= '8' ) {
+				buf[j]++;
+				ro = 0;
+			}
+			else if ( buf[j] == '9' ) {
+				buf[j] = '0';					
+			}
+			j++;
+		}
+		if ( ro == 1 )
+			buf[i++] = '1'; 
+			
+		buf[i] = 0;
+
+		size -= precision;
+        if (!(type&(ZEROPAD+LEFT)))
+                while(size-->0)
+                        putc( ' ',f);
+        if (sign)
+                putc( sign,f);
+
+		if (!(type&(ZEROPAD+LEFT)))
+			while(size-->0)
+				putc( ' ',f);
+		if (type & SPECIAL) {
+		}
+    
+        if (!(type & LEFT))
+                while (size-- > 0)
+                        putc( c,f);
+
+		tmp = buf;
+		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
+			j = 0;
+			while ( j < i && ( *tmp == '0' || *tmp == '.' )) {
+					tmp++;
+					i--;
+			}
+
+		}
+	//	else
+	//		while (i < precision--)
+	//			    putc( '0', f);
+        while (i-- > 0)
+                putc( tmp[i],f);
+        while (size-- > 0)
+                putc( ' ', f);
+	
+
+	
+		
+		
+	}
+		
+}
+
 int
 __vfprintf(FILE *f, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long num;
 	int i, base;
-
+	long double _ldouble;
 	const char *s;
         const short int* sw;
 
@@ -226,10 +428,32 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		}
 
 		/* get the conversion qualifier */
-		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L') {
+		// %Z can be just stand alone or as size_t qualifier
+		if ( *fmt == 'Z' ) {
 			qualifier = *fmt;
-			++fmt;
+			switch ( *(fmt+1)) {
+				case 'o':
+				case 'b':
+				case 'X':
+				case 'x':
+				case 'd':
+				case 'i':
+				case 'u':
+					++fmt;
+					break;
+				default:
+					break;
+			}
+		}
+                else if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' ) {
+                        qualifier = *fmt;
+                        ++fmt;
+                }
+
+		// go fine with ll instead of L
+		if ( *fmt == 'l' ) {
+				++fmt;
+				qualifier = 'L';
 		}
 
 		/* default base */
@@ -268,7 +492,49 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		     }
 //		   CHECKPOINT;
 		   continue;
-		   
+	   	case 'e':
+	   	case 'E':
+		case 'f':
+    		case 'g':
+    		case 'G':
+
+      		   if (qualifier == 'l' || qualifier == 'L' ) 
+			_ldouble = va_arg(args, long double);
+      		   else
+			_ldouble = (long double)va_arg(args, double);
+
+		   if ( _isnanl(_ldouble) ) {
+			s = "Nan";
+			len = 3;
+			while ( len > 0 ) {
+				putc(*s++,f);
+				len --;
+			}
+			
+		   }
+		   else if ( _isinfl(_ldouble) < 0 ) {
+			s = "-Inf";
+			len = 4;
+			while ( len > 0 ) {
+				putc(*s++,f);
+				len --;
+			}
+		   }
+		   else if ( _isinfl(_ldouble) > 0 ) {
+			s = "+Inf";
+			len = 4;
+			while ( len > 0 ) {
+				putc(*s++,f);
+				len --;
+			}
+		   }
+		   else {
+			if ( precision == -1 )
+				precision = 6;
+			numberf(f,_ldouble,*fmt,field_width,precision,flags);
+	
+ 		   }
+		   continue;
 		case 's':
 			s = va_arg(args, char *);
 			if (!s)
@@ -299,10 +565,10 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		case 'n':
 			if (qualifier == 'l') {
 				long * ip = va_arg(args, long *);
-				//*ip = (str - buf);
+				*ip = 0;
 			} else {
 				int * ip = va_arg(args, int *);
-				//*ip = (str - buf);
+				*ip = 0;
 			}
 			continue;
 
@@ -338,11 +604,12 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		}
 		if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
-		else if (qualifier == 'h')
+		else if (qualifier == 'h') {
 			if (flags & SIGN)
 				num = va_arg(args, short);
 			else
 				num = va_arg(args, unsigned short);
+		}
 		else if (flags & SIGN)
 			num = va_arg(args, int);
 		else
@@ -352,6 +619,15 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 	//putc('\0',f);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
 
 
 

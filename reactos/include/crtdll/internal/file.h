@@ -26,6 +26,12 @@ extern "C" {
 #define _IOUNGETC 010000  /* there is an ungetc'ed character in the buffer */
 #endif
 
+
+// might need check for IO_APPEND aswell
+#define WRITE_STREAM(f) ((((f)->_flag & _IOWRT) == _IOWRT ) ||  (((f)->_flag & _IORW) ==  _IORW ))
+
+#define READ_STREAM(f) ((((f)->_flag & _IOREAD) == _IOREAD ) ||  (((f)->_flag & _IORW) ==  _IORW ))
+
 int __set_errno(int err);
 void *filehnd(int fn);
 
@@ -35,7 +41,6 @@ int __fileno_alloc(void *hFile, int mode);
 
 int _doprnt(const char *fmt, va_list args, FILE *f);
 int _doscan(FILE *iop, const char *fmt, va_list argp);
-int _dowscan(FILE *iop, const wchar_t *fmt, va_list argp);
 
 
 int __fileno_dup2( int handle1, int handle2 );

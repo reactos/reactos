@@ -18,11 +18,12 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  * $Author: ariadne $
- * $Date: 1999/04/17 09:11:02 $
+ * $Date: 1999/04/23 18:43:00 $
  *
  */
+// added modfl 
 
 #ifndef _MATH_H_
 #define _MATH_H_
@@ -103,15 +104,15 @@ double	exp (double x);
 double	log (double x);
 double	log10 (double x);
 double	pow (double x, double y);
+long double	powl (long double x,long double y);
 double	sqrt (double x);
 double	ceil (double x);
-long double	ceill (long double x);
-long double	floorl (long double x);
+double	floor (double x);
 double	fabs (double x);
 double	ldexp (double x, int n);
 double	frexp (double x, int* exp);
 double	modf (double x, double* ip);
-long double	modfl (long double x,long double* ip);
+long double modfl (long double x,long double* ip);
 double	fmod (double x, double y);
 
 

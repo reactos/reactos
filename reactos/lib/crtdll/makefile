@@ -49,16 +49,16 @@ WCHAR_OBJECTS = wchar/wcscat.o wchar/wcschr.o wchar/wcscmp.o \
 STDIO_OBJECTS = stdio/getenv.o stdio/filbuf.o  \
 		stdio/fclose.o stdio/feof.o stdio/ferror.o stdio/fileno.o\
 		stdio/fflush.o stdio/fgetc.o stdio/fgetpos.o stdio/fgets.o stdio/flsbuf.o \
-		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o \
+		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o stdio/setvbuf.o\
 		stdio/fread.o stdio/freopen.o  stdio/fscanf.o stdio/fseek.o \
 		stdio/fsetpos.o stdio/ftell.o stdio/fwalk.o stdio/fwrite.o stdio/getc.o \
-		stdio/getchar.o stdio/gets.o stdio/getw.o stdio/perror.o stdio/printf.o \
+		stdio/getchar.o stdio/gets.o stdio/getw.o stdio/perror.o  \
 		stdio/putc.o stdio/putchar.o stdio/puts.o stdio/putw.o \
 		stdio/remove.o stdio/rename.o stdio/rewind.o stdio/allocfil.o\
-		stdio/scanf.o stdio/setbuf.o stdio/setbuffe.o stdlib/obsol.o\
-		stdio/setlineb.o stdio/setvbuf.o stdio/sprintf.o stdio/sscanf.o \
+		stdio/setbuf.o stdio/setbuffe.o stdlib/obsol.o stdio/setlineb.o\
+	 	stdio/scanf.o  stdio/sscanf.o stdio/vscanf.o stdio/vsscanf.o stdio/vfscanf.o\
 		stdio/stdiohk.o stdio/stdhnd.o stdio/tempnam.o stdio/tmpfile.o stdio/tmpnam.o \
-		stdio/ungetc.o stdio/vfprintf.o stdio/vprintf.o \
+		stdio/ungetc.o stdio/printf.o stdio/vfprintf.o stdio/vprintf.o stdio/sprintf.o\
 		stdio/fdopen.o stdio/vsprintf.o stdio/frlist.o \
  
 QUAD_OBJECTS =  quad/qdivrem.o quad/divdi3.o quad/moddi3.o quad/udivdi3.o quad/umoddi3.o
@@ -89,10 +89,10 @@ TCHAR_OBJECTS = tchar/strdec.o tchar/strinc.o tchar/strninc.o  tchar/strncnt.o t
 TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o time/clock.o
 
 FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o\
-		float/chgsign.o
+		float/chgsign.o float/fpclass.o float/isnan.o
 
-#SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o
-SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o
+SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o
+
 
 
 MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o\

@@ -1,17 +1,3 @@
-
-#if 1
-
-long double modfl(long double __x, long double *__i)
-{
-}
-
-double modf(double __x, double *__i)
-{
-}
-
-
-#else
-
 /* @(#)s_modf.c 1.3 95/01/18 */
 /*
  * ====================================================
@@ -24,7 +10,7 @@ double modf(double __x, double *__i)
  * ====================================================
  */
 
-
+#include <crtdll/float.h>
 #include <crtdll/math.h>
 #include <crtdll/internal/ieee.h>
 
@@ -86,7 +72,6 @@ double modf(double __x, double *__i)
 	}
 }
 
-
 long double modfl(long double __x, long double *__i)
 {
 
@@ -145,4 +130,4 @@ long double modfl(long double __x, long double *__i)
 
 	}
 }
-#endif
+

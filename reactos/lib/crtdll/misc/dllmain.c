@@ -17,14 +17,15 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: dwelch $
- * $Date: 1999/04/14 00:51:19 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/23 18:42:21 $
  *
  */
 
 #include <windows.h>
 #include <stdarg.h>
+#include <string.h>
 
 void debug_printf(char* fmt, ...)
 {

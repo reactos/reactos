@@ -50,6 +50,13 @@ int _isinf(double __x)
 	return ( x->exponent == 0x7ff  && ( x->mantissah == 0 && x->mantissal == 0 ));	
 }
 
+
+
+int _finite( double x )
+{
+	return !_isinf(x);
+}
+
 int _isinfl(long double __x)
 {
 	/* Intel's extended format has the normally implicit 1 explicit
