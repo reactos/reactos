@@ -423,9 +423,7 @@ CmiScanKeyList(IN PKEY_OBJECT Parent,
 	       IN ULONG Attributes);
 
 NTSTATUS
-CmiCreateRegistryHive(PWSTR Filename,
-  PREGISTRY_HIVE *RegistryHive,
-  BOOLEAN CreateNew);
+CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS
 CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,

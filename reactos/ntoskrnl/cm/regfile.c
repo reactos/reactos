@@ -847,9 +847,8 @@ CmiCreateHiveBitmap(PREGISTRY_HIVE Hive)
 
 
 static NTSTATUS
-CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
-			       PWSTR Filename,
-			       BOOLEAN CreateNew)
+CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
+				PWSTR Filename)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   ULONG CreateDisposition;
@@ -906,21 +905,7 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 			     NULL,
 			     NULL);
 
-  /*
-   * Note:
-   * This is a workaround to prevent a BSOD because of missing registry hives.
-   * The workaround is only useful for developers. An implementation for the
-   * ordinary user must bail out on missing registry hives because they are
-   * essential to booting and configuring the OS.
-   */
-#if 0
-  if (CreateNew == TRUE)
-    CreateDisposition = FILE_OPEN_IF;
-  else
-    CreateDisposition = FILE_OPEN;
-#endif
   CreateDisposition = FILE_OPEN_IF;
-
   Status = NtCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
@@ -940,10 +925,6 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
       return(Status);
     }
 
-  /* Note: Another workaround! See the note above! */
-#if 0
-  if ((CreateNew) && (IoSB.Information == FILE_CREATED))
-#endif
   if (IoSB.Information != FILE_OPENED)
     {
       Status = CmiCreateNewRegFile(FileHandle);
@@ -1068,91 +1049,66 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 }
 
 
-static NTSTATUS
-CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
+NTSTATUS
+CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
 {
   PKEY_CELL RootKeyCell;
-
-  RegistryHive->Flags |= (HIVE_NO_FILE | HIVE_POINTER);
-
-  CmiCreateDefaultHiveHeader(RegistryHive->HiveHeader);
-
-  RootKeyCell = (PKEY_CELL) ExAllocatePool(NonPagedPool, sizeof(KEY_CELL));
-
-  if (RootKeyCell == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  CmiCreateDefaultRootKeyCell(RootKeyCell);
-
-  RegistryHive->HiveHeader->RootKeyCell = (BLOCK_OFFSET) RootKeyCell;
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-CmiCreateRegistryHive(PWSTR Filename,
-		      PREGISTRY_HIVE *RegistryHive,
-		      BOOLEAN CreateNew)
-{
   PREGISTRY_HIVE Hive;
-  NTSTATUS Status;
-
-  DPRINT("CmiCreateRegistryHive(Filename %S)\n", Filename);
 
   *RegistryHive = NULL;
 
-  Hive = ExAllocatePool(NonPagedPool, sizeof(REGISTRY_HIVE));
+  Hive = ExAllocatePool (NonPagedPool,
+			 sizeof(REGISTRY_HIVE));
   if (Hive == NULL)
-    return(STATUS_INSUFFICIENT_RESOURCES);
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  RtlZeroMemory (Hive,
+		 sizeof(REGISTRY_HIVE));
 
   DPRINT("Hive %x\n", Hive);
 
-  RtlZeroMemory(Hive, sizeof(REGISTRY_HIVE));
-
-  Hive->HiveHeader = (PHIVE_HEADER)
-    ExAllocatePool(NonPagedPool, sizeof(HIVE_HEADER));
-
+  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
+						   sizeof(HIVE_HEADER));
   if (Hive->HiveHeader == NULL)
     {
-      ExFreePool(Hive);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      ExFreePool (Hive);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  if (Filename != NULL)
-    {
-      Status = CmiInitNonVolatileRegistryHive(Hive, Filename, CreateNew);
-    }
-  else
-    {
-      Status = CmiInitVolatileRegistryHive(Hive);
-    }
+  Hive->Flags = (HIVE_NO_FILE | HIVE_POINTER);
 
-  if (!NT_SUCCESS(Status))
+  CmiCreateDefaultHiveHeader (Hive->HiveHeader);
+
+  RootKeyCell = (PKEY_CELL)ExAllocatePool (NonPagedPool,
+					   sizeof(KEY_CELL));
+  if (RootKeyCell == NULL)
     {
       ExFreePool(Hive->HiveHeader);
       ExFreePool(Hive);
-      return(Status);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  ExInitializeResourceLite(&Hive->HiveResource);
+  CmiCreateDefaultRootKeyCell (RootKeyCell);
+  Hive->HiveHeader->RootKeyCell = (BLOCK_OFFSET)RootKeyCell;
+
+  ExInitializeResourceLite (&Hive->HiveResource);
 
   /* Acquire hive list lock exclusively */
-  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
+				  TRUE);
 
   /* Add the new hive to the hive list */
-  InsertTailList(&CmiHiveListHead, &Hive->HiveList);
+  InsertTailList (&CmiHiveListHead,
+		  &Hive->HiveList);
 
   /* Release hive list lock */
-  ExReleaseResourceLite(&CmiHiveListLock);
+  ExReleaseResourceLite (&CmiHiveListLock);
 
-  VERIFY_REGISTRY_HIVE(Hive);
+  VERIFY_REGISTRY_HIVE (Hive);
 
   *RegistryHive = Hive;
 
-  DPRINT("CmiCreateRegistryHive(Filename %S) - Finished.\n", Filename);
-
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -1180,6 +1136,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 		 sizeof(REGISTRY_HIVE));
 
   DPRINT ("Hive %x\n", Hive);
+  Hive->Flags = (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0;
 
   Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool(NonPagedPool,
 						  sizeof(HIVE_HEADER));
@@ -1191,8 +1148,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
 
   Status = CmiInitNonVolatileRegistryHive (Hive,
-					   FileName->Buffer,
-					   TRUE);
+					   FileName->Buffer);
   if (!NT_SUCCESS (Status))
     {
       DPRINT1 ("CmiInitNonVolatileRegistryHive() failed (Status %lx)\n", Status);
