@@ -34,7 +34,7 @@ Copyright notice:
 ////
 #include "remods.h"
 #include "precomp.h"
-
+/*
 #include <linux/sched.h>
 #include <asm/io.h>
 #include <asm/page.h>
@@ -43,6 +43,7 @@ Copyright notice:
 #include <linux/sched.h>
 #include <linux/console.h>
 #include <asm/delay.h>
+*/
 
 char tempOutput[1024],tempOutput2[1024];
 
@@ -51,7 +52,6 @@ BOOLEAN bInPrintk = FALSE;
 BOOLEAN bIsDebugPrint = FALSE;
 
 ULONG ulCountTimerEvents = 0;
-struct timer_list sPiceRunningTimer;
 
 asmlinkage int printk(const char *fmt, ...);
 
@@ -65,7 +65,9 @@ EXPORT_SYMBOL(printk);
 asmlinkage int printk(const char *fmt, ...)
 {
 	ULONG len,ulRingBufferLock;
-    static ULONG ulOldJiffies = 0;
+    static LONGLONG ulOldJiffies = 0;
+	LARGE_INTEGER jiffies;
+
 	va_list args;
 	va_start(args, fmt);
 
@@ -76,12 +78,13 @@ asmlinkage int printk(const char *fmt, ...)
 
 		PICE_vsprintf(tempOutput, fmt, args);
 		bIsDebugPrint = TRUE;
-        // if the last debug print was longer than 5 timer ticks ago
+        // if the last debug print was longer than 50 ms ago
         // directly print it, else just add it to the ring buffer
         // and let the timer process it.
-        if( (jiffies-ulOldJiffies) > (1*wWindow[OUTPUT_WINDOW].cy)/2)
+		KeQuerySystemTime(&jiffies);
+        if( (jiffies.QuadPart-ulOldJiffies) > 10000*(1*wWindow[OUTPUT_WINDOW].cy)/2)
         {
-            ulOldJiffies = jiffies;
+            ulOldJiffies = jiffies.QuadPart;
 		    Print(OUTPUT_WINDOW,tempOutput);
         }
         else
@@ -183,19 +186,28 @@ void PrintkCallback(void)
 // PiceRunningTimer() 
 // 
 //************************************************************************* 
-void PiceRunningTimer(unsigned long param)
-{
-	mod_timer(&sPiceRunningTimer,jiffies + HZ/10);
 
+KTIMER PiceTimer; 
+KDPC PiceTimerDPC;
+
+// do I need it here? Have to keep DPC memory resident #pragma code_seg()
+VOID PiceRunningTimer(IN PKDPC Dpc,
+                       IN PVOID DeferredContext,
+                       IN PVOID SystemArgument1,
+                       IN PVOID SystemArgument2)
+{
    	CheckRingBuffer();
 
     if(ulCountTimerEvents++ > 10)
     {
         ulCountTimerEvents = 0;
 
+		LARGE_INTEGER jiffies;
+		
+		KeQuerySystemTime(&jiffies);
         SetForegroundColor(COLOR_TEXT);
 	    SetBackgroundColor(COLOR_CAPTION);
-        PICE_sprintf(tempOutput,"jiffies = %.8X\n",jiffies);
+        PICE_sprintf(tempOutput,"jiffies = %.8X\n",jiffies.LowPart);
 	    PutChar(tempOutput,GLOBAL_SCREEN_WIDTH-strlen(tempOutput),GLOBAL_SCREEN_HEIGHT-1);
         ResetColor();
     }
@@ -207,11 +219,19 @@ void PiceRunningTimer(unsigned long param)
 //************************************************************************* 
 void InitPiceRunningTimer(void)
 {
-	init_timer(&sPiceRunningTimer);
-	sPiceRunningTimer.data = 0;
-	sPiceRunningTimer.function = PiceRunningTimer;
-	sPiceRunningTimer.expires = jiffies + HZ;
-	add_timer(&sPiceRunningTimer);
+	LARGE_INTEGER   Interval;
+    
+	ENTER_FUNC();	  
+ÿÿ
+	KeInitializeTimer( &PiceTimer );
+	KeInitializeDpc( &PiceTimerDPC, PiceRunningTimer, NULL );
+    
+	Interval.QuadPart=-1000000L;  // 100 millisec. (unit is 100 nanosec.)
+
+    KeSetTimerEx(&PiceTimer,
+                        Interval, 1000000L,
+                        &PiceTimerDpc);
+    LEAVE_FUNC();
 }
 
 //************************************************************************* 
@@ -220,7 +240,7 @@ void InitPiceRunningTimer(void)
 //************************************************************************* 
 void RemovePiceRunningTimer(void)
 {
-	del_timer(&sPiceRunningTimer);
+	KeCancelTimer( &PiceTimer );
 }
 
 //************************************************************************* 
@@ -230,9 +250,12 @@ void RemovePiceRunningTimer(void)
 void InstallPrintkHook(void)
 {
     ENTER_FUNC();
-    DPRINT((0,"enter InstallPrintk()\n"));
+    DPRINT((0,"installing PrintString hook\n"));
 
-    ScanExports("printk",(PULONG)&ulPrintk);
+    ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
+	
+	ASSERT( ulPrintk );                 // temporary
+
     if(ulPrintk)
     {
         InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);

@@ -218,8 +218,8 @@ BOOLEAN Disasm(PULONG pOffset, PUCHAR pchDst);
 #define GLOBAL_CODE_SEGMENT (__KERNEL_CS) 
 #define GLOBAL_DATA_SEGMENT (__KERNEL_DS) 
 
-#define OVR_CS .byte 0x2e 
-#define OVR_FS .byte 0x64 
+//#define OVR_CS .byte 0x2e 
+//#define OVR_FS .byte 0x64 
 
 void DisplayRegs(void);
 void SaveOldRegs(void);
@@ -238,6 +238,15 @@ UCHAR AsciiToScan(UCHAR s);
 
 void outportb(USHORT port,UCHAR data);
 UCHAR inportb(USHORT port);
+
+void outb_p(UCHAR data, USHORT port);
+UCHAR inb_p(USHORT port);
+
+#define save_flags(x)         __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
+#define restore_flags(x)      __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory", "cc")
+#define cli()                 __asm__ __volatile__("cli": : :"memory")
+#define sti()                 __asm__ __volatile__("sti": : :"memory")
+
 
 extern unsigned long sys_call_table[];
 

@@ -74,11 +74,13 @@ NTSTATUS STDCALL pice_open(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     
     /* We don't want to talk to two processes at the 
     * same time */
-    if (bDeviceAlreadyOpen)
-        return STATUS_UNSUCCESSFUL;     /* is there a more descriptive status code for this case? */
+    if (bDeviceAlreadyOpen){
+		IoCompleteRequest (Irp, IO_NO_INCREMENT);
+		return STATUS_UNSUCCESSFUL;     /* is there a more descriptive status code for this case? */
+	}
     
     bDeviceAlreadyOpen = TRUE;
-    
+	IoCompleteRequest (Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
@@ -94,6 +96,7 @@ NTSTATUS STDCALL pice_close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     
 	/* We're now ready for our next caller */
     bDeviceAlreadyOpen = FALSE;
+	IoCompleteRequest (Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
@@ -147,9 +150,10 @@ NTSTATUS STDCALL pice_ioctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             }
             break;
         default:
-            return STATUS_BAD_PARAMETER;
+			IoCompleteRequest (Irp, IO_NO_INCREMENT);
+			return STATUS_BAD_PARAMETER;
 	}
-
+	IoCompleteRequest (Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 

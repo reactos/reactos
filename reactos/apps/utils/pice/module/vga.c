@@ -35,7 +35,7 @@ Copyright notice:
 #include "remods.h"
 #include "precomp.h"
 
-#include <asm/io.h>
+//#include <asm/io.h>
 #include <linux/ctype.h>
 
 

@@ -82,7 +82,7 @@ void process_stabs(
 
     //printf("LOADER: enter process_stabs()\n");
 
-    memset((void*)&SymbolFileHeader,0,sizeof(SymbolFileHeader));
+    PICE_memset((void*)&SymbolFileHeader,0,sizeof(SymbolFileHeader));
 	SymbolFileHeader.magic = PICE_MAGIC;
 	strcpy(temp,pExeName);
 	pSlash = strrchr(temp,'/');
@@ -502,7 +502,7 @@ int process_file(char* filename)
         if(p)
         {
             //printf("LOADER: malloc'd @ %x\n",p);
-            memset(p,0,len+16);
+            PICE_memset(p,0,len+16);
 
             if(len == read(file,p,len))
             {

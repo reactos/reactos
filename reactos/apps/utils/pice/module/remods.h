@@ -28,9 +28,6 @@ Copyright notice:
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
-#include <linux/kernel.h>
-#define __NO_VERSION__
-#include <linux/module.h>
-#include <linux/version.h>
+
 
 

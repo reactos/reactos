@@ -952,8 +952,8 @@ BOOLEAN ConsoleInit(void)
     ENTER_FUNC();
 
     // preset ohandlers and ihandler to NULL
-    memset((void*)&ohandlers,0,sizeof(ohandlers));
-    memset((void*)&ihandlers,0,sizeof(ihandlers));
+    PICE_memset((void*)&ohandlers,0,sizeof(ohandlers));
+    PICE_memset((void*)&ihandlers,0,sizeof(ihandlers));
 
     switch(eTerminalMode)
     {

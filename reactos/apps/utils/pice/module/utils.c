@@ -2006,7 +2006,12 @@ UCHAR AsciiToScan(UCHAR s)
 //************************************************************************
 void outportb(USHORT port,UCHAR data)
 {
-    outb(data,port);
+    WRITE_PORT_UCHAR(data,port);
+}
+
+void outb_p(UCHAR data, USHORT port)
+{
+	WRITE_PORT_UCHAR(data,port);
 }
 
 //************************************************************************
@@ -2015,8 +2020,14 @@ void outportb(USHORT port,UCHAR data)
 //************************************************************************
 UCHAR inportb(USHORT port)
 {
-    return inb(port);
+    return READ_PORT_UCHAR(port);
 }
+			   
+UCHAR inb_p(USHORT port)
+{
+    return READ_PORT_UCHAR(port);
+}			   
+
 
 //************************************************************************* 
 // GetInitMm() 

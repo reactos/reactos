@@ -150,7 +150,7 @@ nomatch:
 		p = temp;
 		for(;*pStr!=0x0a;)*p++=*pStr++;
 		*p=0;
-		p = strtok(temp," ");
+		p = PICE_strtok(temp," ");
 		state=0;
 		while(p)
 		{
@@ -174,7 +174,7 @@ nomatch:
 						
 			}
 			state++;
-			p = strtok(NULL," ");
+			p = PICE_strtok(NULL," ");
 		}
 	}
 

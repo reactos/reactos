@@ -125,7 +125,7 @@ BOOLEAN PatchKeyboardDriver(ULONG AddrOfKbdEvent,ULONG AddrOfScancode)
     DPRINT((0,"initial offset = %X\n",ulOffset));
 	*pOffset = ulOffset;
 
-	while((memcmp(pPatchAddress,ucPattern,sizeof(ucPattern))!=0) &&
+	while((RtlCompareMemory(pPatchAddress,ucPattern,sizeof(ucPattern))!=0) &&
 	      (countBytes<0x1000))
 	{
 /*        DPRINT((0,"offset = %X\n",ulOffset));
@@ -140,7 +140,7 @@ BOOLEAN PatchKeyboardDriver(ULONG AddrOfKbdEvent,ULONG AddrOfScancode)
 		*pOffset = ulOffset;
 	}
 	
-	if(memcmp(pPatchAddress,ucPattern,sizeof(ucPattern))==0)
+	if(RtlCompareMemory(pPatchAddress,ucPattern,sizeof(ucPattern))==0)
 	{
 		DPRINT((0,"pattern found @ %x\n",pPatchAddress));
 		
