@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.7 2004/05/29 00:50:23 arty Exp $
+# $Id: makefile,v 1.16.2.8 2004/05/29 07:08:51 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,7 +13,7 @@ TARGET_CFLAGS = \
 	-DNDIS40 \
 	-DMEMTRACK \
 	-I./include \
-	-I$(PATH_TO_TOP)/lib/oskittcp/include \
+	-I$(PATH_TO_TOP)/drivers/lib/oskittcp/include \
 	-I$(PATH_TO_TOP)/w32api/include \
 	-I$(PATH_TO_TOP)/include
 
