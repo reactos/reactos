@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.53 2004/03/18 18:29:18 weiden Exp $
+/* $Id: file.c,v 1.54 2004/05/25 20:04:13 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -89,19 +89,22 @@ OpenFile(LPCSTR lpFileName,
 		RtlAnsiStringToUnicodeString (&FileNameU, &FileName, TRUE);
 	else
 		RtlOemStringToUnicodeString (&FileNameU, &FileName, TRUE);
-
-	Len = SearchPathW (NULL,
-	                   FileNameU.Buffer,
-	                   NULL,
-	                   OFS_MAXPATHNAME,
-	                   PathNameW,
-	                   &FilePart);
-
-	RtlFreeUnicodeString(&FileNameU);
-
-	if (Len == 0 || Len > OFS_MAXPATHNAME)
+		        
+	if ((uStyle & OF_CREATE) == 0)
 	{
-		return (HFILE)INVALID_HANDLE_VALUE;
+		Len = SearchPathW (NULL,
+		                   FileNameU.Buffer,
+	        	           NULL,
+		                   OFS_MAXPATHNAME,
+		                   PathNameW,
+	        	           &FilePart);
+
+		RtlFreeUnicodeString(&FileNameU);
+
+		if (Len == 0 || Len > OFS_MAXPATHNAME)
+		{
+			return (HFILE)INVALID_HANDLE_VALUE;
+		}
 	}
 
 	FileName.Buffer = lpReOpenBuff->szPathName;
@@ -124,13 +127,6 @@ OpenFile(LPCSTR lpFileName,
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = &FileNameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
-
 	// FILE_SHARE_READ
 	// FILE_NO_INTERMEDIATE_BUFFERING
 
@@ -139,6 +135,35 @@ OpenFile(LPCSTR lpFileName,
 		RtlFreeUnicodeString(&FileNameString);
 		return (HFILE)NULL;
 	}
+
+	if ((uStyle & OF_CREATE) == OF_CREATE)
+	{
+		DWORD Sharing;
+		switch (uStyle & 0x70)
+		{
+			case OF_SHARE_EXCLUSIVE: Sharing = 0; break;
+			case OF_SHARE_DENY_WRITE: Sharing = FILE_SHARE_READ; break;
+			case OF_SHARE_DENY_READ: Sharing = FILE_SHARE_WRITE; break;
+			case OF_SHARE_DENY_NONE:
+			case OF_SHARE_COMPAT:
+			default:
+				Sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		}
+		return (HFILE) CreateFileA (lpFileName,
+		                            GENERIC_READ | GENERIC_WRITE,
+		                            Sharing,
+		                            NULL,
+		                            CREATE_ALWAYS,
+		                            FILE_ATTRIBUTE_NORMAL,
+		                            0);
+	}
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &FileNameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
 
 	errCode = NtOpenFile (&FileHandle,
 	                      GENERIC_READ|SYNCHRONIZE,

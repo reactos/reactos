@@ -16,7 +16,7 @@
 #ifdef assert
 #undef assert
 #endif
-#define assert(x) do { if(!x) RtlAssert(x, __FILE__,__LINE__, ""); } while(0);
+#define assert(x) do { if(!x) RtlAssert("#x", __FILE__,__LINE__, ""); } while(0);
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);

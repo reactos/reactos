@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.24 2004/02/08 10:42:15 jfilby Exp $
+/* $Id: section.c,v 1.25 2004/05/25 20:04:14 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -66,7 +66,7 @@ CreateFileMappingA(HANDLE hFile,
 		   FileStandardInformation);
 	   if (!NT_SUCCESS(Status))
 	   {
-		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", Status);
 		   SetLastErrorByStatus(Status);
 		   return NULL;
 	   }
@@ -149,7 +149,7 @@ CreateFileMappingW(HANDLE hFile,
 		   FileStandardInformation);
 	   if (!NT_SUCCESS(Status))
 	   {
-		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", Status);
 		   SetLastErrorByStatus(Status);
 		   return NULL;
 	   }
