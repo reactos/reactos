@@ -63,7 +63,6 @@ IntInitDefaultPalette(
 {
    ULONG ColorLoop;
    PPALETTEENTRY PaletteEntryPtr;
-   BYTE Red = 0, Green = 0, Blue = 0;
 
    if (ppdev->BitsPerPixel > 8)
    {
@@ -73,8 +72,7 @@ IntInitDefaultPalette(
    }
    else
    {       
-      ppdev->PaletteEntries = EngAllocMem(FL_ZERO_MEMORY,
-         sizeof(PALETTEENTRY) << 8, ALLOC_TAG);
+      ppdev->PaletteEntries = EngAllocMem(0, sizeof(PALETTEENTRY) << 8, ALLOC_TAG);
       if (ppdev->PaletteEntries == NULL)
       {
          return FALSE;
@@ -84,14 +82,10 @@ IntInitDefaultPalette(
            ColorLoop != 0;
            ColorLoop--, PaletteEntryPtr++)
       {
-         PaletteEntryPtr->peRed = Red;
-         PaletteEntryPtr->peGreen = Green;
-         PaletteEntryPtr->peBlue = Blue;
+         PaletteEntryPtr->peRed = ((ColorLoop >> 5) & 7) * 255 / 7;
+         PaletteEntryPtr->peGreen = ((ColorLoop >> 3) & 3) * 255 / 3;
+         PaletteEntryPtr->peBlue = (ColorLoop & 7) * 255 / 7;
          PaletteEntryPtr->peFlags = 0;
-
-         if (!(Red += 32))
-            if (!(Green += 32))
-               Blue += 64;
       }
 
       memcpy(ppdev->PaletteEntries, BASEPALETTE, 10 * sizeof(PALETTEENTRY));
