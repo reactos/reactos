@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.21 2003/07/16 20:57:36 hbirr Exp $
+/* $Id: rmap.c,v 1.22 2003/07/19 08:02:51 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -269,8 +269,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       return(STATUS_UNSUCCESSFUL);
     }
   Type = MemoryArea->Type;
-  if (Type == MEMORY_AREA_SECTION_VIEW ||
-      Type == MEMORY_AREA_CACHE_SEGMENT)
+  if (Type == MEMORY_AREA_SECTION_VIEW)
     {
       Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
 
