@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.7 2000/01/26 10:07:22 dwelch Exp $
+/* $Id: rtl.h,v 1.8 2000/02/05 16:06:09 ekohl Exp $
  *
  */
 
@@ -27,6 +27,83 @@ RtlEraseUnicodeString (
 	IN	PUNICODE_STRING	String
 	);
 
+/* Path functions */
+
+ULONG
+STDCALL
+RtlDetermineDosPathNameType_U (
+	PWSTR Path
+	);
+
+BOOLEAN
+STDCALL
+RtlDoesFileExists_U (
+	PWSTR FileName
+	);
+
+BOOLEAN
+STDCALL
+RtlDosPathNameToNtPathName_U (
+	PWSTR		dosname,
+	PUNICODE_STRING	ntname,
+	PWSTR		*shortname,
+	PCURDIR		nah
+	);
+
+ULONG
+STDCALL
+RtlDosSearchPath_U (
+	WCHAR *sp,
+	WCHAR *name,
+	WCHAR *ext,
+	ULONG buf_sz,
+	WCHAR *buffer,
+	WCHAR **shortname
+	);
+
+ULONG
+STDCALL
+RtlGetCurrentDirectory_U (
+	ULONG MaximumLength,
+	PWSTR Buffer
+	);
+
+ULONG
+STDCALL
+RtlGetFullPathName_U (
+	WCHAR *dosname,
+	ULONG size,
+	WCHAR *buf,
+	WCHAR **shortname
+	);
+
+ULONG
+STDCALL
+RtlGetLongestNtPathLength (
+	VOID
+	);
+
+ULONG
+STDCALL
+RtlIsDosDeviceName_U (
+	PWSTR DeviceName
+	);
+
+BOOLEAN
+STDCALL
+RtlIsNameLegalDOS8Dot3 (
+	PUNICODE_STRING	us,
+	PANSI_STRING	as,
+	PBOOLEAN	pb
+	);
+
+NTSTATUS
+STDCALL
+RtlSetCurrentDirectory_U (
+	PUNICODE_STRING name
+	);
+
+/* Environment functions */
 VOID
 STDCALL
 RtlAcquirePebLock (
@@ -52,6 +129,23 @@ RtlDestroyEnvironment (
 	PVOID	Environment
 	);
 
+NTSTATUS
+STDCALL
+RtlExpandEnvironmentStrings_U (
+	PVOID		Environment,
+	PUNICODE_STRING	Source,
+	PUNICODE_STRING	Destination,
+	PULONG		Length
+	);
+
+NTSTATUS
+STDCALL
+RtlQueryEnvironmentVariable_U (
+	PVOID		Environment,
+	PUNICODE_STRING	Name,
+	PUNICODE_STRING	Value
+	);
+
 VOID
 STDCALL
 RtlSetCurrentEnvironment (
@@ -66,15 +160,6 @@ RtlSetEnvironmentVariable (
 	PUNICODE_STRING	Name,
 	PUNICODE_STRING	Value
 	);
-
-NTSTATUS
-STDCALL
-RtlQueryEnvironmentVariable_U (
-	PVOID		Environment,
-	PUNICODE_STRING	Name,
-	PUNICODE_STRING	Value
-	);
-
 
 NTSTATUS
 STDCALL

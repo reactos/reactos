@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.16 2000/01/27 08:56:48 dwelch Exp $
+/* $Id: startup.c,v 1.17 2000/02/05 16:07:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,6 +76,9 @@ VOID LdrStartup(PPEB Peb,
 	ZwTerminateProcess(NULL,
 			   STATUS_UNSUCCESSFUL);
      }
+
+   /* normalize process parameters */
+   RtlNormalizeProcessParams (Peb->ProcessParameters);
 
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
    __ProcessHeap = RtlCreateHeap(0,

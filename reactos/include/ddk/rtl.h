@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.24 1999/12/29 01:36:58 ekohl Exp $
+/* $Id: rtl.h,v 1.25 2000/02/05 16:04:52 ekohl Exp $
  * 
  */
 
@@ -979,6 +979,14 @@ RtlUnicodeStringToOemSize (
 
 NTSTATUS
 STDCALL
+RtlUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
 RtlUnicodeStringToOemString (
 	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
@@ -1037,6 +1045,14 @@ NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToAnsiString (
 	IN OUT	PANSI_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
 	);

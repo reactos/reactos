@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.12 2000/01/10 20:30:51 ekohl Exp $
+/* $Id: unicode.c,v 1.13 2000/02/05 16:08:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,7 @@
 WCHAR
 STDCALL
 RtlAnsiCharToUnicodeChar (
-	CHAR AnsiChar
+	IN	CHAR	AnsiChar
 	)
 {
 	ULONG Size;
@@ -46,7 +46,7 @@ RtlAnsiCharToUnicodeChar (
 ULONG
 STDCALL
 RtlAnsiStringToUnicodeSize (
-	IN PANSI_STRING AnsiString
+	IN	PANSI_STRING	AnsiString
 	)
 {
 	ULONG Size;
@@ -62,9 +62,9 @@ RtlAnsiStringToUnicodeSize (
 NTSTATUS
 STDCALL
 RtlAnsiStringToUnicodeString(
-	IN OUT PUNICODE_STRING	DestinationString,
-	IN PANSI_STRING		SourceString,
-	IN BOOLEAN		AllocateDestinationString
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	PANSI_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	)
 {
 	NTSTATUS Status;
@@ -123,8 +123,8 @@ RtlAnsiStringToUnicodeString(
 NTSTATUS
 STDCALL
 RtlAppendAsciizToString (
-	IN OUT PSTRING Destination,
-	IN PCSZ Source
+	IN OUT	PSTRING	Destination,
+	IN	PCSZ	Source
 	)
 {
 	ULONG Length;
@@ -153,8 +153,8 @@ RtlAppendAsciizToString (
 NTSTATUS
 STDCALL
 RtlAppendStringToString (
-	PSTRING Destination,
-	PSTRING Source
+	IN OUT	PSTRING	Destination,
+	IN	PSTRING	Source
 	)
 {
 	PCHAR Ptr;
@@ -181,8 +181,8 @@ RtlAppendStringToString (
 NTSTATUS
 STDCALL
 RtlAppendUnicodeStringToString (
-	IN OUT PUNICODE_STRING Destination,
-	IN PUNICODE_STRING Source
+	IN OUT	PUNICODE_STRING	Destination,
+	IN	PUNICODE_STRING	Source
 	)
 {
 	PWCHAR Src;
@@ -211,8 +211,8 @@ RtlAppendUnicodeStringToString (
 NTSTATUS
 STDCALL
 RtlAppendUnicodeToString (
-	IN OUT PUNICODE_STRING Destination,
-	IN PWSTR Source
+	IN OUT	PUNICODE_STRING	Destination,
+	IN	PWSTR		Source
 	)
 {
 	PWCHAR Src;
@@ -286,9 +286,9 @@ RtlCharToInteger (
 LONG
 STDCALL
 RtlCompareString (
-	PSTRING String1,
-	PSTRING String2,
-	BOOLEAN CaseInsensitive
+	IN	PSTRING	String1,
+	IN	PSTRING	String2,
+	IN	BOOLEAN	CaseInsensitive
 	)
 {
 	ULONG i;
@@ -328,9 +328,9 @@ RtlCompareString (
 LONG
 STDCALL
 RtlCompareUnicodeString (
-	PUNICODE_STRING String1,
-	PUNICODE_STRING String2,
-	BOOLEAN CaseInsensitive
+	IN	PUNICODE_STRING	String1,
+	IN	PUNICODE_STRING	String2,
+	IN	BOOLEAN		CaseInsensitive
 	)
 {
 	ULONG i;
@@ -436,8 +436,8 @@ RtlCopyUnicodeString (
 BOOLEAN
 STDCALL
 RtlCreateUnicodeString (
-	PUNICODE_STRING Destination,
-	PWSTR Source
+	IN OUT	PUNICODE_STRING	Destination,
+	IN	PWSTR		Source
 	)
 {
 	ULONG Length;
@@ -537,9 +537,9 @@ RtlDowncaseUnicodeString (
 BOOLEAN
 STDCALL
 RtlEqualString (
-	PSTRING	String1,
-	PSTRING	String2,
-	BOOLEAN	CaseInsensitive
+	IN	PSTRING	String1,
+	IN	PSTRING	String2,
+	IN	BOOLEAN	CaseInsensitive
 	)
 {
 	ULONG i;
@@ -578,9 +578,9 @@ RtlEqualString (
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString (
-	PUNICODE_STRING	String1,
-	PUNICODE_STRING	String2,
-	BOOLEAN		CaseInsensitive
+	IN	PUNICODE_STRING	String1,
+	IN	PUNICODE_STRING	String2,
+	IN	BOOLEAN		CaseInsensitive
 	)
 {
 	ULONG i;
@@ -697,8 +697,8 @@ RtlFreeUnicodeString (
 VOID
 STDCALL
 RtlInitAnsiString (
-	IN OUT PANSI_STRING	DestinationString,
-	IN PCSZ			SourceString
+	IN OUT	PANSI_STRING	DestinationString,
+	IN	PCSZ		SourceString
 	)
 {
 	ULONG DestSize;
@@ -745,8 +745,8 @@ RtlInitString (
 VOID
 STDCALL
 RtlInitUnicodeString (
-	IN OUT PUNICODE_STRING	DestinationString,
-	IN PCWSTR		SourceString
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	PCWSTR		SourceString
 	)
 {
 	ULONG DestSize;
@@ -818,7 +818,7 @@ NTSTATUS
 STDCALL
 RtlIntegerToUnicodeString (
 	IN	ULONG		Value,
-	IN	ULONG		Base,		/* optional */
+	IN	ULONG		Base,	/* optional */
 	IN OUT	PUNICODE_STRING	String
 	)
 {
@@ -848,7 +848,7 @@ RtlIntegerToUnicodeString (
 ULONG
 STDCALL
 RtlOemStringToUnicodeSize (
-	IN POEM_STRING	OemString
+	IN	POEM_STRING	OemString
 	)
 {
 	ULONG Size;
@@ -864,9 +864,9 @@ RtlOemStringToUnicodeSize (
 NTSTATUS
 STDCALL
 RtlOemStringToUnicodeString (
-	PUNICODE_STRING	DestinationString,
-	POEM_STRING	SourceString,
-	BOOLEAN		AllocateDestinationString
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	POEM_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	)
 {
 	NTSTATUS Status;
@@ -925,7 +925,7 @@ RtlOemStringToUnicodeString (
 ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize (
-	IN PUNICODE_STRING	UnicodeString
+	IN	PUNICODE_STRING	UnicodeString
 	)
 {
 	ULONG Size;
@@ -941,9 +941,9 @@ RtlUnicodeStringToAnsiSize (
 NTSTATUS
 STDCALL
 RtlUnicodeStringToAnsiString (
-	IN OUT PANSI_STRING	DestinationString,
-	IN PUNICODE_STRING	SourceString,
-	IN BOOLEAN		AllocateDestinationString
+	IN OUT	PANSI_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	)
 {
 	NTSTATUS Status;
@@ -1089,7 +1089,7 @@ RtlUnicodeStringToInteger (
 ULONG
 STDCALL
 RtlUnicodeStringToOemSize (
-	IN PUNICODE_STRING	UnicodeString
+	IN	PUNICODE_STRING	UnicodeString
 	)
 {
 	ULONG Size;
@@ -1104,43 +1104,52 @@ RtlUnicodeStringToOemSize (
 
 NTSTATUS
 STDCALL
-RtlUnicodeStringToOemString (
-	IN OUT POEM_STRING	DestinationString,
-	IN PUNICODE_STRING	SourceString,
-	IN BOOLEAN		AllocateDestinationString
+RtlUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	)
 {
 	NTSTATUS Status;
 	ULONG Length;
+	ULONG Size;
 
 	if (NlsMbOemCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString);
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
 	else
-		Length = SourceString->Length / sizeof(WCHAR);
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
-	if (AllocateDestinationString == TRUE)
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
+
+	if (AllocateDestinationString)
 	{
-		DestinationString->MaximumLength = Length + sizeof(CHAR);
-		DestinationString->Buffer =
-		        RtlAllocateHeap (RtlGetProcessHeap (),
-		                         0,
-		                         DestinationString->MaximumLength);
+		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+		                                             0,
+		                                             Length);
 		if (DestinationString->Buffer == NULL)
 			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
 	}
 	else
 	{
-		if (Length >= DestinationString->MaximumLength)
-			return STATUS_BUFFER_TOO_SMALL;
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
 	}
-	DestinationString->Length = Length;
-
-	RtlZeroMemory (DestinationString->Buffer,
-	               DestinationString->Length);
 
 	Status = RtlUnicodeToOemN (DestinationString->Buffer,
 	                           DestinationString->Length,
-	                           NULL,
+	                           &Size,
 	                           SourceString->Buffer,
 	                           SourceString->Length);
 	if (!NT_SUCCESS(Status))
@@ -1154,7 +1163,74 @@ RtlUnicodeStringToOemString (
 		return Status;
 	}
 
-	DestinationString->Buffer[Length] = 0;
+	DestinationString->Buffer[Size] = 0;
+
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlUnicodeStringToOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	)
+{
+	NTSTATUS Status;
+	ULONG Length;
+	ULONG Size;
+
+	if (NlsMbOemCodePageTag == TRUE)
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+	else
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
+
+	if (AllocateDestinationString)
+	{
+		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+		                                             0,
+		                                             Length);
+		if (DestinationString->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
+	}
+	else
+	{
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
+	}
+
+	Status = RtlUnicodeToOemN (DestinationString->Buffer,
+	                           DestinationString->Length,
+	                           &Size,
+	                           SourceString->Buffer,
+	                           SourceString->Length);
+	if (!NT_SUCCESS(Status))
+	{
+		if (AllocateDestinationString)
+		{
+			RtlFreeHeap (RtlGetProcessHeap (),
+			             0,
+			             DestinationString->Buffer);
+		}
+		return Status;
+	}
+
+	DestinationString->Buffer[Size] = 0;
 
 	return STATUS_SUCCESS;
 }
@@ -1163,7 +1239,7 @@ RtlUnicodeStringToOemString (
 WCHAR
 STDCALL
 RtlUpcaseUnicodeChar (
-	WCHAR	Source
+	IN	WCHAR	Source
 	)
 {
 	if (Source < L'a')
@@ -1181,9 +1257,9 @@ RtlUpcaseUnicodeChar (
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeString (
-	IN OUT PUNICODE_STRING	DestinationString,
-	IN PUNICODE_STRING	SourceString,
-	IN BOOLEAN		AllocateDestinationString
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
 	)
 {
 	ULONG i;
@@ -1229,34 +1305,44 @@ RtlUpcaseUnicodeStringToAnsiString (
 {
 	NTSTATUS Status;
 	ULONG Length;
+	ULONG Size;
 
 	if (NlsMbCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString);
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
 	else
-		Length = SourceString->Length / sizeof(WCHAR);
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
 
 	if (AllocateDestinationString == TRUE)
 	{
-		DestinationString->MaximumLength = Length + sizeof(CHAR);
 		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 		                                             0,
 		                                             DestinationString->MaximumLength);
 		if (DestinationString->Buffer == NULL)
 			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
 	}
 	else
 	{
-		if (Length >= DestinationString->MaximumLength)
-			return STATUS_BUFFER_TOO_SMALL;
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (!DestinationString->MaximumLength)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
 	}
-	DestinationString->Length = Length;
-
-	RtlZeroMemory (DestinationString->Buffer,
-	               DestinationString->Length);
 
 	Status = RtlUpcaseUnicodeToMultiByteN (DestinationString->Buffer,
 	                                       DestinationString->Length,
-	                                       NULL,
+	                                       &Size,
 	                                       SourceString->Buffer,
 	                                       SourceString->Length);
 	if (!NT_SUCCESS(Status))
@@ -1270,20 +1356,15 @@ RtlUpcaseUnicodeStringToAnsiString (
 		return Status;
 	}
 
-	DestinationString->Buffer[Length] = 0;
+	DestinationString->Buffer[Size] = 0;
 
 	return STATUS_SUCCESS;
 }
 
 
-/*
-RtlUpcaseUnicodeStringToCountedOemString
-*/
-
-
 NTSTATUS
 STDCALL
-RtlUpcaseUnicodeStringToOemString (
+RtlUpcaseUnicodeStringToCountedOemString (
 	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
@@ -1291,34 +1372,44 @@ RtlUpcaseUnicodeStringToOemString (
 {
 	NTSTATUS Status;
 	ULONG Length;
+	ULONG Size;
 
-	if (NlsMbOemCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString);
+	if (NlsMbCodePageTag == TRUE)
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
 	else
-		Length = SourceString->Length / sizeof(WCHAR);
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
 
 	if (AllocateDestinationString == TRUE)
 	{
-		DestinationString->MaximumLength = Length + sizeof(CHAR);
 		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 		                                             0,
-		                                             DestinationString->MaximumLength);
+		                                             Length);
 		if (DestinationString->Buffer == NULL)
 			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
 	}
 	else
 	{
-		if (Length >= DestinationString->MaximumLength)
-			return STATUS_BUFFER_TOO_SMALL;
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
 	}
-	DestinationString->Length = Length;
-
-	RtlZeroMemory (DestinationString->Buffer,
-	               DestinationString->Length);
 
 	Status = RtlUpcaseUnicodeToOemN (DestinationString->Buffer,
 	                                 DestinationString->Length,
-	                                 NULL,
+	                                 &Size,
 	                                 SourceString->Buffer,
 	                                 SourceString->Length);
 	if (!NT_SUCCESS(Status))
@@ -1332,21 +1423,83 @@ RtlUpcaseUnicodeStringToOemString (
 		return Status;
 	}
 
-	DestinationString->Buffer[Length] = 0;
+	DestinationString->Buffer[Size] = 0;
 
 	return STATUS_SUCCESS;
 }
 
 
-/*
-RtlUpcaseUnicodeToCustomCP
-*/
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	)
+{
+	NTSTATUS Status;
+	ULONG Length;
+	ULONG Size;
+
+	if (NlsMbOemCodePageTag == TRUE)
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+	else
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
+
+	if (AllocateDestinationString == TRUE)
+	{
+		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+		                                             0,
+		                                             Length);
+		if (DestinationString->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
+	}
+	else
+	{
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
+	}
+
+	Status = RtlUpcaseUnicodeToOemN (DestinationString->Buffer,
+	                                 DestinationString->Length,
+	                                 &Size,
+	                                 SourceString->Buffer,
+	                                 SourceString->Length);
+	if (!NT_SUCCESS(Status))
+	{
+		if (AllocateDestinationString)
+		{
+			RtlFreeHeap (RtlGetProcessHeap (),
+			             0,
+			             DestinationString->Buffer);
+		}
+		return Status;
+	}
+
+	DestinationString->Buffer[Size] = 0;
+
+	return STATUS_SUCCESS;
+}
 
 
 CHAR
 STDCALL
 RtlUpperChar (
-	CHAR	Source
+	IN	CHAR	Source
 	)
 {
 	WCHAR	Unicode;
@@ -1384,8 +1537,8 @@ RtlUpperChar (
 VOID
 STDCALL
 RtlUpperString (
-	PSTRING	DestinationString,
-	PSTRING	SourceString
+	IN OUT	PSTRING	DestinationString,
+	IN	PSTRING	SourceString
 	)
 {
 	ULONG Length;

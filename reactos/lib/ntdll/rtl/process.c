@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.10 2000/01/27 08:56:48 dwelch Exp $
+/* $Id: process.c,v 1.11 2000/02/05 16:08:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -258,7 +258,7 @@ RtlpCreatePpbAndPeb (
 			 Ppb,
 			 Ppb->TotalSize,
 			 &BytesWritten);
-   
+
    /* create the PEB */
    PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
@@ -495,15 +495,13 @@ RtlCreateProcessParameters (
 
 	/* copy current directory */
    Dest = (PWCHAR)(((PBYTE)Param) + 
-		   sizeof(RTL_USER_PROCESS_PARAMETERS) + 
-		   (256 * sizeof(WCHAR)));
+		   sizeof(RTL_USER_PROCESS_PARAMETERS));
 
    Param->CurrentDirectory.DosPath.Buffer = Dest;
+   Param->CurrentDirectory.DosPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
    if (CurrentDirectory != NULL)
      {
 	Param->CurrentDirectory.DosPath.Length = CurrentDirectory->Length;
-	Param->CurrentDirectory.DosPath.MaximumLength = 
-	  CurrentDirectory->Length + sizeof(WCHAR);
 	memcpy(Dest,
 	       CurrentDirectory->Buffer,
 	       CurrentDirectory->Length);
@@ -512,8 +510,8 @@ RtlCreateProcessParameters (
    *Dest = 0;
 
    Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS) +
-		   (256 * sizeof(WCHAR)) + (MAX_PATH * sizeof(WCHAR)));
-   
+		   /* (256 * sizeof(WCHAR)) + */ (MAX_PATH * sizeof(WCHAR)));
+
    /* copy library path */
    Param->LibraryPath.Buffer = Dest;
    if (LibraryPath != NULL)

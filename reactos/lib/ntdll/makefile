@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.36 2000/01/23 08:16:20 phreak Exp $
+# $Id: makefile,v 1.37 2000/02/05 16:06:52 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -29,8 +29,8 @@ CSR_OBJECTS = csr/api.o
 DBG_OBJECTS = dbg/brkpoint.o dbg/print.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
-              rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/security.o \
-              rtl/thread.o rtl/unicode.o rtl/env.o
+              rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
+              rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 

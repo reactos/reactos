@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.28 2000/01/27 08:56:48 dwelch Exp $
+; $Id: ntdll.edf,v 1.29 2000/02/05 16:07:10 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -431,6 +431,7 @@ ZwWriteRequestData=ZwWriteRequestData@24
 ZwWriteVirtualMemory=ZwWriteVirtualMemory@20
 ZwW32Call=ZwW32Call@20
 ZwYieldExecution=ZwYieldExecution@0
+RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock=RtlAcquirePebLock@0
 RtlAllocateHeap=RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
@@ -442,6 +443,7 @@ RtlCharToInteger=RtlCharToInteger@12
 RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
 RtlCreateProcessParameters=RtlCreateProcessParameters@40
+RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
@@ -464,6 +466,7 @@ RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlEraseUnicodeString=RtlEraseUnicodeString@4
+RtlExpandEnvironmentStrings_U=RtlExpandEnvironmentStrings_U@16
 RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
 RtlExtendedLargeIntegerDivide=RtlExtendedLargeIntegerDivide@16
 RtlExtendedMagicDivide=RtlExtendedMagicDivide@20
@@ -471,6 +474,10 @@ RtlFillMemory=RtlFillMemory@12
 RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHeap=RtlFreeHeap@12
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
+RtlGetCurrentDirectory_U=RtlGetCurrentDirectory_U@8
+RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
+RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
+RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap=RtlGetProcessHeap@0
 RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitializeContext=RtlInitializeContext@20
@@ -498,8 +505,12 @@ RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap=RtlReAllocateHeap@16
 RtlReleasePebLock=RtlReleasePebLock@0
+RtlSetCurrentDirectory_U=RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment=RtlSetCurrentEnvironment@8
+RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
+RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
+RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 RtlSizeHeap=RtlSizeHeap@12
 RtlUnlockHeap=RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
@@ -511,11 +522,13 @@ RtlUnwind=RtlUnwind@0
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12
+RtlUpcaseUnicodeStringToCountedOemString=RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
+RtlValidSecurityDescriptor=RtlValidSecurityDescriptor@4
 RtlValidateHeap=RtlValidateHeap@12
 RtlZeroMemory=RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.38 2000/01/27 08:56:48 dwelch Exp $
+; $Id: ntdll.def,v 1.39 2000/02/05 16:07:10 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -432,6 +432,7 @@ ZwWriteRequestData@24
 ZwWriteVirtualMemory@20
 ZwW32Call@20
 ZwYieldExecution@0
+RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock@0
 RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar@4
@@ -445,6 +446,7 @@ RtlCharToInteger@12
 RtlCreateEnvironment@8
 RtlCreateHeap@24
 RtlCreateProcessParameters@40
+RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess@40
@@ -469,6 +471,7 @@ RtlEnlargedUnsignedMultiply@8
 RtlEqualString@12
 RtlEqualUnicodeString@12
 RtlEraseUnicodeString@4
+RtlExpandEnvironmentStrings_U@16
 RtlExtendedIntegerMultiply@12
 RtlExtendedLargeIntegerDivide@16
 RtlExtendedMagicDivide@20
@@ -477,6 +480,10 @@ RtlFreeAnsiString@4
 RtlFreeHeap@12
 RtlFreeOemString@4
 RtlFreeUnicodeString@4
+RtlGetCurrentDirectory_U@8
+RtlGetDaclSecurityDescriptor@16
+RtlGetGroupSecurityDescriptor@12
+RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap@0
 RtlInitAnsiString@8
 RtlInitializeContext@20
@@ -504,8 +511,12 @@ RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap@16
 RtlReleasePebLock@0
+RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment@8
+RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable@12
+RtlSetGroupSecurityDescriptor@12
+RtlSetOwnerSecurityDescriptor@12
 RtlSizeHeap@12
 RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize@4
@@ -520,11 +531,13 @@ RtlUnwind@0
 RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString@12
+RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString@12
 RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4
 RtlUpperString@8
+RtlValidSecurityDescriptor@4
 RtlValidateHeap@12
 RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize@4
