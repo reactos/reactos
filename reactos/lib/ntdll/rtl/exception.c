@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.5 2001/03/18 19:35:12 dwelch Exp $
+/* $Id: exception.c,v 1.6 2001/06/17 20:05:10 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -53,7 +53,13 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
 VOID STDCALL
 RtlRaiseStatus(NTSTATUS Status)
 {
+  EXCEPTION_RECORD ExceptionRecord;
 
+  ExceptionRecord.ExceptionCode    = Status;
+  ExceptionRecord.ExceptionRecord  = NULL;
+  ExceptionRecord.NumberParameters = 0;
+  ExceptionRecord.ExceptionFlags   = EXCEPTION_NONCONTINUABLE;
+  RtlRaiseException (& ExceptionRecord);
 }
 
 

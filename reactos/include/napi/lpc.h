@@ -87,7 +87,13 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
 			      ULONG MaxConnectInfoLength,
 			      ULONG MaxDataLength,
-			      ULONG Reserved);
+			      ULONG NPMessageQueueSize OPTIONAL);
+
+NTSTATUS STDCALL NtCreateWaitablePort(PHANDLE PortHandle,
+			              POBJECT_ATTRIBUTES ObjectAttributes,
+			              ULONG MaxConnectInfoLength,
+			              ULONG MaxDataLength,
+			              ULONG NPMessageQueueSize OPTIONAL);
 
 NTSTATUS STDCALL NtImpersonateClientOfPort (HANDLE PortHandle,
 					    PLPC_MESSAGE ClientMessage);

@@ -1,4 +1,4 @@
-/* $Id: csr.h,v 1.5 2001/06/17 09:23:46 ekohl Exp $
+/* $Id: csr.h,v 1.6 2001/06/17 20:05:09 ea Exp $
  *
  */
 
@@ -7,12 +7,15 @@
 
 #include <csrss/csrss.h>
 
+extern HANDLE WindowsApiPort; /* lpc.c */
+
+
 NTSTATUS STDCALL CsrClientConnectToServer(VOID);
 NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
-				     PCSRSS_API_REPLY Reply,
+				     PCSRSS_API_REPLY Reply OPTIONAL,
 				     ULONG Length,
 				     ULONG ReplyLength);
-VOID STDCALL CsrIdentifyAlertableThread(VOID);
+NTSTATUS STDCALL CsrIdentifyAlertableThread(VOID);
 NTSTATUS STDCALL CsrNewThread(VOID);
 NTSTATUS STDCALL CsrSetPriorityClass(HANDLE Process,
 				     PULONG PriorityClass);

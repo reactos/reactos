@@ -1,16 +1,20 @@
-/* $Id: api.c,v 1.10 2001/06/17 09:24:04 ekohl Exp $
+/* $Id: lpc.c,v 1.1 2001/06/17 20:05:09 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/api.c
- * PURPOSE:         CSRSS API
+ * FILE:            lib/ntdll/csr/lpc.c
+ * PURPOSE:         CSRSS Client/Server LPC API
+ *
+ * REVISIONS:
+ * 	2001-06-16 (ea)
+ * 		File api.c renamed lpc.c. Process/thread code moved
+ * 		in thread.c. Check added on the LPC port.
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
-#include <ntdll/rtl.h>
 #include <string.h>
 
 #include <csrss/csrss.h>
@@ -20,27 +24,49 @@
 
 /* GLOBALS *******************************************************************/
 
-static HANDLE WindowsApiPort;
+HANDLE WindowsApiPort = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS *****************************************************************/
 
+/* Possible CsrClientCallServer (the NT one):
+
+NTSTATUS STDCALL
+CsrClientCallServer(PCSRSS_XXX_REQUEST Request,
+		    PCSRSS_XXX_REPLY Reply OPTIONAL,
+		    ULONG CsrApiNumber,
+		    ULONG MaxRequestReplyLength)
+
+XXX_REQUEST and XXX_REPLY depend on the CsrApiNumber value and are not LPC
+objects (the LPC_REQUEST is built here instead).
+If Reply == NULL, use storage of Request to write the reply.
+
+TO BE VERIFIED.
+
+*/
 NTSTATUS STDCALL
 CsrClientCallServer(PCSRSS_API_REQUEST Request,
-		    PCSRSS_API_REPLY Reply,
+		    PCSRSS_API_REPLY Reply OPTIONAL,
 		    ULONG Length,
 		    ULONG ReplyLength)
 {
    NTSTATUS Status;
+
+   if (INVALID_HANDLE_VALUE == WindowsApiPort)
+   {
+	   DbgPrint ("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
+	   return (STATUS_UNSUCCESSFUL);
+   }
    
 //   DbgPrint("CsrClientCallServer(Request %x, Reply %x, Length %d, "
 //	    "ReplyLength %d)\n", Request, Reply, Length, ReplyLength);
    
    Request->Header.DataSize = Length;
    Request->Header.MessageSize = sizeof(LPC_MESSAGE_HEADER) + Length;
+  
    
    Status = NtRequestWaitReplyPort(WindowsApiPort,
 				   &Request->Header,
-				   &Reply->Header);
+				   (Reply?&Reply->Header:&Request->Header));
    
 //   DbgPrint("Status %x\n", Status);
    
@@ -85,73 +111,6 @@ CsrClientConnectToServer(VOID)
 	return(Reply.Status);
      }
    return(STATUS_SUCCESS);
-}
-
-VOID STDCALL
-CsrIdentifyAlertableThread(VOID)
-{
-   /* FIXME: notify csrss that current thread is alertable */
-}
-
-NTSTATUS STDCALL
-CsrNewThread(VOID)
-{
-   return (NtRegisterThreadTerminatePort(WindowsApiPort));
-}
-
-NTSTATUS STDCALL
-CsrSetPriorityClass(HANDLE Process,
-		    PULONG PriorityClass)
-{
-   /* FIXME: call csrss to get hProcess' priority */
-   *PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
-
-   return (STATUS_NOT_IMPLEMENTED);
-}
-
-VOID STDCALL
-CsrProbeForRead(IN CONST PVOID Address,
-		IN ULONG Length,
-		IN ULONG Alignment)
-{
-   PUCHAR Pointer;
-   UCHAR Data;
-
-   if (Length == 0)
-     return;
-
-   if ((ULONG)Address & (Alignment - 1))
-     RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
-
-   Pointer = (PUCHAR)Address;
-   Data = *Pointer;
-   Pointer = (PUCHAR)((ULONG)Address + Length -1);
-   Data = *Pointer;
-}
-
-VOID STDCALL
-CsrProbeForWrite(IN CONST PVOID Address,
-		 IN ULONG Length,
-		 IN ULONG Alignment)
-{
-   PUCHAR Pointer;
-   UCHAR Data;
-
-   if (Length == 0)
-     return;
-
-   if ((ULONG)Address & (Alignment - 1))
-     RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
-
-//   if (Address >= MmUserProbeAddress)
-//     RtlRaiseStatus(STATUS_ACCESS_VIOLATION);
-
-   Pointer = (PUCHAR)Address;
-   Data = *Pointer;
-   *Pointer = Data;
-   Pointer = (PUCHAR)((ULONG)Address + Length -1);
-   Data = *Pointer;
-   *Pointer = Data;
 }
 
 /* EOF */

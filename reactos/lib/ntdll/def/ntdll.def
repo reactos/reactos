@@ -1,19 +1,19 @@
-; $Id: ntdll.def,v 1.74 2001/06/17 09:25:03 ekohl Exp $
+; $Id: ntdll.def,v 1.75 2001/06/17 20:05:09 ea Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
-;CsrAllocateCaptureBuffer
-;CsrAllocateCapturePointer
-;CsrAllocateMessagePointer
-;CsrCaptureMessageBuffer
-;CsrCaptureMessageString
-;CsrCaptureTimeout
+CsrAllocateCaptureBuffer@12
+CsrAllocateCapturePointer@12
+CsrAllocateMessagePointer@12
+CsrCaptureMessageBuffer@16
+CsrCaptureMessageString@20
+CsrCaptureTimeout@8
 CsrClientCallServer@16
 CsrClientConnectToServer@0
-;CsrFreeCaptureBuffer
+CsrFreeCaptureBuffer@4
 CsrIdentifyAlertableThread@0
 CsrNewThread@0
 CsrProbeForRead@12
@@ -92,6 +92,7 @@ NtCreateSymbolicLinkObject@16
 NtCreateThread@32
 NtCreateTimer@16
 NtCreateToken@52
+NtCreateWaitablePort@20
 NtDelayExecution@8
 NtDeleteAtom@4
 NtDeleteFile@4

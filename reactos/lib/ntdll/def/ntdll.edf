@@ -1,19 +1,19 @@
-; $Id: ntdll.edf,v 1.63 2001/06/17 09:25:03 ekohl Exp $
+; $Id: ntdll.edf,v 1.64 2001/06/17 20:05:10 ea Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
-;CsrAllocateCaptureBuffer
-;CsrAllocateCapturePointer
-;CsrAllocateMessagePointer
-;CsrCaptureMessageBuffer
-;CsrCaptureMessageString
-;CsrCaptureTimeout
+CsrAllocateCaptureBuffer=CsrAllocateCaptureBuffer@12
+CsrAllocateCapturePointer=CsrAllocateCapturePointer@12
+CsrAllocateMessagePointer=CsrAllocateMessagePointer@12
+CsrCaptureMessageBuffer=CsrCaptureMessageBuffer@16
+CsrCaptureMessageString=CsrCaptureMessageString@20
+CsrCaptureTimeout=CsrCaptureTimeout@8
 CsrClientCallServer=CsrClientCallServer@16
 CsrClientConnectToServer=CsrClientConnectToServer@0
-;CsrFreeCaptureBuffer
+CsrFreeCaptureBuffer=CsrFreeCaptureBuffer@4
 CsrIdentifyAlertableThread=CsrIdentifyAlertableThread@0
 CsrNewThread=CsrNewThread@0
 CsrProbeForRead=CsrProbeForRead@12
@@ -92,6 +92,7 @@ NtCreateSymbolicLinkObject=NtCreateSymbolicLinkObject@16
 NtCreateThread=NtCreateThread@32
 NtCreateTimer=NtCreateTimer@16
 NtCreateToken=NtCreateToken@52
+NtCreateWaitablePort=NtCreateWaitablePort@20
 NtDelayExecution=NtDelayExecution@8
 NtDeleteAtom=NtDeleteAtom@4
 NtDeleteFile=NtDeleteFile@4

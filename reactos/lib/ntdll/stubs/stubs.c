@@ -8,20 +8,6 @@
 
 
 // ?Allocate@CBufferAllocator@@UAEPAXK@Z
-STUB(PropertyLengthAsVariant)
-STUB(RtlCompareVariants)
-STUB(RtlConvertPropertyToVariant)
-STUB(RtlConvertVariantToProperty)
-STUB(CsrAllocateCaptureBuffer)
-STUB(CsrAllocateCapturePointer)
-STUB(CsrAllocateMessagePointer)
-STUB(CsrCaptureMessageBuffer)
-STUB(CsrCaptureMessageString)
-STUB(CsrCaptureTimeout)
-STUB(CsrFreeCaptureBuffer)
-STUB(CsrIdentifyAlertableThread)
-STUB(CsrProbeForRead)
-STUB(CsrProbeForWrite)
 
 STUB(KiRaiseUserExceptionDispatcher)
 
@@ -172,5 +158,5 @@ STUB(_aullrem)
 STUB(_aullshr)
 //STUB(_chkstk)
 STUB(_fltused)
-STUB(sscanf)
+//STUB(sscanf)
 

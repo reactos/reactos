@@ -37,6 +37,7 @@ NtCreateSymbolicLinkObject	ZwCreateSymbolicLinkObject	  16
 NtCreateThread			ZwCreateThread			  32         
 NtCreateTimer			ZwCreateTimer			  16         
 NtCreateToken			ZwCreateToken			  52         
+NtCreateWaitablePort		ZwCreateWaitablePort		  20
 NtDelayExecution		ZwDelayExecution		  8          
 NtDeleteAtom			ZwDeleteAtom			  4          
 NtDeleteFile			ZwDeleteFile			  4          

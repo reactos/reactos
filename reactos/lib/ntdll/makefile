@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.61 2001/05/30 20:02:31 ekohl Exp $
+# $Id: makefile,v 1.62 2001/06/17 20:05:09 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -15,7 +15,7 @@ DLLMAIN=main/dllmain.o
 
 all: $(DLLTARGET)
 
-CSR_OBJECTS = csr/api.o
+CSR_OBJECTS = csr/lpc.o csr/capture.o csr/probe.o csr/thread.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o
 
@@ -25,7 +25,8 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/bitmap.o rtl/time.o rtl/acl.o rtl/sid.o rtl/image.o \
               rtl/access.o rtl/apc.o rtl/callback.o rtl/luid.o rtl/misc.o \
               rtl/registry.o rtl/exception.o rtl/intrlck.o rtl/resource.o \
-              rtl/handle.o rtl/atom.o rtl/message.o rtl/timezone.o
+              rtl/handle.o rtl/atom.o rtl/message.o rtl/timezone.o \
+	      rtl/propvar.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 
