@@ -29,8 +29,9 @@ typedef struct
 {
   HWND hWndSelf;
   HWND hWndParent;
-  HLOCAL hData;
+  HLOCAL hBuffer;
   DWORD style;
+  DWORD MaxBuffer;
   INT LineHeight;
   INT CharWidth;
   HFONT hFont;
@@ -77,6 +78,106 @@ HEXEDIT_MoveCaret(PHEXEDIT_DATA hed, INT Col, INT Line)
   SetCaretPos(hed->LeftMargin + (Col * hed->CharWidth), hed->TopMargin + (Line * hed->LineHeight));
 }
 
+/*** Control specific messages ************************************************/
+
+static LRESULT
+HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
+{
+  if(Buffer != NULL && Size > 0)
+  {
+    LPVOID buf;
+    
+    if(hed->MaxBuffer > 0 && Size > hed->MaxBuffer)
+    {
+      Size = hed->MaxBuffer;
+    }
+    
+    if(hed->hBuffer)
+    {
+      if(Size > 0)
+      {
+        if(LocalSize(hed->hBuffer) != Size)
+        {
+          hed->hBuffer = LocalReAlloc(hed->hBuffer, Size, LMEM_MOVEABLE | LMEM_ZEROINIT);
+        }
+      }
+      else
+      {
+        hed->hBuffer = LocalFree(hed->hBuffer);
+        
+        return 0;
+      }
+    }
+    else if(Size > 0)
+    {
+      hed->hBuffer = LocalAlloc(LHND, Size);
+    }
+    
+    if(Size > 0)
+    {
+      buf = LocalLock(hed->hBuffer);
+      if(buf)
+      {
+        memcpy(buf, Buffer, Size);
+      }
+      else 
+        Size = 0;
+      LocalUnlock(hed->hBuffer);
+    }
+    
+    return Size;
+  }
+  else if(hed->hBuffer)
+  {
+    hed->hBuffer = LocalFree(hed->hBuffer);
+  }
+  
+  return 0;
+}
+
+static LRESULT
+HEXEDIT_HEM_COPYBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
+{
+  DWORD nCpy;
+  
+  if(!hed->hBuffer)
+  {
+    return 0;
+  }
+  
+  if(Buffer != NULL && Size > 0)
+  {
+    nCpy = min(Size, LocalSize(hed->hBuffer));
+    if(nCpy > 0)
+    {
+      PVOID buf;
+      
+      buf = LocalLock(hed->hBuffer);
+      if(buf)
+      {
+        memcpy(Buffer, buf, nCpy);
+      }
+      else
+        nCpy = 0;
+      LocalUnlock(hed->hBuffer);
+    }
+    return nCpy;
+  }
+  
+  return (LRESULT)LocalSize(hed->hBuffer);
+}
+
+static LRESULT
+HEXEDIT_HEM_SETMAXBUFFERSIZE(PHEXEDIT_DATA hed, DWORD nMaxSize)
+{
+  hed->MaxBuffer = nMaxSize;
+  if(hed->MaxBuffer > 0 && hed->hBuffer && LocalSize(hed->hBuffer) > hed->MaxBuffer)
+  {
+    /* truncate the buffer */
+    hed->hBuffer = LocalReAlloc(hed->hBuffer, hed->MaxBuffer, LMEM_MOVEABLE);
+  }
+}
+
 /*** Message Proc *************************************************************/
 
 static LRESULT
@@ -101,10 +202,10 @@ HEXEDIT_WM_NCCREATE(HWND hWnd, CREATESTRUCT *cs)
 static LRESULT
 HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
 {
-  if(hed->hData)
+  if(hed->hBuffer)
   {
-    while(LocalUnlock(hed->hData));
-    LocalFree(hed->hData);
+    while(LocalUnlock(hed->hBuffer));
+    LocalFree(hed->hBuffer);
   }
   
   SetWindowLong(hed->hWndSelf, 0, 0);
@@ -176,6 +277,15 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   hed = (PHEXEDIT_DATA)GetWindowLong(hWnd, 0);
   switch(uMsg)
   {
+    case HEM_LOADBUFFER:
+      return HEXEDIT_HEM_LOADBUFFER(hed, (PVOID)wParam, (DWORD)lParam);
+      
+    case HEM_COPYBUFFER:
+      return HEXEDIT_HEM_COPYBUFFER(hed, (PVOID)wParam, (DWORD)lParam);
+    
+    case HEM_SETMAXBUFFERSIZE:
+      return HEXEDIT_HEM_SETMAXBUFFERSIZE(hed, (DWORD)lParam);
+    
     case WM_SETFOCUS:
       return HEXEDIT_WM_SETFOCUS(hed);
     

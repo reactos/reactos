@@ -33,6 +33,7 @@
 #include "main.h"
 #include "regproc.h"
 #include "resource.h"
+#include "hexedit.h"
 
 
 typedef enum _EDIT_MODE
@@ -44,7 +45,9 @@ typedef enum _EDIT_MODE
 
 static const TCHAR* editValueName;
 static TCHAR* stringValueData;
+static PVOID binValueData;
 static DWORD dwordValueData;
+static DWORD valueDataLen;
 static EDIT_MODE dwordEditMode = EDIT_MODE_HEX;
 
 
@@ -260,68 +263,6 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
-INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    TCHAR* valueData;
-    HWND hwndValue;
-    int len;
-
-    switch(uMsg) {
-    case WM_INITDIALOG:
-        if(editValueName && _tcscmp(editValueName, _T("")))
-        {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
-        }
-        else
-        {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
-        }
-        SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
-        SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
-        return FALSE;
-    case WM_COMMAND:
-        switch (LOWORD(wParam))
-        {
-        case IDOK:
-            if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
-            {
-                if ((len = GetWindowTextLength(hwndValue)))
-                {
-                    if (stringValueData)
-                    {
-                        if ((valueData = HeapReAlloc(GetProcessHeap(), 0, stringValueData, (len + 1) * sizeof(TCHAR))))
-                        {
-                            stringValueData = valueData;
-                            if (!GetWindowText(hwndValue, stringValueData, len + 1))
-                                *stringValueData = 0;
-                        }
-                    }
-                    else
-                    {
-                        if ((valueData = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(TCHAR))))
-                        {
-                            stringValueData = valueData;
-                            if (!GetWindowText(hwndValue, stringValueData, len + 1))
-                                *stringValueData = 0;
-                        }
-                    }
-                }
-                else
-                {
-                  if (stringValueData)
-                    *stringValueData = 0;
-                }
-            }
-            EndDialog(hwndDlg, IDOK);
-            break;
-        case IDCANCEL:
-            EndDialog(hwndDlg, IDCANCEL);
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 
 INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -448,9 +389,56 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     return FALSE;
 }
 
+
+INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PVOID valueData;
+    HWND hwndValue;
+    int len;
+
+    switch(uMsg) {
+    case WM_INITDIALOG:
+        if(editValueName && _tcscmp(editValueName, _T("")))
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+        }
+        else
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+        }
+        HexEdit_LoadBuffer(GetDlgItem(hwndDlg, IDC_VALUE_DATA), binValueData, valueDataLen);
+        SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
+        return FALSE;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
+            {
+                len = HexEdit_GetBufferSize(hwndValue);
+                if (len != valueDataLen && len > 0)
+                {
+                    binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
+                }
+                if (len > 0)
+                {
+                  HexEdit_CopyBuffer(hwndValue, binValueData, len);
+                }
+                valueDataLen = len;
+            }
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
 BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
 {
-    DWORD valueDataLen;
     DWORD type;
     LONG lRet;
     BOOL result = FALSE;
@@ -467,6 +455,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
       type = REG_SZ;
       valueDataLen = 0;
       stringValueData = NULL;
+      binValueData = NULL;
     }
 
     if (lRet != ERROR_SUCCESS)
@@ -633,19 +622,28 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
     }
     else if (type == REG_NONE || type == REG_BINARY)
     {
-        lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)&dwordValueData, &valueDataLen);
+        if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+        {
+          error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+          goto done;
+        }
+	
+	lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)binValueData, &valueDataLen);
         if (lRet != ERROR_SUCCESS)
         {
-            error(hwnd, IDS_BAD_VALUE, valueName);
+            HeapFree(GetProcessHeap(), 0, binValueData);
+	    error(hwnd, IDS_BAD_VALUE, valueName);
             goto done;
         }
 
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_BIN_DATA), hwnd, modify_binary_dlgproc) == IDOK)
         {
-            lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)&dwordValueData, sizeof(DWORD));
+	    lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)binValueData, valueDataLen);
             if (lRet == ERROR_SUCCESS)
                 result = TRUE;
         }
+        if(binValueData != NULL)
+	  HeapFree(GetProcessHeap(), 0, binValueData);
     }
     else
     {
