@@ -192,6 +192,7 @@ __KeStallExecutionProcessor(U32 Loops)
   for (i = 0; i < Loops; i++);
 }
 
+
 VOID KeStallExecutionProcessor(U32 Microseconds)
 {
   U64 LoopCount = ((U64)delay_count * (U64)Microseconds) / 1000ULL;
@@ -404,7 +405,6 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
     CmResourceTypeDeviceSpecific;
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
     CmResourceShareUndetermined;
-//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
 
   Ptr = (char *)(((PVOID)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[0]) +
 		 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
@@ -430,10 +430,6 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 		    DeviceNode->Node,
 		    DeviceNode->Size,
 		    DeviceNode->Size));
-//	  printf("Node: %u  Size %u (0x%x)\n",
-//		 DeviceNode->Node,
-//		 DeviceNode->Size,
-//		 DeviceNode->Size);
 
 	  memcpy (Ptr,
 		  DeviceNode,
@@ -1448,7 +1444,7 @@ DetectSerialPorts(HKEY BusKey)
 			      "Identifier",
 			      REG_SZ,
 			      (PU8)Buffer,
-			      5);
+			      strlen(Buffer) + 1);
 	  if (Error != ERROR_SUCCESS)
 	    {
 	      DbgPrint((DPRINT_HWDETECT,
@@ -1466,6 +1462,135 @@ DetectSerialPorts(HKEY BusKey)
 	  ControllerNumber++;
 	}
     }
+}
+
+
+static VOID
+DetectParallelPorts(HKEY BusKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  U32 Irq[3] = {7, 5, (U32)-1};
+  char Buffer[80];
+  HKEY ControllerKey;
+  PU16 BasePtr;
+  U32 ControllerNumber;
+  U32 i;
+  S32 Error;
+  U32 Size;
+
+  DbgPrint((DPRINT_HWDETECT, "DetectParallelPorts() called\n"));
+
+  ControllerNumber = 0;
+  BasePtr = (PU16)0x408;
+  for (i = 0; i < 3; i++, BasePtr++)
+    {
+      if (*BasePtr == 0)
+        continue;
+
+      DbgPrint((DPRINT_HWDETECT,
+		"Parallel port %u: %x\n",
+		ControllerNumber,
+		*BasePtr));
+
+      /* Create controller key */
+      sprintf(Buffer,
+	      "ParallelController\\%u",
+	      ControllerNumber);
+
+      Error = RegCreateKey(BusKey,
+			   Buffer,
+			   &ControllerKey);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+	  continue;
+	}
+      DbgPrint((DPRINT_HWDETECT, "Created key: %s\n", Buffer));
+
+      /* Set 'ComponentInformation' value */
+      SetComponentInformation(ControllerKey,
+			      0x78, /* FIXME */
+			      ControllerNumber,
+			      0xFFFFFFFF);
+
+      /* Build full device descriptor */
+      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+      if (Irq[i] != (U32)-1)
+	Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
+      FullResourceDescriptor = MmAllocateMemory(Size);
+      if (FullResourceDescriptor == NULL)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Failed to allocate resource descriptor\n"));
+	  continue;
+	}
+      memset(FullResourceDescriptor, 0, Size);
+
+      /* Initialize resource descriptor */
+      FullResourceDescriptor->InterfaceType = Isa;
+      FullResourceDescriptor->BusNumber = 0;
+      FullResourceDescriptor->PartialResourceList.Count = (Irq[i] != (U32)-1) ? 2 : 1;
+
+      /* Set IO Port */
+      PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+      PartialDescriptor->Type = CmResourceTypePort;
+      PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+      PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+      PartialDescriptor->u.Port.Start = (U64)*BasePtr;
+      PartialDescriptor->u.Port.Length = 3;
+
+      /* Set Interrupt */
+      if (Irq[i] != (U32)-1)
+	{
+	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
+	  PartialDescriptor->Type = CmResourceTypeInterrupt;
+	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+	  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+	  PartialDescriptor->u.Interrupt.Level = Irq[i];
+	  PartialDescriptor->u.Interrupt.Vector = Irq[i];
+	  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+	}
+
+      /* Set 'Configuration Data' value */
+      Error = RegSetValue(ControllerKey,
+			  "Configuration Data",
+			  REG_FULL_RESOURCE_DESCRIPTOR,
+			  (PU8) FullResourceDescriptor,
+			  Size);
+      MmFreeMemory(FullResourceDescriptor);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue(Configuration Data) failed (Error %u)\n",
+		    (int)Error));
+	}
+
+      /* Set 'Identifier' value */
+      sprintf(Buffer,
+	      "PARALLEL%u",
+	      i + 1);
+      Error = RegSetValue(ControllerKey,
+			  "Identifier",
+			  REG_SZ,
+			  (PU8)Buffer,
+			  strlen(Buffer) + 1);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue() failed (Error %u)\n",
+		    (int)Error));
+	  continue;
+	}
+      DbgPrint((DPRINT_HWDETECT,
+		"Created value: Identifier %s\n",
+		Buffer));
+
+      ControllerNumber++;
+    }
+
+  DbgPrint((DPRINT_HWDETECT, "DetectParallelPorts() done\n"));
 }
 
 
@@ -2081,9 +2206,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 
   DetectSerialPorts(BusKey);
 
-#if 0
   DetectParallelPorts(BusKey);
-#endif
 
   DetectKeyboardController(BusKey);
 
