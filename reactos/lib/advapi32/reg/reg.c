@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.50 2004/07/03 17:40:21 navaraf Exp $
+/* $Id: reg.c,v 1.51 2004/07/17 16:09:07 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,7 +20,7 @@
 #include <windows.h>
 #include <wchar.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/
@@ -2248,7 +2248,7 @@ RegQueryValueExW (HKEY hKey,
   ULONG BufferSize;
   ULONG ResultSize;
   HANDLE KeyHandle;
-  ULONG MaxCopy = lpcbData ? *lpcbData : 0;
+  ULONG MaxCopy = lpcbData != NULL && lpData != NULL ? *lpcbData : 0;
 
   DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
 	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
