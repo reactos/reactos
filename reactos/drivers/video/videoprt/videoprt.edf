@@ -1,4 +1,4 @@
-; $Id: videoprt.edf,v 1.5 2004/03/06 22:25:22 dwelch Exp $
+; $Id: videoprt.edf,v 1.6 2004/03/07 04:43:55 dwelch Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
@@ -6,6 +6,7 @@ EXPORTS
 VideoPortAllocateBuffer=VideoPortAllocateBuffer@12
 VideoPortAllocateCommonBuffer=VideoPortAllocateCommonBuffer@24
 VideoPortAllocatePool=VideoPortAllocatePool@16
+VideoPortCheckForDeviceExistence=VideoPortCheckForDeviceExistence@28
 VideoPortCompareMemory=NTOSKRNL.RtlCompareMemory
 VideoPortClearEvent=VideoPortClearEvent@8
 VideoPortCreateEvent=VideoPortCreateEvent@16

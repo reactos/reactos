@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.8 2004/03/06 22:25:22 dwelch Exp $
+ * $Id: videoprt.c,v 1.9 2004/03/07 04:43:55 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -35,6 +35,9 @@ VideoPortDeferredRoutine(
    IN PVOID SystemArgument1,
    IN PVOID SystemArgument2
    );
+PVOID STDCALL
+VideoPortGetProcAddress(IN PVOID HwDeviceExtension,
+			IN PUCHAR FunctionName);
 
 //  -------------------------------------------------------  Public Interface
 
@@ -199,7 +202,6 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
                          IN PULONG  Slot)
 {
   PCI_SLOT_NUMBER PciSlotNumber;
-  BOOLEAN FoundDevice;
   ULONG FunctionNumber;
   PCI_COMMON_CONFIG Config;
   PCM_RESOURCE_LIST AllocatedResources;
@@ -208,49 +210,82 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   CM_FULL_RESOURCE_DESCRIPTOR *FullList;
   CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor;
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+  USHORT VendorIdToFind;
+  USHORT DeviceIdToFind;
 
   DPRINT("VideoPortGetAccessRanges\n");
+
+  if (VendorId != NULL)
+    {
+      VendorIdToFind = *(PUSHORT)VendorId;
+    }
+  else
+    {
+      VendorIdToFind = 0;
+    }
+  if (DeviceId != NULL)
+    {
+      DeviceIdToFind = *(PUSHORT)DeviceId;
+    }
+  else
+    {
+      DeviceIdToFind = 0;
+    }
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      VIDEO_PORT_DEVICE_EXTENSION,
 				      MiniPortDeviceExtension);
 
-  if (0 == NumRequestedResources && PCIBus == DeviceExtension->AdapterInterfaceType)
+  if (0 == NumRequestedResources && 
+      PCIBus == DeviceExtension->AdapterInterfaceType)
     {
-      if (DeviceId != NULL && VendorId != NULL)
-        {
-          DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", (int)*((USHORT *) VendorId),
-                 (int)*((USHORT *) DeviceId));
-        }
-      FoundDevice = FALSE;
+      DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", 
+	     VendorIdToFind, DeviceIdToFind);
+
       PciSlotNumber.u.AsULONG = *Slot;
-      for (FunctionNumber = 0; ! FoundDevice && FunctionNumber < 8; FunctionNumber++)
+
+      /*
+	Search for the device id and vendor id on this bus.
+      */
+      for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
 	{
+	  ULONG ReturnedLength;
 	  PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
-	  if (sizeof(PCI_COMMON_CONFIG) ==
-	      HalGetBusDataByOffset(PCIConfiguration, DeviceExtension->SystemIoBusNumber,
-	                            PciSlotNumber.u.AsULONG,&Config, 0,
-	                            sizeof(PCI_COMMON_CONFIG)))
+	  ReturnedLength = HalGetBusData(PCIConfiguration, 
+					 DeviceExtension->SystemIoBusNumber,
+					 PciSlotNumber.u.AsULONG,
+					 &Config,
+					 sizeof(PCI_COMMON_CONFIG));
+	  if (sizeof(PCI_COMMON_CONFIG) == ReturnedLength)	      
 	    {
               if (DeviceId != NULL && VendorId != NULL)
                 {
-                  DPRINT("Slot 0x%02x (Device %d Function %d) VendorId 0x%04x DeviceId 0x%04x\n",
-                         PciSlotNumber.u.AsULONG, PciSlotNumber.u.bits.DeviceNumber,
-                         PciSlotNumber.u.bits.FunctionNumber, Config.VendorID, Config.DeviceID);
+                  DPRINT("Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
+			 "DeviceId 0x%04x\n",
+                         PciSlotNumber.u.AsULONG, 
+			 PciSlotNumber.u.bits.DeviceNumber,
+                         PciSlotNumber.u.bits.FunctionNumber, Config.VendorID,
+			 Config.DeviceID);
                 }
 
-	      FoundDevice = (VendorId == NULL || Config.VendorID == *((USHORT *) VendorId)) &&
-	                    (DeviceId == NULL || Config.DeviceID == *((USHORT *) DeviceId));
+	      if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
+		  (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+		{
+		  break;
+		}
 	    }
 	}
-      if (! FoundDevice)
+      if (FunctionNumber == 8)
 	{
+	  DPRINT("Didn't find device.\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
+
       Status = HalAssignSlotResources(NULL, NULL, NULL, NULL,
                                       DeviceExtension->AdapterInterfaceType,
                                       DeviceExtension->SystemIoBusNumber,
-                                      PciSlotNumber.u.AsULONG, &AllocatedResources);
+                                      PciSlotNumber.u.AsULONG, 
+				      &AllocatedResources);
       if (! NT_SUCCESS(Status))
 	{
 	  return Status;
@@ -316,7 +351,7 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
     }
   else
     {
-    UNIMPLEMENTED
+      UNIMPLEMENTED
     }
 
   return STATUS_SUCCESS;
@@ -596,11 +631,11 @@ VideoPortInitialize(IN PVOID  Context1,
 	  ConfigInfo.InterruptMode = (PCIBus == DeviceExtension->AdapterInterfaceType) ?
 	                              LevelSensitive : Latched;
 	  ConfigInfo.DriverRegistryPath = RegistryPath->Buffer;
+	  ConfigInfo.VideoPortGetProcAddress = VideoPortGetProcAddress;
 
 	  /*  Call HwFindAdapter entry point  */
 	  /* FIXME: Need to figure out what string to pass as param 3  */
-	  DPRINT("HwFindAdapter %X Context2 %X\n", 
-		 HwInitializationData->HwFindAdapter, Context2);
+	  DPRINT("FindAdapter %X\n", HwInitializationData->HwFindAdapter);
 	  Status = HwInitializationData->HwFindAdapter(&DeviceExtension->MiniPortDeviceExtension,
 	                                               Context2,
 	                                               NULL,
@@ -608,7 +643,7 @@ VideoPortInitialize(IN PVOID  Context1,
 	                                               &Again);
 	  if (NO_ERROR != Status)
 	    {
-	      DPRINT("HwFindAdapter call failed with error %d\n", Status);
+	      DPRINT("HwFindAdapter call failed with error %X\n", Status);
 	      DeviceExtension->SystemIoBusNumber++;
 	    }
 	}
@@ -875,8 +910,8 @@ VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
                                  IN PVIDEO_ACCESS_RANGE  AccessRange)
 {
   DPRINT("VideoPortSetTrappedEmulatorPorts\n");
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  /* Should store the ranges in the device extension for use by ntvdm. */
+  return STATUS_SUCCESS;
 }
 
 
@@ -1671,4 +1706,77 @@ VideoPortRegisterBugcheckCallback ( IN PVOID HwDeviceExtension,
 {
   DPRINT1("VideoPortRegisterBugcheckCallback(): Unimplemented.\n");
   return STATUS_UNSUCCESSFUL;
+}
+
+PVOID
+STDCALL
+VideoPortImageDirectoryEntryToData ( PVOID	BaseAddress,
+				     ULONG	Directory )
+{
+  PIMAGE_NT_HEADERS NtHeader;
+  ULONG Va;
+  
+  NtHeader = RtlImageNtHeader (BaseAddress);
+  if (NtHeader == NULL)
+    return NULL;
+  
+  if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
+    return NULL;
+  
+  Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
+  if (Va == 0)
+    return NULL;
+  
+  return (PVOID)(BaseAddress + Va);
+}
+
+PVOID STDCALL
+VideoPortGetProcAddress(IN PVOID HwDeviceExtension,
+			IN PUCHAR FunctionName)
+{
+  SYSTEM_LOAD_IMAGE GdiDriverInfo;
+  PVOID BaseAddress;
+  PIMAGE_EXPORT_DIRECTORY ExportDir;
+  PUSHORT OrdinalPtr;
+  PULONG NamePtr;
+  PULONG AddressPtr;
+  ULONG i = 0;
+  NTSTATUS Status;
+
+  DPRINT("VideoPortGetProcAddress(%s)\n", FunctionName);
+
+  RtlInitUnicodeString(&GdiDriverInfo.ModuleName, L"videoprt");
+  Status = ZwSetSystemInformation(SystemLoadImage, &GdiDriverInfo, 
+				  sizeof(SYSTEM_LOAD_IMAGE));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Couldn't get our own module handle?\n");
+      return NULL;
+    }
+
+  BaseAddress = GdiDriverInfo.ModuleBase;
+
+  /* Get the pointer to the export directory */
+  ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+                VideoPortImageDirectoryEntryToData (BaseAddress,
+                                              IMAGE_DIRECTORY_ENTRY_EXPORT);
+
+  /* search by name */
+  AddressPtr = (PULONG)
+    ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfFunctions);
+  OrdinalPtr = (PUSHORT)
+    ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNameOrdinals);
+  NamePtr = (PULONG)
+    ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNames);
+  for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
+    {
+      if (!_strnicmp(FunctionName, (char*)(BaseAddress + *NamePtr),
+		     strlen(FunctionName)))
+	{
+	  return (PVOID)((ULONG_PTR)BaseAddress + 
+			 (ULONG_PTR)AddressPtr[*OrdinalPtr]);	  
+	}
+    }
+  DPRINT("VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
+  return(NULL);
 }
