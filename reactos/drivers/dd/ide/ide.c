@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.47 2001/11/01 14:51:57 ekohl Exp $
+/* $Id: ide.c,v 1.48 2001/11/01 17:48:13 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -807,41 +807,41 @@ IDEGetDriveIdentification(IN int CommandPort,
 
   /* Get the Drive Identify block from drive or die */
   if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
-                    IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0) 
+                    IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0)
     {
-      return FALSE;
+      return(FALSE);
     }
 
   /* Report on drive parameters if debug mode */
   IDESwapBytePairs(DrvParms->SerialNumber, 20);
   IDESwapBytePairs(DrvParms->FirmwareRev, 8);
   IDESwapBytePairs(DrvParms->ModelNumber, 40);
-  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n", 
-         DrvParms->ConfigBits, 
-         DrvParms->LogicalCyls, 
-         DrvParms->LogicalHeads, 
-         DrvParms->SectorsPerTrack, 
-         DrvParms->InterSectorGap, 
+  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
+         DrvParms->ConfigBits,
+         DrvParms->LogicalCyls,
+         DrvParms->LogicalHeads,
+         DrvParms->SectorsPerTrack,
+         DrvParms->InterSectorGap,
          DrvParms->InterSectorGapSize);
-  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n", 
-         DrvParms->BytesInPLO, 
-         DrvParms->VendorUniqueCnt, 
+  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
+         DrvParms->BytesInPLO,
+         DrvParms->VendorUniqueCnt,
          DrvParms->SerialNumber);
-  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n", 
-         DrvParms->ControllerType, 
-         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ, 
-         DrvParms->ECCByteCnt, 
+  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
+         DrvParms->ControllerType,
+         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
+         DrvParms->ECCByteCnt,
          DrvParms->FirmwareRev);
   DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
-         (DrvParms->RWMultImplemented) & 0xff, 
+  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
+         (DrvParms->RWMultImplemented) & 0xff,
          (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
-         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0, 
+         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
          DrvParms->MinPIOTransTime,
          DrvParms->MinDMATransTime);
   DPRINT("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
-         DrvParms->TMCylinders, 
-         DrvParms->TMHeads, 
+         DrvParms->TMCylinders,
+         DrvParms->TMHeads,
          DrvParms->TMSectorsPerTrk,
          (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
   DPRINT("TM:SectorCount: 0x%04x%04x = %lu\n",
@@ -853,8 +853,8 @@ IDEGetDriveIdentification(IN int CommandPort,
    * Fix default ATA sector size.
    * Attention: Default ATAPI sector size is 2048 bytes!!
    */
-  if (DrvParms->BytesPerSector == 0)
-    DrvParms->BytesPerSector = 512;
+  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
+  DrvParms->BytesPerSector = 512;
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 
   return(TRUE);
@@ -1122,7 +1122,7 @@ IDEPolledRead(IN WORD Address,
   BYTE   Status;
   int    RetryCount;
 
-  /*  Wait for STATUS.BUSY to clear  */
+  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
