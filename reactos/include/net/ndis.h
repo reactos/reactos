@@ -1951,14 +1951,10 @@ NdisFreeBuffer(
 {                                           \
 }
 
-
-/*
- * VOID NdisReinitializePacket(
- *     IN OUT  PNDIS_PACKET    Packet);
- */
-#define NdisReinitializePacketCounts(Packet)    \
-{                                               \
-}
+VOID
+EXPIMP
+NdisReinitializePacket(
+    IN OUT  PNDIS_PACKET    Packet);
 
 
 /*
@@ -2235,6 +2231,102 @@ NdisUpdateSharedMemory(
     RtlZeroMemory(Destination, Length)
 
 
+
+//
+// System processor count
+//
+
+CCHAR
+EXPIMP
+NdisSystemProcessorCount(
+	VOID
+	);
+
+VOID
+EXPIMP
+NdisImmediateReadPortUchar(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	OUT PUCHAR					Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateReadPortUshort(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	OUT PUSHORT Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateReadPortUlong(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	OUT PULONG Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateWritePortUchar(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	IN	UCHAR					Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateWritePortUshort(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	IN	USHORT					Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateWritePortUlong(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					Port,
+	IN	ULONG					Data
+	);
+
+VOID
+EXPIMP
+NdisImmediateReadSharedMemory(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					SharedMemoryAddress,
+	IN	PUCHAR					Buffer,
+	IN	ULONG					Length
+	);
+
+VOID
+EXPIMP
+NdisImmediateWriteSharedMemory(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					SharedMemoryAddress,
+	IN	PUCHAR					Buffer,
+	IN	ULONG					Length
+	);
+
+ULONG
+EXPIMP
+NdisImmediateReadPciSlotInformation(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					SlotNumber,
+	IN	ULONG					Offset,
+	IN	PVOID					Buffer,
+	IN	ULONG					Length
+	);
+
+ULONG
+EXPIMP
+NdisImmediateWritePciSlotInformation(
+	IN	NDIS_HANDLE				WrapperConfigurationContext,
+	IN	ULONG					SlotNumber,
+	IN	ULONG					Offset,
+	IN	PVOID					Buffer,
+	IN	ULONG					Length
+	);
 
 /* String management routines */
 
@@ -2562,6 +2654,42 @@ NdisWriteErrorLogEntry(
     KeStallExecutionProcessor(MicroSecondsToStall)
 
 
+#define NdisZeroMappedMemory(Destination,Length)		RtlZeroMemory(Destination,Length)
+/* moved to ndis/memory.c by robd
+#define NdisMoveMappedMemory(Destination,Source,Length) RtlCopyMemory(Destination,Source,Length)
+ */
+/* moved to ndis/control.c by robd
+#define NdisReinitializePacket(Packet)										\
+{																			\
+	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;							\
+	(Packet)->Private.ValidCounts = FALSE;									\
+}
+ */
+VOID
+EXPIMP
+NdisInitializeEvent(
+	IN	PNDIS_EVENT				Event
+);
+
+VOID
+EXPIMP
+NdisSetEvent(
+	IN	PNDIS_EVENT				Event
+);
+
+VOID
+EXPIMP
+NdisResetEvent(
+	IN	PNDIS_EVENT				Event
+);
+
+BOOLEAN
+EXPIMP
+NdisWaitEvent(
+	IN	PNDIS_EVENT				Event,
+	IN	UINT					msToWait
+);
+
 
 /* NDIS helper macros */
 
@@ -2641,6 +2769,81 @@ NdisReadMcaPosInformation(
 
 #endif /* NDIS40 */
 
+
+#if	USE_KLOCKS
+
+#define	DISPATCH_LEVEL		2
+
+#define NdisAllocateSpinLock(_SpinLock)	KeInitializeSpinLock(&(_SpinLock)->SpinLock)
+
+#define NdisFreeSpinLock(_SpinLock)
+
+#define NdisAcquireSpinLock(_SpinLock)	KeAcquireSpinLock(&(_SpinLock)->SpinLock, &(_SpinLock)->OldIrql)
+
+#define NdisReleaseSpinLock(_SpinLock)	KeReleaseSpinLock(&(_SpinLock)->SpinLock,(_SpinLock)->OldIrql)
+
+#define NdisDprAcquireSpinLock(_SpinLock)						\
+{																\
+	KeAcquireSpinLockAtDpcLevel(&(_SpinLock)->SpinLock);		\
+	(_SpinLock)->OldIrql = DISPATCH_LEVEL;						\
+}
+
+#define NdisDprReleaseSpinLock(_SpinLock) KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
+
+#else
+
+//
+// Ndis Spin Locks
+//
+
+VOID
+EXPIMP
+NdisAllocateSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+
+VOID
+EXPIMP
+NdisFreeSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+
+VOID
+EXPIMP
+NdisAcquireSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+
+VOID
+EXPIMP
+NdisReleaseSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+
+VOID
+EXPIMP
+NdisDprAcquireSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+
+VOID
+EXPIMP
+NdisDprReleaseSpinLock(
+	IN	PNDIS_SPIN_LOCK			SpinLock
+	);
+
+#endif
+
+VOID
+EXPIMP
+NdisGetCurrentSystemTime(
+	PLONGLONG				pSystemTime
+	);
 
 
 /* NDIS 5.0 extensions */
