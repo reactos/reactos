@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.16 2004/03/01 19:36:20 navaraf Exp $
+/* $Id: opengl32.c,v 1.17 2004/07/16 16:16:16 blight Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -17,21 +17,65 @@
 #include <string.h>
 #include "opengl32.h"
 
+
 /* function prototypes */
-/*static BOOL OPENGL32_LoadDrivers();*/
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd );
 static void OPENGL32_RemoveICD( GLDRIVERDATA *icd );
 static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR regKey );
 static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd );
 static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd );
+static DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
+
 
 /* global vars */
 DWORD OPENGL32_tls;
 GLPROCESSDATA OPENGL32_processdata;
 
 
-static
-void
+static BOOL
+OPENGL32_ThreadAttach()
+{
+	GLTHREADDATA* lpData = NULL;
+	PROC *dispatchTable = NULL;
+	TEB *teb = NULL;
+
+	dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
+	                                  HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+	                                  sizeof (((ICDTable *)(0))->dispatch_table) );
+	if (dispatchTable == NULL)
+	{
+		DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
+		return FALSE;
+	}
+
+	lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
+	                                   HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+	                                   sizeof (GLTHREADDATA) );
+	if (lpData == NULL)
+	{
+		DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
+		HeapFree( GetProcessHeap(), 0, dispatchTable );
+		return FALSE;
+	}
+
+	teb = NtCurrentTeb();
+
+	/* initialize dispatch table with empty functions */
+	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
+		dispatchTable[icdidx] = (PROC)glEmptyFunc##stack;                  \
+		if (tebidx >= 0)                                                   \
+			teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
+	GLFUNCS_MACRO
+	#undef X
+
+	teb->glTable = dispatchTable;
+	TlsSetValue( OPENGL32_tls, lpData );
+	
+	return TRUE;
+}
+
+
+static void
 OPENGL32_ThreadDetach()
 {
 	/* FIXME - do we need to release some HDC or something? */
@@ -56,8 +100,47 @@ OPENGL32_ThreadDetach()
 }
 
 
-static
-void
+static BOOL
+OPENGL32_ProcessAttach()
+{
+	SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
+	                               NULL, /* lpSecurityDescriptor */
+	                               TRUE /* bInheritHandle */ };
+
+	OPENGL32_tls = TlsAlloc();
+	if (0xFFFFFFFF == OPENGL32_tls)
+		return FALSE;
+
+	memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
+
+	/* create driver, glrc & dcdata list mutex */
+	OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
+	if (OPENGL32_processdata.driver_mutex == NULL)
+	{
+		DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
+		          GetLastError() );
+		return FALSE;
+	}
+	OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
+	if (OPENGL32_processdata.glrc_mutex == NULL)
+	{
+		DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
+		          GetLastError() );
+		return FALSE;
+	}
+	OPENGL32_processdata.dcdata_mutex = CreateMutex( &attrib, FALSE, NULL );
+	if (OPENGL32_processdata.dcdata_mutex == NULL)
+	{
+		DBGPRINT( "Error: Couldn't create dcdata_list mutex (%d)",
+		          GetLastError() );
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+static void
 OPENGL32_ProcessDetach()
 {
 	GLDRIVERDATA *icd, *icd2;
@@ -106,17 +189,9 @@ OPENGL32_ProcessDetach()
 }
 
 
-BOOL
-WINAPI
+BOOL WINAPI
 DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
-	GLTHREADDATA* lpData = NULL;
-	PROC *dispatchTable = NULL;
-	TEB *teb = NULL;
-	SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
-	                               NULL, /* lpSecurityDescriptor */
-	                               TRUE /* bInheritHandle */ };
-
 	DBGPRINT( "Info: Called!" );
 	switch ( Reason )
 	{
@@ -125,71 +200,15 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 	 */
 	case DLL_PROCESS_ATTACH:
 		DBGTRACE( "Process attach" );
-		OPENGL32_tls = TlsAlloc();
-		if ( 0xFFFFFFFF == OPENGL32_tls )
+		if (!OPENGL32_ProcessAttach())
 			return FALSE;
-
-		memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
-
-		/* create driver, glrc & dcdata list mutex */
-		OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
-		if (OPENGL32_processdata.driver_mutex == NULL)
-		{
-			DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
-			          GetLastError() );
-			return FALSE;
-		}
-		OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
-		if (OPENGL32_processdata.glrc_mutex == NULL)
-		{
-			DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
-			          GetLastError() );
-			return FALSE;
-		}
-		OPENGL32_processdata.dcdata_mutex = CreateMutex( &attrib, FALSE, NULL );
-		if (OPENGL32_processdata.dcdata_mutex == NULL)
-		{
-			DBGPRINT( "Error: Couldn't create dcdata_list mutex (%d)",
-			          GetLastError() );
-			return FALSE;
-		}
-
 		/* No break: Initialize the index for first thread. */
 
 	/* The attached process creates a new thread. */
 	case DLL_THREAD_ATTACH:
 		DBGTRACE( "Thread attach" );
-		dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
-		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-		                            sizeof (((ICDTable *)(0))->dispatch_table) );
-		if (dispatchTable == NULL)
-		{
-			DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
+		if (!OPENGL32_ThreadAttach())
 			return FALSE;
-		}
-
-		lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
-		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-		                            sizeof (GLTHREADDATA) );
-		if (lpData == NULL)
-		{
-			DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
-			HeapFree( GetProcessHeap(), 0, dispatchTable );
-			return FALSE;
-		}
-
-		teb = NtCurrentTeb();
-
-		/* initialize dispatch table with empty functions */
-		#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
-			dispatchTable[icdidx] = (PROC)glEmptyFunc##stack;                  \
-			if (tebidx >= 0)                                                   \
-				teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
-		GLFUNCS_MACRO
-		#undef X
-
-		teb->glTable = dispatchTable;
-		TlsSetValue( OPENGL32_tls, lpData );
 		break;
 
 	/* The thread of the attached process terminates. */
@@ -206,16 +225,18 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 		OPENGL32_ProcessDetach();
 		break;
 	}
+
 	return TRUE;
 }
 
 
-/* FUNCTION: Append ICD to linked list.
- * ARGUMENTS: [IN] icd: GLDRIVERDATA to append to list
- * NOTES: Only call this when you hold the driver_mutex
+/*! \brief Append ICD to linked list.
+ *
+ * \param icd  GLDRIVERDATA to append to list
+ *
+ * \note Only call this when you hold the driver_mutex.
  */
-static
-void
+static void
 OPENGL32_AppendICD( GLDRIVERDATA *icd )
 {
 	if (OPENGL32_processdata.driver_list == NULL)
@@ -230,12 +251,13 @@ OPENGL32_AppendICD( GLDRIVERDATA *icd )
 }
 
 
-/* FUNCTION: Remove ICD from linked list.
- * ARGUMENTS: [IN] icd: GLDRIVERDATA to remove from list
- * NOTES: Only call this when you hold the driver_mutex
+/*! \brief Remove ICD from linked list.
+ *
+ * \param icd  GLDRIVERDATA to remove from list
+ *
+ * \note Only call this when you hold the driver_mutex.
  */
-static
-void
+static void
 OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 {
 	if (icd == OPENGL32_processdata.driver_list)
@@ -257,14 +279,16 @@ OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 }
 
 
-/* FUNCTION:  Load an ICD.
- * ARGUMENTS: [IN] driver:  Name of display driver.
- * RETURNS:   error code; ERROR_SUCCESS on success
+/*! \brief  Load an ICD.
  *
- * TODO: call SetLastError() where appropriate
+ * \param driver  Name of installable client driver.
+ *
+ * \return Pointer to an allocated GLDRIVERDATA struct.
+ * \retval NULL  Failure.
+ *
+ * \todo Call SetLastError() where appropriate.
  */
-static
-GLDRIVERDATA*
+static GLDRIVERDATA *
 OPENGL32_LoadDriver( LPCWSTR driver )
 {
 	LONG ret;
@@ -316,10 +340,12 @@ OPENGL32_LoadDriver( LPCWSTR driver )
 }
 
 
-/* FUNCTION:  Initialize a driver (Load DLL, DrvXXX and glXXX procs)
- * ARGUMENTS: [IN] icd:  ICD to initialize with the dll, version, driverVersion
- *                       and flags already filled.
- * RETURNS:   error code; ERROR_SUCCESS on success
+/*! \brief Initialize a driver (Load DLL and DrvXxx procs)
+ *
+ * \param icd  ICD to initialize with the dll, version, driverVersion
+ *             and flags already filled.
+ * \return Error code.
+ * \retval ERROR_SUCCESS  Success
  */
 #define LOAD_DRV_PROC( icd, proc, required ) \
 	*(char**)&icd->proc = (char*)GetProcAddress( icd->handle, #proc ); \
@@ -329,8 +355,7 @@ OPENGL32_LoadDriver( LPCWSTR driver )
 		return GetLastError(); \
 	}
 
-static
-DWORD
+static DWORD
 OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 {
 	/* check version */
@@ -394,11 +419,12 @@ OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 }
 
 
-/* FUNCTION: Unload loaded ICD.
- * RETURNS:  TRUE on success, FALSE otherwise.
+/*! \brief Unload ICD.
+ *
+ * \retval  TRUE  Success.
+ * \retval  FALSE Failure.
  */
-static
-BOOL
+static BOOL
 OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 {
 	BOOL allOk = TRUE;
@@ -428,11 +454,13 @@ OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 }
 
 
-/* FUNCTION: Load ICD (shared ICD data)
- * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
+/*! \brief Load ICD (shared ICD data)
+ *
+ * \return Pointer to an allocated GLDRIVERDATA on success.
+ * \retval NULL  Failure.
  */
-GLDRIVERDATA*
-OPENGL32_LoadICD ( LPCWSTR driver )
+GLDRIVERDATA *
+OPENGL32_LoadICD( LPCWSTR driver )
 {
 	GLDRIVERDATA *icd;
 
@@ -472,8 +500,10 @@ OPENGL32_LoadICD ( LPCWSTR driver )
 }
 
 
-/* FUNCTION: Unload ICD (shared ICD data)
- * RETURNS:  TRUE on success, FALSE otherwise.
+/*! \brief Unload ICD (shared ICD data)
+ *
+ * \retval TRUE   Success.
+ * \retval FALSE  Failure.
  */
 BOOL
 OPENGL32_UnloadICD( GLDRIVERDATA *icd )
@@ -489,8 +519,8 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 	}
 
 	icd->refcount--;
-	//if (icd->refcount == 0)
-	if (0)
+	if (icd->refcount == 0)
+//	if (0)
 		ret = OPENGL32_UnloadDriver( icd );
 	/* FIXME: InitializeICD crashes when called a second time */
 
@@ -502,21 +532,24 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 }
 
 
-/* FUNCTION: Enumerate OpenGLDrivers (from registry)
- * ARGUMENTS: [IN]  idx   Index of the driver to get information about
- *            [OUT] name  Pointer to an array of WCHARs (can be NULL)
- *            [I,O] cName Pointer to a DWORD. Input is len of name array;
- *                        Output is length of the drivername.
- *                        Can be NULL if name is NULL.
- * RETURNS: Error code (ERROR_NO_MORE_ITEMS at end of list); On failure all
- *          OUT vars are left untouched.
+/*! \brief Enumerate OpenGLDrivers (from registry)
+ *
+ * \param idx    Index of the driver to get information about.
+ * \param name   Pointer to an array of WCHARs (can be NULL)
+ * \param cName  Pointer to a DWORD. Input is len of name array.
+ *               Output is length of the drivername.
+ *               Can be NULL if name is NULL.
+ *
+ * \return Error code 
+ * \retval ERROR_NO_MORE_ITEMS  End of driver list.
+ * \retval ERROR_SUCCESS        Success.
  */
+#if 0 /* unused */
 DWORD
 OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 {
 	HKEY hKey;
-	LPCWSTR subKey =
-		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
+	LPCWSTR subKey = OPENGL_DRIVERS_SUBKEY;
 	LONG ret;
 	DWORD size;
 	WCHAR driver[256];
@@ -550,22 +583,25 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 	RegCloseKey( hKey );
 	return ERROR_SUCCESS;
 }
+#endif /* 0 -- unused */
 
 
-/* FUNCTION: Get registry values for a driver given a name
- * ARGUMENTS: [IN]  idx   Index of the driver to get information about
- *            [OUT] icd   Pointer to GLDRIVERDATA. On success the following
- *                        fields are filled: driver_name, dll, version,
- *                        driver_version and flags.
- * RETURNS: Error code; On failure all OUT vars are left untouched.
+/*! \brief Get registry values for a driver given a name.
+ *
+ * \param driver  Name of the driver to get information about.
+ * \param icd     Pointer to GLDRIVERDATA.
+ *
+ * \return Error code. 
+ * \retval ERROR_SUCCESS  Success.
+ *
+ * \note On success the following fields of \a icd are filled: \a driver_name,
+ *       \a dll, \a version, \a driver_version and \a flags.
  */
-/*static*/
-DWORD
+static DWORD
 OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
 {
 	HKEY hKey;
-	WCHAR subKey[1024] =
-		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
+	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY;
 	LONG ret;
 	DWORD type, size;
 

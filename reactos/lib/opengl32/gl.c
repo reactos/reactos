@@ -20,7 +20,7 @@
  * On other machines we use C to forward the calls (slow...)
  */
 
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEANER_AND_MEANER
 #include <windows.h>
 #include "teb.h"
 
@@ -58,13 +58,25 @@ int STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
                            long l11, long l12, long l13, long l14 )
                            { return 0; }
 
-#if 1//!defined(_M_IX86)
+#if defined(_M_IX86)
+# define FOO(x) #x
+# define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
+__asm__(".globl _"#func"@"#stack                      "\n\t"          \
+        "_"#func"@"#stack":"                          "\n\t"          \
+        "	movl %fs:0x18, %eax"                "\n\t"          \
+        "       movl 0xbe8(%eax), %eax"             "\n\t"          \
+        "       jmp *"FOO((icdidx*4))"(%eax)"        "\n\t");
+        
+GLFUNCS_MACRO
+# undef FOO
+# undef X
+#else /* defined(_M_IX86) */
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
 ret STDCALL func typeargs                                             \
 {                                                                     \
-    PROC *table;                                                      \
+	PROC *table;                                                      \
 	PROC fn;                                                          \
-	if (tebidx >= 0)                                                  \
+	if (tebidx >= 10000)                                                  \
 	{                                                                 \
 		table = (PROC *)NtCurrentTeb()->glDispatchTable;              \
 		fn = table[tebidx];                                           \
@@ -79,7 +91,7 @@ ret STDCALL func typeargs                                             \
 
 GLFUNCS_MACRO
 
-#undef X
-#endif//non-x86 architectures
+# undef X
+#endif /* !defined(_M_IX86) */
 
 /* EOF */
