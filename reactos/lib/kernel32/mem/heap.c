@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.22 2002/11/10 13:33:26 robd Exp $
+/* $Id: heap.c,v 1.23 2003/01/15 21:24:34 chorns Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -27,8 +27,7 @@
  * Put the type definitions of the heap in a seperate header. Boudewijn Dekker
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

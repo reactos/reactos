@@ -1,14 +1,13 @@
-/* $Id: error.c,v 1.16 2002/09/08 10:22:44 chorns Exp $
+/* $Id: error.c,v 1.17 2003/01/15 21:24:34 chorns Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntddbeep.h>
 
-// #define NDEBUG
+#include <k32.h>
+
+#define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 /* INTERNAL */

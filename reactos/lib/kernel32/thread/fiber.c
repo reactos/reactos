@@ -1,11 +1,12 @@
-/* $Id: fiber.c,v 1.3 2002/09/08 10:22:46 chorns Exp $
+/* $Id: fiber.c,v 1.4 2003/01/15 21:24:36 chorns Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
  * ReactOS Kernel32.dll
  *
  */
-#include <windows.h>
+#include <k32.h>
+
 
 
 /**********************************************************************

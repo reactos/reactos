@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.29 2002/09/08 10:22:41 chorns Exp $
+/* $Id: create.c,v 1.30 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,15 +15,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-/* please FIXME: ddk/ntddk.h should be enough */
-#include <ddk/iodef.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/

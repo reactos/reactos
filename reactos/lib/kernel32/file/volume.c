@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.27 2002/12/06 17:33:16 ekohl Exp $
+/* $Id: volume.c,v 1.28 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,13 +19,10 @@
  * Copyright 1996 Alexandre Julliard
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntos/minmax.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 #define MAX_DOS_DRIVES 26

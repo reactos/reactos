@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.7 2002/11/07 02:52:37 robd Exp $
+/* $Id: lfile.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,10 +9,7 @@
  *                  Created 01/11/98
  */
 
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
+#include <k32.h>
 
 
 long

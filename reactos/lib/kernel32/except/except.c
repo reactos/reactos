@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.9 2002/09/08 10:22:41 chorns Exp $
+/* $Id: except.c,v 1.10 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,10 +10,8 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
+#include <k32.h>
 
-#include <kernel32/error.h>
 
 typedef LONG (STDCALL *LPTOP_LEVEL_EXCEPTION_FILTER)(
 	struct _EXCEPTION_POINTERS *ExceptionInfo

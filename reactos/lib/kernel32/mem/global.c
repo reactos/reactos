@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.10 2002/10/28 15:08:32 robd Exp $
+/* $Id: global.c,v 1.11 2003/01/15 21:24:34 chorns Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -11,9 +11,7 @@
  * NOTE: Only fixed memory is implemented!!
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

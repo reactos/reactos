@@ -1,4 +1,4 @@
-/* $Id: comm.c,v 1.5 2002/10/03 18:26:53 robd Exp $
+/* $Id: comm.c,v 1.6 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,17 +12,10 @@
  *					RDD (30/09/2002) implemented many function bodies to call serial driver.
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddser.h>
-#include <kernel32/proc.h>
-#include <kernel32/thread.h>
-#include <wchar.h>
-#include <string.h>
+#include <k32.h>
 
-//#define NDEBUG
-#define DBG
+#define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 WINBOOL

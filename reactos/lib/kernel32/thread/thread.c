@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.32 2002/12/02 21:28:40 ekohl Exp $
+/* $Id: thread.c,v 1.33 2003/01/15 21:24:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,15 +12,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#include <kernel32/thread.h>
-#include <ntdll/ldr.h>
-#include <string.h>
-#include <napi/i386/segment.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 static VOID ThreadAttachDlls (VOID);

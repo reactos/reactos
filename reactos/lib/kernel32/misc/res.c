@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.11 2002/09/08 10:22:45 chorns Exp $
+/* $Id: res.c,v 1.12 2003/01/15 21:24:35 chorns Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -7,11 +7,10 @@
  * AUTHOR   : ???
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/ldr.h>
+#include <k32.h>
+
+#define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 HRSRC

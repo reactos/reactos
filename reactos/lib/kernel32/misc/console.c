@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.49 2002/12/06 17:31:33 ekohl Exp $
+/* $Id: console.c,v 1.50 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,18 +13,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddblue.h>
-#include <windows.h>
-#include <assert.h>
-#include <wchar.h>
-
-#include <csrss/csrss.h>
-#include <ntdll/csr.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 /* GLOBALS *******************************************************************/
 

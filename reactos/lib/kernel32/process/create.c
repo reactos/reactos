@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.58 2003/01/07 17:29:08 robd Exp $
+/* $Id: create.c,v 1.59 2003/01/15 21:24:35 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,23 +11,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <kernel32/proc.h>
-#include <kernel32/thread.h>
-#include <wchar.h>
-#include <string.h>
-#include <napi/i386/segment.h>
-#include <ntdll/ldr.h>
-#include <napi/teb.h>
-#include <ntdll/base.h>
-#include <ntdll/rtl.h>
-#include <csrss/csrss.h>
-#include <ntdll/csr.h>
+#include <k32.h>
 
 #define DBG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 

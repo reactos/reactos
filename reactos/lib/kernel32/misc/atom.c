@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.15 2002/09/08 10:22:43 chorns Exp $
+/* $Id: atom.c,v 1.16 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,9 +10,7 @@
  *                  Full rewrite 27/05/2001
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <kernel32/error.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

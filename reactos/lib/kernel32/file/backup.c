@@ -1,4 +1,4 @@
-/* $Id: backup.c,v 1.3 2002/09/08 10:22:41 chorns Exp $
+/* $Id: backup.c,v 1.4 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,14 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <wchar.h>
-#include <string.h>
-#include <ntdll/rtl.h>
-
-#include <kernel32/kernel32.h>
-#include <kernel32/error.h>
+#include <k32.h>
 
 /* FUNCTIONS ****************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.32 2002/11/12 00:45:16 mdill Exp $
+/* $Id: dir.c,v 1.33 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,15 +15,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 /* FUNCTIONS *****************************************************************/

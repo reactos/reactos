@@ -8,9 +8,7 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
+#include <k32.h>
 
 
 int

@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.5 2002/09/08 10:22:44 chorns Exp $
+/* $Id: profile.c,v 1.6 2003/01/15 21:24:35 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,11 +10,7 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <wchar.h>
-#include <string.h>
-//#include <stdlib.h>
+#include <k32.h>
 
 
 /* FUNCTIONS *****************************************************************/

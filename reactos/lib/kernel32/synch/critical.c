@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.12 2002/09/08 10:22:45 chorns Exp $
+/* $Id: critical.c,v 1.13 2003/01/15 21:24:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,8 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
+#include <k32.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 

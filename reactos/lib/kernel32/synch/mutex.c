@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.4 2002/09/08 10:22:45 chorns Exp $
+/* $Id: mutex.c,v 1.5 2003/01/15 21:24:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,11 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <kernel32/error.h>
-#include <windows.h>
-#include <wchar.h>
+#include <k32.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/

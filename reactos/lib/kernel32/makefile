@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.57 2003/01/07 17:29:09 robd Exp $
+# $Id: makefile,v 1.58 2003/01/15 21:24:33 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,13 +8,15 @@ TARGET_NAME = kernel32
 
 TARGET_BASE = 0x77f00000
 
-TARGET_CFLAGS = -DKERNEL32_BASE=$(TARGET_DLLBASE)
+TARGET_CFLAGS = -DKERNEL32_BASE=$(TARGET_DLLBASE) -I./
 
 TARGET_LFLAGS = -nostartfiles
 
 TARGET_SDKLIBS = ntdll.a
 
 TARGET_GCCLIBS = gcc
+
+TARGET_PCH = k32.h
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

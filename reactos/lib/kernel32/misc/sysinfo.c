@@ -1,15 +1,12 @@
-/* $Id: sysinfo.c,v 1.5 2002/09/08 10:22:45 chorns Exp $
+/* $Id: sysinfo.c,v 1.6 2003/01/15 21:24:35 chorns Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
  */
-#include <ddk/ntddk.h>
+#include <k32.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 
 #define PV_NT351 0x00030033

@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.7 2002/09/08 10:22:42 chorns Exp $
+/* $Id: pipe.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,9 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <kernel32/error.h>
+#include <k32.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* GLOBALS ******************************************************************/

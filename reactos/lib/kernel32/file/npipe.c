@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.13 2002/09/08 10:22:42 chorns Exp $
+/* $Id: npipe.c,v 1.14 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,16 +10,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <kernel32/error.h>
-//#include <wchar.h>
-//#include <string.h>
-#include <limits.h>
-#include <napi/npipe.h>
+#include <k32.h>
 
-//#define NDEBUG
+
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/

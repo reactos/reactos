@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.17 2002/10/21 00:53:33 mdill Exp $
+/* $Id: env.c,v 1.18 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,15 +9,10 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <wchar.h>
-#include <string.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 /* FUNCTIONS ******************************************************************/

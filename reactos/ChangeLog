@@ -1,5 +1,69 @@
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/kernel32/k32.h: New file.
+	* lib/kernel32/makefile (TARGET_CFLAGS): Add -I./.
+	(TARGET_PCH): Set to k32.h.
+	* lib/kernel32/except/except.c: Use <k32.h>.
+	* lib/kernel32/file/backup.c: Ditto.
+	* lib/kernel32/file/cnotify.c: Ditto.
+	* lib/kernel32/file/copy.c: Ditto.
+	* lib/kernel32/file/create.c: Ditto.
+	* lib/kernel32/file/curdir.c: Ditto.
+	* lib/kernel32/file/delete.c: Ditto.
+	* lib/kernel32/file/deviceio.c: Ditto.
+	* lib/kernel32/file/dir.c: Ditto.
+	* lib/kernel32/file/dosdev.c: Ditto.
+	* lib/kernel32/file/file.c: Ditto.
+	* lib/kernel32/file/find.c: Ditto.
+	* lib/kernel32/file/iocompl.c: Ditto.
+	* lib/kernel32/file/lfile.c: Ditto.
+	* lib/kernel32/file/lock.c: Ditto.
+	* lib/kernel32/file/mailslot.c: Ditto.
+	* lib/kernel32/file/move.c: Ditto.
+	* lib/kernel32/file/npipe.c: Ditto.
+	* lib/kernel32/file/pipe.c: Ditto.
+	* lib/kernel32/file/rw.c: Ditto.
+	* lib/kernel32/file/tape.c: Ditto.
+	* lib/kernel32/file/volume.c: Ditto.
+	* lib/kernel32/mem/global.c: Ditto.
+	* lib/kernel32/mem/heap.c: Ditto.
+	* lib/kernel32/mem/isbad.c: Ditto.
+	* lib/kernel32/mem/local.c: Ditto.
+	* lib/kernel32/mem/procmem.c: Ditto.
+	* lib/kernel32/mem/section.c: Ditto.
+	* lib/kernel32/mem/virtual.c: Ditto.
+	* lib/kernel32/misc/atom.c: Ditto.
+	* lib/kernel32/misc/comm.c: Ditto.
+	* lib/kernel32/misc/console.c: Ditto.
+	* lib/kernel32/misc/debug.c: Ditto.
+	* lib/kernel32/misc/dllmain.c: Ditto.
+	* lib/kernel32/misc/env.c: Ditto.
+	* lib/kernel32/misc/error.c: Ditto.
+	* lib/kernel32/misc/handle.c: Ditto.
+	* lib/kernel32/misc/ldr.c: Ditto.
+	* lib/kernel32/misc/profile.c: Ditto.
+	* lib/kernel32/misc/res.c: Ditto.
+	* lib/kernel32/misc/stubs.c: Ditto.
+	* lib/kernel32/misc/sysinfo.c: Ditto.
+	* lib/kernel32/misc/time.c: Ditto.
+	* lib/kernel32/process/cmdline.c: Ditto.
+	* lib/kernel32/process/create.c: Ditto.
+	* lib/kernel32/process/proc.c: Ditto.
+	* lib/kernel32/process/session.c: Ditto.
+	* lib/kernel32/string/lstring.c: Ditto.
+	* lib/kernel32/synch/critical.c: Ditto.
+	* lib/kernel32/synch/event.c: Ditto.
+	* lib/kernel32/synch/intrlck.c: Ditto.
+	* lib/kernel32/synch/mutex.c: Ditto.
+	* lib/kernel32/synch/sem.c: Ditto.
+	* lib/kernel32/synch/timer.c: Ditto.
+	* lib/kernel32/synch/wait.c: Ditto.
+	* lib/kernel32/thread/fiber.c: Ditto.
+	* lib/kernel32/thread/thread.c: Ditto.
+	* lib/kernel32/thread/tls.c: Ditto.
+
+2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* apps/testsets/Makefile (TEST_SETS): Remove ldr.
 	* include/msvcrt/ctype.h (towupper): Make returntype wchar_t.
 

@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.3 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: cnotify.c,v 1.4 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,7 +9,7 @@
  *                  Created 01/11/98
  */
 
-#include <windows.h>
+#include <k32.h>
 
 
 WINBOOL STDCALL

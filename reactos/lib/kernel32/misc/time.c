@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.18 2002/09/30 20:59:39 hbirr Exp $
+/* $Id: time.c,v 1.19 2003/01/15 21:24:35 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,10 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <kernel32/error.h>
-//#include <string.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

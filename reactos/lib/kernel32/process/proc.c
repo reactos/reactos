@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.49 2003/01/15 20:05:52 robd Exp $
+/* $Id: proc.c,v 1.50 2003/01/15 21:24:35 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,18 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <kernel32/proc.h>
-#include <kernel32/thread.h>
-#include <kernel32/error.h>
-#include <wchar.h>
-#include <string.h>
-#include <napi/i386/segment.h>
-#include <napi/teb.h>
-#include <ntdll/csr.h>
-#include <ntdll/ldr.h>
+#include <k32.h>
 
 
 #define NDEBUG

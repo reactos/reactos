@@ -1,11 +1,11 @@
-/* $Id: isbad.c,v 1.4 2002/09/08 10:22:43 chorns Exp $
+/* $Id: isbad.c,v 1.5 2003/01/15 21:24:34 chorns Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
  * ReactOS Operating System
  *
  */
-#include <windows.h>
+#include <k32.h>
 
 /* FIXME: Stubs. What is it for? */
 UINT

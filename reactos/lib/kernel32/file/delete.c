@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.12 2002/09/08 10:22:41 chorns Exp $
+/* $Id: delete.c,v 1.13 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,13 +11,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.6 2002/09/08 10:22:42 chorns Exp $
+/* $Id: iocompl.c,v 1.7 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,9 +9,7 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <wchar.h>
+#include <k32.h>
 
 
 #include <kernel32/error.h>

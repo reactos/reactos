@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.9 2002/09/08 10:22:46 chorns Exp $
+/* $Id: tls.c,v 1.10 2003/01/15 21:24:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,11 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <kernel32/thread.h>
-#include <kernel32/error.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

@@ -1,4 +1,4 @@
-/* $Id: tape.c,v 1.3 2002/09/08 10:22:42 chorns Exp $
+/* $Id: tape.c,v 1.4 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,14 +12,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <wchar.h>
-#include <string.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 

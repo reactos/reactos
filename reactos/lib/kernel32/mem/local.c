@@ -1,4 +1,4 @@
-/* $Id: local.c,v 1.7 2002/09/08 10:22:43 chorns Exp $
+/* $Id: local.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -21,9 +21,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
+#include <k32.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

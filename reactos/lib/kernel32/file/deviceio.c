@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.10 2002/10/03 19:09:04 robd Exp $
+/* $Id: deviceio.c,v 1.11 2003/01/15 21:24:33 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,13 +9,11 @@
  *                  Created 01/11/98
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
+#include <k32.h>
 
 #define NDEBUG
 //#define DBG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 WINBOOL
