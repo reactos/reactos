@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.16 2003/08/25 14:26:30 weiden Exp $
+/* $Id: msgqueue.c,v 1.17 2003/08/25 14:54:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -124,12 +124,11 @@ MsqInitializeImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-LPMSG FASTCALL
+ULONG FASTCALL
 MsgFindSystemMessage(UINT message)
 {
-  ULONG QueuePos;
-  LPMSG Result = NULL;
   MSG Msg;
+  ULONG QueuePos, Result = (ULONG)-1;
   
   if(SystemMessageQueueCount > 0)
   {
@@ -139,7 +138,7 @@ MsgFindSystemMessage(UINT message)
       Msg = SystemMessageQueue[QueuePos];
       if(Msg.message == message)
       {
-        Result = &Msg;
+        Result = QueuePos;
         break;
       }
       QueuePos--;
@@ -153,7 +152,7 @@ VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
 {  
   KIRQL OldIrql;
-  LPMSG mmov = NULL;
+  ULONG mmov = (ULONG)-1;
 
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
   
@@ -161,10 +160,16 @@ MsqInsertSystemMessage(MSG* Msg)
   if(Msg->message == WM_MOUSEMOVE)
     mmov = MsgFindSystemMessage(WM_MOUSEMOVE);
     
-  if(mmov)
+  if(mmov != (ULONG)-1)
   {
-    /* overwrite the existing WM_MOUSEMOVE message */
-    *mmov = *Msg;
+    /* remove old WM_MOUSEMOVE message, move previous messages and insert
+       new WM_MOUSEMOVE message at the queue head */
+    while(mmov > SystemMessageQueueHead)
+    {
+      SystemMessageQueue[mmov - 1] = SystemMessageQueue[mmov];
+      mmov--;
+    }
+    SystemMessageQueue[SystemMessageQueueHead] = *Msg;
   }
   else
   {
