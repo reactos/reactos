@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.58 2004/06/07 16:37:07 hbirr Exp $
+/* $Id: scsiport.c,v 1.59 2004/06/07 20:03:00 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2811,6 +2811,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     {
       Srb = NextIrp->Tail.Overlay.DriverContext[3];
       NextIrp->Tail.Overlay.DriverContext[2] = (PVOID)Srb->QueueSortKey;
+      LunExtension = Srb->OriginalRequest;
 
       ListEntry = DeviceExtension->PendingIrpListHead.Flink;
       while (ListEntry != DeviceExtension->PendingIrpListHead.Flink)
@@ -2823,6 +2824,8 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
           ListEntry = ListEntry->Flink;
 	}
       InsertTailList(ListEntry, (PLIST_ENTRY)&NextIrp->Tail.Overlay.DriverContext[0]);
+      DeviceExtension->PendingIrpCount++;
+      LunExtension->PendingIrpCount++;
     }
 
   while (DeviceExtension->CompleteRequestCount ||
