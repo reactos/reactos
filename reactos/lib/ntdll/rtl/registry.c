@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.18 2002/09/08 10:23:06 chorns Exp $
+/* $Id: registry.c,v 1.19 2002/10/28 15:50:25 robd Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -102,8 +102,10 @@ NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(PUNICODE_STRING KeyPath)
 {
   /* FIXME: !!! */
-  RtlCreateUnicodeString(KeyPath,
+#if 0
+    RtlCreateUnicodeString(KeyPath,
 			 L"\\Registry\\User\\.Default");
+#endif
   return(STATUS_SUCCESS);
 }
 
@@ -113,8 +115,8 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyPath = UNICODE_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
   NTSTATUS Status;
+  UNICODE_STRING KeyPath = UNICODE_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
   if (NT_SUCCESS(Status))
@@ -127,11 +129,11 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
       Status = NtOpenKey(KeyHandle,
 			 DesiredAccess,
 			 &ObjectAttributes);
-      RtlFreeUnicodeString(&KeyPath);
-      if (NT_SUCCESS(Status))
-	return(STATUS_SUCCESS);
+      if (NT_SUCCESS(Status)) {
+         RtlFreeUnicodeString(&KeyPath);
+	     return(STATUS_SUCCESS);
+      }
     }
-
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyPath,
 			     OBJ_CASE_INSENSITIVE,
@@ -140,6 +142,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
   Status = NtOpenKey(KeyHandle,
 		     DesiredAccess,
 		     &ObjectAttributes);
+  RtlFreeUnicodeString(&KeyPath);
   return(Status);
 }
 
