@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.84 2004/04/14 17:19:38 weiden Exp $
+/* $Id: msgqueue.c,v 1.85 2004/04/14 17:35:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -457,7 +457,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
   }
   
-  if(hWnd != NULL && Window->Self != hWnd)
+  if((hWnd != NULL && Window->Self != hWnd) ||
+     ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
   {
     /* Reject the message because it doesn't match the filter */
     
@@ -475,7 +476,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     
     if (Message->Msg.message == WM_MOUSEMOVE)
     {
-      if(Window->MessageQueue->MouseMoveMsg)
+      if(Window->MessageQueue->MouseMoveMsg &&
+         (Window->MessageQueue->MouseMoveMsg != Message))
       {
         /* delete the old message */
         RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
