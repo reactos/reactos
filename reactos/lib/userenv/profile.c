@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.14 2004/10/03 09:27:22 ekohl Exp $
+/* $Id: profile.c,v 1.15 2004/10/05 13:39:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,10 +35,8 @@ AppendSystemPostfix (LPWSTR lpName,
 		     DWORD dwMaxLength)
 {
   WCHAR szSystemRoot[MAX_PATH];
-  WCHAR szDrivePostfix[3];
   LPWSTR lpszPostfix;
   LPWSTR lpszPtr;
-  DWORD dwPostfixLength;
 
   /* Build profile name postfix */
   if (!ExpandEnvironmentStringsW (L"%SystemRoot%",
@@ -62,26 +60,13 @@ AppendSystemPostfix (LPWSTR lpName,
       lpszPtr++;
     }
 
-  dwPostfixLength = wcslen (lpszPostfix);
-  if (szSystemRoot[0] != L'C')
-    {
-      dwPostfixLength += 2;
-      szDrivePostfix[0] = L'_';
-      szDrivePostfix[1] = szSystemRoot[0];
-      szDrivePostfix[2] = (WCHAR)0;
-    }
-
-  if (wcslen (lpName) + dwPostfixLength >= dwMaxLength)
+  if (wcslen(lpName) + wcslen(lpszPostfix) >= dwMaxLength)
     {
       DPRINT1("Error: buffer overflow\n");
       return FALSE;
     }
 
-  wcscat (lpName, lpszPostfix);
-  if (szSystemRoot[0] != L'C')
-    {
-      wcscat (lpName, szDrivePostfix);
-    }
+  wcscat(lpName, lpszPostfix);
 
   return TRUE;
 }
