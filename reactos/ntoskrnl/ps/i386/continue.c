@@ -1,4 +1,4 @@
-/* $Id: continue.c,v 1.3 2004/07/07 08:39:53 gvg Exp $
+/* $Id: continue.c,v 1.4 2004/08/04 00:17:14 navaraf Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -46,7 +46,9 @@ NtContinue (
 	PULONG Frame = 0;
 	__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
 	DPRINT( "NtContinue(): Ebp=%x, prev/TF=%x/%x\n", Frame, Frame[0], TrapFrame );
+#ifndef NDEBUG
 	KeRosDumpStackFrames(NULL,5);
+#endif
 
 	if ( Context == NULL )
 	{
