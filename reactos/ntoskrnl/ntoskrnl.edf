@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.74 2000/08/28 21:48:32 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.75 2000/09/06 02:08:00 phreak Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -568,6 +568,7 @@ ObReferenceObjectByPointer=ObReferenceObjectByPointer@16
 ObfDereferenceObject=ObfDereferenceObject@4
 ;ObfReferenceObject=@ObfReferenceObject@4
 ObfReferenceObject=ObfReferenceObject@4
+ObAddEntryDirectory=ObAddEntryDirectory@12
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix
@@ -584,6 +585,7 @@ PsCreateSystemThread=PsCreateSystemThread@28
 ;PsEstablishWin32Callouts
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
+PsGetCurrentThread=PsGetCurrentThread@0
 ;PsGetProcessExitTime
 PsGetVersion=PsGetVersion@16
 PsImpersonateClient=PsImpersonateClient@20

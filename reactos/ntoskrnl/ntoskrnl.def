@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.87 2000/08/28 21:48:32 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.88 2000/09/06 02:08:00 phreak Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -568,6 +568,7 @@ ObReferenceObjectByPointer@16
 ObfDereferenceObject@4
 ;@ObfReferenceObject@4
 ObfReferenceObject@4
+ObAddEntryDirectory@12
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix
@@ -584,6 +585,7 @@ PsCreateSystemThread@28
 ;PsEstablishWin32Callouts@24
 PsGetCurrentProcessId@0
 PsGetCurrentThreadId@0
+PsGetCurrentThread@0
 ;PsGetProcessExitTime@0
 PsGetVersion@16
 PsImpersonateClient@20
