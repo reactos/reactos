@@ -128,13 +128,16 @@ NdisMQueryAdapterResources(
       return;
     }
 
-  ResourceListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
-                     MiniportBlock->AllocatedResources->Count *
-                     sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+  ResourceListSize = 
+    FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
+    MiniportBlock->AllocatedResources->List[0].PartialResourceList.Count *
+    sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
   if (*BufferSize >= ResourceListSize)
     {
-      RtlCopyMemory(ResourceList, MiniportBlock->AllocatedResources, ResourceListSize);
+      RtlCopyMemory(ResourceList,
+                    &MiniportBlock->AllocatedResources->List[0].PartialResourceList, 
+                    ResourceListSize);
       *BufferSize = ResourceListSize;
       *Status = STATUS_SUCCESS;
     }

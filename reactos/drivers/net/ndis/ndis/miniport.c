@@ -1309,9 +1309,11 @@ NdisIPnPStartDevice(
   if (Stack->Parameters.StartDevice.AllocatedResources != NULL &&
       Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
     {
-      ResourceListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
-                         Stack->Parameters.StartDevice.AllocatedResources->Count *
-                         sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+      ResourceListSize = 
+        FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
+        Stack->Parameters.StartDevice.AllocatedResources->List[0].
+        PartialResourceList.Count *
+        sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
       Adapter->NdisMiniportBlock.AllocatedResources =
         ExAllocatePool(PagedPool, ResourceListSize);
