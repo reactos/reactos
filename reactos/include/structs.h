@@ -5314,8 +5314,7 @@ typedef struct _TAPE_GET_MEDIA_PARAMETERS {
 typedef struct _TAPE_GET_POSITION {
   ULONG Type;
   ULONG Partition;
-  ULONG OffsetLow;
-  ULONG OffsetHigh;
+  LARGE_INTEGER Offset;
 } TAPE_GET_POSITION;
 
 typedef struct _TAPE_PREPARE {
@@ -5337,8 +5336,8 @@ typedef struct _TAPE_SET_MEDIA_PARAMETERS {
 typedef struct _TAPE_SET_POSITION {
   ULONG Method;
   ULONG Partition;
-  ULONG OffsetLow;
-  ULONG OffsetHigh;
+  LARGE_INTEGER Offset;
+  BOOLEAN Immediate;
 } TAPE_SET_POSITION;
 
 typedef struct _TAPE_WRITE_MARKS {
