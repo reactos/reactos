@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.28 2004/03/27 19:41:32 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.29 2004/06/10 11:00:28 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -311,7 +311,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       Node->NextSibling = ParentNode->Child;
       if (ParentNode->Child != NULL)
 	{
-	  ParentNode->Child->PrevSibling = Node;	  
+	  ParentNode->Child->PrevSibling = Node;
 	}
       ParentNode->Child = Node;
       KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
@@ -339,21 +339,21 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
   /* Unlink from parent if it exists */
 
   if ((DeviceNode->Parent) && (DeviceNode->Parent->Child == DeviceNode))
-    {
-      DeviceNode->Parent->Child = DeviceNode->NextSibling;
-    }
+  {
+    DeviceNode->Parent->Child = DeviceNode->NextSibling;
+  }
 
   /* Unlink from sibling list */
 
   if (DeviceNode->PrevSibling)
-    {
-      DeviceNode->PrevSibling->NextSibling = DeviceNode->NextSibling;
-    }
+  {
+    DeviceNode->PrevSibling->NextSibling = DeviceNode->NextSibling;
+  }
 
   if (DeviceNode->NextSibling)
-    {
-  DeviceNode->NextSibling->PrevSibling = DeviceNode->PrevSibling;
-    }
+  {
+    DeviceNode->NextSibling->PrevSibling = DeviceNode->PrevSibling;
+  }
 
   KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
 
@@ -362,24 +362,24 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
   RtlFreeUnicodeString(&DeviceNode->ServiceName);
 
   if (DeviceNode->CapabilityFlags)
-    {
-  ExFreePool(DeviceNode->CapabilityFlags);
-    }
+  {
+    ExFreePool(DeviceNode->CapabilityFlags);
+  }
 
   if (DeviceNode->CmResourceList)
-    {
-  ExFreePool(DeviceNode->CmResourceList);
-    }
+  {
+    ExFreePool(DeviceNode->CmResourceList);
+  }
 
   if (DeviceNode->BootResourcesList)
-    {
-  ExFreePool(DeviceNode->BootResourcesList);
-    }
+  {
+    ExFreePool(DeviceNode->BootResourcesList);
+  }
 
   if (DeviceNode->ResourceRequirementsList)
-    {
-  ExFreePool(DeviceNode->ResourceRequirementsList);
-    }
+  {
+    ExFreePool(DeviceNode->ResourceRequirementsList);
+  }
 
   RtlFreeUnicodeString(&DeviceNode->DeviceID);
 
@@ -394,9 +394,9 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
   RtlFreeUnicodeString(&DeviceNode->DeviceTextLocation);
 
   if (DeviceNode->BusInformation)
-    {
-  ExFreePool(DeviceNode->BusInformation);
-    }
+  {
+    ExFreePool(DeviceNode->BusInformation);
+  }
 
   ExFreePool(DeviceNode);
 
@@ -449,15 +449,15 @@ IopInitiatePnpIrp(
       sizeof(Stack->Parameters));
   }
 
-	Status = IoCallDriver(TopDeviceObject, Irp);
-	if (Status == STATUS_PENDING)
-	  {
-		  KeWaitForSingleObject(
+  Status = IoCallDriver(TopDeviceObject, Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(
         &Event,
         Executive,
-		    KernelMode,
-		    FALSE,
-		    NULL);
+        KernelMode,
+        FALSE,
+        NULL);
       Status = IoStatusBlock->Status;
     }
 
@@ -472,7 +472,7 @@ IopQueryCapabilities(
   PDEVICE_OBJECT Pdo,
   PDEVICE_CAPABILITIES *Capabilities)
 {
-  IO_STATUS_BLOCK	IoStatusBlock;
+  IO_STATUS_BLOCK IoStatusBlock;
   PDEVICE_CAPABILITIES Caps;
   IO_STACK_LOCATION Stack;
   NTSTATUS Status;
@@ -679,6 +679,9 @@ IopActionInterrogateDeviceStack(
    IO_STACK_LOCATION Stack;
    NTSTATUS Status;
    PWSTR KeyBuffer;
+   PWSTR Ptr;
+   USHORT Length;
+   USHORT TotalLength;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
    DPRINT("PDO %x\n", DeviceNode->Pdo);
@@ -725,7 +728,7 @@ IopActionInterrogateDeviceStack(
    {
       RtlInitUnicodeString(
          &DeviceNode->DeviceID,
-         (LPWSTR)IoStatusBlock.Information);
+         (PWSTR)IoStatusBlock.Information);
 
       /*
        * FIXME: Check for valid characters, if there is invalid characters
@@ -750,7 +753,7 @@ IopActionInterrogateDeviceStack(
    {
       RtlInitUnicodeString(
       &DeviceNode->InstanceID,
-      (LPWSTR)IoStatusBlock.Information);
+      (PWSTR)IoStatusBlock.Information);
 
       /*
        * FIXME: Check for valid characters, if there is invalid characters
@@ -763,8 +766,81 @@ IopActionInterrogateDeviceStack(
       RtlInitUnicodeString(&DeviceNode->InstanceID, NULL);
    }
 
-   /* FIXME: SEND IRP_QUERY_ID.BusQueryHardwareIDs */
-   /* FIXME: SEND IRP_QUERY_ID.BusQueryCompatibleIDs */
+   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
+
+   Stack.Parameters.QueryId.IdType = BusQueryHardwareIDs;
+   Status = IopInitiatePnpIrp(
+      DeviceNode->Pdo,
+      &IoStatusBlock,
+      IRP_MN_QUERY_ID,
+      &Stack);
+   if (NT_SUCCESS(Status))
+   {
+      /*
+       * FIXME: Check for valid characters, if there is invalid characters
+       * then bugcheck.
+       */
+      TotalLength = 0;
+      Ptr = (PWSTR)IoStatusBlock.Information;
+      DPRINT("Hardware IDs:\n");
+      while (*Ptr)
+      {
+	DPRINT("  %S\n", Ptr);
+	Length = wcslen(Ptr) + 1;
+
+	Ptr += Length;
+	TotalLength += Length;
+      }
+      DPRINT("TotalLength: %hu\n", TotalLength);
+      DPRINT("\n");
+
+      DeviceNode->HardwareIDs.Length = TotalLength * sizeof(WCHAR);
+      DeviceNode->HardwareIDs.MaximumLength = DeviceNode->HardwareIDs.Length + sizeof(WCHAR);
+      DeviceNode->HardwareIDs.Buffer = (PWSTR)IoStatusBlock.Information;
+   }
+   else
+   {
+      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      RtlInitUnicodeString(&DeviceNode->HardwareIDs, NULL);
+   }
+
+   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
+
+   Stack.Parameters.QueryId.IdType = BusQueryCompatibleIDs;
+   Status = IopInitiatePnpIrp(
+      DeviceNode->Pdo,
+      &IoStatusBlock,
+      IRP_MN_QUERY_ID,
+      &Stack);
+   if (NT_SUCCESS(Status))
+   {
+      /*
+       * FIXME: Check for valid characters, if there is invalid characters
+       * then bugcheck.
+       */
+      TotalLength = 0;
+      Ptr = (PWSTR)IoStatusBlock.Information;
+      DPRINT("Compatible IDs:\n");
+      while (*Ptr)
+      {
+	DPRINT("  %S\n", Ptr);
+	Length = wcslen(Ptr) + 1;
+
+	Ptr += Length;
+	TotalLength += Length;
+      }
+      DPRINT("TotalLength: %hu\n", TotalLength);
+      DPRINT("\n");
+
+      DeviceNode->CompatibleIDs.Length = TotalLength * sizeof(WCHAR);
+      DeviceNode->CompatibleIDs.MaximumLength = DeviceNode->CompatibleIDs.Length + sizeof(WCHAR);
+      DeviceNode->CompatibleIDs.Buffer = (PWSTR)IoStatusBlock.Information;
+   }
+   else
+   {
+      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      RtlInitUnicodeString(&DeviceNode->CompatibleIDs, NULL);
+   }
 
    Status = IopQueryCapabilities(DeviceNode->Pdo, &DeviceNode->CapabilityFlags);
    if (NT_SUCCESS(Status))
@@ -787,7 +863,7 @@ IopActionInterrogateDeviceStack(
    {
       RtlInitUnicodeString(
          &DeviceNode->DeviceText,
-         (LPWSTR)IoStatusBlock.Information);
+         (PWSTR)IoStatusBlock.Information);
    }
    else
    {
@@ -808,7 +884,7 @@ IopActionInterrogateDeviceStack(
    {
       RtlInitUnicodeString(
          &DeviceNode->DeviceTextLocation,
-         (LPWSTR)IoStatusBlock.Information);
+         (PWSTR)IoStatusBlock.Information);
    }
    else
    {
@@ -895,13 +971,13 @@ IopActionInterrogateDeviceStack(
 
    /*
     * Create registry key for the instance id, if it doesn't exist yet
-    */  
+    */
 
    KeyBuffer = ExAllocatePool(
-      PagedPool, 
+      PagedPool,
       (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
+   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
    IopCreateDeviceKeyPath(KeyBuffer);
    ExFreePool(KeyBuffer);
    DeviceNode->Flags |= DNF_PROCESSED;
