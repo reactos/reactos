@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71.4.3 2004/09/14 01:00:45 weiden Exp $
+ * $Id: gdiobj.c,v 1.71.4.4 2004/09/26 22:52:43 weiden Exp $
  */
 #include <w32k.h>
 
@@ -940,7 +940,7 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
   PGDI_TABLE_ENTRY Entry;
   LONG ProcessId, LockedProcessId, PrevProcId;
 
-  DPRINT1("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
+  DPRINT("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
 
   if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
   {
