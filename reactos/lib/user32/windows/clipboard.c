@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.12 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: clipboard.c,v 1.13 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/clipboard.c
@@ -79,7 +79,7 @@ EmptyClipboard(VOID)
 UINT STDCALL
 EnumClipboardFormats(UINT format)
 {
-   return (UINT)NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS);
+   return NtUserEnumClipboardFormats(format);
 }
 
 /*

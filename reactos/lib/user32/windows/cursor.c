@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.18 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: cursor.c,v 1.19 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -171,8 +171,7 @@ GetCursorPos(LPPOINT lpPoint)
     return FALSE;
   }
   
-  res = (BOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)FALSE, 
-                                    TWOPARAM_ROUTINE_CURSORPOSITION);
+  res = NtUserGetCursorPos(lpPoint);
 
   return res;
 }
@@ -261,8 +260,7 @@ SetCursorPos(int X,
   POINT pos;
   pos.x = (LONG)X;
   pos.y = (LONG)Y;
-  return (BOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)TRUE, 
-                                     TWOPARAM_ROUTINE_CURSORPOSITION);
+  return NtUserSetCursorPos(&pos);
 }
 
 

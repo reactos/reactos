@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.95 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: window.c,v 1.96 2004/01/26 08:44:51 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1060,7 +1060,7 @@ IsWindow(HWND hWnd)
 BOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
-	return (BOOL)NtUserCallOneParam((DWORD)hWnd,ONEPARAM_ROUTINE_ISWINDOWUNICODE);
+	return NtUserIsWindowUnicode(hWnd);
 }
 
 
@@ -1421,8 +1421,7 @@ STDCALL
 SetWindowContextHelpId(HWND hwnd,
           DWORD dwContextHelpId)
 {
-  return (BOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)dwContextHelpId, 
-                                     TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID);
+  return NtUserSetWindowContextHelpId(hwnd, dwContextHelpId);
 }
 
 
@@ -1433,7 +1432,7 @@ DWORD
 STDCALL
 GetWindowContextHelpId(HWND hwnd)
 {
-  return NtUserCallOneParam((DWORD)hwnd, ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID);
+  return NtUserGetWindowContextHelpId(hwnd);
 }
 
 /*

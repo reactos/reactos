@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.22 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: input.c,v 1.23 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -389,8 +389,7 @@ STDCALL
 SwapMouseButton(
   BOOL fSwap)
 {
-  return (BOOL)NtUserCallOneParam((DWORD)fSwap, 
-                                     ONEPARAM_ROUTINE_SWAPMOUSEBUTTON);
+  return NtUserSwapMouseButton(fSwap);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.33 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: message.c,v 1.34 2004/01/26 08:44:51 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -92,7 +92,7 @@ STDCALL
 SetMessageExtraInfo(
   LPARAM lParam)
 {
-  return (LPARAM)NtUserCallOneParam((DWORD)lParam, ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO);
+  return NtUserSetMessageExtraInfo(lParam);
 }
 
 

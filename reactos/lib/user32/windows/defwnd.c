@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.122 2004/01/14 21:28:24 gvg Exp $
+/* $Id: defwnd.c,v 1.123 2004/01/26 08:44:51 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1408,7 +1408,7 @@ User32DefWindowProc(HWND hWnd,
           {
             case 0xffff: /* Caret timer */
               /* switch showing byte in win32k and get information about the caret */
-              if(NtUserCallOneParam((DWORD)&CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING) && (CaretInfo.hWnd == hWnd))
+              if(NtUserSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
               {
                 DrawCaret(hWnd, &CaretInfo);
               }

@@ -186,6 +186,14 @@ NtUserCallOneParam(
   DWORD Param,
   DWORD Routine);
 
+#define TWOPARAM_ROUTINE_SETMENUITEMRECT    0x51
+#define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0x52
+  #define TPR_SGTH_ACTIVE         0x01
+  #define TPR_SGTH_FOCUS          0x02
+  #define TPR_SGTH_CAPTURE        0x03
+  #define TPR_SGTH_MENUOWNER      0x04
+  #define TPR_SGTH_MOVESIZE       0x05
+  #define TPR_SGTH_CARET          0x06
 #define TWOPARAM_ROUTINE_ENABLEWINDOW       0x53
 #define TWOPARAM_ROUTINE_UNKNOWN            0x54
 #define TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS    0x55
@@ -1866,6 +1874,13 @@ NtUserSetScrollBarInfo(
   HWND hwnd,
   LONG idObject,
   SETSCROLLBARINFO *info);
+
+typedef struct _SETMENUITEMRECT
+{
+  UINT uItem;
+  BOOL fByPosition;
+  RECT rcRect;
+} SETMENUITEMRECT, *PSETMENUITEMRECT;
 
 #endif /* __WIN32K_NTUSER_H */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.41 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: menu.c,v 1.42 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -625,7 +625,7 @@ EndMenu(VOID)
 HMENU STDCALL
 GetMenu(HWND hWnd)
 {
-  return (HMENU)NtUserCallOneParam((DWORD)hWnd, ONEPARAM_ROUTINE_GETMENU);
+  return NtUserGetMenu(hWnd);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.21 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: paint.c,v 1.22 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -253,9 +253,7 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (BOOL) NtUserCallTwoParam((DWORD) hWnd,
-                                      (DWORD) hRgn,
-                                      TWOPARAM_ROUTINE_VALIDATERGN);
+  return NtUserValidateRgn(hWnd, hRgn);
 }
 
 

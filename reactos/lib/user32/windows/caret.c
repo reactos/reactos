@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.6 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: caret.c,v 1.7 2004/01/26 08:44:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -120,7 +120,7 @@ HideCaret(HWND hWnd)
 BOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
-  return (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME);
+  return NtUserSetCaretBlinkTime(uMSeconds);
 }
 
 
@@ -131,7 +131,7 @@ BOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
 {
-  return (BOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS);
+  return NtUserSetCaretPos(X, Y);
 }
 
 
