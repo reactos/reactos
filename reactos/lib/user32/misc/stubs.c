@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47 2003/11/02 16:32:45 ekohl Exp $
+/* $Id: stubs.c,v 1.48 2003/11/07 19:13:02 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -548,46 +548,6 @@ EndTask(
 /*
  * @unimplemented
  */
-UINT
-STDCALL
-PrivateExtractIconsW(
-		     LPCWSTR szFileName,
-		     int     nIconIndex,
-		     int     cxIcon,
-		     int     cyIcon,
-		     HICON  *phicon,
-		     UINT   *piconid,
-		     UINT    nIcons,
-		     UINT    flags
-		     )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-PrivateExtractIconsA(
-		     LPCSTR szFileName,
-		     int    nIconIndex,
-		     int    cxIcon,
-		     int    cyIcon,
-		     HICON *phicon,
-		     UINT  *piconid,
-		     UINT   nIcons,
-		     UINT   flags
-		     )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 LRESULT
 STDCALL
 MenuWindowProcA(
@@ -672,40 +632,6 @@ SetWindowsHookW ( int idHook, HOOKPROC lpfn )
 HHOOK
 STDCALL
 SetWindowsHookA ( int idHook, HOOKPROC lpfn )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-PrivateExtractIconExW(
-		      DWORD u,
-		      DWORD v,
-		      DWORD w,
-		      DWORD x,
-		      DWORD y
-		      )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-PrivateExtractIconExA(
-		      DWORD u,
-		      DWORD v,
-		      DWORD w,
-		      DWORD x,
-		      DWORD y
-		      )
 {
   UNIMPLEMENTED;
   return FALSE;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.28 2003/11/02 06:58:56 navaraf Exp $
+# $Id: Makefile,v 1.29 2003/11/07 19:13:01 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -41,7 +41,8 @@ MISC_OBJECTS = \
 	misc/display.o \
 	misc/dllmain.o \
 	misc/exit.o \
-	misc/sprintf.o \
+	misc/exticon.o \
+	misc/wsprintf.o \
 	misc/stubs.o \
 	misc/winhelp.o \
 	misc/win32k.o \
