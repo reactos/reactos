@@ -562,7 +562,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
 	    HeapFree(GetProcessHeap(), 0, This->txtbackup);
 	    This->txtbackup = (WCHAR*) HeapAlloc(GetProcessHeap(),
-						 HEAP_ZERO_MEMORY, lstrlenW(hwndText)*sizeof(WCHAR));							      
+						 HEAP_ZERO_MEMORY, (lstrlenW(hwndText)+1)*sizeof(WCHAR));							      
 	    lstrcpyW(This->txtbackup, hwndText);
 
 	    /* Returns if there is no text to search and we doesn't want to display all the entries */
