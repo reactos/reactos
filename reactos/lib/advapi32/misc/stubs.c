@@ -5,6 +5,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <string.h>
 
 /*
  * @unimplemented
@@ -854,7 +855,10 @@ GetCurrentHwProfileA (
  LPHW_PROFILE_INFOA lpHwProfileInfo
  )
 {
-  return(FALSE);
+  lpHwProfileInfo->dwDockInfo = 2 /*DOCKINFO_DOCKED*/;
+  strcpy(lpHwProfileInfo->szHwProfileGuid,"{12340001-1234-1234-1234-1233456789012}");
+  strcpy(lpHwProfileInfo->szHwProfileName,"ReactOS Profile");
+  return(TRUE);
 }
 
 /*
