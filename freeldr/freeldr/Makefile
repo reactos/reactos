@@ -17,110 +17,248 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-include rules.mk	
 
-# asmcode.o has to be first in the link line because it contains the startup code
-#OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o rtl.o fs.a fs.o fat.o \
-#	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
-#	mem.o memory.o debug.o parseini.o registry.o import.o
-#ASM_OBJS = asmcode.o mb.o boot.o mem.o
-OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o oslist.o version.o
-LIBS = arch rtl fs ui reactos comm disk mm cache inifile
-LIB_FILES = arch/arch.a rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a
-LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a inifile/inifile.a
+#############################################
+# CHANGE THESE FOR YOUR OUTPUT
+#
+TARGET		=	i386
+DEBUG		=	1			# Debugging information on (bigger binary)
+#DEBUG		=	0			# Debugging information off (smaller binary)
+
+OBJDIR		=	obj
+OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
+
+#############################################
+# COMPILER AND LINKER PROGRAMS
+#
+CC			= gcc
+LD			= ld
+AR			= ar
+RM			= cmd /C del
+CP			= cmd /C copy
+MKDIR		= cmd /C md
+RMDIR		= cmd /C rd
+MAKE		= cmd /C make
+NASM_CMD	= nasm
+OBJCOPY		= objcopy
+SED			= $(SRCDIR)/../sed
+
+#-----------------------------------------------------------------------------------------------------
+# TEST IF WE ARE IN THE TARGET DIRECTORY
+# IF NOT WE WILL CHANGE TO THE TARGET DIRECTORY AND RUN MAKE FROM THERE
+#-----------------------------------------------------------------------------------------------------
+#ifeq (,$(filter $(CURDIR)/$(OUTPUT_DIR),$(notdir $(CURDIR))))
+ifneq ($(CURDIR), $(SRCDIR)/$(OUTPUT_DIR))
+
+.SUFFIXES:
+
+#############################################
+# VARIABLE TO CHANGE TO TARGET DIRECTORY AND INVOKE MAKE FROM THERE
+#
+MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
+			  -f ../../Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
+
+.PHONY: CHANGE_TO_TARGET
+CHANGE_TO_TARGET: $(OBJDIR) $(OBJDIR)/$(TARGET)
+	+@$(MAKETARGET) > nul
+# If you are compiling on a linux box you can remove the above "> nul"
+# it is only there because Microsoft likes to print its version string
+# during my make and I don't like it to print it's version string
+
+$(OBJDIR):
+	@echo Creating directory: $(OBJDIR)
+	@$(MKDIR) $(OBJDIR)
+
+$(OBJDIR)/$(TARGET): $(OBJDIR)
+	@echo Creating directory: $(OBJDIR)\$(TARGET)
+	@$(MKDIR) $(OBJDIR)\$(TARGET)
+
+Makefile : ;
+
+% :: CHANGE_TO_TARGET
+
+#############################################
 
 .PHONY : clean
-
-all:	freeldr.sys
-
-freeldr.sys:	c_code.a end.o
-#	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys c_code.a end.o
-	$(LD) -N -Ttext=0x8000 -s -o freeldr.exe c_code.a end.o
-	$(OBJCOPY) -O binary freeldr.exe freeldr.sys
-
-freeldr.exe:	asmcode.a c_code.a
-	$(LD) -o freeldr.exe asmcode.a c_code.a
-
-c_code.a:	$(LIBS) c_code1.a c_code2.a
-	$(LD) -r -o c_code.a $(LIB_FILES) c_code1.a c_code2.a
-
-c_code1.a:	$(LIBS)
-	$(LD) -r -o c_code1.a $(LIB_FILES2)
-
-c_code2.a:	$(OBJS)
-	$(LD) -r -o c_code2.a $(OBJS)
-
-freeldr.o:	freeldr.c freeldr.h rtl.h fs.h reactos.h ui.h arch.h miscboot.h
-	$(CC) $(FLAGS) -o freeldr.o -c freeldr.c
-
-miscboot.o:	miscboot.c freeldr.h arch.h rtl.h fs.h ui.h miscboot.h
-	$(CC) $(FLAGS) -o miscboot.o -c miscboot.c
-
-options.o:	options.c freeldr.h rtl.h ui.h options.h
-	$(CC) $(FLAGS) -o options.o -c options.c
-
-linux.o:	linux.c freeldr.h rtl.h ui.h linux.h
-	$(CC) $(FLAGS) -o linux.o -c linux.c
-
-multiboot.o:	multiboot.c freeldr.h rtl.h fs.h multiboot.h ui.h
-	$(CC) $(FLAGS) -o multiboot.o -c multiboot.c
-
-debug.o:	debug.c debug.h
-	$(CC) $(FLAGS) -o debug.o -c debug.c
-
-oslist.o:	oslist.c oslist.h
-	$(CC) $(FLAGS) -o oslist.o -c oslist.c
-
-version.o:	version.c version.h
-	$(CC) $(FLAGS) -o version.o -c version.c
-
-end.o:	end.S
-	$(CC) $(FLAGS) -o end.o -c end.S
-
-arch:
-	$(MAKE) -C arch
-
-rtl:
-	$(MAKE) -C rtl
-
-fs:
-	$(MAKE) -C fs
-
-ui:
-	$(MAKE) -C ui
-
-reactos:
-	$(MAKE) -C reactos
-
-comm:
-	$(MAKE) -C comm
-
-disk:
-	$(MAKE) -C disk
-
-mm:
-	$(MAKE) -C mm
-
-cache:
-	$(MAKE) -C cache
-
-inifile:
-	$(MAKE) -C inifile
-
-.PHONY : $(LIBS)
-
 clean:
-	- $(RM) *.o
-	- $(RM) *.a
-	- $(RM) *.exe
-	- $(RM) *.sys
-	$(MAKE) -C arch clean
-	$(MAKE) -C reactos clean
-	$(MAKE) -C comm clean
-	$(MAKE) -C disk clean
-	$(MAKE) -C mm clean
-	$(MAKE) -C ui clean
-	$(MAKE) -C fs clean
-	$(MAKE) -C rtl clean
-	$(MAKE) -C cache clean
-	$(MAKE) -C inifile clean
+	@echo Cleaning directory $(OBJDIR)\$(TARGET)
+	@-$(RM) /Q $(OBJDIR)\$(TARGET)\*.*
+	@echo Removing directory $(OBJDIR)\$(TARGET)
+	@-$(RMDIR) $(OBJDIR)\$(TARGET)
+	@-$(RMDIR) $(OBJDIR)
+	@echo Clean ALL done.
+
+#############################################
+
+#-----------------------------------------------------------------------------------------------------
+# END MAGIC TARGET DIRECTORY CHANGE STUFF
+#-----------------------------------------------------------------------------------------------------
+else
+
+#############################################
+# COMPILER COMMAND LINE OPTIONS
+#
+COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O3 -MD
+
+#############################################
+# COMPILER DEFINES
+#
+ifeq ($(DEBUG),1)
+COMPILER_DEFINES = -DDEBUG
+else
+COMPILERS_DEFINES =
+endif
+
+#############################################
+# INCLUDE DIRECTORY OPTIONS
+#
+COMPILER_INCLUDES	=	-I$(SRCDIR)/include
+
+#############################################
+# COMPILER FLAGS
+#
+CFLAGS	=	$(COMPILER_OPTIONS)		\
+			$(COMPILER_DEFINES)		\
+			$(COMPILER_INCLUDES)
+
+#############################################
+# LINKER COMMAND LINE OPTIONS
+#
+#LINKER_OPTIONS = -N -Ttext=0x8000 --oformat=binary -s
+LINKER_OPTIONS = -N -Ttext=0x8000 -s
+
+#############################################
+# LINKERS FLAGS
+#
+LFLAGS	=	$(LINKER_OPTIONS)
+
+#############################################
+# LIST ALL THE OBJECT FILE GROUPS
+#
+# fathelp.o must come first in the link line because it contains bootsector helper code
+# arch.o must come second in the link line because it contains the startup code
+# end.o must come last in the link line
+ARCH_OBJS	=	fathelp.o	\
+				arch.o		\
+				boot.o		\
+				linux.o		\
+				mb.o		\
+				mem.o		\
+				diskint13.o
+
+RTL_OBJS	=	memory.o	\
+				print.o		\
+				stdlib.o	\
+				string.o	\
+				list.o
+
+FS_OBJS		=	fs.o		\
+				fat.o		\
+				iso.o
+
+UI_OBJS		=	tui.o		\
+				menu.o
+
+REACTOS_OBJS=	reactos.o	\
+				arcname.o	\
+				hwdetect.o	\
+				reghive.o	\
+				registry.o
+
+COMM_OBJS	=	rs232.o		\
+				portio.o
+
+DISK_OBJS	=	disk.o		\
+				geometry.o	\
+				partition.o
+
+MM_OBJS		=	mm.o		\
+				mm_init.o
+
+CACHE_OBJS	=	cache.o		\
+				blocklist.o
+
+INIFILE_OBJS=	inifile.o	\
+				ini_init.o	\
+				parse.o
+
+FREELDR_OBJS=	freeldr.o	\
+				miscboot.o	\
+				options.o	\
+				linuxboot.o	\
+				multiboot.o	\
+				debug.o		\
+				oslist.o	\
+				version.o	\
+				end.o		# Must come last in the link line
+
+#############################################
+# ALL THE OBJECTS
+#
+OBJS		=	$(ARCH_OBJS)		\
+				$(RTL_OBJS)			\
+				$(FS_OBJS)			\
+				$(UI_OBJS)			\
+				$(REACTOS_OBJS)		\
+				$(COMM_OBJS)		\
+				$(DISK_OBJS)		\
+				$(MM_OBJS)			\
+				$(CACHE_OBJS)		\
+				$(INIFILE_OBJS)		\
+				$(FREELDR_OBJS)
+
+#############################################
+# SET THE VPATH SO MAKE CAN FIND THE SOURCE FILES
+#
+VPATH		=	$(SRCDIR)/					\
+				$(SRCDIR)/arch/$(TARGET)	\
+				$(SRCDIR)/rtl				\
+				$(SRCDIR)/fs				\
+				$(SRCDIR)/ui				\
+				$(SRCDIR)/reactos			\
+				$(SRCDIR)/comm				\
+				$(SRCDIR)/disk				\
+				$(SRCDIR)/mm				\
+				$(SRCDIR)/cache				\
+				$(SRCDIR)/inifile			\
+				$(SRCDIR)/include
+
+#############################################
+
+all : freeldr.sys
+	@echo Make ALL done.
+
+#############################################
+
+freeldr.sys : $(OBJS)
+	@echo ===================================================== LINKING $@
+#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(OBJS)
+	@$(LD) $(LFLAGS) -o freeldr.exe $(OBJS)
+	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
+
+#############################################
+
+%.o :: %.c
+	@echo ===================================================== Compiling $*
+	@$(CC) $(CFLAGS) -o $@ -c $<
+	@$(SED) -e "s/\($*\)\.o[ :]*/\1.o $*.dep : /g" < $*.d > $*.dep
+#	@$(SED) -e "s/#.*//" -e "s/^[^:]*: *//" -e "s/ *\\$$//" -e "/^$$/ d" -e "s/$$/ :/" < $*.d >> $*.P
+
+%.o :: %.S
+	@echo ===================================================== Assembling $*
+	@$(CC) $(CFLAGS) -o $@ -c $<
+	@$(SED) -e "s/\($*\)\.o[ :]*/\1.o $*.dep : /g" < $*.d > $*.dep
+#	@$(SED) -e "s/#.*//" -e "s/^[^:]*: *//" -e "s/ *\\$$//" -e "/^$$/ d" -e "s/$$/ :/" < $*.d >> $*.P
+
+%.o :: %.asm
+	@echo ===================================================== Assembling $*
+	@$(NASM_CMD) -o $@ -f coff $<
+
+#############################################
+
+# Include the automagically generated dependencies
+-include $(OBJS:%.o=%.dep)
+
+#############################################
+
+endif

@@ -1,3 +1,11 @@
+Changes in v1.2.1 (5/3/2002)
+
+- Makefile updates
+- Optimized the Makefile
+- Removed recursive make functionality (builds much faster now)
+- Places all output into one single directory
+- Added automagically generated dependencies
+
 Changes in v1.2 (4/30/2002)
 
 - All Linux kernels are supported (zImage & bzImage, loaded high & low)
