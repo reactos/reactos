@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.13 2003/08/20 14:08:18 weiden Exp $
+/* $Id: bitmap.c,v 1.14 2003/08/22 20:17:08 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -125,7 +125,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
 	  h2Resource = FindResourceW(hinst,
                      MAKEINTRESOURCEW(id),
-                     MAKEINTRESOURCEW(RT_ICON));
+                     MAKEINTRESOURCEW(RT_CURSOR));
 
       hResource = LoadResource(hinst, h2Resource);
       if (hResource == NULL)
