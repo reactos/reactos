@@ -421,7 +421,7 @@ RegQueryValue(HKEY Key,
 				    VALUE,
 				    ValueList);
 
-    DbgPrint((DPRINT_REGISTRY, "Value name '%s'\n", Value->Name));
+    DbgPrint((DPRINT_REGISTRY, "Searching for '%s'. Value name '%s'\n", ValueName, Value->Name));
 
 	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;

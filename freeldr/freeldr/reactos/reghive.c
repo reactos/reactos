@@ -207,9 +207,25 @@ getKeyValueTypeFromChunk (PCHAR  regChunk, PCHAR  dataFormat, int *keyValueType)
     if (*regChunk == ':')
       regChunk++;
   }
+  else if (strncmp (regChunk, "multi", 5) == 0)
+  {
+    strcpy (dataFormat, "multi");
+    *keyValueType = REG_MULTI_SZ;
+    regChunk += 5;
+    if (*regChunk == ':')
+      regChunk++;
+  }
+  else if (strncmp (regChunk, "expand", 6) == 0)
+  {
+    strcpy (dataFormat, "expand");
+    *keyValueType = REG_EXPAND_SZ;
+    regChunk += 6;
+    if (*regChunk == ':')
+      regChunk++;
+  }
   else
   {
-//    UNIMPLEMENTED;
+    UNIMPLEMENTED;
   }
 
   return  *regChunk ? regChunk : 0;
@@ -256,9 +272,46 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
       regChunk++;
     }
   }
+  else if (strcmp (dataFormat, "multi") == 0)
+  {
+    while (*regChunk == '\"')
+    {
+      regChunk++;
+      while (*regChunk != 0 && *regChunk != '\"')
+      {
+        dataSize++;
+        regChunk++;
+      }
+      regChunk++;
+      dataSize++;
+      if (*regChunk == ',')
+      {
+        regChunk++;
+        regChunk = skipWhitespaceInChunk (regChunk);
+        if (*regChunk == '\\')
+        {
+          regChunk++;
+          regChunk = skipWhitespaceInChunk (regChunk);
+        }
+      }
+      else
+        break;
+    }
+    dataSize++;
+  }
+  else if (strcmp (dataFormat, "expand") == 0)
+  {
+    regChunk++;
+    while (*regChunk != 0 && *regChunk != '\"')
+    {
+      dataSize++;
+      regChunk++;
+    }
+    dataSize++;
+  }
   else
   {
-//    UNIMPLEMENTED;
+    UNIMPLEMENTED;
   }
 
   return  dataSize;
@@ -331,9 +384,48 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
     }
     memcpy(data, &ulValue, sizeof(ULONG));
   }
+  else if (strcmp (dataFormat, "multi") == 0)
+  {
+    ptr = (PCHAR)data;
+    while (*regChunk == '\"')
+    {
+      regChunk++;
+      while (*regChunk != 0 && *regChunk != '\"')
+      {
+        *ptr++ = (CHAR)*regChunk++;
+      }
+      regChunk++;
+      *ptr++ = 0;
+      if (*regChunk == ',')
+      {
+        regChunk++;
+        regChunk = skipWhitespaceInChunk (regChunk);
+        if (*regChunk == '\\')
+        {
+          regChunk++;
+          regChunk = skipWhitespaceInChunk (regChunk);
+        }
+      }
+      else
+        break;
+    }
+    *ptr = 0;
+  }
+  else if (strcmp (dataFormat, "expand") == 0)
+  {
+    /* convert quoted string to zero-terminated Unicode string */
+    ptr = (PCHAR)data;
+    regChunk++;
+    while (*regChunk != 0 && *regChunk != '\"')
+    {
+      *ptr++ = (CHAR)*regChunk++;
+    }
+    *ptr = 0;
+    regChunk++;
+  }
   else
   {
-//    UNIMPLEMENTED;
+    UNIMPLEMENTED;
   }
 
   return  *regChunk ? regChunk : 0;
@@ -365,14 +457,13 @@ setKeyValue (HKEY currentKey,
   return  TRUE;
 }
 
-
 VOID
 RegImportHive(PCHAR ChunkBase,
 	      ULONG ChunkSize)
 {
-  HKEY currentKey = NULL;
-  int  newKeySize = 0;
+  HKEY  currentKey = INVALID_HANDLE_VALUE;
   char *newKeyName = NULL;
+  int  newKeySize;
   char  dataFormat [10];
   int  keyValueType;
   int  dataSize = 0;
@@ -380,7 +471,7 @@ RegImportHive(PCHAR ChunkBase,
   PVOID  data = 0;
   PCHAR regChunk;
 
-  DbgPrint((DPRINT_REGISTRY, "ChunkBase 0x%x  ChunkSize %d\n", ChunkBase, ChunkSize));
+  DbgPrint((DPRINT_REGISTRY, "ChunkBase %p  ChunkSize %lx\n", ChunkBase, ChunkSize));
 
   regChunk = checkAndSkipMagic (ChunkBase);
   if (regChunk == 0)
@@ -394,13 +485,10 @@ RegImportHive(PCHAR ChunkBase,
 
     if (*regChunk == '[')
     {
-      DbgPrint((DPRINT_REGISTRY, "Line: %s\n", regChunk));
-
-      if (currentKey != NULL)
+      if (currentKey != INVALID_HANDLE_VALUE)
       {
         DbgPrint((DPRINT_REGISTRY, "Closing current key: 0x%lx\n", currentKey));
-
-        currentKey = NULL;
+        currentKey = INVALID_HANDLE_VALUE;
       }
 
       regChunk++;
@@ -417,7 +505,7 @@ RegImportHive(PCHAR ChunkBase,
         continue;
 
       currentKey = createNewKey (newKeyName);
-      if (currentKey == NULL)
+      if (currentKey == INVALID_HANDLE_VALUE)
       {
         regChunk = skipToNextKeyInChunk (regChunk);
         continue;
@@ -427,13 +515,13 @@ RegImportHive(PCHAR ChunkBase,
     }
     else
     {
-      if (currentKey == NULL)
+      if (currentKey == INVALID_HANDLE_VALUE)
       {
         regChunk = skipToNextKeyInChunk (regChunk);
         continue;
       }
 
-      newKeySize = computeKeyValueNameSize(regChunk);
+      newKeySize = computeKeyValueNameSize (regChunk);
       if (!allocateKeyName (&newKeyName, newKeySize))
       {
         regChunk = 0;
@@ -474,10 +562,16 @@ RegImportHive(PCHAR ChunkBase,
     }
   }
 
+  if (currentKey != INVALID_HANDLE_VALUE)
+  {
+    DbgPrint((DPRINT_REGISTRY, "Closing current key: 0x%lx\n", currentKey));
+  }
+
   if (newKeyName != NULL)
   {
     MmFreeMemory(newKeyName);
   }
+
   if (data != NULL)
   {
     MmFreeMemory(data);
@@ -486,62 +580,9 @@ RegImportHive(PCHAR ChunkBase,
   return;
 }
 
-#if 0
-static PCHAR
-bprintf(char *buffer, char *format, ... )
-{
-  int *dataptr = (int *) &format;
-  char c, *ptr, str[16];
-  char *p = buffer;
-
-  dataptr++;
-
-  while ((c = *(format++)))
-    {
-      if (c != '%')
-      {
-	*p = c;
-	p++;
-      }
-      else
-	switch (c = *(format++))
-	  {
-	  case 'd': case 'u': case 'x':
-	    *convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
-
-	    ptr = str;
-
-	    while (*ptr)
-	    {
-	      *p = *(ptr++);
-	      p++;
-	    }
-	    break;
-
-	  case 'c':
-	    *p = (*(dataptr++))&0xff;
-	    p++;
-	    break;
-
-	  case 's':
-	    ptr = (char *)(*(dataptr++));
-
-	    while ((c = *(ptr++)))
-	    {
-	      *p = c;
-	      p++;
-	    }
-	    break;
-	  }
-    }
-  return(p);
-}
-#endif
-
 BOOL
 RegExportHive(PCHAR ChunkBase, PULONG ChunkSize)
 {
-
   return(TRUE);
 }
 

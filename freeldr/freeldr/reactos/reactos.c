@@ -157,7 +157,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 {
   LONG rc = 0;
   HKEY hGroupKey, hServiceKey, hDriverKey;
-  char ValueBuffer[256];
+  char ValueBuffer[512];
   char ServiceName[256];
   ULONG BufferSize;
   ULONG Index;
@@ -175,7 +175,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
 		  &hGroupKey);
-//  printf("RegOpenKey(): rc %d\n", (int)rc);
+  DbgPrint((DPRINT_REACTOS, "RegOpenKey(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
     return;
 
@@ -183,51 +183,50 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
 		  &hServiceKey);
-//  printf("RegOpenKey(): rc %d\n", (int)rc);
+  DbgPrint((DPRINT_REACTOS, "RegOpenKey(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
     return;
 
-//  printf("hKey: %x\n", (int)hKey);
+  DbgPrint((DPRINT_REACTOS, "hServiceKey: %x\n", (int)hServiceKey));
 
-  BufferSize = 256;
-  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)ValueBuffer, &BufferSize);
-//  printf("RegQueryValue(): rc %d\n", (int)rc);
+  BufferSize = sizeof(ValueBuffer);
+  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)&ValueBuffer, &BufferSize);
+  DbgPrint((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
     return;
 
+  DbgPrint((DPRINT_REACTOS, "BufferSize: %d \n", (int)BufferSize));
 
-//  printf("BufferSize: %d \n", (int)BufferSize);
-
-//  printf("ValueBuffer: '%s' \n", ValueBuffer);
+  DbgPrint((DPRINT_REACTOS, "ValueBuffer: '%s' \n", ValueBuffer));
 
   GroupName = ValueBuffer;
   while (*GroupName)
     {
-//      printf("Driver group: '%s'\n", GroupName);
+      DbgPrint((DPRINT_REACTOS, "Driver group: '%s'\n", GroupName));
 
       /* enumerate all drivers */
       Index = 0;
       while (TRUE)
 	{
-	  ValueSize = 256;
+	  ValueSize = sizeof(ValueBuffer);
 	  rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
-//	  printf("RegEnumKey(): rc %d\n", (int)rc);
+	  DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
 	  if (rc == ERROR_NO_MORE_ITEMS)
 	    break;
 	  if (rc != ERROR_SUCCESS)
 	    return;
-//	  printf("Service %d: '%s'\n", (int)Index, ServiceName);
+	  DbgPrint((DPRINT_REACTOS, "Service %d: '%s'\n", (int)Index, ServiceName));
 
 	  /* open driver Key */
 	  rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
 
 	  ValueSize = sizeof(ULONG);
 	  rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
-//	  printf("  Start: %x  \n", (int)StartValue);
+	  DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
 	  DriverGroupSize = 256;
 	  rc = RegQueryValue(hDriverKey, "Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-//	  printf("  Group: %s  \n", DriverGroup);
+	  DbgPrint((DPRINT_REACTOS, "  Group: '%s'  \n", DriverGroup));
 
 	  if ((StartValue == 0) && (stricmp(DriverGroup, GroupName) == 0))
 	    {
@@ -239,7 +238,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 				 &ValueSize);
 	      if (rc != ERROR_SUCCESS)
 		{
-//		  printf("  ImagePath: not found\n");
+		  DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
 		  strcpy(ImagePath, szSystemRoot);
 		  strcat(ImagePath, "system32\\drivers\\");
 		  strcat(ImagePath, ServiceName);
@@ -247,22 +246,26 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		}
 	      else
 		{
-//		  printf("  ImagePath: '%s'\n", ImagePath);
+		  DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
 		}
-//	      printf("  Loading driver: '%s'\n", ImagePath);
+      DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
 
 	      if (nPos < 100)
 		nPos += 5;
 
 	      LoadDriver(ImagePath, nPos);
 	    }
+		else
+			{
+        DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d and Group '%s' (Current group '%s')\n",
+          ImagePath, StartValue, DriverGroup, GroupName));
+			}
 	  Index++;
 	}
 
       GroupName = GroupName + strlen(GroupName) + 1;
     }
 }
-
 
 #if 0
 static BOOL

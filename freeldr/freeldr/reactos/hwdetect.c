@@ -20,20 +20,9 @@
 
 #include <freeldr.h>
 #include <rtl.h>
-
-//#define NDEBUG
+#include <debug.h>
 
 VOID
 DetectHardware(VOID)
 {
-
-#ifndef NDEBUG
-  printf("DetectHardware() called\n");
-#endif
-
-
-#ifndef NDEBUG
-  printf("DetectHardware() done\n");
-#endif
-//for(;;);
 }
