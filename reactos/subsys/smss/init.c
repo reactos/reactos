@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.46 2003/05/12 19:46:17 ekohl Exp $
+/* $Id: init.c,v 1.47 2003/05/14 21:27:53 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -862,7 +862,7 @@ InitSessionManager(HANDLE Children[])
   if (!NT_SUCCESS(Status))
     {
       PrintString("SM: Failed to preload system DLLs (Status %lx)\n", Status);
-      return(Status);
+      /* Don't crash ReactOS if DLLs cannot be loaded */
     }
 
   /* Create paging files */
