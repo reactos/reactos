@@ -631,7 +631,8 @@ typedef struct
     HFONT hFont;
 } ABOUT_INFO;
 
-#define		IDC_STATIC_TEXT		100
+#define		IDC_STATIC_TEXT1	100
+#define		IDC_STATIC_TEXT2	101
 #define		IDC_LISTBOX		99
 #define		IDC_WINE_TEXT		98
 
@@ -754,7 +755,8 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
                 GetWindowTextW( hWnd, Template, sizeof(Template)/sizeof(WCHAR) );
                 sprintfW( AppTitle, Template, info->szApp );
                 SetWindowTextW( hWnd, AppTitle );
-                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT), info->szOtherStuff );
+                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT1), info->szApp );
+                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT2), info->szOtherStuff );
                 hWndCtl = GetDlgItem(hWnd, IDC_LISTBOX);
                 SendMessageW( hWndCtl, WM_SETREDRAW, 0, 0 );
                 SendMessageW( hWndCtl, WM_SETFONT, (WPARAM)info->hFont, 0 );
