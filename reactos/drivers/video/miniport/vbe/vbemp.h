@@ -158,51 +158,72 @@ typedef struct {
 } VBE_DEVICE_EXTENSION, *PVBE_DEVICE_EXTENSION;
 
 VP_STATUS STDCALL
-VBEFindAdapter(IN PVOID HwDeviceExtension, IN PVOID HwContext,
-   IN PWSTR ArgumentString, IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
+VBEFindAdapter(
+   IN PVOID HwDeviceExtension,
+   IN PVOID HwContext,
+   IN PWSTR ArgumentString,
+   IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again);
 
 BOOLEAN STDCALL
 VBEInitialize(PVOID HwDeviceExtension);
 
 BOOLEAN STDCALL
-VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket);
+VBEStartIO(
+   PVOID HwDeviceExtension,
+   PVIDEO_REQUEST_PACKET RequestPacket);
 
 VP_STATUS STDCALL
-VBESetPowerState(PVOID HwDeviceExtension, ULONG HwId,
+VBEGetPowerState(
+   PVOID HwDeviceExtension,
+   ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
 VP_STATUS STDCALL
-VBEGetPowerState(PVOID HwDeviceExtension, ULONG HwId,
+VBESetPowerState(
+   PVOID HwDeviceExtension,
+   ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
 BOOL FASTCALL
-VBESetCurrentMode(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MODE RequestedMode, PSTATUS_BLOCK StatusBlock);
-
-BOOL FASTCALL
-VBEResetDevice(PVBE_DEVICE_EXTENSION DeviceExtension,
+VBESetCurrentMode(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE RequestedMode,
    PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
-VBEMapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MEMORY RequestedAddress, PVIDEO_MEMORY_INFORMATION MapInformation,
+VBEResetDevice(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
-VBEUnmapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
+VBEMapVideoMemory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MEMORY RequestedAddress,
+   PVIDEO_MEMORY_INFORMATION MapInformation,
    PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
-VBEQueryNumAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_NUM_MODES Modes, PSTATUS_BLOCK StatusBlock);
+VBEUnmapVideoMemory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
-VBEQueryAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MODE_INFORMATION ReturnedModes, PSTATUS_BLOCK StatusBlock);
+VBEQueryNumAvailModes(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_NUM_MODES Modes,
+   PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
-VBESetColorRegisters(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_CLUT ColorLookUpTable, PSTATUS_BLOCK StatusBlock);
+VBEQueryAvailModes(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE_INFORMATION ReturnedModes,
+   PSTATUS_BLOCK StatusBlock);
+
+BOOL FASTCALL
+VBESetColorRegisters(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_CLUT ColorLookUpTable,
+   PSTATUS_BLOCK StatusBlock);
 
 #endif /* VBEMP_H */

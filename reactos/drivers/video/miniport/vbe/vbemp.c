@@ -17,79 +17,41 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * FIXMEs:
+ * TODO:
  * - Check input parameters everywhere.
- * - Add some comments.
- * - Implement support power management.
+ * - Implement power management support.
  */
+
+/* INCLUDES *******************************************************************/
 
 #include "vbemp.h"
 
-/******************************************************************************/
+/* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
-PVOID FASTCALL
-MapPM(ULONG Address, ULONG Size)
+VP_STATUS STDCALL
+DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
-   LARGE_INTEGER Offset;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING PhysMemName;
-   HANDLE PhysMemHandle;
-   NTSTATUS Status;
-   PVOID BaseAddress;
-   ULONG ViewSize;
+   VIDEO_HW_INITIALIZATION_DATA InitData;
 
-   /*
-    * Open the physical memory section
-    */
-   RtlInitUnicodeString(&PhysMemName, L"\\Device\\PhysicalMemory");
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &PhysMemName,
-			      0,
-			      NULL,
-			      NULL);
-   Status = ZwOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS, 
-			  &ObjectAttributes);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT(("VBEMP: Couldn't open \\Device\\PhysicalMemory\n"));
-      return NULL;
-   }
-
-   /*
-    * Map the BIOS and device registers into the address space
-    */
-   Offset.QuadPart = Address;
-   ViewSize = Size;
-   BaseAddress = (PVOID)Address;
-   Status = NtMapViewOfSection(PhysMemHandle,
-			       NtCurrentProcess(),
-			       &BaseAddress,
-			       0,
-			       8192,
-			       &Offset,
-			       &ViewSize,
-			       ViewUnmap,
-			       0,
-			       PAGE_EXECUTE_READWRITE);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT(("VBEMP: Couldn't map physical memory (%x)\n", Status));
-      NtClose(PhysMemHandle);
-      return NULL;
-   }
-   NtClose(PhysMemHandle);
-
-   if (BaseAddress != (PVOID)Address)
-   {
-      DPRINT(("VBEMP: Couldn't map physical memory at the right address "
-              "(was %x)(%x)\n", BaseAddress, Address));
-      return NULL;
-   }
-
-   return BaseAddress;
+   VideoPortZeroMemory(&InitData, sizeof(InitData));
+   InitData.HwFindAdapter = VBEFindAdapter;
+   InitData.HwInitialize = VBEInitialize;
+   InitData.HwStartIO = VBEStartIO;
+   InitData.HwGetPowerState = VBEGetPowerState;
+   InitData.HwSetPowerState = VBESetPowerState;
+   InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
+  
+   return VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 
-ULONG FASTCALL
+/*
+ * InitializeVideoAddressSpace
+ *
+ * This function maps the BIOS memory into out virtual address space and
+ * setups real-mode interrupt table.
+ */
+
+BOOL FASTCALL
 InitializeVideoAddressSpace(VOID)
 {
    NTSTATUS Status;
@@ -98,9 +60,44 @@ InitializeVideoAddressSpace(VOID)
    ULONG ViewSize;
    CHAR IVT[1024];
    CHAR BDA[256];
+   LARGE_INTEGER Offset;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING PhysMemName;
+   HANDLE PhysMemHandle;
 
-   if (MapPM(0xa0000, 0x30000) == NULL)
+   /*
+    * Open the physical memory section
+    */
+
+   RtlInitUnicodeString(&PhysMemName, L"\\Device\\PhysicalMemory");
+   InitializeObjectAttributes(&ObjectAttributes, &PhysMemName, 0, NULL, NULL);
+   Status = ZwOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
    {
+      DPRINT(("VBEMP: Couldn't open \\Device\\PhysicalMemory\n"));
+      return FALSE;
+   }
+
+   /*
+    * Map the BIOS and device registers into the address space
+    */
+
+   Offset.QuadPart = 0xa0000;
+   ViewSize = 0x30000;
+   BaseAddress = (PVOID)0xa0000;
+   Status = NtMapViewOfSection(PhysMemHandle, NtCurrentProcess(), &BaseAddress,
+      0, 8192, &Offset, &ViewSize, ViewUnmap, 0, PAGE_EXECUTE_READWRITE);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT(("VBEMP: Couldn't map physical memory (%x)\n", Status));
+      NtClose(PhysMemHandle);
+      return FALSE;
+   }
+   NtClose(PhysMemHandle);
+   if (BaseAddress != (PVOID)0xa0000)
+   {
+      DPRINT(("VBEMP: Couldn't map physical memory at the right address "
+              "(was %x)(%x)\n", BaseAddress, Address));
       return FALSE;
    }
 
@@ -108,6 +105,7 @@ InitializeVideoAddressSpace(VOID)
     * Map some memory to use for the non-BIOS parts of the v86 mode address
     * space
     */
+
    BaseAddress = (PVOID)0x1;
    ViewSize = 0x20000;
    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
@@ -119,18 +117,19 @@ InitializeVideoAddressSpace(VOID)
    if (!NT_SUCCESS(Status))
    {
       DPRINT(("VBEMP: Failed to allocate virtual memory (Status %x)\n", Status));
-      return 0;
+      return FALSE;
    }
    if (BaseAddress != (PVOID)0x0)
    {
       DPRINT(("VBEMP: Failed to allocate virtual memory at right address "
                "(was %x)\n", BaseAddress));
-      return 0;
+      return FALSE;
    }
 
    /*
     * Get the real mode IVT from the kernel
     */
+
    Status = NtVdmControl(0, IVT);
    if (!NT_SUCCESS(Status))
    {
@@ -141,44 +140,36 @@ InitializeVideoAddressSpace(VOID)
    /*
     * Copy the real mode IVT into the right place
     */
+
    NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
    memcpy(NullAddress, IVT, 1024);
    
    /*
     * Get the BDA from the kernel
     */
+
    Status = NtVdmControl(1, BDA);
    if (!NT_SUCCESS(Status))
    {
       DPRINT(("VBEMP: NtVdmControl failed (status %x)\n", Status));
-      return 0;
+      return FALSE;
    }
    
    /*
     * Copy the BDA into the right place
     */
+
    memcpy((PVOID)0x400, BDA, 256);
 
-   return 1;
+   return TRUE;
 }
 
 VP_STATUS STDCALL
-DriverEntry(IN PVOID Context1, IN PVOID Context2)
-{
-   VIDEO_HW_INITIALIZATION_DATA InitData;
-
-   VideoPortZeroMemory(&InitData, sizeof(InitData));
-   InitData.HwFindAdapter = VBEFindAdapter;
-   InitData.HwInitialize = VBEInitialize;
-   InitData.HwStartIO = VBEStartIO;
-   InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
-  
-   return VideoPortInitialize(Context1, Context2, &InitData, NULL);
-}
-
-VP_STATUS STDCALL
-VBEFindAdapter(IN PVOID HwDeviceExtension, IN PVOID HwContext,
-   IN PWSTR ArgumentString, IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
+VBEFindAdapter(
+   IN PVOID HwDeviceExtension,
+   IN PVOID HwContext,
+   IN PWSTR ArgumentString,
+   IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again)
 {
    KV86M_REGISTERS BiosRegisters;
@@ -187,12 +178,6 @@ VBEFindAdapter(IN PVOID HwDeviceExtension, IN PVOID HwContext,
    PVBE_INFO VbeInfo;
    PVBE_DEVICE_EXTENSION VBEDeviceExtension = 
      (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
-
-   /*
-    * We support only one adapter.
-    */
-
-   *Again = FALSE;
 
    /*
     * Map the BIOS parts of memory into our memory space and intitalize
@@ -262,6 +247,13 @@ VBEFindAdapter(IN PVOID HwDeviceExtension, IN PVOID HwContext,
    }
 }
 
+/*
+ * VBEInitialize
+ *
+ * Performs the first initialization of the adapter, after the HAL has given
+ * up control of the video hardware to the video port driver.
+ */
+
 BOOLEAN STDCALL
 VBEInitialize(PVOID HwDeviceExtension)
 {
@@ -299,6 +291,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    VBEDeviceExtension->VBEVersion = VbeInfo->Version;
    VBEDeviceExtension->VGACompatible = !(VbeInfo->Capabilities & 2);
+
    /*
     * Get the number of supported video modes.
     */
@@ -341,7 +334,6 @@ VBEInitialize(PVOID HwDeviceExtension)
       if (BiosRegisters.Eax == 0x4F &&
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
-/*          (VbeModeInfo->MemoryModel == 5 || VbeModeInfo->MemoryModel == 6) &&*/
           (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR))
       {
          memcpy(VBEDeviceExtension->ModeInfo + ModeCount, 
@@ -383,6 +375,10 @@ VBEInitialize(PVOID HwDeviceExtension)
    
    VBEDeviceExtension->ModeCount = ModeCount;
 
+   /*
+    * Print the supported video modes when DBG is set.
+    */
+
 #ifdef DBG
    for (CurrentMode = 0;
         CurrentMode < ModeCount;
@@ -398,8 +394,16 @@ VBEInitialize(PVOID HwDeviceExtension)
    return TRUE;
 }
 
+/*
+ * VBEStartIO
+ *
+ * Processes the specified Video Request Packet.
+ */
+
 BOOLEAN STDCALL
-VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
+VBEStartIO(
+   PVOID HwDeviceExtension,
+   PVIDEO_REQUEST_PACKET RequestPacket)
 {
    BOOL Result;
 
@@ -413,12 +417,15 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
          }
-         Result = VBESetCurrentMode((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
-            (PVIDEO_MODE)RequestPacket->InputBuffer, RequestPacket->StatusBlock);
+         Result = VBESetCurrentMode(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+            (PVIDEO_MODE)RequestPacket->InputBuffer,
+            RequestPacket->StatusBlock);
          break;
 
       case IOCTL_VIDEO_RESET_DEVICE:
-         Result = VBEResetDevice((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+         Result = VBEResetDevice(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             RequestPacket->StatusBlock);
          break;
 
@@ -429,7 +436,8 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
          }
-         Result = VBEMapVideoMemory((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+         Result = VBEMapVideoMemory(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             (PVIDEO_MEMORY)RequestPacket->InputBuffer,
             (PVIDEO_MEMORY_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
@@ -446,7 +454,8 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
          }
-         Result = VBEQueryNumAvailModes((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+         Result = VBEQueryNumAvailModes(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             (PVIDEO_NUM_MODES)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
@@ -458,7 +467,8 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
             return TRUE;
          }
-         Result = VBEQueryAvailModes((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+         Result = VBEQueryAvailModes(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
@@ -468,9 +478,13 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
          break;
 
       case IOCTL_VIDEO_SET_COLOR_REGISTERS:
-         /* FIXME: Check buffer size! */
-         Result = VBESetColorRegisters((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
-            (PVIDEO_CLUT)RequestPacket->InputBuffer, RequestPacket->StatusBlock);
+         /*
+          * FIXME: Check buffer size!
+          */
+         Result = VBESetColorRegisters(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+            (PVIDEO_CLUT)RequestPacket->InputBuffer,
+            RequestPacket->StatusBlock);
          break;
 
       default:
@@ -484,9 +498,47 @@ VBEStartIO(PVOID HwDeviceExtension, PVIDEO_REQUEST_PACKET RequestPacket)
    return TRUE;
 }
 
+/*
+ * VBEGetPowerState
+ *
+ * Queries whether the device can support the requested power state.
+ */
+
+VP_STATUS STDCALL
+VBEGetPowerState(
+   PVOID HwDeviceExtension,
+   ULONG HwId,
+   PVIDEO_POWER_MANAGEMENT VideoPowerControl)
+{
+   return ERROR_INVALID_FUNCTION;
+}
+
+/*
+ * VBESetPowerState
+ *
+ * Sets the power state of the specified device
+ */
+
+VP_STATUS STDCALL
+VBESetPowerState(
+   PVOID HwDeviceExtension,
+   ULONG HwId,
+   PVIDEO_POWER_MANAGEMENT VideoPowerControl)
+{
+   return ERROR_INVALID_FUNCTION;
+}
+
+/*
+ * VBESetCurrentMode
+ *
+ * Sets the adapter to the specified operating mode.
+ */
+
 BOOL FASTCALL
-VBESetCurrentMode(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MODE RequestedMode, PSTATUS_BLOCK StatusBlock)
+VBESetCurrentMode(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE RequestedMode,
+   PSTATUS_BLOCK StatusBlock)
 {
    KV86M_REGISTERS BiosRegisters;
 
@@ -506,8 +558,16 @@ VBESetCurrentMode(PVBE_DEVICE_EXTENSION DeviceExtension,
    return (BiosRegisters.Eax == 0x4F);
 }
 
+/*
+ * VBEResetDevice
+ *
+ * Resets the video hardware to the default mode, to which it was initialized
+ * at system boot. 
+ */
+
 BOOL FASTCALL
-VBEResetDevice(PVBE_DEVICE_EXTENSION DeviceExtension,
+VBEResetDevice(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock)
 {
    VIDEO_X86_BIOS_ARGUMENTS BiosRegisters;
@@ -519,9 +579,18 @@ VBEResetDevice(PVBE_DEVICE_EXTENSION DeviceExtension,
    return TRUE;
 }
 
+/*
+ * VBEMapVideoMemory
+ *
+ * Maps the video hardware frame buffer and video RAM into the virtual address
+ * space of the requestor. 
+ */
+
 BOOL FASTCALL
-VBEMapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MEMORY RequestedAddress, PVIDEO_MEMORY_INFORMATION MapInformation,
+VBEMapVideoMemory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MEMORY RequestedAddress,
+   PVIDEO_MEMORY_INFORMATION MapInformation,
    PSTATUS_BLOCK StatusBlock)
 {
    KV86M_REGISTERS BiosRegisters;
@@ -567,8 +636,16 @@ VBEMapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
    }
 }
 
+/*
+ * VBEUnmapVideoMemory
+ *
+ * Releases a mapping between the virtual address space and the adapter's
+ * frame buffer and video RAM.
+ */
+
 BOOL FASTCALL
-VBEUnmapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
+VBEUnmapVideoMemory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock)
 {
    VideoPortUnmapMemory(DeviceExtension, DeviceExtension->FrameBufferMemory,
@@ -576,9 +653,19 @@ VBEUnmapVideoMemory(PVBE_DEVICE_EXTENSION DeviceExtension,
    return TRUE;
 }   
 
+/*
+ * VBEQueryNumAvailModes
+ *
+ * Returns the number of video modes supported by the adapter and the size
+ * in bytes of the video mode information, which can be used to allocate a
+ * buffer for an IOCTL_VIDEO_QUERY_AVAIL_MODES request.
+ */
+
 BOOL FASTCALL
-VBEQueryNumAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_NUM_MODES Modes, PSTATUS_BLOCK StatusBlock)
+VBEQueryNumAvailModes(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_NUM_MODES Modes,
+   PSTATUS_BLOCK StatusBlock)
 {
    Modes->NumModes = DeviceExtension->ModeCount;
    Modes->ModeInformationLength = sizeof(VIDEO_MODE_INFORMATION);
@@ -586,9 +673,17 @@ VBEQueryNumAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
    return TRUE;
 }
 
+/*
+ * VBEQueryAvailModes
+ *
+ * Returns information about each video mode supported by the adapter.
+ */
+
 BOOL FASTCALL
-VBEQueryAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_MODE_INFORMATION ReturnedModes, PSTATUS_BLOCK StatusBlock)
+VBEQueryAvailModes(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE_INFORMATION ReturnedModes,
+   PSTATUS_BLOCK StatusBlock)
 {
    ULONG CurrentModeId;
    PVIDEO_MODE_INFORMATION CurrentMode;
@@ -655,9 +750,20 @@ VBEQueryAvailModes(PVBE_DEVICE_EXTENSION DeviceExtension,
    return TRUE;
 }
 
+/*
+ * VBESetColorRegisters
+ *
+ * Sets the adapter's color registers to the specified RGB values. There
+ * are code paths in this function, one generic and one for VGA compatible
+ * controllers. The latter is needed for Bochs, where the generic one isn't
+ * yet implemented.
+ */
+
 BOOL FASTCALL
-VBESetColorRegisters(PVBE_DEVICE_EXTENSION DeviceExtension,
-   PVIDEO_CLUT ColorLookUpTable, PSTATUS_BLOCK StatusBlock)
+VBESetColorRegisters(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_CLUT ColorLookUpTable,
+   PSTATUS_BLOCK StatusBlock)
 {
    KV86M_REGISTERS BiosRegisters;
 
