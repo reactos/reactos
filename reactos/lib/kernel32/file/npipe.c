@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.21 2004/12/23 20:13:19 ekohl Exp $
+/* $Id: npipe.c,v 1.22 2004/12/30 16:15:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -262,8 +262,8 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 		       FILE_GENERIC_READ,
 		       &ObjectAttributes,
 		       &Iosb,
-		       0,
-		       FILE_SYNCHRONOUS_IO_ALERT);
+		       FILE_SHARE_READ | FILE_SHARE_WRITE,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus (Status);

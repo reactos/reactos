@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.27 2004/12/30 12:34:26 ekohl Exp $
+/* $Id: create.c,v 1.28 2004/12/30 16:15:10 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -76,20 +76,20 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   PNPFS_FCB ClientFcb;
   PNPFS_FCB ServerFcb = NULL;
   PNPFS_DEVICE_EXTENSION DeviceExt;
-  ULONG Disposition;
+  BOOLEAN SpecialAccess;
 
   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   IoStack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = IoStack->FileObject;
-  Disposition = ((IoStack->Parameters.Create.Options >> 24) & 0xff);
   DPRINT("FileObject %p\n", FileObject);
   DPRINT("FileName %wZ\n", &FileObject->FileName);
 
   Irp->IoStatus.Information = 0;
 
-  if (Disposition & FILE_OPEN)
+  SpecialAccess = ((IoStack->Parameters.Create.ShareAccess & 3) == 3);
+  if (SpecialAccess)
     {
       DPRINT("NpfsCreate() open client end for special use!\n");
     }
@@ -122,7 +122,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    */
   KeLockMutex(&Pipe->FcbListLock);
 
-  if (!(Disposition & FILE_OPEN))
+  if (!SpecialAccess)
     {
       ServerFcb = NpfsFindListeningServerInstance(Pipe);
       if (ServerFcb == NULL)
@@ -160,7 +160,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->Pipe = Pipe;
   ClientFcb->PipeEnd = FILE_PIPE_CLIENT_END;
   ClientFcb->OtherSide = NULL;
-  ClientFcb->PipeState = (Disposition & FILE_OPEN) ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+  ClientFcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
 
   /* Initialize data list. */
   if (Pipe->InboundQuota)
