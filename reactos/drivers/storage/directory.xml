@@ -1,0 +1,21 @@
+<directory name="atapi">
+	<xi:include href="atapi/atapi.xml" />
+</directory>
+<directory name="cdrom">
+	<xi:include href="cdrom/cdrom.xml" />
+</directory>
+<directory name="class2">
+	<xi:include href="class2/class2.xml" />
+</directory>
+<directory name="disk">
+	<xi:include href="disk/disk.xml" />
+</directory>
+<directory name="diskdump">
+	<xi:include href="diskdump/diskdump.xml" />
+</directory>
+<directory name="floppy">
+	<xi:include href="floppy/floppy.xml" />
+</directory>
+<directory name="scsiport">
+	<xi:include href="scsiport/scsiport.xml" />
+</directory>

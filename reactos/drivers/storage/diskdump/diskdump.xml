@@ -1,0 +1,9 @@
+<module name="diskdump" type="kernelmodedriver">
+	<library definition="diskdump.def" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>class2</library>
+	<file>diskdump.c</file>
+	<file>diskdump_helper.S</file>
+	<file>diskdump.rc</file>
+</module>

@@ -16,3 +16,6 @@
 <directory name="net">
 	<xi:include href="net/directory.xml" />
 </directory>
+<directory name="storage">
+	<xi:include href="storage/directory.xml" />
+</directory>

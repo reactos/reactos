@@ -1,0 +1,7 @@
+<module name="cdrom" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>class2</library>
+	<file>cdrom.c</file>
+	<file>cdrom.rc</file>
+</module>

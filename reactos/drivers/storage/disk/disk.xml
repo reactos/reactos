@@ -1,0 +1,7 @@
+<module name="disk" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>class2</library>
+	<file>disk.c</file>
+	<file>disk.rc</file>
+</module>
