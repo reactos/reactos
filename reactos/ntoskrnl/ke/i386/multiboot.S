@@ -107,46 +107,16 @@ _multiboot_entry:
 	 * Initialize the page directory
 	 */
 	movl	$V2P(startup_pagedirectory), %esi
-	movl	$(V2P(lowmem_pagetable) + 0x7), 0x0(%esi)
-	movl	$(V2P(kernel_pagetable) + 0x7), 0xC00(%esi)
-	movl	$(V2P(kernel_pagetable+4096) + 0x7), 0xC04(%esi)
-	movl	$(V2P(kernel_pagetable+2*4096) + 0x7), 0xC08(%esi)
-	movl	$(V2P(kernel_pagetable+3*4096) + 0x7), 0xC0c(%esi)
-	movl	$(V2P(kernel_pagetable+4*4096) + 0x7), 0xC10(%esi)
-	movl	$(V2P(kernel_pagetable+5*4096) + 0x7), 0xC14(%esi)
-	movl	$(V2P(kernel_pagetable+6*4096) + 0x7), 0xC18(%esi)
-	movl	$(V2P(kernel_pagetable+7*4096) + 0x7), 0xC1c(%esi)
-	movl	$(V2P(kernel_pagetable+8*4096) + 0x7), 0xC20(%esi)
-	movl	$(V2P(kernel_pagetable+9*4096) + 0x7), 0xC24(%esi)
-	movl	$(V2P(kernel_pagetable+10*4096) + 0x7), 0xC28(%esi)
-	movl	$(V2P(kernel_pagetable+11*4096) + 0x7), 0xC2c(%esi)
-	movl	$(V2P(kernel_pagetable+12*4096) + 0x7), 0xC30(%esi)
-	movl	$(V2P(kernel_pagetable+13*4096) + 0x7), 0xC34(%esi)
-	movl	$(V2P(kernel_pagetable+14*4096) + 0x7), 0xC38(%esi)
-	movl	$(V2P(kernel_pagetable+15*4096) + 0x7), 0xC3c(%esi)
-	movl	$(V2P(kernel_pagetable+16*4096) + 0x7), 0xC40(%esi)
-	movl	$(V2P(kernel_pagetable+17*4096) + 0x7), 0xC44(%esi)
-	movl	$(V2P(kernel_pagetable+18*4096) + 0x7), 0xC48(%esi)
-	movl	$(V2P(kernel_pagetable+19*4096) + 0x7), 0xC4c(%esi)
-	movl	$(V2P(kernel_pagetable+20*4096) + 0x7), 0xC50(%esi)
-	movl	$(V2P(kernel_pagetable+21*4096) + 0x7), 0xC54(%esi)
-	movl	$(V2P(kernel_pagetable+22*4096) + 0x7), 0xC58(%esi)
-	movl	$(V2P(kernel_pagetable+23*4096) + 0x7), 0xC5c(%esi)
-	movl	$(V2P(kernel_pagetable+24*4096) + 0x7), 0xC60(%esi)
-	movl	$(V2P(kernel_pagetable+25*4096) + 0x7), 0xC64(%esi)
-	movl	$(V2P(kernel_pagetable+26*4096) + 0x7), 0xC68(%esi)
-	movl	$(V2P(kernel_pagetable+27*4096) + 0x7), 0xC6c(%esi)
-	movl	$(V2P(kernel_pagetable+28*4096) + 0x7), 0xC70(%esi)
-	movl	$(V2P(kernel_pagetable+29*4096) + 0x7), 0xC74(%esi)
-	movl	$(V2P(kernel_pagetable+30*4096) + 0x7), 0xC78(%esi)
-	movl	$(V2P(kernel_pagetable+31*4096) + 0x7), 0xC7c(%esi)
+	movl	$(V2P(lowmem_pagetable) + 0x3), 0x0(%esi)
+	movl	$(V2P(kernel_pagetable) + 0x3), 0xC00(%esi)
+	movl	$(V2P(kernel_pagetable+4096) + 0x3), 0xC04(%esi)
 
-	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
-	movl	$(V2P(kernelmap_pagetable) + 0x7), 0xF0C(%esi)
+	movl	$(V2P(startup_pagedirectory) + 0x3), 0xF00(%esi) 
+	movl	$(V2P(kernelmap_pagetable) + 0x3), 0xF0C(%esi)
 #ifdef MP
-	movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
+	movl	$(V2P(apic_pagetable) + 0x3), 0xFEC(%esi)
 #endif /* MP */
-	movl	$(V2P(kpcr_pagetable) + 0x7), 0xFF0(%esi)
+	movl	$(V2P(kpcr_pagetable) + 0x3), 0xFF0(%esi)
 
 	/*
 	 * Initialize the page table that maps low memory
@@ -165,7 +135,7 @@ _multiboot_entry:
 	 * Initialize the page table that maps kernel memory
 	 */
 	movl	$V2P(kernel_pagetable), %esi
-	movl	$0x200007, %eax
+	movl	$0x200003, %eax
 	movl	$0, %edi
 .l4:
 	movl	%eax, (%esi, %edi)
@@ -199,13 +169,13 @@ _multiboot_entry:
 	 */
 	movl	$V2P(kpcr_pagetable), %esi
 	movl	$0, %edi
-	movl	$0x1007, %eax
+	movl	$0x1003, %eax
 	movl	%eax, (%esi, %edi)
 
 	/*
 	 * Initialize a part of the same pagetable to map the vga frame buffer (at FF3A0000).
 	 */
-	movl	$0xa0007, %eax
+	movl	$0xa0003, %eax
 	movl	$0x20, %ecx
 	movl	$0xE80, %edi
 .l9:	
@@ -355,7 +325,7 @@ lowmem_pagetable:
 	.fill 4096, 1, 0
 
 kernel_pagetable:
-	.fill 32*4096, 1, 0	
+	.fill 2*4096, 1, 0	
 
 kernelmap_pagetable:
 	.fill 4096, 1, 0

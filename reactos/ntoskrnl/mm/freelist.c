@@ -241,92 +241,47 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    return start;
 }
 
-VOID INIT_FUNCTION
-MiParseRangeToFreeList(PADDRESS_RANGE Range)
+
+BOOLEAN
+MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
+           ULONG AddressRangeCount,
+	   PFN_TYPE Pfn)
 {
-   ULONG i, first, last;
-
-   /* FIXME: Not 64-bit ready */
-
-   DPRINT("Range going to free list (Base 0x%X, Length 0x%X, Type 0x%X)\n",
-          Range->BaseAddrLow,
-          Range->LengthLow,
-          Range->Type);
-
-   first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
-   last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
-   for (i = first; i < last && i < MmPageArraySize; i++)
-   {
-      if (MmPageArray[i].Flags.Type == 0)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-	 MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].ReferenceCount = 0;
-         InsertTailList(&FreeUnzeroedPageListHead,
-                        &MmPageArray[i].ListEntry);
-	 MmStats.NrFreePages++;
-         UnzeroedPageCount++;
-      }
-   }
-}
-
-VOID INIT_FUNCTION
-MiParseRangeToBiosList(PADDRESS_RANGE Range)
-{
-   ULONG i, first, last;
-
-   /* FIXME: Not 64-bit ready */
-
-   DPRINT("Range going to bios list (Base 0x%X, Length 0x%X, Type 0x%X)\n",
-          Range->BaseAddrLow,
-          Range->LengthLow,
-          Range->Type);
-
-   first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
-   last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
-   for (i = first; i < last && i < MmPageArraySize; i++)
-   {
-      /* Remove the page from the free list if it is there */
-      if (MmPageArray[i].Flags.Type == MM_PHYSICAL_PAGE_FREE)
-      {
-         RemoveEntryList(&MmPageArray[i].ListEntry);
-	 UnzeroedPageCount--;
-	 MmStats.NrFreePages--;
-
-      }
-
-      if (MmPageArray[i].Flags.Type != MM_PHYSICAL_PAGE_BIOS)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-         MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-         MmPageArray[i].ReferenceCount = 1;
-         InsertTailList(&BiosPageListHead,
-                        &MmPageArray[i].ListEntry);
-         MmStats.NrSystemPages++;
-      }
-   }
-}
-
-VOID INIT_FUNCTION
-MiParseBIOSMemoryMap(PADDRESS_RANGE BIOSMemoryMap,
-                     ULONG AddressRangeCount)
-{
-   PADDRESS_RANGE p;
+   BOOLEAN IsUsable;
+   LARGE_INTEGER BaseAddress;
+   LARGE_INTEGER EndAddress;
    ULONG i;
-
-   p = BIOSMemoryMap;
-   for (i = 0; i < AddressRangeCount; i++, p++)
+   if (BIOSMemoryMap != NULL && AddressRangeCount > 0)
    {
-      if (p->Type == 1)
+      IsUsable = FALSE;
+      for (i = 0; i < AddressRangeCount; i++)
       {
-         MiParseRangeToFreeList(p);
+	 BaseAddress.u.LowPart = BIOSMemoryMap[i].BaseAddrLow;
+	 BaseAddress.u.HighPart = BIOSMemoryMap[i].BaseAddrHigh;
+	 EndAddress.u.LowPart = BIOSMemoryMap[i].LengthLow;
+	 EndAddress.u.HighPart = BIOSMemoryMap[i].LengthHigh;
+	 EndAddress.QuadPart += BaseAddress.QuadPart;
+	 BaseAddress.QuadPart = PAGE_ROUND_DOWN(BaseAddress.QuadPart);
+         EndAddress.QuadPart = PAGE_ROUND_UP(EndAddress.QuadPart);
+
+	 if ((BaseAddress.QuadPart >> PAGE_SHIFT) <= Pfn &&
+	     Pfn < (EndAddress.QuadPart >> PAGE_SHIFT))
+	 {
+	    if (BIOSMemoryMap[i].Type == 1)
+	    {
+	       IsUsable = TRUE;
+	    }
+	    else
+	    {
+	       return FALSE;
+	    }
+	 }
       }
-      else
-      {
-         MiParseRangeToBiosList(p);
-      }
+      return IsUsable;
    }
+   return TRUE;
 }
+         
 
 PVOID INIT_FUNCTION
 MmInitializePageList(PVOID FirstPhysKernelAddress,
@@ -339,7 +294,6 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
  * FUNCTION: Initializes the page list with all pages free
  * except those known to be reserved and those used by the kernel
  * ARGUMENTS:
- *         PageBuffer = Page sized buffer
  *         FirstKernelAddress = First physical address used by the kernel
  *         LastKernelAddress = Last physical address used by the kernel
  */
@@ -347,6 +301,8 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    ULONG i;
    ULONG Reserved;
    NTSTATUS Status;
+   PFN_TYPE LastPage;
+   PFN_TYPE FirstUninitializedPage;
 
    DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
           "LastPhysKernelAddress %x, "
@@ -386,64 +342,133 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    MmStats.NrFreePages = 0;
    MmStats.NrLockedPages = 0;
 
+   /* Preinitialize the Balancer because we need some pages for pte's */
+   MmInitializeBalancer(MemorySizeInPages, 0);
+
+   FirstUninitializedPage = (ULONG_PTR)LastPhysKernelAddress / PAGE_SIZE;
+   LastPage = MmPageArraySize;
    for (i = 0; i < Reserved; i++)
    {
       PVOID Address = (char*)(ULONG)MmPageArray + (i * PAGE_SIZE);
+      ULONG j, start, end;
       if (!MmIsPagePresent(NULL, Address))
       {
-         ULONG Pfn = ((ULONG_PTR)LastPhysKernelAddress >> PAGE_SHIFT) - Reserved + i;
-         Status =
-            MmCreateVirtualMappingUnsafe(NULL,
-                                         Address,
-                                         PAGE_READWRITE,
-					 &Pfn,
-					 1);
+         PFN_TYPE Pfn;
+         Pfn = 0;
+	 while (Pfn == 0 && LastPage > FirstUninitializedPage)
+	 {
+            /* Allocate the page from the upper end of the RAM */
+            if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, --LastPage))
+	    {
+	       Pfn = LastPage;
+	    }
+	 }
+	 if (Pfn == 0)
+	 {
+	    Pfn = MmAllocPage(MC_NPPOOL, 0);
+            if (Pfn == 0)
+	    {
+	       KEBUGCHECK(0);
+	    }
+	 }
+         Status = MmCreateVirtualMappingForKernel(Address,
+                                                  PAGE_READWRITE,
+					          &Pfn,
+					          1);
          if (!NT_SUCCESS(Status))
          {
             DbgPrint("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
       }
-      memset((char*)MmPageArray + (i * PAGE_SIZE), 0, PAGE_SIZE);
+      memset(Address, 0, PAGE_SIZE);
+      
+      start = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray) / sizeof(PHYSICAL_PAGE);
+      end = ((ULONG_PTR)Address - (ULONG_PTR)MmPageArray + PAGE_SIZE) / sizeof(PHYSICAL_PAGE);
+
+      for (j = start; j < end && j < LastPage; j++)
+      {
+         if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, j))
+	 {
+	    if (j == 0)
+	    {
+               /*
+                * Page zero is reserved
+                */
+               MmPageArray[0].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[0].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[0].Flags.Zero = 0;
+               MmPageArray[0].ReferenceCount = 0;
+               InsertTailList(&BiosPageListHead,
+                              &MmPageArray[0].ListEntry);
+	       MmStats.NrReservedPages++;
+	    }
+	    else if (j == 1)
+	    {
+
+               /*
+                * Page one is reserved for the initial KPCR
+                */
+               MmPageArray[1].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[1].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[1].Flags.Zero = 0;
+               MmPageArray[1].ReferenceCount = 0;
+               InsertTailList(&BiosPageListHead,
+                              &MmPageArray[1].ListEntry);
+	       MmStats.NrReservedPages++;
+	    }
+	    else if (j >= 0xa0000 / PAGE_SIZE && j < 0x100000 / PAGE_SIZE)
+	    {
+               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[j].Flags.Zero = 0;
+               MmPageArray[j].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[j].ReferenceCount = 1;
+               InsertTailList(&BiosPageListHead,
+                              &MmPageArray[j].ListEntry);
+	       MmStats.NrReservedPages++;
+	    }
+	    else if (j >= (ULONG)FirstPhysKernelAddress/PAGE_SIZE &&
+		     j < (ULONG)LastPhysKernelAddress/PAGE_SIZE)
+	    {
+               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_USED;
+               MmPageArray[j].Flags.Zero = 0;
+               MmPageArray[j].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[j].ReferenceCount = 1;
+               MmPageArray[j].MapCount = 1;
+               InsertTailList(&UsedPageListHeads[MC_NPPOOL],
+                              &MmPageArray[j].ListEntry);
+	       MmStats.NrSystemPages++;
+	    }
+	    else
+	    {
+               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_FREE;
+               MmPageArray[j].Flags.Zero = 0;
+               MmPageArray[j].ReferenceCount = 0;
+               InsertTailList(&FreeUnzeroedPageListHead,
+                              &MmPageArray[j].ListEntry);
+               UnzeroedPageCount++;
+	       MmStats.NrFreePages++;
+	    }
+	 }
+	 else
+	 {
+            MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+            MmPageArray[j].Flags.Consumer = MC_NPPOOL;
+            MmPageArray[j].Flags.Zero = 0;
+            MmPageArray[j].ReferenceCount = 0;
+            InsertTailList(&BiosPageListHead,
+                           &MmPageArray[j].ListEntry);
+	    MmStats.NrReservedPages++;
+	 }
+      }
+      FirstUninitializedPage = j;
+
    }
 
-
-   /*
-    * Page zero is reserved
-    */
-   MmPageArray[0].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-   MmPageArray[0].Flags.Consumer = MC_NPPOOL;
-   MmPageArray[0].Flags.Zero = 0;
-   MmPageArray[0].ReferenceCount = 0;
-   InsertTailList(&BiosPageListHead,
-                  &MmPageArray[0].ListEntry);
-
-   /*
-    * Page one is reserved for the initial KPCR
-    */
-   MmPageArray[1].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-   MmPageArray[1].Flags.Consumer = MC_NPPOOL;
-   MmPageArray[1].Flags.Zero = 0;
-   MmPageArray[1].ReferenceCount = 0;
-   InsertTailList(&BiosPageListHead,
-                  &MmPageArray[1].ListEntry);
-
-   i = 2;
-   if ((ULONG)FirstPhysKernelAddress < 0xa0000)
+   /* Add the pages from the upper end to the list */
+   for (i = LastPage; i < MmPageArraySize; i++)
    {
-      MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - 2);
-      for (; i<((ULONG)FirstPhysKernelAddress/PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-	 MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].ReferenceCount = 0;
-         InsertTailList(&FreeUnzeroedPageListHead,
-                        &MmPageArray[i].ListEntry);
-         UnzeroedPageCount++;
-      }
-      MmStats.NrSystemPages +=
-         ((((ULONG)LastPhysKernelAddress) / PAGE_SIZE) - i);
-      for (; i<((ULONG)LastPhysKernelAddress / PAGE_SIZE); i++)
+      if (MiIsPfnRam(BIOSMemoryMap, AddressRangeCount, i))
       {
          MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
          MmPageArray[i].Flags.Zero = 0;
@@ -452,91 +477,21 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
          MmPageArray[i].MapCount = 1;
          InsertTailList(&UsedPageListHeads[MC_NPPOOL],
                         &MmPageArray[i].ListEntry);
+	 MmStats.NrSystemPages++;
       }
-      MmStats.NrFreePages += ((0xa0000/PAGE_SIZE) - i);
-      for (; i<(0xa0000/PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-	 MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].ReferenceCount = 0;
-         InsertTailList(&FreeUnzeroedPageListHead,
-                        &MmPageArray[i].ListEntry);
-         UnzeroedPageCount++;
-      }
-      MmStats.NrReservedPages += ((0x100000/PAGE_SIZE) - i);
-      for (; i<(0x100000 / PAGE_SIZE); i++)
+      else
       {
          MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-         MmPageArray[i].Flags.Zero = 0;
          MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-         MmPageArray[i].ReferenceCount = 1;
+         MmPageArray[i].Flags.Zero = 0;
+         MmPageArray[i].ReferenceCount = 0;
          InsertTailList(&BiosPageListHead,
                         &MmPageArray[i].ListEntry);
-      }
-   }
-   else
-   {
-      MmStats.NrFreePages += ((0xa0000 / PAGE_SIZE) - 2);
-      for (; i<(0xa0000 / PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-	 MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].ReferenceCount = 0;
-         InsertTailList(&FreeUnzeroedPageListHead,
-                        &MmPageArray[i].ListEntry);
-         UnzeroedPageCount++;
-      }
-      MmStats.NrReservedPages += (0x60000 / PAGE_SIZE);
-      for (; i<(0x100000 / PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-         MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-         MmPageArray[i].ReferenceCount = 1;
-         InsertTailList(&BiosPageListHead,
-                        &MmPageArray[i].ListEntry);
-      }
-      MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - i);
-      for (; i<((ULONG)FirstPhysKernelAddress/PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-	 MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].ReferenceCount = 0;
-         InsertTailList(&FreeUnzeroedPageListHead,
-                        &MmPageArray[i].ListEntry);
-         UnzeroedPageCount++;
-      }
-      MmStats.NrSystemPages +=
-         (((ULONG)LastPhysKernelAddress/PAGE_SIZE) - i);
-      for (; i<((ULONG)LastPhysKernelAddress/PAGE_SIZE); i++)
-      {
-         MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
-         MmPageArray[i].Flags.Zero = 0;
-         MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-         MmPageArray[i].ReferenceCount = 1;
-         MmPageArray[i].MapCount = 1;
-         InsertTailList(&UsedPageListHeads[MC_NPPOOL],
-                        &MmPageArray[i].ListEntry);
+	 MmStats.NrReservedPages++;
       }
    }
 
-   MmStats.NrFreePages += (MemorySizeInPages - i);
-   for (; i<MemorySizeInPages; i++)
-   {
-      MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-      MmPageArray[i].Flags.Zero = 0;
-      MmPageArray[i].ReferenceCount = 0;
-      InsertTailList(&FreeUnzeroedPageListHead,
-                     &MmPageArray[i].ListEntry);
-      UnzeroedPageCount++;
-   }
 
-   if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
-   {
-      MiParseBIOSMemoryMap(
-         BIOSMemoryMap,
-         AddressRangeCount);
-   }
 
    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
 
