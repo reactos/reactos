@@ -77,7 +77,8 @@ typedef enum
 
 NTSTATUS
 IniCacheLoad(PINICACHE *Cache,
-	     PUNICODE_STRING FileName);
+	     PUNICODE_STRING FileName,
+	     BOOL String);
 
 VOID
 IniCacheDestroy(PINICACHE Cache);

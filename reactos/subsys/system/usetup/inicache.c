@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.3 2003/01/28 17:29:22 ekohl Exp $
+/* $Id: inicache.c,v 1.4 2003/01/30 17:37:13 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -393,21 +393,42 @@ IniCacheGetKeyName(PCHAR Ptr,
   *NamePtr = NULL;
   *NameSize = 0;
 
-  /* skip whitespace */
-  while (*Ptr != 0 && isspace(*Ptr))
+  while(Ptr && *Ptr)
+  {
+    *NamePtr = NULL;
+    *NameSize = 0;
+    Size = 0;
+
+    /* skip whitespace and empty lines */
+    while (isspace(*Ptr) || *Ptr == '\n' || *Ptr == '\r')
     {
       Ptr++;
     }
+    if (*Ptr == 0)
+    {
+      continue;
+    }
 
-  *NamePtr = Ptr;
+    *NamePtr = Ptr;
 
-  while (*Ptr != 0 && !isspace(*Ptr) && *Ptr != '=')
+    while (*Ptr != 0 && !isspace(*Ptr) && *Ptr != '=' && *Ptr != ';')
     {
       Size++;
       Ptr++;
     }
-
-  *NameSize = Size;
+    if (*Ptr == ';')
+    {
+      while (*Ptr != 0 && *Ptr != '\r' && *Ptr != '\n')
+      {
+	Ptr++;
+      }
+    }
+    else
+    {
+      *NameSize = Size;
+      break;
+    }
+  }
 
   return(Ptr);
 }
@@ -416,7 +437,8 @@ IniCacheGetKeyName(PCHAR Ptr,
 static PCHAR
 IniCacheGetKeyValue(PCHAR Ptr,
 		    PCHAR *DataPtr,
-		    PULONG DataSize)
+		    PULONG DataSize,
+		    BOOL String)
 {
   ULONG Size = 0;
 
@@ -442,12 +464,32 @@ IniCacheGetKeyValue(PCHAR Ptr,
       Ptr++;
     }
 
-  /* Get data */
-  *DataPtr = Ptr;
-  while (*Ptr != 0 && *Ptr != '\r')
+  if (*Ptr == '"' && String)
     {
       Ptr++;
-      Size++;
+
+      /* Get data */
+      *DataPtr = Ptr;
+      while (*Ptr != '"')
+	{
+	  Ptr++;
+	  Size++;
+	}
+      Ptr++;
+      while (*Ptr && *Ptr != '\r' && *Ptr != '\n')
+	{
+	  Ptr++;
+	}
+    }
+  else
+    {
+      /* Get data */
+      *DataPtr = Ptr;
+      while (*Ptr != 0 && *Ptr != '\r' && *Ptr != ';')
+	{
+	  Ptr++;
+	  Size++;
+	}
     }
 
   /* Skip to next line */
@@ -468,7 +510,8 @@ IniCacheGetKeyValue(PCHAR Ptr,
 
 NTSTATUS
 IniCacheLoad(PINICACHE *Cache,
-	     PUNICODE_STRING FileName)
+	     PUNICODE_STRING FileName,
+	     BOOL String)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION FileInfo;
@@ -615,6 +658,8 @@ IniCacheLoad(PINICACHE *Cache,
 				       &SectionName,
 				       &SectionNameSize);
 
+	  DPRINT1("[%.*s]\n", SectionNameSize, SectionName);
+
 	  Section = IniCacheAddSection(*Cache,
 				       SectionName,
 				       SectionNameSize);
@@ -639,7 +684,10 @@ IniCacheLoad(PINICACHE *Cache,
 
 	  Ptr = IniCacheGetKeyValue(Ptr,
 				    &KeyValue,
-				    &KeyValueSize);
+				    &KeyValueSize,
+				    String);
+
+	  DPRINT1("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
 
 	  Key = IniCacheAddKey(Section,
 			       KeyName,

@@ -388,7 +388,8 @@ UpdateFreeLoaderIni(PWCHAR IniPath,
 		       IniPath);
 
   Status = IniCacheLoad(&IniCache,
-			&Name);
+			&Name,
+			FALSE);
   if (!NT_SUCCESS(Status))
     return(Status);
 
@@ -1438,7 +1439,8 @@ UpdateBootIni(PWSTR BootIniPath,
 		       BootIniPath);
 
   Status = IniCacheLoad(&Cache,
-			&Name);
+			&Name,
+			FALSE);
   if (!NT_SUCCESS(Status))
   {
 CHECKPOINT1;

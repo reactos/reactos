@@ -404,7 +404,8 @@ StartPage(PINPUT_RECORD Ir)
 
   IniCache = NULL;
   Status = IniCacheLoad(&IniCache,
-			&FileName);
+			&FileName,
+			TRUE);
   if (!NT_SUCCESS(Status))
   {
     PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
@@ -477,24 +478,6 @@ StartPage(PINPUT_RECORD Ir)
       }
     }
   }
-
-#if 0
-  PopupError("This is a test error.", "ENTER = Reboot computer");
-
-  SetStatusText("   ENTER = Continue");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	{
-	  return(INTRO_PAGE);
-	}
-    }
-
-  return(START_PAGE);
-#endif
 
   return(INTRO_PAGE);
 }
