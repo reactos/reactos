@@ -9,6 +9,14 @@
  */
 #include <ndissys.h>
 
+VOID
+EXPORT
+NdisReinitializePacket(
+     IN OUT  PNDIS_PACKET    Packet)
+{
+	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;
+	(Packet)->Private.ValidCounts = FALSE;
+}
 
 VOID
 EXPORT

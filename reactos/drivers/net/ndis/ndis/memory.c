@@ -67,7 +67,7 @@ NdisMoveMappedMemory(
     IN  PVOID   Source,
     IN  ULONG   Length)
 {
-    UNIMPLEMENTED
+    RtlCopyMemory(Destination,Source,Length);
 }
 
 

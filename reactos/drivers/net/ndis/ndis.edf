@@ -208,6 +208,7 @@ NdisMIndicateStatusComplete=NdisMIndicateStatusComplete@4
 NdisMInitializeScatterGatherDma=NdisMInitializeScatterGatherDma@12
 NdisMInitializeTimer=NdisMInitializeTimer@16
 NdisMMapIoSpace=NdisMMapIoSpace@20
+NdisMoveMappedMemory=NdisMoveMappedMemory@12
 NdisMPciAssignResources=NdisMPciAssignResources@12
 NdisMPromoteMiniport=NdisMPromoteMiniport@4
 NdisMQueryAdapterInstanceName=NdisMQueryAdapterInstanceName@8
@@ -263,6 +264,7 @@ NdisReadNetworkAddress=NdisReadNetworkAddress@16
 NdisReadPciSlotInformation=NdisReadPciSlotInformation@20
 NdisReadPcmciaAttributeMemory=NdisReadPcmciaAttributeMemory@16
 ;NdisReEnumerateProtocolBindings ?
+NdisReinitializePacket=NdisReinitializePacket@4
 NdisRegisterAdapter=NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler=NdisRegisterAdapterShutdownHandler@12
 NdisRegisterMac=NdisRegisterMac@24
