@@ -1,4 +1,4 @@
-/* $Id: dosdev.c,v 1.8 2003/09/03 16:16:04 ekohl Exp $
+/* $Id: dosdev.c,v 1.9 2003/09/03 22:28:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,29 +30,39 @@ DefineDosDeviceA(
     LPCSTR lpTargetPath
     )
 {
-	ULONG i;
+  UNICODE_STRING DeviceNameU;
+  UNICODE_STRING TargetPathU;
+  BOOL Result;
 
-	WCHAR DeviceNameW[MAX_PATH];
-	WCHAR TargetPathW[MAX_PATH];
+  if (!RtlCreateUnicodeStringFromAsciiz (&DeviceNameU,
+					 (LPSTR)lpDeviceName))
+  {
+    SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
 
-	i = 0;
-	while ((*lpDeviceName)!=0 && i < MAX_PATH)
-	{
-		DeviceNameW[i] = *lpDeviceName;
-		lpDeviceName++;
-		i++;
-	}
-	DeviceNameW[i] = 0;
+  if (!RtlCreateUnicodeStringFromAsciiz (&TargetPathU,
+					 (LPSTR)lpTargetPath))
+  {
+    RtlFreeHeap (RtlGetProcessHeap (),
+		 0,
+		 DeviceNameU.Buffer);
+    SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
 
-	i = 0;
-	while ((*lpTargetPath)!=0 && i < MAX_PATH)
-	{
-		TargetPathW[i] = *lpTargetPath;
-		lpTargetPath++;
-		i++;
-	}
-	TargetPathW[i] = 0;
-	return DefineDosDeviceW(dwFlags,DeviceNameW,TargetPathW);
+  Result = DefineDosDeviceW (dwFlags,
+			     DeviceNameU.Buffer,
+			     TargetPathU.Buffer);
+
+  RtlFreeHeap (RtlGetProcessHeap (),
+	       0,
+	       TargetPathU.Buffer);
+  RtlFreeHeap (RtlGetProcessHeap (),
+	       0,
+	       DeviceNameU.Buffer);
+
+  return Result;
 }
 
 
@@ -110,7 +120,7 @@ QueryDosDeviceA(
 			    ucchMax);
   if (Length != 0)
   {
-    TargetPathU.Length = (Length - 1) * sizeof(WCHAR);
+    TargetPathU.Length = Length * sizeof(WCHAR);
 
     TargetPathA.Length = 0;
     TargetPathA.MaximumLength = (USHORT)ucchMax;
@@ -146,13 +156,19 @@ QueryDosDeviceW(
     DWORD ucchMax
     )
 {
+  PDIRECTORY_BASIC_INFORMATION DirInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING UnicodeString;
   HANDLE DirectoryHandle;
   HANDLE DeviceHandle;
-  ULONG ReturnedLength;
+  ULONG ReturnLength;
+  ULONG NameLength;
   ULONG Length;
+  ULONG Context;
+  BOOLEAN RestartScan;
   NTSTATUS Status;
+  UCHAR Buffer[512];
+  PWSTR Ptr;
 
   /* Open the '\??' directory */
   RtlInitUnicodeString (&UnicodeString,
@@ -200,46 +216,98 @@ QueryDosDeviceW(
     UnicodeString.MaximumLength = (USHORT)ucchMax * sizeof(WCHAR);
     UnicodeString.Buffer = lpTargetPath;
 
-    ReturnedLength = 0;
+    ReturnLength = 0;
     Status = NtQuerySymbolicLinkObject (DeviceHandle,
 					&UnicodeString,
-					&ReturnedLength);
+					&ReturnLength);
     NtClose (DeviceHandle);
+    NtClose (DirectoryHandle);
     if (!NT_SUCCESS (Status))
     {
       DPRINT ("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
-      NtClose (DirectoryHandle);
       SetLastErrorByStatus (Status);
       return 0;
     }
 
-    DPRINT ("ReturnedLength: %lu\n", ReturnedLength);
+    DPRINT ("ReturnLength: %lu\n", ReturnLength);
     DPRINT ("TargetLength: %hu\n", UnicodeString.Length);
     DPRINT ("Target: '%wZ'\n", &UnicodeString);
 
-    Length = ReturnedLength / sizeof(WCHAR);
-    if (Length <= ucchMax)
+    Length = ReturnLength / sizeof(WCHAR);
+    if (Length < ucchMax)
     {
-      lpTargetPath[Length] = 0;
+      /* Append null-charcter */
+      lpTargetPath[Length] = UNICODE_NULL;
+      Length++;
     }
     else
     {
       DPRINT ("Buffer is too small\n");
-      NtClose (DirectoryHandle);
       SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
       return 0;
     }
   }
   else
   {
-    /* FIXME */
-    DPRINT1 ("Not implemented yet\n");
-    NtClose (DirectoryHandle);
-    SetLastErrorByStatus (STATUS_NOT_IMPLEMENTED);
-    return 0;
-  }
+    RestartScan = TRUE;
+    Context = 0;
+    Ptr = lpTargetPath;
+    DirInfo = (PDIRECTORY_BASIC_INFORMATION)Buffer;
 
-  NtClose (DirectoryHandle);
+    while (TRUE)
+    {
+      Status = NtQueryDirectoryObject (DirectoryHandle,
+				       Buffer,
+				       sizeof (Buffer),
+				       TRUE,
+				       RestartScan,
+				       &Context,
+				       &ReturnLength);
+      if (!NT_SUCCESS(Status))
+      {
+	if (Status == STATUS_NO_MORE_ENTRIES)
+	{
+	  /* Terminate the buffer */
+	  *Ptr = UNICODE_NULL;
+	  Length++;
+
+	  Status = STATUS_SUCCESS;
+	}
+	else
+	{
+	  Length = 0;
+	}
+	SetLastErrorByStatus (Status);
+	break;
+      }
+
+      if (!wcscmp (DirInfo->ObjectTypeName.Buffer, L"SymbolicLink"))
+      {
+	DPRINT ("Name: '%wZ'\n", &DirInfo->ObjectName);
+
+	NameLength = DirInfo->ObjectName.Length / sizeof(WCHAR);
+	if (Length + NameLength + 1 >= ucchMax)
+	{
+	  Length = 0;
+	  SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+	  break;
+	}
+
+	memcpy (Ptr,
+		DirInfo->ObjectName.Buffer,
+		DirInfo->ObjectName.Length);
+	Ptr += NameLength;
+	Length += NameLength;
+	*Ptr = UNICODE_NULL;
+	Ptr++;
+	Length++;
+      }
+
+      RestartScan = FALSE;
+    }
+
+    NtClose (DirectoryHandle);
+  }
 
   return Length;
 }
