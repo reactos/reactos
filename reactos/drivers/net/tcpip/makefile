@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.23 2004/09/30 05:44:10 arty Exp $
+# $Id: makefile,v 1.24 2004/09/30 16:30:43 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -41,9 +41,10 @@ TARGET_OBJECTS = \
   $(INFO_OBJECTS) \
   $(DATALINK_OBJECTS)
 
-preall: all
+preall: $(PATH_TO_TOP)/dk/w32/lib/ip.a
+	$(MAKE) all
 
-$(PATH_TO_TOP)/dk/w32/lib/ipkernel.a:
+$(PATH_TO_TOP)/dk/w32/lib/ip.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/ip
 
 include $(PATH_TO_TOP)/rules.mak
