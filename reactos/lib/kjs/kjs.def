@@ -1,0 +1,11 @@
+; $Id: kjs.def,v 1.1 2004/01/10 20:38:17 arty Exp $
+;
+; ReactOS Operating System
+;
+LIBRARY kjs.dll
+
+EXPORTS
+kjs_eval
+kjs_system_register
+kjs_create_interp
+kjs_destroy_interp

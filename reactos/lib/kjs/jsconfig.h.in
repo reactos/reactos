@@ -1,0 +1,167 @@
+/* jsconfig.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define if on AIX 3.
+   System headers sometimes define this.
+   We just want to avoid a redefinition error message.  */
+#ifndef _ALL_SOURCE
+#undef _ALL_SOURCE
+#endif
+
+/* Define if using alloca.c.  */
+#undef C_ALLOCA
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to one of _getb67, GETB67, getb67 for Cray-2 and Cray-YMP systems.
+   This function is required for alloca.c support on those systems.  */
+#undef CRAY_STACKSEG_END
+
+/* Define if you have alloca, as a function or macro.  */
+#undef HAVE_ALLOCA
+
+/* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
+#undef HAVE_ALLOCA_H
+
+/* Define as __inline if that's what the C compiler calls it.  */
+#undef inline
+
+/* If using the C implementation of alloca, define if you know the
+   direction of stack growth for your system; otherwise it will be
+   automatically deduced at run-time.
+ STACK_DIRECTION > 0 => grows toward higher addresses
+ STACK_DIRECTION < 0 => grows toward lower addresses
+ STACK_DIRECTION = 0 => direction of growth unknown
+ */
+#undef STACK_DIRECTION
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/*
+ * Define the PACKAGE and VERSION only if they are undefined.  This means
+ * that we do not redefine them, when the library is used in another
+ * GNU like package that defines PACKAGE and VERSION.
+ */
+
+/* Package name. */
+#ifndef PACKAGE
+#undef PACKAGE
+#endif /* no PACKAGE */
+
+/* Version number. */
+#ifndef VERSION
+#undef VERSION
+#endif /* no VERSION */
+
+/* Are C prototypes supported. */
+#undef PROTOTYPES
+
+/* Canonical host name and its parts. */
+#undef CANONICAL_HOST
+#undef CANONICAL_HOST_CPU
+#undef CANONICAL_HOST_VENDOR
+#undef CANONICAL_HOST_OS
+
+/* Do we want to build all instruction dispatchers? */
+#undef ALL_DISPATCHERS
+
+/* Do we want to profile byte-code operands. */
+#undef PROFILING
+
+/* Do we want the byte-code operand hooks. */
+#undef BC_OPERAND_HOOKS
+
+/*
+ * Unconditionall disable the jumps byte-code instruction dispatch
+ * method.
+ */
+#undef DISABLE_JUMPS
+
+/* Does the struct stat has st_blksize member? */
+#undef HAVE_STAT_ST_ST_BLKSIZE
+
+/* Does the struct stat has st_blocks member? */
+#undef HAVE_STAT_ST_ST_BLOCKS
+
+/* Does the asctime_r() function take three arguments. */
+#undef ASCTIME_R_WITH_THREE_ARGS
+
+/* Does the drand48_r() work with DRAND48D data. */
+#undef DRAND48_R_WITH_DRAND48D
+
+/* How the attribute structures are passed to the init functions. */
+#undef CONDATTR_BY_VALUE
+#undef MUTEXATTR_BY_VALUE
+#undef THREADATTR_BY_VALUE
+
+/* JS */
+#undef WITH_JS
+
+/* Curses. */
+#undef WITH_CURSES
+#undef HAVE_CURSES_H
+#undef HAVE_NCURSES_H
+
+/* MD5 */
+#undef WITH_MD5
+
+/* The number of bytes in a int.  */
+#undef SIZEOF_INT
+
+/* The number of bytes in a long.  */
+#undef SIZEOF_LONG
+
+/* Define if you have the drand48 function.  */
+#undef HAVE_DRAND48
+
+/* Define if you have the lstat function.  */
+#undef HAVE_LSTAT
+
+/* Define if you have the pthread_attr_create function.  */
+#undef HAVE_PTHREAD_ATTR_CREATE
+
+/* Define if you have the pthread_attr_setscope function.  */
+#undef HAVE_PTHREAD_ATTR_SETSCOPE
+
+/* Define if you have the pthread_attr_setstacksize function.  */
+#undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+
+/* Define if you have the pthread_condattr_create function.  */
+#undef HAVE_PTHREAD_CONDATTR_CREATE
+
+/* Define if you have the pthread_condattr_init function.  */
+#undef HAVE_PTHREAD_CONDATTR_INIT
+
+/* Define if you have the pthread_mutexattr_create function.  */
+#undef HAVE_PTHREAD_MUTEXATTR_CREATE
+
+/* Define if you have the sleep function.  */
+#undef HAVE_SLEEP
+
+/* Define if you have the srand48 function.  */
+#undef HAVE_SRAND48
+
+/* Define if you have the usleep function.  */
+#undef HAVE_USLEEP
+
+/* Define if you have the <dlfcn.h> header file.  */
+#undef HAVE_DLFCN_H
+
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
+/* Define if you have the <float.h> header file.  */
+#undef HAVE_FLOAT_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
+
+/* Define if you have the <stdlib.h> header file.  */
+#undef HAVE_STDLIB_H
+
+/* Define if you have the <string.h> header file.  */
+#undef HAVE_STRING_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H

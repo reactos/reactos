@@ -1,0 +1,69 @@
+
+		      NGS JavaScript Interpreter
+		      ==========================
+
+Welcome to the NGS JavaScript interpreter.  The NGS JavaScript is a
+GPL free interpreter for the JavaScript language.  The JavaScript
+language is an interpreted C-like language, developed by Netscape et
+al.
+
+The NGS JavaScript interpreter is free software; you can redistribute
+it and/or modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
+
+You should have received a copy of the GNU Library General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA
+
+
+* Design Goals
+
+This implementation is not 100% compatible with the JavaScript
+language, found from the Netscape's WWW browsers and servers.  To
+achieve the following design goals, some shortcuts have been taken in
+the implementation, as compared to the Netscape's implementation.
+
+This implementation is designed to be:
+
+- re-entrant
+
+  the interpreter can be safely used in multi-threaded environments
+
+- extendible
+
+  the interpreter API allows user-defined commands and classes, and it
+  allows reading and setting language's global variables
+
+- fast
+
+  the JavaScript code is compiled to byte-code that is executed by a
+  virtual machine
+
+- programmable
+
+  it should be easy to implement large projects with the language
+
+
+* WWW Home Page and Additional Information
+
+The WWW home page of the NGS JavaScript interpreter is at URL:
+
+	http://www.ngs.fi/js/
+
+The home page contains up-to-date information about the interpreter,
+its development, releases, documentation, etc.
+
+Please note that the current version, js-0.2.0 is a work in progress.
+It contains bugs and many features are still unimplemented.
+
+Comments, suggestions, bug reports and fixes, feature wishes, etc. are
+welcome.
+
+	Markku Rossi <mtr@ngs.fi>
