@@ -34,6 +34,7 @@
 #include "console.h"
 #include "partlist.h"
 #include "inicache.h"
+#include "infcache.h"
 #include "filequeue.h"
 #include "progress.h"
 #include "bootsup.h"
@@ -88,7 +89,7 @@ UNICODE_STRING DestinationRootPath;
 
 UNICODE_STRING SystemRootPath; /* Path to the active partition */
 
-PINICACHE IniCache;
+HINF SetupInf;
 
 HSPFILEQ SetupFileQueue = NULL;
 
@@ -378,8 +379,9 @@ StartPage(PINPUT_RECORD Ir)
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
 
-  PINICACHESECTION Section;
+  INFCONTEXT Context;
   PWCHAR Value;
+  ULONG ErrorLine;
 
 
   SetStatusText("   Please wait...");
@@ -403,10 +405,9 @@ StartPage(PINPUT_RECORD Ir)
   RtlInitUnicodeString(&FileName,
 		       FileNameBuffer);
 
-  IniCache = NULL;
-  Status = IniCacheLoad(&IniCache,
-			&FileName,
-			TRUE);
+  Status = InfOpenFile(&SetupInf,
+		       &FileName,
+		       &ErrorLine);
   if (!NT_SUCCESS(Status))
     {
       PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
@@ -424,9 +425,7 @@ StartPage(PINPUT_RECORD Ir)
     }
 
   /* Open 'Version' section */
-  Section = IniCacheGetSection(IniCache,
-			       L"Version");
-  if (Section == NULL)
+  if (!InfFindFirstLine (SetupInf, L"Version", L"Signature", &Context))
     {
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
@@ -444,10 +443,7 @@ StartPage(PINPUT_RECORD Ir)
 
 
   /* Get pointer 'Signature' key */
-  Status = IniCacheGetKey(Section,
-			  L"Signature",
-			  &Value);
-  if (!NT_SUCCESS(Status))
+  if (!InfGetData (&Context, NULL, &Value))
     {
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
@@ -464,7 +460,8 @@ StartPage(PINPUT_RECORD Ir)
     }
 
   /* Check 'Signature' string */
-  if (_wcsicmp(Value, L"$ReactOS$") != 0)
+//  if (_wcsicmp(Value, L"$ReactOS$") != 0)
+  if (_wcsicmp(Value, L"\"$ReactOS$\"") != 0)
     {
       PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
@@ -862,17 +859,15 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
-  PINICACHESECTION Section;
   WCHAR PathBuffer[MAX_PATH];
   WCHAR InstallDir[51];
   PWCHAR DefaultPath;
+  INFCONTEXT Context;
   ULONG Length;
   NTSTATUS Status;
 
-  /* Open 'SetupData' section */
-  Section = IniCacheGetSection(IniCache,
-			       L"SetupData");
-  if (Section == NULL)
+  /* Search for 'DefaultPath' in the 'SetupData' section */
+  if (!InfFindFirstLine (SetupInf, L"SetupData", L"DefaultPath", &Context))
     {
       PopupError("Setup failed to find the 'SetupData' section\n"
 		 "in TXTSETUP.SIF.\n",
@@ -889,17 +884,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
     }
 
-  /* Read the 'DefaultPath' key */
-  Status = IniCacheGetKey(Section,
-			  L"DefaultPath",
-			  &DefaultPath);
-  if (!NT_SUCCESS(Status))
+  /* Read the 'DefaultPath' data */
+  if (InfGetData (&Context, NULL, &DefaultPath))
     {
-      wcscpy(InstallDir, L"\\reactos");
+      wcscpy(InstallDir, DefaultPath);
     }
   else
     {
-      wcscpy(InstallDir, DefaultPath);
+      wcscpy(InstallDir, L"\\ReactOS");
     }
   Length = wcslen(InstallDir);
 
@@ -987,9 +979,8 @@ static ULONG
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
-  PINICACHESECTION DirSection;
-  PINICACHESECTION FilesSection;
-  PINICACHEITERATOR Iterator;
+  INFCONTEXT FilesContext;
+  INFCONTEXT DirContext;
   PWCHAR KeyName;
   PWCHAR KeyValue;
   ULONG Length;
@@ -1017,30 +1008,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 //  SetInvertedTextXY(8, 12, "Build file copy list");
 
 
-  /* Open 'Directories' section */
-  DirSection = IniCacheGetSection(IniCache,
-				  L"Directories");
-  if (DirSection == NULL)
-    {
-      PopupError("Setup failed to find the 'Directories' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
 
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
-	    }
-	}
-    }
-
-  /* Open 'SourceFiles' section */
-  FilesSection = IniCacheGetSection(IniCache,
-				    L"SourceFiles");
-  if (FilesSection == NULL)
+  /* Search for the 'SourceFiles' section */
+  if (!InfFindFirstLine (SetupInf, L"SourceFiles", NULL, &FilesContext))
     {
       PopupError("Setup failed to find the 'SourceFiles' section\n"
 		 "in TXTSETUP.SIF.\n",
@@ -1080,40 +1050,40 @@ PrepareCopyPage(PINPUT_RECORD Ir)
    * Enumerate the files in the 'SourceFiles' section
    * and add them to the file queue.
    */
-  Iterator = IniCacheFindFirstValue(FilesSection,
-				    &FileKeyName,
-				    &FileKeyValue);
-  if (Iterator != NULL)
+  do
     {
-      do
+      if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
+	break;
+
+      DPRINT1("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
+
+      /* Lookup target directory */
+      if (!InfFindFirstLine (SetupInf, L"Directories", FileKeyValue, &DirContext))
 	{
-	  DPRINT1("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
-
-	  /* Lookup target directory */
-	  Status = IniCacheGetKey(DirSection,
-				  FileKeyValue,
-				  &DirKeyValue);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      /* FIXME: Handle error! */
-	      DPRINT1("IniCacheGetKey() failed (Status 0x%lX)\n", Status);
-	    }
-
-	  if (SetupQueueCopy(SetupFileQueue,
-			     SourceRootPath.Buffer,
-			     L"\\install",
-			     FileKeyName,
-			     DirKeyValue,
-			     NULL) == FALSE)
-	    {
-	      /* FIXME: Handle error! */
-	      DPRINT1("SetupQueueCopy() failed\n");
-	    }
+	  /* FIXME: Handle error! */
+	  DPRINT1("InfFindFirstLine() failed\n");
+	  break;
 	}
-      while (IniCacheFindNextValue(Iterator, &FileKeyName, &FileKeyValue));
 
-      IniCacheFindClose(Iterator);
+      if (!InfGetData (&DirContext, NULL, &DirKeyValue))
+	{
+	  /* FIXME: Handle error! */
+	  DPRINT1("InfGetData() failed\n");
+	  break;
+	}
+
+      if (!SetupQueueCopy(SetupFileQueue,
+			  SourceRootPath.Buffer,
+			  L"\\install",
+			  FileKeyName,
+			  DirKeyValue,
+			  NULL))
+	{
+	  /* FIXME: Handle error! */
+	  DPRINT1("SetupQueueCopy() failed\n");
+	}
     }
+  while (InfFindNextLine(&FilesContext, &FilesContext));
 
 
   /* Create directories */
@@ -1153,56 +1123,70 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	}
     }
 
-  /* Enumerate the directory values and create the subdirectories */
-  Iterator = IniCacheFindFirstValue(DirSection,
-				    &KeyName,
-				    &KeyValue);
-  if (Iterator != NULL)
+
+  /* Search for the 'Directories' section */
+  if (!InfFindFirstLine(SetupInf, L"Directories", NULL, &DirContext))
     {
-      do
+      PopupError("Setup failed to find the 'Directories' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
 	{
-	  if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  /* Enumerate the directory values and create the subdirectories */
+  do
+    {
+      if (!InfGetData (&DirContext, NULL, &KeyValue))
+	break;
+
+//      if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
+      if (wcscmp (KeyValue, L"\"\\\"") == 0)
+	{
 	      DPRINT("Absolute Path: '%S'\n", KeyValue);
 
 	      wcscpy(PathBuffer, DestinationRootPath.Buffer);
 	      wcscat(PathBuffer, KeyValue);
 
 	      DPRINT("FullPath: '%S'\n", PathBuffer);
-	    }
-	  else if (KeyValue[0] != L'\\')
+	}
+      else if (KeyValue[0] != L'\\')
+	{
+	  DPRINT("RelativePath: '%S'\n", KeyValue);
+	  wcscpy(PathBuffer, DestinationPath.Buffer);
+	  wcscat(PathBuffer, L"\\");
+	  wcscat(PathBuffer, KeyValue);
+
+	  DPRINT("FullPath: '%S'\n", PathBuffer);
+
+	  Status = CreateDirectory(PathBuffer);
+	  if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
 	    {
-	      DPRINT("RelativePath: '%S'\n", KeyValue);
-	      wcscpy(PathBuffer, DestinationPath.Buffer);
-	      wcscat(PathBuffer, L"\\");
-	      wcscat(PathBuffer, KeyValue);
+	      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+	      PopupError("Setup could not create install directories.",
+			 "ENTER = Reboot computer");
 
-	      DPRINT("FullPath: '%S'\n", PathBuffer);
-
-	      Status = CreateDirectory(PathBuffer);
-	      if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+	      while (TRUE)
 		{
-		  DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
-		  PopupError("Setup could not create install directories.",
-			     "ENTER = Reboot computer");
+		  ConInKey(Ir);
 
-		  while (TRUE)
+		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    {
-		      ConInKey(Ir);
-
-		      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-			{
-			  IniCacheFindClose(Iterator);
-			  return(QUIT_PAGE);
-			}
+		      return(QUIT_PAGE);
 		    }
 		}
 	    }
 	}
-      while (IniCacheFindNextValue(Iterator, &KeyName, &KeyValue));
-
-      IniCacheFindClose(Iterator);
     }
+  while (InfFindNextLine (&DirContext, &DirContext));
 
   return(FILE_COPY_PAGE);
 }

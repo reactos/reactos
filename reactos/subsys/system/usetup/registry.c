@@ -32,14 +32,16 @@
 #include "usetup.h"
 #include "registry.h"
 
+
 /* FUNCTIONS ****************************************************************/
+
 
 NTSTATUS
 SetupUpdateRegistry(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
-//  UNICODE_STRING ValueName;
+  UNICODE_STRING ValueName;
   HANDLE KeyHandle;
   NTSTATUS Status;
 
@@ -66,12 +68,31 @@ SetupUpdateRegistry(VOID)
   NtClose(KeyHandle);
 
 
-  /* FIXME: Create key '\Registry\Machine\System\Setup' */
+  /* Create '\Registry\Machine\System\Setup' key */
+  RtlInitUnicodeStringFromLiteral(&KeyName,
+				  L"\\Registry\\Machine\\SYSTEM\\Setup");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtCreateKey(&KeyHandle,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_NON_VOLATILE,
+		       NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+    }
 
   /* FIXME: Create value 'SetupType' */
 
   /* FIXME: Create value 'SystemSetupInProgress' */
 
+  NtClose(KeyHandle);
 
   return STATUS_SUCCESS;
 }
