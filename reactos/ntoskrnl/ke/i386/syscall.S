@@ -270,8 +270,8 @@ IntRet:
 FastRet:
 
     /* Is SYSEXIT Supported/Wanted? */
-    cmpl $1, _KiFastSystemCallDisable
-    je IntRet
+    cmpl $0, %ss:_KiFastSystemCallDisable
+    jnz IntRet
 
     /* Restore FS to TIB */
     mov $TEB_SELECTOR, %ecx
