@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.16 2002/09/08 10:23:38 chorns Exp $
+/* $Id: nttimer.c,v 1.17 2003/02/27 15:41:54 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,6 +63,25 @@ NtpCreateTimer(PVOID ObjectBody,
 }
 
 
+VOID STDCALL
+NtpDeleteTimer(PVOID ObjectBody)
+{
+   KIRQL OldIrql;
+   PNTTIMER Timer = ObjectBody;
+
+   DPRINT("NtpDeleteTimer()\n");
+
+   OldIrql = KeRaiseIrqlToDpcLevel();
+
+   KeCancelTimer(&Timer->Timer);
+   KeRemoveQueueDpc(&Timer->Dpc);
+   KeRemoveQueueApc(&Timer->Apc);
+   Timer->Running = FALSE;
+
+   KeLowerIrql(OldIrql);
+}
+
+
 VOID
 NtpTimerDpcRoutine(PKDPC Dpc,
 		   PVOID DeferredContext,
@@ -70,11 +89,11 @@ NtpTimerDpcRoutine(PKDPC Dpc,
 		   PVOID SystemArgument2)
 {
    PNTTIMER Timer;
-   
+
    DPRINT("NtpTimerDpcRoutine()\n");
-   
+
    Timer = (PNTTIMER)DeferredContext;
-   
+
    if ( Timer->Running )
      {
 	KeInsertQueueApc(&Timer->Apc,
@@ -100,9 +119,9 @@ NtpTimerApcKernelRoutine(PKAPC Apc,
 VOID NtInitializeTimerImplementation(VOID)
 {
    ExTimerType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   
+
    RtlCreateUnicodeString(&ExTimerType->TypeName, L"Timer");
-   
+
    ExTimerType->Tag = TAG('T', 'I', 'M', 'T');
    ExTimerType->MaxObjects = ULONG_MAX;
    ExTimerType->MaxHandles = ULONG_MAX;
@@ -114,7 +133,7 @@ VOID NtInitializeTimerImplementation(VOID)
    ExTimerType->Dump = NULL;
    ExTimerType->Open = NULL;
    ExTimerType->Close = NULL;
-   ExTimerType->Delete = NULL;
+   ExTimerType->Delete = NtpDeleteTimer;
    ExTimerType->Parse = NULL;
    ExTimerType->Security = NULL;
    ExTimerType->QueryName = NULL;
@@ -142,22 +161,22 @@ NtCancelTimer(IN HANDLE TimerHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      return Status;
-   
+
    OldIrql = KeRaiseIrqlToDpcLevel();
-   
+
    State = KeCancelTimer(&Timer->Timer);
    KeRemoveQueueDpc(&Timer->Dpc);
    KeRemoveQueueApc(&Timer->Apc);
    Timer->Running = FALSE;
-  
+
    KeLowerIrql(OldIrql);
    ObDereferenceObject(Timer);
-   
+
    if (CurrentState != NULL)
      {
 	*CurrentState = State;
      }
-   
+
    return STATUS_SUCCESS;
 }
 
@@ -170,7 +189,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 {
    PNTTIMER Timer;
    NTSTATUS Status;
-   
+
    DPRINT("NtCreateTimer()\n");
    Status = ObCreateObject(TimerHandle,
 			   DesiredAccess,
@@ -179,18 +198,18 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 			   (PVOID*)&Timer);
    if (!NT_SUCCESS(Status))
      return Status;
-   
+
    KeInitializeTimerEx(&Timer->Timer,
 		       TimerType);
-   
+
    KeInitializeDpc (&Timer->Dpc,
 		    (PKDEFERRED_ROUTINE)NtpTimerDpcRoutine,
 		    (PVOID)Timer);
-   
+
    Timer->Running = FALSE;
-   
+
    ObDereferenceObject(Timer);
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -201,7 +220,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
 	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
-   
+
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExTimerType,
 			       NULL,
@@ -233,7 +252,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      return(Status); 
+      return(Status);
     }
 
   if (TimerInformationClass != TimerBasicInformation)
@@ -246,12 +265,12 @@ NtQueryTimer(IN HANDLE TimerHandle,
       ObDereferenceObject(Timer);
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  
+
   memcpy(&TimerInformation.TimeRemaining, &Timer->Timer.DueTime,
 	 sizeof(LARGE_INTEGER));
   TimerInformation.SignalState = Timer->Timer.Header.SignalState;
   ResultLength = sizeof(TIMER_BASIC_INFORMATION);
-  
+
   Status = MmCopyToCaller(UnsafeTimerInformation, &TimerInformation,
 			  sizeof(TIMER_BASIC_INFORMATION));
   if (!NT_SUCCESS(Status))
@@ -259,7 +278,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
       ObDereferenceObject(Timer);
       return(Status);
     }
-  
+
   if (UnsafeResultLength != NULL)
     {
       Status = MmCopyToCaller(UnsafeResultLength, &ResultLength,
