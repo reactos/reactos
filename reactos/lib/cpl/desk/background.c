@@ -19,38 +19,44 @@
 #include "desk.h"
 #include "dibitmap.h"
 
-#define MAX_WALLPAPERS 100
+#define MAX_BACKGROUNDS     100
 
 #define PLACEMENT_CENTER    0
 #define PLACEMENT_STRETCH   1
 #define PLACEMENT_TILE      2
 
-DIBitmap *g_pWallpaperBitmap = NULL;
+typedef struct
+{
+    BOOL bWallpaper; /* Is this background a wallpaper */
+    
+    TCHAR szFilename[MAX_PATH];
+    TCHAR szDisplayName[256];
+    
+} BackgroundItem;
 
-int g_placementSelection = 0;
-int g_wallpaperSelection = -1;
+BackgroundItem g_backgroundItems[MAX_BACKGROUNDS];
 
-int g_wallpaperCount = 0;
-int g_listViewItemCount = 0;
+DIBitmap *g_pWallpaperBitmap    = NULL;
 
-int g_currentWallpaperItemId = 0;
+int g_placementSelection        = 0;
+int g_backgroundSelection       = 0;
 
-HWND g_hBackgroundTab = NULL;
+int g_listViewItemCount         = 0;
 
-HWND g_hWallpaperList = NULL;
-HWND g_hWallpaperPreview = NULL;
-HIMAGELIST g_hShellImageList = NULL;
+HWND g_hBackgroundPage          = NULL;
+HWND g_hBackgroundList          = NULL;
+HWND g_hBackgroundPreview       = NULL;
 
-HWND g_hPlacementCombo = NULL;
+HWND g_hPlacementCombo          = NULL;
+HWND g_hColorButton             = NULL;
 
-TCHAR g_wallpapers[MAX_WALLPAPERS][MAX_PATH];
+HIMAGELIST g_hShellImageList    = NULL;
 
 /* Add the bitmaps in the C:\ReactOS directory and the current wallpaper if any */
 void AddListViewItems()
 {
     WIN32_FIND_DATA fd;
     HANDLE hFind;
-    TCHAR szBuffer[256];
     TCHAR szSearchPath[MAX_PATH];
     LV_ITEM listItem;
     LV_COLUMN dummy;
@@ -63,30 +69,38 @@ void AddListViewItems()
     DWORD varType = REG_SZ;
     LONG result;
     UINT i = 0;
+    BackgroundItem *backgroundItem = NULL;
 
-    GetClientRect(g_hWallpaperList, &clientRect);
+    GetClientRect(g_hBackgroundList, &clientRect);
     
     ZeroMemory(&dummy, sizeof(LV_COLUMN));
     dummy.mask      = LVCF_SUBITEM | LVCF_WIDTH;
     dummy.iSubItem  = 0;
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     
-    ListView_InsertColumn(g_hWallpaperList, 0, &dummy);
+    ListView_InsertColumn(g_hBackgroundList, 0, &dummy);
 
     /* Add the "None" item */
 
-    LoadString(hApplet, IDS_NONE, szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
+    backgroundItem = &g_backgroundItems[g_listViewItemCount];
+    
+    backgroundItem->bWallpaper = FALSE;
+    
+    LoadString(hApplet,
+               IDS_NONE,
+               backgroundItem->szDisplayName,
+               sizeof(backgroundItem->szDisplayName) / sizeof(TCHAR));
     
     ZeroMemory(&listItem, sizeof(LV_ITEM));
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-    listItem.pszText    = szBuffer;
-    listItem.iItem      = g_listViewItemCount;
-    listItem.iImage     = -1;
     listItem.state      = LVIS_SELECTED;
-    listItem.lParam     = -1;
+    listItem.pszText    = backgroundItem->szDisplayName;
+    listItem.iImage     = -1;
+    listItem.iItem      = g_listViewItemCount;
+    listItem.lParam     = g_listViewItemCount;
     
-    ListView_InsertItem(g_hWallpaperList, &listItem);
-    ListView_SetItemState(g_hWallpaperList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
+    ListView_InsertItem(g_hBackgroundList, &listItem);
+    ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
     g_listViewItemCount++;
 
@@ -110,26 +124,28 @@ void AddListViewItems()
             if(i++ == 0)
             {
                 g_hShellImageList = himl;
-                ListView_SetImageList(g_hWallpaperList, himl, LVSIL_SMALL);
+                ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
             }
+
+            backgroundItem = &g_backgroundItems[g_listViewItemCount];
+            
+            backgroundItem->bWallpaper = TRUE;
+
+            _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+            _tcscpy(backgroundItem->szFilename, wallpaperFilename);
 
             ZeroMemory(&listItem, sizeof(LV_ITEM));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.pszText    = sfi.szDisplayName;
             listItem.state      = LVIS_SELECTED;
-            listItem.iItem      = g_listViewItemCount;
+            listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
-            listItem.lParam     = g_wallpaperCount;
+            listItem.iItem      = g_listViewItemCount;
+            listItem.lParam     = g_listViewItemCount;
 
-            ListView_InsertItem(g_hWallpaperList, &listItem);
-            _tcscpy(g_wallpapers[g_wallpaperCount], wallpaperFilename);
-
-            ListView_SetItemState(g_hWallpaperList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
-
-            g_currentWallpaperItemId = g_listViewItemCount;
+            ListView_InsertItem(g_hBackgroundList, &listItem);
+            ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
             g_listViewItemCount++;
-            g_wallpaperCount++;
         }
     }
     
@@ -168,22 +184,27 @@ void AddListViewItems()
             if(i++ == 0)
             {
                 g_hShellImageList = himl;
-                ListView_SetImageList(g_hWallpaperList, himl, LVSIL_SMALL);
+                ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
             }
+
+            backgroundItem = &g_backgroundItems[g_listViewItemCount];
+
+            backgroundItem->bWallpaper = TRUE;
+            
+            _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+            _tcscpy(backgroundItem->szFilename, filename);
 
             ZeroMemory(&listItem, sizeof(LV_ITEM));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.pszText    = sfi.szDisplayName;
+            listItem.pszText    = backgroundItem->szDisplayName;
             listItem.state      = 0;
-            listItem.iItem      = g_listViewItemCount++;
             listItem.iImage     = sfi.iIcon;
-            listItem.lParam     = g_wallpaperCount;
+            listItem.iItem      = g_listViewItemCount;
+            listItem.lParam     = g_listViewItemCount;
             
-            ListView_InsertItem(g_hWallpaperList, &listItem);
+            ListView_InsertItem(g_hBackgroundList, &listItem);
             
-            _tcscpy(g_wallpapers[g_wallpaperCount], filename);
-            
-            g_wallpaperCount++;
+            g_listViewItemCount++;
         }
         
         if(!FindNextFile(hFind, &fd))
@@ -193,9 +214,10 @@ void AddListViewItems()
 
 void InitBackgroundDialog()
 {
-    g_hWallpaperList    = GetDlgItem(g_hBackgroundTab, IDC_WALLPAPER_LIST);
-    g_hWallpaperPreview = GetDlgItem(g_hBackgroundTab, IDC_WALLPAPER_PREVIEW);
-    g_hPlacementCombo   = GetDlgItem(g_hBackgroundTab, IDC_PLACEMENT_COMBO);
+    g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
+    g_hBackgroundPreview    = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_PREVIEW);
+    g_hPlacementCombo       = GetDlgItem(g_hBackgroundPage, IDC_PLACEMENT_COMBO);
+    g_hColorButton          = GetDlgItem(g_hBackgroundPage, IDC_COLOR_BUTTON);
 
     AddListViewItems();
     
@@ -256,7 +278,7 @@ void InitBackgroundDialog()
     RegCloseKey(regKey);
 }
 
-void OnPatternButton()
+void OnColorButton()
 {
     MessageBox(NULL, TEXT("That button doesn't do anything yet"), TEXT("Whoops"), MB_OK);
 }
@@ -271,11 +293,12 @@ void OnBrowseButton()
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
     TCHAR fileTitle[256];
+    BackgroundItem *backgroundItem = NULL;
         
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
     ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = g_hBackgroundTab;
+    ofn.hwndOwner = g_hBackgroundPage;
     ofn.lpstrFile = filename;
         
     /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
@@ -292,77 +315,76 @@ void OnBrowseButton()
     if(GetOpenFileName(&ofn) == TRUE)
     {   
         /* Check if there is already a entry that holds this filename */
-        if(CheckListBoxFilename(g_hWallpaperList, filename) == FALSE)
-        {
-            SHFILEINFO sfi;
-            LV_ITEM listItem;
-            
-            if(g_wallpaperCount > (MAX_WALLPAPERS - 1))
-                return;
-                
-            _tcscpy(g_wallpapers[g_wallpaperCount], filename);
-            
-            SHGetFileInfo(filename,
-                          0,
-                          &sfi,
-                          sizeof(sfi),
-                          SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
-                
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
-            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.pszText    = sfi.szDisplayName;
-            listItem.state      = 0;
-            listItem.iItem      = g_listViewItemCount++;
-            listItem.iImage     = sfi.iIcon;
-            listItem.lParam     = g_wallpaperCount;
-                
-            ListView_InsertItem(g_hWallpaperList, &listItem);
-
-            g_wallpaperCount++;
-        }
+        if(CheckListBoxFilename(g_hBackgroundList, filename) == TRUE)
+            return;
+        
+        SHFILEINFO sfi;
+        LV_ITEM listItem;
+        
+        if(g_listViewItemCount > (MAX_BACKGROUNDS - 1))
+            return;
+        
+        SHGetFileInfo(filename,
+                      0,
+                      &sfi,
+                      sizeof(sfi),
+                      SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+        
+        backgroundItem = &g_backgroundItems[g_listViewItemCount];
+        
+        backgroundItem->bWallpaper = TRUE;
+        
+        _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+        _tcscpy(backgroundItem->szFilename, filename);
+        
+        ZeroMemory(&listItem, sizeof(LV_ITEM));
+        listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+        listItem.state      = 0;
+        listItem.pszText    = backgroundItem->szDisplayName;
+        listItem.iImage     = sfi.iIcon;
+        listItem.iItem      = g_listViewItemCount;
+        listItem.lParam     = g_listViewItemCount;
+        
+        ListView_InsertItem(g_hBackgroundList, &listItem);
+        
+        g_listViewItemCount++;
     }
 }
 
 void ListViewItemChanged(int itemIndex)
-{    
+{
+    BackgroundItem *backgroundItem = NULL;
+    
+    g_backgroundSelection = itemIndex;
+    backgroundItem = &g_backgroundItems[g_backgroundSelection];
+    
     if(g_pWallpaperBitmap != NULL)
     {
         DibFreeImage(g_pWallpaperBitmap);
         g_pWallpaperBitmap = NULL;
     }
-
-    LV_ITEM listItem;
     
-    listItem.iItem = itemIndex;
-    listItem.mask = LVIF_PARAM;
-    ListView_GetItem(g_hWallpaperList, &listItem);
-    
-    if(listItem.lParam == -1)
-    {
-        g_wallpaperSelection = -1;
-        InvalidateRect(g_hWallpaperPreview, NULL, TRUE);
-    }
-    else
-    {
-        g_wallpaperSelection = listItem.lParam;
-        
-        g_pWallpaperBitmap = DibLoadImage(g_wallpapers[g_wallpaperSelection]);
+    if(backgroundItem->bWallpaper == TRUE)
+    {   
+        g_pWallpaperBitmap = DibLoadImage(backgroundItem->szFilename);
         
         if(g_pWallpaperBitmap == NULL)
         {
+            return;
         }
-        
-        InvalidateRect(g_hWallpaperPreview, NULL, TRUE);
     }
     
-    EnableWindow(g_hPlacementCombo, (listItem.lParam != -1 ? TRUE : FALSE));
+    InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
     
-    PropSheet_Changed(GetParent(g_hBackgroundTab), g_hBackgroundTab);
+    EnableWindow(g_hColorButton, (backgroundItem->bWallpaper == FALSE ? TRUE : FALSE));
+    EnableWindow(g_hPlacementCombo, backgroundItem->bWallpaper);
+    
+    PropSheet_Changed(GetParent(g_hBackgroundPage), g_hBackgroundPage);
 }
 
-void DrawWallpaperPreview(LPDRAWITEMSTRUCT draw)
+void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
 {
-    if(g_wallpaperSelection == -1)
+    if(g_backgroundItems[g_backgroundSelection].bWallpaper == FALSE)
     {
         FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
         return;
@@ -471,16 +493,16 @@ void SetWallpaper()
     
     RegCloseKey(regKey);
     
-    if(g_wallpaperSelection == -1)
-    {                
-        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(""), SPIF_UPDATEINIFILE);
+    if(g_backgroundItems[g_backgroundSelection].bWallpaper == TRUE)
+    {
+        SystemParametersInfo(SPI_SETDESKWALLPAPER,
+                             0,
+                             g_backgroundItems[g_backgroundSelection].szFilename,
+                             SPIF_UPDATEINIFILE);
     }
     else
     {   
-        SystemParametersInfo(SPI_SETDESKWALLPAPER,
-                             0,
-                             g_wallpapers[g_wallpaperSelection],
-                             SPIF_UPDATEINIFILE);
+        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(""), SPIF_UPDATEINIFILE);
     }
 }
 
@@ -489,7 +511,7 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                                     WPARAM wParam,
                                     LPARAM lParam)
 {
-    g_hBackgroundTab = hwndDlg;
+    g_hBackgroundPage = hwndDlg;
 
     switch(uMsg)
     {
@@ -505,16 +527,18 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                 
                 switch(controlId)
                 {
-                    case IDC_PATTERN:
+                    case IDC_COLOR_BUTTON:
                         {
                             if(command == BN_CLICKED)
-                                OnPatternButton();
+                                OnColorButton();
+                            
                         } break;
                     
-                    case IDC_BROWSE:
+                    case IDC_BROWSE_BUTTON:
                         {
                             if(command == BN_CLICKED)
                                 OnBrowseButton();
+                            
                         } break;
                     
                     case IDC_PLACEMENT_COMBO:
@@ -523,9 +547,9 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                             {
                                 g_placementSelection = SendMessage(g_hPlacementCombo, CB_GETCURSEL, 0, 0);
                                 
-                                InvalidateRect(g_hWallpaperPreview, NULL, TRUE);
+                                InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
                                 
-                                PropSheet_Changed(GetParent(g_hBackgroundTab), g_hBackgroundTab);
+                                PropSheet_Changed(GetParent(g_hBackgroundPage), g_hBackgroundPage);
                             }
                             
                         } break;
@@ -537,9 +561,9 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                 LPDRAWITEMSTRUCT drawItem;
                 drawItem = (LPDRAWITEMSTRUCT)lParam;
 
-                if(drawItem->CtlID == IDC_WALLPAPER_PREVIEW)
+                if(drawItem->CtlID == IDC_BACKGROUND_PREVIEW)
                 {
-                    DrawWallpaperPreview(drawItem);
+                    DrawBackgroundPreview(drawItem);
                 }
 
             } break;
@@ -553,16 +577,6 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                     case PSN_APPLY:
                         {
                             SetWallpaper();
-                            
-                            /* Update the current wallapaper list item to the 
-                             * currently selected wallpaper */
-                            LV_ITEM listItem;
-                            listItem.mask = LVIF_PARAM;
-                            listItem.iSubItem = 0;
-                            listItem.iItem = g_currentWallpaperItemId;
-                            listItem.lParam = g_wallpaperSelection;
-                            
-                            ListView_SetItem(g_hWallpaperList, &listItem);
 
                             return TRUE;
                         } break;
