@@ -1,0 +1,7 @@
+services.coff
+services.exe
+services.nostrip.exe
+*.d
+*.o
+*.sym
+*.map

@@ -1,0 +1,14 @@
+Index: version.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/dinput8/version.rc,v
+retrieving revision 1.4
+diff -u -r1.4 version.rc
+--- version.rc	23 Nov 2004 13:59:36 -0000	1.4
++++ version.rc	7 Dec 2004 22:27:53 -0000
+@@ -22,5 +22,6 @@
+ #define WINE_FILEVERSION_STR "5.1.2600.881"
+ #define WINE_PRODUCTVERSION 5,1,2600,881
+ #define WINE_PRODUCTVERSION_STR "5.1"
++#define WINE_PRODUCTNAME_STR "DirectX"
+ 
+ #include "wine/wine_common_ver.rc"

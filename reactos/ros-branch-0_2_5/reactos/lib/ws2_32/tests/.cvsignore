@@ -1,0 +1,9 @@
+_regtests.c
+_rtstub.c
+_hooks.c
+_stubs.S
+Makefile.tests
+*.d
+*.o
+*.a
+*.pch

@@ -1,0 +1,14 @@
+errcodes.rc
+temp.exp
+*.d
+*.a
+*.o
+*.bin
+*.dll
+*.lib
+*.coff
+*.sym
+*.tmp
+*.gch
+*.pch
+*.map

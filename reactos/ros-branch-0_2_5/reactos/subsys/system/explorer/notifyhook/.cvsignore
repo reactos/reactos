@@ -1,0 +1,10 @@
+Debug
+Release
+*.d
+*.o
+*.dll
+*.gch
+*.h.pch
+notifyhook.map
+notifyhook.sym
+notifyhook.coff

@@ -1,0 +1,8 @@
+*.coff
+*.cpl
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp

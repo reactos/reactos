@@ -1,0 +1,9 @@
+*.coff
+*.exe
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+wine2ros

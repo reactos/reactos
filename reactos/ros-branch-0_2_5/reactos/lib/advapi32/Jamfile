@@ -1,0 +1,34 @@
+SubDir ROS_TOP Lib Advapi32 ;
+
+# This stuff should actually be moved to Jamrules
+# in order to more easily support other compilers
+CCFLAGS += -Wall -fno-builtin ;
+
+# NOTE - I'm no Jam expert, yet. This stuff should be
+# abstracted into the Jamrules file.
+LINKFLAGS += -nostartfiles -nostdlib ;
+LINKFLAGS += -Wl,--image-base,0x77DB0000 ;
+
+MISC_SRCS = dllmain shutdown sysfunc ;
+
+REG_SRCS = reg ;
+
+SEC_SRCS = ac lsa misc sec sid ;
+
+SERVICE_SRCS = scm sctrl undoc ;
+
+TOKEN_SRCS = privilege token ;
+
+ADVAPI32_SRCS =
+	misc/$(MISC_SRCS).c
+	reg/$(REG_SRCS).c
+	sec/$(SEC_SRCS).c
+	service/$(SERVICE_SRCS).c
+	token/$(TOKEN_SRCS).c
+	;
+
+SharedLibrary advapi32 : $(ADVAPI32_SRCS) ;
+LINKLIBS =
+	$(ROS_TOP)/dk/w32/lib/ntdll.a
+	$(ROS_TOP)/dk/w32/lib/kernel32.a
+	;

@@ -1,0 +1,10 @@
+*.o
+*.d
+*.exe
+*.coff
+*.sym
+*.dsp
+*.dsw
+*.ncb
+*.opt
+*.map

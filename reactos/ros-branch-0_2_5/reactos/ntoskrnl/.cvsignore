@@ -1,0 +1,14 @@
+objects
+base.tmp
+junk.tmp
+temp.exp
+ntoskrnl.coff
+ntoskrnl.map
+ntoskrnl.dbg
+bugcodes.rc
+msg*.bin
+*.d
+*.o
+*.sym
+*.exe
+doxy-doc

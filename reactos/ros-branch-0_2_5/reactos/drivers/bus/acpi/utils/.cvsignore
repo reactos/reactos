@@ -1,0 +1,6 @@
+acpi.coff
+objects
+*.d
+*.o
+*.sym
+*.map

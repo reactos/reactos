@@ -1,0 +1,12 @@
+*.a
+*.d
+*.o
+*.dll
+*.coff
+*.sym
+*.map
+*.tmp
+temp.exp
+msacm32.spec.def
+Makefile.ros
+msacm32.stubs.c

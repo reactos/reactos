@@ -1,0 +1,8 @@
+junk.tmp
+base.tmp
+temp.exp
+vgamp.coff
+*.o
+*.sym
+*.sys
+*.map

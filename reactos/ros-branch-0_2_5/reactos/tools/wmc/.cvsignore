@@ -1,0 +1,10 @@
+wmc
+*.coff
+*.d
+*.exe
+*.o
+*.sym
+*.dsp
+*.dsw
+*.ncb
+*.opt

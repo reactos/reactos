@@ -1,0 +1,4 @@
+vfatlib.a
+*.d
+*.o
+*.sym

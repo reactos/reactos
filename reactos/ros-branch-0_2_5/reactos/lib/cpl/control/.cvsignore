@@ -1,0 +1,15 @@
+*.coff
+*.exe
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+
+*.ncb
+*.opt
+*.plg
+*.aps
+Debug
+Release

@@ -1,0 +1,11 @@
+temp.exp
+*.tmp
+*.gch
+*.pch
+*.sys
+*.coff
+*.sym
+*.map
+*.d
+*.o
+doxy-doc
