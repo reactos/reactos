@@ -187,6 +187,8 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
+   if( PsGetCurrentThread()->ThreadsProcess == Process )
+     PsTerminateCurrentThread( ExitStatus );
    DPRINT("RC %d\n", ObGetReferenceCount(Process));
    return(STATUS_SUCCESS);
 }
