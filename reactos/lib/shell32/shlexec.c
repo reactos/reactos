@@ -785,8 +785,9 @@ static unsigned dde_connect(WCHAR * key, WCHAR* start, WCHAR* ddeexec,
         if (!hConv)
         {
             TRACE("Couldn't connect. ret=%d\n", ret);
-            ret = 30; /* whatever */
-            goto error;
+            DdeUninitialize(ddeInst);
+            SetLastError(ERROR_DDE_FAIL);
+            return ret = 30; /* whatever */
         }
         strcpyW(endkey, wIfexec);
         ifexeclen = sizeof(ifexec);
