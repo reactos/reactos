@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.198 2004/01/02 19:49:44 gvg Exp $
+# $Id: Makefile,v 1.199 2004/01/03 23:12:19 sedwards Exp $
 #
 # Global makefile
 #
@@ -128,8 +128,7 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
 	$(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
 	$(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-	$(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
-	$(APPS:%=%_implib) $(EXT_MODULES:%=%_implib)
+	$(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
