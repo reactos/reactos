@@ -3,7 +3,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <win32k/debug.h>
+//#include <win32k/debug.h>
 #include <win32k/paint.h>
 
 // #define NDEBUG
@@ -28,7 +28,7 @@ UINT  W32kGetBoundsRect(HDC  hDC,
                         LPRECT  Bounds,
                         UINT  Flags)
 {
-  FIXME("stub");
+  DPRINT("stub");
   return  DCB_RESET;   /* bounding rectangle always empty */
 }
 
@@ -42,7 +42,7 @@ UINT  W32kSetBoundsRect(HDC  hDC,
                         CONST PRECT  Bounds,
                         UINT  Flags)
 {
-  FIXME("stub");
+  DPRINT("stub");
   return  DCB_DISABLE;   /* bounding rectangle always empty */
 }
 

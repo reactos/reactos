@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <win32k/bitmaps.h>
-#include <win32k/debug.h>
+//#include <win32k/debug.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -541,7 +541,7 @@ BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
       return 2 * ((bmWidth+3) >> 2);
       
     default:
-      FIXME ("stub");
+      DPRINT ("stub");
     }
 
   return -1;

@@ -3,6 +3,7 @@
  */
 
 #undef WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>

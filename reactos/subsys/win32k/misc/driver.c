@@ -1,12 +1,14 @@
-/* $Id: driver.c,v 1.4 1999/10/28 23:37:14 rex Exp $
+/* $Id: driver.c,v 1.5 1999/11/20 21:51:19 ekohl Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
  * 
  */
 
-#include <win32k/driver.h>
+#undef WIN32_LEAN_AND_MEAN
 #include <ddk/ntddk.h>
+#include <windows.h>
+#include <win32k/driver.h>
 #include <wchar.h>
 
 //#define NDEBUG
