@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.98 2004/05/10 17:07:18 weiden Exp $
+# $Id: makefile,v 1.99 2004/05/13 19:29:47 jfilby Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,6 +13,8 @@ TARGET_ENTRY = _DllMain@8
 TARGET_PCH = w32k.h
 
 TARGET_DDKLIBS = freetype.a
+
+TARGET_REGTESTS = yes
 
 FREETYPE_DIR = $(PATH_TO_TOP)/lib/freetype
 

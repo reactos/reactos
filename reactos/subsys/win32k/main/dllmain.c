@@ -16,11 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.72 2004/05/10 17:07:17 weiden Exp $
+/* $Id: dllmain.c,v 1.73 2004/05/13 19:29:47 jfilby Exp $
  *
  *  Entry Point for win32k.sys
  */
 #include <w32k.h>
+#include <roscfg.h>
 
 #ifdef __USE_W32API
 typedef NTSTATUS (STDCALL *PW32_PROCESS_CALLBACK)(
@@ -305,6 +306,8 @@ DllMain (
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */
   CreateStockObjects();
+  
+  PREPARE_TESTS
 
   return STATUS_SUCCESS;
 }
