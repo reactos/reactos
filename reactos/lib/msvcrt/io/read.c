@@ -5,7 +5,10 @@
  * PURPOSE:     Reads a file
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
- *              28/12/98: Created
+ *              28/12/1998: Created
+ *              03/05/2002: made _read() non-greedy - it now returns as soon as
+ *                          any amount of data has been read. It's the expected
+ *                          behavior for line-buffered streams (KJK::Hyperion)
  */
 #include <windows.h>
 #include <msvcrt/io.h>
@@ -16,38 +19,49 @@
 
 size_t _read(int _fd, void *_buf, size_t _nbyte)
 {
-   DWORD _rbyte = 0, nbyte = _nbyte, count;
-   int cr;
+   DWORD _rbyte = 0, nbyte = _nbyte;
    char *bufp = (char*)_buf;
+   HANDLE hfile;
+   int istext;
 
    DPRINT("_read(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
 
-   while (nbyte)
+   /* null read */
+   if(_nbyte == 0)
+      return 0;
+
+   hfile = _get_osfhandle(_fd);
+   istext = __fileno_getmode(_fd) & O_TEXT;
+
+   /* read data */
+   if (!ReadFile(hfile, bufp, nbyte, &_rbyte, NULL))
    {
-      if (!ReadFile(_get_osfhandle(_fd), bufp, nbyte, &_rbyte, NULL))
-      {
-         return -1;
-      }
-      if (_rbyte == 0)
-         break;
-      if (__fileno_getmode(_fd) & O_TEXT)
-      {
-	 cr = 0;
-	 count = _rbyte;
-         while (count)
-	 {
-            if (*bufp == '\r')
-	       cr++;
-	    else if (cr != 0)
-	           *(bufp - cr) = *bufp;
-            bufp++;
-	    count--;
-	 }
-	 _rbyte -= cr;
-         bufp -= cr;
-      }
-      nbyte -= _rbyte;
+      /* failure */
+      return -1;
    }
-   DPRINT("%d\n", _nbyte - nbyte);
-   return _nbyte - nbyte;
+      
+   /* text mode */
+   if (_rbyte && istext)
+   {
+      int cr = 0;
+      DWORD count = _rbyte;
+
+      /* repeat for all bytes in the buffer */
+      for(; count; bufp++, count--)
+      {
+         /* carriage return */
+         if (*bufp == '\r')
+            cr++;
+         /* shift characters back, to ignore carriage returns */
+         else if (cr != 0)
+            *(bufp - cr) = *bufp;
+
+      }
+
+      /* ignore the carriage returns */
+      _rbyte -= cr;
+   }
+
+   DPRINT("%d\n", _rbyte);
+   return _rbyte;
 }
