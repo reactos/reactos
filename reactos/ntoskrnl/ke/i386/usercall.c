@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.6 2000/02/21 22:41:05 ekohl Exp $
+/* $Id: usercall.c,v 1.7 2000/02/22 07:27:30 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -178,13 +178,70 @@ void interrupt_handler2e(void);
            /*  Users's current stack frame pointer is source  */
            "movl %edx,%esi\n\t"
 
-           /* FIXME: determine system service table to use  */
-           /* FIXME: check to see if SS is valid/inrange  */
+           /*  Determine system service table to use  */
+           "cmpl  $0x0fff, %eax\n\t"
+           "ja    useShadowTable\n\t"
+
+           /*  Check to see if SS is valid/inrange  */
+           "cmpl  _KeServiceDescriptorTable + 8, %eax\n\t"
+           "jbe   serviceInRange\n\t"
+           "movl  $"STR(STATUS_INVALID_SYSTEM_SERVICE)", %eax\n\t"
+           "jmp   done\n\t"
+
+           "serviceInRange:\n\t"
 
            /*  Allocate room for argument list from kernel stack  */
-           "movl %es:_MainSSPT(,%eax,4), %ecx\n\t"
-           //"movl %es:__SystemServiceTable(,%eax,8),%ecx\n\t"
-           "subl %ecx,%esp\n\t"
+           "movl  %es:_KeServiceDescriptorTable + 12, %ecx\n\t"
+           "movl  %es:(%ecx, %eax, 4), %ecx\n\t"
+           "subl  %ecx, %esp\n\t"
+
+           /*  Copy the arguments from the user stack to the kernel stack  */
+           "movl %esp,%edi\n\t"
+           "rep\n\tmovsb\n\t"
+
+           /*  DS is now also kernel segment  */
+           "movw %bx, %ds\n\t"
+
+	   /* Call system call hook */
+	   "pushl %eax\n\t"
+	   "call _KiSystemCallHook\n\t"
+	   "popl %eax\n\t"
+
+           /*  Make the system service call  */
+           "movl  %es:_KeServiceDescriptorTable, %ecx\n\t"
+           "movl  %es:(%ecx, %eax, 4), %eax\n\t"
+           "call  *%eax\n\t"
+
+#if CHECKED
+           /*  Bump Service Counter  */
+#endif
+
+           /*  Deallocate the kernel stack frame  */
+           "movl %ebp,%esp\n\t"
+
+	   /* Call the post system call hook and deliver any pending APCs */
+	   "pushl %eax\n\t"
+	   "call _KiAfterSystemCallHook\n\t"
+	   "addl $8,%esp\n\t"
+
+           "jmp  done\n\t"
+
+           "useShadowTable:\n\t"
+
+           "subl  $0x1000, %eax\n\t"
+
+           /*  Check to see if SS is valid/inrange  */
+           "cmpl  _KeServiceDescriptorTableShadow + 8, %eax\n\t"
+           "jbe   shadowServiceInRange\n\t"
+           "movl  $"STR(STATUS_INVALID_SYSTEM_SERVICE)", %eax\n\t"
+           "jmp   done\n\t"
+
+           "shadowServiceInRange:\n\t"
+
+           /*  Allocate room for argument list from kernel stack  */
+           "movl  %es:_KeServiceDescriptorTableShadow + 12, %ecx\n\t"
+           "movl  %es:(%ecx, %eax, 4), %ecx\n\t"
+           "subl  %ecx, %esp\n\t"
 
            /*  Copy the arguments from the user stack to the kernel stack  */
            "movl %esp,%edi\n\t"
@@ -199,9 +256,13 @@ void interrupt_handler2e(void);
 	   "popl %eax\n\t"
 
            /*  Make the system service call  */
-           //"movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
-            "movl %ds:_MainSSDT(,%eax,4),%eax\n\t"
-           "call *%eax\n\t"
+           "movl  %es:_KeServiceDescriptorTableShadow, %ecx\n\t"
+           "movl  %es:(%ecx, %eax, 4), %eax\n\t"
+           "call  *%eax\n\t"
+
+#if CHECKED
+           /*  Bump Service Counter  */
+#endif
 
            /*  Deallocate the kernel stack frame  */
            "movl %ebp,%esp\n\t"
@@ -210,6 +271,8 @@ void interrupt_handler2e(void);
 	   "pushl %eax\n\t"
 	   "call _KiAfterSystemCallHook\n\t"
 	   "addl $8,%esp\n\t"
+
+           "done:\n\t"
 
            /*  Restore the user context  */
 	   "addl $4,%esp\n\t"    /* UserContext */
