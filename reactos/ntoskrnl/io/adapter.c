@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.7 2002/09/08 10:23:24 chorns Exp $
+/* $Id: adapter.c,v 1.8 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,9 @@ USHORT       EXPORTED IoDeviceHandlerObjectSize = 0;	/* FIXME */
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoAllocateAdapterChannel (PADAPTER_OBJECT	AdapterObject,
 			  PDEVICE_OBJECT	DeviceObject,

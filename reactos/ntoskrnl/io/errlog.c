@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.9 2003/06/20 22:43:27 ekohl Exp $
+/* $Id: errlog.c,v 1.10 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,6 +62,9 @@ IopInitErrorLog (VOID)
 }
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 IoAllocateErrorLogEntry (IN PVOID IoObject,
 			 IN UCHAR EntrySize)
@@ -106,6 +109,9 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 IoWriteErrorLogEntry (IN PVOID ElEntry)
 {

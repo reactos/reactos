@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cancel.c,v 1.9 2003/01/25 16:15:33 hbirr Exp $
+/* $Id: cancel.c,v 1.10 2003/07/10 15:47:00 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cancel.c
@@ -39,6 +39,9 @@ static KSPIN_LOCK CancelSpinLock;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtCancelIoFile (IN	HANDLE			FileHandle,
 		OUT	PIO_STATUS_BLOCK	IoStatusBlock)
@@ -47,6 +50,9 @@ NtCancelIoFile (IN	HANDLE			FileHandle,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL 
 IoCancelIrp(PIRP Irp)
 {
@@ -72,12 +78,18 @@ IoInitCancelHandling(VOID)
    KeInitializeSpinLock(&CancelSpinLock);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 IoAcquireCancelSpinLock(PKIRQL Irql)
 {
    KeAcquireSpinLock(&CancelSpinLock,Irql);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 IoReleaseCancelSpinLock(KIRQL Irql)
 {

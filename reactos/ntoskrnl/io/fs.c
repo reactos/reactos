@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.34 2003/06/27 19:00:33 hbirr Exp $
+/* $Id: fs.c,v 1.35 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,6 +54,9 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtFsControlFile (
 	IN	HANDLE			DeviceHandle,
@@ -426,6 +429,8 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
  *
  * RETURN VALUE
  *	Status
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
@@ -520,6 +525,9 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 PDEVICE_OBJECT STDCALL
 IoGetDeviceToVerify(IN PETHREAD Thread)
 /*
@@ -531,6 +539,9 @@ IoGetDeviceToVerify(IN PETHREAD Thread)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoSetDeviceToVerify(IN PETHREAD Thread,
 		    IN PDEVICE_OBJECT DeviceObject)
@@ -539,6 +550,9 @@ IoSetDeviceToVerify(IN PETHREAD Thread,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
 			     IN PDEVICE_OBJECT DeviceObject)
@@ -547,6 +561,9 @@ IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -577,6 +594,9 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -619,6 +639,8 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
  *
  * NOTE
  * 	From Bo Branten's ntifs.h v13.
+ *
+ * @implemented
  */
 PDEVICE_OBJECT STDCALL
 IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
@@ -683,6 +705,9 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 			       IN PFSDNOTIFICATIONPROC FSDNotificationProc)
@@ -706,6 +731,9 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 				 IN PFSDNOTIFICATIONPROC FSDNotificationProc)

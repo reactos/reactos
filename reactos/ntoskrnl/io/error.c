@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: error.c,v 1.8 2002/09/08 10:23:24 chorns Exp $
+/* $Id: error.c,v 1.9 2003/07/10 15:47:00 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/error.c
@@ -36,6 +36,9 @@
 /* FUNCTIONS *****************************************************************/
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL 
 IoRaiseHardError(PIRP Irp,
 		 PVPB Vpb,
@@ -50,6 +53,9 @@ IoIsTotalDeviceFailure(NTSTATUS Status)
    UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL 
 IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
 			      PUNICODE_STRING String,

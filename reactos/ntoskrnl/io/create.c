@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.65 2003/06/07 12:17:19 chorns Exp $
+/* $Id: create.c,v 1.66 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,7 @@
  *
  * REVISIONS
  * 
+ * @unimplemented
  */
 NTSTATUS STDCALL
 NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
@@ -61,6 +62,7 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
  *
  * REVISIONS
  * 
+ * @implemented
  */
 NTSTATUS STDCALL
 IopCreateFile(PVOID			ObjectBody,
@@ -205,6 +207,7 @@ IopCreateFile(PVOID			ObjectBody,
  * 	
  * REVISIONS
  * 
+ * @implemented
  */
 PFILE_OBJECT STDCALL
 IoCreateStreamFileObject(PFILE_OBJECT FileObject,
@@ -319,6 +322,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
  * 	
  * REVISIONS
  * 
+ * @implemented
  */
 NTSTATUS STDCALL
 IoCreateFile(OUT	PHANDLE			FileHandle,
@@ -495,6 +499,8 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
  * REVISIONS
  * 	2000-03-25 (ea)
  * 		Code originally in NtCreateFile moved in IoCreateFile.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtCreateFile(PHANDLE FileHandle,
@@ -558,6 +564,8 @@ NtCreateFile(PHANDLE FileHandle,
  * 	
  * NOTE
  * 	Undocumented.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtOpenFile(PHANDLE FileHandle,

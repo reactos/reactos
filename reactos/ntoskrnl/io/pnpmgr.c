@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.10 2003/01/16 17:53:56 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.11 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -42,6 +42,9 @@ PDRIVER_OBJECT IopRootDriverObject;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoInitializeRemoveLockEx(
@@ -53,6 +56,9 @@ IoInitializeRemoveLockEx(
 {
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoAcquireRemoveLockEx(
@@ -65,6 +71,9 @@ IoAcquireRemoveLockEx(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoReleaseRemoveLockEx(
@@ -74,6 +83,9 @@ IoReleaseRemoveLockEx(
 {
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoReleaseRemoveLockAndWaitEx(
@@ -83,6 +95,9 @@ IoReleaseRemoveLockAndWaitEx(
 {
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoAdjustPagingPathCount(
@@ -91,6 +106,9 @@ IoAdjustPagingPathCount(
 {
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoGetDeviceInterfaceAlias(
@@ -101,6 +119,9 @@ IoGetDeviceInterfaceAlias(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoGetDeviceInterfaces(
@@ -112,6 +133,9 @@ IoGetDeviceInterfaces(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoGetDeviceProperty(
@@ -124,6 +148,9 @@ IoGetDeviceProperty(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoInvalidateDeviceRelations(
@@ -132,6 +159,9 @@ IoInvalidateDeviceRelations(
 {
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoInvalidateDeviceState(
@@ -139,6 +169,9 @@ IoInvalidateDeviceState(
 {
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoOpenDeviceInterfaceRegistryKey(
@@ -149,6 +182,9 @@ IoOpenDeviceInterfaceRegistryKey(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoOpenDeviceRegistryKey(
@@ -160,6 +196,9 @@ IoOpenDeviceRegistryKey(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 IoRegisterDeviceInterface(
@@ -178,6 +217,9 @@ IoRegisterDeviceInterface(
 //    return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoRegisterPlugPlayNotification(
@@ -192,6 +234,9 @@ IoRegisterPlugPlayNotification(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoReportDetectedDevice(
@@ -207,6 +252,9 @@ IoReportDetectedDevice(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoReportResourceForDetection(
@@ -221,6 +269,9 @@ IoReportResourceForDetection(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoReportTargetDeviceChange(
@@ -230,6 +281,9 @@ IoReportTargetDeviceChange(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoReportTargetDeviceChangeAsynchronous(
@@ -241,6 +295,9 @@ IoReportTargetDeviceChangeAsynchronous(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoRequestDeviceEject(
@@ -248,6 +305,9 @@ IoRequestDeviceEject(
 {
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoSetDeviceInterfaceState(
@@ -261,6 +321,9 @@ IoSetDeviceInterfaceState(
 //    return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoUnregisterPlugPlayNotification(

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.54 2003/06/07 12:17:20 chorns Exp $
+/* $Id: device.c,v 1.55 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -36,6 +36,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
 			IN PDEVICE_OBJECT TargetDevice)
@@ -55,6 +58,9 @@ IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
@@ -91,6 +97,9 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 }
 
 
+/*
+ * @implemented
+ */
 PDEVICE_OBJECT
 STDCALL
 IoGetRelatedDeviceObject (
@@ -115,6 +124,9 @@ IoGetRelatedDeviceObject (
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 IoGetDeviceObjectPointer (
@@ -167,6 +179,9 @@ IoGetDeviceObjectPointer (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 IoDetachDevice(PDEVICE_OBJECT TargetDevice)
@@ -176,6 +191,9 @@ IoDetachDevice(PDEVICE_OBJECT TargetDevice)
 }
 
 
+/*
+ * @implemented
+ */
 PDEVICE_OBJECT
 STDCALL
 IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
@@ -194,6 +212,9 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
    return(Current);
 }
 
+/*
+ * @implemented
+ */
 PDEVICE_OBJECT
 STDCALL
 IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
@@ -209,6 +230,9 @@ IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
    return(Current);
 }
 
+/*
+ * @implemented
+ */
 PDEVICE_OBJECT STDCALL
 IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 			    PDEVICE_OBJECT TargetDevice)
@@ -226,6 +250,9 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    return(AttachedDevice);
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
 				 PDRIVER_REINITIALIZE ReinitRoutine,
@@ -234,6 +261,9 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
@@ -561,6 +591,9 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
           PUNICODE_STRING TargetDeviceName,
@@ -595,6 +628,9 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
@@ -614,6 +650,9 @@ IopCreateDevice(PVOID ObjectBody,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	       ULONG DeviceExtensionSize,
@@ -739,6 +778,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoOpenDeviceInstanceKey (
@@ -754,6 +796,9 @@ IoOpenDeviceInstanceKey (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 IoQueryDeviceEnumInfo (

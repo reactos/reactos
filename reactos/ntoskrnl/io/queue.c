@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.12 2002/09/08 10:23:25 chorns Exp $
+/* $Id: queue.c,v 1.13 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -16,6 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
@@ -53,6 +56,9 @@ IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
      }   
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
@@ -84,6 +90,9 @@ IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
      }
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoStartPacket(PDEVICE_OBJECT DeviceObject,

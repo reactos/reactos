@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.14 2002/09/08 10:23:25 chorns Exp $
+/* $Id: process.c,v 1.15 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 IoGetInitialStack(VOID)
 {
@@ -43,6 +46,9 @@ IoGetInitialStack(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoGetStackLimits(OUT PULONG LowLimit,
 		 OUT PULONG HighLimit)
@@ -52,6 +58,9 @@ IoGetStackLimits(OUT PULONG LowLimit,
 }
 
 
+/*
+ * @implemented
+ */
 PEPROCESS STDCALL
 IoThreadToProcess(IN PETHREAD Thread)
 {
@@ -59,6 +68,9 @@ IoThreadToProcess(IN PETHREAD Thread)
 }
 
 
+/*
+ * @implemented
+ */
 PEPROCESS STDCALL
 IoGetRequestorProcess(IN PIRP Irp)
 {
@@ -78,6 +90,8 @@ IoGetRequestorProcess(IN PIRP Irp)
  * RETURN VALUE
  * 	Previous value for the current thread's hard errors
  * 	processing policy.
+ *
+ * @implemented
  */
 BOOLEAN STDCALL EXPORTED
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)

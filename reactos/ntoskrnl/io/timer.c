@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.8 2002/09/08 10:23:26 chorns Exp $
+/* $Id: timer.c,v 1.9 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 IoInitializeTimer(PDEVICE_OBJECT DeviceObject, 
@@ -48,6 +51,9 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoStartTimer(PDEVICE_OBJECT DeviceObject)
@@ -70,6 +76,9 @@ IoStartTimer(PDEVICE_OBJECT DeviceObject)
                 &(DeviceObject->Timer->dpc));
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoStopTimer(PDEVICE_OBJECT DeviceObject)

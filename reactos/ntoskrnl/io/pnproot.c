@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.11 2003/01/16 17:53:56 ekohl Exp $
+/* $Id: pnproot.c,v 1.12 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -726,6 +726,9 @@ PnpRootQueryDeviceRelations(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootFdoPnpControl(
@@ -784,6 +787,9 @@ PnpRootFdoPnpControl(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootFdoPowerControl(
@@ -823,6 +829,9 @@ PnpRootFdoPowerControl(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootPnpControl(
@@ -857,6 +866,9 @@ PnpRootPnpControl(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootPowerControl(
@@ -886,6 +898,9 @@ PnpRootPowerControl(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootAddDevice(
@@ -948,6 +963,9 @@ PnpRootAddDevice(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PnpRootDriverEntry(

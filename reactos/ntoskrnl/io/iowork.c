@@ -1,4 +1,4 @@
-/* $Id: iowork.c,v 1.3 2003/03/23 10:50:13 hbirr Exp $
+/* $Id: iowork.c,v 1.4 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -34,6 +34,9 @@ typedef struct _IO_WORKITEM
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL STATIC
 IoWorkItemCallback(PVOID Parameter)
 {
@@ -43,6 +46,9 @@ IoWorkItemCallback(PVOID Parameter)
   ObDereferenceObject(DeviceObject);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem, 
 		IN PIO_WORKITEM_ROUTINE WorkerRoutine,
@@ -67,12 +73,18 @@ IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem,
   ExQueueWorkItem(&IoWorkItem->Item, QueueType);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoFreeWorkItem(PIO_WORKITEM IoWorkItem)
 {
   ExFreePool(IoWorkItem);
 }
 
+/*
+ * @implemented
+ */
 PIO_WORKITEM STDCALL
 IoAllocateWorkItem(PDEVICE_OBJECT DeviceObject)
 {

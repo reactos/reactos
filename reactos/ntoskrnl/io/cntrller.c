@@ -1,4 +1,4 @@
-/* $Id: cntrller.c,v 1.9 2002/09/08 10:23:24 chorns Exp $
+/* $Id: cntrller.c,v 1.10 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,9 @@ typedef struct
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
@@ -83,6 +86,9 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    ExFreePool(entry);
 }
 
+/*
+ * @implemented
+ */
 PCONTROLLER_OBJECT
 STDCALL
 IoCreateController(ULONG Size)
@@ -117,6 +123,9 @@ IoCreateController(ULONG Size)
    return(controller);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
@@ -132,6 +141,9 @@ IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
    ExFreePool(ControllerObject);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoFreeController(PCONTROLLER_OBJECT ControllerObject)

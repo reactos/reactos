@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.20 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: vpb.c,v 1.21 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,6 +65,9 @@ IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 			     OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -189,6 +192,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 			 IN FS_INFORMATION_CLASS FsInformationClass,
@@ -267,6 +273,9 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtSetVolumeInformationFile(IN HANDLE FileHandle,
 			   OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -356,6 +365,9 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
@@ -364,6 +376,9 @@ IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoReleaseVpbSpinLock(IN KIRQL Irql)
 {

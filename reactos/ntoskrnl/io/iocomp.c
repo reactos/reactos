@@ -35,6 +35,9 @@ static GENERIC_MAPPING ExIoCompletionMapping =
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS 
 STDCALL
 NtpCreateIoCompletion(
@@ -55,6 +58,9 @@ NtpCreateIoCompletion(
    return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 NtpDeleteIoCompletion(PVOID ObjectBody)
 {
@@ -102,6 +108,9 @@ NtInitializeIoCompletionImplementation(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 NtCreateIoCompletion(
@@ -150,6 +159,9 @@ Return Value
 STATUS_SUCCESS or an error status, such as STATUS_ACCESS_DENIED or
 STATUS_OBJECT_NAME_NOT_FOUND.
 */
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 NtOpenIoCompletion(
@@ -172,6 +184,9 @@ NtOpenIoCompletion(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 NtQueryIoCompletion(
@@ -216,6 +231,8 @@ NtQueryIoCompletion(
 
 /*
  * Dequeues an I/O completion message from an I/O completion object
+ *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -275,6 +292,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 /*
  * Queues an I/O completion message to an I/O completion object
+ *
+ * @implemented
  */
 NTSTATUS
 STDCALL

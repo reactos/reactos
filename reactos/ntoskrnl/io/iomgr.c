@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.34 2003/06/02 10:02:56 ekohl Exp $
+/* $Id: iomgr.c,v 1.35 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -43,6 +43,9 @@ static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IopCloseFile(PVOID ObjectBody,
 	     ULONG HandleCount)
@@ -87,6 +90,9 @@ IopCloseFile(PVOID ObjectBody,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IopDeleteFile(PVOID ObjectBody)
 {
@@ -133,6 +139,9 @@ IopDeleteFile(PVOID ObjectBody)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IopQueryNameFile(PVOID ObjectBody,
 		 POBJECT_NAME_INFORMATION ObjectNameInfo,
@@ -382,6 +391,9 @@ VOID IoInit2(VOID)
     }
 }
 
+/*
+ * @implemented
+ */
 PGENERIC_MAPPING STDCALL
 IoGetFileObjectGenericMapping(VOID)
 {

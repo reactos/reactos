@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.32 2003/06/04 21:41:12 gdalsnes Exp $
+/* $Id: buildirp.c,v 1.33 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -70,6 +70,9 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 }
 
 
+/*
+ * @implemented
+ */
 PIRP STDCALL
 IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 			      PDEVICE_OBJECT DeviceObject,
@@ -159,6 +162,9 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 }
 
 
+/*
+ * @implemented
+ */
 PIRP STDCALL
 IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 			      PDEVICE_OBJECT DeviceObject,
@@ -333,6 +339,9 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 }
 
 
+/*
+ * @implemented
+ */
 PIRP STDCALL
 IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 				  PDEVICE_OBJECT DeviceObject,

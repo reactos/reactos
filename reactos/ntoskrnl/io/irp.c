@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.51 2003/06/05 23:37:10 gdalsnes Exp $
+/* $Id: irp.c,v 1.52 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,6 +46,9 @@
 /* FUNCTIONS ****************************************************************/
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoFreeIrp(PIRP Irp)
 /*
@@ -58,6 +61,9 @@ IoFreeIrp(PIRP Irp)
 }
 
 
+/*
+ * @unimplemented
+ */
 PIRP STDCALL
 IoMakeAssociatedIrp(PIRP Irp,
 		    CCHAR StackSize)
@@ -77,6 +83,9 @@ IoMakeAssociatedIrp(PIRP Irp,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoInitializeIrp(PIRP Irp,
 		USHORT PacketSize,
@@ -99,6 +108,9 @@ IoInitializeIrp(PIRP Irp,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS FASTCALL
 IofCallDriver(PDEVICE_OBJECT DeviceObject,
 	      PIRP Irp)
@@ -133,6 +145,9 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 IoCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -142,6 +157,9 @@ IoCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
+/*
+ * @implemented
+ */
 PIRP STDCALL
 IoAllocateIrp(CCHAR StackSize,
 	      BOOLEAN ChargeQuota)
@@ -191,6 +209,9 @@ IoAllocateIrp(CCHAR StackSize,
 }
 
 
+/*
+ * @implemented
+ */
 VOID FASTCALL
 IofCompleteRequest(PIRP Irp,
          CCHAR PriorityBoost)
@@ -299,6 +320,9 @@ IofCompleteRequest(PIRP Irp,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoCompleteRequest(PIRP Irp,
 		  CCHAR PriorityBoost)
@@ -321,6 +345,8 @@ IoCompleteRequest(PIRP Irp,
  *
  * RETURN VALUE
  * 	TRUE if Irp's operation is synchronous; otherwise FALSE.
+ *
+ * @implemented
  */
 BOOLEAN STDCALL
 IoIsOperationSynchronous(IN PIRP Irp)
@@ -350,6 +376,9 @@ IoIsOperationSynchronous(IN PIRP Irp)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 IoEnqueueIrp(IN PIRP Irp)
 {
@@ -357,6 +386,9 @@ IoEnqueueIrp(IN PIRP Irp)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoSetTopLevelIrp(IN PIRP Irp)
 {
@@ -367,6 +399,9 @@ IoSetTopLevelIrp(IN PIRP Irp)
 }
 
 
+/*
+ * @implemented
+ */
 PIRP STDCALL
 IoGetTopLevelIrp(VOID)
 {
@@ -374,44 +409,13 @@ IoGetTopLevelIrp(VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 IoQueueThreadIrp(IN PIRP Irp)
 {
   UNIMPLEMENTED;
 }
 
-/*
-NTSTATUS
-STDCALL
-IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName, IN BOOLEAN Enable)
-{
-  UNIMPLEMENTED;
-	return 0;
-}
-
-NTSTATUS
-STDCALL
-IoGetDeviceProperty(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
-  IN ULONG BufferLength,
-  OUT PVOID PropertyBuffer,
-  OUT PULONG ResultLength)
-{
-  UNIMPLEMENTED;
-	return 0;
-}
-
-NTSTATUS
-STDCALL
-IoOpenDeviceRegistryKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG DevInstKeyType,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE DevInstRegKey)
-{
-  UNIMPLEMENTED;
-	return 0;
-}
- */
 /* EOF */

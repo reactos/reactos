@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.24 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: file.c,v 1.25 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryInformationFile(HANDLE FileHandle,
 		       PIO_STATUS_BLOCK IoStatusBlock,
@@ -129,6 +132,9 @@ NtQueryInformationFile(HANDLE FileHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 		       IN FILE_INFORMATION_CLASS FileInformationClass,
@@ -207,6 +213,9 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtSetInformationFile(HANDLE FileHandle,
 		     PIO_STATUS_BLOCK IoStatusBlock,
@@ -345,6 +354,9 @@ NtSetInformationFile(HANDLE FileHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 		      OUT PFILE_BASIC_INFORMATION FileInformation)
@@ -382,6 +394,9 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
@@ -419,6 +434,9 @@ NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtQueryEaFile(IN HANDLE FileHandle,
 	      OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -435,6 +453,9 @@ NtQueryEaFile(IN HANDLE FileHandle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtSetEaFile(IN HANDLE FileHandle,
 	    IN PIO_STATUS_BLOCK	IoStatusBlock,

@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.11 2002/10/01 19:27:21 chorns Exp $
+/* $Id: mdl.c,v 1.12 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,6 +22,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 PMDL
 STDCALL
 IoAllocateMdl(PVOID VirtualAddress,
@@ -54,6 +57,9 @@ IoAllocateMdl(PVOID VirtualAddress,
    return(Mdl);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 IoBuildPartialMdl(PMDL SourceMdl,
@@ -73,6 +79,9 @@ IoBuildPartialMdl(PMDL SourceMdl,
      }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoFreeMdl(PMDL Mdl)
 {   

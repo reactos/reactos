@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: share.c,v 1.8 2002/09/08 10:23:26 chorns Exp $
+/* $Id: share.c,v 1.9 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoUpdateShareAccess(PFILE_OBJECT FileObject,
 		    PSHARE_ACCESS ShareAccess)
@@ -80,6 +83,9 @@ IoUpdateShareAccess(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
 		   IN ULONG DesiredShareAccess,
@@ -178,6 +184,9 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
 		    IN PSHARE_ACCESS ShareAccess)
@@ -223,6 +232,9 @@ IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
 		 IN ULONG DesiredShareAccess,
@@ -281,6 +293,9 @@ IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
 		     IN ACCESS_MASK GrantedAccess)
@@ -294,6 +309,9 @@ IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
 			IN ULONG EaLength,
@@ -304,6 +322,9 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
 		      IN UCHAR MajorFunction,
@@ -317,6 +338,9 @@ IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoSetInformation(IN PFILE_OBJECT FileObject,
 		 IN FILE_INFORMATION_CLASS FileInformationClass,
@@ -328,6 +352,9 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			     IN ACCESS_MASK DesiredAccess,

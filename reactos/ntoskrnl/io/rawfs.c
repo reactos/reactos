@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.3 2003/06/07 11:34:36 chorns Exp $
+/* $Id: rawfs.c,v 1.4 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -226,6 +226,9 @@ RawFsWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
   return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 static NTSTATUS
 RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
   IN ULONG CtlCode,
@@ -377,6 +380,9 @@ RawFsFreeIrpContext(IN PRAWFS_IRP_CONTEXT IrpContext)
   ExFreeToNPagedLookasideList(&IrpContextLookasideList, IrpContext);
 }
 
+/*
+ * @implemented
+ */
 static VOID
 STDCALL RawFsDoRequest(PVOID IrpContext)
 {
@@ -772,6 +778,9 @@ RawFsFlush(IN PRAWFS_IRP_CONTEXT IrpContext)
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 static NTSTATUS STDCALL
 RawFsShutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
@@ -830,6 +839,9 @@ RawFsDispatchRequest(IN PRAWFS_IRP_CONTEXT IrpContext)
     }
 }
 
+/*
+ * @implemented
+ */
 static NTSTATUS STDCALL
 RawFsBuildRequest(IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -868,6 +880,9 @@ RawFsBuildRequest(IN PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)

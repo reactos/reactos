@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.17 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: ioctrl.c,v 1.18 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,6 +22,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 					IN HANDLE Event,
 					IN PIO_APC_ROUTINE UserApcRoutine,

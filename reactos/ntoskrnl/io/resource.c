@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.11 2002/09/08 10:23:26 chorns Exp $
+/* $Id: resource.c,v 1.12 2003/07/10 15:47:00 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -40,12 +40,18 @@ SystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 PCONFIGURATION_INFORMATION STDCALL
 IoGetConfigurationInformation(VOID)
 {
   return(&SystemConfigurationInformation);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 		      PDRIVER_OBJECT DriverObject,
@@ -82,6 +88,9 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
   UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoAssignResources(PUNICODE_STRING RegistryPath,
 		  PUNICODE_STRING DriverClassName,
@@ -93,6 +102,9 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
    UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 			 PULONG BusNumber,
@@ -150,6 +162,9 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
 			 PCM_RESOURCE_LIST RawList,

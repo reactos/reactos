@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.19 2002/09/08 10:23:25 chorns Exp $
+/* $Id: page.c,v 1.20 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 IoPageWrite(PFILE_OBJECT FileObject,
 	    PMDL Mdl,
@@ -54,6 +57,9 @@ IoPageWrite(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 IoPageRead(PFILE_OBJECT FileObject,
 	   PMDL Mdl,
@@ -90,6 +96,9 @@ IoPageRead(PFILE_OBJECT FileObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 IoSynchronousPageWrite (PFILE_OBJECT FileObject,
 			PMDL Mdl,

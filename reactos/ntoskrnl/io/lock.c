@@ -21,6 +21,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
   NtLockFileCompletionRoutine(
@@ -34,6 +37,9 @@ STDCALL
 	//FIXME: should I call IoFreeIrp and return STATUS_MORE_PROCESSING_REQUIRED?
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 NtLockFile (
@@ -201,6 +207,9 @@ NtLockFile (
 
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 NtUnlockFile (

@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.6 2002/09/08 10:23:24 chorns Exp $
+/* $Id: event.c,v 1.7 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 PKEVENT STDCALL
 IoCreateNotificationEvent(PUNICODE_STRING EventName,
 			  PHANDLE EventHandle)
@@ -56,6 +59,9 @@ IoCreateNotificationEvent(PUNICODE_STRING EventName,
    return Event;
 }
 
+/*
+ * @implemented
+ */
 PKEVENT STDCALL
 IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			     PHANDLE EventHandle)

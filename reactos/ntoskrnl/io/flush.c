@@ -19,6 +19,9 @@
 /* FUNCTIONS *****************************************************************/
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 NtFlushWriteBuffer(VOID)
@@ -27,6 +30,9 @@ NtFlushWriteBuffer(VOID)
 	return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 NtFlushBuffersFile (

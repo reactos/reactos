@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.32 2003/02/25 16:48:32 ekohl Exp $
+/* $Id: symlink.c,v 1.33 2003/07/10 15:47:00 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
@@ -81,6 +82,7 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
@@ -149,6 +151,7 @@ IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 IoDeleteSymbolicLink(PUNICODE_STRING SymbolicLinkName)
