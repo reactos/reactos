@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.4 2000/06/29 23:35:09 dwelch Exp $
+/* $Id: buildno.c,v 1.5 2000/12/10 16:23:15 ea Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -29,6 +29,9 @@
  * 2000-01-22 (ea)
  * 	Fixed bugs: tm_year is (current_year - 1900),
  * 	tm_month is 0-11 not 1-12 and code ignored TZ.
+ * 2000-12-10 (ea)
+ * 	Added -p option to make it simply print the
+ * 	version number, but skip buildno.h generation.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,7 +159,7 @@ usage (void)
 {
 	fprintf (
 		stderr,
-		"Usage: %s [-q]\n\n  -q  quiet mode\n",
+		"Usage: %s [-{p|q}]\n\n  -p  print version number and exit\n  -q  run in quiet mode\n",
 		argv0
 		);
 	exit (EXIT_SUCCESS);
@@ -166,6 +169,7 @@ usage (void)
 int
 main (int argc, char * argv [])
 {
+	int		print_only = FALSE;
 	int		quiet = FALSE;
 
 	int		year = 0;
@@ -190,6 +194,10 @@ main (int argc, char * argv [])
 				if (argv[1][1] == 'q')
 				{
 					quiet = TRUE;
+				}
+				else  if (argv[1][1] == 'p')
+				{
+					print_only = TRUE;
 				}
 				else
 				{
@@ -305,9 +313,17 @@ Last release: %4d-%02d-%02d\n",
 			);
 	}
 	/*
-	 * (Over)write the include file.
+	 * (Over)write the include file, unless
+	 * the user switched on -p.
 	 */
-	write_h (build);
+	if (FALSE == print_only)
+	{
+		write_h (build);
+	}
+	else
+	{
+		printf ("%s: no code generated", argv [0]);
+	}
 
 	return EXIT_SUCCESS;
 }
