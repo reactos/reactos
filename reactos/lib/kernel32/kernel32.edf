@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.22 2003/04/02 00:06:00 hyperion Exp $
+; $Id: kernel32.edf,v 1.23 2003/04/26 00:25:01 hyperion Exp $
 ;
 ; kernel32.edf
 ;
@@ -584,7 +584,6 @@ SetHandleCount=SetHandleCount@4
 SetHandleInformation=SetHandleInformation@12
 SetLastConsoleEventActive=SetLastConsoleEventActive@0
 SetLastError=SetLastError@4
-SetLastErrorByStatus=SetLastErrorByStatus@4
 SetLocalTime=SetLocalTime@4
 SetLocaleInfoA=SetLocaleInfoA@12
 SetLocaleInfoW=SetLocaleInfoW@12
