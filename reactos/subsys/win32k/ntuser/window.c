@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.253 2004/12/12 01:40:37 weiden Exp $
+/* $Id: window.c,v 1.254 2004/12/12 16:47:52 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2370,7 +2370,7 @@ NtUserFindWindowEx(HWND hwndParent,
   ChildAfter = NULL;
   if(hwndChildAfter && !(ChildAfter = IntGetWindowObject(hwndChildAfter)))
   {
-    IntReleaseWindowObject(hwndParent);
+    IntReleaseWindowObject(Parent);
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
