@@ -1,0 +1,60 @@
+#include "../VERSION"
+#ifndef WINDRES
+#   include "windows.h"
+#   include "winver.h"
+#endif
+
+/*   English (U.S.) resources   */
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+
+#ifdef _WIN32
+#ifndef WINDRES
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif
+#pragma code_page(1252)
+#endif /* _WIN32 */
+
+/*   Version   */
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 3,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40000L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName", "Free Software Foundation"
+            VALUE "FileDescription", "GNU Midnight Commander"
+            VALUE "FileVersion", VERSION
+            VALUE "InternalName", "MC"
+            VALUE "LegalCopyright", "(c) Free Software Foundation"
+            VALUE "LegalTrademarks", "see GNU General Public License"
+            VALUE "OriginalFilename", "MC.EXE"
+            VALUE "ProductName", "GNU Midnight Commander"
+            VALUE "ProductVersion", VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/*   Icon   */
+// 0     ICON    DISCARDABLE     "mc_nt.ico"
+// 1     ICON    DISCARDABLE     "bez03.ico"
+
+#endif   /* English (U.S.) resources */
+

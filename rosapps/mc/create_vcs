@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# Script by Jakub Jelinek
+#
+if test -e /dev/vcs0
+then
+	exit
+fi
+
+I=0
+while [ $I -lt 64 ] 
+do
+        mknod /dev/vcs$I c 7 $I
+        chmod 622 /dev/vcs$I
+        chown root.tty /dev/vcs$I
+        mknod /dev/vcsa$I c 7 `expr $I + 128`
+        chmod 622 /dev/vcsa$I
+        chown root.tty /dev/vcsa$I
+        I=`expr $I + 1`
+done

@@ -1,0 +1,574 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* This is the configuration file for the Midnight Commander. It was generated
+   by autoconf's configure.
+   
+   Configure for Midnight Commander
+   Copyright (C) 1994, 1995 Janne Kukonlehto
+   Copyright (C) 1994, 1995 Miguel de Icaza
+   Copyright (C) 1995 Jakub Jelinek
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   
+#include <VERSION>
+
+
+
+/* Define if on AIX 3.
+   System headers sometimes define this.
+   We just want to avoid a redefinition error message.  */
+#ifndef _ALL_SOURCE
+#undef _ALL_SOURCE
+#endif
+
+/* Define if using alloca.c.  */
+#undef C_ALLOCA
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to one of _getb67, GETB67, getb67 for Cray-2 and Cray-YMP systems.
+   This function is required for alloca.c support on those systems.  */
+#undef CRAY_STACKSEG_END
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define if you have alloca, as a function or macro.  */
+#undef HAVE_ALLOCA
+
+/* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
+#undef HAVE_ALLOCA_H
+
+/* Define if you have the getmntent function.  */
+#undef HAVE_GETMNTENT
+
+/* Define if you have a working `mmap' system call.  */
+#undef HAVE_MMAP
+
+/* Define if your struct stat has st_blksize.  */
+#undef HAVE_ST_BLKSIZE
+
+/* Define if your struct stat has st_blocks.  */
+#undef HAVE_ST_BLOCKS
+
+/* Define if your struct stat has st_rdev.  */
+#undef HAVE_ST_RDEV
+
+/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
+#undef HAVE_SYS_WAIT_H
+
+/* Define as __inline if that's what the C compiler calls it.  */
+#undef inline
+
+/* Define if major, minor, and makedev are declared in <mkdev.h>.  */
+#undef MAJOR_IN_MKDEV
+
+/* Define if major, minor, and makedev are declared in <sysmacros.h>.  */
+#undef MAJOR_IN_SYSMACROS
+
+/* Define if on MINIX.  */
+#undef _MINIX
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef mode_t
+
+/* Define to `long' if <sys/types.h> doesn't define.  */
+#undef off_t
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define if the system does not provide POSIX.1 features except
+   with this defined.  */
+#undef _POSIX_1_SOURCE
+
+/* Define if you need to in order for stat and other things to work.  */
+#undef _POSIX_SOURCE
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* If using the C implementation of alloca, define if you know the
+   direction of stack growth for your system; otherwise it will be
+   automatically deduced at run-time.
+ STACK_DIRECTION > 0 => grows toward higher addresses
+ STACK_DIRECTION < 0 => grows toward lower addresses
+ STACK_DIRECTION = 0 => direction of growth unknown
+ */
+#undef STACK_DIRECTION
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+/* Define if the X Window System is missing or not being used.  */
+#undef X_DISPLAY_MISSING
+
+#undef PACKAGE
+
+/* Always defined */
+#undef D_INO_IN_DIRENT
+#undef IS_AIX
+#undef MOUNTED_FREAD
+#undef MOUNTED_FREAD_FSTYP
+#undef MOUNTED_GETFSSTAT
+#undef MOUNTED_GETMNT
+#undef MOUNTED_GETMNTENT1
+#undef MOUNTED_GETMNTENT2
+#undef MOUNTED_GETMNTINFO
+#undef MOUNTED_VMOUNT
+#undef STAT_STATFS2_BSIZE
+#undef STAT_STATFS2_FSIZE
+#undef STAT_STATFS2_FS_DATA
+#undef STAT_STATFS3_OSF1
+#undef STAT_STATFS4
+#undef STAT_STATVFS
+
+/* Define umode_t if your system does not provide it */
+#undef umode_t
+
+/* Define nlink_t if your system does not provide it */
+#undef nlink_t
+
+/* Does the file command accepts the -L option */
+#undef FILE_L
+
+/* Does the file command work well with - option for stdin? */
+#undef FILE_STDIN
+
+/* Does the grep command work well with - option for stdin? */
+#undef GREP_STDIN
+
+/* Is the program using the GPM library? */
+#undef HAVE_LIBGPM
+
+/* Is the program using the distributed slang library? */
+#undef HAVE_SLANG
+
+/* Is the program using a system-installed slang library? */
+#undef HAVE_SYSTEM_SLANG
+
+/* Define if the slang.h header file is inside a directory slang
+** in the standard directories
+*/
+#undef SLANG_H_INSIDE_SLANG_DIR
+
+/* Does the program have subshell support? */
+#undef HAVE_SUBSHELL_SUPPORT
+
+/* If you don't have gcc, define this */
+#undef OLD_TOOLS 
+
+/* Is the subshell the default or optional? */
+#undef SUBSHELL_OPTIONAL
+
+/* Use SunOS SysV curses? */
+#undef SUNOS_CURSES
+
+/* Use SystemV curses? */
+#undef USE_SYSV_CURSES
+
+/* Use Ncurses? */
+#undef USE_NCURSES
+
+/* If you Curses does not have color define this one */
+#undef NO_COLOR_SUPPORT
+
+/* Support the Midnight Commander Virtual File System? */
+#undef USE_VFS
+
+/* Support for the Memory Allocation Debugger */
+#undef HAVE_MAD
+
+/* Extra Debugging */
+#undef MCDEBUG
+
+/* If the Slang library will be using it's own terminfo instead of termcap */
+#undef SLANG_TERMINFO
+
+/* If Slang library should use termcap */
+#undef USE_TERMCAP
+
+/* If you have socket and the rest of the net functions use this */
+#undef USE_NETCODE
+
+/* If defined, use .netrc for FTP connections */
+#undef USE_NETRC 
+
+/* If your operating system does not have enough space for a file name
+ * in a struct dirent, then define this
+ */
+#undef NEED_EXTRA_DIRENT_BUFFER
+
+/* Define if you want the du -s summary */
+#undef HAVE_DUSUM
+
+/* Define if your du does handle -b correctly */
+#undef DUSUM_USEB
+
+/* Define to size of chunks du is displaying its information.
+ * If DUSUM_USEB is defined, this should be 1
+ */
+#define DUSUM_FACTOR 512
+
+/* Define this one if you want termnet support */
+#undef USE_TERMNET
+
+/* Defined if you have libXpm, <X11/xpm.h>, libXext, <X11/extensions/shape.h> */
+#undef HAVE_XPM_SHAPE
+
+/* Defined if you have shadow passwords on Linux */
+#undef LINUX_SHADOW
+
+/* Defined if you have the crypt prototype in neither unistd.h nor crypt.h */
+#undef NEED_CRYPT_PROTOTYPE
+
+/* Define if you want to turn on SCO-specific code */
+#undef SCO_FLAVOR
+
+/* Define if your system has struct linger */
+#undef HAVE_STRUCT_LINGER
+
+/* Define if your curses has this one (AIX, OSF/1) */
+#undef USE_SETUPTERM
+
+/* Link in ext2fs code for delfs experimental file system */
+#undef USE_EXT2FSLIB
+
+/* Define if you want to use the HSC firewall */
+#undef HSC_PROXY
+
+/* Define if your system uses PAM for auth stuff */
+#undef HAVE_PAM
+
+/* Define if you have the get_process_stats function and have to use that instead of gettimeofday  */
+#undef HAVE_GET_PROCESS_STATS
+
+/* Define if you want to call the internal routine edit() for the editor */
+#undef USE_INTERNAL_EDIT
+
+/* Define if your system has socketpair */
+#undef HAVE_SOCKETPAIR
+
+/* Version of ncurses */
+#undef NCURSES_970530
+
+#undef HAVE_STPCPY
+
+#undef ENABLE_NLS
+#undef HAVE_CATGETS
+#undef HAVE_GETTEXT
+#undef HAVE_LC_MESSAGES
+
+/* Define if you have the __argz_count function.  */
+#undef HAVE___ARGZ_COUNT
+
+/* Define if you have the __argz_next function.  */
+#undef HAVE___ARGZ_NEXT
+
+/* Define if you have the __argz_stringify function.  */
+#undef HAVE___ARGZ_STRINGIFY
+
+/* Define if you have the cfgetospeed function.  */
+#undef HAVE_CFGETOSPEED
+
+/* Define if you have the crypt function.  */
+#undef HAVE_CRYPT
+
+/* Define if you have the dcgettext function.  */
+#undef HAVE_DCGETTEXT
+
+/* Define if you have the getcwd function.  */
+#undef HAVE_GETCWD
+
+/* Define if you have the getmntinfo function.  */
+#undef HAVE_GETMNTINFO
+
+/* Define if you have the getpagesize function.  */
+#undef HAVE_GETPAGESIZE
+
+/* Define if you have the getwd function.  */
+#undef HAVE_GETWD
+
+/* Define if you have the grantpt function.  */
+#undef HAVE_GRANTPT
+
+/* Define if you have the initgroups function.  */
+#undef HAVE_INITGROUPS
+
+/* Define if you have the keyok function.  */
+#undef HAVE_KEYOK
+
+/* Define if you have the memcpy function.  */
+#undef HAVE_MEMCPY
+
+/* Define if you have the memmove function.  */
+#undef HAVE_MEMMOVE
+
+/* Define if you have the memset function.  */
+#undef HAVE_MEMSET
+
+/* Define if you have the munmap function.  */
+#undef HAVE_MUNMAP
+
+/* Define if you have the pmap_getmaps function.  */
+#undef HAVE_PMAP_GETMAPS
+
+/* Define if you have the pmap_getport function.  */
+#undef HAVE_PMAP_GETPORT
+
+/* Define if you have the pmap_set function.  */
+#undef HAVE_PMAP_SET
+
+/* Define if you have the putenv function.  */
+#undef HAVE_PUTENV
+
+/* Define if you have the pwdauth function.  */
+#undef HAVE_PWDAUTH
+
+/* Define if you have the resizeterm function.  */
+#undef HAVE_RESIZETERM
+
+/* Define if you have the rresvport function.  */
+#undef HAVE_RRESVPORT
+
+/* Define if you have the setenv function.  */
+#undef HAVE_SETENV
+
+/* Define if you have the setlocale function.  */
+#undef HAVE_SETLOCALE
+
+/* Define if you have the sigaction function.  */
+#undef HAVE_SIGACTION
+
+/* Define if you have the sigaddset function.  */
+#undef HAVE_SIGADDSET
+
+/* Define if you have the sigemptyset function.  */
+#undef HAVE_SIGEMPTYSET
+
+/* Define if you have the sigprocmask function.  */
+#undef HAVE_SIGPROCMASK
+
+/* Define if you have the socket function.  */
+#undef HAVE_SOCKET
+
+/* Define if you have the socketpair function.  */
+#undef HAVE_SOCKETPAIR
+
+/* Define if you have the statfs function.  */
+#undef HAVE_STATFS
+
+/* Define if you have the statlstat function.  */
+#undef HAVE_STATLSTAT
+
+/* Define if you have the statvfs function.  */
+#undef HAVE_STATVFS
+
+/* Define if you have the stpcpy function.  */
+#undef HAVE_STPCPY
+
+/* Define if you have the strcasecmp function.  */
+#undef HAVE_STRCASECMP
+
+/* Define if you have the strchr function.  */
+#undef HAVE_STRCHR
+
+/* Define if you have the strdup function.  */
+#undef HAVE_STRDUP
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the strncasecmp function.  */
+#undef HAVE_STRNCASECMP
+
+/* Define if you have the sysconf function.  */
+#undef HAVE_SYSCONF
+
+/* Define if you have the tcgetattr function.  */
+#undef HAVE_TCGETATTR
+
+/* Define if you have the tcsetattr function.  */
+#undef HAVE_TCSETATTR
+
+/* Define if you have the truncate function.  */
+#undef HAVE_TRUNCATE
+
+/* Define if you have the <argz.h> header file.  */
+#undef HAVE_ARGZ_H
+
+/* Define if you have the <crypt.h> header file.  */
+#undef HAVE_CRYPT_H
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the <ext2fs/ext2fs.h> header file.  */
+#undef HAVE_EXT2FS_EXT2FS_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <grp.h> header file.  */
+#undef HAVE_GRP_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
+
+/* Define if you have the <linux/ext2_fs.h> header file.  */
+#undef HAVE_LINUX_EXT2_FS_H
+
+/* Define if you have the <locale.h> header file.  */
+#undef HAVE_LOCALE_H
+
+/* Define if you have the <malloc.h> header file.  */
+#undef HAVE_MALLOC_H
+
+/* Define if you have the <memory.h> header file.  */
+#undef HAVE_MEMORY_H
+
+/* Define if you have the <mntent.h> header file.  */
+#undef HAVE_MNTENT_H
+
+/* Define if you have the <mnttab.h> header file.  */
+#undef HAVE_MNTTAB_H
+
+/* Define if you have the <ndir.h> header file.  */
+#undef HAVE_NDIR_H
+
+/* Define if you have the <nl_types.h> header file.  */
+#undef HAVE_NL_TYPES_H
+
+/* Define if you have the <rpc/pmap_clnt.h> header file.  */
+#undef HAVE_RPC_PMAP_CLNT_H
+
+/* Define if you have the <shadow.h> header file.  */
+#undef HAVE_SHADOW_H
+
+/* Define if you have the <shadow/shadow.h> header file.  */
+#undef HAVE_SHADOW_SHADOW_H
+
+/* Define if you have the <slang.h> header file.  */
+#undef HAVE_SLANG_H
+
+/* Define if you have the <slang/slang.h> header file.  */
+#undef HAVE_SLANG_SLANG_H
+
+/* Define if you have the <stdlib.h> header file.  */
+#undef HAVE_STDLIB_H
+
+/* Define if you have the <string.h> header file.  */
+#undef HAVE_STRING_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/dustat.h> header file.  */
+#undef HAVE_SYS_DUSTAT_H
+
+/* Define if you have the <sys/filsys.h> header file.  */
+#undef HAVE_SYS_FILSYS_H
+
+/* Define if you have the <sys/fs_types.h> header file.  */
+#undef HAVE_SYS_FS_TYPES_H
+
+/* Define if you have the <sys/fstyp.h> header file.  */
+#undef HAVE_SYS_FSTYP_H
+
+/* Define if you have the <sys/mount.h> header file.  */
+#undef HAVE_SYS_MOUNT_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/statfs.h> header file.  */
+#undef HAVE_SYS_STATFS_H
+
+/* Define if you have the <sys/statvfs.h> header file.  */
+#undef HAVE_SYS_STATVFS_H
+
+/* Define if you have the <sys/vfs.h> header file.  */
+#undef HAVE_SYS_VFS_H
+
+/* Define if you have the <termios.h> header file.  */
+#undef HAVE_TERMIOS_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the <utime.h> header file.  */
+#undef HAVE_UTIME_H
+
+/* Define if you have the <values.h> header file.  */
+#undef HAVE_VALUES_H
+
+/* Define if you have the i library (-li).  */
+#undef HAVE_LIBI
+
+/* Define if you have the intl library (-lintl).  */
+#undef HAVE_LIBINTL
+
+/* Define if you have the nsl library (-lnsl).  */
+#undef HAVE_LIBNSL
+
+/* Define if you have the pt library (-lpt).  */
+#undef HAVE_LIBPT
+
+/* Define if you have the socket library (-lsocket).  */
+#undef HAVE_LIBSOCKET
+
+#ifdef HAVE_LIBPT
+#    define HAVE_GRANTPT
+#endif
+
+#if defined(HAVE_LIBCRYPT) || defined(HAVE_LIBCRYPT_I)
+#    define HAVE_CRYPT
+#endif
+
+#ifdef HAVE_XVIEW
+#    include <xvmain.h>
+#endif
+
+#if defined(HAVE_SIGADDSET) && defined(HAVE_SIGEMPTYSET)
+# if defined(HAVE_SIGACTION) && defined(HAVE_SIGPROCMASK)
+#  define SLANG_POSIX_SIGNALS
+# endif
+#endif
+
+#ifdef __os2__
+#    define OS2_NT 1
+#    define S_ISFIFO(x) 0
+#endif
+
+#ifdef _OS_NT
+#    define OS2_NT 1
+#endif
+
+#ifndef OS2_NT
+/* some Unices do not define this, and slang requires it: */
+#ifndef unix
+#    define unix
+#endif
+#endif
+

@@ -1,0 +1,105 @@
+VERSION=4.1.36
+
+SHELL = /bin/sh
+
+# This variable makes it possible to move the installation root to another
+# directory. This is useful when you're creating a binary distribution of mc.
+# If empty, normal root will be used.
+# You can run e.g. 'make install DESTDIR=/packages/mc/3.0' to accomplish
+# that.
+# DESTDIR = /opt/apps/mc/$(VERSION)
+
+# Installation target directories & other installation stuff
+prefix = @prefix@
+exec_prefix = $(prefix)
+binprefix =
+manprefix =
+
+builddir   = @builddir@
+bindir     = $(exec_prefix)/bin
+libdir     = $(exec_prefix)/lib/mc
+suppbindir = $(libdir)/bin
+tidir      = $(libdir)/term
+extfsdir   = $(libdir)/extfs
+icondir    = $(prefix)/share/icons/mc
+mandir     = $(prefix)/man/man1
+datadir    = $(prefix)/share
+localedir  = $(datadir)/locale
+manext     = 1
+man8dir    = $(prefix)/man/man8
+man8ext   = 8
+xv_bindir = @xv_bindir@
+
+# Tools & program stuff
+SEDCMD = @SEDCMD@
+SEDCMD2 = @SEDCMD2@
+STRIP = @STRIP@
+@SET_MAKE@
+CC = @CC@
+CPP = @CPP@
+AR = @AR@
+RANLIB = @RANLIB@
+RM = @RM@
+RMF = @RM@ -f
+MV = @MV@
+CP = @CP@
+LN_S = @LN_S@
+AWK = @AWK@
+AWK_VAR_OPTION = @AWK_VAR_OPTION@
+
+# Flags & libs
+# No way, to make make happy (except GNU), we cannot use := to append
+# something to these, so that's why there is a leading _
+XCFLAGS = @CFLAGS@
+XCPPFLAGS = @CPPFLAGS@ -I.. -DBINDIR=\""$(bindir)/"\" -DLIBDIR=\""$(libdir)/"\" -DICONDIR=\""$(icondir)/"\" $(XINC) -DLOCALEDIR=\""$(localedir)/"\" 
+XLDFLAGS = @LDFLAGS@
+XDEFS = @DEFS@
+XLIBS = @LIBS@
+
+# Where do we have the sources?
+# You shouldn't have to edit this :)
+mcsrcdir = $(rootdir)/src
+docdir   = $(rootdir)/doc
+mclibdir = $(rootdir)/lib
+slangdir = $(rootdir)/slang
+vfsdir   = $(rootdir)/vfs
+xvdir    = $(rootdir)/xv
+tkdir	 = $(rootdir)/tk
+gnomedir = $(rootdir)/gnome
+icodir   = $(rootdir)/icons
+
+hpath = -I$(mcsrcdir) -I$(slangdir) -I$(vfsdir) -I$(xvdir) -I$(xvdir)/support/xview_private -I$(tkdir)
+
+# Rules
+first_rule: all
+
+@PHONY@ all check cross TAGS clean install uninstall distcopy depend dep
+@PHONY@ fastdep fastdepslang fastdepvfs fastdeploc slowdep
+
+@PCENTRULE@../slang/%.o : ../slang/%.c
+@PCENTRULE@	cd ../slang; $(MAKE) libmcslang.a
+
+@PCENTRULE@../vfs/%.o : ../vfs/%.c
+@PCENTRULE@	cd ../vfs; $(MAKE) libvfs.a
+
+fastdep: dummy
+	if test x"`echo $(srcdir)/*.[ch]`" != x'$(srcdir)/*.[ch]'; then { cd $(srcdir); $(AWK) -f $(mcsrcdir)/depend.awk $(AWK_VAR_OPTION) hpath="$(hpath)" $(AWK_VAR_OPTION) srcdir="$(srcdir)" *.[ch];} > .depend; fi
+	-$(MAKE) fastdeploc
+	@WRITEDEP@
+
+fastdepslang:
+@PCENTRULE@	{ { { cd ../slang; $(MAKE) showlibdep;} | grep OBJS; cat .depend;} | { cd $(slangdir); $(AWK) -f $(mcsrcdir)/depend.awk $(AWK_VAR_OPTION) dolib="../slang libmcslang.a" $(AWK_VAR_OPTION) hpath="$(hpath)" $(AWK_VAR_OPTION) srcdir="$(slangdir)";};} >> .depend
+
+fastdepvfs:
+@PCENTRULE@	{ { { cd ../vfs; $(MAKE) showlibdep;} | grep OBJS; cat .depend;} | { cd $(vfsdir); $(AWK) -f $(mcsrcdir)/depend.awk $(AWK_VAR_OPTION) dolib="../vfs libvfs.a" $(AWK_VAR_OPTION) hpath="$(hpath)" $(AWK_VAR_OPTION) srcdir="$(vfsdir)";};} >> .depend
+
+slowdep: dummy
+	if test x"`echo $(srcdir)/*.[ch]`" != x'$(srcdir)/*.[ch]'; then \
+	$(CPP) -M $(CPPFLAGS) $(DEFS) $(CFLAGS) $(srcdir)/*.c > .depend; fi
+	@WRITEDEP@
+
+mcdep: @dep@
+
+dummy:
+
+# End of Make.common

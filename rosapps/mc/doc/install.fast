@@ -1,0 +1,70 @@
+-*-text-*-
+
+Read the INSTALL file for the complete instructions. 
+
+   The Midnight Commander by default will use the Slang screen
+manager, if something fails with the Slang screen manager, you may
+compile the program with your system curses (You will need a SysV
+compatible curses, in case you don't have such, read the README file
+for directions on getting the ncurses package, a freely available 
+replacement for SysV curses).
+
+1. Configure the package for your system.
+
+   Normally, you just `cd' to the package main directory and type
+`./configure'.
+
+   The most often needed options to configure are following:
+
+`--prefix=PATH'
+	By default, `make install' will install the package's files in
+	`/usr/local/bin', `/usr/local/man', etc. or to `/usr/bin',
+	`/usr/man', etc. depending on the location of an old mc binary.
+	If you have none in your system, default will be `/usr/local'.
+	You can specify an installation prefix other than default by giving
+	`configure' the option `--prefix=PATH'.
+
+`--with-slang' (default)
+	The easy way to get the Commander running: Slang is part of
+	the distribution. This is the default screen manager, if you run
+	configure without any --with-*curses parameter.
+   
+`--with-ncurses[=PATH]'
+	Use the flag without =PATH if you want to compile with ncurses
+	(default is in version 3.0 the SLang screen manager included
+	in the distribution).
+	Use this flag with =PATH part, if you want to compile with ncurses
+	and your ncurses is not installed in any of the
+	places configure checks (/usr/include, /usr/include/ncurses,
+	/usr/local/include and /usr/local/include/ncurses). The
+	configure script will append `lib' and `include' to find the
+	libncurses.a and ncurses.h files respectively.
+
+`--with-gpm-mouse[=PATH]'
+	Use this flag if your GPM mouse package cannot be detected by the
+	configure. Use =PATH if it is installed in a non-standard place.
+	The configure will append `lib' and `include' to find the libgpm.a
+	and gpm.h files respectively.
+
+`--with-sco'
+	If you are compiling on a SCO machine.
+
+   You may also want to specify CFLAGS for the compiler, even if it finds
+   itself some defaults by typing e.g.
+
+   `CFLAGS=-O2 ./configure'
+
+2. Type `make' to compile the package.
+
+3. Type `make install' (as root) to install programs, data files, and
+documentation. If you're on a Linux system, this will install the 
+`cons.saver' utility, which allows the Midnight Commander to save and 
+restore the screen contents. If you're making a mc binary distribution for
+other people and want to tar the whole binary later, you may want to specify
+`make install DESTDIR=PATH', which will make PATH the root for installation
+(but in the installed stuff will be still stored only --prefix).
+
+3a. Type `make mcfninstall' to get an interactive program check if you
+want to define an useful alias for the Midnight Commander.
+
+4. Type `mc' and enjoy!

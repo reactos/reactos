@@ -1,0 +1,12 @@
+
+This is the Slang Screen Manager, it has been modified a little to
+make it work with the Midnight Commander.  If you want to get the
+complete Slang distribution, you may grab it from:
+
+space.mit.edu:/pub/davis
+
+All of the patches relevant to Slang have been sumbited to John Davis
+for inclusion in his Slang version, changes that are only useful for
+the Midnight Commander have not been submited.
+
+miguel.
