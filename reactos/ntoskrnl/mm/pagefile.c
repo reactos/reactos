@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.35 2003/08/27 21:28:08 dwelch Exp $
+/* $Id: pagefile.c,v 1.36 2003/08/29 21:22:24 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -692,7 +692,6 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
 
   MmCoreDumpPageFile = PageFileNum;
   ObDereferenceObject(PageFile);
-  *(PULONG)0 = 0;
   return(STATUS_SUCCESS);
 }
 
