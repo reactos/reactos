@@ -926,13 +926,10 @@ VOID DefaultProtocolHandler(
 }
 
 
-NTSTATUS IPStartup(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath)
+NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Initializes the IP subsystem
  * ARGUMENTS:
- *     DriverObject = Pointer to a driver object for this driver
  *     RegistryPath = Our registry node for configuration parameters
  * RETURNS:
  *     Status of operation

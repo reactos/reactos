@@ -27,7 +27,6 @@ UINT Random(
 }
 
 #ifdef DBG
-
 static VOID DisplayIPHeader(
     PCHAR Header,
     UINT Length)
@@ -54,59 +53,6 @@ static VOID DisplayIPHeader(
       ((IPHeader->DstAddr >> 0) & 0xFF), ((IPHeader->DstAddr >> 8) & 0xFF),
       ((IPHeader->DstAddr >> 16) & 0xFF), ((IPHeader->DstAddr >> 24) & 0xFF));
 }
-
-VOID DisplayIPPacket(
-    PIP_PACKET IPPacket)
-{
-    PCHAR p;
-    UINT Length;
-    PNDIS_BUFFER Buffer;
-    PNDIS_BUFFER NextBuffer;
-    PCHAR CharBuffer;
-
-    if ((DebugTraceLevel & (DEBUG_PBUFFER | DEBUG_IP)) != (DEBUG_PBUFFER | DEBUG_IP)) {
-        return;
-    }
-
-    if (!IPPacket) {
-        TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
-        return;
-    }
-
-	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
-    TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
-    TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
-    TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
-    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
-    TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
-
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
-        for (; Buffer != NULL; Buffer = NextBuffer) {
-            NdisGetNextBuffer(Buffer, &NextBuffer);
-            NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
-	    //OskitDumpBuffer( p, Length );
-        }
-    } else {
-        p      = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-	//OskitDumpBuffer( p, Length );
-    }
-
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
-        Length -= MaxLLHeaderSize;
-        CharBuffer = exAllocatePool(NonPagedPool, Length);
-        Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
-        DisplayIPHeader(CharBuffer, Length);
-        exFreePool(CharBuffer);
-    } else {
-        CharBuffer = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-        DisplayIPHeader(CharBuffer, Length);
-    }
-}
-
 
 static VOID DisplayTCPHeader(
     PCHAR Header,
@@ -179,5 +125,59 @@ VOID DisplayTCPPacket(
         DisplayTCPHeader(Buffer, Length);
     }
 }
+#endif
 
-#endif/* DBG */
+VOID DisplayIPPacket(
+    PIP_PACKET IPPacket)
+{
+#ifdef DBG
+    PCHAR p;
+    UINT Length;
+    PNDIS_BUFFER Buffer;
+    PNDIS_BUFFER NextBuffer;
+    PCHAR CharBuffer;
+
+    if ((DebugTraceLevel & (DEBUG_PBUFFER | DEBUG_IP)) != (DEBUG_PBUFFER | DEBUG_IP)) {
+        return;
+    }
+
+    if (!IPPacket) {
+        TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
+        return;
+    }
+
+	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
+    TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
+    TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
+    TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
+    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
+    TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
+
+    if (IPPacket->NdisPacket) {
+        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
+        for (; Buffer != NULL; Buffer = NextBuffer) {
+            NdisGetNextBuffer(Buffer, &NextBuffer);
+            NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
+	    //OskitDumpBuffer( p, Length );
+        }
+    } else {
+        p      = IPPacket->Header;
+        Length = IPPacket->ContigSize;
+	//OskitDumpBuffer( p, Length );
+    }
+
+    if (IPPacket->NdisPacket) {
+        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
+        Length -= MaxLLHeaderSize;
+        CharBuffer = exAllocatePool(NonPagedPool, Length);
+        Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
+        DisplayIPHeader(CharBuffer, Length);
+        exFreePool(CharBuffer);
+    } else {
+        CharBuffer = IPPacket->Header;
+        Length = IPPacket->ContigSize;
+        DisplayIPHeader(CharBuffer, Length);
+    }
+#endif
+}
+
