@@ -3,6 +3,8 @@
 
 #ifdef  __MINGW32__
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <winsock.h>
 
 #else

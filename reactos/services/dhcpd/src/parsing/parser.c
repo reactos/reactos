@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <headers.h>
 #include <datatypes.h>
 #include <display.h>

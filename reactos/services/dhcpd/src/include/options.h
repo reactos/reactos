@@ -110,6 +110,9 @@
 #define  BUSY           0x00
 
 #define  DYNAMIC        0x00
+#ifdef STATIC
+#undef STATIC
+#endif
 #define  STATIC         0x01
 
 #endif
