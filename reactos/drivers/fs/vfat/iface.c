@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.59 2001/11/02 22:47:36 hbirr Exp $
+/* $Id: iface.c,v 1.60 2001/11/07 02:21:19 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -168,13 +168,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
   DPRINT1("VfatMount(IrpContext %x)\n", IrpContext);
 
   assert (IrpContext);
-
-  if (IrpContext->DeviceObject != VfatDriverObject->DeviceObject)
-  {
-     // Only allowed on the main device object
-     Status = STATUS_INVALID_DEVICE_REQUEST;
-     goto ByeBye;
-  }
 
   Status = VfatHasFileSystem (IrpContext->Stack->Parameters.Mount.DeviceObject, &RecognizedFS);
   if (!NT_SUCCESS(Status))
