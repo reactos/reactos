@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.63 2001/10/10 22:40:36 hbirr Exp $
+/* $Id: section.c,v 1.64 2001/10/27 15:55:45 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -376,6 +376,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Entry1;
    ULONG Attributes;
    PMM_PAGEOP PageOp;
+   PVOID NewAddress;
    
    /*
     * There is a window between taking the page fault and locking the
@@ -538,6 +539,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmLockSectionSegment(Segment);
 	    Page = MmAllocPage(0);
 	 }
+
+       // clear the page	
+       NewAddress = ExAllocatePageWithPhysPage((ULONG)Page);
+       memset(NewAddress, 0, PAGESIZE);
+       ExUnmapPage(NewAddress);
+
        Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
 				       MemoryArea->Attributes,
