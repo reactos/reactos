@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.12 2000/06/29 23:35:53 dwelch Exp $
+/* $Id: driver.c,v 1.13 2000/07/07 01:18:04 phreak Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -16,8 +16,8 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 
-//#define NDEBUG
-//#include "../../ntoskrnl/include/internal/debug.h"
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _GRAPHICS_DRIVER
 {
@@ -28,11 +28,12 @@ typedef struct _GRAPHICS_DRIVER
 } GRAPHICS_DRIVER, *PGRAPHICS_DRIVER;
 
 static PGRAPHICS_DRIVER  DriverList;
-static PGRAPHICS_DRIVER  GenericDriver;
+static PGRAPHICS_DRIVER  GenericDriver = 0;
 
 BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
   PGRAPHICS_DRIVER  Driver = ExAllocatePool(NonPagedPool, sizeof(*Driver));
+  DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
   if (!Driver) 
     {
       return  FALSE;
@@ -41,7 +42,7 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   Driver->EnableDriver = EnableDriver;
   if (Name)
     {
-      Driver->Name = ExAllocatePool(NonPagedPool, 
+      Driver->Name = ExAllocatePool(PagedPool, 
                                     (wcslen(Name) + 1) * sizeof(WCHAR));
       wcscpy(Driver->Name, Name);
       Driver->Next  = DriverList;
@@ -56,7 +57,6 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
       return  FALSE;
     }
   
-  Driver->Name = NULL;
   GenericDriver = Driver;
   return  TRUE;
 }
@@ -81,7 +81,7 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
   RtlInitUnicodeString (&DriverNameW, Name);
 
   ModuleObject = EngLoadImage(&DriverNameW);
-
+  DRIVER_RegisterDriver( L"DISPLAY", ModuleObject->EntryPoint );
   return (PGD_ENABLEDRIVER)ModuleObject->EntryPoint;
 }
 
@@ -208,7 +208,7 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   DriverObject = ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
   if (DriverObject == NULL)
   {
-    return STATUS_INSUFFICIENT_RESOURCES;
+    return NULL;
   }
   memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
 
@@ -272,14 +272,16 @@ INT  DRIVER_ReferenceDriver (LPCWSTR  Name)
   
   while (Driver && Name)
     {
+      DPRINT( "Comparting %S to %S\n", Driver->Name, Name );
       if (!_wcsicmp( Driver->Name, Name)) 
         {
           return ++Driver->ReferenceCount;
         }
       Driver = Driver->Next;
     }
-  
-  return  GenericDriver ? ++GenericDriver->ReferenceCount : 0;
+  DPRINT( "Driver %S not found to reference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
+  assert( GenericDriver != 0 );
+  return ++GenericDriver->ReferenceCount;
 }
 
 INT  DRIVER_UnreferenceDriver (LPCWSTR  Name)
@@ -288,12 +290,14 @@ INT  DRIVER_UnreferenceDriver (LPCWSTR  Name)
   
   while (Driver && Name)
     {
+      DPRINT( "Comparting %S to %S\n", Driver->Name, Name );
       if (!_wcsicmp( Driver->Name, Name)) 
         {
           return --Driver->ReferenceCount;
         }
       Driver = Driver->Next;
     }
-  
-  return  GenericDriver ? --GenericDriver->ReferenceCount : 0;
+  DPRINT( "Driver '%S' not found to dereference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
+  assert( GenericDriver != 0 );
+  return --GenericDriver->ReferenceCount;
 }
