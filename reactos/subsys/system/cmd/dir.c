@@ -1646,9 +1646,9 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	if ((ptrStartNode = malloc(sizeof(struct TDirFindListNode))) == NULL)
 	{
 #ifdef _DEBUG
-		ConErrPrintf("DEBUG: Cannot allocate memmory for ptrStartNode!\n");
+		ConErrPrintf("DEBUG: Cannot allocate memory for ptrStartNode!\n");
 #endif
-		return 1;	/* Error cannot allocate memmory for 1st object */
+		return 1;	/* Error cannot allocate memory for 1st object */
 	}
 	ptrNextNode = ptrStartNode;
 
@@ -1701,6 +1701,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 			
 		}		
 	}while(FindNextFile(hSearch,&wfdFileInfo));
+	FindClose(hSearch);
 
 	/* Terminate list */
 	ptrNextNode->ptrNext = NULL;
@@ -1710,7 +1711,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	if (!(ptrFileArray))
 	{
 #ifdef _DEBUG
-		ConErrPrintf("DEBUG: Cannot allocate memmory for ptrFileArray!\n");
+		ConErrPrintf("DEBUG: Cannot allocate memory for ptrFileArray!\n");
 #endif
 		goto _DirList_clear_n_exit;
 	}
@@ -1732,6 +1733,9 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Print Data */
 	DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
+	
+	/* Free array */
+	free(ptrFileArray);
 
 	/* Print Directory Summary */
 	/* Condition to print summary is:
@@ -1774,10 +1778,11 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 				}
 			}
 		}while(FindNextFile(hRecSearch,&wfdFileInfo));
+		FindClose(hRecSearch);
 	}
 
 _DirList_clear_n_exit:	
-/* Deallocate memmory */
+/* Deallocate memory */
 	/* Free linked list */
 	while (ptrStartNode)
 	{
@@ -1786,14 +1791,6 @@ _DirList_clear_n_exit:
 		ptrStartNode = ptrNextNode;
 		dwCount --;
 	}
-	/* Free array */
-	free(ptrFileArray);
-
-	/* Close Handles */
-	if (hSearch != INVALID_HANDLE_VALUE)
-		FindClose(hSearch);
-	if (hRecSearch != INVALID_HANDLE_VALUE)
-		FindClose(hRecSearch);
 
 	return 0;
 }
