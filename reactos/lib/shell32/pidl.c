@@ -183,9 +183,13 @@ BOOL WINAPI ILGetDisplayName(LPCITEMIDLIST pidl, LPVOID path)
  *   observed: pidl=Desktop return=pidl
  */
 LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST pidl)
-{	LPCITEMIDLIST   pidlLast = pidl;
+{
+	LPCITEMIDLIST   pidlLast = pidl;
 
 	TRACE("(pidl=%p)\n",pidl);
+
+	if (!pidl)
+	  return NULL;
 
 	while (pidl->mkid.cb)
 	{
@@ -1151,7 +1155,7 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
  * SHGetFolderLocation [SHELL32.@]
  *
  * NOTES
- *  the pidl can be a simple one. since we cant get the path out of the pidl
+ *  the pidl can be a simple one. since we can't get the path out of the pidl
  *  we have to take all data from the pidl
  */
 HRESULT WINAPI SHGetFolderLocation(
@@ -1170,7 +1174,7 @@ HRESULT WINAPI SHGetFolderLocation(
  * SHGetDataFromIDListA [SHELL32.247]
  *
  * NOTES
- *  the pidl can be a simple one. since we cant get the path out of the pidl
+ *  the pidl can be a simple one. since we can't get the path out of the pidl
  *  we have to take all data from the pidl
  */
 HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int nFormat, LPVOID dest, int len)
