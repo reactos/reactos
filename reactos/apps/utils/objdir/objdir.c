@@ -79,10 +79,14 @@ StatusToName (NTSTATUS Status)
 			return "STATUS_PATH_SYNTAX_BAD";
 		case STATUS_NO_MORE_ENTRIES:
 			return "STATUS_NO_MORE_ENTRIES";
+		case STATUS_MORE_ENTRIES:
+			return "STATUS_MORE_ENTRIES";
 		case STATUS_ACCESS_DENIED:
 			return "STATUS_ACCESS_DENIED";
 		case STATUS_UNSUCCESSFUL:
 			return "STATUS_UNSUCCESSFUL";
+		case STATUS_INVALID_HANDLE:
+			return "STATUS_INVALID_HANDLE";
 	}
 	sprintf (RawValue, "0x%08lx", Status);
 	return (const char *) RawValue;
@@ -173,8 +177,9 @@ ListDirectory (
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 	NTSTATUS		Status;
 	HANDLE			DirectoryHandle;
-	BYTE			DirectoryEntry [MAX_DIR_ENTRY * sizeof(OBJECT_DIRECTORY_INFORMATION)];
+	BYTE			DirectoryEntry [512];
 	POBJECT_DIRECTORY_INFORMATION pDirectoryEntry = (POBJECT_DIRECTORY_INFORMATION) DirectoryEntry;
+	POBJECT_DIRECTORY_INFORMATION pDirectoryEntries = (POBJECT_DIRECTORY_INFORMATION) DirectoryEntry;
 	ULONG			Context = 0;
 	ULONG			ReturnLength = 0;
 	ULONG			EntryCount = 0;
@@ -217,25 +222,23 @@ ListDirectory (
 		return (FALSE);
 	}
 	printf ("\n Directory of %s\n\n", DirectoryNameA);
+	
+        for(;;)
+        {
 	/*
 	 * Enumerate each item in the directory.
 	 */
 	Status = NtQueryDirectoryObject (
 			DirectoryHandle,
-			pDirectoryEntry,
+			pDirectoryEntries,
 			sizeof DirectoryEntry,
 			FALSE,/* ReturnSingleEntry */
-			TRUE, /* RestartScan */
+			FALSE, /* RestartScan */
 			& Context,
 			& ReturnLength
 			);
-	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status) && Status != STATUS_NO_MORE_ENTRIES)
 	{
-		if (STATUS_NO_MORE_ENTRIES == Status)
-		{
-			NtClose (DirectoryHandle);
-			return TRUE;
-		}
 		printf (
 			"Failed to query directory object (Status: %s)\n",
 			StatusToName (Status)
@@ -243,12 +246,17 @@ ListDirectory (
 		NtClose (DirectoryHandle);
 		return (FALSE);
 	}
-	while (0 != pDirectoryEntry->ObjectTypeName.Length)
+	if (Status == STATUS_NO_MORE_ENTRIES)
+	{
+          break;
+        }
+	pDirectoryEntry = pDirectoryEntries;
+	while (EntryCount < Context)
 	{
 		CHAR ObjectNameA [MAX_PATH];
 		CHAR TypeNameA [MAX_PATH];
 		CHAR TargetNameA [MAX_PATH];
-		
+
 		if (0 == wcscmp (L"SymbolicLink", pDirectoryEntry->ObjectTypeName.Buffer))
 		{
 			if (TRUE == ExpandSymbolicLink (
@@ -258,7 +266,7 @@ ListDirectory (
 					)
 				)
 			{
-				
+
 				printf (
 					"%-16s %s -> %s\n",
 					RawUszAsz (pDirectoryEntry->ObjectTypeName.Buffer, TypeNameA),
@@ -283,9 +291,10 @@ ListDirectory (
 				RawUszAsz (pDirectoryEntry->ObjectName.Buffer, ObjectNameA)
 				);
 		}
-		++ EntryCount;
 		++ pDirectoryEntry;
+		++ EntryCount;
 	}
+	};
 	printf ("\n\t%lu object(s)\n", EntryCount);
 	/*
 	 * Free any resource.
