@@ -2498,7 +2498,7 @@ LRESULT WINAPI ComboLBWndProc( HWND hwnd, UINT msg,
 	    switch( msg )
 	    {
 		case WM_CREATE:
-#define lpcs	((LPCREATESTRUCTA)lParam)
+#define lpcs	((LPCREATESTRUCT)lParam)
 		     DPRINT( "\tpassed parent handle = 0x%08x\n", 
 				  (UINT)lpcs->lpCreateParams);
 

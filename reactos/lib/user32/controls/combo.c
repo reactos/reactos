@@ -82,7 +82,7 @@ static LRESULT COMBO_NCCreate(WND* wnd, LPARAM lParam)
    if ( wnd && COMBO_Init() &&
       (lphc = HeapAlloc(GetProcessHeap(), 0, sizeof(HEADCOMBO))) )
    {
-	LPCREATESTRUCTA     lpcs = (CREATESTRUCTA*)lParam;
+	LPCREATESTRUCT     lpcs = (CREATESTRUCT*)lParam;
        
 	memset( lphc, 0, sizeof(HEADCOMBO) );
        *(LPHEADCOMBO*)wnd->wExtra = lphc;

@@ -32,15 +32,12 @@ BOOL WIN_CreateDesktopWindow(void)
 
     DPRINT("Creating desktop window\n");
 
-#if 0
-    if (!ICONTITLE_Init() ||
-	!WINPOS_CreateInternalPosAtom() ||
-	!(class = CLASS_FindClassByAtom( STRING2ATOM(DESKTOP_CLASS_NAME) , 0 )))
+
+    
+    class = CLASS_FindClassByAtom( STRING2ATOMW(DESKTOP_CLASS_NAME) , 0 );
+    if ( class == NULL )
 	return FALSE;
-#else
-	WINPOS_CreateInternalPosAtom();
-	class = CLASS_FindClassByAtom( STRING2ATOMW(DESKTOP_CLASS_NAME) , 0 );
-#endif
+
     hwndDesktop = HeapAlloc(GetProcessHeap(),0, sizeof(WND)+class->cbWndExtra );
     if (!hwndDesktop) return FALSE;
     pWndDesktop = (WND *) ( hwndDesktop );
@@ -72,7 +69,7 @@ BOOL WIN_CreateDesktopWindow(void)
     pWndDesktop->dwStyle           = WS_VISIBLE | WS_CLIPCHILDREN |
                                      WS_CLIPSIBLINGS;
     pWndDesktop->dwExStyle         = 0;
-    pWndDesktop->dce               = NULL;
+    pWndDesktop->dce               = DCE_AllocDCE(pWndDesktop,DCE_WINDOW_DC);
     pWndDesktop->pVScroll          = NULL;
     pWndDesktop->pHScroll          = NULL;
     pWndDesktop->pProp             = NULL;
@@ -96,7 +93,7 @@ BOOL WIN_CreateDesktopWindow(void)
 
 HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 {
-    HANDLE hWnd;
+
     WND *wndPtr;
     STARTUPINFO StartupInfo;
     CLASS *classPtr = NULL;
@@ -137,7 +134,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
     wndPtr->class       = classPtr;
     
     wndPtr->hwndSelf = wndPtr;
-    hWnd = wndPtr->hwndSelf;
+   
 
     /* Fill the window structure */
 
@@ -152,8 +149,8 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
     }
     else
     {
-        wndPtr->parent = pWndDesktop;
-        if (!cs->hwndParent || (cs->hwndParent == pWndDesktop->hwndSelf))
+        wndPtr->parent = WIN_GetDesktop();
+        if (!cs->hwndParent || (cs->hwndParent == WIN_GetDesktop()->hwndSelf))
             wndPtr->owner = NULL;
         else
         {
@@ -167,8 +164,8 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 /*
     else
     {
-        wndPtr->parent = pWndDesktop;
-        if (!cs->hWndParent || (cs->hWndParent == pWndDesktop->hwndSelf))
+        wndPtr->parent = WIN_GetDesktop();
+        if (!cs->hWndParent || (cs->hWndParent == WIN_GetDesktop()->hwndSelf))
             wndPtr->owner = NULL;
         else
             wndPtr->owner = WIN_GetTopParentPtr(WIN_FindWndPtr(cs->hWndParent));
@@ -177,7 +174,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
     
     wndPtr->winproc        = classPtr->winproc;
     wndPtr->dwMagic        = WND_MAGIC;
-    //wndPtr->hwndSelf       = hWnd;
+
     wndPtr->hInstance      = cs->hInstance;
     wndPtr->text           = NULL;
     wndPtr->hmemTaskQ      = GetFastQueue();
@@ -193,7 +190,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
     wndPtr->pProp          = NULL;
     wndPtr->userdata       = 0;
     wndPtr->hSysMenu       = (wndPtr->dwStyle & WS_SYSMENU)
-			     ? MENU_GetSysMenu( hWnd, 0 ) : 0;
+			     ? MENU_GetSysMenu( wndPtr->hwndSelf, 0 ) : 0;
 
     if (classPtr->cbWndExtra) 
 	HEAP_memset( wndPtr->wExtra, 0, classPtr->cbWndExtra);
@@ -210,7 +207,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 
 	cbtc.lpcs = cs;
 	cbtc.hwndInsertAfter = hWndLinkAfter;
-        ret = HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (INT)hWnd, (LPARAM)&cbtc,  classPtr->bUnicode);
+        ret = HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (INT)wndPtr->hwndSelf, (LPARAM)&cbtc,  classPtr->bUnicode);
         if (ret)
 	{
 
@@ -331,7 +328,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
     if ((wndPtr->dwStyle & (WS_CAPTION | WS_CHILD)) == WS_CAPTION )
     {
         if (cs->hMenu) 
-		SetMenu(hWnd, cs->hMenu);
+		SetMenu(wndPtr->hwndSelf, cs->hMenu);
         else
         {
             if (classPtr->menuName) {
@@ -364,9 +361,9 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 	
     /* Insert the window in the linked list */
 
-    WIN_LinkWindow( hWnd, hWndLinkAfter );
+    WIN_LinkWindow( wndPtr->hwndSelf, hWndLinkAfter );
 
-    WINPOS_SendNCCalcSize( hWnd, FALSE, &wndPtr->rectWindow,
+    WINPOS_SendNCCalcSize( wndPtr->hwndSelf, FALSE, &wndPtr->rectWindow,
                                NULL, NULL, 0, &wndPtr->rectClient );
     OffsetRect(&wndPtr->rectWindow, maxPos.x - wndPtr->rectWindow.left,
                                           maxPos.y - wndPtr->rectWindow.top);
@@ -374,7 +371,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 
     if( (MSG_SendMessage( wndPtr, WM_CREATE, 0, (LPARAM)cs)) == -1 )
     {
-	WIN_UnlinkWindow( hWnd );
+	WIN_UnlinkWindow( wndPtr->hwndSelf );
 	WIN_DestroyWindow( wndPtr );
 	return NULL;
     }
@@ -405,7 +402,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
                 swFlag = ((wndPtr->dwStyle & WS_CHILD) || GetActiveWindow())
                     ? SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED
                     : SWP_NOZORDER | SWP_FRAMECHANGED;
-        SetWindowPos( hWnd, 0, newPos.left, newPos.top,
+        SetWindowPos( wndPtr->hwndSelf, 0, newPos.left, newPos.top,
                                 newPos.right, newPos.bottom, swFlag );
     }
 
@@ -414,19 +411,19 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 		/* Notify the parent window only */
 
 		MSG_SendMessage( wndPtr->parent, WM_PARENTNOTIFY,
-				MAKEWPARAM(WM_CREATE, wndPtr->wIDmenu), (LPARAM)hWnd );
-		if( !IsWindow(hWnd) ) return 0;
+				MAKEWPARAM(WM_CREATE, wndPtr->wIDmenu), (LPARAM)wndPtr->hwndSelf );
+		if( !IsWindow(wndPtr->hwndSelf) ) return 0;
     }
 
     if (cs->style & WS_VISIBLE) 
-		ShowWindow( hWnd, SW_SHOW );
+		ShowWindow( wndPtr->hwndSelf, SW_SHOW );
 
             /* Call WH_SHELL hook */
 
     if (!(wndPtr->dwStyle & WS_CHILD) && !wndPtr->owner)
-                HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWCREATED, (INT)hWnd, 0L,  classPtr->bUnicode);
+                HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWCREATED, (INT)wndPtr->hwndSelf, 0L,  classPtr->bUnicode);
 
-    return hWnd;
+    return wndPtr->hwndSelf;
  
 
 }
@@ -445,14 +442,14 @@ WINBOOL WIN_IsWindow(HANDLE hWnd)
 HWND WIN_FindWinToRepaint( HWND hwnd, HQUEUE hQueue )
 {
     HWND hwndRet;
-    WND *pWnd = pWndDesktop;
+    WND *pWnd = WIN_GetDesktop();
 
     /* Note: the desktop window never gets WM_PAINT messages 
      * The real reason why is because Windows DesktopWndProc
      * does ValidateRgn inside WM_ERASEBKGND handler.
      */
 
-    pWnd = hwnd ? WIN_FindWndPtr( hwnd ) : pWndDesktop->child;
+    pWnd = hwnd ? WIN_FindWndPtr( hwnd ) : WIN_GetDesktop()->child;
 
     for ( ; pWnd ; pWnd = pWnd->next )
     {

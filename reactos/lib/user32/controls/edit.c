@@ -216,7 +216,7 @@ static void	EDIT_WM_Char(WND *wnd, EDITSTATE *es, CHAR c, DWORD key_data);
 static void	EDIT_WM_Command(WND *wnd, EDITSTATE *es, INT code, INT id, HWND conrtol);
 static void	EDIT_WM_ContextMenu(WND *wnd, EDITSTATE *es, HWND hwnd, INT x, INT y);
 static void	EDIT_WM_Copy(WND *wnd, EDITSTATE *es);
-static LRESULT	EDIT_WM_Create(WND *wnd, EDITSTATE *es, LPCREATESTRUCTA cs);
+static LRESULT	EDIT_WM_Create(WND *wnd, EDITSTATE *es, LPCREATESTRUCT cs);
 static void	EDIT_WM_Destroy(WND *wnd, EDITSTATE *es);
 static LRESULT	EDIT_WM_EraseBkGnd(WND *wnd, EDITSTATE *es, HDC dc);
 static INT	EDIT_WM_GetText(WND *wnd, EDITSTATE *es, INT count, LPSTR text);
@@ -227,7 +227,7 @@ static LRESULT	EDIT_WM_LButtonDblClk(WND *wnd, EDITSTATE *es, DWORD keys, INT x,
 static LRESULT	EDIT_WM_LButtonDown(WND *wnd, EDITSTATE *es, DWORD keys, INT x, INT y);
 static LRESULT	EDIT_WM_LButtonUp(WND *wnd, EDITSTATE *es, DWORD keys, INT x, INT y);
 static LRESULT	EDIT_WM_MouseMove(WND *wnd, EDITSTATE *es, DWORD keys, INT x, INT y);
-static LRESULT	EDIT_WM_NCCreate(WND *wnd, LPCREATESTRUCTA cs);
+static LRESULT	EDIT_WM_NCCreate(WND *wnd, LPCREATESTRUCT cs);
 static void	EDIT_WM_Paint(WND *wnd, EDITSTATE *es);
 static void	EDIT_WM_Paste(WND *wnd, EDITSTATE *es);
 static void	EDIT_WM_SetFocus(WND *wnd, EDITSTATE *es, HWND window_losing_focus);
@@ -313,7 +313,7 @@ LRESULT WINAPI EditWndProc( HWND hwnd, UINT msg,
 
 	case WM_NCCREATE:
 		DPRINTF_EDIT_MSG("WM_NCCREATE");
-		return EDIT_WM_NCCreate(wnd, (LPCREATESTRUCTA)lParam);
+		return EDIT_WM_NCCreate(wnd, (LPCREATESTRUCT)lParam);
 	}
 
 	if (!es)
@@ -591,7 +591,7 @@ LRESULT WINAPI EditWndProc( HWND hwnd, UINT msg,
 
 	case WM_CREATE:
 		DPRINTF_EDIT_MSG("WM_CREATE");
-		result = EDIT_WM_Create(wnd, es, (LPCREATESTRUCTA)lParam);
+		result = EDIT_WM_Create(wnd, es, (LPCREATESTRUCT)lParam);
 		break;
 
 	case WM_CUT:
@@ -2720,7 +2720,7 @@ static void EDIT_WM_Copy(WND *wnd, EDITSTATE *es)
  *	WM_CREATE
  *
  */
-static LRESULT EDIT_WM_Create(WND *wnd, EDITSTATE *es, LPCREATESTRUCTA cs)
+static LRESULT EDIT_WM_Create(WND *wnd, EDITSTATE *es, LPCREATESTRUCT cs)
 {
 	/*
 	 *	To initialize some final structure members, we call some helper
@@ -3231,7 +3231,7 @@ static LRESULT EDIT_WM_MouseMove(WND *wnd, EDITSTATE *es, DWORD keys, INT x, INT
  *	WM_NCCREATE
  *
  */
-static LRESULT EDIT_WM_NCCreate(WND *wnd, LPCREATESTRUCTA cs)
+static LRESULT EDIT_WM_NCCreate(WND *wnd, LPCREATESTRUCT cs)
 {
 	EDITSTATE *es;
 

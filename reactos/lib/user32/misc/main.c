@@ -10,9 +10,10 @@ int main(int argc, char **argv)
 {
 	
 
-	
+	WINPOS_CreateInternalPosAtom();
 	SYSCOLOR_Init();
         WIDGETS_Init();
+	ICONTITLE_Init();
 	DIALOG_Init();
 	COMBO_Init();
 	MENU_Init();

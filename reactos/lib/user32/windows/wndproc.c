@@ -6,8 +6,8 @@
 
 //#include <user32/heapdup.h>
 
-#define MDICREATESTRUCTA MDICREATESTRUCT
-#define MDICREATESTRUCTW MDICREATESTRUCT
+#define MDICREATESTRUCT MDICREATESTRUCT
+#define MDICREATESTRUCT MDICREATESTRUCT
 
 
 /**********************************************************************
@@ -124,7 +124,7 @@ LRESULT WINAPI DefWindowProcA( HWND hwnd, UINT msg, WPARAM wParam,
     {
     case WM_NCCREATE:
 	{
-	    CREATESTRUCTA *cs = (CREATESTRUCTA *)lParam;
+	    CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
 	    if (cs->lpszName) DEFWND_SetTextA( wndPtr, cs->lpszName );
 	    result = 1;
 	}
@@ -191,7 +191,7 @@ LRESULT WINAPI DefWindowProcW( HWND hwnd, UINT msg, WPARAM wParam,
     {
     case WM_NCCREATE:
 	{
-	    CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
+	    CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
 	    if (cs->lpszName) DEFWND_SetTextW( wndPtr, cs->lpszName );
 	    result = 1;
 	}
@@ -303,10 +303,10 @@ INT WINPROC_MapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam 
     case WM_NCCREATE:
     case WM_CREATE:
         {
-            CREATESTRUCTW *cs = (CREATESTRUCTW *)HeapAlloc( GetProcessHeap(), 0,
+            CREATESTRUCT *cs = (CREATESTRUCT *)HeapAlloc( GetProcessHeap(), 0,
                                                                 sizeof(*cs) );
             if (!cs) return -1;
-            *cs = *(CREATESTRUCTW *)*plparam;
+            *cs = *(CREATESTRUCT *)*plparam;
             if (HIWORD(cs->lpszName))
                 cs->lpszName = HEAP_strdupAtoW( GetProcessHeap(), 0,
                                                 (LPCSTR)cs->lpszName );
@@ -318,7 +318,7 @@ INT WINPROC_MapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam 
         return 1;
     case WM_MDICREATE:
         {
-            MDICREATESTRUCTW *cs = HeapAlloc( GetProcessHeap(), 0, sizeof(MDICREATESTRUCT) );
+            MDICREATESTRUCT *cs = HeapAlloc( GetProcessHeap(), 0, sizeof(MDICREATESTRUCT) );
             if (!cs) return -1;
             *cs = *(MDICREATESTRUCT *)*plparam;
             if (HIWORD(cs->szClass))
@@ -410,7 +410,7 @@ void WINPROC_UnmapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_NCCREATE:
     case WM_CREATE:
         {
-            CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
+            CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
             if (HIWORD(cs->lpszName))
                 HeapFree( GetProcessHeap(), 0, (LPVOID)cs->lpszName );
             if (HIWORD(cs->lpszClass))
@@ -421,7 +421,7 @@ void WINPROC_UnmapMsg32ATo32W( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     case WM_MDICREATE:
         {
-            MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)lParam;
+            MDICREATESTRUCT *cs = (MDICREATESTRUCT *)lParam;
             if (HIWORD(cs->szTitle))
                 HeapFree( GetProcessHeap(), 0, (LPVOID)cs->szTitle );
             if (HIWORD(cs->szClass))
@@ -522,10 +522,10 @@ INT WINPROC_MapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam 
     case WM_NCCREATE:
     case WM_CREATE:
         {
-            CREATESTRUCTA *cs = (CREATESTRUCTA *)HeapAlloc( GetProcessHeap(), 0,
+            CREATESTRUCT *cs = (CREATESTRUCT *)HeapAlloc( GetProcessHeap(), 0,
                                                                 sizeof(*cs) );
             if (!cs) return -1;
-            *cs = *(CREATESTRUCTA *)*plparam;
+            *cs = *(CREATESTRUCT *)*plparam;
             if (HIWORD(cs->lpszName))
                 cs->lpszName  = HEAP_strdupWtoA( GetProcessHeap(), 0,
                                                  (LPCWSTR)cs->lpszName );
@@ -537,10 +537,10 @@ INT WINPROC_MapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM *plparam 
         return 1;
     case WM_MDICREATE:
         {
-            MDICREATESTRUCTA *cs =
-                (MDICREATESTRUCTA *)HeapAlloc( GetProcessHeap(), 0, sizeof(*cs) );
+            MDICREATESTRUCT *cs =
+                (MDICREATESTRUCT *)HeapAlloc( GetProcessHeap(), 0, sizeof(*cs) );
             if (!cs) return -1;
-            *cs = *(MDICREATESTRUCTA *)*plparam;
+            *cs = *(MDICREATESTRUCT *)*plparam;
             if (HIWORD(cs->szTitle))
                 cs->szTitle = HEAP_strdupWtoA( GetProcessHeap(), 0,
                                                (LPCWSTR)cs->szTitle );
@@ -643,7 +643,7 @@ void WINPROC_UnmapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_NCCREATE:
     case WM_CREATE:
         {
-            CREATESTRUCTA *cs = (CREATESTRUCTA *)lParam;
+            CREATESTRUCT *cs = (CREATESTRUCT *)lParam;
             if (HIWORD(cs->lpszName))
                 HeapFree( GetProcessHeap(), 0, (LPVOID)cs->lpszName );
             if (HIWORD(cs->lpszClass))
@@ -654,7 +654,7 @@ void WINPROC_UnmapMsg32WTo32A( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     case WM_MDICREATE:
         {
-            MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)lParam;
+            MDICREATESTRUCT *cs = (MDICREATESTRUCT *)lParam;
             if (HIWORD(cs->szTitle))
                 HeapFree( GetProcessHeap(), 0, (LPVOID)cs->szTitle );
             if (HIWORD(cs->szClass))

@@ -27,6 +27,13 @@ DllMain(
 		case DLL_PROCESS_ATTACH:
 			//WinStation = CreateWindowStationA(NULL,0,GENERIC_ALL,NULL);
 			//Desktop = CreateDesktopA(NULL,NULL,NULL,0,0,NULL);
+			WINPOS_CreateInternalPosAtom();
+			SYSCOLOR_Init();
+        		WIDGETS_Init();
+			ICONTITLE_Init();
+			DIALOG_Init();
+			COMBO_Init();
+			MENU_Init();
 			break;
 		case DLL_THREAD_ATTACH:
 			break;

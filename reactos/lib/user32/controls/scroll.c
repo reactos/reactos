@@ -855,7 +855,7 @@ LRESULT STDCALL ScrollBarWndProc( HWND hwnd, UINT message, WPARAM wParam,
     {
     case WM_CREATE:
         {
-	    CREATESTRUCTA *lpCreat = (CREATESTRUCTA *)lParam;
+	    CREATESTRUCT *lpCreat = (CREATESTRUCT *)lParam;
             if (lpCreat->style & SBS_SIZEBOX)
             {
                 DPRINT( "FIXME Unimplemented style SBS_SIZEBOX.\n" );

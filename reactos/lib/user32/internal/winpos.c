@@ -41,7 +41,10 @@ HWND  WINPOS_GetActiveWindow(void)
 WINBOOL WINPOS_CreateInternalPosAtom()
 {
     LPSTR str = "SysIP";
-    atomInternalPos = (LPCSTR)(DWORD)GlobalAddAtomA(str);
+atomInternalPos ="SysIP";
+  //  atomInternalPos = (LPCSTR)(DWORD)GlobalAddAtomA(str);
+    //if ( atomInternalPos == NULL )
+//	atomInternalPos = (LPCSTR)(DWORD)GlobalFindAtom(str);
     return (atomInternalPos) ? TRUE : FALSE;
 }
 
