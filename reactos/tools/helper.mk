@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.18 2002/06/30 02:40:24 ei Exp $
+# $Id: helper.mk,v 1.19 2002/07/13 12:44:09 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -41,6 +41,9 @@
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
+
+include $(PATH_TO_TOP)/config
+
 
 ifeq ($(TARGET_PATH),)
 TARGET_PATH := .
@@ -378,7 +381,8 @@ include $(PATH_TO_TOP)/config
 TARGET_CFLAGS += $(MK_CFLAGS)
 TARGET_CFLAGS += -pipe -march=$(ARCH)
 ifeq ($(DBG),1)
-#TARGET_CFLAGS += -g
+TARGET_CFLAGS += -g
+TARGET_LFLAGS += -g
 endif
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS)
@@ -456,7 +460,7 @@ endif
 	  -o $(MK_NOSTRIPNAME) \
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
-	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
+	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME)
 	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
@@ -496,7 +500,7 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		-o $(MK_NOSTRIPNAME) \
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
-	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
+	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 
 $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -582,6 +586,7 @@ install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
 	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+
 
 dist: $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 

@@ -8,7 +8,8 @@ typedef enum _DEBUG_CONTROL_CODE
   DebugSetSpecialCalls,
   DebugClearSpecialCalls,
   DebugQuerySpecialCalls,
-  DebugDbgBreakPoint
+  DebugDbgBreakPoint,
+  DebugDbgLoadSymbols
 } DEBUG_CONTROL_CODE;
 
 typedef enum _KPROFILE_SOURCE

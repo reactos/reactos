@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.72 2002/07/04 19:56:35 dwelch Exp $
+# $Id: Makefile,v 1.73 2002/07/13 12:44:07 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -617,7 +617,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 	- $(RM) temp.exp
 
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
-	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > $(TARGETNAME).sym
+	$(RSYM) $(TARGETNAME).nostrip.exe $(TARGETNAME).sym
 
 $(TARGETNAME).o: $(OBJECTS)
 	$(LD) \

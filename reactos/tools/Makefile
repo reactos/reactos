@@ -6,7 +6,8 @@ TOOLS = \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
   rmkdir$(EXE_POSTFIX) \
-  rrmdir$(EXE_POSTFIX) 
+  rrmdir$(EXE_POSTFIX)  \
+  rsym$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
@@ -48,6 +49,15 @@ endif
 ifeq ($(HOST),mingw32-windows)
 rrmdir$(EXE_POSTFIX): rrmdir.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
+endif
+
+ifeq ($(HOST),mingw32-linux)
+rsym$(EXE_POSTFIX): rsym.c
+	$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rsym.c -o rsym$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+rsym$(EX_POSTFIX): rsym.c
+	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rsym.c -o rsym$(EXE_POSTFIX)
 endif
 
 wmc_directory_target:

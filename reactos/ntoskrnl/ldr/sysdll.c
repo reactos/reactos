@@ -96,7 +96,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 		       FILE_ALL_ACCESS,
 		       &FileObjectAttributes,
 		       NULL,
-		       0,
+		       FILE_SHARE_READ,
 		       0);
    if (!NT_SUCCESS(Status))
      {

@@ -50,10 +50,12 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
     case DebugQuerySpecialCalls:
     case DebugDbgBreakPoint:
       break;
+#ifdef DBG
+    case DebugDbgLoadSymbols:
+      LdrLoadUserModuleSymbols((PLDR_MODULE) InputBuffer);
+#endif /* DBG */
+      break;
     default:
-#ifdef KDBG
-      LdrLoadUserModuleSymbols((PLDR_MODULE)InputBuffer);
-#endif /* KDBG */
       break;
   }
   return STATUS_SUCCESS;

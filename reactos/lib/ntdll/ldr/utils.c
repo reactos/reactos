@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.50 2002/04/26 13:08:18 ekohl Exp $
+/* $Id: utils.c,v 1.51 2002/07/13 12:44:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,20 +48,21 @@ static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hin
 /* FUNCTIONS *****************************************************************/
 
 
-#ifdef KDBG
+#ifdef DBG
 
-VOID LdrLoadModuleSymbols(PLDR_MODULE ModuleObject)
+VOID
+LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
 {
   NtSystemDebugControl(
-    0xffffffff,
-    (PVOID)ModuleObject,
+    DebugDbgLoadSymbols,
+    (PVOID)LdrModule,
     0,
     NULL,
     0,
     NULL);
 }
 
-#endif /* KDBG */
+#endif /* DBG */
 
 
 /***************************************************************************
@@ -364,6 +365,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   Module = RtlAllocateHeap(RtlGetProcessHeap(),
 			   0,
 			   sizeof (LDR_MODULE));
+  assert(Module);
   Module->BaseAddress = (PVOID)ImageBase;
   Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
@@ -400,9 +402,11 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 		 &Module->InInitializationOrderModuleList);
   /* FIXME: release loader lock */
 
-#ifdef KDBG
-  LdrLoadModuleSymbols(Module);
-#endif /* KDBG */
+#ifdef DBG
+
+  LdrpLoadUserModuleSymbols(Module);
+
+#endif /* DBG */
 
   /* initialize dll */
   if ((NTHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) ==

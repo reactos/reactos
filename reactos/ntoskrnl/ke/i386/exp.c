@@ -45,6 +45,17 @@
 
 /* GLOBALS *****************************************************************/
 
+#ifdef DBG
+
+NTSTATUS
+LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PULONG LineNumber,
+  OUT PCH FileName  OPTIONAL,
+  OUT PCH FunctionName  OPTIONAL);
+
+#endif /* DBG */
+
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -124,16 +135,17 @@ extern unsigned int _text_start__, _text_end__;
 STATIC BOOLEAN 
 print_address(PVOID address)
 {
-#ifdef KDBG
-   ULONG Offset;
-   PSYMBOL Symbol, NextSymbol;
-   BOOLEAN Printed = FALSE;
-   ULONG NextAddress;
-#endif /* KDBG */
    PLIST_ENTRY current_entry;
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
-   
+   ULONG_PTR RelativeAddress;
+#ifdef DBG
+   NTSTATUS Status;
+   ULONG LineNumber;
+   CHAR FileName[256];
+   CHAR FunctionName[256];
+#endif
+
    current_entry = ModuleTextListHead.Flink;
    
    while (current_entry != &ModuleTextListHead &&
@@ -141,46 +153,31 @@ print_address(PVOID address)
      {
 	current = 
 	  CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
-	
+
 	if (address >= (PVOID)current->Base &&
 	    address < (PVOID)(current->Base + current->Length))
 	  {
-
-#ifdef KDBG
-
-      Offset = (ULONG)((ULONG)address - current->Base);
-      Symbol = current->Symbols.Symbols;
-      while (Symbol != NULL)
-        {
-          NextSymbol = Symbol->Next;
-          if (NextSymbol != NULL)
-            NextAddress = NextSymbol->RelativeAddress;
-          else
-            NextAddress = current->Length;
-
-          if ((Offset >= Symbol->RelativeAddress) &&
-              (Offset < NextAddress))
-            {
-              DbgPrint("<%ws: %x (%wZ)>", current->Name, Offset, 
-		       &Symbol->Name);
-              Printed = TRUE;
-              break;
-            }
-          Symbol = NextSymbol;
-        }
-      if (!Printed)
-        DbgPrint("<%ws: %x>", current->Name, Offset);
-
-#else /* KDBG */
-
-	     DbgPrint("<%ws: %x>", current->Name, 
-		      address - current->Base);
-
-#endif /* KDBG */
-
+            RelativeAddress = (ULONG_PTR) address - current->Base;
+#ifdef DBG
+            Status = LdrGetAddressInformation(&current->SymbolInfo,
+              RelativeAddress,
+              &LineNumber,
+              FileName,
+              FunctionName);
+            if (NT_SUCCESS(Status))
+              {
+                DbgPrint("<%ws: %x (%s:%d (%s))>",
+                  current->Name, RelativeAddress, FileName, LineNumber, FunctionName);
+              }
+            else
+             {
+               DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+             }
+#else /* !DBG */
+             DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+#endif /* !DBG */
 	     return(TRUE);
 	  }
-
 	current_entry = current_entry->Flink;
      }
    return(FALSE);
@@ -338,6 +335,7 @@ KiDoubleFaultHandler(VOID)
 	{
 	  print_address((PVOID)Frame[1]);
 	  Frame = (PULONG)Frame[0];
+          DbgPrint("\n");
 	}
 #else
       DbgPrint("Frames: ");
@@ -504,9 +502,6 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2)
        print_address((PVOID)Frame[1]);
        Frame = (PULONG)Frame[0];
        i++;
-     }
-   if ((i % 8) != 0)
-     {
        DbgPrint("\n");
      }
 }
@@ -592,9 +587,6 @@ KeDumpStackFrames(PULONG Frame)
       print_address((PVOID)Frame[1]);
       Frame = (PULONG)Frame[0];
       i++;
-    }
-  if ((i % 8) != 0)
-    {
       DbgPrint("\n");
     }
 }

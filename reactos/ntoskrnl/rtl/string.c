@@ -239,8 +239,12 @@ char *strncpy(char *dst, const char *src, size_t n)
 			}
 		}
 		while (--n != 0);
+                d[0] = 0;
 	}
-
+      else
+        {
+          dst[0] = 0;
+        }
 	return dst;
 }
 

@@ -76,6 +76,7 @@ CP = $(TOOLS_PATH)/rcopy
 RM = $(TOOLS_PATH)/rdel
 RMDIR = $(TOOLS_PATH)/rrmdir
 RMKDIR = $(TOOLS_PATH)/rmkdir
+RSYM = $(TOOLS_PATH)/rsym
 MC = $(TOOLS_PATH)/wmc/wmc
 
 

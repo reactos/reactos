@@ -45,6 +45,17 @@
 
 /* GLOBALS *****************************************************************/
 
+#ifdef DBG
+
+NTSTATUS
+LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PULONG LineNumber,
+  OUT PCH FileName  OPTIONAL,
+  OUT PCH FunctionName  OPTIONAL);
+
+#endif /* DBG */
+
 static char *ExceptionTypeStrings[] = 
   {
     "Divide Error",
@@ -72,16 +83,17 @@ static char *ExceptionTypeStrings[] =
 STATIC BOOLEAN 
 print_user_address(PVOID address)
 {
-#ifdef KDBG
-   ULONG Offset;
-   PSYMBOL Symbol, NextSymbol;
-   BOOLEAN Printed = FALSE;
-   ULONG NextAddress;
-#endif /* KDBG */
    PLIST_ENTRY current_entry;
    PLDR_MODULE current;
    PEPROCESS CurrentProcess;
    PPEB Peb = NULL;
+   ULONG_PTR RelativeAddress;
+#ifdef DBG
+   NTSTATUS Status;
+   ULONG LineNumber;
+   CHAR FileName[256];
+   CHAR FunctionName[256];
+#endif
 
    CurrentProcess = PsGetCurrentProcess();
    if (NULL != CurrentProcess)
@@ -106,37 +118,25 @@ print_user_address(PVOID address)
 	if (address >= (PVOID)current->BaseAddress &&
 	    address < (PVOID)(current->BaseAddress + current->SizeOfImage))
 	  {
-#ifdef KDBG
-
-      Offset = (ULONG)(address - current->BaseAddress);
-      Symbol = current->Symbols.Symbols;
-      while (Symbol != NULL)
-        {
-          NextSymbol = Symbol->Next;
-          if (NextSymbol != NULL)
-            NextAddress = NextSymbol->RelativeAddress;
-          else
-            NextAddress = current->SizeOfImage;
-
-          if ((Offset >= Symbol->RelativeAddress) &&
-              (Offset < NextAddress))
-            {
-              DbgPrint("<%wZ: %x (%wZ)>",
-                &current->BaseDllName, Offset, &Symbol->Name);
-              Printed = TRUE;
-              break;
-            }
-          Symbol = NextSymbol;
-        }
-      if (!Printed)
-        DbgPrint("<%wZ: %x>", &current->BaseDllName, Offset);
-
-#else /* KDBG */
-
-	     DbgPrint("<%wZ: %x>", &current->BaseDllName, 
-		      address - current->BaseAddress);
-
-#endif /* KDBG */
+            RelativeAddress = (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
+#ifdef DBG
+            Status = LdrGetAddressInformation(&current->SymbolInfo,
+              RelativeAddress,
+              &LineNumber,
+              FileName,
+              FunctionName);
+            if (NT_SUCCESS(Status))
+              {
+                DbgPrint("<%wZ: %x (%s:%d (%s))>",
+                  &current->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
+              }
+            else
+             {
+               DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
+             }
+#else /* !DBG */
+             DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
+#endif /* !DBG */
 
 	     return(TRUE);
 	  }

@@ -13,11 +13,9 @@ typedef struct _MODULE_TEXT_SECTION
   ULONG Length;
   LIST_ENTRY ListEntry;
   PWCH Name;
-#ifdef KDBG
-  SYMBOL_TABLE Symbols;
-#endif /* KDBG */
-  PVOID SymbolsBase;
-  ULONG SymbolsLength;
+#ifdef DBG
+  IMAGE_SYMBOL_INFO SymbolInfo;
+#endif /* DBG */
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT

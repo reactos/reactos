@@ -1,5 +1,63 @@
 2002-07-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* rules.mak (RSYM): Define.
+	* include/ddk/zwtypes.h (DebugDbgLoadSymbols): Add to enum
+	_DEBUG_CONTROL_CODE.
+	* include/ntdll/ldr.h (LDR_SYMBOL_INFO, LdrpLoadUserModuleSymbols): Add.
+	(LdrLoadModuleSymbols): Remove.
+	* include/ntos/kdbgsyms.h (ST_FILENAME, ST_FUNCTION,
+	ST_LINENUMBER): Add.
+	(SYMBOL). Make Name an ANSI_STRING.
+	(IMAGE_SYMBOL_INFO, AreSymbolsParsed): Add.
+	* lib/ntdll/ldr/startup.c (LdrInitializeThunk): Call
+	LdrpLoadUserModuleSymbols() not LdrLoadModuleSymbols().
+	* lib/ntdll/ldr/utils.c (LdrLoadModuleSymbols): Rename to
+	LdrpLoadUserModuleSymbols.
+	(LdrpLoadUserModuleSymbols): Use DebugDbgLoadSymbols debug control code.
+	(LdrLoadDll): assert if out of memory.
+	(LdrLoadDll): Call
+	LdrpLoadUserModuleSymbols(), not LdrLoadModuleSymbols().
+	* lib/ntdll/string/ctype.c (_pctype): #undef.
+	* ntoskrnl/dbg/dbgctrl.c (NtSystemDebugControl): Call
+	LdrLoadUserModuleSymbols on DebugDbgLoadSymbols.
+	* ntoskrnl/include/internal/ldr.h (LdrGetAddressInformation): Add.
+	* ntoskrnl/include/internal/module.h (MODULE_TEXT_SECTION): Make SymbolInfo
+	an IMAGE_SYMBOL_INFO.
+	* ntoskrnl/ke/i386/exp.c (LdrGetAddressInformation): Add prototype.
+	(print_address): Change #ifdef KDBG to #ifdef DBG.
+	(KiDoubleFaultHandler, KiDumpTrapFrame, KeDumpStackFrames): Dump
+	one stack frame per line.
+	* ntoskrnl/ke/i386/multiboot.S: Create pagetables for more kernel
+	address space so larger modules can be passed from the boot loader.
+	* ntoskrnl/ke/i386/usertrap.c (LdrGetAddressInformation): Add prototype.
+	(print_user_address): Print symbols using LdrGetAddressInformation().
+	* ntoskrnl/ldr/loader.c (SYMBOLFILE_HEADER, IMAGE_SYMBOL_INFO_CACHE,
+	STAB_ENTRY, N_FUN, N_SLINE, N_SO, SymbolListHead): Add.
+	(TAG_SYM_BUF): Remove.
+	(LdrInitDebug): Remove unneeded code.
+	(LdrInit1): Prepare for loading symbols.
+	(LdrpReadLine, HexL, LdrpParseLine, LdrpLoadModuleSymbolsFromBuffer,
+	LdrpLoadUserModuleSymbolsFromBuffer): Remove.
+	(LdrpParseImageSymbols, LdrpGetFileName, LdrpGetFunctionName,
+	LdrpGetLineNumber, LdrGetAddressInformation, LdrpLookupUserSymbolInfo): Add.
+	(LdrpLoadModuleSymbols, LdrInitializeBootStartDriver): Change to use new
+	symbol structures.
+	(LdrLoadUserModuleSymbols): Cache symbol buffers.
+	(LdrUnloadModuleSymbols): Implement.
+	(LdrLoadModule, LdrUnloadModule): Change #ifdef KDBG to #ifdef DBG.
+	(LdrPEProcessModule): Split a line into two lines.
+	(LdrPEProcessModule): Setup for loading symbols.
+	* ntoskrnl/ldr/sysdll.c (LdrpMapSystemDll): Open with FILE_SHARE_READ.
+	* ntoskrnl/ps/process.c (PiFreeSymbols): Call LdrUnloadModuleSymbols() to
+	free symbols.
+	(PiDeleteProcess): Change #ifdef KDBG to #ifdef DBG.
+	* ntoskrnl/rtl/ctype.c (_pctype): #undef.
+	* ntoskrnl/rtl/string.c (strncpy): Terminate destination string.
+	* tools/Makefile (rsym): Add target.
+	* tools/helper.mk: Include config and use -g if DBG = 1.
+
+2002-07-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile (install_before): Install system.hiv to correct location.
 
 2002-07-04  David Welch  <welch@computer2.darkstar.org>

@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.7 2002/06/16 17:25:58 chorns Exp $
+/* $Id: ctype.c,v 1.8 2002/07/13 12:44:08 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ctype.h>
 
+#undef _pctype
 
 #define upalpha ('A' - 'a')
 

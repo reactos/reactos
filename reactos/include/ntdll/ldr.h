@@ -19,10 +19,19 @@ typedef struct _LDR_MODULE
    HANDLE         SectionHandle;
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
-#ifdef KDBG
-  SYMBOL_TABLE    Symbols;
-#endif /* KDBG */
+#ifdef DBG
+  IMAGE_SYMBOL_INFO SymbolInfo;
+#endif /* DBG */
 } LDR_MODULE, *PLDR_MODULE;
+
+typedef struct _LDR_SYMBOL_INFO {
+  PLDR_MODULE ModuleObject;
+  ULONG_PTR ImageBase;
+  PVOID SymbolsBuffer;
+  ULONG SymbolsBufferLength;
+  PVOID SymbolStringsBuffer;
+  ULONG SymbolStringsBufferLength;
+} LDR_SYMBOL_INFO, *PLDR_SYMBOL_INFO;
 
 
 #define RVA(m, b) ((ULONG)b + m)
@@ -48,7 +57,12 @@ typedef struct _MODULE_INFORMATION
   MODULE_ENTRY ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 
+#ifdef DBG
 
+VOID
+LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
+
+#endif
 
 PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
@@ -57,9 +71,6 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PIMAGE_NT_HEADERS NTHeaders);
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 			       PHANDLE NTDllSectionHandle);
-
-VOID LdrLoadModuleSymbols(PLDR_MODULE ModuleObject);
-
 
 
 NTSTATUS STDCALL

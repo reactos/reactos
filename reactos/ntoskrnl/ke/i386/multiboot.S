@@ -114,6 +114,31 @@ _multiboot_entry:
 	movl	$(V2P(kernel_pagetable+5*4096) + 0x7), 0xC14(%esi)
 	movl	$(V2P(kernel_pagetable+6*4096) + 0x7), 0xC18(%esi)
 	movl	$(V2P(kernel_pagetable+7*4096) + 0x7), 0xC1c(%esi)
+	movl	$(V2P(kernel_pagetable+8*4096) + 0x7), 0xC20(%esi)
+	movl	$(V2P(kernel_pagetable+9*4096) + 0x7), 0xC24(%esi)
+	movl	$(V2P(kernel_pagetable+10*4096) + 0x7), 0xC28(%esi)
+	movl	$(V2P(kernel_pagetable+11*4096) + 0x7), 0xC2c(%esi)
+	movl	$(V2P(kernel_pagetable+12*4096) + 0x7), 0xC30(%esi)
+	movl	$(V2P(kernel_pagetable+13*4096) + 0x7), 0xC34(%esi)
+	movl	$(V2P(kernel_pagetable+14*4096) + 0x7), 0xC38(%esi)
+	movl	$(V2P(kernel_pagetable+15*4096) + 0x7), 0xC3c(%esi)
+	movl	$(V2P(kernel_pagetable+16*4096) + 0x7), 0xC40(%esi)
+	movl	$(V2P(kernel_pagetable+17*4096) + 0x7), 0xC44(%esi)
+	movl	$(V2P(kernel_pagetable+18*4096) + 0x7), 0xC48(%esi)
+	movl	$(V2P(kernel_pagetable+19*4096) + 0x7), 0xC4c(%esi)
+	movl	$(V2P(kernel_pagetable+20*4096) + 0x7), 0xC50(%esi)
+	movl	$(V2P(kernel_pagetable+21*4096) + 0x7), 0xC54(%esi)
+	movl	$(V2P(kernel_pagetable+22*4096) + 0x7), 0xC58(%esi)
+	movl	$(V2P(kernel_pagetable+23*4096) + 0x7), 0xC5c(%esi)
+	movl	$(V2P(kernel_pagetable+24*4096) + 0x7), 0xC60(%esi)
+	movl	$(V2P(kernel_pagetable+25*4096) + 0x7), 0xC64(%esi)
+	movl	$(V2P(kernel_pagetable+26*4096) + 0x7), 0xC68(%esi)
+	movl	$(V2P(kernel_pagetable+27*4096) + 0x7), 0xC6c(%esi)
+	movl	$(V2P(kernel_pagetable+28*4096) + 0x7), 0xC70(%esi)
+	movl	$(V2P(kernel_pagetable+29*4096) + 0x7), 0xC74(%esi)
+	movl	$(V2P(kernel_pagetable+30*4096) + 0x7), 0xC78(%esi)
+	movl	$(V2P(kernel_pagetable+31*4096) + 0x7), 0xC7c(%esi)
+
 	movl	$(V2P(lowmem_pagetable) + 0x7), 0xD00(%esi)
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
 #ifdef MP
@@ -144,7 +169,7 @@ _multiboot_entry:
 	movl	%eax, (%esi, %edi)
 	addl	$0x1000, %eax
 	addl	$4, %edi
-	cmpl	$2048, %edi
+	cmpl	$8192, %edi
 	jl	.l4
 	
 #ifdef  MP
@@ -315,7 +340,7 @@ lowmem_pagetable:
 	.fill 4096, 1, 0
 
 kernel_pagetable:
-	.fill 8*4096, 1, 0	
+	.fill 32*4096, 1, 0	
 
 #ifdef MP
 apic_pagetable:

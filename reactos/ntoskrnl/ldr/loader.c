@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.114 2002/06/27 17:52:32 ekohl Exp $
+/* $Id: loader.c,v 1.115 2002/07/13 12:44:08 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,6 +46,56 @@
 
 /* GLOBALS *******************************************************************/
 
+#ifdef DBG
+
+typedef struct _SYMBOLFILE_HEADER {
+  unsigned long StabsOffset;
+  unsigned long StabsLength;
+  unsigned long StabstrOffset;
+  unsigned long StabstrLength;
+} SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
+
+typedef struct _IMAGE_SYMBOL_INFO_CACHE {
+  LIST_ENTRY ListEntry;
+  UNICODE_STRING FullName;
+  PVOID FileBuffer;
+  PVOID SymbolsBase;
+  ULONG SymbolsLength;
+  PVOID SymbolStringsBase;
+  ULONG SymbolStringsLength;
+} IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
+
+
+typedef struct _STAB_ENTRY {
+  unsigned long n_strx;         /* index into string table of name */
+  unsigned char n_type;         /* type of symbol */
+  unsigned char n_other;        /* misc info (usually empty) */
+  unsigned short n_desc;        /* description field */
+  unsigned long n_value;        /* value of symbol */
+} _STAB_ENTRY, *PSTAB_ENTRY;
+
+/*
+ * Desc - Line number
+ * Value - Relative virtual address
+ */
+#define N_FUN 0x24
+
+/*
+ * Desc - Line number
+ * Value - Relative virtual address
+ */
+#define N_SLINE 0x44
+
+/*
+ * String - First containing a '/' is the compillation directory (CD)
+ *          Not containing a '/' is a source file relative to CD
+ */
+#define N_SO 0x64
+
+LIST_ENTRY SymbolListHead;
+
+#endif /* DBG */
+
 LIST_ENTRY ModuleListHead;
 KSPIN_LOCK ModuleListLock;
 
@@ -55,7 +105,6 @@ STATIC MODULE_TEXT_SECTION LdrHalTextSection;
 ULONG_PTR LdrHalBase;
 
 #define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M')
-#define TAG_SYM_BUF     TAG('S', 'Y', 'M', 'B')
 
 /* FORWARD DECLARATIONS ******************************************************/
 
@@ -120,9 +169,6 @@ LdrInitDebug(PLOADER_MODULE Module, PWCH Name)
     {
       return;
     }
-  
-  current->SymbolsBase = (PVOID)Module->ModStart;
-  current->SymbolsLength = Module->ModEnd - Module->ModStart;
 }
 
 VOID
@@ -148,8 +194,11 @@ LdrInit1(VOID)
   NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
   NtoskrnlTextSection.Name = KERNEL_MODULE_NAME;
-  NtoskrnlTextSection.SymbolsBase = NULL;
-  NtoskrnlTextSection.SymbolsLength = 0;
+#ifdef DBG
+  RtlZeroMemory(&NtoskrnlTextSection.SymbolInfo, sizeof(NtoskrnlTextSection.SymbolInfo));
+  NtoskrnlTextSection.SymbolInfo.ImageBase = OptionalHeader->ImageBase;
+  NtoskrnlTextSection.SymbolInfo.ImageSize = NtoskrnlTextSection.Length;
+#endif
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
 
   /* Setup hal.dll text section */
@@ -165,9 +214,16 @@ LdrInit1(VOID)
   LdrHalTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
   LdrHalTextSection.Name = HAL_MODULE_NAME;
-  LdrHalTextSection.SymbolsBase = NULL;
-  LdrHalTextSection.SymbolsLength = 0;
+#ifdef DBG
+  RtlZeroMemory(&LdrHalTextSection.SymbolInfo, sizeof(LdrHalTextSection.SymbolInfo));
+  LdrHalTextSection.SymbolInfo.ImageBase = OptionalHeader->ImageBase;
+  LdrHalTextSection.SymbolInfo.ImageSize = LdrHalTextSection.Length;
+#endif
   InsertTailList(&ModuleTextListHead, &LdrHalTextSection.ListEntry);
+
+#ifdef DBG
+  InitializeListHead(&SymbolListHead);
+#endif
 }
 
 
@@ -243,300 +299,337 @@ LdrInitModuleManagement(VOID)
 		 &ModuleObject->ListEntry);
 }
 
+#ifdef DBG
 
-#ifdef KDBG
-
-BOOLEAN LdrpReadLine(PCHAR Line,
-                     ULONG LineSize,
-                     PVOID *Buffer,
-                     PULONG Size)
+VOID
+LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
+/* Note: It is important that the symbol strings buffer not be released after
+   this function is called because the strings are still referenced */
 {
-  CHAR ch;
-  PCHAR Block;
-  ULONG Count;
-
-  if (*Size == 0)
-    return FALSE;
-
-  ch = ' ';
-  Count = 0;
-  Block = *Buffer;
-  while ((*Size > 0) && (Count < LineSize) && ((ch = *Block) != (CHAR)13))
-    {
-      *Line = ch;
-      Line++;
-      Block++;
-      Count++;
-      *Size -= 1;
-    }
-  *Line = (CHAR)0;
-
-  if (ch == (CHAR)13)
-    {
-      Block++;
-      *Size -= 1;
-    }
-
-  if ((*Size > 0) && (*Block == (CHAR)10))
-    {
-      Block++;
-      *Size -= 1;
-    }
-
-  *Buffer = Block;
-
-  return TRUE;
-}
-
-ULONG HexL(PCHAR Buffer)
-{
-  CHAR ch;
-  UINT i, j;
-  ULONG Value;
-
-  j     = 32;
-  i     = 0;
-  Value = 0;
-  while ((j > 0) && ((ch = Buffer[i]) != ' '))
-    {
-      j -= 4;
-      if ((ch >= '0') && (ch <= '9'))
-        Value |= ((ch - '0') << j);
-        if ((ch >= 'A') && (ch <= 'F'))
-          Value |= ((10 + (ch - 'A')) << j);
-        else
-          if ((ch >= 'a') && (ch <= 'f'))
-            Value |= ((10 + (ch - 'a')) << j);
-      i++;
-    }
-  return Value;
-}
-
-PSYMBOL LdrpParseLine(PCHAR Line,
-                      PULONG TextBase,
-                      PBOOLEAN TextBaseValid,
-                      PULONG Alignment)
-/*
-    Line format: [ADDRESS] <TYPE> <NAME>
-    TYPE:
-      U = ?
-      A = Image information
-      t = Symbol in text segment
-      T = Symbol in text segment
-      d = Symbol in data segment
-      D = Symbol in data segment
-      b = Symbol in BSS segment
-      B = Symbol in BSS segment
-      ? = Unknown segment or symbol in unknown segment
-*/
-{
-  ANSI_STRING AnsiString;
-  CHAR Buffer[128];
+  PSYMBOL CurrentFileNameSymbol;
+  PSYMBOL CurrentFunctionSymbol;
+  PSYMBOL CurrentLineNumberSymbol;
   PSYMBOL Symbol;
-  ULONG Address;
-  PCHAR Str;
-  CHAR Type;
+  PSTAB_ENTRY StabEntry;
+  PVOID StabsEnd;
+  PCHAR String;
+  ULONG_PTR FunRelativeAddress;
+  ULONG FunLineNumber;
+  ULONG_PTR ImageBase;
 
-  if ((Line[0] == (CHAR)0) || (Line[0] == ' '))
-    return NULL;
+  assert(SymbolInfo);
 
-  Address = HexL(Line);
+  DPRINT("Parsing symbols.\n");
 
-  Line = strchr(Line, ' ');
-  if (Line == NULL)
-    return NULL;
-
-  Line++;
-  Type = *Line;
-
-  Line = strchr(Line, ' ');
-  if (Line == NULL)
-    return NULL;
-
-  Line++;
-  Str = strchr(Line, ' ');
-  if (Str == NULL)
-    strcpy((char*)&Buffer, Line);
-  else
-    strncpy((char*)&Buffer, Line, Str - Line);
-
-  if ((Type == 'A') && (strcmp((char*)&Buffer, "__section_alignment__")) == 0)
+  SymbolInfo->FileNameSymbols.SymbolCount = 0;
+  SymbolInfo->FileNameSymbols.Symbols = NULL;
+  SymbolInfo->FunctionSymbols.SymbolCount = 0;
+  SymbolInfo->FunctionSymbols.Symbols = NULL;
+  SymbolInfo->LineNumberSymbols.SymbolCount = 0;
+  SymbolInfo->LineNumberSymbols.Symbols = NULL;
+  StabsEnd = SymbolInfo->SymbolsBase + SymbolInfo->SymbolsLength;
+  StabEntry = (PSTAB_ENTRY) SymbolInfo->SymbolsBase;
+  ImageBase = SymbolInfo->ImageBase;
+  FunRelativeAddress = 0;
+  FunLineNumber = 0;
+  CurrentFileNameSymbol = NULL;
+  CurrentFunctionSymbol = NULL;
+  CurrentLineNumberSymbol = NULL;
+  while ((ULONG_PTR) StabEntry < (ULONG_PTR) StabsEnd)
     {
-      *Alignment = Address;
-      return NULL;
-    }
+      Symbol = NULL;
 
-  /* We only want symbols in the .text segment */
-  if ((Type != 't') && (Type != 'T'))
-    return NULL;
-
-  /* Discard other symbols we can't use */
-  if ((Buffer[0] != '_') || ((Buffer[0] == '_') && (Buffer[1] == '_')))
-    return NULL;
-
-  Symbol = ExAllocatePool(NonPagedPool, sizeof(SYMBOL));
-  if (!Symbol)
-    return NULL;
-
-  Symbol->Next = NULL;
-
-  Symbol->RelativeAddress = Address;
-
-  RtlInitAnsiString(&AnsiString, (PCSZ)&Buffer);
-  RtlAnsiStringToUnicodeString(&Symbol->Name, &AnsiString, TRUE);
-
-  if (!(*TextBaseValid))
-    {
-      *TextBase = Address - *Alignment;
-      *TextBaseValid = TRUE;
-    }
-
-  return Symbol;
-}
-
-VOID
-LdrpLoadModuleSymbolsFromBuffer(PMODULE_OBJECT ModuleObject,
-				PVOID Buffer,
-				ULONG Length)
-/*
-   Symbols must be sorted by address, e.g.
-   "nm --numeric-sort module.sys > module.sym"
- */
-{
-  PSYMBOL Symbol, CurrentSymbol = NULL;
-  BOOLEAN TextBaseValid;
-  BOOLEAN Valid;
-  ULONG TextBase = 0;
-  ULONG Alignment = 0;
-  CHAR Line[256];
-  ULONG Tmp;
-
-  assert(ModuleObject);
-
-  if (ModuleObject->TextSection == NULL)
-    {
-      ModuleObject->TextSection = &NtoskrnlTextSection;
-    }
-
-  if (ModuleObject->TextSection->Symbols.SymbolCount > 0)
-    {
-      CPRINT("Symbols are already loaded for %wZ\n", &ModuleObject->BaseName);
-      return;
-    }
-
-  ModuleObject->TextSection->Symbols.SymbolCount = 0;
-  ModuleObject->TextSection->Symbols.Symbols = NULL;
-  TextBaseValid = FALSE;
-  Valid = FALSE;
-  while (LdrpReadLine((PCHAR)&Line, 256, &Buffer, &Length))
-    {
-      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &Alignment);
-
-      if ((Valid) && (!TextBaseValid))
+      if (StabEntry->n_type == N_FUN)
         {
-          TextBase = Tmp;
-          TextBaseValid = TRUE;
+          if (StabEntry->n_desc > 0)
+            {
+              assert(StabEntry->n_value >= ImageBase);
+
+              FunRelativeAddress = StabEntry->n_value - ImageBase;
+              FunLineNumber = StabEntry->n_desc;
+
+              Symbol = ExAllocatePool(NonPagedPool, sizeof(SYMBOL));
+              assert(Symbol);
+              Symbol->Next = NULL;
+              Symbol->SymbolType = ST_FUNCTION;
+              Symbol->RelativeAddress = FunRelativeAddress;
+              Symbol->LineNumber = FunLineNumber;
+              String = (PCHAR)SymbolInfo->SymbolStringsBase + StabEntry->n_strx;
+              RtlInitAnsiString(&Symbol->Name, String);
+
+              DPRINT("FUN found. '%s' %d @ %x\n",
+                Symbol->Name.Buffer, FunLineNumber, FunRelativeAddress);
+            }
+        }
+      else if (StabEntry->n_type == N_SLINE)
+        {
+          Symbol = ExAllocatePool(NonPagedPool, sizeof(SYMBOL));
+          assert(Symbol);
+          Symbol->Next = NULL;
+          Symbol->SymbolType = ST_LINENUMBER;
+          Symbol->RelativeAddress = FunRelativeAddress + StabEntry->n_value;
+          Symbol->LineNumber = StabEntry->n_desc;
+
+          DPRINT("SLINE found. %d @ %x\n",
+            Symbol->LineNumber, Symbol->RelativeAddress);
+        }
+      else if (StabEntry->n_type == N_SO)
+        {
+          Symbol = ExAllocatePool(NonPagedPool, sizeof(SYMBOL));
+          assert(Symbol);
+          Symbol->Next = NULL;
+          Symbol->SymbolType = ST_FILENAME;
+          Symbol->RelativeAddress = StabEntry->n_value - ImageBase;
+          Symbol->LineNumber = 0;
+          String = (PCHAR)SymbolInfo->SymbolStringsBase + StabEntry->n_strx;
+          RtlInitAnsiString(&Symbol->Name, String);
+
+          DPRINT("SO found. '%s' @ %x\n",
+            Symbol->Name.Buffer, Symbol->RelativeAddress);
         }
 
       if (Symbol != NULL)
         {
-          Symbol->RelativeAddress -= TextBase;
+          switch (Symbol->SymbolType)
+          {
+            case ST_FILENAME:
+              if (SymbolInfo->FileNameSymbols.Symbols == NULL)
+                SymbolInfo->FileNameSymbols.Symbols = Symbol;
+              else
+                CurrentFileNameSymbol->Next = Symbol;
 
-          if (ModuleObject->TextSection->Symbols.Symbols == NULL)
-            ModuleObject->TextSection->Symbols.Symbols = Symbol;
-          else
-            CurrentSymbol->Next = Symbol;
+              CurrentFileNameSymbol = Symbol;
 
-          CurrentSymbol = Symbol;
+              SymbolInfo->FileNameSymbols.SymbolCount++;
+              break;
+            case ST_FUNCTION:
+              if (SymbolInfo->FunctionSymbols.Symbols == NULL)
+                SymbolInfo->FunctionSymbols.Symbols = Symbol;
+              else
+                CurrentFunctionSymbol->Next = Symbol;
 
-          ModuleObject->TextSection->Symbols.SymbolCount++;
+              CurrentFunctionSymbol = Symbol;
+
+              SymbolInfo->FunctionSymbols.SymbolCount++;
+              break;
+            case ST_LINENUMBER:
+              if (SymbolInfo->LineNumberSymbols.Symbols == NULL)
+                SymbolInfo->LineNumberSymbols.Symbols = Symbol;
+              else
+                CurrentLineNumberSymbol->Next = Symbol;
+
+              CurrentLineNumberSymbol = Symbol;
+
+              SymbolInfo->LineNumberSymbols.SymbolCount++;
+              break;
+          }
         }
+
+      StabEntry++;
     }
 }
 
-
-VOID
-LdrpLoadUserModuleSymbolsFromBuffer(PLDR_MODULE ModuleObject,
-				    PVOID Buffer,
-				    ULONG Length)
-/*
-   Symbols must be sorted by address, e.g.
-   "nm --numeric-sort module.dll > module.sym"
- */
+static NTSTATUS
+LdrpGetFileName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PCH  FileName)
 {
-  PSYMBOL Symbol, CurrentSymbol = NULL;
-  BOOLEAN TextBaseValid;
-  BOOLEAN Valid;
-  ULONG TextBase = 0;
-  ULONG Alignment = 0;
-  CHAR Line[256];
-  ULONG Tmp;
+  PSYMBOL NextSymbol;
+  ULONG_PTR NextAddress;
+  PSYMBOL Symbol;
 
-  if (ModuleObject->Symbols.SymbolCount > 0)
+  Symbol = SymbolInfo->FileNameSymbols.Symbols;
+  while (Symbol != NULL)
     {
-      DPRINT("Symbols are already loaded for %wZ\n", &ModuleObject->BaseDllName);
-      return;
+      NextSymbol = Symbol->Next;
+      if (NextSymbol != NULL)
+        NextAddress = NextSymbol->RelativeAddress;
+      else
+        NextAddress = SymbolInfo->ImageSize;
+
+      DPRINT("FN SEARCH: Type %d  RelativeAddress %x >= Symbol->RelativeAddress %x  < NextAddress %x\n",
+        Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
+
+      if ((Symbol->SymbolType == ST_FILENAME) &&
+        (RelativeAddress >= Symbol->RelativeAddress) &&
+        (RelativeAddress < NextAddress))
+        {
+          DPRINT("FN found\n");
+          strcpy(FileName, Symbol->Name.Buffer);
+          return STATUS_SUCCESS;
+        }
+      Symbol = NextSymbol;
     }
 
-  ModuleObject->Symbols.SymbolCount = 0;
-  ModuleObject->Symbols.Symbols = NULL;
-  TextBaseValid = FALSE;
-  Valid = FALSE;
-  while (LdrpReadLine((PCHAR)&Line, 256, &Buffer, &Length))
-    {
-      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &Alignment);
+  DPRINT("FN not found\n");
 
-      if ((Valid) && (!TextBaseValid))
-        {
-          TextBase = Tmp;
-          TextBaseValid = TRUE;
-        }
-
-      if (Symbol != NULL)
-        {
-          Symbol->RelativeAddress -= TextBase;
-
-          if (ModuleObject->Symbols.Symbols == NULL)
-            ModuleObject->Symbols.Symbols = Symbol;
-          else
-            CurrentSymbol->Next = Symbol;
-
-          CurrentSymbol = Symbol;
-
-          ModuleObject->Symbols.SymbolCount++;
-        }
-    }
+  return STATUS_UNSUCCESSFUL;
 }
 
+static NTSTATUS
+LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PCH  FunctionName)
+{
+  PSYMBOL NextSymbol;
+  ULONG_PTR NextAddress;
+  PSYMBOL Symbol;
+
+  Symbol = SymbolInfo->FunctionSymbols.Symbols;
+  while (Symbol != NULL)
+    {
+      NextSymbol = Symbol->Next;
+      if (NextSymbol != NULL)
+        NextAddress = NextSymbol->RelativeAddress;
+      else
+        NextAddress = SymbolInfo->ImageSize;
+
+      DPRINT("FUN SEARCH: Type %d  RelativeAddress %x >= Symbol->RelativeAddress %x  < NextAddress %x\n",
+        Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
+
+      if ((Symbol->SymbolType == ST_FUNCTION) &&
+        (RelativeAddress >= Symbol->RelativeAddress) &&
+        (RelativeAddress < NextAddress))
+        {
+          PCHAR ExtraInfo;
+          ULONG Length;
+
+          DPRINT("FUN found\n");
+
+          /* Remove the extra information from the function name */
+          ExtraInfo = strchr(Symbol->Name.Buffer, ':');
+          if (ExtraInfo != NULL)
+            Length = ExtraInfo - Symbol->Name.Buffer;
+          else
+            Length = strlen(Symbol->Name.Buffer);
+
+          strncpy(FunctionName, Symbol->Name.Buffer, Length);
+          return STATUS_SUCCESS;
+        }
+      Symbol = NextSymbol;
+    }
+
+  DPRINT("FUN not found\n");
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+static NTSTATUS
+LdrpGetLineNumber(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PULONG  LineNumber)
+{
+  PSYMBOL NextSymbol;
+  ULONG_PTR NextAddress;
+  PSYMBOL Symbol;
+
+  Symbol = SymbolInfo->LineNumberSymbols.Symbols;
+  while (Symbol != NULL)
+    {
+      NextSymbol = Symbol->Next;
+      if (NextSymbol != NULL)
+        NextAddress = NextSymbol->RelativeAddress;
+      else
+        NextAddress = SymbolInfo->ImageSize;
+
+      DPRINT("LN SEARCH: Type %d  RelativeAddress %x >= Symbol->RelativeAddress %x  < NextAddress %x\n",
+        Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
+
+      if ((Symbol->SymbolType == ST_LINENUMBER) &&
+        (RelativeAddress >= Symbol->RelativeAddress) &&
+        (RelativeAddress < NextAddress))
+        {
+          DPRINT("LN found\n");
+          *LineNumber = Symbol->LineNumber;
+          return STATUS_SUCCESS;
+        }
+      Symbol = NextSymbol;
+    }
+
+  DPRINT("LN not found\n");
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+  IN ULONG_PTR  RelativeAddress,
+  OUT PULONG LineNumber,
+  OUT PCH FileName  OPTIONAL,
+  OUT PCH FunctionName  OPTIONAL)
+{
+  NTSTATUS Status;
+
+  *LineNumber = 0;
+
+  DPRINT("RelativeAddress %p\n", RelativeAddress);
+
+  if (RelativeAddress >= SymbolInfo->ImageSize)
+    {
+      DPRINT("Address is not within .text section. RelativeAddress %p  Length 0x%x\n",
+        RelativeAddress, SymbolInfo->ImageSize);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  if (!AreSymbolsParsed(SymbolInfo))
+    {
+      LdrpParseImageSymbols(SymbolInfo);
+    }
+
+  Status = LdrpGetLineNumber(SymbolInfo, RelativeAddress, LineNumber);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  if (FileName)
+   {
+     Status = LdrpGetFileName(SymbolInfo, RelativeAddress, FileName);
+     if (!NT_SUCCESS(Status))
+       {
+         strcpy(FileName, "");
+       }
+   }
+
+  if (FunctionName)
+   {
+     Status = LdrpGetFunctionName(SymbolInfo, RelativeAddress, FunctionName);
+     if (!NT_SUCCESS(Status))
+       {
+         strcpy(FunctionName, "");
+       }
+   }
+
+  return STATUS_SUCCESS;
+}
 
 VOID
-LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
+LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
+  PIMAGE_SYMBOL_INFO SymbolInfo)
 {
   FILE_STANDARD_INFORMATION FileStdInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   WCHAR TmpFileName[MAX_PATH];
-  UNICODE_STRING Filename;
+  UNICODE_STRING SymFileName;
   LPWSTR Start, Ext;
   HANDLE FileHandle;
   PVOID FileBuffer;
   NTSTATUS Status;
   ULONG Length;
   IO_STATUS_BLOCK IoStatusBlock;
-
-  ModuleObject->TextSection->Symbols.SymbolCount = 0;
-  ModuleObject->TextSection->Symbols.Symbols = NULL;
+  PSYMBOLFILE_HEADER SymbolFileHeader;
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
 
   /*  Get the symbol filename from the module name  */
-  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
+  Start = wcsrchr(FileName->Buffer, L'\\');
   if (Start == NULL)
-    Start = ModuleObject->BaseName.Buffer;
+    Start = FileName->Buffer;
   else
     Start++;
 
-  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
+  Ext = wcsrchr(FileName->Buffer, L'.');
   if (Ext != NULL)
     Length = Ext - Start;
   else
@@ -544,11 +637,11 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
 
   wcsncat(TmpFileName, Start, Length);
   wcscat(TmpFileName, L".sym");
-  RtlInitUnicodeString(&Filename, TmpFileName);
+  RtlInitUnicodeString(&SymFileName, TmpFileName);
 
   /*  Open the file  */
   InitializeObjectAttributes(&ObjectAttributes,
-                             &Filename,
+                             &SymFileName,
                              0,
                              NULL,
                              NULL);
@@ -561,11 +654,11 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
                       0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Could not open symbol file: %wZ\n", &Filename);
+      DPRINT("Could not open symbol file: %wZ\n", &SymFileName);
       return;
     }
 
-  CPRINT("Loading symbols from %wZ...\n", &Filename);
+  CPRINT("Loading symbols from %wZ...\n", &SymFileName);
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
@@ -576,6 +669,7 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not get file size\n");
+      ZwClose(FileHandle);
       return;
     }
 
@@ -586,6 +680,7 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
   if (FileBuffer == NULL)
     {
       DPRINT("Could not allocate memory for symbol file\n");
+      ZwClose(FileHandle);
       return;
     }
    
@@ -598,132 +693,150 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Could not read symbol file into memory\n");
+      DPRINT("Could not read symbol file into memory (Status 0x%x)\n", Status);
       ExFreePool(FileBuffer);
+      ZwClose(FileHandle);
       return;
     }
 
   ZwClose(FileHandle);
 
-  LdrpLoadModuleSymbolsFromBuffer(ModuleObject,
-                                  FileBuffer,
-                                  FileStdInfo.EndOfFile.u.LowPart);
-
-  ExFreePool(FileBuffer);
+  SymbolFileHeader = (PSYMBOLFILE_HEADER) FileBuffer;
+  SymbolInfo->FileBuffer = FileBuffer;
+  SymbolInfo->SymbolsBase = FileBuffer + SymbolFileHeader->StabsOffset;
+  SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
+  SymbolInfo->SymbolStringsBase = FileBuffer + SymbolFileHeader->StabstrOffset;
+  SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
 }
 
 
 VOID
-LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
+LdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
 {
-  FILE_STANDARD_INFORMATION FileStdInfo;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR TmpFileName[MAX_PATH];
-  UNICODE_STRING Filename;
-  LPWSTR Start, Ext;
-  HANDLE FileHandle;
-  PVOID FileBuffer;
-  NTSTATUS Status;
-  ULONG Length;
-  IO_STATUS_BLOCK IoStatusBlock;
+  PSYMBOL NextSymbol;
+  PSYMBOL Symbol;
 
-  ModuleObject->Symbols.SymbolCount = 0;
-  ModuleObject->Symbols.Symbols = NULL;
+  DPRINT("Unloading symbols\n");
 
-  /*  Get the path to the symbol store  */
-  wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
-
-  /*  Get the symbol filename from the module name  */
-  Start = wcsrchr(ModuleObject->BaseDllName.Buffer, L'\\');
-  if (Start == NULL)
-    Start = ModuleObject->BaseDllName.Buffer;
-  else
-    Start++;
-
-  Ext = wcsrchr(ModuleObject->BaseDllName.Buffer, L'.');
-  if (Ext != NULL)
-    Length = Ext - Start;
-  else
-    Length = wcslen(Start);
-
-  wcsncat(TmpFileName, Start, Length);
-  wcscat(TmpFileName, L".sym");
-  RtlInitUnicodeString(&Filename, TmpFileName);
-
-  /*  Open the file  */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &Filename,
-                             0,
-                             NULL,
-                             NULL);
-
-  Status = ZwOpenFile(&FileHandle,
-                      FILE_ALL_ACCESS,
-                      &ObjectAttributes,
-                      &IoStatusBlock,
-                      0,
-                      0);
-  if (!NT_SUCCESS(Status))
+  if (SymbolInfo != NULL)
     {
-      DPRINT("Could not open symbol file: %wZ\n", &Filename);
-      return;
+      Symbol = SymbolInfo->FileNameSymbols.Symbols;
+      while (Symbol != NULL)
+	{
+	  NextSymbol = Symbol->Next;
+	  RtlFreeAnsiString(&Symbol->Name);
+	  ExFreePool(Symbol);
+	  Symbol = NextSymbol;
+	}
+
+      SymbolInfo->FileNameSymbols.SymbolCount = 0;
+      SymbolInfo->FileNameSymbols.Symbols = NULL;
+
+      Symbol = SymbolInfo->FunctionSymbols.Symbols;
+      while (Symbol != NULL)
+	{
+	  NextSymbol = Symbol->Next;
+	  RtlFreeAnsiString(&Symbol->Name);
+	  ExFreePool(Symbol);
+	  Symbol = NextSymbol;
+	}
+
+      SymbolInfo->FunctionSymbols.SymbolCount = 0;
+      SymbolInfo->FunctionSymbols.Symbols = NULL;
+
+      Symbol = SymbolInfo->LineNumberSymbols.Symbols;
+      while (Symbol != NULL)
+	{
+	  NextSymbol = Symbol->Next;
+	  RtlFreeAnsiString(&Symbol->Name);
+	  ExFreePool(Symbol);
+	  Symbol = NextSymbol;
+	}
+
+      SymbolInfo->LineNumberSymbols.SymbolCount = 0;
+      SymbolInfo->LineNumberSymbols.Symbols = NULL;
+#if 0
+      /* Don't free buffers because we cache symbol buffers
+         (eg. they are shared across processes) */
+      /* FIXME: We can free them if we do reference counting */
+      if (SymbolInfo->FileBuffer != NULL)
+        {
+          ExFreePool(SymbolInfo->FileBuffer);
+          SymbolInfo->FileBuffer = NULL;
+          SymbolInfo->SymbolsBase = NULL;
+          SymbolInfo->SymbolsLength = 0;
+        }
+#endif
+    }
+}
+
+
+PIMAGE_SYMBOL_INFO_CACHE
+LdrpLookupUserSymbolInfo(PLDR_MODULE LdrModule)
+{
+  PIMAGE_SYMBOL_INFO_CACHE Current;
+  PLIST_ENTRY CurrentEntry;
+  KIRQL Irql;
+
+  DPRINT("Searching symbols for %S\n", LdrModule->FullDllName.Buffer);
+
+  KeAcquireSpinLock(&ModuleListLock,&Irql);
+
+  CurrentEntry = SymbolListHead.Flink;
+  while (CurrentEntry != (&SymbolListHead))
+    {
+      Current = CONTAINING_RECORD(CurrentEntry, IMAGE_SYMBOL_INFO_CACHE, ListEntry);
+
+      if (RtlEqualUnicodeString(&Current->FullName, &LdrModule->FullDllName, TRUE))
+        {
+          KeReleaseSpinLock(&ModuleListLock, Irql);
+          return Current;
+        }
+
+      CurrentEntry = CurrentEntry->Flink;
     }
 
-  CPRINT("Loading symbols from %wZ...\n", &Filename);
+  KeReleaseSpinLock(&ModuleListLock, Irql);
 
-  /*  Get the size of the file  */
-  Status = ZwQueryInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileStdInfo,
-                                  sizeof(FileStdInfo),
-                                  FileStandardInformation);
-  if (!NT_SUCCESS(Status))
+  return(NULL);
+}
+
+
+VOID
+LdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
+{
+  PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
+
+  DPRINT("LdrModule %p\n", LdrModule);
+
+  RtlZeroMemory(&LdrModule->SymbolInfo, sizeof(LdrModule->SymbolInfo));
+  LdrModule->SymbolInfo.ImageBase = (ULONG_PTR) LdrModule->BaseAddress;
+  LdrModule->SymbolInfo.ImageSize = LdrModule->SizeOfImage;
+
+  CacheEntry = LdrpLookupUserSymbolInfo(LdrModule);
+  if (CacheEntry != NULL)
     {
-      DPRINT("Could not get file size\n");
-      return;
-    }
-
-  /*  Allocate nonpageable memory for symbol file  */
-  FileBuffer = ExAllocatePool(NonPagedPool,
-                              FileStdInfo.EndOfFile.u.LowPart);
-
-  if (FileBuffer == NULL)
-    {
-      DPRINT("Could not allocate memory for symbol file\n");
-      return;
-    }
+      DPRINT("Symbol cache hit for %S\n", CacheEntry->FullName.Buffer);
    
-  /*  Load file into memory chunk  */
-  Status = ZwReadFile(FileHandle,
-                      0, 0, 0,
-                      &IoStatusBlock,
-                      FileBuffer,
-                      FileStdInfo.EndOfFile.u.LowPart,
-                      0, 0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Could not read symbol file into memory\n");
-      ExFreePool(FileBuffer);
-      return;
+      LdrModule->SymbolInfo.FileBuffer = CacheEntry->FileBuffer;
+      LdrModule->SymbolInfo.SymbolsBase = CacheEntry->SymbolsBase;
+      LdrModule->SymbolInfo.SymbolsLength = CacheEntry->SymbolsLength;
+      LdrModule->SymbolInfo.SymbolStringsBase = CacheEntry->SymbolStringsBase;
+      LdrModule->SymbolInfo.SymbolStringsLength = CacheEntry->SymbolStringsLength;
     }
-
-  ZwClose(FileHandle);
-
-  LdrpLoadUserModuleSymbolsFromBuffer(ModuleObject,
-                                      FileBuffer,
-                                      FileStdInfo.EndOfFile.u.LowPart);
-
-  ExFreePool(FileBuffer);
+  else
+    {
+      CacheEntry = ExAllocatePool(NonPagedPool, sizeof(IMAGE_SYMBOL_INFO_CACHE));
+      assert(CacheEntry);
+      RtlZeroMemory(CacheEntry, sizeof(IMAGE_SYMBOL_INFO_CACHE));
+      RtlCreateUnicodeString(&CacheEntry->FullName, LdrModule->FullDllName.Buffer);
+      assert(CacheEntry->FullName.Buffer);
+      LdrpLoadModuleSymbols(&LdrModule->FullDllName, &LdrModule->SymbolInfo);
+      InsertTailList(&SymbolListHead, &CacheEntry->ListEntry);
+    }
 }
 
-
-VOID
-LdrpUnloadModuleSymbols(PMODULE_OBJECT ModuleObject)
-{
-  /* FIXME: implement me! */
-}
-
-#endif /* KDBG */
+#endif /* DBG */
 
 
 NTSTATUS
@@ -894,12 +1007,10 @@ LdrLoadModule(PUNICODE_STRING Filename,
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
 
-#ifdef KDBG
-
-  /* Load symbols for module if available */
-  LdrpLoadModuleSymbols(Module);
-
-#endif /* KDBG */
+#ifdef DBG
+  /* Load symbols for the image if available */
+  LdrpLoadModuleSymbols(Filename, &Module->TextSection->SymbolInfo);
+#endif /* DBG */
 
   *ModuleObject = Module;
 
@@ -917,10 +1028,10 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject)
   RemoveEntryList(&ModuleObject->ListEntry);
   KeReleaseSpinLock(&ModuleListLock, Irql);
 
-#ifdef KDBG
+#ifdef DBG
   /* Unload symbols for module if available */
-  LdrpUnloadModuleSymbols(ModuleObject);
-#endif /* KDBG */
+  LdrUnloadModuleSymbols(&ModuleObject->TextSection->SymbolInfo);
+#endif /* DBG */
 
   /* Free text section */
   if (ModuleObject->TextSection != NULL)
@@ -945,6 +1056,10 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 			     PCHAR FileName,
 			     ULONG ModuleLength)
 {
+#ifdef DBG
+  PSYMBOLFILE_HEADER SymbolFileHeader;
+  PIMAGE_SYMBOL_INFO SymbolInfo;
+#endif /* DBG */
   PMODULE_OBJECT ModuleObject;
   UNICODE_STRING ModuleName;
   PDEVICE_NODE DeviceNode;
@@ -954,16 +1069,16 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   ULONG Length;
   LPWSTR Start;
   LPWSTR Ext;
+  PCHAR FileExt;
 
   CHAR TextBuffer [256];
   ULONG x, y, cx, cy;
 
-#ifdef KDBG
+#ifdef DBG
   CHAR TmpBaseName[MAX_PATH];
   CHAR TmpFileName[MAX_PATH];
   ANSI_STRING AnsiString;
-  PCHAR FileExt;
-#endif
+#endif /* DBG */
 
   HalQueryDisplayParameters(&x, &y, &cx, &cy);
   RtlFillMemory(TextBuffer, x, ' ');
@@ -976,13 +1091,14 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   HalDisplayString(TextBuffer);
   HalSetDisplayParameters(cx, cy);
 
-#ifdef KDBG
   /*  Split the filename into base name and extension  */
   FileExt = strrchr(FileName, '.');
   if (FileExt != NULL)
     Length = FileExt - FileName;
   else
     Length = strlen(FileName);
+
+#ifdef DBG
 
   if ((FileExt != NULL) && (strcmp(FileExt, ".sym") == 0))
     {
@@ -996,8 +1112,6 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
       strcpy(TmpFileName, TmpBaseName);
       strcat(TmpFileName, ".sys");
       RtlInitAnsiString(&AnsiString, TmpFileName);
-
-      DPRINT("dasdsad: %s\n", TmpFileName);
 
       RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
       ModuleObject = LdrGetModuleObject(&ModuleName);
@@ -1013,17 +1127,29 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 	}
       if (ModuleObject != NULL)
 	{
-	  LdrpLoadModuleSymbolsFromBuffer(ModuleObject,
-					  ModuleLoadBase,
-					  ModuleLength);
+          SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
+          SymbolFileHeader = (PSYMBOLFILE_HEADER) ModuleLoadBase;
+          SymbolInfo->FileBuffer = ModuleLoadBase;
+          SymbolInfo->SymbolsBase = ModuleLoadBase + SymbolFileHeader->StabsOffset;
+          SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
+          SymbolInfo->SymbolStringsBase = ModuleLoadBase + SymbolFileHeader->StabstrOffset;
+          SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
 	}
+
       return(STATUS_SUCCESS);
     }
   else
     {
-      DPRINT("Module %s is executable\n", FileName);
+      DPRINT("Module %s is non-symbol file\n", FileName);
     }
-#endif /* KDBG */
+
+#endif /* !DBG */
+
+  if ((FileExt != NULL) && !(strcmp(FileExt, ".sys") == 0))
+    {
+      CPRINT("Ignoring non-driver file %s\n", FileName);
+      return STATUS_SUCCESS;
+    }
 
   /* Use IopRootDeviceNode for now */
   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
@@ -1444,7 +1570,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
            memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
                   (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
-                  PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData ? PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
+                  PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData
+                  ? PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
         }
       else
         {
@@ -1671,10 +1798,15 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
   ModuleTextSection = ExAllocatePool(NonPagedPool, 
 				     sizeof(MODULE_TEXT_SECTION));
+  assert(ModuleTextSection);
+  RtlZeroMemory(ModuleTextSection, sizeof(MODULE_TEXT_SECTION));
   ModuleTextSection->Base = (ULONG)DriverBase;
   ModuleTextSection->Length = DriverSize;
-  ModuleTextSection->SymbolsBase = NULL;
-  ModuleTextSection->SymbolsLength = 0;
+#ifdef DBG
+  RtlZeroMemory(&ModuleTextSection->SymbolInfo, sizeof(ModuleTextSection->SymbolInfo));
+  ModuleTextSection->SymbolInfo.ImageBase = PEOptionalHeader->ImageBase;
+  ModuleTextSection->SymbolInfo.ImageSize = ModuleTextSection->Length;
+#endif /* DBG */
   ModuleTextSection->Name = 
     ExAllocatePool(NonPagedPool, 
 		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
@@ -1689,8 +1821,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
   if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_GDB))
     {
-      DbgPrint("Module %wZ loaded at 0x%.08x.\n",
-	       FileName, CreatedModuleObject->Base);
+      DPRINT("Module %wZ loaded at 0x%.08x.\n",
+	      FileName, CreatedModuleObject->Base);
     }
 
   return STATUS_SUCCESS;

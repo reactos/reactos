@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.84 2002/07/04 19:56:36 dwelch Exp $
+/* $Id: process.c,v 1.85 2002/07/13 12:44:08 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -278,15 +278,14 @@ PsInitProcessManagment(VOID)
 		  &SystemProcessHandle);
 }
 
-#ifdef KDBG
+#ifdef DBG
 
 VOID
 PiFreeSymbols(PPEB Peb)
 {
   PLIST_ENTRY CurrentEntry;
   PLDR_MODULE Current;
-  PSYMBOL NextSymbol;
-  PSYMBOL Symbol;
+  PIMAGE_SYMBOL_INFO SymbolInfo;
 
   assert (Peb);
   assert (Peb->Ldr);
@@ -297,21 +296,15 @@ PiFreeSymbols(PPEB Peb)
     {
       Current = CONTAINING_RECORD(CurrentEntry, LDR_MODULE, 
 				  InLoadOrderModuleList);
-      Symbol = Current->Symbols.Symbols;
-      while (Symbol != NULL)
-	{
-	  NextSymbol = Symbol->Next;
-	  RtlFreeUnicodeString (&Symbol->Name);
-	  ExFreePool (Symbol);
-	  Symbol = NextSymbol;
-	}
-      Current->Symbols.SymbolCount = 0;
-      Current->Symbols.Symbols = NULL;
+
+      SymbolInfo = &Current->SymbolInfo;
+      LdrUnloadModuleSymbols(SymbolInfo);
+
       CurrentEntry = CurrentEntry->Flink;
     }
 }
 
-#endif /* KDBG */
+#endif /* DBG */
 
 VOID STDCALL
 PiDeleteProcess(PVOID ObjectBody)
@@ -333,9 +326,9 @@ PiDeleteProcess(PVOID ObjectBody)
    RemoveEntryList(&Process->ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
-#ifdef KDBG
+#ifdef DBG
    PiFreeSymbols(Process->Peb);
-#endif /* KDBG */
+#endif /* DBG */
 
 
    ObDereferenceObject(Process->Token);
