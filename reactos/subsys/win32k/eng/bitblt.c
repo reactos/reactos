@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.39 2004/01/16 19:32:00 gvg Exp $
+/* $Id: bitblt.c,v 1.40 2004/01/17 01:04:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,8 +42,10 @@
 #include <include/surface.h>
 #include <include/inteng.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
+
+#define ROP_NOOP 0x00AA0029
 
 typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFGDI* OutputGDI,
@@ -231,7 +233,7 @@ EngBitBlt(SURFOBJ *DestObj,
 
   UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);
-  if (! UsesSource && ! UsesPattern && 0xaacc != Rop4)
+  if (ROP_NOOP == Rop4)
     {
     /* Copy destination onto itself: nop */
     return TRUE;
@@ -1096,7 +1098,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   /* Dummy BitBlt to let driver know that something has changed.
      0x00AA0029 is the Rop for D (no-op) */
   IntEngBitBlt(DestObj, NULL, Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, 0x00AA0029);
+               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, ROP_NOOP);
 
   return Ret;
 }
