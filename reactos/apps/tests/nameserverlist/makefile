@@ -9,10 +9,9 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = nameserverlist
 
-#TARGET_SDKLIBS = iphlpapi.a ws2_32.a kernel32.a
-TARGET_SDKLIBS = ws2_32.a kernel32.a ntdll.a
+TARGET_SDKLIBS = iphlpapi.a ws2_32.a kernel32.a
 
-TARGET_OBJECTS = $(TARGET_NAME).o iphlpapi.o registry.o
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 TARGET_CFLAGS = -Wall -Werror -g
 
