@@ -75,7 +75,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 
 ; Pagefile settings
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",0x00010000,"PagingFiles", \
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
 
 ; Afd driver
