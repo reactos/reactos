@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.62 2004/05/17 19:45:10 gvg Exp $
+# $Id: helper.mk,v 1.63 2004/05/28 18:16:46 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -1064,6 +1064,8 @@ endif # ROS_USE_PCH
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 %.drv.spec.def: %.spec
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
+%.i: %.c
+	$(CC) $(TARGET_CFLAGS) -E $< > $@
 # Kill implicit rule
 .o:;
 
