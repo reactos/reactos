@@ -1,4 +1,4 @@
-/* $Id: internal.h,v 1.5 2004/03/13 20:49:07 ekohl Exp $ 
+/* $Id: internal.h,v 1.6 2004/05/07 11:18:53 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,6 +28,13 @@ DebugPrint (char* fmt,...);
 BOOL
 CopyDirectory (LPCWSTR lpDestinationPath,
 	       LPCWSTR lpSourcePath);
+
+BOOL
+CreateDirectoryPath (LPCWSTR lpPathName,
+		     LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+BOOL
+RemoveDirectoryPath (LPCWSTR lpPathName);
 
 /* misc.c */
 LPWSTR

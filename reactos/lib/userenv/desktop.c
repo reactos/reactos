@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.5 2004/05/05 15:29:15 ekohl Exp $
+/* $Id: desktop.c,v 1.6 2004/05/07 11:18:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -178,15 +178,15 @@ AddDesktopItemW (BOOL bCommonDesktop,
 			  &FindData);
   if (hFind == INVALID_HANDLE_VALUE)
     {
-      DPRINT1 ("'%S' does not exist\n", szLinkPath);
+      DPRINT ("'%S' does not exist\n", szLinkPath);
 
-      /* FIXME: create directory path */
-      if (!CreateDirectoryW (szLinkPath, NULL))
+      /* Create directory path */
+      if (!CreateDirectoryPath (szLinkPath, NULL))
         return FALSE;
     }
   else
     {
-      DPRINT1 ("'%S' exists\n", szLinkPath);
+      DPRINT ("'%S' exists\n", szLinkPath);
       FindClose (hFind);
     }
 
@@ -330,7 +330,7 @@ CreateGroupW (LPCWSTR lpGroupName,
 {
   WCHAR szGroupPath[MAX_PATH];
 
-  DPRINT ("CreateGroupW() called\n");
+  DPRINT1 ("CreateGroupW() called\n");
 
   if (lpGroupName == NULL || *lpGroupName == 0)
     return TRUE;
@@ -340,19 +340,19 @@ CreateGroupW (LPCWSTR lpGroupName,
       DPRINT1 ("GetProgramsPath() failed\n");
       return FALSE;
     }
-  DPRINT ("Programs path: '%S'\n", szGroupPath);
+  DPRINT1 ("Programs path: '%S'\n", szGroupPath);
 
   wcscat (szGroupPath, L"\\");
   wcscat (szGroupPath, lpGroupName);
-  DPRINT ("Group path: '%S'\n", szGroupPath);
+  DPRINT1 ("Group path: '%S'\n", szGroupPath);
 
-  /* FIXME: Create directory path */
-  if (!CreateDirectoryW (szGroupPath, NULL))
+  /* Create directory path */
+  if (!CreateDirectoryPath (szGroupPath, NULL))
     return FALSE;
 
   /* FIXME: Notify the shell */
 
-  DPRINT ("CreateGroupW() done\n");
+  DPRINT1 ("CreateGroupW() done\n");
 
   return TRUE;
 }
@@ -389,8 +389,8 @@ DeleteGroupW (LPCWSTR lpGroupName,
   wcscat (szGroupPath, lpGroupName);
   DPRINT ("Group path: '%S'\n", szGroupPath);
 
-  /* FIXME: Remove directory path */
-  if (!RemoveDirectoryW (szGroupPath))
+  /* Remove directory path */
+  if (!RemoveDirectoryPath (szGroupPath))
     return FALSE;
 
   /* FIXME: Notify the shell */
@@ -440,7 +440,7 @@ AddItemW (LPCWSTR lpGroupName,
   HRESULT hr;
   BOOL bResult;
 
-  DPRINT ("AddDesktopItemW() called\n");
+  DPRINT ("AddItemW() called\n");
 
   bResult = FALSE;
 
@@ -560,7 +560,7 @@ AddItemW (LPCWSTR lpGroupName,
 
   CoUninitialize();
 
-  DPRINT ("AddDesktopItemW() done\n");
+  DPRINT ("AddItemW() done\n");
 
   return bResult;
 }

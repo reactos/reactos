@@ -1,4 +1,4 @@
-/* $Id: directory.c,v 1.2 2004/01/16 15:31:53 ekohl Exp $
+/* $Id: directory.c,v 1.3 2004/05/07 11:18:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -114,6 +114,73 @@ CopyDirectory (LPCWSTR lpDestinationPath,
   DPRINT ("Copy Directory() done\n");
 
   return TRUE;
+}
+
+
+BOOL
+CreateDirectoryPath (LPCWSTR lpPathName,
+		     LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+{
+  WCHAR szPath[MAX_PATH];
+  LPWSTR Ptr;
+  DWORD dwError;
+
+  DPRINT ("CreateDirectoryPath() called\n");
+
+  if (lpPathName == NULL || *lpPathName == 0)
+    return TRUE;
+
+  if (CreateDirectoryW (lpPathName,
+			lpSecurityAttributes))
+    return TRUE;
+
+  dwError = GetLastError ();
+  if (dwError == ERROR_ALREADY_EXISTS)
+    return TRUE;
+
+  wcscpy (szPath, lpPathName);
+
+  if (wcslen(szPath) > 3 && szPath[1] == ':' && szPath[2] == '\\')
+    {
+      Ptr = &szPath[3];
+    }
+  else
+    {
+      Ptr = szPath;
+    }
+
+  while (Ptr != NULL)
+    {
+      Ptr = wcschr (Ptr, L'\\');
+      if (Ptr != NULL)
+        *Ptr = 0;
+
+      DPRINT ("CreateDirectory(%S)\n", szPath);
+      if (!CreateDirectoryW (szPath,
+			     lpSecurityAttributes))
+	{
+	  dwError = GetLastError ();
+	  if (dwError != ERROR_ALREADY_EXISTS)
+	    return FALSE;
+	}
+
+      if (Ptr != NULL)
+	{
+	  *Ptr = L'\\';
+	  Ptr++;
+	}
+    }
+
+  DPRINT ("CreateDirectoryPath() done\n");
+
+  return TRUE;
+}
+
+
+BOOL
+RemoveDirectoryPath (LPCWSTR lpPathName)
+{
+  return RemoveDirectoryW (lpPathName);
 }
 
 /* EOF */
