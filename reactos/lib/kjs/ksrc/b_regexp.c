@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/b_regexp.c,v $
- * $Id: b_regexp.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
+ * $Id: b_regexp.c,v 1.3 2004/12/25 19:38:16 navaraf Exp $
  */
 
 #include "jsint.h"
@@ -369,6 +369,11 @@ method (JSVirtualMachine *vm, JSBuiltinInfo *builtin_info,
   sprintf (vm->error, "RegExp.%s(): illegal amount of arguments",
 	   js_vm_symname (vm, method));
   js_vm_error (vm);
+
+/* argument_type_error: */ 	 
+  sprintf (vm->error, "RegExp.%s(): illegal argument", 	 
+           js_vm_symname (vm, method)); 	 
+  js_vm_error (vm); 	 
 
  immutable:
   sprintf (vm->error, "RegExp.%s(): immutable object",
@@ -765,7 +770,7 @@ delete_proc (JSBuiltinInfo *builtin_info, void *instance_context)
       js_free (ictx->source);
 
       if (ictx->compiled.buffer)
-	free (ictx->compiled.buffer);
+	js_free (ictx->compiled.buffer);
       if (ictx->compiled.fastmap)
 	js_free (ictx->compiled.fastmap);
 
@@ -1043,9 +1048,9 @@ js_builtin_RegExp_replace (JSVirtualMachine *vm, char *data,
   EMIT_TO_RESULT (data + pos, datalen - pos);
 
   if (regs.start)
-    free (regs.start);
+    js_free (regs.start);
   if (regs.end)
-    free (regs.end);
+    js_free (regs.end);
 }
 
 
@@ -1126,7 +1131,7 @@ js_builtin_RegExp_split (JSVirtualMachine *vm, char *data,
     }
 
   if (regs.start)
-    free (regs.start);
+    js_free (regs.start);
   if (regs.end)
-    free (regs.end);
+    js_free (regs.end);
 }

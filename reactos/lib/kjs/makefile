@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2004/12/03 23:37:41 blight Exp $
+# $Id: makefile,v 1.3 2004/12/25 19:38:17 navaraf Exp $
 # Kernel JavaScript
 # 
 # You can use this for various things but the most obvious is as a powerful
@@ -70,8 +70,7 @@ ORIG_OBJECTS = src/b_array.o \
 	       src/dl_dummy.o \
 	       src/heap.o \
 	       src/utils.o
-TARGET_OBJECTS = $(ORIG_OBJECTS) $(MOD_OBJECTS) $(ARCH_OBJECTS) \
-		../../dk/w32/lib/libntdll.a
+TARGET_OBJECTS = $(ORIG_OBJECTS) $(MOD_OBJECTS) $(ARCH_OBJECTS)
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
