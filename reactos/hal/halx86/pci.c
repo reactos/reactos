@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.5 2002/12/09 19:45:55 hbirr Exp $
+/* $Id: pci.c,v 1.6 2002/12/09 23:15:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,11 +36,6 @@
 	(0xC000 | (((dev_fn) & 0x1F) << 8) | (where))
 #define FUNC(dev_fn) \
 	((((dev_fn) & 0xE0) >> 4) | 0xf0)
-
-
-#define PCIBIOS_SUCCESSFUL		0x00
-#define PCIBIOS_DEVICE_NOT_FOUND	0x86
-#define PCIBIOS_BAD_REGISTER_NUMBER	0x87
 
 
 /* GLOBALS ******************************************************************/
@@ -90,7 +85,7 @@ ReadPciConfigUshort(UCHAR Bus,
 
    if ((Offset & 1) != 0)
      {
-	return PCIBIOS_BAD_REGISTER_NUMBER;
+	return STATUS_INVALID_PARAMETER;
      }
 
    switch (BusConfigType)
@@ -125,7 +120,7 @@ ReadPciConfigUlong(UCHAR Bus,
 
    if ((Offset & 3) != 0)
      {
-	return PCIBIOS_BAD_REGISTER_NUMBER;
+	return STATUS_INVALID_PARAMETER;
      }
 
    switch (BusConfigType)
@@ -190,7 +185,7 @@ WritePciConfigUshort(UCHAR Bus,
 
    if ((Offset & 1) != 0)
      {
-	return PCIBIOS_BAD_REGISTER_NUMBER;
+	return  STATUS_INVALID_PARAMETER;
      }
 
    switch (BusConfigType)
@@ -225,7 +220,7 @@ WritePciConfigUlong(UCHAR Bus,
 
    if ((Offset & 3) != 0)
      {
-	return PCIBIOS_BAD_REGISTER_NUMBER;
+	return  STATUS_INVALID_PARAMETER;
      }
 
    switch (BusConfigType)
