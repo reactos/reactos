@@ -16,6 +16,7 @@
  *    02 Apr 2005 (Magnus Olsen
  *        Remove Hardcode string so
  *        they can be translate
+ *
  */
 
 #include "precomp.h"

@@ -124,8 +124,8 @@
  *        Improved chdir/cd command.
  *
  *    02-Apr-2004 (Magnus Olsen <magnus@greatlord.com>)
-          Remove all hard code string so they can be 
-		  translate to other langues.
+ *        Remove all hard code string so they can be 
+ *		  translate to other langues.
  */
 
 #include "precomp.h"

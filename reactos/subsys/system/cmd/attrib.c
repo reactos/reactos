@@ -27,6 +27,9 @@
  *
  *    23-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added handling of multiple filenames.
+ *
+ *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
