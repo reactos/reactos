@@ -78,6 +78,8 @@ typedef struct _GDI_HANDLE_ENTRY
   WORD  wMagic;
   HANDLE  hProcessId;
   PGDIOBJ  pObject;
+  const char* lockfile;
+  int lockline;
 } GDI_HANDLE_ENTRY, *PGDI_HANDLE_ENTRY;
 
 typedef struct _GDI_HANDLE_TABLE
@@ -101,6 +103,18 @@ BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
 BOOL    FASTCALL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 WORD    FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
 VOID    STDCALL W32kDumpGdiObjects( INT Pid );
+
+// a couple macros for debugging GDIOBJ locking
+#define GDIOBJ_LockObj(obj,mag) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,mag)
+#define GDIOBJ_UnlockObj(obj,mag) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj,mag)
+
+#ifdef GDIOBJ_LockObj
+PGDIOBJ FASTCALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, WORD Magic);
+#endif//GDIOBJ_LockObj
+
+#ifdef GDIOBJ_UnlockObj
+BOOL FASTCALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ Obj, WORD Magic);
+#endif//GDIOBJ_UnlockObj
 
 #define GDIOBJFLAG_DEFAULT		(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
