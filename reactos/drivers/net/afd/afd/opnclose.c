@@ -10,6 +10,7 @@
 #include <afd.h>
 
 PAFDFCB AfdInitializeFCB(
+    PDEVICE_OBJECT      DeviceObject,
     PDEVICE_EXTENSION   DeviceExt,
     PFILE_OBJECT        FileObject  OPTIONAL)
 /*
@@ -27,6 +28,7 @@ PAFDFCB AfdInitializeFCB(
   ExInitializeResourceLite(&NewFCB->NTRequiredFCB.MainResource);
   ExInitializeResourceLite(&NewFCB->NTRequiredFCB.PagingIoResource);
   
+  NewFCB->DeviceObject    = DeviceObject;
   NewFCB->DeviceExt       = DeviceExt;
   NewFCB->ReferenceCount  = 1;
   NewFCB->OpenHandleCount = 1;
@@ -124,7 +126,7 @@ AfdCreate(
 
     /* FIXME: File/socket could already be open, do a search for it */
 
-    FCB = AfdInitializeFCB(DeviceExt, FileObject);
+    FCB = AfdInitializeFCB(DeviceObject, DeviceExt, FileObject);
 
     CCB = AfdInitializeCCB(FCB, FileObject);
 

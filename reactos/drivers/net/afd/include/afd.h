@@ -102,6 +102,7 @@ typedef struct _AFDFCB {
     FsdNTRequiredFCB    NTRequiredFCB;
     LIST_ENTRY          ListEntry;
     BOOL                CommandChannel;
+    PDEVICE_OBJECT      DeviceObject;
     PDEVICE_EXTENSION   DeviceExt;
     SHARE_ACCESS        ShareAccess;
     ULONG               ReferenceCount;
@@ -130,8 +131,7 @@ typedef struct _AFDFCB {
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
     PKEVENT             EventObject;
-    ULONG               Flags;
-    LIST_ENTRY          WorkList;
+    PIO_WORKITEM        WorkItem;
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */

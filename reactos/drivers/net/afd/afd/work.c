@@ -1,55 +1,23 @@
 #include <ntddk.h>
 #include <afd.h>
 
-LIST_ENTRY FCBWorkList;
-KSPIN_LOCK FCBWorkLock;
-FAST_MUTEX FCBWorkMutex;
-KEVENT     WorkEvent;
-KEVENT     WorkShutdown;
-BOOL       WorkTerminate;
-HANDLE     WorkThread = 0;
-CLIENT_ID  WorkThreadId;
-
-extern VOID AfdpWork( PVOID Dummy );
+extern VOID AfdpWork( PDEVICE_OBJECT DriverObject, PVOID Dummy );
 
 NTSTATUS InitWorker() {
-    KeInitializeEvent( &WorkEvent, NotificationEvent, FALSE );
-    KeInitializeEvent( &WorkShutdown, NotificationEvent, FALSE );
-    InitializeListHead( &FCBWorkList );
-    KeInitializeSpinLock( &FCBWorkLock );
-    ExInitializeFastMutex( &FCBWorkMutex );
-    WorkTerminate = FALSE;
-    return PsCreateSystemThread(&WorkThread,
-				THREAD_ALL_ACCESS,
-				NULL,
-				NULL,
-				&WorkThreadId,
-				AfdpWork,
-				NULL);
+    return STATUS_SUCCESS;
 }
 
 VOID ShutdownWorker() {
-    if( WorkThread ) {
-	WorkTerminate = TRUE;
-	KeSetEvent( &WorkEvent, IO_NETWORK_INCREMENT, FALSE );
-	KeWaitForSingleObject( &WorkTerminate,
-			       Executive,
-			       UserMode,
-			       FALSE,
-			       NULL );
-	NtClose( WorkThread );
-    }
 }
 
 VOID RegisterFCBForWork( PAFDFCB FCB ) {
-    if( !(FCB->Flags & AFD_FLAG_WORK) ) {
-	ExAcquireFastMutex( &FCBWorkMutex );
-	FCB->Flags |= AFD_FLAG_WORK;
-	ExInterlockedInsertTailList( &FCBWorkList, 
-				     &FCB->WorkList, 
-				     &FCBWorkLock );
-	KeSetEvent( &WorkEvent, IO_NETWORK_INCREMENT, FALSE );
-	ExReleaseFastMutex( &FCBWorkMutex );
+    if( !FCB->WorkItem ) {
+	FCB->WorkItem = IoAllocateWorkItem( FCB->DeviceObject );
+	if( FCB->WorkItem ) 
+	    IoQueueWorkItem( FCB->WorkItem,
+			     AfdpWork,
+			     DelayedWorkQueue,
+			     FCB );
     }
 }
 
@@ -61,10 +29,10 @@ NTSTATUS AfdpMakeWork( UINT Opcode,
     PAFDFCB FCB;
     PAFD_WORK_REQUEST Request = 
 	ExAllocatePool( NonPagedPool, sizeof(AFD_WORK_REQUEST) + PayloadSize );
-
+    
     if( !Request )
 	return STATUS_NO_MEMORY;
-
+    
     FCB = IrpSp->FileObject->FsContext;
     
     Request->Opcode      = AFD_OP_ACCEPT_REQUEST;
@@ -119,24 +87,16 @@ VOID CancelWork( PAFDFCB FCB ) {
     PAFD_WORK_REQUEST Request;
     KIRQL OldIrql;
 
-    if( FCB->Flags & AFD_FLAG_WORK ) {
-	ExAcquireFastMutex( &FCBWorkMutex );
-	KeAcquireSpinLock( &FCBWorkLock, &OldIrql );
-	RemoveEntryList( &FCB->WorkList );
-	KeReleaseSpinLock( &FCBWorkLock, OldIrql );
-	
-	/* Clear the work queue */
-	KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
-	while( !IsListEmpty( &FCB->WorkQueue ) ) {
-	    ListEntry = RemoveHeadList( &FCB->WorkQueue );
-	    Request = CONTAINING_RECORD( ListEntry, AFD_WORK_REQUEST,
-					 ListEntry );
-	    WorkCancel[Request->Opcode]( Request );
-	    IoCompleteRequest( Request->Irp, IO_NETWORK_INCREMENT );
-	}
-	KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
-	ExReleaseFastMutex( &FCBWorkMutex );
+    /* Clear the work queue */
+    KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
+    while( !IsListEmpty( &FCB->WorkQueue ) ) {
+	ListEntry = RemoveHeadList( &FCB->WorkQueue );
+	Request = CONTAINING_RECORD( ListEntry, AFD_WORK_REQUEST,
+				     ListEntry );
+	WorkCancel[Request->Opcode]( Request );
+	IoCompleteRequest( Request->Irp, IO_NETWORK_INCREMENT );
     }
+    KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
 }
 
 BOOL AfdpTryToSatisfyAcceptRequest( PAFDFCB FCB,
@@ -411,8 +371,8 @@ BOOL AfdpTryToSatisfySendRequest( PAFDFCB FCB,
 BOOL AfdpTryToSatisfyConnectRequest( PAFDFCB FCB,
 				     PAFD_WORK_REQUEST Request ) {
     PAFD_CONNECT_REQUEST ConnectRequest = 
-	(PAFD_CONNECT_REQUEST)Request->Payload;
-    
+    (PAFD_CONNECT_REQUEST)Request->Payload;
+
     if( FCB->State == SOCKET_STATE_CONNECTED ) {
 	AFD_DbgPrint(MAX_TRACE, 
 		     ("1a - Completed ConnectRequest at (0x%X).\n", 
@@ -448,7 +408,7 @@ VOID AfdpWorkOnFcb( PAFDFCB FCB ) {
 
     KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
     ListEntry = FCB->WorkQueue.Flink;
-
+    
     while( ListEntry != &FCB->WorkQueue ) {
 	AFD_DbgPrint(MID_TRACE, ("Got item %x...\n", ListEntry));
 	WorkRequest = CONTAINING_RECORD(&FCB->WorkQueue,
@@ -456,69 +416,37 @@ VOID AfdpWorkOnFcb( PAFDFCB FCB ) {
 					ListEntry);
 	AFD_DbgPrint(MID_TRACE, ("With request %x...\n", WorkRequest));
 	NextListEntry = ListEntry->Flink;
-
+	KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
+    
 	if( WorkPerform[WorkRequest->Opcode]( FCB, WorkRequest ) ) {
 	    IoCompleteRequest( WorkRequest->Irp, IO_NETWORK_INCREMENT );
 	    RemoveEntryList( ListEntry );
 	    ListEntry = NextListEntry;
 	}
+	KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
     }
     KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
 }
 
-VOID AfdpWork( PVOID Dummy ) {
-    PLIST_ENTRY ListEntry = 0;
-    PAFDFCB FCB = 0;
-    KIRQL OldIrql;
+VOID AfdpWork( PDEVICE_OBJECT DriverObject, PVOID Data ) {
+    PAFDFCB FCB = Data;
     NTSTATUS Status;
-
-    AFD_DbgPrint(MID_TRACE, ("Entering AFD Worker\n"));
-
-    while( NT_SUCCESS(KeWaitForSingleObject(
-			  &WorkEvent,
-			  Executive,
-			  UserMode,
-			  FALSE,
-			  NULL )) && !WorkTerminate ) {
-	AFD_DbgPrint(MID_TRACE, ("Working...\n"));
-	while( TRUE ) { 
-	    AFD_DbgPrint(MID_TRACE, ("ExAcquireFastMutex...\n"));
-	    ExAcquireFastMutex( &FCBWorkMutex );
-	    AFD_DbgPrint(MID_TRACE, ("KeAcquireSpinLock...\n"));
-	    KeAcquireSpinLock( &FCBWorkLock, &OldIrql );
-	    if( !IsListEmpty( &FCBWorkList ) ) { 
-		AFD_DbgPrint(MID_TRACE, ("AfdpWork: Nothing to do...\n"));
-		KeResetEvent( &WorkEvent );
-		KeReleaseSpinLock( &FCBWorkLock, OldIrql );
-		ExReleaseFastMutex( &FCBWorkMutex );
-		break;
-	    }
-	    ListEntry = RemoveHeadList( &FCBWorkList );
-	    AFD_DbgPrint(MID_TRACE, ("Got item %x...\n", ListEntry));
-	    FCB = CONTAINING_RECORD(ListEntry, AFDFCB, WorkList);
-	    AFD_DbgPrint(MID_TRACE, ("With FCB %x...\n", FCB));
-	    FCB->Flags &= ~AFD_FLAG_WORK;
-	    if( FCB->ListenRequest.Valid ) { 
-		Status = TdiListen(&FCB->ListenRequest, 
-				   AfdDispCompleteListen, 
-				   FCB);
-
-		AfdpKickFCB( FCB, FD_ACCEPT_BIT, 
-			     FCB->ListenRequest.Result );
-
-		FCB->ListenRequest.Valid = FALSE;
-	    }
-	    KeReleaseSpinLock( &FCBWorkLock, OldIrql );
-	    ExReleaseFastMutex( &FCBWorkMutex );
-	    
-	    AfdpWorkOnFcb( FCB );
-
-	    AFD_DbgPrint(MID_TRACE, ("... Done\n"));
-	}
-	AFD_DbgPrint(MID_TRACE, ("Done Working...\n"));
+    
+    AFD_DbgPrint(MID_TRACE, ("Working...\n"));
+    
+    if( FCB->ListenRequest.Valid ) { 
+	Status = TdiListen(&FCB->ListenRequest, 
+			   AfdDispCompleteListen, 
+			   FCB);
+	
+	AfdpKickFCB( FCB, FD_ACCEPT_BIT, 
+		     FCB->ListenRequest.Result );
+	
+	FCB->ListenRequest.Valid = FALSE;
     }
+    
+    AfdpWorkOnFcb( FCB );
 
-    KeSetEvent( &WorkShutdown, IO_NETWORK_INCREMENT, FALSE );
-
-    AFD_DbgPrint(MID_TRACE, ("Leaving AFD Worker\n"));
+    
+    AFD_DbgPrint(MID_TRACE, ("... Done\n"));
 }

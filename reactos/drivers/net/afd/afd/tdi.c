@@ -181,7 +181,7 @@ NTSTATUS TdiOpenAddressFileIPv4(
   ULONG EaLength;
 
   AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (0x%X)\n",
-    DeviceName, Name));
+			   DeviceName, Name));
 
 	/* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
