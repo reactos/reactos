@@ -6,7 +6,7 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = console
 
-TARGET_NAME = patch
+TARGET_NAME = binpatch
 
 TARGET_SDKLIBS = 
 
