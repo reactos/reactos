@@ -7,16 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <neighbor.h>
-#include <routines.h>
-#include <transmit.h>
-#include <address.h>
-#include <route.h>
-#include <pool.h>
-#include <arp.h>
-#include <ip.h>
+
+#include "precomp.h"
 
 
 NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];

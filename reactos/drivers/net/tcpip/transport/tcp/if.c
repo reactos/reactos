@@ -15,18 +15,8 @@
  * not, write to the FSF, 59 Temple Place #330, Boston, MA 02111-1307, USA.
  */
 
-#include <roscfg.h>
-#include <limits.h>
-#include <tcpip.h>
-#include <tcp.h>
-#include <pool.h>
-#include <route.h>
-#include <address.h>
-#include <datagram.h>
-#include <checksum.h>
-#include <routines.h>
-#include <neighbor.h>
-#include <oskittcp.h>
+#include "precomp.h"
+
 
 #if 0
 #include <sys/param.h>
@@ -34,8 +24,6 @@
 #include <oskit/c/assert.h>
 #include <net/if.h>
 #endif
-
-#include <oskittcp.h>
 
 int if_index = 0;
 struct ifaddr **ifnet_addrs;

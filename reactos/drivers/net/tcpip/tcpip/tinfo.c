@@ -7,11 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <address.h>
-#include <pool.h>
-#include <ip.h>
+
+#include "precomp.h"
+
 
 TDI_STATUS InfoTransportLayerTdiQueryEx( UINT InfoClass,
 					 UINT InfoType,

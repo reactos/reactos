@@ -7,17 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <datagram.h>
-#include <address.h>
-#include <pool.h>
-#include <rawip.h>
-#include <tcp.h>
-#include <udp.h>
-#include <ip.h>
-#include <fileobjs.h>
-#include <oskittcp.h>
+
+#include "precomp.h"
+
 
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;

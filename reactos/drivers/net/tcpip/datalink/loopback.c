@@ -7,14 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <loopback.h>
-#include <ip.h>
-#include <address.h>
-#include <receive.h>
-#include <transmit.h>
-#include <routines.h>
+
+#include "precomp.h"
 
 
 WORK_QUEUE_ITEM LoopWorkItem;

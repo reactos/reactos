@@ -9,15 +9,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <receive.h>
-#include <routines.h>
-#include <checksum.h>
-#include <transmit.h>
-#include <address.h>
-#include <pool.h>
-#include <route.h>
+
+#include "precomp.h"
 
 
 LIST_ENTRY ReassemblyListHead;

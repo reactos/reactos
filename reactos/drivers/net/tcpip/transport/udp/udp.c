@@ -7,15 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <udp.h>
-#include <routines.h>
-#include <transmit.h>
-#include <datagram.h>
-#include <checksum.h>
-#include <address.h>
-#include <pool.h>
+
+#include "precomp.h"
 
 
 BOOLEAN UDPInitialized = FALSE;

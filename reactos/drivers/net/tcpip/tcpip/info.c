@@ -7,10 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <info.h>
-#include <routines.h>
+
+#include "precomp.h"
 #include <debug.h>
 
 TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,

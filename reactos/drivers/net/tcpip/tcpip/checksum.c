@@ -8,9 +8,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <checksum.h>
+
+#include "precomp.h"
 
 
 ULONG ChecksumFold(

@@ -7,13 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <lan.h>
-#include <address.h>
-#include <info.h>
-#include <pool.h>
-#include <ip.h>
+
+#include "precomp.h"
+
 
 TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 				       PIP_INTERFACE Interface,

@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.1 2004/02/22 09:59:17 chorns Exp $
+# $Id: Makefile,v 1.2 2004/08/15 23:41:26 chorns Exp $
 
 PATH_TO_TOP = ../../../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = regtests
+
+TARGET_PCH =
 
 TARGET_LIBPATH = .
 

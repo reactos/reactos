@@ -7,15 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <address.h>
-#include <info.h>
-#include <pool.h>
-#include <prefix.h>
-#include <ip.h>
-#include <route.h>
-#include <tilists.h>
+
+#include "precomp.h"
+
 
 TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer, 
 				     PUINT BufferSize ) {

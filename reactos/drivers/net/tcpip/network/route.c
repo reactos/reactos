@@ -14,10 +14,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <route.h>
-#include <router.h>
+
+#include "precomp.h"
 
 
 /* This RCN is shared by all external nodes. It complicates things,

@@ -8,12 +8,9 @@
  *   CSH 01/08-2000 Created
  * TODO:        Validate device object in all dispatch routines
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <dispatch.h>
-#include <routines.h>
-#include <datagram.h>
-#include <info.h>
+
+#include "precomp.h"
+
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     TI_DbgPrint(MID_TRACE,("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent));

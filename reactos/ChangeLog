@@ -1,5 +1,13 @@
 2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/net/tcpip/include/.cvsignore: New file.
+	* drivers/net/tcpip/include/precomp.h: New file.
+	* drivers/net/tcpip/Makefile (TARGET_PCH): Set to include/precomp.h.
+	* drivers/net/tcpip/tests/Makefile (TARGET_PCH): Reset.
+	* drivers/net/tcpip/*/*.c: Use pre-compiled header.
+
+2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/net/ndis/include/.cvsignore: New file.
 	* drivers/net/ndis/.cvsignore: Add *.d.
 	* drivers/net/ndis/Makefile (TARGET_PCH): Set to include/ndissys.h.

@@ -7,14 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <lan.h>
-#include <address.h>
-#include <routines.h>
-#include <transmit.h>
-#include <receive.h>
-#include <arp.h>
+
+#include "precomp.h"
 
 NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
 BOOLEAN ProtocolRegistered     = FALSE;

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2004/07/18 22:03:49 arty Exp $
+# $Id: makefile,v 1.19 2004/08/15 23:41:23 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -7,6 +7,8 @@ TARGET_REGTESTS = yes
 TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
+
+TARGET_PCH = include/precomp.h
 
 # -DMEMTRACK
 TARGET_CFLAGS = \

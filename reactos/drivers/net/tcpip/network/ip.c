@@ -7,19 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <ip.h>
-#include <tcp.h>
-#include <loopback.h>
-#include <neighbor.h>
-#include <receive.h>
-#include <address.h>
-#include <prefix.h>
-#include <route.h>
-#include <icmp.h>
-#include <pool.h>
-#include <tilists.h>
+
+#include "precomp.h"
+
 
 KTIMER IPTimer;
 KDPC IPTimeoutDpc;

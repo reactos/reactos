@@ -7,19 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <limits.h>
-#include <tcpip.h>
-#include <tcp.h>
-#include <pool.h>
-#include <route.h>
-#include <router.h>
-#include <address.h>
-#include <neighbor.h>
-#include <datagram.h>
-#include <checksum.h>
-#include <routines.h>
-#include <oskittcp.h>
+
+#include "precomp.h"
+
 
 extern ULONG TCP_IPIdentification;
 

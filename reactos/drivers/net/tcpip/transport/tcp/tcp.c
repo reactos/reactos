@@ -7,16 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <limits.h>
-#include <tcpip.h>
-#include <tcp.h>
-#include <pool.h>
-#include <address.h>
-#include <datagram.h>
-#include <checksum.h>
-#include <routines.h>
-#include <oskittcp.h>
+
+#include "precomp.h"
+
 
 LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;

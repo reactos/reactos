@@ -11,12 +11,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <address.h>
-#include <router.h>
-#include <prefix.h>
-#include <pool.h>
+
+#include "precomp.h"
 
 
 LIST_ENTRY FIBListHead;

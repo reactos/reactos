@@ -7,11 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <routines.h>
-#include <pool.h>
-#include <tcp.h>
+
+#include "precomp.h"
 
 
 static UINT RandomNumber = 0x12345678;

@@ -8,18 +8,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <ip.h>
-#include <tcp.h>
-#include <loopback.h>
-#include <neighbor.h>
-#include <receive.h>
-#include <address.h>
-#include <route.h>
-#include <icmp.h>
-#include <prefix.h>
-#include <pool.h>
+
+#include "precomp.h"
+
 
 LIST_ENTRY PrefixListHead;
 KSPIN_LOCK PrefixListLock;

@@ -7,14 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <transmit.h>
-#include <routines.h>
-#include <checksum.h>
-#include <pool.h>
-#include <arp.h>
-#include <lan.h>
+
+#include "precomp.h"
 
 
 BOOLEAN PrepareNextFragment(

@@ -7,18 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <dispatch.h>
-#include <fileobjs.h>
-#include <datagram.h>
-#include <loopback.h>
-#include <rawip.h>
-#include <udp.h>
-#include <tcp.h>
-#include <rosrtl/string.h>
-#include <info.h>
-#include <memtrack.h>
+
+#include "precomp.h"
+
 
 #define NDEBUG
 

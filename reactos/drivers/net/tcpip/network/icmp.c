@@ -7,14 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <roscfg.h>
-#include <tcpip.h>
-#include <icmp.h>
-#include <rawip.h>
-#include <checksum.h>
-#include <routines.h>
-#include <transmit.h>
-#include <pool.h>
+
+#include "precomp.h"
 
 
 VOID SendICMPComplete(
