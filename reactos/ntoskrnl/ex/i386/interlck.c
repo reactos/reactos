@@ -1,9 +1,15 @@
-/* $Id: interlck.c,v 1.9 2004/09/09 18:51:17 hbirr Exp $
+/* $Id: interlck.c,v 1.10 2004/12/12 17:48:20 hbirr Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
  */
 #include <ntoskrnl.h>
+
+#ifdef MP
+#define	LOCK	"lock "
+#else
+#define LOCK	" "
+#endif
 
 #if defined(__GNUC__)
 
@@ -86,7 +92,7 @@ Exfi386InterlockedExchangeUlong(IN PULONG Target,
 
 __asm__("\n\t.global @Exfi386InterlockedExchangeUlong@8\n\t"
 	"@Exfi386InterlockedExchangeUlong@8:\n\t"
-	"xchgl %edx,(%ecx)\n\t"
+	LOCK"xchgl %edx,(%ecx)\n\t"
 	"movl  %edx,%eax\n\t"
 	"ret\n\t");
 
@@ -182,7 +188,7 @@ __asm__("\n\t.global _Exi386InterlockedExchangeUlong@8\n\t"
 	"_Exi386InterlockedExchangeUlong@8:\n\t"
 	"movl 4(%esp),%edx\n\t"
 	"movl 8(%esp),%eax\n\t"
-	"xchgl %eax,(%edx)\n\t"
+	LOCK"xchgl %eax,(%edx)\n\t"
 	"ret $8\n\t");
 
 #elif defined(_MSC_VER)
@@ -225,7 +231,7 @@ InterlockedIncrement(PLONG Addend);
 __asm__("\n\t.global @InterlockedIncrement@4\n\t"
 	"@InterlockedIncrement@4:\n\t"
 	"movl $1,%eax\n\t"
-	"xaddl %eax,(%ecx)\n\t"
+	LOCK"xaddl %eax,(%ecx)\n\t"
 	"incl %eax\n\t"
 	"ret\n\t");
 
@@ -262,7 +268,7 @@ InterlockedDecrement(PLONG Addend);
 __asm__("\n\t.global @InterlockedDecrement@4\n\t"
 	"@InterlockedDecrement@4:\n\t"
 	"movl $-1,%eax\n\t"
-	"xaddl %eax,(%ecx)\n\t"
+	LOCK"xaddl %eax,(%ecx)\n\t"
 	"decl %eax\n\t"
 	"ret\n\t");
 
@@ -301,7 +307,7 @@ InterlockedExchange(PLONG Target,
 
 __asm__("\n\t.global @InterlockedExchange@8\n\t"
 	"@InterlockedExchange@8:\n\t"
-	"xchgl %edx,(%ecx)\n\t"
+	LOCK"xchgl %edx,(%ecx)\n\t"
 	"movl  %edx,%eax\n\t"
 	"ret\n\t");
 
@@ -337,7 +343,7 @@ InterlockedExchangeAdd(PLONG Addend,
 
 __asm__("\n\t.global @InterlockedExchangeAdd@8\n\t"
 	"@InterlockedExchangeAdd@8:\n\t"
-	"xaddl %edx,(%ecx)\n\t"
+	LOCK"xaddl %edx,(%ecx)\n\t"
 	"movl %edx,%eax\n\t"
 	"ret\n\t");
 
@@ -374,7 +380,7 @@ InterlockedCompareExchange(PLONG Destination,
 __asm__("\n\t.global @InterlockedCompareExchange@12\n\t"
 	"@InterlockedCompareExchange@12:\n\t"
 	"movl 4(%esp),%eax\n\t"
-	"cmpxchg %edx,(%ecx)\n\t"
+	LOCK"cmpxchg %edx,(%ecx)\n\t"
 	"ret $4\n\t");
 
 #elif defined(_MSC_VER)
@@ -412,7 +418,7 @@ __asm__("\n\t.global @ExfpInterlockedExchange64@8\n\t"
 	"\n1:\t"
 	"movl (%esi),%eax\n\t"
 	"movl 4(%esi),%edx\n\t"
-	"lock cmpxchg8b (%esi)\n\t"
+	LOCK"cmpxchg8b (%esi)\n\t"
 	"jnz 1b\n\t"
 	"popl %esi\n\t"
 	"popl %ebx\n\t"
@@ -441,7 +447,7 @@ __asm__("\n\t.global @ExfInterlockedCompareExchange64@12\n\t"
 	"movl 12(%esp),%edx\n\t"
 	"movl (%edx),%eax\n\t"
 	"movl 4(%edx),%edx\n\t"
-	"lock cmpxchg8b (%esi)\n\t"
+	LOCK"cmpxchg8b (%esi)\n\t"
 	"popl %esi\n\t"
 	"popl %ebx\n\t"
 	"ret  $4\n\t");
