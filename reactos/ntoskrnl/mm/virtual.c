@@ -820,8 +820,7 @@ ProbeForWrite (IN CONST VOID *Address,
                IN ULONG Length,
                IN ULONG Alignment)
 {
-   PULONG Ptr;
-   ULONG x;
+   volatile PCHAR Ptr;
    ULONG i;
 
    ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
@@ -842,9 +841,8 @@ ProbeForWrite (IN CONST VOID *Address,
    /* Check for accessible pages */
    for (i = 0; i < Length; i += PAGE_SIZE)
    {
-      Ptr = (PULONG)(((ULONG_PTR)Address & ~(PAGE_SIZE - 1)) + i);
-      x = *Ptr;
-      *Ptr = x;
+      Ptr = (PCHAR)(((ULONG_PTR)Address & ~(PAGE_SIZE - 1)) + i);
+      *Ptr = *Ptr;
    }
 }
 
