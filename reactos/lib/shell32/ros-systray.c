@@ -35,6 +35,32 @@ typedef struct TrayNotifyCDS_Dummy {
 	DWORD	nicon_data[1];	// placeholder for NOTIFYICONDATA structure
 } TrayNotifyCDS_Dummy;
 
+ /* The only difference between Shell_NotifyIconA and Shell_NotifyIconW is the call to SendMessageA/W. */
+static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, int nid_size, BOOL unicode)
+{
+	HWND hwnd;
+	COPYDATASTRUCT data;
+
+	BOOL ret = FALSE;
+	int len = sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+nid_size;
+
+	TrayNotifyCDS_Dummy* pnotify_data = (TrayNotifyCDS_Dummy*) alloca(len);
+
+	pnotify_data->cookie = 1;
+	pnotify_data->notify_code = dwMessage;
+	memcpy(&pnotify_data->nicon_data, pnid, nid_size);
+
+	data.dwData = 1;
+	data.cbData = len;
+	data.lpData = pnotify_data;
+
+	for(hwnd=0; hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL); )
+		if ((unicode?SendMessageW:SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
+			ret = TRUE;
+
+	return ret;
+}
+
 
 /*************************************************************************
  * Shell_NotifyIcon			[SHELL32.296]
@@ -42,28 +68,7 @@ typedef struct TrayNotifyCDS_Dummy {
  */
 BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 {
-	HWND hwnd;
-	COPYDATASTRUCT data;
-	TrayNotifyCDS_Dummy* pnotify_data;
-
-	BOOL ret = FALSE;
-
-	pnotify_data = (TrayNotifyCDS_Dummy*) alloca(sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+pnid->cbSize);
-
-	pnotify_data->cookie = 1;
-	pnotify_data->notify_code = dwMessage;
-	memcpy(&pnotify_data->nicon_data, pnid, pnid->cbSize);
-
-	data.dwData = 1;
-	data.cbData = pnid->cbSize;
-	data.lpData = pnotify_data;
-
-	for(hwnd=0; hwnd=FindWindowExA(0, hwnd, "Shell_TrayWnd", NULL); ) {
-		if (SendMessageA(hwnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))
-			ret = TRUE;
-	}
-
-	return ret;
+	return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, pnid->cbSize, FALSE);
 }
 
 /*************************************************************************
@@ -71,26 +76,5 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
  */
 BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
 {
-	HWND hwnd;
-	COPYDATASTRUCT data;
-	TrayNotifyCDS_Dummy* pnotify_data;
-
-	BOOL ret = FALSE;
-
-	pnotify_data = (TrayNotifyCDS_Dummy*) alloca(sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+pnid->cbSize);
-
-	pnotify_data->cookie = 1;
-	pnotify_data->notify_code = dwMessage;
-	memcpy(&pnotify_data->nicon_data, pnid, pnid->cbSize);
-
-	data.dwData = 1;
-	data.cbData = pnid->cbSize;
-	data.lpData = pnotify_data;
-
-	for(hwnd=0; hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL); ) {
-		if (SendMessageW(hwnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))
-			ret = TRUE;
-	}
-
-	return ret;
+	return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, pnid->cbSize, TRUE);
 }
