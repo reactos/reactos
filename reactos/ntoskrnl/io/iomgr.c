@@ -85,6 +85,7 @@ VOID IopDeleteFile(PVOID ObjectBody)
    if (FileObject->FileName.Buffer != NULL)
      {
 	ExFreePool(FileObject->FileName.Buffer);
+	FileObject->FileName.Buffer = 0;
      }
 }
 
