@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.21 2003/07/10 18:50:51 chorns Exp $
+/* $Id: rw.c,v 1.22 2003/07/31 18:24:43 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,8 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL WriteFile(HANDLE hFile,
+WINBOOL STDCALL
+WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
 			  DWORD nNumberOfBytesToWrite,
 			  LPDWORD lpNumberOfBytesWritten,	
@@ -89,7 +90,8 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 /*
  * @implemented
  */
-WINBOOL STDCALL ReadFile(HANDLE hFile,
+WINBOOL STDCALL
+ReadFile(HANDLE hFile,
 			 LPVOID lpBuffer,
 			 DWORD nNumberOfBytesToRead,
 			 LPDWORD lpNumberOfBytesRead,
@@ -149,7 +151,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    return(TRUE);
 }
 
-VOID STDCALL ApcRoutine(PVOID ApcContext, 
+VOID STDCALL
+ApcRoutine(PVOID ApcContext, 
 		struct _IO_STATUS_BLOCK* IoStatusBlock, 
 		ULONG NumberOfBytesTransfered)
 {
@@ -215,7 +218,8 @@ WriteFileEx (HANDLE				hFile,
 /*
  * @implemented
  */
-WINBOOL STDCALL ReadFileEx(HANDLE hFile,
+WINBOOL STDCALL
+ReadFileEx(HANDLE hFile,
 			   LPVOID lpBuffer,
 			   DWORD nNumberOfBytesToRead,
 			   LPOVERLAPPED lpOverLapped,
