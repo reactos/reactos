@@ -134,6 +134,7 @@ export MKHIVE = $(Q)$(TOOLS_PATH)/mkhive/mkhive
 export CDMAKE = $(Q)$(TOOLS_PATH)/cdmake/cdmake
 export BIN2RES = $(Q)$(TOOLS_PATH)/bin2res/bin2res
 export XSLTPROC = $(Q)xsltproc
+export MS2PS = $(Q)$(TOOLS_PATH)/ms2ps/ms2ps
 
 export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=i386 -D_M_IX86
 export STD_CPPFLAGS = $(STD_CFLAGS)
