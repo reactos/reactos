@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.3 2003/12/12 14:22:37 gvg Exp $
+/* $Id: hook.c,v 1.4 2003/12/14 22:34:47 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -501,7 +501,11 @@ NtUserSetWindowsHookEx(
   /* We only (partially) support local WH_CBT hooks for now */
   if (WH_CBT != HookId || Global)
     {
+#if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED
+#else
+      DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
+#endif
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       return NULL;
     }
