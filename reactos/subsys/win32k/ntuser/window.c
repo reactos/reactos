@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.75 2003/08/04 16:54:54 gdalsnes Exp $
+/* $Id: window.c,v 1.76 2003/08/04 21:21:13 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -260,6 +260,7 @@ BOOL FASTCALL
 W32kIsDesktopWindow(PWINDOW_OBJECT WindowObject)
 {
   BOOL IsDesktop;
+  ASSERT(WindowObject);
   IsDesktop = WindowObject->Parent == NULL;
   return(IsDesktop);
 }
