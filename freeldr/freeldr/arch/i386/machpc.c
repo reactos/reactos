@@ -1,6 +1,6 @@
-/*
+/* $Id: machpc.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+ *
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,33 +16,24 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
-#include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <machine.h>
-#include <mm.h>
-#include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
+#include "freeldr.h"
+#include "mm.h"
+#include "arch.h"
+#include "machine.h"
+#include "machpc.h"
+#include "rtl.h"
+
+VOID
+PcMachInit(VOID)
 {
-	CmdLineParse(CmdLine);
+  EnableA20();
 
-	MachInit();
-
-	DebugInit();
-
-	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
-
-	if (!MmInitializeMemoryManager())
-	{
-		printf("Press any key to reboot.\n");
-		getch();
-		return;
-	}
-
-	RunLoader();
+  /* Setup vtbl */
+  MachVtbl.ClearScreenAttr = PcConsClearScreenAttr;
+  MachVtbl.PutChar = PcConsPutChar;
+  MachVtbl.PutCharAttrAtLoc = PcConsPutCharAttrAtLoc;
+  MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
 }
+
+/* EOF */

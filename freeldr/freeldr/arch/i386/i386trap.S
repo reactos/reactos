@@ -24,7 +24,7 @@
 #include <arch.h>
 #include <version.h>
 
-
+#define SCREEN_ATTR 0x1f			/* Bright white on blue background */
 
 .macro SAVE_CPU_REGS
 	movl	%eax,i386_EAX
@@ -272,7 +272,9 @@ i386CommonExceptionHandler:
 
 	SAVE_CPU_REGS
 
-	call	i386ClearScreenToBlue
+	pushl	$SCREEN_ATTR
+	call	_MachClearScreenAttr
+	add	$4,%esp
 
 	movl	$i386ExceptionHandlerText,%esi
 	call	i386PrintText
@@ -438,12 +440,14 @@ i386CommonExceptionHandler:
 	movl	$0,i386_ScreenPosX
 	incl	i386_ScreenPosY
 	incl	i386_ScreenPosY
-  call  i386PrintFrames           // Display frames
+	call	i386PrintFrames						// Display frames
 	incl	i386_ScreenPosY
 	incl	i386_ScreenPosY
 
+	cli
 i386ExceptionHandlerHang:
-	jmp		i386ExceptionHandlerHang
+	hlt
+	jmp	i386ExceptionHandlerHang
 
 	iret
 
@@ -454,31 +458,35 @@ i386PrintFrames:
 
 	movl	i386_EBP,%edi
 printnextframe:
-  test  %edi,%edi
-  je    nomoreframes
-  movl  $STACK32ADDR,%eax
-  cmpl  %edi,%eax
-  jbe   nomoreframes
-  movl	4(%edi),%eax
-  pushl %edi
+	test	%edi,%edi
+	je	nomoreframes
+	movl	$STACK32ADDR,%eax
+	cmpl	%edi,%eax
+	jbe	nomoreframes
+	movl	4(%edi),%eax
+	pushl	%edi
 	call	i386PrintHexDword					// Display frame
-  popl  %edi
+	popl	%edi
 	incl	i386_ScreenPosX
 	incl	i386_ScreenPosX
-  movl	0(%edi),%edi
-  jmp printnextframe
+	movl	0(%edi),%edi
+	jmp	printnextframe
 nomoreframes:
-  ret
+	ret
 
 /************************************************************************/
-i386ClearScreenToBlue:
+/* AL = Char to display                                                 */
+/************************************************************************/
+i386PrintChar:
 	.code32
 
-	cld
-	movw	$0x1F20,%ax
-	movl	$0xB0000,%edi
-	movl	$0x8000,%ecx
-	rep stosw
+	pushl	i386_ScreenPosY
+	pushl	i386_ScreenPosX
+	pushl	$SCREEN_ATTR
+	andl	$0xff,%eax
+	pushl	%eax
+	call	_MachPutCharAttrAtLoc
+	addl	$16,%esp
 
 	ret
 
@@ -492,46 +500,24 @@ i386PrintTextLoop:
 	lodsb
 
 	// Check for end of string char
-	cmp		$0,%al
-	je		i386PrintTextDone
+	cmp	$0,%al
+	je	i386PrintTextDone
 
 	// Check for newline char
-	cmp		$0x0a,%al
-	jne		i386PrintTextLoop2
+	cmp	$0x0a,%al
+	jne	i386PrintTextLoop2
 	incl	i386_ScreenPosY
 	movl	$0,i386_ScreenPosX
-	jmp		i386PrintTextLoop
+	jmp	i386PrintTextLoop
 
 i386PrintTextLoop2:
-	call	i386PrintTextCalcAddressOfNextChar
-
-	stosb
+	call	i386PrintChar
 	incl	i386_ScreenPosX
 
-	jmp		i386PrintTextLoop
+	jmp	i386PrintTextLoop
 
 i386PrintTextDone:
 	
-	ret
-
-/************************************************************************/
-/* On return EDI = Address of next char in screen memory                */
-/************************************************************************/
-i386PrintTextCalcAddressOfNextChar:
-	.code32
-
-	push	%eax
-
-	movl	$0xB8000,%edi
-	addl	i386_ScreenPosX,%edi
-	addl	i386_ScreenPosX,%edi
-	movl	i386_ScreenPosY,%eax
-	movl	$160,%ecx				// 80 columns, 2 bytes per column
-	mull	%ecx
-	addl	%eax,%edi
-
-	pop		%eax
-
 	ret
 
 /************************************************************************/
@@ -553,8 +539,7 @@ i386PrintHex3:
 	andb	$0x0f,%al
 	movl	$i386PrintHexTable,%ebx
 	xlat	/*$i386PrintHexTable*/
-	call	i386PrintTextCalcAddressOfNextChar
-	stosb
+	call	i386PrintChar
 	incl	i386_ScreenPosX
 	pop		%eax
 
@@ -579,10 +564,9 @@ i386PrintHexWord2:
 	andb	$0x0f,%al
 	movl	$i386PrintHexTable,%ebx
 	xlat	/*$i386PrintHexTable*/
-	call	i386PrintTextCalcAddressOfNextChar
-	stosb
+	call	i386PrintChar
 	incl	i386_ScreenPosX
-	pop		%eax
+	pop	%eax
 
 	ret
 
@@ -600,8 +584,7 @@ i386PrintHexByte1:
 	andb	$0x0f,%al
 	movl	$i386PrintHexTable,%ebx
 	xlat	/*$i386PrintHexTable*/
-	call	i386PrintTextCalcAddressOfNextChar
-	stosb
+	call	i386PrintChar
 	incl	i386_ScreenPosX
 	pop		%eax
 

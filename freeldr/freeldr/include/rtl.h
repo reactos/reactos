@@ -72,7 +72,6 @@ int		isxdigit(int c);
 char *	convert_to_ascii(char *buf, int c, ...);
 char *	convert_i64_to_ascii(char *buf, int c, ...);
 
-void	putchar(int ch);		// Implemented in asmcode.S
 int		kbhit(void);			// Implemented in asmcode.S
 int		getch(void);			// Implemented in asmcode.S
 int		getyear(void);			// Implemented in asmcode.S

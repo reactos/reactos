@@ -31,6 +31,10 @@ all:
 	$(MAKE) -C install
 	$(MAKE) -C fdebug
 
+freeldr:
+	$(MAKE) -C freeldr
+.PHONY : freeldr
+
 clean:
 	$(MAKE) -C bootsect clean
 	$(MAKE) -C freeldr clean

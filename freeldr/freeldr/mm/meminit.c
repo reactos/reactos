@@ -24,6 +24,7 @@
 #include <rtl.h>
 #include <debug.h>
 #include <ui.h>
+#include <machine.h>
 
 
 #ifdef DEBUG
@@ -52,20 +53,16 @@ U32		LastFreePageHint = 0;
 BOOL MmInitializeMemoryManager(VOID)
 {
 	BIOS_MEMORY_MAP	BiosMemoryMap[32];
-	U32				BiosMemoryMapEntryCount;
-	U32				ExtendedMemorySize;
-	U32				ConventionalMemorySize;
+	U32		BiosMemoryMapEntryCount;
 #ifdef DEBUG
-	U32				Index;
+	U32		Index;
 #endif
 
 	DbgPrint((DPRINT_MEMORY, "Initializing Memory Manager.\n"));
 
 	RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 
-	BiosMemoryMapEntryCount = GetBiosMemoryMap(BiosMemoryMap, 32);
-	ExtendedMemorySize = GetExtendedMemorySize();
-	ConventionalMemorySize = GetConventionalMemorySize();
+	BiosMemoryMapEntryCount = MachGetMemoryMap(BiosMemoryMap, sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
 
 #ifdef DEBUG
 	// Dump the system memory map
@@ -77,32 +74,12 @@ BOOL MmInitializeMemoryManager(VOID)
 			DbgPrint((DPRINT_MEMORY, "%x%x\t %x%x\t %s\n", BiosMemoryMap[Index].BaseAddress, BiosMemoryMap[Index].Length, MmGetSystemMemoryMapTypeString(BiosMemoryMap[Index].Type)));
 		}
 	}
-	else
-	{
-		DbgPrint((DPRINT_MEMORY, "GetBiosMemoryMap() not supported.\n"));
-	}
-
-	DbgPrint((DPRINT_MEMORY, "Extended memory size: %d KB\n", ExtendedMemorySize));
-	DbgPrint((DPRINT_MEMORY, "Conventional memory size: %d KB\n", ConventionalMemorySize));
 #endif
 
 	// If we got the system memory map then fixup invalid entries
 	if (BiosMemoryMapEntryCount != 0)
 	{
 		MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
-	}
-
-	// Since I don't feel like writing two sets of routines
-	// one to handle the BiosMemoryMap structure and another
-	// to handle just a flat extended memory size I'm going
-	// to create a 'fake' memory map entry out of the
-	// extended memory size if GetBiosMemoryMap() fails.
-	//if (BiosMemoryMapEntryCount == 0)
-	{
-		BiosMemoryMap[0].BaseAddress = 0x100000;		// Start at 1MB
-		BiosMemoryMap[0].Length = ExtendedMemorySize * 1024;
-		BiosMemoryMap[0].Type = MEMTYPE_USABLE;
-		BiosMemoryMapEntryCount = 1;
 	}
 
 	TotalPagesInLookupTable = MmGetAddressablePageCountIncludingHoles(BiosMemoryMap, BiosMemoryMapEntryCount);
@@ -159,7 +136,7 @@ PVOID MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 	EndAddressOfMemory = 0;
 	for (Index=0; Index<MapCount; Index++)
 	{
-		if (MaxStartAddressSoFar < BiosMemoryMap[Index].BaseAddress)
+		if (MaxStartAddressSoFar <= BiosMemoryMap[Index].BaseAddress)
 		{
 			MaxStartAddressSoFar = BiosMemoryMap[Index].BaseAddress;
 			EndAddressOfMemory = (MaxStartAddressSoFar + BiosMemoryMap[Index].Length);

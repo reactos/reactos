@@ -1,6 +1,6 @@
-/*
+/* $Id: machine.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+ *
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,33 +16,36 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
-#include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <machine.h>
-#include <mm.h>
-#include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
+#include "freeldr.h"
+#include "machine.h"
+
+#undef MachClearScreenAttr
+#undef MachPutChar
+#undef MachPutCharAttrAtLoc
+#undef MachGetMemoryMap
+
+MACHVTBL MachVtbl;
+
+void 
+MachClearScreenAttr(U8 Attr)
 {
-	CmdLineParse(CmdLine);
-
-	MachInit();
-
-	DebugInit();
-
-	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
-
-	if (!MmInitializeMemoryManager())
-	{
-		printf("Press any key to reboot.\n");
-		getch();
-		return;
-	}
-
-	RunLoader();
+  MachVtbl.ClearScreenAttr(Attr);
 }
+
+void MachPutChar(int Ch)
+{
+  MachVtbl.PutChar(Ch);
+}
+
+void MachPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y)
+{
+  MachVtbl.PutCharAttrAtLoc(Ch, Attr, X, Y);
+}
+
+U32 MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+{
+  return MachVtbl.GetMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
+}
+
+/* EOF */

@@ -22,6 +22,7 @@
 #include <rtl.h>
 #include <comm.h>
 #include <portio.h>
+#include <machine.h>
 
 #ifdef DEBUG
 
@@ -75,6 +76,7 @@ VOID DebugInit(VOID)
 
 VOID DebugPrintChar(UCHAR Character)
 {
+extern VOID XboxVideoPutChar(char c);
 	if (Character == '\n')
 	{
 		DebugStartOfLine = TRUE;
@@ -94,7 +96,7 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 	else
 	{
-		putchar(Character);
+		MachPutChar(Character);
 	}
 }
 
@@ -230,26 +232,11 @@ VOID DebugPrintHeader(U32 Mask)
 	}
 }
 
-VOID DebugPrint(U32 Mask, char *format, ...)
+static VOID DebugPrintV(char *format, int *dataptr)
 {
-	int *dataptr = (int *) &format;
 	char c, *ptr, str[16];
 	int ll;
-	
-	// Mask out unwanted debug messages
-	if (!(Mask & DebugPrintMask))
-	{
-		return;
-	}
 
-	// Print the header if we have started a new line
-	if (DebugStartOfLine)
-	{
-		DebugPrintHeader(Mask);
-		DebugStartOfLine = FALSE;
-	}
-
-	dataptr++;
 	ll = 0;
 	while ((c = *(format++)))
 	{
@@ -308,7 +295,7 @@ VOID DebugPrint(U32 Mask, char *format, ...)
 				DebugPrintChar(c);
 				break;
 			default:
-				DebugPrint(Mask, "\nDebugPrint() invalid format specifier - %%%c\n", c);
+				DebugPrint(DPRINT_WARNING, "\nDebugPrint() invalid format specifier - %%%c\n", c);
 				break;
 			}
 		}
@@ -320,6 +307,33 @@ VOID DebugPrint(U32 Mask, char *format, ...)
 		//getch();
 	}
 
+}
+
+VOID DebugPrint(U32 Mask, char *format, ...)
+{
+	int *dataptr = (int *) &format;
+	
+	// Mask out unwanted debug messages
+	if (!(Mask & DebugPrintMask))
+	{
+		return;
+	}
+
+	// Print the header if we have started a new line
+	if (DebugStartOfLine)
+	{
+		DebugPrintHeader(Mask);
+		DebugStartOfLine = FALSE;
+	}
+
+	DebugPrintV(format, ++dataptr);
+}
+
+VOID DebugPrint1(char *format, ...)
+{
+	int *dataptr = (int *) &format;
+
+	DebugPrintV(format, ++dataptr);
 }
 
 VOID DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length)

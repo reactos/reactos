@@ -1,6 +1,6 @@
-/*
+/* $Id: machxbox.h,v 1.1 2004/11/08 22:02:47 gvg Exp $
+ *
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,33 +16,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
-#include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <machine.h>
-#include <mm.h>
-#include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
-{
-	CmdLineParse(CmdLine);
+#ifndef __I386_MACHXBOX_H_
+#define __I386_MACHXBOX_H_
 
-	MachInit();
+#ifndef __MEMORY_H
+#include "mm.h"
+#endif
 
-	DebugInit();
+U8 XboxFont8x16[256 * 16];
 
-	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
+VOID XboxMachInit(VOID);
 
-	if (!MmInitializeMemoryManager())
-	{
-		printf("Press any key to reboot.\n");
-		getch();
-		return;
-	}
+VOID XboxVideoInit(VOID);
+VOID XboxVideoClearScreenAttr(U8 Attr);
+VOID XboxVideoPutChar(int Ch);
+VOID XboxVideoPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y);
 
-	RunLoader();
-}
+VOID XboxMemInit(VOID);
+PVOID XboxMemReserveMemory(U32 MbToReserve);
+U32 XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
+
+#endif /* __I386_HWXBOX_H_ */
+
+/* EOF */

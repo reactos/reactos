@@ -38,13 +38,6 @@ typedef struct
 
 U32		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 
-// These functions are implemented in mem.S
-U32		GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
-U32		GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
-U32		GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);	// Fills structure with BIOS memory map and returns memory map item count
-
-
-
 
 //BOOL	MmInitializeMemoryManager(U32 LowMemoryStart, U32 LowMemoryLength);
 BOOL	MmInitializeMemoryManager(VOID);

@@ -17,6 +17,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <freeldr.h>
+#include <machine.h>
 #include <rtl.h>
 
 /*
@@ -27,7 +29,7 @@ void print(char *str)
 	int	i;
 
 	for (i = 0; i < strlen(str); i++)
-		putchar(str[i]);
+		MachPutChar(str[i]);
 }
 
 /*
@@ -46,7 +48,7 @@ void printf(char *format, ... )
 	{
 		if (c != '%')
 		{
-			putchar(c);
+			MachPutChar(c);
 		}
 		else
 		{
@@ -75,22 +77,22 @@ void printf(char *format, ... )
 
 				while (*ptr)
 				{
-					putchar(*(ptr++));
+					MachPutChar(*(ptr++));
 				}
 				break;
 
-			case 'c': putchar((*(dataptr++))&0xff); break;
+			case 'c': MachPutChar((*(dataptr++))&0xff); break;
 
 			case 's':
 				ptr = (char *)(*(dataptr++));
 
 				while ((c = *(ptr++)))
 				{
-					putchar(c);
+					MachPutChar(c);
 				}
 				break;
 			case '%':
-				putchar(c);
+				MachPutChar(c);
 				break;
 			default:
 				printf("\nprintf() invalid format specifier - %%%c\n", c);

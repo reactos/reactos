@@ -22,45 +22,6 @@
 #include <rtl.h>
 #include <portio.h>
 
-void putchar(int ch)
-{
-	REGS	Regs;
-
-	/* If we are displaying a CR '\n' then do a LF also */
-	if (ch == '\n')
-	{
-		/* Display the LF */
-		putchar('\r');
-	}
-
-	/* If we are displaying a TAB '\t' then display 8 spaces ' ' */
-	if (ch == '\t')
-	{
-		/* Display the 8 spaces ' ' */
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		putchar(' ');
-		return;
-	}
-
-	// Int 10h AH=0Eh
-	// VIDEO - TELETYPE OUTPUT
-	//
-	// AH = 0Eh
-	// AL = character to write
-	// BH = page number
-	// BL = foreground color (graphics modes only)
-	Regs.b.ah = 0x0E;
-	Regs.b.al = ch;
-	Regs.w.bx = 1;
-	Int386(0x10, &Regs, &Regs);
-}
-
 int kbhit(void)
 {
 	REGS	Regs;

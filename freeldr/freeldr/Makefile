@@ -200,7 +200,6 @@ ARCH_OBJS	=	fathelp.o	\
 			boot.o		\
 			linux.o		\
 			mb.o		\
-			i386mem.o	\
 			i386rtl.o	\
 			i386vid.o	\
 			drvmap.o	\
@@ -210,6 +209,14 @@ ARCH_OBJS	=	fathelp.o	\
 			hardware.o	\
 			hwcpu.o		\
 			hwpci.o		\
+			archmach.o	\
+			machpc.o	\
+			machxbox.o	\
+			pccons.o	\
+			pcmem.o		\
+			xboxfont.o	\
+			xboxmem.o	\
+			xboxvideo.o	\
 			_alloca.o		# For Mingw32 builds
 
 
@@ -272,7 +279,8 @@ BASE_OBJS	=	freeldr.o \
 			debug.o \
 			multiboot.o	\
 			version.o \
-			cmdline.o
+			cmdline.o \
+			machine.o
 
 FREELDR_OBJS=	bootmgr.o \
 		drivemap.o \

@@ -21,6 +21,10 @@
 #ifndef __I386_HARDWARE_H_
 #define __I386_HARDWARE_H_
 
+#ifndef __REGISTRY_H
+#include "../../reactos/registry.h"
+#endif
+
 typedef enum
 {
   InterfaceTypeUndefined = -1,
@@ -149,6 +153,8 @@ typedef struct _CM_COMPONENT_INFORMATION
 #define Input       0x00000020
 #define Output      0x00000040
 
+#define CONFIG_CMD(bus, dev_fn, where) \
+	(0x80000000 | (((U32)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
 /* PROTOTYPES ***************************************************************/
 

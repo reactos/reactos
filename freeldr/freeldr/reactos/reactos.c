@@ -28,6 +28,7 @@
 #include <ui.h>
 #include <multiboot.h>
 #include <mm.h>
+#include <machine.h>
 #include <inifile.h>
 
 #include "registry.h"
@@ -604,22 +605,35 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Setup multiboot information structure
 	 */
 	mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
-	mb_info.mem_lower = GetConventionalMemorySize();
-	mb_info.mem_upper = GetExtendedMemorySize();
 	mb_info.boot_device = 0xffffffff;
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+	mb_info.mmap_length = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
 	if (mb_info.mmap_length)
 	{
 		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
-		mb_info.flags |= MB_INFO_FLAG_MEMORY_MAP;
+		mb_info.flags |= MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_MEMORY_MAP;
 		multiboot_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
 		DbgPrint((DPRINT_REACTOS, "memory map length: %d\n", mb_info.mmap_length));
 		DbgPrint((DPRINT_REACTOS, "dumping memory map:\n"));
 		for (i=0; i<(mb_info.mmap_length/sizeof(memory_map_t)); i++)
 		{
+			if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
+			    0 == multiboot_memory_map[i].base_addr_low)
+			{
+				mb_info.mem_lower = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024;
+				if (640 < mb_info.mem_lower)
+				{
+					mb_info.mem_lower = 640;
+				}
+			}
+			if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
+			    multiboot_memory_map[i].base_addr_low <= 1024 * 1024 &&
+			    1024 * 1024 <= multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low)
+			{
+				mb_info.mem_upper = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
+			}
 			DbgPrint((DPRINT_REACTOS, "start: %x\t size: %x\t type %d\n", 
 			          multiboot_memory_map[i].base_addr_low, 
 				  multiboot_memory_map[i].length_low,

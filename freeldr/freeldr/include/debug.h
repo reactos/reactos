@@ -23,24 +23,26 @@
 
 #ifdef DEBUG
 
-	#define DPRINT_NONE		    0x00000000  // No debug print
+	#define DPRINT_NONE		0x00000000  // No debug print
 	#define DPRINT_WARNING		0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
-	#define DPRINT_MEMORY		  0x00000002  // OR this with DebugPrintMask to enable memory management messages
+	#define DPRINT_MEMORY		0x00000002  // OR this with DebugPrintMask to enable memory management messages
 	#define DPRINT_FILESYSTEM	0x00000004  // OR this with DebugPrintMask to enable file system messages
 	#define DPRINT_INIFILE		0x00000008  // OR this with DebugPrintMask to enable .ini file messages
-	#define DPRINT_UI			    0x00000010  // OR this with DebugPrintMask to enable user interface messages
-	#define DPRINT_DISK			  0x00000020  // OR this with DebugPrintMask to enable disk messages
-	#define DPRINT_CACHE		  0x00000040  // OR this with DebugPrintMask to enable cache messages
+	#define DPRINT_UI		0x00000010  // OR this with DebugPrintMask to enable user interface messages
+	#define DPRINT_DISK		0x00000020  // OR this with DebugPrintMask to enable disk messages
+	#define DPRINT_CACHE		0x00000040  // OR this with DebugPrintMask to enable cache messages
 	#define DPRINT_REGISTRY		0x00000080  // OR this with DebugPrintMask to enable registry messages
 	#define DPRINT_REACTOS		0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
-	#define DPRINT_LINUX		  0x00000200  // OR this with DebugPrintMask to enable Linux messages
-  #define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
+	#define DPRINT_LINUX		0x00000200  // OR this with DebugPrintMask to enable Linux messages
+	#define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 
 	VOID	DebugInit(VOID);
 	VOID	DebugPrint(U32 Mask, char *format, ...);
+	VOID	DebugPrint1(char *format, ...);
 	VOID	DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length);
 
 	#define DbgPrint(_x_)					DebugPrint _x_ ;
+	#define DPRINT1						DebugPrint1
 	#define BugCheck(_x_)					{ DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
@@ -73,7 +75,9 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #else
 
+	#define DebugInit()
 	#define DbgPrint(_x_)
+	#define DPRINT1(_x_)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
