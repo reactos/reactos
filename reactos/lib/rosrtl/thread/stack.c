@@ -1,4 +1,4 @@
-/* $Id: stack.c,v 1.5 2003/12/30 13:06:54 hbirr Exp $
+/* $Id: stack.c,v 1.6 2004/03/02 17:16:04 navaraf Exp $
 */
 /*
 */
@@ -125,8 +125,8 @@ NTSTATUS NTAPI RtlRosCreateStack
   /* failure */
   if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
 
-  assert((*StackReserve - *StackCommit) >= PAGE_SIZE);
-  assert((*StackReserve - *StackCommit) % PAGE_SIZE == 0);
+  ASSERT((*StackReserve - *StackCommit) >= PAGE_SIZE);
+  ASSERT((*StackReserve - *StackCommit) % PAGE_SIZE == 0);
 
   pGuardBase = (PUCHAR)(UserStack->ExpandableStackLimit) - PAGE_SIZE;
 
@@ -159,7 +159,7 @@ l_Cleanup:
 
  /* failure */
 l_Fail:
- assert(!NT_SUCCESS(nErrCode));
+ ASSERT(!NT_SUCCESS(nErrCode));
  return nErrCode;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.5 2003/08/07 03:32:00 royce Exp $
+/* $Id: create.c,v 1.6 2004/03/02 17:16:04 navaraf Exp $
 */
 /*
 */
@@ -85,7 +85,7 @@ RtlRosCreateUserThread
 
  /* failure */
 l_Fail:
- assert(!NT_SUCCESS(nErrCode));
+ ASSERT(!NT_SUCCESS(nErrCode));
 
  /* deallocate the stack */
  RtlRosDeleteStack(ProcessHandle, &usUserStack);
