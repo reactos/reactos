@@ -68,9 +68,8 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
 
 VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait)
 {
-  DPRINT("KeReleaseDispatcherDatabaseLockAtDpcLevel(Wait %x)\n", Wait);
-  assert(Wait == WaitSet);
-  if (!Wait)
+  DPRINT("KeReleaseDispatcherDatabaseLockAtDpcLevel(Wait %x) WaitSet=%x\n", Wait, WaitSet);
+  if (Wait == WaitSet)
     {
       Owner = NULL;
       KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
@@ -79,9 +78,8 @@ VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait)
 
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
 {
-   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x)\n",Wait);
-   assert(Wait==WaitSet);
-   if (!Wait)
+   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x) WaitSet=%x\n",Wait,WaitSet);
+   if (Wait == WaitSet)
      {
 	Owner = NULL;
 	KeReleaseSpinLock(&DispatcherDatabaseLock, oldlvl);
