@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.47 2003/05/25 10:53:05 rcampbell Exp $
+/* $Id: defwnd.c,v 1.48 2003/05/25 21:05:38 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -403,9 +403,10 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
     char buffer[256];
     /* FIXME:  Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-    PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
-           GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2) - 1, rect->top + 
-           GetSystemMetrics(SM_CYCAPTION) - 1, PATCOPY );
+    
+	PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
+           GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2), (rect->top + 
+           GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
     
     if (style & WS_SYSMENU)
     {
@@ -612,8 +613,8 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
   if ((Style & WS_CAPTION) == WS_CAPTION)
     {
-      WindowRect.top += GetSystemMetrics(SM_CYCAPTION) -
-	GetSystemMetrics(SM_CYBORDER);
+      WindowRect.top += (GetSystemMetrics(SM_CYCAPTION) -
+	GetSystemMetrics(SM_CYBORDER));
       if (!PtInRect(&WindowRect, Point))
 	{
 	  if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW))
@@ -914,8 +915,8 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
     }
   if (Style & WS_CAPTION)
     {
-      Rect->top -= GetSystemMetrics(SM_CYCAPTION) -
-	GetSystemMetrics(SM_CYBORDER);
+      Rect->top -= (GetSystemMetrics(SM_CYCAPTION) -
+	GetSystemMetrics(SM_CYBORDER)) + 1;
     }
   if (Menu)
     {
