@@ -130,10 +130,6 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
             SetClassLongA (hwnd, GCL_HICON, (LPARAM)prfdp->hIcon) ;
             SendMessageA (GetDlgItem (hwnd, 12297), STM_SETICON,
                           (WPARAM)LoadIconA (NULL, (LPSTR)IDI_WINLOGO), 0);
-            if (NULL != prfdp->lpstrDescription)
-                {
-                SetWindowTextA (GetDlgItem(hwnd, 12289), prfdp->lpstrDescription) ;
-                }
             FillList (GetDlgItem (hwnd, 12298), NULL) ;
             SetFocus (GetDlgItem (hwnd, 12298)) ;
             return TRUE ;
@@ -168,8 +164,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         psz = malloc (ic + 2) ;
                         GetWindowTextA (htxt, psz, ic + 1) ;
 
-                        if (!CreateProcessA (NULL, psz, NULL, NULL, TRUE,
-                            NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi))
+                        if ((ret = ShellExecuteA(NULL, _T("open"), psz, NULL, NULL, SW_SHOWNORMAL)) < 33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
@@ -241,13 +236,12 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         return TRUE ;
                         }
 
-                    if (ofnProc (&ofn))
-                        {
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                        SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
-                        SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                        }
+                    ofnProc (&ofn) ;
+
+                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                    SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
+                    SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
 
                     FreeLibrary (hComdlg) ;
 
