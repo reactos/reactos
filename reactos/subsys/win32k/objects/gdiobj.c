@@ -801,13 +801,17 @@ LockHandle:
       if((EntryType & ~GDI_HANDLE_REUSE_MASK) == 0)
       {
         DPRINT1("Attempted to lock object 0x%x that is deleted!\n", hObj);
+#ifdef GDI_DEBUG
         KeRosDumpStackFrames ( NULL, 20 );
+#endif
       }
       else
       {
         DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n",
                 hObj, EntryType & ~GDI_HANDLE_REUSE_MASK, ExpectedType & ~GDI_HANDLE_REUSE_MASK);
+#ifdef GDI_DEBUG
         KeRosDumpStackFrames ( NULL, 20 );
+#endif
       }
 #ifdef GDI_DEBUG
       DPRINT1("-> called from %s:%i\n", file, line);
@@ -839,8 +843,8 @@ LockHandle:
   else
   {
     DPRINT1("Attempted to lock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
-    KeRosDumpStackFrames ( NULL, 20 );
 #ifdef GDI_DEBUG
+    KeRosDumpStackFrames ( NULL, 20 );
     DPRINT1("-> called from %s:%i\n", file, line);
 #endif
   }
