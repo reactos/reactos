@@ -1,4 +1,4 @@
-/* $Id: syssetup.h,v 1.1 2003/05/02 18:07:10 ekohl Exp $
+/* $Id: syssetup.h,v 1.2 2004/01/14 22:15:09 gvg Exp $
 */
 /*
  * syssetup.h
@@ -33,10 +33,10 @@ InstallReactOS (HINSTANCE hInstance);
 
 /* Log File APIs */
 
-#define SEVERITY_INFORMATION   0
-#define SEVERITY_WARNING       1
-#define SEVERITY_ERROR         2
-#define SEVERITY_FATAL_ERROR   3
+#define SYSSETUP_SEVERITY_INFORMATION   0
+#define SYSSETUP_SEVERITY_WARNING       1
+#define SYSSETUP_SEVERITY_ERROR         2
+#define SYSSETUP_SEVERITY_FATAL_ERROR   3
 
 
 BOOL STDCALL

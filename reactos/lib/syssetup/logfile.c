@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logfile.c,v 1.1 2003/05/02 18:07:55 ekohl Exp $
+/* $Id: logfile.c,v 1.2 2004/01/14 22:15:09 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -109,19 +109,19 @@ LogItem (DWORD dwSeverity,
   /* Get the severity code string */
   switch (dwSeverity)
     {
-      case SEVERITY_INFORMATION:
+      case SYSSETUP_SEVERITY_INFORMATION:
 	lpSeverityString = "Information : ";
 	break;
 
-      case SEVERITY_WARNING:
+      case SYSSETUP_SEVERITY_WARNING:
 	lpSeverityString = "Warning : ";
 	break;
 
-      case SEVERITY_ERROR:
+      case SYSSETUP_SEVERITY_ERROR:
 	lpSeverityString = "Error : ";
 	break;
 
-      case SEVERITY_FATAL_ERROR:
+      case SYSSETUP_SEVERITY_FATAL_ERROR:
 	lpSeverityString = "Fatal error : ";
 	break;
 

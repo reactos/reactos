@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.4 2004/01/09 20:05:04 ekohl Exp $
+/* $Id: install.c,v 1.5 2004/01/14 22:15:09 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -51,13 +51,13 @@ InstallReactOS (HINSTANCE hInstance)
       OutputDebugStringA ("InitializeSetupActionLog() failed\n");
     }
 
-  LogItem (SEVERITY_INFORMATION,
+  LogItem (SYSSETUP_SEVERITY_INFORMATION,
 	   L"ReactOS Setup starting");
 
-  LogItem (SEVERITY_FATAL_ERROR,
+  LogItem (SYSSETUP_SEVERITY_FATAL_ERROR,
 	   L"Buuuuuuaaaah!");
 
-  LogItem (SEVERITY_INFORMATION,
+  LogItem (SYSSETUP_SEVERITY_INFORMATION,
 	   L"ReactOS Setup finished");
 
   TerminateSetupActionLog ();
