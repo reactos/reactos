@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.7 2003/07/24 14:25:33 royce Exp $
+/* $Id: misc.c,v 1.8 2003/07/24 19:53:11 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -101,9 +101,7 @@ RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 void STDCALL
 RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 {
-	OSVERSIONINFOEXW versionInfo;
-	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-	GetVersionExW((OSVERSIONINFOW*)&versionInfo);
+	PPEB pPeb = NtCurrentPeb();
 
 	if (major)
 	{
@@ -111,18 +109,18 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 		 * major version is not 5. So, we should never set a version < 5 ...
 		 * This makes sense since this call didn't exist before XP anyway.
 		 */
-		*major = versionInfo.dwMajorVersion < 5 ? 5 : versionInfo.dwMajorVersion;
+		*major = pPeb->OSMajorVersion < 5 ? 5 : pPeb->OSMajorVersion;
 	}
 
 	if (minor)
 	{
-		*minor = versionInfo.dwMinorVersion;
+		*minor = pPeb->OSMinorVersion;
 	}
 
 	if (build)
 	{
 		/* FIXME: Does anybody know the real formula? */
-		*build = (0xF0000000 | versionInfo.dwBuildNumber);
+		*build = (0xF0000000 | pPeb->OSBuildNumber);
 	}
 }
 
