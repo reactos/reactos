@@ -147,7 +147,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    InitializeListHead(&FreePageListHead);
    InitializeListHead(&BiosPageListHead);
    
-   Reserved = (MemorySizeInPages * sizeof(PHYSICAL_PAGE)) / PAGESIZE;
+   Reserved = 
+     PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGESIZE;
    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
    DPRINT("Reserved %d\n", Reserved);

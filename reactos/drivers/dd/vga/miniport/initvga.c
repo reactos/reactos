@@ -105,10 +105,10 @@ void InitVGAMode()
    vps = VideoPortInt10(NULL, &vxba);
    //   setMode(Mode12);
 
-   WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
-   i = vidmem[0];
+   //   WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
+   //   i = vidmem[0];
 //   VideoPortZeroMemory(vidmem, 38400);
-   VideoPortZeroMemory(vidmem, 64000);
+   //   VideoPortZeroMemory(vidmem, 64000);
 
    vgaPreCalc();
 }
