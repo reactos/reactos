@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.54 2004/06/10 07:56:42 hbirr Exp $
+/* $Id: class2.c,v 1.55 2004/08/12 05:59:25 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1887,6 +1887,7 @@ ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject)
 			  NULL);
 
   /* Attach SRB to the IRP */
+  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
   Stack = IoGetNextIrpStackLocation(Irp);
   Stack->MajorFunction = IRP_MJ_SCSI;
   Stack->Parameters.Scsi.Srb = Srb;
@@ -2201,6 +2202,7 @@ ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
 
       /* Initialize the new IRP */
       NewIrp->MdlAddress = Irp->MdlAddress;
+      NewIrp->Tail.Overlay.Thread = PsGetCurrentThread();
 
       IoSetNextIrpStackLocation(NewIrp);
       NewStack = IoGetCurrentIrpStackLocation(NewIrp);
