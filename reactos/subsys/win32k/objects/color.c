@@ -119,6 +119,7 @@ HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
 HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
+
   HPALETTE NewPalette = EngCreatePalette(PAL_INDEXED, palette->palNumEntries, palette->palPalEntry, 0, 0, 0);
   ULONG size;
 

@@ -92,6 +92,31 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       break;
 
+    case 8:
+      SourceBits_8BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
+
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        SourceLine_8BPP = SourceBits_8BPP;
+        DestLine = DestBits;
+        sx = SourcePoint->x;
+        f1 = sx & 1;
+        f2 = DestRect->left & 1;
+
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          *DestLine = (*DestLine & notmask[i&1]) |
+            ((XLATEOBJ_iXlate(ColorTranslation, *SourceLine_8BPP)) << ((4 * (1-(sx & 1)))));
+          if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
+          SourceLine_8BPP++;
+          sx++;
+        }
+
+        SourceBits_8BPP += SourceSurf->lDelta;
+        DestBits += DestSurf->lDelta;
+      }
+      break;
+
     case 24:
       SourceBits_24BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x * 3;
 

@@ -8,6 +8,8 @@
  *        8/20/1999: Created
  */
 
+// TODO: Cache XLATEOBJs that are created by EngCreateXlate by checking if the given palettes match a cached list
+
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
@@ -46,8 +48,8 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
 {
   PVIDEO_CLUTDATA cSourceColor;
   PVIDEO_CLUTDATA cDestColors;
-  ULONG bestMatch = 256, idx = 0, i;
-  ULONG rt;
+  LONG idx = 0, i, rt;
+  ULONG cxRed, cxGreen, cxBlue, BestMatch = 65535;
 
   // Simple cache -- only one value because we don't want to waste time
   // if the colors aren't very sequential
@@ -58,19 +60,20 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
   }
 
   cSourceColor  = &SourceColor;
-
   for (i=0; i<NumColors; i++)
   {
     cDestColors = &DestColors[i];
 
-    rt = ( abs(cSourceColor->Red   - cDestColors->Red)   +
-           abs(cSourceColor->Green - cDestColors->Green) +
-           abs(cSourceColor->Blue  - cDestColors->Blue) ) / 3;
+    cxRed = abs(cSourceColor->Red - cDestColors->Red) ^ 2;
+    cxGreen = abs(cSourceColor->Green - cDestColors->Green) ^ 2;
+    cxBlue = abs(cSourceColor->Blue - cDestColors->Blue) ^ 2;
 
-    if(rt<=bestMatch)
+    rt = /* sqrt */ (cxRed + cxGreen + cxBlue);
+
+    if(rt<=BestMatch)
     {
       idx = i;
-      bestMatch = rt;
+      BestMatch = rt;
     }
   }
 
@@ -132,8 +135,17 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   if( (SourcePalType == PAL_INDEXED) || (SourcePalType == PAL_RGB) )
   {
     XlateObj->flXlate |= XO_TABLE;
-    if (SourcePalType == PAL_INDEXED) IndexedColors = SourcePalGDI->NumColors;
-    if (DestPalType   == PAL_INDEXED) IndexedColors = DestPalGDI->NumColors;
+    if ((SourcePalType == PAL_INDEXED) && (DestPalType == PAL_INDEXED))
+    {
+      if(SourcePalGDI->NumColors > DestPalGDI->NumColors)
+      {
+        IndexedColors = SourcePalGDI->NumColors;
+      } else
+        IndexedColors = DestPalGDI->NumColors;
+    }
+    else if (SourcePalType == PAL_INDEXED) { IndexedColors = SourcePalGDI->NumColors; }
+    else if (DestPalType   == PAL_INDEXED) { IndexedColors = DestPalGDI->NumColors; }
+
     XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, NULL);
   }
 

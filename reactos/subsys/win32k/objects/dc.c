@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.19 2001/03/31 15:35:08 jfilby Exp $
+/* $Id: dc.c,v 1.20 2001/05/02 12:33:42 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -16,6 +16,7 @@
 #include <win32k/region.h>
 #include <win32k/gdiobj.h>
 #include <win32k/pen.h>
+#include <win32k/text.h>
 #include "../eng/objects.h"
 
 // #define NDEBUG
@@ -166,12 +167,16 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->w.hPalette = OrigDC->w.hPalette;
+  NewDC->w.textColor = OrigDC->w.textColor;
+  NewDC->w.textAlign = OrigDC->w.textAlign;
 
   DC_UnlockDC(NewDC);
   DC_UnlockDC(OrigDC);
 
   return  DC_PtrToHandle(NewDC);
 }
+
+#include <ddk/ntddvid.h>
 
 HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                   LPCWSTR  Device,
@@ -192,7 +197,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   }
 
   DPRINT("NAME: %S\n", Driver); // FIXME: Should not crash if NULL
-  
+
   /*  Allocate a DC object  */
   if ((NewDC = DC_AllocDC(Driver)) == NULL)
   {
@@ -290,6 +295,9 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /*  Initialize the DC state  */
   DC_InitDC(NewDC);
   hNewDC = DC_PtrToHandle(NewDC);
+
+  W32kSetTextColor(hNewDC, RGB(0xff, 0xff, 0xff));
+  W32kSetTextAlign(hNewDC, TA_BASELINE);
 
   // If we've created a DC for the DISPLAY, save the reference for later CreateCompatibleDC(NULL... usage
   if(wcscmp(Driver, "DISPLAY")) // FIXME: this works.. but shouldn't we compare to L"DISPLAY" ? (which doesn't work..)

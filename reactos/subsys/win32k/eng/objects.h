@@ -8,6 +8,8 @@
  *                 21/8/1999: Created
  */
 
+#include <freetype/freetype.h>
+
 typedef struct _BRUSHGDI {
 
 } BRUSHGDI;
@@ -32,8 +34,10 @@ typedef struct _FLOATGDI {
 } FLOATGDI;
 
 typedef struct _FONTGDI {
-
-} FONTGDI;
+  LPCWSTR Filename;
+  FT_Face face;
+  TEXTMETRIC TextMetric;
+} FONTGDI, *PFONTGDI;
 
 typedef struct _PALGDI {
   ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
@@ -55,6 +59,8 @@ typedef struct _STRGDI {
 typedef BOOL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
                            PXLATEOBJ, PRECTL, PPOINTL, PPOINTL,
                            PBRUSHOBJ, PPOINTL, ROP4);
+
+typedef BOOL (*PFN_TransparentBlt)(PSURFOBJ, PSURFOBJ, PCLIPOBJ, PXLATEOBJ, PRECTL, PRECTL, ULONG, ULONG);
 
 typedef BOOL (*PFN_StretchBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
                                PXLATEOBJ, PCOLORADJUSTMENT, PPOINTL,
@@ -94,6 +100,7 @@ typedef struct _SURFGDI {
   INT BitsPerPixel;
 
   PFN_BitBlt BitBlt;
+  PFN_TransparentBlt TransparentBlt;
   PFN_StretchBlt StretchBlt;
   PFN_TextOut TextOut;
   PFN_Paint Paint;

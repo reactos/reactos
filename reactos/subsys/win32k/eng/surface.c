@@ -60,6 +60,7 @@ VOID InitializeHooks(SURFGDI *SurfGDI)
   SurfGDI->CopyBits = NULL;
   SurfGDI->CreateDeviceBitmap = NULL;
   SurfGDI->SetPalette = NULL;
+  SurfGDI->TransparentBlt = NULL;
 }
 
 HBITMAP EngCreateDeviceBitmap(DHSURF dhsurf, SIZEL Size, ULONG Format)
@@ -90,6 +91,7 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
   NewBitmap = (PVOID)CreateGDIHandle(SurfGDI, SurfObj);
 
   InitializeHooks(SurfGDI);
+
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   SurfObj->lDelta = Width;
   SurfObj->cjBits = SurfObj->lDelta * Size.cy;
@@ -174,6 +176,7 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
 
   // Hook up specified functions
   if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Dc->DriverFunctions.BitBlt;
+  if(Hooks & HOOK_TRANSPARENTBLT)    SurfGDI->TransparentBlt	= Dc->DriverFunctions.TransparentBlt;
   if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = Dc->DriverFunctions.StretchBlt;
   if(Hooks & HOOK_TEXTOUT)           SurfGDI->TextOut           = Dc->DriverFunctions.TextOut;
   if(Hooks & HOOK_PAINT)             SurfGDI->Paint             = Dc->DriverFunctions.Paint;

@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.11 2001/03/31 15:35:08 jfilby Exp $
+/* $Id: brush.c,v 1.12 2001/05/02 12:33:42 jfilby Exp $
  */
 
 
@@ -9,28 +9,29 @@
 #include <win32k/brush.h>
 //#include <win32k/debug.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {
   PBRUSHOBJ  brushPtr;
   HBRUSH  hBrush;
-  
+
   brushPtr = BRUSHOBJ_AllocBrush();
   hBrush = BRUSHOBJ_PtrToHandle (brushPtr);
+
   if (hBrush == NULL)
   {
     return 0;
   }
-  
+
+  brushPtr->iSolidColor = lb->lbColor;
   brushPtr->logbrush.lbStyle = lb->lbStyle;
   brushPtr->logbrush.lbColor = lb->lbColor;
   brushPtr->logbrush.lbHatch = lb->lbHatch;
 
   BRUSHOBJ_UnlockBrush (hBrush);
-  DPRINT("%08x\n", hBrush);
-  
+
   return  hBrush;
 }
 

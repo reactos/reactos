@@ -56,7 +56,7 @@ BOOL EngDeletePalette(IN HPALETTE Palette)
   PALGDI *PalGDI;
 
   PalGDI = AccessInternalObject(Palette);
-  PalObj = AccessInternalObject(Palette);
+  PalObj = AccessUserObject(Palette);
 
   EngFreeMem(PalGDI);
   EngFreeMem(PalObj);

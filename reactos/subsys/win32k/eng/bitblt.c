@@ -49,13 +49,13 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   BOOL      EnumMore;
   PSURFGDI  DestGDI, SourceGDI;
   HSURF     hTemp;
-  PSURFOBJ  TempSurf;
+  PSURFOBJ  TempSurf = NULL;
   BOOLEAN   canCopyBits;
   POINTL    TempPoint;
   RECTL     TempRect;
   SIZEL     TempSize;
 
-  SourceGDI = AccessInternalObjectFromUserObject(Source);
+  if(Source != NULL) SourceGDI = AccessInternalObjectFromUserObject(Source);
 
   // If we don't have to do anything special, we can punt to DrvCopyBits
   // if it exists
@@ -75,23 +75,26 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
 
     if (DestGDI->BitBlt!=NULL)
     {
-      // The destination is device managed, therefore get the source into a format compatible surface
-      TempPoint.x = 0;
-      TempPoint.y = 0;
-      TempRect.top    = 0;
-      TempRect.left   = 0;
-      TempRect.bottom = DestRect->bottom - DestRect->top;
-      TempRect.right  = DestRect->right - DestRect->left;
-      TempSize.cx = TempRect.right;
-      TempSize.cy = TempRect.bottom;
+      if (Source!=NULL)
+      {
+        // Get the source into a format compatible surface
+        TempPoint.x = 0;
+        TempPoint.y = 0;
+        TempRect.top    = 0;
+        TempRect.left   = 0;
+        TempRect.bottom = DestRect->bottom - DestRect->top;
+        TempRect.right  = DestRect->right - DestRect->left;
+        TempSize.cx = TempRect.right;
+        TempSize.cy = TempRect.bottom;
 
-      hTemp = EngCreateBitmap(TempSize,
-                   DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
-                   Dest->iBitmapFormat, 0, NULL);
-      TempSurf = AccessUserObject(hTemp);
+        hTemp = EngCreateBitmap(TempSize,
+                     DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
+                     Dest->iBitmapFormat, 0, NULL);
+        TempSurf = AccessUserObject(hTemp);
 
-      // FIXME: Skip creating a TempSurf if we have the same BPP and palette
-      EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);
+        // FIXME: Skip creating a TempSurf if we have the same BPP and palette
+        EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);
+      }
 
       return DestGDI->BitBlt(Dest, TempSurf, Mask, ClipRegion,
                              NULL, DestRect, &TempPoint,

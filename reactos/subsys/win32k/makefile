@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2001/03/31 16:09:17 jfilby Exp $
+# $Id: makefile,v 1.30 2001/05/02 12:33:42 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -7,7 +7,7 @@ PATH_TO_TOP = ../..
 TARGET=win32k
 
 # from atheos appserver makefile
-COPTS   = -pipe -O3 -I./freetype2-beta8/include -c -Wall
+COPTS   = -pipe -O3 -I./freetype/include -c -Wall
 
 CFLAGS = -I.
 
@@ -15,7 +15,7 @@ CFLAGS = -I.
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
-		eng/surface.o eng/xlate.o
+		eng/surface.o eng/xlate.o eng/transblt.o
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o misc/math.o
 LDR_OBJECTS = ldr/loader.o
@@ -27,7 +27,11 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o objects/palette.o
 DIB_OBJECTS = dib/dib4bpp.o dib/dib24bpp.o
-FREETYPE_OBJECTS = freetype/grfont.o
+FREETYPE_OBJECTS = freetype/grfont.o freetype/ctype.o \
+	freetype/ftsystem.o freetype/ftdebug.o freetype/ftinit.o freetype/ftbase.o \
+	freetype/ftglyph.o freetype/ftmm.o freetype/autohint.o freetype/cff.o \
+	freetype/type1cid.o freetype/psnames.o freetype/raster1.o freetype/sfnt.o \
+	freetype/smooth.o freetype/truetype.o freetype/winfnt.o freetype/type1z.o
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 

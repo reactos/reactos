@@ -6,22 +6,38 @@
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
-// #include <freetype/freetype.h>
+#include <freetype/freetype.h>
+
+#include "../eng/objects.h"
 
 // #define NDEBUG
 #include <win32k/debug1.h>
 
-// FT_Library  library;
+FT_Library  library;
+
+typedef struct _FONTTABLE {
+  HFONT hFont;
+  LPCWSTR FaceName;
+} FONTTABLE, *PFONTTABLE;
+
+FONTTABLE FontTable[256];
+INT FontsLoaded = 0;
 
 BOOL InitFontSupport()
 {
-/*  ULONG error;
+  ULONG error;
 
   error = FT_Init_FreeType(&library);
   if(error)
   {
     return FALSE;
-  } else return TRUE; */
+  }
+
+  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\helb____.ttf");
+  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\timr____.ttf");
+
+  DbgPrint("All fonts loaded\n");
+
   return TRUE;
 }
 
@@ -29,7 +45,103 @@ int
 STDCALL
 W32kAddFontResource(LPCWSTR  Filename)
 {
-  UNIMPLEMENTED;
+  HFONT NewFont;
+  PFONTOBJ FontObj;
+  PFONTGDI FontGDI;
+  UNICODE_STRING uFileName;
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  FILE_STANDARD_INFORMATION FileStdInfo;
+  PVOID buffer;
+  ULONG size;
+  INT error;
+  FT_Face face;
+  ANSI_STRING StringA;
+  UNICODE_STRING StringU;
+
+  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEOBJ), NULL);
+  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEGDI), NULL);
+  NewFont = CreateGDIHandle(FontGDI, FontObj);
+
+  RtlCreateUnicodeString(&uFileName, Filename);
+
+  //  Open the Module
+  InitializeObjectAttributes(&ObjectAttributes, &uFileName, 0, NULL, NULL);
+
+  Status = NtOpenFile(&FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, NULL, 0, 0);
+
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Could not open module file: %wZ\n", Filename);
+    return 0;
+  }
+
+  //  Get the size of the file
+  Status = NtQueryInformationFile(FileHandle, NULL, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Could not get file size\n");
+    return 0;
+  }
+
+  //  Allocate nonpageable memory for driver
+  size = FileStdInfo.EndOfFile.u.LowPart;
+  buffer = ExAllocatePool(NonPagedPool, size);
+
+  if (buffer == NULL)
+  {
+    DbgPrint("could not allocate memory for module");
+    return 0;
+  }
+   
+  //  Load driver into memory chunk
+  Status = NtReadFile(FileHandle, 0, 0, 0, 0, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("could not read module file into memory");
+    ExFreePool(buffer);
+    return 0;
+  }
+
+  NtClose(FileHandle);
+
+  error = FT_New_Memory_Face(library, buffer, size, 0, &face);
+  if (error == FT_Err_Unknown_File_Format)
+  {
+    DbgPrint("Unknown font file format\n");
+    return 0;
+  }
+  else if (error)
+  {
+    DbgPrint("Error reading font file (error code: %u)\n", error); // 48
+    return 0;
+  }
+
+  // FontGDI->Filename = Filename; perform strcpy
+  FontGDI->face = face;
+
+  // FIXME: Complete text metrics
+  FontGDI->TextMetric.tmAscent = face->size->metrics.ascender; // units above baseline
+  FontGDI->TextMetric.tmDescent = face->size->metrics.descender; // units below baseline
+  FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
+
+  DbgPrint("Family name: %s\n", face->family_name);
+  DbgPrint("Style name: %s\n", face->style_name);
+  DbgPrint("Num glyphs: %u\n", face->num_glyphs);
+
+  // Add this font resource to the font table
+  FontTable[FontsLoaded].hFont = NewFont;
+  FontTable[FontsLoaded].FaceName = ExAllocatePool(NonPagedPool, (StringU.Length + 1) * 2);
+
+  RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
+  RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+  wcscpy(FontTable[FontsLoaded].FaceName, StringU.Buffer);
+  RtlFreeUnicodeString(&StringU);
+
+  FontsLoaded++;
+
+  return 1;
 }
 
 HFONT
@@ -49,14 +161,53 @@ W32kCreateFont(int  Height,
                       DWORD  PitchAndFamily,
                       LPCWSTR  Face)
 {
-  UNIMPLEMENTED;
+  LOGFONT logfont;
+
+  logfont.lfHeight = Height;
+  logfont.lfWidth = Width;
+  logfont.lfEscapement = Escapement;
+  logfont.lfOrientation = Orientation;
+  logfont.lfWeight = Weight;
+  logfont.lfItalic = Italic;
+  logfont.lfUnderline = Underline;
+  logfont.lfStrikeOut = StrikeOut;
+  logfont.lfCharSet = CharSet;
+  logfont.lfOutPrecision = OutputPrecision;
+  logfont.lfClipPrecision = ClipPrecision;
+  logfont.lfQuality = Quality;
+  logfont.lfPitchAndFamily = PitchAndFamily;
+   
+  if(Face)
+    memcpy(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
+  else 
+    logfont.lfFaceName[0] = '\0';
+
+  return W32kCreateFontIndirect(&logfont);
 }
 
 HFONT
 STDCALL
 W32kCreateFontIndirect(CONST LPLOGFONT  lf)
 {
-  DbgPrint("WARNING: W32kCreateFontIndirect is current unimplemented\n");
+  HFONT hFont = 0;
+  PTEXTOBJ fontPtr;
+
+  if (lf)
+  {
+    if(fontPtr = TEXTOBJ_AllocText())
+    {
+      memcpy(&fontPtr->logfont, lf, sizeof(LOGFONT));
+
+      if (lf->lfEscapement != lf->lfOrientation) {
+        /* this should really depend on whether GM_ADVANCED is set */
+        fontPtr->logfont.lfOrientation = fontPtr->logfont.lfEscapement;
+      }
+      hFont = TEXTOBJ_PtrToHandle(fontPtr);
+      TEXTOBJ_UnlockText(hFont);
+    }
+  }
+
+  return hFont;
 }
 
 BOOL
@@ -268,7 +419,42 @@ W32kGetTextExtentPoint(HDC  hDC,
                              int  Count,
                              LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+  PDC dc = AccessUserObject(hDC);
+  PFONTGDI FontGDI;
+  FT_Face face;
+  FT_GlyphSlot glyph;
+  INT error, pitch, glyph_index, i;
+  ULONG TotalWidth = 0, MaxHeight = 0, CurrentChar = 0, SpaceBetweenChars = 5;
+
+  FontGDI = AccessInternalObject(dc->w.hFont);
+
+  for(i=0; i<Count; i++)
+  {
+    glyph_index = FT_Get_Char_Index(face, *String);
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    if(error) DbgPrint("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+    glyph = face->glyph;
+
+    if (glyph->format == ft_glyph_format_outline)
+    {
+      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+      if(error) DbgPrint("WARNING: Failed to render glyph!\n");
+      pitch = glyph->bitmap.pitch;
+    } else {
+      pitch = glyph->bitmap.width;
+    }
+
+    TotalWidth += pitch-1;
+    if((glyph->bitmap.rows-1) > MaxHeight) MaxHeight = glyph->bitmap.rows-1;
+
+    CurrentChar++;
+
+    if(CurrentChar < Size) TotalWidth += SpaceBetweenChars;
+    String++;
+  }
+
+  Size->cx = TotalWidth;
+  Size->cy = MaxHeight;
 }
 
 BOOL
@@ -295,7 +481,13 @@ STDCALL
 W32kGetTextMetrics(HDC  hDC,
                          LPTEXTMETRIC  tm)
 {
-  UNIMPLEMENTED;
+  PDC dc = AccessUserObject(hDC);
+  PFONTGDI FontGDI;
+
+  FontGDI = AccessInternalObject(dc->w.hFont);
+  memcpy(tm, &FontGDI->TextMetric, sizeof(TEXTMETRIC));
+
+  return TRUE;
 }
 
 BOOL
@@ -357,6 +549,7 @@ W32kSetTextColor(HDC hDC,
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
+
   DC_UnlockDC(hDC);
 
   return  oldColor;
@@ -379,104 +572,55 @@ W32kTextOut(HDC  hDC,
                   LPCWSTR  String,
                   int  Count)
 {
-  UNIMPLEMENTED;
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
-/*
+
   DC *dc = DC_HandleToPtr(hDC);
   SURFOBJ *SurfObj = AccessUserObject(dc->Surface);
-  UNICODE_STRING FileName;
-  int error, glyph_index, n, load_flags = FT_LOAD_RENDER, i, j;
+  int error, glyph_index, n, load_flags = FT_LOAD_RENDER, i, j, sx, sy, scc;
   FT_Face face;
   FT_GlyphSlot glyph;
-  NTSTATUS Status;
-  HANDLE FileHandle;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  FILE_STANDARD_INFORMATION FileStdInfo;
-  PVOID buffer;
-  ULONG size, TextLeft = XStart, TextTop = YStart, SpaceBetweenChars = 5, StringLength;
-  FT_Vector origin;
-  FT_Bitmap bit, bit2, bit3;
-  POINTL SourcePoint;
-  RECTL DestRect;
+  ULONG TextLeft = XStart, TextTop = YStart, SpaceBetweenChars = 2, pitch, previous;
+  FT_Bool use_kerning;
+  RECTL DestRect, MaskRect;
+  POINTL SourcePoint, BrushOrigin;
+  HBRUSH hBrush;
+  PBRUSHOBJ Brush;
   HBITMAP HSourceGlyph;
   PSURFOBJ SourceGlyphSurf;
   SIZEL bitSize;
-  FT_CharMap found = 0;
-  FT_CharMap charmap;
-  PCHAR bitbuf;
+  FT_CharMap found = 0, charmap;
+  INT yoff;
+  HFONT hFont = 0;
+  PFONTOBJ FontObj;
+  PFONTGDI FontGDI;
+  PTEXTOBJ TextObj;
+  PPALGDI PalDestGDI;
+  PXLATEOBJ XlateObj;
 
-  // For now we're just going to use an internal font
-//  grWriteCellString(SurfObj, XStart, YStart, AString->Buffer, 0xffffff);
+  TextObj = TEXTOBJ_HandleToPtr(dc->w.hFont);
 
-  //  Prepare the Unicode FileName
-  RtlCreateUnicodeString(&FileName, L"\\SystemRoot\\fonts\\arial.ttf");
-
-  //  Open the Module
-  InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
-
-  Status = NtOpenFile(&FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, NULL, 0, 0);
-
-  if (!NT_SUCCESS(Status))
+  for(i=0; i<FontsLoaded; i++)
   {
-    DbgPrint("Could not open module file: %wZ\n", L"c:/reactos/fonts/arial.ttf");
-    return  0;
+    if(wcscmp(FontTable[i].FaceName, (LPSTR)TextObj->logfont.lfFaceName) == 0)
+     hFont = FontTable[i].hFont;
   }
 
-  //  Get the size of the file
-  Status = NtQueryInformationFile(FileHandle, NULL, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
-  if (!NT_SUCCESS(Status))
+  if(hFont == 0)
   {
-    DbgPrint("Could not get file size\n");
-    return  0;
+    DbgPrint("Specified font %s is not loaded\n", TextObj->logfont.lfFaceName);
+    return FALSE;
   }
 
-  //  Allocate nonpageable memory for driver
-  size = FileStdInfo.EndOfFile.u.LowPart;
-  buffer = ExAllocatePool(NonPagedPool, size);
-
-  if (buffer == NULL)
-  {
-    DbgPrint("could not allocate memory for module");
-    return  0;
-  }
-   
-  //  Load driver into memory chunk
-  Status = NtReadFile(FileHandle, 0, 0, 0, 0, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
-  if (!NT_SUCCESS(Status))
-  {
-    DbgPrint("could not read module file into memory");
-    ExFreePool(buffer);
-
-    return  0;
-  }
-
-  NtClose(FileHandle);
-
-  error = FT_New_Memory_Face(library,
-                             buffer,    // first byte in memory
-                             size,      // size in bytes
-                             0,         // face_index
-                             &face );
-  if ( error == FT_Err_Unknown_File_Format )
-  {
-    DbgPrint("Unknown font file format\n");
-  }
-  else if ( error )
-  {
-    DbgPrint("Error reading font file\n");
-  }
-
-  DbgPrint("Family name: %s\n", face->family_name);
-  DbgPrint("Style name: %s\n", face->style_name);
-  DbgPrint("Num glyphs: %u\n", face->num_glyphs);
-  DbgPrint("Height: %d\n", face->height);
+  FontObj = AccessUserObject(hFont);
+  FontGDI = AccessInternalObject(hFont);
+  face = FontGDI->face;
 
   if (face->charmap == NULL)
   {
     DbgPrint("WARNING: No charmap selected!\n");
     DbgPrint("This font face has %d charmaps\n", face->num_charmaps);
 
-    for ( n = 0; n < face->num_charmaps; n++ )
+    for (n = 0; n < face->num_charmaps; n++)
     {
       charmap = face->charmaps[n];
       DbgPrint("found charmap encoding: %u\n", charmap->encoding);
@@ -486,70 +630,97 @@ W32kTextOut(HDC  hDC,
         break;
       }
     }
+    if (!found) DbgPrint("WARNING: Could not find desired charmap!\n");
+    error = FT_Set_Charmap(face, found);
+    if (error) DbgPrint("WARNING: Could not set the charmap!\n");
   }
-  if (!found) DbgPrint("WARNING: Could not find desired charmap!\n");
-                 
-  error = FT_Set_Charmap(face, found);
-  if (error) DbgPrint("WARNING: Could not set the charmap!\n");
 
-  error = FT_Set_Char_Size(
-              face,    // handle to face object
-              16*64,   // char_width in 1/64th of points
-              16*64,   // char_height in 1/64th of points
-              300,     // horizontal device resolution
-              300 );   // vertical device resolution
+  error = FT_Set_Pixel_Sizes(face, TextObj->logfont.lfHeight, TextObj->logfont.lfWidth);
+  if(error) {
+    DbgPrint("Error in setting pixel sizes: %u\n", error);
+    return FALSE;
+  }
 
-  StringLength = wcslen(String);
-  DbgPrint("StringLength: %u\n", StringLength);
+  // Create the brush
+  PalDestGDI = AccessInternalObject(dc->w.hPalette);
+  XlateObj = EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+  hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
+  Brush = BRUSHOBJ_HandleToPtr(hBrush);
+  EngDeleteXlate(XlateObj);
 
-  for(i=0; i<StringLength; i++)
+  SourcePoint.x = 0;
+  SourcePoint.y = 0;
+  MaskRect.left = 0;
+  MaskRect.top = 0;
+  BrushOrigin.x = 0;
+  BrushOrigin.y = 0;
+
+  // Do we use the current TEXTOBJ's logfont.lfOrientation or the DC's textAlign?
+  if (dc->w.textAlign & TA_BASELINE) {
+    yoff = 0;
+  } else if (dc->w.textAlign & TA_BOTTOM) {
+    yoff = -face->size->metrics.descender / 64;
+  } else { // TA_TOP
+    yoff = face->size->metrics.ascender / 64;
+  }
+
+  use_kerning = FT_HAS_KERNING(face);
+  previous = 0;
+
+  for(i=0; i<Count; i++)
   {
     glyph_index = FT_Get_Char_Index(face, *String);
-
-    error = FT_Load_Glyph( 
-              face,			// handle to face object
-              glyph_index,		// glyph index
-              FT_LOAD_DEFAULT );	// load flags (erase previous glyph)
-    if(error) DbgPrint("WARNING: Failed to load and render glyph!\n");
-
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    if(error) {
+      DbgPrint("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+      return FALSE;
+    }
     glyph = face->glyph;
 
-    if ( glyph->format == ft_glyph_format_outline )
+    // retrieve kerning distance and move pen position
+    if (use_kerning && previous && glyph_index)
     {
-      DbgPrint("Outline Format Font\n");
-      error = FT_Render_Glyph( glyph, ft_render_mode_normal );
-      if(error) DbgPrint("WARNING: Failed to render glyph!\n");
-    } else {
-      DbgPrint("Bitmap Format Font\n");
-      bit3.rows   = glyph->bitmap.rows;
-      bit3.width  = glyph->bitmap.width;
-      bit3.pitch  = glyph->bitmap.pitch;
-      bit3.buffer = glyph->bitmap.buffer;
+      FT_Vector delta;
+      FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+      TextLeft += delta.x >> 6;
     }
 
-    SourcePoint.x	= 0;
-    SourcePoint.y	= 0;
-    DestRect.left	= TextLeft;
-    DestRect.top	= TextTop;
-    DestRect.right	= TextLeft + glyph->bitmap.width-1;
-    DestRect.bottom	= TextTop  + glyph->bitmap.rows-1;
-    bitSize.cx		= glyph->bitmap.width-1;
-    bitSize.cy		= glyph->bitmap.rows-1;
+    if (glyph->format == ft_glyph_format_outline)
+    {
+      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+      if(error) {
+        DbgPrint("WARNING: Failed to render glyph!\n");
+        return FALSE;
+      }
+      pitch = glyph->bitmap.pitch;
+    } else {
+      pitch = glyph->bitmap.width;
+    }
 
-    HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch, BMF_8BPP, 0, glyph->bitmap.buffer);
+    DestRect.left = TextLeft;
+    DestRect.top = TextTop + yoff - glyph->bitmap_top;
+    DestRect.right = TextLeft + glyph->bitmap.width;
+    DestRect.bottom = DestRect.top + glyph->bitmap.rows;
+    bitSize.cx = pitch-1;
+    bitSize.cy = glyph->bitmap.rows-1;
+    MaskRect.right = glyph->bitmap.width;
+    MaskRect.bottom = glyph->bitmap.rows;
+
+    // We should create the bitmap out of the loop at the biggest possible glyph size
+    // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
+    HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = AccessUserObject(HSourceGlyph);
 
-    EngBitBlt(SurfObj, SourceGlyphSurf,
-              NULL, NULL, NULL, &DestRect, &SourcePoint, NULL, NULL, NULL, NULL);
+    // Use the font data as a mask to paint onto the DCs surface using a brush
+    EngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
 
-    TextLeft += glyph->bitmap.width + SpaceBetweenChars;
+    EngDeleteSurface(HSourceGlyph);
+
+    TextLeft += glyph->advance.x >> 6;
+    previous = glyph_index;
+
     String++;
   }
-
-DbgPrint("BREAK\n"); for (;;) ;
-*/
-/*  RtlFreeAnsiString(AString);
-    RtlFreeUnicodeString(UString); */
 }
 
 UINT

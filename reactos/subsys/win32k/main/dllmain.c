@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.18 2001/03/31 15:35:08 jfilby Exp $
+/* $Id: dllmain.c,v 1.19 2001/05/02 12:33:42 jfilby Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -52,6 +52,8 @@ BOOLEAN
 STDCALL
 W32kInitialize (VOID)
 {
+  DbgPrint("W32kInitialize\n");
+
   // FIXME: Retrieve name from registry
   EngLoadImage(L"\\SystemRoot\\system32\\drivers\\vidport.sys");
 

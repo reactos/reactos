@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.17 2001/04/15 22:08:23 narnaoud Exp $
+/* $Id: driver.c,v 1.18 2001/05/02 12:33:42 jfilby Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -107,6 +107,7 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
       DF->StrokeAndFillPath = (PGD_STROKEANDFILLPATH)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvPaint)           DF->Paint = (PGD_PAINT)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvBitBlt)          DF->BitBlt = (PGD_BITBLT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvTransparentBlt)  DF->TransparentBlt = (PGD_TRANSPARENTBLT)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvCopyBits)        DF->CopyBits = (PGD_COPYBITS)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvStretchBlt)      DF->StretchBlt = (PGD_STRETCHBLT)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvSetPalette)      DF->SetPalette = (PGD_SETPALETTE)DED->pdrvfn[i].pfn;
