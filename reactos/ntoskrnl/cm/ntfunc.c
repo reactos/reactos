@@ -69,6 +69,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
 	{
 	  ObDereferenceObject(Object);
+	  RtlFreeUnicodeString(&RemainingPath);
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -83,6 +84,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
       DPRINT("Status %x\n", Status);
       ObDereferenceObject(Object);
+      RtlFreeUnicodeString(&RemainingPath);
       return Status;
     }
 
@@ -96,6 +98,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (End != NULL)
     {
       ObDereferenceObject(Object);
+      RtlFreeUnicodeString(&RemainingPath);
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -124,6 +127,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(KeyObject);
+      RtlFreeUnicodeString(&RemainingPath);
       return(Status);
     }
 
@@ -159,11 +163,20 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       ObDereferenceObject(Object);
+      RtlFreeUnicodeString(&RemainingPath);
       return STATUS_UNSUCCESSFUL;
     }
 
-  RtlCreateUnicodeString(&KeyObject->Name,
-			 Start);
+  if (Start == RemainingPath.Buffer)
+    {
+      KeyObject->Name = RemainingPath;
+    }
+  else
+    {
+      RtlCreateUnicodeString(&KeyObject->Name,
+			     Start);
+      RtlFreeUnicodeString(&RemainingPath);
+    }
 
   if (KeyObject->RegistryHive == KeyObject->ParentKey->RegistryHive)
     {
@@ -847,8 +860,11 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
     {
       ObDereferenceObject(Object);
+      RtlFreeUnicodeString(&RemainingPath);
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
+
+  RtlFreeUnicodeString(&RemainingPath);
 
   /* Fail if the key has been deleted */
   if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
