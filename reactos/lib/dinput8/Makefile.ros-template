@@ -1,0 +1,28 @@
+# $Id: Makefile.ros-template,v 1.1 2004/11/29 00:14:14 greatlrd Exp $
+
+TARGET_NAME = dinput8
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
+
+TARGET_SDKLIBS = libwine.a @IMPORTS@ ole32.a wine_uuid.a ntdll.a  winmm.a dxguid.a
+
+
+
+TARGET_RC_SRCS = @RC_SRCS@
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+default: all
+
+authors.c:
+ifeq ($(HOST),mingw32-linux)
+	echo 'const char * const SHELL_Authors[] = { "WINE team", "ReactOS team", 0 };' > authors.c
+else
+	echo const char * const SHELL_Authors[] = { "WINE team", "ReactOS team", 0 }; > authors.c
+endif
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk
