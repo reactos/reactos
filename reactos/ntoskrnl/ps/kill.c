@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.66 2003/11/02 01:16:21 ekohl Exp $
+/* $Id: kill.c,v 1.67 2003/11/02 03:09:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -158,18 +158,17 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PKTHREAD Thread;
    PLIST_ENTRY current_entry;
    PKMUTANT Mutant;
-   
 
-   DPRINT("terminating %x\n",CurrentThread);
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 
    CurrentThread = PsGetCurrentThread();
-   
+   DPRINT("terminating %x\n",CurrentThread);
+
    CurrentThread->ExitStatus = ExitStatus;
    Thread = KeGetCurrentThread();
    KeCancelTimer(&Thread->Timer);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-   
+
    /* abandon all owned mutants */
    current_entry = Thread->MutantListHead.Flink;
    while (current_entry != &Thread->MutantListHead)
@@ -183,12 +182,12 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 	current_entry = Thread->MutantListHead.Flink;
      }
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   
-   KeAcquireDispatcherDatabaseLockAtDpcLevel();
+   oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
-   KeReleaseDispatcherDatabaseLockFromDpcLevel ();
+   KeReleaseDispatcherDatabaseLock (oldIrql);
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 
    ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
    KeRemoveAllWaitsThread (CurrentThread, STATUS_UNSUCCESSFUL, FALSE);
