@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.40 2000/07/05 18:07:08 ekohl Exp $
+/* $Id: shell.c,v 1.41 2000/07/11 04:40:00 phreak Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -148,7 +148,8 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
    memset(&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof (STARTUPINFO);
    StartupInfo.lpTitle = name;
-
+   // set mode to default for new process
+   SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
    ret = CreateProcessA(fullname,
 			cmdline,
 			NULL,
@@ -197,6 +198,8 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 	     CloseHandle(ProcessInformation.hThread);
 	  }
      }
+   // reset mode
+   SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), 0 );
    return(ret);
 }
 
@@ -466,6 +469,12 @@ int main(void)
    static char line[255];
    
    AllocConsole();
+   // clear line buffered mode
+   if( !SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), 0 ) )
+     {
+       debug_printf( "Error: could not set console mode, error: %d\n", GetLastError() );
+       return GetLastError();
+     }
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
