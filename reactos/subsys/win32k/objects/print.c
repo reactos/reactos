@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.14 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: print.c,v 1.15 2004/03/01 19:25:33 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -25,6 +25,7 @@
 #include <win32k/dc.h>
 #include <include/error.h>
 #include <include/tags.h>
+#include <include/object.h>
 #include <internal/safe.h>
 
 #define NDEBUG
@@ -86,10 +87,12 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
+   PSURFOBJ Surface = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+
    if ( NULL == dc->DriverFunctions.Escape )
    {
       return IntEngExtEscape(
-         dc->Surface,
+         Surface,
          Escape,
          InSize,
          (PVOID)InData,
@@ -99,7 +102,7 @@ IntGdiExtEscape(
    else
    {
       return dc->DriverFunctions.Escape(
-         dc->Surface,
+         Surface,
          Escape,
          InSize,
          (PVOID)InData,
