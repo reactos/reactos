@@ -17,6 +17,39 @@ LIST_ENTRY SleepingThreadsList;
 FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
 
+PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
+    PCONNECTION_ENDPOINT Connection = 
+	ExAllocatePool(NonPagedPool, sizeof(CONNECTION_ENDPOINT));
+    if (!Connection)
+	return Connection;
+    
+    TI_DbgPrint(DEBUG_CPOINT, ("Connection point file object allocated at (0x%X).\n", Connection));
+    
+    RtlZeroMemory(Connection, sizeof(CONNECTION_ENDPOINT));
+    
+    /* Initialize spin lock that protects the connection endpoint file object */
+    KeInitializeSpinLock(&Connection->Lock);
+    InitializeListHead(&Connection->ConnectRequest);
+    InitializeListHead(&Connection->ListenRequest);
+    InitializeListHead(&Connection->ReceiveRequest);
+    
+    /* Reference the object */
+    Connection->RefCount = 1;
+    
+    /* Save client context pointer */
+    Connection->ClientContext = ClientContext;
+    
+    /* Initialize received segments queue */
+    InitializeListHead(&Connection->ReceivedSegments);
+    
+    return Connection;
+}
+
+VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
+    /* XXX Cancel all pending requests */
+    ExFreePool( Connection );
+}
+
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection, 
 		    UINT Family, UINT Type, UINT Proto ) {
     NTSTATUS Status;
@@ -165,10 +198,9 @@ NTSTATUS TCPTranslateError( int OskitError ) {
 
 #if 0
 NTSTATUS TCPBind
-( PTDI_REQUEST Request,
+( PCONNECTION_ENDPOINT Connection,
   PTDI_CONNECTION_INFORMATION ConnInfo ) {
     NTSTATUS Status;
-    PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
     SOCKADDR_IN AddressToConnect;
     PIP_ADDRESS LocalAddress;
     USHORT LocalPort;
@@ -198,12 +230,13 @@ NTSTATUS TCPBind
 #endif
 
 NTSTATUS TCPConnect
-( PTDI_REQUEST Request,
+( PCONNECTION_ENDPOINT Connection,
   PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo ) {
+  PTDI_CONNECTION_INFORMATION ReturnInfo,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context ) {
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
-    PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
     PIP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     PTDI_BUCKET Bucket;
@@ -216,7 +249,9 @@ NTSTATUS TCPConnect
     RecursiveMutexEnter( &TCPLock, TRUE );
 
     /* Freed in TCPSocketState */
-    Bucket->Request = *Request;
+    Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+    Bucket->Request.RequestContext = Context;
+
     InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
 
     Status = AddrBuildAddress
@@ -277,12 +312,11 @@ NTSTATUS TCPClose
 }
 
 NTSTATUS TCPListen
-( PTDI_REQUEST Request,
-  UINT Backlog ) {
-    PCONNECTION_ENDPOINT Connection;
-    NTSTATUS Status;
-
-    Connection = Request->Handle.ConnectionContext;
+( PCONNECTION_ENDPOINT Connection,
+  UINT Backlog, 
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context) {
+   NTSTATUS Status;
 
     RecursiveMutexEnter( &TCPLock, TRUE );
 
@@ -301,20 +335,19 @@ NTSTATUS TCPAccept
 }
 
 NTSTATUS TCPReceiveData
-( PTDI_REQUEST Request,
+( PCONNECTION_ENDPOINT Connection,
   PNDIS_BUFFER Buffer,
   ULONG ReceiveLength,
   ULONG ReceiveFlags,
-  PULONG BytesReceived ) {
-    PCONNECTION_ENDPOINT Connection;
+  PULONG BytesReceived,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context ) {
     PCHAR DataBuffer;
     UINT DataLen, Received = 0;
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
 
     TI_DbgPrint(MID_TRACE,("Called for %d bytes\n", ReceiveLength));
-
-    Connection = Request->Handle.ConnectionContext;
 
     RecursiveMutexEnter( &TCPLock, TRUE );
 
@@ -342,7 +375,8 @@ NTSTATUS TCPReceiveData
 	    return STATUS_NO_MEMORY;
 	}
 	
-	Bucket->Request = *Request;
+	Bucket->Request.RequestNotifyObject = Complete;
+	Bucket->Request.RequestContext = Context;
 	*BytesReceived = 0;
 	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
 	Status = STATUS_PENDING;
@@ -360,17 +394,14 @@ NTSTATUS TCPReceiveData
 }
 
 NTSTATUS TCPSendData
-( PTDI_REQUEST Request,
+( PCONNECTION_ENDPOINT Connection,
   PNDIS_BUFFER Buffer,
   ULONG DataSize,
   ULONG Flags,
-  PULONG DataUsed ) {
+  PULONG DataUsed) {
     NTSTATUS Status;
-    PCONNECTION_ENDPOINT Connection;
     PCHAR BufferData;
     ULONG PacketSize;
-
-    Connection = Request->Handle.ConnectionContext;
 
     RecursiveMutexEnter( &TCPLock, TRUE );
 
