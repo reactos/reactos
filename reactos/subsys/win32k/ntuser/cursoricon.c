@@ -411,7 +411,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   HBITMAP bmpMask, bmpColor;
   BOOLEAN Ret;
   PLIST_ENTRY Search;
-  PCURICON_PROCESS Current;
+  PCURICON_PROCESS Current = NULL;
   PW32PROCESS W32Process = PsGetWin32Process();
 
   ExAcquireFastMutex(&Object->Lock);
