@@ -72,6 +72,10 @@ KdbEnableProfiling();
 VOID
 KdbProfileInterrupt(ULONG_PTR Eip);
 
+VOID
+KdbModuleLoaded(IN PUNICODE_STRING Name);
+
+
 struct KDB_BPINFO {
     DWORD Addr;
     DWORD Type;

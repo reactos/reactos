@@ -50,6 +50,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
   DPRINT("KiDispatchException() called\n");
 
+
   /* PCR->KeExceptionDispatchCount++; */
 
   if (Context == NULL)
@@ -95,8 +96,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      NTSTATUS StatusOfCopy;
 
 #ifdef KDBG
-	      KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
-					 Context, Tf, FALSE);
+	      Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
+	                                          Context, Tf, FALSE);
+              if (Action == kdContinue)
+                {
+                  return;
+                }
 #endif
 
 	      /* FIXME: Forward exception to user mode debugger */
@@ -141,8 +146,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	  /* FIXME: Forward the exception to the process exception port */
 
 #ifdef KDBG
-	  KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
-				     Context, Tf, TRUE);
+	  Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
+	                                      Context, Tf, TRUE);
+          if (Action == kdContinue)
+            {
+              return;
+            }
 #endif
 
 	  /* Terminate the offending thread */
@@ -153,8 +162,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	{
 	  /* PreviousMode == KernelMode */
 #ifdef KDBG
-	  KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
-				     Context, Tf, FALSE);
+	  Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
+	                                      Context, Tf, FALSE);
+          if (Action == kdContinue)
+            {
+              return;
+            }
 #endif
 
 	  Value = RtlpDispatchException (ExceptionRecord, Context);
