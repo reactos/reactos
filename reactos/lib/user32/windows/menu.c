@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.30 2003/08/27 22:58:12 weiden Exp $
+/* $Id: menu.c,v 1.31 2003/08/28 10:39:44 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -311,17 +311,165 @@ MenuGetMenuBarHeight(HWND hWnd, ULONG MenuBarWidth, LONG OrgX, LONG OrgY)
   return(GetSystemMetrics(SM_CYMENU));
 }
 
+static BOOL
+MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWSTR str)
+{
+  BOOL res = FALSE;
+  MEASUREITEMSTRUCT mis;
+  SIZE sz;
+  
+  if(mii->fType & MFT_OWNERDRAW)
+  {
+    /* send WM_MEASUREITEM message to window */
+    mis.CtlType = ODT_MENU;
+    mis.CtlID = 0;
+    mis.itemID = mii->wID;
+    mis.itemWidth = 0;
+    mis.itemHeight = 0;
+    mis.itemData = mii->dwItemData;
+    res = (BOOL)SendMessageW(hWnd, WM_MEASUREITEM, 0, (LPARAM)&mis);
+    if(res)
+    {
+      mir->right = mir->left + mis.itemWidth;
+      mir->bottom = mir->top + mis.itemHeight;
+    }
+    else
+    {
+      /* FIXME calculate size internally assuming the menu item is empty */
+      mir->right = mir->left + 1;
+      mir->bottom = mir->top + 1;
+    }
+    return res;
+  }
+  else
+  {
+    GetTextExtentPoint32W(hDC, str, mii->cch, &sz);
+    /* FIXME calculate the size of the menu item */
+    mir->right = mir->left + sz.cx + 6;
+    mir->bottom = mir->top + max(sz.cy, GetSystemMetrics(SM_CYMENU));
+    return TRUE;
+  }
+}
+
+static BOOL
+DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWSTR str)
+{
+  BOOL res = FALSE;
+  DRAWITEMSTRUCT dis;
+  
+  if(mii->fType & MFT_OWNERDRAW)
+  {
+    /* send WM_DRAWITEM message to window */
+    dis.CtlType = ODT_MENU;
+    dis.CtlID = 0;
+    dis.itemID = mii->wID;
+    dis.itemAction = ODA_DRAWENTIRE; /* FIXME */
+    dis.itemState = 0; /* FIXME */
+    dis.hwndItem = (HWND)mnu;
+    dis.hDC = hDC;
+    RtlCopyMemory(&dis.rcItem, mir, sizeof(RECT));
+    dis.itemData = mii->dwItemData;
+    res = (BOOL)SendMessageW(hWnd, WM_DRAWITEM, 0, (LPARAM)&dis);
+    return res;
+  }
+  else
+  {
+    /* FIXME draw the menu item */
+    SetTextColor(hDC, COLOR_MENUTEXT);
+    DrawTextW(hDC, str, -1, mir, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+  }
+  return res;
+}
+
 
 UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
 {
-  /* FIXME cache menu bar items using NtUserDrawMenuBarTemp() */
+  UINT height;
+  HMENU mnu;
+  HANDLE hHeap;
+  PVOID Buf, hBuf;
+  DWORD BufSize, Items, Items2;
+  MENUITEMINFOW *mii;
+  RECT *omir, *mir = NULL;
+  LPWSTR str;
+  
+  height = Rect->bottom - Rect->top;
+  mnu = GetMenu(hWnd); /* Fixme - pass menu handle as parameter */
+  /* get menu item list size */
+  BufSize = NtUserBuildMenuItemList(mnu, (VOID*)1, 0, 0);
+  if(BufSize)
+  {
+    /* FIXME cache menu bar items using NtUserDrawMenuBarTemp() 
+             instead of allocating and deallocating memory everytime */
 
-  /* FIXME select menu font first */
-  SetTextColor(hDC, COLOR_MENUTEXT);
-  DrawTextW(hDC, L"FIXME: Draw Menubar", -1, Rect, DT_SINGLELINE | DT_VCENTER);
+    hHeap = GetProcessHeap();
+    hBuf = HeapAlloc(hHeap, 0, BufSize);
+    if(!hBuf)
+      return(Rect->bottom - Rect->top);
+    Buf = hBuf;
+    /* copy menu items into buffer */
+    Items = Items2 = NtUserBuildMenuItemList(mnu, Buf, BufSize, 0);
+    
+    /* calculate menu item rectangles */
+    while(Items > 0)
+    {
+      omir = mir;
+      mii = (LPMENUITEMINFOW)Buf;
+      Buf += sizeof(MENUITEMINFOW);
+      mir = (LPRECT)Buf;
+      Buf += sizeof(RECT);
+      if(mii->cch)
+      {
+        str = (LPWSTR)Buf;
+        Buf += (mii->cch + 1) * sizeof(WCHAR);
+      }
+      else
+        str = NULL;
+      if(omir)
+      {
+        mir->left = omir->right + 1;
+        mir->top = omir->top;
+        mir->right += mir->left;
+        mir->bottom += mir->top;
+      }
+      else
+      {
+        mir->left = Rect->left;
+        mir->top = Rect->top;
+      }
+      MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
+      
+      height = max(height, mir->top + mir->bottom);
+      /* DbgPrint("Measure menu item %ws: (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
+      Items--;
+    }
+    height = max(height, GetSystemMetrics(SM_CYMENU));
+    
+    Buf = hBuf;
+    /* draw menu items */
+    while (Items2 > 0)
+    {
+      mii = (LPMENUITEMINFOW)Buf;
+      Buf += sizeof(MENUITEMINFOW);
+      mir = (LPRECT)Buf;
+      Buf += sizeof(RECT);
+      if(mii->cch)
+      {
+        str = (LPWSTR)Buf;
+        Buf += (mii->cch + 1) * sizeof(WCHAR);
+      }
+      else
+        str = NULL;
+      /* DbgPrint("Draw menu item %ws at (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
+      DrawMenuItem(hWnd, mnu, hDC, mii, mir, str);
+      Items2--;
+    }
+    
+    HeapFree(hHeap, 0, hBuf);
+  }
 
-  return(Rect->bottom - Rect->top);
+  return height;
 }
 
 

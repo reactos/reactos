@@ -26,6 +26,7 @@ typedef struct _MENU_ITEM
   ULONG_PTR dwItemData;
   UNICODE_STRING Text;
   HBITMAP hbmpItem;
+  RECT Rect;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
@@ -116,7 +117,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFOW* lpmiil,
+ PVOID Buffer,
  ULONG nBufSize,
  DWORD Reserved);
 

@@ -89,7 +89,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFOW* lpmiil,
+ PVOID Buffer,
  ULONG nBufSize,
  DWORD Reserved);
 

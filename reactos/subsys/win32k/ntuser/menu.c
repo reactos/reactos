@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.28 2003/08/27 22:58:12 weiden Exp $
+/* $Id: menu.c,v 1.29 2003/08/28 10:39:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -778,22 +778,67 @@ IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable)
   return res;
 }
 
-/*
+
 DWORD FASTCALL
-IntBuildMenuItemList(PMENU_OBJECT MenuObject, MENUITEMINFOW *lpmiil, ULONG nMax)
+IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
 {
-  DWORD Index = 0;
+  DWORD res = 0;
+  UINT sz;
+  MENUITEMINFOW mii;
+  PVOID Buf;
   PMENU_ITEM CurItem = MenuObject->MenuItemList;
-  while(CurItem && (nMax > 0))
+  if(nMax)
   {
-    memcpy(&lpmiil[Index], &CurItem->MenuItem, sizeof(MENUITEMINFOW));
-    CurItem = CurItem->Next;
-    Index++;
-    nMax--;
+    sz = sizeof(MENUITEMINFOW) + sizeof(RECT);
+    Buf = Buffer;
+    mii.cbSize = sz;
+    mii.fMask = 0;
+    while(CurItem && (nMax >= sz))
+    {
+      mii.cch = CurItem->Text.Length / sizeof(WCHAR);
+      mii.dwItemData = CurItem->dwItemData;
+      if(CurItem->Text.Length)
+        mii.dwTypeData = NULL;
+      else
+        mii.dwTypeData = (LPWSTR)CurItem->Text.Buffer;
+      mii.fState = CurItem->fState;
+      mii.fType = CurItem->fType;
+      mii.hbmpChecked = CurItem->hbmpChecked;
+      mii.hbmpItem = CurItem->hbmpItem;
+      mii.hbmpUnchecked = CurItem->hbmpUnchecked;
+      mii.hSubMenu = CurItem->hSubMenu;
+      RtlCopyMemory(Buf, &mii, sizeof(MENUITEMINFOW));
+      Buf += sizeof(MENUITEMINFOW);
+      RtlCopyMemory(Buf, &CurItem->Rect, sizeof(RECT));
+      Buf += sizeof(RECT);      
+      nMax -= sz;
+      
+      if(CurItem->Text.Length && (nMax >= CurItem->Text.Length + sizeof(WCHAR)))
+      {
+        /* copy string */
+        RtlCopyMemory(Buf, (LPWSTR)CurItem->Text.Buffer, CurItem->Text.Length);
+        Buf += CurItem->Text.Length + sizeof(WCHAR);
+        nMax -= CurItem->Text.Length + sizeof(WCHAR);
+      }
+      else
+        break;
+
+      CurItem = CurItem->Next;
+      res++;
+    }
   }
-  return Index;
+  else
+  {
+    while(CurItem)
+    {
+      res += sizeof(MENUITEMINFOW) + sizeof(RECT);
+      res += CurItem->Text.Length + sizeof(WCHAR);
+      CurItem = CurItem->Next;
+    }
+  }
+  return res;
 }
-*/
+
 
 DWORD FASTCALL
 IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
@@ -1009,7 +1054,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFOW* lpmiil,
+ VOID* Buffer,
  ULONG nBufSize,
  DWORD Reserved)
 {
@@ -1021,14 +1066,11 @@ NtUserBuildMenuItemList(
     return (DWORD)-1;
   }
   
-  if(lpmiil)
+  if(Buffer)
   {
-    /* FIXME need to pass the menu strings to user32 somehow....
-    
     ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
-    res = IntBuildMenuItemList(MenuObject, lpmiil, nBufSize / sizeof(LPCMENUITEMINFO));
+    res = IntBuildMenuItemList(MenuObject, Buffer, nBufSize);
     ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
-    */
   }
   else
   {
