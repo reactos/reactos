@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: computername.c,v 1.5 2004/02/15 07:03:56 arty Exp $
+/* $Id: computername.c,v 1.6 2004/02/15 07:07:11 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -95,8 +95,6 @@ static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
 	return FALSE;
     }
     
-    DbgPrint("*nSize = %d, KeyInfo->DataLength = %d\n", 
-	     *nSize, KeyInfo->DataLength);
     if( *nSize > (KeyInfo->DataLength / sizeof(WCHAR)) ) {
 	*nSize = KeyInfo->DataLength / sizeof(WCHAR);
 	lpBuffer[*nSize] = 0;
@@ -236,8 +234,6 @@ GetComputerNameExA (
 	UnicodeString.Length = *nSize * sizeof(WCHAR);
 	UnicodeString.Buffer = TempBuffer;
 	
-	DbgPrint("GetComputerNameExW Result: %wZ\n", &UnicodeString);
-
 	RtlUnicodeStringToAnsiString (&AnsiString,
 				      &UnicodeString,
 				      FALSE);
