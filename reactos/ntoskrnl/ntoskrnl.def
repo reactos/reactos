@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.128 2002/02/20 20:16:49 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.129 2002/02/22 17:57:57 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -554,14 +554,14 @@ NtVdmControl@8
 NtW32Call@20
 NtWaitForSingleObject@12
 NtWriteFile@36
-;ObAssignSecurity@16
+ObAssignSecurity@16
 ;ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess@20
 ;ObCreateObject@36
 ObCreateObject@20
 ;ObFindHandleForObject@20
-;ObGetObjectPointerCount@4
-;ObGetObjectSecurity@12
+ObGetObjectPointerCount@4
+ObGetObjectSecurity@12
 ;ObInsertObject@24
 ObMakeTemporaryObject@4
 ObOpenObjectByName@28
@@ -573,7 +573,7 @@ ObOpenObjectByPointer@28
 ObReferenceObjectByHandle@24
 ObReferenceObjectByName@32
 ObReferenceObjectByPointer@16
-;ObReleaseObjectSecurity@8
+ObReleaseObjectSecurity@8
 ;ObSetSecurityDescriptorInfo@24
 ;PfxFindPrefix
 ;PfxInitialize
@@ -846,9 +846,9 @@ SePublicDefaultDacl DATA
 SeReleaseSubjectContext@4
 ;SeSetAccessStateGenericMapping@8
 ;SeSetSecurityDescriptorInfo@24
-;SeSinglePrivilegeCheck@12
+SeSinglePrivilegeCheck@12
 SeSystemDefaultDacl DATA
-;SeTokenImpersonationLevel@4
+SeTokenImpersonationLevel@4
 SeTokenType@4
 ;SeUnlockSubjectContext@4
 ;SeUnregisterLogonSessionTerminatedRoutine@4

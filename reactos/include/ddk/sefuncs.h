@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.16 2002/02/22 13:34:36 ekohl Exp $ */
+/* $Id: sefuncs.h,v 1.17 2002/02/22 17:57:17 ekohl Exp $ */
 
 BOOLEAN STDCALL
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -53,6 +53,9 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 
 NTSTATUS STDCALL
 SeDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR* SecurityDescriptor);
+
+VOID STDCALL
+SeDeleteAccessState(IN PACCESS_STATE AccessState);
 
 VOID STDCALL
 SeDeleteObjectAuditAlarm(IN PVOID Object,

@@ -18,6 +18,33 @@
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS STDCALL
+ObAssignSecurity(IN PACCESS_STATE AccessState,
+		 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+		 IN PVOID Object,
+		 IN POBJECT_TYPE Type)
+{
+  UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL
+ObGetObjectSecurity(IN PVOID Object,
+		    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
+		    OUT PBOOLEAN MemoryAllocated)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+			IN BOOLEAN MemoryAllocated)
+{
+  UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL
 NtQuerySecurityObject(IN HANDLE ObjectHandle,
 		      IN CINT SecurityObjectInformationClass,
 		      OUT PVOID SecurityObjectInformation,
@@ -67,5 +94,4 @@ NtSetSecurityObject(IN HANDLE Handle,
   UNIMPLEMENTED;
 }
 
-
-
+/* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.114 2002/02/20 20:16:49 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.115 2002/02/22 17:57:57 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -554,14 +554,14 @@ NtVdmControl=NtVdmControl@8
 NtW32Call=NtW32Call@20
 NtWaitForSingleObject=NtWaitForSingleObject@12
 NtWriteFile=NtWriteFile@36
-;ObAssignSecurity=ObAssignSecurity@16
+ObAssignSecurity=ObAssignSecurity@16
 ;ObCheckCreateObjectAccess=ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess=ObCheckObjectAccess@20
 ;ObCreateObject=ObCreateObject@36
 ObCreateObject=ObCreateObject@20
 ;ObFindHandleForObject=ObFindHandleForObject@20
-;ObGetObjectPointerCount=ObGetObjectPointerCount@4
-;ObGetObjectSecurity=ObGetObjectSecurity@12
+ObGetObjectPointerCount=ObGetObjectPointerCount@4
+ObGetObjectSecurity=ObGetObjectSecurity@12
 ;ObInsertObject=ObInsertObject@24
 ObMakeTemporaryObject=ObMakeTemporaryObject@4
 ObOpenObjectByName=ObOpenObjectByName@28
@@ -573,7 +573,7 @@ ObfReferenceObject=@ObfReferenceObject@4
 ObReferenceObjectByHandle=ObReferenceObjectByHandle@24
 ObReferenceObjectByName=ObReferenceObjectByName@32
 ObReferenceObjectByPointer=ObReferenceObjectByPointer@16
-;ObReleaseObjectSecurity=ObReleaseObjectSecurity@8
+ObReleaseObjectSecurity=ObReleaseObjectSecurity@8
 ;ObSetSecurityDescriptorInfo=ObSetSecurityDescriptorInfo@24
 ;PfxFindPrefix
 ;PfxInitialize
@@ -845,9 +845,9 @@ SePublicDefaultDacl DATA
 SeReleaseSubjectContext=SeReleaseSubjectContext@4
 ;SeSetAccessStateGenericMapping=SeSetAccessStateGenericMapping@8
 ;SeSetSecurityDescriptorInfo=SeSetSecurityDescriptorInfo@24
-;SeSinglePrivilegeCheck=SeSinglePrivilegeCheck@12
+SeSinglePrivilegeCheck=SeSinglePrivilegeCheck@12
 SeSystemDefaultDacl DATA
-;SeTokenImpersonationLevel=SeTokenImpersonationLevel@4
+SeTokenImpersonationLevel=SeTokenImpersonationLevel@4
 SeTokenType=SeTokenType@4
 ;SeUnlockSubjectContext=SeUnlockSubjectContext@4
 ;SeUnregisterLogonSessionTerminatedRoutine=SeUnregisterLogonSessionTerminatedRoutine@4
