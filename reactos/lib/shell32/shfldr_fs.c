@@ -58,12 +58,12 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 */
 
 typedef struct {
-    ICOM_VFIELD (IUnknown);
-    DWORD ref;
-    ICOM_VTABLE (IShellFolder2) * lpvtblShellFolder;
-    ICOM_VTABLE (IPersistFolder3) * lpvtblPersistFolder3;
-    ICOM_VTABLE (IDropTarget) * lpvtblDropTarget;
-    ICOM_VTABLE (ISFHelper) * lpvtblSFHelper;
+    IUnknownVtbl        *lpVtbl;
+    DWORD                ref;
+    IShellFolder2Vtbl   *lpvtblShellFolder;
+    IPersistFolder3Vtbl *lpvtblPersistFolder3;
+    IDropTargetVtbl     *lpvtblDropTarget;
+    ISFHelperVtbl       *lpvtblSFHelper;
 
     IUnknown *pUnkOuter;	/* used for aggregation */
 
@@ -80,11 +80,11 @@ typedef struct {
     BOOL fAcceptFmt;		/* flag for pending Drop */
 } IGenericSFImpl;
 
-static struct ICOM_VTABLE (IUnknown) unkvt;
-static struct ICOM_VTABLE (IShellFolder2) sfvt;
-static struct ICOM_VTABLE (IPersistFolder3) vt_FSFldr_PersistFolder3;	/* IPersistFolder3 for a FS_Folder */
-static struct ICOM_VTABLE (IDropTarget) dtvt;
-static struct ICOM_VTABLE (ISFHelper) shvt;
+static struct IUnknownVtbl unkvt;
+static struct IShellFolder2Vtbl sfvt;
+static struct IPersistFolder3Vtbl vt_FSFldr_PersistFolder3;	/* IPersistFolder3 for a FS_Folder */
+static struct IDropTargetVtbl dtvt;
+static struct ISFHelperVtbl shvt;
 
 #define _IShellFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblShellFolder)))
 #define _ICOM_THIS_From_IShellFolder2(class, name) class* This = (class*)(((char*)name)-_IShellFolder2_Offset);
@@ -132,7 +132,7 @@ static void SF_RegisterClipFmt (IGenericSFImpl * This)
 */
 static HRESULT WINAPI IUnknown_fnQueryInterface (IUnknown * iface, REFIID riid, LPVOID * ppvObj)
 {
-    ICOM_THIS (IGenericSFImpl, iface);
+    IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     TRACE ("(%p)->(%s,%p)\n", This, shdebugstr_guid (riid), ppvObj);
 
@@ -170,7 +170,7 @@ static HRESULT WINAPI IUnknown_fnQueryInterface (IUnknown * iface, REFIID riid, 
 
 static ULONG WINAPI IUnknown_fnAddRef (IUnknown * iface)
 {
-    ICOM_THIS (IGenericSFImpl, iface);
+    IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -179,7 +179,7 @@ static ULONG WINAPI IUnknown_fnAddRef (IUnknown * iface)
 
 static ULONG WINAPI IUnknown_fnRelease (IUnknown * iface)
 {
-    ICOM_THIS (IGenericSFImpl, iface);
+    IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -196,9 +196,9 @@ static ULONG WINAPI IUnknown_fnRelease (IUnknown * iface)
     return This->ref;
 }
 
-static ICOM_VTABLE (IUnknown) unkvt =
+static IUnknownVtbl unkvt =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE IUnknown_fnQueryInterface,
+      IUnknown_fnQueryInterface,
       IUnknown_fnAddRef,
       IUnknown_fnRelease,
 };
@@ -858,9 +858,8 @@ static HRESULT WINAPI IShellFolder_fnMapColumnToSCID (IShellFolder2 * iface, UIN
     return E_NOTIMPL;
 }
 
-static ICOM_VTABLE (IShellFolder2) sfvt =
+static IShellFolder2Vtbl sfvt =
 {
-        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IShellFolder_fnQueryInterface,
 	IShellFolder_fnAddRef,
 	IShellFolder_fnRelease,
@@ -1102,9 +1101,8 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl, LPC
     return S_OK;
 }
 
-static ICOM_VTABLE (ISFHelper) shvt =
+static ISFHelperVtbl shvt =
 {
-        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	ISFHelper_fnQueryInterface,
 	ISFHelper_fnAddRef,
 	ISFHelper_fnRelease,
@@ -1278,9 +1276,8 @@ IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface, PERSIST_FOL
     return E_NOTIMPL;
 }
 
-static ICOM_VTABLE (IPersistFolder3) vt_FSFldr_PersistFolder3 =
+static IPersistFolder3Vtbl vt_FSFldr_PersistFolder3 =
 {
-        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IFSFldr_PersistFolder3_QueryInterface,
 	IFSFldr_PersistFolder3_AddRef,
 	IFSFldr_PersistFolder3_Release,
@@ -1393,8 +1390,7 @@ ISFDropTarget_Drop (IDropTarget * iface, IDataObject * pDataObject, DWORD dwKeyS
     return E_NOTIMPL;
 }
 
-static struct ICOM_VTABLE (IDropTarget) dtvt = {
-        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+static struct IDropTargetVtbl dtvt = {
 	ISFDropTarget_QueryInterface,
 	ISFDropTarget_AddRef,
 	ISFDropTarget_Release,

@@ -41,13 +41,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 typedef struct
 {
-	ICOM_VFIELD(IContextMenu2);
+	IContextMenu2Vtbl *lpVtbl;
 	IShellFolder*	pSFParent;
 	DWORD		ref;
 } BgCmImpl;
 
 
-static struct ICOM_VTABLE(IContextMenu2) cmvt;
+static struct IContextMenu2Vtbl cmvt;
 
 /**************************************************************************
 *   ISVBgCm_Constructor()
@@ -71,7 +71,7 @@ IContextMenu2 *ISvBgCm_Constructor(IShellFolder*	pSFParent)
 */
 static HRESULT WINAPI ISVBgCm_fnQueryInterface(IContextMenu2 *iface, REFIID riid, LPVOID *ppvObj)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
@@ -103,7 +103,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryInterface(IContextMenu2 *iface, REFIID riid
 */
 static ULONG WINAPI ISVBgCm_fnAddRef(IContextMenu2 *iface)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	TRACE("(%p)->(count=%lu)\n",This, This->ref);
 
@@ -115,7 +115,7 @@ static ULONG WINAPI ISVBgCm_fnAddRef(IContextMenu2 *iface)
 */
 static ULONG WINAPI ISVBgCm_fnRelease(IContextMenu2 *iface)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	TRACE("(%p)->()\n",This);
 
@@ -149,7 +149,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
     UINT	idMax;
     HRESULT hr;
 
-    ICOM_THIS(BgCmImpl, iface);
+    BgCmImpl *This = (BgCmImpl *)iface;
 
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
           This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
@@ -187,7 +187,7 @@ static void DoNewFolder(
 	IContextMenu2 *iface,
 	IShellView *psv)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 	ISFHelper * psfhlp;
 	char szName[MAX_PATH];
 
@@ -217,7 +217,7 @@ static void DoNewFolder(
 static BOOL DoPaste(
 	IContextMenu2 *iface)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 	BOOL bSuccess = FALSE;
 	IDataObject * pda;
 
@@ -315,7 +315,7 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	IContextMenu2 *iface,
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	LPSHELLBROWSER	lpSB;
 	LPSHELLVIEW lpSV = NULL;
@@ -388,7 +388,7 @@ static HRESULT WINAPI ISVBgCm_fnGetCommandString(
 	LPSTR lpszName,
 	UINT uMaxNameLen)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	TRACE("(%p)->(idcom=%x flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
@@ -420,7 +420,7 @@ static HRESULT WINAPI ISVBgCm_fnHandleMenuMsg(
 	WPARAM wParam,
 	LPARAM lParam)
 {
-	ICOM_THIS(BgCmImpl, iface);
+	BgCmImpl *This = (BgCmImpl *)iface;
 
 	FIXME("(%p)->(msg=%x wp=%x lp=%lx)\n",This, uMsg, wParam, lParam);
 
@@ -431,9 +431,8 @@ static HRESULT WINAPI ISVBgCm_fnHandleMenuMsg(
 * IContextMenu2 VTable
 *
 */
-static struct ICOM_VTABLE(IContextMenu2) cmvt =
+static struct IContextMenu2Vtbl cmvt =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	ISVBgCm_fnQueryInterface,
 	ISVBgCm_fnAddRef,
 	ISVBgCm_fnRelease,

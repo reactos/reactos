@@ -273,11 +273,11 @@ DWORD WINAPI SHCLSIDFromStringAW (LPVOID clsid, CLSID *id)
  */
 
 /* set the vtable later */
-static ICOM_VTABLE(IMalloc) VT_Shell_IMalloc32;
+static IMallocVtbl VT_Shell_IMalloc32;
 
 /* this is the static object instance */
 typedef struct {
-	ICOM_VFIELD(IMalloc);
+	IMallocVtbl *lpVtbl;
 	DWORD dummy;
 } _ShellMalloc;
 
@@ -381,9 +381,8 @@ static VOID WINAPI IShellMalloc_fnHeapMinimize(LPMALLOC iface)
 	TRACE("()\n");
 }
 
-static ICOM_VTABLE(IMalloc) VT_Shell_IMalloc32 =
+static IMallocVtbl VT_Shell_IMalloc32 =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IShellMalloc_fnQueryInterface,
 	IShellMalloc_fnAddRefRelease,
 	IShellMalloc_fnAddRefRelease,
@@ -497,7 +496,7 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
 
 typedef struct
 {
-    ICOM_VFIELD(IClassFactory);
+    IClassFactoryVtbl          *lpVtbl;
     DWORD                       ref;
     CLSID			*rclsid;
     LPFNCREATEINSTANCE		lpfnCI;
@@ -505,7 +504,7 @@ typedef struct
     ULONG *			pcRefDll; /* pointer to refcounter in external dll (ugrrr...) */
 } IDefClFImpl;
 
-static ICOM_VTABLE(IClassFactory) dclfvt;
+static IClassFactoryVtbl dclfvt;
 
 /**************************************************************************
  *  IDefClF_fnConstructor
@@ -533,7 +532,7 @@ IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll,
 static HRESULT WINAPI IDefClF_fnQueryInterface(
   LPCLASSFACTORY iface, REFIID riid, LPVOID *ppvObj)
 {
-	ICOM_THIS(IDefClFImpl,iface);
+	IDefClFImpl *This = (IDefClFImpl *)iface;
 
 	TRACE("(%p)->(%s)\n",This,shdebugstr_guid(riid));
 
@@ -553,7 +552,7 @@ static HRESULT WINAPI IDefClF_fnQueryInterface(
  */
 static ULONG WINAPI IDefClF_fnAddRef(LPCLASSFACTORY iface)
 {
-	ICOM_THIS(IDefClFImpl,iface);
+	IDefClFImpl *This = (IDefClFImpl *)iface;
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
 	return InterlockedIncrement(&This->ref);
@@ -563,7 +562,7 @@ static ULONG WINAPI IDefClF_fnAddRef(LPCLASSFACTORY iface)
  */
 static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 {
-	ICOM_THIS(IDefClFImpl,iface);
+	IDefClFImpl *This = (IDefClFImpl *)iface;
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
 	if (!InterlockedDecrement(&This->ref))
@@ -582,7 +581,7 @@ static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 static HRESULT WINAPI IDefClF_fnCreateInstance(
   LPCLASSFACTORY iface, LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject)
 {
-	ICOM_THIS(IDefClFImpl,iface);
+	IDefClFImpl *This = (IDefClFImpl *)iface;
 
 	TRACE("%p->(%p,%s,%p)\n",This,pUnkOuter,shdebugstr_guid(riid),ppvObject);
 
@@ -603,14 +602,13 @@ static HRESULT WINAPI IDefClF_fnCreateInstance(
  */
 static HRESULT WINAPI IDefClF_fnLockServer(LPCLASSFACTORY iface, BOOL fLock)
 {
-	ICOM_THIS(IDefClFImpl,iface);
+	IDefClFImpl *This = (IDefClFImpl *)iface;
 	TRACE("%p->(0x%x), not implemented\n",This, fLock);
 	return E_NOTIMPL;
 }
 
-static ICOM_VTABLE(IClassFactory) dclfvt =
+static IClassFactoryVtbl dclfvt =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     IDefClF_fnQueryInterface,
     IDefClF_fnAddRef,
   IDefClF_fnRelease,

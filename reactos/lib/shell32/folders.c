@@ -44,16 +44,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 typedef struct
 {
-	ICOM_VFIELD(IExtractIconW);
-	DWORD	ref;
-	ICOM_VTABLE(IPersistFile)*	lpvtblPersistFile;
-	ICOM_VTABLE(IExtractIconA)*	lpvtblExtractIconA;
-	LPITEMIDLIST	pidl;
+	IExtractIconWVtbl *lpVtbl;
+	DWORD              ref;
+	IPersistFileVtbl  *lpvtblPersistFile;
+	IExtractIconAVtbl *lpvtblExtractIconA;
+	LPITEMIDLIST       pidl;
 } IExtractIconWImpl;
 
-static struct ICOM_VTABLE(IExtractIconA) eiavt;
-static struct ICOM_VTABLE(IExtractIconW) eivt;
-static struct ICOM_VTABLE(IPersistFile) pfvt;
+static struct IExtractIconAVtbl eiavt;
+static struct IExtractIconWVtbl eivt;
+static struct IPersistFileVtbl pfvt;
 
 #define _IPersistFile_Offset ((int)(&(((IExtractIconWImpl*)0)->lpvtblPersistFile)))
 #define _ICOM_THIS_From_IPersistFile(class, name) class* This = (class*)(((char*)name)-_IPersistFile_Offset);
@@ -87,7 +87,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
  */
 static HRESULT WINAPI IExtractIconW_fnQueryInterface(IExtractIconW *iface, REFIID riid, LPVOID *ppvObj)
 {
-	ICOM_THIS(IExtractIconWImpl, iface);
+	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n", This, debugstr_guid(riid), ppvObj);
 
@@ -125,7 +125,7 @@ static HRESULT WINAPI IExtractIconW_fnQueryInterface(IExtractIconW *iface, REFII
 */
 static ULONG WINAPI IExtractIconW_fnAddRef(IExtractIconW * iface)
 {
-	ICOM_THIS(IExtractIconWImpl, iface);
+	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
 
 	TRACE("(%p)->(count=%lu)\n",This, This->ref );
 
@@ -136,7 +136,7 @@ static ULONG WINAPI IExtractIconW_fnAddRef(IExtractIconW * iface)
 */
 static ULONG WINAPI IExtractIconW_fnRelease(IExtractIconW * iface)
 {
-	ICOM_THIS(IExtractIconWImpl, iface);
+	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
 
 	TRACE("(%p)->()\n",This);
 
@@ -165,7 +165,7 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	int * piIndex,
 	UINT * pwFlags)		/* returned GIL_ flags */
 {
-	ICOM_THIS(IExtractIconWImpl, iface);
+	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
 
 	char	sTemp[MAX_PATH];
 	DWORD	dwNr;
@@ -328,7 +328,7 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 */
 static HRESULT WINAPI IExtractIconW_fnExtract(IExtractIconW * iface, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-	ICOM_THIS(IExtractIconWImpl, iface);
+	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
 
 	FIXME("(%p) (file=%p index=%u %p %p size=%u) semi-stub\n", This, debugstr_w(pszFile), nIconIndex, phiconLarge, phiconSmall, nIconSize);
 
@@ -341,9 +341,8 @@ static HRESULT WINAPI IExtractIconW_fnExtract(IExtractIconW * iface, LPCWSTR psz
 	return S_OK;
 }
 
-static struct ICOM_VTABLE(IExtractIconW) eivt =
+static struct IExtractIconWVtbl eivt =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IExtractIconW_fnQueryInterface,
 	IExtractIconW_fnAddRef,
 	IExtractIconW_fnRelease,
@@ -356,7 +355,7 @@ static struct ICOM_VTABLE(IExtractIconW) eivt =
 */
 IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
 {
-	ICOM_THIS(IExtractIconWImpl, IExtractIconW_Constructor(pidl));
+	IExtractIconWImpl *This = (IExtractIconWImpl *)IExtractIconW_Constructor(pidl);
 	IExtractIconA *eia = (IExtractIconA *)&This->lpvtblExtractIconA;
 	
 	TRACE("(%p)->(%p)\n", This, eia);
@@ -434,9 +433,8 @@ static HRESULT WINAPI IExtractIconA_fnExtract(IExtractIconA * iface, LPCSTR pszF
 	return ret;
 }
 
-static struct ICOM_VTABLE(IExtractIconA) eiavt =
+static struct IExtractIconAVtbl eiavt =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IExtractIconA_fnQueryInterface,
 	IExtractIconA_fnAddRef,
 	IExtractIconA_fnRelease,
@@ -507,9 +505,8 @@ static HRESULT WINAPI IEIPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFi
 
 }
 
-static struct ICOM_VTABLE(IPersistFile) pfvt =
+static struct IPersistFileVtbl pfvt =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IEIPersistFile_fnQueryInterface,
 	IEIPersistFile_fnAddRef,
 	IEIPersistFile_fnRelease,
