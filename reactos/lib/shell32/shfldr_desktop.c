@@ -676,4 +676,5 @@ static ICOM_VTABLE (IShellFolder2) vt_MCFldr_ShellFolder2 =
 	ISF_Desktop_fnGetDefaultColumnState,
 	ISF_Desktop_fnGetDetailsEx,
 	ISF_Desktop_fnGetDetailsOf,
-	ISF_Desktop_fnMapColumnToSCID};
+	ISF_Desktop_fnMapColumnToSCID
+};

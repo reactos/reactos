@@ -1520,12 +1520,12 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 
 	  if (SUCCEEDED(hr))
 	  {
-		hr = IShellFolder_QueryInterface(desktop, riid, ppv);
+	    hr = IShellFolder_QueryInterface(desktop, riid, ppv);
 
-		if (SUCCEEDED(hr) && ppidlLast)
-		  *ppidlLast = ILClone(pidl);
+	    if (SUCCEEDED(hr) && ppidlLast)
+	      *ppidlLast = ILClone(pidl);
 
-		IShellFolder_Release(desktop);
+	    IShellFolder_Release(desktop);
 	  }
 	}
 	else
@@ -1545,7 +1545,9 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 	    ILFree (pidlChild);
 
 	  SHFree (pidlParent);
-	  if (psf) IShellFolder_Release(psf);
+
+	  if (psf)
+		IShellFolder_Release(psf);
 	}
 
 	TRACE_(shell)("-- psf=%p pidl=%p ret=0x%08lx\n", *ppv, (ppidlLast)?*ppidlLast:NULL, hr);

@@ -295,7 +295,7 @@ static void DoOpenExplore(
 	sei.cbSize = sizeof(sei);
 	sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
 	sei.lpIDList = pidlFQ;
-	sei.lpClass = "folder";
+	sei.lpClass = "Folder";
 	sei.hwnd = hwnd;
 	sei.nShow = SW_SHOWNORMAL;
 	sei.lpVerb = verb;

@@ -656,7 +656,7 @@ static HRESULT WINAPI ISF_MyComputer_fnMapColumnToSCID (IShellFolder2 * iface, U
 
 static ICOM_VTABLE (IShellFolder2) vt_ShellFolder2 =
 {
-        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	ISF_MyComputer_fnQueryInterface,
 	ISF_MyComputer_fnAddRef,
 	ISF_MyComputer_fnRelease,
@@ -671,7 +671,7 @@ static ICOM_VTABLE (IShellFolder2) vt_ShellFolder2 =
 	ISF_MyComputer_fnGetDisplayNameOf,
 	ISF_MyComputer_fnSetNameOf,
 	/* ShellFolder2 */
-        ISF_MyComputer_fnGetDefaultSearchGUID,
+	ISF_MyComputer_fnGetDefaultSearchGUID,
 	ISF_MyComputer_fnEnumSearches,
 	ISF_MyComputer_fnGetDefaultColumn,
 	ISF_MyComputer_fnGetDefaultColumnState,

@@ -427,7 +427,7 @@ static UINT _FindExecutableByOperation(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOp
  *              on the operation)
  */
 UINT SHELL_FindExecutable(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOperation,
-                                 LPSTR lpResult, LPSTR key, void **env, LPITEMIDLIST pidl, LPCSTR args)
+                          LPSTR lpResult, LPSTR key, void **env, LPITEMIDLIST pidl, LPCSTR args)
 {
     char *extension = NULL; /* pointer to file extension */
     char tmpext[5];         /* local copy to mung as we please */
@@ -851,6 +851,19 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
     /* process the IDList */
     if (sei->fMask & SEE_MASK_INVOKEIDLIST) /* 0x0c: includes SEE_MASK_IDLIST */
     {
+	IShellExecuteHookA* pSEH;
+
+	HRESULT hr = SHBindToParent(pidl, &IID_IShellExecuteHookA, (LPVOID*)&pSEH, NULL);
+
+	if (SUCCEEDED(hr)) {
+	    hr = IShellExecuteHookA_Execute(pSEH, sei);
+
+	    IShellExecuteHookA_Release(pSEH);
+
+	    if (hr == S_OK)
+		return TRUE;
+	}
+
         if (!SHGetPathFromIDListA(pidl, szApplicationName))
             return FALSE;
 
@@ -859,7 +872,7 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
 
     if (sei->fMask & (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY))
     {
-	/* launch a document by fileclass like 'WordPad.Document.1' */
+        /* launch a document by fileclass like 'WordPad.Document.1' */
         /* the Commandline contains 'c:\Path\wordpad.exe "%1"' */
         /* FIXME: szCommandline should not be of a fixed size. Plus MAX_PATH is way too short! */
         if (sei->fMask & SEE_MASK_CLASSKEY)
@@ -970,7 +983,8 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
 	}
 	else
 	{
-	    /*FIXME This search loop should be moved into CreateProcess() ? */
+	    /* We have to use this search loop here, that in CreateProcess()
+	       is not sufficent because it does not handle shell links. */
 	    LPSTR space, s;
 	    char buffer[MAX_PATH], xlpFile[MAX_PATH];
 
