@@ -41,7 +41,7 @@
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
 static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
-ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
+ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386Cpuid;
 
 #define X86_EFLAGS_ID       (1 << 21)
 
@@ -81,7 +81,7 @@ Ki386GetCpuId(VOID)
     {
       /* Get the feature flags. */
       __asm__("cpuid\n\t"
-	  : "=d" (Ke386CpuidFlags), "=c" (Ke386CpuidFlags2)
+	  : "=a" (Ke386Cpuid),"=d" (Ke386CpuidFlags), "=c" (Ke386CpuidFlags2)
 	  : "a" (0x00000001)
 	  : "ebx");       
     }
