@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.4 2003/08/02 00:03:33 royce Exp $
+/* $Id: menu.c,v 1.5 2003/08/02 00:34:19 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -422,6 +422,7 @@ NtUserSetMenuContextHelpId(
   HMENU hmenu,
   DWORD dwContextHelpId)
 {
+  BOOL res;
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hmenu);
   if(!MenuObject)
   {
@@ -429,7 +430,7 @@ NtUserSetMenuContextHelpId(
     return FALSE;
   }
 
-  BOOL res = W32kSetMenuContextHelpId(MenuObject, dwContextHelpId);
+  res = W32kSetMenuContextHelpId(MenuObject, dwContextHelpId);
   W32kReleaseMenuObject(MenuObject);
   return res;
 }
@@ -457,6 +458,7 @@ BOOL STDCALL
 NtUserSetMenuFlagRtoL(
   HMENU hMenu)
 {
+  BOOL res;
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
@@ -464,7 +466,7 @@ NtUserSetMenuFlagRtoL(
     return FALSE;
   }
 
-  BOOL res = W32kSetMenuFlagRtoL(MenuObject);
+  res = W32kSetMenuFlagRtoL(MenuObject);
   W32kReleaseMenuObject(MenuObject);
   return res;
 }
