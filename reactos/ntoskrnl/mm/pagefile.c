@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.12 2001/10/10 21:57:00 hbirr Exp $
+/* $Id: pagefile.c,v 1.13 2001/12/06 00:54:54 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/bitops.h>
 #include <internal/io.h>
 #include <internal/mm.h>
 #include <napi/core.h>
@@ -204,20 +203,28 @@ static ULONG
 MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 {
    KIRQL oldIrql;
-   ULONG i;
-   ULONG off;
+   ULONG i, j;
    
    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
    
    for (i = 0; i < PagingFile->AllocMapSize; i++)
      {
-	off = find_first_zero_bit(PagingFile->AllocMap, 
-				  PagingFile->AllocMapSize * 32);
-	clear_bit(off % 32, &PagingFile->AllocMap[off / 32]);
-	PagingFile->UsedPages--;
-	PagingFile->FreePages++;
-	KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-	return(off);
+       for (j = 0; j < 32; j++)
+	 {
+	   if (!(PagingFile->AllocMap[i] & (1 << j)))
+	     {
+	       break;
+	     }
+	 }
+       if (j == 32)
+	 {
+	   continue;
+	 }
+       PagingFile->AllocMap[i] |= (1 << j);
+       PagingFile->UsedPages--;
+       PagingFile->FreePages++;
+       KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
+       return((i * 32) + j);
      }
    
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
@@ -237,7 +244,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
    
-   set_bit(off % 32, &PagingFileList[i]->AllocMap[off / 32]);
+   PagingFileList[i]->AllocMap[off / 32] |= (1 << (off % 32));
    
    PagingFileList[i]->FreePages++;
    PagingFileList[i]->UsedPages--;

@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.49 2001/11/25 15:21:11 dwelch Exp $
+/* $Id: npool.c,v 1.50 2001/12/06 00:54:54 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -18,7 +18,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/bitops.h>
 #include <internal/ntoskrnl.h>
 #include <internal/pool.h>
 

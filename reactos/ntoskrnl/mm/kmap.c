@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.11 2001/11/25 15:21:11 dwelch Exp $
+/* $Id: kmap.c,v 1.12 2001/12/06 00:54:54 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -11,7 +11,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/bitops.h>
 #include <internal/ntoskrnl.h>
 #include <internal/pool.h>
 
@@ -44,7 +43,7 @@ ExUnmapPage(PVOID Addr)
    
    KeAcquireSpinLock(&AllocMapLock, &oldIrql);
    MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL);
-   clear_bit(i%32, &AllocMap[i/32]);
+   AllocMap[i / 32] &= (~(1 << (i % 32)));
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
@@ -103,10 +102,10 @@ ExAllocatePageWithPhysPage(ULONG PhysPage)
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    for (i = 1; i < ALLOC_MAP_SIZE; i++)
      {
-       if (!test_bit(i % 32, &AllocMap[i / 32]))
+       if (!(AllocMap[i / 32] & (1 << (i % 32))))
 	 {
 	    DPRINT("i %x\n",i);
-	    set_bit(i % 32, &AllocMap[i / 32]);
+	    AllocMap[i / 32] |= (1 << (i % 32));
 	    addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
 	    Status = MmCreateVirtualMapping(NULL, 
 					    (PVOID)addr, 
@@ -137,10 +136,12 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
   ULONG i;
   ULONG Base = (Addr - NonPagedPoolBase) / PAGESIZE;
+  ULONG Offset;
 
   for (i = 0; i < Count; i++)
     {
-      clear_bit((Base + i) % 32, &AllocMap[(Base + i) / 32]);
+      Offset = Base + i;
+      AllocMap[Offset / 32] &= (~(1 << (Offset % 32))); 
       MmDeleteVirtualMapping(NULL, 
 			     Addr + (i * PAGESIZE), 
 			     Free, 
@@ -161,7 +162,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 
    for (i=1; i<ALLOC_MAP_SIZE;i++)
      {
-	if (!test_bit(i%32,&AllocMap[i/32]))
+       if (!(AllocMap[i/32] & (1 << (i % 32))))
 	  {
 	     if (length == 0)
 	       {
@@ -176,7 +177,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 	       {
 		  for (j=start;j<(start+length);j++)
 		    {
-		       set_bit(j%32,&AllocMap[j/32]);
+		      AllocMap[j / 32] |= (1 << (j % 32));
 		    }
 		  DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
 		  return(((start*PAGESIZE)+NonPagedPoolBase));

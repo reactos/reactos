@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.48 2001/04/09 02:45:04 dwelch Exp $
+/* $Id: mm.c,v 1.49 2001/12/06 00:54:54 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -33,7 +33,6 @@
 #include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
-#include <internal/bitops.h>
 #include <internal/io.h>
 #include <internal/ps.h>
 

@@ -9,7 +9,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/bitops.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 

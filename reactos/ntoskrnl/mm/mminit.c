@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.26 2001/11/25 15:21:11 dwelch Exp $
+/* $Id: mminit.c,v 1.27 2001/12/06 00:54:54 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -16,7 +16,6 @@
 #include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
-#include <internal/bitops.h>
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <napi/shared_data.h>
