@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.49 2004/10/07 20:39:04 gvg Exp $
+/* $Id: dir.c,v 1.50 2004/10/07 21:05:36 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -341,7 +341,6 @@ GetFullPathNameA (
     DWORD ret;
     LPWSTR FilePart = NULL;
 
-if (0 == nBufferLength) __asm__("int $3\n");
     DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
            "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
