@@ -355,6 +355,7 @@ char* CCabinet::ConvertPath(char* Path, bool Allocate)
         }
         i++;
     }
+    newpath[i] = 0;
 
     return(newpath);
 }
