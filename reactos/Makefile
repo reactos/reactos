@@ -1,3 +1,20 @@
+.PHONY: all
+.PHONY: clean
+all: makefile.auto
+
+ifeq ($(HOST),)
+OSDETECT=$(word 1,$(shell gcc -dumpmachine))
+ 
+all: detect_os
+
+detect_os:
+ifeq ($(OSDETECT),mingw32)
+	HOST=mingw32-windows
+else
+	HOST=mingw32-linux
+endif
+endif
+
 # Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
@@ -86,11 +103,6 @@ else # mingw32-windows
 	cp = $(Q)copy /y
 	NUL = NUL
 endif
-
-.PHONY: all
-.PHONY: clean
-
-all: makefile.auto
 
 ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)

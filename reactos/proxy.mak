@@ -1,4 +1,4 @@
-MAKEFLAGS += --no-print-directory --silent
+MAKEFLAGS += --no-print-directory
 
 $(DEFAULT):
 	@$(MAKE) -C $(TOP) $(DEFAULT)
