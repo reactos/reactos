@@ -1,4 +1,0 @@
-LIBRARY riched32.dll
-
-EXPORTS
-  DllGetVersion=RICHED32_DllGetVersion@4 @2
