@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.115 2003/12/24 01:26:10 weiden Exp $
+/* $Id: defwnd.c,v 1.116 2003/12/26 01:05:41 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -974,7 +974,6 @@ User32DefWindowProc(HWND hWnd,
             return (DefWndNCLButtonDown(hWnd, wParam, lParam));
         }
 
-        case WM_LBUTTONDBLCLK:
         case WM_NCLBUTTONDBLCLK:
         {
             return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));

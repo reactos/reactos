@@ -931,6 +931,8 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
       SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
       break;
     }
+    default:
+      return DefWndNCLButtonDown(hWnd, wParam, lParam);
   }
   return(0);
 }
