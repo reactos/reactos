@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.75 2004/12/12 21:25:05 weiden Exp $
+ * $Id: gdiobj.c,v 1.76 2004/12/13 12:51:51 weiden Exp $
  */
 #include <w32k.h>
 
@@ -364,6 +364,7 @@ LockHandle:
       if(GdiHdr->LockingThread == NULL)
       {
         BOOL Ret;
+        PW32PROCESS W32Process = PsGetWin32Process();
         ULONG Type = Entry->Type << 16;
 
         /* Clear the type field so when unlocking the handle it gets finally deleted */
@@ -372,6 +373,11 @@ LockHandle:
         
         /* unlock the handle slot */
         InterlockedExchange(&Entry->ProcessId, 0);
+        
+        if(W32Process != NULL)
+        {
+          InterlockedDecrement(&W32Process->GDIObjects);
+        }
 
         /* call the cleanup routine. */
         Ret = RunCleanupCallback(GDIHdrToBdy(GdiHdr), Type);
@@ -817,6 +823,7 @@ LockHandle:
         if(Entry->Type == 0 && GdiHdr->Locks == 0)
         {
           PPAGED_LOOKASIDE_LIST LookasideList;
+          PW32PROCESS W32Process = PsGetWin32Process();
           DWORD Type = GDI_HANDLE_GET_TYPE(hObj);
           
           ASSERT(ProcessId != 0); /* must not delete a global handle!!!! */
@@ -824,6 +831,11 @@ LockHandle:
           /* we should delete the handle */
           Entry->KernelData = NULL;
           InterlockedExchange(&Entry->ProcessId, 0);
+          
+          if(W32Process != NULL)
+          {
+            InterlockedDecrement(&W32Process->GDIObjects);
+          }
           
           /* call the cleanup routine. */
           Ret = RunCleanupCallback(GDIHdrToBdy(GdiHdr), Type);
