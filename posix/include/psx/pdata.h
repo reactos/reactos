@@ -1,4 +1,4 @@
-/* $Id: pdata.h,v 1.5 2002/03/11 20:51:16 hyperion Exp $
+/* $Id: pdata.h,v 1.6 2002/05/17 01:49:53 hyperion Exp $
  */
 /*
  * psx/pdata.h
@@ -44,6 +44,9 @@ typedef struct __tagPDX_PDATA
  UNICODE_STRING  RootPath;         /* NT path to the process's root directory */
  HANDLE          RootHandle;       /* handle to the process's root directory */
  __fdtable_t     FdTable;          /* file descriptors table */
+ /* WARNING: PRELIMINARY CODE FOR DEBUGGING PURPOSES ONLY - DO NOT CHANGE */
+ CRITICAL_SECTION Lock;
+ LONG             TlsIndex;
 } __PDX_PDATA, * __PPDX_PDATA;
 
 /* serialized process data block, used by __PdxSpawnPosixProcess() and __PdxExecThunk().
@@ -75,6 +78,12 @@ typedef struct __tagPDX_SERIALIZED_PDATA
  BYTE        Buffer[1];
 } __PDX_SERIALIZED_PDATA, *__PPDX_SERIALIZED_PDATA;
 
+typedef struct __tagPDX_TDATA
+{
+ __PPDX_PDATA ProcessData;
+ int          ErrNum;
+} __PDX_TDATA, * __PPDX_TDATA;
+
 /* CONSTANTS */
 
 /* PROTOTYPES */
@@ -91,11 +100,22 @@ __PdxProcessDataToProcessParameters
 );
 
 /* MACROS */
+/* WARNING: PRELIMINARY CODE FOR DEBUGGING PURPOSES ONLY - DO NOT CHANGE */
+VOID __PdxSetProcessData(__PPDX_PDATA);
+__PPDX_PDATA __PdxGetProcessData(VOID);
+
+#include <ddk/ntddk.h>
+
+#define __PdxAcquirePdataLock() (RtlEnterCriticalSection(&__PdxGetProcessData()->Lock))
+#define __PdxReleasePdataLock() (RtlLeaveCriticalSection(&__PdxGetProcessData()->Lock))
+
+#if 0
 #define __PdxAcquirePdataLock() (RtlAcquirePebLock())
 #define __PdxReleasePdataLock() (RtlReleasePebLock())
 
 #define __PdxSetProcessData(PPDATA) ((void)((NtCurrentPeb()->SubSystemData) = (PPDATA)))
 #define __PdxGetProcessData()       ((__PPDX_PDATA)(&(NtCurrentPeb()->SubSystemData)))
+#endif
 
 #define __PdxGetNativePathBuffer() ((PUNICODE_STRING)(&(__PdxGetProcessData()->NativePathBuffer)))
 #define __PdxGetCurDir()           ((PUNICODE_STRING)(&(__PdxGetProcessData()->CurDir)))
