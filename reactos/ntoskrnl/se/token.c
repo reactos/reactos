@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.22 2002/10/25 21:48:00 chorns Exp $
+/* $Id: token.c,v 1.23 2003/05/31 11:10:30 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -172,10 +172,14 @@ SepDuplicateToken(PACCESS_TOKEN Token,
   AccessToken->TokenInUse = 0;
   AccessToken->TokenType  = TokenType;
   AccessToken->ImpersonationLevel = Level;
-  AccessToken->AuthenticationId.QuadPart = SYSTEM_LUID;
+  AccessToken->AuthenticationId.LowPart = SYSTEM_LUID;
+  AccessToken->AuthenticationId.HighPart = 0;
 
-  AccessToken->TokenSource.SourceIdentifier.QuadPart = Token->TokenSource.SourceIdentifier.QuadPart;
-  memcpy(AccessToken->TokenSource.SourceName, Token->TokenSource.SourceName, sizeof(Token->TokenSource.SourceName));
+  AccessToken->TokenSource.SourceIdentifier.LowPart = Token->TokenSource.SourceIdentifier.LowPart;
+  AccessToken->TokenSource.SourceIdentifier.HighPart = Token->TokenSource.SourceIdentifier.HighPart;
+  memcpy(AccessToken->TokenSource.SourceName,
+	 Token->TokenSource.SourceName,
+	 sizeof(Token->TokenSource.SourceName));
   AccessToken->ExpirationTime.QuadPart = Token->ExpirationTime.QuadPart;
   AccessToken->UserAndGroupCount = Token->UserAndGroupCount;
   AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
@@ -820,54 +824,53 @@ NtAdjustGroupsToken(IN HANDLE TokenHandle,
 
 
 #if 0
-NTSTATUS SepAdjustPrivileges(PACCESS_TOKEN Token,           // 0x8
-			     ULONG a,                       // 0xC
-			     KPROCESSOR_MODE PreviousMode,  // 0x10
-			     ULONG PrivilegeCount,          // 0x14
-			     PLUID_AND_ATTRIBUTES Privileges, // 0x18
-			     PTOKEN_PRIVILEGES* PreviousState, // 0x1C
-			     PULONG b, // 0x20
-			     PULONG c, // 0x24
-			     PULONG d) // 0x28
+NTSTATUS
+SepAdjustPrivileges(PACCESS_TOKEN Token,
+		    ULONG a,
+		    KPROCESSOR_MODE PreviousMode,
+		    ULONG PrivilegeCount,
+		    PLUID_AND_ATTRIBUTES Privileges,
+		    PTOKEN_PRIVILEGES* PreviousState,
+		    PULONG b,
+		    PULONG c,
+		    PULONG d)
 {
-   ULONG i;
-   
-   *c = 0;
-   if (Token->PrivilegeCount > 0)
-     {
-	for (i=0; i<Token->PrivilegeCount; i++)
-	  {
-	     if (PreviousMode != 0)
-	       {
-		  if (!(Token->Privileges[i]->Attributes & 
-			SE_PRIVILEGE_ENABLED))
+  ULONG i;
+
+  *c = 0;
+
+  if (Token->PrivilegeCount > 0)
+    {
+      for (i = 0; i < Token->PrivilegeCount; i++)
+	{
+	  if (PreviousMode != KernelMode)
+	    {
+	      if (Token->Privileges[i]->Attributes & SE_PRIVILEGE_ENABLED == 0)
+		{
+		  if (a != 0)
 		    {
-		       if (a != 0)
-			 {
-			    if (PreviousState != NULL)
-			      {
-				 memcpy(&PreviousState[i],
-					&Token->Privileges[i],
-					sizeof(LUID_AND_ATTRIBUTES));
-			      }
-			    Token->Privileges[i].Attributes = 
-			      Token->Privileges[i].Attributes & 
-			      (~SE_PRIVILEGE_ENABLED);
-			 }
+		      if (PreviousState != NULL)
+			{
+			  memcpy(&PreviousState[i],
+				 &Token->Privileges[i],
+				 sizeof(LUID_AND_ATTRIBUTES));
+			}
+		      Token->Privileges[i].Attributes &= (~SE_PRIVILEGE_ENABLED);
 		    }
-	       }
-	  }
-     }
-   if (PreviousMode != 0)
-     {
-	Token->TokenFlags = Token->TokenFlags & (~1);
-     }
-   else
-     {
-	if (PrivilegeCount <= ?)
-	  {
-	     
-	  }
+		}
+	    }
+	}
+    }
+
+  if (PreviousMode != KernelMode)
+    {
+      Token->TokenFlags = Token->TokenFlags & (~1);
+    }
+  else
+    {
+      if (PrivilegeCount <= ?)
+	{
+	}
      }
    if (
 }
@@ -882,37 +885,69 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 			OUT PTOKEN_PRIVILEGES PreviousState,
 			OUT PULONG ReturnLength)
 {
+  PLUID_AND_ATTRIBUTES Privileges;
+  KPROCESSOR_MODE PreviousMode;
+  ULONG PrivilegeCount;
+  PACCESS_TOKEN Token;
+  ULONG Length;
 #if 0
-   ULONG PrivilegeCount;
-   ULONG Length;
-   PSID_AND_ATTRIBUTES Privileges;
    ULONG a;
    ULONG b;
    ULONG c;
-   
-   PrivilegeCount = NewState->PrivilegeCount;
-   
-   SeCaptureLuidAndAttributesArray(NewState->Privileges,
-				   &PrivilegeCount,
-				   KeGetPreviousMode(),
-				   NULL,
-				   0,
-				   NonPagedPool,
-				   1,
-				   &Privileges.
-				   &Length);
+#endif
+  NTSTATUS Status;
+
+  DPRINT1("NtAdjustPrivilegesToken() called\n");
+
+  PrivilegeCount = NewState->PrivilegeCount;
+  PreviousMode = KeGetPreviousMode();
+  SeCaptureLuidAndAttributesArray(NewState->Privileges,
+				  PrivilegeCount,
+				  PreviousMode,
+				  NULL,
+				  0,
+				  NonPagedPool,
+				  1,
+				  &Privileges,
+				  &Length);
+
+  Status = ObReferenceObjectByHandle(TokenHandle,
+				     TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+				     SepTokenObjectType,
+				     PreviousMode,
+				     (PVOID*)&Token,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to reference token (Status %lx)\n", Status);
+      SeReleaseLuidAndAttributesArray(Privileges,
+				      PreviousMode,
+				      0);
+      return(Status);
+    }
+
+
+#if 0
    SepAdjustPrivileges(Token,
 		       0,
-		       KeGetPreviousMode(),
+		       PreviousMode,
 		       PrivilegeCount,
 		       Privileges,
 		       PreviousState,
 		       &a,
 		       &b,
 		       &c);
-#else
-   UNIMPLEMENTED;
 #endif
+
+  ObDereferenceObject(Token);
+
+  SeReleaseLuidAndAttributesArray(Privileges,
+				  PreviousMode,
+				  0);
+
+  DPRINT1("NtAdjustPrivilegesToken() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -955,11 +990,13 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
       return(Status);
     }
 
-  AccessToken->AuthenticationId.QuadPart = SYSTEM_LUID;
+  AccessToken->AuthenticationId.LowPart = SYSTEM_LUID;
+  AccessToken->AuthenticationId.HighPart = 0;
 
   AccessToken->TokenType = TokenPrimary;
   AccessToken->ImpersonationLevel = SecurityDelegation;
-  AccessToken->TokenSource.SourceIdentifier.QuadPart = 0;
+  AccessToken->TokenSource.SourceIdentifier.LowPart = 0;
+  AccessToken->TokenSource.SourceIdentifier.HighPart = 0;
   memcpy(AccessToken->TokenSource.SourceName, "SeMgr\0\0\0", 8);
   AccessToken->ExpirationTime.QuadPart = -1;
   AccessToken->UserAndGroupCount = 4;
@@ -1105,6 +1142,7 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   Process->Token = AccessToken;
   return(STATUS_SUCCESS);
 }
+
 
 NTSTATUS STDCALL
 NtCreateToken(OUT PHANDLE UnsafeTokenHandle,

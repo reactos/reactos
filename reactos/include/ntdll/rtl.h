@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.38 2003/04/02 00:05:59 hyperion Exp $
+/* $Id: rtl.h,v 1.39 2003/05/31 11:07:00 ekohl Exp $
  *
  */
 
@@ -517,6 +517,12 @@ RtlIsValidIndexHandle (
 	IN OUT	PRTL_HANDLE		*Handle,
 	IN	ULONG			Index
 	);
+
+NTSTATUS STDCALL
+RtlAdjustPrivilege(IN ULONG Privilege,
+		   IN BOOLEAN Enable,
+		   IN BOOLEAN CurrentThread,
+		   OUT PBOOLEAN Enabled);
 
 NTSTATUS
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.6 2002/09/08 10:23:43 chorns Exp $
+/* $Id: luid.c,v 1.7 2003/05/31 11:10:30 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,7 +19,9 @@
 
 static KSPIN_LOCK LuidLock;
 static LARGE_INTEGER LuidIncrement;
-static LUID Luid;
+static LARGE_INTEGER LuidValue;
+
+#define SYSTEM_LUID   0x3E7;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -27,25 +29,27 @@ VOID
 SepInitLuid(VOID)
 {
   KeInitializeSpinLock(&LuidLock);
-  Luid.QuadPart = 999;   /* SYSTEM_LUID */
+  LuidValue.QuadPart = SYSTEM_LUID;
   LuidIncrement.QuadPart = 1;
 }
 
 
 NTSTATUS STDCALL
-NtAllocateLocallyUniqueId(OUT LUID* LocallyUniqueId)
+NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-  KIRQL oldIrql;
-  LUID ReturnedLuid;
+  LARGE_INTEGER ReturnedLuid;
+  KIRQL Irql;
 
   KeAcquireSpinLock(&LuidLock,
-		    &oldIrql);
-  ReturnedLuid = Luid;
-  Luid = RtlLargeIntegerAdd(Luid,
-			    LuidIncrement);
+		    &Irql);
+  ReturnedLuid = LuidValue;
+  LuidValue = RtlLargeIntegerAdd(LuidValue,
+				 LuidIncrement);
   KeReleaseSpinLock(&LuidLock,
-		    oldIrql);
-  *LocallyUniqueId = ReturnedLuid;
+		    Irql);
+
+  LocallyUniqueId->LowPart = ReturnedLuid.u.LowPart;
+  LocallyUniqueId->HighPart = ReturnedLuid.u.HighPart;
 
   return(STATUS_SUCCESS);
 }
@@ -55,7 +59,8 @@ VOID STDCALL
 RtlCopyLuid(IN PLUID LuidDest,
 	    IN PLUID LuidSrc)
 {
-  LuidDest->QuadPart = LuidSrc->QuadPart;
+  LuidDest->LowPart = LuidSrc->LowPart;
+  LuidDest->HighPart = LuidSrc->HighPart;
 }
 
 
@@ -63,7 +68,8 @@ BOOLEAN STDCALL
 RtlEqualLuid(IN PLUID Luid1,
 	     IN PLUID Luid2)
 {
-  return((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
+  return (Luid1->LowPart == Luid2->LowPart &&
+	  Luid1->HighPart == Luid2->HighPart);
 }
 
 /* EOF */

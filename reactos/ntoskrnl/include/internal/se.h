@@ -120,15 +120,21 @@ NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
 				PACCESS_TOKEN* OldTokenP);
 
-NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
-					 ULONG PrivilegeCount,
-					 KPROCESSOR_MODE PreviousMode,
-					 PLUID_AND_ATTRIBUTES AllocatedMem,
-					 ULONG AllocatedLength,
-					 POOL_TYPE PoolType,
-					 ULONG d,
-					 PLUID_AND_ATTRIBUTES* Dest,
-					 PULONG Length);
+NTSTATUS
+SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
+				ULONG PrivilegeCount,
+				KPROCESSOR_MODE PreviousMode,
+				PLUID_AND_ATTRIBUTES AllocatedMem,
+				ULONG AllocatedLength,
+				POOL_TYPE PoolType,
+				ULONG d,
+				PLUID_AND_ATTRIBUTES* Dest,
+				PULONG Length);
+
+VOID
+SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
+				KPROCESSOR_MODE PreviousMode,
+				ULONG a);
 
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SE_H */

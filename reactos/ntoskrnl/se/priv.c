@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.5 2002/09/08 10:23:43 chorns Exp $
+/* $Id: priv.c,v 1.6 2003/05/31 11:10:30 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -47,102 +47,124 @@ LUID SeRemoteShutdownPrivilege;
 /* FUNCTIONS ***************************************************************/
 
 VOID
-SepInitPrivileges(VOID)
+SepInitPrivileges (VOID)
 {
-  SeCreateTokenPrivilege.QuadPart = SE_CREATE_TOKEN_PRIVILEGE;
-  SeAssignPrimaryTokenPrivilege.QuadPart = SE_ASSIGNPRIMARYTOKEN_PRIVILEGE;
-  SeLockMemoryPrivilege.QuadPart = SE_LOCK_MEMORY_PRIVILEGE;
-  SeIncreaseQuotaPrivilege.QuadPart = SE_INCREASE_QUOTA_PRIVILEGE;
-  SeUnsolicitedInputPrivilege.QuadPart = SE_UNSOLICITED_INPUT_PRIVILEGE;
-  SeTcbPrivilege.QuadPart = SE_TCB_PRIVILEGE;
-  SeSecurityPrivilege.QuadPart = SE_SECURITY_PRIVILEGE;
-  SeTakeOwnershipPrivilege.QuadPart = SE_TAKE_OWNERSHIP_PRIVILEGE;
-  SeLoadDriverPrivilege.QuadPart = SE_LOAD_DRIVER_PRIVILEGE;
-  SeSystemProfilePrivilege.QuadPart = SE_SYSTEM_PROFILE_PRIVILEGE;
-  SeSystemtimePrivilege.QuadPart = SE_SYSTEMTIME_PRIVILEGE;
-  SeProfileSingleProcessPrivilege.QuadPart = SE_PROF_SINGLE_PROCESS_PRIVILEGE;
-  SeIncreaseBasePriorityPrivilege.QuadPart = SE_INC_BASE_PRIORITY_PRIVILEGE;
-  SeCreatePagefilePrivilege.QuadPart = SE_CREATE_PAGEFILE_PRIVILEGE;
-  SeCreatePermanentPrivilege.QuadPart = SE_CREATE_PERMANENT_PRIVILEGE;
-  SeBackupPrivilege.QuadPart = SE_BACKUP_PRIVILEGE;
-  SeRestorePrivilege.QuadPart = SE_RESTORE_PRIVILEGE;
-  SeShutdownPrivilege.QuadPart = SE_SHUTDOWN_PRIVILEGE;
-  SeDebugPrivilege.QuadPart = SE_DEBUG_PRIVILEGE;
-  SeAuditPrivilege.QuadPart = SE_AUDIT_PRIVILEGE;
-  SeSystemEnvironmentPrivilege.QuadPart = SE_SYSTEM_ENVIRONMENT_PRIVILEGE;
-  SeChangeNotifyPrivilege.QuadPart = SE_CHANGE_NOTIFY_PRIVILEGE;
-  SeRemoteShutdownPrivilege.QuadPart = SE_REMOTE_SHUTDOWN_PRIVILEGE;
+  SeCreateTokenPrivilege.LowPart = SE_CREATE_TOKEN_PRIVILEGE;
+  SeCreateTokenPrivilege.HighPart = 0;
+  SeAssignPrimaryTokenPrivilege.LowPart = SE_ASSIGNPRIMARYTOKEN_PRIVILEGE;
+  SeAssignPrimaryTokenPrivilege.HighPart = 0;
+  SeLockMemoryPrivilege.LowPart = SE_LOCK_MEMORY_PRIVILEGE;
+  SeLockMemoryPrivilege.HighPart = 0;
+  SeIncreaseQuotaPrivilege.LowPart = SE_INCREASE_QUOTA_PRIVILEGE;
+  SeIncreaseQuotaPrivilege.HighPart = 0;
+  SeUnsolicitedInputPrivilege.LowPart = SE_UNSOLICITED_INPUT_PRIVILEGE;
+  SeUnsolicitedInputPrivilege.HighPart = 0;
+  SeTcbPrivilege.LowPart = SE_TCB_PRIVILEGE;
+  SeTcbPrivilege.HighPart = 0;
+  SeSecurityPrivilege.LowPart = SE_SECURITY_PRIVILEGE;
+  SeSecurityPrivilege.HighPart = 0;
+  SeTakeOwnershipPrivilege.LowPart = SE_TAKE_OWNERSHIP_PRIVILEGE;
+  SeTakeOwnershipPrivilege.HighPart = 0;
+  SeLoadDriverPrivilege.LowPart = SE_LOAD_DRIVER_PRIVILEGE;
+  SeLoadDriverPrivilege.HighPart = 0;
+  SeSystemProfilePrivilege.LowPart = SE_SYSTEM_PROFILE_PRIVILEGE;
+  SeSystemProfilePrivilege.HighPart = 0;
+  SeSystemtimePrivilege.LowPart = SE_SYSTEMTIME_PRIVILEGE;
+  SeSystemtimePrivilege.HighPart = 0;
+  SeProfileSingleProcessPrivilege.LowPart = SE_PROF_SINGLE_PROCESS_PRIVILEGE;
+  SeProfileSingleProcessPrivilege.HighPart = 0;
+  SeIncreaseBasePriorityPrivilege.LowPart = SE_INC_BASE_PRIORITY_PRIVILEGE;
+  SeIncreaseBasePriorityPrivilege.HighPart = 0;
+  SeCreatePagefilePrivilege.LowPart = SE_CREATE_PAGEFILE_PRIVILEGE;
+  SeCreatePagefilePrivilege.HighPart = 0;
+  SeCreatePermanentPrivilege.LowPart = SE_CREATE_PERMANENT_PRIVILEGE;
+  SeCreatePermanentPrivilege.HighPart = 0;
+  SeBackupPrivilege.LowPart = SE_BACKUP_PRIVILEGE;
+  SeBackupPrivilege.HighPart = 0;
+  SeRestorePrivilege.LowPart = SE_RESTORE_PRIVILEGE;
+  SeRestorePrivilege.HighPart = 0;
+  SeShutdownPrivilege.LowPart = SE_SHUTDOWN_PRIVILEGE;
+  SeShutdownPrivilege.HighPart = 0;
+  SeDebugPrivilege.LowPart = SE_DEBUG_PRIVILEGE;
+  SeDebugPrivilege.HighPart = 0;
+  SeAuditPrivilege.LowPart = SE_AUDIT_PRIVILEGE;
+  SeAuditPrivilege.HighPart = 0;
+  SeSystemEnvironmentPrivilege.LowPart = SE_SYSTEM_ENVIRONMENT_PRIVILEGE;
+  SeSystemEnvironmentPrivilege.HighPart = 0;
+  SeChangeNotifyPrivilege.LowPart = SE_CHANGE_NOTIFY_PRIVILEGE;
+  SeChangeNotifyPrivilege.HighPart = 0;
+  SeRemoteShutdownPrivilege.LowPart = SE_REMOTE_SHUTDOWN_PRIVILEGE;
+  SeRemoteShutdownPrivilege.HighPart = 0;
 }
 
 
-BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
-			  PLUID_AND_ATTRIBUTES Privileges,
-			  ULONG PrivilegeCount,
-			  ULONG PrivilegeControl,
-			  KPROCESSOR_MODE PreviousMode)
+BOOLEAN
+SepPrivilegeCheck (PACCESS_TOKEN Token,
+		   PLUID_AND_ATTRIBUTES Privileges,
+		   ULONG PrivilegeCount,
+		   ULONG PrivilegeControl,
+		   KPROCESSOR_MODE PreviousMode)
 {
-   ULONG i;
-   PLUID_AND_ATTRIBUTES Current;
-   ULONG j;
-   ULONG k;
-   
-   if (PreviousMode == KernelMode)
-     {
-	return(TRUE);
-     }
-   
-   j = 0;
-   if (PrivilegeCount != 0)
-     {
-	k = PrivilegeCount;
-	do
-	  {
-	     i = Token->PrivilegeCount;
-	     Current = Token->Privileges;
-	     for (i = 0; i < Token->PrivilegeCount; i++)
-	       {
-		  if (!(Current[i].Attributes & SE_PRIVILEGE_ENABLED) &&
-		      Privileges[i].Luid.u.LowPart == 
-		      Current[i].Luid.u.LowPart &&
-		      Privileges[i].Luid.u.HighPart == 
-		      Current[i].Luid.u.HighPart)
-		    {
-		       Privileges[i].Attributes = 
-			 Privileges[i].Attributes | 
-			 SE_PRIVILEGE_USED_FOR_ACCESS;
-		       j++;
-		       break;
-		    }
-	       }
-	     k--;
-	  } while (k > 0);
-     }
-   
-   if ((PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) && 
-       PrivilegeCount == j)       
-     {
-	return(TRUE);
-     }
-       
-   if (j > 0 && 
-       !(PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY))
-     {
-	return(TRUE);
-     }
+  PLUID_AND_ATTRIBUTES Current;
+  ULONG i;
+  ULONG j;
+  ULONG k;
 
-   return(FALSE);
+  if (PreviousMode == KernelMode)
+    {
+      return TRUE;
+    }
+
+  j = 0;
+  if (PrivilegeCount != 0)
+    {
+      k = PrivilegeCount;
+      do
+	{
+	  i = Token->PrivilegeCount;
+	  Current = Token->Privileges;
+	  for (i = 0; i < Token->PrivilegeCount; i++)
+	    {
+	      if (!(Current[i].Attributes & SE_PRIVILEGE_ENABLED) &&
+		  Privileges[i].Luid.LowPart == Current[i].Luid.LowPart &&
+		  Privileges[i].Luid.HighPart == Current[i].Luid.HighPart)
+		{
+		  Privileges[i].Attributes |= SE_PRIVILEGE_USED_FOR_ACCESS;
+		  j++;
+		  break;
+		}
+	    }
+	  k--;
+	}
+      while (k > 0);
+    }
+
+  if ((PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) &&
+      PrivilegeCount == j)
+    {
+      return TRUE;
+    }
+
+  if (j > 0 &&
+      !(PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY))
+    {
+      return TRUE;
+    }
+
+  return FALSE;
 }
 
 
-NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
-					 ULONG PrivilegeCount,
-					 KPROCESSOR_MODE PreviousMode,
-					 PLUID_AND_ATTRIBUTES AllocatedMem,
-					 ULONG AllocatedLength,
-					 POOL_TYPE PoolType,
-					 ULONG d,
-					 PLUID_AND_ATTRIBUTES* Dest,
-					 PULONG Length)
+NTSTATUS
+SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
+				 ULONG PrivilegeCount,
+				 KPROCESSOR_MODE PreviousMode,
+				 PLUID_AND_ATTRIBUTES AllocatedMem,
+				 ULONG AllocatedLength,
+				 POOL_TYPE PoolType,
+				 ULONG d,
+				 PLUID_AND_ATTRIBUTES* Dest,
+				 PULONG Length)
 {
    PLUID_AND_ATTRIBUTES* NewMem;
    ULONG SrcLength;
@@ -181,13 +203,15 @@ NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
    return(STATUS_SUCCESS);
 }
 
+
 VOID
 SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
 				KPROCESSOR_MODE PreviousMode,
 				ULONG a)
 {
-   ExFreePool(Privilege);
+  ExFreePool(Privilege);
 }
+
 
 NTSTATUS STDCALL
 NtPrivilegeCheck(IN HANDLE ClientToken,
@@ -246,6 +270,7 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
    return(STATUS_SUCCESS);
 }
 
+
 BOOLEAN STDCALL
 SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
@@ -272,6 +297,7 @@ SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 			    Privileges->Control,
 			    PreviousMode));
 }
+
 
 BOOLEAN STDCALL
 SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
@@ -304,3 +330,4 @@ SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
    return(r);
 }
 
+/* EOF */

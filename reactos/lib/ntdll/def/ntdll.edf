@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.88 2003/05/15 11:02:03 ekohl Exp $
+; $Id: ntdll.edf,v 1.89 2003/05/31 11:08:08 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -286,7 +286,7 @@ RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce=RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
-;RtlAdjustPrivilege
+RtlAdjustPrivilege=RtlAdjustPrivilege@16
 RtlAllocateAndInitializeSid=RtlAllocateAndInitializeSid@44
 RtlAllocateHandle=RtlAllocateHandle@8
 RtlAllocateHeap=RtlAllocateHeap@12

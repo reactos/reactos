@@ -239,7 +239,11 @@ typedef enum _ACL_INFORMATION_CLASS
 
 typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
-typedef LARGE_INTEGER LUID, *PLUID;
+typedef struct _LUID
+{
+  ULONG LowPart;
+  LONG  HighPart;
+} LUID, *PLUID;
 
 typedef struct _SECURITY_DESCRIPTOR
 {
@@ -255,7 +259,7 @@ typedef struct _SECURITY_DESCRIPTOR
 typedef struct _LUID_AND_ATTRIBUTES
 {
   LUID  Luid;
-  DWORD Attributes;
+  ULONG Attributes;
 } LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
 
 typedef struct _TOKEN_SOURCE

@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.5 2002/09/08 10:23:05 chorns Exp $
+/* $Id: luid.c,v 1.6 2003/05/31 11:08:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,13 +13,15 @@
 
 #include <ddk/ntddk.h>
 
+
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
 RtlCopyLuid(PLUID LuidDest,
 	    PLUID LuidSrc)
 {
-  LuidDest->QuadPart = LuidSrc->QuadPart;
+  LuidDest->LowPart = LuidSrc->LowPart;
+  LuidDest->HighPart = LuidSrc->HighPart;
 }
 
 
@@ -43,7 +45,8 @@ BOOLEAN STDCALL
 RtlEqualLuid(PLUID Luid1,
 	     PLUID Luid2)
 {
-  return((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
+  return (Luid1->LowPart == Luid2->LowPart &&
+	  Luid1->HighPart == Luid2->HighPart);
 }
 
 /* EOF */
