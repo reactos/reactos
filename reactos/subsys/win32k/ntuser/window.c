@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.178 2004/01/27 08:29:28 weiden Exp $
+/* $Id: window.c,v 1.179 2004/01/27 09:36:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1576,8 +1576,9 @@ NtUserDestroyWindow(HWND Wnd)
 		    {
 		      continue;
 		    }
-		  if (Child->Owner != Window)
+		  if (Child->Parent != Window)
 		    {
+		      IntReleaseWindowObject(Child);
 		      continue;
 		    }
 		  if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
