@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.25 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: messagebox.c,v 1.26 2004/07/22 02:32:53 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -733,7 +733,7 @@ MessageBoxIndirectA(
          * UNICODE_STRING objects are always allocated with an extra byte so you
          * can null-term if you want
          */
-        textW.Buffer[textW.Length] = L'\0';
+        textW.Buffer[textW.Length / sizeof(WCHAR)] = L'\0';
     }
     else
         textW.Buffer = (LPWSTR)lpMsgBoxParams->lpszText;
@@ -745,7 +745,7 @@ MessageBoxIndirectA(
          * UNICODE_STRING objects are always allocated with an extra byte so you
          * can null-term if you want
          */
-        captionW.Buffer[captionW.Length] = L'\0';
+        captionW.Buffer[captionW.Length / sizeof(WCHAR)] = L'\0';
     }
     else
         captionW.Buffer = (LPWSTR)lpMsgBoxParams->lpszCaption;
@@ -757,7 +757,7 @@ MessageBoxIndirectA(
          * UNICODE_STRING objects are always allocated with an extra byte so you
          * can null-term if you want
          */
-        iconW.Buffer[iconW.Length] = L'\0';
+        iconW.Buffer[iconW.Length / sizeof(WCHAR)] = L'\0';
     }
     else
         iconW.Buffer = (LPWSTR)lpMsgBoxParams->lpszIcon;
