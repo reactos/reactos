@@ -22,25 +22,7 @@ ifeq ($(HOST),)
 HOST = mingw32-windows
 endif
 
-#
-# Choose various options
-#
-ifeq ($(HOST),mingw32-linux)
-RM			= rm -f
-CP			= cp -f 
-MKDIR		= mkdir
-SEP      = /
-else
-RM			= cmd /C del
-CP			= copy /Y 
-MKDIR		= md
-SEP      = \$(EMPTY_VAR)
-endif
-
-NASM_CMD	= nasm
-NFLAGS = -fwin32 -dwin32
-BIN2C		= ..$(SEP)tools$(SEP)bin2c
-TOOLSDIR	= ..$(SEP)tools
+include rules.mak
 
 all:
 	$(MAKE) -C tools

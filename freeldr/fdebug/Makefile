@@ -18,33 +18,6 @@
 #
 	
 
-# Windows is default host environment
-ifeq ($(HOST),)
-HOST = mingw32-windows
-endif
-
-#
-# Choose various options
-#
-ifeq ($(HOST),mingw32-linux)
-RM			= rm -f
-CP			= cp -f 
-MKDIR		= mkdir
-SEP      = /
-CC		   = mingw32-gcc
-LD		   = mingw32-ld
-WINDRES  = mingw32-windres
-else
-RM			= cmd /C del
-CP			= copy /Y 
-MKDIR		= md
-SEP      = \$(EMPTY_VAR)
-CC   		= gcc
-LD	   	= ld
-RM	   	= cmd /C del
-WINDRES  = windres
-endif
-
 FLAGS = -Wall
 
 OBJS = rs232.o fdebug.o fdebug.res

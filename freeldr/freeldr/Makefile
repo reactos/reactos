@@ -17,34 +17,6 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-# Windows is default host environment
-ifeq ($(HOST),)
-HOST = mingw32-windows
-endif
-
-#
-# Choose various options
-#
-ifeq ($(HOST),mingw32-linux)
-RM			= rm -f
-CP			= cp -f 
-CC			= mingw32-gcc
-LD			= mingw32-ld
-AR			= mingw32-ar
-NM			= mingw32-nm
-MKDIR		= mkdir
-SEP			= /
-else
-RM			= cmd /C del
-CP			= copy /Y 
-CC			= gcc
-LD			= ld
-AR			= ar
-NM			= nm
-MKDIR		= md
-SEP			= /
-endif
-
 #############################################
 # CHANGE THESE FOR YOUR OUTPUT
 #
