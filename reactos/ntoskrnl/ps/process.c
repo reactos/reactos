@@ -117,6 +117,7 @@ VOID PsInitProcessManagment(VOID)
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
+   InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    ObCreateHandle(SystemProcess,
@@ -278,6 +279,7 @@ NtCreateProcess (
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
+   InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
    Status = PsCreatePeb (*ProcessHandle);

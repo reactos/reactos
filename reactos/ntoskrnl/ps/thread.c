@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.42 1999/12/16 22:59:03 phreak Exp $
+/* $Id: thread.c,v 1.43 1999/12/18 07:33:53 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -161,11 +161,25 @@ VOID PsReapThreads(VOID)
 	
 	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
 	  {
+         PEPROCESS Process = current->ThreadsProcess; 
+         NTSTATUS Status = current->ExitStatus;
+
+         ObReferenceObjectByPointer( Process, 0, PsProcessType, KernelMode );
 	     DPRINT("Reaping thread %x\n", current);
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
-	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+         RemoveEntryList( &current->Tcb.ProcessThreadListEntry );
+         KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+         if( IsListEmpty( &Process->Pcb.ThreadListHead ) )
+         {
+             //TODO: Optimize this so it doesnt jerk the IRQL around so much :)
+             DPRINT( "Last thread terminated, terminating process\n" );
+             KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+             PiTerminateProcess( Process, Status );
+             KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+         }
+         ObDereferenceObject( Process );
 	     current_entry = PiThreadListHead.Flink;
 	  }
      }

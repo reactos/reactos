@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.2 1999/12/14 18:35:19 phreak Exp $
+/* $Id: create.c,v 1.3 1999/12/18 07:33:53 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -150,7 +150,7 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
    Thread->ThreadsProcess = Process;
    KeInitializeDpc( &Thread->Tcb.TimerDpc, PiTimeoutThread, Thread );
    Thread->Tcb.WaitBlockList = NULL;
-
+   InsertTailList( &Thread->ThreadsProcess->Pcb.ThreadListHead, &Thread->Tcb.ProcessThreadListEntry );
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
                                 InternalThreadType,
                                 sizeof(ETHREAD),
