@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.2 2002/01/14 01:44:18 ekohl Exp $
+/* $Id: class2.h,v 1.3 2002/01/31 14:58:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -151,7 +151,63 @@ ScsiClassInitialize(IN PVOID Argument1,
 		    IN PVOID Argument2,
 		    IN PCLASS_INIT_DATA InitializationData);
 
+VOID STDCALL
+ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
+				    ULONG NumberElements);
 
+NTSTATUS STDCALL
+ScsiClassInternalIoControl(PDEVICE_OBJECT DeviceObject,
+			   PIRP Irp);
+
+BOOLEAN STDCALL
+ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
+			    PSCSI_REQUEST_BLOCK Srb,
+			    UCHAR MajorFunctionCode,
+			    ULONG IoDeviceCode,
+			    ULONG RetryCount,
+			    NTSTATUS *Status);
+
+NTSTATUS STDCALL
+ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
+		    PIRP Irp,
+		    PVOID Context);
+
+NTSTATUS STDCALL
+ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
+			      PIRP Irp,
+			      PVOID Context);
+
+ULONG STDCALL
+ScsiClassModeSense(PDEVICE_OBJECT DeviceObject,
+		   CHAR ModeSenseBuffer,
+		   ULONG Length,
+		   UCHAR PageMode);
+
+ULONG STDCALL
+ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath);
+
+NTSTATUS STDCALL
+ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS STDCALL
+ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
+			     PSCSI_REQUEST_BLOCK Srb,
+			     PIRP Irp,
+			     PVOID BufferAddress,
+			     ULONG BufferLength,
+			     BOOLEAN WriteToDevice);
+
+NTSTATUS STDCALL
+ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
+			    PSCSI_REQUEST_BLOCK Srb,
+			    PVOID BufferAddress,
+			    ULONG BufferLength,
+			    BOOLEAN WriteToDevice);
+
+VOID STDCALL
+ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp,
+		      ULONG MaximumBytes);
 
 #endif /* __STORAGE_INCLUDE_CLASS2_H */
 

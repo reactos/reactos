@@ -1,4 +1,4 @@
-/* $Id: scsi.h,v 1.3 2002/01/27 01:25:33 ekohl Exp $
+/* $Id: scsi.h,v 1.4 2002/01/31 14:58:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -147,301 +147,299 @@ typedef union _CDB
   struct _READ_CD
     {
       UCHAR OperationCode;
-      UCHAR Reserved0 : 2;
-      UCHAR ExpectedSectorType : 3;
-      UCHAR Reserved1 : 3;
+      UCHAR Reserved0:2;
+      UCHAR ExpectedSectorType:3;
+      UCHAR Reserved1:3;
       UCHAR StartingLBA[4];
       UCHAR TransferBlocks[3];
-      UCHAR Reserved2 : 1;
-      UCHAR ErrorFlags : 2;
-      UCHAR IncludeEDC : 1;
-      UCHAR IncludeUserData : 1;
-      UCHAR HeaderCode : 2;
-      UCHAR IncludeSyncData : 1;
-      UCHAR SubChannelSelection : 3;
-      UCHAR Reserved3 : 5;
+      UCHAR Reserved2:1;
+      UCHAR ErrorFlags:2;
+      UCHAR IncludeEDC:1;
+      UCHAR IncludeUserData:1;
+      UCHAR HeaderCode:2;
+      UCHAR IncludeSyncData:1;
+      UCHAR SubChannelSelection:3;
+      UCHAR Reserved3:5;
       UCHAR Reserved4;
     } READ_CD, *PREAD_CD;
 
-    //
-    // Plextor Read CD-DA
-    //
-
-    struct _PLXTR_READ_CDDA {
-        UCHAR OperationCode;
-        UCHAR Reserved0 : 5;
-        UCHAR LogicalUnitNumber :3;
-        UCHAR LogicalBlockByte0;
-        UCHAR LogicalBlockByte1;
-        UCHAR LogicalBlockByte2;
-        UCHAR LogicalBlockByte3;
-        UCHAR TransferBlockByte0;
-        UCHAR TransferBlockByte1;
-        UCHAR TransferBlockByte2;
-        UCHAR TransferBlockByte3;
-        UCHAR SubCode;
-        UCHAR Control;
+  /* Plextor Read CD-DA */
+  struct _PLXTR_READ_CDDA
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved0:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR LogicalBlockByte0;
+      UCHAR LogicalBlockByte1;
+      UCHAR LogicalBlockByte2;
+      UCHAR LogicalBlockByte3;
+      UCHAR TransferBlockByte0;
+      UCHAR TransferBlockByte1;
+      UCHAR TransferBlockByte2;
+      UCHAR TransferBlockByte3;
+      UCHAR SubCode;
+      UCHAR Control;
     } PLXTR_READ_CDDA, *PPLXTR_READ_CDDA;
 
-    //
-    // NEC Read CD-DA
-    //
-
-    struct _NEC_READ_CDDA {
-        UCHAR OperationCode;
-        UCHAR Reserved0;
-        UCHAR LogicalBlockByte0;
-        UCHAR LogicalBlockByte1;
-        UCHAR LogicalBlockByte2;
-        UCHAR LogicalBlockByte3;
-        UCHAR Reserved1;
-        UCHAR TransferBlockByte0;
-        UCHAR TransferBlockByte1;
-        UCHAR Control;
+  /* NEC Read CD-DA */
+  struct _NEC_READ_CDDA
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved0;
+      UCHAR LogicalBlockByte0;
+      UCHAR LogicalBlockByte1;
+      UCHAR LogicalBlockByte2;
+      UCHAR LogicalBlockByte3;
+      UCHAR Reserved1;
+      UCHAR TransferBlockByte0;
+      UCHAR TransferBlockByte1;
+      UCHAR Control;
     } NEC_READ_CDDA, *PNEC_READ_CDDA;
 
-    //
-    // Mode sense
-    //
-
-    struct _MODE_SENSE {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 3;
-        UCHAR Dbd : 1;
-        UCHAR Reserved2 : 1;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR PageCode : 6;
-        UCHAR Pc : 2;
-        UCHAR Reserved3;
-        UCHAR AllocationLength;
-        UCHAR Control;
+  /* Mode sense */
+  struct _MODE_SENSE
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:3;
+      UCHAR Dbd:1;
+      UCHAR Reserved2:1;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR PageCode:6;
+      UCHAR Pc:2;
+      UCHAR Reserved3;
+      UCHAR AllocationLength;
+      UCHAR Control;
     } MODE_SENSE, *PMODE_SENSE;
 
-    struct _MODE_SENSE10 {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 3;
-        UCHAR Dbd : 1;
-        UCHAR Reserved2 : 1;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR PageCode : 6;
-        UCHAR Pc : 2;
-        UCHAR Reserved3[4];
-        UCHAR AllocationLength[2];
-        UCHAR Control;
+  struct _MODE_SENSE10
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:3;
+      UCHAR Dbd:1;
+      UCHAR Reserved2:1;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR PageCode:6;
+      UCHAR Pc:2;
+      UCHAR Reserved3[4];
+      UCHAR AllocationLength[2];
+      UCHAR Control;
     } MODE_SENSE10, *PMODE_SENSE10;
 
-    //
-    // Mode select
-    //
-
-    struct _MODE_SELECT {
-        UCHAR OperationCode;
-        UCHAR SPBit : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR PFBit : 1;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[2];
-        UCHAR ParameterListLength;
-        UCHAR Control;
+  /* Mode select */
+  struct _MODE_SELECT
+    {
+      UCHAR OperationCode;
+      UCHAR SPBit:1;
+      UCHAR Reserved1:3;
+      UCHAR PFBit:1;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[2];
+      UCHAR ParameterListLength;
+      UCHAR Control;
     } MODE_SELECT, *PMODE_SELECT;
 
-    struct _MODE_SELECT10 {
-        UCHAR OperationCode;
-        UCHAR SPBit : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR PFBit : 1;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[5];
-        UCHAR ParameterListLength[2];
-        UCHAR Control;
+  struct _MODE_SELECT10
+    {
+      UCHAR OperationCode;
+      UCHAR SPBit:1;
+      UCHAR Reserved1:3;
+      UCHAR PFBit:1;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[5];
+      UCHAR ParameterListLength[2];
+      UCHAR Control;
     } MODE_SELECT10, *PMODE_SELECT10;
 
-    struct _LOCATE {
-        UCHAR OperationCode;
-        UCHAR Immediate : 1;
-        UCHAR CPBit : 1;
-        UCHAR BTBit : 1;
-        UCHAR Reserved1 : 2;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved3;
-        UCHAR LogicalBlockAddress[4];
-        UCHAR Reserved4;
-        UCHAR Partition;
-        UCHAR Control;
+  struct _LOCATE
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR CPBit:1;
+      UCHAR BTBit:1;
+      UCHAR Reserved1:2;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved3;
+      UCHAR LogicalBlockAddress[4];
+      UCHAR Reserved4;
+      UCHAR Partition;
+      UCHAR Control;
     } LOCATE, *PLOCATE;
 
-    struct _LOGSENSE {
-        UCHAR OperationCode;
-        UCHAR SPBit : 1;
-        UCHAR PPCBit : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR PageCode : 6;
-        UCHAR PCBit : 2;
-        UCHAR Reserved2;
-        UCHAR Reserved3;
-        UCHAR ParameterPointer[2];  // [0]=MSB, [1]=LSB
-        UCHAR AllocationLength[2];  // [0]=MSB, [1]=LSB
-        UCHAR Control;
+  struct _LOGSENSE
+    {
+      UCHAR OperationCode;
+      UCHAR SPBit:1;
+      UCHAR PPCBit:1;
+      UCHAR Reserved1:3;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR PageCode:6;
+      UCHAR PCBit:2;
+      UCHAR Reserved2;
+      UCHAR Reserved3;
+      UCHAR ParameterPointer[2];	/* [0]=MSB, [1]=LSB */
+      UCHAR AllocationLength[2];	/* [0]=MSB, [1]=LSB */
+      UCHAR Control;
     } LOGSENSE, *PLOGSENSE;
 
-    struct _PRINT {
-        UCHAR OperationCode;
-        UCHAR Reserved : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR TransferLength[3];
-        UCHAR Control;
+  struct _PRINT
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR TransferLength[3];
+      UCHAR Control;
     } PRINT, *PPRINT;
 
-    struct _SEEK {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR LogicalBlockAddress[4];
-        UCHAR Reserved2[3];
-        UCHAR Control;
+  struct _SEEK
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR LogicalBlockAddress[4];
+      UCHAR Reserved2[3];
+      UCHAR Control;
     } SEEK, *PSEEK;
 
-  struct _ERASE {
-        UCHAR OperationCode;
-        UCHAR Long : 1;
-        UCHAR Immediate : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[3];
-        UCHAR Control;
+  struct _ERASE
+    {
+      UCHAR OperationCode;
+      UCHAR Long:1;
+      UCHAR Immediate:1;
+      UCHAR Reserved1:3;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[3];
+      UCHAR Control;
     } ERASE, *PERASE;
 
   struct _START_STOP
-      {
-        UCHAR OperationCode;
-        UCHAR Immediate: 1;
-        UCHAR Reserved1 : 4;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[2];
-        UCHAR Start : 1;
-        UCHAR LoadEject : 1;
-        UCHAR Reserved3 : 6;
-        UCHAR Control;
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR Reserved1:4;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[2];
+      UCHAR Start:1;
+      UCHAR LoadEject:1;
+      UCHAR Reserved3:6;
+      UCHAR Control;
     } START_STOP, *PSTART_STOP;
 
-  struct _MEDIA_REMOVAL {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[2];
-        UCHAR Prevent;
-        UCHAR Control;
+  struct _MEDIA_REMOVAL
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[2];
+      UCHAR Prevent;
+      UCHAR Control;
     } MEDIA_REMOVAL, *PMEDIA_REMOVAL;
 
-    //
-    // Tape CDBs
-    //
-
-    struct _SEEK_BLOCK {
-        UCHAR OperationCode;
-        UCHAR Immediate : 1;
-        UCHAR Reserved1 : 7;
-        UCHAR BlockAddress[3];
-        UCHAR Link : 1;
-        UCHAR Flag : 1;
-        UCHAR Reserved2 : 4;
-        UCHAR VendorUnique : 2;
+  /* Tape CDBs */
+  struct _SEEK_BLOCK
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR Reserved1:7;
+      UCHAR BlockAddress[3];
+      UCHAR Link:1;
+      UCHAR Flag:1;
+      UCHAR Reserved2:4;
+      UCHAR VendorUnique:2;
     } SEEK_BLOCK, *PSEEK_BLOCK;
 
-    struct _REQUEST_BLOCK_ADDRESS {
-        UCHAR OperationCode;
-        UCHAR Reserved1[3];
-        UCHAR AllocationLength;
-        UCHAR Link : 1;
-        UCHAR Flag : 1;
-        UCHAR Reserved2 : 4;
-        UCHAR VendorUnique : 2;
+  struct _REQUEST_BLOCK_ADDRESS
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1[3];
+      UCHAR AllocationLength;
+      UCHAR Link:1;
+      UCHAR Flag:1;
+      UCHAR Reserved2:4;
+      UCHAR VendorUnique:2;
     } REQUEST_BLOCK_ADDRESS, *PREQUEST_BLOCK_ADDRESS;
 
-    struct _PARTITION {
-        UCHAR OperationCode;
-        UCHAR Immediate : 1;
-        UCHAR Sel: 1;
-        UCHAR PartitionSelect : 6;
-        UCHAR Reserved1[3];
-        UCHAR Control;
+  struct _PARTITION
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR Sel:1;
+      UCHAR PartitionSelect:6;
+      UCHAR Reserved1[3];
+      UCHAR Control;
     } PARTITION, *PPARTITION;
 
-    struct _WRITE_TAPE_MARKS {
-        UCHAR OperationCode;
-        UCHAR Immediate : 1;
-        UCHAR WriteSetMarks: 1;
-        UCHAR Reserved : 3;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR TransferLength[3];
-        UCHAR Control;
+  struct _WRITE_TAPE_MARKS
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR WriteSetMarks:1;
+      UCHAR Reserved:3;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR TransferLength[3];
+      UCHAR Control;
     } WRITE_TAPE_MARKS, *PWRITE_TAPE_MARKS;
 
-    struct _SPACE_TAPE_MARKS {
-        UCHAR OperationCode;
-        UCHAR Code : 3;
-        UCHAR Reserved : 2;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR NumMarksMSB ;
-        UCHAR NumMarks;
-        UCHAR NumMarksLSB;
-        union {
-            UCHAR value;
-            struct {
-                UCHAR Link : 1;
-                UCHAR Flag : 1;
-                UCHAR Reserved : 4;
-                UCHAR VendorUnique : 2;
-            } Fields;
-        } Byte6;
+  struct _SPACE_TAPE_MARKS
+    {
+      UCHAR OperationCode;
+      UCHAR Code:3;
+      UCHAR Reserved:2;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR NumMarksMSB ;
+      UCHAR NumMarks;
+      UCHAR NumMarksLSB;
+      union
+	{
+	  UCHAR value;
+	  struct
+	    {
+	      UCHAR Link:1;
+	      UCHAR Flag:1;
+	      UCHAR Reserved:4;
+	      UCHAR VendorUnique:2;
+	    } Fields;
+	} Byte6;
     } SPACE_TAPE_MARKS, *PSPACE_TAPE_MARKS;
 
-    //
-    // Read tape position
-    //
-
-    struct _READ_POSITION {
-        UCHAR Operation;
-        UCHAR BlockType:1;
-        UCHAR Reserved1:4;
-        UCHAR Lun:3;
-        UCHAR Reserved2[7];
-        UCHAR Control;
+  /* Read tape position */
+  struct _READ_POSITION
+    {
+      UCHAR Operation;
+      UCHAR BlockType:1;
+      UCHAR Reserved1:4;
+      UCHAR Lun:3;
+      UCHAR Reserved2[7];
+      UCHAR Control;
     } READ_POSITION, *PREAD_POSITION;
 
-    //
-    // ReadWrite for Tape
-    //
-
-    struct _CDB6READWRITETAPE {
-        UCHAR OperationCode;
-        UCHAR VendorSpecific : 5;
-        UCHAR Reserved : 3;
-        UCHAR TransferLenMSB;
-        UCHAR TransferLen;
-        UCHAR TransferLenLSB;
-        UCHAR Link : 1;
-        UCHAR Flag : 1;
-        UCHAR Reserved1 : 4;
-        UCHAR VendorUnique : 2;
+  /* ReadWrite for Tape */
+  struct _CDB6READWRITETAPE
+    {
+      UCHAR OperationCode;
+      UCHAR VendorSpecific:5;
+      UCHAR Reserved:3;
+      UCHAR TransferLenMSB;
+      UCHAR TransferLen;
+      UCHAR TransferLenLSB;
+      UCHAR Link:1;
+      UCHAR Flag:1;
+      UCHAR Reserved1:4;
+      UCHAR VendorUnique:2;
      } CDB6READWRITETAPE, *PCDB6READWRITETAPE;
 
-    //
-    // Atapi 2.5 Changer 12-byte CDBs
-    //
-
-    struct _LOAD_UNLOAD {
-        UCHAR OperationCode;
-        UCHAR Immediate : 1;
-        UCHAR Reserved1 : 7;
-        UCHAR Reserved2[2];
-        UCHAR Start : 1;
-        UCHAR LoadEject : 1;
-        UCHAR Reserved3: 6;
-        UCHAR Reserved4[3];
-        UCHAR Slot;
-        UCHAR Reserved5[3];
+  /* Atapi 2.5 Changer 12-byte CDBs */
+  struct _LOAD_UNLOAD
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR Reserved1:7;
+      UCHAR Reserved2[2];
+      UCHAR Start:1;
+      UCHAR LoadEject:1;
+      UCHAR Reserved3:6;
+      UCHAR Reserved4[3];
+      UCHAR Slot;
+      UCHAR Reserved5[3];
     } LOAD_UNLOAD, *PLOAD_UNLOAD;
 
   struct _MECH_STATUS
@@ -455,6 +453,7 @@ typedef union _CDB
 
 
 /* Command Descriptor Block constants */
+
 #define CDB6GENERIC_LENGTH                   6
 #define CDB10GENERIC_LENGTH                  10
 #define CDB12GENERIC_LENGTH                  12
@@ -462,7 +461,9 @@ typedef union _CDB
 #define SETBITON                             1
 #define SETBITOFF                            0
 
+
 /* Mode Sense/Select page constants */
+
 #define MODE_PAGE_ERROR_RECOVERY        0x01
 #define MODE_PAGE_DISCONNECT            0x02
 #define MODE_PAGE_FORMAT_DEVICE         0x03
@@ -484,9 +485,8 @@ typedef union _CDB
 #define MODE_PAGE_DATA_COMPRESS         0x0f
 #define MODE_PAGE_CAPABILITIES          0x2A
 
-//
-// SCSI CDB operation codes
-//
+
+/* SCSI CDB operation codes */
 
 #define SCSIOP_TEST_UNIT_READY     0x00
 #define SCSIOP_REZERO_UNIT         0x01
@@ -569,7 +569,6 @@ typedef union _CDB
 #define CDB_RETURN_ON_COMPLETION   0
 #define CDB_RETURN_IMMEDIATE       1
 
-// end_ntminitape
 
 //
 // CDB Force media access used in extended read and write commands.
@@ -637,31 +636,34 @@ typedef union _CDB
 //
 
 #pragma pack (1)
-typedef struct _SCSI_EXTENDED_MESSAGE {
-    UCHAR InitialMessageCode;
-    UCHAR MessageLength;
-    UCHAR MessageType;
-    union _EXTENDED_ARGUMENTS {
+typedef struct _SCSI_EXTENDED_MESSAGE
+{
+  UCHAR InitialMessageCode;
+  UCHAR MessageLength;
+  UCHAR MessageType;
+  union _EXTENDED_ARGUMENTS
+    {
+      struct
+	{
+	  UCHAR Modifier[4];
+	} Modify;
 
-        struct {
-            UCHAR Modifier[4];
-        } Modify;
+      struct
+	{
+	  UCHAR TransferPeriod;
+	  UCHAR ReqAckOffset;
+	} Synchronous;
 
-        struct {
-            UCHAR TransferPeriod;
-            UCHAR ReqAckOffset;
-        } Synchronous;
-
-        struct{
-            UCHAR Width;
-        } Wide;
-    }ExtendedArguments;
+      struct
+	{
+	  UCHAR Width;
+	} Wide;
+    } ExtendedArguments;
 }SCSI_EXTENDED_MESSAGE, *PSCSI_EXTENDED_MESSAGE;
 #pragma pack ()
 
-//
-// SCSI bus status codes.
-//
+
+/* SCSI bus status codes */
 
 #define SCSISTAT_GOOD                  0x00
 #define SCSISTAT_CHECK_CONDITION       0x02
@@ -691,7 +693,7 @@ typedef struct _SCSI_EXTENDED_MESSAGE {
 #define START_UNIT_CODE 0x01
 #define STOP_UNIT_CODE  0x00
 
-// begin_ntminitape
+
 
 //
 // Inquiry buffer structure. This is the data returned from the target
@@ -863,14 +865,13 @@ typedef struct _SENSE_DATA
 #define IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES   ((FILE_DEVICE_SCSI << 16) + 0x0508)
 #define IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS   ((FILE_DEVICE_SCSI << 16) + 0x0509)
 
-//
-// Read Capacity Data - returned in Big Endian format
-//
+
+/* Read Capacity Data - returned in Big Endian format */
 
 typedef struct _READ_CAPACITY_DATA
 {
   ULONG LogicalBlockAddress;
-    ULONG BytesPerBlock;
+  ULONG BytesPerBlock;
 } READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
 
 
@@ -880,10 +881,11 @@ typedef struct _READ_CAPACITY_DATA
 // size for a TAPE device.
 //
 
-typedef struct _READ_BLOCK_LIMITS {
-    UCHAR Reserved;
-    UCHAR BlockMaximumSize[3];
-    UCHAR BlockMinimumSize[2];
+typedef struct _READ_BLOCK_LIMITS
+{
+  UCHAR Reserved;
+  UCHAR BlockMaximumSize[3];
+  UCHAR BlockMinimumSize[2];
 } READ_BLOCK_LIMITS_DATA, *PREAD_BLOCK_LIMITS_DATA;
 
 
@@ -895,19 +897,21 @@ typedef struct _READ_BLOCK_LIMITS {
 // Define Mode parameter header.
 //
 
-typedef struct _MODE_PARAMETER_HEADER {
-    UCHAR ModeDataLength;
-    UCHAR MediumType;
-    UCHAR DeviceSpecificParameter;
-    UCHAR BlockDescriptorLength;
+typedef struct _MODE_PARAMETER_HEADER
+{
+  UCHAR ModeDataLength;
+  UCHAR MediumType;
+  UCHAR DeviceSpecificParameter;
+  UCHAR BlockDescriptorLength;
 }MODE_PARAMETER_HEADER, *PMODE_PARAMETER_HEADER;
 
-typedef struct _MODE_PARAMETER_HEADER10 {
-    UCHAR ModeDataLength[2];
-    UCHAR MediumType;
-    UCHAR DeviceSpecificParameter;
-    UCHAR Reserved[2];
-    UCHAR BlockDescriptorLength[2];
+typedef struct _MODE_PARAMETER_HEADER10
+{
+  UCHAR ModeDataLength[2];
+  UCHAR MediumType;
+  UCHAR DeviceSpecificParameter;
+  UCHAR Reserved[2];
+  UCHAR BlockDescriptorLength[2];
 }MODE_PARAMETER_HEADER10, *PMODE_PARAMETER_HEADER10;
 
 #define MODE_FD_SINGLE_SIDE     0x01
@@ -920,11 +924,12 @@ typedef struct _MODE_PARAMETER_HEADER10 {
 // Define the mode parameter block.
 //
 
-typedef struct _MODE_PARAMETER_BLOCK {
-    UCHAR DensityCode;
-    UCHAR NumberOfBlocks[3];
-    UCHAR Reserved;
-    UCHAR BlockLength[3];
+typedef struct _MODE_PARAMETER_BLOCK
+{
+  UCHAR DensityCode;
+  UCHAR NumberOfBlocks[3];
+  UCHAR Reserved;
+  UCHAR BlockLength[3];
 }MODE_PARAMETER_BLOCK, *PMODE_PARAMETER_BLOCK;
 
 
@@ -949,178 +954,181 @@ typedef struct _MODE_DISCONNECT_PAGE
 // Define mode caching page.
 //
 
-typedef struct _MODE_CACHING_PAGE {
-    UCHAR PageCode : 6;
-    UCHAR Reserved : 1;
-    UCHAR PageSavable : 1;
-    UCHAR PageLength;
-    UCHAR ReadDisableCache : 1;
-    UCHAR MultiplicationFactor : 1;
-    UCHAR WriteCacheEnable : 1;
-    UCHAR Reserved2 : 5;
-    UCHAR WriteRetensionPriority : 4;
-    UCHAR ReadRetensionPriority : 4;
-    UCHAR DisablePrefetchTransfer[2];
-    UCHAR MinimumPrefetch[2];
-    UCHAR MaximumPrefetch[2];
-    UCHAR MaximumPrefetchCeiling[2];
+typedef struct _MODE_CACHING_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR ReadDisableCache:1;
+  UCHAR MultiplicationFactor:1;
+  UCHAR WriteCacheEnable:1;
+  UCHAR Reserved2:5;
+  UCHAR WriteRetensionPriority:4;
+  UCHAR ReadRetensionPriority:4;
+  UCHAR DisablePrefetchTransfer[2];
+  UCHAR MinimumPrefetch[2];
+  UCHAR MaximumPrefetch[2];
+  UCHAR MaximumPrefetchCeiling[2];
 }MODE_CACHING_PAGE, *PMODE_CACHING_PAGE;
 
 //
 // Define mode flexible disk page.
 //
 
-typedef struct _MODE_FLEXIBLE_DISK_PAGE {
-    UCHAR PageCode : 6;
-    UCHAR Reserved : 1;
-    UCHAR PageSavable : 1;
-    UCHAR PageLength;
-    UCHAR TransferRate[2];
-    UCHAR NumberOfHeads;
-    UCHAR SectorsPerTrack;
-    UCHAR BytesPerSector[2];
-    UCHAR NumberOfCylinders[2];
-    UCHAR StartWritePrecom[2];
-    UCHAR StartReducedCurrent[2];
-    UCHAR StepRate[2];
-    UCHAR StepPluseWidth;
-    UCHAR HeadSettleDelay[2];
-    UCHAR MotorOnDelay;
-    UCHAR MotorOffDelay;
-    UCHAR Reserved2 : 5;
-    UCHAR MotorOnAsserted : 1;
-    UCHAR StartSectorNumber : 1;
-    UCHAR TrueReadySignal : 1;
-    UCHAR StepPlusePerCyclynder : 4;
-    UCHAR Reserved3 : 4;
-    UCHAR WriteCompenstation;
-    UCHAR HeadLoadDelay;
-    UCHAR HeadUnloadDelay;
-    UCHAR Pin2Usage : 4;
-    UCHAR Pin34Usage : 4;
-    UCHAR Pin1Usage : 4;
-    UCHAR Pin4Usage : 4;
-    UCHAR MediumRotationRate[2];
-    UCHAR Reserved4[2];
+typedef struct _MODE_FLEXIBLE_DISK_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR TransferRate[2];
+  UCHAR NumberOfHeads;
+  UCHAR SectorsPerTrack;
+  UCHAR BytesPerSector[2];
+  UCHAR NumberOfCylinders[2];
+  UCHAR StartWritePrecom[2];
+  UCHAR StartReducedCurrent[2];
+  UCHAR StepRate[2];
+  UCHAR StepPluseWidth;
+  UCHAR HeadSettleDelay[2];
+  UCHAR MotorOnDelay;
+  UCHAR MotorOffDelay;
+  UCHAR Reserved2:5;
+  UCHAR MotorOnAsserted:1;
+  UCHAR StartSectorNumber:1;
+  UCHAR TrueReadySignal:1;
+  UCHAR StepPlusePerCyclynder:4;
+  UCHAR Reserved3:4;
+  UCHAR WriteCompenstation;
+  UCHAR HeadLoadDelay;
+  UCHAR HeadUnloadDelay;
+  UCHAR Pin2Usage:4;
+  UCHAR Pin34Usage:4;
+  UCHAR Pin1Usage:4;
+  UCHAR Pin4Usage:4;
+  UCHAR MediumRotationRate[2];
+  UCHAR Reserved4[2];
 }MODE_FLEXIBLE_DISK_PAGE, *PMODE_FLEXIBLE_DISK_PAGE;
 
 //
 // Define mode format page.
 //
 
-typedef struct _MODE_FORMAT_PAGE {
-    UCHAR PageCode : 6;
-    UCHAR Reserved : 1;
-    UCHAR PageSavable : 1;
-    UCHAR PageLength;
-    UCHAR TracksPerZone[2];
-    UCHAR AlternateSectorsPerZone[2];
-    UCHAR AlternateTracksPerZone[2];
-    UCHAR AlternateTracksPerLogicalUnit[2];
-    UCHAR SectorsPerTrack[2];
-    UCHAR BytesPerPhysicalSector[2];
-    UCHAR Interleave[2];
-    UCHAR TrackSkewFactor[2];
-    UCHAR CylinderSkewFactor[2];
-    UCHAR Reserved2 : 4;
-    UCHAR SurfaceFirst : 1;
-    UCHAR RemovableMedia : 1;
-    UCHAR HardSectorFormating : 1;
-    UCHAR SoftSectorFormating : 1;
-    UCHAR Reserved3[2];
+typedef struct _MODE_FORMAT_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR TracksPerZone[2];
+  UCHAR AlternateSectorsPerZone[2];
+  UCHAR AlternateTracksPerZone[2];
+  UCHAR AlternateTracksPerLogicalUnit[2];
+  UCHAR SectorsPerTrack[2];
+  UCHAR BytesPerPhysicalSector[2];
+  UCHAR Interleave[2];
+  UCHAR TrackSkewFactor[2];
+  UCHAR CylinderSkewFactor[2];
+  UCHAR Reserved2:4;
+  UCHAR SurfaceFirst:1;
+  UCHAR RemovableMedia:1;
+  UCHAR HardSectorFormating:1;
+  UCHAR SoftSectorFormating:1;
+  UCHAR Reserved3[2];
 }MODE_FORMAT_PAGE, *PMODE_FORMAT_PAGE;
 
 //
 // Define rigid disk driver geometry page.
 //
 
-typedef struct _MODE_RIGID_GEOMETRY_PAGE {
-    UCHAR PageCode : 6;
-    UCHAR Reserved : 1;
-    UCHAR PageSavable : 1;
-    UCHAR PageLength;
-    UCHAR NumberOfCylinders[2];
-    UCHAR NumberOfHeads;
-    UCHAR StartWritePrecom[2];
-    UCHAR StartReducedCurrent[2];
-    UCHAR DriveStepRate[2];
-    UCHAR LandZoneCyclinder[2];
-    UCHAR RotationalPositionLock : 2;
-    UCHAR Reserved2 : 6;
-    UCHAR RotationOffset;
-    UCHAR Reserved3;
-    UCHAR RoataionRate[2];
-    UCHAR Reserved4[2];
+typedef struct _MODE_RIGID_GEOMETRY_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR NumberOfCylinders[2];
+  UCHAR NumberOfHeads;
+  UCHAR StartWritePrecom[2];
+  UCHAR StartReducedCurrent[2];
+  UCHAR DriveStepRate[2];
+  UCHAR LandZoneCyclinder[2];
+  UCHAR RotationalPositionLock:2;
+  UCHAR Reserved2:6;
+  UCHAR RotationOffset;
+  UCHAR Reserved3;
+  UCHAR RoataionRate[2];
+  UCHAR Reserved4[2];
 }MODE_RIGID_GEOMETRY_PAGE, *PMODE_RIGID_GEOMETRY_PAGE;
 
 //
 // Define read write recovery page
 //
 
-typedef struct _MODE_READ_WRITE_RECOVERY_PAGE {
-
-    UCHAR PageCode : 6;
-    UCHAR Reserved1 : 1;
-    UCHAR PSBit : 1;
-    UCHAR PageLength;
-    UCHAR DCRBit : 1;
-    UCHAR DTEBit : 1;
-    UCHAR PERBit : 1;
-    UCHAR EERBit : 1;
-    UCHAR RCBit : 1;
-    UCHAR TBBit : 1;
-    UCHAR ARRE : 1;
-    UCHAR AWRE : 1;
-    UCHAR ReadRetryCount;
-    UCHAR Reserved4[4];
-    UCHAR WriteRetryCount;
-    UCHAR Reserved5[3];
-
+typedef struct _MODE_READ_WRITE_RECOVERY_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PSBit:1;
+  UCHAR PageLength;
+  UCHAR DCRBit:1;
+  UCHAR DTEBit:1;
+  UCHAR PERBit:1;
+  UCHAR EERBit:1;
+  UCHAR RCBit:1;
+  UCHAR TBBit:1;
+  UCHAR ARRE:1;
+  UCHAR AWRE:1;
+  UCHAR ReadRetryCount;
+  UCHAR Reserved4[4];
+  UCHAR WriteRetryCount;
+  UCHAR Reserved5[3];
 } MODE_READ_WRITE_RECOVERY_PAGE, *PMODE_READ_WRITE_RECOVERY_PAGE;
 
 //
 // Define read recovery page - cdrom
 //
 
-typedef struct _MODE_READ_RECOVERY_PAGE {
-
-    UCHAR PageCode : 6;
-    UCHAR Reserved1 : 1;
-    UCHAR PSBit : 1;
-    UCHAR PageLength;
-    UCHAR DCRBit : 1;
-    UCHAR DTEBit : 1;
-    UCHAR PERBit : 1;
-    UCHAR Reserved2 : 1;
-    UCHAR RCBit : 1;
-    UCHAR TBBit : 1;
-    UCHAR Reserved3 : 2;
-    UCHAR ReadRetryCount;
-    UCHAR Reserved4[4];
-
+typedef struct _MODE_READ_RECOVERY_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PSBit:1;
+  UCHAR PageLength;
+  UCHAR DCRBit:1;
+  UCHAR DTEBit:1;
+  UCHAR PERBit:1;
+  UCHAR Reserved2:1;
+  UCHAR RCBit:1;
+  UCHAR TBBit:1;
+  UCHAR Reserved3:2;
+  UCHAR ReadRetryCount;
+  UCHAR Reserved4[4];
 } MODE_READ_RECOVERY_PAGE, *PMODE_READ_RECOVERY_PAGE;
 
 //
 // Define CD-ROM Capabilities and Mechanical Status Page.
 //
 
-typedef struct _MODE_CAPABILITIES_PAGE2 {
-    UCHAR PageCode : 6;
-    UCHAR Reserved1 : 1;
-    UCHAR PSBit : 1;
-    UCHAR PageLength;
-    UCHAR Reserved2[2];
-    UCHAR Capabilities[4];
-    UCHAR MaximumSpeedSupported[2];
-    UCHAR Reserved3;
-    UCHAR NumberVolumeLevels;
-    UCHAR BufferSize[2];
-    UCHAR CurrentSpeed[2];
-    UCHAR Reserved4;
-    UCHAR Reserved5 : 1;
-    UCHAR DigitalOutput : 4;
-    UCHAR Reserved6 : 3;
-    UCHAR Reserved7[2];
+typedef struct _MODE_CAPABILITIES_PAGE2
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PSBit:1;
+  UCHAR PageLength;
+  UCHAR Reserved2[2];
+  UCHAR Capabilities[4];
+  UCHAR MaximumSpeedSupported[2];
+  UCHAR Reserved3;
+  UCHAR NumberVolumeLevels;
+  UCHAR BufferSize[2];
+  UCHAR CurrentSpeed[2];
+  UCHAR Reserved4;
+  UCHAR Reserved5:1;
+  UCHAR DigitalOutput:4;
+  UCHAR Reserved6:3;
+  UCHAR Reserved7[2];
 } MODE_CAPABILITIES_PAGE2, *PMODE_CAPABILITIES_PAGE2;
 
 //
@@ -1150,14 +1158,12 @@ typedef struct _MODE_CAPABILITIES_PAGE2 {
 #define MODE_HEADER_LENGTH                   4
 #define MODE_HEADER_LENGTH10                 8
 
-typedef struct _MODE_PARM_READ_WRITE {
-
-   MODE_PARAMETER_HEADER  ParameterListHeader;  // List Header Format
-   MODE_PARAMETER_BLOCK   ParameterListBlock;   // List Block Descriptor
-
+typedef struct _MODE_PARM_READ_WRITE
+{
+  MODE_PARAMETER_HEADER ParameterListHeader;	/* List Header Format */
+  MODE_PARAMETER_BLOCK ParameterListBlock;	/* List Block Descriptor */
 } MODE_PARM_READ_WRITE_DATA, *PMODE_PARM_READ_WRITE_DATA;
 
-// end_ntminitape
 
 //
 // CDROM audio control (0x0E)
@@ -1181,9 +1187,10 @@ typedef struct _MODE_PARM_READ_WRITE {
 
 #define CDB_USE_MSF                0x01
 
-typedef struct _PORT_OUTPUT {
-    UCHAR ChannelSelection;
-    UCHAR Volume;
+typedef struct _PORT_OUTPUT
+{
+  UCHAR ChannelSelection;
+  UCHAR Volume;
 } PORT_OUTPUT, *PPORT_OUTPUT;
 
 typedef struct _AUDIO_OUTPUT
@@ -1197,9 +1204,8 @@ typedef struct _AUDIO_OUTPUT
   PORT_OUTPUT PortOutput[4];
 } AUDIO_OUTPUT, *PAUDIO_OUTPUT;
 
-//
-// Multisession CDROM
-//
+
+/* Multisession CDROM */
 
 #define GET_LAST_SESSION 0x01
 #define GET_SESSION_DATA 0x02;
@@ -1209,11 +1215,11 @@ typedef struct _AUDIO_OUTPUT
 
 typedef struct _MECHANICAL_STATUS_INFORMATION_HEADER
 {
-  UCHAR CurrentSlot : 5;
-  UCHAR ChangerState : 2;
-  UCHAR Fault : 1;
-  UCHAR Reserved : 5;
-  UCHAR MechanismState : 3;
+  UCHAR CurrentSlot:5;
+  UCHAR ChangerState:2;
+  UCHAR Fault:1;
+  UCHAR Reserved:5;
+  UCHAR MechanismState:3;
   UCHAR CurrentLogicalBlockAddress[3];
   UCHAR NumberAvailableSlots;
   UCHAR SlotTableLength[2];
@@ -1221,9 +1227,9 @@ typedef struct _MECHANICAL_STATUS_INFORMATION_HEADER
 
 typedef struct _SLOT_TABLE_INFORMATION
 {
-  UCHAR DiscChanged : 1;
-  UCHAR Reserved : 6;
-  UCHAR DiscPresent : 1;
+  UCHAR DiscChanged:1;
+  UCHAR Reserved:6;
+  UCHAR DiscPresent:1;
   UCHAR Reserved2[3];
 } SLOT_TABLE_INFORMATION, *PSLOT_TABLE_INFORMATION;
 

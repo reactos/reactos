@@ -1,4 +1,4 @@
-/* $Id: disk.c,v 1.3 2002/01/27 01:25:15 ekohl Exp $
+/* $Id: disk.c,v 1.4 2002/01/31 14:58:12 ekohl Exp $
  *
  */
 
@@ -33,6 +33,10 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 BOOLEAN STDCALL
 DiskClassCheckDevice(IN PINQUIRYDATA InquiryData);
 
+NTSTATUS STDCALL
+DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp);
+
 
 static NTSTATUS
 DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
@@ -40,7 +44,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			    IN PDEVICE_OBJECT PortDeviceObject,
 			    IN ULONG PortNumber,
 			    IN ULONG DiskNumber,
-			    IN PIO_SCSI_CAPABILITIES Capabilities, /* what's this used for? */
+			    IN PIO_SCSI_CAPABILITIES Capabilities,
 			    IN PSCSI_INQUIRY_DATA InquiryData,
 			    IN PCLASS_INIT_DATA InitializationData);
 
@@ -90,12 +94,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 		sizeof(CLASS_INIT_DATA));
 
   InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
-  InitData.DeviceExtensionSize = sizeof(DISK_DEVICE_EXTENSION);
+  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION) + sizeof(DISK_DEVICE_EXTENSION);
   InitData.DeviceType = FILE_DEVICE_DISK;
   InitData.DeviceCharacteristics = 0;
 
   InitData.ClassError = NULL;				// DiskClassProcessError;
-  InitData.ClassReadWriteVerification = NULL;		// DiskClassReadWriteCheck;
+  InitData.ClassReadWriteVerification = DiskClassCheckReadWrite;
   InitData.ClassFindDeviceCallBack = DiskClassCheckDevice;
   InitData.ClassFindDevices = DiskClassFindDevices;
   InitData.ClassDeviceControl = DiskClassDeviceControl;
@@ -275,8 +279,17 @@ DiskClassCheckDevice(IN PINQUIRYDATA InquiryData)
 }
 
 
+NTSTATUS STDCALL
+DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp)
+{
+  DPRINT1("DiskClassCheckReadWrite() called\n");
 
-//    IDECreateDevices
+  return(STATUS_SUCCESS);
+}
+
+
+//    DiskClassCreateDeviceObject
 //
 //  DESCRIPTION:
 //    Create the raw device and any partition devices on this drive
@@ -306,27 +319,26 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			    IN PDEVICE_OBJECT PortDeviceObject,
 			    IN ULONG PortNumber,
 			    IN ULONG DiskNumber,
-			    IN PIO_SCSI_CAPABILITIES Capabilities, /* what's this used for? */
+			    IN PIO_SCSI_CAPABILITIES Capabilities,
 			    IN PSCSI_INQUIRY_DATA InquiryData,
-			    IN PCLASS_INIT_DATA InitializationData) /* what's this used for? */
+			    IN PCLASS_INIT_DATA InitializationData)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING UnicodeDeviceDirName;
   WCHAR NameBuffer[80];
   CHAR NameBuffer2[80];
   PDEVICE_OBJECT DiskDeviceObject;
+  PDEVICE_EXTENSION DiskDeviceExtension; /* defined in class2.h */
+  PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
   HANDLE Handle;
 
 #if 0
   IDE_DRIVE_IDENTIFY     DrvParms;
-  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
   PDEVICE_OBJECT PartitionDeviceObject;
-  PIDE_DEVICE_EXTENSION  PartitionDeviceExtension;
   ULONG                  SectorCount = 0;
-  PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
-  PPARTITION_INFORMATION PartitionEntry;
 #endif
-  ULONG i;
+  PPARTITION_INFORMATION PartitionEntry;
+  ULONG PartitionNumber;
   NTSTATUS Status;
 
   DPRINT1("DiskClassCreateDeviceObjects() called\n");
@@ -380,42 +392,138 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     {
       DPRINT1("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
 
+      /* Release (unclaim) the disk */
       ScsiClassClaimDevice(PortDeviceObject,
 			   InquiryData,
 			   TRUE,
 			   NULL);
+
+      /* Delete the harddisk device directory */
       ZwMakeTemporaryObject(Handle);
       ZwClose(Handle);
 
       return(Status);
     }
 
-
-#if 0
-  /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceObject,
-                                DrvParms.BytesPerSector,
-                                TRUE,
-                                &PartitionList);
-  if (!NT_SUCCESS(Status))
+  DiskDeviceObject->Flags |= DO_DIRECT_IO;
+  if (((PINQUIRYDATA)InquiryData->InquiryData)->RemovableMedia)
     {
-      DbgPrint("IoReadPartitionTable() failed\n");
-      return FALSE;
+      DiskDeviceObject->Characteristics |= FILE_REMOVABLE_MEDIA;
+    }
+  DiskDeviceObject->StackSize = (CCHAR)PortDeviceObject->StackSize + 1;
+
+  if (PortDeviceObject->AlignmentRequirement > DiskDeviceObject->AlignmentRequirement)
+    {
+      DiskDeviceObject->AlignmentRequirement = PortDeviceObject->AlignmentRequirement;
     }
 
-  DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
-  for (i=0;i < PartitionList->PartitionCount; i++)
+  DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
+
+  DiskDeviceExtension->LockCount = 0;
+  DiskDeviceExtension->DeviceNumber = DiskNumber;
+  DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
+
+  /* FIXME: Not yet! Will cause pointer corruption! */
+//  DiskDeviceExtension->PortCapabilities = PortCapabilities;
+
+  DiskDeviceExtension->StartingOffset.QuadPart = 0;
+  DiskDeviceExtension->PortNumber = (UCHAR)PortNumber;
+  DiskDeviceExtension->PathId = InquiryData->PathId;
+  DiskDeviceExtension->TargetId = InquiryData->TargetId;
+  DiskDeviceExtension->Lun = InquiryData->Lun;
+
+
+  /* Get disk geometry */
+  DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
+						     sizeof(DISK_GEOMETRY));
+  if (DiskDeviceExtension->DiskGeometry == NULL)
     {
-      PartitionEntry = &PartitionList->PartitionEntry[i];
+      DPRINT1("Failed to allocate geometry buffer!\n");
 
-      DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
-             i,
-             PartitionEntry->PartitionNumber,
-             PartitionEntry->BootIndicator,
-             PartitionEntry->PartitionType,
-             PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-             PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+      IoDeleteDevice(DiskDeviceObject);
 
+      /* Release (unclaim) the disk */
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+
+      /* Delete the harddisk device directory */
+      ZwMakeTemporaryObject(Handle);
+      ZwClose(Handle);
+
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  /* Read the drive's capacity */
+  Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
+  if (!NT_SUCCESS(Status) &&
+      (DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0)
+    {
+      DPRINT1("Failed to retrieve drive capacity!\n");
+      return(STATUS_SUCCESS);
+    }
+  else
+    {
+      /* Clear the verify flag for non-removable media drives. */
+      DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
+    }
+
+  DPRINT1("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
+
+  /* Read partition table */
+  Status = IoReadPartitionTable(DiskDeviceObject,
+				DiskDeviceExtension->DiskGeometry->BytesPerSector,
+				TRUE,
+				&PartitionList);
+
+  DPRINT1("IoReadPartitionTable(): Status: %lx\n", Status);
+
+  if ((!NT_SUCCESS(Status) || PartitionList->PartitionCount == 0) &&
+      DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+    {
+      if (!NT_SUCCESS(Status))
+	{
+	  /* Drive is not ready. */
+//	  diskData->DriveNotReady = TRUE;
+	}
+      else
+	{
+	  ExFreePool(PartitionList);
+	}
+
+      /* Allocate a partition list for a single entry. */
+      PartitionList = ExAllocatePool(NonPagedPool,
+				     sizeof(DRIVE_LAYOUT_INFORMATION));
+      if (PartitionList != NULL)
+	{
+	  RtlZeroMemory(PartitionList,
+			sizeof(DRIVE_LAYOUT_INFORMATION));
+	  PartitionList->PartitionCount = 1;
+
+	  Status = STATUS_SUCCESS;
+	}
+    }
+
+  if (NT_SUCCESS(Status))
+    {
+      DPRINT1("Read partition table!\n");
+
+      DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
+
+      for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
+	{
+	  PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
+
+	  DPRINT1("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
+		  PartitionNumber,
+		  PartitionEntry->PartitionNumber,
+		  PartitionEntry->BootIndicator,
+		  PartitionEntry->PartitionType,
+		  PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
+		  PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+
+#if 0
       /* Create device for partition */
       Status = IDECreateDevice(DriverObject,
                                &PartitionDeviceObject,
@@ -432,14 +540,15 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
           break;
         }
 
-      /* Initialize pointer to disk device extension */
-      PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
-      PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
-   }
-
-   if (PartitionList != NULL)
-     ExFreePool(PartitionList);
+	  /* Initialize pointer to disk device extension */
+	  PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
+	  PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
 #endif
+	}
+
+
+      ExFreePool(PartitionList);
+    }
 
   DPRINT1("DiskClassCreateDeviceObjects() done\n");
 

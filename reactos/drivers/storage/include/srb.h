@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.3 2002/01/27 01:25:34 ekohl Exp $
+/* $Id: srb.h,v 1.4 2002/01/31 14:58:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,9 +10,8 @@
 #ifndef __STORAGE_INCLUDE_SRB_H
 #define __STORAGE_INCLUDE_SRB_H
 
-//
-// Define SCSI maximum configuration parameters.
-//
+
+/* Define SCSI maximum configuration parameters. */
 
 #define SCSI_MAXIMUM_LOGICAL_UNITS 8
 #define SCSI_MAXIMUM_TARGETS_PER_BUS 32
@@ -20,14 +19,11 @@
 #define SCSI_MINIMUM_PHYSICAL_BREAKS  16
 #define SCSI_MAXIMUM_PHYSICAL_BREAKS 255
 
-//
-// This constant is for backward compatibility.
-// This use to be the maximum number of targets supported.
-//
+
+/* Obsolete. For backward compatibility only. */
 
 #define SCSI_MAXIMUM_TARGETS 8
 
-// begin_ntminitape
 
 #define MAXIMUM_CDB_SIZE 12
 
@@ -125,9 +121,8 @@ typedef struct _SCSI_REQUEST_BLOCK
 
 #define SCSI_REQUEST_BLOCK_SIZE sizeof(SCSI_REQUEST_BLOCK)
 
-//
-// SRB Functions
-//
+
+/* SRB Functions */
 
 #define SRB_FUNCTION_EXECUTE_SCSI           0x00
 #define SRB_FUNCTION_CLAIM_DEVICE           0x01
@@ -146,9 +141,8 @@ typedef struct _SCSI_REQUEST_BLOCK
 #define SRB_FUNCTION_FLUSH_QUEUE            0x15
 #define SRB_FUNCTION_REMOVE_DEVICE          0x16
 
-//
-// SRB Status
-//
+
+/* SRB Status */
 
 #define SRB_STATUS_PENDING                  0x00
 #define SRB_STATUS_SUCCESS                  0x01
@@ -177,18 +171,16 @@ typedef struct _SCSI_REQUEST_BLOCK
 #define SRB_STATUS_BAD_FUNCTION             0x22
 #define SRB_STATUS_ERROR_RECOVERY           0x23
 
-//
-// SRB Status Masks
-//
+
+/* SRB Status Masks */
 
 #define SRB_STATUS_QUEUE_FROZEN             0x40
 #define SRB_STATUS_AUTOSENSE_VALID          0x80
 
 #define SRB_STATUS(Status) (Status & ~(SRB_STATUS_AUTOSENSE_VALID | SRB_STATUS_QUEUE_FROZEN))
 
-//
-// SRB Flag Bits
-//
+
+/* SRB Flag Bits */
 
 #define SRB_FLAGS_QUEUE_ACTION_ENABLE       0x00000002
 #define SRB_FLAGS_DISABLE_DISCONNECT        0x00000004
@@ -205,18 +197,15 @@ typedef struct _SCSI_REQUEST_BLOCK
 #define SRB_FLAGS_ALLOCATED_FROM_ZONE       0x00020000
 #define SRB_FLAGS_SGLIST_FROM_POOL          0x00040000
 
-//
-// Queue Action
-//
+
+/* Queue Action */
 
 #define SRB_SIMPLE_TAG_REQUEST              0x20
 #define SRB_HEAD_OF_QUEUE_TAG_REQUEST       0x21
 #define SRB_ORDERED_QUEUE_TAG_REQUEST       0x22
 
 
-//
-// Port driver error codes
-//
+/* Port driver error codes */
 
 #define SP_BUS_PARITY_ERROR         0x0001
 #define SP_UNEXPECTED_DISCONNECT    0x0002
@@ -229,9 +218,8 @@ typedef struct _SCSI_REQUEST_BLOCK
 #define SP_BAD_FW_WARNING           0x0009
 #define SP_BAD_FW_ERROR             0x000a
 
-//
-// Return values for SCSI_HW_FIND_ADAPTER.
-//
+
+/* Return values for SCSI_HW_FIND_ADAPTER. */
 
 #define SP_RETURN_NOT_FOUND     0
 #define SP_RETURN_FOUND         1
