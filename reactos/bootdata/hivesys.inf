@@ -201,7 +201,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 
-; NDIS driver
+; NDIS driver - the only boot-start network driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
@@ -209,19 +209,29 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NIC drivers are like any other drivers - but no card-specific info here.  bind/route/export
-; should have one entry per child device object. Note that REG_MULTI_SZ is 0x00010000.
+; should have one entry per child device object. 
 ; Comment the networking stuff out if you don't have hte card and don't want to see errors
 ; NE2000 NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Test",0x00010001,0xbaadf00d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00010000,"Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","0",0x00000000,"Root\POSVPN\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","NextInstance",0x00010001,0x00000001
+
+; one day this will happen automatically; until then we need this since ndis5 drivers
+; rely on the fact that their resources are handed to them by ndis, so we have to find
+; the driver that goes with the detected cards.  this is how.
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
 
 ; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
 ; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
@@ -234,9 +244,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Type",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Route",0x00010000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Port",0x00010001,0x00000280
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00010001,0x00000009
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00010001,0xbaadf00d
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Port",0x00000000,"280"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00000000,"9"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00000000,"baadf00d"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","StringTest",0x00000000,"StringTest"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","NetworkAddress",0x00000000,"001122334455"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
@@ -244,34 +254,73 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; AMD PCNet NIC driver
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Bind",0x00010000,"\Device\PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Export",0x00010000,"\Device\PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Route",0x00010000,"PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Bind",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Export",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Route",0x00010000,"PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","Count",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","NextInstance",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"PCNet"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
 
-; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
-; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
-; for the parent driver plus a globally-increasing serial number (i.e. across all ndis miniports)
-; TODO: create this with NDI
-; NE2000 Adapter 1
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Type",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Bind",0x00010000,"\Device\PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Export",0x00010000,"\Device\PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Route",0x00010000,"PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","Port",0x00010001,0x00000280
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","Irq",0x00010001,0x00000009
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","DwordTest",0x00010001,0xbaadf00d
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","StringTest",0x00000000,"StringTest"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","NetworkAddress",0x00000000,"001122334455"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.1.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.1.0.100"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
+; AMD PCNet Adapter 1
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Type",0x00010001,0x00000004
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Bind",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Export",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Route",0x00010000,"PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BUS_TO_SCAN",0x00000000,"ALL"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BUSTIMER",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BUSTYPE",0x00000000,"5"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","EXTPHY",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","FDUP",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","LED0",0x00000000,"10000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","LED1",0x00000000,"10000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","LED2",0x00000000,"10000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","LED3",0x00000000,"10000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","MPMODE",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","TP",0x00000000,"1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","SlotNumber",0x00000000,"10"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BusNumber",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.1.0.1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.1.0.100"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
+
+; ReactOS PCNet Driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcnet.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Bind",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Export",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Route",0x00010000,"PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","Count",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","NextInstance",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"PCNet"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+
+; PCNet Adapter 1
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1","Type",0x00010001,0x00000004
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Bind",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Export",0x00010000,"\Device\PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Linkage","Route",0x00010000,"PCNet1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","SlotNumber",0x00000000,"10"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BusNumber",0x00000000,"0"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.1.0.1"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.1.0.100"
+;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
@@ -318,6 +367,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Type",0x00010001,0x00000001
 
+; SoftICE
+HKLM,"SYSTEM\CurrentControlSet\Services\ntice","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Group",0x00000000,"Debug"
+HKLM,"SYSTEM\CurrentControlSet\Services\ntice","ImagePath",0x00020000,"system32\drivers\ntice.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Type",0x00010001,0x00000001
+
 ; PS/2 mouse port driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
@@ -355,8 +411,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; These bindings are of the windows 2000 type, and will probably need to be
 ; twiddled to get 3rd-party network-related software to work.
 ; NT4 puts additional stuff in the Bind, Export, and Route values.
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_Ne20001"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,"\Device\PCNet1", "\Device\Ne20001", "\Device\PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000, "\Device\Ne20001"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_PCNet1", "\Device\Tcpip_Ne20001", "\Device\Tcpip_PCNet1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000, "\Device\Tcpip_Ne20001"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"PCNet1", "Ne20001", "PCNet1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
