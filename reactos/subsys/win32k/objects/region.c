@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.56 2004/05/18 15:25:25 weiden Exp $ */
+/* $Id: region.c,v 1.57 2004/05/18 22:32:48 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -2647,7 +2647,7 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
  *     bucket.  Finally, we can insert it.
  *
  */
-static void REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
+static void FASTCALL REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
                 INT scanline, ScanLineListBlock **SLLBlock, INT *iSLLBlock)
 
 {
@@ -2719,7 +2719,7 @@ static void REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
  *     leaving them sorted by smaller x coordinate.
  *
  */
-static void REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
+static void FASTCALL REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
 {
     EdgeTableEntry *pPrevAET;
     EdgeTableEntry *tmp;
@@ -2765,7 +2765,7 @@ static void REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
  *         V------------------->       V---> ...
  *
  */
-static void REGION_computeWAET(EdgeTableEntry *AET)
+static void FASTCALL REGION_computeWAET(EdgeTableEntry *AET)
 {
     register EdgeTableEntry *pWETE;
     register int inside = 1;
@@ -2801,7 +2801,7 @@ static void REGION_computeWAET(EdgeTableEntry *AET)
  *     Edge Table.
  *
  */
-static BOOL REGION_InsertionSort(EdgeTableEntry *AET)
+static BOOL FASTCALL REGION_InsertionSort(EdgeTableEntry *AET)
 {
     EdgeTableEntry *pETEchase;
     EdgeTableEntry *pETEinsert;
@@ -2838,7 +2838,7 @@ static BOOL REGION_InsertionSort(EdgeTableEntry *AET)
  *
  *     Clean up our act.
  */
-static void REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
+static void FASTCALL REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
 {
     ScanLineListBlock   *tmpSLLBlock;
 
@@ -2856,7 +2856,7 @@ static void REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
  *
  *     Create an array of rectangles from a list of points.
  */
-static int REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
+static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
 		       POINTBLOCK *FirstPtBlock, ROSRGNDATA *reg)
 {
     RECT *rects;
@@ -2953,7 +2953,7 @@ static int REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
  *     which an edge is initially entered.
  *
  */
-static void REGION_CreateETandAET(const INT *Count, INT nbpolygons,
+static void FASTCALL REGION_CreateETandAET(const INT *Count, INT nbpolygons,
             const POINT *pts, EdgeTable *ET, EdgeTableEntry *AET,
             EdgeTableEntry *pETEs, ScanLineListBlock *pSLLBlock)
 {
