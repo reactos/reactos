@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.13 2000/12/01 12:39:17 jean Exp $
+/* $Id: conio.c,v 1.14 2000/12/09 06:29:29 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -519,7 +519,7 @@ VOID Console_Api( DWORD RefreshEvent )
   if( !NT_SUCCESS( Status ) )
     {
       DbgPrint( "CSR: NtCreateEvent failed: %x\n", Status );
-      return;
+      NtTerminateProcess( NtCurrentProcess(), Status );
     }
   Events[1] = (HANDLE)RefreshEvent;
   while( 1 )
@@ -555,7 +555,7 @@ VOID Console_Api( DWORD RefreshEvent )
 	      else if( Status != STATUS_WAIT_0 )
 		{
 		  DbgPrint( "CSR: NtWaitForMultipleObjects failed: %x, exiting\n", Status );
-		  return;
+		  NtTerminateProcess( NtCurrentProcess(), Status );
 		}
 	      else break;
 	    }
