@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.13 2004/09/26 22:28:49 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.14 2004/09/27 12:07:47 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,6 +135,7 @@ error: \
   { \
     LEAVE_CRITICAL(); \
     DPRINT1("%s(): Invalid %s handle: 0x%x !!!\n", __FUNCTION__, #ObjectType , Handle); \
+    KeRosDumpStackFrames(NULL,10); \
     goto error; \
   } \
 
@@ -2235,6 +2236,28 @@ NtUserSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy
   }
   LEAVE_CRITICAL();
 
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserMoveWindow (
+    HWND hWnd,
+    int X,
+    int Y,
+    int nWidth,
+    int nHeight,
+    BOOL bRepaint )
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(BOOL, FALSE);
+ 
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = WinPosSetWindowPos(Window, NULL, X, Y, nWidth, nHeight,
+    (bRepaint ? SWP_NOZORDER | SWP_NOACTIVATE
+              : SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW));
+  LEAVE_CRITICAL();
+ 
   END_NTUSER();
 }
 
