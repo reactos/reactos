@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.13 2000/07/07 01:18:04 phreak Exp $
+/* $Id: driver.c,v 1.14 2000/07/07 11:59:11 ekohl Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -81,6 +81,9 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
   RtlInitUnicodeString (&DriverNameW, Name);
 
   ModuleObject = EngLoadImage(&DriverNameW);
+  if (ModuleObject == NULL)
+    return NULL;
+
   DRIVER_RegisterDriver( L"DISPLAY", ModuleObject->EntryPoint );
   return (PGD_ENABLEDRIVER)ModuleObject->EntryPoint;
 }
@@ -181,6 +184,8 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   /* Phase 1 */
   RtlInitUnicodeString (&DriverNameW, L"\\??\\C:\\reactos\\system32\\drivers\\vgamp.sys");
   ModuleObject = EngLoadImage(&DriverNameW);
+  if (ModuleObject == NULL)
+     return NULL;
 
   /* Phase 2 */
   if (Name[0] != '\\')
