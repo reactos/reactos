@@ -81,6 +81,8 @@ VOID
 ExInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
+VOID
+ExpInitializeCallbacks(VOID);
 
 /* OTHER FUNCTIONS **********************************************************/
 

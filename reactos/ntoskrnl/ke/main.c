@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.187 2004/05/29 22:10:05 hbirr Exp $
+/* $Id: main.c,v 1.188 2004/06/19 08:48:01 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -663,6 +663,9 @@ ExpInitializeExecutive(VOID)
   IoCreateDriverList();
 
   IoInit2();
+
+  /* Initialize Callbacks before drivers */
+  ExpInitializeCallbacks();
 
   /*
    * Load boot start drivers
