@@ -167,7 +167,8 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "Until then, there must be no regrets, no fears, no anxieties.\n"
        "Just go forward in all your beliefs, and prove to me that I am not mistaken in mine.\n",
        "Lowest possible energy state reached! Switch off now to achive a Bose-Einstein condensate.\n",
-       "Hasta la vista, BABY!\n"
+       "Hasta la vista, BABY!\n",
+       "They live, we sleep!\n"
     };
    LARGE_INTEGER Now;
 
