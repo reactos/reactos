@@ -274,6 +274,7 @@ NtGdiStrokeAndFillPath			1
 NtGdiStrokePath				1
 NtGdiSwapBuffers				1
 NtGdiTextOut				5
+NtGdiTransparentBlt         11
 NtGdiTranslateCharsetInfo		3
 NtGdiUnrealizeObject			2
 NtGdiUpdateColors			1

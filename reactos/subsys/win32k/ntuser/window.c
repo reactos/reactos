@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.201 2004/03/23 21:47:37 weiden Exp $
+/* $Id: window.c,v 1.202 2004/03/28 21:46:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3410,7 +3410,6 @@ IntGetWindowRgn(HWND hWnd, HRGN hRgn)
   if(!hRgn)
   {
     IntReleaseWindowObject(WindowObject);
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return ERROR;
   }
   
@@ -3453,7 +3452,6 @@ IntGetWindowRgnBox(HWND hWnd, RECT *Rect)
   if(!Rect)
   {
     IntReleaseWindowObject(WindowObject);
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return ERROR;
   }
   

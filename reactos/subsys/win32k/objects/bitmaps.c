@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.64 2004/03/22 20:46:33 royce Exp $ */
+/* $Id: bitmaps.c,v 1.65 2004/03/28 21:46:26 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -261,6 +261,123 @@ NtGdiBitBlt(
 	DC_UnlockDc(hDCDest);
 
 	return Status;
+}
+
+BOOL STDCALL
+NtGdiTransparentBlt(
+	HDC			hdcDst,
+	INT			xDst,
+	INT			yDst,
+	INT			cxDst,
+	INT			cyDst,
+	HDC			hdcSrc,
+	INT			xSrc,
+	INT			ySrc,
+	INT			cxSrc,
+	INT			cySrc,
+	COLORREF	TransColor)
+{
+  PDC DCDest, DCSrc;
+  RECT rcDest, rcSrc;
+  PSURFOBJ SurfDest, SurfSrc;
+  PSURFGDI SurfGDIDest, SurfGDISrc;
+  PXLATEOBJ XlateObj;
+  HPALETTE SourcePalette, DestPalette;
+  PPALGDI PalDestGDI, PalSourceGDI;
+  USHORT PalDestMode, PalSrcMode;
+  
+  if(!(DCDest = DC_LockDc(hdcDst)))
+  {
+    DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcDst);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if((hdcDst != hdcSrc) && !(DCSrc = DC_LockDc(hdcSrc)))
+  {
+    DC_UnlockDc(hdcDst);
+    DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcSrc);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if(hdcDst == hdcSrc)
+  {
+    DCSrc = DCDest;
+  }
+  
+  if(DCDest->w.hPalette)
+    DestPalette = DCDest->w.hPalette;
+  else
+    DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+  
+  if(DCSrc->w.hPalette)
+    SourcePalette = DCSrc->w.hPalette;
+  else
+    SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+  
+  if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
+  {
+    DC_UnlockDc(hdcSrc);
+    DC_UnlockDc(hdcDst);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if((DestPalette != SourcePalette) && !(PalDestGDI = PALETTE_LockPalette(DestPalette)))
+  {
+    PALETTE_UnlockPalette(SourcePalette);
+    DC_UnlockDc(hdcSrc);
+    DC_UnlockDc(hdcDst);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if(DestPalette != SourcePalette)
+  {
+    PalDestMode = PalDestGDI->Mode;
+    PalSrcMode = PalSourceGDI->Mode;
+    PALETTE_UnlockPalette(DestPalette);
+  }
+  else
+  {
+    PalDestMode = PalSrcMode = PalSourceGDI->Mode;
+  }
+  PALETTE_UnlockPalette(SourcePalette);
+  
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
+  
+  SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+  ASSERT(SurfDest);
+  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
+  ASSERT(SurfGDIDest);
+  SurfSrc = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
+  ASSERT(SurfSrc);
+  SurfGDISrc = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
+  ASSERT(SurfGDISrc);
+  
+  rcDest.left = xDst;
+  rcDest.top = yDst;
+  rcDest.right = rcDest.left + cxDst;
+  rcDest.bottom = rcDest.bottom + cyDst;
+  rcSrc.left = xSrc;
+  rcSrc.top = ySrc;
+  rcSrc.right = rcDest.left + cxSrc;
+  rcSrc.bottom = rcDest.bottom + cySrc;
+  
+  if((cxDst != cxSrc) || (cyDst != cySrc))
+  {
+    /* FIXME - Create a temporary bitmap and stretchblt it */
+  }
+  
+  
+  DC_UnlockDc(hdcSrc);
+  if(hdcDst != hdcSrc)
+  {
+    DC_UnlockDc(hdcDst);
+  }
+  if(XlateObj)
+  {
+    EngDeleteXlate(XlateObj);
+  }
+  return TRUE;
 }
 
 HBITMAP STDCALL

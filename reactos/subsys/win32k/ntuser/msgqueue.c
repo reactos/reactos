@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.78 2004/03/28 16:21:58 weiden Exp $
+/* $Id: msgqueue.c,v 1.79 2004/03/28 21:46:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -842,7 +842,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   IntLockMessageQueue(MessageQueue);
   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
     {
-      ExReleaseFastMutex(&MessageQueue->Lock);
+      IntUnLockMessageQueue(MessageQueue);
       return(FALSE);
     }
   Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);

@@ -304,5 +304,22 @@ NtGdiStretchDIBits (
 	UINT			Usage,
 	DWORD			ROP
 	);
+
+BOOL
+STDCALL
+NtGdiTransparentBlt(
+	HDC			hdcDst,
+	INT			xDst,
+	INT			yDst,
+	INT			cxDst,
+	INT			cyDst,
+	HDC			hdcSrc,
+	INT			xSrc,
+	INT			ySrc,
+	INT			cxSrc,
+	INT			cySrc,
+	COLORREF	TransColor
+	);
+
 #endif
 
