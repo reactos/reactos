@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.125 2002/06/16 11:44:53 ekohl Exp $
+/* $Id: main.c,v 1.126 2002/06/17 22:16:33 joeg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -528,6 +528,10 @@ ExpInitializeExecutive(VOID)
     KeBugCheck(SECURITY_INITIALIZATION_FAILED);
 
   ObInit();
+
+  if (!SeInit2())
+    KeBugCheck(SECURITY1_INITIALIZATION_FAILED);
+
   PiInitProcessManager();
 
   KdInit1();
@@ -750,9 +754,6 @@ ExpInitializeExecutive(VOID)
    *  - set dos system path, dos device map, etc.
    */
   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
-
-  if (!SeInit2())
-    KeBugCheck(SECURITY1_INITIALIZATION_FAILED);
 
   /*
    *  Launch initial process

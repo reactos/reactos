@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.81 2002/06/11 22:09:03 dwelch Exp $
+/* $Id: process.c,v 1.82 2002/06/17 22:16:34 joeg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -95,13 +95,6 @@ PsGetNextProcess(PEPROCESS OldProcess)
    return(NextProcess);
 }
 
-NTSTATUS STDCALL 
-NtOpenProcessToken(IN	HANDLE		ProcessHandle,
-		   IN	ACCESS_MASK	DesiredAccess,
-		   OUT	PHANDLE		TokenHandle)
-{
-  return(STATUS_UNSUCCESSFUL);
-}
 
 NTSTATUS STDCALL 
 _NtOpenProcessToken(IN	HANDLE		ProcessHandle,
@@ -121,9 +114,18 @@ _NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 			   Token,
 			   DesiredAccess,
 			   FALSE,
-			   ProcessHandle);
+			   TokenHandle);
    ObDereferenceObject(Token);
    return(Status);
+}
+
+
+NTSTATUS STDCALL 
+NtOpenProcessToken(IN	HANDLE		ProcessHandle,
+		   IN	ACCESS_MASK	DesiredAccess,
+		   OUT	PHANDLE		TokenHandle)
+{
+  return _NtOpenProcessToken(ProcessHandle, DesiredAccess, TokenHandle);
 }
 
 
@@ -264,7 +266,7 @@ PsInitProcessManagment(VOID)
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
-   
+
    ObCreateHandle(PsInitialSystemProcess,
 		  PsInitialSystemProcess,
 		  PROCESS_ALL_ACCESS,
@@ -831,13 +833,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessIoCounters:
       case ProcessVmCounters:
       case ProcessTimes:
-      case ProcessBasePriority:
-      case ProcessRaisePriority:
       case ProcessDebugPort:
-      case ProcessExceptionPort:
-      case ProcessAccessToken:
       case ProcessLdtInformation:
-      case ProcessLdtSize:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
@@ -845,24 +842,12 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	*((PULONG)ProcessInformation) = Process->DefaultHardErrorProcessing;
 	break;
 	
-      case ProcessIoPortHandlers:
       case ProcessWorkingSetWatch:
-      case ProcessUserModeIOPL:
-      case ProcessEnableAlignmentFaultFixup:
 	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case ProcessForegroundInformation:
-	((PPROCESS_PRIORITY_CLASS)ProcessInformation)->Foreground =
-		FALSE; /*FIXME: how to compute it? */
-      case ProcessPriorityClass:
-	((PPROCESS_PRIORITY_CLASS)ProcessInformation)->PriorityClass =
-		Process->PriorityClass;
 	break;
 
       case ProcessWx86Information:
       case ProcessHandleCount:
-      case ProcessAffinityMask:
       case ProcessPriorityBoost:
       case ProcessDeviceMap:
       case ProcessSessionInformation:
@@ -870,6 +855,17 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
+      case ProcessBasePriority:
+      case ProcessRaisePriority:
+      case ProcessExceptionPort:
+      case ProcessAccessToken:
+      case ProcessLdtSize:
+      case ProcessIoPortHandlers:
+      case ProcessUserModeIOPL:
+      case ProcessEnableAlignmentFaultFixup:
+      case ProcessPriorityClass:
+      case ProcessAffinityMask:
+      case ProcessForegroundInformation:
       default:
 	Status = STATUS_INVALID_INFO_CLASS;
      }
@@ -896,7 +892,7 @@ PspAssignPrimaryToken(PEPROCESS Process,
 	return(Status);
      }
    Status = SeExchangePrimaryToken(Process, Token, &OldToken);
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
      {
 	ObDereferenceObject(OldToken);
      }
@@ -912,7 +908,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 {
    PEPROCESS Process;
    NTSTATUS Status;
-   PPROCESS_BASIC_INFORMATION ProcessBasicInformationP;
    PHANDLE ProcessAccessTokenP;
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -925,25 +920,17 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
      {
 	return(Status);
      }
-   
+
    switch (ProcessInformationClass)
      {
-      case ProcessBasicInformation:
-	ProcessBasicInformationP = (PPROCESS_BASIC_INFORMATION)
-	  ProcessInformation;
-	memset(ProcessBasicInformationP, 0, sizeof(PROCESS_BASIC_INFORMATION));
-	Process->Pcb.Affinity = ProcessBasicInformationP->AffinityMask;
-	Status = STATUS_SUCCESS;
-	break;
-	
       case ProcessQuotaLimits:
-      case ProcessIoCounters:
-      case ProcessVmCounters:
-      case ProcessTimes:
       case ProcessBasePriority:
       case ProcessRaisePriority:
       case ProcessDebugPort:
       case ProcessExceptionPort:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
       case ProcessAccessToken:
 	ProcessAccessTokenP = (PHANDLE)ProcessInformation;
 	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
@@ -951,7 +938,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 	
       case ProcessImageFileName:
 	memcpy(Process->ImageFileName, ProcessInformation, 8);
-//	DPRINT1("Process->ImageFileName %.8s\n", Process->ImageFileName);
+//      DPRINT1("Process->ImageFileName %.8s\n", Process->ImageFileName);
 	Status = STATUS_SUCCESS;
 	break;
 	
@@ -963,11 +950,20 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessUserModeIOPL:
       case ProcessEnableAlignmentFaultFixup:
       case ProcessPriorityClass:
+      case ProcessAffinityMask:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case ProcessBasicInformation:
+      case ProcessIoCounters:
+      case ProcessVmCounters:
+      case ProcessTimes:
+      case ProcessPooledUsageAndLimits:
       case ProcessWx86Information:
       case ProcessHandleCount:
-      case ProcessAffinityMask:
+      case ProcessWow64Information:
       default:
-	Status = STATUS_NOT_IMPLEMENTED;
+	Status = STATUS_INVALID_INFO_CLASS;
      }
    ObDereferenceObject(Process);
    return(Status);
