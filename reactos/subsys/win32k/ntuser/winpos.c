@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.87 2004/02/04 22:59:04 gvg Exp $
+/* $Id: winpos.c,v 1.88 2004/02/08 10:53:17 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -849,13 +849,12 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* FIXME: Actually do something with WVR_VALIDRECTS */
 
-   if (! (WinPos.flags & SWP_NOMOVE)
-       && (NewWindowRect.left != OldWindowRect.left
-           || NewWindowRect.top != OldWindowRect.top))
+   if (NewClientRect.left != OldClientRect.left ||
+       NewClientRect.top != OldClientRect.top)
    {
       WinPosInternalMoveWindow(Window,
-                               NewWindowRect.left - OldWindowRect.left,
-                               NewWindowRect.top - OldWindowRect.top);
+                               NewClientRect.left - OldClientRect.left,
+                               NewClientRect.top - OldClientRect.top);
    }
 
    Window->WindowRect = NewWindowRect;

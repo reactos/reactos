@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.181 2004/02/04 23:01:07 gvg Exp $
+/* $Id: window.c,v 1.182 2004/02/08 10:53:17 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1404,7 +1404,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   NtGdiOffsetRect(&WindowObject->WindowRect, 
 		 MaxPos.x - WindowObject->WindowRect.left,
 		 MaxPos.y - WindowObject->WindowRect.top);
-
 
   if (NULL != ParentWindow)
     {
@@ -3039,52 +3038,53 @@ NtUserSetLogonNotifyWindow(DWORD Unknown0)
  */
 BOOL STDCALL
 NtUserSetMenu(
-  HWND hWnd,
-  HMENU hMenu,
-  BOOL bRepaint)
+   HWND hWnd,
+   HMENU hMenu,
+   BOOL bRepaint)
 {
-  PWINDOW_OBJECT WindowObject;
-  PMENU_OBJECT MenuObject;
-  BOOL Changed = FALSE;
-  WindowObject = IntGetWindowObject((HWND)hWnd);
-  if(!WindowObject)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
-  
-  if(hMenu)
-  {
-    /* assign new menu handle */
-    MenuObject = IntGetMenuObject((HWND)hMenu);
-    if(!MenuObject)
-    {
-      IntReleaseWindowObject(WindowObject);
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+   PWINDOW_OBJECT WindowObject;
+   PMENU_OBJECT MenuObject;
+   BOOL Changed = FALSE;
+
+   WindowObject = IntGetWindowObject((HWND)hWnd);
+   if (!WindowObject)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
-    }
+   }
+  
+   if (hMenu)
+   {
+      /* assign new menu handle */
+      MenuObject = IntGetMenuObject((HWND)hMenu);
+      if (!MenuObject)
+      {
+         IntReleaseWindowObject(WindowObject);
+         SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+         return FALSE;
+      }
     
-    Changed = (WindowObject->IDMenu != (UINT)hMenu);
-    WindowObject->IDMenu = (UINT)hMenu;
+      Changed = (WindowObject->IDMenu != (UINT)hMenu);
+      WindowObject->IDMenu = (UINT)hMenu;
     
-    IntReleaseMenuObject(MenuObject);
-  }
-  else
-  {
-    /* remove the menu handle */
-    Changed = (WindowObject->IDMenu != 0);
-    WindowObject->IDMenu = 0;
-  }
+      IntReleaseMenuObject(MenuObject);
+   }
+   else
+   {
+      /* remove the menu handle */
+      Changed = (WindowObject->IDMenu != 0);
+      WindowObject->IDMenu = 0;
+   }
   
-  IntReleaseWindowObject(WindowObject);
+   IntReleaseWindowObject(WindowObject);
   
-  if(Changed && bRepaint && IntIsWindowVisible(hWnd))
-  {
-    WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-  }
+   if (Changed && bRepaint)
+   {
+      WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                         SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+   }
   
-  return TRUE;
+   return TRUE;
 }
 
 
