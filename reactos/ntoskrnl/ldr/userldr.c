@@ -26,7 +26,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "syspath.h"
 
 /* FUNCTIONS *****************************************************************/
 

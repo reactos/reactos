@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.55 2000/06/15 18:38:37 ekohl Exp $
+/* $Id: loader.c,v 1.56 2000/06/19 16:42:31 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,8 +33,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-#include "syspath.h"
 
 
 /* FIXME: this should appear in a kernel header file  */
