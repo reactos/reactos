@@ -4,7 +4,9 @@
 #include <typeinfo>
 
 #include <stdio.h>
+#ifdef WIN32
 #include <io.h>
+#endif
 #include <assert.h>
 
 #include "rbuild.h"

@@ -2,8 +2,13 @@
 
 #include "pch.h"
 
+#ifdef WIN32
 #include <direct.h>
 #include <io.h>
+#else
+#include <sys/stat.h>
+#define _MAX_PATH 255
+#endif
 #include <assert.h>
 
 #include "XML.h"
@@ -63,7 +68,7 @@ filelen ( FILE* f )
 {
 #ifdef WIN32
 	return _filelengthi64 ( _fileno(f) );
-#elif defined(UNIX)
+#else
 	struct stat64 file_stat;
 	if ( fstat64(fileno(f), &file_stat) != 0 )
 		return 0;

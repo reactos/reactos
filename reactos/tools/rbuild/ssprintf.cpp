@@ -1,5 +1,7 @@
 // ssprintf.cpp
 
+#include "pch.h"
+
 #include <malloc.h>
 #include <math.h>
 #include <float.h>
@@ -10,8 +12,13 @@
 #define alloca _alloca
 #endif//_MSC_VER
 
+#ifdef _MSC_VER
 typedef __int64 LONGLONG;
 typedef unsigned __int64 ULONGLONG;
+#else
+typedef long long LONGLONG;
+typedef unsigned long long ULONGLONG;
+#endif
 
 typedef struct {
     unsigned int mantissa:23;

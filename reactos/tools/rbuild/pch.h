@@ -13,4 +13,20 @@
 
 #include <stdarg.h>
 
+#ifndef WIN32
+#include <wctype.h>
+#include <math.h>
+
+inline char* strlwr ( char* str )
+{
+  char* p = str;
+  while ( *p )
+    *p++ = tolower(*p);
+  return str;
+}
+
+#define _finite __finite
+#define _isnan __isnan
+#endif
+
 #endif//PCH_H
