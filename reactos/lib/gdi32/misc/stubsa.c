@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.26 2003/12/13 19:27:09 weiden Exp $
+/* $Id: stubsa.c,v 1.27 2004/01/24 08:23:12 ekohl Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -597,7 +597,7 @@ CreateColorSpaceA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetICMProfileA(
 	HDC		a0,
@@ -692,7 +692,7 @@ wglUseFontOutlinesA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UpdateICMRegKeyA(
 	DWORD	a0,

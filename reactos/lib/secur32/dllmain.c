@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.4 2002/11/10 13:38:14 robd Exp $
+/* $Id: dllmain.c,v 1.5 2004/01/24 08:21:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@ HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
-WINBOOL STDCALL DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
+BOOL STDCALL DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
 {
    switch (Reason)
      {

@@ -43,7 +43,7 @@ DWORD DebugTraceLevel = MAX_TRACE;
 //VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 
-WINBOOL
+BOOL
 EXPORT
 DllMain(HANDLE hInstDll,
         ULONG dwReason,
@@ -614,7 +614,7 @@ GetTcpStatistics(PMIB_TCPSTATS pStats)
  */
 DWORD
 STDCALL 
-GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, WINBOOL bOrder)
+GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -644,7 +644,7 @@ GetUdpStatistics(PMIB_UDPSTATS pStats)
  */
 DWORD
 STDCALL 
-GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, WINBOOL bOrder)
+GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -706,7 +706,7 @@ GetIfEntry(PMIB_IFROW pIfRow)
  */
 DWORD
 STDCALL 
-GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, WINBOOL bOrder)
+GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -717,7 +717,7 @@ GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, WINBOOL bOrder)
  * @unimplemented
  */
 DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
- WINBOOL bOrder)
+ BOOL bOrder)
 {
     UNIMPLEMENTED
     return 0L;
@@ -727,7 +727,7 @@ DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
  * @unimplemented
  */
 DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
- WINBOOL bOrder)
+ BOOL bOrder)
 {
     UNIMPLEMENTED
     return 0L;
@@ -737,7 +737,7 @@ DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
  * @unimplemented
  */
 DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
- PULONG pdwSize, WINBOOL bOrder)
+ PULONG pdwSize, BOOL bOrder)
 {
     UNIMPLEMENTED
     return 0L;
@@ -977,7 +977,7 @@ DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
+BOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
  ULONG  MaxHops, PULONG RTT)
 {
     UNIMPLEMENTED
@@ -1023,7 +1023,7 @@ DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 /*
  * @unimplemented
  */
-DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,WINBOOL bOrder,HANDLE hHeap,DWORD dwFlags)
+DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1041,7 +1041,7 @@ DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfInde
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
+BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1117,7 +1117,7 @@ HANDLE STDCALL  Icmp6CreateFile(
 /*
  * @unimplemented
  */
-WINBOOL STDCALL  IcmpCloseHandle(
+BOOL STDCALL  IcmpCloseHandle(
     HANDLE  IcmpHandle
     )
 {

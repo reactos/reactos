@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.64 2003/12/21 10:19:40 weiden Exp $
+/* $Id: dllmain.c,v 1.65 2004/01/24 08:26:25 ekohl Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -183,7 +183,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 /*
  * This definition doesn't work
  */
-// WINBOOL STDCALL DllMain(VOID)
+// BOOL STDCALL DllMain(VOID)
 NTSTATUS STDCALL
 DllMain (
   IN	PDRIVER_OBJECT	DriverObject,

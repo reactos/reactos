@@ -94,7 +94,7 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
+IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                    LPCMENUITEMINFOW lpmii);
                    
 UINT FASTCALL
@@ -169,7 +169,7 @@ STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPCMENUITEMINFOW lpmii);
 
   

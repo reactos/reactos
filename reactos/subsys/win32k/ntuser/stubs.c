@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.43 2003/12/26 13:06:34 weiden Exp $
+/* $Id: stubs.c,v 1.44 2004/01/24 08:26:25 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -244,7 +244,7 @@ NtUserDrawCaptionTemp(
   return 0;
 }
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplayDevices (
   PUNICODE_STRING lpDevice, /* device name */
@@ -257,7 +257,7 @@ NtUserEnumDisplayDevices (
   return 0;
 }
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplayMonitors(
   HDC hdc,
@@ -270,7 +270,7 @@ NtUserEnumDisplayMonitors(
   return 0;
 }
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplaySettings(
   PUNICODE_STRING lpszDeviceName,

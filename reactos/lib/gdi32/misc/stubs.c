@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45 2004/01/10 02:57:08 arty Exp $
+/* $Id: stubs.c,v 1.46 2004/01/24 08:23:12 ekohl Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1941,7 +1941,7 @@ AddFontResourceTracking(
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL 
 AnyLinkedFonts(VOID)
 {
@@ -1974,7 +1974,7 @@ ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEntries)
 {
@@ -1985,9 +1985,9 @@ ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEn
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
-EnableEUDC(WINBOOL enable)
+EnableEUDC(BOOL enable)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2007,7 +2007,7 @@ EndFormPage(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
 {
@@ -2018,7 +2018,7 @@ EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFon
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
 {
@@ -2029,7 +2029,7 @@ EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 FontIsLinked(HDC hdc)
 {
@@ -2062,7 +2062,7 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LONG SrcX,LONG SrcY,LONG SrcCx,LONG SrcCy,BLENDFUNCTION BlendFunction)
 {
@@ -2073,9 +2073,9 @@ GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LO
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
-GdiArtificialDecrementDriver(LPWSTR pDriverName,WINBOOL unknown)
+GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2084,7 +2084,7 @@ GdiArtificialDecrementDriver(LPWSTR pDriverName,WINBOOL unknown)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiCleanCacheDC(HDC hdc)
 {
@@ -2095,7 +2095,7 @@ GdiCleanCacheDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds)
 {
@@ -2194,7 +2194,7 @@ GdiConvertEnhMetaFile(HENHMETAFILE hmf)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiDeleteLocalDC(HDC hdc)
 {
@@ -2216,7 +2216,7 @@ GdiDescribePixelFormat(HDC hdc,int ipfd,UINT cjpfd,PPIXELFORMATDESCRIPTOR ppfd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiDrawStream(HDC dc, ULONG l, VOID *v)
 {
@@ -2282,7 +2282,7 @@ GdiGetLocalFont(HFONT hfont)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiGradientFill(HDC hdc,PTRIVERTEX pVertex,ULONG uVertex,PVOID pMesh,ULONG uMesh,ULONG ulMode)
 {
@@ -2293,7 +2293,7 @@ GdiGradientFill(HDC hdc,PTRIVERTEX pVertex,ULONG uVertex,PVOID pMesh,ULONG uMesh
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiIsMetaFileDC(HDC hdc)
 {
@@ -2304,7 +2304,7 @@ GdiIsMetaFileDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiIsMetaPrintDC(HDC hdc)
 {
@@ -2315,7 +2315,7 @@ GdiIsMetaPrintDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiIsPlayMetafileDC(HDC hdc)
 {
@@ -2326,7 +2326,7 @@ GdiIsPlayMetafileDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiReleaseDC(HDC hdc)
 {
@@ -2337,7 +2337,7 @@ GdiReleaseDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiReleaseLocalDC(HDC hdc)
 {
@@ -2348,7 +2348,7 @@ GdiReleaseLocalDC(HDC hdc)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiSetAttrs(HDC hdc)
 {
@@ -2369,7 +2369,7 @@ GdiSetLastError(DWORD dwErrCode)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiSetPixelFormat(HDC hdc,int ipfd)
 {
@@ -2380,7 +2380,7 @@ GdiSetPixelFormat(HDC hdc,int ipfd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiTransparentBlt(HDC hdcDst, int xDst, int yDst, int cxDst, int cyDst,HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,COLORREF TransColor)
 {
@@ -2391,7 +2391,7 @@ GdiTransparentBlt(HDC hdcDst, int xDst, int yDst, int cxDst, int cyDst,HDC hdcSr
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiValidateHandle(HGDIOBJ hobj)
 {
@@ -2402,7 +2402,7 @@ GdiValidateHandle(HGDIOBJ hobj)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiSwapBuffers(HDC hdc)
 {
@@ -2445,7 +2445,7 @@ GetBrushAttributes(HBRUSH hbr)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetCharABCWidthsI(
 	HDC hdc,
@@ -2462,7 +2462,7 @@ GetCharABCWidthsI(
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetCharWidthI(
 	HDC hdc,
@@ -2576,7 +2576,7 @@ GetLayout(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetTextExtentExPointWPri(HDC hdc,LPWSTR lpwsz,ULONG cwc,ULONG dxMax,ULONG *pcCh,PULONG pdxOut,LPSIZE psize)
 {
@@ -2598,7 +2598,7 @@ GetTextFaceAliasW(HDC hdc,int cChar,LPWSTR pszOut)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetTransform(HDC hdc, DWORD iXform, LPXFORM pxf)
 {
@@ -2622,7 +2622,7 @@ HT_Get8BPPFormatPalette(LPPALETTEENTRY pPaletteEntry, USHORT RedGamma,USHORT Gre
  */
 LONG 
 STDCALL
-HT_Get8BPPMaskPalette(LPPALETTEENTRY pPaletteEntry, WINBOOL Use8BPPMaskPal,BYTE CMYMask, USHORT RedGamma, USHORT GreenGamma, USHORT BlueGamma)
+HT_Get8BPPMaskPalette(LPPALETTEENTRY pPaletteEntry, BOOL Use8BPPMaskPal,BYTE CMYMask, USHORT RedGamma, USHORT GreenGamma, USHORT BlueGamma)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2631,7 +2631,7 @@ HT_Get8BPPMaskPalette(LPPALETTEENTRY pPaletteEntry, WINBOOL Use8BPPMaskPal,BYTE 
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 MirrorRgn(HWND hwnd,HRGN hrgn)
 {
@@ -2664,7 +2664,7 @@ QueryFontAssocStatus(VOID)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 RemoveFontMemResourceEx(
 	HANDLE fh
@@ -2677,7 +2677,7 @@ RemoveFontMemResourceEx(
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 RemoveFontResourceExA(
 	LPCSTR lpFileName,
@@ -2692,7 +2692,7 @@ RemoveFontResourceExA(
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 RemoveFontResourceExW(
 	LPCWSTR lpFileName,
@@ -2793,7 +2793,7 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 SetMagicColors(HDC hdc,PALETTEENTRY peMagic,ULONG Index)
 {
@@ -2804,7 +2804,7 @@ SetMagicColors(HDC hdc,PALETTEENTRY peMagic,ULONG Index)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetVirtualResolution(HDC hdc, int cxVirtualDevicePixel,int cyVirtualDevicePixel,int cxVirtualDeviceMm, int cyVirtualDeviceMm)
 {
@@ -2836,7 +2836,7 @@ UnloadNetworkFonts(DWORD unknown)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
 {
@@ -2847,7 +2847,7 @@ bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
 {
@@ -2888,7 +2888,7 @@ GetGlyphIndicesA(
  */
 UINT 
 STDCALL
-GetStringBitmapA(HDC hdc,LPSTR psz,WINBOOL unknown,UINT cj,BYTE *lpSB)
+GetStringBitmapA(HDC hdc,LPSTR psz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2897,7 +2897,7 @@ GetStringBitmapA(HDC hdc,LPSTR psz,WINBOOL unknown,UINT cj,BYTE *lpSB)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetTextExtentExPointI(
 	HDC hdc,
@@ -2946,7 +2946,7 @@ GetGlyphIndicesW(
  */
 UINT 
 STDCALL
-GetStringBitmapW(HDC hdc,LPWSTR pwsz,WINBOOL unknown,UINT cj,BYTE *lpSB)
+GetStringBitmapW(HDC hdc,LPWSTR pwsz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2955,7 +2955,7 @@ GetStringBitmapW(HDC hdc,LPWSTR pwsz,WINBOOL unknown,UINT cj,BYTE *lpSB)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetTextExtentPointI(
 	HDC hdc,
@@ -2995,7 +2995,7 @@ GdiQueryFonts(PUNIVERSAL_FONT_ID pufiFontList,ULONG nBufferSize,PLARGE_INTEGER p
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri)
 {
@@ -3006,7 +3006,7 @@ GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetCharWidthInfo(HDC hdc,PCHWIDTHINFO pChWidthInfo)
 {
@@ -3017,7 +3017,7 @@ GetCharWidthInfo(HDC hdc,PCHWIDTHINFO pChWidthInfo)
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GetETM(HDC hdc,EXTTEXTMETRIC *petm)
 {
@@ -3028,7 +3028,7 @@ GetETM(HDC hdc,EXTTEXTMETRIC *petm)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiAddGlsRecord(HDC hdc,DWORD unknown1,LPCSTR unknown2,LPRECT unknown3)
 {
@@ -3119,7 +3119,7 @@ GdiGetSpoolFileHandle(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiDeleteSpoolFileHandle(
 	HANDLE	SpoolFileHandle)
@@ -3169,7 +3169,7 @@ GdiGetPageHandle(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiStartDocEMF(
 	HANDLE		SpoolFileHandle,
@@ -3182,7 +3182,7 @@ GdiStartDocEMF(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiStartPageEMF(
 	HANDLE	SpoolFileHandle)
@@ -3194,7 +3194,7 @@ GdiStartPageEMF(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiPlayPageEMF(
 	HANDLE	SpoolFileHandle,
@@ -3210,7 +3210,7 @@ GdiPlayPageEMF(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiEndPageEMF(
 	HANDLE	SpoolFileHandle,
@@ -3223,7 +3223,7 @@ GdiEndPageEMF(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiEndDocEMF(
 	HANDLE	SpoolFileHandle)
@@ -3235,7 +3235,7 @@ GdiEndDocEMF(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiGetDevmodeForPage(
 	HANDLE		SpoolFileHandle,
@@ -3250,7 +3250,7 @@ GdiGetDevmodeForPage(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiResetDCEMF(
 	HANDLE		SpoolFileHandle,
@@ -4307,7 +4307,7 @@ LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 GdiPlayEMF
 (
@@ -4325,7 +4325,7 @@ GdiPlayEMF
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiInitSpool(VOID)
 {
@@ -4336,7 +4336,7 @@ GdiInitSpool(VOID)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GdiPlayPrivatePageEMF
 (

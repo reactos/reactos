@@ -363,7 +363,7 @@ PatBlt(HDC hDC, INT Left, INT Top, INT Width, INT Height, ULONG Rop)
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL 
 PolyPatBlt(HDC hDC,DWORD dwRop,PPATRECT pRects,int cRects,ULONG Reserved)
 {

@@ -229,7 +229,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
    return 0;
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 NtUserIsClipboardFormatAvailable(UINT format)
 {
    UNIMPLEMENTED

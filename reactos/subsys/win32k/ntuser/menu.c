@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.39 2004/01/17 20:13:41 mf Exp $
+/* $Id: menu.c,v 1.40 2004/01/24 08:26:25 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -708,7 +708,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
 }
 
 BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
+IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                    LPCMENUITEMINFOW lpmii)
 {
   int pos = (int)uItem;
@@ -1263,7 +1263,7 @@ DWORD STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPCMENUITEMINFOW lpmii)
 {
   DWORD res = 0;

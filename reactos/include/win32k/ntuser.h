@@ -483,7 +483,7 @@ STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPCMENUITEMINFOW lpmii);
 
 
@@ -507,7 +507,7 @@ NtUserEndMenu(VOID);
 BOOL STDCALL
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs);
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplayDevices (
   PUNICODE_STRING lpDevice, /* device name */
@@ -515,7 +515,7 @@ NtUserEnumDisplayDevices (
   PDISPLAY_DEVICE lpDisplayDevice, /* device information */
   DWORD dwFlags ); /* reserved */
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplayMonitors (
   HDC hdc,
@@ -523,7 +523,7 @@ NtUserEnumDisplayMonitors (
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData );
 
-WINBOOL
+BOOL
 STDCALL
 NtUserEnumDisplaySettings(
   PUNICODE_STRING lpszDeviceName,
@@ -880,7 +880,7 @@ STDCALL
 NtUserGetUpdateRgn(
   HWND hWnd,
   HRGN hRgn,
-  WINBOOL bErase);
+  BOOL bErase);
 
 DWORD
 STDCALL
@@ -953,17 +953,17 @@ STDCALL
 NtUserInvalidateRect(
 HWND hWnd,
 CONST RECT *lpRect,
-WINBOOL bErase);
+BOOL bErase);
 
 DWORD
 STDCALL
   NtUserInvalidateRgn(
   HWND hWnd,
   HRGN hRgn,
-  WINBOOL bErase);
+  BOOL bErase);
 
 
-WINBOOL
+BOOL
 STDCALL
 NtUserIsClipboardFormatAvailable(
   UINT format);
