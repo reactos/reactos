@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.32 2004/02/28 16:54:22 navaraf Exp $
+; $Id: msvcrt.def,v 1.33 2004/03/19 22:58:09 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -57,7 +57,7 @@ $I10_OUTPUT=MSVCRT_I10_OUTPUT @1
 ?terminate@@YAXXZ=MSVCRT_terminate @49
 ?unexpected@@YAXXZ=MSVCRT_unexpected @50
 ?what@exception@@UBEPBDXZ=__thiscall_MSVCRT_what_exception @51
-??1type_info@@UAE@XZ=MSVCRT_type_info_dtor
+??1type_info@@UAE@XZ=MSVCRT_type_info_dtor@4
 
 ;?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @44
 ;??0bad_cast@@QAE@PBD@Z
