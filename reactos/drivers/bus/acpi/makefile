@@ -2,7 +2,7 @@ PATH_TO_TOP = ../../..
 
 TARGET=acpi
 
-CFLAGS = -I./include -I./ospm/include -g
+CFLAGS = -I./include -I./ospm/include
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
@@ -265,12 +265,14 @@ $(TARGET).sys: $(OBJECTS_PATH) $(OBJECTS) $(LIBS)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = $(OBJECTS_PATH)\*.o dispatcher\*.o events\*.o executer\*.o hardware\*.o \
-              namespace\*.o parser\*.o resource\*.o tables\*.o utils\*.o \
+              namespace\*.o ospm\*.o ospm\busmgr\*.o parser\*.o resource\*.o tables\*.o \
+              utils\*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
               $(TARGET).sys $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o dispatcher/*.o events/*.o executer/*.o hardware/*.o \
-              namespace/*.o parser/*.o resource/*.o tables/*.o utils/*.o \
+              namespace/*.o ospm/*.o ospm/busmgr/*.o parser/*.o resource/*.o tables/*.o \
+              utils/*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
               $(TARGET).sys $(TARGET).sym $(TARGET).coff
 endif
