@@ -1,4 +1,4 @@
-/* $Id: format.c,v 1.4 2004/02/23 11:55:12 ekohl Exp $
+/* $Id: format.c,v 1.5 2004/09/15 13:32:27 weiden Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -12,6 +12,7 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
+#include <ntddk.h>
 #include <fmifs.h>
 #include <fslib/vfatlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.22 2004/05/29 21:24:43 hbirr Exp $
+# $Id: makefile,v 1.23 2004/09/15 13:32:27 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_BASE = $(TARGET_BASE_LIB_FMIFS)
 
 TARGET_ENTRY = _InitializeFmIfs@12
 
-TARGET_CFLAGS = -fno-builtin -Werror -Wall
+TARGET_CFLAGS = -fno-builtin -Werror -Wall -D__USE_W32API
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
