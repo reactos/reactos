@@ -38,7 +38,7 @@
 
 #include "desktop.h"
 #include "../taskbar/desktopbar.h"
-#include "../shell/mainframe.h"	// for MainFrame::Create()
+#include "../shell/mainframe.h"	// for MainFrame::OpenShellFolders()
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);
