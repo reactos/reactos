@@ -13,7 +13,7 @@ TARGET_CFLAGS += -DUNICODE -D_UNICODE -Wall -Werror
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a ole32.a wine_uuid.a
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a wine_uuid.a
 
 TARGET_OBJECTS = desktop.o directory.o environment.o profile.o misc.o \
                  registry.o setup.o userenv.o

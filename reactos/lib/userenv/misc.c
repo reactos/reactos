@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.2 2004/03/13 20:49:07 ekohl Exp $
+/* $Id: misc.c,v 1.3 2004/07/11 22:35:07 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -89,6 +89,73 @@ GetUserSidFromToken (HANDLE hToken,
   DPRINT ("SidString: '%wZ'\n", SidString);
 
   return TRUE;
+}
+
+/* Dynamic DLL loading interface **********************************************/
+
+/* OLE32.DLL import table */
+LPSTR Ole32Imports[] =
+{
+  "CoInitialize",
+  "CoCreateInstance",
+  "CoUninitialize",
+};
+
+DYN_MODULE DynOle32 = 
+{
+  L"ole32.dll",
+  sizeof(Ole32Imports) / sizeof(LPSTR),
+  Ole32Imports
+};
+
+/*
+   Use this function to load functions from other modules. We cannot statically
+   link to e.g. ole32.dll because those dlls would get loaded on startup with
+   winlogon and they may try to register classes etc when not even a window station
+   has been created!
+*/
+
+BOOL
+LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs)
+{
+  int i;
+  PVOID *fn;
+  
+  ZeroMemory(DynFuncs, sizeof(DYN_FUNCS));
+  
+  DynFuncs->hModule = LoadLibraryW(Module->Library);
+  if(!DynFuncs->hModule)
+  {
+    return FALSE;
+  }
+  
+  /* begin with the first function */
+  fn = &DynFuncs->fn.foo; /* warning: assignment from incompatible pointer type */
+  
+  /* load the imports */
+  for(i = 0; i < Module->nFunctions; i++)
+  {
+    *fn = GetProcAddress(DynFuncs->hModule, Module->Functions[i]);
+    if(*fn == NULL)
+    {
+      FreeLibrary(DynFuncs->hModule);
+      DynFuncs->hModule = (HMODULE)0;
+      return FALSE;
+    }
+    fn++;
+  }
+  
+  return TRUE;
+}
+
+VOID
+UnloadDynamicImports(PDYN_FUNCS DynFuncs)
+{
+  if(DynFuncs->hModule)
+  {
+    FreeLibrary(DynFuncs->hModule);
+    DynFuncs->hModule = (HMODULE)0;
+  }
 }
 
 /* EOF */
