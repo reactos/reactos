@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.60 2004/09/13 14:43:50 ekohl Exp $
+/* $Id: handle.c,v 1.61 2004/09/24 16:18:28 weiden Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -1024,6 +1024,55 @@ ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
 		    OldIrql);
 
   return Count;
+}
+
+/*
+ * FUNCTION: Searches the handle table of a specified process whether it contains a
+ *           valid handle to the Object we're looking for. If not, it'll create one.
+ *
+ * NOTES:
+ * The parameters of this function is basically a mixture of some of the parameters
+ * of ObReferenceObjectByHandle() and ObReferenceObjectByPointer(). A little thinking
+ * about what this function does (by it's name) makes clear what parameters it requires.
+ * For example the AccessMode parameter of ObReferenceObjectByHandle/Pointer() is not
+ * required at all as it only has influence on the object security. This function doesn't
+ * want to get access to an object, it just looks for a valid handle and if it can't find
+ * one, it'll just create one. It wouldn't make sense to check for security again as the
+ * caller already has a pointer to the object.
+ *
+ * A test on an XP machine shows that this prototype appears to be correct.
+ *
+ * ARGUMENTS:
+ * Process = This parameter simply describes in which handle table we're looking
+ *           for a handle to the object.
+ * Object = The object pointer that we're looking for
+ * ObjectType = Just a sanity check as ObReferenceObjectByHandle() and
+ *              ObReferenceObjectByPointer() provides.
+ * HandleInformation = This one has to be the opposite meaning of the usage in
+ *                     ObReferenceObjectByHandle(). If we actually found a valid
+ *                     handle in the table, we need to check against the information
+ *                     provided so we make sure this handle has all access rights
+ *                     (and attributes?!) we need. If they don't match, we can't
+ *                     use this handle and keep looking because the caller is likely
+ *                     to depend on these access rights.
+ * HandleReturn = The last parameter is the same as in ObCreateHandle(). If we could
+ *                find a suitable handle in the handle table, return this handle, if
+ *                not, we'll just create one using ObCreateHandle() with all access
+ *                rights the caller needs.
+ *
+ * RETURNS: Status
+ *
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+ObFindHandleForObject(IN PEPROCESS Process,
+                      IN PVOID Object,
+                      IN POBJECT_TYPE ObjectType,
+                      IN POBJECT_HANDLE_INFORMATION HandleInformation,
+                      OUT PHANDLE HandleReturn)
+{
+  UNIMPLEMENTED;
+  return STATUS_UNSUCCESSFUL;
 }
 
 /* EOF */

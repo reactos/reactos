@@ -139,4 +139,11 @@ ObSetSecurityDescriptorInfo(IN PVOID Object,
 			    IN PGENERIC_MAPPING GenericMapping);
 */
 
+NTSTATUS STDCALL
+ObFindHandleForObject(IN PEPROCESS Process,
+                      IN PVOID Object,
+                      IN POBJECT_TYPE ObjectType,
+                      IN POBJECT_HANDLE_INFORMATION HandleInformation,
+                      OUT PHANDLE HandleReturn);
+
 #endif /* ndef _INCLUDE_DDK_OBFUNCS_H */
