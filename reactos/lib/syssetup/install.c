@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.18 2004/11/09 15:02:35 ion Exp $
+/* $Id: install.c,v 1.19 2004/11/12 18:23:31 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -79,7 +79,7 @@ static BOOL
 RunVMWInstall(VOID)
 {
   PROCESS_INFORMATION ProcInfo;
-  STARTUPINFO si;
+  STARTUPINFOA si;
   
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
