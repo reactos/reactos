@@ -17,11 +17,20 @@
 #ifndef MIIM_STRING
 #define MIIM_STRING      (0x00000040)
 #endif
-  
+
 typedef struct _MENU_ITEM
 {
   struct _MENU_ITEM *Next;
-  MENUITEMINFOW MenuItem;
+  UINT fType;
+  UINT fState;
+  UINT wID;
+  HMENU hSubMenu;
+  HBITMAP hbmpChecked;
+  HBITMAP hbmpUnchecked;
+  ULONG_PTR dwItemData;
+  LPWSTR dwTypeData;
+  UINT cch;
+  HBITMAP hbmpItem;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
