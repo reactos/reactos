@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.25 2000/08/11 12:39:25 ekohl Exp $
+/* $Id: registry.c,v 1.26 2000/09/03 14:46:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,7 +19,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-//#define  PROTO_REG  1  /* Comment out to disable */
+#define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
@@ -176,11 +176,11 @@ static PREGISTRY_FILE  CmiSystemFile = NULL;
 /*  -----------------------------------------  Forward Declarations  */
 
 #if PROTO_REG
-//static PVOID  CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path);
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
-		     PWSTR *Path);
+		     PWSTR *Path,
+		     POBJECT_TYPE ObjectType);
 
 static VOID  CmiObjectDelete(PVOID  DeletedObject);
 static NTSTATUS  CmiBuildKeyPath(PWSTR  *KeyPath, 
@@ -330,40 +330,35 @@ CmInitializeRegistry(VOID)
   KeInitializeSpinLock(&CmiKeyListLock);
 
   /*  Build volitile registry store  */
-CHECKPOINT;
   CmiVolatileFile = CmiCreateRegistry(NULL);
 
   /*  Build system registry store  */
-CHECKPOINT;
   CmiSystemFile = NULL; // CmiCreateRegistry(SYSTEM_REG_FILE);
 
   /*  Create initial predefined symbolic links  */
   /* HKEY_LOCAL_MACHINE  */
-CHECKPOINT;
   Status = CmiCreateKey(CmiVolatileFile,
                         L"Machine",
                         &KeyBlock,
                         KEY_ALL_ACCESS,
-                        0, 
-                        NULL, 
-                        REG_OPTION_VOLATILE, 
+                        0,
+                        NULL,
+                        REG_OPTION_VOLATILE,
                         0);
   if (!NT_SUCCESS(Status))
     {
       return;
     }
-CHECKPOINT;
   CmiReleaseBlock(CmiVolatileFile, KeyBlock);
   
   /* HKEY_USERS  */
-CHECKPOINT;
   Status = CmiCreateKey(CmiVolatileFile,
                         L"Users",
                         &KeyBlock,
                         KEY_ALL_ACCESS,
-                        0, 
-                        NULL, 
-                        REG_OPTION_VOLATILE, 
+                        0,
+                        NULL,
+                        REG_OPTION_VOLATILE,
                         0);
   if (!NT_SUCCESS(Status))
     {
@@ -1361,12 +1356,11 @@ RtlWriteRegistryValue (
 
 
 #if PROTO_REG
-//static PVOID 
-//CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
-		     PWSTR *Path)
+		     PWSTR *Path,
+		     POBJECT_TYPE ObjectType)
 {
   NTSTATUS  Status;
   /* FIXME: this should be allocated based on the largest subkey name  */
@@ -1768,9 +1762,8 @@ CHECKPOINT;
       CurKeyName[NextSlash - Remainder] = 0;
 
       /* Verify existance of/Create CurKeyName  */
-CHECKPOINT;
-      Status = CmiScanForSubKey(RegistryFile, 
-                                CurKeyBlock, 
+      Status = CmiScanForSubKey(RegistryFile,
+                                CurKeyBlock,
                                 &SubKeyBlock,
                                 CurKeyName,
                                 DesiredAccess);
@@ -1780,12 +1773,12 @@ CHECKPOINT;
         }
       if (SubKeyBlock == NULL)
         {
-          Status = CmiAddSubKey(RegistryFile, 
+          Status = CmiAddSubKey(RegistryFile,
                                 CurKeyBlock,
                                 &SubKeyBlock,
                                 CurKeyName,
                                 0,
-                                NULL, 
+                                NULL,
                                 0);
           if (!NT_SUCCESS(Status))
             {
@@ -1797,12 +1790,10 @@ CHECKPOINT;
 
       Remainder = NextSlash + 1;
     }
-CHECKPOINT;
   if (NT_SUCCESS(Status))
     {
-CHECKPOINT;
-      Status = CmiScanForSubKey(RegistryFile, 
-                                CurKeyBlock, 
+      Status = CmiScanForSubKey(RegistryFile,
+                                CurKeyBlock,
                                 &SubKeyBlock,
                                 CurKeyName,
                                 DesiredAccess);
@@ -1818,14 +1809,14 @@ CHECKPOINT;
                 }
               else
                 {
-                  ClassName = 0;
+                  ClassName = NULL;
                 }
-              Status = CmiAddSubKey(RegistryFile, 
+              Status = CmiAddSubKey(RegistryFile,
                                     CurKeyBlock,
                                     &SubKeyBlock,
                                     Remainder,
                                     TitleIndex,
-                                    ClassName, 
+                                    ClassName,
                                     CreateOptions);
               if (ClassName != NULL)
                 {
@@ -1894,7 +1885,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
       CmiReleaseBlock(RegistryFile, CurKeyBlock);
       CurKeyBlock = SubKeyBlock;
 
-      Remainder = NextSlash + 1;      
+      Remainder = NextSlash + 1;
     }
   if (NT_SUCCESS(Status))
     {
@@ -2134,7 +2125,7 @@ CmiAddSubKey(PREGISTRY_FILE  RegistryFile,
           /* FIXME: All Subkeys will need to be rehashed here!  */
 
           /*  Reallocate the hash table block  */
-          Status = CmiAllocateHashTableBlock(RegistryFile, 
+          Status = CmiAllocateHashTableBlock(RegistryFile,
                                              &NewHashBlock,
                                              HashBlock->HashTableSize +
                                                REG_EXTEND_HASH_TABLE_SIZE);
@@ -2142,7 +2133,7 @@ CmiAddSubKey(PREGISTRY_FILE  RegistryFile,
             {
               return  Status;
             }
-          RtlZeroMemory(&NewHashBlock->Table[0], 
+          RtlZeroMemory(&NewHashBlock->Table[0],
                         sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
           RtlCopyMemory(&NewHashBlock->Table[0],
                         &HashBlock->Table[0],
@@ -2154,7 +2145,7 @@ CmiAddSubKey(PREGISTRY_FILE  RegistryFile,
     }
   Status = CmiAddKeyToHashTable(RegistryFile, HashBlock, NewKeyBlock);
   if (NT_SUCCESS(Status))
-    { 
+    {
       KeyBlock->NumberOfSubKeys++;
       *SubKeyBlock = NewKeyBlock;
     }
@@ -2324,6 +2315,9 @@ CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
   ULONG  NewKeySize;
   PKEY_BLOCK  NewKeyBlock;
 
+  DPRINT("RegistryFile %p KeyBlock %p KeyName %S TitleIndex %x Class %S CreateOptions %x\n",
+         RegistryFile, KeyBlock, KeyName, TitleIndex, Class,CreateOptions);
+
   Status = STATUS_SUCCESS;
 
   /*  Handle volatile files first  */
@@ -2332,7 +2326,10 @@ CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
       NewKeySize = sizeof(KEY_BLOCK) + 
         (wcslen(KeyName) + 1) * sizeof(WCHAR) + 
         (Class != NULL ? (wcslen(Class) + 1) * sizeof(WCHAR) : 0);
+DPRINT ("NewKeySize: %lu\n", NewKeySize);
+//CHECKPOINT;
       NewKeyBlock = ExAllocatePool(NonPagedPool, NewKeySize);
+//CHECKPOINT;
       if (NewKeyBlock == NULL)
         {
           Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2493,14 +2490,21 @@ CmiAddKeyToHashTable(PREGISTRY_FILE  RegistryFile,
                      PHASH_TABLE_BLOCK  HashBlock,
                      PKEY_BLOCK  NewKeyBlock)
 {
-  HashBlock->Table[HashBlock->HashTableSize].KeyOffset = 
-    CmiGetBlockOffset(RegistryFile, NewKeyBlock);
-  RtlCopyMemory(&HashBlock->Table[HashBlock->HashTableSize].HashValue,
-                NewKeyBlock->Name, 
-                4);
-  HashBlock->HashTableSize++;
+  ULONG i;
 
-  return  STATUS_SUCCESS;
+  for (i = 0; i < HashBlock->HashTableSize; i++)
+    {
+       if (HashBlock->Table[i].KeyOffset == 0)
+         {
+            HashBlock->Table[i].KeyOffset =
+              CmiGetBlockOffset(RegistryFile, NewKeyBlock);
+            RtlCopyMemory(&HashBlock->Table[i].HashValue,
+                          NewKeyBlock->Name,
+                          4);
+            return STATUS_SUCCESS;
+         }
+    }
+  return STATUS_UNSUCCESSFUL;
 }
 
 static NTSTATUS
