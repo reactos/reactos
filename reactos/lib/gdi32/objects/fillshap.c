@@ -101,3 +101,30 @@ Pie(HDC hDc,
   return NtGdiPie(hDc, Left, Top, Right, Bottom, XRadialStart, YRadialStart,
                   XRadialEnd, YRadialEnd);
 }
+
+BOOL STDCALL
+ExtFloodFill(
+  HDC hdc,          // handle to DC
+  int nXStart,      // starting x-coordinate 
+  int nYStart,      // starting y-coordinate 
+  COLORREF crColor, // fill color
+  UINT fuFillType   // fill type
+)
+{
+	return NtGdiExtFloodFill( hdc, nXStart, nYStart, crColor, fuFillType );
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL 
+FloodFill(
+  HDC hdc,          // handle to DC
+  int nXStart,      // starting x-coordinate
+  int nYStart,      // starting y-coordinate
+  COLORREF crFill   // fill color
+)
+{
+	return NtGdiFloodFill(hdc,nXStart, nYStart, crFill );
+}
+
