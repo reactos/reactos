@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.125.4.1 2004/06/27 01:13:13 hyperion Exp $
+# $Id: Makefile,v 1.125.4.2 2004/06/27 22:11:20 hyperion Exp $
 #
 # ReactOS Operating System
 #
@@ -58,6 +58,7 @@ CFLAGS += -D_SEH_NO_NATIVE_NLG
 CFLAGS += $(STD_CFLAGS)
 ASFLAGS += $(STD_ASFLAGS)
 RCFLAGS += $(STD_RCFLAGS)
+NFLAGS += $(STD_NFLAGS)
 
 #
 # Build configuration

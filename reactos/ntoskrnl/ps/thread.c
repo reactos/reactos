@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.124 2004/01/05 14:28:21 weiden Exp $
+/* $Id: thread.c,v 1.124.14.1 2004/06/27 22:11:22 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -722,7 +722,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 }
 
 NTSTATUS STDCALL
-NtContinue(IN PCONTEXT	Context,
+KeRosContinue(IN PCONTEXT	Context,
 	   IN BOOLEAN TestAlert)
 {
    PKTRAP_FRAME TrapFrame;
@@ -739,6 +739,10 @@ NtContinue(IN PCONTEXT	Context,
 	KEBUGCHECK(0);
      }
    KeContextToTrapFrame(Context, TrapFrame);
+
+   if(TestAlert)
+    KiTestAlert();
+
    return(STATUS_SUCCESS);
 }
 
