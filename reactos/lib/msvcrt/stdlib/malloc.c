@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/malloc.h>
 
 extern HANDLE hHeap;
 
@@ -95,3 +96,43 @@ int MSVCRT__set_new_mode(int mode)
 /*  FIXME:  UNLOCK_HEAP; */
   return old_mode;
 }
+
+/*
+ * @implemented
+ */
+int	_heapchk(void)
+{
+	if (!HeapValidate(GetProcessHeap(), 0, NULL))
+		return -1;
+	return 0;
+}
+
+/*
+ * @implemented
+ */
+int	_heapmin(void)
+{
+	if (!HeapCompact(GetProcessHeap(), 0))
+		return -1;
+	return 0;
+}
+
+/*
+ * @implemented
+ */
+int	_heapset(unsigned int unFill)
+{
+	if (_heapchk() == -1)
+		return -1;
+	return 0;
+
+}
+
+/*
+ * @implemented
+ */
+int _heapwalk(struct _heapinfo* entry)
+{
+	return 0;
+}
+

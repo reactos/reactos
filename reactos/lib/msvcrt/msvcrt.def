@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.26 2003/12/07 22:59:13 navaraf Exp $
+; $Id: msvcrt.def,v 1.27 2003/12/13 13:27:46 jfilby Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -316,12 +316,12 @@ _getw
 ;_getws
 ;_gmtime64
 _global_unwind2
-;_heapadd
-;_heapchk
-;_heapmin
-;_heapset
+_heapadd
+_heapchk
+_heapmin
+_heapset
 ;_heapused
-;_heapwalk
+_heapwalk
 _hypot
 _i64toa
 _i64tow
