@@ -11,13 +11,7 @@ include $(DEP_FILES)
 endif
 
 
-ifeq ($(HOST),mingw32-linux)
 DEPENDS_PATH := $(PATH_TO_TOP)/tools
-endif
-
-ifeq ($(HOST),mingw32-windows)
-DEPENDS_PATH := $(subst /,\,$(PATH_TO_TOP))\tools
-endif
 
 .%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
