@@ -585,6 +585,52 @@ protected:
 };
 
 
+ /// Popup Menus
+struct PopupMenu
+{
+	PopupMenu()
+	 :	_hmenu(CreatePopupMenu())
+	{
+	}
+
+	PopupMenu(UINT nid);
+
+	operator HMENU() {return _hmenu;}
+
+	void Append(UINT id, LPCTSTR str, UINT flags=MF_STRING)
+	{
+		AppendMenu(_hmenu, flags, id, str);
+	}
+
+	int TrackPopupMenu(HWND hwnd, const POINT& pt, UINT flags=TPM_LEFTBUTTON|TPM_RIGHTBUTTON, LPTPMPARAMS tpm=NULL) {
+	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, tpm);
+	}
+
+	int PopupContextMenu(HWND hwnd, POINTS pos, UINT flags=TPM_LEFTBUTTON|TPM_RIGHTBUTTON) {
+	 POINT pt; POINTSTOPOINT(pt, pos);
+	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, NULL);
+	}
+
+	int TrackPopupMenu(HWND hwnd, POINTS pos, UINT flags=TPM_LEFTBUTTON|TPM_RIGHTBUTTON) {
+	 POINT pt; POINTSTOPOINT(pt, pos);
+	 ClientToScreen(hwnd, &pt);
+	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, NULL);
+	}
+
+	int TrackPopupMenuAtCursor(HWND hwnd, UINT flags=TPM_LEFTBUTTON) {
+	 POINT pt; GetCursorPos(&pt);
+	 return TrackPopupMenuEx(_hmenu, flags, pt.x, pt.y, hwnd, NULL);
+	}
+
+	int TrackPopupMenuAtPos(HWND hwnd, DWORD pos, UINT flags=TPM_LEFTBUTTON) {
+	 return TrackPopupMenuEx(_hmenu, flags, GET_X_LPARAM(pos), GET_Y_LPARAM(pos), hwnd, NULL);
+	}
+
+protected:
+	HMENU _hmenu;
+};
+
+
  /// string class for convenience
 struct String
 #ifdef UNICODE

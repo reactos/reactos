@@ -180,6 +180,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_COPYDATA:
 		return ProcessCopyData((COPYDATASTRUCT*)lparam);
 
+	  case WM_CONTEXTMENU:
+		PopupMenu(IDM_DESKTOPBAR).TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -219,6 +223,14 @@ int DesktopBar::Command(int id, int code)
 	switch(id) {
 	  case IDC_START:	///@todo startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
 		ShowStartMenu();
+		break;
+
+	  case ID_ABOUT_EXPLORER:
+		explorer_about(_hwnd);
+		break;
+
+	  case ID_DESKTOPBAR_SETTINGS:
+		MessageBox(_hwnd, TEXT("Not yet implemented"), ResString(IDS_TITLE), MB_OK);
 		break;
 
 	  default:

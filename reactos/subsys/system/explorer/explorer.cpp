@@ -403,6 +403,13 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine)
 }
 
 
+PopupMenu::PopupMenu(UINT nid)
+{
+	HMENU hMenu = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(nid));
+	_hmenu = GetSubMenu(hMenu, 0);
+}
+
+
  /// "About Explorer" Dialog
 struct ExplorerAboutDlg : public
 			CtlColorParent<

@@ -66,6 +66,7 @@
 #define IDI_PRINTER                     147
 #define IDI_NETWORK                     148
 #define IDI_COMPUTER                    149
+#define IDM_DESKTOPBAR                  150
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -89,6 +90,7 @@
 #define ID_DRIVE_FIRST                  0x9003
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
+#define ID_DESKTOPBAR_SETTINGS          40005
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
 #define ID_WINDOW_CASCADE               0xE132
@@ -105,8 +107,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         40004
+#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_COMMAND_VALUE         40006
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
