@@ -28,7 +28,8 @@ DEFINES = \
 TARGET_CFLAGS += \
 	$(DEFINES) \
 	-DDCX_USESTYLE=0x10000L \
-	-I$(PATH_TO_TOP)/include/wine
+        -I$(PATH_TO_TOP)/include/wine
+       
 
 TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
