@@ -108,6 +108,8 @@ SepPrivilegeCheck (PTOKEN Token,
   ULONG k;
 
   DPRINT ("SepPrivilegeCheck() called\n");
+  
+  PAGED_CODE();
 
   if (PreviousMode == KernelMode)
     {
@@ -167,6 +169,8 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
 {
   PLUID_AND_ATTRIBUTES* NewMem;
   ULONG SrcLength;
+  
+  PAGED_CODE();
 
   if (PrivilegeCount == 0)
     {
@@ -212,6 +216,8 @@ SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
 				 KPROCESSOR_MODE PreviousMode,
 				 ULONG a)
 {
+  PAGED_CODE();
+  
   ExFreePool (Privilege);
 }
 
@@ -227,6 +233,8 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
   ULONG PrivilegeControl;
   ULONG Length;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = ObReferenceObjectByHandle (ClientToken,
 				      0,
@@ -291,6 +299,8 @@ SePrivilegeCheck (PPRIVILEGE_SET Privileges,
 		  KPROCESSOR_MODE PreviousMode)
 {
   PACCESS_TOKEN Token = NULL;
+  
+  PAGED_CODE();
 
   if (SubjectContext->ClientToken == NULL)
     {
@@ -323,6 +333,8 @@ SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
   SECURITY_SUBJECT_CONTEXT SubjectContext;
   PRIVILEGE_SET Priv;
   BOOLEAN Result;
+  
+  PAGED_CODE();
 
   SeCaptureSubjectContext (&SubjectContext);
 

@@ -5,7 +5,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = -D__REACTOS__ @EXTRADEFS@
 
-TARGET_SDKLIBS = @IMPORTS@ wine.a wine_unicode.a wine_uuid.a ntdll.a winspool.a
+TARGET_SDKLIBS = @IMPORTS@ wine.a wine_uuid.a ntdll.a winspool.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_COMDLG32)
 

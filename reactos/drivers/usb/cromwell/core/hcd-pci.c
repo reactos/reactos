@@ -62,12 +62,15 @@
 int STDCALL usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 {
 	struct hc_driver	*driver;
-	unsigned long		resource, len;
+	PHYSICAL_ADDRESS	resource;
+	unsigned long		len;
 	void			*base;
 	struct usb_hcd		*hcd;
 	int			retval, region;
 	char			buf [8];
 	//char			*bufp = buf;
+
+	printk("usbcore: usb_hcd_pci_probe() called\n");
 
 	if (usb_disabled())
 		return -ENODEV;
@@ -103,7 +106,8 @@ clean_1:
 		}
 
 	} else { 				// UHCI
-		resource = len = 0;
+		//resource = 0;
+		len = 0;
 		for (region = 0; region < PCI_ROM_RESOURCE; region++) {
 			if (!(pci_resource_flags (dev, region) & IORESOURCE_IO))
 				continue;
@@ -118,7 +122,7 @@ clean_1:
 			dbg ("no i/o regions available");
 			return -EBUSY;
 		}
-		base = (void *) resource;
+		base = NULL; //(void *) resource; // this isn't possible
 	}
 
 	// driver->start(), later on, will transfer device from
@@ -165,7 +169,7 @@ clean_3:
 	if (request_irq (dev->irq, usb_hcd_irq, SA_SHIRQ, hcd->description, hcd)
 			!= 0) {
 		dev_err (hcd->controller,
-				"request interrupt %s failed\n", bufp);
+				"request interrupt %s failed\n", buf);
 		retval = -EBUSY;
 		goto clean_3;
 	}
@@ -173,7 +177,7 @@ clean_3:
 
 	hcd->regs = base;
 	hcd->region = region;
-	dev_info (hcd->controller, "irq %s, %s %p\n", bufp,
+	dev_info (hcd->controller, "irq %s, %s %p\n", buf,
 		(driver->flags & HCD_MEMORY) ? "pci mem" : "io base",
 		base);
 

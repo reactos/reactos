@@ -27,8 +27,9 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/fcntl.h>
-#include <msvcrt/time.h>
+#include <fcntl.h>
+#include <time.h>
+#include <wchar.h>
 #include "tzfile.h"
 
 

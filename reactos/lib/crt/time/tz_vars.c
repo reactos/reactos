@@ -1,6 +1,6 @@
-#include <msvcrt/string.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 
 int _daylight;
@@ -18,4 +18,18 @@ void _set_timezone_export(int value)
 }
 
 
+/*********************************************************************
+ *    __p_daylight (MSVCRT.@)
+ */
+void* __p__daylight(void)
+{
+   return &_daylight;
+}
 
+/*********************************************************************
+ *    __p__timezone (MSVCRT.@)
+ */
+int* __p__timezone(void) 
+{ 
+   return &_timezone; 
+}

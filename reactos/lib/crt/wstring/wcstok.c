@@ -1,5 +1,5 @@
-#include <msvcrt/string.h>
-#include <msvcrt/internal/tls.h>
+#include <string.h>
+#include <internal/tls.h>
 
 wchar_t** _wlasttoken(); /* wlasttok.c */
 

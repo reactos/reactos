@@ -10,8 +10,6 @@
 
 #include "precomp.h"
 
-extern VOID DrainSignals();
-
 int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
 		   void *WhichConnection,
@@ -32,10 +30,9 @@ int TCPSocketState(void *ClientData,
     if( !Connection ) {
 	TI_DbgPrint(DEBUG_TCP,("Socket closing.\n"));
 	Connection = FileFindConnectionByContext( WhichSocket );
-	if( !Connection ) {
-	    TcpipRecursiveMutexLeave( &TCPLock );
+	if( !Connection )
 	    return 0;
-	} else 
+	else 
 	    TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
     }
 

@@ -160,26 +160,27 @@ static HRESULT WINAPI ISF_MyComputer_fnQueryInterface (IShellFolder2 * iface, RE
 static ULONG WINAPI ISF_MyComputer_fnAddRef (IShellFolder2 * iface)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%lu)\n", This, refCount - 1);
 
-    return ++(This->ref);
+    return refCount;
 }
 
 static ULONG WINAPI ISF_MyComputer_fnRelease (IShellFolder2 * iface)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%lu)\n", This, refCount + 1);
 
-    if (!--(This->ref)) {
+    if (!refCount) {
         TRACE ("-- destroying IShellFolder(%p)\n", This);
         if (This->pidlRoot)
             SHFree (This->pidlRoot);
         LocalFree ((HLOCAL) This);
-        return 0;
     }
-    return This->ref;
+    return refCount;
 }
 
 /**************************************************************************

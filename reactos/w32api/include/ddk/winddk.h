@@ -134,7 +134,7 @@ typedef LONG KPRIORITY;
 typedef UCHAR KIRQL, *PKIRQL;
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 typedef ULONG KAFFINITY, *PKAFFINITY;
-typedef CCHAR KPROCESSOR_MODE;
+typedef UCHAR KPROCESSOR_MODE;
 
 typedef enum _MODE {
   KernelMode,
@@ -7606,6 +7606,15 @@ DDKAPI
 KeLeaveCriticalRegion(
   VOID);
 
+static __inline
+VOID
+KeMemoryBarrier(
+  VOID)
+{
+  volatile LONG Barrier;
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+}
+
 NTOSAPI
 LONG
 DDKAPI
@@ -9131,17 +9140,17 @@ NTOSAPI
 NTSTATUS
 DDKAPI
 NtWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS

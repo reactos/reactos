@@ -471,7 +471,7 @@ static int hc_start (struct ohci_hcd *ohci)
 
 	/* a reset clears this */
 	writel ((u32) ohci->hcca_dma, &ohci->regs->hcca);
-//	usbprintk("HCCA: %p \n",ohci->regs->hcca);
+	usbprintk("HCCA: %p \n",ohci->regs->hcca);
 
 	/* force default fmInterval (we won't adjust it); init thresholds
 	 * for last FS and LS packets, reserve 90% for periodic.

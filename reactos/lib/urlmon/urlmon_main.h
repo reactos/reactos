@@ -28,6 +28,13 @@ extern HINSTANCE URLMON_hInstance;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
+/**********************************************************************
+ * Dll lifetime tracking declaration for urlmon.dll
+ */
+extern LONG URLMON_refCount;
+static inline void URLMON_LockModule() { InterlockedIncrement( &URLMON_refCount ); }
+static inline void URLMON_UnlockModule() { InterlockedDecrement( &URLMON_refCount ); }
+
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 #endif /* __WINE_URLMON_MAIN_H */

@@ -91,6 +91,8 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
    HANDLE hSemaphore;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
@@ -167,6 +169,8 @@ NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
    HANDLE hSemaphore;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
@@ -227,6 +231,8 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
    PKSEMAPHORE Semaphore;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
@@ -298,6 +304,8 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
    KPROCESSOR_MODE PreviousMode;
    PKSEMAPHORE Semaphore;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
    
    PreviousMode = ExGetPreviousMode();
    

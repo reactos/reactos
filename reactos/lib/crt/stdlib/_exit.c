@@ -1,8 +1,8 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/internal/atexit.h>
+#include <stdlib.h>
+#include <io.h>
+#include <fcntl.h>
+#include <internal/atexit.h>
 
 struct __atexit *__atexit_ptr = 0;
 

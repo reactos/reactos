@@ -10,8 +10,8 @@
  *              28/12/98: Created
  */
 
-#include <msvcrt/conio.h>
-#include <msvcrt/internal/console.h>
+#include <conio.h>
+#include <internal/console.h>
 
 #define EOF -1
 

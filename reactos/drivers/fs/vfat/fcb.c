@@ -72,7 +72,7 @@ vfatSplitPathName(PUNICODE_STRING PathNameU, PUNICODE_STRING DirNameU, PUNICODE_
 VOID
 vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 {
-  ULONG PathNameBufferLength;
+  USHORT PathNameBufferLength;
   
   if (NameU)
     PathNameBufferLength = NameU->Length + sizeof(WCHAR);
@@ -460,7 +460,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
 {
   PVFATFCB  rcFCB;
   PWCHAR PathNameBuffer;
-  ULONG PathNameLength;
+  USHORT PathNameLength;
   ULONG Size;
   ULONG hash;
   
@@ -583,7 +583,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
-  DPRINT ("file open: fcb:%x PathName:%wZ file size: %d\n", fcb, &fcb->PathNameU, fcb->entry.FileSize);
+  DPRINT ("file open: fcb:%x PathName:%wZ\n", fcb, &fcb->PathNameU);
 
   return  STATUS_SUCCESS;
 }

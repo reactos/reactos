@@ -21,12 +21,13 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/wine/msvcrt.h>
+#include <stdio.h>
+#include <internal/tls.h>
+#include <stdlib.h>
+#include <internal/wine/msvcrt.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/debug.h>
 
 
 /* EXTERNAL PROTOTYPES ********************************************************/
@@ -66,7 +67,8 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     {
     case DLL_PROCESS_ATTACH://1
         /* initialize version info */
-        DPRINT("Attach %d\n", nAttachCount);
+        //DPRINT1("Process Attach %d\n", nAttachCount);
+        //DPRINT1("Process Attach\n");
         _osver = GetVersion();
         _winmajor = (_osver >> 8) & 0xFF;
         _winminor = _osver & 0xFF;
@@ -110,7 +112,8 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         break;
 
     case DLL_PROCESS_DETACH://0
-        DPRINT("Detach %d\n", nAttachCount);
+        //DPRINT1("Detach %d\n", nAttachCount);
+        //DPRINT("Detach\n");
         /* FIXME: more cleanup... */
         _fcloseall();
 

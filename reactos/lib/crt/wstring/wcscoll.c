@@ -1,5 +1,5 @@
 
-#include <msvcrt/string.h>
+#include <string.h>
 
 /*
  * @unimplemented

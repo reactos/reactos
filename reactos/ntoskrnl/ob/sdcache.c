@@ -28,12 +28,10 @@ typedef struct _SD_CACHE_ENTRY
 
 /* GLOBALS ******************************************************************/
 
-PLIST_ENTRY ObpSdCache;
-KSPIN_LOCK ObpSdCacheSpinLock;
-KIRQL ObpSdCacheIrql;
-
-
 #define SD_CACHE_ENTRIES 0x100
+
+LIST_ENTRY ObpSdCache[SD_CACHE_ENTRIES];
+FAST_MUTEX ObpSdCacheMutex;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -42,37 +40,36 @@ ObpInitSdCache(VOID)
 {
   ULONG i;
 
-  ObpSdCache = ExAllocatePool(NonPagedPool,
-			      SD_CACHE_ENTRIES * sizeof(LIST_ENTRY));
-  if (ObpSdCache == NULL)
-    {
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  for (i = 0; i < SD_CACHE_ENTRIES; i++)
+  for (i = 0; i < (sizeof(ObpSdCache) / sizeof(ObpSdCache[0])); i++)
     {
       InitializeListHead(&ObpSdCache[i]);
     }
 
-  KeInitializeSpinLock(&ObpSdCacheSpinLock);
+  ExInitializeFastMutex(&ObpSdCacheMutex);
 
   return STATUS_SUCCESS;
 }
 
 
-static VOID
+static inline VOID
 ObpSdCacheLock(VOID)
 {
-  KeAcquireSpinLock(&ObpSdCacheSpinLock,
-		    &ObpSdCacheIrql);
+  /* can't acquire a fast mutex in the early boot process... */
+  if(KeGetCurrentThread() != NULL)
+  {
+    ExAcquireFastMutex(&ObpSdCacheMutex);
+  }
 }
 
 
-static VOID
+static inline VOID
 ObpSdCacheUnlock(VOID)
 {
-  KeReleaseSpinLock(&ObpSdCacheSpinLock,
-		    ObpSdCacheIrql);
+  /* can't acquire a fast mutex in the early boot process... */
+  if(KeGetCurrentThread() != NULL)
+  {
+    ExReleaseFastMutex(&ObpSdCacheMutex);
+  }
 }
 
 

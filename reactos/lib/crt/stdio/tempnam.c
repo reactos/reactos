@@ -1,25 +1,25 @@
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
-char* _tempnam(const char* dir,const char* prefix)
+_TCHAR* _ttempnam(const _TCHAR* dir,const _TCHAR* prefix)
 {
-    char* TempFileName = malloc(MAX_PATH);
-    char* d;
+    _TCHAR* TempFileName = malloc(MAX_PATH*sizeof(_TCHAR));
+    _TCHAR* d;
 
     if (dir == NULL)
-        d = getenv("TMP");
+        d = _tgetenv(_T("TMP"));
     else
-        d = (char*)dir;
+        d = (_TCHAR*)dir;
 
 #ifdef _MSVCRT_LIB_    // TODO: check on difference?
-    if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0) {
+    if (GetTempFileName(d, prefix, 1, TempFileName) == 0) {
 #else// TODO: FIXME: review which is correct
-    if (GetTempFileNameA(d, prefix, 0, TempFileName) == 0) {
+    if (GetTempFileName(d, prefix, 0, TempFileName) == 0) {
 #endif /*_MSVCRT_LIB_*/
 
         free(TempFileName);

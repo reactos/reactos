@@ -1,4 +1,4 @@
-#include <msvcrt/mbstring.h>
+#include <mbstring.h>
 
 int _ismbbalpha(unsigned char c);
 int _ismbbalnum(unsigned char c);

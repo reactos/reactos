@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,8 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 {
   PSECURITY_DESCRIPTOR NewDescriptor;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   /* Build the new security descriptor */
   Status = SeAssignSecurity(SecurityDescriptor,
@@ -73,6 +75,8 @@ ObGetObjectSecurity(IN PVOID Object,
   POBJECT_HEADER Header;
   ULONG Length;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Header = BODY_TO_HEADER(Object);
   if (Header->ObjectType == NULL)
@@ -129,6 +133,8 @@ VOID STDCALL
 ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			IN BOOLEAN MemoryAllocated)
 {
+  PAGED_CODE();
+  
   if (SecurityDescriptor == NULL)
     return;
 
@@ -156,6 +162,8 @@ NtQuerySecurityObject(IN HANDLE Handle,
   POBJECT_HEADER Header;
   PVOID Object;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT("NtQuerySecurityObject() called\n");
 
@@ -226,6 +234,8 @@ NtSetSecurityObject(IN HANDLE Handle,
   ULONG Control = 0;
   ULONG_PTR Current;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT("NtSetSecurityObject() called\n");
 

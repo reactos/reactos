@@ -681,74 +681,6 @@ INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.25]
- *
- * Determine if a Unicode character is alphabetic.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is alphabetic,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharAlphaWrapW(WCHAR wc)
-{
-    return (get_char_typeW(wc) & C1_ALPHA) != 0;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.26]
- *
- * Determine if a Unicode character is upper-case.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is upper-case,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharUpperWrapW(WCHAR wc)
-{
-    return (get_char_typeW(wc) & C1_UPPER) != 0;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.27]
- *
- * Determine if a Unicode character is lower-case.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is lower-case,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharLowerWrapW(WCHAR wc)
-{
-    return (get_char_typeW(wc) & C1_LOWER) != 0;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.28]
- *
- * Determine if a Unicode character is alphabetic or a digit.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is alphabetic or a digit,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharAlphaNumericWrapW(WCHAR wc)
-{
-    return (get_char_typeW(wc) & (C1_ALPHA|C1_DIGIT)) != 0;
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.29]
  *
  * Determine if a Unicode character is a space.
@@ -762,7 +694,9 @@ BOOL WINAPI IsCharAlphaNumericWrapW(WCHAR wc)
  */
 BOOL WINAPI IsCharSpaceW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_SPACE) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_SPACE);
 }
 
 /*************************************************************************
@@ -780,7 +714,9 @@ BOOL WINAPI IsCharSpaceW(WCHAR wc)
  */
 BOOL WINAPI IsCharBlankW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_BLANK) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_BLANK);
 }
 
 /*************************************************************************
@@ -797,7 +733,9 @@ BOOL WINAPI IsCharBlankW(WCHAR wc)
  */
 BOOL WINAPI IsCharPunctW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_PUNCT) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_PUNCT);
 }
 
 /*************************************************************************
@@ -814,7 +752,9 @@ BOOL WINAPI IsCharPunctW(WCHAR wc)
  */
 BOOL WINAPI IsCharCntrlW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_CNTRL) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_CNTRL);
 }
 
 /*************************************************************************
@@ -831,7 +771,9 @@ BOOL WINAPI IsCharCntrlW(WCHAR wc)
  */
 BOOL WINAPI IsCharDigitW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_DIGIT) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_DIGIT);
 }
 
 /*************************************************************************
@@ -848,7 +790,9 @@ BOOL WINAPI IsCharDigitW(WCHAR wc)
  */
 BOOL WINAPI IsCharXDigitW(WCHAR wc)
 {
-    return (get_char_typeW(wc) & C1_XDIGIT) != 0;
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_XDIGIT);
 }
 
 /*************************************************************************

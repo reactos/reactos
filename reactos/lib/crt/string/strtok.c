@@ -3,8 +3,8 @@
 #undef __USE_W32API
 #endif
 
-#include <msvcrt/string.h>
-#include <msvcrt/internal/tls.h>
+#include <string.h>
+#include <internal/tls.h>
 
 char** _lasttoken(); /* lasttok.c */
 

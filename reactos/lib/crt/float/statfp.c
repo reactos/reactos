@@ -1,4 +1,4 @@
-#include <msvcrt/float.h>
+#include <float.h>
 
 /*
  * @implemented

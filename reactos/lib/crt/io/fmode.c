@@ -1,14 +1,14 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/fcntl.h>
-#include <msvcrt/io.h>
+#include <fcntl.h>
+#include <io.h>
 
 
-int __fmode = O_TEXT;
+int _fmode = O_TEXT;
 
 /*
  * @implemented
  */
 int *__p__fmode(void)
 {
-   return &__fmode;
+   return &_fmode;
 }

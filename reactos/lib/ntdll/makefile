@@ -13,6 +13,10 @@ TARGET_CFLAGS = -g -D__NTDLL__ -Werror -Wall
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
+ifneq ($(DBG), 0)
+TARGET_CFLAGS += -DDBG
+endif
+
 TARGET_ASFLAGS = -I $(PATH_TO_TOP)/include
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \

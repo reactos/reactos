@@ -16,35 +16,21 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <msvcrt/stdarg.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
-int printf(const char* format, ...)
+int _tprintf(const _TCHAR* format, ...)
 {
     va_list arg;
     int done;
 
     va_start(arg, format);
-    done = vprintf(format, arg);
-    va_end(arg);
-    return done;
-}
-
-/*
- * @implemented
- */
-int wprintf(const wchar_t* format, ...)
-{
-    va_list arg;
-    int done;
-
-    va_start(arg, format);
-    done = vwprintf(format, arg);
+    done = _vtprintf(format, arg);
     va_end(arg);
     return done;
 }

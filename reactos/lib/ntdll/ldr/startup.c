@@ -207,10 +207,9 @@ LoadCompatibilitySettings(PPEB Peb)
 		Peb->OSPlatformId = (ULONG)PlatformId;
 
 		/* optional service pack version numbers */
-		if(ReadCompatibilitySetting(SubKeyHandle, L"SPMajorVersion", ValueInfo, &SPMajorVersion))
-			Peb->SPMajorVersion = (UCHAR)SPMajorVersion;
-		if(ReadCompatibilitySetting(SubKeyHandle, L"SPMinorVersion", ValueInfo, &SPMinorVersion))
-			Peb->SPMinorVersion = (UCHAR)SPMinorVersion;
+		if(ReadCompatibilitySetting(SubKeyHandle, L"SPMajorVersion", ValueInfo, &SPMajorVersion) &&
+		   ReadCompatibilitySetting(SubKeyHandle, L"SPMinorVersion", ValueInfo, &SPMinorVersion))
+			Peb->OSCSDVersion = ((SPMajorVersion & 0xFF) << 8) | (SPMinorVersion & 0xFF);
 
 finish:
 		/* we're finished */

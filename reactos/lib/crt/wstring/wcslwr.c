@@ -8,7 +8,7 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <msvcrt/wchar.h>
+#include <wchar.h>
 
 /*
  * @implemented

@@ -1,3 +1,20 @@
+Release 1.95.9 TBD
+        - We no longer use the "check" library for C unit testing; we
+          always use the (partial) internal implementation of the API.
+        - Report XML_NS setting via XML_GetFeatureList().
+        - Fixed headers for use from C++.
+        - Updated to use libtool 1.5.10 (the most recent).
+
+Release 1.95.8 Fri Jul 23 2004
+        - Major new feature: suspend/resume.  Handlers can now request
+          that a parse be suspended for later resumption or aborted
+          altogether.  See "Temporarily Stopping Parsing" in the
+          documentation for more details.
+        - Some mostly minor bug fixes, but compilation should no
+          longer generate warnings on most platforms.  SF issues
+          include: 827319, 840173, 846309, 888329, 896188, 923913,
+          928113, 961698, 985192.
+
 Release 1.95.7 Mon Oct 20 2003
         - Fixed enum XML_Status issue (reported on SourceForge many
           times), so compilers that are properly picky will be happy.

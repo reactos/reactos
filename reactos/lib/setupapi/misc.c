@@ -463,6 +463,19 @@ BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
 }
 
 
+/**************************************************************************
+ * DelayedMove [SETUPAPI.@]
+ *
+ * Moves a file upon the next reboot.
+ *
+ * PARAMS
+ *     lpExistingFileName  [I] Current file name
+ *     lpNewFileName       [I] New file name
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
 BOOL WINAPI DelayedMove(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName)
 {
     if (OsVersionInfo.dwPlatformId != VER_PLATFORM_WIN32_NT)
@@ -476,6 +489,19 @@ BOOL WINAPI DelayedMove(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName)
 }
 
 
+/**************************************************************************
+ * FileExists [SETUPAPI.@]
+ *
+ * Checks whether a file exists.
+ *
+ * PARAMS
+ *     lpFileName     [I] Name of the file to check
+ *     lpNewFileName  [O] Optional information about the existing file
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
 BOOL WINAPI FileExists(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFileFindData)
 {
     WIN32_FIND_DATAW FindData;
@@ -499,5 +525,61 @@ BOOL WINAPI FileExists(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFileFindData)
     if (lpFileFindData)
         memcpy(lpFileFindData, &FindData, sizeof(WIN32_FIND_DATAW));
 
+    SetErrorMode(uErrorMode);
+
     return TRUE;
+}
+
+
+/**************************************************************************
+ * CaptureStringArg [SETUPAPI.@]
+ *
+ * Captures a UNICODE string.
+ *
+ * PARAMS
+ *     lpSrc  [I] UNICODE string to be captured
+ *     lpDst  [O] Pointer to the captured UNICODE string
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: ERROR_INVALID_PARAMETER
+ *
+ * NOTE
+ *     Call MyFree to release the captured UNICODE string.
+ */
+DWORD WINAPI CaptureStringArg(LPCWSTR pSrc, LPWSTR *pDst)
+{
+  if (pDst == NULL)
+    return ERROR_INVALID_PARAMETER;
+
+  *pDst = DuplicateString(pSrc);
+
+  return ERROR_SUCCESS;
+}
+
+
+/**************************************************************************
+ * CaptureAndConvertAnsiArg [SETUPAPI.@]
+ *
+ * Captures an ANSI string and converts it to a UNICODE string.
+ *
+ * PARAMS
+ *     lpSrc  [I] ANSI string to be captured
+ *     lpDst  [O] Pointer to the captured UNICODE string
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: ERROR_INVALID_PARAMETER
+ *
+ * NOTE
+ *     Call MyFree to release the captured UNICODE string.
+ */
+DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst)
+{
+  if (pDst == NULL)
+    return ERROR_INVALID_PARAMETER;
+
+  *pDst = MultiByteToUnicode(pSrc, CP_ACP);
+
+  return ERROR_SUCCESS;
 }

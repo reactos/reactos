@@ -254,6 +254,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
 
+; Subsystems
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00070000,"Posix Os2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00070000,"Debug Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
+
 ; 3Com 3c905 Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"

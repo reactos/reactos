@@ -216,7 +216,7 @@ KeUnstackDetachProcess (
 {
 	KIRQL OldIrql;
 	PKTHREAD Thread;
-	   
+
 	/* If the special "We tried to attach to the process already being attached to" flag is there, don't do anything */
 	if (ApcState->Process == (PKPROCESS)1) return;
 	
@@ -231,29 +231,27 @@ KeUnstackDetachProcess (
 	
 	/* Restore the Old APC State if a Process was present */
 	if (ApcState->Process) {
-		RtlMoveMemory(ApcState, &Thread->ApcState, sizeof(KAPC_STATE));
+		KiMoveApcState(ApcState, &Thread->ApcState);
 	} else {
 		/* The ApcState parameter is useless, so use the saved data and reset it */
-		RtlMoveMemory(&Thread->SavedApcState, &Thread->ApcState, sizeof(KAPC_STATE));
+		KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
 		Thread->SavedApcState.Process = NULL;
 		Thread->ApcStateIndex = OriginalApcEnvironment;
 		Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
 		Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
 	}
 
-	/* Restore the APC State */
-	KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
-	
 	/* Swap Processes */
 	KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
-	
+
 	/* Return to old IRQL*/
 	KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
-// This function should be used by win32k.sys to add its own user32/gdi32 services
-// TableIndex is 0 based
-// ServiceCountTable its not used at the moment
+/* This function should be used by win32k.sys to add its own user32/gdi32 services
+ * TableIndex is 0 based
+ * ServiceCountTable its not used at the moment
+ */
 /*
  * @implemented
  */

@@ -1,10 +1,10 @@
-#include <msvcrt/alloc.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/sys/utime.h>
-#include <msvcrt/io.h>
-#include <msvcrt/time.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <sys/utime.h>
+#include <io.h>
+#include <time.h>
+#include <errno.h>
+#include <internal/file.h>
 
 
 /*
@@ -22,7 +22,7 @@ int _futime (int nHandle, struct _utimbuf *pTimes)
   }
 
   if (pTimes == NULL) {
-      pTimes = alloca(sizeof(struct _utimbuf));
+      pTimes = _alloca(sizeof(struct _utimbuf));
       time(&pTimes->actime);
       time(&pTimes->modtime);
   }
@@ -34,7 +34,7 @@ int _futime (int nHandle, struct _utimbuf *pTimes)
 
   UnixTimeToFileTime(pTimes->actime,&LastAccessTime,0);
   UnixTimeToFileTime(pTimes->modtime,&LastWriteTime,0);
-  if (!SetFileTime(_get_osfhandle(nHandle),NULL, &LastAccessTime, &LastWriteTime)) {
+  if (!SetFileTime((HANDLE)_get_osfhandle(nHandle),NULL, &LastAccessTime, &LastWriteTime)) {
       __set_errno(EBADF);
       return -1;
   }

@@ -65,4 +65,23 @@
 
 #include <pseh.h>
 
+#ifdef DBG
+#ifndef PAGED_CODE
+#define PAGED_CODE()                                                           \
+  do {                                                                         \
+    if(KeGetCurrentIrql() > APC_LEVEL) {                                       \
+      DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n",        \
+               __FILE__, __LINE__, KeGetCurrentIrql());                        \
+      KEBUGCHECK(0);                                                           \
+    }                                                                          \
+  } while(0)
+#endif
+#define PAGED_CODE_RTL PAGED_CODE
+#else
+#ifndef PAGED_CODE
+#define PAGED_CODE()
+#endif
+#define PAGED_CODE_RTL()
+#endif
+
 #endif /* INCLUDE_NTOSKRNL_H */

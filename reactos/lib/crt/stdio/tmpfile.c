@@ -3,15 +3,15 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
 //#include <msvcrt/unistd.h>
-#include <msvcrt/io.h>
-#include <msvcrt/share.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <share.h>
+#include <internal/file.h>
 
 
 FILE *  __alloc_file(void);
@@ -56,13 +56,13 @@ tmpfile(void)
     f->_cnt    = 0;
     f->_bufsiz = 0;
     f->_flag   = _IORMONCL | _IOREAD | _IOWRT;
-    f->_name_to_remove = n_t_r;
-    strcpy(f->_name_to_remove, temp_name);
+    f->_tmpfname  = n_t_r;
+    strcpy(f->_tmpfname  , temp_name);
     f->_base = f->_ptr = NULL;
   }
   else
   {
-    close(temp_fd);
+    _close(temp_fd);
     remove(temp_name);
     free(n_t_r);
   }

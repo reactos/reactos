@@ -1,8 +1,8 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/sys/utime.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <io.h>
+#include <errno.h>
+#include <sys/utime.h>
+#include <internal/file.h>
 
 
 /*

@@ -78,25 +78,30 @@ static HRESULT WINAPI SecManagerImpl_QueryInterface(IInternetSecurityManager* if
 static ULONG WINAPI SecManagerImpl_AddRef(IInternetSecurityManager* iface)
 {
     SecManagerImpl *This = (SecManagerImpl *)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)\n",This);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
-    return InterlockedIncrement(&This->ref);
+    URLMON_LockModule();
+
+    return refCount;
 }
 
 static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManager* iface)
 {
     SecManagerImpl *This = (SecManagerImpl *)iface;
-    ULONG ref;
-    TRACE("(%p)\n",This);
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    ref = InterlockedDecrement(&This->ref);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
     /* destroy the object if there's no more reference on it */
-    if (ref==0){
+    if (!refCount){
         HeapFree(GetProcessHeap(),0,This);
     }
-    return ref;
+
+    URLMON_UnlockModule();
+
+    return refCount;
 }
 
 static HRESULT WINAPI SecManagerImpl_SetSecuritySite(IInternetSecurityManager *iface,
@@ -238,10 +243,13 @@ static HRESULT WINAPI ZoneMgrImpl_QueryInterface(IInternetZoneManager* iface, RE
 static ULONG WINAPI ZoneMgrImpl_AddRef(IInternetZoneManager* iface)
 {
     ZoneMgrImpl* This = (ZoneMgrImpl*)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) was %lu\n", This, This->ref);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
-    return InterlockedIncrement(&This->ref);
+    URLMON_LockModule();
+
+    return refCount;
 }
 
 /********************************************************************
@@ -250,15 +258,16 @@ static ULONG WINAPI ZoneMgrImpl_AddRef(IInternetZoneManager* iface)
 static ULONG WINAPI ZoneMgrImpl_Release(IInternetZoneManager* iface)
 {
     ZoneMgrImpl* This = (ZoneMgrImpl*)iface;
-    ULONG ref;
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) was %lu\n", This, This->ref);
-    ref = InterlockedDecrement(&This->ref);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
-    if(!ref)
+    if(!refCount)
         HeapFree(GetProcessHeap(), 0, This);
 
-    return ref;
+    URLMON_UnlockModule();
+    
+    return refCount;
 }
 
 /********************************************************************

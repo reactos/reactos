@@ -346,6 +346,8 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   UNICODE_STRING PathString;
   ULONG Attributes;
   PUNICODE_STRING ObjectName;
+  
+  PAGED_CODE();
 
   DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
 	 "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
@@ -483,6 +485,8 @@ ObQueryNameString (IN PVOID Object,
   POBJECT_HEADER ObjectHeader;
   ULONG LocalReturnLength;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   *ReturnLength = 0;
 
@@ -611,7 +615,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
   SECURITY_SUBJECT_CONTEXT SubjectContext;
 
-  ASSERT_IRQL(APC_LEVEL);
+  PAGED_CODE();
   
   if(ObjectAttributesAccessMode == UserMode && ObjectAttributes != NULL)
   {
@@ -814,6 +818,8 @@ ObReferenceObjectByPointer(IN PVOID Object,
 			   IN KPROCESSOR_MODE AccessMode)
 {
    POBJECT_HEADER Header;
+   
+   /* NOTE: should be possible to reference an object above APC_LEVEL! */
 
    DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
 	  Object,ObjectType);
@@ -875,6 +881,8 @@ ObOpenObjectByPointer(IN POBJECT Object,
 		      OUT PHANDLE Handle)
 {
    NTSTATUS Status;
+   
+   PAGED_CODE();
    
    DPRINT("ObOpenObjectByPointer()\n");
    
@@ -1117,6 +1125,8 @@ ULONG STDCALL
 ObGetObjectPointerCount(PVOID Object)
 {
   POBJECT_HEADER Header;
+  
+  PAGED_CODE();
 
   ASSERT(Object);
   Header = BODY_TO_HEADER(Object);
@@ -1142,6 +1152,8 @@ ULONG
 ObGetObjectHandleCount(PVOID Object)
 {
   POBJECT_HEADER Header;
+  
+  PAGED_CODE();
 
   ASSERT(Object);
   Header = BODY_TO_HEADER(Object);

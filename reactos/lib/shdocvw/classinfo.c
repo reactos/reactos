@@ -38,27 +38,25 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 static HRESULT WINAPI WBPCI_QueryInterface(LPPROVIDECLASSINFO iface,
                                            REFIID riid, LPVOID *ppobj)
 {
-    IProvideClassInfoImpl *This = (IProvideClassInfoImpl *)iface;
+    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
 
-    FIXME("(%p)->(%s,%p),stub!\n", This, debugstr_guid(riid), ppobj);
+    if (ppobj == NULL) return E_POINTER;
+
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI WBPCI_AddRef(LPPROVIDECLASSINFO iface)
 {
-    IProvideClassInfoImpl *This = (IProvideClassInfoImpl *)iface;
+    SHDOCVW_LockModule();
 
-    TRACE("\n");
-    return ++(This->ref);
+    return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI WBPCI_Release(LPPROVIDECLASSINFO iface)
 {
-    IProvideClassInfoImpl *This = (IProvideClassInfoImpl *)iface;
+    SHDOCVW_UnlockModule();
 
-    /* static class, won't be freed */
-    TRACE("\n");
-    return --(This->ref);
+    return 1; /* non-heap based object */
 }
 
 /* Return an ITypeInfo interface to retrieve type library info about
@@ -82,7 +80,7 @@ static IProvideClassInfoVtbl WBPCI_Vtbl =
     WBPCI_GetClassInfo
 };
 
-IProvideClassInfoImpl SHDOCVW_ProvideClassInfo = { &WBPCI_Vtbl, 1 };
+IProvideClassInfoImpl SHDOCVW_ProvideClassInfo = { &WBPCI_Vtbl};
 
 
 /**********************************************************************
@@ -93,27 +91,25 @@ IProvideClassInfoImpl SHDOCVW_ProvideClassInfo = { &WBPCI_Vtbl, 1 };
 static HRESULT WINAPI WBPCI2_QueryInterface(LPPROVIDECLASSINFO2 iface,
                                             REFIID riid, LPVOID *ppobj)
 {
-    IProvideClassInfo2Impl *This = (IProvideClassInfo2Impl *)iface;
+    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
 
-    FIXME("(%p)->(%s,%p),stub!\n", This, debugstr_guid(riid), ppobj);
+    if (ppobj == NULL) return E_POINTER;
+    
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI WBPCI2_AddRef(LPPROVIDECLASSINFO2 iface)
 {
-    IProvideClassInfo2Impl *This = (IProvideClassInfo2Impl *)iface;
+    SHDOCVW_LockModule();
 
-    TRACE("\n");
-    return ++(This->ref);
+    return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI WBPCI2_Release(LPPROVIDECLASSINFO2 iface)
 {
-    IProvideClassInfo2Impl *This = (IProvideClassInfo2Impl *)iface;
+    SHDOCVW_UnlockModule();
 
-    /* static class, won't be freed */
-    TRACE("\n");
-    return --(This->ref);
+    return 1; /* non-heap based object */
 }
 
 /* Return an ITypeInfo interface to retrieve type library info about
@@ -167,4 +163,4 @@ static IProvideClassInfo2Vtbl WBPCI2_Vtbl =
     WBPCI2_GetGUID
 };
 
-IProvideClassInfo2Impl SHDOCVW_ProvideClassInfo2 = { &WBPCI2_Vtbl, 1 };
+IProvideClassInfo2Impl SHDOCVW_ProvideClassInfo2 = { &WBPCI2_Vtbl};

@@ -21,7 +21,7 @@ TARGET_SDKLIBS = crt.a string.a kernel32.a ntdll.a wine.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_CFLAGS = -D__USE_W32API -D_MSVCRT_LIB_ -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -D_MSVCRT_LIB_ -Wall -Werror -I../crt/include
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += \

@@ -165,6 +165,8 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
+  
+  PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 Path,
@@ -188,6 +190,8 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
+  
+  PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 Path,
@@ -213,6 +217,8 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
+  
+  PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 (PWSTR)Path,
@@ -245,6 +251,8 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   ULONG Length;
   UNICODE_STRING SidString;
   NTSTATUS Status;
+  
+  PAGED_CODE_RTL();
 
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
 
@@ -299,7 +307,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 
   KeyPath->Length = 0;
   KeyPath->MaximumLength = Length;
-  KeyPath->Buffer = ExAllocatePool (NonPagedPool,
+  KeyPath->Buffer = ExAllocatePool (PagedPool,
 				    KeyPath->MaximumLength);
   if (KeyPath->Buffer == NULL)
     {
@@ -328,6 +336,8 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyPath;
   NTSTATUS Status;
+  
+  PAGED_CODE_RTL();
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
   if (NT_SUCCESS(Status))
@@ -390,6 +400,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
+  
+  PAGED_CODE_RTL();
 
   DPRINT("RtlQueryRegistryValues() called\n");
 
@@ -878,6 +890,8 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   HANDLE KeyHandle;
   NTSTATUS Status;
   UNICODE_STRING Name;
+  
+  PAGED_CODE_RTL();
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 (PWSTR)Path,

@@ -8,8 +8,8 @@
  *              28/12/98: Created
  */
 
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 static char *__rt_err_msg[] =

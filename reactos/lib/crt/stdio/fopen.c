@@ -25,16 +25,15 @@
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/sys/types.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/io.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/internal/file.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <io.h>
+#include <fcntl.h>
+#include <internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
 
-FILE* __alloc_file(void);
 
 
 FILE* fopen(const char *file, const char *mode)
@@ -63,7 +62,7 @@ FILE* fopen(const char *file, const char *mode)
   else if (strchr(mode, 'b'))
     oflags |= O_BINARY;
   else
-    oflags |= (__fmode & (O_TEXT|O_BINARY));
+    oflags |= (_fmode& (O_TEXT|O_BINARY));
 
   fd = _open(file, oflags, 0);
   if (fd < 0)
@@ -73,7 +72,7 @@ FILE* fopen(const char *file, const char *mode)
 // we just move the file pointer to the end of file initially
 
   if (strchr(mode, 'a'))
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;
@@ -89,7 +88,7 @@ FILE* fopen(const char *file, const char *mode)
     f->_flag |= _IOTEXT;
   else if (strchr(mode, 'b'))
     f->_flag |= _IOBINARY;
-  else if (__fmode & O_BINARY)
+  else if (_fmode& O_BINARY)
     f->_flag |= _IOBINARY;
 
   f->_base = f->_ptr = NULL;
@@ -125,7 +124,7 @@ FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
   else if (wcschr(mode, L'b'))
     oflags |= O_BINARY;
   else
-    oflags |= (__fmode & (O_TEXT|O_BINARY));
+    oflags |= (_fmode& (O_TEXT|O_BINARY));
 
   fd = _wopen(file, oflags, 0);
   if (fd < 0)
@@ -134,7 +133,7 @@ FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
 // msvcrt ensures that writes will end up at the end of file in append mode
 // we just move the file pointer to the end of file initially
   if (wcschr(mode, 'a'))
-    lseek(fd, 0, SEEK_END);
+    _lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;
@@ -150,7 +149,7 @@ FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
     f->_flag |= _IOTEXT;
   else if (wcschr(mode, L'b'))
     f->_flag |= _IOBINARY;
-  else if (__fmode & O_BINARY)
+  else if (_fmode& O_BINARY)
     f->_flag |= _IOBINARY;
 
   f->_base = f->_ptr = NULL;

@@ -32,12 +32,12 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "wine/winternl.h"
-#include <msvcrt/wine/msvcrt.h>
+#include <internal/wine/msvcrt.h>
 #include "wine/exception.h"
 #include "excpt.h"
 #include "wine/debug.h"
 
-#include <msvcrt/wine/cppexcept.h>
+#include <internal/wine/cppexcept.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(seh);
 

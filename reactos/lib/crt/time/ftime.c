@@ -9,8 +9,8 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/sys/time.h>
-#include <msvcrt/sys/timeb.h>
+#include <sys/time.h>
+#include <sys/timeb.h>
 
 /* ftime (3) -- Obsolete BSD library function included in the SUS for copat.
  * Also present in msvcrt.dll as _ftime
@@ -18,7 +18,7 @@
 /*
  * @implemented
  */
-void _ftime( struct timeb *tm )
+void _ftime( struct _timeb *tm )
 {
   int ret = 0;
   SYSTEMTIME syst;
@@ -28,7 +28,7 @@ void _ftime( struct timeb *tm )
   if( ret == 0 ) {
     time( &tm->time );
     tm->millitm = syst.wMilliseconds;
-    tm->_timezone = 0; /* According to the open group, timezone and dstflag */
+//    tm->_timezone = 0; /* According to the open group, timezone and dstflag */
     tm->dstflag = 0;  /* exist for compatibility, but are unspecified. */
   }
 }

@@ -199,6 +199,9 @@ IntInitializeDesktopGraphics(VOID)
   
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 
+  /* Setup the cursor */
+  IntLoadDefaultCursors();
+
   return TRUE;
 }
 
@@ -810,11 +813,15 @@ IntGetWinStaObj(VOID)
                                                      KernelMode,
                                                      0,
                                                      &WinStaObj);
-   if(!NT_SUCCESS(Status))
-   {
-     SetLastNtError(Status);
-     return NULL;
-   }
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+  else
+  {
+    WinStaObj = NULL;
   }
   
   return WinStaObj;

@@ -1,7 +1,7 @@
 #include "precomp.h"
-#include <msvcrt/errno.h>
-#include <msvcrt/process.h>
-#include <msvcrt/internal/file.h>
+#include <errno.h>
+#include <process.h>
+#include <internal/file.h>
 
 #if 0
 /*

@@ -1,0 +1,58 @@
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Desktop"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,48,10,
+                    150,105,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,7,139,173,71
+    LTEXT           "Wähle ein Bild um es als Desktop Hintergrund zu nutzen:",
+                    IDC_STATIC,8,127,180,8
+    PUSHBUTTON      "&Durchsuchen...",IDC_BROWSE_BUTTON,187,175,50,14
+    PUSHBUTTON      "&Farbe...",IDC_COLOR_BUTTON,187,195,50,14
+    LTEXT           "Ausrichtung:",IDC_STATIC,187,138,36,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,187,148,50,90,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Bildschrimschoner"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
+                    110,112,8
+END
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Darstellung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
+                    110,112,8
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Einstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
+                    110,112,8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Anzeige"
+    IDS_CPLDESCRIPTION "Passt die Darstellung des Hintergrundbildes und des Bildschrimschoners an."
+
+    IDS_NONE "(Keine)"
+    IDS_CENTER "Zentriert"
+    IDS_STRETCH "Gestreckt"
+    IDS_TILE "Nebeneinnander"
+END

@@ -41,6 +41,9 @@ BUS = acpi isapnp pci
 # vfatlib
 LIB_FSLIB = vfatlib
 
+# libunicode, must be empty!
+LIBUNICODE = 
+
 # Static libraries
 LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids crt rossym wdmguid
 
@@ -59,8 +62,8 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
 	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi smdll snmpapi syssetup \
-	twain unicode user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
-	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
+	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -102,7 +105,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regedt32 regsvr32 \
   reporterror services setup taskmgr userinit usetup welcome vmwinst \
-  winlogon regedit winefile notepad reactos
+  winlogon regedit winefile notepad reactos lsass
 
 # System services
 SYS_SVC = rpcss eventlog umpnpmgr
@@ -980,8 +983,6 @@ install_clean:
 	$(RM) $(INSTALL_DIR)/system32/config/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/system32/*.*
 	$(RM) $(INSTALL_DIR)/system32/*.*
-	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/symbols/*.*
-	$(RM) $(INSTALL_DIR)/symbols/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/fonts/*.*
 	$(RM) $(INSTALL_DIR)/media/fonts/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/*.*
@@ -996,8 +997,6 @@ install_clean:
 	$(RMDIR) $(INSTALL_DIR)/system32/config
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/system32
 	$(RMDIR) $(INSTALL_DIR)/system32
-	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/symbols
-	$(RMDIR) $(INSTALL_DIR)/symbols
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media/fonts
 	$(RMDIR) $(INSTALL_DIR)/media/fonts
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media
@@ -1020,8 +1019,6 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)/media
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/media/fonts
 	$(RMKDIR) $(INSTALL_DIR)/media/fonts
-	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/symbols
-	$(RMKDIR) $(INSTALL_DIR)/symbols
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32
 	$(RMKDIR) $(INSTALL_DIR)/system32
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32/config

@@ -120,6 +120,9 @@ int OskitTCPSocket( void *context,
 	so->so_connection = context;
 	so->so_state = SS_NBIO;
 	so->so_error = 0;
+        so->so_q = so->so_q0 = NULL;
+        so->so_qlen = 0;
+        so->so_head = NULL;
 	*aso = so;
     }
     return error;
@@ -377,7 +380,6 @@ int OskitTCPAccept( void *socket,
 	*newso = so;
 	    
 	/*so->so_state &= ~SS_COMP;*/
-	so->so_q = NULL;
 
 	mnam.m_data = &sa;
 	mnam.m_len = sizeof(sa);
@@ -385,6 +387,9 @@ int OskitTCPAccept( void *socket,
 	(void) soaccept(so, &mnam);
 
 	so->so_state = SS_NBIO | SS_ISCONNECTED;
+        so->so_q = so->so_q0 = NULL;
+        so->so_qlen = 0;
+        so->so_head = 0;
 
 	OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
 	if (name) {

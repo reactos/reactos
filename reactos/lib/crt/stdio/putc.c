@@ -25,10 +25,10 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
 
 // putc can be a macro
 #undef putc
@@ -65,7 +65,7 @@ int putc(int c, FILE* fp)
 /*
  * @implemented
  */
-int putwc(wint_t c, FILE* fp)
+wint_t putwc(wint_t c, FILE* fp)
 {
     // valid stream macro should check that fp is dword aligned
     if (!__validfp(fp)) {

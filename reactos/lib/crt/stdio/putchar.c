@@ -8,7 +8,9 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrt/stdio.h>
+#include <stdio.h>
+#include <tchar.h>
+#include <internal/file.h>
 
 #undef putc
 #undef putchar
@@ -18,21 +20,11 @@
 /*
  * @implemented
  */
-int putchar(int c)
+_TINT _puttchar(_TINT c)
 {
-  int r = putc(c, stdout);
+  _TINT r = _puttc(c, stdout);
   if (stdout->_flag & _IO_LBF)
      fflush(stdout);
   return r;
 }
 
-/*
- * @implemented
- */
-wint_t putwchar(wint_t c)
-{
-  wint_t r = putwc(c, stdout);
-  if (stdout->_flag & _IO_LBF)
-     fflush(stdout);
-  return r;
-}

@@ -1,5 +1,5 @@
 
-#include <msvcrt/internal/rterror.h>
+#include <internal/rterror.h>
 
 /*
  * @implemented

@@ -8,13 +8,14 @@
 		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created
  */
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
+#include <mbstring.h>
+#include <mbctype.h>
+#include <internal/mbstring.h>
 
 /*
  * @implemented
  */
-int _ismbbkana(unsigned char c)
+int _ismbbkana(unsigned int c)
 {
-  return ((_jctype+1)[(unsigned char)(c)] & (_KNJ_M|_KNJ_P));
+  return ((_mbctype+1)[(unsigned char)(c)] & (_KNJ_M|_KNJ_P));
 }

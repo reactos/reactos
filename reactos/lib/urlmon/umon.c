@@ -103,10 +103,13 @@ static HRESULT WINAPI URLMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,
 static ULONG WINAPI URLMonikerImpl_AddRef(IMoniker* iface)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)\n",This);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
-    return InterlockedIncrement(&This->ref);
+    URLMON_LockModule();
+
+    return refCount;
 }
 
 /******************************************************************************
@@ -115,19 +118,19 @@ static ULONG WINAPI URLMonikerImpl_AddRef(IMoniker* iface)
 static ULONG WINAPI URLMonikerImpl_Release(IMoniker* iface)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
-    ULONG ref;
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)\n",This);
-
-    ref = InterlockedDecrement(&This->ref);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
     /* destroy the object if there's no more reference on it */
-    if (ref == 0) {
+    if (!refCount) {
         HeapFree(GetProcessHeap(),0,This->URLName);
         HeapFree(GetProcessHeap(),0,This);
     }
 
-    return ref;
+    URLMON_UnlockModule();
+
+    return refCount;
 }
 
 /******************************************************************************

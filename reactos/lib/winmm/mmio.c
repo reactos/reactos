@@ -1,4 +1,3 @@
-/* -*- tab-width: 8; c-basic-offset: 4 -*- */
 /*
  * MMIO functions
  *
@@ -221,8 +220,6 @@ static LRESULT CALLBACK mmioMemIOProc(LPMMIOINFO lpmmioinfo, UINT uMessage,
 	FIXME("unexpected message %u\n", uMessage);
 	return 0;
     }
-
-    return 0;
 }
 
 /* This array will be the entire list for most apps 
@@ -1351,7 +1348,7 @@ MMRESULT WINAPI mmioRenameA(LPCSTR szFileName, LPCSTR szNewFileName,
     /* FIXME: should we actually pass lpmmioinfo down the drain ???
      * or make a copy of it because it's const ???
      */
-    return send_message(ioProc, (LPMMIOINFO)lpmmioinfo, MMIOM_RENAME,
+    return send_message(ioProc, (MMIOINFO*)lpmmioinfo, MMIOM_RENAME,
                         (LPARAM)szFileName, (LPARAM)szNewFileName, MMIO_PROC_32A);
 }
 

@@ -2,16 +2,19 @@
    See the file COPYING for copying permission.
 */
 
+#include <stddef.h>
+
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
 #else
 #ifdef HAVE_EXPAT_CONFIG_H
-#include "expat_config.h"
+#include <expat_config.h>
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
+#include "expat_external.h"
 #include "internal.h"
 #include "xmlrole.h"
 #include "ascii.h"
@@ -790,7 +793,7 @@ attlist2(PROLOG_STATE *state,
     return XML_ROLE_ATTLIST_NONE;
   case XML_TOK_NAME:
     {
-      static const char *types[] = {
+      static const char * const types[] = {
         KW_CDATA,
         KW_ID,
         KW_IDREF,

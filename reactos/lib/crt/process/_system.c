@@ -10,11 +10,11 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/process.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdlib.h>
+#include <string.h>
+#include <process.h>
+#include <errno.h>
+#include <internal/file.h>
 
 /*
  * @implemented

@@ -48,7 +48,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mmsys);
 
 static WINE_MMTHREAD*   WINMM_GetmmThread(HANDLE16);
-static LPWINE_DRIVER    DRIVER_OpenDriver16(LPCSTR, LPCSTR, LPARAM);
+static LPWINE_DRIVER    DRIVER_OpenDriver16(LPCWSTR, LPCWSTR, LPARAM);
 static LRESULT          DRIVER_CloseDriver16(HDRVR16, LPARAM, LPARAM);
 static LRESULT          DRIVER_SendMessage16(HDRVR16, UINT, LPARAM, LPARAM);
 static LRESULT          MMIO_Callback16(SEGPTR, LPMMIOINFO, UINT, LPARAM, LPARAM);
@@ -597,7 +597,7 @@ UINT16 WINAPI mciGetDeviceID16(LPCSTR lpstrName)
 {
     TRACE("(\"%s\")\n", lpstrName);
 
-    return MCI_GetDriverFromString(lpstrName);
+    return mciGetDeviceIDA(lpstrName);
 }
 
 /**************************************************************************
@@ -731,6 +731,7 @@ UINT16 WINAPI midiOutGetDevCaps16(UINT16 uDeviceID, LPMIDIOUTCAPS16 lpCaps,
 
 /**************************************************************************
  * 				midiOutGetErrorText 	[MMSYSTEM.203]
+ * 				midiInGetErrorText 	[MMSYSTEM.203]
  */
 UINT16 WINAPI midiOutGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
 {
@@ -946,14 +947,6 @@ UINT16 WINAPI midiInGetDevCaps16(UINT16 uDeviceID, LPMIDIINCAPS16 lpCaps,
 	memcpy(lpCaps, &mic16, min(uSize, sizeof(mic16)));
     }
     return ret;
-}
-
-/**************************************************************************
- * 				midiInGetErrorText 		[MMSYSTEM.303]
- */
-UINT16 WINAPI midiInGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
-{
-    return midiInGetErrorTextA(uError, lpText, uSize);
 }
 
 /**************************************************************************
@@ -1238,6 +1231,7 @@ UINT16 WINAPI waveOutGetDevCaps16(UINT16 uDeviceID,
 
 /**************************************************************************
  * 				waveOutGetErrorText 	[MMSYSTEM.403]
+ * 				waveInGetErrorText 	[MMSYSTEM.403]
  */
 UINT16 WINAPI waveOutGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
 {
@@ -1533,14 +1527,6 @@ UINT16 WINAPI waveInGetDevCaps16(UINT16 uDeviceID, LPWAVEINCAPS16 lpCaps,
         memcpy(lpCaps, &wic16, min(uSize, sizeof(wic16)));
     }
     return ret;
-}
-
-/**************************************************************************
- * 				waveInGetErrorText 	[MMSYSTEM.503]
- */
-UINT16 WINAPI waveInGetErrorText16(UINT16 uError, LPSTR lpText, UINT16 uSize)
-{
-    return waveInGetErrorTextA(uError, lpText, uSize);
 }
 
 /**************************************************************************
@@ -2371,30 +2357,52 @@ static WINMM_MapType DRIVER_UnMapMsg32To16(WORD wMsg, DWORD lParam1, DWORD lPara
  *
  * Tries to load a 16 bit driver whose DLL's (module) name is lpFileName.
  */
-static	LPWINE_DRIVER	DRIVER_OpenDriver16(LPCSTR fn, LPCSTR sn, LPARAM lParam2)
+static	LPWINE_DRIVER	DRIVER_OpenDriver16(LPCWSTR fn, LPCWSTR sn, LPARAM lParam2)
 {
     LPWINE_DRIVER 	lpDrv = NULL;
-    LPCSTR		cause = 0;
+    LPCSTR		cause = NULL;
+    LPSTR               fnA = NULL, snA = NULL;
+    unsigned            len;
 
-    TRACE("(%s, %08lX);\n", debugstr_a(sn), lParam2);
+    TRACE("(%s, %s, %08lX);\n", debugstr_w(fn), debugstr_w(sn), lParam2);
 
     lpDrv = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_DRIVER));
     if (lpDrv == NULL) {cause = "OOM"; goto exit;}
+
+    if (fn)
+    {
+        len = WideCharToMultiByte( CP_ACP, 0, fn, -1, NULL, 0, NULL, NULL );
+        fnA = HeapAlloc(GetProcessHeap(), 0, len);
+        if (fnA == NULL) {cause = "OOM"; goto exit;}
+        WideCharToMultiByte( CP_ACP, 0, fn, -1, fnA, len, NULL, NULL );
+    }
+
+    if (sn)
+    {
+        len = WideCharToMultiByte( CP_ACP, 0, sn, -1, NULL, 0, NULL, NULL );
+        snA = HeapAlloc(GetProcessHeap(), 0, len);
+        if (snA == NULL) {cause = "OOM"; goto exit;}
+        WideCharToMultiByte( CP_ACP, 0, sn, -1, snA, len, NULL, NULL );
+    }
 
     /* FIXME: shall we do some black magic here on sn ?
      *	drivers32 => drivers
      *	mci32 => mci
      * ...
      */
-    lpDrv->d.d16.hDriver16 = OpenDriver16(fn, sn, lParam2);
+    lpDrv->d.d16.hDriver16 = OpenDriver16(fnA, snA, lParam2);
     if (lpDrv->d.d16.hDriver16 == 0) {cause = "Not a 16 bit driver"; goto exit;}
     lpDrv->dwFlags = WINE_GDF_16BIT;
 
     TRACE("=> %p\n", lpDrv);
     return lpDrv;
- exit:
+
+exit:
     HeapFree(GetProcessHeap(), 0, lpDrv);
-    TRACE("Unable to load 16 bit module %s: %s\n", debugstr_a(fn), cause);
+    HeapFree(GetProcessHeap(), 0, fnA);
+    HeapFree(GetProcessHeap(), 0, snA);
+    TRACE("Unable to load 16 bit module %s[%s]: %s\n", 
+          debugstr_w(fn), debugstr_w(sn), cause);
     return NULL;
 }
 
@@ -2612,15 +2620,45 @@ DWORD WINAPI mciSendString16(LPCSTR lpstrCommand, LPSTR lpstrRet,
  */
 UINT16 WINAPI mciLoadCommandResource16(HINSTANCE16 hInst, LPCSTR resname, UINT16 type)
 {
-    HRSRC16 res;
-    HGLOBAL16 handle;
-    void *ptr;
+    HRSRC16     res;
+    HGLOBAL16   handle;
+    const BYTE* ptr16;
+    BYTE*       ptr32;
+    unsigned    pos = 0, size = 1024, len;
+    const char* str;
+    DWORD	flg;
+    WORD	eid;
+    UINT16      ret = MCIERR_OUT_OF_MEMORY;
 
     if (!(res = FindResource16( hInst, resname, (LPSTR)RT_RCDATA))) return MCI_NO_COMMAND_TABLE;
     if (!(handle = LoadResource16( hInst, res ))) return MCI_NO_COMMAND_TABLE;
-    ptr = LockResource16(handle);
-    return MCI_SetCommandTable(ptr, type);
-    /* FIXME: FreeResource */
+    ptr16 = LockResource16(handle);
+    /* converting the 16 bit resource table into a 32W one */
+    if ((ptr32 = HeapAlloc(GetProcessHeap(), 0, size)))
+    {
+        do {
+            str = (LPCSTR)ptr16;
+            ptr16 += strlen(str) + 1;
+            flg = *(const DWORD*)ptr16;
+            eid = *(const WORD*)(ptr16 + sizeof(DWORD));
+            ptr16 += sizeof(DWORD) + sizeof(WORD);
+            len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0) * sizeof(WCHAR);
+            if (pos + len + sizeof(DWORD) + sizeof(WORD) > size)
+            {
+                while (pos + len * sizeof(WCHAR) + sizeof(DWORD) + sizeof(WORD) > size) size += 1024;
+                ptr32 = HeapReAlloc(GetProcessHeap(), 0, ptr32, size);
+                if (!ptr32) goto the_end;
+            }
+            MultiByteToWideChar(CP_ACP, 0, str, -1, (LPWSTR)(ptr32 + pos), len / sizeof(WCHAR));
+            *(DWORD*)(ptr32 + pos + len) = flg;
+            *(WORD*)(ptr32 + pos + len + sizeof(DWORD)) = eid;
+            pos += len + sizeof(DWORD) + sizeof(WORD);
+        } while (eid != MCI_END_COMMAND_LIST);
+    }
+the_end:
+    FreeResource16( handle );
+    if (ptr32) ret = MCI_SetCommandTable(ptr32, type);
+    return ret;
 }
 
 /**************************************************************************
@@ -2630,7 +2668,7 @@ BOOL16 WINAPI mciFreeCommandResource16(UINT16 uTable)
 {
     TRACE("(%04x)!\n", uTable);
 
-    return mciFreeCommandResource(uTable);
+    return MCI_DeleteCommandTable(uTable, TRUE);
 }
 
 /* ###################################################

@@ -10,11 +10,14 @@ TARGET_NAME = crt
 
 TARGET_PCH = precomp.h
 
-TARGET_CFLAGS = -D_MSVCRT_LIB_ -Wall -Werror
+TARGET_CFLAGS = -D_MSVCRT_LIB_ -D__MSVCRT__ -Wall -Werror -I./include
+
+#-nostdinc
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += \
 	-D_DISABLE_TIDENTS \
+	-D__MINGW_IMPORT=extern \
 	-D__USE_W32API \
 	-D__REACTOS__ \
 	-D_WIN32_IE=0x600 \
@@ -26,7 +29,6 @@ CONIO_OBJECTS = \
 	conio/cgets.o \
 	conio/cprintf.o \
 	conio/cputs.o \
-	conio/cscanf.o \
 	conio/getch.o \
 	conio/getche.o \
 	conio/kbhit.o \
@@ -238,6 +240,7 @@ PROCESS_OBJECTS = \
 	process/_system.o \
 	process/dll.o \
 	process/process.o \
+	process/wprocess.o \
 	process/procid.o \
 	process/thread.o \
 	process/threadid.o \
@@ -275,12 +278,14 @@ STDIO_OBJECTS = \
 	stdio/fputc.o \
 	stdio/fputchar.o \
 	stdio/fputs.o \
+	stdio/fputws.o \
 	stdio/fread.o \
 	stdio/freopen.o \
-	stdio/fscanf.o \
+	stdio/wfreopen.o \
 	stdio/fseek.o \
 	stdio/fsetpos.o \
 	stdio/fsopen.o \
+	stdio/wfsopen.o \
 	stdio/ftell.o \
 	stdio/fwalk.o \
 	stdio/fwrite.o \
@@ -290,32 +295,35 @@ STDIO_OBJECTS = \
 	stdio/getw.o \
 	stdio/perror.o \
 	stdio/popen.o \
+	stdio/wpopen.o \
 	stdio/printf.o \
+	stdio/wprintf.o \
 	stdio/putc.o \
 	stdio/putchar.o \
+	stdio/putwchar.o \
 	stdio/puts.o \
 	stdio/putw.o \
 	stdio/remove.o \
+	stdio/wremove.o \
 	stdio/rename.o \
 	stdio/rewind.o \
 	stdio/rmtmp.o \
-	stdio/scanf.o \
 	stdio/setbuf.o \
 	stdio/setvbuf.o \
 	stdio/sprintf.o \
-	stdio/sscanf.o \
+	stdio/swprintf.o \
 	stdio/stdhnd.o \
 	stdio/tempnam.o \
 	stdio/tmpfile.o \
 	stdio/tmpnam.o \
 	stdio/ungetc.o \
+	stdio/ungetwc.o \
 	stdio/vfprintf.o \
-	stdio/vfscanf.o \
 	stdio/vfwprint.o \
 	stdio/vprintf.o \
-	stdio/vscanf.o \
+	stdio/vwprintf.o \
 	stdio/vsprintf.o \
-	stdio/vsscanf.o \
+	stdio/vswprintf.o \
 	stdio/wfdopen.o \
 	stdio/wrename.o \
 	stdio/wtempnam.o \
@@ -330,6 +338,7 @@ STDLIB_OBJECTS = \
 	stdlib/atoi.o \
 	stdlib/atoi64.o \
 	stdlib/atol.o \
+	stdlib/wtol.o \
 	stdlib/bsearch.o \
 	stdlib/div.o \
 	stdlib/ecvt.o \
@@ -437,7 +446,8 @@ WINE_OBJECTS = \
 	wine/cpp.o \
 	wine/cppexcept.o \
 	wine/heap.o \
-	wine/thread.o
+	wine/thread.o \
+	wine/scanf.o
 
 TARGET_OBJECTS = \
 	$(CONIO_OBJECTS) \

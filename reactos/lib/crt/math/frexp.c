@@ -1,6 +1,6 @@
-#include <msvcrt/math.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/ieee.h>
+#include <math.h>
+#include <stdlib.h>
+#include <internal/ieee.h>
 
 /*
  * @implemented

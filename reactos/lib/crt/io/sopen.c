@@ -1,10 +1,11 @@
-#include <msvcrt/io.h>
+#include <io.h>
 
 
 /*
  * @implemented
  */
-int _sopen(char *path, int access, int shflag, int mode)
+int _sopen(const char *path, int access, int shflag, ... /*mode, permissin*/)
 {
-  return _open((path), (access)|(shflag), (mode));
+   //FIXME: vararg
+  return _open((path), (access)|(shflag));//, (mode));
 }

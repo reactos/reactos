@@ -316,6 +316,17 @@ typedef struct _MIDL_FORMAT_STRING {
 	short Pad;
 	unsigned char Format[1];
 } MIDL_FORMAT_STRING;
+typedef struct _MIDL_SYNTAX_INFO
+{
+	RPC_SYNTAX_IDENTIFIER TransferSyntax;
+	RPC_DISPATCH_TABLE *DispatchTable;
+	PFORMAT_STRING ProcString;
+	const unsigned short *FmtStringOffset;
+	PFORMAT_STRING TypeString;
+	const void *aUserMarshalQuadruple;
+	ULONG_PTR pReserved1;
+	ULONG_PTR pReserved2;
+} MIDL_SYNTAX_INFO, *PMIDL_SYNTAX_INFO;
 typedef void(__RPC_API *STUB_THUNK)(PMIDL_STUB_MESSAGE);
 typedef long(__RPC_API *SERVER_ROUTINE)(void);
 typedef struct _MIDL_SERVER_INFO_ {
@@ -324,6 +335,9 @@ typedef struct _MIDL_SERVER_INFO_ {
 	PFORMAT_STRING ProcString;
 	const unsigned short *FmtStringOffset;
 	const STUB_THUNK *ThunkTable;
+	PRPC_SYNTAX_IDENTIFIER pTransferSyntax;
+	ULONG_PTR nCount;
+	PMIDL_SYNTAX_INFO pSyntaxInfo;
 } MIDL_SERVER_INFO,*PMIDL_SERVER_INFO;
 typedef struct _MIDL_STUBLESS_PROXY_INFO {
 	PMIDL_STUB_DESC pStubDesc;

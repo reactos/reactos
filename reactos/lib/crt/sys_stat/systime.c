@@ -1,5 +1,5 @@
 #include "precomp.h"
-#include <msvcrt/sys/time.h>
+#include <sys/time.h>
 
 
 int month[12] = { 31,28,31,30,31,30,31,31,30,31,30,31};

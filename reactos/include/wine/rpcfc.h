@@ -21,7 +21,7 @@
 #define RPC_FC_DOUBLE			0x0c
 #define RPC_FC_ENUM16			0x0d
 #define RPC_FC_ENUM32			0x0e
-
+#define RPC_FC_IGNORE			0x0f /* handle_t */
 #define RPC_FC_ERROR_STATUS_T		0x10
 
 /* other stuff */
@@ -45,6 +45,8 @@
 #define RPC_FC_CSTRUCT			0x17 /* conformant structure */
 
 #define RPC_FC_CPSTRUCT                 0x18 /* conformant structure w/ pointers */
+
+#define RPC_FC_CVSTRUCT                 0x19 /* conformant varying struct */
 
 #define RPC_FC_BOGUS_STRUCT		0x1a /* complex structure */
 

@@ -1,9 +1,9 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/float.h>
-#include <msvcrt/alloc.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <float.h>
+#include <malloc.h>
 // #include <msvcrt/locale.h>
 
 void __ecvround (char *, char *, const char *, int *);
@@ -15,7 +15,7 @@ fcvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
   static char INFINITY[] = "Infinity";
   char decimal = '.' /* localeconv()->decimal_point[0] */;
   int digits = ndigits >= 0 ? ndigits : 0;
-  char *cvtbuf = (char *)alloca (2*DBL_MAX_10_EXP + 16);
+  char *cvtbuf = (char *)_alloca (2*DBL_MAX_10_EXP + 16);
   char *s = cvtbuf;
   char *dot;
 

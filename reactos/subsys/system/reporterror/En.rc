@@ -51,3 +51,4 @@ BEGIN
   IDS_FAILED_TO_INITIALIZE_WINSOCK "Failed to initialize winsock (windows error code %d)"
   IDS_FAILED_TO_LOCATE_SERVER "Failed to contact error reporting server"
 END
+

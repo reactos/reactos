@@ -1,7 +1,7 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #if 1
 /*

@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/sys/stat.h>
+#include <sys/stat.h>
 
 unsigned _unMode_dll = 022;
 

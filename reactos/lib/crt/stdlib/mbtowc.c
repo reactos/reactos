@@ -1,6 +1,6 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/ctype.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 
 #if 1

@@ -1,22 +1,23 @@
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
+#include <stdlib.h>
+#include <string.h>
+#include <tchar.h>
 
 
 /*
  * @implemented
  */
-void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext)
+void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
-  char* tmp_drive;
-  char* tmp_dir;
-  char* tmp_ext;
+  _TCHAR* tmp_drive;
+  _TCHAR* tmp_dir;
+  _TCHAR* tmp_ext;
 
-  tmp_drive = (char*)strchr(path,':');
+  tmp_drive = (_TCHAR*)_tcschr(path,':');
   if (drive)
     {
       if (tmp_drive)
         {
-          strncpy(drive,tmp_drive-1,2);
+          _tcsncpy(drive,tmp_drive-1,2);
           *(drive+2) = 0;
         }
       else
@@ -26,15 +27,15 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
     }
   if (!tmp_drive)
     {
-      tmp_drive = (char*)path - 1;
+      tmp_drive = (_TCHAR*)path - 1;
     }
 
-  tmp_dir = (char*)strrchr(path,'\\');
+  tmp_dir = (_TCHAR*)_tcsrchr(path,'\\');
   if (dir)
     {
       if (tmp_dir)
         {
-          strncpy(dir,tmp_drive+1,tmp_dir-tmp_drive);
+          _tcsncpy(dir,tmp_drive+1,tmp_dir-tmp_drive);
           *(dir+(tmp_dir-tmp_drive)) = 0;
         }
       else
@@ -43,26 +44,26 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
         }
     }
 
-  tmp_ext = (char*)strrchr(path,'.');
+  tmp_ext = (_TCHAR*)_tcsrchr(path,'.');
   if (!tmp_ext)
     {
-      tmp_ext = (char*)path+strlen(path);
+      tmp_ext = (_TCHAR*)path+_tcslen(path);
     }
   if (ext)
     {
-      strcpy(ext,tmp_ext);
+      _tcscpy(ext,tmp_ext);
     }
 
   if (fname)
     {
       if (tmp_dir)
         {
-          strncpy(fname,tmp_dir+1,tmp_ext-tmp_dir-1);
+          _tcsncpy(fname,tmp_dir+1,tmp_ext-tmp_dir-1);
           *(fname+(tmp_ext-tmp_dir-1)) = 0;
         }
       else
         {
-          strncpy(fname,tmp_drive+1,tmp_ext-tmp_drive-1);
+          _tcsncpy(fname,tmp_drive+1,tmp_ext-tmp_drive-1);
           *(fname+(tmp_ext-path))=0;
         }
     }

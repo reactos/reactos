@@ -24,8 +24,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <internal/file.h>
 
 #undef getchar
 #undef getwchar

@@ -19,8 +19,8 @@
 #include "precomp.h"
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
-#include <msvcrt/internal/mtdll.h>
+#include <internal/debug.h>
+#include <internal/mtdll.h>
 
 typedef struct
 {

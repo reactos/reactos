@@ -1,6 +1,6 @@
 /* $Id: init.c 13449 2005-02-06 21:55:07Z ea $
  *
- * initdosdev.c - Define symbolic links to kernel devices (MS-DOS names)
+ * initdosdev.c - Define symbolic links to kernel devices (MS-DOS names).
  * 
  * ReactOS Operating System
  * 

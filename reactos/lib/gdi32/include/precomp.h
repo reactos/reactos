@@ -9,9 +9,6 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 
-#define NtGdiQueryTable() \
-  (PGDI_TABLE_ENTRY)NtUserCallNoParam(NOPARAM_ROUTINE_GDI_QUERY_TABLE)
-
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
 
@@ -39,6 +36,7 @@ typedef CHWIDTHINFO *PCHWIDTHINFO;
 
 extern PGDI_TABLE_ENTRY GdiHandleTable;
 extern HANDLE hProcessHeap;
+extern HANDLE CurrentProcessId;
 
 /* == HEAP ================================================================== */
 
@@ -51,5 +49,9 @@ VOID     HEAP_free ( LPVOID memory );
 BOOL FASTCALL TextMetricW2A(TEXTMETRICA *tma, TEXTMETRICW *tmw);
 BOOL FASTCALL NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw);
 BOOL FASTCALL NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw);
+
+/* == GDI HANDLES =========================================================== */
+BOOL GdiIsHandleValid(HGDIOBJ hGdiObj);
+BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
 
 /* EOF */

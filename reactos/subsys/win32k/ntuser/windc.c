@@ -213,7 +213,7 @@ DceDeleteClipRgn(DCE* Dce)
     {
       Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
     }
-  else if (Dce->hClipRgn > (HRGN) 1)
+  else if (Dce->hClipRgn != NULL)
     {
       GDIOBJ_SetOwnership(Dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(Dce->hClipRgn);
@@ -332,10 +332,21 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 noparent:
    if (Flags & DCX_INTERSECTRGN)
    {
-      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+      if(Dce->hClipRgn != NULL)
+      {
+         NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+      }
+      else
+      {
+         if(hRgnVisible != NULL)
+         {
+            NtGdiDeleteObject(hRgnVisible);
+         }
+         hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
+      }
    }
 
-   if (Flags & DCX_EXCLUDERGN)
+   if (Flags & DCX_EXCLUDERGN && Dce->hClipRgn != NULL)
    {
       NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
    }

@@ -12,13 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-#include <ntos/minmax.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /*
@@ -728,7 +722,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       {
          DPRINT("VfatReadFile returned STATUS_VERIFY_REQUIRED\n");
          DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
-         IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
+         IoSetDeviceToVerify(PsGetCurrentThread(), DeviceToVerify);
          Status = IoVerifyVolume (DeviceToVerify, FALSE);
 
          if (NT_SUCCESS(Status))

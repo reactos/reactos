@@ -198,6 +198,8 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
   PETHREAD Thread;
   BOOLEAN CopyOnOpen;
   BOOLEAN EffectiveOnly;
+  
+  PAGED_CODE();
 
   Thread = PsGetCurrentThread();
   if (Thread == NULL)
@@ -226,6 +228,8 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL
 SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+  PAGED_CODE();
+  
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&SepSubjectContextLock, TRUE);
 }
@@ -237,6 +241,8 @@ SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL
 SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+  PAGED_CODE();
+  
   ExReleaseResourceLite(&SepSubjectContextLock);
   KeLeaveCriticalRegion();
 }
@@ -248,6 +254,8 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL
 SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+  PAGED_CODE();
+  
   if (SubjectContext->PrimaryToken != NULL)
     {
       ObDereferenceObject(SubjectContext->PrimaryToken);
@@ -266,6 +274,8 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 NTSTATUS STDCALL
 SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
+  PAGED_CODE();
+  
   if (*SecurityDescriptor != NULL)
     {
       ExFreePool(*SecurityDescriptor);
@@ -331,6 +341,8 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   PSID Group = NULL;
   PACL Dacl = NULL;
   PACL Sacl = NULL;
+  
+  PAGED_CODE();
 
   /* Lock subject context */
   SeLockSubjectContext(SubjectContext);
@@ -561,6 +573,8 @@ SepSidInToken(PACCESS_TOKEN _Token,
 {
   ULONG i;
   PTOKEN Token = (PTOKEN)_Token;
+  
+  PAGED_CODE();
 
   if (Token->UserAndGroupCount == 0)
   {
@@ -624,6 +638,8 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   PACE CurrentAce;
   PSID Sid;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   CurrentAccess = PreviouslyGrantedAccess;
 
@@ -795,6 +811,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   KPROCESSOR_MODE PreviousMode;
   PTOKEN Token;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT("NtAccessCheck() called\n");
 

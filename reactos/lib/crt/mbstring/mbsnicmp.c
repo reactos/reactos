@@ -1,4 +1,4 @@
-#include <msvcrt/mbstring.h>
+#include <mbstring.h>
 
 
 size_t _mbclen2(const unsigned int s);

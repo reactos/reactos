@@ -775,6 +775,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    }
 
    PreviousMode = ExGetPreviousMode();
+   
    Status = RtlCaptureUnicodeString(&CapturedFileName,
                                     PreviousMode,
                                     PagedPool,
@@ -805,6 +806,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     
       if (!NT_SUCCESS(Status))
       {
+         RtlReleaseCapturedUnicodeString(&CapturedFileName,
+                                         PreviousMode,
+                                         FALSE);
          return Status;
       }
    }
@@ -834,6 +838,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                          CreateFileTypeNone,
                          NULL,
                          SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+
    RtlReleaseCapturedUnicodeString(&CapturedFileName,
                                    PreviousMode,
                                    FALSE);

@@ -33,7 +33,7 @@ FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, USHORT DosDate, USHORT 
 
   TimeFields.Day = pddate->Day;
   TimeFields.Month = pddate->Month;
-  TimeFields.Year = DeviceExt->BaseDateYear + pddate->Year;
+  TimeFields.Year = (CSHORT)(DeviceExt->BaseDateYear + pddate->Year);
 
   RtlTimeFieldsToTime (&TimeFields, &LocalTime);
   ExLocalTimeToSystemTime(&LocalTime, SystemTime);
@@ -261,7 +261,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->NextEntryOffset = 
       ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     RtlCopyMemory(pInfo->ShortName, DirContext->ShortNameU.Buffer, DirContext->ShortNameU.Length);
-    pInfo->ShortNameLength = DirContext->ShortNameU.Length;
+    pInfo->ShortNameLength = (CCHAR)DirContext->ShortNameU.Length;
     RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
   //      pInfo->FileIndex=;
     FsdDosDateTimeToSystemTime (DeviceExt, DirContext->DirEntry.Fat.CreationDate,

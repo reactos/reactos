@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
 				IN PVOID Context)
@@ -272,9 +272,9 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 NTSTATUS
 VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG CtlCode,
-			  IN PVOID InputBuffer,
+			  IN PVOID InputBuffer OPTIONAL,
 			  IN ULONG InputBufferSize,
-			  IN OUT PVOID OutputBuffer,
+			  IN OUT PVOID OutputBuffer OPTIONAL,
 			  IN OUT PULONG OutputBufferSize,
 			  IN BOOLEAN Override)
 {

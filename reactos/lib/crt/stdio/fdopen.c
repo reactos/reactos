@@ -1,13 +1,22 @@
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
 
-FILE* __alloc_file(void);
+
+#include <stdio.h>
+#include <tchar.h>
+#include <internal/file.h>
+
+
+
+
 
 
 /*
  * @implemented
  */
-FILE* _fdopen(int handle, char* mode)
+FILE* _tfdopen(int handle, 
+#ifndef _UNICODE
+   const
+#endif   
+   _TCHAR* mode)
 {
   FILE* file;
   int rw;
@@ -20,12 +29,6 @@ FILE* _fdopen(int handle, char* mode)
 
   if (handle == 2)
     return stderr;
-
-  if (handle == 3)
-    return stdaux;
-
-  if (handle == 4)
-    return stdprn;
 
   file = __alloc_file();
   if (file == NULL)
@@ -55,3 +58,5 @@ FILE* _fdopen(int handle, char* mode)
 
   return file;
 }
+
+

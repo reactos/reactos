@@ -23,10 +23,10 @@
 
 #include "precomp.h"
 
-#include "msvcrt/errno.h"
-#include "msvcrt/malloc.h"
-#include "msvcrt/stdlib.h"
-#include <msvcrt/internal/mtdll.h>
+#include <errno.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <internal/mtdll.h>
 
 #include "wine/debug.h"
 

@@ -125,46 +125,6 @@ RtlReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
   }
 }
 
-NTSTATUS
-RtlCaptureAnsiString(PANSI_STRING Dest,
-		     PANSI_STRING UnsafeSrc)
-{
-  PANSI_STRING Src; 
-  NTSTATUS Status;
-  
-  /*
-   * Copy the source string structure to kernel space.
-   */
-  Status = MmCopyFromCaller(&Src, UnsafeSrc, sizeof(ANSI_STRING));
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  /*
-   * Initialize the destination string.
-   */
-  Dest->Length = Src->Length;
-  Dest->MaximumLength = Src->MaximumLength;
-  Dest->Buffer = ExAllocatePool(NonPagedPool, Dest->MaximumLength);
-  if (Dest->Buffer == NULL)
-    {
-      return(Status);
-    }
-
-  /*
-   * Copy the source string to kernel space.
-   */
-  Status = MmCopyFromCaller(Dest->Buffer, Src->Buffer, Dest->Length);
-  if (!NT_SUCCESS(Status))
-    {
-      ExFreePool(Dest->Buffer);
-      return(Status);
-    }
-
-  return(STATUS_SUCCESS);
-}
-
 /*
  * @unimplemented
  */

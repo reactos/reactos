@@ -910,7 +910,7 @@ getmousesvalue(iface);
   dod[3].dwOfs =   DIMOFS_BUTTON1;
   dod[3].dwData =   This->m_state.rgbButtons[1];
   dod[3].dwTimeStamp =  0;
-  dod[0].dwSequence = last_event++;
+  dod[3].dwSequence = last_event++;
   
   dod[4].dwOfs =   DIMOFS_BUTTON2;
   dod[4].dwData =   This->m_state.rgbButtons[2];

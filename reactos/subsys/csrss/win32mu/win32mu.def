@@ -1,0 +1,4 @@
+; $Id:  $
+LIBRARY win32mu.dll
+EXPORTS
+ServerDllInitialization@20

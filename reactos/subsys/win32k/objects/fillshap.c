@@ -88,9 +88,7 @@ IntGdiPolygon(PDC    dc,
 
 	/* Now fill the polygon with the current brush. */
 	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-	/* FIXME - FillBrushObj can be NULL!!!!!!!! Don't Assert! */
-	ASSERT(FillBrushObj);
-	if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+	if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
@@ -99,12 +97,10 @@ IntGdiPolygon(PDC    dc,
 
 	/* get BRUSHOBJ from current pen. */
 	PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
-	/* FIXME - handle PenBrushObj == NULL !!!!! */
-        IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-
 	// Draw the Polygon Edges with the current pen ( if not a NULL pen )
-	if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+	if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
+	  IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 	  for ( CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint )
 	  {
 	    POINT To, From; //, Next;
@@ -260,8 +256,14 @@ NtGdiEllipse(
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   /* FIXME - BitmapObj can be NULL!!!! Don't assert but handle this case gracefully! */
-   ASSERT(BitmapObj);
+   if (NULL == BitmapObj)
+   {
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INTERNAL_ERROR);
+      return FALSE;
+   }
 
    IntGdiInitBrushInstance(&FillBrushInst, FillBrush, dc->XlateBrush);
    IntGdiInitBrushInstance(&PenBrushInst, PenBrush, dc->XlatePen);
@@ -962,14 +964,13 @@ IntRectangle(PDC dc,
     DestRect.bottom = BottomRect;
 
     FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-    /* FIXME - Handle FillBrushObj == NULL !!!! */
-    IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 
     if ( FillBrushObj )
     {
       if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
-	ret = IntEngBitBlt(BitmapObj,
+        IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+        ret = IntEngBitBlt(BitmapObj,
                            NULL,
                            NULL,
                            dc->CombinedClip,
@@ -1113,29 +1114,43 @@ IntRoundRect(
   RectBounds.bottom = bottom;
 
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-  /* FIXME - BitmapObj can be NULL!!!! Handle this case gracefully instead of ASSERT! */
-  ASSERT(BitmapObj);
+  if (!BitmapObj)
+  {
+    /* Nothing to do, as we don't have a bitmap */
+    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+    SetLastWin32Error(ERROR_INTERNAL_ERROR);
+    return FALSE;
+  }
 
   FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
-  /* FIXME - Don't assert if FillBrushObj == NULL, handle this case !!!! */
-  ASSERT(FillBrushObj);
-  if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
+  if (FillBrushObj)
   {
-    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-    FillBrushObj = NULL; // make null brush check simpler...
+    if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
+    {
+      /* make null brush check simpler... */
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      FillBrushObj = NULL;
+    }
+    else
+    {
+      IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+    }
   }
 
   PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
-  /* FIXME - PenBrushObject can be NULL!!! Don't assert!!!! */
-  ASSERT(PenBrushObj);
-  if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
+  if (PenBrushObj)
   {
-    PENOBJ_UnlockPen(dc->w.hPen);
-    PenBrushObj = NULL;
+    if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
+    {
+      /* make null pen check simpler... */
+      PENOBJ_UnlockPen(dc->w.hPen);
+      PenBrushObj = NULL;
+    }
+    else
+    {
+      IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+    }
   }
-
-  IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-  IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
   right--;
   bottom--;
@@ -1317,7 +1332,8 @@ IntRoundRect(
   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
   if(PenBrushObj != NULL)
     PENOBJ_UnlockPen(dc->w.hPen);
-  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+  if(FillBrushObj != NULL)
+    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 
   return ret;
 }

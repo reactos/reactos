@@ -3,5 +3,6 @@
 #define REACTOS_STR_INTERNAL_NAME	"freetype\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"freetype.dll\0"
 #define REACTOS_STR_COMPANY_NAME	"ReactOS Development Team/FreeType Team\0"
-#define REACTOS_STR_LEGAL_COPYRIGHT	"Copyright 1998-2004 ReactOS Team, 1996-2004 FreeType Team\0"
+#define REACTOS_STR_LEGAL_COPYRIGHT	"Copyright 1998-2005 ReactOS Team\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright 1996-2005 FreeType Team\0"
 #include <reactos/version.rc>

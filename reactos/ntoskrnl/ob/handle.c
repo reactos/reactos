@@ -287,7 +287,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    HANDLE TargetHandle;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(SourceProcessHandle,
 				      PROCESS_DUP_HANDLE,
@@ -552,6 +552,8 @@ ObDeleteHandle(PEPROCESS Process,
    PHANDLE_TABLE HandleTable;
    POBJECT_HEADER Header;
    HANDLE_BLOCK *Block;
+   
+   PAGED_CODE();
 
    DPRINT("ObDeleteHandle(Handle %x)\n",Handle);
 
@@ -630,6 +632,8 @@ ObCreateHandle(PEPROCESS Process,
    HANDLE_BLOCK* new_blk = NULL;
    PHANDLE_TABLE HandleTable;
    KIRQL oldlvl;
+   
+   PAGED_CODE();
 
    DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
 
@@ -723,6 +727,8 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
   PEPROCESS Process;
   KIRQL oldIrql;
   PHANDLE_ENTRY HandleEntry;
+  
+  PAGED_CODE();
 
   DPRINT("ObQueryObjectAuditingByHandle(Handle %x)\n", Handle);
 
@@ -777,7 +783,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    ULONG Attributes;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
 	   "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
@@ -930,7 +936,7 @@ NtClose(IN HANDLE Handle)
    POBJECT_HEADER	Header;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    DPRINT("NtClose(Handle %x)\n",Handle);
    
@@ -966,6 +972,8 @@ ObInsertObject(IN PVOID Object,
 {
   POBJECT_HEADER ObjectHeader;
   ACCESS_MASK Access;
+  
+  PAGED_CODE();
 
   Access = DesiredAccess;
   ObjectHeader = BODY_TO_HEADER(Object);

@@ -1,8 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/atexit.h>
-
-typedef int (* _onexit_t)(void);
+#include <stdlib.h>
+#include <internal/atexit.h>
 
 /*
  * @implemented

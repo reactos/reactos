@@ -22,8 +22,8 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/malloc.h>
+#include <stdlib.h>
+#include <malloc.h>
 
 extern HANDLE hHeap;
 

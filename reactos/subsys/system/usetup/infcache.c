@@ -1294,7 +1294,7 @@ InfGetLineCount(HINF InfHandle,
 
   /* Iterate through list of sections */
   CacheSection = Cache->FirstSection;
-  while (Section != NULL)
+  while (CacheSection != NULL)
     {
       DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 

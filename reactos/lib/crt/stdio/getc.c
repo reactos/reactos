@@ -22,10 +22,10 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
 
 //getc can be a macro
 #undef getc

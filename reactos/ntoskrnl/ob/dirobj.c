@@ -50,6 +50,8 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
    
+   PAGED_CODE();
+   
    PreviousMode = ExGetPreviousMode();
    
    if(PreviousMode != KernelMode)
@@ -168,6 +170,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
   ULONG SkipEntries = 0;
   ULONG NextEntry = 0;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
 
@@ -426,6 +430,8 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
   HANDLE hDirectory;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
   
   DPRINT("NtCreateDirectoryObject(DirectoryHandle %x, "
 	 "DesiredAccess %x, ObjectAttributes %x\n",

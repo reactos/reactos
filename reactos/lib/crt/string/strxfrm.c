@@ -1,5 +1,5 @@
 #include "precomp.h"
-#include <msvcrt/string.h>
+#include <string.h>
 
 #if 1
 /*

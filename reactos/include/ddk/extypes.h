@@ -129,7 +129,7 @@ typedef union _SLIST_HEADER
    ULONGLONG Alignment;
    struct
      {
-	SINGLE_LIST_ENTRY Next;
+	SLIST_ENTRY Next;
 	USHORT Depth;
 	USHORT Sequence;	
      }; /* now anonymous */

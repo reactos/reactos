@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef __BEOS__
+#include <unistd.h>
+#endif
+
 #ifndef S_ISREG
 #ifndef S_IFREG
 #define S_IFREG _S_IFREG

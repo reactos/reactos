@@ -90,39 +90,6 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(const GUID *class, PCWSTR filter, HWND pa
   return FALSE;
 }
 
-/***********************************************************************
- *		CM_Connect_MachineW  (SETUPAPI.@)
- */
-DWORD WINAPI CM_Connect_MachineW(LPCWSTR name, void * machine)
-{
-#define  CR_SUCCESS       0x00000000
-#define  CR_ACCESS_DENIED 0x00000033
-  FIXME("\n");
-  return  CR_ACCESS_DENIED;
-}
-
-/***********************************************************************
- *		CM_Disconnect_Machine  (SETUPAPI.@)
- */
-DWORD WINAPI CM_Disconnect_Machine(DWORD handle)
-{
-  FIXME("\n");
-  return  CR_SUCCESS;
-
-}
-
-/***********************************************************************
- *             CM_Get_Device_ID_ListA  (SETUPAPI.@)
- */
-
-DWORD WINAPI CM_Get_Device_ID_ListA(
-    PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags )
-{
-    FIXME("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags );
-    memset(Buffer,0,2);
-    return CR_SUCCESS;
-}
-
 
 /***********************************************************************
  *		SetupCopyOEMInfA  (SETUPAPI.@)

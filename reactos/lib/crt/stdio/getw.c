@@ -16,7 +16,7 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <msvcrt/stdio.h>
+#include <stdio.h>
 
 
 /*

@@ -144,16 +144,27 @@ RtlEnterCriticalSection(
          */
         if (Thread == CriticalSection->OwningThread) {
             
-            /* You own it, so you'll get it when you're done with it! */
+            /* You own it, so you'll get it when you're done with it! No need to
+               use the interlocked functions as only the thread who already owns
+               the lock can modify this data. */
             CriticalSection->RecursionCount++;
             return STATUS_SUCCESS;
         }
+
+        /* NOTE - CriticalSection->OwningThread can be NULL here because changing
+                  this information is not serialized. This happens when thread a
+                  acquires the lock (LockCount == 0) and thread b tries to
+                  acquire it as well (LockCount == 1) but thread a hasn't had a
+                  chance to set the OwningThread! So it's not an error when
+                  OwningThread is NULL here! */
         
         /* We don't own it, so we must wait for it */
         RtlpWaitForCriticalSection(CriticalSection);
     }
     
-    /* Lock successful */
+    /* Lock successful. Changing this information has not to be serialized because
+       only one thread at a time can actually change it (the one who acquired
+       the lock)! */
     CriticalSection->OwningThread = Thread;
     CriticalSection->RecursionCount = 1;
     return STATUS_SUCCESS;
@@ -293,19 +304,34 @@ NTSTATUS
 STDCALL
 RtlLeaveCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
-{     
-    /* Decrease the Recursion Count */    
+{   
+#ifndef NDEBUG
+    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    
+    /* In win this case isn't checked. However it's a valid check so it should only
+       be performed in debug builds! */
+    if (Thread != CriticalSection->OwningThread)
+    {
+       DPRINT1("Releasing critical section not owned!\n");
+       return STATUS_INVALID_PARAMETER;
+    }
+#endif
+   
+    /* Decrease the Recursion Count. No need to do this atomically because only
+       the thread who holds the lock can call this function (unless the program
+       is totally screwed... */
     if (--CriticalSection->RecursionCount) {
     
-        /* Someone still owns us, but we are free */
+        /* Someone still owns us, but we are free. This needs to be done atomically. */
         InterlockedDecrement(&CriticalSection->LockCount);
         
     } else {
         
-         /* Nobody owns us anymore */
+         /* Nobody owns us anymore. No need to do this atomically. See comment
+            above. */
         CriticalSection->OwningThread = 0;
         
-        /* Was someone wanting us? */
+        /* Was someone wanting us? This needs to be done atomically. */
         if (InterlockedDecrement(&CriticalSection->LockCount) >= 0) {
         
             /* Let him have us */
@@ -334,29 +360,29 @@ RtlLeaveCriticalSection(
  *     None
  *
  *--*/
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlTryEnterCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
-{   
+{
     /* Try to take control */
     if (InterlockedCompareExchange(&CriticalSection->LockCount,
                                    0,
                                    -1) == -1) {
 
-        /* It's ours */                                
+        /* It's ours */
         CriticalSection->OwningThread =  NtCurrentTeb()->Cid.UniqueThread;
         CriticalSection->RecursionCount = 1;
         return TRUE;
-   
+
    } else if (CriticalSection->OwningThread == NtCurrentTeb()->Cid.UniqueThread) {
-       
+
         /* It's already ours */
         InterlockedIncrement(&CriticalSection->LockCount);
         CriticalSection->RecursionCount++;
         return TRUE;
     }
-    
+
     /* It's not ours */
     return FALSE;
 }

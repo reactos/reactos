@@ -1,6 +1,6 @@
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <internal/file.h>
 
 
 /*
@@ -8,7 +8,7 @@
  */
 long _filelength(int _fd)
 {
-    DWORD len = GetFileSize(_get_osfhandle(_fd), NULL);
+    DWORD len = GetFileSize((HANDLE)_get_osfhandle(_fd), NULL);
     if (len == INVALID_FILE_SIZE) {
     	DWORD oserror = GetLastError();
     	if (oserror != 0) {

@@ -267,8 +267,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   BOOLEAN BelongsToThreadData;
   
   ASSERT(Window);
-
-  MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->Self);
   
   IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   if(Window->Status & WINDOWSTATUS_DESTROYING)
@@ -326,6 +324,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     if(BelongsToThreadData)
       IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
   }
+  MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->Self);
   
   /* flush the message queue */
   MsqRemoveWindowMessagesFromQueue(Window);
@@ -1164,7 +1163,7 @@ NtUserBuildHwndList(
     PLIST_ENTRY Current;
     PWINDOW_OBJECT Window;
     
-    Status = PsLookupThreadByThreadId((PVOID)dwThreadId, &Thread);
+    Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
     if(!NT_SUCCESS(Status))
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1173,7 +1172,7 @@ NtUserBuildHwndList(
     if(!(W32Thread = Thread->Tcb.Win32Thread))
     {
       ObDereferenceObject(Thread);
-      DPRINT1("Thread is not a GUI Thread!\n");
+      DPRINT("Thread is not a GUI Thread!\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
     }

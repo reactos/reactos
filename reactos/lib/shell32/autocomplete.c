@@ -170,9 +170,11 @@ static ULONG WINAPI IAutoComplete_fnAddRef(
 	IAutoComplete * iface)
 {
     IAutoCompleteImpl *This = (IAutoCompleteImpl *)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
     
-    TRACE("(%p)->(%lu)\n",This,This->ref);
-    return ++(This->ref);
+    TRACE("(%p)->(%lu)\n", This, refCount - 1);
+
+    return refCount;
 }
 
 /******************************************************************************
@@ -182,10 +184,11 @@ static ULONG WINAPI IAutoComplete_fnRelease(
 	IAutoComplete * iface)
 {
     IAutoCompleteImpl *This = (IAutoCompleteImpl *)iface;
+    ULONG refCount = InterlockedDecrement(&This->ref);
     
-    TRACE("(%p)->(%lu)\n",This,This->ref);
+    TRACE("(%p)->(%lu)\n", This, refCount + 1);
 
-    if (!--(This->ref)) {
+    if (!refCount) {
 	TRACE(" destroying IAutoComplete(%p)\n",This);
         HeapFree(GetProcessHeap(), 0, This->quickComplete);
         HeapFree(GetProcessHeap(), 0, This->txtbackup);
@@ -194,9 +197,8 @@ static ULONG WINAPI IAutoComplete_fnRelease(
 	if (This->enumstr)
 	    IEnumString_Release(This->enumstr);
 	HeapFree(GetProcessHeap(), 0, This);
-	return 0;
     }
-    return This->ref;
+    return refCount;
 }
 
 /******************************************************************************

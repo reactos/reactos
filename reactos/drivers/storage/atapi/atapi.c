@@ -2231,7 +2231,7 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DPRINT("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
 	 Srb->TargetId);
 
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_NO_FLUSH))
+  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_NO_FLUSH)
     {
       /*
        * NOTE: Don't flush the cache for CD/DVD drives. Although
@@ -2240,9 +2240,16 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
        * it doesn't make sense to flush cache on devices we don't
        * write to.
        */
-      return STATUS_SUCCESS;
+      return SRB_STATUS_INVALID_REQUEST;
     }
 
+  if (!(DeviceExtension->DeviceParams[Srb->TargetId].SupportedFeatures83 & 0x1000))
+    {
+      /* The device states it doesn't support the command */
+      DPRINT("The drive doesn't support FLUSH_CACHE\n");
+      return SRB_STATUS_INVALID_REQUEST;
+    }
+ 
   /* Wait for BUSY to clear */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {

@@ -1,4 +1,5 @@
-#include <msvcrt/mbstring.h>
+#include <stdlib.h>
+#include <mbstring.h>
 
 /*
  * @implemented

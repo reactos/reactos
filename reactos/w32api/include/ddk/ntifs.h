@@ -3306,7 +3306,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupThreadByThreadId (
-    IN PVOID        UniqueThreadId,
+    IN HANDLE       UniqueThreadId,
     OUT PETHREAD    *Thread
 );
 

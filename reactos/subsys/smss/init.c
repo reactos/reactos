@@ -98,7 +98,7 @@ struct {
 };
 
 NTSTATUS
-InitSessionManager(HANDLE Children[])
+InitSessionManager(VOID)
 {
   int i;
   NTSTATUS Status;

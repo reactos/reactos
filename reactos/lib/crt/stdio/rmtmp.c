@@ -9,25 +9,10 @@
  * NOTE		    Not tested.
  */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <string.h>
+#include <internal/file.h>
 
-#ifndef F_OK
- #define F_OK	0x01
-#endif
-#ifndef R_OK
- #define R_OK	0x02
-#endif
-#ifndef W_OK
- #define W_OK	0x04
-#endif
-#ifndef X_OK
- #define X_OK	0x08
-#endif
-#ifndef D_OK
- #define D_OK	0x10
-#endif
 
 // should be replace by a closure of the tmp files
 extern __file_rec *__file_rec_list;
@@ -35,7 +20,7 @@ extern __file_rec *__file_rec_list;
 int _rmtmp( void )
 {
 /*
-loop files and check for name_to_remove 
+loop files and check for _tmpfname  
 */
   __file_rec *fr = __file_rec_list;
   __file_rec **last_fr = &__file_rec_list;
@@ -51,9 +36,9 @@ loop files and check for name_to_remove
 
     /* If one of the existing slots is available, return it */
     for (i=0; i<fr->count; i++) {
-      if (fr->files[i]->_name_to_remove != NULL) {
-		if ( _access(fr->files[i]->_name_to_remove,W_OK) ) {
-			strcpy(temp_name,fr->files[i]->_name_to_remove);
+      if (fr->files[i]->_tmpfname  != NULL) {
+      if ( _access(fr->files[i]->_tmpfname  ,W_OK) ) {
+         strcpy(temp_name,fr->files[i]->_tmpfname  );
 			fclose(fr->files[i]);
 			remove(temp_name);
 			total_closed++;

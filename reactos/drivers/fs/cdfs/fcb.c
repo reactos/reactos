@@ -250,6 +250,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
       KEBUGCHECK(0);
     }
 #else
+  Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
 		       FALSE,

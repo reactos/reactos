@@ -9,8 +9,8 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/stdlib.h>
+#include <mbstring.h>
+#include <stdlib.h>
 
 /*
  * @implemented

@@ -1,4 +1,4 @@
-#include <msvcrt/math.h>
+#include <math.h>
 
 #pragma function(fmod,sqrt)
 #pragma function(log,log10,pow,exp)

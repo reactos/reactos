@@ -50,7 +50,7 @@ typedef struct {
 static void
 reportError(XML_Parser parser, const XML_Char *filename)
 {
-  int code = XML_GetErrorCode(parser);
+  enum XML_Error code = XML_GetErrorCode(parser);
   const XML_Char *message = XML_ErrorString(code);
   if (message)
     ftprintf(stdout, T("%s:%d:%d: %s\n"),
@@ -68,7 +68,7 @@ processFile(const void *data, size_t size,
 {
   XML_Parser parser = ((PROCESS_ARGS *)args)->parser;
   int *retPtr = ((PROCESS_ARGS *)args)->retPtr;
-  if (XML_Parse(parser, data, size, 1) == XML_STATUS_ERROR) {
+  if (XML_Parse(parser, (const char *)data, size, 1) == XML_STATUS_ERROR) {
     reportError(parser, filename);
     *retPtr = 0;
   }
@@ -154,7 +154,7 @@ processStream(const XML_Char *filename, XML_Parser parser)
   }
   for (;;) {
     int nread;
-    char *buf = XML_GetBuffer(parser, READ_SIZE);
+    char *buf = (char *)XML_GetBuffer(parser, READ_SIZE);
     if (!buf) {
       if (filename != NULL)
         close(fd);

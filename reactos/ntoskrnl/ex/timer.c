@@ -209,12 +209,16 @@ NtCancelTimer(IN HANDLE TimerHandle,
               OUT PBOOLEAN CurrentState OPTIONAL)
 {
     PETIMER Timer;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode;
     BOOLEAN State;
     KIRQL OldIrql;
-    BOOLEAN KillTimer = FALSE;
     PETHREAD TimerThread;
+    BOOLEAN KillTimer = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
    
     DPRINT("NtCancelTimer(0x%x, 0x%x)\n", TimerHandle, CurrentState);
    
@@ -319,8 +323,12 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 {
     PETIMER Timer;
     HANDLE hTimer;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
    
     DPRINT("NtCreateTimer(Handle: %x, Type: %d)\n", TimerHandle, TimerType);
 
@@ -398,8 +406,12 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
             IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     HANDLE hTimer;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
 
     DPRINT("NtOpenTimer(TimerHandle: %x)\n", TimerHandle);
 
@@ -452,9 +464,13 @@ NtQueryTimer(IN HANDLE TimerHandle,
              OUT PULONG ReturnLength  OPTIONAL)
 {
     PETIMER Timer;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
     PTIMER_BASIC_INFORMATION BasicInfo = (PTIMER_BASIC_INFORMATION)TimerInformation;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
 
     DPRINT("NtQueryTimer(TimerHandle: %x, Class: %d)\n", TimerHandle, TimerInformationClass);
     
@@ -522,13 +538,18 @@ NtSetTimer(IN HANDLE TimerHandle,
 {
     PETIMER Timer;
     KIRQL OldIrql;
-    BOOLEAN KillTimer = FALSE;
     BOOLEAN State;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PETHREAD CurrentThread = PsGetCurrentThread();
-    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode;
+    PETHREAD CurrentThread;
     LARGE_INTEGER TimerDueTime;
     PETHREAD TimerThread;
+    BOOLEAN KillTimer = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
+    CurrentThread = PsGetCurrentThread();
 
     DPRINT("NtSetTimer(TimerHandle: %x, DueTime: %d, Apc: %x, Period: %d)\n", TimerHandle, DueTime->QuadPart, TimerApcRoutine, Period);
 

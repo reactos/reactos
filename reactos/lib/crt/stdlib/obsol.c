@@ -1,5 +1,5 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
 
 #undef _cpumode
 unsigned char _cpumode = 0;

@@ -1138,7 +1138,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     return 0;
   }
   
-  Status = PsLookupThreadByThreadId((PVOID)dwThreadId, &Thread);
+  Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
   if(!NT_SUCCESS(Status))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);

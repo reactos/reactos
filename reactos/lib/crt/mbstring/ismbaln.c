@@ -1,11 +1,11 @@
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <mbctype.h>
+#include <ctype.h>
 
 
 /*
  * @implemented
  */
-int _ismbbalnum(unsigned char c)
+int _ismbbalnum(unsigned int c)
 {
   return (isalnum(c) || _ismbbkalnum(c));
 }

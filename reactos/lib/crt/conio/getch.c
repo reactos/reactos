@@ -9,10 +9,10 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/conio.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/io.h>
-#include <msvcrt/internal/console.h>
+#include <conio.h>
+#include <stdio.h>
+#include <io.h>
+#include <internal/console.h>
 
 
 /*
@@ -26,7 +26,7 @@ int _getch(void)
         c = ungot_char;
         char_avail = 0;
     } else {
-        ReadConsoleA(_get_osfhandle(stdin->_file),
+        ReadConsoleA((HANDLE)_get_osfhandle(stdin->_file),
 		             &c,
 		             1,
 		             &NumberOfCharsRead,

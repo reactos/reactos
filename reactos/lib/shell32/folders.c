@@ -130,10 +130,11 @@ static HRESULT WINAPI IExtractIconW_fnQueryInterface(IExtractIconW *iface, REFII
 static ULONG WINAPI IExtractIconW_fnAddRef(IExtractIconW * iface)
 {
 	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
+	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n",This, This->ref );
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
-	return ++(This->ref);
+	return refCount;
 }
 /**************************************************************************
 *  IExtractIconW_Release
@@ -141,17 +142,18 @@ static ULONG WINAPI IExtractIconW_fnAddRef(IExtractIconW * iface)
 static ULONG WINAPI IExtractIconW_fnRelease(IExtractIconW * iface)
 {
 	IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->()\n",This);
+	TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
 
-	if (!--(This->ref))
+	if (!refCount)
 	{
 	  TRACE(" destroying IExtractIcon(%p)\n",This);
 	  SHFree(This->pidl);
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 
 static HRESULT getIconLocationForFolder(IExtractIconW *iface, UINT uFlags,

@@ -37,6 +37,8 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
 {
   PVOID Object;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   if (ObjectInformationClass != ObjectHandleInformation)
     return STATUS_INVALID_INFO_CLASS;
@@ -88,6 +90,8 @@ NtQueryObject (IN HANDLE ObjectHandle,
   ULONG InfoLength;
   PVOID Object;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = ObReferenceObjectByHandle (ObjectHandle,
 				      0,
@@ -260,6 +264,8 @@ NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 {
   PVOID ObjectBody;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,
@@ -299,6 +305,8 @@ NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
   PVOID ObjectBody;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,

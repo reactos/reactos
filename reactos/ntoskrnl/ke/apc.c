@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -517,13 +517,16 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 
 	PKAPC Apc;
 	PETHREAD Thread;
+	KPROCESSOR_MODE PreviousMode;
 	NTSTATUS Status;
+	
+	PreviousMode = ExGetPreviousMode();
 
 	/* Get ETHREAD from Handle */
 	Status = ObReferenceObjectByHandle(ThreadHandle,
 					   THREAD_SET_CONTEXT,
 					   PsThreadType,
-					   KeGetPreviousMode(),
+					   PreviousMode,
 					   (PVOID)&Thread,
 					   NULL);
 	
@@ -545,7 +548,7 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 		return(STATUS_NO_MEMORY);
 	}
    
-	/* Initialize and Queue */
+	/* Initialize and Queue a user mode apc (always!) */
 	KeInitializeApc(Apc,
 			&Thread->Tcb,
 			OriginalApcEnvironment,

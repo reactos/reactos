@@ -1,9 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <limits.h>
-#include <msvcrt/ctype.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
+#include <ctype.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <internal/file.h>
 
 
 /*

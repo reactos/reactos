@@ -7,7 +7,7 @@ dnl The implementation will create a binary, and instead of running
 dnl the binary it will be grep'ed for some symbols that will look
 dnl different for different endianess of the binary.
 dnl
-dnl @version $Id$
+dnl @version $Id: ac_c_bigendian_cross.m4 12852 2005-01-06 13:58:04Z mf $
 dnl @author Guido Draheim <guidod@gmx.de>
 dnl
 AC_DEFUN([AC_C_BIGENDIAN_CROSS],
