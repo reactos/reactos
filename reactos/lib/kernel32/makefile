@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.73 2003/12/30 05:10:31 hyperion Exp $
+# $Id: makefile,v 1.74 2004/01/14 21:40:12 rcampbell Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,7 +13,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = rosrtl.a ntdll.a
+TARGET_SDKLIBS = rosrtl.a ntdll.a kernel32.a
 
 TARGET_GCCLIBS = gcc
 

@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.3 2004/01/14 07:22:17 rcampbell Exp $
+/* $Id: lang.c,v 1.4 2004/01/14 21:40:12 rcampbell Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -12,6 +12,14 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <string.h>
+
+#define LOCALE_SYEARMONTH 0x1006
+#define LOCALE_IPAPERSIZE 0x100A
+#define LOCALE_RETURN_NUMBER 0x20000000
+#define LOCALE_USE_CP_ACP 0x40000000
+#define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
+#define LOCALE_NEUTRAL		(MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT))
+#define LOCALE_FONTSIGNATURE 0x00000058
 
 static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
 
@@ -608,22 +616,271 @@ GetGeoInfoA(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
+const WCHAR *RosGetLocaleValueName( DWORD lctype )
+{
+    static const WCHAR iCalendarTypeW[] = {'i','C','a','l','e','n','d','a','r','T','y','p','e',0};
+    static const WCHAR iCountryW[] = {'i','C','o','u','n','t','r','y',0};
+    static const WCHAR iCurrDigitsW[] = {'i','C','u','r','r','D','i','g','i','t','s',0};
+    static const WCHAR iCurrencyW[] = {'i','C','u','r','r','e','n','c','y',0};
+    static const WCHAR iDateW[] = {'i','D','a','t','e',0};
+    static const WCHAR iDigitsW[] = {'i','D','i','g','i','t','s',0};
+    static const WCHAR iFirstDayOfWeekW[] = {'i','F','i','r','s','t','D','a','y','O','f','W','e','e','k',0};
+    static const WCHAR iFirstWeekOfYearW[] = {'i','F','i','r','s','t','W','e','e','k','O','f','Y','e','a','r',0};
+    static const WCHAR iLDateW[] = {'i','L','D','a','t','e',0};
+    static const WCHAR iLZeroW[] = {'i','L','Z','e','r','o',0};
+    static const WCHAR iMeasureW[] = {'i','M','e','a','s','u','r','e',0};
+    static const WCHAR iNegCurrW[] = {'i','N','e','g','C','u','r','r',0};
+    static const WCHAR iNegNumberW[] = {'i','N','e','g','N','u','m','b','e','r',0};
+    static const WCHAR iPaperSizeW[] = {'i','P','a','p','e','r','S','i','z','e',0};
+    static const WCHAR iTLZeroW[] = {'i','T','L','Z','e','r','o',0};
+    static const WCHAR iTimeW[] = {'i','T','i','m','e',0};
+    static const WCHAR s1159W[] = {'s','1','1','5','9',0};
+    static const WCHAR s2359W[] = {'s','2','3','5','9',0};
+    static const WCHAR sCountryW[] = {'s','C','o','u','n','t','r','y',0};
+    static const WCHAR sCurrencyW[] = {'s','C','u','r','r','e','n','c','y',0};
+    static const WCHAR sDateW[] = {'s','D','a','t','e',0};
+    static const WCHAR sDecimalW[] = {'s','D','e','c','i','m','a','l',0};
+    static const WCHAR sGroupingW[] = {'s','G','r','o','u','p','i','n','g',0};
+    static const WCHAR sLanguageW[] = {'s','L','a','n','g','u','a','g','e',0};
+    static const WCHAR sListW[] = {'s','L','i','s','t',0};
+    static const WCHAR sLongDateW[] = {'s','L','o','n','g','D','a','t','e',0};
+    static const WCHAR sMonDecimalSepW[] = {'s','M','o','n','D','e','c','i','m','a','l','S','e','p',0};
+    static const WCHAR sMonGroupingW[] = {'s','M','o','n','G','r','o','u','p','i','n','g',0};
+    static const WCHAR sMonThousandSepW[] = {'s','M','o','n','T','h','o','u','s','a','n','d','S','e','p',0};
+    static const WCHAR sNegativeSignW[] = {'s','N','e','g','a','t','i','v','e','S','i','g','n',0};
+    static const WCHAR sPositiveSignW[] = {'s','P','o','s','i','t','i','v','e','S','i','g','n',0};
+    static const WCHAR sShortDateW[] = {'s','S','h','o','r','t','D','a','t','e',0};
+    static const WCHAR sThousandW[] = {'s','T','h','o','u','s','a','n','d',0};
+    static const WCHAR sTimeFormatW[] = {'s','T','i','m','e','F','o','r','m','a','t',0};
+    static const WCHAR sTimeW[] = {'s','T','i','m','e',0};
+    static const WCHAR sYearMonthW[] = {'s','Y','e','a','r','M','o','n','t','h',0};
 
+    switch (lctype & ~LOCALE_LOCALEINFOFLAGSMASK)
+    {
+    /* These values are used by SetLocaleInfo and GetLocaleInfo, and
+     * the values are stored in the registry, confirmed under Windows.
+     */
+    case LOCALE_ICALENDARTYPE:    return iCalendarTypeW;
+    case LOCALE_ICURRDIGITS:      return iCurrDigitsW;
+    case LOCALE_ICURRENCY:        return iCurrencyW;
+    case LOCALE_IDIGITS:          return iDigitsW;
+    case LOCALE_IFIRSTDAYOFWEEK:  return iFirstDayOfWeekW;
+    case LOCALE_IFIRSTWEEKOFYEAR: return iFirstWeekOfYearW;
+    case LOCALE_ILZERO:           return iLZeroW;
+    case LOCALE_IMEASURE:         return iMeasureW;
+    case LOCALE_INEGCURR:         return iNegCurrW;
+    case LOCALE_INEGNUMBER:       return iNegNumberW;
+    case LOCALE_IPAPERSIZE:       return iPaperSizeW;
+    case LOCALE_ITIME:            return iTimeW;
+    case LOCALE_S1159:            return s1159W;
+    case LOCALE_S2359:            return s2359W;
+    case LOCALE_SCURRENCY:        return sCurrencyW;
+    case LOCALE_SDATE:            return sDateW;
+    case LOCALE_SDECIMAL:         return sDecimalW;
+    case LOCALE_SGROUPING:        return sGroupingW;
+    case LOCALE_SLIST:            return sListW;
+    case LOCALE_SLONGDATE:        return sLongDateW;
+    case LOCALE_SMONDECIMALSEP:   return sMonDecimalSepW;
+    case LOCALE_SMONGROUPING:     return sMonGroupingW;
+    case LOCALE_SMONTHOUSANDSEP:  return sMonThousandSepW;
+    case LOCALE_SNEGATIVESIGN:    return sNegativeSignW;
+    case LOCALE_SPOSITIVESIGN:    return sPositiveSignW;
+    case LOCALE_SSHORTDATE:       return sShortDateW;
+    case LOCALE_STHOUSAND:        return sThousandW;
+    case LOCALE_STIME:            return sTimeW;
+    case LOCALE_STIMEFORMAT:      return sTimeFormatW;
+    case LOCALE_SYEARMONTH:       return sYearMonthW;
+
+    /* The following are not listed under MSDN as supported,
+     * but seem to be used and also stored in the registry.
+     */
+    case LOCALE_ICOUNTRY:         return iCountryW;
+    case LOCALE_IDATE:            return iDateW;
+    case LOCALE_ILDATE:           return iLDateW;
+    case LOCALE_ITLZERO:          return iTLZeroW;
+    case LOCALE_SCOUNTRY:         return sCountryW;
+    case LOCALE_SLANGUAGE:        return sLanguageW;
+    }
+    return NULL;
+}
+
+HKEY RosCreateRegistryKey(void)
+{
+    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
+                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
+    OBJECT_ATTRIBUTES objAttr;
+    UNICODE_STRING nameW;
+    HKEY hKey;
+
+    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hKey ) != STATUS_SUCCESS) return 0;
+
+    objAttr.Length = sizeof(objAttr);
+    objAttr.RootDirectory = hKey;
+    objAttr.ObjectName = &nameW;
+    objAttr.Attributes = 0;
+    objAttr.SecurityDescriptor = NULL;
+    objAttr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, intlW );
+
+    if (NtCreateKey( &hKey, KEY_ALL_ACCESS, &objAttr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hKey = 0;
+    NtClose( objAttr.RootDirectory );
+    return hKey;
+}
+
+INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
+{
+    DWORD dwSize;
+    HKEY hKey;
+	INT nRet;
+    NTSTATUS ntStatus;
+    UNICODE_STRING usNameW;
+    KEY_VALUE_PARTIAL_INFORMATION *kvpiInfo;
+    const int nInfoSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
+    if (!(hKey = RosCreateRegistryKey())) return -1;
+
+    RtlInitUnicodeString( &usNameW, lpValue );
+    dwSize = nInfoSize + nLen * sizeof(WCHAR);
+
+    if (!(kvpiInfo = HeapAlloc( GetProcessHeap(), 0, dwSize )))
+    {
+        NtClose( hKey );
+        SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+        return 0;
+    }
+
+    ntStatus = NtQueryValueKey( hKey, &usNameW, KeyValuePartialInformation, kvpiInfo, dwSize, &dwSize );
+    if (ntStatus == STATUS_BUFFER_OVERFLOW && !lpBuffer) ntStatus = 0;
+
+    if (!ntStatus)
+    {
+        nRet = (dwSize - nInfoSize) / sizeof(WCHAR);
+        
+        if (!nRet || ((WCHAR *)kvpiInfo->Data)[nRet - 1])
+        {
+            if (nRet < nLen || !lpBuffer) nRet++;
+            else
+            {
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                nRet = 0;
+            }
+        }
+        if (nRet && lpBuffer)
+        {
+            memcpy( lpBuffer, kvpiInfo->Data, (nRet - 1) * sizeof(WCHAR) );
+            lpBuffer[nRet - 1] = 0;
+        }
+    }
+    else
+    {
+        if (ntStatus == STATUS_OBJECT_NAME_NOT_FOUND) nRet = -1;
+        else
+        {
+            SetLastError( RtlNtStatusToDosError(ntStatus) );
+            nRet = 0;
+        }
+    }
+    NtClose( hKey );
+    HeapFree( GetProcessHeap(), 0, kvpiInfo );
+    return nRet;
+}
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
 GetLocaleInfoW (
-    LCID    Locale,
+	LCID Locale,
     LCTYPE  LCType,
     LPWSTR  lpLCData,
     int cchData
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    LANGID liLangID;
+    HRSRC hRsrc;
+    HGLOBAL hMem;
+    HMODULE hModule;
+    INT nRet;
+    UINT uiFlags;
+    const WCHAR *ch;
+    int i;
+
+    if (cchData < 0 || (cchData && !lpLCData))
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+    if (!cchData) lpLCData = NULL;
+
+    if (Locale == LOCALE_NEUTRAL || Locale == LOCALE_SYSTEM_DEFAULT) Locale = GetSystemDefaultLCID();
+    else if (Locale == LOCALE_USER_DEFAULT) Locale = GetUserDefaultLCID();
+
+    uiFlags = LCType & LOCALE_LOCALEINFOFLAGSMASK;
+    LCType &= ~LOCALE_LOCALEINFOFLAGSMASK;
+
+    if (!(uiFlags & LOCALE_NOUSEROVERRIDE) && Locale == GetUserDefaultLCID())
+    {
+        const WCHAR *value = RosGetLocaleValueName(LCType);
+
+        if (value && ((nRet = RosGetRegistryLocaleInfo( value, lpLCData, cchData )) != -1)) return nRet;
+    }
+
+    liLangID = LANGIDFROMLCID( Locale );
+
+    if (SUBLANGID(liLangID) == SUBLANG_NEUTRAL)
+        liLangID = MAKELANGID(PRIMARYLANGID(liLangID), SUBLANG_DEFAULT);
+
+    hModule = GetModuleHandleA( "kernel32.dll" );
+    if (!(hRsrc = FindResourceExW( hModule, RT_STRINGW, (LPCWSTR)((LCType >> 4) + 1), liLangID )))
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return 0;
+    }
+    if (!(hMem = LoadResource( hModule, hRsrc )))
+        return 0;
+
+    ch = LockResource( hMem );
+    for (i = 0; i < (LCType & 0x0f); i++) ch += *ch + 1;
+
+    if (uiFlags & LOCALE_RETURN_NUMBER) nRet = sizeof(UINT) / sizeof(WCHAR);
+    else nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;
+
+    if (!lpLCData) return nRet;
+
+    if (nRet > cchData)
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        return 0;
+    }
+
+    if (uiFlags & LOCALE_RETURN_NUMBER)
+    {
+        UINT uiNum;
+        WCHAR *chEnd, *chTmp = HeapAlloc( GetProcessHeap(), 0, (*ch + 1) * sizeof(WCHAR) );
+
+        if (!chTmp) 
+			return 0;
+
+        memcpy( chTmp, ch + 1, *ch * sizeof(WCHAR) );
+        chTmp[*ch] = 0;
+        uiNum = wcstol( chTmp, &chEnd, 10 );
+
+        if (!*chEnd)
+            memcpy( lpLCData, &uiNum, sizeof(uiNum) );
+        else
+        {
+            SetLastError( ERROR_INVALID_FLAGS );
+            nRet = 0;
+        }
+        HeapFree( GetProcessHeap(), 0, chTmp );
+    }
+    else
+    {
+        memcpy( lpLCData, ch + 1, *ch * sizeof(WCHAR) );
+        if (LCType != LOCALE_FONTSIGNATURE) lpLCData[nRet-1] = 0;
+    }
+    return nRet;
 }
 
 
