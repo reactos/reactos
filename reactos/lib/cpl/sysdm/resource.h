@@ -61,6 +61,10 @@
 #define IDC_SYSTEM_VARIABLE_EDIT        226
 #define IDC_SYSTEM_VARIABLE_DELETE      227
 
+#define IDD_EDIT_VARIABLE               106
+#define IDC_VARIABLE_NAME               230
+#define IDC_VARIABLE_VALUE              231
+
 #endif /* __CPL_RESOURCE_H */
 
 /* EOF */
