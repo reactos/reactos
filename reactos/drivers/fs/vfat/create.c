@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.17 2001/03/02 15:59:16 cnettel Exp $
+/* $Id: create.c,v 1.18 2001/03/06 17:28:25 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -630,6 +630,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   ULONG RequestedDisposition, RequestedOptions;
   PVFATCCB pCcb;
   PVFATFCB pFcb;
+  PWCHAR c;
 
   Stack = IoGetCurrentIrpStackLocation (Irp);
   assert (Stack);
@@ -643,6 +644,21 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   DeviceExt = DeviceObject->DeviceExtension;
   assert (DeviceExt);
   
+  /*
+   * Check for illegal characters in the file name
+   */
+  c = FileObject->FileName.Buffer;
+  while (*c != 0)
+    {
+      if (*c == L'*' || *c == L'?')
+	{
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
+	  return(Status);
+	}
+      c++;
+    }
+
   Status = VfatOpenFile (DeviceExt, FileObject, FileObject->FileName.Buffer);
 
   /*

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001/03/06 14:52:58 dwelch Exp $
+# $Id: Makefile,v 1.12 2001/03/06 17:28:25 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -288,6 +288,8 @@ C_OBJECTS = $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_MM_I386) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD)	
 
+D_FILES := $(filter-out ex/napi.%, $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d)))
+
 # Resources
 OBJECTS_RESOURCE = \
 	$(TARGETNAME).coff
@@ -451,13 +453,13 @@ CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
               ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
               kd\*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(join $(dir $(D_FILES)), $(addprefix ., $(notdir $(D_FILES))))
 else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(join $(dir $(D_FILES)), $(addprefix ., $(notdir $(D_FILES))))
 endif
 
 
@@ -570,16 +572,16 @@ ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 ke/main.o: ke/main.c ../include/reactos/buildno.h
 
-#include $(filter-out ex/napi.%, $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d)))
+#include $(join $(dir $(D_FILES)), $(addprefix ., $(notdir $(D_FILES))))
 
-%.d: %.c
-	$(CC) $(CFLAGS) -M $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+.%.d: %.c
+	$(CC) $(CFLAGS) -M $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
 
-%.d: %.s
-	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+.%.d: %.s
+	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
 
-%.d: %.S
-	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+.%.d: %.S
+	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
 
 include $(PATH_TO_TOP)/rules.mak
 

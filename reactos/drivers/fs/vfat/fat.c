@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.20 2001/03/02 15:59:16 cnettel Exp $
+ * $Id: fat.c,v 1.21 2001/03/06 17:28:25 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
