@@ -23,3 +23,4 @@
 #include <napi/npipe.h>
 #include <ntos/minmax.h>
 #include <csrss/csrss.h>
+#include <reactos/buildno.h>

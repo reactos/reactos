@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.18 2003/01/15 21:24:34 chorns Exp $
+/* $Id: env.c,v 1.19 2003/02/01 19:58:17 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -211,48 +211,185 @@ DWORD
 STDCALL
 GetVersion(VOID)
 {
-	DWORD Version = 0;
-	OSVERSIONINFO VersionInformation;
-	GetVersionExW(&VersionInformation);
+ PPEB pPeb = NtCurrentPeb();
+ DWORD nVersion;
 
-	Version |= ( VersionInformation.dwMajorVersion << 8 );
-	Version |= VersionInformation.dwMinorVersion;
+ nVersion = MAKEWORD(pPeb->OSMajorVersion, pPeb->OSMinorVersion);
 
-	Version |= ( VersionInformation.dwPlatformId << 16 );
+ /* behave consistently when posing as another operating system */
+ /* build number */
+ if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_WINDOWS)
+  nVersion |= ((DWORD)(pPeb->OSBuildNumber)) << 16;
+ 
+ /* non-NT platform flag */
+ if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_NT)
+  nVersion |= 0x80000000;
 
-	return Version;
+ return nVersion;
 }
 
 
 WINBOOL
 STDCALL
 GetVersionExW(
-    LPOSVERSIONINFO lpVersionInformation
+    LPOSVERSIONINFOW lpVersionInformation
     )
 {
-	lpVersionInformation->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	lpVersionInformation->dwMajorVersion = 4;
-	lpVersionInformation->dwMinorVersion = 0;
-	lpVersionInformation->dwBuildNumber = 12;
-	lpVersionInformation->dwPlatformId = VER_PLATFORM_WIN32_NT;
-	lstrcpyW((WCHAR *)lpVersionInformation->szCSDVersion,L"Ariadne was here...");
-	return TRUE;
+ PPEB pPeb = NtCurrentPeb();
+
+ /* TODO: move this into RtlGetVersion */
+ switch(lpVersionInformation->dwOSVersionInfoSize)
+ {
+  case sizeof(OSVERSIONINFOEXW):
+  {
+   LPOSVERSIONINFOEXW lpVersionInformationEx =
+    (LPOSVERSIONINFOEXW)lpVersionInformation;
+
+   lpVersionInformationEx->wServicePackMajor = pPeb->SPMajorVersion;
+   lpVersionInformationEx->wServicePackMinor = pPeb->SPMinorVersion;
+   /* TODO: read from the KUSER_SHARED_DATA */
+   lpVersionInformationEx->wSuiteMask = 0;
+   /* TODO: call RtlGetNtProductType */
+   lpVersionInformationEx->wProductType = 0;
+   /* ??? */
+   lpVersionInformationEx->wReserved = 0;
+   /* fall through */
+  }
+
+  case sizeof(OSVERSIONINFOW):
+  {
+   lpVersionInformation->dwMajorVersion = pPeb->OSMajorVersion;
+   lpVersionInformation->dwMinorVersion = pPeb->OSMinorVersion;
+   lpVersionInformation->dwBuildNumber = pPeb->OSBuildNumber;
+   lpVersionInformation->dwPlatformId = pPeb->OSPlatformId;
+
+   /* version string is "ReactOS x.y.z" */
+   wcsncpy
+   (
+    lpVersionInformation->szCSDVersion,
+    L"ReactOS " KERNEL_VERSION_STR,
+    sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR)
+   );
+
+   /* null-terminate, just in case */
+   lpVersionInformation->szCSDVersion
+   [
+    sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR) - 1
+   ] = 0;
+
+   break;
+  }
+
+  default:
+  {
+   /* unknown version information revision */
+   SetLastError(ERROR_INSUFFICIENT_BUFFER);
+   return FALSE;
+  }
+ }
+ 
+ return TRUE;
 }
 
 
 WINBOOL
 STDCALL
 GetVersionExA(
-    LPOSVERSIONINFO lpVersionInformation
+    LPOSVERSIONINFOA lpVersionInformation
     )
 {
-	lpVersionInformation->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	lpVersionInformation->dwMajorVersion = 4;
-	lpVersionInformation->dwMinorVersion = 0;
-	lpVersionInformation->dwBuildNumber = 12;
-	lpVersionInformation->dwPlatformId = VER_PLATFORM_WIN32_NT;
-	lstrcpyA((char *)lpVersionInformation->szCSDVersion,"ReactOs Pre-Alpha");
-	return TRUE;
+ NTSTATUS nErrCode;
+ OSVERSIONINFOEXW oviVerInfo;
+ LPOSVERSIONINFOEXA lpVersionInformationEx;
+
+ /* UNICODE_STRING descriptor of the Unicode version string */
+ UNICODE_STRING wstrVerStr =
+ {
+  /*
+   gives extra work to RtlUnicodeStringToAnsiString, but spares us an
+   RtlInitUnicodeString round
+  */
+   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
+   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]) -
+   1,
+   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
+   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]),
+  oviVerInfo.szCSDVersion
+ };
+
+ /* ANSI_STRING descriptor of the ANSI version string buffer */
+ ANSI_STRING strVerStr =
+ {
+  0,
+   sizeof(((LPOSVERSIONINFOA)NULL)->szCSDVersion) *
+   sizeof(((LPOSVERSIONINFOA)NULL)->szCSDVersion[0]) -
+   1,
+  lpVersionInformation->szCSDVersion
+ };
+
+ switch(lpVersionInformation->dwOSVersionInfoSize)
+ {
+  case sizeof(OSVERSIONINFOEXA):
+  {
+   oviVerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+   break;
+  }
+
+  case sizeof(OSVERSIONINFOA):
+  {
+   oviVerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+   break;
+  }
+
+  default:
+  {
+   /* unknown version information revision */
+   SetLastError(ERROR_INSUFFICIENT_BUFFER);
+   return FALSE;
+  }
+ }
+
+ if(!GetVersionExW((LPOSVERSIONINFOW)&oviVerInfo))
+  return FALSE;
+
+ /* null-terminate, just in case */
+ oviVerInfo.szCSDVersion
+ [
+  sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
+  sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]) -
+  1
+ ] = 0;
+
+ /* convert the version string */
+ nErrCode = RtlUnicodeStringToAnsiString(&strVerStr, &wstrVerStr, FALSE);
+ 
+ if(!NT_SUCCESS(nErrCode))
+ {
+  /* failure */
+  SetLastErrorByStatus(nErrCode);
+  return FALSE;
+ }
+
+ /* copy the fields */
+ lpVersionInformation->dwMajorVersion = oviVerInfo.dwMajorVersion;
+ lpVersionInformation->dwMinorVersion = oviVerInfo.dwMinorVersion;
+ lpVersionInformation->dwBuildNumber = oviVerInfo.dwBuildNumber;
+ lpVersionInformation->dwPlatformId = oviVerInfo.dwPlatformId;
+ 
+ if(lpVersionInformation->dwOSVersionInfoSize < sizeof(OSVERSIONINFOEXA))
+  /* success */
+  return TRUE;
+
+ /* copy the extended fields */
+ lpVersionInformationEx = (LPOSVERSIONINFOEXA)lpVersionInformation;
+ lpVersionInformationEx->wServicePackMajor = oviVerInfo.wServicePackMajor;
+ lpVersionInformationEx->wServicePackMinor = oviVerInfo.wServicePackMinor;
+ lpVersionInformationEx->wSuiteMask = oviVerInfo.wSuiteMask;
+ lpVersionInformationEx->wProductType = oviVerInfo.wProductType;
+ lpVersionInformationEx->wReserved = oviVerInfo.wReserved;
+
+ /* success */
+ return TRUE;
 }
 
 
