@@ -21,12 +21,11 @@ VOID STDCALL ApcRoutine(PVOID Context,
 			PIO_STATUS_BLOCK IoStatus,
 			ULONG Reserved)
 {
-   printf("(apc.exe) ApcRoutine(Context %x)\n", Context);
+   printf("(apc.exe) ApcRoutine(Context %p)\n", Context);
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-   int i;
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -48,7 +47,7 @@ void main(int argc, char* argv[])
    if (EventHandle == INVALID_HANDLE_VALUE)
      {
 	printf("Failed to create event\n");
-	return;
+	return 0;
      }
    
    printf("Opening file\n");
@@ -71,13 +70,13 @@ void main(int argc, char* argv[])
    if (FileHandle == INVALID_HANDLE_VALUE)
      {
 	printf("Open failed\n");
-	return;
+	return 0;
      }
    printf("Reading file\n");
    Status = ZwReadFile(FileHandle,
 			NULL,
-			ApcRoutine,
-			0xdeadbeef,
+			(PIO_APC_ROUTINE)ApcRoutine,
+			(PVOID)0xdeadbeef,
 			&IoStatus,
 			Buffer,
 			256,
@@ -93,5 +92,6 @@ void main(int argc, char* argv[])
    ZwClose(FileHandle);
    printf("Program finished\n");
    for(;;);
+   return 0;
 }
 

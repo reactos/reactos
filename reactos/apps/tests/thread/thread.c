@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.5 2000/01/30 20:55:51 hochoa Exp $
+/* $Id: thread.c,v 1.6 2000/01/31 20:24:27 ekohl Exp $
  *
  *
  *
@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <stdlib.h>
 
 #define NR_THREADS (10)
 
@@ -16,17 +17,17 @@ DWORD WINAPI thread_main1(LPVOID param)
 {
    ULONG s;
    
-   printf("Thread %d running\n", (DWORD)param);
+   printf("Thread %ld running\n", (DWORD)param);
    s = nr = ((nr * 1103515245) + 12345) & 0x7fffffff;
    s = s % 10;
-   printf("s %d\n", s);
+   printf("s %ld\n", s);
    Sleep(s);
-   printf("Thread %d finished\n", (DWORD)param);
+   printf("Thread %ld finished\n", (DWORD)param);
    return 0;
 }
 
 // Shows the help on how to use these program to the user
-void showHelp()
+void showHelp(void)
 {
 
 printf("\nReactOS threads test program (built on %s).\n\n", __DATE__);
@@ -53,7 +54,7 @@ int main (int argc, char* argv[])
    }
 		
    nr = atoi(argv[1]);
-   printf("Seed %d\n", nr);
+   printf("Seed %ld\n", nr);
    
    printf("Creating %d threads...\n",NR_THREADS*2);
    for (i=0;i<NR_THREADS;i++)
