@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.3 2003/08/01 11:56:19 weiden Exp $
+/* $Id: menu.c,v 1.4 2003/08/02 00:03:33 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -359,7 +359,9 @@ NtUserMenuInfo(
  LPCMENUINFO lpcmi,
  BOOL fsog)
 {
+	UNIMPLEMENTED;
 
+	return 0;
 }
 
 
