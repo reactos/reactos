@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.59 2004/01/12 00:07:34 navaraf Exp $
+ *  $Id: painting.c,v 1.60 2004/01/12 21:24:20 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -414,7 +414,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
                /*
                 * WINDOWS REALLY DON'T DO THIS!!!
                 */
-#if 0
+#if 1
                /*
                 * Update our UpdateRegion depending on children
                 */
