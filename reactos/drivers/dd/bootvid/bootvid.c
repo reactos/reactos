@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: bootvid.c,v 1.8 2004/05/15 22:45:50 hbirr Exp $
+ * $Id: bootvid.c,v 1.9 2004/05/21 17:05:46 navaraf Exp $
  */
 
 /* INCLUDES ******************************************************************/
@@ -41,14 +41,14 @@
  * - Graphics: Data Rotate (Index 3)
  *   Set to zero to indicate that the data written to video memory by
  *   CPU should be processed unmodified.
- * - Graphics: Mode Register (index 5)
+ * - Graphics: Mode Register (Index 5)
  *   Set to Write Mode 2 and Read Mode 0.
  */
 
 static VGA_REGISTERS Mode12Regs =
 {
    /* CRT Controller Registers */
-   {0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
+   {0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0xDE, 0x1F, 0x00, 0x40, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0xEA, 0x8C, 0xDF, 0x28, 0x00, 0xE7, 0x04, 0xE3},
    /* Attribute Controller Registers */
    {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
@@ -327,6 +327,7 @@ InbvDisplayCompressedBitmap()
    ULONG bfOffBits;
    ULONG clen;
    PCHAR ImageData;
+   UCHAR ClrUsed;
 
    bminfo = (PBITMAPV5HEADER) &BootimageBitmap[0];
    DPRINT("bV5Size = %d\n", bminfo->bV5Size);
@@ -341,9 +342,14 @@ InbvDisplayCompressedBitmap()
    DPRINT("bV5ClrUsed = %d\n", bminfo->bV5ClrUsed);
    DPRINT("bV5ClrImportant = %d\n", bminfo->bV5ClrImportant);
 
-   bfOffBits = bminfo->bV5Size + bminfo->bV5ClrUsed * sizeof(RGBQUAD);
+   if (bminfo->bV5ClrUsed)
+      ClrUsed = bminfo->bV5ClrUsed;
+   else
+      ClrUsed = 1 << bminfo->bV5BitCount;
+
+   bfOffBits = bminfo->bV5Size + ClrUsed * sizeof(RGBQUAD);
    DPRINT("bfOffBits = %d\n", bfOffBits);
-   DPRINT("size of color indices = %d\n", bminfo->bV5ClrUsed * sizeof(RGBQUAD));
+   DPRINT("size of color indices = %d\n", ClrUsed * sizeof(RGBQUAD));
    DPRINT("first byte of data = %d\n", BootimageBitmap[bfOffBits]);
 
    InbvSetBlackPalette();
@@ -396,6 +402,8 @@ InbvDisplayCompressedBitmap()
             if (b == 0)
             {
                /* End of line */
+               cury = k / bminfo->bV5Width;
+               k = (cury + 1) * bminfo->bV5Width;
             }
             else if (b == 1)
             {
@@ -465,6 +473,7 @@ InbvFadeUpPalette()
    LARGE_INTEGER Interval;
    FADER_PALETTE_ENTRY FaderPalette[16];
    FADER_PALETTE_ENTRY FaderPaletteDelta[16];
+   UCHAR ClrUsed;
 
    RtlZeroMemory(&FaderPalette, sizeof(FaderPalette));
    RtlZeroMemory(&FaderPaletteDelta, sizeof(FaderPaletteDelta));
@@ -472,14 +481,16 @@ InbvFadeUpPalette()
    bminfo = (PBITMAPV5HEADER)&BootimageBitmap[0];
    Palette = (PRGBQUAD)&BootimageBitmap[bminfo->bV5Size];
 
-   for (i = 0; i < 16; i++)
+   if (bminfo->bV5ClrUsed)
+      ClrUsed = bminfo->bV5ClrUsed;
+   else
+      ClrUsed = 1 << bminfo->bV5BitCount;
+
+   for (i = 0; i < 16 && i < ClrUsed; i++)
    {
-      if (i < bminfo->bV5ClrUsed)
-      {
-         FaderPaletteDelta[i].r = ((Palette[i].rgbRed << 8) / PALETTE_FADE_STEPS);
-         FaderPaletteDelta[i].g = ((Palette[i].rgbGreen << 8) / PALETTE_FADE_STEPS);
-         FaderPaletteDelta[i].b = ((Palette[i].rgbBlue << 8) / PALETTE_FADE_STEPS);
-      }
+      FaderPaletteDelta[i].r = ((Palette[i].rgbRed << 8) / PALETTE_FADE_STEPS);
+      FaderPaletteDelta[i].g = ((Palette[i].rgbGreen << 8) / PALETTE_FADE_STEPS);
+      FaderPaletteDelta[i].b = ((Palette[i].rgbBlue << 8) / PALETTE_FADE_STEPS);
    }
 
    for (i = 0; i < PALETTE_FADE_STEPS; i++)
@@ -488,7 +499,7 @@ InbvFadeUpPalette()
       READ_PORT_UCHAR(STATUS);
       WRITE_PORT_UCHAR(ATTRIB, 0x00);
 
-      for (c = 0; c < bminfo->bV5ClrUsed; c++)
+      for (c = 0; c < ClrUsed; c++)
       {
          /* Add the delta */
          FaderPalette[c].r += FaderPaletteDelta[c].r;
