@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.21 2002/06/06 23:19:36 ekohl Exp $
+/* $Id: class2.c,v 1.22 2002/08/17 15:21:12 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -928,15 +928,6 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
     }
-
-  /* Free the IRP's MDL */
-  if (Irp->MdlAddress->MappedSystemVa != NULL)
-    {
-      MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
-			 Irp->MdlAddress);
-    }
-  MmUnlockPages(Irp->MdlAddress);
-  ExFreePool(Irp->MdlAddress);
 
   /* FIXME: use lookaside list instead */
   DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
