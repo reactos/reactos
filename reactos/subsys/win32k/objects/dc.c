@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.130 2004/04/25 12:51:53 weiden Exp $
+/* $Id: dc.c,v 1.131 2004/04/25 15:31:43 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -55,6 +55,10 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+#ifndef OBJ_COLORSPACE
+#define OBJ_COLORSPACE	(14)
+#endif
 
 static GDIDEVICE PrimarySurface;
 
@@ -962,7 +966,43 @@ DC_GET_VAL( HRGN, NtGdiGetClipRgn, w.hClipRgn )
 HGDIOBJ STDCALL
 NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
 {
-  UNIMPLEMENTED;
+  HGDIOBJ SelObject;
+  DC *dc;
+  
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return NULL;
+  }
+  
+  switch(ObjectType)
+  {
+    case OBJ_PEN:
+      SelObject = dc->w.hPen;
+      break;
+    case OBJ_BRUSH:
+      SelObject = dc->w.hBrush;
+      break;
+    case OBJ_PAL:
+      DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_PAL not supported yet!\n");
+      break;
+    case OBJ_FONT:
+      SelObject = dc->w.hFont;
+      break;
+    case OBJ_BITMAP:
+      SelObject = dc->w.hBitmap;
+      break;
+    case OBJ_COLORSPACE:
+      DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");
+      break;
+    default:
+      SelObject = NULL;
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      break;
+  }
+  
+  DC_UnlockDc(hDC);
+  return SelObject;
 }
 
 DC_GET_VAL_EX ( GetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT, x, y )

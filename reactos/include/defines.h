@@ -1092,19 +1092,20 @@ extern "C" {
 #define TRUETYPE_FONTTYPE	(4)
 
 /* EnumObjects, GetCurrentObject, GetObjectType */
-#define OBJ_BRUSH	(2)
 #define OBJ_PEN	(1)
+#define OBJ_BRUSH	(2)
+#define OBJ_DC	(3)
+#define OBJ_METADC	(4)
 #define OBJ_PAL	(5)
 #define OBJ_FONT	(6)
 #define OBJ_BITMAP	(7)
-#define OBJ_EXTPEN	(11)
 #define OBJ_REGION	(8)
-#define OBJ_DC	(3)
-#define OBJ_MEMDC	(10)
 #define OBJ_METAFILE	(9)
-#define OBJ_METADC	(4)
-#define OBJ_ENHMETAFILE	(13)
+#define OBJ_MEMDC	(10)
+#define OBJ_EXTPEN	(11)
 #define OBJ_ENHMETADC	(12)
+#define OBJ_ENHMETAFILE	(13)
+#define OBJ_COLORSPACE	(14)
 
 /* EnumPrinters */
 

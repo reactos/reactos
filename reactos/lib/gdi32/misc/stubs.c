@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.55 2004/04/25 14:46:53 weiden Exp $
+/* $Id: stubs.c,v 1.56 2004/04/25 15:31:43 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -249,21 +249,6 @@ STDCALL
 GetMetaRgn(
 	HDC	a0,
 	HRGN	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HGDIOBJ
-STDCALL
-GetCurrentObject(
-	HDC	a0,
-	UINT	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

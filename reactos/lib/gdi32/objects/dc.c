@@ -1030,3 +1030,16 @@ FixBrushOrgEx(
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
+HGDIOBJ
+STDCALL
+GetCurrentObject(
+	HDC	hdc,
+	UINT	uObjectType
+	)
+{
+  return NtGdiGetCurrentObject(hdc, uObjectType);
+}
