@@ -1,0 +1,47 @@
+meaning of struct FILE* members
+
+int   _cnt;
+
+W: number of empty slots left in the buffer.
+R: number of characters left in the buffer.
+
+char *_ptr;
+
+pointer inside the buffer we're using.
+R: points to next character to read out.
+W: points to next cell to put character in.
+
+char *_base;
+
+pointer to the start of the buffer we're using.
+
+int   _bufsiz;
+
+size of the buffer
+
+int   _flag;
+
+_IORW		file is used for both read and write
+_IOWRT		file was last used for write
+_IOREAD		file was last used for read
+_IOMYBUF	buffer needs to be freed
+_IOEOF		file is at EOF
+_IOERR		error occurred
+_IOSTRG		sprintf
+_IOAPPEND	append mode
+_IORMONCL	remove file on close
+_IOUNGETC       buffer contents does not correspond to file
+
+int   _file;
+
+dos file descriptor
+
+char *_name_to_remove;
+
+If nonzero, the named file is removed when the file is fclosed.
+
+int   _fillsize;
+
+The number of bytes to read this time.  Used to slow-start the read,
+in case the program seeks a lot we won't waste time reading large
+blocks, but if you read a lot, we use bigger transfers.
