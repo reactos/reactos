@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.52 2004/07/17 17:24:45 navaraf Exp $
+/* $Id: reg.c,v 1.53 2004/07/18 23:52:30 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1451,6 +1451,7 @@ RegEnumValueW (HKEY hKey,
 	      *lpcbValueName = (DWORD)(ValueInfo->Basic.NameLength / sizeof(WCHAR));
 	      lpValueName[*lpcbValueName] = 0;
 	    }
+          *lpcbData = (DWORD)ValueInfo->Full.DataLength;
 	}
 
       if (ErrorCode == ERROR_SUCCESS && lpType != NULL)
