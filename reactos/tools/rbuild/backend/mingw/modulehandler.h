@@ -6,13 +6,14 @@
 class MingwModuleHandler
 {
 public:
-	static std::map<const char*,MingwModuleHandler*>* handler_map;
+	static std::map<std::string,MingwModuleHandler*>* handler_map;
 
 	MingwModuleHandler ( const char* moduletype_ );
 	virtual ~MingwModuleHandler() {}
 
 	static void SetMakefile ( FILE* f );
-	static MingwModuleHandler* LookupHandler ( const std::string& moduletype_ );
+	static MingwModuleHandler* LookupHandler ( const std::string& location,
+	                                           const std::string& moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
 
 protected:
@@ -42,6 +43,7 @@ private:
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
+	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
 	void GenerateObjectFileTargets ( const Module& module,

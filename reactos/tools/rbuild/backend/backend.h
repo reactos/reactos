@@ -12,7 +12,7 @@ class Backend
 public:
 	class Factory
 	{
-		static std::map<const char*,Factory*>* factories;
+		static std::map<std::string,Factory*>* factories;
 
 	protected:
 
@@ -22,7 +22,8 @@ public:
 		virtual Backend* operator() ( Project& ) = 0;
 
 	public:
-		static Backend* Create ( const std::string& name, Project& project );
+		static Backend* Create ( const std::string& name,
+		                         Project& project );
 
 	private:
 	};

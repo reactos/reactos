@@ -38,7 +38,9 @@ Module::Module ( const Project& project,
 
 	att = moduleNode.GetAttribute ( "type", true );
 	assert(att);
-	type = GetModuleType ( *att );
+	stype = att->value;
+	strlwr ( &stype[0] );
+	etype = GetModuleType ( node.location, *att );
 
 	att = moduleNode.GetAttribute ( "extension", false );
 	if (att != NULL)
@@ -136,7 +138,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 }
 
 ModuleType
-Module::GetModuleType ( const XMLAttribute& attribute )
+Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 {
 	if ( attribute.value == "buildtool" )
 		return BuildTool;
@@ -144,14 +146,15 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 		return StaticLibrary;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
-	throw InvalidAttributeValueException ( attribute.name,
+	throw InvalidAttributeValueException ( location,
+	                                       attribute.name,
 	                                       attribute.value );
 }
 
 string
 Module::GetDefaultModuleExtension () const
 {
-	switch (type)
+	switch (etype)
 	{
 		case BuildTool:
 			return EXEPOSTFIX;
@@ -264,7 +267,7 @@ Invoke::ProcessXML()
 				module.name.c_str(),
 				att->value.c_str() );
 	}
-	
+
 	for ( size_t i = 0; i < node.subElements.size (); i++ )
 		ProcessXMLSubElement ( *node.subElements[i] );
 }

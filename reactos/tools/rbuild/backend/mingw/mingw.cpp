@@ -90,7 +90,9 @@ MingwBackend::GenerateAllTarget ()
 void
 MingwBackend::ProcessModule ( Module& module )
 {
-	MingwModuleHandler* h = MingwModuleHandler::LookupHandler ( module.name );
+	MingwModuleHandler* h = MingwModuleHandler::LookupHandler (
+		module.node.location,
+		module.stype );
 	h->Process ( module );
 }
 

@@ -10,7 +10,7 @@ using std::string;
 using std::vector;
 using std::map;
 
-map<const char*,MingwModuleHandler*>*
+map<string,MingwModuleHandler*>*
 MingwModuleHandler::handler_map = NULL;
 
 FILE*
@@ -21,8 +21,8 @@ MingwModuleHandler::MingwModuleHandler ( const char* moduletype_ )
 	string moduletype ( moduletype_ );
 	strlwr ( &moduletype[0] );
 	if ( !handler_map )
-		handler_map = new map<const char*,MingwModuleHandler*>;
-	(*handler_map)[moduletype.c_str()] = this;
+		handler_map = new map<string,MingwModuleHandler*>;
+	(*handler_map)[moduletype] = this;
 }
 
 /*static*/ void
@@ -32,16 +32,17 @@ MingwModuleHandler::SetMakefile ( FILE* f )
 }
 
 /*static*/ MingwModuleHandler*
-MingwModuleHandler::LookupHandler ( const string& moduletype_ )
+MingwModuleHandler::LookupHandler ( const string& location,
+                                    const string& moduletype_ )
 {
 	string moduletype ( moduletype_ );
 	strlwr ( &moduletype[0] );
 	if ( !handler_map )
 		throw Exception ( "internal tool error: no registered module handlers" );
-	MingwModuleHandler* h = (*handler_map)[moduletype.c_str()];
+	MingwModuleHandler* h = (*handler_map)[moduletype];
 	if ( !h )
 	{
-		throw UnknownModuleTypeException ( moduletype );
+		throw UnknownModuleTypeException ( location, moduletype );
 		return NULL;
 	}
 	return h;
@@ -217,6 +218,16 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 	return parameters;
 }
 
+void
+MingwModuleHandler::GenerateGccModuleIncludeVariable ( const Module& module ) const
+{
+	string name ( module.name + "_INCLUDES" );
+	fprintf ( fMakefile,
+	          "%s := %s\n",
+	          name.c_str(),
+	          GenerateGccIncludeParameters(module).c_str() );
+}
+
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
@@ -234,12 +245,7 @@ string
 MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParameters ( module );
-	string s = GenerateGccIncludeParameters ( module );
-	if ( s.length () > 0 )
-	{
-		parameters += " ";
-		parameters += s;
-	}
+	parameters += ssprintf(" $(%s_INCLUDES)",module.name.c_str());
 	return parameters;
 }
 
@@ -250,6 +256,8 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 	if ( module.files.size () == 0 )
 		return;
 	
+	GenerateGccModuleIncludeVariable ( module );
+
 	for ( size_t i = 0; i < module.files.size (); i++ )
 	{
 		string sourceFilename = module.files[i]->name;
@@ -378,7 +386,7 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 	{
 		const Invoke& invoke = *module.invocations[i];
 
-		if ( invoke.invokeModule->type != BuildTool )
+		if ( invoke.invokeModule->etype != BuildTool )
 			throw InvalidBuildFileException ( module.node.location,
 		                                      "Only modules of type buildtool can be invoked." );
 

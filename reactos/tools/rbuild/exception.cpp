@@ -93,17 +93,23 @@ XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
 }
 
 
-RequiredAttributeNotFoundException::RequiredAttributeNotFoundException ( const string& attributeName,
-                                                                         const string& elementName )
-	: InvalidBuildFileException ( "Required attribute '%s' not found on '%s'.",
+RequiredAttributeNotFoundException::RequiredAttributeNotFoundException (
+	const string& location,
+	const string& attributeName,
+	const string& elementName )
+	: InvalidBuildFileException ( location,
+	                              "Required attribute '%s' not found on '%s'.",
 	                              attributeName.c_str (),
 	                              elementName.c_str ())
 {
 }
 
-InvalidAttributeValueException::InvalidAttributeValueException ( const string& name,
-	                                                             const string& value )
-	: InvalidBuildFileException ( "Attribute '%s' has an invalid value '%s'.",
+InvalidAttributeValueException::InvalidAttributeValueException (
+	const string& location,
+	const string& name,
+	const string& value )
+	: InvalidBuildFileException ( location,
+	                              "Attribute '%s' has an invalid value '%s'.",
 	                              name.c_str (),
 	                              value.c_str () )
 {
@@ -119,12 +125,14 @@ BackendNameConflictException::BackendNameConflictException ( const string& name 
 
 UnknownBackendException::UnknownBackendException ( const string& name )
 	: Exception ( "Unknown Backend requested: '%s'",
-	             name.c_str() )
+	              name.c_str() )
 {
 }
 
-UnknownModuleTypeException::UnknownModuleTypeException ( const string& moduletype )
-	: Exception ( "module type requested: '%s'",
-	              moduletype.c_str() )
+UnknownModuleTypeException::UnknownModuleTypeException ( const string& location,
+                                                         const string& moduletype )
+	: InvalidBuildFileException ( location,
+	                              "module type requested: '%s'",
+	                              moduletype.c_str() )
 {
 }

@@ -422,7 +422,8 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		throw RequiredAttributeNotFoundException ( attribute,
+		throw RequiredAttributeNotFoundException ( location,
+		                                           attribute,
 		                                           name );
 	}
 	return NULL;
@@ -441,7 +442,8 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		throw RequiredAttributeNotFoundException ( attribute,
+		throw RequiredAttributeNotFoundException ( location,
+		                                           attribute,
 		                                           name );
 	}
 	return NULL;

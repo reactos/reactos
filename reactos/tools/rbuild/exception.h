@@ -66,7 +66,8 @@ public:
 class RequiredAttributeNotFoundException : public InvalidBuildFileException
 {
 public:
-	RequiredAttributeNotFoundException ( const std::string& attributeName,
+	RequiredAttributeNotFoundException ( const std::string& location,
+	                                     const std::string& attributeName,
 	                                     const std::string& elementName );
 };
 
@@ -74,7 +75,8 @@ public:
 class InvalidAttributeValueException : public InvalidBuildFileException
 {
 public:
-	InvalidAttributeValueException ( const std::string& name,
+	InvalidAttributeValueException ( const std::string& location,
+	                                 const std::string& name,
 	                                 const std::string& value );
 };
 
@@ -92,10 +94,11 @@ public:
 	UnknownBackendException ( const std::string& name );
 };
 
-class UnknownModuleTypeException : public Exception
+class UnknownModuleTypeException : public InvalidBuildFileException
 {
 public:
-	UnknownModuleTypeException ( const std::string& moduletype );
+	UnknownModuleTypeException ( const std::string& location,
+	                             const std::string& moduletype );
 };
 
 #endif /* __EXCEPTION_H */

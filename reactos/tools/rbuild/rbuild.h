@@ -39,7 +39,7 @@ public:
 	std::vector<Module*> modules;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
-	
+
 	Project ();
 	Project ( const std::string& filename );
 	~Project ();
@@ -71,19 +71,21 @@ public:
 	std::string name;
 	std::string extension;
 	std::string path;
-	ModuleType type;
+	ModuleType etype;
+	std::string stype;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
-	
+
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
 	         const std::string& modulePath );
 	~Module ();
-	ModuleType GetModuleType (const XMLAttribute& attribute );
+	ModuleType GetModuleType ( const std::string& location,
+	                           const XMLAttribute& attribute );
 	std::string GetBasePath() const;
 	std::string GetPath () const;
 	std::string GetTargets () const;
