@@ -1,4 +1,4 @@
-/* $Id: conio.h,v 1.4 2004/08/22 20:52:28 navaraf Exp $
+/* $Id: conio.h,v 1.5 2004/09/10 22:14:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -99,6 +99,7 @@ void FASTCALL ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
                                      LONG *LogicalX,
                                      LONG *LogicalY);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
+VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 
 /* api/conio.c */
 CSR_API(CsrWriteConsole);

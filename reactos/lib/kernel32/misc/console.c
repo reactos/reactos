@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.79 2004/08/28 22:14:08 navaraf Exp $
+/* $Id: console.c,v 1.80 2004/09/10 22:14:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,12 +41,10 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 	{
 	case CTRL_C_EVENT:
 		DPRINT("Ctrl-C Event\n");
-		ExitProcess(0);
 		break;
 		
 	case CTRL_BREAK_EVENT:
 		DPRINT("Ctrl-Break Event\n");
-		ExitProcess(0);
 		break;
 
 	case CTRL_SHUTDOWN_EVENT:
@@ -61,7 +59,7 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 		DPRINT("Ctrl Logoff Event\n");
 		break;
 	}
-//	ExitProcess((UINT)&ExitCode);
+	ExitProcess(0);
 	return TRUE;
 }
 

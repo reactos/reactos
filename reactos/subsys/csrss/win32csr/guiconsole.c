@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.19 2004/08/24 17:25:17 navaraf Exp $
+/* $Id: guiconsole.c,v 1.20 2004/09/10 22:14:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -571,8 +571,6 @@ GuiConsoleHandleClose(HWND hWnd)
   PGUI_CONSOLE_DATA GuiData;
   PLIST_ENTRY current_entry;
   PCSRSS_PROCESS_DATA current;
-  HANDLE Process;
-  BOOL Result;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
@@ -584,18 +582,7 @@ GuiConsoleHandleClose(HWND hWnd)
       current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
       current_entry = current_entry->Flink;
 
-      Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, current->ProcessId);
-      if (NULL == Process)
-        {
-          DPRINT1("Failed for handle duplication\n");
-	  continue;
-        }
-      Result = TerminateProcess(Process, 0);
-      CloseHandle(Process);
-      if (!Result)
-        {
-	  DPRINT1("Failed to terminate process %d\n", current->ProcessId);
-	}
+      ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 
   LeaveCriticalSection(&Console->Header.Lock);

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.14 2004/08/25 10:37:14 hbirr Exp $
+/* $Id: conio.c,v 1.15 2004/09/10 22:14:52 gvg Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -63,12 +63,12 @@ ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Con
   return STATUS_SUCCESS;
 }
 
-STATIC VOID FASTCALL
-CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
+VOID FASTCALL
+ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 {
   HANDLE Process, Thread;
 	
-  DPRINT("CsrConsoleCtrlEvent Parent ProcessId = %x\n",	ProcessData->ProcessId);
+  DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n",	ProcessData->ProcessId);
 
   if (ProcessData->CtrlDispatcher)
     {
@@ -79,7 +79,7 @@ CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
           return;
         }
 
-      DPRINT("CsrConsoleCtrlEvent Process Handle = %x\n", Process);
+      DPRINT("ConioConsoleCtrlEvent Process Handle = %x\n", Process);
 
       Thread = CreateRemoteThread(Process, NULL, 0,
                                   (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
@@ -988,7 +988,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
 	{
 	  current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
 	  current_entry = current_entry->Flink;
-	  CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+	  ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
 	}
       HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
       return;
