@@ -306,7 +306,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   BOOLEAN First = FALSE;
   BOOLEAN FirstCall;
   VFAT_DIRENTRY_CONTEXT DirContext;
-  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH];
+  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH + 1];
   WCHAR ShortNameBuffer[13];
 
   PIO_STACK_LOCATION Stack = IrpContext->Stack;

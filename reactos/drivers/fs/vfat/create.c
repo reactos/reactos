@@ -200,15 +200,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
           Parent, FileToFindU, DirContext->DirIndex);
   DPRINT ("FindFile: Path %wZ)\n",&Parent->PathNameU);
   
-  PathNameBufferLength = Parent->PathNameU.Length + LONGNAME_MAX_LENGTH + 2 * sizeof(WCHAR);
-  if (PathNameBufferLength > (USHRT_MAX - 2) * sizeof(WCHAR))
-  {
-    /* A valid filename can't be so long. Do as if the file doesn't exist. */
-    CHECKPOINT;
-    return STATUS_NO_SUCH_FILE;
-  }
-  
-  PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameBufferLength);
+  PathNameBufferLength = LONGNAME_MAX_LENGTH * sizeof(WCHAR);
+  PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameBufferLength + sizeof(WCHAR));
   if (!PathNameBuffer)
   {
     CHECKPOINT1;

@@ -461,14 +461,17 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   
   UNICODE_STRING NameU;
 
-  PathNameLength = (directoryFCB->PathNameU.Length + 2 * sizeof(WCHAR)
-                   + DirContext->LongNameU.Length) * sizeof(WCHAR);
+  PathNameLength = directoryFCB->PathNameU.Length + max(DirContext->LongNameU.Length, DirContext->ShortNameU.Length);
+  if (!vfatFCBIsRoot (directoryFCB))
+  {
+     PathNameLength += sizeof(WCHAR);
+  }
   
-  if (PathNameLength > (USHRT_MAX - 2) * sizeof(WCHAR))
+  if (PathNameLength > LONGNAME_MAX_LENGTH * sizeof(WCHAR))
   {
     return  STATUS_OBJECT_NAME_INVALID;
   }
-  PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameLength);
+  PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameLength + sizeof(WCHAR));
   if (!PathNameBuffer)
   {
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -585,7 +588,9 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
   PVOID Page = NULL;
   BOOLEAN First = TRUE;
   VFAT_DIRENTRY_CONTEXT DirContext;
-  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH];
+  /* This buffer must have a size of 260 characters, because 
+     vfatMakeFCBFromDirEntry can copy 20 name entries with 13 characters. */
+  WCHAR LongNameBuffer[260];
   WCHAR ShortNameBuffer[13];
   BOOLEAN FoundLong = FALSE;
   BOOLEAN FoundShort = FALSE;
