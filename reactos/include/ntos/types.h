@@ -143,18 +143,17 @@ typedef DWORD STDCALL_FUNC (*PTHREAD_START_ROUTINE) (LPVOID);
 
 typedef union _LARGE_INTEGER
 {
+  struct
+  {
+    DWORD LowPart;
+    LONG  HighPart;
+  } u;
 #ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
     LONG  HighPart;
   };
-#else
-  struct
-  {
-    DWORD LowPart;
-    LONG  HighPart;
-  } u;
 #endif /* ANONYMOUSUNIONS */
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
