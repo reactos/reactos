@@ -738,7 +738,7 @@ NtWaitForMultipleObjects(IN ULONG Count,
         if (Status != STATUS_SUCCESS)
           {
              /* dereference all referenced objects */
-             for (j = 0; j < i; i++)
+             for (j = 0; j < i; j++)
                {
                   ObDereferenceObject(ObjectPtrArray[j]);
                }
