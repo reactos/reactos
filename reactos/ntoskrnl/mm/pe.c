@@ -74,6 +74,19 @@ static __inline BOOLEAN Intsafe_CanAddULongPtr
  return Addend1 <= (MAXULONG_PTR - Addend2);
 }
 
+#ifndef MAXLONGLONG
+#define MAXLONGLONG ((LONGLONG)((~((ULONGLONG)0)) >> 1))
+#endif
+
+static __inline BOOLEAN Intsafe_CanAddLong64
+(
+ IN LONG64 Addend1,
+ IN LONG64 Addend2
+)
+{
+ return Addend1 <= (MAXLONGLONG - Addend2);
+}
+
 static __inline BOOLEAN Intsafe_CanAddULong32
 (
  IN ULONG Addend1,
@@ -210,7 +223,7 @@ NTSTATUS NTAPI PeFmtCreateSection
  LARGE_INTEGER lnOffset;
  PVOID pBuffer;
  ULONG nPrevVirtualEndOfSegment;
- ULONG nPrevFileEndOfSegment;
+ ULONG nFileSizeOfHeaders;
  ULONG i;
 
  ASSERT(FileHeader);
@@ -623,7 +636,7 @@ l_ReadHeaderFromFile:
 
  ASSERT(IsAligned(cbHeadersSize, nFileAlignment));
 
- if(!AlignUp(&nPrevFileEndOfSegment, cbHeadersSize, nFileAlignment))
+ if(!AlignUp(&nFileSizeOfHeaders, cbHeadersSize, nFileAlignment))
   DIE(("Cannot align the size of the section headers\n"));
 
  if(!AlignUp(&nPrevVirtualEndOfSegment, cbHeadersSize, nSectionAlignment))
@@ -632,7 +645,7 @@ l_ReadHeaderFromFile:
  pssSegments[0].FileOffset = 0;
  pssSegments[0].Protection = PAGE_READONLY;
  pssSegments[0].Length = nPrevVirtualEndOfSegment;
- pssSegments[0].RawLength = nPrevFileEndOfSegment;
+ pssSegments[0].RawLength = nFileSizeOfHeaders;
  pssSegments[0].VirtualAddress = 0;
  pssSegments[0].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
  pssSegments[0].WriteCopy = TRUE;
@@ -665,12 +678,6 @@ l_ReadHeaderFromFile:
    if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
     DIE(("PointerToRawData[%u] is not aligned\n", i));
 
-   /* sections must be contiguous, ordered by base address and non-overlapping */
-#if 0
-   if(pishSectionHeaders[i].PointerToRawData != nPrevFileEndOfSegment)
-    DIE(("File gap between section %u and the previous\n", i));
-#endif
-
    /* conversion */
    pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;
    pssSegments[i].RawLength = pishSectionHeaders[i].SizeOfRawData;
@@ -680,6 +687,8 @@ l_ReadHeaderFromFile:
    ASSERT(pssSegments[i].FileOffset == 0);
    ASSERT(pssSegments[i].RawLength == 0);
   }
+
+  ASSERT(Intsafe_CanAddLong64(pssSegments[i].FileOffset, pssSegments[i].RawLength));
 
   nCharacteristics = pishSectionHeaders[i].Characteristics;
 
@@ -715,13 +724,6 @@ l_ReadHeaderFromFile:
 
   pssSegments[i].VirtualAddress = pishSectionHeaders[i].VirtualAddress;
   pssSegments[i].Characteristics = pishSectionHeaders[i].Characteristics;
-
-  /* ensure the executable is no larger than 4GB */
-  if(pssSegments[i].RawLength != 0)
-  {
-   if(!Intsafe_AddULong32(&nPrevFileEndOfSegment, pssSegments[i].FileOffset, pssSegments[i].RawLength))
-    DIE(("The executable is larger than 4GB\n"));
-  }
 
   /* ensure the memory image is no larger than 4GB */
   if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[i].VirtualAddress, pssSegments[i].Length))
