@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.25 2003/10/16 12:50:30 ekohl Exp $
+/* $Id: driver.c,v 1.26 2003/10/16 14:49:05 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,7 +18,6 @@
 #include <internal/po.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
-#include <internal/registry.h>
 #include <internal/pool.h>
 #include <internal/se.h>
 #include <internal/mm.h>

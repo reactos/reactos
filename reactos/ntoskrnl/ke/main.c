@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.175 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: main.c,v 1.176 2003/10/16 14:47:30 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -47,7 +47,6 @@
 #include <internal/kd.h>
 #include <internal/trap.h>
 #include "../dbg/kdb.h"
-#include <internal/registry.h>
 #include <internal/nls.h>
 #include <reactos/bugcodes.h>
 #include <ntos/bootvid.h>

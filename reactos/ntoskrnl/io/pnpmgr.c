@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.21 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.22 2003/10/16 14:49:05 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -16,7 +16,6 @@
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ldr.h>
-#include <internal/registry.h>
 #include <internal/module.h>
 
 #include <ole32/guiddef.h>
@@ -571,6 +570,78 @@ IopTraverseDeviceTree(
 }
 
 
+static NTSTATUS
+IopCreateDeviceKeyPath(PWSTR Path)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR KeyBuffer[MAX_PATH];
+  UNICODE_STRING KeyName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  PWCHAR Current;
+  PWCHAR Next;
+
+  if (_wcsnicmp(Path, L"\\Registry\\", 10) != 0)
+    {
+      return STATUS_INVALID_PARAMETER;
+    }
+
+  wcsncpy (KeyBuffer, Path, MAX_PATH-1);
+  RtlInitUnicodeString (&KeyName, KeyBuffer);
+
+  /* Skip \\Registry\\ */
+  Current = KeyName.Buffer;
+  Current = wcschr (Current, '\\') + 1;
+  Current = wcschr (Current, '\\') + 1;
+
+  do
+   {
+      Next = wcschr (Current, '\\');
+      if (Next == NULL)
+	{
+	  /* The end */
+	}
+      else
+	{
+	  *Next = 0;
+	}
+
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  OBJ_CASE_INSENSITIVE,
+				  NULL,
+				  NULL);
+
+      DPRINT("Create '%S'\n", KeyName.Buffer);
+
+      Status = NtCreateKey (&KeyHandle,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    0,
+			    NULL);
+      if (!NT_SUCCESS (Status))
+	{
+	  DPRINT ("NtCreateKey() failed with status %x\n", Status);
+	  return Status;
+	}
+
+      NtClose (KeyHandle);
+
+      if (Next != NULL)
+	{
+	  *Next = L'\\';
+	}
+
+      Current = Next + 1;
+    }
+   while (Next != NULL);
+
+  return STATUS_SUCCESS;
+}
+
+
 /*
  * IopActionInterrogateDeviceStack
  *
@@ -822,7 +893,7 @@ IopActionInterrogateDeviceStack(
    KeyBuffer = ExAllocatePool(PagedPool, (49 + DeviceNode->InstancePath.Length) * sizeof(WCHAR));
    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
    wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
-   RtlpCreateRegistryKeyPath(KeyBuffer);
+   IopCreateDeviceKeyPath(KeyBuffer);
    ExFreePool(KeyBuffer);
    DeviceNode->Flags |= DNF_PROCESSED;
 

@@ -10,18 +10,121 @@
 
 #include <ddk/ntddk.h>
 #include <roscfg.h>
-#include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
-#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 #include "cm.h"
 
-
 /* FUNCTIONS ****************************************************************/
+
+
+static NTSTATUS
+RtlpGetRegistryHandle(ULONG RelativeTo,
+		      PWSTR Path,
+		      BOOLEAN Create,
+		      PHANDLE KeyHandle)
+{
+  UNICODE_STRING KeyName;
+  WCHAR KeyBuffer[MAX_PATH];
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
+
+  if (RelativeTo & RTL_REGISTRY_HANDLE)
+    {
+      Status = NtDuplicateObject(NtCurrentProcess(),
+				 (HANDLE)Path,
+				 NtCurrentProcess(),
+				 KeyHandle,
+				 0,
+				 FALSE,
+				 DUPLICATE_SAME_ACCESS);
+      return(Status);
+    }
+
+  if (RelativeTo & RTL_REGISTRY_OPTIONAL)
+    RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
+
+  if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
+    return STATUS_INVALID_PARAMETER;
+
+  KeyName.Length = 0;
+  KeyName.MaximumLength = MAX_PATH;
+  KeyName.Buffer = KeyBuffer;
+  KeyBuffer[0] = 0;
+
+  switch (RelativeTo)
+    {
+      case RTL_REGISTRY_SERVICES:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+	break;
+
+      case RTL_REGISTRY_CONTROL:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
+	break;
+
+      case RTL_REGISTRY_WINDOWS_NT:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
+	break;
+
+      case RTL_REGISTRY_DEVICEMAP:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
+	break;
+
+      case RTL_REGISTRY_USER:
+	Status = RtlFormatCurrentUserKeyPath(&KeyName);
+	if (!NT_SUCCESS(Status))
+	  return(Status);
+	break;
+
+      /* ReactOS specific */
+      case RTL_REGISTRY_ENUM:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+	break;
+    }
+
+  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
+    {
+      Path++;
+    }
+  RtlAppendUnicodeToString(&KeyName,
+			   Path);
+
+  DPRINT("KeyName '%wZ'\n", &KeyName);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     NULL,
+			     NULL);
+
+  if (Create == TRUE)
+    {
+      Status = NtCreateKey(KeyHandle,
+			   KEY_ALL_ACCESS,
+			   &ObjectAttributes,
+			   0,
+			   NULL,
+			   0,
+			   NULL);
+    }
+  else
+    {
+      Status = NtOpenKey(KeyHandle,
+			 KEY_ALL_ACCESS,
+			 &ObjectAttributes);
+    }
+
+  return(Status);
+}
+
 
 /*
  * @implemented
@@ -95,6 +198,20 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
 		   &Name);
 
   NtClose(KeyHandle);
+
+  return(STATUS_SUCCESS);
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
+{
+  /* FIXME: !!! */
+  RtlCreateUnicodeString(KeyPath,
+			 L"\\Registry\\User\\.Default");
 
   return(STATUS_SUCCESS);
 }
@@ -413,7 +530,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  Status = STATUS_NO_MEMORY;
 		  break;
 		}
-              ValueNameSize = 256 * sizeof(WCHAR);
+	      ValueNameSize = 256 * sizeof(WCHAR);
 	      ValueName = ExAllocatePool(PagedPool,
 		                         ValueNameSize);
 	      if (ValueName == NULL)
@@ -445,7 +562,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      break;
 		    }
 
-                  if (FullValueInfo->NameLength > ValueNameSize - sizeof(WCHAR))
+		  if (FullValueInfo->NameLength > ValueNameSize - sizeof(WCHAR))
 		    {
 		      /* Should not happen, because the name length is limited to 255 characters */
 		      ExFreePool(ValueName);
@@ -458,7 +575,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 			}
 		    }
 
-	          RtlCopyMemory(ValueName, 
+		  RtlCopyMemory(ValueName,
 		                FullValueInfo->Name,
 				FullValueInfo->NameLength);
 		  ValueName[FullValueInfo->NameLength / sizeof(WCHAR)] = 0;
@@ -558,199 +675,6 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   NtClose(KeyHandle);
 
   return(STATUS_SUCCESS);
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
-{
-  /* FIXME: !!! */
-  RtlCreateUnicodeString(KeyPath,
-			 L"\\Registry\\User\\.Default");
-
-  return(STATUS_SUCCESS);
-}
-
-/*  ------------------------------------------  Private Implementation  */
-
-
-NTSTATUS
-RtlpGetRegistryHandle(ULONG RelativeTo,
-		      PWSTR Path,
-		      BOOLEAN Create,
-		      PHANDLE KeyHandle)
-{
-  UNICODE_STRING KeyName;
-  WCHAR KeyBuffer[MAX_PATH];
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  NTSTATUS Status;
-
-  if (RelativeTo & RTL_REGISTRY_HANDLE)
-    {
-      Status = ZwDuplicateObject(NtCurrentProcess(),
-				 (HANDLE)Path,
-				 NtCurrentProcess(),
-				 KeyHandle,
-				 0,
-				 FALSE,
-				 DUPLICATE_SAME_ACCESS);
-      return(Status);
-    }
-
-  if (RelativeTo & RTL_REGISTRY_OPTIONAL)
-    RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
-
-  if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
-    return STATUS_INVALID_PARAMETER;
-
-  KeyName.Length = 0;
-  KeyName.MaximumLength = MAX_PATH;
-  KeyName.Buffer = KeyBuffer;
-  KeyBuffer[0] = 0;
-
-  switch (RelativeTo)
-    {
-      case RTL_REGISTRY_SERVICES:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-	break;
-
-      case RTL_REGISTRY_CONTROL:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
-	break;
-
-      case RTL_REGISTRY_WINDOWS_NT:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
-	break;
-
-      case RTL_REGISTRY_DEVICEMAP:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
-	break;
-
-      case RTL_REGISTRY_USER:
-	Status = RtlFormatCurrentUserKeyPath(&KeyName);
-	if (!NT_SUCCESS(Status))
-	  return(Status);
-	break;
-
-      /* ReactOS specific */
-      case RTL_REGISTRY_ENUM:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-	break;
-    }
-
-  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
-    {
-      Path++;
-    }
-  RtlAppendUnicodeToString(&KeyName,
-			   Path);
-
-  DPRINT("KeyName '%wZ'\n", &KeyName);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     NULL,
-			     NULL);
-
-  if (Create == TRUE)
-    {
-      Status = NtCreateKey(KeyHandle,
-			   KEY_ALL_ACCESS,
-			   &ObjectAttributes,
-			   0,
-			   NULL,
-			   0,
-			   NULL);
-    }
-  else
-    {
-      Status = NtOpenKey(KeyHandle,
-			 KEY_ALL_ACCESS,
-			 &ObjectAttributes);
-    }
-
-  return(Status);
-}
-
-
-NTSTATUS
-RtlpCreateRegistryKeyPath(PWSTR Path)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR KeyBuffer[MAX_PATH];
-  UNICODE_STRING KeyName;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-  PWCHAR Current;
-  PWCHAR Next;
-
-  if (_wcsnicmp(Path, L"\\Registry\\", 10) != 0)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
-
-  wcsncpy (KeyBuffer, Path, MAX_PATH-1);
-  RtlInitUnicodeString (&KeyName, KeyBuffer);
-
-  /* Skip \\Registry\\ */
-  Current = KeyName.Buffer;
-  Current = wcschr (Current, '\\') + 1;
-  Current = wcschr (Current, '\\') + 1;
-
-  do
-   {
-      Next = wcschr (Current, '\\');
-      if (Next == NULL)
-	{
-	  /* The end */
-	}
-      else
-	{
-	  *Next = 0;
-	}
-
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &KeyName,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
-
-      DPRINT("Create '%S'\n", KeyName.Buffer);
-
-      Status = NtCreateKey (&KeyHandle,
-			    KEY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    0,
-			    NULL,
-			    0,
-			    NULL);
-      if (!NT_SUCCESS (Status))
-	{
-	  DPRINT ("NtCreateKey() failed with status %x\n", Status);
-	  return Status;
-	}
-
-      NtClose (KeyHandle);
-
-      if (Next != NULL)
-	{
-	  *Next = L'\\';
-	}
-
-      Current = Next + 1;
-    }
-   while (Next != NULL);
-
-  return STATUS_SUCCESS;
 }
 
 /* EOF */

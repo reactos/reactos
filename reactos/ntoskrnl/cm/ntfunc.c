@@ -14,7 +14,6 @@
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <internal/se.h>
-#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>

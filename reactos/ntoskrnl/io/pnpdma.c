@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.2 2003/09/25 18:29:44 navaraf Exp $
+/* $Id: pnpdma.c,v 1.3 2003/10/16 14:49:05 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,7 +18,6 @@
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ldr.h>
-#include <internal/registry.h>
 #include <internal/module.h>
 
 //#define NDEBUG

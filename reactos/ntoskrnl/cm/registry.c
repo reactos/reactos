@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.112 2003/10/13 20:53:42 ekohl Exp $
+/* $Id: registry.c,v 1.113 2003/10/16 14:48:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,6 @@
 #include <string.h>
 #include <roscfg.h>
 #include <internal/ob.h>
-#include <internal/registry.h>
 #include <reactos/bugcodes.h>
 
 #define NDEBUG

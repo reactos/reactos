@@ -11,7 +11,6 @@
 #include <string.h>
 #include <roscfg.h>
 #include <internal/ob.h>
-#include <internal/registry.h>
 #include <ntos/minmax.h>
 #include <reactos/bugcodes.h>
 

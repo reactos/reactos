@@ -15,7 +15,6 @@
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ldr.h>
-#include <internal/registry.h>
 #include <internal/module.h>
 
 //#define NDEBUG
