@@ -1,6 +1,16 @@
 #ifndef __INCLUDE_HAL_MPS
 #define __INCLUDE_HAL_MPS
 
+/* 
+ * FIXME: This does not work if we have more than 24 IRQs (ie. more than one 
+ * I/O APIC) 
+ */
+#define VECTOR2IRQ(vector) (((vector) - FIRST_DEVICE_VECTOR) / 8)
+#define IRQ2VECTOR(vector) ((vector * 8) + FIRST_DEVICE_VECTOR)
+#define VECTOR2IRQL(vector) (DISPATCH_LEVEL /* 2 */ + 1 + VECTOR2IRQ(vector))
+#define IRQL2VECTOR(irql) (IRQ2VECTOR(irql - DISPATCH_LEVEL /* 2 */ - 1))
+
+
 #define APIC_DEFAULT_BASE     0xFEE00000    /* Default Local APIC Base Register Address */
 #define IOAPIC_DEFAULT_BASE   0xFEC00000    /* Default I/O APIC Base Register Address */
 

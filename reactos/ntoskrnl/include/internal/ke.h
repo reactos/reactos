@@ -36,6 +36,8 @@
 
 struct _KTHREAD;
 
+VOID STDCALL KeRescheduleThread();
+
 VOID KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip);
 
 VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);

@@ -1,5 +1,38 @@
 2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/storage/atapi/atapi.c (AtapiReadWrite): Expect an interrupt a
+	bit sooner.
+	* hal/halx86/isa.c (HalpGetIsaInterruptVector): Compute vector for MP.
+	* hal/halx86/pci.c (HalpGetPciInterruptVector): Ditto.
+	* hal/halx86/sysbus.c (HalpGetSystemInterruptVector): Ditto.
+	* hal/halx86/mp.c (AssignIrqVector): Rewrite.
+	(MpsTimerHandler): Disable for now.
+	(MpsSpuriousHandler): Do not acknowledge interrupt.
+	(HalAllProcessorsStarted): Only boot 1 CPU for now.
+	(RescheduleDpcRoutine): New function.
+	(RescheduleDpc): New variable.
+	(HalpInitMPS): Initialize RescheduleDpc. Fix bug in call to memset.
+	* hal/halx86/mpsirql.c: Rewrite.
+	* hal/halx86/include/mps.h (VECTOR2IRQ, IRQ2VECTOR, VECTOR2IRQL,
+	IRQL2VECTOR): New macros.
+	* ntoskrnl/ntoskrnl.def: Add KeRescheduleThread@0.
+	* ntoskrnl/ntoskrnl.edf: Ditto.
+	* ntoskrnl/include/internal/ke.h (KeRescheduleThread): Prototype.
+	* ntoskrnl/ke/kthread.c (KeRescheduleThread): New function.
+	* ntoskrnl/ke/i386/exp.c (KeInitExceptions): Remove unneeded call to
+	set_trap_gate().
+	* ntoskrnl/ke/i386/irq.c (VECTOR2IRQ, IRQ2VECTOR, VECTOR2IRQL): Correct.
+	(IRQ_BASE): Define as FIRST_DEVICE_VECTOR.
+	(NR_IRQS): Define using IRQ_BASE.
+	(KeInitInterrupts): Use IRQ_BASE.
+	(KiInterruptDispatch2): Rewrite.
+	(KiInterruptDispatch): Ditto.
+	(KeConnectInterrupt): Pass Vector to HalEnableSystemInterrupt() for MP.
+	(KeDisconnectInterrupt): Pass Vector to HalDisableSystemInterrupt() for MP.
+	* ntoskrnl/ke/i386/trap.s (_KiTrapProlog): Change 0x124 to KPCR_CURRENT_THREAD.
+
+2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile: Add format.
 	* include/fslib/vfatlib.h (VfatFormat): Prototype.
 	* lib/fmifs/format.c (VfatFormat): Add stub.

@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.6 2002/12/26 17:36:12 robd Exp $
+/* $Id: mp.c,v 1.7 2003/04/06 10:45:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,7 +82,8 @@ extern VOID MpsSpuriousInterrupt(VOID);
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
 
-BOOLEAN MPSInitialized = FALSE;  /* Is the MP system initialized? */
+static BOOLEAN MPSInitialized = FALSE;  /* Is the MP system initialized? */
+static KDPC RescheduleDpc;
 
 VOID APICDisable(VOID);
 static VOID APICSyncArbIDs(VOID);
@@ -96,8 +97,7 @@ ULONG lastvalw = 0;
 #endif /* MP */
 
 
-BOOLEAN BSPInitialized = FALSE;  /* Is the BSP initialized? */
-
+static BOOLEAN BSPInitialized = FALSE;  /* Is the BSP initialized? */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -148,11 +148,9 @@ volatile ULONG IOAPICRead(
   PULONG Base;
 
   Base = (PULONG)IOAPICMap[Apic].ApicAddress;
-
-	*Base = Offset;
-	return *((PULONG)((ULONG)Base + IOAPIC_IOWIN));
+  *Base = Offset;
+  return *((PULONG)((ULONG)Base + IOAPIC_IOWIN));
 }
-
 
 VOID IOAPICWrite(
    ULONG Apic,
@@ -162,9 +160,8 @@ VOID IOAPICWrite(
   PULONG Base;
 
   Base = (PULONG)IOAPICMap[Apic].ApicAddress;
-
   *Base = Offset;
-	*((PULONG)((ULONG)Base + IOAPIC_IOWIN)) = Value;
+  *((PULONG)((ULONG)Base + IOAPIC_IOWIN)) = Value;
 }
 
 
@@ -179,6 +176,7 @@ VOID IOAPICClearPin(
    */
 	memset(&Entry, 0, sizeof(Entry));
 	Entry.mask = 1;
+
 	IOAPICWrite(Apic, IOAPIC_REDTBL + 2 * Pin, *(((PULONG)&Entry) + 0));
 	IOAPICWrite(Apic, IOAPIC_REDTBL + 1 + 2 * Pin, *(((PULONG)&Entry) + 1));
 }
@@ -210,6 +208,7 @@ VOID IOAPICMaskIrq(
 
 	*((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
   Entry.mask = 1;
+
  	IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
 }
 
@@ -223,6 +222,7 @@ VOID IOAPICUnmaskIrq(
 
   *((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
   Entry.mask = 0;
+
   IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
 }
 
@@ -268,7 +268,7 @@ IOAPICSetupIds(VOID)
     
     tmp &= ~IOAPIC_ID_MASK;
     tmp |= SET_IOAPIC_ID(IOAPICMap[apic].ApicId);
-    
+
     IOAPICWrite(apic, IOAPIC_ID, tmp);
     
     /*
@@ -582,25 +582,26 @@ static ULONG IOAPICGetIrqEntry(
 static ULONG AssignIrqVector(
   ULONG irq)
 {
-	static ULONG current_vector = FIRST_DEVICE_VECTOR, vector_offset = 0;
+  static ULONG current_vector = FIRST_DEVICE_VECTOR, vector_offset = 0;
   ULONG vector;
 
   /* There may already have been assigned a vector for this IRQ */
   vector = IRQVectorMap[irq];
-	if (vector > 0)
-		return vector;
+  if (vector > 0)
+    return vector;
 
-  current_vector += 8;
   if (current_vector > FIRST_SYSTEM_VECTOR) {
-		vector_offset++;
+      vector_offset++;
 	  current_vector = FIRST_DEVICE_VECTOR + vector_offset;
   } else if (current_vector == FIRST_SYSTEM_VECTOR) {
      DPRINT1("Ran out of interrupt sources!");
      KeBugCheck(0);
   }
 
-	IRQVectorMap[irq] = current_vector;
-	return current_vector;
+  vector = current_vector;
+  IRQVectorMap[irq] = vector;
+  current_vector += 8;
+  return vector;
 }
 
 
@@ -650,6 +651,8 @@ VOID IOAPICSetupIrqs(
 
   	vector = AssignIrqVector(irq);
 		entry.vector = vector;
+
+	DPRINT("vector 0x%.08x assigned to irq 0x%.02x\n", vector, irq);
 
     if (irq == 0)
     {
@@ -1167,7 +1170,6 @@ VOID WaitFor8254Wraparound(VOID)
 	LONG Delta;
 
 	CurCount = Read8254Timer();
-
 	do {
 		PrevCount = CurCount;
 		CurCount = Read8254Timer();
@@ -1235,8 +1237,8 @@ VOID APICCalibrateTimer(
 
 	/* Setup timer for normal operation */
   //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100); // 100ns
-  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 15000); // 15ms
-  //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
+//  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 15000); // 15ms
+  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
 
   DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	  CPUMap[CPU].CoreSpeed/1000000,
@@ -1374,37 +1376,52 @@ VOID MpsTimerHandler(
 {
 #if 0
   KIRQL OldIrql;
-#endif
 
-  DPRINT("T1");
+  DPRINT("T:\n");
+
+  /*
+   * Notify the rest of the kernel of the raised irq level
+   */
+  //OldIrql = KeRaiseIrqlToSynchLevel();
+  KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
+
+  /*
+   * Enable interrupts
+   * NOTE: Only higher priority interrupts will get through
+   */
+  __asm__("sti\n\t");
+
+  if (KeGetCurrentProcessorNumber() == 0)
+    {
+      //KIRQL OldIrql2;
+      //KeLowerIrql(PROFILE_LEVEL);
+      KiInterruptDispatch2(OldIrql, 0);
+      //KeRaiseIrql(CLOCK2_LEVEL, &OldIrql2);
+    }
+
+  DbgPrint("MpsTimerHandler() called at IRQL 0x%.08x\n", OldIrql);
+  //(BOOLEAN) KeInsertQueueDpc(&RescheduleDpc, NULL, NULL);
+
+	DbgPrint("MpsTimerHandler() -1 IRQL 0x%.08x\n", OldIrql);
+
+  /*
+   * Disable interrupts
+   */
+  __asm__("cli\n\t");
+
+  DbgPrint("MpsTimerHandler() 0 IRQL 0x%.08x\n", OldIrql);
 
   /*
    * Acknowledge the interrupt
    */
   APICSendEOI();
-#if 0
-  /*
-   * Notify the rest of the kernel of the raised irq level
-   */
-  OldIrql = KeRaiseIrqlToSynchLevel();
-#endif
-  __asm__("sti\n\t");
 
-  /*
-   * Call the dispatcher
-   */
-  // TODO FIXME - What happened to definition for PsDispatchThread ???
-  //PsDispatchThread(THREAD_STATE_READY);
-
-  // KeGetCurrentThread is linked into hal from ntoskrnl, so can 
-  //    PsDispatchThread be exported from ntoskrnl also ???
-
-
-#if 0
   /*
    * Lower irq level
    */
+  DbgPrint("MpsTimerHandler() 1 IRQL 0x%.08x\n", OldIrql);
   KeLowerIrql(OldIrql);
+  DbgPrint("MpsTimerHandler() 2 IRQL 0x%.08x\n", OldIrql);
 #endif
 }
 
@@ -1445,10 +1462,8 @@ VOID MpsSpuriousHandler(
 {
   DPRINT1("Spurious interrupt on CPU(%d)\n", ThisCPU());
 
-	/*
-   * Acknowledge the interrupt
-   */
-  APICSendEOI();
+  /* No need to send EOI here */
+
   APICDump();
   for (;;);
 }
@@ -1494,7 +1509,7 @@ VOID APICSetup(
 	APICWrite(APIC_SIVR, tmp);
 
   /*
-   * Only the BP should see the LINT1 NMI signal, obviously.
+   * Only the BSP should see the LINT1 NMI signal, obviously.
    */
   if (CPU == 0)
 		tmp = APIC_DM_NMI;
@@ -1744,7 +1759,8 @@ HalAllProcessorsStarted (
 
 #ifdef MP
 
-  return (NextCPU >= CPUCount);
+  //return (NextCPU >= CPUCount);
+  return (NextCPU >= 1);
 
 #else /* MP */
 
@@ -2214,6 +2230,7 @@ static VOID HaliConstructDefaultISAMPTable(
   }
 }
 
+
 BOOLEAN
 HaliScanForMPConfigTable(
    ULONG Base,
@@ -2301,6 +2318,22 @@ HaliScanForMPConfigTable(
 }
 
 
+static VOID STDCALL
+RescheduleDpcRoutine(PKDPC Dpc, PVOID DeferredContext,
+  PVOID SystemArgument1, PVOID SystemArgument2)
+{
+  KIRQL OldIrql;
+  KIRQL NewIrql;
+
+  DbgPrint("RDR()");
+  NewIrql = KeGetCurrentIrql();
+  KeLowerIrql(APC_LEVEL);
+  KeRescheduleThread();
+  KeRaiseIrql(NewIrql, &OldIrql);
+  DbgPrint("...\n");
+}
+
+
 VOID
 HalpInitMPS(
    VOID)
@@ -2328,6 +2361,8 @@ HalpInitMPS(
 
   MPSInitialized = TRUE;
 
+  KeInitializeDpc(&RescheduleDpc, RescheduleDpcRoutine, NULL);
+
   /*
      Scan the system memory for an MP configuration table
        1) Scan the first KB of system base memory
@@ -2350,7 +2385,7 @@ HalpInitMPS(
   }
 
   /* Setup IRQ to vector translation map */
-  memset(&IRQVectorMap, sizeof(IRQVectorMap), 0);
+  memset(&IRQVectorMap, 0, sizeof(IRQVectorMap));
 
   /* Initialize the bootstrap processor */
   HaliInitBSP();

@@ -1,4 +1,4 @@
-/* $Id: sysbus.c,v 1.4 2002/12/09 19:46:39 hbirr Exp $
+/* $Id: sysbus.c,v 1.5 2003/04/06 10:45:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,8 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <bus.h>
+#ifdef MP
+#include <mps.h>
+#endif
 
 
 /* FUNCTIONS ****************************************************************/
@@ -25,9 +29,15 @@ HalpGetSystemInterruptVector(PVOID BusHandler,
 			     PKIRQL Irql,
 			     PKAFFINITY Affinity)
 {
-   *Irql = PROFILE_LEVEL - BusInterruptVector;
-   *Affinity = 0xFFFFFFFF;
-   return BusInterruptVector;
+#ifdef MP
+  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Affinity = 0xFFFFFFFF;
+  return IRQ2VECTOR(BusInterruptVector);
+#else
+  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Affinity = 0xFFFFFFFF;
+  return BusInterruptVector;
+#endif
 }
 
 

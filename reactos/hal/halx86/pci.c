@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.7 2003/02/17 21:24:13 gvg Exp $
+/* $Id: pci.c,v 1.8 2003/04/06 10:45:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,8 +18,13 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <bus.h>
+#ifdef MP
+#include <mps.h>
+#endif
+
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -546,9 +551,15 @@ HalpGetPciInterruptVector(PVOID BusHandler,
 			  PKIRQL Irql,
 			  PKAFFINITY Affinity)
 {
+#ifdef MP
+  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Affinity = 0xFFFFFFFF;
+  return IRQ2VECTOR(BusInterruptVector);
+#else
   *Irql = PROFILE_LEVEL - BusInterruptVector;
   *Affinity = 0xFFFFFFFF;
   return BusInterruptVector;
+#endif
 }
 
 static BOOLEAN STDCALL

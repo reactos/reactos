@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.148 2003/03/20 09:45:57 gvg Exp $
+; $Id: ntoskrnl.def,v 1.149 2003/04/06 10:45:16 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -412,6 +412,7 @@ KeQuerySystemTime@4
 KeQueryTickCount@4
 KeQueryTimeIncrement@0
 ;KeRaiseUserException
+KeRescheduleThread@0
 KeReadStateEvent@4
 KeReadStateMutant@4
 KeReadStateMutex@4

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.37 2003/01/30 22:08:15 ekohl Exp $
+/* $Id: atapi.c,v 1.38 2003/04/06 10:45:15 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -2174,6 +2174,9 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow);
   IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
 
+  /* Indicate expecting an interrupt. */
+  DeviceExtension->ExpectingInterrupt = TRUE;
+
   /* Issue command to drive */
   IDEWriteCommand(DeviceExtension->CommandPortBase, Command);
 
@@ -2224,8 +2227,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		       TransferSize);
       }
     }
-  /* Indicate expecting an interrupt. */
-  DeviceExtension->ExpectingInterrupt = TRUE;
 
   DPRINT("AtapiReadWrite() done!\n");
 

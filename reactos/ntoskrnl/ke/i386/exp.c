@@ -538,7 +538,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  {
 	     return(0);
 	  }
-
      }
 
    /*
@@ -629,7 +628,6 @@ KeInitExceptions(VOID)
    set_trap_gate(11, (ULONG)KiTrap11);
    set_trap_gate(12, (ULONG)KiTrap12);
    set_trap_gate(13, (ULONG)KiTrap13);
-   set_trap_gate(14, (ULONG)KiTrap14);
    set_interrupt_gate(14, (ULONG)KiTrap14);
    set_trap_gate(15, (ULONG)KiTrap15);
    set_trap_gate(16, (ULONG)KiTrap16);
