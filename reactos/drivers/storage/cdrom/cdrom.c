@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.19 2003/05/01 17:50:03 ekohl Exp $
+/* $Id: cdrom.c,v 1.20 2003/07/13 12:40:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,10 +47,41 @@
 #define SCSI_CDROM_TIMEOUT 10		/* Default timeout: 10 seconds */
 
 
+typedef struct _ERROR_RECOVERY_DATA
+{
+  MODE_PARAMETER_HEADER Header;
+  MODE_PARAMETER_BLOCK BlockDescriptor;
+  MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
+} ERROR_RECOVERY_DATA, *PERROR_RECOVERY_DATA;
+
+
+typedef struct _ERROR_RECOVERY_DATA10
+{
+  MODE_PARAMETER_HEADER10 Header10;
+  MODE_PARAMETER_BLOCK BlockDescriptor10;
+  MODE_READ_RECOVERY_PAGE ReadRecoveryPage10;
+} ERROR_RECOVERY_DATA10, *PERROR_RECOVERY_DATA10;
+
+
 typedef struct _CDROM_DATA
 {
-  ULONG Dummy;
+  BOOLEAN PlayActive;
+  BOOLEAN RawAccess;
+  USHORT XaFlags;
+
+  union
+    {
+      ERROR_RECOVERY_DATA;
+      ERROR_RECOVERY_DATA10;
+    };
+
 } CDROM_DATA, *PCDROM_DATA;
+
+/* CDROM_DATA.XaFlags */
+#define XA_USE_6_BYTE		0x0001
+#define XA_USE_10_BYTE		0x0002
+#define XA_USE_READ_CD		0x0004
+#define XA_NOT_SUPPORTED	0x0008
 
 
 BOOLEAN STDCALL
@@ -67,6 +98,10 @@ NTSTATUS STDCALL
 CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp);
 
+static VOID
+CdromClassCreateMediaChangeEvent(IN PDEVICE_EXTENSION DeviceExtension,
+				 IN ULONG DeviceNumber);
+
 static NTSTATUS
 CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			     IN PUNICODE_STRING RegistryPath,
@@ -82,9 +117,9 @@ NTSTATUS STDCALL
 CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp);
 
-NTSTATUS STDCALL
-CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
-			IN PIRP Irp);
+VOID STDCALL
+CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
+		   IN PIRP Irp);
 
 VOID STDCALL
 CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
@@ -131,14 +166,14 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.DeviceType = FILE_DEVICE_CD_ROM;
   InitData.DeviceCharacteristics = FILE_REMOVABLE_MEDIA | FILE_READ_ONLY_DEVICE;
 
-  InitData.ClassError = NULL;	// CdromClassProcessError;
+  InitData.ClassError = NULL;
   InitData.ClassReadWriteVerification = CdromClassCheckReadWrite;
   InitData.ClassFindDeviceCallBack = CdromClassCheckDevice;
   InitData.ClassFindDevices = CdromClassFindDevices;
   InitData.ClassDeviceControl = CdromClassDeviceControl;
-  InitData.ClassShutdownFlush = CdromClassShutdownFlush;
+  InitData.ClassShutdownFlush = NULL;
   InitData.ClassCreateClose = NULL;
-  InitData.ClassStartIo = NULL;
+  InitData.ClassStartIo = CdromClassStartIo;
 
   return(ScsiClassInitialize(DriverObject,
 			     RegistryPath,
@@ -339,6 +374,27 @@ CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
+static VOID
+CdromClassCreateMediaChangeEvent(IN PDEVICE_EXTENSION DeviceExtension,
+				 IN ULONG DeviceNumber)
+{
+  WCHAR NameBuffer[MAX_PATH];
+  UNICODE_STRING Name;
+
+  swprintf (NameBuffer,
+	    L"\\Device\\MediaChangeEvent%lu",
+	    DeviceNumber);
+  RtlInitUnicodeString (&Name,
+			NameBuffer);
+
+  DeviceExtension->MediaChangeEvent =
+    IoCreateSynchronizationEvent (&Name,
+				  &DeviceExtension->MediaChangeEventHandle);
+
+  KeClearEvent (DeviceExtension->MediaChangeEvent);
+}
+
+
 /**********************************************************************
  * NAME							EXPORTED
  *	CdromClassCreateDeviceObject
@@ -375,13 +431,17 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			     IN PSCSI_INQUIRY_DATA InquiryData,
 			     IN PCLASS_INIT_DATA InitializationData)
 {
+  PDEVICE_EXTENSION DiskDeviceExtension; /* defined in class2.h */
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING UnicodeDeviceDirName;
-  CHAR NameBuffer[80];
   PDEVICE_OBJECT DiskDeviceObject;
-  PDEVICE_EXTENSION DiskDeviceExtension; /* defined in class2.h */
-  HANDLE Handle;
+  SCSI_REQUEST_BLOCK Srb;
   PCDROM_DATA CdromData;
+  CHAR NameBuffer[80];
+  HANDLE Handle;
+  PUCHAR Buffer;
+  ULONG Length;
+  PCDB Cdb;
   NTSTATUS Status;
 
   DPRINT("CdromClassCreateDeviceObject() called\n");
@@ -512,8 +572,107 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
-  /* FIXME: initialize media change support */
+  /* Initialize media change support */
+  CdromClassCreateMediaChangeEvent (DiskDeviceExtension,
+				    DeviceNumber);
+  if (DiskDeviceExtension->MediaChangeEvent != NULL)
+    {
+      DPRINT("Allocated media change event!\n");
 
+      /* FIXME: Allocate media change IRP and SRB */
+    }
+
+  /* Use 6 byte xa commands by default */
+  CdromData->XaFlags |= XA_USE_6_BYTE;
+
+  /* Read 'error recovery page' to get additional drive capabilities */
+  Length = sizeof(MODE_READ_RECOVERY_PAGE) +
+	   MODE_BLOCK_DESC_LENGTH +
+	   MODE_HEADER_LENGTH;
+
+  RtlZeroMemory (&Srb,
+		 sizeof(SCSI_REQUEST_BLOCK));
+  Srb.CdbLength = 6;
+  Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
+
+  Cdb = (PCDB)Srb.Cdb;
+  Cdb->MODE_SENSE.OperationCode = SCSIOP_MODE_SENSE;
+  Cdb->MODE_SENSE.PageCode = 0x01;
+  Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
+
+  Buffer = ExAllocatePool (NonPagedPool,
+			   sizeof(MODE_READ_RECOVERY_PAGE) +
+			     MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH10);
+  if (Buffer == NULL)
+    {
+      DPRINT1("Allocating recovery page buffer failed!\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  Status = ScsiClassSendSrbSynchronous (DiskDeviceObject,
+					&Srb,
+					Buffer,
+					Length,
+					FALSE);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT("MODE_SENSE(6) failed\n");
+
+      /* Try the 10 byte version */
+      Length = sizeof(MODE_READ_RECOVERY_PAGE) +
+	       MODE_BLOCK_DESC_LENGTH +
+	       MODE_HEADER_LENGTH10;
+
+      RtlZeroMemory (&Srb,
+		     sizeof(SCSI_REQUEST_BLOCK));
+      Srb.CdbLength = 10;
+      Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
+
+      Cdb = (PCDB)Srb.Cdb;
+      Cdb->MODE_SENSE10.OperationCode = SCSIOP_MODE_SENSE10;
+      Cdb->MODE_SENSE10.PageCode = 0x01;
+      Cdb->MODE_SENSE10.AllocationLength[0] = (UCHAR)(Length >> 8);
+      Cdb->MODE_SENSE10.AllocationLength[1] = (UCHAR)(Length && 0xFF);
+
+      Status = ScsiClassSendSrbSynchronous (DiskDeviceObject,
+					    &Srb,
+					    Buffer,
+					    Length,
+					    FALSE);
+      if (Status == STATUS_DATA_OVERRUN)
+	{
+	  DPRINT1("Data overrun\n");
+
+	  /* FIXME */
+	}
+      else if (NT_SUCCESS (Status))
+	{
+	  DPRINT("Use 10 byte commands\n");
+	  RtlCopyMemory (&CdromData->Header,
+			 Buffer,
+			 sizeof (ERROR_RECOVERY_DATA10));
+	  CdromData->Header.ModeDataLength = 0;
+
+	  CdromData->XaFlags &= XA_USE_6_BYTE;
+	  CdromData->XaFlags |= XA_USE_10_BYTE;
+	}
+      else
+	{
+	  DPRINT("XA not supported\n");
+	  CdromData->XaFlags |= XA_NOT_SUPPORTED;
+	}
+    }
+  else
+    {
+      DPRINT("Use 6 byte commands\n");
+      RtlCopyMemory (&CdromData->Header,
+		     Buffer,
+		     sizeof (ERROR_RECOVERY_DATA));
+      CdromData->Header.ModeDataLength = 0;
+    }
+  ExFreePool (Buffer);
+
+  /* Initialize device timer */
   IoInitializeTimer(DiskDeviceObject,
 		    CdromTimerRoutine,
 		    NULL);
@@ -540,11 +699,16 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
  */
 
 static NTSTATUS
-CdromClassReadTocEntry(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, UINT Length)
+CdromClassReadTocEntry (PDEVICE_OBJECT DeviceObject,
+			UINT TrackNo,
+			PVOID Buffer,
+			UINT Length)
 {
-  PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PDEVICE_EXTENSION DeviceExtension;
   SCSI_REQUEST_BLOCK Srb;
   PCDB Cdb;
+
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
   Srb.CdbLength = 10;
@@ -567,11 +731,16 @@ CdromClassReadTocEntry(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, 
 
 
 static NTSTATUS
-CdromClassReadLastSession(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, UINT Length)
+CdromClassReadLastSession (PDEVICE_OBJECT DeviceObject,
+			   UINT TrackNo,
+			   PVOID Buffer,
+			   UINT Length)
 {
-  PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PDEVICE_EXTENSION DeviceExtension;
   SCSI_REQUEST_BLOCK Srb;
   PCDB Cdb;
+
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
   Srb.CdbLength = 10;
@@ -753,11 +922,11 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
 
 /**********************************************************************
- * NAME							EXPORTED
- *	CdromClassShutdownFlush
+ * NAME
+ *	CdromClassStartIo
  *
  * DESCRIPTION:
- *	Answer requests for shutdown and flush calls
+ *	Starts IRP processing.
  *
  * RUN LEVEL:
  *	PASSIVE_LEVEL
@@ -768,20 +937,80 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
  *		Standard dispatch arguments
  *
  * RETURNS:
- *	Status.
+ *	None.
  */
-
-NTSTATUS STDCALL
-CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
-			IN PIRP Irp)
+VOID STDCALL
+CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
+		   IN PIRP Irp)
 {
-  DPRINT("CdromClassShutdownFlush() called!\n");
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  ULONG MaximumTransferLength;
+  ULONG TransferPages;
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  DPRINT("CdromClassStartIo() called!\n");
 
-  return(STATUS_SUCCESS);
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  IrpStack = IoGetCurrentIrpStackLocation (Irp);
+
+  MaximumTransferLength = DeviceExtension->PortCapabilities->MaximumTransferLength;
+
+  if (IrpStack->MajorFunction == IRP_MJ_READ)
+    {
+      DPRINT("  IRP_MJ_READ\n");
+
+      TransferPages =
+	ADDRESS_AND_SIZE_TO_SPAN_PAGES (MmGetMdlVirtualAddress(Irp->MdlAddress),
+					IrpStack->Parameters.Read.Length);
+
+      /* Check transfer size */
+      if ((IrpStack->Parameters.Read.Length > MaximumTransferLength) ||
+	  (TransferPages > DeviceExtension->PortCapabilities->MaximumPhysicalPages))
+	{
+	  /* Transfer size is too large - split it */
+	  TransferPages =
+	    DeviceExtension->PortCapabilities->MaximumPhysicalPages - 1;
+
+	  /* Adjust transfer size */
+	  if (MaximumTransferLength > TransferPages * PAGE_SIZE)
+	    MaximumTransferLength = TransferPages * PAGE_SIZE;
+
+	  if (MaximumTransferLength == 0)
+	    MaximumTransferLength = PAGE_SIZE;
+
+	  /* Split the transfer */
+	  ScsiClassSplitRequest (DeviceObject,
+				 Irp,
+				 MaximumTransferLength);
+	  return;
+	}
+      else
+	{
+	  /* Build SRB */
+	  ScsiClassBuildRequest (DeviceObject,
+				 Irp);
+	}
+    }
+  else if (IrpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL)
+    {
+      DPRINT1("  IRP_MJ_IRP_MJ_DEVICE_CONTROL\n");
+
+      UNIMPLEMENTED;
+#if 0
+      switch (IrpStack->Parameters.DeviceIoControl.IoControlCode)
+	{
+
+	  default:
+	    IoCompleteRequest (Irp,
+			       IO_NO_INCREMENT);
+	    return;
+	}
+#endif
+    }
+
+  /* Call the SCSI port driver */
+  IoCallDriver (DeviceExtension->PortDeviceObject,
+		Irp);
 }
 
 
