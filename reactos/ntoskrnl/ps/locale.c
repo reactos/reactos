@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.6 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: locale.c,v 1.7 2004/02/12 15:55:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,7 @@
 #include <internal/ps.h>
 #include <rosrtl/string.h>
 
-#define NDEBUG
+/* #define NDEBUG */
 #include <internal/debug.h>
 
 
@@ -86,7 +86,7 @@ PiInitDefaultLocale(VOID)
 	     ValueString.Buffer = (PWSTR)ValueInfo->Data;
 
 	     Status = RtlUnicodeStringToInteger(&ValueString,
-						10,
+						16,
 						&LocaleValue);
 	     if (NT_SUCCESS(Status))
 	       {
@@ -126,7 +126,7 @@ PiInitDefaultLocale(VOID)
 	     ValueString.Buffer = (PWSTR)ValueInfo->Data;
 
 	     Status = RtlUnicodeStringToInteger(&ValueString,
-						10,
+						16,
 						&LocaleValue);
 	     if (NT_SUCCESS(Status))
 	       {
