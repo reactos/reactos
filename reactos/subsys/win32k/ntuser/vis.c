@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.21 2004/02/26 22:23:54 weiden Exp $
+ * $Id: vis.c,v 1.22 2004/02/29 17:43:41 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -87,7 +87,7 @@ VIS_ComputeVisibleRegion(
       {
          IntLockRelatives(CurrentWindow);
          CurrentSibling = CurrentWindow->FirstChild;
-         while (CurrentSibling != PreviousWindow)
+         while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
          {
             if (CurrentSibling->Style & WS_VISIBLE)
             {
