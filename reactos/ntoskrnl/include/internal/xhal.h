@@ -25,7 +25,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
 			      IN ULONG PartitionNumber,
 			      IN ULONG PartitionType);
 
-NTSTATUS STDCALL
+NTSTATUS FASTCALL
 xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG SectorSize,
 			  IN ULONG SectorsPerTrack,

@@ -128,7 +128,7 @@ typedef union _LARGE_INTEGER
     DWORD LowPart;
     LONG  HighPart;
   } u;
-#ifdef ANONYMOUSUNIONS   
+#ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
@@ -145,15 +145,21 @@ typedef union _ULARGE_INTEGER
     DWORD LowPart;
     DWORD HighPart;
   } u;
-#ifdef ANONYMOUSUNIONS   
+#ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
     DWORD HighPart;
   };
-#endif /* ANONYMOUSUNIONS */   
+#endif /* ANONYMOUSUNIONS */
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
+
+typedef struct _FILETIME
+{
+   DWORD dwLowDateTime;
+   DWORD dwHighDateTime;
+} FILETIME, *LPFILETIME, *PFILETIME;
 
 #define CONST const
 

@@ -293,11 +293,6 @@ typedef struct _browseinfo {
   int iImage;              
 } BROWSEINFO, *PBROWSEINFO, *LPBROWSEINFO; 
 
-typedef struct _FILETIME { 
-  DWORD dwLowDateTime; 
-  DWORD dwHighDateTime; 
-} FILETIME, *LPFILETIME, *PFILETIME; 
- 
 typedef struct _BY_HANDLE_FILE_INFORMATION {
   DWORD    dwFileAttributes; 
   FILETIME ftCreationTime; 

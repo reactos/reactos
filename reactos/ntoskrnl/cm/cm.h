@@ -2,7 +2,6 @@
 #ifndef __INCLUDE_CM_H
 #define __INCLUDE_CM_H
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/config.h>
 #include <internal/ob.h>

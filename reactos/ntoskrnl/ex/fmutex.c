@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fmutex.c,v 1.9 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: fmutex.c,v 1.10 2001/06/20 12:57:32 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
@@ -36,8 +36,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID FASTCALL EXPORTED 
-ExAcquireFastMutexUnsafe (PFAST_MUTEX	FastMutex)
+VOID FASTCALL
+ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
    if (InterlockedDecrement(&FastMutex->Count) == 0)
      {
@@ -52,8 +52,8 @@ ExAcquireFastMutexUnsafe (PFAST_MUTEX	FastMutex)
    FastMutex->Owner = KeGetCurrentThread();
 }
 
-VOID FASTCALL EXPORTED 
-ExReleaseFastMutexUnsafe (PFAST_MUTEX	FastMutex)
+VOID FASTCALL
+ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
    assert(FastMutex->Owner == KeGetCurrentThread());
    if (InterlockedIncrement(&FastMutex->Count) <= 0)

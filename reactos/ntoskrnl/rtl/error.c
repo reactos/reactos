@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.1 2000/07/04 01:30:18 ekohl Exp $
+/* $Id: error.c,v 1.2 2001/06/20 13:00:53 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -20,12 +20,13 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <windows.h>
 #include <errors.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
+#define LOWORD(l) ((WORD)(l))
 
 /* TYPES *******************************************************************/
 
@@ -825,20 +826,17 @@ RPC_NT_SS_CONTEXT_MISMATCH           ERROR_INVALID_HANDLE
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
-STDCALL
-RtlAssert (
-	PVOID FailedAssertion,
-	PVOID FileName,
-	ULONG LineNumber,
-	PCHAR Message
-	)
+VOID STDCALL
+RtlAssert(PVOID FailedAssertion,
+	  PVOID FileName,
+	  ULONG LineNumber,
+	  PCHAR Message)
 {
-	DbgPrint ("Assertion \'%s\' failed at %s line %d: %s\n",
-	          (PCHAR)FailedAssertion,
-	          (PCHAR)FileName,
-	          LineNumber,
-	          Message);
+   DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+	    (PCHAR)FailedAssertion,
+	    (PCHAR)FileName,
+	    LineNumber,
+	    Message);
 }
 
 
@@ -859,9 +857,8 @@ RtlAssert (
  * REMARK
  *	RtlNtStatusToDosErrorNoTeb() does the real work.
  */
-DWORD
-STDCALL
-RtlNtStatusToDosErrorNoTeb (NTSTATUS Status)
+DWORD STDCALL
+RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 {
 	PERROR_TABLE Table = (PERROR_TABLE)ErrorTable;
 
@@ -918,19 +915,16 @@ RtlNtStatusToDosErrorNoTeb (NTSTATUS Status)
  * REMARK
  *	RtlNtStatusToDosErrorNoTeb() does the real work.
  */
-DWORD
-STDCALL
-RtlNtStatusToDosError (
-	NTSTATUS	Status
-	)
+DWORD STDCALL
+RtlNtStatusToDosError(IN NTSTATUS Status)
 {
-	PNT_TEB Teb = NtCurrentTeb ();
+   PNT_TEB Teb = NtCurrentTeb ();
 
-	if (NULL != Teb)
-	{
-		Teb->LastStatusValue = Status;
-	}
-	return RtlNtStatusToDosErrorNoTeb (Status);
+   if (NULL != Teb)
+     {
+	Teb->LastStatusValue = Status;
+     }
+   return RtlNtStatusToDosErrorNoTeb(Status);
 }
 
 
@@ -955,18 +949,15 @@ RtlNtStatusToDosError (
  * REVISIONS
  * 	1999-11-30 ea
  */
-INT
-STDCALL
-RtlNtStatusToPsxErrno (
-	IN	NTSTATUS	Status
-	)
+INT STDCALL
+RtlNtStatusToPsxErrno(IN NTSTATUS Status)
 {
 #if 0
-	switch (Status)
-	{
-	}
+   switch (Status)
+     {
+     }
 #endif
-	return -1; /* generic POSIX error */
+   return -1; /* generic POSIX error */
 }
 
 /* EOF */
