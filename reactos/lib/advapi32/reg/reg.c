@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.62 2004/11/11 11:21:30 ekohl Exp $
+/* $Id: reg.c,v 1.63 2004/11/22 16:11:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2475,6 +2475,7 @@ RegQueryValueExA (HKEY hKey,
 				(LPBYTE)ValueData.Buffer,
 				NULL == lpcbData ? NULL : &Length);
   DPRINT("ErrorCode %lu\n", ErrorCode);
+  RtlFreeUnicodeString(&ValueName);
 
   if (ErrorCode == ERROR_SUCCESS ||
       ErrorCode == ERROR_MORE_DATA)
