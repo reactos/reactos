@@ -191,24 +191,6 @@ void __stdcall _FinallyPretty
                
                
                
-#define ___END_DUAL                                                           \
-            } while (0);                                                      \
-                                                                              \
-            if (_ret > 1)                                                     \
-            {                                                                 \
-               _SEHLongJmp(*((_SEHJmpBuf_t*)_ret), 1);                        \
-               /* alternative: _SEHLongJmp(*_SEHFrame->SEH_JmpRetPtr, 1); */  \
-            }                                                                 \
-            break;                                                            \
-         }                                                                    \
-      }                                                                       \
-                                                                              \
-    } while (0);
-
-
-
-
-
 #define ___EXCEPT_SINGLE(filter)                                              \
          } while(0);                                                          \
                                                                               \
@@ -274,7 +256,7 @@ void __stdcall _FinallyPretty
 
 
 
-#define ___END_SINGLE                                                         \
+#define ___ENDTRY                                                             \
             } while (0);                                                      \
                                                                               \
             if (_ret > 1)                                                     \
@@ -304,11 +286,11 @@ void __stdcall _FinallyPretty
    #define __TRY2 ___TRY
    #define __EXCEPT2 ___EXCEPT_DUAL
    #define __FINALLY2 ___FINALLY_DUAL
-   #define __ENDTRY2 ___END_DUAL   
+   #define __ENDTRY2 __ENDTRY
    #define __TRY ___TRY   
    #define __EXCEPT ___EXCEPT_SINGLE
    #define __FINALLY ___FINALLY_SINGLE
-   #define __ENDTRY ___END_SINGLE
+   #define __ENDTRY ___ENDTRY
    #define __LEAVE break
 #endif
 
