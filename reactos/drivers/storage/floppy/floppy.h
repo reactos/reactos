@@ -40,7 +40,11 @@ int _cdecl swprintf(const WCHAR *, ...);
 /* missing from ros headers */
 /* TODO: fix this right */
 #ifndef KdPrint
+#if 0
 #define KdPrint(x) DbgPrint x
+#else
+#define KdPrint(x) 
+#endif
 #endif
 
 #ifndef ASSERT
