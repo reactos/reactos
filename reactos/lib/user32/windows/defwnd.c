@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.31 2003/03/12 06:02:59 rcampbell Exp $
+/* $Id: defwnd.c,v 1.32 2003/03/12 06:32:44 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -319,7 +319,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 {
     RECT r = *rect;
     char buffer[256];
-    
+
     /* Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
     PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
@@ -345,12 +345,12 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
       else
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
       hOldFont = SelectObject(hDC, hFont);
-
       SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
       SetBkMode( hDC, TRANSPARENT );
       
       /*FIXME:  Need verticle centering code and other fixups */
-      TextOutA(hDC, r.left, r.top+5, buffer, strlen(buffer));
+      TextOutA(hDC, r.left, (r.top / 2) + (((int) nclm.lfCaptionFont.lfHeight) / 2), buffer, strlen(buffer));
+      //TextOutA(hDC, r.left, (r.top / 2) + (6), buffer, strlen(buffer));
       DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
