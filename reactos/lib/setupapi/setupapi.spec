@@ -194,14 +194,14 @@
 @ stub CaptureStringArg
 @ stub CenterWindowRelativeToParent
 @ stub ConcatenatePaths
-@ stub DelayedMove
+@ stdcall DelayedMove(wstr wstr)
 @ stub DelimStringToMultiSz
 @ stub DestroyTextFileReadBuffer
 @ stdcall DoesUserHavePrivilege(wstr)
 @ stdcall DuplicateString(wstr)
 @ stdcall EnablePrivilege(wstr long)
 @ stub ExtensionPropSheetPageProc
-@ stub FileExists
+@ stdcall FileExists(wstr ptr)
 @ stub FreeStringArray
 @ stub GetCurrentDriverSigningPolicy
 @ stub GetNewInfName

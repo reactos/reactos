@@ -30,6 +30,9 @@
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
+#include "setupapi_private.h"
+
+
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 
@@ -457,4 +460,44 @@ BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
     CloseHandle(hToken);
 
     return bResult;
+}
+
+
+BOOL WINAPI DelayedMove(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName)
+{
+    if (OsVersionInfo.dwPlatformId != VER_PLATFORM_WIN32_NT)
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    return MoveFileExW(lpExistingFileName, lpNewFileName,
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_DELAY_UNTIL_REBOOT);
+}
+
+
+BOOL WINAPI FileExists(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFileFindData)
+{
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFind;
+    UINT uErrorMode;
+    DWORD dwError;
+
+    uErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+
+    hFind = FindFirstFileW(lpFileName, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        dwError = GetLastError();
+        SetErrorMode(uErrorMode);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    FindClose(hFind);
+
+    if (lpFileFindData)
+        memcpy(lpFileFindData, &FindData, sizeof(WIN32_FIND_DATAW));
+
+    return TRUE;
 }
