@@ -289,10 +289,6 @@ RegGetValueCount (HKEY Key);
 
 
 BOOL
-RegImportTextHive (PCHAR ChunkBase,
-		   U32 ChunkSize);
-
-BOOL
 RegImportBinaryHive (PCHAR ChunkBase,
 		     U32 ChunkSize);
 

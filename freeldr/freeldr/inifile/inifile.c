@@ -30,6 +30,9 @@ BOOL IniOpenSection(PUCHAR SectionName, U32* SectionId)
 
 	DbgPrint((DPRINT_INIFILE, "IniOpenSection() SectionName = %s\n", SectionName));
 
+	if (!IniFileSectionListHead)
+		return FALSE;
+
 	// Loop through each section and find the one they want
 	Section = (PINI_SECTION)RtlListGetHead((PLIST_ITEM)IniFileSectionListHead);
 	while (Section != NULL)

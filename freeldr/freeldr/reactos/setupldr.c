@@ -28,6 +28,7 @@
 #include <multiboot.h>
 #include <mm.h>
 #include <ui.h>
+#include <inffile.h>
 
 #include "registry.h"
 
@@ -238,6 +239,10 @@ VOID RunLoader(VOID)
   char *SourcePath;
   char *LoadOptions;
 
+  HINF InfHandle;
+  U32 ErrorLine;
+  INFCONTEXT InfContext;
+
   /* Setup multiboot information structure */
   mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
   mb_info.mem_lower = GetConventionalMemorySize();
@@ -298,9 +303,46 @@ VOID RunLoader(VOID)
   ((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
 
 
-  /* Set load options */
-//  LoadOptions = "/DEBUGPORT=COM1";
-  LoadOptions = "/DEBUGPORT=SCREEN";
+  /* Open boot drive */
+  if (!FsOpenVolume(BootDrive, BootPartition))
+    {
+#ifdef USE_UI
+      UiMessageBox("Failed to open boot drive.");
+#else
+      printf("Failed to open boot drive.");
+#endif
+      return;
+    }
+
+  /* Open 'txtsetup.sif' */
+  if (!InfOpenFile (&InfHandle,
+		    (BootDrive < 0x80) ? "\\txtsetup.sif" : "\\reactos\\txtsetup.sif",
+		    &ErrorLine))
+    {
+      printf("Failed to open 'txtsetup.sif'\n");
+      return;
+    }
+
+  /* Get load options */
+  if (!InfFindFirstLine (InfHandle,
+			 "SetupData",
+			 "OsLoadOptions",
+			 &InfContext))
+    {
+      printf("Failed to find 'SetupData/OsLoadOptions'\n");
+      return;
+    }
+
+  if (!InfGetDataField (&InfContext,
+			1,
+			&LoadOptions))
+    {
+      printf("Failed to get load options\n");
+      return;
+    }
+#if 0
+  printf("LoadOptions: '%s'\n", LoadOptions);
+#endif
 
   if (BootDrive < 0x80)
     {
@@ -320,18 +362,6 @@ VOID RunLoader(VOID)
 	  (unsigned int)BootDrive,
 	  SourcePath,
 	  LoadOptions);
-
-
-  /* Open boot drive */
-  if (!FsOpenVolume(BootDrive, BootPartition))
-    {
-#ifdef USE_UI
-      UiMessageBox("Failed to open boot drive.");
-#else
-      printf("Failed to open boot drive.");
-#endif
-      return;
-    }
 
   /* Load ntoskrnl.exe */
   if (!LoadKernel(SourcePath, "ntoskrnl.exe"))

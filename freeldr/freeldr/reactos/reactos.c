@@ -662,21 +662,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	FilePointer = FsOpenFile(szFileName);
 	if (FilePointer == NULL)
 	{
-		strcpy(szFileName, szBootPath);
-		strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM.HIV");
-
-		DbgPrint((DPRINT_REACTOS, "SystemHive: '%s'", szFileName));
-
-		FilePointer = FsOpenFile(szFileName);
-		if (FilePointer == NULL)
-		{
-			UiMessageBox("Could not find the System hive!");
-			return;
-		}
-		else
-		{
-			TextHive = TRUE;
-		}
+		UiMessageBox("Could not find the System hive!");
+		return;
 	}
 
 	/*
@@ -702,14 +689,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Import the loaded system hive
 	 */
-	if (TextHive)
-	{
-		RegImportTextHive(Base, Size);
-	}
-	else
-	{
-		RegImportBinaryHive(Base, Size);
-	}
+	RegImportBinaryHive(Base, Size);
 
 	/*
 	 * Initialize the 'CurrentControlSet' link

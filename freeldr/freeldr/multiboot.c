@@ -207,6 +207,7 @@ PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize)
 	return((PVOID)pModule->mod_start);
 }
 
+#if 0
 int GetBootPartition(char *OperatingSystemName)
 {
 	int		BootPartitionNumber = -1;
@@ -223,7 +224,7 @@ int GetBootPartition(char *OperatingSystemName)
 
 	return BootPartitionNumber;
 }
-
+#endif
 
 PVOID MultiBootCreateModule(char *ModuleName)
 {

@@ -233,9 +233,7 @@ UI_OBJS		=	tui.o		\
 				ui.o		\
 				gui.o
 
-REACTOS_OBJS=	reactos.o	\
-				arcname.o	\
-				reghive.o	\
+REACTOS_OBJS=	arcname.o	\
 				binhive.o	\
 				registry.o
 
@@ -255,6 +253,8 @@ INIFILE_OBJS=	inifile.o	\
 				ini_init.o	\
 				parse.o
 
+INFFILE_OBJS=	inffile.o
+
 VIDEO_OBJS	=	video.o		\
 				vidmode.o	\
 				fade.o		\
@@ -269,16 +269,18 @@ MATH_OBJS	=	libgcc2.o
 
 BASE_OBJS	=	freeldr.o \
 				debug.o \
-				drivemap.o \
 				multiboot.o	\
 				version.o
 
 FREELDR_OBJS=	bootmgr.o \
+				drivemap.o \
 				miscboot.o \
 				options.o \
 				linuxboot.o	\
 				oslist.o \
 				custom.o
+
+ROSLDR_OBJS =	reactos.o
 
 SETUPLDR_OBJS=	setupldr.o
 
@@ -291,23 +293,33 @@ COMMON_OBJS	=	$(ARCH_OBJS)		\
 				$(DISK_OBJS)		\
 				$(MM_OBJS)			\
 				$(CACHE_OBJS)		\
-				$(INIFILE_OBJS)		\
 				$(VIDEO_OBJS)		\
 				$(MATH_OBJS)		\
 				$(BASE_OBJS)
 
+SPECIAL_OBJS =	$(INIFILE_OBJS)		\
+				$(INFFILE_OBJS)		\
+				$(FREELDR_OBJS)		\
+				$(ROSLDR_OBJS)		\
+				$(SETUPLDR_OBJS)
+				
+
 F_OBJS		=	$(COMMON_OBJS)		\
+				$(INIFILE_OBJS)		\
+				$(ROSLDR_OBJS)		\
 				$(FREELDR_OBJS)
 
 S_OBJS		=	$(COMMON_OBJS)		\
+				$(INIFILE_OBJS)		\
+				$(INFFILE_OBJS)		\
 				$(SETUPLDR_OBJS)
+
 
 #############################################
 # ALL THE OBJECTS
 #
 ALL_OBJS	=	$(COMMON_OBJS)		\
-				$(FREELDR_OBJS)		\
-				$(SETUPLDR_OBJS)
+				$(SPECIAL_OBJS)
 
 
 #############################################
@@ -324,6 +336,7 @@ VPATH		=	$(SRCDIR)/					\
 				$(SRCDIR)/mm				\
 				$(SRCDIR)/cache				\
 				$(SRCDIR)/inifile			\
+				$(SRCDIR)/inffile			\
 				$(SRCDIR)/video				\
 				$(SRCDIR)/math				\
 				$(SRCDIR)/include
@@ -347,7 +360,6 @@ freeldr.sys : $(ALL_OBJS)
 
 setupldr.sys : $(ALL_OBJS)
 	@echo ===================================================== LINKING $@
-#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o setupldr.sys $(S_OBJS)
 	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(S_OBJS)
 	@$(NM) --numeric-sort setupldr.exe > setupldr.sym
 	@$(OBJCOPY) -O binary setupldr.exe setupldr.sys
