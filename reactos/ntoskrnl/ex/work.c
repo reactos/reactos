@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.23 2004/11/21 18:38:51 gdalsnes Exp $
+/* $Id: work.c,v 1.24 2004/12/24 02:09:12 gdalsnes Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -53,6 +53,25 @@ ExWorkerThreadEntryPoint(IN PVOID context)
    while (TRUE) 
    {
       current = KeRemoveQueue( (PKQUEUE)context, KernelMode, NULL );
+      
+      /* can't happend since we do a KernelMode wait (and we're a system thread) */
+      ASSERT((NTSTATUS)current != STATUS_USER_APC);
+      
+      /* this should never happend either, since we wait with NULL timeout,
+       * but there's a slight possibility that STATUS_TIMEOUT is returned
+       * at queue rundown in NT (unlikely) -Gunnar
+       */
+      ASSERT((NTSTATUS)current != STATUS_TIMEOUT);
+      
+      /* based on INVALID_WORK_QUEUE_ITEM bugcheck desc. */
+      if (current->Flink == NULL || current->Blink == NULL)
+      {
+         KeBugCheck(INVALID_WORK_QUEUE_ITEM);
+      }
+      
+      /* "reinitialize" item (same as done in ExInitializeWorkItem) */
+      current->Flink = NULL;
+      
       item = CONTAINING_RECORD( current, WORK_QUEUE_ITEM, List);
       item->WorkerRoutine(item->Parameter);
       
@@ -126,7 +145,7 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
 {
     ASSERT(WorkItem!=NULL);
     ASSERT_IRQL(DISPATCH_LEVEL);
-   
+    ASSERT(WorkItem->List.Flink == NULL);
    /*
     * Insert the item in the appropiate queue and wake up any thread
     * waiting for something to do
