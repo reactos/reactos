@@ -118,7 +118,6 @@ UINT WINAPI MsiGetSummaryInformationW(MSIHANDLE hDatabase,
     ERR("storage = %p propertysetstorage = %p\n", db->storage, psstg);
 
     grfMode = STGM_READ | STGM_SHARE_EXCLUSIVE;
-
     r = IPropertySetStorage_Open( psstg, &FMTID_SummaryInformation, grfMode, &ps );
     if( FAILED( r ) )
     {
