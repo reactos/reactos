@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.2 2004/05/14 12:11:52 ekohl Exp $
+/* $Id: rangelist.c,v 1.3 2004/05/15 14:26:08 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -124,29 +124,81 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
 		  IN PRTL_RANGE_LIST RangeList)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_ENTRY Current;
+  PRTL_RANGE_ENTRY NewEntry;
+  PLIST_ENTRY Entry;
+
+  CopyRangeList->Flags = RangeList->Flags;
+
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+
+      NewEntry = RtlAllocateHeap (RtlGetProcessHeap(),
+				  0,
+				  sizeof(RTL_RANGE_ENTRY));
+      if (NewEntry == NULL)
+	return STATUS_INSUFFICIENT_RESOURCES;
+
+      RtlCopyMemory (&NewEntry->Range,
+		     &Current->Range,
+		     sizeof(RTL_RANGE_ENTRY));
+
+      InsertTailList (&CopyRangeList->ListHead,
+		      &NewEntry->Entry);
+
+      CopyRangeList->Count++;
+
+      Entry = Entry->Flink;
+    }
+
+  CopyRangeList->Stamp++;
+
+  return STATUS_SUCCESS;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
 		       IN PVOID Owner)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+      if (Current->Range.Owner == Owner)
+	{
+	  RemoveEntryList (Entry);
+	  RtlFreeHeap (RtlGetProcessHeap(),
+		       0,
+		       Current);
+
+	  RangeList->Count--;
+	  RangeList->Stamp++;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return STATUS_SUCCESS;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
@@ -154,7 +206,32 @@ RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
 		IN ULONGLONG End,
 		IN PVOID Owner)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+      if (Current->Range.Start == Start &&
+	  Current->Range.End == End &&
+	  Current->Range.Owner == Owner)
+	{
+	  RemoveEntryList (Entry);
+
+	  RtlFreeHeap (RtlGetProcessHeap(),
+		       0,
+		       Current);
+
+	  RangeList->Count--;
+	  RangeList->Stamp++;
+	  return STATUS_SUCCESS;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return STATUS_RANGE_NOT_FOUND;
 }
 
 
@@ -184,27 +261,23 @@ VOID STDCALL
 RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
 {
   PLIST_ENTRY Entry;
-#ifndef NDEBUG
   PRTL_RANGE_ENTRY Current;
-#endif
 
   while (!IsListEmpty(&RangeList->ListHead))
     {
       Entry = RemoveHeadList (&RangeList->ListHead);
-
-#ifndef NDEBUG
       Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+
       DPRINT ("Range start: %I64u\n", Current->Range.Start);
       DPRINT ("Range end:   %I64u\n", Current->Range.End);
-#endif
 
       RtlFreeHeap (RtlGetProcessHeap(),
 		   0,
-		   Entry);
+		   Current);
     }
 
+  RangeList->Flags = 0;
   RangeList->Count = 0;
-  RangeList->Stamp++;
 }
 
 
@@ -304,6 +377,30 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
 		     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
 		     OUT PBOOLEAN Available)
 {
+#if 0
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+
+  *Available = TRUE;
+
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+      if (!((Current->Range.Start > End && Current->Range.End > End) ||
+	    (Current->Range.Start < Start && Current->Range.End < Start)))
+	{
+	  if (Callback != NULL)
+	    Callback (Context, &Current->Range);
+
+	  *Available = FALSE;
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  return STATUS_SUCCESS;
+#endif
   return STATUS_NOT_IMPLEMENTED;
 }
 
