@@ -19,6 +19,10 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 
+#if __GNUC__ >=3
+#pragma GCC system_header
+#endif
+
 #define KTRAP_FRAME_DEBUGEBP     (0x0)
 #define KTRAP_FRAME_DEBUGEIP     (0x4)
 #define KTRAP_FRAME_DEBUGARGMARK (0x8)

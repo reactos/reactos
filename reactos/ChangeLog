@@ -1,3 +1,72 @@
+2002-11-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/bus/acpi/ospm/osl.c (acpi_os_readable, acpi_os_writable):
+	Match prototypes.
+	* include/ascii.h (AbortSystemShutdownA): Correct prototype.
+	* include/debug.h (assert): Wrap in #ifndef assert.
+	* include/funcs.h (AbortSystemShutdown): Remove duplicate prototype.
+	* include/ddk/rtltypes.h: Move ...
+	* include/ntos/rtltypes.h: ... here.
+	* include/ddk/rtl.h: Move ...
+	* include/ntos/rtl.h: ... here.
+	* include/ddk/zwtypes.h: Move ...
+	* include/ntos/zwtypes.h: ... here.
+	* include/ddk/zw.h: Move ...
+	* include/ntos/zw.h: ... here.
+	| include/ddk/cmfuncs.h: Remove file; Move NtCreateKey to ntos/zw.h.
+	* include/ntos.h: #include ntos/rtltypes.h, ntos/rtl.h, ntos/zwtypes.h,
+	and ntos/zw.h.
+	* include/unicode.h: (AbortSystemShutdownW): Correct prototype.
+	* include/ddk/ntddk.h: Include headers at new location; Don't include
+	removed files.
+	* include/defines.h: Wrap definitions in w32api in #ifndef __USE_W32API.
+	* include/ntos/zwtypes.h: Ditto.
+	* include/napi/lpc.h: Ditto.
+	* include/napi/shared_data.h: Ditto.
+	* include/napi/teb.h: Ditto.
+	* include/napi/types.h: Ditto.
+	* include/ntdll/ldr.h: Ditto.
+	* include/ntdll/rtl.h: Ditto.
+	* include/ntos/console.h: Ditto.
+	* include/ntos/disk.h: Ditto.
+	* include/ntos/except.h: Ditto.
+	* include/ntos/file.h: Ditto.
+	* include/ntos/gditypes.h: Ditto.
+	* include/ntos/heap.h: Ditto.
+	* include/ntos/keyboard.h: Ditto.
+	* include/ntos/mm.h: Ditto.
+	* include/ntos/ntdef.h: Ditto.
+	* include/ntos/ps.h: Ditto.
+	* include/ntos/registry.h: Ditto.
+	* include/ntos/security.h: Ditto.
+	* include/ntos/synch.h: Ditto.
+	* include/ntos/time.h: Ditto.
+	* include/ntos/types.h: Ditto.
+	* include/ntos/port.h: Ditto.
+	* lib/advapi32/misc/shutdown.c (AbortSystemShutdownW,
+	AbortSystemShutdownA): Correct prototype.
+	* lib/advapi32/reg/reg.c: #include ntos.h.
+	* lib/advapi32/sec/misc.c: Ditto.
+	* lib/advapi32/sec/sid.c: Ditto.
+	* lib/advapi32/service/sctrl.c: Ditto.
+	* lib/advapi32/token/token.c: Ditto.
+	* lib/kernel32/misc/dllmain.c: Ditto.
+	* ntoskrnl/ex/napi.c: Ditto.
+	* ntoskrnl/rtl/i386/exception.c: Ditto.
+	* lib/advapi32/sec/ac.c: Ditto.
+	(FindFirstFreeAce, GetAce): Change PACE* to PACE_HEADER*.
+	* lib/advapi32/service/scm.c (EnumServicesStatusExA,
+	EnumServicesStatusExW, QueryServiceStatusEx): Correct prototype.
+	* lib/ntdll/rtl/ppb.c (RtlDestroyProcessParameters): Match prototype.
+	* ntoskrnl/dbg/errinfo.c (DbgGetErrorText): Use %08x, not %08lx.
+	* ntoskrnl/io/arcname.c (IoCreateSystemRootLink): Use %u, not %lu.
+	* ntoskrnl/ke/main.c (ExpInitializeExecutive): Ditto.
+	* (_main): Use %d, not %ld.
+	* ntoskrnl/include/internal/i386/ke.h: Add #pragma GCC system_header.
+	* include/ddk/ntdef.h (NTSYSAPI, NTAPI, NTKERNELAPI): Define to STDCALL;
+	Check if already defined.
+	* include/base.h (STDCALL, CDECL, CALLBACK, PASCAL): Move to ntos/types.h.
+
 2002-11-13  Rick Gaiser  <RickG81@Wanadoo.nl>
 
 	* drivers/bus/isapnp/isapnp.c (FindNextReadPort): Increment Port before

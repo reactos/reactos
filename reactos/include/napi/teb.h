@@ -4,34 +4,17 @@
 
 #include <napi/types.h>
 
+#ifdef __USE_W32API
+#include <ddk/ntapi.h>
+#endif /* !__USE_W32API */
+
+#ifndef __USE_W32API
+
 typedef struct _CLIENT_ID
 {
    HANDLE UniqueProcess;
    HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
-
-typedef struct _CURDIR
-{
-   UNICODE_STRING DosPath;
-   PVOID Handle;
-} CURDIR, *PCURDIR;
-
-typedef struct RTL_DRIVE_LETTER_CURDIR
-{
-   USHORT Flags;
-   USHORT Length;
-   ULONG TimeStamp;
-   UNICODE_STRING DosPath;
-} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
-
-typedef struct _PEB_FREE_BLOCK
-{
-   struct _PEB_FREE_BLOCK* Next;
-   ULONG Size;
-} PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
-
-/* RTL_USER_PROCESS_PARAMETERS.Flags */
-#define PPF_NORMALIZED	(1)
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS {
 	ULONG  AllocationSize;
@@ -63,6 +46,44 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS {
 	UNICODE_STRING  ShellInfo;
 	UNICODE_STRING  RuntimeInfo;
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
+
+typedef struct _NT_TIB {
+    struct _EXCEPTION_REGISTRATION_RECORD* ExceptionList;  // 00h
+    PVOID StackBase;                                       // 04h
+    PVOID StackLimit;                                      // 08h
+    PVOID SubSystemTib;                                    // 0Ch
+    union {
+        PVOID FiberData;                                   // 10h
+        ULONG Version;                                     // 10h
+    } Fib;
+    PVOID ArbitraryUserPointer;                            // 14h
+    struct _NT_TIB *Self;                                  // 18h
+} NT_TIB, *PNT_TIB;
+
+#endif /* !__USE_W32API */
+
+typedef struct _CURDIR
+{
+   UNICODE_STRING DosPath;
+   PVOID Handle;
+} CURDIR, *PCURDIR;
+
+typedef struct RTL_DRIVE_LETTER_CURDIR
+{
+   USHORT Flags;
+   USHORT Length;
+   ULONG TimeStamp;
+   UNICODE_STRING DosPath;
+} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+typedef struct _PEB_FREE_BLOCK
+{
+   struct _PEB_FREE_BLOCK* Next;
+   ULONG Size;
+} PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
+
+/* RTL_USER_PROCESS_PARAMETERS.Flags */
+#define PPF_NORMALIZED	(1)
 
 #define PEB_BASE        (0x7FFDF000)
 
@@ -130,21 +151,13 @@ typedef struct _PEB
    ULONG ImageSubSystemMajorVersion;                // B8h
    ULONG ImageSubSystemMinorVersion;                // C0h
    ULONG GdiHandleBuffer[0x22];                     // C4h
-} PEB, *PPEB;
+} PEB;
 
+#ifndef __USE_W32API
 
-typedef struct _NT_TIB {
-    struct _EXCEPTION_REGISTRATION_RECORD* ExceptionList;  // 00h
-    PVOID StackBase;                                       // 04h
-    PVOID StackLimit;                                      // 08h
-    PVOID SubSystemTib;                                    // 0Ch
-    union {
-        PVOID FiberData;                                   // 10h
-        ULONG Version;                                     // 10h
-    } Fib;
-    PVOID ArbitraryUserPointer;                            // 14h
-    struct _NT_TIB *Self;                                  // 18h
-} NT_TIB, *PNT_TIB;
+typedef PEB *PPEB;
+
+#endif /* !__USE_W32API */
 
 typedef struct _GDI_TEB_BATCH
 {
@@ -227,7 +240,5 @@ static inline PTEB NtCurrentTeb(VOID)
    
    return((PTEB)x);
 }
-
-
 
 #endif /* __INCLUDE_INTERNAL_TEB */

@@ -592,14 +592,14 @@ acpi_os_get_line(NATIVE_CHAR *buffer)
 	return 0;
 }
 
-BOOLEAN
+u8
 acpi_os_readable(void *ptr, u32 len)
 {
   /* Always readable */
 	return TRUE;
 }
 
-BOOLEAN
+u8
 acpi_os_writable(void *ptr, u32 len)
 {
   /* Always writable */

@@ -12,13 +12,13 @@
 #ifndef __INCLUDE_SYNCH_H
 #define __INCLUDE_SYNCH_H
 
+#ifndef __USE_W32API
 
 #define EVENT_ALL_ACCESS	(0x1f0003L)
-#define EVENT_QUERY_STATE	(1)
 #define EVENT_MODIFY_STATE	(2)
+#define EVENT_QUERY_STATE	(1)
 #define EVENT_PAIR_ALL_ACCESS	(0x1f0000L)
 #define MUTEX_ALL_ACCESS	(0x1f0001L)
-#define MUTEX_QUERY_STATE	(1)
 #define MUTANT_ALL_ACCESS	(0x1f0001L)
 #define MUTANT_QUERY_STATE	(1)
 #define SEMAPHORE_ALL_ACCESS	(0x1f0003L)
@@ -28,5 +28,8 @@
 #define TIMER_QUERY_STATE	(1)
 #define TIMER_MODIFY_STATE	(2)
 
+#endif /* !__USE_W32API */
+
+#define MUTEX_QUERY_STATE	(1)
 
 #endif /* __INCLUDE_SYNCH_H */

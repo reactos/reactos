@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.23 2002/09/08 10:22:43 chorns Exp $
+/* $Id: dllmain.c,v 1.24 2002/11/14 18:21:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,10 +11,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/csr.h>
-#include <ntdll/ldr.h>
-#include <windows.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <wchar.h>
 
 #define NDEBUG

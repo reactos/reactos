@@ -8,8 +8,9 @@
  *                  Created 01/11/98
  */
 
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
 
 WINBOOL
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.5 2002/09/08 10:22:36 chorns Exp $
+/* $Id: shutdown.c,v 1.6 2002/11/14 18:21:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,17 +11,18 @@
  */
 
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define USZ {0,0,0}
 
 /**********************************************************************
  *	AbortSystemShutdownW
  */
-BOOL
+WINBOOL
 STDCALL
 AbortSystemShutdownW(
-	LPWSTR	lpMachineName
+	LPCWSTR	lpMachineName
 	)
 {
 	NTSTATUS Status;
@@ -37,7 +38,7 @@ AbortSystemShutdownW(
 BOOL
 STDCALL
 AbortSystemShutdownA(
-	LPSTR	lpMachineName
+	LPCSTR	lpMachineName
 	)
 {
         ANSI_STRING     MachineNameA;

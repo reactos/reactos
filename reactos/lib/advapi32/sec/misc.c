@@ -1,8 +1,8 @@
 /*
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
 
 

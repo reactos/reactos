@@ -1,4 +1,4 @@
-/* $Id: registry.h,v 1.3 2002/06/19 22:30:29 ekohl Exp $
+/* $Id: registry.h,v 1.4 2002/11/14 18:21:03 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -12,6 +12,8 @@
 
 #ifndef __INCLUDE_NTOS_REGISTRY_H
 #define __INCLUDE_NTOS_REGISTRY_H
+
+#ifndef __USE_W32API
 
 /* Key access rights */
 #define KEY_QUERY_VALUE			(1)
@@ -51,5 +53,6 @@
 #define REG_FULL_RESOURCE_DESCRIPTOR	(9)
 #define REG_RESOURCE_REQUIREMENTS_LIST	(10)
 
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_NTOS_REGISTRY_H */

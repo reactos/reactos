@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.19 2002/11/10 13:44:48 robd Exp $
+/* $Id: reg.c,v 1.20 2002/11/14 18:21:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,6 +9,8 @@
  *                  Created 01/11/98
  *                  19990309 EA Stubs
  */
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #ifdef WIN32_REGDBG
 #include "cm_win32.h"

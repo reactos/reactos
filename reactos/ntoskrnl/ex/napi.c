@@ -8,8 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <napi/lpc.h>
+#include <ntos.h>
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

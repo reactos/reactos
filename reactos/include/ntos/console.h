@@ -14,15 +14,30 @@
 #define __INCLUDE_CONSOLE_H
 
 /* GetConsoleMode */
-#define ENABLE_LINE_INPUT	  (0x02)
-#define ENABLE_ECHO_INPUT	  (0x04)
-#define ENABLE_PROCESSED_INPUT	  (0x01)
-#define ENABLE_WINDOW_INPUT	  (0x08)
-#define ENABLE_MOUSE_INPUT	  (0x0f)
 #define CONSOLE_INPUT_MODE_VALID  (0x0f)
-#define ENABLE_PROCESSED_OUTPUT	  (0x01)
-#define ENABLE_WRAP_AT_EOL_OUTPUT (0x02)
 #define CONSOLE_OUTPUT_MODE_VALID (0x03)
+
+typedef struct _CONSOLE_FONT_INFO {
+  DWORD nFont;
+  COORD dwFontSize;
+} CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
+
+typedef struct _CONSOLE_SELECTION_INFO {
+  DWORD dwFlags;
+  COORD dwSelectionAnchor;
+  SMALL_RECT srSelection;
+} CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
+
+#ifndef __USE_W32API
+
+/* GetConsoleMode */
+#define ENABLE_LINE_INPUT			(0x02)
+#define ENABLE_ECHO_INPUT			(0x04)
+#define ENABLE_PROCESSED_INPUT		(0x01)
+#define ENABLE_WINDOW_INPUT			(0x08)
+#define ENABLE_MOUSE_INPUT			(0x0f)
+#define ENABLE_PROCESSED_OUTPUT		(0x01)
+#define ENABLE_WRAP_AT_EOL_OUTPUT	(0x02)
 
 typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
   COORD      dwSize;
@@ -37,18 +52,6 @@ typedef struct _CONSOLE_CURSOR_INFO {
   BOOL   bVisible;
 } CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO;
 
-typedef struct _CONSOLE_FONT_INFO {
-  DWORD nFont;
-  COORD dwFontSize;
-} CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
-
-typedef struct _CONSOLE_SELECTION_INFO {
-  DWORD dwFlags;
-  COORD dwSelectionAnchor;
-  SMALL_RECT srSelection;
-} CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_CONSOLE_H */
-
-
-

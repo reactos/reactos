@@ -2251,7 +2251,7 @@ InitiateSystemShutdownW(
 WINBOOL
 STDCALL
 AbortSystemShutdownW(
-    LPWSTR lpMachineName
+    LPCWSTR lpMachineName
     );
 
 LONG

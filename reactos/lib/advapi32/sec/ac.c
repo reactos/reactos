@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.4 2002/09/08 10:22:37 chorns Exp $
+/* $Id: ac.c,v 1.5 2002/11/14 18:21:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,8 +6,8 @@
  * PURPOSE:         ACL/ACE functions
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
 
 
@@ -346,7 +346,7 @@ FindFirstFreeAce (
 	)
 {
 	return RtlFirstFreeAce (pAcl,
-	                        (PACE*)pAce);
+	                        (PACE_HEADER*)pAce);
 }
 
 
@@ -362,7 +362,7 @@ GetAce (
 
 	Status = RtlGetAce (pAcl,
 	                    dwAceIndex,
-	                    (PACE*)pAce);
+	                    (PACE_HEADER*)pAce);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastError (RtlNtStatusToDosError (Status));

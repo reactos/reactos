@@ -1,4 +1,4 @@
-/* $Id: cdrom.h,v 1.3 2002/09/17 20:35:22 hbirr Exp $
+/* $Id: cdrom.h,v 1.4 2002/11/14 18:21:03 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel

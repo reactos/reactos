@@ -56,17 +56,6 @@ typedef long LONG;
 
 #define CONST const
 
-#ifdef i386
-#define STDCALL     __attribute__ ((stdcall))
-#define CDECL       __attribute((cdecl))
-#define CALLBACK    WINAPI
-#define PASCAL      WINAPI
-#else
-#define STDCALL
-#define CDECL
-#define CALLBACK
-#define PASCAL
-#endif
 #define WINAPI      STDCALL
 #define APIENTRY    STDCALL
 #define WINGDIAPI

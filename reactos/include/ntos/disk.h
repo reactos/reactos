@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.11 2002/09/08 10:22:32 chorns Exp $
+/* $Id: disk.h,v 1.12 2002/11/14 18:21:03 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -134,13 +134,6 @@ typedef struct _PARTITION_INFORMATION
   BOOLEAN RewritePartition;
 } PARTITION_INFORMATION, *PPARTITION_INFORMATION;
 
-typedef struct _DRIVE_LAYOUT_INFORMATION
-{
-  DWORD PartitionCount;
-  DWORD Signature;
-  PARTITION_INFORMATION PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
-
 typedef struct _SET_PARTITION_INFORMATION
 {
   ULONG PartitionType;
@@ -154,6 +147,17 @@ typedef struct _DISK_GEOMETRY
   DWORD SectorsPerTrack;
   DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
+
+#ifndef __USE_W32API
+
+typedef struct _DRIVE_LAYOUT_INFORMATION
+{
+  DWORD PartitionCount;
+  DWORD Signature;
+  PARTITION_INFORMATION PartitionEntry[1];
+} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
+
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_DISK_H */
 

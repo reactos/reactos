@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.31 2002/09/08 10:47:44 chorns Exp $
+/* $Id: ntddk.h,v 1.32 2002/11/14 18:21:02 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -57,17 +57,16 @@ extern "C"
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
 #include <ddk/ldrtypes.h>
-#include <ddk/zwtypes.h>
+#include <ntos/zwtypes.h>
 #include <ddk/ioctrl.h>
-#include <ddk/rtltypes.h>
+#include <ntos/rtltypes.h>
 #include <ddk/haltypes.h>
 #include <napi/shared_data.h>
 
-#include <ddk/zw.h>
-#include <ddk/rtl.h>
+#include <ntos/zw.h>
+#include <ntos/rtl.h>
 #include <ddk/dbgfuncs.h>
 #include <ddk/ldrfuncs.h>
-#include <ddk/cmfuncs.h>
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
 #include <ddk/exfuncs.h>
 #include <ddk/halfuncs.h>

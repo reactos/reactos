@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.16 2002/10/20 11:56:00 chorns Exp $
+/* $Id: ppb.c,v 1.17 2002/11/14 18:21:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -235,12 +235,12 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    return STATUS_SUCCESS;
 }
 
-VOID STDCALL
+NTSTATUS STDCALL
 RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
    ULONG RegionSize = 0;
 
-   NtFreeVirtualMemory (NtCurrentProcess (),
+   return NtFreeVirtualMemory (NtCurrentProcess (),
 			(PVOID)ProcessParameters,
 			&RegionSize,
 			MEM_RELEASE);

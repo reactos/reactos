@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.6 2002/09/08 10:22:37 chorns Exp $
+/* $Id: sid.c,v 1.7 2002/11/14 18:21:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,8 +6,8 @@
  * PURPOSE:         Security ID functions
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
 
 

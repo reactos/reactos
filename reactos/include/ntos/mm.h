@@ -13,12 +13,8 @@
 #ifndef __INCLUDE_MM_H
 #define __INCLUDE_MM_H
 
-#if 0
-#define SEC_COMMIT	(134217728)
-#define SEC_IMAGE	(16777216)
-#define SEC_NOCACHE	(268435456)
-#define SEC_RESERVE	(67108864)
-#else
+#ifndef __USE_W32API
+
 #define SEC_BASED       (0x00200000)
 #define SEC_NO_CHANGE   (0x00400000)
 #define SEC_IMAGE       (0x01000000)
@@ -26,7 +22,6 @@
 #define SEC_RESERVE     (0x04000000)
 #define SEC_COMMIT      (0x08000000)
 #define SEC_NOCACHE     (0x10000000)
-#endif
 #define PAGE_READONLY	(2)
 #define PAGE_READWRITE	(4)
 #define PAGE_WRITECOPY	(8)
@@ -58,6 +53,10 @@
 #define FILE_MAP_READ	(4)
 #define FILE_MAP_WRITE	(2)
 #define FILE_MAP_COPY	(1)
+#else /* __USE_W32API */
 
+#include <ddk/ntifs.h>
+
+#endif /* __USE_W32API */
 
 #endif /* __INCLUDE_MM_H */

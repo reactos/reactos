@@ -23,10 +23,12 @@
 #define CHECKED
 #endif
 
+#ifndef assert
 #ifndef NASSERT
 #define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
 #else
 #define assert(x)
+#endif
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);

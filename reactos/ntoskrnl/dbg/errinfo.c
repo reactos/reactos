@@ -257,11 +257,11 @@ DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags)
     {
       if (Flags & DBG_GET_SHOW_FACILITY)
         {
-          sprintf(NumBuf, "%08lx", ErrorCode);
+          sprintf(NumBuf, "%08x", ErrorCode);
           strcat(TempBuf, NumBuf);
           strcat(TempBuf, " ");
         }
-      sprintf(NumBuf, "Unknown Message #%08lx", ErrorCode);
+      sprintf(NumBuf, "Unknown Message #%08x", ErrorCode);
       strcat(TempBuf, NumBuf);
     }
   RtlInitAnsiString(&AnsiString, TempBuf);

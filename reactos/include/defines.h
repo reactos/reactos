@@ -4718,6 +4718,18 @@ DECLARE_HANDLE(HANDLE);
 #endif
 
 
+#ifndef __USE_W32API
+
+typedef enum _SC_STATUS_TYPE {
+  SC_STATUS_PROCESS_INFO = 0
+} SC_STATUS_TYPE;
+
+typedef enum _SC_ENUM_TYPE {
+  SC_ENUM_PROCESS_INFO = 0
+} SC_ENUM_TYPE;
+
+#endif /* !__USE_W32API */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -865,7 +865,6 @@ int STDCALL AbortDoc(HDC);
 WINBOOL STDCALL AbortPath(HDC);
 WINBOOL STDCALL AbortPrinter(HANDLE);
 WINBOOL CALLBACK AbortProc(HDC, int);
-WINBOOL STDCALL AbortSystemShutdown(LPTSTR);
 WINBOOL STDCALL AccessCheck(
 		    PSECURITY_DESCRIPTOR  pSecurityDescriptor,
 		    HANDLE  ClientToken,

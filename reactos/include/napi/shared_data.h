@@ -15,9 +15,9 @@ typedef struct _KUSER_SHARED_DATA
 {
    volatile ULONG TickCountLow;
    ULONG TickCountMultiplier;
-   volatile KSYSTEM_TIME InterruptTime;
-   volatile KSYSTEM_TIME SystemTime;
-   volatile KSYSTEM_TIME TimeZoneBias;
+   volatile ULARGE_INTEGER InterruptTime;
+   volatile ULARGE_INTEGER SystemTime;
+   volatile ULARGE_INTEGER TimeZoneBias;
    USHORT ImageNumberLow;
    USHORT ImageNumberHigh;
    WCHAR NtSystemRoot[260];
@@ -61,7 +61,9 @@ typedef struct _KUSER_SHARED_DATA
 #define KI_USER_SHARED_DATA	(0xFFDF0000)
 #define SharedUserData		((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 #else
+#ifndef __USE_W32API
 #define SharedUserData		((KUSER_SHARED_DATA * const)USER_SHARED_DATA)
+#endif /* !__USE_W32API */
 #endif
 
 

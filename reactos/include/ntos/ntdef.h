@@ -11,6 +11,12 @@
 #ifndef __INCLUDE_NTDEF_H
 #define __INCLUDE_NTDEF_H
 
+#define PACKED __attribute__((packed))
+
+#define EX_MAXIMUM_WAIT_OBJECTS (64)
+
+#ifndef __USE_W32API
+
 #define ANYSIZE_ARRAY	(1)
 
 #define DELETE		(0x00010000L)
@@ -20,10 +26,8 @@
 #define DUPLICATE_CLOSE_SOURCE	(1)
 #define DUPLICATE_SAME_ACCESS	(2)
 
-#define PACKED __attribute__((packed))
-
 #define INVALID_HANDLE_VALUE	((HANDLE)-1)
 
-#define EX_MAXIMUM_WAIT_OBJECTS (64)
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_NTDEF_H */

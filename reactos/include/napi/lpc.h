@@ -1,9 +1,15 @@
 #ifndef __INCLUDE_NAPI_LPC_H
 #define __INCLUDE_NAPI_LPC_H
 
+#ifdef __USE_W32API
+#include <ddk/ntapi.h>
+#endif /* !__USE_W32API */
+
 #include <ntos/security.h>
 
 #define MAX_MESSAGE_DATA   (0x130)
+
+#ifndef __USE_W32API
 
 typedef enum 
 {
@@ -51,6 +57,8 @@ typedef struct _LPC_MESSAGE_HEADER
    ULONG MessageId;
    ULONG SharedSectionSize;
 } LPC_MESSAGE, *PLPC_MESSAGE;
+
+#endif /* !__USE_W32API */
 
 typedef struct _LPC_TERMINATION_MESSAGE
 {

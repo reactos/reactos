@@ -13,6 +13,21 @@
 #ifndef __INCLUDE_PS_H
 #define __INCLUDE_PS_H
 
+#define THREAD_READ			(0x020048L)
+#define THREAD_WRITE			(0x020037L)
+#define THREAD_EXECUTE			(0x120000L)
+
+#define PROCESS_READ			(0x020410L)
+#define PROCESS_WRITE			(0x020bebL)
+#define PROCESS_EXECUTE			(0x120000L)
+
+/* Thread priorities */
+#define THREAD_PRIORITY_BELOW_NORMAL	(-1)
+#define THREAD_PRIORITY_IDLE	(-15)
+#define THREAD_PRIORITY_LOWEST	(-2)
+
+#ifndef __USE_W32API
+
 /* Thread access rights */
 #define THREAD_TERMINATE		(0x0001L)
 #define THREAD_SUSPEND_RESUME		(0x0002L)
@@ -25,9 +40,6 @@
 #define THREAD_DIRECT_IMPERSONATION	(0x0200L)
 
 #define THREAD_ALL_ACCESS		(0x1f03ffL)
-#define THREAD_READ			(0x020048L)
-#define THREAD_WRITE			(0x020037L)
-#define THREAD_EXECUTE			(0x120000L)
 
 /* Process access rights */
 #define PROCESS_TERMINATE		(0x0001L)
@@ -43,16 +55,10 @@
 #define PROCESS_QUERY_INFORMATION	(0x0400L)
 
 #define PROCESS_ALL_ACCESS		(0x1f0fffL)
-#define PROCESS_READ			(0x020410L)
-#define PROCESS_WRITE			(0x020bebL)
-#define PROCESS_EXECUTE			(0x120000L)
 
 /* Thread priorities */
 #define THREAD_PRIORITY_ABOVE_NORMAL	(1)
-#define THREAD_PRIORITY_BELOW_NORMAL	(-1)
 #define THREAD_PRIORITY_HIGHEST	(2)
-#define THREAD_PRIORITY_IDLE	(-15)
-#define THREAD_PRIORITY_LOWEST	(-2)
 #define THREAD_PRIORITY_NORMAL	(0)
 #define THREAD_PRIORITY_TIME_CRITICAL	(15)
 #define THREAD_PRIORITY_ERROR_RETURN	(2147483647)
@@ -74,5 +80,7 @@
 
 /* ResumeThread / SuspendThread */
 #define MAXIMUM_SUSPEND_COUNT	(0x7f)
+
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_PS_H */

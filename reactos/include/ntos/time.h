@@ -14,6 +14,8 @@
 
 #include <ntos/types.h>
 
+#ifndef __USE_W32API
+
 typedef struct _SYSTEMTIME
 {
    WORD wYear;
@@ -36,5 +38,14 @@ typedef struct _TIME_ZONE_INFORMATION
    SYSTEMTIME DaylightDate;
    LONG DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
+
+#else /* __USE_W32API */
+
+#include <ddk/ntapi.h>
+
+typedef LPTIME_ZONE_INFORMATION PTIME_ZONE_INFORMATION;
+
+#endif /* __USE_W32API */
+
 
 #endif /* __INCLUDE_NTOS_TIME_H */

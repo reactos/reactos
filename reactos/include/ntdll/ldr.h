@@ -3,6 +3,7 @@
 
 #include <ntos/kdbgsyms.h>
 #include <roscfg.h>
+#include <napi/teb.h>
 
 typedef NTSTATUS STDCALL (*PEPFUNC)(PPEB);
 

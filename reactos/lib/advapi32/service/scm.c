@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.12 2002/09/08 10:22:37 chorns Exp $
+/* $Id: scm.c,v 1.13 2002/11/14 18:21:04 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,8 +12,10 @@
 
 /* INCLUDES ******************************************************************/
 
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
+#include <tchar.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -245,7 +247,17 @@ EnumServicesStatusA (
  */
 BOOL
 STDCALL
-EnumServicesStatusExA(VOID)
+EnumServicesStatusExA(SC_HANDLE  hSCManager,
+  SC_ENUM_TYPE  InfoLevel,
+  DWORD  dwServiceType,
+  DWORD  dwServiceState,
+  LPBYTE  lpServices,
+  DWORD  cbBufSize,
+  LPDWORD  pcbBytesNeeded,
+  LPDWORD  lpServicesReturned,
+  LPDWORD  lpResumeHandle,
+  LPCSTR  pszGroupName
+  )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -257,7 +269,17 @@ EnumServicesStatusExA(VOID)
  */
 BOOL
 STDCALL
-EnumServicesStatusExW(VOID)
+EnumServicesStatusExW(SC_HANDLE  hSCManager,
+  SC_ENUM_TYPE  InfoLevel,
+  DWORD  dwServiceType,
+  DWORD  dwServiceState,
+  LPBYTE  lpServices,
+  DWORD  cbBufSize,
+  LPDWORD  pcbBytesNeeded,
+  LPDWORD  lpServicesReturned,
+  LPDWORD  lpResumeHandle,
+  LPCWSTR  pszGroupName
+  )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -691,7 +713,12 @@ QueryServiceStatus(
  */
 BOOL
 STDCALL
-QueryServiceStatusEx(VOID)
+QueryServiceStatusEx(SC_HANDLE  hService,
+  SC_STATUS_TYPE  InfoLevel,
+  LPBYTE  lpBuffer,
+  DWORD  cbBufSize,
+  LPDWORD  pcbBytesNeeded
+  )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;

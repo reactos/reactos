@@ -2415,7 +2415,7 @@ InitiateSystemShutdownA(
 WINBOOL
 STDCALL
 AbortSystemShutdownA(
-    LPSTR lpMachineName
+    LPCSTR lpMachineName
     );
 
 int

@@ -11,6 +11,8 @@
 #ifndef __INCLUDE_NTOS_GDITYPES_H
 #define __INCLUDE_NTOS_GDITYPES_H
 
+#ifndef __USE_W32API
+
 #define CCHDEVICENAME	(32)
 #define CCHFORMNAME	(32)
 
@@ -85,6 +87,8 @@ typedef struct _devicemodeW
 	DWORD dmICCManufacturer;
 	DWORD dmICCModel;
 } DEVMODEW,*LPDEVMODEW,*PDEVMODEW;
+
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_NTOS_GDITYPES_H */
 

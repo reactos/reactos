@@ -1,16 +1,21 @@
-/* $Id: rtl.h,v 1.35 2002/09/08 10:22:32 chorns Exp $
+/* $Id: rtl.h,v 1.36 2002/11/14 18:21:03 chorns Exp $
  *
  */
 
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
 
+#include <ntos/types.h>
 #include <napi/teb.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+
+#ifndef __USE_W32API
 
 typedef struct _DEBUG_BUFFER
 {
@@ -51,6 +56,9 @@ typedef struct _CRITICAL_SECTION {
     HANDLE LockSemaphore;
     DWORD Reserved;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
+
+#endif /* !__USE_W32API */
+
 
 typedef struct _RTL_PROCESS_INFO
 {
@@ -374,7 +382,7 @@ RtlDeNormalizeProcessParams (
 	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
-VOID
+NTSTATUS
 STDCALL
 RtlDestroyProcessParameters (
 	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
@@ -569,6 +577,10 @@ RtlpNtSetValueKey (
 	);
 
 #ifndef __NTDRIVER__
+
+#ifndef __INTERLOCKED_DECLARED
+#define __INTERLOCKED_DECLARED
+
 LONG
 STDCALL
 InterlockedIncrement (
@@ -603,6 +615,7 @@ InterlockedExchangeAdd (
 	LONG Increment
 	);
 
+#endif /* __INTERLOCKED_DECLARED */
 
 #endif /* __NTDRIVER__ */
 
