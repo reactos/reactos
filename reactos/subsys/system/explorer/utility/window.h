@@ -448,3 +448,26 @@ protected:
 	HICON	_hIcon;
 	bool	_flat;
 };
+
+
+struct ToolTip : public WindowHandle
+{
+	typedef WindowHandle super;
+
+	ToolTip(HWND owner);
+
+	void activate(BOOL active=TRUE)
+	{
+		SendMessage(_hwnd, TTM_ACTIVATE, active, 0);
+	}
+
+	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK)
+	{
+		TOOLINFO ti = {
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool, 0, 0, 0, 0, 0, 0, 0
+		};
+		ti.lpszText = (LPTSTR) txt;
+
+		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	}
+};

@@ -29,6 +29,7 @@
 #include "../utility/utility.h"
 
 #include "../explorer.h"
+#include "../globals.h"
 
 #include "traynotify.h"
 
@@ -277,10 +278,13 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 
 
 ClockWindow::ClockWindow(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	_tooltip(hwnd)
 {
 	*_time = _T('\0');
 	FormatTime();
+
+	_tooltip.add(_hwnd, _hwnd);
 }
 
 HWND ClockWindow::Create(HWND hwndParent)
@@ -301,6 +305,23 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+int ClockWindow::Notify(int id, NMHDR* pnmh)
+{
+	if (pnmh->code == TTN_GETDISPINFO) {
+		LPNMTTDISPINFO pdi = (LPNMTTDISPINFO)pnmh;
+
+		SYSTEMTIME systime;
+		TCHAR buffer[64];
+
+		GetLocalTime(&systime);
+		GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systime, NULL, buffer, 64);
+
+		_tcscpy(pdi->szText, buffer);
 	}
 
 	return 0;

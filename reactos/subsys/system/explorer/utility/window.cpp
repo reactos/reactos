@@ -653,3 +653,12 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 		DrawFocusRect(dis->hDC, &rect);
 	}
 }
+
+
+ToolTip::ToolTip(HWND owner)
+ :	super(CreateWindowEx(WS_EX_NOPARENTNOTIFY, TOOLTIPS_CLASS, 0,
+				 TTS_ALWAYSTIP, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
+				 owner, 0, g_Globals._hInstance, 0))
+{
+	activate();
+}

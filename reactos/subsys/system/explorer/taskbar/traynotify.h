@@ -114,9 +114,11 @@ struct ClockWindow : public Window
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Notify(int id, NMHDR* pnmh);
 
 	bool	FormatTime();
 	void	Paint();
 
 	TCHAR	_time[16];
+	ToolTip	_tooltip;
 };
