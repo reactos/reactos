@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2001/06/12 17:35:45 chorns Exp $
+/* $Id: stubs.c,v 1.4 2001/06/18 03:05:54 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2946,17 +2946,6 @@ LoadMenuW(
   LPCWSTR lpMenuName)
 {
   return (HMENU)0;
-}
-
-int
-STDCALL
-LoadStringA(
-  HINSTANCE hInstance,
-  UINT uID,
-  LPSTR lpBuffer,
-  int nBufferMax)
-{
-  return 0;
 }
 
 int

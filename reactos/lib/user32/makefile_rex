@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.17 2001/06/12 17:35:43 chorns Exp $
+# $Id: makefile_rex,v 1.18 2001/06/18 03:05:54 phreak Exp $
 #
 # ReactOS Operating System
 #
@@ -16,7 +16,8 @@ MISC_OBJECTS = \
 	misc/sprintf.o  \
 	misc/stubs.o    \
 	misc/win32k.o   \
-	misc/winsta.o
+	misc/winsta.o   \
+	misc/resources.o
 
 WINDOWS_OBJECTS = \
 	windows/class.o    \
