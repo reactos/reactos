@@ -24,7 +24,7 @@ null.sys     = 3
 serial.sys   = 3
 vgaddi.dll   = 3
 vgamp.sys    = 3
-vidport.sys  = 3
+videoprt.sys = 3
 
 cdfs.sys     = 3
 fs_rec.sys   = 3

@@ -54,7 +54,7 @@ copy /Y drivers\dd\null\null.sys %BOOTCD_DIR%\disk\install
 copy /Y drivers\dd\serial\serial.sys %BOOTCD_DIR%\disk\install
 copy /Y drivers\dd\vga\display\vgaddi.dll %BOOTCD_DIR%\disk\install
 copy /Y drivers\dd\vga\miniport\vgamp.sys %BOOTCD_DIR%\disk\install
-copy /Y drivers\dd\vidport\vidport.sys %BOOTCD_DIR%\disk\install
+copy /Y drivers\dd\videoprt\videoprt.sys %BOOTCD_DIR%\disk\install
 
 copy /Y drivers\fs\cdfs\cdfs.sys %BOOTCD_DIR%\disk\install
 copy /Y drivers\fs\fs_rec\fs_rec.sys %BOOTCD_DIR%\disk\install

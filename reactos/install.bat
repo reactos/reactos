@@ -51,7 +51,7 @@ copy drivers\dd\serial\serial.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\serenum\serenum.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vga\miniport\vgamp.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vga\display\vgaddi.dll %ROS_INSTALL%\system32\drivers
-copy drivers\dd\vidport\vidport.sys %ROS_INSTALL%\system32\drivers
+copy drivers\dd\videoprt\videoprt.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\afd\afd.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\dd\ne2000\ne2000.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\dd\miniport\nscirda\nscirda.sys %ROS_INSTALL%\system32\drivers
