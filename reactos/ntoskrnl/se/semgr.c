@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.50 2004/11/12 12:05:05 ekohl Exp $
+/* $Id: semgr.c,v 1.51 2004/11/21 18:35:05 gdalsnes Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -227,6 +227,7 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL
 SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&SepSubjectContextLock, TRUE);
 }
 
@@ -238,6 +239,7 @@ VOID STDCALL
 SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
   ExReleaseResourceLite(&SepSubjectContextLock);
+  KeLeaveCriticalRegion();
 }
 
 
