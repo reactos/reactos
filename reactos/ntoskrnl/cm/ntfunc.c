@@ -822,7 +822,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
     {
       ObDereferenceObject(Object);
-      return(STATUS_UNSUCCESSFUL);
+      return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
   /* Fail if the key has been deleted */
