@@ -39,7 +39,6 @@
 #include "shlguid.h"
 #include "winerror.h"
 #include "winnls.h"
-#include "winternl.h"
 #include "undocshell.h"
 #include "shell32_main.h"
 #include "shellapi.h"
@@ -124,7 +123,7 @@ BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR pa
 	      flag = SHGDN_INFOLDER;
 	      break;
 	    default:
-	      FIXME("Unknown type parameter = %lx", type);
+	      FIXME("Unknown type parameter = %lx\n", type);
 	      flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
 	      break;
 	  }
@@ -1040,35 +1039,24 @@ static HRESULT WINAPI _ILParsePathW(LPCWSTR path, LPWIN32_FIND_DATAW lpFindFile,
  */
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
 {
-	LPITEMIDLIST pidl = NULL;
-
-#if 0    /* don't link directly to ntdll */
-	UNICODE_STRING wPath;
-
-	RtlCreateUnicodeStringFromAsciiz(&wPath, lpszPath);
-	_ILParsePathW(wPath.Buffer, NULL, TRUE, &pidl, NULL);
-	RtlFreeUnicodeString(&wPath);
-#else
-    LPWSTR wPath;
+    LPITEMIDLIST pidl = NULL;
+    LPWSTR wPath = NULL;
     int len;
 
-	TRACE("%s\n", debugstr_a(lpszPath));
+    TRACE("%s\n", debugstr_a(lpszPath));
 
-	if (lpszPath) {
-		len = MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, NULL, 0);
-		wPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-		MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, wPath, len);
-	} else
-		wPath = NULL;
+    if (lpszPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, NULL, 0);
+        wPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, wPath, len);
+    }
 
     _ILParsePathW(wPath, NULL, TRUE, &pidl, NULL);
 
-	if (wPath)
-		HeapFree(GetProcessHeap(), 0, wPath);
-#endif
-
-	TRACE("%s %p\n", debugstr_a(lpszPath), pidl);
-	return pidl;
+    if (wPath) HeapFree(GetProcessHeap(), 0, wPath);
+    TRACE("%s %p\n", debugstr_a(lpszPath), pidl);
+    return pidl;
 }
 
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathW(LPCWSTR lpszPath)

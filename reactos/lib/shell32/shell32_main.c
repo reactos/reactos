@@ -30,7 +30,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "winreg.h"
-#include "winternl.h"
 #include "dlgs.h"
 #include "shellapi.h"
 #include "winuser.h"
@@ -799,42 +798,26 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
 BOOL WINAPI ShellAboutA( HWND hWnd, LPCSTR szApp, LPCSTR szOtherStuff, HICON hIcon )
 {
     BOOL ret;
-
-#if 0    /* don't link directly to ntdll */
-    UNICODE_STRING appW, otherW;
-
-    RtlCreateUnicodeStringFromAsciiz( &appW, szApp );
-    RtlCreateUnicodeStringFromAsciiz( &otherW, szOtherStuff );
-    ret = ShellAboutW( hWnd, appW.Buffer, otherW.Buffer, hIcon );
-    RtlFreeUnicodeString( &appW );
-    RtlFreeUnicodeString( &otherW );
-#else
-    LPWSTR appW, otherW;
+    LPWSTR appW = NULL, otherW = NULL;
     int len;
 
-	if (szApp) {
-		len = MultiByteToWideChar(CP_ACP, 0, szApp, -1, NULL, 0);
-		appW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-		MultiByteToWideChar(CP_ACP, 0, szApp, -1, appW, len);
-	} else
-		appW = NULL;
-
-	if (szOtherStuff) {
-		len = MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, NULL, 0);
-		otherW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-		MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, otherW, len);
-	} else
-		otherW = NULL;
+    if (szApp)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, szApp, -1, NULL, 0);
+        appW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, szApp, -1, appW, len);
+    }
+    if (szOtherStuff)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, NULL, 0);
+        otherW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, otherW, len);
+    }
 
     ret = ShellAboutW(hWnd, appW, otherW, hIcon);
 
-	if (otherW)
-		HeapFree(GetProcessHeap(), 0, otherW);
-
-	if (appW)
-		HeapFree(GetProcessHeap(), 0, appW);
-#endif
-
+    if (otherW) HeapFree(GetProcessHeap(), 0, otherW);
+    if (appW) HeapFree(GetProcessHeap(), 0, appW);
     return ret;
 }
 
@@ -909,8 +892,6 @@ HRESULT WINAPI SHELL32_DllGetVersion (DLLVERSIONINFO *pdvi)
  * all are once per process
  *
  */
-void	(WINAPI *pDLLInitComctl)(LPVOID);
-
 HINSTANCE	shell32_hInstance = 0;
 HIMAGELIST	ShellSmallIconList = 0;
 HIMAGELIST	ShellBigIconList = 0;
@@ -931,31 +912,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	{
 	  case DLL_PROCESS_ATTACH:
 	    shell32_hInstance = hinstDLL;
-
-		/* get full path to this DLL for IExtractIconW_fnGetIconLocation() */
-		GetModuleFileNameW(hinstDLL, swShell32Name, MAX_PATH);
-		WideCharToMultiByte(CP_ACP, 0, swShell32Name, -1, sShell32Name, MAX_PATH, NULL, NULL);
-
-#if 0 /* why not directly link to InitCommonControlsEx()? */
-	    hComctl32 = GetModuleHandleA("COMCTL32.DLL");
 	    DisableThreadLibraryCalls(shell32_hInstance);
 
-	    if (!hComctl32)
-	    {
-	      ERR("P A N I C SHELL32 loading failed\n");
-	      return FALSE;
-	    }
+	    /* get full path to this DLL for IExtractIconW_fnGetIconLocation() */
+	    GetModuleFileNameW(hinstDLL, swShell32Name, MAX_PATH);
+	    WideCharToMultiByte(CP_ACP, 0, swShell32Name, -1, sShell32Name, MAX_PATH, NULL, NULL);
 
-	    /* comctl32 */
-	    pDLLInitComctl = (void*)GetProcAddress(hComctl32,"InitCommonControlsEx");
-	    /* initialize the common controls */
-	    if (pDLLInitComctl)
-	    {
-	      pDLLInitComctl(NULL);
-	    }
-#else
-		InitCommonControlsEx(NULL);
-#endif
+	    InitCommonControlsEx(NULL);
 
 	    SIC_Initialize();
 	    SYSTRAY_Init();

@@ -46,11 +46,6 @@ extern HIMAGELIST	ShellSmallIconList;
 extern HIMAGELIST	ShellBigIconList;
 extern HDPA		sic_hdpa;
 
-/*******************************************
-* pointer to functions dynamically loaded
-*/
-extern void	(WINAPI *pDLLInitComctl)(LPVOID);
-
 BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Iconcache */

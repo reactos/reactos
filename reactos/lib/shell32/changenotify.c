@@ -331,7 +331,7 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         break;
     case SHCNF_PRINTERA:
     case SHCNF_PRINTERW:
-        FIXME("SHChangeNotify with (uFlags & SHCNF_PRINTER)");
+        FIXME("SHChangeNotify with (uFlags & SHCNF_PRINTER)\n");
         return;
     case SHCNF_DWORD:
     default:
