@@ -1291,6 +1291,8 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
 	LPSTR end = pszPath + uOutSize;
 	HRESULT hr = S_OK;
 
+	pszPath[0] = '\0';
+
 	/* One case is a PIDL rooted at desktop level */
 	if (_ILIsValue(pidl) || _ILIsFolder(pidl)) {
 	    hr = SHGetSpecialFolderPathA(0, pstr, CSIDL_DESKTOP, FALSE);
@@ -1313,6 +1315,10 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
 		if (!txt)
 		    {hr = E_INVALIDARG; break;}
 
+                /* make sure there's enough space for the next segment */
+                if (pstr+lstrlenA(txt) >= end)
+		    {hr = E_INVALIDARG; break;}
+
 		lstrcpynA(pstr, txt, end-pstr);
 
 		pidl = ILGetNext(pidl);
@@ -1323,6 +1329,9 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
 		    /* We are at the end and successfully converted the complete PIDL. */
 		    break;
 		}
+
+                if (pstr+1 >= end)
+		    {hr = E_INVALIDARG; break;}
 
 		pstr = PathAddBackslashA(pstr);
 		if (!pstr)
@@ -1374,6 +1383,8 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
 	LPWSTR end = pszPath + uOutSize;
 	HRESULT hr = S_OK;
 
+	pszPath[0] = '\0';
+
 	/* One case is a PIDL rooted at desktop level */
 	if (_ILIsValue(pidl) || _ILIsFolder(pidl)) {
 	    hr = SHGetSpecialFolderPathW(0, pstr, CSIDL_DESKTOP, FALSE);
@@ -1396,6 +1407,10 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
 		if (!txt)
 		    {hr = E_INVALIDARG; break;}
 
+                /* make sure there's enough space for the next segment */
+                if (pstr+lstrlenA(txt) >= end)
+		    {hr = E_INVALIDARG; break;}
+
 		if (!MultiByteToWideChar(CP_ACP, 0, txt, -1, pstr, uOutSize))
 		    {hr = E_OUTOFMEMORY; break;}
 
@@ -1407,6 +1422,9 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
 		    /* We are at the end and successfully converted the complete PIDL. */
 		    break;
 		}
+
+                if (pstr+1 >= end)
+		    {hr = E_INVALIDARG; break;}
 
 		pstr = PathAddBackslashW(pstr);
 		if (!pstr)
