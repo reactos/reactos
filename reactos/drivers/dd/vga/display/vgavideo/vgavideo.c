@@ -331,7 +331,7 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 
    return FALSE;
 }
-
+/*
 BOOL bltToVga(INT x1, INT y1, INT dx, INT dy, UCHAR *bitmap)
 {
   // We use vertical stripes because we save some time by setting the mask less often
@@ -360,3 +360,4 @@ BOOL bltToVga(INT x1, INT y1, INT dx, INT dy, UCHAR *bitmap)
 
   return TRUE;
 }
+*/
