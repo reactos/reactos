@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.13 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: suspend.c,v 1.14 2004/01/22 13:18:10 ekohl Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -79,24 +79,33 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 
 
 NTSTATUS
-PsResumeThread(PETHREAD Thread, PULONG SuspendCount)
+PsResumeThread (PETHREAD Thread,
+		PULONG SuspendCount)
 {
-  ExAcquireFastMutex(&SuspendMutex);
+  DPRINT("PsResumeThread (Thread %p  SuspendCount %p) called\n");
+
+  ExAcquireFastMutex (&SuspendMutex);
+
   if (SuspendCount != NULL)
     {
       *SuspendCount = Thread->Tcb.SuspendCount;
     }
+
   if (Thread->Tcb.SuspendCount > 0)
     {
       Thread->Tcb.SuspendCount--;
       if (Thread->Tcb.SuspendCount == 0)
 	{
-	  KeReleaseSemaphore(&Thread->Tcb.SuspendSemaphore, IO_NO_INCREMENT, 
-			     1, FALSE);
-	}      
+	  KeReleaseSemaphore (&Thread->Tcb.SuspendSemaphore,
+			      IO_NO_INCREMENT,
+			      1,
+			      FALSE);
+	}
     }
-  ExReleaseFastMutex(&SuspendMutex);
-  return(STATUS_SUCCESS);
+
+  ExReleaseFastMutex (&SuspendMutex);
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -147,26 +156,32 @@ NtResumeThread(IN HANDLE ThreadHandle,
   DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
 	 ThreadHandle, SuspendCount);
 
-  Status = ObReferenceObjectByHandle(ThreadHandle,
-				     THREAD_SUSPEND_RESUME,
-				     PsThreadType,
-				     UserMode,
-				     (PVOID*)&Thread,
-				     NULL);
+  Status = ObReferenceObjectByHandle (ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
-  Status = PsResumeThread(Thread, &Count);
+  Status = PsResumeThread (Thread, &Count);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject ((PVOID)Thread);
+      return Status;
+    }
+
   if (SuspendCount != NULL)
     {
       *SuspendCount = Count;
     }
 
-  ObDereferenceObject((PVOID)Thread);
+  ObDereferenceObject ((PVOID)Thread);
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -203,14 +218,20 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     }
 
   Status = PsSuspendThread(Thread, &Count);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject ((PVOID)Thread);
+      return Status;
+    }
+
   if (PreviousSuspendCount != NULL)
     {
       *PreviousSuspendCount = Count;
     }
 
-  ObDereferenceObject((PVOID)Thread);
+  ObDereferenceObject ((PVOID)Thread);
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 VOID INIT_FUNCTION
