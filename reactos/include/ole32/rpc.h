@@ -17,7 +17,7 @@
 typedef long RPC_STATUS;
 
 typedef void* I_RPC_HANDLE;
-
+/*
 #ifndef _GUID_DEFINED
 #define _GUID_DEFINED
 typedef struct _GUID
@@ -28,7 +28,7 @@ typedef struct _GUID
     BYTE  Data4[8];
 } GUID;
 #endif
-
+*/
 #ifndef UUID_DEFINED
 #define UUID_DEFINED
 typedef GUID UUID;
