@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.62 2004/03/15 22:06:55 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.63 2004/03/16 02:15:06 royce Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -33,6 +33,7 @@
 #include <include/surface.h>
 #include <include/palette.h>
 #include <include/tags.h>
+#include <rosrtl/gdimacro.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -467,66 +468,52 @@ BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
   return  TRUE;
 }
 
-COLORREF STDCALL NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
+COLORREF
+STDCALL
+NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 {
    PDC dc = NULL;
-   COLORREF Result = (COLORREF) 0;
+   COLORREF clrSource, Result = (COLORREF)CLR_INVALID; // default to failure
    PSURFGDI Surface;
    PSURFOBJ SurfaceObject;
    HPALETTE Pal;
    PPALGDI PalGDI;
    USHORT PalMode;
-   PXLATEOBJ XlateObj = NULL;
+   PXLATEOBJ XlateObj;
 
    dc = DC_LockDc (hDC);
-   if (dc == NULL)
+   if (dc != NULL)
    {
-      return (COLORREF)CLR_INVALID;
-   }
-   if (XPos < dc->CombinedClip->rclBounds.left ||
-       XPos > dc->CombinedClip->rclBounds.right ||
-       YPos < dc->CombinedClip->rclBounds.top ||
-       YPos > dc->CombinedClip->rclBounds.bottom)
-   {
-      DC_UnlockDc(hDC);
-      return (COLORREF)CLR_INVALID;
-   }
-   SurfaceObject = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
-   Surface = (PSURFGDI)AccessInternalObjectFromUserObject(SurfaceObject);
-   if (Surface == NULL || Surface->DIB_GetPixel == NULL)
-   {
-      DC_UnlockDc(hDC);
-      return (COLORREF)CLR_INVALID;
-   }
-   Result = Surface->DIB_GetPixel(SurfaceObject, XPos, YPos);
+      if ( IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos) )
+      {
+         SurfaceObject = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+		 ASSERT(SurfaceObject);
+         Surface = (PSURFGDI)AccessInternalObjectFromUserObject(SurfaceObject);
+         if ( Surface && Surface->DIB_GetPixel )
+         {
+            clrSource = Surface->DIB_GetPixel(SurfaceObject, XPos, YPos);
+            if (dc->w.hPalette != 0)
+               Pal = dc->w.hPalette;
+            else
+               Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
+            PalGDI = PALETTE_LockPalette(Pal);
+            if ( PalGDI )
+            {
+               PalMode = PalGDI->Mode;
+               PALETTE_UnlockPalette(Pal);
 
-   if (dc->w.hPalette != 0)
-   {
-      Pal = dc->w.hPalette;
-   }
-   else
-   {
-      Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
-   }
-   PalGDI = PALETTE_LockPalette(Pal);
-   if (NULL == PalGDI)
-   {
+               XlateObj = (PXLATEOBJ)IntEngCreateXlate ( PAL_RGB, PalMode, NULL, Pal );
+               if ( XlateObj )
+               {
+                  Result = XLATEOBJ_iXlate(XlateObj, clrSource);
+                  EngDeleteXlate(XlateObj);
+               }
+            }
+         }
+      }
       DC_UnlockDc(hDC);
-      return (COLORREF)CLR_INVALID;
    }
-   PalMode = PalGDI->Mode;
-   PALETTE_UnlockPalette(Pal);
 
-   XlateObj = (PXLATEOBJ) IntEngCreateXlate(PAL_RGB, PalMode, NULL, Pal);
-   if (NULL == XlateObj)
-   {
-      DC_UnlockDc(hDC);
-      return (COLORREF)CLR_INVALID;
-   }
-   Result = XLATEOBJ_iXlate(XlateObj, Result);
-   EngDeleteXlate(XlateObj);
-
-   DC_UnlockDc(hDC);
    return Result;
 }
 
