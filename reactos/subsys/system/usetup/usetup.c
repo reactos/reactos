@@ -1,39 +1,50 @@
-/* $Id: usetup.c,v 1.1 2002/09/08 18:28:43 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2002 ReactOS Team
  *
- * smss.c - Session Manager
- * 
- * ReactOS Operating System
- * 
- * --------------------------------------------------------------------
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
- *
- * --------------------------------------------------------------------
- * 
- * 	19990529 (Emanuele Aliberti)
- * 		Compiled successfully with egcs 1.1.2
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/* $Id: usetup.c,v 1.2 2002/09/19 16:21:15 ekohl Exp $
+ *
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS user-mode setup application
+ * FILE:        subsys/system/usetup/usetup.c
+ * PURPOSE:     setup application
+ * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
+ */
+
 #include <ddk/ntddk.h>
 #include <ddk/ntddblue.h>
+#include <ddk/ntddscsi.h>
 
 #include <ntdll/rtl.h>
 
 #include <ntos/keyboard.h>
 
 #include "usetup.h"
+
+
+#define INTRO_PAGE		0
+#define INSTALL_INTRO_PAGE	1
+
+#define CHOOSE_PARTITION_PAGE	5
+
+
+#define SUCCESS_PAGE		100
+#define QUIT_PAGE		101
+#define REBOOT_PAGE		102
 
 
 HANDLE ProcessHeap;
@@ -94,22 +105,29 @@ ConfirmQuit(PINPUT_RECORD Ir)
   xLeft = (xScreen - 52) / 2;
 
   /* Save screen */
+#if 0
   Pos.X = 0;
   Pos.Y = 0;
-  pAttributes = (PUSHORT)RtlAllocateHeap(RtlGetProcessHeap(),
+  pAttributes = (PUSHORT)RtlAllocateHeap(ProcessHeap,
 					 0,
 					 xScreen * yScreen * sizeof(USHORT));
+CHECKPOINT1;
+DPRINT1("pAttributes %p\n", pAttributes);
   ReadConsoleOutputAttributes(pAttributes,
 			      xScreen * yScreen,
 			      Pos,
 			      NULL);
-  pCharacters = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+CHECKPOINT1;
+  pCharacters = (PUCHAR)RtlAllocateHeap(ProcessHeap,
 					0,
 					xScreen * yScreen * sizeof(UCHAR));
+CHECKPOINT1;
   ReadConsoleOutputCharacters(pCharacters,
 			      xScreen * yScreen,
 			      Pos,
 			      NULL);
+CHECKPOINT1;
+#endif
 
   /* Draw popup window */
   SetTextXY(xLeft, yTop,
@@ -151,34 +169,100 @@ ConfirmQuit(PINPUT_RECORD Ir)
     }
 
   /* Restore screen */
+#if 0
+CHECKPOINT1;
   WriteConsoleOutputAttributes(pAttributes,
 			       xScreen * yScreen,
 			       Pos,
 			       NULL);
+CHECKPOINT1;
 
   WriteConsoleOutputCharacters(pCharacters,
 			       xScreen * yScreen,
 			       Pos);
-  RtlFreeHeap(RtlGetProcessHeap(),
+CHECKPOINT1;
+
+  RtlFreeHeap(ProcessHeap,
 	      0,
 	      pAttributes);
-  RtlFreeHeap(RtlGetProcessHeap(),
+  RtlFreeHeap(ProcessHeap,
 	      0,
 	      pCharacters);
+#endif
 
   return(Result);
 }
 
 
 
-static BOOL
+
+
+
+
+#if 0
+static ULONG
+RepairIntroPage(PINPUT_RECORD Ir)
+{
+
+}
+#endif
+
+
+/*
+ * First setup page
+ * RETURNS
+ *	TRUE: setup/repair completed successfully
+ *	FALSE: setup/repair terminated by user
+ */
+static ULONG
+IntroPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Welcome to the ReactOS Setup");
+
+  SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
+  SetTextXY(6, 12, "computer and prepares the second part of the setup.");
+
+  SetTextXY(8, 15, "\xf9  Press ENTER to install ReactOS.");
+
+#if 0
+  SetTextXY(8, 17, "\xf9  Press R to repair ReactOS.");
+  SetTextXY(8, 19, "\xf9  Press F3 to quit without installing ReactOS.");
+#endif
+
+  SetTextXY(8, 17, "\xf9  Press F3 to quit without installing ReactOS.");
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(INSTALL_INTRO_PAGE);
+	}
+#if 0
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')
+	{
+	  return(REPAIR_INTRO_PAGE);
+	}
+#endif
+    }
+
+  return(INTRO_PAGE);
+}
+
+
+static ULONG
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-  ClearScreen();
-
-  SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
-  SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
-
   SetTextXY(6, 8, "Install intro page");
 
 #if 0
@@ -200,100 +284,221 @@ InstallIntroPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(FALSE);
+	    return(QUIT_PAGE);
+	  break;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
-	break;
+	{
+	  /* FIXME: Preliminary exit */
+	  return(CHOOSE_PARTITION_PAGE);
+	}
     }
 
-  return(TRUE);
+  return(INSTALL_INTRO_PAGE);
 }
 
 
-#if 0
-static BOOL
-RepairIntroPage(PINPUT_RECORD Ir)
+static ULONG
+ChoosePartitionPage(PINPUT_RECORD Ir)
 {
-  ClearScreen();
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  SYSTEM_DEVICE_INFORMATION Sdi;
+  DISK_GEOMETRY DiskGeometry;
+  ULONG ReturnSize;
+  NTSTATUS Status;
+  ULONG DiskCount;
+  IO_STATUS_BLOCK Iosb;
+  WCHAR Buffer[MAX_PATH];
+  UNICODE_STRING Name;
+  HANDLE FileHandle;
+  ULONG Line;
+  ULONG i;
 
-}
-#endif
+  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
+  SCSI_ADDRESS ScsiAddress;
+  ULONGLONG DiskSize;
+  char *Scale;
 
 
-/*
- * First setup page
- * RETURNS
- *	TRUE: setup/repair completed successfully
- *	FALSE: setup/repair terminated by user
- */
-static BOOL
-IntroPage(PINPUT_RECORD Ir)
-{
-CHECKPOINT1;
-  ClearScreen();
 
-  SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
-  SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+  SetTextXY(6, 8, "Choose install partition");
 
-  SetTextXY(6, 8, "Welcome to the ReactOS Setup");
+  Status = NtQuerySystemInformation(SystemDeviceInformation,
+				    &Sdi,
+				    sizeof(SYSTEM_DEVICE_INFORMATION),
+				    &ReturnSize);
+  if (!NT_SUCCESS(Status))
+    {
+      SetTextXY(8, 10, "NtQuerySystemInformation failed!");
+    }
 
-  SetTextXY(6, 10, "This part of the setup copies the ReactOS Operating System to your");
-  SetTextXY(6, 11, "computer and prepares the second part of the setup.");
+  PrintTextXY(6, 12, "Setup found %lu %s on this computer.",
+	    Sdi.NumberOfDisks, (Sdi.NumberOfDisks == 1) ? "harddisk" : "harddisks");
 
-  SetTextXY(8, 14, "\xf9  Press ENTER to install ReactOS.");
+  Line = 14;
+  for (DiskCount = 0; DiskCount < Sdi.NumberOfDisks; DiskCount++)
+    {
+      swprintf(Buffer,
+	       L"\\Device\\Harddisk%d\\Partition0",
+	       DiskCount);
+      RtlInitUnicodeString(&Name,
+			   Buffer);
 
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &Name,
+				 0,
+				 NULL,
+				 NULL);
+
+      Status = NtOpenFile(&FileHandle,
+			  0x10001,
+			  &ObjectAttributes,
+			  &Iosb,
+			  1,
+			  FILE_SYNCHRONOUS_IO_NONALERT);
+      if (NT_SUCCESS(Status))
+	{
+	  Status = NtDeviceIoControlFile(FileHandle,
+					 NULL,
+					 NULL,
+					 NULL,
+					 &Iosb,
+					 IOCTL_DISK_GET_DRIVE_GEOMETRY,
+					 NULL,
+					 0,
+					 &DiskGeometry,
+					 sizeof(DISK_GEOMETRY));
+	  if (NT_SUCCESS(Status))
+	    {
+	      Status = NtDeviceIoControlFile(FileHandle,
+					     NULL,
+					     NULL,
+					     NULL,
+					     &Iosb,
+					     IOCTL_SCSI_GET_ADDRESS,
+					     NULL,
+					     0,
+					     &ScsiAddress,
+					     sizeof(SCSI_ADDRESS));
+
+	      if (DiskGeometry.MediaType == FixedMedia)
+		{
+		  DiskSize = DiskGeometry.Cylinders.QuadPart *
+			(ULONGLONG)DiskGeometry.TracksPerCylinder *
+			(ULONGLONG)DiskGeometry.SectorsPerTrack *
+			(ULONGLONG)DiskGeometry.BytesPerSector;
 #if 0
-  SetTextXY(8, 16, "\xf9  Press R to repair ReactOS.");
+		  if (DiskSize >= 0x120000000ULL) /* 10 GB */
+		    {
+		      DiskSize
+		      Scale = "GB";
+		    }
+		  else
 #endif
+		    {
+		      DiskSize = (DiskSize + (1 << 19)) >> 20;
+		      Scale = "MB";
+		    }
 
-  SetTextXY(8, 17, "\xf9  Press F3 to quit without installing ReactOS.");
+		  PrintTextXY(8, Line++,
+			      "%I64u %s Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+			      DiskSize,
+			      Scale,
+			      DiskCount,
+			      ScsiAddress.PortNumber,
+			      ScsiAddress.PathId,
+			      ScsiAddress.TargetId);
+
+		  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
+
+		  Status = NtDeviceIoControlFile(FileHandle,
+						 NULL,
+						 NULL,
+						 NULL,
+						 &Iosb,
+						 IOCTL_DISK_GET_DRIVE_LAYOUT,
+						 NULL,
+						 0,
+						 LayoutBuffer,
+						 8192);
+		  if (NT_SUCCESS(Status))
+		    {
+		      for (i = 0; i < LayoutBuffer->PartitionCount; i++)
+			{
+			  if ((LayoutBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED) &&
+			      !IsContainerPartition(LayoutBuffer->PartitionEntry[i].PartitionType))
+			    {
+			      PrintTextXY(10, Line++,
+					  "%d: nr: %d boot: %1x type: %x size: %I64u MB",
+				      i,
+				      LayoutBuffer->PartitionEntry[i].PartitionNumber,
+				      LayoutBuffer->PartitionEntry[i].BootIndicator,
+				      LayoutBuffer->PartitionEntry[i].PartitionType,
+				      (LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart + (1 << 19)) >>20);
+
+
+
+			    }
+			}
+		    }
+
+		  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
+		}
+	    }
+	  else
+	    {
+	      PrintTextXY(8, Line++,
+			  "Harddisk %lu:  Failed to retrieve drive geometry (Status %lx)",
+			  DiskCount, Status);
+	    }
+
+	  NtClose(FileHandle);
+	  Line++;
+	}
+      else
+	{
+	  PrintTextXY(8, Line++,
+		      "Harddisk %lu:  Failed to open (Status %lx)",
+		      DiskCount, Status);
+	}
+    }
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
-CHECKPOINT1;
 
   while(TRUE)
     {
-CHECKPOINT1;
       ConInKey(Ir);
-CHECKPOINT1;
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(FALSE);
+	    return(QUIT_PAGE);
+	  break;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
-	  return(InstallIntroPage(Ir));
+	  /* FIXME: Preliminary exit */
+	  return(SUCCESS_PAGE);
 	}
-#if 0
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')
-	{
-	  return(RepairIntroPage(Ir));
-	}
-#endif
     }
 
-  return(FALSE);
+  return(CHOOSE_PARTITION_PAGE);
 }
 
 
-static VOID
+
+
+
+static ULONG
 QuitPage(PINPUT_RECORD Ir)
 {
-  ClearScreen();
+  SetTextXY(10, 6, "ReactOS is not completely installed");
 
-  SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
-  SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+  SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
+  SetTextXY(10, 9, "all CD-ROMs from CD-Drive.");
 
-
-  SetTextXY(6, 10, "ReactOS is not completely installed");
-
-  SetTextXY(8, 10, "Remove floppy disk from drive A:.");
-  SetTextXY(9, 10, "Remove cdrom from cdrom drive.");
-
-  SetTextXY(11, 10, "Press ENTER to reboot your computer.");
+  SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
   SetStatusText("   ENTER = Reboot computer");
 
@@ -303,27 +508,21 @@ QuitPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
-	  return;
+	  return(REBOOT_PAGE);
 	}
     }
 }
 
 
-static VOID
+static ULONG
 SuccessPage(PINPUT_RECORD Ir)
 {
-  ClearScreen();
+  SetTextXY(10, 6, "The basic components of ReactOS have been installed successfully.");
 
-  SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
-  SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+  SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
+  SetTextXY(10, 9, "all CD-ROMs from CD-Drive.");
 
-
-  SetTextXY(6, 10, "The basic components of ReactOS have been installed successfully.");
-
-  SetTextXY(8, 10, "Remove floppy disk from drive A:.");
-  SetTextXY(9, 10, "Remove cdrom from cdrom drive.");
-
-  SetTextXY(11, 10, "Press ENTER to reboot your computer.");
+  SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
   SetStatusText("   ENTER = Reboot computer");
 
@@ -333,7 +532,7 @@ SuccessPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
-	  return;
+	  return(REBOOT_PAGE);
 	}
     }
 }
@@ -344,6 +543,7 @@ NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
   INPUT_RECORD Ir;
+  ULONG Page;
 
   RtlNormalizeProcessParams(Peb->ProcessParameters);
 
@@ -353,38 +553,65 @@ NtProcessStartup(PPEB Peb)
   if (!NT_SUCCESS(Status))
     {
       PrintString("Console initialization failed! (Status %lx)\n", Status);
-      goto ByeBye;
+
+      /* Raise a hard error (crash the system/BSOD) */
+      NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+		       0,0,0,0,0);
     }
 
-CHECKPOINT1;
-  if (IntroPage(&Ir) == TRUE)
+  Page = INTRO_PAGE;
+  while (Page != REBOOT_PAGE)
     {
-      /* Display success message */
-      SetCursorXY(5, 49);
-      ConOutPrintf("Press any key to continue\n");
-      ConInKey(&Ir);
-//      SuccessPage(&Ir)
-    }
-  else
-    {
-      /* Display termination message */
-      QuitPage(&Ir);
+      ClearScreen();
+
+      SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
+      SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+
+      switch (Page)
+	{
+	  case INTRO_PAGE:
+	    Page = IntroPage(&Ir);
+	    break;
+
+	  case INSTALL_INTRO_PAGE:
+	    Page = InstallIntroPage(&Ir);
+	    break;
+
+#if 0
+	  case OEM_DRIVER_PAGE:
+	    Page = OemDriverPage(&Ir);
+	    break;
+#endif
+
+#if 0
+	  case DEVICE_SETTINGS_PAGE:
+#endif
+
+	  case CHOOSE_PARTITION_PAGE:
+	    Page = ChoosePartitionPage(&Ir);
+	    break;
+
+#if 0
+	  case ROOT_DIRECTORY_PAGE:
+#endif
+
+#if 0
+	  case FILE_COPY_PAGE:
+#endif
+
+	  case SUCCESS_PAGE:
+	    Page = SuccessPage(&Ir);
+	    break;
+
+	  case QUIT_PAGE:
+	    Page = QuitPage(&Ir);
+	    break;
+	}
     }
 
   /* Reboot */
-
-ConsoleExit:
   FreeConsole();
-
-  PrintString("*** System halted ***\n", Status);
-  for(;;);
-
-ByeBye:
-  /* Raise a hard error (crash the system/BSOD) */
-  NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
-		   0,0,0,0,0);
-
-//   NtTerminateProcess(NtCurrentProcess(), 0);
+  NtShutdownSystem(ShutdownReboot);
 }
 
 /* EOF */

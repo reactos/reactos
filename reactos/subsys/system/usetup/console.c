@@ -27,6 +27,7 @@
 
 static HANDLE StdInput  = INVALID_HANDLE_VALUE;
 static HANDLE StdOutput = INVALID_HANDLE_VALUE;
+static HANDLE InputEvent = INVALID_HANDLE_VALUE;
 
 static SHORT xScreen = 0;
 static SHORT yScreen = 0;
@@ -71,6 +72,15 @@ AllocConsole(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
+  /* Create input event */
+  Status = NtCreateEvent(&InputEvent,
+			 STANDARD_RIGHTS_ALL,
+			 NULL,
+			 FALSE,
+			 FALSE);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
   /* Open the keyboard */
   RtlInitUnicodeString(&Name,
 		       L"\\??\\Keyboard");
@@ -108,6 +118,9 @@ FreeConsole(VOID)
 
   if (StdOutput != INVALID_HANDLE_VALUE)
     NtClose(StdOutput);
+
+  if (InputEvent != INVALID_HANDLE_VALUE)
+    NtClose(InputEvent);
 }
 
 
@@ -188,47 +201,32 @@ ReadConsoleA(HANDLE hConsoleInput,
 #endif
 
 
-
 NTSTATUS
-ReadConsoleInput(PINPUT_RECORD Buffer,
-		 ULONG Length,
-		 PULONG NumberOfEventsRead)
+ReadConsoleInput(PINPUT_RECORD Buffer)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status = STATUS_SUCCESS;
-  ULONG i;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
 
-  for (i=0; (NT_SUCCESS(Status) && i < Length);)
-    {
-      Status = NtReadFile(StdInput,
-			  NULL,
-			  NULL,
-			  NULL,
-			  &IoStatusBlock,
-			  &Buffer[i].Event.KeyEvent,
-			  sizeof(KEY_EVENT_RECORD),
-			  NULL,
-			  NULL);
-      if (Status == STATUS_PENDING)
+  Buffer->EventType = KEY_EVENT;
+  Status = NtReadFile(StdInput,
+		      InputEvent,
+		      NULL,
+		      NULL,
+		      &Iosb,
+		      &Buffer->Event.KeyEvent,	//&KeyEventRecord->InputEvent.Event.KeyEvent,
+		      sizeof(KEY_EVENT_RECORD),
+		      NULL,
+		      0);
+
+      if( Status == STATUS_PENDING )
 	{
-	  NtWaitForSingleObject(StdInput,
+	  NtWaitForSingleObject(InputEvent,
 				FALSE,
 				NULL);
-	  Status = IoStatusBlock.Status;
+	  Status = Iosb.Status;
 	}
-      if (NT_SUCCESS(Status))
-	{
-	  Buffer[i].EventType = KEY_EVENT;
-	  i++;
-	}
-    }
 
-  if (NumberOfEventsRead != NULL)
-    {
-      *NumberOfEventsRead = i;
-    }
-
-   return(Status);
+  return(Status);
 }
 
 
@@ -548,38 +546,34 @@ GetConsoleCursorInfo(
 }
 
 
-
-/*--------------------------------------------------------------
- * 	SetConsoleMode
- */
-WINBASEAPI
-BOOL
-WINAPI
-SetConsoleMode(
-	HANDLE		hConsoleHandle,
-	DWORD		dwMode
-	)
+NTSTATUS
+SetConsoleMode(HANDLE hConsoleHandle,
+	       ULONG dwMode)
 {
+  IO_STATUS_BLOCK IoStatusBlock;
+  NTSTATUS Status;
   CONSOLE_MODE Buffer;
-  DWORD dwBytesReturned;
 
   Buffer.dwMode = dwMode;
 
-  if (DeviceIoControl(hConsoleHandle,
-                      IOCTL_CONSOLE_SET_MODE,
-                         &Buffer,
-                         sizeof(CONSOLE_MODE),
-                         NULL,
-                         0,
-                         &dwBytesReturned,
-                         NULL))
+  Status = NtDeviceIoControlFile(hConsoleHandle,
+				 NULL,
+				 NULL,
+				 NULL,
+				 &IoStatusBlock,
+				 IOCTL_CONSOLE_SET_MODE,
+				 &Buffer,
+				 sizeof(CONSOLE_MODE),
+				 NULL,
+				 0);
+  if (Status == STATUS_PENDING)
     {
-        SetLastError (ERROR_SUCCESS);
-        return TRUE;
+      NtWaitForSingleObject(hConsoleHandle,
+			    FALSE,
+			    NULL);
+      Status = IoStatusBlock.Status;
     }
-
-    SetLastError(0); /* FIXME: What error code? */
-    return FALSE;
+  return(Status);
 }
 #endif
 
@@ -710,7 +704,8 @@ ConInKey(PINPUT_RECORD Buffer)
 
   while (TRUE)
     {
-      ReadConsoleInput(Buffer, 1, &KeysRead);
+      ReadConsoleInput(Buffer);
+
       if ((Buffer->EventType == KEY_EVENT) &&
 	  (Buffer->Event.KeyEvent.bKeyDown == TRUE))
 	  break;
@@ -877,6 +872,30 @@ SetTextXY(SHORT x, SHORT y, PCHAR Text)
 
   WriteConsoleOutputCharacters(Text,
 			       strlen(Text),
+			       coPos);
+}
+
+
+VOID
+PrintTextXY(SHORT x, SHORT y, char* fmt,...)
+{
+  char buffer[512];
+  va_list ap;
+  COORD coPos;
+
+CHECKPOINT1;
+  va_start(ap, fmt);
+  vsprintf(buffer, fmt, ap);
+  va_end(ap);
+CHECKPOINT1;
+DPRINT1("%s\n", buffer);
+CHECKPOINT1;
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  WriteConsoleOutputCharacters(buffer,
+			       strlen(buffer),
 			       coPos);
 }
 

@@ -47,6 +47,11 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 			     COORD dwWriteCoord,
 			     PULONG lpNumberOfAttrsWritten);
 
+#if 0
+NTSTATUS
+SetConsoleMode(HANDLE hConsoleHandle,
+	       ULONG dwMode);
+#endif
 
 VOID
 ConInKey(PINPUT_RECORD Buffer);
@@ -89,6 +94,8 @@ SetStatusText(PCHAR Text);
 VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text);
 
+VOID
+PrintTextXY(SHORT x, SHORT y, char* fmt,...);
 
 #endif /* __CONSOLE_H__*/
 
