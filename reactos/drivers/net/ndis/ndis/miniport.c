@@ -841,7 +841,7 @@ VOID STDCALL MiniportDpc(
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
               }
-	    if( NdisStatus == NDIS_STATUS_PENDING ) {
+	    if( NdisStatus != NDIS_STATUS_PENDING ) {
 		NdisMSendComplete
 		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
 		Adapter->MiniportBusy = FALSE;
