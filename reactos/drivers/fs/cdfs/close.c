@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: close.c,v 1.4 2002/09/09 17:25:39 hbirr Exp $
+/* $Id: close.c,v 1.5 2002/09/15 22:21:40 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,7 +38,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
+NTSTATUS
 CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 	      PFILE_OBJECT FileObject)
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.6 2002/09/08 10:22:08 chorns Exp $
+/* $Id: create.c,v 1.7 2002/09/15 22:21:40 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -169,6 +169,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   ULONG RequestedDisposition;
   ULONG RequestedOptions;
   PFCB Fcb;
+  PCCB Ccb;
 //  PWSTR FileName;
   NTSTATUS Status;
 
@@ -180,12 +181,9 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   assert (Stack);
 
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
-//  RequestedOptions =
-//    Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
-//  PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
-//  if ((RequestedOptions & FILE_DIRECTORY_FILE)
-//      && RequestedDisposition == FILE_SUPERSEDE)
-//    return STATUS_INVALID_PARAMETER;
+  RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
+  DPRINT("RequestedDisposition %x, RequestedOptions %x\n", 
+         RequestedDisposition, RequestedOptions);
 
   FileObject = Stack->FileObject;
 
@@ -199,6 +197,25 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   Status = CdfsOpenFile(DeviceExt,
 			FileObject,
 			FileObject->FileName.Buffer);
+
+  if (NT_SUCCESS(Status))
+  {
+    Ccb = FileObject->FsContext2;
+    Fcb = Ccb->Fcb;
+    /*
+     * Check the file has the requested attributes
+     */
+    if (RequestedOptions & FILE_NON_DIRECTORY_FILE && CdfsFCBIsDirectory(Fcb))
+    {
+       CdfsCloseFile (DeviceExt, FileObject);
+       return STATUS_FILE_IS_A_DIRECTORY;
+    }
+    if (RequestedOptions & FILE_DIRECTORY_FILE && !CdfsFCBIsDirectory(Fcb))
+    {
+       CdfsCloseFile (DeviceExt, FileObject);
+       return STATUS_NOT_A_DIRECTORY;
+    }
+  }  
 
   /*
    * If the directory containing the file to open doesn't exist then
