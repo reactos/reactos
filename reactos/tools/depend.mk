@@ -22,7 +22,9 @@ endif
 DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTERED))))
  
 ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(DEP_FILES),)
 -include $(DEP_FILES)
+endif
 endif
 
 ifeq ($(SEP),\)
