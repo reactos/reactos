@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.89 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: text.c,v 1.90 2004/04/23 21:35:59 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1515,8 +1515,11 @@ NtGdiExtTextOut(
 
    dc = DC_LockDc(hDC);
    if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
-
+   }
+   
    if (NULL != UnsafeDx)
    {
       Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
@@ -2467,66 +2470,76 @@ NtGdiGetTextMetrics(HDC hDC,
   TT_OS2 *pOS2;
   ULONG Error;
 
-  dc = DC_LockDc(hDC);
-  if (NULL == dc || NULL == tm)
+  if (NULL == tm)
   {
-    Status = STATUS_INVALID_PARAMETER;
+    SetLastWin32Error(STATUS_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  if (NULL != TextObj)
+  {
+    Status = GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+    if (NT_SUCCESS(Status))
+    {
+      Face = FontGDI->face;
+      IntLockFreeType;
+      Error = FT_Set_Pixel_Sizes(Face,
+	                         /* FIXME should set character height if neg */
+	                         (TextObj->logfont.lfHeight < 0 ?
+	                          - TextObj->logfont.lfHeight :
+	                          TextObj->logfont.lfHeight),
+	                         TextObj->logfont.lfWidth);
+      IntUnLockFreeType;
+      if (0 != Error)
+	{
+	DPRINT1("Error in setting pixel sizes: %u\n", Error);
+	Status = STATUS_UNSUCCESSFUL;
+	}
+      else
+	{
+	memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+        IntLockFreeType;
+        pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+        IntUnLockFreeType;
+        if (NULL == pOS2)
+          {
+            DPRINT1("Can't find OS/2 table - not TT font?\n");
+            Status = STATUS_UNSUCCESSFUL;
+          }
+        else
+          {
+            SafeTm.tmAveCharWidth = (pOS2->xAvgCharWidth + 32) >> 6;
+          }
+  	SafeTm.tmAscent = (Face->size->metrics.ascender + 32) >> 6; // units above baseline
+	SafeTm.tmDescent = (32 - Face->size->metrics.descender) >> 6; // units below baseline
+	SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
+        SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) >> 6;
+	Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
+	}
+    }
+    TEXTOBJ_UnlockText(dc->w.hFont);
   }
   else
   {
-    TextObj = TEXTOBJ_LockText(dc->w.hFont);
-    if (NULL != TextObj)
-    {
-      Status = GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
-      if (NT_SUCCESS(Status))
-      {
-	Face = FontGDI->face;
-        IntLockFreeType;
-	Error = FT_Set_Pixel_Sizes(Face,
-	                           /* FIXME should set character height if neg */
-	                           (TextObj->logfont.lfHeight < 0 ?
-	                            - TextObj->logfont.lfHeight :
-	                            TextObj->logfont.lfHeight),
-	                           TextObj->logfont.lfWidth);
-        IntUnLockFreeType;
-	if (0 != Error)
-	  {
-	  DPRINT1("Error in setting pixel sizes: %u\n", Error);
-	  Status = STATUS_UNSUCCESSFUL;
-	  }
-        else
-	  {
-	  memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
-          IntLockFreeType;
-          pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-          IntUnLockFreeType;
-          if (NULL == pOS2)
-            {
-              DPRINT1("Can't find OS/2 table - not TT font?\n");
-              Status = STATUS_UNSUCCESSFUL;
-            }
-          else
-            {
-              SafeTm.tmAveCharWidth = (pOS2->xAvgCharWidth + 32) >> 6;
-            }
-  	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) >> 6; // units above baseline
-	  SafeTm.tmDescent = (32 - Face->size->metrics.descender) >> 6; // units below baseline
-	  SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
-          SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) >> 6;
-	  Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
-	  }
-      }
-      TEXTOBJ_UnlockText(dc->w.hFont);
-    }
-    else
-    {
-      ASSERT(FALSE);
-      Status = STATUS_INVALID_HANDLE;
-    }
-    DC_UnlockDc(hDC);
+    ASSERT(FALSE);
+    Status = STATUS_INVALID_HANDLE;
   }
-
-  return NT_SUCCESS(Status);
+  DC_UnlockDc(hDC);
+  
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
+  return TRUE;
 }
 
 BOOL
@@ -2564,7 +2577,8 @@ NtGdiSetTextAlign(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
     {
-      return  0;
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
     }
   prevAlign = dc->w.textAlign;
   dc->w.textAlign = Mode;
@@ -2583,7 +2597,8 @@ NtGdiSetTextColor(HDC hDC,
 
   if (!dc)
   {
-    return 0x80000000;
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
   }
 
   oldColor = dc->w.textColor;
