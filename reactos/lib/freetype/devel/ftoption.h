@@ -296,7 +296,7 @@ FT_BEGIN_HEADER
   /*   Do not #undef this macro here since the build system might define   */
   /*   it for certain configurations only.                                 */
   /*                                                                       */
-/* #define FT_DEBUG_MEMORY */
+#define FT_DEBUG_MEMORY
 
 
   /*************************************************************************/

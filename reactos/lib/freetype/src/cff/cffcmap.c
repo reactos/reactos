@@ -19,6 +19,8 @@
 #include "cffcmap.h"
 #include "cffload.h"
 
+#include "cfferrs.h"
+
 
   /*************************************************************************/
   /*************************************************************************/
@@ -37,7 +39,7 @@
 
 
     cmap->gids  = encoding->codes;
-    
+
     return 0;
   }
 
@@ -58,7 +60,7 @@
 
     if ( char_code < 256 )
       result = cmap->gids[char_code];
-    
+
     return result;
   }
 
@@ -69,27 +71,27 @@
   {
     FT_UInt    result    = 0;
     FT_UInt32  char_code = *pchar_code;
-    
+
 
     *pchar_code = 0;
 
     if ( char_code < 255 )
     {
       FT_UInt  code = (FT_UInt)(char_code + 1);
-      
+
 
       for (;;)
       {
         if ( code >= 256 )
           break;
-          
+
         result = cmap->gids[code];
         if ( result != 0 )
         {
           *pchar_code = code;
           break;
         }
-          
+
         code++;
       }
     }
@@ -123,28 +125,28 @@
   {
     FT_UInt32  u1 = ((CFF_CMapUniPair)pair1)->unicode;
     FT_UInt32  u2 = ((CFF_CMapUniPair)pair2)->unicode;
-    
+
 
     if ( u1 < u2 )
       return -1;
-      
+
     if ( u1 > u2 )
       return +1;
-      
+
     return 0;
-  }                            
+  }
 
 
   FT_CALLBACK_DEF( FT_Error )
   cff_cmap_unicode_init( CFF_CMapUnicode  cmap )
   {
-    FT_Error         error;
-    FT_UInt          count;
-    TT_Face          face    = (TT_Face)FT_CMAP_FACE( cmap );
-    FT_Memory        memory  = FT_FACE_MEMORY( face );
-    CFF_Font         cff     = (CFF_Font)face->extra.data;
-    CFF_Charset      charset = &cff->charset;
-    PSNames_Service  psnames = (PSNames_Service)cff->psnames;
+    FT_Error            error;
+    FT_UInt             count;
+    TT_Face             face    = (TT_Face)FT_CMAP_FACE( cmap );
+    FT_Memory           memory  = FT_FACE_MEMORY( face );
+    CFF_Font            cff     = (CFF_Font)face->extra.data;
+    CFF_Charset         charset = &cff->charset;
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
 
 
     cmap->num_pairs = 0;
@@ -167,7 +169,7 @@
 
 
         gname = cff_index_get_sid_string( &cff->string_index, sid, psnames );
-         
+
         /* build unsorted pair table by matching glyph names */
         if ( gname )
         {
@@ -179,7 +181,7 @@
             pair->gindex  = n;
             pair++;
           }
-          
+
           FT_FREE( gname );
         }
       }
@@ -221,7 +223,7 @@
     FT_Face    face   = FT_CMAP_FACE( cmap );
     FT_Memory  memory = FT_FACE_MEMORY( face );
 
- 
+
     FT_FREE( cmap->pairs );
     cmap->num_pairs = 0;
   }

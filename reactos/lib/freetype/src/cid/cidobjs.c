@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,7 +23,7 @@
 #include "cidgload.h"
 #include "cidload.h"
 
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 
@@ -199,12 +199,12 @@
       if ( face->subrs )
       {
         FT_Int  n;
-        
+
 
         for ( n = 0; n < cid->num_dicts; n++ )
         {
           CID_Subrs  subr = face->subrs + n;
-          
+
 
           if ( subr->code )
           {
@@ -234,6 +234,9 @@
 
       face->root.family_name = 0;
       face->root.style_name  = 0;
+
+      FT_FREE( face->binary_data );
+      FT_FREE( face->cid_stream );
     }
   }
 
@@ -268,27 +271,19 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    FT_Error          error;
-    PSNames_Service   psnames;
-    PSAux_Service     psaux;
-    PSHinter_Service  pshinter;
+    FT_Error            error;
+    FT_Service_PsCMaps  psnames;
+    PSAux_Service       psaux;
+    PSHinter_Service    pshinter;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
-    FT_UNUSED( face_index );
     FT_UNUSED( stream );
 
 
     face->root.num_faces = 1;
 
-    psnames = (PSNames_Service)face->psnames;
-    if ( !psnames )
-    {
-      psnames = (PSNames_Service)FT_Get_Module_Interface(
-                  FT_FACE_LIBRARY( face ), "psnames" );
-
-      face->psnames = psnames;
-    }
+    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
 
     psaux = (PSAux_Service)face->psaux;
     if ( !psaux )
@@ -312,7 +307,7 @@
     if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
-    error = cid_face_open( face );
+    error = cid_face_open( face, face_index );
     if ( error )
       goto Exit;
 
@@ -423,8 +418,10 @@
       root->height    = (FT_Short)(
         ( ( root->ascender - root->descender ) * 12 ) / 10 );
 
-      root->underline_position  = info->underline_position >> 16;
-      root->underline_thickness = info->underline_thickness >> 16;
+      root->underline_position =
+        (FT_Short)( info->underline_position >> 16 );
+      root->underline_thickness =
+        (FT_Short)( info->underline_thickness >> 16 );
 
       root->internal->max_points   = 0;
       root->internal->max_contours = 0;

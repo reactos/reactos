@@ -1,21 +1,38 @@
 #!/bin/sh
 # install - install a program, script, or datafile
-# This originally came from X11R5 (mit/util/scripts/install.sh).
 
-scriptversion=2003-01-17.15
+scriptversion=2003-09-24.23
 
-# Copyright 1991 by the Massachusetts Institute of Technology
-# (FSF changes in the public domain.)
+# This originates from X11R5 (mit/util/scripts/install.sh), which was
+# later released in X11R6 (xc/config/util/install.sh) with the
+# following copyright and license.
 #
-# Permission to use, copy, modify, distribute, and sell this software and its
-# documentation for any purpose is hereby granted without fee, provided that
-# the above copyright notice appear in all copies and that both that
-# copyright notice and this permission notice appear in supporting
-# documentation, and that the name of M.I.T. not be used in advertising or
-# publicity pertaining to distribution of the software without specific,
-# written prior permission.  M.I.T. makes no representations about the
-# suitability of this software for any purpose.  It is provided "as is"
-# without express or implied warranty.
+# Copyright (C) 1994 X Consortium
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNEC-
+# TION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the name of the X Consortium shall not
+# be used in advertising or otherwise to promote the sale, use or other deal-
+# ings in this Software without prior written authorization from the X Consor-
+# tium.
+#
+#
+# FSF changes to this file are in the public domain.
 #
 # Calling this script install-sh is preferred over install.sh, to prevent
 # `make' implicit rules from creating a file called install from it
@@ -134,6 +151,11 @@ if test -z "$src"; then
   exit 1
 fi
 
+# Protect names starting with `-'.
+case $src in
+  -*) src=./$src ;;
+esac
+
 if test -n "$dir_arg"; then
   dst=$src
   src=
@@ -158,6 +180,11 @@ else
     exit 1
   fi
 
+  # Protect names starting with `-'.
+  case $dst in
+    -*) dst=./$dst ;;
+  esac
+
   # If destination is a directory, append the input filename; won't work
   # if double slashes aren't ignored.
   if test -d "$dst"; then
@@ -165,11 +192,10 @@ else
   fi
 fi
 
-## this sed command emulates the dirname command
+# This sed command emulates the dirname command.
 dstdir=`echo "$dst" | sed -e 's,[^/]*$,,;s,/$,,;s,^$,.,'`
 
 # Make sure that the destination directory exists.
-# (this part is taken from Noah Friedman's mkinstalldirs script.)
 
 # Skip lots of stat calls in the usual case.
 if test ! -d "$dstdir"; then
@@ -213,8 +239,8 @@ else
   test -z "$dstfile" && dstfile=`basename "$dst"`
 
   # Make a couple of temp file names in the proper directory.
-  dsttmp=$dstdir/#inst.$$#
-  rmtmp=$dstdir/#rm.$$#
+  dsttmp=$dstdir/_inst.$$_
+  rmtmp=$dstdir/_rm.$$_
 
   # Trap to clean up those temp files at exit.
   trap 'status=$?; rm -f "$dsttmp" "$rmtmp" && exit $status' 0

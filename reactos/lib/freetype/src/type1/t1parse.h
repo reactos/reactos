@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (specification).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -69,9 +69,9 @@ FT_BEGIN_HEADER
     FT_Byte*      private_dict;
     FT_Long       private_len;
 
-    FT_Byte       in_pfb;
-    FT_Byte       in_memory;
-    FT_Byte       single_block;
+    FT_Bool       in_pfb;
+    FT_Bool       in_memory;
+    FT_Bool       single_block;
 
   } T1_ParserRec, *T1_Parser;
 
@@ -91,8 +91,8 @@ FT_BEGIN_HEADER
           } while ( 0 )
 
 
-#define T1_Skip_Spaces( p )  (p)->root.funcs.skip_spaces( &(p)->root )
-#define T1_Skip_Alpha( p )   (p)->root.funcs.skip_alpha ( &(p)->root )
+#define T1_Skip_Spaces( p )    (p)->root.funcs.skip_spaces( &(p)->root )
+#define T1_Skip_PS_Token( p )  (p)->root.funcs.skip_PS_token( &(p)->root )
 
 #define T1_ToInt( p )       (p)->root.funcs.to_int( &(p)->root )
 #define T1_ToFixed( p, t )  (p)->root.funcs.to_fixed( &(p)->root, t )

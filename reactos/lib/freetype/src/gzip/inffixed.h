@@ -7,9 +7,9 @@
    subject to change. Applications should only use zlib.h.
  */
 
-local uInt fixed_bl = 9;
-local uInt fixed_bd = 5;
-local inflate_huft fixed_tl[] = {
+local const uInt fixed_bl = 9;
+local const uInt fixed_bd = 5;
+local const inflate_huft fixed_tl[] = {
     {{{96,7}},256}, {{{0,8}},80}, {{{0,8}},16}, {{{84,8}},115},
     {{{82,7}},31}, {{{0,8}},112}, {{{0,8}},48}, {{{0,9}},192},
     {{{80,7}},10}, {{{0,8}},96}, {{{0,8}},32}, {{{0,9}},160},
@@ -139,7 +139,7 @@ local inflate_huft fixed_tl[] = {
     {{{82,7}},27}, {{{0,8}},111}, {{{0,8}},47}, {{{0,9}},191},
     {{{0,8}},15}, {{{0,8}},143}, {{{0,8}},79}, {{{0,9}},255}
   };
-local inflate_huft fixed_td[] = {
+local const inflate_huft fixed_td[] = {
     {{{80,5}},1}, {{{87,5}},257}, {{{83,5}},17}, {{{91,5}},4097},
     {{{81,5}},5}, {{{89,5}},1025}, {{{85,5}},65}, {{{93,5}},16385},
     {{{80,5}},3}, {{{88,5}},513}, {{{84,5}},33}, {{{92,5}},8193},

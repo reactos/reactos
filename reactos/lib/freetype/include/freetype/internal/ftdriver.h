@@ -155,11 +155,15 @@ FT_BEGIN_HEADER
   /*                        add data from AFM or PFM files on a Type 1     */
   /*                        face, or a CIDMap on a CID-keyed face.         */
   /*                                                                       */
-  /*    get_advances     :: A function handle used to return the advances  */
-  /*                        of 'count' glyphs, starting at `index'.  the   */
-  /*                        `vertical' flags must be set when vertical     */
-  /*                        advances are queried.  The advances buffer is  */
-  /*                        caller-allocated.                              */
+  /*    get_advances     :: A function handle used to return advance       */
+  /*                        widths of 'count' glyphs (in font units),      */
+  /*                        starting at `first'.  The `vertical' flag must */
+  /*                        be set to get vertical advance heights.  The   */
+  /*                        `advances' buffer is caller-allocated.         */
+  /*                        Currently not implemented.  The idea of this   */
+  /*                        function is to be able to perform              */
+  /*                        device-independent text layout without loading */
+  /*                        a single glyph image.                          */
   /*                                                                       */
   /* <Note>                                                                */
   /*    Most function pointers, with the exception of `load_glyph' and     */

@@ -78,7 +78,7 @@ FT_BEGIN_HEADER
   ps_parser_skip_spaces( PS_Parser  parser );
 
   FT_LOCAL( void )
-  ps_parser_skip_alpha( PS_Parser  parser );
+  ps_parser_skip_PS_token( PS_Parser  parser );
 
   FT_LOCAL( void )
   ps_parser_to_token( PS_Parser  parser,
@@ -106,6 +106,14 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Long )
   ps_parser_to_int( PS_Parser  parser );
+
+
+  FT_LOCAL( FT_Error )
+  ps_parser_to_bytes( PS_Parser  parser,
+                      FT_Byte*   bytes,
+                      FT_Long    max_bytes,
+                      FT_Long*   pnum_bytes,
+                      FT_Bool    delimiters );
 
 
   FT_LOCAL( FT_Fixed )

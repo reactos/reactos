@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,12 +21,11 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_FNT_TYPES_H
 
 #include "winfnt.h"
-
 #include "fnterrs.h"
-
+#include FT_SERVICE_WINFNT_H
+#include FT_SERVICE_XFREE86_NAME_H
 
   /*************************************************************************/
   /*                                                                       */
@@ -38,8 +37,7 @@
 #define FT_COMPONENT  trace_winfnt
 
 
-  static
-  const FT_Frame_Field  winmz_header_fields[] =
+  static const FT_Frame_Field  winmz_header_fields[] =
   {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  WinMZ_HeaderRec
@@ -51,8 +49,7 @@
     FT_FRAME_END
   };
 
-  static
-  const FT_Frame_Field  winne_header_fields[] =
+  static const FT_Frame_Field  winne_header_fields[] =
   {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  WinNE_HeaderRec
@@ -65,13 +62,12 @@
     FT_FRAME_END
   };
 
-  static
-  const FT_Frame_Field  winfnt_header_fields[] =
+  static const FT_Frame_Field  winfnt_header_fields[] =
   {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  FT_WinFNT_HeaderRec
 
-    FT_FRAME_START( 146 ),
+    FT_FRAME_START( 148 ),
       FT_FRAME_USHORT_LE( version ),
       FT_FRAME_ULONG_LE ( file_size ),
       FT_FRAME_BYTES    ( copyright, 60 ),
@@ -106,7 +102,7 @@
       FT_FRAME_USHORT_LE( A_space ),
       FT_FRAME_USHORT_LE( B_space ),
       FT_FRAME_USHORT_LE( C_space ),
-      FT_FRAME_USHORT_LE( color_table_offset ),
+      FT_FRAME_ULONG_LE ( color_table_offset ),
       FT_FRAME_BYTES    ( reserved1, 16 ),
     FT_FRAME_END
   };
@@ -137,6 +133,8 @@
   {
     FT_Error          error;
     FT_WinFNT_Header  header = &font->header;
+    FT_Bool           new_format;
+    FT_UInt           size;
 
 
     /* first of all, read the FNT header */
@@ -147,6 +145,16 @@
     /* check header */
     if ( header->version != 0x200 &&
          header->version != 0x300 )
+    {
+      FT_TRACE2(( "[not a valid FNT file]\n" ));
+      error = FNT_Err_Unknown_File_Format;
+      goto Exit;
+    }
+
+    new_format = FT_BOOL( font->header.version == 0x300 );
+    size       = new_format ? 148 : 118;
+
+    if ( header->file_size < size )
     {
       FT_TRACE2(( "[not a valid FNT file]\n" ));
       error = FNT_Err_Unknown_File_Format;
@@ -361,7 +369,7 @@
   }
 
 
-  static FT_CMap_ClassRec  fnt_cmap_class_rec =
+  static const FT_CMap_ClassRec  fnt_cmap_class_rec =
   {
     sizeof ( FNT_CMapRec ),
 
@@ -371,7 +379,7 @@
     (FT_CMap_CharNextFunc) fnt_cmap_char_next
   };
 
-  static FT_CMap_Class  fnt_cmap_class = &fnt_cmap_class_rec;
+  static FT_CMap_Class const  fnt_cmap_class = &fnt_cmap_class_rec;
 
 
   static void
@@ -453,10 +461,10 @@
 
 
         bsize->width  = font->header.avg_width;
-        bsize->height =
-          font->header.pixel_height + font->header.external_leading;
+        bsize->height = (FT_Short)(
+          font->header.pixel_height + font->header.external_leading );
         bsize->size   = font->header.nominal_point_size << 6;
-        bsize->x_ppem = 
+        bsize->x_ppem =
           (FT_Pos)( ( font->header.horizontal_resolution * bsize->size + 36 )
                     / 72 );
         bsize->y_ppem =
@@ -468,10 +476,17 @@
         FT_CharMapRec  charmap;
 
 
-        charmap.encoding    = FT_ENCODING_UNICODE;
-        charmap.platform_id = 3;
-        charmap.encoding_id = 1;
+        charmap.encoding    = FT_ENCODING_NONE;
+        charmap.platform_id = 0;
+        charmap.encoding_id = 0;
         charmap.face        = root;
+
+        if ( font->header.charset == FT_WinFNT_ID_MAC )
+        {
+          charmap.encoding    = FT_ENCODING_APPLE_ROMAN;
+          charmap.platform_id = 1;
+/*        charmap.encoding_id = 0; */
+        }
 
         error = FT_CMap_New( fnt_cmap_class,
                              NULL,
@@ -528,8 +543,8 @@
 
 
       size->metrics.ascender    = font->header.ascent * 64;
-      size->metrics.descender   = ( font->header.pixel_height -
-                                      font->header.ascent ) * 64;
+      size->metrics.descender   = -( font->header.pixel_height -
+                                       font->header.ascent ) * 64;
       size->metrics.height      = font->header.pixel_height * 64;
       size->metrics.max_advance = font->header.max_width * 64;
 
@@ -573,7 +588,7 @@
     len        = new_format ? 6 : 4;
 
     /* jump to glyph entry */
-    p = font->fnt_frame + ( new_format ? 146 : 118 ) + len * glyph_index;
+    p = font->fnt_frame + ( new_format ? 148 : 118 ) + len * glyph_index;
 
     bitmap->width = FT_NEXT_SHORT_LE( p );
 
@@ -581,6 +596,13 @@
       offset = FT_NEXT_ULONG_LE( p );
     else
       offset = FT_NEXT_USHORT_LE( p );
+
+    if ( offset >= font->header.file_size )
+    {
+      FT_TRACE2(( "invalid FNT offset!\n" ));
+      error = FNT_Err_Invalid_File_Format;
+      goto Exit;
+    }
 
     /* jump to glyph data */
     p = font->fnt_frame + /* font->header.bits_offset */ + offset;
@@ -632,6 +654,49 @@
   }
 
 
+  static FT_Error
+  winfnt_get_header( FT_Face               face,
+                     FT_WinFNT_HeaderRec  *aheader )
+  {
+    FNT_Font  font = ((FNT_Face)face)->font;
+
+
+    *aheader = font->header;
+
+    return 0;
+  }
+
+
+  static const FT_Service_WinFntRec  winfnt_service_rec =
+  {
+    winfnt_get_header
+  };
+
+ /*
+  *  SERVICE LIST
+  *
+  */
+
+  static const FT_ServiceDescRec  winfnt_services[] =
+  {
+    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_WINFNT },
+    { FT_SERVICE_ID_WINFNT,    &winfnt_service_rec },
+    { NULL, NULL }
+  };
+
+
+  static FT_Module_Interface
+  winfnt_get_service( FT_Driver         driver,
+                      const FT_String*  service_id )
+  {
+    FT_UNUSED( driver );
+
+    return ft_service_list_lookup( winfnt_services, service_id );
+  }
+
+
+
+
   FT_CALLBACK_TABLE_DEF
   const FT_Driver_ClassRec  winfnt_driver_class =
   {
@@ -648,7 +713,7 @@
 
       (FT_Module_Constructor)0,
       (FT_Module_Destructor) 0,
-      (FT_Module_Requester)  0
+      (FT_Module_Requester)  winfnt_get_service
     },
 
     sizeof( FNT_FaceRec ),

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType new character mapping table (cmap) support (specification). */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,7 +23,7 @@
 #include <ft2build.h>
 #include FT_INTERNAL_TRUETYPE_TYPES_H
 #include FT_INTERNAL_OBJECTS_H
-
+#include FT_SERVICE_TT_CMAP_H
 
 FT_BEGIN_HEADER
 
@@ -46,6 +46,7 @@ FT_BEGIN_HEADER
     FT_CMap_ClassRec      clazz;
     FT_UInt               format;
     TT_CMap_ValidateFunc  validate;
+    TT_CMap_Info_GetFunc  get_cmap_info;
 
   } TT_CMap_ClassRec;
 
@@ -64,6 +65,11 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   tt_face_build_cmaps( TT_Face  face );
+
+  /* used in tt-cmaps service */
+  FT_LOCAL( FT_Error )
+  tt_get_cmap_info( FT_CharMap    charmap,
+                    TT_CMapInfo  *cmap_info );
 
 
 FT_END_HEADER

@@ -25,8 +25,9 @@ CACHE_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(CACHE_DIR))
 
 # Cache driver sources (i.e., C files)
 #
-CACHE_DRV_SRC := $(CACHE_DIR)/ftlru.c    \
+CACHE_DRV_SRC := $(CACHE_DIR)/ftcmru.c   \
                  $(CACHE_DIR)/ftcmanag.c \
+                 $(CACHE_DIR)/ftcbasic.c \
                  $(CACHE_DIR)/ftccache.c \
                  $(CACHE_DIR)/ftcglyph.c \
                  $(CACHE_DIR)/ftcsbits.c \
@@ -35,10 +36,11 @@ CACHE_DRV_SRC := $(CACHE_DIR)/ftlru.c    \
 
 # Cache driver headers
 #
-CACHE_DRV_H := $(CACHE_H_DIR)/ftlru.h    \
+CACHE_DRV_H := $(CACHE_H_DIR)/ftcmru.h   \
                $(CACHE_H_DIR)/ftcmanag.h \
                $(CACHE_H_DIR)/ftcglyph.h \
                $(CACHE_H_DIR)/ftcimage.h \
+               $(CACHE_H_DIR)/ftccmap.h  \
                $(CACHE_DIR)/ftcerror.h
 
 

@@ -34,6 +34,7 @@ CFF_DRV_SRC := $(CFF_DIR)/cffobjs.c  \
 #
 CFF_DRV_H := $(CFF_DRV_SRC:%.c=%.h) \
              $(CFF_DIR)/cfftoken.h  \
+             $(CFF_DIR)/cfftypes.h  \
              $(CFF_DIR)/cfferrs.h
 
 

@@ -44,6 +44,8 @@ THE SOFTWARE.
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pcfread
 
+#include FT_SERVICE_BDF_H
+#include FT_SERVICE_XFREE86_NAME_H
 
   typedef struct  PCF_CMapRec_
   {
@@ -471,6 +473,12 @@ THE SOFTWARE.
   }
 
 
+ /*
+  *
+  *  BDF SERVICE
+  *
+  */
+  
   static FT_Error
   pcf_get_bdf_property( PCF_Face          face,
                         const char*       prop_name,
@@ -503,16 +511,46 @@ THE SOFTWARE.
   }
 
 
+  static FT_Error
+  pcf_get_charset_id( PCF_Face      face,
+                      const char*  *acharset_encoding,
+                      const char*  *acharset_registry )
+  {
+    *acharset_encoding = face->charset_encoding;
+    *acharset_registry = face->charset_registry;
+
+    return 0;
+  }
+
+
+  static FT_Service_BDFRec  pcf_service_bdf =
+  {
+    (FT_BDF_GetCharsetIdFunc)pcf_get_charset_id,
+    (FT_BDF_GetPropertyFunc) pcf_get_bdf_property
+  };
+
+
+ /*
+  *
+  *  SERVICE LIST
+  *
+  */
+
+  static FT_ServiceDescRec  pcf_services[] =
+  {
+    { FT_SERVICE_ID_BDF,       &pcf_service_bdf },
+    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_PCF },
+    { NULL, NULL }
+  };
+  
+  
   static FT_Module_Interface
   pcf_driver_requester( FT_Module    module,
                         const char*  name )
   {
     FT_UNUSED( module );
 
-    if ( name && ft_strcmp( name, "get_bdf_property" ) == 0 )
-      return (FT_Module_Interface) pcf_get_bdf_property;
-
-    return NULL;
+    return ft_service_list_lookup( pcf_services, name );
   }
 
 

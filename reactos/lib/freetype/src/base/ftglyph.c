@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -253,14 +253,11 @@
       goto Exit;
 
     /* copy it */
-    FT_MEM_COPY( target->points, source->points,
-                 source->n_points * sizeof ( FT_Vector ) );
+    FT_ARRAY_COPY( target->points, source->points, source->n_points );
 
-    FT_MEM_COPY( target->tags, source->tags,
-                 source->n_points * sizeof ( FT_Byte ) );
+    FT_ARRAY_COPY( target->tags, source->tags, source->n_points );
 
-    FT_MEM_COPY( target->contours, source->contours,
-                 source->n_contours * sizeof ( FT_Short ) );
+    FT_ARRAY_COPY( target->contours, source->contours, source->n_contours );
 
     /* copy all flags, except the `FT_OUTLINE_OWNER' one */
     target->flags = source->flags | FT_OUTLINE_OWNER;
@@ -421,7 +418,7 @@
   FT_Get_Glyph( FT_GlyphSlot  slot,
                 FT_Glyph     *aglyph )
   {
-    FT_Library  library = slot->library;
+    FT_Library  library;
     FT_Error    error;
     FT_Glyph    glyph;
 
@@ -430,6 +427,8 @@
 
     if ( !slot )
       return FT_Err_Invalid_Slot_Handle;
+
+    library = slot->library;
 
     if ( !aglyph )
       return FT_Err_Invalid_Argument;
@@ -544,10 +543,10 @@
         if ( bbox_mode == FT_GLYPH_BBOX_GRIDFIT ||
              bbox_mode == FT_GLYPH_BBOX_PIXELS  )
         {
-          acbox->xMin &= -64;
-          acbox->yMin &= -64;
-          acbox->xMax  = ( acbox->xMax + 63 ) & -64;
-          acbox->yMax  = ( acbox->yMax + 63 ) & -64;
+          acbox->xMin = FT_PIX_FLOOR( acbox->xMin );
+          acbox->yMin = FT_PIX_FLOOR( acbox->yMin );
+          acbox->xMax = FT_PIX_CEIL( acbox->xMax );
+          acbox->yMax = FT_PIX_CEIL( acbox->yMax );
         }
 
         /* convert to integer pixels if needed */

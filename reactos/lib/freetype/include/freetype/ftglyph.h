@@ -36,6 +36,12 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#ifdef FREETYPE_H
+#error "freetype.h of FreeType 1 has been loaded!"
+#error "Please fix the directory search order for header files"
+#error "so that freetype.h of FreeType 2 is found first."
+#endif
+
 
 FT_BEGIN_HEADER
 
@@ -235,7 +241,8 @@ FT_BEGIN_HEADER
   /*    FT_Glyph_Copy                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A function used to copy a glyph image.                             */
+  /*    A function used to copy a glyph image.  Note that the created      */
+  /*    @FT_Glyph object must be released with @FT_Done_Glyph.             */
   /*                                                                       */
   /* <Input>                                                               */
   /*    source :: A handle to the source glyph object.                     */
@@ -472,8 +479,7 @@ FT_BEGIN_HEADER
   /*      }                                                                */
   /*                                                                       */
   /*                                                                       */
-  /*    This function will always fail if the glyph's format isn't         */
-  /*    scalable.                                                          */
+  /*    This function does nothing if the glyph format isn't scalable.     */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Glyph_To_Bitmap( FT_Glyph*       the_glyph,

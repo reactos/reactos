@@ -163,7 +163,7 @@
     { (char *)"_MULE_RELATIVE_COMPOSE",  BDF_INTEGER,  1, { 0 } },
   };
 
-  static unsigned long
+  static const unsigned long
   _num_bdf_properties = sizeof ( _bdf_properties ) /
                         sizeof ( _bdf_properties[0] );
 
@@ -391,7 +391,7 @@
 
   /* An empty string for empty fields. */
 
-  static char  empty[1] = { 0 };   /* XXX eliminate this */
+  static const char  empty[1] = { 0 };      /* XXX eliminate this */
 
 
   /* Assume the line is NULL-terminated and that the `list' parameter */
@@ -468,7 +468,7 @@
       }
 
       /* Assign the field appropriately. */
-      list->field[list->used++] = ( ep > sp ) ? sp : empty;
+      list->field[list->used++] = ( ep > sp ) ? sp : (char*)empty;
 
       sp = ep;
 
@@ -511,7 +511,7 @@
     }
 
     if ( final_empty )
-      list->field[list->used++] = empty;
+      list->field[list->used++] = (char*)empty;
 
     if ( list->used == list->size )
     {

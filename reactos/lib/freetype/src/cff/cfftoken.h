@@ -43,10 +43,10 @@
   CFF_FIELD_NUM     ( 17,    charstrings_offset )
   CFF_FIELD_CALLBACK( 18,    private_dict )
   CFF_FIELD_NUM     ( 0x114, synthetic_base )
-  CFF_FIELD_STRING  ( 0x115, postscript )
-  CFF_FIELD_STRING  ( 0x116, base_font_name )
+  CFF_FIELD_STRING  ( 0x115, embedded_postscript )
 
 #if 0
+  CFF_FIELD_STRING  ( 0x116, base_font_name )
   CFF_FIELD_DELTA   ( 0x117, base_font_blend, 16 )
   CFF_FIELD_CALLBACK( 0x118, multiple_master )
   CFF_FIELD_CALLBACK( 0x119, blend_axit_types )

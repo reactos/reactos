@@ -418,7 +418,7 @@
     /* first of all, reallocate the contours array if necessary */
     if ( num_contours > outline->max_contours )
     {
-      FT_Int  new_contours = ( num_contours + 3 ) & -4;
+      FT_Int  new_contours = FT_PAD_CEIL( num_contours, 4 );
 
 
       if ( FT_RENEW_ARRAY( outline->contours,
@@ -435,7 +435,7 @@
     /*                                                                   */
     if ( num_points + 2 > outline->max_points )
     {
-      FT_Int  news = ( num_points + 2 + 7 ) & -8;
+      FT_Int  news = FT_PAD_CEIL( num_points, 8 );
       FT_Int  max  = outline->max_points;
 
 

@@ -257,7 +257,7 @@ FT_BEGIN_HEADER
   /*   The maximum number of modules that can be registered in a single    */
   /*   FreeType library object.  32 is the default.                        */
   /*                                                                       */
-#define FT_MAX_MODULES  16384
+#define FT_MAX_MODULES  32767
 
 
   /*************************************************************************/
@@ -399,7 +399,7 @@ FT_BEGIN_HEADER
   /*   Do not #undef this macro here, since the build system might         */
   /*   define it for certain configurations only.                          */
   /*                                                                       */
-#define  TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+ #define  TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 
 
   /*************************************************************************/
@@ -411,11 +411,8 @@ FT_BEGIN_HEADER
   /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
   /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally actived                  */
   /*                                                                       */
-  /* XXX: WARNING: THIS DOESN'T WORK AS ADVERTISED YET. PLEASE DO NOT      */
-  /*      DEFINE FOR THE MOMENT..                                          */
-  /*                                                                       */
- #define FT_DEBUG_HOOK_UNPATENTED_HINTING
- #define TT_CONFIG_OPTION_UNPATENTED_HINTING
+#define FT_DEBUG_HOOK_UNPATENTED_HINTING
+#define TT_CONFIG_OPTION_UNPATENTED_HINTING
 
 
   /*************************************************************************/

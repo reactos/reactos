@@ -1,20 +1,26 @@
 #! /bin/sh
 # mkinstalldirs --- make directory hierarchy
-# Author: Noah Friedman <friedman@prep.ai.mit.edu>
+# Original author: Noah Friedman <friedman@prep.ai.mit.edu>
 # Created: 1993-05-16
-# Public domain
+# Public domain.
+
+scriptversion=2003-09-26.19
 
 errstatus=0
 dirmode=""
 
 usage="\
-Usage: mkinstalldirs [-h] [--help] [-m mode] dir ..."
+Usage: mkinstalldirs [-h] [--help] [--version] [-m MODE] DIR ...
+
+Create each directory DIR (with mode MODE, if specified), including all
+leading file name components.
+"
 
 # process command line arguments
 while test $# -gt 0 ; do
   case $1 in
     -h | --help | --h*)         # -h for help
-      echo "$usage" 1>&2
+      echo "$usage"
       exit 0
       ;;
     -m)                         # -m PERM arg
@@ -22,6 +28,10 @@ while test $# -gt 0 ; do
       test $# -eq 0 && { echo "$usage" 1>&2; exit 1; }
       dirmode=$1
       shift
+      ;;
+    --version)
+      echo "$0 $scriptversion"
+      exit 0
       ;;
     --)                         # stop option processing
       shift
@@ -55,12 +65,25 @@ case $dirmode in
     if mkdir -p -- . 2>/dev/null; then
       echo "mkdir -p -- $*"
       exec mkdir -p -- "$@"
+    else
+      # On NextStep and OpenStep, the `mkdir' command does not
+      # recognize any option.  It will interpret all options as
+      # directories to create, and then abort because `.' already
+      # exists.
+      test -d ./-p && rmdir ./-p
+      test -d ./-- && rmdir ./--
     fi
     ;;
   *)
     if mkdir -m "$dirmode" -p -- . 2>/dev/null; then
       echo "mkdir -m $dirmode -p -- $*"
       exec mkdir -m "$dirmode" -p -- "$@"
+    else
+      # Clean up after NextStep and OpenStep mkdir.
+      for d in ./-m ./-p ./-- "./$dirmode";
+      do
+        test -d $d && rmdir $d
+      done
     fi
     ;;
 esac
@@ -84,17 +107,17 @@ do
       mkdir "$pathcomp" || lasterr=$?
 
       if test ! -d "$pathcomp"; then
-  	errstatus=$lasterr
+	errstatus=$lasterr
       else
-  	if test ! -z "$dirmode"; then
+	if test ! -z "$dirmode"; then
 	  echo "chmod $dirmode $pathcomp"
-    	  lasterr=""
-  	  chmod "$dirmode" "$pathcomp" || lasterr=$?
+	  lasterr=""
+	  chmod "$dirmode" "$pathcomp" || lasterr=$?
 
-  	  if test ! -z "$lasterr"; then
-  	    errstatus=$lasterr
-  	  fi
-  	fi
+	  if test ! -z "$lasterr"; then
+	    errstatus=$lasterr
+	  fi
+	fi
       fi
     fi
 
@@ -107,5 +130,8 @@ exit $errstatus
 # Local Variables:
 # mode: shell-script
 # sh-indentation: 2
+# eval: (add-hook 'write-file-hooks 'time-stamp)
+# time-stamp-start: "scriptversion="
+# time-stamp-format: "%:y-%02m-%02d.%02H"
+# time-stamp-end: "$"
 # End:
-# mkinstalldirs ends here

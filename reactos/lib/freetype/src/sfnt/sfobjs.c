@@ -21,10 +21,9 @@
 #include "ttload.h"
 #include "ttcmap0.h"
 #include FT_INTERNAL_SFNT_H
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
-
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include "sferrors.h"
 
 
@@ -365,11 +364,7 @@
       face->goto_table = sfnt->goto_table;
     }
 
-    if ( !face->psnames )
-    {
-      face->psnames = (PSNames_Service)
-                        FT_Get_Module_Interface( library, "psnames" );
-    }
+    FT_FACE_FIND_GLOBAL_SERVICE( face, face->psnames, POSTSCRIPT_CMAPS );
 
     /* check that we have a valid TrueType file */
     error = sfnt->load_sfnt_header( face, stream, face_index, &sfnt_header );
@@ -405,7 +400,7 @@
                   FT_Int         num_params,
                   FT_Parameter*  params )
   {
-    FT_Error      error;
+    FT_Error      error, psnames_error;
     FT_Bool       has_outline;
     FT_Bool       is_apple_sbit;
 
@@ -467,7 +462,7 @@
     /* the following tables are optional in PCL fonts -- */
     /* don't check for errors                            */
     (void)LOAD_( names );
-    (void)LOAD_( psnames );
+    psnames_error = LOAD_( psnames );
 
     /* do not load the metrics headers and tables if this is an Apple */
     /* sbit font file                                                 */
@@ -534,9 +529,9 @@
                FT_FACE_FLAG_HORIZONTAL;   /* horizontal data   */
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-      /* might need more polish to detect the presence of a Postscript */
-      /* name table in the font                                        */
-      flags |= FT_FACE_FLAG_GLYPH_NAMES;
+      if ( psnames_error == SFNT_Err_Ok &&
+           face->postscript.FormatType != 0x00030000L )
+        flags |= FT_FACE_FLAG_GLYPH_NAMES;
 #endif
 
       /* fixed width font? */
@@ -643,14 +638,14 @@
           FT_Bitmap_Size*  bsize  = root->available_sizes + n;
           TT_SBit_Strike   strike = face->sbit_strikes + n;
           FT_UShort        fupem  = face->header.Units_Per_EM;
-          FT_Short         height = face->horizontal.Ascender -
-                                      face->horizontal.Descender +
-                                      face->horizontal.Line_Gap;
+          FT_Short         height = (FT_Short)( face->horizontal.Ascender -
+                                                face->horizontal.Descender +
+                                                face->horizontal.Line_Gap );
           FT_Short         avg    = face->os2.xAvgCharWidth;
 
 
           /* assume 72dpi */
-          bsize->height = 
+          bsize->height =
             (FT_Short)( ( height * strike->y_ppem + fupem/2 ) / fupem );
           bsize->width  =
             (FT_Short)( ( avg * strike->y_ppem + fupem/2 ) / fupem );

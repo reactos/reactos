@@ -74,8 +74,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_RoundFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0x8000L ) & -0x10000L
-                      : -((-a + 0x8000L ) & -0x10000L );
+    return ( a >= 0 ) ?   ( a + 0x8000L ) & ~0xFFFFL
+                      : -((-a + 0x8000L ) & ~0xFFFFL );
   }
 
 
@@ -84,8 +84,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_CeilFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0xFFFFL ) & -0x10000L
-                      : -((-a + 0xFFFFL ) & -0x10000L );
+    return ( a >= 0 ) ?   ( a + 0xFFFFL ) & ~0xFFFFL
+                      : -((-a + 0xFFFFL ) & ~0xFFFFL );
   }
 
 
@@ -94,8 +94,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_FloorFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   a & -0x10000L
-                      : -((-a) & -0x10000L );
+    return ( a >= 0 ) ?   a & ~0xFFFFL
+                      : -((-a) & ~0xFFFFL );
   }
 
 
@@ -153,6 +153,33 @@
 
     return ( s > 0 ) ? d : -d;
   }
+
+
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+  /* documentation is in ftcalc.h */
+
+  FT_BASE_DEF( FT_Long )
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c )
+  {
+    FT_Int   s;
+    FT_Long  d;
+
+
+    s = 1;
+    if ( a < 0 ) { a = -a; s = -1; }
+    if ( b < 0 ) { b = -b; s = -s; }
+    if ( c < 0 ) { c = -c; s = -s; }
+
+    d = (FT_Long)( c > 0 ? (FT_Int64)a * b / c
+                         : 0x7FFFFFFFL );
+
+    return ( s > 0 ) ? d : -d;
+  }
+
+#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
 
 
   /* documentation is in freetype.h */
@@ -303,9 +330,8 @@
     s ^= c; c = ABS( c );
 
     if ( a <= 46340L && b <= 46340L && c <= 176095L && c > 0 )
-    {
       a = ( a * b + ( c >> 1 ) ) / c;
-    }
+
     else if ( c > 0 )
     {
       FT_Int64  temp, temp2;
@@ -323,6 +349,43 @@
 
     return ( s < 0 ? -a : a );
   }
+
+
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+  FT_BASE_DEF( FT_Long )
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c )
+  {
+    long  s;
+
+
+    if ( a == 0 || b == c )
+      return a;
+
+    s  = a; a = ABS( a );
+    s ^= b; b = ABS( b );
+    s ^= c; c = ABS( c );
+
+    if ( a <= 46340L && b <= 46340L && c > 0 )
+      a = a * b / c;
+
+    else if ( c > 0 )
+    {
+      FT_Int64  temp;
+
+
+      ft_multo64( a, b, &temp );
+      a = ft_div64by32( temp.hi, temp.lo, c );
+    }
+    else
+      a = 0x7FFFFFFFL;
+
+    return ( s < 0 ? -a : a );
+  }
+
+#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
 
 
   /* documentation is in freetype.h */

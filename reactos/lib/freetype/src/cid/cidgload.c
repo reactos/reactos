@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,7 +44,7 @@
     CID_FaceInfo   cid  = &face->cid;
     FT_Byte*       p;
     FT_UInt        fd_select;
-    FT_Stream      stream = face->root.stream;
+    FT_Stream      stream = face->cid_stream;
     FT_Error       error  = 0;
     FT_Byte*       charstring = 0;
     FT_Memory      memory = face->root.memory;
@@ -412,11 +412,11 @@
 
           if ( hinting )
           {
-            metrics->horiAdvance = ( metrics->horiAdvance + 32 ) & -64;
-            metrics->vertAdvance = ( metrics->vertAdvance + 32 ) & -64;
+            metrics->horiAdvance = FT_PIX_ROUND( metrics->horiAdvance );
+            metrics->vertAdvance = FT_PIX_ROUND( metrics->vertAdvance );
 
-            metrics->vertBearingX = ( metrics->vertBearingX + 32 ) & -64;
-            metrics->vertBearingY = ( metrics->vertBearingY + 32 ) & -64;
+            metrics->vertBearingX = FT_PIX_ROUND( metrics->vertBearingX );
+            metrics->vertBearingY = FT_PIX_ROUND( metrics->vertBearingY );
           }
         }
 
@@ -426,10 +426,10 @@
         /* grid fit the bounding box if necessary */
         if ( hinting )
         {
-          cbox.xMin &= -64;
-          cbox.yMin &= -64;
-          cbox.xMax  = ( cbox.xMax + 63 ) & -64;
-          cbox.yMax  = ( cbox.yMax + 63 ) & -64;
+          cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
+          cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
+          cbox.xMax = FT_PIX_CEIL( cbox.xMax );
+          cbox.yMax = FT_PIX_CEIL( cbox.yMax );
         }
 
         metrics->width  = cbox.xMax - cbox.xMin;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -163,10 +163,10 @@
 
 
 #define cur_to_org( n, zone ) \
-          FT_MEM_COPY( (zone)->org, (zone)->cur, (n) * sizeof ( FT_Vector ) )
+          FT_ARRAY_COPY( (zone)->org, (zone)->cur, (n) )
 
 #define org_to_cur( n, zone ) \
-          FT_MEM_COPY( (zone)->cur, (zone)->org, (n) * sizeof ( FT_Vector ) )
+          FT_ARRAY_COPY( (zone)->cur, (zone)->org, (n) )
 
 
   /*************************************************************************/
@@ -690,12 +690,12 @@
       FT_Pos  x = zone->org[n_points-2].x;
 
 
-      x = ( ( x + 32 ) & -64 ) - x;
+      x = FT_PIX_ROUND( x ) - x;
       translate_array( n_points, zone->org, x, 0 );
 
       org_to_cur( n_points, zone );
 
-      zone->cur[n_points - 1].x = ( zone->cur[n_points - 1].x + 32 ) & -64;
+      zone->cur[n_points - 1].x = FT_PIX_ROUND( zone->cur[n_points - 1].x );
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 
@@ -1202,8 +1202,8 @@
 
               if ( subglyph->flags & ROUND_XY_TO_GRID )
               {
-                x = ( x + 32 ) & -64;
-                y = ( y + 32 ) & -64;
+                x = FT_PIX_ROUND( x );
+                y = FT_PIX_ROUND( y );
               }
             }
           }
@@ -1296,8 +1296,8 @@
           /* if hinting, round the phantom points */
           if ( IS_HINTED( loader->load_flags ) )
           {
-            pp1[0].x = ( ( loader->pp1.x + 32 ) & -64 );
-            pp1[1].x = ( ( loader->pp2.x + 32 ) & -64 );
+            pp1[0].x = FT_PIX_ROUND( loader->pp1.x );
+            pp1[1].x = FT_PIX_ROUND( loader->pp2.x );
           }
 
           {
@@ -1390,10 +1390,10 @@
       if ( IS_HINTED( loader->load_flags ) )
       {
         /* grid-fit the bounding box */
-        bbox.xMin &= -64;
-        bbox.yMin &= -64;
-        bbox.xMax  = ( bbox.xMax + 63 ) & -64;
-        bbox.yMax  = ( bbox.yMax + 63 ) & -64;
+        bbox.xMin = FT_PIX_FLOOR( bbox.xMin );
+        bbox.yMin = FT_PIX_FLOOR( bbox.yMin );
+        bbox.xMax = FT_PIX_CEIL( bbox.xMax );
+        bbox.yMax = FT_PIX_CEIL( bbox.yMax );
       }
     }
     else
@@ -1425,7 +1425,7 @@
 
     /* don't forget to hint the advance when we need to */
     if ( IS_HINTED( loader->load_flags ) )
-      glyph->metrics.horiAdvance = ( glyph->metrics.horiAdvance + 32 ) & -64;
+      glyph->metrics.horiAdvance = FT_PIX_ROUND( glyph->metrics.horiAdvance );
 
     /* Now take care of vertical metrics.  In the case where there is    */
     /* no vertical information within the font (relatively common), make */
@@ -1538,9 +1538,9 @@
       /* grid-fit them if necessary */
       if ( IS_HINTED( loader->load_flags ) )
       {
-        left   &= -64;
-        top     = ( top + 63     ) & -64;
-        advance = ( advance + 32 ) & -64;
+        left    = FT_PIX_FLOOR( left );
+        top     = FT_PIX_CEIL( top );
+        advance = FT_PIX_ROUND( advance );
       }
 
       glyph->metrics.vertBearingX = left;

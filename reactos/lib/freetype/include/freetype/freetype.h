@@ -16,6 +16,15 @@
 /***************************************************************************/
 
 
+#ifndef FT_FREETYPE_H
+#error "`ft2build.h' hasn't been included yet!"
+#error "Please always use macros to include FreeType header files."
+#error "Example:"
+#error "  #include <ft2build.h>"
+#error "  #include FT_FREETYPE_H"
+#endif
+
+
 #ifndef __FREETYPE_H__
 #define __FREETYPE_H__
 
@@ -35,7 +44,7 @@
   /*                                                                       */
 #define FREETYPE_MAJOR 2
 #define FREETYPE_MINOR 1
-#define FREETYPE_PATCH 5
+#define FREETYPE_PATCH 8
 
 
 #include <ft2build.h>
@@ -581,6 +590,37 @@ FT_BEGIN_HEADER
   /*   the font file, for the cases when they are needed, with the Adobe   */
   /*   values as well.                                                     */
   /*                                                                       */
+  /*   FT_ENCODING_NONE is set by the BDF and PCF drivers if the charmap   */
+  /*   is neither Unicode nor ISO-8859-1 (otherwise it is set to           */
+  /*   FT_ENCODING_UNICODE).  Use `FT_Get_BDF_Charset_ID' to find out      */
+  /*   which encoding is really present.  If, for example, the             */
+  /*   `cs_registry' field is `KOI8' and the `cs_encoding' field is `R',   */
+  /*   the font is encoded in KOI8-R.                                      */
+  /*                                                                       */
+  /*   FT_ENCODING_NONE is always set (with a single exception) by the     */
+  /*   winfonts driver.  Use `FT_Get_WinFNT_Header' and examine the        */
+  /*   `charset' field of the `FT_WinFNT_HeaderRec' structure to find out  */
+  /*   which encoding is really present.  For example, FT_WinFNT_ID_CP1251 */
+  /*   (204) means Windows code page 1251 (for Russian).                   */
+  /*                                                                       */
+  /*   FT_ENCODING_NONE is set if `platform_id' is `TT_PLATFORM_MACINTOSH' */
+  /*   and `encoding_id' is not `TT_MAC_ID_ROMAN' (otherwise it is set to  */
+  /*   FT_ENCODING_APPLE_ROMAN).                                           */
+  /*                                                                       */
+  /*   If `platform_id' is `TT_PLATFORM_MACINTOSH', use the function       */
+  /*   `FT_Get_CMap_Language_ID' to query the Mac language ID which may be */
+  /*   needed to be able to distinguish Apple encoding variants.  See      */
+  /*                                                                       */
+  /*     http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/README.TXT   */
+  /*                                                                       */
+  /*   to get an idea how to do that.  Basically, if the language ID is 0, */
+  /*   dont use it, otherwise subtract 1 from the language ID.  Then       */
+  /*   examine `encoding_id'.  If, for example, `encoding_id' is           */
+  /*   `TT_MAC_ID_ROMAN' and the language ID (minus 1) is                  */
+  /*   `TT_MAC_LANGID_GREEK', it is the Greek encoding, not Roman.         */
+  /*   `TT_MAC_ID_ARABIC' with `TT_MAC_LANGID_FARSI' means the Farsi       */
+  /*   variant the Arabic encoding.                                        */
+  /*                                                                       */
   typedef enum  FT_Encoding_
   {
     FT_ENC_TAG( FT_ENCODING_NONE, 0, 0, 0, 0 ),
@@ -932,7 +972,7 @@ FT_BEGIN_HEADER
   /*    FT_FACE_FLAG_XXX                                                   */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A list of bit flags used in the 'face_flags' field of the          */
+  /*    A list of bit flags used in the `face_flags' field of the          */
   /*    @FT_FaceRec structure.  They inform client applications of         */
   /*    properties of the corresponding face.                              */
   /*                                                                       */
@@ -2021,7 +2061,9 @@ FT_BEGIN_HEADER
   /*                   will be loaded.                                     */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    glyph_index :: The index of the glyph in the font file.            */
+  /*    glyph_index :: The index of the glyph in the font file.  For       */
+  /*                   CID-keyed fonts (either in PS or in CFF format)     */
+  /*                   this argument specifies the CID value.              */
   /*                                                                       */
   /*    load_flags  :: A flag indicating what to load for this glyph.  The */
   /*                   @FT_LOAD_XXX constants can be used to control the   */
