@@ -52,11 +52,10 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 }
 
 /* event.c */
-void TCPSocketState( void *ClientData,
-		     void *WhichSocket,
-		     void *WhichConnection,
-		     OSK_UINT SelFlags,
-		     OSK_UINT SocketState );
+int TCPSocketState( void *ClientData,
+		    void *WhichSocket,
+		    void *WhichConnection,
+		    OSK_UINT NewState );
 
 int TCPPacketSend( void *ClientData,
 		   void *WhichSocket,
@@ -67,7 +66,7 @@ int TCPPacketSend( void *ClientData,
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
     NULL, /* Client Data */
     TCPSocketState, /* SocketState */
-    TCPPacketSend, /* PacketSend */
+    TCPPacketSend,  /* PacketSend */
 };
 
 NTSTATUS TCPStartup(VOID)
@@ -129,6 +128,8 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED:
     case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
+    case OSK_EINPROGRESS:
+    case OSK_EAGAIN: Status = STATUS_PENDING; break;
     default: Status = STATUS_INVALID_CONNECTION; break;
     }
 
@@ -143,20 +144,30 @@ NTSTATUS TCPConnect
     KIRQL OldIrql;
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect;
-    PCONNECTION_ENDPOINT Connection;
-
-    Connection = Request->Handle.ConnectionContext;
-
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
-    
+    PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
     PIP_ADDRESS RemoteAddress;
     USHORT RemotePort;
+    PTDI_BUCKET Bucket;
 
-    Status = AddrBuildAddress(
-	(PTA_ADDRESS)(&((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress)->
-		      Address[0]),
-	&RemoteAddress,
-	&RemotePort);
+    DbgPrint("TCPConnect: Called\n");
+
+    Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+    if( !Bucket ) return STATUS_NO_MEMORY;
+
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+    /* Freed in TCPSocketState */
+    Bucket->Request = *Request;
+    InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
+
+    Status = AddrBuildAddress
+	((PTA_ADDRESS)ConnInfo->RemoteAddress,
+	 &RemoteAddress,
+	 &RemotePort);
+
+    DbgPrint("Connecting to address %x:%x\n",
+	     RemoteAddress->Address.IPv4Address,
+	     RemotePort);
 
     if (!NT_SUCCESS(Status)) {
 	TI_DbgPrint(MID_TRACE, ("Could not AddrBuildAddress in TCPConnect\n"));
@@ -171,11 +182,16 @@ NTSTATUS TCPConnect
 	    sizeof(AddressToConnect.sin_addr) );
     AddressToConnect.sin_port = RemotePort;
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    
+    Status = OskitTCPConnect(Connection->SocketContext,
+			     Connection,
+			     &AddressToConnect, 
+			     sizeof(AddressToConnect));
 
-    return TCPTranslateError( OskitTCPConnect(Connection->SocketContext,
-					      Connection,
-					      &AddressToConnect, 
-					      sizeof(AddressToConnect)) );
+    if( Status == OSK_EINPROGRESS || Status == STATUS_SUCCESS ) 
+	return STATUS_PENDING;
+    else
+	return Status;
 }
 
 NTSTATUS TCPClose
@@ -209,38 +225,76 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveLength,
   ULONG ReceiveFlags,
   PULONG BytesReceived ) {
+    KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection;
     PCHAR DataBuffer;
     UINT DataLen, Received = 0;
+    NTSTATUS Status;
+    PTDI_BUCKET Bucket;
 
     Connection = Request->Handle.ConnectionContext;
 
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
-    return TCPTranslateError
+    TI_DbgPrint(MID_TRACE,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
+
+    Status = TCPTranslateError
 	( OskitTCPRecv
 	  ( Connection->SocketContext,
 	    DataBuffer,
 	    DataLen,
 	    &Received,
 	    ReceiveFlags ) );    
+
+    /* Keep this request around ... there was no data yet */
+    if( Status == STATUS_PENDING || Received == 0 ) {
+	/* Freed in TCPSocketState */
+	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+	if( !Bucket ) return STATUS_NO_MEMORY;
+	
+	Bucket->Request = *Request;
+	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
+	Status = STATUS_PENDING;
+    }
+
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+    TI_DbgPrint(MID_TRACE,("Status %x\n", Status));
+
+    return Status;
 }
 
 NTSTATUS TCPSendData
 ( PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
-  ULONG DataSize ) {
+  ULONG DataSize,
+  ULONG Flags,
+  PULONG DataUsed ) {
+    KIRQL OldIrql;
+    NTSTATUS Status;
     PCONNECTION_ENDPOINT Connection;
     PCHAR BufferData;
     ULONG PacketSize;
     int error;
 
+    Connection = Request->Handle.ConnectionContext;
+
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
     NdisQueryBuffer( Buffer, &BufferData, &PacketSize );
     
-    Connection = Request->Handle.ConnectionContext;
-    return  OskitTCPSend( Connection->SocketContext, 
-			  BufferData, PacketSize, 0 );
+    TI_DbgPrint(MID_TRACE,("Connection = %x\n", Connection));
+    TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
+			   Connection->SocketContext));
+
+    Status = OskitTCPSend( Connection->SocketContext, 
+			 BufferData, PacketSize, (OSK_UINT *)DataUsed, 0 );
+
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+    return Status;
 }
 
 NTSTATUS TCPTimeout(VOID) { 

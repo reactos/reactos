@@ -84,7 +84,8 @@ NTSTATUS RawIPSendDatagram(
     PTDI_REQUEST Request,
     PTDI_CONNECTION_INFORMATION ConnInfo,
     PNDIS_BUFFER Buffer,
-    ULONG DataSize)
+    ULONG DataSize,
+    PULONG DataUsed )
 /*
  * FUNCTION: Sends a raw IP datagram to a remote address
  * ARGUMENTS:
@@ -109,6 +110,8 @@ NTSTATUS RawIPSendDatagram(
 				       BufferLen );
     
     TI_DbgPrint(MID_TRACE,("Packet.NdisPacket %x\n", Packet.NdisPacket));
+
+    *DataUsed = BufferLen;
 
     if( Status == NDIS_STATUS_SUCCESS )
 	Status = BuildRawIPPacket( &Packet,

@@ -187,9 +187,10 @@ VOID DispDataRequestComplete(
     PTRANSPORT_CONTEXT TranContext;
     KIRQL OldIrql;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+    TI_DbgPrint(DEBUG_IRP, ("Called for irp %x (%x, %d).\n", 
+			    Context, Status, Count));
 
-    Irp         = (PIRP)Context;
+    Irp         = Context;
     IrpSp       = IoGetCurrentIrpStackLocation(Irp);
     TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
 
@@ -218,6 +219,10 @@ VOID DispDataRequestComplete(
     Irp->IoStatus.Status      = Status;
     Irp->IoStatus.Information = Count;
 
+    TI_DbgPrint(MID_TRACE, ("Irp->IoStatus.Status = %x\n",
+			    Irp->IoStatus.Status));
+    TI_DbgPrint(MID_TRACE, ("Irp->IoStatus.Information = %d\n",
+			    Irp->IoStatus.Information));
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
     IRPFinish(Irp, STATUS_SUCCESS);
@@ -687,6 +692,7 @@ NTSTATUS DispTdiReceive(
     IrpSp->FileObject->FsContext,
     Irp,
     (PDRIVER_CANCEL)DispCancelRequest);
+  TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
       Status = TCPReceiveData(
@@ -786,46 +792,63 @@ NTSTATUS DispTdiSend(
  *     Status of operation
  */
 {
-    PIO_STACK_LOCATION IrpSp;
-    TDI_REQUEST Request;
-    PTDI_REQUEST_KERNEL_SEND SendInfo;
-    PTRANSPORT_CONTEXT TranContext;
-    NTSTATUS Status;
+  PIO_STACK_LOCATION IrpSp;
+  PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
+  PTRANSPORT_CONTEXT TranContext;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
+  ULONG BytesReceived;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
-    SendInfo    = (PTDI_REQUEST_KERNEL_SEND)&(IrpSp->Parameters);
-    TranContext = IrpSp->FileObject->FsContext;
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  ReceiveInfo = (PTDI_REQUEST_KERNEL_RECEIVE)&(IrpSp->Parameters);
 
-    /* Initialize a send request */
-    Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
-    Request.RequestNotifyObject  = DispDataRequestComplete;
-    Request.RequestContext       = Irp;
-
-    Status = DispPrepareIrpForCancel(
-        IrpSp->FileObject->FsContext,
-        Irp,
-        (PDRIVER_CANCEL)DispCancelRequest);
-    if (NT_SUCCESS(Status)) {
-
-        /* FIXME: DgramInfo->SendDatagramInformation->RemoteAddress 
-           must be of type PTDI_ADDRESS_IP */
-
-        Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
-            &Request, NULL, 
-	    (PNDIS_BUFFER)Irp->MdlAddress, SendInfo->SendLength);
-        if (Status != STATUS_PENDING) {
-            DispDataRequestComplete(Irp, Status, 0);
-            /* Return STATUS_PENDING because DispPrepareIrpForCancel
-               marks Irp as pending */
-            Status = STATUS_PENDING;
-        }
+  TranContext = IrpSp->FileObject->FsContext;
+  if (TranContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+      return STATUS_INVALID_CONNECTION;
     }
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
+  if (TranContext->Handle.ConnectionContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+      return STATUS_INVALID_CONNECTION;
+    }
 
-    return Status;
+  /* Initialize a receive request */
+  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
+  Request.RequestNotifyObject = DispDataRequestComplete;
+  Request.RequestContext = Irp;
+  Status = DispPrepareIrpForCancel(
+    IrpSp->FileObject->FsContext,
+    Irp,
+    (PDRIVER_CANCEL)DispCancelRequest);
+  TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
+  if (NT_SUCCESS(Status))
+    {
+	TI_DbgPrint(MID_TRACE,("About to TCPSendData\n"));
+	Status = TCPSendData(
+	    &Request,
+	    (PNDIS_BUFFER)Irp->MdlAddress,
+	    ReceiveInfo->ReceiveLength,
+	    ReceiveInfo->ReceiveFlags,
+	    &BytesReceived);
+	if (Status != STATUS_PENDING)
+	{
+	    DispDataRequestComplete(Irp, Status, BytesReceived);
+	}
+    }
+
+  if (Status != STATUS_PENDING)
+    {
+      IrpSp->Control &= ~SL_PENDING_RETURNED;
+    }
+
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
+
+  return Status;
 }
 
 
@@ -867,9 +890,10 @@ NTSTATUS DispTdiSendDatagram(
 
         Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
             &Request, DgramInfo->SendDatagramInformation,
-            (PNDIS_BUFFER)Irp->MdlAddress, DgramInfo->SendLength);
+            (PNDIS_BUFFER)Irp->MdlAddress, DgramInfo->SendLength, 
+	    &Irp->IoStatus.Information);
         if (Status != STATUS_PENDING) {
-            DispDataRequestComplete(Irp, Status, 0);
+            DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
             /* Return STATUS_PENDING because DispPrepareIrpForCancel
                marks Irp as pending */
             Status = STATUS_PENDING;

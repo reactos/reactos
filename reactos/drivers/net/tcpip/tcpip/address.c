@@ -210,11 +210,22 @@ NTSTATUS AddrBuildAddress(
   PTDI_ADDRESS_IP ValidAddr;
   PIP_ADDRESS IPAddress;
 
-  if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP)
-    return STATUS_INVALID_ADDRESS;
+  TI_DbgPrint(MID_TRACE,("Address in:\n"));
+  OskitDumpBuffer( TdiAddress, sizeof(*TdiAddress) );
 
-  if (TdiAddress->AddressLength != TDI_ADDRESS_LENGTH_IP)
+  if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
+      TI_DbgPrint
+	  (MID_TRACE,("AddressType %x, Not valid\n", 
+		      TdiAddress->AddressType));
     return STATUS_INVALID_ADDRESS;
+  }
+  if (TdiAddress->AddressLength < TDI_ADDRESS_LENGTH_IP) {
+      TI_DbgPrint
+	  (MID_TRACE,("AddressLength %x, Not valid (expected %x)\n", 
+		      TdiAddress->AddressLength, TDI_ADDRESS_LENGTH_IP));
+      return STATUS_INVALID_ADDRESS;
+  }
+
 
   ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;
 
@@ -225,6 +236,9 @@ NTSTATUS AddrBuildAddress(
   AddrInitIPv4(IPAddress, ValidAddr->in_addr);
   *Address = IPAddress;
   *Port = ValidAddr->sin_port;
+
+  TI_DbgPrint(MID_TRACE,("Address out:\n"));
+  OskitDumpBuffer( IPAddress, sizeof(*IPAddress) );
 
   return STATUS_SUCCESS;
 }

@@ -42,7 +42,8 @@ NTSTATUS UDPSendDatagram(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
-  ULONG DataSize);
+  ULONG DataSize,
+  PULONG DataUsed);
 
 NTSTATUS UDPReceiveDatagram(
   PTDI_REQUEST Request,

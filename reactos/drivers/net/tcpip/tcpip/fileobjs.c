@@ -456,6 +456,9 @@ NTSTATUS FileOpenConnection(
 
   /* Initialize spin lock that protects the connection endpoint file object */
   KeInitializeSpinLock(&Connection->Lock);
+  InitializeListHead(&Connection->ConnectRequest);
+  InitializeListHead(&Connection->ListenRequest);
+  InitializeListHead(&Connection->ReceiveRequest);
 
   /* Reference the object */
   Connection->RefCount = 1;
@@ -469,9 +472,6 @@ NTSTATUS FileOpenConnection(
 			   IPPROTO_TCP );
   DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
   
-  /* Initialize receive requests queue */
-  InitializeListHead(&Connection->ReceiveRequests);
-
   /* Initialize received segments queue */
   InitializeListHead(&Connection->ReceivedSegments);
 

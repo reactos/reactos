@@ -100,7 +100,8 @@ typedef NTSTATUS (*DATAGRAM_SEND_ROUTINE)(
     PTDI_REQUEST Request,
     PTDI_CONNECTION_INFORMATION ConnInfo,
     PNDIS_BUFFER Buffer,
-    ULONG DataSize);
+    ULONG DataSize,
+    PULONG DataUsed);
 
 /* Datagram completion handler prototype */
 typedef VOID (*DATAGRAM_COMPLETION_ROUTINE)(
@@ -295,54 +296,31 @@ typedef struct _TCP_SEGMENT {
   ULONG BytesDelivered;       /* Number of bytes already delivered to the client */
 } TCP_SEGMENT, *PTCP_SEGMENT;
 
+typedef struct _TDI_BUCKET {
+    LIST_ENTRY Entry;
+    TDI_REQUEST Request;
+} TDI_BUCKET, *PTDI_BUCKET;
 
 /* Transport connection context structure A.K.A. Transmission Control Block
    (TCB) in TCP terminology. The FileObject->FsContext2 field holds a pointer
    to this structure */
 typedef struct _CONNECTION_ENDPOINT {
-  LIST_ENTRY ListEntry;       /* Entry on list */
-  KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
-  ULONG RefCount;             /* Number of references to this object */
-  PVOID ClientContext;        /* Pointer to client context information */
-  PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
-  PVOID SocketContext;        /* Context for lower layer */
-
-#if 0
-  PIP_ADDRESS LocalAddress;   /* Pointer to local IP address */
-  USHORT LocalPort;           /* Local port number (network byte order) */
-
-  PIP_ADDRESS RemoteAddress;  /* Pointer to remote IP address */
-  USHORT RemotePort;          /* Remote port number (network byte order) */
-
-  CONNECTION_STATE State;     /* Connection state */
-  /* Send sequence variables */
-  ULONG SendUnacknowledged;   /* Highest sequence number that is acknowledged */
-  ULONG SendNext;             /* Sequence number of last data block sent */
-  ULONG SendWindow;           /* Maximum allowed number of octets in a segment */
-  ULONG SendUrgentPointer;    /* Sequence number of start of urgent data */
-  ULONG SendWL1;              /* Sequence number used for last window update */
-  ULONG SendWL2;              /* Acknowledgment number used for last window update */
-  ULONG SendISS;              /* Initial send sequence number */
-
-  /* Receive sequence variables */
-  ULONG ReceiveNext;          /* Next sequence number expected and start of receive window */
-  ULONG ReceiveWindow;        /* Maximum allowed number of octets in a segment */
-  ULONG ReceiveUrgentPointer; /* Sequence number of start of urgent data */
-  ULONG ReceiveIRS;           /* Initial receive sequence number */
-  ULONG ReceiveDelivered;     /* Next sequence number to be delivered to the client */
-
-  /* Statistics for computing the retransmission timeout */
-  ULONG TimestampSend;        /* Timestamp when sending a segment */
-  ULONG TimestampAck;         /* Timestamp when receiving acknowledgment */
-#endif
-
-  /* Requests */
-  PTDI_REQUEST ListenRequest; /* Queued listen request */
-  LIST_ENTRY ReceiveRequests; /* Queued receive requests */
-
-  /* Queues */
-  LIST_ENTRY ReceivedSegments;/* Segments that are received */
-
+    LIST_ENTRY ListEntry;       /* Entry on list */
+    KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
+    ULONG RefCount;             /* Number of references to this object */
+    PVOID ClientContext;        /* Pointer to client context information */
+    PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
+    PVOID SocketContext;        /* Context for lower layer */
+    
+    UINT State;                 /* Socket state W.R.T. oskit */
+    
+    /* Requests */
+    LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
+    LIST_ENTRY ListenRequest;  /* Queued listen requests */
+    LIST_ENTRY ReceiveRequest; /* Queued receive requests */
+    
+    /* Queues */
+    LIST_ENTRY ReceivedSegments;/* Segments that are received */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

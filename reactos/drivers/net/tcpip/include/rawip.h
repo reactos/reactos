@@ -11,7 +11,8 @@ NTSTATUS RawIPSendDatagram(
     PTDI_REQUEST Request,
     PTDI_CONNECTION_INFORMATION ConnInfo,
     PNDIS_BUFFER Buffer,
-    ULONG DataSize);
+    ULONG DataSize,
+    PULONG DataUsed);
 
 VOID RawIPReceive(
     PNET_TABLE_ENTRY NTE,

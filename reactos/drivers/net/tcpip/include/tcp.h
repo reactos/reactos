@@ -104,9 +104,10 @@ NTSTATUS TCPReceiveData(
 
 NTSTATUS TCPSendData(
   PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
-  ULONG DataSize);
+  ULONG DataSize,
+  ULONG Flags,
+  PULONG DataUsed);
 
 NTSTATUS TCPStartup(
   VOID);

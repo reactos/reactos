@@ -168,7 +168,8 @@ NTSTATUS UDPSendDatagram(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
-  ULONG DataSize)
+  ULONG DataSize,
+  PULONG DataUsed ) 
 /*
  * FUNCTION: Sends an UDP datagram to a remote address
  * ARGUMENTS:
@@ -183,6 +184,12 @@ NTSTATUS UDPSendDatagram(
     PDATAGRAM_SEND_REQUEST SendRequest;
     PADDRESS_FILE AddrFile = 
 	(PADDRESS_FILE)Request->Handle.AddressHandle;
+    PCHAR BufferData;
+    UINT BufferLen;
+
+    NdisQueryBuffer( Buffer, &BufferData, &BufferLen );
+
+    *DataUsed = BufferLen;
     
     BuildUDPPacket( SendRequest,
 		    (PIP_ADDRESS)&AddrFile->ADE->Address->Address.

@@ -23,150 +23,93 @@
 
 extern ULONG TCP_IPIdentification;
 
-void TCPRecvNotify( PCONNECTION_ENDPOINT Connection, UINT Flags ) {
-    int error = 0;
-    NTSTATUS Status = 0;
-    CHAR DataBuffer[1024];
-    UINT BytesRead = 0, BytesTaken = 0;
-    PTDI_IND_RECEIVE ReceiveHandler;
-    PTDI_IND_DISCONNECT DisconnectHandler;
-    PVOID HandlerContext;
-    SOCKADDR Addr;
+typedef VOID 
+(*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
 
-    TI_DbgPrint(MID_TRACE,("XX> Called\n"));
-    
-    do { 
-	error = OskitTCPRecv( Connection->SocketContext,
-			      &Addr,
-			      DataBuffer,
-			      1024,
-			      &BytesRead,
-			      Flags | OSK_MSG_DONTWAIT | OSK_MSG_PEEK );
+int TCPSocketState(void *ClientData,
+		   void *WhichSocket, 
+		   void *WhichConnection,
+		   OSK_UINT NewState ) {
+    PCONNECTION_ENDPOINT Connection = WhichConnection;
+    PTCP_COMPLETION_ROUTINE Complete;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
 
-	switch( error ) {
-	case 0:
-	    ReceiveHandler = Connection->AddressFile->ReceiveHandler;
-	    HandlerContext = Connection->AddressFile->ReceiveHandlerContext;
-	    
-	    TI_DbgPrint(MID_TRACE,("Received %d bytes\n", BytesRead));
-	    
-	    if( Connection->AddressFile->RegisteredReceiveHandler ) 
-		Status = ReceiveHandler( HandlerContext,
-					 NULL,
-					 TDI_RECEIVE_NORMAL,
-					 BytesRead,
-					 BytesRead,
-					 &BytesTaken,
-					 DataBuffer,
-					 NULL );
-	    else
-		Status = STATUS_UNSUCCESSFUL;
-	    
-	    if( Status == STATUS_SUCCESS ) {
-		OskitTCPRecv( Connection->SocketContext,
-			      &Addr,
-			      DataBuffer,
-			      BytesTaken,
-			      &BytesRead,
-			      Flags | OSK_MSG_DONTWAIT );
-	    }
-	    break;
+    TI_DbgPrint(MID_TRACE,("Called: NewState %x\n", NewState));
 
-	case OSK_ESHUTDOWN:
-	case OSK_ECONNRESET:
-	    DisconnectHandler = Connection->AddressFile->DisconnectHandler;
-	    HandlerContext = Connection->AddressFile->DisconnectHandlerContext;
-	    
-	    if( Connection->AddressFile->RegisteredDisconnectHandler )
-		Status = DisconnectHandler( HandlerContext,
-					    NULL,
-					    0,
-					    NULL,
-					    0,
-					    NULL,
-					    (error == OSK_ESHUTDOWN) ? 
-					    TDI_DISCONNECT_RELEASE :
-					    TDI_DISCONNECT_ABORT );
-	    else
-		Status = STATUS_UNSUCCESSFUL;
-	    break;
-	    
-	default:
-	    assert( 0 );
-	    break;
-	}
-    } while( error == 0 && BytesRead > 0 && BytesTaken > 0 );
-
-    TI_DbgPrint(MID_TRACE,("XX> Leaving\n"));
-}
-
-void TCPCloseNotify( PCONNECTION_ENDPOINT Connection ) {
-    NTSTATUS Status;
-    PTDI_IND_DISCONNECT DisconnectHandler;
-    PVOID HandlerContext;
-
-    DisconnectHandler = Connection->AddressFile->DisconnectHandler;
-    HandlerContext = Connection->AddressFile->DisconnectHandlerContext;
-    
-    /* XXX Distinguish TDI_DISCONNECT_RELEASE from TDI_DISCONNECT_ABORT */
-    if( Connection->AddressFile->RegisteredDisconnectHandler )
-	Status = DisconnectHandler( HandlerContext,
-				    NULL,
-				    0,
-				    NULL,
-				    0,
-				    NULL,
-				    TDI_DISCONNECT_ABORT );
-    else
-	Status = STATUS_UNSUCCESSFUL;    
-
-    return Status;
-}
-
-char *FlagNames[] = { "SEL_CONNECT",
-		      "SEL_FIN",
-		      "SEL_ACCEPT",
-		      "SEL_OOB",
-		      "SEL_READ",
-		      "SEL_WRITE",
-		       0 };
-int FlagValues[]   = { SEL_CONNECT,
-		       SEL_FIN,
-		       SEL_ACCEPT,
-		       SEL_OOB,
-		       SEL_READ,
-		       SEL_WRITE,
-		       0 };
-
-void TCPSocketState( void *ClientData,
-		     void *WhichSocket,
-		     void *WhichConnection,
-		     OSK_UINT Flags,
-		     OSK_UINT SocketState ) {
-    int i;
-    PCONNECTION_ENDPOINT Connection = 
-	(PCONNECTION_ENDPOINT)WhichConnection;
-
-    TI_DbgPrint(MID_TRACE,("TCPSocketState: (socket %x) %x %x\n",
-			   WhichSocket, Flags, SocketState));
-
-    for( i = 0; FlagValues[i]; i++ ) {
-	if( Flags & FlagValues[i] ) 
-	    TI_DbgPrint(MID_TRACE,("Flag %s\n", FlagNames[i]));
+    if( !Connection ) {
+	TI_DbgPrint(MID_TRACE,("Socket closing.\n"));
+	return 0;
     }
 
-    if( Flags & SEL_CONNECT ) 
-	/* TCPConnectNotify( Connection ); */ ;
-    if( Flags & SEL_FIN )
-	TCPCloseNotify( Connection );
-    if( Flags & SEL_ACCEPT )
-	/* TCPAcceptNotify( Connection ); */ ;
-    if( Flags & SEL_OOB ) 
-	TCPRecvNotify( Connection, MSG_OOB );
-    if( Flags & SEL_WRITE )
-	/* TCPSendNotify( Connection ); */ ;
-    if( Flags & SEL_READ )
-	TCPRecvNotify( Connection, 0 );
+    if( (NewState & SEL_CONNECT) && 
+	!(Connection->State & SEL_CONNECT) ) {
+	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
+	    Connection->State |= SEL_CONNECT;
+	    Entry = RemoveHeadList( &Connection->ConnectRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+	    TI_DbgPrint(MID_TRACE,
+			("Completing Connect Request %x\n", Bucket->Request));
+	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+	    /* Frees the bucket allocated in TCPConnect */
+	    ExFreePool( Bucket );
+	}
+    } else if( NewState & SEL_READ ) {
+	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
+	    PIRP Irp;
+	    OSK_UINT RecvLen = 0, Received = 0;
+	    OSK_PCHAR RecvBuffer = 0;
+	    PMDL Mdl;
+	    NTSTATUS Status;
+
+	    Entry = RemoveHeadList( &Connection->ReceiveRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+
+	    TI_DbgPrint(MID_TRACE,
+			("Readable, Completing read request %x\n", 
+			 Bucket->Request));
+
+	    Irp = Bucket->Request.RequestContext;
+	    Mdl = Irp->MdlAddress;
+
+	    TI_DbgPrint(MID_TRACE,
+			("Getting the user buffer from %x\n", Mdl));
+
+	    NdisQueryBuffer( Mdl, &RecvBuffer, &RecvLen );
+
+	    TI_DbgPrint(MID_TRACE,
+			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
+
+	    Status = TCPTranslateError
+		( OskitTCPRecv( Connection->SocketContext,
+				RecvBuffer,
+				RecvLen,
+				&Received,
+				0 ) );
+
+	    TI_DbgPrint(MID_TRACE,("TCP Bytes: %d\n", Received));
+
+	    if( Status == STATUS_SUCCESS && Received != 0 ) {
+		TI_DbgPrint(MID_TRACE,("Received %d bytes with status %x\n",
+				       Received, Status));
+		
+		TI_DbgPrint(MID_TRACE,
+			    ("Completing Receive Request: %x\n", 
+			     Bucket->Request));
+		
+		Complete( Bucket->Request.RequestContext, 
+			  STATUS_SUCCESS, 
+			  Received );
+	    } else {
+		InsertHeadList( &Connection->ReceiveRequest,
+				&Bucket->Entry );
+	    }
+	}
+    }
+
+    return 0;
 }
 
 void TCPPacketSendComplete( PVOID Context,
@@ -294,6 +237,12 @@ int TCPPacketSend(void *ClientData,
 			&RemoteAddress.Address.IPv4Address,
 			&RemotePort );
 
+    DbgPrint("OSKIT SENDING PACKET *** %x:%d -> %x:%d\n",
+	     LocalAddress.Address.IPv4Address,
+	     LocalPort,
+	     RemoteAddress.Address.IPv4Address,
+	     RemotePort);
+
     NCE = RouterGetRoute( &RemoteAddress, NULL );
 
     if( !NCE ) return OSK_EADDRNOTAVAIL;
@@ -302,8 +251,7 @@ int TCPPacketSend(void *ClientData,
 			    ADE_UNICAST, 
 			    &LocalAddress.Address.IPv4Address );
 
-    if( Connection ) 
-	KeAcquireSpinLock( &Connection->Lock, &OldIrql );
+    KeRaiseIrql( DISPATCH_LEVEL, &OldIrql );
 
     NdisStatus = 
 	AllocatePacketWithBuffer( &SendRequest->PacketToSend, data, len );
@@ -333,8 +281,7 @@ int TCPPacketSend(void *ClientData,
 	DbgPrint("Transmit called without connection.\n");
 
 end:
-    if( Connection )
-	KeReleaseSpinLock( &Connection->Lock, OldIrql );
+    KeLowerIrql( OldIrql );
 
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;

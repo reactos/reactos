@@ -213,7 +213,14 @@ CP
       (Address->TAAddressCount != 1) ||
       (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
       (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {
-      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid:\n"));
+      TI_DbgPrint(MIN_TRACE, ("AddressCount: %d\n", Address->TAAddressCount));
+      if( Address->TAAddressCount == 1 ) {
+	  TI_DbgPrint(MIN_TRACE, ("AddressLength: %\n", 
+				  Address->Address[0].AddressLength));
+	  TI_DbgPrint(MIN_TRACE, ("AddressType: %\n", 
+				  Address->Address[0].AddressType));
+      }
       ExFreePool(Context);
       return STATUS_INVALID_PARAMETER;
     }
@@ -578,11 +585,12 @@ TiDispatch(
   NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
+  IrpSp  = IoGetCurrentIrpStackLocation(Irp);
+
   TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
 
   Irp->IoStatus.Information = 0;
 
-  IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 #ifdef _MSC_VER
   Status = TdiMapUserRequest(DeviceObject, Irp, IrpSp);
   if (NT_SUCCESS(Status)) {
