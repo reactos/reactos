@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.30 2002/11/11 21:51:33 hbirr Exp $
+/* $Id: atapi.c,v 1.31 2002/12/09 20:04:44 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -41,9 +41,8 @@
  */
 
 #define ENABLE_PCI
+#define ENABLE_NATIVE_PCI
 #define ENABLE_ISA
-#define ENABLE_MULTIMODE    // enables multiple sector commands 
-#define ENABLE_32BIT	    // enables 32Bit I/O for disk transfer (not for ATAPI)
 
 //  -------------------------------------------------------------------------
 
@@ -77,6 +76,10 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
   IDE_DRIVE_IDENTIFY DeviceParams[2];
   BOOLEAN DevicePresent[2];
   BOOLEAN DeviceAtapi[2];
+  ULONG TransferSize[2]; 
+  BOOLEAN MultiSectorCommand[2];
+  BOOLEAN DWordIo[2];
+
 
   ULONG CommandPortBase;
   ULONG ControlPortBase;
@@ -84,6 +87,7 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
 
   BOOLEAN ExpectingInterrupt;
   PSCSI_REQUEST_BLOCK CurrentSrb;
+
 
   PUSHORT DataBuffer;
 } ATAPI_MINIPORT_EXTENSION, *PATAPI_MINIPORT_EXTENSION;
@@ -94,7 +98,24 @@ typedef struct _UNIT_EXTENSION
   ULONG Dummy;
 } UNIT_EXTENSION, *PUNIT_EXTENSION;
 
+PCI_SLOT_NUMBER LastSlotNumber;
 
+#ifdef ENABLE_NATIVE_PCI
+typedef struct _PCI_NATIVE_CONTROLLER 
+{
+  USHORT VendorID;
+  USHORT DeviceID;
+}
+PCI_NATIVE_CONTROLLER, *PPCI_NATIVE_CONTROLLER;
+
+PCI_NATIVE_CONTROLLER const PciNativeController[] = 
+{
+    {
+	0x105A,		    // Promise 
+	0x4D68,		    // PDC20268, Ultra100TX2
+    }
+};
+#endif
 //  -----------------------------------------------  Discardable Declarations
 
 #ifdef  ALLOC_PRAGMA
@@ -273,6 +294,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
   InitData.MapBuffers = TRUE;
 
+
   /* Search the PCI bus for compatibility mode ide controllers */
 #ifdef ENABLE_PCI
   InitData.HwFindAdapter = AtapiFindCompatiblePciController;
@@ -283,6 +305,28 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.VendorIdLength = 0;
   InitData.DeviceId = NULL;
   InitData.DeviceIdLength = 0;
+
+  Status = ScsiPortInitialize(DriverObject,
+			      RegistryPath,
+			      &InitData,
+			      NULL);
+//  if (newStatus < statusToReturn)
+//    statusToReturn = newStatus;
+#endif
+
+  /* Search the PCI bus for all ide controllers */
+#ifdef ENABLE_NATIVE_PCI
+
+  InitData.HwFindAdapter = AtapiFindNativePciController;
+  InitData.NumberOfAccessRanges = 3;
+  InitData.AdapterInterfaceType = PCIBus;
+
+  InitData.VendorId = 0;
+  InitData.VendorIdLength = 0;
+  InitData.DeviceId = 0;
+  InitData.DeviceIdLength = 0;
+
+  LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
 
   Status = ScsiPortInitialize(DriverObject,
 			      RegistryPath,
@@ -311,31 +355,95 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //        statusToReturn = newStatus;
 #endif
 
-  /* Search the PCI bus for native mode ide controllers */
-#if 0
-  InitData.HwFindAdapter = AtapiFindNativePciController;
-  InitData.NumberOfAccessRanges = 2;
-  InitData.AdapterInterfaceType = PCIBus;
-
-  InitData.VendorId = NULL;
-  InitData.VendorIdLength = 0;
-  InitData.DeviceId = NULL;
-  InitData.DeviceIdLength = 0;
-
-  Status = ScsiPortInitialize(DriverObject,
-			      RegistryPath,
-			      &InitData,
-			      (PVOID)i);
-//  if (newStatus < statusToReturn)
-//    statusToReturn = newStatus;
-#endif
 
   DPRINT("Returning from DriverEntry\n");
 
   return(Status);
 }
 
+BOOLEAN
+AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
+		      PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+		      INTERFACE_TYPE InterfaceType,
+		      ULONG CommandPortBase,
+		      ULONG ControlPortBase,
+		      ULONG BusMasterPortBase,
+		      ULONG InterruptVector)
+{
+   SCSI_PHYSICAL_ADDRESS IoAddress;
+   PVOID IoBase;
+   
+   IoAddress = ScsiPortConvertUlongToPhysicalAddress(CommandPortBase);
+   IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
+                                  InterfaceType,
+				  ConfigInfo->SystemIoBusNumber,
+				  IoAddress,
+				  8,
+				  TRUE);
+   if (IoBase == NULL)
+   {
+      return FALSE;
+   }
+   DevExt->CommandPortBase = (ULONG)IoBase;
+   ConfigInfo->AccessRanges[0].RangeStart = IoAddress;
+   ConfigInfo->AccessRanges[0].RangeLength = 8;
+   ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
 
+   if (ControlPortBase)
+   {
+      IoAddress = ScsiPortConvertUlongToPhysicalAddress(ControlPortBase + 2);
+      IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
+                                     InterfaceType,
+				     ConfigInfo->SystemIoBusNumber,
+				     IoAddress,
+				     1,
+				     TRUE);
+      if (IoBase == NULL)
+      {
+         ScsiPortFreeDeviceBase((PVOID)DevExt,
+	                        (PVOID)DevExt->CommandPortBase);
+         return FALSE;
+      }
+      DevExt->ControlPortBase = (ULONG)IoBase;
+      ConfigInfo->AccessRanges[1].RangeStart = IoAddress;
+      ConfigInfo->AccessRanges[1].RangeLength = 1;
+      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+   }
+   if (BusMasterPortBase)
+   {
+      IoAddress = ScsiPortConvertUlongToPhysicalAddress(BusMasterPortBase);
+      IoBase = ScsiPortGetDeviceBase((PVOID)DevExt,
+                                     InterfaceType,
+				     ConfigInfo->SystemIoBusNumber,
+				     IoAddress,
+				     8,
+				     TRUE);
+      if (IoBase == NULL)
+      {
+         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->CommandPortBase);
+         ScsiPortFreeDeviceBase((PVOID)DevExt, (PVOID)DevExt->ControlPortBase);
+         return FALSE;
+      }
+      ConfigInfo->AccessRanges[2].RangeStart = IoAddress;
+      ConfigInfo->AccessRanges[2].RangeLength = 8;
+      ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
+   }
+   ConfigInfo->BusInterruptLevel = InterruptVector;
+   ConfigInfo->BusInterruptVector = InterruptVector;
+   ConfigInfo->InterruptMode = (InterfaceType == Isa) ? Latched : LevelSensitive;
+
+   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F4) && !ConfigInfo->AtdiskPrimaryClaimed)
+   {
+      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+   }
+   if ((CommandPortBase == 0x170 || ControlPortBase == 0x374) && !ConfigInfo->AtdiskSecondaryClaimed)
+   {
+      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+   }
+   return TRUE;
+}
+
+#ifdef ENABLE_PCI
 static ULONG STDCALL
 AtapiFindCompatiblePciController(PVOID DeviceExtension,
 				 PVOID HwContext,
@@ -348,9 +456,13 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
   PCI_SLOT_NUMBER SlotNumber;
   PCI_COMMON_CONFIG PciConfig;
   ULONG DataSize;
+  ULONG StartDeviceNumber;
+  ULONG DeviceNumber;
+  ULONG StartFunctionNumber;
   ULONG FunctionNumber;
   BOOLEAN ChannelFound;
   BOOLEAN DeviceFound;
+  ULONG BusMasterBasePort = 0;
 
   DPRINT("AtapiFindCompatiblePciController() Bus: %lu  Slot: %lu\n",
 	  ConfigInfo->SystemIoBusNumber,
@@ -363,155 +475,115 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
       ConfigInfo->AtdiskSecondaryClaimed == TRUE)
     return(SP_RETURN_NOT_FOUND);
 
+  SlotNumber.u.AsULONG = ConfigInfo->SlotNumber;
+  StartDeviceNumber = SlotNumber.u.bits.DeviceNumber;
+  StartFunctionNumber = SlotNumber.u.bits.FunctionNumber;
+  for (DeviceNumber = StartDeviceNumber; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
+  {
+     SlotNumber.u.bits.DeviceNumber = DeviceNumber;
+     for (FunctionNumber = StartFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
+     {
+        SlotNumber.u.bits.FunctionNumber = FunctionNumber;
+	ChannelFound = FALSE;
+        DeviceFound = FALSE;
 
-  SlotNumber.u.AsULONG = 0;
-  for (FunctionNumber = 0 /*ConfigInfo->SlotNumber*/; FunctionNumber < 256; FunctionNumber++)
-    {
-      SlotNumber.u.AsULONG = FunctionNumber;
-
-      ChannelFound = FALSE;
-      DeviceFound = FALSE;
-
-      DataSize = ScsiPortGetBusData(DeviceExtension,
-				    PCIConfiguration,
-				    0,
-				    SlotNumber.u.AsULONG,
-				    &PciConfig,
-				    sizeof(PCI_COMMON_CONFIG));
-//      if (DataSize != sizeof(PCI_COMMON_CONFIG) ||
-//	  PciConfig.VendorID == PCI_INVALID_VENDORID)
-      if (DataSize == 0)
+        DataSize = ScsiPortGetBusData(DeviceExtension,
+				      PCIConfiguration,
+				      ConfigInfo->SystemIoBusNumber,
+				      SlotNumber.u.AsULONG,
+				      &PciConfig,
+				      PCI_COMMON_HDR_LENGTH);
+        if (DataSize != PCI_COMMON_HDR_LENGTH)
 	{
-//	  if ((SlotNumber.u.AsULONG & 0x07) == 0)
-//	    return(SP_RETURN_ERROR); /* No bus found */
-
-	  continue;
-//	  return(SP_RETURN_ERROR);
+	   if (FunctionNumber == 0)
+	   {
+	      break;
+	   }
+	   else
+	   {
+	      continue;
+	   }
 	}
-
-      if (PciConfig.BaseClass == 0x01 &&
-	  PciConfig.SubClass == 0x01) // &&
-//	  (PciConfig.ProgIf & 0x05) == 0)
+	  
+	DPRINT("%x %x\n", PciConfig.BaseClass, PciConfig.SubClass);
+        if (PciConfig.BaseClass == 0x01 &&
+	    PciConfig.SubClass == 0x01) // &&
+//	    (PciConfig.ProgIf & 0x05) == 0)
 	{
-	  /* both channels are in compatibility mode */
-	  DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
-		 ConfigInfo->SystemIoBusNumber,
-		 SlotNumber.u.bits.DeviceNumber,
-		 SlotNumber.u.bits.FunctionNumber,
-		 PciConfig.VendorID,
-		 PciConfig.DeviceID);
-	  DPRINT("ProgIF 0x%02hx\n", PciConfig.ProgIf);
+	   /* both channels are in compatibility mode */
+	   DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
+		  ConfigInfo->SystemIoBusNumber,
+		  SlotNumber.u.bits.DeviceNumber,
+		  SlotNumber.u.bits.FunctionNumber,
+		  PciConfig.VendorID,
+		  PciConfig.DeviceID);
+	   DPRINT("ProgIF 0x%02hx\n", PciConfig.ProgIf);
 
-	  DPRINT("Found IDE controller in compatibility mode!\n");
+	   DPRINT("Found IDE controller in compatibility mode!\n");
 
-	  ConfigInfo->NumberOfBuses = 1;
-	  ConfigInfo->MaximumNumberOfTargets = 2;
-	  ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
+	   ConfigInfo->NumberOfBuses = 1;
+	   ConfigInfo->MaximumNumberOfTargets = 2;
+	   ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
 
-	  if (PciConfig.ProgIf & 0x80)
-	    {
+	   if (PciConfig.ProgIf & 0x80)
+	   {
 	      DPRINT("Found IDE Bus Master controller!\n");
-	      if (PciConfig.u.type0.BaseAddresses[4] & 0x00000001)
-		{
-		  DPRINT("  IDE Bus Master Registers at IO %lx\n",
-			  PciConfig.u.type0.BaseAddresses[4] & ~0x00000003);
-		}
-	    }
-
-	  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
-	    {
+	      if (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE)
+	      {
+		  BusMasterBasePort = PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_ADDRESS_MASK;
+		  DPRINT("  IDE Bus Master Registers at IO %lx\n", BusMasterBasePort);
+	      }
+	   }
+	   if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
+	   {
 	      /* Both channels unclaimed: Claim primary channel */
 	      DPRINT("Primary channel!\n");
-
-	      DevExt->CommandPortBase = 0x01F0;
-	      DevExt->ControlPortBase = 0x03F6;
-
-	      ConfigInfo->BusInterruptLevel = 14;
-	      ConfigInfo->BusInterruptVector = 14;
-	      ConfigInfo->InterruptMode = LevelSensitive;
-
-	      ConfigInfo->AccessRanges[0].RangeStart =
-		ScsiPortConvertUlongToPhysicalAddress(0x01F0);
-	      ConfigInfo->AccessRanges[0].RangeLength = 8;
-	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
-
-	      ConfigInfo->AccessRanges[1].RangeStart =
-		ScsiPortConvertUlongToPhysicalAddress(0x03F6);
-	      ConfigInfo->AccessRanges[1].RangeLength = 1;
-	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
-
-	      /* Claim bus master registers */
-	      if (PciConfig.ProgIf & 0x80)
-		{
-		  DevExt->BusMasterRegisterBase =
-		    PciConfig.u.type0.BaseAddresses[4] & ~0x00000003;
-
-		  ConfigInfo->AccessRanges[2].RangeStart =
-		    ScsiPortConvertUlongToPhysicalAddress(DevExt->BusMasterRegisterBase);
-		  ConfigInfo->AccessRanges[2].RangeLength = 8;
-		  ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
-		}
-
-	      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
-	      ChannelFound = TRUE;
-	      *Again = TRUE;
-	    }
-	  else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
-	    {
+              ChannelFound = AtapiClaimHwResources(DevExt,
+		                                   ConfigInfo,
+		                                   PCIBus,
+		                                   0x1F0,
+			                           0x3F4,
+			                           BusMasterBasePort,
+			                           14);
+              *Again = TRUE;
+	   }
+	   else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
+	   {
 	      /* Primary channel already claimed: claim secondary channel */
 	      DPRINT("Secondary channel!\n");
 
-	      DevExt->CommandPortBase = 0x0170;
-	      DevExt->ControlPortBase = 0x0376;
-
-	      ConfigInfo->BusInterruptLevel = 15;
-	      ConfigInfo->BusInterruptVector = 15;
-	      ConfigInfo->InterruptMode = LevelSensitive;
-
-	      ConfigInfo->AccessRanges[0].RangeStart =
-		ScsiPortConvertUlongToPhysicalAddress(0x0170);
-	      ConfigInfo->AccessRanges[0].RangeLength = 8;
-	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
-
-	      ConfigInfo->AccessRanges[1].RangeStart =
-		ScsiPortConvertUlongToPhysicalAddress(0x0376);
-	      ConfigInfo->AccessRanges[1].RangeLength = 1;
-	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
-
-	      /* Claim bus master registers */
-	      if (PciConfig.ProgIf & 0x80)
-		{
-		  DevExt->BusMasterRegisterBase =
-		    (PciConfig.u.type0.BaseAddresses[4] & ~0x00000003) + 8;
-
-		  ConfigInfo->AccessRanges[2].RangeStart =
-		    ScsiPortConvertUlongToPhysicalAddress(DevExt->BusMasterRegisterBase);
-		  ConfigInfo->AccessRanges[2].RangeLength = 8;
-		  ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
-		}
-
-	      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
-	      ChannelFound = TRUE;
+              ChannelFound = AtapiClaimHwResources(DevExt,
+		                                   ConfigInfo,
+		                                   PCIBus,
+		                                   0x170,
+			                           0x374,
+						   BusMasterBasePort ? BusMasterBasePort + 8 : 0,
+			                           15);
 	      *Again = FALSE;
-	    }
-
-	  /* Find attached devices */
-	  if (ChannelFound == TRUE)
-	    {
-	      DeviceFound = AtapiFindDevices(DevExt,
-					     ConfigInfo);
-	    }
-	  DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_FOUND\n");
-	  return(SP_RETURN_FOUND);
-        }
-    }
-
+	   }
+	   /* Find attached devices */
+	   if (ChannelFound)
+	   {
+	      DeviceFound = AtapiFindDevices(DevExt, ConfigInfo);
+	      ConfigInfo->SlotNumber = SlotNumber.u.AsULONG;
+	      DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_FOUND\n");
+	      return(SP_RETURN_FOUND);
+	   }
+	}
+	if (FunctionNumber == 0 && !(PciConfig.HeaderType & PCI_MULTIFUNCTION))
+	{
+	   break;
+	}
+     }	
+     StartFunctionNumber = 0;
+  }
   DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_NOT_FOUND\n");
 
   return(SP_RETURN_NOT_FOUND);
 }
+#endif
 
-
+#ifdef ENABLE_ISA
 static ULONG STDCALL
 AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PVOID HwContext,
@@ -537,23 +609,13 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
       /* Both channels unclaimed: Claim primary channel */
       DPRINT("Primary channel!\n");
 
-      DevExt->CommandPortBase = 0x01F0;
-      DevExt->ControlPortBase = 0x03F6;
-
-      ConfigInfo->BusInterruptLevel = 14;
-      ConfigInfo->BusInterruptVector = 14;
-      ConfigInfo->InterruptMode = LevelSensitive;
-
-      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x01F0);
-      ConfigInfo->AccessRanges[0].RangeLength = 8;
-      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
-
-      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x03F6);
-      ConfigInfo->AccessRanges[1].RangeLength = 1;
-      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
-
-      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
-      ChannelFound = TRUE;
+      ChannelFound = AtapiClaimHwResources(DevExt,
+		                           ConfigInfo,
+		                           Isa,
+		                           0x1F0,
+			                   0x3F4,
+			                   0,
+			                   14);
       *Again = TRUE;
     }
   else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
@@ -561,23 +623,13 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
       /* Primary channel already claimed: claim secondary channel */
       DPRINT("Secondary channel!\n");
 
-      DevExt->CommandPortBase = 0x0170;
-      DevExt->ControlPortBase = 0x0376;
-
-      ConfigInfo->BusInterruptLevel = 15;
-      ConfigInfo->BusInterruptVector = 15;
-      ConfigInfo->InterruptMode = LevelSensitive;
-
-      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0170);
-      ConfigInfo->AccessRanges[0].RangeLength = 8;
-      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
-
-      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0376);
-      ConfigInfo->AccessRanges[1].RangeLength = 1;
-      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
-
-      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
-      ChannelFound = TRUE;
+      ChannelFound = AtapiClaimHwResources(DevExt,
+		                           ConfigInfo,
+		                           Isa,
+		                           0x170,
+			                   0x374,
+			                   0,
+			                   15);
       *Again = FALSE;
     }
   else
@@ -592,13 +644,15 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
     {
       DeviceFound = AtapiFindDevices(DevExt,
 				     ConfigInfo);
+      DPRINT("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
+      return(SP_RETURN_FOUND);
     }
-
-  DPRINT("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
-  return(SP_RETURN_FOUND);
+  *Again = FALSE;
+  return SP_RETURN_NOT_FOUND;
 }
+#endif
 
-
+#ifdef ENABLE_NATIVE_PCI
 static ULONG STDCALL
 AtapiFindNativePciController(PVOID DeviceExtension,
 			     PVOID HwContext,
@@ -608,16 +662,129 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 			     PBOOLEAN Again)
 {
   PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+  PCI_COMMON_CONFIG PciConfig;
+  PCI_SLOT_NUMBER SlotNumber;
+  ULONG DataSize;
+  ULONG DeviceNumber;
+  ULONG StartDeviceNumber;
+  ULONG FunctionNumber;
+  ULONG StartFunctionNumber;
+  ULONG BusMasterBasePort;
+  ULONG Count;
+  BOOLEAN ChannelFound;
 
   DPRINT("AtapiFindNativePciController() called!\n");
 
-  *Again = FALSE;
+  SlotNumber.u.AsULONG = ConfigInfo->SlotNumber;
+  StartDeviceNumber = SlotNumber.u.bits.DeviceNumber;
+  StartFunctionNumber = SlotNumber.u.bits.FunctionNumber;
+  for (DeviceNumber = StartDeviceNumber; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
+  {
+     SlotNumber.u.bits.DeviceNumber = DeviceNumber;
+     for (FunctionNumber = StartFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
+     {
+	SlotNumber.u.bits.FunctionNumber = FunctionNumber;
+	DataSize = ScsiPortGetBusData(DeviceExtension,
+				      PCIConfiguration,
+				      ConfigInfo->SystemIoBusNumber,
+				      SlotNumber.u.AsULONG,
+				      &PciConfig,
+				      PCI_COMMON_HDR_LENGTH);
+        if (DataSize != PCI_COMMON_HDR_LENGTH)
+	{
+	   break;
+	}
+	for (Count = 0; Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER); Count++)
+	{
+	   if (PciConfig.VendorID == PciNativeController[Count].VendorID &&
+	       PciConfig.DeviceID == PciNativeController[Count].DeviceID)
+	   {
+	      break;
+	   }
+	}
+	if (Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER)) 
+	{
+	   /* We have found a known natice pci ide controller */
+   	   if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
+	   {
+	      DPRINT("Found IDE Bus Master controller!\n");
+	      BusMasterBasePort = PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_ADDRESS_MASK;
+	      DPRINT("  IDE Bus Master Registers at IO %lx\n", BusMasterBasePort);
+	   }
+	   else
+	   {
+	      BusMasterBasePort = 0;
+	   }
 
+	   DPRINT("VendorID: %04x, DeviceID: %04x\n", PciConfig.VendorID, PciConfig.DeviceID);
+           ConfigInfo->NumberOfBuses = 1;
+           ConfigInfo->MaximumNumberOfTargets = 2;
+           ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
+
+	   /* FIXME:
+	        We must not store and use the last tested slot number. If there is a recall
+		to the some device and we will claim the primary channel again than the call
+		to ScsiPortGetDeviceBase in AtapiClaimHwResource will fail and we can try to
+		claim the secondary channel. 
+	    */
+	   ChannelFound = FALSE;
+	   if (LastSlotNumber.u.AsULONG != SlotNumber.u.AsULONG)
+	   {
+	      /* try to claim primary channel */
+	      if ((PciConfig.u.type0.BaseAddresses[0] & PCI_ADDRESS_IO_SPACE) &&
+		  (PciConfig.u.type0.BaseAddresses[1] & PCI_ADDRESS_IO_SPACE))
+	      {
+		 /* primary channel is enabled */
+		 ChannelFound = AtapiClaimHwResources(DevExt,
+		                                      ConfigInfo,
+		                                      PCIBus,
+		                                      PciConfig.u.type0.BaseAddresses[0] & PCI_ADDRESS_IO_ADDRESS_MASK,
+			                              PciConfig.u.type0.BaseAddresses[1] & PCI_ADDRESS_IO_ADDRESS_MASK,
+			                              BusMasterBasePort,
+			                              PciConfig.u.type0.InterruptLine);
+	         if (ChannelFound)
+		 {
+                    AtapiFindDevices(DevExt, ConfigInfo);
+                    *Again = TRUE;
+		    ConfigInfo->SlotNumber = LastSlotNumber.u.AsULONG = SlotNumber.u.AsULONG;
+                    return SP_RETURN_FOUND;
+		 }
+	      }
+	   }
+	   if (!ChannelFound)
+	   {
+	      /* try to claim secondary channel */
+	      if ((PciConfig.u.type0.BaseAddresses[2] & PCI_ADDRESS_IO_SPACE) &&
+		  (PciConfig.u.type0.BaseAddresses[3] & PCI_ADDRESS_IO_SPACE))
+	      {
+	         /* secondary channel is enabled */
+	         ChannelFound = AtapiClaimHwResources(DevExt,
+		                                      ConfigInfo,
+		                                      PCIBus,
+		                                      PciConfig.u.type0.BaseAddresses[2] & PCI_ADDRESS_IO_ADDRESS_MASK,
+			                              PciConfig.u.type0.BaseAddresses[3] & PCI_ADDRESS_IO_ADDRESS_MASK,
+						      BusMasterBasePort ? BusMasterBasePort + 8 : 0,
+			                              PciConfig.u.type0.InterruptLine);
+		 if (ChannelFound)
+		 {
+		    AtapiFindDevices(DevExt, ConfigInfo);
+                    *Again = FALSE;
+		    LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
+                    return SP_RETURN_FOUND;
+		 }
+	      }
+	   }
+	} 		     
+     }
+     StartFunctionNumber = 0;
+  }
+  *Again = FALSE;
+  LastSlotNumber.u.AsULONG = 0xFFFFFFFF;
   DPRINT("AtapiFindNativePciController() done!\n");
 
   return(SP_RETURN_NOT_FOUND);
 }
-
+#endif
 
 static BOOLEAN STDCALL
 AtapiInitialize(IN PVOID DeviceExtension)
@@ -707,17 +874,31 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   DPRINT("AtapiInterrupt() called!\n");
 
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
-  if (DevExt->ExpectingInterrupt == FALSE)
-    {
-      DPRINT("AtapiInterrupt(): Unexpected interrupt\n");
-      return(FALSE);
-    }
-
-  Srb = DevExt->CurrentSrb;
-  DPRINT("Srb: %p\n", Srb);
 
   CommandPortBase = DevExt->CommandPortBase;
   ControlPortBase = DevExt->ControlPortBase;
+
+  if (DevExt->ExpectingInterrupt == FALSE)
+    {
+      DeviceStatus = IDEReadStatus(CommandPortBase);
+      DPRINT("AtapiInterrupt(): Unexpected interrupt (port=%x)\n", CommandPortBase);
+      return(FALSE);
+    }
+
+  /* check if it was our irq */
+  if ((DeviceStatus = IDEReadAltStatus(ControlPortBase)) & IDE_SR_BUSY)
+  {
+     ScsiPortStallExecution(1);
+     if ((DeviceStatus = IDEReadAltStatus(ControlPortBase) & IDE_SR_BUSY))
+     {
+        DPRINT("AtapiInterrupt(): Unexpected interrupt (port=%x)\n", CommandPortBase);
+        return(FALSE);
+     }
+  }
+  
+  Srb = DevExt->CurrentSrb;
+  DPRINT("Srb: %p\n", Srb);
+
   DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", CommandPortBase, ControlPortBase);
 
   IsAtapi = DevExt->DeviceAtapi[Srb->TargetId];
@@ -727,25 +908,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
   DeviceStatus = IDEReadStatus(CommandPortBase);
   DPRINT("DeviceStatus: %x\n", DeviceStatus);
-
-  if (DeviceStatus & IDE_SR_BUSY)
-    {
-      /* Wait for BUSY to drop */
-      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
-	{
-	  DeviceStatus = IDEReadStatus(CommandPortBase);
-	  if (!(DeviceStatus & IDE_SR_BUSY))
-	    {
-	      break;
-	    }
-	  ScsiPortStallExecution(10);
-	}
-      if (Retries >= IDE_MAX_BUSY_RETRIES)
-	{
-	  DPRINT1("Drive is BUSY for too long\n");
-	  /* FIXME: handle timeout */
-	}
-    }
 
   if ((DeviceStatus & IDE_SR_ERR) &&
       (Srb->Cdb[0] != SCSIOP_REQUEST_SENSE))
@@ -770,13 +932,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	    }
 	  else
 	    {
-	      TransferSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
-#ifdef ENABLE_MULTIMODE
-	      if (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff)
-	      {
-		  TransferSize *= (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff);
-	      }
-#endif
+	      TransferSize = DevExt->TransferSize[Srb->TargetId];
 	    }
 
 	  DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
@@ -784,12 +940,10 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 	  if (Srb->DataTransferLength <= TransferSize)
 	    {
-#ifdef ENABLE_MULTIMODE
 	      if (!IsAtapi)
 	      {
 	         TransferSize = Srb->DataTransferLength;
 	      }
-#endif
 	      Srb->DataTransferLength = 0;
 	      IsLastBlock = TRUE;
 	    }
@@ -810,24 +964,18 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	    }
 
 	  /* Copy the block of data */
-#ifdef ENABLE_32BIT
-	  if (IsAtapi)
-	  {
-	     IDEReadBlock(CommandPortBase,
-		          TargetAddress,
-		          TransferSize);
-	  }
-	  else
+	  if (DevExt->DWordIo[Srb->TargetId])
 	  {
 	     IDEReadBlock32(CommandPortBase,
 		            TargetAddress,
 		            TransferSize);
 	  }
-#else
-	  IDEReadBlock(CommandPortBase,
-		       TargetAddress,
-		       TransferSize);
-#endif
+	  else
+	  {
+	     IDEReadBlock(CommandPortBase,
+		          TargetAddress,
+		          TransferSize);
+	  }
 	  /* check DRQ */
 	  if (IsLastBlock)
 	    {
@@ -854,35 +1002,24 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 	  if (Srb->DataTransferLength == 0)
 	    {
-
-	      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
-		   (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
-		   Retries++)
-		{
-		  KeStallExecutionProcessor(10);
-		}
-
 	      /* Check for data overrun */
-	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
+	      if (DeviceStatus & IDE_SR_DRQ)
 		{
 		  /* FIXME: Handle error! */
-		  DPRINT1("AtapiInterrupt(): data overrun error!");
+		  /* This can occure if the irq is shared with an other and if the 
+		     ide controller has a write buffer. We have write the last sectors
+		     and the other device has a irq before ours. The isr is called but 
+		     we haven't a interrupt. The controller writes the sector buffer 
+		     and the status register shows DRQ because the write is not ended. */
+		  DPRINT("AtapiInterrupt(): data overrun error!\n");
 		}
-
-	      DevExt->ExpectingInterrupt = FALSE;
 	      IsLastBlock = TRUE;
 	    }
 	  else
 	    {
 	      /* Update SRB data */
-	      TransferSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
-#ifdef ENABLE_MULTIMODE
-	      if (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff)
-	      {
-		  TransferSize *= (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff);
-	      }
-#endif
-	      if (Srb->DataTransferLength <= TransferSize)
+	      TransferSize = DevExt->TransferSize[Srb->TargetId];
+	      if (Srb->DataTransferLength < TransferSize)
 	      {
 		 TransferSize = Srb->DataTransferLength;
 	      }
@@ -892,15 +1029,18 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	      Srb->DataTransferLength -= TransferSize;
 
 	      /* Write the sector */
-#ifdef ENABLE_32BIT
-	      IDEWriteBlock32(CommandPortBase,
-			      TargetAddress,
-			      TransferSize);
-#else
-	      IDEWriteBlock(CommandPortBase,
-			    TargetAddress,
-			    TransferSize);
-#endif
+              if (DevExt->DWordIo[Srb->TargetId])
+	      {
+	         IDEWriteBlock32(CommandPortBase,
+			         TargetAddress,
+			         TransferSize);
+	      }
+	      else
+	      {
+	         IDEWriteBlock(CommandPortBase,
+			       TargetAddress,
+			       TransferSize);
+	      }
 	    }
 
 	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -939,11 +1079,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
   return(TRUE);
 }
-
-
-
-
-
 
 //  ----------------------------------------------------  Discardable statics
 
@@ -1039,6 +1174,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      DPRINT("  ATAPI drive found!\n");
 	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
 	      DeviceExtension->DeviceAtapi[UnitNumber] = TRUE;
+	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
+              DeviceExtension->MultiSectorCommand[UnitNumber] = FALSE;
+              DeviceExtension->DWordIo[UnitNumber] = FALSE;
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1057,6 +1195,18 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      DPRINT("  IDE drive found!\n");
 	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
 	      DeviceExtension->DeviceAtapi[UnitNumber] = FALSE;
+	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
+	      if (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000 && 
+		  DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff)
+	      {
+		 DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff);
+		 DeviceExtension->MultiSectorCommand[UnitNumber] = TRUE;
+	      }
+	      else
+	      {
+                 DeviceExtension->MultiSectorCommand[UnitNumber] = FALSE;
+	      }
+              DeviceExtension->DWordIo[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].DWordIo ? TRUE : FALSE;
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1195,8 +1345,8 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
          DrvParms->ECCByteCnt,
          DrvParms->FirmwareRev);
   DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT("RWMultMax?:%02x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
-         (DrvParms->RWMultImplemented) & 0xff,
+  DPRINT("RWMultMax?:%04x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
+         (DrvParms->RWMultImplemented),
 	 (DrvParms->RWMultCurrent) & 0xff,
          (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
          (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
@@ -1273,7 +1423,6 @@ AtapiPolledRead(IN ULONG CommandPort,
   ULONG RetryCount;
   BOOLEAN Junk = FALSE;
   UCHAR Status;
-  UCHAR Control;
 
 //#if 0
   /* Wait for BUSY to clear */
@@ -1300,8 +1449,7 @@ AtapiPolledRead(IN ULONG CommandPort,
   ScsiPortStallExecution(500);
 
   /* Disable interrupts */
-  Control = IDEReadAltStatus(ControlPort);
-  IDEWriteDriveControl(ControlPort, Control | IDE_DC_nIEN);
+  IDEWriteDriveControl(ControlPort, IDE_DC_nIEN);
   ScsiPortStallExecution(500);
 
 #if 0
@@ -1362,7 +1510,10 @@ AtapiPolledRead(IN ULONG CommandPort,
 	{
 	  if (Status & IDE_SR_ERR)
 	    {
-	      IDEWriteDriveControl(ControlPort, Control & ~IDE_DC_nIEN);
+	      IDEWriteDriveControl(ControlPort, 0);
+              ScsiPortStallExecution(50);
+	      IDEReadStatus(CommandPort);
+
 	      return(IDE_ER_ABRT);
 	    }
 	  if (Status & IDE_SR_DRQ)
@@ -1371,7 +1522,10 @@ AtapiPolledRead(IN ULONG CommandPort,
 	    }
 	  else
 	    {
-	      IDEWriteDriveControl(ControlPort, Control & ~IDE_DC_nIEN);
+	      IDEWriteDriveControl(ControlPort, 0);
+	      ScsiPortStallExecution(50);
+	      IDEReadStatus(CommandPort);
+
 	      return(IDE_ER_ABRT);
 	    }
 	}
@@ -1381,7 +1535,10 @@ AtapiPolledRead(IN ULONG CommandPort,
   /*  timed out  */
   if (RetryCount >= IDE_MAX_POLL_RETRIES)
     {
-      IDEWriteDriveControl(ControlPort, Control & ~IDE_DC_nIEN);
+      IDEWriteDriveControl(ControlPort, 0);
+      ScsiPortStallExecution(50);
+      IDEReadStatus(CommandPort);
+
       return(IDE_ER_ABRT);
     }
 
@@ -1408,7 +1565,10 @@ AtapiPolledRead(IN ULONG CommandPort,
 	    {
 	      if (Status & IDE_SR_ERR)
 		{
-		  IDEWriteDriveControl(ControlPort, Control & ~IDE_DC_nIEN);
+	          IDEWriteDriveControl(ControlPort, 0);
+	          ScsiPortStallExecution(50);
+	          IDEReadStatus(CommandPort);
+
 		  return(IDE_ER_ABRT);
 		}
 	      if (Status & IDE_SR_DRQ)
@@ -1427,7 +1587,10 @@ AtapiPolledRead(IN ULONG CommandPort,
 		      DPRINT("Read %lu sectors of junk!\n",
 			     SectorCount - SectorCnt);
 		    }
-		  IDEWriteDriveControl(ControlPort, Control & ~IDE_DC_nIEN);
+	          IDEWriteDriveControl(ControlPort, 0);
+	          ScsiPortStallExecution(50);
+	          IDEReadStatus(CommandPort);
+
 		  return(0);
 		}
 	    }
@@ -1871,19 +2034,11 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   if (Srb->SrbFlags & SRB_FLAGS_DATA_IN)
     {
-#ifdef ENABLE_MULTIMODE
-      Command = DeviceParams->RWMultCurrent & 0xff ? IDE_CMD_READ_MULTIPLE : IDE_CMD_READ;
-#else
-      Command = IDE_CMD_READ;
-#endif
+      Command = DeviceExtension->MultiSectorCommand[Srb->TargetId] ? IDE_CMD_READ_MULTIPLE : IDE_CMD_READ;
     }
   else
     {
-#ifdef ENABLE_MULTIMODE
-      Command = DeviceParams->RWMultCurrent & 0xff ? IDE_CMD_WRITE_MULTIPLE : IDE_CMD_WRITE;
-#else
-      Command = IDE_CMD_WRITE;
-#endif
+      Command = DeviceExtension->MultiSectorCommand[Srb->TargetId] ? IDE_CMD_WRITE_MULTIPLE : IDE_CMD_WRITE;
     }
 
   if (DrvHead & IDE_DH_LBA)
@@ -1915,9 +2070,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
 
   DeviceExtension->CurrentSrb = Srb;
-  DeviceExtension->ExpectingInterrupt = TRUE;
-
-
 
   /*  wait for BUSY to clear  */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
@@ -1997,9 +2149,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 #endif
 
-  /* Indicate expecting an interrupt. */
-  DeviceExtension->ExpectingInterrupt = TRUE;
-
   /* Setup command parameters */
   IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
   IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount);
@@ -2012,14 +2161,10 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteCommand(DeviceExtension->CommandPortBase, Command);
 
   /* Write data block */
-#ifdef ENABLE_MULTIMODE
-  if (Command == IDE_CMD_WRITE || Command == IDE_CMD_WRITE_MULTIPLE)
-#else
-  if (Command == IDE_CMD_WRITE)
-#endif
+  if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
     {
       PUCHAR TargetAddress;
-      ULONG SectorSize;
+      ULONG TransferSize;
 
       /* Wait for controller ready */
       for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
@@ -2031,9 +2176,9 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	    }
 	  KeStallExecutionProcessor(10);
 	}
-      if (Retries >= IDE_MAX_BUSY_RETRIES)
+      if (Retries >= IDE_MAX_WRITE_RETRIES)
 	{
-	  DPRINT("Drive is BUSY for too long after sending write command\n");
+	  DPRINT1("Drive is BUSY for too long after sending write command\n");
 	  return(SRB_STATUS_BUSY);
 #if 0
           if (DeviceExtension->Retries++ > IDE_MAX_CMD_RETRIES)
@@ -2054,34 +2199,32 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
 
       /* Update SRB data */
-      SectorSize = DeviceParams->BytesPerSector;
-#ifdef ENABLE_MULTIMODE
-      if (DeviceParams->RWMultCurrent & 0xff)
+      TransferSize = DeviceExtension->TransferSize[Srb->TargetId];
+      if (Srb->DataTransferLength < TransferSize)
       {
-         SectorSize *= (DeviceParams->RWMultCurrent & 0xff);
+	 TransferSize = Srb->DataTransferLength;
       }
-      if (Srb->DataTransferLength < SectorSize)
-      {
-	 SectorSize = Srb->DataTransferLength;
-      }
-#endif
 
       TargetAddress = Srb->DataBuffer;
-      Srb->DataBuffer += SectorSize;
-      Srb->DataTransferLength -= SectorSize;
+      Srb->DataBuffer += TransferSize;
+      Srb->DataTransferLength -= TransferSize;
 
       /* Write data block */
-#ifdef ENABLE_32BIT
-      IDEWriteBlock32(DeviceExtension->CommandPortBase,
-		      TargetAddress,
-		      SectorSize);
-#else
-      IDEWriteBlock(DeviceExtension->CommandPortBase,
-		    TargetAddress,
-		    SectorSize);
-#endif
+      if (DeviceExtension->DWordIo[Srb->TargetId])
+      {
+         IDEWriteBlock32(DeviceExtension->CommandPortBase,
+		         TargetAddress,
+		         TransferSize);
+      }
+      else
+      {
+         IDEWriteBlock(DeviceExtension->CommandPortBase,
+		       TargetAddress,
+		       TransferSize);
+      }
     }
-
+  /* Indicate expecting an interrupt. */
+  DeviceExtension->ExpectingInterrupt = TRUE;
 
   DPRINT("AtapiReadWrite() done!\n");
 

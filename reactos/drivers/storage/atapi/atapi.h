@@ -150,7 +150,7 @@ typedef struct _IDE_DRIVE_IDENTIFY
   char   FirmwareRev[8];      /*23*/
   char   ModelNumber[40];     /*27*/
   WORD  RWMultImplemented;   /*47*/
-  WORD  Reserved48;          /*48*/
+  WORD  DWordIo;	     /*48*/
   WORD  Capabilities;        /*49*/
 #define IDE_DRID_STBY_SUPPORTED   0x2000
 #define IDE_DRID_IORDY_SUPPORTED  0x0800
@@ -172,7 +172,6 @@ typedef struct _IDE_DRIVE_IDENTIFY
   WORD  Reserved62[193];     /*62*/
   WORD  Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
-
 
 #ifdef __cplusplus
 }
