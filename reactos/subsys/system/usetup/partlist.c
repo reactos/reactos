@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.12 2003/08/03 12:20:22 ekohl Exp $
+/* $Id: partlist.c,v 1.13 2003/08/04 15:54:05 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -806,7 +806,7 @@ PrintDiskData(PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf(LineBuffer,
-	      "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
+	      "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
 	      DiskSize,
 	      Unit,
 	      DiskEntry->DiskNumber,
@@ -818,7 +818,7 @@ PrintDiskData(PPARTLIST List,
   else
     {
       sprintf(LineBuffer,
-	      "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	      "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
 	      DiskSize,
 	      Unit,
 	      DiskEntry->DiskNumber,
@@ -1081,121 +1081,46 @@ ScrollUpPartitionList(PPARTLIST List)
 }
 
 
-BOOLEAN
-GetSelectedPartition(PPARTLIST List,
-		     PPARTDATA Data)
-{
-  PDISKENTRY DiskEntry;
-  PPARTENTRY PartEntry;
-
-  if (List->CurrentDisk == NULL)
-    return FALSE;
-
-  DiskEntry = List->CurrentDisk;
-
-  if (List->CurrentPartition == NULL)
-    return FALSE;
-
-  PartEntry = List->CurrentPartition;
-
-  /* Copy disk-specific data */
-  Data->DiskSize = DiskEntry->DiskSize;
-  Data->DiskNumber = DiskEntry->DiskNumber;
-  Data->Port = DiskEntry->Port;
-  Data->Bus = DiskEntry->Bus;
-  Data->Id = DiskEntry->Id;
-
-  /* Copy driver name */
-  RtlInitUnicodeString(&Data->DriverName,
-		       NULL);
-  if (DiskEntry->DriverName.Length != 0)
-    {
-      Data->DriverName.Buffer = RtlAllocateHeap(ProcessHeap,
-						0,
-						DiskEntry->DriverName.MaximumLength);
-      if (Data->DriverName.Buffer != NULL)
-	{
-	  Data->DriverName.MaximumLength = DiskEntry->DriverName.MaximumLength;
-	  Data->DriverName.Length = DiskEntry->DriverName.Length;
-	  RtlCopyMemory(Data->DriverName.Buffer,
-			DiskEntry->DriverName.Buffer,
-			DiskEntry->DriverName.MaximumLength);
-	}
-    }
-
-  /* Copy partition-specific data */
-  Data->CreatePartition = FALSE;
-  Data->NewPartSize = 0;
-  Data->PartSize = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-  Data->PartNumber = PartEntry->PartInfo[0].PartitionNumber;
-  Data->PartType = PartEntry->PartInfo[0].PartitionType;
-  Data->DriveLetter = PartEntry->DriveLetter;
-
-  return TRUE;
-}
-
-
-BOOLEAN
+VOID
 GetActiveBootPartition(PPARTLIST List,
-		       PPARTDATA Data)
+		       PDISKENTRY *DiskEntry,
+		       PPARTENTRY *PartEntry)
 {
-  PDISKENTRY DiskEntry;
-  PPARTENTRY PartEntry;
+  PDISKENTRY LocalDiskEntry;
+  PPARTENTRY LocalPartEntry;
   PLIST_ENTRY Entry;
   ULONG i;
 
+  *DiskEntry = NULL;
+  *PartEntry = NULL;
+
+  /* Check for empty disk list */
   if (IsListEmpty (&List->DiskListHead))
-    return FALSE;
+    return;
 
   /* Get first disk entry from the disk list */
   Entry = List->DiskListHead.Flink;
-  DiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
+  LocalDiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
 
-  Entry = DiskEntry->PartListHead.Flink;
-  while (Entry != &DiskEntry->PartListHead)
+  /* Check for empty partition list */
+  if (IsListEmpty (&LocalDiskEntry->PartListHead))
+    return;
+
+  /* Search for active partition */
+  Entry = LocalDiskEntry->PartListHead.Flink;
+  while (Entry != &LocalDiskEntry->PartListHead)
     {
-      PartEntry = CONTAINING_RECORD (Entry, PARTENTRY, ListEntry);
+      LocalPartEntry = CONTAINING_RECORD (Entry, PARTENTRY, ListEntry);
 
-      if (PartEntry->PartInfo[0].BootIndicator)
+      if (LocalPartEntry->PartInfo[0].BootIndicator)
 	{
-	  /* Copy disk-specific data */
-	  Data->DiskSize = DiskEntry->DiskSize;
-	  Data->DiskNumber = DiskEntry->DiskNumber;
-	  Data->Port = DiskEntry->Port;
-	  Data->Bus = DiskEntry->Bus;
-	  Data->Id = DiskEntry->Id;
-
-	  /* Copy driver name */
-	  RtlInitUnicodeString(&Data->DriverName,
-			       NULL);
-	  if (DiskEntry->DriverName.Length != 0)
-	    {
-	      Data->DriverName.Buffer = RtlAllocateHeap(ProcessHeap,
-							0,
-							DiskEntry->DriverName.MaximumLength);
-	      if (Data->DriverName.Buffer != NULL)
-		{
-		  Data->DriverName.MaximumLength = DiskEntry->DriverName.MaximumLength;
-		  Data->DriverName.Length = DiskEntry->DriverName.Length;
-		  RtlCopyMemory(Data->DriverName.Buffer,
-				DiskEntry->DriverName.Buffer,
-				DiskEntry->DriverName.MaximumLength);
-		}
-	    }
-
-	  /* Copy partition-specific data */
-	  Data->PartSize = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-	  Data->PartNumber = PartEntry->PartInfo[0].PartitionNumber;
-	  Data->PartType = PartEntry->PartInfo[0].PartitionType;
-	  Data->DriveLetter = PartEntry->DriveLetter;
-
-	  return TRUE;
+	  *DiskEntry = LocalDiskEntry;
+	  *PartEntry = LocalPartEntry;
+	  return;
 	}
 
       Entry = Entry->Flink;
     }
-
-  return FALSE;
 }
 
 

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.12 2003/08/03 12:20:22 ekohl Exp $
+/* $Id: partlist.h,v 1.13 2003/08/04 15:54:05 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -26,25 +26,6 @@
 
 #ifndef __PARTLIST_H__
 #define __PARTLIST_H__
-
-typedef struct _PARTDATA
-{
-  ULONGLONG DiskSize;
-  ULONG DiskNumber;
-  USHORT Port;
-  USHORT Bus;
-  USHORT Id;
-
-  BOOLEAN CreatePartition;
-  ULONGLONG PartSize;
-  ULONGLONG NewPartSize;
-  ULONG PartNumber;
-  ULONG PartType;
-
-  CHAR DriveLetter;
-
-  UNICODE_STRING DriverName;
-} PARTDATA, *PPARTDATA;
 
 
 typedef struct _PARTENTRY
@@ -109,10 +90,15 @@ typedef struct _PARTLIST
   PDISKENTRY CurrentDisk;
   PPARTENTRY CurrentPartition;
 
+#if 0
+  /* Not used yet! */
+  PDISKENTRY ActiveBootDisk;
+  PPARTENTRY ActiveBootPartition;
+#endif
+
   LIST_ENTRY DiskListHead;
 
 } PARTLIST, *PPARTLIST;
-
 
 
 
@@ -121,11 +107,6 @@ CreatePartitionList(SHORT Left,
 		    SHORT Top,
 		    SHORT Right,
 		    SHORT Bottom);
-
-BOOLEAN
-MarkPartitionActive(ULONG DiskNumber,
-			ULONG PartitionNumber,
-			PPARTDATA ActivePartition);
 
 VOID
 DestroyPartitionList(PPARTLIST List);
@@ -139,21 +120,25 @@ ScrollDownPartitionList(PPARTLIST List);
 VOID
 ScrollUpPartitionList(PPARTLIST List);
 
-BOOLEAN
-GetSelectedPartition(PPARTLIST List,
-		     PPARTDATA Data);
-
-BOOLEAN
+VOID
 GetActiveBootPartition(PPARTLIST List,
-		       PPARTDATA Data);
+		       PDISKENTRY *DiskEntry,
+		       PPARTENTRY *PartEntry);
 
 BOOLEAN
 CreateSelectedPartition(PPARTLIST List,
-  ULONG PartType,
-  ULONGLONG NewPartSize);
+			ULONG PartType,
+			ULONGLONG NewPartSize);
 
 BOOLEAN
 DeleteSelectedPartition(PPARTLIST List);
+
+#if 0
+BOOLEAN
+MarkPartitionActive(ULONG DiskNumber,
+		    ULONG PartitionNumber,
+		    PPARTDATA ActivePartition);
+#endif
 
 #endif /* __PARTLIST_H__ */
 

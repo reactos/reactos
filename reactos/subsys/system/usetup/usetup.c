@@ -53,9 +53,12 @@ typedef enum _PAGE_NUMBER
 
   SELECT_PARTITION_PAGE,
   CREATE_PARTITION_PAGE,
+  DELETE_PARTITION_PAGE,
+
   SELECT_FILE_SYSTEM_PAGE,
   FORMAT_PARTITION_PAGE,
   CHECK_FILE_SYSTEM_PAGE,
+
   PREPARE_COPY_PAGE,
   INSTALL_DIRECTORY_PAGE,
   FILE_COPY_PAGE,
@@ -84,29 +87,32 @@ typedef struct _COPYCONTEXT
 HANDLE ProcessHeap;
 UNICODE_STRING SourceRootPath;
 
+
 /* LOCALS *******************************************************************/
 
-static BOOLEAN PartDataValid;
-static PARTDATA PartData;
+static PPARTLIST PartitionList = NULL;
 
-static BOOLEAN ActivePartitionValid;
-static PARTDATA ActivePartition;
+static PDISKENTRY ActiveBootDisk = NULL;
+static PPARTENTRY ActiveBootPartition = NULL;
+
+static PFILE_SYSTEM_LIST FileSystemList = NULL;
+
 
 static UNICODE_STRING SourcePath;
 
 static UNICODE_STRING InstallPath;
+
+/* Path to the install directory */
 static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
-static UNICODE_STRING SystemRootPath; /* Path to the active partition */
+/* Path to the active partition (boot manager) */
+static UNICODE_STRING SystemRootPath;
 
 static HINF SetupInf;
 
 static HSPFILEQ SetupFileQueue = NULL;
-
-static PPARTLIST CurrentPartitionList = NULL;
-static PFILE_SYSTEM_LIST CurrentFileSystemList;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -356,8 +362,8 @@ ConfirmQuit(PINPUT_RECORD Ir)
 	     "computer. If you quit Setup now, you will need to\n"
 	     "run Setup again to install ReactOS.\n"
 	     "\n"
-	     "  * Press ENTER to continue Setup.\n"
-	     "  * Press F3 to quit Setup.",
+	     "  \x07  Press ENTER to continue Setup.\n"
+	     "  \x07  Press F3 to quit Setup.",
 	     "F3= Quit  ENTER = Continue");
 
   while(TRUE)
@@ -518,13 +524,13 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
-  SetTextXY(8, 15, "\xfa  Press ENTER to install ReactOS.");
+  SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 17, "\xfa  Press E to start the emergency console.");
+  SetTextXY(8, 17, "\x07  Press E to start the emergency console.");
 
-  SetTextXY(8, 19, "\xfa  Press R to repair ReactOS.");
+  SetTextXY(8, 19, "\x07  Press R to repair ReactOS.");
 
-  SetTextXY(8, 21, "\xfa  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -566,9 +572,9 @@ EmergencyIntroPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 12, "The emergency console is not implemented yet.");
 
-  SetTextXY(8, 15, "\xfa  Press ESC to return to the main page.");
+  SetTextXY(8, 15, "\x07  Press ESC to return to the main page.");
 
-  SetTextXY(8, 17, "\xfa  Press ENTER to reboot your computer.");
+  SetTextXY(8, 17, "\x07  Press ENTER to reboot your computer.");
 
   SetStatusText("   ESC = Main page  ENTER = Reboot");
 
@@ -599,9 +605,9 @@ RepairIntroPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
-  SetTextXY(8, 15, "\xfa  Press ESC to return to the main page.");
+  SetTextXY(8, 15, "\x07  Press ESC to return to the main page.");
 
-  SetTextXY(8, 17, "\xfa  Press ENTER to reboot your computer.");
+  SetTextXY(8, 17, "\x07  Press ENTER to reboot your computer.");
 
   SetStatusText("   ESC = Main page  ENTER = Reboot");
 
@@ -638,9 +644,9 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
 
 
-  SetTextXY(8, 21, "\xfa  Press ENTER to install ReactOS.");
+  SetTextXY(8, 21, "\x07  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 23, "\xfa  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 23, "\x07  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -666,58 +672,20 @@ InstallIntroPage(PINPUT_RECORD Ir)
 }
 
 
-/*
- * Confirm delete partition
- * RETURNS
- *   TRUE: Delete currently selected partition.
- *   FALSE: Don't delete currently selected partition.
- */
-static BOOL
-ConfirmDeletePartition(PINPUT_RECORD Ir)
-{
-  BOOL Result = FALSE;
-
-  PopupError("Are you sure you want to delete this partition?\n"
-	     "\n"
-	     "  * Press ENTER to delete the partition.\n"
-	     "  * Press ESC to NOT delete the partition.",
-	     "ESC = Cancel  ENTER = Delete partition");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
-	{
-	  Result = FALSE;
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)	/* ENTER */
-	{
-	  Result = TRUE;
-	  break;
-	}
-    }
-
-  return(Result);
-}
-
-
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
-  PPARTLIST PartList;
   SHORT xScreen;
   SHORT yScreen;
 
   SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
   SetTextXY(6, 9, "space for new partitions.");
 
-  SetTextXY(8, 11, "\xfa  Press UP or DOWN to select a list entry.");
-  SetTextXY(8, 13, "\xfa  Press ENTER to install ReactOS onto the selected partition.");
-  SetTextXY(8, 15, "\xfa  Press C to create a new partition.");
-  SetTextXY(8, 17, "\xfa  Press D to delete an existing partition.");
+  SetTextXY(8, 11, "\x07  Press UP or DOWN to select a list entry.");
+  SetTextXY(8, 13, "\x07  Press ENTER to install ReactOS onto the selected partition.");
+  SetTextXY(8, 15, "\x07  Press C to create a new partition.");
+  SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
 
   SetStatusText("   Please wait...");
 
@@ -726,23 +694,39 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
   GetScreenSize(&xScreen, &yScreen);
 
-  PartList = CreatePartitionList(2, 19, xScreen - 3, yScreen - 3);
-  if (PartList == NULL)
+  if (PartitionList == NULL)
     {
-      /* FIXME: show an error dialog */
-      return(QUIT_PAGE);
+      PartitionList = CreatePartitionList (2,
+					   19,
+					   xScreen - 3,
+					   yScreen - 3);
+      if (PartitionList == NULL)
+	{
+	  /* FIXME: show an error dialog */
+	  return(QUIT_PAGE);
+	}
     }
-
-  if (CurrentPartitionList != NULL)
+  else
     {
-      DestroyPartitionList(CurrentPartitionList);
+      DrawPartitionList (PartitionList);
     }
-  CurrentPartitionList = PartList;
-
-  SetStatusText("   ENTER = Continue   F3 = Quit");
 
   while(TRUE)
     {
+      /* Update status text */
+      if (PartitionList->CurrentPartition == NULL ||
+	  PartitionList->CurrentPartition->Unpartitioned == TRUE)
+	{
+#if 0
+	  SetStatusText ("   ENTER = Install   C = Create Partition   F3 = Quit");
+#endif
+	  SetStatusText ("   C = Create Partition   F3 = Quit");
+	}
+      else
+	{
+	  SetStatusText ("   ENTER = Install   D = Delete Partition   F3 = Quit");
+	}
+
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -750,88 +734,126 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    {
-	      DestroyPartitionList(PartList);
-	      return(QUIT_PAGE);
+	      DestroyPartitionList (PartitionList);
+	      PartitionList = NULL;
+	      return QUIT_PAGE;
 	    }
 	  break;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-	  ScrollDownPartitionList(PartList);
+	  ScrollDownPartitionList (PartitionList);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
-	  ScrollUpPartitionList(PartList);
+	  ScrollUpPartitionList (PartitionList);
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-	  PartDataValid = GetSelectedPartition(PartList,
-					       &PartData);
-	  if (PartDataValid)
+	  if (PartitionList->CurrentPartition == NULL ||
+	      PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
-	      ActivePartitionValid = GetActiveBootPartition(PartList,
-							    &ActivePartition);
+	      PopupError ("You can not install ReactOS on\n"
+			  "unpartitioned disk space!\n"
+			  "\n"
+			  "  * Press any key to select an other partition.",
+			  NULL);
+	      ConInKey (Ir);
 
-	      RtlFreeUnicodeString(&DestinationRootPath);
-	      swprintf(PathBuffer,
-		       L"\\Device\\Harddisk%lu\\Partition%lu",
-		       PartData.DiskNumber,
-		       PartData.PartNumber);
-	      RtlCreateUnicodeString(&DestinationRootPath,
-				     PathBuffer);
-
-	      RtlFreeUnicodeString(&SystemRootPath);
-
-	      if (ActivePartitionValid)
-		{
-		  swprintf(PathBuffer,
-			   L"\\Device\\Harddisk%lu\\Partition%lu",
-			   ActivePartition.DiskNumber,
-			   ActivePartition.PartNumber);
-		}
-	      else
-		{
-		  /* We mark the selected partition as bootable */
-		  swprintf(PathBuffer,
-			   L"\\Device\\Harddisk%lu\\Partition%lu",
-			   PartData.DiskNumber,
-			   PartData.PartNumber);
-		}
-	      RtlCreateUnicodeString(&SystemRootPath,
-				     PathBuffer);
-
-	      return(SELECT_FILE_SYSTEM_PAGE);
+	      return SELECT_PARTITION_PAGE;
 	    }
 	  else
 	    {
-	      /* FIXME: show an error dialog */
-	      return(SELECT_PARTITION_PAGE);
+	      RtlFreeUnicodeString (&DestinationRootPath);
+	      swprintf (PathBuffer,
+			L"\\Device\\Harddisk%lu\\Partition%lu",
+			PartitionList->CurrentDisk->DiskNumber,
+			PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
+	      RtlCreateUnicodeString (&DestinationRootPath,
+				      PathBuffer);
+
+	      GetActiveBootPartition (PartitionList,
+				      &ActiveBootDisk,
+				      &ActiveBootPartition);
+
+	      RtlFreeUnicodeString (&SystemRootPath);
+	      if (ActiveBootDisk != NULL && ActiveBootPartition != NULL)
+		{
+		  swprintf (PathBuffer,
+			    L"\\Device\\Harddisk%lu\\Partition%lu",
+			    ActiveBootDisk->DiskNumber,
+			    ActiveBootPartition->PartInfo[0].PartitionNumber);
+		}
+	      else
+		{
+		  /*
+		   * FIXME:
+		   *   Check whether partition can be activated.
+		   *   We may have to force Disk0\Partition1.
+		   *   Mark partition active.
+		   */
+		  swprintf (PathBuffer,
+			    L"\\Device\\Harddisk%lu\\Partition%lu",
+			    PartitionList->CurrentDisk->DiskNumber,
+			    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
+		}
+	      RtlCreateUnicodeString (&SystemRootPath,
+				      PathBuffer);
+
+	      DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+	      DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
+
+#if 0
+	      PopupError ("You chose to install ReactOS on\n"
+			  "a valid Partition.\n"
+			  "\n"
+			  "  * Press any key to continue.",
+			  NULL);
+	      ConInKey (Ir);
+
+	      return SELECT_PARTITION_PAGE;
+#endif
+	      return SELECT_FILE_SYSTEM_PAGE;
 	    }
 	}
-#if 0
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
 	{
-	  /* Don't destroy the parition list here */;
-	  return(CREATE_PARTITION_PAGE);
+	  if (PartitionList->CurrentPartition->Unpartitioned == FALSE)
+	    {
+	      PopupError ("You can not create a new Partition inside\n"
+			  "of an already existing Partition!\n"
+			  "\n"
+			  "  * Press any key to continue.",
+			  NULL);
+	      ConInKey (Ir);
+
+	      return SELECT_PARTITION_PAGE;
+	    }
+
+	  return CREATE_PARTITION_PAGE;
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
 	{
-	  if (ConfirmDeletePartition(Ir) == TRUE)
+	  if (PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
-	      (BOOLEAN) DeleteSelectedPartition(CurrentPartitionList);
+	      PopupError ("You can not delete unpartitioned disk space!\n"
+			  "\n"
+			  "  * Press any key to continue.",
+			  NULL);
+	      ConInKey (Ir);
+
+	      return SELECT_PARTITION_PAGE;
 	    }
-	  return(SELECT_PARTITION_PAGE);
+
+	  return DELETE_PARTITION_PAGE;
 	}
-#endif
-
-      /* FIXME: Update status text */
-
     }
 
-  return(SELECT_PARTITION_PAGE);
+  return SELECT_PARTITION_PAGE;
 }
+
 
 static VOID
 DrawInputField(ULONG FieldLength,
@@ -883,9 +905,9 @@ ShowPartitionSizeInputBox(ULONG MaxSize,
 
   GetScreenSize(&xScreen, &yScreen);
   Left = 12;
-  Top = 11;
+  Top = 14;
   Right = xScreen - 12;
-  Bottom = 15;
+  Bottom = 17;
 
   /* draw upper left corner */
   coPos.X = Left;
@@ -1018,13 +1040,11 @@ ShowPartitionSizeInputBox(ULONG MaxSize,
 }
 
 
-#if 0
 static PAGE_NUMBER
-CreatePartitionPage(PINPUT_RECORD Ir)
+CreatePartitionPage (PINPUT_RECORD Ir)
 {
   BOOLEAN Valid;
   WCHAR PathBuffer[MAX_PATH];
-  PPARTLIST PartList;
   PPARTENTRY PartEntry;
   SHORT xScreen;
   SHORT yScreen;
@@ -1037,49 +1057,51 @@ CreatePartitionPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "You have chosen to create a new partition in the unused disk space.");
   SetTextXY(6, 9, "Please enter the size of the new partition in megabytes.");
 
+#if 0
+  PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
+	      PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
+#endif
+
   SetStatusText("   Please wait...");
 
   GetScreenSize(&xScreen, &yScreen);
 
-  PartList = CurrentPartitionList;
-
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
-  PartEntry = &PartList->DiskArray[PartList->CurrentDisk].PartArray[PartList->CurrentPartition];
+  PartEntry = PartitionList->CurrentPartition;
   while (TRUE)
     {
-      MaxSize = PartEntry->PartSize;
-      ShowPartitionSizeInputBox(MaxSize, InputBuffer, &Quit, &Cancel);
+      MaxSize = PartEntry->UnpartitionedLength;
+      ShowPartitionSizeInputBox (MaxSize, InputBuffer, &Quit, &Cancel);
       if (Quit == TRUE)
-        {
-      	  if (ConfirmQuit(Ir) == TRUE)
-      	    {
-      	      DestroyPartitionList(PartList);
-      	      return(QUIT_PAGE);
-      	    }
-        }
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    {
+	      return QUIT_PAGE;
+	    }
+	}
       else if (Cancel == TRUE)
-        {
-          break;
-        }
+	{
+	  break;
+	}
       else
-        {
-          PartSize = atoi(InputBuffer);
-          if (PartSize < 1)
-            {
-              // Too small
-              continue;
-            }
-          /* Convert to bytes */
-          PartSize *= 1024 * 1024;
+	{
+	  PartSize = atoi(InputBuffer);
+	  if (PartSize < 1)
+	    {
+	      /* Too small */
+	      continue;
+	    }
 
-          if (PartSize > PartEntry->PartSize)
-            {
-              // Too large
-              continue;
-            }
+	  /* Convert to bytes */
+	  PartSize *= 1024 * 1024;
 
-//          assert(PartEntry->Unpartitioned == TRUE);
+	  if (PartSize > PartEntry->UnpartitionedLength)
+	    {
+	      /* Too large */
+	      continue;
+	    }
+#if 0
           PartEntry->PartType = PARTITION_ENTRY_UNUSED;
           PartEntry->Used = TRUE;
 
@@ -1128,12 +1150,69 @@ CreatePartitionPage(PINPUT_RECORD Ir)
               /* FIXME: show an error dialog */
               return(SELECT_PARTITION_PAGE);
             }
-        }
+#endif
+	  return SELECT_PARTITION_PAGE;
+	}
     }
 
-  return(SELECT_PARTITION_PAGE);
+  return SELECT_PARTITION_PAGE;
 }
+
+
+static PAGE_NUMBER
+DeletePartitionPage (PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "You have chosen to delete the following partition:");
+
+
+#if 0
+  SetTextXY(6, 9, "Please enter the size of the new partition in megabytes.");
+
+  PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
+	      PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
 #endif
+
+
+  SetTextXY(8, 13, "\x07  Press D to delete the partition.");
+  SetTextXY(11, 14, "WARNING: All data on this partition will be lost!");
+
+  SetTextXY(8, 16, "\x07  Press ESC to cancel.");
+
+
+  SetStatusText("   D = Delete Partition   ESC = Cancel   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    {
+	      return QUIT_PAGE;
+	    }
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+	{
+	  return SELECT_PARTITION_PAGE;
+	}
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+	{
+	  /* FIXME: delete partition here! */
+
+#if 0
+	  DeleteSelectedPartition(CurrentPartitionList);
+#endif
+
+	  return SELECT_PARTITION_PAGE;
+	}
+    }
+
+  return DELETE_PARTITION_PAGE;
+}
 
 
 static PFILE_SYSTEM_LIST
@@ -1251,9 +1330,10 @@ ScrollUpFileSystemList(PFILE_SYSTEM_LIST List)
 
 
 static PAGE_NUMBER
-SelectFileSystemPage(PINPUT_RECORD Ir)
+SelectFileSystemPage (PINPUT_RECORD Ir)
 {
-  PFILE_SYSTEM_LIST FileSystemList;
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
   BOOLEAN ForceFormat;
   ULONGLONG DiskSize;
   ULONGLONG PartSize;
@@ -1261,54 +1341,59 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
   PCHAR PartUnit;
   PCHAR PartType;
 
-  if (PartDataValid == FALSE)
+  if (PartitionList == NULL ||
+      PartitionList->CurrentDisk == NULL ||
+      PartitionList->CurrentPartition == NULL)
     {
       /* FIXME: show an error dialog */
       return(QUIT_PAGE);
     }
 
+  DiskEntry = PartitionList->CurrentDisk;
+  PartEntry = PartitionList->CurrentPartition;
+
   /* adjust disk size */
-  if (PartData.DiskSize >= 0x280000000ULL) /* 10 GB */
+  if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
-      DiskSize = (PartData.DiskSize + (1 << 29)) >> 30;
+      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
       DiskUnit = "GB";
     }
   else
     {
-      DiskSize = (PartData.DiskSize + (1 << 19)) >> 20;
+      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
       DiskUnit = "MB";
     }
 
   /* adjust partition size */
-  if (PartData.PartSize >= 0x280000000ULL) /* 10 GB */
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000ULL) /* 10 GB */
     {
-      PartSize = (PartData.PartSize + (1 << 29)) >> 30;
+      PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
       PartUnit = "GB";
     }
   else
     {
-      PartSize = (PartData.PartSize + (1 << 19)) >> 20;
+      PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
       PartUnit = "MB";
     }
 
   /* adjust partition type */
-  if ((PartData.PartType == PARTITION_FAT_12) ||
-      (PartData.PartType == PARTITION_FAT_16) ||
-      (PartData.PartType == PARTITION_HUGE) ||
-      (PartData.PartType == PARTITION_XINT13))
+  if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
+      (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
+      (PartEntry->PartInfo[0].PartitionType == PARTITION_HUGE) ||
+      (PartEntry->PartInfo[0].PartitionType == PARTITION_XINT13))
     {
       PartType = "FAT";
     }
-  else if ((PartData.PartType == PARTITION_FAT32) ||
-	   (PartData.PartType == PARTITION_FAT32_XINT13))
+  else if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	   (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
     {
       PartType = "FAT32";
     }
-  else if (PartData.PartType == PARTITION_IFS)
+  else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
     {
       PartType = "NTFS"; /* FIXME: Not quite correct! */
     }
-  else if (PartData.PartType == PARTITION_ENTRY_UNUSED)
+  else if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {
       PartType = "Unused";
     }
@@ -1320,38 +1405,42 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "Setup will install ReactOS on");
 
   PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
-	      PartData.PartNumber,
+	      PartEntry->PartInfo[0].PartitionNumber,
 	      PartSize,
 	      PartUnit,
 	      PartType);
 
   PrintTextXY(8, 12, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
-	      PartData.DiskNumber,
+	      DiskEntry->DiskNumber,
 	      DiskSize,
 	      DiskUnit,
-	      PartData.Port,
-	      PartData.Bus,
-	      PartData.Id,
-	      &PartData.DriverName);
+	      DiskEntry->Port,
+	      DiskEntry->Bus,
+	      DiskEntry->Id,
+	      &DiskEntry->DriverName);
 
 
   SetTextXY(6, 17, "Select a file system for the partition from the list below.");
 
-  SetTextXY(8, 19, "\xfa  Press UP or DOWN to select a file system.");
-  SetTextXY(8, 21, "\xfa  Press ENTER to format the partition.");
-  SetTextXY(8, 23, "\xfa  Press ESC to select another partition.");
+  SetTextXY(8, 19, "\x07  Press UP or DOWN to select a file system.");
+  SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
+  SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
 
-  ForceFormat = (PartData.PartType == PARTITION_ENTRY_UNUSED);
-  FileSystemList = CreateFileSystemList(6, 26, ForceFormat, FsFat);
+  ForceFormat = (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED);
+
   if (FileSystemList == NULL)
     {
-      /* FIXME: show an error dialog */
-      return(QUIT_PAGE);
+      FileSystemList = CreateFileSystemList (6, 26, ForceFormat, FsFat);
+      if (FileSystemList == NULL)
+	{
+	  /* FIXME: show an error dialog */
+	  return QUIT_PAGE;
+	}
     }
-
-  CurrentFileSystemList = FileSystemList;
-
-  DrawFileSystemList(FileSystemList);
+  else
+    {
+      DrawFileSystemList (FileSystemList);
+    }
 
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
@@ -1394,6 +1483,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
+
+  return SELECT_FILE_SYSTEM_PAGE;
 }
 
 
@@ -1418,29 +1509,32 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-      {
+	    {
 	      return(QUIT_PAGE);
-      }
+	    }
 	  break;
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-    SetStatusText("   Please wait ...");
+	  SetStatusText("   Please wait ...");
 
-    switch (CurrentFileSystemList->CurrentFileSystem)
-      {
-        case FsFat:
-          PartType = PARTITION_FAT32_XINT13;
-          break;
-        case FsKeep:
-          break;
-        default:
-          return QUIT_PAGE;
-      }
+	  switch (FileSystemList->CurrentFileSystem)
+	    {
+	      case FsFat:
+		PartType = PARTITION_FAT32_XINT13;
+		break;
 
+	      case FsKeep:
+		break;
+
+	      default:
+		return QUIT_PAGE;
+	    }
+
+#if 0
     if (PartData.CreatePartition)
       {
-    	  Valid = CreateSelectedPartition(CurrentPartitionList, PartType, PartData.NewPartSize);
+    	  Valid = CreateSelectedPartition (PartitionList, PartType, PartData.NewPartSize);
         if (!Valid)
           {
             DPRINT("CreateSelectedPartition() failed\n");
@@ -1448,29 +1542,34 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             return(QUIT_PAGE);
           }
       }
+#endif
 
-    switch (CurrentFileSystemList->CurrentFileSystem)
-      {
-        case FsFat:
-          Status = FormatPartition(&DestinationRootPath);
-          if (!NT_SUCCESS(Status))
-            {
-              DPRINT1("FormatPartition() failed with status 0x%.08x\n", Status);
-              /* FIXME: show an error dialog */
-              return(QUIT_PAGE);
-            }
-          break;
-        case FsKeep:
-          break;
-        default:
-          return QUIT_PAGE;
-      }
-    return(INSTALL_DIRECTORY_PAGE);
+	  switch (FileSystemList->CurrentFileSystem)
+	    {
+	      case FsFat:
+		Status = FormatPartition (&DestinationRootPath);
+		if (!NT_SUCCESS (Status))
+		  {
+		    DPRINT1("FormatPartition() failed with status 0x%.08x\n", Status);
+		    /* FIXME: show an error dialog */
+		    return QUIT_PAGE;
+		  }
+		break;
+
+	      case FsKeep:
+		break;
+
+	      default:
+		return QUIT_PAGE;
+	    }
+
+	  return INSTALL_DIRECTORY_PAGE;
 	}
     }
 
-  return(INSTALL_DIRECTORY_PAGE);
+  return INSTALL_DIRECTORY_PAGE;
 }
+
 
 static ULONG
 CheckFileSystemPage(PINPUT_RECORD Ir)
@@ -1508,12 +1607,25 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
   WCHAR PathBuffer[MAX_PATH];
   WCHAR InstallDir[51];
   PWCHAR DefaultPath;
   INFCONTEXT Context;
   ULONG Length;
   NTSTATUS Status;
+
+  if (PartitionList == NULL ||
+      PartitionList->CurrentDisk == NULL ||
+      PartitionList->CurrentPartition == NULL)
+    {
+      /* FIXME: show an error dialog */
+      return QUIT_PAGE;
+    }
+
+  DiskEntry = PartitionList->CurrentDisk;
+  PartEntry = PartitionList->CurrentPartition;
 
   /* Search for 'DefaultPath' in the 'SetupData' section */
   if (!InfFindFirstLine (SetupInf, L"SetupData", L"DefaultPath", &Context))
@@ -1522,13 +1634,13 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 		 "in TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
 
-      while(TRUE)
+      while (TRUE)
 	{
-	  ConInKey(Ir);
+	  ConInKey (Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -1588,8 +1700,8 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	  RtlFreeUnicodeString(&DestinationArcPath);
 	  swprintf(PathBuffer,
 		   L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
-		   PartData.DiskNumber,
-		   PartData.PartNumber);
+		   DiskEntry->DiskNumber,
+		   PartEntry->PartInfo[0].PartitionNumber);
 	  if (InstallDir[0] != L'\\')
 	    wcscat(PathBuffer,
 		   L"\\");
@@ -2099,7 +2211,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
 #endif
 
-  if (ActivePartition.PartType == PARTITION_ENTRY_UNUSED)
+  if (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {
       DPRINT1("Error: active partition invalid (unused)\n");
       PopupError("The active partition is unused (invalid).\n",
@@ -2116,7 +2228,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
     }
 
-  if (ActivePartition.PartType == 0x0A)
+  if (ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
     {
       /* OS/2 boot manager partition */
       DPRINT1("Found OS/2 boot manager partition\n");
@@ -2134,7 +2246,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if (ActivePartition.PartType == 0x83)
+  else if (ActiveBootPartition->PartInfo[0].PartitionType == 0x83)
     {
       /* Linux ext2 partition */
       DPRINT1("Found Linux ext2 partition\n");
@@ -2152,7 +2264,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if (ActivePartition.PartType == PARTITION_IFS)
+  else if (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_IFS)
     {
       /* NTFS partition */
       DPRINT1("Found NTFS partition\n");
@@ -2170,12 +2282,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if ((ActivePartition.PartType == PARTITION_FAT_12) ||
-	   (ActivePartition.PartType == PARTITION_FAT_16) ||
-	   (ActivePartition.PartType == PARTITION_HUGE) ||
-	   (ActivePartition.PartType == PARTITION_XINT13) ||
-	   (ActivePartition.PartType == PARTITION_FAT32) ||
-	   (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+  else if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
+	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
+	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_HUGE) ||
+	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_XINT13) ||
+	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
   {
     /* FAT or FAT32 partition */
     DPRINT1("System path: '%wZ'\n", &SystemRootPath);
@@ -2239,8 +2351,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootcode */
-	if ((ActivePartition.PartType == PARTITION_FAT32) ||
-	    (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  /* Install FAT32 bootcode */
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
@@ -2435,8 +2547,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootsector */
-	if ((ActivePartition.PartType == PARTITION_FAT32) ||
-	    (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
 	  wcscat(SrcPath, L"\\loader\\fat32.bin");
@@ -2596,8 +2708,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootsector */
-	if ((ActivePartition.PartType == PARTITION_FAT32) ||
-	    (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
 	  wcscat(SrcPath, L"\\loader\\fat32.bin");
@@ -2709,6 +2821,22 @@ QuitPage(PINPUT_RECORD Ir)
 
   SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
+  SetStatusText("   Please wait ...");
+
+  /* Destroy partition list */
+  if (PartitionList != NULL)
+    {
+      DestroyPartitionList (PartitionList);
+      PartitionList = NULL;
+    }
+
+  /* Destroy filesystem list */
+  if (FileSystemList != NULL)
+    {
+      DestroyFileSystemList (FileSystemList);
+      FileSystemList = NULL;
+    }
+
   SetStatusText("   ENTER = Reboot computer");
 
   while(TRUE)
@@ -2768,7 +2896,6 @@ NtProcessStartup(PPEB Peb)
 		       0,0,0,0,0);
     }
 
-  PartDataValid = FALSE;
 
   /* Initialize global unicode strings */
   RtlInitUnicodeString(&SourcePath, NULL);
@@ -2818,11 +2945,13 @@ NtProcessStartup(PPEB Peb)
 	    Page = SelectPartitionPage(&Ir);
 	    break;
 
-#if 0
 	  case CREATE_PARTITION_PAGE:
 	    Page = CreatePartitionPage(&Ir);
 	    break;
-#endif
+
+	  case DELETE_PARTITION_PAGE:
+	    Page = DeletePartitionPage(&Ir);
+	    break;
 
 	  case SELECT_FILE_SYSTEM_PAGE:
 	    Page = SelectFileSystemPage(&Ir);
