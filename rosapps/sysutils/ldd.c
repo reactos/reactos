@@ -1,4 +1,4 @@
-/* $Id: ldd.c,v 1.2 2000/09/11 20:17:02 ea Exp $
+/* $Id: ldd.c,v 1.3 2001/01/13 18:17:17 ea Exp $
  *
  * FILE  : ldd.c
  * AUTHOR: Emanuele ALIBERTI
@@ -92,7 +92,7 @@ main (int argc, char * argv [] )
 						)
 					)
 				{
-					printf ("  %s\n", DeviceName);
+					printf ("  -> \"%s\"\n", DeviceName);
 				}
 			}
 			else

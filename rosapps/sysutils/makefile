@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2000/10/04 21:04:30 ea Exp $
+# $Id: makefile,v 1.8 2001/01/13 18:17:17 ea Exp $
 #
 # ReactOS System Utilities
 #
@@ -35,7 +35,6 @@ IMPORT_USER32=$(ROS_LIB)/user32/user32.a
 IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
 
 TARGET=\
-	regnav.exe	\
 	chklib.exe	\
 	qsi.exe		\
 	ldd.exe		\
@@ -86,18 +85,6 @@ chklib.exe: chklib.o win32err.o chklib.coff
 		-o chklib.exe
 	$(NM) --numeric-sort chklib.exe > chklib.sym
 
-
-regnav.exe: regnav.o win32err.o regnav.coff
-	$(CC) \
-		regnav.o		\
-		win32err.o		\
-		regnav.coff 		\
-		$(IMPORT_KERNEL32)	\
-		$(IMPORT_ADVAPI32)	\
-		$(IMPORT_CRTDLL)	\
-		-o regnav.exe
-	$(NM) --numeric-sort regnav.exe > regnav.sym
-	
 
 shutdown.exe: shutdown.o win32err.o shutdown.coff
 	$(CC) \

@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.3 2000/05/28 17:44:51 ea Exp $
+/* $Id: qsi.c,v 1.4 2001/01/13 18:17:17 ea Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -21,6 +21,8 @@
  * 	2000-04-23 (ea)
  * 		Added almost all structures for getting system
  * 		information (from UNDOCNT.H by Dabak et alii).
+ * 	2001-01-13 (ea)
+ * 		New QSI classe names used by E.Kohl.
  */
 #include <windows.h>
 #include <stdio.h>
@@ -404,21 +406,17 @@ CMD_DEF(unknown)
  * NOTE
  * 	Class 0.
  */
-CMD_DEF(Basic)
+CMD_DEF(0)
 {
 	NTSTATUS			Status;
 	SYSTEM_BASIC_INFORMATION	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemBasicInformation:\n");
-	}
 	RtlZeroMemory (
 		(PVOID) & Info,
 		sizeof Info
 		);
 	Status = NtQuerySystemInformation (
-			SystemBasicInformation,
+			0,
 			& Info,
 			sizeof Info,
 			NULL
@@ -428,17 +426,17 @@ CMD_DEF(Basic)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tAlwaysZero              = 0x%08x\n", Info.AlwaysZero);
-	printf ("\tKeMaximumIncrement      = %ld\n", Info.KeMaximumIncrement);
-	printf ("\tMmPageSize              = %ld\n", Info.MmPageSize);
-	printf ("\tMmNumberOfPhysicalPages = %ld\n", Info.MmNumberOfPhysicalPages);
-	printf ("\tMmLowestPhysicalPage    = %ld\n", Info.MmLowestPhysicalPage);
-	printf ("\tMmHighestPhysicalPage   = %ld\n", Info.MmHighestPhysicalPage);
-	printf ("\tMmLowestUserAddress     = 0x%08x\n", Info.MmLowestUserAddress);
-	printf ("\tMmLowestUserAddress1    = 0x%08x\n", Info.MmLowestUserAddress1);
-	printf ("\tMmHighestUserAddress    = 0x%08x\n", Info.MmHighestUserAddress);
-	printf ("\tKeActiveProcessors      = 0x%08x\n", Info.KeActiveProcessors);
-	printf ("\tKeNumberProcessors      = %ld\n", Info.KeNumberProcessors);
+	printf ("  Reserved                     0x%08x\n", Info.Reserved);
+	printf ("  TimerResolution              %d\n",    Info.TimerResolution);
+	printf ("  PageSize                     %d\n",    Info.PageSize);
+	printf ("  NumberOfPhysicalPages        %d\n",    Info.NumberOfPhysicalPages);
+	printf ("  LowestPhysicalPageNumber     %d\n",    Info.LowestPhysicalPageNumber);
+	printf ("  HighestPhysicalPageNumber    %d\n",    Info.HighestPhysicalPageNumber);
+	printf ("  AllocationGranularity        %d\n", Info.AllocationGranularity);
+	printf ("  MinimumUserModeAddress       0x%08x (%d)\n", Info.MinimumUserModeAddress, Info.MinimumUserModeAddress);
+	printf ("  MaximumUserModeAddress       0x%08x (%d)\n", Info.MaximumUserModeAddress, Info.MaximumUserModeAddress);
+	printf ("  ActiveProcessorsAffinityMask 0x%08x\n", Info.ActiveProcessorsAffinityMask);
+	printf ("  NumberOfProcessors           %d\n",   (int) Info.NumberOfProcessors);
 
 	return EXIT_SUCCESS;
 }
@@ -451,21 +449,17 @@ CMD_DEF(Basic)
  * NOTE
  * 	Class 1.
  */
-CMD_DEF(Processor)
+CMD_DEF(1)
 {
 	NTSTATUS			Status;
 	SYSTEM_PROCESSOR_INFORMATION	Info;
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemProcessorInformation:\n");
-	}
 	RtlZeroMemory (
 		(PVOID) & Info,
 		sizeof Info
 		);
 	Status = NtQuerySystemInformation (
-			SystemProcessorInformation,
+			1,
 			& Info,
 			sizeof Info,
 			NULL
@@ -475,14 +469,12 @@ CMD_DEF(Processor)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tKeProcessorArchitecture = %ld\n", Info.KeProcessorArchitecture);
-	printf ("\tKeProcessorLevel        = %ld\n", Info.KeProcessorLevel);
-	printf ("\tKeProcessorRevision     = %ld\n", Info.KeProcessorRevision);
-	if (Application.Flag.Verbose)
-	{
-		printf ("\tAlwaysZero              = 0x%08x\n", Info.AlwaysZero);
-	}
-	printf ("\tKeFeatureBits           = %08x\n", Info.KeFeatureBits);
+	printf ("  ProcessorArchitecture %d\n",    Info.ProcessorArchitecture);
+	printf ("  ProcessorLevel        %d\n",    Info.ProcessorLevel);
+	printf ("  ProcessorRevision     %d\n",    Info.ProcessorRevision);
+	printf ("  Reserved              0x%08x\n", Info.Reserved);
+	printf ("  FeatureBits           %08x\n",   Info.ProcessorFeatureBits);
+	/* FIXME: decode feature bits */
 
 	return EXIT_SUCCESS;
 }
@@ -496,19 +488,15 @@ CMD_DEF(Processor)
  * NOTE
  * 	Class 2.
  */
-CMD_DEF(Performance)
+CMD_DEF(2)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	PSYSTEM_PERFORMANCE_INFO	Info;
 	LONG				Length = 0;
 
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemPerformanceInformation:\n");
-	}
 	Status = NtQuerySystemInformation (
-			SystemPerformanceInformation,
+			2,
 			& Info,
 			sizeof Info,
 			& Length
@@ -606,17 +594,13 @@ CMD_DEF(Performance)
  * NOTE
  * 	Class 3.
  */
-CMD_DEF(Time)
+CMD_DEF(3)
 {
-	NTSTATUS		Status;
-	SYSTEM_TIME_INFORMATION	Info;
+	NTSTATUS			Status;
+	SYSTEM_TIMEOFDAY_INFORMATION	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemTimeInformation:\n");
-	}
 	Status = NtQuerySystemInformation (
-			SystemTimeInformation,
+			3,
 			& Info,
 			sizeof Info,
 			NULL
@@ -626,14 +610,11 @@ CMD_DEF(Time)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	PrintUtcDateTime ("\tKeBootTime     : %s\n", & Info.KeBootTime);
-	PrintUtcDateTime ("\tKeSystemTime   : %s\n", & Info.KeSystemTime);
-	PrintUtcDateTime ("\tExpTimeZoneBias: %s\n", & Info.ExpTimeZoneBias); /* FIXME */
-	printf ("\tExpTimeZoneId  : %ld\n", Info.ExpTimeZoneId);
-	if (Application.Flag.Verbose)
-	{
-		printf ("\tUnused         : %08x (?)\n", Info.Unused);
-	}
+	PrintUtcDateTime ("  BootTime     %s\n", (PTIME) & Info.BootTime);
+	PrintUtcDateTime ("  CurrentTime  %s\n", (PTIME) & Info.CurrentTime);
+	PrintUtcDateTime ("  TimeZoneBias %s\n", (PTIME) & Info.TimeZoneBias); /* FIXME */
+	printf           ("  TimeZoneId   %ld\n", Info.TimeZoneId);
+	printf           ("  Reserved     %08x\n", Info.Reserved);
 
 	return EXIT_SUCCESS;
 }
@@ -646,7 +627,7 @@ CMD_DEF(Time)
  * NOTE
  * 	Class 4.
  */
-CMD_DEF(Path)
+CMD_DEF(4)
 {
 	NTSTATUS		Status;
 	SYSTEM_PATH_INFORMATION	Info;
@@ -655,7 +636,7 @@ CMD_DEF(Path)
 
 	RtlZeroMemory (& Info, _MAX_PATH);
 	Status = NtQuerySystemInformation (
-			SystemPathInformation,
+			4,
 			& _Info,
 			_MAX_PATH,
 			& Length
@@ -679,7 +660,7 @@ CMD_DEF(Path)
  * NOTE
  * 	Class 5.
  */
-CMD_DEF(Process)
+CMD_DEF(5)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	PSYSTEM_PROCESS_INFORMATION	pInfo = NULL;
@@ -689,15 +670,11 @@ CMD_DEF(Process)
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check NULL==pInfo */
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemProcessInformation:\n");
-	}
 	/*
 	 *	Obtain required buffer size
 	 */
 	Status = NtQuerySystemInformation (
-			SystemProcessInformation,
+			5,
 			pInfo,
 			BUFFER_SIZE_DEFAULT,
 			& Length
@@ -843,20 +820,16 @@ CMD_DEF(Process)
  * NOTE
  * 	Class 6.
  */
-CMD_DEF(ServiceDescriptorTable)
+CMD_DEF(6)
 {
 	NTSTATUS		Status;
 	SYSTEM_SDT_INFORMATION	Info;
 	ULONG			Length = 0;
 
 /* FIXME */
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemServiceDescriptorTableInfo:\n");
-	}
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
-			SystemServiceDescriptorTableInfo,
+			6,
 			& Info,
 			sizeof Info,
 			& Length
@@ -867,10 +840,10 @@ CMD_DEF(ServiceDescriptorTable)
 		DumpData (Length, & Info);
 		return EXIT_FAILURE;
 	}
-	printf ("\tBufferLength                = %ld\n", Info.BufferLength);
-	printf ("\tNumberOfSystemServiceTables = %ld\n", Info.NumberOfSystemServiceTables);
-	printf ("\tNumberOfServices            = %ld\n", Info.NumberOfServices [0]);
-	printf ("\tServiceCounters             = %ld\n", Info.ServiceCounters [0]);
+	printf ("  BufferLength                = %ld\n", Info.BufferLength);
+	printf ("  NumberOfSystemServiceTables = %ld\n", Info.NumberOfSystemServiceTables);
+	printf ("  NumberOfServices            = %ld\n", Info.NumberOfServices [0]);
+	printf ("  ServiceCounters             = %ld\n", Info.ServiceCounters [0]);
 
 	DumpData (Length, & Info);
 
@@ -885,18 +858,14 @@ CMD_DEF(ServiceDescriptorTable)
  * NOTE
  * 	Class 7.
  */
-CMD_DEF(IoConfig)
+CMD_DEF(7)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
-	SYSTEM_IOCONFIG_INFORMATION	Info;
+	SYSTEM_DEVICE_INFORMATION	Info;
 	ULONG				Length = 0;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemIoConfigInformation:\n");
-	}
 	Status = NtQuerySystemInformation (
-			SystemIoConfigInformation,
+			7,
 			& Info,
 			sizeof Info,
 			& Length
@@ -906,12 +875,12 @@ CMD_DEF(IoConfig)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tDiskCount    : %ld\n", Info.DiskCount);
-	printf ("\tFloppyCount  : %ld\n", Info.FloppyCount);
-	printf ("\tCdRomCount   : %ld\n", Info.CdRomCount);
-	printf ("\tTapeCount    : %ld\n", Info.TapeCount);
-	printf ("\tSerialCount  : %ld\n", Info.SerialCount);
-	printf ("\tParallelCount: %ld\n", Info.ParallelCount);
+	printf ("  Number Of Disks          %ld\n", Info.NumberOfDisks);
+	printf ("  Number Of Floppies       %ld\n", Info.NumberOfFloppies);
+	printf ("  Number Of CD-ROMs        %ld\n", Info.NumberOfCdRoms);
+	printf ("  Number Of Tapes          %ld\n", Info.NumberOfTapes);
+	printf ("  Number Of Serial Ports   %ld\n", Info.NumberOfSerialPorts);
+	printf ("  Number Of Parallel Ports %ld\n", Info.NumberOfParallelPorts);
 
 	DumpData (Length, & Info);
 
@@ -926,18 +895,14 @@ CMD_DEF(IoConfig)
  * NOTE
  * 	Class 8.
  */
-CMD_DEF(ProcessorTime)
+CMD_DEF(8)
 {
 	NTSTATUS			Status;
 	SYSTEM_PROCESSORTIME_INFO	Info;
 	ULONG				Length = 0;
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemProcessorTimeInformation:\n");
-	}
 	Status = NtQuerySystemInformation (
-			SystemProcessorTimeInformation,
+			8,
 			& Info,
 			sizeof Info,
 			& Length
@@ -947,16 +912,13 @@ CMD_DEF(ProcessorTime)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	PrintUtcDateTime ("\tTotalProcessorRunTime : %s\n", & Info.TotalProcessorRunTime);
-	PrintUtcDateTime ("\tTotalProcessorTime    : %s\n", & Info.TotalProcessorTime);
-	PrintUtcDateTime ("\tTotalProcessorUserTime: %s\n", & Info.TotalProcessorUserTime);
-	PrintUtcDateTime ("\tTotalDPCTime          : %s\n", & Info.TotalDPCTime);
-	PrintUtcDateTime ("\tTotalInterruptTime    : %s\n", & Info.TotalInterruptTime);
-	printf ("\tTotalInterrupts       : %ld\n", Info.TotalInterrupts);
-	if (Application.Flag.Verbose)
-	{
-		printf ("\tUnused                : %08x\n", Info.Unused);
-	}
+	PrintUtcDateTime ("  TotalProcessorRunTime : %s\n", & Info.TotalProcessorRunTime);
+	PrintUtcDateTime ("  TotalProcessorTime    : %s\n", & Info.TotalProcessorTime);
+	PrintUtcDateTime ("  TotalProcessorUserTime: %s\n", & Info.TotalProcessorUserTime);
+	PrintUtcDateTime ("  TotalDPCTime          : %s\n", & Info.TotalDPCTime);
+	PrintUtcDateTime ("  TotalInterruptTime    : %s\n", & Info.TotalInterruptTime);
+	printf           ("  TotalInterrupts       : %ld\n", Info.TotalInterrupts);
+	printf           ("  Unused                : %08x\n", Info.Unused);
 
 	return EXIT_SUCCESS;
 }
@@ -969,18 +931,14 @@ CMD_DEF(ProcessorTime)
  * NOTE
  * 	Class 9.
  */
-CMD_DEF(NtGlobalFlag)
+CMD_DEF(9)
 {
-	NTSTATUS		Status;
-	SYSTEM_GLOBAL_FLAG_INFO	Info;
-	ULONG			Length = 0;
+	NTSTATUS			Status;
+	SYSTEM_FLAGS_INFORMATION	Info;
+	ULONG				Length = 0;
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemNtGlobalFlagInformation:\n");
-	}
 	Status = NtQuerySystemInformation (
-			SystemNtGlobalFlagInformation,
+			9,
 			& Info,
 			sizeof Info,
 			& Length
@@ -990,7 +948,7 @@ CMD_DEF(NtGlobalFlag)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tNtGlobalFlag: %08x\n", Info.NtGlobalFlag);
+	printf ("  NtGlobalFlag: %08x\n", Info.Flags);
 	/* FIXME: decode each flag */
 
 	return EXIT_SUCCESS;
@@ -1020,7 +978,7 @@ CMD_NOT_IMPLEMENTED
  * 	at http://www.internals.com/, adapted to ReactOS
  * 	structures layout.
  */
-CMD_DEF(Module)
+CMD_DEF(11)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	PSYSTEM_MODULE_INFORMATION	pInfo = NULL;
@@ -1030,15 +988,11 @@ CMD_DEF(Module)
 		"-------- -------- -------- ---------------------------------------\n";
 
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemModuleInformation:\n");
-	}
 	/*
 	 *	Obtain required buffer size
 	 */
 	Status = NtQuerySystemInformation (
-			SystemModuleInformation,
+			11,
 			& pInfo,
 			0, /* query size */
 			& Length
@@ -1064,7 +1018,7 @@ CMD_DEF(Module)
 	 *	Get module list from ntoskrnl.exe
 	 */
 	Status = NtQuerySystemInformation (
-			SystemModuleInformation,
+			11,
 			pInfo,
 			Length,
 			& Length
@@ -1105,7 +1059,7 @@ CMD_DEF(Module)
  * NOTE
  * 	Class 12.
  */
-CMD_DEF(ResourceLock)
+CMD_DEF(12)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	PSYSTEM_RESOURCE_LOCK_INFO	pInfo = NULL;
@@ -1117,15 +1071,11 @@ CMD_DEF(ResourceLock)
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check NULL==pInfo */
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemResourceLockInformation:\n");
-	}
 	/*
 	 *	Obtain required buffer size
 	 */
 	Status = NtQuerySystemInformation (
-			SystemResourceLockInformation,
+			12,
 			pInfo,
 			BUFFER_SIZE_DEFAULT, /* query size */
 			& Length
@@ -1155,7 +1105,7 @@ CMD_DEF(ResourceLock)
 	 *	Get locked resource list from ntoskrnl.exe
 	 */
 	Status = NtQuerySystemInformation (
-			SystemResourceLockInformation,
+			12,
 			pInfo,
 			Length,
 			& Length
@@ -1233,7 +1183,7 @@ CMD_NOT_IMPLEMENTED
  * 	Class 16. You can not pass 0 as the initial output buffer's
  * 	size to get back the needed buffer size.
  */
-CMD_DEF(Handle)
+CMD_DEF(16)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	PSYSTEM_HANDLE_INFORMATION	pInfo = NULL;
@@ -1245,15 +1195,11 @@ CMD_DEF(Handle)
 
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemHandleInformation:\n");
-	}
 	/*
 	 *	Obtain required buffer size
 	 */
 	Status = NtQuerySystemInformation (
-			SystemHandleInformation,
+			16,
 			pInfo,
 			BUFFER_SIZE_DEFAULT,
 			& Length
@@ -1283,7 +1229,7 @@ CMD_DEF(Handle)
 	 *	Get handle table from ntoskrnl.exe
 	 */
 	Status = NtQuerySystemInformation (
-			SystemHandleInformation,
+			16,
 			pInfo,
 			Length,
 			& Length
@@ -1332,7 +1278,7 @@ CMD_DEF(Handle)
  * NOTE
  * 	Class 17.
  */
-CMD_DEF(Object)
+CMD_DEF(17)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1343,7 +1289,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 18.
  */
-CMD_DEF(PageFile)
+CMD_DEF(18)
 {
 	NTSTATUS			Status;
 	PSYSTEM_PAGEFILE_INFORMATION	pInfo = NULL;
@@ -1352,12 +1298,8 @@ CMD_DEF(PageFile)
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check pInfo */
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemPageFileInformation:\n");
-	}
 	Status = NtQuerySystemInformation(
-			SystemPageFileInformation,
+			18,
 			pInfo,
 			BUFFER_SIZE_DEFAULT,
 			& Length
@@ -1384,7 +1326,7 @@ CMD_DEF(PageFile)
 		}
 	}
 	Status = NtQuerySystemInformation (
-			SystemPageFileInformation,
+			18,
 			pInfo,
 			Length,
 			& Length
@@ -1398,14 +1340,11 @@ CMD_DEF(PageFile)
 
 	while (1)
 	{
-		wprintf (L"\t\"%s\":\n", pInfo->PagefileFileName.Buffer);
-		if (Application.Flag.Verbose)
-		{
-			wprintf (L"\t\tRelativeOffset   = %08x\n", pInfo->RelativeOffset);
-		}
-		wprintf (L"\t\tCurrentSizePages = %ld\n", pInfo->CurrentSizePages);
-		wprintf (L"\t\tTotalUsedPages   = %ld\n", pInfo->TotalUsedPages);
-		wprintf (L"\t\tPeakUsedPages    = %ld\n", pInfo->PeakUsedPages);
+		wprintf (L"  \"%s\":\n", pInfo->PagefileFileName.Buffer);
+		wprintf (L"\tRelativeOffset   %08x\n", pInfo->RelativeOffset);
+		wprintf (L"\tCurrentSizePages %ld\n", pInfo->CurrentSizePages);
+		wprintf (L"\tTotalUsedPages   %ld\n", pInfo->TotalUsedPages);
+		wprintf (L"\tPeakUsedPages    %ld\n", pInfo->PeakUsedPages);
 
 		if (0 == pInfo->RelativeOffset)
 		{
@@ -1430,18 +1369,14 @@ CMD_DEF(PageFile)
  * NOTE
  * 	Class 19.
  */
-CMD_DEF(InstructionEmulation)
+CMD_DEF(19)
 {
 	NTSTATUS		Status;
 	SYSTEM_VDM_INFORMATION	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemInstructionEmulationInfo:\n");
-	}
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
-			SystemInstructionEmulationInfo,
+			19,
 			& Info,
 			sizeof Info,
 			NULL
@@ -1451,40 +1386,40 @@ CMD_DEF(InstructionEmulation)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tVdmSegmentNotPresentCount = %ld\n", Info.VdmSegmentNotPresentCount);
-	printf ("\tVdmINSWCount              = %ld\n", Info.VdmINSWCount);
-	printf ("\tVdmESPREFIXCount          = %ld\n", Info.VdmESPREFIXCount);
-	printf ("\tVdmCSPREFIXCount          = %ld\n", Info.VdmCSPREFIXCount);
-	printf ("\tVdmSSPREFIXCount          = %ld\n", Info.VdmSSPREFIXCount);
-	printf ("\tVdmDSPREFIXCount          = %ld\n", Info.VdmDSPREFIXCount);
-	printf ("\tVdmFSPREFIXCount          = %ld\n", Info.VdmFSPREFIXCount);
-	printf ("\tVdmGSPREFIXCount          = %ld\n", Info.VdmGSPREFIXCount);
-	printf ("\tVdmOPER32PREFIXCount      = %ld\n", Info.VdmOPER32PREFIXCount);
-	printf ("\tVdmADDR32PREFIXCount      = %ld\n", Info.VdmADDR32PREFIXCount);
-	printf ("\tVdmINSBCount              = %ld\n", Info.VdmINSBCount);
-	printf ("\tVdmINSWV86Count           = %ld\n", Info.VdmINSWV86Count);
-	printf ("\tVdmOUTSBCount             = %ld\n", Info.VdmOUTSBCount);
-	printf ("\tVdmOUTSWCount             = %ld\n", Info.VdmOUTSWCount);
-	printf ("\tVdmPUSHFCount             = %ld\n", Info.VdmPUSHFCount);
-	printf ("\tVdmPOPFCount              = %ld\n", Info.VdmPOPFCount);
-	printf ("\tVdmINTNNCount             = %ld\n", Info.VdmINTNNCount);
-	printf ("\tVdmINTOCount              = %ld\n", Info.VdmINTOCount);
-	printf ("\tVdmIRETCount              = %ld\n", Info.VdmIRETCount);
-	printf ("\tVdmINBIMMCount            = %ld\n", Info.VdmINBIMMCount);
-	printf ("\tVdmINWIMMCount            = %ld\n", Info.VdmINWIMMCount);
-	printf ("\tVdmOUTBIMMCount           = %ld\n", Info.VdmOUTBIMMCount);
-	printf ("\tVdmOUTWIMMCount           = %ld\n", Info.VdmOUTWIMMCount);
-	printf ("\tVdmINBCount               = %ld\n", Info.VdmINBCount);
-	printf ("\tVdmINWCount               = %ld\n", Info.VdmINWCount);
-	printf ("\tVdmOUTBCount              = %ld\n", Info.VdmOUTBCount);
-	printf ("\tVdmOUTWCount              = %ld\n", Info.VdmOUTWCount);
-	printf ("\tVdmLOCKPREFIXCount        = %ld\n", Info.VdmLOCKPREFIXCount);
-	printf ("\tVdmREPNEPREFIXCount       = %ld\n", Info.VdmREPNEPREFIXCount);
-	printf ("\tVdmREPPREFIXCount         = %ld\n", Info.VdmREPPREFIXCount);
-	printf ("\tVdmHLTCount               = %ld\n", Info.VdmHLTCount);
-	printf ("\tVdmCLICount               = %ld\n", Info.VdmCLICount);
-	printf ("\tVdmSTICount               = %ld\n", Info.VdmSTICount);
-	printf ("\tVdmBopCount               = %ld\n", Info.VdmBopCount);
+	printf ("  VdmSegmentNotPresentCount = %ld\n", Info.VdmSegmentNotPresentCount);
+	printf ("  VdmINSWCount              = %ld\n", Info.VdmINSWCount);
+	printf ("  VdmESPREFIXCount          = %ld\n", Info.VdmESPREFIXCount);
+	printf ("  VdmCSPREFIXCount          = %ld\n", Info.VdmCSPREFIXCount);
+	printf ("  VdmSSPREFIXCount          = %ld\n", Info.VdmSSPREFIXCount);
+	printf ("  VdmDSPREFIXCount          = %ld\n", Info.VdmDSPREFIXCount);
+	printf ("  VdmFSPREFIXCount          = %ld\n", Info.VdmFSPREFIXCount);
+	printf ("  VdmGSPREFIXCount          = %ld\n", Info.VdmGSPREFIXCount);
+	printf ("  VdmOPER32PREFIXCount      = %ld\n", Info.VdmOPER32PREFIXCount);
+	printf ("  VdmADDR32PREFIXCount      = %ld\n", Info.VdmADDR32PREFIXCount);
+	printf ("  VdmINSBCount              = %ld\n", Info.VdmINSBCount);
+	printf ("  VdmINSWV86Count           = %ld\n", Info.VdmINSWV86Count);
+	printf ("  VdmOUTSBCount             = %ld\n", Info.VdmOUTSBCount);
+	printf ("  VdmOUTSWCount             = %ld\n", Info.VdmOUTSWCount);
+	printf ("  VdmPUSHFCount             = %ld\n", Info.VdmPUSHFCount);
+	printf ("  VdmPOPFCount              = %ld\n", Info.VdmPOPFCount);
+	printf ("  VdmINTNNCount             = %ld\n", Info.VdmINTNNCount);
+	printf ("  VdmINTOCount              = %ld\n", Info.VdmINTOCount);
+	printf ("  VdmIRETCount              = %ld\n", Info.VdmIRETCount);
+	printf ("  VdmINBIMMCount            = %ld\n", Info.VdmINBIMMCount);
+	printf ("  VdmINWIMMCount            = %ld\n", Info.VdmINWIMMCount);
+	printf ("  VdmOUTBIMMCount           = %ld\n", Info.VdmOUTBIMMCount);
+	printf ("  VdmOUTWIMMCount           = %ld\n", Info.VdmOUTWIMMCount);
+	printf ("  VdmINBCount               = %ld\n", Info.VdmINBCount);
+	printf ("  VdmINWCount               = %ld\n", Info.VdmINWCount);
+	printf ("  VdmOUTBCount              = %ld\n", Info.VdmOUTBCount);
+	printf ("  VdmOUTWCount              = %ld\n", Info.VdmOUTWCount);
+	printf ("  VdmLOCKPREFIXCount        = %ld\n", Info.VdmLOCKPREFIXCount);
+	printf ("  VdmREPNEPREFIXCount       = %ld\n", Info.VdmREPNEPREFIXCount);
+	printf ("  VdmREPPREFIXCount         = %ld\n", Info.VdmREPPREFIXCount);
+	printf ("  VdmHLTCount               = %ld\n", Info.VdmHLTCount);
+	printf ("  VdmCLICount               = %ld\n", Info.VdmCLICount);
+	printf ("  VdmSTICount               = %ld\n", Info.VdmSTICount);
+	printf ("  VdmBopCount               = %ld\n", Info.VdmBopCount);
 
 	return EXIT_SUCCESS;
 }
@@ -1508,21 +1443,17 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 21.
  */
-CMD_DEF(Cache)
+CMD_DEF(21)
 {
 	NTSTATUS			Status;
 	SYSTEM_CACHE_INFORMATION	Si;
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemCacheInformation:\n");
-	}
 	RtlZeroMemory (
 		(PVOID) & Si,
 		sizeof Si
 		);
 	Status = NtQuerySystemInformation (
-			SystemCacheInformation,
+			21,
 			& Si,
 			sizeof Si,
 			0
@@ -1553,7 +1484,7 @@ CMD_DEF(Cache)
  * NOTE
  * 	Class 22.
  */
-CMD_DEF(PoolTag)
+CMD_DEF(22)
 {
 	NTSTATUS		Status;
 	PSYSTEM_POOL_TAG_INFO	pInfo = NULL;
@@ -1563,12 +1494,8 @@ CMD_DEF(PoolTag)
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check pInfo */
 	
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemPoolTagInformation:\n");
-	}
 	Status = NtQuerySystemInformation(
-			SystemPoolTagInformation,
+			22,
 			pInfo,
 			BUFFER_SIZE_DEFAULT,
 			& Length
@@ -1595,7 +1522,7 @@ CMD_DEF(PoolTag)
 		}
 	}
 	Status = NtQuerySystemInformation (
-			SystemPoolTagInformation,
+			22,
 			pInfo,
 			Length,
 			& Length
@@ -1646,21 +1573,17 @@ CMD_DEF(PoolTag)
  * NOTE
  * 	Class 23.
  */
-CMD_DEF(ProcessorSchedule)
+CMD_DEF(23)
 {
 	NTSTATUS			Status;
 	SYSTEM_PROCESSOR_SCHEDULE_INFO	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemProcessorScheduleInfo:\n");
-	}
 	RtlZeroMemory (
 		& Info,
 		sizeof Info
 		);
 	Status = NtQuerySystemInformation (
-			SystemProcessorScheduleInfo,
+			23,
 			& Info,
 			sizeof Info,
 			NULL
@@ -1692,21 +1615,17 @@ CMD_DEF(ProcessorSchedule)
  * NOTE
  * 	Class 24.
  */
-CMD_DEF(Dpc)
+CMD_DEF(24)
 {
 	NTSTATUS		Status;
 	SYSTEM_DPC_INFORMATION	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemDpcInformation:\n");
-	}
 	RtlZeroMemory (
 		& Info,
 		sizeof Info
 		);
 	Status = NtQuerySystemInformation (
-			SystemDpcInformation,
+			24,
 			& Info,
 			sizeof Info,
 			NULL
@@ -1750,7 +1669,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 26.
  */
-INT CMD_LoadImage (INT argc, LPCSTR argv [])
+CMD_DEF(26)
 CMD_NOT_IMPLEMENTED
 
 /**********************************************************************
@@ -1760,7 +1679,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 27.
  */
-CMD_DEF(UnloadImage)
+CMD_DEF(27)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1771,18 +1690,14 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 28.
  */
-CMD_DEF(TimeAdjustment)
+CMD_DEF(28)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	SYSTEM_TIME_ADJUSTMENT_INFO	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemTimeAdjustmentInformation:\n");
-	}
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
-			SystemTimeAdjustmentInformation,
+			28,
 			& Info,
 			sizeof Info,
 			0
@@ -1840,7 +1755,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 32.
  */
-CMD_DEF(CrashDumpSection)
+CMD_DEF(32)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1851,7 +1766,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 33.
  */
-CMD_DEF(ProcessorFaultCount)
+CMD_DEF(33)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1862,7 +1777,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 34.
  */
-CMD_DEF(CrashDumpState)
+CMD_DEF(34)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1873,14 +1788,14 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 35.
  */
-CMD_DEF(Debugger)
+CMD_DEF(35)
 {
 	NTSTATUS		Status;
 	SYSTEM_DEBUGGER_INFO	Info;
 
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
-			SystemDebuggerInformation,
+			35,
 			& Info,
 			sizeof Info,
 			NULL
@@ -1906,7 +1821,7 @@ CMD_DEF(Debugger)
  * NOTE
  * 	Class 36.
  */
-CMD_DEF(ThreadSwitchCounters)
+CMD_DEF(36)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1917,18 +1832,14 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 37.
  */
-CMD_DEF(Quota)
+CMD_DEF(37)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
 	SYSTEM_QUOTA_INFORMATION	Info;
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemQuotaInformation:\n");
-	}
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
-			SystemQuotaInformation,
+			37,
 			& Info,
 			sizeof Info,
 			0
@@ -1953,7 +1864,7 @@ CMD_DEF(Quota)
  * NOTE
  * 	Class 38.
  */
-CMD_DEF(LoadDriver)
+CMD_DEF(38)
 CMD_NOT_IMPLEMENTED
 
 
@@ -1964,7 +1875,7 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 39.
  */
-CMD_DEF(PrioritySeparation)
+CMD_DEF(39)
 CMD_NOT_IMPLEMENTED
 
 
@@ -2020,17 +1931,13 @@ CMD_NOT_IMPLEMENTED
  * NOTE
  * 	Class 44.
  */
-CMD_DEF(TimeZone)
+CMD_DEF(44)
 {
 #if 0
 	NTSTATUS			Status;
 	TIME_ZONE_INFORMATION		Tzi;
 	WCHAR				Name [33];
 
-	if (Application.Flag.Verbose)
-	{
-		printf ("SystemTimeZoneInformation:\n");
-	}
 	RtlZeroMemory (& Tzi, sizeof Tzi);
 	Status = NtQuerySystemInformation(
 			SystemTimeZoneInformation,
@@ -2100,7 +2007,6 @@ CMD_DEF(TimeZone)
 		"\tBias: %d'\n",
 		Tzi.DaylightBias /* LONG */ 
 		);
-
 #endif
 	return EXIT_SUCCESS;
 }
@@ -2113,7 +2019,95 @@ CMD_DEF(TimeZone)
  * NOTE
  * 	Class 45.
  */
-CMD_DEF(Lookaside)
+CMD_DEF(45)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 46.
+ */
+CMD_DEF(46)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 47.
+ */
+CMD_DEF(47)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 48.
+ */
+CMD_DEF(48)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 49.
+ */
+CMD_DEF(49)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 50.
+ */
+CMD_DEF(50)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 51.
+ */
+CMD_DEF(51)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 52.
+ */
+CMD_DEF(52)
+CMD_NOT_IMPLEMENTED
+
+
+/**********************************************************************
+ * 
+ * DESCRIPTION
+ *
+ * NOTE
+ * 	Class 53.
+ */
+CMD_DEF(53)
 CMD_NOT_IMPLEMENTED
 
 
@@ -2129,7 +2123,8 @@ CMD_DEF(ver)
 	printf (
 	"ReactOS Operating System - http://www.reactos.com/\n"
 	"QSI - Query System Information (compiled on %s, %s)\n"
-	"Copyright (c) 1999, 2000 Emanuele Aliberti et alii\n\n",
+	"Copyright (c) 1999-2001 Emanuele Aliberti et alii\n\n"
+	"Run the command in verbose mode, for full license information.\n\n",
 	__DATE__, __TIME__
 	);
 
@@ -2251,233 +2246,274 @@ Commands [] =
 	
 	{						/* 0  Q  */
 		"basic",
-		CMD_REF(Basic),
+		CMD_REF(0),
 		"Basic system information"
 	},
 	{						/* 1  Q  */
 		"processor",	
-		CMD_REF(Processor),
+		CMD_REF(1),
 		"Processor characteristics"
 	},
 	{						/* 2  Q  */
 		"perf",	
-		CMD_REF(Performance),
+		CMD_REF(2),
 		"System performance data"
 	},
 	{						/* 3  Q  */
 		"time",
-		CMD_REF(Time),
+		CMD_REF(3),
 		"System times"
 	},
-	{						/* 4  Q  */
+	{						/* 4  Q  (checked build only) */
 		"path",
-		CMD_REF(Path),
-		"unknown"
+		CMD_REF(4),
+		"Path (checked build only)"
 	},
 	{						/* 5  Q  */
 		"process",
-		CMD_REF(Process),
+		CMD_REF(5),
 		"Process & thread tables"
 	},
 	{						/* 6  Q  */
-		"sdt",
-		CMD_REF(ServiceDescriptorTable),
-		"Service descriptor table (SDT)"
+		"callcount",
+		CMD_REF(6),
+		"Call count information"
 	},
 	{						/* 7  Q  */
-		"ioconfig",
-		CMD_REF(IoConfig),
+		"device",
+		CMD_REF(7),
 		"I/O devices in the system, by class"
 	},
 	{						/* 8  Q  */
-		"proctime",
-		CMD_REF(ProcessorTime),
-		"Print processor times"
+		"performance",
+		CMD_REF(8),
+		"Processor performance"
 	},
 	{						/* 9  QS */
-		"flag",
-		CMD_REF(NtGlobalFlag),
-		"Print the system wide flags"
+		"flags",
+		CMD_REF(9),
+		"System wide flags"
 	},
 	{						/* 10    */
-		"#10",
+		"call",
 		CMD_REF(10),
-		"UNKNOWN"
+		"Call time"
 	},
 	{						/* 11 Q  */
 		"module",
-		CMD_REF(Module),
+		CMD_REF(11),
 		"Table of kernel modules"
 	},
 	{						/* 12 Q  */
-		"reslock",
-		CMD_REF(ResourceLock),
+		"locks",
+		CMD_REF(12),
 		"Table of locks on resources"
 	},
 	{						/* 13    */
-		"#13",
+		"stack",
 		CMD_REF(13),
-		"UNKNOWN"
+		"Stack trace"
 	},
 	{						/* 14    */
-		"#14",
+		"ppool",
 		CMD_REF(14),
-		"UNKNOWN"
+		"Paged pool"
 	},
 	{						/* 15    */
-		"#15",
+		"nppool",
 		CMD_REF(15),
-		"UNKNOWN"
+		"Non paged pool"
 	},
 	{						/* 16 Q  */
 		"handle",
-		CMD_REF(Handle),
-		"Table of handles (Ps Manager)"
+		CMD_REF(16),
+		"Table of handles"
 	},
 	{						/* 17 Q  */
 		"object",
-		CMD_REF(Object),
-		"Table of objects (Ob Manager)"
+		CMD_REF(17),
+		"Table of executive objects"
 	},
 	{						/* 18 Q  */
 		"pagefile",
-		CMD_REF(PageFile),
-		"Virtual memory paging files (Cc Subsystem)"
+		CMD_REF(18),
+		"Virtual memory paging files"
 	},
 	{						/* 19 Q  */
-		"emulation",
-		CMD_REF(InstructionEmulation),
+		"vdmie",
+		CMD_REF(19),
 		"Virtual DOS Machine instruction emulation (VDM)"
 	},
 	{						/* 20    */
-		"#20",
+		"vdmbop",
 		CMD_REF(20),
-		"UNKNOWN"
+		"Bop (VDM)"
 	},
 	{						/* 21 QS */
 		"cache",	
-		CMD_REF(Cache),
-		"Cache Manager Status"
+		CMD_REF(21),
+		"File cache"
 	},
 	{						/* 22 Q  */
 		"pooltag",
-		CMD_REF(PoolTag),
+		CMD_REF(22),
 		"Tagged pools statistics (checked build only)"
 	},
 	{						/* 23 Q  */
-		"procsched",
-		CMD_REF(ProcessorSchedule),
-		"Processor schedule information"
+		"int",
+		CMD_REF(23),
+		"Processor schedule information (interrupt)"
 	},
 	{						/* 24 QS */
 		"dpc",
-		CMD_REF(Dpc),
-		"Deferred procedure call (DPC)"
+		CMD_REF(24),
+		"Deferred procedure call behaviour (DPC)"
 	},
 	{						/* 25    */
-		"#25",
+		"fullmem",
 		CMD_REF(25),
-		"UNKNOWN"
+		"Full memory"
 	},
 	{						/* 26 S (callable) */
 		"loadpe",
-		CMD_REF(LoadImage),
-		"Load a kernel mode DLL (in PE format)"
+		CMD_REF(26),
+		"Load a kernel mode DLL (module in PE format)"
 	},
 	{						/* 27 S (callable) */
 		"unloadpe",
-		CMD_REF(UnloadImage),
-		"Unload a kernel mode DLL (module)"
+		CMD_REF(27),
+		"Unload a kernel mode DLL (module in Pe format)"
 	},
 	{						/* 28 QS */
 		"timeadj",
-		CMD_REF(TimeAdjustment),
+		CMD_REF(28),
 		"Time adjustment"
 	},
 	{						/* 29    */
-		"#29",
+		"smem",
 		CMD_REF(29),
-		"UNKNOWN"
+		"Summary memory"
 	},
 	{						/* 30    */
-		"#30",
+		"event",
 		CMD_REF(30),
-		"UNKNOWN"
+		"Next event ID"
 	},
 	{						/* 31    */
-		"#31",
+		"events",
 		CMD_REF(31),
-		"UNKNOWN"
+		"Event IDs"
 	},
 	{						/* 32 Q  */
-		"crashsect",
-		CMD_REF(CrashDumpSection),
+		"crash",
+		CMD_REF(32),
 		"Crash Dump Section"
 	},
 	{						/* 33 Q  */
-		"procfault",
-		CMD_REF(ProcessorFaultCount),
-		"Processor fault count"
+		"exceptions",
+		CMD_REF(33),
+		"Exceptions"
 	},
 	{						/* 34 Q  */
 		"crashstate",
-		CMD_REF(CrashDumpState),
+		CMD_REF(34),
 		"Crash Dump State"
 	},
 	{						/* 35 Q  */
 		"debugger",
-		CMD_REF(Debugger),
-		"System debugger"
+		CMD_REF(35),
+		"Kernel debugger"
 	},
 	{						/* 36 Q  */
-		"threadsw",
-		CMD_REF(ThreadSwitchCounters),
-		"Thread switch counters"
+		"cswitch",
+		CMD_REF(36),
+		"Thread context switch counters"
 	},
 	{						/* 37 QS */
-		"quota",
-		CMD_REF(Quota),
-		"System quota values"
+		"regquota",
+		CMD_REF(37),
+		"Registry quota values"
 	},
 	{						/* 38 S  */
-		"loaddrv",
-		CMD_REF(LoadDriver),
-		"Load kernel driver (SYS)"
+		"est",
+		CMD_REF(38),
+		"Extended service table"
 	},
 	{						/* 39 S  */
 		"prisep",
-		CMD_REF(PrioritySeparation),
+		CMD_REF(39),
 		"Priority Separation"
 	},
 	{						/* 40    */
-		"#40",
+		"ppbus",
 		CMD_REF(40),
-		"UNKNOWN"
+		"Plug & play bus"
 	},
 	{						/* 41    */
-		"#41",
+		"dock",
 		CMD_REF(41),
-		"UNKNOWN"
+		"Dock"
 	},
 	{						/* 42    */
-		"#42",
+		"power",
 		CMD_REF(42),
-		"UNKNOWN"
+		"Power"
 	},
 	{						/* 43    */
-		"#43",
+		"procspeed",
 		CMD_REF(43),
-		"UNKNOWN"
+		"Processor speed"
 	},
 	{						/* 44 QS */
 		"tz",
-		CMD_REF(TimeZone),
-		"Time zone (TZ) information"
+		CMD_REF(44),
+		"Current time zone (TZ)"
 	},
 	{						/* 45 Q  */
 		"lookaside",
-		CMD_REF(Lookaside),
+		CMD_REF(45),
 		"Lookaside"
+	},
+	/* NT5 */
+	{						/* 46 Q  */
+		"tslip",
+		CMD_REF(46),
+		"Set time slip (5.0)"
+	},
+	{						/* 47 Q  */
+		"csession",
+		CMD_REF(47),
+		"Create session (5.0)"
+	},
+	{						/* 48 Q  */
+		"dsession",
+		CMD_REF(48),
+		"Delete session (5.0)"
+	},
+	{						/* 49 Q  */
+		"#49",
+		CMD_REF(49),
+		"UNKNOWN (5.0)"
+	},
+	{						/* 50 Q  */
+		"range",
+		CMD_REF(50),
+		"Range start (5.0)"
+	},
+	{						/* 51 Q  */
+		"verifier",
+		CMD_REF(51),
+		"Verifier (5.0)"
+	},
+	{						/* 52 Q  */
+		"addverif",
+		CMD_REF(52),
+		"Add verifier (5.0)"
+	},
+	{						/* 53 Q  */
+		"sesproc",
+		CMD_REF(53),
+		"Session processes (5.0)"
 	},
 /* User commands */
 	{

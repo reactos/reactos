@@ -22,7 +22,7 @@
 							_T("This is free software, and you are welcome to redistribute it\n")\
 							_T("under certain conditions; type `help gpl' for details.\n")
 
-#define COPYRIGHT_MSG		_T("Copyright (C) 2000 Nedko Arnaoudov\n")
+#define COPYRIGHT_MSG		_T("Copyright (C) 2000-2001 Nedko Arnaoudov\n")
 
 #define CREDITS_MSG			_T("Registry Explorer is written by Nedko Arnaoudov\n")\
 							_T("Special thanks to Emanuele Aliberti\n")
