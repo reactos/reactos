@@ -22,7 +22,6 @@ APPS = 	calc \
 	notevil \
 	sysutils \
 	sysutils$(SEP)ctm \
-	sysutils$(SEP)tlist \
 	net$(SEP)finger \
 	net$(SEP)ncftp \
 	net$(SEP)ping \
@@ -35,6 +34,10 @@ APPS = 	calc \
 #
 #	taskmgr \
 #	sysutils$(SEP)regexpl \
+#
+# Removed because it doesn't build correctly
+#
+#	sysutils$(SEP)tlist \
 #
 
 all: $(APPS)
