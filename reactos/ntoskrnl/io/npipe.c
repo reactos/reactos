@@ -52,7 +52,7 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
    FileObject = ObCreateObject(NamedPipeFileHandle,
 			       DesiredAccess,
 			       ObjectAttributes,
-			       IoFileType);
+			       IoFileObjectType);
    if (FileObject == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
