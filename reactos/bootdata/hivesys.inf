@@ -503,7 +503,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 
@@ -511,7 +511,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.0",0x00000001,36,34,30,78,34,38,30,00
