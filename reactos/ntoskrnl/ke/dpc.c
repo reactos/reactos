@@ -102,7 +102,7 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
  */
 {
    DPRINT("KeInsertQueueDpc()\n",0);
-   assert(KeGetCurrentIrql()==DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
    
    dpc->Number=0;
    dpc->Importance=Medium;
@@ -115,7 +115,7 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
-   dpc->Lock=1;
+   dpc->Lock=(PULONG)1;
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
    return(TRUE);

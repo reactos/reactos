@@ -118,11 +118,12 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
    /*
     * sanity check
     */
-//   printk("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
-//	  OldIrql);
+   DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
+	  OldIrql);
    if (NewIrql < CurrentIrql)
      {
-	DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",__FILE__,__LINE__,
+                 CurrentIrql,NewIrql,OldIrql);
 	for(;;);
      }
    

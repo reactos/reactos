@@ -72,7 +72,6 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
-   NTSTATUS Status;
    
    DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	  "IoStatusBlock %x)\n",
@@ -138,7 +137,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 }
 
 NTSTATUS ZwWriteFile(HANDLE FileHandle,
-		     HANDLE Event,
+		     HANDLE EventHandle,
 		     PIO_APC_ROUTINE ApcRoutine,
 		     PVOID ApcContext,
 		     PIO_STATUS_BLOCK IoStatusBlock,
@@ -152,76 +151,27 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
+   KEVENT Event;
    
    if (hdr==NULL)
      {
 	return(STATUS_INVALID_HANDLE);
      }
    
-   Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize,TRUE);
-   if (Irp==NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   Irp->UserBuffer = (LPVOID)Buffer;
-   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
-     {
-	DPRINT1("Doing buffer i/o\n");
-	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,Length);
-	if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	  {
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	memcpy(Irp->AssociatedIrp.SystemBuffer,Buffer,Length);
-	Irp->UserBuffer = NULL;
-     }
-   if (FileObject->DeviceObject->Flags&DO_DIRECT_IO)
-     {
-	DPRINT1("Doing direct i/o\n");
-	
-	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
-	Irp->UserBuffer = NULL;
-	Irp->AssociatedIrp.SystemBuffer = NULL;
-     }
-
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   DPRINT("StackPtr %x\n",StackPtr);
-   StackPtr->MajorFunction = IRP_MJ_WRITE;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = FileObject->DeviceObject;
-   StackPtr->FileObject = FileObject;
-   StackPtr->Parameters.Write.Length = Length;
-   if (ByteOffset!=NULL)
-   {
-        StackPtr->Parameters.Write.ByteOffset.LowPart = ByteOffset->LowPart;
-        StackPtr->Parameters.Write.ByteOffset.HighPart = ByteOffset->HighPart;
-   }
-   else
-   {
-        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
-        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
-   }
-   if (Key!=NULL)
-   {
-         StackPtr->Parameters.Write.Key = *Key;
-   }
-   else
-   {
-        StackPtr->Parameters.Write.Key = 0;
-   }
-   
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+				      FileObject->DeviceObject,
+				      Buffer,
+				      Length,
+				      ByteOffset,
+				      &Event,
+				      IoStatusBlock);
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING)
      {
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	Status = IoStatusBlock->Status;
+        Status = Irp->IoStatus.Status;
      }
    return(Status);
 }

@@ -56,12 +56,12 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    MmCreateMemoryArea(KernelMode,
 		      MEMORY_AREA_MDL_MAPPING,
 		      &base,
-		      Mdl->ByteCount,
+		      Mdl->ByteCount + Mdl->ByteOffset,
 		      0,
 		      &Result);
    CHECKPOINT;
    mdl_pages = (ULONG *)(Mdl + 1);
-   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE); i++)
+   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset)/PAGESIZE); i++)
      {
 	DPRINT("Writing %x with physical address %x\n",
 	       base+(i*PAGESIZE),mdl_pages[i]);

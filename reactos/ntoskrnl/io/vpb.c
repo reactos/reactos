@@ -35,7 +35,7 @@ NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
    Vpb->RealDevice = DeviceObject;
    Vpb->SerialNumber = 0;
    Vpb->ReferenceCount = 0;
-   memset(Vpb->VolumeLabel,0,sizeof(WCHAR)*MAXIMUM_VOLUME_LABEL_LENGTH);
+   RtlZeroMemory(Vpb->VolumeLabel,sizeof(WCHAR)*MAXIMUM_VOLUME_LABEL_LENGTH);
    
    DeviceObject->Vpb = Vpb;
 }

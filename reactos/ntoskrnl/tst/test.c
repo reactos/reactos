@@ -244,14 +244,15 @@ void TstFileRead(VOID)
 void TstIDERead(void)
 {
   BOOLEAN TestFailed;
-  int Entry, i;
+  int Entry, i, j;
   HANDLE FileHandle;
   NTSTATUS Status;
   LARGE_INTEGER BlockOffset;
   ANSI_STRING AnsiDeviceName;
   UNICODE_STRING UnicodeDeviceName;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  char SectorBuffer[512];
+// static  char SectorBuffer2[512 ];
+static  char SectorBuffer[512 * 10];
   PBOOT_BLOCK BootBlock;
   ROOT_DIR_ENTRY DirectoryBlock[ENTRIES_PER_BLOCK];
 
@@ -260,7 +261,7 @@ void TstIDERead(void)
 
     /*  open the first partition  */
   DbgPrint("Opening Partition1\n");
-  RtlInitAnsiString(&AnsiDeviceName, "\\Device\\HardDrive0\\Partition0");
+  RtlInitAnsiString(&AnsiDeviceName, "\\Device\\HardDrive0\\Partition1");
   RtlAnsiStringToUnicodeString(&UnicodeDeviceName, &AnsiDeviceName, TRUE);
   InitializeObjectAttributes(&ObjectAttributes,
                              &UnicodeDeviceName, 
@@ -279,17 +280,16 @@ void TstIDERead(void)
     {
       DbgPrint("Reading boot block from Partition1\n");
       RtlZeroMemory(SectorBuffer, sizeof(SectorBuffer));
-DbgPrint("addr %x\n", SectorBuffer);
       Status = ZwReadFile(FileHandle,
                           NULL,
                           NULL,
                           NULL,
                           NULL,
                           SectorBuffer,
-                          sizeof(SectorBuffer),
+                          512,
                           0,
                           0);
-      if (Status != STATUS_SUCCESS /* !NT_SUCCESS(Status) */)
+      if (!NT_SUCCESS(Status))
         {
           DbgPrint("Failed to read book block from partition1 status:%x\n", Status);
           TestFailed = TRUE;
@@ -301,17 +301,6 @@ DbgPrint("addr %x\n", SectorBuffer);
     /*  Spew info about boot block  */
   if (!TestFailed)
     {
-
-      for (i = 0; i < 64; i++)
-        {
-          if (!(i % 16))
-            {
-              DbgPrint("\n%04d: ", i);
-            }
-          DbgPrint("%02x ", (unsigned char)SectorBuffer[i]);
-        }
-      DbgPrint("\n");
-
       BootBlock = (PBOOT_BLOCK) SectorBuffer;
       DbgPrint("boot block on Partition1:\n");
       DbgPrint("  OEM Name: %.8s  Bytes/Sector:%d Sectors/Cluster:%d\n",
@@ -332,7 +321,6 @@ DbgPrint("addr %x\n", SectorBuffer);
                BootBlock->BootParameters.HiddenSectorCount);
       DbgPrint("  VolumeLabel:%.11s\n", BootBlock->VolumeLabel);
     }
-for(;;);
 
     /*  Read the first root directory block */
   if (!TestFailed)
@@ -351,7 +339,7 @@ for(;;);
                           sizeof(DirectoryBlock),
                           &BlockOffset,
                           0);
-      if (Status != STATUS_SUCCESS /* !NT_SUCCESS(Status) */)
+      if (!NT_SUCCESS(Status))
         {
           DbgPrint("Failed to read root directory block from partition1\n");
           TestFailed = TRUE;
@@ -397,7 +385,7 @@ for(;;);
 
             default:
               DbgPrint("  FILE: %.8s.%.3s ATTR:%x Time:%04x Date:%04x offset:%d size:%d\n",
-                       &DirectoryBlock[Entry].Filename[1],
+                       DirectoryBlock[Entry].Filename,
                        DirectoryBlock[Entry].Extension,
                        DirectoryBlock[Entry].FileAttribute,
                        DirectoryBlock[Entry].ModifiedTime,
@@ -408,6 +396,64 @@ for(;;);
             }
         }
     }
+
+    /*  Execute a multiblock disk read/write test  */
+  if (!TestFailed)
+    {
+      DbgPrint("Reading data from blocks 10000-4 from Partition1\n");
+      RtlFillMemory(SectorBuffer, sizeof(SectorBuffer), 0xea);
+      BlockOffset.HighPart = 0;
+      BlockOffset.LowPart = 10000 * 512;
+      Status = ZwReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          SectorBuffer,
+                          512 * 5,
+                          &BlockOffset,
+                          0);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("Failed to read blocks 10000-4 from partition1 status:%x\n", 
+                   Status);
+          TestFailed = TRUE;
+        }
+      else
+        {
+          for (j = 0; j < 10; j++)
+            {
+              DbgPrint("%04x: ", j * 256);
+              for (i = 0; i < 16; i++)
+                {
+                  DbgPrint("%02x ", (unsigned char)SectorBuffer[j * 256 + i]);
+                  SectorBuffer[j * 256 + i]++;
+                }
+              DbgPrint("\n");
+            }
+for(;;);
+          Status = ZwWriteFile(FileHandle,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               SectorBuffer,
+                               512 * 5,
+                               &BlockOffset,
+                               0);
+          if (!NT_SUCCESS(Status))
+            {
+              DbgPrint("Failed to write blocks 10000-4 to partition1 status:%x\n", 
+                       Status);
+              TestFailed = TRUE;
+            }
+          else
+            {
+              DbgPrint("Block written\n");
+            }
+        }
+    }  
+
   if (FileHandle != NULL)
     {
       ZwClose(FileHandle);
