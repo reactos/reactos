@@ -41,7 +41,7 @@ vwprintf (format, arg)
      const wchar_t *format;
      va_list arg;
 {
-  int ret = vfprintf (stdout, format, arg);
+  int ret = vfwprintf (stdout, format, arg);
   fflush(stdout);
   return ret;
 }

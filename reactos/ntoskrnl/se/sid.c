@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.5 2000/10/08 12:50:13 ekohl Exp $
+/* $Id: sid.c,v 1.6 2000/10/08 19:12:01 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -102,7 +102,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    if (!RtlValidSid(Sid))
      return STATUS_INVALID_SID;
 
-   Ptr = Bufer;
+   Ptr = Buffer;
    Ptr += swprintf (Ptr,
 		    L"S-%u-",
 		    Sid->Revision);
