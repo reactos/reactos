@@ -36,6 +36,10 @@ static GENERIC_MAPPING ExpTimerMapping = {
 	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
 	TIMER_ALL_ACCESS};
 
+static const INFORMATION_CLASS_INFO ExTimerInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(TIMER_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* TimerBasicInformation */
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -146,36 +150,67 @@ NtCancelTimer(IN HANDLE TimerHandle,
 	      OUT PBOOLEAN CurrentState OPTIONAL)
 {
    PNTTIMER Timer;
-   NTSTATUS Status;
-   BOOLEAN State;
-   KIRQL OldIrql;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   DPRINT("NtCancelTimer(0x%x, 0x%x)\n", TimerHandle, CurrentState);
+   
+   if(CurrentState != NULL && PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(CurrentState,
+                     sizeof(BOOLEAN),
+                     sizeof(BOOLEAN));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
-   DPRINT("NtCancelTimer()\n");
    Status = ObReferenceObjectByHandle(TimerHandle,
 				      TIMER_ALL_ACCESS,
 				      ExTimerType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Timer,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return Status;
+   if(NT_SUCCESS(Status))
+   {
+     BOOLEAN State;
+     KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
 
-   OldIrql = KeRaiseIrqlToDpcLevel();
+     State = KeCancelTimer(&Timer->Timer);
+     KeRemoveQueueDpc(&Timer->Dpc);
+     KeRemoveQueueApc(&Timer->Apc);
+     Timer->Running = FALSE;
 
-   State = KeCancelTimer(&Timer->Timer);
-   KeRemoveQueueDpc(&Timer->Dpc);
-   KeRemoveQueueApc(&Timer->Apc);
-   Timer->Running = FALSE;
+     KeLowerIrql(OldIrql);
+     ObDereferenceObject(Timer);
 
-   KeLowerIrql(OldIrql);
-   ObDereferenceObject(Timer);
-
-   if (CurrentState != NULL)
+     if(CurrentState != NULL)
      {
-	*CurrentState = State;
+       _SEH_TRY
+       {
+         *CurrentState = State;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
+   }
 
-   return STATUS_SUCCESS;
+   return Status;
 }
 
 
@@ -186,38 +221,75 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 	      IN TIMER_TYPE TimerType)
 {
    PNTTIMER Timer;
-   NTSTATUS Status;
-
+   HANDLE hTimer;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
    DPRINT("NtCreateTimer()\n");
-   Status = ObCreateObject(ExGetPreviousMode(),
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(TimerHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+
+   Status = ObCreateObject(PreviousMode,
 			   ExTimerType,
 			   ObjectAttributes,
-			   ExGetPreviousMode(),
+			   PreviousMode,
 			   NULL,
 			   sizeof(NTTIMER),
 			   0,
 			   0,
 			   (PVOID*)&Timer);
-   if (!NT_SUCCESS(Status))
-     return Status;
+   if(NT_SUCCESS(Status))
+   {
+     KeInitializeTimerEx(&Timer->Timer,
+		         TimerType);
 
-   KeInitializeTimerEx(&Timer->Timer,
-		       TimerType);
+     KeInitializeDpc(&Timer->Dpc,
+		     &ExpTimerDpcRoutine,
+		     Timer);
 
-   KeInitializeDpc(&Timer->Dpc,
-		   &ExpTimerDpcRoutine,
-		   Timer);
+     Timer->Running = FALSE;
 
-   Timer->Running = FALSE;
-
-   Status = ObInsertObject ((PVOID)Timer,
-			    NULL,
-			    DesiredAccess,
-			    0,
-			    NULL,
-			    TimerHandle);
-
-   ObDereferenceObject(Timer);
+     Status = ObInsertObject ((PVOID)Timer,
+			      NULL,
+			      DesiredAccess,
+			      0,
+			      NULL,
+			      &hTimer);
+     ObDereferenceObject(Timer);
+     
+     if(NT_SUCCESS(Status))
+     {
+       _SEH_TRY
+       {
+         *TimerHandle = hTimer;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+     }
+   }
 
    return Status;
 }
@@ -228,15 +300,54 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
 	    IN ACCESS_MASK DesiredAccess,
 	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
+   HANDLE hTimer;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   DPRINT("NtOpenTimer()\n");
+
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(TimerHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExTimerType,
 			       NULL,
-			       UserMode,
+			       PreviousMode,
 			       DesiredAccess,
 			       NULL,
-			       TimerHandle);
+			       &hTimer);
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *TimerHandle = hTimer;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   
    return Status;
 }
 
@@ -248,58 +359,67 @@ NtQueryTimer(IN HANDLE TimerHandle,
 	     IN ULONG TimerInformationLength,
 	     OUT PULONG ReturnLength  OPTIONAL)
 {
-  PNTTIMER Timer;
-  TIMER_BASIC_INFORMATION SafeTimerInformation;
-  ULONG ResultLength;
-  NTSTATUS Status;
+   PNTTIMER Timer;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-  Status = ObReferenceObjectByHandle(TimerHandle,
-				     TIMER_QUERY_STATE,
-				     ExTimerType,
-				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     (PVOID*)&Timer,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+   PreviousMode = ExGetPreviousMode();
 
-  if (TimerInformationClass != TimerBasicInformation)
-    {
-      ObDereferenceObject(Timer);
-      return(STATUS_INVALID_INFO_CLASS);
-    }
-  if (TimerInformationLength < sizeof(TIMER_BASIC_INFORMATION))
-    {
-      ObDereferenceObject(Timer);
-      return(STATUS_INFO_LENGTH_MISMATCH);
-    }
+   DefaultQueryInfoBufferCheck(TimerInformationClass,
+                               ExTimerInfoClass,
+                               TimerInformation,
+                               TimerInformationLength,
+                               ReturnLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQueryTimer() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
 
-  memcpy(&SafeTimerInformation.TimeRemaining, &Timer->Timer.DueTime,
-	 sizeof(LARGE_INTEGER));
-  SafeTimerInformation.SignalState = (BOOLEAN)Timer->Timer.Header.SignalState;
-  ResultLength = sizeof(TIMER_BASIC_INFORMATION);
+   Status = ObReferenceObjectByHandle(TimerHandle,
+				      TIMER_QUERY_STATE,
+				      ExTimerType,
+				      PreviousMode,
+				      (PVOID*)&Timer,
+				      NULL);
+   if(NT_SUCCESS(Status))
+   {
+     switch(TimerInformationClass)
+     {
+       case TimerBasicInformation:
+       {
+         PTIMER_BASIC_INFORMATION BasicInfo = (PTIMER_BASIC_INFORMATION)TimerInformation;
 
-  Status = MmCopyToCaller(TimerInformation, &SafeTimerInformation,
-			  sizeof(TIMER_BASIC_INFORMATION));
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject(Timer);
-      return(Status);
-    }
+         _SEH_TRY
+         {
+           /* FIXME - interrupt correction */
+           BasicInfo->TimeRemaining.QuadPart = Timer->Timer.DueTime.QuadPart;
+           BasicInfo->SignalState = (BOOLEAN)Timer->Timer.Header.SignalState;
 
-  if (ReturnLength != NULL)
-    {
-      Status = MmCopyToCaller(ReturnLength, &ResultLength,
-			      sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  ObDereferenceObject(Timer);
-	  return(Status);
-	}
-    }
-  ObDereferenceObject(Timer);
-  return(STATUS_SUCCESS);
+           if(ReturnLength != NULL)
+           {
+             *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
+           }
+         }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+         break;
+       }
+
+       default:
+         Status = STATUS_NOT_IMPLEMENTED;
+         break;
+     }
+
+     ObDereferenceObject(Timer);
+   }
+
+   return Status;
 }
 
 
@@ -313,16 +433,48 @@ NtSetTimer(IN HANDLE TimerHandle,
 	   OUT PBOOLEAN PreviousState  OPTIONAL)
 {
    PNTTIMER Timer;
-   NTSTATUS Status;
    BOOLEAN Result;
    BOOLEAN State;
+   LARGE_INTEGER TimerDueTime;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    DPRINT("NtSetTimer()\n");
+
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(DueTime,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       TimerDueTime = *DueTime;
+
+       if(PreviousState != NULL)
+       {
+         ProbeForWrite(PreviousState,
+                       sizeof(BOOLEAN),
+                       sizeof(BOOLEAN));
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObReferenceObjectByHandle(TimerHandle,
 				      TIMER_ALL_ACCESS,
 				      ExTimerType,
-				      (KPROCESSOR_MODE)KeGetPreviousMode(),
+				      PreviousMode,
 				      (PVOID*)&Timer,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -351,15 +503,15 @@ NtSetTimer(IN HANDLE TimerHandle,
 		       &ExpTimerApcKernelRoutine,
 		       (PKRUNDOWN_ROUTINE)NULL,
 		       (PKNORMAL_ROUTINE)TimerApcRoutine,
-		       (KPROCESSOR_MODE)KeGetPreviousMode(),
+		       PreviousMode,
 		       TimerContext);
      }
 
    Result = KeSetTimerEx(&Timer->Timer,
-			 *DueTime,
+			 TimerDueTime,
 			 Period,
 			 TimerApcRoutine ? &Timer->Dpc : 0 );
-   if (Result == TRUE)
+   if (Result)
      {
 	ObDereferenceObject(Timer);
 	DPRINT1( "KeSetTimer says the timer was already running, this shouldn't be\n" );
@@ -371,11 +523,19 @@ NtSetTimer(IN HANDLE TimerHandle,
    ObDereferenceObject(Timer);
 
    if (PreviousState != NULL)
+   {
+     _SEH_TRY
      {
-	*PreviousState = State;
+       *PreviousState = State;
      }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
-   return STATUS_SUCCESS;
+   return Status;
 }
 
 /* EOF */

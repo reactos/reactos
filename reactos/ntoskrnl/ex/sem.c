@@ -240,12 +240,12 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
                                &Status);
    if(!NT_SUCCESS(Status))
    {
-     DPRINT1("NtQueryEvent() failed, Status: 0x%x\n", Status);
+     DPRINT1("NtQuerySemaphore() failed, Status: 0x%x\n", Status);
      return Status;
    }
 
    Status = ObReferenceObjectByHandle(SemaphoreHandle,
-				      EVENT_QUERY_STATE,
+				      SEMAPHORE_QUERY_STATE,
 				      ExSemaphoreObjectType,
 				      PreviousMode,
 				      (PVOID*)&Semaphore,
