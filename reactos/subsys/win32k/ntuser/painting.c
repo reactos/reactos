@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.38 2003/11/21 21:12:08 navaraf Exp $
+ *  $Id: painting.c,v 1.39 2003/11/25 23:46:23 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -586,7 +586,10 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Cleanup ;-)
     */
 
-   NtGdiDeleteObject(hRgn);
+   if (NULL != hRgn)
+   {
+      NtGdiDeleteObject(hRgn);
+   }
 
    return TRUE;
 }
