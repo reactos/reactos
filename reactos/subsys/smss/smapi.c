@@ -51,20 +51,22 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request);
  * 	Entry point for the listener thread of LPC port "\SmApiPort".
  */
 VOID STDCALL
-SmpApiConnectedThread(PVOID dummy)
+SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
 	PVOID		Unknown = NULL;
 	PLPC_MESSAGE	Reply = NULL;
 	SM_PORT_MESSAGE	Request = {{0}};
+	HANDLE          ConnectedPort = * (PHANDLE) pConnectedPort;
 
-	DPRINT("SM: %s running\n",__FUNCTION__);
+	DPRINT("SM: %s(%08lx) running\n", __FUNCTION__, pConnectedPort);
+	DPRINT("SM: %s(%08lx): ConnectedPort = %08lx\n",  __FUNCTION__, pConnectedPort, ConnectedPort);
 
 	while (TRUE)
 	{
 		DPRINT("SM: %s: waiting for message\n",__FUNCTION__);
 
-		Status = NtReplyWaitReceivePort(SmApiPort,
+		Status = NtReplyWaitReceivePort(ConnectedPort,
 						(PULONG) & Unknown,
 						Reply,
 						(PLPC_MESSAGE) & Request);
@@ -98,8 +100,13 @@ SmpApiConnectedThread(PVOID dummy)
 					Reply = (PLPC_MESSAGE) & Request;
 				}
 			}
+		} else {
+			/* LPC failed */
+			break;
 		}
 	}
+	NtClose (ConnectedPort);
+	NtTerminateThread (NtCurrentThread(), Status);
 }
 
 /**********************************************************************
@@ -115,75 +122,91 @@ SmpApiConnectedThread(PVOID dummy)
 NTSTATUS STDCALL
 SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 {
-#if defined(__USE_NT_LPC__)
+	PSM_CONNECT_DATA ConnectData = (PSM_CONNECT_DATA) ((PBYTE) Request) + sizeof (LPC_REQUEST);
 	NTSTATUS         Status = STATUS_SUCCESS;
+	BOOL             Accept = FALSE;
 	PSM_CLIENT_DATA  ClientData = NULL;
+	HANDLE           hClientDataApiPort = (HANDLE) 0;
+	PHANDLE          ClientDataApiPort = & hClientDataApiPort;
+	HANDLE           hClientDataApiPortThread = (HANDLE) 0;
+	PHANDLE          ClientDataApiPortThread = & hClientDataApiPortThread;
 	PVOID            Context = NULL;
 	
-	DPRINT("SM: %s called\n",__FUNCTION__);
+	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	/*
-	 * SmCreateClient/2 is called here explicitly to *fail*.
-	 * If it succeeds, there is something wrong in the
-	 * connection request. An environment subsystem *never*
-	 * registers twice. (Security issue: maybe we will
-	 * write this event into the security log).
-	 */
-	Status = SmCreateClient (Request, & ClientData);
-	if(STATUS_SUCCESS == Status)
+	if(sizeof (SM_CONNECT_DATA) == Request->Header.DataSize)
 	{
-		/* OK: the client is an environment subsystem
-		 * willing to manage a free image type.
-		 * Accept it.
-		 */
-		Status = NtAcceptConnectPort (& ClientData->ApiPort,
-					      Context,
-					      (PLPC_MESSAGE) Request,
-					      TRUE, //accept
-					      NULL,
-					      NULL);
-		if(NT_SUCCESS(Status))
+		if(IMAGE_SUBSYSTEM_UNKNOWN == ConnectData->Subsystem)
 		{
-			Status = NtCompleteConnectPort(ClientData->ApiPort);
+			/*
+			 * This is not a call from an environment server
+			 * willing to register, but from any other process
+			 * that will use the SM API.
+			 */
+			DPRINT("SM: %s: req from NON subsys server process\n", __FUNCTION__);
+			ClientDataApiPort = & hClientDataApiPort;
+			ClientDataApiPortThread = & hClientDataApiPortThread;
+			Accept = TRUE;
+		} else {
+			DPRINT("SM: %s: req from subsys server process\n", __FUNCTION__);
+			/*
+			 * SmCreateClient/2 is called here explicitly to *fail*.
+			 * If it succeeds, there is something wrong in the
+			 * connection request. An environment subsystem *never*
+			 * registers twice. (Security issue: maybe we will
+			 * write this event into the security log).
+			 */
+			Status = SmCreateClient (Request, & ClientData);
+			if(STATUS_SUCCESS == Status)
+			{
+				/* OK: the client is an environment subsystem
+				 * willing to manage a free image type.
+				 */
+				ClientDataApiPort = & ClientData->ApiPort;
+				ClientDataApiPortThread = & ClientData->ApiPortThread;
+				/*
+				 *  Reject GUIs: only odd subsystem IDs are
+				 *  allowed to register here.
+				 */
+				Accept = (1 == (ConnectData->Subsystem % 2));
+			}
 		}
-		return STATUS_SUCCESS;
-	} else {
-		/* Reject the subsystem */
-		Status = NtAcceptConnectPort (& ClientData->ApiPort,
-					      Context,
-					      (PLPC_MESSAGE) Request,
-					      FALSE, //reject
-					      NULL,
-					      NULL);
 	}
+#if defined(__USE_NT_LPC__)
+	Status = NtAcceptConnectPort (ClientDataApiPort,
+				      Context,
+				      (PLPC_MESSAGE) Request,
+				      Accept,
+				      NULL,
+				      NULL);
 #else /* ReactOS LPC */
-	NTSTATUS         Status = STATUS_SUCCESS;
-	PSM_CLIENT_DATA  ClientData = NULL;
-	
-	DPRINT("SM: %s called\n",__FUNCTION__);
-
-	Status = SmCreateClient (Request, & ClientData);
-	if(STATUS_SUCCESS == Status)
+	Status = NtAcceptConnectPort (ClientDataApiPort,
+				      SmApiPort, // ROS LPC requires the listen port here
+				      Context,
+				      Accept,
+				      NULL,
+				      NULL);
+#endif
+	DPRINT("SM: %s: ClientDataPort=0x%08lx\n", __FUNCTION__, ClientDataApiPort);
+	DPRINT("SM: %s: *ClientDataPort=0x%08lx\n", __FUNCTION__, *ClientDataApiPort);
+	if(Accept)
 	{
-		Status = NtAcceptConnectPort (& ClientData->ApiPort,
-					      SmApiPort,
-					      NULL,
-					      TRUE, //accept
-					      NULL,
-					      NULL);
-		if (!NT_SUCCESS(Status))
+		if(!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: NtAcceptConnectPort() failed (Status=0x%08lx)\n",
-					__FUNCTION__, Status);
+				__FUNCTION__, Status);
 			return Status;
 		} else {
-			Status = NtCompleteConnectPort(ClientData->ApiPort);
+			DPRINT("SM: %s: completing conn req\n", __FUNCTION__);
+			Status = NtCompleteConnectPort (*ClientDataApiPort);
 			if (!NT_SUCCESS(Status))
 			{
 				DPRINT1("SM: %s: NtCompleteConnectPort() failed (Status=0x%08lx)\n",
 					__FUNCTION__, Status);
 				return Status;
 			}
+#if !defined(__USE_NT_LPC__) /* ReactOS LPC */
+			DPRINT("SM: %s: server side comm port thread (ROS LPC)\n", __FUNCTION__);
 			Status = RtlCreateUserThread(NtCurrentProcess(),
 					     NULL,
 					     FALSE,
@@ -191,8 +214,8 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 					     NULL,
 					     NULL,
 					     (PTHREAD_START_ROUTINE) SmpApiConnectedThread,
-					     ClientData->ApiPort,
-					     & ClientData->ApiPortThread,
+					     ClientDataApiPort,
+					     ClientDataApiPortThread,
 					     NULL);
 			if (!NT_SUCCESS(Status))
 			{
@@ -200,18 +223,11 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 					__FUNCTION__, Status);
 				return Status;
 			}
+#endif
 		}
-		return STATUS_SUCCESS;
-	} else {
-		/* Reject the subsystem */
-		Status = NtAcceptConnectPort (& ClientData->ApiPort,
-					      SmApiPort,
-					      NULL,
-					      FALSE, //reject
-					      NULL,
-					      NULL);
+		Status = STATUS_SUCCESS;
 	}
-#endif /* defined __USE_NT_LPC__ */
+	DPRINT("SM: %s done\n", __FUNCTION__);
 	return Status;
 }
 

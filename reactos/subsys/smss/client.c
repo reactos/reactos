@@ -42,39 +42,6 @@ struct _SM_CLIENT_DIRECTORY
 
 } SmpClientDirectory;
 
-#if 0
-/**********************************************************************
- *	SmpRegisterSmss/0
- */
-static NTSTATUS
-SmpRegisterSmss(VOID)
-{
-	NTSTATUS Status = STATUS_SUCCESS;
-	UNICODE_STRING SbApiPortName = {0,0,NULL};
-	HANDLE hSmApiPort = (HANDLE) 0;
-
-	DPRINT("SM: %s called\n",__FUNCTION__);
-	
-	Status = SmConnectApiPort(& SbApiPortName,
-				  (HANDLE) -1,
-				  IMAGE_SUBSYSTEM_NATIVE,
-				  & hSmApiPort);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("SM: %s: SMDLL!SmConnectApiPort failed (Status=0x%08lx)\n",__FUNCTION__,Status);
-		return Status;
-	}
-	Status = SmCompleteSession (hSmApiPort, (HANDLE)0, hSmApiPort);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("SM: %s: SMDLL!SmCompleteSession failed (Status=0x%08lx)\n",__FUNCTION__,Status);
-		return Status;
-	}
-	NtClose(hSmApiPort);
-	return Status;
-}
-#endif
-
 /**********************************************************************
  *	SmInitializeClientManagement/0
  */
@@ -85,16 +52,46 @@ SmInitializeClientManagement (VOID)
 	RtlInitializeCriticalSection(& SmpClientDirectory.Lock);
 	SmpClientDirectory.Count = 0;
 	SmpClientDirectory.Client = NULL;
-#if 0
-	/* Register IMAGE_SUBSYSTE_NATIVE to be managed by SM */
-	return SmpRegisterSmss();
-#endif
 	return STATUS_SUCCESS;
 
 }
 
 /**********************************************************************
- *	SmpLookupClient/1
+ *	SmCompleteClientInitialization/1
+ *
+ * DESCRIPTION
+ * 	Lookup the subsystem server descriptor given the process handle
+ * 	of the subsystem server process.
+ */
+NTSTATUS STDCALL
+SmCompleteClientInitialization (HANDLE hProcess)
+{
+	NTSTATUS        Status = STATUS_SUCCESS;
+	PSM_CLIENT_DATA Client = NULL;
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
+	if (SmpClientDirectory.Count > 0)
+	{
+		Client = SmpClientDirectory.Client;
+		while (NULL != Client)
+		{
+			if (hProcess == Client->ServerProcess)
+			{
+				Client->Initialized = TRUE;
+				break;
+			}
+			Client = Client->Next;
+		}
+		Status = STATUS_NOT_FOUND;
+	}
+	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	return Status;
+}
+
+/**********************************************************************
+ *	SmpLookupClient/1					PRIVATE
  *
  * DESCRIPTION
  * 	Lookup the subsystem server descriptor given its image ID.
@@ -148,7 +145,7 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	 */
 	if (SmpLookupClient(ConnectData->Subsystem))
 	{
-		DPRINT("SMSS: %s: attempt to register again subsystem %d.\n",
+		DPRINT("SM: %s: attempt to register again subsystem %d.\n",
 			__FUNCTION__,
 			ConnectData->Subsystem);
 		return STATUS_UNSUCCESSFUL;

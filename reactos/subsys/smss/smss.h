@@ -91,9 +91,9 @@ typedef struct _SM_CLIENT_DATA
 	
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement(VOID);
-NTSTATUS SmpRegisterSmss(VOID);
 NTSTATUS STDCALL SmCreateClient(PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
 NTSTATUS STDCALL SmDestroyClient(ULONG);
+NTSTATUS STDCALL SmCompleteClientInitialization (HANDLE hProcess);
 
 /* debug.c */
 extern HANDLE DbgSsApiPort;

@@ -40,7 +40,6 @@ NtProcessStartup(PPEB Peb)
   NTSTATUS Status;
   PROCESS_BASIC_INFORMATION PBI = {0};
   
-  DisplayString(L"SMSS\n");
   PrintString("ReactOS Session Manager %s (Build %s)\n",
 	     KERNEL_RELEASE_STR,
 	     KERNEL_VERSION_BUILD_STR);

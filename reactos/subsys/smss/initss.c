@@ -53,6 +53,42 @@ HANDLE hSmApiPort = (HANDLE) 0;
  */
 
 /**********************************************************************
+ *	SmpRegisterSmss/0
+ *
+ * DESCRIPTION
+ *	Make smss register with itself for IMAGE_SUBSYSTEM_NATIVE
+ *	(programmatically). This also open hSmApiPort to be used
+ *	in loading required subsystems.
+ */
+#if 0
+static NTSTATUS
+SmpRegisterSmss(VOID)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+	UNICODE_STRING SbApiPortName = {0,0,NULL};
+
+	DPRINT("SM: %s called\n",__FUNCTION__);
+	
+	Status = SmConnectApiPort(& SbApiPortName,
+				  (HANDLE) 0,
+				  IMAGE_SUBSYSTEM_NATIVE,
+				  & hSmApiPort);
+	if(!NT_SUCCESS(Status))
+	{
+		DPRINT("SM: %s: SMDLL!SmConnectApiPort failed (Status=0x%08lx)\n",
+			__FUNCTION__,Status);
+		return Status;
+	}
+	/*
+	 * Note that you don't need to call complete session
+	 * because connection handling code autocompletes
+	 * the client structure for IMAGE_SUBSYSTEM_NATIVE.
+	 */
+	return Status;
+}
+#endif
+
+/**********************************************************************
  */
 NTSTATUS
 SmLoadSubsystems(VOID)
@@ -65,7 +101,15 @@ SmLoadSubsystems(VOID)
 
 
 	DPRINT("SM: loading subsystems\n");
- 
+
+	/* SM self registers */
+#if 0
+	Status = SmpRegisterSmss();
+	if(!NT_SUCCESS(Status))
+	{
+		DPRINT1("SM: SM failed to self register: system is not secure!\n");
+	}
+#endif
 	/* Load Kmode subsystem (aka win32k.sys) */
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
@@ -91,6 +135,13 @@ SmLoadSubsystems(VOID)
 		}
 	}
 	/* TODO: load Required subsystems (Debug Windows) */
+#if 0
+	Status = SmExecuteProgram(L"DEBUG");
+	if(!NT_SUCCESS(Status))
+	{
+		DPRINT1("SM: DBSS failed to initialize!\n");
+	}
+#endif
 	return Status;
 }
 

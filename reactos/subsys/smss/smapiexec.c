@@ -285,18 +285,23 @@ SMAPI(SmExecPgm)
 		}
 		else
 		{
-			WCHAR ImagePath [1024] = {0};
-			ULONG ImagePathLength = sizeof ImagePath;
-			ULONG ImagePathType = REG_EXPAND_SZ;
+			WCHAR Data [MAX_PATH + 1] = {0};
+			ULONG DataLength = sizeof Data;
+			ULONG DataType = REG_EXPAND_SZ;
 
 			/* Lookup Name in the registry */
 			Status = SmLookupSubsystem (Name,
-						    ImagePath,
-						    & ImagePathLength,
-						    & ImagePathType,
+						    Data,
+						    & DataLength,
+						    & DataType,
 						    TRUE); /* expand */
 			if(NT_SUCCESS(Status))
 			{
+				WCHAR ImagePath [MAX_PATH + 1] = {0};
+
+				wcscpy (ImagePath, L"\\??\\");
+				wcscat (ImagePath, Data);
+			
 				/* Create native process */
 				Request->Status = SmCreateUserProcess(ImagePath,
 								      L"", /* FIXME */
