@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.249 2004/09/15 10:16:05 mf Exp $
+# $Id: Makefile,v 1.250 2004/09/26 09:56:22 weiden Exp $
 #
 # Global makefile
 #
@@ -46,6 +46,9 @@ DLLS_KBD = kbddv kbdfr kbdgr kbdse kbduk kbdus
 # Control Panels
 DLLS_CPL = cpl
 
+# Shell extensions
+DLLS_SHELLEXT = shellext
+
 # User mode libraries
 # libpcap packet epsapi
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
@@ -54,7 +57,7 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
 	dnsapi \
-	$(DLLS_KBD) $(DLLS_CPL)
+	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
