@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.66 2004/08/15 16:39:08 chorns Exp $
+/* $Id: mminit.c,v 1.67 2004/08/19 22:17:47 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -341,8 +341,6 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    MmUserProbeAddress = (PVOID)0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
 
-   MmInitGlobalKernelPageDirectory();
-
    /*
     * Initialize memory managment statistics
     */
@@ -357,20 +355,6 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    MmStats.PagingRequestsInLastFiveMinutes = 0;
    MmStats.PagingRequestsInLastFifteenMinutes = 0;
 
-   /*
-    * Initialize the kernel address space
-    */
-   MmInitializeKernelAddressSpace();
-
-   /*
-    * Unmap low memory
-    */
-#ifndef MP
-   /* In SMP mode we unmap the low memory in MmInit3.
-      The APIC needs the mapping of the first pages
-      while the processors are starting up. */
-   MmDeletePageTable(NULL, 0);
-#endif
    /*
     * Free all pages not used for kernel memory
     * (we assume the kernel occupies a continuous range of physical
@@ -397,7 +381,15 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    MmStats.NrTotalPages += 16;
 #endif
 
+   /*
+    * Initialize the kernel address space
+    */
+   MmInitializeKernelAddressSpace();
+   
+   MmInitGlobalKernelPageDirectory();
+   
    MiInitKernelMap();
+
 
 
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
@@ -411,10 +403,19 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
 
    /*
+    * Unmap low memory
+    */
+#ifndef MP
+   /* In SMP mode we unmap the low memory in MmInit3.
+      The APIC needs the mapping of the first pages
+      while the processors are starting up. */
+   MmDeletePageTable(NULL, 0);
+#endif
+
+   /*
     * Create a trap for null pointer references and protect text
     * segment
     */
-   CHECKPOINT;
    DPRINT("_text_start__ %x _init_end__ %x\n",(int)&_text_start__,(int)&_init_end__);
    for (i=PAGE_ROUND_DOWN(((int)&_text_start__));
          i<PAGE_ROUND_UP(((int)&_init_end__));i=i+PAGE_SIZE)
