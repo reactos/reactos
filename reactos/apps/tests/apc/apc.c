@@ -16,6 +16,7 @@ ApcRoutine(PVOID Context,
    printf("(apc.exe) ApcRoutine(Context %p)\n", Context);
 }
 
+
 int main(int argc, char* argv[])
 {
    NTSTATUS Status;
@@ -25,7 +26,8 @@ int main(int argc, char* argv[])
    IO_STATUS_BLOCK IoStatus;
    CHAR Buffer[256];
    HANDLE EventHandle;
-   
+   LARGE_INTEGER off;
+  
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
@@ -57,24 +59,30 @@ int main(int argc, char* argv[])
 			    OPEN_EXISTING,
 			    FILE_FLAG_OVERLAPPED,
 			    NULL);
+         
    if (FileHandle == INVALID_HANDLE_VALUE)
      {
-	printf("Open failed\n");
+
+  printf("Open failed last err 0x%lu\n",GetLastError());
 	return 0;
      }
+     
+     off.QuadPart = 0;
+     
    printf("Reading file\n");
    Status = ZwReadFile(FileHandle,
 			NULL,
 			(PIO_APC_ROUTINE)ApcRoutine,
-			(PVOID)0xdeadbeef,
+			(PVOID) 0xdeadbeef,
 			&IoStatus,
 			Buffer,
-			256,
-			NULL,
-			NULL);
+			256,//len
+			&off ,//offset must exist if file was opened for asynch. i/o aka. OVERLAPPED 
+			NULL); 
+      
    if (!NT_SUCCESS(Status))
      {
-	printf("Read failed\n");
+	printf("Read failed status 0x%lu\n",Status);
      }
    printf("Waiting\n");
    WaitForSingleObjectEx(EventHandle, INFINITE, TRUE);
