@@ -533,6 +533,10 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
+      if (NtCurrentPeb() == NULL)
+      {
+         return(STATUS_VARIABLE_NOT_FOUND);
+      }
       Environment = NtCurrentPeb()->ProcessParameters->Environment;
       SysEnvUsed = TRUE;
    }
