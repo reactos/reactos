@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.37 2003/12/13 10:57:29 weiden Exp $ */
+/* $Id: fillshap.c,v 1.38 2003/12/13 13:05:30 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -66,8 +66,6 @@ IntGdiPolygon(PDC    dc,
   PRECTL RectBounds;
   RECTL DestRect;
   int CurrentPoint;
-  PPOINT Points;
-  NTSTATUS Status;
 
   ASSERT(dc); // caller's responsibility to pass a valid dc
 
@@ -80,42 +78,31 @@ IntGdiPolygon(PDC    dc,
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   ASSERT(SurfObj);
 
-  /* Copy points from userspace to kernelspace */
-  Points = ExAllocatePool(PagedPool, Count * sizeof(POINT));
-  if (NULL == Points)
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-  else
-  {
-    Status = MmCopyFromCaller(Points, UnsafePoints, Count * sizeof(POINT));
-    if ( !NT_SUCCESS(Status) )
-      SetLastNtError(Status);
-    else
-    {
       /* Convert to screen coordinates */
       for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
 	{
-	  Points[CurrentPoint].x += dc->w.DCOrgX;
-	  Points[CurrentPoint].y += dc->w.DCOrgY;
+	  UnsafePoints[CurrentPoint].x += dc->w.DCOrgX;
+	  UnsafePoints[CurrentPoint].y += dc->w.DCOrgY;
 	}
 
       RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
       //ei not yet implemented ASSERT(RectBounds);
 
       if (PATH_IsPathOpen(dc->w.path)) 
-	ret = PATH_Polygon(dc, Points, Count );
+	ret = PATH_Polygon(dc, UnsafePoints, Count );
       else
       {
-	DestRect.left   = Points[0].x;
-	DestRect.right  = Points[0].x;
-	DestRect.top    = Points[0].y;
-	DestRect.bottom = Points[0].y;
+	DestRect.left   = UnsafePoints[0].x;
+	DestRect.right  = UnsafePoints[0].x;
+	DestRect.top    = UnsafePoints[0].y;
+	DestRect.bottom = UnsafePoints[0].y;
 
 	for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
 	{
-	  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].x);
-	  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].x);
-	  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
-	  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
+	  DestRect.left     = MIN(DestRect.left, UnsafePoints[CurrentPoint].x);
+	  DestRect.right    = MAX(DestRect.right, UnsafePoints[CurrentPoint].x);
+	  DestRect.top      = MIN(DestRect.top, UnsafePoints[CurrentPoint].y);
+	  DestRect.bottom   = MAX(DestRect.bottom, UnsafePoints[CurrentPoint].y);
 	}
 
 #if 1
@@ -123,7 +110,7 @@ IntGdiPolygon(PDC    dc,
 	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	ASSERT(FillBrushObj);
 	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
-	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
+	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, UnsafePoints, Count, DestRect );
 	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 #endif
 
@@ -141,11 +128,11 @@ IntGdiPolygon(PDC    dc,
 	     * if i+1 > Count, Draw a line from Points[i] to Points[0]
 	     * Draw a line from Points[i] to Points[i+1]
 	     */
-	    From = Points[CurrentPoint];
+	    From = UnsafePoints[CurrentPoint];
 	    if (Count <= CurrentPoint + 1)
-	      To = Points[0];
+	      To = UnsafePoints[0];
 	    else
-	      To = Points[CurrentPoint + 1];
+	      To = UnsafePoints[CurrentPoint + 1];
 
 	    //DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
 	    ret = IntEngLineTo(SurfObj,
@@ -164,15 +151,13 @@ IntGdiPolygon(PDC    dc,
 	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	ASSERT(FillBrushObj);
 	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
-	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
+	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, UnsafePoints, Count, DestRect );
 	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 #endif
       }
 
       RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
-    }
-    ExFreePool ( Points );
-  }
+  
   return ret;
 }
 
@@ -817,8 +802,8 @@ extern BOOL FillPolygon(PDC dc,
 BOOL
 STDCALL
 NtGdiPolygon(HDC          hDC,
-            CONST PPOINT UnsafePoints,
-            int          Count)
+             CONST PPOINT UnsafePoints,
+             int          Count)
 {
   DC *dc;
   LPPOINT Safept;
@@ -845,6 +830,7 @@ NtGdiPolygon(HDC          hDC,
     Status = MmCopyFromCaller(Safept, UnsafePoints, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
+      ExFreePool(Safept);
       DC_UnlockDc(hDC);
       SetLastNtError(Status);
       return FALSE;
@@ -868,10 +854,10 @@ NtGdiPolygon(HDC          hDC,
 
 BOOL
 STDCALL
-NtGdiPolyPolygon(HDC            hDC,
-                CONST LPPOINT  Points,
-                CONST LPINT    PolyCounts,
-                int            Count)
+NtGdiPolyPolygon(HDC           hDC,
+                 CONST LPPOINT Points,
+                 CONST LPINT   PolyCounts,
+                 int           Count)
 {
   DC *dc;
   LPPOINT Safept;
@@ -1036,14 +1022,18 @@ NtGdiRectangle(HDC  hDC,
               int  RightRect,
               int  BottomRect)
 {
-  DC   *dc = DC_LockDc(hDC);
-  BOOL  ret = FALSE; // default to failure
-
-  if ( dc )
+  DC   *dc;
+  BOOL ret; // default to failure
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
   {
-    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    DC_UnlockDc ( hDC );
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
   }
+  
+  ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+  DC_UnlockDc ( hDC );
 
   return ret;
 }
@@ -1300,7 +1290,7 @@ NtGdiRoundRect(
   if ( !dc )
   {
     DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
   }
   else
   {
