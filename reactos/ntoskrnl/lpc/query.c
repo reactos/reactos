@@ -1,4 +1,4 @@
-/* $Id: query.c,v 1.5 2002/09/08 10:23:32 chorns Exp $
+/* $Id: query.c,v 1.6 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,8 @@
  * NOTES
  * 	P. Dabak reports that this system service seems to return
  * 	no information.
+ *
+ * @unimplemented
  */
 EXPORTED NTSTATUS STDCALL
 NtQueryInformationPort (IN	HANDLE	PortHandle,

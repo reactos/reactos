@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.10 2003/06/07 12:23:14 chorns Exp $
+/* $Id: create.c,v 1.11 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/*
+ * @unimplemented
+ */
 STATIC NTSTATUS STDCALL 
 VerifyCreateParameters (IN	PHANDLE			PortHandle,
 			IN	POBJECT_ATTRIBUTES	ObjectAttributes,
@@ -55,6 +58,9 @@ VerifyCreateParameters (IN	PHANDLE			PortHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NiCreatePort (PVOID			ObjectBody,
 	      PVOID			Parent,
@@ -90,6 +96,7 @@ NiCreatePort (PVOID			ObjectBody,
  * 
  * RETURN VALUE
  * 
+ * @implemented
  */
 EXPORTED NTSTATUS STDCALL 
 NtCreatePort (PHANDLE		      PortHandle,
@@ -152,6 +159,7 @@ NtCreatePort (PHANDLE		      PortHandle,
  * 
  * RETURN VALUE
  * 
+ * @unimplemented
  */
 EXPORTED NTSTATUS STDCALL
 NtCreateWaitablePort (OUT	PHANDLE			PortHandle,

@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.9 2002/09/08 10:23:32 chorns Exp $
+/* $Id: send.c,v 1.10 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL 
 LpcSendTerminationPort (IN PEPORT Port,
@@ -57,6 +58,7 @@ LpcSendTerminationPort (IN PEPORT Port,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL 
 LpcSendDebugMessagePort (IN PEPORT Port,
@@ -111,6 +113,7 @@ LpcSendDebugMessagePort (IN PEPORT Port,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 				 IN	PLPC_MESSAGE	LpcMessage)
@@ -140,6 +143,7 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
 				IN	PLPC_MESSAGE	LpcMessage)
@@ -181,6 +185,7 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL 
 NtRequestWaitReplyPort (IN HANDLE PortHandle,
@@ -302,6 +307,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
  *
  * REVISIONS
  *
+ * @unimplemented
  */
 NTSTATUS STDCALL NtWriteRequestData (HANDLE		PortHandle,
 				     PLPC_MESSAGE	Message,

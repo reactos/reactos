@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.16 2003/06/07 12:23:14 chorns Exp $
+/* $Id: connect.c,v 1.17 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 EiConnectPort(IN PEPORT* ConnectedPort,
 	      IN PEPORT NamedPort,
@@ -233,6 +236,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
  * 
  * RETURN VALUE
  * 
+ * @unimplemented
  */
 NTSTATUS STDCALL
 NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
@@ -501,6 +505,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
  *
  * RETURN VALUE
  *
+ * @implemented
  */
 EXPORTED NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE			ServerPortHandle,
@@ -745,6 +750,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
  * 
  * RETURN VALUE
  * 
+ * @unimplemented
  */
 NTSTATUS STDCALL
 NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,

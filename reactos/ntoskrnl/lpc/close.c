@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.10 2002/09/08 10:23:31 chorns Exp $
+/* $Id: close.c,v 1.11 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,6 +31,7 @@
  *
  * REVISIONS
  *
+ * @implemented
  */
 VOID STDCALL
 NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
@@ -85,6 +86,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
  *
  * REVISIONS
  *
+ * @unimplemented
  */
 VOID STDCALL
 NiDeletePort (PVOID	ObjectBody)

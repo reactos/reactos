@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.7 2002/09/08 10:23:32 chorns Exp $
+/* $Id: queue.c,v 1.8 2003/07/10 20:42:53 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EiEnqueueMessagePort (IN OUT	PEPORT		Port,
 		      IN	PQUEUEDMESSAGE	Message)
@@ -30,6 +33,9 @@ EiEnqueueMessagePort (IN OUT	PEPORT		Port,
   Port->QueueLength++;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EiEnqueueMessageAtHeadPort (IN OUT	PEPORT		Port,
 			    IN	PQUEUEDMESSAGE	Message)
@@ -39,6 +45,9 @@ EiEnqueueMessageAtHeadPort (IN OUT	PEPORT		Port,
   Port->QueueLength++;
 }
 
+/*
+ * @implemented
+ */
 PQUEUEDMESSAGE STDCALL
 EiDequeueMessagePort (IN OUT	PEPORT	Port)
 {
@@ -57,6 +66,9 @@ EiDequeueMessagePort (IN OUT	PEPORT	Port)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EiEnqueueConnectMessagePort (IN OUT	PEPORT		Port,
 			     IN	PQUEUEDMESSAGE	Message)
@@ -67,6 +79,9 @@ EiEnqueueConnectMessagePort (IN OUT	PEPORT		Port,
 }
 
 
+/*
+ * @implemented
+ */
 PQUEUEDMESSAGE STDCALL
 EiDequeueConnectMessagePort (IN OUT	PEPORT	Port)
 {
