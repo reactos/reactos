@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.50 2002/03/18 16:14:45 ekohl Exp $
+/* $Id: zw.h,v 1.51 2002/07/20 00:59:19 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2571,19 +2571,13 @@ ZwPulseEvent(
  * RETURNS: Status
  */
 
-NTSTATUS
-STDCALL
-NtQueryAttributesFile(
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN PVOID Buffer
-	);
+NTSTATUS STDCALL
+NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+		      OUT PFILE_BASIC_INFORMATION FileInformation);
 
-NTSTATUS
-STDCALL
-ZwQueryAttributesFile(
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN PVOID Buffer
-	);
+NTSTATUS STDCALL
+ZwQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+		      OUT PFILE_BASIC_INFORMATION FileInformation);
 
 /*
  * FUNCTION: Queries the default locale id
@@ -2777,18 +2771,13 @@ ZwQueryEvent(
 	OUT PULONG ReturnLength
 	);
 
-NTSTATUS
-STDCALL
-NtQueryFullAttributesFile(
-	IN HANDLE FileHandle,
-	IN PVOID Attributes
-	);
-NTSTATUS
-STDCALL
-ZwQueryFullAttributesFile(
-	IN HANDLE FileHandle,
-	IN PVOID Attributes
-	);
+NTSTATUS STDCALL
+NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
+
+NTSTATUS STDCALL
+ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
 
 NTSTATUS
 STDCALL

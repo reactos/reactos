@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.17 2002/04/27 19:21:32 hbirr Exp $
+/* $Id: file.c,v 1.18 2002/07/20 01:00:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -313,7 +313,7 @@ NtSetInformationFile(HANDLE FileHandle,
 
 NTSTATUS STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
-		      IN PVOID Buffer)
+		      OUT PFILE_BASIC_INFORMATION FileInformation)
 {
    UNIMPLEMENTED;
    return STATUS_NOT_IMPLEMENTED;
@@ -321,8 +321,8 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
 
 NTSTATUS STDCALL
-NtQueryFullAttributesFile(IN HANDLE FileHandle,
-			  IN PVOID Attributes)
+NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
    UNIMPLEMENTED;
    return STATUS_NOT_IMPLEMENTED;
