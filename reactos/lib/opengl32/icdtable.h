@@ -1,4 +1,4 @@
-// icdtable.h
+/* icdtable.h */
 
 #ifndef OPENGL32_PRIVATE_ICDTABLE_H
 #define OPENGL32_PRIVATE_ICDTABLE_H
@@ -12,10 +12,12 @@ enum icdoffsets_e
 	ICDIDX_COUNT
 };
 
-struct ICDTable
+typedef struct tagICDTable
 {
-	DWORD	num_funcs; // Normally 336 (0x150)
+	DWORD	num_funcs; /* Normally 336 (0x150) */
 	PROC	dispatch_table[812];
-};
+} ICDTable;
 
-#endif//OPENGL32_PRIVATE_ICDTABLE_H
+#endif /* OPENGL32_PRIVATE_ICDTABLE_H */
+
+/* EOF */

@@ -7,14 +7,14 @@ TARGET_NORC = yes
 TARGET_NAME = opengl32
 
 # -fno-builtin
-TARGET_CFLAGS = -D__USE_W32API -DUNICODE -D_M_IX86
+TARGET_CFLAGS = -D__USE_W32API -DUNICODE -D_M_IX86 -Os
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -lgdi32 -lntdll
 
-TARGET_SDKLIBS = opengl32.a gdi32.a
+TARGET_SDKLIBS = opengl32.a gdi32.a ntdll.a
 # ntdll.a gdi32.a - may still need these
 
 TARGET_OBJECTS = \

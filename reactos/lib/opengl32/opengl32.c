@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.9 2004/02/05 04:28:11 royce Exp $
+/* $Id: opengl32.c,v 1.10 2004/02/06 13:59:13 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,9 +12,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
+#include <ntos/types.h>
+#include <napi/teb.h>
 
 #include <string.h>
-//#include <GL/gl.h>
 #include "opengl32.h"
 
 /* function prototypes */
@@ -26,12 +27,12 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd );
 static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd );
 
 /* global vars */
-const char* OPENGL32_funcnames[GLIDX_COUNT] SHARED =
+/*const char* OPENGL32_funcnames[GLIDX_COUNT] SHARED =
 {
 #define X(func, ret, typeargs, args) #func,
 	GLFUNCS_MACRO
 #undef X
-};
+};*/
 
 DWORD OPENGL32_tls;
 GLPROCESSDATA OPENGL32_processdata;
@@ -54,9 +55,11 @@ static void OPENGL32_ThreadDetach()
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
 	GLTHREADDATA* lpData = NULL;
-	SECURITY_ATTRIBUTES attrib = { .nLength = sizeof (SECURITY_ATTRIBUTES),
-	                               .lpSecurityDescriptor = NULL,
-	                               .bInheritHandle = TRUE };
+	ICDTable *dispatchTable = NULL;
+	TEB *teb = NULL;
+	SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
+	                               NULL, /* lpSecurityDescriptor */
+	                               TRUE /* bInheritHandle */ };
 
 	DBGPRINT( "Info: Called!" );
 	switch ( Reason )
@@ -92,15 +95,36 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 	/* The attached process creates a new thread. */
 	case DLL_THREAD_ATTACH:
-		//lpData = (GLTHREADDATA*)LocalAlloc(LPTR, sizeof(GLTHREADDATA));
+		dispatchTable = (ICDTable*)HeapAlloc( GetProcessHeap(),
+		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+		                            sizeof (ICDTable) );
+		if (dispatchTable == NULL)
+		{
+			DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
+			return FALSE;
+		}
+
 		lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
 		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
 		                            sizeof (GLTHREADDATA) );
 		if (lpData == NULL)
 		{
 			DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
+			HeapFree( GetProcessHeap(), 0, dispatchTable );
 			return FALSE;
 		}
+
+		teb = NtCurrentTeb();
+
+		/* initialize dispatch table with empty functions */
+		#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
+			dispatchTable->dispatch_table[icdidx] = (PROC)glEmptyFunc##stack;  \
+			if (tebidx >= 0)                                                   \
+				teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
+		GLFUNCS_MACRO
+		#undef X
+
+		teb->glTable = dispatchTable->dispatch_table;
 		TlsSetValue( OPENGL32_tls, lpData );
 		break;
 
@@ -126,17 +150,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 /* FUNCTION: Append ICD to linked list.
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to append to list
+ * NOTES: Only call this when you hold the driver_mutex
  */
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
 {
-	/* synchronize */
-	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
-	    WAIT_FAILED)
-	{
-		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
-		return; /* FIXME: do we have to expect such an error and handle it? */
-	}
-
 	if (OPENGL32_processdata.driver_list == NULL)
 		OPENGL32_processdata.driver_list = icd;
 	else
@@ -146,26 +163,15 @@ static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
 			p = p->next;
 		p->next = icd;
 	}
-
-	/* release mutex */
-	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
-		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 
 /* FUNCTION: Remove ICD from linked list.
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to remove from list
+ * NOTES: Only call this when you hold the driver_mutex
  */
 static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 {
-	/* synchronize */
-	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
-	    WAIT_FAILED)
-	{
-		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
-		return; /* FIXME: do we have to expect such an error and handle it? */
-	}
-
 	if (icd == OPENGL32_processdata.driver_list)
 		OPENGL32_processdata.driver_list = icd->next;
 	else
@@ -182,10 +188,6 @@ static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 		}
 		DBGPRINT( "Error: ICD 0x%08x not found in list!", icd );
 	}
-
-	/* release mutex */
-	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
-		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 
@@ -224,7 +226,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR driver )
 
 	DBGPRINT( "Info: Dll = %ws", icd->dll );
 	DBGPRINT( "Info: Version = 0x%08x", icd->version );
-	DBGPRINT( "Info: DriverVersion = 0x%08x", icd->driverVersion );
+	DBGPRINT( "Info: DriverVersion = 0x%08x", icd->driver_version );
 	DBGPRINT( "Info: Flags = 0x%08x", icd->flags );
 
 	/* load/initialize ICD */
@@ -363,12 +365,25 @@ GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
 {
 	GLDRIVERDATA *icd;
 
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return NULL; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	/* look if ICD is already loaded */
 	for (icd = OPENGL32_processdata.driver_list; icd; icd = icd->next)
 	{
 		if (!_wcsicmp( driver, icd->driver_name )) /* found */
 		{
 			icd->refcount++;
+
+			/* release mutex */
+			if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+				DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+
 			return icd;
 		}
 	}
@@ -377,6 +392,11 @@ GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
 	icd = OPENGL32_LoadDriver( driver );
 	if (icd != NULL)
 		icd->refcount = 1;
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+
 	return icd;
 }
 
@@ -386,11 +406,25 @@ GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
  */
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 {
+	BOOL ret = TRUE;
+
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.driver_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return FALSE; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
 	icd->refcount--;
 	if (icd->refcount == 0)
-		return OPENGL32_UnloadDriver( icd );
+		ret = OPENGL32_UnloadDriver( icd );
 
-	return TRUE;
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+
+	return ret;
 }
 
 

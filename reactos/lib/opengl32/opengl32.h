@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.8 2004/02/05 04:28:11 royce Exp $
+/* $Id: opengl32.h,v 1.9 2004/02/06 13:59:13 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,6 +12,12 @@
 #ifndef OPENGL32_PRIVATE_H
 #define OPENGL32_PRIVATE_H
 
+/* gl function list */
+#include "glfuncs.h"
+
+/* ICD index list/types */
+#include "icdtable.h"
+
 /* debug flags */
 #if !defined(NDEBUG)
 # define DEBUG_OPENGL32
@@ -21,7 +27,8 @@
 #endif /* !NDEBUG */
 
 /* debug macros */
-#if 0//def DEBUG_OPENGL32 /* FIXME: DPRINT wants DbgPrint - where is it? */
+#ifdef DEBUG_OPENGL32 /* FIXME: DPRINT wants DbgPrint - where is it? */
+ULONG DbgPrint(PCH Format,...);
 # include <debug.h>
 # define DBGPRINT( fmt, args... ) \
          DPRINT( "OpenGL32.DLL: %s: "fmt"\n", __FUNCTION__, ##args )
@@ -39,14 +46,7 @@
 # endif
 #endif
 
-/* function/data attributes */
-#define EXPORT __declspec(dllexport)
-#define NAKED __attribute__((naked))
-#define SHARED __attribute__((section("shared"), shared))
-
-/* gl function list */
-#include "glfuncs.h"
-
+#if 0
 /* table indices for funcnames and function pointers */
 enum glfunc_indices
 {
@@ -59,9 +59,10 @@ enum glfunc_indices
 
 /* function name table */
 extern const char* OPENGL32_funcnames[GLIDX_COUNT];
+#endif
 
-/* FIXME: what type of argument does this take? */
-typedef DWORD (CALLBACK * SetContextCallBack) (void *);
+/* Called by the driver to set the dispatch table */
+typedef DWORD (CALLBACK * SetContextCallBack)( const ICDTable * );
 
 /* OpenGL ICD data */
 typedef struct tagGLDRIVERDATA
@@ -93,12 +94,10 @@ typedef struct tagGLDRIVERDATA
 	BOOL    (*DrvSwapLayerBuffers)( HDC, UINT );
 	BOOL    (*DrvValidateVersion)( DWORD );
 
-	PVOID   func_list[GLIDX_COUNT]; /* glXXX functions supported by ICD */
-
 	struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
 } GLDRIVERDATA;
 
-/* OpenGL context */
+/* Out private OpenGL context (saved in TLS) */
 typedef struct tagGLRC
 {
 	GLDRIVERDATA *icd;  /* driver used for this context */
@@ -108,7 +107,6 @@ typedef struct tagGLRC
 	DWORD   thread_id;  /* thread holding this context */
 
 	HGLRC   hglrc;      /* GLRC from DrvCreateContext */
-	PVOID   func_list[GLIDX_COUNT];  /* glXXX function pointers */
 
 	struct tagGLRC *next; /* linked list */
 } GLRC;
@@ -137,6 +135,29 @@ GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName );
 DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
+
+/* empty gl functions from gl.c */
+void STDCALL glEmptyFunc0();
+void STDCALL glEmptyFunc4( long );
+void STDCALL glEmptyFunc8( long, long );
+void STDCALL glEmptyFunc12( long, long, long );
+void STDCALL glEmptyFunc16( long, long, long, long );
+void STDCALL glEmptyFunc20( long, long, long, long, long );
+void STDCALL glEmptyFunc24( long, long, long, long, long, long );
+void STDCALL glEmptyFunc28( long, long, long, long, long, long, long );
+void STDCALL glEmptyFunc32( long, long, long, long, long, long, long, long );
+void STDCALL glEmptyFunc36( long, long, long, long, long, long, long, long,
+                            long );
+void STDCALL glEmptyFunc40( long, long, long, long, long, long, long, long,
+                            long, long );
+void STDCALL glEmptyFunc44( long, long, long, long, long, long, long, long,
+                            long, long, long );
+void STDCALL glEmptyFunc48( long, long, long, long, long, long, long, long,
+                            long, long, long, long );
+void STDCALL glEmptyFunc52( long, long, long, long, long, long, long, long,
+                            long, long, long, long, long );
+void STDCALL glEmptyFunc56( long, long, long, long, long, long, long, long,
+                            long, long, long, long, long, long );
 
 #endif//OPENGL32_PRIVATE_H
 

@@ -10,6 +10,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ntos/types.h>
+#include <napi/teb.h>
 
 #include "opengl32.h"
 
@@ -83,14 +85,27 @@ static void WGL_RemoveContext( GLRC *glrc )
  */
 static BOOL WGL_ContainsContext( GLRC *glrc )
 {
-	GLRC *p = OPENGL32_processdata.glrc_list;
+	GLRC *p;
 
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return FALSE; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
+	p = OPENGL32_processdata.glrc_list;
 	while (p != NULL)
 	{
 		if (p == glrc)
 			return TRUE;
 		p = p->next;
 	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.glrc_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 
 	return FALSE;
 }
@@ -103,11 +118,62 @@ static BOOL WGL_ContainsContext( GLRC *glrc )
  *                        functions)
  * RETURNS: unkown
  */
-DWORD CALLBACK WGL_SetContextCallBack( void *table )
+DWORD CALLBACK WGL_SetContextCallBack( const ICDTable *table )
 {
-	DBGPRINT( "Function count: %d\n", *(DWORD *)table );
-	DBGBREAK();
+/*	UINT i;*/
+	TEB *teb;
+	PROC *tebTable, *tebDispatchTable;
+
+	teb = NtCurrentTeb();
+	tebTable = (PROC *)teb->glTable;
+	tebDispatchTable = (PROC *)teb->glDispatchTable;
+
+	DBGPRINT( "Function count: %d\n", table->num_funcs );
+
+	/* save table */
+	memcpy( tebTable, table->dispatch_table,
+	        sizeof (PROC) * table->num_funcs );
+	memset( tebTable + sizeof (PROC) * table->num_funcs, 0,
+	        (sizeof (table->dispatch_table) / sizeof (PROC)) -
+	        (sizeof (PROC) * table->num_funcs) );
+
+	/* FIXME: pull in software fallbacks -- need mesa */
+#if 0 /* unused atm */
+	for (i = 0; i < (sizeof (table->dispatch_table) / sizeof (PROC)); i++)
+	{
+		if (tebTable[i] == NULL)
+		{
+			/* FIXME: fallback */
+			DBGPRINT( "Warning: GL proc #%d is NULL!", i );
+		}
+	}
+#endif
+
+	/* put in empty functions as long as we dont have a fallback */
+	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
+		if (tebTable[icdidx] == NULL)                                      \
+		{                                                                  \
+			DBGPRINT( "Warning: GL proc '%s' is NULL", #func );            \
+			tebTable[icdidx] = (PROC)glEmptyFunc##stack;                   \
+		}
+	GLFUNCS_MACRO
+	#undef X
+
+	/* fill teb->glDispatchTable for fast calls */
+	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
+		if (tebidx >= 0)                                                   \
+			tebDispatchTable[tebidx] = tebTable[icdidx];
+	GLFUNCS_MACRO
+	#undef X
+
 	return ERROR_SUCCESS;
+}
+
+
+int WINAPI wglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 
@@ -168,7 +234,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 	WCHAR driver[256];
 	DWORD dw, size;
 
-	GLDRIVERDATA *icd;
+	GLDRIVERDATA *icd = NULL;
 	GLRC *glrc;
 	HGLRC drvHglrc = NULL;
 
@@ -198,7 +264,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 
 		if (icd->DrvCreateLayerContext)
 			drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
-		else
+		if (drvHglrc)
 		{
 			if (layer == 0)
 				drvHglrc = icd->DrvCreateContext( hdc );
@@ -217,7 +283,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 		break;
 	}
 
-	if (drvHglrc == NULL) /* no ICD was found */
+	if (drvHglrc == NULL || icd == NULL) /* no ICD was found */
 	{
 		/* FIXME: fallback to mesa */
 		DBGPRINT( "Error: No working ICD found!" );
@@ -229,9 +295,6 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 	glrc->hglrc = drvHglrc;
 	glrc->iFormat = -1; /* what is this used for? */
 	glrc->icd = icd;
-	memcpy( glrc->func_list, icd->func_list, sizeof (PVOID) * GLIDX_COUNT );
-
-	/* FIXME: fill NULL-pointers in glrc->func_list with mesa functions */
 
 	/* append glrc to context list */
 	WGL_AppendContext( glrc );
@@ -283,9 +346,16 @@ BOOL WINAPI wglDeleteContext( HGLRC hglrc )
 BOOL WINAPI wglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
                                    UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
-
-
+	UNIMPLEMENTED;
 	return FALSE;
+}
+
+
+int WINAPI wglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
+                                   LPPIXELFORMATDESCRIPTOR pfd )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 
@@ -314,6 +384,14 @@ HDC WINAPI wglGetCurrentDC()
 int WINAPI wglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                                int cEntries, COLORREF *pcr )
 {
+	UNIMPLEMENTED;
+	return 0;
+}
+
+
+int WINAPI wglGetPixelFormat( HDC hdc )
+{
+	UNIMPLEMENTED;
 	return 0;
 }
 
@@ -366,7 +444,11 @@ BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
 
-	/* FIXME: glFlush() current context */
+	/* flush current context */
+	if (OPENGL32_threaddata->glrc != NULL)
+	{
+		glFlush();
+	}
 
 	/* check hdc */
 	if (GetObjectType( hdc ) != OBJ_DC)
@@ -392,9 +474,8 @@ BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 	/* call the ICD */
 	if (glrc->hglrc != NULL)
 	{
-		/* FIXME: which function to call? DrvSetContext?
-		          does it crash with NULL as SetContextCallBack? */
-		if (!glrc->icd->DrvSetContext( hdc, glrc->hglrc, NULL ))
+		if (!glrc->icd->DrvSetContext( hdc, glrc->hglrc,
+		                               WGL_SetContextCallBack ))
 		{
 			DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
 			return FALSE;
@@ -414,6 +495,7 @@ BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 
 BOOL WINAPI wglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -421,8 +503,17 @@ BOOL WINAPI wglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 int WINAPI wglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                                int cEntries, CONST COLORREF *pcr )
 {
+	UNIMPLEMENTED;
 	return 0;
 }
+
+
+BOOL WINAPI wglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
 
 /* FUNCTION: Enable display-list sharing between multiple GLRCs
  * ARGUMENTS: [IN] hglrc1 GLRC number 1
@@ -457,6 +548,7 @@ BOOL WINAPI wglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 	return glrc1->icd->DrvShareLists( glrc1->hglrc, glrc2->hglrc );
 }
 
+
 /* FUNCTION: Flushes GL and swaps front/back buffer if appropriate
  * ARGUMENTS: [IN] hdc  Handle to device context to swap buffers for
  * RETURNS: TRUE on success, FALSE on failure
@@ -490,18 +582,21 @@ BOOL WINAPI wglSwapBuffers( HDC hdc )
 
 BOOL WINAPI wglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
 BOOL WINAPI wglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
 BOOL WINAPI wglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -510,6 +605,7 @@ BOOL WINAPI wglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBa
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -518,6 +614,7 @@ BOOL WINAPI wglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBa
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
