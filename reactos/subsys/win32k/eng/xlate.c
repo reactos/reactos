@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.37 2004/06/28 17:03:35 navaraf Exp $
+/* $Id: xlate.c,v 1.38 2004/06/29 20:08:07 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -60,29 +60,17 @@ static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 
 // Takes indexed palette and a
 ULONG STDCALL 
-ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor,
+ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
    PALETTEENTRY *DestColors, ULONG NumColors)
 {
-  LPPALETTEENTRY cSourceColor;
   LONG idx = 0;
   ULONG i;
-  ULONG SourceRGB;
   ULONG SourceRed, SourceGreen, SourceBlue;
   ULONG cxRed, cxGreen, cxBlue, rt, BestMatch = 16777215;
 
-  if (PAL_BITFIELDS == XlateGDI->XlateObj.iSrcType || PAL_BGR == XlateGDI->XlateObj.iSrcType)
-    {
-      /* FIXME: must use bitfields */
-      SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
-      cSourceColor = (LPPALETTEENTRY) &SourceRGB;
-    }
-  else
-    {
-      cSourceColor = (LPPALETTEENTRY)&SourceColor;
-    } 
-  SourceRed = cSourceColor->peRed;
-  SourceGreen = cSourceColor->peGreen;
-  SourceBlue = cSourceColor->peBlue;
+  SourceRed = SourceColor->peRed;
+  SourceGreen = SourceColor->peGreen;
+  SourceBlue = SourceColor->peBlue;
 
   for (i=0; i<NumColors; i++)
   {
@@ -115,7 +103,7 @@ IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
   Trivial = TRUE;
   for(i=0; i<PalSource->NumColors; i++)
     {
-      TranslationTable[i] = ClosestColorMatch(XlateGDI, *((ULONG*)&PalSource->IndexedColors[i]), PalDest->IndexedColors, PalDest->NumColors);
+      TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors + i, PalDest->IndexedColors, PalDest->NumColors);
       Trivial = Trivial && (TranslationTable[i] == i);
     }
   if (Trivial)
@@ -425,7 +413,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
       Color = ShiftAndMask(XlateGDI, Color);
 
       /* Return closest match for the given color. */
-      Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+      Closest = ClosestColorMatch(XlateGDI, (LPPALETTEENTRY)&Color, PalGDI->IndexedColors, PalGDI->NumColors);
       PALETTE_UnlockPalette(XlateGDI->DestPal);
       return Closest;
    }
