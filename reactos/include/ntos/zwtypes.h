@@ -847,10 +847,10 @@ typedef struct _FILE_END_OF_FILE_INFORMATION
 
 typedef struct _FILE_NETWORK_OPEN_INFORMATION
 {
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
+	LARGE_INTEGER CreationTime;
+	LARGE_INTEGER LastAccessTime;
+	LARGE_INTEGER LastWriteTime;
+	LARGE_INTEGER ChangeTime;
 	LARGE_INTEGER AllocationSize;
 	LARGE_INTEGER EndOfFile;
 	ULONG FileAttributes;
@@ -1037,10 +1037,10 @@ typedef struct _FILE_FS_LABEL_INFORMATION {
 typedef struct _FILE_DIRECTORY_INFORMATION {
 	ULONG	NextEntryOffset;
 	ULONG	FileIndex;
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
+	LARGE_INTEGER CreationTime;
+	LARGE_INTEGER LastAccessTime;
+	LARGE_INTEGER LastWriteTime;
+	LARGE_INTEGER ChangeTime;
 	LARGE_INTEGER EndOfFile;
 	LARGE_INTEGER AllocationSize;
 	ULONG FileAttributes;
@@ -1051,10 +1051,10 @@ typedef struct _FILE_DIRECTORY_INFORMATION {
 typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
 	ULONG	NextEntryOffset;
 	ULONG	FileIndex;
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
+	LARGE_INTEGER CreationTime;
+	LARGE_INTEGER LastAccessTime;
+	LARGE_INTEGER LastWriteTime;
+	LARGE_INTEGER ChangeTime;
 	LARGE_INTEGER EndOfFile;
 	LARGE_INTEGER AllocationSize;
 	ULONG FileAttributes;
@@ -1068,12 +1068,12 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
 	ULONG		NextEntryOffset;
 	ULONG		FileIndex;
-	TIME 		CreationTime;
-	TIME 		LastAccessTime;
-	TIME 		LastWriteTime;
-	TIME 		ChangeTime;
-	LARGE_INTEGER 	EndOfFile;
-	LARGE_INTEGER 	AllocationSize;
+	LARGE_INTEGER	CreationTime;
+	LARGE_INTEGER	LastAccessTime;
+	LARGE_INTEGER	LastWriteTime;
+	LARGE_INTEGER	ChangeTime;
+	LARGE_INTEGER	EndOfFile;
+	LARGE_INTEGER	AllocationSize;
 	ULONG 		FileAttributes;
 	ULONG 		FileNameLength;
 	ULONG 		EaSize;
