@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.15 2002/09/15 22:19:16 hbirr Exp $
+/* $Id: cdrom.c,v 1.16 2002/09/17 20:35:21 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -552,6 +552,32 @@ CdromClassReadTocEntry(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, 
 				     FALSE);
 }
 
+static NTSTATUS
+CdromClassReadLastSession(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, UINT Length)
+{
+  PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  SCSI_REQUEST_BLOCK Srb;
+  PCDB Cdb;
+
+  RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
+  Srb.CdbLength = 10;
+  Srb.TimeOutValue = DeviceExtension->TimeOutValue;
+
+  Cdb = (PCDB)Srb.Cdb;
+  Cdb->READ_TOC.OperationCode = SCSIOP_READ_TOC;
+  Cdb->READ_TOC.StartingTrack = TrackNo;
+  Cdb->READ_TOC.Format = 1;
+  Cdb->READ_TOC.AllocationLength[0] = Length >> 8;
+  Cdb->READ_TOC.AllocationLength[1] = Length & 0xff;
+  Cdb->READ_TOC.Msf = 0;
+ 
+  return ScsiClassSendSrbSynchronous(DeviceObject,
+				     &Srb,
+				     Buffer,
+				     Length,
+				     FALSE);
+}
+
 /**********************************************************************
  * NAME							EXPORTED
  *	CdromClassDeviceControl
@@ -658,6 +684,25 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		       Information = Length;
 		    }
 		 }
+	      }
+	  }
+	  break;
+      case IOCTL_CDROM_GET_LAST_SESSION:
+	  DPRINT("IOCTL_CDROM_GET_LAST_SESSION\n");
+	  if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < 4 + sizeof(TRACK_DATA))
+	  {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	  else
+	  {
+	      USHORT Length;
+	      PCDROM_TOC TocBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+	      Length = 4 + sizeof(TRACK_DATA);
+	      Status = CdromClassReadLastSession(DeviceObject, 0, TocBuffer, Length);
+	      if (NT_SUCCESS(Status))
+	      {
+                 Information = Length;
 	      }
 	  }
 	  break;
