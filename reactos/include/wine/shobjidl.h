@@ -4112,6 +4112,160 @@ void __RPC_STUB IContextMenu3_HandleMenuMsg2_Stub(
 
 #endif  /* __IContextMenu3_INTERFACE_DEFINED__ */
 
+#ifndef __IShellExecuteHookA_FWD_DEFINED__
+#define __IShellExecuteHookA_FWD_DEFINED__
+typedef struct IShellExecuteHookA IShellExecuteHookA;
+#endif
+
+typedef struct _SHELLEXECUTEINFOA *LPSHELLEXECUTEINFOA;
+
+/*****************************************************************************
+ * IShellExecuteHookA interface
+ */
+#ifndef __IShellExecuteHookA_INTERFACE_DEFINED__
+#define __IShellExecuteHookA_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IShellExecuteHookA, 0x000214f5, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IShellExecuteHookA : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE Execute(
+        LPSHELLEXECUTEINFOA pei) = 0;
+
+};
+#else
+typedef struct IShellExecuteHookAVtbl IShellExecuteHookAVtbl;
+struct IShellExecuteHookA {
+    const IShellExecuteHookAVtbl* lpVtbl;
+};
+struct IShellExecuteHookAVtbl {
+    ICOM_MSVTABLE_COMPAT_FIELDS
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IShellExecuteHookA* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IShellExecuteHookA* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IShellExecuteHookA* This);
+
+    /*** IShellExecuteHookA methods ***/
+    HRESULT (STDMETHODCALLTYPE *Execute)(
+        IShellExecuteHookA* This,
+        LPSHELLEXECUTEINFOA pei);
+
+};
+
+/*** IUnknown methods ***/
+#define IShellExecuteHookA_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellExecuteHookA_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IShellExecuteHookA_Release(p) (p)->lpVtbl->Release(p)
+/*** IShellExecuteHookA methods ***/
+#define IShellExecuteHookA_Execute(p,a) (p)->lpVtbl->Execute(p,a)
+
+#endif
+
+#define IShellExecuteHookA_METHODS \
+    ICOM_MSVTABLE_COMPAT_FIELDS \
+    /*** IUnknown methods ***/ \
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
+    STDMETHOD_(ULONG,Release)(THIS) PURE; \
+    /*** IShellExecuteHookA methods ***/ \
+    STDMETHOD_(HRESULT,Execute)(THIS_ LPSHELLEXECUTEINFOA pei) PURE;
+
+HRESULT CALLBACK IShellExecuteHookA_Execute_Proxy(
+    IShellExecuteHookA* This,
+    LPSHELLEXECUTEINFOA pei);
+void __RPC_STUB IShellExecuteHookA_Execute_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IShellExecuteHookA_INTERFACE_DEFINED__ */
+
+#ifndef __IShellExecuteHookW_FWD_DEFINED__
+#define __IShellExecuteHookW_FWD_DEFINED__
+typedef struct IShellExecuteHookW IShellExecuteHookW;
+#endif
+
+typedef struct _SHELLEXECUTEINFOW *LPSHELLEXECUTEINFOW;
+
+/*****************************************************************************
+ * IShellExecuteHookW interface
+ */
+#ifndef __IShellExecuteHookW_INTERFACE_DEFINED__
+#define __IShellExecuteHookW_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IShellExecuteHookW, 0x000214fb, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IShellExecuteHookW : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE Execute(
+        LPSHELLEXECUTEINFOW pei) = 0;
+
+};
+#else
+typedef struct IShellExecuteHookWVtbl IShellExecuteHookWVtbl;
+struct IShellExecuteHookW {
+    const IShellExecuteHookWVtbl* lpVtbl;
+};
+struct IShellExecuteHookWVtbl {
+    ICOM_MSVTABLE_COMPAT_FIELDS
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IShellExecuteHookW* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IShellExecuteHookW* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IShellExecuteHookW* This);
+
+    /*** IShellExecuteHookW methods ***/
+    HRESULT (STDMETHODCALLTYPE *Execute)(
+        IShellExecuteHookW* This,
+        LPSHELLEXECUTEINFOW pei);
+
+};
+
+/*** IUnknown methods ***/
+#define IShellExecuteHookW_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellExecuteHookW_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IShellExecuteHookW_Release(p) (p)->lpVtbl->Release(p)
+/*** IShellExecuteHookW methods ***/
+#define IShellExecuteHookW_Execute(p,a) (p)->lpVtbl->Execute(p,a)
+
+#endif
+
+#define IShellExecuteHookW_METHODS \
+    ICOM_MSVTABLE_COMPAT_FIELDS \
+    /*** IUnknown methods ***/ \
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
+    STDMETHOD_(ULONG,Release)(THIS) PURE; \
+    /*** IShellExecuteHookW methods ***/ \
+    STDMETHOD_(HRESULT,Execute)(THIS_ LPSHELLEXECUTEINFOW pei) PURE;
+
+HRESULT CALLBACK IShellExecuteHookW_Execute_Proxy(
+    IShellExecuteHookW* This,
+    LPSHELLEXECUTEINFOW pei);
+void __RPC_STUB IShellExecuteHookW_Execute_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IShellExecuteHookW_INTERFACE_DEFINED__ */
+
 #ifdef __cplusplus
 }
 #endif
