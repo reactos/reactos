@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.27 2001/12/02 23:34:43 dwelch Exp $
+/* $Id: conio.c,v 1.28 2002/02/08 02:57:10 chorns Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -15,6 +15,8 @@
 #include "api.h"
 #include <ntdll/rtl.h>
 #include <ddk/ntddblue.h>
+
+#define NDEBUG
 #include <debug.h>
 
 #define LOCK   RtlEnterCriticalSection(&ActiveConsoleLock)
@@ -738,7 +740,7 @@ VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
 VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console )
 {
    ConsoleInput *Event;
-   DPRINT1( "CsrDeleteConsole\n" );
+   DPRINT( "CsrDeleteConsole\n" );
    LOCK;
    /* Drain input event queue */
    while( Console->InputEvents.Flink != &Console->InputEvents )
@@ -777,7 +779,7 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
    IO_STATUS_BLOCK Iosb;
    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
    
-   DbgPrint("CSR: CsrInitConsoleSupport()\n");
+   DPRINT("CSR: CsrInitConsoleSupport()\n");
    
    RtlInitUnicodeString(&DeviceName, L"\\??\\BlueScreen");
    InitializeObjectAttributes(&ObjectAttributes,

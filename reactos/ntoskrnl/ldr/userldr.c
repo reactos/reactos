@@ -59,7 +59,7 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
 			      PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Image map view of section failed (Status %x)", Status);
+      CPRINT("Image map view of section failed (Status %x)", Status);
       return(Status);
     }
   

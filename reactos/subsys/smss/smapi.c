@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.4 2000/04/03 21:54:42 dwelch Exp $
+/* $Id: smapi.c,v 1.5 2002/02/08 02:57:10 chorns Exp $
  *
  * Reactos Session Manager
  *
@@ -10,7 +10,7 @@
 
 #include "smss.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 
 VOID STDCALL

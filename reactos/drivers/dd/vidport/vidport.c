@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.20 2001/06/26 12:51:00 ekohl Exp $
+/* $Id: vidport.c,v 1.21 2002/02/08 02:57:09 chorns Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -50,7 +50,6 @@ STDCALL NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, 
             IN PUNICODE_STRING RegistryPath) 
 {
-  DbgPrint("VideoPort Driver %s\n", VERSION);
   return  STATUS_SUCCESS;
 }
 
@@ -293,7 +292,7 @@ VideoPortInitialize(IN PVOID  Context1,
       DeviceNumber++;
     }
   while (Again);
-
+#if 0
   /* Find a process handle for csrss */
   Cid.UniqueProcess = (HANDLE)3;
   Cid.UniqueThread = 0;
@@ -320,7 +319,9 @@ VideoPortInitialize(IN PVOID  Context1,
 	  Csrss = NULL;
 	}
     }  
-
+#else
+  Csrss = NULL;
+#endif
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)
     {
@@ -791,8 +792,6 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                          IN PIRP Irp) 
 {
   PVIDEO_REQUEST_PACKET vrp;
-
-  DbgPrint("IO Control code: %u\n", Irp->Stack[0].Parameters.DeviceIoControl.IoControlCode);
 
   // Translate the IRP to a VRP
   vrp = ExAllocatePool(PagedPool, sizeof(VIDEO_REQUEST_PACKET));

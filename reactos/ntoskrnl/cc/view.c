@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.36 2002/01/26 21:21:02 dwelch Exp $
+/* $Id: view.c,v 1.37 2002/02/08 02:57:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -560,7 +560,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 VOID
 CcInitView(VOID)
 {
-  DPRINT1("CcInitView()\n");
+  DPRINT("CcInitView()\n");
   InitializeListHead(&CacheSegmentListHead);
   InitializeListHead(&DirtySegmentListHead);
   InitializeListHead(&CacheSegmentLRUListHead);

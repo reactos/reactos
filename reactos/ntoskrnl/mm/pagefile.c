@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.16 2002/01/27 03:25:44 dwelch Exp $
+/* $Id: pagefile.c,v 1.17 2002/02/08 02:57:07 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -33,6 +33,7 @@
 #include <internal/mm.h>
 #include <napi/core.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
@@ -376,7 +377,7 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
    PVOID Buffer;
    LARGE_INTEGER ByteOffset;
 
-   DPRINT1("NtCreatePagingFile(PageFileName %wZ, MinimumSize %d)\n",
+   DPRINT("NtCreatePagingFile(PageFileName %wZ, MinimumSize %d)\n",
 	   PageFileName, MinimumSize);
    
    InitializeObjectAttributes(&ObjectAttributes,

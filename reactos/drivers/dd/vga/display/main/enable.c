@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.16 $
+ * $Revision: 1.17 $
  * $Author: chorns $
- * $Date: 2001/09/23 22:14:10 $
+ * $Date: 2002/02/08 02:57:09 $
  *
  */
 
@@ -185,9 +185,9 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
   // FIXME: full out DevInfo
 
   devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
-DbgPrint("Palette from Driver: %u\n", devinfoVGA.hpalDefault);
+DPRINT("Palette from Driver: %u\n", devinfoVGA.hpalDefault);
   *DI = devinfoVGA;
-DbgPrint("Palette from Driver 2: %u and DI is %08x\n", DI->hpalDefault, DI);
+DPRINT("Palette from Driver 2: %u and DI is %08x\n", DI->hpalDefault, DI);
 
   return  PDev;
 }

@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.4 2001/10/21 19:09:06 chorns Exp $
+/* $Id: services.c,v 1.5 2002/02/08 02:57:05 chorns Exp $
  *
  * service control manager
  * 
@@ -47,6 +47,7 @@
 
 void PrintString (char* fmt,...)
 {
+#ifdef DBG
    char buffer[512];
    va_list ap;
 
@@ -55,6 +56,7 @@ void PrintString (char* fmt,...)
    va_end(ap);
 
    OutputDebugStringA(buffer);
+#endif
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.112 2002/01/23 23:39:25 chorns Exp $
+/* $Id: main.c,v 1.113 2002/02/08 02:57:06 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -445,7 +445,7 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	swprintf (ArcNameBuffer,
 	          L"\\ArcName\\%S", ParamBuffer);
 	RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-	DPRINT1("Arc name: %wZ\n", &ArcName);
+	DPRINT("Arc name: %wZ\n", &ArcName);
 
 	/* free ParamBuffer */
 	ExFreePool (ParamBuffer);
@@ -485,7 +485,7 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	{
 		RtlFreeUnicodeString (&BootPath);
 		RtlFreeUnicodeString (&DeviceName);
-		DbgPrint("NtQuerySymbolicObject() failed (Status %x)\n",
+		CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
 		         Status);
 
 		KeBugCheck (0x0);
@@ -507,7 +507,7 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	RtlFreeUnicodeString (&DeviceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DbgPrint("IoCreateSymbolicLink() failed (Status %x)\n",
+		CPRINT("IoCreateSymbolicLink() failed (Status %x)\n",
 		         Status);
 
 		KeBugCheck (0x0);
@@ -525,7 +525,7 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	                                   &ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	{
-		DbgPrint("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
+		CPRINT("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
 		         Status);
 		KeBugCheck (0x0);
 	}
@@ -627,7 +627,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      {
 	RtlFreeUnicodeString (&BootPath);
 	RtlFreeUnicodeString (&ArcDeviceName);
-	DbgPrint("NtOpenSymbolicLinkObject() failed (Status %x)\n",
+	CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n",
 	         Status);
 
 	KeBugCheck (0x0);
@@ -641,7 +641,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      {
 	RtlFreeUnicodeString (&BootPath);
 	RtlFreeUnicodeString (&ArcDeviceName);
-	DbgPrint("NtQuerySymbolicObject() failed (Status %x)\n",
+	CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
 		 Status);
 
 	KeBugCheck (0x0);
@@ -1040,7 +1040,7 @@ ExpInitializeExecutive(VOID)
   /*
    * Initalize services loaded at boot time
    */
-  DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
+  DPRINT("%d files loaded\n",KeLoaderBlock.ModsCount);
   for (i=0; i < KeLoaderBlock.ModsCount; i++)
     {
       CPRINT("Module: '%s' at %08lx, length 0x%08lx\n",

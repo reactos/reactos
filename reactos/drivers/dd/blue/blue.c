@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.31 2001/08/27 01:25:37 ekohl Exp $
+/* $Id: blue.c,v 1.32 2002/02/08 02:57:07 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -610,7 +610,7 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     UNICODE_STRING DeviceName;
     UNICODE_STRING SymlinkName;
 
-    DbgPrint ("Screen Driver 0.0.6\n");
+    DPRINT ("Screen Driver 0.0.6\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]  = ScrDispatch;

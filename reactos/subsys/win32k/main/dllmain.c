@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.23 2002/01/27 01:11:24 dwelch Exp $
+/* $Id: dllmain.c,v 1.24 2002/02/08 02:57:10 chorns Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -36,8 +36,6 @@ DllMain (
   NTSTATUS Status;
   BOOLEAN Result;
 
-  DbgPrint("Win32 kernel mode driver\n");
-
   /*
    * Register user mode call interface
    * (system service table index = 1)
@@ -48,8 +46,6 @@ DllMain (
     DbgPrint("Adding system services failed!\n");
     return STATUS_UNSUCCESSFUL;
   }
-
-  DbgPrint("System services added successfully!\n");
 
   /*
    * Register our per-process and per-thread structures.
@@ -99,8 +95,6 @@ BOOLEAN
 STDCALL
 W32kInitialize (VOID)
 {
-  DbgPrint("W32kInitialize\n");
-
   InitGdiObjectHandleTable ();
 
   // FIXME: Retrieve name from registry

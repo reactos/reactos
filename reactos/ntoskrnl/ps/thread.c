@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.87 2002/01/15 02:51:32 dwelch Exp $
+/* $Id: thread.c,v 1.88 2002/02/08 02:57:07 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -230,7 +230,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    return;
 	  }
      }
-   DbgPrint("CRITICAL: No threads are runnable\n");
+   CPRINT("CRITICAL: No threads are runnable\n");
    KeBugCheck(0);
 }
 
@@ -350,7 +350,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThreads[Id] = IdleThread;
 
   NtClose(IdleThreadHandle);
-  DbgPrint("IdleThread for Processor %d has PID %d\n",
+  DPRINT("IdleThread for Processor %d has PID %d\n",
 	   Id, IdleThread->Cid.UniqueThread);
 }
 
@@ -663,7 +663,7 @@ NtContinue(IN PCONTEXT	Context,
    TrapFrame = KeGetCurrentThread()->TrapFrame;
    if (TrapFrame == NULL)
      {
-	DbgPrint("NtContinue called but TrapFrame was NULL\n");
+	CPRINT("NtContinue called but TrapFrame was NULL\n");
 	KeBugCheck(0);
      }
    KeContextToTrapFrame(Context, TrapFrame);

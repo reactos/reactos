@@ -243,7 +243,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 
    RtlInitUnicodeString( &arcname, L"\\ArcName\\multi(0)disk(0)fdisk(0)" );
    Status = IoAssignArcName( &arcname, &DeviceName );
-   DbgPrint( "Floppy drive initialized\n" );
+   DPRINT( "Floppy drive initialized\n" );
    return TRUE;
 
  devicecleanup:
@@ -499,7 +499,7 @@ NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {
-   DbgPrint("Floppy driver\n");
+   DPRINT("Floppy driver\n");
    
    /* Export other driver entry points... */
    DriverObject->MajorFunction[IRP_MJ_CREATE] = FloppyDispatchOpenClose;

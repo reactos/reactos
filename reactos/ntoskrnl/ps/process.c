@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.76 2002/01/04 22:35:26 hbirr Exp $
+/* $Id: process.c,v 1.77 2002/02/08 02:57:07 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -87,7 +87,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
 				       KernelMode);   
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
+	CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
 	KeBugCheck(0);
      }
    ObDereferenceObject(OldProcess);

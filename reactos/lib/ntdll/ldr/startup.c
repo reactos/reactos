@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.35 2002/01/27 03:25:44 dwelch Exp $
+/* $Id: startup.c,v 1.36 2002/02/08 02:57:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -248,7 +248,6 @@ LdrInitializeThunk (ULONG Unknown1,
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
 
-   DbgPrint("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }

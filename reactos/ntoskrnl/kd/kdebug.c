@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.32 2002/02/02 20:13:08 ekohl Exp $
+/* $Id: kdebug.c,v 1.33 2002/02/08 02:57:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -201,7 +201,7 @@ KdInitSystem(ULONG Reserved,
 	    break;
 
 	  case ScreenDebug:
-	    PrintString("\n   Screen debugging enabled\n\n");
+	    //PrintString("\n   Screen debugging enabled\n\n");
 	    break;
 
 	  case BochsDebug:

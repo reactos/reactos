@@ -127,7 +127,6 @@ VOID AfdUnload(
  *     DriverObject = Pointer to driver object created by the system
  */
 {
-	DbgPrint("Unloading Ancillary Function Driver\n");
 }
 
 
@@ -149,8 +148,6 @@ DriverEntry(
     PDEVICE_OBJECT DeviceObject;
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
-
-    DbgPrint("Ancillary Function Driver\n");
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
     Status = IoCreateDevice(DriverObject,

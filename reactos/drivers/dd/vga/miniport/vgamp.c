@@ -73,8 +73,6 @@ DriverEntry(IN PVOID Context1,
             IN PVOID Context2) 
 {
   VIDEO_HW_INITIALIZATION_DATA  InitData;
-  
-  DbgPrint("VGA miniport Driver %s\n", VERSION);
 
   VideoPortZeroMemory(&InitData, sizeof InitData);
   

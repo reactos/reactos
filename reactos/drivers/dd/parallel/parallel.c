@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.6 2000/10/22 02:02:28 ekohl Exp $
+/* $Id: parallel.c,v 1.7 2002/02/08 02:57:08 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -130,7 +130,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
    
-   DbgPrint("Parallel Port Driver 0.0.1\n");
+   DPRINT("Parallel Port Driver 0.0.1\n");
    
    RtlInitUnicodeString (&DeviceName,
 			 L"\\Device\\Parallel");

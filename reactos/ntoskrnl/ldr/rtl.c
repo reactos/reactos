@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.12 2001/02/10 22:51:09 dwelch Exp $
+/* $Id: rtl.c,v 1.13 2002/02/08 02:57:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -212,7 +212,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 		  return STATUS_SUCCESS;
 	       }
 	  }
-	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
+	CPRINT("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
      }
    else
      {
@@ -225,7 +225,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 		       (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
 	     return STATUS_SUCCESS;
 	  }
-	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n",
+	CPRINT("LdrGetProcedureAddress: Can't resolve symbol @%d\n",
 		 Ordinal);
   }
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.42 2002/01/03 17:59:09 ekohl Exp $
+/* $Id: create.c,v 1.43 2002/02/08 02:57:07 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -467,7 +467,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 				      &ResultLength);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("NtQueryVirtualMemory (Status %x)\n", Status);
+	     CPRINT("NtQueryVirtualMemory (Status %x)\n", Status);
 	     KeBugCheck(0);
 	  }
 	/* FIXME: Race between this and the above check */

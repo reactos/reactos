@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.50 2002/01/24 10:04:50 ekohl Exp $
+/* $Id: ide.c,v 1.51 2002/02/08 02:57:08 chorns Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -241,7 +241,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
   NTSTATUS Status;
 
-  DbgPrint("IDE Driver %s\n", VERSION);
+  DPRINT("IDE Driver %s\n", VERSION);
 
   /* Export other driver entry points... */
   DriverObject->DriverStartIo = IDEStartIo;
@@ -674,13 +674,13 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Get the Drive Identification Data */
   if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
     {
-      DbgPrint("No ATA drive %d found on controller %d...\n",
+      DPRINT("No ATA drive %d found on controller %d...\n",
              DriveIdx,
              ControllerExtension->Number);
       return(FALSE);
     }
 
-  DbgPrint("Found ATA drive %d on controller %d...\n",
+  DPRINT("Found ATA drive %d on controller %d...\n",
            DriveIdx,
            ControllerExtension->Number);
 
@@ -745,7 +745,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                         ControllerExtension);
     }
 
-  DPRINT1("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
+  DPRINT("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
 
   /* Read partition table */
   Status = IoReadPartitionTable(DiskDeviceObject,
@@ -1072,7 +1072,7 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
   /* Initialize the DPC object here */
   IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
 
-  DbgPrint("%wZ %luMB\n", &DeviceName, DeviceExtension->Size / 2048);
+  DPRINT("%wZ %luMB\n", &DeviceName, DeviceExtension->Size / 2048);
 
   /* assign arc name */
   swprintf(ArcNameBuffer,
@@ -1206,7 +1206,7 @@ IDEPolledRead(IN WORD Address,
             {
               if (Status & IDE_SR_ERR)
                 {
-                  DPRINT1("IDE_SR_ERR asserted!\n");
+                  DPRINT("IDE_SR_ERR asserted!\n");
                 }
               if ((Status & IDE_SR_DRQ) && !(Status & IDE_SR_ERR))
                 {
@@ -1247,7 +1247,7 @@ IDEPolledRead(IN WORD Address,
             {
               if (Status & IDE_SR_ERR)
                 {
-                  DPRINT1("IDE_SR_ERR asserted!\n");
+                  DPRINT("IDE_SR_ERR asserted!\n");
                 }
               if (Status & IDE_SR_DRQ)
                 {
@@ -1432,7 +1432,7 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
               DiskDeviceExtension->SectorsPerLogTrk;
           Geometry->SectorsPerTrack = DiskDeviceExtension->SectorsPerLogTrk;
           Geometry->BytesPerSector = DiskDeviceExtension->BytesPerSector;
-DPRINT1("DiskDeviceExtension->BytesPerSector %lu\n", DiskDeviceExtension->BytesPerSector);
+DPRINT("DiskDeviceExtension->BytesPerSector %lu\n", DiskDeviceExtension->BytesPerSector);
           Irp->IoStatus.Status = STATUS_SUCCESS;
           Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
         }

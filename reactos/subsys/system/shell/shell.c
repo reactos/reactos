@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.7 2001/07/30 11:50:44 ea Exp $
+/* $Id: shell.c,v 1.8 2002/02/08 02:57:06 chorns Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -459,8 +459,6 @@ int main(void)
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-
-   debug_printf("Shell Starting...\n");
 
    ParseCommandLine ();
 

@@ -834,7 +834,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    UNICODE_STRING DeviceName;
    UNICODE_STRING SymlinkName;
    
-   DbgPrint("Keyboard Driver 0.0.4\n");
+   DPRINT("Keyboard Driver 0.0.4\n");
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdDispatch;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;

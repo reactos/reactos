@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.8 2000/10/09 00:18:00 ekohl Exp $
+/* $Id: smss.c,v 1.9 2002/02/08 02:57:10 chorns Exp $
  *
  * smss.c - Session Manager
  * 
@@ -69,13 +69,9 @@ void NtProcessStartup (PPEB Peb)
 {
    HANDLE Children[2]; /* csrss, winlogon */
 
-   DisplayString( L"Session Manager\n" );
-
    if (TRUE == InitSessionManager(Children))
      {
 	NTSTATUS	wws;
-	
-	DisplayString( L"SM: Waiting for process termination...\n" );
 
 #if 0
 	wws = NtWaitForMultipleObjects (

@@ -57,7 +57,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   FILE_STANDARD_INFORMATION finfo;
   DWORD err;
   
-  DbgPrint("Ramdisk driver\n");
+  DPRINT("Ramdisk driver\n");
   
   /* Export other driver entry points... */
   DriverObject->MajorFunction[IRP_MJ_CREATE] = RamdrvDispatchOpenClose;
@@ -170,7 +170,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
       DPRINT( "Failed to read floppy\n" );
       goto cleantbuff;
     }
-  DbgPrint( "RAMDRV: Read in %d bytes, decompressing now\n", iosb.Information );
+  DPRINT( "RAMDRV: Read in %d bytes, decompressing now\n", iosb.Information );
   err = BZ2_bzBuffToBuffDecompress( devext->Buffer,
 				    &dstlen,
 				    tbuff,
@@ -178,7 +178,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
 				    1,
 				    0 );
   if( err == 0 )
-    DbgPrint( "RAMDRV: Image Decompressed\n");
+    DPRINT( "RAMDRV: Image Decompressed\n");
   else DbgPrint( "RAMDRV: Failed to decomparess image, error: %d\n", err );
   ExFreePool( tbuff );
   NtClose( file );

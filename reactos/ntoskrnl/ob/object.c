@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.40 2001/08/30 20:38:20 dwelch Exp $
+/* $Id: object.c,v 1.41 2002/02/08 02:57:07 chorns Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -394,13 +394,13 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
    
    if (Header->RefCount < 0)
      {
-	DbgPrint("Object %x/%x has invalid reference count (%d)\n",
+	CPRINT("Object %x/%x has invalid reference count (%d)\n",
 		 Header, HEADER_TO_BODY(Header), Header->RefCount);
 	KeBugCheck(0);
      }
    if (Header->HandleCount < 0)
      {
-	DbgPrint("Object %x/%x has invalid handle count (%d)\n",
+	CPRINT("Object %x/%x has invalid handle count (%d)\n",
 		 Header, HEADER_TO_BODY(Header), Header->HandleCount);
 	KeBugCheck(0);
      }

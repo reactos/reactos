@@ -95,7 +95,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			    FileHandle);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("ZwCreateSection failed (Status %x)\n", Status);
+	DPRINT("ZwCreateSection failed (Status %x)\n", Status);
 	ZwClose(FileHandle);
 	return(Status);
      }
@@ -112,7 +112,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			    NULL);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("Could not create process\n");
+	DPRINT("Could not create process\n");
 	return Status;
      }
 
@@ -140,7 +140,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
+	DPRINT("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
 	return(Status);
      }
    

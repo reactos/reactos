@@ -13,7 +13,7 @@ KDBG := 0
 #
 # Whether to compile for debugging
 #
-DBG := 1
+DBG := 0
 
 #
 # Whether to compile a multiprocessor or single processor version

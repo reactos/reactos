@@ -266,8 +266,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING DeviceName;
    UNICODE_STRING SymlinkName;
 
-   DbgPrint("Mouse Class Driver 0.0.1\n");
-
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
 //   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
 //   DriverObject->MajorFunction[IRP_MJ_READ]   = MouseClassDispatch;

@@ -161,11 +161,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING SymlinkName;
    PDEVICE_EXTENSION DeviceExtension;
 
-   DbgPrint("PS/2 Keyboard & Mouse Driver 0.0.2\n");
-
    if(detect_ps2_port() == TRUE)
    {
-     DbgPrint("PS/2 Mouse Detected\n");
    } else
      return STATUS_UNSUCCESSFUL;
 

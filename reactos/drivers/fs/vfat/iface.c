@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.60 2001/11/07 02:21:19 phreak Exp $
+/* $Id: iface.c,v 1.61 2002/02/08 02:57:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,7 +61,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 	return(Status);
      }
 
-   DPRINT1("Boot->SysType %.5s\n", Boot->SysType);
+   DPRINT("Boot->SysType %.5s\n", Boot->SysType);
    if (strncmp(Boot->SysType, "FAT12", 5) == 0 ||
        strncmp(Boot->SysType, "FAT16", 5) == 0 ||
        strncmp(((struct _BootSector32 *) (Boot))->SysType, "FAT32", 5) == 0)
@@ -127,14 +127,14 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
 
    if (strncmp (DeviceExt->Boot->SysType, "FAT12", 5) == 0)
      {
-	DbgPrint("FAT12\n");
+	DPRINT("FAT12\n");
 	DeviceExt->FatType = FAT12;
      }
    else if (strncmp
 	    (((struct _BootSector32 *) (DeviceExt->Boot))->SysType, "FAT32",
 	    5) == 0)
      {
-	DbgPrint("FAT32\n");
+	DPRINT("FAT32\n");
 	DeviceExt->FatType = FAT32;
 	DeviceExt->rootDirectorySectors = DeviceExt->Boot->SectorsPerCluster;
 	DeviceExt->dataStart = DeviceExt->FATStart + DeviceExt->Boot->FATCount
@@ -144,7 +144,7 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
      }
    else
      {
-	DbgPrint("FAT16\n");
+	DPRINT("FAT16\n");
 	DeviceExt->FatType = FAT16;
      }
 
@@ -165,7 +165,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB Fcb = NULL;
   PVFATCCB Ccb = NULL;
 
-  DPRINT1("VfatMount(IrpContext %x)\n", IrpContext);
+  DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
   assert (IrpContext);
 
@@ -209,7 +209,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
     goto ByeBye;
   }
 
-#if 1
+#ifdef DBG
   DbgPrint("BytesPerSector:     %d\n", DeviceExt->Boot->BytesPerSector);
   DbgPrint("SectorsPerCluster:  %d\n", DeviceExt->Boot->SectorsPerCluster);
   DbgPrint("ReservedSectors:    %d\n", DeviceExt->Boot->ReservedSectors);
@@ -348,14 +348,14 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 
    NTSTATUS Status;
 
-   DPRINT1("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
 
    assert (IrpContext);
 
    switch (IrpContext->MinorFunction)
      {
 	case IRP_MN_USER_FS_REQUEST:
-	   DPRINT1("VFAT FSC: IRP_MN_USER_FS_REQUEST\n");
+	   DPRINT("VFAT FSC: IRP_MN_USER_FS_REQUEST\n");
 	   Status = STATUS_INVALID_DEVICE_REQUEST;
 	   break;
 
@@ -364,12 +364,12 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	   break;
 
 	case IRP_MN_VERIFY_VOLUME:
-	   DPRINT1("VFAT FSC: IRP_MN_VERIFY_VOLUME\n");
+	   DPRINT("VFAT FSC: IRP_MN_VERIFY_VOLUME\n");
 	   Status = STATUS_INVALID_DEVICE_REQUEST;
 	   break;
 
 	default:
-	   DPRINT1("VFAT FSC: MinorFunction %d\n", IrpContext->MinorFunction);
+	   DPRINT("VFAT FSC: MinorFunction %d\n", IrpContext->MinorFunction);
 	   Status = STATUS_INVALID_DEVICE_REQUEST;
 	   break;
      }
@@ -397,7 +397,7 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
 
-   DbgPrint("VFAT 0.0.6\n");
+   DPRINT("VFAT 0.0.6\n");
 
    VfatDriverObject = _DriverObject;
 

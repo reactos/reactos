@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.37 2002/02/05 21:32:30 hbirr Exp $
+/* $Id: create.c,v 1.38 2002/02/08 02:57:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -475,7 +475,7 @@ vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject,
   PVFATFCB  fcb;
   PVFATCCB  ccb;
 
-  DbgPrint ("try related for %S\n", pRelativeFileName);
+  DPRINT ("try related for %S\n", pRelativeFileName);
   ccb = pFileObject->FsContext2;
   assert (ccb);
   fcb = ccb->pFcb;
@@ -798,7 +798,7 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
   if (IrpContext->DeviceObject->Size == sizeof (DEVICE_OBJECT))
   {
      /* DeviceObject represents FileSystem instead of logical volume */
-     DbgPrint ("FsdCreate called with file system\n");
+     DPRINT ("FsdCreate called with file system\n");
      IrpContext->Irp->IoStatus.Information = FILE_OPENED;
      Status = STATUS_SUCCESS;
      goto ByeBye;

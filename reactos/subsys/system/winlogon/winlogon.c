@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.7 2001/06/22 02:10:11 phreak Exp $
+/* $Id: winlogon.c,v 1.8 2002/02/08 02:57:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,8 @@
 
 #include <wchar.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -50,14 +52,10 @@ BOOLEAN StartServices(VOID)
    CHAR CommandLine[MAX_PATH];
    DWORD Count;
 
-   /* Start the service control manager (services.exe) */
-   PrintString("WL: Running services.exe\n");
-   
+   /* Start the service control manager (services.exe) */   
    GetSystemDirectory(CommandLine, MAX_PATH);
    strcat(CommandLine, "\\services.exe");
-   
-   PrintString("WL: %s\n", CommandLine);
-   
+      
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
    StartupInfo.lpDesktop = NULL;
@@ -83,7 +81,6 @@ BOOLEAN StartServices(VOID)
      }
    
    /* wait for event creation (by SCM) for max. 20 seconds */
-   PrintString("WL: Waiting for services\n");
    for (Count = 0; Count < 20; Count++)
      {
 	Sleep(1000);
@@ -93,19 +90,14 @@ BOOLEAN StartServices(VOID)
 				      "SvcctrlStartEvent_A3725DX");
 	if (ServicesInitEvent != NULL)
 	  {
-	     PrintString("WL: Opened start event\n");
 	     break;
 	  }
-	PrintString("WL: Waiting for %ld seconds\n", Count+1);
      }
    
    /* wait for event signalization */
-   DbgPrint("WL: Waiting for services initialization\n");
    WaitForSingleObject(ServicesInitEvent, INFINITE);
    CloseHandle(ServicesInitEvent);
-   
-   DbgPrint("WL: Finished waiting for services\n");
-   
+      
    return TRUE;
 }
 
@@ -129,7 +121,6 @@ BOOLEAN StartLsass(VOID)
      }
    
    /* Start the local security authority subsystem (lsass.exe) */
-   DbgPrint("WL: Running lsass.exe\n");
    
    GetSystemDirectory(CommandLine, MAX_PATH);
    strcat(CommandLine, "\\lsass.exe");
@@ -158,11 +149,10 @@ BOOLEAN StartLsass(VOID)
 	return(FALSE);
      }
    
-   DbgPrint("WL: Waiting for lsass\n");
+   DPRINT("WL: Waiting for lsass\n");
    WaitForSingleObject(LsassInitEvent, INFINITE);
    CloseHandle(LsassInitEvent);
    
-   DbgPrint("WL: Finished waiting for lsass\n");
    return(TRUE);
 }
 
@@ -174,8 +164,6 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
    CHAR CommandLine[MAX_PATH];
    CHAR CurrentDirectory[MAX_PATH];
    
-   DbgPrint("WL: Running shell.exe\n");
-
    GetSystemDirectory(CommandLine, MAX_PATH);
    strcat(CommandLine, "\\shell.exe");
 
@@ -316,6 +304,7 @@ WinMain(HINSTANCE hInstance,
    /* Main loop */
    for (;;)
      {
+#if 0
 	/* Display login prompt */
 	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
 		     LoginPrompt,
@@ -351,7 +340,7 @@ WinMain(HINSTANCE hInstance,
 	     i++;
 	  } while (Password[i - 1] != '\n');
 	Password[i - 1] =0;
-	
+#endif
 	DoLoginUser(LoginName, Password);
      }
 

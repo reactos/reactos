@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.29 2001/12/31 19:06:49 dwelch Exp $
+/* $Id: init.c,v 1.30 2002/02/08 02:57:10 chorns Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -195,9 +195,6 @@ SmInitDosDevices(VOID)
 	RtlInitUnicodeString(&DeviceName,
 			     LinkPtr->DeviceName);
    
-	PrintString("SM: Linking %wZ --> %wZ\n",
-		    &LinkName,
-		    &DeviceName);
 #if 0
 	/* check if target device exists (can be opened) */
 	InitializeObjectAttributes(&ObjectAttributes,
@@ -489,7 +486,6 @@ BOOL InitSessionManager (HANDLE	Children[])
    /*
     * Start the Win32 subsystem (csrss.exe)
     */
-   DisplayString (L"SM: Running csrss.exe\n");
    
    /* initialize executable path */
    wcscpy(UnicodeBuffer, L"\\??\\");
@@ -528,18 +524,15 @@ BOOL InitSessionManager (HANDLE	Children[])
 	return FALSE;
      }
    
-   DbgPrint("SM: Waiting for csrss\n");
    NtWaitForSingleObject(CsrssInitEvent,
 			 FALSE,
 			 NULL);
-   DbgPrint("SM: Finished waiting for csrss\n");
    
    Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
    
    /*
     * Start the logon process (winlogon.exe)
     */
-   DisplayString(L"SM: Running winlogon.exe\n");
    
    /* initialize executable path */
    wcscpy(UnicodeBuffer, L"\\??\\");

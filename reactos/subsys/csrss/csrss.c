@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.9 2001/08/14 12:57:16 ea Exp $
+/* $Id: csrss.c,v 1.10 2002/02/08 02:57:10 chorns Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -51,8 +51,6 @@ VOID NtProcessStartup(PPEB Peb)
    HANDLE CsrssInitEvent;
    UNICODE_STRING UnicodeString;
    NTSTATUS Status;
-   
-   DisplayString(L"Client/Server Runtime Subsystem\n");
 
    ProcParams = RtlNormalizeProcessParams (Peb->ProcessParameters);
 
@@ -106,7 +104,6 @@ VOID NtProcessStartup(PPEB Peb)
      }
    if (CsrServerInitialization (argc, argv) == TRUE)
      {
-	DisplayString( L"CSR: Subsystem initialized.\n" );
 
 	NtSetEvent(CsrssInitEvent,
 		   NULL);

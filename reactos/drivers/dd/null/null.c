@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.5 2001/06/12 12:36:58 ekohl Exp $
+/* $Id: null.c,v 1.6 2002/02/08 02:57:08 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,8 +83,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
-   
-   DbgPrint("Null Device Driver 0.0.2\n");
    
    DeviceObject->Flags=0;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
