@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.1 2004/06/25 01:41:20 hyperion Exp $
+/* $Id: exception.c,v 1.2 2004/07/04 02:01:02 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -230,6 +230,8 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
   /* No exception handler will handle this exception */
 
   DPRINT("RtlpDispatchException(): Return ExceptionContinueExecution\n");
+
+  ExceptionRecord->ExceptionFlags = EXCEPTION_NONCONTINUABLE;
 
   return ExceptionContinueExecution;  
 }
