@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.48 2003/08/18 10:20:57 hbirr Exp $
+/* $Id: handle.c,v 1.49 2003/09/13 06:17:52 vizzini Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -757,6 +757,8 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    ObjectBody = ObDeleteHandle(PsGetCurrentProcess(), Handle);
    if (ObjectBody == NULL)
      {
+        if(((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->ExceptionPort)
+           KeRaiseUserException(STATUS_INVALID_HANDLE);
 	return(STATUS_INVALID_HANDLE);
      }
    

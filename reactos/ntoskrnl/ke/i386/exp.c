@@ -20,9 +20,11 @@
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/i386/exp.c
  * PURPOSE:              Handling exceptions
- * PROGRAMMER:           David Welch (welch@cwcom.net)
+ * PROGRAMMERS:          David Welch (welch@cwcom.net)
+ *                       Skywing (skywing@valhallalegends.com)
  * REVISION HISTORY:
  *              ??/??/??: Created
+ *              09/12/03: KeRaiseUserException added (Skywing).
  */
 
 /* INCLUDES *****************************************************************/
@@ -40,6 +42,7 @@
 #include <ntdll/ldr.h>
 #include <internal/safe.h>
 #include <internal/kd.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -644,4 +647,20 @@ KeInitExceptions(VOID)
    
    set_system_call_gate(0x2d,(int)interrupt_handler2d);
    set_system_call_gate(0x2e,(int)interrupt_handler2e);
+}
+
+/*
+ * @implemented
+ */
+
+VOID STDCALL
+KeRaiseUserException(IN NTSTATUS ExceptionCode)
+{
+   /* FIXME: This needs SEH */
+
+   PKTHREAD Thread = KeGetCurrentThread();
+
+   ProbeForWrite(&Thread->Teb->ExceptionCode, sizeof(NTSTATUS), sizeof(NTSTATUS)); /* NT doesn't check this -- bad? */
+   Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
+   Thread->Teb->ExceptionCode = ExceptionCode;
 }

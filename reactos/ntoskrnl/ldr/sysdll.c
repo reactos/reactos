@@ -7,6 +7,7 @@
  *                  Rex Jolliff (rex@lvcablemodem.com)
  * UPDATE HISTORY:
  *   DW   26/01/00  Created
+ *   Skywing 09/11/2003 Added support for KiRaiseUserExceptionDispatcher
  */
 
 /* INCLUDES *****************************************************************/
@@ -27,6 +28,7 @@ static PVOID SystemDllEntryPoint = NULL;
 static PVOID SystemDllApcDispatcher = NULL;
 static PVOID SystemDllCallbackDispatcher = NULL;
 static PVOID SystemDllExceptionDispatcher = NULL;
+static PVOID SystemDllRaiseExceptionDispatcher = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,6 +50,11 @@ PVOID LdrpGetSystemDllEntryPoint(VOID)
 PVOID LdrpGetSystemDllApcDispatcher(VOID)
 {
    return(SystemDllApcDispatcher);
+}
+
+PVOID LdrpGetSystemDllRaiseExceptionDispatcher(VOID)
+{
+   return(SystemDllRaiseExceptionDispatcher);
 }
 
 NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
@@ -267,6 +274,27 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&ProcedureName,
 					0,
 					&SystemDllCallbackDispatcher);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   KeDetachProcess();
+	   ObDereferenceObject(Process);
+	   ZwClose(NTDllSectionHandle);
+	   return (Status);
+	 }
+     }
+
+   /*
+    * Retrieve the offset of the raise exception dispatcher from NTDLL
+    */
+   if (SystemDllRaiseExceptionDispatcher == NULL)
+     {
+       RtlInitAnsiString (&ProcedureName,
+			  "KiRaiseUserExceptionDispatcher");
+       Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+					&ProcedureName,
+					0,
+					&SystemDllRaiseExceptionDispatcher);
        if (!NT_SUCCESS(Status))
 	 {
 	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);

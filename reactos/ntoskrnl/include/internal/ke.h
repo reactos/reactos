@@ -61,6 +61,9 @@ KiDeliverNormalApc(VOID);
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
 
+VOID STDCALL
+KeRaiseUserException(NTSTATUS ExceptionCode);
+
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

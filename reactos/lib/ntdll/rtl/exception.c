@@ -1,10 +1,13 @@
-/* $Id: exception.c,v 1.15 2003/07/11 13:50:23 royce Exp $
+/* $Id: exception.c,v 1.16 2003/09/13 06:17:51 vizzini Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           User-mode exception support
  * FILE:              lib/ntdll/rtl/exception.c
- * PROGRAMER:         David Welch <welch@cwcom.net>
+ * PROGRAMERS:        David Welch <welch@cwcom.net>
+ *                    Skywing <skywing@valhallalegends.com>
+ * UPDATES:           Skywing, 09/11/2003: Implemented RtlRaiseException and
+ *                    KiUserRaiseExceptionDispatcher.
  */
 
 /* INCLUDES *****************************************************************/
@@ -12,6 +15,7 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <string.h>
+#include <napi/teb.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -55,13 +59,43 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
   RtlRaiseException(&NestedExceptionRecord);
 }
 
+/* implemented in except.s */
+VOID
+RtlpCaptureContext(PCONTEXT Context);
+
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
-  DPRINT("RtlRaiseException()\n");
+  CONTEXT Context;
+  NTSTATUS Status;
+
+  RtlpCaptureContext(&Context);
+
+  ExceptionRecord->ExceptionAddress = (PVOID)(*(((PULONG)Context.Ebp)+1));
+  Context.ContextFlags = CONTEXT_FULL;
+
+  Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
+  RtlRaiseException(ExceptionRecord);
+  RtlRaiseStatus(Status); /* If we get to this point, something is seriously wrong... */
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+KiRaiseUserExceptionDispatcher(VOID)
+{
+  EXCEPTION_RECORD ExceptionRecord;
+
+  ExceptionRecord.ExceptionCode = ((PTEB)NtCurrentTeb())->ExceptionCode;
+  ExceptionRecord.ExceptionFlags = 0;
+  ExceptionRecord.ExceptionRecord = NULL;
+  ExceptionRecord.NumberParameters = 0;
+
+  RtlRaiseException(&ExceptionRecord);
 }
 
 VOID STDCALL
