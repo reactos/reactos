@@ -1,4 +1,4 @@
-/* $Id: complete.c,v 1.12 2004/08/15 16:39:06 chorns Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,7 +46,7 @@ NtCompleteConnectPort (HANDLE hServerSideCommPort)
    */
   Status = ObReferenceObjectByHandle (hServerSideCommPort,
 				      PORT_ALL_ACCESS,
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&ReplyPort,
 				      NULL);

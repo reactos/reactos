@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.24 2004/12/24 17:06:59 navaraf Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,7 +88,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);
@@ -154,7 +154,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.206 2004/12/26 17:48:19 navaraf Exp $
+; $Id$
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -680,6 +680,7 @@ LdrAccessResource@16
 LdrEnumResources@20
 LdrFindResourceDirectory_U@16
 LdrFindResource_U@16
+LpcPortObjectType DATA
 LpcRequestPort@8
 LpcRequestWaitReplyPort@12
 LsaCallAuthenticationPackage@28

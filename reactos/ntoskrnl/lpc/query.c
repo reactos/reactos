@@ -1,4 +1,4 @@
-/* $Id: query.c,v 1.9 2004/08/15 16:39:06 chorns Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,7 +50,7 @@ NtQueryInformationPort (IN	HANDLE	PortHandle,
   
   Status = ObReferenceObjectByHandle (PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID *) & Port,
 				      NULL);

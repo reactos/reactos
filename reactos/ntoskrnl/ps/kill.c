@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.91 2004/12/24 17:07:00 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -448,7 +448,7 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      ExPortType,
+				      & LpcPortObjectType,
 				      KeGetCurrentThread()->PreviousMode,
 				      (PVOID*)&TerminationPort,
 				      NULL);   

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.18 2004/10/31 20:27:08 ea Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -134,7 +134,7 @@ NtCreatePort (PHANDLE		      PortHandle,
 
   /* Ask Ob to create the object */
   Status = ObCreateObject (ExGetPreviousMode(),
-			   ExPortType,
+			   & LpcPortObjectType,
 			   ObjectAttributes,
 			   ExGetPreviousMode(),
 			   NULL,

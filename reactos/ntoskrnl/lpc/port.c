@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.20 2004/10/31 20:27:08 ea Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,7 +21,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE	ExPortType = NULL;
+OBJECT_TYPE	LpcPortObjectType = {0, };
 ULONG		LpcpNextMessageId = 0; /* 0 is not a valid ID */
 FAST_MUTEX	LpcpLock; /* global internal sync in LPC facility */
 
@@ -37,30 +37,30 @@ static GENERIC_MAPPING ExpPortMapping = {
 NTSTATUS INIT_FUNCTION
 NiInitPort (VOID)
 {
-   ExPortType = ExAllocatePoolWithTag(NonPagedPool,sizeof(OBJECT_TYPE),TAG_OBJECT_TYPE);
+   RtlZeroMemory (& LpcPortObjectType, sizeof (OBJECT_TYPE));
    
-   RtlRosInitUnicodeStringFromLiteral(&ExPortType->TypeName,L"Port");
+   RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType.TypeName,L"Port");
    
-   ExPortType->Tag = TAG('L', 'P', 'R', 'T');
-   ExPortType->MaxObjects = ULONG_MAX;
-   ExPortType->MaxHandles = ULONG_MAX;
-   ExPortType->TotalObjects = 0;
-   ExPortType->TotalHandles = 0;
-   ExPortType->PagedPoolCharge = 0;
-   ExPortType->NonpagedPoolCharge = sizeof(EPORT);
-   ExPortType->Mapping = &ExpPortMapping;
-   ExPortType->Dump = NULL;
-   ExPortType->Open = NULL;
-   ExPortType->Close = NiClosePort;
-   ExPortType->Delete = NiDeletePort;
-   ExPortType->Parse = NULL;
-   ExPortType->Security = NULL;
-   ExPortType->QueryName = NULL;
-   ExPortType->OkayToClose = NULL;
-   ExPortType->Create = NiCreatePort;
-   ExPortType->DuplicationNotify = NULL;
+   LpcPortObjectType.Tag = TAG('L', 'P', 'R', 'T');
+   LpcPortObjectType.MaxObjects = ULONG_MAX;
+   LpcPortObjectType.MaxHandles = ULONG_MAX;
+   LpcPortObjectType.TotalObjects = 0;
+   LpcPortObjectType.TotalHandles = 0;
+   LpcPortObjectType.PagedPoolCharge = 0;
+   LpcPortObjectType.NonpagedPoolCharge = sizeof(EPORT);
+   LpcPortObjectType.Mapping = &ExpPortMapping;
+   LpcPortObjectType.Dump = NULL;
+   LpcPortObjectType.Open = NULL;
+   LpcPortObjectType.Close = NiClosePort;
+   LpcPortObjectType.Delete = NiDeletePort;
+   LpcPortObjectType.Parse = NULL;
+   LpcPortObjectType.Security = NULL;
+   LpcPortObjectType.QueryName = NULL;
+   LpcPortObjectType.OkayToClose = NULL;
+   LpcPortObjectType.Create = NiCreatePort;
+   LpcPortObjectType.DuplicationNotify = NULL;
 
-   ObpCreateTypeObject(ExPortType);
+   ObpCreateTypeObject(& LpcPortObjectType);
    
    LpcpNextMessageId = 0;
 

@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.27 2004/08/15 16:39:06 chorns Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,7 +66,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
    * Create a port to represent our side of the connection
    */
   Status = ObCreateObject (KernelMode,
-			   ExPortType,
+			   & LpcPortObjectType,
 			   NULL,
 			   KernelMode,
 			   NULL,
@@ -333,7 +333,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
                                     0,
                                     NULL,
                                     PORT_ALL_ACCESS,  /* DesiredAccess */
-                                    ExPortType,
+                                    & LpcPortObjectType,
                                     UserMode,
                                     NULL,
                                     (PVOID*)&NamedPort);
@@ -547,7 +547,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   
   Status = ObReferenceObjectByHandle(NamedPortHandle,
 				     PORT_ALL_ACCESS,
-				     ExPortType,
+				     & LpcPortObjectType,
 				     UserMode,
 				     (PVOID*)&NamedPort,
 				     NULL);
@@ -563,7 +563,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   if (AcceptIt)
     {
       Status = ObCreateObject(ExGetPreviousMode(),
-			      ExPortType,
+			      & LpcPortObjectType,
 			      NULL,
 			      ExGetPreviousMode(),
 			      NULL,

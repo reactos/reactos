@@ -140,7 +140,7 @@ NiInitializePort (IN OUT  PEPORT	Port,
 NTSTATUS
 NiInitPort (VOID);
 
-extern POBJECT_TYPE	ExPortType;
+extern OBJECT_TYPE	LpcPortObjectType;
 extern ULONG		LpcpNextMessageId;
 extern FAST_MUTEX	LpcpLock;
 

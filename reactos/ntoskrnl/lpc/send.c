@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.20 2004/11/13 22:27:16 hbirr Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -180,7 +180,7 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);
@@ -231,7 +231,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS, 
-				      ExPortType,
+				      & LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);

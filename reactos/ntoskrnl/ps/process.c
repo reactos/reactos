@@ -743,7 +743,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	Status = ObReferenceObjectByHandle(DebugPort,
 					   PORT_ALL_ACCESS,
-					   ExPortType,
+					   & LpcPortObjectType,
 					   UserMode,
 					   (PVOID*)&pDebugPort,
 					   NULL);   
@@ -765,7 +765,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	Status = ObReferenceObjectByHandle(ExceptionPort,
 					   PORT_ALL_ACCESS,
-					   ExPortType,
+					   & LpcPortObjectType,
 					   UserMode,
 					   (PVOID*)&pExceptionPort,
 					   NULL);   
