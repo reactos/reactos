@@ -16,9 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.1 2003/11/24 14:25:28 weiden Exp $
+/* $Id: msgina.c,v 1.2 2003/11/24 15:28:54 weiden Exp $
  *
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
  * PURPOSE:         ReactOS Logon GINA DLL
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -27,6 +27,23 @@
  */
 #include <windows.h>
 #include <WinWlx.h>
+#include "msgina.h"
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxNegotiate(
+	DWORD  dwWinlogonVersion,
+	PDWORD pdwDllVersion)
+{
+  if(dwWinlogonVersion < GINA_VERSION)
+    return FALSE;
+  
+  *pdwDllVersion = GINA_VERSION;
+  
+  return TRUE;
+}
 
 BOOL STDCALL
 DllMain(

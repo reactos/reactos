@@ -1,7 +1,7 @@
-/* $Id: stubs.c,v 1.1 2003/11/24 14:25:28 weiden Exp $
+/* $Id: stubs.c,v 1.2 2003/11/24 15:28:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/stubs.c
  * PURPOSE:         msgina.dll stubs
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -16,11 +16,14 @@
   DbgPrint("MSGINA:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
 
 
+/*
+ * @unimplemented
+ */
 DWORD WINAPI
 ShellShutdownDialog(
-    HWND hParent,
+    HWND  hParent,
     DWORD Unknown,
-    BOOL bHideLogoff)
+    BOOL  bHideLogoff)
 {
   /* Return values:
    * 0x00: Cancelled/Help
@@ -155,19 +158,6 @@ WlxLogoff(
 {
   UNIMPLEMENTED;
   return;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxNegotiate(
-	DWORD  dwWinlogonVersion,
-	PDWORD pdwDllVersion)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 
