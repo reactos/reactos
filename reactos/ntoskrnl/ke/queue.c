@@ -207,7 +207,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             
             /* Remove the Entry */
             RemoveEntryList(ListEntry);
-            Entry->Flink = NULL;
+            ListEntry->Flink = NULL;
             
             /* Nothing to wait on */
             break;
