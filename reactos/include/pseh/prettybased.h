@@ -166,9 +166,6 @@ void __stdcall _FinallyPretty
          } while(0);                                                          \
                                                                               \
          _SEHLeave(&_SEHFrame->SEH_Header);                                   \
-                                                                              \
-         if (!_SEHHandlers.SH_Finally) break;                                 \
-         _loop ++;                                                            \
       }                                                                       \
       else                                                                    \
       {                                                                       \
@@ -195,7 +192,6 @@ void __stdcall _FinallyPretty
                
                
 #define ___END_DUAL                                                           \
-                                                                              \
             } while (0);                                                      \
                                                                               \
             if (_ret > 1)                                                     \
@@ -205,7 +201,6 @@ void __stdcall _FinallyPretty
             }                                                                 \
             break;                                                            \
          }                                                                    \
-         _loop ++;                                                            \
       }                                                                       \
                                                                               \
     } while (0);
@@ -253,7 +248,7 @@ void __stdcall _FinallyPretty
       _SEHPortableFrame = &_SEHFrame->SEH_Header;                             \
       (void)_SEHPortableFrame;                                                \
                                                                               \
-      for(;;)                                                                 \
+      for(;;_loop++)                                                          \
       if (_loop == 1)                                                         \
       {                                                                       \
          _SEHEnter(&_SEHFrame->SEH_Header);                                   \
@@ -266,7 +261,6 @@ void __stdcall _FinallyPretty
          } while(0);                                                          \
                                                                               \
          _SEHLeave(&_SEHFrame->SEH_Header);                                   \
-         _loop ++;                                                            \
       }                                                                       \
       else                                                                    \
       {                                                                       \
@@ -290,7 +284,6 @@ void __stdcall _FinallyPretty
             }                                                                 \
             break;                                                            \
          }                                                                    \
-         _loop ++;                                                            \
       }                                                                       \
     } while (0);
 
