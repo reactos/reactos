@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.23 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: device.c,v 1.24 2000/12/10 19:15:45 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/ob.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -449,14 +450,31 @@ IoQueryDeviceEnumInfo (
 }
 
 
-VOID
-STDCALL
-IoSetDeviceToVerify (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+PDEVICE_OBJECT STDCALL
+IoGetDeviceToVerify (PETHREAD Thread)
+/*
+ * FUNCTION: Returns a pointer to the device, representing a removable-media
+ * device, that is the target of the given thread's I/O request
+ */
 {
-	UNIMPLEMENTED;
+   return Thread->DeviceToVerify;
 }
+
+
+VOID STDCALL
+IoSetDeviceToVerify (IN PETHREAD Thread,
+		     IN PDEVICE_OBJECT DeviceObject)
+{
+   Thread->DeviceToVerify = DeviceObject;
+}
+
+
+VOID STDCALL
+IoSetHardErrorOrVerifyDevice(PIRP Irp,
+			     PDEVICE_OBJECT DeviceObject)
+{
+   Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
+}
+
 
 /* EOF */

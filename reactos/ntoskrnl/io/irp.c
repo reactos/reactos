@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.31 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: irp.c,v 1.32 2000/12/10 19:15:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,16 +38,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
-
-PDEVICE_OBJECT STDCALL
-IoGetDeviceToVerify (PETHREAD Thread)
-/*
- * FUNCTION: Returns a pointer to the device, representing a removable-media
- * device, that is the target of the given thread's I/O request
- */
-{
-   UNIMPLEMENTED;
-}
 
 
 VOID STDCALL

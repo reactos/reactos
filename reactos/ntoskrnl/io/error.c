@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.4 2000/07/04 08:52:38 dwelch Exp $
+/* $Id: error.c,v 1.5 2000/12/10 19:15:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,12 +19,9 @@
 /* FUNCTIONS *****************************************************************/
 
 
-VOID STDCALL IoSetHardErrorOrVerifyDevice(PIRP Irp, PDEVICE_OBJECT DeviceObject)
-{
-   UNIMPLEMENTED;
-}
-
-VOID STDCALL IoRaiseHardError(PIRP Irp, PVPB Vpb, PDEVICE_OBJECT RealDeviceObject)
+VOID STDCALL IoRaiseHardError(PIRP Irp,
+			      PVPB Vpb,
+			      PDEVICE_OBJECT RealDeviceObject)
 {
    UNIMPLEMENTED;
 }
@@ -35,8 +32,8 @@ BOOLEAN IoIsTotalDeviceFailure(NTSTATUS Status)
 }
 
 BOOLEAN STDCALL IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
-				      PUNICODE_STRING String,
-				      PKTHREAD Thread)
+					      PUNICODE_STRING String,
+					      PKTHREAD Thread)
 {
    UNIMPLEMENTED;
 }

@@ -150,12 +150,12 @@ typedef struct _KTHREAD
     */
    
    /* Added by Phillip Susi for list of threads in a process */
-   LIST_ENTRY        ProcessThreadListEntry;        
+   LIST_ENTRY        ProcessThreadListEntry;
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
    /* Added by Phillip Susi for internal KeAddThreadTimeout() implementation */
-   KDPC              TimerDpc;		       
+   KDPC              TimerDpc;
 } __attribute__((packed)) KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and
@@ -193,14 +193,14 @@ typedef struct
 
 struct _WIN32THREADDATA;
 
-typedef struct _ETHREAD 
+typedef struct _ETHREAD
 {
    KTHREAD Tcb;
-   TIME	CreateTime;
-   TIME	ExitTime;
+   TIME CreateTime;
+   TIME ExitTime;
    NTSTATUS ExitStatus;
    LIST_ENTRY PostBlockList;
-   LIST_ENTRY TerminationPortList;  
+   LIST_ENTRY TerminationPortList;
    KSPIN_LOCK ActiveTimerListLock;
    PVOID ActiveTimerListHead;
    CLIENT_ID Cid;
@@ -210,6 +210,7 @@ typedef struct _ETHREAD
    PPS_IMPERSONATION_INFO ImpersonationInfo;
    LIST_ENTRY IrpList;
    TOP_LEVEL_IRP TopLevelIrp;
+   PDEVICE_OBJECT DeviceToVerify;
    ULONG ReadClusterSize;
    UCHAR ForwardClusterOnly;
    UCHAR DisablePageFaultClustering;
@@ -218,7 +219,7 @@ typedef struct _ETHREAD
    ACCESS_MASK GrantedAccess;
    struct _EPROCESS* ThreadsProcess;
    PKSTART_ROUTINE StartAddress;
-   LPTHREAD_START_ROUTINE Win32StartAddress; 
+   LPTHREAD_START_ROUTINE Win32StartAddress;
    UCHAR LpcExitThreadCalled;
    UCHAR HardErrorsAreDisabled;
    UCHAR LpcReceivedMsgIdValid;
