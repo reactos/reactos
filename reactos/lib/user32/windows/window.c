@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.38 2003/06/15 04:25:34 rcampbell Exp $
+/* $Id: window.c,v 1.39 2003/06/16 13:46:26 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,9 +15,12 @@
 #include <user32.h>
 #include <window.h>
 #include <user32/callback.h>
+#include <user32/regcontrol.h>
 
 #define NDEBUG
 #include <debug.h>
+
+static BOOL ControlsInitCalled = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 ULONG
@@ -433,6 +436,13 @@ CreateWindowExA(DWORD dwExStyle,
   HWND Handle;
   INT sw;
 
+  /* Register built-in controls if not already done */
+  if (! ControlsInitCalled)
+    {
+      ControlsInit();
+      ControlsInitCalled = TRUE;
+    }
+
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -549,6 +559,13 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   HANDLE Handle;
   UINT sw;
+
+  /* Register built-in controls if not already done */
+  if (! ControlsInitCalled)
+    {
+      ControlsInit();
+      ControlsInitCalled = TRUE;
+    }
 
   if (IS_ATOM(lpClassName)) 
     {
