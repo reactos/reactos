@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.187 2004/02/21 14:00:30 navaraf Exp $
+/* $Id: window.c,v 1.188 2004/02/22 14:26:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -410,11 +410,12 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   CLASS_RemoveWindow(Window->Class);
 #endif
 
-  if(Window->Parent)
+  if (Window->Parent)
   {
-    ExAcquireFastMutexUnsafe(&Window->Parent->ChildrenListLock);
+    PWINDOW_OBJECT Parent = Window->Parent;
+    ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
     IntUnlinkWindow(Window);
-    ExReleaseFastMutexUnsafe(&Window->Parent->ChildrenListLock);
+    ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
   }
 
   ExAcquireFastMutexUnsafe (&ThreadData->WindowListLock);
@@ -670,27 +671,6 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
    return (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
 }
 
-VOID FASTCALL
-IntInitDesktopWindow(ULONG Width, ULONG Height)
-{
-  PWINDOW_OBJECT DesktopWindow;
-
-  DesktopWindow = IntGetWindowObject(PsGetWin32Thread()->Desktop->DesktopWindow);
-  if (NULL == DesktopWindow)
-    {
-      return;
-    }
-  DesktopWindow->WindowRect.left = 0;
-  DesktopWindow->WindowRect.top = 0;
-  DesktopWindow->WindowRect.right = Width;
-  DesktopWindow->WindowRect.bottom = Height;
-  DesktopWindow->ClientRect = DesktopWindow->WindowRect;
-
-  IntRedrawWindow(DesktopWindow, NULL, 0, RDW_INVALIDATE | RDW_ERASE);
-  IntReleaseWindowObject(DesktopWindow);
-}
-
-
 BOOL FASTCALL
 IntIsChildWindow(HWND Parent, HWND Child)
 {
@@ -708,7 +688,6 @@ IntIsChildWindow(HWND Parent, HWND Child)
   IntReleaseWindowObject(BaseWindow);
   return(FALSE);  
 }
-
 
 BOOL FASTCALL
 IntIsWindowVisible(HWND Wnd)
@@ -813,8 +792,12 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 
    if (WndNewParent != WndOldParent)
    {
+      ExAcquireFastMutexUnsafe(&WndOldParent->ChildrenListLock);      
       IntUnlinkWindow(Wnd);
+      ExReleaseFastMutexUnsafe(&WndOldParent->ChildrenListLock);
+      ExAcquireFastMutexUnsafe(&WndNewParent->ChildrenListLock);      
       IntLinkWindow(Wnd, WndNewParent, NULL /*prev sibling*/);
+      ExReleaseFastMutexUnsafe(&WndNewParent->ChildrenListLock);
 
       if (WndNewParent->Self != IntGetDesktopWindow()) /* a child window */
       {
@@ -1609,7 +1592,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd)
 {
-  PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT Window, Parent;
   BOOLEAN isChild;
 
   Window = IntGetWindowObject(Wnd);
@@ -1736,7 +1719,10 @@ NtUserDestroyWindow(HWND Wnd)
     }
 
   /* Unlink now so we won't bother with the children later on */
+  Parent = Window->Parent;
+  ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
   IntUnlinkWindow(Window);
+  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
 
   /* Destroy the window storage */
   IntDestroyWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.96 2004/02/21 13:57:31 navaraf Exp $
+/* $Id: winpos.c,v 1.97 2004/02/22 14:26:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -588,26 +588,30 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 VOID STATIC FASTCALL
 WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
-  PWINDOW_OBJECT Child;
+   HWND *Children;
+   UINT Count;
 
-  Window->WindowRect.left += MoveX;
-  Window->WindowRect.right += MoveX;
-  Window->WindowRect.top += MoveY;
-  Window->WindowRect.bottom += MoveY;
+   Window->WindowRect.left += MoveX;
+   Window->WindowRect.right += MoveX;
+   Window->WindowRect.top += MoveY;
+   Window->WindowRect.bottom += MoveY;
 
-  Window->ClientRect.left += MoveX;
-  Window->ClientRect.right += MoveX;
-  Window->ClientRect.top += MoveY;
-  Window->ClientRect.bottom += MoveY;
+   Window->ClientRect.left += MoveX;
+   Window->ClientRect.right += MoveX;
+   Window->ClientRect.top += MoveY;
+   Window->ClientRect.bottom += MoveY;
 
-  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
-  Child = Window->FirstChild;
-  while (Child)
-    {
-      WinPosInternalMoveWindow(Child, MoveX, MoveY);
-      Child = Child->NextSibling;
-    }
-  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+   Children = IntWinListChildren(Window);
+   if (Children)
+   {
+      for (Count = 0; Children[Count] != NULL; Count++)
+      {
+         Window = IntGetWindowObject(Children[Count]);
+         WinPosInternalMoveWindow(Window, MoveX, MoveY);
+         IntReleaseWindowObject(Window);
+      }
+      ExFreePool(Children);
+   }
 }
 
 /*
