@@ -32,6 +32,15 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
 #define THREAD_STATE_TERMINATED_1 (4)
 #define THREAD_STATE_TERMINATED_2 (5)
 #define THREAD_STATE_MAX          (6)
+
+
+// Internal thread priorities, added by Phillip Susi
+// TODO: rebalence these to make use of all priorities... the ones above 16 can not all be used right now
+
+#define PROCESS_PRIO_IDLE			3
+#define PROCESS_PRIO_NORMAL			8
+#define PROCESS_PRIO_HIGH			13
+#define PROCESS_PRIO_RT				18
      
 /*
  * Functions the HAL must provide

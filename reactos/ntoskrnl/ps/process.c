@@ -87,6 +87,7 @@ VOID PsInitProcessManagment(VOID)
    PsProcessType->Security = NULL;
    PsProcessType->QueryName = NULL;
    PsProcessType->OkayToClose = NULL;
+   PsProcessType->Create = NULL;
    
    RtlInitAnsiString(&AnsiString,"Process");
    RtlAnsiStringToUnicodeString(&PsProcessType->TypeName,&AnsiString,TRUE);
@@ -101,6 +102,7 @@ VOID PsInitProcessManagment(VOID)
 				  PROCESS_ALL_ACCESS,
 				  NULL,
 				  PsProcessType);
+   SystemProcess->Pcb.BasePriority = NORMAL_PRIORITY_CLASS;
    KeInitializeDispatcherHeader(&SystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),
@@ -265,6 +267,7 @@ NtCreateProcess (
 				FALSE);
    KProcess = &(Process->Pcb);
    
+   KProcess->BasePriority = NORMAL_PRIORITY_CLASS;
    InitializeListHead(&(KProcess->MemoryAreaList));
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
@@ -514,3 +517,4 @@ NtSetInformationProcess (
    ObDereferenceObject(Process);
    return(Status);
 }
+

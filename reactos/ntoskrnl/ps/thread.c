@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.34 1999/12/10 17:04:36 dwelch Exp $
+/* $Id: thread.c,v 1.35 1999/12/10 22:07:23 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -37,7 +37,7 @@
 
 POBJECT_TYPE PsThreadType = NULL;
 
-#define NR_THREAD_PRIORITY_LEVELS (31)
+#define NR_THREAD_PRIORITY_LEVELS (32)
 #define THREAD_PRIORITY_MAX (15)
 
 KSPIN_LOCK PiThreadListLock;
@@ -205,7 +205,7 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    CurrentThread->Tcb.State = NewThreadStatus;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
-	PsInsertIntoThreadList(CurrentThread->Tcb.BasePriority,
+	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
 			       CurrentThread);
      }
    
@@ -274,7 +274,6 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
 			   PsThreadType);
    DPRINT("Thread = %x\n",Thread);
    Thread->Tcb.State = THREAD_STATE_SUSPENDED;
-   Thread->Tcb.BasePriority = THREAD_PRIORITY_NORMAL;
    Thread->Tcb.SuspendCount = 1;
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[0]);
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[1]);
@@ -296,6 +295,8 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
 	if (Status != STATUS_SUCCESS)
 	  {
 	     DPRINT("Failed at %s:%d\n",__FILE__,__LINE__);
+		 ObDereferenceObject( Thread );
+		 PiNrThreads--;
 	     return(Status);
 	  }
      }
@@ -307,26 +308,19 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
 				   PsProcessType,
 				   UserMode);
      }
-   ObReferenceObjectByPointer(Thread->ThreadsProcess,
-			      PROCESS_CREATE_THREAD,
-			      PsProcessType,
-			      UserMode);
    InitializeListHead(&Thread->IrpList);
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
 					      &PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
-   ObReferenceObjectByPointer(Thread,
-			      THREAD_ALL_ACCESS,
-			      PsThreadType,
-			      UserMode);
    
    *ThreadPtr = Thread;
    
    InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
+
+   Thread->Tcb.BasePriority = Thread->ThreadsProcess->Pcb.BasePriority;
+   Thread->Tcb.Priority = Thread->Tcb.BasePriority;
    
-   ObDereferenceObject(Thread->ThreadsProcess);
-   ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
 }
 
@@ -351,7 +345,7 @@ ULONG PsResumeThread(PETHREAD Thread,
 	  {
 	     Thread->Tcb.WaitStatus = *WaitStatus;
 	  }
-	PsInsertIntoThreadList(Thread->Tcb.BasePriority, Thread);
+	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
 	PiNrRunnableThreads++;	
      }
    DPRINT("About release ThreadListLock = %x\n", &PiThreadListLock);
@@ -706,9 +700,16 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
 }
 
 
+// Sets thread's base priority relative to the process' base priority
+// Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
 LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
-{ 
-   UNIMPLEMENTED;
+{
+   Thread->BasePriority = ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
+   if( Thread->BasePriority < 0 )
+	   Thread->BasePriority = 0;
+   else if( Thread->BasePriority >= NR_THREAD_PRIORITY_LEVELS )
+	   Thread->BasePriority = NR_THREAD_PRIORITY_LEVELS - 1;
+   Thread->Priority = Thread->BasePriority;
 }
 
 
@@ -717,8 +718,8 @@ KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
    KPRIORITY OldPriority;
    KIRQL oldIrql;
    
-   OldPriority = Thread->BasePriority;
-   Thread->BasePriority = Priority;
+   OldPriority = Thread->Priority;
+   Thread->Priority = Priority;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    RemoveEntryList(&Thread->QueueListEntry);
