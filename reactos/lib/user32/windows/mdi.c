@@ -2373,7 +2373,7 @@ static HWND MDI_MoreWindowsDialog(HWND hwnd)
         return 0;
 
     return (HWND) DialogBoxIndirectParamA(GetModuleHandleA("USER32"),
-                                          (LPDLGTEMPLATEA) template,
+                                          (LPDLGTEMPLATE) template,
                                           hwnd, MDI_MoreWindowsDlgProc, (LPARAM) hwnd);
 }
 
