@@ -329,6 +329,7 @@ GetScrollRange=GetScrollRange@16
 GetSubMenu=GetSubMenu@8
 GetSysColor=GetSysColor@4
 GetSysColorBrush=GetSysColorBrush@4
+GetSysColorPen@4=GetSysColorPen@4 ; ReactOS extension
 GetSystemMenu=GetSystemMenu@8
 GetSystemMetrics=GetSystemMetrics@4
 GetTabbedTextExtentA=GetTabbedTextExtentA@20
@@ -686,8 +687,8 @@ VkKeyScanW=VkKeyScanW@4
 WaitForInputIdle=WaitForInputIdle@8
 WaitMessage=WaitMessage@0
 ;Win32PoolAllocationStats
-;WinHelpA
-;WinHelpW
+WinHelpA=WinHelpA@16
+WinHelpW=WinHelpW@16
 WindowFromDC=WindowFromDC@4
 WindowFromPoint=WindowFromPoint@8
 ;keybd_event

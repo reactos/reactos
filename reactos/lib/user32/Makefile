@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/08/28 21:56:50 jfilby Exp $
+# $Id: Makefile,v 1.3 2002/09/01 04:17:05 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,12 +26,13 @@ CONTROLS_OBJECTS = \
 	controls/scrollbar.o
 
 MISC_OBJECTS = \
-  misc/desktop.o  \
-	misc/dllmain.o  \
-	misc/sprintf.o  \
-	misc/stubs.o    \
-	misc/win32k.o   \
-	misc/winsta.o   \
+	misc/desktop.o \
+	misc/dllmain.o \
+	misc/sprintf.o \
+	misc/stubs.o \
+	misc/winhelp.o \
+	misc/win32k.o \
+	misc/winsta.o \
 	misc/resources.o \
 	misc/dde.o \
 	misc/display.o \
@@ -39,8 +40,8 @@ MISC_OBJECTS = \
 	misc/timer.o
 
 WINDOWS_OBJECTS = \
-	windows/class.o    \
-	windows/message.o  \
+	windows/class.o \
+	windows/message.o \
 	windows/window.o \
 	windows/defwnd.o \
 	windows/accel.o \

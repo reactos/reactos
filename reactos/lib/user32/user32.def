@@ -687,8 +687,8 @@ VkKeyScanW@4
 WaitForInputIdle@8
 WaitMessage@0
 ;Win32PoolAllocationStats
-;WinHelpA
-;WinHelpW
+WinHelpA
+WinHelpW
 WindowFromDC@4
 WindowFromPoint@8
 ;keybd_event
