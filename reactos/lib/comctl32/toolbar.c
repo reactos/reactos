@@ -5042,6 +5042,7 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if((infoPtr->nHotItem >= 0) && (nHit != -1))
         infoPtr->buttons[infoPtr->nHotItem].bHot = TRUE;
 
+    if (0 <= infoPtr->nButtonDown) {
 	btnPtr = &infoPtr->buttons[infoPtr->nButtonDown];
 	btnPtr->fsState &= ~TBSTATE_PRESSED;
 
@@ -5111,6 +5112,7 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    nmmouse.dwItemData = btnPtr->dwData;
 	    TOOLBAR_SendNotify ((NMHDR *) &nmmouse, infoPtr, NM_CLICK);
 	}
+    }
     return 0;
 }
 
