@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.25 2001/06/30 17:43:05 jfilby Exp $
+/* $Id: dc.c,v 1.26 2001/08/28 18:16:32 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -82,15 +82,9 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
 
 //  ---------------------------------------------------------  File Statics
 
-static HDC hDISPLAY_DC = NULL; // handle to the DISPLAY HDC
 static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave);
 
 //  -----------------------------------------------------  Public Functions
-
-HDC RetrieveDisplayHDC(VOID)
-{
-  return hDISPLAY_DC;
-}
 
 BOOL STDCALL  W32kCancelDC(HDC  hDC)
 {
@@ -102,17 +96,10 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
 
-  if(hDC == NULL)
+  OrigDC = DC_HandleToPtr(hDC);
+  if (OrigDC == NULL)
   {
-    // The OrigDC is one the DC created to reference the DISPLAY (we assume such a DC exists)
-    if(hDISPLAY_DC != NULL)
-      OrigDC = DC_HandleToPtr(hDISPLAY_DC);
-  } else {
-    OrigDC = DC_HandleToPtr(hDC);
-    if (OrigDC == NULL)
-    {
-      return  0;
-    }
+    return  0;
   }
 
   /*  Allocate a new DC based on the original DC's device  */
@@ -306,14 +293,6 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   W32kSetTextColor(hNewDC, RGB(0xff, 0xff, 0xff));
   W32kSetTextAlign(hNewDC, TA_BASELINE);
-
-  // If we've created a DC for the DISPLAY, save the reference for later CreateCompatibleDC(NULL... usage
-  if(wcscmp(Driver, L"DISPLAY") == 0)
-  {
-    hDISPLAY_DC = hNewDC;
-  }
-
-  TestMouse();
 
   return hNewDC;
 
@@ -1157,15 +1136,7 @@ PDC  DC_AllocDC(LPCWSTR  Driver)
 
 PDC  DC_FindOpenDC(LPCWSTR  Driver)
 {
-  /*  FIXME: This is just a hack to return the pointer to the DISPLAY DC.. must cater for others too!  */
-
-  if(wcscmp(Driver, L"DISPLAY"))
-  {
-    return DC_HandleToPtr(hDISPLAY_DC);
-  }
-
   return NULL;
-
 }
 
 void  DC_InitDC(PDC  DCToInit)

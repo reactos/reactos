@@ -55,11 +55,11 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
   ULONG i;
   LONG mouse_cx = 0, mouse_cy = 0;
-  HDC hDC = RetrieveDisplayHDC();
+/*  HDC hDC = RetrieveDisplayHDC();
   PDC dc = DC_HandleToPtr(hDC);
   PSURFOBJ SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
   PSURFGDI SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
-  RECTL MouseRect;
+  RECTL MouseRect; */
 
   PDEVICE_OBJECT ClassDeviceObject = NULL;
   PFILE_OBJECT FileObject = NULL;
@@ -86,8 +86,8 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     if(mouse_x > 620) mouse_x = 620;
     if(mouse_y > 460) mouse_y = 460;
 
-    if((SafetySwitch == FALSE) && (SafetySwitch2 == FALSE))
-      SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
+    if((SafetySwitch == FALSE) && (SafetySwitch2 == FALSE)) ;
+/*      SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect); */
   }
 }
 
@@ -116,7 +116,7 @@ NTSTATUS ConnectMouseClassDriver()
 
    KeInitializeEvent(&event, NotificationEvent, FALSE);
 
-   GDIInformation.CallBack     = MouseGDICallBack;
+   GDIInformation.CallBack = MouseGDICallBack;
 
    irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_MOUSE_CONNECT,
       ClassDeviceObject, &GDIInformation, sizeof(CLASS_INFORMATION), NULL, 0, TRUE, &event, &ioStatus);
@@ -131,7 +131,7 @@ NTSTATUS ConnectMouseClassDriver()
 
    return ioStatus.Status;
 }
-
+/*
 void TestMouse()
 {
   HDC hDC = RetrieveDisplayHDC();
@@ -149,15 +149,6 @@ void TestMouse()
   RECTL MouseRect;
 
   // Draw a test mouse cursor
-/*  Brush.iSolidColor = 1;
-  EngLineTo(SurfObj, NULL, &Brush, 0, 0, 15, 0, NULL, 0);
-  EngLineTo(SurfObj, NULL, &Brush, 0, 0, 0, 15, NULL, 0);
-  EngLineTo(SurfObj, NULL, &Brush, 0, 15, 15, 0, NULL, 0);
-  Brush.iSolidColor = 15;
-  EngLineTo(SurfObj, NULL, &Brush, 1, 1, 13, 1, NULL, 0);
-  EngLineTo(SurfObj, NULL, &Brush, 1, 1, 1, 13, NULL, 0);
-  EngLineTo(SurfObj, NULL, &Brush, 1, 13, 13, 1, NULL, 0); */
-
   mouse_width  = 16;
   mouse_height = 16;
 
@@ -199,3 +190,4 @@ void TestMouse()
   ConnectMouseClassDriver();
   MouseEnabled = TRUE;
 }
+*/

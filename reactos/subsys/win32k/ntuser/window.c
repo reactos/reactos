@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.2 2001/07/06 00:05:05 rex Exp $
+/* $Id: window.c,v 1.3 2001/08/28 18:16:32 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -565,9 +565,14 @@ NtUserShowWindow(
   HWND hWnd,
   LONG nCmdShow)
 {
-  UNIMPLEMENTED
+  PWINDOW_OBJECT WindowObject;
 
-  return 0;
+  GuiCheck();
+
+  WindowObject = USEROBJ_HandleToPtr (hWnd, UO_WINDOW_MAGIC);
+
+
+  return TRUE;
 }
 
 DWORD
