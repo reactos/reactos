@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.8 2000/02/19 19:34:49 ekohl Exp $
+/* $Id: env.c,v 1.9 2000/02/27 15:45:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,7 @@
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -130,6 +131,9 @@ RtlExpandEnvironmentStrings_U (
 	int dst_max;
 	int tail;
 
+	DPRINT ("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
+	        Environment, Source, Destination, Length);
+
 	src_len = Source->Length / sizeof(WCHAR);
 	s = Source->Buffer;
 	dst_max = Destination->MaximumLength / sizeof(WCHAR);
@@ -162,7 +166,7 @@ RtlExpandEnvironmentStrings_U (
 			val.MaximumLength = dst_max * sizeof(WCHAR);
 			val.Buffer = d;
 			Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val);
-			if (!NT_SUCCESS(Status))
+			if (NT_SUCCESS(Status))
 			{
 				d += val.Length / sizeof(WCHAR);
 				dst_max -= val.Length / sizeof(WCHAR);
@@ -190,6 +194,7 @@ copy:
 	if (dst_max)
 		Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
+	DPRINT ("Destination %wZ\n", Destination);
 	return Status;
 }
 
@@ -419,18 +424,22 @@ RtlQueryEnvironmentVariable_U (
 	PWSTR val;
 	int varlen;
 	int len;
+	BOOLEAN SysEnvUsed = FALSE;
 
 	DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
 	       Environment, Name, Value);
 
-	if (!Environment)
+	if (Environment == NULL)
+	{
 		Environment = NtCurrentPeb()->ProcessParameters->Environment;
+		SysEnvUsed = TRUE;
+	}
 
-	if (!Environment)
+	if (Environment == NULL)
 		return STATUS_VARIABLE_NOT_FOUND;
 
 	Value->Length = 0;
-	if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
+	if (SysEnvUsed == TRUE)
 		RtlAcquirePebLock();
 
 	wcs = Environment;
@@ -454,14 +463,16 @@ RtlQueryEnvironmentVariable_U (
 				{
 					wcscpy (Value->Buffer, val);
 					DPRINT("Value %S\n", val);
+					DPRINT("Return STATUS_SUCCESS\n");
 					Status = STATUS_SUCCESS;
 				}
 				else
 				{
+					DPRINT("Return STATUS_BUFFER_TOO_SMALL\n");
 					Status = STATUS_BUFFER_TOO_SMALL;
 				}
 
-				if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
+				if (SysEnvUsed == TRUE)
 					RtlReleasePebLock ();
 
 				return Status;
@@ -470,9 +481,10 @@ RtlQueryEnvironmentVariable_U (
 		wcs++;
 	}
 
-	if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
+	if (SysEnvUsed == TRUE)
 		RtlReleasePebLock ();
 
+	DPRINT("Return STATUS_VARIABLE_NOT_FOUND\n");
 	return STATUS_VARIABLE_NOT_FOUND;
 }
 
