@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.69 2004/10/02 21:14:08 weiden Exp $
+/* $Id: proc.c,v 1.70 2004/10/19 10:27:11 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,14 +41,13 @@ GetProcessAffinityMask (HANDLE hProcess,
 			LPDWORD lpSystemAffinityMask)
 {
   PROCESS_BASIC_INFORMATION ProcessInfo;
-  ULONG BytesWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationProcess (hProcess,
 				      ProcessBasicInformation,
 				      (PVOID)&ProcessInfo,
 				      sizeof(PROCESS_BASIC_INFORMATION),
-				      &BytesWritten);
+				      NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus (Status);
@@ -280,14 +279,13 @@ GetExitCodeProcess(HANDLE hProcess,
 		   LPDWORD lpExitCode)
 {
   PROCESS_BASIC_INFORMATION ProcessBasic;
-  ULONG BytesWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationProcess(hProcess,
 				     ProcessBasicInformation,
 				     &ProcessBasic,
 				     sizeof(PROCESS_BASIC_INFORMATION),
-				     &BytesWritten);
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -308,14 +306,13 @@ InternalGetProcessId(HANDLE hProcess,
 	     LPDWORD lpProcessId)
 {
   PROCESS_BASIC_INFORMATION ProcessBasic;
-  ULONG BytesWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationProcess(hProcess,
 				     ProcessBasicInformation,
 				     &ProcessBasic,
 				     sizeof(PROCESS_BASIC_INFORMATION),
-				     &BytesWritten);
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -949,14 +946,14 @@ STDCALL
 GetProcessHandleCount(HANDLE hProcess,
                       PDWORD pdwHandleCount)
 {
-    ULONG phc, BytesWritten;
+    ULONG phc;
     NTSTATUS Status;
 
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessHandleCount,
                                        &phc,
                                        sizeof(ULONG),
-                                       &BytesWritten);
+                                       NULL);
     if(NT_SUCCESS(Status))
     {
       *pdwHandleCount = phc;
