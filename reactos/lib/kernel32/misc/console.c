@@ -1,10 +1,11 @@
-/* $Id: console.c,v 1.61 2003/07/29 16:42:35 royce Exp $
+/* $Id: console.c,v 1.62 2003/08/07 12:17:56 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/console.c
  * PURPOSE:         Win32 server console functions
- * PROGRAMMER:      ???
+ * PROGRAMMER:      James Tabor 
+ *			<jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
  * UPDATE HISTORY:
  *	199901?? ??	Created
  *	19990204 EA	SetConsoleTitleA
