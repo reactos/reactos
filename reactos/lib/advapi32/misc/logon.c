@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.8 2004/07/10 13:12:24 ekohl Exp $
+/* $Id: logon.c,v 1.9 2004/07/10 21:15:26 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -579,7 +579,8 @@ LogonUserW (LPWSTR lpszUsername,
   PSID UserSid = NULL;
   PSID PrimaryGroupSid = NULL;
   PSID OwnerSid = NULL;
-  ACL Dacl;
+  PSID LocalSystemSid;
+  PACL Dacl;
   NTSTATUS Status;
   SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
   unsigned i;
@@ -626,7 +627,7 @@ LogonUserW (LPWSTR lpszUsername,
 				  &OwnerSid);
   if (NULL == TokenGroups)
     {
-      RtlFreeSid (UserSid);
+      RtlFreeSid(UserSid);
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
@@ -639,7 +640,7 @@ LogonUserW (LPWSTR lpszUsername,
   if (NULL == TokenPrivileges)
     {
       FreeGroupSids(TokenGroups);
-      RtlFreeSid (UserSid);
+      RtlFreeSid(UserSid);
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
@@ -661,48 +662,85 @@ LogonUserW (LPWSTR lpszUsername,
 
   TokenOwner.Owner = OwnerSid;
   TokenPrimaryGroup.PrimaryGroup = PrimaryGroupSid;
-//  TokenPrimaryGroup.PrimaryGroup = UserSid;
 
-  Status = RtlCreateAcl (&Dacl, sizeof(ACL), ACL_REVISION);
-  if (!NT_SUCCESS(Status))
+
+  Dacl = RtlAllocateHeap(GetProcessHeap(), 0, 1024);
+  if (Dacl == NULL)
     {
       FreeGroupSids(TokenGroups);
-      RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-      RtlFreeSid (UserSid);
+      RtlFreeSid(UserSid);
+      SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
 
-  TokenDefaultDacl.DefaultDacl = &Dacl;
-
-  memcpy (TokenSource.SourceName,
-	  "**ANON**",
-	  8);
-  Status = NtAllocateLocallyUniqueId (&TokenSource.SourceIdentifier);
+  Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
   if (!NT_SUCCESS(Status))
     {
+      RtlFreeHeap(GetProcessHeap(), 0, Dacl);
       FreeGroupSids(TokenGroups);
       RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-      RtlFreeSid (UserSid);
+      RtlFreeSid(UserSid);
       return FALSE;
     }
 
-  Status = NtCreateToken (phToken,
-			  TOKEN_ALL_ACCESS,
-			  &ObjectAttributes,
-			  TokenPrimary,
-			  &AuthenticationId,
-			  &ExpirationTime,
-			  &TokenUser,
-			  TokenGroups,
-			  TokenPrivileges,
-			  &TokenOwner,
-			  &TokenPrimaryGroup,
-			  &TokenDefaultDacl,
-			  &TokenSource);
+  RtlAddAccessAllowedAce(Dacl,
+			 ACL_REVISION,
+			 GENERIC_ALL,
+			 OwnerSid);
 
+  RtlAllocateAndInitializeSid(&SystemAuthority,
+			      1,
+			      SECURITY_LOCAL_SYSTEM_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      SECURITY_NULL_RID,
+			      &LocalSystemSid);
+
+  /* SID: S-1-5-18 */
+  RtlAddAccessAllowedAce(Dacl,
+			 ACL_REVISION,
+			 GENERIC_ALL,
+			 LocalSystemSid);
+
+  RtlFreeSid(LocalSystemSid);
+
+  TokenDefaultDacl.DefaultDacl = Dacl;
+
+  memcpy(TokenSource.SourceName,
+	 "User32  ",
+	 8);
+  Status = NtAllocateLocallyUniqueId(&TokenSource.SourceIdentifier);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeHeap(GetProcessHeap(), 0, Dacl);
+      FreeGroupSids(TokenGroups);
+      RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
+      RtlFreeSid(UserSid);
+      return FALSE;
+    }
+
+  Status = NtCreateToken(phToken,
+			 TOKEN_ALL_ACCESS,
+			 &ObjectAttributes,
+			 TokenPrimary,
+			 &AuthenticationId,
+			 &ExpirationTime,
+			 &TokenUser,
+			 TokenGroups,
+			 TokenPrivileges,
+			 &TokenOwner,
+			 &TokenPrimaryGroup,
+			 &TokenDefaultDacl,
+			 &TokenSource);
+
+  RtlFreeHeap(GetProcessHeap(), 0, Dacl);
   FreeGroupSids(TokenGroups);
   RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-  RtlFreeSid (UserSid);
+  RtlFreeSid(UserSid);
 
   return NT_SUCCESS(Status);
 }
