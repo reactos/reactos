@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.6 2003/09/11 08:32:42 gvg Exp $
+/* $Id: static.c,v 1.7 2003/09/11 22:10:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -296,6 +296,18 @@ static LRESULT CALLBACK StaticWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPA
     case WM_GETDLGCODE:
         return DLGC_STATIC;
 
+    case WM_LBUTTONDOWN:
+	if (! (full_style & SS_NOTIFY)) return 0;
+	SendMessageW(GetParent(hwnd), WM_COMMAND,
+	             MAKEWPARAM((WORD) GetWindowLongW(hwnd, GWL_ID), STN_CLICKED), (LPARAM) hwnd);
+	return 0;
+
+    case WM_LBUTTONDBLCLK:
+	if (! (full_style & SS_NOTIFY)) return 0;
+	SendMessageW(GetParent(hwnd), WM_COMMAND,
+	             MAKEWPARAM((WORD) GetWindowLongW(hwnd, GWL_ID), STN_DBLCLK), (LPARAM) hwnd);
+	return 0;
+
     case STM_GETIMAGE:
     case STM_GETICON:
         return GetWindowLongA( hwnd, HICON_GWL_OFFSET );
@@ -385,8 +397,20 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     if (style & SS_NOPREFIX)
 	wFormat |= DT_NOPREFIX;
-    if (SS_WORDELLIPSIS == (style & SS_WORDELLIPSIS))
+    switch(style & SS_ELLIPSISMASK)
+    {
+    case SS_WORDELLIPSIS:
 	wFormat |= DT_WORD_ELLIPSIS | DT_SINGLELINE;
+	break;
+    case SS_ENDELLIPSIS:
+	wFormat |= DT_END_ELLIPSIS;
+	wFormat &= ~DT_WORDBREAK;
+	break;
+    case SS_PATHELLIPSIS:
+	wFormat |= DT_PATH_ELLIPSIS;
+	wFormat &= ~DT_WORDBREAK;
+	break;
+    }
 
     if ((hFont = (HFONT)GetWindowLongA( hwnd, HFONT_GWL_OFFSET ))) SelectObject( hdc, hFont );
 
