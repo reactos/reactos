@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.2 2002/04/10 21:30:21 ea Exp $
+/* $Id: init.c,v 1.3 2002/04/14 18:06:39 ea Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS POSIX+ Subsystem
@@ -28,7 +28,7 @@ VOID STDCALL __PdxInitializeData (int * errno_arg, char *** environ_arg)
 /*
  * Called by DLL's entry point when reason==PROCESS_ATTACH.
  */
-NTATATUS STDCALL PsxConnectApiPort (VOID)
+NTSTATUS STDCALL PsxConnectApiPort (VOID)
 {
     UNICODE_STRING              usApiPortName;
     LPWSTR                      wsApiPortName = L"\\"PSX_NS_SUBSYSTEM_DIRECTORY_NAME"\\"PSX_NS_API_PORT_NAME;
@@ -39,7 +39,7 @@ NTATATUS STDCALL PsxConnectApiPort (VOID)
     ULONG                       ConnectDataLength = sizeof ConnectData;
 
     RtlInitUnicodeString (& usApiPortName, wsApiPortName);
-    RtlZeroMemory (Sqos, sizeof Sqos);
+    RtlZeroMemory (& Sqos, sizeof Sqos);
     ConnectData.ConnectionType = PSX_CONNECTION_TYPE_PROCESS;
     ConnectData.Version        = PSX_LPC_PROTOCOL_VERSION;
     ConnectData.PortIdentifier = 0;
