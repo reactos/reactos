@@ -58,6 +58,7 @@ NtLockFile (
 	IO_STATUS_BLOCK		LocalIoStatusBlock;
 	PIO_STATUS_BLOCK IoStatusBlock;
 	PDEVICE_OBJECT	DeviceObject;
+   ULONG FobFlags;
 
 	//FIXME: instead of this, use SEH when available?
 	if (!Length || !ByteOffset)	{
@@ -65,13 +66,9 @@ NtLockFile (
 		goto fail;
 	}
 
-	/*
-	BUGBUG: ObReferenceObjectByHandle fails if DesiredAccess=0 and mode=UserMode!
-	It should ONLY fail if we desire an access that conflict with granted access!
-	*/
 	Status = ObReferenceObjectByHandle(
 	  				 FileHandle,
-				     FILE_READ_DATA,//BUGBUG: have to use something...but shouldn't have to!
+				     0,
 				     IoFileObjectType,
 				     ExGetPreviousMode(),
 				     (PVOID*)&FileObject,
@@ -127,7 +124,6 @@ NtLockFile (
 	StackPtr = IoGetNextIrpStackLocation(Irp);
 	StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
 	StackPtr->MinorFunction = IRP_MN_LOCK;
-	StackPtr->DeviceObject = DeviceObject;
 	StackPtr->FileObject = FileObject;
 	
 	if (ExclusiveLock) StackPtr->Flags |= SL_EXCLUSIVE_LOCK;
@@ -157,15 +153,17 @@ NtLockFile (
 					TRUE,  
 					TRUE  );
 
+   //can't touch FileObject after IoCallDriver since it might be freed
+   FobFlags = FileObject->Flags;
   	Status = IofCallDriver(DeviceObject, Irp);
 
-	if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO)) {
+   if (Status == STATUS_PENDING && (FobFlags & FO_SYNCHRONOUS_IO)) {
 
 		Status = KeWaitForSingleObject(
 							Event,
 							Executive,
 							ExGetPreviousMode() , 
-							(FileObject->Flags & FO_ALERTABLE_IO) ? TRUE : FALSE,
+                     (FobFlags & FO_ALERTABLE_IO) ? TRUE : FALSE,
 							NULL
 							);
 
@@ -181,7 +179,7 @@ NtLockFile (
 		Status = LocalIoStatusBlock.Status;
 	}
 
-	if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+   if (FobFlags & FO_SYNCHRONOUS_IO)
 		*UserIoStatusBlock = LocalIoStatusBlock;
 
 	return Status;
