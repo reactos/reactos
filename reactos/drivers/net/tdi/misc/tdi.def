@@ -1,0 +1,47 @@
+; $Id: tdi.def,v 1.1 1999/11/20 10:21:18 ea Exp $
+;
+; TDI.SYS Kernel Module - ReactOS Operating System
+;
+LIBRARY TDI.SYS
+
+EXPORTS
+CTEAllocateString
+CTEBlock
+CTEInitEvent
+CTEInitString
+CTEInitTimer
+CTEInitialize
+CTELogEvent
+CTEScheduleEvent
+CTESignal
+CTEStartTimer
+CTESystemUpTime
+TdiBuildNetbiosAddress
+TdiBuildNetbiosAddressEa
+TdiCopyBufferToMdl
+TdiCopyMdlToBuffer
+TdiDefaultChainedRcvDatagramHandler
+TdiDefaultChainedRcvExpeditedHandler
+TdiDefaultChainedReceiveHandler
+TdiDefaultConnectHandler
+TdiDefaultDisconnectHandler
+TdiDefaultErrorHandler
+TdiDefaultRcvDatagramHandler
+TdiDefaultRcvExpeditedHandler
+TdiDefaultReceiveHandler
+TdiDefaultSendPossibleHandler
+TdiDeregisterAddressChangeHandler
+TdiDeregisterDeviceObject
+TdiDeregisterNetAddress
+TdiDeregisterNotificationHandler
+TdiInitialize
+TdiMapBuffer
+TdiMapUserRequest
+TdiOpenNetbiosAddress
+TdiRegisterAddressChangeHandler
+TdiRegisterDeviceObject
+TdiRegisterNetAddress
+TdiRegisterNotificationHandler
+TdiReturnChainedReceives
+TdiUnmapBuffer
+; EOF
