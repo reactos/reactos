@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.191 2004/09/16 11:46:17 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.192 2004/09/22 22:31:46 weiden Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -920,7 +920,7 @@ PsIsProcessBeingDebugged@4
 PsIsSystemThread@4
 PsIsThreadImpersonating@4
 PsIsThreadTerminating@4
-;PsJobType DATA
+PsJobType DATA
 PsLookupProcessByProcessId@8
 PsLookupProcessThreadByCid@12
 PsLookupThreadByThreadId@8

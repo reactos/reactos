@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.21 2004/08/15 16:39:10 chorns Exp $
+/* $Id: psmgr.c,v 1.22 2004/09/22 22:31:46 weiden Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -25,6 +25,7 @@ VOID PiShutdownProcessManager(VOID)
 VOID INIT_FUNCTION
 PiInitProcessManager(VOID)
 {
+   PsInitJobManagment();
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();

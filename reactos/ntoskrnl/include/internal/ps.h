@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.67 2004/09/22 14:53:26 weiden Exp $
+/* $Id: ps.h,v 1.68 2004/09/22 22:31:46 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -640,6 +640,8 @@ typedef struct _EJOB
   FAST_MUTEX MemoryLimitsLock;
 } EJOB;
 #include <poppack.h>
+
+VOID INIT_FUNCTION PsInitJobManagment(VOID);
 
 #endif /* ASSEMBLER */
 

@@ -14,7 +14,62 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+POBJECT_TYPE EXPORTED PsJobType = NULL;
+
+LIST_ENTRY PsJobListHead;
+static KSPIN_LOCK PsJobListLock;
+
+static GENERIC_MAPPING PiJobMapping = {PROCESS_READ,
+                                       PROCESS_WRITE,
+                                       PROCESS_EXECUTE,
+                                       PROCESS_ALL_ACCESS};
+
 /* FUNCTIONS *****************************************************************/
+
+VOID STDCALL
+PiDeleteJob(PVOID ObjectBody)
+{
+  KIRQL oldIrql;
+  PEJOB Job = (PEJOB)ObjectBody;
+  
+  KeAcquireSpinLock(&PsJobListLock, &oldIrql);
+  RemoveEntryList(&Job->JobLinks);
+  KeReleaseSpinLock(&PsJobListLock, oldIrql);
+}
+
+VOID INIT_FUNCTION
+PsInitJobManagment(VOID)
+{
+  PsJobType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+
+  PsJobType->Tag = TAG('E', 'J', 'O', 'B');
+  PsJobType->TotalObjects = 0;
+  PsJobType->TotalHandles = 0;
+  PsJobType->MaxObjects = ULONG_MAX;
+  PsJobType->MaxHandles = ULONG_MAX;
+  PsJobType->PagedPoolCharge = 0;
+  PsJobType->NonpagedPoolCharge = sizeof(EJOB);
+  PsJobType->Mapping = &PiJobMapping;
+  PsJobType->Dump = NULL;
+  PsJobType->Open = NULL;
+  PsJobType->Close = NULL;
+  PsJobType->Delete = PiDeleteJob;
+  PsJobType->Parse = NULL;
+  PsJobType->Security = NULL;
+  PsJobType->QueryName = NULL;
+  PsJobType->OkayToClose = NULL;
+  PsJobType->Create = NULL;
+  PsJobType->DuplicationNotify = NULL;
+  
+  RtlRosInitUnicodeStringFromLiteral(&PsJobType->TypeName, L"Job");
+  
+  ObpCreateTypeObject(PsJobType);
+  
+  InitializeListHead(&PsJobListHead);
+  KeInitializeSpinLock(&PsJobListLock);
+}
 
 /*
  * @unimplemented
