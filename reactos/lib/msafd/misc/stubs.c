@@ -152,20 +152,6 @@ WSPSetSockOpt(
     return 0;
 }
 
-
-INT
-WSPAPI
-WSPShutdown(
-    IN  SOCKET s,
-    IN  INT how,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
 INT
 WSPAPI
 WSPStringToAddress(

@@ -11,23 +11,102 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
-#include <wsahelp.h>
+#include <wsahelp.h> /* comment for msvc */
+//#include "C:\Programming\ReactOS\reactos\w32api\include\wsahelp.h" uncomment for MSVC
 #include <winsock2.h>
 #include <ws2spi.h>
-#include <ddk/tdi.h>
+//#include "C:\Programming\ReactOS\reactos\w32api\include\ddk\tdi.h" uncomment for MSVC
+#include <ddk/tdi.h> /* comment for msvc */
 #include <afd/shared.h>
+#include <helpers.h>
 #include <debug.h>
-
-/*typedef _MSAFD_LISTEN_REQUEST
-{
-  LIST_ENTRY ListEntry;
-  HANDLE Socket;
-} MSAFD_LISTEN_REQUEST, *PMSAFD_LISTEN_REQUEST;*/
-
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
 extern LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
+extern LIST_ENTRY SockHelpersListHead;
+extern HANDLE SockEvent;
+
+typedef enum _SOCKET_STATE {
+    SocketOpen,
+    SocketBound,
+    SocketBoundUdp,
+    SocketConnected,
+    SocketClosed
+} SOCKET_STATE, *PSOCKET_STATE;
+
+typedef struct _SOCK_SHARED_INFO {
+    SOCKET_STATE				State;
+    INT							AddressFamily;
+    INT							SocketType;
+    INT							Protocol;
+    INT							SizeOfLocalAddress;
+    INT							SizeOfRemoteAddress;
+    ULONG						LingerData;
+    ULONG						SendTimeout;
+    ULONG						RecvTimeout;
+    ULONG						SizeOfRecvBuffer;
+    ULONG						SizeOfSendBuffer;
+    struct {
+        BOOLEAN					Listening:1;
+        BOOLEAN					Broadcast:1;
+        BOOLEAN					Debug:1;
+        BOOLEAN					OobInline:1;
+        BOOLEAN					ReuseAddresses:1;
+        BOOLEAN					ExclusiveAddressUse:1;
+        BOOLEAN					NonBlocking:1;
+        BOOLEAN					DontUseWildcard:1;
+        BOOLEAN					ReceiveShutdown:1;
+        BOOLEAN					SendShutdown:1;
+        BOOLEAN					UseDelayedAcceptance:1;
+		BOOLEAN					UseSAN:1;
+    }; // Flags
+    DWORD						CreateFlags;
+    DWORD						CatalogEntryId;
+    DWORD						ServiceFlags1;
+    DWORD						ProviderFlags;
+    GROUP						GroupID;
+    DWORD						GroupType;
+    INT							GroupPriority;
+    INT							SocketLastError;
+    HWND						hWnd;
+    LONG						Unknown;
+    DWORD						SequenceNumber;
+    UINT						wMsg;
+    LONG						Event;
+    LONG						DisabledEvents;
+} SOCK_SHARED_INFO, *PSOCK_SHARED_INFO;
+
+typedef struct _SOCKET_INFORMATION {
+    ULONG						RefCount;
+    SOCKET						Handle;
+	SOCK_SHARED_INFO			SharedData;
+    DWORD						HelperEvents;
+    PHELPER_DATA				HelperData;
+    PVOID						HelperContext;
+    PSOCKADDR					LocalAddress;
+    PSOCKADDR					RemoteAddress;
+    HANDLE						TdiAddressHandle;
+    HANDLE						TdiConnectionHandle;
+    PVOID						AsyncData;
+    HANDLE						EventObject;
+    LONG						NetworkEvents;
+    CRITICAL_SECTION			Lock;
+    PVOID						SanData;
+	BOOL						TrySAN;
+	SOCKADDR					WSLocalAddress;
+	SOCKADDR					WSRemoteAddress;
+} SOCKET_INFORMATION, *PSOCKET_INFORMATION;
+
+
+typedef struct _SOCKET_CONTEXT {
+	SOCK_SHARED_INFO			SharedData;
+	ULONG						SizeOfHelperData;
+	ULONG						Padding;
+	SOCKADDR					LocalAddress;
+	SOCKADDR					RemoteAddress;
+	/* Plus Helper Data */
+} SOCKET_CONTEXT, *PSOCKET_CONTEXT;
 
 SOCKET
 WSPAPI
@@ -314,6 +393,28 @@ WSPStringToAddress(
     IN OUT  LPINT lpAddressLength,
     OUT     LPINT lpErrno);
 
+
+PSOCKET_INFORMATION GetSocketStructure(
+	SOCKET Handle
+);
+
+int GetSocketInformation(
+	PSOCKET_INFORMATION Socket,
+	ULONG				AfdInformationClass,
+	PULONG Ulong		OPTIONAL,
+	PLARGE_INTEGER		LargeInteger OPTIONAL
+);
+
+int SetSocketInformation(
+	PSOCKET_INFORMATION Socket,
+	ULONG				AfdInformationClass,
+	PULONG				Ulong		OPTIONAL,
+	PLARGE_INTEGER		LargeInteger OPTIONAL
+);
+
+int CreateContext(
+	PSOCKET_INFORMATION Socket
+);
 #endif /* __MSAFD_H */
 
 /* EOF */

@@ -3,6 +3,6 @@
 LIBRARY msafd.dll
 
 EXPORTS
-WSPStartup@76
+WSPStartup=_WSPStartup@76
 
 ; EOF
