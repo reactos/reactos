@@ -95,16 +95,19 @@ int TCPSocketState(void *ClientData,
 		TI_DbgPrint(MID_TRACE,
 			    ("Completing Receive Request: %x\n", 
 			     Bucket->Request));
-		
+
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
-	    } else if( Status == STATUS_PENDING ) {
+	    } else if( Status == STATUS_PENDING || 
+		       (Status == STATUS_SUCCESS && Received == 0) ) {
 		InsertHeadList( &Connection->ReceiveRequest,
 				&Bucket->Entry );
 		break;
 	    } else {
+		TI_DbgPrint(MID_TRACE,
+			    ("Completing Receive request: %x %x\n",
+			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
-		break;
 	    }
 	}
     } 
@@ -116,7 +119,6 @@ void TCPPacketSendComplete( PVOID Context,
 			    PNDIS_PACKET NdisPacket,
 			    NDIS_STATUS NdisStatus ) {
     TI_DbgPrint(MID_TRACE,("called\n"));
-    /* FreeNdisPacket( NdisPacket ); */
 }
 
 #define STRINGIFY(x) #x
