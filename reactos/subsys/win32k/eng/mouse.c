@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.34 2003/08/25 23:55:45 weiden Exp $
+/* $Id: mouse.c,v 1.35 2003/08/26 00:33:53 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -278,18 +278,27 @@ MouseMoveCursor(LONG X, LONG Y)
   ULONG TickCount;
   static ULONG ButtonsDown = 0;
   
-  hDC = IntGetScreenDC();
-  
-  if(!hDC || !InputWindowStation)
+  if(!InputWindowStation)
     return FALSE;
   
   if(IntGetWindowStationObject(InputWindowStation))
   {
+    CurInfo = &InputWindowStation->SystemCursor;
+    if(!CurInfo->Enabled)
+    {
+      ObDereferenceObject(InputWindowStation);
+      return FALSE;
+    }
+    hDC = IntGetScreenDC();
+    if(!hDC)
+    {
+      ObDereferenceObject(InputWindowStation);
+      return FALSE;
+    }
     dc = DC_LockDc(hDC);
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDC );
-    CurInfo = &InputWindowStation->SystemCursor;
     CheckClipCursor(&X, &Y, CurInfo);
     if((X != CurInfo->x) || (Y != CurInfo->y))
     {
@@ -355,6 +364,11 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     CurInfo = &InputWindowStation->SystemCursor;
     SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
     MouseEnabled = CurInfo->Enabled;
+    if(!MouseEnabled)
+    {
+      ObDereferenceObject(InputWindowStation);
+      return;
+    }
     mouse_ox = CurInfo->x;
     mouse_oy = CurInfo->y;
   }
