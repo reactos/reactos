@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.2 2004/02/28 11:30:59 ekohl Exp $
+/* $Id: registry.c,v 1.3 2004/03/14 18:15:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -52,7 +52,7 @@ CopyKey (HKEY hDstKey,
 		       NULL,
 		       NULL))
     {
-      DPRINT1("Error: %lu\n", GetLastError ());
+      DPRINT1 ("RegQueryInfoKey() failed (Error %lu)\n", GetLastError ());
       return FALSE;
     }
 
@@ -86,7 +86,7 @@ CopyKey (HKEY hDstKey,
 			     NULL,
 			     &LastWrite))
 	    {
-	      DPRINT1("Subkey enumeration failed (Error %lu)\n", GetLastError());
+	      DPRINT ("Subkey enumeration failed (Error %lu)\n", GetLastError());
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
@@ -103,7 +103,7 @@ CopyKey (HKEY hDstKey,
 			       &hDstSubKey,
 			       &dwDisposition))
 	    {
-	      DPRINT1("Subkey creation failed (Error %lu)\n", GetLastError());
+	      DPRINT ("Subkey creation failed (Error %lu)\n", GetLastError());
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
@@ -116,7 +116,7 @@ CopyKey (HKEY hDstKey,
 			     KEY_READ,
 			     &hSrcSubKey))
 	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
+	      DPRINT ("Error: %lu\n", GetLastError());
 	      RegCloseKey (hDstSubKey);
 	      HeapFree (GetProcessHeap (),
 			0,
@@ -127,7 +127,7 @@ CopyKey (HKEY hDstKey,
 	  if (!CopyKey (hDstSubKey,
 			hSrcSubKey))
 	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
+	      DPRINT ("Error: %lu\n", GetLastError());
 	      RegCloseKey (hSrcSubKey);
 	      RegCloseKey (hDstSubKey);
 	      HeapFree (GetProcessHeap (),
@@ -153,7 +153,7 @@ CopyKey (HKEY hDstKey,
 				dwMaxValueNameLength * sizeof(WCHAR));
       if (lpNameBuffer == NULL)
 	{
-	  DPRINT1("Buffer allocation failed\n");
+	  DPRINT ("Buffer allocation failed\n");
 	  return FALSE;
 	}
 
@@ -162,7 +162,7 @@ CopyKey (HKEY hDstKey,
 				dwMaxValueLength);
       if (lpDataBuffer == NULL)
 	{
-	  DPRINT1("Buffer allocation failed\n");
+	  DPRINT ("Buffer allocation failed\n");
 	  HeapFree (GetProcessHeap (),
 		    0,
 		    lpNameBuffer);
@@ -241,7 +241,7 @@ CreateUserHive (LPCWSTR lpKeyName)
 		     KEY_READ,
 		     &hDefaultKey))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1 ("Error: %lu\n", GetLastError());
       return FALSE;
     }
 
@@ -251,7 +251,7 @@ CreateUserHive (LPCWSTR lpKeyName)
 		     KEY_ALL_ACCESS,
 		     &hUserKey))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1 ("Error: %lu\n", GetLastError());
       RegCloseKey (hDefaultKey);
       return FALSE;
     }

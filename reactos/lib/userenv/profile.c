@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.6 2004/03/13 20:49:07 ekohl Exp $
+/* $Id: profile.c,v 1.7 2004/03/14 18:15:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -506,8 +506,85 @@ GetUserProfileDirectoryW (HANDLE hToken,
 			  LPWSTR lpProfileDir,
 			  LPDWORD lpcchSize)
 {
-  /* FIXME */
+  UNICODE_STRING SidString;
+  WCHAR szKeyName[MAX_PATH];
+  WCHAR szRawImagePath[MAX_PATH];
+  WCHAR szImagePath[MAX_PATH];
+  DWORD dwLength;
+  HKEY hKey;
+
+  if (!GetUserSidFromToken (hToken,
+			    &SidString))
+    {
+      DPRINT1 ("GetUserSidFromToken() failed\n");
+      return FALSE;
+    }
+
+  DPRINT ("SidString: '%wZ'\n", &SidString);
+
+  wcscpy (szKeyName,
+	  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+  wcscat (szKeyName,
+	  SidString.Buffer);
+
+  RtlFreeUnicodeString (&SidString);
+
+  DPRINT ("KeyName: '%S'\n", szKeyName);
+
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     szKeyName,
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1 ("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			L"ProfileImagePath",
+			NULL,
+			NULL,
+			(LPBYTE)szRawImagePath,
+			&dwLength))
+    {
+      DPRINT1 ("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  DPRINT ("RawImagePath: '%S'\n", szRawImagePath);
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szRawImagePath,
+				  szImagePath,
+				  MAX_PATH))
+    {
+      DPRINT1 ("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  DPRINT ("ImagePath: '%S'\n", szImagePath);
+
+  dwLength = wcslen (szImagePath);
+  if (dwLength > *lpcchSize)
+    {
+      DPRINT1 ("Buffer too small\n");
+      SetLastError (ERROR_INSUFFICIENT_BUFFER);
+      return FALSE;
+    }
+
+  *lpcchSize = dwLength;
+  wcscpy (lpProfileDir,
+	  szImagePath);
+
+  return TRUE;
+#if 0
   return GetDefaultUserProfileDirectoryW (lpProfileDir, lpcchSize);
+#endif
 }
 
 
@@ -601,6 +678,17 @@ LoadUserProfileW (HANDLE hToken,
       return FALSE;
     }
 
+  if (RegOpenKeyExW (HKEY_USERS,
+		     SidString.Buffer,
+		     0,
+		     KEY_ALL_ACCESS,
+		     (PHKEY)&lpProfileInfo->hProfile))
+    {
+      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
   RtlFreeUnicodeString (&SidString);
 
   DPRINT ("LoadUserProfileW() done\n");
@@ -616,6 +704,15 @@ UnloadUserProfile (HANDLE hToken,
   UNICODE_STRING SidString;
 
   DPRINT ("UnloadUserProfile() called\n");
+
+  if (hProfile == NULL)
+    {
+      DPRINT1 ("Invalide profile handle\n");
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  RegCloseKey (hProfile);
 
   if (!GetUserSidFromToken (hToken,
 			    &SidString))
