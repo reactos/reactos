@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.2 2002/12/21 19:24:51 jfilby Exp $
+/* $Id: scrollbar.c,v 1.3 2002/12/22 10:50:04 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,7 +93,7 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect /* ,
 
   if (pixels <= 2 * NtUserGetSystemMetrics (SM_CXVSCROLL) + SCROLL_MIN_RECT)
     {
-      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0;
+/*      info.dxyLineButton = info.xyThumbTop = info.xyThumbBottom = 0; */
     }
   else
     {
