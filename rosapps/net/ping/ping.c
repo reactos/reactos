@@ -1,4 +1,4 @@
-/* $Id: ping.c,v 1.2 2004/01/12 22:45:53 sedwards Exp $
+/* $Id: ping.c,v 1.3 2004/01/16 04:43:19 mtempel Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
@@ -8,6 +8,7 @@
  * REVISIONS:
  *   CSH  01/09/2000 Created
  */
+//#include <windows.h>
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdarg.h>
@@ -18,6 +19,9 @@
 //#define DBG
 
 /* FIXME: Where should this be? */
+#ifdef CopyMemory
+#undef CopyMemory
+#endif
 #define CopyMemory(Destination, Source, Length) memcpy(Destination, Source, Length);
 
 /* Should be in the header files somewhere (exported by ntdll.dll) */
@@ -421,7 +425,7 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     if (size  < IphLength + ICMP_MINSIZE) {
 #ifdef DBG
         printf("Bad size (0x%X < 0x%X)\n", size, IphLength + ICMP_MINSIZE);
-#endif DBG
+#endif /* DBG */
         return FALSE;
     }
 
@@ -430,14 +434,14 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY) {
 #ifdef DBG
         printf("Bad ICMP type (0x%X should be 0x%X)\n", Icmp->Icmp.Type, ICMPMSG_ECHOREPLY);
-#endif DBG
+#endif /* DBG */
         return FALSE;
     }
 
     if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId()) {
 #ifdef DBG
         printf("Bad ICMP id (0x%X should be 0x%X)\n", Icmp->Icmp.Id, (USHORT)GetCurrentProcessId());
-#endif DBG
+#endif /* DBG */
         return FALSE;
     }
 
@@ -510,7 +514,7 @@ BOOL Ping(VOID)
         printf("Sending packet\n");
         DisplayBuffer(Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize);
         printf("\n");
-#endif DBG
+#endif /* DBG */
 
         Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
             0, (SOCKADDR*)&Target, sizeof(Target));
@@ -541,7 +545,7 @@ BOOL Ping(VOID)
         printf("Received packet\n");
         DisplayBuffer(Buffer, Status);
         printf("\n");
-#endif DBG
+#endif /* DBG */
     }
     if (Status == SOCKET_ERROR) {
         if (WSAGetLastError() != WSAETIMEDOUT) {
