@@ -17,8 +17,7 @@
 
 VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);
-VOID KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
-VOID KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr);
+BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 
 VOID KiInterruptDispatch(ULONG irq);
 VOID KiDispatchInterrupt(ULONG irq);

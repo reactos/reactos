@@ -79,15 +79,41 @@ ULONG EiNrUsedBlocks = 0;
  *      If set then the page is used by a kmalloc block
  */
 static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
+static KSPIN_LOCK AllocMapLock;
 
 unsigned int EiFreeNonPagedPool = 0;
 unsigned int EiUsedNonPagedPool = 0;
 
 /* FUNCTIONS ***************************************************************/
 
+PVOID ExAllocatePage(VOID)
+{
+   KIRQL oldlvl;
+   ULONG addr;
+   ULONG i;
+   
+   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
+   for (i=1; i<ALLOC_MAP_SIZE;i++)
+     {
+	if (!test_bit(i%32,&alloc_map[i/32]))
+	  {
+	     addr = kernel_pool_base + (i*PAGESIZE);
+	     MmSetPage(NULL,
+		       (PVOID)addr,
+		       PAGE_READWRITE,
+		       get_free_page());
+	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
+	     return((PVOID)addr);
+	  }
+     }
+   KeReleaseSpinLock(&AllocMapLock, oldlvl);
+   return(NULL);
+}
+
 VOID ExInitNonPagedPool(ULONG BaseAddress)
 {
-   kernel_pool_base=BaseAddress;
+   kernel_pool_base = BaseAddress;
+   KeInitializeSpinLock(&AllocMapLock);
 }
 
 #if 0

@@ -17,7 +17,8 @@ RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
-	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o
+	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o \
+	     ke/process.o
 
 MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/virtual.o \
              mm/mdl.o mm/zone.o mm/special.o mm/paging.o \

@@ -538,7 +538,14 @@ l10:
         add     eax,07h
         mov     [fs:di],eax
         mov     [fs:di+(0xd0000000/(1024*1024))],eax
-
+	
+	;
+	; Map the page tables from the page table
+	;
+	mov     eax,[kernel_page_directory_base]
+	add     eax,07h
+	mov     [fs:di+(0xf0000000/(1024*1024))],eax
+	
         ;
         ; Map in the kernel page table
         ;

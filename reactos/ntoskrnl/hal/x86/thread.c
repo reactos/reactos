@@ -24,6 +24,8 @@
 
 /* GLOBALS ***************************************************************/
 
+#define NR_TASKS 128
+
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
 VOID PsBeginThreadWithContextInternal(VOID);
 
@@ -93,7 +95,7 @@ static unsigned int allocate_tss_descriptor(void)
  */
 {
    unsigned int i;
-   for (i=0;i<16;i++)
+   for (i=0;i<NR_TASKS;i++)
      {
 	if (gdt[FIRST_TSS_OFFSET + i].a==0 &&
 	    gdt[FIRST_TSS_OFFSET + i].b==0)
@@ -156,13 +158,18 @@ NTSTATUS KeValidateUserContext(PCONTEXT Context)
 }
 
 NTSTATUS HalReleaseTask(PETHREAD Thread)
+/*
+ * FUNCTION: Releases the resource allocated for a thread by
+ * HalInitTaskWithContext or HalInitTask
+ * NOTE: The thread had better not be running when this is called
+ */
 {
    gdt[Thread->Tcb.Context.nr/8].a=0;
    gdt[Thread->Tcb.Context.nr/8].b=0;
    ExFreePool(Thread->Tcb.Context.KernelStackBase);
    if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
      {
-	ExFreePool(Thread->Tcb.Context.KernelStackBase);
+	ExFreePool(Thread->Tcb.Context.SavedKernelStackBase);
      }
    return(STATUS_SUCCESS);
 }
@@ -227,8 +234,8 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    Thread->Tcb.Context.cs = KERNEL_CS;
    Thread->Tcb.Context.eip = (ULONG)PsBeginThreadWithContextInternal;
    Thread->Tcb.Context.io_bitmap[0] = 0xff;
-   Thread->Tcb.Context.cr3 = (ULONG)MmGetPhysicalAddress(
-			       Thread->ThreadsProcess->Pcb.PageTableDirectory);
+   Thread->Tcb.Context.cr3 = (ULONG)
+     Thread->ThreadsProcess->Pcb.PageTableDirectory;
    Thread->Tcb.Context.ds = KERNEL_DS;
    Thread->Tcb.Context.es = KERNEL_DS;
    Thread->Tcb.Context.fs = KERNEL_DS;
@@ -242,7 +249,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
-BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
+NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
 /*
  * FUNCTION: Initializes the HAL portion of a thread object
  * ARGUMENTS:
@@ -252,7 +259,7 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
  * RETURNS: True if the function succeeded
  */
 {
-   unsigned int desc = allocate_tss_descriptor();
+   unsigned int desc;
    unsigned int length = sizeof(hal_thread_state) - 1;
    unsigned int base = (unsigned int)(&(thread->Tcb.Context));
    PULONG kernel_stack = ExAllocatePool(NonPagedPool,4096);
@@ -265,6 +272,12 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
     * Make sure
     */
    assert(sizeof(hal_thread_state)>=0x68);
+   
+   desc = allocate_tss_descriptor();
+   if (desc == 0)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
    
    /*
     * Setup a TSS descriptor
@@ -302,8 +315,8 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.cs = KERNEL_CS;
    thread->Tcb.Context.eip = (unsigned long)PsBeginThread;
    thread->Tcb.Context.io_bitmap[0] = 0xff;
-   thread->Tcb.Context.cr3 = 
-          MmGetPhysicalAddress(thread->ThreadsProcess->Pcb.PageTableDirectory);
+   thread->Tcb.Context.cr3 = (ULONG)
+     thread->ThreadsProcess->Pcb.PageTableDirectory;
    thread->Tcb.Context.ds = KERNEL_DS;
    thread->Tcb.Context.es = KERNEL_DS;
    thread->Tcb.Context.fs = KERNEL_DS;
@@ -314,8 +327,7 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.SavedKernelStackBase = NULL;
    DPRINT("Allocated %x\n",desc*8);
    
-
-   return(TRUE);
+   return(STATUS_SUCCESS);
 }
 
 void HalInitFirstTask(PETHREAD thread)

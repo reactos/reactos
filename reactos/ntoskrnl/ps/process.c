@@ -163,6 +163,7 @@ NTSTATUS STDCALL ZwCreateProcess(
    ULONG i;
    PKPROCESS KProcess;
    NTSTATUS Status;
+   PULONG PhysicalPageDirectory;
    
    DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -184,7 +185,7 @@ NTSTATUS STDCALL ZwCreateProcess(
 			    ObjectAttributes,
 			    PsProcessType);
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
-				0,
+				ProcessType,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &(Process->Pcb);
@@ -194,16 +195,20 @@ NTSTATUS STDCALL ZwCreateProcess(
 		       InheritObjectTable,
 		       Process);
    
-   PageDirectory = (PULONG)physical_to_linear((ULONG)get_free_page());
-   KProcess->PageTableDirectory = PageDirectory;
+   PhysicalPageDirectory = (PULONG)get_free_page();
+   PageDirectory = (PULONG)physical_to_linear((ULONG)PhysicalPageDirectory);
+   KProcess->PageTableDirectory = PhysicalPageDirectory;
    
-   CurrentPageDirectory = (PULONG)get_page_directory();
+   CurrentPageDirectory = (PULONG)physical_to_linear(
+						  (ULONG)get_page_directory());
    
    memset(PageDirectory,0,PAGESIZE);
-   for (i=768;i<1024;i++)
+   for (i=768; i<896; i++)
      {
-	PageDirectory[i]=CurrentPageDirectory[i];
+	PageDirectory[i] = CurrentPageDirectory[i];
      }
+   PageDirectory[0xf0000000 / (4*1024*1024)] 
+     = (ULONG)PhysicalPageDirectory | 0x7;
    
    /*
     * FIXME: I don't what I'm supposed to know with a section handle

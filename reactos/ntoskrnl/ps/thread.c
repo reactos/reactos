@@ -273,12 +273,8 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 VOID PsResumeThread(PETHREAD Thread)
 {
    DPRINT("PsResumeThread(Thread %x)\n",Thread);
-   
    Thread->Tcb.SuspendCount--;
-   DPRINT("Thread->Tcb.SuspendCount %d\n",Thread->Tcb.SuspendCount);
-   DPRINT("Thread->Tcb.ThreadState %d THREAD_STATE_RUNNING %d\n",
-	    Thread->Tcb.ThreadState,THREAD_STATE_RUNNING);
-   if (Thread->Tcb.SuspendCount <= 0 && 
+   if (Thread->Tcb.SuspendCount <= 0 &&
        Thread->Tcb.ThreadState != THREAD_STATE_RUNNING)
      {
         DPRINT("Setting thread to runnable\n");
@@ -386,12 +382,16 @@ NTSTATUS ZwCreateThread(PHANDLE ThreadHandle,
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
 			       DesiredAccess,ObjectAttributes);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
-   HalInitTaskWithContext(Thread,ThreadContext);
+   Status = HalInitTaskWithContext(Thread,ThreadContext);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
    Thread->StartAddress=NULL;
 
    if (Client!=NULL)
@@ -440,13 +440,17 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
 			       DesiredAccess,ObjectAttributes);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
    Thread->StartAddress=StartRoutine;
-   HalInitTask(Thread,StartRoutine,StartContext);
+   Status = HalInitTask(Thread,StartRoutine,StartContext);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
 
    if (ClientId!=NULL)
      {

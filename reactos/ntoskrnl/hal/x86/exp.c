@@ -210,9 +210,12 @@ asmlinkage void exception_handler(unsigned int edi,
      {
 	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
      }
-   DbgPrint("Process: %x\n",PsGetCurrentThread()->Cid.UniqueProcess);
-   DbgPrint("Thread: %x\n",PsGetCurrentThread()->Cid.UniqueThread);
    DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
+   __asm__("movl %%cr2,%0\n\t"
+	   : "=d" (cr2));
+   DbgPrint("cr2 %x\n",cr2);
+   DbgPrint("Process: %x\n",PsGetCurrentProcess());
+   DbgPrint("Thread: %x\n",PsGetCurrentThread()->Cid.UniqueThread);
    DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
 	    gs&0xfff);
    //   for(;;);
@@ -228,9 +231,6 @@ asmlinkage void exception_handler(unsigned int edi,
 	DbgPrint("ESP %.8x\n",esp);
      }
    
-   __asm__("movl %%cr2,%0\n\t"
-	   : "=d" (cr2));
-   DbgPrint("cr2 %x\n",cr2);
    
    if ((cs&0xffff)==KERNEL_CS)
      {
@@ -241,8 +241,8 @@ asmlinkage void exception_handler(unsigned int edi,
         printk("Stack:\n");
         for (i=0;i<16;i=i+4)
         {
-                printk("%.8x %.8x %.8x %.8x\n",stack[i],stack[i+1],stack[i+2],
-                       stack[i+3]);
+	   DbgPrint("%.8x %.8x %.8x %.8x\n",stack[i],stack[i+1],stack[i+2],
+		    stack[i+3]);
         }
         printk("Frames:\n");
         for (i=0;i<32;i++)
@@ -259,20 +259,20 @@ asmlinkage void exception_handler(unsigned int edi,
                                 sym = j;
                               }
                           }
-                        printk("  %.8x  (%s+%d)", 
-                               stack[i], 
-                               symbol_table[sym].name,
-                               stack[i] - symbol_table[sym].value);
+                        DbgPrint("  %.8x  (%s+%d)", 
+				 stack[i], 
+				 symbol_table[sym].name,
+				 stack[i] - symbol_table[sym].value);
                     }
         }
 //        #endif
      }
    else
      {
-	printk("SS:ESP %x:%x\n",ss0,esp0);
+	DbgPrint("SS:ESP %x:%x\n",ss0,esp0);
         stack=(unsigned int *)(esp0);
        
-        printk("Stack:\n");
+        DbgPrint("Stack:\n");
         for (i=0; i<16; i++)
         {
 	   if (MmIsPagePresent(NULL,&stack[i]))

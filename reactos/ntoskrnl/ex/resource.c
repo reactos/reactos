@@ -31,6 +31,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
+#include <internal/string.h>
 
 #include <internal/debug.h>
 

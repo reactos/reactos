@@ -80,7 +80,7 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
 
    PiTerminateProcessThreads(Process, ExitStatus);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   KeDispatcherObjectWakeAll(&Process->Pcb.DispatcherHeader);
+   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {

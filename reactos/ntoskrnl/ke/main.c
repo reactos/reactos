@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
  * PURPOSE:         Initalizes the kernel
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                28/05/98: Created
  */
@@ -105,6 +105,7 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 extern int edata;
 extern int end;
 
+
 asmlinkage void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -173,7 +174,8 @@ asmlinkage void _main(boot_param* _bp)
     * Load Auto configured drivers
     */
    LdrLoadAutoConfigDrivers();
-   
+
+      
   /*
    *  Launch initial process
    */

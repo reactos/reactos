@@ -233,6 +233,13 @@ typedef struct _ETHREAD {
 	LPTHREAD_START_ROUTINE  Win32StartAddress; // Should Specify a win32 start func
 	UCHAR 			LpcExitThreadCalled;
 	UCHAR 			HardErrorsAreDisabled;
+
+   
+   /*
+    * Added by David Welch (welch@cwcom.net)
+    */
+   struct _EPROCESS* OldProcess;
+
 } ETHREAD, *PETHREAD;
 
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
- * FILE:        ntoskrnl/hal/x86/page.c
+ * FILE:        ntoskrnl/mm/i386/page.c
  * PURPOSE:     low level memory managment manipulation
  * PROGRAMER:   David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
@@ -28,6 +28,9 @@
 
 #define PA_PRESENT (1<<PA_BIT_PRESENT)
 
+#define PAGETABLE_MAP     (0xf0000000)
+#define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
+
 /* FUNCTIONS ***************************************************************/
 
 static ULONG ProtectToPTE(ULONG flProtect)
@@ -50,45 +53,53 @@ static ULONG ProtectToPTE(ULONG flProtect)
    return(Attributes);
 }
 
-PULONG MmGetPageEntry(PEPROCESS Process, PVOID PAddress)
+#define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
+                                (((ULONG)v / (1024 * 1024))&(~0x3)))
+#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((ULONG)v / 1024))
+
+ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
-   ULONG page_table;
+   ULONG Entry;
+   
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeAttachProcess(Process);
+     }
+   Entry = *MmGetPageEntry(Address);
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeDetachProcess();
+     }
+   return(Entry);
+}
+
+PULONG MmGetPageEntry(PVOID PAddress)
+/*
+ * FUNCTION: Get a pointer to the page table entry for a virtual address
+ */
+{
    PULONG page_tlb;
    PULONG page_dir;
    ULONG Address = (ULONG)PAddress;
    
-   DPRINT("MmGetPageEntry(Process %x, Address %x)\n",Process,Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
-   if (Process != NULL)
+   page_dir = ADDR_TO_PDE(Address);
+   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
+   if ((*page_dir) == 0)
      {
-	page_dir = Process->Pcb.PageTableDirectory;
+//	(*page_dir) = get_free_page() | (PA_READ | PA_WRITE);
+	(*page_dir) = get_free_page() | 0x7;
+	FLUSH_TLB;
      }
-   else
-     {
-	page_dir = (PULONG)get_page_directory();
-     } 
-   
-   DPRINT("page_dir %x\n",page_dir);
-   page_tlb = (PULONG)physical_to_linear(
-			     PAGE_MASK(page_dir[VADDR_TO_PD_OFFSET(Address)]));
+   page_tlb = ADDR_TO_PTE(Address);
    DPRINT("page_tlb %x\n",page_tlb);
-
-   if (PAGE_MASK(page_dir[VADDR_TO_PD_OFFSET(Address)])==0)
-     {
-	DPRINT("Creating new page directory\n",0);
-	page_table = get_free_page();  // Returns a physical address
-	page_tlb=(PULONG)physical_to_linear(page_table);
-	memset(page_tlb,0,PAGESIZE);
-	page_dir[VADDR_TO_PD_OFFSET(Address)]=page_table+0x7;
-	
-     }
-   DPRINT("Returning %x\n",page_tlb[VADDR_TO_PT_OFFSET(Address)/4]);
-   return(&page_tlb[VADDR_TO_PT_OFFSET(Address)/4]);
+   return(page_tlb);
 }
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
-   return((*MmGetPageEntry(Process, Address)) & PA_PRESENT);
+   return((MmGetPageEntryForProcess(Process, Address)) & PA_PRESENT);
 }
 
 VOID MmSetPage(PEPROCESS Process,
@@ -99,10 +110,22 @@ VOID MmSetPage(PEPROCESS Process,
    
    ULONG Attributes = 0;
    
+   DPRINT("MmSetPage(Process %x, Address %x, flProtect %x, "
+	  "PhysicalAddress %x)\n",Process,Address,flProtect,
+	  PhysicalAddress);
+   
    Attributes = ProtectToPTE(flProtect);
    
-   (*MmGetPageEntry(Process, Address)) = PhysicalAddress | Attributes;
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeAttachProcess(Process);
+     }
+   (*MmGetPageEntry(Address)) = PhysicalAddress | Attributes;
    FLUSH_TLB;
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeDetachProcess();
+     }
 }
 
 VOID MmSetPageProtect(PEPROCESS Process,
@@ -113,10 +136,18 @@ VOID MmSetPageProtect(PEPROCESS Process,
    PULONG PageEntry;
    
    Attributes = ProtectToPTE(flProtect);
-   
-   PageEntry = MmGetPageEntry(Process,Address);
+
+   if (Process != PsGetCurrentProcess())
+     {
+	KeAttachProcess(Process);
+     }
+   PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = PAGE_MASK(*PageEntry) | Attributes;
    FLUSH_TLB;
+   if (Process != PsGetCurrentProcess())
+     {
+	KeDetachProcess();
+     }
 }
 
 PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
@@ -129,7 +160,7 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
   DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    
   SET_LARGE_INTEGER_HIGH_PART(p, 0);
-  SET_LARGE_INTEGER_LOW_PART(p, PAGE_MASK(*MmGetPageEntry(NULL,vaddr)));
+  SET_LARGE_INTEGER_LOW_PART(p, PAGE_MASK(*MmGetPageEntry(vaddr)));
    
   return p;
 }

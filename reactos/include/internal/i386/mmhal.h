@@ -9,7 +9,7 @@
 
 #define PAGESIZE (4096)
 
-PULONG MmGetPageEntry(PEPROCESS Process, PVOID Address);
+PULONG MmGetPageEntry(PVOID Address);
 
 
 /*
@@ -48,12 +48,12 @@ extern inline unsigned int linear_to_physical(unsigned int x)
 
 #define FLUSH_TLB    __asm__("movl %cr3,%eax\n\tmovl %eax,%cr3\n\t")
 
-extern inline unsigned int* get_page_directory(void)
+extern inline PULONG get_page_directory(void)
 {
         unsigned int page_dir=0;
         __asm__("movl %%cr3,%0\n\t"
                 : "=r" (page_dir));
-        return((unsigned int *)physical_to_linear(page_dir));
+        return((PULONG)page_dir);
 }
 
 

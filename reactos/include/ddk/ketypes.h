@@ -173,32 +173,15 @@ typedef struct _KDPC
  * PURPOSE: Defines a delayed procedure call object
  */
 {
-   /*
-    * PURPOSE: Magic value to check this is the current object type
-    */
    SHORT Type;
-   
-   /*
-    * PURPOSE: Target processor or zero if untargetted
-    */
    UCHAR Number;
-   
-   /*
-    * PURPOSE: Indication of desired latency before exection
-    */
-   UCHAR Importance;
-   
+   UCHAR Importance;   
    LIST_ENTRY DpcListEntry; 
    PKDEFERRED_ROUTINE DeferredRoutine;
    PVOID DeferredContext;
    PVOID SystemArgument1;
    PVOID SystemArgument2;
-   
-   /*
-    * PURPOSE: If non-zero then already in queue
-    */
    PULONG Lock;
-   
 } KDPC, *PKDPC;
 
 

@@ -3,7 +3,7 @@
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mdl.c
  * PURPOSE:      Manipulates MDLs
- * PROGRAMMER:   David Welch (welch@mcmail.com)
+ * PROGRAMMER:   David Welch (welch@cwcom.net)
  * UPDATE HISTORY: 
  *               27/05/98: Created
  */

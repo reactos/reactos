@@ -48,7 +48,7 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
  * PURPOSE: Acquires the dispatcher database lock for the caller
  */
 {
-   DPRINT("KeAcquireDispatcherDatabaseLock(Wait %x)\n",Wait);
+//   DPRINT("KeAcquireDispatcherDatabaseLock(Wait %x)\n",Wait);
    if (WaitSet && Owner == KeGetCurrentThread())
      {
 	return;
@@ -60,7 +60,7 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
 
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
 {
-   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x)\n",Wait);  
+//   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x)\n",Wait);  
    assert(Wait==WaitSet);
    if (!Wait)
      {
@@ -69,10 +69,15 @@ VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
      }
 }
 
-VOID KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
+static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 {
    PKWAIT_BLOCK current;
    PLIST_ENTRY current_entry;
+   
+   if (IsListEmpty(&hdr->WaitListHead))
+     {
+	return(FALSE);
+     }
    
    while (!IsListEmpty(&(hdr->WaitListHead)))
      {
@@ -82,9 +87,10 @@ VOID KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	DPRINT("Waking %x\n",current->Thread);
 	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
      };
+   return(TRUE);
 }
 
-BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
+static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 {
    PKWAIT_BLOCK current;
    PLIST_ENTRY current_entry;
@@ -101,29 +107,48 @@ BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
    DPRINT("Waking %x\n",current->Thread);
-   if (hdr->Type == SemaphoreType)
-      hdr->SignalState--;
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
 }
 
-VOID KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
+BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
+/*
+ * FUNCTION: Wake threads waiting on a dispatcher object
+ * NOTE: The exact semantics of waking are dependant on the type of object
+ */
 {
+   BOOL Ret;
    
    DPRINT("Entering KeDispatcherObjectWake(hdr %x)\n",hdr);
 //   DPRINT("hdr->WaitListHead %x hdr->WaitListHead.Flink %x\n",
 //	  &hdr->WaitListHead,hdr->WaitListHead.Flink);
-   if (hdr->Type==NotificationEvent)
+   switch (hdr->Type)
      {
-	KeDispatcherObjectWakeAll(hdr);
+      case NotificationEvent:
+	return(KeDispatcherObjectWakeAll(hdr));
+	
+      case SynchronizationEvent:
+	Ret = KeDispatcherObjectWakeOne(hdr);
+	if (Ret)
+	  {
+	     hdr->SignalState = FALSE;
+	  }
+	return(Ret);
+	
+      case SemaphoreType:
+	Ret = KeDispatcherObjectWakeOne(hdr);
+	if (Ret)
+	  {
+	     hdr->SignalState--;
+	  }
+	return(Ret);
+	
+      case ProcessType:
+	return(KeDispatcherObjectWakeAll(hdr));
      }
-   if (hdr->Type==SynchronizationEvent)
-     {
-        if (KeDispatcherObjectWakeOne(hdr))
-        {
-           hdr->SignalState=FALSE;
-        }
-     }
+   DbgPrint("Dispatcher object has unknown type\n");
+   KeBugCheck(0);
+   return(FALSE);
 }
  
    
@@ -149,20 +174,25 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    DISPATCHER_HEADER* hdr = (DISPATCHER_HEADER *)Object;
    KWAIT_BLOCK blk;
    
-   DPRINT("Entering KeWaitForSingleObject(Object %x)\n",Object);
-   // FIXME : if KeReleaseSemaphore called with wait just before KeWaitxxx
-   // we must do something special.
+   DPRINT("Entering KeWaitForSingleObject(Object %x) "
+	  "PsGetCurrentThread() %x\n",Object,PsGetCurrentThread());
 
    KeAcquireDispatcherDatabaseLock(FALSE);
-
+   
+   DPRINT("hdr->SignalState %d\n", hdr->SignalState);
+   
    if (hdr->SignalState > 0)
    {
-      if (hdr->Type == SynchronizationEvent)
-      {
-        hdr->SignalState=FALSE;
-      }
-      else  if (hdr->Type == SemaphoreType)
-        hdr->SignalState--;
+      switch (hdr->Type)
+	{
+	 case SynchronizationEvent:
+	   hdr->SignalState = FALSE;
+	   break;
+	   
+	 case SemaphoreType:
+	   hdr->SignalState--;
+	   break;
+	}
       KeReleaseDispatcherDatabaseLock(FALSE);
       return(STATUS_SUCCESS);
    }
@@ -187,6 +217,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
      {
 	KeCancelTimer(&KeGetCurrentThread()->TimerBlock);
      }
+   DPRINT("Returning from KeWaitForSingleObject()\n");
    return(STATUS_SUCCESS);
 }
 

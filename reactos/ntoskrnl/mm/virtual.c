@@ -18,6 +18,8 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <string.h>
+#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -106,7 +108,7 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    IO_STATUS_BLOCK IoStatus;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	    MemoryArea,Address);
+	  MemoryArea,Address);
    
    MmSetPage(NULL,
 	     Address,
@@ -150,18 +152,19 @@ asmlinkage int page_fault_handler(unsigned int cs,
     */
    unsigned int cr2;
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-   DPRINT("Page fault at address %x with eip %x\n",cr2,eip);
+   DPRINT("Page fault at address %x with eip %x in process %x\n",cr2,eip,
+	  PsGetCurrentProcess());
 
    cr2 = PAGE_ROUND_DOWN(cr2);
    
-   if (KeGetCurrentIrql()!=PASSIVE_LEVEL)
+   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
      {
 	DbgPrint("Page fault at high IRQL\n");
 	return(0);
 //	KeBugCheck(0);
      }
    
-   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    
    /*
     * Find the memory area for the faulting address
@@ -171,7 +174,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	/*
 	 * Check permissions
 	 */
-	if (cs!=KERNEL_CS)
+	if (cs != KERNEL_CS)
 	  {
 	     printk("%s:%d\n",__FILE__,__LINE__);
 	     return(0);
@@ -184,7 +187,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
      }
    
    MemoryArea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),(PVOID)cr2);
-   if (MemoryArea==NULL)
+   if (MemoryArea == NULL)
      {
 	printk("%s:%d\n",__FILE__,__LINE__);
 	return(0);
@@ -199,7 +202,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
         if (MmSectionHandleFault(MemoryArea, (PVOID)cr2)==STATUS_SUCCESS)
 	  {
-	     stat=1;
+	     stat = 1;
 	  }
 	else
 	  {
@@ -637,6 +640,16 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
 				     IN ULONG  NumberOfBytesToRead,
 				     OUT PULONG NumberOfBytesRead)
 {
+   UNIMPLEMENTED;
+}
+
+#if 0
+NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
+				     IN PVOID BaseAddress,
+				     OUT PVOID Buffer,
+				     IN ULONG  NumberOfBytesToRead,
+				     OUT PULONG NumberOfBytesRead)
+{
    PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
    ULONG i;
@@ -678,6 +691,7 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
      }
    return(STATUS_SUCCESS);
 }
+#endif
 
 NTSTATUS STDCALL NtUnlockVirtualMemory(HANDLE ProcessHandle,
 				       PVOID BaseAddress,
@@ -717,11 +731,10 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
 				      IN ULONG NumberOfBytesToWrite,
 				      OUT PULONG NumberOfBytesWritten)
 {
-   PEPROCESS Process;
-   PMEMORY_AREA OutMemoryArea;
-   ULONG i;
    NTSTATUS Status;
-   PULONG CurrentEntry;
+   PMDL Mdl;
+   PVOID SystemAddress;
+   PEPROCESS Process;
    
    DPRINT("ZwWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
 	    "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
@@ -737,56 +750,22 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
      {
 	return(Status);
      }
-
-   OutMemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);   
-   if (OutMemoryArea == NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-  
+   
+   Mdl = MmCreateMdl(NULL, 
+		     Buffer,
+		     NumberOfBytesToWrite);
+   MmProbeAndLockPages(Mdl,
+		       UserMode,
+		       IoReadAccess);
+   
+   KeAttachProcess(Process);
+   
+   SystemAddress = MmGetSystemAddressForMdl(Mdl);
+   memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+   
+   KeDetachProcess();
+   
    *NumberOfBytesWritten = NumberOfBytesToWrite;
-   
-   DPRINT("*Buffer %x\n",((PULONG)Buffer)[0]);
-   
-   for (i=0; i<(PAGE_ROUND_DOWN(NumberOfBytesToWrite)/PAGESIZE); i++)     
-     {
-	if (!MmIsPagePresent(Process, BaseAddress + (i*PAGESIZE)))
-	  {
-	     DPRINT("OutMemoryArea->Attributes %x\n",
-		      OutMemoryArea->Attributes);
-	     MmSetPage(Process,
-		       BaseAddress + (i*PAGESIZE),
-		       OutMemoryArea->Attributes,
-		       get_free_page());
-	  }
-	CurrentEntry = MmGetPageEntry(Process, 
-				      (PVOID)((DWORD)BaseAddress + 
-				      (i*PAGESIZE)));
-	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)) +
-		      (((DWORD)BaseAddress)%PAGESIZE),
-		      Buffer + (i*PAGESIZE),
-		      PAGESIZE);
-     }
-   if ((NumberOfBytesToWrite % PAGESIZE) != 0)
-     {
-	if (!MmIsPagePresent(Process, BaseAddress + (i*PAGESIZE)))
-	  {
-	     MmSetPage(Process,
-		       BaseAddress + (i*PAGESIZE),
-		       OutMemoryArea->Attributes,
-		       get_free_page());
-	  }
-	CurrentEntry = MmGetPageEntry(Process, 
-				      BaseAddress + (i*PAGESIZE));
-	DPRINT("addr %x\n",
-		 physical_to_linear(PAGE_MASK(*CurrentEntry)) +
-		 (((DWORD)BaseAddress)%PAGESIZE));
-	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)) +
-		      (((DWORD)BaseAddress)%PAGESIZE),
-		      Buffer + (i*PAGESIZE),
-		      NumberOfBytesToWrite % PAGESIZE);
-     }
    return(STATUS_SUCCESS);
 }
-
 

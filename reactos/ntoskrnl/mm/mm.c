@@ -58,6 +58,8 @@ void MmInitialize(boot_param* bp)
    unsigned int first_krnl_phys_addr;
    unsigned int last_krnl_phys_addr;
    int i;
+   PULONG page_directory = (PULONG)physical_to_linear(
+						  (ULONG)get_page_directory());
    
    DPRINT("InitalizeMM()\n");
 
@@ -65,7 +67,7 @@ void MmInitialize(boot_param* bp)
    /*
     * Unmap low memory
     */
-   (get_page_directory())[0]=0;
+   page_directory[0]=0;
    FLUSH_TLB;
    CHECKPOINT;
    
@@ -122,12 +124,8 @@ void MmInitialize(boot_param* bp)
 		  PAGE_NOACCESS,
 		  0);
      }
-   MmSetPage(NULL,
-	     0,
-	     PAGE_NOACCESS,
-	     0);
    FLUSH_TLB;
-   CHECKPOINT;
+   
    /*
     * Intialize memory areas
     */

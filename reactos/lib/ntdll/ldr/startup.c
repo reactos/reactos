@@ -82,8 +82,8 @@ VOID LdrStartup(HANDLE SectionHandle,
    NTSTATUS Status;
    PIMAGE_NT_HEADERS NTHeaders;
    
-   DPRINT("LdrStartup(ImageBase %x, SectionHandle %x, "
-	  "NTDllSectionHandle %x)\n",ImageBase,
+   dprintf("LdrStartup(ImageBase %x, SectionHandle %x, "
+	   "NTDllSectionHandle %x)\n",ImageBase,
 	   SectionHandle, NTDllSectionHandle);
    
    LdrDllListHead.BaseAddress = (PVOID)&_image_base__;

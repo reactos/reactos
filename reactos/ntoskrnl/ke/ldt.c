@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
+ * FILE:            ntoskrnl/ke/ldt.c
+ * PURPOSE:         LDT managment
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98

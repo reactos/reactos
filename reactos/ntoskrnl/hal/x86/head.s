@@ -66,7 +66,6 @@ _idt_descr:
         .long _idt
 
 _gdt_descr:
-/*        .word ((6+128)*8)-1 */
         .word ((6+NR_TASKS)*8)-1
         .long _gdt
 

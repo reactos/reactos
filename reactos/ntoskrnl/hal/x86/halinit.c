@@ -3,7 +3,7 @@
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/hal/x86/halinit.c
  * PURPOSE:       Initalize the uniprocessor, x86 hal
- * PROGRAMMER:    David Welch (welch@mcmail.com)
+ * PROGRAMMER:    David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *              11/06/98: Created
  */
@@ -20,8 +20,7 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID HalInit(boot_param* bp)
-{
-   
+{   
    KeInitExceptions();
    KeInitIRQ();
    KeLowerIrql(DISPATCH_LEVEL);

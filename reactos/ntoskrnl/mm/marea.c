@@ -417,6 +417,13 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
                        1);
 	  }
      }
+   for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
+     {
+	MmSetPage(NULL,
+		  MemoryArea->BaseAddress + (i*PAGESIZE),
+		  0,
+		  0);
+     }
    
    RemoveEntryList(&(MemoryArea->Entry));
    ExFreePool(MemoryArea);
