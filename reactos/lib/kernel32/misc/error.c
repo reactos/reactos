@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.17 2003/01/15 21:24:34 chorns Exp $
+/* $Id: error.c,v 1.18 2003/04/26 12:50:56 gvg Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -8,19 +8,6 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-
-
-/* INTERNAL */
-DWORD
-STDCALL
-SetLastErrorByStatus (
-	NTSTATUS	Status
-	)
-{
-	DWORD Error = RtlNtStatusToDosError (Status);
-	SetLastError (Error);
-	return (Error);
-}
 
 
 VOID
