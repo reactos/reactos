@@ -518,7 +518,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
     if(edgePixel == TRUE)
     {
       b1 = vgaGetPixel(x2, j);
-      *pb = b1;
+      *pb = b1 << 4;
       pb++;
     }
 
@@ -528,48 +528,50 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 }
 #endif
 
+/* DIB blt to the VGA. */
 void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
-
-//  DIB blt to the VGA.
-//  For now we just do slow writes -- pixel by pixel, packing each one into the correct 4BPP format.
 {
-  PBYTE  pb = b, opb = b;
-  BOOLEAN  edgePixel = FALSE;
-  ULONG  i, j;
-  ULONG  x2 = x + w;
-  ULONG  y2 = y + h;
-  BYTE  b1, b2;
+  PBYTE pb, opb = b;
+  ULONG i, j;
+  ULONG x2 = x + w;
+  ULONG y2 = y + h;
+  ULONG offset;
+  UCHAR a;
 
-  // Check if the width is odd
-  if(mod(w, 2)>0)
-  {
-    edgePixel = TRUE;
-    x2 -= 1;
-  }
-
-  for (j=y; j<y2; j++)
-  {
-    for (i=x; i<x2; i+=2)
+  for (i = x; i < x2; i++)
     {
-      b1 = (*pb & 0xf0) >> 4;
-      b2 = *pb & 0x0f;
-      vgaPutPixel(i,   j, b1);
-      vgaPutPixel(i+1, j, b2);
-      pb++;
+      pb = opb;
+      offset = xconv[i] + y80[y];
+
+      WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);       // set the mask
+      WRITE_PORT_UCHAR((PUCHAR)0x3cf, maskbit[i]);
+
+      if (0 == ((i - x) % 2))
+	{
+	  for (j = y; j < y2; j++)
+	    {
+	      a = READ_REGISTER_UCHAR(vidmem + offset);
+	      WRITE_REGISTER_UCHAR(vidmem + offset, (*pb & 0xf0) >> 4);
+	      offset += 80;
+	      pb += Source_lDelta;
+	    }
+	}
+      else
+	{
+	  for (j = y; j < y2; j++)
+	    {
+	      a = READ_REGISTER_UCHAR(vidmem + offset);
+	      WRITE_REGISTER_UCHAR(vidmem + offset, *pb & 0x0f);
+	      offset += 80;
+	      pb += Source_lDelta;
+	    }
+	}
+
+      if (0 != ((i - x) % 2))
+	{
+	  opb++;
+	}
     }
-
-    if(edgePixel == TRUE)
-    {
-      b1 = *pb;
-      vgaPutPixel(x2, j, b1);
-      pb++;
-    }
-
-    opb += Source_lDelta;
-
-    pb = opb;
-
-  }
 }
 
 void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, ULONG trans)
