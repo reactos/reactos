@@ -237,10 +237,11 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 void
 MingwModuleHandler::GenerateGccModuleIncludeVariable ( const Module& module ) const
 {
-	string name ( module.name + "_INCLUDES" );
+	string name ( module.name + "_CFLAGS" );
 	fprintf ( fMakefile,
-	          "%s := %s\n",
+	          "%s := %s %s\n",
 	          name.c_str(),
+			  GenerateGccDefineParameters(module).c_str(),
 	          GenerateGccIncludeParameters(module).c_str() );
 }
 
@@ -260,9 +261,7 @@ MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 string
 MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccDefineParameters ( module );
-	parameters += ssprintf(" $(%s_INCLUDES)", module.name.c_str());
-	return parameters;
+	return ssprintf(" $(%s_CFLAGS)", module.name.c_str());
 }
 
 string
@@ -381,18 +380,18 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 {
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string sourceFilenames = GetSourceFilenames ( module );
-	string objectFilenames = GetObjectFilenames ( module );
+	string objectsMacro = GenerateObjectList ( module );
 	
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          archiveFilename.c_str (),
-	          objectFilenames.c_str ());
+	          objectsMacro.c_str ());
 
 	fprintf ( fMakefile,
 	          "\t%s -rc %s %s\n\n",
 	          ar.c_str (),
 	          archiveFilename.c_str (),
-	          objectFilenames.c_str ());
+	          objectsMacro.c_str ());
 }
 
 void
@@ -525,6 +524,17 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 	fprintf ( fMakefile,
 	          ".PHONY: %s\n\n",
 	          preconditionDependenciesName.c_str () );
+}
+
+string MingwModuleHandler::GenerateObjectList ( const Module& module ) const
+{
+	string macro ( ssprintf("%s_OBJS",module.name.c_str()) );
+	fprintf (
+		fMakefile,
+		"%s = %s\n",
+		macro.c_str(),
+		GetObjectFilenames(module).c_str() );
+	return ssprintf("$(%s)",macro.c_str());
 }
 
 

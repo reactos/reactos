@@ -38,6 +38,7 @@ protected:
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
+	std::string GenerateObjectList ( const Module& module ) const;
 	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
