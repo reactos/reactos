@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2003/12/07 12:07:58 mf Exp $
+# $Id: Makefile,v 1.8 2004/02/07 00:21:45 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -37,9 +37,9 @@ all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
 
 objs/*.o objs/libfreetype.a:
 ifeq ($(DBG), 1)
-	@$(MAKE) -f Makefile.freetype CFLAGS="-c -g -Wall" CC:=$(CC)
+	@$(MAKE) -f Makefile.freetype CC:=$(CC)
 else
-	@$(MAKE) -f Makefile.freetype CFLAGS="-c -Wall -O3" CC:=$(CC)
+	@$(MAKE) -f Makefile.freetype CC:=$(CC)
 endif
 
 # Automatic dependency tracking
