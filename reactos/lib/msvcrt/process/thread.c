@@ -1,7 +1,4 @@
-/* $Id: thread.c,v 1.9 2003/12/24 23:20:08 sedwards Exp $
- *
- */
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/errno.h>
 #include <msvcrt/process.h>
 #include <msvcrt/internal/file.h>

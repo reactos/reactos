@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.22 2004/05/27 11:49:48 hbirr Exp $
+/* $Id: dllmain.c,v 1.23 2004/08/15 18:16:37 chorns Exp $
  *
  * dllmain.c
  *
@@ -14,13 +14,13 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.22 $
- * $Author: hbirr $
- * $Date: 2004/05/27 11:49:48 $
+ * $Revision: 1.23 $
+ * $Author: chorns $
+ * $Date: 2004/08/15 18:16:37 $
  *
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
 #include "../wine/msvcrt.h"

@@ -1,5 +1,4 @@
-/* $Id: process.c,v 1.9 2004/01/23 20:11:03 ekohl Exp $ */
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

@@ -8,10 +8,9 @@
  *              28/12/98: Created
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/conio.h>
 #include <msvcrt/internal/console.h>
-
 
 
 /*

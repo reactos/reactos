@@ -1,4 +1,4 @@
-/* $Id: fputs.c,v 1.7 2003/07/16 17:53:34 royce Exp $
+/* $Id: fputs.c,v 1.8 2004/08/15 18:16:38 chorns Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -25,7 +25,7 @@
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 #include <msvcrt/string.h>

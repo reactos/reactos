@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.9 2003/12/03 17:17:03 navaraf Exp $
+/* $Id: _system.c,v 1.10 2004/08/15 18:16:37 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,7 +8,8 @@
  * UPDATE HISTORY:
  *              04/03/99: Created
  */
-#include <windows.h>
+
+#include "precomp.h"
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 #include <msvcrt/process.h>

@@ -1,11 +1,11 @@
-/* $Id: environ.c,v 1.8 2004/05/27 11:49:48 hbirr Exp $
+/* $Id: environ.c,v 1.9 2004/08/15 18:16:37 chorns Exp $
  *
  * dllmain.c
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

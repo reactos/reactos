@@ -1,9 +1,8 @@
+#include "precomp.h"
 #include <msvcrt/stdio.h>
 #include <msvcrt/locale.h>
 #include <msvcrt/string.h>
 #include <limits.h>
-
-#include <windows.h>
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
 

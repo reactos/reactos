@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.9 2003/07/11 21:58:09 royce Exp $
+/* $Id: getc.c,v 1.10 2004/08/15 18:16:38 chorns Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/stdio.h>
 #include <msvcrt/wchar.h>
 #include <msvcrt/errno.h>

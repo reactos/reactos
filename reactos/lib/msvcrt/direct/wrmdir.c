@@ -1,6 +1,7 @@
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/direct.h>
 #include <msvcrt/internal/file.h>
+
 
 /*
  * @implemented

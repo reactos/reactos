@@ -1,9 +1,9 @@
-/* $Id: crtmain.c,v 1.5 2003/07/11 21:58:09 royce Exp $
+/* $Id: crtmain.c,v 1.6 2004/08/15 18:16:37 chorns Exp $
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
-#include <windows.h>
-//#include <msvcrt/stdlib.h>
+
+#include "precomp.h"
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>

@@ -1,5 +1,4 @@
-/* $Id: popen.c,v 1.5 2003/07/11 21:58:09 royce Exp $ */
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/stdio.h>

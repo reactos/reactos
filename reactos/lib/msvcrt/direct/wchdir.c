@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/ctype.h>
 #include <msvcrt/direct.h>
 #include <msvcrt/internal/file.h>

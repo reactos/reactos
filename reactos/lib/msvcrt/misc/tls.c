@@ -1,6 +1,4 @@
-/* tls.c */
-
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/stdlib.h>
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/internal/rterror.h>

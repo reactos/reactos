@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/string.h>
 
 /* Compare S1 and S2, returning less than, equal to or

@@ -1,4 +1,4 @@
-/* $Id: wopen.c,v 1.4 2003/12/03 17:17:03 navaraf Exp $
+/* $Id: wopen.c,v 1.5 2004/08/15 18:16:36 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -12,7 +12,7 @@
 // rember to interlock the allocation of fileno when making this thread safe
 // possibly store extra information at the handle
 
-#include <windows.h>
+#include "precomp.h"
 #if !defined(NDEBUG) && defined(DBG)
 #include <msvcrt/stdarg.h>
 #endif

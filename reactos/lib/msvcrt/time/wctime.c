@@ -26,9 +26,9 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "precomp.h"
 #include <msvcrt/fcntl.h>
 #include <msvcrt/time.h>
-#include <windows.h>
 #include "tzfile.h"
 
 

@@ -1,5 +1,4 @@
-/* $Id: dup.c,v 1.6 2003/12/03 17:17:03 navaraf Exp $ */
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>

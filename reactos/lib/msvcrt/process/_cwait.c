@@ -7,7 +7,8 @@
  * UPDATE HISTORY:
  *              04/03/99: Created
  */
-#include <windows.h>
+
+#include "precomp.h"
 #include <msvcrt/process.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>

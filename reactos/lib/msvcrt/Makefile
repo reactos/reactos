@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.44 2004/05/29 21:24:44 hbirr Exp $
+# $Id: Makefile,v 1.45 2004/08/15 18:16:35 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,8 @@ TARGET_DEFONLY = yes
 TARGET_TYPE = dynlink
 
 TARGET_NAME = msvcrt
+
+TARGET_PCH = precomp.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_MSVCRT)
 

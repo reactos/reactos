@@ -1,4 +1,4 @@
-/* $Id: putc.c,v 1.9 2003/07/11 22:17:09 royce Exp $
+/* $Id: putc.c,v 1.10 2004/08/15 18:16:38 chorns Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -24,7 +24,7 @@
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <windows.h>
+#include "precomp.h"
 #include <msvcrt/stdio.h>
 #include <msvcrt/wchar.h>
 #include <msvcrt/errno.h>

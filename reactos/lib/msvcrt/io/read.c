@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.12 2003/12/03 17:17:03 navaraf Exp $
+/* $Id: read.c,v 1.13 2004/08/15 18:16:36 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -11,7 +11,8 @@
  *                          any amount of data has been read. It's the expected
  *                          behavior for line-buffered streams (KJK::Hyperion)
  */
-#include <windows.h>
+
+#include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
 
