@@ -281,7 +281,7 @@ MmLocateMemoryAreaByRegion(
    return NULL;
 }
 
-/*
+/**
  * @name MmCompressHelper
  *
  * This is helper of MmRebalanceTree. Performs a compression transformation
@@ -319,7 +319,7 @@ MmCompressHelper(
    }
 }
 
-/*
+/**
  * @name MmRebalanceTree
  *
  * Rebalance a memory area tree using the Tree->Vine->Balanced Tree
@@ -699,7 +699,7 @@ MmInitMemoryAreas(VOID)
 }
 
 
-/*
+/**
  * @name MmFreeMemoryArea
  *
  * Free an existing memory area.
@@ -832,7 +832,7 @@ MmFreeMemoryArea(
    return STATUS_SUCCESS;
 }
 
-/*
+/**
  * @name MmFreeMemoryAreaByPtr
  *
  * Free an existing memory area given a pointer inside it.
@@ -883,7 +883,7 @@ MmFreeMemoryAreaByPtr(
    return MmFreeMemoryArea(AddressSpace, MemoryArea, FreePage, FreePageContext);
 }
 
-/*
+/**
  * @name MmCreateMemoryArea
  *
  * Create a memory area.
