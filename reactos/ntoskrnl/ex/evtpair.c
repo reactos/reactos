@@ -117,7 +117,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
      }
    }
 
-   Status = ObCreateObject(ExGetPreviousMode(),
+   Status = ObCreateObject(PreviousMode,
 			   ExEventPairObjectType,
 			   ObjectAttributes,
 			   PreviousMode,

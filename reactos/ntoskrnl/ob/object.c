@@ -47,24 +47,16 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 {
   OBJECT_ATTRIBUTES AttributesCopy;
   NTSTATUS Status = STATUS_SUCCESS;
-  
+
   /* at least one output parameter must be != NULL! */
-  ASSERT(((ULONG_PTR)CapturedObjectAttributes ^ (ULONG_PTR)ObjectName) != 0);
-  
+  ASSERT(CapturedObjectAttributes != NULL || ObjectName != NULL);
+
   if(ObjectAttributes == NULL)
   {
-failbasiccleanup:
-    if(ObjectName != NULL)
-    {
-      RtlInitUnicodeString(ObjectName, NULL);
-    }
-    if(CapturedObjectAttributes != NULL)
-    {
-      RtlZeroMemory(CapturedObjectAttributes, sizeof(CAPTURED_OBJECT_ATTRIBUTES));
-    }
-    return Status; /* STATUS_SUCCESS */
+    /* we're going to return STATUS_SUCCESS! */
+    goto failbasiccleanup;
   }
-  
+
   if(AccessMode != KernelMode)
   {
     _SEH_TRY
@@ -80,21 +72,30 @@ failbasiccleanup:
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
-      return Status;
+      DPRINT1("ObpCaptureObjectAttributes failed to probe object attributes\n");
+      goto failbasiccleanup;
     }
   }
-  else if(AccessMode == KernelMode && !CaptureIfKernel)
+  else if(!CaptureIfKernel)
   {
-    if(ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES))
+    if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
     {
-      /* we don't have to capture any memory, the caller considers the passed data
-         as valid */
       if(ObjectName != NULL)
       {
-        *ObjectName = *ObjectAttributes->ObjectName;
+        /* we don't have to capture any memory, the caller considers the passed data
+           as valid */
+        if(ObjectAttributes->ObjectName != NULL)
+        {
+          *ObjectName = *ObjectAttributes->ObjectName;
+        }
+        else
+        {
+          ObjectName->Length = ObjectName->MaximumLength = 0;
+          ObjectName->Buffer = NULL;
+        }
       }
       if(CapturedObjectAttributes != NULL)
       {
@@ -115,7 +116,7 @@ failbasiccleanup:
   {
     AttributesCopy = *ObjectAttributes;
   }
-  
+
   /* if Length isn't as expected, bail with an invalid parameter status code so
      the caller knows he passed garbage... */
   if(AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
@@ -123,7 +124,7 @@ failbasiccleanup:
     Status = STATUS_INVALID_PARAMETER;
     goto failbasiccleanup;
   }
-  
+
   if(CapturedObjectAttributes != NULL)
   {
     CapturedObjectAttributes->RootDirectory = AttributesCopy.RootDirectory;
@@ -147,13 +148,13 @@ failbasiccleanup:
       CapturedObjectAttributes->SecurityDescriptor = NULL;
     }
   }
-  
+
   if(ObjectName != NULL)
   {
     if(AttributesCopy.ObjectName != NULL)
     {
       UNICODE_STRING OriginalCopy;
-      
+
       if(AccessMode != KernelMode)
       {
         _SEH_TRY
@@ -175,7 +176,7 @@ failbasiccleanup:
           Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
+
         if(NT_SUCCESS(Status))
         {
           if(OriginalCopy.Length > 0)
@@ -197,6 +198,11 @@ failbasiccleanup:
                 Status = _SEH_GetExceptionCode();
               }
               _SEH_END;
+
+              if(!NT_SUCCESS(Status))
+              {
+                DPRINT1("ObpCaptureObjectAttributes failed to copy the unicode string!\n");
+              }
             }
             else
             {
@@ -209,29 +215,15 @@ failbasiccleanup:
             Status = STATUS_OBJECT_NAME_INVALID;
           }
         }
-
-        /* handle failure */
-        if(!NT_SUCCESS(Status))
+        else
         {
-failallocatedcleanup:
-          if(ObjectName->Buffer)
-          {
-            ExFreePool(ObjectName->Buffer);
-          }
-          if(CapturedObjectAttributes != NULL)
-          {
-            /* cleanup allocated resources */
-            SeReleaseSecurityDescriptor(CapturedObjectAttributes->SecurityDescriptor,
-                                        AccessMode,
-                                        TRUE);
-          }
-          goto failbasiccleanup;
+          DPRINT1("ObpCaptureObjectAttributes failed to probe the object name UNICODE_STRING structure!\n");
         }
       }
       else /* AccessMode == KernelMode */
       {
         OriginalCopy = *AttributesCopy.ObjectName;
-        
+
         if(OriginalCopy.Length > 0)
         {
           ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
@@ -252,21 +244,44 @@ failallocatedcleanup:
           /* if the caller specified a root directory, there must be an object name! */
           Status = STATUS_OBJECT_NAME_INVALID;
         }
-        
-        if(!NT_SUCCESS(Status))
-        {
-          goto failallocatedcleanup;
-        }
       }
     }
     else
     {
-      RtlInitUnicodeString(ObjectName, NULL);
+      ObjectName->Length = ObjectName->MaximumLength = 0;
+      ObjectName->Buffer = NULL;
     }
   }
-  
+
+  if(!NT_SUCCESS(Status))
+  {
+    if(ObjectName->Buffer)
+    {
+      ExFreePool(ObjectName->Buffer);
+    }
+    if(CapturedObjectAttributes != NULL)
+    {
+      /* cleanup allocated resources */
+      SeReleaseSecurityDescriptor(CapturedObjectAttributes->SecurityDescriptor,
+                                  AccessMode,
+                                  TRUE);
+    }
+
+failbasiccleanup:
+    if(ObjectName != NULL)
+    {
+      ObjectName->Length = ObjectName->MaximumLength = 0;
+      ObjectName->Buffer = NULL;
+    }
+    if(CapturedObjectAttributes != NULL)
+    {
+      RtlZeroMemory(CapturedObjectAttributes, sizeof(CAPTURED_OBJECT_ATTRIBUTES));
+    }
+  }
+
   return Status;
 }
+
 
 VOID
 ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
@@ -276,8 +291,7 @@ ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttribut
 {
   /* WARNING - You need to pass the same parameters to this function as you passed
                to ObpCaptureObjectAttributes() to avoid memory leaks */
-  if(AccessMode != KernelMode ||
-     (AccessMode == KernelMode && CaptureIfKernel))
+  if(AccessMode != KernelMode || CaptureIfKernel)
   {
     if(CapturedObjectAttributes != NULL &&
        CapturedObjectAttributes->SecurityDescriptor != NULL)
