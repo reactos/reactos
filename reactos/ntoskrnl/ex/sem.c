@@ -53,7 +53,7 @@ ExpInitializeSemaphoreImplementation(VOID)
 {
    ExSemaphoreObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore");
+   RtlpCreateUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore", NonPagedPool);
    
    ExSemaphoreObjectType->Tag = TAG('S', 'E', 'M', 'T');
    ExSemaphoreObjectType->PeakObjects = 0;

@@ -863,11 +863,11 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
 	 RegistryHive, Filename);
 
   /* Duplicate Filename */
-  Status = RtlCreateUnicodeString(&RegistryHive->HiveFileName,
-				  Filename);
+  Status = RtlpCreateUnicodeString(&RegistryHive->HiveFileName,
+              Filename, NonPagedPool);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
+      DPRINT("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
       return(Status);
     }
 

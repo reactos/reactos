@@ -65,7 +65,7 @@ ExpInitializeMutantImplementation(VOID)
 {
   ExMutantObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
 
-  RtlCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant");
+  RtlpCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant", NonPagedPool);
 
   ExMutantObjectType->Tag = TAG('M', 'T', 'N', 'T');
   ExMutantObjectType->PeakObjects = 0;

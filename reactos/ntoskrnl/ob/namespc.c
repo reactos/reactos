@@ -195,7 +195,7 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 {
   KIRQL oldlvl;
 
-  RtlCreateUnicodeString(&Header->Name, Name);
+  RtlpCreateUnicodeString(&Header->Name, Name, NonPagedPool);
   Header->Parent = Parent;
 
   KeAcquireSpinLock(&Parent->Lock, &oldlvl);

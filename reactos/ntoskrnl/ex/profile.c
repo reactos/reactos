@@ -68,7 +68,7 @@ ExpInitializeProfileImplementation(VOID)
 
   ExProfileObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
   
-  RtlCreateUnicodeString(&ExProfileObjectType->TypeName, L"Profile");
+  RtlpCreateUnicodeString(&ExProfileObjectType->TypeName, L"Profile", NonPagedPool);
   
   ExProfileObjectType->Tag = TAG('P', 'R', 'O', 'F');
   ExProfileObjectType->PeakObjects = 0;

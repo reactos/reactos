@@ -196,12 +196,12 @@ CmImportSystemHive(PCHAR ChunkBase,
     }
 
   /* Set the hive filename */
-  RtlCreateUnicodeString (&RegistryHive->HiveFileName,
-			  SYSTEM_REG_FILE);
+  RtlpCreateUnicodeString (&RegistryHive->HiveFileName,
+           SYSTEM_REG_FILE, NonPagedPool);
 
   /* Set the log filename */
-  RtlCreateUnicodeString (&RegistryHive->LogFileName,
-			  SYSTEM_LOG_FILE);
+  RtlpCreateUnicodeString (&RegistryHive->LogFileName,
+           SYSTEM_LOG_FILE, NonPagedPool);
 
   return TRUE;
 }

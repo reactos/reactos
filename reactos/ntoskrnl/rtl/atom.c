@@ -377,8 +377,8 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
      }
 
    InsertTailList(&AtomTable->Slot[Hash], &Entry->List);
-   RtlCreateUnicodeString (&Entry->Name,
-			   AtomName);
+   RtlpCreateUnicodeString (&Entry->Name,
+            AtomName, NonPagedPool);
    Entry->RefCount = 1;
    Entry->Locked = FALSE;
 

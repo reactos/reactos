@@ -160,8 +160,8 @@ CmiObjectParse(PVOID ParsedObject,
       FoundObject->KeyCell = SubKeyCell;
       FoundObject->KeyCellOffset = BlockOffset;
       FoundObject->RegistryHive = ParsedKey->RegistryHive;
-      RtlCreateUnicodeString(&FoundObject->Name,
-			     KeyName.Buffer);
+      RtlpCreateUnicodeString(&FoundObject->Name,
+              KeyName.Buffer, NonPagedPool);
       CmiAddKeyToList(ParsedKey, FoundObject);
       DPRINT("Created object 0x%x\n", FoundObject);
     }
@@ -248,8 +248,8 @@ CmiObjectCreate(PVOID ObjectBody,
       Start = RemainingPath;
       if(*Start == L'\\')
 	Start++;
-      RtlCreateUnicodeString(&KeyObject->Name,
-			     Start);
+      RtlpCreateUnicodeString(&KeyObject->Name,
+              Start, NonPagedPool);
     }
    else
     {

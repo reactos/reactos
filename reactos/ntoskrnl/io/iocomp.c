@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,7 +119,7 @@ IopInitIoCompletionImplementation(VOID)
 {
    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion");
+   RtlpCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion", NonPagedPool);
    
    ExIoCompletionType->Tag = IOC_TAG;
    ExIoCompletionType->PeakObjects = 0;

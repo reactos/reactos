@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,7 +84,7 @@ ExpWinStaObjectCreate(PVOID ObjectBody,
 
   DPRINT("Creating window station (0x%X)  Name (%wZ)\n", WinSta, &UnicodeString);
 
-  Status = RtlCreateUnicodeString(&WinSta->Name, UnicodeString.Buffer);
+  Status = RtlpCreateUnicodeString(&WinSta->Name, UnicodeString.Buffer, NonPagedPool);
   if (!NT_SUCCESS(Status))
   {
     return Status;
@@ -247,7 +247,7 @@ ExpDesktopObjectCreate(PVOID ObjectBody,
     &Desktop->ListEntry,
     &Desktop->WindowStation->Lock);
 
-  return RtlCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer);
+  return RtlpCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer, NonPagedPool);
 }
 
 VOID STDCALL

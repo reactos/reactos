@@ -200,8 +200,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
   else
     {
-      RtlCreateUnicodeString(&KeyObject->Name,
-			     Start);
+      RtlpCreateUnicodeString(&KeyObject->Name, Start, NonPagedPool);
       RtlFreeUnicodeString(&RemainingPath);
     }
 

@@ -60,7 +60,7 @@ ExpInitializeEventPairImplementation(VOID)
 {
    ExEventPairObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair");
+   RtlpCreateUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair", NonPagedPool);
    ExEventPairObjectType->Tag = TAG('E', 'v', 'P', 'a');
    ExEventPairObjectType->PeakObjects = 0;
    ExEventPairObjectType->PeakHandles = 0;

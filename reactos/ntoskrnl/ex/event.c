@@ -54,7 +54,7 @@ ExpInitializeEventImplementation(VOID)
 {
    ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExEventObjectType->TypeName, L"Event");
+   RtlpCreateUnicodeString(&ExEventObjectType->TypeName, L"Event", NonPagedPool);
    
    ExEventObjectType->Tag = TAG('E', 'V', 'T', 'T');
    ExEventObjectType->PeakObjects = 0;

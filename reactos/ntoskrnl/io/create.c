@@ -147,8 +147,8 @@ IopCreateFile(PVOID			ObjectBody,
 	      DeviceObject = DeviceObject->Vpb->DeviceObject;
 	      DPRINT("FsDeviceObject %lx\n", DeviceObject);
 	    }
-	  RtlCreateUnicodeString(&(FileObject->FileName),
-				 RemainingPath);
+	  RtlpCreateUnicodeString(&(FileObject->FileName),
+             RemainingPath, NonPagedPool);
 	}
     }
   else
@@ -165,8 +165,8 @@ IopCreateFile(PVOID			ObjectBody,
 
       FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
-      RtlCreateUnicodeString(&(FileObject->FileName),
-			     RemainingPath);
+      RtlpCreateUnicodeString(&(FileObject->FileName),
+              RemainingPath, NonPagedPool);
     }
 
   DPRINT("FileObject->FileName %wZ\n",

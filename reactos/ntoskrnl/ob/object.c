@@ -439,7 +439,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
   if (current)
-     RtlCreateUnicodeString (RemainingPath, current);
+     RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
   RtlFreeUnicodeString (&PathString);
   *ReturnedObject = CurrentObject;
 

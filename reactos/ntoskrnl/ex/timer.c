@@ -119,7 +119,7 @@ ExpInitializeTimerImplementation(VOID)
    ASSERT(!ExTimerType)
    ExTimerType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 
-   RtlCreateUnicodeString(&ExTimerType->TypeName, L"Timer");
+   RtlpCreateUnicodeString(&ExTimerType->TypeName, L"Timer", NonPagedPool);
 
    ExTimerType->Tag = TAG('T', 'I', 'M', 'T');
    ExTimerType->PeakObjects = 0;

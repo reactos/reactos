@@ -794,8 +794,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
 
       RtlZeroMemory(Group, sizeof(SERVICE_GROUP));
 
-      if (!RtlCreateUnicodeString(&Group->GroupName,
-				  (PWSTR)ValueData))
+      if (!RtlpCreateUnicodeString(&Group->GroupName, (PWSTR)ValueData, NonPagedPool))
 	{
 	  ExFreePool(Group);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
@@ -1864,7 +1863,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
       Start = DriverServiceName->Buffer;
    else
       Start++;
-   RtlCreateUnicodeString(&DeviceNode->ServiceName, Start);
+   RtlpCreateUnicodeString(&DeviceNode->ServiceName, Start, NonPagedPool);
 
    /*
     * Initialize the driver module

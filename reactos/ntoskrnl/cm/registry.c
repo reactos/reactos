@@ -315,7 +315,7 @@ CmInitializeRegistry(VOID)
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
-  Status = RtlCreateUnicodeString(&RootKey->Name, L"Registry");
+  Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
   ASSERT(NT_SUCCESS(Status));
 
 #if 0
@@ -662,12 +662,12 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   DPRINT ("SubName %S\n", SubName);
 
-  Status = RtlCreateUnicodeString(&NewKey->Name,
-				  SubName);
+  Status = RtlpCreateUnicodeString(&NewKey->Name,
+              SubName, NonPagedPool);
   RtlFreeUnicodeString(&RemainingPath);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
+      DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
       if (NewKey->SubKeys != NULL)
 	{
 	  ExFreePool (NewKey->SubKeys);

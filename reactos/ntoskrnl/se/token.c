@@ -547,8 +547,8 @@ SepInitializeTokenImplementation(VOID)
   SepTokenObjectType->Create = NULL;
   SepTokenObjectType->DuplicationNotify = NULL;
 
-  RtlCreateUnicodeString(&SepTokenObjectType->TypeName,
-			 L"Token");
+  RtlpCreateUnicodeString(&SepTokenObjectType->TypeName,
+          L"Token", NonPagedPool);
   ObpCreateTypeObject (SepTokenObjectType);
 }
 

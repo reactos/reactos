@@ -27,7 +27,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -715,7 +715,7 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
   RtlZeroMemory(CacheEntry, sizeof (IMAGE_SYMBOL_INFO_CACHE));
 
   /* fill entry */
-  RtlCreateUnicodeString(&CacheEntry->FileName, FileName->Buffer);
+  RtlpCreateUnicodeString(&CacheEntry->FileName, FileName->Buffer, NonPagedPool);
   ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->FileBuffer = SymbolInfo->FileBuffer;
