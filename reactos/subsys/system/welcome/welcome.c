@@ -1,6 +1,6 @@
 /*
  *  ReactOS applications
- *  Copyright (C) 2001, 2002 ReactOS Team
+ *  Copyright (C) 2001, 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: welcome.c,v 1.3 2003/10/18 18:49:08 weiden Exp $
+/* $Id: welcome.c,v 1.4 2003/12/21 14:38:25 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
  * FILE:        subsys/system/welcome/welcome.c
  * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *
+ * NOTE:
+ *   This utility can be customized by modifying the resources.
+ *   Please do NOT change the source code in order to customize this
+ *   utility but change the resources!
  */
+
 #include "../../../include/reactos/version.h"
 #include <windows.h>
 #include <string.h>
@@ -34,14 +40,16 @@
 
 
 
-#define LIGHT_BLUE 0x00F0CAA6
-#define DARK_BLUE  0x00996633
+#define LIGHT_BLUE 0x00F7EFD6
+#define DARK_BLUE  0x008C7B6B
 
+#define TITLE_WIDTH  480
+#define TITLE_HEIGHT  93
 
 
 /* GLOBALS ******************************************************************/
 
-TCHAR szFrameClass [] = "WelcomeWindowClass";
+TCHAR szFrameClass [] = TEXT("WelcomeWindowClass");
 TCHAR szAppTitle [80];
 
 HINSTANCE hInstance;
@@ -49,19 +57,18 @@ HINSTANCE hInstance;
 HWND hwndMain = 0;
 HWND hwndDefaultTopic = 0;
 
-HBITMAP hTitleBitmap = 0;
-HBITMAP hTopBackgroundBitmap = 0;
-HBITMAP hRightBackgroundBitmap = 0;
 HDC hdcDisplay=0;
 HDC hdcMem = 0;
 
 int nTopic = -1;
 int nDefaultTopic = -1;
 
-ULONG ulInnerWidth = 480;
-ULONG ulInnerHeight = 360;
+ULONG ulInnerWidth = TITLE_WIDTH;
+ULONG ulInnerHeight = (TITLE_WIDTH * 3) / 4;
+ULONG ulTitleHeight = TITLE_HEIGHT + 3;
 
-HBITMAP hDefaultTopicBitmap;
+HBITMAP hTitleBitmap = 0;
+HBITMAP hDefaultTopicBitmap = 0;
 HBITMAP hTopicBitmap[10];
 HWND hwndTopicButton[10];
 HWND hwndCloseButton;
@@ -71,8 +78,6 @@ HFONT hfontTopicButton;
 HFONT hfontTopicTitle;
 HFONT hfontTopicDescription;
 HFONT hfontCheckButton;
-
-HFONT hfontBannerTitle;
 
 HBRUSH hbrLightBlue;
 HBRUSH hbrDarkBlue;
@@ -106,6 +111,7 @@ WinMain(HINSTANCE hInst,
   RECT rcWindow;
   HICON hMainIcon;
   DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
+  BITMAP BitmapInfo;
 
   hInstance = hInst;
 
@@ -119,7 +125,7 @@ WinMain(HINSTANCE hInst,
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = hInstance;
   wndclass.hIcon = hMainIcon;
-  wndclass.hCursor = LoadCursor (NULL, (LPCTSTR)IDC_ARROW);
+  wndclass.hCursor = LoadCursor (NULL, MAKEINTRESOURCE(IDC_ARROW));
   wndclass.hbrBackground = 0;
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szFrameClass;
@@ -128,6 +134,16 @@ WinMain(HINSTANCE hInst,
   wndclass.hIconSm = 0;
 
   RegisterClassEx(&wndclass);
+
+  hTitleBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
+  if (hTitleBitmap != NULL)
+    {
+      GetObject(hTitleBitmap, sizeof(BITMAP), &BitmapInfo);
+      ulInnerWidth = BitmapInfo.bmWidth;
+      ulInnerHeight = (ulInnerWidth * 3) / 4;
+      ulTitleHeight = BitmapInfo.bmHeight + 3;
+    }
+  ulInnerHeight -= GetSystemMetrics(SM_CYCAPTION);
 
   rcWindow.top = 0;
   rcWindow.bottom = ulInnerHeight - 1;
@@ -144,7 +160,7 @@ WinMain(HINSTANCE hInst,
   yPos = (GetSystemMetrics(SM_CYSCREEN) - yHeight) / 2;
 
   rcTitlePanel.top = 0;
-  rcTitlePanel.bottom = 93;
+  rcTitlePanel.bottom = ulTitleHeight;
   rcTitlePanel.left = 0;
   rcTitlePanel.right = ulInnerWidth - 1;
 
@@ -159,7 +175,7 @@ WinMain(HINSTANCE hInst,
   rcRightPanel.right = ulInnerWidth - 1;
 
   if (!LoadString(hInstance, (UINT)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
-    _tcscpy(szAppTitle, TEXT("ReactOS Welcome"));
+    lstrcpy(szAppTitle, TEXT("ReactOS Welcome"));
 
   /* Create main window */
   hwndMain = CreateWindow(szFrameClass,
@@ -199,7 +215,7 @@ ButtonSubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	  nTopic = i;
 	  SetFocus(hWnd);
-	  InvalidateRect(hwndMain, NULL, TRUE);
+	  InvalidateRect(hwndMain, &rcRightPanel, TRUE);
 	}
     }
 
@@ -212,8 +228,8 @@ RunApplication(int nTopic)
 {
   PROCESS_INFORMATION ProcessInfo;
   STARTUPINFO StartupInfo;
-  CHAR AppName[256];
-  CHAR CurrentDir[256];
+  TCHAR AppName[256];
+  TCHAR CurrentDir[256];
   int nLength;
 
   InvalidateRect(hwndMain, NULL, TRUE);
@@ -222,17 +238,20 @@ RunApplication(int nTopic)
 
   nLength = LoadString(hInstance, IDS_TOPICACTION0 + nTopic, AppName, 256);
   if (nLength == 0)
-    return(FALSE);
+    return TRUE;
 
-  if (stricmp(AppName, "explorer.exe") == 0)
+  if (!lstrcmpi(AppName, TEXT("<exit>")))
+    return FALSE;
+
+  if (lstrcmpi(AppName, TEXT("explorer.exe")) == 0)
     {
-      strcat(AppName, " ");
-      strcat(AppName, CurrentDir);
+      lstrcat(AppName, TEXT(" "));
+      lstrcat(AppName, CurrentDir);
     }
 
   memset(&StartupInfo, 0, sizeof(STARTUPINFO));
   StartupInfo.cb = sizeof(STARTUPINFO);
-  StartupInfo.lpTitle = "Test";
+  StartupInfo.lpTitle = TEXT("Test");
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
@@ -244,8 +263,9 @@ RunApplication(int nTopic)
   CloseHandle(ProcessInfo.hProcess);
   CloseHandle(ProcessInfo.hThread);
 
-  return(TRUE);
+  return TRUE;
 }
+
 
 static VOID
 SubclassButton(HWND hWnd)
@@ -279,24 +299,16 @@ GetButtonHeight(HDC hDC,
 static LRESULT
 OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  char szText[80];
+  TCHAR szText[80];
   int i,nLength;
   DWORD dwTop;
   DWORD dwHeight = 0;
 
-  hbrLightBlue = CreateSolidBrush (LIGHT_BLUE);
+  hbrLightBlue = CreateSolidBrush(LIGHT_BLUE);
   hbrDarkBlue = CreateSolidBrush(DARK_BLUE);
-  hbrRightPanel = CreateSolidBrush (0x00FFFFFF);
+  hbrRightPanel = CreateSolidBrush(0x00FFFFFF);
 
-  /* Banner fonts */
-  hfontBannerTitle = CreateFont(-30,0,0,0,FW_BOLD,
-				FALSE,FALSE,FALSE,ANSI_CHARSET,
-			       OUT_DEFAULT_PRECIS,
-			       CLIP_DEFAULT_PRECIS,
-			       DEFAULT_QUALITY,
-			       FF_DONTCARE,
-			       "Arial");
-
+  /* Topic title font */
   hfontTopicTitle = CreateFont(-18,0,0,0,FW_NORMAL,
 			       FALSE,FALSE,FALSE,ANSI_CHARSET,
 			       OUT_DEFAULT_PRECIS,
@@ -305,7 +317,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			       FF_DONTCARE,
 			       "Arial");
 
-
+  /* Topic description font */
   hfontTopicDescription = CreateFont(-11,0,0,0,FW_THIN,
 				     FALSE,FALSE,FALSE,ANSI_CHARSET,
 				     OUT_DEFAULT_PRECIS,
@@ -314,6 +326,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				     FF_DONTCARE,
 				     "Arial");
 
+  /* Topic button font */
   hfontTopicButton = CreateFont(-11,0,0,0,FW_BOLD,
 				FALSE,FALSE,FALSE,ANSI_CHARSET,
 				OUT_DEFAULT_PRECIS,
@@ -322,26 +335,25 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				FF_DONTCARE,
 				"Arial");
 
-  /* Load bitmaps */
-  hTitleBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
+  /* Load title bitmap */
+  if (hTitleBitmap != 0)
+    hTitleBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
+
+  /* Load topic bitmaps */
   hDefaultTopicBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_DEFAULTTOPICBITMAP));
-#if 0
   for (i=0;i < 10; i++)
     {
       hTopicBitmap[i] = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0+i));
     }
-#endif
-  hTopBackgroundBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_TBACKGROUNDBITMAP));
-  hRightBackgroundBitmap = LoadBitmap (hInstance, MAKEINTRESOURCE(IDB_RBACKGROUNDBITMAP));
 
-  hdcDisplay = CreateDC ("DISPLAY", NULL, NULL, NULL);
+  hdcDisplay = CreateDC (TEXT("DISPLAY"), NULL, NULL, NULL);
   hdcMem = CreateCompatibleDC (hdcDisplay);
 
   /* load and create buttons */
   dwTop = rcLeftPanel.top;
-  for (i=0;i < 10; i++)
+  for (i = 0; i < 10; i++)
     {
-      nLength = LoadString(hInstance, IDS_TOPICBUTTON0+i,szText,80);
+      nLength = LoadString(hInstance, IDS_TOPICBUTTON0 + i, szText, 80);
       if (nLength > 0)
 	{
 	  dwHeight = GetButtonHeight(hdcMem,
@@ -349,7 +361,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				     szText,
 				     rcLeftPanel.right - rcLeftPanel.left);
 
-	  hwndTopicButton[i] = CreateWindow("BUTTON",
+	  hwndTopicButton[i] = CreateWindow(TEXT("BUTTON"),
 					    szText,
 					    WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_MULTILINE | BS_OWNERDRAW,
 					    rcLeftPanel.left,
@@ -377,7 +389,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
   nLength = LoadString(hInstance, IDS_CLOSETEXT, szText, 80);
   if (nLength > 0)
     {
-      hwndCloseButton = CreateWindow("BUTTON",
+      hwndCloseButton = CreateWindow(TEXT("BUTTON"),
 				     szText,
 				     WS_VISIBLE | WS_CHILD | BS_FLAT,
 				     rcRightPanel.right - 10 - 57,
@@ -396,7 +408,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
       hwndCloseButton = 0;
     }
-#if 0
+
   /* Create checkbox */
   nLength = LoadString(hInstance, IDS_CHECKTEXT,szText,80);
   if (nLength > 0)
@@ -406,9 +418,9 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				    CLIP_DEFAULT_PRECIS,
 				    DEFAULT_QUALITY,
 				    FF_DONTCARE,
-				    "Tahoma");
+				    TEXT("Tahoma"));
 
-      hwndCheckButton = CreateWindow("BUTTON",
+      hwndCheckButton = CreateWindow(TEXT("BUTTON"),
 				     szText,
 				     WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
 				     rcLeftPanel.left + 8,
@@ -426,7 +438,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
       hwndCheckButton = 0;
       hfontCheckButton = 0;
     }
-#endif
+
   return 0;
 }
 
@@ -454,13 +466,9 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
 {
   HBITMAP hOldBitmap;
   HBRUSH hOldBrush;
-  HFONT hOldFont;
-  RECT rcTitle;
-  int oldBkMode;
-  CHAR version[50];
 
-  /* Gradient background bitmap */
-  hOldBitmap = SelectObject(hdcMem, hTopBackgroundBitmap);
+  /* Title bitmap */
+  hOldBitmap = SelectObject(hdcMem, hTitleBitmap);
   BitBlt(hdc,
 	 rcPanel->left,
 	 rcPanel->top,
@@ -469,27 +477,7 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
 	 hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdc, hOldBitmap);
 
-  hOldFont = SelectObject (hdc, hfontBannerTitle);
-  SetTextColor(hdc, 0x00000000);
-
-  oldBkMode = GetBkMode(hdc);
-  SetBkMode(hdc, TRANSPARENT);
-
-  sprintf(version, "ReactOS %d.%d.%d",
-    KERNEL_VERSION_MAJOR,
-    KERNEL_VERSION_MINOR,
-    KERNEL_VERSION_PATCH_LEVEL);
-
-  rcTitle.top = 5;
-  rcTitle.left = 15;
-  DrawTextA(hdc, version, -1, &rcTitle, DT_TOP | DT_CALCRECT);
-  DrawTextA(hdc, version, -1, &rcTitle, DT_TOP);
-
-  SetBkMode(hdc, oldBkMode);
-
-  SelectObject(hdc, hOldFont);
-
-  /* dark blue line */
+  /* Dark blue line */
   hOldBrush = SelectObject(hdc, hbrDarkBlue);
   PatBlt(hdc,
 	 rcPanel->left,
@@ -516,7 +504,8 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   TCHAR szTopicTitle[80];
   TCHAR szTopicDesc[256];
   int nLength;
-  //BITMAP bmpInfo;
+  BITMAP bmpInfo;
+  TCHAR version[50];
 
   hdc = BeginPaint(hWnd, &ps);
 
@@ -531,25 +520,26 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	 rcLeftPanel.right - rcLeftPanel.left,
 	 rcLeftPanel.bottom - rcLeftPanel.top,
 	 PATCOPY);
+  SelectObject(hdc, hOldBrush);
 
   /* Right panel */
-  /* Gradient background bitmap */
-  hOldBitmap = SelectObject(hdcMem, hRightBackgroundBitmap);
-  BitBlt(hdc,
+  hOldBrush = SelectObject (hdc, WHITE_BRUSH);
+  PatBlt(hdc,
 	 rcRightPanel.left,
 	 rcRightPanel.top,
 	 rcRightPanel.right - rcRightPanel.left,
 	 rcRightPanel.bottom - rcRightPanel.top,
-	 hdcMem, 0, 0, SRCCOPY);
-  SelectObject(hdc, hOldBitmap);
+	 PATCOPY);
+  SelectObject(hdc, hOldBrush);
 
-	hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
-	hOldPen = SelectObject(hdc, hPen);
-	MoveToEx(hdc, rcRightPanel.left, rcRightPanel.top, NULL);
-	LineTo(hdc, rcRightPanel.left, rcRightPanel.bottom);
-	SelectObject(hdc, hOldPen);
-	DeleteObject(hPen);
-#if 0
+  /* Draw dark verical line */
+  hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
+  hOldPen = SelectObject(hdc, hPen);
+  MoveToEx(hdc, rcRightPanel.left, rcRightPanel.top, NULL);
+  LineTo(hdc, rcRightPanel.left, rcRightPanel.bottom);
+  SelectObject(hdc, hOldPen);
+  DeleteObject(hPen);
+
   /* Draw topic bitmap */
   if ((nTopic == -1) && (hDefaultTopicBitmap != 0))
     {
@@ -579,7 +569,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	     0,
 	     SRCCOPY);
     }
-#endif
+
   if (nTopic == -1)
     {
       nLength = LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szTopicTitle, 80);
@@ -603,6 +593,21 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
 
   SetBkMode(hdc, TRANSPARENT);
+
+  /* Draw version information */
+  wsprintf(version, TEXT("ReactOS %d.%d.%d"),
+    KERNEL_VERSION_MAJOR,
+    KERNEL_VERSION_MINOR,
+    KERNEL_VERSION_PATCH_LEVEL);
+
+  rcTitle.left = rcLeftPanel.left + 8;
+  rcTitle.right = rcLeftPanel.right - 5;
+  rcTitle.top = rcLeftPanel.bottom - 40;
+  rcTitle.bottom = rcLeftPanel.bottom - 5;
+  hOldFont = SelectObject(hdc, hfontTopicDescription);
+  DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_CALCRECT | DT_SINGLELINE);
+  DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_SINGLELINE);
+  SelectObject(hdc, hOldFont);
 
   /* Draw topic title */
   rcTitle.left = rcRightPanel.left + 12;
@@ -643,7 +648,7 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
   LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
   HPEN hPen, hOldPen;
   HBRUSH hOldBrush;
-  CHAR szText[80];
+  TCHAR szText[80];
   int iBkMode;
 
   if (lpDis->hwndItem == hwndCloseButton)
@@ -651,37 +656,38 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
       DrawFrameControl(lpDis->hDC,
 		       &lpDis->rcItem,
 		       DFC_BUTTON,
-		        DFCS_BUTTONPUSH | DFCS_FLAT);
+		       DFCS_BUTTONPUSH | DFCS_FLAT);
     }
   else
     {
-	if (lpDis->CtlID == (ULONG)nTopic)
-		hOldBrush = SelectObject(lpDis->hDC, hbrRightPanel);
-	else
-		hOldBrush = SelectObject(lpDis->hDC, hbrLightBlue);
-	PatBlt(lpDis->hDC,
-		   lpDis->rcItem.left,
-		   lpDis->rcItem.top,
-		   lpDis->rcItem.right,
-		   lpDis->rcItem.bottom,
-		   PATCOPY);
-	SelectObject(lpDis->hDC, hOldBrush);
+      if (lpDis->CtlID == (ULONG)nTopic)
+	hOldBrush = SelectObject(lpDis->hDC, hbrRightPanel);
+      else
+	hOldBrush = SelectObject(lpDis->hDC, hbrLightBlue);
 
-	hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
-	hOldPen = SelectObject(lpDis->hDC, hPen);
-	MoveToEx(lpDis->hDC, lpDis->rcItem.left, lpDis->rcItem.bottom-1, NULL);
-	LineTo(lpDis->hDC, lpDis->rcItem.right, lpDis->rcItem.bottom-1);
-	SelectObject(lpDis->hDC, hOldPen);
-	DeleteObject(hPen);
+      PatBlt(lpDis->hDC,
+	     lpDis->rcItem.left,
+	     lpDis->rcItem.top,
+	     lpDis->rcItem.right,
+	     lpDis->rcItem.bottom,
+	     PATCOPY);
+      SelectObject(lpDis->hDC, hOldBrush);
 
-	InflateRect(&lpDis->rcItem, -10, -4);
-	OffsetRect(&lpDis->rcItem, 0, 1);
-	GetWindowText(lpDis->hwndItem, szText, 80);
-	SetTextColor(lpDis->hDC, 0x00000000);
-	iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
-	DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
-	SetBkMode(lpDis->hDC, iBkMode);
-  }
+      hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
+      hOldPen = SelectObject(lpDis->hDC, hPen);
+      MoveToEx(lpDis->hDC, lpDis->rcItem.left, lpDis->rcItem.bottom-1, NULL);
+      LineTo(lpDis->hDC, lpDis->rcItem.right, lpDis->rcItem.bottom-1);
+      SelectObject(lpDis->hDC, hOldPen);
+      DeleteObject(hPen);
+
+      InflateRect(&lpDis->rcItem, -10, -4);
+      OffsetRect(&lpDis->rcItem, 0, 1);
+      GetWindowText(lpDis->hwndItem, szText, 80);
+      SetTextColor(lpDis->hDC, 0x00000000);
+      iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
+      DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
+      SetBkMode(lpDis->hDC, iBkMode);
+    }
 
   return 0;
 }
@@ -694,7 +700,7 @@ OnMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
       nTopic = -1;
       SetFocus(hWnd);
-      InvalidateRect(hwndMain, NULL, TRUE);
+      InvalidateRect(hwndMain, &rcRightPanel, TRUE);
     }
 
   return 0;
@@ -718,7 +724,7 @@ static LRESULT
 OnActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   nTopic = -1;
-  InvalidateRect(hwndMain, NULL, TRUE);
+  InvalidateRect(hwndMain, &rcRightPanel, TRUE);
 
   return(0);
 }
@@ -752,15 +758,10 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
       if (hTopicBitmap[i] != 0)
 	DeleteObject(hTopicBitmap[i]);
     }
-  DeleteObject(hTopBackgroundBitmap);
-  DeleteObject(hRightBackgroundBitmap);
 
   DeleteObject(hfontTopicTitle);
   DeleteObject(hfontTopicDescription);
   DeleteObject(hfontTopicButton);
-
-  DeleteObject(hfontBannerTitle);
-
 
   if (hfontCheckButton != 0)
     DeleteObject(hfontCheckButton);

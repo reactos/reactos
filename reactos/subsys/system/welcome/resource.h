@@ -3,7 +3,7 @@
 #define IDS_DEFAULTTOPICTITLE           1001
 #define IDS_DEFAULTTOPICDESC            1002
 #define IDS_FONTNAME                    1003
-//#define IDS_CHECKTEXT                   1004
+#define IDS_CHECKTEXT                   1004
 #define IDS_CLOSETEXT                   1005
 
 #define IDS_TOPICBUTTON0                1010
@@ -65,10 +65,7 @@
 /* Bitmaps */
 #define IDB_TITLEBITMAP                 101
 #define IDB_DEFAULTTOPICBITMAP          102
-#define IDB_TBACKGROUNDBITMAP           103
-#define IDB_RBACKGROUNDBITMAP           104
 
-#if 0
 #define IDB_TOPICBITMAP0                110
 #define IDB_TOPICBITMAP1                111
 #define IDB_TOPICBITMAP2                112
@@ -79,10 +76,8 @@
 #define IDB_TOPICBITMAP7                117
 #define IDB_TOPICBITMAP8                118
 #define IDB_TOPICBITMAP9                119
-#endif
 
+#define IDC_CLOSEBUTTON                 2000
+#define IDC_CHECKBUTTON                 2001
 
-#define IDC_CLOSEBUTTON			            2000
-#define IDC_CHECKBUTTON			            2001
-
-#define IDI_MAIN                         3000
+#define IDI_MAIN                        3000
