@@ -253,7 +253,7 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
 	  "(*SystemArgument1) %x\n", Apc, SystemArgument1,
 	  *SystemArgument1);
    IoSecondStageCompletion((PIRP)(*SystemArgument1),
-                           IO_NO_INCREMENT);
+                           SystemArgument2);
 }
 
 VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
@@ -308,7 +308,7 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 			   Irp->Overlay.AsynchronousParameters.UserApcContext);
 	KeInsertQueueApc(&Irp->Tail.Apc,
 			 Irp,
-			 NULL,
+			 PriorityBoost,
 			 KernelMode);
      }
    else
