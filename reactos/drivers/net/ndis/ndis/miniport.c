@@ -1388,7 +1388,7 @@ NdisIStartAdapter(
                                    KEY_ALL_ACCESS, &RegKeyHandle);
   if(Status != STATUS_SUCCESS)
     {
-      NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key %wZ\n", &RegKeyPathU));
+      NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key\n"));
       ExFreePool(Adapter);
       return;
     }
