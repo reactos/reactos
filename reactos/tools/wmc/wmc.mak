@@ -1,4 +1,4 @@
-WMC_BASE = tools$(SEP)wmc
+WMC_BASE = .$(SEP)tools$(SEP)wmc
 
 WMC_TARGET = \
 	$(ROS_INTERMEDIATE)$(WMC_BASE)$(SEP)wmc$(EXEPOSTFIX)

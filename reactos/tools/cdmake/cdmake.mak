@@ -1,4 +1,4 @@
-CDMAKE_BASE = tools$(SEP)cdmake
+CDMAKE_BASE = .$(SEP)tools$(SEP)cdmake
 
 CDMAKE_TARGET = \
 	$(ROS_INTERMEDIATE)$(CDMAKE_BASE)$(SEP)cdmake$(EXEPOSTFIX)

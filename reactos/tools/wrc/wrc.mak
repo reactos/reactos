@@ -1,4 +1,4 @@
-WRC_BASE = tools$(SEP)wrc
+WRC_BASE = .$(SEP)tools$(SEP)wrc
 
 WRC_TARGET = \
 	$(ROS_INTERMEDIATE)$(WRC_BASE)$(SEP)wrc$(EXEPOSTFIX)

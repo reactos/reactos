@@ -809,7 +809,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	string resFilename = ReplaceExtension ( sourceFilename,
 	                                        ".res" );
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s $(WRC_TARGET)\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
@@ -820,7 +820,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	         rciFilename.c_str () );
 	fprintf ( fMakefile,
 	         "\t${wrc} ${%s} %s %s\n",
-           windresflagsMacro.c_str (),
+	         windresflagsMacro.c_str (),
 	         rciFilename.c_str (),
 	         resFilename.c_str () );
 	fprintf ( fMakefile,

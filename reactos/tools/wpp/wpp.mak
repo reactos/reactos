@@ -1,4 +1,4 @@
-WPP_BASE = tools$(SEP)wpp
+WPP_BASE = .$(SEP)tools$(SEP)wpp
 
 WPP_TARGET = \
 	$(ROS_INTERMEDIATE)$(WPP_BASE)$(SEP)libwpp.a

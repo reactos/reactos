@@ -1,4 +1,4 @@
-RBUILD_BASE = tools$(SEP)rbuild
+RBUILD_BASE = .$(SEP)tools$(SEP)rbuild
 
 RBUILD_TARGET = \
 	$(ROS_INTERMEDIATE)$(RBUILD_BASE)$(SEP)rbuild$(EXEPOSTFIX)

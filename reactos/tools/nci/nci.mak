@@ -1,4 +1,4 @@
-NCI_BASE = tools$(SEP)nci
+NCI_BASE = .$(SEP)tools$(SEP)nci
 
 NCI_TARGET = \
 	$(ROS_INTERMEDIATE)$(NCI_BASE)$(SEP)nci$(EXEPOSTFIX)

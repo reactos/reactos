@@ -1,4 +1,4 @@
-UNICODE_BASE = tools$(SEP)unicode
+UNICODE_BASE = .$(SEP)tools$(SEP)unicode
 
 UNICODE_TARGET = \
 	$(ROS_INTERMEDIATE)$(UNICODE_BASE)$(SEP)libunicode.a
