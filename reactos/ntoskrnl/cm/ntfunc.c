@@ -6,6 +6,8 @@
  * UPDATE HISTORY:
 */
 
+/* INCLUDES *****************************************************************/
+
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -19,9 +21,16 @@
 
 #include "cm.h"
 
+
+/* GLOBALS ******************************************************************/
+
 extern POBJECT_TYPE  CmiKeyType;
 extern PREGISTRY_HIVE  CmiVolatileHive;
 
+static BOOLEAN CmiRegistryInitialized = FALSE;
+
+
+/* FUNCTIONS ****************************************************************/
 
 NTSTATUS STDCALL
 NtCreateKey(OUT PHANDLE KeyHandle,
@@ -775,9 +784,9 @@ END FIXME*/
   RegistryHive->HiveHeader->Checksum = 0;
   pEntDword = (DWORD *) RegistryHive->HiveHeader;
   for (i = 0; i < 127 ; i++)
-	  {
-	    RegistryHive->HiveHeader->Checksum ^= pEntDword[i];
-	  }
+    {
+      RegistryHive->HiveHeader->Checksum ^= pEntDword[i];
+    }
 
   /* Write new header */
   fileOffset.u.LowPart = 0;
@@ -1575,11 +1584,18 @@ NtUnloadKey(IN HANDLE KeyHandle)
 NTSTATUS STDCALL
 NtInitializeRegistry(IN BOOLEAN SetUpBoot)
 {
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_ACCESS_DENIED;
 
-  /* FIXME: save boot log file */
+  if (CmiRegistryInitialized == FALSE)
+    {
+      /* FIXME: save boot log file */
 
-  Status = CmiInitHives(SetUpBoot);
+      Status = CmiInitHives(SetUpBoot);
+
+      CmiRegistryInitialized = TRUE;
+    }
 
   return(Status);
 }
+
+/* EOF */
