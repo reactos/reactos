@@ -135,6 +135,7 @@
 @ stdcall mmioStringToFOURCCW(wstr long)
 @ stdcall mmioWrite(long ptr long)
 @ stdcall mmsystemGetVersion()
+@ stdcall mmTaskCreate(ptr ptr long)
 @ stdcall sndPlaySoundA(ptr long)
 @ stdcall sndPlaySoundW(ptr long)
 @ stdcall timeBeginPeriod(long)

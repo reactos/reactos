@@ -102,8 +102,9 @@ static	void WINMM_DeleteIData(void)
 	 * inside WINMM_IData */
         CloseHandle(WINMM_IData->psStopEvent);
         CloseHandle(WINMM_IData->psLastEvent);
+        WINMM_IData->cs.DebugInfo = NULL;
         DeleteCriticalSection(&WINMM_IData->cs);
-	HeapFree(GetProcessHeap(), 0, WINMM_IData);
+        HeapFree(GetProcessHeap(), 0, WINMM_IData);
         WINMM_IData = NULL;
     }
 }
@@ -3175,4 +3176,50 @@ UINT WINAPI waveInMessage(HWAVEIN hWaveIn, UINT uMessage,
 
 
     return MMDRV_Message(wmld, uMessage, dwParam1, dwParam2, TRUE);
+}
+
+struct mm_starter
+{
+    LPTASKCALLBACK      cb;
+    DWORD               client;
+    HANDLE              event;
+};
+
+DWORD WINAPI mmTaskRun(void* pmt)
+{
+    struct mm_starter mms;
+
+    memcpy(&mms, pmt, sizeof(struct mm_starter));
+    HeapFree(GetProcessHeap(), 0, pmt);
+    mms.cb(mms.client);
+    if (mms.event) SetEvent(mms.event);
+    return 0;
+}
+
+MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
+{
+    HANDLE               hThread;
+    HANDLE               hEvent;
+    struct mm_starter   *mms;
+
+    mms = HeapAlloc(GetProcessHeap(), 0, sizeof(struct mm_starter));
+    if (mms == NULL) { return TASKERR_OUTOFMEMORY; }
+
+    mms->cb = cb;
+    mms->client = client;
+    if (ph) {
+        mms->event = hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    } else {
+        mms->event = NULL;
+    }
+
+    hThread = CreateThread(0, 0, mmTaskRun, (LPVOID)&mms, 0, NULL);
+    if (!hThread) {
+        HeapFree(GetProcessHeap(), 0, mms);
+        CloseHandle(hEvent);
+        return TASKERR_OUTOFMEMORY;
+    }
+    if (ph) *ph = hEvent;
+    CloseHandle(hThread);
+    return 0;
 }

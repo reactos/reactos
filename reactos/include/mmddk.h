@@ -449,6 +449,16 @@ BOOL			WINAPI	mciFreeCommandResource(UINT uTable);
 BOOL		 	WINAPI	DriverCallback(DWORD dwCallBack, UINT uFlags, HDRVR hDev,
 					       UINT wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
 
+typedef void (*LPTASKCALLBACK)(DWORD dwInst);
+
+#define TASKERR_NOTASKSUPPORT 1
+#define TASKERR_OUTOFMEMORY   2
+MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD);
+void     WINAPI mmTaskBlock(HANDLE);
+BOOL     WINAPI mmTaskSignal(HANDLE);
+void     WINAPI mmTaskYield(void);
+HANDLE   WINAPI mmGetCurrentTask(void);
+
 #ifdef __WINESRC__
 #define  WAVE_DIRECTSOUND               0x0080
 #endif
