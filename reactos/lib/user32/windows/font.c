@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: font.c,v 1.9 2003/12/21 16:49:41 navaraf Exp $
+/* $Id: font.c,v 1.10 2004/06/27 11:24:06 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -97,8 +97,10 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
     else
     {
         TEXTMETRICA tm;
-        GetTextMetricsA( hdc, &tm );
-        defWidth = 8 * tm.tmAveCharWidth;
+        if (GetTextMetricsA( hdc, &tm ))
+            defWidth = 8 * tm.tmAveCharWidth;
+        else
+            defWidth = 0;
         if (cTabStops == 1)
             cTabStops = 0; /* on negative *lpTabPos */
     }
@@ -742,7 +744,7 @@ static const WCHAR *TEXT_NextLineW( HDC hdc, const WCHAR *str, int *count,
 {
     int i = 0, j = 0;
     int plen = 0;
-    SIZE size;
+    SIZE size = {0, 0};
     int maxl = *len;
     int seg_i, seg_count, seg_j;
     int max_seg_width;
@@ -950,7 +952,7 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 {
     int prefix_x;
     int prefix_end;
-    SIZE size;
+    SIZE size = {0, 0};
     HPEN hpen;
     HPEN oldPen;
 
