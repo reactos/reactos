@@ -172,6 +172,7 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tSHORT
 %token tSIGNED
 %token tSIZEIS tSIZEOF
+%token tSMALL
 %token tSOURCE
 %token tSTDCALL
 %token tSTRING tSTRUCT
@@ -553,7 +554,7 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 	| tSIGNED int_std			{ $$ = $2; $$->sign = 1; }
 	| tUNSIGNED int_std			{ $$ = $2; $$->sign = -1;
 						  switch ($$->type) {
-						  case RPC_FC_CHAR:  $$->type = RPC_FC_BYTE; $$->sign = 0; break;
+						  case RPC_FC_CHAR: break;
 						  case RPC_FC_SMALL: $$->type = RPC_FC_USMALL; break;
 						  case RPC_FC_SHORT: $$->type = RPC_FC_USHORT; break;
 						  case RPC_FC_LONG:  $$->type = RPC_FC_ULONG;  break;
@@ -565,9 +566,9 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 						}
 	| tFLOAT				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
 	| tDOUBLE				{ $$ = make_type(RPC_FC_DOUBLE, NULL); }
-	| tBOOLEAN				{ $$ = make_type(RPC_FC_BYTE, &std_bool); /* ? */ }
+	| tBOOLEAN				{ $$ = make_type(RPC_FC_SMALL, &std_bool); }
 	| tERRORSTATUST				{ $$ = make_type(RPC_FC_ERROR_STATUS_T, NULL); }
-	| tHANDLET				{ $$ = make_type(RPC_FC_BIND_PRIMITIVE, NULL); /* ? */ }
+	| tHANDLET				{ $$ = make_type(RPC_FC_IGNORE, NULL); }
 	;
 
 m_int:
@@ -575,6 +576,7 @@ m_int:
 	;
 
 int_std:  tINT					{ $$ = make_type(RPC_FC_LONG, &std_int); } /* win32 only */
+	| tSMALL m_int				{ $$ = make_type(RPC_FC_SMALL, NULL); }
 	| tSHORT m_int				{ $$ = make_type(RPC_FC_SHORT, NULL); }
 	| tLONG m_int				{ $$ = make_type(RPC_FC_LONG, NULL); }
 	| tHYPER m_int				{ $$ = make_type(RPC_FC_HYPER, NULL); }

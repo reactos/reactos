@@ -1,0 +1,11 @@
+ChangeLog
+
+2005-02-24 ekohl
+  include/wine/rpcfc.h
+  tools/widl/client.c
+  tools/widl/header.c
+  tools/widl/parser.l
+  tools/widl/parser.y
+  tools/widl/server.c
+
+Support remaining basic types (float, double, small, wchar_t and handle_t).

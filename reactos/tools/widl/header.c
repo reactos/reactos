@@ -245,7 +245,7 @@ void write_type(FILE *h, type_t *t, var_t *v, char *n)
         if (t->ref) fprintf(h, t->ref->name);
         else fprintf(h, "error_status_t");
         break;
-      case RPC_FC_BIND_PRIMITIVE:
+      case RPC_FC_IGNORE:
         if (t->ref) fprintf(h, t->ref->name);
         else fprintf(h, "handle_t");
         break;
@@ -511,6 +511,10 @@ void write_args(FILE *h, var_t *arg, char *name, int method, int do_indent)
     fprintf(h, "%s* This", name);
     count++;
   }
+  if (arg == NULL && method == 0) {
+    fprintf(h, "void");
+    return;
+  }
   while (arg) {
     if (count) {
         if (do_indent)
@@ -668,10 +672,7 @@ static void write_function_proto(type_t *iface)
     fprintf(header, " ");
     write_name(header, def);
     fprintf(header, "(\n");
-    if (cur->args)
-      write_args(header, cur->args, iface->name, 0, TRUE);
-    else
-      fprintf(header, "    void");
+    write_args(header, cur->args, iface->name, 0, TRUE);
     fprintf(header, ");\n");
 
     cur = PREV_LINK(cur);

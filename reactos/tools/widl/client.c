@@ -82,38 +82,49 @@ static void write_procformatstring(type_t *iface)
                 {
                 case RPC_FC_BYTE:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_BYTE */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_BYTE */\n", RPC_FC_BYTE);
                     break;
                 case RPC_FC_CHAR:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_CHAR */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_CHAR */\n", RPC_FC_CHAR);
                     break;
                 case RPC_FC_WCHAR:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_WCHAR */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_WCHAR */\n", RPC_FC_WCHAR);
                     break;
                 case RPC_FC_USHORT:
-                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_USHORT */\n", var->type->type);
-                    break;
                 case RPC_FC_SHORT:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_SHORT */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_USHORT */\n", RPC_FC_SHORT);
                     break;
                 case RPC_FC_ULONG:
-                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_ULONG */\n", var->type->type);
-                    break;
                 case RPC_FC_LONG:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_LONG */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_LONG */\n", RPC_FC_LONG);
                     break;
                 case RPC_FC_HYPER:
                     print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                    print_client("0x%02x,    /* RPC_FC_HYPER */\n", var->type->type);
+                    print_client("0x%02x,    /* FC_HYPER */\n", RPC_FC_HYPER);
+                    break;
+                case RPC_FC_IGNORE:
+                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_client("0x%02x,    /* FC_IGNORE */\n", RPC_FC_IGNORE);
+                    break;
+                case RPC_FC_SMALL:
+                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_client("0x%02x,    /* FC_SMALL */\n", RPC_FC_SMALL);
+                    break;
+                case RPC_FC_FLOAT:
+                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_client("0x%02x,    /* FC_FLOAT */\n", RPC_FC_FLOAT);
+                    break;
+                case RPC_FC_DOUBLE:
+                    print_client("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_client("0x%02x,    /* FC_DOUBLE */\n", RPC_FC_DOUBLE);
                     break;
                 default:
                     error("Unknown/unsupported type\n");
+                    return;
                 }
 
                 var = PREV_LINK(var);
@@ -133,38 +144,51 @@ static void write_procformatstring(type_t *iface)
             {
             case RPC_FC_BYTE:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_BYTE */\n", var->type->type);
+                print_client("0x%02x,    /* FC_BYTE */\n", var->type->type);
                 break;
             case RPC_FC_CHAR:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_CHAR */\n", var->type->type);
+                print_client("0x%02x,    /* FC_CHAR */\n", var->type->type);
                 break;
             case RPC_FC_WCHAR:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_WCHAR */\n", var->type->type);
+                print_client("0x%02x,    /* FC_WCHAR */\n", var->type->type);
                 break;
             case RPC_FC_USHORT:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_USHORT */\n", var->type->type);
+                print_client("0x%02x,    /* FC_USHORT */\n", var->type->type);
                 break;
             case RPC_FC_SHORT:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_SHORT */\n", var->type->type);
+                print_client("0x%02x,    /* FC_SHORT */\n", var->type->type);
                 break;
             case RPC_FC_ULONG:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_ULONG */\n", var->type->type);
+                print_client("0x%02x,    /* FC_ULONG */\n", var->type->type);
                 break;
             case RPC_FC_LONG:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_LONG */\n", var->type->type);
+                print_client("0x%02x,    /* FC_LONG */\n", var->type->type);
                 break;
             case RPC_FC_HYPER:
                 print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-                print_client("0x%02x,    /* RPC_FC_HYPER */\n", var->type->type);
+                print_client("0x%02x,    /* FC_HYPER */\n", var->type->type);
+                break;
+            case RPC_FC_SMALL:
+                print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_client("0x%02x,    /* FC_SMALL */\n", RPC_FC_SMALL);
+                break;
+            case RPC_FC_FLOAT:
+                print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_client("0x%02x,    /* FC_FLOAT */\n", RPC_FC_FLOAT);
+                break;
+            case RPC_FC_DOUBLE:
+                print_client("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_client("0x%02x,    /* FC_DOUBLE */\n", RPC_FC_DOUBLE);
                 break;
             default:
                 error("Unknown/unsupported type\n");
+                return;
             }
         }
 
@@ -220,6 +244,7 @@ static void print_message_buffer_size(func_t *func)
         {
         case RPC_FC_BYTE:
         case RPC_FC_CHAR:
+        case RPC_FC_SMALL:
             size = 1;
             alignment = 0;
             break;
@@ -234,26 +259,42 @@ static void print_message_buffer_size(func_t *func)
 
         case RPC_FC_ULONG:
         case RPC_FC_LONG:
+        case RPC_FC_FLOAT:
             size = 4;
             if (last_size != 0 && last_size < 4)
                 alignment += (4 - last_size);
             break;
 
         case RPC_FC_HYPER:
+        case RPC_FC_DOUBLE:
             size = 8;
             if (last_size != 0 && last_size < 4)
                 alignment += (4 - last_size);
+            break;
+
+        case RPC_FC_IGNORE:
+            size = 0;
             break;
 
         default:
             error("Unknown/unsupported type!");
         }
 
-        if (last_size != 0)
-            fprintf(client, " +");
-        fprintf(client, " %uU", size + alignment);
+        if (size == 0)
+        {
+            if (last_size != 0)
+                fprintf(client, " +");
+            fprintf(client, " 0U");
+        }
+        else
+        {
+            if (last_size != 0)
+                fprintf(client, " +");
+            fprintf(client, " %uU", size + alignment);
 
-        last_size = size;
+            last_size = size;
+        }
+        
 
         var = PREV_LINK(var);
     }
@@ -279,6 +320,7 @@ static void marshall_arguments(func_t *func)
         {
         case RPC_FC_BYTE:
         case RPC_FC_CHAR:
+        case RPC_FC_SMALL:
             size = 1;
             alignment = 0;
             break;
@@ -293,32 +335,41 @@ static void marshall_arguments(func_t *func)
 
         case RPC_FC_ULONG:
         case RPC_FC_LONG:
+        case RPC_FC_FLOAT:
             size = 4;
             if (last_size != 0 && last_size < 4)
                 alignment = (4 - last_size);
             break;
 
         case RPC_FC_HYPER:
+        case RPC_FC_DOUBLE:
             size = 8;
             if (last_size != 0 && last_size < 4)
                 alignment = (4 - last_size);
+            break;
+
+        case RPC_FC_IGNORE:
+            size = 0;
             break;
 
         default:
             error("Unknown/unsupported type!");
         }
 
-        if (alignment != 0)
-            print_client("_StubMsg.Buffer += %u;\n", alignment);
+        if (size != 0)
+        {
+            if (alignment != 0)
+                print_client("_StubMsg.Buffer += %u;\n", alignment);
 
-        print_client("*((");
-        write_type(client, var->type, var, var->tname);
-        fprintf(client, " __RPC_FAR*)_StubMsg.Buffer)++ = ");
-        write_name(client, var);
-        fprintf(client, ";\n");
-        fprintf(client, "\n");
+            print_client("*((");
+            write_type(client, var->type, var, var->tname);
+            fprintf(client, " __RPC_FAR*)_StubMsg.Buffer)++ = ");
+            write_name(client, var);
+            fprintf(client, ";\n");
+            fprintf(client, "\n");
 
-        last_size = size;
+            last_size = size;
+        }
 
         var = PREV_LINK(var);
     }
@@ -328,6 +379,7 @@ static void marshall_arguments(func_t *func)
 static void write_function_stubs(type_t *iface)
 {
     char *implicit_handle = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
+    int explitit_handle = is_attr(iface->attrs, ATTR_IMPLICIT_HANDLE);
     func_t *func = iface->funcs;
     var_t* var;
     int method_count = 0;
@@ -343,10 +395,7 @@ static void write_function_stubs(type_t *iface)
         write_name(client, def);
         fprintf(client, "(\n");
         indent++;
-        if (func->args)
-            write_args(client, func->args, iface->name, 0, TRUE);
-        else
-            print_client("void");
+        write_args(client, func->args, iface->name, 0, TRUE);
         fprintf(client, ")\n");
         indent--;
 

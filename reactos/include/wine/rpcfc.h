@@ -21,7 +21,7 @@
 #define RPC_FC_DOUBLE			0x0c
 #define RPC_FC_ENUM16			0x0d
 #define RPC_FC_ENUM32			0x0e
-
+#define RPC_FC_IGNORE			0x0f /* handle_t */
 #define RPC_FC_ERROR_STATUS_T		0x10
 
 /* other stuff */

@@ -4568,6 +4568,7 @@ static struct keyword {
 	{"size_is",			tSIZEIS},
 	{"sizeof",			tSIZEOF},
 /* ... */
+	{"small",			tSMALL},
 	{"source",			tSOURCE},
 /* ... */	
 	{"string",			tSTRING},
