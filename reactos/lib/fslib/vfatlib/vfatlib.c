@@ -42,7 +42,7 @@ VfatFormat(
   PARTITION_INFORMATION PartitionInfo;
   NTSTATUS Status;
 
-  DPRINT("VfatFormat(DriveRoot '%S')\n", DriveRoot->Buffer);
+  DPRINT("VfatFormat(DriveRoot '%wZ')\n", DriveRoot);
 
   InitializeObjectAttributes(&ObjectAttributes,
     DriveRoot,
@@ -81,10 +81,10 @@ VfatFormat(
 
   if (DiskGeometry.MediaType == FixedMedia)
     {
-      DPRINT("Cylinders %d\n", DiskGeometry.Cylinders.QuadPart);
-      DPRINT("TracksPerCylinder %d\n", DiskGeometry.TracksPerCylinder);
-      DPRINT("SectorsPerTrack %d\n", DiskGeometry.SectorsPerTrack);
-      DPRINT("BytesPerSector %d\n", DiskGeometry.BytesPerSector);
+      DPRINT("Cylinders %I64d\n", DiskGeometry.Cylinders.QuadPart);
+      DPRINT("TracksPerCylinder %ld\n", DiskGeometry.TracksPerCylinder);
+      DPRINT("SectorsPerTrack %ld\n", DiskGeometry.SectorsPerTrack);
+      DPRINT("BytesPerSector %ld\n", DiskGeometry.BytesPerSector);
       DPRINT("DiskSize %I64d\n",
         DiskGeometry.Cylinders.QuadPart *
         (ULONGLONG)DiskGeometry.TracksPerCylinder *
@@ -107,54 +107,64 @@ VfatFormat(
           NtClose(FileHandle);
           return Status;
         }
-
-      DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
-      DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset);
-      DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength);
-      DPRINT("HiddenSectors %d\n", PartitionInfo.HiddenSectors);
-      DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
-      DPRINT("BootIndicator 0x%x\n", PartitionInfo.BootIndicator);
-      DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
-      DPRINT("RecognizedPartition %d\n", PartitionInfo.RecognizedPartition);
-
-
-      if (PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
-	  PartitionInfo.PartitionType == PARTITION_FAT32)
-	{
-	  Status = Fat32Format (FileHandle,
-				&PartitionInfo,
-				&DiskGeometry,
-				Label,
-				QuickFormat,
-				ClusterSize,
-				Callback);
-	}
-      else if (PartitionInfo.PartitionType == PARTITION_FAT_12)
-	{
-	  Status = Fat12Format (FileHandle,
-				&PartitionInfo,
-				&DiskGeometry,
-				Label,
-				QuickFormat,
-				ClusterSize,
-				Callback);
-	}
-      else
-	{
-	  Status = Fat16Format (FileHandle,
-				&PartitionInfo,
-				&DiskGeometry,
-				Label,
-				QuickFormat,
-				ClusterSize,
-				Callback);
-	}
     }
   else
     {
-      DPRINT1("FIXME: Removable media is not supported\n");
-      NtClose(FileHandle);
-      return STATUS_UNSUCCESSFUL;
+      PartitionInfo.PartitionType = 0;
+      PartitionInfo.StartingOffset.QuadPart = 0ULL;
+      PartitionInfo.PartitionLength.QuadPart =
+	DiskGeometry.Cylinders.QuadPart *
+	(ULONGLONG)DiskGeometry.TracksPerCylinder *
+	(ULONGLONG)DiskGeometry.SectorsPerTrack *
+	(ULONGLONG)DiskGeometry.BytesPerSector;
+      PartitionInfo.HiddenSectors = 0;
+      PartitionInfo.PartitionNumber = 1;
+      PartitionInfo.BootIndicator = FALSE;
+      PartitionInfo.RewritePartition = FALSE;
+      PartitionInfo.RecognizedPartition = TRUE;
+    }
+
+  DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
+  DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset.QuadPart);
+  DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength.QuadPart);
+  DPRINT("HiddenSectors %lu\n", PartitionInfo.HiddenSectors);
+  DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
+  DPRINT("BootIndicator 0x%x\n", PartitionInfo.BootIndicator);
+  DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
+  DPRINT("RecognizedPartition %d\n", PartitionInfo.RecognizedPartition);
+
+  if (PartitionInfo.PartitionLength.QuadPart < (4200ULL * 1024ULL))
+    {
+      /* FAT12 (volume is smaller than 4.1MB) */
+      Status = Fat12Format (FileHandle,
+			    &PartitionInfo,
+			    &DiskGeometry,
+			    Label,
+			    QuickFormat,
+			    ClusterSize,
+			    Callback);
+    }
+  else if (PartitionInfo.PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
+    {
+      /* FAT16 (volume is smaller than 512MB) */
+      Status = Fat16Format (FileHandle,
+			    &PartitionInfo,
+			    &DiskGeometry,
+			    Label,
+			    QuickFormat,
+			    ClusterSize,
+			    Callback);
+    }
+  else
+    {
+      /* FAT32 (volume is 512MB or larger) */
+      Status = Fat32Format (FileHandle,
+			    &PartitionInfo,
+			    &DiskGeometry,
+			    Label,
+			    QuickFormat,
+			    ClusterSize,
+			    Callback);
     }
 
   NtClose(FileHandle);
