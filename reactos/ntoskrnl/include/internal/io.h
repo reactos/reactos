@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.22 2002/06/12 23:28:38 ekohl Exp $
+/* $Id: io.h,v 1.23 2002/08/28 07:13:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -302,17 +302,11 @@ VOID IoShutdownRegisteredDevices(VOID);
 VOID IoShutdownRegisteredFileSystems(VOID);
 
 NTSTATUS STDCALL
-IoPageRead(PFILE_OBJECT		FileObject,
-	   PMDL			Mdl,
-	   PLARGE_INTEGER		Offset,
-	   PIO_STATUS_BLOCK	StatusBlock,
-	   BOOLEAN PagingIo);
-NTSTATUS STDCALL
-IoPageWrite(PFILE_OBJECT		FileObject,
-	    PMDL			Mdl,
-	    PLARGE_INTEGER		Offset,
-	    PIO_STATUS_BLOCK	StatusBlock,
-	    BOOLEAN PagingIo);
+IoPageWrite(PFILE_OBJECT	FileObject,
+	    PMDL		Mdl,
+	    PLARGE_INTEGER	Offset,
+	    PKEVENT		Event,
+	    PIO_STATUS_BLOCK	StatusBlock);
 
 NTSTATUS
 IoCreateArcNames(VOID);

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.30 2002/04/10 09:55:10 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.31 2002/08/28 07:13:04 hbirr Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -1031,15 +1031,21 @@ STDCALL
 IoStopTimer (
 	PDEVICE_OBJECT	DeviceObject
 	);
-NTSTATUS
-STDCALL
-IoSynchronousPageWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+NTSTATUS STDCALL
+IoPageRead(PFILE_OBJECT		FileObject,
+	   PMDL			Mdl,
+	   PLARGE_INTEGER	Offset,
+	   PKEVENT		Event,
+	   PIO_STATUS_BLOCK	StatusBlock);
+
+NTSTATUS STDCALL 
+IoSynchronousPageWrite (PFILE_OBJECT	    FileObject,
+			PMDL		    Mdl,
+			PLARGE_INTEGER	    Offset,
+			PKEVENT		    Event,
+			PIO_STATUS_BLOCK    StatusBlock);
+
 struct _EPROCESS* STDCALL IoThreadToProcess (struct _ETHREAD*	Thread);
 VOID
 STDCALL

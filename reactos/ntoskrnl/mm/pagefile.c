@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.23 2002/08/17 01:42:02 dwelch Exp $
+/* $Id: pagefile.c,v 1.24 2002/08/28 07:13:04 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -125,6 +125,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
+   KEVENT Event;
    
    if (SwapEntry == 0)
      {
@@ -148,12 +149,17 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
      }
    
    file_offset.QuadPart = offset * 4096;
-     
+   KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Status = IoPageWrite(PagingFileList[i]->FileObject,
 			Mdl,
 			&file_offset,
-			&Iosb,
-			TRUE);
+			&Event,
+			&Iosb);
+   if (Status == STATUS_PENDING)
+   {
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      return(Iosb.Status);
+   }
    return(Status);
 }
 
@@ -163,6 +169,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
+   KEVENT Event;
    
    if (SwapEntry == 0)
      {
@@ -186,12 +193,17 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
      }
    
    file_offset.QuadPart = offset * 4096;
-     
+   KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Status = IoPageRead(PagingFileList[i]->FileObject,
 		       Mdl,
 		       &file_offset,
-		       &Iosb,
-		       TRUE);
+		       &Event,
+		       &Iosb);
+   if (Status == STATUS_PENDING)
+   {
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      return(Iosb.Status);
+   }
    return(Status);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.93 2002/08/27 06:40:32 hbirr Exp $
+/* $Id: section.c,v 1.94 2002/08/28 07:13:04 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -323,6 +323,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   PMDL Mdl;
   NTSTATUS Status;
   PREACTOS_COMMON_FCB_HEADER Fcb;
+  KEVENT Event;
 
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
   Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
@@ -399,11 +400,18 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       /*
        * Call the FSD to read the page
        */
+
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
       Status = IoPageRead(FileObject,
 			  Mdl,
 			  Offset,
-			  &IoStatus,
-			  TRUE);
+			  &Event,
+			  &IoStatus);
+      if (Status == STATUS_PENDING)
+      {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        return(IoStatus.Status);
+      }
       return(Status);
     }
 }

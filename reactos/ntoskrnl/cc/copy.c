@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.9 2002/08/17 15:14:26 hbirr Exp $
+/* $Id: copy.c,v 1.10 2002/08/28 07:13:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,6 +60,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
   LARGE_INTEGER SegOffset;
   NTSTATUS Status;
   ULONG TempLength;
+  KEVENT Event;
 
   Status = CcRosGetCacheSegmentChain(Bcb, ReadOffset, Length, &head);
   if (!NT_SUCCESS(Status))
@@ -131,11 +132,17 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	   * Read in the information.
 	   */
 	  SegOffset.QuadPart = current->FileOffset;
+	  KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	  Status = IoPageRead(Bcb->FileObject,
 			      Mdl,
 			      &SegOffset,
-			      &Iosb,
-			      TRUE);
+			      &Event,
+			      &Iosb);
+	  if (Status == STATUS_PENDING)
+	  {
+	     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+	     Status = Iosb.Status;
+	  }
 	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	    {
 	      while (current != NULL)
@@ -169,6 +176,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
   NTSTATUS Status;
   LARGE_INTEGER SegOffset;
   IO_STATUS_BLOCK IoStatus;
+  KEVENT Event;
 
   SegOffset.QuadPart = CacheSeg->FileOffset;
   Size = CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset;
@@ -178,8 +186,14 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     }
   Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
-  Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &IoStatus, 
-		      TRUE);
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, & Event, &IoStatus); 
+  if (Status == STATUS_PENDING)
+  {
+     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+     Status = IoStatus.Status;
+  }
+
   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
     {
       CcRosReleaseCacheSegment(CacheSeg->Bcb, CacheSeg, FALSE, FALSE, FALSE);
@@ -202,6 +216,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
   NTSTATUS Status;
   IO_STATUS_BLOCK IoStatus;
   LARGE_INTEGER SegOffset;
+  KEVENT Event;
 
   CacheSeg->Dirty = FALSE;
   SegOffset.QuadPart = CacheSeg->FileOffset;
@@ -212,8 +227,13 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     }
   Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
-  Status = IoPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &IoStatus, 
-		       TRUE);
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  Status = IoPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+  if (Status == STATUS_PENDING)
+  {
+     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+     Status = IoStatus.Status;
+  }
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("IoPageWrite failed, Status %x\n", Status);
@@ -444,6 +464,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   PMDL Mdl;
   ULONG i;
   IO_STATUS_BLOCK Iosb;
+  KEVENT Event;
   
   DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, "
 	 "Wait %d\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart, 
@@ -487,7 +508,13 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    {
 	      ((PULONG)(Mdl + 1))[i] = CcZeroPage.u.LowPart;
 	    }
-	  Status = IoPageWrite(FileObject, Mdl, StartOffset, &Iosb, TRUE);
+          KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	  Status = IoPageWrite(FileObject, Mdl, StartOffset, &Event, &Iosb);
+          if (Status == STATUS_PENDING)
+	  {
+             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+             Status = Iosb.Status;
+	  }
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(FALSE);
@@ -558,16 +585,13 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  else
 	    {
 	      ULONG RLength;
-	      Mdl = MmCreateMdl(NULL, (PVOID)RStart,
-				ROUND_UP(Start % Bcb->CacheSegmentSize + 
-					 Length, Bcb->CacheSegmentSize));
+	      RLength = Start % Bcb->CacheSegmentSize + Length;
+	      RLength = ROUND_UP(RLength, Bcb->CacheSegmentSize);
+	      Mdl = MmCreateMdl(NULL, (PVOID)RStart, RLength);
 	      if (Mdl == NULL)
 		{
 		  return(FALSE);
 		}
-	      RLength = ROUND_UP(RStart + Length, Bcb->CacheSegmentSize);
-	      RLength = min(RLength, Bcb->AllocationSize.u.LowPart);
-	      RLength -= RStart;
 	      Status = CcRosGetCacheSegmentChain (Bcb, RStart, RLength,
 						  &CacheSeg);
 	      if (!NT_SUCCESS(Status))
@@ -622,7 +646,13 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    }
 	  
 	  /* Write the Segment */
-	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Iosb, TRUE);
+          KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
+          if (Status == STATUS_PENDING)
+	  {
+             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+             Status = Iosb.Status;
+	  }
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1("IoPageWrite failed, status %x\n", Status);
