@@ -80,7 +80,7 @@ _Ki386ContextSwitch:
 	/*
 	 * Set the current thread information in the PCR.
 	 */
-	 movl	%ebx, %fs:KPCR_CURRENT_THREAD
+	movl	%ebx, %fs:KPCR_CURRENT_THREAD
 
 	/*
 	 * FIXME: Save debugging state.

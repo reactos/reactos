@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.27 2001/11/24 14:08:54 jfilby Exp $
+/* $Id: ps.h,v 1.28 2002/01/15 02:51:32 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -36,6 +36,7 @@
 #define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_PREVIOUS_MODE     0x137
 #define KTHREAD_TRAP_FRAME        0x128
+#define KTHREAD_CALLBACK_STACK    0x120
 
 #define ETHREAD_THREADS_PROCESS   0x258
 

@@ -3,3 +3,4 @@ junk.tmp
 temp.exp
 vfatfs.coff
 vfatfs.sys.unstripped
+*.d

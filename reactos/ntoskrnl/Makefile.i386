@@ -31,7 +31,8 @@ OBJECTS_KE_I386 := \
 	ke/i386/kernel.o \
 	ke/i386/fpu.o \
 	ke/i386/tss.o \
-	ke/i386/usertrap.o
+	ke/i386/usertrap.o \
+	ke/i386/stkswitch.o
 
 OBJECTS_MM_I386 := \
 	mm/i386/memsafe.o \

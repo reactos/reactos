@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.86 2002/01/15 01:42:57 phreak Exp $
+/* $Id: thread.c,v 1.87 2002/01/15 02:51:32 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -26,6 +26,8 @@
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/pool.h>
+#include <ntos/minmax.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -498,9 +500,92 @@ NtCallbackReturn (PVOID		Result,
 		  ULONG		ResultLength,
 		  NTSTATUS	Status)
 {
-  UNIMPLEMENTED;
+  PULONG OldStack;
+  PETHREAD Thread;
+  PNTSTATUS CallbackStatus;
+  PULONG CallerResultLength;
+  PVOID* CallerResult;
+  PVOID InitialStack;
+  PVOID StackBase;
+  ULONG StackLimit;
+  KIRQL oldIrql;
+
+  Thread = PsGetCurrentThread();
+  OldStack = (PULONG)Thread->Tcb.CallbackStack;
+  Thread->Tcb.CallbackStack = NULL;
+
+  CallbackStatus = (PNTSTATUS)OldStack[0];
+  CallerResultLength = (PULONG)OldStack[1];
+  CallerResult = (PVOID*)OldStack[2];
+  InitialStack = (PVOID)OldStack[3];
+  StackBase = (PVOID)OldStack[4];
+  StackLimit = OldStack[5];
+
+  *CallbackStatus = Status;
+  if (CallerResult != NULL && CallerResultLength != NULL)
+    {
+      if (Result == NULL)
+	{
+	  *CallerResultLength = 0;
+	}
+      else
+	{
+	  *CallerResultLength = min(ResultLength, *CallerResultLength);
+	  memcpy(*CallerResult, Result, *CallerResultLength);
+	}
+    }
+
+  KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+  Thread->Tcb.InitialStack = InitialStack;
+  Thread->Tcb.StackBase = StackBase;
+  Thread->Tcb.StackLimit = StackLimit;
+  KeStackSwitchAndRet((PVOID)(OldStack + 6));
+
+  /* Should never return. */
+  KeBugCheck(0);
+  return(STATUS_UNSUCCESSFUL);
 }
 
+PVOID STATIC
+PsAllocateCallbackStack(ULONG StackSize)
+{
+  PVOID KernelStack;
+  NTSTATUS Status;
+  PMEMORY_AREA StackArea;
+  ULONG i;
+
+  StackSize = PAGE_ROUND_UP(StackSize);
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  Status = MmCreateMemoryArea(NULL,
+			      MmGetKernelAddressSpace(),
+			      MEMORY_AREA_KERNEL_STACK,
+			      &KernelStack,
+			      StackSize,
+			      0,
+			      &StackArea,
+			      FALSE);
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());  
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Failed to create thread stack\n");
+      return(NULL);
+    }
+  for (i = 0; i < (StackSize / PAGESIZE); i++)
+    {
+      PVOID Page;
+      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(NULL);
+	}
+      Status = MmCreateVirtualMapping(NULL,
+				      KernelStack + (i * PAGESIZE),
+				      PAGE_EXECUTE_READWRITE,
+				      (ULONG)Page,
+				      TRUE);
+    }
+  return(KernelStack);
+}
 
 NTSTATUS STDCALL
 NtW32Call (IN ULONG RoutineIndex,
@@ -509,8 +594,60 @@ NtW32Call (IN ULONG RoutineIndex,
 	   OUT PVOID* Result OPTIONAL,
 	   OUT PULONG ResultLength OPTIONAL)
 {
-  UNIMPLEMENTED;
-}
+  PETHREAD Thread;
+  PVOID NewStack;
+  ULONG StackSize;
+  PKTRAP_FRAME NewFrame;
+  PULONG UserEsp;
+  KIRQL oldIrql;
+  ULONG SavedStackLimit;
+  PVOID SavedStackBase;
+  PVOID SavedInitialStack;
+  NTSTATUS CallbackStatus;
+
+  Thread = PsGetCurrentThread();
+  if (Thread->Tcb.CallbackStack != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  /* Set up the new kernel and user environment. */
+  StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
+  NewStack = PsAllocateCallbackStack(StackSize);
+  memcpy(NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
+	 sizeof(KTRAP_FRAME));
+  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - sizeof(KTRAP_FRAME));
+  NewFrame->Esp -= (ArgumentLength + (4 * sizeof(ULONG))); 
+  NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
+  UserEsp = (PULONG)NewFrame->Esp;
+  UserEsp[0] = 0;     /* Return address. */
+  UserEsp[1] = RoutineIndex;
+  UserEsp[2] = (ULONG)&UserEsp[4];
+  UserEsp[3] = ArgumentLength;
+  memcpy((PVOID)&UserEsp[4], Argument, ArgumentLength);
+
+  /* Switch to the new environment and return to user-mode. */
+  KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+  SavedStackLimit = Thread->Tcb.StackLimit;
+  SavedStackBase = Thread->Tcb.StackBase;
+  SavedInitialStack = Thread->Tcb.InitialStack;
+  Thread->Tcb.InitialStack = Thread->Tcb.StackBase = NewStack + StackSize;
+  Thread->Tcb.StackLimit = (ULONG)NewStack;
+  Thread->Tcb.KernelStack = NewStack + StackSize - sizeof(KTRAP_FRAME);
+  KePushAndStackSwitchAndSysRet(SavedStackLimit, 
+				(ULONG)SavedStackBase, 
+				(ULONG)SavedInitialStack, (ULONG)Result, 
+				(ULONG)ResultLength, (ULONG)&CallbackStatus, 
+				Thread->Tcb.KernelStack);
+
+  /* 
+   * The callback return will have already restored most of the state we 
+   * modified.
+   */
+  KeLowerIrql(PASSIVE_LEVEL);
+  ExFreePool(NewStack);
+  return(CallbackStatus);
+} 
 
 NTSTATUS STDCALL 
 NtContinue(IN PCONTEXT	Context,

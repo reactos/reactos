@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.3 2001/09/24 00:51:17 chorns Exp $
+/* $Id: syscall.S,v 1.4 2002/01/15 02:51:32 dwelch Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -33,6 +33,7 @@
 /*
  *
  */
+.globl KeReturnFromSystemCall	
 .globl _interrupt_handler2e
 _interrupt_handler2e:
 
@@ -124,7 +125,7 @@ L3:
            cmpl  %es:_KeServiceDescriptorTable + 8, %eax
            jbe   new_serviceInRange
            movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
-           jmp   new_done
+           jmp   KeReturnFromSystemCall
 
 new_serviceInRange:
 
@@ -163,7 +164,7 @@ new_serviceInRange:
 	   call _KiAfterSystemCallHook
 	   addl $8,%esp
 
-           jmp  new_done
+           jmp  KeReturnFromSystemCall
 
 new_useShadowTable:
 
@@ -173,7 +174,7 @@ new_useShadowTable:
            cmpl  %es:_KeServiceDescriptorTableShadow + 24, %eax
            jbe   new_shadowServiceInRange
            movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
-           jmp   new_done
+           jmp   KeReturnFromSystemCall
 
 new_shadowServiceInRange:
 
@@ -212,7 +213,7 @@ new_shadowServiceInRange:
 	   call _KiAfterSystemCallHook
 	   addl $8,%esp
 
-new_done:
+KeReturnFromSystemCall:
 
            /* Restore the user context */
 	   /* Get a pointer to the current thread */

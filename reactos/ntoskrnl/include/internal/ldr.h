@@ -48,6 +48,8 @@ PVOID
 LdrpGetSystemDllApcDispatcher(VOID);
 PVOID 
 LdrpGetSystemDllExceptionDispatcher(VOID);
+PVOID 
+LdrpGetSystemDllCallbackDispatcher(VOID);
 NTSTATUS
 LdrpMapImage (
 	HANDLE	ProcessHandle, 
