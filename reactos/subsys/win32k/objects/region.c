@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.29 2003/07/17 07:49:15 gvg Exp $ */
+/* $Id: region.c,v 1.30 2003/08/04 19:07:50 royce Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -340,14 +340,20 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
   HRGN hNewDst, hRet = NULL;
   GDIMULTILOCK Lock[2] = {{hDst, 0, GO_REGION_MAGIC}, {hSrc, 0, GO_REGION_MAGIC}};
 
-  if( !hDst ){
-	  if( !( hNewDst = RGNDATA_AllocRgn(1) ) ){
-		return 0;
-	  }
-	  Lock[0].hObj = hNewDst;
-  }
+  if( !hDst )
+    {
+      if( !( hNewDst = RGNDATA_AllocRgn(1) ) )
+	{
+	  return 0;
+	}
+      Lock[0].hObj = hNewDst;
+    }
 
-  GDIOBJ_LockMultipleObj(Lock, 2);
+  if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
+    {
+      DPRINT1("GDIOBJ_LockMultipleObj() failed\n" );
+      return 0;
+    }
   rgnDst = Lock[0].pObj;
   objSrc = Lock[1].pObj;
 
@@ -369,7 +375,7 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
 	  }
     }
   }
-  GDIOBJ_UnlockMultipleObj(Lock, 2);
+  GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
   return hRet;
 }
 
@@ -1349,7 +1355,7 @@ BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   if(dc->w.MapMode == MM_TEXT) // Requires only a translation
   {
     if(W32kCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
-	  goto done;
+      goto done;
 
     W32kOffsetRgn(hDest, dc->vportOrgX - dc->wndOrgX, dc->vportOrgY - dc->wndOrgY);
     ret = TRUE;
@@ -1439,48 +1445,56 @@ W32kCombineRgn(HRGN  hDest,
   GDIMULTILOCK Lock[3] = {{hDest, 0, GO_REGION_MAGIC}, {hSrc1, 0, GO_REGION_MAGIC}, {hSrc2, 0, GO_REGION_MAGIC}};
   PROSRGNDATA destRgn, src1Rgn, src2Rgn;
 
-  GDIOBJ_LockMultipleObj(Lock, 3);
+  if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
+    {
+      DPRINT1("GDIOBJ_LockMultipleObj() failed\n" );
+      return ERROR;
+    }
 
   destRgn = (PROSRGNDATA) Lock[0].pObj;
   src1Rgn = (PROSRGNDATA) Lock[1].pObj;
   src2Rgn = (PROSRGNDATA) Lock[2].pObj;
 
-  if( destRgn ){
-	if( src1Rgn ){
-  		if (CombineMode == RGN_COPY)
-  		{
-  		  if( !REGION_CopyRegion(destRgn, src1Rgn) )
-  				return ERROR;
-  		  result = destRgn->rdh.iType;
-  		}
-  		else
-  		{
-		  if( src2Rgn ){
-	  		  switch (CombineMode)
-	  		  {
-	  		    case RGN_AND:
-	  		      REGION_IntersectRegion(destRgn, src1Rgn, src2Rgn);
-	  		      break;
-	  		    case RGN_OR:
-	  		      REGION_UnionRegion(destRgn, src1Rgn, src2Rgn);
-	  		      break;
-	  		    case RGN_XOR:
-	  		      REGION_XorRegion(destRgn, src1Rgn, src2Rgn);
-	  		      break;
-	  		    case RGN_DIFF:
-	  		      REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
-	  		      break;
-	  		  }
-	  		  result = destRgn->rdh.iType;
-		  }
-  		}
-	}
-  }
-  else{
+  if( destRgn )
+    {
+      if( src1Rgn )
+	  {
+	    if (CombineMode == RGN_COPY)
+	      {
+		if( !REGION_CopyRegion(destRgn, src1Rgn) )
+		  return ERROR;
+		result = destRgn->rdh.iType;
+	      }
+	    else
+	    {
+	      if( src2Rgn )
+		{
+		  switch (CombineMode)
+		    {
+		      case RGN_AND:
+			REGION_IntersectRegion(destRgn, src1Rgn, src2Rgn);
+			break;
+		      case RGN_OR:
+			REGION_UnionRegion(destRgn, src1Rgn, src2Rgn);
+			break;
+		      case RGN_XOR:
+			REGION_XorRegion(destRgn, src1Rgn, src2Rgn);
+			break;
+		      case RGN_DIFF:
+			REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
+			break;
+		    }
+		  result = destRgn->rdh.iType;
+		}
+	    }
+	  }
+    }
+  else
+    {
       DPRINT("W32kCombineRgn: hDest unavailable\n");
-	  result = ERROR;
-  }
-  GDIOBJ_UnlockMultipleObj(Lock, 3);
+      result = ERROR;
+    }
+  GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
   return result;
 }
 
