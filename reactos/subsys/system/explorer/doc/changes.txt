@@ -90,3 +90,4 @@ If you search for more information, look into the CVS repository.
 17.09.2004	m. fuchs	handle "." and ".." as special direcory names and move them at the very first beginning of directory listings
 23.09.2004	m. fuchs	configuration dialog to choose between MDI and SDI mode with persistent storage
 20.11.2004	m. fuchs	display notification icon change times
+						notification area button to toggle hidden icons

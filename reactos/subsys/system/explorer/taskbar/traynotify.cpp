@@ -118,7 +118,7 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 		if (_hIcon)
 			DestroyIcon(_hIcon);
 
-		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, 16, 16, 0);
+		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0);
 	}
 
 #ifdef NIF_STATE	// as of 21.08.2003 missing in MinGW headers
@@ -227,6 +227,7 @@ void NotifyArea::read_config()
 
 		_hide_inactive = XMLBool(options, "hide-inactive", true);	///@todo read default setting from registry
 		_show_hidden = XMLBool(options, "show-hidden", false);	///@todo read default setting from registry
+		_show_button = XMLBool(options, "show-button", true);
 
 		XMLChildrenFilter icons(cfg_pos, "icon");
 
@@ -272,6 +273,7 @@ void NotifyArea::write_config()
 	XMLPos options(cfg_pos, "options");
 	XMLBoolRef(options, "hide-inactive") = _hide_inactive;
 	XMLBoolRef(options, "show-hidden") = _show_hidden;
+	XMLBoolRef(options, "show-button") = _show_button;
 
 	for(NotifyIconCfgList::iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
 		NotifyIconConfig& cfg = *it;
@@ -365,8 +367,11 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		SetWindowPos(_hwndClock, 0, cx-_clock_width, 0, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
 		break;}
 
-	  case PM_GET_WIDTH:
-		return _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
+	  case PM_GET_WIDTH: {
+		int w = _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
+		if (_show_button)
+			w += NOTIFYICON_DIST;
+		return w;}
 
 	  case PM_REFRESH_CONFIG:
 		read_config();
@@ -402,9 +407,11 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				|| nmsg==WM_XBUTTONDOWN
 #endif
 				)
+
 				CancelModes();
 
-			NotifyIconSet::const_iterator found = IconHitTest(Point(lparam));
+			Point pt(lparam);
+			NotifyIconSet::const_iterator found = IconHitTest(pt);
 
 			if (found != _sorted_icons.end()) {
 				const NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
@@ -446,7 +453,13 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				}
 				else if (_icon_map.erase(entry))	// delete icons without valid owner window
 					UpdateIcons();
-			}
+			} else
+				 // handle clicks on notification area button "show hidden icons"
+				if (_show_button)
+					if (nmsg == WM_LBUTTONDOWN)
+						if (pt.x>=NOTIFYICON_X && pt.x<NOTIFYICON_X+NOTIFYICON_SIZE &&
+							pt.y>=NOTIFYICON_Y && pt.y<NOTIFYICON_Y+NOTIFYICON_SIZE)
+							PostMessage(_hwnd, WM_COMMAND, MAKEWPARAM(ID_SHOW_HIDDEN_ICONS,0), 0);
 		}
 
 		return super::WndProc(nmsg, wparam, lparam);
@@ -491,12 +504,22 @@ int NotifyArea::Notify(int id, NMHDR* pnmh)
 		Point pt(GetMessagePos());
 		ScreenToClient(_hwnd, &pt);
 
-		NotifyIconSet::iterator found = IconHitTest(pt);
+		if (_show_button &&
+			pt.x>=NOTIFYICON_X && pt.x<NOTIFYICON_X+NOTIFYICON_SIZE &&
+			pt.y>=NOTIFYICON_Y && pt.y<NOTIFYICON_Y+NOTIFYICON_SIZE)
+		{
+			static ResString sShowIcons(IDS_SHOW_HIDDEN_ICONS);
+			static ResString sHideIcons(IDS_HIDE_ICONS);
 
-		if (found != _sorted_icons.end()) {
-			NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+			pdi->lpszText = (LPTSTR)(_show_hidden?sHideIcons:sShowIcons).c_str();
+		} else {
+			NotifyIconSet::iterator found = IconHitTest(pt);
 
-			pdi->lpszText = (LPTSTR)entry._tipText.c_str();
+			if (found != _sorted_icons.end()) {
+				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+
+				pdi->lpszText = (LPTSTR)entry._tipText.c_str();
+			}
 		}
 	}
 
@@ -581,10 +604,18 @@ void NotifyArea::UpdateIcons()
 
 	 // sync tooltip areas to current icon number
 	if (_sorted_icons.size() != _last_icon_count) {
-		RECT rect = {2, 3, 2+16, 3+16};
-		size_t icon_cnt = _sorted_icons.size();
+		RECT rect = {NOTIFYICON_X, NOTIFYICON_Y, NOTIFYICON_X+NOTIFYICON_SIZE, NOTIFYICON_Y+NOTIFYICON_SIZE};
 
 		size_t tt_idx = 0;
+
+		if (_show_button) {
+			_tooltip.add(_hwnd, tt_idx++, rect);
+
+			rect.left += NOTIFYICON_DIST;
+			rect.right += NOTIFYICON_DIST;
+		}
+
+		size_t icon_cnt = _sorted_icons.size();
 		while(tt_idx < icon_cnt) {
 			_tooltip.add(_hwnd, tt_idx++, rect);
 
@@ -612,11 +643,19 @@ void NotifyArea::Paint()
 	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
 
 	 // draw icons
-	int x = 2;
-	int y = 3;
+	int x = NOTIFYICON_X;
+	int y = NOTIFYICON_Y;
+
+	if (_show_button) {
+		static SmallIcon leftArrowIcon(IDI_NOTIFY_L);
+		static SmallIcon rightArrowIcon(IDI_NOTIFY_R);
+
+		DrawIconEx(canvas, x, y, _show_hidden?rightArrowIcon:leftArrowIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
+		x += NOTIFYICON_DIST;
+	}
 
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
-		DrawIconEx(canvas, x, y, it->_hIcon, 16, 16, 0, 0, DI_NORMAL);
+		DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
 
 		x += NOTIFYICON_DIST;
 	}
@@ -676,17 +715,20 @@ void NotifyArea::Refresh(bool update)
  /// search for a icon at a given client coordinate position
 NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 {
-	if (pos.y<2 || pos.y>=2+16)
+	if (pos.y<NOTIFYICON_Y || pos.y>=NOTIFYICON_Y+NOTIFYICON_SIZE)
 		return _sorted_icons.end();
 
 	NotifyIconSet::iterator it = _sorted_icons.begin();
 
-	int x = 2;
+	int x = NOTIFYICON_X;
+
+	if (_show_button)
+		x += NOTIFYICON_DIST;
 
 	for(; it!=_sorted_icons.end(); ++it) {
 		//NotifyInfo& entry = const_cast<NotifyInfo&>(*it);	// Why does GCC 3.3 need this additional const_cast ?!
 
-		if (pos.x>=x && pos.x<x+16)
+		if (pos.x>=x && pos.x<x+NOTIFYICON_SIZE)
 			break;
 
 		x += NOTIFYICON_DIST;
@@ -1096,7 +1138,7 @@ void TrayNotifyDlg::SetIconMode(NOTIFYICONMODE mode)
 	if (!lparam)
 		return;
 
-	NotifyIconConfig& entry = *(NotifyIconConfig*)lparam;
+	NotifyIconConfig& entry = _info[lparam];
 
 	if (entry._mode != mode) {
 		entry._mode = mode;

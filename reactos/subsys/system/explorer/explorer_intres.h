@@ -44,6 +44,8 @@
 #define IDS_NOTIFY_SHOW                 40
 #define IDS_NOTIFY_HIDE                 41
 #define IDS_NOTIFY_AUTOHIDE             42
+#define IDS_SHOW_HIDDEN_ICONS           43
+#define IDS_HIDE_ICONS                  44
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -109,6 +111,8 @@
 #define IDI_DOT_RED                     165
 #define IDI_ARROW_UP                    166
 #define IDI_ARROW_DOWN                  167
+#define IDI_NOTIFY_L                    168
+#define IDI_NOTIFY_R                    169
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -211,7 +215,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        166
+#define _APS_NEXT_RESOURCE_VALUE        169
 #define _APS_NEXT_COMMAND_VALUE         40024
 #define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101

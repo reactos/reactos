@@ -518,6 +518,14 @@ SOURCE=.\res\notify_h.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\notify_l.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\notify_r.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\notify_t.ico
 # End Source File
 # Begin Source File

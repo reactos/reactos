@@ -174,6 +174,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "show"
     IDS_NOTIFY_HIDE         "hide"
     IDS_NOTIFY_AUTOHIDE     "autohide"
+    IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
+    IDS_HIDE_ICONS          "Hide icons"
 END
 
 #endif    // Romanian resources
@@ -568,6 +570,8 @@ IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
 IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
 IDI_ARROW_UP            ICON    DISCARDABLE     "res/arrow_up.ico"
 IDI_ARROW_DOWN          ICON    DISCARDABLE     "res/arrow_dwn.ico"
+IDI_NOTIFY_L            ICON    DISCARDABLE     "res\\notify_l.ico"
+IDI_NOTIFY_R            ICON    DISCARDABLE     "res/notify_r.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -627,6 +631,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "sichtbar"
     IDS_NOTIFY_HIDE         "versteckt"
     IDS_NOTIFY_AUTOHIDE     "automatisch"
+    IDS_SHOW_HIDDEN_ICONS   "Zeige versteckte Icons"
+    IDS_HIDE_ICONS          "Verstecke Icons"
 END
 
 #endif    // German (Germany) resources
@@ -1117,6 +1123,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "show"
     IDS_NOTIFY_HIDE         "hide"
     IDS_NOTIFY_AUTOHIDE     "autohide"
+    IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
+    IDS_HIDE_ICONS          "Hide icons"
 END
 
 #endif    // English (U.S.) resources
@@ -1578,6 +1586,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "mostrar"
     IDS_NOTIFY_HIDE         "ocultar"
     IDS_NOTIFY_AUTOHIDE     "autoocultar"
+    IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
+    IDS_HIDE_ICONS          "Hide icons"
 END
 
 #endif    // Spanish (Castilian) resources
@@ -1746,6 +1756,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "show"
     IDS_NOTIFY_HIDE         "hide"
     IDS_NOTIFY_AUTOHIDE     "autohide"
+    IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
+    IDS_HIDE_ICONS          "Hide icons"
 END
 
 #endif    // French (France) resources
@@ -1957,6 +1969,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "show"
     IDS_NOTIFY_HIDE         "hide"
     IDS_NOTIFY_AUTOHIDE     "autohide"
+    IDS_SHOW_HIDDEN_ICONS   "Show hidden icons"
+    IDS_HIDE_ICONS          "Hide icons"
 END
 
 #endif    // Portuguese (Portugal) resources
