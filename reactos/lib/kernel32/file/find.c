@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.23 2000/01/11 17:30:16 ekohl Exp $
+/* $Id: find.c,v 1.24 2000/03/15 12:25:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 #include <wchar.h>
 #include <string.h>
@@ -58,177 +59,245 @@ typedef struct _WIN32_FIND_DATA_ASCII {
 /* FUNCTIONS *****************************************************************/
 
 
-static void FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE_DATA IData)
+static void
+FileDataToWin32Data (
+	LPWIN32_FIND_DATA		lpFindFileData,
+	PKERNEL32_FIND_FILE_DATA	IData
+	)
 {
-   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
-   memcpy(&lpFindFileData->ftCreationTime,&IData->FileInfo.CreationTime,sizeof(FILETIME));
-   memcpy(&lpFindFileData->ftLastAccessTime,&IData->FileInfo.LastAccessTime,sizeof(FILETIME));
-   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
-   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
-   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
+	lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+	memcpy (&lpFindFileData->ftCreationTime,
+	        &IData->FileInfo.CreationTime,
+	        sizeof(FILETIME));
+	memcpy (&lpFindFileData->ftLastAccessTime,
+	        &IData->FileInfo.LastAccessTime,
+	        sizeof(FILETIME));
+	memcpy (&lpFindFileData->ftLastWriteTime,
+	        &IData->FileInfo.LastWriteTime,
+	        sizeof(FILETIME));
+	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
+	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 }
 
-WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
-                                     LPWIN32_FIND_DATA lpFindFileData)
+
+WINBOOL
+STDCALL
+InternalFindNextFile (
+	HANDLE			hFindFile,
+	LPWIN32_FIND_DATA	lpFindFileData
+	)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
-   PKERNEL32_FIND_FILE_DATA IData;
-   
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-   
-   Status = NtQueryDirectoryFile(IData->DirectoryHandle,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 &IoStatusBlock,
-                                 (PVOID)&IData->FileInfo,
-                                 sizeof(IData->FileInfo) +
-                                 sizeof(IData->FileNameExtra),
-                                 FileBothDirectoryInformation,
-                                 TRUE,
-                                 &(IData->PatternStr),
-                                 FALSE);
-   DPRINT("Found %S\n",IData->FileInfo.FileName);
-   if (Status != STATUS_SUCCESS)
-   {
-        return(FALSE);
-   }
+	PKERNEL32_FIND_FILE_DATA IData;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-   FileDataToWin32Data(lpFindFileData, IData);
+	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
-   return(TRUE);
-}
+	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
+	                               NULL,
+	                               NULL,
+	                               NULL,
+	                               &IoStatusBlock,
+	                               (PVOID)&IData->FileInfo,
+	                               sizeof(IData->FileInfo) +
+	                               sizeof(IData->FileNameExtra),
+	                               FileBothDirectoryInformation,
+	                               TRUE,
+	                               &(IData->PatternStr),
+	                               FALSE);
+	DPRINT("Found %S\n",IData->FileInfo.FileName);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
 
-HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName, 
-                                      LPWIN32_FIND_DATA lpFindFileData)
-{
-   WCHAR CurrentDirectory[MAX_PATH];
-   WCHAR Pattern[MAX_PATH];
-   WCHAR Directory[MAX_PATH];
-   PWSTR End;
-   PKERNEL32_FIND_FILE_DATA IData;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING DirectoryNameStr;
-   IO_STATUS_BLOCK IoStatusBlock;
+	FileDataToWin32Data (lpFindFileData, IData);
 
-   DPRINT("FindFirstFileW(lpFileName %S, lpFindFileData %x)\n",
-       lpFileName, lpFindFileData);
-
-   GetFullPathNameW(lpFileName, MAX_PATH, CurrentDirectory, NULL);
-   Directory[0] = '\\';
-   Directory[1] = '?';
-   Directory[2] = '?';
-   Directory[3] = '\\';
-   Directory[4] = 0;
-   DPRINT("Directory %S\n",Directory);
-   wcscat(Directory, CurrentDirectory);
-   DPRINT("Directory %S\n",Directory);
-   End = wcsrchr(Directory, '\\');
-   *End = 0;
-   
-   wcscpy(Pattern, End+1);
-   *(End+1) = 0;
-   *End = '\\';
-
-   /* change pattern: "*.*" --> "*" */
-   if (!wcscmp(Pattern, L"*.*"))
-        Pattern[1] = 0;
-
-   DPRINT("Directory %S Pattern %S\n",Directory,Pattern);
-   
-   IData = HeapAlloc(GetProcessHeap(), 
-		     HEAP_ZERO_MEMORY, 
-		     sizeof(KERNEL32_FIND_FILE_DATA));
-   
-   RtlInitUnicodeString(&DirectoryNameStr, Directory);
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &DirectoryNameStr,
-			      0,
-			      NULL,
-			      NULL);
-
-   if (ZwOpenFile(&IData->DirectoryHandle,
-		  FILE_LIST_DIRECTORY,
-		  &ObjectAttributes,
-		  &IoStatusBlock,
-          FILE_OPEN_IF,
-		  OPEN_EXISTING)!=STATUS_SUCCESS)
-     {
-	return(NULL);
-     }
-
-   RtlInitUnicodeString(&(IData->PatternStr), Pattern);
-   
-   NtQueryDirectoryFile(IData->DirectoryHandle,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatusBlock,
-			(PVOID)&IData->FileInfo,
-			sizeof(IData->FileInfo) +
-			sizeof(IData->FileNameExtra),
-			FileBothDirectoryInformation,
-			TRUE,
-                        &(IData->PatternStr),
-			FALSE);
-   DPRINT("Found %S\n",IData->FileInfo.FileName);
-   
-   FileDataToWin32Data(lpFindFileData, IData);
-
-   return(IData);
+	return TRUE;
 }
 
 
 HANDLE
 STDCALL
-FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
+InternalFindFirstFile (
+	LPCWSTR			lpFileName,
+	LPWIN32_FIND_DATA	lpFindFileData
+	)
 {
-   WCHAR lpFileNameW[MAX_PATH];
-   ULONG i;
-   PKERNEL32_FIND_FILE_DATA IData;
-   PWIN32_FIND_DATA_ASCII Ret;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	PKERNEL32_FIND_FILE_DATA IData;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING NtPathU;
+	NTSTATUS Status;
+	PWSTR End;
 
-   i = 0;
-   while (lpFileName[i]!=0)
-     {
-        lpFileNameW[i] = lpFileName[i];
-	i++;
-     }
-   lpFileNameW[i] = 0;
-   
-   IData = InternalFindFirstFile(lpFileNameW,lpFindFileData);
-   if (IData == NULL)
-     {
-	DPRINT("Failing request\n");
-	return(INVALID_HANDLE_VALUE);
-     }
+	DPRINT("FindFirstFileW(lpFileName %S, lpFindFileData %x)\n",
+	       lpFileName, lpFindFileData);
+
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+	                                   &NtPathU,
+	                                   &End,
+	                                   NULL))
+		return FALSE;
+
+	DPRINT("NtPathU \'%S\' End \'%S\'\n", NtPathU.Buffer, End);
+
+	IData = RtlAllocateHeap (RtlGetProcessHeap (),
+	                         HEAP_ZERO_MEMORY,
+	                         sizeof(KERNEL32_FIND_FILE_DATA));
+
+	/* move seach pattern to separate string */
+	RtlCreateUnicodeString (&IData->PatternStr,
+	                        End);
+	*End = 0;
+	NtPathU.Length = wcslen(NtPathU.Buffer)*sizeof(WCHAR);
+
+	/* change pattern: "*.*" --> "*" */
+	if (!wcscmp (IData->PatternStr.Buffer, L"*.*"))
+	{
+		IData->PatternStr.Buffer[1] = 0;
+		IData->PatternStr.Length = sizeof(WCHAR);
+	}
+
+	DPRINT("NtPathU \'%S\' Pattern \'%S\'\n",
+	       NtPathU.Buffer, IData->PatternStr.Buffer);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+	                            &NtPathU,
+	                            0,
+	                            NULL,
+	                            NULL);
+
+	Status = NtOpenFile (&IData->DirectoryHandle,
+	                     FILE_LIST_DIRECTORY,
+	                     &ObjectAttributes,
+	                     &IoStatusBlock,
+	                     FILE_OPEN_IF,
+	                     OPEN_EXISTING);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             NtPathU.Buffer);
+
+	if (!NT_SUCCESS(Status))
+	{
+		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
+		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+		SetLastError (RtlNtStatusToDosError (Status));
+		return(NULL);
+	}
+
+	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
+	                               NULL,
+	                               NULL,
+	                               NULL,
+	                               &IoStatusBlock,
+	                               (PVOID)&IData->FileInfo,
+	                               sizeof(IData->FileInfo) +
+	                               sizeof(IData->FileNameExtra),
+	                               FileBothDirectoryInformation,
+	                               TRUE,
+	                               &(IData->PatternStr),
+	                               FALSE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Status %lx\n", Status);
+		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
+		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+		SetLastError (RtlNtStatusToDosError (Status));
+		return NULL;
+	}
+	DPRINT("Found %S\n",IData->FileInfo.FileName);
+
+	FileDataToWin32Data(lpFindFileData, IData);
+
+	return IData;
+}
 
 
-   Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
+HANDLE
+STDCALL
+FindFirstFileA (
+	LPCTSTR			lpFileName,
+	LPWIN32_FIND_DATA	lpFindFileData
+	)
+{
+	PKERNEL32_FIND_FILE_DATA IData;
+	PWIN32_FIND_DATA_ASCII Ret;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
 
-   DPRINT("IData->FileInfo.FileNameLength %d\n",
-	  IData->FileInfo.FileNameLength);
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
 
-   DPRINT("IData->FileInfo.ShortNameLength %d\n",
-	  IData->FileInfo.ShortNameLength);
-   if (IData->FileInfo.ShortNameLength > 13)
-     {
-	IData->FileInfo.ShortNameLength = 13;
-     }
-   for (i=0; i<IData->FileInfo.ShortNameLength; i++)
-     {
-	Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
-     }
-   Ret->cAlternateFileName[i] = 0;
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
 
+	IData = InternalFindFirstFile (FileNameU.Buffer, lpFindFileData);
 
-   return(IData);
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+
+	if (IData == NULL)
+	{
+		DPRINT("Failing request\n");
+		return INVALID_HANDLE_VALUE;
+	}
+
+	Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
+
+	DPRINT("IData->FileInfo.FileNameLength %d\n",
+	       IData->FileInfo.FileNameLength);
+
+	FileNameU.Length = IData->FileInfo.FileNameLength * sizeof(WCHAR);
+	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
+	FileNameU.Buffer = IData->FileInfo.FileName;
+
+	FileName.Length = 0;
+	FileName.MaximumLength = MAX_PATH;
+	FileName.Buffer = Ret->cFileName;
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName,
+		                              &FileNameU,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName,
+		                             &FileNameU,
+		                             FALSE);
+
+	DPRINT("IData->FileInfo.ShortNameLength %d\n",
+	       IData->FileInfo.ShortNameLength);
+
+	FileNameU.Length = IData->FileInfo.ShortNameLength * sizeof(WCHAR);
+	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
+	FileNameU.Buffer = IData->FileInfo.FileName;
+
+	FileName.Length = 0;
+	FileName.MaximumLength = 14;
+	FileName.Buffer = Ret->cAlternateFileName;
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName,
+		                              &FileNameU,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName,
+		                             &FileNameU,
+		                             FALSE);
+
+	return IData;
 }
 
 
@@ -236,60 +305,95 @@ WINBOOL
 STDCALL
 FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
 {
-   PWIN32_FIND_DATA_ASCII Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
-   ULONG i;
+	PWIN32_FIND_DATA_ASCII Ret;
+	PKERNEL32_FIND_FILE_DATA IData;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
 
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;   
-   if (IData == NULL)
-     {
-	return(FALSE);
-     }
-   if (!InternalFindNextFile(hFindFile, lpFindFileData))
-   {
-      DPRINT("InternalFindNextFile() failed\n");
-      return(FALSE);
-   }
+	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
+	if (IData == NULL)
+	{
+		return FALSE;
+	}
 
-   Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
+	if (!InternalFindNextFile (hFindFile, lpFindFileData))
+	{
+		DPRINT("InternalFindNextFile() failed\n");
+		return FALSE;
+	}
 
-   DPRINT("IData->FileInfo.FileNameLength %d\n",
-	  IData->FileInfo.FileNameLength);
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
-   
-   DPRINT("IData->FileInfo.ShortNameLength %d\n",
-	  IData->FileInfo.ShortNameLength);
-   for (i=0; i<IData->FileInfo.ShortNameLength; i++)
-     {
-	Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
-     }
-   Ret->cAlternateFileName[i] = 0;
+	Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
 
-   return(TRUE);
+	DPRINT("IData->FileInfo.FileNameLength %d\n",
+	       IData->FileInfo.FileNameLength);
+
+	FileNameU.Length = IData->FileInfo.FileNameLength * sizeof(WCHAR);
+	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
+	FileNameU.Buffer = IData->FileInfo.FileName;
+
+	FileName.Length = 0;
+	FileName.MaximumLength = MAX_PATH;
+	FileName.Buffer = Ret->cFileName;
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName,
+		                              &FileNameU,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName,
+		                             &FileNameU,
+		                             FALSE);
+
+	DPRINT("IData->FileInfo.ShortNameLength %d\n",
+	       IData->FileInfo.ShortNameLength);
+
+	FileNameU.Length = IData->FileInfo.ShortNameLength * sizeof(WCHAR);
+	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
+	FileNameU.Buffer = IData->FileInfo.FileName;
+
+	FileName.Length = 0;
+	FileName.MaximumLength = 14;
+	FileName.Buffer = Ret->cAlternateFileName;
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName,
+		                              &FileNameU,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName,
+		                             &FileNameU,
+		                             FALSE);
+
+	return TRUE;
 }
 
 
 BOOL
 STDCALL
-FindClose(HANDLE hFindFile)
+FindClose (
+	HANDLE	hFindFile
+	)
 {
-   PKERNEL32_FIND_FILE_DATA IData;
-   
-   DPRINT("FindClose(hFindFile %x)\n",hFindFile);
+	PKERNEL32_FIND_FILE_DATA IData;
 
-   if (hFindFile || hFindFile == INVALID_HANDLE_VALUE)
-     {
-       SetLastError (ERROR_INVALID_HANDLE);
-       return(FALSE);
-     }
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-   CloseHandle(IData->DirectoryHandle);
-   HeapFree(GetProcessHeap(), 0, IData);
-   return(TRUE);
+	DPRINT("FindClose(hFindFile %x)\n",hFindFile);
+
+	if (hFindFile || hFindFile == INVALID_HANDLE_VALUE)
+	{
+		SetLastError (ERROR_INVALID_HANDLE);
+		return FALSE;
+	}
+
+	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
+
+	CloseHandle (IData->DirectoryHandle);
+	if (IData->PatternStr.Buffer)
+		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
+	RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+
+	return TRUE;
 }
 
 
@@ -300,18 +404,26 @@ FindFirstFileW (
 	LPWIN32_FIND_DATA	lpFindFileData
 	)
 {
-   PWIN32_FIND_DATA_UNICODE Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
+	PWIN32_FIND_DATA_UNICODE Ret;
+	PKERNEL32_FIND_FILE_DATA IData;
 
-   IData = InternalFindFirstFile(lpFileName,lpFindFileData);
-   Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
+	IData = InternalFindFirstFile (lpFileName, lpFindFileData);
+	if (IData == NULL)
+	{
+		DPRINT("Failing request\n");
+		return INVALID_HANDLE_VALUE;
+	}
 
-   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
-	  IData->FileInfo.FileNameLength);
-   memcpy(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
-	  IData->FileInfo.ShortNameLength);
+	Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
 
-   return(IData);
+	memcpy (Ret->cFileName,
+	        IData->FileInfo.FileName,
+	        IData->FileInfo.FileNameLength);
+	memcpy (Ret->cAlternateFileName,
+	        IData->FileInfo.ShortName,
+	        IData->FileInfo.ShortNameLength);
+
+	return IData;
 }
 
 
@@ -322,23 +434,27 @@ FindNextFileW (
 	LPWIN32_FIND_DATA	lpFindFileData
 	)
 {
-   PWIN32_FIND_DATA_UNICODE Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
+	PWIN32_FIND_DATA_UNICODE Ret;
+	PKERNEL32_FIND_FILE_DATA IData;
 
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;   
-   if (!InternalFindNextFile(hFindFile, lpFindFileData))
-   {
-        return(FALSE);
-   }
+	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
+	if (!InternalFindNextFile(hFindFile, lpFindFileData))
+	{
+		DPRINT("Failing request\n");
+		return FALSE;
+	}
 
-   Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
+	Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
 
-   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
-	  IData->FileInfo.FileNameLength);
-   memcpy(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
-	  IData->FileInfo.ShortNameLength);
+	memcpy (Ret->cFileName,
+	        IData->FileInfo.FileName,
+	        IData->FileInfo.FileNameLength);
 
-   return(TRUE);
+	memcpy (Ret->cAlternateFileName,
+	        IData->FileInfo.ShortName,
+	        IData->FileInfo.ShortNameLength);
+
+	return TRUE;
 }
 
 /* EOF */
