@@ -559,11 +559,19 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 		          GetLinkerMacro ( module ).c_str () );
 
 		fprintf ( fMakefile,
+		          "\t${rm} %s\n",
+		          junk_tmp.c_str () );
+
+		fprintf ( fMakefile,
 	              "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s --kill-at\n",
 	              targetName.c_str (),
 	              base_tmp.c_str (),
 		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
 	              temp_exp.c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${rm} %s\n",
+		          base_tmp.c_str () );
 
 		fprintf ( fMakefile,
 		          "\t%s %s %s -o %s %s %s %s\n\n",
@@ -574,6 +582,10 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 		          objectFilenames.c_str (),
 		          importLibraryDependencies.c_str (),
 		          GetLinkerMacro ( module ).c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${rm} %s\n\n",
+		          temp_exp.c_str () );
 	}
 	else
 	{
