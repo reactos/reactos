@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: ncpa.c,v 1.3 2004/09/26 15:55:52 weiden Exp $
+/* $Id: ncpa.c,v 1.4 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/ncpa.c
@@ -129,7 +129,7 @@ void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc,LPARAM lP
 
 
 LONG CALLBACK DisplayApplet(VOID);
-BOOL CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo);
 
 HINSTANCE hApplet = 0;
@@ -240,7 +240,8 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 
 
 
-BOOL CALLBACK NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
 	switch(uMsg)
@@ -426,7 +427,8 @@ void DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 
 
 
-BOOL CALLBACK NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg)
 	{
@@ -608,7 +610,8 @@ void EnumAdapters(HWND hwndDlg)
 }
 
 
-BOOL CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	NMHDR* pnmh;
 	int nIndex;

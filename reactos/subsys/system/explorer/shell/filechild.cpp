@@ -93,7 +93,7 @@ WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
 }
 
 
-BOOL CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+INT_PTR CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static struct ExecuteDialog* dlg;
 

@@ -35,7 +35,7 @@
 
 HANDLE        hProcessAffinityHandle;
 
-LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void ProcessPage_OnSetAffinity(void)
 {
@@ -69,7 +69,8 @@ void ProcessPage_OnSetAffinity(void)
     }
 }
 
-LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     DWORD    dwProcessAffinityMask = 0;
     DWORD    dwSystemAffinityMask = 0;

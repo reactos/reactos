@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userprofile.c,v 1.1 2004/06/30 10:53:05 ekohl Exp $
+/* $Id: userprofile.c,v 1.2 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/computer.c
@@ -31,7 +31,7 @@
 #include "sysdm.h"
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 UserProfilePageProc(
   HWND hwndDlg,
   UINT uMsg,

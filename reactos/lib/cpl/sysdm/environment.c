@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: environment.c,v 1.4 2004/09/26 15:55:53 weiden Exp $
+/* $Id: environment.c,v 1.5 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/sysdm/environment.c
@@ -42,7 +42,7 @@ typedef struct _VARIABLE_DATA
 
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 EditVariableDlgProc(HWND hwndDlg,
 		    UINT uMsg,
 		    WPARAM wParam,
@@ -475,7 +475,7 @@ ReleaseListViewItems(HWND hwndDlg,
 
 
 /* Environment dialog procedure */
-BOOL CALLBACK
+INT_PTR CALLBACK
 EnvironmentDlgProc(HWND hwndDlg,
 		   UINT uMsg,
 		   WPARAM wParam,

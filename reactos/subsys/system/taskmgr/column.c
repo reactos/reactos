@@ -33,8 +33,8 @@
 
 UINT    ColumnDataHints[25];
 
-int                    InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
-LRESULT CALLBACK    ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+int                 InsertColumn(int nCol, LPCTSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
+INT_PTR CALLBACK    ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void AddColumns(void)
 {
@@ -368,7 +368,8 @@ void ProcessPage_OnViewSelectColumns(void)
     }
 }
 
-LRESULT CALLBACK ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
     switch (message)

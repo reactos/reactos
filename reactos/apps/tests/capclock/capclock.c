@@ -1,4 +1,4 @@
-/* $Id: capclock.c,v 1.3 2003/11/14 17:13:16 weiden Exp $
+/* $Id: capclock.c,v 1.4 2004/10/11 21:08:03 weiden Exp $
  *
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)
@@ -27,7 +27,7 @@ INT STDCALL WinMain (HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR lpCmdLine, INT 
 	wc.hbrBackground  = (HBRUSH) (COLOR_WINDOW + 1);
 	wc.lpszClassName  = "CapClock";
 	RegisterClass (& wc);
-	return DialogBox(hinst, MAKEINTRESOURCE(2), NULL, (DLGPROC) DialogFunc);
+	return DialogBox(hinst, MAKEINTRESOURCE(2), NULL, DialogFunc);
 
 }
 static int InitializeApp (HWND hDlg,WPARAM wParam, LPARAM lParam)
@@ -36,7 +36,7 @@ static int InitializeApp (HWND hDlg,WPARAM wParam, LPARAM lParam)
 	TimerProc (hDlg,0,0,0);
 	return 1;
 }
-static BOOL CALLBACK DialogFunc (HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK DialogFunc (HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{

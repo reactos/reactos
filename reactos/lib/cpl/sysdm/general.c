@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: general.c,v 1.2 2004/06/30 10:53:05 ekohl Exp $
+/* $Id: general.c,v 1.3 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/general.c
@@ -90,7 +90,7 @@ ObtainSystemInformationThread(POSITINFO posit)
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 GeneralPageProc(
   HWND hwndDlg,
   UINT uMsg,

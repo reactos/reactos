@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cplsample.c,v 1.3 2004/07/10 22:06:40 kuehng Exp $
+/* $Id: cplsample.c,v 1.4 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS Sample Control Panel
  * FILE:            lib/cpl/cplsample/cplsample.c
@@ -53,7 +53,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 Page1Proc(
   HWND hwndDlg,
   UINT uMsg,
@@ -70,7 +70,7 @@ Page1Proc(
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 Page2Proc(
   HWND hwndDlg,
   UINT uMsg,
@@ -87,7 +87,7 @@ Page2Proc(
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 Page3Proc(
   HWND hwndDlg,
   UINT uMsg,

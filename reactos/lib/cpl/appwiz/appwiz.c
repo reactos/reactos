@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: appwiz.c,v 1.3 2004/07/10 22:06:39 kuehng Exp $
+/* $Id: appwiz.c,v 1.4 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS Software Control Panel
  * FILE:            lib/cpl/system/appwiz.c
@@ -42,8 +42,8 @@
 #define NUM_APPLETS	(1)
 
 LONG CALLBACK SystemApplet(VOID);
-BOOL CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
 
 /* Applets */
@@ -106,7 +106,7 @@ CallUninstall(HWND hwndDlg)
 
 
 /* Property page dialog callback */
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 InstallPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
   TCHAR pszName[MAX_PATH];
@@ -183,7 +183,7 @@ InstallPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 
 /* Property page dialog callback */
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 RosPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
   switch(uMsg)

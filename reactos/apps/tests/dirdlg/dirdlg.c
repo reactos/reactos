@@ -6,7 +6,7 @@
 
 static char selected[MAX_PATH + 1];
 
-BOOL 
+INT_PTR
 CALLBACK 
 DlgMainProc(
   HWND hwndDlg,

@@ -106,7 +106,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         return -1;
     }
 
-    DialogBox(hInst, (LPCTSTR)IDD_TASKMGR_DIALOG, NULL, (DLGPROC)TaskManagerWndProc);
+    DialogBox(hInst, (LPCTSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
  
     /* Save our settings to the registry */
     SaveSettings();
@@ -115,7 +115,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 }
 
 /* Message handler for dialog box. */
-LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC             hdc;
     PAINTSTRUCT     ps;

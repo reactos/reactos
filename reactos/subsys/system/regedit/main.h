@@ -80,10 +80,10 @@ extern TCHAR szChildClass[];
 extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
-extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+extern INT_PTR CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 
 /* framewnd.c */
-extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+extern INT_PTR CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void SetupStatusBar(HWND hWnd, BOOL bResize);
 extern void UpdateStatusBar(void);
 

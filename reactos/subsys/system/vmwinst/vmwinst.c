@@ -18,7 +18,7 @@
  *
  * VMware is a registered trademark of VMware, Inc.
  */
-/* $Id: vmwinst.c,v 1.11 2004/09/24 20:20:46 weiden Exp $
+/* $Id: vmwinst.c,v 1.12 2004/10/11 21:08:05 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -369,7 +369,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DWORD Flags, DLGPROC DlgProc)
 }
 
 /* Property page dialog callback */
-int CALLBACK
+INT_PTR CALLBACK
 PageWelcomeProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -414,7 +414,7 @@ PageWelcomeProc(
 }
 
 /* Property page dialog callback */
-int CALLBACK
+INT_PTR CALLBACK
 PageInsertDiscProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -569,7 +569,7 @@ InstStartInstallationThread(HWND hwndNotify)
 }
 
 /* Property page dialog callback */
-int CALLBACK
+INT_PTR CALLBACK
 PageInstallingProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -638,7 +638,7 @@ PageInstallingProc(
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 PageInstallFailedProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -686,7 +686,7 @@ typedef struct
 } MAPCTLRES;
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 PageConfigProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -799,7 +799,7 @@ PageConfigProc(
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 PageChooseActionProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -851,7 +851,7 @@ PageChooseActionProc(
 }
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 PageSelectDriverProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -921,7 +921,7 @@ ShowUninstNotice(HWND Owner)
   MessageBox(Owner, Msg, NULL, MB_ICONINFORMATION);
 }
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 PageDoUninstallProc(
   HWND hwndDlg,
   UINT uMsg,

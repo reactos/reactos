@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.8 2004/09/26 15:55:53 weiden Exp $
+/* $Id: wizard.c,v 1.9 2004/10/11 21:08:04 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -98,7 +98,7 @@ CreateTitleFont(VOID)
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
                UINT uMsg,
                WPARAM wParam,
@@ -164,7 +164,7 @@ WelcomeDlgProc(HWND hwndDlg,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 OwnerPageDlgProc(HWND hwndDlg,
                  UINT uMsg,
                  WPARAM wParam,
@@ -254,7 +254,7 @@ OwnerPageDlgProc(HWND hwndDlg,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 ComputerPageDlgProc(HWND hwndDlg,
                     UINT uMsg,
                     WPARAM wParam,
@@ -355,7 +355,7 @@ ComputerPageDlgProc(HWND hwndDlg,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 LocalePageDlgProc(HWND hwndDlg,
                   UINT uMsg,
                   WPARAM wParam,
@@ -406,7 +406,7 @@ LocalePageDlgProc(HWND hwndDlg,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 ProcessPageDlgProc(HWND hwndDlg,
                    UINT uMsg,
                    WPARAM wParam,
@@ -481,7 +481,7 @@ ProcessPageDlgProc(HWND hwndDlg,
 
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 FinishDlgProc(HWND hwndDlg,
               UINT uMsg,
               WPARAM wParam,

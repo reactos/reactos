@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.9 2004/03/28 12:19:07 weiden Exp $
+/* $Id: msgina.c,v 1.10 2004/10/11 21:08:04 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -42,7 +42,7 @@ typedef struct _DISPLAYSTATUSMSG
   HANDLE StartupEvent;
 } DISPLAYSTATUSMSG, *PDISPLAYSTATUSMSG;
 
-BOOL CALLBACK 
+INT_PTR CALLBACK
 LoggedOnDlgProc(
   HWND hwndDlg,
   UINT uMsg,

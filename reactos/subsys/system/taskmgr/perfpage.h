@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 extern	HWND		hPerformancePage;		/* Performance Property Page */
-LRESULT CALLBACK	PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK	PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void	RefreshPerformancePage(void);
 void	PerformancePage_OnViewShowKernelTimes(void);
 void	PerformancePage_OnViewCPUHistoryOneGraphAll(void);

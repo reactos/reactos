@@ -30,14 +30,15 @@
     
 #include "about.h"
 
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void OnAbout(void)
 {
     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, (DLGPROC)AboutDialogWndProc);
 }
 
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;
     TCHAR    strLicense[0x1000];
