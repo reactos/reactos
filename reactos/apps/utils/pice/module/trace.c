@@ -69,7 +69,6 @@ NewInt1Handler:
 
         popl %eax
         pushl $" STR(REASON_SINGLESTEP) "
-		//call _ping1
         jmp NewInt31Handler
 
 exceptionnotsinglestep:
