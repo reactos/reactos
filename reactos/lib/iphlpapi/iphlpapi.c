@@ -90,9 +90,6 @@ CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
     return 0L;
 }
 
-
-#ifdef __GNUC__
-
 DWORD
 WINAPI
 GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
@@ -100,14 +97,137 @@ GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
     return 0;
 }
 
-DWORD
-WINAPI
-GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
+DWORD WINAPI MyGetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
-    return 0;
-}
+	LONG lErr;
+	DWORD dwSize;
+	DWORD dwIndex;
+	BYTE* pNextMemFree = (BYTE*) pAdapterInfo;
+	ULONG uUsedMemory = 0;
+	PIP_ADAPTER_INFO pPrevAdapter = NULL;
+	PIP_ADAPTER_INFO pCurrentAdapter = NULL;
+	HKEY hAdapters;
+	HKEY hAdapter;
+	HKEY hIpConfig;
+	wchar_t* strAdapter;
+	wchar_t* strTemp1;
+	wchar_t* strTemp2;
+	DWORD dwAdapterLen;
+	char strTemp[MAX_ADAPTER_NAME_LENGTH + 4];
 
-#endif
+	if(pAdapterInfo == NULL && pOutBufLen == NULL)
+		return ERROR_INVALID_PARAMETER;
+	ZeroMemory(pAdapterInfo, *pOutBufLen);
+
+	lErr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Adapters", 0, KEY_READ, &hAdapters);
+	if(lErr != ERROR_SUCCESS)
+		return lErr;
+
+	//	Determine the size of the largest name of any adapter and the number of adapters.
+	lErr = RegQueryInfoKey(hAdapters, NULL, NULL, NULL, NULL, &dwAdapterLen, NULL, NULL, NULL, NULL, NULL, NULL);
+    if(lErr != ERROR_SUCCESS)
+	{
+		RegCloseKey(hAdapters);
+		return lErr;
+	}
+	dwAdapterLen++;			//	RegQueryInfoKey return value does not include terminating null.
+
+	strAdapter = (wchar_t*) malloc(dwAdapterLen * sizeof(wchar_t));
+
+	//	Enumerate all adapters in SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Adapters.
+	for(dwIndex = 0; ; dwIndex++)
+	{
+		dwSize = dwAdapterLen;			//	Reset size of the strAdapterLen buffer.
+		lErr = RegEnumKeyExW(hAdapters, dwIndex, strAdapter, &dwSize, NULL, NULL, NULL, NULL);
+		if(lErr == ERROR_NO_MORE_ITEMS)
+			break;
+
+		//	TODO	Skip NdisWanIP???
+		if(wcsstr(strAdapter, L"NdisWanIp") != 0)
+			continue;
+
+		lErr = RegOpenKeyExW(hAdapters, strAdapter, 0, KEY_READ, &hAdapter);
+		if(lErr != ERROR_SUCCESS)
+			continue;
+
+		//	Read the IpConfig value.
+		lErr = RegQueryValueExW(hAdapter, L"IpConfig", NULL, NULL, NULL, &dwSize);
+		if(lErr != ERROR_SUCCESS)
+			continue;
+
+		strTemp1 = (wchar_t*) malloc(dwSize);
+		strTemp2 = (wchar_t*) malloc(dwSize + 35 * sizeof(wchar_t));
+		lErr = RegQueryValueExW(hAdapter, L"IpConfig", NULL, NULL, (BYTE*) strTemp1, &dwSize);
+		if(lErr != ERROR_SUCCESS)
+		{
+			free(strTemp1);
+			free(strTemp2);
+			continue;
+		}
+		int n = swprintf(strTemp2, L"SYSTEM\\CurrentControlSet\\Services\\%s", strTemp1);
+
+		//	Open the IpConfig key.
+		lErr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, strTemp2, 0, KEY_READ, &hIpConfig);
+		if(lErr != ERROR_SUCCESS)
+		{
+			free(strTemp1);
+			free(strTemp2);
+			continue;
+		}
+		free((void*) strTemp1);
+		free((void*) strTemp2);
+		
+
+		//	Fill IP_ADAPTER_INFO block.
+		pCurrentAdapter = (IP_ADAPTER_INFO*) pNextMemFree;
+		pNextMemFree += sizeof(IP_ADAPTER_INFO);
+		uUsedMemory += sizeof(IP_ADAPTER_INFO);
+		if(uUsedMemory > *pOutBufLen)
+			return ERROR_BUFFER_OVERFLOW;				//	TODO	return the needed size
+
+			//	struct _IP_ADAPTER_INFO* Next
+		if(pPrevAdapter != NULL)
+			pPrevAdapter->Next = pCurrentAdapter;
+			//	TODO	DWORD ComboIndex
+			//	char AdapterName[MAX_ADAPTER_NAME_LENGTH + 4]
+		wcstombs(strTemp, strAdapter, MAX_ADAPTER_NAME_LENGTH + 4);
+		strcpy(pCurrentAdapter->AdapterName, strTemp);
+			//	TODO	char Description[MAX_ADAPTER_DESCRIPTION_LENGTH + 4]
+			//	TODO	UINT AddressLength
+			//	TODO	BYTE Address[MAX_ADAPTER_ADDRESS_LENGTH]
+			//	TODO	DWORD Index
+			//	TODO	UINT Type
+			//	TODO	UINT DhcpEnabled
+			//	TODO	PIP_ADDR_STRING CurrentIpAddress
+			//	IP_ADDR_STRING IpAddressList
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "IPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "SubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+		if(strstr(pCurrentAdapter->IpAddressList.IpAddress.String, "0.0.0.0") != NULL)
+		{	
+			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpIPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+		}
+			//	TODO	IP_ADDR_STRING GatewayList
+			//	IP_ADDR_STRING DhcpServer
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpServer", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpMask, &dwSize);
+			//	TODO	BOOL HaveWins
+			//	TODO	IP_ADDR_STRING PrimaryWinsServer
+			//	TODO	IP_ADDR_STRING SecondaryWinsServer
+			//	TODO	time_t LeaseObtained
+			//	TODO	time_t LeaseExpires
+
+		pPrevAdapter = pCurrentAdapter;
+		RegCloseKey(hAdapter);
+		RegCloseKey(hIpConfig);
+	}
+
+	//	Cleanup
+	free(strAdapter);
+	RegCloseKey(hAdapters);
+
+	return ERROR_SUCCESS;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,7 @@ EXPORTS
 AddIPAddress @1
 SetIpNetEntry @107
 CreateIpForwardEntry @9
+GetAdaptersInfo 
 GetNetworkParams @43
 GetNumberOfInterfaces @44
 GetInterfaceInfo @34
