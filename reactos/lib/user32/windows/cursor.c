@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.14 2003/11/10 17:44:49 weiden Exp $
+/* $Id: cursor.c,v 1.15 2003/11/18 19:59:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -176,7 +176,7 @@ LoadCursorA(HINSTANCE hInstance,
 	    LPCSTR lpCursorName)
 {
   return(LoadImageA(hInstance, lpCursorName, IMAGE_CURSOR, 0, 0,
-		    LR_DEFAULTSIZE));
+         LR_SHARED | LR_DEFAULTSIZE));
 }
 
 
@@ -215,7 +215,7 @@ LoadCursorW(HINSTANCE hInstance,
 	    LPCWSTR lpCursorName)
 {
   return(LoadImageW(hInstance, lpCursorName, IMAGE_CURSOR, 0, 0,
-		    LR_DEFAULTSIZE));
+		 LR_SHARED | LR_DEFAULTSIZE));
 }
 
 

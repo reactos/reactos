@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.13 2003/11/10 17:44:49 weiden Exp $
+/* $Id: icon.c,v 1.14 2003/11/18 19:59:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -242,6 +242,15 @@ CreateIconFromResourceEx(
   HDC hScreenDc;
   WORD wXHotspot;
   WORD wYHotspot;
+  
+  /*
+    FIXME - does win support LR_SHARED? According to msdn it does but we don't
+            have useful information to identify the icon
+  if (uFlags & LR_SHARED)
+  {
+    DbgPrint("FIXME: need LR_SHARED support in CreateIconFromResourceEx()\n");
+  }
+  */
 
   DPRINT("dwVersion, cxDesired, cyDesired are all ignored in this implementation!\n");
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.19 2003/11/15 12:43:25 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.20 2003/11/18 19:59:51 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -469,8 +469,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
           CurIconObject->IconInfo.hbmMask = IntCopyBitmap(CurIconObject->IconInfo.hbmMask);
           CurIconObject->IconInfo.hbmColor = IntCopyBitmap(CurIconObject->IconInfo.hbmColor);
         }
-        bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
-        if(bmp)
+        if(CurIconObject->IconInfo.hbmColor && 
+          (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor)))
         {
           CurIconObject->Size.cx = bmp->size.cx;
           CurIconObject->Size.cy = bmp->size.cy;
@@ -478,8 +478,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
         }
         else
         {
-          bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask);
-          if(bmp)
+          if(CurIconObject->IconInfo.hbmMask && 
+            (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
           {
             CurIconObject->Size.cx = bmp->size.cx;
             CurIconObject->Size.cy = bmp->size.cy / 2;
@@ -830,7 +830,7 @@ NtUserFindExistingCursorIcon(
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
-
+  
   SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
   ObDereferenceObject(WinStaObject);
   return (HICON)0;
@@ -1036,26 +1036,46 @@ NtUserSetCursorIconData(
   if(CurIconObject)
   {
     /* Copy fields */
-    Status = MmCopyFromCaller(&CurIconObject->IconInfo.fIcon, fIcon, sizeof(BOOL));
-    if(!NT_SUCCESS(Status))
+    if(fIcon)
     {
-      SetLastNtError(Status);
-      goto done;
+      Status = MmCopyFromCaller(&CurIconObject->IconInfo.fIcon, fIcon, sizeof(BOOL));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        goto done;
+      }
     }
-    Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
-    if(NT_SUCCESS(Status))
+    else
     {
-      CurIconObject->IconInfo.xHotspot = SafeHotspot.x;
-      CurIconObject->IconInfo.yHotspot = SafeHotspot.y;
-      
+      if(!Hotspot)
+        Ret = TRUE;
+    }
+    
+    if(Hotspot)
+    {
+      Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
+      if(NT_SUCCESS(Status))
+      {
+        CurIconObject->IconInfo.xHotspot = SafeHotspot.x;
+        CurIconObject->IconInfo.yHotspot = SafeHotspot.y;
+        
+        CurIconObject->hModule = hModule;
+        CurIconObject->hRsrc = hRsrc;
+        CurIconObject->hGroupRsrc = hGroupRsrc;
+        
+        Ret = TRUE;
+      }
+      else
+        SetLastNtError(Status);
+    }
+    
+    if(!fIcon && !Hotspot)
+    {
       CurIconObject->hModule = hModule;
       CurIconObject->hRsrc = hRsrc;
       CurIconObject->hGroupRsrc = hGroupRsrc;
-      
       Ret = TRUE;
     }
-    else
-      SetLastNtError(Status);
     
     done:
     IntReleaseCurIconObject(WinStaObject);

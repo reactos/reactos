@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.19 2003/11/10 17:44:49 weiden Exp $
+/* $Id: bitmap.c,v 1.20 2003/11/18 19:59:50 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -80,6 +80,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 {
   HANDLE hResource;
   HANDLE h2Resource;
+  HANDLE hfRes;
   HANDLE hFile;
   HANDLE hSection;
   CURSORICONDIR* IconDIR;
@@ -93,21 +94,25 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
   GRPCURSORICONDIR* IconResDir;
   INT id;
   ICONIMAGE *ResIcon;
-
-  if (fuLoad & LR_SHARED)
-    DbgPrint("FIXME: need LR_SHARED support Loading cursor images\n");
-
+  
   if (!(fuLoad & LR_LOADFROMFILE))
   {
       if (hinst == NULL)
 	  {
 	    hinst = GetModuleHandleW(L"USER32");
 	  }
-      hResource = FindResourceW(hinst, lpszName, RT_GROUP_CURSOR);
+      hResource = hfRes = FindResourceW(hinst, lpszName, RT_GROUP_CURSOR);
       if (hResource == NULL)
 	  {
 	    return(NULL);
 	  }
+	  
+	  if (fuLoad & LR_SHARED)
+      {
+        hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes);
+        if(hIcon)
+          return hIcon;
+      }
 
       hResource = LoadResource(hinst, hResource);
       if (hResource == NULL)
@@ -139,12 +144,23 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 	  {
 	    return(NULL);
 	  }
-      return CreateIconFromResourceEx((PBYTE) ResIcon,
-                  SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
-                  32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE) ResIcon,
+                        SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
+                        32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      if(hIcon)
+      {
+        NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
+                                (HRSRC)NULL);
+      }
+      return hIcon;
   }
   else
   {
+      if (fuLoad & LR_SHARED)
+      {
+        DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
+      }
+      
       hFile = CreateFileW(lpszName,
 			 GENERIC_READ,
 			 FILE_SHARE_READ,
@@ -246,6 +262,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 {
   HANDLE hResource;
   HANDLE h2Resource;
+  HANDLE hfRes;
   HANDLE hFile;
   HANDLE hSection;
   CURSORICONDIR* IconDIR;
@@ -259,21 +276,25 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   GRPCURSORICONDIR* IconResDir;
   INT id;
   ICONIMAGE *ResIcon;
-
-  if (fuLoad & LR_SHARED)
-    DbgPrint("FIXME: need LR_SHARED support Loading icon images\n");
-
+  
   if (!(fuLoad & LR_LOADFROMFILE))
   {
       if (hinst == NULL)
 	  {
 	    hinst = GetModuleHandleW(L"USER32");
 	  }
-      hResource = FindResourceW(hinst, lpszName, RT_GROUP_ICON);
+      hResource = hfRes = FindResourceW(hinst, lpszName, RT_GROUP_ICON);
       if (hResource == NULL)
 	  {
 	    return(NULL);
 	  }
+	  
+	  if (fuLoad & LR_SHARED)
+      {
+        hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes);
+        if(hIcon)
+          return hIcon;
+      }
 
       hResource = LoadResource(hinst, hResource);
       if (hResource == NULL)
@@ -305,12 +326,23 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	  {
 	    return(NULL);
 	  }
-      return CreateIconFromResourceEx((PBYTE) ResIcon,
-                  SizeofResource(hinst, h2Resource), TRUE, 0x00030000,
-                  width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE) ResIcon,
+                        SizeofResource(hinst, h2Resource), TRUE, 0x00030000,
+                        width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      if(hIcon)
+      {
+        NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
+                                (HRSRC)NULL);
+      }
+      return hIcon;
   }
   else
   {
+      if (fuLoad & LR_SHARED)
+      {
+        DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
+      }
+      
       hFile = CreateFileW(lpszName,
 			 GENERIC_READ,
 			 FILE_SHARE_READ,
