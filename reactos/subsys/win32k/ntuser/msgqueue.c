@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.33 2003/11/21 17:01:16 navaraf Exp $
+/* $Id: msgqueue.c,v 1.34 2003/11/21 23:05:28 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -224,27 +224,32 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
         DbgPrint("Changing Focus window to 0x%X\n", Wnd);
         
-        Window = IntGetWindowObject(Wnd);
         SpareLParam = MAKELONG(WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window), Msg);
         
-        Result = NtUserSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
-
-        IntReleaseWindowObject(Window);
-
-        switch (Result)
+        if(Window)
         {
-            case MA_NOACTIVATEANDEAT:
-                return TRUE;
-            case MA_NOACTIVATE:
-                break;
-            case MA_ACTIVATEANDEAT:
-                IntSetFocusWindow(Wnd);
-                return TRUE;
-/*            case MA_ACTIVATE:
-            case 0:*/
-            default:
-                IntSetFocusWindow(Wnd);
-                break;
+          Result = NtUserSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
+
+          switch (Result)
+          {
+              case MA_NOACTIVATEANDEAT:
+                  return TRUE;
+              case MA_NOACTIVATE:
+                  break;
+              case MA_ACTIVATEANDEAT:
+                  IntSetFocusWindow(Wnd);
+                  return TRUE;
+/*              case MA_ACTIVATE:
+              case 0:*/
+              default:
+                  IntSetFocusWindow(Wnd);
+                  break;
+          }
+        }
+        else
+        {
+          ExFreePool(Message);
+          return(FALSE);
         }
     }
 
