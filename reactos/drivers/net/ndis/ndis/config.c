@@ -182,6 +182,7 @@ NdisOpenConfiguration(
     *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
     if(*Status != STATUS_SUCCESS)
     {
+      NDIS_DbgPrint(MID_TRACE, ("Failed to open registry configuration for this miniport\n"));
         *ConfigurationHandle = NULL;
         *Status = NDIS_STATUS_FAILURE;
         return;

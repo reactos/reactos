@@ -17,11 +17,11 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = -1;
+DWORD DebugTraceLevel = -1;
 
 #endif /* DBG */
 
+/* see miniport.c */
 extern KSPIN_LOCK OrphanAdapterListLock;
 extern LIST_ENTRY OrphanAdapterListHead;
 
@@ -37,9 +37,7 @@ VOID MainUnload(
 }
 
 NTSTATUS
-#ifndef _MSC_VER
 STDCALL
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)
@@ -52,34 +50,34 @@ DriverEntry(
  *     Status of driver initialization
  */
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    InitializeListHead(&ProtocolListHead);
-    KeInitializeSpinLock(&ProtocolListLock);
+  InitializeListHead(&ProtocolListHead);
+  KeInitializeSpinLock(&ProtocolListLock);
 
-    InitializeListHead(&MiniportListHead);
-    KeInitializeSpinLock(&MiniportListLock);
+  InitializeListHead(&MiniportListHead);
+  KeInitializeSpinLock(&MiniportListLock);
 
-    InitializeListHead(&AdapterListHead);
-    KeInitializeSpinLock(&AdapterListLock);
+  InitializeListHead(&AdapterListHead);
+  KeInitializeSpinLock(&AdapterListLock);
 
-    InitializeListHead(&OrphanAdapterListHead);
-    KeInitializeSpinLock(&OrphanAdapterListLock);
+  InitializeListHead(&OrphanAdapterListHead);
+  KeInitializeSpinLock(&OrphanAdapterListLock);
 
-    DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
+  DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
 
-    /* 
-     * until we have PNP support, query the enum key and NdisFindDevice() each one
-     * NOTE- this will load and start other services before this one returns STATUS_SUCCESS.
-     * I hope there aren't code reentrancy problems. :) 
-     */
-    /* NdisStartDevices(); */
+  /* 
+   * until we have PNP support, query the enum key and NdisFindDevice() each one
+   * NOTE- this will load and start other services before this one returns STATUS_SUCCESS.
+   * I hope there aren't code reentrancy problems. :) 
+   */
+  NdisStartDevices();
 
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 CDECL
@@ -101,13 +99,11 @@ NdisWriteErrorLogEntry(
  * NOTES:
  *     - THIS IS >CDECL<
  *     - This needs to be fixed to do var args
+ *     - FIXME - this needs to be properly implemented once we have an event log
  */
 {
-  /*
-   * XXX This may be tricky due to the va_arg thing.  I don't
-   * want to figure it out now so it's just gonna be disabled.
-   */
   NDIS_DbgPrint(MIN_TRACE, ("ERROR: ErrorCode 0x%x\n", ErrorCode));
+
 #if DBG
   /* break into a debugger so we can see what's up */
   __asm__("int $3\n");
@@ -122,17 +118,18 @@ EXPORT
 NdisInitializeReadWriteLock(
     IN  PNDIS_RW_LOCK   Lock)
 /*
- * FUNCTION:
+ * FUNCTION: Initialize a NDIS_RW_LOCK
  * ARGUMENTS:
+ *     Lock: pointer to the lock to initialize
  * NOTES:
  *    NDIS 5.0
  */
 {
-	memset(Lock,0,sizeof(NDIS_RW_LOCK));
+  memset(Lock,0,sizeof(NDIS_RW_LOCK));
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
@@ -145,22 +142,26 @@ NdisWriteEventLogEntry(
     IN  ULONG       DataSize,
     IN  PVOID       Data        OPTIONAL)
 /*
- * FUNCTION:
+ * FUNCTION: Log an event in the system event log
  * ARGUMENTS:
+ *     LogHandle: pointer to the driver object of the protocol logging the event
+ *     EventCode: NDIS_STATUS_XXX describing the event
+ *     UniqueEventValue: identifiees this instance of the error value
+ *     NumStrings: number of strings in StringList
+ *     StringList: list of strings to log
+ *     DataSize: number of bytes in Data
+ *     Data: binary dump data to help analyzing the event
  * NOTES:
- *    NDIS 5.0
+ *     - STDCALL, not CDECL like WriteError...
+ *     - FIXME Needs to use the real log interface, once there is one
  */
 {
-	/*
-	 * gonna try just returning true
-	 *
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-	 */
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-	return NDIS_STATUS_SUCCESS;
+  /*
+   * just returning true until we have an event log
+   */
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  return NDIS_STATUS_SUCCESS;
 }
 
-
 /* EOF */
+

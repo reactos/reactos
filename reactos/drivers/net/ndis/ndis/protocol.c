@@ -636,7 +636,6 @@ NdisRegisterProtocol(
 
 	{
 		UNICODE_STRING ValueName;
-		ULONG Length;
 		ULONG ResultLength;
 
 		RtlInitUnicodeString(&ValueName, L"Bind");
