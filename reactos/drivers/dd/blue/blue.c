@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.28 2000/09/29 15:03:21 jean Exp $
+/* $Id: blue.c,v 1.29 2001/01/31 02:24:46 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -286,9 +286,7 @@ STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
-
     DeviceExtension = DeviceObject->DeviceExtension;
-
     switch (stk->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO:
@@ -462,24 +460,21 @@ STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
         case IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE:
             {
-                POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
-                PWORD pAttr = (PWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                COORD *pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
+		CHAR *pAttr = (CHAR *)(pCoord + 1);
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
 
                 vidmem = DeviceExtension->VideoMemory;
-                offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                         (Buf->dwCoord.X * 2) + 1;
+                offset = (pCoord->Y * DeviceExtension->Columns * 2) +
+                         (pCoord->X * 2) + 1;
 
-                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pAttr++)
+                for (dwCount = 0; dwCount < (stk->Parameters.Write.Length - sizeof( COORD )); dwCount++, pAttr++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char) *pAttr;
+                    vidmem[offset + (dwCount * 2)] = *pAttr;
                 }
-
-                Buf->dwTransfered = dwCount;
-
-                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+                Irp->IoStatus.Information = 0;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -542,24 +537,23 @@ STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
         case IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER:
             {
-                POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
-                LPSTR pChar = (LPSTR)MmGetSystemAddressForMdl(Irp->MdlAddress);
+	        COORD *pCoord;
+                LPSTR pChar;
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
-
+		pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
+		pChar = (CHAR *)(pCoord + 1);
                 vidmem = DeviceExtension->VideoMemory;
-                offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                         (Buf->dwCoord.X * 2) + 1;
+                offset = (pCoord->Y * DeviceExtension->Columns * 2) +
+                         (pCoord->X * 2);
 
-                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pChar++)
+                for (dwCount = 0; dwCount < (stk->Parameters.Write.Length - sizeof( COORD )); dwCount++, pChar++)
                 {
-                    vidmem[offset + (dwCount * 2)] = (char) *pChar;
+                    vidmem[offset + (dwCount * 2)] = *pChar;
                 }
 
-                Buf->dwTransfered = dwCount;
-
-                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+		Irp->IoStatus.Information = 0;
                 Status = STATUS_SUCCESS;
             }
             break;
