@@ -105,7 +105,9 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
       {
          PAINTSTRUCT ps;
          const HDC Hdc = BeginPaint(HWnd, &ps);
+#if 0
          try
+#endif
          {
             //
             // TODO: add palette support (see Chapter 9)...
@@ -116,7 +118,9 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                    HMemDC, 0, 0, 
                    SRCCOPY);  
          }           
+#if 0
          catch (...)
+#endif
          {
             EndPaint(HWnd, &ps);
          }
