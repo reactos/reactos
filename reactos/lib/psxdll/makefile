@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/10/12 21:17:04 ea Exp $
+# $Id: makefile,v 1.3 1999/10/21 16:11:42 ekohl Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -90,22 +90,22 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
+floppy: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
 else
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 endif
 
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
+dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
+	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
 else
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
+	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
 endif
 
 #WARNINGS_ARE_ERRORS = yes

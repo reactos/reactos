@@ -18,6 +18,8 @@ STUBS_OBJECTS = stubs/stubs.o
 OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
           $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
 
+TARGET=win32k.sys
+
 all: win32k.sys
 
 win32k.coff: win32k.rc ../../include/reactos/resource.h
@@ -65,6 +67,26 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/subsys/win32k.sys
+
+$(FLOPPY_DIR)/subsys/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\subsys\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/subsys/$(TARGET).sys
+endif
+
+
+dist: $(DIST_DIR)/subsys/$(TARGET).sys
+
+$(DIST_DIR)/subsys/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\$(DIST_DIR)\subsys\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../$(DIST_DIR)/subsys/$(TARGET).sys
+endif
+
 
 #WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
