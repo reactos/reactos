@@ -339,7 +339,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		else
 			ConOutPrintf (_T("    %lu file%s deleted\n"),
 			              dwFiles,
-			              (dwFiles == 1) ? "" : "s");
+			              (dwFiles == 1) ? _T("") : _T("s"));
 	}
 
 	return 0;
