@@ -1,0 +1,56 @@
+; $Id: wsock32.edf,v 1.1 2003/04/03 22:44:19 gvg Exp $
+;
+; WSOCK32.DLL - Windows Sockets 2 DLL
+
+LIBRARY wsock32.dll
+
+EXPORTS
+WSAAsyncGetHostByAddr=WSAAsyncGetHostByAddr@28
+WSAAsyncGetHostByName=WSAAsyncGetHostByName@20
+WSAAsyncGetProtoByName=WSAAsyncGetProtoByName@20
+WSAAsyncGetProtoByNumber=WSAAsyncGetProtoByNumber@20
+WSAAsyncGetServByName=WSAAsyncGetServByName@24
+WSAAsyncGetServByPort=WSAAsyncGetServByPort@24
+WSAAsyncSelect=WSAAsyncSelect@16
+WSACancelAsyncRequest=WSACancelAsyncRequest@4
+WSACancelBlockingCall=WSACancelBlockingCall@0
+WSACleanup=WSACleanup@0
+WSAGetLastError=WSAGetLastError@0
+WSAIsBlocking=WSAIsBlocking@0
+WSASetBlockingHook=WSASetBlockingHook@4
+WSASetLastError=WSASetLastError@4
+WSAStartup=WSAStartup@8
+WSAUnhookBlockingHook=WSAUnhookBlockingHook@0
+__WSAFDIsSet=__WSAFDIsSet@8
+accept=accept@12
+bind=bind@12
+closesocket=closesocket@4
+connect=connect@12
+gethostbyaddr=gethostbyaddr@12
+gethostbyname=gethostbyname@4
+gethostname=gethostname@8
+getpeername=getpeername@12
+getprotobyname=getprotobyname@4
+getprotobynumber=getprotobynumber@4
+getservbyname=getservbyname@8
+getservbyport=getservbyport@8
+getsockname=getsockname@12
+getsockopt=getsockopt@20
+htonl=htonl@4
+htons=htons@4
+inet_addr=inet_addr@4
+inet_ntoa=inet_ntoa@4
+ioctlsocket=ioctlsocket@12
+listen=listen@8
+ntohl=ntohl@4
+ntohs=ntohs@4
+recv=recv@16
+recvfrom=recvfrom@24
+select=select@20
+send=send@16
+sendto=sendto@24
+setsockopt=setsockopt@20
+shutdown=shutdown@8
+socket=socket@12
+
+; EOF
