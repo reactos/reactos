@@ -3,6 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
+include $(PATH_TO_TOP)/rules.mak
+
 TARGET = winebuild$(EXE_POSTFIX)
 
 all: $(TARGET)
@@ -39,4 +41,3 @@ endif
 
 .PHONY: clean
 
-include $(PATH_TO_TOP)/rules.mak
