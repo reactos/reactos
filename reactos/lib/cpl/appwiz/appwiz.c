@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: appwiz.c,v 1.2 2004/06/30 12:11:11 ekohl Exp $
+/* $Id: appwiz.c,v 1.3 2004/07/10 22:06:39 kuehng Exp $
  *
  * PROJECT:         ReactOS Software Control Panel
  * FILE:            lib/cpl/system/appwiz.c
@@ -226,7 +226,7 @@ SystemApplet(VOID)
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
   psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETHEADER);
+  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
   psh.nStartPage = 0;
   psh.ppsp = psp;
   psh.pfnCallback = NULL;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cplsample.c,v 1.2 2004/03/08 14:20:14 weiden Exp $
+/* $Id: cplsample.c,v 1.3 2004/07/10 22:06:40 kuehng Exp $
  *
  * PROJECT:         ReactOS Sample Control Panel
  * FILE:            lib/cpl/cplsample/cplsample.c
@@ -153,7 +153,7 @@ Applet1(VOID)
   psh.hInstance = hApplet;
   psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
   psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETHEADER);
+  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
   psh.u2.nStartPage = 0;
   psh.u3.ppsp = psp;
   psh.pfnCallback = PropSheetProc;

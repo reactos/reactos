@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: access.c,v 1.1 2004/06/30 12:16:27 ekohl Exp $
+/* $Id: access.c,v 1.2 2004/07/10 22:06:39 kuehng Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/sysdm.c
@@ -111,7 +111,7 @@ SystemApplet(VOID)
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLACCESS));
   psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETHEADER);
+  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
   psh.nStartPage = 0;
   psh.ppsp = psp;
   psh.pfnCallback = PropSheetProc;
