@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.140 2002/07/29 15:29:58 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.141 2002/08/28 07:15:14 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -218,6 +218,7 @@ HalPrivateDispatchTable DATA
 @InterlockedExchangeAdd@8
 @InterlockedIncrement@4
 IoAcquireCancelSpinLock@4
+IoAcquireRemoveLockEx@20
 IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
 IoAllocateAdapterChannel@20
@@ -278,11 +279,12 @@ IoGetRequestorProcess@4
 IoGetStackLimits@8
 IoGetTopLevelIrp@0
 IoInitializeIrp@12
+IoInitializeRemoveLockEx@20
 IoInitializeTimer@12
 IoIsOperationSynchronous@4
 IoMakeAssociatedIrp@8
 IoOpenDeviceInstanceKey@20
-;IoPageRead@16
+IoPageRead@20
 IoQueryDeviceDescription@32
 IoQueryDeviceEnumInfo@8
 IoQueryFileInformation@20
@@ -298,6 +300,8 @@ IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange@8
 IoRegisterShutdownNotification@4
 IoReleaseCancelSpinLock@4
+IoReleaseRemoveLockAndWaitEx@12
+IoReleaseRemoveLockEx@12
 IoReleaseVpbSpinLock@4
 IoRemoveShareAccess@8
 IoReportHalResourceUsage@16
