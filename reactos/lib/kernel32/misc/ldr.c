@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.10 2001/01/24 04:41:58 phreak Exp $
+/* $Id: ldr.c,v 1.11 2001/02/10 22:29:35 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -194,6 +194,9 @@ GetModuleFileNameA (
 	Peb = NtCurrentPeb ();
 	RtlEnterCriticalSection (Peb->LoaderLock);
 
+	if (hModule == NULL)
+		hModule = Peb->ImageBaseAddress;
+
 	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
 	Entry = ModuleListHead->Flink;
 
@@ -234,7 +237,6 @@ GetModuleFileNameA (
 	SetLastErrorByStatus (STATUS_DLL_NOT_FOUND);
 	RtlLeaveCriticalSection (Peb->LoaderLock);
 
-
 	return 0;
 }
 
@@ -256,6 +258,9 @@ GetModuleFileNameW (
 
 	Peb = NtCurrentPeb ();
 	RtlEnterCriticalSection (Peb->LoaderLock);
+
+	if (hModule == NULL)
+		hModule = Peb->ImageBaseAddress;
 
 	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
 	Entry = ModuleListHead->Flink;
