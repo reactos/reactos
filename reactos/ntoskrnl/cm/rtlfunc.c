@@ -257,7 +257,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   NtClose (TokenHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtQueryInformationToken() failed (Status %lx)\n", Status);
+      DPRINT ("NtQueryInformationToken() failed (Status %lx)\n", Status);
       return Status;
     }
 
