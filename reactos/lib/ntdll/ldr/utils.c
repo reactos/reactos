@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.93 2004/06/26 11:23:32 ekohl Exp $
+/* $Id: utils.c,v 1.94 2004/06/26 14:37:05 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1224,187 +1224,88 @@ static NTSTATUS
 LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                       PVOID ImageBase)
 {
-  USHORT NumberOfEntries;
-  PUSHORT pValue16;
-  ULONG RelocationRVA;
-  ULONG Delta32;
-  ULONG Offset;
-  PULONG pValue32;
-  PRELOCATION_DIRECTORY RelocationDir;
-  PRELOCATION_ENTRY RelocationBlock;
-  int i;
   PIMAGE_DATA_DIRECTORY RelocationDDir;
-  ULONG OldProtect;
-  PVOID ProtectBase;
-  ULONG ProtectSize;
-  ULONG OldProtect2;
-  PVOID ProtectBase2;
-  ULONG ProtectSize2;
+  PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
+  ULONG Count, ProtectSize, OldProtect, i;
+  PVOID Page, ProtectPage;
+  PWORD TypeOffset;
+  ULONG Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
   NTSTATUS Status;
-  PIMAGE_SECTION_HEADER Sections;
-  ULONG MaxExtend;
-  ULONG RelocationBlockOffset;
-  ULONG RelocationSectionSize;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
       return STATUS_UNSUCCESSFUL;
     }
 
-  Sections =
-    (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
-  MaxExtend = 0;
-  RelocationSectionSize = 0;
-  for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
-    {
-      if (!(Sections[i].Characteristics & IMAGE_SECTION_NOLOAD))
-        {
-          ULONG Extend;
-          Extend =
-            (ULONG)(Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize);
-          MaxExtend = max(MaxExtend, Extend);
-        }
-
-      if (!memcmp(Sections[i].Name,".reloc", 6))
-	{
-	  RelocationSectionSize = Sections[i].Misc.VirtualSize;
-	  DPRINT("Relocation section size: %lx\n", RelocationSectionSize);
-	}
-    }
-
   RelocationDDir =
     &NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-  RelocationRVA = RelocationDDir->VirtualAddress;
 
-  if (RelocationRVA)
+  if (RelocationDDir->VirtualAddress == 0 || RelocationDDir->Size == 0)
     {
-      RelocationDir =
-        (PRELOCATION_DIRECTORY)((PCHAR)ImageBase + RelocationRVA);
+      return STATUS_SUCCESS;
+    }
+   
+  ProtectSize = PAGE_SIZE;
+  RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase + 
+                  RelocationDDir->VirtualAddress);
+  RelocationEnd = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase +
+                  RelocationDDir->VirtualAddress + RelocationDDir->Size);
+  while (RelocationDir < RelocationEnd &&
+         RelocationDir->SizeOfBlock > 0)
+    {
+      Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
+              sizeof(WORD);
+      Page = ImageBase + RelocationDir->VirtualAddress;
+      TypeOffset = (PWORD)(RelocationDir + 1);
 
-      RelocationBlockOffset = 0;
-      while (RelocationBlockOffset < RelocationSectionSize)
+      /* Unprotect the page we're about to relocate. */
+      ProtectPage = Page;
+      Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                      &ProtectPage,
+                                      &ProtectSize,
+                                      PAGE_READWRITE,
+                                      &OldProtect);
+      if (!NT_SUCCESS(Status))
         {
-          if (RelocationDir->VirtualAddress > MaxExtend)
-            {
-              RelocationRVA += RelocationDir->SizeOfBlock;
-              RelocationDir =
-                (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
-              RelocationBlockOffset += RelocationDir->SizeOfBlock;
-              continue;
-            }
-
-          Delta32 = (ULONG)(ImageBase - NTHeaders->OptionalHeader.ImageBase);
-          RelocationBlock =
-            (PRELOCATION_ENTRY) (RelocationRVA + ImageBase +
-                                 sizeof (RELOCATION_DIRECTORY));
-          NumberOfEntries =
-            RelocationDir->SizeOfBlock - sizeof (RELOCATION_DIRECTORY);
-          NumberOfEntries = NumberOfEntries / sizeof (RELOCATION_ENTRY);
-
-          ProtectBase = ImageBase + RelocationDir->VirtualAddress;
-          ProtectSize = PAGE_SIZE;
-          Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          &ProtectBase,
-                                          &ProtectSize,
-                                          PAGE_READWRITE,
-                                          &OldProtect);
-          if (!NT_SUCCESS(Status))
-            {
-              DPRINT1("Failed to unprotect relocation target.\n");
-              return(Status);
-            }
-
-          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
-            {
-                  ProtectBase2 = ImageBase + RelocationDir->VirtualAddress + PAGE_SIZE;
-                  ProtectSize2 = PAGE_SIZE;
-                  Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  &ProtectBase2,
-                                                  &ProtectSize2,
-                                                  PAGE_READWRITE,
-                                                  &OldProtect2);
-                  if (!NT_SUCCESS(Status))
-                    {
-                      DPRINT1("Failed to unprotect relocation target (2).\n");
-                      NtProtectVirtualMemory(NtCurrentProcess(),
-                                             &ProtectBase,
-                                             &ProtectSize,
-                                             OldProtect,
-                                             &OldProtect);
-                      return(Status);
-                    }
-              }
-
-          for (i = 0; i < NumberOfEntries; i++)
-            {
-              Offset = (RelocationBlock[i].TypeOffset & 0xfff);
-              Offset += (ULONG)(RelocationDir->VirtualAddress + ImageBase);
-
-              /*
-               * What kind of relocations should we perform
-               * for the current entry?
-               */
-              switch (RelocationBlock[i].TypeOffset >> 12)
-                {
-                case TYPE_RELOC_ABSOLUTE:
-                  break;
-
-                case TYPE_RELOC_HIGH:
-                  pValue16 = (PUSHORT)Offset;
-                  *pValue16 += Delta32 >> 16;
-                  break;
-
-                case TYPE_RELOC_LOW:
-                  pValue16 = (PUSHORT)Offset;
-                  *pValue16 += Delta32 & 0xffff;
-                  break;
-
-                case TYPE_RELOC_HIGHLOW:
-                  pValue32 = (PULONG)Offset;
-                  *pValue32 += Delta32;
-                  break;
-
-                case TYPE_RELOC_HIGHADJ:
-                  /* FIXME: do the highadjust fixup  */
-                  DPRINT("TYPE_RELOC_HIGHADJ fixup not implemented, sorry\n");
-                  return STATUS_UNSUCCESSFUL;
-
-                default:
-                  DPRINT("unexpected fixup type\n");
-                  return STATUS_UNSUCCESSFUL;
-                }
-            }
-
-          Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          &ProtectBase,
-                                          &ProtectSize,
-                                          OldProtect,
-                                          &OldProtect);
-          if (!NT_SUCCESS(Status))
-            {
-              DPRINT1("Failed to protect relocation target.\n");
-              return(Status);
-            }
-
-          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
-            {
-                  Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  &ProtectBase2,
-                                                  &ProtectSize2,
-                                                  OldProtect2,
-                                                  &OldProtect2);
-                  if (!NT_SUCCESS(Status))
-                    {
-                      DPRINT1("Failed to protect relocation target2.\n");
-                      return(Status);
-                    }
-            }
-
-          RelocationRVA += RelocationDir->SizeOfBlock;
-          RelocationDir =
-            (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
-          RelocationBlockOffset += RelocationDir->SizeOfBlock;
+          DPRINT1("Failed to unprotect relocation target.\n");
+          return(Status);
         }
+
+      /* Patch the page. */
+      for (i = 0; i < Count; i++)
+        {
+          SHORT Offset = TypeOffset[i] & 0xFFF;
+          USHORT Type = TypeOffset[i] >> 12;
+
+          switch (Type)
+            {
+              case IMAGE_REL_BASED_ABSOLUTE:
+                break;
+              case IMAGE_REL_BASED_HIGH:
+                *(PUSHORT)(Page + Offset) += HIWORD(Delta);
+                break;
+              case IMAGE_REL_BASED_LOW:
+                *(PUSHORT)(Page + Offset) += LOWORD(Delta);
+                break;
+              case IMAGE_REL_BASED_HIGHLOW:
+                *(PULONG)(Page + Offset) += Delta;
+                break;
+              case IMAGE_REL_BASED_HIGHADJ:
+              default:
+                DPRINT("Unknown/unsupported fixup type %d.\n", type);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
+
+      /* Restore old page protection. */
+      NtProtectVirtualMemory(NtCurrentProcess(),
+                             &ProtectPage,
+                             &ProtectSize,
+                             OldProtect,
+                             &OldProtect);
+
+      RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)RelocationDir +
+                      RelocationDir->SizeOfBlock);
     }
 
   return STATUS_SUCCESS;
