@@ -1,5 +1,10 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* include/ntos/types.h (FALSE): Protect with #ifndef FALSE.
+	(TRUE): Protect with #ifndef TRUE.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/napi/i386/segment.h (put_user, get_user,
 	bad_user_access_length, __segment_dummy, __sd, __const_sd, __put_user,
 	__get_user, __generic_memcpy_tofs, __constant_memcpy_tofs, COMMON,

@@ -231,8 +231,12 @@ typedef unsigned short *PRTL_ATOM;
 
 #endif /* __USE_W32API */
 
+#ifndef FALSE
 #define FALSE 0
+#endif
+#ifndef TRUE
 #define TRUE 1
+#endif
 
 #ifndef NULL
 #ifdef __cplusplus
