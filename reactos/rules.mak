@@ -12,6 +12,8 @@ ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 endif
 
+DOT := \.
+
 #
 # Choose various options
 #
@@ -48,7 +50,7 @@ DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
-DOT = \.
+DOT := \\.
 endif
 
 CC = $(PREFIX)gcc

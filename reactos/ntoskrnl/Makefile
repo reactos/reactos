@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2001/03/12 17:32:54 dwelch Exp $
+# $Id: Makefile,v 1.17 2001/03/12 19:23:48 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -127,7 +127,8 @@ OBJECTS_MM = \
 	mm/wset.o \
 	mm/mminit.o \
 	mm/kmap.o \
-	mm/mpw.o
+	mm/mpw.o \
+	mm/pageop.o
 
 OBJECTS_MM_I386 = \
 	mm/i386/memsafe.o \
