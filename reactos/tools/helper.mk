@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.80 2004/09/16 10:25:17 gvg Exp $
+# $Id: helper.mk,v 1.81 2004/10/02 08:44:54 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -977,6 +977,7 @@ $(REGTEST_TARGETS): $(REGTEST_TESTS)
 ifeq ($(MK_MODE),user)
 ifeq ($(TARGET_BUILDENV_TEST),yes)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
+	$(REGTESTS) -s ./tests/stubs.tst ./tests/_stubs.S ./tests/_hooks.c
 else
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
 endif

@@ -1,3 +1,15 @@
+2004-10-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/gdiplus/tests/.cvsignore: Ignore _hooks.c and _stubs.S.
+	* lib/gdiplus/tests/Makefile (TARGET_OBJECTS): Remove passthrough.o and
+	add _hooks.o and _stubs.o.
+	* lib/gdiplus/tests/tests/test-1.c: Test API hooking.
+	* regtests/shared/regtests.h: Add support for API hooking.
+	* tools/helper.mk: Generate stubs.
+	* tools/regtests.c: Add support for generating stubs and hooks.
+	* lib/gdiplus/tests/passthrough.c: Remove.
+	* lib/gdiplus/tests/stubs.tst: New file.
+
 2004-09-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/msafd/makefile (TARGET_CFLAGS): Don't define DBG.

@@ -1,5 +1,7 @@
+_hooks.c
 _regtests.c
 _rtstub.c
+_stubs.S
 Makefile.tests
 *.d
 *.o
