@@ -17,6 +17,7 @@ C_SRCS = \
 	parser.c \
 	queue.c \
 	setupcab.c \
+        setupapi_main.c \
 	stubs.c
 
 C_SRCS16 = \
