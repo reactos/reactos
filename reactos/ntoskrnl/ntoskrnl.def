@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.174 2004/02/03 14:23:29 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.175 2004/03/02 17:20:36 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -472,8 +472,8 @@ KeTickCount DATA
 KeWaitForMultipleObjects@32
 KeWaitForMutexObject@20
 KeWaitForSingleObject@20
-;@KefAcquireSpinLockAtDpcLevel
-;@KefReleaseSpinLockFromDpcLevel
+@KefAcquireSpinLockAtDpcLevel@4=KefAcquireSpinLockAtDpcLevel
+@KefReleaseSpinLockFromDpcLevel@4=KefReleaseSpinLockFromDpcLevel
 ;Kei386EoiHelper
 @KiAcquireSpinLock@4
 ;KiBugCheckData DATA
