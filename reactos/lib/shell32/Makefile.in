@@ -5,7 +5,7 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shell32.dll
 # fixme: avoid ole32.dll import
-IMPORTS   = ole32 shlwapi comctl32 user32 gdi32 advapi32 kernel32
+IMPORTS   = ole32 shlwapi comctl32 user32 gdi32 advapi32 kernel32 ntdll
 ALTNAMES  = shell.dll
 EXTRALIBS = $(LIBUUID) $(LIBUNICODE)
 
