@@ -145,8 +145,6 @@ typedef struct
   TCHAR		drives[BUFFER_LEN];
   BOOL		prescan_node;	/*TODO*/
 
-//UINT		wStringTableOffset;
-
 #ifdef _SHELL_FOLDERS
   IShellFolder*	iDesktop;
   IMalloc*		iMalloc;
