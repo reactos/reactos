@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.28 2004/03/20 15:58:16 ekohl Exp $
+/* $Id: winlogon.c,v 1.29 2004/03/28 12:21:41 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,16 +33,17 @@
 
 BOOL
 LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion);
+PWLSESSION
+MsGinaInit(void);
+void
+SessionLoop(PWLSESSION Session);
 BOOL
-MsGinaInit(DWORD Version);
+InitServices(void);
+BOOL
+WlxCreateWindowStationAndDesktops(PWLSESSION Session);
 
 HINSTANCE hAppInstance;
-HWINSTA InteractiveWindowStation;   /* WinSta0 */
-HDESK ApplicationDesktop;           /* WinSta0\Default */
-HDESK WinlogonDesktop;              /* WinSta0\Winlogon */
-HDESK ScreenSaverDesktop;           /* WinSta0\Screen-Saver */
-
-MSGINAFUNCTIONS MsGinaFunctions;
+PWLSESSION WLSession = NULL;
 
 #if SUPPORT_CONSOLESTART
 BOOL StartConsole = TRUE;
@@ -475,151 +476,10 @@ WinMain(HINSTANCE hInstance,
   LSA_OPERATIONAL_MODE Mode;
   ULONG AuthenticationPackage;
 #endif
-  DWORD GinaDllVersion;
-  HANDLE hShutdownEvent;
-  WCHAR StatusMsg[256];
-  BOOL Success;
   NTSTATUS Status;
   
   hAppInstance = hInstance;
   
-  /*
-   * FIXME: Create a security descriptor with
-   *        one ACE containing the Winlogon SID
-   */
-  
-  /*
-   * Create the interactive window station
-   */
-   InteractiveWindowStation = 
-     CreateWindowStation(L"WinSta0", 0, GENERIC_ALL, NULL);
-   if (InteractiveWindowStation == NULL)
-     {
-       DbgPrint("WL: Failed to create window station (0x%X)\n", GetLastError());
-       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
-       ExitProcess(1);
-     }
-   
-   /*
-    * Set the process window station
-    */
-   SetProcessWindowStation(InteractiveWindowStation);
-
-   /*
-    * Create the application desktop
-    */
-   ApplicationDesktop = 
-     CreateDesktop(L"Default",
-                   NULL,
-                   NULL,
-                   0,      /* FIXME: Set some flags */
-                   GENERIC_ALL,
-                   NULL); 
-
-   /*
-    * Create the winlogon desktop
-    */
-   WinlogonDesktop = CreateDesktop(L"Winlogon",
-                                   NULL,
-                                   NULL,
-                                   0,      /* FIXME: Set some flags */
-                                   GENERIC_ALL,
-                                   NULL);  
-   
-   /*
-    * Create the screen saver desktop
-    */
-   ScreenSaverDesktop = CreateDesktop(L"Screen-Saver",
-                                      NULL,
-                                      NULL,
-                                      0,      /* FIXME: Set some flags */
-                                      GENERIC_ALL,
-                                      NULL);  
-   
-   /*
-    * Switch to winlogon desktop
-    */
-   /* FIXME: Do start up in the application desktop for now. */
-   Status = NtSetInformationProcess(NtCurrentProcess(),
-                                    ProcessDesktop,
-                                    &ApplicationDesktop,
-                                    sizeof(ApplicationDesktop));
-   if (!NT_SUCCESS(Status))
-     {
-       DbgPrint("WL: Cannot set default desktop for winlogon.\n");
-     }
-   SetThreadDesktop(ApplicationDesktop);
-   Success = SwitchDesktop(ApplicationDesktop);
-   if (!Success)
-     {
-       DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
-     }
-
-  /* Check for pending setup */
-  if (GetSetupType () != 0)
-    {
-      DPRINT ("Winlogon: CheckForSetup() in setup mode\n");
-
-      /* Run setup and reboot when done */
-      RunSetup ();
-
-      NtShutdownSystem (ShutdownReboot);
-      ExitProcess (0);
-      return 0;
-    }
-
-#if SUPPORT_CONSOLESTART
- StartConsole = !StartIntoGUI();
- if(!StartConsole)
- {
-#endif
-   if(!LoadGina(&MsGinaFunctions, &GinaDllVersion))
-   {
-     NtShutdownSystem(ShutdownReboot);
-     ExitProcess(0);
-     return(0);
-   }
-
-   /* FIXME - better solution needed */
-   hShutdownEvent = CreateEvent(NULL,
-                                TRUE,
-                                FALSE,
-                                L"WinLogonShutdown");
-   
-   if(!hShutdownEvent)
-   {
-     DbgPrint("WL: Failed to create WinLogonShutdown event!\n");
-     NtShutdownSystem(ShutdownNoReboot);
-     ExitProcess(0);
-     return(0);
-   }
-   
-   if(!MsGinaInit(GinaDllVersion) || !MsGinaInst)
-   {
-     DbgPrint("WL: Failed to initialize winlogon!\n");
-     NtShutdownSystem(ShutdownNoReboot);
-     ExitProcess(0);
-     return(0);
-   }
-   
-   LoadString(hAppInstance, IDS_REACTOSISSTARTINGUP, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-#if SUPPORT_CONSOLESTART
- }
-#endif
-
-   /* start system processes (services.exe & lsass.exe) */
-   if (StartProcess(L"StartServices"))
-     {
-	if (!StartServices())
-	  {
-	     DbgPrint("WL: Failed to start Services (0x%X)\n", GetLastError());
-	  }
-     }
 #if START_LSASS
    if (StartProcess(L"StartLsass"))
      {
@@ -629,6 +489,80 @@ WinMain(HINSTANCE hInstance,
 	  }
      }
 #endif
+  
+  if(!(WLSession = MsGinaInit()))
+  {
+    DbgPrint("WL: Failed to initialize msgina.dll\n");
+    NtShutdownSystem(ShutdownNoReboot);
+    ExitProcess(0);
+    return 0;
+  }
+  
+  WLSession->LogonStatus = LOGON_INITIALIZING;
+#if START_LSASS
+  if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
+  {
+    DbgPrint("WL: Could not register logon process\n");
+    NtShutdownSystem(ShutdownNoReboot);
+    ExitProcess(0);
+    return 0;
+  }
+#endif
+  
+  if(!WlxCreateWindowStationAndDesktops(WLSession))
+  {
+    NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+    ExitProcess(1);
+    return 1;
+  }
+  
+  /*
+   * Switch to winlogon desktop
+   */
+  /* FIXME: Do start up in the application desktop for now. */
+  Status = NtSetInformationProcess(NtCurrentProcess(),
+                                   ProcessDesktop,
+                                   &WLSession->ApplicationDesktop,
+                                   sizeof(HDESK));
+  if(!NT_SUCCESS(Status))
+  {
+    DbgPrint("WL: Cannot set default desktop for winlogon.\n");
+  }
+  SetThreadDesktop(WLSession->ApplicationDesktop);
+  if(!SwitchDesktop(WLSession->ApplicationDesktop))
+  {
+    DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
+  }
+  
+  /* Check for pending setup */
+  if (GetSetupType () != 0)
+  {
+    DPRINT ("Winlogon: CheckForSetup() in setup mode\n");
+    
+    /* Run setup and reboot when done */
+    RunSetup();
+    
+    NtShutdownSystem(ShutdownReboot);
+    ExitProcess(0);
+    return 0;
+  }
+  
+#if SUPPORT_CONSOLESTART
+ StartConsole = !StartIntoGUI();
+ if(!StartConsole)
+ {
+#endif
+  if(!InitializeSAS(WLSession))
+  {
+    DbgPrint("WL: Failed to initialize SAS\n");
+    ExitProcess(2);
+    return 2;
+  }
+#if SUPPORT_CONSOLESTART
+ }
+#endif
+  
+  InitServices();
    
 #if 0
    /* real winlogon uses "Winlogon" */
@@ -722,7 +656,188 @@ WinMain(HINSTANCE hInstance,
  else
  {
 #endif
+  
+  SessionLoop(WLSession);
+  
+   /* FIXME - Flush disks and registry, ... */
+   
+   if(WLSession->LogonStatus == LOGON_SHUTDOWN)
+   {
+     /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
+     switch(DialogBox(hInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerProc))
+     {
+       case IDC_BTNSHTDOWNCOMPUTER:
+         NtShutdownSystem(ShutdownReboot);
+         break;
+       default:
+         NtShutdownSystem(ShutdownNoReboot);
+         break;
+     }
+     ExitProcess(0);
+   }
+   else
+   {
+     DbgPrint("WL: LogonStatus != LOGON_SHUTDOWN!!!\n");
+     ExitProcess(0);
+   }
+#if SUPPORT_CONSOLESTART
+ }
+#endif
+   
+   return 0;
+}
 
+BOOL
+DisplayStatusMessage(PWLSESSION Session, HDESK hDesktop, DWORD dwOptions, PWSTR pTitle, PWSTR pMessage)
+{
+  if(Session->SuppressStatus)
+  {
+    return TRUE;
+  }
+  
+  #if SUPPORT_CONSOLESTART
+  if(StartConsole)
+  {
+    if(pMessage)
+    {
+      DbgPrint("WL-Status: %ws\n", pMessage);
+    }
+    return TRUE;
+  }
+  #endif
+  
+  return Session->MsGina.Functions.WlxDisplayStatusMessage(Session->MsGina.Context, hDesktop, dwOptions, pTitle, pMessage);
+}
+
+BOOL
+InitServices(void)
+{
+  WCHAR StatusMsg[256];
+
+  LoadString(hAppInstance, IDS_REACTOSISSTARTINGUP, StatusMsg, 256 * sizeof(WCHAR));
+  DisplayStatusMessage(WLSession, WLSession->ApplicationDesktop, 0, NULL, StatusMsg);
+
+  /* start system processes (services.exe & lsass.exe) */
+  if(StartProcess(L"StartServices"))
+  {
+	if(!StartServices())
+    {
+      DbgPrint("WL: Failed to start Services (0x%X)\n", GetLastError());
+    }
+  }
+  
+  return TRUE;
+}
+
+DWORD
+DoLogin(PWLSESSION Session)
+{
+  DWORD WlxAction, Options;
+  WLX_MPR_NOTIFY_INFO MprNotifyInfo;
+  PWLX_PROFILE_V2_0 Profile;
+  PSID LogonSid;
+  HANDLE Token;
+  
+  /* FIXME - Create a Logon Sid
+  if(!(LogonSid = CreateUserLogonSid(NULL)))
+  {
+    return WLX_SAS_ACTION_NONE;
+  }
+  */
+  
+  Options = 0;
+  WlxAction = Session->MsGina.Functions.WlxLoggedOutSAS(Session->MsGina.Context,
+                                                        Session->SASAction,
+                                                        &Session->LogonId,
+                                                        LogonSid,
+                                                        &Options,
+                                                        &Token,
+                                                        &MprNotifyInfo,
+                                                        (PVOID*)&Profile);
+  
+  return WlxAction;
+}
+
+void
+SessionLoop(PWLSESSION Session)
+{
+  //WCHAR StatusMsg[256];
+ // HANDLE hShutdownEvent;
+  DWORD WlxAction;
+  MSG Msg;
+  
+  WlxAction = WLX_SAS_ACTION_NONE;
+  Session->LogonStatus = LOGON_NONE;
+  while(WlxAction == WLX_SAS_ACTION_NONE)
+  {
+    RemoveStatusMessage(Session);
+    if(Session->LogonStatus == LOGON_NONE)
+    {
+      Session->LogonStatus = LOGON_SHOWINGLOGON;
+      /* we're ready to display a logon window,
+         don't timeout dialogboxes here */
+      WlxSetTimeout(Session->MsGina.Context, 0);
+      Session->SuppressStatus = TRUE;
+      /* tell msgina to show a window telling the user one can logon */
+      #if SUPPORT_CONSOLESTART
+      if(!StartConsole)
+      #endif
+      DisplaySASNotice(Session);
+      Session->SuppressStatus = FALSE;
+      
+      if(Session->SASAction == WLX_SAS_ACTION_LOGOFF)
+      {
+        /* the system wants to log off here */
+        Session->LogonStatus = LOGON_SHUTDOWN;
+        break;
+      }
+    }
+    
+    WlxAction = DoLogin(Session);
+    if(WlxAction == WLX_SAS_ACTION_LOGOFF)
+    {
+      /* the user doesn't want to login, instead pressed cancel
+         we should display the window again so one can logon again */
+      /* FIXME - disconnect any connections in case we did a remote logon */
+      DbgPrint("WL: DoLogin failed\n");
+      WlxAction = WLX_SAS_ACTION_NONE;
+    }
+    if(WlxAction == WLX_SAS_ACTION_NONE)
+    {
+      if(Session->SASAction == WLX_SAS_ACTION_LOGOFF)
+      {
+        /* system is about to shut down, leave the main loop */
+        Session->LogonStatus = LOGON_SHUTDOWN;
+        break;
+      }
+      Session->LogonStatus = LOGON_NONE;
+      continue;
+    }
+    
+    /* FIXME - don't leave the loop when suspending the computer */
+    if(WLX_SUSPENDING(WlxAction))
+    {
+      Session->LogonStatus = LOGON_NONE;
+      WlxAction = WLX_SAS_ACTION_NONE;
+      /* don't leave the loop */
+      continue;
+    }
+    
+    if(WLX_SHUTTINGDOWN(WlxAction))
+    {
+      Session->LogonStatus = LOGON_SHUTDOWN;
+      /* leave the loop here */
+      break;
+    }
+    
+    /* Message loop for the SAS window */
+    while(GetMessage(&Msg, 0, 0, 0))
+    {
+      TranslateMessage(&Msg);
+      DispatchMessage(&Msg);
+    }
+  }
+   /*
    LoadString(hAppInstance, IDS_PREPARENETWORKCONNECTIONS, StatusMsg, 256 * sizeof(WCHAR));
    MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
                                                   ApplicationDesktop,
@@ -730,7 +845,7 @@ WinMain(HINSTANCE hInstance,
                                                   NULL,
                                                   StatusMsg);
    
-   /* FIXME */
+
    Sleep(150);
    
    LoadString(hAppInstance, IDS_APPLYINGCOMPUTERSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
@@ -740,14 +855,14 @@ WinMain(HINSTANCE hInstance,
                                                   NULL,
                                                   StatusMsg);
    
-   /* FIXME */
+
    Sleep(150);
 
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
       
-   /* FIXME - call WlxLoggedOutSAS() to display the login dialog */
+
     Sleep(250);
    
    LoadString(hAppInstance, IDS_LOADINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
@@ -756,8 +871,7 @@ WinMain(HINSTANCE hInstance,
                                                   0,
                                                   NULL,
                                                   StatusMsg);
-   
-   /* FIXME */
+
    Sleep(150);
    
    LoadString(hAppInstance, IDS_APPLYINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
@@ -767,7 +881,7 @@ WinMain(HINSTANCE hInstance,
                                                   NULL,
                                                   StatusMsg);
    
-   /* FIXME */
+
    Sleep(150);
    
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
@@ -794,7 +908,7 @@ WinMain(HINSTANCE hInstance,
                                                   NULL,
                                                   StatusMsg);
    
-   /* FIXME */
+
    Sleep(150);
    
    MsGinaInst->Functions->WlxShutdown(MsGinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
@@ -806,28 +920,11 @@ WinMain(HINSTANCE hInstance,
                                                   NULL,
                                                   StatusMsg);
    
-   /* FIXME */
+
    Sleep(250);
    
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-   
-   /* FIXME - Flush disks and registry, ... */
-   
-   /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
-   switch(DialogBox(hInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerProc))
-   {
-     case IDC_BTNSHTDOWNCOMPUTER:
-       NtShutdownSystem(ShutdownReboot);
-       break;
-     default:
-       NtShutdownSystem(ShutdownNoReboot);
-       break;
-   }
-   ExitProcess(0);
-#if SUPPORT_CONSOLESTART
- }
-#endif
-   
-   return 0;
+   */
 }
+

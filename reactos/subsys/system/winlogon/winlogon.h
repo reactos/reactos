@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winlogon.h,v 1.2 2003/12/07 00:04:20 weiden Exp $
+/* $Id: winlogon.h,v 1.3 2004/03/28 12:21:41 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h
@@ -28,6 +28,34 @@
 #define __WINLOGON_MAIN_H__
 
 #include <WinWlx.h>
+
+VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
+VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);
+VOID WINAPI WlxSasNotify(HANDLE hWlx, DWORD dwSasType);
+BOOL WINAPI WlxSetTimeout(HANDLE hWlx, DWORD Timeout);
+int WINAPI WlxAssignShellProtection(HANDLE hWlx, HANDLE hToken, HANDLE hProcess, HANDLE hThread);
+int WINAPI WlxMessageBox(HANDLE hWlx, HWND hwndOwner, LPWSTR lpszText, LPWSTR lpszTitle, UINT fuStyle);
+int WINAPI WlxDialogBox(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc);
+int WINAPI WlxDialogBoxParam(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
+int WINAPI WlxDialogBoxIndirect(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc);
+int WINAPI WlxDialogBoxIndirectParam(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
+int WINAPI WlxSwitchDesktopToUser(HANDLE hWlx);
+int WINAPI WlxSwitchDesktopToWinlogon(HANDLE hWlx);
+int WINAPI WlxChangePasswordNotify(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo);
+BOOL WINAPI WlxGetSourceDesktop(HANDLE hWlx, PWLX_DESKTOP* ppDesktop);
+BOOL WINAPI WlxSetReturnDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop);
+BOOL WINAPI WlxCreateUserDesktop(HANDLE hWlx, HANDLE hToken, DWORD Flags, PWSTR pszDesktopName, PWLX_DESKTOP* ppDesktop);
+int WINAPI WlxChangePasswordNotifyEx(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo, PWSTR ProviderName, PVOID Reserved);
+BOOL WINAPI WlxCloseUserDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop, HANDLE hToken);
+BOOL WINAPI WlxSetOption(HANDLE hWlx, DWORD Option, ULONG_PTR Value, ULONG_PTR* OldValue);
+BOOL WINAPI WlxGetOption(HANDLE hWlx, DWORD Option, ULONG_PTR* Value);
+VOID WINAPI WlxWin31Migrate(HANDLE hWlx);
+BOOL WINAPI WlxQueryClientCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
+BOOL WINAPI WlxQueryInetConnectorCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
+DWORD WINAPI WlxQueryConsoleSwitchCredentials(PWLX_CONSOLESWITCH_CREDENTIALS_INFO_V1_0 pCred);
+BOOL WINAPI WlxQueryTsLogonCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V2_0 pCred);
+BOOL WINAPI WlxDisconnect(void);
+DWORD WINAPI WlxQueryTerminalServicesData(HANDLE hWlx, PWLX_TERMINAL_SERVICES_DATA pTSData, WCHAR* UserName, WCHAR* Domain);
 
 typedef BOOL (WINAPI * PFWLXNEGOTIATE)  (DWORD, DWORD *);
 typedef BOOL (WINAPI * PFWLXINITIALIZE) (LPWSTR, HANDLE, PVOID, PVOID, PVOID *);
@@ -83,20 +111,56 @@ typedef struct _MSGINAFUNCTIONS
 typedef struct _MSGINAINSTANCE
 {
   HANDLE hDllInstance;
-  PMSGINAFUNCTIONS Functions;
+  MSGINAFUNCTIONS Functions;
   PVOID Context;
   DWORD Version;
 } MSGINAINSTANCE, *PMSGINAINSTANCE;
 
+typedef struct _WLSESSION
+{
+  MSGINAINSTANCE MsGina;
+  DWORD SASAction;
+  DWORD LogonStatus;
+  BOOL SuppressStatus;
+  BOOL TaskManHotkey;
+  HWND SASWindow;
+  HWINSTA InteractiveWindowStation;
+  HDESK ApplicationDesktop;
+  HDESK WinlogonDesktop;
+  HDESK ScreenSaverDesktop;
+  LUID LogonId;
+} WLSESSION, *PWLSESSION;
+
 extern HINSTANCE hAppInstance;
-extern PMSGINAINSTANCE MsGinaInst;
-extern HWINSTA InteractiveWindowStation;   /* WinSta0 */
-extern HDESK ApplicationDesktop;           /* WinSta0\Default */
-extern HDESK WinlogonDesktop;              /* WinSta0\Winlogon */
-extern HDESK ScreenSaverDesktop;           /* WinSta0\Screen-Saver */
+extern PWLSESSION WLSession;
 
-extern MSGINAFUNCTIONS MsGinaFunctions;
+BOOL
+InitializeSAS(PWLSESSION Session);
+void
+DispatchSAS(PWLSESSION Session, DWORD dwSasType);
 
+#define LOGON_INITIALIZING  1
+#define LOGON_NONE  2
+#define LOGON_SHOWINGLOGON  3
+
+#define LOGON_SHUTDOWN  9
+
+#define WLX_SHUTTINGDOWN(Status) \
+  (((Status) == WLX_SAS_ACTION_SHUTDOWN) || \
+   ((Status) == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF) || \
+   ((Status) == WLX_SAS_ACTION_SHUTDOWN_REBOOT) \
+  )
+
+#define WLX_SUSPENDING(Status) \
+  (((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP) || \
+   ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
+   ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
+  )
+
+#define RemoveStatusMessage(Session) \
+  Session->MsGina.Functions.WlxRemoveStatusMessage(Session->MsGina.Context);
+#define DisplaySASNotice(Session) \
+  Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
 
 #endif /* __WINLOGON_MAIN_H__ */
 

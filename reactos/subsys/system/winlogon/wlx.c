@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.3 2004/01/06 16:11:57 ekohl Exp $
+/* $Id: wlx.c,v 1.4 2004/03/28 12:21:41 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,21 +26,19 @@
 
 #define Unimplemented DbgPrint("WL: %S() at %S:%i unimplemented!\n", __FUNCTION__, __FILE__, __LINE__)
 
-PMSGINAINSTANCE MsGinaInst;
-
 /*
- * @unimplemented
+ * @implemented
  */
 VOID WINAPI
 WlxUseCtrlAltDel(
   HANDLE hWlx
 )
 {
-  Unimplemented;
+  WlxSetOption(hWlx, WLX_OPTION_USE_CTRL_ALT_DEL, TRUE, NULL);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID WINAPI
 WlxSetContextPointer(
@@ -48,11 +46,11 @@ WlxSetContextPointer(
   PVOID pWlxContext
 )
 {
-  Unimplemented;
+  WlxSetOption(hWlx, WLX_OPTION_CONTEXT_POINTER, (ULONG_PTR)pWlxContext, NULL);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID WINAPI
 WlxSasNotify(
@@ -60,7 +58,7 @@ WlxSasNotify(
   DWORD dwSasType
 )
 {
-  Unimplemented;
+  DispatchSAS((PWLSESSION)hWlx, dwSasType);
 }
 
 /*
@@ -72,7 +70,7 @@ WlxSetTimeout(
   DWORD Timeout
 )
 {
-  Unimplemented;
+  /* Unimplemented; */
   return FALSE;
 }
 
@@ -294,9 +292,9 @@ WlxSetOption(
   ULONG_PTR* OldValue
 )
 {
-  PMSGINAINSTANCE Instance = (PMSGINAINSTANCE)hWlx;
-  Unimplemented;
-  if(Instance || !Value)
+  PWLSESSION Session = (PWLSESSION)hWlx;
+  
+  if(Session || !Value)
   {
     switch(Option)
     {
@@ -304,8 +302,8 @@ WlxSetOption(
         return TRUE;
       case WLX_OPTION_CONTEXT_POINTER:
       {
-        *OldValue = (ULONG_PTR)Instance->Context;
-        Instance->Context = (PVOID)Value;
+        *OldValue = (ULONG_PTR)Session->MsGina.Context;
+        Session->MsGina.Context = (PVOID)Value;
         return TRUE;
       }    
       case WLX_OPTION_USE_SMART_CARD:
@@ -571,21 +569,19 @@ GinaLoadFailedProc(
 }
 
 BOOL
-LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion)
+LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion, HMODULE *GinaInstance)
 {
   HMODULE hGina;
   WCHAR GinaDll[MAX_PATH + 1];
   
-  MsGinaInst = NULL;
-  
   GetMsGinaPath(GinaDll);
   
-  hGina = LoadLibrary(GinaDll);
-  if(!hGina)
+  if(!(hGina = LoadLibrary(GinaDll)))
   {
     DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedProc, (LPARAM)&GinaDll);
     return FALSE;
   }
+  *GinaInstance = hGina;
   
   Functions->WlxNegotiate = (PFWLXNEGOTIATE)GetProcAddress(hGina, "WlxNegotiate");
   Functions->WlxInitialize = (PFWLXINITIALIZE)GetProcAddress(hGina, "WlxInitialize");
@@ -634,32 +630,99 @@ LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion)
   return (Functions->WlxNegotiate != NULL) && (Functions->WlxInitialize != NULL);
 }
 
-BOOL
-MsGinaInit(DWORD Version)
+PWLSESSION
+MsGinaInit(void)
 {
-  PMSGINAINSTANCE Instance;
+  PWLSESSION WLSession;
+  DWORD GinaDllVersion;
   
-  Instance = (PMSGINAINSTANCE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSGINAINSTANCE));
-  if(!Instance)
+  WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLSESSION));
+  if(!WLSession)
   {
-    return 0;
+    return NULL;
   }
   
-  Instance->Functions = &MsGinaFunctions;
-  Instance->hDllInstance = NULL; /* FIXME */
-  Instance->Context = NULL;
-  Instance->Version = Version;
-  
-  MsGinaInst = Instance;
-  
-  if(!Instance->Functions->WlxInitialize(InteractiveWindowStation,
-                                         (HANDLE)Instance,
-                                         NULL,
-                                         (PVOID)&FunctionTable,
-                                         &Instance->Context))
+  if(!LoadGina(&WLSession->MsGina.Functions, &GinaDllVersion, &WLSession->MsGina.hDllInstance))
   {
-    return 0;
+    HeapFree(GetProcessHeap(), 0, WLSession);
+    return NULL;
   }
+  
+  WLSession->MsGina.Context = NULL;
+  WLSession->MsGina.Version = GinaDllVersion;
+  WLSession->SuppressStatus = FALSE;
+  
+  if(!WLSession->MsGina.Functions.WlxInitialize(WLSession->InteractiveWindowStation,
+                                               (HANDLE)WLSession,
+                                               NULL,
+                                               (PVOID)&FunctionTable,
+                                               &WLSession->MsGina.Context))
+  {
+    HeapFree(GetProcessHeap(), 0, WLSession);
+    return NULL;
+  }
+  return WLSession;
+}
+
+BOOL
+WlxCreateWindowStationAndDesktops(PWLSESSION Session)
+{
+  /*
+   * Create the interactive window station
+   */
+  Session->InteractiveWindowStation = CreateWindowStation(L"WinSta0", 0, GENERIC_ALL, NULL);
+  if(!Session->InteractiveWindowStation)
+  {
+    DbgPrint("WL: Failed to create window station (0x%X)\n", GetLastError());
+    return FALSE;
+  }
+  SetProcessWindowStation(Session->InteractiveWindowStation);
+  
+  /*
+   * Create the application desktop
+   */
+  Session->ApplicationDesktop = CreateDesktop(L"Default",
+                                              NULL,
+                                              NULL,
+                                              0,      /* FIXME: Set some flags */
+                                              GENERIC_ALL,
+                                              NULL);
+  if(!Session->ApplicationDesktop)
+  {
+    DbgPrint("WL: Failed to create Default desktop (0x%X)\n", GetLastError());
+    return FALSE;
+  }
+  
+  /*
+   * Create the winlogon desktop
+   */
+  Session->WinlogonDesktop = CreateDesktop(L"Winlogon",
+                                           NULL,
+                                           NULL,
+                                           0,      /* FIXME: Set some flags */
+                                           GENERIC_ALL,
+                                           NULL);
+  if(!Session->WinlogonDesktop)
+  {
+    DbgPrint("WL: Failed to create Winlogon desktop (0x%X)\n", GetLastError());
+    return FALSE;
+  }
+  
+  /*
+   * Create the screen saver desktop
+   */
+  Session->ScreenSaverDesktop = CreateDesktop(L"Screen-Saver",
+                                              NULL,
+                                              NULL,
+                                              0,      /* FIXME: Set some flags */
+                                              GENERIC_ALL,
+                                              NULL);
+  if(!Session->ScreenSaverDesktop)
+  {
+    DbgPrint("WL: Failed to create Screen-Saver desktop (0x%X)\n", GetLastError());
+    return FALSE;
+  }
+  
   return TRUE;
 }
 
