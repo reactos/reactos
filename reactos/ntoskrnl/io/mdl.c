@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/base/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
+ * FILE:            ntoskrnl/io/mdl.c
+ * PURPOSE:         Io manager mdl functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
@@ -62,7 +62,7 @@ VOID IoBuildPartialMdl(PMDL SourceMdl,
 }
 
 VOID IoFreeMdl(PMDL Mdl)
-{
+{   
    MmUnmapLockedPages(MmGetSystemAddressForMdl(Mdl),Mdl);
    MmUnlockPages(Mdl);
    ExFreePool(Mdl);

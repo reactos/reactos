@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/iomgr/timer.c
- * PURPOSE:         IO timers
+ * FILE:            ntoskrnl/io/timer.c
+ * PURPOSE:         io timers
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98

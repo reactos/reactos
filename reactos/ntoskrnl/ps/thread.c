@@ -310,6 +310,7 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
    
    ExInterlockedInsertHeadList(&ThreadListHead,&thread->Entry,
 			       &ThreadListLock);
+   InitializeListHead(&thread->ApcQueueHead);
    return(STATUS_SUCCESS);
 }
 

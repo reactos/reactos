@@ -11,11 +11,11 @@
 /* INCLUDES ***************************************************************/
 
 #include <windows.h>
+#include <wstring.h>
 #include <ddk/ntddk.h>
 #include <internal/objmgr.h>
 #include <internal/string.h>
 #include <internal/kernel.h>
-#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -47,6 +47,78 @@ static struct
 } namespc_root;
 
 /* FUNCTIONS **************************************************************/
+
+NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
+			       ACCESS_MASK DesiredAccess,
+			       POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   PVOID Object;
+   NTSTATUS Status;
+   
+   Status = ObOpenObjectByName(ObjectAttributes,&Object);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+       
+   if (BODY_TO_HEADER(Object)->Type!=OBJTYP_DIRECTORY)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   *DirectoryHandle = ObAddHandle(Object);
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
+				OUT POBJDIR_INFORMATION DirObjInformation, 
+				IN ULONG                BufferLength, 
+				IN BOOLEAN              GetNextIndex, 
+				IN BOOLEAN              IgnoreInputIndex, 
+				IN OUT PULONG           ObjectIndex,
+				OUT PULONG              DataWritten OPTIONAL)
+{
+   POBJECT_HEADER hdr = ObGetObjectByHandle(DirObjHandle);
+   PDIRECTORY_OBJECT dir = (PDIRECTORY_OBJECT)(HEADER_TO_BODY(hdr));
+   PLIST_ENTRY current_entry;
+   POBJECT_HEADER current;
+   PWSTR outbuffer = (PWSTR)(ObjectIndex);
+   
+   current_entry = dir->head.Flink;
+   while (current_entry!=NULL)
+     {
+	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,entry);
+	if (BufferLength < wstrlen(current->name.Buffer))
+	     {
+		return(STATUS_SUCCESS);
+	     }
+	BufferLength = BufferLength - wstrlen(current->name.Buffer);
+//	wcscpy(outbuffer,current->name.Buffer);
+	outbuffer = outbuffer + wstrlen(current->name.Buffer);
+	current_entry = current_entry->Flink;
+     }
+   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
+			    PVOID* Object)
+{
+   
+   DPRINT("ObOpenObjectByName(ObjectAttributes %x, Object %x)\n",
+	  ObjectAttributes,Object);
+   DPRINT("ObjectAttributes = {ObjectName %x ObjectName->Buffer %w}\n",
+	  ObjectAttributes->ObjectName,ObjectAttributes->ObjectName->Buffer);
+   
+   *Object = ObLookupObject(ObjectAttributes->RootDirectory, 
+                              ObjectAttributes->ObjectName->Buffer);
+   DPRINT("*Object %x\n",*Object);
+   if ((*Object)==NULL)
+     {
+	return(STATUS_NO_SUCH_FILE);
+     }
+   return(STATUS_SUCCESS);
+}
 
 void ObjNamespcInit(void)
 /*
@@ -92,20 +164,6 @@ NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
    return(STATUS_SUCCESS);
 }
 
-PWSTR Rtlstrrchr(PUNICODE_STRING string, WCHAR c)
-{
-   int i;
-   DPRINT("string->Length %d\n",string->Length);
-   for (i=(string->Length-1);i>=0;i--)
-     {
-	if (string->Buffer[i]==c)
-	  {
-	     return(&string->Buffer[i]);
-	  }
-     }
-   return(NULL);
-}
-
 VOID InitializeObjectAttributes(POBJECT_ATTRIBUTES InitializedAttributes,
 				PUNICODE_STRING ObjectName,
 				ULONG Attributes,
@@ -127,70 +185,15 @@ VOID InitializeObjectAttributes(POBJECT_ATTRIBUTES InitializedAttributes,
  *     to RootDirectory
  */
 {
-   UNICODE_STRING path;
-   PWSTR name = NULL;
-   PDIRECTORY_OBJECT parent_dir;
-   
-   DPRINT("InitalizeObjectAttributes(ObjectName %w)\n",ObjectName->Buffer);
-   
-   if (RootDirectory!=NULL)
-     {
-	ObReferenceObjectByHandle(RootDirectory,DIRECTORY_TRAVERSE,NULL,
-				  UserMode,(PVOID*)&parent_dir,NULL);
-     }
-   else
-     {
-	parent_dir = HEADER_TO_BODY((POBJECT_HEADER)&namespc_root);
-     }
-   
-   ASSERT_IRQL(PASSIVE_LEVEL);
-   
-   path.Buffer = ExAllocatePool(NonPagedPool,
-				ObjectName->Length*sizeof(WCHAR));
-   path.MaximumLength = ObjectName->Length;
-   RtlCopyUnicodeString(&path,ObjectName);   
- 
-   /*
-    * Seperate the path into the name of the object and the name of its
-    * direct parent directory
-    */
-   name = Rtlstrrchr(&path,'\\');
-   *name=0;
-   
-   /*
-    * Find the objects parent directory
-    */
-   DPRINT("parent_dir %x\n",&(parent_dir->Type));
-   parent_dir=(PDIRECTORY_OBJECT)ObLookupObject(parent_dir,&path);
-   if (parent_dir==NULL)
-     {
-	return;
-     }
-
-   /*
-    * Make sure the parent directory doesn't disappear
-    */
-   ObReferenceObjectByPointer(parent_dir,DIRECTORY_CREATE_OBJECT,NULL,
-			      UserMode);
-
-   InitializedAttributes->Attributes = Attributes;
-   InitializedAttributes->parent = parent_dir;
-   RtlInitUnicodeString(&InitializedAttributes->name,name+1);
-   InitializedAttributes->path = path;
-}
-
-int _wcscmp(wchar_t* str1, wchar_t* str2)
-{
-   while ( (*str1)==(*str2) )
-     {
-	str1++;
-	str2++;
-	if ( (*str1)==((wchar_t)0) && (*str1)==((wchar_t)0) )
-	  {
-	     return(0);
-	  }
-     }
-   return( (*str1) - (*str2) );
+   DPRINT("InitializeObjectAttributes(InitializedAttributes %x "
+	  "ObjectName %x Attributes %x RootDirectory %x)\n",
+	  InitializedAttributes,ObjectName,Attributes,RootDirectory);
+   InitializedAttributes->Length=sizeof(OBJECT_ATTRIBUTES);
+   InitializedAttributes->RootDirectory=RootDirectory;
+   InitializedAttributes->ObjectName=ObjectName;
+   InitializedAttributes->Attributes=Attributes;
+   InitializedAttributes->SecurityDescriptor=SecurityDescriptor;
+   InitializedAttributes->SecurityQualityOfService=NULL;
 }
 
 static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
@@ -205,12 +208,24 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
 {
    LIST_ENTRY* current = ((PDIRECTORY_OBJECT)dir)->head.Flink;
    POBJECT_HEADER current_obj;
-   DPRINT("ObDirLookup(dir %x, name %w\n",dir,name);
+   DPRINT("ObDirLookup(dir %x, name %w)\n",dir,name);
+   if (name[0]==0)
+     {
+	return(BODY_TO_HEADER(dir));
+     }
+   if (name[0]=='.'&&name[1]==0)
+     {
+	return(BODY_TO_HEADER(dir));
+     }
+   if (name[0]=='.'&&name[1]=='.'&&name[2]==0)
+     {
+	UNIMPLEMENTED;
+	return(NULL);
+     }
    while (current!=NULL)
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,entry);
-	DPRINT("current_obj->name %w\n",current_obj->name.Buffer);
-	if ( _wcscmp(current_obj->name.Buffer, name)==0)
+	if ( wcscmp(current_obj->name.Buffer, name)==0)
 	  {
 	     return(current_obj);
 	  }
@@ -244,20 +259,7 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
    InsertTailList(&parent->head,&Object->entry);
 }
 
-wchar_t* _wcschr(wchar_t* str, wchar_t ch)
-{
-   while ((*str)!=((wchar_t)0))
-     {
-	if ((*str)==ch)
-	  {
-	     return(str);
-	  }
-	str++;
-     }
-   return(NULL);
-}
-
-PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string)
+PVOID ObLookupObject(HANDLE rooth, PWSTR string)
 /*
  * FUNCTION: Lookup an object within the system namespc
  * ARGUMENTS:
@@ -269,29 +271,30 @@ PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string)
 {
    PWSTR current;
    PWSTR next;
-   PDIRECTORY_OBJECT current_dir = root;
+   PDIRECTORY_OBJECT current_dir = NULL;
    POBJECT_HEADER current_hdr;
-   PWSTR string;
    
-   DPRINT("root %x string %w\n",root,_string->Buffer);
+   DPRINT("root %x string %w\n",rooth,string);
    
-   if (root==NULL)
+   if (rooth==NULL)
      {
 	current_dir = HEADER_TO_BODY(&(namespc_root.hdr));
+     }
+   else
+     {
+	ObReferenceObjectByHandle(rooth,DIRECTORY_TRAVERSE,NULL,
+				  UserMode,(PVOID*)&current_dir,NULL);
      }
   
    /*
     * Bit of a hack this
     */
-   if (_string->Buffer[0]==0)
+   if (string[0]==0)
    {
       DPRINT("current_dir %x\n",current_dir);
       DPRINT("type %d\n",current_dir->Type);
       return(current_dir);
    }
-
-   string=(PWSTR)ExAllocatePool(NonPagedPool,(_string->Length+1)*2);
-   wcscpy(string,_string->Buffer);
 
    DPRINT("string = %w\n",string);
    
@@ -304,7 +307,7 @@ PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string)
       
    current = string+1;
    DPRINT("current %w\n",current);
-   next = _wcschr(string+1,'\\');
+   next = wcschr(string+1,'\\');
    if (next!=NULL)
      {
 	*next=0;
@@ -341,7 +344,7 @@ PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string)
 	current_dir = HEADER_TO_BODY(current_hdr);
 	  
 	current = next+1;
-	next = _wcschr(next+1,'\\');
+	next = wcschr(next+1,'\\');
 	if (next!=NULL)
 	  {
 	     *next=0;
@@ -353,11 +356,9 @@ PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string)
    current_hdr = ObDirLookup(current_dir,current);
    if (current_hdr==NULL)
    {
-        ExFreePool(string);
         return(NULL);
    }
    DPRINT("Returning %x %x\n",current_hdr,HEADER_TO_BODY(current_hdr));
-   ExFreePool(string);
    return(HEADER_TO_BODY(current_hdr));
 }
  

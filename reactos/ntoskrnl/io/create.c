@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/iomgr/create.cc
+ * FILE:            ntoskrnl/io/create.c
  * PURPOSE:         Handling file create/open apis
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -15,6 +15,7 @@
 #include <internal/kernel.h>
 #include <internal/objmgr.h>
 #include <internal/iomgr.h>
+#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -43,59 +44,54 @@ NTSTATUS ZwOpenFile(PHANDLE FileHandle,
 		    ULONG ShareAccess,
 		    ULONG OpenOptions)
 {
-   UNIMPLEMENTED;
-}
-
-HANDLE STDCALL CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess,
-			   DWORD dwShareMode, 
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
-{
-   PDEVICE_OBJECT DeviceObject;
+   PVOID Object;
+   NTSTATUS Status;
    PIRP Irp;
-   HANDLE hfile;
-   UNICODE_STRING filename;
-   ANSI_STRING afilename;
+   KEVENT Event;
+   PDEVICE_OBJECT DeviceObject;
+   PFILE_OBJECT FileObject;   
+   PIO_STACK_LOCATION StackLoc;
    
-   RtlInitAnsiString(&afilename,lpFileName);
-   RtlAnsiStringToUnicodeString(&filename,&afilename,TRUE);
-   DeviceObject = ObLookupObject(NULL,&filename);   
-   DPRINT("Sending IRP for IRP_MJ_CREATE to %x\n",DeviceObject);
-   if (DeviceObject==NULL)
-   {
-      DPRINT("(%s:%d) Object not found\n",__FILE__,__LINE__);
-      return(NULL);	
-   }
-
-   hfile = ObAddHandle(DeviceObject);
+   assert_irql(PASSIVE_LEVEL);
    
-   /*
-    * Tell the device we are openining it 
-    */
-   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);   
-   if (Irp==NULL)
-     {
-	return(NULL);
+   *FileHandle=0;
+   
+   Status =  ObOpenObjectByName(ObjectAttributes,&Object);
+   DPRINT("Object %x Status %x\n",Object,Status);
+   if (!NT_SUCCESS(Status))
+     {	
+	return(Status);
      }
    
-   DPRINT("Preparing IRP\n");
+   DeviceObject = (PDEVICE_OBJECT)Object;
+
+   FileObject = ObGenericCreateObject(FileHandle,0,NULL,OBJTYP_FILE);
+   DPRINT("FileObject %x DeviceObject %x\n",FileObject,DeviceObject);
+   memset(FileObject,0,sizeof(FILE_OBJECT));
+   FileObject->DeviceObject=DeviceObject;
+   FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
    
-   /*
-    * Set up the stack location 
-    */
-   Irp->Stack[Irp->CurrentLocation].MajorFunction = IRP_MJ_CREATE;
-   Irp->Stack[Irp->CurrentLocation].MinorFunction = 0;
-   Irp->Stack[Irp->CurrentLocation].Flags = 0;
-   Irp->Stack[Irp->CurrentLocation].Control = 0;
-   Irp->Stack[Irp->CurrentLocation].DeviceObject = DeviceObject;
-//   Irp->Stack[Irp->StackPtr].FileObject = &files[hfile];
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
    
-   DPRINT("Sending IRP\n");
+   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+   if (Irp==NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   StackLoc = IoGetNextIrpStackLocation(Irp);
+   DPRINT("StackLoc %x\n",StackLoc);
+   StackLoc->MajorFunction = IRP_MJ_CREATE;
+   StackLoc->MinorFunction = 0;
+   StackLoc->Flags = 0;
+   StackLoc->Control = 0;
+   StackLoc->DeviceObject = DeviceObject;
+   StackLoc->FileObject=FileObject;
+   DPRINT("DeviceObject %x\n",DeviceObject);
+   DPRINT("DeviceObject->DriverObject %x\n",DeviceObject->DriverObject);
    IoCallDriver(DeviceObject,Irp);
    
-   DPRINT("Returning %x\n",hfile);
-   return(hfile);
+   return(STATUS_SUCCESS);
 }
+
 

@@ -226,7 +226,7 @@ VOID RtlStoreUshort(PUSHORT Address, USHORT Value);
 BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS TimeFields, PLARGE_INTEGER Time);
 VOID RtlTimeToTimeFields(PLARGE_INTEGER Time, PTIME_FIELDS TimeFields);
 PWSTR RtlStrtok(PUNICODE_STRING _string, PWSTR _sep, PWSTR* temp);
-
+VOID RtlGetCallersAddress(PVOID* CallersAddress);
 
 typedef struct {
 	ULONG    	Length;

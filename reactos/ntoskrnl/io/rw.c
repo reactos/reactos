@@ -17,7 +17,7 @@
 #include <internal/string.h>
 #include <internal/objmgr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #ifndef NDEBUG
@@ -38,191 +38,157 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 		    PLARGE_INTEGER ByteOffset,
 		    PULONG Key)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS ZwWriteFile(HANDLE FileHandle,
-		    HANDLE Event,
-		    PIO_APC_ROUTINE ApcRoutine,
-		    PVOID ApcContext,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    PVOID Buffer,
-		    ULONG Length,
-		    PLARGE_INTEGER ByteOffset,
-		    PULONG Key)
-{
-   UNIMPLEMENTED;
-}
-
-static BOOL WriteDevice(PDEVICE_OBJECT dev, LPVOID lpBuffer,
-			DWORD nNumberOfBytesToWrite,
-			LPDWORD lpNumberOfBytesWritten,
-			LPOVERLAPPED lpOverlapped)
-{
-   PDRIVER_OBJECT drv = dev->DriverObject;
-   PIRP irp;
+   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
+   PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    
-   DPRINT("dev %x drv %x\n",dev,drv);
-   
-   /*
-    * Build an irp for the transfer
-    */
-   irp = IoAllocateIrp(dev->StackSize,TRUE);
-   if (irp==NULL)
+   if (hdr==NULL)
      {
-	printk("Failed to allocate IRP\n");
-	return(FALSE);
+	return(STATUS_INVALID_HANDLE);
      }
    
-   /*
-    * Prepare the user buffer
-    */
-   DPRINT1("Preparing user buffer\n");
-   irp->UserBuffer = (LPVOID)lpBuffer;    // This handles the 'neither' method
-   if (dev->Flags&DO_BUFFERED_IO)
+   Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
      {
 	DPRINT1("Doing buffer i/o\n");
-	irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,nNumberOfBytesToWrite);
-	if (irp->AssociatedIrp.SystemBuffer==NULL)
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	                   ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
-	     return(FALSE);
+	     return(STATUS_UNSUCCESSFUL);
 	  }
-	memcpy(irp->AssociatedIrp.SystemBuffer,lpBuffer,nNumberOfBytesToWrite);
-	irp->UserBuffer = NULL;
+	Irp->UserBuffer = NULL;
      }
-   if (dev->Flags&DO_DIRECT_IO)
+   if (FileObject->DeviceObject->Flags&DO_DIRECT_IO)
      {
 	DPRINT1("Doing direct i/o\n");
 	
-	irp->MdlAddress = MmCreateMdl(NULL,lpBuffer,nNumberOfBytesToWrite);
-	MmProbeAndLockPages(irp->MdlAddress,UserMode,IoWriteAccess);
-	irp->UserBuffer = NULL;
-	irp->AssociatedIrp.SystemBuffer = NULL;
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
      }
 
-   /*
-    * Set up the stack location 
-    */
-   StackPtr = IoGetNextIrpStackLocation(irp);
-   StackPtr->MajorFunction = IRP_MJ_WRITE;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = dev;
-   StackPtr->FileObject = NULL;
-   StackPtr->Parameters.Write.Length = nNumberOfBytesToWrite;
-   
-   DPRINT1("Sending IRP\n");
-   IoCallDriver(dev,irp);
-
-   
-   /*
-    * Free the above buffer
-    */
-}
-
-WINBOOL STDCALL WriteFile(HANDLE hFile, LPCVOID lpBuffer,
-			  DWORD nNumberOfBytesToWrite,
-			  LPDWORD lpNumberOfBytesWritten,
-			  LPOVERLAPPED lpOverlapped)
-{
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(hFile);
-   
-   if (hdr->Type==OBJTYP_DEVICE)
-     {
-	return(WriteDevice(hdr,lpBuffer,nNumberOfBytesToWrite,
-			   lpNumberOfBytesWritten,lpOverlapped));       
-     }
-   return(FALSE);
-}
-
-static BOOL ReadDevice(PDEVICE_OBJECT dev, LPVOID lpBuffer,
-			DWORD nNumberOfBytesToWrite,
-			LPDWORD lpNumberOfBytesWritten,
-			LPOVERLAPPED lpOverlapped)
-{
-   PDRIVER_OBJECT drv = dev->DriverObject;
-   PIRP irp;
-   PIO_STACK_LOCATION StackPtr;
-   
-   DPRINT("dev %x drv %x\n",dev,drv);
-   
-   /*
-    * Build an irp for the transfer
-    */
-   irp = IoAllocateIrp(dev->StackSize,TRUE);
-   if (irp==NULL)
-     {
-	printk("Failed to allocate IRP\n");
-	return(FALSE);
-     }
-   
-   /*
-    * Prepare the user buffer
-    */
-   DPRINT1("Preparing user buffer\n");
-   irp->UserBuffer = (LPVOID)lpBuffer;    // This handles the 'neither' method
-   if (dev->Flags&DO_BUFFERED_IO)
-     {
-	DPRINT1("Doing buffer i/o\n");
-	irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,nNumberOfBytesToWrite);
-	if (irp->AssociatedIrp.SystemBuffer==NULL)
-	  {
-	     return(FALSE);
-	  }
-	memcpy(irp->AssociatedIrp.SystemBuffer,lpBuffer,nNumberOfBytesToWrite);
-	irp->UserBuffer = NULL;
-     }
-   if (dev->Flags&DO_DIRECT_IO)
-     {
-	DPRINT1("Doing direct i/o\n");
-	
-	irp->MdlAddress = MmCreateMdl(NULL,lpBuffer,nNumberOfBytesToWrite);
-	MmProbeAndLockPages(irp->MdlAddress,UserMode,IoWriteAccess);
-	irp->UserBuffer = NULL;
-	irp->AssociatedIrp.SystemBuffer = NULL;
-     }
-
-   /*
-    * Set up the stack location 
-    */
-   StackPtr = IoGetNextIrpStackLocation(irp);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   DPRINT("StackPtr %x\n",StackPtr);
    StackPtr->MajorFunction = IRP_MJ_READ;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;
    StackPtr->Control = 0;
-   StackPtr->DeviceObject = dev;
-   StackPtr->FileObject = NULL;
-   StackPtr->Parameters.Write.Length = nNumberOfBytesToWrite;
+   StackPtr->DeviceObject = FileObject->DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.Write.Length = Length;
+   if (ByteOffset!=NULL)
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = ByteOffset->LowPart;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = ByteOffset->HighPart;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+   }
+   if (Key!=NULL)
+   {
+         StackPtr->Parameters.Write.Key = *Key;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.Key = 0;
+   }
    
-   DPRINT1("Sending IRP\n");
-   IoCallDriver(dev,irp);
-
-   
-   /*
-    * Free the above buffer
-    */
-   DPRINT1("Finished ReadDevice\n");
+   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
+   IoCallDriver(FileObject->DeviceObject,Irp);
+   memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+   return(STATUS_SUCCESS);
 }
 
-
-
-WINBOOL STDCALL ReadFile(HANDLE hFile, LPVOID lpBuffer,
-			  DWORD nNumberOfBytesToWrite,
-			  LPDWORD lpNumberOfBytesWritten,
-			  LPOVERLAPPED lpOverlapped)
+NTSTATUS ZwWriteFile(HANDLE FileHandle,
+		     HANDLE Event,
+		     PIO_APC_ROUTINE ApcRoutine,
+		     PVOID ApcContext,
+		     PIO_STATUS_BLOCK IoStatusBlock,
+		     PVOID Buffer,
+		     ULONG Length,
+		     PLARGE_INTEGER ByteOffset,
+		     PULONG Key)
 {
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(hFile);
+   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
    
-   if (hdr->Type==OBJTYP_DEVICE)
+   if (hdr==NULL)
      {
-	return(ReadDevice((PDEVICE_OBJECT)hdr,lpBuffer,nNumberOfBytesToWrite,
-			   lpNumberOfBytesWritten,lpOverlapped));       
+	return(STATUS_INVALID_HANDLE);
      }
-   return(FALSE);
-}
+   
+   Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+	DPRINT1("Doing buffer i/o\n");
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	                   ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	  {
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	memcpy(Irp->AssociatedIrp.SystemBuffer,Buffer,Length);
+	Irp->UserBuffer = NULL;
+     }
+   if (FileObject->DeviceObject->Flags&DO_DIRECT_IO)
+     {
+	DPRINT1("Doing direct i/o\n");
+	
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
+     }
 
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   DPRINT("StackPtr %x\n",StackPtr);
+   StackPtr->MajorFunction = IRP_MJ_WRITE;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = FileObject->DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.Write.Length = Length;
+   if (ByteOffset!=NULL)
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = ByteOffset->LowPart;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = ByteOffset->HighPart;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+   }
+   if (Key!=NULL)
+   {
+         StackPtr->Parameters.Write.Key = *Key;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.Key = 0;
+   }
+   
+   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
+   IoCallDriver(FileObject->DeviceObject,Irp);
+   return(STATUS_SUCCESS);
+}
 

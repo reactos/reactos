@@ -1,7 +1,7 @@
  /*
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
- * FILE:         kernel/mm/mdl.cc
+ * FILE:         ntoskrnl/mm/mdl.c
  * PURPOSE:      Manipulates MDLs
  * PROGRAMMER:   David Welch (welch@mcmail.com)
  * UPDATE HISTORY: 
@@ -15,19 +15,45 @@
 #include <internal/hal/page.h>
 #include <internal/string.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
 
 VOID MmUnlockPages(PMDL MemoryDescriptorList)
+/*
+ * FUNCTION: Unlocks the physical pages described by a given MDL
+ * ARGUMENTS:
+ *      MemoryDescriptorList = MDL describing the buffer to be unlocked
+ */
 {
    UNIMPLEMENTED;
 }
 
-PVOID MmMapLockedPages(PMDL MemoryDescriptorList, KPROCESSOR_MODE AccessMode)
+PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 {
-   UNIMPLEMENTED;
+   PVOID base;
+   unsigned int i;
+   ULONG* mdl_pages=NULL;
+   
+   DPRINT("Mdl->ByteCount %x\n",Mdl->ByteCount);
+   DPRINT("PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE) %x\n",
+	  PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);
+   
+   base = VirtualAlloc((LPVOID)0,Mdl->ByteCount,MEM_COMMIT,
+		       PAGE_SYSTEM + PAGE_EXECUTE_READWRITE);
+   mdl_pages = (ULONG *)(Mdl + 1);
+   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE); i++)
+     {
+	DPRINT("Writing %x with physical address %x\n",
+	       base+(i*PAGESIZE),mdl_pages[i]);
+	DPRINT("&((PULONG)(Mdl+1))[i] %x\n",&mdl_pages[i]);
+	set_page(base+(i*PAGESIZE),PA_READ + PA_SYSTEM,
+		 mdl_pages[i]);
+     }
+   DPRINT("base %x\n",base);
+   return(base + Mdl->ByteOffset);
 }
 
 VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList)
@@ -56,20 +82,36 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
  *          Operation = Operation to probe for
  */
 {
-   /*
-    * Find the memory area containing the buffer
-    */
    ULONG* mdl_pages=NULL;
    int i;
-   memory_area* marea=find_first_marea(memory_area_list_head,
-				       (ULONG)Mdl->StartVa,
-				       Mdl->ByteCount);
+   memory_area* marea;
+   
+   DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
+   DPRINT("StartVa %x\n",Mdl->StartVa);
+   
+   if (Mdl->StartVa > KERNEL_BASE)
+     {
+   	marea=find_first_marea(system_memory_area_list_head,
+			       (ULONG)Mdl->StartVa,
+			       Mdl->ByteCount);   
+     }
+   else
+     {
+	marea=find_first_marea(memory_area_list_head,
+			       (ULONG)Mdl->StartVa,
+			       Mdl->ByteCount);      
+     }
+   
+   DPRINT("marea %x\n",marea);
+  
+   
    
    /*
     * Check the area is valid
     */
    if (marea==NULL || (marea->base+marea->length) < ((ULONG)Mdl->StartVa))
      {
+	printk("Area is invalid\n");
 	ExRaiseStatus(STATUS_INVALID_PARAMETER);
      }
    
@@ -89,6 +131,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
       case IoModifyAccess:
 	if (marea->access&PAGE_GUARD || marea->access&PAGE_READONLY)
 	  {
+	     printk("Invalid area protections\n");
 	     ExRaiseStatus(STATUS_INVALID_PARAMETER);
 	  }
 	break;
@@ -108,7 +151,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    /*
     * Lock the pages
     */
-   mdl_pages = (ULONG *)(Mdl + sizeof(MDL));
+   mdl_pages = (ULONG *)(Mdl + 1);
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);i++)
      {
@@ -119,6 +162,8 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 	  }
 	mdl_pages[i]=MmGetPhysicalAddress((PVOID)(PAGE_ROUND_DOWN(Mdl->StartVa)
 					  +(i*PAGESIZE)));
+	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
+	DPRINT("&mdl_pages[i] %x\n",&mdl_pages[i]);
      }
 }
 
@@ -151,13 +196,9 @@ ULONG MmSizeOfMdl(PVOID Base, ULONG Length)
  *         Length = number of bytes to map
  */
 {
-   unsigned int len=PAGE_ROUND_UP(Length)/PAGESIZE;
+   unsigned int len=ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base,Length);
    
-   if (!IS_PAGE_ALIGNED(Base))
-     {
-	len++;
-     }
-   
+   DPRINT("MmSizeOfMdl() %x\n",sizeof(MDL)+(len*sizeof(ULONG)));
    return(sizeof(MDL)+(len*sizeof(ULONG)));
 }
 
@@ -167,12 +208,32 @@ PVOID MmGetMdlVirtualAddress(PMDL Mdl)
 }
 
 PVOID MmGetSystemAddressForMdl(PMDL Mdl)
+/*
+ * FUNCTION: Returns a nonpaged system-space virtual address for the buffer
+ * described by the MDL. It maps the physical pages described by a given
+ * MDL into system space, if they are not already mapped to system space.
+ * ARGUMENTS:
+ *        Mdl = Mdl to map
+ * RETURNS: The base system-space virtual address that maps the physical
+ * pages described by the given MDL.
+ */
 {
-   Mdl->MappedSystemVa = MmMapLockedPages(Mdl,KernelMode);
+   if (!( (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) ||
+	  (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) ))
+     {
+	Mdl->MappedSystemVa = MmMapLockedPages(Mdl,KernelMode);
+     }
    return(Mdl->MappedSystemVa);
 }
 
 VOID MmBuildMdlForNonPagedPool(PMDL Mdl)
+/*
+ * FUNCTION: Fills in the corresponding physical page array of a given 
+ * MDL for a buffer in nonpaged system space
+ * ARGUMENTS:
+ *        Mdl = Points to an MDL that supplies a virtual address, 
+ *              byte offset and length
+ */
 {
    int va;
    for (va=0; va<Mdl->Size; va++)
@@ -180,21 +241,25 @@ VOID MmBuildMdlForNonPagedPool(PMDL Mdl)
 	((PULONG)(Mdl + 1))[va] = MmGetPhysicalAddress(
 					Mdl->StartVa+ (va * PAGESIZE));
      }
+   Mdl->MappedSystemVa = Mdl->StartVa;
 }
 
 VOID MmInitializeMdl(PMDL MemoryDescriptorList, PVOID Base, ULONG Length)
+/*
+ * FUNCTION: Initializes the header of an MDL
+ * ARGUMENTS:
+ *        MemoryDescriptorList = Points to the MDL to be initialized
+ *        BaseVa = Points to the base virtual address of a buffer
+ *        Length = Specifies the length (in bytes) of a buffer
+ */
 {
    memset(MemoryDescriptorList,0,sizeof(MDL));
    MemoryDescriptorList->StartVa = PAGE_ROUND_DOWN(Base);
    MemoryDescriptorList->ByteOffset = Base - PAGE_ROUND_DOWN(Base);
    MemoryDescriptorList->MdlFlags = 0;
    MemoryDescriptorList->ByteCount = Length;
-   MemoryDescriptorList->Size = PAGE_ROUND_UP(Length) / PAGESIZE;
-   if (!IS_PAGE_ALIGNED(Base))
-     {
-	MemoryDescriptorList->Size = MemoryDescriptorList->Size
-	  + sizeof(ULONG);
-     }
+   MemoryDescriptorList->Size = sizeof(MDL) + 
+             (ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base,Length) * sizeof(ULONG));
    MemoryDescriptorList->Process = PsGetCurrentProcess();
 }
 
@@ -211,7 +276,10 @@ PMDL MmCreateMdl(PMDL MemoryDescriptorList, PVOID Base, ULONG Length)
 {   
    if (MemoryDescriptorList == NULL)
      {
-	MemoryDescriptorList = (PMDL)ExAllocatePool(NonPagedPool,sizeof(MDL));
+	ULONG Size;
+	
+	Size = MmSizeOfMdl(Base,Length);
+	MemoryDescriptorList = (PMDL)ExAllocatePool(NonPagedPool,Size);
 	if (MemoryDescriptorList==NULL)
 	  {
 	     return(NULL);

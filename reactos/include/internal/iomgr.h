@@ -22,6 +22,6 @@
 NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry);
 
 VOID IoInitCancelHandling(VOID);
-
+VOID IoInitSymbolicLinkImplementation(VOID);
 
 #endif

@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/objmgr.h>
 #include <internal/kernel.h>
+#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -37,9 +38,14 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 			    CSHORT Type)
 {
    POBJECT_HEADER hdr = NULL;
+   UNICODE_STRING ObjectName;
+   PWSTR path;
+   PWSTR name;
+   PDIRECTORY_OBJECT parent;
    
-   DPRINT("ObGenericCreateObject(Handle %x ObjectAttributes %x Type %x)\n",
-	  Handle,ObjectAttributes,Type);
+   DPRINT("ObGenericCreateObject(Handle %x, DesiredAccess %x,"
+	  "ObjectAttributes %x, Type %x)\n",Handle,DesiredAccess,ObjectAttributes,
+	  Type);
    
    /*
     * Allocate the object body and header
@@ -49,30 +55,56 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
      {
 	return(NULL);
      }
+
+   /*
+    * If unnamed then initalize
+    */
+   if (ObjectAttributes==NULL)
+     {
+	ObInitializeObjectHeader(Type,NULL,hdr);
+	*Handle = ObAddHandle(HEADER_TO_BODY(hdr));
+	return(HEADER_TO_BODY(hdr));
+     }
+   
+   /*
+    * Copy the object name into a buffer
+    */
+   DPRINT("ObjectAttributes->ObjectName %x\n",ObjectAttributes->ObjectName);
+   DPRINT("ObjectAttributes->ObjectName->Length %d\n",
+	  ObjectAttributes->ObjectName->Length);
+   ObjectName.MaximumLength = ObjectAttributes->ObjectName->Length;
+   ObjectName.Buffer = ExAllocatePool(NonPagedPool,
+			       ((ObjectAttributes->ObjectName->Length+1)*2));
+   if (ObjectName.Buffer==NULL)
+     {
+	return(NULL);	
+     }
+   RtlCopyUnicodeString(&ObjectName,ObjectAttributes->ObjectName);
+   
+   /*
+    * Seperate the name into a path and name 
+    */
+   name = wcsrchr(ObjectName.Buffer,'\\');
+   if (name==NULL)
+     {
+	name=ObjectName.Buffer;
+	path=NULL;
+     }
+   else
+     {
+	path=ObjectName.Buffer;
+	*name=0;
+	name=name+1;
+     }
+   
+   parent = ObLookupObject(ObjectAttributes->RootDirectory,path);
    
    /*
     * Initialize the object header
     */
-   if (ObjectAttributes!=NULL)
-     {
-	ObInitializeObjectHeader(Type,&ObjectAttributes->name,hdr);
-     }
-   else
-     {	
-	ObInitializeObjectHeader(Type,NULL,hdr);
-     }
-   
-//   DPRINT("ObjectAttributes->parent->Type %d\n",
-//	  ObjectAttributes->parent->Type);
-   if (ObjectAttributes!=NULL)
-     {
-	/*
-	 * Add the object to its parent directory
-	 */
-	DPRINT("hdr->name.Buffer %x\n",hdr->name.Buffer);
-        ObCreateEntry(ObjectAttributes->parent,hdr);
-     }
-   
+   ObInitializeObjectHeader(Type,name,hdr);
+   ObCreateEntry(parent,hdr);
+      
    DPRINT("Handle %x\n",Handle);
    *Handle = ObAddHandle(HEADER_TO_BODY(hdr));
    
@@ -81,6 +113,8 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 
 ULONG ObSizeOf(CSHORT Type)
 {
+   DPRINT("ObSizeOf(Type %d)\n",Type);
+   DPRINT("ObSizeOf() Returning %d\n",ObjectTypes[Type]->PagedPoolCharge);
    return(ObjectTypes[Type]->PagedPoolCharge);
 }
 
@@ -95,7 +129,7 @@ VOID ObRegisterType(CSHORT id, POBJECT_TYPE type)
    ObjectTypes[id]=type;
 }
 
-VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name, 
+VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
 			      POBJECT_HEADER obj)
 /*
  * FUNCTION: Creates a new object
@@ -104,10 +138,12 @@ VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name,
  *        obj = Pointer to the header of the object
  */
 {
+   PWSTR temp_name;
+   
    if (name!=NULL)
      {
 	DPRINT("ObInitializeObjectHeader(id %d name %w obj %x)\n",id,
-	       name->Buffer,obj);
+	       name,obj);
      }
    else
      {
@@ -125,13 +161,13 @@ VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name,
      }
    else
      {
-	obj->name.Length = 0;
-	obj->name.MaximumLength = name->Length;
+	DPRINT("name %w\n",name);
+	obj->name.MaximumLength = wstrlen(name);
 	obj->name.Buffer = ExAllocatePool(NonPagedPool,
-					  (name->Length+1)*sizeof(WCHAR));
-	DPRINT("obj->name.Buffer %x\n",obj->name.Buffer);
-	RtlCopyUnicodeString(&obj->name,name);
-	DPRINT("obj->name.Buffer %x\n",obj->name.Buffer);
+					  (obj->name.MaximumLength+1)*2);
+	DPRINT("name %w\n",name);
+	RtlInitUnicodeString(&obj->name,name);
+	DPRINT("name %w\n",obj->name.Buffer);
      }
 }
 
@@ -150,10 +186,11 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
  * RETURNS: Status
  */
 {
-   POBJECT_HEADER Object = BODY_TO_HEADER(ObjectBody);
+   POBJECT_HEADER Object;
 
    DPRINT("ObReferenceObjectByPointer(%x %x)\n",ObjectBody,Object);
-
+   
+   Object = BODY_TO_HEADER(ObjectBody);
    Object->RefCount++;
    return(STATUS_SUCCESS);
 }
@@ -180,7 +217,7 @@ NTSTATUS ZwClose(HANDLE Handle)
 {
    PVOID ObjectBody;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   assert_irql(PASSIVE_LEVEL);
    
    ObjectBody = ObGetObjectByHandle(Handle);   
    if (ObjectBody == NULL)

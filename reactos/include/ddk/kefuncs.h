@@ -3,6 +3,12 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+VOID KeDrainApcQueue(VOID);
+VOID KeInitializeApc(PKAPC Apc, PKNORMAL_ROUTINE NormalRoutine,
+		     PVOID NormalContext,
+		     PKTHREAD TargetThread);
+BOOLEAN KeInsertQueueApc(PKAPC Apc);
+
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 
  * data

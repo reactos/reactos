@@ -89,8 +89,75 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 				   ULONG Length,
 				   PLARGE_INTEGER StartingOffset,
 				   PIO_STATUS_BLOCK IoStatusBlock)
+/*
+ * FUNCTION: Allocates and sets up an IRP to be sent to lower level drivers
+ * ARGUMENTS:
+ *         MajorFunction = One of IRP_MJ_READ, IRP_MJ_WRITE, 
+ *                         IRP_MJ_FLUSH_BUFFERS or IRP_MJ_SHUTDOWN
+ *         DeviceObject = Device object to send the irp to
+ *         Buffer = Buffer into which data will be read or written
+ *         Length = Length in bytes of the irp to be allocated
+ *         StartingOffset = Starting offset on the device
+ *         IoStatusBlock (OUT) = Storage for the result of the operation
+ * RETURNS: The IRP allocated on success, or
+ *          NULL on failure
+ */
 {
-   UNIMPLEMENTED;
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
+     {
+	return(NULL);
+     }
+   
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+	DPRINT("Doing buffer i/o\n",0);
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	                   ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	  {
+	     return(NULL);
+	  }
+	Irp->UserBuffer = NULL;
+     }
+   if (DeviceObject->Flags&DO_DIRECT_IO)
+     {
+	DPRINT("Doing direct i/o\n",0);
+	
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
+     }
+
+   Irp->UserIosb = IoStatusBlock;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = MajorFunction;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = NULL;
+   StackPtr->Parameters.Write.Length = Length;
+   if (StartingOffset!=NULL)
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 
+	                                          StartingOffset->LowPart;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 
+	                                           StartingOffset->HighPart;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+   }
+   
+   return(Irp);
 }
 
 PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
@@ -113,29 +180,78 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 				  PLARGE_INTEGER StartingOffset,
 				  PKEVENT Event,
 				  PIO_STATUS_BLOCK IoStatusBlock)
+/*
+ * FUNCTION: Allocates and builds an IRP to be sent synchronously to lower
+ * level driver(s)
+ * ARGUMENTS:
+ *        MajorFunction = Major function code, one of IRP_MJ_READ,
+ *                        IRP_MJ_WRITE, IRP_MJ_FLUSH_BUFFERS, IRP_MJ_SHUTDOWN
+ *        DeviceObject = Target device object
+ *        Buffer = Buffer containing data for a read or write
+ *        Length = Length in bytes of the information to be transferred
+ *        StartingOffset = Offset to begin the read/write from
+ *        Event (OUT) = Will be set when the operation is complete
+ *        IoStatusBlock (OUT) = Set to the status of the operation
+ * RETURNS: The IRP allocated on success, or
+ *          NULL on failure
+ */
 {
-   PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
-   PIRP irp;
+   PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-      
-   /*
-    * Allocate an IRP for the transfer
-    */
-   irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
-   if (irp==NULL)
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
      {
-	printk("Failed to allocate IRP\n");
-	return(FALSE);
+	return(NULL);
      }
    
-   /*
-    * Prepare the parameter in the next IO stack location
-    */
-   StackPtr = IoGetNextIrpStackLocation(irp);
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+	DPRINT("Doing buffer i/o\n",0);
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	                   ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	  {
+	     return(NULL);
+	  }
+	Irp->UserBuffer = NULL;
+     }
+   if (DeviceObject->Flags&DO_DIRECT_IO)
+     {
+	DPRINT("Doing direct i/o\n",0);
+	
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
+     }
+
+   Irp->UserIosb = IoStatusBlock;
+   Irp->UserEvent = Event;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;
    StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = NULL;
+   StackPtr->Parameters.Write.Length = Length;
+   if (StartingOffset!=NULL)
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 
+	                                            StartingOffset->LowPart;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 
+	                                             StartingOffset->HighPart;
+   }
+   else
+   {
+        StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+   }
+   
+   return(Irp);
 }
 
 USHORT IoSizeOfIrp(CCHAR StackSize)
@@ -204,13 +320,15 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DevObject, PIRP irp)
 {
    PDRIVER_OBJECT drv = DevObject->DriverObject;
    IO_STACK_LOCATION* param = IoGetNextIrpStackLocation(irp);
-   
+   DPRINT("Deviceobject %x\n",DevObject);
+   DPRINT("Irp %x\n",irp);
    irp->Tail.Overlay.CurrentStackLocation--;
    irp->CurrentLocation--;
    DPRINT("Io stack address %x\n",param);
    DPRINT("Function %d Routine %x\n",param->MajorFunction,
 	  drv->MajorFunction[param->MajorFunction]);
    DPRINT("IRP_MJ_CREATE %d\n",IRP_MJ_CREATE);
+
    return(drv->MajorFunction[param->MajorFunction](DevObject,irp));
 }
 
@@ -272,7 +390,7 @@ VOID IoSetCompletionRoutine(PIRP Irp,
      }
 }
 
-VOID IoCompleteRequest(IRP* Irp, CCHAR PriorityBoost)
+VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 /*
  * FUNCTION: Indicates the caller has finished all processing for a given
  * I/O request and is returning the given IRP to the I/O manager
@@ -282,9 +400,15 @@ VOID IoCompleteRequest(IRP* Irp, CCHAR PriorityBoost)
  *                         thread making the request
  */
 {
-   unsigned int i;   
+   unsigned int i=0;   
+   unsigned int stack_size;
    
-   for (i=0;i<0;i++)
+   DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d)\n",
+	  Irp,PriorityBoost);
+   DPRINT("Irp->Stack[i].DeviceObject->StackSize %x\n",
+	  Irp->Stack[i].DeviceObject->StackSize);
+   stack_size = Irp->Stack[i].DeviceObject->StackSize;
+   for (i=0;i<stack_size;i++)
      {
 	if (Irp->Stack[i].CompletionRoutine!=NULL)
 	  {
@@ -292,4 +416,17 @@ VOID IoCompleteRequest(IRP* Irp, CCHAR PriorityBoost)
 					     Irp->Stack[i].CompletionContext);
 	  }
      }
+   
+   if (Irp->UserEvent!=NULL)
+     {
+	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+     }
+   if (Irp->UserIosb!=NULL)
+     {
+	*Irp->UserIosb=Irp->IoStatus;
+     }
+   
+   /*
+    * If the 
+    */
 }
