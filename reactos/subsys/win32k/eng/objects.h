@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.16 2003/07/27 18:37:23 dwelch Exp $
+/* $Id: objects.h,v 1.17 2003/08/12 20:08:45 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -108,10 +108,9 @@ typedef struct _PATHGDI {
   PATHOBJ		PathObj;
 } PATHGDI;
 
-/*ei Fixme! Fix STROBJ */
 typedef struct _STRGDI {
   ENGOBJ 		Header;
-  //STROBJ		StrObj;
+  STROBJ		StrObj;
 } STRGDI;
 
 typedef BOOL STDCALL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,

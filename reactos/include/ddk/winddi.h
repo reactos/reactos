@@ -41,7 +41,6 @@ typedef PVOID  PGLYPHDATA;
 typedef PVOID  PLINEATTRS;
 typedef DWORD  MIX;
 typedef DWORD  ROP4;
-typedef PVOID  PSTROBJ;
 typedef PVOID  PTTPOLYGONHEADER;
 typedef PVOID  PVIDEOMEMORY;
 
@@ -671,6 +670,16 @@ typedef struct _XFORMOBJ
 {
   /* FIXME: what does this beast look like?  */
 } XFORMOBJ, *PXFORMOBJ;
+
+typedef struct _STROBJ
+{
+  ULONG  cGlyphs;
+  FLONG  flAccel;
+  ULONG  ulCharInc;
+  RECTL  rclBkGround;
+  GLYPHPOS  *pgp;
+  LPWSTR  pwszOrg;
+} STROBJ, *PSTROBJ;
 
 /*
  * Functions Prefixed with Drv are calls made from GDI to DDI, and

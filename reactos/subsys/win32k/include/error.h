@@ -9,6 +9,9 @@ VOID FASTCALL
 SetLastWin32Error(
   DWORD Status);
 
+NTSTATUS FASTCALL
+GetLastNtError();
+
 #endif /* __WIN32K_ERROR_H */
 
 /* EOF */

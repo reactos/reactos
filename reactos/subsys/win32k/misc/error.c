@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: error.c,v 1.5 2003/05/18 17:16:17 ea Exp $
+/* $Id: error.c,v 1.6 2003/08/12 20:08:45 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,6 +45,19 @@ SetLastWin32Error(DWORD Status)
     {
       Teb->LastErrorValue = Status;
     }
+}
+
+NTSTATUS FASTCALL
+GetLastNtError()
+{
+  // FIXME - not 100% sure this is correct
+  PTEB Teb = NtCurrentTeb();
+
+  if ( NULL != Teb )
+    {
+      return Teb->LastStatusValue;
+    }
+  return 0;
 }
 
 /* EOF */
