@@ -18,6 +18,9 @@ HBITMAP  W32kCreateBitmap(INT  Width,
                           UINT  Planes,
                           UINT  BitsPerPel,
                           CONST VOID *Bits);
+HBITMAP  W32kCreateCompatibleBitmap(HDC hDC,
+                                    INT  Width,
+                                    INT  Height);
 HBITMAP  W32kCreateBitmapIndirect(CONST BITMAP  *BM);
 HBITMAP  W32kCreateDIBitmap(HDC  hDC,
                             CONST BITMAPINFOHEADER  *bmih,

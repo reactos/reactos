@@ -7,7 +7,7 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-int  W32kAddFontResource(LPCTSTR  Filename)
+int  W32kAddFontResource(LPCWSTR  Filename)
 {
   UNIMPLEMENTED;
 }
@@ -25,7 +25,7 @@ HFONT  W32kCreateFont(int  Height,
                       DWORD  ClipPrecision,
                       DWORD  Quality,
                       DWORD  PitchAndFamily,
-                      LPCTSTR  Face)
+                      LPCWSTR  Face)
 {
   UNIMPLEMENTED;
 }
@@ -36,15 +36,15 @@ HFONT  W32kCreateFontIndirect(CONST LPLOGFONT  lf)
 }
 
 BOOL  W32kCreateScalableFontResource(DWORD  Hidden,
-                                     LPCTSTR  FontRes,
-                                     LPCTSTR  FontFile,
-                                     LPCTSTR  CurrentPath)
+                                     LPCWSTR  FontRes,
+                                     LPCWSTR  FontFile,
+                                     LPCWSTR  CurrentPath)
 {
   UNIMPLEMENTED;
 }
 
 int  W32kEnumFontFamilies(HDC  hDC,
-                          LPCTSTR  Family,
+                          LPCWSTR  Family,
                           FONTENUMPROC  EnumFontFamProc,
                           LPARAM  lParam)
 {
@@ -61,7 +61,7 @@ int  W32kEnumFontFamiliesEx(HDC  hDC,
 }
 
 int  W32kEnumFonts(HDC  hDC,
-                   LPCTSTR FaceName,
+                   LPCWSTR FaceName,
                    FONTENUMPROC  FontFunc,
                    LPARAM  lParam)
 {
@@ -73,7 +73,7 @@ BOOL  W32kExtTextOut(HDC  hDC,
                      int  Y,
                      UINT  Options,
                      CONST LPRECT  rc,
-                     LPCTSTR  String,
+                     LPCWSTR  String,
                      UINT  Count,
                      CONST LPINT  Dx)
 {
@@ -103,7 +103,7 @@ BOOL  W32kGetCharABCWidthsFloat(HDC  hDC,
 }
 
 DWORD  W32kGetCharacterPlacement(HDC  hDC,
-                                 LPCTSTR  String,
+                                 LPCWSTR  String,
                                  int  Count,
                                  int  MaxExtent,
                                  LPGCP_RESULTS  Results,
@@ -172,8 +172,20 @@ BOOL  W32kGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
   UNIMPLEMENTED;
 }
 
+UINT  W32kGetTextCharset(HDC  hDC)
+{
+  UNIMPLEMENTED;
+}
+
+UINT  W32kGetTextCharsetInfo(HDC  hDC,
+                             LPFONTSIGNATURE  Sig,
+                             DWORD  Flags)
+{
+  UNIMPLEMENTED;
+}
+
 BOOL  W32kGetTextExtentExPoint(HDC  hDC,
-                               LPCTSTR String,
+                               LPCWSTR String,
                                int  Count,
                                int  MaxExtent,
                                LPINT  Fit,
@@ -184,7 +196,7 @@ BOOL  W32kGetTextExtentExPoint(HDC  hDC,
 }
 
 BOOL  W32kGetTextExtentPoint(HDC  hDC,
-                             LPCTSTR  String,
+                             LPCWSTR  String,
                              int  Count,
                              LPSIZE  Size)
 {
@@ -192,7 +204,7 @@ BOOL  W32kGetTextExtentPoint(HDC  hDC,
 }
 
 BOOL  W32kGetTextExtentPoint32(HDC  hDC,
-                               LPCTSTR  String,
+                               LPCWSTR  String,
                                int  Count,
                                LPSIZE  Size)
 {
@@ -201,7 +213,7 @@ BOOL  W32kGetTextExtentPoint32(HDC  hDC,
 
 int  W32kGetTextFace(HDC  hDC,
                      int  Count,
-                     LPTSTR  FaceName)
+                     LPWSTR  FaceName)
 {
   UNIMPLEMENTED;
 }
@@ -219,7 +231,7 @@ BOOL  W32kPolyTextOut(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRemoveFontResource(LPCTSTR  FileName)
+BOOL  W32kRemoveFontResource(LPCWSTR  FileName)
 {
   UNIMPLEMENTED;
 }
@@ -252,8 +264,15 @@ BOOL  W32kSetTextJustification(HDC  hDC,
 BOOL  W32kTextOut(HDC  hDC,
                   int  XStart,
                   int  YStart,
-                  LPCTSTR  String,
+                  LPCWSTR  String,
                   int  Count)
+{
+  UNIMPLEMENTED;
+}
+
+UINT  W32kTranslateCharsetInfo(PDWORD  Src,
+                               LPCHARSETINFO  CSI,   
+                               DWORD  Flags)
 {
   UNIMPLEMENTED;
 }

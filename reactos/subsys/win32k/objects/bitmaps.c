@@ -29,6 +29,13 @@ HBITMAP  W32kCreateBitmap(INT  Width,
   UNIMPLEMENTED;
 }
 
+HBITMAP  W32kCreateCompatibleBitmap(HDC hDC,
+                                    INT  Width,
+                                    INT  Height)
+{
+  UNIMPLEMENTED;
+}
+
 HBITMAP  W32kCreateBitmapIndirect(CONST BITMAP  *BM)
 {
   UNIMPLEMENTED;

@@ -122,7 +122,12 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                           LPCWSTR  Device,
                           LPCWSTR  Output,
                           CONST PDEVMODEW  InitData);
+HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
+                         LPCWSTR  Device,
+                         LPCWSTR  Output,
+                         CONST PDEVMODEW  DevMode);
 BOOL STDCALL  W32kDeleteDC(HDC  hDC);
+BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject);
 INT STDCALL  W32kDrawEscape(HDC  hDC,
                             INT  nEscape,
                             INT  cbInput,
@@ -145,9 +150,14 @@ BOOL STDCALL  W32kGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point);
 INT STDCALL  W32kGetDeviceCaps(HDC  hDC, INT  Index);
 INT STDCALL  W32kGetMapMode(HDC  hDC);
+INT STDCALL  W32kGetObject(HGDIOBJ  hGDIObj,
+                           INT  BufSize,
+                           LPVOID  Object);
+DWORD STDCALL  W32kGetObjectType(HGDIOBJ  hGDIObj);
 INT STDCALL  W32kGetPolyFillMode(HDC  hDC);
 INT STDCALL  W32kGetRelAbs(HDC  hDC);
 INT STDCALL  W32kGetROP2(HDC  hDC);
+HGDIOBJ STDCALL  W32kGetStockObject(INT  Object);
 INT STDCALL  W32kGetStretchBltMode(HDC  hDC);
 COLORREF STDCALL  W32kGetTextColor(HDC  hDC);
 UINT STDCALL  W32kGetTextAlign(HDC  hDC);

@@ -167,6 +167,14 @@ Failure:
   return  NULL;
 }
 
+HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
+                         LPCWSTR  Device,
+                         LPCWSTR  Output,
+                         CONST PDEVMODEW  DevMode)
+{
+  UNIMPLEMENTED;
+}
+
 BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
 {
   PDC  DCToDelete;
@@ -180,6 +188,11 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   DC_FreeDC(DCToDelete);
   
   return  STATUS_SUCCESS;
+}
+
+BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
+{
+  UNIMPLEMENTED;
 }
 
 INT  W32kDrawEscape(HDC  hDC,
@@ -225,9 +238,28 @@ INT  W32kGetDeviceCaps(HDC  hDC,
 
 DC_GET_VAL( INT, W32kGetMapMode, w.MapMode )
 DC_GET_VAL( INT, W32kGetPolyFillMode, w.polyFillMode )
+
+INT STDCALL  W32kGetObject(HGDIOBJ  hGDIObj,
+                           INT  BufSize,
+                           LPVOID  Object)
+{
+  UNIMPLEMENTED;
+}
+ 
+DWORD STDCALL  W32kGetObjectType(HGDIOBJ  hGDIObj)
+{
+  UNIMPLEMENTED;
+}
+
 DC_GET_VAL( INT, W32kGetRelAbs, w.relAbsMode )
 DC_GET_VAL( INT, W32kGetROP2, w.ROPmode )
 DC_GET_VAL( INT, W32kGetStretchBltMode, w.stretchBltMode )
+
+HGDIOBJ STDCALL  W32kGetStockObject(INT  Object)
+{
+  UNIMPLEMENTED;
+}
+
 DC_GET_VAL( UINT, W32kGetTextAlign, w.textAlign )
 DC_GET_VAL( COLORREF, W32kGetTextColor, w.textColor )
 DC_GET_VAL_EX( W32kGetViewportExtEx, vportExtX, vportExtY, SIZE )

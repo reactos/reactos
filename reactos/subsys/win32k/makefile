@@ -6,7 +6,10 @@ MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
-                  objects/fillshap.o objects/line.o objects/text.o
+                  objects/fillshap.o objects/icm.o objects/line.o  \
+                  objects/metafile.o objects/pen.o  \
+                  objects/print.o objects/region.o objects/text.o  \
+                  objects/wingl.o
 RESOURCE_OBJECT = win32k.coff
 STUBS_OBJECTS = stubs/stubs.o
 
