@@ -2,8 +2,7 @@
 #include <stdio.h>
 
 static UINT WindowCount;
-LRESULT WINAPI TopLevelWndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT WINAPI ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT WINAPI MultiWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI 
 WinMain(HINSTANCE hInstance,
@@ -17,13 +16,13 @@ WinMain(HINSTANCE hInstance,
   HWND hWnd2;
   HWND hWndChild;
 
-  wc.lpszClassName = "TopLevelClass";
-  wc.lpfnWndProc = TopLevelWndProc;
+  wc.lpszClassName = "MultiClass";
+  wc.lpfnWndProc = MultiWndProc;
   wc.style = CS_VREDRAW | CS_HREDRAW;
   wc.hInstance = hInstance;
-  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
+  wc.hIcon = LoadIcon(NULL, (LPCTSTR) IDI_APPLICATION);
+  wc.hCursor = LoadCursor(NULL, (LPCTSTR) IDC_ARROW);
+  wc.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
@@ -34,24 +33,7 @@ WinMain(HINSTANCE hInstance,
       return(1);
     }
 
-  wc.lpszClassName = "ChildClass";
-  wc.lpfnWndProc = ChildWndProc;
-  wc.style = CS_VREDRAW | CS_HREDRAW;
-  wc.hInstance = hInstance;
-  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-  wc.lpszMenuName = NULL;
-  wc.cbClsExtra = 0;
-  wc.cbWndExtra = 0;
-  if (RegisterClass(&wc) == 0)
-    {
-      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
-	      GetLastError());
-      return(1);
-    }
-
-  hWnd1 = CreateWindow("TopLevelClass",
+  hWnd1 = CreateWindow("MultiClass",
 		      "TopLevel1",
 		      WS_OVERLAPPEDWINDOW,
 		      0,
@@ -62,8 +44,8 @@ WinMain(HINSTANCE hInstance,
 		      NULL,
 		      hInstance,
 		      NULL);
-  
-  hWndChild = CreateWindow("ChildClass",
+
+  hWndChild = CreateWindow("MultiClass",
 		      "Child1 of TopLevel1",
 		      WS_CHILD | WS_BORDER | WS_CAPTION | WS_VISIBLE | WS_SYSMENU,
 		      20,
@@ -74,21 +56,8 @@ WinMain(HINSTANCE hInstance,
 		      NULL,
 		      hInstance,
 		      NULL);
-  
-#ifdef TODO
-  hWnd2 = CreateWindow("TopLevelClass",
-		      "TopLevel2",
-		      WS_OVERLAPPEDWINDOW,
-		      400,
-		      0,
-		      160,
-		      120,
-		      NULL,
-		      NULL,
-		      hInstance,
-		      NULL);
-#else
-  hWnd2 = CreateWindow("TopLevelClass",
+
+  hWnd2 = CreateWindow("MultiClass",
 		      "TopLevel2",
 		      WS_OVERLAPPEDWINDOW,
 		      400,
@@ -99,7 +68,6 @@ WinMain(HINSTANCE hInstance,
 		      NULL,
 		      hInstance,
 		      NULL);
-#endif
 
   if (! hWnd1 || ! hWnd2 || ! hWndChild)
     {
@@ -108,6 +76,7 @@ WinMain(HINSTANCE hInstance,
       return(1);
     }
   WindowCount = 2;
+
   ShowWindow(hWnd1, SW_NORMAL);
   ShowWindow(hWnd2, SW_NORMAL);
 
@@ -119,42 +88,55 @@ WinMain(HINSTANCE hInstance,
   return msg.wParam;
 }
 
-LRESULT CALLBACK TopLevelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   PAINTSTRUCT ps;
   HDC hDC;
+  LONG Style;
+  RECT Client;
+  HBRUSH Brush;
+  static COLORREF Colors[] =
+    {
+      RGB(0x00, 0x00, 0x00),
+      RGB(0x80, 0x00, 0x00),
+      RGB(0x00, 0x80, 0x00),
+      RGB(0x00, 0x00, 0x80),
+      RGB(0x80, 0x80, 0x00),
+      RGB(0x80, 0x00, 0x80),
+      RGB(0x00, 0x80, 0x80),
+      RGB(0x80, 0x80, 0x80),
+      RGB(0xff, 0x00, 0x00),
+      RGB(0x00, 0xff, 0x00),
+      RGB(0x00, 0x00, 0xff),
+      RGB(0xff, 0xff, 0x00),
+      RGB(0xff, 0x00, 0xff),
+      RGB(0x00, 0xff, 0xff),
+      RGB(0xff, 0xff, 0xff)
+    };
+  static unsigned CurrentColor = 0;
 
   switch(msg)
     {
       case WM_PAINT:
 	hDC = BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &Client);
+	Brush = CreateSolidBrush(Colors[CurrentColor]);
+	FillRect(hDC, &Client, Brush);
+	DeleteObject(Brush);
+	CurrentColor++;
+	if (sizeof(Colors) / sizeof(Colors[0]) <= CurrentColor)
+	  {
+	    CurrentColor = 0;
+	  }
 	EndPaint(hWnd, &ps);
 	break;
 
       case WM_DESTROY:
-	if (0 == --WindowCount)
+	Style = GetWindowLong(hWnd, GWL_STYLE);
+	if (0 == (Style & WS_CHILD) && 0 == --WindowCount)
 	  {
 	    PostQuitMessage(0);
 	  }
-	break;
-
-      default:
-	return DefWindowProc(hWnd, msg, wParam, lParam);
-    }
-
-  return 0;
-}
-
-LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  PAINTSTRUCT ps;
-  HDC hDC;
-
-  switch(msg)
-    {
-      case WM_PAINT:
-	hDC = BeginPaint(hWnd, &ps);
-	EndPaint(hWnd, &ps);
 	break;
 
       default:
