@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.65 2004/09/13 19:10:45 gvg Exp $
+/* $Id: proc.c,v 1.66 2004/09/19 14:36:47 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,7 +12,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
-
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -52,7 +51,7 @@ GetProcessAffinityMask (HANDLE hProcess,
 				      &BytesWritten);
   if (!NT_SUCCESS(Status))
     {
-      SetLastError (Status);
+      SetLastErrorByStatus (Status);
       return FALSE;
     }
 
@@ -80,7 +79,7 @@ SetProcessAffinityMask (HANDLE hProcess,
 				    sizeof(DWORD));
   if (!NT_SUCCESS(Status))
     {
-      SetLastError (Status);
+      SetLastErrorByStatus (Status);
       return FALSE;
     }
 
@@ -106,7 +105,7 @@ GetProcessShutdownParameters (LPDWORD lpdwLevel,
 			       sizeof(CSRSS_API_REPLY));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
     {
-      SetLastError(Status);
+      SetLastErrorByStatus (Status);
       return(FALSE);
     }
 
@@ -138,7 +137,7 @@ SetProcessShutdownParameters (DWORD dwLevel,
 			       sizeof(CSRSS_API_REPLY));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
     {
-      SetLastError(Status);
+      SetLastErrorByStatus (Status);
       return(FALSE);
     }
 
@@ -151,8 +150,8 @@ SetProcessShutdownParameters (DWORD dwLevel,
  */
 BOOL STDCALL
 GetProcessWorkingSetSize (HANDLE hProcess,
-			  LPDWORD lpMinimumWorkingSetSize,
-			  LPDWORD lpMaximumWorkingSetSize)
+			  PSIZE_T lpMinimumWorkingSetSize,
+			  PSIZE_T lpMaximumWorkingSetSize)
 {
   QUOTA_LIMITS QuotaLimits;
   NTSTATUS Status;
@@ -168,23 +167,38 @@ GetProcessWorkingSetSize (HANDLE hProcess,
       return(FALSE);
     }
 
-  *lpMinimumWorkingSetSize = (DWORD)QuotaLimits.MinimumWorkingSetSize;
-  *lpMaximumWorkingSetSize = (DWORD)QuotaLimits.MaximumWorkingSetSize;
+  *lpMinimumWorkingSetSize = QuotaLimits.MinimumWorkingSetSize;
+  *lpMaximumWorkingSetSize = QuotaLimits.MaximumWorkingSetSize;
 
   return(TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 SetProcessWorkingSetSize(HANDLE hProcess,
-			 DWORD dwMinimumWorkingSetSize,
-			 DWORD dwMaximumWorkingSetSize)
+			 SIZE_T dwMinimumWorkingSetSize,
+			 SIZE_T dwMaximumWorkingSetSize)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return(FALSE);
+  QUOTA_LIMITS QuotaLimits;
+  NTSTATUS Status;
+  
+  QuotaLimits.MinimumWorkingSetSize = dwMinimumWorkingSetSize;
+  QuotaLimits.MaximumWorkingSetSize = dwMaximumWorkingSetSize;
+
+  Status = NtSetInformationProcess(hProcess,
+				   ProcessQuotaLimits,
+				   &QuotaLimits,
+				   sizeof(QUOTA_LIMITS));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
 }
 
 
@@ -718,42 +732,45 @@ FatalExit (int ExitCode)
  * @implemented
  */
 DWORD STDCALL
-GetPriorityClass (HANDLE	hProcess)
+GetPriorityClass (HANDLE hProcess)
 {
-  HANDLE		hProcessTmp;
-  DWORD		CsrPriorityClass = 0; // This tells CSRSS we want to GET it!
-  NTSTATUS	Status;
-	
-  Status = 
-    NtDuplicateObject (GetCurrentProcess(),
-		       hProcess,
-		       GetCurrentProcess(),
-		       &hProcessTmp,
-		       (PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
-		       FALSE,
-		       0);
-  if (!NT_SUCCESS(Status))
+  NTSTATUS Status;
+  PROCESS_PRIORITY_CLASS PriorityClass;
+  
+  Status = NtQueryInformationProcess(hProcess,
+                                     ProcessPriorityClass,
+                                     &PriorityClass,
+                                     sizeof(PROCESS_PRIORITY_CLASS),
+                                     NULL);
+  if(NT_SUCCESS(Status))
+  {
+    switch(PriorityClass.PriorityClass)
     {
-      SetLastErrorByStatus (Status);
-      return (0); /* ERROR */
+      case PROCESS_PRIORITY_CLASS_IDLE:
+        return IDLE_PRIORITY_CLASS;
+
+      case PROCESS_PRIORITY_CLASS_BELOW_NORMAL:
+        return BELOW_NORMAL_PRIORITY_CLASS;
+
+      case PROCESS_PRIORITY_CLASS_NORMAL:
+        return NORMAL_PRIORITY_CLASS;
+
+      case PROCESS_PRIORITY_CLASS_ABOVE_NORMAL:
+        return ABOVE_NORMAL_PRIORITY_CLASS;
+
+      case PROCESS_PRIORITY_CLASS_HIGH:
+        return HIGH_PRIORITY_CLASS;
+
+      case PROCESS_PRIORITY_CLASS_REALTIME:
+        return REALTIME_PRIORITY_CLASS;
+
+      default:
+        return NORMAL_PRIORITY_CLASS;
     }
-  /* Ask CSRSS to set it */
-  CsrSetPriorityClass (hProcessTmp, &CsrPriorityClass);
-  NtClose (hProcessTmp);
-  /* Translate CSR->W32 priorities */
-  switch (CsrPriorityClass)
-    {
-    case CSR_PRIORITY_CLASS_NORMAL:
-      return (NORMAL_PRIORITY_CLASS);	/* 32 */
-    case CSR_PRIORITY_CLASS_IDLE:
-      return (IDLE_PRIORITY_CLASS);	/* 64 */
-    case CSR_PRIORITY_CLASS_HIGH:
-      return (HIGH_PRIORITY_CLASS);	/* 128 */
-    case CSR_PRIORITY_CLASS_REALTIME:
-      return (REALTIME_PRIORITY_CLASS);	/* 256 */
-    }
-  SetLastError (ERROR_ACCESS_DENIED);
-  return (0); /* ERROR */
+  }
+  
+  SetLastErrorByStatus(Status);
+  return FALSE;
 }
 
 
@@ -761,53 +778,57 @@ GetPriorityClass (HANDLE	hProcess)
  * @implemented
  */
 BOOL STDCALL
-SetPriorityClass (HANDLE	hProcess,
+SetPriorityClass (HANDLE hProcess,
 		  DWORD	dwPriorityClass)
 {
-  HANDLE		hProcessTmp;
-  DWORD		CsrPriorityClass;
-  NTSTATUS	Status;
+  NTSTATUS Status;
+  PROCESS_PRIORITY_CLASS PriorityClass;
   
-  switch (dwPriorityClass)
-    {
-    case NORMAL_PRIORITY_CLASS:	/* 32 */
-      CsrPriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+  switch(dwPriorityClass)
+  {
+    case IDLE_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_IDLE;
       break;
-    case IDLE_PRIORITY_CLASS:	/* 64 */
-      CsrPriorityClass = CSR_PRIORITY_CLASS_IDLE;
+
+    case BELOW_NORMAL_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
       break;
-    case HIGH_PRIORITY_CLASS:	/* 128 */
-      CsrPriorityClass = CSR_PRIORITY_CLASS_HIGH;
+
+    case NORMAL_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
       break;
-    case REALTIME_PRIORITY_CLASS:	/* 256 */
-      CsrPriorityClass = CSR_PRIORITY_CLASS_REALTIME;
+
+    case ABOVE_NORMAL_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
       break;
+
+    case HIGH_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+      break;
+
+    case REALTIME_PRIORITY_CLASS:
+      PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_REALTIME;
+      break;
+
     default:
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return (FALSE);
-    }
-  Status = 
-    NtDuplicateObject (GetCurrentProcess(),
-		       hProcess,
-		       GetCurrentProcess(),
-		       &hProcessTmp,
-		       (PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
-		       FALSE,
-		       0);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus (Status);
-      return (FALSE); /* ERROR */
-    }
-  /* Ask CSRSS to set it */
-  Status = CsrSetPriorityClass (hProcessTmp, &CsrPriorityClass);
-  NtClose (hProcessTmp);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus (Status);
-      return (FALSE);
-    }
-  return (TRUE);
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+  }
+  
+  PriorityClass.Foreground = FALSE;
+
+  Status = NtSetInformationProcess(hProcess,
+                                   ProcessPriorityClass,
+                                   &PriorityClass,
+                                   sizeof(PROCESS_PRIORITY_CLASS));
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  return TRUE;
 }
 
 

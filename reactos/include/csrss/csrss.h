@@ -5,11 +5,6 @@
 #include <ddk/ntddblue.h>
 #include <ntos.h>
 
-#define CSR_PRIORITY_CLASS_NORMAL	(0x10)
-#define CSR_PRIORITY_CLASS_IDLE		(0x20)
-#define CSR_PRIORITY_CLASS_HIGH		(0x40)
-#define CSR_PRIORITY_CLASS_REALTIME	(0x80)
-
 #define CSR_CSRSS_SECTION_SIZE          (65536)
 
 typedef __declspec(noreturn) VOID CALLBACK(*PCONTROLDISPATCHER)(DWORD);

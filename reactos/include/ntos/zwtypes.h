@@ -646,8 +646,8 @@ typedef struct _QUOTA_LIMITS
 {
 	ULONG PagedPoolLimit;
 	ULONG NonPagedPoolLimit;
-	ULONG MinimumWorkingSetSize;
-	ULONG MaximumWorkingSetSize;
+	SIZE_T MinimumWorkingSetSize;
+	SIZE_T MaximumWorkingSetSize;
 	ULONG PagefileLimit;
 	TIME TimeLimit;
 } QUOTA_LIMITS, *PQUOTA_LIMITS;

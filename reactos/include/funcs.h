@@ -5049,16 +5049,16 @@ WINBOOL
 STDCALL
 GetProcessWorkingSetSize(
 			 HANDLE hProcess,
-			 LPDWORD lpMinimumWorkingSetSize,
-			 LPDWORD lpMaximumWorkingSetSize
+			 PSIZE_T lpMinimumWorkingSetSize,
+			 PSIZE_T lpMaximumWorkingSetSize
 			 );
 
 WINBOOL
 STDCALL
 SetProcessWorkingSetSize(
 			 HANDLE hProcess,
-			 DWORD dwMinimumWorkingSetSize,
-			 DWORD dwMaximumWorkingSetSize
+			 SIZE_T dwMinimumWorkingSetSize,
+			 SIZE_T dwMaximumWorkingSetSize
 			 );
 
 HANDLE

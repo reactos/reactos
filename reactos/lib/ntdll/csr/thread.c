@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.4 2003/07/11 13:50:22 royce Exp $
+/* $Id: thread.c,v 1.5 2004/09/19 14:36:47 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@ CsrSetPriorityClass(HANDLE Process,
 		    PULONG PriorityClass)
 {
    /* FIXME: call csrss to get hProcess' priority */
-   *PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+   *PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
 
    return (STATUS_NOT_IMPLEMENTED);
 }
