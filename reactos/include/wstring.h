@@ -5,10 +5,16 @@
  * Added wcsicmp and wcsnicmp -- Boudewijn Dekker
  */
 
-#include <internal/types.h>
+#ifndef _STRING_H_
+#define	_STRING_H_
+
 
 #ifndef _LINUX_WSTRING_H_
 #define _LINUX_WSTRING_H_
+
+#include <internal/types.h>
+
+
 
 
 
@@ -79,3 +85,4 @@ int wcscmpi (const wchar_t* ws1, const wchar_t* ws2);
 
 #endif 
 
+#endif
