@@ -364,6 +364,8 @@ BOOLEAN ConsoleInitVga(void)
 	UCHAR i,reg,data;
 #endif
     PUSHORT p;
+	PHYSICAL_ADDRESS FrameBuffer;
+
 
     ENTER_FUNC();
 
@@ -393,7 +395,8 @@ BOOLEAN ConsoleInitVga(void)
 
 #ifdef LOCAL_CONSOLE
     // the real framebuffer
-	pScreenBufferHardwareVga = MmMapIoSpace(0xB8000,FRAMEBUFFER_SIZE,MmWriteCombined);
+	FrameBuffer.u.LowPart = 0xB8000;
+	pScreenBufferHardwareVga = MmMapIoSpace(FrameBuffer,FRAMEBUFFER_SIZE,FALSE);
     // the console
 	pScreenBufferVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL);
     // the save area

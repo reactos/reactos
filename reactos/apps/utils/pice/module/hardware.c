@@ -344,7 +344,7 @@ void PrintRingBuffer(ULONG ulLines)
 
 	if(ulDelta < ulLines)
     {
-        DPRINT((0,"PrintRingBuffer(): less lines than requested\n"));
+        DPRINT((0,"PrintRingBuffer(): less lines than requested: ulDelta: %x, ulLines: %x\n", ulDelta, ulLines));
 		ulLines = ulDelta;
     }
 
@@ -720,7 +720,7 @@ void Clear(USHORT Window)
 //*************************************************************************
 void PrintCaption(void)
 {
-    const char title[]=" PrivateICE system level debugger (LINUX) (c) 1998-2001 PrivateTOOLS ";
+    const char title[]=" PrivateICE system level debugger (REACTOS) ";
 
     SetForegroundColor(COLOR_TEXT);
 	SetBackgroundColor(COLOR_CAPTION);
@@ -797,6 +797,8 @@ void PrintCursor(BOOLEAN bForce)
 void Print(USHORT Window,LPSTR p)
 {
 	ULONG i;
+
+	DPRINT((5,"%s",p));
 
     //ENTER_FUNC();
     if(!bConsoleIsInitialized)
@@ -1013,7 +1015,7 @@ void ConsoleShutdown(void)
     ENTER_FUNC();
 
     // sleep for a few seconds
-    Sleep(1000*5000);
+    KeStallExecutionProcessor(1000*5000);
 
 	switch(eTerminalMode)
     {

@@ -247,6 +247,11 @@ int PICE_islower( int c )
 	return ((c>=0x61) && (c<=0x7a));
 }
 
+int PICE_isalpha( int c )
+{
+	return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+}
+
 //*************************************************************************
 // PICE_strncmpi()
 //
@@ -295,9 +300,32 @@ ULONG result=1;
     return result;
 }
 
-ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
+//*************************************************************************
+// PICE_strcmpi()
+//
+// my version of strcmp()
+//*************************************************************************
+ULONG PICE_strcmp(char* s1,char* s2)
 {
 ULONG result=1;
+
+    while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
+          IsAddressValid((ULONG)s2) && *s2 && // not end of string
+          (*s1)==(*s2) )
+    {
+        s1++;
+        s2++;
+    }
+	// strings same length
+    if(*s1==0 && *s2==0)
+        result=0;
+
+    return result;
+}
+
+ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
+{
+    ULONG result=1;
 
     while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
           IsAddressValid((ULONG)s2) && *s2 && // not end of string
@@ -313,7 +341,6 @@ ULONG result=1;
     return result;
 }
 
-}
 //*************************************************************************
 // PICE_strrev()
 //
@@ -652,7 +679,7 @@ void ShowRunningMsg(void)
     SetForegroundColor(COLOR_TEXT);
 	SetBackgroundColor(COLOR_CAPTION);
 	ClrLine(wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
-	PutChar(" Linux is running... (Press CTRL-F to stop) ",1,wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
+	PutChar(" Reactos is running... (Press CTRL-D to stop) ",1,wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
     ResetColor();
 
     LEAVE_FUNC();
@@ -1158,7 +1185,7 @@ void SaveOldRegs(void)
 UCHAR GetKeyStatus(void)
 {
     UCHAR ucRet;
-    ucRet = inb_p(I8042_PHYSICAL_BASE + I8042_STATUS_REGISTER_OFFSET);
+    ucRet = inb_p((PUCHAR)(I8042_PHYSICAL_BASE + I8042_STATUS_REGISTER_OFFSET));
     return ucRet;
 }
 
@@ -1169,7 +1196,7 @@ UCHAR GetKeyStatus(void)
 UCHAR GetKeyData(void)
 {
     UCHAR ucRet;
-    ucRet = inb_p(I8042_PHYSICAL_BASE + I8042_DATA_REGISTER_OFFSET);
+    ucRet = inb_p((PUCHAR)(I8042_PHYSICAL_BASE + I8042_DATA_REGISTER_OFFSET));
     return ucRet;
 }
 
@@ -1309,7 +1336,7 @@ UCHAR ucKey;
             else
                 goto load;
         }
-        Sleep(1000);
+        KeStallExecutionProcessor(1000);
     }
 load:
 	Clear(REGISTER_WINDOW);
@@ -1375,7 +1402,7 @@ void IntelStackWalk(ULONG pc,ULONG ebp,ULONG esp)
 // FindPteForLinearAddress()
 //
 //*************************************************************************
-pte_t * FindPteForLinearAddress(ULONG address)
+PULONG FindPteForLinearAddress(ULONG address)
 {
 	PULONG pPGD;
 	PULONG pPTE;
@@ -1558,6 +1585,16 @@ static int skip_atoi(const char **s)
 	return i;
 }
 
+size_t PICE_strnlen(const char * s, size_t count)
+{
+         const char *sc;
+
+         for (sc = s; count-- && *sc != '\0'; ++sc)
+                 /* nothing */;
+         return sc - s;
+}
+
+
 #define NUM_ZEROPAD	1		/* pad with zero */
 #define NUM_SIGN	2		/* unsigned/signed long */
 #define NUM_PLUS	4		/* show plus */
@@ -1729,7 +1766,7 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 			if (!s)
 				s = "<NULL>";
 
-			len = strnlen(s, precision);
+			len = PICE_strnlen(s, precision);
 
 			if (!(flags & NUM_LEFT))
 				while (len < field_width--)
@@ -1927,14 +1964,14 @@ UCHAR AsciiToScan(UCHAR s)
 // outportb()
 //
 //************************************************************************
-void outportb(USHORT port,UCHAR data)
+void outportb(PUCHAR port,UCHAR data)
 {
-    WRITE_PORT_UCHAR(port, data);
+    WRITE_PORT_UCHAR((PUCHAR)port, data);
 }
 
-void outb_p(UCHAR data, USHORT port)
+void outb_p(UCHAR data, PUCHAR port)
 {
-	WRITE_PORT_UCHAR(port, data);
+	WRITE_PORT_UCHAR((PUCHAR)port, data);
 }
 
 VOID  outl(ULONG data, PULONG port)
@@ -1947,14 +1984,14 @@ VOID  outl(ULONG data, PULONG port)
 // inportb()
 //
 //************************************************************************
-UCHAR inportb(USHORT port)
+UCHAR inportb(PUCHAR port)
 {
-    return READ_PORT_UCHAR(port);
+    return READ_PORT_UCHAR((PUCHAR)port);
 }
 
-UCHAR inb_p(USHORT port)
+UCHAR inb_p(PUCHAR port)
 {
-    return READ_PORT_UCHAR(port);
+    return READ_PORT_UCHAR((PUCHAR)port);
 }
 
 ULONG  inl(PULONG port)
@@ -2007,10 +2044,10 @@ void EnablePassThrough(void)
 	save_flags(flags);
 	cli();
 
-	oldCF8 = inl(0xcf8);
-	outl(0x80000050,0xcf8);
-	outl(inl(0xcfc)|0x00000020,0xcfc);
-	outl(oldCF8,0xcf8);
+	oldCF8 = inl((PULONG)0xcf8);
+	outl(0x80000050,(PULONG)0xcf8);
+	outl(inl((PULONG)0xcfc)|0x00000020,(PULONG)0xcfc);
+	outl(oldCF8,(PULONG)0xcf8);
 
 	restore_flags(flags);
 }
@@ -2021,7 +2058,7 @@ void EnablePassThrough(void)
 void * PICE_malloc( size_t numBytes, BOOLEAN fromPaged )
 {
 	void* res = ExAllocatePool( (fromPaged)?PagedPool:NonPagedPool, numBytes );
-	assert(res);
+	ASSERT(res);
 	return res;
 }
 
@@ -2030,7 +2067,7 @@ void * PICE_malloc( size_t numBytes, BOOLEAN fromPaged )
 //***********************************************************************************
 void PICE_free( void* p )
 {
-	assert( p );
+	ASSERT( p );
 	ExFreePool( p );
 }
 
@@ -2039,7 +2076,7 @@ long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes)
 	DWORD	NumberOfBytesRead;
 	IO_STATUS_BLOCK  iosb;
 
-	assert( lpBuffer );
+	ASSERT( lpBuffer );
 
 	if (!NT_SUCCESS(NtReadFile(
 		(HANDLE) hFile,
@@ -2096,6 +2133,10 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
                       &ObjectAttributes,
                       NULL, dwShareMode, 0);
 	//BUG BUG check status!!!
+	DbgPrint("PICE_open: handle: %x, status: %x", hfile, status);
+	if( !NT_SUCCESS( status ) ){
+		DPRINT((0,"PICE_open: NtOpenFile error: %x\n", status));
+	}
 	return hfile;
 }
 
@@ -2116,7 +2157,113 @@ size_t PICE_len( HANDLE hFile )
 	NTSTATUS status;
 
   	status = ZwQueryInformationFile( hFile, &iosb, &fs, sizeof fs, FileStandardInformation );
-	assert(fs.EndOfFile.HighPart == 0);
-	return (size_t)fs.EndOfFile.LowPart;
+	ASSERT(fs.EndOfFile.u.HighPart == 0);
+	return (size_t)fs.EndOfFile.u.LowPart;
+}
+
+/* From kernel32
+ * NOTE
+ * 	A raw converter for now. It assumes lpMultiByteStr is
+ * 	NEVER multi-byte (that is each input character is
+ * 	8-bit ASCII) and is ALWAYS NULL terminated.
+ * 	FIXME-FIXME-FIXME-FIXME
+ */
+
+INT
+STDCALL
+PICE_MultiByteToWideChar (
+	UINT	CodePage,
+	DWORD	dwFlags,
+	LPCSTR	lpMultiByteStr,
+	int	cchMultiByte,
+	LPWSTR	lpWideCharStr,
+	int	cchWideChar
+	)
+{
+	int	InStringLength = 0;
+	BOOL	InIsNullTerminated = TRUE;
+	PCHAR	r;
+	PWCHAR	w;
+	int	cchConverted;
+
+	/*
+	 * Check the parameters.
+	 */
+	if (	/* --- CODE PAGE --- */
+		(	(CP_ACP != CodePage)
+			&& (CP_MACCP != CodePage)
+			&& (CP_OEMCP != CodePage))
+		/* --- FLAGS --- */
+		|| (dwFlags ^ (	MB_PRECOMPOSED
+				| MB_COMPOSITE
+				| MB_ERR_INVALID_CHARS
+				| MB_USEGLYPHCHARS
+				)
+			)
+		/* --- INPUT BUFFER --- */
+		|| (NULL == lpMultiByteStr)
+		)
+	{
+		DPRINT((0,"ERROR_INVALID_PARAMETER\n"));
+		return 0;
+	}
+	/*
+	 * Compute the input buffer length.
+	 */
+	if (-1 == cchMultiByte)
+	{
+		InStringLength = PICE_strlen(lpMultiByteStr);
+	}
+	else
+	{
+		InIsNullTerminated = FALSE;
+		InStringLength = cchMultiByte;
+	}
+	/*
+	 * Does caller query for output
+	 * buffer size?
+	 */
+	if (0 == cchWideChar)
+	{
+		DPRINT((0,"ERROR_SUCCESS\n"));
+		return InStringLength;
+	}
+	/*
+	 * Is space provided for the translated
+	 * string enough?
+	 */
+	if (cchWideChar < InStringLength)
+	{
+		DPRINT((0,"ERROR_INSUFFICIENT_BUFFER\n"));
+		return 0;
+	}
+	/*
+	 * Raw 8- to 16-bit conversion.
+	 */
+	for (	cchConverted = 0,
+		r = (PCHAR) lpMultiByteStr,
+		w = (PWCHAR) lpWideCharStr;
+
+		((*r) && (cchConverted < cchWideChar));
+
+		r++,
+		cchConverted++
+		)
+	{
+		*w = (WCHAR) *r;
+	}
+	/*
+	 * Is the input string NULL terminated?
+	 */
+	if (TRUE == InIsNullTerminated)
+	{
+		*w = L'\0';
+		++cchConverted;
+	}
+	/*
+	 * Return how many characters we
+	 * wrote in the output buffer.
+	 */
+	return cchConverted;
 }
 

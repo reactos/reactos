@@ -38,7 +38,6 @@ Copyright notice:
 //#include <ddk/ntddk.h>
 //#include <winnt.h>
 
-
 //temporary
 #ifndef CTL_CODE
 #define CTL_CODE(Dev, Func, Meth, Acc) ( ((Dev)<<16) | ((Acc)<<14) | ((Func)<<2) | (Meth))

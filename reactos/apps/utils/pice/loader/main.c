@@ -374,11 +374,11 @@ int process_pe(char* filename,int file,void* p,int len)
 				if((pDot = strrchr(szSymName,'.')))
 				{
 					*pDot = 0;
-					strcat(pDot,".pice");
+					strcat(pDot,".dbg");
 				}
 				else
 				{
-					strcat(szSymName,".pice");
+					strcat(szSymName,".dbg");
 				}
 				//printf("LOADER: symbol file name = %s\n",szSymName);
 	            printf("LOADER: creating symbol file %s for %s\n",szSymName,filename);

@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -28,7 +28,7 @@ Copyright notice:
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
-BOOLEAN PatchKeyboardDriver(ULONG AddrOfKbdEvent,ULONG AddrOfScancode);
+BOOLEAN PatchKeyboardDriver(void);
 void RestoreKeyboardDriver(void);
 
 extern UCHAR ucBreakKey;

@@ -350,7 +350,7 @@ void DebuggerShell(void)
 	Unassemble(&Args);
 
     // try to find current process's name
-    pCurrentProcess = = IoGetCurrentProcess();
+    pCurrentProcess = IoGetCurrentProcess();
     CurrentProcess = (ULONG)pCurrentProcess;
 
     // display status line
@@ -443,12 +443,12 @@ void DebuggerShell(void)
                             movl %2,%%eax
                             movl %%esp,%%ebx
                             mov  %%ebx,%0
-                            leal aulNewStack,%%ebx
+                            leal _aulNewStack,%%ebx
                             addl $0x1FFF0,%%ebx
                             movl %%ebx,%%esp
                             pushl $0
                             pushl %%eax
-                            call Parse
+                            call _Parse
                             movl %0,%%ebx
                             movl %%ebx,%%esp"
                             :"=m" (ulOldStack)
@@ -532,12 +532,12 @@ void DebuggerShell(void)
                                 movl %2,%%eax
                                 movl %%esp,%%ebx
                                 mov  %%ebx,%0
-                                leal aulNewStack,%%ebx
+                                leal _aulNewStack,%%ebx
                                 addl $0x1FFF0,%%ebx
                                 movl %%ebx,%%esp
                                 pushl $1
                                 pushl %%eax
-                                call Parse
+                                call _Parse
                                 movl %0,%%ebx
                                 movl %%ebx,%%esp"
                                 :"=m" (ulOldStack)
@@ -1392,29 +1392,29 @@ void RealIsr(ULONG dwReasonForBreak)
 	    ("
             pushl %eax
 		    movw %es,%ax
-		    movw %ax,CurrentES
+		    movw %ax,_CurrentES
 		    movw %fs,%ax
-		    movw %ax,CurrentFS
+		    movw %ax,_CurrentFS
 		    movw %gs,%ax
-		    movw %ax,CurrentGS
+		    movw %ax,_CurrentGS
 		    movl %dr0,%eax
-		    movl %eax,CurrentDR0
+		    movl %eax,_CurrentDR0
 		    movl %dr1,%eax
-		    movl %eax,CurrentDR1
+		    movl %eax,_CurrentDR1
 		    movl %dr2,%eax
-		    movl %eax,CurrentDR2
+		    movl %eax,_CurrentDR2
 		    movl %dr3,%eax
-		    movl %eax,CurrentDR3
+		    movl %eax,_CurrentDR3
 		    movl %dr6,%eax
-		    movl %eax,CurrentDR6
+		    movl %eax,_CurrentDR6
 		    movl %dr7,%eax
-		    movl %eax,CurrentDR7
+		    movl %eax,_CurrentDR7
 		    movl %cr0,%eax
-		    movl %eax,CurrentCR0
+		    movl %eax,_CurrentCR0
 		    movl %cr2,%eax
-		    movl %eax,CurrentCR2
+		    movl %eax,_CurrentCR2
 		    movl %cr3,%eax
-		    movl %eax,CurrentCR3
+		    movl %eax,_CurrentCR3
             popl %eax"
 	    );
 
@@ -1452,7 +1452,7 @@ common_return_point:
 	DPRINT((0,"-----------------------------------------------------------------\n"));
 }
 
-__asm__("
+__asm__(".global NewInt31Handler
 NewInt31Handler:
 	cli
     cld
@@ -1464,15 +1464,15 @@ NewInt31Handler:
 	mov %ax,%ds
 
 	mov 0x4(%esp),%eax
-	movl %eax,CurrentEAX
-	movl %ebx,CurrentEBX
-	movl %ecx,CurrentECX
-	movl %edx,CurrentEDX
-	movl %esi,CurrentESI
-	movl %edi,CurrentEDI
-	movl %ebp,CurrentEBP
+	movl %eax,_CurrentEAX
+	movl %ebx,_CurrentEBX
+	movl %ecx,_CurrentECX
+	movl %edx,_CurrentEDX
+	movl %esi,_CurrentESI
+	movl %edi,_CurrentEDI
+	movl %ebp,_CurrentEBP
 	movl (%esp),%eax
-	movw %ax,CurrentDS
+	movw %ax,_CurrentDS
 
     // test for V86 mode
 	testl $0x20000,5*4(%esp)
@@ -1489,32 +1489,32 @@ notV86:
 
     // switched stack
 	movl 6*4(%esp),%eax
-	mov %eax,CurrentESP
+	mov %eax,_CurrentESP
 	mov 7*4(%esp),%eax
 	movzwl %ax,%eax
-	mov %ax,CurrentSS
+	mov %ax,_CurrentSS
 	jmp afterswitch
 
 notswitched:
     // didn't switch stack
-	movl %esp,CurrentESP
-	addl $24,CurrentESP
+	movl %esp,_CurrentESP
+	addl $24,_CurrentESP
 	movw %ss,%ax
 	movzwl %ax,%eax
-	mov %ax,CurrentSS
+	mov %ax,_CurrentSS
 
 afterswitch:
     // save EIP
 	mov 3*4(%esp),%eax
-	mov %eax,CurrentEIP
+	mov %eax,_CurrentEIP
     //save CS
 	mov 4*4(%esp),%eax
 	movzwl %ax,%eax
-	movw %ax,CurrentCS
+	movw %ax,_CurrentCS
     // save flags
 	movl 5*4(%esp),%eax
 	andl $0xFFFFFEFF,%eax
-	movl %eax,CurrentEFL
+	movl %eax,_CurrentEFL
 
 	pushal
 
@@ -1523,10 +1523,10 @@ afterswitch:
 
     // setup a large work stack
 	movl %esp,%eax
-	movl %eax,ulRealStackPtr
+	movl %eax,_ulRealStackPtr
 
     pushl %ebx
-	call RealIsr
+	call _RealIsr
     addl $4,%esp
 
     // restore all regs
@@ -1548,13 +1548,13 @@ afterswitch:
 
 	// modify or restore EFLAGS
 	.byte 0x2e
-	mov CurrentEFL,%eax
+	mov _CurrentEFL,%eax
 	mov %eax,3*4(%esp)
 	.byte 0x2e
-	movzwl CurrentCS,%eax
+	movzwl _CurrentCS,%eax
 	mov %eax,2*4(%esp)
 	.byte 0x2e
-	mov CurrentEIP,%eax
+	mov _CurrentEIP,%eax
 	mov %eax,1*4(%esp)
 
     // restore EAX
@@ -1562,46 +1562,46 @@ afterswitch:
 
     // do we need to call old INT1 handler
     .byte 0x2e
-    cmp $0,dwCallOldInt1Handler
+    cmp $0,_dwCallOldInt1Handler
     je do_iret2
 
     // call INT3 handler
     .byte 0x2e
-    jmp *OldInt1Handler
+    jmp *_OldInt1Handler
 
 do_iret2:
     // do we need to call old INT3 handler
     .byte 0x2e
-    cmp $0,dwCallOldInt3Handler
+    cmp $0,_dwCallOldInt3Handler
     je do_iret1
 
     // call INT3 handler
     .byte 0x2e
-    jmp *OldInt3Handler
+    jmp *_OldInt3Handler
 
 do_iret1:
     // do we need to call old pagefault handler
     .byte 0x2e
-    cmp $0,dwCallOldIntEHandler
+    cmp $0,_dwCallOldIntEHandler
     je do_iret3
 
     // call old pagefault handler
 	.byte 0x2e
-    pushl error_code
+    pushl _error_code
 	.byte 0x2e
-    jmp *OldIntEHandler
+    jmp *_OldIntEHandler
 
 do_iret3:
     // do we need to call old general protection fault handler
     .byte 0x2e
-    cmp $0,dwCallOldGPFaultHandler
+    cmp $0,_dwCallOldGPFaultHandler
     je do_iret
 
     // call old pagefault handler
 	.byte 0x2e
-    pushl error_code
+    pushl _error_code
 	.byte 0x2e
-    jmp *OldGPFaultHandler
+    jmp *_OldGPFaultHandler
 
 do_iret:
 	iretl ");
@@ -1614,12 +1614,12 @@ do_iret:
 __asm__ ("
 NewGlobalInt31Handler:
 		.byte 0x2e
-		cmpb $0,bEnterNow
+		cmpb $0,_bEnterNow
 		jne dotheenter
 
         // chain to old handler
 		.byte 0x2e
-		jmp *OldGlobalInt31Handler
+		jmp *_OldGlobalInt31Handler
 
 dotheenter:
         pushl $" STR(REASON_CTRLF) "

@@ -177,7 +177,7 @@ NewSyscallHandler:
 	    movw %ss,%ax
 	    movw %ax,%ds
 
-    	call CSyscallHandler
+    	call _CSyscallHandler
 
 		// remove pushed params
         add $12,%esp
@@ -189,7 +189,7 @@ NewSyscallHandler:
 
 		// chain to old handler
 		.byte 0x2e
-		jmp *OldSyscallHandler");
+		jmp *_OldSyscallHandler");
 
 void InstallSyscallHook(void)
 {

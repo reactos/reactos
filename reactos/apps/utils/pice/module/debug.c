@@ -46,7 +46,7 @@ Copyright notice:
 ////////////////////////////////////////////////////
 // GLOBALS
 ////
-LONG lDebugLevel = 0;
+LONG lDebugLevel = 10;
 ULONG ulDebugFlags;
 char tempDebug[2048];
 USHORT usDebugPortBase;
@@ -72,7 +72,8 @@ VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
         save_flags(ulDebugFlags);
         cli();
 		PICE_vsprintf(tempDebug, DebugMessage, ap);
-        DebugSendString(tempDebug);
+        //ei DebugSendString(tempDebug);
+		DbgPrint("%s", tempDebug);
         restore_flags(ulDebugFlags);
 	}
 	va_end(ap);

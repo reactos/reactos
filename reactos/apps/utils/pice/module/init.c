@@ -58,6 +58,7 @@ BOOLEAN InitPICE(void)
 	ARGS Args;
     KIRQL Dirql;
     KAFFINITY Affinity;
+	ULONG ulAddr;
 
     ENTER_FUNC();
 
@@ -112,36 +113,6 @@ BOOLEAN InitPICE(void)
 	}
 
     DPRINT((0,"InitPICE(): trace step 6\n"));
-
-	ScanExport(_KernelAddressSpace,(PULONG)&mm_init_mm);
-	if(!my_init_mm)
-	{
-		Print(OUTPUT_WINDOW,"pICE: ABORT (initial memory map not found)\n");
-		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
-        while(!GetKeyPolled());
-        UnloadSymbols();
-		ConsoleShutdown();
-        LEAVE_FUNC();
-		return FALSE;
-	}
-    DPRINT((0,"init_mm @ %X\n",my_init_mm));
-
-    DPRINT((0,"InitPICE(): trace step 6.1\n"));
-
-	ScanExport(_PsProcessListHead,(PULONG)&pPsProcessListHead);
-	if(!pPsProcessListHead)
-	{
-		Print(OUTPUT_WINDOW,"pICE: ABORT (PsProcessListHead not found)\n");
-		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
-        while(!GetKeyPolled());
-        UnloadSymbols();
-		ConsoleShutdown();
-        LEAVE_FUNC();
-		return FALSE;
-	}
-    DPRINT((0,"PsProcessListHead @ %X\n",pPsProcessListHead));
-
-    DPRINT((0,"InitPICE(): trace step 7\n"));
     // load the file /boot/System.map.
     // !!! It must be consistent with the current kernel at all cost!!!
     if(!LoadExports())
@@ -154,6 +125,39 @@ BOOLEAN InitPICE(void)
         LEAVE_FUNC();
 		return FALSE;
     }
+
+    DPRINT((0,"InitPICE(): trace step 7\n"));
+	ScanExports("_KernelAddressSpace", &ulAddr);
+	my_init_mm = ulAddr;
+	DPRINT((0,"init_mm %x @ %x\n",&my_init_mm,my_init_mm));
+	if(!my_init_mm)
+	{
+		Print(OUTPUT_WINDOW,"pICE: ABORT (initial memory map not found)\n");
+		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
+		DbgPrint("pICE: ABORT (initial memory map not found)\n");
+		DbgPrint("pICE: press any key to continue...\n");
+        while(!GetKeyPolled());
+        UnloadSymbols();
+		ConsoleShutdown();
+        LEAVE_FUNC();
+		return FALSE;
+	}
+
+    DPRINT((0,"InitPICE(): trace step 7.1\n"));
+
+	ScanExports("_PsProcessListHead",&ulAddr);
+	pPsProcessListHead = ulAddr;
+    DPRINT((0,"pPsProcessListHead @ %X\n",pPsProcessListHead));
+	if(!pPsProcessListHead)
+	{
+		Print(OUTPUT_WINDOW,"pICE: ABORT (PsProcessListHead not found)\n");
+		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
+        while(!GetKeyPolled());
+        UnloadSymbols();
+		ConsoleShutdown();
+        LEAVE_FUNC();
+		return FALSE;
+	}
 
     DPRINT((0,"InitPICE(): trace step 8\n"));
     // end of the kernel
@@ -175,7 +179,9 @@ BOOLEAN InitPICE(void)
     DPRINT((0,"InitPICE(): trace step 9\n"));
 
 	// the loaded module list
-	ScanExports("_NameSpaceRoot", (PULONG)pNameSpaceRoot);
+	ScanExports("_NameSpaceRoot", &ulAddr);
+	pNameSpaceRoot = ulAddr;
+	DPRINT((0,"pNameSpaceRoot @ %X\n",pNameSpaceRoot));
     if(!pNameSpaceRoot)
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't retreive name space root)\n");
@@ -224,7 +230,7 @@ BOOLEAN InitPICE(void)
     DPRINT((0,"InitPICE(): trace step 13\n"));
     // patch the keyboard driver
 
-	if(PatchKeyboardDriver())
+	if(!PatchKeyboardDriver())
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't patch keyboard driver)\n");
 		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
@@ -244,7 +250,7 @@ BOOLEAN InitPICE(void)
     CurrentDS = CurrentSS = GLOBAL_DATA_SEGMENT;
     __asm__("
             mov %%esp,%%eax
-            mov %%eax,CurrentESP
+            mov %%eax,_CurrentESP
             ":::"eax");
 
 

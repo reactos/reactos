@@ -48,6 +48,9 @@ USHORT usOldDisasmSegment = 0;
 ULONG ulOldDisasmOffset = 0;
 static ULONG ulCountForWaitKey = 0;
 
+extern PDEBUG_MODULE pdebug_module_head;
+extern PDEBUG_MODULE pdebug_module_tail;
+
 //extern unsigned long sys_call_table[];
 
 BOOLEAN (*DisplayMemory)(PARGS) = DisplayMemoryDword;
@@ -59,6 +62,7 @@ PICE_SYMBOLFILE_HEADER* pCurrentSymbols=NULL;
 // suppresses passing on of function keys while stepping code
 BOOLEAN bStepping = FALSE;
 BOOLEAN bInt3Here = TRUE;
+BOOLEAN bInt1Here = TRUE;
 
 KEYWORDS RegKeyWords[]={
 	{"eax",&CurrentEAX,sizeof(ULONG)},
@@ -171,7 +175,7 @@ LPSTR CommandGroups[]=
 CMDTABLE CmdTable[]={
 	{"gdt",ShowGdt,"display current global descriptor table"		,0,{0,0,0,0,0},"",COMMAND_GROUP_STRUCT},
 	{"idt",ShowIdt,"display current interrupt descriptor table"		,0,{0,0,0,0,0},"",COMMAND_GROUP_STRUCT},
-	{"x",LeaveIce,"return to Linux"									,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
+	{"x",LeaveIce,"return to Reactos"								,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"t",SingleStep,"single step one instruction"					,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"vma",ShowVirtualMemory,"displays VMAs"						,0,{0,0,0,0,0},"",COMMAND_GROUP_OS},
 	{"h",ShowHelp,"list help on commands"							,0,{0,0,0,0,0},"",COMMAND_GROUP_HELP},
@@ -940,7 +944,7 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 	  // one arg supplied -> show individual page
 		else if(pArgs->Count == 1)
 		{
-            pPGD = (ULONG)PAGEDIRECTORY_MAP+(((ULONG)pArgs->Value[0] / (1024 * 1024))&(~0x3));
+            pPGD = ADDR_TO_PDE((ULONG)pArgs->Value[0]);
 
             DPRINT((0,"ShowPageDirs(): VA = %.8X\n",pArgs->Value[0]));
             DPRINT((0,"ShowPageDirs(): pPGD = %.8X\n",(ULONG)pPGD));
@@ -1903,8 +1907,10 @@ LPSTR DecodeVmFlags(ULONG flags)
     static LPSTR flags_syms_on[]={"R","W","X","S","MR","MW","MX","MS","GD","GU","SHM","exe","LOCK","IO",""};
     static char temp[256];
 
-    // terminate string
+	// terminate string
     *temp = 0;
+//ei fix fix fix
+#if 0
 
     if(flags == VM_STACK_FLAGS)
     {
@@ -1922,7 +1928,7 @@ LPSTR DecodeVmFlags(ULONG flags)
             flags >>= 1;
         }
     }
-
+#endif
     return temp;
 }
 
@@ -2464,8 +2470,11 @@ COMMAND_PROTOTYPE(SwitchTables)
     else if(pArgs->Count == 1)
     {
 		PDEBUG_MODULE pTempMod;
+		char temp[DEBUG_MODULE_NAME_LEN];
+		CopyWideToAnsi(temp,pMod->name);
+
 		pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
-		pTempMod = IsModuleLoaded(pCurrentSymbols->name);
+		pTempMod = IsModuleLoaded(temp);
 		if( pTempMod )
 			pCurrentMod = pTempMod;
     }
@@ -2996,7 +3005,7 @@ COMMAND_PROTOTYPE(ShowPCI)
         }
 
         // save old config space selector
-	    oldCF8 = inl(0xcf8);
+	    oldCF8 = inl((PULONG)0xcf8);
 
         for(bus=0;bus<256;bus++)
         {
@@ -3011,8 +3020,8 @@ COMMAND_PROTOTYPE(ShowPCI)
                 pciNumber.u.bits.bus    = bus;
                 pciNumber.u.bits.func   = 0;
                 pciNumber.u.bits.ce     = 1;
-	            outl(pciNumber.u.AsUlong,0xcf8);
-	            data = inl(0xcfc);
+	            outl(pciNumber.u.AsUlong,(PULONG)0xcf8);
+	            data = inl((PULONG)0xcfc);
 
                 if(data != 0xFFFFFFFF) // valid device
                 {
@@ -3037,10 +3046,10 @@ COMMAND_PROTOTYPE(ShowPCI)
                         pciNumber.u.bits.reg    = reg;
                         pciNumber.u.bits.ce     = 1;
 
-	                    outl(pciNumber.u.AsUlong,0xcf8);
-	                    *p++ = inl(0xcfc);
+	                    outl(pciNumber.u.AsUlong,(PULONG)0xcf8);
+	                    *p++ = inl((PULONG)0xcfc);
                     }
-                    PICE_sprintf(tempCmd,"SubVendorId %.4X SubSystemId %.4X\n",pciConfig.SubVendorID,pciConfig.SubSystemID);
+                    PICE_sprintf(tempCmd,"SubVendorId %.4X SubSystemId %.4X\n",pciConfig.u.type0.SubVendorID,pciConfig.u.type0.SubSystemID);
                     Print(OUTPUT_WINDOW,tempCmd);
                     if(WaitForKey()==FALSE)goto CommonShowPCIExit;
 
@@ -3048,7 +3057,7 @@ COMMAND_PROTOTYPE(ShowPCI)
                     {
                         for(ulNumBaseAddresses=0,i=0;i<6;i++)
                         {
-                            if(pciConfig.BaseAddresses[i] != 0)
+                            if(pciConfig.u.type0.BaseAddresses[i] != 0)
                                 ulNumBaseAddresses++;
                         }
                         if(ulNumBaseAddresses)
@@ -3057,9 +3066,9 @@ COMMAND_PROTOTYPE(ShowPCI)
                             tempCmd[0] = 0;
                             for(i=0;i<6;i++)
                             {
-                                if(pciConfig.BaseAddresses[i] != 0)
+                                if(pciConfig.u.type0.BaseAddresses[i] != 0)
                                 {
-                                    PICE_sprintf(temp," %u:%.8X",i,pciConfig.BaseAddresses[i]);
+                                    PICE_sprintf(temp," %u:%.8X",i,pciConfig.u.type0.BaseAddresses[i]);
                                     PICE_strcat(tempCmd,temp);
                                 }
                             }
@@ -3083,7 +3092,7 @@ COMMAND_PROTOTYPE(ShowPCI)
 
 CommonShowPCIExit:
         // restore old config space selector
-	    outl(oldCF8,0xcf8);
+	    outl(oldCF8,(PULONG)0xcf8);
 
     }
     else if(pArgs->Count == 1)
@@ -3414,6 +3423,7 @@ BOOLEAN ConvertTokenToSymbol(LPSTR pToken,PULONG pValue)
     LPSTR pEx;
     char temp[64];
     LPSTR p;
+	PDEBUG_MODULE pModFound;
 
     DPRINT((0,"ConvertTokenToSymbol()\n"));
 
@@ -3759,8 +3769,7 @@ BOOLEAN ConvertTokenToLineNumber(LPSTR p,PULONG pValue)
                 if(FindAddressForSourceLine(ulDecimal,szCurrentFile,pCurrentMod,pValue))
                 {
                     DPRINT((0,"ConvertTokenToLineNumber(): value  = %x\n",*pValue));
-                    if(*pValue>TASK_SIZE)
-                        return TRUE;
+                    return TRUE;
                 }
             }
         }

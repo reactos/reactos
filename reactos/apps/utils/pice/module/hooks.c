@@ -140,10 +140,10 @@ void TakeIdtSnapshot(void)
 
     for(i=0;i<256;i++)
     {
-        DPRINT((0,"TakeIdtSnapShot(): saving vector %u\n",i));
+        DPRINT((11,"TakeIdtSnapShot(): saving vector %u\n",i));
         if(IsRangeValid((ULONG)pidt,sizeof(*pidt)) )
         {
-            DPRINT((0,"TakeIdtSnapShot(): vector %u valid\n",i));
+            DPRINT((11,"TakeIdtSnapShot(): vector %u valid\n",i));
     	    idt_snapshot[i] = *pidt++;
         }
     }
@@ -165,10 +165,10 @@ void RestoreIdt(void)
 
     for(i=0;i<256;i++)
     {
-        DPRINT((0,"TakeIdtSnapShot(): restoring vector %u\n",i));
+        DPRINT((11,"TakeIdtSnapShot(): restoring vector %u\n",i));
         if(IsRangeValid((ULONG)pidt,sizeof(*pidt)) )
         {
-            DPRINT((0,"TakeIdtSnapShot(): vector %u valid\n",i));
+            DPRINT((11,"TakeIdtSnapShot(): vector %u valid\n",i));
     	    *pidt++ = idt_snapshot[i];
         }
     }

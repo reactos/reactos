@@ -41,6 +41,7 @@ Copyright notice:
 ////
 
 char tempPageFault[1024];
+extern void NewInt31Handler(void);
 
 ULONG OldIntEHandler=0;
 ULONG error_code;
@@ -89,7 +90,7 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
         (ptr->error_code&1)?"PLP":"NP",
         (ptr->error_code&2)?"WRITE":"READ",
         (ptr->error_code&4)?"USER-MODE":"KERNEL-MODE",
-        (ULONG)tsk);
+        (ULONG)tsk));
 
 	if(!bInPrintk)
     {
@@ -144,7 +145,7 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 //*************************************************************************
 ULONG HandlePageFault(FRAME* ptr)
 {
-    ULONG address;
+    PVOID address;
 	PEPROCESS tsk;
 	PMADDRESS_SPACE vma;
     PLIST_ENTRY current_entry;
@@ -159,7 +160,7 @@ ULONG HandlePageFault(FRAME* ptr)
     // there's something terribly wrong if we get a fault in our command handler
     if(bInDebuggerShell)
     {
-		return HandleInDebuggerFault(ptr,address);
+		return HandleInDebuggerFault(ptr,(ULONG)address);
     }
 
     // remember error code so we can push it back on the stack
@@ -174,7 +175,7 @@ ULONG HandlePageFault(FRAME* ptr)
     }
 */
     // lookup VMA for this address
-	vma = &(my_current->AddressSpace);
+	vma = &(tsk->AddressSpace);
 	current_entry = vma->MAreaListHead.Flink;
 	while(current_entry != &vma->MAreaListHead)
 	{
@@ -240,7 +241,7 @@ NewIntEHandler:
         // get frame ptr
         lea 40(%esp),%eax
         pushl %eax
-        call HandlePageFault
+        call _HandlePageFault
         addl $4,%esp
 
         cmpl $0,%eax
@@ -265,7 +266,7 @@ call_old_inte_handler:
 		popfl
 		// chain to old handler
 		.byte 0x2e
-		jmp *OldIntEHandler
+		jmp *_OldIntEHandler
 
 call_handler_unknown_reason:
 	    popl %ds

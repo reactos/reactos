@@ -28,7 +28,8 @@ Copyright notice:
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
-
+#include <stdarg.h>
+#include "../../../ntoskrnl/include/internal/ps.h"
 #define __STR(x) #x
 #define STR(x) __STR(x)
 
@@ -88,7 +89,7 @@ typedef struct _PCI_NUMBER
         ULONG AsUlong;
     }u;
 }PCI_NUMBER;
-
+/*
 typedef struct _PCI_COMMON_CONFIG {
     USHORT  VendorID;                   // (ro)
     USHORT  DeviceID;                   // (ro)
@@ -115,6 +116,7 @@ typedef struct _PCI_COMMON_CONFIG {
     UCHAR   MinimumGrant;       // (ro)
     UCHAR   MaximumLatency;     // (ro)
 }PCI_COMMON_CONFIG;
+*/
 
 typedef struct tagPageDir
 {
@@ -182,6 +184,7 @@ char* PICE_strchr(char* s,char c);
 int PICE_isdigit( int c );
 int PICE_isxdigit( int c );
 int PICE_islower( int c );
+int PICE_isalpha( int c );
 
 int PICE_sprintf(char * buf, const char *fmt, ...);
 int PICE_vsprintf(char *buf, const char *fmt, va_list args);
@@ -242,11 +245,11 @@ void KeyboardFlushKeyboardQueue(void);
 UCHAR AsciiFromScan(UCHAR s);
 UCHAR AsciiToScan(UCHAR s);
 
-void outportb(USHORT port,UCHAR data);
-UCHAR inportb(USHORT port);
+void outportb(PUCHAR port,UCHAR data);
+UCHAR inportb(PUCHAR port);
 
-void outb_p(UCHAR data, USHORT port);
-UCHAR inb_p(USHORT port);
+void outb_p(UCHAR data, PUCHAR port);
+UCHAR inb_p(PUCHAR port);
 
 VOID  outl(ULONG l, PULONG port);
 ULONG  inl(PULONG port);
@@ -257,6 +260,11 @@ ULONG  inl(PULONG port);
 #define cli()                 __asm__ __volatile__("cli": : :"memory")
 #define sti()                 __asm__ __volatile__("sti": : :"memory")
 
+#ifdef NDEBUG
+#define ASSERT(x)
+#else
+#define ASSERT(x) if (!(x)) { DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__); KeBugCheck(0); }
+#endif
 
 //extern unsigned long sys_call_table[];
 
@@ -278,3 +286,13 @@ long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes);
 int PICE_close (HANDLE	hFile);
 size_t PICE_len( HANDLE hFile );
 WCHAR * PICE_wcscpy(WCHAR * str1,const WCHAR * str2);
+INT
+STDCALL
+PICE_MultiByteToWideChar (
+	UINT	CodePage,
+	DWORD	dwFlags,
+	LPCSTR	lpMultiByteStr,
+	int	cchMultiByte,
+	LPWSTR	lpWideCharStr,
+	int	cchWideChar
+	);

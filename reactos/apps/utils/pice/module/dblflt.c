@@ -74,7 +74,7 @@ NewDblFltHandler:
         // get frame ptr
         lea 40(%esp),%eax
         pushl %eax
-        call HandleDoubleFault
+        call _HandleDoubleFault
         addl $4,%esp
 
 	    popl %ds

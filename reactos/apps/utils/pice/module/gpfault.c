@@ -74,7 +74,7 @@ NewGPFaultHandler:
         // get frame ptr
         lea 40(%esp),%eax
         pushl %eax
-        call HandleGPFault
+        call _HandleGPFault
         addl $4,%esp
 
 	    popl %ds

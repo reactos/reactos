@@ -33,6 +33,8 @@ Copyright notice:
 
 #include "precomp.h"
 
+extern void NewInt31Handler(void);
+
 void DeInstallTraceHook(void);
 
 volatile ULONG OldInt1Handler=0;
@@ -40,9 +42,9 @@ volatile ULONG OldInt1Handler=0;
 __asm__("
 NewInt1Handler:
         pushl %eax
-		movl %dr6,%eax 
-		testl $(1<<14),%eax 
-		jz exceptionnotsinglestep 
+		movl %dr6,%eax
+		testl $(1<<14),%eax
+		jz exceptionnotsinglestep
 
         popl %eax
         pushl $" STR(REASON_SINGLESTEP) "

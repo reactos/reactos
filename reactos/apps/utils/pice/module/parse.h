@@ -89,6 +89,7 @@ extern BOOLEAN bCodeOn;
 extern BOOLEAN bShowSrc;
 extern BP Bp[];
 extern BOOLEAN bInt3Here;
+extern BOOLEAN bInt1Here;
 
 extern BOOLEAN bStepping;
 

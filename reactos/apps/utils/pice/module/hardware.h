@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -90,7 +90,7 @@ extern BOOLEAN bGrayed;
 extern BOOLEAN bCursorEnabled;
 
 // install and remove handler
-BOOLEAN ConsoleInit(void); 
+BOOLEAN ConsoleInit(void);
 void ConsoleShutdown(void);
 
 // OUTPUT handler
@@ -159,6 +159,8 @@ extern USHORT usCaptionText;
 extern USHORT usForegroundColor;
 #define COLOR_FOREGROUND usForegroundColor
 extern USHORT usBackgroundColor;
+
+#undef COLOR_BACKGROUND
 #define COLOR_BACKGROUND usBackgroundColor
 extern USHORT usHiLiteColor;
 #define COLOR_HILITE usHiLiteColor

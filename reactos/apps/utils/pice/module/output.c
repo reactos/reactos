@@ -53,9 +53,16 @@ BOOLEAN bIsDebugPrint = FALSE;
 
 ULONG ulCountTimerEvents = 0;
 
+#ifdef __cplusplus
+#define CPP_ASMLINKAGE extern "C"
+#else
+#define CPP_ASMLINKAGE
+#endif
+#define asmlinkage CPP_ASMLINKAGE __attribute__((regparm(0)))
+
 asmlinkage int printk(const char *fmt, ...);
 
-EXPORT_SYMBOL(printk);
+//EXPORT_SYMBOL(printk);
 
 //*************************************************************************
 // printk()
@@ -203,14 +210,14 @@ VOID PiceRunningTimer(IN PKDPC Dpc,
 
     if(ulCountTimerEvents++ > 10)
     {
-        ulCountTimerEvents = 0;
-
 		LARGE_INTEGER jiffies;
+
+		ulCountTimerEvents = 0;
 
 		KeQuerySystemTime(&jiffies);
         SetForegroundColor(COLOR_TEXT);
 	    SetBackgroundColor(COLOR_CAPTION);
-        PICE_sprintf(tempOutput,"jiffies = %.8X\n",jiffies.LowPart);
+        PICE_sprintf(tempOutput,"jiffies = %.8X\n",jiffies.u.LowPart);
 	    PutChar(tempOutput,GLOBAL_SCREEN_WIDTH-strlen(tempOutput),GLOBAL_SCREEN_HEIGHT-1);
         ResetColor();
     }
@@ -258,7 +265,7 @@ void InstallPrintkHook(void)
 
     ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
 
-	assert( ulPrintk );                 // temporary
+	ASSERT( ulPrintk );                 // temporary
 
     if(ulPrintk)
     {

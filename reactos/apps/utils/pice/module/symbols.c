@@ -126,7 +126,7 @@ BOOLEAN InitModuleList( PDEBUG_MODULE *ppmodule, ULONG len )
 
 	ENTER_FUNC();
 
-	assert(pm==NULL);
+	ASSERT(pm==NULL);
 
 	for(i=1;i<=len;i++){
 		pm = (PDEBUG_MODULE)ExAllocatePool( NonPagedPool, sizeof( DEBUG_MODULE ) );
@@ -162,13 +162,13 @@ BOOLEAN ListUserModules( PPEB peb )
 		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 		//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
 
-		DPRINT("FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,
-				Module->BaseDllName.Buffer, Module->SizeOfImage, Module->EntryPoint, Module->BaseAddress );
+		DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,
+				Module->BaseDllName.Buffer, Module->SizeOfImage, Module->EntryPoint, Module->BaseAddress ));
 
 		pdebug_module_tail->size = Module->SizeOfImage;
 		pdebug_module_tail->BaseAddress = Module->BaseAddress;
-		pdebug_module_tail->EntryPoint = Module->EntryPoint;
-		assert(Module->BaseDllName.Length<DEBUG_MODULE_NAME_LEN); //name length is limited
+		pdebug_module_tail->EntryPoint = (PVOID)(Module->EntryPoint);
+		ASSERT(Module->BaseDllName.Length<DEBUG_MODULE_NAME_LEN); //name length is limited
 		PICE_wcscpy( pdebug_module_tail->name, Module->BaseDllName.Buffer );
 		pdebug_module_tail = pdebug_module_tail->next;
 
@@ -192,10 +192,10 @@ POBJECT FindDriverObjectDirectory( void )
 		while (current!=(&((*pNameSpaceRoot)->head)))
 		{
 			current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	   	 	DPRINT("Scanning %S\n",current_obj->Name.Buffer);
+	   	 	DPRINT((0,"Scanning %S\n",current_obj->Name.Buffer));
 			if (_wcsicmp(current_obj->Name.Buffer, L"Modules")==0)
 			{
-				DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
+				DPRINT((0,"Found it %x\n",HEADER_TO_BODY(current_obj)));
 				pd=HEADER_TO_BODY(current_obj);
 				return pd;
 			}
@@ -220,10 +220,10 @@ BOOLEAN ListDriverModules( void )
 		while (current!=(&(pd->head)))
 		{
 			current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	   	 	DPRINT("Modules %S\n",current_obj->Name.Buffer);
+	   	 	DPRINT((0,"Modules %S\n",current_obj->Name.Buffer));
 			pm = HEADER_TO_BODY(current_obj);
-			DPRINT("FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x\n", pm->FullName.Buffer,
-					pm->BaseName.Buffer, pm->Length, pm->EntryPoint );
+			DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x\n", pm->FullName.Buffer,
+					pm->BaseName.Buffer, pm->Length, pm->EntryPoint ));
 
 			pdebug_module_tail->size = pm->Length;
 			pdebug_module_tail->BaseAddress = pm->Base;
@@ -287,7 +287,7 @@ PDEBUG_MODULE IsModuleLoaded(LPSTR p)
 			char temp[DEBUG_MODULE_NAME_LEN];
             DPRINT((0,"module (%x) %S\n",pd->size,pd->name));
 			CopyWideToAnsi(temp,pd->name);
-            if(pd->size && PICE_strcmp(p,temp) == 0)
+            if(pd->size && PICE_strcmpi(p,temp) == 0)
             {
                 DPRINT((0,"module %S is loaded!\n",pd->name));
 				LEAVE_FUNC();
@@ -311,7 +311,7 @@ BOOLEAN ScanExports(const char *pFind,PULONG pValue)
 	BOOLEAN bResult = FALSE;
 
 	ENTER_FUNC();
-
+	DPRINT((0,"ScanExports pValue: %x\n", pValue));
 nomatch:
 	if(pExports)
 		pStr = strstr(pExp,pFind);
@@ -322,12 +322,12 @@ nomatch:
 		ULONG state;
 		LPSTR pOldStr = pStr;
 
-		for(;*pStr!=0x0a && (ULONG)pStr>=(ULONG)pExports;pStr--);
+		for(;(*pStr!=0x0a && *pStr!=0x0d) && (ULONG)pStr>=(ULONG)pExports;pStr--);
 		pStr++;
 		p = temp;
-		for(;*pStr!=0x0a;)*p++=*pStr++;
+		for(;(*pStr!=0x0a && *pStr!=0x0d);)*p++=*pStr++;
 		*p=0;
-		p = PICE_strtok(temp," ");
+		p = (LPSTR) PICE_strtok(temp," ");
 		state=0;
 		while(p)
 		{
@@ -339,21 +339,24 @@ nomatch:
 				case 1:
 					break;
 				case 2:
-					if(PICE_strcmp(p,pFind)!=0)
+					if(strcmp(p,pFind)!=0)
 					{
+						DPRINT((0,"Not: %s\n", p));
 						pExp = pOldStr+1;
 						goto nomatch;
 					}
 					state = -1;
 					bResult = TRUE;
 		            DPRINT((0,"%s @ %x\n",pFind,*pValue));
+					goto exit;
 					break;
-
 			}
 			state++;
-			p = PICE_strtok(NULL," ");
+			p = (char*) PICE_strtok(NULL," ");
 		}
 	}
+exit:
+	DPRINT((0,"%s %x @ %x\n",pFind,pValue,*pValue));
 
 	LEAVE_FUNC();
 
@@ -421,12 +424,11 @@ BOOLEAN ValidityCheckSymbols(PICE_SYMBOLFILE_HEADER* pSymbols)
 
     DPRINT((0,"ValidityCheckSymbols()\n"));
 
-	bRet = (((ULONG)pSymbols>=TASK_SIZE) &&
-			IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToHeaders,pSymbols->ulSizeOfHeader) &&
+	bRet = (IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToHeaders,pSymbols->ulSizeOfHeader) &&
 		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToGlobals,pSymbols->ulSizeOfGlobals) &&
 		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToGlobalsStrings,pSymbols->ulSizeOfGlobalsStrings) &&
 		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToStabs,pSymbols->ulSizeOfStabs) &&
-		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings,pSymbols->ulSizeOfStabsStrings) );
+		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings,pSymbols->ulSizeOfStabsStrings));
 
     DPRINT((0,"ValidityCheckSymbols(): symbols are %s\n",bRet?"VALID":"NOT VALID"));
 
@@ -517,7 +519,7 @@ PDEBUG_MODULE FindModuleByName(LPSTR modname)
 	WCHAR tempstr[DEBUG_MODULE_NAME_LEN];
 
     DPRINT((0,"FindModuleFromAddress()\n"));
-	if( !MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
+	if( !PICE_MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
 	{
 		DPRINT((0,"Can't convert module name.\n"));
 		return NULL;
@@ -552,7 +554,7 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbolsByModuleName(LPSTR modname)
 	WCHAR tempstr[DEBUG_MODULE_NAME_LEN];
 
     DPRINT((0,"FindModuleSymbols()\n"));
-	if( !MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
+	if( !PICE_MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
 	{
 		DPRINT((0,"Can't convert module name in FindModuleSymbols.\n"));
 		return NULL;
@@ -600,7 +602,7 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
         pd = pdebug_module_head;
         do
         {
-            assert(pd->size);
+            ASSERT(pd->size);
 
 			pdTemp = pd;
 
@@ -665,15 +667,15 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 					{
 						PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pFoundSym->SectionNumber;
 						//check that ulValue is below the limit for the section where best match is found
-						assert(ulValue < ((ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
+						ASSERT(ulValue < ((ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
 					}
-					if( !(pFoundSym->Name.Short) ){
-						pName = pFoundSym->ShortName;  //name is in the header
+					if( !(pFoundSym->N.Name.Short) ){
+						pName = pFoundSym->N.ShortName;  //name is in the header
 						PICE_sprintf(temp3,"%S!%.8s",pdTemp->name,pName); //if name is in the header it may be nonzero terminated
 					}
 					else{
-						assert(pFoundSym->Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
-						pName = pStr[pFoundSym->Name.Long];
+						ASSERT(pFoundSym->N.Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
+						pName = pStr+pFoundSym->N.Name.Long;
 						if(!IsAddressValid((ULONG)pName))
 						{
 							DPRINT((0,"ScanExportsByAddress(): pName = %x is not a valid pointer\n",pName));
@@ -685,11 +687,11 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 					return TRUE;
 				}
 			}
-        }while((pMod = pMod->next));
+        }while((pd = pd->next));
 	}
 	// if haven't found in the symbols try ntoskrnl exports. (note: check that this is needed since we
 	// already checked ntoskrnl coff symbol table)
-    if(pExports && ulValue >= TASK_SIZE /*&& ulValue < kernel_end*/)
+    if(pExports /*&& ulValue >= TASK_SIZE && ulValue < kernel_end*/)
     {
         p = pExports;
         // while we bound in System.map
@@ -718,6 +720,7 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
         }
         if(bResult)
         {
+			int i;
             // copy symbol name to temp string
             for(i=0;pSymbolName[i]!=0 && pSymbolName[i]!=0x0a;i++)
                 temp[i] = pSymbolName[i];
@@ -740,7 +743,7 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 //*************************************************************************
 LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 {
-	PIMAGE_SYMBOL pSym, pSymEnd;
+	PIMAGE_SYMBOL pSym, pSymEnd, pFoundSym;
 	LPSTR pStr;
 	PIMAGE_SECTION_HEADER pShdr;
 	PDEBUG_MODULE pd;
@@ -748,6 +751,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
     PICE_SYMBOLFILE_HEADER* pSymbols;
     ULONG start,end;
 	static char temp4[256];
+	LPSTR pName;
 
     pSymbols = FindModuleSymbols(ulValue);
     DPRINT((0,"FindFunctionByAddress(): symbols @ %x\n",(ULONG)pSymbols));
@@ -757,7 +761,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
         pd = pdebug_module_head;
         do
         {
-			assert(pd->size);
+			ASSERT(pd->size);
             pdTemp = pd;
 
 			//initial values for start and end.
@@ -790,7 +794,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 					{
 						//symbol is a function is it's type is 0x20, storage class is external and section>0
 						if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC) &&
-						   (pSym->SectionNumber > 0 ))
+						   (pSym->SectionNumber > 0 )))
 						{
 							ULONG ulCurrAddr;
 							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
@@ -832,21 +836,21 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 							//just in case there is more than  one code section
 							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pFoundSym->SectionNumber;
 							if( end > (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData ){
-								DPRINT((0,"Hmm: end=%d, end of section: %d\",end,  (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
+								DPRINT((0,"Hmm: end=%d, end of section: %d\n", end, (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
 								end = (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData;
 							}
 							*pulend = end;
 						}
 
-						if( !(pFoundSym->Name.Short) ){
+						if( !(pFoundSym->N.Name.Short) ){
 							//name is in the header. it's not zero terminated. have to copy.
-							PICE_sprintf(temp4,"%.8s", pFoundSym->ShortName);
+							PICE_sprintf(temp4,"%.8s", pFoundSym->N.ShortName);
 							pName = temp4;
 							DPRINT((0,"Function name: %S!%.8s",pdTemp->name,pName));
 						}
 						else{
-							assert(pFoundSym->Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
-							pName = pStr[pFoundSym->Name.Long];
+							ASSERT(pFoundSym->N.Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
+							pName = pStr+pFoundSym->N.Name.Long;
 							if(!IsAddressValid((ULONG)pName))
 							{
 								DPRINT((0,"FindFunctionByAddress(): pName = %x is not a valid pointer\n",pName));
@@ -934,7 +938,7 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
     ENTER_FUNC();
     DPRINT((0,"FindFunctionInModuleByName(%s)\n",szFunctionname));
     DPRINT((0,"FindFunctionInModuleByName(): mod size = %x\n",pd->size));
-    DPRINT((0,"FindFunctionInModuleByName(): module is %S\n",pMod->name));
+    DPRINT((0,"FindFunctionInModuleByName(): module is %S\n",pd->name));
 
 	addr = (ULONG)pd->BaseAddress;
 
@@ -949,19 +953,18 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
 
 		while( pSym < pSymEnd )
 		{
-            DPRINT((0,"FindFunctionInModuleByName(): BIND = %.8X TYPE = %.8X\n",ELF32_ST_BIND(pElfSym->st_info),ELF32_ST_TYPE(pElfSym->st_info)));
 			//symbol is a function is it's type is 0x20, storage class is external and section>0
 			if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC) &&
-			   (pSym->SectionNumber > 0 ))
+			   (pSym->SectionNumber > 0 )))
 			{
                 ULONG start;
                 LPSTR pName;
 				PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
 
 				DPRINT((0,"FindFunctionInModuleByName(): %s @ %x\n",pName,start));
-				start = ((ULONG)pdTemp->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
+				start = ((ULONG)pd->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
 
-				if( !(pSym->Name.Short) ){ //if name is stored in the structure
+				if( !(pSym->N.Name.Short) ){ //if name is stored in the structure
 					//name may be not zero terminated but 8 characters max
 			        if((PICE_strncmpi(pName,szFunctionname, 8) == 0) && start)
 			        {
@@ -1522,7 +1525,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                             // and we're lower or equal than minimum value
                             if(addr>=start+pStab->n_value &&
                                (addr-(start+pStab->n_value))<=ulMinValue &&
-                               PICE_strcmp(szWantedPath,szCurrentPath)==0 )
+                               PICE_strcmpi(szWantedPath,szCurrentPath)==0 )
                             {
                                 ULONG j;
                                 PICE_SYMBOLFILE_SOURCE* pSrc = (PICE_SYMBOLFILE_SOURCE*)((ULONG)pSymbols+pSymbols->ulOffsetToSrcFiles);
@@ -1780,18 +1783,18 @@ ULONG ListSymbolStartingAt(PDEBUG_MODULE pMod,PICE_SYMBOLFILE_HEADER* pSymbols,U
 			//add offset of the section and then add offset of the symbol from
 			//the begining of the section
 
-			start = ((ULONG)pdTemp->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
-			if( !(pSym->Name.Short) ){
+			start = ((ULONG)pMod->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
+			if( !(pSym->N.Name.Short) ){
 				//name is in the header. it's not zero terminated. have to copy.
-				PICE_sprintf(pOutput,"%.8X (%s) %.8s\n",start,(section_flags&IMAGE_SCN_CNT_CODE)?"TEXT":"DATA",pSym->ShortName);
+				PICE_sprintf(pOutput,"%.8X (%s) %.8s\n",start,(section_flags&IMAGE_SCN_CNT_CODE)?"TEXT":"DATA",pSym->N.ShortName);
 			}
 			else{
-				assert(pSym->Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
-				pName = pStr[pSym->Name.Long];
+				ASSERT(pSym->N.Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
+				pName = pStr+pSym->N.Name.Long;
 				if(!IsAddressValid((ULONG)pName))
 				{
 					DPRINT((0,"ListSymbolStartingAt(): pName = %x is not a valid pointer\n",pName));
-					return NULL;
+					return 0;
 				}
             	PICE_sprintf(pOutput,"%.8X (%s) %s\n",start,(section_flags&IMAGE_SCN_CNT_CODE)?"TEXT":"DATA",pName);
 			}
@@ -1909,7 +1912,7 @@ BOOLEAN LoadExports(void)
 	}
     else
     {
-        Print(OUTPUT_WINDOW,"pICE: no System.map in /\n");
+        Print(OUTPUT_WINDOW,"pICE: no ntoskrnl.sys \n");
         Print(OUTPUT_WINDOW,"pICE: could not load exports...\n");
         bResult = FALSE;
     }
@@ -1943,12 +1946,19 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 {
 	HANDLE hf;
     PICE_SYMBOLFILE_HEADER* pSymbols=NULL;
+	WCHAR tempstr[DEBUG_MODULE_NAME_LEN];
 
 	ENTER_FUNC();
 
+	if( !PICE_MultiByteToWideChar(CP_ACP, NULL, filename, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
+	{
+		DPRINT((0,"Can't convert module name.\n"));
+		return NULL;
+	}
+
     if(ulNumSymbolsLoaded<DIM(apSymbols))
     {
-	    hf = PICE_open(filename,OF_READ);
+	    hf = PICE_open(tempstr,OF_READ);
 	    if(hf)
 	    {
 		    //mm_segment_t oldfs;
@@ -2066,7 +2076,7 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 
 	ENTER_FUNC();
 
-	hf = PICE_open("L"\\SystemRoot\\symbols\\pice.conf",OF_READ);
+	hf = PICE_open(L"\\SystemRoot\\symbols\\pice.cfg",OF_READ);
 	if(hf)
 	{
 		//mm_segment_t oldfs;
@@ -2083,7 +2093,7 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 		    DPRINT((0,"pConfig = %x\n",pConfig));
         	//oldfs = get_fs(); set_fs(KERNEL_DS);
 
-			if(len == PICE_read(pf,(PVOID)pConfig,len))
+			if(len == PICE_read(hf,(PVOID)pConfig,len))
 			{
 	    		//set_fs(oldfs);
 
@@ -2131,17 +2141,17 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
                         {
                             if(PICE_strlen(temp)>1)
                             {
-                                if(PICE_strcmp(temp,"+vga")==0)
+                                if(PICE_strcmpi(temp,"+vga")==0)
                                 {
                                     eTerminalMode = TERMINAL_MODE_VGA_TEXT;
                                     DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_VGA_TEXT\n"));
                                 }
-                                else if(PICE_strcmp(temp,"+hercules")==0)
+                                else if(PICE_strcmpi(temp,"+hercules")==0)
                                 {
                                     eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS;
                                     DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS\n"));
                                 }
-                                else if(PICE_strcmp(temp,"+serial")==0)
+                                else if(PICE_strcmpi(temp,"+serial")==0)
                                 {
                                     eTerminalMode = TERMINAL_MODE_SERIAL;
                                     DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_SERIAL\n"));
@@ -2335,7 +2345,7 @@ BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumbe
 //*************************************************************************
 void ExtractToken(LPSTR pStringToken)
 {
-	while(isalpha(pExpression[ulIndex]) || PICE_isdigit(pExpression[ulIndex]) || pExpression[ulIndex]=='_')
+	while(PICE_isalpha(pExpression[ulIndex]) || PICE_isdigit(pExpression[ulIndex]) || pExpression[ulIndex]=='_')
 	{
 		*pStringToken++=pExpression[ulIndex++];
 		*pStringToken=0;

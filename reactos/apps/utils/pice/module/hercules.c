@@ -400,6 +400,7 @@ BOOLEAN ConsoleInitHercules(void)
 	BOOLEAN bResult = FALSE;
 	PUCHAR pMGATable = MGATable43;
 	UCHAR i,reg,data;
+	PHYSICAL_ADDRESS FrameBuffer;
 
     ENTER_FUNC();
 
@@ -439,8 +440,8 @@ BOOLEAN ConsoleInitHercules(void)
     GLOBAL_SCREEN_HEIGHT = 45;
 
     attr.u.Asuchar = 0x07;
-
-	pScreenBufferHercules=MmMapIoSpace(0xb0000,FRAMEBUFFER_SIZE,MmWriteCombined);
+	FrameBuffer.u.LowPart = 0xb0000;
+	pScreenBufferHercules=MmMapIoSpace(FrameBuffer,FRAMEBUFFER_SIZE,FALSE);
 
     DPRINT((0,"VGA memory phys. 0xb0000 mapped to virt. 0x%x\n",pScreenBufferHercules));
 

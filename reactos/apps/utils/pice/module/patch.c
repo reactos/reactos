@@ -83,8 +83,8 @@ BOOLEAN PiceKbdIsr (
 
     ENTER_FUNC();
 	// BUG!! should protect with spinlock since bControl is static.
-    DPRINT((0,"PiceKbdIsr(%x,%u)\n",pByte,isDown));
-    DPRINT((0,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
+    DPRINT((5,"PiceKbdIsr(pByte: %x, val: %x,%u)\n",pByte,*pByte,isDown));
+    DPRINT((5,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
 
 	if(isDown)
 	{
@@ -118,7 +118,8 @@ BOOLEAN PiceKbdIsr (
 			bForward=FALSE;
         }
     }
-	*ContinueProcessing = bForward;
+	*pContinueProcessing = bForward;
+	DPRINT((5,"*pContinueProcessing: %d\n", *pContinueProcessing));
     LEAVE_FUNC();
 	return TRUE;
 }
@@ -152,6 +153,7 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
                                                      TRUE,
                                                      &event,
                                                      &iosb))) {
+		DPRINT((0,"PiceSendIoctl: STATUS_INSUFFICIENT_RESOURCES\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -165,10 +167,10 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
                                        FALSE,
                                        NULL);
 
-        assert(STATUS_SUCCESS == status);
+        ASSERT(STATUS_SUCCESS == status);
         status = iosb.Status;
     }
-
+	DPRINT((0,"PiceSendIoctl: status: %d\n",NT_SUCCESS(status)));
     return status;
 }
 
@@ -189,9 +191,11 @@ BOOLEAN PatchKeyboardDriver(void)
 	RtlInitUnicodeString(&DevName, L"\\Device\\Keyboard");
 
 	//Get pointer to keyboard device
-    if( !NT_SUCCESS( IoGetDeviceObjectPointer( &DevName, FILE_READ_ACCESS, &FO, &kbdDevice ) ) )
+    if( !NT_SUCCESS( status = IoGetDeviceObjectPointer( &DevName, FILE_READ_ACCESS, &FO, &kbdDevice ) ) )
+	{
+		DPRINT((0,"PatchKeyboardDriver: IoGetDeviceObjectPointer status: %x\n", status));
 		return FALSE;
-
+	}
 	phkData = ExAllocatePool( PagedPool, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
 	RtlZeroMemory( phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
 
@@ -201,6 +205,7 @@ BOOLEAN PatchKeyboardDriver(void)
 	//call keyboard device internal io control to hook keyboard input stream
 	status = PiceSendIoctl( kbdDevice, IOCTL_INTERNAL_I8042_HOOK_KEYBOARD,
 			phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
+	DPRINT((0,"PatchKeyboardDriver: PiceSendIoctl status: %x\n", status));
 
 
 	ObDereferenceObject(FO);
