@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.25 2003/03/01 20:39:16 rcampbell Exp $
+/* $Id: defwnd.c,v 1.26 2003/03/03 19:51:31 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -723,7 +723,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
     case HTCAPTION:
       {
-	HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
+	HWND hTopWnd = GetDesktopWindow(); //GetAncestor(hWnd, GA_ROOT); temp fix.
 	if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
 	  {
 	    SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
