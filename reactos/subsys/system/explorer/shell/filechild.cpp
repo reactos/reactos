@@ -471,7 +471,7 @@ void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
 
 int FileChildWindow::Notify(int id, NMHDR* pnmh)
 {
-	return (pnmh->idFrom==IDW_HEADER_LEFT? _left: _right)->Notify(pnmh);
+	return (pnmh->idFrom==IDW_HEADER_LEFT? _left: _right)->Notify(id, pnmh);
 }
 
 
@@ -480,22 +480,22 @@ BOOL CALLBACK ExecuteDialog::WndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 	static struct ExecuteDialog* dlg;
 
 	switch(nmsg) {
-		case WM_INITDIALOG:
-			dlg = (struct ExecuteDialog*) lparam;
-			return 1;
+	  case WM_INITDIALOG:
+		dlg = (struct ExecuteDialog*) lparam;
+		return 1;
 
-		case WM_COMMAND: {
-			int id = (int)wparam;
+	  case WM_COMMAND: {
+		int id = (int)wparam;
 
-			if (id == IDOK) {
-				GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
-				dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
-												SW_SHOWMINIMIZED: SW_SHOWNORMAL;
-				EndDialog(hwnd, id);
-			} else if (id == IDCANCEL)
-				EndDialog(hwnd, id);
+		if (id == IDOK) {
+			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
+			dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
+											SW_SHOWMINIMIZED: SW_SHOWNORMAL;
+			EndDialog(hwnd, id);
+		} else if (id == IDCANCEL)
+			EndDialog(hwnd, id);
 
-			return 1;}
+		return 1;}
 	}
 
 	return 0;

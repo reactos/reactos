@@ -67,7 +67,7 @@ protected:
 
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);
-	virtual int 	Notify(int id, NMHDR* pnmh);
+	virtual int		Notify(int id, NMHDR* pnmh);
 
 
 	static const void* s_new_info;	//TODO: protect for multithreaded access
@@ -85,6 +85,8 @@ struct SubclassedWindow : public Window
 
 protected:
 	WNDPROC	_orgWndProc;
+
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 };
 
 

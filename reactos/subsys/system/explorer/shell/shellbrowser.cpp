@@ -391,15 +391,15 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-		case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
-			return (LRESULT)static_cast<IShellBrowser*>(this);
+	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
+		return (LRESULT)static_cast<IShellBrowser*>(this);
 
-		case WM_CREATE:
-			OnCreate((LPCREATESTRUCT)lparam);
-			goto def;
+	  case WM_CREATE:
+		OnCreate((LPCREATESTRUCT)lparam);
+		goto def;
 
-		default: def:
-			return super::WndProc(nmsg, wparam, lparam);
+	  default: def:
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
@@ -412,6 +412,7 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 	  case TVN_ITEMEXPANDING:	OnTreeItemExpanding(id, (LPNMTREEVIEW)pnmh);	break;
 	  case TVN_SELCHANGED:		OnTreeItemSelected(id, (LPNMTREEVIEW)pnmh);		break;
 	  case NM_RCLICK:			OnTreeItemRClick(id, pnmh);						break;
+	  default:					return super::Notify(id, pnmh);
 	}
 
 	return 0;

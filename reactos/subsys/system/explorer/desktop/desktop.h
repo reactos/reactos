@@ -34,6 +34,17 @@
 #include "../externals.h"
 
 
+struct BackgroundWindow : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	BackgroundWindow(HWND hwnd) : super(hwnd) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+};
+
+
 struct DesktopWindow : public Window, public IShellBrowserImpl
 {
 	typedef Window super;
@@ -65,7 +76,7 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 	}
 
 protected:
-	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	IShellView*	_pShellView;
 };

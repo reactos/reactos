@@ -64,6 +64,8 @@ struct OutputWorker {
 
 struct Pane : public SubclassedWindow
 {
+	typedef SubclassedWindow super;
+
 	Pane(HWND hparent, int id, int id_header, Entry* rool, bool treePane, int visible_cols);
 
 #define COLUMNS 10
@@ -87,10 +89,10 @@ struct Pane : public SubclassedWindow
 
 	void	insert_entries(Entry* dir, int idx);
 	BOOL	command(UINT cmd);
-	LRESULT Notify(NMHDR* pnmh);
+	int		Notify(int id, NMHDR* pnmh);
 
 protected:
-	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	void	calc_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
 	void	calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);

@@ -184,6 +184,11 @@ SubclassedWindow::SubclassedWindow(HWND hwnd)
 	_orgWndProc = SubclassWindow(_hwnd, WindowWndProc);
 }
 
+LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
+}
+
 
 ChildWindow::ChildWindow(HWND hwnd)
  :	Window(hwnd)

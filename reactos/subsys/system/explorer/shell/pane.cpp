@@ -110,9 +110,9 @@ static const int g_pos_align[] = {
 
 
 Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int visible_cols)
- :	SubclassedWindow(CreateWindow(TEXT("ListBox"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
-					 LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
-					 0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0)),
+ :	super(CreateWindow(TEXT("ListBox"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
+			LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
+			0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0)),
 	_root(root),
 	_treePane(treePane),
 	_visible_cols(visible_cols)
@@ -132,29 +132,29 @@ Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int 
 LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-		case WM_HSCROLL:
-			set_header();
-			break;
+	  case WM_HSCROLL:
+		set_header();
+		break;
 
-		case WM_SETFOCUS: {
-			FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+	  case WM_SETFOCUS: {
+		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
 
-			child->set_focus_pane(this);
-			ListBox_SetSel(_hwnd, TRUE, 1);
-			/*TODO: check menu items */
-			break;}
+		child->set_focus_pane(this);
+		ListBox_SetSel(_hwnd, TRUE, 1);
+		/*TODO: check menu items */
+		break;}
 
-		case WM_KEYDOWN: {
-			FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+	  case WM_KEYDOWN: {
+		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
 
-			if (wparam == VK_TAB) {
-				/*TODO: SetFocus(g_Globals.hdrivebar) */
-				child->switch_focus_pane();
-			}
-			break;}
-	}
+		if (wparam == VK_TAB) {
+			/*TODO: SetFocus(g_Globals.hdrivebar) */
+			child->switch_focus_pane();
+		}
+		break;}
+}
 
-	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
+	return super::WndProc(nmsg, wparam, lparam);
 }
 
 
@@ -766,7 +766,7 @@ void Pane::calc_single_width(int col)
 }
 
 
-LRESULT Pane::Notify(NMHDR* pnmh)
+int Pane::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 		case HDN_TRACK:
@@ -832,6 +832,9 @@ LRESULT Pane::Notify(NMHDR* pnmh)
 			Header_SetItem(_hwndHeader, phdn->iItem, &item);
 			InvalidateRect(_hwnd, 0, TRUE);
 			break;}
+
+		default:
+			return super::Notify(id, pnmh);
 	}
 
 	return 0;

@@ -46,6 +46,55 @@ BOOL IsAnyDesktopRunning()
 }
 
 
+static void draw_desktop_background(HWND hwnd, HDC hdc)
+{
+	// We'd want to draw the desktop wallpaper here. Need to
+	// maintain a copy of the wallpaper in an off-screen DC and then
+	// bitblt (or stretchblt?) it to the screen appropriately. For
+	// now, though, we'll just draw some text.
+
+	static const TCHAR BkgndText[] = TEXT("ReactOS 0.1.2 Desktop Example\nby Silver Blade, Martin Fuchs");
+
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+
+	HBRUSH bkgndBrush = CreateSolidBrush(RGB(0,32,160));	// dark blue
+	FillRect(hdc, &rect, bkgndBrush/*GetStockBrush(BLACK_BRUSH)*/);
+	DeleteBrush(bkgndBrush);
+
+	// This next part could be improved by working out how much
+	// space the text actually needs...
+
+	rect.left = rect.right - 260;
+	rect.top = rect.bottom - 80;
+	rect.right = rect.left + 250;
+	rect.bottom = rect.top + 40;
+
+	SetTextColor(hdc, RGB(255,255,255));
+	SetBkMode(hdc, TRANSPARENT);
+	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+}
+
+
+LRESULT	BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_ERASEBKGND:
+		draw_desktop_background(_hwnd, (HDC)wparam);
+		return TRUE;
+
+	  case WM_RBUTTONDBLCLK:
+		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		break;
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+
 DesktopWindow::DesktopWindow(HWND hwnd)
  :	super(hwnd)
 {
@@ -62,116 +111,94 @@ DesktopWindow::~DesktopWindow()
 LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-		case WM_PAINT: {
-			// We'd want to draw the desktop wallpaper here. Need to
-			// maintain a copy of the wallpaper in an off-screen DC and then
-			// bitblt (or stretchblt?) it to the screen appropriately. For
-			// now, though, we'll just draw some text.
+	  case WM_PAINT: {
+		PAINTSTRUCT ps;
+		draw_desktop_background(_hwnd, BeginPaint(_hwnd, &ps));
+		EndPaint(_hwnd, &ps);
+		break;}
 
-			PAINTSTRUCT ps;
-			HDC DesktopDC = BeginPaint(_hwnd, &ps);
+	  case WM_LBUTTONDBLCLK:
+	  case WM_RBUTTONDBLCLK:
+		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		break;
 
-			static const TCHAR Text [] = TEXT("ReactOS 0.1.2 Desktop Example\nby Silver Blade, Martin Fuchs");
+	  case WM_GETISHELLBROWSER:
+		return (LRESULT)static_cast<IShellBrowser*>(this);
+
+	  case WM_CREATE: {
+		HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+
+		HWND hWndView = 0;
+
+		if (SUCCEEDED(hr)) {
+			FOLDERSETTINGS fs;
+
+			fs.ViewMode = FVM_ICON;
+			fs.fFlags = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
 
 			RECT rect;
 			GetClientRect(_hwnd, &rect);
 
-			// This next part could be improved by working out how much
-			// space the text actually needs...
+			hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
 
-			rect.left = rect.right - 260;
-			rect.top = rect.bottom - 80;
-			rect.right = rect.left + 250;
-			rect.bottom = rect.top + 40;
-
-			SetTextColor(DesktopDC, 0x00ffffff);
-			SetBkMode(DesktopDC, TRANSPARENT);
-			DrawText(DesktopDC, Text, -1, &rect, DT_RIGHT);
-
-			EndPaint(_hwnd, &ps);
-			break;}
-
-		case WM_LBUTTONDBLCLK:
-			explorer_show_frame(_hwnd, SW_SHOWNORMAL);
-			break;
-
-		case WM_GETISHELLBROWSER:
-			return (LRESULT)static_cast<IShellBrowser*>(this);
-
-		case WM_CREATE: {
-			HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
-
-			HWND hWndView = 0;
+			//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state
 
 			if (SUCCEEDED(hr)) {
-				FOLDERSETTINGS fs;
+				_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 
-				fs.ViewMode = FVM_ICON;
-				fs.fFlags = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
+			/*
+				IShellView2* pShellView2;
 
-				RECT rect;
-				GetClientRect(_hwnd, &rect);
+				hr = _pShellView->QueryInterface(IID_IShellView2, (void**)&pShellView2);
 
-				hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
+				SV2CVW2_PARAMS params;
+				params.cbSize = sizeof(SV2CVW2_PARAMS);
+				params.psvPrev = _pShellView;
+				params.pfs = &fs;
+				params.psbOwner = this;
+				params.prcView = &rect;
+				params.pvid = params.pvid;//@@
 
-				//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state
+				hr = pShellView2->CreateViewWindow2(&params);
+				params.pvid;
+			*/
+
+			/*
+				IFolderView* pFolderView;
+
+				hr = _pShellView->QueryInterface(IID_IFolderView, (void**)&pFolderView);
 
 				if (SUCCEEDED(hr)) {
-					_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
-
-				/*
-					IShellView2* pShellView2;
-
-					hr = _pShellView->QueryInterface(IID_IShellView2, (void**)&pShellView2);
-
-					SV2CVW2_PARAMS params;
-					params.cbSize = sizeof(SV2CVW2_PARAMS);
-					params.psvPrev = _pShellView;
-					params.pfs = &fs;
-					params.psbOwner = this;
-					params.prcView = &rect;
-					params.pvid = params.pvid;//@@
-
-					hr = pShellView2->CreateViewWindow2(&params);
-					params.pvid;
-				*/
-
-				/*
-					IFolderView* pFolderView;
-
-					hr = _pShellView->QueryInterface(IID_IFolderView, (void**)&pFolderView);
-
-					if (SUCCEEDED(hr)) {
-						hr = pFolderView->GetAutoArrange();
-						hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
-					}
-				*/
-
-					HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
-
-					ShowWindow(hwndFolderView, SW_SHOW);
+					hr = pFolderView->GetAutoArrange();
+					hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
 				}
+			*/
+
+				HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
+
+				new BackgroundWindow(hwndFolderView);
 			}
- 
-			if (hWndView && SetShellWindowEx)
-				SetShellWindowEx(_hwnd, hWndView);
-			else if (SetShellWindow)
-				SetShellWindow(_hwnd);
-			break;}
+		}
 
-		case WM_DESTROY:
+		if (hWndView && SetShellWindowEx)
+			SetShellWindowEx(_hwnd, hWndView);
+		else if (SetShellWindow)
+			SetShellWindow(_hwnd);
+		break;}
 
-			//TODO: use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
-			
-			if (SetShellWindow)
-				SetShellWindow(0);
-			break;
+	  case WM_DESTROY:
 
-		case WM_CLOSE:
-			break;	// Over-ride close. We need to close desktop some other way.
+		//TODO: use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
+		
+		if (SetShellWindow)
+			SetShellWindow(0);
+		break;
 
-		default:
-			return super::WndProc(nmsg, wparam, lparam);
+	  case WM_CLOSE:
+		break;	// Over-ride close. We need to close desktop some other way.
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
