@@ -1,4 +1,5 @@
-/*
+/* $Id: wait.c,v 1.10 2000/03/16 21:50:11 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/synch/wait.c
@@ -14,30 +15,33 @@
 
 HANDLE
 STDCALL
-CreateSemaphoreA(
-		 LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-		 LONG lInitialCount,
-		 LONG lMaximumCount,
-		 LPCSTR lpName
-		 )
+CreateSemaphoreA (
+	LPSECURITY_ATTRIBUTES	lpSemaphoreAttributes,
+	LONG			lInitialCount,
+	LONG			lMaximumCount,
+	LPCSTR			lpName
+	)
 {
-	WCHAR NameW[MAX_PATH];
-	ULONG i = 0;
+	UNICODE_STRING NameU;
+	ANSI_STRING Name;
+	HANDLE Handle;
 
-	while ((*lpName)!=0 && i < MAX_PATH)
-		{
-		NameW[i] = *lpName;
-		lpName++;
-		i++;
-		}
-	NameW[i] = 0;
-	return CreateSemaphoreW(
-		 lpSemaphoreAttributes,
-		 lInitialCount,
-		 lMaximumCount,
-		 NameW
-		 );
+	RtlInitAnsiString (&Name,
+	                   lpName);
+	RtlAnsiStringToUnicodeString (&NameU,
+	                              &Name,
+	                              TRUE);
+
+	Handle = CreateSemaphoreW (lpSemaphoreAttributes,
+	                           lInitialCount,
+	                           lMaximumCount,
+	                           NameU.Buffer);
+
+	RtlFreeUnicodeString (&NameU);
+
+	return Handle;
 }
+
 
 HANDLE
 STDCALL
@@ -89,37 +93,39 @@ CreateSemaphoreW(
 
 HANDLE
 STDCALL
-CreateMutexA(
-	     LPSECURITY_ATTRIBUTES lpMutexAttributes,
-	     WINBOOL bInitialOwner,
-	     LPCSTR lpName
-	     )
+CreateMutexA (
+	LPSECURITY_ATTRIBUTES	lpMutexAttributes,
+	WINBOOL			bInitialOwner,
+	LPCSTR			lpName
+	)
 {
-	WCHAR NameW[MAX_PATH];
-	ULONG i = 0;
+	UNICODE_STRING NameU;
+	ANSI_STRING Name;
+	HANDLE Handle;
 
-	while ((*lpName)!=0 && i < MAX_PATH)
-     	{
-		NameW[i] = *lpName;
-		lpName++;
-		i++;
-     	}
-	NameW[i] = 0;
+	RtlInitAnsiString (&Name,
+	                   lpName);
+	RtlAnsiStringToUnicodeString (&NameU,
+	                              &Name,
+	                              TRUE);
 
-	return CreateMutexW(
-	     lpMutexAttributes,
-	     bInitialOwner,
-	     NameW
-	     );
+	Handle = CreateMutexW (lpMutexAttributes,
+	                       bInitialOwner,
+	                       NameU.Buffer);
+
+	RtlFreeUnicodeString (&NameU);
+
+	return Handle;
 }
+
 
 HANDLE
 STDCALL
-CreateMutexW(
-    LPSECURITY_ATTRIBUTES lpMutexAttributes,
-    WINBOOL bInitialOwner,
-    LPCWSTR lpName
-    )
+CreateMutexW (
+	LPSECURITY_ATTRIBUTES	lpMutexAttributes,
+	WINBOOL			bInitialOwner,
+	LPCWSTR			lpName
+	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	NTSTATUS errCode;
@@ -156,19 +162,21 @@ CreateMutexW(
 }
 
 
-DWORD 
+DWORD
 STDCALL
-WaitForSingleObject(HANDLE  hHandle,
-                    DWORD  dwMilliseconds)
+WaitForSingleObject (
+	HANDLE	hHandle,
+	DWORD	dwMilliseconds
+	)
 {
-   return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE); 
+	return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE);
 }
 
 
 DWORD
 STDCALL
 WaitForSingleObjectEx(HANDLE hHandle,
-                      DWORD  dwMilliseconds, 
+                      DWORD  dwMilliseconds,
                       BOOL   bAlertable)
 {
    NTSTATUS  errCode;
@@ -205,7 +213,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
 }
 
 
-DWORD 
+DWORD
 STDCALL
 WaitForMultipleObjects(DWORD nCount,
                        CONST HANDLE *lpHandles,
@@ -216,7 +224,7 @@ WaitForMultipleObjects(DWORD nCount,
 }
 
 
-DWORD 
+DWORD
 STDCALL
 WaitForMultipleObjectsEx(DWORD nCount,
                          CONST HANDLE *lpHandles,
@@ -238,7 +246,7 @@ WaitForMultipleObjectsEx(DWORD nCount,
         Time.QuadPart = -10000 * dwMilliseconds;
         TimePtr = &Time;
      }
-	
+
    errCode = NtWaitForMultipleObjects (nCount,
                                        (PHANDLE)lpHandles,
                                        (CINT)bWaitAll,
@@ -262,4 +270,3 @@ WaitForMultipleObjectsEx(DWORD nCount,
 }
 
 /* EOF */
-

@@ -1,4 +1,5 @@
-/*
+/* $Id: timer.c,v 1.4 2000/03/16 21:50:11 ekohl Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/mem/timer.c
@@ -13,11 +14,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-
-
-HANDLE CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
-			    WINBOOL bManualReset,  
-			    LPWSTR lpTimerName)
+HANDLE
+CreateWaitableTimerW (
+	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
+	WINBOOL			bManualReset,
+	LPWSTR			lpTimerName
+	)
 {
    NTSTATUS errCode;
    HANDLE TimerHandle;
@@ -47,32 +49,39 @@ HANDLE CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 }
 
 
-HANDLE CreateWaitableTimerA(
-  LPSECURITY_ATTRIBUTES lpTimerAttributes,
-  WINBOOL bManualReset,  
-  LPCSTR lpTimerName 
-)
+HANDLE
+CreateWaitableTimerA (
+	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
+	WINBOOL			bManualReset,
+	LPCSTR			lpTimerName
+	)
 {
-	WCHAR NameW[MAX_PATH];
-	ULONG i = 0;
+	UNICODE_STRING TimerNameU;
+	ANSI_STRING TimerName;
+	HANDLE TimerHandle;
 
-	while ((*lpTimerName)!=0 && i < MAX_PATH)
-		{
-		NameW[i] = *lpTimerName;
-		lpTimerName++;
-		i++;
-		}
-	NameW[i] = 0;
-	return CreateWaitableTimerW(lpTimerAttributes,
-		bManualReset,
-		NameW);
+	RtlInitAnsiString (&TimerName,
+	                   (LPSTR)lpTimerName);
+	RtlAnsiStringToUnicodeString (&TimerNameU,
+	                              &TimerName,
+	                              TRUE);
+
+	TimerHandle = CreateWaitableTimerW (lpTimerAttributes,
+	                                    bManualReset,
+	                                    TimerNameU.Buffer);
+
+	RtlFreeUnicodeString (&TimerNameU);
+
+	return TimerHandle;
 }
 
-HANDLE OpenWaitableTimerW(
-  DWORD dwDesiredAccess,  
-  WINBOOL bInheritHandle,    
-  LPCWSTR lpTimerName     
-)
+
+HANDLE
+OpenWaitableTimerW (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCWSTR	lpTimerName
+	)
 {
 	NTSTATUS errCode;
 
@@ -83,10 +92,9 @@ HANDLE OpenWaitableTimerW(
 
 	if ( bInheritHandle )
 		Attributes = OBJ_INHERIT;
-	
 
-   	RtlInitUnicodeString(&UnicodeName, lpTimerName);
-   	InitializeObjectAttributes(&ObjectAttributes,
+	RtlInitUnicodeString(&UnicodeName, lpTimerName);
+	InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
 			      Attributes,
 			      NULL,
@@ -96,38 +104,46 @@ HANDLE OpenWaitableTimerW(
 		&TimerHandle,
 		dwDesiredAccess,
 		&ObjectAttributes
-    	);
+	);
 
-	return TimerHandle;	
+	return TimerHandle;
 }
 
-HANDLE OpenWaitableTimerA(
-  DWORD dwDesiredAccess,  
-  WINBOOL bInheritHandle,    
-  LPCSTR lpTimerName     
-)
-{
-	WCHAR NameW[MAX_PATH];
-	ULONG i = 0;
 
-	while ((*lpTimerName)!=0 && i < MAX_PATH)
-		{
-		NameW[i] = *lpTimerName;
-		lpTimerName++;
-		i++;
-		}
-	NameW[i] = 0;
-	return OpenWaitableTimerW(dwDesiredAccess, bInheritHandle,(LPCWSTR) NameW);
+HANDLE
+OpenWaitableTimerA (
+	DWORD dwDesiredAccess,
+	WINBOOL bInheritHandle,
+	LPCSTR lpTimerName
+	)
+{
+	UNICODE_STRING TimerNameU;
+	ANSI_STRING TimerName;
+	HANDLE TimerHandle;
+
+	RtlInitAnsiString (&TimerName,
+	                   (LPSTR)lpTimerName);
+	RtlAnsiStringToUnicodeString (&TimerNameU,
+	                              &TimerName,
+	                              TRUE);
+
+	TimerHandle = OpenWaitableTimerW (dwDesiredAccess,
+	                                  bInheritHandle,
+	                                  TimerNameU.Buffer);
+
+	RtlFreeUnicodeString (&TimerNameU);
+
+	return TimerHandle;
 }
 
 
 WINBOOL SetWaitableTimer(
-  HANDLE hTimer,         
-  LARGE_INTEGER *pDueTime,          
-  LONG lPeriod,             
-  PTIMERAPCROUTINE pfnCompletionRoutine,  
-  LPVOID lpArgToCompletionRoutine,      
-  WINBOOL fResume                           
+  HANDLE hTimer,
+  LARGE_INTEGER *pDueTime,
+  LONG lPeriod,
+  PTIMERAPCROUTINE pfnCompletionRoutine,
+  LPVOID lpArgToCompletionRoutine,
+  WINBOOL fResume
 )
 {
 	NTSTATUS errCode;
@@ -141,7 +157,7 @@ WINBOOL SetWaitableTimer(
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-	return TRUE;	
+	return TRUE;
 }
 
 WINBOOL CancelWaitableTimer(HANDLE hTimer)
@@ -157,6 +173,7 @@ WINBOOL CancelWaitableTimer(HANDLE hTimer)
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-	return TRUE;	
-	
+	return TRUE;
 }
+
+/* EOF */
