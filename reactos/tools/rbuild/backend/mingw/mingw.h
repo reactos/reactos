@@ -7,6 +7,9 @@
 class MingwModuleHandlerList : public std::vector<MingwModuleHandler*>
 {
 public:
+	MingwModuleHandlerList()
+	{
+	}
 	~MingwModuleHandlerList()
 	{
 		for ( size_t i = 0; i < size(); i++ )
@@ -14,6 +17,10 @@ public:
 			delete (*this)[i];
 		}
 	}
+private:
+	// disable copy semantics
+	MingwModuleHandlerList ( const MingwModuleHandlerList& );
+	MingwModuleHandlerList& operator = ( const MingwModuleHandlerList& );
 };
 
 
@@ -24,7 +31,7 @@ public:
 	virtual void Process ();
 private:
 	void ProcessModule ( Module& module );
-	void GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers );
+	void GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers ) const;
 	void CreateMakefile ();
 	void CloseMakefile ();
 	void GenerateHeader ();

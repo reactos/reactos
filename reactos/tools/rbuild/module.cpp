@@ -118,7 +118,7 @@ Module::GetDefaultModuleExtension ()
 }
 
 string
-Module::GetPath ()
+Module::GetPath () const
 {
 	return FixSeparator (path) + CSEP + name + extension;
 }

@@ -100,7 +100,7 @@ MingwBackend::ProcessModule ( Module& module )
 }
 
 void
-MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers )
+MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers ) const
 {
 	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
 	moduleHandlers.push_back ( new MingwStaticLibraryModuleHandler ( fMakefile ) );

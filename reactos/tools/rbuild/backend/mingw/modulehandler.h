@@ -7,29 +7,29 @@ class MingwModuleHandler
 {
 public:
 	MingwModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( Module& module ) = 0;
-	virtual void Process ( Module& module ) = 0;
+	virtual bool CanHandleModule ( const Module& module ) const = 0;
+	virtual void Process ( const Module& module ) = 0;
 protected:
-	std::string MingwModuleHandler::GetWorkingDirectory ();
-	std::string ReplaceExtension ( std::string filename,
-	                               std::string newExtension );
-	std::string GetModuleArchiveFilename ( Module& module );
-	std::string GetImportLibraryDependencies ( Module& module );
-	std::string GetSourceFilenames ( Module& module );
-	std::string GetObjectFilename ( std::string sourceFilename );
-	std::string GetObjectFilenames ( Module& module );
-	void GenerateObjectFileTargets ( Module& module );
-	void GenerateArchiveTarget ( Module& module );
+	std::string MingwModuleHandler::GetWorkingDirectory () const;
+	std::string ReplaceExtension ( const std::string& filename,
+	                               const std::string& newExtension ) const;
+	std::string GetModuleArchiveFilename ( const Module& module ) const;
+	std::string GetImportLibraryDependencies ( const Module& module ) const;
+	std::string GetSourceFilenames ( const Module& module ) const;
+	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
+	std::string GetObjectFilenames ( const Module& module ) const;
+	void GenerateObjectFileTargets ( const Module& module ) const;
+	void GenerateArchiveTarget ( const Module& module ) const;
 	FILE* fMakefile;
 private:
-	std::string ConcatenatePaths ( std::string path1,
-	                               std::string path2 );
-	std::string GenerateGccDefineParametersFromVector ( std::vector<Define*> defines );
-	std::string GenerateGccDefineParameters ( Module& module );
-	std::string GenerateGccIncludeParametersFromVector ( std::string basePath,
-	                                                     std::vector<Include*> includes );
-	std::string GenerateGccIncludeParameters ( Module& module );
-	std::string GenerateGccParameters ( Module& module );
+	std::string ConcatenatePaths ( const std::string& path1,
+	                               const std::string& path2 ) const;
+	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
+	std::string GenerateGccDefineParameters ( const Module& module ) const;
+	std::string GenerateGccIncludeParametersFromVector ( const std::string& basePath,
+	                                                     const std::vector<Include*>& includes ) const;
+	std::string GenerateGccIncludeParameters ( const Module& module ) const;
+	std::string GenerateGccParameters ( const Module& module ) const;
 };
 
 
@@ -37,10 +37,10 @@ class MingwKernelModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( Module& module );
-	virtual void Process ( Module& module );
+	virtual bool CanHandleModule ( const Module& module ) const;
+	virtual void Process ( const Module& module );
 private:
-	void GenerateKernelModuleTarget ( Module& module );
+	void GenerateKernelModuleTarget ( const Module& module );
 };
 
 
@@ -48,10 +48,10 @@ class MingwStaticLibraryModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwStaticLibraryModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( Module& module );
-	virtual void Process ( Module& module );
+	virtual bool CanHandleModule ( const Module& module ) const;
+	virtual void Process ( const Module& module );
 private:
-	void GenerateStaticLibraryModuleTarget ( Module& module );
+	void GenerateStaticLibraryModuleTarget ( const Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

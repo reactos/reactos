@@ -15,14 +15,14 @@ MingwModuleHandler::MingwModuleHandler ( FILE* fMakefile )
 }
 
 string
-MingwModuleHandler::GetWorkingDirectory ()
+MingwModuleHandler::GetWorkingDirectory () const
 {
 	return ".";
 }
 
 string
-MingwModuleHandler::ReplaceExtension ( string filename,
-	                                   string newExtension )
+MingwModuleHandler::ReplaceExtension ( const string& filename,
+	                                   const string& newExtension ) const
 {
 	size_t index = filename.find_last_of ( '.' );
 	if (index != string::npos)
@@ -31,14 +31,14 @@ MingwModuleHandler::ReplaceExtension ( string filename,
 }
 
 string
-MingwModuleHandler::GetModuleArchiveFilename ( Module& module )
+MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 {
 	return ReplaceExtension ( module.GetPath ().c_str (),
 	                          ".a" );
 }
 
 string
-MingwModuleHandler::GetImportLibraryDependencies ( Module& module )
+MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 {
 	if ( module.libraries.size () == 0 )
 		return "";
@@ -56,7 +56,7 @@ MingwModuleHandler::GetImportLibraryDependencies ( Module& module )
 }
 
 string
-MingwModuleHandler::GetSourceFilenames ( Module& module )
+MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 {
 	if ( module.files.size () == 0 )
 		return "";
@@ -72,14 +72,14 @@ MingwModuleHandler::GetSourceFilenames ( Module& module )
 }
 
 string
-MingwModuleHandler::GetObjectFilename ( string sourceFilename )
+MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 {
 	return ReplaceExtension ( sourceFilename,
 		                      ".o" );
 }
 
 string
-MingwModuleHandler::GetObjectFilenames ( Module& module )
+MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 {
 	if ( module.files.size () == 0 )
 		return "";
@@ -95,7 +95,7 @@ MingwModuleHandler::GetObjectFilenames ( Module& module )
 }
 
 string
-MingwModuleHandler::GenerateGccDefineParametersFromVector ( vector<Define*> defines )
+MingwModuleHandler::GenerateGccDefineParametersFromVector ( const vector<Define*>& defines ) const
 {
 	string parameters;
 	for (size_t i = 0; i < defines.size (); i++)
@@ -115,7 +115,7 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector ( vector<Define*> defi
 }
 
 string
-MingwModuleHandler::GenerateGccDefineParameters ( Module& module )
+MingwModuleHandler::GenerateGccDefineParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParametersFromVector ( module.project->defines );
 	string s = GenerateGccDefineParametersFromVector ( module.defines );
@@ -128,8 +128,8 @@ MingwModuleHandler::GenerateGccDefineParameters ( Module& module )
 }
 
 string
-MingwModuleHandler::ConcatenatePaths ( string path1,
-	                                   string path2 )
+MingwModuleHandler::ConcatenatePaths ( const string& path1,
+	                                   const string& path2 ) const
 {
 	if ( ( path1.length () == 0 ) || ( path1 == "." ) || ( path1 == "./" ) )
 		return path2;
@@ -140,8 +140,8 @@ MingwModuleHandler::ConcatenatePaths ( string path1,
 }
 
 string
-MingwModuleHandler::GenerateGccIncludeParametersFromVector ( string basePath,
-	                                                         vector<Include*> includes )
+MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const string& basePath,
+	                                                         const vector<Include*>& includes ) const
 {
 	string parameters;
 	for (size_t i = 0; i < includes.size (); i++)
@@ -157,7 +157,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( string basePath,
 }
 
 string
-MingwModuleHandler::GenerateGccIncludeParameters ( Module& module )
+MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccIncludeParametersFromVector ( ".",
 	                                                             module.project->includes );
@@ -172,7 +172,7 @@ MingwModuleHandler::GenerateGccIncludeParameters ( Module& module )
 }
 
 string
-MingwModuleHandler::GenerateGccParameters ( Module& module )
+MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParameters ( module );
 	string s = GenerateGccIncludeParameters ( module );
@@ -185,7 +185,7 @@ MingwModuleHandler::GenerateGccParameters ( Module& module )
 }
 
 void
-MingwModuleHandler::GenerateObjectFileTargets ( Module& module )
+MingwModuleHandler::GenerateObjectFileTargets ( const Module& module ) const
 {
 	if ( module.files.size () == 0 )
 		return;
@@ -209,7 +209,7 @@ MingwModuleHandler::GenerateObjectFileTargets ( Module& module )
 }
 
 void
-MingwModuleHandler::GenerateArchiveTarget ( Module& module )
+MingwModuleHandler::GenerateArchiveTarget ( const Module& module ) const
 {
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string sourceFilenames = GetSourceFilenames ( module );
@@ -233,19 +233,19 @@ MingwKernelModuleHandler::MingwKernelModuleHandler ( FILE* fMakefile )
 }
 
 bool
-MingwKernelModuleHandler::CanHandleModule ( Module& module )
+MingwKernelModuleHandler::CanHandleModule ( const Module& module ) const
 {
 	return module.type == KernelModeDLL;
 }
 
 void
-MingwKernelModuleHandler::Process ( Module& module )
+MingwKernelModuleHandler::Process ( const Module& module )
 {
 	GenerateKernelModuleTarget ( module );
 }
 
 void
-MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
+MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 {
 	string workingDirectory = GetWorkingDirectory ( );
 	string archiveFilename = GetModuleArchiveFilename ( module );
@@ -292,19 +292,19 @@ MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ( FILE* fMakefi
 }
 
 bool
-MingwStaticLibraryModuleHandler::CanHandleModule ( Module& module )
+MingwStaticLibraryModuleHandler::CanHandleModule ( const Module& module ) const
 {
 	return module.type == StaticLibrary;
 }
 
 void
-MingwStaticLibraryModuleHandler::Process ( Module& module )
+MingwStaticLibraryModuleHandler::Process ( const Module& module )
 {
 	GenerateStaticLibraryModuleTarget ( module );
 }
 
 void
-MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( Module& module )
+MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( const Module& module )
 {
 	GenerateArchiveTarget ( module );
 	GenerateObjectFileTargets ( module );

@@ -77,7 +77,7 @@ public:
 	         const std::string& modulePath );
 	~Module ();
 	ModuleType GetModuleType (const XMLAttribute& attribute );
-	std::string GetPath ();
+	std::string GetPath () const;
 	void ProcessXML ( const XMLElement& e, const std::string& path );
 private:
 	std::string GetDefaultModuleExtension ();
