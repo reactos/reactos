@@ -1,5 +1,4 @@
-
-/* $Id: rw.c,v 1.66 2004/05/15 23:00:02 hbirr Exp $
+/* $Id: rw.c,v 1.66.12.1 2004/07/26 17:10:20 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,6 +20,8 @@
 #include <debug.h>
 
 #include "vfat.h"
+
+#define FAST_RW
 
 /* FUNCTIONS *****************************************************************/
 
@@ -135,7 +136,6 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   ULONG BytesDone;
   ULONG BytesPerSector;
   ULONG BytesPerCluster;
-  ULONG Count;
 
   /* PRECONDITION */
   assert (IrpContext);
@@ -219,10 +219,12 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   /*
    * Find the cluster to start the read from
    */
+#ifdef TODO
   if (Ccb->LastCluster > 0 && ReadOffset.u.LowPart > Ccb->LastOffset)
   {
     CurrentCluster = Ccb->LastCluster;
   }
+#endif
   Status = OffsetToCluster(DeviceExt, FirstCluster,
 			   ROUND_DOWN(ReadOffset.u.LowPart, BytesPerCluster),
 			   &CurrentCluster, FALSE);
@@ -231,12 +233,13 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
     return(Status);
   }
 
+#ifdef TODO
   Ccb->LastCluster = CurrentCluster;
   Ccb->LastOffset = ROUND_DOWN (ReadOffset.u.LowPart, BytesPerCluster);
+#endif
 
   KeInitializeEvent(&IrpContext->Event, NotificationEvent, FALSE);
   IrpContext->RefCount = 1;
-  Count = 0;
 
   while (Length > 0 && CurrentCluster != 0xffffffff)
   {
@@ -271,10 +274,10 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
     DPRINT("start %08x, next %08x, count %d\n",
            StartCluster, CurrentCluster, ClusterCount);
 
+#ifdef TODO
     Ccb->LastCluster = StartCluster + (ClusterCount - 1);
     Ccb->LastOffset = ReadOffset.u.LowPart + (ClusterCount - 1) * BytesPerCluster;
-
-    Count++;
+#endif
 
     // Fire up the read command
     Status = VfatReadDiskPartial (IrpContext, &StartOffset, BytesDone, *LengthRead, FALSE);
@@ -403,10 +406,12 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    /*
     * Find the cluster to start the write from
     */
+#ifdef TODO
    if (Ccb->LastCluster > 0 && WriteOffset.u.LowPart > Ccb->LastOffset)
    {
       CurrentCluster = Ccb->LastCluster;
    }
+#endif
 
    Status = OffsetToCluster(DeviceExt, FirstCluster,
 			    ROUND_DOWN(WriteOffset.u.LowPart, BytesPerCluster),
@@ -417,11 +422,12 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
       return(Status);
    }
 
+#ifdef TODO
    Ccb->LastCluster = CurrentCluster;
    Ccb->LastOffset = ROUND_DOWN (WriteOffset.u.LowPart, BytesPerCluster);
+#endif
 
    IrpContext->RefCount = 1;
-   Count = 0;
    BufferOffset = 0;
 
    while (Length > 0 && CurrentCluster != 0xffffffff)
@@ -457,12 +463,13 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
       DPRINT("start %08x, next %08x, count %d\n",
              StartCluster, CurrentCluster, ClusterCount);
 
+#ifdef TODO
       Ccb->LastCluster = StartCluster + (ClusterCount - 1);
       Ccb->LastOffset = WriteOffset.u.LowPart + (ClusterCount - 1) * BytesPerCluster;
+#endif
 
       // Fire up the write command
       Status = VfatWriteDiskPartial (IrpContext, &StartOffset, BytesDone, BufferOffset, FALSE);
-      Count++;
       if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
         {
 	  break;
@@ -630,10 +637,17 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       {
 	  ULONG CacheSize;
 	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
+#ifndef FAST_RW
 	  if (CacheSize < PAGE_SIZE)
 	  {
 	     CacheSize = PAGE_SIZE;
 	  }
+#else
+	  if (CacheSize < 8 * PAGE_SIZE)
+	  {
+	     CacheSize = 8 * PAGE_SIZE;
+	  }
+#endif
 	  CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
       }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
@@ -921,10 +935,17 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       {
 	  ULONG CacheSize;
 	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
+#ifndef FAST_RW
 	  if (CacheSize < PAGE_SIZE)
 	  {
 	     CacheSize = PAGE_SIZE;
 	  }
+#else
+	  if (CacheSize < PAGE_SIZE * 8)
+	  {
+	     CacheSize = PAGE_SIZE * 8;
+	  }
+#endif
 	  CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
       }
       if (ByteOffset.QuadPart > OldFileSize.QuadPart)

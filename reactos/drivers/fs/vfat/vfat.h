@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.65 2004/07/05 21:39:02 hbirr Exp $ */
+/* $Id: vfat.h,v 1.65.4.1 2004/07/26 17:10:20 navaraf Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -258,9 +258,11 @@ typedef struct _VFATCCB
   ULONG Entry;
   /* for DirectoryControl */
   UNICODE_STRING SearchPattern;
+
+#ifdef TODO
   ULONG LastCluster;
   ULONG LastOffset;
-
+#endif
 } VFATCCB, *PVFATCCB;
 
 #ifndef TAG
