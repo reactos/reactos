@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.166 2003/12/17 19:56:13 weiden Exp $
+/* $Id: window.c,v 1.167 2003/12/17 21:46:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1167,15 +1167,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
   WindowObject->UserData = 0;
-  if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000)
-      && (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
-    {
-      WindowObject->Unicode = ClassObject->Unicode;
-    }
-  else
-    {
-      WindowObject->Unicode = bUnicodeWindow;
-    }
+  WindowObject->Unicode = bUnicodeWindow;
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
   WindowObject->WndProcW = ClassObject->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
