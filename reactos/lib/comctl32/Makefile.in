@@ -49,6 +49,7 @@ RC_BINARIES = \
 	idc_copy.cur \
 	idc_divider.cur \
 	idc_divideropen.cur \
+	idc_movebutton.cur \
 	idi_dragarrow.ico \
 	idt_check.bmp
 

@@ -18,6 +18,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * NOTES
+ *
+ * This code was audited for completeness against the documented features
+ * of Comctl32.dll version 6.0 on Mar. 10, 2004, by Robert Shearman.
+ * 
+ * Unless otherwise noted, we believe this code to be complete, as per
+ * the specification mentioned above.
+ * If you discover missing features or bugs please note them below.
+ * 
  */
 
 #include <stdarg.h>
@@ -27,16 +36,15 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "winnt.h"
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
-#ifndef TEXT
-# define TEXT(string) string
-#endif
+/* for compiler compatibility we only accept literal ASCII strings */
+#undef TEXT
+#define TEXT(string) string
 
 #define DRAGLIST_SUBCLASSID     0
 #define DRAGLIST_SCROLLPERIOD 200
@@ -50,17 +58,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 /* internal Wine specific data for the drag list control */
 typedef struct _DRAGLISTDATA
 {
-	/* are we currently in dragging mode? */
-	BOOL dragging;
+    /* are we currently in dragging mode? */
+    BOOL dragging;
 
-	/* cursor to use as determined by DL_DRAGGING notification.
+    /* cursor to use as determined by DL_DRAGGING notification.
      * NOTE: as we use LoadCursor we don't have to use DeleteCursor
      * when we are finished with it */
-	HCURSOR cursor;
+    HCURSOR cursor;
 
     /* optimisation so that we don't have to load the cursor
      * all of the time whilst dragging */
-	LRESULT last_dragging_response;
+    LRESULT last_dragging_response;
+
     /* prevents flicker with drawing drag arrow */
     RECT last_drag_icon_rect;
 } DRAGLISTDATA;
@@ -259,12 +268,17 @@ VOID WINAPI DrawInsert (HWND hwndParent, HWND hwndLB, INT nItem)
     if (!GetWindowSubclass(hwndLB, DragList_SubclassWindowProc, DRAGLIST_SUBCLASSID, (DWORD_PTR*)&data))
         return;
 
+    if (nItem < 0)
+        SetRectEmpty(&rcDragIcon);
+
     /* prevent flicker by only redrawing when necessary */
     if (!EqualRect(&rcDragIcon, &data->last_drag_icon_rect))
     {
         /* get rid of any previous inserts drawn */
         RedrawWindow(hwndParent, &data->last_drag_icon_rect, NULL,
             RDW_INTERNALPAINT | RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
+
+        CopyRect(&data->last_drag_icon_rect, &rcDragIcon);
 
         if (nItem >= 0)
         {
@@ -275,7 +289,6 @@ VOID WINAPI DrawInsert (HWND hwndParent, HWND hwndLB, INT nItem)
             ReleaseDC(hwndParent, hdc);
         }
     }
-    CopyRect(&data->last_drag_icon_rect, &rcDragIcon);
 }
 
 /***********************************************************************

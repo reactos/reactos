@@ -71,6 +71,7 @@ typedef struct
    LPVOID		outdata;
    /* data for the background mechanism */
    CRITICAL_SECTION	cs;
+   HANDLE		hStopEvent;
    HANDLE		hThread;
    UINT			uTimer;
    /* data for playing the file */
@@ -145,9 +146,17 @@ static LRESULT ANIMATE_DoStop(ANIMATE_INFO *infoPtr)
     /* should stop playing */
     if (infoPtr->hThread)
     {
-        if (!TerminateThread(infoPtr->hThread,0))
-            WARN("could not destroy animation thread!\n");
-	    infoPtr->hThread = 0;
+        HANDLE handle = infoPtr->hThread;
+
+        TRACE("stopping animation thread\n");
+        SetEvent( infoPtr->hStopEvent );
+        LeaveCriticalSection(&infoPtr->cs);  /* leave it a chance to run */
+        WaitForSingleObject( handle, INFINITE );
+        TRACE("animation thread stopped\n");
+        EnterCriticalSection(&infoPtr->cs);
+        CloseHandle( infoPtr->hThread );
+        CloseHandle( infoPtr->hStopEvent );
+        infoPtr->hThread = 0;
     }
     if (infoPtr->uTimer) {
 	KillTimer(infoPtr->hwndSelf, infoPtr->uTimer);
@@ -378,33 +387,20 @@ static LRESULT ANIMATE_DrawFrame(ANIMATE_INFO* infoPtr)
 static DWORD CALLBACK ANIMATE_AnimationThread(LPVOID ptr_)
 {
     ANIMATE_INFO*	infoPtr = (ANIMATE_INFO*)ptr_;
-    HDC hDC;
-
-    if(!infoPtr)
-    {
-        WARN("animation structure undefined!\n");
-        return FALSE;
-    }
+    HANDLE event;
+    DWORD timeout;
 
     while(1)
     {
-        if(GetWindowLongA(infoPtr->hwndSelf, GWL_STYLE) & ACS_TRANSPARENT)
-        {
-            hDC = GetDC(infoPtr->hwndSelf);
-	    /* sometimes the animation window will be destroyed in between
-	     * by the main program, so a ReleaseDC() error msg is possible */
-            infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
-					     WM_CTLCOLORSTATIC, (WPARAM)hDC,
-					     (LPARAM)infoPtr->hwndSelf);
-            ReleaseDC(infoPtr->hwndSelf,hDC);
-        }
-
         EnterCriticalSection(&infoPtr->cs);
         ANIMATE_DrawFrame(infoPtr);
+        timeout = infoPtr->mah.dwMicroSecPerFrame;
+        event = infoPtr->hStopEvent;
         LeaveCriticalSection(&infoPtr->cs);
 
         /* time is in microseconds, we should convert it to milliseconds */
-        Sleep((infoPtr->mah.dwMicroSecPerFrame+500)/1000);
+        if (WaitForSingleObject( event, (timeout+500)/1000) == WAIT_OBJECT_0)
+            break;
     }
     return TRUE;
 }
@@ -445,13 +441,22 @@ static LRESULT ANIMATE_Play(HWND hWnd, WPARAM wParam, LPARAM lParam)
     } else {
         DWORD threadID;
 
+        if(GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
+        {
+            HDC hDC = GetDC(hWnd);
+            infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
+                                                     WM_CTLCOLORSTATIC, 0, (LPARAM)hWnd);
+            ReleaseDC(hWnd,hDC);
+        }
+
 	TRACE("Using an animation thread\n");
+        infoPtr->hStopEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
         infoPtr->hThread = CreateThread(0,0,ANIMATE_AnimationThread,(LPVOID)infoPtr, 0, &threadID);
         if(!infoPtr->hThread)
         {
            ERR("Could not create animation thread!\n");
            return FALSE;
-    }
+        }
 
     }
 

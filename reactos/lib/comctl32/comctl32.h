@@ -106,6 +106,7 @@ extern HBRUSH  COMCTL32_hPattern55AABrush;
 #define IDI_DRAGARROW                   501
 #define IDC_COPY                        502
 
+#define IDC_MOVEBUTTON                    1
 
 /* HOTKEY internal strings */
 #define HKY_NONE                        2048

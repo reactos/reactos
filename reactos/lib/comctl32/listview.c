@@ -26,7 +26,7 @@
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 21, 2002, by Dimitrie O. Paun.
  * 
- * Unless otherwise noted, we belive this code to be complete, as per
+ * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
  * 

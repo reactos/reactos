@@ -442,98 +442,109 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 /***********************************************************************
  *           UPDOWN_SetBuddy
- * Tests if 'bud' is a valid window handle. If not, returns FALSE.
- * Else, sets it as a new Buddy.
+ *
+ * Sets bud as a new Buddy.
  * Then, it should subclass the buddy
  * If window has the UDS_ARROWKEYS, it subcalsses the buddy window to
  * process the UP/DOWN arrow keys.
  * If window has the UDS_ALIGNLEFT or UDS_ALIGNRIGHT style
  * the size/pos of the buddy and the control are adjusted accordingly.
  */
-static BOOL UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
+static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
 {
     DWORD dwStyle = GetWindowLongW (infoPtr->Self, GWL_STYLE);
     RECT  budRect;  /* new coord for the buddy */
     int   x, width;  /* new x position and width for the up-down */
     WNDPROC baseWndProc;
     CHAR buddyClass[40];
-
-    /* Is it a valid bud? */
-    if(!IsWindow(bud)) return FALSE;
+    HWND ret;
 
     TRACE("(hwnd=%p, bud=%p)\n", infoPtr->Self, bud);
+
+    ret = infoPtr->Buddy;
 
     /* there is already a body assigned */
     if (infoPtr->Buddy)  RemovePropA(infoPtr->Buddy, BUDDY_UPDOWN_HWND);
 
+    if(!IsWindow(bud))
+        bud = 0;
+
     /* Store buddy window handle */
     infoPtr->Buddy = bud;
 
-    /* keep upDown ctrl hwnd in a buddy property */
-    SetPropA( bud, BUDDY_UPDOWN_HWND, infoPtr->Self);
+    if(bud) {
 
-    /* Store buddy window class type */
-    infoPtr->BuddyType = BUDDY_TYPE_UNKNOWN;
-    if (GetClassNameA(bud, buddyClass, COUNT_OF(buddyClass))) {
-	if (lstrcmpiA(buddyClass, "Edit") == 0)
-	    infoPtr->BuddyType = BUDDY_TYPE_EDIT;
-	else if (lstrcmpiA(buddyClass, "Listbox") == 0)
-	    infoPtr->BuddyType = BUDDY_TYPE_LISTBOX;
-    }
+        /* keep upDown ctrl hwnd in a buddy property */
+        SetPropA( bud, BUDDY_UPDOWN_HWND, infoPtr->Self);
 
-    if(dwStyle & UDS_ARROWKEYS){
-        /* Note that I don't clear the BUDDY_SUPERCLASS_WNDPROC property
-           when we reset the upDown ctrl buddy to another buddy because it is not
-           good to break the window proc chain. */
-	if (!GetPropA(bud, BUDDY_SUPERCLASS_WNDPROC)) {
-	    baseWndProc = (WNDPROC)SetWindowLongW(bud, GWL_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
- 	    SetPropA(bud, BUDDY_SUPERCLASS_WNDPROC, (HANDLE)baseWndProc);
-	}
-    }
+        /* Store buddy window class type */
+        infoPtr->BuddyType = BUDDY_TYPE_UNKNOWN;
+        if (GetClassNameA(bud, buddyClass, COUNT_OF(buddyClass))) {
+            if (lstrcmpiA(buddyClass, "Edit") == 0)
+                infoPtr->BuddyType = BUDDY_TYPE_EDIT;
+            else if (lstrcmpiA(buddyClass, "Listbox") == 0)
+                infoPtr->BuddyType = BUDDY_TYPE_LISTBOX;
+        }
 
-    /* Get the rect of the buddy relative to its parent */
-    GetWindowRect(infoPtr->Buddy, &budRect);
-    MapWindowPoints(HWND_DESKTOP, GetParent(infoPtr->Buddy), (POINT *)(&budRect.left), 2);
+        if(dwStyle & UDS_ARROWKEYS){
+            /* Note that I don't clear the BUDDY_SUPERCLASS_WNDPROC property
+               when we reset the upDown ctrl buddy to another buddy because it is not
+               good to break the window proc chain. */
+            if (!GetPropA(bud, BUDDY_SUPERCLASS_WNDPROC)) {
+                baseWndProc = (WNDPROC)SetWindowLongW(bud, GWL_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
+                SetPropA(bud, BUDDY_SUPERCLASS_WNDPROC, (HANDLE)baseWndProc);
+            }
+        }
 
-    /* now do the positioning */
-    if  (dwStyle & UDS_ALIGNLEFT) {
-        x  = budRect.left;
-        budRect.left += DEFAULT_WIDTH + DEFAULT_XSEP;
-    } else if (dwStyle & UDS_ALIGNRIGHT) {
-        budRect.right -= DEFAULT_WIDTH + DEFAULT_XSEP;
-        x  = budRect.right+DEFAULT_XSEP;
+        /* Get the rect of the buddy relative to its parent */
+        GetWindowRect(infoPtr->Buddy, &budRect);
+        MapWindowPoints(HWND_DESKTOP, GetParent(infoPtr->Buddy), (POINT *)(&budRect.left), 2);
+
+        /* now do the positioning */
+        if  (dwStyle & UDS_ALIGNLEFT) {
+            x  = budRect.left;
+            budRect.left += DEFAULT_WIDTH + DEFAULT_XSEP;
+        } else if (dwStyle & UDS_ALIGNRIGHT) {
+            budRect.right -= DEFAULT_WIDTH + DEFAULT_XSEP;
+            x  = budRect.right+DEFAULT_XSEP;
+        } else {
+            x  = budRect.right+DEFAULT_XSEP;
+        }
+
+        /* first adjust the buddy to accomodate the up/down */
+        SetWindowPos(infoPtr->Buddy, 0, budRect.left, budRect.top,
+                     budRect.right  - budRect.left, budRect.bottom - budRect.top,
+                     SWP_NOACTIVATE|SWP_NOZORDER);
+
+        /* now position the up/down */
+        /* Since the UDS_ALIGN* flags were used, */
+        /* we will pick the position and size of the window. */
+        width = DEFAULT_WIDTH;
+
+        /*
+         * If the updown has a buddy border, it has to overlap with the buddy
+         * to look as if it is integrated with the buddy control.
+         * We nudge the control or change it size to overlap.
+         */
+        if (UPDOWN_HasBuddyBorder(infoPtr)) {
+            if(dwStyle & UDS_ALIGNLEFT)
+                width += DEFAULT_BUDDYBORDER;
+            else
+                x -= DEFAULT_BUDDYBORDER;
+        }
+
+        SetWindowPos(infoPtr->Self, infoPtr->Buddy, x,
+                     budRect.top - DEFAULT_ADDTOP, width,
+                     budRect.bottom - budRect.top + DEFAULT_ADDTOP + DEFAULT_ADDBOT,
+                     SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOZORDER);
     } else {
-        x  = budRect.right+DEFAULT_XSEP;
+        RECT rect;
+        GetWindowRect(infoPtr->Self, &rect);
+        MapWindowPoints(HWND_DESKTOP, GetParent(infoPtr->Self), (POINT *)&rect, 2);
+        SetWindowPos(infoPtr->Self, 0, rect.left, rect.top, DEFAULT_WIDTH, rect.bottom - rect.top,
+                     SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOZORDER);
     }
-
-    /* first adjust the buddy to accomodate the up/down */
-    SetWindowPos(infoPtr->Buddy, 0, budRect.left, budRect.top,
-	         budRect.right  - budRect.left, budRect.bottom - budRect.top,
-	         SWP_NOACTIVATE|SWP_NOZORDER);
-
-    /* now position the up/down */
-    /* Since the UDS_ALIGN* flags were used, */
-    /* we will pick the position and size of the window. */
-    width = DEFAULT_WIDTH;
-
-    /*
-     * If the updown has a buddy border, it has to overlap with the buddy
-     * to look as if it is integrated with the buddy control.
-     * We nudge the control or change it size to overlap.
-     */
-    if (UPDOWN_HasBuddyBorder(infoPtr)) {
-        if(dwStyle & UDS_ALIGNLEFT)
-            width += DEFAULT_BUDDYBORDER;
-        else
-            x -= DEFAULT_BUDDYBORDER;
-    }
-
-    SetWindowPos(infoPtr->Self, infoPtr->Buddy, x,
-		 budRect.top - DEFAULT_ADDTOP, width,
-		 budRect.bottom - budRect.top + DEFAULT_ADDTOP + DEFAULT_ADDBOT,
-		 SWP_NOACTIVATE);
-
-    return TRUE;
+    return ret;
 }
 
 /***********************************************************************
@@ -859,9 +870,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam,
 	    return (LRESULT)infoPtr->Buddy;
 
 	case UDM_SETBUDDY:
-	    temp = (int)infoPtr->Buddy;
-	    UPDOWN_SetBuddy (infoPtr, (HWND)wParam);
-	    return temp;
+	    return (LRESULT)UPDOWN_SetBuddy (infoPtr, (HWND)wParam);
 
 	case UDM_GETPOS:
 	    temp = UPDOWN_GetBuddyInt (infoPtr);
@@ -948,7 +957,7 @@ void UPDOWN_Register(void)
     WNDCLASSW wndClass;
 
     ZeroMemory( &wndClass, sizeof( WNDCLASSW ) );
-    wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW;
+    wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
     wndClass.lpfnWndProc   = (WNDPROC)UpDownWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(UPDOWN_INFO*);

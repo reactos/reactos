@@ -1175,7 +1175,7 @@ static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheet
   hwndControl = GetDlgItem(hwndDlg, IDC_SUNKEN_LINE);
   GetWindowRect(hwndControl, &rc);
 
-  ptLine.x = 0;
+  ptLine.x = rc.left;
   ptLine.y = rc.bottom;
 
   ScreenToClient(hwndDlg, &ptLine);
@@ -1217,6 +1217,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     SendMessageW(hwndTabCtrl, TCM_SETIMAGELIST, 0, (LPARAM)psInfo->hImageList);
   }
 
+  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 0, 0);
   for (i = 0; i < nTabs; i++)
   {
     if ( psInfo->proppage[i].hasIcon )
@@ -1232,6 +1233,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     item.pszText = (LPWSTR) psInfo->proppage[i].pszText;
     SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, (WPARAM)i, (LPARAM)&item);
   }
+  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 1, 0);
 
   return TRUE;
 }
@@ -2830,6 +2832,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       LPCPROPSHEETPAGEW ppshpage;
       int idx;
 
+      /* Using PropSheetInfoStr to store extra data doesn't match the native
+       * common control: native uses TCM_[GS]ETITEM
+       */
       SetPropW(hwnd, PropSheetInfoStr, (HANDLE)psInfo);
 
       /*

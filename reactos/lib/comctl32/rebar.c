@@ -213,14 +213,9 @@ typedef struct
 #define DRAW_BOTTOMSEP  0x00000020
 #define DRAW_CHEVRONHOT 0x00000040
 #define DRAW_CHEVRONPUSHED 0x00000080
+#define DRAW_LAST_IN_ROW   0x00000100
+#define DRAW_FIRST_IN_ROW  0x00000200
 #define NTF_INVALIDATE  0x01000000
-
-typedef struct
-{
-    INT      istartband;  /* index of first band in row */
-    INT      iendband;    /* index of last band in row */
-} REBAR_ROW;
-
 
 typedef struct
 {
@@ -257,7 +252,6 @@ typedef struct
     INT      ichevronhotBand; /* last band that had a hot chevron */
     INT      iGrabbedBand;/* band number of band whose gripper was grabbed */
 
-    REBAR_ROW  *rows;       /* pointer to row indexes              */
     REBAR_BAND *bands;      /* pointer to the array of rebar bands */
 } REBAR_INFO;
 
@@ -304,6 +298,10 @@ typedef struct
 /* Height of divider for Rebar if not disabled (CCS_NODIVIDER)     */
 /* either top or bottom                                            */
 #define REBAR_DIVIDER  2
+
+/* minimium vertical height of a normal bar                        */
+/*   or minimum width of a CCS_VERT bar - from experiment on Win2k */
+#define REBAR_MINSIZE  23
 
 /* This is the increment that is used over the band height         */
 #define REBARSPACE(a)     ((a->fStyle & RBBS_CHILDEDGE) ? 2*REBAR_DIVIDER : 0)
@@ -675,11 +673,10 @@ static VOID
 REBAR_Refresh (REBAR_INFO *infoPtr, HDC hdc)
 {
     REBAR_BAND *lpBand;
-    UINT i, oldrow;
+    UINT i;
 
     if (!infoPtr->DoRedraw) return;
 
-    oldrow = infoPtr->bands[0].iRow;
     for (i = 0; i < infoPtr->uNumBands; i++) {
 	lpBand = &infoPtr->bands[i];
 
@@ -1674,7 +1671,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 #if PROBLEM2
 	     (x < adjcx) : (y < adjcy)
 #else
-	     (adjcx - x > 4) : (adjcy - y > 4)
+	     (adjcx - x > 5) : (adjcy - y > 4)
 #endif
 	     ) &&
 	    (infoPtr->uNumBands > 1)) {
@@ -1762,39 +1759,29 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
     /* ******* End Phase 2 - split rows till adjustment height full ******* */
 
 
-    /* ******* Start Phase 2a - create array of start and end  ******* */
-    /*                          indexes by row                         */
+    /* ******* Start Phase 2a - mark first and last band in each ******* */
 
-    if (infoPtr->uNumRows != origrows) {
-	if (infoPtr->rows) Free (infoPtr->rows);
-	infoPtr->rows = Alloc (sizeof (REBAR_ROW) * infoPtr->uNumRows);
+    prevBand = NULL;
+    for (i = 0; i < infoPtr->uNumBands; i++) { 	 
+        lpBand = &infoPtr->bands[i]; 	 
+        if (HIDDENBAND(lpBand))
+            continue;
+        if( !prevBand ) {
+            lpBand->fDraw |= DRAW_FIRST_IN_ROW;
+            prevBand = lpBand;
+        }
+        else if( prevBand->iRow == lpBand->iRow )
+            prevBand = lpBand;
+        else {
+            prevBand->fDraw |= DRAW_LAST_IN_ROW;
+            lpBand->fDraw |= DRAW_FIRST_IN_ROW;
+            prevBand = lpBand;
+        }
     }
+    if( prevBand )
+        prevBand->fDraw |= DRAW_LAST_IN_ROW;
 
-    row = 0;
-    for (i = 0; i < infoPtr->uNumBands; i++) {
-	lpBand = &infoPtr->bands[i];
-	if (HIDDENBAND(lpBand)) continue;
-
-	if (lpBand->iRow > row) {
-	    row++;
-	    infoPtr->rows[row-1].istartband = i;
-	}
-	if (row == 0) {
-	    ERR("P2a bug!!!!!!\n");
-	}
-	infoPtr->rows[row-1].iendband = i;
-    }
-
-    for (i = 0; i < infoPtr->uNumRows; i++) {
-	REBAR_ROW *p;
-
-	p = &infoPtr->rows[i];
-	TRACE("P2a row %d, starts %d, ends %d\n",
-	      i+1, p->istartband, p->iendband);
-    }
-
-    /* ******* End Phase 2a - create array of start and end    ******* */
-    /*                          indexes by row                         */
+    /* ******* End Phase 2a - mark first and last band in each ******* */
 
 
     /* ******* Start Phase 2b - adjust all bands for height full ******* */
@@ -1804,24 +1791,28 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 
     if (((infoPtr->dwStyle & CCS_VERT) ? clientcx > x : clientcy > y) &&
 	infoPtr->uNumBands) {
-	INT diff, i, iband;
+	INT diff, i;
 	UINT j;
 
 	diff = (infoPtr->dwStyle & CCS_VERT) ? clientcx - x : clientcy - y;
-	for (i = infoPtr->uNumRows; i >= 1; i--) {
-	    /* if row has more than 1 band, ignore row   */
-	    if (infoPtr->rows[i-1].istartband != infoPtr->rows[i-1].iendband)
-		continue;
-	    /* point to only band in row  */
-	    iband = infoPtr->rows[i-1].istartband;
-	    lpBand = &infoPtr->bands[iband];
+
+        /* iterate backwards thru the rows */
+        for (i = infoPtr->uNumBands-1; i>=0; i--) {
+	    lpBand = &infoPtr->bands[i];
 	    if(HIDDENBAND(lpBand)) continue;
+
+	    /* if row has more than 1 band, ignore it */
+            if( !(lpBand->fDraw&DRAW_FIRST_IN_ROW) )
+                continue;
+            if( !(lpBand->fDraw&DRAW_LAST_IN_ROW) )
+                continue;
+
 	    if (lpBand->fMask & RBBS_VARIABLEHEIGHT) continue;
 	    if (((INT)lpBand->cyMaxChild < 1) ||
 		((INT)lpBand->cyIntegral < 1)) {
 		if (lpBand->cyMaxChild + lpBand->cyIntegral == 0) continue;
 		ERR("P2b band %u RBBS_VARIABLEHEIGHT set but cyMax=%d, cyInt=%d\n",
-		    iband, lpBand->cyMaxChild, lpBand->cyIntegral);
+		    i, lpBand->cyMaxChild, lpBand->cyIntegral);
 		continue;
 	    }
 	    /* j is now the maximum height/width in the client area */
@@ -1835,7 +1826,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	    else
 		lpBand->rcBand.bottom = lpBand->rcBand.top + j;
 	    TRACE("P2b band %d, row %d changed to (%ld,%ld)-(%ld,%ld)\n",
-		  iband, lpBand->iRow,
+		  i, lpBand->iRow,
 		  lpBand->rcBand.left, lpBand->rcBand.top,
 		  lpBand->rcBand.right, lpBand->rcBand.bottom);
 	    if (diff <= 0) break;
@@ -1856,7 +1847,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
     /* ******* Start Phase 3 - adjust all bands for width full ******* */
 
     if (infoPtr->uNumBands) {
-	REBAR_ROW *p;
+        int startband;
 
 	/* If RBS_BANDBORDERS set then indicate to draw bottom separator */
 	/* on all bands in all rows but last row.                        */
@@ -1864,39 +1855,49 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	/* each row but the rightmost band.                              */
 	if (infoPtr->dwStyle & RBS_BANDBORDERS) {
 
-	    for(i = 0; i < infoPtr->uNumRows; i++) {
-		p = &infoPtr->rows[i];
-		for (j = p->istartband; j <= p->iendband; j++) {
-		    lpBand = &infoPtr->bands[j];
-		    if (HIDDENBAND(lpBand)) continue;
-		    if (j != p->iendband)
-			lpBand->fDraw |= DRAW_RIGHTSEP;
-		    if (i != infoPtr->uNumRows-1)
-			lpBand->fDraw |= DRAW_BOTTOMSEP;
-		}
+            for (i=0; i<infoPtr->uNumBands; i++) {
+	        lpBand = &infoPtr->bands[i];
+		if (HIDDENBAND(lpBand))
+                    continue;
+
+                /* not righthand bands */
+                if( !(lpBand->fDraw & DRAW_LAST_IN_ROW) )
+		    lpBand->fDraw |= DRAW_RIGHTSEP;
+
+                /* not the last row */
+                if( lpBand->iRow != infoPtr->uNumRows )
+		    lpBand->fDraw |= DRAW_BOTTOMSEP;
 	    }
 	}
 
 	/* Distribute the extra space on the horizontal and adjust  */
 	/* all bands in row to same height.                         */
-	for (i=1; i<=infoPtr->uNumRows; i++) {
-	    p = &infoPtr->rows[i-1];
-	    mcy = 0;
+	mcy = 0;
+        startband = -1;
+        for (i=0; i<infoPtr->uNumBands; i++) {
 
-	    TRACE("P3 processing row %d, starting band %d, ending band %d\n",
-		  i, p->istartband, p->iendband);
+            lpBand = &infoPtr->bands[i];
 
-	    /* Find the largest height of the bands in the row */
-	    for (j = p->istartband; j <= p->iendband; j++) {
-		lpBand = &infoPtr->bands[j];
-		if (HIDDENBAND(lpBand)) continue;
-		if (mcy < ircBw(lpBand))
-		    mcy = ircBw(lpBand);
-	    }
+            if( lpBand->fDraw & DRAW_FIRST_IN_ROW )
+            {
+                startband = i;
+                mcy = 0;
+            }
 
-	    REBAR_AdjustBands (infoPtr, p->istartband, p->iendband,
+            if ( (mcy < ircBw(lpBand)) && !HIDDENBAND(lpBand) )
+                mcy = ircBw(lpBand);
+
+            if( lpBand->fDraw & DRAW_LAST_IN_ROW )
+            {
+	        TRACE("P3 processing row %d, starting band %d, ending band %d\n",
+		      lpBand->iRow, startband, i);
+                if( startband < 0 )
+                    ERR("Last band %d with no first, row %d\n", i, lpBand->iRow);
+
+	        REBAR_AdjustBands (infoPtr, startband, i,
 			       (infoPtr->dwStyle & CCS_VERT) ?
 			       clientcy : clientcx, mcy);
+            }
 	}
 
 	/* Calculate the other rectangles in each band */
@@ -1920,6 +1921,8 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	y = clientcy;
     }
     if (infoPtr->dwStyle & CCS_VERT) {
+        if( x < REBAR_MINSIZE )
+            x = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = x;
 	infoPtr->calcSize.cy = clientcy;
 	TRACE("vert, notify=%d, x=%d, origheight=%d\n",
@@ -1927,6 +1930,8 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	if (notify && (x != origheight)) infoPtr->fStatus |= NTF_HGHTCHG;
     }
     else {
+        if( y < REBAR_MINSIZE )
+            y = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = clientcx;
 	infoPtr->calcSize.cy = y;
 	TRACE("horz, notify=%d, y=%d, origheight=%d\n",
@@ -2511,13 +2516,13 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, POINTS *ptsmove)
 
 	}
     }
-    if (RHeaderSum) RHeaderSum -= SEP_WIDTH; /* no separator afterlast band */
+    if (RHeaderSum) RHeaderSum -= SEP_WIDTH; /* no separator after last band */
 
     mindBand = &infoPtr->bands[imindBand];
     maxdBand = &infoPtr->bands[imaxdBand];
 
-    if (imindBand == imaxdBand) return; /* nothing to drag agains */
-    if (imindBand == ihitBand) return; /* first band in row, cant drag */
+    if (imindBand == imaxdBand) return; /* nothing to drag against */
+    if (imindBand == ihitBand) return; /* first band in row, can't drag */
 
     /* limit movement to inside adjustable bands - Left */
     if ( (ptsmove->x < mindBand->rcBand.left) ||
@@ -3205,9 +3210,9 @@ REBAR_InsertBandW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	}
 
 	/* post copy */
-	if (uIndex < infoPtr->uNumBands - 1) {
+	if (uIndex <= infoPtr->uNumBands - 1) {
 	    memcpy (&infoPtr->bands[uIndex+1], &oldBands[uIndex],
-		    (infoPtr->uNumBands - uIndex - 1) * sizeof(REBAR_BAND));
+		    (infoPtr->uNumBands - uIndex) * sizeof(REBAR_BAND));
 	}
 
 	Free (oldBands);
@@ -3239,7 +3244,7 @@ REBAR_InsertBandW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     REBAR_ValidateBand (infoPtr, lpBand);
     /* On insert of second band, revalidate band 1 to possible add gripper */
     if (infoPtr->uNumBands == 2)
-	REBAR_ValidateBand (infoPtr, &infoPtr->bands[0]);
+	REBAR_ValidateBand (infoPtr, &infoPtr->bands[uIndex ? 0 : 1]);
 
     REBAR_DumpBand (infoPtr);
 
