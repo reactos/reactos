@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.10 2003/07/05 16:04:01 chorns Exp $
+/* $Id: msgqueue.c,v 1.11 2003/07/25 23:53:36 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,6 +56,8 @@ static FAST_MUTEX HardwareMessageQueueLock;
 
 static KEVENT HardwareMessageEvent;
 
+static PAGED_LOOKASIDE_LIST MessageLookasideList;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID FASTCALL
@@ -89,6 +91,15 @@ MsqInitializeImpl(VOID)
   KeInitializeEvent(&HardwareMessageEvent, NotificationEvent, 0);
   KeInitializeSpinLock(&SystemMessageQueueLock);
   ExInitializeFastMutex(&HardwareMessageQueueLock);
+
+  ExInitializePagedLookasideList(&MessageLookasideList,
+				 NULL,
+				 NULL,
+				 0,
+				 sizeof(USER_MESSAGE),
+				 0,
+				 256);
+
   return(STATUS_SUCCESS);
 }
 
@@ -276,7 +287,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	(SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
       KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
-      UserMsg = ExAllocatePool(NonPagedPool, sizeof(USER_MESSAGE));
+      UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
       UserMsg->Msg = Msg;
       InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
       KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
@@ -394,7 +405,7 @@ MsqCreateMessage(LPMSG Msg)
 {
   PUSER_MESSAGE Message;
   
-  Message = (PUSER_MESSAGE)ExAllocatePool(PagedPool, sizeof(USER_MESSAGE));
+  Message = ExAllocateFromPagedLookasideList(&MessageLookasideList);
   if (!Message)
     {
       return NULL;
@@ -408,7 +419,7 @@ MsqCreateMessage(LPMSG Msg)
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
-  ExFreePool(Message);
+  ExFreeToPagedLookasideList(&MessageLookasideList, Message);
 }
 
 VOID FASTCALL
@@ -622,7 +633,7 @@ MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, 
 					 ListEntry);
       CurrentEntry = CurrentEntry->Flink;
-      ExFreePool(CurrentMessage);
+      MsqDestroyMessage(CurrentMessage);
     }
 }
 

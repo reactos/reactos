@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.24 2003/07/24 05:51:26 gvg Exp $
+/* $Id: message.c,v 1.25 2003/07/25 23:53:36 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -171,7 +171,7 @@ W32kPeekMessage(LPMSG Msg,
       RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
       if (RemoveMessages)
 	{
-	  ExFreePool(Message);
+	  MsqDestroyMessage(Message);
 	}
       return TRUE;
     }
@@ -189,7 +189,7 @@ W32kPeekMessage(LPMSG Msg,
       RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
       if (RemoveMessages)
 	{
-	  ExFreePool(Message);
+	  MsqDestroyMessage(Message);
 	}
       return TRUE;
     }
