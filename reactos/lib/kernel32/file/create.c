@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.35 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: create.c,v 1.36 2004/07/01 22:36:16 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -285,10 +285,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
       (dwCreationDisposition == FILE_OVERWRITE_IF && IoStatusBlock.Information == FILE_OVERWRITTEN))
   {
     SetLastError(ERROR_ALREADY_EXISTS);
-  }
-  else
-  {
-    SetLastError(0);
   }
 
   return FileHandle;
