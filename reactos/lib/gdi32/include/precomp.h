@@ -36,6 +36,7 @@ typedef CHWIDTHINFO *PCHWIDTHINFO;
 
 extern PGDI_TABLE_ENTRY GdiHandleTable;
 extern HANDLE hProcessHeap;
+extern HANDLE CurrentProcessId;
 
 /* == HEAP ================================================================== */
 
@@ -48,5 +49,9 @@ VOID     HEAP_free ( LPVOID memory );
 BOOL FASTCALL TextMetricW2A(TEXTMETRICA *tma, TEXTMETRICW *tmw);
 BOOL FASTCALL NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw);
 BOOL FASTCALL NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw);
+
+/* == GDI HANDLES =========================================================== */
+BOOL GdiIsHandleValid(HGDIOBJ hGdiObj);
+BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
 
 /* EOF */

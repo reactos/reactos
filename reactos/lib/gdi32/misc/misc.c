@@ -29,6 +29,7 @@
 #include "precomp.h"
 
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
+HANDLE CurrentProcessId = NULL;
 
 /*
  * @implemented
@@ -38,4 +39,33 @@ STDCALL
 GdiQueryTable(VOID)
 {
   return (PVOID)GdiHandleTable;
+}
+
+BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
+{
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+  if(Entry->KernelData != NULL && (Entry->Type & GDI_HANDLE_TYPE_MASK) == GDI_HANDLE_GET_TYPE(hGdiObj))
+  {
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    if(pid == NULL || pid == CurrentProcessId)
+    {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
+{
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+  if(Entry->KernelData != NULL && (Entry->Type & GDI_HANDLE_TYPE_MASK) == GDI_HANDLE_GET_TYPE(hGdiObj))
+  {
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    if(pid == NULL || pid == CurrentProcessId)
+    {
+      *UserData = Entry->UserData;
+      return TRUE;
+    }
+  }
+  return FALSE;
 }

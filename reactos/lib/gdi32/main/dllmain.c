@@ -33,6 +33,7 @@ GdiProcessSetup (VOID)
 
         /* map the gdi handle table to user space */
 	GdiHandleTable = NtCurrentTeb()->Peb->GdiSharedHandleTable;
+	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
 }
 
 
