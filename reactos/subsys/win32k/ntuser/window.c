@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.122 2003/10/28 20:24:09 navaraf Exp $
+/* $Id: window.c,v 1.123 2003/10/28 22:46:30 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -852,6 +852,14 @@ IntSetFocusWindow(HWND hWnd)
 
 
 PWINDOW_OBJECT FASTCALL
+IntSetOwner(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewOwner)
+{
+    HWND ret = Wnd->hWndOwner;
+    Wnd->hWndOwner = WndNewOwner;
+    return ret;
+}
+
+PWINDOW_OBJECT FASTCALL
 IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 {
   PWINDOW_OBJECT WndOldParent;
@@ -860,6 +868,7 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 
   if (Wnd->Self == IntGetDesktopWindow())
   {
+    SetLastWin32Error(STATUS_ACCESS_DENIED);
     return NULL;
   }
 
@@ -1233,6 +1242,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   PWNDCLASS_OBJECT ClassObject;
   PWINDOW_OBJECT WindowObject;
   PWINDOW_OBJECT ParentWindow;
+  HWND ParentWindowHandle;
+  HWND OwnerWindowHandle;
   PMENU_OBJECT SystemMenu;
   UNICODE_STRING WindowName;
   NTSTATUS Status;
@@ -1259,17 +1270,32 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       return((HWND)0);
     }
 
-  /* FIXME: parent must belong to the current process */
+  ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
+  OwnerWindowHandle = NULL;
 
-  if (hWndParent != NULL)
+  if (hWndParent == HWND_MESSAGE)
     {
-      ParentWindow = IntGetWindowObject(hWndParent);
+      /*
+       * native ole32.OleInitialize uses HWND_MESSAGE to create the
+       * message window (style: WS_POPUP|WS_DISABLED)
+       */
+      UNIMPLEMENTED;
     }
-  else
+  else if (hWndParent)
     {
-      hWndParent = PsGetWin32Thread()->Desktop->DesktopWindow;
-      ParentWindow = IntGetWindowObject(hWndParent);
+      if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+        ParentWindowHandle = hWndParent;
+      else
+        OwnerWindowHandle = NtUserGetAncestor(hWndParent, GA_ROOT);
     }
+  else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+    {
+      return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
+    }
+
+  ParentWindow = IntGetWindowObject(ParentWindowHandle);
+    
+  /* FIXME: parent must belong to the current process */
 
   /* Check the class. */
   Status = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer);
@@ -1337,7 +1363,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Width = nWidth;
   WindowObject->Height = nHeight;
   WindowObject->ContextHelpId = 0;
-  WindowObject->ParentHandle = hWndParent;
+  WindowObject->ParentHandle = ParentWindowHandle;
+  WindowObject->hWndOwner = OwnerWindowHandle;
   WindowObject->IDMenu = (UINT)hMenu;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
@@ -1449,7 +1476,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.lpCreateParams = lpParam;
   Cs.hInstance = hInstance;
   Cs.hMenu = hMenu;
-  Cs.hwndParent = hWndParent;
+  Cs.hwndParent = ParentWindowHandle;
   Cs.cx = nWidth;
   Cs.cy = nHeight;
   Cs.x = x;
@@ -2301,7 +2328,7 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 	case GWL_HWNDPARENT:
 	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
 	  {
-		Result = 0;
+		Result = (LONG) WindowObject->hWndOwner;
 	  }
 	  else
 	  {
@@ -3034,8 +3061,14 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	  break;
 
 	case GWL_HWNDPARENT:
-	  OldValue = (LONG) WindowObject->ParentHandle;
-	  IntSetParent(WindowObject, (HWND) NewValue);
+	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
+	  {
+		OldValue = (LONG) IntSetOwner(WindowObject, (HWND) NewValue);
+	  }
+	  else
+	  {
+		OldValue = (LONG) IntSetParent(WindowObject, (HWND) NewValue);
+	  }
 	  break;
 
 	case GWL_ID:

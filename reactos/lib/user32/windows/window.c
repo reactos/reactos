@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.75 2003/10/25 22:57:34 navaraf Exp $
+/* $Id: window.c,v 1.76 2003/10/28 22:46:30 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -402,11 +402,6 @@ CreateWindowExA(DWORD dwExStyle,
       ControlsInitCalled = TRUE;
     }
 
-  if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD && !hWndParent)
-    {
-      return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
-    }
-
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -547,11 +542,6 @@ CreateWindowExW(DWORD dwExStyle,
     {
       ControlsInit();
       ControlsInitCalled = TRUE;
-    }
-
-  if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD && !hWndParent)
-    {
-      return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
   if (IS_ATOM(lpClassName)) 

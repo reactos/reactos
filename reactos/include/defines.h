@@ -2542,6 +2542,7 @@ extern "C" {
 #define HWND_NOTOPMOST	((HWND)-2)
 #define HWND_TOP	((HWND)0)
 #define HWND_TOPMOST	((HWND)-1)
+#define HWND_MESSAGE	((HWND)-3)
 #define SWP_DRAWFRAME	(32)
 #define SWP_FRAMECHANGED	(32)
 #define SWP_HIDEWINDOW	(128)
