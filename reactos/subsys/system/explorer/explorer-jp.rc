@@ -281,10 +281,8 @@ BEGIN
     IDS_CONNECTIONS         "ネットワーク接続"
     IDS_DRIVES              "ローカルディスク"
     IDS_SEARCH_COMPUTER     "コンピュータの検索..."
-    IDS_SETTINGS_MENU       "設定メニュー" //FIXME?
     IDS_CONTROL_PANEL       "コントロールパネル"
     IDS_PRINTERS            "プリンタ"
-    IDS_BROWSE              "ファイルをブラウズ"
     IDS_SEARCH_PRG          "プログラムを検索..."
     IDS_ALL_USERS           "All Users\\" //FIXME?
     IDS_SEARCH_FILES        "ファイルやフォルダ..."

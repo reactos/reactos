@@ -21,10 +21,8 @@
 #define IDS_CONNECTIONS                 17
 #define IDS_DRIVES                      18
 #define IDS_SEARCH_COMPUTER             19
-#define IDS_SETTINGS_MENU               20
 #define IDS_CONTROL_PANEL               21
 #define IDS_PRINTERS                    22
-#define IDS_BROWSE                      23
 #define IDS_SEARCH_PRG                  24
 #define IDS_ALL_USERS                   25
 #define IDS_SEARCH                      26

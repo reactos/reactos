@@ -27,8 +27,8 @@
 
 
 #define _LIGHT_STARTMENU
-#define _LAZY_ICONEXTRACT
-#define _SINGLE_ICONEXTRACT
+//#define _LAZY_ICONEXTRACT
+//#define _SINGLE_ICONEXTRACT
 
 
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
@@ -369,21 +369,6 @@ struct SettingsMenu : public StartMenuHandler
 	typedef StartMenuHandler super;
 
 	SettingsMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
-	 :	super(hwnd, create_info)
-	{
-	}
-
-protected:
-	void	AddEntries();
-};
-
-
- /// "Browse Files..." sub-start menu
-struct BrowseMenu : public StartMenuHandler
-{
-	typedef StartMenuHandler super;
-
-	BrowseMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	 :	super(hwnd, create_info)
 	{
 	}

@@ -1393,8 +1393,6 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	AddButton(ResString(IDS_SETTINGS),		ICID_CONFIG, true, IDC_SETTINGS);
 
-	AddButton(ResString(IDS_BROWSE),		ICID_FOLDER, true, IDC_BROWSE);
-
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOFIND))
 #else
@@ -1549,10 +1547,6 @@ int StartMenuHandler::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_FAVORITES, ResString(IDS_FAVORITES));
 		break;
 
-	  case IDC_BROWSE:
-		CreateSubmenu(id, ResString(IDS_BROWSE), STARTMENU_CREATOR(BrowseMenu));
-		break;
-
 	  case IDC_SETTINGS:
 		CreateSubmenu(id, ResString(IDS_SETTINGS), STARTMENU_CREATOR(SettingsMenu));
 		break;
@@ -1586,37 +1580,24 @@ int StartMenuHandler::Command(int id, int code)
 		ExplorerPropertySheet(g_Globals._hwndDesktopBar);
 		break;
 
-	  case IDC_SETTINGS_MENU:
-		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
-		break;
-
 	  case IDC_PRINTERS:
-		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
+		CloseStartMenu(id);
+		MainFrame::Create(SpecialFolderPath(CSIDL_PRINTERS, _hwnd), OWM_PIDL);	//@todo missing: CSIDL_PRINTHOOD
 		break;
 
 	  case IDC_CONTROL_PANEL:
 		CloseStartMenu(id);
-		MainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
+		MainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
 		break;
 
 	  case IDC_ADMIN:
-		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
+		CloseStartMenu(id);
+		MainFrame::Create(SpecialFolderPath(CSIDL_ADMINTOOLS, _hwnd), OWM_PIDL);	//@todo missing: CSIDL_COMMON_ADMINTOOLS
 		break;
 
 	  case IDC_CONNECTIONS:
-		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
-		break;
-
-
-	// browse menu
-
-	  case IDC_NETWORK:
-		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
-		break;
-
-	  case IDC_DRIVES:
-		///@todo exclude removeable drives
-		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
+		CloseStartMenu(id);
+		MainFrame::Create(SpecialFolderPath(CSIDL_CONNECTIONS, _hwnd), OWM_PIDL);
 		break;
 
 
@@ -1717,28 +1698,11 @@ void SettingsMenu::AddEntries()
 #endif
 		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 
-	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, true, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, true, IDC_CONNECTIONS);
-	AddButton(ResString(IDS_ADMIN),			ICID_CONFIG, true, IDC_ADMIN);
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
-#endif
-		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
+	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, false, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, false, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_ADMIN),			ICID_CONFIG, false, IDC_ADMIN);
 
 	AddButton(ResString(IDS_DESKTOPBAR_SETTINGS), ICID_CONFIG, false, ID_DESKTOPBAR_SETTINGS);
-}
-
-void BrowseMenu::AddEntries()
-{
-	super::AddEntries();
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
-#endif
-		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, true, IDC_NETWORK);
-
-	AddButton(ResString(IDS_DRIVES),	ICID_FOLDER, true, IDC_DRIVES);
 }
 
 void SearchMenu::AddEntries()
