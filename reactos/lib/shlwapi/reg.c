@@ -1204,8 +1204,8 @@ DWORD WINAPI SHQueryValueExA( HKEY hKey, LPCSTR lpszValue,
     }
     else
     {
-      nBytesToAlloc = lstrlenA(pvData) * sizeof (CHAR);
-      szData = (LPSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc + 1);
+      nBytesToAlloc = (lstrlenA(pvData)+1) * sizeof (CHAR);
+      szData = (LPSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc );
       lstrcpyA(szData, pvData);
       dwExpDataLen = ExpandEnvironmentStringsA(szData, pvData, *pcbData / sizeof(CHAR));
       if (dwExpDataLen > *pcbData) dwRet = ERROR_MORE_DATA;
@@ -1265,8 +1265,8 @@ DWORD WINAPI SHQueryValueExW(HKEY hKey, LPCWSTR lpszValue,
     }
     else
     {
-      nBytesToAlloc = lstrlenW(pvData) * sizeof(WCHAR);
-      szData = (LPWSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc + 1);
+      nBytesToAlloc = (lstrlenW(pvData) + 1) * sizeof(WCHAR);
+      szData = (LPWSTR) LocalAlloc(GMEM_ZEROINIT, nBytesToAlloc );
       lstrcpyW(szData, pvData);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, pvData, *pcbData/sizeof(WCHAR) );
       if (dwExpDataLen > *pcbData) dwRet = ERROR_MORE_DATA;

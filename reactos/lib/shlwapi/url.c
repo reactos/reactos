@@ -369,8 +369,8 @@ DWORD WINAPI ParseURLW(LPCWSTR x, UNKNOWN_SHLWAPI_2 *y)
 
     /* see if known scheme and return indicator number */
     len = WideCharToMultiByte(0, 0, y->ap1, y->sizep1, 0, 0, 0, 0);
-    cmpstr = (LPSTR)HeapAlloc(GetProcessHeap(), 0, len+1);
-    WideCharToMultiByte(0, 0, y->ap1, y->sizep1, cmpstr, len+1, 0, 0);
+    cmpstr = (LPSTR)HeapAlloc(GetProcessHeap(), 0, len);
+    WideCharToMultiByte(0, 0, y->ap1, y->sizep1, cmpstr, len, 0, 0);
     y->fcncde = URL_SCHEME_UNKNOWN;
     inet_pro = shlwapi_schemes;
     while (inet_pro->scheme_name) {
@@ -422,7 +422,7 @@ HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
     if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
 	return E_INVALIDARG;
 
-    base = (LPWSTR) HeapAlloc(GetProcessHeap(), 0,
+    base = HeapAlloc(GetProcessHeap(), 0,
 			      (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
     canonical = base + INTERNET_MAX_URL_LENGTH;
 
@@ -1482,7 +1482,7 @@ HRESULT WINAPI UrlApplySchemeA(LPCSTR pszIn, LPSTR pszOut, LPDWORD pcchOut, DWOR
     TRACE("(in %s, out size %ld, flags %08lx) using W version\n",
 	  debugstr_a(pszIn), *pcchOut, dwFlags);
 
-    in = (LPWSTR) HeapAlloc(GetProcessHeap(), 0,
+    in = HeapAlloc(GetProcessHeap(), 0,
 			      (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
     out = in + INTERNET_MAX_URL_LENGTH;
 
@@ -1968,7 +1968,7 @@ HRESULT WINAPI UrlGetPartA(LPCSTR pszIn, LPSTR pszOut, LPDWORD pcchOut,
     LPWSTR in, out;
     DWORD ret, len, len2;
 
-    in = (LPWSTR) HeapAlloc(GetProcessHeap(), 0,
+    in = HeapAlloc(GetProcessHeap(), 0,
 			      (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
     out = in + INTERNET_MAX_URL_LENGTH;
 

@@ -518,109 +518,99 @@ RegisterDefaultAcceptHeaders_Exit:
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.14]
+ *      @	[SHLWAPI.15]
  *
  * Get Explorers "AcceptLanguage" setting.
  *
  * PARAMS
  *  langbuf [O] Destination for language string
  *  buflen  [I] Length of langbuf
+ *          [0] Success: used length of langbuf
  *
  * RETURNS
  *  Success: S_OK.   langbuf is set to the language string found.
  *  Failure: E_FAIL, If any arguments are invalid, error occurred, or Explorer
  *           does not contain the setting.
+ *           E_INVALIDARG, If the buffer is not big enough
  */
-HRESULT WINAPI GetAcceptLanguagesA(
-	LPSTR langbuf,
-	LPDWORD buflen)
+HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 {
-	CHAR *mystr;
-	DWORD mystrlen, mytype;
-	HKEY mykey;
-	LCID mylcid;
+    static const WCHAR szkeyW[] = {
+	'S','o','f','t','w','a','r','e','\\',
+	'M','i','c','r','o','s','o','f','t','\\',
+	'I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r','\\',
+	'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
+    static const WCHAR valueW[] = {
+	'A','c','c','e','p','t','L','a','n','g','u','a','g','e',0};
+    static const WCHAR enusW[] = {'e','n','-','u','s',0};
+    DWORD mystrlen, mytype;
+    HKEY mykey;
+    HRESULT retval;
+    LCID mylcid;
+    WCHAR *mystr;
 
-	mystrlen = (*buflen > 6) ? *buflen : 6;
-	mystr = (CHAR*)HeapAlloc(GetProcessHeap(),
-				 HEAP_ZERO_MEMORY, mystrlen);
-	RegOpenKeyA(HKEY_CURRENT_USER,
-		    "Software\\Microsoft\\Internet Explorer\\International",
-		    &mykey);
-	if (RegQueryValueExA(mykey, "AcceptLanguage",
-			      0, &mytype, (PBYTE)mystr, &mystrlen)) {
-	    /* Did not find value */
-	    mylcid = GetUserDefaultLCID();
-	    /* somehow the mylcid translates into "en-us"
-	     *  this is similar to "LOCALE_SABBREVLANGNAME"
-	     *  which could be gotten via GetLocaleInfo.
-	     *  The only problem is LOCALE_SABBREVLANGUAGE" is
-	     *  a 3 char string (first 2 are country code and third is
-	     *  letter for "sublanguage", which does not come close to
-	     *  "en-us"
-	     */
-	    lstrcpyA(mystr, "en-us");
-	    mystrlen = lstrlenA(mystr);
-	}
-	else {
-	    /* handle returned string */
-	    FIXME("missing code\n");
-	}
-	if (mystrlen > *buflen)
-	    lstrcpynA(langbuf, mystr, *buflen);
-	else {
-	    lstrcpyA(langbuf, mystr);
-	    *buflen = lstrlenA(langbuf);
-	}
-	RegCloseKey(mykey);
-	HeapFree(GetProcessHeap(), 0, mystr);
-	TRACE("language is %s\n", debugstr_a(langbuf));
-	return 0;
+    if(!langbuf || !buflen || !*buflen)
+	return E_FAIL;
+
+    mystrlen = (*buflen > 20) ? *buflen : 20 ;
+    mystr = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * mystrlen);
+    RegOpenKeyW(HKEY_CURRENT_USER, szkeyW, &mykey);
+    if(RegQueryValueExW(mykey, valueW, 0, &mytype, (PBYTE)mystr, &mystrlen)) {
+        /* Did not find value */
+        mylcid = GetUserDefaultLCID();
+        /* somehow the mylcid translates into "en-us"
+         *  this is similar to "LOCALE_SABBREVLANGNAME"
+         *  which could be gotten via GetLocaleInfo.
+         *  The only problem is LOCALE_SABBREVLANGUAGE" is
+         *  a 3 char string (first 2 are country code and third is
+         *  letter for "sublanguage", which does not come close to
+         *  "en-us"
+         */
+        lstrcpyW(mystr, enusW);
+        mystrlen = lstrlenW(mystr);
+    } else {
+        /* handle returned string */
+        FIXME("missing code\n");
+    }
+    memcpy( langbuf, mystr, min(*buflen,strlenW(mystr)+1)*sizeof(WCHAR) );
+
+    if(*buflen > lstrlenW(mystr)) {
+	*buflen = lstrlenW(mystr);
+	retval = S_OK;
+    } else {
+	*buflen = 0;
+	retval = E_INVALIDARG;
+	SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+    RegCloseKey(mykey);
+    HeapFree(GetProcessHeap(), 0, mystr);
+    return retval;
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.15]
+ *      @	[SHLWAPI.14]
  *
- * Unicode version of GetAcceptLanguagesA.
+ * Ascii version of GetAcceptLanguagesW.
  */
-HRESULT WINAPI GetAcceptLanguagesW(
-	LPWSTR langbuf,
-	LPDWORD buflen)
+HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
 {
-	CHAR *mystr;
-	DWORD mystrlen, mytype;
-	HKEY mykey;
-	LCID mylcid;
+    WCHAR *langbufW;
+    DWORD buflenW, convlen;
+    HRESULT retval;
 
-	mystrlen = (*buflen > 6) ? *buflen : 6;
-	mystr = (CHAR*)HeapAlloc(GetProcessHeap(),
-				 HEAP_ZERO_MEMORY, mystrlen);
-	RegOpenKeyA(HKEY_CURRENT_USER,
-		    "Software\\Microsoft\\Internet Explorer\\International",
-		    &mykey);
-	if (RegQueryValueExA(mykey, "AcceptLanguage",
-			      0, &mytype, (PBYTE)mystr, &mystrlen)) {
-	    /* Did not find value */
-	    mylcid = GetUserDefaultLCID();
-	    /* somehow the mylcid translates into "en-us"
-	     *  this is similar to "LOCALE_SABBREVLANGNAME"
-	     *  which could be gotten via GetLocaleInfo.
-	     *  The only problem is LOCALE_SABBREVLANGUAGE" is
-	     *  a 3 char string (first 2 are country code and third is
-	     *  letter for "sublanguage", which does not come close to
-	     *  "en-us"
-	     */
-	    lstrcpyA(mystr, "en-us");
-	    mystrlen = lstrlenA(mystr);
-	}
-	else {
-	    /* handle returned string */
-	    FIXME("missing code\n");
-	}
-	RegCloseKey(mykey);
-	*buflen = MultiByteToWideChar(0, 0, mystr, -1, langbuf, (*buflen)-1);
-	HeapFree(GetProcessHeap(), 0, mystr);
-	TRACE("language is %s\n", debugstr_w(langbuf));
-	return 0;
+    if(!langbuf || !buflen || !*buflen) return E_FAIL;
+
+    buflenW = *buflen;
+    langbufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * buflenW);
+    retval = GetAcceptLanguagesW(langbufW, &buflenW);
+
+    /* FIXME: this is wrong, the string may not be null-terminated */
+    convlen = WideCharToMultiByte(CP_ACP, 0, langbufW, -1, langbuf,
+                                  *buflen, NULL, NULL);
+    *buflen = buflenW ? convlen : 0;
+
+    if(langbufW) HeapFree(GetProcessHeap(), 0, langbufW);
+    return retval;
 }
 
 /*************************************************************************
@@ -3964,4 +3954,32 @@ HRESULT WINAPI SKGetValueW(DWORD a, LPWSTR b, LPWSTR c, DWORD d, DWORD e, DWORD 
 {
     FIXME("(%lx, %s, %s, %lx, %lx, %lx): stub\n", a, debugstr_w(b), debugstr_w(c), d, e, f);
     return E_FAIL;
+}
+
+typedef HRESULT (WINAPI *DllGetVersion_func)(DLLVERSIONINFO *);
+
+/***********************************************************************
+ *              GetUIVersion (SHLWAPI.452)
+ */
+DWORD WINAPI GetUIVersion(void)
+{
+    static DWORD version;
+
+    if (!version)
+    {
+        DllGetVersion_func pDllGetVersion;
+        HMODULE dll = LoadLibraryA("shell32.dll");
+        if (!dll) return 0;
+
+        pDllGetVersion = (DllGetVersion_func)GetProcAddress(dll, "DllGetVersion");
+        if (pDllGetVersion)
+        {
+            DLLVERSIONINFO dvi;
+            dvi.cbSize = sizeof(DLLVERSIONINFO);
+            if (pDllGetVersion(&dvi) == S_OK) version = dvi.dwMajorVersion;
+        }
+        FreeLibrary( dll );
+        if (!version) version = 3;  /* old shell dlls don't have DllGetVersion */
+    }
+    return version;
 }

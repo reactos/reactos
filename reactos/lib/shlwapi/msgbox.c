@@ -84,11 +84,11 @@ static INT_PTR CALLBACK SHDlgProcEx(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
     switch (LOWORD(wParam))
     {
       case IDYES:
-        LOWORD(wParam) = IDOK;
+        wParam = MAKELONG(IDOK, HIWORD(wParam));
         /* Fall through ... */
       case IDNO:
         if (LOWORD(wParam) == IDNO)
-          LOWORD(wParam) = IDCANCEL;
+          wParam = MAKELONG(IDCANCEL, HIWORD(wParam));
         /* Fall through ... */
       case IDOK:
       case IDCANCEL:

@@ -75,7 +75,7 @@ static IQueryAssociations* IQueryAssociations_Constructor(void)
 {
   IQueryAssociationsImpl* iface;
 
-  iface =(IQueryAssociationsImpl*)HeapAlloc(GetProcessHeap(),0,sizeof(IQueryAssociationsImpl));
+  iface = HeapAlloc(GetProcessHeap(),0,sizeof(IQueryAssociationsImpl));
   iface->lpVtbl = &IQueryAssociations_vtbl;
   iface->ref = 1;
   iface->hkeySource = NULL;
@@ -95,7 +95,7 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
 {
   if (lpszParam)
   {
-    DWORD dwStrLen = lstrlenA(lpszParam);
+    DWORD dwStrLen = MultiByteToWideChar(CP_ACP, 0, lpszParam, -1, NULL, 0);
 
     if (dwStrLen < dwLen)
     {
@@ -104,12 +104,12 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
     else
     {
       /* Create a new buffer big enough for the string */
-      *lpszOut = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                   (dwStrLen + 1) * sizeof(WCHAR));
+      *lpszOut = HeapAlloc(GetProcessHeap(), 0,
+                                   dwStrLen * sizeof(WCHAR));
       if (!*lpszOut)
         return FALSE;
     }
-    MultiByteToWideChar(0, 0, lpszParam, -1, *lpszOut, -1);
+    MultiByteToWideChar(CP_ACP, 0, lpszParam, -1, *lpszOut, dwStrLen);
   }
   else
     *lpszOut = NULL;
@@ -298,7 +298,7 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
     DWORD dwLenOut = *pcchOut;
 
     if (dwLenOut >= MAX_PATH)
-      lpszReturnW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+      lpszReturnW = HeapAlloc(GetProcessHeap(), 0,
                                       (dwLenOut + 1) * sizeof(WCHAR));
 
     if (!lpszReturnW)
@@ -389,7 +389,7 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   {
     DWORD dwLenOut = *pcchOut;
     if (dwLenOut >= MAX_PATH)
-      lpszReturnW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+      lpszReturnW = HeapAlloc(GetProcessHeap(), 0,
                                       (dwLenOut + 1) * sizeof(WCHAR));
 
     if (lpszReturnW)
