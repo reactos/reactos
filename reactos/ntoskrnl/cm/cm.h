@@ -63,11 +63,11 @@ typedef struct _HIVE_HEADER
   /* Hive identifier "regf" (0x66676572) */
   ULONG  BlockId;
 
-  /* File version ? */
-  ULONG  Version;
+  /* Update counter */
+  ULONG  UpdateCounter1;
 
-  /* File version ? - same as Version */
-  ULONG  VersionOld;
+  /* Update counter */
+  ULONG  UpdateCounter2;
 
   /* When this hive file was last modified */
   FILETIME  DateModified;
