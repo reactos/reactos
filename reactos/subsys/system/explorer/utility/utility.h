@@ -808,8 +808,10 @@ struct Context
 
 	~Context()
 	{
-		s_current = _last;
-		_last = NULL;
+		if (_last) {
+			s_current = _last;
+			_last = NULL;
+		}
 	}
 
 	String toString() const;
