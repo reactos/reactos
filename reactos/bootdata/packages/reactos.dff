@@ -48,15 +48,18 @@ drivers\net\tdi\tdi.sys                 2
 drivers\net\wshtcpip\wshtcpip.dll       1
 drivers\net\dd\ne2000\ne2000.sys        2
 lib\advapi32\advapi32.dll               1
+lib\cards\cards.dll                     1
 lib\comctl32\comctl32.dll               1
+lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
-lib\kbdus\kbdus.dll                     1
-lib\kbdgr\kbdgr.dll                     1
 lib\kbdfr\kbdfr.dll                     1
+lib\kbdgr\kbdgr.dll                     1
+lib\kbduk\kbduk.dll                     1
+lib\kbdus\kbdus.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
 lib\msafd\msafd.dll                     1
@@ -65,6 +68,7 @@ lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt20\msvcrt20.dll               1
 lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
+lib\rpcrt4\rpcrt4.dll                   1
 lib\secur32\secur32.dll                 1
 lib\shell32\shell32.dll                 1
 lib\shlwapi\shlwapi.dll	                1
@@ -75,6 +79,7 @@ lib\user32\user32.dll                   1
 lib\userenv\userenv.dll                 1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1
+lib\winmm\winmm.dll                     1
 lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1
 lib\wshirda\wshirda.dll                 1
