@@ -35,8 +35,20 @@ _fstat(int fd, struct stat *statbuf)
   statbuf->st_ctime = FileTimeToUnixTime( &FileInformation.ftCreationTime,NULL);
   statbuf->st_atime = FileTimeToUnixTime( &FileInformation.ftLastAccessTime,NULL);
   statbuf->st_mtime = FileTimeToUnixTime( &FileInformation.ftLastWriteTime,NULL);
+  if (statbuf->st_atime ==0)
+    statbuf->st_atime = statbuf->st_mtime;
+  if (statbuf->st_ctime ==0)
+    statbuf->st_ctime = statbuf->st_mtime;
 
-  statbuf->st_dev = fd;
+  statbuf->st_dev = FileInformation.dwVolumeSerialNumber; 
   statbuf->st_size = FileInformation.nFileSizeLow; 
+  statbuf->st_nlink = FileInformation.nNumberOfLinks;
+  statbuf->st_mode = S_IREAD;
+  if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    statbuf->st_mode |= S_IFDIR | S_IEXEC;
+  else
+    statbuf->st_mode |= S_IFREG;
+  if ( !(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+    statbuf->st_mode |= S_IWRITE;
   return 0;
 }

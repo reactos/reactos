@@ -53,7 +53,7 @@ FILE* fopen(const char *file, const char *mode)
   else
     oflags |= (_fmode & (O_TEXT|O_BINARY));
 
-  fd = _open(file, oflags, 0);
+  fd = _open(file, oflags, 0666);
   if (fd < 0)
     return NULL;
 

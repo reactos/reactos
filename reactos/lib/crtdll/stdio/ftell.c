@@ -6,6 +6,7 @@
 #include <crtdll/internal/file.h>
 #include <crtdll/fcntl.h>
 #include <crtdll/io.h>
+#include <errno.h>
 
 
 long
@@ -13,6 +14,12 @@ ftell(FILE *f)
 {
   long tres;
   int adjust=0;
+
+  if (!f) 
+  {
+    __set_errno(EBADF);
+    return -1;
+  }
 
   if (f->_cnt < 0)
     f->_cnt = 0;
