@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.16 2004/02/02 12:05:41 ekohl Exp $
+/* $Id: acl.c,v 1.17 2004/02/02 20:59:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -319,8 +319,8 @@ RtlCreateAcl(PACL Acl,
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
-  if (Acl->AclRevision < MIN_ACL_REVISION ||
-      Acl->AclRevision > MAX_ACL_REVISION)
+  if (AclRevision < MIN_ACL_REVISION ||
+      AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_UNKNOWN_REVISION);
     }
