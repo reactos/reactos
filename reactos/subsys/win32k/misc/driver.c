@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.38 2004/04/09 20:03:19 navaraf Exp $
+/* $Id: driver.c,v 1.39 2004/04/09 20:39:10 navaraf Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -32,7 +32,6 @@
 #include <win32k/misc.h>
 #include <wchar.h>
 #include <ddk/winddi.h>
-#include <ddk/ntddvid.h>
 #include <ddk/ntapi.h>
 #include <rosrtl/string.h>
 #include <include/tags.h>
@@ -235,7 +234,8 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
   return TRUE;
 }
 
-typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
+typedef LONG VP_STATUS;
+typedef VP_STATUS (STDCALL *PMP_DRIVERENTRY)(PVOID, PVOID);
 
 PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
 {

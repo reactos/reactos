@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.31 2004/01/24 08:26:25 ekohl Exp $
+/* $Id: xlate.c,v 1.32 2004/04/09 20:39:10 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <ddk/ntddvid.h>
+#include <ddk/ntddvdeo.h>
 
 #include <include/object.h>
 #include <include/palette.h>
