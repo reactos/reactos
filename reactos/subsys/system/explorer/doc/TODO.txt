@@ -14,3 +14,4 @@
 - Windows-key combos
 - Application Desktop Toolbars
 - desktop switching
+- command line in explorer windows
