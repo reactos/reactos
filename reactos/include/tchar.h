@@ -29,14 +29,16 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.9 $
- * $Author: hyperion $
- * $Date: 2003/07/06 23:04:18 $
+ * $Revision: 1.10 $
+ * $Author: royce $
+ * $Date: 2003/08/11 00:04:05 $
  *
  */
 
 #ifndef	_TCHAR_H_
 #define _TCHAR_H_
+
+#include <msvcrt/string.h>
 
 /*
  * NOTE: This tests _UNICODE, which is different from the UNICODE define
