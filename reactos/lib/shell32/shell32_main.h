@@ -242,11 +242,10 @@ inline static WCHAR * __SHCloneStrAtoW(WCHAR ** target, const char * source)
 #define HINSTANCE_32(h16)	((HINSTANCE)(ULONG_PTR)(h16))
 #define HINSTANCE_16(h32)	(LOWORD(h32))
 
-typedef UINT (*SHELL_ExecuteA1632)(const char *lpCmd, void *env, BOOL shWait,
-			    LPSHELLEXECUTEINFOA psei, LPSHELLEXECUTEINFOA psei_out);
+typedef UINT (*SHELL_ExecuteW32)(const WCHAR *lpCmd, void *env, BOOL shWait,
+			    LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out);
 
-BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei, SHELL_ExecuteA1632 execfunc);
-BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW psei, SHELL_ExecuteA1632 execfunc);
+BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfunc);
 
 extern WCHAR swShell32Name[MAX_PATH];
 extern char sShell32Name[MAX_PATH];
