@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.8 2003/12/26 00:58:33 weiden Exp $
+ *  $Id: desktop.c,v 1.9 2004/02/21 13:13:26 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -254,7 +254,6 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 }
 
 /*
-<<<<<<< winsta.c
  * NtUserCreateDesktop
  *
  * Creates a new desktop.

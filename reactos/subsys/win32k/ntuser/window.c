@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.185 2004/02/19 21:12:09 weiden Exp $
+/* $Id: window.c,v 1.186 2004/02/21 13:13:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3309,29 +3309,6 @@ static BOOL IsStaticClass(PWINDOW_OBJECT Window)
     return rc;
 }
 
-static BOOL IsHidden(PWINDOW_OBJECT Window)
-{
-    BOOL rc = FALSE;
-    ASSERT(0 != Window);
-    PWINDOW_OBJECT wnd = Window;
-
-    while (0 != wnd && wnd->Style & WS_CHILD)
-    {
-      if (!(wnd->Style & WS_VISIBLE))
-	  {
-	    rc = TRUE;
-        break;
-	  }
-      wnd = wnd->Parent;
-    }
-    if (0 != wnd)
-    {
-      rc = !(wnd->Style & WS_VISIBLE);
-    }
-
-    return rc;
-}
-
 static BOOL IsDisabled(PWINDOW_OBJECT Window)
 {
     BOOL rc = FALSE;
@@ -3365,7 +3342,7 @@ static PWINDOW_OBJECT RestrictiveSearchChildWindows(PWINDOW_OBJECT Window, POINT
         */
         if (!IsStaticClass(ChildWindow) &&
             !IsDisabled(ChildWindow)    &&
-            !IsHidden(ChildWindow)       )
+            IntIsWindowVisible(ChildWindow))
         {
             /*
             **Now find the deepest child window

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.67 2004/02/04 23:01:07 gvg Exp $
+ *  $Id: painting.c,v 1.68 2004/02/21 13:13:26 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -93,60 +93,6 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 }
 
 /*
- * IntGetNCUpdateRegion
- *
- * Get nonclient part of window update region. 
- * 
- * Return Value
- *    Handle to region that represents invalid nonclient window area. The
- *    caller is responsible for deleting it.
- *
- * Remarks
- *    This function also marks the nonclient update region of window
- *    as valid, clears the WINDOWOBJECT_NEED_NCPAINT flag.
- */
-
-STATIC HRGN FASTCALL
-IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
-{
-   HRGN WindowRgn;
-   HRGN NonclientRgn;
-
-   ASSERT(! ExTryToAcquireFastMutex(&Window->UpdateLock));
-
-   /*
-    * Generate the update region.
-    */
-
-   WindowRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
-   NtGdiOffsetRgn(WindowRgn, 
-      -Window->WindowRect.left,
-      -Window->WindowRect.top);
-   NonclientRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-   if (NtGdiCombineRgn(NonclientRgn, Window->UpdateRegion,
-       WindowRgn, RGN_DIFF) == NULLREGION)
-   {
-      NtGdiDeleteObject(NonclientRgn);
-      NonclientRgn = NULL;
-   }
-
-   /*
-    * Remove the nonclient region from the standard update region.
-    */
-
-   if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
-       WindowRgn, RGN_AND) == NULLREGION)
-   {
-      NtGdiDeleteObject(Window->UpdateRegion);
-      Window->UpdateRegion = NULL;
-   }
-
-   NtGdiDeleteObject(WindowRgn);
-
-   return NonclientRgn;
-}
-
-/*
  * IntPaintWindows
  *
  * Internal function used by IntRedrawWindow.
@@ -157,11 +103,6 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
   HWND hWnd = Window->Self;
-
-  if (! (Window->Style & WS_VISIBLE))
-    {
-      return;
-    }
 
   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
     {
@@ -239,7 +180,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           for (phWnd = List; *phWnd; ++phWnd)
             {
               Window = IntGetWindowObject(*phWnd);
-              if (Window)
+              if (Window && (Window->Style & WS_VISIBLE))
                 {
                   IntPaintWindows(Window, Flags);
                   IntReleaseWindowObject(Window);
@@ -262,7 +203,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    INT RgnType;
    BOOL HadPaintMessage, HadNCPaintMessage;
    BOOL HasPaintMessage, HasNCPaintMessage;
-   HRGN hRgnWindow;
 
    /*
     * Clip the given region with window rectangle (or region)
@@ -272,11 +212,13 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (!Window->WindowRegion)
 #endif
    {
+      HRGN hRgnWindow;
+
       hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
       NtGdiOffsetRgn(hRgnWindow,
          -Window->WindowRect.left,
          -Window->WindowRect.top);
-      RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);        
+      RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);
       NtGdiDeleteObject(hRgnWindow);
    }
 #ifdef TODO
@@ -355,16 +297,44 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Split the nonclient update region.
     */
 
-   if (Window->NCUpdateRegion == NULL)
    {
-      Window->NCUpdateRegion = IntGetNCUpdateRegion(Window);
-   }
-   else
-   {
-      HRGN hRgnNonClient = IntGetNCUpdateRegion(Window);
-      NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
-         hRgnNonClient, RGN_OR);
-      NtGdiDeleteObject(hRgnNonClient);
+      HRGN hRgnWindow, hRgnNonClient;
+
+      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+      NtGdiOffsetRgn(hRgnWindow,
+         -Window->WindowRect.left,
+         -Window->WindowRect.top);
+
+      hRgnNonClient = NtGdiCreateRectRgn(0, 0, 0, 0);
+      if (NtGdiCombineRgn(hRgnNonClient, Window->UpdateRegion,
+          hRgnWindow, RGN_DIFF) == NULLREGION)
+      {
+         NtGdiDeleteObject(hRgnNonClient);
+         hRgnNonClient = NULL;
+      }
+
+      /*
+       * Remove the nonclient region from the standard update region.
+       */
+
+      if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+          hRgnWindow, RGN_AND) == NULLREGION)
+      {
+         NtGdiDeleteObject(Window->UpdateRegion);
+         Window->UpdateRegion = NULL;
+      }
+
+      if (Window->NCUpdateRegion == NULL)
+      {
+         Window->NCUpdateRegion = hRgnNonClient;
+      }
+      else
+      {
+         NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
+            hRgnNonClient, RGN_OR);
+      }
+
+      NtGdiDeleteObject(hRgnWindow);
    }
 
    /*
@@ -408,6 +378,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    /*
     * Fake post paint messages to window message queue if needed
     */
+
    HasPaintMessage = Window->UpdateRegion != NULL ||
          Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
    HasNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
@@ -534,7 +505,8 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Repaint and erase windows if needed.
     */
 
-   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
+   if ((Flags & (RDW_ERASENOW | RDW_UPDATENOW)) &&
+       IntIsWindowVisible(Window))
    {
       IntPaintWindows(Window, Flags);
    }
@@ -552,6 +524,15 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
    return TRUE;
 }
 
+BOOL FASTCALL
+IntIsWindowDirty(PWINDOW_OBJECT Window)
+{
+   return (Window->Style & WS_VISIBLE) &&
+      ((Window->UpdateRegion != NULL) ||
+       (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) ||
+       (Window->Flags & WINDOWOBJECT_NEED_NCPAINT));
+}
+
 HWND STDCALL
 IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 {
@@ -563,8 +544,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
    if (Window == NULL)
       return NULL;
 
-   if ((Window->UpdateRegion != NULL ||
-       Window->Flags & (WINDOWOBJECT_NEED_INTERNALPAINT | WINDOWOBJECT_NEED_NCPAINT)) && 
+   if (IntIsWindowDirty(Window) && 
        IntWndBelongsToThread(Window, Thread))
    {
       IntReleaseWindowObject(Window);
@@ -573,13 +553,10 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 
    ExAcquireFastMutex(&Window->ChildrenListLock);
 
-   for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+   for (Child = Window->LastChild; Child; Child = Child->PrevSibling)
    {
-      if (Child->Style & WS_VISIBLE &&
-          (Child->UpdateRegion != NULL ||
-           Child->Flags & WINDOWOBJECT_NEED_INTERNALPAINT ||
-           Child->Flags & WINDOWOBJECT_NEED_NCPAINT)
-          && IntWndBelongsToThread(Child, Thread))
+      if (IntIsWindowDirty(Child) &&
+          IntWndBelongsToThread(Child, Thread))
       {
          hFoundWnd = Child->Self;
          break;
@@ -588,7 +565,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 
    if (hFoundWnd == NULL)
    {
-      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      for (Child = Window->LastChild; Child; Child = Child->PrevSibling)
       {
          if (Child->Style & WS_VISIBLE)
          {
@@ -643,6 +620,7 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
          Message->lParam = 0;
          if (Remove)
          {
+            IntValidateParent(Window, Window->NCUpdateRegion);
             Window->NCUpdateRegion = NULL;
             Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
             MsqDecPaintCountQueue(Window->MessageQueue);

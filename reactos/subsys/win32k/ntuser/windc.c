@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.56 2004/02/08 22:02:40 gvg Exp $
+/* $Id: windc.c,v 1.57 2004/02/21 13:13:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -240,8 +240,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 
       Parent = Window->Parent;
 
-      if (Window->Style & WS_VISIBLE /*&&
-          !(Parent->Style & WS_MINIMIZE)*/)
+      if (Window->Style & WS_VISIBLE)
         {
           if (Parent->Style & WS_CLIPSIBLINGS)
             {
@@ -381,18 +380,15 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   else if (Flags & DCX_PARENTCLIP)
     {
       Flags |= DCX_CACHE;
-      if (!(Flags & (DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS)))
-	{
-	  if ((Window->Style & WS_VISIBLE) && 
-	      (Window->Parent->Style & WS_VISIBLE))
-	    {
-	      Flags &= ~DCX_CLIPCHILDREN;
-	      if (Window->Parent->Style & WS_CLIPSIBLINGS)
-		{
-		  Flags |= DCX_CLIPSIBLINGS;
-		}
-	    }
-	}
+      if ((Window->Style & WS_VISIBLE) &&
+          (Window->Parent->Style & WS_VISIBLE))
+        {
+          Flags &= ~DCX_CLIPCHILDREN;
+          if (Window->Parent->Style & WS_CLIPSIBLINGS)
+            {
+              Flags |= DCX_CLIPSIBLINGS;
+            }
+        }
     }
 
   DcxFlags = Flags & DCX_CACHECOMPAREMASK;

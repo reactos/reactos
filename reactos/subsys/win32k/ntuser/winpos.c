@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.92 2004/02/19 21:12:09 weiden Exp $
+/* $Id: winpos.c,v 1.93 2004/02/21 13:13:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -747,8 +747,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    if (Wnd == IntGetDesktopWindow() &&
        Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
    {
-	   IntReleaseWindowObject(Window);
-	   return FALSE;
+      IntReleaseWindowObject(Window);
+      return FALSE;
    }
 
    WinPos.hwnd = Wnd;
@@ -830,8 +830,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             IntReleaseWindowObject(InsertAfterWindow);
       }
    }
-
-   /* FIXME: Reset active DCEs */
 
    OldWindowRect = Window->WindowRect;
    OldClientRect = Window->ClientRect;
