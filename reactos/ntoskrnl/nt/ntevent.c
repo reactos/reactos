@@ -361,4 +361,21 @@ NtSetEvent(IN HANDLE EventHandle,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtTraceEvent(
+	IN ULONG TraceHandle,
+	IN ULONG Flags,
+	IN ULONG TraceHeaderLength,
+	IN struct _EVENT_TRACE_HEADER* TraceHeader
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.126 2004/07/02 00:47:57 royce Exp $
+/* $Id: thread.c,v 1.127 2004/07/17 03:06:02 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -807,6 +807,23 @@ PsLookupThreadByThreadId(IN PVOID ThreadId,
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
   return(STATUS_INVALID_PARAMETER);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtOpenThreadTokenEx(
+    IN HANDLE ThreadHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN BOOLEAN OpenAsSelf,
+    IN ULONG HandleAttributes,
+    OUT PHANDLE TokenHandle
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.19 2003/12/30 18:52:05 fireball Exp $
+/* $Id: ntobj.c,v 1.20 2004/07/17 03:06:01 ion Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -274,5 +274,19 @@ NtMakeTemporaryObject (IN HANDLE Handle)
 
   return STATUS_SUCCESS;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtMakePermanentObject(
+	IN HANDLE Object
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* EOF */

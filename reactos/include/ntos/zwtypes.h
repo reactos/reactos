@@ -3,6 +3,9 @@
 
 #ifndef __USE_W32API
 
+typedef unsigned short LANGID;
+typedef LANGID *PLANGID;
+
 typedef struct _LDT_ENTRY {
   WORD LimitLow;
   WORD BaseLow;
@@ -983,13 +986,6 @@ typedef struct _FILE_FS_LABEL_INFORMATION {
 	WCHAR VolumeLabel[0];
 } FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
 
-// read file scatter / write file scatter
-//FIXME I am a win32 struct aswell
-
-typedef union _FILE_SEGMENT_ELEMENT {
-	PVOID Buffer;
-	ULONG Alignment;
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
 
 typedef struct _FILE_DIRECTORY_INFORMATION {
 	ULONG	NextEntryOffset;
@@ -1623,6 +1619,24 @@ typedef struct _DIRECTORY_BASIC_INFORMATION
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
 } DIRECTORY_BASIC_INFORMATION, *PDIRECTORY_BASIC_INFORMATION;
 
+
+// power information levels
+typedef enum _POWER_INFORMATION_LEVEL {
+	SystemPowerPolicyAc,
+	SystemPowerPolicyDc,
+	VerifySystemPolicyAc,
+	VerifySystemPolicyDc,
+	SystemPowerCapabilities,
+	SystemBatteryState,
+	SystemPowerStateHandler,
+	ProcessorStateHandler,
+	SystemPowerPolicyCurrent,
+	AdministratorPowerPolicy,
+	SystemReserveHiberFile,
+	ProcessorInformation,
+	SystemPowerInformationData
+} POWER_INFORMATION_LEVEL;
+
 #endif /* __USE_W32API */
 
 /*
@@ -1845,6 +1859,7 @@ typedef struct _HASH_TABLE
   // Pointer to array of hash buckets with splay trees
   PSPLAY_TREE  HashTrees;
 } HASH_TABLE, *PHASH_TABLE;
+
 
 /* END REACTOS ONLY */
 

@@ -155,7 +155,7 @@ typedef HANDLE HRAWINPUT;
 typedef HANDLE HTASK;
 typedef HANDLE HWINEVENTHOOK;
 typedef VOID (CALLBACK *WINEVENTPROC)(HWINEVENTHOOK hWinEventHook,DWORD event,HWND hwnd,LONG idObject,LONG idChild,DWORD idEventThread,DWORD dwmsEventTime);
-typedef unsigned short LANGID;
+//typedef unsigned short LANGID;
 /*typedef DWORD LCID; */
 typedef DWORD LCTYPE;
 /* typedef LOCALHANDLE */
@@ -744,7 +744,7 @@ typedef FARPROC ENHMFENUMPROC;
 typedef DWORD CCSTYLE, *PCCSTYLE, *LPCCSTYLE;
 typedef DWORD CCSTYLEFLAGA, *PCCSTYLEFLAGA, *LPCCSTYLEFLAGA;
 #define DECLARE_HANDLE(s) typedef HANDLE s
-typedef LANGID *PLANGID;
+//typedef LANGID *PLANGID;
 
 #endif /* ! defined (RC_INVOKED) */
 

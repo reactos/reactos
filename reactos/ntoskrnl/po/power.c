@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.8 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: power.c,v 1.9 2004/07/17 03:06:01 ion Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -217,5 +217,39 @@ VOID INIT_FUNCTION
 PoInit(VOID)
 {
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtInitiatePowerAction (
+	POWER_ACTION SystemAction,
+	SYSTEM_POWER_STATE MinSystemState,
+ 	ULONG Flags,
+	BOOLEAN Asynchronous)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtPowerInformation(
+	POWER_INFORMATION_LEVEL PowerInformationLevel,
+    PVOID InputBuffer, 
+	ULONG InputBufferLength,
+    PVOID OutputBuffer,
+	ULONG OutputBufferLength
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
 
 /* EOF */

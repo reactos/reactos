@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.130 2004/07/16 17:20:23 ekohl Exp $
+# $Id: Makefile,v 1.131 2004/07/17 03:06:01 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -88,6 +88,7 @@ include Makefile.$(ARCH)
 # System API (Nt/Zw)
 OBJECTS_NT = \
 	nt/channel.o \
+	nt/efi.o \
 	nt/evtpair.o \
 	nt/mutant.o \
 	nt/misc.o \
@@ -243,6 +244,7 @@ OBJECTS_PS = \
 	ps/create.o \
 	ps/debug.o \
 	ps/idle.o \
+	ps/job.o \
 	ps/kill.o \
 	ps/locale.o \
 	ps/process.o \

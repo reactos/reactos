@@ -1489,12 +1489,6 @@ NtOpenThreadTokenEx(
 
 NTSTATUS
 STDCALL
-NtQueryDefaultUILanguage(
-	OUT PLANGID LanguageId
-	);
-
-NTSTATUS
-STDCALL
 NtQueryInformationJobObject(
 	IN HANDLE JobHandle,
 	IN JOBOBJECTINFOCLASS JobInformationClass,
@@ -1503,11 +1497,6 @@ NtQueryInformationJobObject(
 	OUT PULONG ReturnLength OPTIONAL
 	);
 
-NTSTATUS
-STDCALL
-NtQueryInstallUILanguage(
-	OUT PLANGID LanguageId
-	);
 
 ULONG
 STDCALL
@@ -1564,23 +1553,8 @@ NtSecureConnectPort(
 
 NTSTATUS
 STDCALL
-NtSetDefaultUILanguage(
-	IN LANGID LanguageId
-	);
-
-NTSTATUS
-STDCALL
 NtSetHighWaitLowThread(
 	VOID
-	);
-
-NTSTATUS
-STDCALL
-NtSetInformationJobObject(
-	IN HANDLE JobHandle,
-	IN JOBOBJECTINFOCLASS JobInformationClass,
-	IN PVOID JobInformation,
-	IN ULONG JobInformationLength
 	);
 
 NTSTATUS
@@ -1962,12 +1936,6 @@ ZwOpenThreadTokenEx(
 
 NTSTATUS
 STDCALL
-ZwQueryDefaultUILanguage(
-	OUT PLANGID LanguageId
-	);
-
-NTSTATUS
-STDCALL
 ZwQueryInformationJobObject(
 	IN HANDLE JobHandle,
 	IN JOBOBJECTINFOCLASS JobInformationClass,
@@ -1976,30 +1944,10 @@ ZwQueryInformationJobObject(
 	OUT PULONG ReturnLength OPTIONAL
 	);
 
-NTSTATUS
-STDCALL
-ZwQueryInstallUILanguage(
-	OUT PLANGID LanguageId
-	);
-
 ULONG
 STDCALL
 ZwQueryPortInformationProcess(
 	VOID
-	);
-
-NTSTATUS
-STDCALL
-ZwQueryQuotaInformationFile(
-	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PFILE_USER_QUOTA_INFORMATION Buffer,
-	IN ULONG BufferLength,
-	IN BOOLEAN ReturnSingleEntry,
-	IN PFILE_QUOTA_LIST_INFORMATION QuotaList OPTIONAL,
-	IN ULONG QuotaListLength,
-	IN PSID ResumeSid OPTIONAL,
-	IN BOOLEAN RestartScan
 	);
 
 NTSTATUS
@@ -2047,12 +1995,6 @@ ZwSecureConnectPort(
 	OUT PULONG MaxMessageSize OPTIONAL,
 	IN OUT PVOID ConnectData OPTIONAL,
 	IN OUT PULONG ConnectDataLength OPTIONAL
-	);
-
-NTSTATUS
-STDCALL
-ZwSetDefaultUILanguage(
-	IN LANGID LanguageId
 	);
 
 NTSTATUS
@@ -2210,14 +2152,6 @@ NtGetDevicePowerState(
     IN HANDLE Device,
     OUT DEVICE_POWER_STATE *State
     );
-NTSTATUS
-STDCALL
-NtInitiatePowerAction(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags,
-    IN BOOL Asynchronous
-    );
 BOOL
 STDCALL
 NtIsSystemResumeAutomatic(
@@ -2369,14 +2303,6 @@ ZwGetDevicePowerState(
     IN HANDLE Device,
     OUT DEVICE_POWER_STATE *State
     );
-NTSTATUS
-STDCALL
-ZwInitiatePowerAction(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags,
-    IN BOOL Asynchronous
-    );
 BOOL
 STDCALL
 ZwIsSystemResumeAutomatic(
@@ -2474,8 +2400,6 @@ VOID STDCALL A_SHAFinal(PSHA_CONTEXT Context, PVOID Result);
 
 VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam);
 BOOL STDCALL SetConsoleIcon(HICON hicon);
-NTSTATUS STDCALL NtPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
-NTSTATUS STDCALL ZwPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 double __cdecl _CIpow(double x,double y);
 LPSTR __cdecl _ui64toa(
     ULONGLONG value,

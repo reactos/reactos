@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.8 2004/03/10 20:26:40 navaraf Exp $
+/* $Id: locale.c,v 1.9 2004/07/17 03:06:02 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -302,6 +302,43 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
      }
 
    return(STATUS_SUCCESS);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtQueryDefaultUILanguage(
+	PLANGID LanguageId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtQueryInstallUILanguage(
+	PLANGID LanguageId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtSetDefaultUILanguage(
+	LANGID LanguageId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

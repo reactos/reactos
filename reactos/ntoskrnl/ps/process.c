@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.133 2004/07/16 20:20:53 weiden Exp $
+/* $Id: process.c,v 1.134 2004/07/17 03:06:02 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -168,6 +168,23 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 {
   return _NtOpenProcessToken(ProcessHandle, DesiredAccess, TokenHandle);
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtOpenProcessTokenEx(
+    IN HANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG HandleAttributes,
+    OUT PHANDLE TokenHandle
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 
 /*

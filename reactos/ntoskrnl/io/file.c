@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.29 2004/06/23 21:42:50 ion Exp $
+/* $Id: file.c,v 1.30 2004/07/17 03:06:01 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -128,6 +128,42 @@ NtQueryInformationFile(HANDLE FileHandle,
    ExFreePool(SystemBuffer);
 
    return Status;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtQueryQuotaInformationFile(
+    IN HANDLE FileHandle,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    OUT PVOID Buffer,
+    IN ULONG Length,
+    IN BOOLEAN ReturnSingleEntry,
+    IN PVOID SidList OPTIONAL,
+    IN ULONG SidListLength,
+    IN PSID StartSid OPTIONAL,
+    IN BOOLEAN RestartScan
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL
+NtSetQuotaInformationFile(
+	HANDLE FileHandle,
+    	PIO_STATUS_BLOCK IoStatusBlock,
+	PFILE_USER_QUOTA_INFORMATION Buffer,
+    	ULONG BufferLength)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
