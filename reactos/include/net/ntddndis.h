@@ -7,6 +7,8 @@
 #ifndef __NTDDNDIS_H
 #define __NIDDNDIS_H
 
+#include <net/ndisoid.h>
+
 typedef enum _NDIS_DEVICE_POWER_STATE
 {
     NdisDeviceStateUnspecified = 0,
