@@ -255,6 +255,22 @@ asmlinkage void exception_handler(unsigned int edi,
    for(;;);
 }
 
+VOID KeDumpStackFrames(ULONG DummyArg)
+{
+   PULONG Stack = ((PULONG)&DummyArg)[-1];
+   ULONG i;
+   
+   DbgPrint("Frames:\n");
+   for (i=0; i<32; i++)
+     {
+	if (Stack[i] > KERNEL_BASE)
+	  {
+	     DbgPrint("%.8x  ",Stack[i]);
+	  }
+     }
+   DbgPrint("\n");
+}
+
 static void set_system_call_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("sel %x %d\n",sel,sel);

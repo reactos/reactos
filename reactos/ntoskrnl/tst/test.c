@@ -130,12 +130,12 @@ VOID ExExecuteShell(VOID)
    BaseAddress = (PVOID)0x10000;
    SectionOffset.HighPart = 0;
    SectionOffset.LowPart = 0;
-   Size = 0x8000;
+   Size = 0x10000;
    ZwMapViewOfSection(SectionHandle,
 		      ShellHandle,
 		      &BaseAddress,
 		      0,
-                      0x8000,
+                      Size,
 		      &SectionOffset,
 		      &Size,
 		      0,

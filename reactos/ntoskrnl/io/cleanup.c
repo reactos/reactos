@@ -41,6 +41,7 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
      }
    if (DeviceObject->Flags & DO_DIRECT_IO)
      {
+	DPRINT("Tearing down MDL\n");
 	if (Irp->MdlAddress->MappedSystemVa!=NULL)
 	  {	     
 	     MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,

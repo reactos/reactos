@@ -22,7 +22,7 @@
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/

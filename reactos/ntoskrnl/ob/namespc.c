@@ -239,7 +239,8 @@ NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
    Status = ObLookupObject(ObjectAttributes->RootDirectory, 
 			   ObjectAttributes->ObjectName->Buffer, 
 			   Object,
-			   UnparsedSection);
+			   UnparsedSection,
+			   ObjectAttributes->Attributes);
    DPRINT("*Object %x\n",*Object);
    DPRINT("ObjectAttributes->ObjectName->Length %d\n",
 	  ObjectAttributes->ObjectName->Length);
@@ -348,7 +349,8 @@ VOID InitializeObjectAttributes(POBJECT_ATTRIBUTES InitializedAttributes,
    InitializedAttributes->SecurityQualityOfService=NULL;
 }
 
-static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
+static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name,
+			 ULONG Attributes)
 /*
  * FUNCTION: Looks up an entry within a namespace directory
  * ARGUMENTS:
@@ -379,9 +381,21 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
 	DPRINT("Scanning %w\n",current_obj->Name.Buffer);
-	if ( wcscmp(current_obj->Name.Buffer, name)==0)
+	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
-	     return(HEADER_TO_BODY(current_obj));
+	     if (wcsicmp(current_obj->Name.Buffer, name)==0)
+	       {
+		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
+		  return(HEADER_TO_BODY(current_obj));
+	       }
+	  }
+	else
+	  {
+	     if ( wcscmp(current_obj->Name.Buffer, name)==0)
+	       {
+		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
+		  return(HEADER_TO_BODY(current_obj));
+	       }
 	  }
 	current = current->Flink;
      }
@@ -419,7 +433,7 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
 }
 
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
-			 PWSTR* UnparsedSection)
+			PWSTR* UnparsedSection, ULONG Attributes)
 /*
  * FUNCTION: Lookup an object within the system namespc
  * ARGUMENTS:
@@ -489,11 +503,12 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 	  }
 	DPRINT("\n",0);
 	
-	current_dir=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current);
+	current_dir=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current,
+						   Attributes);
 	if (current_dir==NULL)
 	  {
-             DbgPrint("(%s:%d) Path component not found\n",__FILE__,
-                    __LINE__);
+             DbgPrint("(%s:%d) Path component %w not found\n",__FILE__,
+                    __LINE__,current);
 	     return(STATUS_UNSUCCESSFUL);	   	     
 	  }
 	

@@ -22,24 +22,19 @@
 /* FUNCTIONS ***************************************************************/
 
 
-NTSTATUS 
-STDCALL
-NtUnloadDriver(
-	IN PUNICODE_STRING DriverServiceName
-	)
+NTSTATUS STDCALL NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
+   return(ZwUnloadDriver(DriverServiceName));
 }
 
-NTSTATUS 
-STDCALL
-ZwUnloadDriver(
-	IN PUNICODE_STRING DriverServiceName
-	)
+NTSTATUS STDCALL ZwUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
+   UNIMPLEMENTED;
 }
 
 NTSTATUS NtLoadDriver(PUNICODE_STRING DriverServiceName)
 {
+   return(ZwLoadDriver(DriverServiceName));
 }
 
 NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
@@ -50,6 +45,7 @@ NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
  * RETURNS: Status
  */
 {
+   UNIMPLEMENTED;
 }
 
 NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT SourceDevice,
@@ -105,6 +101,7 @@ PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    
    AttachedDevice->AttachedDevice = SourceDevice;
    SourceDevice->StackSize = AttachedDevice->StackSize + 1;
+   SourceDevice->Vpb = AttachedDevice->Vpb;
    return(AttachedDevice);
 }
 

@@ -67,8 +67,8 @@ VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    if (Result == DeallocateObject)
      {
 	IoFreeController(ControllerObject);
-	ExFreePool(entry);
      }
+   ExFreePool(entry);
 }
 
 PCONTROLLER_OBJECT IoCreateController(ULONG Size)
@@ -121,23 +121,23 @@ VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject)
  *       ControllerObject = Controller object to be released
  */
 {
-   PKDEVICE_QUEUE_ENTRY QEntry = KeRemoveDeviceQueue(&ControllerObject->
-						    DeviceWaitQueue);
-   CONTROLLER_QUEUE_ENTRY* Entry = CONTAINING_RECORD(QEntry,
-			 			    CONTROLLER_QUEUE_ENTRY,
-						    Entry);
+   PKDEVICE_QUEUE_ENTRY QEntry;
+   CONTROLLER_QUEUE_ENTRY* Entry;
    IO_ALLOCATION_ACTION Result;
    
-   if (QEntry==NULL)
+   do
      {
-	return;
-     }
-   Result = Entry->ExecutionRoutine(Entry->DeviceObject,
-				    Entry->DeviceObject->CurrentIrp,NULL,
-				    Entry->Context);
-   if (Result == DeallocateObject)
-     {
+	QEntry = KeRemoveDeviceQueue(&ControllerObject->DeviceWaitQueue);
+	Entry = CONTAINING_RECORD(QEntry,CONTROLLER_QUEUE_ENTRY,Entry);
+	if (QEntry==NULL)
+	  {
+	     return;
+	  }
+	Result = Entry->ExecutionRoutine(Entry->DeviceObject,
+					 Entry->DeviceObject->CurrentIrp,
+					 NULL,					 
+					 Entry->Context);
 	ExFreePool(Entry);
-     }
+     } while (Result == DeallocateObject);
 }
    

@@ -124,6 +124,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    
    
    DeviceObject = (PDEVICE_OBJECT)Object;
+   DPRINT("DeviceObject %x\n",DeviceObject);
    DeviceObject = IoGetAttachedDevice(DeviceObject);
    DPRINT("DeviceObject %x\n",DeviceObject);
    
@@ -140,30 +141,37 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    else
      {
 	CHECKPOINT;
+	DPRINT("DeviceObject %x\n",DeviceObject);
+	DPRINT("FileHandle %x\n",FileHandle);
 	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
 	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
 	  {
+	     CHECKPOINT;
 	     ZwClose(*FileHandle);
 	     *FileHandle=0;
 	     return(STATUS_UNSUCCESSFUL);
 	  }
+	DPRINT("DeviceObject->Vpb %x\n",DeviceObject->Vpb);
 	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	  {
+	     CHECKPOINT;
 	     Status = IoTryToMountStorageDevice(DeviceObject);
 	     if (Status!=STATUS_SUCCESS)
 	       {
+		  CHECKPOINT;
 		  ZwClose(*FileHandle);
 		  *FileHandle=0;
 		  return(Status);
 	       }
 	     DeviceObject = IoGetAttachedDevice(DeviceObject);
 	  }
-	DPRINT("Remainder %w\n",Remainder);
+//	DPRINT("Remainder %x\n",Remainder);
+//	DPRINT("Remainder %w\n",Remainder);
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
 						     wstrlen(Remainder));
 	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
-	DPRINT("FileObject->FileName.Buffer %x %w\n",
-	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
+//	DPRINT("FileObject->FileName.Buffer %x %w\n",
+//	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
      }
    CHECKPOINT;
    

@@ -461,6 +461,8 @@ void KeExpireTimers(void)
 }
 
 extern unsigned int nr_used_blocks;
+extern unsigned int EiFreeNonPagedPool;
+extern unsigned int EiUsedNonPagedPool;
 
 VOID KiTimerInterrupt(VOID)
 /*
@@ -470,6 +472,7 @@ VOID KiTimerInterrupt(VOID)
    char str[36];
    char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
    int i;
+   int x,y;
    
    /*
     * Increment the number of timers ticks 
@@ -481,7 +484,21 @@ VOID KiTimerInterrupt(VOID)
     * Display the tick count in the top left of the screen as a debugging
     * aid
     */
-   sprintf(str,"%.8u %.8u",nr_used_blocks,ticks);
+//   sprintf(str,"%.8u %.8u",nr_used_blocks,ticks);
+   if ((EiFreeNonPagedPool + EiUsedNonPagedPool) == 0)
+     {
+	x = y = 0;
+     }
+   else
+     {
+	x = (EiFreeNonPagedPool * 100) / 
+	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
+	y = (EiUsedNonPagedPool * 100) / 
+	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
+     }
+//   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
+   sprintf(str,"%.4u %.4u %.7u",x,y,ticks);
+//   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];

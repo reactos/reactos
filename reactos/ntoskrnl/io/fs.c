@@ -145,6 +145,8 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
 	     break;
 	   
 	   case STATUS_SUCCESS:
+	     DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
+	                                VPB_MOUNTED;
 	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 	     return(STATUS_SUCCESS);
 	     

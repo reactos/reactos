@@ -11,6 +11,8 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
+#include <internal/debug.h>
+
 /* FUNCTIONS ****************************************************************/
 
 VOID ExRaiseStatus(NTSTATUS Status)
@@ -20,22 +22,18 @@ VOID ExRaiseStatus(NTSTATUS Status)
 }
 
 
-NTSTATUS
-STDCALL
-NtRaiseException(
-	IN PEXCEPTION_RECORD ExceptionRecord,
-	IN PCONTEXT Context,
-	IN BOOL IsDebugger OPTIONAL
-	)
+NTSTATUS STDCALL NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+				  IN PCONTEXT Context,
+				  IN BOOL IsDebugger OPTIONAL)
 {
+   return(ZwRaiseException(ExceptionRecord,
+			   Context,
+			   IsDebugger));
 }
 
-NTSTATUS
-STDCALL
-ZwRaiseException(
-	IN PEXCEPTION_RECORD ExceptionRecord,
-	IN PCONTEXT Context,
-	IN BOOL IsDebugger OPTIONAL
-	)
+NTSTATUS STDCALL ZwRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+				  IN PCONTEXT Context,
+				  IN BOOL IsDebugger OPTIONAL)
 {
+   UNIMPLEMENTED;
 }

@@ -21,7 +21,31 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 			    PDEVICE_OBJECT DeviceObject,
 			    PVOID Buffer,
 			    PVOID Length)
+/*
+ * FUNCTION: Prepares the buffer to be used for an IRP
+ */
 {
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+	DPRINT("Doing buffer i/o\n",0);
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	  ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	  {
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+     }
+   if (DeviceObject->Flags&DO_DIRECT_IO)
+     {
+	DPRINT("Doing direct i/o\n",0);
+	
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
+     }   
+   return(STATUS_SUCCESS);
 }
 
 PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
@@ -218,11 +242,12 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    Irp->UserIosb = IoStatusBlock;
    if (DeviceObject->Flags&DO_BUFFERED_IO)
      {
-	DPRINT("Doing buffer i/o\n",0);
+	DPRINT("Doing buffer i/o\n");
 	Irp->AssociatedIrp.SystemBuffer = (PVOID)
 	                   ExAllocatePool(NonPagedPool,Length);
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
+	     IoFreeIrp(Irp);
 	     return(NULL);
 	  }
         if (MajorFunction == IRP_MJ_WRITE)
@@ -232,7 +257,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
      }
    if (DeviceObject->Flags&DO_DIRECT_IO)
      {
-	DPRINT("Doing direct i/o\n",0);
+	DPRINT("Doing direct i/o\n");
 	
 	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
         if (MajorFunction == IRP_MJ_READ)

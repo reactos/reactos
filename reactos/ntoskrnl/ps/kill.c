@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

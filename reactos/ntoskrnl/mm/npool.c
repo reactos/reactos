@@ -28,6 +28,11 @@
 #include <ddk/ntddk.h>
 
 
+#if 0
+#define VALIDATE_POOL validate_kernel_pool()
+#else
+#define VALIDATE_POOL
+#endif
 
 /* TYPES *******************************************************************/
 
@@ -69,6 +74,9 @@ unsigned int nr_used_blocks = 0;
 static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
 
 static unsigned int pool_free_mem = 0;
+
+unsigned int EiFreeNonPagedPool = 0;
+unsigned int EiUsedNonPagedPool = 0;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -430,6 +438,9 @@ static block_hdr* grow_kernel_pool(unsigned int size)
 	free_blk->magic = BLOCK_HDR_MAGIC;
 	free_blk->size = (nr_pages * PAGESIZE) -((sizeof(block_hdr)*2) + size);
 	add_to_free_list(free_blk);
+	
+	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->size;
+	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->size;
      }
    else
      {
@@ -437,9 +448,11 @@ static block_hdr* grow_kernel_pool(unsigned int size)
 	used_blk->magic = BLOCK_HDR_MAGIC;
 	used_blk->size = nr_pages * PAGESIZE;
 	add_to_used_list(used_blk);
+	
+	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->size;
      }
    
-   validate_kernel_pool();
+   VALIDATE_POOL;
    return(used_blk);
 }
 
@@ -458,12 +471,16 @@ static void* take_block(block_hdr* current, unsigned int size)
     */
    if (current->size > (1 + size + sizeof(block_hdr)))
      {
+	block_hdr* free_blk;
+	
+	EiFreeNonPagedPool = EiFreeNonPagedPool - current->size;
+	
 	/*
 	 * Replace the bigger block with a smaller block in the
 	 * same position in the list
 	 */
-	block_hdr* free_blk = (block_hdr *)(((int)current)
-					    + sizeof(block_hdr) + size);
+        free_blk = (block_hdr *)(((int)current)
+				 + sizeof(block_hdr) + size);		
 	free_blk->magic = BLOCK_HDR_MAGIC;
 	free_blk->next = current->next;
 	free_blk->previous = current->previous;
@@ -484,7 +501,10 @@ static void* take_block(block_hdr* current, unsigned int size)
 	current->size=size;
 	add_to_used_list(current);
 	
-	validate_kernel_pool();
+	EiUsedNonPagedPool = EiUsedNonPagedPool + current->size;
+	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->size;
+	
+	VALIDATE_POOL;
 	return(block_to_address(current));
      }
    
@@ -494,7 +514,10 @@ static void* take_block(block_hdr* current, unsigned int size)
    remove_from_free_list(current);
    add_to_used_list(current);
    
-   validate_kernel_pool();
+   EiFreeNonPagedPool = EiFreeNonPagedPool - current->size;
+   EiUsedNonPagedPool = EiUsedNonPagedPool + current->size;
+   
+   VALIDATE_POOL;
    return(block_to_address(current));
 }
 
@@ -508,14 +531,28 @@ asmlinkage VOID ExFreePool(PVOID block)
    block_hdr* blk=address_to_block(block);
    OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
    
-   validate_kernel_pool();
+//   DbgPrint("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
+//	    ((PULONG)&block)[-1]);
+   
+   VALIDATE_POOL;
+   
+   if (blk->magic != BLOCK_HDR_MAGIC)
+     {
+	DbgPrint("ExFreePool of non-allocated address\n");
+	for(;;);
+	return;
+     }
+   
    /*
     * Please don't change the order
     */
    remove_from_used_list(blk);
    add_to_free_list(blk);
    
-   validate_kernel_pool();
+   EiUsedNonPagedPool = EiUsedNonPagedPool - blk->size;
+   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->size;   
+   
+   VALIDATE_POOL;
 }
 
 PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
@@ -525,8 +562,8 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
    
 //   DbgPrint("Blocks on free list %d\n",nr_free_blocks);
 //   DbgPrint("Blocks on used list %d\n",nr_used_blocks);
-   OLD_DPRINT("ExAllocateNonPagedPool(type %d, size %d)\n",type,size);
-   validate_kernel_pool();
+//   OLD_DPRINT("ExAllocateNonPagedPool(type %d, size %d)\n",type,size);
+   VALIDATE_POOL;
    
    /*
     * accomodate this useful idiom

@@ -16,28 +16,48 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS
-STDCALL
-NtQueryInformationToken(  
-	IN HANDLE TokenHandle,     
+NTSTATUS STDCALL ZwQueryInformationToken(IN HANDLE TokenHandle,     
 	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
 	OUT PVOID TokenInformation,  
   	IN ULONG TokenInformationLength,
-  	OUT PULONG ReturnLength       
-	)
+  	OUT PULONG ReturnLength)
 {
+   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtQuerySecurityObject(
-	IN HANDLE Object,
-	IN CINT SecurityObjectInformationClass,
-	OUT PVOID SecurityObjectInformation,
-	IN ULONG Length,
-	OUT PULONG ReturnLength
-	)
+NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,     
+	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+	OUT PVOID TokenInformation,  
+  	IN ULONG TokenInformationLength,
+  	OUT PULONG ReturnLength)
 {
+   return(ZwQueryInformationToken(TokenHandle,
+				  TokenInformationClass,
+				  TokenInformation,
+				  TokenInformationLength,
+				  ReturnLength));
+}
+
+NTSTATUS STDCALL ZwQuerySecurityObject(IN HANDLE Object,
+				       IN CINT SecurityObjectInformationClass,
+				       OUT PVOID SecurityObjectInformation,
+				       IN ULONG Length,
+				       OUT PULONG ReturnLength)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtQuerySecurityObject(IN HANDLE Object,
+				       IN CINT SecurityObjectInformationClass,
+				       OUT PVOID SecurityObjectInformation,
+				       IN ULONG Length,
+				       OUT PULONG ReturnLength)
+{
+   return(ZwQuerySecurityObject(Object,
+				SecurityObjectInformationClass,
+				SecurityObjectInformation,
+				Length,
+				ReturnLength));
 }
 
 NTSTATUS

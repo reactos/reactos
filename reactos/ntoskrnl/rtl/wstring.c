@@ -51,8 +51,29 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-int 
-wcscmp(const wchar_t *cs, const wchar_t *ct)
+wchar_t towupper(wchar_t w)
+{
+   if (w < L'A')
+     {
+	return(w+'A');
+     }
+   else     
+     {
+	return(w);
+     }
+}
+
+int wcsicmp(const wchar_t* cs, const wchar_t* ct)
+{
+   while (*cs != '\0' && *ct != '\0' && towupper(*cs) == towupper(*ct))
+     {
+	cs++;
+	ct++;
+     }
+   return *cs - *ct;
+}
+
+int wcscmp(const wchar_t *cs, const wchar_t *ct)
 {
   while (*cs != '\0' && *ct != '\0' && *cs == *ct)
     {
@@ -62,19 +83,17 @@ wcscmp(const wchar_t *cs, const wchar_t *ct)
   return *cs - *ct;
 }
 
-wchar_t *
-wcscpy(wchar_t *str1, const wchar_t *str2)
+wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 {
-   while ( (*str1)==(*str2) )
+   wchar_t* s = str1;
+   DbgPrint("wcscpy(str1 %w, str2 %w)\n",str1,str2);
+   while ((*str2)!=0)
      {
-	str1++;
+	*s = *str2;
+	s++;
 	str2++;
-	if ( (*str1)==((wchar_t)0) && (*str1)==((wchar_t)0) )
-	  {
-	     return(0);
-	  }
      }
-   return(wchar_t *)( (*str1) - (*str2) );
+   return(str1);
 }
 
 #ifdef i386
@@ -117,7 +136,7 @@ UNIMPLEMENTED;
 
 #endif
 
-#ifdef i386
+#if 0
 
 int 
 wcsicmp(const wchar_t *cs,const wchar_t *ct)
@@ -158,7 +177,7 @@ wcsicmp(const wchar_t *cs,const wchar_t *ct)
   return __res;
 }
 
-#else
+
 
 int 
 wcsicmp(const wchar_t *cs,const wchar_t *ct)

@@ -44,7 +44,12 @@ PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
  *          NULL on failure
  */
 {
-   return(ExAllocatePoolWithTag(PoolType,NumberOfBytes,TAG_NONE));
+   PVOID Block;
+//   DbgPrint("ExAllocatePool(NumberOfBytes %d) caller %x\n",
+//	    NumberOfBytes,((PULONG)&PoolType)[-1]);
+   Block = ExAllocatePoolWithTag(PoolType,NumberOfBytes,TAG_NONE);
+//   DbgPrint("ExAllocatePool() = %x\n",Block);
+   return(Block);
 }
 
 PVOID ExAllocatePoolWithTag(ULONG type, ULONG size, ULONG Tag)

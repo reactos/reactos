@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/dir.c
  * PURPOSE:         Directory functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -17,20 +17,18 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL 
-NtQueryDirectoryFile(
-	IN HANDLE FileHandle,
-	IN HANDLE Event OPTIONAL,
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-	IN PVOID ApcContext OPTIONAL,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID FileInformation,
-	IN ULONG Length,
-	IN FILE_INFORMATION_CLASS FileInformationClass,
-	IN BOOLEAN ReturnSingleEntry,
-	IN PUNICODE_STRING FileName OPTIONAL,
-	IN BOOLEAN RestartScan
-	)
+NTSTATUS STDCALL NtQueryDirectoryFile(IN HANDLE FileHandle,
+				      IN HANDLE Event OPTIONAL,
+				      IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+				      IN PVOID ApcContext OPTIONAL,
+				      OUT PIO_STATUS_BLOCK IoStatusBlock,
+				      OUT PVOID FileInformation,
+				      IN ULONG Length,
+				      IN FILE_INFORMATION_CLASS 
+				                       FileInformationClass,
+				      IN BOOLEAN ReturnSingleEntry,
+				      IN PUNICODE_STRING FileName OPTIONAL,
+				      IN BOOLEAN RestartScan)
 {
    return(ZwQueryDirectoryFile(FileHandle,
 			       Event,
@@ -133,6 +131,8 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    NTSTATUS Status;
    KEVENT Event;
    PIO_STACK_LOCATION IoStack;
+   BOOLEAN IndexSpecified;
+   ULONG Idx;
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,
@@ -156,20 +156,71 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    Irp->UserEvent = &Event;
    
    IoStack = IoGetNextIrpStackLocation(Irp);
+
    
+   IoStack->Flags = 0;
+   if (RestartScan)
+     {
+	IoStack->Flags = IoStack->Flags | SL_RESTART_SCAN;
+     }
+   if (ReturnSingleEntry)
+     {
+	IoStack->Flags = IoStack->Flags | SL_RETURN_SINGLE_ENTRY;
+     }
+   
+   switch (FileInformationClass)
+     {
+      case FileNameInformation:
+	Idx = ((PFILE_NAMES_INFORMATION)FileInformation)->FileIndex;
+	if (Idx != 0)
+	  {
+	     IoStack->Parameters.QueryDirectory.FileIndex = Idx;
+	     IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
+	  }
+	break;
+	
+      case FileDirectoryInformation:
+	Idx = ((PFILE_DIRECTORY_INFORMATION)FileInformation)->FileIndex;
+	if (Idx != 0)
+	  {
+	     IoStack->Parameters.QueryDirectory.FileIndex = Idx;
+	     IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
+	  }
+	break;
+	
+      case FileFullDirectoryInformation:
+	Idx = ((PFILE_FULL_DIR_INFORMATION)FileInformation)->FileIndex;
+	if (Idx != 0)
+	  {
+	     IoStack->Parameters.QueryDirectory.FileIndex = Idx;
+	     IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
+	  }
+	break;
+	
+      case FileBothDirectoryInformation:
+	Idx = ((PFILE_BOTH_DIR_INFORMATION)FileInformation)->FileIndex;
+	if (Idx != 0)
+	  {
+	     IoStack->Parameters.QueryDirectory.FileIndex = Idx;
+	     IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
+	  }
+	break;
+	
+      default:
+	return(STATUS_UNSUCCESSFUL);
+     }
+      
    IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
    IoStack->MinorFunction = IRP_MN_QUERY_DIRECTORY;
-   IoStack->Flags = 0;
+   
    IoStack->Control = 0;
    IoStack->DeviceObject = DeviceObject;
    IoStack->FileObject = FileObject;
    
    IoStack->Parameters.QueryDirectory.FileInformationClass = 
      FileInformationClass;
-   IoStack->Parameters.QueryDirectory.ReturnSingleEntry = 
-     ReturnSingleEntry;
    IoStack->Parameters.QueryDirectory.FileName = FileName;
-   IoStack->Parameters.QueryDirectory.RestartScan = RestartScan;
+   IoStack->Parameters.QueryDirectory.Length = Length;
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))

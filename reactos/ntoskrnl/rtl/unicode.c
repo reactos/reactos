@@ -531,4 +531,4 @@ VOID RtlUpcaseString(IN OUT PSTRING DestinationString,
 
         DestinationString->Buffer-=len;
         SourceString->Buffer-=len;
-};
+}
