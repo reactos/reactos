@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.7 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: desktopbg.c,v 1.8 2004/05/08 19:35:32 weiden Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -53,11 +53,11 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
   switch(Msg)
     {
-      case WM_NCCREATE:
-        Result = (LRESULT) TRUE;
-        break;
-      case WM_CREATE:
-        Result = 0;
+      case WM_ERASEBKGND:
+        {
+          PaintDesktop((HDC)wParam);
+          Result = 1;
+        }
         break;
       case WM_PAINT:
         {
@@ -68,11 +68,14 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           Result = 0;
         }
         break;
-      case WM_ERASEBKGND:
-        {
-          PaintDesktop((HDC)wParam);
-          Result = 1;
-        }
+      case WM_SETCURSOR:
+	Result = (LRESULT) SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+        break;
+      case WM_NCCREATE:
+        Result = (LRESULT) TRUE;
+        break;
+      case WM_CREATE:
+        Result = 0;
         break;
       case PM_SHOW_DESKTOP:
         Result = ! SetWindowPos(Wnd,

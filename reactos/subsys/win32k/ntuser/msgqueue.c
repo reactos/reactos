@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.92 2004/04/29 22:42:51 weiden Exp $
+/* $Id: msgqueue.c,v 1.93 2004/05/08 19:35:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -257,6 +257,11 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
     else
     {
       WinPosWindowFromPoint(ScopeWin, NULL, &Message->Msg.pt, &Window);
+      if(Window == NULL)
+      {
+        Window = ScopeWin;
+        IntReferenceWindowObject(Window);
+      }
     }
   }
   else
