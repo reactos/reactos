@@ -6,7 +6,7 @@ TARGET_NAME = usbcore
 
 TARGET_DDKLIBS = ntoskrnl.a
 
-TARGET_CFLAGS = -Wall -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_CFLAGS = -Wall -I$(PATH_TO_TOP)/ntoskrnl/include -DDEBUG_MODE
 
 TARGET_OBJECTS = \
   message.o hcd.o hcd-pci.o hub.o usb.o config.o urb.o \

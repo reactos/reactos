@@ -1042,7 +1042,7 @@ static void set_device_description (struct usb_device *dev)
 			 "USB device %04x:%04x (%s)",
 			 vendor_id, product_id, mfgr_str);
 	}
-	//usbprintk("USB connected: %s\n",dev->dev.name);
+	usbprintk("USB connected: %s\n",dev->dev.name);
 	kfree(buf);
 }
 
@@ -1227,6 +1227,7 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 				"usb-%s-%s interface %d",
 				dev->bus->bus_name, dev->devpath,
 				desc->bInterfaceNumber);
+			DPRINT1("usb_new_device: %s\n", interface->dev.name);
 		}
 		dev_dbg (&dev->dev, "%s - registering interface %s\n", __FUNCTION__, interface->dev.bus_id);
 		device_add (&interface->dev);
@@ -1510,7 +1511,7 @@ int STDCALL usb_disabled(void)
 /*
  * Init
  */
-static int __init usb_init(void)
+int STDCALL __init usb_init(void)
 {
 	if (nousb) {
 		info("USB support disabled\n");
@@ -1530,7 +1531,7 @@ static int __init usb_init(void)
 /*
  * Cleanup
  */
-static void __exit usb_exit(void)
+void STDCALL __exit usb_exit(void)
 {
 	/* This will matter if shutdown/reboot does exitcalls. */
 	if (nousb)

@@ -205,6 +205,7 @@ struct pci_dev {
 	int base[4];
 	int flags[4];
 	void * data;
+	void * dev_ext; // link to Windows DeviceExtension
 };
 
 struct pci_bus {
@@ -475,12 +476,19 @@ void my_wait_for_completion(struct completion*);
 #define daemonize(a)         do {} while(0)
 #define allow_signal(a)      do {} while(0)
 #define wait_event_interruptible(x,y) do {} while(0)
+
+#define interruptible_sleep_on(a) my_interruptible_sleep_on(a)
+void my_interruptible_sleep_on(int a);
+
 #define flush_scheduled_work() do {} while(0)
 #define refrigerator(x)        do {} while(0)
 #define signal_pending(x)      1  // fall through threads
 #define complete_and_exit(a,b) return 0
 
-#define kill_proc(a,b,c)     0
+//#define kill_proc(a,b,c)     0
+#define kill_proc(a,b,c) my_kill_proc(a, b, c);
+int my_kill_proc(int pid, int signal, int unk);
+
 #define yield() do {} while(0)
 #define cpu_relax() do {} while(0)
 
@@ -528,7 +536,7 @@ void my_wait_for_completion(struct completion*);
 /*------------------------------------------------------------------------*/ 
 #ifdef DEBUG_MODE
 #define dev_printk(lvl,x,f,arg...) printk(f, ## arg)
-#define dev_dbg(x,f,arg...) do {} while (0) //printk(f, ## arg)
+#define dev_dbg(x,f,arg...) printk(f, ## arg)
 #define dev_info(x,f,arg...) printk(f,## arg)
 #define dev_warn(x,f,arg...) printk(f,## arg)
 #define dev_err(x,f,arg...) printk(f,## arg)
@@ -681,7 +689,7 @@ static void __inline__ complete(struct completion *p)
 }
 
 #define kernel_thread(a,b,c) my_kernel_thread(a,b,c)
-int my_kernel_thread(int (*handler)(void*), void* parm, int flags);
+int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags);
 
 /*------------------------------------------------------------------------*/ 
 /* PCI, simple and inlined... */
@@ -714,7 +722,7 @@ struct my_irqs {
 
 void handle_irqs(int irq);
 void inc_jiffies(int);
-void init_wrapper(void);
+void init_wrapper(struct pci_dev *pci_dev);
 void do_all_timers(void);
 
 #define __KERNEL_DS   0x18

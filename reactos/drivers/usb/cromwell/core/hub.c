@@ -1148,7 +1148,12 @@ static int hub_thread(void *__hub)
 	do {
 		
 		hub_events();
-		wait_event_interruptible(khubd_wait, !list_empty(&hub_event_list)); 
+
+		//FIXME: Correct this
+		//wait_event_interruptible(khubd_wait, !list_empty(&hub_event_list)); // interruptable_sleep_on analog - below
+		/*while (!list_empty(&hub_event_list)) {
+			interruptible_sleep_on(&khubd_wait);
+		}*/
 
 		if (current->flags & PF_FREEZE)
 			refrigerator(PF_IOTHREAD);

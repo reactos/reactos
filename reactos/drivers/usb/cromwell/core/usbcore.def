@@ -2,6 +2,8 @@
 ; Exports definition file for usbcore.sys
 ;
 EXPORTS
+usb_init@0
+usb_exit@0
 usb_init_urb@4
 usb_alloc_urb@8
 usb_free_urb@4

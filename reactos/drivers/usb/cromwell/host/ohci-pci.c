@@ -38,6 +38,8 @@ ohci_pci_start (struct usb_hcd *hcd)
 	struct ohci_hcd	*ohci = hcd_to_ohci (hcd);
 	int		ret;
 
+	DPRINT("ohci_pci_start()\n");
+
 	if (hcd->pdev) {
 		ohci->hcca = pci_alloc_consistent (hcd->pdev,
 				sizeof *ohci->hcca, &ohci->hcca_dma);
@@ -86,23 +88,27 @@ ohci_pci_start (struct usb_hcd *hcd)
 	
 	}
 
-        memset (ohci->hcca, 0, sizeof (struct ohci_hcca));
+    memset (ohci->hcca, 0, sizeof (struct ohci_hcca));
 	if ((ret = ohci_mem_init (ohci)) < 0) {
 		ohci_stop (hcd);
 		return ret;
 	}
 	ohci->regs = hcd->regs;
 
+    DPRINT("Controller memory init done\n");
+
 	if (hc_reset (ohci) < 0) {
 		ohci_stop (hcd);
 		return -ENODEV;
 	}
+	DPRINT("Controller reset done\n");
 
 	if (hc_start (ohci) < 0) {
 		ohci_err (ohci, "can't start\n");
 		ohci_stop (hcd);
 		return -EBUSY;
 	}
+	DPRINT("Controller start done\n");
 
 #ifdef	DEBUG
 	ohci_dump (ohci, 1);
@@ -352,7 +358,7 @@ static const struct hc_driver ohci_pci_hc_driver = {
 
 /*-------------------------------------------------------------------------*/
 
-static const struct pci_device_id __devinitdata pci_ids [] = { {
+const struct pci_device_id __devinitdata pci_ids [] = { {
 
 	/* handle any USB OHCI controller */
 	.class =	(PCI_CLASS_SERIAL_USB << 8) | 0x10,
@@ -370,7 +376,7 @@ static const struct pci_device_id __devinitdata pci_ids [] = { {
 MODULE_DEVICE_TABLE (pci, pci_ids);
 
 /* pci driver glue; this is a "new style" PCI driver module */
-static struct pci_driver ohci_pci_driver = {
+struct pci_driver ohci_pci_driver = {
 	.name =		(char *) hcd_name,
 	.id_table =	pci_ids,
 
@@ -384,22 +390,23 @@ static struct pci_driver ohci_pci_driver = {
 };
 
  
-static int __init ohci_hcd_pci_init (void) 
+int ohci_hcd_pci_init (void) 
 {
 	printk (KERN_DEBUG "%s: " DRIVER_INFO " (PCI)\n", hcd_name);
 	if (usb_disabled())
 		return -ENODEV;
 
-	printk (KERN_DEBUG "%s: block sizes: ed %Zd td %Zd\n", hcd_name,
-		sizeof (struct ed), sizeof (struct td));
+	// causes page fault in reactos
+	//printk (KERN_DEBUG "%s: block sizes: ed %Zd td %Zd\n", hcd_name,
+	//	sizeof (struct ed), sizeof (struct td));
 	return pci_module_init (&ohci_pci_driver);
 }
-module_init (ohci_hcd_pci_init);
+/*module_init (ohci_hcd_pci_init);*/
 
 /*-------------------------------------------------------------------------*/
 
-static void __exit ohci_hcd_pci_cleanup (void) 
+void ohci_hcd_pci_cleanup (void) 
 {	
 	pci_unregister_driver (&ohci_pci_driver);
 }
-module_exit (ohci_hcd_pci_cleanup);
+/*module_exit (ohci_hcd_pci_cleanup);*/

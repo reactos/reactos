@@ -47,7 +47,7 @@ static int drvs_num;
  * Helper functions for top-level system
  */
 /*------------------------------------------------------------------------*/ 
-void init_wrapper(void)
+void init_wrapper(struct pci_dev *probe_dev)
 {
 	int n;
 	for(n=0;n<MAX_TIMERS;n++)
@@ -58,7 +58,7 @@ void init_wrapper(void)
 	my_jiffies=0;
 	num_irqs=0;
 	my_current=&act_cur;
-	pci_probe_dev=NULL;
+	pci_probe_dev=probe_dev;
 
 	for(n=0;n<MAX_IRQS;n++)
 	{
@@ -108,12 +108,38 @@ void do_all_timers(void)
 }
 /*------------------------------------------------------------------------*/ 
 // Purpose: Remember thread procedure and data in global var
-int my_kernel_thread(int (*handler)(void*), void* parm, int flags)
+// ReactOS Purpose: Create real kernel thread
+int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
 {
-	thread_handler=handler;
-	thread_parm=parm;
-	return 42; // PID :-)
+	HANDLE hThread;
+	//thread_handler=handler;
+	//thread_parm=parm;
+	//return 42; // PID :-)
+	
+	ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+	PsCreateSystemThread(&hThread,
+			     THREAD_ALL_ACCESS,
+			     NULL,
+			     NULL,
+			     NULL,
+			     (PKSTART_ROUTINE)handler,
+				 parm);
+
+    return (int)hThread; // FIXME: Correct?
 }
+
+// Kill the process
+int my_kill_proc(int pid, int signal, int unk)
+{
+	HANDLE hThread;
+
+	hThread = (HANDLE)pid;
+	ZwClose(hThread);
+
+	return 0;
+}
+
 /*------------------------------------------------------------------------*/ 
 /* Device management
  * As simple as possible, but as complete as necessary ...
