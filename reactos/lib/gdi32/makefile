@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.24 2003/02/02 19:24:15 hyperion Exp $
+# $Id: makefile,v 1.25 2003/03/20 03:02:07 mtempel Exp $
 
 PATH_TO_TOP = ../..
 
@@ -30,7 +30,7 @@ MAIN_OBJECTS = main/dllmain.o
 
 MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
 
-OBJECTS_OBJECTS = objects/dc.o objects/line.o objects/pen.o objects/bitblt.o objects/text.o objects/region.o objects/brush.o
+OBJECTS_OBJECTS = objects/dc.o objects/line.o objects/pen.o objects/bitblt.o objects/text.o objects/region.o objects/brush.o objects/fillshap.o
 
 OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
 
