@@ -1,1 +1,23 @@
-all: beep.o
+#
+#
+#
+
+OBJECTS = beep.o ../../../ntoskrnl/ntoskrnl.a
+
+all: beep.sys
+
+.PHONY: all
+
+beep.sys: $(OBJECTS)
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
+	      -Wl,--base-file,base.tmp $(OBJECTS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname beep.sys --base-file base.tmp \
+		   --output-exp temp.exp
+	- $(RM) base.tmp
+	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
+	      -specs=../../svc_specs -mdll -o beep.sys $(OBJECTS) -Wl,temp.exp
+	- $(RM) temp.exp
+
+
