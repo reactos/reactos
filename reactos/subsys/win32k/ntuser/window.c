@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.34 2003/03/18 09:16:44 gvg Exp $
+/* $Id: window.c,v 1.35 2003/03/20 10:09:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -489,6 +489,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		 &WindowObject->SiblingListEntry);
   InitializeListHead(&WindowObject->ChildrenListHead);
   InitializeListHead(&WindowObject->PropListHead);
+  ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
   RtlFreeUnicodeString(&WindowName);
