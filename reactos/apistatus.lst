@@ -29,4 +29,5 @@ tdi.sys reactos/drivers/net/tdi
 class2.sys reactos/drivers/storage/class2
 scsiport.sys reactos/drivers/storage/scsiport
 ntoskrnl.exe reactos/ntoskrnl
+ntoskrnl.exe reactos/lib/rtl
 win32k.sys reactos/subsys/win32k
