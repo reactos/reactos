@@ -32,15 +32,15 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
   switch(BitsPerFormat(Surface->iBitmapFormat))
   {
     case 4:
-      DIB_PutPixel = DIB_4BPP_PutPixel;
-      DIB_HLine    = DIB_4BPP_HLine;
-      DIB_VLine    = DIB_4BPP_VLine;
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
+      DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;
+      DIB_VLine    = (PFN_DIB_VLine)DIB_4BPP_VLine;
       break;
 
     case 24:
-      DIB_PutPixel = DIB_24BPP_PutPixel;
-      DIB_HLine    = DIB_24BPP_HLine;
-      DIB_VLine    = DIB_24BPP_VLine;
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
+      DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
+      DIB_VLine    = (PFN_DIB_VLine)DIB_24BPP_VLine;
       break;
 
     default:
@@ -52,7 +52,6 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
   }
 
   // FIXME: Implement clipping
-
   x=x1;
   y=y1;
   deltax=x2-x1;
@@ -120,5 +119,6 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
   }
 
   MouseSafetyOnDrawEnd(Surface, SurfGDI);
+
   return TRUE;
 }

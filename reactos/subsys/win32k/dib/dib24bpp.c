@@ -8,36 +8,36 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-VOID DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, RGBTRIPLE c)
+PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
 
-  *addr = c;
+  *(PULONG)(addr) = c;
 }
 
-RGBTRIPLE DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+PFN_DIB_GetPixel DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
 
-  return *addr;
+  return (PFN_DIB_GetPixel)(*(PULONG)(addr));
 }
 
-VOID DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, RGBTRIPLE c)
+PFN_DIB_HLine DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x1;
   LONG cx = x1;
 
   while(cx <= x2) {
-    *addr = c;
+    *(PULONG)(addr) = c;
     ++addr;
     ++cx;
   }
 }
 
-VOID DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, RGBTRIPLE c)
+PFN_DIB_VLine DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y1 * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
@@ -45,7 +45,7 @@ VOID DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, RGBTRIPLE c)
 
   byteaddr = (PBYTE)addr;
   while(y1++ <= y2) {
-    *addr = c;
+    *(PULONG)(addr) = c;
 
     byteaddr += lDelta;
     addr = (PRGBTRIPLE)byteaddr;
