@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.42 2003/06/17 10:39:43 gvg Exp $
+/* $Id: kdebug.c,v 1.43 2003/07/10 15:50:09 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -353,6 +353,9 @@ KdpPrintString(PANSI_STRING String)
 
 /* NTOSKRNL.KdPollBreakIn */
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KdPollBreakIn(VOID)
 {
@@ -361,6 +364,9 @@ KdPollBreakIn(VOID)
   return KdpBreakPending;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeEnterKernelDebugger(VOID)
 {
@@ -370,6 +376,9 @@ KeEnterKernelDebugger(VOID)
     __asm__("hlt\n\t");
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KdSystemDebugControl(ULONG Code)
 {
