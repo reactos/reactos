@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.1 2001/08/21 20:18:27 chorns Exp $
+/* $Id: pci.c,v 1.2 2001/11/07 02:27:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -449,46 +449,61 @@ GetBusConfigType(VOID)
 }
 
 
-VOID HalpInitPciBus (VOID)
+static ULONG STDCALL
+HalpGetPciInterruptVector(PVOID BusHandler,
+			  ULONG BusNumber,
+			  ULONG BusInterruptLevel,
+			  ULONG BusInterruptVector,
+			  PKIRQL Irql,
+			  PKAFFINITY Affinity)
 {
-   PBUS_HANDLER BusHandler;
+  *Irql = HIGH_LEVEL - BusInterruptVector;
+  *Affinity = 0xFFFFFFFF;
+  return BusInterruptVector;
+}
 
-   DPRINT("HalpInitPciBus() called.\n");
 
-   BusConfigType = GetBusConfigType();
-   if (BusConfigType == 0)
-     return;
+VOID
+HalpInitPciBus(VOID)
+{
+  PBUS_HANDLER BusHandler;
 
-   DPRINT("Bus configuration %lu used\n", BusConfigType);
+  DPRINT("HalpInitPciBus() called.\n");
 
-   /* pci bus (bus 0) handler */
-   BusHandler = HalpAllocateBusHandler(PCIBus,
-				       PCIConfiguration,
-				       0);
-   BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
-   BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
-//	BusHandler->GetInterruptVector =
-//		(pGetInterruptVector)HalpGetPciInterruptVector;
+  BusConfigType = GetBusConfigType();
+  if (BusConfigType == 0)
+    return;
+
+  DPRINT("Bus configuration %lu used\n", BusConfigType);
+
+  /* pci bus (bus 0) handler */
+  BusHandler = HalpAllocateBusHandler(PCIBus,
+				      PCIConfiguration,
+				      0);
+  BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
+  BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
+  BusHandler->GetInterruptVector =
+    (pGetInterruptVector)HalpGetPciInterruptVector;
 //	BusHandler->AdjustResourceList =
 //		(pGetSetBusData)HalpAdjustPciResourceList;
 //	BusHandler->AssignSlotResources =
 //		(pGetSetBusData)HalpAssignPciSlotResources;
 
 
-   /* agp bus (bus 1) handler */
-   BusHandler = HalpAllocateBusHandler(PCIBus,
-				       PCIConfiguration,
-				       1);
-   BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
-   BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
-//	BusHandler->GetInterruptVector =
-//		(pGetInterruptVector)HalpGetPciInterruptVector;
+  /* agp bus (bus 1) handler */
+  BusHandler = HalpAllocateBusHandler(PCIBus,
+				      PCIConfiguration,
+				      1);
+  BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
+  BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
+  BusHandler->GetInterruptVector =
+    (pGetInterruptVector)HalpGetPciInterruptVector;
 //	BusHandler->AdjustResourceList =
 //		(pGetSetBusData)HalpAdjustPciResourceList;
 //	BusHandler->AssignSlotResources =
 //		(pGetSetBusData)HalpAssignPciSlotResources;
 
-   DPRINT("HalpInitPciBus() finished.\n");
+  DPRINT("HalpInitPciBus() finished.\n");
 }
 
 /* EOF */
