@@ -13,7 +13,6 @@
 extern ULONG TCP_IPIdentification;
 extern LIST_ENTRY SleepingThreadsList;
 extern FAST_MUTEX SleepingThreadsLock;
-extern RECURSIVE_MUTEX TcpMutex;
 
 int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
