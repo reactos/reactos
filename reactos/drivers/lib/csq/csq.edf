@@ -1,0 +1,10 @@
+LIBRARY csq.lib
+
+EXPORTS
+IoCsqInitialize=IoCsqInitialize@28
+IoCsqInitializeEx=IoCsqInitializeEx@28
+IoCsqInsertIrp=IoCsqInsertIrp@12
+IoCsqInsertIrpEx=IoCsqInsertIrpEx@16
+IoCsqRemoveIrp=IoCsqRemoveIrp@8
+IoCsqRemoveNextIrp=IoCsqRemoveNextIrp@8
+
