@@ -116,6 +116,12 @@ VOID
 SetStatusText(char* fmt, ...);
 
 VOID
+InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+
+VOID
+NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+
+VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID

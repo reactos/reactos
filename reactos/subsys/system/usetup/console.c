@@ -822,6 +822,42 @@ SetStatusText(char* fmt, ...)
 
 
 VOID
+InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
+{
+  COORD coPos;
+  ULONG Written;
+
+  for (coPos.Y = y; coPos.Y < y + row; coPos.Y++)
+    {
+      coPos.X = x;
+
+      FillConsoleOutputAttribute(0x71,
+				 col,
+				 coPos,
+				 &Written);
+    }
+}
+
+
+VOID
+NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
+{
+  COORD coPos;
+  ULONG Written;
+
+  for (coPos.Y = y; coPos.Y < y + row; coPos.Y++)
+    {
+      coPos.X = x;
+
+      FillConsoleOutputAttribute(0x17,
+				 col,
+				 coPos,
+				 &Written);
+    }
+}
+
+
+VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text)
 {
   COORD coPos;

@@ -56,6 +56,13 @@ typedef enum _PAGE_NUMBER
   INTRO_PAGE,
   INSTALL_INTRO_PAGE,
 
+  DEVICE_SETTINGS_PAGE,
+  COMPUTER_SETTINGS_PAGE,
+  DISPLAY_SETTINGS_PAGE,
+  KEYBOARD_SETTINGS_PAGE,
+  LAYOUT_SETTINGS_PAGE,
+  POINTER_SETTINGS_PAGE,
+
   SELECT_PARTITION_PAGE,
   CREATE_PARTITION_PAGE,
   DELETE_PARTITION_PAGE,
@@ -391,12 +398,12 @@ ConfirmQuit(PINPUT_RECORD Ir)
 	}
     }
 
-  return(Result);
+  return Result;
 }
 
 
 VOID
-CheckUnattendedSetup()
+CheckUnattendedSetup(VOID)
 {
   WCHAR UnattendInfPath[MAX_PATH];
   UNICODE_STRING FileName;
@@ -700,7 +707,7 @@ IntroPage(PINPUT_RECORD Ir)
       return INSTALL_INTRO_PAGE;
     }
 
-  while(TRUE)
+  while (TRUE)
     {
       ConInKey(Ir);
 
@@ -831,16 +838,252 @@ InstallIntroPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
+	    return QUIT_PAGE;
 	  break;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(SELECT_PARTITION_PAGE);
+	  return DEVICE_SETTINGS_PAGE;
 	}
     }
 
-  return(INSTALL_INTRO_PAGE);
+  return INSTALL_INTRO_PAGE;
+}
+
+
+static PAGE_NUMBER
+DeviceSettingsPage(PINPUT_RECORD Ir)
+{
+  static ULONG Line = 17;
+
+  SetTextXY(6, 8, "The list below shows the current device settings.");
+
+  SetTextXY(8, 11, "       Computer:");
+  SetTextXY(8, 12, "        Display:");
+  SetTextXY(8, 13, "       Keyboard:");
+  SetTextXY(8, 14, "Keyboard layout:");
+  SetTextXY(8, 15, " Pointer device:");
+
+  SetTextXY(8, 17, "         Accept:");
+
+
+  SetTextXY(25, 11, "Standard-PC");
+  SetTextXY(25, 12, "Automatic detection");
+  SetTextXY(25, 13, "XT-, AT- or extended keyboard (83-105 keys)");
+  SetTextXY(25, 14, "English (USA)");
+  SetTextXY(25, 15, "PS/2 (Mouse port) mouse");
+
+  SetTextXY(25, 17, "Accept these device setings");
+  InvertTextXY (24, Line, 48, 1);
+
+
+  SetTextXY(6, 20, "You can change the hardware settings by pressing the UP or DOWN keys");
+  SetTextXY(6, 21, "to select an entry. Then press the ENTER key to select alternative");
+  SetTextXY(6, 22, "settings.");
+
+  SetTextXY(6, 24, "When all settings are correct, select \"Accept these device setings\"");
+  SetTextXY(6, 25, "and press ENTER.");
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  NormalTextXY (24, Line, 48, 1);
+	  if (Line == 15)
+	    Line = 17;
+	  else if (Line == 17)
+	    Line = 11;
+	  else
+	    Line++;
+	  InvertTextXY (24, Line, 48, 1);
+	}
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  NormalTextXY (24, Line, 48, 1);
+	  if (Line == 11)
+	    Line = 17;
+	  else if (Line == 17)
+	    Line = 15;
+	  else
+	    Line--;
+	  InvertTextXY (24, Line, 48, 1);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  if (Line == 11)
+	    return COMPUTER_SETTINGS_PAGE;
+	  else if (Line == 12)
+	    return DISPLAY_SETTINGS_PAGE;
+	  else if (Line == 13)
+	    return KEYBOARD_SETTINGS_PAGE;
+	  else if (Line == 14)
+	    return LAYOUT_SETTINGS_PAGE;
+	  else if (Line == 15)
+	    return POINTER_SETTINGS_PAGE;
+	  else if (Line == 17)
+	    return SELECT_PARTITION_PAGE;
+	}
+    }
+
+  return DEVICE_SETTINGS_PAGE;
+}
+
+
+static PAGE_NUMBER
+ComputerSettingsPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Computer settings are not implemented yet.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+	}
+    }
+
+  return COMPUTER_SETTINGS_PAGE;
+}
+
+
+static PAGE_NUMBER
+DisplaySettingsPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Display settings are not implemented yet.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+	}
+    }
+
+  return DISPLAY_SETTINGS_PAGE;
+}
+
+
+static PAGE_NUMBER
+KeyboardSettingsPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Keyboard settings are not implemented yet.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+	}
+    }
+
+  return DISPLAY_SETTINGS_PAGE;
+}
+
+
+static PAGE_NUMBER
+LayoutSettingsPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Keyboard layout settings are not implemented yet.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+	}
+    }
+
+  return DISPLAY_SETTINGS_PAGE;
+}
+
+
+static PAGE_NUMBER
+PointerSettingsPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(6, 8, "Pointer settings are not implemented yet.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return DEVICE_SETTINGS_PAGE;
+	}
+    }
+
+  return DISPLAY_SETTINGS_PAGE;
 }
 
 
@@ -871,7 +1114,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
       if (PartitionList == NULL)
 	{
 	  /* FIXME: show an error dialog */
-	  return(QUIT_PAGE);
+	  return QUIT_PAGE;
 	}
     }
 
@@ -3445,6 +3688,8 @@ NtProcessStartup(PPEB Peb)
   RtlInitUnicodeString(&DestinationRootPath, NULL);
   RtlInitUnicodeString(&SystemRootPath, NULL);
 
+  /* Hide the cursor */
+  SetCursorType(TRUE, FALSE);
 
   Page = START_PAGE;
   while (Page != REBOOT_PAGE)
@@ -3476,9 +3721,29 @@ NtProcessStartup(PPEB Peb)
 	    break;
 #endif
 
-#if 0
 	  case DEVICE_SETTINGS_PAGE:
-#endif
+	    Page = DeviceSettingsPage(&Ir);
+	    break;
+
+	  case COMPUTER_SETTINGS_PAGE:
+	    Page = ComputerSettingsPage(&Ir);
+	    break;
+
+	  case DISPLAY_SETTINGS_PAGE:
+	    Page = DisplaySettingsPage(&Ir);
+	    break;
+
+	  case KEYBOARD_SETTINGS_PAGE:
+	    Page = KeyboardSettingsPage(&Ir);
+	    break;
+
+	  case LAYOUT_SETTINGS_PAGE:
+	    Page = LayoutSettingsPage(&Ir);
+	    break;
+
+	  case POINTER_SETTINGS_PAGE:
+	    Page = PointerSettingsPage(&Ir);
+	    break;
 
 	  case SELECT_PARTITION_PAGE:
 	    Page = SelectPartitionPage(&Ir);
