@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.118 2004/01/16 23:29:10 gvg Exp $
+/* $Id: dc.c,v 1.119 2004/01/25 16:47:10 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -474,6 +474,8 @@ IntCreatePrimarySurface()
   BOOL GotDriver;
   BOOL DoDefault;
 
+  RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
+
   ExInitializeFastMutex(&PrimarySurface.DriverLock);
 
   /*  Open the miniport driver  */
@@ -543,9 +545,6 @@ IntCreatePrimarySurface()
   DPRINT("Display driver %S loaded\n", CurrentName);
 
   DPRINT("Building DDI Functions\n");
-
-  /*  Make sure the non existant functions are NULL  */
-  RtlZeroMemory(&PrimarySurface.DriverFunctions, sizeof(PrimarySurface.DriverFunctions));
 
   /*  Construct DDI driver function dispatch table  */
   if (! DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
@@ -652,8 +651,19 @@ IntCreatePrimarySurface()
 VOID FASTCALL
 IntDestroyPrimarySurface()
   {
+#if 0
+    PSURFOBJ SurfObj;
+    PSURFGDI SurfGDI;
+#endif
+
     DRIVER_UnreferenceDriver(L"DISPLAY");
 
+#if 0
+    DPRINT("Hiding mouse pointer\n" );
+    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
+    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+    SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0);
+#endif
     DPRINT("Reseting display\n" );
     PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
     PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);

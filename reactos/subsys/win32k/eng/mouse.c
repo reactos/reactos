@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.57 2004/01/24 19:47:05 navaraf Exp $
+/* $Id: mouse.c,v 1.58 2004/01/25 16:47:09 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -40,6 +40,9 @@
 #include "include/window.h"
 #include "include/cursoricon.h"
 #include "include/callback.h"
+#include "include/palette.h"
+#include "include/inteng.h"
+#include "include/eng.h"
 #include <include/mouse.h>
 
 #define NDEBUG
@@ -706,6 +709,12 @@ EngSetPointerShape(
       ppdev->PointerSaveSurface = NULL;
    }
 
+   if (ppdev->PointerXlateObject != NULL)
+   {
+      EngDeleteXlate(ppdev->PointerXlateObject);
+      ppdev->PointerXlateObject = NULL;
+   }
+
    /*
     * See if we are being asked to hide the pointer.
     */
@@ -722,8 +731,6 @@ EngSetPointerShape(
    ppdev->PointerAttributes.Row = y - yHot;
    ppdev->PointerAttributes.Width = psoMask->lDelta << 3;
    ppdev->PointerAttributes.Height = (psoMask->cjBits / psoMask->lDelta) >> 1;
-
-   ppdev->PointerXlateObject = pxlo;
 
    if (psoColor != NULL)
    {
@@ -754,6 +761,35 @@ EngSetPointerShape(
 
       ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,
          psoMask->lDelta, psoMask->iBitmapFormat, 0, Bits);
+   }
+
+   /*
+    * Create and XLATEOBJ that will be used for drawing masks.
+    * FIXME: We should get this in pxlo parameter!
+    */
+
+/*
+   ppdev->PointerXlateObject = pxlo;
+*/
+
+   {
+      HPALETTE BWPalette, DestPalette;
+      ULONG BWColors[] = {0, 0xFFFFFF};
+      PDC Dc;
+      PPALGDI PalObj;
+      LONG DestMode;
+
+      BWPalette = EngCreatePalette(PAL_INDEXED, sizeof(BWColors) / sizeof(ULONG),
+         BWColors, 0, 0, 0);
+      Dc = DC_LockDc(IntGetScreenDC());
+      DestPalette = Dc->w.hPalette;
+      PalObj = PALETTE_LockPalette(DestPalette);
+      DestMode = PalObj->Mode;
+      PALETTE_UnlockPalette(DestPalette);
+      DC_UnlockDc(IntGetScreenDC());
+      ppdev->PointerXlateObject = IntEngCreateXlate(DestMode, PAL_INDEXED,
+         DestPalette, BWPalette);
+      EngDeletePalette(BWPalette);
    }
 
    /*
