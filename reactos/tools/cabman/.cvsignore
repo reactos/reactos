@@ -1,7 +1,0 @@
-cabman
-*.o
-*.d
-*.exe
-*.coff
-*.sym
-*.map
