@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.20 2002/05/14 23:17:12 ekohl Exp $
+/* $Id: atapi.c,v 1.21 2002/05/24 22:27:48 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -884,11 +884,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("AtapiFindDevices() called\n");
 
-//  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart);
   CommandPortBase = ScsiPortConvertPhysicalAddressToUlong(ConfigInfo->AccessRanges[0].RangeStart);
   DPRINT("  CommandPortBase: %x\n", CommandPortBase);
 
-//  ControlPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[1].RangeStart);
   ControlPortBase = ScsiPortConvertPhysicalAddressToUlong(ConfigInfo->AccessRanges[1].RangeStart);
   DPRINT("  ControlPortBase: %x\n", ControlPortBase);
 
@@ -916,7 +914,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	    }
 	  ScsiPortStallExecution(150);
 	}
-      if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
+      if (Retries >= 20000)
 	{
 	  DbgPrint("Timeout on drive %lu\n", UnitNumber);
 	  return(DeviceFound);
@@ -1169,24 +1167,6 @@ AtapiPolledRead(IN ULONG CommandPort,
   Control = IDEReadAltStatus(ControlPort);
   IDEWriteDriveControl(ControlPort, Control | IDE_DC_nIEN);
   ScsiPortStallExecution(500);
-
-  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  if (RetryCount == IDE_MAX_BUSY_RETRIES)
-    {
-      return(IDE_ER_ABRT);
-    }
-
-  /*  Write Drive/Head to select drive  */
-  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
 
   /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)

@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.4 2002/01/31 14:58:35 ekohl Exp $
+/* $Id: srb.h,v 1.5 2002/05/24 22:28:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,8 +55,11 @@ typedef struct _PORT_CONFIGURATION_INFORMATION
   DMA_SPEED DmaSpeed;
   ULONG AlignmentMask;
   ULONG NumberOfAccessRanges;
-//  ACCESS_RANGE (*AccessRanges)[];
-  PACCESS_RANGE AccessRanges;
+#ifdef __GNUC__
+  ACCESS_RANGE *AccessRanges;
+#else
+  ACCESS_RANGE (*AccessRanges)[];
+#endif
   PVOID Reserved;
   UCHAR NumberOfBuses;
   CCHAR InitiatorBusId[8];
