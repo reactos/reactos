@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.17 2004/04/12 13:03:29 navaraf Exp $
+/* $Id: create.c,v 1.18 2004/04/12 14:46:02 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -77,7 +77,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	ExFreePool(ClientFcb);
 	KeUnlockMutex(&DeviceExt->PipeListLock);
 	
-	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+	Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
 	Irp->IoStatus.Information = 0;
 	
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
