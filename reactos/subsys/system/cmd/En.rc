@@ -147,7 +147,7 @@ ERASE [/%c /%c /%c /%c /%c /%c /%c] file ...\n\n \
   /%c    Yes. Kill even *.* without asking.\n \
   /%c    Zap. Delete hidden, read-only and system files).\n"
 
-STRING_DEL_HELP3, "    %lu file%s deleted\n"
+STRING_DEL_HELP3, "    %lu file deleted\n"
 
 STRING_DEL_HELP4, "    %lu files deleted\n"
 
