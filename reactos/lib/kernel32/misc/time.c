@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.30 2004/07/30 19:18:39 jimtabor Exp $
+/* $Id: time.c,v 1.31 2004/11/14 18:53:11 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -141,7 +141,12 @@ CompareFileTime(
 VOID STDCALL
 GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 {
-  NtQuerySystemTime ((PLARGE_INTEGER)lpFileTime);
+  do
+    {
+      lpFileTime->dwHighDateTime = SharedUserData->SystemTime.High1Time;
+      lpFileTime->dwLowDateTime = SharedUserData->SystemTime.LowPart;
+    }
+  while (lpFileTime->dwHighDateTime != SharedUserData->SystemTime.High2Time);
 }
 
 
@@ -254,7 +259,7 @@ GetLocalTime(LPSYSTEMTIME lpSystemTime)
   FILETIME FileTime;
   FILETIME LocalFileTime;
 
-  NtQuerySystemTime ((PLARGE_INTEGER)&FileTime);
+  GetSystemTimeAsFileTime(&FileTime);
   FileTimeToLocalFileTime (&FileTime, &LocalFileTime);
   FileTimeToSystemTime (&LocalFileTime, lpSystemTime);
 }
@@ -268,7 +273,7 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
 
-  NtQuerySystemTime ((PLARGE_INTEGER)&FileTime);
+  GetSystemTimeAsFileTime(&FileTime);
   FileTimeToSystemTime (&FileTime, lpSystemTime);
 }
 
