@@ -5,6 +5,14 @@ ChangeLog
    tools/widl/client.c
    tools/widl/server.c
 
+Implement [string] attribute for pointers to char and wchar_t.
+
+
+2005-03-12 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
 Implement [in], [out] and [in, out] support for pointers to basic types.
 
 

@@ -164,6 +164,7 @@ static void write_typeformatstring(type_t *iface)
     func_t *func = iface->funcs;
     var_t *var;
     int out_attr;
+    int string_attr;
 
     print_client("static const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =\n");
     print_client("{\n");
@@ -183,6 +184,7 @@ static void write_typeformatstring(type_t *iface)
             while (var)
             {
                 out_attr = is_attr(var->attrs, ATTR_OUT);
+                string_attr = is_attr(var->attrs, ATTR_STRING);
 
                 if (var->ptr_level > 1)
                 {
@@ -199,7 +201,20 @@ static void write_typeformatstring(type_t *iface)
                             print_client("0x11, 0x0c,    /* FC_RP [allocated_on_stack] [simple_pointer] */\n");
                         else
                             print_client("0x11, 0x08,    /* FC_RP [simple_pointer] */\n");
-                        print_client("0x%02x,          /* FC_<type> */\n", var->type->type);
+                        if (string_attr)
+                        {
+                            if (var->type->type == RPC_FC_CHAR)
+                                print_client("0x%02x,          /* FC_C_CSTRING */\n", RPC_FC_C_CSTRING);
+                            else if (var->type->type == RPC_FC_WCHAR)
+                                print_client("0x%02x,          /* FC_C_WSTRING */\n", RPC_FC_C_WSTRING);
+                            else
+                            {
+                                error("%s: Invalid type!\n", __FUNCTION__);
+                                return;
+                            }
+                        }
+                        else
+                            print_client("0x%02x,          /* FC_<type> */\n", var->type->type);
                         print_client("0x5c,          /* FC_PAD */\n");
                     }
                 }
@@ -229,9 +244,12 @@ static void print_message_buffer_size(func_t *func)
     int last_size = -1;
     int in_attr;
     int out_attr;
+    int string_attr;
     int nothing_printed = 1;
     var_t *var;
+    unsigned int type_offset = 2;
 
+    print_client("_StubMsg.BufferLength =");
     if (func->args)
     {
         var = func->args;
@@ -240,6 +258,7 @@ static void print_message_buffer_size(func_t *func)
         {
             out_attr = is_attr(var->attrs, ATTR_OUT);
             in_attr = is_attr(var->attrs, ATTR_IN);
+            string_attr = is_attr(var->attrs, ATTR_STRING);
 
             /* set 'in' attribute if neither 'in' nor 'out' is found */
             if (!out_attr && !in_attr)
@@ -248,52 +267,64 @@ static void print_message_buffer_size(func_t *func)
             if (!in_attr)
                 continue;
 
-            alignment = 0;
-            switch (var->type->type)
+            if (var->ptr_level == 1 &&
+                string_attr &&
+                (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR))
             {
-            case RPC_FC_BYTE:
-            case RPC_FC_CHAR:
-            case RPC_FC_SMALL:
-                size = 1;
+                size = 12;
                 alignment = 0;
-                break;
-
-            case RPC_FC_WCHAR:
-            case RPC_FC_USHORT:
-            case RPC_FC_SHORT:
-                size = 2;
-                if (last_size > 0 && last_size < 2)
-                    alignment += (2 - last_size);
-                break;
-
-            case RPC_FC_ULONG:
-            case RPC_FC_LONG:
-            case RPC_FC_FLOAT:
-                size = 4;
-                if (last_size > 0 && last_size < 4)
-                    alignment += (4 - last_size);
-                break;
-
-            case RPC_FC_HYPER:
-            case RPC_FC_DOUBLE:
-                size = 8;
-                if (last_size > 0 && last_size < 4)
-                    alignment += (4 - last_size);
-                break;
-
-            case RPC_FC_IGNORE:
-                size = 0;
-                break;
-
-            default:
-                error("Unknown/unsupported type!");
-                return;
+                fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
+                nothing_printed = 0;
             }
+            else
+            {
+                alignment = 0;
+                switch (var->type->type)
+                {
+                case RPC_FC_BYTE:
+                case RPC_FC_CHAR:
+                case RPC_FC_SMALL:
+                    size = 1;
+                    alignment = 0;
+                    break;
 
-            if (last_size != -1)
-                fprintf(client, " +");
-            fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
-            nothing_printed = 0;
+                case RPC_FC_WCHAR:
+                case RPC_FC_USHORT:
+                case RPC_FC_SHORT:
+                    size = 2;
+                    if (last_size > 0 && last_size < 2)
+                        alignment += (2 - last_size);
+                    break;
+
+                case RPC_FC_ULONG:
+                case RPC_FC_LONG:
+                case RPC_FC_FLOAT:
+                    size = 4;
+                    if (last_size > 0 && last_size < 4)
+                        alignment += (4 - last_size);
+                    break;
+
+                case RPC_FC_HYPER:
+                case RPC_FC_DOUBLE:
+                    size = 8;
+                    if (last_size > 0 && last_size < 4)
+                        alignment += (4 - last_size);
+                    break;
+
+                case RPC_FC_IGNORE:
+                    size = 0;
+                    break;
+
+                default:
+                    error("Unknown/unsupported type!");
+                    return;
+                }
+
+                if (last_size != -1)
+                    fprintf(client, " +");
+                fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
+                nothing_printed = 0;
+            }
 
             last_size = size;
         }
@@ -303,16 +334,65 @@ static void print_message_buffer_size(func_t *func)
     {
         fprintf(client, " 0U");
     }
+    fprintf(client, ";\n");
+
+    /* get string size */
+    if (func->args)
+    {
+        nothing_printed = 0;
+        var = func->args;
+        while (NEXT_LINK(var)) var = NEXT_LINK(var);
+        for (; var; var = PREV_LINK(var))
+        {
+            out_attr = is_attr(var->attrs, ATTR_OUT);
+            in_attr = is_attr(var->attrs, ATTR_IN);
+            string_attr = is_attr(var->attrs, ATTR_STRING);
+
+            /* set 'in' attribute if neither 'in' nor 'out' is found */
+            if (!out_attr && !in_attr)
+                in_attr = 1;
+
+            if (!in_attr)
+                continue;
+
+            if (var->ptr_level == 1 &&
+                string_attr &&
+                (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR))
+            {
+                print_client("NdrConformantStringBufferSize(\n");
+                indent++;
+                print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
+                print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
+                print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n", type_offset + 2);
+                nothing_printed = 1;
+                indent--;
+            }
+
+           /* calculate the next type offset */
+           if (var->ptr_level == 1)
+           {
+               if (is_base_type(var->type))
+               {
+                   type_offset += 4;
+               }
+           }
+        }
+
+        if (nothing_printed)
+            fprintf(client, "\n");
+    }
 }
 
 
 static void marshall_in_arguments(func_t *func)
 {
+    unsigned int type_offset = 2;
     unsigned int alignment;
     unsigned int size;
     unsigned int last_size = 0;
     int in_attr;
     int out_attr;
+    int string_attr;
     var_t *var;
 
     if (!func->args)
@@ -324,6 +404,7 @@ static void marshall_in_arguments(func_t *func)
     {
         out_attr = is_attr(var->attrs, ATTR_OUT);
         in_attr = is_attr(var->attrs, ATTR_IN);
+        string_attr = is_attr(var->attrs, ATTR_STRING);
 
         /* set 'in' attribute if neither 'in' nor 'out' is set */
         if (!out_attr && !in_attr)
@@ -339,62 +420,86 @@ static void marshall_in_arguments(func_t *func)
             return;
         }
 
-        alignment = 0;
-        switch (var->type->type)
+        if (var->ptr_level == 1 &&
+            string_attr &&
+            (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR))
         {
-        case RPC_FC_BYTE:
-        case RPC_FC_CHAR:
-        case RPC_FC_SMALL:
-            size = 1;
+            print_client("NdrConformantStringMarshall(\n");
+            indent++;
+            print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
+            print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
+            print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n", type_offset + 2);
+            indent--;
+            fprintf(client, "\n");
+        }
+        else
+        {
             alignment = 0;
-            break;
+            switch (var->type->type)
+            {
+            case RPC_FC_BYTE:
+            case RPC_FC_CHAR:
+            case RPC_FC_SMALL:
+                size = 1;
+                alignment = 0;
+                break;
 
-        case RPC_FC_WCHAR:
-        case RPC_FC_USHORT:
-        case RPC_FC_SHORT:
-            size = 2;
-            if (last_size > 0 && last_size < 2)
-                alignment = (2 - last_size);
-            break;
+            case RPC_FC_WCHAR:
+            case RPC_FC_USHORT:
+            case RPC_FC_SHORT:
+                size = 2;
+                if (last_size > 0 && last_size < 2)
+                    alignment = (2 - last_size);
+                break;
 
-        case RPC_FC_ULONG:
-        case RPC_FC_LONG:
-        case RPC_FC_FLOAT:
-            size = 4;
-            if (last_size > 0 && last_size < 4)
-                alignment = (4 - last_size);
-            break;
+            case RPC_FC_ULONG:
+            case RPC_FC_LONG:
+            case RPC_FC_FLOAT:
+                size = 4;
+                if (last_size > 0 && last_size < 4)
+                    alignment = (4 - last_size);
+                break;
 
-        case RPC_FC_HYPER:
-        case RPC_FC_DOUBLE:
-            size = 8;
-            if (last_size > 0 && last_size < 4)
-                alignment = (4 - last_size);
-            break;
+            case RPC_FC_HYPER:
+            case RPC_FC_DOUBLE:
+                size = 8;
+                if (last_size > 0 && last_size < 4)
+                    alignment = (4 - last_size);
+                break;
 
-        case RPC_FC_IGNORE:
-            size = 0;
-            break;
+           case RPC_FC_IGNORE:
+                size = 0;
+                break;
 
-        default:
-            error("Unknown/unsupported type!");
+            default:
+                error("Unknown/unsupported type!");
+            }
+
+            if (size != 0)
+            {
+                if (alignment != 0)
+                    print_client("_StubMsg.Buffer += %u;\n", alignment);
+
+                print_client("*((");
+                write_type(client, var->type, NULL, var->tname);
+                fprintf(client, " __RPC_FAR*)_StubMsg.Buffer)++ = ");
+                if (var->ptr_level == 1)
+                    fprintf(client, "*");
+                write_name(client, var);
+                fprintf(client, ";\n");
+                fprintf(client, "\n");
+
+                last_size = size;
+            }
         }
 
-        if (size != 0)
+        /* calculate the next type offset */
+        if (var->ptr_level == 1)
         {
-            if (alignment != 0)
-                print_client("_StubMsg.Buffer += %u;\n", alignment);
-
-            print_client("*((");
-            write_type(client, var->type, NULL, var->tname);
-            fprintf(client, " __RPC_FAR*)_StubMsg.Buffer)++ = ");
-            if (var->ptr_level == 1)
-                fprintf(client, "*");
-            write_name(client, var);
-            fprintf(client, ";\n");
-            fprintf(client, "\n");
-
-            last_size = size;
+            if (is_base_type(var->type))
+            {
+                type_offset += 4;
+            }
         }
     }
 }
@@ -676,10 +781,7 @@ static void write_function_stubs(type_t *iface)
         }
 
         /* emit the message buffer size */
-        print_client("_StubMsg.BufferLength =");
         print_message_buffer_size(func);
-        fprintf(client, ";\n");
-
 
         print_client("NdrGetBuffer(\n");
         indent++;
