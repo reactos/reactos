@@ -98,23 +98,18 @@ ExInit3(VOID);
 VOID
 ExpInitTimeZoneInfo(VOID);
 VOID
-ExInitializeWorkerThreads(VOID);
+ExpInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
 VOID
 ExpInitializeCallbacks(VOID);
 VOID
 ExpInitUuids(VOID);
+VOID
+STDCALL
+ExpInitializeExecutive(VOID);
 
 /* OTHER FUNCTIONS **********************************************************/
-
-#ifdef _ENABLE_THRDEVTPAIR
-VOID
-ExpSwapThreadEventPair(
-	IN struct _ETHREAD* Thread,
-	IN struct _KEVENT_PAIR* EventPair
-	);
-#endif /* _ENABLE_THRDEVTPAIR */
 
 LONGLONG 
 FASTCALL

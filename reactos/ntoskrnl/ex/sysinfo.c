@@ -86,6 +86,20 @@ ExGetCurrentProcessorCounts (
 	ProcessorNumber = &ProcNumber;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN 
+STDCALL
+ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
+{
+    /* Quick check to see if it exists at all */
+    if (ProcessorFeature >= PROCESSOR_FEATURE_MAX) return(FALSE);
+
+    /* Return our support for it */
+    return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
+}
+
 NTSTATUS STDCALL
 NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 			       OUT	PWCHAR		ValueBuffer,

@@ -241,6 +241,29 @@ CmiCheckRegistry(BOOLEAN Verbose)
   CmiCheckByName(Verbose, L"User");
 }
 
+VOID
+INIT_FUNCTION
+STDCALL
+CmInitHives(BOOLEAN SetupBoot)
+{
+    PCHAR BaseAddress;
+    
+    /* Load Registry Hives */
+    BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
+    CmImportSystemHive(BaseAddress,
+                       CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    
+    BaseAddress = (PCHAR)CachedModules[HardwareRegistry]->ModStart;
+    CmImportHardwareHive(BaseAddress,
+                         CachedModules[HardwareRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    
+
+    /* Create dummy keys if no hardware hive was found */
+    CmImportHardwareHive (NULL, 0);
+
+    /* Initialize volatile registry settings */
+    if (SetupBoot == FALSE) CmInit2((PCHAR)KeLoaderBlock.CommandLine);
+}   
 
 VOID INIT_FUNCTION
 CmInitializeRegistry(VOID)
