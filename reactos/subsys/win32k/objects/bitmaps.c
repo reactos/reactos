@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.60 2004/03/10 16:55:03 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.61 2004/03/14 00:11:28 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -458,6 +458,10 @@ COLORREF STDCALL NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
    COLORREF Result = (COLORREF) 0;
    PSURFGDI Surface;
    PSURFOBJ SurfaceObject;
+   HPALETTE Pal;
+   PPALGDI PalGDI;
+   USHORT PalMode;
+   PXLATEOBJ XlateObj = NULL;
 
    dc = DC_LockDc (hDC);
    if (dc == NULL)
@@ -480,6 +484,33 @@ COLORREF STDCALL NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
       return (COLORREF)CLR_INVALID;
    }
    Result = Surface->DIB_GetPixel(SurfaceObject, XPos, YPos);
+
+   if (dc->w.hPalette != 0)
+   {
+      Pal = dc->w.hPalette;
+   }
+   else
+   {
+      Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
+   }
+   PalGDI = PALETTE_LockPalette(Pal);
+   if (NULL == PalGDI)
+   {
+      DC_UnlockDc(hDC);
+      return (COLORREF)CLR_INVALID;
+   }
+   PalMode = PalGDI->Mode;
+   PALETTE_UnlockPalette(Pal);
+
+   XlateObj = (PXLATEOBJ) IntEngCreateXlate(PAL_RGB, PalMode, NULL, Pal);
+   if (NULL == XlateObj)
+   {
+      DC_UnlockDc(hDC);
+      return (COLORREF)CLR_INVALID;
+   }
+   Result = XLATEOBJ_iXlate(XlateObj, Result);
+   EngDeleteXlate(XlateObj);
+
    DC_UnlockDc(hDC);
    return Result;
 }
