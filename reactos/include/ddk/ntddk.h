@@ -49,6 +49,7 @@ extern "C"
 #include <ddk/cmfuncs.h>
 #include <ddk/exfuncs.h>
 #include <ddk/mmfuncs.h>
+#include <ddk/kdfuncs.h>
 #include <ddk/kefuncs.h>
 #include <ddk/iofuncs.h> 
 #include <ddk/psfuncs.h>

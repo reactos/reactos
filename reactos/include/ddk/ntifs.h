@@ -34,19 +34,39 @@ typedef struct _CACHE_SEGMENT
    PBCB Bcb;
 } CACHE_SEGMENT, *PCACHE_SEGMENT;
 
-NTSTATUS CcFlushCachePage(PCACHE_SEGMENT CacheSeg);
-NTSTATUS CcReleaseCachePage(PBCB Bcb,
-			    PCACHE_SEGMENT CacheSeg,
-			    BOOLEAN Valid);
-NTSTATUS CcRequestCachePage(PBCB Bcb,
-			    ULONG FileOffset,
-			    PVOID* BaseAddress,
-			    PBOOLEAN UptoDate,
-			    PCACHE_SEGMENT* CacheSeg);
-NTSTATUS CcInitializeFileCache(PFILE_OBJECT FileObject,
-			       PBCB* Bcb);
-NTSTATUS CcReleaseFileCache(PFILE_OBJECT FileObject,
-			    PBCB Bcb);
+NTSTATUS
+STDCALL
+CcFlushCachePage (
+	PCACHE_SEGMENT	CacheSeg
+	);
+NTSTATUS
+STDCALL
+CcReleaseCachePage (
+	PBCB		Bcb,
+	PCACHE_SEGMENT	CacheSeg,
+	BOOLEAN		Valid
+	);
+NTSTATUS
+STDCALL
+CcRequestCachePage (
+	PBCB		Bcb,
+	ULONG		FileOffset,
+	PVOID		* BaseAddress,
+	PBOOLEAN	UptoDate,
+	PCACHE_SEGMENT	* CacheSeg
+	);
+NTSTATUS
+STDCALL
+CcInitializeFileCache (
+	PFILE_OBJECT	FileObject,
+	PBCB		* Bcb
+	);
+NTSTATUS
+STDCALL
+CcReleaseFileCache (
+	PFILE_OBJECT	FileObject,
+	PBCB		Bcb
+	);
 
 #include <ddk/cctypes.h>
 

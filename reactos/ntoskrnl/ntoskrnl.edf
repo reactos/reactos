@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.32 2000/02/26 16:22:27 ea Exp $
+; $Id: ntoskrnl.edf,v 1.33 2000/02/26 22:41:34 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -6,10 +6,10 @@
 ;
 EXPORTS
 InitializeListHead
-CcInitializeFileCache
-CcRequestCachePage
-CcReleaseCachePage
-CcReleaseFileCache
+CcInitializeFileCache=CcInitializeFileCache@8
+CcRequestCachePage=CcRequestCachePage@20
+CcReleaseCachePage=CcReleaseCachePage@12
+CcReleaseFileCache=CcReleaseFileCache@8
 DbgPrint
 ExAcquireResourceExclusive
 ExAcquireResourceExclusiveLite
@@ -186,7 +186,6 @@ NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
 NtBuildNumber DATA
 NtClose=NtClose@4
 NtConnectPort=NtConnectPort@32
-;NtConnectPort=NtConnectPort@8
 NtCreateEvent=NtCreateEvent@20
 NtCreateFile=NtCreateFile@44
 NtCreateSection=NtCreateSection@28
@@ -198,7 +197,7 @@ NtDuplicateToken=NtDuplicateToken@24
 NtFindAtom=NtFindAtom@8
 NtFreeVirtualMemory=NtFreeVirtualMemory@16
 NtFsControlFile=NtFsControlFile@40
-;NtGlobalFlag <--- variable
+NtGlobalFlag DATA
 NtLockFile=NtLockFile@40
 NtMapViewOfSection=NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile=NtNotifyChangeDirectoryFile@36
@@ -217,9 +216,7 @@ NtQuerySystemTime=NtQuerySystemTime@4
 NtQueryVolumeInformationFile=NtQueryVolumeInformationFile@20
 NtReadFile=NtReadFile@36
 NtRequestPort=NtRequestPort@8
-;NtRequestPort=NtRequestPort@20
 NtRequestWaitReplyPort@12
-;NtRequestWaitReplyPort=NtRequestWaitReplyPort@0
 NtSetEvent=NtSetEvent@8
 NtSetInformationFile=NtSetInformationFile@20
 NtSetInformationProcess=NtSetInformationProcess@16
@@ -539,13 +536,14 @@ HalSetRealTimeClock
 ;IoReadPartitionTable
 ;IoSetPartitionInformation
 ;IoWritePartitionTable
-KdComPortInUse
-;KdPortGetByte
+KdComPortInUse DATA
+KdPollBreakIn=KdPollBreakIn@0
+KdPortGetByte=KdPortGetByte@0
 KdPortInitialize=KdPortInitialize@12
-;KdPortPollByte
+KdPortPollByte=KdPortPollByte@0
 KdPortPutByte=KdPortPutByte@4
-;KdPortRestore
-;KdPortSave
+KdPortRestore=KdPortRestore@0
+KdPortSave=KdPortSave@0
 KeAcquireSpinLock
 ;KeAcquireSpinLockRaiseToSynch
 ;KeFlushWriteBuffer

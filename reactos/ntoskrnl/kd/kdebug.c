@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.4 2000/01/19 16:23:56 ekohl Exp $
+/* $Id: kdebug.c,v 1.5 2000/02/26 22:41:35 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,10 +57,6 @@ KdDebuggerEnabled = FALSE;
 
 BOOLEAN
 KdDebuggerNotPresent = TRUE;
-
-/* This is exported by hal.dll (Eric Kohl) */
-//ULONG
-//KdComPortInUse = 0;
 
 
 /* PRIVATE FUNCTIONS ********************************************************/
@@ -130,7 +126,7 @@ KdpPrintString (PANSI_STRING String)
 /* PUBLIC FUNCTIONS *********************************************************/
 
 /* NTOSKRNL.KdPollBreakIn */
-/*
+
 BYTE
 STDCALL
 KdPollBreakIn (
@@ -139,7 +135,6 @@ KdPollBreakIn (
 {
 	return KdPortPollByte();
 }
-*/
 
 
 /* EOF */

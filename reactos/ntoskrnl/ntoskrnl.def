@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.45 2000/02/26 16:22:27 ea Exp $
+; $Id: ntoskrnl.def,v 1.46 2000/02/26 22:41:34 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -6,10 +6,10 @@
 ;
 EXPORTS
 InitializeListHead
-CcInitializeFileCache
-CcRequestCachePage
-CcReleaseCachePage
-CcReleaseFileCache
+CcInitializeFileCache@8
+CcRequestCachePage@20
+CcReleaseCachePage@12
+CcReleaseFileCache@8
 DbgPrint
 ExAcquireResourceExclusive
 ExAcquireResourceExclusiveLite
@@ -186,7 +186,6 @@ NtAllocateVirtualMemory@24
 NtBuildNumber DATA
 NtClose@4
 NtConnectPort@32
-;NtConnectPort@8
 NtCreateEvent@20
 NtCreateFile@44
 NtCreateSection@28
@@ -198,7 +197,7 @@ NtDuplicateToken@24
 NtFindAtom@8
 NtFreeVirtualMemory@16
 NtFsControlFile@40
-;NtGlobalFlag <--- variable?
+NtGlobalFlag DATA
 NtLockFile@40
 NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile@36
@@ -216,10 +215,8 @@ NtQuerySecurityObject@20
 NtQuerySystemTime@4
 NtQueryVolumeInformationFile@20
 NtReadFile@36
-;NtRequestPort@8
 NtRequestPort@20
 NtRequestWaitReplyPort@12
-;NtRequestWaitReplyPort@0
 NtSetEvent@8
 NtSetInformationFile@20
 NtSetInformationProcess@16
@@ -541,13 +538,14 @@ HalSetRealTimeClock
 ;IoReadPartitionTable
 ;IoSetPartitionInformation
 ;IoWritePartitionTable
-;KdComPortInUse
-;KdPortGetByte
-KdPortInitialize
-;KdPortPollByte
-KdPortPutByte
-;KdPortRestore
-;KdPortSave
+KdComPortInUse DATA
+KdPollBreakIn@0
+KdPortGetByte@0
+KdPortInitialize@12
+KdPortPollByte@0
+KdPortPutByte@4
+KdPortRestore@0
+KdPortSave@0
 KeAcquireSpinLock
 ;KeAcquireSpinLockRaiseToSynch
 ;KeFlushWriteBuffer

@@ -1,4 +1,5 @@
-/*
+/* $Id: view.c,v 1.7 2000/02/26 22:41:34 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -19,7 +20,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
+NTSTATUS STDCALL CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Asks the FSD to flush the contents of the page back to disk
  */
@@ -34,7 +35,7 @@ NTSTATUS CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS CcReleaseCachePage(PBCB Bcb,
+NTSTATUS STDCALL CcReleaseCachePage(PBCB Bcb,
 			    PCACHE_SEGMENT CacheSeg,
 			    BOOLEAN Valid)
 {
@@ -50,7 +51,7 @@ NTSTATUS CcReleaseCachePage(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CcRequestCachePage(PBCB Bcb,
+NTSTATUS STDCALL CcRequestCachePage(PBCB Bcb,
 			    ULONG FileOffset,
 			    PVOID* BaseAddress,
 			    PBOOLEAN UptoDate,
@@ -128,7 +129,7 @@ NTSTATUS CcRequestCachePage(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CcFreeCacheSegment(PFILE_OBJECT FileObject,
+NTSTATUS STDCALL CcFreeCacheSegment(PFILE_OBJECT FileObject,
 			    PBCB Bcb,
 			    PCACHE_SEGMENT CacheSeg)
 {
@@ -140,7 +141,7 @@ NTSTATUS CcFreeCacheSegment(PFILE_OBJECT FileObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CcReleaseFileCache(PFILE_OBJECT FileObject,
+NTSTATUS STDCALL CcReleaseFileCache(PFILE_OBJECT FileObject,
 			    PBCB Bcb)
 {
    PLIST_ENTRY current_entry;
@@ -166,7 +167,7 @@ NTSTATUS CcReleaseFileCache(PFILE_OBJECT FileObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS CcInitializeFileCache(PFILE_OBJECT FileObject,
+NTSTATUS STDCALL CcInitializeFileCache(PFILE_OBJECT FileObject,
 			       PBCB* Bcb)
 {
    DPRINT("CcInitializeFileCache(FileObject %x)\n",FileObject);
@@ -187,4 +188,4 @@ NTSTATUS CcInitializeFileCache(PFILE_OBJECT FileObject,
 }
 
 
-
+/* EOF */
