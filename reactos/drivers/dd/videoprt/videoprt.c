@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.11 2003/10/24 21:39:59 gvg Exp $
+/* $Id: videoprt.c,v 1.12 2003/11/05 22:31:50 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -31,14 +31,15 @@ typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 
 typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 {
-  PDEVICE_OBJECT  DeviceObject;
-  PKINTERRUPT  InterruptObject;
-  KSPIN_LOCK  InterruptSpinLock;
-  ULONG  InterruptLevel;
-  KIRQL  IRQL;
-  KAFFINITY  Affinity;
+  PDEVICE_OBJECT DeviceObject;
+  PKINTERRUPT InterruptObject;
+  KSPIN_LOCK InterruptSpinLock;
+  ULONG InterruptVector;
+  ULONG InterruptLevel;
   PVIDEO_HW_INITIALIZE HwInitialize;
   PVIDEO_HW_RESET_HW HwResetHw;
+  PVIDEO_HW_TIMER HwTimer;
+  PVIDEO_HW_INTERRUPT HwInterrupt;
   LIST_ENTRY AddressMappingListHead;
   INTERFACE_TYPE AdapterInterfaceType;
   ULONG SystemIoBusNumber;
@@ -48,7 +49,6 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
 
-static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchOpen(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
@@ -127,6 +127,7 @@ VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension)
 {
   DPRINT("VideoPortDisableInterrupt\n");
   UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -139,6 +140,7 @@ VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension)
 {
   DPRINT("VideoPortEnableInterrupt\n");
   UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -237,6 +239,7 @@ VideoPortGetDeviceData(IN PVOID  HwDeviceExtension,
 {
   DPRINT("VideoPortGetDeviceData\n");
   UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -306,8 +309,7 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 	}
       AssignedCount = 0;
       for (FullList = AllocatedResources->List;
-           FullList < AllocatedResources->List + AllocatedResources->Count &&
-           AssignedCount < NumAccessRanges;
+           FullList < AllocatedResources->List + AllocatedResources->Count;
            FullList++)
 	{
 	  assert(FullList->InterfaceType == PCIBus &&
@@ -315,12 +317,25 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 	         1 == FullList->PartialResourceList.Version &&
 	         1 == FullList->PartialResourceList.Revision);
 	  for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
-	       Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count &&
-	       AssignedCount < NumAccessRanges;
+	       Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
 	       Descriptor++)
 	    {
+              if ((CmResourceTypeMemory == Descriptor->Type
+                   || CmResourceTypePort == Descriptor->Type)
+                  && NumAccessRanges <= AssignedCount)
+		{
+                  DPRINT1("Too many access ranges found\n");
+                  ExFreePool(AllocatedResources);
+                  return STATUS_UNSUCCESSFUL;
+                }
 	      if (CmResourceTypeMemory == Descriptor->Type)
 		{
+                  if (NumAccessRanges <= AssignedCount)
+                    {
+                      DPRINT1("Too many access ranges found\n");
+                      ExFreePool(AllocatedResources);
+                      return STATUS_UNSUCCESSFUL;
+                    }
 		  DPRINT("Memory range starting at 0x%08x length 0x%08x\n",
 		         Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
 		  AccessRanges[AssignedCount].RangeStart = Descriptor->u.Memory.Start;
@@ -329,6 +344,7 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 		  AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
 		  AccessRanges[AssignedCount].RangeShareable =
 		    (CmResourceShareShared == Descriptor->ShareDisposition);
+		  AssignedCount++;
 		}
 	      else if (CmResourceTypePort == Descriptor->Type)
 		{
@@ -339,13 +355,13 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 		  AccessRanges[AssignedCount].RangeInIoSpace = 1;
 		  AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
 		  AccessRanges[AssignedCount].RangeShareable = 0;
+		  AssignedCount++;
 		}
-	      else
-		{
-		  ExFreePool(AllocatedResources);
-		  return STATUS_UNSUCCESSFUL;
-		}
-	      AssignedCount++;
+              else if (CmResourceTypeInterrupt == Descriptor->Type)
+                {
+                  DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
+                  DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+                }
 	    }
 	}
       ExFreePool(AllocatedResources);
@@ -433,6 +449,30 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
          ? ERROR_SUCCESS : ERROR_INVALID_PARAMETER;
 }
 
+static BOOLEAN
+VPInterruptRoutine(IN struct _KINTERRUPT *Interrupt,
+                   IN PVOID ServiceContext)
+{
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+  
+  DeviceExtension = ServiceContext;
+  assert(NULL != DeviceExtension->HwInterrupt);
+
+  return DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+}
+
+static VOID STDCALL
+VPTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
+               IN PVOID Context)
+{
+  PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
+  
+  DeviceExtension = Context;
+  assert(DeviceExtension == DeviceObject->DeviceExtension
+         && NULL != DeviceExtension->HwTimer);
+
+  DeviceExtension->HwTimer(&DeviceExtension->MiniPortDeviceExtension);
+}
 
 /*
  * @implemented
@@ -444,20 +484,23 @@ VideoPortInitialize(IN PVOID  Context1,
                     IN PVOID  HwContext)
 {
   PUNICODE_STRING RegistryPath;
-  UCHAR  Again;
-  WCHAR  DeviceBuffer[20];
-  WCHAR  SymlinkBuffer[20];
-  WCHAR  DeviceVideoBuffer[20];
-  NTSTATUS  Status;
-  PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
-  PDEVICE_OBJECT  MPDeviceObject;
-  VIDEO_PORT_CONFIG_INFO  ConfigInfo;
+  UCHAR Again;
+  WCHAR DeviceBuffer[20];
+  WCHAR SymlinkBuffer[20];
+  WCHAR DeviceVideoBuffer[20];
+  NTSTATUS Status;
+  PDRIVER_OBJECT MPDriverObject = (PDRIVER_OBJECT) Context1;
+  PDEVICE_OBJECT MPDeviceObject;
+  VIDEO_PORT_CONFIG_INFO ConfigInfo;
   PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
   ULONG DeviceNumber = 0;
   UNICODE_STRING DeviceName;
   UNICODE_STRING SymlinkName;
   ULONG MaxBus;
   ULONG MaxLen;
+  KIRQL IRQL;
+  KAFFINITY Affinity;
+  ULONG InterruptVector;
 
   DPRINT("VideoPortInitialize\n");
 
@@ -577,52 +620,62 @@ VideoPortInitialize(IN PVOID  Context1,
       /* FIXME: Allocate hardware resources for device  */
 
       /*  Allocate interrupt for device  */
-      if (HwInitializationData->HwInterrupt != NULL &&
-          !(ConfigInfo.BusInterruptLevel == 0 &&
-            ConfigInfo.BusInterruptVector == 0))
+      DeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
+      if (0 == ConfigInfo.BusInterruptVector)
         {
-#if 0
-          DeviceExtension->IRQL = ConfigInfo.BusInterruptLevel;
-          DeviceExtension->InterruptLevel = 
+          ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
+        }
+      if (0 == ConfigInfo.BusInterruptLevel)
+        {
+          ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
+        }
+      if (NULL != HwInitializationData->HwInterrupt)
+        {
+          InterruptVector = 
             HalGetInterruptVector(ConfigInfo.AdapterInterfaceType,
                                   ConfigInfo.SystemIoBusNumber,
                                   ConfigInfo.BusInterruptLevel,
                                   ConfigInfo.BusInterruptVector,
-                                  &DeviceExtension->IRQL,
-                                  &DeviceExtension->Affinity);
+                                  &IRQL,
+                                  &Affinity);
+          if (0 == InterruptVector)
+            {
+              DPRINT1("HalGetInterruptVector failed\n");
+              IoDeleteDevice(MPDeviceObject);
+              
+              return STATUS_INSUFFICIENT_RESOURCES;
+            }
           KeInitializeSpinLock(&DeviceExtension->InterruptSpinLock);
           Status = IoConnectInterrupt(&DeviceExtension->InterruptObject,
-                                      (PKSERVICE_ROUTINE)
-                                        HwInitializationData->HwInterrupt,
-                                      &DeviceExtension->MiniPortDeviceExtension,
+                                      VPInterruptRoutine,
+                                      DeviceExtension,
                                       &DeviceExtension->InterruptSpinLock,
-                                      DeviceExtension->InterruptLevel,
-                                      DeviceExtension->IRQL,
-                                      DeviceExtension->IRQL,
+                                      InterruptVector,
+                                      IRQL,
+                                      IRQL,
                                       ConfigInfo.InterruptMode,
                                       FALSE,
-                                      DeviceExtension->Affinity,
+                                      Affinity,
                                       FALSE);
           if (!NT_SUCCESS(Status))
             {
-              DPRINT("IoConnectInterrupt failed with status 0x%08x\n", Status);
+              DPRINT1("IoConnectInterrupt failed with status 0x%08x\n", Status);
               IoDeleteDevice(MPDeviceObject);
               
               return Status;
             }
-#endif
         }
       DeviceNumber++;
     }
   while (Again);
 
-  /* FIXME: initialize timer routine for MP Driver  */
+  DeviceExtension->HwTimer = HwInitializationData->HwTimer;
   if (HwInitializationData->HwTimer != NULL)
     {
+      DPRINT("Initializing timer\n");
       Status = IoInitializeTimer(MPDeviceObject,
-                                 (PIO_TIMER_ROUTINE)
-                                   HwInitializationData->HwTimer,
-                                 &DeviceExtension->MiniPortDeviceExtension);
+                                 VPTimerRoutine,
+                                 DeviceExtension);
       if (!NT_SUCCESS(Status))
         {
           DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);
@@ -715,6 +768,7 @@ VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
 {
   DPRINT("VideoPortMapBankedMemory\n");
   UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -730,8 +784,6 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                    OUT PVOID  *VirtualAddress)
 {
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-  PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
-  PLIST_ENTRY Entry;
 
   DPRINT("VideoPortMapMemory\n");
 
@@ -753,7 +805,7 @@ STDCALL
 VideoPortReadPortUchar(IN PUCHAR  Port)
 {
   DPRINT("VideoPortReadPortUchar\n");
-  return  READ_PORT_UCHAR(Port);
+  return READ_PORT_UCHAR(Port);
 }
 
 
@@ -765,7 +817,7 @@ STDCALL
 VideoPortReadPortUshort(IN PUSHORT Port)
 {
   DPRINT("VideoPortReadPortUshort\n");
-  return  READ_PORT_USHORT(Port);
+  return READ_PORT_USHORT(Port);
 }
 
 
@@ -777,7 +829,7 @@ STDCALL
 VideoPortReadPortUlong(IN PULONG Port)
 {
   DPRINT("VideoPortReadPortUlong\n");
-  return  READ_PORT_ULONG(Port);
+  return READ_PORT_ULONG(Port);
 }
 
 
@@ -831,7 +883,7 @@ STDCALL
 VideoPortReadRegisterUchar(IN PUCHAR Register)
 {
   DPRINT("VideoPortReadPortRegisterUchar\n");
-  return  READ_REGISTER_UCHAR(Register);
+  return READ_REGISTER_UCHAR(Register);
 }
 
 
@@ -996,6 +1048,7 @@ VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
 {
   DPRINT("VideoPortSetTrappedEmulatorPorts\n");
   UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1404,7 +1457,6 @@ VidDispatchClose(IN PDEVICE_OBJECT pDO,
                  IN PIRP Irp)
 {
   PIO_STACK_LOCATION IrpStack;
-  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VidDispatchClose() called\n");
 
@@ -1423,29 +1475,6 @@ VidDispatchClose(IN PDEVICE_OBJECT pDO,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return STATUS_SUCCESS;
-}
-
-//    VidStartIo
-//
-//  DESCRIPTION:
-//    Get the next requested I/O packet started
-//
-//  RUN LEVEL:
-//    DISPATCH_LEVEL
-//
-//  ARGUMENTS:
-//    Dispatch routine standard arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
-static VOID STDCALL
-VidStartIo(IN PDEVICE_OBJECT DeviceObject,
-           IN PIRP Irp)
-{
-  DPRINT("VidStartIo\n");
-  UNIMPLEMENTED;
 }
 
 //    VidDispatchDeviceControl

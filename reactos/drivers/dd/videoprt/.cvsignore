@@ -3,3 +3,4 @@ videoprt.coff
 *.sym
 *.sys
 *.map
+.*.d
