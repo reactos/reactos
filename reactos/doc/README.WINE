@@ -61,7 +61,7 @@ reactos/lib/shell32             # Synced to Wine-20041201
 reactos/lib/shlwapi             # Synced to Wine-20041201
 reactos/lib/twain		# Out of sync
 reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20041201
-reactos/lib/urlmon		# Out of sync
+reactos/lib/urlmon		# Synced to Wine-20041201
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
 reactos/lib/winmm		# Synced to Wine-20041201

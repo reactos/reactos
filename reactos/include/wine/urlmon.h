@@ -55,7 +55,7 @@ struct IBinding {
     const IBindingVtbl* lpVtbl;
 };
 struct IBindingVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -94,8 +94,10 @@ struct IBindingVtbl {
         LPOLESTR* pszResult,
         DWORD* pdwReserved);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IBinding_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IBinding_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -107,22 +109,9 @@ struct IBindingVtbl {
 #define IBinding_SetPriority(p,a) (p)->lpVtbl->SetPriority(p,a)
 #define IBinding_GetPriority(p,a) (p)->lpVtbl->GetPriority(p,a)
 #define IBinding_GetBindResult(p,a,b,c,d) (p)->lpVtbl->GetBindResult(p,a,b,c,d)
-
 #endif
 
-#define IBinding_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IBinding methods ***/ \
-    STDMETHOD_(HRESULT,Abort)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Suspend)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Resume)(THIS) PURE; \
-    STDMETHOD_(HRESULT,SetPriority)(THIS_ LONG nPriority) PURE; \
-    STDMETHOD_(HRESULT,GetPriority)(THIS_ LONG* pnPriority) PURE; \
-    STDMETHOD_(HRESULT,GetBindResult)(THIS_ CLSID* pclsidProtocol, DWORD* pdwResult, LPOLESTR* pszResult, DWORD* pdwReserved) PURE;
+#endif
 
 HRESULT CALLBACK IBinding_Abort_Proxy(
     IBinding* This);
@@ -378,7 +367,7 @@ struct IBindStatusCallback {
     const IBindStatusCallbackVtbl* lpVtbl;
 };
 struct IBindStatusCallbackVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -435,8 +424,10 @@ struct IBindStatusCallbackVtbl {
         REFIID riid,
         IUnknown* punk);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IBindStatusCallback_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IBindStatusCallback_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -450,24 +441,9 @@ struct IBindStatusCallbackVtbl {
 #define IBindStatusCallback_GetBindInfo(p,a,b) (p)->lpVtbl->GetBindInfo(p,a,b)
 #define IBindStatusCallback_OnDataAvailable(p,a,b,c,d) (p)->lpVtbl->OnDataAvailable(p,a,b,c,d)
 #define IBindStatusCallback_OnObjectAvailable(p,a,b) (p)->lpVtbl->OnObjectAvailable(p,a,b)
-
 #endif
 
-#define IBindStatusCallback_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IBindStatusCallback methods ***/ \
-    STDMETHOD_(HRESULT,OnStartBinding)(THIS_ DWORD dwReserved, IBinding* pib) PURE; \
-    STDMETHOD_(HRESULT,GetPriority)(THIS_ LONG* pnPriority) PURE; \
-    STDMETHOD_(HRESULT,OnLowResource)(THIS_ DWORD reserved) PURE; \
-    STDMETHOD_(HRESULT,OnProgress)(THIS_ ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText) PURE; \
-    STDMETHOD_(HRESULT,OnStopBinding)(THIS_ HRESULT hresult, LPCWSTR szError) PURE; \
-    STDMETHOD_(HRESULT,GetBindInfo)(THIS_ DWORD* grfBINDF, BINDINFO* pbindinfo) PURE; \
-    STDMETHOD_(HRESULT,OnDataAvailable)(THIS_ DWORD grfBSCF, DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed) PURE; \
-    STDMETHOD_(HRESULT,OnObjectAvailable)(THIS_ REFIID riid, IUnknown* punk) PURE;
+#endif
 
 HRESULT CALLBACK IBindStatusCallback_OnStartBinding_Proxy(
     IBindStatusCallback* This,
@@ -614,7 +590,7 @@ struct IBindHost {
     const IBindHostVtbl* lpVtbl;
 };
 struct IBindHostVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -652,8 +628,10 @@ struct IBindHostVtbl {
         REFIID riid,
         void** ppvObj);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IBindHost_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IBindHost_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -662,19 +640,9 @@ struct IBindHostVtbl {
 #define IBindHost_CreateMoniker(p,a,b,c,d) (p)->lpVtbl->CreateMoniker(p,a,b,c,d)
 #define IBindHost_MonikerBindToStorage(p,a,b,c,d,e) (p)->lpVtbl->MonikerBindToStorage(p,a,b,c,d,e)
 #define IBindHost_MonikerBindToObject(p,a,b,c,d,e) (p)->lpVtbl->MonikerBindToObject(p,a,b,c,d,e)
-
 #endif
 
-#define IBindHost_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IBindHost methods ***/ \
-    STDMETHOD_(HRESULT,CreateMoniker)(THIS_ LPOLESTR szName, IBindCtx* pBC, IMoniker** ppmk, DWORD dwReserved) PURE; \
-    STDMETHOD_(HRESULT,MonikerBindToStorage)(THIS_ IMoniker* pMk, IBindCtx* pBC, IBindStatusCallback* pBSC, REFIID riid, void** ppvObj) PURE; \
-    STDMETHOD_(HRESULT,MonikerBindToObject)(THIS_ IMoniker* pMk, IBindCtx* pBC, IBindStatusCallback* pBSC, REFIID riid, void** ppvObj) PURE;
+#endif
 
 HRESULT CALLBACK IBindHost_CreateMoniker_Proxy(
     IBindHost* This,
@@ -771,7 +739,7 @@ struct IWinInetInfo {
     const IWinInetInfoVtbl* lpVtbl;
 };
 struct IWinInetInfoVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -792,25 +760,19 @@ struct IWinInetInfoVtbl {
         LPVOID pBuffer,
         DWORD* pcbBuf);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IWinInetInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IWinInetInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
 #define IWinInetInfo_Release(p) (p)->lpVtbl->Release(p)
 /*** IWinInetInfo methods ***/
 #define IWinInetInfo_QueryOption(p,a,b,c) (p)->lpVtbl->QueryOption(p,a,b,c)
-
 #endif
 
-#define IWinInetInfo_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IWinInetInfo methods ***/ \
-    STDMETHOD_(HRESULT,QueryOption)(THIS_ DWORD dwOption, LPVOID pBuffer, DWORD* pcbBuf) PURE;
+#endif
 
 HRESULT CALLBACK IWinInetInfo_RemoteQueryOption_Proxy(
     IWinInetInfo* This,
@@ -866,7 +828,7 @@ struct IWinInetHttpInfo {
     const IWinInetHttpInfoVtbl* lpVtbl;
 };
 struct IWinInetHttpInfoVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -896,8 +858,10 @@ struct IWinInetHttpInfoVtbl {
         DWORD* pdwFlags,
         DWORD* pdwReserved);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IWinInetHttpInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IWinInetHttpInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -906,19 +870,9 @@ struct IWinInetHttpInfoVtbl {
 #define IWinInetHttpInfo_QueryOption(p,a,b,c) (p)->lpVtbl->QueryOption(p,a,b,c)
 /*** IWinInetHttpInfo methods ***/
 #define IWinInetHttpInfo_QueryInfo(p,a,b,c,d,e) (p)->lpVtbl->QueryInfo(p,a,b,c,d,e)
-
 #endif
 
-#define IWinInetHttpInfo_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IWinInetInfo methods ***/ \
-    STDMETHOD_(HRESULT,QueryOption)(THIS_ DWORD dwOption, LPVOID pBuffer, DWORD* pcbBuf) PURE; \
-    /*** IWinInetHttpInfo methods ***/ \
-    STDMETHOD_(HRESULT,QueryInfo)(THIS_ DWORD dwOption, LPVOID pBuffer, DWORD* pcbBuf, DWORD* pdwFlags, DWORD* pdwReserved) PURE;
+#endif
 
 HRESULT CALLBACK IWinInetHttpInfo_RemoteQueryInfo_Proxy(
     IWinInetHttpInfo* This,
@@ -997,7 +951,7 @@ struct IPersistMoniker {
     const IPersistMonikerVtbl* lpVtbl;
 };
 struct IPersistMonikerVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -1041,8 +995,10 @@ struct IPersistMonikerVtbl {
         IPersistMoniker* This,
         IMoniker** ppimkName);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IPersistMoniker_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IPersistMoniker_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -1054,22 +1010,9 @@ struct IPersistMonikerVtbl {
 #define IPersistMoniker_Save(p,a,b,c) (p)->lpVtbl->Save(p,a,b,c)
 #define IPersistMoniker_SaveCompleted(p,a,b) (p)->lpVtbl->SaveCompleted(p,a,b)
 #define IPersistMoniker_GetCurMoniker(p,a) (p)->lpVtbl->GetCurMoniker(p,a)
-
 #endif
 
-#define IPersistMoniker_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IPersistMoniker methods ***/ \
-    STDMETHOD_(HRESULT,GetClassID)(THIS_ CLSID* pClassID) PURE; \
-    STDMETHOD_(HRESULT,IsDirty)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Load)(THIS_ BOOL fFullyAvailable, IMoniker* pimkName, LPBC pibc, DWORD grfMode) PURE; \
-    STDMETHOD_(HRESULT,Save)(THIS_ IMoniker* pimkName, LPBC pbc, BOOL fRemember) PURE; \
-    STDMETHOD_(HRESULT,SaveCompleted)(THIS_ IMoniker* pimkName, LPBC pibc) PURE; \
-    STDMETHOD_(HRESULT,GetCurMoniker)(THIS_ IMoniker** ppimkName) PURE;
+#endif
 
 HRESULT CALLBACK IPersistMoniker_GetClassID_Proxy(
     IPersistMoniker* This,
@@ -1227,7 +1170,7 @@ struct IInternetProtocolInfo {
     const IInternetProtocolInfoVtbl* lpVtbl;
 };
 struct IInternetProtocolInfoVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -1278,8 +1221,10 @@ struct IInternetProtocolInfoVtbl {
         DWORD* pcbBuf,
         DWORD dwReserved);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IInternetProtocolInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IInternetProtocolInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -1289,20 +1234,9 @@ struct IInternetProtocolInfoVtbl {
 #define IInternetProtocolInfo_CombineUrl(p,a,b,c,d,e,f,g) (p)->lpVtbl->CombineUrl(p,a,b,c,d,e,f,g)
 #define IInternetProtocolInfo_CompareUrl(p,a,b,c) (p)->lpVtbl->CompareUrl(p,a,b,c)
 #define IInternetProtocolInfo_QueryInfo(p,a,b,c,d,e,f,g) (p)->lpVtbl->QueryInfo(p,a,b,c,d,e,f,g)
-
 #endif
 
-#define IInternetProtocolInfo_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IInternetProtocolInfo methods ***/ \
-    STDMETHOD_(HRESULT,ParseUrl)(THIS_ LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult, DWORD* pcchResult, DWORD dwReserved) PURE; \
-    STDMETHOD_(HRESULT,CombineUrl)(THIS_ LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl, DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD* pcchResult, DWORD dwReserved) PURE; \
-    STDMETHOD_(HRESULT,CompareUrl)(THIS_ LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags) PURE; \
-    STDMETHOD_(HRESULT,QueryInfo)(THIS_ LPCWSTR pwzUrl, QUERYOPTION OueryOption, DWORD dwQueryFlags, LPVOID pBuffer, DWORD cbBuffer, DWORD* pcbBuf, DWORD dwReserved) PURE;
+#endif
 
 HRESULT CALLBACK IInternetProtocolInfo_ParseUrl_Proxy(
     IInternetProtocolInfo* This,
@@ -1423,7 +1357,7 @@ struct IInternetSession {
     const IInternetSessionVtbl* lpVtbl;
 };
 struct IInternetSessionVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
+    BEGIN_INTERFACE
 
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
@@ -1479,8 +1413,10 @@ struct IInternetSessionVtbl {
         DWORD dwBufferLength,
         DWORD dwReserved);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IInternetSession_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IInternetSession_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -1492,22 +1428,9 @@ struct IInternetSessionVtbl {
 #define IInternetSession_UnregisterMimeFilter(p,a,b) (p)->lpVtbl->UnregisterMimeFilter(p,a,b)
 #define IInternetSession_CreateBinding(p,a,b,c,d,e,f) (p)->lpVtbl->CreateBinding(p,a,b,c,d,e,f)
 #define IInternetSession_SetSessionOption(p,a,b,c,d) (p)->lpVtbl->SetSessionOption(p,a,b,c,d)
-
 #endif
 
-#define IInternetSession_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IInternetSession methods ***/ \
-    STDMETHOD_(HRESULT,RegisterNameSpace)(THIS_ IClassFactory* pCF, REFCLSID rclsid, LPCWSTR pwzProtocol, ULONG cPatterns, const LPCWSTR* ppwzPatterns, DWORD dwReserved) PURE; \
-    STDMETHOD_(HRESULT,UnregisterNameSpace)(THIS_ IClassFactory* pCF, LPCWSTR pszProtocol) PURE; \
-    STDMETHOD_(HRESULT,RegisterMimeFilter)(THIS_ IClassFactory* pCF, REFCLSID rclsid, LPCWSTR pwzType) PURE; \
-    STDMETHOD_(HRESULT,UnregisterMimeFilter)(THIS_ IClassFactory* pCF, LPCWSTR pwzType) PURE; \
-    STDMETHOD_(HRESULT,CreateBinding)(THIS_ LPBC pBC, LPCWSTR szUrl, IUnknown* pUnkOuter, IUnknown** ppUnk, void** ppOInetProt, DWORD dwOption) PURE; \
-    STDMETHOD_(HRESULT,SetSessionOption)(THIS_ DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength, DWORD dwReserved) PURE;
+#endif
 
 HRESULT CALLBACK IInternetSession_RegisterNameSpace_Proxy(
     IInternetSession* This,
@@ -1577,6 +1500,722 @@ void __RPC_STUB IInternetSession_SetSessionOption_Stub(
 
 #endif  /* __IInternetSession_INTERFACE_DEFINED__ */
 
+#ifndef __IInternetSecurityMgrSite_FWD_DEFINED__
+#define __IInternetSecurityMgrSite_FWD_DEFINED__
+typedef struct IInternetSecurityMgrSite IInternetSecurityMgrSite;
+#endif
+
+/*****************************************************************************
+ * IInternetSecurityMgrSite interface
+ */
+#ifndef __IInternetSecurityMgrSite_INTERFACE_DEFINED__
+#define __IInternetSecurityMgrSite_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IInternetSecurityMgrSite, 0x79eac9ed, 0xbaf9, 0x11ce, 0x8c,0x82, 0x00,0xaa,0x00,0x4b,0xa9,0x0b);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IInternetSecurityMgrSite : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(
+        HWND* phwnd) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE EnableModeless(
+        BOOL fEnable) = 0;
+
+};
+#else
+typedef struct IInternetSecurityMgrSiteVtbl IInternetSecurityMgrSiteVtbl;
+struct IInternetSecurityMgrSite {
+    const IInternetSecurityMgrSiteVtbl* lpVtbl;
+};
+struct IInternetSecurityMgrSiteVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IInternetSecurityMgrSite* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IInternetSecurityMgrSite* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IInternetSecurityMgrSite* This);
+
+    /*** IInternetSecurityMgrSite methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetWindow)(
+        IInternetSecurityMgrSite* This,
+        HWND* phwnd);
+
+    HRESULT (STDMETHODCALLTYPE *EnableModeless)(
+        IInternetSecurityMgrSite* This,
+        BOOL fEnable);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IInternetSecurityMgrSite_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInternetSecurityMgrSite_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IInternetSecurityMgrSite_Release(p) (p)->lpVtbl->Release(p)
+/*** IInternetSecurityMgrSite methods ***/
+#define IInternetSecurityMgrSite_GetWindow(p,a) (p)->lpVtbl->GetWindow(p,a)
+#define IInternetSecurityMgrSite_EnableModeless(p,a) (p)->lpVtbl->EnableModeless(p,a)
+#endif
+
+#endif
+
+HRESULT CALLBACK IInternetSecurityMgrSite_GetWindow_Proxy(
+    IInternetSecurityMgrSite* This,
+    HWND* phwnd);
+void __RPC_STUB IInternetSecurityMgrSite_GetWindow_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityMgrSite_EnableModeless_Proxy(
+    IInternetSecurityMgrSite* This,
+    BOOL fEnable);
+void __RPC_STUB IInternetSecurityMgrSite_EnableModeless_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IInternetSecurityMgrSite_INTERFACE_DEFINED__ */
+
+#define SID_SInternetSecurityManager IID_IInternetSecurityManager
+#ifndef __IInternetSecurityManager_FWD_DEFINED__
+#define __IInternetSecurityManager_FWD_DEFINED__
+typedef struct IInternetSecurityManager IInternetSecurityManager;
+#endif
+
+#define MAX_SIZE_SECURITY_ID 512
+typedef enum {
+    PUAF_DEFAULT = 0x0,
+    PUAF_NOUI = 0x1,
+    PUAF_ISFILE = 0x2,
+    PUAF_WARN_IF_DENIED = 0x4,
+    PUAF_FORCEUI_FOREGROUND = 0x8,
+    PUAF_CHECK_TIPS = 0x10
+} PUAF;
+
+typedef enum {
+    SZM_CREATE = 0x0,
+    SZM_DELETE = 0x1
+} SZM_FLAGS;
+
+/*****************************************************************************
+ * IInternetSecurityManager interface
+ */
+#ifndef __IInternetSecurityManager_INTERFACE_DEFINED__
+#define __IInternetSecurityManager_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IInternetSecurityManager, 0x79eac9ee, 0xbaf9, 0x11ce, 0x8c,0x82, 0x00,0xaa,0x00,0x4b,0xa9,0x0b);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IInternetSecurityManager : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE SetSecuritySite(
+        IInternetSecurityMgrSite* pSite) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetSecuritySite(
+        IInternetSecurityMgrSite** ppSite) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE MapUrlToZone(
+        LPCWSTR pwszUrl,
+        DWORD* pdwZone,
+        DWORD dwFlags) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetSecurityId(
+        LPCWSTR pwszUrl,
+        BYTE* pbSecurityId,
+        DWORD* pcbSecurityId,
+        DWORD dwReserved) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE ProcessUrlAction(
+        LPCWSTR pwszUrl,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        BYTE* pContext,
+        DWORD cbContext,
+        DWORD dwFlags,
+        DWORD dwReserved) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE QueryCustomPolicy(
+        LPCWSTR pwszUrl,
+        REFGUID guidKey,
+        BYTE** ppPolicy,
+        DWORD* pcbPolicy,
+        BYTE* pContext,
+        DWORD cbContext,
+        DWORD dwReserved) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE SetZoneMapping(
+        DWORD dwZone,
+        LPCWSTR lpszPattern,
+        DWORD dwFlags) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetZoneMappings(
+        DWORD dwZone,
+        IEnumString** ppenumString,
+        DWORD dwFlags) = 0;
+
+};
+#else
+typedef struct IInternetSecurityManagerVtbl IInternetSecurityManagerVtbl;
+struct IInternetSecurityManager {
+    const IInternetSecurityManagerVtbl* lpVtbl;
+};
+struct IInternetSecurityManagerVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IInternetSecurityManager* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IInternetSecurityManager* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IInternetSecurityManager* This);
+
+    /*** IInternetSecurityManager methods ***/
+    HRESULT (STDMETHODCALLTYPE *SetSecuritySite)(
+        IInternetSecurityManager* This,
+        IInternetSecurityMgrSite* pSite);
+
+    HRESULT (STDMETHODCALLTYPE *GetSecuritySite)(
+        IInternetSecurityManager* This,
+        IInternetSecurityMgrSite** ppSite);
+
+    HRESULT (STDMETHODCALLTYPE *MapUrlToZone)(
+        IInternetSecurityManager* This,
+        LPCWSTR pwszUrl,
+        DWORD* pdwZone,
+        DWORD dwFlags);
+
+    HRESULT (STDMETHODCALLTYPE *GetSecurityId)(
+        IInternetSecurityManager* This,
+        LPCWSTR pwszUrl,
+        BYTE* pbSecurityId,
+        DWORD* pcbSecurityId,
+        DWORD dwReserved);
+
+    HRESULT (STDMETHODCALLTYPE *ProcessUrlAction)(
+        IInternetSecurityManager* This,
+        LPCWSTR pwszUrl,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        BYTE* pContext,
+        DWORD cbContext,
+        DWORD dwFlags,
+        DWORD dwReserved);
+
+    HRESULT (STDMETHODCALLTYPE *QueryCustomPolicy)(
+        IInternetSecurityManager* This,
+        LPCWSTR pwszUrl,
+        REFGUID guidKey,
+        BYTE** ppPolicy,
+        DWORD* pcbPolicy,
+        BYTE* pContext,
+        DWORD cbContext,
+        DWORD dwReserved);
+
+    HRESULT (STDMETHODCALLTYPE *SetZoneMapping)(
+        IInternetSecurityManager* This,
+        DWORD dwZone,
+        LPCWSTR lpszPattern,
+        DWORD dwFlags);
+
+    HRESULT (STDMETHODCALLTYPE *GetZoneMappings)(
+        IInternetSecurityManager* This,
+        DWORD dwZone,
+        IEnumString** ppenumString,
+        DWORD dwFlags);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IInternetSecurityManager_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInternetSecurityManager_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IInternetSecurityManager_Release(p) (p)->lpVtbl->Release(p)
+/*** IInternetSecurityManager methods ***/
+#define IInternetSecurityManager_SetSecuritySite(p,a) (p)->lpVtbl->SetSecuritySite(p,a)
+#define IInternetSecurityManager_GetSecuritySite(p,a) (p)->lpVtbl->GetSecuritySite(p,a)
+#define IInternetSecurityManager_MapUrlToZone(p,a,b,c) (p)->lpVtbl->MapUrlToZone(p,a,b,c)
+#define IInternetSecurityManager_GetSecurityId(p,a,b,c,d) (p)->lpVtbl->GetSecurityId(p,a,b,c,d)
+#define IInternetSecurityManager_ProcessUrlAction(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->ProcessUrlAction(p,a,b,c,d,e,f,g,h)
+#define IInternetSecurityManager_QueryCustomPolicy(p,a,b,c,d,e,f,g) (p)->lpVtbl->QueryCustomPolicy(p,a,b,c,d,e,f,g)
+#define IInternetSecurityManager_SetZoneMapping(p,a,b,c) (p)->lpVtbl->SetZoneMapping(p,a,b,c)
+#define IInternetSecurityManager_GetZoneMappings(p,a,b,c) (p)->lpVtbl->GetZoneMappings(p,a,b,c)
+#endif
+
+#endif
+
+HRESULT CALLBACK IInternetSecurityManager_SetSecuritySite_Proxy(
+    IInternetSecurityManager* This,
+    IInternetSecurityMgrSite* pSite);
+void __RPC_STUB IInternetSecurityManager_SetSecuritySite_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_GetSecuritySite_Proxy(
+    IInternetSecurityManager* This,
+    IInternetSecurityMgrSite** ppSite);
+void __RPC_STUB IInternetSecurityManager_GetSecuritySite_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_MapUrlToZone_Proxy(
+    IInternetSecurityManager* This,
+    LPCWSTR pwszUrl,
+    DWORD* pdwZone,
+    DWORD dwFlags);
+void __RPC_STUB IInternetSecurityManager_MapUrlToZone_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_GetSecurityId_Proxy(
+    IInternetSecurityManager* This,
+    LPCWSTR pwszUrl,
+    BYTE* pbSecurityId,
+    DWORD* pcbSecurityId,
+    DWORD dwReserved);
+void __RPC_STUB IInternetSecurityManager_GetSecurityId_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_ProcessUrlAction_Proxy(
+    IInternetSecurityManager* This,
+    LPCWSTR pwszUrl,
+    DWORD dwAction,
+    BYTE* pPolicy,
+    DWORD cbPolicy,
+    BYTE* pContext,
+    DWORD cbContext,
+    DWORD dwFlags,
+    DWORD dwReserved);
+void __RPC_STUB IInternetSecurityManager_ProcessUrlAction_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_QueryCustomPolicy_Proxy(
+    IInternetSecurityManager* This,
+    LPCWSTR pwszUrl,
+    REFGUID guidKey,
+    BYTE** ppPolicy,
+    DWORD* pcbPolicy,
+    BYTE* pContext,
+    DWORD cbContext,
+    DWORD dwReserved);
+void __RPC_STUB IInternetSecurityManager_QueryCustomPolicy_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_SetZoneMapping_Proxy(
+    IInternetSecurityManager* This,
+    DWORD dwZone,
+    LPCWSTR lpszPattern,
+    DWORD dwFlags);
+void __RPC_STUB IInternetSecurityManager_SetZoneMapping_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetSecurityManager_GetZoneMappings_Proxy(
+    IInternetSecurityManager* This,
+    DWORD dwZone,
+    IEnumString** ppenumString,
+    DWORD dwFlags);
+void __RPC_STUB IInternetSecurityManager_GetZoneMappings_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IInternetSecurityManager_INTERFACE_DEFINED__ */
+
+#ifndef __IInternetZoneManager_FWD_DEFINED__
+#define __IInternetZoneManager_FWD_DEFINED__
+typedef struct IInternetZoneManager IInternetZoneManager;
+#endif
+
+typedef IInternetZoneManager *LPURLZONEMANAGER;
+
+typedef enum tagURLZONE {
+    URLZONE_PREDEFINED_MIN = 0,
+    URLZONE_LOCAL_MACHINE = 0,
+    URLZONE_INTRANET = 1,
+    URLZONE_TRUSTED = 2,
+    URLZONE_INTERNET = 3,
+    URLZONE_UNTRUSTED = 4,
+    URLZONE_PREDEFINED_MAX = 999,
+    URLZONE_USER_MIN = 1000,
+    URLZONE_USER_MAX = 10000
+} URLZONE;
+
+typedef enum tagURLTEMPLATE {
+    URLTEMPLATE_CUSTOM = 0x0,
+    URLTEMPLATE_PREDEFINED_MIN = 0x10000,
+    URLTEMPLATE_LOW = 0x10000,
+    URLTEMPLATE_MEDIUM = 0x11000,
+    URLTEMPLATE_HIGH = 0x12000,
+    URLTEMPLATE_PREDEFINED_MAX = 0x20000
+} URLTEMPLATE;
+
+typedef enum {
+    ZAFLAGS_CUSTOM_EDIT = 0x1,
+    ZAFLAGS_ADD_SITES = 0x2,
+    ZAFLAGS_REQUIRE_VERIFICATION = 0x4,
+    ZAFLAGS_INCLUDE_PROXY_OVERRIDE = 0x8,
+    ZAFLAGS_INCLUDE_INTRANET_SITES = 0x10,
+    ZAFLAGS_NO_UI = 0x20,
+    ZAFLAGS_SUPPORTS_VERIFICATION = 0x40,
+    ZAFLAGS_UNC_AS_INTRANET = 0x80
+} ZAFLAGS;
+
+enum {
+    MAX_ZONE_PATH = 260,
+    MAX_ZONE_DESCRIPTION = 200
+};
+
+typedef struct _ZONEATTRIBUTES {
+    ULONG cbSize;
+    WCHAR szDisplayName[260];
+    WCHAR szDescription[200];
+    WCHAR szIconPath[260];
+    DWORD dwTemplateMinLevel;
+    DWORD dwTemplateRecommended;
+    DWORD dwTemplateCurrentLevel;
+    DWORD dwFlags;
+} ZONEATTRIBUTES, *LPZONEATTRIBUTES;
+
+typedef enum _URLZONEREG {
+    URLZONEREG_DEFAULT,
+    URLZONEREG_HKLM,
+    URLZONEREG_HKCU
+} URLZONEREG;
+
+/*****************************************************************************
+ * IInternetZoneManager interface
+ */
+#ifndef __IInternetZoneManager_INTERFACE_DEFINED__
+#define __IInternetZoneManager_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IInternetZoneManager, 0x79eac9ef, 0xbaf9, 0x11ce, 0x8c,0x82, 0x00,0xaa,0x00,0x4b,0xa9,0x0b);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IInternetZoneManager : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE GetZoneAttributes(
+        DWORD dwZone,
+        ZONEATTRIBUTES* pZoneAttributes) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE SetZoneAttributes(
+        DWORD dwZone,
+        ZONEATTRIBUTES* pZoneAttributes) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetZoneCustomPolicy(
+        DWORD dwZone,
+        REFGUID guidKey,
+        BYTE** ppPolicy,
+        DWORD* pcbPolicy,
+        URLZONEREG ulrZoneReg) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE SetZoneCustomPolicy(
+        DWORD dwZone,
+        REFGUID guidKey,
+        BYTE* ppPolicy,
+        DWORD pcbPolicy,
+        URLZONEREG ulrZoneReg) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetZoneActionPolicy(
+        DWORD dwZone,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        URLZONEREG urlZoneReg) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE SetZoneActionPolicy(
+        DWORD dwZone,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        URLZONEREG urlZoneReg) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE LogAction(
+        DWORD dwAction,
+        LPCWSTR pwszUrl,
+        LPCWSTR pwszText,
+        DWORD dwLogFlags) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE CreateZoneEnumerator(
+        DWORD* pdwEnum,
+        DWORD* pdwCount,
+        DWORD dwFlags) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE GetZoneAt(
+        DWORD dwEnum,
+        DWORD dwIndex,
+        DWORD* pdwZone) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE DestroyZoneEnumerator(
+        DWORD dwEnum) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE CopyTemplatePoliciesToZone(
+        DWORD dwTemplate,
+        DWORD dwZone,
+        DWORD dwReserved) = 0;
+
+};
+#else
+typedef struct IInternetZoneManagerVtbl IInternetZoneManagerVtbl;
+struct IInternetZoneManager {
+    const IInternetZoneManagerVtbl* lpVtbl;
+};
+struct IInternetZoneManagerVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IInternetZoneManager* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IInternetZoneManager* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IInternetZoneManager* This);
+
+    /*** IInternetZoneManager methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetZoneAttributes)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        ZONEATTRIBUTES* pZoneAttributes);
+
+    HRESULT (STDMETHODCALLTYPE *SetZoneAttributes)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        ZONEATTRIBUTES* pZoneAttributes);
+
+    HRESULT (STDMETHODCALLTYPE *GetZoneCustomPolicy)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        REFGUID guidKey,
+        BYTE** ppPolicy,
+        DWORD* pcbPolicy,
+        URLZONEREG ulrZoneReg);
+
+    HRESULT (STDMETHODCALLTYPE *SetZoneCustomPolicy)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        REFGUID guidKey,
+        BYTE* ppPolicy,
+        DWORD pcbPolicy,
+        URLZONEREG ulrZoneReg);
+
+    HRESULT (STDMETHODCALLTYPE *GetZoneActionPolicy)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        URLZONEREG urlZoneReg);
+
+    HRESULT (STDMETHODCALLTYPE *SetZoneActionPolicy)(
+        IInternetZoneManager* This,
+        DWORD dwZone,
+        DWORD dwAction,
+        BYTE* pPolicy,
+        DWORD cbPolicy,
+        URLZONEREG urlZoneReg);
+
+    HRESULT (STDMETHODCALLTYPE *LogAction)(
+        IInternetZoneManager* This,
+        DWORD dwAction,
+        LPCWSTR pwszUrl,
+        LPCWSTR pwszText,
+        DWORD dwLogFlags);
+
+    HRESULT (STDMETHODCALLTYPE *CreateZoneEnumerator)(
+        IInternetZoneManager* This,
+        DWORD* pdwEnum,
+        DWORD* pdwCount,
+        DWORD dwFlags);
+
+    HRESULT (STDMETHODCALLTYPE *GetZoneAt)(
+        IInternetZoneManager* This,
+        DWORD dwEnum,
+        DWORD dwIndex,
+        DWORD* pdwZone);
+
+    HRESULT (STDMETHODCALLTYPE *DestroyZoneEnumerator)(
+        IInternetZoneManager* This,
+        DWORD dwEnum);
+
+    HRESULT (STDMETHODCALLTYPE *CopyTemplatePoliciesToZone)(
+        IInternetZoneManager* This,
+        DWORD dwTemplate,
+        DWORD dwZone,
+        DWORD dwReserved);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IInternetZoneManager_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInternetZoneManager_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IInternetZoneManager_Release(p) (p)->lpVtbl->Release(p)
+/*** IInternetZoneManager methods ***/
+#define IInternetZoneManager_GetZoneAttributes(p,a,b) (p)->lpVtbl->GetZoneAttributes(p,a,b)
+#define IInternetZoneManager_SetZoneAttributes(p,a,b) (p)->lpVtbl->SetZoneAttributes(p,a,b)
+#define IInternetZoneManager_GetZoneCustomPolicy(p,a,b,c,d,e) (p)->lpVtbl->GetZoneCustomPolicy(p,a,b,c,d,e)
+#define IInternetZoneManager_SetZoneCustomPolicy(p,a,b,c,d,e) (p)->lpVtbl->SetZoneCustomPolicy(p,a,b,c,d,e)
+#define IInternetZoneManager_GetZoneActionPolicy(p,a,b,c,d,e) (p)->lpVtbl->GetZoneActionPolicy(p,a,b,c,d,e)
+#define IInternetZoneManager_SetZoneActionPolicy(p,a,b,c,d,e) (p)->lpVtbl->SetZoneActionPolicy(p,a,b,c,d,e)
+#define IInternetZoneManager_LogAction(p,a,b,c,d) (p)->lpVtbl->LogAction(p,a,b,c,d)
+#define IInternetZoneManager_CreateZoneEnumerator(p,a,b,c) (p)->lpVtbl->CreateZoneEnumerator(p,a,b,c)
+#define IInternetZoneManager_GetZoneAt(p,a,b,c) (p)->lpVtbl->GetZoneAt(p,a,b,c)
+#define IInternetZoneManager_DestroyZoneEnumerator(p,a) (p)->lpVtbl->DestroyZoneEnumerator(p,a)
+#define IInternetZoneManager_CopyTemplatePoliciesToZone(p,a,b,c) (p)->lpVtbl->CopyTemplatePoliciesToZone(p,a,b,c)
+#endif
+
+#endif
+
+HRESULT CALLBACK IInternetZoneManager_GetZoneAttributes_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    ZONEATTRIBUTES* pZoneAttributes);
+void __RPC_STUB IInternetZoneManager_GetZoneAttributes_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_SetZoneAttributes_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    ZONEATTRIBUTES* pZoneAttributes);
+void __RPC_STUB IInternetZoneManager_SetZoneAttributes_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_GetZoneCustomPolicy_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    REFGUID guidKey,
+    BYTE** ppPolicy,
+    DWORD* pcbPolicy,
+    URLZONEREG ulrZoneReg);
+void __RPC_STUB IInternetZoneManager_GetZoneCustomPolicy_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_SetZoneCustomPolicy_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    REFGUID guidKey,
+    BYTE* ppPolicy,
+    DWORD pcbPolicy,
+    URLZONEREG ulrZoneReg);
+void __RPC_STUB IInternetZoneManager_SetZoneCustomPolicy_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_GetZoneActionPolicy_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    DWORD dwAction,
+    BYTE* pPolicy,
+    DWORD cbPolicy,
+    URLZONEREG urlZoneReg);
+void __RPC_STUB IInternetZoneManager_GetZoneActionPolicy_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_SetZoneActionPolicy_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwZone,
+    DWORD dwAction,
+    BYTE* pPolicy,
+    DWORD cbPolicy,
+    URLZONEREG urlZoneReg);
+void __RPC_STUB IInternetZoneManager_SetZoneActionPolicy_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_LogAction_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwAction,
+    LPCWSTR pwszUrl,
+    LPCWSTR pwszText,
+    DWORD dwLogFlags);
+void __RPC_STUB IInternetZoneManager_LogAction_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_CreateZoneEnumerator_Proxy(
+    IInternetZoneManager* This,
+    DWORD* pdwEnum,
+    DWORD* pdwCount,
+    DWORD dwFlags);
+void __RPC_STUB IInternetZoneManager_CreateZoneEnumerator_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_GetZoneAt_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwEnum,
+    DWORD dwIndex,
+    DWORD* pdwZone);
+void __RPC_STUB IInternetZoneManager_GetZoneAt_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_DestroyZoneEnumerator_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwEnum);
+void __RPC_STUB IInternetZoneManager_DestroyZoneEnumerator_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IInternetZoneManager_CopyTemplatePoliciesToZone_Proxy(
+    IInternetZoneManager* This,
+    DWORD dwTemplate,
+    DWORD dwZone,
+    DWORD dwReserved);
+void __RPC_STUB IInternetZoneManager_CopyTemplatePoliciesToZone_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IInternetZoneManager_INTERFACE_DEFINED__ */
+
+DEFINE_GUID(CLSID_InternetSecurityManager, 0x7b8a2d94, 0x0ac9, 0x11d1, 0x89, 0x6c, 0x00, 0xc0, 0x4f, 0xB6, 0xbf, 0xc4);
+DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x89, 0x6C, 0x00, 0xC0, 0x4F, 0xB6, 0xBF, 0xC4);
 DEFINE_GUID(IID_IAsyncMoniker, 0x79EAC9D3, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);
 DEFINE_GUID(CLSID_StdURLMoniker, 0x79EAC9E0, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);
 #define MK_S_ASYNCHRONOUS                0x000401E8
@@ -1613,6 +2252,7 @@ HRESULT WINAPI IsAsyncMoniker(IMoniker* pmk);
 HRESULT WINAPI CreateAsyncBindCtx(DWORD, IBindStatusCallback*, IEnumFORMATETC*, IBindCtx**);
 HRESULT WINAPI CoInternetCombineUrl(LPCWSTR,LPCWSTR,DWORD,LPWSTR,DWORD,DWORD*,DWORD);
 HRESULT WINAPI CoInternetCompareUrl(LPCWSTR,LPCWSTR,DWORD);
+HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider*, IInternetZoneManager**, DWORD);
 #define OInetCombineUrl CoInternetCombineUrl
 #define OInetCompareUrl CoInternetCompareUrl
 #define OInetGetSession CoInternetGetSession
