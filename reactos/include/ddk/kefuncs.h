@@ -199,6 +199,18 @@ KeRaiseIrql (
 	PKIRQL	OldIrql
 	);
 
+KIRQL
+STDCALL
+KeRaiseIrqlToDpcLevel (
+	VOID
+	);
+
+KIRQL
+STDCALL
+KeRaiseIrqlToSynchLevel (
+	VOID
+	);
+
 /*
  * FUNCTION: Raises a user mode exception
  * ARGUMENTS:

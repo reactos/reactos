@@ -309,6 +309,57 @@ KeRaiseIrql (
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KeRaiseIrqlToDpcLevel
+ *
+ * DESCRIPTION
+ *	Raises the hardware priority (irql) to DISPATCH level
+ *
+ * ARGUMENTS
+ *	None
+ *
+ * RETURN VALUE
+ *	Previous irq level
+ *
+ * NOTES
+ *	Calls KfRaiseIrql
+ */
+
+KIRQL
+STDCALL
+KeRaiseIrqlToDpcLevel (VOID)
+{
+	return KfRaiseIrql (DISPATCH_LEVEL);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KeRaiseIrqlToSynchLevel
+ *
+ * DESCRIPTION
+ *	Raises the hardware priority (irql) to CLOCK2 level
+ *
+ * ARGUMENTS
+ *	None
+ *
+ * RETURN VALUE
+ *	Previous irq level
+ *
+ * NOTES
+ *	Calls KfRaiseIrql
+ */
+
+KIRQL
+STDCALL
+KeRaiseIrqlToSynchLevel (VOID)
+{
+//	return KfRaiseIrql (CLOCK2_LEVEL);
+	UNIMPLEMENTED;
+}
+
+
 BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
 					 KIRQL Irql,
 					 PKIRQL OldIrql)
