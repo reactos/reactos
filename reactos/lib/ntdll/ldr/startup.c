@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.45 2002/11/07 16:36:50 robd Exp $
+/* $Id: startup.c,v 1.46 2002/11/15 22:06:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -225,24 +225,21 @@ LdrInitializeThunk (ULONG Unknown1,
      }
    ExeModule->BaseAddress = Peb->ImageBaseAddress;
 
-   if ((Peb->ProcessParameters != NULL) &&
-       (Peb->ProcessParameters->ImagePathName.Length != 0))
-     {
-	RtlCreateUnicodeString (&ExeModule->FullDllName,
-			        Peb->ProcessParameters->ImagePathName.Buffer);
-	RtlCreateUnicodeString (&ExeModule->BaseDllName,
-				wcsrchr(ExeModule->FullDllName.Buffer, L'\\') + 1);
-     }
-   else
-     {
-	/* FIXME(???): smss.exe doesn't have a process parameter block */
-        wcscpy (FullNtDllPath, SharedUserData->NtSystemRoot);
-	wcscat (FullNtDllPath, L"\\system32\\smss.exe");
-	RtlCreateUnicodeString (&ExeModule->BaseDllName,
-				L"smss.exe");
-	RtlCreateUnicodeString (&ExeModule->FullDllName,
-				FullNtDllPath);
-     }
+  if ((Peb->ProcessParameters == NULL) ||
+      (Peb->ProcessParameters->ImagePathName.Length == 0))
+    {
+      DbgPrint("Failed to access the process parameter block\n");
+      ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+    }
+
+  RtlCreateUnicodeString(&ExeModule->FullDllName,
+			 Peb->ProcessParameters->ImagePathName.Buffer);
+  RtlCreateUnicodeString(&ExeModule->BaseDllName,
+			 wcsrchr(ExeModule->FullDllName.Buffer, L'\\') + 1);
+
+  DPRINT("BaseDllName '%wZ'  FullDllName '%wZ'\n",
+	 &ExeModule->BaseDllName,
+	 &ExeModule->FullDllName);
 
    ExeModule->Flags = 0;
    ExeModule->LoadCount = -1; /* don't unload */
