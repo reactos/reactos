@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.13 2003/03/21 00:20:41 gdalsnes Exp $
+/* $Id: res.c,v 1.14 2003/04/10 19:12:14 gvg Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -103,48 +103,15 @@ FindResourceExW (
 	PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry = NULL;
 	LDR_RESOURCE_INFO ResourceInfo;
 	NTSTATUS Status;
-	int i,l;
-	ULONG nType = 0, nName = 0;
-	
+
 	if ( hModule == NULL )
 		hModule = GetModuleHandle(NULL);
 
-	if ( HIWORD(lpName) != 0 )  {
-		if ( lpName[0] == L'#' ) {
-			l = lstrlenW(lpName) -1;
-
-			for(i=0;i<l;i++) {
-				nName = lpName[i+1] - L'0';
-				if ( i < l - 1 )
-					nName*= 10;
-			}
-		}
-		else
-		{
-			SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
-			return NULL;
-		}
-
-		lpName = (LPWSTR)nName;
+	if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
+		lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
 	}
-
-	if ( HIWORD(lpType) != 0 )  {
-		if ( lpType[0] == L'#' ) {
-			l = lstrlenW(lpType);
-
-			for(i=0;i<l;i++) {
-				nType = lpType[i] - L'0';
-				if ( i < l - 1 )
-					nType*= 10;
-			}
-		}
-		else
-		{
-			SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
-			return NULL;
-		}
-
-		lpType = (LPWSTR)nType;
+	if ( !IS_INTRESOURCE(lpType) && lpType[0] == L'#' ) {
+		lpType = MAKEINTRESOURCEW(wcstoul(lpType + 1, NULL, 10));
 	}
 
 	ResourceInfo.Type = (ULONG)lpType;

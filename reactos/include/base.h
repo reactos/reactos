@@ -323,7 +323,10 @@ typedef enum _SID_NAME_USE {
 #define INDEXTOSTATEIMAGEMASK(i) ((i) << 12) 
 
 #define MAKEINTATOM(i)   (LPTSTR) ((DWORD) ((WORD) (i))) 
-#define MAKEINTRESOURCE(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
+#define MAKEINTRESOURCE(i)   (LPTSTR) ((ULONG_PTR) ((WORD) (i)))
+#define MAKEINTRESOURCEA(i)  (LPSTR)  ((ULONG_PTR) ((WORD) (i)))
+#define MAKEINTRESOURCEW(i)  (LPWSTR) ((ULONG_PTR) ((WORD) (i)))
+#define IS_INTRESOURCE(n)    ((((ULONG_PTR) (n)) >> 16) == 0)
 
 #define MAKELANGID(p, s) ((((WORD) (s)) << 10) | (WORD) (p)) 
 #define PRIMARYLANGID(lgid)    ((WORD  )(lgid) & 0x3ff) 

@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.2 2003/01/07 17:35:55 robd Exp $
+/* $Id: res.c,v 1.3 2003/04/10 19:12:15 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,8 +88,8 @@ LdrFindResource_U(PVOID BaseAddress,
             for (; EntryCount--; ResEntry++) {
                 /* Scan entries for equal name */
                 if (ResEntry->Name & 0x80000000) {
-                    ws = (PWCHAR)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
-                    if (!wcsncmp((PWCHAR)Id, ws + 1, *ws) &&
+                    ws = (PWCHAR)((ULONG)ResBase + (ResEntry->Name & 0x7FFFFFFF));
+                    if (!_wcsnicmp((PWCHAR)Id, ws + 1, *ws) &&
                           wcslen((PWCHAR)Id) == (int)*ws) {
                         goto found;
                     }

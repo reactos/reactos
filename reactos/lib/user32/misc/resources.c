@@ -3,6 +3,11 @@
 #include <ddk/ntddk.h>
 #include <kernel32/error.h>
 
+/* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
+          does not seem to work properly for stack address space. */
+/* kill `left-hand operand of comma expression has no effect' warning */
+#define IsBadWritePtr(lp, n) ((DWORD)lp==n?0:0)
+
 BOOL STDCALL _InternalLoadString
 (
  HINSTANCE hInstance,
@@ -11,6 +16,7 @@ BOOL STDCALL _InternalLoadString
 )
 {
  HRSRC hrsStringTable;
+ HGLOBAL hResource;
  PWCHAR pStringTable;
  unsigned i;
  unsigned l = uID % 16; /* (1) */
@@ -40,7 +46,13 @@ BOOL STDCALL _InternalLoadString
  if(hrsStringTable == NULL) return FALSE;
 
  /* load the string table into memory */
- pStringTable = LoadResource((HMODULE)hInstance, hrsStringTable);
+ hResource = LoadResource((HMODULE)hInstance, hrsStringTable);
+
+ /* failure */
+ if(hResource == NULL) return FALSE;
+
+ /* lock the resource into memory */
+ pStringTable = LockResource(hResource);
 
  /* failure */
  if(pStringTable == NULL) return FALSE;
@@ -65,8 +77,8 @@ BOOL STDCALL _InternalLoadString
   return FALSE; /* 3 */
  }
 
- /* string length */
- pwstrDest->Length = pwstrDest->MaximumLength = (*pStringTable);
+ /* string length in bytes */
+ pwstrDest->Length = pwstrDest->MaximumLength = (*pStringTable) * sizeof(WCHAR);
 
  /* string */
  pwstrDest->Buffer = pStringTable + 1;
