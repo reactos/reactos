@@ -733,7 +733,7 @@ void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
 
     
 	
-
+ 
 	if (poll_mouse==1) filp=0;
 	if (filp==2) filp=0;
 	if (filp==0) {
@@ -865,34 +865,28 @@ const int size = sizeof(DIDEVICEOBJECTDATA) * 1;
 int count=0;
 DWORD count_ent=0;
 static DWORD time=0;
-static int save_x;
-static int save_y;
-static int save_z;
-static int save_b0;
-static int save_b1;
-static int save_b2;
-static int save_b3;
-static int save_b4;
-static int save_b5;
-static int save_b6;
-int calc;
+static POINT save_point;
+static int save_b[5];
+static int b[5];
+static POINT point;
+int count_button;
 #endif
 
     
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
     
 #ifdef __REACTOS__
-save_x = This->m_state.lX;
-save_y = This->m_state.lY;
-save_z = This->m_state.lZ;
-save_b0 = This->m_state.rgbButtons[0];
-save_b1 = This->m_state.rgbButtons[1];
-save_b2 = This->m_state.rgbButtons[2];
-save_b3 = This->m_state.rgbButtons[3];
-save_b4 = This->m_state.rgbButtons[4];
-save_b5 = This->m_state.rgbButtons[5];
-save_b6 = This->m_state.rgbButtons[6];
-getmousesvalue(iface);
+
+if (flags != DIGDD_PEEK) 
+{
+b[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[3] = ((GetKeyState(VK_XBUTTON1) & 0x80) ? 0xFF : 0x00);	
+b[4] = ((GetKeyState(VK_XBUTTON2) & 0x80) ? 0xFF : 0x00);	
+GetCursorPos( &point );   	
+}
+
 #endif
 
 	// windows does not get any data if 
@@ -913,103 +907,72 @@ getmousesvalue(iface);
 #ifdef __REACTOS__	
      
 	    
-  FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
+  FIXME("This is broken in Tribes ??, need right implant of the buffer!!!!!!!!\n"); 
 
   
   if (GetTickCount()-time <50) {
 	  return DI_OK;
       }
+
   time = GetTickCount();
   if (*entries == 0) return DIERR_INVALIDPARAM;
   
- 
+  last_event++;
+
   for (count=0;count<*entries;count++) {
 	  
-	 if (save_x != This->m_state.lX) {
-         dod[count].dwOfs =   DIMOFS_X;         
-		 dod[count].dwData =  This->m_state.lX - This->offset_array[0];         
+	 if (save_point.x != point.x) {
+         dod[count_ent].dwOfs =   DIMOFS_X;         
+		 dod[count_ent].dwData =  point.x - save_point.x;		
+		 
          dod[count].dwTimeStamp =  time +1; 
          dod[count].dwSequence = last_event++;  
 		 count_ent++;
+         save_point.x = point.x;
          }
 
-     if (save_y != This->m_state.lY) {
+     if (save_point.y != point.y) {
         dod[count].dwOfs =   DIMOFS_Y;
-        dod[count].dwData =   This->m_state.lY;
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
-     if (save_z != This->m_state.lZ) {
-        dod[count].dwOfs =   DIMOFS_Z;
-        dod[count].dwData =   This->m_state.lZ;
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
-  
-	 if (save_b0 != This->m_state.rgbButtons[0]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON0;
-        dod[count].dwData =   This->m_state.rgbButtons[0];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
+        dod[count].dwData =    point.y - save_point.y;
 
-	 if (save_b1 != This->m_state.rgbButtons[1]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON1;
-        dod[count].dwData =   This->m_state.rgbButtons[1];
         dod[count].dwTimeStamp =  time +1;
         dod[count].dwSequence = last_event++;
 		count_ent++;
+		save_point.y = point.y;
 	    }
+     
+     for (count_button=0;count_button<5;count_button++)
+	 {
+	 if (save_b[count_button] != b[count_button]) {
+		 if (count_button==0) {
+			dod[count].dwOfs =   DIMOFS_BUTTON0;
+			}
 
- 	 if (save_b2 != This->m_state.rgbButtons[2]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON2;
-        dod[count].dwData =   This->m_state.rgbButtons[2];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
+		 if (count_button==1) {
+			 dod[count].dwOfs =   DIMOFS_BUTTON1;
+		     }
+		 if (count_button==2) {
+			 dod[count].dwOfs =   DIMOFS_BUTTON2;
+		     }
+		 if (count_button==3) {
+			 dod[count].dwOfs =   DIMOFS_BUTTON3;
+		     }
+		 if (count_button==4) {
+			 dod[count].dwOfs =  DIMOFS_BUTTON4;
+		     }
 
- 	 if (save_b3 != This->m_state.rgbButtons[3]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON3;
-        dod[count].dwData =   This->m_state.rgbButtons[3];
+        dod[count].dwData =   b[count_button];
         dod[count].dwTimeStamp =  time +1;
         dod[count].dwSequence = last_event++;
 		count_ent++;
+		save_b[count_button] = b[count_button];
 	    }
-
- 	 if (save_b4 != This->m_state.rgbButtons[4]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON4;
-        dod[count].dwData =   This->m_state.rgbButtons[4];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
-
-	 if (save_b5 != This->m_state.rgbButtons[5]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON5;
-        dod[count].dwData =   This->m_state.rgbButtons[5];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
-
-	 if (save_b6 != This->m_state.rgbButtons[6]) {
-        dod[count].dwOfs =   DIMOFS_BUTTON6;
-        dod[count].dwData =   This->m_state.rgbButtons[6];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
-		count_ent++;
-	    }
+	 }
 
   }  // end for
 
 
 *entries = count_ent;
-  
-
 #endif
 
 #ifndef __REACTOS__
