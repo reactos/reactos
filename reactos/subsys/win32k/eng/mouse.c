@@ -68,16 +68,20 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
+  pgp->SafetyRemoveCount++;
+
+  if (pgp->SafetyRemoveLevel)
+    {
+      /* already hidden */
+      return FALSE;
+    } 
+
   if (pgp->Exclude.right >= HazardX1
       && pgp->Exclude.left <= HazardX2
       && pgp->Exclude.bottom >= HazardY1
       && pgp->Exclude.top <= HazardY2)
     {
-      if (0 != pgp->SafetyRemoveCount++)
-        {
-          return FALSE;
-        }
-      pgp->SafetySwitch = TRUE;
+      pgp->SafetyRemoveLevel = pgp->SafetyRemoveCount;
       if (pgp->MovePointer)
         pgp->MovePointer(SurfObj, -1, -1, NULL);
       else
@@ -113,25 +117,22 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
     return FALSE;
   }
 
-  if (pgp->SafetySwitch)
-    {
-      if (1 < pgp->SafetyRemoveCount--)
-        {
-          /* Someone else removed it too, let them restore it */
-          return FALSE;
-        }
-      /* FIXME - this is wrong!!!!!! we must NOT access pgp->Pos from here, it's
-                 a private field for ENG/driver. This will paint the cursor to the
-                 wrong screen coordinates when a driver overrides DrvMovePointer()!
-                 We should store the coordinates before calling Drv/EngMovePointer()
-                 and Drv/EngSetPointerShape() separately in the GDIDEVICE structure
-                 or somewhere where ntuser can access it! */
-      if (pgp->MovePointer)
-        pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
-      else
-        EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
-     pgp->SafetySwitch = FALSE;
-    }
+  if (--pgp->SafetyRemoveCount >= pgp->SafetyRemoveLevel)
+   {
+      return FALSE;
+   }
+   /* FIXME - this is wrong!!!!!! we must NOT access pgp->Pos from here, it's
+	      a private field for ENG/driver. This will paint the cursor to the
+	      wrong screen coordinates when a driver overrides DrvMovePointer()!
+	      We should store the coordinates before calling Drv/EngMovePointer()
+	      and Drv/EngSetPointerShape() separately in the GDIDEVICE structure
+	      or somewhere where ntuser can access it! */
+  if (pgp->MovePointer)
+    pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+  else
+    EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+
+  pgp->SafetyRemoveLevel = 0;
 
   return(TRUE);
 }

@@ -124,7 +124,8 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
   PGD_MOVEPOINTER MovePointer;
   ULONG Status;
-  BOOL SafetySwitch;
+  UINT SafetyRemoveLevel; /* at what level was the cursor removed?
+			     0 for not removed */
   UINT SafetyRemoveCount;
 } GDIPOINTER, *PGDIPOINTER;
 
