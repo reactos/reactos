@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.145 2002/12/07 15:43:29 ekohl Exp $
+/* $Id: main.c,v 1.146 2002/12/09 23:09:25 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -102,6 +102,26 @@ RtlpCheckFileNameExtension(PCHAR FileName,
      return TRUE;
    else
      return FALSE;
+}
+
+
+static BOOLEAN
+RtlpIsSystemHive(PCHAR FileName)
+{
+  PCHAR Name;
+
+  Name = strrchr(FileName, '\\');
+  if (Name == NULL)
+  {
+    Name = FileName;
+  }
+  else
+  {
+    Name = Name + 1;
+  }
+
+  return((_stricmp(Name, "system.hiv") == 0) ||
+	 (_stricmp(Name, "system") == 0));
 }
 
 
@@ -492,8 +512,7 @@ ExpInitializeExecutive(VOID)
 	  CPRINT("Process registry chunk at %08lx\n", start);
 	  CmImportHive((PCHAR)start, length);
 	}
-      if (_stricmp(name, "system") == 0 ||
-	  _stricmp(name, "system.hiv") == 0)
+      if (RtlpIsSystemHive(name))
 	{
 	  SetupBoot = FALSE;
 	}
