@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.11 2003/08/02 16:49:36 ekohl Exp $
+/* $Id: partlist.h,v 1.12 2003/08/03 12:20:22 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -49,21 +49,23 @@ typedef struct _PARTDATA
 
 typedef struct _PARTENTRY
 {
-  ULONGLONG StartingOffset;
-  ULONGLONG PartSize;
-  ULONG PartNumber;
-  ULONG PartType;
-  BOOLEAN Active;
+  LIST_ENTRY ListEntry;
 
   CHAR DriveLetter;
   CHAR VolumeLabel[17];
   CHAR FileSystemName[9];
 
-  BOOL Unpartitioned;
+  BOOLEAN Unpartitioned;
 
-  BOOL Used;
+  /*
+   * Raw offset and length of the unpartitioned disk space.
+   * Includes the leading, not yet existing, partition table.
+   */
+  ULONGLONG UnpartitionedOffset;
+  ULONGLONG UnpartitionedLength;
 
-  BOOLEAN HidePartEntry;
+  PARTITION_INFORMATION PartInfo[4];
+
 } PARTENTRY, *PPARTENTRY;
 
 
@@ -71,11 +73,15 @@ typedef struct _DISKENTRY
 {
   LIST_ENTRY ListEntry;
 
-  ULONGLONG DiskSize;
   ULONGLONG Cylinders;
   ULONGLONG TracksPerCylinder;
   ULONGLONG SectorsPerTrack;
   ULONGLONG BytesPerSector;
+
+  ULONGLONG DiskSize;
+  ULONGLONG CylinderSize;
+  ULONGLONG TrackSize;
+
   ULONG DiskNumber;
   USHORT Port;
   USHORT Bus;
@@ -83,8 +89,7 @@ typedef struct _DISKENTRY
 
   UNICODE_STRING DriverName;
 
-  ULONG PartCount;
-  PPARTENTRY PartArray;
+  LIST_ENTRY PartListHead;
 
 } DISKENTRY, *PDISKENTRY;
 
@@ -102,9 +107,9 @@ typedef struct _PARTLIST
   ULONG TopPartition;
 
   PDISKENTRY CurrentDisk;
-  ULONG CurrentPartition;
+  PPARTENTRY CurrentPartition;
 
-  LIST_ENTRY DiskList;
+  LIST_ENTRY DiskListHead;
 
 } PARTLIST, *PPARTLIST;
 
