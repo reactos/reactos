@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.4 2003/11/20 22:28:49 weiden Exp $
+/* $Id: hotkey.c,v 1.5 2003/11/23 12:24:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,6 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
-#include <win32k/userobj.h>
 #include <internal/ex.h>
 #include <internal/ps.h>
 #include <include/error.h>

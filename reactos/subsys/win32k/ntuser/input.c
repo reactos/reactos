@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.19 2003/11/17 02:12:52 hyperion Exp $
+/* $Id: input.c,v 1.20 2003/11/23 12:24:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,6 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
-#include <win32k/userobj.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
