@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.31 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: driver.c,v 1.32 2003/12/15 17:50:23 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -66,7 +66,19 @@ typedef struct _SERVICE
 /*  BOOLEAN ServiceRunning;*/	// needed ??
 } SERVICE, *PSERVICE;
 
+typedef struct _DRIVER_REINIT_ITEM
+{
+  LIST_ENTRY ItemEntry;
+  PDRIVER_OBJECT DriverObject;
+  PDRIVER_REINITIALIZE ReinitRoutine;
+  PVOID Context;
+} DRIVER_REINIT_ITEM, *PDRIVER_REINIT_ITEM;
+
 /* GLOBALS ********************************************************************/
+
+static LIST_ENTRY DriverReinitListHead;
+static PLIST_ENTRY DriverReinitTailEntry;
+static KSPIN_LOCK DriverReinitListLock;
 
 static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
@@ -122,6 +134,10 @@ IopInitDriverImplementation(VOID)
   RtlRosInitUnicodeStringFromLiteral(&IoDriverObjectType->TypeName, L"Driver");
 
   ObpCreateTypeObject(IoDriverObjectType);
+
+  InitializeListHead(&DriverReinitListHead);
+  KeInitializeSpinLock(&DriverReinitListLock);
+  DriverReinitTailEntry = NULL;
 }
 
 static NTSTATUS STDCALL
@@ -1128,6 +1144,97 @@ NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
    return IopUnloadDriver(DriverServiceName, FALSE);
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
+				 PDRIVER_REINITIALIZE ReinitRoutine,
+				 PVOID Context)
+{
+  PDRIVER_REINIT_ITEM ReinitItem;
+
+  ReinitItem = ExAllocatePool(NonPagedPool,
+			      sizeof(DRIVER_REINIT_ITEM));
+  if (ReinitItem == NULL)
+    return;
+
+  ReinitItem->DriverObject = DriverObject;
+  ReinitItem->ReinitRoutine = ReinitRoutine;
+  ReinitItem->Context = Context;
+
+  ExInterlockedInsertTailList(&DriverReinitListHead,
+			      &ReinitItem->ItemEntry,
+			      &DriverReinitListLock);
+}
+
+
+VOID
+IopMarkLastReinitializeDriver(VOID)
+{
+  KIRQL Irql;
+
+  KeAcquireSpinLock(&DriverReinitListLock,
+		    &Irql);
+
+  if (IsListEmpty(&DriverReinitListHead))
+  {
+    DriverReinitTailEntry = NULL;
+  }
+  else
+  {
+    DriverReinitTailEntry = DriverReinitListHead.Blink;
+  }
+
+  KeReleaseSpinLock(&DriverReinitListLock,
+		    Irql);
+}
+
+
+VOID
+IopReinitializeDrivers(VOID)
+{
+  PDRIVER_REINIT_ITEM ReinitItem;
+  PLIST_ENTRY Entry;
+  KIRQL Irql;
+
+  KeAcquireSpinLock(&DriverReinitListLock,
+		    &Irql);
+
+  if (DriverReinitTailEntry == NULL)
+  {
+    KeReleaseSpinLock(&DriverReinitListLock,
+		      Irql);
+    return;
+  }
+
+  KeReleaseSpinLock(&DriverReinitListLock,
+		    Irql);
+
+  for (;;)
+  {
+    Entry = ExInterlockedRemoveHeadList(&DriverReinitListHead,
+				        &DriverReinitListLock);
+    if (Entry == NULL)
+      return;
+
+    ReinitItem = (PDRIVER_REINIT_ITEM)CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
+
+    /* Increment reinitialization counter */
+    ReinitItem->DriverObject->DriverExtension->Count++;
+
+    ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
+			      ReinitItem->Context,
+			      ReinitItem->DriverObject->DriverExtension->Count);
+
+    ExFreePool(Entry);
+
+    if (Entry == DriverReinitTailEntry)
+      return;
+  }
 }
 
 /* EOF */

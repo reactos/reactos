@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.64 2003/10/16 14:49:05 ekohl Exp $
+/* $Id: device.c,v 1.65 2003/12/15 17:50:23 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -249,16 +249,6 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    return(AttachedDevice);
 }
 
-/*
- * @unimplemented
- */
-VOID STDCALL
-IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
-				 PDRIVER_REINITIALIZE ReinitRoutine,
-				 PVOID Context)
-{
-   UNIMPLEMENTED;
-}
 
 NTSTATUS STDCALL
 IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
@@ -539,6 +529,8 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   DPRINT("RegistryKey: %wZ\n", &RegistryKey);
   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
 
+  IopMarkLastReinitializeDriver();
+
   Status = DriverEntry(DriverObject, &RegistryKey);
   if (!NT_SUCCESS(Status))
     {
@@ -548,6 +540,8 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
       ObDereferenceObject(DriverObject);
       return(Status);
     }
+
+  IopReinitializeDrivers();
 
   Status = IopInitializeDevice(DeviceNode, BootDriver);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.37 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: io.h,v 1.38 2003/12/15 17:49:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -393,6 +393,12 @@ NTSTATUS
 IopInitializeDeviceNodeService(
   PDEVICE_NODE DeviceNode,
   BOOLEAN BootDriverOnly);
+
+VOID
+IopMarkLastReinitializeDriver(VOID);
+
+VOID
+IopReinitializeDrivers(VOID);
 
 /* pnpmgr.c */
 
