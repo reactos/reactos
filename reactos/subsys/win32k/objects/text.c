@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.39 2003/08/09 12:03:10 gvg Exp $ */
+/* $Id: text.c,v 1.40 2003/08/09 21:14:01 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -531,7 +531,7 @@ W32kGetTextCharsetInfo(HDC  hDC,
 
 static BOOL
 FASTCALL
-TextIntGetTextExtentPoint(PDC dc,
+TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
                           LPCWSTR String,
                           int Count,
                           int MaxExtent,
@@ -539,7 +539,6 @@ TextIntGetTextExtentPoint(PDC dc,
                           LPINT Dx,
                           LPSIZE Size)
 {
-  PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   FT_Face face;
   FT_GlyphSlot glyph;
@@ -548,7 +547,6 @@ TextIntGetTextExtentPoint(PDC dc,
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
 
-  TextObj = TEXTOBJ_LockText(dc->w.hFont);
   GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
   face = FontGDI->face;
   if (NULL != Fit)
@@ -644,8 +642,6 @@ TextIntGetTextExtentPoint(PDC dc,
       String++;
     }
 
-  TEXTOBJ_UnlockText(dc->w.hFont);
-
   Size->cx = TotalWidth;
   Size->cy = MaxHeight;
 
@@ -669,14 +665,8 @@ W32kGetTextExtentExPoint(HDC hDC,
   BOOLEAN Result;
   INT Fit;
   LPINT Dx;
+  PTEXTOBJ TextObj;
 
-  dc = DC_HandleToPtr(hDC);
-
-  if (NULL == dc)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
   if (Count < 0)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -729,8 +719,22 @@ W32kGetTextExtentExPoint(HDC hDC,
       return FALSE;
     }
 
-  Result = TextIntGetTextExtentPoint(dc, String, Count, MaxExtent,
+  dc = DC_HandleToPtr(hDC);
+  if (NULL == dc)
+    {
+      if (NULL != Dx)
+	{
+	  ExFreePool(Dx);
+	}
+      ExFreePool(String);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  DC_ReleasePtr(hDC);
+  Result = TextIntGetTextExtentPoint(TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
+  TEXTOBJ_UnlockText(dc->w.hFont);
 
   ExFreePool(String);
   if (! Result)
@@ -806,6 +810,7 @@ W32kGetTextExtentPoint32(HDC hDC,
   SIZE Size;
   NTSTATUS Status;
   BOOLEAN Result;
+  PTEXTOBJ TextObj;
 
   dc = DC_HandleToPtr(hDC);
 
@@ -847,7 +852,17 @@ W32kGetTextExtentPoint32(HDC hDC,
       return FALSE;
     }
 
+  dc = DC_HandleToPtr(hDC);
+  if (NULL == dc)
+    {
+      ExFreePool(String);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  DC_ReleasePtr(hDC);
   Result = TextIntGetTextExtentPoint(dc, String, Count, 0, NULL, NULL, &Size);
+  TEXTOBJ_UnlockText(dc->w.hFont);
 
   ExFreePool(String);
   if (! Result)
