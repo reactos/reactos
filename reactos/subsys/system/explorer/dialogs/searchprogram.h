@@ -28,7 +28,8 @@
  //
 
 
-struct ShellPathWithFolder {
+struct ShellPathWithFolder
+{
 	ShellPathWithFolder(const ShellFolder& folder, const ShellPath& path)
 	 :	_folder(folder), _path(path) {}
 
@@ -41,9 +42,10 @@ typedef void (*COLLECT_CALLBACK)(ShellFolder& folder, const ShellEntry* entry, v
 
 struct CollectProgramsThread : public Thread
 {
-	CollectProgramsThread(COLLECT_CALLBACK callback, HWND hwnd)
+	CollectProgramsThread(COLLECT_CALLBACK callback, HWND hwnd, void* para)
 	 :	_callback(callback),
-		_hwnd(hwnd)
+		_hwnd(hwnd),
+		_para(para)
 	{
 	}
 
@@ -52,6 +54,7 @@ struct CollectProgramsThread : public Thread
 protected:
 	COLLECT_CALLBACK _callback;
 	HWND	_hwnd;
+	void*	_para;
 
 	void CollectProgramsThread::collect_programs(const ShellPath& path);
 };
@@ -62,15 +65,19 @@ struct FindProgramTopicDlg : public ResizeController<Dialog>
 	typedef ResizeController<Dialog> super;
 
 	FindProgramTopicDlg(HWND hwnd);
+	~FindProgramTopicDlg();
 
 protected:
+	CommonControlInit _usingCmnCtrl;
 	HWND	_list_ctrl;
 	HACCEL	_haccel;
+	HIMAGELIST _himl;
 
 	CollectProgramsThread _thread;
 
 	virtual LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);
+	virtual int	Notify(int id, NMHDR* pnmh);
 
 	void	Refresh();
 

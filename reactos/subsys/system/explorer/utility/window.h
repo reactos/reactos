@@ -333,8 +333,8 @@ struct Dialog : public Window
 	Dialog(HWND);
 	~Dialog();
 
-	static int DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent);
-	static int DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent);
+	static int DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent=0);
+	static int DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent=0);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

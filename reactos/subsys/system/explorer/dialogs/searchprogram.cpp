@@ -71,15 +71,18 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 			collect_programs(shell_entry->create_absolute_pidl());
 		else if (entry->_shell_attribs & SFGAO_LINK)
 			if (_alive)
-				_callback(dir._folder, shell_entry, _hwnd);
+				_callback(dir._folder, shell_entry, _para);
 	}
 }
 
 
+#pragma warning(disable: 4355)
+
 FindProgramTopicDlg::FindProgramTopicDlg(HWND hwnd)
  :	super(hwnd),
 	_list_ctrl(GetDlgItem(hwnd, IDC_MAILS_FOUND)),
-	_thread(collect_programs_callback, _list_ctrl)
+	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32, 0, 0)),
+	_thread(collect_programs_callback, hwnd, this)
 {
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
 
@@ -90,7 +93,9 @@ FindProgramTopicDlg::FindProgramTopicDlg(HWND hwnd)
 
 	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_SEARCH_PROGRAM));
 
-	LV_COLUMN column = {LVCF_TEXT|LVCF_FMT|LVCF_WIDTH, LVCFMT_LEFT, 250};
+	ListView_SetImageList(_list_ctrl, _himl, LVSIL_SMALL);
+
+	LV_COLUMN column = {LVCF_FMT|LVCF_WIDTH|LVCF_TEXT, LVCFMT_LEFT, 250};
 
 	column.pszText = _T("Name");
 	ListView_InsertColumn(_list_ctrl, 0, &column);
@@ -103,6 +108,12 @@ FindProgramTopicDlg::FindProgramTopicDlg(HWND hwnd)
 
 	Refresh();
 }
+
+FindProgramTopicDlg::~FindProgramTopicDlg()
+{
+	ImageList_Destroy(_himl);
+}
+
 
 void FindProgramTopicDlg::Refresh()
 {
@@ -129,25 +140,31 @@ void FindProgramTopicDlg::collect_programs_callback(ShellFolder& folder, const S
 			hr = pShellLink->GetPath(path, MAX_PATH-1, (WIN32_FIND_DATA*)&wfd, SLGP_UNCPRIORITY);
 
 			if (SUCCEEDED(hr)) {
-				if (_tcsstr(path, _T(".exe"))) {	//@@
-					HWND list_ctrl = (HWND)param;
+				String lwr_path = path;
+				String lwr_name = entry->_display_name;
 
-					LV_ITEM item = {LVIF_TEXT, INT_MAX};
+				_tcslwr((LPTSTR)lwr_path.c_str());
+				_tcslwr((LPTSTR)lwr_name.c_str());
+
+				if (_tcsstr(lwr_path, _T(".exe")) &&	//@@ filter on ".exe" suffix
+					!_tcsstr(lwr_name, _T("uninstal")) && !_tcsstr(lwr_name, _T("deinstal"))) {	//@@ filter out deinstallation links
+					FindProgramTopicDlg* pThis = (FindProgramTopicDlg*) param;
+
+					LV_ITEM item = {LVIF_TEXT|LVIF_IMAGE|LVIF_PARAM, INT_MAX};
 
 					item.pszText = entry->_display_name;
-					item.iItem = ListView_InsertItem(list_ctrl, &item);
-
-					item.iSubItem = 1;
-					item.pszText = path;
-					ListView_SetItem(list_ctrl, &item);
-
-					int icon;
-					hr = pShellLink->GetIconLocation(path, MAX_PATH-1, &icon);
-
-					//TODO: display icon
+					item.iImage = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
+					item.lParam = 0;	//@@
 
 					//TODO: store info in ShellPathWithFolder
 
+					item.iItem = ListView_InsertItem(pThis->_list_ctrl, &item);
+
+					item.mask = LVIF_TEXT;
+					item.iSubItem = 1;
+					item.pszText = path;
+
+					ListView_SetItem(pThis->_list_ctrl, &item);
 				}
 			}
 		}
@@ -178,4 +195,31 @@ int FindProgramTopicDlg::Command(int id, int code)
 	}
 
 	return TRUE;
+}
+
+int FindProgramTopicDlg::Notify(int id, NMHDR* pnmh)
+{
+	switch(pnmh->code) {
+	  case LVN_GETDISPINFO: {
+		LV_DISPINFO* pDispInfo = (LV_DISPINFO*) pnmh;
+
+		if (pnmh->hwndFrom == _list_ctrl) {
+/*
+			if (pDispInfo->item.mask & LVIF_IMAGE) {
+				int icon;
+				HRESULT hr = pShellLink->GetIconLocation(path, MAX_PATH-1, &icon);
+
+				HICON hIcon = ExtractIcon();
+				pDispInfo->item.iImage = ImageList_AddIcon(_himl, hIcon);
+
+				pDispInfo->item.mask |= LVIF_DI_SETITEM;
+
+				return 1;
+			}
+*/
+		}
+	  break;}
+	}
+
+	return 0;
 }

@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include <windows.h>
-#include <winuser.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -143,12 +142,21 @@ IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 // Accelerator
 //
 
+#ifdef __WINE__
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
     VK_X,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
     VK_S,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
+#else
+IDA_EXPLORER ACCELERATORS DISCARDABLE 
+BEGIN
+    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+END
+#endif
 
 IDA_SEARCH_PROGRAM ACCELERATORS DISCARDABLE 
 BEGIN
@@ -559,7 +567,7 @@ BEGIN
     PUSHBUTTON      "&Help",254,158,43,47,14
 END
 
-IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
+IDD_SEARCH_PROGRAM DIALOGEX 120, 100, 144, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
@@ -567,7 +575,7 @@ CAPTION "Search Program in Startmenu"
 FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_TOPIC,7,7,130,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
+    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | LVS_SINGLESEL|
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,25,130,33
 END
 

@@ -773,15 +773,14 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS);
 		break;
 
-	  case IDC_SEARCH_PROGRAM: {
-		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+	  case IDC_SEARCH_PROGRAM:
 		CloseStartMenu(id);
-		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramTopicDlg), hwndDesktopBar);
-		break;}
+		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramTopicDlg));
+		break;
 
 	  case IDC_EXPLORE:
-		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		CloseStartMenu(id);
+		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
 	  case IDC_LAUNCH: {
