@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.17 2003/07/21 19:21:48 royce Exp $
+/* $Id: stubsa.c,v 1.18 2003/07/28 19:37:13 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -743,7 +743,7 @@ GetEnhMetaFileDescriptionA(
   if ( lpszDescription && cchBuffer )
     {
       hHeap = RtlGetProcessHeap();
-      lpszDescriptionW = RtlAllocateHeap ( hHeap, 0, cchBuffer );
+      lpszDescriptionW = (LPWSTR)RtlAllocateHeap ( hHeap, 0, cchBuffer );
     }
 
   rc = W32kGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
