@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: toolhelp.c,v 1.5 2004/10/31 00:04:19 weiden Exp $
+/* $Id: toolhelp.c,v 1.6 2004/10/31 00:09:12 weiden Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -400,7 +400,6 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       ProcessListEntry->dwFlags = 0; /* no longer used */
       if(ProcessInfo->ImageName.Buffer != NULL)
       {
-        DbgPrint("proc: %ws\n", ProcessInfo->ImageName.Buffer);
         lstrcpynW(ProcessListEntry->szExeFile,
                   ProcessInfo->ImageName.Buffer,
                   min(ProcessInfo->ImageName.Length, sizeof(ProcessListEntry->szExeFile) / sizeof(ProcessListEntry->szExeFile[0])));
