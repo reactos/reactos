@@ -1,11 +1,11 @@
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/libs/unicode/string.c,v
-retrieving revision 1.4
-diff -u -r1.4 string.c
---- string.c	22 Nov 2003 00:00:53 -0000	1.4
-+++ string.c	2 Jan 2004 19:09:14 -0000
-@@ -23,6 +23,20 @@
+retrieving revision 1.5
+diff -u -r1.5 string.c
+--- string.c	2 Apr 2004 19:40:31 -0000	1.5
++++ string.c	16 Apr 2004 09:07:08 -0000
+@@ -23,6 +23,21 @@
  
  #include "wine/unicode.h"
  
@@ -22,6 +22,7 @@ diff -u -r1.4 string.c
 +#undef strcmpiW
 +#undef strncmpiW
 +#undef sprintfW
++#undef snprintfW
 +
  int strcmpiW( const WCHAR *str1, const WCHAR *str2 )
  {
