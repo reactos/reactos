@@ -1,3 +1,8 @@
+2003-08-13  Martin Fuchs	<martin-fuchs@gmx.net>
+	
+	* subsys/system/explorer/taskbar/ex_bar.c, ex_menu.c
+	make explorer bar look more like windows taskbar bar
+
 2003-08-09  Martin Fuchs	<martin-fuchs@gmx.net>
 	
 	* subsys/system/explorer Subclassing of shell window for drawing

@@ -29,7 +29,12 @@ static int InitializePlugIn(HWND ExplorerHandle)
  int i;
  int x;
 
-  fprintf(stderr,"EX_MENU : INITIALIZE PLUGIN call\n");
+ HINSTANCE hinst = (HINSTANCE) GetWindowLong(ExplorerHandle, GWL_HINSTANCE);
+
+ fprintf(stderr,"EX_MENU : INITIALIZE PLUGIN call\n");
+
+ CreateWindow(TEXT("BUTTON"), TEXT("Start"), WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON,
+     2, 2, 50, ex_dy-10, ExplorerHandle, NULL, hinst, 0);
 
  if (!(Conf=fopen("explorer.lst","r")))   // Error !
   {
@@ -39,7 +44,6 @@ static int InitializePlugIn(HWND ExplorerHandle)
  
  fgets(line,80,Conf);              // Read how many entries are in the file
  epl_Buttons=atoi(line);           // atoi it !
-
 
  for (i=0;i<epl_Buttons;i++)
  {
@@ -54,8 +58,8 @@ static int InitializePlugIn(HWND ExplorerHandle)
    strcpy(epl_line[i],line);
 
    epl_AppButtons[i] = CreateWindow(
-    TEXT("BUTTON"),ttl/*@@*/,WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-      (i*102)+2, 2, 100,  ex_dy-10, ExplorerHandle, NULL, (HINSTANCE) GetWindowLong(ExplorerHandle, GWL_HINSTANCE),NULL);
+    TEXT("BUTTON"),ttl/*@@*/, WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON,
+      60+(i*102)+2, 2, 100,  ex_dy-10, ExplorerHandle, NULL, hinst, 0);
   }
 
   return 1;
@@ -159,6 +163,7 @@ static int PlugInMessageProc(HWND PlgnHandle, UINT Msg, WPARAM wParam, LPARAM lP
       }
     break;
   }
+
   return 1;
 }
 
