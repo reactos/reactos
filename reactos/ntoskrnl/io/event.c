@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.2 2000/03/26 19:38:22 ea Exp $
+/* $Id: event.c,v 1.3 2000/10/06 16:54:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos.h>
 
 #include <internal/debug.h>
 
@@ -20,18 +21,75 @@
 PKEVENT
 STDCALL
 IoCreateNotificationEvent(PUNICODE_STRING EventName,
-				  PHANDLE EventHandle)
+			  PHANDLE EventHandle)
 {
-   UNIMPLEMENTED;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   PKEVENT Event;
+   HANDLE Handle;
+   NTSTATUS Status;
+
+   InitializeObjectAttributes(&ObjectAttributes,
+			      EventName,
+			      OBJ_OPENIF,
+			      NULL,
+			      NULL);
+
+   Status = NtCreateEvent(&Handle,
+			  EVENT_ALL_ACCESS,
+			  &ObjectAttributes,
+			  FALSE,
+			  TRUE);
+   if (!NT_SUCCESS(Status))
+     return NULL;
+
+   ObReferenceObjectByHandle(Handle,
+			     0,
+			     ExEventObjectType,
+			     KernelMode,
+			     &Event,
+			     NULL);
+   ObDereferenceObject(Event);
+
+   *EventHandle = Handle;
+
+   return Event;
 }
 
 PKEVENT
 STDCALL
 IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
-				     PHANDLE EventHandle)
+			     PHANDLE EventHandle)
 {
-   UNIMPLEMENTED;
-}
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   PKEVENT Event;
+   HANDLE Handle;
+   NTSTATUS Status;
 
+   InitializeObjectAttributes(&ObjectAttributes,
+			      EventName,
+			      OBJ_OPENIF,
+			      NULL,
+			      NULL);
+
+   Status = NtCreateEvent(&Handle,
+			  EVENT_ALL_ACCESS,
+			  &ObjectAttributes,
+			  TRUE,
+			  TRUE);
+   if (!NT_SUCCESS(Status))
+     return NULL;
+
+   ObReferenceObjectByHandle(Handle,
+			     0,
+			     ExEventObjectType,
+			     KernelMode,
+			     &Event,
+			     NULL);
+   ObDereferenceObject(Event);
+
+   *EventHandle = Handle;
+
+   return Event;
+}
 
 /* EOF */
