@@ -8,7 +8,7 @@ set ROS_INSTALL=c:\reactos
 echo Installing to %ROS_INSTALL%
 @echo off
 
-set ROS_INSTALL_TESTS=%ROS_INSTALL%\tests
+set ROS_INSTALL_TESTS=%ROS_INSTALL%\test
 
 md %ROS_INSTALL%
 md %ROS_INSTALL%\bin
@@ -87,6 +87,7 @@ copy lib\shell32\roshel32.dll %ROS_INSTALL%\system32
 copy lib\snmpapi\snmpapi.dll %ROS_INSTALL%\system32
 copy lib\user32\user32.dll %ROS_INSTALL%\system32
 copy lib\version\version.dll %ROS_INSTALL%\system32
+copy lib\winedbgc\winedbgc.dll %ROS_INSTALL%\system32
 copy lib\winmm\winmm.dll %ROS_INSTALL%\system32
 copy lib\ws2_32\ws2_32.dll %ROS_INSTALL%\system32
 copy lib\ws2help\ws2help.dll %ROS_INSTALL%\system32
