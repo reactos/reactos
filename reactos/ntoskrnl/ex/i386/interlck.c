@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
+/* $Id: interlck.c,v 1.5 2002/12/16 22:56:30 hbirr Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
@@ -34,8 +34,8 @@ Exfi386InterlockedExchangeUlong(IN PULONG Target,
 
 __asm__("\n\t.global @Exfi386InterlockedExchangeUlong@8\n\t"
 	"@Exfi386InterlockedExchangeUlong@8:\n\t"
-	"movl (%ecx),%eax\n"
 	"xchgl %edx,(%ecx)\n\t"
+	"movl  %edx,%eax\n\t"
 	"ret\n\t");
 
 
@@ -124,8 +124,8 @@ InterlockedExchange(PLONG Target,
 
 __asm__("\n\t.global @InterlockedExchange@8\n\t"
 	"@InterlockedExchange@8:\n\t"
-	"movl (%ecx),%eax\n"
 	"xchgl %edx,(%ecx)\n\t"
+	"movl  %edx,%eax\n\t"
 	"ret\n\t");
 
 
