@@ -1,379 +1,702 @@
-/* $Id: elf.c,v 1.1.2.1 2004/12/03 14:17:10 hyperion Exp $
+/* $Id: elf.c,v 1.1.2.2 2004/12/30 01:59:59 hyperion Exp $
 */
 
-/*
- * REACTOS ELF MAPPER
- *
- * ELF mapper, ported from FreeBSD by KJK::Hyperion as part of the ELF support
- * initiative. Original copyright, licensing and disclaimers follow
- */
+#include <ntoskrnl.h>
 
-/*-
- * Copyright 1996-1998 John D. Polstra.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $FreeBSD: src/libexec/rtld-elf/map_object.c,v 1.15 2004/08/03 08:50:58 dfr Exp $
- */
+/*#define NDEBUG*/
+#include <internal/debug.h>
 
-#include <sys/param.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <reactos/exeformat.h>
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#ifndef __ELF_WORD_SIZE
+#error __ELF_WORD_SIZE must be defined
+#endif
 
-#include "debug.h"
-#include "rtld.h"
+#include <elf.h>
 
-static Elf_Ehdr *get_elf_header (int, const char *);
-static int convert_prot(int);	/* Elf flags -> mmap protection */
-static int convert_flags(int); /* Elf flags -> mmap flags */
-
-/*
- * Map a shared object into memory.  The "fd" argument is a file descriptor,
- * which must be open on the object and positioned at its beginning.
- * The "path" argument is a pathname that is used only for error messages.
- *
- * The return value is a pointer to a newly-allocated Obj_Entry structure
- * for the shared object.  Returns NULL on failure.
- */
-Obj_Entry *
-map_object(int fd, const char *path, const struct stat *sb)
+/* TODO: Intsafe should be made into a library, as it's generally useful */
+static __inline BOOLEAN Intsafe_CanAddULongPtr
+(
+ IN ULONG_PTR Addend1,
+ IN ULONG_PTR Addend2
+)
 {
-    Obj_Entry *obj;
-    Elf_Ehdr *hdr;
-    int i;
-    Elf_Phdr *phdr;
-    Elf_Phdr *phlimit;
-    Elf_Phdr **segs;
-    int nsegs;
-    Elf_Phdr *phdyn;
-    Elf_Phdr *phphdr;
-    Elf_Phdr *phinterp;
-    Elf_Phdr *phtls;
-    caddr_t mapbase;
-    size_t mapsize;
-    Elf_Off base_offset;
-    Elf_Addr base_vaddr;
-    Elf_Addr base_vlimit;
-    caddr_t base_addr;
-    Elf_Off data_offset;
-    Elf_Addr data_vaddr;
-    Elf_Addr data_vlimit;
-    caddr_t data_addr;
-    int data_prot;
-    int data_flags;
-    Elf_Addr clear_vaddr;
-    caddr_t clear_addr;
-    caddr_t clear_page;
-    size_t nclear;
-    Elf_Addr bss_vaddr;
-    Elf_Addr bss_vlimit;
-    caddr_t bss_addr;
-
-    hdr = get_elf_header(fd, path);
-    if (hdr == NULL)
-	return (NULL);
-
-    /*
-     * Scan the program header entries, and save key information.
-     *
-     * We rely on there being exactly two load segments, text and data,
-     * in that order.
-     */
-    phdr = (Elf_Phdr *) ((char *)hdr + hdr->e_phoff);
-    phlimit = phdr + hdr->e_phnum;
-    nsegs = -1;
-    phdyn = phphdr = phinterp = phtls = NULL;
-    segs = alloca(sizeof(segs[0]) * hdr->e_phnum);
-    while (phdr < phlimit) {
-	switch (phdr->p_type) {
-
-	case PT_INTERP:
-	    phinterp = phdr;
-	    break;
-
-	case PT_LOAD:
-	    segs[++nsegs] = phdr;
-    	    if (segs[nsegs]->p_align < PAGE_SIZE) {
-		_rtld_error("%s: PT_LOAD segment %d not page-aligned",
-		    path, nsegs);
-		return NULL;
-	    }
-	    break;
-
-	case PT_PHDR:
-	    phphdr = phdr;
-	    break;
-
-	case PT_DYNAMIC:
-	    phdyn = phdr;
-	    break;
-
-	case PT_TLS:
-	    phtls = phdr;
-	    break;
-	}
-
-	++phdr;
-    }
-    if (phdyn == NULL) {
-	_rtld_error("%s: object is not dynamically-linked", path);
-	return NULL;
-    }
-
-    if (nsegs < 0) {
-	_rtld_error("%s: too few PT_LOAD segments", path);
-	return NULL;
-    }
-
-    /*
-     * Map the entire address space of the object, to stake out our
-     * contiguous region, and to establish the base address for relocation.
-     */
-    base_offset = trunc_page(segs[0]->p_offset);
-    base_vaddr = trunc_page(segs[0]->p_vaddr);
-    base_vlimit = round_page(segs[nsegs]->p_vaddr + segs[nsegs]->p_memsz);
-    mapsize = base_vlimit - base_vaddr;
-    base_addr = hdr->e_type == ET_EXEC ? (caddr_t) base_vaddr : NULL;
-
-    mapbase = mmap(base_addr, mapsize, convert_prot(segs[0]->p_flags),
-      convert_flags(segs[0]->p_flags), fd, base_offset);
-    if (mapbase == (caddr_t) -1) {
-	_rtld_error("%s: mmap of entire address space failed: %s",
-	  path, strerror(errno));
-	return NULL;
-    }
-    if (base_addr != NULL && mapbase != base_addr) {
-	_rtld_error("%s: mmap returned wrong address: wanted %p, got %p",
-	  path, base_addr, mapbase);
-	munmap(mapbase, mapsize);
-	return NULL;
-    }
-
-    for (i = 0; i <=  nsegs; i++) {
-	/* Overlay the segment onto the proper region. */
-	data_offset = trunc_page(segs[i]->p_offset);
-	data_vaddr = trunc_page(segs[i]->p_vaddr);
-	data_vlimit = round_page(segs[i]->p_vaddr + segs[i]->p_filesz);
-	data_addr = mapbase + (data_vaddr - base_vaddr);
-	data_prot = convert_prot(segs[i]->p_flags);
-	data_flags = convert_flags(segs[i]->p_flags) | MAP_FIXED;
-	/* Do not call mmap on the first segment - this is redundant */
-	if (i && mmap(data_addr, data_vlimit - data_vaddr, data_prot,
-	  data_flags, fd, data_offset) == (caddr_t) -1) {
-	    _rtld_error("%s: mmap of data failed: %s", path, strerror(errno));
-	    return NULL;
-	}
-
-	/* Clear any BSS in the last page of the segment. */
-	clear_vaddr = segs[i]->p_vaddr + segs[i]->p_filesz;
-	clear_addr = mapbase + (clear_vaddr - base_vaddr);
-	clear_page = mapbase + (trunc_page(clear_vaddr) - base_vaddr);
-	if ((nclear = data_vlimit - clear_vaddr) > 0) {
-	    /* Make sure the end of the segment is writable */
-	    if ((data_prot & PROT_WRITE) == 0 &&
-		-1 ==  mprotect(clear_page, PAGE_SIZE, data_prot|PROT_WRITE)) {
-			_rtld_error("%s: mprotect failed: %s", path,
-			    strerror(errno));
-			return NULL;
-	    }
-
-	    memset(clear_addr, 0, nclear);
-
-	    /* Reset the data protection back */
-	    if ((data_prot & PROT_WRITE) == 0)
-		 mprotect(clear_page, PAGE_SIZE, data_prot);
-	}
-
-	/* Overlay the BSS segment onto the proper region. */
-	bss_vaddr = data_vlimit;
-	bss_vlimit = round_page(segs[i]->p_vaddr + segs[i]->p_memsz);
-	bss_addr = mapbase +  (bss_vaddr - base_vaddr);
-	if (bss_vlimit > bss_vaddr) {	/* There is something to do */
-	    if (mmap(bss_addr, bss_vlimit - bss_vaddr, data_prot,
-		MAP_PRIVATE|MAP_FIXED|MAP_ANON, -1, 0) == (caddr_t) -1) {
-		    _rtld_error("%s: mmap of bss failed: %s", path,
-			strerror(errno));
-		return NULL;
-	    }
-	}
-    }
-
-    obj = obj_new();
-    if (sb != NULL) {
-	obj->dev = sb->st_dev;
-	obj->ino = sb->st_ino;
-    }
-    obj->mapbase = mapbase;
-    obj->mapsize = mapsize;
-    obj->textsize = round_page(segs[0]->p_vaddr + segs[0]->p_memsz) -
-      base_vaddr;
-    obj->vaddrbase = base_vaddr;
-    obj->relocbase = mapbase - base_vaddr;
-    obj->dynamic = (const Elf_Dyn *) (obj->relocbase + phdyn->p_vaddr);
-    if (hdr->e_entry != 0)
-	obj->entry = (caddr_t) (obj->relocbase + hdr->e_entry);
-    if (phphdr != NULL) {
-	obj->phdr = (const Elf_Phdr *) (obj->relocbase + phphdr->p_vaddr);
-	obj->phsize = phphdr->p_memsz;
-    }
-    if (phinterp != NULL)
-	obj->interp = (const char *) (obj->relocbase + phinterp->p_vaddr);
-    if (phtls != NULL) {
-	tls_dtv_generation++;
-	obj->tlsindex = ++tls_max_index;
-	obj->tlssize = phtls->p_memsz;
-	obj->tlsalign = phtls->p_align;
-	obj->tlsinitsize = phtls->p_filesz;
-	obj->tlsinit = mapbase + phtls->p_vaddr;
-    }
-    return obj;
+ return Addend1 <= (MAXULONG_PTR - Addend2);
 }
 
-static Elf_Ehdr *
-get_elf_header (int fd, const char *path)
+#define Intsafe_CanAddSizeT Intsafe_CanAddULongPtr
+
+static __inline BOOLEAN Intsafe_CanAddULong32
+(
+ IN ULONG Addend1,
+ IN ULONG Addend2
+)
 {
-    static union {
-	Elf_Ehdr hdr;
-	char buf[PAGE_SIZE];
-    } u;
-    ssize_t nbytes;
-
-    if ((nbytes = read(fd, u.buf, PAGE_SIZE)) == -1) {
-	_rtld_error("%s: read error: %s", path, strerror(errno));
-	return NULL;
-    }
-
-    /* Make sure the file is valid */
-    if (nbytes < (ssize_t)sizeof(Elf_Ehdr) || !IS_ELF(u.hdr)) {
-	_rtld_error("%s: invalid file format", path);
-	return NULL;
-    }
-    if (u.hdr.e_ident[EI_CLASS] != ELF_TARG_CLASS
-      || u.hdr.e_ident[EI_DATA] != ELF_TARG_DATA) {
-	_rtld_error("%s: unsupported file layout", path);
-	return NULL;
-    }
-    if (u.hdr.e_ident[EI_VERSION] != EV_CURRENT
-      || u.hdr.e_version != EV_CURRENT) {
-	_rtld_error("%s: unsupported file version", path);
-	return NULL;
-    }
-    if (u.hdr.e_type != ET_EXEC && u.hdr.e_type != ET_DYN) {
-	_rtld_error("%s: unsupported file type", path);
-	return NULL;
-    }
-    if (u.hdr.e_machine != ELF_TARG_MACH) {
-	_rtld_error("%s: unsupported machine", path);
-	return NULL;
-    }
-
-    /*
-     * We rely on the program header being in the first page.  This is
-     * not strictly required by the ABI specification, but it seems to
-     * always true in practice.  And, it simplifies things considerably.
-     */
-    if (u.hdr.e_phentsize != sizeof(Elf_Phdr)) {
-	_rtld_error(
-	  "%s: invalid shared object: e_phentsize != sizeof(Elf_Phdr)", path);
-	return NULL;
-    }
-    if (u.hdr.e_phoff + u.hdr.e_phnum * sizeof(Elf_Phdr) > (size_t)nbytes) {
-	_rtld_error("%s: program header too large", path);
-	return NULL;
-    }
-
-    return (&u.hdr);
+ return Addend1 <= (MAXULONG - Addend2);
 }
 
-void
-obj_free(Obj_Entry *obj)
+static __inline BOOLEAN Intsafe_AddULong32
+(
+ OUT PULONG Result,
+ IN ULONG Addend1,
+ IN ULONG Addend2
+)
 {
-    Objlist_Entry *elm;
+ if(!Intsafe_CanAddULong32(Addend1, Addend2))
+  return FALSE;
 
-    free(obj->path);
-    while (obj->needed != NULL) {
-	Needed_Entry *needed = obj->needed;
-	obj->needed = needed->next;
-	free(needed);
-    }
-    while (!STAILQ_EMPTY(&obj->dldags)) {
-	elm = STAILQ_FIRST(&obj->dldags);
-	STAILQ_REMOVE_HEAD(&obj->dldags, link);
-	free(elm);
-    }
-    while (!STAILQ_EMPTY(&obj->dagmembers)) {
-	elm = STAILQ_FIRST(&obj->dagmembers);
-	STAILQ_REMOVE_HEAD(&obj->dagmembers, link);
-	free(elm);
-    }
-    free(obj->origin_path);
-    free(obj->priv);
-    free(obj);
+ *Result = Addend1 + Addend2;
+ return TRUE;
 }
 
-Obj_Entry *
-obj_new(void)
+static __inline BOOLEAN Intsafe_CanAddULong64
+(
+ IN ULONG64 Addend1,
+ IN ULONG64 Addend2
+)
 {
-    Obj_Entry *obj;
+ return Addend1 <= (((ULONG64)-1) - Addend2);
+}
 
-    obj = CNEW(Obj_Entry);
-    STAILQ_INIT(&obj->dldags);
-    STAILQ_INIT(&obj->dagmembers);
-    return obj;
+static __inline BOOLEAN Intsafe_AddULong64
+(
+ OUT PULONG64 Result,
+ IN ULONG64 Addend1,
+ IN ULONG64 Addend2
+)
+{
+ if(!Intsafe_CanAddULong64(Addend1, Addend2))
+  return FALSE;
+
+ *Result = Addend1 + Addend2;
+ return TRUE;
+}
+
+static __inline BOOLEAN Intsafe_CanMulULong32
+(
+ IN ULONG Factor1,
+ IN ULONG Factor2
+)
+{
+ return Factor1 <= (MAXULONG / Factor2);
+}
+
+static __inline BOOLEAN Intsafe_MulULong32
+(
+ OUT PULONG Result,
+ IN ULONG Factor1,
+ IN ULONG Factor2
+)
+{
+ if(!Intsafe_CanMulULong32(Factor1, Factor2))
+  return FALSE;
+
+ *Result = Factor1 * Factor2;
+ return TRUE;
+}
+
+static __inline BOOLEAN Intsafe_CanOffsetPointer
+(
+ IN CONST VOID * Pointer,
+ IN SIZE_T Offset
+)
+{
+ /* FIXME: (PVOID)MAXULONG_PTR isn't necessarily a valid address */
+ return Intsafe_CanAddULongPtr((ULONG_PTR)Pointer, Offset);
+}
+
+#if __ELF_WORD_SIZE == 32
+#define ElfFmtpAddSize Intsafe_AddULong32
+#define ElfFmtpReadAddr ElfFmtpReadULong
+#define ElfFmtpReadOff  ElfFmtpReadULong
+#define ElfFmtpSafeReadAddr ElfFmtpSafeReadULong
+#define ElfFmtpSafeReadOff  ElfFmtpSafeReadULong
+#define ElfFmtpSafeReadSize ElfFmtpSafeReadULong
+#elif __ELF_WORD_SIZE == 64
+#define ElfFmtpAddSize Intsafe_AddULong64
+#define ElfFmtpReadAddr ElfFmtpReadULong64
+#define ElfFmtpReadOff  ElfFmtpReadULong64
+#define ElfFmtpSafeReadAddr ElfFmtpSafeReadULong64
+#define ElfFmtpSafeReadOff  ElfFmtpSafeReadULong64
+#define ElfFmtpSafeReadSize ElfFmtpSafeReadULong64
+#endif
+
+/* TODO: these are standard DDK/PSDK macros */
+#define RtlRetrieveUlonglong(DST_, SRC_) \
+ (RtlCopyMemory((DST_), (SRC_), sizeof(ULONG64)))
+
+#ifndef RTL_FIELD_SIZE
+#define RTL_FIELD_SIZE(TYPE_, FIELD_) (sizeof(((TYPE_ *)0)->FIELD_))
+#endif
+
+#ifndef RTL_SIZEOF_THROUGH_FIELD
+#define RTL_SIZEOF_THROUGH_FIELD(TYPE_, FIELD_) \
+ (FIELD_OFFSET(TYPE_, FIELD_) + RTL_FIELD_SIZE(TYPE_, FIELD_))
+#endif
+
+#ifndef RTL_CONTAINS_FIELD
+#define RTL_CONTAINS_FIELD(P_, SIZE_, FIELD_) \
+ ((((char *)(P_)) + (SIZE_)) > (((char *)(&((P_)->FIELD_))) + sizeof((P_)->FIELD_)))
+#endif
+
+#define ELFFMT_FIELDS_EQUAL(TYPE1_, TYPE2_, FIELD_) \
+ ( \
+  (FIELD_OFFSET(TYPE1_, FIELD_) == FIELD_OFFSET(TYPE2_, FIELD_)) && \
+  (RTL_FIELD_SIZE(TYPE1_, FIELD_) == RTL_FIELD_SIZE(TYPE2_, FIELD_)) \
+ )
+
+#define ELFFMT_MAKE_ULONG64(BYTE1_, BYTE2_, BYTE3_, BYTE4_, BYTE5_, BYTE6_, BYTE7_, BYTE8_) \
+ ( \
+  (((ULONG64)ELFFMT_MAKE_ULONG(BYTE1_, BYTE2_, BYTE3_, BYTE4_)) <<  0) | \
+  (((ULONG64)ELFFMT_MAKE_ULONG(BYTE5_, BYTE6_, BYTE7_, BYTE8_)) << 32) \
+ )
+
+#define ELFFMT_MAKE_ULONG(BYTE1_, BYTE2_, BYTE3_, BYTE4_) \
+ ( \
+  (((ULONG)ELFFMT_MAKE_USHORT(BYTE1_, BYTE2_)) <<  0) | \
+  (((ULONG)ELFFMT_MAKE_USHORT(BYTE3_, BYTE4_)) << 16) \
+ )
+
+#define ELFFMT_MAKE_USHORT(BYTE1_, BYTE2_) \
+ ( \
+  (((USHORT)(BYTE1_)) << 0) | \
+  (((USHORT)(BYTE2_)) << 8) \
+ )
+
+static __inline ULONG64 ElfFmtpReadULong64
+(
+ IN ULONG64 Input,
+ IN ULONG DataType
+)
+{
+ PBYTE p;
+
+ if(DataType == ELF_TARG_DATA)
+  return Input;
+
+ p = (PBYTE)&Input;
+
+ switch(DataType)
+ {
+  case ELFDATA2LSB: return ELFFMT_MAKE_ULONG64(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+  case ELFDATA2MSB: return ELFFMT_MAKE_ULONG64(p[7], p[6], p[5], p[4], p[3], p[2], p[1], p[0]);
+ }
+
+ ASSERT(FALSE);
+ return (ULONG64)-1;
+}
+
+static __inline ULONG ElfFmtpReadULong
+(
+ IN ULONG Input,
+ IN ULONG DataType
+)
+{
+ PBYTE p;
+
+ if(DataType == ELF_TARG_DATA)
+  return Input;
+
+ p = (PBYTE)&Input;
+
+ switch(DataType)
+ {
+  case ELFDATA2LSB: return ELFFMT_MAKE_ULONG(p[0], p[1], p[2], p[3]);
+  case ELFDATA2MSB: return ELFFMT_MAKE_ULONG(p[3], p[2], p[1], p[0]);
+ }
+
+ ASSERT(FALSE);
+ return (ULONG)-1;
+}
+
+static __inline USHORT ElfFmtpReadUShort
+(
+ IN USHORT Input,
+ IN ULONG DataType
+)
+{
+ PBYTE p;
+
+ if(DataType == ELF_TARG_DATA)
+  return Input;
+
+ p = (PBYTE)&Input;
+
+ switch(DataType)
+ {
+  case ELFDATA2LSB: return ELFFMT_MAKE_USHORT(p[0], p[1]);
+  case ELFDATA2MSB: return ELFFMT_MAKE_USHORT(p[1], p[0]);
+ }
+
+ ASSERT(FALSE);
+ return (USHORT)-1;
+}
+
+static __inline ULONG64 ElfFmtpSafeReadULong64
+(
+ IN CONST ULONG64 * Input,
+ IN ULONG DataType
+)
+{
+ PBYTE p;
+ ULONG nSafeInput;
+
+ RtlRetrieveUlonglong(&nSafeInput, Input);
+
+ p = (PBYTE)&nSafeInput;
+
+ switch(DataType)
+ {
+  case ELFDATA2LSB: return ELFFMT_MAKE_ULONG64(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+  case ELFDATA2MSB: return ELFFMT_MAKE_ULONG64(p[7], p[6], p[5], p[4], p[3], p[2], p[1], p[0]);
+ }
+
+ ASSERT(FALSE);
+ return (ULONG64)-1;
+}
+
+static __inline ULONG ElfFmtpSafeReadULong
+(
+ IN CONST ULONG * Input,
+ IN ULONG DataType
+)
+{
+ PBYTE p;
+ ULONG nSafeInput;
+
+ RtlRetrieveUlong(&nSafeInput, Input);
+
+ if(DataType == ELF_TARG_DATA)
+  return nSafeInput;
+
+ p = (PBYTE)&nSafeInput;
+
+ switch(DataType)
+ {
+  case ELFDATA2LSB: return ELFFMT_MAKE_ULONG(p[0], p[1], p[2], p[3]);
+  case ELFDATA2MSB: return ELFFMT_MAKE_ULONG(p[3], p[2], p[1], p[0]);
+ }
+
+ ASSERT(FALSE);
+ return (ULONG)-1;
+}
+
+static __inline BOOLEAN ElfFmtpIsPowerOf2(IN Elf_Addr Number)
+{
+ if(Number == 0)
+  return FALSE;
+
+ while((Number % 2) == 0)
+  Number /= 2;
+
+ return Number == 1;
+}
+
+static __inline Elf_Addr ElfFmtpModPow2
+(
+ IN Elf_Addr Address,
+ IN Elf_Addr Alignment
+)
+{
+ ASSERT(sizeof(Elf_Addr) == sizeof(Elf_Size));
+ ASSERT(sizeof(Elf_Addr) == sizeof(Elf_Off));
+ ASSERT(ElfFmtpIsPowerOf2(Alignment));
+ return Address & (Alignment - 1);
+}
+
+static __inline Elf_Addr ElfFmtpAlignDown
+(
+ IN Elf_Addr Address,
+ IN Elf_Addr Alignment
+)
+{
+ ASSERT(sizeof(Elf_Addr) == sizeof(Elf_Size));
+ ASSERT(sizeof(Elf_Addr) == sizeof(Elf_Off));
+ ASSERT(ElfFmtpIsPowerOf2(Alignment));
+ return Address & ~(Alignment - 1);
+}
+
+static __inline BOOLEAN ElfFmtpAlignUp
+(
+ OUT Elf_Addr * AlignedAddress,
+ IN Elf_Addr Address,
+ IN Elf_Addr Alignment
+)
+{
+ Elf_Addr nExcess = ElfFmtpModPow2(Address, Alignment);
+
+ if(nExcess == 0)
+ {
+  *AlignedAddress = Address;
+  return nExcess == 0;
+ }
+ else
+  return ElfFmtpAddSize(AlignedAddress, Address, Alignment - nExcess);
 }
 
 /*
- * Given a set of ELF protection flags, return the corresponding protection
- * flags for MMAP.
+ References:
+  [1] Tool Interface Standards (TIS) Committee, "Executable and Linking Format
+      (ELF) Specification", Version 1.2
+*/
+NTSTATUS NTAPI
+#if __ELF_WORD_SIZE == 32
+Elf32FmtCreateSection
+#elif __ELF_WORD_SIZE == 64
+Elf64FmtCreateSection
+#endif
+(
+ IN CONST VOID * FileHeader,
+ IN SIZE_T FileHeaderSize,
+ IN PVOID File,
+ OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+ OUT PULONG Flags,
+ IN PEXEFMT_CB_READ_FILE ReadFileCb,
+ IN PEXEFMT_CB_ALLOCATE_SEGMENTS AllocateSegmentsCb
+)
+{
+ NTSTATUS nStatus;
+ const Elf_Ehdr * pehHeader;
+ const Elf_Phdr * pphPHdrs;
+ BOOLEAN fPageAligned;
+ ULONG nData;
+ ULONG nPHdrCount;
+ ULONG cbPHdrSize;
+ Elf_Off cbPHdrOffset;
+ PVOID pBuffer;
+ PMM_SECTION_SEGMENT pssSegments;
+ Elf_Addr nImageBase;
+ Elf_Addr nEntryPoint;
+ ULONG nPrevVirtualEndOfSegment;
+ ULONG i;
+ ULONG j;
+
+ (void)Intsafe_AddULong64;
+ (void)Intsafe_MulULong32;
+ (void)ElfFmtpReadULong64;
+ (void)ElfFmtpSafeReadULong64;
+ (void)ElfFmtpReadULong;
+
+#define DIE(ARGS_) { DPRINT ARGS_; goto l_Return; }
+
+ pBuffer = NULL;
+
+ nStatus = STATUS_INVALID_IMAGE_FORMAT;
+
+ /* Ensure the file contains the full header */
+ /*
+  EXEFMT_LOAD_HEADER_SIZE is 8KB: enough to contain an ELF header (at least in
+  all the classes defined as of December 2004). If FileHeaderSize is less than
+  sizeof(Elf_Ehdr), it means the file itself is small enough not to contain a
+  full ELF header
  */
-static int
-convert_prot(int elfflags)
-{
-    int prot = 0;
-    if (elfflags & PF_R)
-	prot |= PROT_READ;
-    if (elfflags & PF_W)
-	prot |= PROT_WRITE;
-    if (elfflags & PF_X)
-	prot |= PROT_EXEC;
-    return prot;
-}
+ ASSERT(sizeof(Elf_Ehdr) <= EXEFMT_LOAD_HEADER_SIZE);
 
-static int
-convert_flags(int elfflags)
-{
-    int flags = MAP_PRIVATE; /* All mappings are private */
+ if(FileHeaderSize < sizeof(Elf_Ehdr))
+  DIE(("The file is truncated, doesn't contain the full header\n"));
 
+ pehHeader = FileHeader;
+ ASSERT(((ULONG_PTR)pehHeader % TYPE_ALIGNMENT(Elf_Ehdr)) == 0);
+
+ nData = pehHeader->e_ident[EI_DATA];
+
+ /* Validate the header */
+ if(ElfFmtpReadUShort(pehHeader->e_ehsize, nData) < sizeof(Elf_Ehdr))
+  DIE(("Inconsistent value for e_ehsize\n"));
+
+ /* Calculate size and offset of the program headers */
+ cbPHdrSize = ElfFmtpReadUShort(pehHeader->e_phentsize, nData);
+
+ if(cbPHdrSize != sizeof(Elf_Phdr))
+  DIE(("Inconsistent value for e_phentsize\n"));
+
+ /* MAXUSHORT * MAXUSHORT < MAXULONG */
+ nPHdrCount = ElfFmtpReadUShort(pehHeader->e_phnum, nData);
+ ASSERT(Intsafe_CanMulULong32(cbPHdrSize, nPHdrCount));
+ cbPHdrSize *= nPHdrCount;
+
+ cbPHdrOffset = ElfFmtpReadOff(pehHeader->e_phoff, nData);
+
+ /* The initial header doesn't contain the program headers */
+ if(cbPHdrOffset > FileHeaderSize || cbPHdrSize > (FileHeaderSize - cbPHdrOffset))
+ {
+  NTSTATUS nReadStatus;
+  LARGE_INTEGER lnOffset;
+  PVOID pData;
+  ULONG cbReadSize;
+
+  /* Will worry about this when ELF128 comes */
+  ASSERT(sizeof(cbPHdrOffset) <= sizeof(lnOffset.QuadPart));
+
+  lnOffset.QuadPart = (LONG64)cbPHdrOffset;
+
+  /*
+   We can't support executable files larger than 8 Exabytes - it's a limitation
+   of the I/O system (only 63-bit offsets are supported). Quote:
+
+    [...] the total amount of printed material in the world is estimated to be
+    around a fifth of an exabyte. [...] [Source: Wikipedia]
+  */
+  if(lnOffset.u.HighPart < 0)
+   DIE(("The program header is too far into the file\n"));
+
+  nReadStatus = ReadFileCb
+  (
+   File,
+   &lnOffset,
+   cbPHdrSize,
+   &pData,
+   &pBuffer,
+   &cbReadSize
+  );
+
+  if(!NT_SUCCESS(nReadStatus))
+  {
+   nStatus = nReadStatus;
+   DIE(("ReadFile failed, status %08X\n", nStatus));
+  }
+
+  ASSERT(pData);
+  ASSERT(pBuffer);
+  ASSERT(Intsafe_CanOffsetPointer(pData, cbReadSize));
+
+  if(cbReadSize < cbPHdrSize)
+   DIE(("The file didn't contain the program headers\n"));
+
+  /* Force the buffer to be aligned */
+  if((ULONG_PTR)pData % TYPE_ALIGNMENT(Elf_Phdr))
+  {
+   ASSERT(((ULONG_PTR)pBuffer % TYPE_ALIGNMENT(Elf_Phdr)) == 0);
+   RtlMoveMemory(pBuffer, pData, cbPHdrSize);
+   pphPHdrs = pBuffer;
+  }
+  else
+   pphPHdrs = pData;
+ }
+ else
+ {
+  ASSERT(Intsafe_CanAddSizeT(cbPHdrOffset, 0));
+  ASSERT(Intsafe_CanOffsetPointer(FileHeader, cbPHdrOffset));
+  pphPHdrs = (PVOID)((ULONG_PTR)FileHeader + (ULONG_PTR)cbPHdrOffset);
+ }
+
+ /* Allocate the segments */
+ pssSegments = AllocateSegmentsCb(nPHdrCount);
+
+ if(pssSegments == NULL)
+ {
+  nStatus = STATUS_INSUFFICIENT_RESOURCES;
+  DIE(("Out of memory\n"));
+ }
+
+ ImageSectionObject->Segments = pssSegments;
+
+ fPageAligned = TRUE;
+
+ /* Fill in the segments */
+ for(i = 0, j = 0; i < nPHdrCount; ++ i)
+ {
+  switch(ElfFmtpSafeReadULong(&pphPHdrs[i].p_type, nData))
+  {
+   case PT_LOAD:
+   {
+    static const ULONG ProgramHeaderFlagsToProtect[8] =
+    {
+     PAGE_NOACCESS,          /* 0 */
+     PAGE_EXECUTE_READ,      /* PF_X */
+     PAGE_READWRITE,         /* PF_W */
+     PAGE_EXECUTE_READWRITE, /* PF_X | PF_W */
+     PAGE_READONLY,          /* PF_R */
+     PAGE_EXECUTE_READ,      /* PF_X | PF_R */
+     PAGE_READWRITE,         /* PF_W | PF_R */
+     PAGE_EXECUTE_READWRITE  /* PF_X | PF_W | PF_R */
+    };
+
+    Elf_Size nAlignment;
+    Elf_Off nFileOffset;
+    Elf_Addr nVirtualAddr;
+    Elf_Size nAdj;
+    Elf_Size nVirtualSize;
+    Elf_Size nFileSize;
+
+    ASSERT(j <= nPHdrCount);
+
+    /* Retrieve and validate the segment alignment */
+    nAlignment = ElfFmtpSafeReadSize(&pphPHdrs[i].p_align, nData);
+
+    if(nAlignment == 0)
+     nAlignment = 1;
+    else if(!ElfFmtpIsPowerOf2(nAlignment))
+     DIE(("Alignment of loadable segment isn't a power of 2\n"));
+
+    if(nAlignment < PAGE_SIZE)
+     fPageAligned = FALSE;
+
+    /* Retrieve the addresses and calculate the adjustment */
+    nFileOffset = ElfFmtpSafeReadOff(&pphPHdrs[i].p_offset, nData);
+    nVirtualAddr = ElfFmtpSafeReadAddr(&pphPHdrs[i].p_vaddr, nData);
+
+    nAdj = ElfFmtpModPow2(nFileOffset, nAlignment);
+
+    if(nAdj != ElfFmtpModPow2(nVirtualAddr, nAlignment))
+     DIE(("File and memory address of loadable segment not congruent modulo alignment\n"));
+
+    /* Retrieve, adjust and align the file size and memory size */
+    if(!ElfFmtpAddSize(&nFileSize, ElfFmtpSafeReadSize(&pphPHdrs[i].p_filesz, nData), nAdj))
+     DIE(("Can't adjust the file size of loadable segment\n"));
+
+    if(!ElfFmtpAddSize(&nVirtualSize, ElfFmtpSafeReadSize(&pphPHdrs[i].p_memsz, nData), nAdj))
+     DIE(("Can't adjust the memory size of lodable segment\n"));
+
+    if(!ElfFmtpAlignUp(&nVirtualSize, nVirtualSize, nAlignment))
+     DIE(("Can't align the memory size of lodable segment\n"));
+
+    if(nFileSize > nVirtualSize)
+     nFileSize = nVirtualSize;
+
+    if(nVirtualSize > MAXULONG)
+     DIE(("Virtual image larger than 4GB\n"));
+
+    ASSERT(nFileSize <= MAXULONG);
+
+    pssSegments[j].Length = (ULONG)(nVirtualSize & 0xFFFFFFFF);
+    pssSegments[j].RawLength = (ULONG)(nFileSize & 0xFFFFFFFF);
+
+    /* File offset */
+    nFileOffset = ElfFmtpAlignDown(nFileOffset, nAlignment);
+
+#if __ELF_WORD_SIZE >= 64
+    ASSERT(sizeof(nFileOffset) == sizeof(LONG64));
+
+    if(((LONG64)nFileOffset) < 0)
+     DIE(("File offset of loadable segment is too large\n"));
+#endif
+
+    pssSegments[j].FileOffset = (LONG64)nFileOffset;
+
+    /* Virtual address */
+    nVirtualAddr = ElfFmtpAlignDown(nVirtualAddr, nAlignment);
+
+    if(j == 0)
+    {
+     /* First segment: its address is the base address of the image */
+     nImageBase = nVirtualAddr;
+     pssSegments[j].VirtualAddress = 0;
+
+     /* Several places make this assumption */
+     if(pssSegments[j].FileOffset != 0)
+      DIE(("First loadable segment doesn't contain the ELF header\n"));
+    }
+    else
+    {
+     Elf_Size nVirtualOffset;
+
+     /* Other segment: store the offset from the base address */
+     if(nVirtualAddr <= nImageBase)
+      DIE(("Loadable segments are not sorted\n"));
+
+     nVirtualOffset = nVirtualAddr - nImageBase;
+
+     if(nVirtualOffset > MAXULONG)
+      DIE(("Virtual image larger than 4GB\n"));
+
+     pssSegments[j].VirtualAddress = (ULONG)(nVirtualOffset & 0xFFFFFFFF);
+
+     if(pssSegments[j].VirtualAddress != nPrevVirtualEndOfSegment)
+      DIE(("Loadable segments are not sorted and contiguous\n"));
+    }
+
+    /* Memory protection */
+    pssSegments[j].Protection = ProgramHeaderFlagsToProtect
+    [
+     ElfFmtpSafeReadULong(&pphPHdrs[i].p_flags, nData) & (PF_R | PF_W | PF_X)
+    ];
+
+    /* Characteristics */
     /*
-     * Readonly mappings are marked "MAP_NOCORE", because they can be
-     * reconstructed by a debugger.
-     */
-    if (!(elfflags & PF_W))
-	flags |= MAP_NOCORE;
-    return flags;
+     TODO: need to add support for the shared, non-pageable, non-cacheable and
+     discardable attributes. This involves extensions to the ELF format, so it's
+     nothing to be taken lightly
+    */
+    if(pssSegments[j].Protection & PAGE_IS_EXECUTABLE)
+    {
+     ImageSectionObject->Executable = TRUE;
+     pssSegments[j].Characteristics = IMAGE_SCN_CNT_CODE;
+    }
+    else if(pssSegments[j].RawLength == 0)
+     pssSegments[j].Characteristics = IMAGE_SCN_CNT_UNINITIALIZED_DATA;
+    else
+     pssSegments[j].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
+
+    /* Copy-on-write */
+    pssSegments[j].WriteCopy = TRUE;
+
+    if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[j].VirtualAddress, pssSegments[j].Length))
+     DIE(("Virtual image larger than 4GB\n"));
+
+    ++ j;
+    break;
+   }
+  }
+ }
+
+ if(j == 0)
+  DIE(("No loadable segments\n"));
+
+ ImageSectionObject->NrSegments = j;
+
+ *Flags =
+  EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED |
+  EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP;
+
+ if(fPageAligned)
+  *Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
+
+ nEntryPoint = ElfFmtpReadAddr(pehHeader->e_entry, nData);
+
+ if(nEntryPoint < nImageBase || nEntryPoint - nImageBase > nPrevVirtualEndOfSegment)
+  DIE(("Entry point not within the virtual image\n"));
+
+ ASSERT(nEntryPoint >= nImageBase);
+ ASSERT((nEntryPoint - nImageBase) <= MAXULONG);
+ ImageSectionObject->EntryPoint = nEntryPoint - nImageBase;
+
+ /* TODO: support Wine executables and read these values from nt_headers */
+ ImageSectionObject->ImageCharacteristics |=
+  IMAGE_FILE_EXECUTABLE_IMAGE |
+  IMAGE_FILE_LINE_NUMS_STRIPPED |
+  IMAGE_FILE_LOCAL_SYMS_STRIPPED |
+  (nImageBase > MAXULONG ? IMAGE_FILE_LARGE_ADDRESS_AWARE : 0) |
+  IMAGE_FILE_DEBUG_STRIPPED;
+
+ if(nData == ELFDATA2LSB)
+  ImageSectionObject->ImageCharacteristics |= IMAGE_FILE_BYTES_REVERSED_LO;
+ else if(nData == ELFDATA2MSB)
+  ImageSectionObject->ImageCharacteristics |= IMAGE_FILE_BYTES_REVERSED_HI;
+
+ /* Base address outside the possible address space */
+ if(nImageBase > MAXULONG_PTR)
+  ImageSectionObject->ImageBase = EXEFMT_LOAD_BASE_NONE;
+ /* Position-independent image, base address doesn't matter */
+ else if(nImageBase == 0)
+  ImageSectionObject->ImageBase = EXEFMT_LOAD_BASE_ANY;
+ /* Use the specified base address */
+ else
+  ImageSectionObject->ImageBase = (ULONG_PTR)nImageBase;
+
+ /* safest bet */
+ ImageSectionObject->Subsystem = IMAGE_SUBSYSTEM_WINDOWS_CUI;
+ ImageSectionObject->MinorSubsystemVersion = 0;
+ ImageSectionObject->MajorSubsystemVersion = 4;
+
+ /* Success, at last */
+ nStatus = STATUS_SUCCESS;
+
+l_Return:
+ if(pBuffer)
+  ExFreePool(pBuffer);
+
+ return nStatus;
 }
+
+/* EOF */

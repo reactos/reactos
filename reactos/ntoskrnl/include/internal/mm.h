@@ -108,16 +108,17 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-  ULONG FileOffset;
-  ULONG RawLength;
+  LONGLONG FileOffset;
   ULONG_PTR VirtualAddress;
-  SIZE_T Length;
+  ULONG RawLength;
+  ULONG Length;
   ULONG Protection;
-  LONG ReferenceCount;
+  FAST_MUTEX Lock;
+  ULONG ReferenceCount;
+  SECTION_PAGE_DIRECTORY PageDirectory;
   ULONG Flags;
   ULONG Characteristics;
-  FAST_MUTEX Lock;
-  SECTION_PAGE_DIRECTORY PageDirectory;
+  BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
@@ -385,14 +386,6 @@ VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
-
-PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
-			       PMADDRESS_SPACE AddressSpace,
-			       PMEMORY_AREA OriginalMemoryArea,
-			       PVOID BaseAddress,
-			       ULONG Length,
-			       ULONG NewType,
-			       ULONG NewAttributes);
 
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,

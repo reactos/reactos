@@ -144,6 +144,8 @@ OBJECTS_MM = \
 	mm/balance.o \
 	mm/cont.o \
 	mm/drvlck.o \
+	mm/elf32.o \
+	mm/elf64.o \
 	mm/freelist.o \
 	mm/iospace.o \
 	mm/kmap.o \

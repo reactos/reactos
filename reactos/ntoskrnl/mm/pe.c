@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pe.c,v 1.1.2.4 2004/12/18 02:36:09 hyperion Exp $
+/* $Id: pe.c,v 1.1.2.5 2004/12/30 01:59:59 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
@@ -25,13 +25,17 @@
  * UPDATE HISTORY:
  *                  2004-12-06 Created
  *                  2004-12-09 Compiles
+ *                  2004-12-26 Actually works, several checks relaxed to support
+ *                             the majority of existing executables, corrected
+ *                             the alignment helper functions, debug messages to
+ *                             explain failure.
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
 
-/*#define NDEBUG*/
+#define NDEBUG
 #include <internal/debug.h>
 
 #include <reactos/exeformat.h>
@@ -46,18 +50,22 @@ static ULONG SectionCharacteristicsToProtect[16] =
  PAGE_READONLY,          /* 5 = READABLE, SHARED */
  PAGE_EXECUTE_READ,      /* 6 = READABLE, EXECUTABLE */
  PAGE_EXECUTE_READ,      /* 7 = READABLE, EXECUTABLE, SHARED */
- PAGE_WRITECOPY,         /* 8 = WRITABLE */
+ /*
+  * FIXME? do we really need the WriteCopy field in segments? can't we use
+  * PAGE_WRITECOPY here?
+  */
+ PAGE_READWRITE,         /* 8 = WRITABLE */
  PAGE_READWRITE,         /* 9 = WRITABLE, SHARED */
- PAGE_EXECUTE_WRITECOPY, /* 10 = WRITABLE, EXECUTABLE */
+ PAGE_EXECUTE_READWRITE, /* 10 = WRITABLE, EXECUTABLE */
  PAGE_EXECUTE_READWRITE, /* 11 = WRITABLE, EXECUTABLE, SHARED */
- PAGE_WRITECOPY,         /* 12 = WRITABLE, READABLE */
+ PAGE_READWRITE,         /* 12 = WRITABLE, READABLE */
  PAGE_READWRITE,         /* 13 = WRITABLE, READABLE, SHARED */
- PAGE_EXECUTE_WRITECOPY, /* 14 = WRITABLE, READABLE, EXECUTABLE */
+ PAGE_EXECUTE_READWRITE, /* 14 = WRITABLE, READABLE, EXECUTABLE */
  PAGE_EXECUTE_READWRITE, /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
 };
 
 /* TODO: Intsafe should be made into a library, as it's generally useful */
-BOOLEAN FASTCALL Intsafe_CanAddULongPtr
+static __inline BOOLEAN Intsafe_CanAddULongPtr
 (
  IN ULONG_PTR Addend1,
  IN ULONG_PTR Addend2
@@ -66,44 +74,7 @@ BOOLEAN FASTCALL Intsafe_CanAddULongPtr
  return Addend1 <= (MAXULONG_PTR - Addend2);
 }
 
-BOOLEAN FASTCALL Intsafe_AddULongPtr
-(
- OUT PULONG_PTR Result,
- IN ULONG_PTR Addend1,
- IN ULONG_PTR Addend2
-)
-{
- if(!Intsafe_CanAddULongPtr(Addend1, Addend2))
-  return FALSE;
-
- *Result = Addend1 + Addend2;
- return TRUE;
-}
-
-BOOLEAN FASTCALL Intsafe_CanMulULongPtr
-(
- IN ULONG_PTR Factor1,
- IN ULONG_PTR Factor2
-)
-{
- return Factor1 <= (MAXULONG_PTR / Factor2);
-}
-
-BOOLEAN FASTCALL Intsafe_MulULongPtr
-(
- OUT PULONG_PTR Result,
- IN ULONG_PTR Factor1,
- IN ULONG_PTR Factor2
-)
-{
- if(!Intsafe_CanMulULongPtr(Factor1, Factor2))
-  return FALSE;
-
- *Result = Factor1 * Factor2;
- return TRUE;
-}
-
-BOOLEAN FASTCALL Intsafe_CanAddULong32
+static __inline BOOLEAN Intsafe_CanAddULong32
 (
  IN ULONG Addend1,
  IN ULONG Addend2
@@ -112,7 +83,7 @@ BOOLEAN FASTCALL Intsafe_CanAddULong32
  return Addend1 <= (MAXULONG - Addend2);
 }
 
-BOOLEAN FASTCALL Intsafe_AddULong32
+static __inline BOOLEAN Intsafe_AddULong32
 (
  OUT PULONG Result,
  IN ULONG Addend1,
@@ -126,7 +97,7 @@ BOOLEAN FASTCALL Intsafe_AddULong32
  return TRUE;
 }
 
-BOOLEAN FASTCALL Intsafe_CanMulULong32
+static __inline BOOLEAN Intsafe_CanMulULong32
 (
  IN ULONG Factor1,
  IN ULONG Factor2
@@ -135,21 +106,7 @@ BOOLEAN FASTCALL Intsafe_CanMulULong32
  return Factor1 <= (MAXULONG / Factor2);
 }
 
-BOOLEAN FASTCALL Intsafe_MulULong32
-(
- OUT PULONG Result,
- IN ULONG Factor1,
- IN ULONG Factor2
-)
-{
- if(!Intsafe_CanMulULong32(Factor1, Factor2))
-  return FALSE;
-
- *Result = Factor1 * Factor2;
- return TRUE;
-}
-
-BOOLEAN FASTCALL Intsafe_CanOffsetPointer
+static __inline BOOLEAN Intsafe_CanOffsetPointer
 (
  IN CONST VOID * Pointer,
  IN SIZE_T Offset
@@ -174,7 +131,7 @@ BOOLEAN FASTCALL Intsafe_CanOffsetPointer
  ((((char *)(P_)) + (SIZE_)) > (((char *)(&((P_)->FIELD_))) + sizeof((P_)->FIELD_)))
 #endif
 
-BOOLEAN FASTCALL IsPowerOf2(IN ULONG Number)
+static __inline BOOLEAN IsPowerOf2(IN ULONG Number)
 {
  if(Number == 0)
   return FALSE;
@@ -185,25 +142,25 @@ BOOLEAN FASTCALL IsPowerOf2(IN ULONG Number)
  return Number == 1;
 }
 
-ULONG FASTCALL GetExcess(IN ULONG Address, IN ULONG Alignment)
+static __inline ULONG ModPow2(IN ULONG Address, IN ULONG Alignment)
 {
  ASSERT(IsPowerOf2(Alignment));
  return Address & (Alignment - 1);
 }
 
-BOOLEAN FASTCALL IsAligned(IN ULONG Address, IN ULONG Alignment)
+static __inline BOOLEAN IsAligned(IN ULONG Address, IN ULONG Alignment)
 {
- return GetExcess(Address, Alignment) == 0;
+ return ModPow2(Address, Alignment) == 0;
 }
 
-BOOLEAN FASTCALL AlignUp
+static __inline BOOLEAN AlignUp
 (
  OUT PULONG AlignedAddress,
  IN ULONG Address,
  IN ULONG Alignment
 )
 {
- ULONG nExcess = GetExcess(Address, Alignment);
+ ULONG nExcess = ModPow2(Address, Alignment);
 
  if(nExcess == 0)
  {
@@ -214,6 +171,12 @@ BOOLEAN FASTCALL AlignUp
   return Intsafe_AddULong32(AlignedAddress, Address, Alignment - nExcess);
 }
 
+#define PEFMT_FIELDS_EQUAL(TYPE1_, TYPE2_, FIELD_) \
+ ( \
+  (FIELD_OFFSET(TYPE1_, FIELD_) == FIELD_OFFSET(TYPE2_, FIELD_)) && \
+  (RTL_FIELD_SIZE(TYPE1_, FIELD_) == RTL_FIELD_SIZE(TYPE2_, FIELD_)) \
+ )
+
 /*
  References:
   [1] Microsoft Corporation, "Microsoft Portable Executable and Common Object
@@ -223,7 +186,7 @@ NTSTATUS NTAPI PeFmtCreateSection
 (
  IN CONST VOID * FileHeader,
  IN SIZE_T FileHeaderSize,
- IN PFILE_OBJECT File,
+ IN PVOID File,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
  IN PEXEFMT_CB_READ_FILE ReadFileCb,
@@ -311,7 +274,7 @@ NTSTATUS NTAPI PeFmtCreateSection
   (UINT_PTR)pinhNtHeader % TYPE_ALIGNMENT(IMAGE_NT_HEADERS32) != 0
  )
  {
-  SIZE_T cbNtHeaderSize;
+  ULONG cbNtHeaderSize;
   ULONG cbReadSize;
   PVOID pData;
 
@@ -340,14 +303,14 @@ l_ReadHeaderFromFile:
 
   /* the buffer doesn't contain the file header */
   if(cbReadSize < RTL_SIZEOF_THROUGH_FIELD(IMAGE_NT_HEADERS32, FileHeader))
-   DIE(("The file doesn't contain the PE file header"));
+   DIE(("The file doesn't contain the PE file header\n"));
 
   pinhNtHeader = pData;
 
   /* object still not aligned: copy it to the beginning of the buffer */
-  if((UINT_PTR)pinhNtHeader % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) != 0)
+  if((UINT_PTR)pinhNtHeader % TYPE_ALIGNMENT(IMAGE_NT_HEADERS32) != 0)
   {
-   ASSERT((UINT_PTR)pBuffer % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) == 0);
+   ASSERT((UINT_PTR)pBuffer % TYPE_ALIGNMENT(IMAGE_NT_HEADERS32) == 0);
    RtlMoveMemory(pBuffer, pData, cbReadSize);
    pinhNtHeader = pBuffer;
   }
@@ -392,6 +355,8 @@ l_ReadHeaderFromFile:
 
  nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, Magic));
+
  if(!RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Magic))
   DIE(("The optional header doesn't contain the Magic field, SizeOfOptionalHeader is %X\n", cbOptHeaderSize));
 
@@ -406,6 +371,9 @@ l_ReadHeaderFromFile:
   default:
    DIE(("Unrecognized optional header, Magic is %X\n", piohOptHeader->Magic));
  }
+
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, SectionAlignment));
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, FileAlignment));
 
  if
  (
@@ -457,9 +425,9 @@ l_ReadHeaderFromFile:
   /* PE32+ */
   case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
   {
-   PIMAGE_OPTIONAL_HEADER64 pioh64OptHeader;
+   const IMAGE_OPTIONAL_HEADER64 * pioh64OptHeader;
 
-   pioh64OptHeader = (PIMAGE_OPTIONAL_HEADER64)piohOptHeader;
+   pioh64OptHeader = (const IMAGE_OPTIONAL_HEADER64 *)piohOptHeader;
 
    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, ImageBase))
    {
@@ -493,10 +461,10 @@ l_ReadHeaderFromFile:
  if((ULONG_PTR)ImageSectionObject->ImageBase % 0x10000)
   DIE(("ImageBase is not aligned on a 64KB boundary"));
 
- /*
-  ASSUME: all the fields used here have the same offset and size in both
-  IMAGE_OPTIONAL_HEADER32 and IMAGE_OPTIONAL_HEADER64
- */
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, Subsystem));
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, MinorSubsystemVersion));
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, MajorSubsystemVersion));
+
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Subsystem))
  {
   ImageSectionObject->Subsystem = piohOptHeader->Subsystem;
@@ -512,8 +480,12 @@ l_ReadHeaderFromFile:
   }
  }
 
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, AddressOfEntryPoint));
+
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
   ImageSectionObject->EntryPoint = piohOptHeader->AddressOfEntryPoint;
+
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, SizeOfCode));
 
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
   ImageSectionObject->Executable = piohOptHeader->SizeOfCode != 0;
@@ -550,6 +522,8 @@ l_ReadHeaderFromFile:
 
  if(!Intsafe_AddULong32(&cbSectionHeadersOffsetSize, cbSectionHeadersOffset, cbSectionHeadersSize))
   DIE(("Section headers too large\n"));
+
+ ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, SizeOfHeaders));
 
  /* size of the executable's headers */
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfHeaders))
@@ -660,7 +634,8 @@ l_ReadHeaderFromFile:
  pssSegments[0].Length = nPrevVirtualEndOfSegment;
  pssSegments[0].RawLength = nPrevFileEndOfSegment;
  pssSegments[0].VirtualAddress = 0;
- pssSegments[0].Characteristics = 0;
+ pssSegments[0].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
+ pssSegments[0].WriteCopy = TRUE;
 
  /* skip the headers segment */
  ++ pssSegments;
@@ -721,6 +696,7 @@ l_ReadHeaderFromFile:
 
   /* see table above */
   pssSegments[i].Protection = SectionCharacteristicsToProtect[nCharacteristics >> 28];
+  pssSegments[i].WriteCopy = !(nCharacteristics & IMAGE_SCN_MEM_SHARED);
 
   if(pishSectionHeaders[i].Misc.VirtualSize == 0 || pishSectionHeaders[i].Misc.VirtualSize < pishSectionHeaders[i].SizeOfRawData)
    pssSegments[i].Length = pishSectionHeaders[i].SizeOfRawData;
@@ -730,12 +706,11 @@ l_ReadHeaderFromFile:
   if(!AlignUp(&pssSegments[i].Length, pssSegments[i].Length, nSectionAlignment))
    DIE(("Cannot align the virtual size of section %u\n", i));
 
+  ASSERT(IsAligned(pssSegments[i].Length, nSectionAlignment));
+
   if(pssSegments[i].Length == 0)
    DIE(("Virtual size of section %u is null\n", i));
 
-  /* ExInitializeFastMutex(&pssSegments[i].Lock); */
-  /* pssSegments[i].ReferenceCount = 1; */
-  /* RtlZeroMemory(&pssSegments[i].PageDirectory, sizeof(pssSegments[i].PageDirectory)); */
   pssSegments[i].VirtualAddress = pishSectionHeaders[i].VirtualAddress;
   pssSegments[i].Characteristics = pishSectionHeaders[i].Characteristics;
 
@@ -749,17 +724,10 @@ l_ReadHeaderFromFile:
   /* ensure the memory image is no larger than 4GB */
   if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[i].VirtualAddress, pssSegments[i].Length))
    DIE(("The image is larger than 4GB\n"));
-
-  DPRINT("FileOffset    [%u] = %lX\n", i, (ULONG)pssSegments[i].FileOffset);
-  DPRINT("RawLength     [%u] = %lX\n", i, pssSegments[i].RawLength);
-  DPRINT("VirtualAddress[%u] = %lX\n", i, pssSegments[i].VirtualAddress);
-  DPRINT("Length        [%u] = %lX\n", i, pssSegments[i].Length);
  }
 
  /* spare our caller some work in validating the segments */
- *Flags |=
-  EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED |
-  EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP;
+ *Flags = EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED | EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP;
 
  if(nSectionAlignment >= PAGE_SIZE)
   *Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;

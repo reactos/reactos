@@ -33,12 +33,12 @@
  * ELF definitions common to all 64-bit architectures.
  */
 
-typedef UINT64	Elf64_Addr;
-typedef UINT32	Elf64_Half;
-typedef UINT64	Elf64_Off;
-typedef INT64		Elf64_Sword;
-typedef UINT64	Elf64_Word;
-typedef UINT64	Elf64_Size;
+typedef ULONG64	Elf64_Addr;
+typedef ULONG32	Elf64_Half;
+typedef ULONG64	Elf64_Off;
+typedef LONG64	Elf64_Sword;
+typedef ULONG64	Elf64_Word;
+typedef ULONG64	Elf64_Size;
 typedef USHORT	Elf64_Quarter;
 
 /*

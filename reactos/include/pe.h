@@ -40,6 +40,7 @@
 #define IMAGE_FILE_EXECUTABLE_IMAGE          0x0002  // File is executable  (i.e. no unresolved externel references).
 #define IMAGE_FILE_LINE_NUMS_STRIPPED        0x0004  // Line nunbers stripped from file.
 #define IMAGE_FILE_LOCAL_SYMS_STRIPPED       0x0008  // Local symbols stripped from file.
+#define IMAGE_FILE_LARGE_ADDRESS_AWARE       0x0020  // Application supports addresses >2GB
 #define IMAGE_FILE_BYTES_REVERSED_LO         0x0080  // Bytes of machine word are reversed.
 #define IMAGE_FILE_32BIT_MACHINE             0x0100  // 32 bit word machine.
 #define IMAGE_FILE_DEBUG_STRIPPED            0x0200  // Debugging info stripped from file in .DBG file
@@ -57,6 +58,12 @@
 #define IMAGE_FILE_MACHINE_R10000            0x168   // MIPS little-endian
 #define IMAGE_FILE_MACHINE_ALPHA             0x184   // Alpha_AXP
 #define IMAGE_FILE_MACHINE_POWERPC           0x1F0   // IBM PowerPC Little-Endian
+#define IMAGE_FILE_MACHINE_ARM               0x01c0  // ARM little-endian
+#define IMAGE_FILE_MACHINE_IA64              0x0200  // Intel IA64
+#define IMAGE_FILE_MACHINE_AXP64             IMAGE_FILE_MACHINE_ALPHA64
+#define IMAGE_FILE_MACHINE_ALPHA64           0x0284  // Alpha AXP, full 64-bit support
+#define IMAGE_FILE_MACHINE_AMD64             0x8664  // AMD x86-64
+#define IMAGE_FILE_MACHINE_M32R              0x9041  // M32R little-endian
 
 #pragma pack(push,4)
 typedef struct _IMAGE_FILE_HEADER {

@@ -33,6 +33,8 @@
  * ELF definitions for the i386 architecture.
  */
 
+#ifdef _REACTOS_ELF_MACHINE_IS_TARGET
+
 #ifndef __ELF_WORD_SIZE
 #define	__ELF_WORD_SIZE	32	/* Used by <elf/generic.h> */
 #endif
@@ -102,6 +104,14 @@ __ElfType(Auxinfo);
 
 #define	AT_COUNT	15	/* Count of defined aux entry types. */
 
+/* Define "machine" characteristics */
+#define	ELF_TARG_CLASS	ELFCLASS32
+#define	ELF_TARG_DATA	ELFDATA2LSB
+#define	ELF_TARG_MACH	EM_386
+#define	ELF_TARG_VER	1
+
+#endif /* _REACTOS_ELF_MACHINE_IS_TARGET */
+
 /*
  * Relocation types.
  */
@@ -139,11 +149,5 @@ __ElfType(Auxinfo);
 #define	R_386_TLS_TPOFF32 37	/* GOT entry of -ve static TLS offset */
 
 #define	R_386_COUNT	38	/* Count of defined relocation types. */
-
-/* Define "machine" characteristics */
-#define	ELF_TARG_CLASS	ELFCLASS32
-#define	ELF_TARG_DATA	ELFDATA2LSB
-#define	ELF_TARG_MACH	EM_386
-#define	ELF_TARG_VER	1
 
 #endif /* !_MACHINE_ELF_H_ */
