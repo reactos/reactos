@@ -199,8 +199,16 @@ FreeConsole( VOID )
 	}
 	SetLastError(ERROR_SUCCESS);
 	CloseHandle(StdInput);
+
+	if (StdError != INVALID_HANDLE_VALUE)
+	{
+		if (StdError != StdOutput)
+			CloseHandle(StdError);
+		StdError = INVALID_HANDLE_VALUE;
+	}
+
 	CloseHandle(StdOutput);
-	CloseHandle(StdError);
+
 #ifdef EXTENDED_CONSOLE
 	CloseHandle(StdAux);
 	CloseHandle(StdPrint);
@@ -263,8 +271,8 @@ SetConsoleCursorPosition(
 	ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
 	
 	if( !DeviceIoControl(
-		hConsoleOutput,
-            IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
+			hConsoleOutput,
+			IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
 			&ConsoleScreenBufferInfo,
 			sizeof(CONSOLE_SCREEN_BUFFER_INFO),
 			NULL,
