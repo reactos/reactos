@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.100 2001/07/12 17:23:42 ekohl Exp $
+/* $Id: main.c,v 1.101 2001/07/14 21:10:31 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -757,6 +757,11 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
   LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
   LastKernelAddress = last_kernel_address;
+
+#ifndef ACPI
+  /* FIXME: VMware does not like it when ReactOS is using the BIOS memory map */
+  KeLoaderBlock.Flags &= ~MB_FLAGS_MMAP_INFO;
+#endif
 
   KeMemoryMapRangeCount = 0;
   if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
