@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.17 2003/07/10 21:05:03 royce Exp $
+/* $Id: balance.c,v 1.18 2003/07/12 01:52:10 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -59,8 +59,6 @@ static ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
-static ULONG NrWorkingThreads = 0;
-static HANDLE WorkerThreadId;
 static ULONG MiPagesRequired = 0;
 static ULONG MiMinimumPagesPerRun = 10;
 
@@ -161,7 +159,7 @@ MiTrimMemoryConsumer(ULONG Consumer)
 }
 
 VOID
-MiRebalanceMemoryConsumers(VOID)
+MmRebalanceMemoryConsumers(VOID)
 {
   LONG Target;
   ULONG i;
@@ -203,7 +201,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    */
   OldUsed = InterlockedIncrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
   if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
-      WorkerThreadId != PsGetCurrentThreadId())
+      !MiIsPagerThread())
     {
       if (!CanWait)
 	{
@@ -234,41 +232,30 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       InterlockedIncrement((LONG *)&MiPagesRequired);
 
       KeAcquireSpinLock(&AllocationListLock, &oldIrql);     
-      if (NrWorkingThreads == 0)
+      /* Always let the pager thread itself allocate memory. */
+      if (MiIsPagerThread())
 	{
-	  InsertTailList(&AllocationListHead, &Request.ListEntry);
-	  NrWorkingThreads++;
+	  Page = MmAllocPage(Consumer, 0);
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	  WorkerThreadId = PsGetCurrentThreadId();
-	  MiRebalanceMemoryConsumers();
-	  KeAcquireSpinLock(&AllocationListLock, &oldIrql);
-	  NrWorkingThreads--;
-	  WorkerThreadId = 0;
-	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	}
-      else
-	{
-	  if (WorkerThreadId == PsGetCurrentThreadId())
+	  if (Page.QuadPart == 0LL)
 	    {
-	      Page = MmAllocPage(Consumer, 0);
-	      KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	      if (Page.QuadPart == 0LL)
-		{
-		  KeBugCheck(0);
-		}
-	      *AllocatedPage = Page;
-	      InterlockedDecrement((LONG *)&MiPagesRequired);
-	      return(STATUS_SUCCESS);
+	      KeBugCheck(0);
 	    }
-	  InsertTailList(&AllocationListHead, &Request.ListEntry);
-	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
+	  *AllocatedPage = Page;
+	  InterlockedDecrement((LONG *)&MiPagesRequired);
+	  return(STATUS_SUCCESS);
 	}
+      /* Otherwise start the pager thread if it isn't already working. */
+      MiStartPagerThread();
+      InsertTailList(&AllocationListHead, &Request.ListEntry);
+      KeReleaseSpinLock(&AllocationListLock, oldIrql);
+
       KeWaitForSingleObject(&Request.Event,
 			    0,
 			    KernelMode,
 			    FALSE,
 			    NULL);
-
+      
       Page = Request.Page;
       if (Page.QuadPart == 0LL)
 	{
@@ -279,7 +266,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       InterlockedDecrement((LONG *)&MiPagesRequired);
       return(STATUS_SUCCESS);
     }
-
+  
   /*
    * Actually allocate the page.
    */

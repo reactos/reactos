@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.11 2002/09/08 10:23:36 chorns Exp $
+/* $Id: pager.c,v 1.12 2003/07/12 01:52:10 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -25,31 +25,55 @@ static HANDLE PagerThreadHandle;
 static CLIENT_ID PagerThreadId;
 static KEVENT PagerThreadEvent;
 static BOOLEAN PagerThreadShouldTerminate;
+static ULONG PagerThreadWorking;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+MiIsPagerThread(VOID)
+{
+  return(PsGetCurrentThreadId() == PagerThreadId.UniqueThread);
+}
+
+VOID
+MiStartPagerThread(VOID)
+{
+  ULONG WasWorking;
+
+  WasWorking = InterlockedExchange(&PagerThreadWorking, 1);
+  if (WasWorking == 0)
+    {
+      KeSetEvent(&PagerThreadEvent, IO_NO_INCREMENT, FALSE);
+    }
+}
 
 static NTSTATUS STDCALL
 MmPagerThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
-      
+
    for(;;)
      {
-	Status = KeWaitForSingleObject(&PagerThreadEvent,
-				       0,
-				       KernelMode,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("PagerThread: Wait failed\n");
-	     KeBugCheck(0);
-	  }
-	if (PagerThreadShouldTerminate)
-	  {
-	     DbgPrint("PagerThread: Terminating\n");
-	     return(STATUS_SUCCESS);
-	  }
+       /* Wake for a low memory situation or a terminate request. */
+       Status = KeWaitForSingleObject(&PagerThreadEvent,
+				      0,
+				      KernelMode,
+				      FALSE,
+				      NULL);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("PagerThread: Wait failed\n");
+	   KeBugCheck(0);
+	 }
+       if (PagerThreadShouldTerminate)
+	 {
+	   DbgPrint("PagerThread: Terminating\n");
+	   return(STATUS_SUCCESS);
+	 }
+       /* Try and make some memory available to the system. */
+       MmRebalanceMemoryConsumers();
+       /* Let the rest of the system know we finished this run. */
+       (VOID)InterlockedExchange(&PagerThreadWorking, 0);
      }
 }
 
@@ -58,6 +82,7 @@ NTSTATUS MmInitPagerThread(VOID)
    NTSTATUS Status;
    
    PagerThreadShouldTerminate = FALSE;
+   PagerThreadWorking = 0;
    KeInitializeEvent(&PagerThreadEvent,
 		     SynchronizationEvent,
 		     FALSE);

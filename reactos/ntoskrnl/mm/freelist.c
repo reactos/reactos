@@ -70,6 +70,11 @@ MmTransferOwnershipPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG NewConsumer)
   KIRQL oldIrql;
    
   KeAcquireSpinLock(&PageListLock, &oldIrql);
+  if (MmPageArray[Start].MapCount != 0)
+    {
+      DbgPrint("Transfering mapped page.\n");
+      KeBugCheck(0);
+    }
   RemoveEntryList(&MmPageArray[Start].ListEntry);
   InsertTailList(&UsedPageListHeads[NewConsumer], 
     &MmPageArray[Start].ListEntry);
@@ -98,6 +103,23 @@ MmGetLRUFirstUserPage(VOID)
   Next.QuadPart = (Next.QuadPart / sizeof(PHYSICAL_PAGE)) * PAGE_SIZE;   
   KeReleaseSpinLock(&PageListLock, oldIrql);
   return(Next);
+}
+
+VOID
+MmSetLRULastPage(PHYSICAL_ADDRESS PhysicalAddress)
+{
+  ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
+  KIRQL oldIrql;
+
+  KeAcquireSpinLock(&PageListLock, &oldIrql);
+  if (MmPageArray[Start].Flags.Type == MM_PHYSICAL_PAGE_USED &&
+      MmPageArray[Start].Flags.Consumer == MC_USER)
+    {
+      RemoveEntryList(&MmPageArray[Start].ListEntry);
+      InsertTailList(&UsedPageListHeads[MC_USER], 
+		     &MmPageArray[Start].ListEntry);
+    }
+  KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
 PHYSICAL_ADDRESS

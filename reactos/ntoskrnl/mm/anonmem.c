@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.17 2003/07/11 01:23:15 royce Exp $
+/* $Id: anonmem.c,v 1.18 2003/07/12 01:52:10 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -193,7 +193,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
-	   return(STATUS_UNSUCCESSFUL);
+	   return(STATUS_PAGEFILE_QUOTA);
 	 }
      }
    

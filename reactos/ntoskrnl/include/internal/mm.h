@@ -632,5 +632,13 @@ BOOLEAN
 MmIsAvailableSwapPage(VOID);
 VOID
 MmShowOutOfSpaceMessagePagingFile(VOID);
+VOID
+MmRebalanceMemoryConsumers(VOID);
+BOOLEAN
+MiIsPagerThread(VOID);
+VOID
+MiStartPagerThread(VOID);
+VOID
+MmSetLRULastPage(PHYSICAL_ADDRESS PhysicalAddress);
 
 #endif
