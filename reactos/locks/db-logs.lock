@@ -1,7 +1,0 @@
-DB logs lock file, representing locks on the versioned filesystem logs.
-
-All log manipulators of the repository's
-Berkeley DB environment take out exclusive locks on this file
-to ensure that only one accessor manupulates the logs at the time.
-
-You should never have to edit or remove this file.
