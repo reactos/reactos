@@ -21,11 +21,10 @@
 
 extern ULONG_PTR LdrHalBase;
 
-
 NTSTATUS
-LdrLoadInitialProcess (
-	VOID
-	);
+LdrLoadInitialProcess(PHANDLE ProcessHandle,
+		      PHANDLE ThreadHandle);
+
 VOID
 LdrLoadAutoConfigDrivers (
 	VOID

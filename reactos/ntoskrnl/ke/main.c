@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.139 2002/09/17 23:48:14 dwelch Exp $
+/* $Id: main.c,v 1.140 2002/11/12 19:12:13 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -282,9 +282,13 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
+
 VOID
 ExpInitializeExecutive(VOID)
 {
+  LARGE_INTEGER Timeout;
+  HANDLE ProcessHandle;
+  HANDLE ThreadHandle;
   ULONG BootDriverCount;
   ULONG i;
   ULONG start;
@@ -575,7 +579,27 @@ ExpInitializeExecutive(VOID)
   /*
    *  Launch initial process
    */
-  LdrLoadInitialProcess();
+  Status = LdrLoadInitialProcess(&ProcessHandle,
+				 &ThreadHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+  /*
+   * Crash the system if the initial process terminates within 5 seconds.
+   */
+  Timeout.QuadPart = 50000000;
+  Status = NtWaitForSingleObject(ProcessHandle,
+				 FALSE,
+				 &Timeout);
+  if (Status != STATUS_TIMEOUT)
+    {
+      KeBugCheckEx(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+  NtClose(ThreadHandle);
+  NtClose(ProcessHandle);
 
   PsTerminateSystemThread(STATUS_SUCCESS);
 }
