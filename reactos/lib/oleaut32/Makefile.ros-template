@@ -1,10 +1,10 @@
-# $Id: Makefile.ros-template,v 1.4 2004/05/29 21:24:45 hbirr Exp $
+# $Id: Makefile.ros-template,v 1.5 2004/10/20 20:31:36 gvg Exp $
 
 TARGET_NAME = oleaut32
 
 TARGET_OBJECTS = @C_SRCS@
 
-TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__ -DCOBJMACROS
 
 TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a libwine_unicode.a ntdll.a
 

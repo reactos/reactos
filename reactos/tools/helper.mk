@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.87 2004/10/18 19:11:09 chorns Exp $
+# $Id: helper.mk,v 1.88 2004/10/20 20:31:35 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -448,8 +448,8 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
-  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -478,8 +478,8 @@ ifeq ($(TARGET_TYPE),winedrv)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
-  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no

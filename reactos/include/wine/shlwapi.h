@@ -1,4 +1,4 @@
-/* $Id: shlwapi.h,v 1.8 2004/10/20 16:20:22 gvg Exp $
+/* $Id: shlwapi.h,v 1.9 2004/10/20 20:31:36 gvg Exp $
  *
  * Compatibility header
  *
@@ -13,17 +13,22 @@
 #define __WINE_SHLWAPI_H
 
 #define INTERFACE IQueryAssociations
-#define IQueryAssociations_METHODS \
-    IUnknown_METHODS \
-    STDMETHOD(Init)(THIS_ ASSOCF  flags, LPCWSTR  pszAssoc, HKEY  hkProgid, HWND  hwnd) PURE; \
-    STDMETHOD(GetString)(THIS_ ASSOCF  flags, ASSOCSTR  str, LPCWSTR  pszExtra, LPWSTR  pszOut, DWORD * pcchOut) PURE; \
-    STDMETHOD(GetKey)(THIS_ ASSOCF  flags, ASSOCKEY  key, LPCWSTR  pszExtra, HKEY * phkeyOut) PURE; \
-    STDMETHOD(GetData)(THIS_ ASSOCF  flags, ASSOCDATA  data, LPCWSTR  pszExtra, LPVOID  pvOut, DWORD * pcbOut) PURE; \
+DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IQueryAssociations methods ***/
+    STDMETHOD(Init)(THIS_ ASSOCF  flags, LPCWSTR  pszAssoc, HKEY  hkProgid, HWND  hwnd) PURE;
+    STDMETHOD(GetString)(THIS_ ASSOCF  flags, ASSOCSTR  str, LPCWSTR  pszExtra, LPWSTR  pszOut, DWORD * pcchOut) PURE;
+    STDMETHOD(GetKey)(THIS_ ASSOCF  flags, ASSOCKEY  key, LPCWSTR  pszExtra, HKEY * phkeyOut) PURE;
+    STDMETHOD(GetData)(THIS_ ASSOCF  flags, ASSOCDATA  data, LPCWSTR  pszExtra, LPVOID  pvOut, DWORD * pcbOut) PURE;
     STDMETHOD(GetEnum)(THIS_ ASSOCF  flags, ASSOCENUM  assocenum, LPCWSTR  pszExtra, REFIID  riid, LPVOID * ppvOut) PURE;
-DECLARE_INTERFACE_(IQueryAssociations,IUnknown) { IQueryAssociations_METHODS };
+};
 #undef INTERFACE
 
-#ifdef COBJMACROS
+#if !defined(__cplusplus) || defined(CINTERFACE)
 #define IQueryAssociations_QueryInterface(p,a,b)   (p)->lpVtbl->QueryInterface(p,a,b)
 #define IQueryAssociations_AddRef(p)               (p)->lpVtbl->AddRef(p)
 #define IQueryAssociations_Release(p)              (p)->lpVtbl->Release(p)
