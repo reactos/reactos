@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.75 2004/07/13 11:48:32 ekohl Exp $
+/* $Id: create.c,v 1.76 2004/07/19 06:08:21 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -318,6 +318,56 @@ PsReferenceImpersonationToken(IN PETHREAD Thread,
   return Thread->ImpersonationInfo->Token;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+PsDereferenceImpersonationToken(
+    IN PACCESS_TOKEN ImpersonationToken
+    )
+{
+	UNIMPLEMENTED;	
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+PsDereferencePrimaryToken(
+    IN PACCESS_TOKEN PrimaryToken
+    )
+{
+	UNIMPLEMENTED;	
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+PsDisableImpersonation(
+    IN PETHREAD Thread,
+    IN PSE_IMPERSONATION_STATE ImpersonationState
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;	
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsRestoreImpersonation(
+	IN PETHREAD   	 Thread,
+	IN PSE_IMPERSONATION_STATE  	ImpersonationState
+     	)
+{
+	UNIMPLEMENTED;
+}
 
 VOID
 PiBeforeBeginThread(CONTEXT c)

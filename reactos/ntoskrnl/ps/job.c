@@ -117,5 +117,57 @@ NtTerminateJobObject(
 	return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL 
+PsGetJobLock(
+    PVOID */*PEJOB*/ Job
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
 
+
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetJobSessionId(
+    PVOID /*PEJOB*/	Job
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+PsGetJobUIRestrictionsClass(
+   	PVOID /*PEJOB*/	Job
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetJobUIRestrictionsClass(
+    PVOID /*PEJOB*/	Job,
+    ULONG	UIRestrictionsClass	
+	)
+{
+	UNIMPLEMENTED;
+}
 /* EOF */

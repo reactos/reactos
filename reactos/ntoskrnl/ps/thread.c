@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.127 2004/07/17 03:06:02 ion Exp $
+/* $Id: thread.c,v 1.128 2004/07/19 06:08:21 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -77,6 +77,183 @@ PKTHREAD STDCALL KeGetCurrentThread(VOID)
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
 {
    return(PsGetCurrentThread()->Cid.UniqueThread);
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+PsGetThreadFreezeCount(
+	PETHREAD Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+PsGetThreadHardErrorsAreDisabled(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetThreadId(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PEPROCESS
+STDCALL
+PsGetThreadProcess(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetThreadProcessId(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetThreadSessionId(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PTEB
+STDCALL
+PsGetThreadTeb(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetThreadWin32Thread(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+/*
+ * @unimplemented
+ */
+KPROCESSOR_MODE
+STDCALL
+PsGetCurrentThreadPreviousMode (
+    	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetCurrentThreadStackBase (
+    	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetCurrentThreadStackLimit (
+    	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN STDCALL
+PsIsThreadTerminating(IN PETHREAD Thread)
+{
+  return(Thread->DeadThread);
+}
+
+/*
+ * @unimplemented
+ */             
+BOOLEAN
+STDCALL
+PsIsSystemThread(
+    PETHREAD Thread
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;	
+}
+
+/*
+ * @unimplemented
+ */                       
+BOOLEAN
+STDCALL
+PsIsThreadImpersonating(
+    PETHREAD	Thread
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;	
 }
 
 static VOID
@@ -410,6 +587,58 @@ PsFreezeAllThreads(PEPROCESS Process)
     }
 
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
+
+/*
+ * @unimplemented
+ */                       
+NTSTATUS
+STDCALL
+PsRemoveCreateThreadNotifyRoutine (
+    IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;	
+}
+
+/*
+ * @unimplemented
+ */                       
+ULONG
+STDCALL
+PsSetLegoNotifyRoutine(   	
+	PVOID LegoNotifyRoutine  	 
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetThreadHardErrorsAreDisabled(
+    PEPROCESS	Process,
+    BOOLEAN	HardErrorsAreDisabled
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetThreadWin32Thread(
+    PETHREAD	Thread,
+    PVOID	Win32Thread
+	)
+{
+	UNIMPLEMENTED;
 }
 
 VOID

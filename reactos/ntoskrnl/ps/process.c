@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.134 2004/07/17 03:06:02 ion Exp $
+/* $Id: process.c,v 1.135 2004/07/19 06:08:21 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -522,6 +522,19 @@ HANDLE STDCALL
 PsGetCurrentProcessId(VOID)
 {
   return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
+}
+
+/*
+ * @unimplemented
+ */
+NTKERNELAPI
+ULONG
+PsGetCurrentProcessSessionId (
+    	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
 }
 
 /*
@@ -1589,12 +1602,211 @@ PsGetProcessExitTime(VOID)
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-BOOLEAN STDCALL
-PsIsThreadTerminating(IN PETHREAD Thread)
+ULONG
+STDCALL
+PsGetProcessCreateTimeQuadPart(
+    PEPROCESS	Process
+	)
 {
-  return(Thread->DeadThread);
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetProcessDebugPort(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+PsGetProcessExitProcessCalled(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;	
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+PsGetProcessExitStatus(
+	PEPROCESS Process
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetProcessId(
+   	PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PWSTR
+STDCALL
+PsGetProcessImageFileName(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetProcessInheritedFromUniqueProcessId(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID /*PEJOB*/
+STDCALL
+PsGetProcessJob(
+	PEPROCESS Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PPEB
+STDCALL
+PsGetProcessPeb(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+PsGetProcessPriorityClass(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetProcessSectionBaseAddress(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetProcessSecurityPort(
+	PEPROCESS Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+PsGetProcessSessionId(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetProcessWin32Process(
+	PEPROCESS Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+PsGetProcessWin32WindowStation(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return 0;	
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+PsIsProcessBeingDebugged(
+    PEPROCESS	Process
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;	
 }
 
 
@@ -1704,6 +1916,19 @@ PspRunLoadImageNotifyRoutines(
 }
 
 /*
+ * @unimplemented
+ */                       
+NTSTATUS
+STDCALL
+PsRemoveLoadImageNotifyRoutine(
+    IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;	
+}
+
+/*
  * @implemented
  */
 NTSTATUS STDCALL
@@ -1728,4 +1953,153 @@ PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
    return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetProcessPriorityClass(
+    PEPROCESS	Process,
+    ULONG	PriorityClass	
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetProcessSecurityPort(
+    PEPROCESS	Process,
+    PVOID	SecurityPort	
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetProcessWin32Process(
+    PEPROCESS	Process,
+    PVOID	Win32Process
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsSetProcessWin32WindowStation(
+    PEPROCESS	Process,
+    PVOID	WindowStation
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/* Pool Quotas */
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+PsChargePoolQuota(
+    IN PEPROCESS Process,
+    IN POOL_TYPE PoolType,
+    IN ULONG_PTR Amount
+    )
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+PsChargeProcessNonPagedPoolQuota (
+    	IN PEPROCESS Process,
+    	IN ULONG_PTR Amount
+	)
+{
+	UNIMPLEMENTED;	
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+PsChargeProcessPagedPoolQuota (
+    	IN PEPROCESS Process,
+    	IN ULONG_PTR Amount
+	)
+{
+	UNIMPLEMENTED;	
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+PsChargeProcessPoolQuota(
+    IN PEPROCESS Process,
+    IN POOL_TYPE PoolType,
+    IN ULONG_PTR Amount
+    )
+{
+	UNIMPLEMENTED;	
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsReturnPoolQuota(
+    IN PEPROCESS Process,
+    IN POOL_TYPE PoolType,
+    IN ULONG_PTR Amount
+    )
+{
+	UNIMPLEMENTED;
+} 
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsReturnProcessNonPagedPoolQuota(
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    )
+{
+	UNIMPLEMENTED;
+} 
+
+/*
+ * @unimplemented
+ */                       
+VOID
+STDCALL
+PsReturnProcessPagedPoolQuota(
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    )
+{
+	UNIMPLEMENTED;
+}
 /* EOF */

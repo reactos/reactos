@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.15 2004/07/11 16:09:37 ekohl Exp $
+/* $Id: setypes.h,v 1.16 2004/07/19 06:08:21 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -207,6 +207,13 @@ typedef struct _ACCESS_STATE
   UNICODE_STRING ObjectName;
   UNICODE_STRING ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
+
+typedef struct _SE_IMPERSONATION_STATE {
+	PVOID		Token;
+	BOOLEAN		CopyOnOpen;
+	BOOLEAN		EffectiveOnly;
+	SECURITY_IMPERSONATION_LEVEL Level;
+} SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
 
 #endif
 
