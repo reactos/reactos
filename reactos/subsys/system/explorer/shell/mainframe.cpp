@@ -1046,7 +1046,8 @@ void MainFrame::FillBookmarks()
 
 	TreeView_DeleteAllItems(_hsidebar);
 
-	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT, _himl);
+	WindowCanvas canvas(_hwnd);
+	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT, _himl, canvas);
 }
 
 #endif

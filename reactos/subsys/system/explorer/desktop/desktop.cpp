@@ -275,7 +275,9 @@ LRESULT BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return TRUE;
 
 	  case WM_MBUTTONDBLCLK:
-		explorer_show_frame(SW_SHOWNORMAL);
+		/* Imagelist icons are missing if MainFrame::Create() is called directly from here!
+		explorer_show_frame(SW_SHOWNORMAL); */
+		PostMessage(g_Globals._hwndDesktop, nmsg, wparam, lparam);
 		break;
 
 	  case PM_DISPLAY_VERSION:

@@ -69,7 +69,7 @@ struct BookmarkList : public list<BookmarkNode>
 	void	read(const_XMLPos& pos);
 	void	write(XMLPos& pos) const;
 
-	void	fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST) const;
+	void	fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST, HDC hdc_wnd) const;
 };
 
 struct BookmarkFolder

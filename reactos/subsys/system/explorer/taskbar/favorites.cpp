@@ -254,10 +254,8 @@ void BookmarkList::write(XMLPos& pos) const
 
 
  /// fill treeview control with bookmark tree content
-void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist) const
+void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist, HDC hdc_wnd) const
 {
-	HDC hdc = GetDC(hwnd);
-
 	TV_INSERTSTRUCT tvi;
 
 	tvi.hParent = parent;
@@ -279,7 +277,7 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist)
 			tv.iSelectedImage = 4;
 			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
 
-			folder._bookmarks.fill_tree(hwnd, hitem, himagelist);
+			folder._bookmarks.fill_tree(hwnd, hitem, himagelist, hdc_wnd);
 		} else {
 			const Bookmark& bookmark = *node._pbookmark;
 
@@ -292,14 +290,12 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist)
 				const Icon& icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
 
 				if ((ICON_ID)icon != ICID_NONE)
-					tv.iImage = tv.iSelectedImage = ImageList_Add(himagelist, icon.create_bitmap(RGB(255,255,255), GetStockBrush(WHITE_BRUSH), hdc), 0);
+					tv.iImage = tv.iSelectedImage = ImageList_Add(himagelist, icon.create_bitmap(RGB(255,255,255), GetStockBrush(WHITE_BRUSH), hdc_wnd), 0);
 			}
 
 			TreeView_InsertItem(hwnd, &tvi);
 		}
 	}
-
-	ReleaseDC(hwnd, hdc);
 }
 
 
