@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.44 2003/03/16 16:14:38 hbirr Exp $
+/* $Id: conio.c,v 1.45 2003/03/21 20:17:55 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1236,9 +1236,10 @@ CSR_API(CsrSetCursor)
 
 CSR_API(CsrWriteConsoleOutputChar)
 {
-   BYTE *Buffer = Request->Data.WriteConsoleOutputCharRequest.String;
+   PBYTE String = Request->Data.WriteConsoleOutputCharRequest.String;
+   PBYTE Buffer;
    PCSRSS_SCREEN_BUFFER Buff;
-   DWORD X, Y;
+   DWORD X, Y, Length;
    NTSTATUS Status;
    IO_STATUS_BLOCK Iosb;
 
@@ -1253,12 +1254,26 @@ CSR_API(CsrWriteConsoleOutputChar)
 	 UNLOCK;
 	 return Reply->Status = STATUS_INVALID_HANDLE;
       }
-   X = Buff->CurrentX;
-   Y = Buff->CurrentY;
-   Buff->CurrentX = Request->Data.WriteConsoleOutputCharRequest.Coord.X;
-   Buff->CurrentY = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
-   Buffer[Request->Data.WriteConsoleOutputCharRequest.Length] = 0;
-   CsrpWriteConsole( Buff, Buffer, Request->Data.WriteConsoleOutputCharRequest.Length, FALSE );
+
+
+   X = Request->Data.WriteConsoleOutputCharRequest.Coord.X + Buff->ShowX;
+   Y = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
+   Length = Request->Data.WriteConsoleOutputCharRequest.Length;
+   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X)];
+   while(Length--)
+   {
+      *Buffer = *String++;
+      Buffer += 2;
+      if (++X == Buff->MaxX)
+      {
+         if (++Y == Buff->MaxY)
+	 {
+	    Y = 0;
+	    Buffer = Buff->Buffer;
+	 }
+	 X = 0;
+      }
+   }
    if( ActiveConsole->ActiveBuffer == Buff )
      {
        Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
@@ -1274,10 +1289,8 @@ CSR_API(CsrWriteConsoleOutputChar)
        if( !NT_SUCCESS( Status ) )
 	 DPRINT1( "Failed to write output chars: %x\n", Status );
      }
-   Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
-   Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Buff->CurrentY + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
-   Buff->CurrentY = Y;
-   Buff->CurrentX = X;
+   Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = X - Buff->ShowX;
+   Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Y + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
    UNLOCK;
    return Reply->Status = STATUS_SUCCESS;
 }
@@ -1285,7 +1298,12 @@ CSR_API(CsrWriteConsoleOutputChar)
 CSR_API(CsrFillOutputChar)
 {
    PCSRSS_SCREEN_BUFFER Buff;
-   DWORD X, Y, i;
+   DWORD X, Y, Length;
+   BYTE Char;
+   OUTPUT_CHARACTER Character;
+   PBYTE Buffer;
+   NTSTATUS Status;
+   IO_STATUS_BLOCK Iosb;
 
    DPRINT("CsrFillOutputChar\n");
    
@@ -1301,18 +1319,41 @@ CSR_API(CsrFillOutputChar)
       }
    X = Request->Data.FillOutputRequest.Position.X + Buff->ShowX;
    Y = (Request->Data.FillOutputRequest.Position.Y + Buff->ShowY) % Buff->MaxY;
-   for( i = 0; i < Request->Data.FillOutputRequest.Length; i++ )
+   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X)];
+   Char = Request->Data.FillOutputRequest.Char;
+   Length = Request->Data.FillOutputRequest.Length;
+   while (Length--)
+   {
+      *Buffer = Char;
+      Buffer += 2;
+      if( ++X == Buff->MaxX )
       {
-	 Buff->Buffer[ (Y * 2 * Buff->MaxX) + (X * 2) ] = Request->Data.FillOutputRequest.Char;
-	 if( ++X == Buff->MaxX )
-	    {
-	       if( ++Y == Buff->MaxY )
-		  Y = 0;
-	       X = 0;
-	    }
+         if( ++Y == Buff->MaxY )
+	 {
+	    Y = 0;
+	    Buffer = Buff->Buffer;
+	 }
+	 X = 0;
       }
+   }
    if( Buff == ActiveConsole->ActiveBuffer )
-      CsrDrawConsole( Buff );
+   {
+      Character.dwCoord = Request->Data.FillOutputRequest.Position;
+      Character.cCharacter = Char;
+      Character.nLength = Request->Data.FillOutputRequest.Length;
+      Status = NtDeviceIoControlFile( ConsoleDeviceHandle, 
+	                              NULL, 
+				      NULL, 
+				      NULL, 
+				      &Iosb,
+	                              IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER,
+				      &Character,
+				      sizeof(Character),
+				      NULL,
+				      0);
+      if (!NT_SUCCESS(Status))
+	  DPRINT1( "Failed to write output characters to console\n" );
+   }
    UNLOCK;
    return Reply->Status;
 }
@@ -1389,10 +1430,10 @@ CSR_API(CsrReadInputEvent)
 
 CSR_API(CsrWriteConsoleOutputAttrib)
 {
-   int c;
    PCSRSS_SCREEN_BUFFER Buff;
+   PUCHAR Buffer, Attribute;
    NTSTATUS Status;
-   int X, Y;
+   int X, Y, Length;
    IO_STATUS_BLOCK Iosb;
 
    DPRINT("CsrWriteConsoleOutputAttrib\n");
@@ -1408,20 +1449,25 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 	 UNLOCK;
 	 return Status;
       }
-   X = Buff->CurrentX;
-   Y = Buff->CurrentY;
-   Buff->CurrentX = Request->Data.WriteConsoleOutputAttribRequest.Coord.X + Buff->ShowX;
-   Buff->CurrentY = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
-   for( c = 0; c < Request->Data.WriteConsoleOutputAttribRequest.Length; c++ )
+   X = Request->Data.WriteConsoleOutputAttribRequest.Coord.X + Buff->ShowX;
+   Y = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
+   Length = Request->Data.WriteConsoleOutputAttribRequest.Length;
+   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X) + 1];
+   Attribute = Request->Data.WriteConsoleOutputAttribRequest.String;
+   while (Length--)
+   {
+      *Buffer = *Attribute++;
+      Buffer += 2;
+      if( ++X == Buff->MaxX )
       {
-	 Buff->Buffer[(Buff->CurrentY * Buff->MaxX * 2) + (Buff->CurrentX * 2) + 1] = Request->Data.WriteConsoleOutputAttribRequest.String[c];
-	 if( ++Buff->CurrentX == Buff->MaxX )
-	    {
-	       Buff->CurrentX = 0;
-	       if( ++Buff->CurrentY == Buff->MaxY )
-		  Buff->CurrentY = 0;
-	    }
+         X = 0;
+	 if( ++Y == Buff->MaxY )
+	 {
+	    Y = 0;
+	    Buffer = Buff->Buffer + 1;
+	 }
       }
+   }
    if( Buff == ActiveConsole->ActiveBuffer )
       {
 	Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
@@ -1440,20 +1486,19 @@ CSR_API(CsrWriteConsoleOutputAttrib)
       }
    Reply->Data.WriteConsoleOutputAttribReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
    Reply->Data.WriteConsoleOutputAttribReply.EndCoord.Y = ( Buff->CurrentY + Buff->MaxY - Buff->ShowY ) % Buff->MaxY;
-   Buff->CurrentX = X;
-   Buff->CurrentY = Y;
    UNLOCK;
    return Reply->Status = STATUS_SUCCESS;
 }
 
 CSR_API(CsrFillOutputAttrib)
 {
-   int c;
+   OUTPUT_ATTRIBUTE Attribute;
    PCSRSS_SCREEN_BUFFER Buff;
+   PCHAR Buffer;
    NTSTATUS Status;
-   int X, Y;
+   int X, Y, Length;
    IO_STATUS_BLOCK Iosb;
-   OUTPUT_ATTRIBUTE Attr;
+   UCHAR Attr;
 
    DPRINT("CsrFillOutputAttrib\n");
    
@@ -1468,40 +1513,43 @@ CSR_API(CsrFillOutputAttrib)
 	 UNLOCK;
 	 return Status;
       }
-   X = Buff->CurrentX;
-   Y = Buff->CurrentY;
-   Buff->CurrentX = Request->Data.FillOutputAttribRequest.Coord.X + Buff->ShowX;
-   Buff->CurrentY = (Request->Data.FillOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
-   for( c = 0; c < Request->Data.FillOutputAttribRequest.Length; c++ )
+   X = Request->Data.FillOutputAttribRequest.Coord.X + Buff->ShowX;
+   Y = (Request->Data.FillOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
+   Length = Request->Data.FillOutputAttribRequest.Length;
+   Attr = Request->Data.FillOutputAttribRequest.Attribute;
+   Buffer = &Buff->Buffer[(Y * Buff->MaxX * 2) + (X * 2) + 1];
+   while(Length--)
+   {
+      *Buffer = Attr;
+      Buffer += 2;
+      if( ++X == Buff->MaxX )
       {
-	 Buff->Buffer[(Buff->CurrentY * Buff->MaxX * 2) + (Buff->CurrentX * 2) + 1] = Request->Data.FillOutputAttribRequest.Attribute;
-	 if( ++Buff->CurrentX == Buff->MaxX )
-	    {
-	       Buff->CurrentX = 0;
-	       if( ++Buff->CurrentY == Buff->MaxY )
-		  Buff->CurrentY = 0;
-	    }
+         X = 0;
+	 if( ++Y == Buff->MaxY )
+	 {
+	    Y = 0;
+	    Buffer = Buff->Buffer + 1;
+	 }
       }
+   }
    if( Buff == ActiveConsole->ActiveBuffer )
-     {
-       Attr.wAttribute = Request->Data.FillOutputAttribRequest.Attribute;
-       Attr.nLength = Request->Data.FillOutputAttribRequest.Length;
-       Attr.dwCoord = Request->Data.FillOutputAttribRequest.Coord;
-       Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
-				       NULL,
-				       NULL,
-				       NULL,
-				       &Iosb,
-				       IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
-				       &Attr,
-				       sizeof (Attr),
-				       0,
-				       0 );
-       if( !NT_SUCCESS( Status ) )
-	 DPRINT1( "Failed to fill output attribute\n" );
-     }
-   Buff->CurrentX = X;
-   Buff->CurrentY = Y;
+   {
+      Attribute.wAttribute = Attr;
+      Attribute.nLength = Request->Data.FillOutputAttribRequest.Length;
+      Attribute.dwCoord = Request->Data.FillOutputAttribRequest.Coord;
+      Status = NtDeviceIoControlFile( ConsoleDeviceHandle, 
+	                              NULL, 
+				      NULL, 
+				      NULL, 
+				      &Iosb,
+				      IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE, 
+				      &Attribute,
+				      sizeof(OUTPUT_ATTRIBUTE), 
+				      NULL, 
+				      0);
+      if( !NT_SUCCESS( Status ) )
+         DPRINT1( "Failed to fill output attributes to console\n" );
+   }
    UNLOCK;
    return Reply->Status = STATUS_SUCCESS;
 }
