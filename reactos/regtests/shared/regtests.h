@@ -17,6 +17,7 @@ void SetupOnce()
 /* Valid values for Command parameter of TestRoutine */
 #define TESTCMD_RUN       0   /* Buffer contains information about what failed */
 #define TESTCMD_TESTNAME  1   /* Buffer contains description of test */
+#define TESTCMD_TIMEOUT   2   /* Buffer contains timeout for test (DWORD, default is 5000 ms) */
 
 /* Valid values for return values of TestRoutine */
 #define TS_EXCEPTION     -1
@@ -27,7 +28,7 @@ extern int _Result;
 extern char *_Buffer;
 
 /* Macros to simplify tests */
-#define _Dispatcher(FunctionName, TestName) \
+#define _DispatcherTimeout(FunctionName, TestName, TimeOut) \
 void \
 FunctionName(int Command) \
 { \
@@ -39,11 +40,16 @@ FunctionName(int Command) \
       case TESTCMD_TESTNAME: \
         strcpy(_Buffer, TestName); \
         break; \
+      case TESTCMD_TIMEOUT: \
+        *(PDWORD)_Buffer = (DWORD)TimeOut; \
+        break; \
       default: \
         _Result = TS_FAILED; \
         break; \
     } \
 }
+
+#define _Dispatcher(FunctionName, TestName) _DispatcherTimeout(FunctionName, TestName, 5000)
 
 static inline void
 AppendAssertion(char *message)
@@ -172,6 +178,18 @@ _LoadLibraryA(LPCSTR lpLibFileName);
 
 VOID STDCALL
 _ExitProcess(UINT uExitCode);
+
+HANDLE STDCALL
+_CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
+              LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter,
+              DWORD dwCreationFlags, LPDWORD lpThreadId);
+
+WINBOOL STDCALL
+_TerminateThread(HANDLE hThread, DWORD dwExitCode);
+
+DWORD STDCALL
+_WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
+
 
 static inline PCHAR
 FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
