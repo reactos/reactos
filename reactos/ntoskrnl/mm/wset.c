@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.1 2000/07/04 08:52:45 dwelch Exp $
+/* $Id: wset.c,v 1.2 2000/07/06 14:34:51 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,15 +42,49 @@ VOID MmInitializeWorkingSet(PEPROCESS Process,
    AddressSpace->WorkingSetPagesAllocated = 1;
    KeInitializeMutex(&Process->WorkingSetLock, 1);
    Process->WorkingSetPage = ExAllocatePage();
+   memset(Process->WorkingSetPage, 0, 4096);
+}
+
+ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
+		    PMEMORY_AREA MArea,
+		    PVOID Address,
+		    PBOOLEAN Ul)
+{
+   ULONG Count;
+   
+   switch(MArea->Type)
+     {
+      case MEMORY_AREA_SYSTEM:
+	*Ul = FALSE;
+	return(0);
+	     
+      case MEMORY_AREA_SECTION_VIEW_COMMIT:
+	Count = MmPageOutSectionView(AddressSpace,
+				     MArea,
+				     Address,
+				     Ul);
+	return(Count);
+		  
+      case MEMORY_AREA_COMMIT:
+	Count = MmPageOutVirtualMemory(AddressSpace,
+				       MArea,
+				       Address,
+				       Ul);
+	return(Count);
+	
+     }
+   *Ul = FALSE;
+   return(0);
 }
 
 ULONG MmTrimWorkingSet(PEPROCESS Process,
 		       ULONG ReduceHint)
 {
-   ULONG i;
+   ULONG i, j;
    PMADDRESS_SPACE AddressSpace;
    PMWORKING_SET WSet;
    ULONG Count;
+   BOOLEAN Ul;
    
    MmLockWorkingSet(Process);
    
@@ -58,41 +92,37 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
    AddressSpace = &Process->AddressSpace;
    
    Count = 0;
+   j = AddressSpace->WorkingSetLruFirst;
    
-   for (i = 0; i < AddressSpace->WorkingSetSize; i++)
+   for (i = 0; i < AddressSpace->WorkingSetSize; )
      {
 	PVOID Address;
 	PMEMORY_AREA MArea;
 	
-	Address = WSet->Address[AddressSpace->WorkingSetLruFirst];
-	
+	Address = WSet->Address[j];
+		
 	MArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
 	
-	switch(MArea->Type)
+	if (MArea == NULL)
 	  {
-	   case MEMORY_AREA_SYSTEM:
-	     break;
-	     
-	   case MEMORY_AREA_SECTION_VIEW_COMMIT:
-	     Count = Count + MmPageOutSectionView(AddressSpace,
-						  MArea,
-						  Address);
-	     break;
-	     
-	   case MEMORY_AREA_COMMIT:
-	     Count = Count + MmPageOutVirtualMemory(AddressSpace,
-						    MArea,
-						    Address);
-	     break;
-	     
-	   default:
-	     break;
+	     KeBugCheck(0);
 	  }
-
 	
-	AddressSpace->WorkingSetLruFirst =
-	  ((AddressSpace->WorkingSetLruFirst) + 1) % 1020;
+	Count = Count + MmPageOutPage(AddressSpace, MArea, Address, &Ul);
 	
+	if (Ul)
+	  {
+	     MmLockWorkingSet(Process);
+	     
+	     j = AddressSpace->WorkingSetLruFirst;
+	     i = 0;
+	  }
+	else
+	  {
+	     j = (j + 1) % 1020;
+	     i++;
+	  }
+			
 	if (Count == ReduceHint)
 	  {
 	     MmUnlockWorkingSet(Process);
@@ -119,7 +149,8 @@ VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
      {
 	if (WSet->Address[j] == Address)
 	  {
-	     WSet->Address[j] = WSet->Address[AddressSpace->WorkingSetLruLast];
+	     WSet->Address[j] = 
+	       WSet->Address[AddressSpace->WorkingSetLruLast - 1];
 	     if (AddressSpace->WorkingSetLruLast != 0)
 	       {
 		  AddressSpace->WorkingSetLruLast =

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.35 2000/07/04 08:52:45 dwelch Exp $
+/* $Id: section.c,v 1.36 2000/07/06 14:34:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,9 +122,9 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
    
    MmLockSection(Section);
    
+   Page = MmAllocPageMaybeSwap(0);
    Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-   MmBuildMdlFromPages(Mdl);
-   Page = MmGetMdlPageAddress(Mdl, 0);
+   MmBuildMdlFromPages(Mdl, (PULONG)&Page);
    MmUnlockSection(Section);
    MmUnlockAddressSpace(AddressSpace);
    DPRINT("Reading file offset %x\n", Offset.QuadPart);
@@ -200,9 +200,11 @@ NTSTATUS MmOldNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    
    if (Entry == 0)
      {   
+	Page = MmAllocPageMaybeSwap(0);
+
+	
 	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-	MmBuildMdlFromPages(Mdl);
-	Page = MmGetMdlPageAddress(Mdl, 0);
+	MmBuildMdlFromPages(Mdl, (PULONG)&Page);
 	MmUnlockSection(Section);
 	MmUnlockAddressSpace(AddressSpace);
 	DPRINT("Reading file offset %x\n", Offset.QuadPart);
@@ -239,6 +241,103 @@ NTSTATUS MmOldNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	MmReferencePage(Page);	
      }
    
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)Page);
+   MmUnlockSection(Section);
+   
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
+					  PMEMORY_AREA MemoryArea,
+					  PVOID Address,
+					  PSECTION_OBJECT Section,
+					  LARGE_INTEGER Offset,
+					  ULONG Entry)
+{
+   PVOID Page;
+   NTSTATUS Status;
+   
+   /*
+    * If a page-in on that section offset is pending that wait for
+    * it to finish.
+    */
+   
+   do
+     {
+	/*
+	 * Release all our locks and wait for the pending operation
+	 * to complete
+	 */
+	MmUnlockSection(Section);
+	MmUnlockAddressSpace(AddressSpace);
+	/*
+	 * FIXME: What if the event is set and cleared after we
+	 * unlock the section but before we wait. 
+	 */
+	Status = MmWaitForPage((PVOID)(Entry & (~SPE_PAGEIN_PENDING)));
+	if (!NT_SUCCESS(Status))
+	  {
+	     /*
+	      * FIXME: What do we do in this case? Maybe the thread 
+	      * has terminated.
+	      */
+	     
+	     DbgPrint("Failed to wait for page\n");
+	     KeBugCheck(0);
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	
+	/*
+	 * Relock the address space and section
+	 */
+	MmLockAddressSpace(AddressSpace);
+	MmLockSection(Section);
+	
+	/*
+	 * Get the entry for the section offset. If the entry is still
+	 * pending that means another thread is already trying the
+	 * page-in again so we have to wait again.
+	 */
+	Entry = MmGetPageEntrySection(Section,
+				      Offset.u.LowPart);					   
+     } while (Entry & SPE_PAGEIN_PENDING);
+   
+   /*
+    * Setting the entry to null means the read failing. 
+    * FIXME: We should retry it (unless that filesystem has gone
+    * entirely e.g. the network died).
+    */
+   if (Entry == 0)
+     {
+	DbgPrint("Entry set to null while we slept\n");
+	KeBugCheck(0);
+     }
+   
+   /*
+    * Maybe the thread did the page-in took the fault on the
+    * same address-space/address as we did. If so we can just
+    * return success.
+    */
+   if (MmIsPagePresent(NULL, Address))
+     {
+	MmUnlockSection(Section);
+	return(STATUS_SUCCESS);
+     }
+   
+   /*
+    * Get a reference to the page containing the data for the page.
+    */
+   Page = (PVOID)Entry;
+   MmReferencePage(Page);   
+   
+   /*
+    * When we reach here, we have the address space and section locked
+    * and have a reference to a page containing valid data for the
+    * section offset. Set the page and return success.
+    */
    MmSetPage(NULL,
 	     Address,
 	     MemoryArea->Attributes,
@@ -318,11 +417,47 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 */
 	
 	/*
+	 * 
+	 */
+	Page = MmAllocPage(0);
+	while (Page == NULL)
+	  {
+	     MmUnlockSection(Section);
+	     MmUnlockAddressSpace(AddressSpace);
+	     MmWaitForFreePages();
+	     MmLockAddressSpace(AddressSpace);
+	     MmLockSection(Section);
+	     Entry1 = MmGetPageEntrySection(Section, Offset.u.LowPart);	     
+	     if (Entry1 & SPE_PAGEIN_PENDING)
+	       {
+		  return(MmWaitForPendingOperationSection(AddressSpace,
+							  MemoryArea,
+							  Address,
+							  Section,
+							  Offset,
+							  Entry1));
+	       }
+	     else if (Entry1 != 0)
+	       {
+		  Page = (PVOID)Entry;
+		  MmReferencePage(Page);	
+
+		  MmSetPage(NULL,
+			    Address,
+			    MemoryArea->Attributes,
+			    (ULONG)Page);
+		  MmUnlockSection(Section);
+   
+		  return(STATUS_SUCCESS);
+	       }
+	     Page = MmAllocPage(0);
+	  }
+	
+	/*
 	 * Create an mdl to hold the page we are going to read data into.
 	 */
 	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-	MmBuildMdlFromPages(Mdl);
-	Page = MmGetMdlPageAddress(Mdl, 0);
+	MmBuildMdlFromPages(Mdl, (PULONG)&Page);
 	
 	/*
 	 * Clear the wait state (Since we are holding the only reference to
@@ -390,80 +525,24 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 * may be waiting know that valid data is now in-memory.
 	 */
 	MmSetWaitPage(Page);
+	
+	MmSetPage(NULL,
+		  Address,
+		  MemoryArea->Attributes,
+		  (ULONG)Page);
+	MmUnlockSection(Section);
+	
+	return(STATUS_SUCCESS);
+
      }
    else if (Entry & SPE_PAGEIN_PENDING)
      {
-	/*
-	 * If a page-in on that section offset is pending that wait for
-	 * it to finish.
-	 */
-	
-	do
-	  {
-	     /*
-	      * Release all our locks and wait for the pending operation
-	      * to complete
-	      */
-	     MmUnlockSection(Section);
-	     MmUnlockAddressSpace(AddressSpace);
-	     /*
-	      * FIXME: What if the event is set and cleared after we
-	      * unlock the section but before we wait. 
-	      */
-	     Status = MmWaitForPage((PVOID)(Entry & (~SPE_PAGEIN_PENDING)));
-	     if (!NT_SUCCESS(Status))
-	       {
-		  /*
-		   * FIXME: What do we do in this case? Maybe the thread 
-		   * has terminated.
-		   */
-		  
-		  DbgPrint("Failed to wait for page\n");
-		  KeBugCheck(0);
-	       }
-	     
-	     /*
-	      * Relock the address space and section
-	      */
-	     MmLockAddressSpace(AddressSpace);
-	     MmLockSection(Section);
-	     
-	     /*
-	      * Get the entry for the section offset. If the entry is still
-	      * pending that means another thread is already trying the
-	      * page-in again so we have to wait again.
-	      */
-	     Entry = MmGetPageEntrySection(Section,
-					   Offset.u.LowPart);					   
-	  } while (Entry & SPE_PAGEIN_PENDING);
-	
-	/*
-	 * Setting the entry to null means the read failing. 
-	 * FIXME: We should retry it (unless that filesystem has gone
-	 * entirely e.g. the network died).
-	 */
-	if (Entry == 0)
-	  {
-	     DbgPrint("Entry set to null while we slept\n");
-	     KeBugCheck(0);
-	  }
-	
-	/*
-	 * Maybe the thread did the page-in took the fault on the
-	 * same address-space/address as we did. If so we can just
-	 * return success.
-	 */
-	if (MmIsPagePresent(NULL, Address))
-	  {
-	     MmUnlockSection(Section);
-	     return(STATUS_SUCCESS);
-	  }
-	
-	/*
-	 * Get a reference to the page containing the data for the page.
-	 */
-	Page = (PVOID)Entry;
-	MmReferencePage(Page);
+	return(MmWaitForPendingOperationSection(AddressSpace,
+						MemoryArea,
+						Address,
+						Section,
+						Offset,
+						Entry));
      }
    else
      {
@@ -474,27 +553,23 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
+	
+	MmSetPage(NULL,
+		  Address,
+		  MemoryArea->Attributes,
+		  (ULONG)Page);
+	MmUnlockSection(Section);
+	
+	return(STATUS_SUCCESS);
      }
-   
-   /*
-    * When we reach here, we have the address space and section locked
-    * and have a reference to a page containing valid data for the
-    * section offset. Set the page and return success.
-    */
-   
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
-   MmUnlockSection(Section);
-   
-   return(STATUS_SUCCESS);
 }
 
 ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 			   MEMORY_AREA* MemoryArea, 
-			   PVOID Address)
+			   PVOID Address,
+			   PBOOLEAN Ul)
 {
+   (*Ul) = FALSE;
    return(0);
 }
 

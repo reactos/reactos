@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.30 2000/07/04 08:52:45 dwelch Exp $
+/* $Id: virtual.c,v 1.31 2000/07/06 14:34:51 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -29,7 +29,8 @@
 
 ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			     PMEMORY_AREA MemoryArea,
-			     PVOID Address)
+			     PVOID Address,
+			     PBOOLEAN Ul)
 {
    PHYSICAL_ADDRESS PhysicalAddress;
    
@@ -39,30 +40,71 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
 	PhysicalAddress = MmGetPhysicalAddress(Address);
 	
-	MmDereferencePage((PVOID)PhysicalAddress.u.LowPart);
+	MmRemovePageFromWorkingSet(AddressSpace->Process,
+				   Address);
 	MmSetPage(PsGetCurrentProcess(),
 		  Address,
 		  0,
 		  0);
+	MmDereferencePage((PVOID)PhysicalAddress.u.LowPart);
+	*Ul = TRUE;
 	return(1);
      }
+   *Ul = FALSE;
    return(0);     
 }
 
 NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 					MEMORY_AREA* MemoryArea, 
 					PVOID Address)
+/*
+ * FUNCTION: Move data into memory to satisfy a page not present fault
+ * ARGUMENTS:
+ *      AddressSpace = Address space within which the fault occurred
+ *      MemoryArea = The memory area within which the fault occurred
+ *      Address = The absolute address of fault
+ * RETURNS: Status
+ * NOTES: This function is called with the address space lock held.
+ */
 {
+   PVOID Page;
+   NTSTATUS Status;
+   
    if (MmIsPagePresent(NULL, Address))
-     {
-	
+     {	
 	return(STATUS_SUCCESS);
      }
    
+   Page = MmAllocPage(0);
+   while (Page == NULL)
+     {
+	MmUnlockAddressSpace(AddressSpace);
+	MmWaitForFreePages();
+	MmLockAddressSpace(AddressSpace);
+	if (MmIsPagePresent(NULL, Address))
+	  {
+	     return(STATUS_SUCCESS);
+	  }
+	Page = MmAllocPage(0);
+     }
+   Status = MmCreatePageTable(Address);
+   while (!NT_SUCCESS(Status))
+     {
+	MmUnlockAddressSpace(AddressSpace);
+	MmWaitForFreePages();
+	MmLockAddressSpace(AddressSpace);
+	if (MmIsPagePresent(NULL, Address))
+	  {
+	     MmDereferencePage(Page);
+	     return(STATUS_SUCCESS);
+	  }
+	Status = MmCreatePageTable(Address);     
+     }
+   MmAddPageToWorkingSet(PsGetCurrentProcess(), Address);
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
 	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage(0));
+	     (ULONG)Page);
    
    return(STATUS_SUCCESS);
 }
@@ -239,6 +281,7 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    PMADDRESS_SPACE AddressSpace;
+   ULONG i;
    
    DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	  "*RegionSize %x, FreeType %x)\n",ProcessHandle,*BaseAddress,
@@ -283,10 +326,26 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	  {
 	     MmDereserveSwapPages(PAGE_ROUND_UP(MemoryArea->Length));
 	  }
+	
+	for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
+	  {
+	     LARGE_INTEGER PhysicalAddr;
+	     
+	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
+						 (i*PAGESIZE));
+	     if (PhysicalAddr.u.LowPart != 0)
+	       {
+		  MmRemovePageFromWorkingSet(AddressSpace->Process,
+					     MemoryArea->BaseAddress +
+					     (i*PAGESIZE));
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+	       }
+	  }
+	
 	MmFreeMemoryArea(&Process->AddressSpace,
 			 BaseAddress,
 			 0,
-			 TRUE);
+			 FALSE);
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.25 2000/05/27 12:48:59 dwelch Exp $
+/* $Id: startup.c,v 1.26 2000/07/06 14:34:49 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,16 +119,6 @@ VOID LdrStartup(VOID)
      {
 	DbgPrint("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
-     }
-
-   /*
-    * Connect to the csrss server
-    */
-   Status = CsrClientConnectToServer();
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
-//	ZwTerminateProcess(NtCurrentProcess(), Status);
      }
    
    DbgPrint("Transferring control to image at %x\n",EntryPoint);

@@ -85,6 +85,9 @@ BOOLEAN KiTestAlert(struct _KTHREAD* Thread, PCONTEXT UserContext);
 VOID KeCallApcsThread(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
+LONG STDCALL KePulseEvent (PKEVENT		Event,
+			   KPRIORITY	Increment,
+			   BOOLEAN		Wait);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

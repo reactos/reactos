@@ -30,102 +30,29 @@
 extern void interrupt_handler2e(void);
 extern void interrupt_handler2d(void);
 
+extern void exception_handler0(void);
+extern void exception_handler1(void);
+extern void exception_handler2(void);
+extern void exception_handler3(void);
+extern void exception_handler4(void);
+extern void exception_handler5(void);
+extern void exception_handler6(void);
+extern void exception_handler7(void);
+extern void exception_handler8(void);
+extern void exception_handler9(void);
+extern void exception_handler10(void);
+extern void exception_handler11(void);
+extern void exception_handler12(void);
+extern void exception_handler13(void);
+extern void exception_handler14(void);
+extern void exception_handler15(void);
+extern void exception_handler16(void);
+extern void exception_handler_unknown(void);
+
 extern ULONG init_stack;
 extern ULONG init_stack_top;
 
 /* FUNCTIONS ****************************************************************/
-
-#define EXCEPTION_HANDLER_WITH_ERROR(y)  \
-      void exception_handler##y (void);   \
-      void tmp_exception_handler##y (void) { \
-       __asm__("\n\t_exception_handler"STR(y)":\n\t" \
-                "pushl %gs\n\t" \
-                "pushl %fs\n\t" \
-                "pushl %es\n\t" \
-                "pushl %ds\n\t"    \
-                "pushl $"STR(y)"\n\t"                        \
-                "pusha\n\t"                          \
-                "movw $"STR(KERNEL_DS)",%ax\n\t"        \
-                "movw %ax,%ds\n\t"      \
-                "movw %ax,%es\n\t"      \
-                "movw %ax,%fs\n\t"      \
-                "movw %ax,%gs\n\t"      \
-                "call _exception_handler\n\t"        \
-                "popa\n\t" \
-                "addl $4,%esp\n\t"                   \
-                "popl %ds\n\t"      \
-                "popl %es\n\t"      \
-                "popl %fs\n\t"      \
-                "popl %gs\n\t"      \
-                "addl $4,%esp\n\t" \
-                "iret\n\t"); }
-
-#define EXCEPTION_HANDLER_WITHOUT_ERROR(y)           \
-         void exception_handler##y (void);        \
-        void tmp_exception_handler##y (void) { \
-        __asm__("\n\t_exception_handler"STR(y)":\n\t"           \
-                "pushl $0\n\t"                        \
-                "pushl %gs\n\t" \
-                "pushl %fs\n\t" \
-                "pushl %es\n\t" \
-                "pushl %ds\n\t"   \
-                "pushl $"STR(y)"\n\t"                       \
-                "pusha\n\t"                          \
-                "movw $"STR(KERNEL_DS)",%ax\n\t"        \
-                "movw %ax,%ds\n\t"      \
-                "movw %ax,%es\n\t"      \
-                "movw %ax,%fs\n\t"      \
-                "movw %ax,%gs\n\t"      \
-                "call _exception_handler\n\t"        \
-                "popa\n\t"                           \
-                "addl $4,%esp\n\t"                 \
-                "popl %ds\n\t"  \
-                "popl %es\n\t"  \
-                "popl %fs\n\t"  \
-                "popl %gs\n\t"  \
-                "addl $4,%esp\n\t" \
-                "iret\n\t"); }
-
-void exception_handler_unknown(void);
-void tmp_exception_handler_unknown(void)
-{
-        __asm__("\n\t_exception_handler_unknown:\n\t"           
-                "pushl $0\n\t"
-                "pushl %gs\n\t" 
-                "pushl %fs\n\t" 
-                "pushl %es\n\t" 
-                "pushl %ds\n\t"   
-                "pushl %ds\n\t"
-                "pushl $0xff\n\t"                       
-                "pusha\n\t"                          
-                "movw $"STR(KERNEL_DS)",%ax\n\t"        
-                "movw %ax,%ds\n\t"      
-                "movw %ax,%es\n\t"      
-                "movw %ax,%fs\n\t"      
-                "movw %ax,%gs\n\t"      
-                "call _exception_handler\n\t"        
-                "popa\n\t"                           
-                "addl $8,%esp\n\t"                 
-                "iret\n\t");
-}
-
-EXCEPTION_HANDLER_WITHOUT_ERROR(0);
-EXCEPTION_HANDLER_WITHOUT_ERROR(1);
-EXCEPTION_HANDLER_WITHOUT_ERROR(2);
-EXCEPTION_HANDLER_WITHOUT_ERROR(3);
-EXCEPTION_HANDLER_WITHOUT_ERROR(4);
-EXCEPTION_HANDLER_WITHOUT_ERROR(5);
-EXCEPTION_HANDLER_WITHOUT_ERROR(6);
-EXCEPTION_HANDLER_WITHOUT_ERROR(7);
-EXCEPTION_HANDLER_WITH_ERROR(8);
-EXCEPTION_HANDLER_WITHOUT_ERROR(9);
-EXCEPTION_HANDLER_WITH_ERROR(10);
-EXCEPTION_HANDLER_WITH_ERROR(11);
-EXCEPTION_HANDLER_WITH_ERROR(12);
-EXCEPTION_HANDLER_WITH_ERROR(13);
-EXCEPTION_HANDLER_WITH_ERROR(14);
-EXCEPTION_HANDLER_WITH_ERROR(15);
-EXCEPTION_HANDLER_WITHOUT_ERROR(16);
 
 extern unsigned int stext, etext;
 

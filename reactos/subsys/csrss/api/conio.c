@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.7 2000/05/26 05:40:20 phreak Exp $
+/* $Id: conio.c,v 1.8 2000/07/06 14:34:52 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -486,8 +486,10 @@ VOID Console_Api( DWORD Ignored )
   NTSTATUS Status;
   while( 1 )
     {
-      KeyEventRecord = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( ConsoleInput ) );
-      if( KeyEventRecord == 0 )
+      KeyEventRecord = RtlAllocateHeap(CsrssApiHeap, 
+				       0, 
+				       sizeof(ConsoleInput));
+       if ( KeyEventRecord == 0 )
 	{
 	  DbgPrint( "CSR: Memory allocation failure!" );
 	  continue;

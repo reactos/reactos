@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.21 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: mdl.c,v 1.22 2000/07/06 14:34:51 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -109,7 +109,7 @@ VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 }
 
 
-VOID MmBuildMdlFromPages(PMDL Mdl)
+VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
 {
    ULONG i;
    PULONG mdl_pages;
@@ -118,19 +118,15 @@ VOID MmBuildMdlFromPages(PMDL Mdl)
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
-        mdl_pages[i] = (ULONG)MmAllocPage(0);
+        mdl_pages[i] = Pages[i];
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
 }
 
 
-VOID
-STDCALL
-MmProbeAndLockPages (
-	PMDL		Mdl,
-	KPROCESSOR_MODE	AccessMode,
-	LOCK_OPERATION	Operation
-	)
+VOID STDCALL MmProbeAndLockPages (PMDL		Mdl,
+				  KPROCESSOR_MODE	AccessMode,
+				  LOCK_OPERATION	Operation)
 /*
  * FUNCTION: Probes the specified pages, makes them resident and locks them
  * ARGUMENTS:

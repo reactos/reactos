@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.49 2000/07/04 11:11:04 dwelch Exp $
+/* $Id: process.c,v 1.50 2000/07/06 14:34:52 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -55,9 +55,18 @@ PEPROCESS PsGetNextProcess(PEPROCESS OldProcess)
      }
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink, 
-				   EPROCESS,
-				   ProcessListEntry);
+   if (OldProcess->ProcessListEntry.Flink == &PsProcessListHead)
+     {
+	NextProcess = CONTAINING_RECORD(PsProcessListHead.Flink,
+					EPROCESS,
+					ProcessListEntry);	
+     }
+   else
+     {
+	NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink, 
+					EPROCESS,
+					ProcessListEntry);
+     }
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    Status = ObReferenceObjectByPointer(NextProcess,
 				       PROCESS_ALL_ACCESS,

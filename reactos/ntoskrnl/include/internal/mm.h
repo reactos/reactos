@@ -162,7 +162,7 @@ VOID MmDeletePageEntry(struct _EPROCESS* Process,
 		       PVOID Address, 
 		       BOOL FreePage);
 
-VOID MmBuildMdlFromPages(PMDL Mdl);
+VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
 VOID MiShutdownMemoryManager(VOID);
 ULONG MmGetPhysicalAddressForProcess(struct _EPROCESS* Process,
@@ -210,10 +210,12 @@ BOOLEAN MmIsPageDirty(struct _EPROCESS* Process, PVOID Address);
 BOOLEAN MmIsPageTablePresent(PVOID PAddress);
 ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 			   MEMORY_AREA* MemoryArea, 
-			   PVOID Address);
+			   PVOID Address,
+			   PBOOLEAN Ul);
 ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			     PMEMORY_AREA MemoryArea,
-			     PVOID Address);
+			     PVOID Address,
+			     PBOOLEAN Ul);
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,
 				      ULONG Length);
@@ -245,5 +247,10 @@ NTSTATUS MmInitPagerThread(VOID);
 
 VOID MmInitKernelMap(PVOID BaseAddress);
 unsigned int alloc_pool_region(unsigned int nr_pages);
+
+VOID MmWaitForFreePages(VOID);
+PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry);
+PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry);
+NTSTATUS MmCreatePageTable(PVOID PAddress);
 
 #endif

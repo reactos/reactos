@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.51 2000/07/04 11:11:04 dwelch Exp $
+/* $Id: thread.c,v 1.52 2000/07/06 14:34:52 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -149,7 +149,7 @@ VOID PsDumpThreads(VOID)
 	current = CONTAINING_RECORD(current_entry, ETHREAD, 
 				    Tcb.ThreadListEntry);
 	t++;
-	if (t >= PiNrThreads)
+	if (t > PiNrThreads)
 	  {
 	     DbgPrint("Too many threads on list\n");
 	     return;
@@ -157,7 +157,8 @@ VOID PsDumpThreads(VOID)
 	DbgPrint("current %x current->Tcb.State %d eip %x ",
 		current, current->Tcb.State,
 		current->Tcb.Context.eip);
-//	KeDumpStackFrames(0, 16);
+	KeDumpStackFrames((PVOID)current->Tcb.Context.esp0, 
+			  16);
 	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
 	DbgPrint("\n");
 	

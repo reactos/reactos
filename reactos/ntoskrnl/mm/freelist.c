@@ -236,6 +236,11 @@ VOID MmReferencePage(PVOID PhysicalAddress)
    
    DPRINT("MmReferencePage(PhysicalAddress %x)\n", PhysicalAddress);
    
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
+   
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    MmPageArray[Start].ReferenceCount++;
    KeReleaseSpinLock(&PageListLock, oldIrql);
@@ -247,6 +252,11 @@ VOID MmDereferencePage(PVOID PhysicalAddress)
    KIRQL oldIrql;
    
    DPRINT("MmDereferencePage(PhysicalAddress %x)\n", PhysicalAddress);
+
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
    
    if (((ULONG)PhysicalAddress) > 0x400000)
      {
@@ -283,8 +293,8 @@ PVOID MmAllocPage(SWAPENTRY SavedSwapEntry)
    DPRINT("ListEntry %x\n",ListEntry);
    if (ListEntry == NULL)
      {
-	DbgPrint("MmAllocPage(): Out of memory\n");
-	KeBugCheck(0);
+	DPRINT("MmAllocPage(): Out of memory\n");
+	return(NULL);
      }
    PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
    DPRINT("PageDescriptor %x\n",PageDescriptor);
@@ -311,6 +321,33 @@ PVOID MmAllocPage(SWAPENTRY SavedSwapEntry)
    
    DPRINT("MmAllocPage() = %x\n",offset);
    return((PVOID)offset);
+}
+
+PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry)
+{
+   PVOID Page;
+   
+   Page = MmAllocPage(SavedSwapEntry);
+   if (Page == NULL)
+     {
+	KeBugCheck(0);
+	return(NULL);
+     }
+   
+   return(Page);
+}
+
+PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry)
+{
+   PVOID Page;
+   
+   Page = MmAllocPage(SavedSwapEntry);
+   while (Page == NULL)
+     {
+	MmWaitForFreePages();
+	Page = MmAllocPage(SavedSwapEntry);
+     };
+   return(Page);
 }
 
 NTSTATUS MmWaitForPage(PVOID PhysicalAddress)

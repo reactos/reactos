@@ -294,7 +294,10 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	  {
 	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
 						 (i*PAGESIZE));
-             MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+	     if (PhysicalAddr.u.LowPart != 0)
+	       {
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+	       }
 	  }
      }
    for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)

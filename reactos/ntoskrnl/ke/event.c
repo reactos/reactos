@@ -22,7 +22,7 @@
 VOID STDCALL KeClearEvent (PKEVENT Event)
 {
    DPRINT("KeClearEvent(Event %x)\n", Event);
-   Event->Header.SignalState=FALSE;
+   Event->Header.SignalState = FALSE;
 }
 
 VOID STDCALL KeInitializeEvent (PKEVENT		Event,

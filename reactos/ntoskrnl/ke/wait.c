@@ -83,7 +83,7 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
    switch (hdr->Type)
      {
       case InternalSynchronizationEvent:
-	hdr->SignalState = FALSE;
+	hdr->SignalState = 0;
 	break;
 	
       case InternalSemaphoreType:
@@ -113,7 +113,7 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
 	     Mutex = CONTAINING_RECORD(hdr,
 				       KMUTEX,
 				       Header);
-	     hdr->SignalState++;
+	     hdr->SignalState--;
 	     Mutex->OwnerThread = Thread;
 	  }
 	break;
@@ -137,9 +137,9 @@ static BOOLEAN KiIsObjectSignalled(DISPATCHER_HEADER* hdr,
 				  KMUTEX,
 				  Header);
 	
-	if ((hdr->SignalState <= 0 &&
-	    Mutex->OwnerThread == Thread) ||
-	    hdr->SignalState > 0)
+	assert(hdr->SignalState <= 1);
+	if ((hdr->SignalState < 1 && Mutex->OwnerThread == Thread) ||
+	    hdr->SignalState == 1)
 	  {
 	     KiSideEffectsBeforeWake(hdr,
 				     Thread);
@@ -365,15 +365,11 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 }
 
 
-NTSTATUS
-STDCALL
-KeWaitForSingleObject (
-	PVOID		Object,
-	KWAIT_REASON	WaitReason,
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Timeout
-	)
+NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
+					KWAIT_REASON	WaitReason,
+					KPROCESSOR_MODE	WaitMode,
+					BOOLEAN		Alertable,
+					PLARGE_INTEGER	Timeout)
 /*
  * FUNCTION: Puts the current thread into a wait state until the
  * given dispatcher object is set to signalled 

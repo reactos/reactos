@@ -1,4 +1,4 @@
-/* $Id: fmutex.c,v 1.6 2000/06/09 20:02:59 ekohl Exp $
+/* $Id: fmutex.c,v 1.7 2000/07/06 14:34:49 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,40 +18,30 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-FASTCALL
-EXPORTED
-ExAcquireFastMutexUnsafe (
-	PFAST_MUTEX	FastMutex
-	)
+VOID FASTCALL EXPORTED ExAcquireFastMutexUnsafe (PFAST_MUTEX	FastMutex)
 {
-   if (InterlockedDecrement(&(FastMutex->Count))==0)
+   if (InterlockedDecrement(&FastMutex->Count) == 0)
      {
 	return;
      }
    FastMutex->Contention++;
-   KeWaitForSingleObject(&(FastMutex->Event),
+   KeWaitForSingleObject(&FastMutex->Event,
 			 Executive,
 			 KernelMode,
 			 FALSE,
 			 NULL);
-   FastMutex->Owner=KeGetCurrentThread();
+   FastMutex->Owner = KeGetCurrentThread();
 }
 
-VOID
-FASTCALL
-EXPORTED
-ExReleaseFastMutexUnsafe (
-	PFAST_MUTEX	FastMutex
-	)
+VOID FASTCALL EXPORTED ExReleaseFastMutexUnsafe (PFAST_MUTEX	FastMutex)
 {
    assert(FastMutex->Owner == KeGetCurrentThread());
-   FastMutex->Owner=NULL;
-   if (InterlockedIncrement(&(FastMutex->Count))<=0)
+   FastMutex->Owner = NULL;
+   if (InterlockedIncrement(&FastMutex->Count) <= 0)
      {
 	return;
      }
-   KeSetEvent(&(FastMutex->Event),0,FALSE);
+   KeSetEvent(&FastMutex->Event, 0, FALSE);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.10 2000/07/04 08:52:46 dwelch Exp $
+/* $Id: page.c,v 1.11 2000/07/06 14:34:51 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -140,6 +140,46 @@ ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
    return(Entry);
 }
 
+ULONG MmGetPageEntry1(PVOID PAddress)
+/*
+ * FUNCTION: Get a pointer to the page table entry for a virtual address
+ */
+{
+   PULONG page_tlb;
+   PULONG page_dir;
+   ULONG Address = (ULONG)PAddress;
+   
+   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   
+   page_dir = ADDR_TO_PDE(Address);
+   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
+   if ((*page_dir) == 0)
+     {
+	return(0);
+     }
+   page_tlb = ADDR_TO_PTE(Address);
+   DPRINT("page_tlb %x\n",page_tlb);
+   return(*page_tlb);
+}
+
+ULONG MmGetPageEntryForProcess1(PEPROCESS Process, PVOID Address)
+{
+   ULONG Entry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   Entry = MmGetPageEntry1(Address);
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+   return(Entry);
+}
+
+
 ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
 				     PVOID Address)
 {
@@ -202,6 +242,30 @@ BOOLEAN MmIsPageTablePresent(PVOID PAddress)
    return((*page_dir) == 0);
 }
 
+NTSTATUS MmCreatePageTable(PVOID PAddress)
+{
+   PULONG page_dir;
+   ULONG Address = (ULONG)PAddress;
+   ULONG npage;
+   
+   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   
+   page_dir = ADDR_TO_PDE(Address);
+   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
+   if ((*page_dir) == 0)
+     {
+	npage = (ULONG)MmAllocPage(0);
+	if (npage == 0)
+	  {
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	(*page_dir) = npage | 0x7;
+	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+	FLUSH_TLB;
+     }
+   return(STATUS_SUCCESS);
+}
+
 PULONG MmGetPageEntry(PVOID PAddress)
 /*
  * FUNCTION: Get a pointer to the page table entry for a virtual address
@@ -210,6 +274,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
    PULONG page_tlb;
    PULONG page_dir;
    ULONG Address = (ULONG)PAddress;
+   ULONG npage;
    
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
@@ -217,7 +282,12 @@ PULONG MmGetPageEntry(PVOID PAddress)
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
    if ((*page_dir) == 0)
      {
-	(*page_dir) = ((ULONG)MmAllocPage(0)) | 0x7;
+	npage = (ULONG)MmAllocPage(0);
+	if (npage == 0)
+	  {
+	     KeBugCheck(0);
+	  }
+	(*page_dir) = npage | 0x7;
 	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
 	FLUSH_TLB;
      }
@@ -233,7 +303,7 @@ BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address)
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
-   return((MmGetPageEntryForProcess(Process, Address)) & PA_PRESENT);
+   return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
 }
 
 
