@@ -1,4 +1,4 @@
-/* $Id: pdata.h,v 1.3 2002/03/07 05:48:35 hyperion Exp $
+/* $Id: pdata.h,v 1.4 2002/03/10 17:03:18 hyperion Exp $
  */
 /*
  * psx/pdata.h
@@ -37,7 +37,7 @@ typedef struct __tagPDX_PDATA
 {
  BOOL            Spawned;          /* TRUE if process has been created through __PdxSpawnPosixProcess() */
  int             ArgCount;         /* count of arguments passed to exec() */
- char          **ArgVect;          /* array of arguments passed to exesc() */
+ char          **ArgVect;          /* array of arguments passed to exec() */
  char         ***Environment;      /* pointer to user-provided environ variable */
  UNICODE_STRING  NativePathBuffer; /* static buffer used by low-level calls for pathname conversions */
  UNICODE_STRING  CurDir;           /* current working directory */
@@ -78,13 +78,15 @@ typedef struct __tagPDX_SERIALIZED_PDATA
 /* CONSTANTS */
 
 /* PROTOTYPES */
+NTSTATUS STDCALL __PdxSerializeProcessData(IN __PPDX_PDATA, OUT __PPDX_SERIALIZED_PDATA *);
+NTSTATUS STDCALL __PdxUnserializeProcessData(IN OUT __PPDX_SERIALIZED_PDATA *, OUT __PPDX_PDATA * OPTIONAL);
 
 /* MACROS */
 #define __PdxAcquirePdataLock() (RtlAcquirePebLock())
 #define __PdxReleasePdataLock() (RtlReleasePebLock())
 
-#define __PdxSetProcessData()(PPDATA) ((void)((NtCurrentPeb()->SubSystemData) = (PPDATA)))
-#define __PdxGetProcessData()         ((__PPDX_PDATA)(&(NtCurrentPeb()->SubSystemData)))
+#define __PdxSetProcessData(PPDATA) ((void)((NtCurrentPeb()->SubSystemData) = (PPDATA)))
+#define __PdxGetProcessData()       ((__PPDX_PDATA)(&(NtCurrentPeb()->SubSystemData)))
 
 #define __PdxGetNativePathBuffer() ((PUNICODE_STRING)(&(__PdxGetProcessData()->NativePathBuffer)))
 #define __PdxGetCurDir()           ((PUNICODE_STRING)(&(__PdxGetProcessData()->CurDir)))
