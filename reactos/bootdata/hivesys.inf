@@ -18,6 +18,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout Text",0x00000000,"FR"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout File",0x00000000,"kbdse.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout Text",0x00000000,"SE"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000809","Layout File",0x00000000,"kbduk.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000809","Layout Text",0x00000000,"UK"
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
@@ -46,6 +48,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040e",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040f",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0410",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","041d",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0809",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
