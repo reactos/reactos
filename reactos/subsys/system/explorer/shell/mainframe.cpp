@@ -619,7 +619,8 @@ int MainFrame::Command(int id, int code)
 	  break;}
 
 	  case ID_WEB_WINDOW:
-		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://localhost")));	// http://www.reactos.com //@@
+		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.reactos.com")));
+		//create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://localhost")));
 		break;
 
 	///@todo There are even more menu items!
@@ -633,7 +634,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_EXPLORER_FAQ:
-		launch_file(_hwnd, TEXT("http://www.sky.franken.de/explorer/"), SW_SHOWNORMAL);
+		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.sky.franken.de/explorer/")));
 		break;
 
 	  case IDW_ADDRESSBAR:
