@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.25 2002/04/27 19:25:57 hbirr Exp $
+/* $Id: dirwr.c,v 1.26 2002/06/10 21:19:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,10 +46,6 @@ NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
           ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
   status = vfatGetFCBForFile(DeviceExt, &pDirFcb, &pFcb, 
              ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
-  if (pFcb != NULL)
-  {
-    vfatReleaseFCB(DeviceExt, pFcb);
-  }
   if (!NT_SUCCESS(status))
   {
     if (pDirFcb != NULL)
@@ -71,6 +67,7 @@ NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   else
      DPRINT1 ("Failed write to \'%S\'.\n", pDirFcb->PathName);
   vfatReleaseFCB(DeviceExt, pDirFcb);
+  vfatReleaseFCB(DeviceExt, pFcb);
   return STATUS_SUCCESS;
 }
 
