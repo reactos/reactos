@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.36 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: timer.c,v 1.37 2001/02/05 02:31:04 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -67,7 +67,7 @@ volatile ULONG KiRawTicks = 0;
  * 
  * RJJ was 54945055
  */
-#define CLOCK_INCREMENT (549255)
+#define CLOCK_INCREMENT (100000)
 
 /*
  * PURPOSE: List of timers
@@ -79,7 +79,7 @@ static KSPIN_LOCK TimerListLock;
 
 extern ULONG PiNrRunnableThreads;
 
-#define MICROSECONDS_PER_TICK (54945)
+#define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
 #define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
 #define SYSTEM_TIME_UNITS_PER_MSEC (10000)
@@ -252,7 +252,7 @@ KeSetTimerEx (PKTIMER		Timer,
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
      {
-	Timer->DueTime.QuadPart = system_time + 100000000;
+	Timer->DueTime.QuadPart = system_time - DueTime.QuadPart;
      }
    else
      {
