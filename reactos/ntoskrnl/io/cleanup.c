@@ -56,10 +56,6 @@ IopCompleteRequest1(struct _KAPC* Apc,
 
    if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
    {
-      // if the event is not the one in the file object, it needs dereferenced
-      if (Irp->UserEvent && Irp->UserEvent != &FileObject->Event)
-	 ObDereferenceObject(Irp->UserEvent);
-
       if (IoStack->MajorFunction != IRP_MJ_CLOSE)
       {
 	 ObDereferenceObject(FileObject);
@@ -263,10 +259,6 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 
    if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
    {
-      // if the event is not the one in the file object, it needs dereferenced
-      if (Irp->UserEvent && Irp->UserEvent != &FileObject->Event)
-	 ObDereferenceObject(Irp->UserEvent);
-
       if (IoStack->MajorFunction != IRP_MJ_CLOSE)
       {
 	 ObDereferenceObject(FileObject);

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.41 2003/01/11 15:32:40 hbirr Exp $
+/* $Id: rw.c,v 1.42 2003/05/16 12:03:11 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -20,6 +20,23 @@
 
 /* FUNCTIONS ***************************************************************/
 
+
+NTSTATUS STDCALL
+IopReadWriteIoComplete(PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context)
+{
+  PIO_STACK_LOCATION IrpStack;
+
+  DPRINT("IopReadWriteIoComplete(DeviceObject %p  Irp %p  Context %p) called\n",
+	  DeviceObject, Irp, Context);
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+  ObDereferenceObject(Irp->UserEvent);
+
+  return STATUS_SUCCESS;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -51,6 +68,7 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
   PKEVENT Event = NULL;
   IO_STATUS_BLOCK Iosb;
   PIO_STATUS_BLOCK IoStatusBlock;
+  BOOLEAN SetIoCompletionRoutine;
   
   DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
@@ -85,11 +103,13 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 	  ObDereferenceObject(FileObject);
 	  return(Status);
 	}
+      SetIoCompletionRoutine = TRUE;
     }
   else 
     {
       Event = &FileObject->Event;
       KeResetEvent(Event);
+      SetIoCompletionRoutine = FALSE;
     }
   
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -123,6 +143,17 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
       StackPtr->Parameters.Read.Key = 0;
     }
   
+  if (SetIoCompletionRoutine)
+    {
+      /* Set completion routine */
+      IoSetCompletionRoutine(Irp,
+        IopReadWriteIoComplete,
+        NULL,
+        TRUE,
+        TRUE,
+        TRUE);
+    }
+
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && FileObject->Flags & FO_SYNCHRONOUS_IO)
      {
@@ -147,9 +178,11 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 	   /* Wait failed. */
 	   return(Status);
 	 }
+
 	Status = Iosb.Status;
 	return(Status);
      }
+
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
       *UserIoStatusBlock = Iosb;
@@ -188,7 +221,8 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
   PKEVENT Event = NULL;
   IO_STATUS_BLOCK Iosb;
   PIO_STATUS_BLOCK IoStatusBlock;
-  
+  BOOLEAN SetIoCompletionRoutine;
+
   DPRINT("NtWriteFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
 	 IoStatusBlock);
@@ -222,11 +256,13 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 	  ObDereferenceObject(FileObject);
 	  return(Status);
 	}
+      SetIoCompletionRoutine = TRUE;
     }
   else 
     {
       Event = &FileObject->Event;
       KeResetEvent(Event);
+      SetIoCompletionRoutine = FALSE;
     }
   
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -259,7 +295,18 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
     {
       StackPtr->Parameters.Write.Key = 0;
     }
-  
+
+  if (SetIoCompletionRoutine)
+    {
+      /* Set completion routine */
+      IoSetCompletionRoutine(Irp,
+        IopReadWriteIoComplete,
+        NULL,
+        TRUE,
+        TRUE,
+        TRUE);
+    }
+
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && FileObject->Flags & FO_SYNCHRONOUS_IO)
      {
@@ -284,9 +331,11 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 	   /* Wait failed. */
 	   return(Status);
 	 }
+
 	Status = Iosb.Status;
 	return(Status);
      }
+
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
       *UserIoStatusBlock = Iosb;
