@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.43 2001/06/04 11:26:11 chorns Exp $
+/* $Id: create.c,v 1.44 2001/06/14 21:05:07 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -356,7 +356,8 @@ IoCreateFile(
      {
 	return (STATUS_UNSUCCESSFUL);
      }
-   
+     
+   Irp->UserIosb = IoStatusBlock;   //return iostatus
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
    
@@ -395,6 +396,7 @@ IoCreateFile(
     * immediately.
     */
    Status = IofCallDriver(FileObject->DeviceObject, Irp );
+   
    if (Status == STATUS_PENDING)
      {
 	KeWaitForSingleObject(&Event,

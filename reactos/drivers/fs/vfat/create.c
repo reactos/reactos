@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.25 2001/05/04 01:21:45 rex Exp $
+/* $Id: create.c,v 1.26 2001/06/14 21:05:08 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -598,7 +598,8 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  CHECKPOINT;
 	  ParentFcb = Temp;
 	}
-
+	
+	if( *current != L'\0' ){ //the file name is directory. there will be no last part.
       /* searching for last path component */
       DPRINT ("search for (%S) in (%S)\n", current, Fcb ? Fcb->PathName : L"");
       Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
@@ -621,6 +622,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Fcb = ParentFcb;
       ParentFcb = Temp;
       ParentFcb->ObjectName = &(wcschr (ParentFcb->ObjectName, '\\'))[1];
+      }
     }
 
     FileObject->Flags = FileObject->Flags | 
