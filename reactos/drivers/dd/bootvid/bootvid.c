@@ -18,16 +18,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: bootvid.c,v 1.12 2004/06/08 19:31:10 navaraf Exp $
+ * $Id: bootvid.c,v 1.13 2004/10/17 18:51:09 gvg Exp $
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <ddk/ntbootvid.h>
-#include <reactos/resource.h>
 #include <rosrtl/string.h>
 #include "bootvid.h"
+#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>
