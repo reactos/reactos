@@ -1367,7 +1367,7 @@ typedef struct {
   LPCTSTR lpszOutput; 
   LPCTSTR lpszDatatype; 
   DWORD   fwType;       
-} DOCINFO; 
+} DOCINFO, *PDOCINFO; 
  
 typedef struct { 
   UINT uNotification; 
@@ -1488,7 +1488,7 @@ typedef struct tagLOGBRUSH {
   UINT     lbStyle; 
   COLORREF lbColor; 
   LONG     lbHatch; 
-} LOGBRUSH; 
+} LOGBRUSH, *PLOGBRUSH; 
  
 typedef struct tagEMRCREATEBRUSHINDIRECT
 {
@@ -1568,7 +1568,7 @@ typedef struct tagLOGPEN {
   UINT     lopnStyle; 
   POINT    lopnWidth; 
   COLORREF lopnColor; 
-} LOGPEN; 
+} LOGPEN, *PLOGPEN; 
  
 typedef struct tagEMRCREATEPEN
 {
@@ -3809,7 +3809,7 @@ typedef struct _RGNDATAHEADER {
 typedef struct _RGNDATA { 
   RGNDATAHEADER rdh; 
   char          Buffer[1]; 
-} RGNDATA, *LPRGNDATA; 
+} RGNDATA, *PRGNDATA, *LPRGNDATA; 
  
 typedef struct tagSCROLLINFO {
   UINT cbSize; 
