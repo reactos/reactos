@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.89 2003/12/10 16:08:49 vizzini Exp $
+/* $Id: window.c,v 1.90 2003/12/18 16:47:27 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -419,6 +419,14 @@ CreateWindowExA(DWORD dwExStyle,
       ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
+  if (dwExStyle & WS_EX_MDICHILD)
+  {
+     if (!IS_ATOM(lpClassName))
+        RtlFreeUnicodeString(&ClassName);
+     return CreateMDIWindowA(lpClassName, lpWindowName, dwStyle, x, y,
+        nWidth, nHeight, hWndParent, hInstance, (LPARAM)lpParam);
+  }
+
   if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
     {
       if (!IS_ATOM(lpClassName))
@@ -546,6 +554,10 @@ CreateWindowExW(DWORD dwExStyle,
     {
       ControlsInitialized = ControlsInit(lpClassName);
     }
+
+  if (dwExStyle & WS_EX_MDICHILD)
+     return CreateMDIWindowW(lpClassName, lpWindowName, dwStyle, x, y,
+        nWidth, nHeight, hWndParent, hInstance, (LPARAM)lpParam);
 
   if (IS_ATOM(lpClassName)) 
     {
