@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.42.8.1 2004/06/26 00:49:38 hyperion Exp $
+/* $Id: catch.c,v 1.42.8.2 2004/06/26 00:57:48 hyperion Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -99,8 +99,6 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
     }
 
-  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
-
 #ifdef KDBG
   else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
     {
@@ -111,6 +109,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	}
     }
 #endif /* KDBG */
+
+  if(NtCurrentTeb()->Tib.ExceptionList != ExceptionList) DbgBreakPoint();
+
   if (Action != kdHandleException)
     {
       if (PreviousMode == UserMode)
