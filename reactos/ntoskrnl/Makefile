@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.125 2004/06/21 21:07:29 hyperion Exp $
+# $Id: Makefile,v 1.126 2004/06/23 21:03:43 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -262,9 +262,12 @@ OBJECTS_EX = \
 	ex/napi.o \
 	ex/power.o \
 	ex/resource.o \
-	ex/time.o \
+        ex/rundown.o \
 	ex/stree.o \
+        ex/synch.o \
 	ex/sysinfo.o \
+        ex/time.o \
+        ex/util.o \
 	ex/win32k.o \
 	ex/work.o \
 	ex/zone.o
