@@ -62,9 +62,9 @@ struct ShellDirectory : public ShellEntry, public Directory
 		_path = pFolder;
 	}
 
-	explicit ShellDirectory(ShellDirectory* parent, IShellFolder* shell_root, LPITEMIDLIST shell_path, HWND hwnd)
+	explicit ShellDirectory(ShellDirectory* parent, LPITEMIDLIST shell_path, HWND hwnd)
 	 :	ShellEntry(parent, shell_path),
-		_folder(shell_root),
+		_folder(parent->_folder, shell_path),
 		_hwnd(hwnd)
 	{
 		/* not neccessary - the caller will fill the info
@@ -72,8 +72,18 @@ struct ShellDirectory : public ShellEntry, public Directory
 		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 		_shell_attribs = SFGAO_FOLDER; */
 
-		shell_root->AddRef();
-		_path = shell_root;
+		_folder->AddRef();
+		_path = _folder;
+	}
+
+	ShellDirectory(const ShellDirectory& other)
+	 :	ShellEntry(other),
+		Directory(other),
+		_folder(other._folder),
+		_hwnd(other._hwnd)
+	{
+		IShellFolder* pFolder = (IShellFolder*)_path;
+		pFolder->AddRef();
 	}
 
 	~ShellDirectory()

@@ -51,7 +51,8 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
  :	super(hwnd)
 {
 	for(StartMenuFolders::const_iterator it=info.begin(); it!=info.end(); ++it)
-		_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
+		if (*it)
+			_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
 
 	_next_id = IDC_FIRST_MENU;
 }
@@ -65,33 +66,50 @@ HWND StartMenu::Create(int x, int y, HWND hwndParent)
 }
 */
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent)
+Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
+
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, CREATORFUNC creator)
 {
-	return Window::Create(WINDOW_CREATOR_INFO(StartMenu,StartMenuFolders), &folders, 0, s_wcStartMenu, NULL,
+	return Window::Create(creator, &folders, 0, s_wcStartMenu, NULL,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
 }
 
 
 LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 {
+	WaitCursor wait;
+
+	AddEntries();
+
 	if (super::Init(pcs))
 		return 1;
 
-	WaitCursor wait;
-	
-	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
-		ShellDirectory& dir = *it;
+	for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+		const StartMenuEntry& sme = it->second;
 
-		dir.smart_scan();
-
-		AddShellEntries(dir);
+		AddButton(sme._title, sme._hIcon, it->first);
 	}
 
 	return 0;
 }
 
-void StartMenu::AddShellEntries(const ShellDirectory& dir, bool subfolders)
+void StartMenu::AddEntries()
 {
+	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
+		StartMenuDirectory& smd = *it;
+		ShellDirectory& dir = smd._dir;
+
+		dir.smart_scan();
+
+		AddShellEntries(dir, -1, smd._subfolders);
+	}
+}
+
+
+void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfolders)
+{
+	int cnt = 0;
+
 	for(const Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -102,12 +120,15 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, bool subfolders)
 			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
 
+		 // only 'max' entries shall be added.
+		if (++cnt == max)
+			break;
+
 		const ShellEntry* shell_entry = static_cast<const ShellEntry*>(entry);
 
-		AddButton(dir._folder, shell_entry);
+		AddEntry(dir._folder, shell_entry);
 	}
 }
-
 
 
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -141,10 +162,13 @@ int StartMenu::Command(int id, int code)
 		break;
 
 	  default: {
-		ShellEntryMap::const_iterator found = _entry_map.find(id);
+		ShellEntryMap::const_iterator found = _entries.find(id);
 
-		if (found != _entry_map.end()) {
-			ActivateEntry(const_cast<ShellEntry*>(found->second));
+		if (found != _entries.end()) {
+			ShellEntry* entry = const_cast<ShellEntry*>(found->second._entry);
+
+			if (entry)
+				ActivateEntry(id, entry);
 			break;
 		}
 
@@ -154,11 +178,39 @@ int StartMenu::Command(int id, int code)
 	return 0;
 }
 
-UINT StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
+
+StartMenuEntry& StartMenu::AddEntry(LPCTSTR title, HICON hIcon, UINT id)
 {
 	if (id == (UINT)-1)
 		id = ++_next_id;
 
+	StartMenuEntry& sme = _entries[id];
+
+	sme._title = title;
+	sme._hIcon = hIcon;
+
+	return sme;
+}
+
+StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* entry)
+{
+	HICON hIcon = entry->_hicon;
+
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		hIcon = SmallIcon(IDI_EXPLORER);
+
+	const String& entry_name = folder.get_name(entry->_pidl);
+
+	StartMenuEntry& sme = AddEntry(entry_name, hIcon);
+
+	sme._entry = entry;
+
+	return sme;
+}
+
+
+void StartMenu::AddButton(LPCTSTR title, HICON hIcon, UINT id)
+{
 	WindowRect rect(_hwnd);
 
 	rect.top -= STARTMENU_LINE_HEIGHT;
@@ -170,36 +222,86 @@ UINT StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, text, id, hIcon);
-
-	return id;
+	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, title, id, hIcon);
 }
 
-UINT StartMenu::AddButton(const ShellFolder folder, const ShellEntry* entry)
+void StartMenu::AddSeparator()
 {
-	HICON hIcon = entry->_hicon;
+	WindowRect rect(_hwnd);
 
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		hIcon = SmallIcon(IDI_EXPLORER);
+	rect.top -= STARTMENU_SEP_HEIGHT;
 
-	const String& entry_name = folder.get_name(entry->_pidl);
+	if (rect.top < 0) {
+		rect.top += STARTMENU_LINE_HEIGHT;
+		rect.bottom += STARTMENU_LINE_HEIGHT;
+	}
 
-	UINT id = AddButton(entry_name, hIcon);
+	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	_entry_map[id] = entry;
-
-	return id;
+	StartMenuSeparator(_hwnd, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-4);
 }
 
-void StartMenu::ActivateEntry(ShellEntry* entry)
+
+void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator)
+{
+	HWND btn = GetDlgItem(_hwnd, id);
+	int x, y;
+
+	if (btn) {
+		WindowRect pos(btn);
+
+		x = pos.right;
+		y = pos.top+STARTMENU_HEIGHT-4;
+	} else {
+		WindowRect pos(_hwnd);
+
+		x = pos.right;
+		y = pos.top+STARTMENU_HEIGHT-4;
+	}
+
+	StartMenu::Create(x, y, new_folders, _hwnd, creator);
+}
+
+void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
+{
+	StartMenuFolders new_folders;
+
+	SpecialFolder folder(folder_id, _hwnd);
+
+	if (folder)
+		new_folders.push_back(folder);
+
+	CreateSubmenu(id, new_folders, creator);
+}
+
+void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUNC creator)
+{
+	StartMenuFolders new_folders;
+
+	SpecialFolder folder1(folder_id1, _hwnd);
+
+	if (folder1)
+		new_folders.push_back(folder1);
+
+	if (folder_id2 != -1) {
+		SpecialFolder folder2(folder_id2, _hwnd);
+
+		if (folder2)
+			new_folders.push_back(folder2);
+	}
+
+	CreateSubmenu(id, new_folders, creator);
+}
+
+
+void StartMenu::ActivateEntry(int id, ShellEntry* entry)
 {
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		StartMenuFolders new_folders;
 
 		new_folders.push_back(entry->create_absolute_pidl(_hwnd));
 
-		WindowRect my_pos(_hwnd);
-		StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, new_folders, _hwnd);
+		CreateSubmenu(id, new_folders);
 	} else {
 		entry->launch_entry(_hwnd);
 	}
@@ -209,6 +311,13 @@ void StartMenu::ActivateEntry(ShellEntry* entry)
 StartMenuRoot::StartMenuRoot(HWND hwnd)
  :	super(hwnd)
 {
+	 // insert directory "All Users\Start Menu"
+	ShellDirectory cmn_startmenu(Desktop(), SpecialFolder(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+	_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// dont't add subfolders
+
+	 // insert directory "<user name>\Start Menu"
+	ShellDirectory usr_startmenu(Desktop(), SpecialFolder(CSIDL_STARTMENU, _hwnd), _hwnd);
+	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// dont't add subfolders
 }
 
 HWND StartMenuRoot::Create(int x, int y, HWND hwndParent)
@@ -219,29 +328,26 @@ HWND StartMenuRoot::Create(int x, int y, HWND hwndParent)
 
 LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 {
+	 // add buttons for entries in _entries
 	if (super::Init(pcs))
 		return 1;
 
-	WaitCursor wait;
-
-	 // insert start menu entries links from "All Users\Start Menu" and "<user name>\Start Menu"
-	ShellDirectory cmn_startmenu(Desktop(), SpecialFolder(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-	cmn_startmenu.read_directory();
-	AddShellEntries(cmn_startmenu, false);
-
-	ShellDirectory usr_startmenu(Desktop(), SpecialFolder(CSIDL_STARTMENU, _hwnd), _hwnd);
-	usr_startmenu.read_directory();
-	AddShellEntries(usr_startmenu, false);
+	AddSeparator();
 
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),	0, IDC_PROGRAMS);
 	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), IDC_EXPLORE);
 	AddButton(ResString(IDS_FAVORITES),	0, IDC_FAVORITES);
 	AddButton(ResString(IDS_DOCUMENTS),	0, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_RECENT),	0, IDC_RECENT);
 	AddButton(ResString(IDS_SETTINGS),	0, IDC_SETTINGS);
+	AddButton(ResString(IDS_ADMIN),		0, IDC_ADMIN);
 	AddButton(ResString(IDS_SEARCH),	0, IDC_SEARCH);
 	AddButton(ResString(IDS_START_HELP),0, IDC_START_HELP);
 	AddButton(ResString(IDS_LAUNCH),	0, IDC_LAUNCH);
+
+	AddSeparator();
+
 	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), IDC_SHUTDOWN);
 	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), IDC_LOGOFF);
 
@@ -251,18 +357,32 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 int StartMenuRoot::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_PROGRAMS: {
-		StartMenuFolders prg_folders;
-
-		prg_folders.push_back(SpecialFolder(CSIDL_COMMON_PROGRAMS, _hwnd));
-		prg_folders.push_back(SpecialFolder(CSIDL_PROGRAMS, _hwnd));
-
-		WindowRect my_pos(_hwnd);
-		StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, prg_folders, _hwnd);
-		break;}
+	  case IDC_PROGRAMS:
+		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS);
+		break;
 
 	  case IDC_EXPLORE:
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		break;
+
+	  case IDC_DOCUMENTS:
+		CreateSubmenu(id, CSIDL_PERSONAL);
+		break;
+
+	  case IDC_RECENT:
+		CreateSubmenu(id, CSIDL_RECENT, STARTMENU_CREATOR(RecentStartMenu));
+		break;
+
+	  case IDC_SETTINGS:
+		CreateSubmenu(id, CSIDL_CONTROLS);
+		break;
+
+	  case IDC_FAVORITES:
+		CreateSubmenu(id, CSIDL_FAVORITES);
+		break;
+
+	  case IDC_ADMIN:
+		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS);
 		break;
 
 	  case IDC_LOGOFF:
@@ -278,4 +398,23 @@ int StartMenuRoot::Command(int id, int code)
 	}
 
 	return 0;
+}
+
+
+RecentStartMenu::RecentStartMenu(HWND hwnd, const StartMenuFolders& info)
+ :	super(hwnd, info)
+{
+}
+
+void RecentStartMenu::AddEntries()
+{
+	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
+		StartMenuDirectory& smd = *it;
+		ShellDirectory& dir = smd._dir;
+
+		dir.smart_scan();
+
+		dir.sort_directory(SORT_DATE);
+		AddShellEntries(dir, 16, smd._subfolders);	//TODO: read max. count of entries from registry
+	}
 }

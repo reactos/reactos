@@ -58,11 +58,11 @@ IconWindowClass::IconWindowClass(LPCTSTR classname, UINT nid, UINT style, WNDPRO
 
 
 HHOOK Window::s_hcbtHook = 0;
-Window::WINDOWCREATORFUNC Window::s_window_creator = NULL;
+Window::CREATORFUNC Window::s_window_creator = NULL;
 const void* Window::s_new_info = NULL;
 
 
-HWND Window::Create(WINDOWCREATORFUNC creator, DWORD dwExStyle,
+HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
@@ -75,7 +75,7 @@ HWND Window::Create(WINDOWCREATORFUNC creator, DWORD dwExStyle,
 							hwndParent, hMenu, g_Globals._hInstance, 0/*lpParam*/);
 }
 
-HWND Window::Create(WINDOWCREATORFUNC creator, const void* info, DWORD dwExStyle,
+HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
 					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
@@ -91,7 +91,7 @@ HWND Window::Create(WINDOWCREATORFUNC creator, const void* info, DWORD dwExStyle
 
 static Window* s_new_child_wnd = NULL;
 
-Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WINDOWCREATORFUNC creator, const void* info)
+Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info)
 {
 	s_window_creator = creator;
 	s_new_info = info;
@@ -141,7 +141,7 @@ Window* Window::get_window(HWND hwnd)
 		const void* info = s_new_info;
 		s_new_info = NULL;
 
-		WINDOWCREATORFUNC window_creator = s_window_creator;
+		CREATORFUNC window_creator = s_window_creator;
 		s_window_creator = NULL;
 
 		wnd = window_creator(hwnd, info);
@@ -227,7 +227,7 @@ ChildWindow::ChildWindow(HWND hwnd)
 }
 
 
-ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, WINDOWCREATORFUNC creator, LPCTSTR classname, LPCTSTR title)
+ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC creator, LPCTSTR classname, LPCTSTR title)
 {
 	MDICREATESTRUCT mcs;
 
@@ -464,7 +464,7 @@ int Window::MessageLoop()
 
 
 Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
-				UINT id, DWORD flags, DWORD exStyle)
+				int id, DWORD flags, DWORD exStyle)
 {
 	_hwnd = CreateWindowEx(exStyle, TEXT("BUTTON"), text, flags, left, top, width, height,
 							parent, (HMENU)id, g_Globals._hInstance, 0);
@@ -478,6 +478,14 @@ LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 		return TRUE;
 	} else
 		return super::WndProc(message, wparam, lparam);
+}
+
+
+Static::Static(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+				int id, DWORD flags, DWORD exStyle)
+{
+	_hwnd = CreateWindowEx(exStyle, TEXT("STATIC"), text, flags, left, top, width, height,
+							parent, (HMENU)id, g_Globals._hInstance, 0);
 }
 
 

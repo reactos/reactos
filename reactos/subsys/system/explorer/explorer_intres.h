@@ -14,6 +14,9 @@
 #define IDS_PROGRAMS                    10
 #define IDS_SETTINGS                    11
 #define IDS_EXPLORE                     12
+#define IDS_EMPTY                       13
+#define IDS_RECENT                      14
+#define IDS_ADMIN                       15
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -59,7 +62,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        125
+#define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           101

@@ -68,19 +68,19 @@ struct Window
 	operator HWND() const {return _hwnd;}
 
 
-	typedef Window* (*WINDOWCREATORFUNC)(HWND, const void*);
+	typedef Window* (*CREATORFUNC)(HWND, const void*);
 
-	static HWND Create(WINDOWCREATORFUNC creator, DWORD dwExStyle,
+	static HWND Create(CREATORFUNC creator, DWORD dwExStyle,
 				LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
 
-	static HWND Create(WINDOWCREATORFUNC creator, const void* info,
+	static HWND Create(CREATORFUNC creator, const void* info,
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
 
-	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WINDOWCREATORFUNC creator, const void* info=NULL);
+	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info=NULL);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 	static Window* get_window(HWND hwnd);
@@ -108,7 +108,7 @@ protected:
 
 
 	static const void* s_new_info;	//TODO: protect for multithreaded access
-	static WINDOWCREATORFUNC s_window_creator;	//TODO: protect for multithreaded access
+	static CREATORFUNC s_window_creator;	//TODO: protect for multithreaded access
 
 	 // MDI child creation
 	static HHOOK s_hcbtHook;
@@ -147,7 +147,7 @@ template<typename WND_CLASS> struct WindowCreator
 };
 
 #define WINDOW_CREATOR(WND_CLASS) \
-	(Window::WINDOWCREATORFUNC) WindowCreator<WND_CLASS>::window_creator
+	(Window::CREATORFUNC) WindowCreator<WND_CLASS>::window_creator
 
 
 template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
@@ -159,7 +159,7 @@ template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 };
 
 #define WINDOW_CREATOR_INFO(WND_CLASS, INFO_CLASS) \
-	(Window::WINDOWCREATORFUNC) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
+	(Window::CREATORFUNC) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
 
 
  /**
@@ -239,7 +239,7 @@ struct ChildWindow : public Window
 	ChildWindow(HWND hwnd);
 
 	static ChildWindow* create(HWND hmdiclient, const RECT& rect,
-				WINDOWCREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL);
+				CREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -295,7 +295,24 @@ struct Dialog : public Window
 struct Button
 {
 	Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
-			UINT id, DWORD flags=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON, DWORD ex_flags=0);
+			int id, DWORD flags=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON, DWORD exStyle=0);
+
+	operator HWND() const {return _hwnd;}
+
+protected:
+	HWND	_hwnd;
+};
+
+
+ /**
+	This class constructs static controls.
+	The control will remain existent when the C++ object is destroyed.
+	There is no conjunction between C++ object and windows control life time.
+ */
+struct Static
+{
+	Static(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+			int id, DWORD flags=WS_VISIBLE|WS_CHILD|SS_SIMPLE, DWORD ex_flags=0);
 
 	operator HWND() const {return _hwnd;}
 

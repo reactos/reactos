@@ -36,9 +36,9 @@
  // Startmenu button
 struct StartMenuButton : public Button
 {
-	StartMenuButton(HWND parent, int y, LPCTSTR text,
-					UINT id, HICON hIcon, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW, DWORD exStyle=0)
-	 :	Button(parent, text, 2, y, STARTMENU_WIDTH-4, STARTMENU_LINE_HEIGHT, id, style, exStyle)
+	StartMenuButton(HWND parent, int y, LPCTSTR title,
+					UINT id, HICON hIcon=0, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW, DWORD exStyle=0)
+	 :	Button(parent, title, 2, y, STARTMENU_WIDTH-4, STARTMENU_LINE_HEIGHT, id, style, exStyle)
 	{
 		*new StartmenuEntry(_hwnd, hIcon);
 
@@ -47,9 +47,41 @@ struct StartMenuButton : public Button
 };
 
 
+struct StartMenuSeparator : public Static
+{
+	StartMenuSeparator(HWND parent, int y, DWORD style=WS_VISIBLE|WS_CHILD|SS_ETCHEDHORZ, DWORD exStyle=0)
+	 :	Static(parent, NULL, 2, y+STARTMENU_SEP_HEIGHT/2-1, STARTMENU_WIDTH-4, 2, -1, style, exStyle)
+	{
+	}
+};
+
+
+struct StartMenuDirectory
+{
+	StartMenuDirectory(const ShellDirectory& dir, bool subfolders=true)
+	 :	_dir(dir), _subfolders(subfolders) {}
+
+	ShellDirectory _dir;
+	bool	_subfolders;
+};
+
+typedef list<StartMenuDirectory> StartMenuShellDirs;
+
+struct StartMenuEntry
+{
+	StartMenuEntry() : _entry(NULL), _hIcon(0) {}
+
+	String	_title;
+	HICON	_hIcon;
+	const ShellEntry* _entry;
+};
+
+typedef map<UINT, StartMenuEntry> ShellEntryMap;
+
+
 typedef list<ShellPath> StartMenuFolders;
-typedef list<ShellDirectory> StartMenuShellDirs;
-typedef map<UINT, const ShellEntry*> ShellEntryMap;
+
+#define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuFolders)
 
 
  // Startmenu window
@@ -61,12 +93,13 @@ struct StartMenu : public OwnerDrawParent<Dialog>
 	StartMenu(HWND hwnd, const StartMenuFolders& info);
 
 	static HWND Create(int x, int y, HWND hwndParent=0);
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent=0);
+	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent=0, CREATORFUNC creator=s_def_creator);
+	static CREATORFUNC s_def_creator;
 
 protected:
 	int		_next_id;
+	ShellEntryMap _entries;
 	StartMenuShellDirs _dirs;
-	ShellEntryMap _entry_map;
 
 	static BtnWindowClass s_wcStartMenu;
 
@@ -74,12 +107,20 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	UINT	AddButton(LPCTSTR text, HICON hIcon=0, UINT id=(UINT)-1);
-	UINT	AddButton(const ShellFolder folder, const ShellEntry* entry);
+	virtual void AddEntries();
 
-	void	AddShellEntries(const ShellDirectory& dir, bool subfolders=true);
+	StartMenuEntry& AddEntry(LPCTSTR title, HICON hIcon=0, UINT id=(UINT)-1);
+	StartMenuEntry& AddEntry(const ShellFolder folder, const ShellEntry* entry);
 
-	void	ActivateEntry(ShellEntry* entry);
+	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
+
+	void	AddButton(LPCTSTR title, HICON hIcon=0, UINT id=(UINT)-1);
+	void	AddSeparator();
+
+	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder, CREATORFUNC creator=s_def_creator);
+	void	ActivateEntry(int id, ShellEntry* entry);
 };
 
 
@@ -95,4 +136,15 @@ struct StartMenuRoot : public StartMenu
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	int		Command(int id, int code);
+};
+
+
+struct RecentStartMenu : public StartMenu
+{
+	typedef StartMenu super;
+
+	RecentStartMenu(HWND hwnd, const StartMenuFolders& info);
+
+protected:
+	virtual void AddEntries();
 };

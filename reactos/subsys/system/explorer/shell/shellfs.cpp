@@ -30,6 +30,7 @@
 #include "../utility/shellclasses.h"
 
 #include "../globals.h"
+
 #include "entries.h"
 #include "shellfs.h"
 
@@ -243,22 +244,18 @@ void ShellDirectory::read_directory()
 			HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
 
 			if (SUCCEEDED(hr)) {
-				if (attribs != ~SFGAO_FILESYSTEM) {
+				if (attribs != ~SFGAO_FILESYSTEM)
 					bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi);
-				} else
+				else
 					attribs = 0;
 			} else
 				attribs = 0;
 
 			Entry* entry;
 
-			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				IShellFolder* child = NULL;
-
-				/*hr = */_folder->BindToObject(pidls[n], 0, IID_IShellFolder, (void**)&child);
-
-				entry = new ShellDirectory(this, child, pidls[n], _hwnd);
-			} else
+			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				entry = new ShellDirectory(this, pidls[n], _hwnd);
+			else
 				entry = new ShellEntry(this, pidls[n]);
 
 			if (!first_entry)

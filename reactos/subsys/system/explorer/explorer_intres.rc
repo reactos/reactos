@@ -251,6 +251,9 @@ BEGIN
     IDS_PROGRAMS            "Programs"
     IDS_SETTINGS            "Settings"
     IDS_EXPLORE             "Explore"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "Recent Documents"
+    IDS_ADMIN               "Administration"
 END
 
 #endif    // German (Germany) resources

@@ -139,7 +139,7 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
 	IShellFolder* ptr;
 
-	if (pidl->mkid.cb)
+	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
@@ -153,7 +153,7 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	IShellFolder* ptr;
 	IShellFolder* parent = Desktop();
 
-	if (pidl->mkid.cb)
+	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
@@ -166,7 +166,7 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
 	IShellFolder* ptr;
 
-	if (pidl->mkid.cb)
+	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
@@ -192,7 +192,7 @@ ShellFolder::ShellFolder(IShellFolder* p)
 
 ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
-	if (pidl->mkid.cb)
+	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
 		_p = Desktop();
@@ -202,7 +202,7 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 {
-	if (pidl->mkid.cb)
+	if (pidl && pidl->mkid.cb)
 		CheckError(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
 		_p = Desktop();
