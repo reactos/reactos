@@ -239,7 +239,7 @@ WINBOOL STDCALL AllocConsole(VOID)
    Request.Type = CSRSS_ALLOC_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Reply.Status ) )
-     DbgPrint( "AllocConsole Failed\n" );
+     return FALSE;
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
    SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
