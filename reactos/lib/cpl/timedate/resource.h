@@ -1,0 +1,19 @@
+#ifndef __CPL_RESOURCE_H
+#define __CPL_RESOURCE_H
+
+
+#define IDC_CPLICON		1
+
+#define IDD_DATETIMEPAGE	100
+#define IDC_TIMEZONE		106
+
+#define IDD_TIMEZONEPAGE	110
+#define IDC_TIMEZONELIST	111
+#define IDC_AUTOADJUST		113
+
+#define IDS_CPLNAME		1001
+#define IDS_CPLDESCRIPTION	2001
+
+#endif /* __CPL_RESOURCE_H */
+
+/* EOF */

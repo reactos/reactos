@@ -1,0 +1,44 @@
+/* $Id: timedate.rc,v 1.1 2004/10/30 19:15:31 ekohl Exp $ */
+
+#include <defines.h>
+#include "resource.h"
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Control Panel\0"
+#define REACTOS_STR_INTERNAL_NAME	"timedate\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"timedate.cpl\0"
+#include <reactos/version.rc>
+
+IDC_CPLICON ICON "resources/applet.ico"
+
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Date && Time"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  GROUPBOX "&Date", -1, 4, 2, 122, 125
+  GROUPBOX "&Time", -1, 132, 2, 113, 125
+  LTEXT "Current time zone: %s", IDC_TIMEZONE, 4, 136, 241, 8
+END
+
+
+IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Time Zone"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
+           CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+  AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
+               IDC_AUTOADJUST, 5, 139, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
+
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME "Date/Time"
+  IDS_CPLDESCRIPTION "Changes date, time and time zone information."
+END
