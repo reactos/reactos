@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.59 2003/06/24 21:34:41 ekohl Exp $
+/* $Id: create.c,v 1.60 2003/06/26 22:01:02 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -534,15 +534,6 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       RequestedDisposition == FILE_SUPERSEDE)
     {
       return(STATUS_INVALID_PARAMETER);
-    }
-
-  /* Verify volume */
-  Status = IoVerifyVolume (DeviceExt->StorageDevice,
-			   FALSE);
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT("IoVerifyVolume() failed (Status %lx)\n", Status);
-      return Status;
     }
 
   /* This a open operation for the volume itself */
