@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.11 1999/09/29 23:12:49 ekohl Exp $
+/* $Id: utils.c,v 1.12 1999/10/17 18:16:31 ariadne Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,6 +39,9 @@ STDCALL
 	LPVOID	lpReserved
 	);
 
+static
+NTSTATUS
+LdrFindDll (PDLL* Dll,PCHAR	Name);
 
 /**********************************************************************
  * NAME
@@ -55,7 +58,7 @@ STDCALL
  * NOTE
  *
  */
-static
+
 NTSTATUS
 LdrLoadDll (
 	PDLL	* Dll,
@@ -80,6 +83,9 @@ LdrLoadDll (
    
 
 	DPRINT("LdrLoadDll(Base %x, Name \"%s\")\n", Dll, Name);
+
+	if ( LdrFindDll(Dll,Name) == STATUS_SUCCESS )
+		return STATUS_SUCCESS;
 
 	/*
 	 * Build the DLL's absolute name
@@ -227,6 +233,7 @@ LdrLoadDll (
 	(*Dll)->BaseAddress = (PVOID)ImageBase;
 	(*Dll)->Next = LdrDllListHead.Next;
 	(*Dll)->Prev = & LdrDllListHead;
+	(*Dll)->ReferenceCount = 1;
 	LdrDllListHead.Next->Prev = (*Dll);
 	LdrDllListHead.Next = (*Dll);
    
@@ -239,7 +246,7 @@ LdrLoadDll (
 	{
 		DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
 		if (FALSE == Entrypoint(
-				ImageBase,
+				Dll,
 				DLL_PROCESS_ATTACH,
 				NULL
 				))
@@ -311,6 +318,7 @@ LdrFindDll (
 		if (strcmp(ExportDir->Name + current->BaseAddress, Name) == 0)
 		{
 			*Dll = current;
+			current->ReferenceCount++;
 			return STATUS_SUCCESS;
 		}
 	
@@ -320,7 +328,7 @@ LdrFindDll (
    
 	dprintf("Failed to find dll %s\n",Name);
    
-	return (LdrLoadDll(Dll, Name));
+	return -1;
 }
 
 
@@ -400,7 +408,7 @@ LdrMapSections (
  * NOTE
  *
  */
-static
+
 PVOID
 LdrGetExportByOrdinal (
 	PDLL	Module,
@@ -453,7 +461,7 @@ LdrGetExportByOrdinal (
  * NOTE
  *
  */
-static
+
 PVOID
 LdrGetExportByName (
 	PDLL	Module,
@@ -690,7 +698,7 @@ LdrFixupImports (
 		DWORD	pName;
 		PWORD	pHint;
 	
-		Status = LdrFindDll(
+		Status = LdrLoadDll(
 				& Module,
 				(PCHAR) (
 					ImageBase
@@ -871,6 +879,54 @@ LdrPEStartup (
 	return EntryPoint;
 }
 
+NTSTATUS LdrUnloadDll(PDLL Dll)
+{
 
+	PDLLMAIN_FUNC		Entrypoint;
+	NTSTATUS		Status;
+
+
+	if ( Dll->ReferenceCount > 1 ) {
+		Dll->ReferenceCount--;
+		return STATUS_SUCCESS;
+	}
+
+	Entrypoint =
+		(PDLLMAIN_FUNC) LdrPEStartup(
+					Dll->BaseAddress,
+					Dll->SectionHandle
+					);
+	if (Entrypoint != NULL)
+	{
+		DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+		if (FALSE == Entrypoint(
+				Dll,
+				DLL_PROCESS_DETACH,
+				NULL
+				))
+		{
+			DPRINT("NTDLL.LDR: DLL failed to detach\n");
+			return -1;
+		}
+		else
+		{
+			DPRINT("NTDLL.LDR: DLL  detached successfully\n");
+		}
+	}
+	else
+	{
+		DPRINT("NTDLL.LDR: Entrypoint is NULL for \n");
+	}
+
+
+	Status = ZwUnmapViewOfSection(
+		NtCurrentProcess(),
+		Dll->BaseAddress
+	);
+
+	ZwClose(Dll->SectionHandle);
+   
+	return Status;
+}
 
 /* EOF */
