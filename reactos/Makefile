@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.184 2003/12/02 18:12:04 navaraf Exp $
+# $Id: Makefile,v 1.185 2003/12/02 20:13:30 navaraf Exp $
 #
 # Global makefile
 #
@@ -41,10 +41,10 @@ DLLS_KBD = kbdus kbdgr kbdfr
 # advapi32 cards crtdll fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 # imagehlp
-DLLS = libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand \
-       msafd msvcrt ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version \
-       winspool ws2help ws2_32 wsock32 wshirda iphlpapi msgina mswsock msimg32 d3d8thk \
-       winmm ole32 comctl32 $(DLLS_KBD)
+DLLS =	libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand \
+	msafd msvcrt ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version \
+	winspool ws2help ws2_32 wsock32 wshirda iphlpapi msgina mswsock msimg32 d3d8thk \
+	winmm ole32 comctl32 $(DLLS_KBD)
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -123,10 +123,10 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) 
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-        $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
-        $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-        $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
-        $(APPS:%=%_implib) $(EXT_MODULES:%=%_implib)
+	$(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+	$(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
+	$(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
+	$(APPS:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \

@@ -3,17 +3,17 @@ PATH_TO_TOP = ..
 CFLAGS += -Wall -Werror
 
 TOOLS = \
-  buildno$(EXE_POSTFIX) \
-  depends$(EXE_POSTFIX) \
-  regtests$(EXE_POSTFIX) \
-  rcopy$(EXE_POSTFIX) \
-  rdel$(EXE_POSTFIX) \
-  rline$(EXE_POSTFIX) \
-  rmkdir$(EXE_POSTFIX) \
-  rrmdir$(EXE_POSTFIX) \
-  rsym$(EXE_POSTFIX) \
-  rtouch$(EXE_POSTFIX) \
-  mkflpimg$(EXE_POSTFIX)
+	buildno$(EXE_POSTFIX) \
+	depends$(EXE_POSTFIX) \
+	regtests$(EXE_POSTFIX) \
+	rcopy$(EXE_POSTFIX) \
+	rdel$(EXE_POSTFIX) \
+	rline$(EXE_POSTFIX) \
+	rmkdir$(EXE_POSTFIX) \
+	rrmdir$(EXE_POSTFIX) \
+	rsym$(EXE_POSTFIX) \
+	rtouch$(EXE_POSTFIX) \
+	mkflpimg$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
