@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.19 2003/07/29 16:44:48 royce Exp $
+/* $Id: nls.c,v 1.20 2003/08/10 10:09:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,8 +110,6 @@ RtlpCreateInitialNlsTables(VOID)
 }
 
 
-
-
 VOID
 RtlpCreateNlsSection(VOID)
 {
@@ -158,7 +156,6 @@ RtlpCreateNlsSection(VOID)
   Status = MmMapViewInSystemSpace(NlsSectionObject,
 				  &NlsSectionBase,
 				  &NlsSectionViewSize);
-  NtClose(SectionHandle);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MmMapViewInSystemSpace() failed\n");
@@ -389,13 +386,15 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
 			  PCHAR MbString,
 			  ULONG MbSize)
 {
+  ULONG Length;
+
   if (NlsMbCodePageTag == FALSE)
     {
       /* single-byte code page */
@@ -404,10 +403,20 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
   else
     {
       /* multi-byte code page */
-      /* FIXME */
+      for (Length = 0; MbSize; MbSize--, MbString++, Length++)
+	{
+	  if (NlsLeadByteInfo[(UCHAR)*MbString] != 0)
+	    {
+	      if (!--MbSize)
+		break;  /* partial char, ignore it */
+	      MbString++;
+	    }
+	}
+
+      *UnicodeSize = Length * sizeof(WCHAR);
     }
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
