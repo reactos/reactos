@@ -217,6 +217,7 @@ ISF_MyComputer_fnParseDisplayName (IShellFolder2 * iface,
     /* do we have an absolute path name ? */
     else if (PathGetDriveNumberW (lpszDisplayName) >= 0 && lpszDisplayName[2] == (WCHAR) '\\') {
 	szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
+	szElement[0] = toupper(szElement[0]); /* make drive letter uppercase to enable PIDL comparison */
 	WideCharToMultiByte (CP_ACP, 0, szElement, -1, szTempA, MAX_PATH, NULL, NULL);
 	pidlTemp = _ILCreateDrive (szTempA);
     }
