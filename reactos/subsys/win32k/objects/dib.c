@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.57 2004/12/12 01:40:38 weiden Exp $
+ * $Id: dib.c,v 1.58 2004/12/18 17:15:10 royce Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -159,7 +159,21 @@ IntSetDIBits(
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0 < bmi->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
                                  (PVOID) Bits);
+  if (0 == SourceBitmap)
+  {
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+  }
+
   SourceSurf = EngLockSurface((HSURF)SourceBitmap);
+  if (NULL == SourceSurf)
+  {
+	  EngDeleteSurface((HSURF)SourceBitmap);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+  }
 
   // Destination palette obtained from the hDC
   hDCPalette = PALETTE_LockPalette(DC->DevInfo->hpalDefault);
