@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.2 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: windc.c,v 1.3 2002/08/24 11:09:17 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,11 +20,18 @@
 #include <include/msgqueue.h>
 #include <include/window.h>
 #include <include/rect.h>
+#include <include/dce.h>
 
 #define NDEBUG
 #include <debug.h>
 
+static PDCE firstDCE;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID DCE_FreeWindowDCE(HWND);
+INT  DCE_ExcludeRgn(HDC, HWND, HRGN);
+BOOL DCE_InvalidateDCE(HWND, const PRECTL);
 
 BOOL STATIC
 DceGetVisRect(PWINDOW_OBJECT Window, BOOL ClientArea, RECT* Rect)
@@ -225,10 +232,167 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   
 }
 
+DWORD
+STDCALL
+NtUserGetDC(HWND hWnd)
+{
+    if (!hWnd)
+        return NtUserGetDCEx(0, 0, DCX_CACHE | DCX_WINDOW);
+    return NtUserGetDCEx(hWnd, 0, DCX_USESTYLE);
+}
+
 HDC STDCALL
 NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 {
-  
+    HDC 	hdc = 0;
+    HDCE	hdce;
+    PDCE	dce;
+    DWORD 	dcxFlags = 0;
+    BOOL	bUpdateVisRgn = TRUE;
+    BOOL	bUpdateClipOrigin = FALSE;
+    HWND parent, full;
+    PWINDOW_OBJECT Window;
+
+    DPRINT("hWnd %04x, hRegion %04x, Flags %08x\n", hWnd, hRegion, (unsigned)Flags);
+
+    if (!hWnd) hWnd = W32kGetDesktopWindow();
+    if (!(Window = W32kGetWindowObject(hWnd))) return 0;
+
+    // fixup flags
+
+    if (Flags & (DCX_WINDOW | DCX_PARENTCLIP)) Flags |= DCX_CACHE;
+
+    if (Flags & DCX_USESTYLE)
+    {
+	Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
+
+        if(Window->Style & WS_CLIPSIBLINGS)
+            Flags |= DCX_CLIPSIBLINGS;
+
+	if (!(Flags & DCX_WINDOW))
+	{
+            if (Window->ExStyle & CS_PARENTDC) Flags |= DCX_PARENTCLIP;
+
+	    if (Window->Style & WS_CLIPCHILDREN &&
+                     !(Window->Style & WS_MINIMIZE)) Flags |= DCX_CLIPCHILDREN;
+            if (!Window->dce) Flags |= DCX_CACHE;
+	}
+    }
+
+    if (Flags & DCX_WINDOW) Flags &= ~DCX_CLIPCHILDREN;
+
+    parent = W32kGetParentWindow(hWnd);
+    if (!parent || (parent == W32kGetDesktopWindow()))
+        Flags = (Flags & ~DCX_PARENTCLIP) | DCX_CLIPSIBLINGS;
+
+    // it seems parent clip is ignored when clipping siblings or children
+    if (Flags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN)) Flags &= ~DCX_PARENTCLIP;
+
+    if(Flags & DCX_PARENTCLIP)
+    {
+        LONG parent_style = NtUserGetWindowLong(parent, GWL_STYLE);
+        if((Window->Style & WS_VISIBLE) && (parent_style & WS_VISIBLE))
+        {
+            Flags &= ~DCX_CLIPCHILDREN;
+            if (parent_style & WS_CLIPSIBLINGS) Flags |= DCX_CLIPSIBLINGS;
+        }
+    }
+
+    // find a suitable DCE
+
+    dcxFlags = Flags & (DCX_PARENTCLIP | DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
+		        DCX_CACHE | DCX_WINDOW);
+
+    if (Flags & DCX_CACHE)
+    {
+	PDCE dceEmpty;
+	PDCE dceUnused;
+
+	dceEmpty = dceUnused = NULL;
+
+	/* Strategy: First, we attempt to find a non-empty but unused DCE with
+	 * compatible flags. Next, we look for an empty entry. If the cache is
+	 * full we have to purge one of the unused entries.
+	 */
+
+	for (dce = firstDCE; (dce); dce = dce->next)
+	{
+	    if ((dce->DCXflags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
+	    {
+		dceUnused = dce;
+
+		if (dce->DCXflags & DCX_DCEEMPTY)
+		    dceEmpty = dce;
+		else
+		if ((dce->hwndCurrent == hWnd) &&
+		   ((dce->DCXflags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
+				      DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)) == dcxFlags))
+		{
+		    DPRINT("Found valid %08x dce [%04x], flags %08x\n",
+					(unsigned)dce, hWnd, (unsigned)dcxFlags);
+		    bUpdateVisRgn = FALSE;
+		    bUpdateClipOrigin = TRUE;
+		    break;
+		}
+	    }
+	}
+
+	if (!dce) dce = (dceEmpty) ? dceEmpty : dceUnused;
+
+        // if there's no dce empty or unused, allocate a new one
+        if (!dce)
+        {
+            hdce = DCEOBJ_AllocDCE();
+            if (hdce == NULL)
+            {
+                return 0;
+            }
+            dce = DCEOBJ_LockDCE(hdce);
+            dce->type = DCE_CACHE_DC;
+        }
+    }
+    else
+    {
+        dce = Window->dce;
+        if (dce && dce->hwndCurrent == hWnd)
+	{
+	    DPRINT("skipping hVisRgn update\n");
+	    bUpdateVisRgn = FALSE; // updated automatically, via DCHook()
+	}
+    }
+    if (!dce)
+    {
+        hdc = 0;
+        goto END;
+    }
+
+    if (!(Flags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN))) hRegion = 0;
+
+    if (((Flags ^ dce->DCXflags) & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
+        (dce->hClipRgn != hRegion))
+    {
+        // if the extra clip region has changed, get rid of the old one
+/*        DCE_DeleteClipRgn(dce); */
+    }
+
+    dce->hwndCurrent = hWnd;
+    dce->hClipRgn = hRegion;
+    dce->DCXflags = Flags & (DCX_PARENTCLIP | DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
+                             DCX_CACHE | DCX_WINDOW | DCX_WINDOWPAINT |
+                             DCX_KEEPCLIPRGN | DCX_INTERSECTRGN | DCX_EXCLUDERGN);
+    dce->DCXflags |= DCX_DCEBUSY;
+    dce->DCXflags &= ~DCX_DCEDIRTY;
+    hdc = dce->hDC;
+
+/*    if (bUpdateVisRgn) SetHookFlags(hdc, DCHF_INVALIDATEVISRGN); // force update */
+
+/*    if (!USER_Driver.pGetDC(hWnd, hdc, hRegion, Flags)) hdc = 0; */
+
+    DPRINT("(%04x,%04x,0x%lx): returning %04x\n", hWnd, hRegion, Flags, hdc);
+
+END:
+/*    WIN_ReleasePtr(Window); */
+    return hdc;
 }
 
 /* EOF */

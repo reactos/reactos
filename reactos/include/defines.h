@@ -1291,6 +1291,8 @@ extern "C" {
 #define DCX_EXCLUDERGN	(0x40L)
 #define DCX_INTERSECTRGN	(0x80L)
 #define DCX_VALIDATE	(0x200000L)
+#define DCX_USESTYLE         (0x00010000L)
+#define DCX_NORECOMPUTE      (0x00100000L)
 
 /* GetDeviceCaps */
 #define DRIVERVERSION	(0)

@@ -6,6 +6,7 @@
 #include <include/class.h>
 #include <include/msgqueue.h>
 #include <include/winsta.h>
+#include <include/dce.h>
 
 typedef struct _INTERNALPOS
 {
@@ -72,6 +73,8 @@ typedef struct _WINDOW_OBJECT
   LIST_ENTRY ThreadListEntry;
   /* Pointer to the parent window. */
   struct _WINDOW_OBJECT* Parent;
+  /* DC Entries (DCE) */
+  PDCE dce;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */

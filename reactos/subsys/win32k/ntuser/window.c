@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.9 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: window.c,v 1.10 2002/08/24 11:09:17 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,6 +83,16 @@ W32kIsDesktopWindow(HWND hWnd)
   IsDesktop = WindowObject->Parent == NULL;
   W32kReleaseWindowObject(WindowObject);
   return(IsDesktop);
+}
+
+HWND W32kGetDesktopWindow()
+{
+  return W32kGetActiveDesktop()->DesktopWindow;
+}
+
+HWND W32kGetParentWindow(HWND hWnd)
+{
+  return W32kGetWindowObject(hWnd)->ParentHandle;
 }
 
 PWINDOW_OBJECT
@@ -776,6 +786,7 @@ NtUserSetInternalWindowPos(DWORD Unknown0,
   UNIMPLEMENTED
 
   return 0;
+
 }
 
 DWORD STDCALL

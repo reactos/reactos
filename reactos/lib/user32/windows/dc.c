@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.6 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: dc.c,v 1.7 2002/08/24 11:09:17 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,7 +39,7 @@ STDCALL
 GetDC(
   HWND hWnd)
 {
-  return (HDC)0;
+  return NtUserGetDC(hWnd);
 }
 
 HDC
@@ -49,7 +49,7 @@ GetDCEx(
   HRGN hrgnClip,
   DWORD flags)
 {
-  return (HDC)0;
+  return NtUserGetDCEx(hWnd, hrgnClip, flags);
 }
 HDC
 STDCALL

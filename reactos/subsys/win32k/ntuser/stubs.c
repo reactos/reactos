@@ -827,16 +827,6 @@ NtUserGetCursorInfo(
 
 DWORD
 STDCALL
-NtUserGetDC(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetDoubleClickTime(VOID)
 {
   UNIMPLEMENTED
@@ -1424,6 +1414,7 @@ NtUserScrollDC(
   DWORD Unknown4,
   DWORD Unknown5,
   DWORD Unknown6)
+
 {
   UNIMPLEMENTED
 

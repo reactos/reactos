@@ -23,6 +23,7 @@
 #define GO_METAFILE_DC_MAGIC     0x4f51
 #define GO_ENHMETAFILE_MAGIC     0x4f52
 #define GO_ENHMETAFILE_DC_MAGIC  0x4f53
+#define GO_DCE_MAGIC             0x4f54
 #define GO_MAGIC_DONTCARE        0xffff
 
 /* (RJJ) swiped stock handles from wine  */
