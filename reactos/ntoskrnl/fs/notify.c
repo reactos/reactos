@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.10 2004/06/23 00:42:21 ion Exp $
+/* $Id: notify.c,v 1.11 2004/06/27 13:58:05 navaraf Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -315,8 +315,8 @@ FsRtlNotifyVolumeEvent (
 STDCALL
 NTSTATUS
 FsRtlRegisterFileSystemFilterCallbacks (
-    IN struct _DRIVER_OBJECT *FilterDriverObject,
-    IN PFS_FILTER_CALLBACKS Callbacks
+    IN PVOID		Unknown1,
+    IN PVOID		Unknown2
     )
 {
 	UNIMPLEMENTED;
