@@ -2702,7 +2702,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FileNamesInformation			FILE_NAMES_INFORMATION
 	  FileDispositionInformation		FILE_DISPOSITION_INFORMATION
 	  FilePositionInformation		FILE_POSITION_INFORMATION
-	  FileFullEaInformation			FILE_FULL_EA_INFORMATION		
+	  FileFullEaInformation			FILE_FULL_EA_INFORMATION
 	  FileModeInformation			FILE_MODE_INFORMATION
 	  FileAlignmentInformation		FILE_ALIGNMENT_INFORMATION
 	  FileAllInformation			FILE_ALL_INFORMATION
@@ -2715,7 +2715,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FilePipeRemoteInformation		
 	  FileMailslotQueryInformation		
 	  FileMailslotSetInformation		
-	  FileCompressionInformation		FILE_COMPRESSION_INFORMATION		
+	  FileCompressionInformation		FILE_COMPRESSION_INFORMATION
 	  FileCopyOnWriteInformation		
 	  FileCompletionInformation 		IO_COMPLETION_CONTEXT
 	  FileMoveClusterInformation		
@@ -2728,7 +2728,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FileContentIndexInformation		
 	  FileInheritContentIndexInformation	
 	  FileOleInformation			
-	  FileMaximumInformation			
+	  FileMaximumInformation		
 
  * REMARK:
  *	  This procedure maps to the win32 GetShortPathName, GetLongPathName,
@@ -4933,16 +4933,16 @@ ZwYieldExecution(
 
 NTSTATUS
 STDCALL
-NtPlugPlayControl (DWORD Unknown1,
-                   DWORD Unknown2,
-                   DWORD Unknown3);
+NtPlugPlayControl(IN ULONG ControlCode,
+                  IN OUT PVOID Buffer,
+                  IN ULONG BufferLength);
 
 NTSTATUS
 STDCALL
-NtGetPlugPlayEvent (ULONG Reserved1,
-                    ULONG Reserved2,
-                    PVOID Buffer,
-                    ULONG BufferLength);
+NtGetPlugPlayEvent(IN ULONG Reserved1,
+                   IN ULONG Reserved2,
+                   OUT PVOID Buffer,
+                   IN ULONG BufferLength);
 
 /* --- POWER MANAGEMENT --- */
 
@@ -5026,12 +5026,6 @@ NtSetLdtEntries (ULONG Selector1,
 		 LDT_ENTRY LdtEntry1,
 		 ULONG Selector2,
 		 LDT_ENTRY LdtEntry2);
-
-NTSTATUS
-STDCALL
-NtQueryOleDirectoryFile (
-	VOID
-	);
 
 /*
  * FUNCTION: Checks a clients access rights to a object

@@ -481,7 +481,7 @@ IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
   return STATUS_UNSUCCESSFUL;
 }
 
-/**********************************************************************
+/*
  * DESCRIPTION
  * 	Creates a device node
  *
@@ -1556,7 +1556,6 @@ IopActionInitAllServices(
  * parent node. This function just calls IopActionInitChildServices with
  * BootDrivers = TRUE.
  */
-
 NTSTATUS
 IopActionInitBootServices(
    PDEVICE_NODE DeviceNode,
@@ -1581,7 +1580,6 @@ IopActionInitBootServices(
  * Return Value
  *    Status
  */
-
 NTSTATUS
 IopInitializePnpServices(
    IN PDEVICE_NODE DeviceNode,
@@ -1767,6 +1765,14 @@ PnpInit(VOID)
    DPRINT("PnpInit()\n");
 
    KeInitializeSpinLock(&IopDeviceTreeLock);
+
+   /* Initialize PnP-Event notification support */
+   Status = IopInitPlugPlayEvents();
+   if (!NT_SUCCESS(Status))
+   {
+      CPRINT("IopInitPlugPlayEvents() failed\n");
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+   }
 
    /*
     * Create root device node

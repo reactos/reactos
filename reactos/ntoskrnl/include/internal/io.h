@@ -500,6 +500,13 @@ IopMarkLastReinitializeDriver(VOID);
 VOID FASTCALL
 IopReinitializeDrivers(VOID);
 
+
+/* pnpevent.c */
+
+NTSTATUS INIT_FUNCTION
+IopInitPlugPlayEvents(VOID);
+
+
 /* pnpmgr.c */
 
 NTSTATUS
