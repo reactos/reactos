@@ -54,6 +54,8 @@ protected:
 	int	_alignment_cur;
 	int	_alignment_tmp;
 
+	int	_display_version_org;
+
 	virtual int Command(int id, int code);
 	virtual int Notify(int id, NMHDR* pnmh);
 };
@@ -67,6 +69,7 @@ struct TaskbarSettingsDlg : public PropSheetPageDlg
 	TaskbarSettingsDlg(HWND hwnd);
 
 	virtual int	Command(int id, int code);
+	virtual int Notify(int id, NMHDR* pnmh);
 
 protected:
 	XMLDoc	_cfg_org;

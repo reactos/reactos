@@ -649,11 +649,6 @@ Dialog::~Dialog()
 	unregister_dialog(_hwnd);
 }
 
-LRESULT Dialog::Init(LPCREATESTRUCT pcs)
-{
-	return TRUE;	// set standard focus
-}
-
 int Dialog::DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
@@ -685,7 +680,7 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 	if (pThis) {
 		switch(nmsg) {
 		  case WM_COMMAND:
-			SetWindowLong(hwnd, DWL_MSGRESULT, (LPARAM)pThis->Command(LOWORD(wparam), HIWORD(wparam)));
+			pThis->Command(LOWORD(wparam), HIWORD(wparam));
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFY:
@@ -708,8 +703,6 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 
 		if (pThis)
 			return pThis->Init(NULL);
-
-		return TRUE;
 	}
 
 	return FALSE;	// message has not been processed
@@ -1373,7 +1366,7 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 	if (pThis) {
 		switch(nmsg) {
 		  case WM_COMMAND:
-			SetWindowLong(hwnd, DWL_MSGRESULT, (LPARAM)pThis->Command(LOWORD(wparam), HIWORD(wparam)));
+			pThis->Command(LOWORD(wparam), HIWORD(wparam));
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFY:
@@ -1401,8 +1394,6 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 			if (pThis)
 				return pThis->Init(NULL);
 		}
-
-		return TRUE;
 	}
 
 	return FALSE;	// message has not been processed
@@ -1412,5 +1403,5 @@ int PropSheetPageDlg::Command(int id, int code)
 {
 	// override call to EndDialog in Dialog::Command();
 
-	return 1;
+	return FALSE;
 }

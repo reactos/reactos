@@ -149,6 +149,9 @@ extern int find_window_class(LPCTSTR classname);
  // create a directory with all missing parent directories
 BOOL RecursiveCreateDirectory(LPCTSTR path_in);
 
+ // read DWORD value from registry
+DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def);
+
 
 #ifdef __cplusplus
 } // extern "C"

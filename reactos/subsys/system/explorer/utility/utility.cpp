@@ -333,3 +333,22 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 
 	return TRUE;
 }
+
+
+DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def)
+{
+	HKEY hkey;
+	DWORD ret;
+
+	if (!RegOpenKey(root, path, &hkey)) {
+		DWORD len = sizeof(ret);
+
+		if (RegQueryValueEx(hkey, valueName, 0, NULL, (LPBYTE)&ret, &len))
+			ret = def;
+
+		RegCloseKey(hkey);
+
+		return ret;
+	} else
+		return def;
+}

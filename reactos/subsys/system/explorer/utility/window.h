@@ -371,7 +371,6 @@ struct Dialog : public Window
 	static int DoModal(UINT nid, CREATORFUNC_INFO creator, const void* info, HWND hwndParent=0);
 
 protected:
-	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 };

@@ -95,6 +95,9 @@ DesktopSettingsDlg::DesktopSettingsDlg(HWND hwnd)
 
 	_alignment_cur = SendMessage(g_Globals._hwndShellView, PM_GET_ICON_ALGORITHM, 0, 0);
 	_alignment_tmp = _alignment_cur;
+
+	_display_version_org = SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,0));
+	CheckDlgButton(hwnd, ID_DESKTOP_VERSION, _display_version_org? BST_CHECKED: BST_UNCHECKED);
 }
 
 #ifndef PSN_QUERYINITIALFOCUS	// currently (as of 18.01.2004) missing in MinGW headers
@@ -110,11 +113,13 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 
 	  case PSN_APPLY:
 		_alignment_cur = _alignment_tmp;
+		_display_version_org = SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,0));
 		break;
 
 	  case PSN_RESET:
 		if (_alignment_tmp != _alignment_cur)
 			SendMessage(g_Globals._hwndShellView, PM_SET_ICON_ALGORITHM, _alignment_cur, 0);
+		SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, _display_version_org, MAKELONG(1,0));
 		break;
 
 	  default:
@@ -140,7 +145,17 @@ int	DesktopSettingsDlg::Command(int id, int code)
 		return 0;
 	}
 
-	return 1;
+	switch(id) {
+	  case ID_DESKTOP_VERSION:
+		SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,1));	// toggle version display flag
+		PropSheet_Changed(GetParent(_hwnd), _hwnd);
+		break;
+
+	  default:
+		return 1;
+	}
+
+	return 0;
 }
 
 
@@ -150,6 +165,25 @@ TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
 {
 	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(g_Globals.get_cfg("desktopbar"), "options", "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
 	CheckDlgButton(hwnd, ID_HIDE_INACTIVE_ICONS, XMLBool(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true)? BST_CHECKED: BST_UNCHECKED);
+}
+
+int TaskbarSettingsDlg::Notify(int id, NMHDR* pnmh)
+{
+	switch(pnmh->code) {
+	  case PSN_APPLY:
+		_cfg_org = g_Globals._cfg;
+		break;
+
+	  case PSN_RESET:
+		g_Globals._cfg = _cfg_org;
+		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
+		break;
+
+	  default:
+		return super::Notify(id, pnmh);
+	}
+
+	return 0;
 }
 
 int	TaskbarSettingsDlg::Command(int id, int code)
@@ -169,11 +203,6 @@ int	TaskbarSettingsDlg::Command(int id, int code)
 		XMLBoolRef(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true).toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
-		break;
-
-	  case PSN_RESET:
-		g_Globals._cfg = _cfg_org;
-		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		break;
 
 	  default:

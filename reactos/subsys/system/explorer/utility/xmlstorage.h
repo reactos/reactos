@@ -303,6 +303,21 @@ struct XMLNode : public String
 		}
 	}
 
+	XMLNode& operator=(const XMLNode& other)
+	{
+		_children.clear();
+
+		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
+			_children.push_back(new XMLNode(**it));
+
+		_attributes = other._attributes;
+
+		_content = other._content;
+		_trailing = other._trailing;
+
+		return *this;
+	}
+
 	 /// add a new child node
 	void add_child(XMLNode* child)
 	{
@@ -329,7 +344,7 @@ struct XMLNode : public String
 	 /// convenient value access in children node
 	String value(const String& name, const String& attr_name) const
 	{
-		XMLNode* node = find_first(name);
+		const XMLNode* node = find_first(name);
 
 		if (node)
 			return (*node)[attr_name];
@@ -365,7 +380,7 @@ struct XMLNode : public String
 	 /// convenient value access in children node
 	String value(const char* name, const char* attr_name) const
 	{
-		XMLNode* node = find_first(name);
+		const XMLNode* node = find_first(name);
 
 		if (node)
 			return (*node)[attr_name];
