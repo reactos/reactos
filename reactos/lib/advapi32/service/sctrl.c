@@ -13,6 +13,8 @@
 /* INCLUDES ******************************************************************/
 
 #include "advapi32.h"
+#include <services/services.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -23,9 +25,15 @@ typedef struct _ACTIVE_SERVICE
 {
   DWORD ThreadId;
   UNICODE_STRING ServiceName;
-  LPSERVICE_MAIN_FUNCTIONW MainFunction;
+  union
+  {
+    LPSERVICE_MAIN_FUNCTIONA lpFuncA;
+    LPSERVICE_MAIN_FUNCTIONW lpFuncW;
+  } Main;
   LPHANDLER_FUNCTION HandlerFunction;
   SERVICE_STATUS ServiceStatus;
+  BOOL bUnicode;
+  LPWSTR Arguments;
 } ACTIVE_SERVICE, *PACTIVE_SERVICE;
 
 
@@ -33,7 +41,6 @@ typedef struct _ACTIVE_SERVICE
 
 static DWORD dwActiveServiceCount = 0;
 static PACTIVE_SERVICE lpActiveServices = NULL;
-/* static PHANDLE ActiveServicesThreadHandles; */ /* uncomment when in use */
 
 
 /* FUNCTIONS *****************************************************************/
@@ -80,15 +87,53 @@ static DWORD WINAPI
 ScServiceMainStub(LPVOID Context)
 {
   PACTIVE_SERVICE lpService;
+  DWORD dwArgCount = 0;
+  DWORD dwLength = 0;
 
   lpService = (PACTIVE_SERVICE)Context;
 
   DPRINT("ScServiceMainStub() called\n");
 
-  /* FIXME: Send argc and argv (from command line) as arguments */
+  /* Count arguments */
+  while (lpService->Arguments[dwLength])
+    {
+      dwLength += wcslen(&lpService->Arguments[dwLength]) + 1;
+      dwArgCount++;
+    }
 
+  /* Build the argument vector and call the main service routine */
+  if (lpService->bUnicode)
+    {
+      LPWSTR *lpArgVector;
+      LPWSTR Ptr;
 
-  (lpService->MainFunction)(0, NULL);
+      lpArgVector = HeapAlloc(GetProcessHeap(),
+			      HEAP_ZERO_MEMORY,
+			      (dwArgCount + 1) * sizeof(LPWSTR));
+      if (lpArgVector == NULL)
+        return ERROR_OUTOFMEMORY;
+
+      dwArgCount = 0;
+      Ptr = lpService->Arguments;
+      while (*Ptr)
+	{
+	  lpArgVector[dwArgCount] = Ptr;
+
+	  dwArgCount++;
+	  Ptr += (wcslen(Ptr) + 1);
+	}
+      lpArgVector[dwArgCount] = NULL;
+
+      (lpService->Main.lpFuncW)(dwArgCount, lpArgVector);
+
+      HeapFree(GetProcessHeap(),
+	       0,
+	       lpArgVector);
+    }
+  else
+    {
+      (lpService->Main.lpFuncA)(0, NULL);
+    }
 
   return ERROR_SUCCESS;
 }
@@ -141,17 +186,29 @@ ScConnectControlPipe(HANDLE *hPipe)
 }
 
 
-static BOOL
-ScServiceDispatcher(HANDLE hPipe,
-		    PUCHAR lpBuffer,
-		    DWORD dwBufferSize)
+
+static DWORD
+ScStartService(PSCM_START_PACKET StartPacket)
 {
   PACTIVE_SERVICE lpService;
   HANDLE ThreadHandle;
 
-  DPRINT("ScDispatcherLoop() called\n");
+  DPRINT("Size: %lu\n", StartPacket->Size);
+  DPRINT("Service: %S\n", &StartPacket->Arguments[0]);
 
-  lpService = &lpActiveServices[0];
+  lpService = ScLookupServiceByServiceName(&StartPacket->Arguments[0]);
+  if (lpService == NULL)
+    return ERROR_SERVICE_DOES_NOT_EXIST;
+
+  lpService->Arguments = HeapAlloc(GetProcessHeap(),
+				   HEAP_ZERO_MEMORY,
+				   StartPacket->Size);
+  if (lpService->Arguments == NULL)
+    return ERROR_OUTOFMEMORY;
+
+  memcpy(lpService->Arguments,
+	 StartPacket->Arguments,
+	 StartPacket->Size * sizeof(WCHAR));
 
   ThreadHandle = CreateThread(NULL,
 			      0,
@@ -160,21 +217,63 @@ ScServiceDispatcher(HANDLE hPipe,
 			      CREATE_SUSPENDED,
 			      &lpService->ThreadId);
   if (ThreadHandle == NULL)
-    return FALSE;
+    return ERROR_SERVICE_NO_THREAD;
 
   ResumeThread(ThreadHandle);
-
   CloseHandle(ThreadHandle);
 
-#if 0
+  return ERROR_SUCCESS;
+}
+
+
+static BOOL
+ScServiceDispatcher(HANDLE hPipe,
+		    PUCHAR lpBuffer,
+		    DWORD dwBufferSize)
+{
+  LPDWORD Buffer;
+  DWORD Count;
+  BOOL bResult;
+
+  DPRINT("ScDispatcherLoop() called\n");
+
+  Buffer = HeapAlloc(GetProcessHeap(),
+                     HEAP_ZERO_MEMORY,
+                     1024);
+  if (Buffer == NULL)
+    return FALSE;
+
   while (TRUE)
     {
       /* Read command from the control pipe */
+      bResult = ReadFile(hPipe,
+			 Buffer,
+			 1024,
+			 &Count,
+			 NULL);
+      if (bResult == FALSE)
+        {
+          DPRINT1("Pipe read failed\n");
+          return FALSE;
+        }
 
       /* Execute command */
+      switch (Buffer[0])
+        {
+          case SCM_START_COMMAND:
+            DPRINT("Start command\n");
+            ScStartService((PSCM_START_PACKET)Buffer);
+            break;
 
+          default:
+            DPRINT1("Unknown command %lu", Buffer[0]);
+            break;
+        }
     }
-#endif
+
+  HeapFree(GetProcessHeap(),
+           0,
+           Buffer);
 
   return TRUE;
 }
@@ -324,7 +423,8 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     {
       RtlCreateUnicodeStringFromAsciiz(&lpActiveServices[i].ServiceName,
 				       lpServiceStartTable[i].lpServiceName);
-      lpActiveServices[i].MainFunction = (LPSERVICE_MAIN_FUNCTIONW)lpServiceStartTable[i].lpServiceProc;
+      lpActiveServices[i].Main.lpFuncA = lpServiceStartTable[i].lpServiceProc;
+      lpActiveServices[i].bUnicode = FALSE;
     }
 
   dwError = ScConnectControlPipe(&hPipe);
@@ -400,7 +500,8 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     {
       RtlCreateUnicodeString(&lpActiveServices[i].ServiceName,
 			     lpServiceStartTable[i].lpServiceName);
-      lpActiveServices[i].MainFunction = lpServiceStartTable[i].lpServiceProc;
+      lpActiveServices[i].Main.lpFuncW = lpServiceStartTable[i].lpServiceProc;
+      lpActiveServices[i].bUnicode = TRUE;
     }
 
   dwError = ScConnectControlPipe(&hPipe);
