@@ -192,14 +192,14 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   KeInitializeEvent(&ClientFcb->Event, SynchronizationEvent, FALSE);
 
   /*
-   * Step 4. Add the client FCB to a list and connect it if necessary.
+   * Step 4. Add the client FCB to a list and connect it if possible.
    */
 
   /* Add the client FCB to the pipe FCB list. */
   InsertTailList(&Pipe->ClientFcbListHead, &ClientFcb->FcbListEntry);
 
-  /* Connect pipes if they were created by the same thread */
-  if (ServerFcb && ServerFcb->Thread == ClientFcb->Thread)
+  /* Connect to listening server side */
+  if (ServerFcb)
     {
       ClientFcb->OtherSide = ServerFcb;
       ServerFcb->OtherSide = ClientFcb;
