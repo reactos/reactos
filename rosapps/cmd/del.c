@@ -26,6 +26,9 @@
  *
  *    30-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
  *        Added quiet ("/Q"), wipe ("/W") and zap ("/Z") option.
+ *
+ *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
+ *        Little fix to keep DEL quiet inside batch files.
  */
 
 #include "config.h"
@@ -39,6 +42,7 @@
 #include <ctype.h>
 
 #include "cmd.h"
+#include "batch.h"
 
 
 #define PROMPT_NO		0
@@ -70,7 +74,7 @@ static BOOL ConfirmDeleteAll (VOID)
 	LPTSTR p;
 
 	ConOutPrintf (_T("All files in directory will be deleted!\n"
-					 "Are you sure (Y/N)? "));
+	                 "Are you sure (Y/N)? "));
 	ConInString (inp, 10);
 
 	_tcsupr (inp);
@@ -226,6 +230,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 1;
 		}
+
+		/* keep quiet within batch files */
+		if (bc != NULL)
+			dwFlags |= DEL_QUIET;
 
 		/* check for filenames anywhere in command line */
 		for (i = 0; i < args; i++)
