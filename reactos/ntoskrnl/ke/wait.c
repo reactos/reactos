@@ -168,13 +168,12 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
 				    WaitListEntry);
         DPRINT("Waking %x\n",current->Thread);
-
         if (current->WaitType == WaitAny)
           {
              DPRINT("WaitAny: Remove all wait blocks.\n");
 	         for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
 			    if( PrevBlock != current )
-				    RemoveEntryList( &PrevBlock->WaitListEntry );
+				    RemoveEntryList( &(PrevBlock->WaitListEntry) );
 		     current->Thread->WaitBlockList = 0;
           }
         else
@@ -200,11 +199,11 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
                  }
               }
 		   }     
-	
 	KiSideEffectsBeforeWake(hdr);
     Status = current->WaitKey;
-	PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
-     };
+	if( current->Thread->WaitBlockList == NULL )
+        PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
+     }
    return(TRUE);
 }
 
@@ -227,13 +226,12 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
 
-
    if (current->WaitType == WaitAny)
      {
         DPRINT("WaitAny: Remove all wait blocks.\n");
 		for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
 			if( PrevBlock != current )
-				RemoveEntryList( &PrevBlock->WaitListEntry );
+                RemoveEntryList( &(PrevBlock->WaitListEntry) );
 		current->Thread->WaitBlockList = 0;
      }
    else
@@ -261,7 +259,6 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
      }
 
    DPRINT("Waking %x\n",current->Thread);
-   
    KiSideEffectsBeforeWake(hdr);
    Status = current->WaitKey;
    PsUnfreezeThread( CONTAINING_RECORD( current->Thread, ETHREAD, Tcb ), &Status );
@@ -396,7 +393,6 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 		       (UCHAR)Alertable,
 		       WaitMode);
 	DPRINT("Woke from wait\n");
-	
      } while (Status == STATUS_KERNEL_APC);
    
    if (Timeout != NULL)
@@ -433,13 +429,13 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 
     if (WaitBlockArray == NULL)
     {
-        if (Count > 3)
+        if (Count > 4)
         {
             DbgPrint("(%s:%d) Too many objects!\n",
                      __FILE__,__LINE__);
             return STATUS_UNSUCCESSFUL;
         }
-        blk = &CurrentThread->WaitBlock[1];
+        blk = &CurrentThread->WaitBlock[0];
     }
     else
     {
@@ -501,10 +497,9 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
         if (i == Count - 1)
             blk->NextWaitBlock = NULL;
         else
-            blk->NextWaitBlock = (PVOID)((ULONG)blk+sizeof(KWAIT_BLOCK));
+            blk->NextWaitBlock = blk + 1;
         DPRINT("blk %p blk->NextWaitBlock %p\n",
                blk, blk->NextWaitBlock);
-
         InsertTailList(&(hdr->WaitListHead),&(blk->WaitListEntry));
 //        DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
 //               hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
@@ -617,8 +612,6 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
 				  Time);
    
    ObDereferenceObject(ObjectPtr);
-   
-   va_end(ap);
    
    return(Status);
 }
