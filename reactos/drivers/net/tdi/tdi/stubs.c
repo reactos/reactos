@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 1999/11/21 23:48:14 ea Exp $
+/* $Id: stubs.c,v 1.3 1999/11/28 07:59:29 ea Exp $
  *
  */
 #include <ntos.h>
@@ -56,15 +56,14 @@ TdiCopyMdlToBuffer (
 }
 
 
+VOID
+STDCALL
+TdiInitialize (
+	PVOID	Unknown0
+	)
+{
+}
 
-/*
-TdiDeregisterAddressChangeHandler
-TdiDeregisterDeviceObject
-TdiDeregisterNetAddress
-TdiDeregisterNotificationHandler
-
-TdiInitialize
-*/
 
 NTSTATUS
 STDCALL
@@ -78,13 +77,17 @@ TdiMapUserRequest (
 }
 
 
-/*
-TdiOpenNetbiosAddress
-TdiRegisterAddressChangeHandler
-TdiRegisterDeviceObject
-TdiRegisterNetAddress
-TdiRegisterNotificationHandler
-*/
+VOID
+STDCALL
+TdiOpenNetbiosAddress (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+}
+
 
 VOID
 STDCALL

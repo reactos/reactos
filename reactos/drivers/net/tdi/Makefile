@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 1999/11/24 23:06:24 ea Exp $
+# $Id: Makefile,v 1.4 1999/11/28 07:59:28 ea Exp $
 #
 # TDI.SYS build spec
 #
@@ -8,7 +8,7 @@ TARGETNAME=tdi
 BASE_CFLAGS = -I../../../include
 
 OBJECTS_CTE = cte/stubs.o cte/string.o
-OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o
+OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o tdi/dereg.o
 
 OBJECTS_MISC = misc/main.o misc/$(TARGETNAME).coff
 
