@@ -8,6 +8,8 @@
  *                  Created 01/11/98
  */
 
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 
 DWORD
