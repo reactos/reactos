@@ -2,32 +2,62 @@
  *
  * BigBlockFile
  *
- * This is the implementation of a file that consists of blocks of 
+ * This is the implementation of a file that consists of blocks of
  * a predetermined size.
- * This class is used in the Compound File implementation of the 
- * IStorage and IStream interfaces. It provides the functionality 
- * to read and write any blocks in the file as well as setting and 
+ * This class is used in the Compound File implementation of the
+ * IStorage and IStream interfaces. It provides the functionality
+ * to read and write any blocks in the file as well as setting and
  * obtaining the size of the file.
  * The blocks are indexed sequentially from the start of the file
  * starting with -1.
- * 
+ *
  * TODO:
  * - Support for a transacted mode
  *
  * Copyright 1999 Thuy Nguyen
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <assert.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 
-#include <windows.h>
-#include <ole32/ole32.h>
+#ifdef __REACTOS__
+#include <wine/icom.h>
+#endif
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "windef.h"
+#include "winbase.h"
+#ifdef __REACTOS__
+#include "wingdi.h"
+#endif
+#include "winuser.h"
+#include "winerror.h"
+#include "objbase.h"
+#include "ole2.h"
+
 #include "storage32.h"
 
-#include <debug.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
 /***********************************************************
  * Data structures used internally by the BigBlockFile
@@ -52,7 +82,7 @@ typedef struct
 
 /***
  * This structure identifies the paged that are mapped
- * from the file and their position in memory. It is 
+ * from the file and their position in memory. It is
  * also used to hold a reference count to those pages.
  *
  * page_index identifies which PAGE_SIZE chunk from the
@@ -85,7 +115,7 @@ static void      BIGBLOCKFILE_RemapAllMappedPages(LPBIGBLOCKFILE This);
 static void*     BIGBLOCKFILE_GetBigBlockPointer(LPBIGBLOCKFILE This,
                                                  ULONG          index,
                                                  DWORD          desired_access);
-static MappedPage* BIGBLOCKFILE_GetPageFromPointer(LPBIGBLOCKFILE This, 
+static MappedPage* BIGBLOCKFILE_GetPageFromPointer(LPBIGBLOCKFILE This,
 						   void*         pBlock);
 static MappedPage* BIGBLOCKFILE_CreatePage(LPBIGBLOCKFILE This,
 					   ULONG page_index);
@@ -95,7 +125,7 @@ static BOOL      BIGBLOCKFILE_MemInit(LPBIGBLOCKFILE This, ILockBytes* plkbyt);
 
 /* Note that this evaluates a and b multiple times, so don't
  * pass expressions with side effects. */
-#define ROUNDUP(a, b) ((((a) + (b) - 1)/(b))*(b))
+#define ROUND_UP(a, b) ((((a) + (b) - 1)/(b))*(b))
 
 /***********************************************************
  * Blockbits functions.
@@ -133,7 +163,7 @@ static inline void BIGBLOCKFILE_Zero(BlockBits *bb)
 /******************************************************************************
  *      BIGBLOCKFILE_Construct
  *
- * Construct a big block file. Create the file mapping object. 
+ * Construct a big block file. Create the file mapping object.
  * Create the read only mapped pages list, the writable mapped page list
  * and the blocks in use list.
  */
@@ -217,7 +247,7 @@ static BOOL BIGBLOCKFILE_FileInit(LPBIGBLOCKFILE This, HANDLE hFile)
 
   This->maplist = NULL;
 
-  Print(MAX_TRACE, ("file len %lu\n", This->filesize.u.LowPart));
+  TRACE("file len %lu\n", This->filesize.u.LowPart);
 
   return TRUE;
 }
@@ -237,7 +267,7 @@ static BOOL BIGBLOCKFILE_MemInit(LPBIGBLOCKFILE This, ILockBytes* plkbyt)
    */
   if (GetHGlobalFromILockBytes(plkbyt, &(This->hbytearray)) != S_OK)
   {
-    Print(MIN_TRACE, ("May not be an ILockBytes on HGLOBAL\n"));
+    FIXME("May not be an ILockBytes on HGLOBAL\n");
     return FALSE;
   }
 
@@ -254,7 +284,7 @@ static BOOL BIGBLOCKFILE_MemInit(LPBIGBLOCKFILE This, ILockBytes* plkbyt)
 
   This->pbytearray = GlobalLock(This->hbytearray);
 
-  Print(MAX_TRACE, ("mem on %p len %lu\n", This->pbytearray, This->filesize.u.LowPart));
+  TRACE("mem on %p len %lu\n", This->pbytearray, This->filesize.u.LowPart);
 
   return TRUE;
 }
@@ -306,13 +336,13 @@ void* BIGBLOCKFILE_GetROBigBlock(
 
   /*
    * validate the block index
-   * 
+   *
    */
   if (This->blocksize * (index + 1)
-      > ROUNDUP(This->filesize.u.LowPart, This->blocksize))
+      > ROUND_UP(This->filesize.u.LowPart, This->blocksize))
   {
-    Print(MAX_TRACE, ("out of range %lu vs %lu\n", This->blocksize * (index + 1),
-	    This->filesize.u.LowPart));
+    TRACE("out of range %lu vs %lu\n", This->blocksize * (index + 1),
+	  This->filesize.u.LowPart);
     return NULL;
   }
 
@@ -376,19 +406,19 @@ void BIGBLOCKFILE_ReleaseBigBlock(LPBIGBLOCKFILE This, void *pBlock)
  *      BIGBLOCKFILE_SetSize
  *
  * Sets the size of the file.
- * 
+ *
  */
 void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
 {
   if (This->filesize.u.LowPart == newSize.u.LowPart)
     return;
 
-  Print(MAX_TRACE, ("from %lu to %lu\n", This->filesize.u.LowPart, newSize.u.LowPart));
+  TRACE("from %lu to %lu\n", This->filesize.u.LowPart, newSize.u.LowPart);
   /*
    * unmap all views, must be done before call to SetEndFile
    */
   BIGBLOCKFILE_UnmapAllMappedPages(This);
-  
+
   if (This->fileBased)
   {
     char buf[10];
@@ -406,7 +436,7 @@ void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
      * to that dir: crash.
      *
      * The problem is that the SetFilePointer-SetEndOfFile combo below
-     * doesn't always succeed. The file is not grown. It seems like the 
+     * doesn't always succeed. The file is not grown. It seems like the
      * operation is cached. By doing the WriteFile, the file is actually
      * grown on disk.
      * This hack is only needed when saving to smbfs.
@@ -415,7 +445,7 @@ void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
     SetFilePointer(This->hfile, newSize.u.LowPart, NULL, FILE_BEGIN);
     WriteFile(This->hfile, buf, 10, NULL, NULL);
     /*
-     * END HACK 
+     * END HACK
      */
 
     /*
@@ -423,14 +453,14 @@ void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
      */
     SetFilePointer(This->hfile, newSize.u.LowPart, NULL, FILE_BEGIN);
     SetEndOfFile(This->hfile);
-  
+
     /*
      * re-create the file mapping object
      */
     This->hfilemap = CreateFileMappingA(This->hfile,
                                         NULL,
                                         This->flProtect,
-                                        0, 0, 
+                                        0, 0,
                                         NULL);
   }
   else
@@ -459,7 +489,7 @@ void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
  *      BIGBLOCKFILE_GetSize
  *
  * Returns the size of the file.
- * 
+ *
  */
 ULARGE_INTEGER BIGBLOCKFILE_GetSize(LPBIGBLOCKFILE This)
 {
@@ -502,8 +532,8 @@ static BOOL BIGBLOCKFILE_AccessCheck(MappedPage *page, ULONG block_index,
  * Returns a pointer to the specified block.
  */
 static void* BIGBLOCKFILE_GetBigBlockPointer(
-  LPBIGBLOCKFILE This, 
-  ULONG          block_index, 
+  LPBIGBLOCKFILE This,
+  ULONG          block_index,
   DWORD          desired_access)
 {
     DWORD page_index = block_index / BLOCKS_PER_PAGE;
@@ -656,7 +686,7 @@ static BOOL BIGBLOCKFILE_MapPage(LPBIGBLOCKFILE This, MappedPage *page)
 	page->lpBytes = (LPBYTE)This->pbytearray + lowoffset;
     }
 
-    Print(MAX_TRACE, ("mapped page %lu to %p\n", page->page_index, page->lpBytes));
+    TRACE("mapped page %lu to %p\n", page->page_index, page->lpBytes);
 
     return page->lpBytes != NULL;
 }
@@ -686,9 +716,9 @@ static MappedPage *BIGBLOCKFILE_CreatePage(LPBIGBLOCKFILE This,
 
 static void BIGBLOCKFILE_UnmapPage(LPBIGBLOCKFILE This, MappedPage *page)
 {
-    Print(MAX_TRACE, ("%ld at %p\n", page->page_index, page->lpBytes));
+    TRACE("%ld at %p\n", page->page_index, page->lpBytes);
     if (page->refcnt > 0)
-	Print(MIN_TRACE, ("unmapping inuse page %p\n", page->lpBytes));
+	ERR("unmapping inuse page %p\n", page->lpBytes);
 
     if (This->fileBased && page->lpBytes)
 	UnmapViewOfFile(page->lpBytes);
@@ -800,7 +830,7 @@ static void BIGBLOCKFILE_RemapList(LPBIGBLOCKFILE This, MappedPage *list)
 
 	if (list->page_index * PAGE_SIZE > This->filesize.u.LowPart)
 	{
-	    Print(MAX_TRACE, ("discarding %lu\n", list->page_index));
+	    TRACE("discarding %lu\n", list->page_index);
 
 	    /* page is entirely outside of the file, delete it */
 	    BIGBLOCKFILE_UnlinkPage(list);

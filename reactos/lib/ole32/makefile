@@ -1,9 +1,4 @@
-# $Id: makefile,v 1.7 2003/08/07 04:03:23 royce Exp $
-#
-# Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
-#
-# Makefile for ReactOS ole32.dll
-#
+# $Id: makefile
 
 PATH_TO_TOP = ../..
 
@@ -13,38 +8,67 @@ TARGET_NAME = ole32
 
 TARGET_BASE = 0x77a50000
 
-TARGET_DEFONLY = yes
+TARGET_CFLAGS = \
+ -Wall \
+ -fno-builtin
 
-TARGET_CFLAGS = -fno-rtti -I./include
+# Compile definitions usage:
+#    __USE_W32API - Compilation with w32api headers
+#    __REACTOS__ - Compilation of Wine sources for ReactOS
+#    _WIN32_IE=0x600 - Internet Explorer 6 compatible defintions
+#    WINVER=0x501 - Windows XP definitions
+#    __need_offsetof - Force definition of macro offsetof in stddef.h
+#
+DEFINES = \
+	-D__USE_W32API \
+	-D__REACTOS__ \
+	-D_WIN32_IE=0x600 \
+	-D_WIN32_WINNT=0x501 \
+	-DWINVER=0x501 \
+	-DCOBJMACROS \
+	-D__need_offsetof
+	
+TARGET_CFLAGS += \
+	$(DEFINES) \
+	-I$(PATH_TO_TOP)/include/wine \
+	-Wno-unused
 
-# require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a user32.a gdi32.a msvcrt.a
+TARGET_SDKLIBS = libwine.a ntdll.a
+
+TARGET_GCCLIBS = uuid gdi32 rpcrt4
 
 TARGET_OBJECTS = \
-	DllMain.o \
-	CoXxx.o \
-	Moniker.o \
-	Ole2.o \
-	OleAuto.o \
-	Misc.o \
-	Storage.o \
-	storage32.o \
-	stg_stream.o \
-	stg_bigblockfile.o \
-	compobj.o \
-	memlockbytes.o \
-	rpcrt4_main.o \
-	filemoniker.o \
-	bindctx.o \
-	compositemoniker.o \
-	itemmoniker.o \
 	antimoniker.o \
-	datacache.o
+	bindctx.o \
+	clipboard.o \
+	compobj.o \
+	compositemoniker.o \
+	datacache.o \
+	defaulthandler.o \
+	errorinfo.o \
+	filemoniker.o \
+	ftmarshal.o \
+	git.o \
+	hglobalstream.o \
+	ifs.o \
+	itemmoniker.o \
+	marshal.o \
+	memlockbytes.o \
+	moniker.o \
+	ole2.o \
+	ole2stubs.o \
+	ole2impl.o \
+	ole32_main.o \
+	oleobj.o \
+	oleproxy.o \
+	regsvr.o \
+	rpc.o \
+	stg_bigblockfile.o \
+	stg_stream.o \
+	storage32.o
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-# EOF

@@ -4,18 +4,48 @@
  *
  * Copyright 1999 Thuy Nguyen
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "config.h"
+
+#include <assert.h>
+#include <stdarg.h>
 #include <string.h>
 
-#include <windows.h>
-#include <ole32/ole32.h>
-#include <compobj.h>
-#include <storage32.h>
+#ifdef __REACTOS__
+#include <wine/icom.h>
+#endif
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "windef.h"
+#include "winbase.h"
+#ifdef __REACTOS__
+#include "wingdi.h"
+#endif
+#include "winuser.h"
+#ifndef __REACTOS__
+#include "wine/winbase16.h"
+#endif
+#include "objbase.h"
+#include "ole2.h"
+#include "winerror.h"
 
-#include <debug.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /******************************************************************************
  * HGLOBALLockBytesImpl definition.
@@ -26,7 +56,7 @@
 struct HGLOBALLockBytesImpl
 {
   /*
-   * Needs to be the first item in the stuct 
+   * Needs to be the first item in the stuct
    * since we want to cast this in an ILockBytes pointer
    */
   ICOM_VFIELD(ILockBytes);
@@ -132,7 +162,7 @@ static ICOM_VTABLE(ILockBytes) HGLOBALLockBytesImpl_Vtbl =
 };
 
 /******************************************************************************
- *           CreateILockBytesOnHGlobal     [OLE32.57]
+ *           CreateILockBytesOnHGlobal     [OLE32.@]
  */
 HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL      hGlobal,
                                          BOOL         fDeleteOnRelease,
@@ -153,20 +183,43 @@ HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL      hGlobal,
 }
 
 /******************************************************************************
- *           GetHGlobalFromILockBytes     [OLE32.70]
+ *           GetHGlobalFromILockBytes     [OLE32.@]
  */
 HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
 {
   HGLOBALLockBytesImpl* const pMemLockBytes = (HGLOBALLockBytesImpl*)plkbyt;
+  STATSTG stbuf;
+  HRESULT hres;
+  ULARGE_INTEGER start;
+  ULONG xread;
 
-  if (ICOM_VTBL(pMemLockBytes) == &HGLOBALLockBytesImpl_Vtbl)
+  *phglobal = 0;
+  if (pMemLockBytes->lpVtbl == &HGLOBALLockBytesImpl_Vtbl) {
     *phglobal = pMemLockBytes->supportHandle;
-  else
-    *phglobal = 0;
-
-  if (*phglobal == 0)
+    if (*phglobal == 0)
+      return E_INVALIDARG;
+    return S_OK;
+  }
+  /* It is not our lockbytes implementation, so use a more generic way */
+  hres = ILockBytes_Stat(plkbyt,&stbuf,0);
+  if (hres != S_OK) {
+     ERR("Cannot ILockBytes_Stat, %lx\n",hres);
+     return hres;
+  }
+  FIXME("cbSize is %ld\n",stbuf.cbSize.u.LowPart);
+  *phglobal = GlobalAlloc( GMEM_MOVEABLE|GMEM_SHARE, stbuf.cbSize.u.LowPart);
+  if (!*phglobal)
     return E_INVALIDARG;
-
+  memset(&start,0,sizeof(start));
+  hres = ILockBytes_ReadAt(plkbyt, start, GlobalLock(*phglobal), stbuf.cbSize.u.LowPart, &xread);
+  GlobalUnlock(*phglobal);
+  if (hres != S_OK) {
+    FIXME("%p->ReadAt failed with %lx\n",plkbyt,hres);
+    return hres;
+  }
+  if (stbuf.cbSize.u.LowPart != xread) {
+    FIXME("Read size is not requested size %ld vs %ld?\n",stbuf.cbSize.u.LowPart, xread);
+  }
   return S_OK;
 }
 
@@ -189,15 +242,15 @@ HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(HGLOBAL hGlobal,
 {
   HGLOBALLockBytesImpl* newLockBytes;
   newLockBytes = HeapAlloc(GetProcessHeap(), 0, sizeof(HGLOBALLockBytesImpl));
- 
+
   if (newLockBytes!=0)
   {
     /*
      * Set up the virtual function table and reference count.
      */
-    ICOM_VTBL(newLockBytes) = &HGLOBALLockBytesImpl_Vtbl;
+    newLockBytes->lpVtbl = &HGLOBALLockBytesImpl_Vtbl;
     newLockBytes->ref    = 0;
-  
+
     /*
      * Initialize the support.
      */
@@ -295,7 +348,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
    */
   HGLOBALLockBytesImpl_AddRef(iface);
 
-  return S_OK;;
+  return S_OK;
 }
 
 /******************************************************************************
@@ -399,7 +452,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
   /*
    * The function returns S_OK if the specified number of bytes were read
    * or the end of the array was reached.
-   * It returns STG_E_READFAULT if the number of bytes to read does not equal 
+   * It returns STG_E_READFAULT if the number of bytes to read does not equal
    * the number of bytes actually read.
    */
   if(*pcbRead == cb)
@@ -498,28 +551,28 @@ HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
       ULARGE_INTEGER  libNewSize)   /* [in] */
 {
   HGLOBALLockBytesImpl* const This=(HGLOBALLockBytesImpl*)iface;
+  HGLOBAL supportHandle;
 
   /*
    * As documented.
    */
   if (libNewSize.u.HighPart != 0)
     return STG_E_INVALIDFUNCTION;
- 
+
   if (This->byteArraySize.u.LowPart == libNewSize.u.LowPart)
     return S_OK;
 
   /*
    * Re allocate the HGlobal to fit the new size of the stream.
    */
-  This->supportHandle = GlobalReAlloc(This->supportHandle,
-                                      libNewSize.u.LowPart,
-                                      0);
+  supportHandle = GlobalReAlloc(This->supportHandle, libNewSize.u.LowPart, 0);
 
-  if (This->supportHandle == 0)
+  if (supportHandle == 0)
     return STG_E_MEDIUMFULL;
 
+  This->supportHandle = supportHandle;
   This->byteArraySize.u.LowPart = libNewSize.u.LowPart;
- 
+
   return S_OK;
 }
 
@@ -578,4 +631,3 @@ HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
 
   return S_OK;
 }
-

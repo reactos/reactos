@@ -27,18 +27,15 @@ DEFINES = \
 	-D__REACTOS__ \
 	-D_WIN32_IE=0x600 \
 	-D_WIN32_WINNT=0x501 \
-	-DWINVER=0x501 \
-	-DCOBJMACROS \
-	-D__need_offsetof
+	-DWINVER=0x501
 	
 TARGET_CFLAGS += \
 	$(DEFINES) \
-	-DDCX_USESTYLE=0x10000L \
 	-I$(PATH_TO_TOP)/include/wine
 
 TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
-TARGET_SDKLIBS = ntdll.a kernel32.a libwine.a ntdll.a
+TARGET_SDKLIBS = libwine.a ntdll.a kernel32.a
 
 TARGET_OBJECTS = \
 	driver.o \

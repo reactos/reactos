@@ -1,7 +1,6 @@
 *.coff
 *.dll
-*.d
 *.o
+*.d
 *.sym
 *.map
-

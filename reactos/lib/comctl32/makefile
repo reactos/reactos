@@ -28,14 +28,16 @@ DEFINES = \
 TARGET_CFLAGS += \
 	$(DEFINES) \
 	-DDCX_USESTYLE=0x10000L \
-	-I$(PATH_TO_TOP)/include/wine
+	-I$(PATH_TO_TOP)/include/wine \
+	-Wno-unused
 
 TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = libwine.a gdi32.a msvcrt.a kernel32.a user32.a advapi32.a \
-	winmm.a ole32.a ntdll.a
+TARGET_SDKLIBS = libwine.a
+
+TARGET_GCCLIBS = gdi32 msvcrt kernel32 user32 advapi32 winmm ole32 ntdll
 
 TARGET_BASE = 0x76160000
 
