@@ -185,7 +185,7 @@ asmlinkage void exception_handler(unsigned int edi,
      {
        "Divide Error",
        "Debug Trap",
-       "Unknown(2)",
+       "NMI",
        "Breakpoint",
        "Overflow",
        "BOUND range exceeded",

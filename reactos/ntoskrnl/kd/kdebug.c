@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.7 2000/03/03 00:46:37 ekohl Exp $
+/* $Id: kdebug.c,v 1.8 2000/03/04 22:02:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,121 +12,308 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/kd.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 
-/*
- * Uncomment one of the following symbols to select a debug output style.
- *
- * SCREEN_DEBUGGING:
- *    Debug information is printed on the screen.
- *
- * SERIAL_DEBUGGING:
- *    Debug information is printed to a serial device. Check the port
- *    address, the baud rate and the data format.
- *    Default: COM1 19200 Baud 8N1 (8 data bits, no parity, 1 stop bit)
- *
- * BOCHS_DEBUGGING: (not tested yet)
- *    Debug information is printed to the bochs logging port. Bochs
- *    writes the output to a log file.
- */
+/* serial debug connection */
+#define DEFAULT_DEBUG_PORT      2	/* COM2 */
+#define DEFAULT_DEBUG_BAUD_RATE 19200	/* 19200 Baud */
 
-#define SCREEN_DEBUGGING	/* debug info is printed on the screen */
-//#define SERIAL_DEBUGGING	/* remote debugging */
-//#define BOCHS_DEBUGGING	/* debug output using bochs */
-
-
-#define SERIAL_DEBUG_PORT 1	/* COM 1 */
-// #define SERIAL_DEBUG_PORT 2	/* COM 2 */
-#define SERIAL_DEBUG_BAUD_RATE 19200
-
-
-//#define BOCHS_DEBUGGING
-#ifdef BOCHS_DEBUGGING
+/* bochs debug output */
 #define BOCHS_LOGGER_PORT (0xe9)
-#endif
+
+
+/* TYPEDEFS ****************************************************************/
+
+typedef enum
+{
+	ScreenDebug,
+	SerialDebug,
+	BochsDebug
+} DEBUGTYPE;
 
 
 /* VARIABLES ***************************************************************/
 
-BOOLEAN KdDebuggerEnabled = FALSE;		/* EXPORTED */
-BOOLEAN KdDebuggerNotPresent = TRUE;		/* EXPORTED */
+BOOLEAN
+__declspec(dllexport)
+KdDebuggerEnabled = FALSE;		/* EXPORTED */
+
+BOOLEAN
+__declspec(dllexport)
+KdDebuggerNotPresent = TRUE;		/* EXPORTED */
+
+
+static BOOLEAN KdpBreakPending = FALSE;
+static BOOLEAN KdpBreakRecieved = FALSE;
+static DEBUGTYPE KdpDebugType = ScreenDebug;
 
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-VOID
-KdInitSystem (VOID)
+static void
+PrintString (char* fmt,...)
 {
+	char buffer[512];
+	va_list ap;
 
-	/* FIXME: parse kernel command line */
+	va_start(ap, fmt);
+	vsprintf(buffer, fmt, ap);
+	va_end(ap);
+
+	HalDisplayString (buffer);
+}
+
+
+VOID
+KdInitSystem (
+	ULONG		Reserved,
+	boot_param*	BootParam
+	)
+{
+	KD_PORT_INFORMATION PortInfo;
+	ULONG Value;
+	PCHAR p1, p2;
+
+	/* set debug port default values */
+	PortInfo.ComPort  = DEFAULT_DEBUG_PORT;
+	PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+
+	/*
+	 * parse kernel command line
+	 */
+
+	/* check for 'DEBUGPORT' */
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "DEBUGPORT", 9))
+		{
+			p2 += 9;
+			if (*p2 != '=')
+				break;
+			p2++;
+			if (!_strnicmp (p2, "SCREEN", 6))
+			{
+				p2 += 6;
+				KdDebuggerEnabled = TRUE;
+				KdpDebugType = ScreenDebug;
+			}
+			else if (!_strnicmp (p2, "BOCHS", 5))
+			{
+				p2 += 5;
+				KdDebuggerEnabled = TRUE;
+				KdpDebugType = BochsDebug;
+			}
+			else if (!_strnicmp (p2, "COM", 3))
+			{
+				p2 += 3;
+				Value = (ULONG)atol (p2);
+				if (Value > 0 && Value < 5)
+				{
+					KdDebuggerEnabled = TRUE;
+					KdpDebugType = SerialDebug;
+					PortInfo.ComPort = Value;
+				}
+			}
+			break;
+		}
+		p1 = p2;
+	}
+
+	/* check for 'BAUDRATE' */
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "BAUDRATE", 8))
+		{
+			p2 += 8;
+			if (*p2 != '=')
+				break;
+			p2++;
+			Value = (ULONG)atol (p2);
+			if (Value > 0)
+			{
+				KdDebuggerEnabled = TRUE;
+				KdpDebugType = SerialDebug;
+				PortInfo.BaudRate = Value;
+			}
+			break;
+		}
+		p1 = p2;
+	}
+
+	/* Check for 'DEBUG'. Dont' accept 'DEBUGPORT'!*/
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "DEBUG", 5) &&
+		    _strnicmp (p2, "DEBUGPORT", 9))
+		{
+			p2 += 5;
+			KdDebuggerEnabled = TRUE;
+			KdpDebugType = SerialDebug;
+			break;
+		}
+		p1 = p2;
+	}
+
+	/* Check for 'NODEBUG' */
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "NODEBUG", 7))
+		{
+			p2 += 7;
+			KdDebuggerEnabled = FALSE;
+			break;
+		}
+		p1 = p2;
+	}
+
+	/* Check for 'CRASHDEBUG' */
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "CRASHDEBUG", 10))
+		{
+			p2 += 10;
+			KdDebuggerEnabled = FALSE;
+			break;
+		}
+		p1 = p2;
+	}
+
+	/* Check for 'BREAK' */
+	p1 = BootParam->kernel_parameters;
+	while (p1 && (p2 = strchr (p1, '/')))
+	{
+		p2++;
+		if (!_strnicmp (p2, "BREAK", 5))
+		{
+			p2 += 7;
+			KdpBreakPending = TRUE;
+			break;
+		}
+		p1 = p2;
+	}
+
+
+	/* print some information */
+	if (KdDebuggerEnabled == TRUE)
+	{
+		if (KdpDebugType == ScreenDebug)
+		{
+			PrintString ("\n   Screen debugging enabled\n\n");
+		}
+		else if (KdpDebugType == BochsDebug)
+		{
+			PrintString ("\n   Bochs debugging enabled\n\n");
+		}
+		else if (KdpDebugType == SerialDebug)
+		{
+			PrintString ("\n   Serial debugging enabled: COM%ld %ld Baud\n\n",
+			             PortInfo.ComPort, PortInfo.BaudRate);
+		}
+	}
+	else
+		PrintString ("\n   Debugging disabled\n\n");
+
 
 	/* initialize debug port */
-#ifdef SERIAL_DEBUGGING
-	KD_PORT_INFORMATION PortInfo;
-
-	PortInfo.ComPort  = SERIAL_DEBUG_PORT;
-	PortInfo.BaudRate = SERIAL_DEBUG_BAUD_RATE;
-
-	KdPortInitialize (&PortInfo,
-	                  0,
-	                  0);
-#endif
+	if (KdDebuggerEnabled && KdpDebugType == SerialDebug)
+	{
+		KdPortInitialize (&PortInfo,
+		                  0,
+		                  0);
+	}
 }
 
 
 ULONG
 KdpPrintString (PANSI_STRING String)
 {
-#if defined(SERIAL_DEBUGGING) || defined(BOCHS_DEBUGGING)
-   PCH pch = String->Buffer;
-#endif
+	PCH pch = String->Buffer;
 
-#ifdef SCREEN_DEBUGGING
-   HalDisplayString (String->Buffer);
-#endif
+	if (KdpDebugType == ScreenDebug)
+	{
+		HalDisplayString (String->Buffer);
+	}
+	else if (KdpDebugType == SerialDebug)
+	{
+		while (*pch != 0)
+		{
+			if (*pch == '\n')
+			{
+				KdPortPutByte ('\r');
+			}
+			KdPortPutByte (*pch);
+			pch++;
+		}
+	}
+	else if (KdpDebugType == BochsDebug)
+	{
+		while (*pch != 0)
+		{
+			if (*pch == '\n')
+			{
+				WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
+			}
+			WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
+			pch++;
+		}
+	}
 
-#ifdef SERIAL_DEBUGGING
-   while (*pch != 0)
-   {
-       if (*pch == '\n')
-       {
-           KdPortPutByte ('\r');
-       }
-
-       KdPortPutByte (*pch);
-
-       pch++;
-   }
-#endif
-
-#ifdef BOCHS_DEBUGGING
-   while (*pch != 0)
-   {
-       if (*pch == '\n')
-       {
-           WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
-       }
-
-       WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
-
-       pch++;
-   }
-#endif
-
-    return (ULONG)String->Length;
+	return (ULONG)String->Length;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
 /* NTOSKRNL.KdPollBreakIn */
 
-BYTE
+BOOLEAN
 STDCALL
 KdPollBreakIn (
 	VOID
 	)
 {
-	return KdPortPollByte();
+	BOOLEAN Result = FALSE;
+	UCHAR ByteRead;
+
+	if (KdDebuggerEnabled == FALSE || KdpDebugType != SerialDebug)
+		return Result;
+
+//	Flags = KiDisableInterrupts();
+
+	HalDisplayString ("Waiting for kernel debugger connection...\n");
+
+	if (KdPortPollByte (&ByteRead))
+	{
+		if (ByteRead == 0x62)
+		{
+			if (KdpBreakPending == TRUE)
+			{
+				KdpBreakPending = FALSE;
+				KdpBreakRecieved = TRUE;
+				Result = TRUE;
+			}
+			HalDisplayString ("   Kernel debugger connected\n");
+		}
+		else
+		{
+			HalDisplayString ("   Kernel debugger connection failed\n");
+		}
+	}
+
+//	KiRestoreInterrupts (Flags);
+
+	return Result;
 }
 
 VOID

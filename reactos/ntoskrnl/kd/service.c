@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.2 2000/02/27 02:09:40 ekohl Exp $
+/* $Id: service.c,v 1.3 2000/03/04 22:02:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,8 +49,8 @@ KdpServiceDispatcher (
 
 void interrupt_handler2d(void);
    __asm__("\n\t.global _interrupt_handler2d\n\t"
-           "_interrupt_handler2d:\n\t"
-           
+	   "_interrupt_handler2d:\n\t"
+	   
 	   /* Save the user context */
 	   "pushl %ebp\n\t"       /* Ebp */
 	   
@@ -77,10 +77,10 @@ void interrupt_handler2d(void);
 	   
 	   "pushl $0\n\t"         /* ContextFlags */
 	   
-           /*  Set ES to kernel segment  */
-           "movw  $"STR(KERNEL_DS)",%bx\n\t"
-           "movw %bx,%es\n\t"
-           
+	   /*  Set ES to kernel segment  */
+	   "movw  $"STR(KERNEL_DS)",%bx\n\t"
+	   "movw %bx,%es\n\t"
+	   
            /* FIXME: check to see if SS is valid/inrange */
            
            /*  DS is now also kernel segment */
@@ -90,10 +90,10 @@ void interrupt_handler2d(void);
            "pushl %edx\n\t"
            "pushl %ecx\n\t"
            "pushl %eax\n\t"
-           "call _KdpServiceDispatcher\n\t"
-           "addl $12,%esp\n\t"   /* restore stack pointer */
+	   "call _KdpServiceDispatcher\n\t"
+	   "addl $12,%esp\n\t"   /* restore stack pointer */
 
-           /*  Restore the user context  */
+	   /*  Restore the user context  */
 	   "addl $4,%esp\n\t"    /* UserContext */
 	   "addl $24,%esp\n\t"   /* Dr[0-3,6-7] */
 	   "addl $112,%esp\n\t"  /* FloatingSave */
@@ -107,10 +107,10 @@ void interrupt_handler2d(void);
 	   "popl %ebx\n\t"       /* Ebx */
 	   "popl %edx\n\t"       /* Edx */
 	   "popl %ecx\n\t"       /* Ecx */
-	   "addl $4,%esp\n\t"       /* Eax (Not restored) */
+	   "addl $4,%esp\n\t"    /* Eax (Not restored) */
 	   
 	   "popl %ebp\n\t"       /* Ebp */
 	   
-           "iret\n\t");
+	   "iret\n\t");
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: ddk.h,v 1.10 2000/03/04 20:45:33 ea Exp $
+/* $Id: ddk.h,v 1.11 2000/03/04 21:59:32 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -207,6 +207,14 @@ STDCALL
 KdPortInitialize (PKD_PORT_INFORMATION PortInformation,
 		  DWORD Unknown1,
 		  DWORD Unknown2);
+
+BOOLEAN
+STDCALL
+KdPortGetByte (PUCHAR ByteRecieved);
+
+BOOLEAN
+STDCALL
+KdPortPollByte (PUCHAR ByteRecieved);
 
 VOID
 STDCALL

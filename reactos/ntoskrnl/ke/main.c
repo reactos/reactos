@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.38 2000/02/29 23:57:45 ea Exp $
+/* $Id: main.c,v 1.39 2000/03/04 22:03:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,7 +39,21 @@ __declspec(dllexport)
 NtGlobalFlag = 0; /* FIXME: EXPORTED */
 
 /* FUNCTIONS ****************************************************************/
-                                            
+
+static void
+PrintString (char* fmt,...)
+{
+	char buffer[512];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsprintf(buffer, fmt, ap);
+	va_end(ap);
+
+	HalDisplayString (buffer);
+}
+
+
 void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 		    unsigned int len)
 /*
@@ -86,19 +100,19 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 	__asm__("movl %0,%%db1\n\t"
 		: /* no outputs */
 		: "d" (addr));
-	break;                        
+	break;
 	
       case 2:
 	__asm__("movl %0,%%db2\n\t"
 		: /* no outputs */
 		: "d" (addr));
-	break;                        
+	break;
 	
       case 3:
 	__asm__("movl %0,%%db3\n\t"
 		: /* no outputs */
 		: "d" (addr));
-	break;                        
+	break;
      }
    
    /*
@@ -158,36 +172,49 @@ asmlinkage void _main(boot_param* _bp)
     * Copy the parameters to a local buffer because lowmem will go away
     */
    memcpy(&bp,_bp,sizeof(boot_param));
-      
+
+   /*
+    * FIXME: Preliminary hack!!!!
+    * Initializes the kernel parameter line.
+    * This should be done by the boot loader.
+    */
+   strcpy (bp.kernel_parameters, "/DEBUGPORT=SCREEN");
+
    /*
     * Initalize the hal (Phase 0)
     */
    HalInitSystem (0, &bp);
-   
-   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
-   /*
-    * Initialize the debug output
-    */
-   KdInitSystem ();
+   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    if (start < ((int)&end))
      {
-        DbgPrint("start %x end %x\n",start,(int)&end);
-	DbgPrint("Kernel booted incorrectly, aborting\n");
-	DbgPrint("Reduce the amount of uninitialized data\n");
-	for(;;);
-     }   
+	PrintString("start %x end %x\n",start,(int)&end);
+	PrintString("Kernel booted incorrectly, aborting\n");
+	PrintString("Reduce the amount of uninitialized data\n");
+	PrintString("\n\n*** The system has halted ***\n");
+	for(;;)
+	     __asm__("hlt\n\t");
+     }
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
-   
+
    last_kernel_address = KERNEL_BASE;
    for (i=0; i<=bp.nr_files; i++)
      {
 	last_kernel_address = last_kernel_address +
 	  PAGE_ROUND_UP(bp.module_length[i]);
      }
-   
+
+   /*
+    * Initialize the kernel debugger
+    */
+   KdInitSystem (0, &bp);
+//   if (KdPollBreakIn ())
+//     {
+//	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+//     }
+
    /*
     * Initalize various critical subsystems
     */
@@ -213,6 +240,12 @@ asmlinkage void _main(boot_param* _bp)
    memcpy(old_idt, KiIdt, sizeof(old_idt));
    old_idt_valid = 0;
    
+   /* Just a test. Exceptions and Interrupts are initialized now */
+   if (KdPollBreakIn ())
+     {
+	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+     }
+
    /*
     * Initalize services loaded at boot time
     */

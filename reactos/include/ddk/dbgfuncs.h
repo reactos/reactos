@@ -1,6 +1,14 @@
+#ifndef __INCLUDE_DDK_DBGFUNCS_H
+#define __INCLUDE_DDK_DBGFUNCS_H
+/* $Id: dbgfuncs.h,v 1.4 2000/03/04 21:58:49 ekohl Exp $ */
 
-VOID STDCALL DbgBreakPoint(VOID);
+#define DBG_STATUS_CONTROL_C       1
+#define DBG_STATUS_SYSRQ           2
+#define DBG_STATUS_BUGCHECK_FIRST  3
+#define DBG_STATUS_BUGCHECK_SECOND 4
+#define DBG_STATUS_FATAL           5
 VOID STDCALL DbgBreakPointWithStatus (ULONG Status);
+VOID STDCALL DbgBreakPoint(VOID);
 ULONG DbgPrint(PCH Format,...);
 
 #define DBG_GET_SHOW_FACILITY 0x0001
@@ -10,3 +18,4 @@ ULONG DbgPrint(PCH Format,...);
 VOID DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags);
 VOID DbgPrintErrorMessage(NTSTATUS ErrorCode);
 
+#endif /* __INCLUDE_DDK_DBGFUNCS_H */

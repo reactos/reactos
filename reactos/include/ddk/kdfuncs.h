@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_KDFUNCS_H
 #define __INCLUDE_DDK_KDFUNCS_H
-/* $Id: kdfuncs.h,v 1.2 2000/02/29 23:57:44 ea Exp $ */
+/* $Id: kdfuncs.h,v 1.3 2000/03/04 21:58:49 ekohl Exp $ */
 
 /* --- NTOSKRNL.EXE --- */
 #if defined(__NTOSKRNL__)
@@ -31,15 +31,15 @@ KdPortInitialize (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
-BYTE
+BOOLEAN
 STDCALL
 KdPortGetByte (
-	VOID
+	PUCHAR	ByteRecieved
 	);
-BYTE
+BOOLEAN
 STDCALL
 KdPortPollByte (
-	VOID
+	PUCHAR	ByteRecieved
 	);
 VOID
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.7 2000/02/29 23:57:45 ea Exp $
+/* $Id: kdbg.c,v 1.8 2000/03/04 22:01:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,36 +258,41 @@ KdPortInitialize (
 
 
 /* HAL.KdPortGetByte */
-BYTE
+BOOLEAN
 STDCALL
 KdPortGetByte (
-	VOID
+	PUCHAR	ByteRecieved
 	)
 {
 	if (PortInitialized == FALSE)
-		return 0;
+		return FALSE;
 
 	if ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_DR))
-		return (BYTE)READ_PORT_UCHAR (SER_RBR(PortBase));
+	{
+		*ByteRecieved = READ_PORT_UCHAR (SER_RBR(PortBase));
+		return TRUE;
+	}
 
-	return 0;
+	return FALSE;
 }
 
 
 /* HAL.KdPortPollByte */
-BYTE
+BOOLEAN
 STDCALL
 KdPortPollByte (
-	VOID
+	PUCHAR	ByteRecieved
 	)
 {
 	if (PortInitialized == FALSE)
-		return 0;
+		return FALSE;
 
 	while ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_DR) == 0)
 		;
 
-	return (BYTE)READ_PORT_UCHAR (SER_RBR(PortBase));
+	*ByteRecieved = READ_PORT_UCHAR (SER_RBR(PortBase));
+
+	return TRUE;
 }
 
 

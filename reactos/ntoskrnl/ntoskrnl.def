@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.50 2000/03/04 20:45:34 ea Exp $
+; $Id: ntoskrnl.def,v 1.51 2000/03/04 22:00:21 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -665,9 +665,9 @@ HalSetRealTimeClock
 ;IoSetPartitionInformation
 ;IoWritePartitionTable
 KdComPortInUse DATA
-KdPortGetByte@0
+KdPortGetByte@4
 KdPortInitialize@12
-KdPortPollByte@0
+KdPortPollByte@4
 KdPortPutByte@4
 KdPortRestore@0
 KdPortSave@0

@@ -33,6 +33,11 @@ typedef struct
          * List of module lengths (terminated by a 0)
          */
         unsigned int module_length[64];
+
+        /*
+         * Kernel parameter string
+         */
+        char kernel_parameters[256];
 } boot_param;
 
 
@@ -87,6 +92,6 @@ VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmImportHive(PCHAR);
-VOID KdInitSystem(VOID);
+VOID KdInitSystem(ULONG Reserved, boot_param* BootParam);
 
 #endif
