@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.10 2001/08/27 01:25:17 ekohl Exp $
+/* $Id: beep.c,v 1.11 2002/07/18 00:29:19 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -31,7 +31,6 @@ typedef struct _BEEP_DEVICE_EXTENSION
 
 
 /* FUNCTIONS ***************************************************************/
-
 
 static VOID STDCALL
 BeepDPC(PKDPC Dpc,
@@ -245,25 +244,14 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   UNICODE_STRING SymlinkName;
   NTSTATUS Status;
 
-  DbgPrint("Beep Device Driver 0.0.3\n");
+  DPRINT("Beep Device Driver 0.0.3\n");
 
+  DriverObject->Flags = 0;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = BeepCreate;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = BeepClose;
   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = BeepCleanup;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BeepDeviceControl;
   DriverObject->DriverUnload = BeepUnload;
-
-  /* set up device extension */
-  DeviceExtension = DeviceObject->DeviceExtension;
-  DeviceExtension->BeepOn = FALSE;
-
-  KeInitializeDpc(&DeviceExtension->Dpc,
-		  BeepDPC,
-		  DeviceExtension);
-  KeInitializeTimer(&DeviceExtension->Timer);
-  KeInitializeEvent(&DeviceExtension->Event,
-		    SynchronizationEvent,
-		    FALSE);
 
   RtlInitUnicodeString(&DeviceName,
 		       L"\\Device\\Beep");
@@ -277,6 +265,19 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(Status))
     return Status;
 
+  /* set up device extension */
+  DeviceExtension = DeviceObject->DeviceExtension;
+  DeviceExtension->BeepOn = FALSE;
+
+  KeInitializeDpc(&DeviceExtension->Dpc,
+		  BeepDPC,
+		  DeviceExtension);
+  KeInitializeTimer(&DeviceExtension->Timer);
+  KeInitializeEvent(&DeviceExtension->Event,
+		    SynchronizationEvent,
+		    FALSE);
+
+  /* Create the dos device link */
   RtlInitUnicodeString(&SymlinkName,
 		       L"\\??\\Beep");
   IoCreateSymbolicLink(&SymlinkName,
