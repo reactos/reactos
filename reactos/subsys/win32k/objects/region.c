@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.45 2004/03/23 17:07:41 gvg Exp $ */
+/* $Id: region.c,v 1.46 2004/04/03 20:36:56 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -78,7 +78,8 @@ static inline int xmemcheck(ROSRGNDATA *reg, LPRECT *rect, LPRECT *firstrect ) {
 		    return 0;
 		RtlCopyMemory( temp, *firstrect, reg->rdh.nRgnSize );
 		reg->rdh.nRgnSize *= 2;
-		ExFreePool( *firstrect );
+		if (*firstrect != &reg->BuiltInRect)
+		    ExFreePool( *firstrect );
 		*firstrect = temp;
 		*rect = (*firstrect)+reg->rdh.nCount;
     }
@@ -141,7 +142,7 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 	  if( !temp )
 		return FALSE;
 
-	  if( dst->Buffer )
+	  if( dst->Buffer && dst->Buffer != (char *) &dst->BuiltInRect )
 	  	ExFreePool( dst->Buffer );	//free the old buffer
 	  dst->Buffer = temp;
       dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
@@ -216,7 +217,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
     }
     else{
       xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
-	  if( rgnDst->Buffer )
+	  if( rgnDst->Buffer && rgnDst->Buffer != (char *) &rgnDst->BuiltInRect )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer. will be assigned to xrect below.
 	}
 
@@ -279,7 +280,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       if(!temp)
 	      return FALSE;
 
-	  if( rgnDst->Buffer )
+	  if( rgnDst->Buffer && rgnDst->Buffer != (char *) &rgnDst->BuiltInRect )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer
       (PRECT)rgnDst->Buffer = temp;
       rgnDst->rdh.nCount = i;
@@ -817,7 +818,8 @@ REGION_RegionOp(
 			else{
 				newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
 				RtlCopyMemory( newReg->Buffer, prev_rects, newReg->rdh.nRgnSize );
-				ExFreePool( prev_rects );
+				if (prev_rects != &newReg->BuiltInRect)
+					ExFreePool( prev_rects );
 			}
 		}
 		else
@@ -827,7 +829,8 @@ REGION_RegionOp(
 		     * the region is empty
 		     */
 		    newReg->rdh.nRgnSize = sizeof(RECT);
-		    ExFreePool( newReg->Buffer );
+		    if (newReg->Buffer != (char *) &newReg->BuiltInRect)
+			ExFreePool( newReg->Buffer );
 		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, sizeof(RECT), TAG_REGION );
 			ASSERT( newReg->Buffer );
 		}
@@ -838,7 +841,8 @@ REGION_RegionOp(
 	else
 		newReg->rdh.iType = (newReg->rdh.nCount > 1)? COMPLEXREGION : SIMPLEREGION;
 
-	ExFreePool( oldRects );
+	if (oldRects != &newReg->BuiltInRect)
+		ExFreePool( oldRects );
     return;
 }
 
@@ -1473,33 +1477,45 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   PROSRGNDATA pReg;
   BOOL bRet;
 
-  if((hReg = (HRGN)GDIOBJ_AllocObj(sizeof(ROSRGNDATA), GDI_OBJECT_TYPE_REGION,
-                                   (GDICLEANUPPROC) RGNDATA_InternalDelete))){
-	if( (pReg = RGNDATA_LockRgn(hReg)) ){
+  if ((hReg = (HRGN) GDIOBJ_AllocObj(sizeof(ROSRGNDATA), GDI_OBJECT_TYPE_REGION,
+                                     (GDICLEANUPPROC) RGNDATA_InternalDelete)))
+    {
+      if (NULL != (pReg = RGNDATA_LockRgn(hReg)))
+        {
+          if (1 == n)
+            {
+              pReg->Buffer = (char *) &pReg->BuiltInRect;
+            }
+          else
+            {
+              pReg->Buffer = ExAllocatePoolWithTag(PagedPool, n * sizeof(RECT), TAG_REGION);
+            }
+          if (NULL != pReg->Buffer)
+            {
+              EMPTY_REGION(pReg);
+              pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
+              pReg->rdh.nCount = n;
+              pReg->rdh.nRgnSize = n*sizeof(RECT);
 
-      if ((pReg->Buffer = ExAllocatePoolWithTag(PagedPool, n * sizeof(RECT), TAG_REGION))){
-      	EMPTY_REGION(pReg);
-      	pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
-      	pReg->rdh.nCount = n;
-      	pReg->rdh.nRgnSize = n*sizeof(RECT);
+              bRet = RGNDATA_UnlockRgn(hReg);
+              ASSERT(bRet);
 
-        bRet = RGNDATA_UnlockRgn(hReg);
-        ASSERT(bRet);
+              return hReg;
+            }
+        }
+      else
+        {
+          RGNDATA_FreeRgn(hReg);
+        }
+    }
 
-      	return hReg;
-	  }
-
-	}
-	else
-		RGNDATA_FreeRgn(hReg);
-  }
   return NULL;
 }
 
 BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
 {
   ASSERT(pRgn);
-  if(pRgn->Buffer)
+  if(pRgn->Buffer && pRgn->Buffer != (char *) &pRgn->BuiltInRect)
     ExFreePool(pRgn->Buffer);
   return TRUE;
 }
