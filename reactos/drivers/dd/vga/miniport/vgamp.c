@@ -398,7 +398,7 @@ VOID  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
 VOID  VGASetPaletteRegisters(IN PWORD  PaletteRegisters,
                              OUT PSTATUS_BLOCK  StatusBlock)
 {
-  UNIMPLEMENTED;
+  ;
 
 /*
   We don't need the following code because the palette registers are set correctly on VGA initialization.
