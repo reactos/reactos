@@ -92,7 +92,7 @@ NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
 	break;
 	
       case ThreadAmILastThread:
-	break;	
+	break;
 	
       case ThreadPriorityBoost:
 	break;
@@ -114,7 +114,76 @@ NtQueryInformationThread (
 	IN	ULONG		ThreadInformationLength,
 	OUT	PULONG		ReturnLength)
 {
-	UNIMPLEMENTED
+   PETHREAD Thread;
+   NTSTATUS Status;
+
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_QUERY_INFORMATION,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+
+   switch (ThreadInformationClass)
+     {
+      case ThreadBasicInformation:
+	break;
+
+      case ThreadTimes:
+	break;
+
+      case ThreadPriority:
+	break;
+
+      case ThreadBasePriority:
+	break;
+
+      case ThreadAffinityMask:
+	break;
+
+      case ThreadImpersonationToken:
+	break;
+
+      case ThreadDescriptorTableEntry:
+	UNIMPLEMENTED;
+	break;
+
+      case ThreadEventPair:
+	UNIMPLEMENTED;
+	break;
+
+      case ThreadQuerySetWin32StartAddress:
+	break;
+
+      case ThreadZeroTlsCell:
+	break;
+
+      case ThreadPerformanceCount:
+	break;
+
+      case ThreadAmILastThread:
+	{
+	   BOOLEAN *LastThread;
+	   PLIST_ENTRY Entry;
+
+	   LastThread = (PBOOLEAN) ThreadInformation;
+	   Entry = &(Thread->ThreadsProcess->ThreadListHead);
+	   *LastThread = (Entry->Flink->Flink == Entry)?TRUE:FALSE;
+	}
+	break;
+
+      case ThreadPriorityBoost:
+	break;
+
+      default:
+	Status = STATUS_UNSUCCESSFUL;
+     }
+   ObDereferenceObject(Thread);
+   return Status;
 }
 
 VOID KeSetPreviousMode(ULONG Mode)

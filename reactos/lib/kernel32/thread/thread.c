@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.18 2000/09/01 17:09:50 ekohl Exp $
+/* $Id: thread.c,v 1.19 2000/09/05 13:52:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -170,6 +170,26 @@ DWORD STDCALL GetCurrentThreadId()
 VOID STDCALL ExitThread(UINT uExitCode)
 {
    NTSTATUS errCode;
+   BOOLEAN LastThread;
+   NTSTATUS Status;
+
+   /*
+    * Terminate process if this is the last thread
+    * of the current process
+    */
+   Status = NtQueryInformationThread(NtCurrentThread(),
+				     ThreadAmILastThread,
+				     &LastThread,
+				     sizeof(BOOLEAN),
+				     NULL);
+   if (NT_SUCCESS(Status) && LastThread == TRUE)
+     {
+	ExitProcess (uExitCode);
+     }
+
+   /* FIXME: notify csrss of thread termination */
+
+   LdrShutdownThread();
 
    errCode = NtTerminateThread(NtCurrentThread(),
 			       uExitCode);
@@ -282,7 +302,7 @@ TerminateThread (
 	)
 {
    NTSTATUS errCode;
-   
+
    errCode = NtTerminateThread(hThread,
 			    dwExitCode);
    if (!NT_SUCCESS(errCode))

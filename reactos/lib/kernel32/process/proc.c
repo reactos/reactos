@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.34 2000/09/05 11:00:07 ekohl Exp $
+/* $Id: proc.c,v 1.35 2000/09/05 13:52:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -506,6 +506,16 @@ FatalAppExitW (
 	)
 {
 	return;
+}
+
+
+VOID
+STDCALL
+FatalExit (
+	  int ExitCode
+	  )
+{
+	ExitProcess(ExitCode);
 }
 
 

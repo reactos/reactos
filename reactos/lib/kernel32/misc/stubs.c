@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.21 2000/09/01 17:09:19 ekohl Exp $
+/* $Id: stubs.c,v 1.22 2000/09/05 13:52:04 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -745,16 +745,6 @@ ExtendVirtualBuffer (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-VOID
-STDCALL
-FatalExit (
-	  int ExitCode
-	  )
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 

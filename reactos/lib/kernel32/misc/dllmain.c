@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.14 2000/09/05 10:59:27 ekohl Exp $
+/* $Id: dllmain.c,v 1.15 2000/09/05 13:52:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
+#include <ntdll/ldr.h>
 #include <napi/shared_data.h>
 #include <windows.h>
 #include <wchar.h>
@@ -51,6 +52,9 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 		(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
 
 	     DPRINT("DLL_PROCESS_ATTACH\n");
+
+	     LdrDisableThreadCalloutsForDll ((PVOID)hInst);
+
 	     /*
 	      * Connect to the csrss server
 	      */
