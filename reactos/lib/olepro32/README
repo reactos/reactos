@@ -1,0 +1,9 @@
+29Nov99
+Sean Langley 
+
+This library (OLEPRO32.DLL) is basically a sub-set of what is in OLEAUT32.DLL.
+The main difference under Win32 is that OLEPRO32.DLL can be used
+as a type library.  There are two functions in this DLL which are already 
+implemented in Wine.  They are OleCreateFontIndirect, and OleTranslateColor.
+The spec file for both of these functions points to the functions in the
+OLEAUT32.DLL.

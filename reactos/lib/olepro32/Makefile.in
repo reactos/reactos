@@ -1,0 +1,12 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = olepro32.dll
+IMPORTS   = oleaut32
+
+C_SRCS = olepro32stubs.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
