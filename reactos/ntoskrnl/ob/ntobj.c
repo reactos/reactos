@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.20 2004/07/17 03:06:01 ion Exp $
+/* $Id: ntobj.c,v 1.21 2004/07/17 12:08:21 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -71,7 +71,7 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
 /**********************************************************************
  * NAME							EXPORTED
  *	NtQueryObject
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -135,11 +135,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	      }
 	    else
 	      {
-#if defined(__GNUC__)
-		BasicInfo->CreateTime.QuadPart = 0ULL;
-#else
-		BasicInfo->CreateTime.QuadPart = 0;
-#endif
+		BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
 	      }
 	    Status = STATUS_SUCCESS;
 	  }
@@ -216,7 +212,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 /**********************************************************************
  * NAME							EXPORTED
  *	ObMakeTemporaryObject
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -228,7 +224,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
  * @implemented
  */
 VOID STDCALL
-ObMakeTemporaryObject (IN PVOID ObjectBody)
+ObMakeTemporaryObject(IN PVOID ObjectBody)
 {
   POBJECT_HEADER ObjectHeader;
 
@@ -240,7 +236,7 @@ ObMakeTemporaryObject (IN PVOID ObjectBody)
 /**********************************************************************
  * NAME							EXPORTED
  *	NtMakeTemporaryObject
- *	
+ *
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -250,7 +246,7 @@ ObMakeTemporaryObject (IN PVOID ObjectBody)
  * REVISIONS
  */
 NTSTATUS STDCALL
-NtMakeTemporaryObject (IN HANDLE Handle)
+NtMakeTemporaryObject(IN HANDLE Handle)
 {
   POBJECT_HEADER ObjectHeader;
   PVOID Object;
@@ -260,7 +256,7 @@ NtMakeTemporaryObject (IN HANDLE Handle)
 				     0,
 				     NULL,
 				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     & Object,
+				     &Object,
 				     NULL);
   if (Status != STATUS_SUCCESS)
     {
@@ -275,18 +271,43 @@ NtMakeTemporaryObject (IN HANDLE Handle)
   return STATUS_SUCCESS;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-NtMakePermanentObject(
-	IN HANDLE Object
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtMakePermanentObject
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ */
+NTSTATUS STDCALL
+NtMakePermanentObject(IN HANDLE Handle)
+{
+  POBJECT_HEADER ObjectHeader;
+  PVOID Object;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(Handle,
+				     0,
+				     NULL,
+				     (KPROCESSOR_MODE)KeGetPreviousMode(),
+				     &Object,
+				     NULL);
+  if (Status != STATUS_SUCCESS)
+    {
+      return Status;
+    }
+
+  ObjectHeader = BODY_TO_HEADER(Object);
+  ObjectHeader->Permanent = TRUE;
+
+  ObDereferenceObject(Object);
+
+  return STATUS_SUCCESS;
+}
 
 /* EOF */
