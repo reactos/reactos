@@ -5,7 +5,7 @@
 all: loadros.com
 
 loadros.com: loadros.asm
-	nasm -fbin loadros.asm -o loadros.com
+	$(NASM_CMD) -fbin loadros.asm -o loadros.com
 
 clean:
 	- $(RM) loadros.com
