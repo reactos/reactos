@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.24 2004/04/06 21:53:48 weiden Exp $ */
+/* $Id: dib16bpp.c,v 1.25 2004/04/06 23:05:36 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -607,8 +607,7 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG X, Y, SourceX, SourceY, Source, wd, Dest;
-  LONG RoundedRight;
+  ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
   ULONG *DestBits;
   
   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x1);
@@ -616,7 +615,7 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   DestBits = (ULONG*)(DestSurf->pvScan0 +
                       (DestRect->left << 1) +
                       DestRect->top * DestSurf->lDelta);
-  wd = ((DestRect->right - DestRect->left) << 1) - DestSurf->lDelta;
+  wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 1);
   
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
@@ -653,7 +652,7 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
     }
     SourceY++;
-    DestBits = (ULONG*)((ULONG_PTR)DestBits - wd);
+    DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
   }
   
   return TRUE;

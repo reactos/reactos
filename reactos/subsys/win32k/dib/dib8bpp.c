@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.18 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: dib8bpp.c,v 1.19 2004/04/06 23:05:36 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -568,7 +568,71 @@ DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  POINTL  *SourcePoint,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  return FALSE;
+  ULONG RoundedRight, X, Y, SourceX, SourceY, Source, wd, Dest;
+  ULONG *DestBits;
+  
+  RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x3);
+  SourceY = SourcePoint->y;
+  DestBits = (ULONG*)(DestSurf->pvScan0 + DestRect->left +
+                      (DestRect->top * DestSurf->lDelta));
+  wd = DestSurf->lDelta - (DestRect->right - DestRect->left);
+  
+  for(Y = DestRect->top; Y < DestRect->bottom; Y++)
+  {
+    DestBits = (ULONG*)(DestSurf->pvScan0 + DestRect->left +
+                        (Y * DestSurf->lDelta));
+    SourceX = SourcePoint->x;
+    for (X = DestRect->left; X < RoundedRight; X += 4, DestBits++)
+    {
+      Dest = *DestBits;
+      
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX++, SourceY);
+      if(Source != iTransColor)
+      {
+        Dest &= 0xFFFFFF00;
+        Dest |= (XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+      }
+
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX++, SourceY);
+      if(Source != iTransColor)
+      {
+        Dest &= 0xFFFF00FF;
+        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 8) & 0xFF00);
+      }
+      
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX++, SourceY);
+      if(Source != iTransColor)
+      {
+        Dest &= 0xFF00FFFF;
+        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 16) & 0xFF0000);
+      }
+      
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX++, SourceY);
+      if(Source != iTransColor)
+      {
+        Dest &= 0x00FFFFFF;
+        Dest |= ((XLATEOBJ_iXlate(ColorTranslation, Source) << 24) & 0xFF000000);
+      }
+
+      *DestBits = Dest;
+    }
+    
+    if(X < DestRect->right)
+    {
+      for (; X < DestRect->right; X++)
+      {
+        Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX++, SourceY);
+        if(Source != iTransColor)
+        {
+          *((BYTE*)DestBits) = (BYTE)(XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFF);
+        }
+        DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+      }
+    }
+    SourceY++;
+  }
+  
+  return TRUE;
 }
 
 /* EOF */

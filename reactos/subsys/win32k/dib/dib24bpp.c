@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.20 2004/04/06 21:53:48 weiden Exp $ */
+/* $Id: dib24bpp.c,v 1.21 2004/04/06 23:05:36 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -374,7 +374,7 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   DestBits = (BYTE*)(DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
-  wd = ((DestRect->right - DestRect->left) << 2) - DestSurf->lDelta;
+  wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 2);
   
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
@@ -391,7 +391,7 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     }
     
     SourceY++;
-    DestBits = (BYTE*)((ULONG_PTR)DestBits - wd);
+    DestBits = (BYTE*)((ULONG_PTR)DestBits + wd);
   }
   
   return TRUE;
