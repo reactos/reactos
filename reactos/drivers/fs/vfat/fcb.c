@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.24 2003/01/02 16:03:56 hbirr Exp $
+/* $Id: fcb.c,v 1.25 2003/01/11 15:59:07 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -104,64 +104,73 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   HASHENTRY* entry;
   ULONG Index;
   ULONG ShortIndex;
+  PVFATFCB tmpFcb;
 
   DPRINT ("releasing FCB at %x: %S, refCount:%d\n",
           pFCB,
           pFCB->PathName,
           pFCB->RefCount);
 
-  Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
-  ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
-  KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
-  pFCB->RefCount--;
-  if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
+  while (pFCB)
   {
-    RemoveEntryList (&pFCB->FcbListEntry);  
-    if (pFCB->Hash.Hash != pFCB->ShortHash.Hash)
-    {
-      entry = pVCB->FcbHashTable[ShortIndex];
-      if (entry->self == pFCB)
-      {
-         pVCB->FcbHashTable[ShortIndex] = entry->next;
-      }
-      else
-      {
-         while (entry->next->self != pFCB)
-	 {
-            entry = entry->next;
-	 }
-         entry->next = pFCB->ShortHash.next;
-      }
-    }
-    entry = pVCB->FcbHashTable[Index];
-    if (entry->self == pFCB)
-    {
-      pVCB->FcbHashTable[Index] = entry->next;
-    }
-    else
-    {
-      while (entry->next->self != pFCB)
-      {
-        entry = entry->next;
-      }
-      entry->next = pFCB->Hash.next;
-    }
-    KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
-    if (vfatFCBIsDirectory(pFCB))
-    {
-      /* Uninitialize file cache if initialized for this file object. */
-      if (pFCB->RFCB.Bcb != NULL)
+     Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
+     ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
+     KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
+     pFCB->RefCount--;
+     if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
+     {
+        tmpFcb = pFCB->parentFcb;
+        RemoveEntryList (&pFCB->FcbListEntry);  
+        if (pFCB->Hash.Hash != pFCB->ShortHash.Hash)
         {
-          CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+           entry = pVCB->FcbHashTable[ShortIndex];
+           if (entry->self == pFCB)
+	   {
+              pVCB->FcbHashTable[ShortIndex] = entry->next;
+	   }
+           else
+	   {
+              while (entry->next->self != pFCB)
+	      {
+                 entry = entry->next;
+	      }
+              entry->next = pFCB->ShortHash.next;
+	   }
         }
-      vfatDestroyCCB(pFCB->FileObject->FsContext2);
-      pFCB->FileObject->FsContext2 = NULL;
-      ObDereferenceObject(pFCB->FileObject);
-    }
-    vfatDestroyFCB (pFCB);
+        entry = pVCB->FcbHashTable[Index];
+        if (entry->self == pFCB)
+        {
+           pVCB->FcbHashTable[Index] = entry->next;
+        }
+        else
+        {
+           while (entry->next->self != pFCB)
+	   {
+              entry = entry->next;
+	   }
+           entry->next = pFCB->Hash.next;
+        }
+        KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
+        if (vfatFCBIsDirectory(pFCB))
+        {
+           /* Uninitialize file cache if initialized for this file object. */
+           if (pFCB->RFCB.Bcb != NULL)
+	   {
+              CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+	   }
+           vfatDestroyCCB(pFCB->FileObject->FsContext2);
+           pFCB->FileObject->FsContext2 = NULL;
+           ObDereferenceObject(pFCB->FileObject);
+        }
+        vfatDestroyFCB (pFCB);
+     }
+     else
+     {
+        KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
+	tmpFcb = NULL;
+     }
+     pFCB = tmpFcb;
   }
-  else
-    KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
 VOID
@@ -183,6 +192,10 @@ vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   {
      pFCB->ShortHash.next = pVCB->FcbHashTable[ShortIndex];
      pVCB->FcbHashTable[ShortIndex] = &pFCB->ShortHash;
+  }
+  if (pFCB->parentFcb)
+  {
+     pFCB->parentFcb->RefCount++;
   }
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
@@ -429,6 +442,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
     {
       vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
     }
+  rcFCB->parentFcb = directoryFCB;
   vfatAddFCBToTable (vcb, rcFCB);
   *fileFCB = rcFCB;
 
