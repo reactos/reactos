@@ -41,9 +41,9 @@
 		<file>rtlfunc.c</file>
 	</directory>
 	<directory name="dbg">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<if property="kdbg" value="1">
+				<if property="KDBG" value="1">
 					<group>
 						<file>i386-dis.c</file>
 						<file>kdb_help.S</file>
@@ -51,14 +51,14 @@
 				</if>
 			</directory>
 		</if>
-		<if property="kdbg" value="1">
+		<if property="KDBG" value="1">
 			<file>kdb.c</file>
 			<file>kdb_keyboard.c</file>
 			<file>kdb_serial.c</file>
 			<file>rdebug.c</file>
 			<file>profile.c</file>
 		</if>
-		<if property="dbg_or_kdbg" value="true">
+		<if property="DBG_OR_KDBG" value="true">
 			<file>kdb_stabs.c</file>
 			<file>kdb_symbols.c</file>
 		</if>
@@ -68,7 +68,7 @@
 		<file>user.c</file>
 	</directory>
 	<directory name="ex">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>interlck.c</file>
 			</directory>
@@ -171,7 +171,7 @@
 		<file>service.c</file>
 	</directory>
 	<directory name="ke">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>bios.c</file>
 				<file>brkpoint.c</file>
@@ -243,7 +243,7 @@
 		<file>send.c</file>
 	</directory>
 	<directory name="mm">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>memsafe.s</file>
 				<file>page.c</file>
@@ -314,7 +314,7 @@
 		<file>power.c</file>
 	</directory>
 	<directory name="ps">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>continue.c</file>
 			</directory>
@@ -335,7 +335,7 @@
 		<file>win32.c</file>
 	</directory>
 	<directory name="rtl">
-		<if property="arch" value="i386">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>exception.c</file>
 			</directory>
