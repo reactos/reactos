@@ -197,6 +197,7 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 
 BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
+	char		ErrMsg[64];
 #ifdef DEBUG
 	U32		Index;
 #endif
@@ -236,6 +237,8 @@ BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_R
 	// Check the partition table magic value
 	if (BootRecord->MasterBootRecordMagic != 0xaa55)
 	{
+		sprintf(ErrMsg, "Invalid partition table magic 0x%x found on drive 0x%x",
+		        BootRecord->MasterBootRecordMagic, DriveNumber);
 		DiskError("Invalid partition table magic (0xaa55)", 0);
 		return FALSE;
 	}
