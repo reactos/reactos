@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.10 2003/05/28 18:09:10 chorns Exp $
+/* $Id: syscall.S,v 1.11 2003/06/04 18:11:16 hbirr Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -141,6 +141,7 @@ new_serviceInRange:
 
            /*  Copy the arguments from the user stack to the kernel stack  */
            movl %esp,%edi
+           cld
            rep  movsb
 
            /*  DS is now also kernel segment  */
@@ -190,6 +191,7 @@ new_shadowServiceInRange:
 
            /*  Copy the arguments from the user stack to the kernel stack  */
            movl %esp,%edi
+           cld
            rep movsb
 
            /*  DS is now also kernel segment  */
