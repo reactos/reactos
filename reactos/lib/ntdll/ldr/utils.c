@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.69 2003/07/27 11:39:18 ekohl Exp $
+/* $Id: utils.c,v 1.70 2003/07/27 14:00:04 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -234,6 +234,7 @@ LdrAddModuleEntry(PVOID ImageBase,
   PLDR_MODULE           Module;
   Module = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (LDR_MODULE));
   assert(Module);
+  memset(Module, 0, sizeof(LDR_MODULE));
   Module->BaseAddress = (PVOID)ImageBase;
   Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
@@ -261,12 +262,12 @@ LdrAddModuleEntry(PVOID ImageBase,
                           wcsrchr(FullDosName, L'\\') + 1);
   DPRINT ("BaseDllName %wZ\n", &Module->BaseDllName);
   
-  /* FIXME: aquire loader lock */
+  RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
   InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
                  &Module->InLoadOrderModuleList);
   InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
                  &Module->InInitializationOrderModuleList);
-  /* FIXME: release loader lock */
+  RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
 
   return(Module);
 }
@@ -523,8 +524,6 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   if (LdrFindEntryForName(&AdjustedName, &Module) == STATUS_SUCCESS)
     {
       DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
-      if (Module->LoadCount != -1)
-        Module->LoadCount++;
       *BaseAddress = Module->BaseAddress;
       return STATUS_SUCCESS;
     }
@@ -669,10 +668,14 @@ LdrFindEntryForAddress(PVOID Address,
   if (NtCurrentPeb()->Ldr == NULL)
     return(STATUS_NO_MORE_ENTRIES);
 
+  RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
   ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
   Entry = ModuleListHead->Flink;
   if (Entry == ModuleListHead)
-    return(STATUS_NO_MORE_ENTRIES);
+    {
+      RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
+      return(STATUS_NO_MORE_ENTRIES);
+    }
 
   while (Entry != ModuleListHead)
     {
@@ -684,6 +687,7 @@ LdrFindEntryForAddress(PVOID Address,
           (Address <= (ModulePtr->BaseAddress + ModulePtr->SizeOfImage)))
         {
           *Module = ModulePtr;
+	  RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
           return(STATUS_SUCCESS);
         }
 
@@ -692,6 +696,7 @@ LdrFindEntryForAddress(PVOID Address,
 
   DPRINT("Failed to find module entry.\n");
 
+  RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
   return(STATUS_NO_MORE_ENTRIES);
 }
 
@@ -726,15 +731,23 @@ LdrFindEntryForName(PUNICODE_STRING Name,
   if (NtCurrentPeb()->Ldr == NULL)
     return(STATUS_NO_MORE_ENTRIES);
 
+  RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
   ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
   Entry = ModuleListHead->Flink;
   if (Entry == ModuleListHead)
-    return(STATUS_NO_MORE_ENTRIES);
+    {
+      RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
+      return(STATUS_NO_MORE_ENTRIES);
+    }
 
   // NULL is the current process
   if (Name == NULL)
     {
       *Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      if ((*Module)->LoadCount != -1)
+        (*Module)->LoadCount++;
+
+      RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
       return(STATUS_SUCCESS);
     }
 
@@ -756,6 +769,9 @@ LdrFindEntryForName(PUNICODE_STRING Name,
            0 == RtlCompareUnicodeString(&ModulePtr->FullDllName, Name, TRUE)))
         {
           *Module = ModulePtr;
+          if (ModulePtr->LoadCount != -1)
+            ModulePtr->LoadCount++;
+          RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
           return(STATUS_SUCCESS);
         }
 
@@ -763,7 +779,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
     }
 
   DPRINT("Failed to find dll %wZ\n", Name);
-
+  RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
   return(STATUS_NO_MORE_ENTRIES);
 }
 
@@ -1066,6 +1082,11 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
   ULONG LastOffset;
+
+  if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
 
   Sections = 
     (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
@@ -1503,6 +1524,8 @@ LdrUnloadDll (IN PVOID BaseAddress)
    if (BaseAddress == NULL)
      return STATUS_SUCCESS;
 
+   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+
    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
    Entry = ModuleListHead->Flink;
 
@@ -1514,11 +1537,13 @@ LdrUnloadDll (IN PVOID BaseAddress)
              if (Module->LoadCount == -1)
                {
                   /* never unload this dll */
+                  RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
                   return STATUS_SUCCESS;
                }
              else if (Module->LoadCount > 1)
                {
                   Module->LoadCount--;
+                  RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
                   return STATUS_SUCCESS;
                }
 
@@ -1543,9 +1568,13 @@ LdrUnloadDll (IN PVOID BaseAddress)
              ZwClose (Module->SectionHandle);
 
              /* remove the module entry from the list */
-             RtlFreeUnicodeString (&Module->FullDllName);
+             RemoveEntryList (&Module->InLoadOrderModuleList)
+             RemoveEntryList (&Module->InInitializationOrderModuleList);
+             RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+	     RtlFreeUnicodeString (&Module->FullDllName);
              RtlFreeUnicodeString (&Module->BaseDllName);
-             RemoveEntryList (Entry);
+
              RtlFreeHeap (RtlGetProcessHeap (), 0, Module);
 
              return Status;
@@ -1553,6 +1582,7 @@ LdrUnloadDll (IN PVOID BaseAddress)
 
         Entry = Entry->Flink;
      }
+   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
 
    DPRINT("NTDLL.LDR: Dll not found\n")
 
@@ -1574,6 +1604,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %x)\n", BaseAddress);
 
     Status = STATUS_DLL_NOT_FOUND;
+    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
     ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     Entry = ModuleListHead->Flink;
     while (Entry != ModuleListHead) {
@@ -1586,10 +1617,11 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
                 Module->Flags |= 0x00040000;
                 Status = STATUS_SUCCESS;
             }
-            return Status;
+            break;
         }
         Entry = Entry->Flink;
     }
+    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
     return Status;
 }
 
@@ -1621,6 +1653,7 @@ LdrGetDllHandle(IN ULONG Unknown1,
 
     DPRINT("FullDllName %wZ\n", &FullDllName);
 
+    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
     ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     Entry = ModuleListHead->Flink;
     while (Entry != ModuleListHead) {
@@ -1633,6 +1666,7 @@ LdrGetDllHandle(IN ULONG Unknown1,
              RtlFreeUnicodeString(&FullDllName);
              *BaseAddress = Module->BaseAddress;
              DPRINT("BaseAddress %x\n", *BaseAddress);
+             RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
              return STATUS_SUCCESS;
         }
         Entry = Entry->Flink;
@@ -1642,6 +1676,7 @@ LdrGetDllHandle(IN ULONG Unknown1,
 
     RtlFreeUnicodeString(&FullDllName);
     *BaseAddress = NULL;
+    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
     return STATUS_DLL_NOT_FOUND;
 }
 
