@@ -134,7 +134,7 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
-   Status = MmCopyFromCaller(&ObjectAttribute, UnsafeObjectAttributes,
+   Status = MmCopyFromCaller(&ObjectAttributes, UnsafeObjectAttributes,
 			     sizeof(OBJECT_ATTRIBUTES));
    if (!NT_SUCCESS(Status))
      {
@@ -143,7 +143,7 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 
    Event = ObCreateObject(&EventHandle,
 			  DesiredAccess,
-			  ObjectAttributes,
+			  &ObjectAttributes,
 			  ExEventObjectType);
    KeInitializeEvent(Event,
 		     ManualReset ? NotificationEvent : SynchronizationEvent,
@@ -181,7 +181,7 @@ NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
    Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))
      {
-       ZwClose(Handle);
+       ZwClose(EventHandle);
        return(Status);
      }
    
@@ -259,7 +259,7 @@ NtQueryEvent(IN HANDLE EventHandle,
      }
 
    ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
-   Status = MmCopyToCaller(UnsafeReturnLength, ReturnLength, sizeof(ULONG));
+   Status = MmCopyToCaller(UnsafeReturnLength, &ReturnLength, sizeof(ULONG));
    if (!NT_SUCCESS(Status))
      {
        ObDereferenceObject(Event);

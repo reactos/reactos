@@ -7,6 +7,6 @@ NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS
 MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS
-MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
+MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SAFE_Hb */

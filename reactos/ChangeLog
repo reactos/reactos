@@ -1,5 +1,12 @@
 2001-03-16  David Welch  <welch@cwcom.net>
 
+	* ntoskrnl/include/internal/safe.h: Corrected typo.
+	* ntoskrnl/nt/ntevent.c (NtCreateEvent, NtOpenEvent, NtQueryEvent):
+	Corrected typos.
+	* ntoskrnl/rtl/mem.c: Missing header file.
+
+2001-03-16  David Welch  <welch@cwcom.net>
+
 	* ntoskrnl/include/internal/safe.h: Add definitions for handling
 	potentially unsafe pointers.
 

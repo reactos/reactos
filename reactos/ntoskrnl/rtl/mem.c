@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.10 2001/03/16 09:50:38 dwelch Exp $
+/* $Id: mem.c,v 1.11 2001/03/16 10:58:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
