@@ -58,6 +58,7 @@ lib\expat\libexpat.dll                  1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
+lib\imm32\imm32				1
 lib\iphlpapi\iphlpapi.dll               1
 lib\kbdfr\kbdfr.dll                     1
 lib\kbdgr\kbdgr.dll                     1
@@ -74,6 +75,7 @@ lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
+lib\psapi\psapi.dll			1
 lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1
 lib\samlib\samlib.dll                   1
