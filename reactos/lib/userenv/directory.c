@@ -1,4 +1,4 @@
-/* $Id: directory.c,v 1.3 2004/05/07 11:18:53 ekohl Exp $
+/* $Id: directory.c,v 1.4 2004/05/08 13:11:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -177,9 +177,100 @@ CreateDirectoryPath (LPCWSTR lpPathName,
 }
 
 
+static BOOL
+RecursiveRemoveDir (LPCWSTR lpPath)
+{
+  WCHAR szPath[MAX_PATH];
+  WIN32_FIND_DATAW FindData;
+  HANDLE hFind;
+  BOOL bResult;
+
+  wcscpy (szPath, lpPath);
+  wcscat (szPath, L"\\*.*");
+  DPRINT ("Search path: '%S'\n", szPath);
+
+  hFind = FindFirstFileW (szPath,
+			  &FindData);
+  if (hFind == INVALID_HANDLE_VALUE)
+    return FALSE;
+
+  bResult = TRUE;
+  while (TRUE)
+    {
+      if (wcscmp (FindData.cFileName, L".") &&
+	  wcscmp (FindData.cFileName, L".."))
+	{
+	  wcscpy (szPath, lpPath);
+	  wcscat (szPath, L"\\");
+	  wcscat (szPath, FindData.cFileName);
+	  DPRINT ("File name: '%S'\n", szPath);
+
+	  if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	    {
+	      DPRINT ("Delete directory: '%S'\n", szPath);
+
+	      if (!RecursiveRemoveDir (szPath))
+		{
+		  bResult = FALSE;
+		  break;
+		}
+
+	      if (FindData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+		{
+		  SetFileAttributesW (szPath,
+				      FindData.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY);
+		}
+
+	      if (!RemoveDirectoryW (szPath))
+		{
+		  bResult = FALSE;
+		  break;
+		}
+	    }
+	  else
+	    {
+	      DPRINT ("Delete file: '%S'\n", szPath);
+
+	      if (FindData.dwFileAttributes & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
+		{
+		  SetFileAttributesW (szPath,
+				      FILE_ATTRIBUTE_NORMAL);
+		}
+
+	      if (!DeleteFileW (szPath))
+		{
+		  bResult = FALSE;
+		  break;
+		}
+	    }
+	}
+
+      if (!FindNextFileW (hFind, &FindData))
+	{
+	  if (GetLastError () != ERROR_NO_MORE_FILES)
+	    {
+	      DPRINT1 ("Error: %lu\n", GetLastError());
+	      bResult = FALSE;
+	      break;
+	    }
+
+	  break;
+	}
+    }
+
+  FindClose (hFind);
+
+  return bResult;
+}
+
+
 BOOL
 RemoveDirectoryPath (LPCWSTR lpPathName)
 {
+  if (!RecursiveRemoveDir (lpPathName))
+    return FALSE;
+
+  DPRINT1 ("Delete directory: '%S'\n", lpPathName);
   return RemoveDirectoryW (lpPathName);
 }
 
