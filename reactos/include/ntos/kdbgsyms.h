@@ -8,6 +8,10 @@ typedef struct _IMAGE_SYMBOL_INFO
   ULONG_PTR ImageBase;
   ULONG_PTR ImageSize;
   PVOID FileBuffer;
+  PVOID StabsBase;
+  ULONG StabsLength;
+  PVOID StabStringsBase;
+  ULONG StabStringsLength;
   PVOID SymbolsBase;
   ULONG SymbolsLength;
   PVOID SymbolStringsBase;

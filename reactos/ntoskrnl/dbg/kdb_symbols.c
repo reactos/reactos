@@ -17,6 +17,34 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
+ * Parts of this file based on work Copyright (c) 1990, 1993
+ *      The Regents of the University of California.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+/*
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/dbg/kdb_symbols.c
  * PURPOSE:              Getting symbol information...
@@ -41,6 +69,7 @@
 #include <internal/safe.h>
 #include <internal/kd.h>
 #include <rosrtl/string.h>
+#include <coff.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -55,6 +84,10 @@ typedef struct _SYMBOLFILE_HEADER {
   ULONG StabsLength;
   ULONG StabstrOffset;
   ULONG StabstrLength;
+  ULONG SymbolsOffset;
+  ULONG SymbolsLength;
+  ULONG SymbolstrOffset;
+  ULONG SymbolstrLength;
 } SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
 
 typedef struct _IMAGE_SYMBOL_INFO_CACHE {
@@ -62,6 +95,10 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE {
   ULONG RefCount;
   UNICODE_STRING FileName;
   PVOID FileBuffer;
+  PVOID StabsBase;
+  ULONG StabsLength;
+  PVOID StabStringsBase;
+  ULONG StabStringsLength;
   PVOID SymbolsBase;
   ULONG SymbolsLength;
   PVOID SymbolStringsBase;
@@ -282,6 +319,67 @@ KdbSymPrintAddress(IN PVOID Address)
   return TRUE;
 }
 
+/*! \brief Find a COFF symbol entry...
+ *
+ * Finds the COFF symbol as close as possible before the specified address
+ *
+ * \param SymbolInfo       Pointer to the symbol info.
+ * \param RelativeAddress  Relative address of address to look for.
+ *
+ * \returns Pointer to a external_syment
+ * \retval NULL  No entry found.
+ */
+static struct external_syment *
+KdbpSymbolsFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
+                     IN ULONG_PTR RelativeAddress)
+{
+  /*
+   * Perform a binary search.
+   *
+   * The code below is a bit sneaky.  After a comparison fails, we
+   * divide the work in half by moving either left or right. If lim
+   * is odd, moving left simply involves halving lim: e.g., when lim
+   * is 5 we look at item 2, so we change lim to 2 so that we will
+   * look at items 0 & 1.  If lim is even, the same applies.  If lim
+   * is odd, moving right again involes halving lim, this time moving
+   * the base up one item past p: e.g., when lim is 5 we change base
+   * to item 3 and make lim 2 so that we will look at items 3 and 4.
+   * If lim is even, however, we have to shrink it by one before
+   * halving: e.g., when lim is 4, we still looked at item 2, so we
+   * have to make lim 3, then halve, obtaining 1, so that we will only
+   * look at item 3.
+   */
+  struct external_syment *Base = (struct external_syment *) SymbolInfo->SymbolsBase;
+  ULONG Lim;
+  struct external_syment *Mid, *Low;
+
+  if (SymbolInfo->SymbolsLength < sizeof(struct external_syment)
+      || RelativeAddress < Base->e_value)
+    {
+      return NULL;
+    }
+
+  Low = Base;
+  for (Lim = SymbolInfo->SymbolsLength / sizeof(struct external_syment); Lim != 0; Lim >>= 1)
+    {
+      Mid = Base + (Lim >> 1);
+      if (RelativeAddress == Mid->e_value)
+        {
+          return Mid;
+        }
+      if (Mid->e_value < RelativeAddress)  /* key > mid: move right */
+        {
+          Low = Mid;
+          Base = Mid + 1;
+          Lim--;
+        }               /* else move left */
+    }
+
+  ASSERT(Low->e_value < RelativeAddress);
+
+  return Low;
+}
+
 
 /*! \brief Get information for an address (source file, line number,
  *         function name)
@@ -306,12 +404,13 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
                             OUT PCH FileName  OPTIONAL,
                             OUT PCH FunctionName  OPTIONAL)
 {
-  PSTAB_ENTRY FunctionEntry = NULL, FileEntry = NULL, LineEntry = NULL;
+  PSTAB_ENTRY StabsFunctionEntry = NULL, FileEntry = NULL, LineEntry = NULL;
+  struct external_syment *SymbolsFunctionEntry = NULL;
 
   DPRINT("RelativeAddress = 0x%08x\n", RelativeAddress);
 
-  if (SymbolInfo->SymbolsBase == NULL || SymbolInfo->SymbolsLength == 0 ||
-      SymbolInfo->SymbolStringsBase == NULL || SymbolInfo->SymbolStringsLength == 0)
+  if (SymbolInfo->StabsBase == NULL || SymbolInfo->StabsLength == 0 ||
+      SymbolInfo->StabStringsBase == NULL || SymbolInfo->StabStringsLength == 0)
     {
       return STATUS_UNSUCCESSFUL;
     }
@@ -330,24 +429,24 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
   if (LineNumber != NULL || FunctionName != NULL)
     {
       /* find stab entry for function */
-      FunctionEntry = KdbpStabFindEntry(SymbolInfo, N_FUN, (PVOID)RelativeAddress, NULL);
-      if (FunctionEntry == NULL)
+      StabsFunctionEntry = KdbpStabFindEntry(SymbolInfo, N_FUN, (PVOID)RelativeAddress, NULL);
+      if (StabsFunctionEntry == NULL)
         {
           DPRINT("No function stab entry found. RelativeAddress %p\n", RelativeAddress);
         }
 
-      if (LineNumber != NULL && FunctionEntry != NULL)
+      if (LineNumber != NULL && StabsFunctionEntry != NULL)
         {
           /* find stab entry for line number */
-          ULONG_PTR FunctionRelativeAddress = RelativeAddress - FunctionEntry->n_value;
+          ULONG_PTR FunctionRelativeAddress = RelativeAddress - StabsFunctionEntry->n_value;
           ULONG_PTR AddrFound = 0;
           PSTAB_ENTRY NextLineEntry;
 
-          LineEntry = NextLineEntry = FunctionEntry;
+          LineEntry = NextLineEntry = StabsFunctionEntry;
           while (NextLineEntry != NULL)
             {
               NextLineEntry++;
-              if ((ULONG_PTR)NextLineEntry >= ((ULONG_PTR)SymbolInfo->SymbolsBase + SymbolInfo->SymbolsLength))
+              if ((ULONG_PTR)NextLineEntry >= ((ULONG_PTR)SymbolInfo->StabsBase + SymbolInfo->StabsLength))
                 break;
               if (NextLineEntry->n_type == N_FUN)
                 break;
@@ -364,6 +463,14 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
         }
     }
 
+  if (FunctionName != NULL
+      && SymbolInfo->SymbolsBase != NULL && SymbolInfo->SymbolsLength != 0
+      && SymbolInfo->SymbolStringsBase != NULL && SymbolInfo->SymbolStringsLength != 0)
+    {
+      /* find symbol entry for function */
+      SymbolsFunctionEntry = KdbpSymbolsFindEntry(SymbolInfo, RelativeAddress);
+    }
+
   if (FileName != NULL)
     {
       /* find stab entry for file name */
@@ -373,7 +480,7 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
       FileEntry = KdbpStabFindEntry(SymbolInfo, N_SO, (PVOID)RelativeAddress, NULL);
       if (FileEntry != NULL)
         {
-          p = (PCHAR)SymbolInfo->SymbolStringsBase + FileEntry->n_strx;
+          p = (PCHAR)SymbolInfo->StabStringsBase + FileEntry->n_strx;
           Length = strlen(p);
           if (p[Length - 1] == '/' || p[Length - 1] == '\\') /* source dir */
             FileEntry = KdbpStabFindEntry(SymbolInfo, N_SO, (PVOID)RelativeAddress, FileEntry + 1);
@@ -384,9 +491,10 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
         }
     }
 
-  if (((LineNumber   != NULL && LineEntry     == NULL) || LineNumber   == NULL) &&
-      ((FileName     != NULL && FileEntry     == NULL) || FileName     == NULL) &&
-      ((FunctionName != NULL && FunctionEntry == NULL) || FunctionName == NULL))
+  if (((LineNumber   != NULL && LineEntry          == NULL) || LineNumber   == NULL) &&
+      ((FileName     != NULL && FileEntry          == NULL) || FileName     == NULL) &&
+      ((FunctionName != NULL && StabsFunctionEntry == NULL && SymbolsFunctionEntry == NULL) ||
+       FunctionName == NULL))
     {
       DPRINT("None of the requested information was found!\n");
       return STATUS_UNSUCCESSFUL;
@@ -403,18 +511,56 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
       PCHAR Name = "";
       if (FileEntry != NULL)
         {
-          Name = (PCHAR)SymbolInfo->SymbolStringsBase + FileEntry->n_strx;
+          Name = (PCHAR)SymbolInfo->StabStringsBase + FileEntry->n_strx;
         }
       strcpy(FileName, Name);
     }
   if (FunctionName != NULL)
     {
       PCHAR Name = "", p;
-      if (FunctionEntry != NULL)
-        Name = (PCHAR)SymbolInfo->SymbolStringsBase + FunctionEntry->n_strx;
-      strcpy(FunctionName, Name);
-      if ((p = strchr(FunctionName, ':')) != NULL) /* remove extra info from function name */
-        *p = '\0';
+      if (StabsFunctionEntry != NULL)
+        {
+          if (SymbolsFunctionEntry == NULL ||
+              SymbolsFunctionEntry->e_value <= StabsFunctionEntry->n_value)
+            {
+              Name = (PCHAR)SymbolInfo->StabStringsBase + StabsFunctionEntry->n_strx;
+              strcpy(FunctionName, Name);
+              if ((p = strchr(FunctionName, ':')) != NULL) /* remove extra info from function name */
+                {
+                  *p = '\0';
+                }
+            }
+          else if (SymbolsFunctionEntry != NULL)
+            {
+              if (SymbolsFunctionEntry->e.e.e_zeroes == 0)
+                {
+                  Name = (PCHAR) SymbolInfo->SymbolStringsBase + SymbolsFunctionEntry->e.e.e_offset;
+                  strcpy(FunctionName, Name);
+                }
+              else
+                {
+                  memcpy(FunctionName, SymbolsFunctionEntry->e.e_name, E_SYMNMLEN);
+                  FunctionName[E_SYMNMLEN] = '\0';
+                }
+            }
+        }
+      else if (SymbolsFunctionEntry != NULL)
+        {
+          if (SymbolsFunctionEntry->e.e.e_zeroes == 0)
+            {
+              Name = (PCHAR) SymbolInfo->SymbolStringsBase + SymbolsFunctionEntry->e.e.e_offset;
+              strcpy(FunctionName, Name);
+            }
+          else
+            {
+              memcpy(FunctionName, SymbolsFunctionEntry->e.e_name, E_SYMNMLEN);
+              FunctionName[E_SYMNMLEN] = '\0';
+            }
+        }
+      else
+        {
+          FunctionName[0] = '\0';
+        }
     }
 
   return STATUS_SUCCESS;
@@ -449,14 +595,14 @@ KdbpSymGetSourceAddress(IN PIMAGE_SYMBOL_INFO SymbolInfo,
 
   FileNameLength = strlen(FileName);
   FuncNameLength = strlen(FuncName);
-  for (Entry = SymbolInfo->SymbolsBase;
-       (ULONG_PTR)Entry < (ULONG_PTR)(SymbolInfo->SymbolsBase + SymbolInfo->SymbolsLength);
+  for (Entry = SymbolInfo->StabsBase;
+       (ULONG_PTR)Entry < (ULONG_PTR)(SymbolInfo->StabsBase + SymbolInfo->StabsLength);
        Entry++)
     {
       if (Entry->n_type != N_SO)
         continue;
 
-      SymbolName = (PCHAR)SymbolInfo->SymbolStringsBase + Entry->n_strx;
+      SymbolName = (PCHAR)SymbolInfo->StabStringsBase + Entry->n_strx;
       Length = strlen(SymbolName);
       if (SymbolName[Length -  1] == '/' ||
           SymbolName[Length -  1] == '\\')
@@ -473,7 +619,7 @@ KdbpSymGetSourceAddress(IN PIMAGE_SYMBOL_INFO SymbolInfo,
         continue;
 
       Entry++;
-      for (;(ULONG_PTR)Entry < (ULONG_PTR)(SymbolInfo->SymbolsBase + SymbolInfo->SymbolsLength);
+      for (;(ULONG_PTR)Entry < (ULONG_PTR)(SymbolInfo->StabsBase + SymbolInfo->StabsLength);
            Entry++)
         {
           if (Entry->n_type == N_FUN)
@@ -487,7 +633,7 @@ KdbpSymGetSourceAddress(IN PIMAGE_SYMBOL_INFO SymbolInfo,
             continue;
           else /* if (FunctionName != NULL) */
             {
-              SymbolName = (PCHAR)SymbolInfo->SymbolStringsBase + Entry->n_strx;
+              SymbolName = (PCHAR)SymbolInfo->StabStringsBase + Entry->n_strx;
               p = strchr(SymbolName, ':');
               if (p == NULL)
                 return FALSE;
@@ -589,6 +735,10 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
   ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->FileBuffer = SymbolInfo->FileBuffer;
+  CacheEntry->StabsBase = SymbolInfo->StabsBase;
+  CacheEntry->StabsLength = SymbolInfo->StabsLength;
+  CacheEntry->StabStringsBase = SymbolInfo->StabStringsBase;
+  CacheEntry->StabStringsLength = SymbolInfo->StabStringsLength;
   CacheEntry->SymbolsBase = SymbolInfo->SymbolsBase;
   CacheEntry->SymbolsLength = SymbolInfo->SymbolsLength;
   CacheEntry->SymbolStringsBase = SymbolInfo->SymbolStringsBase;
@@ -692,6 +842,10 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
     {
       DPRINT("Found cached symbol file %wZ\n", &SymFileName);
       SymbolInfo->FileBuffer = CachedSymbolFile->FileBuffer;
+      SymbolInfo->StabsBase = CachedSymbolFile->StabsBase;
+      SymbolInfo->StabsLength = CachedSymbolFile->StabsLength;
+      SymbolInfo->StabStringsBase = CachedSymbolFile->StabStringsBase;
+      SymbolInfo->StabStringsLength = CachedSymbolFile->StabStringsLength;
       SymbolInfo->SymbolsBase = CachedSymbolFile->SymbolsBase;
       SymbolInfo->SymbolsLength = CachedSymbolFile->SymbolsLength;
       SymbolInfo->SymbolStringsBase = CachedSymbolFile->SymbolStringsBase;
@@ -769,16 +923,23 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
 
   SymbolFileHeader = (PSYMBOLFILE_HEADER) FileBuffer;
   SymbolInfo->FileBuffer = FileBuffer;
-  SymbolInfo->SymbolsBase = FileBuffer + SymbolFileHeader->StabsOffset;
-  SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
-  SymbolInfo->SymbolStringsBase = FileBuffer + SymbolFileHeader->StabstrOffset;
-  SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+  SymbolInfo->StabsBase = FileBuffer + SymbolFileHeader->StabsOffset;
+  SymbolInfo->StabsLength = SymbolFileHeader->StabsLength;
+  SymbolInfo->StabStringsBase = FileBuffer + SymbolFileHeader->StabstrOffset;
+  SymbolInfo->StabStringsLength = SymbolFileHeader->StabstrLength;
+  SymbolInfo->SymbolsBase = FileBuffer + SymbolFileHeader->SymbolsOffset;
+  SymbolInfo->SymbolsLength = SymbolFileHeader->SymbolsLength;
+  SymbolInfo->SymbolStringsBase = FileBuffer + SymbolFileHeader->SymbolstrOffset;
+  SymbolInfo->SymbolStringsLength = SymbolFileHeader->SymbolstrLength;
 
   /* add file to cache */
   KdbpSymAddCachedFile(&SymFileName, SymbolInfo);
 
-  DPRINT("Installed stabs: %wZ (%08x-%08x,%08x)\n",
+  DPRINT("Installed stabs: %wZ (%08x-%08x,%08x) (%08x-%08x,%08x)\n",
 	 FileName,
+	 SymbolInfo->StabsBase,
+	 SymbolInfo->StabsLength + SymbolInfo->StabsBase,
+	 SymbolInfo->StabStringsBase,
 	 SymbolInfo->SymbolsBase,
 	 SymbolInfo->SymbolsLength + SymbolInfo->SymbolsBase,
 	 SymbolInfo->SymbolStringsBase);
@@ -800,6 +961,8 @@ KdbpSymUnloadModuleSymbols(IN PIMAGE_SYMBOL_INFO SymbolInfo)
     {
       KdbpSymRemoveCachedFile(SymbolInfo);
       SymbolInfo->FileBuffer = NULL;
+      SymbolInfo->StabsBase = NULL;
+      SymbolInfo->StabsLength = 0;
       SymbolInfo->SymbolsBase = NULL;
       SymbolInfo->SymbolsLength = 0;
     }
@@ -955,10 +1118,14 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
 	       KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
  
         SymbolInfo->FileBuffer = SymbolFileHeader;
-        SymbolInfo->SymbolsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabsOffset;
-        SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
-        SymbolInfo->SymbolStringsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabstrOffset;
-        SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+        SymbolInfo->StabsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabsOffset;
+        SymbolInfo->StabsLength = SymbolFileHeader->StabsLength;
+        SymbolInfo->StabStringsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->StabstrOffset;
+        SymbolInfo->StabStringsLength = SymbolFileHeader->StabstrLength;
+        SymbolInfo->SymbolsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->SymbolsOffset;
+        SymbolInfo->SymbolsLength = SymbolFileHeader->SymbolsLength;
+        SymbolInfo->SymbolStringsBase = (PVOID)SymbolFileHeader + SymbolFileHeader->SymbolstrOffset;
+        SymbolInfo->SymbolStringsLength = SymbolFileHeader->SymbolstrLength;
 
         /* add file to cache */
         RtlInitAnsiString(&AnsiString, SymbolName);
@@ -966,10 +1133,13 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         KdbpSymAddCachedFile(&UnicodeString, SymbolInfo);
         RtlFreeUnicodeString(&UnicodeString);
 
-        DPRINT("Installed stabs: %s@%08x-%08x (%08x-%08x,%08x)\n",
+        DPRINT("Installed stabs: %s@%08x-%08x (%08x-%08x,%08x) (%08x-%08x,%08x)\n",
 	       FileName,
 	       ModuleObject->Base,
 	       ModuleObject->Length + ModuleObject->Base,
+	       SymbolInfo->StabsBase,
+	       SymbolInfo->StabsLength + SymbolInfo->StabsBase,
+	       SymbolInfo->StabStringsBase,
 	       SymbolInfo->SymbolsBase,
 	       SymbolInfo->SymbolsLength + SymbolInfo->SymbolsBase,
 	       SymbolInfo->SymbolStringsBase);
