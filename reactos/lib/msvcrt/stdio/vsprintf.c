@@ -13,7 +13,7 @@ vsprintf(char *str, const char *fmt, va_list ap)
   FILE f;
   int len;
 
-  f._flag = _IOWRT|_IOSTRG;
+  f._flag = _IOWRT|_IOSTRG|_IOBINARY;;
   f._ptr = str;
   f._cnt = INT_MAX;
   f._file = -1;
@@ -31,12 +31,12 @@ vswprintf(wchar_t *str, const wchar_t *fmt, va_list ap)
   FILE f;
   int len;
 
-  f._flag = _IOWRT|_IOSTRG;
+  f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = (char*)str;
   f._cnt = INT_MAX;
   f._file = -1;
   len = vfwprintf(&f,fmt, ap);
-  *f._ptr = 0;
+  *(wchar_t*)f._ptr = 0;
   return len;
 }
 
@@ -49,7 +49,7 @@ _vsnprintf(char *str, size_t maxlen, const char *fmt, va_list ap)
 {
   FILE f;
   int len;
-  f._flag = _IOWRT|_IOSTRG;
+  f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = str;
   f._cnt = maxlen;
   f._file = -1;
@@ -67,13 +67,13 @@ _vsnwprintf(wchar_t *str, size_t maxlen, const wchar_t *fmt, va_list ap)
 {
   FILE f;
   int len;
-  f._flag = _IOWRT|_IOSTRG;
+  f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = (char*)str;
   f._cnt = maxlen;
   f._file = -1;
   len = vfwprintf(&f,fmt, ap);
   // what if the buffer is full ??
-  *f._ptr = 0;
+  *(wchar_t*)f._ptr = 0;
   return len;
 }
 
