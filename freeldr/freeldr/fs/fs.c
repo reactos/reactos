@@ -161,7 +161,7 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 	case PARTITION_FAT32:
 	case PARTITION_FAT32_XINT13:
 		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionTableEntry.StartSector);
+		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
 		FileSystemType = 0;
 		FileSystemError("Unsupported file system.");

@@ -47,6 +47,8 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 	ULONG	PhysicalHead;
 	ULONG	PhysicalSector;
 
+	DbgPrint((DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
+
 	// Store the drive number
 	FatDriveNumber = DriveNumber;
 
