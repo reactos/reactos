@@ -25,6 +25,11 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#ifndef __DDRAW_GUID_DEFINED__
+	DEFINE_GUID( CLSID_DirectDraw,		0xD7B70EE0,0x4340,0x11CF,0xB0,0x63,0x00,0x20,0xAF,0xC2,0xCD,0x35 );
+
+#endif
+
 #define DDENUMRET_CANCEL	0
 #define DDENUMRET_OK		1
 
