@@ -1,5 +1,10 @@
 2003-08-22  Martin Fuchs	<martin-fuchs@gmx.net>
 
+	* subsys/system/explorer/taskbar/traynotify.cpp:
+	Added tray notification area.
+
+2003-08-22  Martin Fuchs	<martin-fuchs@gmx.net>
+
 	* include/wine/commctrl.h:
 	Removed commctrl.h header file to use the one of W32API headers.
 
