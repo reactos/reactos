@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.18 2004/08/15 22:15:23 chorns Exp $
+/* $Id: cmd.c,v 1.19 2004/08/22 20:47:20 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -247,7 +247,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 
 #ifdef _UNICODE
-#define SHELLEXECUTETEXT   	L"ShellExecuteW"
+#define SHELLEXECUTETEXT   	"ShellExecuteW"
 #else
 #define SHELLEXECUTETEXT   	"ShellExecuteA"
 #endif
