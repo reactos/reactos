@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/11/07 15:37:41 weiden Exp $
+# $Id: Makefile,v 1.2 2004/11/07 18:41:19 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = winscard
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = $(TARGET_BASE_LIB_WINFAX)
+TARGET_BASE = $(TARGET_BASE_LIB_WINSCARD)
 
 TARGET_CFLAGS = \
  -D__USE_W32API \
