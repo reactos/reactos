@@ -368,6 +368,10 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
       IoDisconnectInterrupt(ControllerExtension->Interrupt);
       IoDeleteController(ControllerObject);
     }
+  else
+    {
+      IoStartTimer(ControllerExtension->TimerDevice);
+    }
 
   return  CreatedDevices;
 }
@@ -1514,7 +1518,6 @@ IDEStartController(IN OUT PVOID Context)
   IDEWriteCommand(ControllerExtension->CommandPortBase, Command);
   ControllerExtension->TimerState = IDETimerCmdWait;
   ControllerExtension->TimerCount = IDE_CMD_TIMEOUT;
-  IoStartTimer(ControllerExtension->TimerDevice);
   
   if (DeviceExtension->Operation == IRP_MJ_WRITE) 
     {
@@ -1588,8 +1591,6 @@ IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension)
     // FIXME: set timer to check for end of reset
   ControllerExtension->TimerState = IDETimerResetWaitForBusyNegate;
   ControllerExtension->TimerCount = IDE_RESET_BUSY_TIMEOUT;
-  IoStartTimer(ControllerExtension->TimerDevice);
-
 }
 
 //    IDEIsr
@@ -1937,7 +1938,6 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
           {
             ControllerExtension->TimerState = IDETimerIdle;
             ControllerExtension->TimerCount = 0;
-            IoStopTimer(ControllerExtension->TimerDevice);
 
               // FIXME: get diagnostic code from drive 0
 
@@ -1976,7 +1976,6 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
               {
                 ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
                 ControllerExtension->CurrentIrp->IoStatus.Information = 0;
-                IoStopTimer(ControllerExtension->TimerDevice);
                 IDEFinishOperation(ControllerExtension);
               }
             else
@@ -1989,7 +1988,6 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
           case IDETimerResetWaitForDrdyAssert:
             ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
             ControllerExtension->CurrentIrp->IoStatus.Information = 0;
-            IoStopTimer(ControllerExtension->TimerDevice);
             IDEFinishOperation(ControllerExtension);
             break;
         }
