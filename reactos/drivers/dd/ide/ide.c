@@ -103,13 +103,13 @@ typedef struct _IDE_CONTROLLER_PARAMETERS
 
 #define  IDE_MAX_DRIVES       2
 
-#define  IDE_MAX_CONTROLLERS  4
+#define  IDE_MAX_CONTROLLERS  1
 IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] = 
 {
-  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff},
-  {0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff},
+  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff}
+  /*{0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff},
   {0x01E8, 8, 0x03ee, 1, 11, 11, 15, LevelSensitive, 0xffff},
-  {0x0168, 8, 0x036e, 1, 10, 10, 15, LevelSensitive, 0xffff}
+  {0x0168, 8, 0x036e, 1, 10, 10, 15, LevelSensitive, 0xffff}*/
 };
 
 static BOOLEAN IDEInitialized = FALSE;
@@ -261,7 +261,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     {
       IDEInitialized = TRUE;
     }
-
+  DPRINT( "Returning from DriverEntry\n" );
   return  WeGotSomeDisks ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
 }
 
@@ -408,7 +408,7 @@ IDEResetController(IN WORD CommandPort,
   IDEWriteDriveControl(ControlPort, 0);
 
     //  Wait for BUSY assertion
-  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++) 
+  /*for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++) 
     {
       if (IDEReadStatus(CommandPort) & IDE_SR_BUSY)
         {
@@ -420,7 +420,7 @@ IDEResetController(IN WORD CommandPort,
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
       return FALSE;
-    }
+    }*/
 
     //  Wait for BUSY negation
   for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++) 
@@ -436,16 +436,10 @@ IDEResetController(IN WORD CommandPort,
     {
       return FALSE;
     }
-   
    CHECKPOINT;
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
-  return  IDEReadError(CommandPort) == 1 &&
-          IDEReadSectorCount(CommandPort) == 1 &&
-          IDEReadSectorNum(CommandPort) == 1 &&
-          IDEReadCylinderLow(CommandPort) == 0 &&
-          IDEReadCylinderHigh(CommandPort) == 0 &&
-          (IDEReadDriveHead(CommandPort) & 0x1F) == 0;
+  return  IDEReadError(CommandPort) == 1;
 }
 
 //    IDECreateDevices
