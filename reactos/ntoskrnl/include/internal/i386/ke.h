@@ -136,10 +136,13 @@ VOID
 NtEarlyInitVdm(VOID);
 
 
-#define X86_EFLAGS_ID		(1 << 21)
+#define X86_EFLAGS_ID	    0x00200000 /* CPUID detection flag */
 
-#define X86_CR4_PGE		(1 << 7)
-#define X86_FEATURE_PGE		(1 << 13)
+#define X86_CR4_PAE	    0x00000020 /* enable physical address extensions */
+#define X86_CR4_PGE	    0x00000080 /* enable global pages */
+
+#define X86_FEATURE_PAE	    0x00000040 /* physical address extension is present */	
+#define X86_FEATURE_PGE	    0x00002000 /* Page Global Enable */
 
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");

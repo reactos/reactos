@@ -55,14 +55,11 @@ struct _EPROCESS;
 
 
 PULONG MmGetPageDirectory(VOID);
+VOID MiEnablePAE(PVOID* LastKernelAddress);
 
-/*
- * Amount of memory that can be mapped by a page table
- */
-#define PAGE_TABLE_SIZE (4*1024*1024)
 
-#define PAGE_MASK(x) ((x)&(~0xfff))
-#define VADDR_TO_PT_OFFSET(x)  ((((x)/1024)%4096))
-#define VADDR_TO_PD_OFFSET(x)  ((x)/(4*1024*1024))
+
+#define PAGE_MASK(x)		((x)&(~0xfff))
+#define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

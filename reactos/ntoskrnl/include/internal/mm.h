@@ -674,6 +674,10 @@ VOID MmMarkPageUnmapped(PFN_TYPE Page);
 
 VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size);
 
+VOID MiInitPageDirectoryMap(VOID);
+
+ULONG MiGetUserPageDirectoryCount(VOID);
+
 /* wset.c ********************************************************************/
 
 NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);

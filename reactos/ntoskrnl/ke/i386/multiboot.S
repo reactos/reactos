@@ -29,6 +29,7 @@
 .globl _unmap_me4
 .globl _pagetable_start
 .globl _pagetable_end 
+.globl _pae_pagedirtable
 		
 	/*
 	 * This is called by the realmode loader, with protected mode
@@ -329,7 +330,8 @@ kernel_pagetable:
 
 kernelmap_pagetable:
 	.fill 4096, 1, 0
-
+_pae_pagedirtable:
+	.fill 4096, 1, 0
 #ifdef MP
 apic_pagetable:
 	.fill 4096, 1, 0	

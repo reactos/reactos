@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.67 2004/08/19 22:17:47 hbirr Exp $
+/* $Id: mminit.c,v 1.68 2004/09/09 20:42:33 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -34,7 +34,6 @@ static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_init_desc = NULL;
-static MEMORY_AREA* kernel_map_desc = NULL;
 static MEMORY_AREA* kernel_kpcr_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
@@ -107,17 +106,7 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
    /*
     * Setup the system area descriptor list
     */
-   BaseAddress = (PVOID)0xf0000000;
-   MmCreateMemoryArea(NULL,
-                      MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      0x400000,
-                      0,
-                      &kernel_map_desc,
-                      TRUE,
-                      FALSE,
-                      BoundaryAddressMultiple);
+   MiInitPageDirectoryMap();
 
    BaseAddress = (PVOID)KPCR_BASE;
    MmCreateMemoryArea(NULL,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.193 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: main.c,v 1.194 2004/09/09 20:42:33 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -848,14 +848,10 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 {
   ULONG i;
   ULONG size;
-  ULONG last_kernel_address;
   extern ULONG _bss_end__;
   ULONG HalBase;
   ULONG DriverBase;
   ULONG DriverSize;
-
-  /* Low level architecture specific initialization */
-  KeInit1();
 
   /*
    * Copy the parameters to a local buffer because lowmem will go away
@@ -956,13 +952,17 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
 
+  LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd);
+
+  /* Low level architecture specific initialization */
+  KeInit1((PCHAR)KeLoaderBlock.CommandLine, &LastKernelAddress);
+
 #ifdef HAL_DBG
   HalnInitializeDisplay((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 #endif
 
   HalBase = KeLoaderModules[1].ModStart;
-  DriverBase = 
-    PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd);
+  DriverBase = LastKernelAddress;
 
   /*
    * Process hal.dll
@@ -970,7 +970,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   LdrSafePEProcessModule((PVOID)HalBase, (PVOID)DriverBase, (PVOID)KERNEL_BASE, &DriverSize);
 
   LdrHalBase = (ULONG_PTR)DriverBase;
-  last_kernel_address = DriverBase + DriverSize;
+  LastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
   /*
    * Process ntoskrnl.exe
@@ -981,8 +981,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   /* time in the boot process that we can use HAL         */
 
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
-  LastKrnlPhysAddr  = last_kernel_address - KERNEL_BASE + 0x200000;
-  LastKernelAddress = last_kernel_address;
+  LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
 
 #ifndef ACPI
   /* FIXME: VMware does not like it when ReactOS is using the BIOS memory map */

@@ -116,7 +116,7 @@ VOID KeInitializeTimerImpl(VOID);
 VOID KeInitializeBugCheck(VOID);
 VOID Phase1Initialization(PVOID Context);
 
-VOID KeInit1(VOID);
+VOID KeInit1(PCHAR CommandLine, PULONG LastKernelAddress);
 VOID KeInit2(VOID);
 
 BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame);

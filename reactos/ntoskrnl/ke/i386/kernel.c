@@ -37,7 +37,7 @@ ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
 static PFN_TYPE PcrPages[MAXIMUM_PROCESSORS];
 ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
-ULONG Ke386Cpuid = 300;
+ULONG Ke386Cpuid = 0x300;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -150,15 +150,24 @@ KeApplicationProcessorInit(VOID)
      /* Enable global pages */
      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
   }
+  
+  /* Enable PAE mode */
+  if (Ke386CpuidFlags & X86_FEATURE_PAE)
+  {
+     MiEnablePAE(NULL);
+  }
 
   /* Now we can enable interrupts. */
   Ke386EnableInterrupts();
 }
 
 VOID INIT_FUNCTION
-KeInit1(VOID)
+KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 {
    PKPCR KPCR;
+   BOOLEAN Pae = FALSE;
+   BOOLEAN NoExecute = FALSE;
+   PCHAR p1, p2;
    extern USHORT KiBootGdt[];
    extern KTSS KiBootTss;
 
@@ -195,7 +204,7 @@ KeInit1(VOID)
 
    if (Ke386CpuidFlags & X86_FEATURE_PGE)
    {
-   	  ULONG Flags;
+      ULONG Flags;
       /* Enable global pages */
       Ke386SaveFlags(Flags);
       Ke386DisableInterrupts();
@@ -203,6 +212,36 @@ KeInit1(VOID)
       Ke386RestoreFlags(Flags);
    }
 
+   /* Search for pae and noexecute */
+   p1 = (PCHAR)KeLoaderBlock.CommandLine;
+   while(*p1 && (p2 = strchr(p1, '/')))
+   {
+      p2++;
+      if (!_strnicmp(p2, "PAE", 3))
+      {
+	 if (p2[3] == ' ' || p2[3] == 0)
+	 {
+	    p2 += 3;
+	    Pae = TRUE;
+	 }
+      }
+      else if (!_strnicmp(p2, "NOEXECUTE", 9))
+      {
+         if (p2[9] == ' ' || p2[9] == '=' || p2[9] == 0)
+	 {
+	    p2 += 9;
+	    NoExecute = TRUE;
+	 }
+      }
+      p1 = p2;
+   }
+
+   /* Enable PAE mode */
+   if ((Pae && (Ke386CpuidFlags & X86_FEATURE_PAE)) ||
+       (NoExecute && (Ke386CpuidFlags & X86_FEATURE_PAE) /* && (check for the non execution capabilities of the processor) */))
+   {
+      MiEnablePAE((PVOID*)LastKernelAddress);
+   }
 }
 
 VOID INIT_FUNCTION
@@ -212,4 +251,17 @@ KeInit2(VOID)
    KeInitializeBugCheck();
    KeInitializeDispatcher();
    KeInitializeTimerImpl();
+
+   if (Ke386CpuidFlags & X86_FEATURE_PAE)
+   {
+      DPRINT1("CPU supports PAE mode\n");
+      if (Ke386GetCr4() & X86_CR4_PAE)
+      {
+         DPRINT1("CPU runs in PAE mode\n");
+      }
+      else
+      {
+         DPRINT1("CPU doesn't run in PAE mode\n");
+      }
+   }
 }
