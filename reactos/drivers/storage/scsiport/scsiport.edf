@@ -1,4 +1,4 @@
-; $Id: scsiport.edf,v 1.2 2001/07/23 06:13:48 ekohl Exp $
+; $Id: scsiport.edf,v 1.3 2001/08/23 15:26:57 ekohl Exp $
 ;
 ; scsiport.def - export definition file for scsiport driver
 ;
@@ -22,18 +22,12 @@ ScsiPortIoMapTransfer=ScsiPortIoMapTransfer@16
 ScsiPortLogError=ScsiPortLogError@28
 ScsiPortMoveMemory=ScsiPortMoveMemory@12
 ScsiPortNotification
-;ScsiPortReadPortBufferUchar=HAL.READ_PORT_BUFFER_UCHAR
-ScsiPortReadPortBufferUchar=NTOSKRNL.READ_PORT_BUFFER_UCHAR
-;ScsiPortReadPortBufferUshort=HAL.READ_PORT_BUFFER_USHORT
-ScsiPortReadPortBufferUshort=NTOSKRNL.READ_PORT_BUFFER_USHORT
-;ScsiPortReadPortBufferUlong=HAL.READ_PORT_BUFFER_ULONG
-ScsiPortReadPortBufferUlong=NTOSKRNL.READ_PORT_BUFFER_ULONG
-;ScsiPortReadPortUchar=NTOSKRNL.READ_PORT_UCHAR
-ScsiPortReadPortUchar=NTOSKRNL.READ_PORT_UCHAR
-;ScsiPortReadPortUshort=HAL.READ_PORT_USHORT
-ScsiPortReadPortUshort=NTOSKRNL.READ_PORT_USHORT
-;ScsiPortReadPortUlong=HAL.READ_PORT_ULONG
-ScsiPortReadPortUlong=NTOSKRNL.READ_PORT_ULONG
+ScsiPortReadPortBufferUchar=HAL.READ_PORT_BUFFER_UCHAR
+ScsiPortReadPortBufferUshort=HAL.READ_PORT_BUFFER_USHORT
+ScsiPortReadPortBufferUlong=HAL.READ_PORT_BUFFER_ULONG
+ScsiPortReadPortUchar=HAL.READ_PORT_UCHAR
+ScsiPortReadPortUshort=HAL.READ_PORT_USHORT
+ScsiPortReadPortUlong=HAL.READ_PORT_ULONG
 ScsiPortReadRegisterBufferUchar=NTOSKRNL.READ_REGISTER_BUFFER_UCHAR
 ScsiPortReadRegisterBufferUshort=NTOSKRNL.READ_REGISTER_BUFFER_USHORT
 ScsiPortReadRegisterBufferUlong=NTOSKRNL.READ_REGISTER_BUFFER_ULONG
@@ -41,21 +35,14 @@ ScsiPortReadRegisterUchar=NTOSKRNL.READ_REGISTER_UCHAR
 ScsiPortReadRegisterUshort=NTOSKRNL.READ_REGISTER_USHORT
 ScsiPortReadRegisterUlong=NTOSKRNL.READ_REGISTER_ULONG
 ScsiPortSetDataBusByOffset=ScsiPortSetBusDataByOffset@28
-;ScsiPortStallExecution=HAL.KeStallExecutionProcessor
-ScsiPortStallExecution=NTOSKRNL.KeStallExecutionProcessor
+ScsiPortStallExecution=HAL.KeStallExecutionProcessor
 ScsiPortValidateRange=ScsiPortValidateRange@28
-;ScsiPortWritePortUchar=HAL.WRITE_PORT_UCHAR
-ScsiPortWritePortUchar=NTOSKRNL.WRITE_PORT_UCHAR
-;ScsiPortWritePortUshort=HA.WRITE_PORT_USHORT
-ScsiPortWritePortUshort=NTOSKRNL.WRITE_PORT_USHORT
-;ScsiPortWritePortUlong=HAL.WRITE_PORT_ULONG
-ScsiPortWritePortUlong=NTOSKRNL.WRITE_PORT_ULONG
-;ScsiPortWritePortBufferUchar=HAL.WRITE_PORT_BUFFER_UCHAR
-ScsiPortWritePortBufferUchar=NTOSKRNL.WRITE_PORT_BUFFER_UCHAR
-;ScsiPortWritePortBufferUshort=HAL.WRITE_PORT_BUFFER_USHORT
-ScsiPortWritePortBufferUshort=NTOSKRNL.WRITE_PORT_BUFFER_USHORT
-;ScsiPortWritePortBufferUlong=HAL.WRITE_PORT_BUFFER_ULONG
-ScsiPortWritePortBufferUlong=NTOSKRNL.WRITE_PORT_BUFFER_ULONG
+ScsiPortWritePortUchar=HAL.WRITE_PORT_UCHAR
+ScsiPortWritePortUshort=HA.WRITE_PORT_USHORT
+ScsiPortWritePortUlong=HAL.WRITE_PORT_ULONG
+ScsiPortWritePortBufferUchar=HAL.WRITE_PORT_BUFFER_UCHAR
+ScsiPortWritePortBufferUshort=HAL.WRITE_PORT_BUFFER_USHORT
+ScsiPortWritePortBufferUlong=HAL.WRITE_PORT_BUFFER_ULONG
 ScsiPortWriteRegisterBufferUchar=NTOSKRNL.WRITE_REGISTER_BUFFER_UCHAR
 ScsiPortWriteRegisterBufferUshort=NTOSKRNL.WRITE_REGISTER_BUFFER_USHORT
 ScsiPortWriteRegisterBufferUlong=NTOSKRNL.WRITE_REGISTER_BUFFER_ULONG
