@@ -20,6 +20,7 @@
 #define IDS_NETWORK                     16
 #define IDS_CONNECTIONS                 17
 #define IDS_DRIVES                      18
+#define IDS_SEARCH_COMPUTER             19
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102

@@ -191,6 +191,13 @@ typedef	void (WINAPI* RUNFILEDLG)(HWND hwndOwner, HICON hIcon, LPCSTR lpstrDirec
 #define	RFF_NOSEPARATEMEM	0x20	// Removes the Separate Memory Space check box (Windows NT only).
 
 
+ // declare more undocumented shell32 functions
+typedef	void (WINAPI* EXITWINDOWSDLG)(HWND hwndOwner);
+typedef	int (WINAPI* RESTARTWINDOWSDLG)(HWND hwndOwner, LPCWSTR reason, UINT flags);
+typedef	BOOL (WINAPI* SHFINDFILES)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch);
+typedef	BOOL (WINAPI* SHFINDCOMPUTER)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch);
+
+
  // Startmenu root window
 struct StartMenuRoot : public StartMenu
 {
@@ -205,7 +212,11 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	void	ShowLaunchDialog(HWND hwndDesktopBar);
+	static void	ShowLaunchDialog(HWND hwndDesktopBar);
+	static void	ShowExitWindowsDialog(HWND hwndOwner);
+	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
+	static void	ShowSearchDialog();
+	static void	ShowSearchComputer();
 
 	SIZE	_logo_size;
 };

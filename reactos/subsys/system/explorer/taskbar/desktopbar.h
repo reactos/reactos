@@ -36,24 +36,25 @@
 #define	DESKTOPBARBAR_HEIGHT	29
 
 
-#define	IDC_START		0x1000
-#define	IDC_LOGOFF		0x1001
-#define	IDC_SHUTDOWN	0x1002
-#define	IDC_LAUNCH		0x1003
-#define	IDC_START_HELP	0x1004
-#define	IDC_SEARCH		0x1005
-#define	IDC_SETTINGS	0x1006
-#define	IDC_ADMIN		0x1007
-#define	IDC_DOCUMENTS	0x1008
-#define	IDC_RECENT		0x1009
-#define	IDC_FAVORITES	0x100A
-#define	IDC_PROGRAMS	0x100B
-#define	IDC_EXPLORE		0x100C
-#define	IDC_NETWORK		0x100D
-#define	IDC_CONNECTIONS	0x100E
-#define	IDC_DRIVES		0x100F
+#define	IDC_START				0x1000
+#define	IDC_LOGOFF				0x1001
+#define	IDC_SHUTDOWN			0x1002
+#define	IDC_LAUNCH				0x1003
+#define	IDC_START_HELP			0x1004
+#define	IDC_SEARCH				0x1005
+#define	IDC_SEARCH_COMPUTER		0x1006
+#define	IDC_SETTINGS			0x1007
+#define	IDC_ADMIN				0x1008
+#define	IDC_DOCUMENTS			0x1009
+#define	IDC_RECENT				0x100A
+#define	IDC_FAVORITES			0x100B
+#define	IDC_PROGRAMS			0x100C
+#define	IDC_EXPLORE				0x100D
+#define	IDC_NETWORK				0x100E
+#define	IDC_CONNECTIONS			0x100F
+#define	IDC_DRIVES				0x1010
 
-#define	IDC_FIRST_MENU	0x3000
+#define	IDC_FIRST_MENU			0x3000
 
 
  /// desktop bar window, also known as "system tray"

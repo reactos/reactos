@@ -106,6 +106,7 @@ BEGIN
     IDS_NETWORK             "Reþea"
     IDS_CONNECTIONS         "Conecþii"
     IDS_DRIVES              "Discuri"
+    IDS_SEARCH_COMPUTER     "Search Computer..."
 END
 
 #endif    // Romanian resources
@@ -363,6 +364,7 @@ BEGIN
     IDS_NETWORK             "Netzwerk"
     IDS_CONNECTIONS         "Verbindungen"
     IDS_DRIVES              "Verzeichnisse"
+    IDS_SEARCH_COMPUTER     "Suche Computer..."
 END
 
 #endif    // German (Germany) resources
@@ -571,6 +573,7 @@ BEGIN
     IDS_NETWORK             "Network"
     IDS_CONNECTIONS         "Connections"
     IDS_DRIVES              "Drives"
+    IDS_SEARCH_COMPUTER     "Search Computer..."
 END
 
 #endif    // English (U.S.) resources

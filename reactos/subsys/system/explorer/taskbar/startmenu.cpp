@@ -573,23 +573,24 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddSeparator();
 
 	 // insert hard coded start entries
-	AddButton(ResString(IDS_PROGRAMS),	0, true, IDC_PROGRAMS);
-	AddButton(ResString(IDS_FAVORITES),	0, true, IDC_FAVORITES);
-	AddButton(ResString(IDS_DOCUMENTS),	0, true, IDC_DOCUMENTS);
-	AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
-	AddButton(ResString(IDS_SETTINGS),	0, true, IDC_SETTINGS);
-	AddButton(ResString(IDS_ADMIN),		0, true, IDC_ADMIN);
-	AddButton(ResString(IDS_DRIVES),	0, true, IDC_DRIVES);
-	AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
-	AddButton(ResString(IDS_CONNECTIONS),0,true, IDC_CONNECTIONS);
-	AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
-	AddButton(ResString(IDS_START_HELP),0, false, IDC_START_HELP);
-	AddButton(ResString(IDS_LAUNCH),	0, false, IDC_LAUNCH);
+	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
+	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
+	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
+	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
+	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_DRIVES),		0, true, IDC_DRIVES);
+	AddButton(ResString(IDS_NETWORK),		0, true, IDC_NETWORK);
+	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_SEARCH),		0, false, IDC_SEARCH);
+	AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
+	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
+	AddButton(ResString(IDS_LAUNCH),		0, false, IDC_LAUNCH);
 
 	AddSeparator();
 
-	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
 	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
+	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
 
 	return 0;
 }
@@ -675,13 +676,27 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_DRIVES);
 		break;
 
-	  case IDC_LOGOFF:
-		DestroyWindow(GetParent(_hwnd));	//TODO: show dialog and ask for acknowledge
+	  case IDC_SEARCH:
+		ShowSearchDialog();
 		break;
 
-	  case IDC_SHUTDOWN:
-		DestroyWindow(GetParent(_hwnd));	//TODO: show dialog box and shut down system
+	  case IDC_SEARCH_COMPUTER:
+		ShowSearchComputer();
 		break;
+
+	  case IDC_LOGOFF:
+		/* The shell32 Dialog prompts about some system setting change. This is not what we want to display here.
+		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+		CloseStartMenu(id);
+		ShowRestartDialog(hwndDesktopBar, EWX_LOGOFF);*/
+		DestroyWindow(GetParent(_hwnd));
+		break;
+
+	  case IDC_SHUTDOWN: {
+		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+		CloseStartMenu(id);
+		ShowExitWindowsDialog(hwndDesktopBar);
+		break;}
 
 	  default:
 		return super::Command(id, code);
@@ -714,6 +729,42 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 		else
 			RunFileDlg(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
 	}
+}
+
+void StartMenuRoot::ShowExitWindowsDialog(HWND hwndOwner)
+{
+	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
+	EXITWINDOWSDLG ExitWindowsDlg = (EXITWINDOWSDLG)GetProcAddress(hShell32, (LPCSTR)60);
+
+	if (ExitWindowsDlg)
+		ExitWindowsDlg(hwndOwner);
+}
+
+void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
+{
+	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
+	RESTARTWINDOWSDLG RestartDlg = (RESTARTWINDOWSDLG)GetProcAddress(hShell32, (LPCSTR)59);
+
+	if (RestartDlg)
+		RestartDlg(hwndOwner, L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
+}
+
+void StartMenuRoot::ShowSearchDialog()
+{
+	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
+	SHFINDFILES SHFindFiles = (SHFINDFILES)GetProcAddress(hShell32, (LPCSTR)90);
+
+	if (SHFindFiles)
+		SHFindFiles(NULL, NULL);
+}
+
+void StartMenuRoot::ShowSearchComputer()
+{
+	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
+	SHFINDCOMPUTER SHFindComputer = (SHFINDCOMPUTER)GetProcAddress(hShell32, (LPCSTR)91);
+
+	if (SHFindComputer)
+		SHFindComputer(NULL, NULL);
 }
 
 
