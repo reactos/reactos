@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2004/03/27 23:24:51 weiden Exp $
+/* $Id: stubs.c,v 1.7 2004/03/28 12:19:07 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
@@ -71,25 +71,6 @@ WlxIsLogoffOk(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int WINAPI
-WlxLoggedOutSAS(
-	PVOID                pWlxContext,
-	DWORD                dwSasType,
-	PLUID                pAuthenticationId,
-	PSID                 pLogonSid,
-	PDWORD               pdwOptions,
-	PHANDLE              phToken,
-	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo,
-	PVOID                *pProfile)
-{
-  UNIMPLEMENTED;
-  return 0;
 }
 
 

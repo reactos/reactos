@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.8 2004/03/27 23:24:51 weiden Exp $
+/* $Id: msgina.c,v 1.9 2004/03/28 12:19:07 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -456,6 +456,84 @@ WlxDisplaySASNotice(
 {
   PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
   pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
+}
+
+
+static PWSTR
+DuplicationString(PWSTR Str)
+{
+  DWORD cb;
+  PWSTR NewStr;
+
+  cb = (wcslen(Str) + 1) * sizeof(WCHAR);
+  if((NewStr = LocalAlloc(LMEM_FIXED, cb)))
+  {
+    memcpy(NewStr, Str, cb);
+  }
+  return NewStr;
+}
+
+
+/*
+ * @unimplemented
+ */
+int WINAPI
+WlxLoggedOutSAS(
+	PVOID                pWlxContext,
+	DWORD                dwSasType,
+	PLUID                pAuthenticationId,
+	PSID                 pLogonSid,
+	PDWORD               pdwOptions,
+	PHANDLE              phToken,
+	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo,
+	PVOID                *pProfile)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  TOKEN_STATISTICS Stats;
+  DWORD cbStats;
+
+  if(!phToken)
+  {
+    DbgPrint("msgina: phToken == NULL!\n");
+    return WLX_SAS_ACTION_NONE;
+  }
+
+  if(!LogonUser(L"Administrator", NULL, L"Secrect",
+                LOGON32_LOGON_INTERACTIVE, /* FIXME - use LOGON32_LOGON_UNLOCK instead! */
+                LOGON32_PROVIDER_DEFAULT,
+                phToken))
+  {
+    DbgPrint("msgina: Logonuser() failed\n");
+    return WLX_SAS_ACTION_NONE;
+  }
+  
+  if(!(*phToken))
+  {
+    DbgPrint("msgina: *phToken == NULL!\n");
+    return WLX_SAS_ACTION_NONE;
+  }
+
+  pgContext->UserToken =*phToken;
+  
+  *pdwOptions = 0;
+  *pProfile =NULL; 
+  
+  if(!GetTokenInformation(*phToken,
+                          TokenStatistics,
+                          (PVOID)&Stats,
+                          sizeof(TOKEN_STATISTICS),
+                          &cbStats))
+  {
+    DbgPrint("msgina: Couldn't get Autentication id from user token!\n");
+    return WLX_SAS_ACTION_NONE;
+  }
+  *pAuthenticationId = Stats.AuthenticationId; 
+  pNprNotifyInfo->pszUserName = DuplicationString(L"Administrator");
+  pNprNotifyInfo->pszDomain = NULL;
+  pNprNotifyInfo->pszPassword = DuplicationString(L"Secret");
+  pNprNotifyInfo->pszOldPassword = NULL;
+
+  return WLX_SAS_ACTION_LOGON;
 }
 
 
