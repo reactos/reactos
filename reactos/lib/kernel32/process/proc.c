@@ -18,14 +18,15 @@
 #include <string.h>
 #include <ddk/rtl.h>
 #include <ddk/li.h>
+#include <internal/i386/segment.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* GLOBALS *****************************************************************/
 
-static NT_PEB *CurrentPeb;
-static NT_PEB Peb;
+static NT_PEB CurrentPeb;
+static PROCESSINFOW ProcessInfo;
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
@@ -35,12 +36,17 @@ VOID RegisterWaitForInputIdle(WaitForInputIdleType  lpfnRegisterWaitForInputIdle
 
 WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
 
+VOID InitializePeb(PWSTR CommandLine)
+{
+   DPRINT("InitializePeb(CommandLine %x)\n",CommandLine);
+   DPRINT("ProcessInfo.CommandLine %x\n",ProcessInfo.CommandLine);
+   wcscpy(ProcessInfo.CommandLine, CommandLine);
+   CurrentPeb.StartupInfo = &ProcessInfo;
+}
+
 NT_PEB *GetCurrentPeb(VOID)
 {
-	if ( CurrentPeb != NULL )
-		return CurrentPeb;
-	else // hack to be able to return a process environment any time.
-		return &Peb;
+   return(&CurrentPeb);
 }
 
 HANDLE STDCALL GetCurrentProcess(VOID)
@@ -178,6 +184,103 @@ WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
 			 lpProcessInformation);				
 }
 
+HANDLE STDCALL CreateFirstThread(HANDLE hProcess,
+				 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+				 DWORD dwStackSize,
+				 LPTHREAD_START_ROUTINE lpStartAddress,
+				 LPVOID lpParameter,
+				 DWORD dwCreationFlags,
+				 LPDWORD lpThreadId,
+				 PWSTR lpCommandLine)
+{	
+   NTSTATUS errCode;
+   HANDLE ThreadHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId;
+   CONTEXT ThreadContext;
+   INITIAL_TEB InitialTeb;
+   BOOLEAN CreateSuspended = FALSE;
+   ULONG BaseAddress;
+   ULONG BytesWritten;
+   ULONG Temp;
+   ULONG CommandLineLen;
+   
+   if (lpCommandLine == NULL)
+     {
+	lpCommandLine = "";
+	CommandLineLen = 1;
+     }
+   else
+     {
+	CommandLineLen = wcslen(lpCommandLine) + 1;     
+     }
+   CommandLineLen = CommandLineLen * sizeof(WCHAR);
+   CommandLineLen = (CommandLineLen & (~0x3)) + 4;
+   DPRINT("CommandLineLen %d\n",CommandLineLen);
+   
+   
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.ObjectName = NULL;
+   ObjectAttributes.Attributes = 0;
+   if ( lpThreadAttributes != NULL ) {
+      if ( lpThreadAttributes->bInheritHandle ) 
+	ObjectAttributes.Attributes = OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
+   }
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   if ( ( dwCreationFlags & CREATE_SUSPENDED ) == CREATE_SUSPENDED )
+		CreateSuspended = TRUE;
+   else
+     CreateSuspended = FALSE;
+
+   BaseAddress = 0;
+   ZwAllocateVirtualMemory(hProcess,
+			   &BaseAddress,
+			   0,
+                           &dwStackSize,
+			   MEM_COMMIT,
+			   PAGE_READWRITE);
+   
+
+   memset(&ThreadContext,0,sizeof(CONTEXT));
+   ThreadContext.Eip = lpStartAddress;
+   ThreadContext.SegGs = USER_DS;
+   ThreadContext.SegFs = USER_DS;
+   ThreadContext.SegEs = USER_DS;
+   ThreadContext.SegDs = USER_DS;
+   ThreadContext.SegCs = USER_CS;
+   ThreadContext.SegSs = USER_DS;        
+   ThreadContext.Esp = BaseAddress + dwStackSize - CommandLineLen - 8;   
+   ThreadContext.EFlags = (1<<1) + (1<<9);
+
+   NtWriteVirtualMemory(hProcess,
+			BaseAddress + dwStackSize - CommandLineLen,
+			lpCommandLine,
+			CommandLineLen,
+			&BytesWritten);
+   Temp = BaseAddress + dwStackSize - CommandLineLen;
+   NtWriteVirtualMemory(hProcess,
+			BaseAddress + dwStackSize - CommandLineLen - 4,
+			&Temp,
+			sizeof(Temp),
+			&BytesWritten);
+
+   errCode = NtCreateThread(&ThreadHandle,
+			    THREAD_ALL_ACCESS,
+			    &ObjectAttributes,
+			    hProcess,
+			    &ClientId,
+			    &ThreadContext,
+			    &InitialTeb,
+			    CreateSuspended);
+   if ( lpThreadId != NULL )
+     memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+   
+   return ThreadHandle;
+}
+
 
 WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			       LPWSTR lpCommandLine,
@@ -200,9 +303,10 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    LPVOID  lpParameter = NULL;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-   WCHAR TempApplicationName[255];
-   WCHAR TempFileName[255];
-   WCHAR TempDirectoryName[255];
+   WCHAR TempApplicationName[256];
+   WCHAR TempFileName[256];
+   WCHAR TempDirectoryName[256];
+   WCHAR TempCommandLine[256];
    ULONG i;
    ULONG BaseAddress;
    ULONG Size;
@@ -210,6 +314,8 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
+   
+   wcscpy(TempCommandLine, lpCommandLine);
    
    hFile = NULL;
    
@@ -328,15 +434,17 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			   &PriorityClass,
 			   sizeof(KPRIORITY));
 #endif
+   
    DPRINT("Creating thread for process\n");
    lpStartAddress = BaseAddress;
-   hThread =  CreateRemoteThread(hProcess,	
-				 lpThreadAttributes,
-				 4096, // 1 page ??	
-				 lpStartAddress,	
-				 lpParameter,	
-				 dwCreationFlags,
-				 &lpProcessInformation->dwThreadId);
+   hThread =  CreateFirstThread(hProcess,	
+				lpThreadAttributes,
+				16384, // 3 page ??
+				lpStartAddress,	
+				lpParameter,	
+				dwCreationFlags,
+				&lpProcessInformation->dwThreadId,
+				TempCommandLine);
 
    if ( hThread == NULL )
      return FALSE;

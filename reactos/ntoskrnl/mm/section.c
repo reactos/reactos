@@ -149,7 +149,11 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
 			    DesiredAccess,
 			    ObjectAttributes,
 			    MmSectionType);
-   
+   if (Section == NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+     
    if (MaximumSize != NULL)
      {
 	Section->MaximumSize = *MaximumSize;
@@ -215,11 +219,12 @@ NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
 	return(Status);
      }
        
-   *SectionHandle = ObInsertHandle(KeGetCurrentProcess(),
-				   Object,
-				   DesiredAccess,
-				   FALSE);
-   return(STATUS_SUCCESS);
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   SectionHandle);
+   return(Status);
 }
 
 NTSTATUS NtMapViewOfSection(HANDLE SectionHandle,

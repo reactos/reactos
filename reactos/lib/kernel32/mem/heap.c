@@ -35,6 +35,7 @@
 
 #include <ddk/ntddk.h>
 
+#define HEAP_VALIDATE
 
 static HEAP_BUCKET __HeapDefaultBuckets[]=
 {
@@ -121,6 +122,11 @@ static LPVOID __HeapAlloc(PHEAP pheap, ULONG flags, ULONG size, ULONG tag)
    
    DPRINT("__HeapAlloc(pheap %x, flags %x, size %d, tag %x)\n",
 	   pheap,flags,size,tag);
+   
+   if (size <= HEAP_ADMIN_SIZE)
+     {
+	size = size + HEAP_ADMIN_SIZE;
+     }
    
    pfree=&(pheap->Start);
    allocsize=SIZE_ROUND(size);
@@ -446,11 +452,17 @@ static LPVOID __HeapAllocFragment(PHEAP pheap, ULONG flags, ULONG size )
    PHEAP_SUBALLOC	psub;
    PHEAP_FRAGMENT	palloc;
    INT			nalloc;
-
+   
+   DPRINT("__HeapAllocFragment(pheap %x, flags %d, size %d)\n",
+	  pheap,flags,size);
+   
+   size = size + HEAP_FRAG_ADMIN_SIZE;
+   
    /* get bucket size */
    pbucket=pheap->Bucket;
    while(size>pbucket->Size)
    {
+      DPRINT("pbucket->Size %d\n",pbucket->Size);
       pbucket++;
    }
    /* get suballoc */
@@ -681,9 +693,9 @@ LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
    PHEAP    pheap=hheap;
    LPVOID   retval;
 
-   DPRINT("HeapAlloc( 0x%lX, 0x%lX, 0x%lX )\n",
+   DPRINT("HeapAlloc(hheap 0x%lX, flags 0x%lX, size 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) size );
-#ifdef NOT
+#ifdef HEAP_VALIDATE
    HeapValidate(hheap, 0, 0);
 #endif
    if(( flags | pheap->Flags)  & HEAP_NO_SERIALIZE )
@@ -698,6 +710,8 @@ LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
       LeaveCriticalSection(&(pheap->Synchronize));
 
    DPRINT("HeapAlloc returns 0x%lX\n", (ULONG) retval);
+   
+   HeapValidate(hheap, 0, 0);
    return retval;
 
 
@@ -715,7 +729,7 @@ LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
 
    DPRINT("HeapReAlloc( 0x%lX, 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) ptr, size );
-#ifdef NOT
+#ifdef HEAP_VALIDATE
    HeapValidate(hheap, 0, 0);
 #endif
    if(( flags | pheap->Flags)  & HEAP_NO_SERIALIZE )
@@ -748,7 +762,7 @@ WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
 
    DPRINT("HeapFree( 0x%lX, 0x%lX, 0x%lX )\n",
           (ULONG) hheap, flags, (ULONG) ptr );
-#ifdef NOT
+#ifdef HEAP_VALIDATE
    HeapValidate(hheap, 0, 0);
 #endif
    if(( flags | pheap->Flags)  & HEAP_NO_SERIALIZE )

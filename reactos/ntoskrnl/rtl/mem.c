@@ -11,9 +11,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <internal/string.h>
-
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -49,7 +49,10 @@ VOID RtlCopyBytes(PVOID Destination,
 
 VOID RtlCopyMemory(VOID* Destination, VOID* Source, ULONG Length)
 {
+   DPRINT("RtlCopyMemory(Destination %x Source %x Length %d\n",
+	  Destination,Source,Length);
    memcpy(Destination,Source,Length);
+   DPRINT("*Destination %x\n",*(PULONG)Destination);
 }
 
 VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)

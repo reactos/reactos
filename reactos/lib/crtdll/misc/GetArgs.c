@@ -29,55 +29,65 @@ char *** _environ_dll = &_environ;
 char **environ; 
         
 
-int  __GetMainArgs(int *argc,char ***argv,char **env,int flag)
+int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
 {
-	char *cmdline;
-	int i,afterlastspace;
-	DWORD   version;
- 
-//	acmdln_dll = cmdline = strdup(  GetCommandLineA() );
-
-	version = GetVersion();
-	osver_dll       = version >> 16;
-	winminor_dll    = version & 0xFF;
-	winmajor_dll    = (version>>8) & 0xFF;
-	winver_dll      = ((version >> 8) & 0xFF) + ((version & 0xFF) << 8);
-
- 
-         /* missing threading init */
- 
-	i=0;
-
-	afterlastspace=0;
-	while (cmdline[i]) {
-		  if (cmdline[i]==' ') {
-			__argc++;
-			cmdline[i]='\0';
-			__argv[__argc-1] = strdup( cmdline+afterlastspace);
-			i++;
-			while (cmdline[i]==' ')
-				i++;
-            if (cmdline[i])
-					afterlastspace=i;
-		  } else
-			  i++;
-	}
-	
-    __argc++;
-	cmdline[i]='\0';
-	__argv[__argc-1] = strdup( cmdline+afterlastspace);
-
+   char *cmdline;
+   int i,afterlastspace;
+   DWORD   version;
+   
+   //	acmdln_dll = cmdline = strdup(  GetCommandLineA() );
+   
+   version = GetVersion();
+   osver_dll       = version >> 16;
+   winminor_dll    = version & 0xFF;
+   winmajor_dll    = (version>>8) & 0xFF;
+   winver_dll      = ((version >> 8) & 0xFF) + ((version & 0xFF) << 8);
+   
+   
+   /* missing threading init */
+   
+   i=0;
+   cmdline = GetCommandLineA();
+   afterlastspace=0;
+   
+   dprintf("cmdline '%s'\n",cmdline);
+   
+   while (cmdline[i]) 
+     {
+	if (cmdline[i]==' ') 
+	  {
+	     dprintf("cmdline '%s'\n",cmdline);
+	     __argc++;
+	     cmdline[i]='\0';
+	     __argv[__argc-1] = strdup( cmdline+afterlastspace);
+	     i++;
+	     while (cmdline[i]==' ')
+	       i++;
+	     if (cmdline[i])
+	       afterlastspace=i;
+	  } 
+	else
+	  {
+	     i++;
+	  }
+     }
+  
+   
+   __argc++;
+   cmdline[i]='\0';
+   __argv[__argc-1] = strdup( cmdline+afterlastspace);
+   HeapValidate(GetProcessHeap(),0,NULL);
     
-    *argc    = __argc;
-    *argv    = __argv;
- 
-
-	xenv = GetEnvironmentStringsA();
-	_environ = &xenv;
-	_environ_dll = &_environ;    
-	environ = &xenv; 
-	env =  &xenv;
-	return 0;
+   *argc    = __argc;
+   *argv    = __argv;
+   
+   
+//   xenv = GetEnvironmentStringsA();
+   _environ = &xenv;
+   _environ_dll = &_environ;    
+   environ = &xenv; 
+   env =  &xenv;
+   return 0;
 }
 
 int _chkstk()

@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS kernel
  * FILE:              ntoskrnl/ps/process.c
  * PURPOSE:           Process managment
- * PROGRAMMER:        David Welch (welch@mcmail.com)
+ * PROGRAMMER:        David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *              21/07/98: Created
  */
@@ -26,6 +26,11 @@ HANDLE SystemProcessHandle = NULL;
 POBJECT_TYPE PsProcessType = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+PEPROCESS PsGetSystemProcess(VOID)
+{
+   return(SystemProcess);
+}
 
 VOID PsInitProcessManagment(VOID)
 {
@@ -64,11 +69,14 @@ VOID PsInitProcessManagment(VOID)
    KProcess = &SystemProcess->Pcb;  
    
    InitializeListHead(&(KProcess->MemoryAreaList));
-   ObInitializeHandleTable(NULL,FALSE,KProcess);
+   ObCreateHandleTable(NULL,FALSE,SystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
    
-   SystemProcessHandle = ObInsertHandle(KProcess,SystemProcess,
-					PROCESS_ALL_ACCESS,FALSE);   
+   ObCreateHandle(SystemProcess,
+		  SystemProcess,
+		  PROCESS_ALL_ACCESS,
+		  FALSE,
+		  &SystemProcessHandle);
 }
 
 PKPROCESS KeGetCurrentProcess(VOID)
@@ -84,8 +92,8 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
  * FUNCTION: Returns a pointer to the current process
  */
 {
-   if (PsGetCurrentThread()==NULL 
-       || PsGetCurrentThread()->ThreadsProcess==NULL)
+   if (PsGetCurrentThread() == NULL || 
+       PsGetCurrentThread()->ThreadsProcess == NULL)
      {
 	return(SystemProcess);
      }
@@ -163,7 +171,7 @@ NTSTATUS STDCALL ZwCreateProcess(
 				      PROCESS_CREATE_PROCESS,
 				      PsProcessType,
 				      UserMode,
-				      &ParentProcessHandle,
+				      (PVOID*)&ParentProcess,
 				      NULL);
 
    if (Status != STATUS_SUCCESS)
@@ -183,7 +191,9 @@ NTSTATUS STDCALL ZwCreateProcess(
    KProcess = &(Process->Pcb);
    
    InitializeListHead(&(KProcess->MemoryAreaList));
-   ObInitializeHandleTable(KProcess,InheritObjectTable,KProcess);
+   ObCreateHandleTable(ParentProcess,
+		       InheritObjectTable,
+		       Process);
    
    PageDirectory = physical_to_linear((ULONG)get_free_page());
    KProcess->PageTableDirectory = PageDirectory;
@@ -308,5 +318,45 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
 					 IN PVOID ProcessInformation,
 					 IN ULONG ProcessInformationLength)
 {
-   UNIMPLEMENTED;
+   PEPROCESS Process;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+				      PROCESS_SET_INFORMATION,
+				      PsProcessType,
+				      UserMode,
+				      &ProcessHandle,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+   
+   switch (ProcessInformationClass)
+     {
+      case ProcessBasicInformation:
+      case ProcessQuotaLimits:
+      case ProcessIoCounters:
+      case ProcessVmCounters:
+      case ProcessTimes:
+      case ProcessBasePriority:
+      case ProcessRaisePriority:
+      case ProcessDebugPort:
+      case ProcessExceptionPort:
+      case ProcessAccessToken:
+      case ProcessLdtInformation:
+      case ProcessLdtSize:
+      case ProcessDefaultHardErrorMode:
+      case ProcessIoPortHandlers:
+      case ProcessWorkingSetWatch:
+      case ProcessUserModeIOPL:
+      case ProcessEnableAlignmentFaultFixup:
+      case ProcessPriorityClass:
+      case ProcessWx86Information:
+      case ProcessHandleCount:
+      case ProcessAffinityMask:
+      default:
+	Status = STATUS_NOT_IMPLEMENTED;
+     }
+   return(Status);
 }

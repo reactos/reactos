@@ -42,6 +42,7 @@ VOID ExExecuteShell(VOID)
    ULONG Size, StackSize;
    CONTEXT Context;
    NTSTATUS Status;
+   ULONG Temp,BytesWritten;
    
    ZwCreateProcess(&ShellHandle,
 		   PROCESS_ALL_ACCESS,
@@ -87,7 +88,7 @@ VOID ExExecuteShell(VOID)
    memset(&Context,0,sizeof(CONTEXT));
    
    Context.SegSs = USER_DS;
-   Context.Esp = 0x2000;
+   Context.Esp = 0xf000 - 12;
    Context.EFlags = 0x202;
    Context.SegCs = USER_CS;
    Context.Eip = 0x10000;
@@ -97,14 +98,20 @@ VOID ExExecuteShell(VOID)
    Context.SegGs = USER_DS;
    
    BaseAddress = 0x1000;
-   StackSize = 0x1000;
+   StackSize = 0xe000;
    ZwAllocateVirtualMemory(ShellHandle,
 			   &BaseAddress,
 			   0,
 			   &StackSize,
 			   MEM_COMMIT,
 			   PAGE_READWRITE);
-			   
+   
+   Temp = 0xf000 - 4;
+   ZwWriteVirtualMemory(ShellHandle,
+			0xf000 - 8,
+			&Temp,
+			sizeof(Temp),
+			&BytesWritten);
    
    ZwCreateThread(&ThreadHandle,
 		  THREAD_ALL_ACCESS,

@@ -67,6 +67,7 @@ void MmInitialize(boot_param* bp)
    (get_page_directory())[0]=0;
    FLUSH_TLB;
    CHECKPOINT;
+   
    /*
     * Free all pages not used for kernel memory
     * (we assume the kernel occupies a continuous range of physical
@@ -107,15 +108,23 @@ void MmInitialize(boot_param* bp)
    for (i=PAGE_ROUND_UP(((int)&stext));
 	i<PAGE_ROUND_DOWN(((int)&etext));i=i+PAGESIZE)
      {
-	mark_page_not_writable(i);
+	MmSetPageProtect(NULL,
+			 i,
+			 PAGE_EXECUTE_READ);
      }
    DPRINT("end %x\n",(int)&end);
    for (i=PAGE_ROUND_UP(KERNEL_BASE+kernel_len);
 	i<(KERNEL_BASE+PAGE_TABLE_SIZE);i=i+PAGESIZE)
      {
-	set_page(i,0,0);
+	MmSetPage(NULL,
+		  i,
+		  PAGE_NOACCESS,
+		  0);
      }
-   set_page(0,0,0);
+   MmSetPage(NULL,
+	     0,
+	     PAGE_NOACCESS,
+	     0);
    FLUSH_TLB;
    CHECKPOINT;
    /*

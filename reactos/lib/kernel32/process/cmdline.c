@@ -21,7 +21,7 @@
 
 /* GLOBALS ******************************************************************/
 
-unsigned char CommandLineA[MAX_PATH];
+static unsigned char CommandLineA[MAX_PATH];
 
 /* FUNCTIONS ****************************************************************/
 

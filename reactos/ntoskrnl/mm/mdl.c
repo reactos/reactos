@@ -66,7 +66,10 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
      {
 	DPRINT("Writing %x with physical address %x\n",
 	       base+(i*PAGESIZE),mdl_pages[i]);
-	set_page((DWORD)base+(i*PAGESIZE),PA_READ + PA_SYSTEM,mdl_pages[i]);
+	MmSetPage(NULL,
+		  (DWORD)base+(i*PAGESIZE),
+		  PAGE_READWRITE,
+		  mdl_pages[i]);
      }
    DPRINT("base %x\n",base);
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;

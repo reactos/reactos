@@ -429,8 +429,10 @@ static block_hdr* grow_kernel_pool(unsigned int size)
    
    for (i=0;i<nr_pages;i++)
      {
-	set_page(start+(i*PAGESIZE),PA_SYSTEM | PA_WRITE | PA_READ,
-		 get_free_page());
+	MmSetPage(NULL,
+		  start + (i*PAGESIZE),
+		  PAGE_READWRITE,
+		  get_free_page());
      }
 
    

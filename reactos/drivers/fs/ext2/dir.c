@@ -41,6 +41,7 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 {
    PFILE_DIRECTORY_INFORMATION FDI;
    PFILE_NAMES_INFORMATION FNI;
+   PFILE_BOTH_DIRECTORY_INFORMATION FBI;
    ULONG i;
    PWSTR FileName;
    struct ext2_inode inode;
@@ -77,6 +78,19 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 	FDI->FileNameLength = dir_entry->name_len;
 	Ext2ConvertName(FDI->FileName, dir_entry->name, dir_entry->name_len);
 	Buffer = Buffer + FDI->NextEntryOffset;
+	break;
+	
+      case FileBothDirectoryInformation:
+	FBI = (PFILE_BOTH_DIRECTORY_INFORMATION)Buffer;
+	FBI->NextEntryOffset = sizeof(FileBothDirectoryInformation) +
+	  dir_entry->name_len + 1;
+	FBI->FileIndex = FileIndex;
+	FBI->AllocationSize = FBI->EndOfFile = inode.i_size;
+	FBI->FileAttributes = 0;
+	FBI->FileNameLength = dir_entry->name_len;
+	Ext2ConvertName(FBI->FileName, dir_entry->name, dir_entry->name_len);
+	memset(FBI->ShortName, 0, sizeof(FBI->ShortName));
+	Buffer = Buffer + FBI->NextEntryOffset;
 	break;
 	
       default:
@@ -280,7 +294,8 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  }
 	current_inode = entry.inode;
 	current_segment = strtok(NULL,"\\");
-     };
+	StartIndex = 0;
+     }
    DPRINT("Found file\n");
    
    Ext2ReadInode(DeviceExt,

@@ -136,10 +136,12 @@ NTSTATUS STDCALL ZwOpenEvent(OUT PHANDLE EventHandle,
 	return(Status);
      }
    
-   *EventHandle = ObInsertHandle(KeGetCurrentProcess(),
-				 Event,
-				 DesiredAccess,
-				 FALSE);
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Event,
+			   DesiredAccess,
+			   FALSE,
+			   EventHandle);
+   ObDereferenceObject(Event);
    
    return(STATUS_SUCCESS);
 }

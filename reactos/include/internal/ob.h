@@ -52,21 +52,13 @@ enum
 BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
-
-VOID ObInitializeObjectHeader(POBJECT_TYPE Type, PWSTR name,
-			      POBJECT_HEADER obj);
-HANDLE ObInsertHandle(PKPROCESS Process, PVOID ObjectBody,
-		      ACCESS_MASK GrantedAccess, BOOLEAN Inherit);
 VOID ObDeleteHandle(HANDLE Handle);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 			 PWSTR* UnparsedSection, ULONG Attributes);
-
 PVOID ObCreateObject(PHANDLE Handle,
 		     ACCESS_MASK DesiredAccess,
 		     POBJECT_ATTRIBUTES ObjectAttributes,
 		     POBJECT_TYPE Type);
-VOID ObInitializeHandleTable(PKPROCESS Parent, BOOLEAN Inherit,
-			     PKPROCESS Process);
 VOID ObRemoveEntry(POBJECT_HEADER Header);
 
 /*
@@ -102,5 +94,18 @@ typedef struct
 
 PHANDLE_REP ObTranslateHandle(PKPROCESS Process, HANDLE h);
 extern PDIRECTORY_OBJECT NameSpaceRoot;
+
+VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+			 POBJECT Object,
+			 PWSTR Name);
+NTSTATUS ObCreateHandle(PEPROCESS Process,
+			PVOID ObjectBody,
+			ACCESS_MASK GrantedAccess,
+			BOOLEAN Inherit,
+			PHANDLE Handle);
+VOID ObCreateHandleTable(PEPROCESS Parent,
+			 BOOLEAN Inherit,
+			 PEPROCESS Process);
+
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/apc.c
  * PURPOSE:         Possible implementation of APCs
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */

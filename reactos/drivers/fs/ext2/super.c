@@ -24,16 +24,6 @@ static PDRIVER_OBJECT DriverObject;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS Ext2CloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
-/*
- * FUNCTION: Closes a file
- */
-{
-   DPRINT("Ext2CloseFile(DeviceExt %x, FileObject %x)\n",
-	  DeviceExt,FileObject);
-   return(STATUS_SUCCESS);
-}
-
 NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack;   
@@ -46,8 +36,6 @@ NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Stack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = Stack->FileObject;
    DeviceExtension = DeviceObject->DeviceExtension;
-   
-   Status = Ext2CloseFile(DeviceExtension,FileObject);
 
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;

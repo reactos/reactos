@@ -13,7 +13,7 @@ MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o
 
 THREAD_OBJECTS = thread/thread.o
 
-PROCESS_OBJECTS = process/proc.o
+PROCESS_OBJECTS = process/proc.o process/cmdline.o
 
 STRING_OBJECTS = string/lstring.o
 

@@ -23,6 +23,9 @@ extern ULONG PiNrThreads;
 /* FUNCTIONS *****************************************************************/
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
+/*
+ * FUNCTION: Terminates the current thread
+ */
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
@@ -42,6 +45,9 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
 }
 
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
+/*
+ * FUNCTION: Terminate a thread when calling from that thread's context
+ */
 {
    UNIMPLEMENTED;
 }
@@ -117,6 +123,7 @@ NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle,
      {
 	PsTerminateOtherThread(Thread, ExitStatus);
      }
+   return(STATUS_SUCCESS);
 }
 
 VOID PsReleaseThread(PETHREAD Thread)
@@ -144,6 +151,7 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
  */
 {
    PsTerminateCurrentThread(ExitStatus);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE TerminationPort)

@@ -30,19 +30,18 @@ NT_TEB *Teb;
 
 
 
-WINBOOL   
-STDCALL   
-DllMain (
-	HANDLE hInst, 
-	ULONG ul_reason_for_call,
-	LPVOID lpReserved )
+WINBOOL STDCALL DllMain (HANDLE hInst, 
+			 ULONG ul_reason_for_call,
+			 LPVOID lpReserved)
 {
  
     switch( ul_reason_for_call ) {
     	case DLL_PROCESS_ATTACH:
 	{
 		
-		GetCurrentPeb()->ProcessHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS,8192,0);
+		GetCurrentPeb()->ProcessHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS,
+							  8192,
+							  0);
 		InitAtomTable(13);
 		SetCurrentDirectoryW(L"C:");
 	//	SetSystemDirectoryW(L"C:\\Reactos\\System");

@@ -63,8 +63,11 @@ NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
 	return(Status);
      }
        
-   *DirectoryHandle = ObInsertHandle(KeGetCurrentProcess(),Object,
-				     DesiredAccess,FALSE);
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   DirectoryHandle);
    return(STATUS_SUCCESS);
 }
 

@@ -26,12 +26,8 @@ void* calloc(size_t _nmemb, size_t _size)
 
 void* realloc(void* _ptr, size_t _size)
 {
-    ExFreePool(_ptr);
- return ExAllocatePool(NonPagedPool,_size );
-#if 0
    return(HeapReAlloc(GetProcessHeap(),
 		      0,
 		      _ptr,
 		      _size));
-#endif
 }

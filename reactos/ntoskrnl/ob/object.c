@@ -33,10 +33,11 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
    RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
    if (Handle != NULL)
      {
-	*Handle = ObInsertHandle(KeGetCurrentProcess(),
-				 HEADER_TO_BODY(ObjectHeader),
-				 DesiredAccess,
-				 FALSE);
+	ObCreateHandle(PsGetCurrentProcess(),
+		       HEADER_TO_BODY(ObjectHeader),
+		       DesiredAccess,
+		       FALSE,
+		       Handle);
      }
 }
 
@@ -240,70 +241,4 @@ VOID ObDereferenceObject(PVOID ObjectBody)
    
    Header->RefCount--;
    ObPerformRetentionChecks(Header);
-}
-
-NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
-				   ACCESS_MASK DesiredAccess,
-				   POBJECT_TYPE ObjectType,
-				   KPROCESSOR_MODE AccessMode,
-				   PVOID* Object,
-				   POBJECT_HANDLE_INFORMATION 
-				           HandleInformationPtr)
-/*
- * FUNCTION: Increments the reference count for an object and returns a 
- * pointer to its body
- * ARGUMENTS:
- *         Handle = Handle for the object
- *         DesiredAccess = Desired access to the object
- *         ObjectType
- *         AccessMode 
- *         Object (OUT) = Points to the object body on return
- *         HandleInformation (OUT) = Contains information about the handle 
- *                                   on return
- * RETURNS: Status
- */
-{
-   PHANDLE_REP HandleRep;
-   POBJECT_HEADER ObjectHeader;
-   
-   ASSERT_IRQL(PASSIVE_LEVEL);
-   
-   DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
-	  "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
-	  ObjectType,AccessMode,Object);
-   
-   if (Handle == NtCurrentProcess())
-     {
-	*Object = PsGetCurrentProcess();
-	return(STATUS_SUCCESS);
-     }
-   if (Handle == NtCurrentThread())
-     {
-	*Object = PsGetCurrentThread();
-	return(STATUS_SUCCESS);
-     }
-   
-   HandleRep = ObTranslateHandle(KeGetCurrentProcess(),Handle);
-   if (HandleRep == NULL || HandleRep->ObjectBody == NULL)
-     {
-	return(STATUS_INVALID_HANDLE);
-     }
-   
-   ObjectHeader = BODY_TO_HEADER(HandleRep->ObjectBody);
-   
-   if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }   
-   
-   if (!(HandleRep->GrantedAccess & DesiredAccess))
-     {
-	return(STATUS_ACCESS_DENIED);
-     }
-   
-   ObjectHeader->RefCount++;
-   
-   *Object = HandleRep->ObjectBody;
-   
-   return(STATUS_SUCCESS);
 }

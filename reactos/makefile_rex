@@ -33,7 +33,7 @@ LOADERS = dos
 KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide test sdisk \
                   minix vfat ext2
 		  
-APPS = hello shell
+APPS = hello shell args
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 
@@ -45,6 +45,9 @@ clean: dummy
 #
 hello: dummy
 	make -C apps/hello
+
+args: dummy
+	make -C apps/args
 
 cmd: dummy
 	make -C apps/cmd

@@ -69,6 +69,11 @@ void ExecuteType(char* cmdline)
 			   OPEN_EXISTING,
 			   0,
 			   NULL);
+   if (FileHandle == NULL)
+     {
+	debug_printf("Unknown file\n");
+	return;
+     }
    while (ReadFile(FileHandle,
 		   &c,
 		   1,
@@ -156,7 +161,6 @@ void ExecuteCommand(char* line)
      }
    if (ExecuteProcess(cmd,tail))
      {
-        debug_printf("Done ExecuteProcess\n");
 	return;
      }
    debug_printf("Unknown command\n");
@@ -201,8 +205,6 @@ void ReadLine(char* line)
 void main()
 {
    static char line[255];
-   
-   KERNEL32_Init();
    
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);

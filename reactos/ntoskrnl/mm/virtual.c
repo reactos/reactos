@@ -95,7 +95,10 @@ void VirtualInit(boot_param* bp)
 
 ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, ULONG Address)
 {
-   set_page(Address,0x7,get_free_page());
+   MmSetPage(PsGetCurrentProcess(),
+	     Address,
+	     MemoryArea->Attributes,
+	     get_free_page());
    return(TRUE);
 }
 
@@ -107,7 +110,10 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	    MemoryArea,Address);
    
-   set_page((DWORD)Address,0x7,get_free_page());
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     get_free_page());
    
    LARGE_INTEGER_QUAD_PART(Offset) = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
@@ -152,7 +158,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
    
    if (KeGetCurrentIrql()!=PASSIVE_LEVEL)
      {
-	DbgPrint("Recursive page fault detected\n");
+	DbgPrint("Page fault at high IRQL\n");
 	return(0);
 //	KeBugCheck(0);
      }
@@ -713,10 +719,15 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
 				      OUT PULONG NumberOfBytesWritten)
 {
    PEPROCESS Process;
-   MEMORY_AREA* MemoryArea;
+   PMEMORY_AREA InMemoryArea;
+   PMEMORY_AREA OutMemoryArea;
    ULONG i;
    NTSTATUS Status;
    PULONG CurrentEntry;
+   
+   DPRINT("ZwWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+	    "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
+	    Buffer,NumberOfBytesToWrite);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_WRITE,
@@ -729,26 +740,52 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
 	return(Status);
      }
 
-   MemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);
-   
-   if (MemoryArea == NULL)
+   OutMemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);   
+   if (OutMemoryArea == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (MemoryArea->Length > NumberOfBytesToWrite)
-     {
-	NumberOfBytesToWrite = MemoryArea->Length;
-     }
-   
+  
    *NumberOfBytesWritten = NumberOfBytesToWrite;
    
-   for (i=0; i<(NumberOfBytesToWrite/PAGESIZE); i++)
+   DPRINT("*Buffer %x\n",((PULONG)Buffer)[0]);
+   
+   for (i=0; i<(PAGE_ROUND_DOWN(NumberOfBytesToWrite)/PAGESIZE); i++)     
      {
-	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + (i*PAGESIZE));
-	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)),
+	if (!MmIsPagePresent(Process, BaseAddress + (i*PAGESIZE)))
+	  {
+	     DPRINT("OutMemoryArea->Attributes %x\n",
+		      OutMemoryArea->Attributes);
+	     MmSetPage(Process,
+		       BaseAddress + (i*PAGESIZE),
+		       OutMemoryArea->Attributes,
+		       get_free_page());
+	  }
+	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + 
+				      (i*PAGESIZE));
+	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)) +
+		      (((DWORD)BaseAddress)%PAGESIZE),
 		      Buffer + (i*PAGESIZE),
 		      PAGESIZE);
-	
+     }
+   if ((NumberOfBytesToWrite % PAGESIZE) != 0)
+     {
+	if (!MmIsPagePresent(Process, BaseAddress + (i*PAGESIZE)))
+	  {
+	     MmSetPage(Process,
+		       BaseAddress + (i*PAGESIZE),
+		       OutMemoryArea->Attributes,
+		       get_free_page());
+	  }
+	CurrentEntry = MmGetPageEntry(Process, 
+				      BaseAddress + (i*PAGESIZE));
+	DPRINT("addr %x\n",
+		 physical_to_linear(PAGE_MASK(*CurrentEntry)) +
+		 (((DWORD)BaseAddress)%PAGESIZE));
+	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)) +
+		      (((DWORD)BaseAddress)%PAGESIZE),
+		      Buffer + (i*PAGESIZE),
+		      NumberOfBytesToWrite % PAGESIZE);
      }
    return(STATUS_SUCCESS);
 }

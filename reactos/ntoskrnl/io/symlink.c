@@ -120,8 +120,17 @@ NTSTATUS ZwOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
      {
 	return(Status);
      }
-   *LinkHandle = ObInsertHandle(KeGetCurrentProcess(),Object,
-				DesiredAccess,FALSE);
+   
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   LinkHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
    return(STATUS_SUCCESS);
 }
 
@@ -170,7 +179,6 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE SymbolicLinkHandle;
    PSYMLNK_OBJECT SymbolicLink;
-   PUNICODE_STRING TargetName;
    
    DPRINT("IoCreateSymbolicLink(SymbolicLinkName %w, DeviceName %w)\n",
 	  SymbolicLinkName->Buffer,DeviceName->Buffer);
@@ -185,9 +193,10 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 	return(STATUS_UNSUCCESSFUL);
      }
    
+   ZwClose(SymbolicLinkHandle);
    SymbolicLink->TargetName.Length = 0;
    SymbolicLink->TargetName.MaximumLength = 
-     ((wstrlen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
+     ((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
    SymbolicLink->TargetName.Buffer = ExAllocatePool(NonPagedPool,
                                       SymbolicLink->TargetName.MaximumLength);
    RtlCopyUnicodeString(&(SymbolicLink->TargetName), DeviceName);

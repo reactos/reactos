@@ -272,7 +272,7 @@ BOOL FindClose(HANDLE hFindFile)
    DPRINT("FindClose(hFindFile %x)\n",hFindFile);
    
    IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-   NtClose(IData->DirectoryHandle);
+   CloseHandle(IData->DirectoryHandle);
    HeapFree(GetProcessHeap(), 0, IData);
    return(TRUE);
 }

@@ -24,7 +24,6 @@ PVOID MmAllocateSection(ULONG Length)
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
-   ULONG Attributes;
    
    DPRINT("MmAllocateSection(Length %x)\n",Length);
    
@@ -41,10 +40,12 @@ PVOID MmAllocateSection(ULONG Length)
 	return(NULL);
      }
    DPRINT("Result %x\n",Result);
-   Attributes = PA_WRITE | PA_READ | PA_EXECUTE | PA_SYSTEM;
    for (i=0;i<=(Length/PAGESIZE);i++)
      {
-	set_page(Result+(i*PAGESIZE),Attributes,get_free_page());
+	MmSetPage(NULL,
+		  Result+(i*PAGESIZE),
+		  PAGE_READWRITE,
+		  get_free_page());
      }
    return((PVOID)Result);
 }
@@ -89,9 +90,10 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
      }
    for (i=0;i<=(NumberOfBytes/PAGESIZE);i++)
      {
-	set_page(Result + (i * PAGESIZE),
-                 Attributes, 
-                 GET_LARGE_INTEGER_LOW_PART(PhysicalAddress));
+	MmSetPage(NULL,
+		  Result + (i * PAGESIZE),
+		  PAGE_READWRITE,
+		  GET_LARGE_INTEGER_LOW_PART(PhysicalAddress));
      }
    return((PVOID)Result);
 }
@@ -123,9 +125,10 @@ PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
      }
    for (i=0;i<=(NumberOfBytes/PAGESIZE);i++)
      {
-	set_page(Result+(i*PAGESIZE),
-		 PA_WRITE | PA_READ | PA_EXECUTE | PA_SYSTEM | PA_PCD | PA_PWT,
-		 get_free_page());
+	MmSetPage(NULL,
+		  Result+(i*PAGESIZE),
+		  PAGE_READWRITE,
+		  get_free_page());
      }
    return((PVOID)Result);
 }
