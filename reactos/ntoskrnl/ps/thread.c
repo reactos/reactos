@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.108 2003/04/10 23:14:47 hyperion Exp $
+/* $Id: thread.c,v 1.109 2003/04/25 18:37:44 fireball Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -502,6 +502,17 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
      }
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    return(OldPriority);
+}
+
+NTSTATUS STDCALL
+KeSetAffinityThread(PKTHREAD	Thread,
+					PVOID		AfMask)
+/*
+ * Sets thread's affinity
+ */
+{
+	return STATUS_SUCCESS; // FIXME: Use function below
+	//return ZwSetInformationThread(handle, ThreadAffinityMask,<pointer to affinity mask>,sizeof(KAFFINITY));
 }
 
 
