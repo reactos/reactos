@@ -612,9 +612,8 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPSTR doc_name, LPSTR new
  * NOTES
  *     exported by name
  *
- * FIXME: ?? MSDN shows this as a VOID
  */
-DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
+void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 {
 /* If list is a string list lpfnCompare has the following prototype
  * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
@@ -653,20 +652,20 @@ DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     ret=SHADD_get_policy( "NoRecentDocsHistory", &type, &data, &datalen);
     if ((ret > 0) && (ret != ERROR_FILE_NOT_FOUND)) {
 	ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-	return 0;
+	return;
     }
     if (ret == ERROR_SUCCESS) {
 	if (!( (type == REG_DWORD) ||
 	       ((type == REG_BINARY) && (datalen == 4)) )) {
 	    ERR("Error policy data for \"NoRecentDocsHistory\" not formated correctly, type=%ld, len=%ld\n",
 		type, datalen);
-	    return 0;
+	    return;
 	}
 
 	TRACE("policy value for NoRecentDocsHistory = %08lx\n", data[0]);
 	/* now test the actual policy value */
 	if ( data[0] != 0)
-	    return 0;
+	    return;
     }
 
     /* Open key to where the necessary info is
@@ -679,7 +678,7 @@ DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 			"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
 			0, 0, 0, KEY_READ, 0, &HCUbasekey, 0)) {
 	ERR("Failed to create 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'\n");
-	return 0;
+	return;
     }
 
     /* Get path to user's "Recent" directory
@@ -729,7 +728,7 @@ DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 	 */
 	RegDeleteKeyA(HCUbasekey, "RecentDocs");
 	RegCloseKey(HCUbasekey);
-	return 0;
+	return;
     }
 
     /* Have data to add, the jobs to be done:
@@ -785,7 +784,7 @@ DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 	    /* MRU failed */
 	    ERR("MRU processing failed, handle zero\n");
 	    RegCloseKey(HCUbasekey);
-	    return 0;
+	    return;
 	}
 	len = lstrlenA(doc_name);
 	pos = FindMRUData(mruhandle, doc_name, len, 0);
@@ -934,7 +933,7 @@ DWORD WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
     /* all done */
     RegCloseKey(HCUbasekey);
-    return 0;
+    return;
 }
 
 /*************************************************************************

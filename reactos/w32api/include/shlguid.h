@@ -9,8 +9,14 @@ extern "C" {
 #endif
 #define DEFINE_SHLGUID(n,l,w1,w2) DEFINE_GUID(n,l,w1,w2,0xC0,0,0,0,0,0,0,0x46)
 #define SID_SShellBrowser IID_IShellBrowser
+extern const GUID CLSID_MyComputer;
 extern const GUID CLSID_ShellDesktop;
 extern const GUID CLSID_ShellLink;
+extern const GUID CLSID_ControlPanel;
+extern const GUID CLSID_Internet;
+extern const GUID CLSID_NetworkPlaces;
+extern const GUID CLSID_RecycleBin;
+extern const GUID CLSID_ShellFSFolder;
 extern const GUID FMTID_Intshcut;
 extern const GUID FMTID_InternetSite;
 extern const GUID CGID_Explorer;

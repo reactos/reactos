@@ -204,7 +204,7 @@ LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST pidl)
  * NOTES
  *   when pidl=Desktop return=FALSE
  */
-BOOL WINAPI ILRemoveLastID(LPCITEMIDLIST pidl)
+BOOL WINAPI ILRemoveLastID(LPITEMIDLIST pidl)
 {
 	TRACE_(shell)("pidl=%p\n",pidl);
 

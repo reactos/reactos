@@ -706,7 +706,7 @@ DWORD WINAPI SHHelpShortcuts_RunDLL (DWORD dwArg1, DWORD dwArg2, DWORD dwArg3, D
  * the shell process and release it immediately
  */
 
-DWORD WINAPI SHLoadInProc (REFCLSID rclsid)
+HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
 {
     void *ptr = NULL;
 
