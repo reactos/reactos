@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.6 2003/11/05 22:46:05 gvg Exp $
+/* $Id: debug.c,v 1.7 2004/01/07 19:24:37 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -39,5 +39,6 @@ EngDebugPrint(PCHAR StandardPrefix,
 {
   DbgPrint(StandardPrefix);
   DbgPrint(DebugMessage, ap);
+  DbgPrint("\n");
 }
 /* EOF */
