@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.7 2003/01/19 01:49:10 hbirr Exp $
+/* $Id: bitmap.c,v 1.8 2003/02/08 20:59:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -422,7 +422,7 @@ RtlFindLongestRunSet (
 	ULONG Max = 0;
 	ULONG Start;
 	ULONG Maxstart = 0;
-	ULONG  Mask = 1;
+	ULONG Mask = 1;
 
 	while (Index < Size)
 	{
@@ -477,7 +477,7 @@ RtlFindSetBits (
 	ULONG Index;
 	ULONG Count;
 	PULONG Ptr;
-	CHAR  Mask;
+	ULONG Mask;
 
 	if (NumberToFind > Size || NumberToFind == 0)
 		return (ULONG)-1;
