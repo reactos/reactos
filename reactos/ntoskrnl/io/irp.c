@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.59 2004/04/20 19:01:47 gdalsnes Exp $
+/* $Id: irp.c,v 1.60 2004/04/20 23:14:35 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -318,10 +318,10 @@ IofCompleteRequest(PIRP Irp,
       }
       
       /* io manager frees the irp for close operations */
-      if (Irp->Flags & IRP_PAGING_IO)
-      {
+//      if (Irp->Flags & IRP_PAGING_IO)
+//      {
          IoFreeIrp(Irp);
-      }
+//      }
       
       return;
    }
