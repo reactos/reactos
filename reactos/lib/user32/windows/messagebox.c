@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.28 2004/10/07 19:20:57 gvg Exp $
+/* $Id: messagebox.c,v 1.29 2004/11/19 19:34:11 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -201,7 +201,6 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
   return 0;
 }
 
-#define SAFETY_MARGIN 32 /* Extra number of bytes to allocate in case we counted wrong */
 static int
 MessageBoxTimeoutIndirectW(
   CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT Timeout)
@@ -390,8 +389,7 @@ MessageBoxTimeoutIndirectW(
                  (wcslen(ButtonText[i]) + 1) * sizeof(WCHAR);
     }
     
-    buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize + SAFETY_MARGIN);
-        /* Just to be safe.... */
+    buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize);
     if(!buf)
     {
       return 0;
@@ -414,7 +412,7 @@ MessageBoxTimeoutIndirectW(
       tpl->dwExtendedStyle |= WS_EX_RIGHT;
     tpl->x = 100;
     tpl->y = 100;
-    tpl->cdit = nButtons + (Icon != (HICON)0) + 1;
+    tpl->cdit = nButtons + ((Icon != (HICON)0) ? 1 : 0) + 1;
     
     dest = (BYTE *)(tpl + 1);
     
@@ -505,11 +503,6 @@ MessageBoxTimeoutIndirectW(
       DrawTextW(hDC, ButtonText[i], btnlen, &btnrect, DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
       btnsize.cx = max(btnsize.cx, btnrect.right);
       btnsize.cy = max(btnsize.cy, btnrect.bottom);
-    }
-
-    if ((ULONG_PTR) dest != ((ULONG_PTR) buf + (ULONG_PTR) bufsize))
-    {
-      DbgPrint("Tell GvG he can't count: bufsize is %lu, but should be %lu\n", bufsize, (ULONG_PTR) dest - (ULONG_PTR) buf);
     }
     
     /* make first button the default button if no other is */
