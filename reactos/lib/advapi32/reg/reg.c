@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.60 2004/10/10 10:10:52 hbirr Exp $
+/* $Id: reg.c,v 1.61 2004/10/10 10:43:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -456,24 +456,26 @@ RegCreateKeyExA (HKEY hKey,
       RtlCreateUnicodeStringFromAsciiz (&ClassString,
 					lpClass);
     }
-  RtlCreateUnicodeStringFromAsciiz (&SubKeyString,
-				    (LPSTR)lpSubKey);
+
+  RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
+				   (LPSTR)lpSubKey);
   InitializeObjectAttributes (&Attributes,
 			      &SubKeyString,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
 			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
   Status = CreateNestedKey(phkResult,
-		           &Attributes,
-                           (lpClass == NULL)? NULL : &ClassString,
-                           dwOptions,
-                           samDesired,
-                           lpdwDisposition);
+			   &Attributes,
+			   (lpClass == NULL)? NULL : &ClassString,
+			   dwOptions,
+			   samDesired,
+			   lpdwDisposition);
   RtlFreeUnicodeString (&SubKeyString);
   if (lpClass != NULL)
     {
       RtlFreeUnicodeString (&ClassString);
     }
+
   DPRINT("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
     {
@@ -2166,7 +2168,7 @@ RegQueryInfoKeyW (HKEY hKey,
 /************************************************************************
  *  RegQueryMultipleValuesA
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegQueryMultipleValuesA (HKEY hKey,
@@ -2175,9 +2177,55 @@ RegQueryMultipleValuesA (HKEY hKey,
 			 LPSTR lpValueBuf,
 			 LPDWORD ldwTotsize)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
+  ULONG i;
+  DWORD maxBytes = *ldwTotsize;
+  LPSTR bufptr = (LPSTR)lpValueBuf;
+  LONG ErrorCode;
+
+  if (maxBytes >= (1024*1024))
+    return ERROR_TRANSFER_TOO_LONG;
+
+  *ldwTotsize = 0;
+
+  DPRINT ("RegQueryMultipleValuesA(%p,%p,%ld,%p,%p=%ld)\n",
+	  hKey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
+
+  for (i = 0; i < num_vals; i++)
+    {
+      val_list[i].ve_valuelen = 0;
+      ErrorCode = RegQueryValueExA (hKey,
+				    val_list[i].ve_valuename,
+				    NULL,
+				    NULL,
+				    NULL,
+				    &val_list[i].ve_valuelen);
+      if (ErrorCode != ERROR_SUCCESS)
+	{
+	  return ErrorCode;
+	}
+
+      if (lpValueBuf != NULL && *ldwTotsize + val_list[i].ve_valuelen <= maxBytes)
+	{
+	  ErrorCode = RegQueryValueExA (hKey,
+					val_list[i].ve_valuename,
+					NULL,
+					&val_list[i].ve_type,
+					bufptr,
+					&val_list[i].ve_valuelen);
+	  if (ErrorCode != ERROR_SUCCESS)
+	    {
+	      return ErrorCode;
+	    }
+
+	  val_list[i].ve_valueptr = (DWORD_PTR)bufptr;
+
+	  bufptr += val_list[i].ve_valuelen;
+	}
+
+      *ldwTotsize += val_list[i].ve_valuelen;
+    }
+
+  return (lpValueBuf != NULL && *ldwTotsize <= maxBytes) ? ERROR_SUCCESS : ERROR_MORE_DATA;
 }
 
 
@@ -2206,7 +2254,7 @@ RegQueryMultipleValuesW (HKEY hKey,
   DPRINT ("RegQueryMultipleValuesW(%p,%p,%ld,%p,%p=%ld)\n",
 	  hKey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
 
-  for (i = 0; i < num_vals; ++i)
+  for (i = 0; i < num_vals; i++)
     {
       val_list[i].ve_valuelen = 0;
       ErrorCode = RegQueryValueExW (hKey,
