@@ -123,7 +123,7 @@ Value:
 	None.
 
 Elements:
-	bootstrap, define, dependency, directory, file, if, importlibrary, include, invoke, library, property.
+	bootstrap, component, define, dependency, directory, file, if, importlibrary, include, invoke, library, property.
 
 
 Module types
@@ -137,10 +137,12 @@ The module type determines the actions that is to be carried out to process the 
 	kernelmodedriver - Builds a kernel-mode driver. Default extension is .sys. Default entrypoint is _DriverEntry@8.
 	nativedll - Builds a native DLL. Default extension is .dll. Default entrypoint is _DllMainCRTStartup@12.
 	win32dll - Builds a Win32 DLL. Default extension is .dll. Default entrypoint is _DllMain@12.
+	win32cui - Builds a Win32 console executable. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
 	win32gui - Builds a Win32 GUI executable. Default extension is .exe. Default entrypoint is _WinMainCRTStartup. The baseaddress module attribute is not applicable for this module type.
 	bootloader - Builds a bootloader. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	bootsector - Builds one or more bootsector binaries. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	iso - Builds a bootable CD. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	test - Builds a testsuite. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
 
 
 Bootstrap element
@@ -174,6 +176,42 @@ Attributes:
 
 Value:
 	Name of file.
+
+Elements:
+	None.
+
+
+Component element
+-----------------
+A component element specifies that imports from a library are to be stubbed so tests can be run without actually calling the functions in the library. This element can only be used for modules of type test.
+
+Syntax:
+	<component name="ntdll.dll">
+		...
+	</component>
+
+Attributes:
+	name - Name of library.
+
+Value:
+	None.
+
+Elements:
+	Symbol.
+
+
+Symbol element
+--------------
+A symbol element specifies an imported function from a library that is to be stubbed so tests can be run without actually calling the function in the library.
+
+Syntax:
+	<symbol newname="RtlAllocateHeap">HeapAlloc@12</symbol>
+
+Attributes:
+	newname - New name of symbol. This attribute is optional.
+
+Value:
+	Name of symbol.
 
 Elements:
 	None.

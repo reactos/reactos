@@ -38,9 +38,9 @@ SourceFileTest::IncludeTest ()
 	AutomaticDependency automaticDependency ( project );
 	automaticDependency.Process ();
 	ARE_EQUAL( 4, automaticDependency.sourcefile_map.size () );
-	const SourceFile* include = automaticDependency.RetrieveFromCache ( "." SSEP RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile_include.h" );
+	const SourceFile* include = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile_include.h" );
 	IS_NOT_NULL( include );
-	const SourceFile* includenext = automaticDependency.RetrieveFromCache ( "." SSEP RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1" SSEP "sourcefile_includenext.h" );
+	const SourceFile* includenext = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1" SSEP "sourcefile_includenext.h" );
 	IS_NOT_NULL( includenext );
 }
 
@@ -51,9 +51,9 @@ SourceFileTest::FullParseTest ()
 	AutomaticDependency automaticDependency ( project );
 	automaticDependency.Process ();
 	ARE_EQUAL( 5, automaticDependency.sourcefile_map.size () );
-	const SourceFile* header1 = automaticDependency.RetrieveFromCache ( "." SSEP RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1_header1.h" );
+	const SourceFile* header1 = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1_header1.h" );
 	IS_NOT_NULL( header1 );
-	const SourceFile* recurse = automaticDependency.RetrieveFromCache ( "." SSEP RBUILD_BASE"tests" SSEP "data" SSEP "sourcefile1_recurse.h" );
+	const SourceFile* recurse = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1_recurse.h" );
 	IS_NOT_NULL( recurse );
 	IS_TRUE( IsParentOf ( header1,
 	                      recurse ) );

@@ -1,0 +1,4 @@
+<module name="rtshared" type="staticlibrary">
+	<include base="rtshared">.</include>
+	<file>regtests.c</file>
+</module>

@@ -336,4 +336,14 @@ private:
 	                                const Module& module );
 };
 
+class MingwTestModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwTestModuleHandler ( MingwBackend* backend );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ( const Module& module, string_list& clean_files );
+private:
+	void GenerateTestModuleTarget ( const Module& module, string_list& clean_files );
+};
+
 #endif /* MINGW_MODULEHANDLER_H */

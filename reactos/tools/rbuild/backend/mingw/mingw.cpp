@@ -176,6 +176,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "bin2res = " TOOL_PREFIX "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cabman = " TOOL_PREFIX "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cdmake = " TOOL_PREFIX "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "regtests = " TOOL_PREFIX "regtests" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "rsym = " TOOL_PREFIX "rsym" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "wrc = " TOOL_PREFIX "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "\n" );

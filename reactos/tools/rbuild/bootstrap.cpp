@@ -39,6 +39,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case StaticLibrary:
 		case ObjectLibrary:
 		case Iso:
+		case Test:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

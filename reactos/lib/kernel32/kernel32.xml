@@ -1,16 +1,9 @@
-<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}">
-	<importlibrary definition="kernel32.def" />
-	<include base="kernel32">.</include>
-	<include base="kernel32">include</include>
+<module name="kernel32_base" type="objectlibrary">
+	<include base="kernel32_base">.</include>
+	<include base="kernel32_base">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="WINVER">0x0500</define>
-	<library>pseh</library>
-	<library>rosrtl</library>
-	<library>ntdll</library>
-	<linkerflag>-lgcc</linkerflag>
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<pch>k32.h</pch>
 	<directory name="debug">
 		<file>break.c</file>
@@ -109,6 +102,25 @@
 		<file>thread.c</file>
 		<file>tls.c</file>
 	</directory>
-	<file>kernel32.rc</file>
-
 </module>
+<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}">
+	<importlibrary definition="kernel32.def" />
+	<include base="kernel32">.</include>
+	<include base="kernel32">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="_SEH_NO_NATIVE_NLG" />
+	<define name="WINVER">0x0500</define>
+	<library>kernel32_base</library>
+	<library>pseh</library>
+	<library>rosrtl</library>
+	<library>ntdll</library>
+	<linkerflag>-lgcc</linkerflag>
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
+	<file>kernel32.rc</file>
+</module>
+<!--
+<directory name="tests">
+	<xi:include href="tests/kernel32.xml" />
+</directory>
+-->

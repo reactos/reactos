@@ -39,6 +39,7 @@ RBUILD_BASE_SOURCES = \
 	module.cpp \
 	project.cpp \
 	ssprintf.cpp \
+	stubbedcomponent.cpp \
 	XML.cpp
 
 RBUILD_COMMON_SOURCES = \
@@ -62,6 +63,7 @@ RBUILD_OBJECTS = \
 	$(RBUILD_SPECIAL_OBJECTS)
 
 RBUILD_TESTS = \
+	tests$(SEP)cdfiletest.cpp \
 	tests$(SEP)definetest.cpp \
 	tests$(SEP)functiontest.cpp \
 	tests$(SEP)iftest.cpp \
@@ -71,7 +73,7 @@ RBUILD_TESTS = \
 	tests$(SEP)moduletest.cpp \
 	tests$(SEP)projecttest.cpp \
 	tests$(SEP)sourcefiletest.cpp \
-	tests$(SEP)cdfiletest.cpp
+	tests$(SEP)symboltest.cpp
 
 RBUILD_TEST_SPECIAL_SOURCES = \
 	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_TESTS)) \

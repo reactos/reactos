@@ -179,6 +179,7 @@ private:
 		tests.push_back(new FunctionTest());
 		tests.push_back(new SourceFileTest());
 		tests.push_back(new CDFileTest());
+		tests.push_back(new SymbolTest());
 	}
 };
 

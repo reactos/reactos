@@ -15,5 +15,5 @@ void InvokeTest::Run()
 	ARE_EQUAL(1, invoke1.output.size());
 
 	InvokeFile& file1 = *invoke1.output[0];
-	ARE_EQUAL(FixSeparator("./dir1/file1.c"), file1.name);
+	ARE_EQUAL(FixSeparator("dir1/file1.c"), file1.name);
 }

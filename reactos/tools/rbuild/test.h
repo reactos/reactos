@@ -126,4 +126,11 @@ public:
 	void Run ();
 };
 
+
+class SymbolTest : public BaseTest
+{
+public:
+	void Run ();
+};
+
 #endif /* __TEST_H */

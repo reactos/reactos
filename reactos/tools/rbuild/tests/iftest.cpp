@@ -17,9 +17,9 @@ void IfTest::Run()
 
 	ARE_EQUAL ( 1, if1.data.files.size () );
 	File& file1 = *if1.data.files[0];
-	ARE_EQUAL( "." SSEP "file1.c", file1.name );
+	ARE_EQUAL( SSEP "file1.c", file1.name );
 
 	ARE_EQUAL ( 1, module1.non_if_data.files.size () );
 	File& file2 = *module1.non_if_data.files[0];
-	ARE_EQUAL( "." SSEP "file2.c", file2.name );
+	ARE_EQUAL( SSEP "file2.c", file2.name );
 }

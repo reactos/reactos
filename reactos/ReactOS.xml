@@ -47,6 +47,9 @@
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.xml" />
 	</directory>
+	<directory name="regtests">
+		<xi:include href="regtests/directory.xml" />
+	</directory>
 	<directory name="services">
 		<xi:include href="services/directory.xml" />
 	</directory>

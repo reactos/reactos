@@ -152,6 +152,9 @@ MingwModuleHandler::InstanciateHandler ( const string& location,
 		case Iso:
 			handler = new MingwIsoModuleHandler ( backend );
 			break;
+		case Test:
+			handler = new MingwTestModuleHandler ( backend );
+			break;
 	}
 	return handler;
 }
@@ -1226,10 +1229,10 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	                            clean_files );
 
 	CLEAN_FILE ( ar_target );
-	string tgt = FixupTargetFilename(module.GetPath());
-	if ( tgt != ar_target )
+	string target = FixupTargetFilename ( module.GetPath () );
+	if ( target != ar_target )
 	{
-		CLEAN_FILE ( tgt );
+		CLEAN_FILE ( target );
 	}
 }
 
@@ -1882,8 +1885,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module,
 	{
 		GenerateMacrosAndTargets ( module, NULL, NULL, clean_files );
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = objectsMacro + " " + linkDepsMacro;
 
 		string linker;
 		if ( module.cplusplus )
@@ -2301,4 +2303,64 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	          bootcdDirectory.c_str () );
 	fprintf ( fMakefile,
 	          "\n" );
+}
+
+
+MingwTestModuleHandler::MingwTestModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Test,
+	                       backend )
+{
+}
+
+void
+MingwTestModuleHandler::Process ( const Module& module, string_list& clean_files )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateTestModuleTarget ( module, clean_files );
+	GenerateInvocations ( module );
+}
+
+void
+MingwTestModuleHandler::GenerateTestModuleTarget ( const Module& module, string_list& clean_files )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string objectsMacro = GetObjectsMacro ( module );
+	string linkDepsMacro = GetLinkingDependenciesMacro ( module );
+	string libsMacro = GetLibsMacro ( module );
+
+	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
+
+	if ( module.non_if_data.files.size () > 0 )
+	{
+		GenerateMacrosAndTargets ( module, NULL, NULL, clean_files );
+
+		string dependencies = objectsMacro + " " + linkDepsMacro;
+
+		string linker;
+		if ( module.cplusplus )
+			linker = "${gpp}";
+		else
+			linker = "${gcc}";
+
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
+		GenerateLinkerCommand ( module,
+		                        target,
+		                        dependencies,
+		                        linker,
+		                        linkerParameters,
+		                        objectsMacro,
+		                        libsMacro,
+		                        clean_files );
+	}
+	else
+	{
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+	}
 }

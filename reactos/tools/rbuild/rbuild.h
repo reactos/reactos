@@ -57,6 +57,8 @@ class AutomaticDependency;
 class Bootstrap;
 class CDFile;
 class PchFile;
+class StubbedComponent;
+class StubbedSymbol;
 
 class SourceFileTest;
 
@@ -130,7 +132,8 @@ enum ModuleType
 	Win32GUI,
 	BootLoader,
 	BootSector,
-	Iso
+	Iso,
+	Test
 };
 
 enum HostType
@@ -159,6 +162,7 @@ public:
 	std::vector<Dependency*> dependencies;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
+	std::vector<StubbedComponent*> stubbedComponents;
 	PchFile* pch;
 	bool cplusplus;
 	std::string prefix;
@@ -523,6 +527,35 @@ public:
 		const XMLElement& node,
 		const Module& module,
 		const std::string& header );
+	void ProcessXML();
+};
+
+
+class StubbedComponent
+{
+public:
+	const Module* module;
+	const XMLElement& node;
+	std::string name;
+	std::vector<StubbedSymbol*> symbols;
+
+	StubbedComponent ( const Module* module_,
+	                   const XMLElement& stubbedComponentNode );
+	~StubbedComponent ();
+	void ProcessXML ();
+	void ProcessXMLSubElement ( const XMLElement& e );
+};
+
+
+class StubbedSymbol
+{
+public:
+	const XMLElement& node;
+	std::string symbol;
+	std::string newname;
+
+	StubbedSymbol ( const XMLElement& stubbedSymbolNode );
+	~StubbedSymbol ();
 	void ProcessXML();
 };
 

@@ -197,6 +197,8 @@ Module::~Module ()
 		delete compilerFlags[i];
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		delete linkerFlags[i];
+	for ( i = 0; i < stubbedComponents.size(); i++ )
+		delete stubbedComponents[i];
 	if ( pch )
 		delete pch;
 }
@@ -215,6 +217,8 @@ Module::ProcessXML()
 		compilerFlags[i]->ProcessXML();
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		linkerFlags[i]->ProcessXML();
+	for ( i = 0; i < stubbedComponents.size(); i++ )
+		stubbedComponents[i]->ProcessXML();
 	non_if_data.ProcessXML();
 	if ( pch )
 		pch->ProcessXML();
@@ -342,6 +346,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		linkerFlags.push_back ( new LinkerFlag ( project, this, e ) );
 		subs_invalid = true;
 	}
+	else if ( e.name == "component" )
+	{
+		stubbedComponents.push_back ( new StubbedComponent ( this, e ) );
+		subs_invalid = false;
+	}
 	else if ( e.name == "property" )
 	{
 		throw InvalidBuildFileException (
@@ -407,6 +416,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BootSector;
 	if ( attribute.value == "iso" )
 		return Iso;
+	if ( attribute.value == "test" )
+		return Test;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -439,6 +450,8 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Iso:
 			return ".iso";
+		case Test:
+			return ".exe";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -460,6 +473,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Win32DLL:
 			return "_DllMain@12";
 		case Win32CUI:
+		case Test:
 			return "_mainCRTStartup";
 		case Win32GUI:
 			return "_WinMainCRTStartup";
@@ -493,6 +507,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Win32DLL:
 			return "0x10000";
 		case Win32CUI:
+		case Test:
 			return "0x00400000";
 		case Win32GUI:
 			return "0x00400000";
