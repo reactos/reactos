@@ -2298,10 +2298,10 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	/* create new default image list */
 	TRACE ("creating default image list!\n");
 
-    himlDef = ImageList_Create (infoPtr->nBitmapWidth, infoPtr->nBitmapHeight, 
-		ILC_COLORDDB | ILC_MASK, nButtons, 2);
+        himlDef = ImageList_Create (infoPtr->nBitmapWidth, infoPtr->nBitmapHeight,
+                                    ILC_COLORDDB | ILC_MASK, nButtons, 2);
 	TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlDef, 0);
-    infoPtr->himlInt = himlDef;
+        infoPtr->himlInt = himlDef;
     }
     else {
         himlDef = GETDEFIMAGELIST(infoPtr, 0);
