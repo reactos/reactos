@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.29 2002/05/05 03:45:21 phreak Exp $
+/* $Id: conio.c,v 1.30 2002/05/07 22:44:23 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -665,6 +665,7 @@ VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer )
 NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
 {
   NTSTATUS Status;
+  OBJECT_ATTRIBUTES ObjectAttributes;
 
   Console->Title.MaximumLength = Console->Title.Length = 0;
   Console->Title.Buffer = 0;
@@ -679,7 +680,10 @@ NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->EarlyReturn = FALSE;
   InitializeListHead(&Console->InputEvents);
-  Status = NtCreateEvent( &Console->ActiveEvent, STANDARD_RIGHTS_ALL, 0, FALSE, FALSE );
+
+  InitializeObjectAttributes(&ObjectAttributes, NULL, OBJ_INHERIT, NULL, NULL);
+
+  Status = NtCreateEvent( &Console->ActiveEvent, STANDARD_RIGHTS_ALL, &ObjectAttributes, FALSE, FALSE );
   if( !NT_SUCCESS( Status ) )
     {
       return Status;
