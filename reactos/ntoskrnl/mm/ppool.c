@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.2 2000/03/01 22:52:28 ea Exp $
+/* $Id: ppool.c,v 1.3 2001/03/06 14:41:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,23 +29,13 @@
  *
  * RETURN VALUE
  */
-PVOID 
-STDCALL
-ExAllocatePagedPoolWithTag (
-	IN	POOL_TYPE	PoolType,
-	IN	ULONG		NumberOfBytes,
-	IN	ULONG		Tag
-	)
+PVOID STDCALL
+ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
+			    IN	ULONG		NumberOfBytes,
+			    IN	ULONG		Tag)
 {
-	PVOID	Address = NULL;
-	
-	UNIMPLEMENTED; /* FIXME: */
-
-	if (NULL == Address)
-	{
-		ExRaiseStatus (STATUS_INSUFFICIENT_RESOURCES);
-	}
-	return Address;
+  UNIMPLEMENTED; /* FIXME: */
+  return(NULL);
 }
 
 

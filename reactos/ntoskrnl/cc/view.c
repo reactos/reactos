@@ -1,7 +1,6 @@
-
 /*
  *  ReactOS kernel
- *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>
+ *  Copyright (C) 1998, 1999, 2000, 2001 David Welch <welch@cwcom.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.14 2001/02/10 22:51:08 dwelch Exp $
+/* $Id: view.c,v 1.15 2001/03/06 14:41:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

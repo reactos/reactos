@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001/02/14 02:53:52 dwelch Exp $
+# $Id: Makefile,v 1.9 2001/03/06 14:41:18 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -282,6 +282,12 @@ OBJECTS_KD = \
 	kd/service.o \
 	kd/dlog.o
 
+C_OBJECTS = $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_MM_I386) \
+	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_KE_I386) $(OBJECTS_OB) \
+	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
+	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
+	$(OBJECTS_PO) $(OBJECTS_KD)	
+
 # Resources
 OBJECTS_RESOURCE = \
 	$(TARGETNAME).coff
@@ -445,13 +451,13 @@ CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
               ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
               kd\*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
 else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
 endif
 
 
@@ -563,6 +569,17 @@ dist: ../$(DIST_DIR)/$(TARGETNAME).exe
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 ke/main.o: ke/main.c ../include/reactos/buildno.h
+
+#include $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
+
+%.d: %.c
+	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+
+%.d: %.s
+	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+
+%.d: %.S
+	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
 
 include $(PATH_TO_TOP)/rules.mak
 

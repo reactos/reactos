@@ -412,4 +412,7 @@ typedef struct _MM_PAGEOP
   ULONG Offset;
 } MM_PAGEOP, *PMM_PAGEOP;
 
+VOID
+MiDebugDumpNonPagedPool(VOID);
+
 #endif
