@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.20 2001/07/30 11:56:54 ea Exp $
+/* $Id: conio.c,v 1.21 2001/07/31 20:28:43 ea Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -224,28 +224,15 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 (b)->Buffer[(o)++]=(c);\
 (b)->Buffer[(o)++]=(a);
 
-static DWORD FASTCALL
-ComputeOffsetBuffer (
-	PCSRSS_SCREEN_BUFFER	Buff,
-	DWORD			LogicalX,
-	DWORD			LogicalY
-	)
-{
-	/* 2 == sizeof (cell) */
-	return (2 * ((LogicalY * Buff->MaxX) + LogicalX));
-}
-
 static VOID FASTCALL
 ClearLineBuffer (
 	PCSRSS_SCREEN_BUFFER	Buff,
-	DWORD			StartX,
-	DWORD			StopX
+	DWORD			StartX
 	)
 {
-	DWORD LogicalX = StartX;
-	DWORD Offset   = ComputeOffsetBuffer (Buff, LogicalX, Buff->CurrentY);
+	DWORD Offset   = 2 * ((Buff->CurrentY * Buff->MaxX) + StartX);
 	
-	for ( ; LogicalX < StopX; LogicalX ++ )
+	for ( ; StartX < Buff->MaxX; StartX ++ )
 	{
 		/* Fill the cell: Offset is incremented by the macro */
 		SET_CELL_BUFFER(Buff,Offset,' ',Buff->DefaultAttrib)
@@ -274,10 +261,10 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 		  {
 		     Buff->CurrentY = 0;
 		  }
-	       ClearLineBuffer (Buff, 0, Buff->MaxX);
+	       ClearLineBuffer (Buff, 0);
 	       break;
 	    /* --- BS --- */
-	    case '\b': {
+	    case '\b':
 	      if( Buff->CurrentX == 0 )
 		{
 		  /* slide viewable screen up */
@@ -297,13 +284,20 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 		}
 	      else
 		Buff->CurrentX--;
-	      Offset = ComputeOffsetBuffer (Buff, Buff->CurrentX, Buff->CurrentY);
+	      Offset = 2 * ((Buff->CurrentY * Buff->MaxX) + Buff->CurrentX);
 	      SET_CELL_BUFFER(Buff,Offset,' ',Buff->DefaultAttrib);
 	      break;
-	    }
+	    /* --- CR --- */
+	    case '\r':
+	      Buff->CurrentX = 0;
+	      break;
+	    /* --- TAB --- */
+	    case '\t':
+	      CsrpWriteConsole(Buff, "        ", 8, Attrib);
+	      break;
 	    /* --- */
 	    default:
-	       Offset = ComputeOffsetBuffer (Buff, Buff->CurrentX, Buff->CurrentY);
+	       Offset = 2 * (((Buff->CurrentY * Buff->MaxX)) + Buff->CurrentX);
 	       Buff->Buffer[Offset ++] = Buffer[ i ];
 	       if( Attrib )
 		  Buff->Buffer[Offset] = Buff->DefaultAttrib;
@@ -317,11 +311,11 @@ NTSTATUS CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length
 			   /* if end of buffer, wrap back to beginning */
 			   Buff->CurrentY = 0;
 			   /* clear new line */
-			   ClearLineBuffer (Buff, 0, Buff->MaxX);
+			   ClearLineBuffer (Buff, 0);
 			}
 		     else {
 			/* clear new line */
-			ClearLineBuffer (Buff, 0, Buff->MaxX);
+			ClearLineBuffer (Buff, 0);
 		     }
 		     /* slide the viewable screen */
 		     if( (Buff->CurrentY - Buff->ShowY) == PhysicalConsoleSize.Y )
@@ -382,7 +376,7 @@ NTSTATUS CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console )
   /* initialize buffer to be empty with default attributes */
   for( ; Console->CurrentY < Console->MaxY; Console->CurrentY++ )
     {
-	    ClearLineBuffer (Console, 0, Console->MaxX);
+	    ClearLineBuffer (Console, 0);
     }
   Console->CursorInfo.bVisible = TRUE;
   Console->CursorInfo.dwSize = 5;
