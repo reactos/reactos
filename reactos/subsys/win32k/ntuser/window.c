@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.114 2003/10/17 17:38:38 mf Exp $
+/* $Id: window.c,v 1.115 2003/10/18 10:35:52 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -543,9 +543,6 @@ IntGetWindowObject(HWND hWnd)
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
 
-  /* FIXME */
-  if (PsGetWin32Process() == NULL)
-    return NULL;
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->
 	    		       HandleTable,
