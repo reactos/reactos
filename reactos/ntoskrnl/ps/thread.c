@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.60 2000/12/10 23:42:01 dwelch Exp $
+/* $Id: thread.c,v 1.61 2000/12/22 13:37:41 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -306,6 +306,52 @@ ULONG PsFreezeThread(PETHREAD Thread,
    return(r);
 }
 
+ULONG PsResumeThread(PETHREAD Thread)
+{
+   KIRQL oldIrql;
+   ULONG SuspendCount;
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+   if (Thread->Tcb.SuspendCount > 0)
+     {
+	Thread->Tcb.SuspendCount--;
+	SuspendCount = Thread->Tcb.SuspendCount;
+	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
+	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
+     }
+
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+   return SuspendCount;
+}
+
+ULONG PsSuspendThread(PETHREAD Thread)
+{
+   KIRQL oldIrql;
+   ULONG PreviousSuspendCount;
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+   PreviousSuspendCount = Thread->Tcb.SuspendCount;
+   if (Thread->Tcb.SuspendCount < MAXIMUM_SUSPEND_COUNT)
+     {
+	Thread->Tcb.SuspendCount++;
+     }
+
+   if (PsGetCurrentThread() == Thread)
+     {
+	DbgPrint("Cannot suspend self\n");
+	KeBugCheck(0);
+     }
+
+   Thread->Tcb.State = THREAD_STATE_SUSPENDED;
+
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+   return PreviousSuspendCount;
+}
+
 VOID PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment
@@ -430,7 +476,7 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
    (VOID)PsUnfreezeThread(Thread, &ThreadStatus);
    
    ObDereferenceObject(Thread);
-   return(STATUS_SUCCESS);   
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL NtOpenThread(OUT	PHANDLE ThreadHandle,
@@ -449,13 +495,36 @@ NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
  *        ThreadHandle = Handle to the thread that should be resumed
  *        ResumeCount =  The resulting resume count.
  * REMARK:
- *	  A thread is resumed if its suspend count is 0. This procedure maps to
- *        the win32 ResumeThread function. ( documentation about the the suspend count can be found here aswell )
+ *        A thread is resumed if its suspend count is 0. This procedure maps to
+ *        the win32 ResumeThread function. ( documentation about the the suspend
+ *        count can be found here aswell )
  * RETURNS: Status
  */
 {
-   UNIMPLEMENTED;
-   return(STATUS_UNSUCCESSFUL);
+   PETHREAD Thread;
+   NTSTATUS Status;
+   ULONG Count;
+
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
+   Count = PsResumeThread(Thread);
+   if (SuspendCount != NULL)
+     {
+	*SuspendCount = Count;
+     }
+
+   ObDereferenceObject((PVOID)Thread);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -467,7 +536,7 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
  *        ThreadHandle = Handle to the thread that should be resumed
  *        PreviousSuspendCount =  The resulting/previous suspend count.
  * REMARK:
- *	  A thread will be suspended if its suspend count is greater than 0. 
+ *        A thread will be suspended if its suspend count is greater than 0. 
  *        This procedure maps to the win32 SuspendThread function. ( 
  *        documentation about the the suspend count can be found here aswell )
  *        The suspend count is not increased if it is greater than 
@@ -475,8 +544,30 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
  * RETURNS: Status
  */ 
 {
-   UNIMPLEMENTED;
-   return(STATUS_UNSUCCESSFUL);
+   PETHREAD Thread;
+   NTSTATUS Status;
+   ULONG Count;
+
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
+   Count = PsSuspendThread(Thread);
+   if (PreviousSuspendCount != NULL)
+     {
+	*PreviousSuspendCount = Count;
+     }
+
+   ObDereferenceObject((PVOID)Thread);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -490,14 +581,14 @@ NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
      {
 	DbgPrint("NtContinue called but TrapFrame was NULL\n");
 	KeBugCheck(0);
-     }   
+     }
    KeContextToTrapFrame(Context, TrapFrame);
    return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL NtYieldExecution(VOID)
-{ 
+{
    PsDispatchThread(THREAD_STATE_RUNNABLE);
    return(STATUS_SUCCESS);
 }

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.24 2000/10/22 16:36:53 ekohl Exp $
+/* $Id: create.c,v 1.25 2000/12/22 13:37:41 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -444,7 +444,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
      {
         Teb.Peb = Thread->ThreadsProcess->Peb; /* No PEB yet!! */
      }
-//   DPRINT1("Teb.Peb %x\n", Teb.Peb);
+   DPRINT("Teb.Peb %x\n", Teb.Peb);
    
    /* store stack information from InitialTeb */
    if (InitialTeb != NULL)
@@ -494,13 +494,13 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
         *TebPtr = (PNT_TEB)TebBase;
      }
 
-//   DPRINT1 ("TEB allocated at %p\n", TebBase);
+   DPRINT("TEB allocated at %p\n", TebBase);
 
    return Status;
 }
 
 
-NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
+NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
 				 ACCESS_MASK		DesiredAccess,
 				 POBJECT_ATTRIBUTES	ObjectAttributes,
 				 HANDLE			ProcessHandle,
@@ -588,8 +588,8 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
    
    if (!CreateSuspended)
      {
-        DPRINT("Not creating suspended\n");
-	PsUnfreezeThread(Thread, NULL);
+	DPRINT("Not creating suspended\n");
+	PsResumeThread(Thread);
      }
    DPRINT("Thread %x\n", Thread);
    DPRINT("ObGetReferenceCount(Thread) %d ObGetHandleCount(Thread) %x\n",
@@ -648,8 +648,9 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
 	*ClientId=Thread->Cid;
      }  
 
-   PsUnfreezeThread(Thread, NULL);
+   PsResumeThread(Thread);
    
    return(STATUS_SUCCESS);
 }
 
+/* EOF */
