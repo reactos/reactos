@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.16 1999/12/11 01:44:29 ekohl Exp $
+/* $Id: blue.c,v 1.17 2000/01/07 18:57:33 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -19,26 +19,31 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* DEFINITIONS ***************************************************************/
+
+/* uncomment to use fixed screen dimensions */
+//#define BLUE_FIXEDSIZE
 
 #define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
 
+#ifdef BLUE_FIXEDSIZE
 #define NR_ROWS            50
 #define NR_COLUMNS         80
 #define NR_SCANLINES       8
+#endif
 
 #define CRTC_COMMAND       ((PUCHAR)0x3d4)
 #define CRTC_DATA          ((PUCHAR)0x3d5)
 
 #define CRTC_COLUMNS       0x01
+#define CRTC_OVERFLOW      0x07
 #define CRTC_ROWS          0x12
 #define CRTC_SCANLINES     0x09
 #define CRTC_CURSORSTART   0x0a
 #define CRTC_CURSOREND     0x0b
-#define CRTC_CURSORPOSLO   0x0f
 #define CRTC_CURSORPOSHI   0x0e
+#define CRTC_CURSORPOSLO   0x0f
 
 #define ATTRC_WRITEREG     ((PUCHAR)0x3c0)
 #define ATTRC_READREG      ((PUCHAR)0x3c1)
@@ -63,8 +68,8 @@ typedef struct _DEVICE_EXTENSION
     WORD  CharAttribute;
     DWORD Mode;
     BYTE  ScanLines;      /* Height of a text line */
-    BYTE  Rows;           /* Number of rows        */
-    BYTE  Columns;        /* Number of columns     */
+    WORD  Rows;           /* Number of rows        */
+    WORD  Columns;        /* Number of columns     */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
@@ -86,6 +91,7 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* FIXME : use MmMapIoSpace() */
     DeviceExtension->VideoMemory = (PBYTE)(IDMAP_BASE + VIDMEM_BASE);
 
+    /* disable interrupts */
     __asm__("cli\n\t");
 
     /* get current output position */
@@ -103,11 +109,36 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     WRITE_PORT_UCHAR (ATTRC_WRITEREG, data);
     WRITE_PORT_UCHAR (ATTRC_WRITEREG, value);
     READ_PORT_UCHAR (ATTRC_INPST1);
+
+    /* read screen information from crt controller */
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_COLUMNS);
+    DeviceExtension->Columns = READ_PORT_UCHAR (CRTC_DATA) + 1;
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_ROWS);
+    DeviceExtension->Rows = READ_PORT_UCHAR (CRTC_DATA);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_OVERFLOW);
+    data = READ_PORT_UCHAR (CRTC_DATA);
+    DeviceExtension->Rows |= (((data & 0x02) << 7) | ((data & 0x40) << 3));
+    DeviceExtension->Rows++;
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_SCANLINES);
+    DeviceExtension->ScanLines = (READ_PORT_UCHAR (CRTC_DATA) & 0x1F) + 1;
+
+    /* enable interrupts */
     __asm__("sti\n\t");
 
+    /* calculate number of text rows */
+    DeviceExtension->Rows =
+        DeviceExtension->Rows / DeviceExtension->ScanLines;
+
+    DbgPrint ("%d Columns  %d Rows %d Scanlines\n",
+              DeviceExtension->Columns,
+              DeviceExtension->Rows,
+              DeviceExtension->ScanLines);
+
+#ifdef BLUE_FIXEDSIZE
     DeviceExtension->ScanLines = NR_SCANLINES; /* FIXME: read it from CRTC */
     DeviceExtension->Rows  = NR_ROWS; /* FIXME: read it from CRTC */
     DeviceExtension->Columns = NR_COLUMNS; /* FIXME: read it from CRTC */
+#endif
 
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
@@ -118,12 +149,21 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                             ENABLE_WRAP_AT_EOL_OUTPUT;
 
     /* show blinking cursor */
-    /* FIXME: calculate cursor size */
     __asm__("cli\n\t");
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
+#ifdef BLUE_FIXEDSIZE
     WRITE_PORT_UCHAR (CRTC_DATA, 0x47);
+#else
+    WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
+#endif
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
+#ifdef BLUE_FIXEDSIZE
     WRITE_PORT_UCHAR (CRTC_DATA, 0x07);
+#else
+    data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
+    WRITE_PORT_UCHAR (CRTC_DATA,
+                      data | ((DeviceExtension->ScanLines - 1) & 0x1F));
+#endif
     __asm__("sti\n\t");
 
     Status = STATUS_SUCCESS;
@@ -226,11 +266,11 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 LinePtr[j] = DeviceExtension->CharAttribute << 8;
             }
             cursory = rows - 1;
-			for (j = 0; j < columns; j++)
-			{
-				vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
-				vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
-			}
+            for (j = 0; j < columns; j++)
+            {
+                vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
+                vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
+            }
         }
     }
 
@@ -270,6 +310,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 int columns = DeviceExtension->Columns;
                 unsigned int offset;
 
+                /* read cursor position from crtc */
                 __asm__("cli\n\t");
                 WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
                 offset = READ_PORT_UCHAR (CRTC_DATA);
@@ -335,7 +376,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_CONSOLE_SET_CURSOR_INFO:
             {
                 PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
-                BYTE data;
+                BYTE data, value;
                 DWORD size, height;
 
                 DeviceExtension->CursorSize = pcci->dwSize;
@@ -353,7 +394,11 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
                 WRITE_PORT_UCHAR (CRTC_DATA, data);
                 WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-                WRITE_PORT_UCHAR (CRTC_DATA, height - 1);
+//                WRITE_PORT_UCHAR (CRTC_DATA, height - 1);
+
+                value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
+                WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
+
                 __asm__("sti\n\t");
 
                 Irp->IoStatus.Information = 0;
