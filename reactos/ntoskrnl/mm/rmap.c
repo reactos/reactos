@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.20 2003/07/15 19:31:27 hbirr Exp $
+/* $Id: rmap.c,v 1.21 2003/07/16 20:57:36 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -269,7 +269,8 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       return(STATUS_UNSUCCESSFUL);
     }
   Type = MemoryArea->Type;
-  if (Type == MEMORY_AREA_SECTION_VIEW)
+  if (Type == MEMORY_AREA_SECTION_VIEW ||
+      Type == MEMORY_AREA_CACHE_SEGMENT)
     {
       Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
 
@@ -307,8 +308,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       Status = MmPageOutSectionView(AddressSpace, MemoryArea, 
 				    Address, PageOp);
     }
-  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY || 
-           Type == MEMORY_AREA_CACHE_SEGMENT)
+  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
       PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
