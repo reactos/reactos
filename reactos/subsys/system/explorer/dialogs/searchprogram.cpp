@@ -185,7 +185,12 @@ void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 	LPCITEMIDLIST pidl_last = NULL;
 	IShellFolder* pFolder;
 
-	HRESULT hr = SHBindToParent(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
+	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
+
+	if (!SHBindToParent)
+		return;
+
+	HRESULT hr = (*SHBindToParent)(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
 
 	if (SUCCEEDED(hr)) {
 		hr = pFolder->GetUIObjectOf(pThis->_hwnd, 1, &pidl_last, IID_IShellLink, NULL, (LPVOID*)&pShellLink);
