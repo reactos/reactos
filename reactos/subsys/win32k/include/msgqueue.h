@@ -233,7 +233,11 @@ LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
   ((message) == WM_LBUTTON##code || \
    (message) == WM_MBUTTON##code || \
    (message) == WM_RBUTTON##code || \
-   (message) == WM_XBUTTON##code )
+   (message) == WM_XBUTTON##code || \
+   (message) == WM_NCLBUTTON##code || \
+   (message) == WM_NCMBUTTON##code || \
+   (message) == WM_NCRBUTTON##code || \
+   (message) == WM_NCXBUTTON##code )
 
 #endif /* _WIN32K_MSGQUEUE_H */
 
