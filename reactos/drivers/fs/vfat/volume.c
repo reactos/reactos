@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.11 2001/07/20 08:00:21 ekohl Exp $
+/* $Id: volume.c,v 1.12 2001/07/28 10:12:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,15 +27,17 @@ FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
 			  PULONG BufferLength)
 {
   ULONG LabelLength;
-  
+
   DPRINT("FsdGetFsVolumeInformation()\n");
   DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
-  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength));
-  
+
   LabelLength = DeviceObject->Vpb->VolumeLabelLength;
+
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)));
   DPRINT("LabelLength %lu\n", LabelLength);
-  
+  DPRINT("Label %S\n", DeviceObject->Vpb->VolumeLabel);
+
   /* FIXME: This does not work correctly! Why?? */
 //  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength));
 //    return(STATUS_BUFFER_OVERFLOW);
@@ -44,17 +46,17 @@ FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
   FsVolumeInfo->VolumeLabelLength = LabelLength;
   wcscpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
-  
+
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
   FsVolumeInfo->SupportsObjects = FALSE;
-  
+
   DPRINT("Finished FsdGetFsVolumeInformation()\n");
-  
-  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength);
-  
+
+  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength * sizeof(WCHAR));
+
   DPRINT("BufferLength %lu\n", *BufferLength);
-  
+
   return(STATUS_SUCCESS);
 }
 
@@ -67,22 +69,22 @@ FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
   DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
-  
+
   /* FIXME: This does not work correctly! Why?? */
 //  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
 //    return(STATUS_BUFFER_OVERFLOW);
-  
+
   FsAttributeInfo->FileSystemAttributes =
     FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
   FsAttributeInfo->MaximumComponentNameLength = 255;
   FsAttributeInfo->FileSystemNameLength = 6;
   wcscpy(FsAttributeInfo->FileSystemName, L"FAT");
-  
+
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
-  
+
   *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6);
   DPRINT("BufferLength %lu\n", *BufferLength);
-  
+
   return(STATUS_SUCCESS);
 }
 
@@ -94,16 +96,16 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 {
   PDEVICE_EXTENSION DeviceExt;
   NTSTATUS Status;
-  
+
   DPRINT("FsdGetFsSizeInformation()\n");
   DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
-  
+
   /* FIXME: This does not work correctly! Why?? */
 //  if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION));
 //    return(STATUS_BUFFER_OVERFLOW);
-  
+
   DeviceExt = DeviceObject->DeviceExtension;
-  
+
   if (DeviceExt->FatType == FAT32)
     {
       struct _BootSector32 *BootSect =
