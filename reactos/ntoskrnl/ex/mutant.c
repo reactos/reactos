@@ -137,6 +137,11 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
   Status = ObCreateObject(PreviousMode,
@@ -343,6 +348,11 @@ NtReleaseMutant(IN HANDLE MutantHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObReferenceObjectByHandle(MutantHandle,

@@ -1208,39 +1208,34 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
-	if (ProcessInformationLength != sizeof(PROCESS_BASIC_INFORMATION))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-          PPROCESS_BASIC_INFORMATION ProcessBasicInformationP =
-	    (PPROCESS_BASIC_INFORMATION)ProcessInformation;
+      {
+        PPROCESS_BASIC_INFORMATION ProcessBasicInformationP =
+	  (PPROCESS_BASIC_INFORMATION)ProcessInformation;
 
-          _SEH_TRY
-          {
-	    ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
-	    ProcessBasicInformationP->PebBaseAddress = Process->Peb;
-	    ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
-	    ProcessBasicInformationP->UniqueProcessId =
-	      Process->UniqueProcessId;
-	    ProcessBasicInformationP->InheritedFromUniqueProcessId =
-	      (ULONG)Process->InheritedFromUniqueProcessId;
-	    ProcessBasicInformationP->BasePriority =
-	      Process->Pcb.BasePriority;
+        _SEH_TRY
+        {
+	  ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
+	  ProcessBasicInformationP->PebBaseAddress = Process->Peb;
+	  ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
+	  ProcessBasicInformationP->UniqueProcessId =
+	    Process->UniqueProcessId;
+	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
+	    (ULONG)Process->InheritedFromUniqueProcessId;
+	  ProcessBasicInformationP->BasePriority =
+	    Process->Pcb.BasePriority;
 
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 	break;
+      }
 
       case ProcessQuotaLimits:
       case ProcessIoCounters:
@@ -1248,56 +1243,43 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessTimes:
-	if (ProcessInformationLength != sizeof(KERNEL_USER_TIMES))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-           PKERNEL_USER_TIMES ProcessTimeP = (PKERNEL_USER_TIMES)ProcessInformation;
-           _SEH_TRY
-           {
-	      ProcessTimeP->CreateTime = Process->CreateTime;
-              ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000LL;
-              ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000LL;
-	      ProcessTimeP->ExitTime = Process->ExitTime;
+      {
+         PKERNEL_USER_TIMES ProcessTimeP = (PKERNEL_USER_TIMES)ProcessInformation;
+         _SEH_TRY
+         {
+	    ProcessTimeP->CreateTime = Process->CreateTime;
+            ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000LL;
+            ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000LL;
+	    ProcessTimeP->ExitTime = Process->ExitTime;
 
-	     if (ReturnLength)
-	     {
-	       *ReturnLength = sizeof(KERNEL_USER_TIMES);
-	     }
-           }
-           _SEH_HANDLE
-           {
-             Status = _SEH_GetExceptionCode();
-           }
-           _SEH_END;
-	}
-	break;
+	   if (ReturnLength)
+	   {
+	     *ReturnLength = sizeof(KERNEL_USER_TIMES);
+	   }
+         }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+	 break;
+      }
 
       case ProcessDebugPort:
       {
-      	if (ProcessInformationLength != sizeof(HANDLE))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-          _SEH_TRY
-          {
-
-            *(PHANDLE)ProcessInformation = (Process->DebugPort != NULL ? (HANDLE)-1 : NULL);
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(HANDLE);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+        _SEH_TRY
+        {
+          *(PHANDLE)ProcessInformation = (Process->DebugPort != NULL ? (HANDLE)-1 : NULL);
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(HANDLE);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
         break;
       }
       
@@ -1308,54 +1290,42 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessHandleCount:
-      	if (ProcessInformationLength != sizeof(ULONG))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-	  ULONG HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
+      {
+	ULONG HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
 	  
-	  _SEH_TRY
+	_SEH_TRY
+	{
+          *(PULONG)ProcessInformation = HandleCount;
+	  if (ReturnLength)
 	  {
-            *(PULONG)ProcessInformation = HandleCount;
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(ULONG);
-	    }
+	    *ReturnLength = sizeof(ULONG);
 	  }
-	  _SEH_HANDLE
-	  {
-            Status = _SEH_GetExceptionCode();
-	  }
-	  _SEH_END;
 	}
+	_SEH_HANDLE
+	{
+          Status = _SEH_GetExceptionCode();
+	}
+	_SEH_END;
 	break;
+      }
 
       case ProcessSessionInformation:
       {
-        if (ProcessInformationLength != sizeof(PROCESS_SESSION_INFORMATION))
-        {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
-        }
-        else
-        {
-          PPROCESS_SESSION_INFORMATION SessionInfo = (PPROCESS_SESSION_INFORMATION)ProcessInformation;
+        PPROCESS_SESSION_INFORMATION SessionInfo = (PPROCESS_SESSION_INFORMATION)ProcessInformation;
 
-          _SEH_TRY
+        _SEH_TRY
+        {
+          SessionInfo->SessionId = Process->SessionId;
+          if (ReturnLength)
           {
-            SessionInfo->SessionId = Process->SessionId;
-            if (ReturnLength)
-            {
-              *ReturnLength = sizeof(PROCESS_SESSION_INFORMATION);
-            }
+            *ReturnLength = sizeof(PROCESS_SESSION_INFORMATION);
           }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
         }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
         break;
       }
       
@@ -1365,148 +1335,123 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessVmCounters:
-	if (ProcessInformationLength != sizeof(VM_COUNTERS))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-	  PVM_COUNTERS pOut = (PVM_COUNTERS)ProcessInformation;
+      {
+	PVM_COUNTERS pOut = (PVM_COUNTERS)ProcessInformation;
 	  
-	  _SEH_TRY
-	  {
-	    pOut->PeakVirtualSize            = Process->PeakVirtualSize;
-	    /*
-	     * Here we should probably use VirtualSize.LowPart, but due to
-	     * incompatibilities in current headers (no unnamed union),
-	     * I opted for cast.
-	     */
-	    pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
-	    pOut->PageFaultCount             = Process->Vm.PageFaultCount;
-	    pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
-	    pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
-	    pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
-	    pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
-	    pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
-	    pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
-	    pOut->PagefileUsage              = Process->PagefileUsage;
-	    pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
+	_SEH_TRY
+	{
+	  pOut->PeakVirtualSize            = Process->PeakVirtualSize;
+	  /*
+	   * Here we should probably use VirtualSize.LowPart, but due to
+	   * incompatibilities in current headers (no unnamed union),
+	   * I opted for cast.
+	   */
+	  pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
+	  pOut->PageFaultCount             = Process->Vm.PageFaultCount;
+	  pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
+	  pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
+	  pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
+	  pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
+	  pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
+	  pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
+	  pOut->PagefileUsage              = Process->PagefileUsage;
+	  pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
 
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(VM_COUNTERS);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(VM_COUNTERS);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 	break;
+      }
 
       case ProcessDefaultHardErrorMode:
-	if (ProcessInformationLength != sizeof(ULONG))
+      {
+	PULONG HardErrMode = (PULONG)ProcessInformation;
+	_SEH_TRY
 	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	  *HardErrMode = Process->DefaultHardErrorProcessing;
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(ULONG);
+	  }
 	}
-	else
+	_SEH_HANDLE
 	{
-	  PULONG HardErrMode = (PULONG)ProcessInformation;
-	  _SEH_TRY
-	  {
-	    *HardErrMode = Process->DefaultHardErrorProcessing;
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(ULONG);
-	    }
-	  }
-	  _SEH_HANDLE
-	  {
-            Status = _SEH_GetExceptionCode();
-	  }
-	  _SEH_END;
+          Status = _SEH_GetExceptionCode();
 	}
+	_SEH_END;
 	break;
+      }
 
       case ProcessPriorityBoost:
-	if (ProcessInformationLength != sizeof(ULONG))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-	  PULONG BoostEnabled = (PULONG)ProcessInformation;
+      {
+	PULONG BoostEnabled = (PULONG)ProcessInformation;
 	  
-	  _SEH_TRY
-	  {
-	    *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
+	_SEH_TRY
+	{
+	  *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
 
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(ULONG);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(ULONG);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 	break;
+      }
 
       case ProcessDeviceMap:
-	if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
-        {
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-        else
-        {
-          PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+      {
+        PROCESS_DEVICEMAP_INFORMATION DeviceMap;
           
-          ObQueryDeviceMapInformation(Process, &DeviceMap);
-          
-          _SEH_TRY
+        ObQueryDeviceMapInformation(Process, &DeviceMap);
+
+        _SEH_TRY
+        {
+          *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
+	  if (ReturnLength)
           {
-            *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
-	    if (ReturnLength)
-            {
-	      *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+	    *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 	break;
+      }
 
       case ProcessPriorityClass:
-	if (ProcessInformationLength != sizeof(USHORT))
-	{
-	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	}
-	else
-	{
-	  PUSHORT Priority = (PUSHORT)ProcessInformation;
-	  
-	  _SEH_TRY
-	  {
-	    *Priority = Process->PriorityClass;
+      {
+	PUSHORT Priority = (PUSHORT)ProcessInformation;
 
-	    if (ReturnLength)
-	    {
-	      *ReturnLength = sizeof(USHORT);
-	    }
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-	}
+	_SEH_TRY
+	{
+	  *Priority = Process->PriorityClass;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(USHORT);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 	break;
+      }
 
       case ProcessImageFileName:
       {
@@ -1620,6 +1565,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             }
           }
           
+          /* don't forget to detach from the process!!! */
           KeDetachProcess();
         }
         else

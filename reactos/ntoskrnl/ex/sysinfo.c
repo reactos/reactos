@@ -95,7 +95,6 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 			       IN	ULONG		ValueBufferLength,
 			       IN OUT	PULONG		ReturnLength  OPTIONAL)
 {
-  NTSTATUS Status;
   ANSI_STRING AName;
   UNICODE_STRING WName;
   BOOLEAN Result;
@@ -103,8 +102,38 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   ANSI_STRING AValue;
   UNICODE_STRING WValue;
   KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
   
   PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(VariableName,
+                   sizeof(UNICODE_STRING),
+                   sizeof(ULONG));
+      ProbeForWrite(ValueBuffer,
+                    ValueBufferLength,
+                    sizeof(WCHAR));
+      if(ReturnLength != NULL)
+      {
+        ProbeForWrite(ReturnLength,
+                      sizeof(ULONG),
+                      sizeof(ULONG));
+      }
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   /*
    * Copy the name to kernel space if necessary and convert it to ANSI.
@@ -116,19 +145,6 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
                                    VariableName);
   if(NT_SUCCESS(Status))
   {
-    if(PreviousMode != KernelMode)
-    {
-      ProbeForWrite(ValueBuffer,
-                    ValueBufferLength,
-                    sizeof(WCHAR));
-      if(ReturnLength != NULL)
-      {
-        ProbeForWrite(ReturnLength,
-                      sizeof(ULONG),
-                      sizeof(ULONG));
-      }
-    }
-    
     /*
      * according to ntinternals the SeSystemEnvironmentName privilege is required!
      */

@@ -114,6 +114,11 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObCreateObject(ExGetPreviousMode(),
@@ -183,6 +188,11 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObOpenObjectByName(ObjectAttributes,

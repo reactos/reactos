@@ -119,10 +119,42 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
 		IN KPROFILE_SOURCE ProfileSource,
 		IN KAFFINITY Affinity)
 {
-  HANDLE SafeProfileHandle;
-  NTSTATUS Status;
+  HANDLE hProfile;
   PKPROFILE Profile;
   PEPROCESS pProcess;
+  KPROCESSOR_MODE PreviousMode;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(BufferSize == 0)
+  {
+    return STATUS_INVALID_PARAMETER_7;
+  }
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(ProfileHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+      ProbeForWrite(Buffer,
+                    BufferSize,
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   /*
    * Reference the associated process
@@ -132,7 +164,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
       Status = ObReferenceObjectByHandle(Process,
 					 PROCESS_QUERY_INFORMATION,
 					 PsProcessType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&pProcess,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -143,7 +175,11 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
   else
     {
       pProcess = NULL;
-      /* FIXME: Check privilege. */
+      if(!SeSinglePrivilegeCheck(SeSystemProfilePrivilege,
+                                 PreviousMode))
+      {
+        return STATUS_PRIVILEGE_NOT_HELD;
+      }
     }
 
   /*
@@ -170,10 +206,16 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
   /*
    * Create the object
    */
-  Status = ObCreateObject(ExGetPreviousMode(),
+  InitializeObjectAttributes(&ObjectAttributes,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+
+  Status = ObCreateObject(KernelMode,
 			  ExProfileObjectType,
-			  NULL,
-			  ExGetPreviousMode(),
+			  &ObjectAttributes,
+			  PreviousMode,
 			  NULL,
 			  sizeof(KPROFILE),
 			  0,
@@ -193,6 +235,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
   Profile->BufferMdl = MmCreateMdl(NULL, Buffer, BufferSize);
   if(Profile->BufferMdl == NULL) {
 	DPRINT("MmCreateMdl: Out of memory!");
+	ObDereferenceObject (Profile);
 	return(STATUS_NO_MEMORY);
   }  
   MmProbeAndLockPages(Profile->BufferMdl, UserMode, IoWriteAccess);
@@ -212,7 +255,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
 			   STANDARD_RIGHTS_ALL,
 			   0,
 			   NULL,
-			   &SafeProfileHandle);
+			   &hProfile);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (Profile);
@@ -222,39 +265,70 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
   /*
    * Copy the created handle back to the caller
    */
-  Status = MmCopyToCaller(ProfileHandle, &SafeProfileHandle, sizeof(HANDLE));
-  if (!NT_SUCCESS(Status))
-     {
-       ObDereferenceObject(Profile);
-       ZwClose(ProfileHandle);
-       return(Status);
-     }
+  _SEH_TRY
+  {
+    *ProfileHandle = hProfile;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 
   ObDereferenceObject(Profile);
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 NTSTATUS STDCALL 
 NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
 		       OUT PULONG Interval)
 {
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(Interval,
+                    sizeof(ULONG),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   if (ProfileSource == ProfileTime)
     {
-      ULONG SafeInterval;
+      ULONG ReturnInterval;
 
       /* FIXME: What units does this use, for now nanoseconds */
-      SafeInterval = 100;
-      Status = MmCopyToCaller(Interval, &SafeInterval, sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      return(STATUS_SUCCESS);
+      ReturnInterval = 100;
+
+      _SEH_TRY
+      {
+        *Interval = ReturnInterval;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      
+      return Status;
     }
-  return(STATUS_INVALID_PARAMETER_2);
+  return STATUS_INVALID_PARAMETER_2;
 }
 
 NTSTATUS STDCALL 
@@ -267,13 +341,16 @@ NtSetIntervalProfile(IN ULONG Interval,
 NTSTATUS STDCALL 
 NtStartProfile(IN HANDLE ProfileHandle)
 {
-  NTSTATUS Status;
   PKPROFILE Profile;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
 
   Status = ObReferenceObjectByHandle(ProfileHandle,
 				     STANDARD_RIGHTS_ALL,
 				     ExProfileObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&Profile,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -288,13 +365,16 @@ NtStartProfile(IN HANDLE ProfileHandle)
 NTSTATUS STDCALL 
 NtStopProfile(IN HANDLE ProfileHandle)
 {
-  NTSTATUS Status;
   PKPROFILE Profile;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
 
   Status = ObReferenceObjectByHandle(ProfileHandle,
 				     STANDARD_RIGHTS_ALL,
 				     ExProfileObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&Profile,
 				     NULL);
   if (!NT_SUCCESS(Status))

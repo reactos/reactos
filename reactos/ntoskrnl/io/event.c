@@ -65,26 +65,15 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			     PHANDLE EventHandle)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING CapturedEventName;
    KPROCESSOR_MODE PreviousMode;
    PKEVENT Event;
    HANDLE Handle;
    NTSTATUS Status;
    
    PreviousMode = ExGetPreviousMode();
-   
-   Status = RtlCaptureUnicodeString(&CapturedEventName,
-                                    PreviousMode,
-                                    NonPagedPool,
-                                    FALSE,
-                                    EventName);
-   if (!NT_SUCCESS(Status))
-     {
-	return NULL;
-     }
 
    InitializeObjectAttributes(&ObjectAttributes,
-			      &CapturedEventName,
+			      EventName,
 			      OBJ_OPENIF,
 			      NULL,
 			      NULL);
@@ -94,10 +83,6 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			  &ObjectAttributes,
 			  SynchronizationEvent,
 			  TRUE);
-
-   RtlRelaseCapturedUnicodeString(&CapturedEventName,
-                                  PreviousMode,
-                                  FALSE);
 
    if (!NT_SUCCESS(Status))
      {

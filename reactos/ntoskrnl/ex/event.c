@@ -151,6 +151,11 @@ NtCreateEvent(OUT PHANDLE EventHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
  
    Status = ObCreateObject(PreviousMode,
@@ -285,6 +290,11 @@ NtPulseEvent(IN HANDLE EventHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObReferenceObjectByHandle(EventHandle,
@@ -421,6 +431,11 @@ NtResetEvent(IN HANDLE EventHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObReferenceObjectByHandle(EventHandle,
@@ -481,6 +496,11 @@ NtSetEvent(IN HANDLE EventHandle,
        Status = _SEH_GetExceptionCode();
      }
      _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
 
    Status = ObReferenceObjectByHandle(EventHandle,
