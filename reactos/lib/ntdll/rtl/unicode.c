@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.33 2004/01/24 11:59:04 navaraf Exp $
+/* $Id: unicode.c,v 1.34 2004/02/02 15:10:00 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,7 +21,7 @@
 extern PUSHORT NlsUnicodeUpcaseTable;
 extern PUSHORT NlsUnicodeLowercaseTable;
 
-WCHAR RtlDowncaseUnicodeChar(IN WCHAR Source);
+WCHAR STDCALL RtlDowncaseUnicodeChar(IN WCHAR Source);
 
 /* FUNCTIONS *****************************************************************/
 

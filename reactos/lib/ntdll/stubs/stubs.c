@@ -219,27 +219,6 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
   return(FALSE);
 }
 
-
-
-/*
- * @unimplemented
- */
-CCHAR STDCALL
-RtlFindLeastSignificantBit (ULONGLONG ulLong)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-CCHAR STDCALL
-RtlFindMostSignificantBit (ULONGLONG ulLong)
-{
-  return(FALSE);
-}
-
-
 /*
  * @unimplemented
  */
