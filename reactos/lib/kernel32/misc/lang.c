@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.12 2004/01/28 23:03:59 gdalsnes Exp $
+/* $Id: lang.c,v 1.13 2004/04/12 10:19:43 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1235,18 +1235,20 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 		}
 	}
 
-	if (!cchTime)
-      /* We are counting */;
-	else if (nPos >= cchTime)
+	/* Are we not only counting? */
+	if (cchTime)
 	{
-		SetLastError(ERROR_INSUFFICIENT_BUFFER);
-		return 0;
+		if (nPos >= cchTime)
+		{
+			SetLastError(ERROR_INSUFFICIENT_BUFFER);
+			return 0;
+		}
+		else
+			lpTimeStr[nPos] = '\0';
 	}
-	else
-		lpTimeStr[nPos] = '\0';
 
 	nPos++;
-	return cchTime;
+	return nPos;
 }
 
 /*
@@ -1302,7 +1304,7 @@ GetTimeFormatW (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -1314,8 +1316,73 @@ GetTimeFormatA (
     LPSTR           lpTimeStr,
     int         cchTime
     )
-{    return sizeof(lpTimeStr);
+{
+	LPWSTR lpFormatU = NULL;
+	LPWSTR  lpTimeStrU;
+	int numCharsU;
+	int retVal;
+
+	if (lpFormat != NULL) {
+		/* First just determine the number of necessary bytes 
+		for the unicode string */
+		int numBytes = MultiByteToWideChar(CP_ACP,
+							MB_ERR_INVALID_CHARS,
+							lpFormat,
+							-1,
+							NULL,
+							0);
+
+		/* Try really hard not to fail due to format problems
+		If there are any problems with the format pass NULL
+		to GetTimeFormatW() */
+		if (numBytes > 0) {
+			lpFormatU = HeapAlloc(GetProcessHeap(),0,numBytes);
+
+			if (lpFormatU != NULL) 
+				MultiByteToWideChar(CP_ACP,
+								0,
+								lpFormat,
+								-1,
+								lpFormatU,
+								numBytes);
+		}
+	}
+
+	/* Just get the number of characters needed to store the 
+	   Unicode output */
+	numCharsU = GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,NULL,0);
+
+	if (numCharsU == 0) {
+		if (lpFormatU != NULL)
+			HeapFree(GetProcessHeap(),0,lpFormatU);
+		return 0;
+	}
+
+	lpTimeStrU = HeapAlloc(GetProcessHeap(),0,numCharsU*sizeof(WCHAR));
+	if (lpTimeStrU == NULL) {
+		if (lpFormatU != NULL) 
+			HeapFree(GetProcessHeap(),0,lpFormatU);
+		return 0;
+	}
+
+	if (GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,lpTimeStrU,numCharsU))
+		/* Convert the output string to ANSI */
+		retVal = WideCharToMultiByte(CP_ACP,
+						0,
+						lpTimeStrU,
+						numCharsU,
+						lpTimeStr,
+						cchTime,
+						NULL,
+						NULL);
+
+	HeapFree(GetProcessHeap(),0,lpTimeStrU);
+	if (lpFormatU != NULL)
+		HeapFree(GetProcessHeap(),0,lpFormatU);
+
+	return retVal;
 }
+
 
 
 #ifndef _OLE2NLS_IN_BUILD_
