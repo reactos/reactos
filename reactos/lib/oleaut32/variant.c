@@ -24,12 +24,8 @@
 
 #include "config.h"
 
-#ifdef HAVE_STRING_H
-# include <string.h>
-#endif
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
+#include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
@@ -41,7 +37,6 @@
 #include "wine/unicode.h"
 #include "winerror.h"
 #include "variant.h"
-
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -1441,7 +1436,7 @@ HRESULT WINAPI VarUdateFromDate(DATE dateIn, ULONG dwFlags, UDATE *lpUdate)
 
 #define GET_NUMBER_TEXT(fld,name) \
   buff[0] = 0; \
-  if (!GetLocaleInfoW(lcid, lctype|fld, buff, sizeof(WCHAR) * 2)) \
+  if (!GetLocaleInfoW(lcid, lctype|fld, buff, 2)) \
     WARN("buffer too small for " #fld "\n"); \
   else \
     if (buff[0]) lpChars->name = buff[0]; \
@@ -1464,7 +1459,7 @@ void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID lcid, D
 
   /* Local currency symbols are often 2 characters */
   lpChars->cCurrencyLocal2 = '\0';
-  switch(GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, buff, sizeof(WCHAR) * 4))
+  switch(GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, buff, sizeof(buff)/sizeof(WCHAR)))
   {
     case 3: lpChars->cCurrencyLocal2 = buff[1]; /* Fall through */
     case 2: lpChars->cCurrencyLocal  = buff[0];
@@ -2497,6 +2492,7 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_UI2  : lVal = V_UNION(left,uiVal); resT=VT_I4; break;
         case VT_UI4  : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
         case VT_UINT : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
+        case VT_BOOL : rVal = V_UNION(left,boolVal); resT=VT_I4; break;
         default: lOk = FALSE;
         }
 
@@ -2510,6 +2506,7 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_UI2  : rVal = V_UNION(right,uiVal); resT=VT_I4; break;
         case VT_UI4  : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
         case VT_UINT : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
+        case VT_BOOL : rVal = V_UNION(right,boolVal); resT=VT_I4; break;
         default: rOk = FALSE;
         }
 
@@ -2944,6 +2941,7 @@ HRESULT WINAPI VarOr(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_UI2  : lVal = V_UNION(left,uiVal); resT=VT_I4; break;
         case VT_UI4  : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
         case VT_UINT : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
+        case VT_BOOL : lVal = V_UNION(left,boolVal); resT=VT_I4; break;
         default: lOk = FALSE;
         }
 
@@ -2957,6 +2955,7 @@ HRESULT WINAPI VarOr(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_UI2  : rVal = V_UNION(right,uiVal); resT=VT_I4; break;
         case VT_UI4  : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
         case VT_UINT : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
+        case VT_BOOL : rVal = V_UNION(right,boolVal); resT=VT_I4; break;
         default: rOk = FALSE;
         }
 
@@ -3445,6 +3444,135 @@ HRESULT WINAPI VarNot(LPVARIANT pVarIn, LPVARIANT pVarOut)
 
     return hRet;
 }
+
+/**********************************************************************
+ *              VarRound [OLEAUT32.175]
+ *
+ * Perform a round operation on a variant.
+ *
+ * PARAMS
+ *  pVarIn  [I] Source variant
+ *  deci    [I] Number of decimals to round to
+ *  pVarOut [O] Destination for converted value
+ *
+ * RETURNS
+ *  Success: S_OK. pVarOut contains the converted value.
+ *  Failure: An HRESULT error code indicating the error.
+ *
+ * NOTES
+ *  - Floating point values are rounded to the desired number of decimals.
+ *  - Some integer types are just copied to the return variable.
+ *  - Some other integer types are not handled and fail.
+ */
+HRESULT WINAPI VarRound(LPVARIANT pVarIn, int deci, LPVARIANT pVarOut)
+{
+    VARIANT varIn;
+    HRESULT hRet = S_OK;
+    float factor;
+
+    TRACE("(%p->(%s%s),%d)\n", pVarIn, debugstr_VT(pVarIn), debugstr_VF(pVarIn), deci);
+
+    switch (V_VT(pVarIn))
+    {
+    /* cases that fail on windows */
+    case VT_I1:
+    case VT_I8:
+    case VT_UI2:
+    case VT_UI4:
+	hRet = DISP_E_BADVARTYPE;
+	break;
+
+    /* cases just copying in to out */
+    case VT_UI1:
+	V_VT(pVarOut) = V_VT(pVarIn);
+	V_UI1(pVarOut) = V_UI1(pVarIn);
+	break;
+    case VT_I2:
+	V_VT(pVarOut) = V_VT(pVarIn);
+	V_I2(pVarOut) = V_I2(pVarIn);
+	break;
+    case VT_I4:
+	V_VT(pVarOut) = V_VT(pVarIn);
+	V_I4(pVarOut) = V_I4(pVarIn);
+	break;
+    case VT_NULL:
+	V_VT(pVarOut) = V_VT(pVarIn);
+	/* value unchanged */
+	break;
+
+    /* cases that change type */
+    case VT_EMPTY:
+	V_VT(pVarOut) = VT_I2;
+	V_I2(pVarOut) = 0;
+	break;
+    case VT_BOOL:
+	V_VT(pVarOut) = VT_I2;
+	V_I2(pVarOut) = V_BOOL(pVarIn);
+	break;
+    case VT_BSTR:
+	hRet = VarR8FromStr(V_BSTR(pVarIn), LOCALE_USER_DEFAULT, 0, &V_R8(&varIn));
+	if (FAILED(hRet))
+	    break;
+	V_VT(&varIn)=VT_R8;
+	pVarIn = &varIn;
+	/* Fall through ... */
+
+    /* cases we need to do math */
+    case VT_R8:
+	if (V_R8(pVarIn)>0) {
+	    V_R8(pVarOut)=floor(V_R8(pVarIn)*pow(10, deci)+0.5)/pow(10, deci);
+	} else {
+	    V_R8(pVarOut)=ceil(V_R8(pVarIn)*pow(10, deci)-0.5)/pow(10, deci);
+	}
+	V_VT(pVarOut) = V_VT(pVarIn);
+	break;
+    case VT_R4:
+	if (V_R4(pVarIn)>0) {
+	    V_R4(pVarOut)=floor(V_R4(pVarIn)*pow(10, deci)+0.5)/pow(10, deci);
+	} else {
+	    V_R4(pVarOut)=ceil(V_R4(pVarIn)*pow(10, deci)-0.5)/pow(10, deci);
+	}
+	V_VT(pVarOut) = V_VT(pVarIn);
+	break;
+    case VT_DATE:
+	if (V_DATE(pVarIn)>0) {
+	    V_DATE(pVarOut)=floor(V_DATE(pVarIn)*pow(10, deci)+0.5)/pow(10, deci);
+	} else {
+	    V_DATE(pVarOut)=ceil(V_DATE(pVarIn)*pow(10, deci)-0.5)/pow(10, deci);
+	}
+	V_VT(pVarOut) = V_VT(pVarIn);
+	break;
+    case VT_CY:
+	if (deci>3)
+	    factor=1;
+	else
+	    factor=pow(10, 4-deci);
+
+	if (V_CY(pVarIn).int64>0) {
+	    V_CY(pVarOut).int64=floor(V_CY(pVarIn).int64/factor)*factor;
+	} else {
+	    V_CY(pVarOut).int64=ceil(V_CY(pVarIn).int64/factor)*factor;
+	}
+	V_VT(pVarOut) = V_VT(pVarIn);
+	break;
+
+    /* cases we don't know yet */
+    default:
+	FIXME("unimplemented part, V_VT(pVarIn) == 0x%X, deci == %d\n",
+		V_VT(pVarIn) & VT_TYPEMASK, deci);
+	hRet = DISP_E_BADVARTYPE;
+    }
+
+    if (FAILED(hRet))
+      V_VT(pVarOut) = VT_EMPTY;
+
+    TRACE("returning 0x%08lx (%s%s),%f\n", hRet, debugstr_VT(pVarOut),
+	debugstr_VF(pVarOut), (V_VT(pVarOut) == VT_R4) ? V_R4(pVarOut) :
+	(V_VT(pVarOut) == VT_R8) ? V_R8(pVarOut) : 0);
+
+    return hRet;
+}
+
 
 /**********************************************************************
  *              VarMod [OLEAUT32.154]

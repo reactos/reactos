@@ -170,7 +170,7 @@
 172 stdcall VarInt(ptr ptr)
 173 stdcall VarNeg(ptr ptr)
 174 stdcall VarNot(ptr ptr)
-175 stub VarRound # stdcall (ptr long ptr)
+175 stdcall VarRound(ptr long ptr)
 176 stdcall VarCmp(ptr ptr long long)
 177 stdcall VarDecAdd(ptr ptr ptr)
 178 stdcall VarDecDiv(ptr ptr ptr)

@@ -29,7 +29,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-
 extern HMODULE OLEAUT32_hModule;
 
 static const WCHAR szFloatFormatW[] = { '%','.','7','G','\0' };
@@ -44,20 +43,17 @@ static inline void VARIANT_CopyData(const VARIANT *srcVar, VARTYPE vt, void *pOu
   case VT_UI1: memcpy(pOut, &V_UI1(srcVar), sizeof(BYTE)); break;
   case VT_BOOL:
   case VT_I2:
-  case VT_UI2: memcpy(pOut, &V_UI2(srcVar), sizeof(SHORT));
-	break;
+  case VT_UI2: memcpy(pOut, &V_UI2(srcVar), sizeof(SHORT)); break;
   case VT_R4:
   case VT_INT:
   case VT_I4:
   case VT_UINT:
-  case VT_UI4: memcpy(pOut, &V_UI4(srcVar), sizeof (LONG));
-	break;
+  case VT_UI4: memcpy(pOut, &V_UI4(srcVar), sizeof (LONG)); break;
   case VT_R8:
   case VT_DATE:
   case VT_CY:
   case VT_I8:
-  case VT_UI8: memcpy(pOut, &V_UI8(srcVar), sizeof (LONG64));
-	break;
+  case VT_UI8: memcpy(pOut, &V_UI8(srcVar), sizeof (LONG64)); break;
   case VT_INT_PTR: memcpy(pOut, &V_INT_PTR(srcVar), sizeof (INT_PTR)); break;
   case VT_DECIMAL: memcpy(pOut, &V_DECIMAL(srcVar), sizeof (DECIMAL)); break;
   default:
@@ -1761,7 +1757,6 @@ HRESULT WINAPI VarUI4FromCy(CY cyIn, ULONG *pulOut)
   return _VarUI4FromR8(d, pulOut);
 }
 
-
 /************************************************************************
  * VarUI4FromStr (OLEAUT32.277)
  *
@@ -2014,7 +2009,6 @@ HRESULT WINAPI VarI8FromR8(double dblIn, LONG64* pi64Out)
   OLEAUT32_DutchRound(LONG64, dblIn, *pi64Out);
   return S_OK;
 }
-
 
 /************************************************************************
  * VarI8FromCy (OLEAUT32.337)
@@ -2829,7 +2823,6 @@ HRESULT WINAPI VarR4FromDec(DECIMAL* pDecIn, float *pFltOut)
   return S_OK;
 }
 
-
 /************************************************************************
  * VarR4FromI8 (OLEAUT32.360)
  *
@@ -3453,7 +3446,6 @@ HRESULT WINAPI VarCyFromDisp(IDispatch* pdispIn, LCID lcid, CY* pCyOut)
 {
   return _VarCyFromDisp(pdispIn, lcid, pCyOut);
 }
-
 
 /************************************************************************
  * VarCyFromBool (OLEAUT32.106)
@@ -4083,7 +4075,6 @@ HRESULT WINAPI VarDecFromCy(CY cyIn, DECIMAL* pDecOut)
   return S_OK;
 }
 
-
 /************************************************************************
  * VarDecFromStr (OLEAUT32.197)
  *
@@ -4710,7 +4701,6 @@ HRESULT WINAPI VarDecCmp(const DECIMAL* pDecLeft, const DECIMAL* pDecRight)
   return hRet;
 }
 
-
 /************************************************************************
  * VarDecCmpR8 (OLEAUT32.298)
  *
@@ -5248,7 +5238,7 @@ HRESULT WINAPI VarBstrFromI4(LONG lIn, LCID lcid, ULONG dwFlags, BSTR* pbstrOut)
 
   if (lIn < 0)
   {
-    ul64 = -lIn;
+    ul64 = (ULONG)-lIn;
     dwFlags |= VAR_NEGATIVE;
   }
   return VARIANT_BstrFromUInt(ul64, lcid, dwFlags, pbstrOut);
