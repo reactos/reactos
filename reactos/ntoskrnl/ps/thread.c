@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.138 2004/11/01 19:10:07 hbirr Exp $
+/* $Id: thread.c,v 1.139 2004/11/27 16:52:35 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -490,16 +490,20 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   PETHREAD Thread;
   PKWAIT_BLOCK WaitBlock;
 
-  KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+  if (!DispatcherLock)
+    {
+      oldIrql = KeAcquireDispatcherDatabaseLock();
+      KiAcquireSpinLock(&PiThreadLock);
+    }
+  else
+    {
+      KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+    }
 
   KThread = KeGetCurrentThread();
   Thread = CONTAINING_RECORD (KThread, ETHREAD, Tcb);
   if (KThread->ApcState.KernelApcPending)
   {
-    if (!DispatcherLock)
-      {
-	KeAcquireDispatcherDatabaseLockAtDpcLevel();
-      }
     WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
     while (WaitBlock)
       {
@@ -516,10 +520,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   }
   else
     {
-      if (DispatcherLock)
-	{
-	  KeReleaseDispatcherDatabaseLockFromDpcLevel();
-	}
+      KeReleaseDispatcherDatabaseLockFromDpcLevel();
       Thread->Tcb.Alertable = Alertable;
       Thread->Tcb.WaitMode = (UCHAR)WaitMode;
       Thread->Tcb.WaitIrql = WaitIrql;
