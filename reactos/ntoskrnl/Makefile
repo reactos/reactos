@@ -10,8 +10,6 @@ TARGET_TYPE = kernel
 
 TARGET_NAME = ntoskrnl
 
-TARGET_BASE = 0xc0000000
-
 TARGET_BOOTSTRAP = yes
 
 CONFIG :=
@@ -526,7 +524,10 @@ TARGET_LFLAGS = \
 	-Wl,--image-base,$(TARGET_BASE) \
 	-Wl,--file-alignment,0x1000 \
 	-Wl,--section-alignment,0x1000 \
-	-Wl,--entry,_NtProcessStartup
+	-Wl,--entry,_NtProcessStartup \
+	-nostdlib
+
+TARGET_GCCLIBS = gcc
 
 TAGS: $(TAG_OBJECTS)
 	etags $(addprefix -i , $(TAG_OBJECTS))
