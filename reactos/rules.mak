@@ -45,8 +45,10 @@ endif
 #
 ifeq ($(WITH_DEBUGGING),yes)
 DEBUGGING_CFLAGS = -g
+OPTIMIZATIONS = -O2
 else
-DEBUGGING_CFLAGS = 
+DEBUGGING_CFLAGS =
+OPTIMIZATIONS = -O2
 endif
 
 ifeq ($(WARNINGS_ARE_ERRORS),yes)
@@ -66,7 +68,7 @@ NATIVE_CC = gcc
 NATIVE_NM = nm
 CFLAGS = $(BASE_CFLAGS) \
 	-pipe \
-	-O2 \
+	$(OPTIMIZATIONS) \
 	$(LEAN_AND_MEAN_DEFINE)  \
 	$(DEFINES) -Wall \
 	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \

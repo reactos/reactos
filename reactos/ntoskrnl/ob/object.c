@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.24 2000/06/15 18:39:25 ekohl Exp $
+/* $Id: object.c,v 1.25 2000/07/30 18:22:35 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -169,6 +169,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     /* reparse the object path */
 	     NextObject = RootObject;
 	     current = PathString.Buffer;
+	     
+	     ObReferenceObjectByPointer(NextObject,
+					DIRECTORY_TRAVERSE,
+					NULL,
+					UserMode);
 	  }
 
 	if (NextObject == NULL)

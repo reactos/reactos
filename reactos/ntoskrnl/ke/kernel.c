@@ -35,10 +35,10 @@ VOID KiCheckFPU(VOID)
    __asm__("fstsw %0\n\t" : "=a" (status));
    if (status != 0)
      {
-	__asm__("movl %%cr0, %0\n\t" : "=g" (cr0));
+	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
 	cr0 = cr0 | 0x4;
 	__asm__("movl %0, %%cr0\n\t" :
-		: "g" (cr0));
+		: "a" (cr0));
 	DbgPrint("No FPU detected\n");
 	return;
      }

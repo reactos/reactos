@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.9 2000/07/04 08:52:38 dwelch Exp $
+/* $Id: process.c,v 1.10 2000/07/30 18:22:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,43 +18,31 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-STDCALL
-IoGetInitialStack (
-	VOID
-	)
+PVOID STDCALL
+IoGetInitialStack (VOID)
 {
    UNIMPLEMENTED;
 }
 
 
-VOID
-STDCALL
-IoGetStackLimits (
-	PULONG	LowLimit,
-	PULONG	HighLimit
-	)
+VOID STDCALL
+IoGetStackLimits (PULONG	LowLimit,
+		  PULONG	HighLimit)
 {
 	*LowLimit = (ULONG)NtCurrentTeb ()->Tib.StackLimit;
 	*HighLimit = (ULONG)NtCurrentTeb ()->Tib.StackBase;
 }
 
 
-PEPROCESS
-STDCALL
-IoThreadToProcess (
-	IN	PETHREAD	Thread
-	)
+PEPROCESS STDCALL
+IoThreadToProcess (IN	PETHREAD	Thread)
 {
-	return (Thread->ThreadsProcess);
+   return (Thread->ThreadsProcess);
 }
 
 
-PEPROCESS
-STDCALL
-IoGetRequestorProcess (
-	IN	PIRP	Irp
-	)
+PEPROCESS STDCALL
+IoGetRequestorProcess (IN	PIRP	Irp)
 {
 	return (Irp->Tail.Overlay.Thread->ThreadsProcess);
 }
@@ -73,12 +61,8 @@ IoGetRequestorProcess (
  * 	Previous value for the current thread's hard errors
  * 	processing policy.
  */
-BOOLEAN
-STDCALL
-EXPORTED
-IoSetThreadHardErrorMode (
-	IN	BOOLEAN	HardErrorEnabled
-	)
+BOOLEAN STDCALL EXPORTED
+IoSetThreadHardErrorMode (IN	BOOLEAN	HardErrorEnabled)
 {
 	BOOLEAN PreviousHEM = NtCurrentTeb ()->HardErrorDisabled;
 	

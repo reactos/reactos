@@ -16,7 +16,7 @@ TIME_ZONE_INFORMATION SystemTimeZoneInfo;
 
 VOID ExInit (VOID);
 VOID ExInitTimeZoneInfo (VOID);
-
+VOID ExInitializeWorkerThreads(VOID);
 
 #endif /* _INCLUDE_INTERNAL_EXECUTIVE_H */
 

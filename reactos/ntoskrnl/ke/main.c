@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.55 2000/07/10 21:54:19 ekohl Exp $
+/* $Id: main.c,v 1.56 2000/07/30 18:22:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,7 +82,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /*
     * Initialization phase 0
     */
-   HalInitSystem (0, &KeLoaderBlock);
+   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    KeInit1();
    KeLowerIrql(DISPATCH_LEVEL);
 
@@ -103,12 +103,12 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 	  PAGE_ROUND_UP(KeLoaderBlock.module_length[i]);
      }
 
-   MmInit1(&KeLoaderBlock, last_kernel_address);
+   MmInit1((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, last_kernel_address);
 
    /*
     * Initialize the kernel debugger
     */
-   KdInitSystem (0, &KeLoaderBlock);
+   KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    if (KdPollBreakIn ())
      {
 	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
@@ -118,7 +118,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     * Initialization phase 1
     * Initalize various critical subsystems
     */
-   HalInitSystem (1, &KeLoaderBlock);
+   HalInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    MmInit2();
    KeInit2();
 
@@ -127,9 +127,9 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     */
    KeLowerIrql(PASSIVE_LEVEL);
 
-   ExInit();
    ObInit();
    PiInitProcessManager();
+   ExInit();
    IoInit();
    LdrInitModuleManagement();
    CmInitializeRegistry();
@@ -181,7 +181,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /*
     * Assign drive letters
     */
-   IoAssignDriveLetters (&KeLoaderBlock,
+   IoAssignDriveLetters ((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
                          NULL,
                          NULL,
                          NULL);

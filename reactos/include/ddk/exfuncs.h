@@ -381,8 +381,8 @@ ExInitializeResourceLite (
  */
 #define ExInitializeWorkItem(Item, Routine, Context) \
 	ASSERT_IRQL(DISPATCH_LEVEL); \
-	(Item)->WorkerRoutine = (Routine); \
-	(Item)->Parameter = (Context); \
+	(Item)->Routine = (Routine); \
+	(Item)->Context = (Context); \
 	(Item)->List.Flink = NULL; \
 	(Item)->List.Blink = NULL;
 

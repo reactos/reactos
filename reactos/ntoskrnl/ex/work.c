@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.7 2000/07/02 10:48:31 ekohl Exp $
+/* $Id: work.c,v 1.8 2000/07/30 18:22:33 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -135,12 +135,9 @@ VOID ExInitializeWorkerThreads(VOID)
 			 HIGH_PRIORITY);
 }
 
-VOID
-STDCALL
-ExQueueWorkItem (
-	PWORK_QUEUE_ITEM	WorkItem,
-	WORK_QUEUE_TYPE		QueueType
-	)
+VOID STDCALL
+ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
+		 WORK_QUEUE_TYPE		QueueType)
 /*
  * FUNCTION: Inserts a work item in a queue for one of the system worker
  * threads to process
@@ -163,8 +160,8 @@ ExQueueWorkItem (
 				    &WorkItem->Entry,
 				    &EiNormalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
-			   1,
 			   IO_NO_INCREMENT,
+			   1,
 			   FALSE);
 	break;
 	
@@ -173,8 +170,8 @@ ExQueueWorkItem (
 				    &WorkItem->Entry,
 				    &EiCriticalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
-			   1,
 			   IO_NO_INCREMENT,
+			   1,
 			   FALSE);
 	break;
 
@@ -183,8 +180,8 @@ ExQueueWorkItem (
 				    &WorkItem->Entry,
 				    &EiHyperCriticalWorkQueue.Lock);
 	KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
-			   1,
 			   IO_NO_INCREMENT,
+			   1,
 			   FALSE);
 	break;
 

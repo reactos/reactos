@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.30 2000/03/29 13:11:53 dwelch Exp $
+/* $Id: create.c,v 1.31 2000/07/30 18:22:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,13 +37,10 @@
  * REVISIONS
  * 
  */
-NTSTATUS
-STDCALL
-NtDeleteFile (
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL
+NtDeleteFile (IN	POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 
@@ -182,12 +179,9 @@ IopCreateFile (
  * REVISIONS
  * 
  */
-PFILE_OBJECT
-STDCALL
-IoCreateStreamFileObject (
-	PFILE_OBJECT	FileObject,
-	PDEVICE_OBJECT	DeviceObject
-	)
+PFILE_OBJECT STDCALL
+IoCreateStreamFileObject (PFILE_OBJECT	FileObject,
+			  PDEVICE_OBJECT	DeviceObject)
 {
 	HANDLE		FileHandle;
 	PFILE_OBJECT	CreatedFileObject;
@@ -329,13 +323,11 @@ IoCreateFile (
    
 	*FileHandle = 0;
 
-	FileObject = ObCreateObject (
-			FileHandle,
-			DesiredAccess,
-			ObjectAttributes,
-			IoFileObjectType
-			);
-	if (NULL == FileObject)
+	FileObject = ObCreateObject (FileHandle,
+				     DesiredAccess,
+				     ObjectAttributes,
+				     IoFileObjectType);
+	if (FileObject == NULL)
 	{
 		return (STATUS_UNSUCCESSFUL);
 	}
@@ -343,20 +335,15 @@ IoCreateFile (
 	{
 		//FileObject->Flags = FileObject->Flags | FO_ALERTABLE_IO;
 		//FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
-		FileObject->Flags |= (	FO_ALERTABLE_IO
-					| FO_SYNCHRONOUS_IO
-					);
+		FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);
 	}
 	if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
 	{
 		//FileObject->Flags |= FileObject->Flags | FO_SYNCHRONOUS_IO;
 		FileObject->Flags |= FO_SYNCHRONOUS_IO;
 	}
-	KeInitializeEvent (
-		& Event,
-		NotificationEvent,
-		FALSE
-		);
+	KeInitializeEvent (&Event, NotificationEvent, FALSE);
+   
 	DPRINT("FileObject %x\n", FileObject);
 	DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
 	/*
@@ -364,14 +351,14 @@ IoCreateFile (
 	 * the FS driver: this may fail
 	 * due to resource shortage.
 	 */
-	Irp = IoAllocateIrp (
-		FileObject->DeviceObject->StackSize,
-		FALSE
-		);
-	if (NULL == Irp)
+	Irp = IoAllocateIrp (FileObject->DeviceObject->StackSize, FALSE);  
+	if (Irp == NULL)
 	{
 		return (STATUS_UNSUCCESSFUL);
 	}
+   
+        Irp->AssociatedIrp.SystemBuffer = EaBuffer;
+   
 	/*
 	 * Get the stack location for the new
 	 * IRP and prepare it.
@@ -385,25 +372,21 @@ IoCreateFile (
 	StackLoc->FileObject = FileObject;
 	StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
 	StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
+   
 	/*
 	 * Now call the driver and 
 	 * possibly wait if it can
 	 * not complete the request
 	 * immediately.
 	 */
-	Status = IofCallDriver (
-			FileObject->DeviceObject,
-			Irp
-			);
-	if (STATUS_PENDING == Status)
+	Status = IofCallDriver (FileObject->DeviceObject, Irp );
+	if (Status == STATUS_PENDING)
 	{
-		KeWaitForSingleObject (
-			& Event,
-			Executive,
-			KernelMode,
-			FALSE,
-			NULL
-			);
+		KeWaitForSingleObject (&Event,
+				       Executive,
+				       KernelMode,
+				       FALSE,
+				       NULL);
 		Status = IoStatusBlock->Status;
 	}
 	if (!NT_SUCCESS(Status))

@@ -62,6 +62,7 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    CONTEXT SavedContext;
    ULONG Top;
    BOOL ret = FALSE;
+   PETHREAD EThread;
    
    DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
    while(1)
@@ -106,11 +107,16 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
 	*/
        KeCallKernelRoutineApc(Apc);
      }
-   KeAcquireSpinLock( &PiThreadListLock, &oldlvl );
-   if( (CONTAINING_RECORD( Thread, ETHREAD, Tcb ))->DeadThread )
+   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
+   EThread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+   if (EThread->DeadThread)
      {
-       KeReleaseSpinLock( &PiThreadListLock, oldlvl );
-       PsTerminateCurrentThread( (CONTAINING_RECORD( Thread, ETHREAD, Tcb ))->ExitStatus );
+       KeReleaseSpinLock(&PiThreadListLock, oldlvl);
+       PsTerminateCurrentThread(EThread->ExitStatus);
+     }
+   else
+     {
+	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
      }
    return ret;
 }
@@ -147,14 +153,10 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
 //   Thread->Tcb.WaitStatus = STATUS_KERNEL_APC;
 }
 
-VOID
-STDCALL
-KeInsertQueueApc (
-	PKAPC	Apc,
-	PVOID	SystemArgument1,
-	PVOID	SystemArgument2,
-	UCHAR	Mode
-	)
+VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
+			       PVOID	SystemArgument1,
+			       PVOID	SystemArgument2,
+			       UCHAR	Mode)
 /*
  * FUNCTION: Queues an APC for execution
  * ARGUMENTS:
@@ -202,7 +204,6 @@ KeInsertQueueApc (
      {
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_KERNEL_APC);
-	KeReleaseSpinLock(&PiApcLock, oldlvl);
      }
    if (Apc->ApcMode == UserMode && TargetThread->Alertable == TRUE &&
        TargetThread->WaitMode == UserMode)
@@ -214,22 +215,19 @@ KeInsertQueueApc (
 	Status = STATUS_USER_APC;
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_USER_APC);
-	KeReleaseSpinLock(&PiApcLock, oldlvl);
      }
+   KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
-VOID
-STDCALL
-KeInitializeApc (
-	PKAPC			Apc,
-	PKTHREAD		Thread,
-	UCHAR			StateIndex,
-	PKKERNEL_ROUTINE	KernelRoutine,
-	PKRUNDOWN_ROUTINE	RundownRoutine,
-	PKNORMAL_ROUTINE	NormalRoutine,
-	UCHAR			Mode,
-	PVOID			Context
-	)
+VOID STDCALL
+KeInitializeApc (PKAPC			Apc,
+		 PKTHREAD		Thread,
+		 UCHAR			StateIndex,
+		 PKKERNEL_ROUTINE	KernelRoutine,
+		 PKRUNDOWN_ROUTINE	RundownRoutine,
+		 PKNORMAL_ROUTINE	NormalRoutine,
+		 UCHAR			Mode,
+		 PVOID			Context)
 /*
  * FUNCTION: Initialize an APC object
  * ARGUMENTS:

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.18 2000/07/07 10:30:54 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.19 2000/07/30 18:22:32 dwelch Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -901,7 +901,7 @@ IoReportResourceUsage (
 	((PDRIVER_CANCEL)InterlockedExchange((PULONG)&(Irp)->CancelRoutine, \
 					     (ULONG)(NewCancelRoutine)));
 
-#define IoSetCompletionRoutine (Irp,Routine,Context,Success,Error,Cancel) \
+#define IoSetCompletionRoutine(Irp,Routine,Context,Success,Error,Cancel) \
 	{ \
 		PIO_STACK_LOCATION param; \
 		assert((Success)||(Error)||(Cancel)?(Routine)!=NULL:TRUE); \

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.52 2000/07/06 14:34:52 dwelch Exp $
+/* $Id: thread.c,v 1.53 2000/07/30 18:22:35 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -202,7 +202,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 			       CurrentThread);
      }
    
-   for (CurrentPriority = THREAD_PRIORITY_TIME_CRITICAL; 
+   for (CurrentPriority = (THREAD_PRIORITY_TIME_CRITICAL + 1);
 	(CurrentPriority >= THREAD_PRIORITY_IDLE);
 	CurrentPriority--)
      {

@@ -22,6 +22,7 @@ POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
 VOID ExInit (VOID)
 {
   ExInitTimeZoneInfo();
+  ExInitializeWorkerThreads();
 }
 
 
