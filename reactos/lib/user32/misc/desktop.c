@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.22 2003/08/09 18:22:11 mf Exp $
+/* $Id: desktop.c,v 1.23 2003/08/11 11:02:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,6 +13,7 @@
 #include <user32.h>
 #include <debug.h>
 #include <rosrtl/devmode.h>
+#include <rosrtl/logfont.h>
 
 /*
  * @implemented
@@ -33,7 +34,34 @@ SystemParametersInfoA(UINT uiAction,
 		      PVOID pvParam,
 		      UINT fWinIni)
 {
-  return(SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni));
+  WINBOOL Ret;
+  NONCLIENTMETRICSA *nclma;
+  NONCLIENTMETRICSW nclmw;
+
+  switch (uiAction)
+    {
+      case SPI_GETNONCLIENTMETRICS:
+	nclma = pvParam;
+	nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
+	uiParam = sizeof(NONCLIENTMETRICSW);
+	pvParam = &nclmw;
+	break;
+    }
+  Ret = SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+  if (! Ret)
+    {
+      return FALSE;
+    }
+
+  switch (uiAction)
+    {
+      case SPI_GETNONCLIENTMETRICS:
+	RosRtlLogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
+	RosRtlLogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
+	return TRUE;
+    }
+
+  return TRUE;
 }
 
 
