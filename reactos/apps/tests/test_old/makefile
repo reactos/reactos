@@ -4,7 +4,7 @@
 PATH_TO_TOP = ../..
 
 PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
-       temptest test-fseek test_rdwr testfsd
+       temptest test-fseek test_rdwr testfsd time_t
 
 all: $(PROGS:%=%.exe)
 
@@ -20,7 +20,6 @@ clean:
 install: # $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
 
 $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
 
 dist: $(PROGS:%=$(DIST_DIR)/apps/%.exe)
 
@@ -66,5 +65,9 @@ tstdiomisc.exe: tstdiomisc.c
 testfsd.exe: testfsd.c testsuite.c
 	$(CC) testfsd.c testsuite.c -lkernel32 -o testfsd.exe
 	$(NM) --numeric-sort testfsd.exe > testfsd.sym
+
+time_t.exe: time_t.c
+	$(CC) time_t.c -lkernel32 -o time_t.exe
+	$(NM) --numeric-sort time_t.exe > time_t.sym
 
 include ../../rules.mak
