@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <rosrtl/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -38,8 +39,19 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
    else
      {
        IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
-       OutputBufferLength = NT_SUCCESS(Irp->IoStatus.Status)
-                            ? Irp->IoStatus.Information : 0;
+       if (NT_SUCCESS(Irp->IoStatus.Status))
+         {
+           OutputBufferLength = Irp->IoStatus.Information;
+           if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < OutputBufferLength)
+             {
+               Irp->IoStatus.Status = STATUS_DATA_OVERRUN;
+               OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+             }
+         }
+       else
+         {
+           OutputBufferLength = 0;
+         }
      }
    
    switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
