@@ -108,8 +108,7 @@ MiniDisplayPacket2(
         for (i = 0; i < HeaderBufferSize; i++) {
             if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
-            DbgPrint("%02X ", *p);
-            *(ULONG_PTR*)p += 1;
+            DbgPrint("%02X ", *p++);
         }
 
         DbgPrint("\nFRAME:");
@@ -119,8 +118,7 @@ MiniDisplayPacket2(
         for (i = 0; i < Length; i++) {
             if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
-            DbgPrint("%02X ", *p);
-            *(ULONG_PTR*)p += 1;
+            DbgPrint("%02X ", *p++);
         }
 
         DbgPrint("\n*** RECEIVE PACKET STOP ***\n");
