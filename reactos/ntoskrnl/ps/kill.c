@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.64 2003/09/14 10:50:29 hbirr Exp $
+/* $Id: kill.c,v 1.65 2003/09/18 17:55:21 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -299,7 +299,7 @@ NtTerminateProcess(IN	HANDLE		ProcessHandle,
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_TERMINATE,
                                       PsProcessType,
-				      UserMode,
+				      KeGetCurrentThread()->PreviousMode,
                                       (PVOID*)&Process,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -328,7 +328,7 @@ NtTerminateThread(IN	HANDLE		ThreadHandle,
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_TERMINATE,
 				      PsThreadType,
-				      UserMode,
+				      KeGetCurrentThread()->PreviousMode,
 				      (PVOID*)&Thread,
 				      NULL);
    if (Status != STATUS_SUCCESS)
@@ -401,7 +401,7 @@ NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
    Status = ObReferenceObjectByHandle(TerminationPortHandle,
 				      PORT_ALL_ACCESS,
 				      ExPortType,
-				      UserMode,
+				      KeGetCurrentThread()->PreviousMode,
 				      (PVOID*)&TerminationPort,
 				      NULL);   
    if (!NT_SUCCESS(Status))
