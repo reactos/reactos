@@ -1,0 +1,7 @@
+*.a
+*.exe
+*.sym
+*.map
+*.o
+*.coff
+
