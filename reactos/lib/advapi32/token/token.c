@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.13 2004/08/15 17:03:15 chorns Exp $
+/* $Id: token.c,v 1.14 2004/09/27 20:04:53 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -235,7 +235,7 @@ SetThreadToken (PHANDLE ThreadHandle,
 
   Status = NtSetInformationThread (hThread,
 				   ThreadImpersonationToken,
-				   TokenHandle,
+				   &TokenHandle,
 				   sizeof(HANDLE));
   if (!NT_SUCCESS(Status))
     {
