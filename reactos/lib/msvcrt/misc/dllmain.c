@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.4 2001/01/11 02:38:34 phreak Exp $
+/* $Id: dllmain.c,v 1.5 2001/01/15 15:40:58 jean Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -15,7 +15,9 @@ unsigned int _winmajor = 0;
 unsigned int _winver = 0;
 
 char *_acmdln = NULL;		/* pointer to ascii command line */
+#undef _environ;
 char **_environ = NULL;		/* pointer to environment block */
+char ***_environ_dll = &_environ;
 char *_pgmptr = NULL;		/* pointer to program name */
 
 int __app_type = 0; //_UNKNOWN_APP;	/* application type */
