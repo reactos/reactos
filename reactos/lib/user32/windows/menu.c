@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.36 2003/11/09 13:50:04 navaraf Exp $
+/* $Id: menu.c,v 1.37 2003/12/15 19:39:37 sedwards Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -39,6 +39,7 @@
 #include <user32/callback.h>
 #include "user32/regcontrol.h"
 #include "../controls/controls.h"
+#include "wine/unicode.h"
 
 /* TYPES *********************************************************************/
 
@@ -85,34 +86,6 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
  * Of course I didnt copy the ASM code because we want this to be portable 
  * and it needs to go away.
  */
-
-static inline unsigned int strlenW( const WCHAR *str )
-{
-    const WCHAR *s = str;
-    while (*s) s++;
-    return s - str;
-}
-
-static inline WCHAR *strncpyW( WCHAR *str1, const WCHAR *str2, int n )
-{
-    WCHAR *ret = str1;
-    while (n-- > 0) if (!(*str1++ = *str2++)) break;
-    while (n-- > 0) *str1++ = 0;
-    return ret;
-}
-
-static inline WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
-{
-    WCHAR *p = dst;
-    while ((*p++ = *src++));
-    return dst;
-}
-
-static inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
-{
-    strcpyW( dst + strlenW(dst), src );
-    return dst;
-}
 
 #ifndef GET_WORD
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
