@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.6 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: except.c,v 1.7 2001/08/03 17:39:09 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -104,10 +104,50 @@ RaiseException (
 	DWORD		dwExceptionCode,
 	DWORD		dwExceptionFlags,
 	DWORD		nNumberOfArguments,
-	CONST DWORD	* lpArguments
+	CONST DWORD	* lpArguments		OPTIONAL
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	EXCEPTION_RECORD ExceptionRecord;
+
+	/* Do NOT normalize dwExceptionCode: it will be done in
+	 * NTDLL.RtlRaiseException().
+	 */
+	ExceptionRecord.ExceptionCode = dwExceptionCode;
+	ExceptionRecord.ExceptionRecord = NULL;
+	ExceptionRecord.ExceptionAddress = (PVOID) RaiseException;
+	/*
+	 * Normalize dwExceptionFlags.
+	 */
+	ExceptionRecord.ExceptionFlags = (dwExceptionFlags & EXCEPTION_NONCONTINUABLE);
+	/*
+	 * Normalize nNumberOfArguments.
+	 */
+	if (EXCEPTION_MAXIMUM_PARAMETERS < nNumberOfArguments)
+	{
+		nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
+	}
+	/*
+	 * If the exception has no argument,
+	 * or it is a non-continuable exception,
+	 * ignore nNumberOfArguments and lpArguments.
+	 */
+	if ((NULL == lpArguments) || ExceptionRecord.ExceptionFlags)
+	{
+		ExceptionRecord.NumberParameters = 0;
+	}
+	else
+	{
+		ExceptionRecord.NumberParameters = nNumberOfArguments;
+		for (	nNumberOfArguments = 0;
+			(nNumberOfArguments < ExceptionRecord.NumberParameters); 
+			nNumberOfArguments ++
+			)
+		{
+			ExceptionRecord.ExceptionInformation [nNumberOfArguments]
+				= *lpArguments ++;
+		}
+	}
+	RtlRaiseException (& ExceptionRecord);
 }
 
 /* EOF */
