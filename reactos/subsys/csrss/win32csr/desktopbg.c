@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.11 2004/11/20 16:46:05 weiden Exp $
+/* $Id: desktopbg.c,v 1.12 2004/12/01 18:38:04 weiden Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -30,11 +30,8 @@
 
 #define DESKTOP_WINDOW_ATOM 32880
 
-#ifndef WM_APP
-#define WM_APP 0x8000
-#endif
-#define PM_SHOW_DESKTOP (WM_APP + 1)
-#define PM_HIDE_DESKTOP (WM_APP + 2)
+#define PM_SHOW_DESKTOP 1
+#define PM_HIDE_DESKTOP 2
 
 typedef struct tagDTBG_THREAD_DATA
 {
