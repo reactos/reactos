@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.2 2000/12/05 18:11:51 ekohl Exp $
+/* $Id: winlogon.c,v 1.3 2000/12/08 00:45:04 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,20 +29,19 @@ BOOLEAN StartServices(VOID)
    BOOLEAN Result;
    STARTUPINFO StartupInfo;
    PROCESS_INFORMATION ProcessInformation;
-   
-   ServicesInitEvent = CreateEvent(NULL,
-				   TRUE,
-				   FALSE,
-				   "\\ServicesInitDone");
-   
-   if (ServicesInitEvent == NULL)
-     {
-	DbgPrint("Failed to create services notification event\n");
-	return(FALSE);
-     }
+   CHAR CommandLine[MAX_PATH];
+   DWORD Count;
    
    /* Start the service control manager (services.exe) */
-   DbgPrint("WL: Running services.exe\n");
+   OutputDebugString("WL: Running services.exe\n");
+//   DbgPrint("WL: Running services.exe\n");
+   
+   GetSystemDirectory(CommandLine, MAX_PATH);
+   strcat(CommandLine, "\\services.exe");
+   
+   DbgPrint("WL: ");
+   DbgPrint(CommandLine);
+   DbgPrint("\n");
    
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
@@ -52,12 +51,12 @@ BOOLEAN StartServices(VOID)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
    
-   Result = CreateProcess("C:\\reactos\\system32\\services.exe",
+   Result = CreateProcess(CommandLine,
 			  NULL,
 			  NULL,
 			  NULL,
 			  FALSE,
-			  DETACHED_PROCESS,
+			  0, //DETACHED_PROCESS,
 			  NULL,
 			  NULL,
 			  &StartupInfo,
@@ -68,8 +67,23 @@ BOOLEAN StartServices(VOID)
 	return(FALSE);
      }
    
+   /* wait for event creation (by SCM) for max. 20 seconds */
    DbgPrint("WL: Waiting for services\n");
+   for (Count = 0; Count < 20; Count++)
+     {
+	Sleep(1000);
+   
+	ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
+				      FALSE,
+				      "\\SvcctrlStartEvent_A3725DX");
+	if (ServicesInitEvent)
+	  break;
+     }
+   
+   /* wait for event signalization */
+   DbgPrint("WL: Waiting for services initialization\n");
    WaitForSingleObject(ServicesInitEvent, INFINITE);
+   CloseHandle(ServicesInitEvent);
    
    DbgPrint("WL: Finished waiting for services\n");
    return(TRUE);
@@ -81,6 +95,7 @@ BOOLEAN StartLsass(VOID)
    BOOLEAN Result;
    STARTUPINFO StartupInfo;
    PROCESS_INFORMATION ProcessInformation;
+   CHAR CommandLine[MAX_PATH];
    
    LsassInitEvent = CreateEvent(NULL,
 				TRUE,
@@ -96,6 +111,9 @@ BOOLEAN StartLsass(VOID)
    /* Start the local security authority subsystem (lsass.exe) */
    DbgPrint("WL: Running lsass.exe\n");
    
+   GetSystemDirectory(CommandLine, MAX_PATH);
+   strcat(CommandLine, "\\lsass.exe");
+   
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
    StartupInfo.lpDesktop = NULL;
@@ -104,7 +122,7 @@ BOOLEAN StartLsass(VOID)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
    
-   Result = CreateProcess("C:\\reactos\\system32\\lsass.exe",
+   Result = CreateProcess(CommandLine,
 			  NULL,
 			  NULL,
 			  NULL,
@@ -122,6 +140,7 @@ BOOLEAN StartLsass(VOID)
    
    DbgPrint("WL: Waiting for lsass\n");
    WaitForSingleObject(LsassInitEvent, INFINITE);
+   CloseHandle(LsassInitEvent);
    
    DbgPrint("WL: Finished waiting for lsass\n");
    return(TRUE);
@@ -132,7 +151,16 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
    PROCESS_INFORMATION ProcessInformation;
    STARTUPINFO StartupInfo;
    BOOLEAN Result;
+   CHAR CommandLine[MAX_PATH];
+   CHAR CurrentDirectory[MAX_PATH];
    
+   DbgPrint("WL: Running shell.exe\n");
+
+   GetSystemDirectory(CommandLine, MAX_PATH);
+   strcat(CommandLine, "\\shell.exe");
+
+   GetWindowsDirectory(CurrentDirectory, MAX_PATH);
+
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
    StartupInfo.lpDesktop = NULL;
@@ -141,14 +169,14 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
    
-   Result = CreateProcess("C:\\reactos\\system32\\shell.exe",
+   Result = CreateProcess(CommandLine,
 			  NULL,
 			  NULL,
 			  NULL,
 			  FALSE,
 			  DETACHED_PROCESS,
 			  NULL,
-			  "C:\\reactos",
+			  CurrentDirectory,
 			  &StartupInfo,
 			  &ProcessInformation);
    if (!Result)
@@ -180,11 +208,14 @@ WinMain(HINSTANCE hInstance,
    
    /* 
     * FIXME: Create WindowStations here. At the moment lsass and services
-    * share ours
+    * share ours. Create a new console intead.
     */
+   AllocConsole();
+   
+   /* start system processes (services.exe & lsass.exe) */
 #if 0
-   StartLsass();
    StartServices();
+   StartLsass();
 #endif
    
    /* FIXME: What name does the real WinLogon use? */
@@ -197,9 +228,6 @@ WinMain(HINSTANCE hInstance,
 	return(1);
      }
 #endif
-   
-   /* smss wouldn't have created a console for us */
-   AllocConsole();
    
    /* Main loop */
    for (;;)
@@ -242,4 +270,8 @@ WinMain(HINSTANCE hInstance,
 	
 	DoLoginUser(LoginName, Password);
      }
+
+   ExitProcess(0);
+
+   return 0;
 }
