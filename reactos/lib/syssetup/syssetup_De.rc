@@ -23,20 +23,20 @@ LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Willkommen zu den Setup-Assistent von ReactOS.", IDC_STATIC, 115, 9, 189, 31
-    LTEXT "Dieser Assistent wird ReactOS auf Ihren Computer installieren. "\
-          "Der Assistent benötigt ein paar Informationenn um ReactOS "\
+    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. "\
+          "Der Assistent benötigt ein paar Informationen um ReactOS "\
           "zu installieren.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "Klicken Sie auf Weiter um forzufahren.", IDC_STATIC, 115, 160, 189, 31
+    LTEXT "Klicken Sie auf Weiter um fortzufahren.", IDC_STATIC, 115, 160, 189, 31
 END
 
 
 IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Geben Sie ihren Namen und ihre Firma oder Organization ein.",
           IDC_STATIC, 54, 7, 242, 21
@@ -50,17 +50,17 @@ END
 IDD_COMPUTERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Geben sie einen Computernamen ein, der höchstens 63 Zeichen lang ist. "\
-          "Wenn Sie um Netzwerk sind muss dieser Name einmalig sein.",
+          "Wenn Sie im Netzwerk sind muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
-    LTEXT "Das Setup wird einen Administratorkonto erstellen. "\
-          "Benutzen Sie ihn, wenn Sie vollen Zugriff auf Ihren Computer benötigen .",
+    LTEXT "Das Setup wird ein Administratorkonto erstellen. "\
+          "Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto ein, das höchstens 14 Zeichen lang ist",
+    LTEXT "Geben Sie ein Passwort für das Administratorkonto ein, das höchstens 14 Zeichen lang ist.",
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administrator Passwort:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -69,15 +69,36 @@ BEGIN
 END
 
 
+IDD_LOCALEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "The system locale should match the language of the applications "\
+          "you want to use. The user locale controls how numbers, "\
+          "currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "To change system or user locale settings, click Customize.",
+          IDC_STATIC, 53, 60, 184, 8
+    PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "The keyboard layout controls the characters that appear when you type.",
+          IDC_STATIC, 53, 86, 253, 8
+    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "To change the keyboard layout, click Customize.",
+          IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+END
+
+
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Fertigstellung des ReactOS Setups"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellung des ReactOS Setup Assistenten",IDC_STATIC,115,9,195,37
     LTEXT "Das ReactOS Setup wurde erfolgreich fertiggestellt.\n\n" \
           "Wenn Sie auf Fertig klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
-    LTEXT "Entfernen Sie die CD wenn vorhanden. Danach klicken Sie "\
+    LTEXT "Entfernen Sie die CD, wenn vorhanden. Danach klicken Sie "\
           "auf Fertig, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
 END
 
@@ -89,8 +110,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.", IDC_STATIC, 13, 12, 212, 16
    LTEXT "Um fortzufahren muss Ihr Computer neu gesratet werden. "\
-         "Der Computer wird in 15 Minuten automatisch neu gestartet oder wenn Sie auch den "\
-         "Neustart Button klicken.", IDC_STATIC, 13, 33, 212, 32
+         "Der Computer wird in 15 Minuten automatisch neu gestartet oder wenn Sie auf "\
+         "Neustart klicken.", IDC_STATIC, 13, 33, 212, 32
 /*   GROUPBOX "", -1, 7, 3, 231, 106 */
    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
    PUSHBUTTON "&Neustart", IDOK, 98, 87, 50, 14

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.14 2004/07/19 01:33:14 kuehng Exp $
+/* $Id: install.c,v 1.15 2004/08/03 13:43:00 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -41,8 +41,9 @@
 #include "globals.h"
 #include "resource.h"
 
-// #define NO_GUI
 #define VMWINST
+
+VOID WINAPI CreateCmdLink(VOID);
 
 
 /* GLOBALS ******************************************************************/
@@ -63,15 +64,11 @@ DebugPrint(char* fmt,...)
   vsprintf(buffer, fmt, ap);
   va_end(ap);
 
-#ifdef NO_GUI
-  OutputDebugStringA(buffer);
-#else
-  strcat (buffer, "\nRebooting now!");
-  MessageBoxA (NULL,
-	       buffer,
-	       "ReactOS Setup",
-	       MB_OK);
-#endif
+  strcat(buffer, "\nRebooting now!");
+  MessageBoxA(NULL,
+	      buffer,
+	      "ReactOS Setup",
+	      MB_OK);
 }
 
 
@@ -250,38 +247,48 @@ CreateTempDir(LPCWSTR VarName)
   RegCloseKey (hKey);
 }
 
-BOOL ProcessSysSetupInf(void)
-{
 #define SECTIONBUF_SIZE 4096
-	TCHAR *pBuf2;
-	TCHAR pBuf[SECTIONBUF_SIZE];
-	
-	SetLastError(0);
 
-	DWORD dwBufSize = GetPrivateProfileSection(_T("DeviceInfsToInstall"),pBuf,SECTIONBUF_SIZE,_T("Inf\\SYSSETUP.INF"));
-	
-	// fix this first...
-	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-		return TRUE;
+BOOL
+ProcessSysSetupInf(VOID)
+{
+  LPTSTR pBuf2;
+  TCHAR szBuf[SECTIONBUF_SIZE];
+  DWORD dwBufSize;
 
-	if(dwBufSize == SECTIONBUF_SIZE-2)
-		return FALSE;
-	if(!dwBufSize)
-		return FALSE;
-	pBuf2=pBuf;
-	while(*pBuf2)
-	{
-		OutputDebugString(_T("Calling Class Installer for "));
-		OutputDebugString(pBuf2);
-		OutputDebugString(_T("\r\n"));
+  SetLastError(0);
 
-//		Currently unsupported
-//		if(!SetupDiInstallClass(NULL,pBuf2,DI_QUIETINSTALL,NULL))
-//			return FALSE;
-		pBuf2+=_tcslen(pBuf2)+1;
-	}
+  dwBufSize = GetPrivateProfileSection(_T("DeviceInfsToInstall"),
+				       szBuf,
+				       SECTIONBUF_SIZE,
+				       _T("Inf\\SYSSETUP.INF"));
 
-	return TRUE;
+  /* fix this first... */
+  if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    return TRUE;
+
+  if (dwBufSize == SECTIONBUF_SIZE-2)
+    return FALSE;
+
+  if (!dwBufSize)
+    return FALSE;
+
+  pBuf2 = szBuf;
+  while (*pBuf2)
+  {
+    OutputDebugString(_T("Calling Class Installer for "));
+    OutputDebugString(pBuf2);
+    OutputDebugString(_T("\r\n"));
+
+#if 0
+    /* FIXME: Currently unsupported */
+    if (!SetupDiInstallClass(NULL, pBuf2, DI_QUIETINSTALL, NULL))
+      return FALSE;
+#endif
+    pBuf2 += _tcslen(pBuf2) + 1;
+  }
+
+  return TRUE;
 }
 
 
@@ -385,9 +392,8 @@ InstallReactOS (HINSTANCE hInstance)
       DebugPrint("ProcessSysSetupInf() failed!\n");
 	  return 0;
   }
-#if 1
-  InstallWizard ();
-#endif
+
+  InstallWizard();
 
 #ifdef VMWINST
   RunVMWInstall ();
@@ -401,11 +407,13 @@ InstallReactOS (HINSTANCE hInstance)
   return 0;
 }
 
+
 /*
  * @unimplemented
  */
-DWORD STDCALL SetupChangeFontSize(HANDLE HWindow,
-                                  LPCWSTR lpszFontSize)
+DWORD STDCALL
+SetupChangeFontSize(HANDLE hWnd,
+                    LPCWSTR lpszFontSize)
 {
-  return(FALSE);
+  return FALSE;
 }

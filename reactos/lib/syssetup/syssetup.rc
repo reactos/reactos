@@ -37,6 +37,12 @@ BEGIN
     END
 END
 
+
+/* Bitmaps */
+IDB_WATERMARK BITMAP "res/watermark.bmp"
+IDB_HEADER    BITMAP "res/header.bmp"
+
+
 /*
  * Everything specific to any language goes in one of the specific
  * files. Note that you can and may override resources which also have

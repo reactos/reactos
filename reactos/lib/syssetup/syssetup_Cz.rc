@@ -21,7 +21,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STATIC, 115, 9, 189, 31
     LTEXT "This wizard installs ReactOS on your computer. The wizard "\
@@ -34,7 +34,7 @@ END
 IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Type your full name and the name of your company or organization.",
           IDC_STATIC, 54, 7, 242, 21
@@ -48,7 +48,7 @@ END
 IDD_COMPUTERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Type a name for your computer that is 63 characters or less. "\
           "If you are on a network, your computer name must be unique.",
@@ -67,10 +67,31 @@ BEGIN
 END
 
 
+IDD_LOCALEPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "The system locale should match the language of the applications "\
+          "you want to use. The user locale controls how numbers, "\
+          "currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "To change system or user locale settings, click Customize.",
+          IDC_STATIC, 53, 60, 184, 8
+    PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "The keyboard layout controls the characters that appear when you type.",
+          IDC_STATIC, 53, 86, 253, 8
+    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "To change the keyboard layout, click Customize.",
+          IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+END
+
+
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Completing ReactOS Setup"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard",IDC_STATIC,115,9,195,37
     LTEXT "You have successfully completed ReactOS Setup.\n\n" \
