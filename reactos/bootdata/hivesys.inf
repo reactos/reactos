@@ -257,10 +257,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00070000,"Posix Os2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00070000,"Debug Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
 
 ; 3Com 3c905 Driver
@@ -674,8 +674,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
+;hard coded values
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","0",0x00000000,"ACPI\PNP0501"
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\0000","Service",0x00000000,"serial"
 
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001

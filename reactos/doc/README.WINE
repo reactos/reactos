@@ -26,52 +26,55 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are derived from Wine.
+reactos/tools/unicode		# Synced to Wine-20050310
+reactos/tools/wpp		# Synced to Wine-20050310
 reactos/tools/bin2res		# Resource to binary converter
-reactos/tools/winebuild		# Synced to Wine-20050211
+reactos/tools/winebuild		# Synced to Wine-20050310
 reactos/tools/wmc		# Wine Message Compiler
-reactos/tools/wrc		# Synced to Wine-20050211
+reactos/tools/wrc		# Synced to Wine-20050310
+reactos/tools/widl		# Synced to Wine-20050310
 
 The following shared libraries are a 100% port from Winehq sources.
 
-reactos/lib/cabinet             # Synced to Wine-20050211
-reactos/lib/comctl32            # Synced to Wine-20050211
-reactos/lib/comdlg32		# Synced to Wine-20050211
-reactos/lib/dinput		# Synced to Wine-20050211
-reactos/lib/dinput8		# Synced to Wine-20050211
-reactos/lib/icmp		# Synced to Wine-20050211
+reactos/lib/cabinet             # Synced to Wine-20050310
+reactos/lib/comctl32            # Synced to Wine-20050310
+reactos/lib/comdlg32		# Synced to Wine-20050310
+reactos/lib/dinput		# Synced to Wine-20050310
+reactos/lib/dinput8		# Synced to Wine-20050310
+reactos/lib/icmp		# Synced to Wine-20050310
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
 reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-20050211
+reactos/lib/mpr                 # Synced to Wine-20050310
 reactos/lib/msacm		# Out of sync
-reactos/lib/msimg32		# Synced to Wine-20050211
-reactos/lib/msi			# Synced to Wine-20050211
+reactos/lib/msimg32		# Synced to Wine-20050310
+reactos/lib/msi			# Synced to Wine-20050310
 reactos/lib/msvideo		# Out of sync
 reactos/lib/netapi32		# Out of sync
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-20050211
-reactos/lib/oleaut32		# Synced to Wine-20050211
-reactos/lib/oledlg              # Synced to Wine-20050211
-reactos/lib/olepro32		# Synced to Wine-20050211
-reactos/lib/richedit		# Synced to Wine-20050211
-reactos/lib/rpcrt4		# Synced to Wine-20050211
-reactos/lib/setupapi		# Synced to Wine-20050125 # CVS
-reactos/lib/shell32             # Synced to Wine-20050211
-reactos/lib/shdocvw             # Synced to Wine-20050211
-reactos/lib/shlwapi             # Synced to Wine-20050211
+reactos/lib/ole32               # Synced to Wine-20050310
+reactos/lib/oleaut32		# Synced to Wine-20050310
+reactos/lib/oledlg              # Synced to Wine-20050310
+reactos/lib/olepro32		# Synced to Wine-20050310
+reactos/lib/riched20		# Synced to Wine-20050310
+reactos/lib/richedit		# Synced to Wine-20050310
+reactos/lib/rpcrt4		# Synced to Wine-20050310
+reactos/lib/setupapi		# Synced to Wine-20050310
+reactos/lib/shell32             # Synced to Wine-20050310
+reactos/lib/shdocvw             # Synced to Wine-20050310
+reactos/lib/shlwapi             # Synced to Wine-20050310
 reactos/lib/twain		# Out of sync
-reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20050211
-reactos/lib/urlmon		# Synced to Wine-20050211
+reactos/lib/urlmon		# Synced to Wine-20050310
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
-reactos/lib/winmm		# Synced to Wine-20050211
-reactos/lib/winmm/midimap       # Synced to Wine-20050211
-reactos/lib/winmm/wavemap       # Synced to Wine-20050211
+reactos/lib/winmm		# Synced to Wine-20050310
+reactos/lib/winmm/midimap       # Synced to Wine-20050310
+reactos/lib/winmm/wavemap       # Synced to Wine-20050310
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	# Out of sync
 reactos/subsys/system/expand	# Out of sync
-reactos/subsys/system/msiexec	# Synced to Wine-20050211
+reactos/subsys/system/msiexec	# Synced to Wine-20050311
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files

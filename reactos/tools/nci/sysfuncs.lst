@@ -180,7 +180,6 @@ NtSetEaFile 4
 NtSetEvent 2
 NtSetHighEventPair 1
 NtSetHighWaitLowEventPair 1
-NtSetHighWaitLowThread 0
 NtSetInformationFile 5
 NtSetInformationKey 4
 NtSetInformationJobObject 4
@@ -192,7 +191,6 @@ NtSetIntervalProfile 2
 NtSetLdtEntries 6
 NtSetLowEventPair 1
 NtSetLowWaitHighEventPair 1
-NtSetLowWaitHighThread 0
 NtSetQuotaInformationFile 4
 NtSetSecurityObject 3
 NtSetSystemEnvironmentValue 2

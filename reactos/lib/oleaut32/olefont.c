@@ -1068,8 +1068,16 @@ static HRESULT      WINAPI OLEFontImpl_QueryTextMetrics(
   IFont*         iface,
   TEXTMETRICOLE* ptm)
 {
-  FIXME("(%p, %p), stub!\n",iface,ptm);
-  return E_NOTIMPL;
+  HDC hdcRef;
+  HFONT hOldFont, hNewFont;
+
+  hdcRef = GetDC(0);
+  OLEFontImpl_get_hFont(iface, &hNewFont);
+  hOldFont = SelectObject(hdcRef, hNewFont);
+  GetTextMetricsW(hdcRef, ptm);
+  SelectObject(hdcRef, hOldFont);
+  ReleaseDC(0, hdcRef);
+  return S_OK;
 }
 
 /************************************************************************

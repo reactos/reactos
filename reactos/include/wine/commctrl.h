@@ -1,5 +1,4 @@
-/* $Id $
- *
+/*
  * Compatibility header
  *
  * This header is wrapper to allow compilation of Wine DLLs under ReactOS
@@ -59,6 +58,18 @@ typedef LPFINDINFOW LPLVFINDINFOW;
 #define HDM_SETBITMAPMARGIN     (HDM_FIRST+20)
 #define HDM_GETBITMAPMARGIN     (HDM_FIRST+21)
 
-#define FLATSB_CLASSA         "flatsb_class32"
+#define SB_SETBORDERS		(WM_USER+5)
+
+#define FLATSB_CLASSA           "flatsb_class32"
+#define DRAGLISTMSGSTRINGA      "commctrl_DragListMsg"
+#if defined(__GNUC__)
+# define DRAGLISTMSGSTRINGW (const WCHAR []){ 'c','o','m','m','c','t','r','l', \
+  '_','D','r','a','g','L','i','s','t','M','s','g',0 }
+#elif defined(_MSC_VER)
+# define DRAGLISTMSGSTRINGW     L"commctrl_DragListMsg"
+#else
+static const WCHAR DRAGLISTMSGSTRINGW[] = { 'c','o','m','m','c','t','r','l', \
+  '_','D','r','a','g','L','i','s','t','M','s','g',0 };
+#endif
 
 #endif /* __WINE_COMMCTRL_H */

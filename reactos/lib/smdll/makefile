@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = smdll
 
-TARGET_SDKLIBS = ntdll.a
+TARGET_SDKLIBS = smlib.a ntdll.a
 
 TARGET_CFLAGS = -I./include -Wall -Werror
 
@@ -19,9 +19,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_OBJECTS = \
 	dllmain.o \
-	connect.o \
-	execpgm.o \
-	compses.o
+	query.o
 	
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

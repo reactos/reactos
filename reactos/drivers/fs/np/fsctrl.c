@@ -2,10 +2,10 @@
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       services/fs/np/fsctrl.c
+ * FILE:       drivers/fs/np/fsctrl.c
  * PURPOSE:    Named pipe filesystem
  * PROGRAMMER: David Welch <welch@cwcom.net>
- *             Eric Kohl <ekohl@rz-online.de>
+ *             Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,8 +18,72 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static VOID
+NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp)
+{
+  PNPFS_WAITER_ENTRY Waiter;
+
+  DPRINT1("NpfsListeningCancelRoutine() called\n");
+
+  IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+  Waiter = Irp->Tail.Overlay.DriverContext[0];
+
+  KeLockMutex(&Waiter->Pipe->FcbListLock);
+  RemoveEntryList(&Waiter->Entry);
+  KeUnlockMutex(&Waiter->Pipe->FcbListLock);
+
+  Irp->IoStatus.Status = STATUS_CANCELLED;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  ExFreePool(Waiter);
+}
+
+
 static NTSTATUS
-NpfsConnectPipe(PNPFS_FCB Fcb)
+NpfsAddListeningServerInstance(PIRP Irp,
+			       PNPFS_FCB Fcb)
+{
+  PNPFS_WAITER_ENTRY Entry;
+
+  Entry = ExAllocatePool(NonPagedPool, sizeof(NPFS_WAITER_ENTRY));
+  if (Entry == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  Entry->Irp = Irp;
+  Entry->Fcb = Fcb;
+  Entry->Pipe = Fcb->Pipe;
+
+  KeLockMutex(&Fcb->Pipe->FcbListLock);
+
+  IoMarkIrpPending(Irp);
+  Irp->Tail.Overlay.DriverContext[0] = Entry;
+  InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
+
+  IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
+  
+  if (!Irp->Cancel)
+    {
+      KeUnlockMutex(&Fcb->Pipe->FcbListLock);
+      return STATUS_PENDING;
+    }
+  
+  RemoveEntryList(&Entry->Entry);
+  
+  Irp->IoStatus.Status = STATUS_CANCELLED;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  KeUnlockMutex(&Fcb->Pipe->FcbListLock);
+  ExFreePool(Entry);
+
+  return STATUS_CANCELLED;
+}
+
+
+static NTSTATUS
+NpfsConnectPipe(PIRP Irp,
+                PNPFS_FCB Fcb)
 {
   PNPFS_PIPE Pipe;
   PLIST_ENTRY current_entry;
@@ -88,29 +152,18 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
       current_entry = current_entry->Flink;
     }
 
-  KeUnlockMutex(&Pipe->FcbListLock);
-
   /* no listening client fcb found */
   DPRINT("No listening client fcb found -- waiting for client\n");
 
   Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
 
-  Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
-				 UserRequest,
-				 KernelMode,
-				 FALSE,
-				 NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("KeWaitForSingleObject() failed (Status %lx)\n", Status);
-      return Status;
-    }
+  Status = NpfsAddListeningServerInstance(Irp, Fcb);
 
-  Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+  KeUnlockMutex(&Pipe->FcbListLock);
 
-  DPRINT("Client Fcb: %p\n", Fcb->OtherSide);
+  DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
 
-  return STATUS_PIPE_CONNECTED;
+  return Status;
 }
 
 
@@ -327,7 +380,6 @@ NpfsPeekPipe(PIRP Irp,
 }
 
 
-
 NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
@@ -366,7 +418,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_LISTEN:
 	DPRINT("Connecting pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsConnectPipe(Fcb);
+	Status = NpfsConnectPipe(Irp, Fcb);
 	break;
 
       case FSCTL_PIPE_PEEK:
@@ -439,12 +491,15 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	Status = STATUS_UNSUCCESSFUL;
     }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
+  if (Status != STATUS_PENDING)
+    {
+      Irp->IoStatus.Status = Status;
+      Irp->IoStatus.Information = 0;
+ 
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(Status);
+  return Status;
 }
 
 

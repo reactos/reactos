@@ -861,7 +861,8 @@ static const char * debug_shfileops_action( DWORD op )
 #define ERROR_SHELL_INTERNAL_FILE_NOT_FOUND 1026
 #define HIGH_ADR (LPWSTR)0xffffffff
 
-static int file_operation_delete( WIN32_FIND_DATAW *wfd,SHFILEOPSTRUCTW nFileOp, LPWSTR pFromFile,LPWSTR pTempFrom,HANDLE *hFind)
+/* handle the complete deletion of `pTempFrom` */
+static int shfileops_delete(WIN32_FIND_DATAW *wfd,SHFILEOPSTRUCTW nFileOp, LPWSTR pFromFile,LPWSTR pTempFrom,HANDLE *hFind)
 
 {
     LPWSTR lpFileName;
@@ -914,7 +915,7 @@ static int file_operation_delete( WIN32_FIND_DATAW *wfd,SHFILEOPSTRUCTW nFileOp,
  * FOF_ALLOWUNDO, FOF_WANTMAPPINGHANDLE
  */
 
-static int file_operation_checkFlags(SHFILEOPSTRUCTW nFileOp)
+static int shfileops_check_flags(SHFILEOPSTRUCTW nFileOp)
 {
     FILEOP_FLAGS OFl = ((FILEOP_FLAGS)nFileOp.fFlags & 0xfff);
     long FuncSwitch = (nFileOp.wFunc & FO_MASK);
@@ -945,6 +946,53 @@ static int file_operation_checkFlags(SHFILEOPSTRUCTW nFileOp)
     return 0;
 }
 
+static int shfileops_do_operation(WIN32_FIND_DATAW wfd,SHFILEOPSTRUCTW *nFileOp, LPWSTR pToFile, LPWSTR pFromFile)
+{
+    LPWSTR lpFileName = wfd.cAlternateFileName;
+    if (!lpFileName[0])
+        lpFileName = wfd.cFileName;
+    if (IsDotDir(lpFileName) ||
+            (IsAttribDir(wfd.dwFileAttributes) && (nFileOp->fFlags & FOF_FILESONLY)))
+        return 0; /* next name in pTempFrom(dir) */
+    SHFileStrCpyCatW(&pToFile[1], lpFileName, NULL);
+    SHFileStrCpyCatW(&pFromFile[1], lpFileName, NULL);
+    return SHFileOperationW (nFileOp);
+}
+
+/* get attributes of the parent dir of pTemp and create the directory if it does not exists */
+static DWORD shfileops_get_parent_attr2(LPWSTR pFile,LPWSTR pTemp,int flag,int *retCode)
+{
+    DWORD PathAttr;
+    pFile[0] = '\0';
+    PathAttr = GetFileAttributesW(pTemp);
+    if ((PathAttr == INVALID_FILE_ATTRIBUTES) && flag)
+    {
+        /* create dir must be here, sample target D:\y\ *.* create with RC=10003 */
+        if (SHNotifyCreateDirectoryW(pTemp, NULL))
+        {
+            *retCode = 0x73;/* value unknown */
+            /*goto shfileop_end;*/
+            return PathAttr;
+        }
+        PathAttr = GetFileAttributesW(pTemp);
+    }
+    pFile[0] = '\\';
+    return PathAttr;
+}
+
+/* get attributes of the parent dir of pTemp without creating the directory if it does not exists */
+static DWORD shfileops_get_parent_attr(LPWSTR pFile,LPWSTR pTemp)
+{
+    /* less efficient: 
+    return shfileops_get_parent_attr2(pFile,pTemp,0,NULL);
+    */
+    DWORD PathAttr;
+    pFile[0] = '\0';
+    PathAttr = GetFileAttributesW(pTemp);
+    pFile[0] = '\\';
+    return PathAttr;
+}
+
 /*************************************************************************
  * SHFileOperationW          [SHELL32.@]
  *
@@ -964,7 +1012,6 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	LPWSTR pTempTo = NULL;
 	LPWSTR pFromFile;
 	LPWSTR pToFile = NULL;
-	LPWSTR lpFileName;
 	int retCode = 0;
 	DWORD ToAttr;
 	DWORD ToPathAttr;
@@ -985,8 +1032,6 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 
 	long FuncSwitch = (nFileOp.wFunc & FO_MASK);
 	long level= nFileOp.wFunc>>4;
-
-        int ret;
 
 	/*  default no error */
 	nFileOp.fAnyOperationsAborted = FALSE;
@@ -1016,12 +1061,9 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
          * create dir              0 0 0 0 0 0 1 0
          */
 
-        ret = file_operation_checkFlags(nFileOp);
-        if (ret != 0)
-        {
-            retCode = ret;
+        retCode = shfileops_check_flags(nFileOp);
+        if (retCode)
             goto shfileop_end;
-        }
 
         if ((pNextFrom) && (!(b_MultiTo) || (pNextTo)))
         {
@@ -1108,17 +1150,10 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	    hFind = FindFirstFileW(pFrom, &wfd);
 	    if (INVALID_HANDLE_VALUE == hFind)
 	    {
-                if ((FO_DELETE == FuncSwitch) && (b_Mask))
+                if ((FO_DELETE == FuncSwitch) && (b_Mask) && IsAttribDir(shfileops_get_parent_attr(pFromFile,pTempFrom)))
                 {
-                    DWORD FromPathAttr;
-                    pFromFile[0] = '\0';
-                    FromPathAttr = GetFileAttributesW(pTempFrom);
-                    pFromFile[0] = '\\';
-                    if (IsAttribDir(FromPathAttr))
-                    {
-                        /* FO_DELETE with mask and without found is valid */
-                        goto shfileop_end;
-                    }
+                    /* FO_DELETE with mask and without found is valid */
+                    goto shfileop_end;
                 }
                 /* root (without mask) is also not allowed as source, tested in W98 */
                 retCode = ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
@@ -1130,13 +1165,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
             /* ??? b_Mask = (!SHFileStrICmpA(&pFromFile[1], &wfd.cFileName[0], HIGH_ADR, HIGH_ADR)); */
 	    if (!pTo) /* FO_DELETE */
 	    {
-                ret = file_operation_delete(&wfd,nFileOp,pFromFile,pTempFrom,&hFind);
-                /* if ret is not 0, nFileOp.fAnyOperationsAborted is TRUE */
-                if (ret != 0)
-                {
-                  retCode = ret;
-                  goto shfileop_end;
-                }
+                retCode = shfileops_delete(&wfd,nFileOp,pFromFile,pTempFrom,&hFind);
+                /* if ret is not 0, nFileOp.fAnyOperationsAborted is TRUE and the loop will end */
                 continue;
 	    } /* FO_DELETE ends, pTo must be always valid from here */
 
@@ -1146,9 +1176,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	    ToPathAttr = ToAttr = GetFileAttributesW(pTempTo);
 	    if (!b_Mask && (ToAttr == INVALID_FILE_ATTRIBUTES) && (pToFile))
 	    {
-                pToFile[0] = '\0';
-                ToPathAttr = GetFileAttributesW(pTempTo);
-                pToFile[0] = '\\';
+                ToPathAttr = shfileops_get_parent_attr(pToFile,pTempTo);
 	    }
 
 	    if (FO_RENAME == FuncSwitch)
@@ -1202,15 +1230,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
                 nFileOp.fFlags = (nFileOp.fFlags | FOF_MULTIDESTFILES);
                 do
                 {
-                    lpFileName = wfd.cAlternateFileName;
-                    if (!lpFileName[0])
-                        lpFileName = wfd.cFileName;
-                    if (IsDotDir(lpFileName) ||
-                        (IsAttribDir(wfd.dwFileAttributes) && (nFileOp.fFlags & FOF_FILESONLY)))
-                        continue; /* next name in pTempFrom(dir) */
-                    SHFileStrCpyCatW(&pToFile[1], lpFileName, NULL);
-                    SHFileStrCpyCatW(&pFromFile[1], lpFileName, NULL);
-                    retCode = SHFileOperationW (&nFileOp);
+                    retCode = shfileops_do_operation(wfd,&nFileOp,pToFile,pFromFile);
                 } while(!nFileOp.fAnyOperationsAborted && FindNextFileW(hFind, &wfd));
 	    }
 	    FindClose(hFind);
@@ -1224,19 +1244,9 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	    {
                 if (pToFile)
                 {
-                    pToFile[0] = '\0';
-                    ToPathAttr = GetFileAttributesW(pTempTo);
-                    if ((ToPathAttr == INVALID_FILE_ATTRIBUTES) && b_ToValid)
-                    {
-                        /* create dir must be here, sample target D:\y\ *.* create with RC=10003 */
-                        if (SHNotifyCreateDirectoryW(pTempTo, NULL))
-                        {
-                            retCode = 0x73;/* value unknown */
-                            goto shfileop_end;
-                        }
-                        ToPathAttr = GetFileAttributesW(pTempTo);
-                    }
-                    pToFile[0] = '\\';
+                    ToPathAttr = shfileops_get_parent_attr2(pToFile,pTempTo,b_ToValid,&retCode);
+                    if (retCode)
+                        goto shfileop_end;
                     if (b_ToInvalidTail)
                     {
                         retCode = 0x10003;
@@ -1270,9 +1280,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	    }
 	    else
 	    {
-                pToFile[0] = '\0';
-                ToPathAttr = GetFileAttributesW(pTempTo);
-                pToFile[0] = '\\';
+                ToPathAttr = shfileops_get_parent_attr(pToFile,pTempTo);
                 if (IsAttribFile(ToPathAttr))
                 {
                     /* error, is this tested ? */
@@ -1403,7 +1411,16 @@ void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 }
 
 /*************************************************************************
- * SheGetDirW [SHELL32.281]
+ * SheGetDirA [SHELL32.@]
+ *
+ */
+HRESULT WINAPI SheGetDirA(LPSTR u, LPSTR v)
+{   FIXME("%p %p stub\n",u,v);
+    return 0;
+}
+
+/*************************************************************************
+ * SheGetDirW [SHELL32.@]
  *
  */
 HRESULT WINAPI SheGetDirW(LPWSTR u, LPWSTR v)
@@ -1412,7 +1429,16 @@ HRESULT WINAPI SheGetDirW(LPWSTR u, LPWSTR v)
 }
 
 /*************************************************************************
- * SheChangeDirW [SHELL32.274]
+ * SheChangeDirA [SHELL32.@]
+ *
+ */
+HRESULT WINAPI SheChangeDirA(LPSTR u)
+{   FIXME("(%s),stub\n",debugstr_a(u));
+    return 0;
+}
+
+/*************************************************************************
+ * SheChangeDirW [SHELL32.@]
  *
  */
 HRESULT WINAPI SheChangeDirW(LPWSTR u)

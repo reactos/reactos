@@ -210,6 +210,7 @@ UINT WINAPI MsiRecordClearData( MSIHANDLE handle )
         rec->fields[i].u.iVal = 0;
     }
     msiobj_unlock( &rec->hdr );
+    msiobj_release( &rec->hdr );
 
     return ERROR_SUCCESS;
 }

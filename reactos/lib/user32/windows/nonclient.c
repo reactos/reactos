@@ -288,10 +288,9 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
  * - Correct drawing of size-box
  */
 LRESULT
-DefWndNCPaint(HWND hWnd, HRGN hRgn)
+DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 {
    HDC hDC;
-   BOOL Active;
    DWORD Style, ExStyle;
    HWND Parent;
    RECT ClientRect, WindowRect, CurrentRect, TempRect;
@@ -309,15 +308,18 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    
    Parent = GetParent(hWnd);
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-   if (ExStyle & WS_EX_MDICHILD)
+   if (Active == -1)
    {
-      Active = IsChild(GetForegroundWindow(), hWnd);
-      if (Active)
-         Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
-   }
-   else
-   {
-      Active = (GetForegroundWindow() == hWnd);
+      if (ExStyle & WS_EX_MDICHILD)
+      {
+         Active = IsChild(GetForegroundWindow(), hWnd);
+         if (Active)
+            Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
+      }
+      else
+      {
+         Active = (GetForegroundWindow() == hWnd);
+      }
    }
    GetWindowRect(hWnd, &WindowRect);
    GetClientRect(hWnd, &ClientRect);
@@ -376,7 +378,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    }
 
    /* Now the other bit of the frame */
-   if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
+   if (Style & (WS_DLGFRAME | WS_BORDER) || ExStyle & WS_EX_DLGMODALFRAME)
    {
       DWORD Width = GetSystemMetrics(SM_CXBORDER);
       DWORD Height = GetSystemMetrics(SM_CYBORDER);
@@ -660,7 +662,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 LRESULT
 DefWndNCActivate(HWND hWnd, WPARAM wParam)
 {
-   DefWndNCPaint(hWnd, (HRGN)1);
+   DefWndNCPaint(hWnd, (HRGN)1, wParam);
    return TRUE;
 }
 
@@ -882,79 +884,75 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 VOID
 DefWndDoButton(HWND hWnd, WPARAM wParam)
 {
-  MSG Msg;
-  BOOL InBtn, HasBtn = FALSE;
-  ULONG Btn, Style;
-  WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
-  HDC WindowDC = NULL;
+   MSG Msg;
+   HDC WindowDC;
+   BOOL Pressed = TRUE, OldState;
+   WPARAM SCMsg;
+   ULONG ButtonType, Style;
   
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
-  switch(wParam)
-  {
-    case HTCLOSE:
-      Btn = DFCS_CAPTIONCLOSE;
-      SCMsg = SC_CLOSE;
-      HasBtn = (Style & WS_SYSMENU);
-      break;
-    case HTMINBUTTON:
-      Btn = DFCS_CAPTIONMIN;
-      SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
-      HasBtn = (Style & WS_MINIMIZEBOX);
-      break;
-    case HTMAXBUTTON:
-      Btn = DFCS_CAPTIONMAX;
-      SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
-      HasBtn = (Style & WS_MAXIMIZEBOX);
-      break;
-    default:
-      return;
-  }
+   Style = GetWindowLongW(hWnd, GWL_STYLE);
+   switch (wParam)
+   {
+      case HTCLOSE:
+         if (!(Style & WS_SYSMENU))
+            return;
+         ButtonType = DFCS_CAPTIONCLOSE;
+         SCMsg = SC_CLOSE;
+         break;
+      case HTMINBUTTON:
+         if (!(Style & WS_MINIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMIN;
+         SCMsg = ((Style & WS_MINIMIZE) ? SC_RESTORE : SC_MINIMIZE);
+         break;
+      case HTMAXBUTTON:
+         if (!(Style & WS_MAXIMIZEBOX))
+            return;
+         ButtonType = DFCS_CAPTIONMAX;
+         SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
+         break;
+
+      default:
+         ASSERT(FALSE);
+         return;
+   }
   
-  InBtn = HasBtn;
+   /*
+    * FIXME: Not sure where to do this, but we must flush the pending
+    * window updates when someone clicks on the close button and at
+    * the same time the window is overlapped with another one. This
+    * looks like a good place for now...
+    */
+   UpdateWindow(hWnd);
+
+   WindowDC = GetWindowDC(hWnd);
+   UserDrawCaptionButtonWnd(hWnd, WindowDC, TRUE, ButtonType);
+
+   SetCapture(hWnd);
   
-  SetCapture(hWnd);
+   for (;;)
+   {
+      if (GetMessageW(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST) <= 0)
+         break;
+    
+      if (Msg.message == WM_LBUTTONUP)
+         break;
+
+      if (Msg.message != WM_MOUSEMOVE)
+         continue;
+
+      OldState = Pressed;
+      Pressed = (DefWndNCHitTest(hWnd, Msg.pt) == wParam);
+      if (Pressed != OldState)
+         UserDrawCaptionButtonWnd(hWnd, WindowDC, Pressed, ButtonType);
+   }
   
-  if(HasBtn)
-  {
-    WindowDC = GetWindowDC(hWnd);
-    UserDrawCaptionButtonWnd(hWnd, WindowDC, HasBtn , Btn);
-  }
-  
- for(;;)
-  {
-    GetMessageW(&Msg, 0, 0, 0);
-    switch(Msg.message)
-    {
-      case WM_LBUTTONUP:
-        if(InBtn)
-          goto done;
-        else
-        {
-          ReleaseCapture();
-          if (HasBtn)
-            ReleaseDC(hWnd, WindowDC);
-          return;
-        }
-      case WM_MOUSEMOVE:
-        if(HasBtn)
-        {
-          CurBtn = DefWndNCHitTest(hWnd, Msg.pt);
-          if(InBtn != (CurBtn == OrigBtn))
-          {
-            UserDrawCaptionButtonWnd( hWnd, WindowDC, (CurBtn == OrigBtn) , Btn);
-          }
-          InBtn = CurBtn == OrigBtn;
-        }
-        break;
-    }
-  }
-  
-done:
-  UserDrawCaptionButtonWnd( hWnd, WindowDC, FALSE , Btn);
-  ReleaseDC(hWnd, WindowDC);
-  ReleaseCapture();
-  SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
-  return;
+   if (Pressed)
+      UserDrawCaptionButtonWnd(hWnd, WindowDC, FALSE, ButtonType);
+   ReleaseCapture();
+   ReleaseDC(hWnd, WindowDC);
+   if (Pressed)
+      SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
 }
 
 

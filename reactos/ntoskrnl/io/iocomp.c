@@ -1,5 +1,4 @@
-/* $Id$
- * 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/iocomp.c
@@ -18,66 +17,54 @@
 
 POBJECT_TYPE ExIoCompletionType;
 
-NPAGED_LOOKASIDE_LIST  IoCompletionPacketLookaside;
+NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
 
 static GENERIC_MAPPING ExIoCompletionMapping = 
 {
-   STANDARD_RIGHTS_READ | IO_COMPLETION_QUERY_STATE,
-   STANDARD_RIGHTS_WRITE | IO_COMPLETION_MODIFY_STATE,
-   STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | IO_COMPLETION_QUERY_STATE,
-   IO_COMPLETION_ALL_ACCESS
+    STANDARD_RIGHTS_READ    | IO_COMPLETION_QUERY_STATE,
+    STANDARD_RIGHTS_WRITE   | IO_COMPLETION_MODIFY_STATE,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | IO_COMPLETION_QUERY_STATE,
+    IO_COMPLETION_ALL_ACCESS
+};
+
+static const INFORMATION_CLASS_INFO ExIoCompletionInfoClass[] = {
+
+     /* IoCompletionBasicInformation */
+    ICI_SQ_SAME( sizeof(IO_COMPLETION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ),
 };
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
+VOID 
 STDCALL
-IopCreateIoCompletion(
-   PVOID                ObjectBody,
-   PVOID                Parent,
-   PWSTR                RemainingPath,
-   POBJECT_ATTRIBUTES   ObjectAttributes
-   )
-{
-   DPRINT("IopCreateIoCompletion(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-      ObjectBody, Parent, RemainingPath);
-
-   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-   {
-      return STATUS_UNSUCCESSFUL;
-   }
-
-   return STATUS_SUCCESS;
-}
-
-VOID STDCALL
 IopDeleteIoCompletion(PVOID ObjectBody)
 {
-   PKQUEUE Queue = ObjectBody;
+    PKQUEUE Queue = ObjectBody;
+    PLIST_ENTRY FirstEntry;
+    PLIST_ENTRY CurrentEntry;
+    PIO_COMPLETION_PACKET Packet;
 
-   DPRINT("IopDeleteIoCompletion()\n");
+    DPRINT("IopDeleteIoCompletion()\n");
 
-   KeRundownQueue(Queue);
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoSetCompletionRoutineEx(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PIO_COMPLETION_ROUTINE CompletionRoutine,
-    IN PVOID Context,
-    IN BOOLEAN InvokeOnSuccess,
-    IN BOOLEAN InvokeOnError,
-    IN BOOLEAN InvokeOnCancel
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    /* Rundown the Queue */
+    FirstEntry = KeRundownQueue(Queue);
+    
+    /* Clean up the IRPs */
+    if (FirstEntry) {
+    
+        CurrentEntry = FirstEntry;
+        do {
+        
+            /* Get the Packet */
+            Packet = CONTAINING_RECORD(CurrentEntry, IO_COMPLETION_PACKET, ListEntry);
+            
+            /* Go to next Entry */
+            CurrentEntry = CurrentEntry->Flink;
+            
+            /* Free it */
+            ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+        } while (FirstEntry != CurrentEntry);
+    }
 }
 
 /*
@@ -85,305 +72,412 @@ IoSetCompletionRoutineEx(
  */
 NTSTATUS
 STDCALL
-IoSetIoCompletion (
-	IN PVOID IoCompletion,
-	IN PVOID KeyContext,
-	IN PVOID ApcContext,
-	IN NTSTATUS IoStatus,
-	IN ULONG_PTR IoStatusInformation,
-	IN BOOLEAN Quota
-	)
+IoSetIoCompletion(IN PVOID IoCompletion,
+                  IN PVOID KeyContext,
+                  IN PVOID ApcContext,
+                  IN NTSTATUS IoStatus,
+                  IN ULONG_PTR IoStatusInformation,
+                  IN BOOLEAN Quota)
 {
-   PKQUEUE Queue = (PKQUEUE) IoCompletion;
-   PIO_COMPLETION_PACKET   Packet;
+    PKQUEUE Queue = (PKQUEUE)IoCompletion;
+    PIO_COMPLETION_PACKET Packet;
 
-   Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
-   if (NULL == Packet)
-   {
-     return STATUS_NO_MEMORY;
-   }
+    /* Allocate the Packet */
+    Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
+    if (NULL == Packet) return STATUS_NO_MEMORY;
+    
+    /* Set up the Packet */
+    Packet->Key = KeyContext;
+    Packet->Context = ApcContext;
+    Packet->IoStatus.Status = IoStatus;
+    Packet->IoStatus.Information = IoStatusInformation;
+    
+    /* Insert the Queue */
+    KeInsertQueue(Queue, &Packet->ListEntry);
 
-   Packet->Key = KeyContext;
-   Packet->Context = ApcContext;
-   Packet->IoStatus.Status = IoStatus;
-   Packet->IoStatus.Information = IoStatusInformation;
-   
-   KeInsertQueue(Queue, &Packet->ListEntry);
+    /* Return Success */
+    return STATUS_SUCCESS;
+}
 
-   return STATUS_SUCCESS;
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoSetCompletionRoutineEx(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp,
+                         IN PIO_COMPLETION_ROUTINE CompletionRoutine,
+                         IN PVOID Context,
+                         IN BOOLEAN InvokeOnSuccess,
+                         IN BOOLEAN InvokeOnError,
+                         IN BOOLEAN InvokeOnCancel)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID
 FASTCALL
 IopInitIoCompletionImplementation(VOID)
 {
-   ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   
-   RtlpCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion", NonPagedPool);
-   
-   ExIoCompletionType->Tag = IOC_TAG;
-   ExIoCompletionType->PeakObjects = 0;
-   ExIoCompletionType->PeakHandles = 0;
-   ExIoCompletionType->TotalObjects = 0;
-   ExIoCompletionType->TotalHandles = 0;
-   ExIoCompletionType->PagedPoolCharge = 0;
-   ExIoCompletionType->NonpagedPoolCharge = sizeof(KQUEUE);
-   ExIoCompletionType->Mapping = &ExIoCompletionMapping;
-   ExIoCompletionType->Dump = NULL;
-   ExIoCompletionType->Open = NULL;
-   ExIoCompletionType->Close = NULL;
-   ExIoCompletionType->Delete = IopDeleteIoCompletion;
-   ExIoCompletionType->Parse = NULL;
-   ExIoCompletionType->Security = NULL;
-   ExIoCompletionType->QueryName = NULL;
-   ExIoCompletionType->OkayToClose = NULL;
-   ExIoCompletionType->Create = IopCreateIoCompletion;
-   ExIoCompletionType->DuplicationNotify = NULL;
+    /* Create the IO Completion Type */
+    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));   
+    RtlInitUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion");
+    ExIoCompletionType->Tag = IOC_TAG;
+    ExIoCompletionType->PeakObjects = 0;
+    ExIoCompletionType->PeakHandles = 0;
+    ExIoCompletionType->TotalObjects = 0;
+    ExIoCompletionType->TotalHandles = 0;
+    ExIoCompletionType->PagedPoolCharge = 0;
+    ExIoCompletionType->NonpagedPoolCharge = sizeof(KQUEUE);
+    ExIoCompletionType->Mapping = &ExIoCompletionMapping;
+    ExIoCompletionType->Dump = NULL;
+    ExIoCompletionType->Open = NULL;
+    ExIoCompletionType->Close = NULL;
+    ExIoCompletionType->Delete = IopDeleteIoCompletion;
+    ExIoCompletionType->Parse = NULL;
+    ExIoCompletionType->Security = NULL;
+    ExIoCompletionType->QueryName = NULL;
+    ExIoCompletionType->OkayToClose = NULL;
+    ExIoCompletionType->Create = NULL;
+    ExIoCompletionType->DuplicationNotify = NULL;
 
-   ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
-                                   NULL,
-                                   NULL,
-                                   0,
-                                   sizeof(IO_COMPLETION_PACKET),
-                                   IOC_TAG,
-                                   0);
+    /* Initialize the Lookaside List we'll use for packets */
+    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(IO_COMPLETION_PACKET),
+                                    IOC_TAG,
+                                    0);
 }
-
 
 NTSTATUS
 STDCALL
-NtCreateIoCompletion(
-   OUT PHANDLE             IoCompletionHandle,
-   IN  ACCESS_MASK         DesiredAccess,
-   IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-   IN  ULONG               NumberOfConcurrentThreads
-   )
+NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
+                     IN  ACCESS_MASK DesiredAccess,
+                     IN  POBJECT_ATTRIBUTES ObjectAttributes,
+                     IN  ULONG NumberOfConcurrentThreads)
 {
-   PKQUEUE     Queue;
-   NTSTATUS    Status;
+    PKQUEUE Queue;
+    HANDLE hIoCompletionHandle;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
 
-   Status = ObCreateObject(ExGetPreviousMode(),
-                           ExIoCompletionType,
-                           ObjectAttributes,
-                           ExGetPreviousMode(),
-                           NULL,
-                           sizeof(KQUEUE),
-                           0,
-                           0,
-                           (PVOID*)&Queue);
-   if (!NT_SUCCESS(Status))
-   {
-     return Status;
-   }
+    if (PreviousMode != KernelMode) {
 
-   Status = ObInsertObject ((PVOID)Queue,
-			    NULL,
-			    DesiredAccess,
-			    0,
-			    NULL,
-			    IoCompletionHandle);
-   if (!NT_SUCCESS(Status))
-   {
-     ObDereferenceObject(Queue);
-     return Status;
-   }
+        _SEH_TRY {
 
-   KeInitializeQueue(Queue, NumberOfConcurrentThreads);
-   ObDereferenceObject(Queue);
+            ProbeForWrite(IoCompletionHandle,
+                          sizeof(HANDLE),
+                          sizeof(ULONG));
+        } _SEH_HANDLE {
 
-   return STATUS_SUCCESS;
-   /*
+            Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+      
+        if (!NT_SUCCESS(Status)) {
 
-  CompletionPort = NULL OR ExistingCompletionPort
+            return Status;
+        }
+    }
 
-  */
- 
-
-}
-
-/*
-DesiredAccess:
-ZERO
-IO_COMPLETION_QUERY_STATE Query access
-IO_COMPLETION_MODIFY_STATE Modify access
-IO_COMPLETION_ALL_ACCESS All of the preceding + STANDARD_RIGHTS_ALL
-
-ObjectAttributes
-OBJ_OPENLINK and OBJ_PERMANENT are not valid attributes
-
-Return Value
-STATUS_SUCCESS or an error status, such as STATUS_ACCESS_DENIED or
-STATUS_OBJECT_NAME_NOT_FOUND.
-*/
-NTSTATUS
-STDCALL
-NtOpenIoCompletion(
-   OUT PHANDLE             IoCompletionHandle,
-   IN  ACCESS_MASK         DesiredAccess,
-   IN  POBJECT_ATTRIBUTES  ObjectAttributes
-   )
-{
-   NTSTATUS Status;
+    /* Create the Object */
+    Status = ObCreateObject(PreviousMode,
+                            ExIoCompletionType,
+                            ObjectAttributes,
+                            PreviousMode,
+                            NULL,
+                            sizeof(KQUEUE),
+                            0,
+                            0,
+                            (PVOID*)&Queue);
+    
+    /* Check for success */
+    if (NT_SUCCESS(Status)) {
    
-   Status = ObOpenObjectByName(ObjectAttributes,
-                               ExIoCompletionType,
-                               NULL,
-                               UserMode,
-                               DesiredAccess,
-                               NULL,
-                               IoCompletionHandle);  //<- ???
+        /* Initialize the Queue */
+        KeInitializeQueue(Queue, NumberOfConcurrentThreads);
+
+        /* Insert it */
+        Status = ObInsertObject(Queue,
+                                NULL,
+                                DesiredAccess,
+                                0,
+                                NULL,
+                                &hIoCompletionHandle);
+        ObDereferenceObject(Queue);
+        
+        if (NT_SUCCESS(Status)) {
+
+            _SEH_TRY {
+
+                *IoCompletionHandle = hIoCompletionHandle;
+            } _SEH_HANDLE {
+
+                Status = _SEH_GetExceptionCode();
+            } _SEH_END;
+        }
+   }
    
+   /* Return Status */
    return Status;
 }
 
+NTSTATUS
+STDCALL
+NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
+                   IN ACCESS_MASK DesiredAccess,
+                   IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    HANDLE hIoCompletionHandle;
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
+    
+    if(PreviousMode != KernelMode) {
+
+        _SEH_TRY {
+
+            ProbeForWrite(IoCompletionHandle,
+                          sizeof(HANDLE),
+                          sizeof(ULONG));
+        } _SEH_HANDLE {
+
+            Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+
+        if(!NT_SUCCESS(Status)) {
+
+            return Status;
+        }
+    }
+    
+    /* Open the Object */
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                ExIoCompletionType,
+                                NULL,
+                                PreviousMode,
+                                DesiredAccess,
+                                NULL,
+                                &hIoCompletionHandle);
+ 
+    if (NT_SUCCESS(Status)) {
+
+        _SEH_TRY {
+
+            *IoCompletionHandle = hIoCompletionHandle;
+        } _SEH_HANDLE {
+
+            Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+    }
+ 
+    /* Return Status */  
+    return Status;
+}
+
 
 NTSTATUS
 STDCALL
-NtQueryIoCompletion(
-   IN  HANDLE                          IoCompletionHandle,
-   IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
-   OUT PVOID                           IoCompletionInformation,
-   IN  ULONG                           IoCompletionInformationLength,
-   OUT PULONG                          ResultLength OPTIONAL
-   )
+NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
+                    IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
+                    OUT PVOID IoCompletionInformation,
+                    IN  ULONG IoCompletionInformationLength,
+                    OUT PULONG ResultLength OPTIONAL)
 {
-   PKQUEUE  Queue;
-   NTSTATUS Status;
+    PKQUEUE Queue;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
 
-   if (IoCompletionInformationClass != IoCompletionBasicInformation)
-   {
-      return STATUS_INVALID_INFO_CLASS;
-   }
-   if (IoCompletionInformationLength < sizeof(IO_COMPLETION_BASIC_INFORMATION))
-   {
-      return STATUS_INFO_LENGTH_MISMATCH;
-   }
+    /* Check buffers and parameters */
+    DefaultQueryInfoBufferCheck(IoCompletionInformationClass,
+                                ExIoCompletionInfoClass,
+                                IoCompletionInformation,
+                                IoCompletionInformationLength,
+                                ResultLength,
+                                PreviousMode,
+                                &Status);
+    if(!NT_SUCCESS(Status)) {
 
-   Status = ObReferenceObjectByHandle( IoCompletionHandle,
+        DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);
+        return Status;
+    }
+
+    /* Get the Object */
+    Status = ObReferenceObjectByHandle(IoCompletionHandle,
                                        IO_COMPLETION_QUERY_STATE,
                                        ExIoCompletionType,
-                                       UserMode,
+                                       PreviousMode,
                                        (PVOID*)&Queue,
                                        NULL);
-   if (NT_SUCCESS(Status))
-   {
-      ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->Depth = 
-         Queue->Header.SignalState;
+    
+    /* Check for Success */
+   if (NT_SUCCESS(Status)) {
+      
+        _SEH_TRY {
 
-      ObDereferenceObject(Queue);
+            /* Return Info */
+            ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->Depth = KeReadStateQueue(Queue);
+            ObDereferenceObject(Queue);
 
-      if (ResultLength) *ResultLength = sizeof(IO_COMPLETION_BASIC_INFORMATION);
-   }
+            /* Return Result Length if needed */
+            if (ResultLength) {
 
-   return Status;
+                *ResultLength = sizeof(IO_COMPLETION_BASIC_INFORMATION);
+            }
+        } _SEH_HANDLE {
+
+            Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+    }
+
+    /* Return Status */
+    return Status;
 }
-
 
 /*
  * Dequeues an I/O completion message from an I/O completion object
  */
 NTSTATUS
 STDCALL
-NtRemoveIoCompletion(
-   IN  HANDLE           IoCompletionHandle,
-   OUT PVOID            *CompletionKey,
-   OUT PVOID            *CompletionContext,
-   OUT PIO_STATUS_BLOCK IoStatusBlock,
-   IN  PLARGE_INTEGER   Timeout OPTIONAL
-   )
+NtRemoveIoCompletion(IN  HANDLE IoCompletionHandle,
+                     OUT PVOID *CompletionKey,
+                     OUT PVOID *CompletionContext,
+                     OUT PIO_STATUS_BLOCK IoStatusBlock,
+                     IN  PLARGE_INTEGER Timeout OPTIONAL)
 {
-   PKQUEUE  Queue;
-   NTSTATUS Status;
-   PIO_COMPLETION_PACKET   Packet;
-   PLIST_ENTRY             ListEntry;
+    LARGE_INTEGER SafeTimeout;
+    PKQUEUE Queue;
+    PIO_COMPLETION_PACKET Packet;
+    PLIST_ENTRY ListEntry;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
 
-   Status = ObReferenceObjectByHandle( IoCompletionHandle,
+    if (PreviousMode != KernelMode) {
+
+        _SEH_TRY {
+
+            ProbeForWrite(CompletionKey,
+                          sizeof(PVOID),
+                          sizeof(ULONG));
+            ProbeForWrite(CompletionContext,
+                          sizeof(PVOID),
+                          sizeof(ULONG));
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
+            if (Timeout != NULL) {
+
+                ProbeForRead(Timeout,
+                             sizeof(LARGE_INTEGER),
+                             sizeof(ULONG));
+                SafeTimeout = *Timeout;
+                Timeout = &SafeTimeout;
+            }
+        } _SEH_HANDLE {
+
+            Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+        
+        if (!NT_SUCCESS(Status)) {
+
+            return Status;
+        }
+    }
+    
+    /* Open the Object */
+    Status = ObReferenceObjectByHandle(IoCompletionHandle,
                                        IO_COMPLETION_MODIFY_STATE,
                                        ExIoCompletionType,
-                                       UserMode,
+                                       PreviousMode,
                                        (PVOID*)&Queue,
                                        NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }
+    
+    /* Check for success */
+    if (NT_SUCCESS(Status)) {
 
-   /*
-   Try 2 remove packet from queue. Wait (optionaly) if
-   no packet in queue or max num of threads allready running.
-   */
-      
-   do {
-      
-      ListEntry = KeRemoveQueue(Queue, UserMode, Timeout );
+        /* Remove queue */
+        ListEntry = KeRemoveQueue(Queue, PreviousMode, Timeout);
 
-      /* Nebbets book says nothing about NtRemoveIoCompletion returning STATUS_USER_APC,
-      and the umode equivalent GetQueuedCompletionStatus says nothing about this either,
-      so my guess it we should restart the operation. Need further investigation. -Gunnar
-      */
+        /* If we got a timeout or user_apc back, return the status */
+        if ((NTSTATUS)ListEntry == STATUS_TIMEOUT || (NTSTATUS)ListEntry == STATUS_USER_APC) {
+            
+            Status = (NTSTATUS)ListEntry; 
+            
+        } else {
+            
+            /* Get the Packet Data */
+            Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
+            
+            _SEH_TRY {
 
-   } while((NTSTATUS)ListEntry == STATUS_USER_APC);
+                /* Return it */
+                *CompletionKey = Packet->Key;
+                *CompletionContext = Packet->Context;
+                *IoStatusBlock = Packet->IoStatus;
+           
+            } _SEH_HANDLE {
 
-   ObDereferenceObject(Queue);
+                Status = _SEH_GetExceptionCode();
+            } _SEH_END;
+
+            /* Free packet */
+            ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+        }
    
-   if ((NTSTATUS)ListEntry == STATUS_TIMEOUT)
-   {
-      return STATUS_TIMEOUT;
-   }
-   
-   ASSERT(ListEntry);
-   
-   Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
-
-   if (CompletionKey) *CompletionKey = Packet->Key;
-   if (CompletionContext) *CompletionContext = Packet->Context;
-   if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
-
-   ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
-
-   return STATUS_SUCCESS;
+        /* Dereference the Object */
+        ObDereferenceObject(Queue);
+    }
+    
+    /* Return status */
+    return Status;
 }
-
-
-/*
-ASSOSIERT MED FOB's IoCompletionContext
-
-typedef struct _IO_COMPLETION_CONTEXT {
-        PVOID Port; 
-        ULONG Key; 
-} IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
-
-*/
-
 
 /*
  * Queues an I/O completion message to an I/O completion object
  */
 NTSTATUS
 STDCALL
-NtSetIoCompletion(
-   IN HANDLE   IoCompletionPortHandle,
-   IN PVOID    CompletionKey,
-   IN PVOID    CompletionContext,
-   IN NTSTATUS CompletionStatus,
-   IN ULONG    CompletionInformation
-   )
+NtSetIoCompletion(IN HANDLE IoCompletionPortHandle,
+                  IN PVOID CompletionKey,
+                  IN PVOID CompletionContext,
+                  IN NTSTATUS CompletionStatus,
+                  IN ULONG CompletionInformation)
 {
-   NTSTATUS                Status;
-   PKQUEUE                 Queue;
-
-   Status = ObReferenceObjectByHandle( IoCompletionPortHandle,
+    NTSTATUS Status;
+    PKQUEUE Queue;
+    
+    PAGED_CODE();
+    
+    /* Get the Object */
+    Status = ObReferenceObjectByHandle(IoCompletionPortHandle,
                                        IO_COMPLETION_MODIFY_STATE,
                                        ExIoCompletionType,
-                                       UserMode,
+                                       ExGetPreviousMode(),
                                        (PVOID*)&Queue,
                                        NULL);
-   if (NT_SUCCESS(Status))
-   {
-      Status = IoSetIoCompletion(Queue, CompletionKey, CompletionContext,
-                                 CompletionStatus, CompletionInformation, TRUE);
-      ObDereferenceObject(Queue);
-   }
-
-   return Status;
+    
+    /* Check for Success */
+    if (NT_SUCCESS(Status)) {
+        
+        /* Set the Completion */
+        Status = IoSetIoCompletion(Queue, 
+                                   CompletionKey, 
+                                   CompletionContext,
+                                   CompletionStatus, 
+                                   CompletionInformation, 
+                                   TRUE);
+        ObDereferenceObject(Queue);
+    }
+    
+    /* Return status */
+    return Status;
 }

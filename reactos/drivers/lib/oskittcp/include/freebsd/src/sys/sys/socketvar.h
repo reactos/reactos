@@ -40,6 +40,25 @@
 #include <sys/filedesc.h>		/* for struct filedesc */
 #include <sys/select.h>			/* for struct selinfo */
 
+/* Warning suppression */
+struct sockaddr;
+
+/*
+ * Used to maintain information about processes that wish to be
+ * notified when I/O becomes possible.
+ *
+ * Moved from sys/select.h and replaced with an #include.
+ */
+struct selinfo {
+#if defined(OSKIT)
+	struct  listener_mgr *si_sel;
+#endif /* OSKIT */
+	pid_t	si_pid;		/* process to be notified */
+	short	si_flags;	/* see below */
+};
+#define	SI_COLL	0x0001		/* collision occurred */
+
+
 /*
  * Kernel structure per socket.
  * Contains send and receive buffer queues,

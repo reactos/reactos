@@ -55,7 +55,7 @@ VfatxFormat (PUNICODE_STRING DriveRoot,
     NULL);
 
   Status = NtOpenFile(&FileHandle,
-    FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+    FILE_GENERIC_READ | FILE_GENERIC_WRITE,
     &ObjectAttributes,
     &Iosb,
     FILE_SHARE_READ,
@@ -162,7 +162,7 @@ VfatxFormat (PUNICODE_STRING DriveRoot,
       Callback (DONE, 0, (PVOID)&Context.Success);
     }
 
-  DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
+  DPRINT("VfatxFormat() done. Status 0x%.08x\n", Status);
 
   return Status;
 }

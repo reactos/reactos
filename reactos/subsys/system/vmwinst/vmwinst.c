@@ -1091,9 +1091,6 @@ CreateWizard(VOID)
   psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
   /* Display the wizard */
-  PropertySheet(&psh);
-
-  
   return (LONG)(PropertySheet(&psh) != -1);
 }
 

@@ -15,6 +15,9 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 
+#define NDEBUG
+#include <ntdll/ntdll.h>
+
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlGetNtProductType
@@ -107,3 +110,30 @@ RtlGetNtGlobalFlags(VOID)
 	PPEB pPeb = NtCurrentPeb();
 	return pPeb->NtGlobalFlag;
 }
+
+
+/*
+ * @implemented
+ */
+PVOID
+STDCALL
+RtlEncodePointer(IN PVOID Pointer)
+{
+  ULONG Cookie;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                     ProcessCookie,
+                                     &Cookie,
+                                     sizeof(Cookie),
+                                     NULL);
+
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to receive the process cookie! Status: 0x%x\n", Status);
+    return Pointer;
+  }
+
+  return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
+}
+

@@ -173,11 +173,13 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
         Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         if (!ConnectNamedPipe(Connection->conn, &Connection->ovl)) {
-          WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           if (GetLastError() == ERROR_PIPE_CONNECTED) {
             SetEvent(Connection->ovl.hEvent);
             return RPC_S_OK;
+          } else if (GetLastError() == ERROR_IO_PENDING) {
+            return RPC_S_OK;
           }
+          WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           return RPC_S_SERVER_UNAVAILABLE;
         }
       }
@@ -211,7 +213,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
             return RPC_S_SERVER_TOO_BUSY;
           } else {
             err = GetLastError();
-            TRACE("connection failed, error=%lx\n", err);
+            WARN("connection failed, error=%lx\n", err);
             HeapFree(GetProcessHeap(), 0, pname);
             return RPC_S_SERVER_UNAVAILABLE;
           }
@@ -243,7 +245,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
           err = GetLastError();
           /* we don't need to handle ERROR_PIPE_BUSY here,
            * the doc says that it is returned to the app */
-          TRACE("connection failed, error=%lx\n", err);
+          WARN("connection failed, error=%lx\n", err);
           HeapFree(GetProcessHeap(), 0, pname);
           if (err == ERROR_PIPE_BUSY)
             return RPC_S_SERVER_TOO_BUSY;
@@ -397,7 +399,7 @@ RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, UUID* ObjectUuid)
 RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection)
 {
   RpcBinding* NewBinding;
-  TRACE("(*RpcBinding == ^%p, Connection == ^%p)\n", *Binding, Connection);
+  TRACE("(RpcBinding == ^%p, Connection == ^%p)\n", Binding, Connection);
 
   RPCRT4_AllocBinding(&NewBinding, Connection->server);
   NewBinding->Protseq = RPCRT4_strdupA(Connection->Protseq);
@@ -1093,4 +1095,23 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
   
   FIXME("Unknown protseq %s - we probably need to implement it one day\n", debugstr_w(protseq));
   return RPC_S_PROTSEQ_NOT_SUPPORTED;
+}
+
+/***********************************************************************
+ *             RpcImpersonateClient (RPCRT4.@)
+ *
+ * Impersonates the client connected via a binding handle so that security
+ * checks are done in the context of the client.
+ *
+ * PARAMS
+ *  BindingHandle [I] Handle to the binding to the client.
+ *
+ * RETURNS
+ *  Success: RPS_S_OK.
+ *  Failure: RPC_STATUS value.
+ */
+RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
+{
+    FIXME("(%p): stub\n", BindingHandle);
+    return RPC_S_NO_CONTEXT_AVAILABLE;
 }

@@ -92,11 +92,11 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
           SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
           return 0;
         }
-    
-      if (WindowObject->OwnerThread != PsGetCurrentThread())
+
+      if (WindowObject->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
         {
           IntReleaseWindowObject(WindowObject);
-          DPRINT1("Trying to set timer for window in another thread (shatter attack?)\n");
+          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
           SetLastWin32Error(ERROR_ACCESS_DENIED);
           return 0;
         }

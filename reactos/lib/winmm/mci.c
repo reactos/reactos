@@ -278,6 +278,11 @@ static int MCI_MapMsgAtoW(UINT msg, DWORD_PTR dwParam1, DWORD_PTR *dwParam2)
     case MCI_UPDATE:
     case MCI_RESUME:
     case MCI_DELETE:
+    case MCI_MONITOR:
+    case MCI_SETAUDIO:
+    case MCI_SIGNAL:
+    case MCI_SETVIDEO:
+    case MCI_LIST:
         return 0;
 
     case MCI_OPEN:
@@ -975,8 +980,8 @@ static	LPCWSTR		MCI_FindCommand(UINT uTbl, LPCWSTR verb)
  */
 static	DWORD		MCI_GetReturnType(LPCWSTR lpCmd)
 {
-    lpCmd += strlenW(lpCmd) + 1 + sizeof(DWORD) + sizeof(WORD);
-    if (*lpCmd == '\0' && *(const WORD*)(lpCmd + 1 + sizeof(DWORD)) == MCI_RETURN) {
+    lpCmd = (LPCWSTR)((BYTE*)(lpCmd + strlenW(lpCmd) + 1) + sizeof(DWORD) + sizeof(WORD));
+    if (*lpCmd == '\0' && *(const WORD*)((BYTE*)(lpCmd + 1) + sizeof(DWORD)) == MCI_RETURN) {
 	return *(const DWORD*)(lpCmd + 1);
     }
     return 0L;
@@ -1743,7 +1748,7 @@ errCleanUp:
 /**************************************************************************
  * 			MCI_Close				[internal]
  */
-static	DWORD MCI_Close(UINT16 wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParms)
+static	DWORD MCI_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParms)
 {
     DWORD		dwRet;
     LPWINE_MCIDRIVER	wmd;
@@ -1835,7 +1840,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
 		    RegQueryInfoKeyW( hKey, 0, 0, 0, &cnt, 0, 0, 0, 0, 0, 0, 0);
 		    RegCloseKey( hKey );
 		}
-		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf), wszSystemIni))
+		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf) / sizeof(buf[0]), wszSystemIni))
 		    for (s = buf; *s; s += strlenW(s) + 1) cnt++;
 	    }
 	} else {
@@ -1887,7 +1892,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
 	        RegCloseKey( hKey );
 	    }
 	    if (!s) {
-		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf), wszSystemIni)) {
+		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf) / sizeof(buf[0]), wszSystemIni)) {
 		    for (p = buf; *p; p += strlenW(p) + 1, cnt++) {
                         TRACE("%ld: %s\n", cnt, debugstr_w(p));
 			if (cnt == lpParms->dwNumber - 1) {

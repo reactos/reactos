@@ -11,6 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#include "../dbg/kdb.h"
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -33,9 +34,9 @@ ULONG                 IoOtherOperationCount = 0;
 ULONGLONG             IoOtherTransferCount = 0;
 KSPIN_LOCK   EXPORTED IoStatisticsLock = 0;
 
-static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
-					 FILE_GENERIC_WRITE,
-					 FILE_GENERIC_EXECUTE,
+static GENERIC_MAPPING IopFileMapping = {STANDARD_RIGHTS_READ | SYNCHRONIZE | FILE_READ_DATA | FILE_READ_PROPERTIES,
+					 STANDARD_RIGHTS_WRITE | SYNCHRONIZE | FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_PROPERTIES,
+					 STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | FILE_EXECUTE | FILE_READ_ATTRIBUTES,
 					 FILE_ALL_ACCESS};
 
 /* FUNCTIONS ****************************************************************/
@@ -51,7 +52,7 @@ IopCloseFile(PVOID ObjectBody,
    
    DPRINT("IopCloseFile()\n");
    
-   if (HandleCount > 0 || FileObject->DeviceObject == NULL)
+   if (HandleCount > 1 || FileObject->DeviceObject == NULL)
      {
 	return;
      }
@@ -105,15 +106,24 @@ IopDeleteFile(PVOID ObjectBody)
 			        UserMode);
 #endif   
      KeResetEvent( &FileObject->Event );
-     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
-				        FileObject->DeviceObject,
-				        NULL,
-				        0,
-				        NULL,
-				        &FileObject->Event,
-				        NULL);
+
+     Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, TRUE);
+     if (Irp == NULL)
+     {
+        /*
+         * FIXME: This case should eventually be handled. We should wait
+         * until enough memory is available to allocate the IRP.
+         */
+        ASSERT(FALSE);
+     }
+   
+     Irp->UserEvent = &FileObject->Event;
+     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
      Irp->Flags |= IRP_CLOSE_OPERATION;
+   
      StackPtr = IoGetNextIrpStackLocation(Irp);
+     StackPtr->MajorFunction = IRP_MJ_CLOSE;
+     StackPtr->DeviceObject = FileObject->DeviceObject;
      StackPtr->FileObject = FileObject;
    
      Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -553,14 +563,17 @@ IoInit (VOID)
 }
 
 
-VOID INIT_FUNCTION
-IoInit2(VOID)
+VOID 
+INIT_FUNCTION
+IoInit2(BOOLEAN BootLog)
 {
   PDEVICE_NODE DeviceNode;
   PDRIVER_OBJECT DriverObject;
   MODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
+  IoCreateDriverList();
+          
   KeInitializeSpinLock (&IoStatisticsLock);
 
   /* Initialize raw filesystem driver */
@@ -605,6 +618,56 @@ IoInit2(VOID)
   IopInvalidateDeviceRelations(
     IopRootDeviceNode,
     BusRelations);
+  
+     /* Start boot logging */
+    IopInitBootLog(BootLog);
+  
+    /* Load boot start drivers */
+    IopInitializeBootDrivers();
+}
+
+VOID
+STDCALL
+INIT_FUNCTION
+IoInit3(VOID)
+{
+    NTSTATUS Status;
+    
+    /* Create ARC names for boot devices */
+    IoCreateArcNames();
+
+    /* Create the SystemRoot symbolic link */
+    CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+    Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
+    if (!NT_SUCCESS(Status)) {
+        DbgPrint("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
+        DbgPrintErrorMessage (Status);
+        KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
+    }
+
+    /* Start Profiling on a Debug Build */
+#if defined(KDBG)
+    KdbInit();
+#endif /* KDBG */
+
+    /* I/O is now setup for disk access, so start the debugging logger thread. */
+    if (KdDebugState & KD_DEBUG_FILELOG) DebugLogInit2();
+
+    /* Load services for devices found by PnP manager */
+    IopInitializePnpServices(IopRootDeviceNode, FALSE);
+
+    /* Load system start drivers */
+    IopInitializeSystemDrivers();
+    IoDestroyDriverList();
+
+    /* Stop boot logging */
+    IopStopBootLog();
+
+    /* Assign drive letters */
+    IoAssignDriveLetters((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
+                         NULL,
+                         NULL,
+                         NULL);    
 }
 
 /*

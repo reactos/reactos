@@ -82,7 +82,7 @@ DllMain(HANDLE hDll,
 	LPVOID lpReserved)
 {
   NTSTATUS Status;
-
+  
   (void)lpReserved;
 
   DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
@@ -147,8 +147,9 @@ DllMain(HANDLE hDll,
 	RtlInitializeCriticalSection(&ConsoleLock);
 	SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
 
-	/* Insert more dll attach stuff here! */
 
+   /* Insert more dll attach stuff here! */
+   
 	DllInitialized = TRUE;
 	break;
 

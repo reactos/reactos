@@ -321,40 +321,18 @@ CopyFileExA (
 	DWORD			dwCopyFlags
 	)
 {
-	UNICODE_STRING ExistingFileNameU;
-	UNICODE_STRING NewFileNameU;
-	ANSI_STRING ExistingFileName;
-	ANSI_STRING NewFileName;
+	PWCHAR ExistingFileNameW;
+   PWCHAR NewFileNameW;
 	BOOL Result;
 
-	RtlInitAnsiString (&ExistingFileName,
-	                   (LPSTR)lpExistingFileName);
+   if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, FALSE)))
+      return FALSE;
 
-	RtlInitAnsiString (&NewFileName,
-	                   (LPSTR)lpNewFileName);
+   if (!(NewFileNameW = FilenameA2W(lpNewFileName, TRUE)))
+      return FALSE;
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-	{
-		RtlAnsiStringToUnicodeString (&ExistingFileNameU,
-		                              &ExistingFileName,
-		                              TRUE);
-		RtlAnsiStringToUnicodeString (&NewFileNameU,
-		                              &NewFileName,
-		                              TRUE);
-	}
-	else
-	{
-		RtlOemStringToUnicodeString (&ExistingFileNameU,
-		                             &ExistingFileName,
-		                             TRUE);
-		RtlOemStringToUnicodeString (&NewFileNameU,
-		                             &NewFileName,
-		                             TRUE);
-	}
-
-	Result = CopyFileExW (ExistingFileNameU.Buffer,
-	                      NewFileNameU.Buffer,
+   Result = CopyFileExW (ExistingFileNameW ,
+                         NewFileNameW ,
 	                      lpProgressRoutine,
 	                      lpData,
 	                      pbCancel,
@@ -362,10 +340,7 @@ CopyFileExA (
 
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,
-	             ExistingFileNameU.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             NewFileNameU.Buffer);
+                NewFileNameW);
 
 	return Result;
 }

@@ -365,7 +365,7 @@ static UINT SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     }
     else if ((retval = GetLastError()) >= 32)
     {
-        FIXME("Strange error set by CreateProcess: %d\n", retval);
+        TRACE("CreateProcess returned error %d\n", retval);
         retval = ERROR_BAD_FORMAT;
     }
 

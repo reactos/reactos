@@ -80,6 +80,11 @@ NTSTATUS DDKAPI ListenComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
 
+    if ( Irp->Cancel ) {
+	/* FIXME: is this anything else we need to do? */
+	return STATUS_SUCCESS;
+    }
+
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ListenIrp.InFlightRequest = NULL;

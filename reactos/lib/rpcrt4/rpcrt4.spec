@@ -72,7 +72,7 @@
 @ stub RpcGetAsyncCallStatus
 @ stub RpcIfIdVectorFree
 @ stub RpcIfInqId
-@ stub RpcImpersonateClient
+@ stdcall RpcImpersonateClient(ptr)
 @ stub RpcInitializeAsyncHandle
 @ stub RpcMgmtBindingInqParameter # win9x
 @ stub RpcMgmtBindingSetParameter # win9x

@@ -157,7 +157,6 @@ typedef struct _OBJECT_HEADER
    LIST_ENTRY Entry;
    LONG RefCount;
    LONG HandleCount;
-   BOOLEAN CloseInProcess;
    BOOLEAN Permanent;
    BOOLEAN Inherit;
    struct _DIRECTORY_OBJECT* Parent;
@@ -228,16 +227,21 @@ enum
    OBJTYP_MAX,
 };
 
+#define HEADER_TO_BODY(objhdr)                                                 \
+  (PVOID)((ULONG_PTR)objhdr + sizeof(OBJECT_HEADER) - sizeof(COMMON_BODY_HEADER))
+
+#define BODY_TO_HEADER(objbdy)                                                 \
+  CONTAINING_RECORD(&(((PCOMMON_BODY_HEADER)objbdy)->Type), OBJECT_HEADER, Type)
 
 #define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
 
+#define HANDLE_TO_EX_HANDLE(handle)                                            \
+  (LONG)(((LONG)(handle) >> 2) - 1)
+#define EX_HANDLE_TO_HANDLE(exhandle)                                          \
+  (HANDLE)(((exhandle) + 1) << 2)
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
-
-
-POBJECT_HEADER BODY_TO_HEADER(PVOID body);
-PVOID HEADER_TO_BODY(POBJECT_HEADER obj);
 
 VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			  POBJECT_HEADER Header,
@@ -260,13 +264,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
-VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
 
 NTSTATUS
 ObDeleteHandle(PEPROCESS Process,
-	       HANDLE Handle,
-	       PVOID *ObjectBody);
+	       HANDLE Handle);
 
 NTSTATUS
 ObpQueryHandleAttributes(HANDLE Handle,
@@ -300,7 +302,9 @@ ObQueryDeviceMapInformation(PEPROCESS Process, PPROCESS_DEVICEMAP_INFORMATION De
 VOID FASTCALL
 ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent);
 
-
+VOID
+STDCALL
+ObKillProcess(PEPROCESS Process);
 /* Security descriptor cache functions */
 
 NTSTATUS
@@ -326,7 +330,7 @@ typedef struct _CAPTURED_OBJECT_ATTRIBUTES
   HANDLE RootDirectory;
   ULONG Attributes;
   PSECURITY_DESCRIPTOR SecurityDescriptor;
-  /* PVOID SecurityQualityOfService; */
+  PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
 } CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
 
 NTSTATUS
@@ -377,10 +381,8 @@ typedef struct _INFORMATION_CLASS_INFO
     else if(ClassList[Class].RequiredSize##Mode > 0 &&                         \
             (BufferLen) != ClassList[Class].RequiredSize##Mode)                \
     {                                                                          \
-      if((!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&           \
-           (BufferLen) != ClassList[Class].RequiredSize##Mode) ||              \
-         ((ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
-          (BufferLen) < ClassList[Class].RequiredSize##Mode))                  \
+      if(!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
+           (BufferLen) != ClassList[Class].RequiredSize##Mode)                 \
       {                                                                        \
         *(StatusVar) = STATUS_INFO_LENGTH_MISMATCH;                            \
       }                                                                        \

@@ -526,7 +526,7 @@ LRESULT DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_CONTEXTMENU:
-		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam), _cm_ifs))
+		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
 			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		break;
 
@@ -558,7 +558,7 @@ int DesktopShellView::Notify(int id, NMHDR* pnmh)
 	return super::Notify(id, pnmh);
 }
 
-bool DesktopShellView::DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs)
+bool DesktopShellView::DoContextMenu(int x, int y)
 {
 	IDataObject* selection;
 
@@ -588,7 +588,7 @@ bool DesktopShellView::DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs)
 	for(int i=pida->cidl; i>0; --i)
 		apidl[i-1] = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
 
-	hr = ShellFolderContextMenu(ShellFolder(parent_pidl), _hwnd, pida->cidl, apidl, x, y, cm_ifs);
+	hr = ShellFolderContextMenu(ShellFolder(parent_pidl), _hwnd, pida->cidl, apidl, x, y, _cm_ifs);
 
 	selection->Release();
 

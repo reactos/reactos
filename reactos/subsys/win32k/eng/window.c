@@ -26,6 +26,9 @@
  * REVISION HISTORY:
  *                 16/11/2004: Created
  */
+
+/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows. */
+ 
 #include <w32k.h>
 
 /*
@@ -33,9 +36,9 @@
  */
 VOID
 FASTCALL
-IntEngWndChanged(
-        IN WNDOBJ *pwo,
-        IN FLONG   flChanged)
+IntEngWndCallChangeProc(
+  IN WNDOBJ *pwo,
+  IN FLONG   flChanged)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   
@@ -63,22 +66,144 @@ IntEngWndChanged(
 }
 
 /*
+ * Fills the CLIPOBJ and client rect of the WNDOBJ with the data from the given WINDOW_OBJECT
+ */
+BOOLEAN
+FASTCALL
+IntEngWndUpdateClipObj(
+  WNDGDI *WndObjInt,
+  PWINDOW_OBJECT Window)
+{
+  HRGN hVisRgn;
+  PROSRGNDATA visRgn;
+  CLIPOBJ *ClipObj = NULL;
+  CLIPOBJ *OldClipObj;
+
+  hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
+  if (hVisRgn != NULL)
+  {
+    NtGdiOffsetRgn(hVisRgn, Window->ClientRect.left, Window->ClientRect.top);
+    visRgn = RGNDATA_LockRgn(hVisRgn);
+    if (visRgn != NULL)
+    {
+      if (visRgn->rdh.nCount > 0)
+      {
+        ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, (PRECTL)visRgn->Buffer,
+                                         (PRECTL)&visRgn->rdh.rcBound);
+        DPRINT("Created visible region with %d rects\n", visRgn->rdh.nCount);
+        DPRINT("  BoundingRect: %d, %d  %d, %d\n",
+               visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
+               visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
+        {
+          INT i;
+          for (i = 0; i < visRgn->rdh.nCount; i++)
+          {
+            DPRINT("  Rect #%d: %d,%d  %d,%d\n", i+1,
+                   visRgn->Buffer[i].left, visRgn->Buffer[i].top,
+                   visRgn->Buffer[i].right, visRgn->Buffer[i].bottom);
+          }
+        }
+      }
+      RGNDATA_UnlockRgn(hVisRgn);
+    }
+    else
+    {
+      DPRINT1("Warning: Couldn't lock visible region of window DC\n");
+    }
+  }
+  else
+  {
+    DPRINT1("Warning: VIS_ComputeVisibleRegion failed!\n");
+  }
+
+  if (ClipObj == NULL)
+  {
+    /* Fall back to client rect */
+    ClipObj = IntEngCreateClipRegion(1, (PRECTL)&Window->ClientRect,
+                                     (PRECTL)&Window->ClientRect);
+  }
+  
+  if (ClipObj == NULL)
+  {
+    DPRINT1("Warning: IntEngCreateClipRegion() failed!\n");
+    return FALSE;
+  }
+
+  RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
+  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->ClientRect, sizeof (RECT));
+  OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
+  if (OldClipObj != NULL)
+    IntEngDeleteClipRegion(OldClipObj);
+  
+  return TRUE;
+}
+
+/*
+ * Updates all WNDOBJs of the given WINDOW_OBJECT and calls the change-procs.
+ */
+VOID
+FASTCALL
+IntEngWindowChanged(
+  PWINDOW_OBJECT  Window,
+  FLONG           flChanged)
+{
+  PLIST_ENTRY CurrentEntry;
+  WNDGDI *Current;
+
+  ASSERT_IRQL(PASSIVE_LEVEL);
+
+  ExAcquireFastMutex(&Window->WndObjListLock);
+  CurrentEntry = Window->WndObjListHead.Flink;
+  while (CurrentEntry != &Window->WndObjListHead)
+    {
+      Current = CONTAINING_RECORD(CurrentEntry, WNDGDI, ListEntry);
+      
+      if (Current->WndObj.pvConsumer != NULL)
+        {
+          /* Update the WNDOBJ */
+          switch (flChanged)
+            {
+            case WOC_RGN_CLIENT:
+              /* Update the clipobj and client rect of the WNDOBJ */
+              IntEngWndUpdateClipObj(Current, Window);
+              break;
+          
+            case WOC_DELETE:
+              /* FIXME: Should the WNDOBJs be deleted by win32k or by the driver? */
+              break;
+            }
+
+          /* Call the change proc */
+          IntEngWndCallChangeProc(&Current->WndObj, flChanged);
+      
+          /* HACK: Send WOC_CHANGED after WOC_RGN_CLIENT */
+          if (flChanged == WOC_RGN_CLIENT)
+            {
+              IntEngWndCallChangeProc(&Current->WndObj, WOC_CHANGED);
+            }
+
+          CurrentEntry = CurrentEntry->Flink;
+        }
+    }
+
+  ExReleaseFastMutex(&Window->WndObjListLock);
+}
+
+/*
  * @implemented
  */
 WNDOBJ*
 STDCALL
 EngCreateWnd(
-	SURFOBJ          *pso,
-	HWND              hwnd,
-	WNDOBJCHANGEPROC  pfn,
-	FLONG             fl,
-	int               iPixelFormat
-	)
+  SURFOBJ          *pso,
+  HWND              hwnd,
+  WNDOBJCHANGEPROC  pfn,
+  FLONG             fl,
+  int               iPixelFormat)
 {
   WNDGDI *WndObjInt = NULL;
   WNDOBJ *WndObjUser = NULL;
   PWINDOW_OBJECT Window;
-  CLIPOBJ *ClientClipObj;
 
   DPRINT("EngCreateWnd: pso = 0x%x, hwnd = 0x%x, pfn = 0x%x, fl = 0x%x, pixfmt = %d\n",
          pso, hwnd, pfn, fl, iPixelFormat);
@@ -99,27 +224,30 @@ EngCreateWnd(
       return NULL;
     }
 
-  ClientClipObj = IntEngCreateClipRegion(1, (PRECTL)&Window->ClientRect,
-                                         (PRECTL)&Window->ClientRect);
-  if (ClientClipObj == NULL)
+  /* Fill the clipobj */
+  WndObjInt->ClientClipObj = NULL;
+  if (!IntEngWndUpdateClipObj(WndObjInt, Window))
     {
       IntReleaseWindowObject(Window);
       EngFreeMem(WndObjInt);
       return NULL;
     }
 
-  /* fill user object */
+  /* Fill user object */
   WndObjUser = GDIToObj(WndObjInt, WND);
   WndObjUser->psoOwner = pso;
   WndObjUser->pvConsumer = NULL;
-  RtlCopyMemory(&WndObjUser->rclClient, &Window->ClientRect, sizeof (RECT));
-  RtlCopyMemory(&WndObjUser->coClient, ClientClipObj, sizeof (CLIPOBJ));
 
-  /* fill internal object */
+  /* Fill internal object */
+  WndObjInt->Hwnd = hwnd;
   WndObjInt->ChangeProc = pfn;
   WndObjInt->Flags = fl;
   WndObjInt->PixelFormat = iPixelFormat;
-  WndObjInt->ClientClipObj = ClientClipObj;
+
+  /* associate object with window */
+  ExAcquireFastMutex(&Window->WndObjListLock);
+  InsertTailList(&Window->WndObjListHead, &WndObjInt->ListEntry);
+  ExReleaseFastMutex(&Window->WndObjListLock);
 
   /* release resources */
   IntReleaseWindowObject(Window);
@@ -135,12 +263,31 @@ EngCreateWnd(
  */
 VOID
 STDCALL
-EngDeleteWnd ( IN WNDOBJ *pwo )
+EngDeleteWnd(
+  IN WNDOBJ *pwo)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-  
+  PWINDOW_OBJECT Window;
+
   DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
 
+  /* Get window object */
+  Window = IntGetWindowObject(WndObjInt->Hwnd);
+  if (Window == NULL)
+    {
+      DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
+      RemoveEntryList(&WndObjInt->ListEntry);
+    }
+  else
+    {
+      /* Remove object from window */
+      ExAcquireFastMutex(&Window->WndObjListLock);
+      RemoveEntryList(&WndObjInt->ListEntry);
+      ExReleaseFastMutex(&Window->WndObjListLock);
+      IntReleaseWindowObject(Window);
+    }
+
+  /* Free resources */
   IntEngDeleteClipRegion(WndObjInt->ClientClipObj);
   EngFreeMem(WndObjInt);
 }
@@ -152,10 +299,9 @@ EngDeleteWnd ( IN WNDOBJ *pwo )
 BOOL
 STDCALL
 WNDOBJ_bEnum(
-	IN WNDOBJ  *pwo,
-	IN ULONG  cj,
-	OUT ULONG  *pul
-	)
+  IN WNDOBJ  *pwo,
+  IN ULONG  cj,
+  OUT ULONG  *pul)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   BOOL Ret;
@@ -174,11 +320,10 @@ WNDOBJ_bEnum(
 ULONG
 STDCALL
 WNDOBJ_cEnumStart(
-	IN WNDOBJ  *pwo,
-	IN ULONG  iType,
-	IN ULONG  iDirection,
-	IN ULONG  cLimit
-	)
+  IN WNDOBJ  *pwo,
+  IN ULONG  iType,
+  IN ULONG  iDirection,
+  IN ULONG  cLimit)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   ULONG Ret;
@@ -200,9 +345,8 @@ WNDOBJ_cEnumStart(
 VOID
 STDCALL
 WNDOBJ_vSetConsumer(
-	IN WNDOBJ  *pwo,
-	IN PVOID  pvConsumer
-	)
+  IN WNDOBJ  *pwo,
+  IN PVOID  pvConsumer)
 {
   BOOL Hack;
 
@@ -211,12 +355,19 @@ WNDOBJ_vSetConsumer(
   Hack = (pwo->pvConsumer == NULL);
   pwo->pvConsumer = pvConsumer;
 
-  /* HACKHACKHACK */
+  /* HACKHACKHACK
+   *
+   * MSDN says that the WNDOBJCHANGEPROC will be called with the most recent state
+   * when a WNDOBJ is created - we do it here because most drivers will need pvConsumer
+   * in the callback to identify the WNDOBJ I think.
+   *
+   *  - blight
+   */
   if (Hack)
     {
-      IntEngWndChanged(pwo, WOC_RGN_CLIENT);
-      IntEngWndChanged(pwo, WOC_CHANGED);
-      IntEngWndChanged(pwo, WOC_DRAWN);
+      IntEngWndCallChangeProc(pwo, WOC_RGN_CLIENT);
+      IntEngWndCallChangeProc(pwo, WOC_CHANGED);
+      IntEngWndCallChangeProc(pwo, WOC_DRAWN);
     }
 }
 

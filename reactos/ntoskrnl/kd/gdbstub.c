@@ -377,7 +377,9 @@ GspMem2Hex (PCHAR Address,
       ch = *Address;
       GspAccessLocation = NULL;
       if (MayFault && GspMemoryError)
-        return (Buffer);
+        {
+          return (Buffer);
+        }
       *Buffer++ = HexChars[(ch >> 4) & 0xf];
       *Buffer++ = HexChars[ch & 0xf];
       Address++;
@@ -427,7 +429,7 @@ GspHex2Mem (PCHAR Buffer,
           ch = (CHAR)(HexValue (*Buffer++) << 4);
           ch = (CHAR)(ch + HexValue (*Buffer++));
 
-          GspAccessLocation = Address;
+          GspAccessLocation = current;
           *current = ch;
           GspAccessLocation = NULL;
           current++;
@@ -436,7 +438,9 @@ GspHex2Mem (PCHAR Buffer,
         {
           MmSetPageProtect (NULL, page, oldprot);
           if (GspMemoryError)
-            return (Buffer);
+            {
+              return (Buffer);
+            }
         }
     }
 
@@ -1103,7 +1107,6 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   LONG NewPC;
   PCHAR ptr;
   LONG Esp;
-  KIRQL OldIrql;
 
   /* FIXME: Stop on other CPUs too */
   /* Disable hardware debugging while we are inside the stub */
@@ -1122,16 +1125,11 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     {
       GspAccessLocation = NULL;
       GspMemoryError = TRUE;
-      Context->Eip += 2;
+      TrapFrame->Eip += 2;
     }
   else
     {
       /* Don't switch threads */
-      OldIrql = KeGetCurrentIrql();
-      if (OldIrql < DISPATCH_LEVEL)
-        {
-          KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        }
           
       /* Always use the current thread when entering the exception handler */
       if (NULL != GspDbgThread)
@@ -1334,10 +1332,6 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 #else
 #error Unknown compiler for inline assembler
 #endif
-                if (OldIrql < DISPATCH_LEVEL)
-                  {
-                    KeLowerIrql(OldIrql);
-                  }
 
                 KeContextToTrapFrame(Context, TrapFrame);
                 return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
@@ -1475,17 +1469,17 @@ KdGdbStubInit(ULONG Phase)
 
   if (Phase == 0)
     {
-		  DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
-
-		  GspInitialized = TRUE;
-		  GspRunThread = PsGetCurrentThread();
+      GspInitialized = TRUE;
+      GspRunThread = PsGetCurrentThread();
      
-                  ObReferenceObject(GspRunThread);
+      ObReferenceObject(GspRunThread);
 
-/*		  GspDbgThread = PsGetCurrentThread(); */
-                  GspDbgThread = NULL;
-		  GspEnumThread = NULL;
+/*      GspDbgThread = PsGetCurrentThread(); */
+      GspDbgThread = NULL;
+      GspEnumThread = NULL;
 
+      HalDisplayString("Waiting for GDB to attach\n");
+      DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
     }
   else if (Phase == 1)
@@ -1543,8 +1537,6 @@ KdGdbDebugPrint(LPSTR Message)
 	    GspOutBuffer[3 + Length] = '\0';
 	    GspPutPacketNoWait (&GspOutBuffer[0]);
 	  }
-#else
-  HalDisplayString(Message);
 #endif
 }
 

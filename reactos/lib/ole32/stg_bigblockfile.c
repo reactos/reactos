@@ -866,8 +866,11 @@ static void BIGBLOCKFILE_RemapAllMappedPages(LPBIGBLOCKFILE This)
  */
 static DWORD BIGBLOCKFILE_GetProtectMode(DWORD openFlags)
 {
-    if (openFlags & (STGM_WRITE | STGM_READWRITE))
-	return PAGE_READWRITE;
-    else
-	return PAGE_READONLY;
+    switch(STGM_ACCESS_MODE(openFlags))
+    {
+    case STGM_WRITE:
+    case STGM_READWRITE:
+        return PAGE_READWRITE;
+    }
+    return PAGE_READONLY;
 }

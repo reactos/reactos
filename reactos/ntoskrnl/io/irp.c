@@ -268,7 +268,6 @@ IoAllocateIrp(CCHAR StackSize,
       return(NULL);
     }
 
-  RtlZeroMemory(Irp, IoSizeOfIrp(StackSize));
   IoInitializeIrp(Irp,
 		  IoSizeOfIrp(StackSize),
 		  StackSize);
@@ -364,6 +363,9 @@ IofCompleteRequest(PIRP Irp,
       ULONG MasterIrpCount;
       PIRP MasterIrp = Irp->AssociatedIrp.MasterIrp;
 
+      /* This should never happen! */
+      ASSERT(IsListEmpty(&Irp->ThreadListEntry));
+
       MasterIrpCount = InterlockedDecrement(&MasterIrp->AssociatedIrp.IrpCount);
       while ((Mdl = Irp->MdlAddress))
       {
@@ -386,6 +388,9 @@ IofCompleteRequest(PIRP Irp,
    /* Windows NT File System Internals, page 165 */
    if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
    {
+      /* This should never happen! */
+      ASSERT(IsListEmpty(&Irp->ThreadListEntry));
+
       /* 
        * If MDL_IO_PAGE_READ is set, then the caller is responsible 
        * for deallocating of the mdl. 
@@ -405,7 +410,16 @@ IofCompleteRequest(PIRP Irp,
 
       if (Irp->UserIosb)
       {
-         *Irp->UserIosb = Irp->IoStatus;
+         _SEH_TRY
+         {
+            *Irp->UserIosb = Irp->IoStatus;
+         }
+         _SEH_HANDLE
+         {
+           DPRINT1("Unable to set UserIosb (at 0x%x) to 0x%x, Error: 0x%x\n",
+                   Irp->UserIosb, Irp->IoStatus, _SEH_GetExceptionCode());
+         }
+         _SEH_END;
       }
 
       if (Irp->UserEvent)
@@ -582,19 +596,19 @@ IoGetTopLevelIrp(VOID)
 VOID STDCALL
 IoQueueThreadIrp(IN PIRP Irp)
 {
-/* undefine this when (if ever) implementing irp cancellation */
-#if 0
-  KIRQL oldIrql;
+   KIRQL OldIrql;
   
-  oldIrql = KfRaiseIrql(APC_LEVEL);
+   OldIrql = KfRaiseIrql(APC_LEVEL);
   
-  /* Synchronous irp's are queued to requestor thread. If they are not completed
-  when the thread exits, they are canceled (cleaned up).
-  -Gunnar */
-  InsertTailList(&PsGetCurrentThread()->IrpList, &Irp->ThreadListEntry);
+   /*
+    * Synchronous irp's are queued to requestor thread. If they are not
+    * completed when the thread exits, they are canceled (cleaned up).
+    * - Gunnar
+    */
+
+   InsertTailList(&Irp->Tail.Overlay.Thread->IrpList, &Irp->ThreadListEntry);
     
-  KfLowerIrql(oldIrql);    
-#endif
+   KfLowerIrql(OldIrql);
 }
 
 

@@ -145,7 +145,16 @@
 
 #define APIC_INTEGRATED(version) (version & 0xF0)
 
+typedef enum {
+  amPIC = 0,    /* IMCR and PIC compatibility mode */
+  amVWIRE       /* Virtual Wire compatibility mode */
+} APIC_MODE;
+
+#ifdef CONFIG_SMP
 #define MAX_CPU   32
+#else
+#define MAX_CPU	  1
+#endif
 
 /*
  * Local APIC timer IRQ vector is on a different priority level,
@@ -158,6 +167,11 @@
 #define ERROR_VECTOR		    0xFE
 #define SPURIOUS_VECTOR		    0xFF  /* Must be 0xXF */
 
+/* CPU flags */
+#define CPU_USABLE   0x01  /* 1 if the CPU is usable (ie. can be used) */
+#define CPU_ENABLED  0x02  /* 1 if the CPU is enabled */
+#define CPU_BSP      0x04  /* 1 if the CPU is the bootstrap processor */
+#define CPU_TSC      0x08  /* 1 if the CPU has a time stamp counter */
 
 typedef struct _CPU_INFO
 {
@@ -170,23 +184,26 @@ typedef struct _CPU_INFO
    UCHAR    Padding[16-12];   /* Padding to 16-byte */
 } CPU_INFO, *PCPU_INFO;
 
+extern ULONG CPUCount;			/* Total number of CPUs */
+extern ULONG BootCPU;					/* Bootstrap processor */
+extern ULONG OnlineCPUs;		/* Bitmask of online CPUs */
+extern CPU_INFO CPUMap[MAX_CPU];	/* Map of all CPUs in the system */
 
 /* Prototypes */
 
-
-inline ULONG APICRead(ULONG Offset);
 inline VOID APICWrite(ULONG Offset, ULONG Value);
+inline ULONG APICRead(ULONG Offset);
 VOID APICSendIPI(ULONG Target, ULONG Mode); 
-
-ULONG APICGetMaxLVT(VOID);
 VOID APICSetup(VOID);
 VOID HaliInitBSP(VOID);
 VOID APICSyncArbIDs(VOID);
 inline VOID APICSendEOI(VOID);
+VOID APICCalibrateTimer(ULONG CPU);
+VOID HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack);
 
 static inline ULONG ThisCPU(VOID)
 {
-   return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
+    return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
 }
 
 

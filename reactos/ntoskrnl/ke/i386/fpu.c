@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,7 +228,7 @@ KiCheckFPU(VOID)
    unsigned short int status;
    int cr0;
    ULONG Flags;
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKPRCB Prcb = KeGetCurrentPrcb();
 
    Ke386SaveFlags(Flags);
    Ke386DisableInterrupts();
@@ -275,7 +275,7 @@ KiCheckFPU(VOID)
    HardwareMathSupport = 1;
 
    /* check for and enable MMX/SSE support if possible */
-   if ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) != 0)
+   if ((Prcb->FeatureBits & X86_FEATURE_FXSR) != 0)
      {
         BYTE DummyArea[sizeof(FX_SAVE_AREA) + 15];
         PFX_SAVE_AREA FxSaveArea;
@@ -300,7 +300,7 @@ KiCheckFPU(VOID)
           }
      }
    /* FIXME: Check for SSE3 in Ke386CpuidFlags2! */
-   if (Pcr->PrcbData.FeatureBits & (X86_FEATURE_SSE | X86_FEATURE_SSE2))
+   if (Prcb->FeatureBits & (X86_FEATURE_SSE | X86_FEATURE_SSE2))
      {
         Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
         
@@ -401,7 +401,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
       CurrentThread = KeGetCurrentThread();
 #ifndef CONFIG_SMP
-      NpxThread = KeGetCurrentKPCR()->PrcbData.NpxThread;
+      NpxThread = KeGetCurrentPrcb()->NpxThread;
 #endif
 
       ASSERT(CurrentThread != NULL);
@@ -414,7 +414,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
           /* save the FPU state into the owner's save area */
           if (NpxThread != NULL)
             {
-              KeGetCurrentKPCR()->PrcbData.NpxThread = NULL;
+              KeGetCurrentPrcb()->NpxThread = NULL;
               FxSaveArea = (PFX_SAVE_AREA)((char *)NpxThread->InitialStack - sizeof (FX_SAVE_AREA));
               /* the fnsave might raise a delayed #MF exception */
               if (FxsrSupport)
@@ -463,7 +463,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                   asm volatile("finit");
                 }
             }
-          KeGetCurrentKPCR()->PrcbData.NpxThread = CurrentThread;
+          KeGetCurrentPrcb()->NpxThread = CurrentThread;
 #ifndef CONFIG_SMP
         }
 #endif
@@ -487,7 +487,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
       KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
 
-      NpxThread = KeGetCurrentKPCR()->PrcbData.NpxThread;
+      NpxThread = KeGetCurrentPrcb()->NpxThread;
       CurrentThread = KeGetCurrentThread();
       if (NpxThread == NULL)
         {

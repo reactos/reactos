@@ -1,7 +1,7 @@
 /*
  * Implementation of the Microsoft Installer (msi.dll)
  *
- * Copyright 2002-2004 Mike McCormack for CodeWeavers
+ * Copyright 2002-2005 Mike McCormack for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -212,6 +212,9 @@ UINT MSI_IterateRecords( MSIQUERY *view, DWORD *count,
     if( count )
         *count = n;
 
+    if( r == ERROR_NO_MORE_ITEMS )
+        r = ERROR_SUCCESS;
+
     return r;
 }
 
@@ -420,8 +423,7 @@ UINT WINAPI MsiViewExecute(MSIHANDLE hView, MSIHANDLE hRec)
     msiobj_unlock( &rec->hdr );
 
 out:
-    if( query )
-        msiobj_release( &query->hdr );
+    msiobj_release( &query->hdr );
     if( rec )
         msiobj_release( &rec->hdr );
 
@@ -460,7 +462,10 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
 
     rec = MSI_CreateRecord( count );
     if( !rec )
-        return ERROR_FUNCTION_FAILED;
+    {
+        r = ERROR_FUNCTION_FAILED;
+        goto out;
+    }
 
     for( i=0; i<count; i++ )
     {
@@ -475,8 +480,7 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
     *hRec = alloc_msihandle( &rec->hdr );
 
 out:
-    if( query )
-        msiobj_release( &query->hdr );
+    msiobj_release( &query->hdr );
     if( rec )
         msiobj_release( &rec->hdr );
 
@@ -514,8 +518,7 @@ UINT WINAPI MsiViewModify( MSIHANDLE hView, MSIMODIFY eModifyMode,
     r = view->ops->modify( view, eModifyMode, rec );
 
 out:
-    if( query )
-        msiobj_release( &query->hdr );
+    msiobj_release( &query->hdr );
     if( rec )
         msiobj_release( &rec->hdr );
 
@@ -574,18 +577,116 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
     return r;
 }
 
-UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb, 
-                    LPCSTR table, MSIHANDLE* rec)
+struct msi_primary_key_record_info
 {
-    FIXME("%ld %s %p\n", hdb, debugstr_a(table), rec);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD n;
+    MSIRECORD *rec;
+};
+
+static UINT msi_primary_key_iterator( MSIRECORD *rec, LPVOID param )
+{
+    struct msi_primary_key_record_info *info = param;
+    LPCWSTR name;
+    DWORD type;
+
+    type = MSI_RecordGetInteger( rec, 4 );
+    if( type & MSITYPE_KEY )
+    {
+        info->n++;
+        if( info->rec )
+        {
+            name = MSI_RecordGetString( rec, 3 );
+            MSI_RecordSetStringW( info->rec, info->n, name );
+        }
+    }
+
+    return ERROR_SUCCESS;
 }
 
-UINT WINAPI MsiDatabaseGetPrimaryKeysW(MSIHANDLE hdb,
-                    LPCWSTR table, MSIHANDLE* rec)
+UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *db,
+                LPCWSTR table, MSIRECORD **prec )
 {
-    FIXME("%ld %s %p\n", hdb, debugstr_w(table), rec);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    static const WCHAR sql[] = {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ','`','_','C','o','l','u','m','n','s','`',' ',
+        'w','h','e','r','e',' ',
+        '`','T','a','b','l','e','`',' ','=',' ','\'','%','s','\'',0 };
+    struct msi_primary_key_record_info info;
+    MSIQUERY *query = NULL;
+    MSIVIEW *view;
+    UINT r;
+    
+    r = MSI_OpenQuery( db, &query, sql, table );
+    if( r != ERROR_SUCCESS )
+        return r;
+
+    view = query->view;
+
+    /* count the number of primary key records */
+    info.n = 0;
+    info.rec = 0;
+    r = MSI_IterateRecords( query, 0, msi_primary_key_iterator, &info );
+    if( r == ERROR_SUCCESS )
+    {
+        TRACE("Found %ld primary keys\n", info.n );
+
+        /* allocate a record and fill in the names of the tables */
+        info.rec = MSI_CreateRecord( info.n );
+        info.n = 0;
+        r = MSI_IterateRecords( query, 0, msi_primary_key_iterator, &info );
+        if( r == ERROR_SUCCESS )
+            *prec = info.rec;
+        else
+            msiobj_release( &info.rec->hdr );
+    }
+    msiobj_release( &query->hdr );
+
+    return r;
+}
+
+UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
+                    LPCWSTR table, MSIHANDLE* phRec )
+{
+    MSIRECORD *rec = NULL;
+    MSIDATABASE *db;
+    UINT r;
+
+    TRACE("%ld %s %p\n", hdb, debugstr_w(table), phRec);
+
+    db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
+    if( !db )
+        return ERROR_INVALID_HANDLE;
+
+    r = MSI_DatabaseGetPrimaryKeys( db, table, &rec );
+    if( r == ERROR_SUCCESS )
+    {
+        *phRec = alloc_msihandle( &rec->hdr );
+        msiobj_release( &rec->hdr );
+    }
+    msiobj_release( &db->hdr );
+
+    return r;
+}
+
+UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb, 
+                    LPCSTR table, MSIHANDLE* phRec)
+{
+    LPWSTR szwTable = NULL;
+    DWORD len;
+    UINT r;
+
+    TRACE("%ld %s %p\n", hdb, debugstr_a(table), phRec);
+
+    if( table )
+    {
+        len = MultiByteToWideChar( CP_ACP, 0, table, -1, NULL, 0 );
+        szwTable = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, table, -1, szwTable, len );
+    }
+    r = MsiDatabaseGetPrimaryKeysW( hdb, szwTable, phRec );
+    HeapFree( GetProcessHeap(), 0, szwTable );
+
+    return r;
 }
 
 UINT WINAPI MsiDatabaseIsTablePersistentA(

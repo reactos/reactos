@@ -144,16 +144,6 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
               Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
               IntSendMessage(hWnd, WM_PAINT, 0, 0);
-              IntLockWindowUpdate(Window);
-              if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-                {
-                  Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-                  if (Window->UpdateRegion == NULL)
-                    {
-                      MsqDecPaintCountQueue(Window->MessageQueue);
-                    }
-                }
-              IntUnLockWindowUpdate(Window);
             }
         }
     }
@@ -547,8 +537,7 @@ IntIsWindowDirty(PWINDOW_OBJECT Window)
 {
    return (Window->Style & WS_VISIBLE) &&
       ((Window->UpdateRegion != NULL) ||
-       (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) ||
-       (Window->Flags & WINDOWOBJECT_NEED_NCPAINT));
+       (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT));
 }
 
 HWND STDCALL
@@ -614,6 +603,10 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
    if (!MessageQueue->PaintPosted)
       return FALSE;
 
+   if ((MsgFilterMin != 0 || MsgFilterMax != 0) &&
+       (MsgFilterMin > WM_PAINT || MsgFilterMax < WM_PAINT))
+      return FALSE;
+
    if (hWnd)
       Message->hwnd = IntFindWindowToRepaint(hWnd, PsGetWin32Thread());
    else
@@ -635,25 +628,10 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
    Window = IntGetWindowObject(Message->hwnd);
    if (Window != NULL)
    {
-      IntLockWindowUpdate(Window);
-
-      if ((MsgFilterMin == 0 && MsgFilterMax == 0) ||
-          (MsgFilterMin <= WM_PAINT && WM_PAINT <= MsgFilterMax))
-      {
-         Message->message = WM_PAINT;
-         Message->wParam = Message->lParam = 0;
-         if (Remove && Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-         {
-            Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-            if (Window->UpdateRegion == NULL)
-            {
-               MsqDecPaintCountQueue(Window->MessageQueue);
-            }
-         }
-      }
-      IntUnLockWindowUpdate(Window);
-
+      Message->message = WM_PAINT;
+      Message->wParam = Message->lParam = 0;
       IntReleaseWindowObject(Window);
+
       return TRUE;
    }
 
@@ -779,8 +757,11 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    }
    else
    {
+      if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+         MsqDecPaintCountQueue(Window->MessageQueue);
       IntGetClientRect(Window, &Ps.rcPaint);
    }
+   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
    IntUnLockWindowUpdate(Window);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)

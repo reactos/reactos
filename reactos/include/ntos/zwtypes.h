@@ -58,6 +58,7 @@ typedef enum _KPROFILE_SOURCE
   ProfileTime
 } KPROFILE_SOURCE;
 
+
 // file disposition values
 
 #define FILE_SUPERSEDE                  0x0000
@@ -488,6 +489,19 @@ struct _SYSTEM_CACHE_INFORMATION
 	ULONG	Unused[2];
 
 } SYSTEM_CACHE_INFORMATION;
+
+// SystemInterruptInformation (23)
+typedef
+struct _SYSTEM_INTERRUPT_INFORMATION
+{
+	ULONG	ContextSwitches;
+	ULONG	DpcCount;
+	ULONG	DpcRate;
+	ULONG	TimeIncrement;
+	ULONG	DpcBypassCount;
+	ULONG	ApcBypassCount;
+
+} SYSTEM_INTERRUPT_INFORMATION, *PSYSTEM_INTERRUPT_INFORMATION;
 
 // SystemDpcInformation (24)
 typedef
@@ -1102,10 +1116,11 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
 */
 
 typedef struct _FILE_NOTIFY_INFORMATION {
-	ULONG Action;
-	ULONG FileNameLength;
-	WCHAR FileName[0]; 
-} FILE_NOTIFY_INFORMATION;
+   ULONG NextEntryOffset;
+   ULONG Action;
+   ULONG NameLength;
+   WCHAR Name[1];
+} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
 
 #define FSCTL_GET_VOLUME_BITMAP			0x9006F
 #define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
@@ -1218,9 +1233,17 @@ extern IMPORTED ULONG NtBuildNumber;
 #define ProcessSessionInformation		24
 #define ProcessForegroundInformation		25
 #define ProcessWow64Information			26
-/* ReactOS private. */
 #define ProcessImageFileName			27
-#define MaxProcessInfoClass			28
+#define ProcessLUIDDeviceMapsEnabled            28
+#define ProcessBreakOnTermination               29
+#define ProcessDebugObjectHandle                30
+#define ProcessDebugFlags                       31
+#define ProcessHandleTracing                    32
+#define ProcessUnknown33                        33
+#define ProcessUnknown34                        34
+#define ProcessUnknown35                        35
+#define ProcessCookie                           36
+#define MaxProcessInfoClass                     36
 
 /*
  * thread query / set information class
@@ -1262,9 +1285,9 @@ typedef enum _MUTANT_INFORMATION_CLASS
 
 typedef struct _MUTANT_BASIC_INFORMATION
 {
-  LONG Count;
-  BOOLEAN Owned;
-  BOOLEAN Abandoned;
+  LONG CurrentCount;
+  BOOLEAN OwnedByCaller;
+  BOOLEAN AbandonedState;
 } MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
 

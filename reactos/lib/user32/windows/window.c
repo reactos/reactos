@@ -22,7 +22,7 @@
 
 BOOL ControlsInitialized = FALSE;
 
-LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1236,7 +1236,7 @@ SetWindowTextA(HWND hWnd,
     
     if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
     {
-      DefWndNCPaint(hWnd, (HRGN)1);
+      DefWndNCPaint(hWnd, (HRGN)1, -1);
     }
     return TRUE;
   }
@@ -1270,7 +1270,7 @@ SetWindowTextW(HWND hWnd,
     
     if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
     {
-      DefWndNCPaint(hWnd, (HRGN)1);
+      DefWndNCPaint(hWnd, (HRGN)1, -1);
     }
     return TRUE;
   }

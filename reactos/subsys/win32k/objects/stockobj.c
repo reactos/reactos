@@ -68,28 +68,6 @@ static HBRUSH SysColorBrushes[NUM_SYSCOLORS];
 
 /*  GDI stock objects */
 
-static LOGBRUSH WhiteBrush =
-{ BS_SOLID, RGB(255,255,255), 0 };
-
-static LOGBRUSH LtGrayBrush =
-/* FIXME : this should perhaps be BS_HATCHED, at least for 1 bitperpixel */
-{ BS_SOLID, RGB(192,192,192), 0 };
-
-static LOGBRUSH GrayBrush =
-/* FIXME : this should perhaps be BS_HATCHED, at least for 1 bitperpixel */
-{ BS_SOLID, RGB(128,128,128), 0 };
-
-static LOGBRUSH DkGrayBrush =
-/* This is BS_HATCHED, for 1 bitperpixel. This makes the spray work in pbrush */
-/* NB_HATCH_STYLES is an index into HatchBrushes */
-{ BS_HATCHED, RGB(0,0,0), NB_HATCH_STYLES };
-
-static LOGBRUSH BlackBrush =
-{ BS_SOLID, RGB(0,0,0), 0 };
-
-static LOGBRUSH NullBrush =
-{ BS_NULL, 0, 0 };
-
 static LOGPEN WhitePen =
 { PS_SOLID, { 0, 0 }, RGB(255,255,255) };
 
@@ -144,12 +122,12 @@ CreateStockObjects(void)
 
   /* Create GDI Stock Objects from the logical structures we've defined */
 
-  StockObjects[WHITE_BRUSH] =  IntGdiCreateBrushIndirect(&WhiteBrush);
-  StockObjects[LTGRAY_BRUSH] = IntGdiCreateBrushIndirect(&LtGrayBrush);
-  StockObjects[GRAY_BRUSH] =   IntGdiCreateBrushIndirect(&GrayBrush);
-  StockObjects[DKGRAY_BRUSH] = IntGdiCreateBrushIndirect(&DkGrayBrush);
-  StockObjects[BLACK_BRUSH] =  IntGdiCreateBrushIndirect(&BlackBrush);
-  StockObjects[NULL_BRUSH] =   IntGdiCreateBrushIndirect(&NullBrush);
+  StockObjects[WHITE_BRUSH] =  IntGdiCreateSolidBrush(RGB(255,255,255));
+  StockObjects[LTGRAY_BRUSH] = IntGdiCreateSolidBrush(RGB(192,192,192));
+  StockObjects[GRAY_BRUSH] =   IntGdiCreateSolidBrush(RGB(128,128,128));
+  StockObjects[DKGRAY_BRUSH] = IntGdiCreateSolidBrush(RGB(64,64,64));
+  StockObjects[BLACK_BRUSH] =  IntGdiCreateSolidBrush(RGB(0,0,0));
+  StockObjects[NULL_BRUSH] =   IntGdiCreateNullBrush();
 
   StockObjects[WHITE_PEN] = IntGdiCreatePenIndirect(&WhitePen);
   StockObjects[BLACK_PEN] = IntGdiCreatePenIndirect(&BlackPen);
@@ -279,18 +257,14 @@ VOID FASTCALL
 CreateSysColorObjects(VOID)
 {
   UINT i;
-  LOGBRUSH Brush;
   LOGPEN Pen;
   
   /* Create the syscolor brushes */
-  Brush.lbStyle = BS_SOLID;
-  Brush.lbHatch = 0;
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
     if(SysColorBrushes[i] == NULL)
     {
-      Brush.lbColor = SysColors[i];
-      SysColorBrushes[i] = IntGdiCreateBrushIndirect(&Brush);
+      SysColorBrushes[i] = IntGdiCreateSolidBrush(SysColors[i]);
       if(SysColorBrushes[i] != NULL)
       {
         GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorBrushes[i]);

@@ -89,6 +89,20 @@ enum msidbFeatureAttributes
     msidbFeatureAttributesNoUnsupportedAdvertise = 0x00000020
 };
 
+enum msidbComponentAttributes
+{
+    msidbComponentAttributesLocalOnly = 0x00000000,
+    msidbComponentAttributesSourceOnly = 0x00000001,
+    msidbComponentAttributesOptional = 0x00000002,
+    msidbComponentAttributesRegistryKeyPath = 0x00000004,
+    msidbComponentAttributesSharedDllRefCount = 0x00000008,
+    msidbComponentAttributesPermanent = 0x00000010,
+    msidbComponentAttributesODBCDataSource = 0x00000020,
+    msidbComponentAttributesTransitive = 0x00000040,
+    msidbComponentAttributesNeverOverwrite = 0x00000080,
+    msidbComponentAttributes64bit = 0x00000100
+};
+
 #ifdef __cplusplus
 }
 #endif

@@ -191,10 +191,8 @@ CFStub_Invoke(
 
 	msg->cbBuffer = ststg.cbSize.u.LowPart;
 
-	if (msg->Buffer)
-	    msg->Buffer = HeapReAlloc(GetProcessHeap(),0,msg->Buffer,ststg.cbSize.u.LowPart);
-	else
-	    msg->Buffer = HeapAlloc(GetProcessHeap(),0,ststg.cbSize.u.LowPart);
+        I_RpcGetBuffer((RPC_MESSAGE *)msg);
+        if (hres) return hres;
 
 	seekto.u.LowPart = 0;seekto.u.HighPart = 0;
 	hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
@@ -547,10 +545,10 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
 
     /* out */
     pMsg->cbBuffer = cIids * sizeof(REMQIRESULT);
-    if (pMsg->Buffer)
-        pMsg->Buffer = HeapReAlloc(GetProcessHeap(), 0, pMsg->Buffer, pMsg->cbBuffer);
-	else
-        pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->cbBuffer);
+
+    I_RpcGetBuffer((RPC_MESSAGE *)pMsg);
+    if (hr) return hr;
+
     buf = pMsg->Buffer;
     /* FIXME: pQIResults is a unique pointer so pQIResults can be NULL! */
     memcpy(buf, pQIResults, cIids * sizeof(REMQIRESULT));
@@ -574,12 +572,13 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
 
     /* out */
     pMsg->cbBuffer = cIids * sizeof(HRESULT);
-    if (pMsg->Buffer)
-        pMsg->Buffer = HeapReAlloc(GetProcessHeap(), 0, pMsg->Buffer, pMsg->cbBuffer);
-	else
-        pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->cbBuffer);
-    buf = pMsg->Buffer;
-    memcpy(buf, pResults, cIids * sizeof(HRESULT));
+
+    I_RpcGetBuffer((RPC_MESSAGE *)pMsg);
+    if (!hr)
+    {
+        buf = pMsg->Buffer;
+        memcpy(buf, pResults, cIids * sizeof(HRESULT));
+    }
 
     CoTaskMemFree(pResults);
 

@@ -66,6 +66,40 @@ typedef NTSTATUS STDCALL_FUNC
 typedef NTSTATUS STDCALL_FUNC
 (*PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
 			BOOLEAN Create);
+            
+/* 
+ * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
+ * rewrite -- Alex
+ */
+typedef NTSTATUS STDCALL_FUNC
+(*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
+                         PVOID Parent,
+                         PWSTR RemainingPath,
+                         struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+
+typedef NTSTATUS STDCALL_FUNC
+(*OBJECT_PARSE_ROUTINE)(PVOID Object,
+                        PVOID *NextObject,
+                        PUNICODE_STRING FullPath,
+                        PWSTR *Path,
+                        ULONG Attributes);
+                        
+typedef VOID STDCALL_FUNC
+(*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
+
+typedef PVOID STDCALL_FUNC
+(*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
+                       PWSTR Name,
+                       ULONG Attributes);
+                       
+typedef struct _W32_OBJECT_CALLBACK {
+    OBJECT_CREATE_ROUTINE WinStaCreate;
+    OBJECT_PARSE_ROUTINE WinStaParse;
+    OBJECT_DELETE_ROUTINE WinStaDelete;
+    OBJECT_FIND_ROUTINE WinStaFind;
+    OBJECT_CREATE_ROUTINE DesktopCreate;
+    OBJECT_DELETE_ROUTINE DesktopDelete;    
+} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
 
 typedef struct _STACK_INFORMATION
 {

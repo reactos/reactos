@@ -93,7 +93,14 @@ static CRITICAL_SECTION listen_cs = { &listen_cs_debug, -1, 0, 0, 0, 0 };
 
 static BOOL std_listen;
 static LONG listen_count = -1;
-static HANDLE mgr_event, server_thread;
+/* set on change of configuration (e.g. listening on new protseq) */
+static HANDLE mgr_event;
+/* mutex for ensuring only one thread can change state at a time */
+static HANDLE mgr_mutex;
+/* set when server thread has finished opening connections */
+static HANDLE server_ready_event;
+/* thread that waits for connections */
+static HANDLE server_thread;
 
 static CRITICAL_SECTION spacket_cs;
 static CRITICAL_SECTION_DEBUG spacket_cs_debug =
@@ -463,6 +470,7 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
   RpcServerProtseq* cps;
   RpcConnection* conn;
   RpcConnection* cconn;
+  BOOL set_ready_event = FALSE;
 
   TRACE("(the_arg == ^%p)\n", the_arg);
 
@@ -499,11 +507,22 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
     }
     LeaveCriticalSection(&server_cs);
 
+    if (set_ready_event)
+    {
+        /* signal to function that changed state that we are now sync'ed */
+        SetEvent(server_ready_event);
+        set_ready_event = FALSE;
+    }
+
     /* start waiting */
     res = WaitForMultipleObjects(count, objs, FALSE, INFINITE);
     if (res == WAIT_OBJECT_0) {
-      ResetEvent(m_event);
-      if (!std_listen) break;
+      if (!std_listen)
+      {
+        SetEvent(server_ready_event);
+        break;
+      }
+      set_ready_event = TRUE;
     }
     else if (res == WAIT_FAILED) {
       ERR("wait failed\n");
@@ -548,13 +567,31 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
   return 0;
 }
 
+/* tells the server thread that the state has changed and waits for it to
+ * make the changes */
+static void RPCRT4_sync_with_server_thread(void)
+{
+  /* make sure we are the only thread sync'ing the server state, otherwise
+   * there is a race with the server thread setting an older state and setting
+   * the server_ready_event when the new state hasn't yet been applied */
+  WaitForSingleObject(mgr_mutex, INFINITE);
+
+  SetEvent(mgr_event);
+  /* wait for server thread to make the requested changes before returning */
+  WaitForSingleObject(server_ready_event, INFINITE);
+
+  ReleaseMutex(mgr_mutex);
+}
+
 static void RPCRT4_start_listen(void)
 {
   TRACE("\n");
 
   EnterCriticalSection(&listen_cs);
   if (! ++listen_count) {
-    if (!mgr_event) mgr_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (!mgr_mutex) mgr_mutex = CreateMutexW(NULL, FALSE, NULL);
+    if (!mgr_event) mgr_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (!server_ready_event) server_ready_event = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (!server_sem) server_sem = CreateSemaphoreW(NULL, 0, MAX_THREADS, NULL);
     if (!worker_tls) worker_tls = TlsAlloc();
     std_listen = TRUE;
@@ -562,7 +599,7 @@ static void RPCRT4_start_listen(void)
     LeaveCriticalSection(&listen_cs);
   } else {
     LeaveCriticalSection(&listen_cs);
-    SetEvent(mgr_event);
+    RPCRT4_sync_with_server_thread();
   }
 }
 
@@ -574,7 +611,7 @@ static void RPCRT4_stop_listen(void)
   else if (--listen_count == -1) {
     std_listen = FALSE;
     LeaveCriticalSection(&listen_cs);
-    SetEvent(mgr_event);
+    RPCRT4_sync_with_server_thread();
   } else
     LeaveCriticalSection(&listen_cs);
   assert(listen_count > -2);
@@ -589,7 +626,7 @@ static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps)
   protseqs = ps;
   LeaveCriticalSection(&server_cs);
 
-  if (std_listen) SetEvent(mgr_event);
+  if (std_listen) RPCRT4_sync_with_server_thread();
 
   return RPC_S_OK;
 }

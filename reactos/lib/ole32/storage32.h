@@ -100,6 +100,14 @@ static const ULONG PROPERTY_NULL             = 0xFFFFFFFF;
 #define LIMIT_TO_USE_SMALL_BLOCK 0x1000
 #define NUM_BLOCKS_PER_DEPOT_BLOCK 128
 
+#define STGM_ACCESS_MODE(stgm)   ((stgm)&0x0000f)
+#define STGM_SHARE_MODE(stgm)    ((stgm)&0x000f0)
+#define STGM_CREATE_MODE(stgm)   ((stgm)&0x0f000)
+
+#define STGM_KNOWN_FLAGS (0xf0ff | \
+     STGM_TRANSACTED | STGM_CONVERT | STGM_PRIORITY | STGM_NOSCRATCH | \
+     STGM_NOSNAPSHOT | STGM_DIRECT_SWMR | STGM_DELETEONRELEASE | STGM_SIMPLE)
+
 /*
  * These are signatures to detect the type of Document file.
  */
@@ -207,6 +215,8 @@ struct StorageBaseImpl
   IStorageVtbl *lpVtbl;    /* Needs to be the first item in the struct
 			    * since we want to cast this in a Storage32 pointer */
 
+  IPropertySetStorageVtbl *pssVtbl; /* interface for adding a properties stream */
+
   /*
    * Reference count of this object
    */
@@ -298,17 +308,7 @@ HRESULT WINAPI StorageBaseImpl_SetClass(
  */
 struct StorageImpl
 {
-  IStorageVtbl *lpVtbl;  /* Needs to be the first item in the struct
-			  * since we want to cast this in a Storage32 pointer */
-
-  /*
-   * Declare the member of the Storage32BaseImpl class to allow
-   * casting as a Storage32BaseImpl
-   */
-  ULONG		        ref;
-  struct StorageImpl* ancestorStorage;
-  ULONG                 rootPropertySetIndex;
-  void (*v_destructor)(struct StorageImpl*);
+  struct StorageBaseImpl base;
 
   /*
    * The following data members are specific to the Storage32Impl
@@ -405,7 +405,7 @@ HRESULT WINAPI StorageImpl_Stat(IStorage* iface,
                                 DWORD     grfStatFlag); /* [in] */
 
 void StorageImpl_Destroy(
-	    StorageImpl* This);
+	    StorageBaseImpl* This);
 
 HRESULT StorageImpl_Construct(
             StorageImpl* This,
@@ -498,17 +498,7 @@ void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
  */
 struct StorageInternalImpl
 {
-  IStorageVtbl *lpVtbl;         /* Needs to be the first item in the struct
-				 * since we want to cast this in a Storage32 pointer */
-
-  /*
-   * Declare the member of the Storage32BaseImpl class to allow
-   * casting as a Storage32BaseImpl
-   */
-  ULONG		             ref;
-  struct StorageImpl* ancestorStorage;
-  ULONG                    rootPropertySetIndex;
-  void (*v_destructor)(struct StorageInternalImpl*);
+  struct StorageBaseImpl base;
 
   /*
    * There is no specific data for this class.
@@ -523,7 +513,7 @@ StorageInternalImpl* StorageInternalImpl_Construct(
 	    ULONG          rootTropertyIndex);
 
 void StorageInternalImpl_Destroy(
-       	    StorageInternalImpl* This);
+       	    StorageBaseImpl* This);
 
 HRESULT WINAPI StorageInternalImpl_Commit(
 	    IStorage*            iface,

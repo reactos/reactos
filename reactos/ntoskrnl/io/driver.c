@@ -160,7 +160,7 @@ IopCreateDriver(
 
    RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
 
-   Object->Type = InternalDriverType;
+   Object->Type = IO_TYPE_DRIVER;
 
    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
       Object->MajorFunction[i] = IopInvalidDeviceRequest;
@@ -960,7 +960,7 @@ IoCreateDriverList(VOID)
 			     NULL);
 
   Status = ZwOpenKey(&KeyHandle,
-		     0x10001,
+		     KEY_ENUMERATE_SUB_KEYS,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
@@ -1252,10 +1252,11 @@ IopInitializeBootDrivers(VOID)
     */
    for (i = 1; i < KeLoaderBlock.ModsCount; i++)
    {
-
        MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
                               KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
    }
+
+   KeLoaderBlock.ModsCount = 0;
 
    if (BootDriverCount == 0)
    {

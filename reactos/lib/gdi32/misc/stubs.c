@@ -84,21 +84,6 @@ CloseMetaFile(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-HBRUSH
-STDCALL
-CreateDIBPatternBrush(
-	HGLOBAL			a0,
-	UINT			a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @unimplemented

@@ -8,6 +8,7 @@ InitInputImpl(VOID);
 NTSTATUS FASTCALL
 InitKeyboardImpl(VOID);
 PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue(VOID);
+VOID W32kUnregisterPrimitiveMessageQueue(VOID);
 PKBDTABLES W32kGetDefaultKeyLayout(VOID);
 VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout);
 BOOL FASTCALL IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt);

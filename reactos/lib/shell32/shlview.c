@@ -454,7 +454,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
         {
             _ILGetFileAttributes(pItemIdList1, strName1, MAX_PATH);
             _ILGetFileAttributes(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by FileName: Folder or Files can be sorted */
         else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_NAME || bIsBothFolder)
@@ -462,7 +462,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
             /* Sort by Text */
             _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
             _ILSimpleGetText(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by File Size, Only valid for Files */
         else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_SIZE)
@@ -475,7 +475,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
             /* Sort by Type */
             _ILGetFileType(pItemIdList1, strName1, MAX_PATH);
             _ILGetFileType(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
     }
     /*  If the Date, FileSize, FileType, Attrib was the same, sort by FileName */
@@ -484,7 +484,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
     {
         _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
         _ILSimpleGetText(pItemIdList2, strName2, MAX_PATH);
-        nDiff = strcasecmp(strName1, strName2);
+        nDiff = lstrcmpiA(strName1, strName2);
     }
 
     if(!pSortInfo->bIsAscending)
@@ -988,7 +988,7 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	{
 	  hMenu = CreatePopupMenu();
 
-	  pCM = ISvBgCm_Constructor(This->pSFParent);
+	  pCM = ISvBgCm_Constructor(This->pSFParent, FALSE);
 	  IContextMenu2_QueryContextMenu(pCM, hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
 
 	  uCommand = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,This->hWnd,NULL);
@@ -1977,7 +1977,7 @@ static HRESULT WINAPI IShellView_fnGetItemObject(IShellView * iface, UINT uItem,
 	switch(uItem)
 	{
 	  case SVGIO_BACKGROUND:
-	    *ppvOut = ISvBgCm_Constructor(This->pSFParent);
+	    *ppvOut = ISvBgCm_Constructor(This->pSFParent, FALSE);
 	    break;
 
 	  case SVGIO_SELECTION:

@@ -61,8 +61,8 @@ DLLS_SHELLEXT = shellext
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk dbghelp expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
-	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi smdll snmpapi syssetup \
-	twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
+	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi smlib smdll snmpapi \
+	syssetup twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
 	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
@@ -103,8 +103,8 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
 # autochk cmd format services setup usetup welcome winlogon msiexec 
-SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regedt32 regsvr32 \
-  reporterror services setup taskmgr userinit usetup welcome vmwinst \
+SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regsvr32 \
+  reporterror services setup taskmgr userinit usetup welcome vmwinst rundll32 \
   winlogon regedit winefile notepad reactos lsass
 
 # System services
@@ -216,6 +216,8 @@ bootcd_install_before:
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
 	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/services to $(BOOTCD_DIR)/reactos/services
 	$(CP) media/drivers/etc/services $(BOOTCD_DIR)/reactos/services
+	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/KDBinit to $(BOOTCD_DIR)/reactos/KDBinit
+	$(CP) media/drivers/etc/KDBinit $(BOOTCD_DIR)/reactos/KDBinit
 
 bootcd_basic: bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
 
@@ -1043,6 +1045,8 @@ install_before:
 	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
 	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/services to $(INSTALL_DIR)/system32/drivers/etc/services
 	$(CP) media/drivers/etc/services $(INSTALL_DIR)/system32/drivers/etc/services
+	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/KDBinit to $(INSTALL_DIR)/system32/drivers/etc/KDBinit
+	$(CP) media/drivers/etc/KDBinit $(INSTALL_DIR)/system32/drivers/etc/KDBinit
 
 .PHONY: install_clean install_dirs install_before
 

@@ -315,6 +315,9 @@ HRESULT WINAPI LoadTypeLibEx(
 
     TRACE("(%s,%d,%p)\n",debugstr_w(szFile), regkind, pptLib);
 
+    /* by default try and load using LoadLibrary (for builtin stdole32.tlb) */
+    memcpy(szPath, szFile, (strlenW(szFile)+1)*sizeof(WCHAR));
+    
     *pptLib = NULL;
     if(!SearchPathW(NULL,szFile,NULL,sizeof(szPath)/sizeof(WCHAR),szPath,
 		    NULL)) {
@@ -331,9 +334,6 @@ HRESULT WINAPI LoadTypeLibEx(
 	        return TYPE_E_CANTLOADLIBRARY;
 	    if (GetFileAttributesW(szFileCopy) & FILE_ATTRIBUTE_DIRECTORY)
 		return TYPE_E_CANTLOADLIBRARY;
-	} else {
-	    TRACE("Wanted to load %s as typelib, but file was not found.\n",debugstr_w(szFile));
-	    return TYPE_E_CANTLOADLIBRARY;
 	}
     }
 
@@ -848,9 +848,10 @@ typedef struct tagITypeLibImpl
 				   libary. Only used while read MSFT
 				   typelibs */
 
-    /* typelibs are cached, keyed by path, so store the linked list info within them */
+    /* typelibs are cached, keyed by path and index, so store the linked list info within them */
     struct tagITypeLibImpl *next, *prev;
     WCHAR *path;
+    INT index;
 } ITypeLibImpl;
 
 static struct ITypeLib2Vtbl tlbvt;
@@ -865,7 +866,7 @@ static ITypeLib2* ITypeLib2_Constructor_SLTG(LPVOID pLib, DWORD dwTLBLength);
 
 /*======================= ITypeInfo implementation =======================*/
 
-/* data for refernced types */
+/* data for referenced types */
 typedef struct tagTLBRefType
 {
     INT index;              /* Type index for internal ref or for external ref
@@ -1497,7 +1498,7 @@ static void MSFT_ReadValue( VARIANT * pVar, int offset, TLBContext *pcx )
 
     if(offset <0) { /* data are packed in here */
         V_VT(pVar) = (offset & 0x7c000000 )>> 26;
-        V_UNION(pVar, iVal) = offset & 0x3ffffff;
+        V_I2(pVar) = offset & 0x3ffffff;
         return;
     }
     MSFT_ReadLEWords(&(V_VT(pVar)), sizeof(VARTYPE), pcx,
@@ -1537,7 +1538,7 @@ static void MSFT_ReadValue( VARIANT * pVar, int offset, TLBContext *pcx )
 	    } else {
                 ptr=TLB_Alloc(size);/* allocate temp buffer */
 		MSFT_Read(ptr, size, pcx, DO_NOT_SEEK);/* read string (ANSI) */
-		V_UNION(pVar, bstrVal)=SysAllocStringLen(NULL,size);
+		V_BSTR(pVar)=SysAllocStringLen(NULL,size);
 		/* FIXME: do we need a AtoW conversion here? */
 		V_UNION(pVar, bstrVal[size])=L'\0';
 		while(size--) V_UNION(pVar, bstrVal[size])=ptr[size];
@@ -1570,7 +1571,7 @@ static void MSFT_ReadValue( VARIANT * pVar, int offset, TLBContext *pcx )
     }
 
     if(size>0) /* (big|small) endian correct? */
-        MSFT_Read(&(V_UNION(pVar, iVal)), size, pcx, DO_NOT_SEEK );
+        MSFT_Read(&(V_I2(pVar)), size, pcx, DO_NOT_SEEK );
     return;
 }
 /*
@@ -1924,7 +1925,7 @@ static void MSFT_DoVars(TLBContext *pcx, ITypeInfoImpl *pTI, int cFuncs,
         recoffset += reclength;
     }
 }
-/* fill in data for a hreftype (offset). When the refernced type is contained
+/* fill in data for a hreftype (offset). When the referenced type is contained
  * in the typelib, it's just an (file) offset in the type info base dir.
  * If comes from import, it's an offset+1 in the ImpInfo table
  * */
@@ -2169,7 +2170,7 @@ int TLB_ReadTypeLib(LPCWSTR pszFileName, INT index, ITypeLib2 **ppTypeLib)
     EnterCriticalSection(&cache_section);
     for (entry = tlb_cache_first; entry != NULL; entry = entry->next)
     {
-        if (!strcmpiW(entry->path, pszFileName))
+        if (!strcmpiW(entry->path, pszFileName) && entry->index == index)
         {
             TRACE("cache hit\n");
             *ppTypeLib = (ITypeLib2*)entry;
@@ -2209,8 +2210,13 @@ int TLB_ReadTypeLib(LPCWSTR pszFileName, INT index, ITypeLib2 **ppTypeLib)
       }
       CloseHandle(hFile);
     }
+    else
+    {
+      TRACE("not found, trying to load %s as library\n", debugstr_w(pszFileName));
+    }
 
-    if( (WORD)dwSignature == IMAGE_DOS_SIGNATURE )
+    /* if the file is a DLL or not found, try loading it with LoadLibrary */
+    if (((WORD)dwSignature == IMAGE_DOS_SIGNATURE) || (dwSignature == 0))
     {
       /* find the typelibrary resource*/
       HINSTANCE hinstDLL = LoadLibraryExW(pszFileName, 0, DONT_RESOLVE_DLL_REFERENCES|
@@ -2258,6 +2264,7 @@ int TLB_ReadTypeLib(LPCWSTR pszFileName, INT index, ITypeLib2 **ppTypeLib)
 	impl->path = HeapAlloc(GetProcessHeap(), 0, (strlenW(pszFileName)+1) * sizeof(WCHAR));
 	lstrcpyW(impl->path, pszFileName);
 	/* We should really canonicalise the path here. */
+        impl->index = index;
 
         /* FIXME: check if it has added already in the meantime */
         EnterCriticalSection(&cache_section);
@@ -3074,7 +3081,7 @@ static SLTG_TypeInfoTail *SLTG_ProcessEnum(char *pBlk, ITypeInfoImpl *pTI,
   return (SLTG_TypeInfoTail*)(pFirstItem + pMemHeader->cbExtra);
 }
 
-/* Because SLTG_OtherTypeInfo is such a painfull struct, we make a more
+/* Because SLTG_OtherTypeInfo is such a painful struct, we make a more
    managable copy of it into this */
 typedef struct {
   WORD small_no;
@@ -4109,8 +4116,8 @@ static ULONG WINAPI ITypeInfo_fnRelease(ITypeInfo2 *iface)
     TRACE("(%p)->(%lu)\n",This, ref);
 
     if (ref)   {
-      /* We don't release ITypeLib when ref=0 becouse
-         it means that funtion is called by ITypeLi2_Release */
+      /* We don't release ITypeLib when ref=0 because
+         it means that function is called by ITypeLib2_Release */
       ITypeLib2_Release((ITypeLib2*)This->pTypeLib);
     } else   {
       FIXME("destroy child objects\n");
@@ -4518,12 +4525,12 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
     }
 
     if (V_VT(arg) == vt) {
-	memcpy(argpos, &V_UNION(arg,lVal), arglen);
+	memcpy(argpos, &V_I4(arg), arglen);
 	return S_OK;
     }
 
     if (V_ISARRAY(arg) && (vt == VT_SAFEARRAY)) {
-	memcpy(argpos, &V_UNION(arg,parray), sizeof(SAFEARRAY*));
+	memcpy(argpos, &V_ARRAY(arg), sizeof(SAFEARRAY*));
 	return S_OK;
     }
 
@@ -4533,13 +4540,13 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
     }
     /* Deref BYREF vars if there is need */
     if(V_ISBYREF(arg) && ((V_VT(arg) & ~VT_BYREF)==vt)) {
-        memcpy(argpos,(void*)V_UNION(arg,lVal), arglen);
+        memcpy(argpos,(void*)V_I4(arg), arglen);
 	return S_OK;
     }
     if (vt==VT_UNKNOWN && V_VT(arg)==VT_DISPATCH) {
     	/* in this context, if the type lib specifies IUnknown*, giving an
            IDispatch* is correct; so, don't invoke VariantChangeType */
-    	memcpy(argpos,&V_UNION(arg,lVal), arglen);
+    	memcpy(argpos,&V_I4(arg), arglen);
 	return S_OK;
     }
     if ((vt == VT_PTR) && tdesc)
@@ -4555,7 +4562,7 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 	    FIXME("Could not get typeinfo of hreftype %lx for VT_USERDEFINED, "
                   "while coercing from vt 0x%x. Copying 4 byte.\n",
                   tdesc->u.hreftype,V_VT(arg));
-	    memcpy(argpos, &V_UNION(arg,lVal), 4);
+	    memcpy(argpos, &V_I4(arg), 4);
 	    return S_OK;
 	}
 	hres = ITypeInfo_GetTypeAttr(tinfo2,&tattr);
@@ -4569,11 +4576,11 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 	case TKIND_ENUM:
           switch ( V_VT( arg ) ) {
           case VT_I2:
-             *argpos = V_UNION(arg,iVal);
+             *argpos = V_I2(arg);
              hres = S_OK;
              break;
           case VT_I4:
-             memcpy(argpos, &V_UNION(arg,lVal), 4);
+             memcpy(argpos, &V_I4(arg), 4);
              hres = S_OK;
              break;
           default:
@@ -4592,15 +4599,15 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 	    if (V_VT(arg) == VT_DISPATCH) {
 		IDispatch *disp;
 		if (IsEqualIID(&IID_IDispatch,&(tattr->guid))) {
-		    memcpy(argpos, &V_UNION(arg,pdispVal), 4);
+		    memcpy(argpos, &V_DISPATCH(arg), 4);
 		    hres = S_OK;
                     break;
 		}
-		hres=IUnknown_QueryInterface(V_UNION(arg,pdispVal),
+		hres=IUnknown_QueryInterface(V_DISPATCH(arg),
                                              &IID_IDispatch,(LPVOID*)&disp);
 		if (SUCCEEDED(hres)) {
 		    memcpy(argpos,&disp,4);
-		    IUnknown_Release(V_UNION(arg,pdispVal));
+		    IUnknown_Release(V_DISPATCH(arg));
 		    hres = S_OK;
                     break;
 		}
@@ -4610,7 +4617,7 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
                 break;
 	    }
 	    if (V_VT(arg) == VT_UNKNOWN) {
-		memcpy(argpos, &V_UNION(arg,punkVal), 4);
+		memcpy(argpos, &V_UNKNOWN(arg), 4);
 		hres = S_OK;
                 break;
 	    }
@@ -4621,7 +4628,7 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
 
 	case TKIND_DISPATCH:
 	    if (V_VT(arg) == VT_DISPATCH) {
-		memcpy(argpos, &V_UNION(arg,pdispVal), 4);
+		memcpy(argpos, &V_DISPATCH(arg), 4);
 		hres = S_OK;
 	    }
             else {
@@ -4646,7 +4653,7 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
     oldvt = V_VT(arg);
     VariantInit(&va);
     if (VariantChangeType(&va,arg,0,vt)==S_OK) {
-	memcpy(argpos,&V_UNION(&va,lVal), arglen);
+	memcpy(argpos,&V_I4(&va), arglen);
 	FIXME("Should not use VariantChangeType here."
               " (conversion from 0x%x -> 0x%x) %08lx\n",
 		V_VT(arg), vt, *argpos
@@ -4768,7 +4775,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                         if(i < func_desc->cParams - func_desc->cParamsOpt)
                             ERR("Parameter has PARAMFLAG_FOPT flag but is not one of last cParamOpt parameters\n");
                         if(V_VT(arg) == VT_EMPTY
-                          || ((V_VT(arg) & VT_BYREF) && !V_BYREF(arg))) {
+                          || ((V_ISBYREF(arg)) && !V_BYREF(arg))) {
                                /* FIXME: Documentation says that we do this when parameter is left unspecified.
                                          How to determine it? */
 
@@ -4834,7 +4841,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
 			continue;
 
 		    VariantInit(pVarResult);
-		    memcpy(&V_UNION(pVarResult,intVal),&args2[args2pos],arglen*sizeof(DWORD));
+		    memcpy(&V_INT(pVarResult),&args2[args2pos],arglen*sizeof(DWORD));
 
 		    if (tdesc->vt == VT_PTR)
 			tdesc = tdesc->u.lptdesc;

@@ -59,4 +59,5 @@ OBM_COMBO BITMAP "resources/obm_combo.bmp"
 OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 
 #include "En.rc"
+#include "Da.rc"
 #include "De.rc"

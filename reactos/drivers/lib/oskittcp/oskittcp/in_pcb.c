@@ -312,7 +312,7 @@ in_pcbladdr(inp, nam, plocal_sin)
 	 * Don't do pcblookup call here; return interface in plocal_sin
 	 * and exit to caller, that will do the lookup.
 	 */
-		*plocal_sin = ia->ia_ifa.ifa_addr;
+		*plocal_sin = (struct sockaddr_in *)ia->ia_ifa.ifa_addr;
 		OS_DbgPrint(OSK_MID_TRACE,("plocal sin %x\n", 
 					   (*plocal_sin)->sin_addr.s_addr));
 

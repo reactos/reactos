@@ -39,6 +39,8 @@ PLDR_MODULE ExeModule;
 
 NTSTATUS LdrpAttachThread (VOID);
 
+VOID RtlpInitializeVectoredExceptionHandling(VOID);
+
 
 #define VALUE_BUFFER_SIZE 256
 
@@ -306,6 +308,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
             
+       /* initialized vectored exception handling */
+       RtlpInitializeVectoredExceptionHandling();
+
        /* initalize peb lock support */
        RtlInitializeCriticalSection (&PebLock);
        Peb->FastPebLock = &PebLock;

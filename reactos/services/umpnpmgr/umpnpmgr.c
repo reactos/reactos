@@ -27,9 +27,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define UNICODE
-#define _UNICODE
-
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ntos/ntpnp.h>
@@ -40,6 +37,8 @@
 
 #include <rpc.h>
 #include <rpcdce.h>
+
+#include "pnp.h"
 
 #define DBG
 #define NDEBUG
@@ -60,6 +59,66 @@ static SERVICE_TABLE_ENTRY ServiceTable[2] =
 
 
 /* FUNCTIONS *****************************************************************/
+
+static DWORD WINAPI
+RpcServerThread(LPVOID lpParameter)
+{
+  RPC_STATUS Status;
+
+  DPRINT("RpcServerThread() called\n");
+
+  Status = RpcServerUseProtseqEpW(L"ncacn_np",
+                                  20,
+                                  L"\\pipe\\umpnpmgr",
+                                  NULL);  // Security descriptor
+  if (Status != RPC_S_OK)
+  {
+    DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+    return 0;
+  }
+
+  Status = RpcServerRegisterIf(pnp_v1_0_s_ifspec,
+                               NULL,
+                               NULL);
+  if (Status != RPC_S_OK)
+  {
+    DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+    return 0;
+  }
+
+  Status = RpcServerListen(1,
+                           20,
+                           FALSE);
+  if (Status != RPC_S_OK)
+  {
+    DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
+    return 0;
+  }
+
+  DPRINT("RpcServerThread() done\n");
+
+  return 0;
+}
+
+
+void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
+{
+  return GlobalAlloc(GPTR, len);
+}
+
+
+void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
+{
+  GlobalFree(ptr);
+}
+
+
+//WORD PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle)
+WORD PNP_GetVersion(handle_t BindingHandle)
+{
+  return 0x0400;
+}
+
 
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
@@ -128,6 +187,15 @@ ServiceMain(DWORD argc, LPTSTR *argv)
   hThread = CreateThread(NULL,
 			 0,
 			 PnpEventThread,
+			 NULL,
+			 0,
+			 &dwThreadId);
+  if (hThread != NULL)
+    CloseHandle(hThread);
+
+  hThread = CreateThread(NULL,
+			 0,
+			 RpcServerThread,
 			 NULL,
 			 0,
 			 &dwThreadId);

@@ -118,13 +118,11 @@ KdInitSystem(ULONG BootPhase,
 	      if (!_strnicmp(p2, "SCREEN", 6) && BootPhase > 0)
 		{
 		  p2 += 6;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_SCREEN;
 		}
 	      else if (!_strnicmp(p2, "BOCHS", 5) && BootPhase == 0)
 		{
 		  p2 += 5;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOCHS;
 		}
 	      else if (!_strnicmp(p2, "GDB", 3) && BootPhase == 0)
@@ -150,21 +148,18 @@ KdInitSystem(ULONG BootPhase,
 		  Value = (ULONG)atol(p2);
 		  if (Value > 0 && Value < 5)
 		    {
-		      KdDebuggerEnabled = TRUE;
-			  KdDebugState |= KD_DEBUG_SERIAL;
+		      KdDebugState |= KD_DEBUG_SERIAL;
 		      LogPortInfo.ComPort = Value;
 		    }
 		}
-	      else if (!_strnicmp(p2, "BOOTLOG", 4) && BootPhase > 0)
+	      else if (!_strnicmp(p2, "FILE", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
-		  KdDebuggerEnabled = TRUE;
-		  KdDebugState |= KD_DEBUG_BOOTLOG;
+		  KdDebugState |= KD_DEBUG_FILELOG;
 		}
 	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
 		{
 		  p2 += 3;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_MDA;
 		}
 	    }
@@ -172,13 +167,11 @@ KdInitSystem(ULONG BootPhase,
       else if (!_strnicmp(p2, "KDSERIAL", 8) && BootPhase > 0)
         {
 	  p2 += 8;
-	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_SERIAL | KD_DEBUG_KDSERIAL;
         }
       else if (!_strnicmp(p2, "KDNOECHO", 8) && BootPhase > 0)
         {
 	  p2 += 8;
-	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_KDNOECHO;
         }
       else if (!_strnicmp(p2, "DEBUG", 5) && BootPhase == 0)
@@ -243,12 +236,6 @@ KdInitSystem(ULONG BootPhase,
 		}
 	    }
 	}
-#if defined(KDBG) || defined(DBG)
-    else if (!_strnicmp(p2, "PROFILE", 7)  && BootPhase > 0)
-      {
-        KdbInitProfiling();
-      }
-#endif /* KDBG */
       p1 = p2;
     }
 #if 1
@@ -260,20 +247,17 @@ KdInitSystem(ULONG BootPhase,
 #endif
 
   /* Perform any initialization nescessary */
-  if (KdDebuggerEnabled == TRUE)
-    {
       if (KdDebugState & KD_DEBUG_GDB && BootPhase == 0)
 	    KdPortInitializeEx(&GdbPortInfo, 0, 0);
 
       if (KdDebugState & KD_DEBUG_SERIAL  && BootPhase == 0)
 	    KdPortInitializeEx(&LogPortInfo, 0, 0);
 
-      if (KdDebugState & KD_DEBUG_BOOTLOG && BootPhase > 0)
+      if (KdDebugState & KD_DEBUG_FILELOG && BootPhase > 0)
 	    DebugLogInit();
 
       if (KdDebugState & KD_DEBUG_MDA && BootPhase > 0)
 	    KdInitializeMda();
-    }
 }
 
 
@@ -281,7 +265,7 @@ VOID INIT_FUNCTION
 KdInit1(VOID)
 {
   /* Initialize kernel debugger (phase 0) */
-  if ((KdDebuggerEnabled == TRUE) &&
+  if ((KdDebuggerEnabled) &&
       (KdDebugState & KD_DEBUG_GDB))
     {
       KdGdbStubInit(0);
@@ -293,7 +277,7 @@ VOID INIT_FUNCTION
 KdInit2(VOID)
 {
   /* Initialize kernel debugger (phase 1) */
-  if ((KdDebuggerEnabled == TRUE) &&
+  if ((KdDebuggerEnabled) &&
       (KdDebugState & KD_DEBUG_GDB))
     {
       KdGdbStubInit(1);
@@ -305,8 +289,6 @@ VOID INIT_FUNCTION
 KdInit3(VOID)
 {
   /* Print some information */
-  if (KdDebuggerEnabled == TRUE)
-    {
       if (KdDebugState & KD_DEBUG_GDB)
 	    PrintString("\n   GDB debugging enabled. COM%ld %ld Baud\n\n",
 			GdbPortInfo.ComPort, GdbPortInfo.BaudRate);
@@ -324,11 +306,10 @@ KdInit3(VOID)
 	    PrintString("\n   Serial debugging enabled. COM%ld %ld Baud\n\n",
 			LogPortInfo.ComPort, LogPortInfo.BaudRate);
 
-      if (KdDebugState & KD_DEBUG_BOOTLOG)
+      if (KdDebugState & KD_DEBUG_FILELOG)
 	    PrintString("\n   File log debugging enabled\n\n");
       if (KdDebugState & KD_DEBUG_MDA)
 	    PrintString("\n   MDA debugging enabled\n\n");
-    }
 }
 
 
@@ -395,7 +376,7 @@ KdpPrintString(PANSI_STRING String)
 	if (KdDebugState & KD_DEBUG_BOCHS)
 		KdBochsDebugPrint(pch);
 
-	if (KdDebugState & KD_DEBUG_BOOTLOG)
+	if (KdDebugState & KD_DEBUG_FILELOG)
 		DebugLogWrite(pch);
 
 	if (KdDebugState & KD_DEBUG_MDA)
@@ -476,7 +457,7 @@ KdSystemDebugControl(ULONG Code)
   /* B - Bug check the system. */
   else if (Code == 1)
     {
-      KEBUGCHECK(0xDEADDEAD);
+      KEBUGCHECK(MANUALLY_INITIATED_CRASH);
     }
   /* 
    * C -  Dump statistics about the distribution of tagged blocks in 

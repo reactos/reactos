@@ -23,8 +23,6 @@
  *
  * --------------------------------------------------------------------
  */
-
-
 #include "smss.h"
 
 #define NDEBUG
@@ -82,7 +80,7 @@ SmCreateObjectDirectories(VOID)
   QueryTable[0].QueryRoutine = SmpObjectDirectoryQueryRoutine;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-				  L"\\Session Manager",
+				  SM_REGISTRY_ROOT_NAME,
 				  QueryTable,
 				  NULL,
 				  NULL);

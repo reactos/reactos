@@ -1036,7 +1036,7 @@ static BOOL OLEMenu_FindMainMenuIndex( HMENU hMainMenu, HMENU hPopupMenu, UINT *
  * All menu messages from these groups should be routed to the server.
  *
  * RETURNS: TRUE if the popup menu is part of a server owned group
- *          FASE if the popup menu is part of a container owned group
+ *          FALSE if the popup menu is part of a container owned group
  */
 BOOL OLEMenu_SetIsServerMenu( HMENU hmenu, OleMenuDescriptor *pOleMenuDescriptor )
 {

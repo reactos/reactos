@@ -83,13 +83,19 @@ SetUnhandledExceptionFilter(
  * The address can point to anywhere within the module.
  */
 static const char*
-_module_name_from_addr(const void* addr, char* psz, size_t nChars)
+_module_name_from_addr(const void* addr, void **module_start_addr, 
+                       char* psz, size_t nChars)
 {
    MEMORY_BASIC_INFORMATION mbi;
    if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
    {
       psz[0] = '\0';
+      *module_start_addr = 0;
+   }
+   else
+   {
+      *module_start_addr = (void *)mbi.AllocationBase;
    }
    return psz;
 }
@@ -152,26 +158,30 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    {
 #ifdef _X86_
       PULONG Frame;
+      PVOID StartAddr;
       CHAR szMod[128] = "";
 #endif
 
       /* Print a stack trace. */
-      DPRINT1("Unhandled exception\n");
-      DPRINT1("Address:\n");
-      DPRINT1("   %8x   %s\n",
+      DbgPrint("Unhandled exception\n");
+      DbgPrint("Address:\n");
+      DbgPrint("   %8x   %s\n",
          ExceptionInfo->ExceptionRecord->ExceptionAddress,
-         _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, szMod, sizeof(szMod)));
+         _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod)));
       _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef _X86_
-      DPRINT1("Frames:\n");
+      DbgPrint("Frames:\n");
       Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
       while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
       {
          if (IsBadReadPtr((PVOID)Frame[1], 4)) {
-           DPRINT1("   %8x   %s\n", Frame[1], "<invalid address>");
+           DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
          } else {
-           _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
-           DPRINT1("   %8x   %s\n", Frame[1], szMod);
+           _module_name_from_addr((const void*)Frame[1], &StartAddr, 
+                                  szMod, sizeof(szMod));
+           DbgPrint("   %8x+%-8x   %s\n", 
+                   (PVOID)StartAddr, 
+                   (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
          }
          if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
            break;

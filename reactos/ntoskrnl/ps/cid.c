@@ -16,147 +16,189 @@
 
 /* GLOBALS ******************************************************************/
 
-/*
- * FIXME - use a global handle table instead!
- */
-
-KSPIN_LOCK CidLock;
-LIST_ENTRY CidHead;
-KEVENT CidReleaseEvent;
-LONG CidCounter = 0;
-LARGE_INTEGER ShortDelay, LongDelay;
+PHANDLE_TABLE PspCidTable = NULL;
 
 #define TAG_CIDOBJECT TAG('C', 'I', 'D', 'O')
+
+#define CID_FLAG_PROCESS 0x1
+#define CID_FLAG_THREAD 0x2
+#define CID_FLAGS_MASK (CID_FLAG_PROCESS | CID_FLAG_THREAD)
 
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION
 PsInitClientIDManagment(VOID)
 {
-   InitializeListHead(&CidHead);
-   KeInitializeSpinLock(&CidLock);
-   KeInitializeEvent(&CidReleaseEvent, SynchronizationEvent, FALSE);
-   ShortDelay.QuadPart = -100LL;
-   LongDelay.QuadPart = -100000LL;
-}
-
-VOID
-PspReferenceCidObject(PCID_OBJECT Object)
-{
-  InterlockedIncrement(&Object->ref);
-}
-
-VOID
-PspDereferenceCidObject(PCID_OBJECT Object)
-{
-  if(InterlockedDecrement(&Object->ref) == 0)
-  {
-    ExFreePool(Object);
-  }
+  PspCidTable = ExCreateHandleTable(NULL);
+  ASSERT(PspCidTable);
 }
 
 NTSTATUS
 PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
 {
-  KIRQL oldIrql;
-  PCID_OBJECT cido = ExAllocatePoolWithTag(NonPagedPool,
-                                           sizeof(CID_OBJECT),
-                                           TAG_CIDOBJECT);
-  if(cido != NULL)
+  HANDLE_TABLE_ENTRY NewEntry;
+  LONG ExHandle;
+  
+  PAGED_CODE();
+  
+  NewEntry.u1.Object = Object;
+  if(ObjectType == PsThreadType)
+    NewEntry.u2.GrantedAccess = CID_FLAG_THREAD;
+  else if(ObjectType == PsProcessType)
+    NewEntry.u2.GrantedAccess = CID_FLAG_PROCESS;
+  else
   {
-    cido->ref = 1;
-    ExInitializeFastMutex(&cido->Lock);
-    cido->Obj.Object = Object;
-
-    KeAcquireSpinLock(&CidLock, &oldIrql);
-    cido->Handle = (HANDLE)((ULONG_PTR)(++CidCounter) << 2);
-    InsertTailList(&CidHead, &cido->Entry);
-    KeReleaseSpinLock(&CidLock, oldIrql);
-
-    *Handle = cido->Handle;
+    DPRINT1("Can't create CID handles for %wZ objects\n", &ObjectType->TypeName);
+    KEBUGCHECK(0);
+  }
+  
+  ExHandle = ExCreateHandle(PspCidTable,
+                            &NewEntry);
+  if(ExHandle != EX_INVALID_HANDLE)
+  {
+    *Handle = EX_HANDLE_TO_HANDLE(ExHandle);
     return STATUS_SUCCESS;
   }
   
-  return STATUS_INSUFFICIENT_RESOURCES;
+  return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
 PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
 {
-  PCID_OBJECT cido, Found = NULL;
-  PLIST_ENTRY Current;
-  KIRQL oldIrql;
+  PHANDLE_TABLE_ENTRY Entry;
+  LONG ExHandle = HANDLE_TO_EX_HANDLE(CidHandle);
   
-  if(CidHandle == NULL)
-  {
-    return STATUS_INVALID_PARAMETER;
-  }
-  
-  KeAcquireSpinLock(&CidLock, &oldIrql);
-  Current = CidHead.Flink;
-  while(Current != &CidHead)
-  {
-    cido = CONTAINING_RECORD(Current, CID_OBJECT, Entry);
-    if(cido->Handle == CidHandle)
-    {
-      RemoveEntryList(&cido->Entry);
-      cido->Handle = NULL;
-      Found = cido;
-      break;
-    }
-    Current = Current->Flink;
-  }
-  KeReleaseSpinLock(&CidLock, oldIrql);
+  PAGED_CODE();
 
-  if(Found != NULL)
+  Entry = ExMapHandleToPointer(PspCidTable,
+                               ExHandle);
+  if(Entry != NULL)
   {
-    PspDereferenceCidObject(Found);
+    if((ObjectType == PsThreadType && ((Entry->u2.GrantedAccess & CID_FLAGS_MASK) == CID_FLAG_THREAD)) ||
+       (ObjectType == PsProcessType && ((Entry->u2.GrantedAccess & CID_FLAGS_MASK) == CID_FLAG_PROCESS)))
+    {
+      ExDestroyHandleByEntry(PspCidTable,
+                             Entry,
+                             ExHandle);
+      return STATUS_SUCCESS;
+    }
+    else
+    {
+      ExUnlockHandleTableEntry(PspCidTable,
+                               Entry);
+      return STATUS_OBJECT_TYPE_MISMATCH;
+    }
+  }
+
+  return STATUS_INVALID_HANDLE;
+}
+
+PHANDLE_TABLE_ENTRY
+PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
+{
+  PHANDLE_TABLE_ENTRY Entry;
+  
+  PAGED_CODE();
+
+  KeEnterCriticalRegion();
+  
+  Entry = ExMapHandleToPointer(PspCidTable,
+                               HANDLE_TO_EX_HANDLE(CidHandle));
+  if(Entry != NULL)
+  {
+    if((ObjectType == PsProcessType && ((Entry->u2.GrantedAccess & CID_FLAGS_MASK) == CID_FLAG_PROCESS)) ||
+       (ObjectType == PsThreadType && ((Entry->u2.GrantedAccess & CID_FLAGS_MASK) == CID_FLAG_THREAD)))
+    {
+      *Object = Entry->u1.Object;
+      return Entry;
+    }
+    else
+    {
+      DPRINT1("CID Obj type mismatch handle 0x%x %wZ vs 0x%x\n", CidHandle,
+              &ObjectType->TypeName, Entry->u2.GrantedAccess);
+      ExUnlockHandleTableEntry(PspCidTable,
+                               Entry);
+      KEBUGCHECK(0);
+    }
+  }
+  
+  KeLeaveCriticalRegion();
+  
+  return NULL;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
+			   OUT PEPROCESS *Process OPTIONAL,
+			   OUT PETHREAD *Thread)
+{
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PETHREAD FoundThread;
+
+  PAGED_CODE();
+
+  ASSERT(Thread);
+  ASSERT(Cid);
+
+  CidEntry = PsLookupCidHandle(Cid->UniqueThread, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
+  {
+    ObReferenceObject(FoundThread);
+
+    PsUnlockCidHandle(CidEntry);
+
+    if(Process != NULL)
+    {
+      *Process = FoundThread->ThreadsProcess;
+    }
+    *Thread = FoundThread;
     return STATUS_SUCCESS;
   }
 
-  return STATUS_UNSUCCESSFUL;
+  return STATUS_INVALID_PARAMETER;
 }
 
-PCID_OBJECT
-PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsLookupThreadByThreadId(IN HANDLE ThreadId,
+			 OUT PETHREAD *Thread)
 {
-  PCID_OBJECT cido, Found = NULL;
-  PLIST_ENTRY Current;
-  KIRQL oldIrql;
-  
-  if(CidHandle == NULL)
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PETHREAD FoundThread;
+
+  PAGED_CODE();
+
+  ASSERT(Thread);
+
+  CidEntry = PsLookupCidHandle(ThreadId, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
   {
-    return NULL;
-  }
-  
-  KeAcquireSpinLock(&CidLock, &oldIrql);
-  Current = CidHead.Flink;
-  while(Current != &CidHead)
-  {
-    cido = CONTAINING_RECORD(Current, CID_OBJECT, Entry);
-    if(cido->Handle == CidHandle)
-    {
-      Found = cido;
-      PspReferenceCidObject(Found);
-      break;
-    }
-    Current = Current->Flink;
-  }
-  KeReleaseSpinLock(&CidLock, oldIrql);
-  
-  if(Found != NULL)
-  {
-    ExAcquireFastMutex(&Found->Lock);
+    ObReferenceObject(FoundThread);
+
+    PsUnlockCidHandle(CidEntry);
+
+    *Thread = FoundThread;
+    return STATUS_SUCCESS;
   }
 
-  return Found;
+  return STATUS_INVALID_PARAMETER;
 }
 
 VOID
-PsUnlockCidObject(PCID_OBJECT CidObject)
+PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry)
 {
-  ExReleaseFastMutex(&CidObject->Lock);
-  PspDereferenceCidObject(CidObject);
+  PAGED_CODE();
+
+  ExUnlockHandleTableEntry(PspCidTable,
+                           CidEntry);
+  KeLeaveCriticalRegion();
 }
 
 /* EOF */

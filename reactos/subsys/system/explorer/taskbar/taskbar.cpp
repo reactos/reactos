@@ -32,6 +32,11 @@
 #include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
 
 
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_DeregisterShellHookWindow(TEXT("user32"), "DeregisterShellHookWindow");
+
+
 TaskBarEntry::TaskBarEntry()
 {
 	_id = 0;
@@ -53,16 +58,21 @@ TaskBarMap::~TaskBarMap()
 
 
 TaskBar::TaskBar(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	WM_SHELLHOOK(RegisterWindowMessage(TEXT("SHELLHOOK")))
 {
 	_last_btn_width = 0;
 }
 
 TaskBar::~TaskBar()
 {
-	KillTimer(_hwnd, 0);
+	if (g_DeregisterShellHookWindow)
+		(*g_DeregisterShellHookWindow)(_hwnd);
+	else
+		KillTimer(_hwnd, 0);
 
-	//DeinstallShellHook();
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(0);
 }
 
 HWND TaskBar::Create(HWND hwndParent)
@@ -95,11 +105,20 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	//InstallShellHook(_hwnd, PM_SHELLHOOK_NOTIFY);
+	 // register ourselved as task manager window to make the following call to RegisterShellHookWindow working
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(_hwnd);
+
+	if (g_RegisterShellHookWindow) {
+		LOG(TEXT("Using shell hooks for notification of shell events."));
+
+		(*g_RegisterShellHookWindow)(_hwnd);
+	} else {
+		LOG(TEXT("Shell hooks not available."));
+		SetTimer(_hwnd, 0, 200, NULL);
+	}
 
 	Refresh();
-
-	SetTimer(_hwnd, 0, 200, NULL);
 
 	return 0;
 }
@@ -124,28 +143,25 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 
 		goto def;}
-/*
-//#define PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
-	  case PM_SHELLHOOK_NOTIFY: {
-		int code = lparam;
-
-		switch(code) {
-		  case HSHELL_WINDOWCREATED:
-		  case HSHELL_WINDOWDESTROYED:
-		  case HSHELL_WINDOWACTIVATED:
-		  case HSHELL_WINDOWREPLACED:
-			Refresh();
-			break;
-		}
-		Refresh();
-		break;}
-*/
 	  case PM_GET_LAST_ACTIVE:
 		return (LRESULT)(HWND)_last_foreground_wnd;
 
 	  default: def:
-		return super::WndProc(nmsg, wparam, lparam);
+		if (nmsg == WM_SHELLHOOK) {
+			LOG(FmtString(TEXT("SHELLHOOK %x"), wparam));
+
+			switch(wparam) {
+			  case HSHELL_WINDOWCREATED:
+			  case HSHELL_WINDOWDESTROYED:
+			  case HSHELL_WINDOWACTIVATED:
+			  case HSHELL_REDRAW:
+				Refresh();
+				break;
+			}
+		} else {
+			return super::WndProc(nmsg, wparam, lparam);
+		}
 	}
 
 	return 0;

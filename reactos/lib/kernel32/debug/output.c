@@ -456,7 +456,8 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
    if(hDBMonDataReady) CloseHandle(hDBMonDataReady);
 
    /* leave the critical section */
-   ReleaseMutex(hDBMonMutex);
+   if(hDBMonDataReady != NULL)
+    ReleaseMutex(hDBMonMutex);
 #if 0
   }
  }

@@ -130,17 +130,16 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI SHDOCVW_DllCanUnloadNow(void)
 {
-    HRESULT moz_can_unload = S_FALSE;
+    HRESULT moz_can_unload = S_OK;
     fnCanUnloadNow pCanUnloadNow;
 
     if (hMozCtl)
     {
         pCanUnloadNow = (fnCanUnloadNow)
             GetProcAddress(hMozCtl, "DllCanUnloadNow");
-        moz_can_unload = pCanUnloadNow();
+        if (pCanUnloadNow)
+            moz_can_unload = pCanUnloadNow();
     }
-    else
-        moz_can_unload = S_OK;
 
     if (moz_can_unload == S_OK && SHDOCVW_refCount == 0)
         return S_OK;

@@ -79,6 +79,9 @@ typedef struct
     BOOL              NtfUnicode;	/* notify format */
     STATUSWINDOWPART  part0;		/* simple window */
     STATUSWINDOWPART* parts;
+    INT               horizontalBorder;
+    INT               verticalBorder;
+    INT               horizontalGap;
 } STATUS_INFO;
 
 /*
@@ -159,28 +162,24 @@ STATUSBAR_DrawPart (STATUS_INFO *infoPtr, HDC hdc, STATUSWINDOWPART *part, int i
 
     DrawEdge(hdc, &r, border, BF_RECT|BF_ADJUST);
 
-    if (part->style & SBT_OWNERDRAW)
-	{
-	    DRAWITEMSTRUCT dis;
+    if (part->style & SBT_OWNERDRAW) {
+	DRAWITEMSTRUCT dis;
 
-	    dis.CtlID = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
-	    dis.itemID = itemID;
-	    dis.hwndItem = infoPtr->Self;
-	    dis.hDC = hdc;
-	    dis.rcItem = r;
-	    dis.itemData = (INT)part->text;
-	    SendMessageW (infoPtr->Notify, WM_DRAWITEM, (WPARAM)dis.CtlID, (LPARAM)&dis);
-    }
-    else
-	{
-	    if (part->hIcon)
-		{
-	        INT cy = r.bottom - r.top;
+	dis.CtlID = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
+	dis.itemID = itemID;
+	dis.hwndItem = infoPtr->Self;
+	dis.hDC = hdc;
+	dis.rcItem = r;
+	dis.itemData = (INT)part->text;
+	SendMessageW (infoPtr->Notify, WM_DRAWITEM, (WPARAM)dis.CtlID, (LPARAM)&dis);
+    } else {
+	if (part->hIcon) {
+	   INT cy = r.bottom - r.top;
 
-	        r.left += 2;
-	        DrawIconEx (hdc, r.left, r.top, part->hIcon, cy, cy, 0, 0, DI_NORMAL);
-	        r.left += cy;
-		}
+	    r.left += 2;
+	    DrawIconEx (hdc, r.left, r.top, part->hIcon, cy, cy, 0, 0, DI_NORMAL);
+	    r.left += cy;
+	}
         DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
     }
 }
@@ -213,12 +212,11 @@ STATUSBAR_RefreshPart (STATUS_INFO *infoPtr, HDC hdc, STATUSWINDOWPART *part, in
     if (infoPtr->clrBk != CLR_DEFAULT)
 	    DeleteObject (hbrBk);
 
-    if (GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP)
-	{
-	    RECT rect;
+    if (GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP) {
+        RECT rect;
 
-	    GetClientRect (infoPtr->Self, &rect);
-	    STATUSBAR_DrawSizeGrip (hdc, &rect);
+	GetClientRect (infoPtr->Self, &rect);
+	STATUSBAR_DrawSizeGrip (hdc, &rect);
     }
 }
 
@@ -240,19 +238,19 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
     GetClientRect (infoPtr->Self, &rect);
 
     if (infoPtr->clrBk != CLR_DEFAULT)
-	    hbrBk = CreateSolidBrush (infoPtr->clrBk);
+	hbrBk = CreateSolidBrush (infoPtr->clrBk);
     else
-	    hbrBk = GetSysColorBrush (COLOR_3DFACE);
+	hbrBk = GetSysColorBrush (COLOR_3DFACE);
     FillRect(hdc, &rect, hbrBk);
 
     hOldFont = SelectObject (hdc, infoPtr->hFont ? infoPtr->hFont : infoPtr->hDefaultFont);
 
     if (infoPtr->simple) {
-	    STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->part0, 0);
+	STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->part0, 0);
     } else {
-	    for (i = 0; i < infoPtr->numParts; i++) {
-		    STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->parts[i], i);
-	    }
+	for (i = 0; i < infoPtr->numParts; i++) {
+	    STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->parts[i], i);
+	}
     }
 
     SelectObject (hdc, hOldFont);
@@ -278,7 +276,8 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr)
     GetClientRect (infoPtr->Self, &rect);
     TRACE("client wnd size is %ld,%ld - %ld,%ld\n", rect.left, rect.top, rect.right, rect.bottom);
 
-    rect.top += VERT_BORDER;
+    rect.left += infoPtr->horizontalBorder;
+    rect.top += infoPtr->verticalBorder;
 
     /* set bounds for simple rectangle */
     infoPtr->part0.bound = rect;
@@ -292,7 +291,7 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr)
 	if (i == 0)
 	    r->left = 0;
 	else
-	    r->left = infoPtr->parts[i-1].bound.right + HORZ_GAP;
+	    r->left = infoPtr->parts[i-1].bound.right + infoPtr->horizontalGap;
 	if (part->x == -1)
 	    r->right = rect.right;
 	else
@@ -331,12 +330,25 @@ STATUSBAR_Relay2Tip (STATUS_INFO *infoPtr, UINT uMsg,
 
 
 static BOOL
-STATUSBAR_GetBorders (INT out[])
+STATUSBAR_GetBorders (STATUS_INFO *infoPtr, INT out[])
 {
     TRACE("\n");
-    out[0] = HORZ_BORDER; /* horizontal border width */
-    out[1] = VERT_BORDER; /* vertical border width */
-    out[2] = HORZ_GAP; /* width of border between rectangles */
+    out[0] = infoPtr->horizontalBorder;
+    out[1] = infoPtr->verticalBorder;
+    out[2] = infoPtr->horizontalGap;
+
+    return TRUE;
+}
+
+
+static BOOL
+STATUSBAR_SetBorders (STATUS_INFO *infoPtr, INT in[])
+{
+    TRACE("\n");
+    infoPtr->horizontalBorder = in[0];
+    infoPtr->verticalBorder = in[1];
+    infoPtr->horizontalGap = in[2];
+    InvalidateRect(infoPtr->Self, NULL, FALSE);
 
     return TRUE;
 }
@@ -560,13 +572,13 @@ STATUSBAR_SetMinHeight (STATUS_INFO *infoPtr, INT height)
 	RECT parent_rect;
 
 	GetClientRect (infoPtr->Notify, &parent_rect);
-	infoPtr->height = height + VERT_BORDER;
+	infoPtr->height = height + infoPtr->verticalBorder;
 	width = parent_rect.right - parent_rect.left;
 	x = parent_rect.left;
 	y = parent_rect.bottom - infoPtr->height;
 	MoveWindow (infoPtr->Self, parent_rect.left,
-		      parent_rect.bottom - infoPtr->height,
-		      width, infoPtr->height, TRUE);
+		    parent_rect.bottom - infoPtr->height,
+		    width, infoPtr->height, TRUE);
 	STATUSBAR_SetPartBounds (infoPtr);
     }
 
@@ -728,8 +740,7 @@ STATUSBAR_SetTipTextA (STATUS_INFO *infoPtr, INT id, LPSTR text)
 	ti.uId = id;
 	ti.hinst = 0;
 	ti.lpszText = text;
-	SendMessageA (infoPtr->hwndToolTip, TTM_UPDATETIPTEXTA,
-			0, (LPARAM)&ti);
+	SendMessageA (infoPtr->hwndToolTip, TTM_UPDATETIPTEXTA, 0, (LPARAM)&ti);
     }
 
     return 0;
@@ -747,8 +758,7 @@ STATUSBAR_SetTipTextW (STATUS_INFO *infoPtr, INT id, LPWSTR text)
 	ti.uId = id;
 	ti.hinst = 0;
 	ti.lpszText = text;
-	SendMessageW (infoPtr->hwndToolTip, TTM_UPDATETIPTEXTW,
-			0, (LPARAM)&ti);
+	SendMessageW (infoPtr->hwndToolTip, TTM_UPDATETIPTEXTW, 0, (LPARAM)&ti);
     }
 
     return 0;
@@ -838,6 +848,9 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     infoPtr->simple = FALSE;
     infoPtr->clrBk = CLR_DEFAULT;
     infoPtr->hFont = 0;
+    infoPtr->horizontalBorder = HORZ_BORDER;
+    infoPtr->verticalBorder = VERT_BORDER;
+    infoPtr->horizontalGap = HORZ_GAP;
 
     i = SendMessageW(infoPtr->Notify, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
     infoPtr->NtfUnicode = (i == NFR_UNICODE);
@@ -929,7 +942,7 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     if (!(dwStyle & CCS_NORESIZE)) { /* don't resize wnd if it doesn't want it ! */
         GetClientRect (infoPtr->Notify, &rect);
         width = rect.right - rect.left;
-        infoPtr->height = textHeight + 4 + VERT_BORDER;
+        infoPtr->height = textHeight + 4 + infoPtr->verticalBorder;
         SetWindowPos(hwnd, 0, lpCreate->x, lpCreate->y - 1,
 			width, infoPtr->height, SWP_NOZORDER);
         STATUSBAR_SetPartBounds (infoPtr);
@@ -1069,8 +1082,7 @@ STATUSBAR_WMSize (STATUS_INFO *infoPtr, WORD flags)
     /* Need to resize width to match parent */
     TRACE("flags %04x\n", flags);
 
-    if (flags != SIZE_RESTORED && flags != SIZE_MAXIMIZED)
-    {
+    if (flags != SIZE_RESTORED && flags != SIZE_MAXIMIZED) {
 	WARN("flags MUST be SIZE_RESTORED or SIZE_MAXIMIZED\n");
 	return FALSE;
     }
@@ -1129,7 +1141,7 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     switch (msg) {
 	case SB_GETBORDERS:
-	    return STATUSBAR_GetBorders ((INT *)lParam);
+	    return STATUSBAR_GetBorders (infoPtr, (INT *)lParam);
 
 	case SB_GETICON:
 	    return (LRESULT)STATUSBAR_GetIcon (infoPtr, nPart);
@@ -1161,6 +1173,9 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case SB_ISSIMPLE:
 	    return infoPtr->simple;
+
+	case SB_SETBORDERS:
+	    return STATUSBAR_SetBorders (infoPtr, (INT *)lParam);
 
 	case SB_SETBKCOLOR:
 	    return STATUSBAR_SetBkColor (infoPtr, (COLORREF)lParam);

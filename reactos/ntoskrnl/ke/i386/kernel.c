@@ -18,7 +18,7 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
-static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags;
+static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386CpuidExMisc;
 ULONG Ke386CacheAlignment;
 CHAR Ke386CpuidModel[49] = {0,};
 ULONG Ke386L1CacheSize;
@@ -34,7 +34,7 @@ Ki386GetCpuId(VOID)
 {
    ULONG OrigFlags, Flags, FinalFlags;
    ULONG MaxCpuidLevel;
-   ULONG Dummy, Eax, Ebx, Ecx, Edx;
+   ULONG Dummy, Eax, Ecx, Edx;
    PKPCR Pcr = KeGetCurrentKPCR();
 
    Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
@@ -45,6 +45,10 @@ Ki386GetCpuId(VOID)
    Flags = OrigFlags ^ X86_EFLAGS_ID;
    Ke386RestoreFlags(Flags);
    Ke386SaveFlags(FinalFlags);
+   
+   Pcr->PrcbData.LogicalProcessorsPerPhysicalProcessor = 1;
+   Pcr->PrcbData.InitialApicId = 0xff;
+   
    if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
    {
       /* No cpuid supported. */
@@ -59,14 +63,24 @@ Ki386GetCpuId(VOID)
    if (MaxCpuidLevel > 0)
    { 
       /* Get the feature flags. */
-      Ki386Cpuid(1, &Eax, &Ebx, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
+      Ki386Cpuid(1, &Eax, &Ke386CpuidExMisc, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
       /* Get the cache alignment, if it is available */
       if (Pcr->PrcbData.FeatureBits & (1<<19))
       {
-         Ke386CacheAlignment = ((Ebx >> 8) & 0xff) * 8;
+         Ke386CacheAlignment = ((Ke386CpuidExMisc >> 8) & 0xff) * 8;
       }
       Pcr->PrcbData.CpuType = (Eax >> 8) & 0xf;
       Pcr->PrcbData.CpuStep = (Eax & 0xf) | ((Eax << 4) & 0xf00);
+      
+      Pcr->PrcbData.InitialApicId = (Ke386CpuidExMisc >> 24) & 0xff;
+
+      /* detect Hyper-Threading on Pentium 4 CPUs or later */
+      if ((Pcr->PrcbData.CpuType == 0xf || (Eax & 0x0f00000)) &&
+          !strncmp(Pcr->PrcbData.VendorString, "GenuineIntel", 12) &&
+          Pcr->PrcbData.FeatureBits & X86_FEATURE_HT)
+      {
+        Pcr->PrcbData.LogicalProcessorsPerPhysicalProcessor = (Ke386CpuidExMisc >> 16) & 0xff;
+      }
    }
    else
    {
@@ -132,6 +146,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->ProcessorNumber = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
+  Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
 
   Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
@@ -172,7 +187,7 @@ KeApplicationProcessorInit(VOID)
   /* Check FPU/MMX/SSE support. */
   KiCheckFPU();
 
-  KeInitDpc(Pcr);
+  KeInitDpc(Pcr->Prcb);
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
   {
@@ -224,6 +239,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = KPCR;
+   KPCR->Prcb = &KPCR->PrcbData;
    KPCR->Irql = SYNCH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;
@@ -246,7 +262,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
-   KeInitDpc(KPCR);
+   KeInitDpc(KPCR->Prcb);
 
    KeInitExceptions ();
    KeInitInterrupts ();
@@ -339,7 +355,7 @@ KeInit2(VOID)
 {
    PKPCR Pcr = KeGetCurrentKPCR();
 
-   KeInitializeBugCheck();
+   KiInitializeBugCheck();
    KeInitializeDispatcher();
    KiInitializeSystemClock();
 

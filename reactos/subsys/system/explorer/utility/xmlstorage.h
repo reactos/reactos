@@ -4,7 +4,7 @@
  //
  // xmlstorage.h
  //
- // Copyright (c) 2004, Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 

@@ -466,4 +466,107 @@ SepInitSecurityIDs(VOID)
   return(TRUE);
 }
 
+NTSTATUS
+SepCaptureSid(IN PSID InputSid,
+              IN KPROCESSOR_MODE AccessMode,
+              IN POOL_TYPE PoolType,
+              IN BOOLEAN CaptureIfKernel,
+              OUT PSID *CapturedSid)
+{
+  ULONG SidSize = 0;
+  PISID NewSid, Sid = (PISID)InputSid;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
+
+  if(AccessMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(Sid,
+                   sizeof(*Sid) - sizeof(Sid->SubAuthority),
+                   sizeof(UCHAR));
+      SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+      ProbeForRead(Sid,
+                   SidSize,
+                   sizeof(UCHAR));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(NT_SUCCESS(Status))
+    {
+      /* allocate a SID and copy it */
+      NewSid = ExAllocatePool(PoolType,
+                              SidSize);
+      if(NewSid != NULL)
+      {
+        _SEH_TRY
+        {
+          RtlCopyMemory(NewSid,
+                        Sid,
+                        SidSize);
+
+          *CapturedSid = NewSid;
+        }
+        _SEH_HANDLE
+        {
+          ExFreePool(NewSid);
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+      }
+      else
+      {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+      }
+    }
+  }
+  else if(!CaptureIfKernel)
+  {
+    *CapturedSid = InputSid;
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+
+    /* allocate a SID and copy it */
+    NewSid = ExAllocatePool(PoolType,
+                            SidSize);
+    if(NewSid != NULL)
+    {
+      RtlCopyMemory(NewSid,
+                    Sid,
+                    SidSize);
+
+      *CapturedSid = NewSid;
+    }
+    else
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+  }
+
+  return Status;
+}
+
+VOID
+SepReleaseSid(IN PSID CapturedSid,
+              IN KPROCESSOR_MODE AccessMode,
+              IN BOOLEAN CaptureIfKernel)
+{
+  PAGED_CODE();
+  
+  if(CapturedSid != NULL &&
+     (AccessMode == UserMode ||
+      (AccessMode == KernelMode && CaptureIfKernel)))
+  {
+    ExFreePool(CapturedSid);
+  }
+}
+
 /* EOF */

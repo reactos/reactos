@@ -230,7 +230,7 @@ HWND16 WINAPI ReplaceText16( SEGPTR find )
 static LRESULT FINDDLG_WMInitDialog(HWND hWnd, LPARAM lParam, LPDWORD lpFlags,
                                     LPSTR lpstrFindWhat, BOOL fUnicode)
 {
-    SetWindowLongA(hWnd, DWL_USER, lParam);
+    SetWindowLongPtrW(hWnd, DWLP_USER, lParam);
     *lpFlags &= ~(FR_FINDNEXT | FR_REPLACE | FR_REPLACEALL | FR_DIALOGTERM);
     /*
      * FIXME : If the initial FindWhat string is empty, we should disable the
@@ -295,14 +295,14 @@ static LRESULT FINDDLG_WMCommand(HWND hWnd, WPARAM wParam,
 		else *lpFlags &= ~FR_MATCHCASE;
             *lpFlags &= ~(FR_REPLACE | FR_REPLACEALL | FR_DIALOGTERM);
 	    *lpFlags |= FR_FINDNEXT;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    return TRUE;
 	case IDCANCEL:
             *lpFlags &= ~(FR_FINDNEXT | FR_REPLACE | FR_REPLACEALL);
 	    *lpFlags |= FR_DIALOGTERM;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    DestroyWindow(hWnd);
 	    return TRUE;
 	case pshHelp:
@@ -328,7 +328,7 @@ BOOL16 CALLBACK FindTextDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam,
 	    return FINDDLG_WMInitDialog(hWnd, lParam, &(lpfr->Flags),
 		MapSL(lpfr->lpstrFindWhat), FALSE);
 	case WM_COMMAND:
-	    lpfr=MapSL(GetWindowLongA(hWnd, DWL_USER));
+	    lpfr=MapSL(GetWindowLongPtrW(hWnd, DWLP_USER));
 	    return FINDDLG_WMCommand(hWnd, wParam, HWND_32(lpfr->hwndOwner),
 		&lpfr->Flags, MapSL(lpfr->lpstrFindWhat),
 		lpfr->wFindWhatLen, FALSE);
@@ -344,7 +344,7 @@ static LRESULT REPLACEDLG_WMInitDialog(HWND hWnd, LPARAM lParam,
 		    LPDWORD lpFlags, LPSTR lpstrFindWhat,
 		    LPSTR lpstrReplaceWith, BOOL fUnicode)
 {
-    SetWindowLongA(hWnd, DWL_USER, lParam);
+    SetWindowLongPtrW(hWnd, DWLP_USER, lParam);
     *lpFlags &= ~(FR_FINDNEXT | FR_REPLACE | FR_REPLACEALL | FR_DIALOGTERM);
     /*
      * FIXME : If the initial FindWhat string is empty, we should disable the FinNext /
@@ -410,14 +410,14 @@ static LRESULT REPLACEDLG_WMCommand(HWND hWnd, WPARAM16 wParam,
 		else *lpFlags &= ~FR_MATCHCASE;
             *lpFlags &= ~(FR_REPLACE | FR_REPLACEALL | FR_DIALOGTERM);
 	    *lpFlags |= FR_FINDNEXT;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    return TRUE;
 	case IDCANCEL:
             *lpFlags &= ~(FR_FINDNEXT | FR_REPLACE | FR_REPLACEALL);
 	    *lpFlags |= FR_DIALOGTERM;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    DestroyWindow(hWnd);
 	    return TRUE;
 	case psh1:
@@ -438,8 +438,8 @@ static LRESULT REPLACEDLG_WMCommand(HWND hWnd, WPARAM16 wParam,
 		else *lpFlags &= ~FR_MATCHCASE;
             *lpFlags &= ~(FR_FINDNEXT | FR_REPLACEALL | FR_DIALOGTERM);
 	    *lpFlags |= FR_REPLACE;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    return TRUE;
 	case psh2:
 	    if (fUnicode)
@@ -459,8 +459,8 @@ static LRESULT REPLACEDLG_WMCommand(HWND hWnd, WPARAM16 wParam,
 		else *lpFlags &= ~FR_MATCHCASE;
             *lpFlags &= ~(FR_FINDNEXT | FR_REPLACE | FR_DIALOGTERM);
 	    *lpFlags |= FR_REPLACEALL;
-	    SendMessageA(hwndOwner, uFindReplaceMessage, 0,
-                          GetWindowLongA(hWnd, DWL_USER) );
+	    SendMessageW( hwndOwner, uFindReplaceMessage, 0,
+                          GetWindowLongPtrW(hWnd, DWLP_USER) );
 	    return TRUE;
 	case pshHelp:
 	    /* FIXME : should lpfr structure be passed as an argument ??? */
@@ -486,7 +486,7 @@ BOOL16 CALLBACK ReplaceTextDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam
 		    MapSL(lpfr->lpstrFindWhat),
 		    MapSL(lpfr->lpstrReplaceWith), FALSE);
 	case WM_COMMAND:
-	    lpfr=MapSL(GetWindowLongA(hWnd, DWL_USER));
+	    lpfr=MapSL(GetWindowLongPtrW(hWnd, DWLP_USER));
 	    return REPLACEDLG_WMCommand(hWnd, wParam, HWND_32(lpfr->hwndOwner),
 		    &lpfr->Flags, MapSL(lpfr->lpstrFindWhat),
 		    lpfr->wFindWhatLen, MapSL(lpfr->lpstrReplaceWith),

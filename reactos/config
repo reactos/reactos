@@ -5,14 +5,13 @@
 # Possible values in the future: alpha,i386,m68k,mips,powerpc
 ARCH := i386
 
-
 #
-# Which cpu should reactos optimze for
+# Which cpu should reactos optimize for
 # example : i486, i586, pentium, pentium2, pentium3, pentium4
 #           athlon-xp, athlon-mp, k6-2, 
 #
-# see gcc manual for more cpu name and which cpu it can 
-# be optimze for. 
+# see gcc manual for more cpu names and which cpus it can 
+# be optimized for. 
 #
 
 OARCH := i486
@@ -28,24 +27,9 @@ KDBG := 0
 DBG := 0
 
 #
-# Whether to compile with optimizations
-#
-OPTIMIZED := 0
-
-#
 # Whether to compile a multiprocessor or single processor version
 #
 CONFIG_SMP := 0
-
-#
-# Whether to compile for ACPI compliant systems
-#
-ACPI := 0
-
-#
-# whether to use a 3GB User, 1GB Kernel memory map
-#
-3GB := 0
 
 #
 # Which version of NDIS do we support up to?

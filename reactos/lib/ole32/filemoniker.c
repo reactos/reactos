@@ -157,7 +157,7 @@ HRESULT WINAPI FileMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void**
 {
     FileMonikerImpl *This = (FileMonikerImpl *)iface;
 
-  TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
+  TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
     /* Perform a sanity check on the parameters.*/
     if ( (This==0) || (ppvObject==0) )
@@ -223,7 +223,7 @@ ULONG WINAPI FileMonikerImpl_Release(IMoniker* iface)
 HRESULT WINAPI FileMonikerImpl_GetClassID(IMoniker* iface,
                                           CLSID *pClassID)/* Pointer to CLSID of object */
 {
-    TRACE("(%p,%p),stub!\n",iface,pClassID);
+    TRACE("(%p,%p)\n",iface,pClassID);
 
     if (pClassID==NULL)
         return E_POINTER;
@@ -473,7 +473,7 @@ HRESULT WINAPI FileMonikerImpl_Construct(FileMonikerImpl* This, LPCOLESTR lpszPa
     static const WCHAR bkSlash[]={'\\',0};
     BYTE addBkSlash;
 
-    TRACE("(%p,%p)\n",This,lpszPathName);
+    TRACE("(%p,%s)\n",This,debugstr_w(lpszPathName));
 
     /* Initialize the virtual fgunction table. */
     This->lpvtbl1      = &VT_FileMonikerImpl;
@@ -566,7 +566,7 @@ HRESULT WINAPI FileMonikerImpl_BindToObject(IMoniker* iface,
 
     *ppvResult=0;
 
-    TRACE("(%p,%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,riid,ppvResult);
+    TRACE("(%p,%p,%p,%s,%p)\n",iface,pbc,pmkToLeft,debugstr_guid(riid),ppvResult);
 
     if(pmkToLeft==NULL){
 
@@ -673,7 +673,7 @@ HRESULT WINAPI FileMonikerImpl_BindToStorage(IMoniker* iface,
     IStorage *pstg=0;
     HRESULT res;
 
-    TRACE("(%p,%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,riid,ppvObject);
+    TRACE("(%p,%p,%p,%s,%p)\n",iface,pbc,pmkToLeft,debugstr_guid(riid),ppvObject);
 
     if (pmkToLeft==NULL){
 
@@ -708,7 +708,7 @@ HRESULT WINAPI FileMonikerImpl_BindToStorage(IMoniker* iface,
     }
     else {
 
-        FIXME("(%p,%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,riid,ppvObject);
+        FIXME("(%p,%p,%p,%s,%p)\n",iface,pbc,pmkToLeft,debugstr_guid(riid),ppvObject);
 
         return E_NOTIMPL;
     }
@@ -1243,6 +1243,8 @@ HRESULT WINAPI FileMonikerImpl_GetDisplayName(IMoniker* iface,
 
     strcpyW(*ppszDisplayName,This->filePathName);
 
+    TRACE("-- %s\n", debugstr_w(*ppszDisplayName));
+    
     return S_OK;
 }
 
@@ -1283,7 +1285,7 @@ HRESULT WINAPI FileMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid
 
     ICOM_THIS_From_IROTData(IMoniker, iface);
 
-    TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
+    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
     return FileMonikerImpl_QueryInterface(This, riid, ppvObject);
 }
@@ -1329,29 +1331,28 @@ HRESULT WINAPI FileMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
  ******************************************************************************/
 HRESULT WINAPI CreateFileMoniker(LPCOLESTR lpszPathName, LPMONIKER * ppmk)
 {
-    FileMonikerImpl* newFileMoniker = 0;
-    HRESULT  hr = E_FAIL;
-    IID riid=IID_IMoniker;
+    FileMonikerImpl* newFileMoniker;
+    HRESULT  hr;
 
-    TRACE("(%p,%p)\n",lpszPathName,ppmk);
+    TRACE("(%s,%p)\n",debugstr_w(lpszPathName),ppmk);
 
-    if (ppmk==NULL)
+    if (!ppmk)
         return E_POINTER;
 
-    if(lpszPathName==NULL)
+    if(!lpszPathName)
         return MK_E_SYNTAX;
 
-    *ppmk=0;
+    *ppmk=NULL;
 
     newFileMoniker = HeapAlloc(GetProcessHeap(), 0, sizeof(FileMonikerImpl));
 
-    if (newFileMoniker == 0)
+    if (!newFileMoniker)
         return E_OUTOFMEMORY;
 
     hr = FileMonikerImpl_Construct(newFileMoniker,lpszPathName);
 
     if (SUCCEEDED(hr))
-	hr = FileMonikerImpl_QueryInterface((IMoniker*)newFileMoniker,&riid,(void**)ppmk);
+	hr = FileMonikerImpl_QueryInterface((IMoniker*)newFileMoniker,&IID_IMoniker,(void**)ppmk);
     else
         HeapFree(GetProcessHeap(),0,newFileMoniker);
 

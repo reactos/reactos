@@ -14,7 +14,7 @@ END
 
 IDD_GINALOADFAILED DIALOG  58, 83, 231, 119
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "User Interface Fehler"
+CAPTION "Benutzer Interface Fehler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Die Logon Benutzer Schnittstelle DLL %s konnte nicht geladen werden.", IDC_GINALOADFAILED, 39, 16, 156, 24
@@ -22,7 +22,7 @@ BEGIN
     DEFPUSHBUTTON "Neusta&rt", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Netzwerkverbindungen vorbereiten..."
     IDS_APPLYINGCOMPUTERSETTINGS "Computereinstellungen laden..."
@@ -40,8 +40,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS startet..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon konnte die Benutzershell nicht aktivieren!"
 END
-

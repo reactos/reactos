@@ -257,7 +257,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             OnAbout();
             break;
         case ID_FILE_EXIT:
-            DestroyWindow(hDlg);
+            EndDialog(hDlg, IDOK);
             break;
         }     
         break;
@@ -590,23 +590,12 @@ BOOL OnCreate(HWND hWnd)
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 2);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, nActivePage);
 
-    if (TaskManagerSettings.UpdateSpeed == 0)
-        KillTimer(hWnd, 1);
-    else if (TaskManagerSettings.UpdateSpeed == 1)
-    {
-        KillTimer(hWnd, 1);
+    if (TaskManagerSettings.UpdateSpeed == 1)
         SetTimer(hWnd, 1, 1000, NULL);
-    }
     else if (TaskManagerSettings.UpdateSpeed == 2)
-    {
-        KillTimer(hWnd, 1);
         SetTimer(hWnd, 1, 2000, NULL);
-    }
     else if (TaskManagerSettings.UpdateSpeed == 4)
-    {
-        KillTimer(hWnd, 1);
         SetTimer(hWnd, 1, 4000, NULL);
-    }
 
     /*
      * Refresh the performance data

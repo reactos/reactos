@@ -2,9 +2,7 @@
 #ifndef __SM_API_H
 #define __SM_API_H
 
-#define SM_API_PORT_NAME   L"\\SmApiPort"
-#define SM_DBGSS_PORT_NAME L"\\DbgSsApiPort"
-#define SM_DBGUI_PORT_NAME L"\\DbgUiApiPort"
+#include <sm/ns.h>
 
 #pragma pack(push,4)
 

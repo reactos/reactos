@@ -13,6 +13,8 @@ UINT CountInterfaceAddresses( PIP_INTERFACE Interface );
 NTSTATUS GetInterfaceSpeed( PIP_INTERFACE Interface, PUINT Speed );
 NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, PCHAR NameBuffer,
 			   UINT NameMaxLen );
+NTSTATUS GetInterfaceConnectionStatus( PIP_INTERFACE Interface,
+                                       PDWORD OperStatus );
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address);
 
 #endif//_TCPIP_INTERFACE_H

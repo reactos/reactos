@@ -94,7 +94,8 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 
       /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
       Status = NtOpenProcess(&Process,
-                             PROCESS_DUP_HANDLE,
+                             PROCESS_DUP_HANDLE | PROCESS_VM_OPERATION |
+                             PROCESS_VM_WRITE | PROCESS_CREATE_THREAD,
                              &ObjectAttributes,
                              &ClientId);
       if (!NT_SUCCESS(Status))
@@ -110,7 +111,7 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
                                   (PVOID) Event, 0, NULL);
       if (NULL == Thread)
         {
-          DPRINT1("Failed thread creation\n");
+          DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
           CloseHandle(Process);
           return;
         }
@@ -1381,8 +1382,8 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     }
 }
 
-VOID
-Console_Api(DWORD RefreshEvent)
+DWORD STDCALL
+Console_Api (PVOID unused)
 {
   /* keep reading events from the keyboard and stuffing them into the current
      console's input queue */
@@ -1409,6 +1410,7 @@ Console_Api(DWORD RefreshEvent)
     }
 
   PrivateCsrssAcquireOrReleaseInputOwnership(TRUE);
+  return 0;
 }
 
 CSR_API(CsrGetScreenBufferInfo)

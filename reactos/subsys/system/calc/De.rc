@@ -28,7 +28,7 @@ STRINGTABLE DISCARDABLE
 {
    IDS_APPNAME,            "Rechner"
 
-   IDS_COPYRIGHT1,         "Calculator 5.0. Lizensiert unter der LGPL 2"
+   IDS_COPYRIGHT1,         "Rechner 5.0. Lizenziert unter der LGPL 2"
    IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
    IDS_COPYRIGHT3          "San Jose, California, USA"
    IDS_COPYRIGHT4          "james@ActionMessage.com"
@@ -43,9 +43,9 @@ STRINGTABLE DISCARDABLE
    IDS_BTN_MEM_PLUS,       "M+"
    IDS_BTN_MEM_STATUS_M,   "M"
    IDS_BTN_SQRT,           "sqrt"
-   IDS_ERR_INVALID_INPUT,  "Ungültige Eingabe für funktion."
+   IDS_ERR_INVALID_INPUT,  "Ungültige Eingabe für Funktion."
    IDS_ERR_DIVIDE_BY_ZERO, "Teilen durch 0 unmöglich."
-   IDS_ERR_UNDEFINED,      "Das Ergebnis der funktion is undefiniert."
+   IDS_ERR_UNDEFINED,      "Das Ergebnis der Funktion is undefiniert."
 }
 
 MAIN_MENU MENU DISCARDABLE
@@ -70,7 +70,7 @@ MAIN_MENU MENU DISCARDABLE
 SCIMS_MENU MENU DISCARDABLE
 {
    POPUP "&Bearbeiten" {
-      MENUITEM "&Kopiren Ctrl+C",     IDM_COPY
+      MENUITEM "&Kopieren Ctrl+C",     IDM_COPY
       MENUITEM "&Einfügen Ctrl+V",    IDM_PASTE
    }
    POPUP "&Anzeige" {

@@ -25,18 +25,6 @@ typedef struct _RETENTION_CHECK_PARAMS
 
 /* FUNCTIONS ************************************************************/
 
-PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
-{
-  return(((char*)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
-}
-
-
-POBJECT_HEADER BODY_TO_HEADER(PVOID body)
-{
-  PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
-  return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
-}
-
 NTSTATUS
 ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                            IN KPROCESSOR_MODE AccessMode,
@@ -102,6 +90,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
         CapturedObjectAttributes->RootDirectory = ObjectAttributes->RootDirectory;
         CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
         CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+        CapturedObjectAttributes->SecurityQualityOfService = ObjectAttributes->SecurityQualityOfService;
       }
 
       return STATUS_SUCCESS;
@@ -146,6 +135,53 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     else
     {
       CapturedObjectAttributes->SecurityDescriptor = NULL;
+    }
+
+    if(AttributesCopy.SecurityQualityOfService != NULL)
+    {
+      SECURITY_QUALITY_OF_SERVICE SafeQoS;
+
+      _SEH_TRY
+      {
+        ProbeForRead(AttributesCopy.SecurityQualityOfService,
+                     sizeof(SECURITY_QUALITY_OF_SERVICE),
+                     sizeof(ULONG));
+        SafeQoS = *(PSECURITY_QUALITY_OF_SERVICE)AttributesCopy.SecurityQualityOfService;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(!NT_SUCCESS(Status))
+      {
+        DPRINT1("Unable to capture QoS!!!\n");
+        goto failcleanupsdescriptor;
+      }
+
+      if(SafeQoS.Length != sizeof(SECURITY_QUALITY_OF_SERVICE))
+      {
+        DPRINT1("Unable to capture QoS, wrong size!!!\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto failcleanupsdescriptor;
+      }
+
+      CapturedObjectAttributes->SecurityQualityOfService = ExAllocatePool(PoolType,
+                                                                          sizeof(SECURITY_QUALITY_OF_SERVICE));
+      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
+      {
+        *CapturedObjectAttributes->SecurityQualityOfService = SafeQoS;
+      }
+      else
+      {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto failcleanupsdescriptor;
+      }
+    }
+    else
+    {
+      CapturedObjectAttributes->SecurityQualityOfService = NULL;
     }
   }
 
@@ -259,6 +295,8 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     {
       ExFreePool(ObjectName->Buffer);
     }
+
+failcleanupsdescriptor:
     if(CapturedObjectAttributes != NULL)
     {
       /* cleanup allocated resources */
@@ -293,11 +331,18 @@ ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttribut
                to ObpCaptureObjectAttributes() to avoid memory leaks */
   if(AccessMode != KernelMode || CaptureIfKernel)
   {
-    if(CapturedObjectAttributes != NULL &&
-       CapturedObjectAttributes->SecurityDescriptor != NULL)
+    if(CapturedObjectAttributes != NULL)
     {
-      ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
-      CapturedObjectAttributes->SecurityDescriptor = NULL;
+      if(CapturedObjectAttributes->SecurityDescriptor != NULL)
+      {
+        ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
+        CapturedObjectAttributes->SecurityDescriptor = NULL;
+      }
+      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
+      {
+        ExFreePool(CapturedObjectAttributes->SecurityQualityOfService);
+        CapturedObjectAttributes->SecurityQualityOfService = NULL;
+      }
     }
     if(ObjectName != NULL &&
        ObjectName->Length > 0)
@@ -367,7 +412,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   else
     {
       Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
-					 DIRECTORY_TRAVERSE,
+					 0,
 					 NULL,
 					 UserMode,
 					 &CurrentObject,
@@ -677,7 +722,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
 
   /* Initialize the object header */
-  DPRINT("Initalizing header\n");
+  DPRINT("Initalizing header 0x%x (%wZ)\n", Header, &Type->TypeName);
   Header->HandleCount = 0;
   Header->RefCount = 1;
   Header->ObjectType = Type;
@@ -849,7 +894,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
  
-   if (Header->CloseInProcess)
+   if (Header->RefCount == 0 && !Header->Permanent)
    {
       if (Header->ObjectType == PsProcessType)
         {
@@ -862,7 +907,10 @@ ObReferenceObjectByPointer(IN PVOID Object,
       return(STATUS_UNSUCCESSFUL);
    }
 
-   InterlockedIncrement(&Header->RefCount);
+   if (1 == InterlockedIncrement(&Header->RefCount) && !Header->Permanent)
+   {
+      KEBUGCHECK(0);
+   }
    
    return(STATUS_SUCCESS);
 }
@@ -978,12 +1026,6 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
       KEBUGCHECK(0);
     }
 
-  if (ObjectHeader->CloseInProcess)
-    {
-      KEBUGCHECK(0);
-      return STATUS_UNSUCCESSFUL;
-    }
-  ObjectHeader->CloseInProcess = TRUE;
   
   switch (KeGetCurrentIrql ())
     {
@@ -1049,12 +1091,11 @@ ObfReferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   /* No one should be referencing an object once we are deleting it. */
-  if (Header->CloseInProcess)
-    {
-      KEBUGCHECK(0);
-    }
+  if (InterlockedIncrement(&Header->RefCount) == 1 && !Header->Permanent)
+  {
+     KEBUGCHECK(0);
+  }
 
-  (VOID)InterlockedIncrement(&Header->RefCount);
 }
 
 
@@ -1080,25 +1121,23 @@ ObfDereferenceObject(IN PVOID Object)
   POBJECT_HEADER Header;
   LONG NewRefCount;
   BOOL Permanent;
-  ULONG HandleCount;
 
   ASSERT(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
   Permanent = Header->Permanent;
-  HandleCount = Header->HandleCount;
 
   /* 
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
   NewRefCount = InterlockedDecrement(&Header->RefCount);
+  DPRINT("ObfDereferenceObject(0x%x)==%d (%wZ)\n", Object, NewRefCount, &Header->ObjectType->TypeName);
   ASSERT(NewRefCount >= 0);
 
   /* Check whether the object can now be deleted. */
   if (NewRefCount == 0 &&
-      HandleCount == 0 &&
       !Permanent)
     {
       ObpDeleteObjectDpcLevel(Header, NewRefCount);

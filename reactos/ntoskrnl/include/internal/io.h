@@ -412,7 +412,7 @@ IoDestroyDriverList(VOID);
 /* bootlog.c */
 
 VOID
-IopInitBootLog(VOID);
+IopInitBootLog(BOOLEAN StartBootLog);
 
 VOID
 IopStartBootLog(VOID);
@@ -425,6 +425,11 @@ IopBootLog(PUNICODE_STRING DriverName, BOOLEAN Success);
 
 VOID
 IopSaveBootLogToFile(VOID);
+
+/* cancel.c */
+
+VOID STDCALL
+IoCancelThreadIo(PETHREAD Thread);
 
 /* errlog.c */
 

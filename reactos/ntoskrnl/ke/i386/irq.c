@@ -315,7 +315,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * the PIC.
     */
     
-   KeGetCurrentKPCR()->PrcbData.InterruptCount++;
+   KeGetCurrentPrcb()->InterruptCount++;
 
    /*
     * Notify the rest of the kernel of the raised irq level. For the
@@ -340,9 +340,6 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, old_level);
-#if defined(KDBG) || defined(DBG)
-      KdbProfileInterrupt(Trapframe->Eip);
-#endif /* KDBG */
    }
    else
 #endif

@@ -148,6 +148,60 @@ SepPrivilegeCheck(PTOKEN Token,
 		  ULONG PrivilegeControl,
 		  KPROCESSOR_MODE PreviousMode);
 
+NTSTATUS
+SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN POOL_TYPE PoolType,
+                                   IN BOOLEAN CaptureIfKernel,
+                                   OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+                                   OUT PBOOLEAN Present);
+
+VOID
+SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+SepCaptureSid(IN PSID InputSid,
+              IN KPROCESSOR_MODE AccessMode,
+              IN POOL_TYPE PoolType,
+              IN BOOLEAN CaptureIfKernel,
+              OUT PSID *CapturedSid);
+
+VOID
+SepReleaseSid(IN PSID CapturedSid,
+              IN KPROCESSOR_MODE AccessMode,
+              IN BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+SepCaptureAcl(IN PACL InputAcl,
+              IN KPROCESSOR_MODE AccessMode,
+              IN POOL_TYPE PoolType,
+              IN BOOLEAN CaptureIfKernel,
+              OUT PACL *CapturedAcl);
+
+VOID
+SepReleaseAcl(IN PACL CapturedAcl,
+              IN KPROCESSOR_MODE AccessMode,
+              IN BOOLEAN CaptureIfKernel);
+
+#define SepAcquireTokenLockExclusive(Token)                                    \
+  do {                                                                         \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
+  while(0)
+
+#define SepAcquireTokenLockShared(Token)                                       \
+  do {                                                                         \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
+  while(0)
+
+#define SepReleaseTokenLock(Token)                                             \
+  do {                                                                         \
+    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
+    KeLeaveCriticalRegion();                                                   \
+  while(0)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SE_H */
 

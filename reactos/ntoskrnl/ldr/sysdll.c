@@ -18,11 +18,11 @@
 
 /* GLOBALS *******************************************************************/
 
-static PVOID SystemDllEntryPoint = NULL;
-static PVOID SystemDllApcDispatcher = NULL;
-static PVOID SystemDllCallbackDispatcher = NULL;
-static PVOID SystemDllExceptionDispatcher = NULL;
-static PVOID SystemDllRaiseExceptionDispatcher = NULL;
+PVOID SystemDllEntryPoint = NULL;
+PVOID SystemDllApcDispatcher = NULL;
+PVOID SystemDllCallbackDispatcher = NULL;
+PVOID SystemDllExceptionDispatcher = NULL;
+PVOID SystemDllRaiseExceptionDispatcher = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -144,7 +144,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			    SECTION_ALL_ACCESS,
 			    NULL,
 			    NULL,
-			    PAGE_READWRITE,
+			    PAGE_READONLY,
 			    SEC_IMAGE | SEC_COMMIT,
 			    FileHandle);
    if (!NT_SUCCESS(Status))

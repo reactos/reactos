@@ -186,8 +186,13 @@ LdrpInitializeTlsForThread(VOID)
    PTLS_DATA TlsInfo;
    PVOID TlsData;
    ULONG i;
-
+   PTEB Teb = NtCurrentTeb();
+   
    DPRINT("LdrpInitializeTlsForThread() called for %wZ\n", &ExeModule->BaseDllName);
+
+   Teb->StaticUnicodeString.Length = 0;
+   Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
+   Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
 
    if (LdrpTlsCount > 0)
      {
@@ -201,7 +206,7 @@ LdrpInitializeTlsForThread(VOID)
          }
 
        TlsData = (PVOID)TlsPointers + LdrpTlsCount * sizeof(PVOID);
-       NtCurrentTeb()->ThreadLocalStoragePointer = TlsPointers;
+       Teb->ThreadLocalStoragePointer = TlsPointers;
 
        TlsInfo = LdrpTlsArray;
        for (i = 0; i < LdrpTlsCount; i++, TlsInfo++)
@@ -682,7 +687,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                            SECTION_ALL_ACCESS,
                            NULL,
                            NULL,
-                           PAGE_READWRITE,
+                           PAGE_READONLY,
                            SEC_COMMIT | (MapAsDataFile ? 0 : SEC_IMAGE),
                            FileHandle);
   NtClose(FileHandle);
@@ -2048,7 +2053,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     &ViewSize,
                                     0,
                                     MEM_COMMIT,
-                                    PAGE_READWRITE);
+                                    PAGE_READONLY);
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("map view of section failed (Status %x)\n", Status);
@@ -2875,10 +2880,10 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
   DPRINT ("LdrVerifyImageMatchesChecksum() called\n");
 
   Status = NtCreateSection (&SectionHandle,
-                            SECTION_MAP_EXECUTE,
+                            SECTION_MAP_READ,
                             NULL,
                             NULL,
-                            PAGE_EXECUTE,
+                            PAGE_READONLY,
                             SEC_COMMIT,
                             FileHandle);
   if (!NT_SUCCESS(Status))
@@ -2898,7 +2903,7 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
                                &ViewSize,
                                ViewShare,
                                0,
-                               PAGE_EXECUTE);
+                               PAGE_READONLY);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);

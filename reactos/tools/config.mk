@@ -19,10 +19,6 @@ ifeq ($(CONFIG_SMP), 1)
 CONFIG += CONFIG_SMP
 endif
 
-ifeq ($(ACPI), 1)
-CONFIG += ACPI
-endif
-
 $(PATH_TO_TOP)/tools/mkconfig$(EXE_POSTFIX): $(PATH_TO_TOP)/tools/mkconfig.c
 	@$(HOST_CC) -g -o $(PATH_TO_TOP)/tools/mkconfig$(EXE_POSTFIX) $(PATH_TO_TOP)/tools/mkconfig.c
 

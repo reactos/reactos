@@ -6,6 +6,8 @@
 #include <internal/i386/mm.h>
 #include <internal/i386/fpu.h>
 
+#define AP_MAGIC (0x12481020)
+
 .globl _NtProcessStartup
 
 _NtProcessStartup:
@@ -17,7 +19,25 @@ _NtProcessStartup:
     /* Load the PCR selector */
     movl $PCR_SELECTOR, %eax
     movl %eax, %fs
+    
+    cmpl $AP_MAGIC, %ecx
+    jne  .m1
+     
+    pushl $0
+    popfl
+	
+    /*
+     *  Reserve space for the floating point save area.
+     */
+    subl  $SIZEOF_FX_SAVE_AREA, %esp
 
+    /*
+     * Call the application processor initialization code
+     */
+    pushl $0
+    call  _KiSystemStartup
+    
+.m1:     
     /* Load the initial kernel stack */
     lea _kernel_stack, %eax
     add $0x1000, %eax

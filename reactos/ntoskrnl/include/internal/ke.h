@@ -41,11 +41,42 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 struct _KTHREAD;
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
+struct _KPRCB;
 struct _KEXCEPTION_FRAME;
 
 #define IPI_REQUEST_FUNCTIONCALL    0
 #define IPI_REQUEST_APC		    1
 #define IPI_REQUEST_DPC		    2
+#define IPI_REQUEST_FREEZE	    3
+
+/* threadsch.c ********************************************************************/
+
+/* Thread Scheduler Functions */
+
+/* Readies a Thread for Execution. */
+VOID 
+STDCALL
+KiDispatchThreadNoLock(ULONG NewThreadStatus);
+
+/* Readies a Thread for Execution. */
+VOID 
+STDCALL
+KiDispatchThread(ULONG NewThreadStatus);
+
+/* Puts a Thread into a block state. */
+VOID
+STDCALL
+KiBlockThread(PNTSTATUS Status, 
+              UCHAR Alertable, 
+              ULONG WaitMode,
+              UCHAR WaitReason);
+    
+/* Removes a thread out of a block state. */        
+VOID
+STDCALL
+KiUnblockThread(PKTHREAD Thread, 
+                PNTSTATUS WaitStatus, 
+                KPRIORITY Increment);
 
 /* ipi.c ********************************************************************/
 
@@ -63,60 +94,66 @@ KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID),
 
 /* next file ***************************************************************/
 
-typedef struct _KPROCESS_PROFILE
-/*
- * List of the profile data structures associated with a process.
- */
-{
-  LIST_ENTRY ProfileListHead;
-  LIST_ENTRY ListEntry;
-  HANDLE Pid;
-} KPROCESS_PROFILE, *PKPROCESS_PROFILE;
+typedef struct _KPROFILE_SOURCE_OBJECT {
+    KPROFILE_SOURCE Source;
+    LIST_ENTRY ListEntry;
+} KPROFILE_SOURCE_OBJECT, *PKPROFILE_SOURCE_OBJECT;
 
-typedef struct _KPROFILE
-/*
- * Describes a contiguous region of process memory that is being profiled.
- */
-{
-  CSHORT Type;
-  CSHORT Name;
-
-  /* Entry in the list of profile data structures for this process. */
-  LIST_ENTRY ListEntry; 
-
-  /* Base of the region being profiled. */
-  PVOID Base;
-
-  /* Size of the region being profiled. */
-  ULONG Size;
-
-  /* Shift of offsets from the region to buckets in the profiling buffer. */
-  ULONG BucketShift;
-
-  /* MDL which described the buffer that receives profiling data. */
-  struct _MDL *BufferMdl;
-
-  /* System alias for the profiling buffer. */
-  PULONG Buffer;
-
-  /* Size of the buffer for profiling data. */
-  ULONG BufferSize;
-
-  /* 
-   * Mask of processors for which profiling data should be collected. 
-   * Currently unused.
-   */
-  ULONG ProcessorMask;
-
-  /* TRUE if profiling has been started for this region. */
-  BOOLEAN Started;
-
-  /* Pointer (and reference) to the process which is being profiled. */
-  struct _EPROCESS *Process;
+typedef struct _KPROFILE {
+    CSHORT Type;
+    CSHORT Size;
+    LIST_ENTRY ListEntry;
+    PVOID RegionStart;
+    PVOID RegionEnd;
+    ULONG BucketShift;
+    PVOID Buffer;
+    CSHORT Source;
+    ULONG Affinity;
+    BOOLEAN Active;
+    struct _KPROCESS *Process;
 } KPROFILE, *PKPROFILE;
+
+/* Cached modules from the loader block */
+typedef enum _CACHED_MODULE_TYPE {
+    AnsiCodepage,
+    OemCodepage,
+    UnicodeCasemap,
+    SystemRegistry,
+    HardwareRegistry,
+    MaximumCachedModuleType,
+} CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
+extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
+
+STDCALL
+VOID
+KeInitializeProfile(struct _KPROFILE* Profile,
+                    struct _KPROCESS* Process,
+                    PVOID ImageBase,
+                    ULONG ImageSize,
+                    ULONG BucketSize,
+                    KPROFILE_SOURCE ProfileSource,
+                    KAFFINITY Affinity);
+
+STDCALL
+VOID
+KeStartProfile(struct _KPROFILE* Profile,
+               PVOID Buffer);
+
+STDCALL
+VOID
+KeStopProfile(struct _KPROFILE* Profile);
+
+STDCALL
+ULONG
+KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
+
+STDCALL
+VOID
+KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
+                     ULONG Interval);
 
 VOID
 STDCALL
@@ -131,43 +168,91 @@ KeProfileInterruptWithSource(
 	IN KPROFILE_SOURCE		Source
 );
 
-VOID KiAddProfileEventToProcess(PLIST_ENTRY ListHead, PVOID Eip);
-VOID KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Eip);
-VOID KiInsertProfileIntoProcess(PLIST_ENTRY ListHead, PKPROFILE Profile);
-VOID KiInsertProfile(PKPROFILE Profile);
-VOID KiRemoveProfile(PKPROFILE Profile);
-VOID STDCALL KiDeleteProfile(PVOID ObjectBody);
-
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 
 VOID STDCALL KiExpireTimers(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
 
-KIRQL KeAcquireDispatcherDatabaseLock(VOID);
-VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
-VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
-VOID KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
+KIRQL inline FASTCALL KeAcquireDispatcherDatabaseLock(VOID);
+VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
+VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
+VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
+
+VOID 
+STDCALL
+KeInitializeThread(struct _KPROCESS* Process, PKTHREAD Thread, BOOLEAN First);
+
+VOID
+STDCALL
+KeRundownThread(VOID);
+
+NTSTATUS KeReleaseThread(PKTHREAD Thread);
+
+VOID
+STDCALL
+KeStackAttachProcess (
+    IN struct _KPROCESS* Process,
+    OUT PKAPC_STATE ApcState
+    );
+
+VOID
+STDCALL
+KeUnstackDetachProcess (
+    IN PKAPC_STATE ApcState
+    );
 
 BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment);
 VOID STDCALL KeExpireTimers(PKDPC Apc,
 			    PVOID Arg1,
 			    PVOID Arg2,
 			    PVOID Arg3);
-VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
-				  ULONG Size, ULONG SignalState);
+VOID inline FASTCALL KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
+ 				  ULONG Size, ULONG SignalState);
 VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 
-BOOLEAN KiAbortWaitThread(struct _KTHREAD* Thread, NTSTATUS WaitStatus);
+VOID
+FASTCALL 
+KiAbortWaitThread(PKTHREAD Thread, 
+                  NTSTATUS WaitStatus,
+                  KPRIORITY Increment);
+                  
+ULONG
+STDCALL
+KeForceResumeThread(IN PKTHREAD Thread);
+ 
+BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
+
+VOID inline FASTCALL KiSatisfyObjectWait(PDISPATCHER_HEADER Object, PKTHREAD Thread);
+
+BOOLEAN inline FASTCALL KiIsObjectSignaled(PDISPATCHER_HEADER Object, PKTHREAD Thread);
+
+VOID inline FASTCALL KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
+
+VOID FASTCALL KiWaitTest(PDISPATCHER_HEADER Object, KPRIORITY Increment);
 
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-		  
-VOID KiInitializeUserApc(IN PVOID Reserved,
+
+LONG 
+STDCALL 
+KiInsertQueue(IN PKQUEUE Queue, 
+              IN PLIST_ENTRY Entry, 
+              BOOLEAN Head);
+   
+ULONG
+STDCALL
+KeSetProcess(struct _KPROCESS* Process, 
+             KPRIORITY Increment);
+             
+                            
+VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
+
+VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
 			 IN PKTRAP_FRAME TrapFrame,
 			 IN PKNORMAL_ROUTINE NormalRoutine,
 			 IN PVOID NormalContext,
@@ -183,6 +268,7 @@ STDCALL
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
+VOID FASTCALL KiWakeQueue(IN PKQUEUE Queue);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
 
 extern LARGE_INTEGER SystemBootTime;
@@ -192,11 +278,11 @@ extern LARGE_INTEGER SystemBootTime;
 VOID KeInitExceptions(VOID);
 VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);
-VOID KeInitDpc(struct _KPCR* Pcr);
+VOID KeInitDpc(struct _KPRCB* Prcb);
 VOID KeInitDispatcher(VOID);
-VOID KeInitializeDispatcher(VOID);
+VOID inline FASTCALL KeInitializeDispatcher(VOID);
 VOID KiInitializeSystemClock(VOID);
-VOID KeInitializeBugCheck(VOID);
+VOID KiInitializeBugCheck(VOID);
 VOID Phase1Initialization(PVOID Context);
 
 VOID KeInit1(PCHAR CommandLine, PULONG LastKernelAddress);

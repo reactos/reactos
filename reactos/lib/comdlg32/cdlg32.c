@@ -131,8 +131,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
  *	COMDLG32_AllocMem 			(internal)
  * Get memory for internal datastructure plus stringspace etc.
  *	RETURNS
- *		Pointer to a heap block: Succes
- *		NULL: Failure
+ *		Success: Pointer to a heap block
+ *		Failure: null
  */
 LPVOID COMDLG32_AllocMem(
 	int size	/* [in] Block size to allocate */

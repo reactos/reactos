@@ -1115,6 +1115,9 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
 
          MmSharePageEntrySectionSegment(Segment, SegmentOffset);
 
+         /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
+          * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
+          */
          Status = MmCreateVirtualMapping(MemoryArea->Process,
                                          Address,
                                          Attributes,
@@ -1227,21 +1230,21 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
          KEBUGCHECK(0);
       }
       MmLockAddressSpace(AddressSpace);
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
-                                      Address,
-                                      Region->Protect,
-                                      &Pfn[0],
-                                      1);
+      Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
+                                            Address,
+                                            Region->Protect,
+                                            &Pfn[0],
+                                            1);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("MmCreateVirtualMapping failed, status=%x\n", Status);
+         DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");
          KEBUGCHECK(0);
          return(Status);
       }
       MmInsertRmap(Pfn[0], AddressSpace->Process, (PVOID)PAddress);
       if (Locked)
       {
-         MmLockPage(Pfn[0]);
+         MmLockPageUnsafe(Pfn[0]);
       }
 
       /*
@@ -1512,7 +1515,7 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
                                        BOOLEAN Locked)
 {
    PVOID PAddress;
-   PVOID StartingAddress;
+   PVOID StartingAddress = NULL;
    ULONG Offset;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
@@ -1522,7 +1525,7 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
    NTSTATUS Status;
    ULONG Entry;
    PFN_TYPE Pfn[4];
-   PSECTION_DATA SectionData;
+   PSECTION_DATA SectionData = NULL;
    ULONG PageCount;
    ULONG i;
    PVOID RegionBase;

@@ -84,7 +84,7 @@ SetSetupType (DWORD dwSetupType)
   dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
 			 0,
-			 KEY_QUERY_VALUE,
+			 KEY_SET_VALUE,
 			 &hKey);
   if (dwError != ERROR_SUCCESS)
     {

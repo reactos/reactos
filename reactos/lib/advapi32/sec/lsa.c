@@ -507,4 +507,19 @@ LsaGetUserName(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryInfoTrustedDomain (DWORD Unknonw0,
+			   DWORD Unknonw1,
+			   DWORD Unknonw2)
+{
+  DPRINT1("LsaQueryInfoTrustedDomain not implemented\n");
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
 /* EOF */

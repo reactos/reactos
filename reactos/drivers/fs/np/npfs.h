@@ -1,13 +1,7 @@
 /* $Id$ */
 
-#ifndef __SERVICES_FS_NP_NPFS_H
-#define __SERVICES_FS_NP_NPFS_H
-
-/*
- * Hacky support for delayed closing of pipes. We need this to support
- * reading from pipe the was closed on one end.
- */
-#define FIN_WORKAROUND_READCLOSE
+#ifndef __DRIVERS_FS_NP_NPFS_H
+#define __DRIVERS_FS_NP_NPFS_H
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {
@@ -25,6 +19,7 @@ typedef struct _NPFS_PIPE
   KMUTEX FcbListLock;
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
+  LIST_ENTRY WaiterListHead;
   ULONG PipeType;
   ULONG ReadMode;
   ULONG WriteMode;
@@ -58,6 +53,14 @@ typedef struct _NPFS_FCB
   KSPIN_LOCK DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
 
+typedef struct _NPFS_WAITER_ENTRY
+{
+  LIST_ENTRY Entry;
+  PIRP Irp;
+  PNPFS_PIPE Pipe;
+  PNPFS_FCB Fcb;
+} NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
+
 
 extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
@@ -69,8 +72,6 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
                                              NULL);
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
-
-#define CP DPRINT("\n");
 
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -89,4 +90,4 @@ NTSTATUS STDCALL NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS STDCALL NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-#endif /* __SERVICES_FS_NP_NPFS_H */
+#endif /* __DRIVERS_FS_NP_NPFS_H */

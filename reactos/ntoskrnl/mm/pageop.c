@@ -73,7 +73,7 @@ PMM_PAGEOP
 MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
                  PMM_SECTION_SEGMENT Segment, ULONG Offset)
 {
-   ULONG_PTR Hash;
+   ULONG_PTR Hash = 0;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
@@ -147,7 +147,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
  * pid, address pair.      
  */
 {
-   ULONG_PTR Hash;
+   ULONG_PTR Hash = 0;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 

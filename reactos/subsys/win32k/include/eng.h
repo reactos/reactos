@@ -15,4 +15,9 @@ IntEngMaskBlt(SURFOBJ *DestObj,
              BRUSHOBJ *Brush,
              POINTL *BrushOrigin);
 
+VOID FASTCALL
+IntEngWindowChanged(
+        PWINDOW_OBJECT Window,
+        FLONG flChanged);
+
 #endif /* _WIN32K_ENG_H */

@@ -71,7 +71,9 @@
 #include "olectl.h"
 #include "oleauto.h"
 #include "connpt.h"
+#include "urlmon.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 #include "wine/wingdi16.h"
 #include "cursoricon.h"
@@ -106,7 +108,7 @@ typedef struct OLEPictureImpl {
     IPersistStreamVtbl *lpvtbl3;
     IConnectionPointContainerVtbl *lpvtbl4;
 
-  /* Object referenece count */
+  /* Object reference count */
     DWORD ref;
 
   /* We own the object and must destroy it ourselves */
@@ -705,7 +707,7 @@ static HRESULT WINAPI OLEPictureImpl_get_Attributes(IPicture *iface,
   TRACE("(%p)->(%p).\n", This, pdwAttr);
   *pdwAttr = 0;
   switch (This->desc.picType) {
-  case PICTYPE_BITMAP: 	break;	/* not 'truely' scalable, see MSDN. */
+  case PICTYPE_BITMAP: 	break;	/* not 'truly' scalable, see MSDN. */
   case PICTYPE_ICON: *pdwAttr     = PICTURE_TRANSPARENT;break;
   case PICTYPE_METAFILE: *pdwAttr = PICTURE_TRANSPARENT|PICTURE_SCALABLE;break;
   default:FIXME("Unknown pictype %d\n",This->desc.picType);break;
@@ -1514,9 +1516,15 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
     GetDIBits(hDC, hBitmap, 0, pInfoBitmap->bmiHeader.biHeight, pPixelData, pInfoBitmap, DIB_RGB_COLORS);
 
     /* Calculate the total length required for the BMP data */
-    if (pInfoBitmap->bmiHeader.biClrUsed != 0) iNumPaletteEntries = pInfoBitmap->bmiHeader.biClrUsed;
-    else if (pInfoBitmap->bmiHeader.biBitCount <= 8) iNumPaletteEntries = 1 << pInfoBitmap->bmiHeader.biBitCount;
-    else iNumPaletteEntries = 0;
+    if (pInfoBitmap->bmiHeader.biClrUsed != 0) {
+	iNumPaletteEntries = pInfoBitmap->bmiHeader.biClrUsed;
+	if (iNumPaletteEntries > 256) iNumPaletteEntries = 256;
+    } else {
+	if (pInfoBitmap->bmiHeader.biBitCount <= 8)
+	    iNumPaletteEntries = 1 << pInfoBitmap->bmiHeader.biBitCount;
+	else
+    	    iNumPaletteEntries = 0;
+    }
     *pLength =
         sizeof(BITMAPFILEHEADER) +
         sizeof(BITMAPINFOHEADER) +
@@ -1624,6 +1632,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 				||	(pInfoBitmap->bmiHeader.biBitCount == 24)
 				||	(pInfoBitmap->bmiHeader.biBitCount == 32 && pInfoBitmap->bmiHeader.biCompression == BI_RGB)) {
 				iNumEntriesPalette = pInfoBitmap->bmiHeader.biClrUsed;
+				if (iNumEntriesPalette > 256) iNumEntriesPalette = 256; 
 			} else if ((pInfoBitmap->bmiHeader.biBitCount == 16 || pInfoBitmap->bmiHeader.biBitCount == 32)
 				&& pInfoBitmap->bmiHeader.biCompression == BI_BITFIELDS) {
 				iNumEntriesPalette = 3;
@@ -1820,7 +1829,7 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
 
   VariantInit(pVarResult);
   V_VT(pVarResult) = VT_BOOL;
-  V_UNION(pVarResult,boolVal) = FALSE;
+  V_BOOL(pVarResult) = FALSE;
   return S_OK;
 }
 
@@ -1984,6 +1993,113 @@ HRESULT WINAPI OleLoadPictureEx( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
   return hr;
 }
 
+/***********************************************************************
+ * OleLoadPicturePath (OLEAUT32.424)
+ */
+HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
+		DWORD dwReserved, OLE_COLOR clrReserved, REFIID riid,
+		LPVOID *ppvRet )
+{
+  static const WCHAR file[] = { 'f','i','l','e',':','/','/',0 };
+  IPicture *ipicture;
+  HANDLE hFile;
+  DWORD dwFileSize;
+  HGLOBAL hGlobal = NULL;
+  DWORD dwBytesRead = 0;
+  IStream *stream;
+  BOOL bRead;
+  IPersistStream *pStream;
+  HRESULT hRes;
+
+  TRACE("(%s,%p,%ld,%08lx,%s,%p): stub\n",
+        debugstr_w(szURLorPath), punkCaller, dwReserved, clrReserved,
+        debugstr_guid(riid), ppvRet);
+
+  if (!ppvRet) return E_POINTER;
+
+  if (strncmpW(szURLorPath, file, 7) == 0) {	    
+      szURLorPath += 7;
+  
+      hFile = CreateFileW(szURLorPath, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+				   0, NULL);
+      if (hFile == INVALID_HANDLE_VALUE)
+	  return E_UNEXPECTED;
+
+      dwFileSize = GetFileSize(hFile, NULL);
+      if (dwFileSize != INVALID_FILE_SIZE )
+      {
+	  hGlobal = GlobalAlloc(GMEM_FIXED,dwFileSize);
+	  if ( hGlobal)
+	  {
+	      bRead = ReadFile(hFile, hGlobal, dwFileSize, &dwBytesRead, NULL);
+	      if (!bRead)
+	      {
+		  GlobalFree(hGlobal);
+		  hGlobal = 0;
+	      }
+	  }
+      }
+      CloseHandle(hFile);
+      
+      if (!hGlobal)
+	  return E_UNEXPECTED;
+
+      hRes = CreateStreamOnHGlobal(hGlobal, TRUE, &stream);
+      if (FAILED(hRes)) 
+      {
+	  GlobalFree(hGlobal);
+	  return hRes;
+      }
+  } else {
+      IMoniker *pmnk;
+      IBindCtx *pbc;
+
+      hRes = CreateBindCtx(0, &pbc);
+      if (SUCCEEDED(hRes)) 
+      {
+	  hRes = CreateURLMoniker(NULL, szURLorPath, &pmnk);
+	  if (SUCCEEDED(hRes))
+	  {	         
+	      hRes = IMoniker_BindToStorage(pmnk, pbc, NULL, &IID_IStream, (LPVOID*)&stream);
+	      IMoniker_Release(pmnk);
+	  }
+	  IBindCtx_Release(pbc);
+      }
+      if (FAILED(hRes))
+	  return hRes;
+  }
+
+  hRes = CoCreateInstance(&CLSID_StdPicture, punkCaller, CLSCTX_INPROC_SERVER, 
+		   &IID_IPicture, (LPVOID*)&ipicture);
+  if (hRes != S_OK) {
+      IStream_Release(stream);
+      return hRes;
+  }
+  
+  hRes = IPicture_QueryInterface(ipicture, &IID_IPersistStream, (LPVOID*)&pStream);
+  if (hRes) {
+      IStream_Release(stream);
+      IPicture_Release(ipicture);
+      return hRes;
+  }
+
+  hRes = IPersistStream_Load(pStream, stream); 
+  IPersistStream_Release(pStream);
+  IStream_Release(stream);
+
+  if (hRes) {
+      IPicture_Release(ipicture);
+      return hRes;
+  }
+
+  hRes = IPicture_QueryInterface(ipicture,riid,ppvRet);
+  if (hRes)
+      FIXME("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
+  
+  IPicture_Release(ipicture);
+  return hRes;
+}
+
 /*******************************************************************************
  * StdPic ClassFactory
  */
@@ -2017,12 +2133,8 @@ static ULONG WINAPI SPCF_Release(LPCLASSFACTORY iface) {
 static HRESULT WINAPI SPCF_CreateInstance(
 	LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj
 ) {
-	PICTDESC	pd;
-
-	FIXME("(%p,%p,%s,%p), creating stdpic with PICTYPE_NONE.\n",iface,pOuter,debugstr_guid(riid),ppobj);
-	pd.cbSizeofstruct = sizeof(pd);
-	pd.picType = PICTYPE_NONE;
-	return OleCreatePictureIndirect(&pd,riid,TRUE,ppobj);
+    /* Creates an uninitialized picture */
+    return OleCreatePictureIndirect(NULL,riid,TRUE,ppobj);
 
 }
 

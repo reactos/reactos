@@ -200,6 +200,15 @@ EnumDisplaySettingsExA(
 {
   BOOL rc;
   UNICODE_STRING DeviceName;
+  LPDEVMODEW lpDevModeW;
+
+  lpDevModeW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                         sizeof(DEVMODEW) + lpDevMode->dmDriverExtra);
+  if ( lpDevModeW == NULL )
+    {
+      SetLastError ( ERROR_OUTOFMEMORY );
+      return FALSE;
+    }
 
   if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
     {
@@ -207,15 +216,16 @@ EnumDisplaySettingsExA(
       return FALSE;
     }
 
-  /*
-   * NOTE: We don't need to convert between DEVMODEW and DEVMODEA because
-   * only dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags and
-   * dmDisplayFrequency fields are set.
-   */
-  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, (LPDEVMODEW)lpDevMode,
+  lpDevModeW->dmSize = sizeof(DEVMODEW);
+  lpDevModeW->dmDriverExtra = 0;
+
+  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, lpDevModeW,
                                    dwFlags );
 
+  RosRtlDevModeW2A ( lpDevMode, lpDevModeW );
+
   RtlFreeUnicodeString ( &DeviceName );
+  HeapFree ( GetProcessHeap(), 0, lpDevModeW );
 
   return rc;
 }

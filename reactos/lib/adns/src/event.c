@@ -52,7 +52,7 @@ static void tcp_close(adns_state ads) {
   
   serv= ads->tcpserver;
   adns_socket_close(ads->tcpsocket);
-  ads->tcpsocket= -1;
+  ads->tcpsocket= INVALID_SOCKET;
   ads->tcprecv.used= ads->tcprecv_skip= ads->tcpsend.used= 0;
 }
 

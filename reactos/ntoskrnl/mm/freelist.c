@@ -625,15 +625,15 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 }
 
 VOID
-MmReferencePage(PFN_TYPE Pfn)
+MmReferencePageUnsafe(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
 
-   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+   DPRINT("MmReferencePageUnsafe(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    if (Pfn == 0 || Pfn >= MmPageArraySize)
    {
-      KEBUGCHECK(0);
+      return;
    }
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -646,6 +646,19 @@ MmReferencePage(PFN_TYPE Pfn)
 
    MmPageArray[Pfn].ReferenceCount++;
    KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+VOID
+MmReferencePage(PFN_TYPE Pfn)
+{
+   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+
+   if (Pfn == 0 || Pfn >= MmPageArraySize)
+   {
+      KEBUGCHECK(0);
+   }
+
+   MmReferencePageUnsafe(Pfn);
 }
 
 ULONG
@@ -800,15 +813,15 @@ MmGetLockCountPage(PFN_TYPE Pfn)
 }
 
 VOID
-MmLockPage(PFN_TYPE Pfn)
+MmLockPageUnsafe(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
 
-   DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+   DPRINT("MmLockPageUnsafe(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    if (Pfn == 0 || Pfn >= MmPageArraySize)
    {
-      KEBUGCHECK(0);
+      return;
    }
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
@@ -821,6 +834,19 @@ MmLockPage(PFN_TYPE Pfn)
 
    MmPageArray[Pfn].LockCount++;
    KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+VOID
+MmLockPage(PFN_TYPE Pfn)
+{
+   DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+
+   if (Pfn == 0 || Pfn >= MmPageArraySize)
+   {
+      KEBUGCHECK(0);
+   }
+   
+   MmLockPageUnsafe(Pfn);
 }
 
 VOID

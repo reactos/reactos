@@ -25,19 +25,15 @@ LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
 ifeq ($(KDBG), 1)
-OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o \
-		../dk/w32/lib/libkjs.a dbg/i386/i386-dis.o
-CFLAGS_KDBG := -I../lib/kjs/include
+OBJECTS_KDBG := dbg/kdb.o dbg/kdb_cli.o dbg/kdb_expr.o dbg/kdb_keyboard.o \
+                dbg/kdb_serial.o dbg/kdb_string.o dbg/rdebug.o dbg/i386/kdb_help.o \
+                dbg/i386/i386-dis.o dbg/i386/longjmp.o dbg/i386/setjmp.o
 preall: all
-
-../dk/w32/lib/libkjs.a:
-	$(MAKE) -C ../lib/kjs
 else
 OBJECTS_KDBG :=
 endif
 ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o dbg/profile.o
+OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o
 endif
 
 TARGET_ASFLAGS = -I./include
@@ -101,10 +97,8 @@ OBJECTS_KE = \
 	ke/bug.o \
 	ke/catch.o \
 	ke/clock.o \
-	ke/critical.o \
 	ke/dpc.o \
 	ke/device.o \
-	ke/error.o \
 	ke/event.o \
 	ke/kqueue.o \
 	ke/kthread.o \
@@ -117,8 +111,8 @@ OBJECTS_KE = \
 	ke/sem.o \
 	ke/spinlock.o \
 	ke/timer.o \
-	ke/wait.o \
-	ke/alert.o
+	ke/usercall.o \
+	ke/wait.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -219,7 +213,8 @@ OBJECTS_OB = \
 	ob/object.o \
 	ob/sdcache.o \
 	ob/security.o \
-	ob/symlink.o
+	ob/symlink.o \
+	ob/wait.o
 
 # Process Manager (Ps)
 OBJECTS_PS = \
@@ -232,31 +227,29 @@ OBJECTS_PS = \
 	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
+	ps/query.o \
+	ps/security.o \
 	ps/suspend.o \
 	ps/thread.o \
-	ps/tinfo.o \
-	ps/win32.o \
-	ps/w32call.o
+	ps/win32.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
-	ex/btree.o \
 	ex/callback.o \
+	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
 	ex/fmutex.o \
-	ex/hashtab.o \
+	ex/handle.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
 	ex/lookas.o \
 	ex/mutant.o \
-	ex/napi.o \
 	ex/power.o \
 	ex/profile.o \
 	ex/resource.o \
 	ex/rundown.o \
-	ex/stree.o \
 	ex/sem.o \
 	ex/synch.o \
 	ex/sysinfo.o \
@@ -380,134 +373,26 @@ $(OBJECTS_PATH):
 
 $(OBJECTS_RESOURCE): $(TARGET_NAME).rc bugcodes.rc $(PATH_TO_TOP)/include/reactos/resource.h
 
-#
-# Build subsystem intermediate objects
-#
-$(OBJECTS_PATH)/arch.o: $(OBJECTS_ARCH)
-	$(LD) -r -o $(OBJECTS_PATH)/arch.o $(OBJECTS_ARCH)
-
-$(OBJECTS_PATH)/io.o: $(OBJECTS_IO)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/io.o \
-		$(OBJECTS_IO)
-
-$(OBJECTS_PATH)/ke.o: $(OBJECTS_KE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ke.o \
-		$(OBJECTS_KE)
-
-$(OBJECTS_PATH)/rtl.o: $(OBJECTS_RTL)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/rtl.o \
-		$(OBJECTS_RTL)
-
-$(OBJECTS_PATH)/mm.o: $(OBJECTS_MM)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/mm.o \
-		$(OBJECTS_MM)
-
-$(OBJECTS_PATH)/ob.o: $(OBJECTS_OB)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ob.o \
-		$(OBJECTS_OB)
-
-$(OBJECTS_PATH)/ps.o: $(OBJECTS_PS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ps.o \
-		$(OBJECTS_PS)
-
-$(OBJECTS_PATH)/ex.o: $(OBJECTS_EX)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ex.o \
-		$(OBJECTS_EX)
-
-$(OBJECTS_PATH)/fs.o: $(OBJECTS_FS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/fs.o \
-		$(OBJECTS_FS)
-
-$(OBJECTS_PATH)/se.o: $(OBJECTS_SE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/se.o \
-		$(OBJECTS_SE)
-
-$(OBJECTS_PATH)/cm.o: $(OBJECTS_CM)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/cm.o \
-		$(OBJECTS_CM)
-
-$(OBJECTS_PATH)/dbg.o: $(OBJECTS_DBG)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/dbg.o \
-		$(OBJECTS_DBG)
-
-$(OBJECTS_PATH)/ldr.o: $(OBJECTS_LDR)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ldr.o \
-		$(OBJECTS_LDR)
-
-$(OBJECTS_PATH)/lpc.o: $(OBJECTS_LPC)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/lpc.o \
-		$(OBJECTS_LPC)
-
-$(OBJECTS_PATH)/po.o: $(OBJECTS_PO)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/po.o \
-		$(OBJECTS_PO)
-
-$(OBJECTS_PATH)/cc.o: $(OBJECTS_CC)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/cc.o \
-		$(OBJECTS_CC)
-
-$(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/kd.o \
-		$(OBJECTS_KD)
-
-$(OBJECTS_PATH)/inbv.o: $(OBJECTS_INBV)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/inbv.o \
-		$(OBJECTS_INBV)
-
 # Note: arch.o MUST be the first file!!!
 OBJECTS := \
-	$(OBJECTS_PATH)/arch.o \
-	$(OBJECTS_PATH)/ke.o \
-	$(OBJECTS_PATH)/cc.o \
-	$(OBJECTS_PATH)/cm.o \
-	$(OBJECTS_PATH)/dbg.o \
-	$(OBJECTS_PATH)/ex.o \
-	$(OBJECTS_PATH)/lpc.o \
-	$(OBJECTS_PATH)/fs.o \
-	$(OBJECTS_PATH)/io.o \
-	$(OBJECTS_PATH)/kd.o \
-	$(OBJECTS_PATH)/ldr.o \
-	$(OBJECTS_PATH)/mm.o \
-	$(OBJECTS_PATH)/ob.o \
-	$(OBJECTS_PATH)/po.o \
-	$(OBJECTS_PATH)/ps.o \
-	$(OBJECTS_PATH)/rtl.o \
-	$(OBJECTS_PATH)/se.o \
-	$(OBJECTS_PATH)/inbv.o \
+	$(OBJECTS_ARCH) \
+	$(OBJECTS_KE) \
+	$(OBJECTS_CC) \
+	$(OBJECTS_CM) \
+	$(OBJECTS_DBG) \
+	$(OBJECTS_EX) \
+	$(OBJECTS_LPC) \
+	$(OBJECTS_FS) \
+	$(OBJECTS_IO) \
+	$(OBJECTS_KD) \
+	$(OBJECTS_LDR) \
+	$(OBJECTS_MM) \
+	$(OBJECTS_OB) \
+	$(OBJECTS_PO) \
+	$(OBJECTS_PS) \
+	$(OBJECTS_RTL) \
+	$(OBJECTS_SE) \
+	$(OBJECTS_INBV) \
 	$(OBJECTS_RESOURCE)
 
 EXTRA_OBJECTS = $(PATH_TO_TOP)/include/reactos/bugcodes.h
@@ -550,7 +435,6 @@ TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
   $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc
 
-ex/napi.o: ex/zw.S $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 

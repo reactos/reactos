@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,10 +52,10 @@ extern long MmSafeCopyFromUser(void *Dest, void *Src, unsigned long NumberOfByte
 
 
 int
-print_insn_i386_att (bfd_vma pc, struct disassemble_info *info);
+print_insn_i386 (bfd_vma pc, struct disassemble_info *info);
 
 int
-KdbPrintDisasm(void* Ignored, const char* fmt, ...)
+KdbpPrintDisasm(void* Ignored, const char* fmt, ...)
 {
   va_list ap;
   static char buffer[256];
@@ -69,46 +69,46 @@ KdbPrintDisasm(void* Ignored, const char* fmt, ...)
 }
 
 int
-KdbNopPrintDisasm(void* Ignored, const char* fmt, ...)
+KdbpNopPrintDisasm(void* Ignored, const char* fmt, ...)
 {
   return(0);
 }
 
 int static
-KdbReadMemory(unsigned int Addr, unsigned char* Data, unsigned int Length, 
-	      struct disassemble_info * Ignored)
+KdbpReadMemory(unsigned int Addr, unsigned char* Data, unsigned int Length,
+	       struct disassemble_info * Ignored)
 {
   return KdbpSafeReadMemory(Data, (void *)Addr, Length); /* 0 means no error */
 }
 
 void static
-KdbMemoryError(int Status, unsigned int Addr, 
-	       struct disassemble_info * Ignored)
+KdbpMemoryError(int Status, unsigned int Addr,
+	        struct disassemble_info * Ignored)
 {
 }
 
 void static
-KdbPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
+KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 {
   if (!KdbSymPrintAddress((void*)Addr))
     {
-      DbgPrint("<0x%X>", Addr);
+      DbgPrint("<%08x>", Addr);
     }
 }
 
 void static
-KdbNopPrintAddress(unsigned int Addr, struct disassemble_info * Ignored)
+KdbpNopPrintAddress(unsigned int Addr, struct disassemble_info * Ignored)
 {
 }
 
 #include "dis-asm.h"
 
 long
-KdbGetInstLength(unsigned int Address)
+KdbpGetInstLength(unsigned int Address)
 {
   disassemble_info info;
 
-  info.fprintf_func = KdbNopPrintDisasm;
+  info.fprintf_func = KdbpNopPrintDisasm;
   info.stream = NULL;
   info.application_data = NULL;
   info.flavour = bfd_target_unknown_flavour;
@@ -116,9 +116,9 @@ KdbGetInstLength(unsigned int Address)
   info.mach = bfd_mach_i386_i386;
   info.insn_sets = 0;
   info.flags = 0;
-  info.read_memory_func = KdbReadMemory;
-  info.memory_error_func = KdbMemoryError;
-  info.print_address_func = KdbNopPrintAddress;
+  info.read_memory_func = KdbpReadMemory;
+  info.memory_error_func = KdbpMemoryError;
+  info.print_address_func = KdbpNopPrintAddress;
   info.symbol_at_address_func = NULL;
   info.buffer = NULL;
   info.buffer_vma = info.buffer_length = 0;
@@ -126,25 +126,25 @@ KdbGetInstLength(unsigned int Address)
   info.display_endian = BIG_ENDIAN_LITTLE;
   info.disassembler_options = NULL;
 
-  return(print_insn_i386_att(Address, &info));
+  return(print_insn_i386(Address, &info));
 }
 
 long
-KdbDisassemble(unsigned int Address)
+KdbpDisassemble(unsigned int Address, unsigned long IntelSyntax)
 {
   disassemble_info info;
 
-  info.fprintf_func = KdbPrintDisasm;
+  info.fprintf_func = KdbpPrintDisasm;
   info.stream = NULL;
   info.application_data = NULL;
   info.flavour = bfd_target_unknown_flavour;
   info.arch = bfd_arch_i386;
-  info.mach = bfd_mach_i386_i386;
+  info.mach = IntelSyntax ? bfd_mach_i386_i386_intel_syntax : bfd_mach_i386_i386;
   info.insn_sets = 0;
   info.flags = 0;
-  info.read_memory_func = KdbReadMemory;
-  info.memory_error_func = KdbMemoryError;
-  info.print_address_func = KdbPrintAddressInCode;
+  info.read_memory_func = KdbpReadMemory;
+  info.memory_error_func = KdbpMemoryError;
+  info.print_address_func = KdbpPrintAddressInCode;
   info.symbol_at_address_func = NULL;
   info.buffer = NULL;
   info.buffer_vma = info.buffer_length = 0;
@@ -152,7 +152,7 @@ KdbDisassemble(unsigned int Address)
   info.display_endian = BIG_ENDIAN_LITTLE;
   info.disassembler_options = NULL;
 
-  return(print_insn_i386_att(Address, &info));
+  return(print_insn_i386(Address, &info));
 }
 
 /* Print i386 instructions for GDB, the GNU debugger.
@@ -2113,7 +2113,7 @@ print_insn (pc, info)
 #else
   mode_64bit = 0;
   priv.orig_sizeflag = AFLAG | DFLAG;
-  intel_syntax = 0;
+  /*intel_syntax = 0;*/
 #endif
 
   if (intel_syntax)

@@ -60,7 +60,7 @@ void MSI_FreePackage( MSIOBJECTHDR *arg)
     msiobj_release( &package->db->hdr );
 }
 
-static const UINT clone_properties(MSIDATABASE *db)
+static UINT clone_properties(MSIDATABASE *db)
 {
     MSIQUERY * view = NULL;
     UINT rc;
@@ -617,7 +617,7 @@ INT WINAPI MsiProcessMessage( MSIHANDLE hInstall, INSTALLMESSAGE eMessageType,
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if( !package )
-        goto out;
+        return ERROR_INVALID_HANDLE;
 
     record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
     if( !record )
@@ -626,8 +626,7 @@ INT WINAPI MsiProcessMessage( MSIHANDLE hInstall, INSTALLMESSAGE eMessageType,
     ret = MSI_ProcessMessage( package, eMessageType, record );
 
 out:
-    if( package )
-        msiobj_release( &package->hdr );
+    msiobj_release( &package->hdr );
     if( record )
         msiobj_release( &record->hdr );
 

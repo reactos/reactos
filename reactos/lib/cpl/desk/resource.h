@@ -36,5 +36,11 @@
 #define IDS_STRETCH                 2004
 #define IDS_TILE                    2005
 
+#define IDC_SETTINGS_DEVICE	       201
+#define IDC_SETTINGS_BPP             202
+#define IDC_SETTINGS_RESOLUTION      203
+#define IDC_SETTINGS_RESOLUTION_TEXT 204
+#define IDC_SETTINGS_ADVANCED        205
+
 #endif /* __CPL_DESK_RESOURCE_H__ */
 

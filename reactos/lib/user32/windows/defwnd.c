@@ -31,7 +31,7 @@
 #define WM_QUERYDROPOBJECT  0x022B
 #endif
 
-LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
 LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
@@ -317,7 +317,8 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
     {
       while(!hittest)
 	{
-	  GetMessageW(&msg, NULL, 0, 0);
+	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)
+	    break;
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
@@ -418,7 +419,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 {
   HRGN DesktopRgn;
   MSG msg;
-  RECT sizingRect, mouseRect, origRect, clipRect;
+  RECT sizingRect, mouseRect, origRect, clipRect, unmodRect;
   HDC hdc;
   LONG hittest = (LONG)(wParam & 0x0f);
   HCURSOR hDragCursor = 0, hOldCursor = 0;
@@ -487,6 +488,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   GetWindowRect(hwnd, &sizingRect);
+  unmodRect = sizingRect;
   if (Style & WS_CHILD)
     {
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
@@ -571,7 +573,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       int dx = 0, dy = 0;
 
-      GetMessageW(&msg, 0, 0, 0);
+      if (GetMessageW(&msg, 0, 0, 0) <= 0)
+        break;
       
       /* Exit on button-up, Return, or Esc */
       if ((msg.message == WM_LBUTTONUP) ||
@@ -623,7 +626,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	  if (msg.message == WM_KEYDOWN) SetCursorPos( pt.x, pt.y );
 	  else
 	    {
-	      RECT newRect = sizingRect;
+	      RECT newRect = unmodRect;
 	      WPARAM wpSizingHit = 0;
 	      
 	      if (hittest == HTCAPTION) OffsetRect( &newRect, dx, dy );
@@ -637,6 +640,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      /* determine the hit location */
 	      if (hittest >= HTLEFT && hittest <= HTBOTTOMRIGHT)
 		wpSizingHit = WMSZ_LEFT + (hittest - HTLEFT);
+	      unmodRect	= newRect;
 	      SendMessageA( hwnd, WM_SIZING, wpSizingHit, (LPARAM)&newRect );
 	      
 	      if (!iconic)
@@ -945,7 +949,7 @@ User32DefWindowProc(HWND hWnd,
     {
 	case WM_NCPAINT:
 	{
-            return DefWndNCPaint(hWnd, (HRGN)wParam);
+            return DefWndNCPaint(hWnd, (HRGN)wParam, -1);
         }
 
         case WM_NCCALCSIZE:
@@ -1468,7 +1472,7 @@ DefWindowProcA(HWND hWnd,
             
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1);
+                DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
             return TRUE;
         }
@@ -1528,7 +1532,7 @@ DefWindowProcW(HWND hWnd,
             
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1);
+                DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
             return (1);
         }

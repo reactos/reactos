@@ -513,7 +513,7 @@ static VOID SYSLINK_RepaintLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
 
 /***********************************************************************
  * SYSLINK_GetLinkItemByIndex
- * Retreives a document link by it's index
+ * Retrieves a document link by its index
  */
 static PDOC_ITEM SYSLINK_GetLinkItemByIndex (SYSLINK_INFO *infoPtr, int iLink)
 {
@@ -532,7 +532,7 @@ static PDOC_ITEM SYSLINK_GetLinkItemByIndex (SYSLINK_INFO *infoPtr, int iLink)
 
 /***********************************************************************
  * SYSLINK_GetFocusLink
- * Retreives the link that has the LIS_FOCUSED bit
+ * Retrieves the link that has the LIS_FOCUSED bit
  */
 static PDOC_ITEM SYSLINK_GetFocusLink (SYSLINK_INFO *infoPtr, int *LinkId)
 {

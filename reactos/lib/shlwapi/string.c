@@ -534,7 +534,7 @@ LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 /*************************************************************************
  * StrRStrIA	[SHLWAPI.@]
  *
- * Find the last occurence of a substring within a string.
+ * Find the last occurrence of a substring within a string.
  *
  * PARAMS
  *  lpszStr    [I] String to search in
@@ -542,7 +542,7 @@ LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
  *  lpszSearch [I] String to look for
  *
  * RETURNS
- *  The last occurence lpszSearch within lpszStr, or NULL if not found.
+ *  The last occurrence lpszSearch within lpszStr, or NULL if not found.
  */
 LPSTR WINAPI StrRStrIA(LPCSTR lpszStr, LPCSTR lpszEnd, LPCSTR lpszSearch)
 {
@@ -711,7 +711,7 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  * NOTES
  *  Leading whitespace, '-' and '+' are allowed before the number. If
  *  dwFlags includes STIF_SUPPORT_HEX, hexadecimal numbers are allowed, if
- *  preceeded by '0x'. If this flag is not set, or there is no '0x' prefix,
+ *  preceded by '0x'. If this flag is not set, or there is no '0x' prefix,
  *  the string is treated as a decimal string. A leading '-' is ignored for
  *  hexadecimal numbers.
  */
@@ -1171,7 +1171,7 @@ static LPWSTR WINAPI SHLWAPI_StrRChrHelperW(LPCWSTR lpszStr,
 /**************************************************************************
  * StrRChrA	[SHLWAPI.@]
  *
- * Find the last occurence of a character in string.
+ * Find the last occurrence of a character in string.
  *
  * PARAMS
  *  lpszStr [I] String to search in
@@ -1205,7 +1205,7 @@ LPWSTR WINAPI StrRChrW(LPCWSTR lpszStr, LPCWSTR lpszEnd, WORD ch)
 /**************************************************************************
  * StrRChrIA	[SHLWAPI.@]
  *
- * Find the last occurence of a character in string, ignoring case.
+ * Find the last occurrence of a character in string, ignoring case.
  *
  * PARAMS
  *  lpszStr [I] String to search in

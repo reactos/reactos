@@ -122,7 +122,7 @@ INT16 WINAPI FontFamilyEnumProc16( SEGPTR logfont, SEGPTR metrics,
 {
   HWND hwnd=HWND_32(LOWORD(lParam));
   HWND hDlg=GetParent(hwnd);
-  LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongA(hDlg, DWL_USER);
+  LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongPtrW(hDlg, DWLP_USER);
   LOGFONT16 *lplf = MapSL( logfont );
   TEXTMETRIC16 *lpmtrx16 = MapSL(metrics);
   ENUMLOGFONTEXW elf32w;
@@ -142,7 +142,7 @@ INT16 WINAPI FontStyleEnumProc16( SEGPTR logfont, SEGPTR metrics,
   HWND hcmb2=HWND_32(LOWORD(lParam));
   HWND hcmb3=HWND_32(HIWORD(lParam));
   HWND hDlg=GetParent(hcmb3);
-  LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongA(hDlg, DWL_USER);
+  LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongPtrW(hDlg, DWLP_USER);
   LOGFONT16 *lplf = MapSL(logfont);
   TEXTMETRIC16 *lpmtrx16 = MapSL(metrics);
   ENUMLOGFONTEXW elf32w;
@@ -300,7 +300,7 @@ BOOL16 CALLBACK FormatCharDlgProc16(HWND16 hDlg16, UINT16 message,
   BOOL16 res=0;
   if (message!=WM_INITDIALOG)
   {
-   lpcf=(LPCHOOSEFONT16)GetWindowLongA(hDlg, DWL_USER);
+   lpcf=(LPCHOOSEFONT16)GetWindowLongPtrW(hDlg, DWLP_USER);
    if (!lpcf && message != WM_MEASUREITEM)
       return FALSE;
    if (CFn_HookCallChk(lpcf))

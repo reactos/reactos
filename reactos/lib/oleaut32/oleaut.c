@@ -572,28 +572,6 @@ ULONG WINAPI OaBuildVersion()
 }
 
 /******************************************************************************
- *      GetRecordInfoFromGuids  [OLEAUT32.322]
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: E_INVALIDARG, if any argument is invalid.
- *
- * BUGS
- *  Unimplemented
- */
-HRESULT WINAPI GetRecordInfoFromGuids(
-    REFGUID rGuidTypeLib,
-    ULONG uVerMajor,
-    ULONG uVerMinor,
-    LCID lcid,
-    REFGUID rGuidTypeInfo,
-    IRecordInfo** ppRecInfo)
-{
-    FIXME("(%p,%ld,%ld,%ld,%p,%p),stub!\n",rGuidTypeLib, uVerMajor, uVerMinor, lcid, rGuidTypeInfo, ppRecInfo);
-    return E_NOTIMPL;
-}
-
-/******************************************************************************
  *		OleTranslateColor	[OLEAUT32.421]
  *
  * Convert an OLE_COLOR to a COLORREF.

@@ -9,5 +9,12 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"slayer.dll\0"
 #include <reactos/version.rc>
 
-#include "en.rc"
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+
+#include "En.rc"
+#include "De.rc"
 

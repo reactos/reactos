@@ -274,4 +274,50 @@ BOOL STDCALL NtGdiDdAttachSurface(
 }
 */
 
+
+
+DWORD STDCALL NtGdiDdGetDriverInfo(      
+    HANDLE hDirectDrawLocal,
+    PDD_GETDRIVERINFODATA puGetDriverInfoData)	
+
+{		  
+	DWORD  pdwNumHeaps; 
+	VIDEOMEMORY  *pvmList = NULL;
+    DWORD  pdwNumFourCC;
+    DWORD  *pdwFourCC = NULL;
+	DWORD  ddRVal;
+	
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+
+	ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
+                 pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
+                 &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
+
+    GDIOBJ_UnlockObj(hDirectDrawLocal);
+	
+	return ddRVal;
+}
+
+
+
+DWORD STDCALL NtGdiDdWaitForVerticalBlank(      
+    HANDLE hDirectDrawLocal,
+    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
+)
+{
+	DWORD  ddRVal;
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+    	
+	puWaitForVerticalBlankData->lpDD = pDirectDraw->Local.lpGbl;
+
+	ddRVal = pDirectDraw->DdWaitForVerticalBlank(puWaitForVerticalBlankData);
+
+    GDIOBJ_UnlockObj(hDirectDrawLocal);
+
+	return ddRVal;
+}
+
+
+
 /* EOF */

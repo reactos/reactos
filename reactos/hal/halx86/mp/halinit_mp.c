@@ -20,10 +20,34 @@
 
 /* FUNCTIONS ***************************************************************/
 
+extern BOOLEAN HaliFindSmpConfig(VOID);
+
+/***************************************************************************/
 VOID
 HalpInitPhase0(VOID)
+
 {
-  HalpInitMPS();
+   static BOOLEAN MPSInitialized = FALSE;
+
+
+   /* Only initialize MP system once. Once called the first time,
+      each subsequent call is part of the initialization sequence
+			for an application processor. */
+
+   DPRINT("HalpInitPhase0()\n");
+
+
+   if (MPSInitialized) 
+   {
+      KEBUGCHECK(0);
+   }
+
+   MPSInitialized = TRUE;
+
+   if (!HaliFindSmpConfig())
+   {
+      KEBUGCHECK(0);
+   }
 }
 
 /* EOF */

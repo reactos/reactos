@@ -1327,6 +1327,8 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
          DrvParms->TMSectorCountHi,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
+  DPRINT("SupportedFeatures83: %x, EnabledFeatures86 %x\n", DrvParms->SupportedFeatures83, DrvParms->EnabledFeatures86);
+  DPRINT("Max48BitAddress: %I64d\n", *(PULONGLONG)DrvParms->Max48BitAddress);
   if (DrvParms->TMFieldsValid & 0x0004)
     {
       if ((DrvParms->UltraDmaModes >> 8) && (DrvParms->UltraDmaModes & 0xff))
@@ -1952,7 +1954,7 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 {
   PREAD_CAPACITY_DATA CapacityData;
   PIDE_DRIVE_IDENTIFY DeviceParams;
-  ULONG LastSector;
+  LARGE_INTEGER LastSector;
 
   DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
   CapacityData = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
@@ -1964,14 +1966,33 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   /* Calculate last sector (big-endian). */
   if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
     {
-      LastSector = (ULONG)((DeviceParams->TMSectorCountHi << 16) +
-			    DeviceParams->TMSectorCountLo) - 1;
+      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
+        {
+	  ((PUSHORT)&LastSector)[0] = DeviceParams->Max48BitAddress[0]; 
+	  ((PUSHORT)&LastSector)[1] = DeviceParams->Max48BitAddress[1]; 
+	  ((PUSHORT)&LastSector)[2] = DeviceParams->Max48BitAddress[2]; 
+	  ((PUSHORT)&LastSector)[3] = DeviceParams->Max48BitAddress[3]; 
+	  LastSector.QuadPart -= 1;
+
+	}
+      else
+        {
+	  LastSector.u.HighPart = 0;
+          LastSector.u.LowPart = (ULONG)((DeviceParams->TMSectorCountHi << 16) +
+			                 DeviceParams->TMSectorCountLo)-1;
+	}
     }
   else
     {
-      LastSector = (ULONG)(DeviceParams->LogicalCyls *
-			   DeviceParams->LogicalHeads *
-			   DeviceParams->SectorsPerTrack)-1;
+      LastSector.u.HighPart = 0;
+      LastSector.u.LowPart = (ULONG)(DeviceParams->LogicalCyls *
+			             DeviceParams->LogicalHeads *
+			             DeviceParams->SectorsPerTrack)-1;
+    }
+  if (LastSector.u.HighPart)
+    {
+      DPRINT1("Disk is too large for our implementation (%I64d sectors\n", LastSector.QuadPart);
+      KEBUGCHECK(0);
     }
 
   CapacityData->LogicalBlockAddress = (((PUCHAR)&LastSector)[0] << 24) |
@@ -1996,10 +2017,10 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PIDE_DRIVE_IDENTIFY DeviceParams;
   ULONG StartingSector;
   ULONG SectorCount;
-  UCHAR CylinderHigh;
-  UCHAR CylinderLow;
+  UCHAR CylinderHigh[2];
+  UCHAR CylinderLow[2];
   UCHAR DrvHead;
-  UCHAR SectorNumber;
+  UCHAR SectorNumber[2];
   UCHAR Command;
   ULONG Retries;
   UCHAR Status;
@@ -2025,47 +2046,61 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	 Srb->DataTransferLength,
 	 SectorCount);
 
-  if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
+  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
     {
-      SectorNumber = StartingSector & 0xff;
-      CylinderLow = (StartingSector >> 8) & 0xff;
-      CylinderHigh = (StartingSector >> 16) & 0xff;
-      DrvHead = ((StartingSector >> 24) & 0x0f) | 
-          (Srb->TargetId ? IDE_DH_DRV1 : 0) |
-          IDE_DH_LBA;
-    }
-  else
-    {
-      SectorNumber = (StartingSector % DeviceParams->SectorsPerTrack) + 1;
-      StartingSector /= DeviceParams->SectorsPerTrack;
-      DrvHead = (StartingSector % DeviceParams->LogicalHeads) | 
-          (Srb->TargetId ? IDE_DH_DRV1 : 0);
-      StartingSector /= DeviceParams->LogicalHeads;
-      CylinderLow = StartingSector & 0xff;
-      CylinderHigh = StartingSector >> 8;
-    }
+      SectorNumber[0] = StartingSector & 0xff;
+      CylinderLow[0] = (StartingSector >> 8) & 0xff;
+      CylinderHigh[0] = (StartingSector >> 16) & 0xff;
+      SectorNumber[1] = (StartingSector >> 24) & 0xff;
+      CylinderLow[1] = 0;
+      CylinderHigh[1] = 0;
+      DrvHead = (Srb->TargetId ? IDE_DH_DRV1 : 0) | IDE_DH_LBA;
 
-  if (DrvHead & IDE_DH_LBA)
+      DPRINT("%s:BUS=%04x:DRV=%d:LBA48=1:BLK=%08d:SC=%02x:CM=%02x\n",
+	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
+	     DeviceExtension->CommandPortBase,
+	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
+	     (SectorNumber[1] << 24) +
+	     (CylinderHigh[0] << 16) + (CylinderLow[0] << 8) + DectorNumberLow[0],
+	     SectorCount,
+	     Command);
+    }
+  else if (DeviceParams->Capabilities & IDE_DRID_LBA_SUPPORTED)
     {
+      SectorNumber[0] = StartingSector & 0xff;
+      CylinderLow[0] = (StartingSector >> 8) & 0xff;
+      CylinderHigh[0] = (StartingSector >> 16) & 0xff;
+      DrvHead = ((StartingSector >> 24) & 0x0f) | 
+                 (Srb->TargetId ? IDE_DH_DRV1 : 0) |
+		 IDE_DH_LBA;
+
       DPRINT("%s:BUS=%04x:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
 	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
 	     DeviceExtension->CommandPortBase,
 	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
 	     ((DrvHead & 0x0f) << 24) +
-	       (CylinderHigh << 16) + (CylinderLow << 8) + SectorNumber,
+	     (CylinderHigh[0] << 16) + (CylinderLow[0] << 8) + SectorNumber[0],
 	     SectorCount,
 	     Command);
     }
   else
     {
+      SectorNumber[0] = (StartingSector % DeviceParams->SectorsPerTrack) + 1;
+      StartingSector /= DeviceParams->SectorsPerTrack;
+      DrvHead = (StartingSector % DeviceParams->LogicalHeads) | 
+          (Srb->TargetId ? IDE_DH_DRV1 : 0);
+      StartingSector /= DeviceParams->LogicalHeads;
+      CylinderLow[0] = StartingSector & 0xff;
+      CylinderHigh[0] = StartingSector >> 8;
+
       DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
              (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
              DeviceExtension->CommandPortBase,
              DrvHead & IDE_DH_DRV1 ? 1 : 0, 
-             CylinderHigh,
-             CylinderLow,
+             CylinderHigh[0],
+             CylinderLow[0],
              DrvHead & 0x0f,
-             SectorNumber,
+             SectorNumber[0],
              SectorCount,
              Command);
     }
@@ -2119,11 +2154,21 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #endif
 
   /* Setup command parameters */
+  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
+    {
+      IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
+      IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount >> 8);
+      IDEWriteSectorNum(DeviceExtension->CommandPortBase, SectorNumber[1]);
+      IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow[1]);
+      IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh[1]);
+    }
+
   IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
-  IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount);
-  IDEWriteSectorNum(DeviceExtension->CommandPortBase, SectorNumber);
-  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh);
-  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow);
+  IDEWriteSectorCount(DeviceExtension->CommandPortBase, SectorCount & 0xff);
+  IDEWriteSectorNum(DeviceExtension->CommandPortBase, SectorNumber[0]);
+  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow[0]);
+  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh[0]);
+
   IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
 
 #ifdef ENABLE_DMA
@@ -2135,7 +2180,14 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   if (DeviceExtension->UseDma)
     {
       Handler = AtapiDmaInterrupt;
-      Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_DMA : IDE_CMD_WRITE_DMA;
+      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
+        {
+	  Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_DMA_EXT : IDE_CMD_WRITE_DMA_EXT;
+	}
+      else
+        {
+          Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_DMA : IDE_CMD_WRITE_DMA;
+	}
     }
   else
 #endif
@@ -2143,11 +2195,25 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       Handler = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? AtapiReadInterrupt : AtapiWriteInterrupt;
       if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MULTI_SECTOR_CMD)
         {
-          Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE : IDE_CMD_WRITE_MULTIPLE;
+          if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
+	    {
+              Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE_EXT : IDE_CMD_WRITE_MULTIPLE_EXT;
+	    }
+	  else
+	    {
+              Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE : IDE_CMD_WRITE_MULTIPLE;
+	    }
 	}
       else
         {
-          Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ : IDE_CMD_WRITE;
+          if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS)
+	    {
+	      Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_EXT : IDE_CMD_WRITE_EXT;
+	    }
+	  else
+	    {
+	      Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ : IDE_CMD_WRITE;
+	    }
 	}
     }
 
@@ -2274,7 +2340,9 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ScsiPortStallExecution(10);
 
   /* Issue command to drive */
-  AtapiExecuteCommand(DeviceExtension, IDE_CMD_FLUSH_CACHE, AtapiNoDataInterrupt); 
+  AtapiExecuteCommand(DeviceExtension, 
+	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE, 
+		      AtapiNoDataInterrupt); 
 
   /* Wait for controller ready */
   for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)

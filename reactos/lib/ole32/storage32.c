@@ -8,6 +8,7 @@
  * Copyright 1999 Francis Beaudet
  * Copyright 1999 Sylvain St-Germain
  * Copyright 1999 Thuy Nguyen
+ * Copyright 2005 Mike McCormack
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,8 +51,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
 #define FILE_BEGIN 0
-
-#define STGM_SHARE_MODE(stgm) ((stgm)&0xf0)
 
 /* Used for OleConvertIStorageToOLESTREAM and OleConvertOLESTREAMToIStorage */
 #define OLESTREAM_ID 0x501
@@ -222,7 +221,7 @@ static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
     IEnumSTATSTGImpl_Clone
 };
 
-
+extern IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
 
 
 
@@ -266,6 +265,10 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
   {
     *ppvObject = (IStorage*)This;
   }
+  else if (memcmp(&IID_IPropertySetStorage, riid, sizeof(IID_IPropertySetStorage)) == 0)
+  {
+    *ppvObject = (IStorage*)&This->pssVtbl;
+  }
 
   /*
    * Check that we obtained an interface.
@@ -294,7 +297,11 @@ ULONG WINAPI StorageBaseImpl_AddRef(
             IStorage* iface)
 {
   StorageBaseImpl *This = (StorageBaseImpl *)iface;
-  return InterlockedIncrement(&This->ref);
+  ULONG ref = InterlockedIncrement(&This->ref);
+
+  TRACE("(%p) AddRef to %ld\n", This, ref);
+
+  return ref;
 }
 
 /************************************************************************
@@ -313,6 +320,8 @@ ULONG WINAPI StorageBaseImpl_Release(
    * Decrease the reference count on this object.
    */
   ULONG ref = InterlockedDecrement(&This->ref);
+
+  TRACE("(%p) ReleaseRef to %ld\n", This, ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
@@ -381,7 +390,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   /*
    * As documented.
    */
-  if ( !(grfMode & STGM_SHARE_EXCLUSIVE) ||
+  if ( STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE ||
         (grfMode & STGM_DELETEONRELEASE) ||
         (grfMode & STGM_TRANSACTED) )
   {
@@ -500,7 +509,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   /*
    * As documented.
    */
-  if ( !(grfMode & STGM_SHARE_EXCLUSIVE) ||
+  if ( STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE ||
         (grfMode & STGM_DELETEONRELEASE) ||
         (grfMode & STGM_PRIORITY) )
   {
@@ -882,7 +891,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
   if ( FAILED( validateSTGM(grfMode) ))
     return STG_E_INVALIDFLAG;
 
-  if ( !(grfMode & STGM_SHARE_EXCLUSIVE) )
+  if (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE) 
     return STG_E_INVALIDFLAG;
 
   /*
@@ -914,7 +923,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
     /*
      * An element with this name already exists
      */
-    if (grfMode & STGM_CREATE)
+    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE)
     {
       IStorage_DestroyElement(iface, pwcsName);
     }
@@ -1089,8 +1098,8 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   /*
    * Create a property enumeration and search the properties
    */
-  propertyEnumeration = IEnumSTATSTGImpl_Construct( This->ancestorStorage,
-                                                    This->rootPropertySetIndex);
+  propertyEnumeration = IEnumSTATSTGImpl_Construct( This->base.ancestorStorage,
+                                                    This->base.rootPropertySetIndex);
 
   foundPropertyIndex = IEnumSTATSTGImpl_FindProperty(propertyEnumeration,
                                                      pwcsName,
@@ -1102,7 +1111,7 @@ HRESULT WINAPI StorageImpl_CreateStorage(
     /*
      * An element with this name already exists
      */
-    if (grfMode & STGM_CREATE)
+    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE)
       IStorage_DestroyElement(iface, pwcsName);
     else
       return STG_E_FILEALREADYEXISTS;
@@ -1141,13 +1150,13 @@ HRESULT WINAPI StorageImpl_CreateStorage(
   /*
    * Obtain a free property in the property chain
    */
-  newPropertyIndex = getFreeProperty(This->ancestorStorage);
+  newPropertyIndex = getFreeProperty(This->base.ancestorStorage);
 
   /*
    * Save the new property into the new property spot
    */
   StorageImpl_WriteProperty(
-    This->ancestorStorage,
+    This->base.ancestorStorage,
     newPropertyIndex,
     &newProperty);
 
@@ -1200,7 +1209,7 @@ static ULONG getFreeProperty(
     /*
      * Start by reading the root property
      */
-    readSuccessful = StorageImpl_ReadProperty(storage->ancestorStorage,
+    readSuccessful = StorageImpl_ReadProperty(storage->base.ancestorStorage,
                                                currentPropertyIndex,
                                                &currentProperty);
     if (readSuccessful)
@@ -1239,7 +1248,7 @@ static ULONG getFreeProperty(
      * obtain the new count of property blocks
      */
     blockCount = BlockChainStream_GetCount(
-                   storage->ancestorStorage->rootBlockChain)+1;
+                   storage->base.ancestorStorage->rootBlockChain)+1;
 
     /*
      * initialize the size used by the property stream
@@ -1250,7 +1259,7 @@ static ULONG getFreeProperty(
     /*
      * add a property block to the property chain
      */
-    BlockChainStream_SetSize(storage->ancestorStorage->rootBlockChain, newSize);
+    BlockChainStream_SetSize(storage->base.ancestorStorage->rootBlockChain, newSize);
 
     /*
      * memset the empty property in order to initialize the unused newly
@@ -1269,7 +1278,7 @@ static ULONG getFreeProperty(
       propertyIndex++)
     {
       StorageImpl_WriteProperty(
-        storage->ancestorStorage,
+        storage->base.ancestorStorage,
         propertyIndex,
         &emptyProperty);
     }
@@ -1322,8 +1331,8 @@ static void updatePropertyChain(
   /*
    * Read the root property
    */
-  StorageImpl_ReadProperty(storage->ancestorStorage,
-                             storage->rootPropertySetIndex,
+  StorageImpl_ReadProperty(storage->base.ancestorStorage,
+                             storage->base.rootPropertySetIndex,
                              &currentProperty);
 
   if (currentProperty.dirProperty != PROPERTY_NULL)
@@ -1343,7 +1352,7 @@ static void updatePropertyChain(
     /*
      * Read
      */
-    StorageImpl_ReadProperty(storage->ancestorStorage,
+    StorageImpl_ReadProperty(storage->base.ancestorStorage,
                                currentProperty.dirProperty,
                                &currentProperty);
 
@@ -1359,7 +1368,7 @@ static void updatePropertyChain(
       {
         if (previous != PROPERTY_NULL)
         {
-          StorageImpl_ReadProperty(storage->ancestorStorage,
+          StorageImpl_ReadProperty(storage->base.ancestorStorage,
                                      previous,
                                      &currentProperty);
           current = previous;
@@ -1367,7 +1376,7 @@ static void updatePropertyChain(
         else
         {
           currentProperty.previousProperty = newPropertyIndex;
-          StorageImpl_WriteProperty(storage->ancestorStorage,
+          StorageImpl_WriteProperty(storage->base.ancestorStorage,
                                       current,
                                       &currentProperty);
           found = 1;
@@ -1377,7 +1386,7 @@ static void updatePropertyChain(
       {
         if (next != PROPERTY_NULL)
         {
-          StorageImpl_ReadProperty(storage->ancestorStorage,
+          StorageImpl_ReadProperty(storage->base.ancestorStorage,
                                      next,
                                      &currentProperty);
           current = next;
@@ -1385,7 +1394,7 @@ static void updatePropertyChain(
         else
         {
           currentProperty.nextProperty = newPropertyIndex;
-          StorageImpl_WriteProperty(storage->ancestorStorage,
+          StorageImpl_WriteProperty(storage->base.ancestorStorage,
                                       current,
                                       &currentProperty);
           found = 1;
@@ -1410,8 +1419,8 @@ static void updatePropertyChain(
      * The root storage is empty, link the new property to it's dir property
      */
     currentProperty.dirProperty = newPropertyIndex;
-    StorageImpl_WriteProperty(storage->ancestorStorage,
-                                storage->rootPropertySetIndex,
+    StorageImpl_WriteProperty(storage->base.ancestorStorage,
+                                storage->base.rootPropertySetIndex,
                                 &currentProperty);
   }
 }
@@ -1657,8 +1666,8 @@ HRESULT WINAPI StorageImpl_DestroyElement(
    * Create a property enumeration to search the property with the given name
    */
   propertyEnumeration = IEnumSTATSTGImpl_Construct(
-    This->ancestorStorage,
-    This->rootPropertySetIndex);
+    This->base.ancestorStorage,
+    This->base.rootPropertySetIndex);
 
   foundPropertyIndexToDelete = IEnumSTATSTGImpl_FindProperty(
     propertyEnumeration,
@@ -1682,8 +1691,8 @@ HRESULT WINAPI StorageImpl_DestroyElement(
    * First, read This's StgProperty..
    */
   res = StorageImpl_ReadProperty(
-          This->ancestorStorage,
-          This->rootPropertySetIndex,
+          This->base.ancestorStorage,
+          This->base.rootPropertySetIndex,
           &parentProperty);
 
   assert(res);
@@ -1698,7 +1707,7 @@ HRESULT WINAPI StorageImpl_DestroyElement(
      * Set data as it would have been done in the else part...
      */
     typeOfRelation   = PROPERTY_RELATION_DIR;
-    parentPropertyId = This->rootPropertySetIndex;
+    parentPropertyId = This->base.rootPropertySetIndex;
   }
   else
   {
@@ -1709,8 +1718,8 @@ HRESULT WINAPI StorageImpl_DestroyElement(
     IEnumSTATSTGImpl* propertyEnumeration2;
 
     propertyEnumeration2 = IEnumSTATSTGImpl_Construct(
-      This->ancestorStorage,
-      This->rootPropertySetIndex);
+      This->base.ancestorStorage,
+      This->base.rootPropertySetIndex);
 
     typeOfRelation = IEnumSTATSTGImpl_FindParentProperty(
       propertyEnumeration2,
@@ -1847,7 +1856,7 @@ static HRESULT deleteStorageProperty(
    */
   propertyToDelete.sizeOfNameString = 0;
 
-  StorageImpl_WriteProperty(parentStorage->ancestorStorage,
+  StorageImpl_WriteProperty(parentStorage->base.ancestorStorage,
                             indexOfPropertyToDelete,
                             &propertyToDelete);
 
@@ -1914,7 +1923,7 @@ static HRESULT deleteStreamProperty(
    * but since we are here to zap it, I don't do it...
    */
   StorageImpl_WriteProperty(
-    parentStorage->ancestorStorage,
+    parentStorage->base.ancestorStorage,
     indexOfPropertyToDelete,
     &propertyToDelete);
 
@@ -1942,7 +1951,7 @@ static HRESULT findPlaceholder(
    * Read the storage property
    */
   res = StorageImpl_ReadProperty(
-          storage->ancestorStorage,
+          storage->base.ancestorStorage,
           storePropertyIndex,
           &storeProperty);
 
@@ -1998,7 +2007,7 @@ static HRESULT findPlaceholder(
   }
 
   hr = StorageImpl_WriteProperty(
-         storage->ancestorStorage,
+         storage->base.ancestorStorage,
          storePropertyIndex,
          &storeProperty);
 
@@ -2140,7 +2149,7 @@ static HRESULT adjustPropertyChain(
    * Write back the parent property
    */
   res = StorageImpl_WriteProperty(
-          This->ancestorStorage,
+          This->base.ancestorStorage,
           parentPropertyId,
           &parentProperty);
   if(! res)
@@ -2213,14 +2222,15 @@ HRESULT StorageImpl_Construct(
   /*
    * Initialize the virtual function table.
    */
-  This->lpVtbl = &Storage32Impl_Vtbl;
-  This->v_destructor = &StorageImpl_Destroy;
+  This->base.lpVtbl = &Storage32Impl_Vtbl;
+  This->base.pssVtbl = &IPropertySetStorage_Vtbl;
+  This->base.v_destructor = &StorageImpl_Destroy;
 
   /*
    * This is the top-level storage so initialize the ancestor pointer
    * to this.
    */
-  This->ancestorStorage = This;
+  This->base.ancestorStorage = This;
 
   /*
    * Initialize the physical support of the storage.
@@ -2372,13 +2382,13 @@ HRESULT StorageImpl_Construct(
       if ( (currentProperty.sizeOfNameString != 0 ) &&
            (currentProperty.propertyType     == PROPTYPE_ROOT) )
       {
-        This->rootPropertySetIndex = currentPropertyIndex;
+        This->base.rootPropertySetIndex = currentPropertyIndex;
       }
     }
 
     currentPropertyIndex++;
 
-  } while (readSuccessful && (This->rootPropertySetIndex == PROPERTY_NULL) );
+  } while (readSuccessful && (This->base.rootPropertySetIndex == PROPERTY_NULL) );
 
   if (!readSuccessful)
   {
@@ -2390,15 +2400,15 @@ HRESULT StorageImpl_Construct(
    * Create the block chain abstraction for the small block root chain.
    */
   if(!(This->smallBlockRootChain =
-       BlockChainStream_Construct(This, NULL, This->rootPropertySetIndex)))
+       BlockChainStream_Construct(This, NULL, This->base.rootPropertySetIndex)))
     return STG_E_READFAULT;
 
   return hr;
 }
 
-void StorageImpl_Destroy(
-  StorageImpl* This)
+void StorageImpl_Destroy(StorageBaseImpl* iface)
 {
+  StorageImpl *This = (StorageImpl*) iface;
   TRACE("(%p)\n", This);
 
   HeapFree(GetProcessHeap(), 0, This->pwcsName);
@@ -3138,7 +3148,7 @@ BOOL StorageImpl_ReadProperty(
   if (readSuccessful)
   {
     /* replace the name of root entry (often "Root Entry") by the file name */
-    WCHAR *propName = (index == This->rootPropertySetIndex) ?
+    WCHAR *propName = (index == This->base.rootPropertySetIndex) ?
 	    		This->filename : (WCHAR *)currentProperty+OFFSET_PS_NAME;
 
     memset(buffer->name, 0, sizeof(buffer->name));
@@ -3484,19 +3494,19 @@ StorageInternalImpl* StorageInternalImpl_Construct(
     /*
      * Initialize the virtual function table.
      */
-    newStorage->lpVtbl = &Storage32InternalImpl_Vtbl;
-    newStorage->v_destructor = &StorageInternalImpl_Destroy;
+    newStorage->base.lpVtbl = &Storage32InternalImpl_Vtbl;
+    newStorage->base.v_destructor = &StorageInternalImpl_Destroy;
 
     /*
      * Keep the ancestor storage pointer and nail a reference to it.
      */
-    newStorage->ancestorStorage = ancestorStorage;
-    StorageBaseImpl_AddRef((IStorage*)(newStorage->ancestorStorage));
+    newStorage->base.ancestorStorage = ancestorStorage;
+    StorageBaseImpl_AddRef((IStorage*)(newStorage->base.ancestorStorage));
 
     /*
      * Keep the index of the root property set for this storage,
      */
-    newStorage->rootPropertySetIndex = rootPropertyIndex;
+    newStorage->base.rootPropertySetIndex = rootPropertyIndex;
 
     return newStorage;
   }
@@ -3504,10 +3514,11 @@ StorageInternalImpl* StorageInternalImpl_Construct(
   return 0;
 }
 
-void StorageInternalImpl_Destroy(
-  StorageInternalImpl* This)
+void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
 {
-  StorageBaseImpl_Release((IStorage*)This->ancestorStorage);
+  StorageInternalImpl* This = (StorageInternalImpl*) iface;
+
+  StorageBaseImpl_Release((IStorage*)This->base.ancestorStorage);
   HeapFree(GetProcessHeap(), 0, This);
 }
 
@@ -4938,7 +4949,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
 
         StorageImpl_ReadProperty(
           This->parentStorage,
-          This->parentStorage->rootPropertySetIndex,
+          This->parentStorage->base.rootPropertySetIndex,
           &rootProp);
 
         rootProp.startingBlock = sbStartIndex;
@@ -4947,7 +4958,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
 
         StorageImpl_WriteProperty(
           This->parentStorage,
-          This->parentStorage->rootPropertySetIndex,
+          This->parentStorage->base.rootPropertySetIndex,
           &rootProp);
       }
     }
@@ -4966,7 +4977,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
 
     StorageImpl_ReadProperty(
       This->parentStorage,
-      This->parentStorage->rootPropertySetIndex,
+      This->parentStorage->base.rootPropertySetIndex,
       &rootProp);
 
     if (rootProp.size.u.LowPart <
@@ -4980,7 +4991,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
 
       StorageImpl_WriteProperty(
         This->parentStorage,
-        This->parentStorage->rootPropertySetIndex,
+        This->parentStorage->base.rootPropertySetIndex,
         &rootProp);
     }
   }
@@ -5415,7 +5426,7 @@ HRESULT WINAPI StgCreateDocfile(
 {
   StorageImpl* newStorage = 0;
   HANDLE       hFile      = INVALID_HANDLE_VALUE;
-  HRESULT        hr         = S_OK;
+  HRESULT        hr         = STG_E_INVALIDFLAG;
   DWORD          shareMode;
   DWORD          accessMode;
   DWORD          creationMode;
@@ -5438,16 +5449,33 @@ HRESULT WINAPI StgCreateDocfile(
    * Validate the STGM flags
    */
   if ( FAILED( validateSTGM(grfMode) ))
-    return STG_E_INVALIDFLAG;
+    goto end;
 
   /* StgCreateDocFile always opens for write */
-  if (!(grfMode & (STGM_WRITE|STGM_READWRITE)))
-    return STG_E_INVALIDFLAG;
+  switch(STGM_ACCESS_MODE(grfMode))
+  {
+  case STGM_WRITE:
+  case STGM_READWRITE:
+    break;
+  default:
+    goto end;
+  }
 
-  /* always opens non-shared */
-  if (!(grfMode & STGM_SHARE_EXCLUSIVE))
-    return STG_E_INVALIDFLAG;
-      
+  /* can't share write */
+  switch(STGM_SHARE_MODE(grfMode))
+  {
+  case STGM_SHARE_EXCLUSIVE:
+  case STGM_SHARE_DENY_WRITE:
+    break;
+  default:
+    goto end;
+  }
+
+  /* shared reading requires transacted mode */
+  if( STGM_SHARE_MODE(grfMode) == STGM_SHARE_DENY_WRITE &&
+     !(grfMode&STGM_TRANSACTED) )
+    goto end;
+
   /*
    * Generate a unique name.
    */
@@ -5456,10 +5484,8 @@ HRESULT WINAPI StgCreateDocfile(
     WCHAR tempPath[MAX_PATH];
     static const WCHAR prefix[] = { 'S', 'T', 'O', 0 };
 
-    if (!(grfMode & STGM_SHARE_EXCLUSIVE))
-      return STG_E_INVALIDFLAG;
-    if (!(grfMode & (STGM_WRITE|STGM_READWRITE)))
-      return STG_E_INVALIDFLAG;
+    if (STGM_SHARE_MODE(grfMode) == STGM_SHARE_EXCLUSIVE)
+      goto end;
 
     memset(tempPath, 0, sizeof(tempPath));
     memset(tempFileName, 0, sizeof(tempFileName));
@@ -5470,7 +5496,10 @@ HRESULT WINAPI StgCreateDocfile(
     if (GetTempFileNameW(tempPath, prefix, 0, tempFileName) != 0)
       pwcsName = tempFileName;
     else
-      return STG_E_INSUFFICIENTMEMORY;
+    {
+      hr = STG_E_INSUFFICIENTMEMORY;
+      goto end;
+    }
 
     creationMode = TRUNCATE_EXISTING;
   }
@@ -5501,16 +5530,18 @@ HRESULT WINAPI StgCreateDocfile(
   hFile = CreateFileW(pwcsName,
                         accessMode,
                         shareMode,
-            NULL,
+                        NULL,
                         creationMode,
                         fileAttributes,
-            0);
+                        0);
 
   if (hFile == INVALID_HANDLE_VALUE)
   {
     if(GetLastError() == ERROR_FILE_EXISTS)
-      return STG_E_FILEALREADYEXISTS;
-    return E_FAIL;
+      hr = STG_E_FILEALREADYEXISTS;
+    else
+      hr = E_FAIL;
+    goto end;
   }
 
   /*
@@ -5519,7 +5550,10 @@ HRESULT WINAPI StgCreateDocfile(
   newStorage = HeapAlloc(GetProcessHeap(), 0, sizeof(StorageImpl));
 
   if (newStorage == 0)
-    return STG_E_INSUFFICIENTMEMORY;
+  {
+    hr = STG_E_INSUFFICIENTMEMORY;
+    goto end;
+  }
 
   hr = StorageImpl_Construct(
          newStorage,
@@ -5533,7 +5567,7 @@ HRESULT WINAPI StgCreateDocfile(
   if (FAILED(hr))
   {
     HeapFree(GetProcessHeap(), 0, newStorage);
-    return hr;
+    goto end;
   }
 
   /*
@@ -5543,6 +5577,8 @@ HRESULT WINAPI StgCreateDocfile(
          (IStorage*)newStorage,
          (REFIID)&IID_IStorage,
          (void**)ppstgOpen);
+end:
+  TRACE("<-- %p  r = %08lx\n", *ppstgOpen, hr);
 
   return hr;
 }
@@ -5555,6 +5591,23 @@ HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD st
     TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
           grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
     return STG_E_UNIMPLEMENTEDFUNCTION;
+}
+
+/******************************************************************************
+ *              StgCreatePropSetStg       [OLE32.@]
+ */
+HRESULT WINAPI StgCreatePropSetStg(IStorage *pstg, DWORD reserved,
+ IPropertySetStorage **ppPropSetStg)
+{
+    HRESULT hr;
+
+    TRACE("(%p, 0x%lx, %p): stub\n", pstg, reserved, ppPropSetStg);
+    if (reserved)
+        hr = STG_E_INVALIDPARAMETER;
+    else
+        hr = StorageBaseImpl_QueryInterface(pstg, &IID_IPropertySetStorage,
+         (void**)ppPropSetStg);
+    return hr;
 }
 
 /******************************************************************************
@@ -5850,11 +5903,23 @@ HRESULT WINAPI StgOpenStorageOnILockBytes(
  *
  *
  */
-HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *a,
-                           FILETIME const *b, FILETIME const *c )
+HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *pctime,
+                           FILETIME const *patime, FILETIME const *pmtime)
 {
-  FIXME("(%s, %p, %p, %p),stub!\n", debugstr_w(str), a, b, c);
-  return S_OK;
+  IStorage *stg = NULL;
+  HRESULT r;
+ 
+  TRACE("%s %p %p %p\n", debugstr_w(str), pctime, patime, pmtime);
+
+  r = StgOpenStorage(str, NULL, STGM_READWRITE | STGM_SHARE_DENY_WRITE,
+                     0, 0, &stg);
+  if( SUCCEEDED(r) )
+  {
+    r = IStorage_SetElementTimes(stg, NULL, pctime, patime, pmtime);
+    IStorage_Release(stg);
+  }
+
+  return r;
 }
 
 /******************************************************************************
@@ -5985,6 +6050,9 @@ HRESULT  WINAPI OleSaveToStream(IPersistStream *pPStm,IStream *pStm)
 /****************************************************************************
  * This method validate a STGM parameter that can contain the values below
  *
+ * The stgm modes in 0x0000ffff are not bit masks, but distinct 4 bit values.
+ * The stgm values contained in 0xffff0000 are bitmasks.
+ *
  * STGM_DIRECT               0x00000000
  * STGM_TRANSACTED           0x00010000
  * STGM_SIMPLE               0x08000000
@@ -6010,79 +6078,74 @@ HRESULT  WINAPI OleSaveToStream(IPersistStream *pPStm,IStream *pStm)
  */
 static HRESULT validateSTGM(DWORD stgm)
 {
-  BOOL bSTGM_TRANSACTED       = ((stgm & STGM_TRANSACTED) == STGM_TRANSACTED);
-  BOOL bSTGM_SIMPLE           = ((stgm & STGM_SIMPLE) == STGM_SIMPLE);
-  BOOL bSTGM_DIRECT           = ! (bSTGM_TRANSACTED || bSTGM_SIMPLE);
+  DWORD access = STGM_ACCESS_MODE(stgm);
+  DWORD share  = STGM_SHARE_MODE(stgm);
+  DWORD create = STGM_CREATE_MODE(stgm);
 
-  BOOL bSTGM_WRITE            = ((stgm & STGM_WRITE) == STGM_WRITE);
-  BOOL bSTGM_READWRITE        = ((stgm & STGM_READWRITE) == STGM_READWRITE);
-  BOOL bSTGM_READ             = ! (bSTGM_WRITE || bSTGM_READWRITE);
+  if (stgm&~STGM_KNOWN_FLAGS)
+  {
+    ERR("unknown flags %08lx\n", stgm);
+    return E_FAIL;
+  }
 
-  BOOL bSTGM_SHARE_DENY_NONE  =
-                     ((stgm & STGM_SHARE_DENY_NONE)  == STGM_SHARE_DENY_NONE);
+  switch (access)
+  {
+  case STGM_READ:
+  case STGM_WRITE:
+  case STGM_READWRITE:
+    break;
+  default:
+    return E_FAIL;
+  }
 
-  BOOL bSTGM_SHARE_DENY_READ  =
-                     ((stgm & STGM_SHARE_DENY_READ)  == STGM_SHARE_DENY_READ);
+  switch (share)
+  {
+  case STGM_SHARE_DENY_NONE:
+  case STGM_SHARE_DENY_READ:
+  case STGM_SHARE_DENY_WRITE:
+  case STGM_SHARE_EXCLUSIVE:
+    break;
+  default:
+    return E_FAIL;
+  }
 
-  BOOL bSTGM_SHARE_DENY_WRITE =
-                     ((stgm & STGM_SHARE_DENY_WRITE) == STGM_SHARE_DENY_WRITE);
-
-  BOOL bSTGM_SHARE_EXCLUSIVE  =
-                     ((stgm & STGM_SHARE_EXCLUSIVE)  == STGM_SHARE_EXCLUSIVE);
-
-  BOOL bSTGM_CREATE           = ((stgm & STGM_CREATE) == STGM_CREATE);
-  BOOL bSTGM_CONVERT          = ((stgm & STGM_CONVERT) == STGM_CONVERT);
-
-  BOOL bSTGM_NOSCRATCH        = ((stgm & STGM_NOSCRATCH) == STGM_NOSCRATCH);
-  BOOL bSTGM_NOSNAPSHOT       = ((stgm & STGM_NOSNAPSHOT) == STGM_NOSNAPSHOT);
+  switch (create)
+  {
+  case STGM_CREATE:
+  case STGM_FAILIFTHERE:
+    break;
+  default:
+    return E_FAIL;
+  }
 
   /*
    * STGM_DIRECT | STGM_TRANSACTED | STGM_SIMPLE
    */
-  if ( ! bSTGM_DIRECT )
-    if( bSTGM_TRANSACTED && bSTGM_SIMPLE )
-      return E_FAIL;
-
-  /*
-   * STGM_WRITE |  STGM_READWRITE | STGM_READ
-   */
-  if ( ! bSTGM_READ )
-    if( bSTGM_WRITE && bSTGM_READWRITE )
-      return E_FAIL;
-
-  /*
-   * STGM_SHARE_DENY_NONE | others
-   * (I assume here that DENY_READ implies DENY_WRITE)
-   */
-  if ( bSTGM_SHARE_DENY_NONE )
-    if ( bSTGM_SHARE_DENY_READ ||
-         bSTGM_SHARE_DENY_WRITE ||
-         bSTGM_SHARE_EXCLUSIVE)
+  if ( (stgm & STGM_TRANSACTED) && (stgm & STGM_SIMPLE) )
       return E_FAIL;
 
   /*
    * STGM_CREATE | STGM_CONVERT
    * if both are false, STGM_FAILIFTHERE is set to TRUE
    */
-  if ( bSTGM_CREATE && bSTGM_CONVERT )
+  if ( create == STGM_CREATE && (stgm & STGM_CONVERT) )
     return E_FAIL;
 
   /*
    * STGM_NOSCRATCH requires STGM_TRANSACTED
    */
-  if ( bSTGM_NOSCRATCH && ! bSTGM_TRANSACTED )
+  if ( (stgm & STGM_NOSCRATCH) && (stgm & STGM_TRANSACTED) )
     return E_FAIL;
 
   /*
    * STGM_NOSNAPSHOT requires STGM_TRANSACTED and
    * not STGM_SHARE_EXCLUSIVE or STGM_SHARE_DENY_WRITE`
    */
-  if (bSTGM_NOSNAPSHOT)
-  {
-    if ( ! ( bSTGM_TRANSACTED &&
-           !(bSTGM_SHARE_EXCLUSIVE || bSTGM_SHARE_DENY_WRITE)) )
+  if ( (stgm & STGM_NOSNAPSHOT) &&
+        (!(stgm & STGM_TRANSACTED) ||
+         share == STGM_SHARE_EXCLUSIVE ||
+         share == STGM_SHARE_DENY_WRITE) )
     return E_FAIL;
-  }
 
   return S_OK;
 }
@@ -6095,29 +6158,20 @@ static HRESULT validateSTGM(DWORD stgm)
  */
 static DWORD GetShareModeFromSTGM(DWORD stgm)
 {
-  DWORD dwShareMode = 0;
-  BOOL bSTGM_SHARE_DENY_NONE  =
-                     ((stgm & STGM_SHARE_DENY_NONE)  == STGM_SHARE_DENY_NONE);
-
-  BOOL bSTGM_SHARE_DENY_READ  =
-                     ((stgm & STGM_SHARE_DENY_READ)  == STGM_SHARE_DENY_READ);
-
-  BOOL bSTGM_SHARE_DENY_WRITE =
-                     ((stgm & STGM_SHARE_DENY_WRITE) == STGM_SHARE_DENY_WRITE);
-
-  BOOL bSTGM_SHARE_EXCLUSIVE  =
-                     ((stgm & STGM_SHARE_EXCLUSIVE)  == STGM_SHARE_EXCLUSIVE);
-
-  if ((bSTGM_SHARE_EXCLUSIVE) || (bSTGM_SHARE_DENY_READ))
-    dwShareMode = 0;
-
-  if (bSTGM_SHARE_DENY_NONE)
-    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-
-  if (bSTGM_SHARE_DENY_WRITE)
-    dwShareMode = FILE_SHARE_READ;
-
-  return dwShareMode;
+  switch (STGM_SHARE_MODE(stgm))
+  {
+  case STGM_SHARE_DENY_NONE:
+    return FILE_SHARE_READ | FILE_SHARE_WRITE;
+  case STGM_SHARE_DENY_READ:
+    return FILE_SHARE_WRITE;
+  case STGM_SHARE_DENY_WRITE:
+    return FILE_SHARE_READ;
+  case STGM_SHARE_EXCLUSIVE:
+    return 0;
+  }
+  ERR("Invalid share mode!\n");
+  assert(0);
+  return 0;
 }
 
 /****************************************************************************
@@ -6128,21 +6182,17 @@ static DWORD GetShareModeFromSTGM(DWORD stgm)
  */
 static DWORD GetAccessModeFromSTGM(DWORD stgm)
 {
-  DWORD dwDesiredAccess = GENERIC_READ;
-  BOOL bSTGM_WRITE     = ((stgm & STGM_WRITE) == STGM_WRITE);
-  BOOL bSTGM_READWRITE = ((stgm & STGM_READWRITE) == STGM_READWRITE);
-  BOOL bSTGM_READ      = ! (bSTGM_WRITE || bSTGM_READWRITE);
-
-  if (bSTGM_READ)
-    dwDesiredAccess = GENERIC_READ;
-
-  if (bSTGM_WRITE)
-    dwDesiredAccess |= GENERIC_WRITE;
-
-  if (bSTGM_READWRITE)
-    dwDesiredAccess = GENERIC_READ | GENERIC_WRITE;
-
-  return dwDesiredAccess;
+  switch (STGM_ACCESS_MODE(stgm))
+  {
+  case STGM_READ:
+    return GENERIC_READ;
+  case STGM_WRITE:
+  case STGM_READWRITE:
+    return GENERIC_READ | GENERIC_WRITE;
+  }
+  ERR("Invalid access mode!\n");
+  assert(0);
+  return 0;
 }
 
 /****************************************************************************
@@ -6153,16 +6203,19 @@ static DWORD GetAccessModeFromSTGM(DWORD stgm)
  */
 static DWORD GetCreationModeFromSTGM(DWORD stgm)
 {
-  if ( stgm & STGM_CREATE)
+  switch(STGM_CREATE_MODE(stgm))
+  {
+  case STGM_CREATE:
     return CREATE_ALWAYS;
-  if (stgm & STGM_CONVERT) {
+  case STGM_CONVERT:
     FIXME("STGM_CONVERT not implemented!\n");
     return CREATE_NEW;
+  case STGM_FAILIFTHERE:
+    return CREATE_NEW;
   }
-  /* All other cases */
-  if (stgm & ~ (STGM_CREATE|STGM_CONVERT))
-  	FIXME("unhandled storage mode : 0x%08lx\n",stgm & ~ (STGM_CREATE|STGM_CONVERT));
-  return CREATE_NEW;
+  ERR("Invalid create mode!\n");
+  assert(0);
+  return 0;
 }
 
 
@@ -6831,7 +6884,7 @@ HRESULT WINAPI ReadFmtUserTypeStg (LPSTORAGE pstg, CLIPFORMAT* pcf, LPOLESTR* lp
                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
     if( FAILED ( r ) )
     {
-        ERR("Failed to open stream\n");
+        WARN("Failed to open stream r = %08lx\n", r);
         return r;
     }
 

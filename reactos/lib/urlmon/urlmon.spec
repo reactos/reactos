@@ -1,5 +1,10 @@
+# Up until Windows 2000 these APIs have hardcoded ordinals.
+# Keep it that way for compatibility.
 1 stub CDLGetLongPathNameA
 2 stub CDLGetLongPathNameW
+# IsJITInProgress has a hardcoded ordinal on WinME and Windows 2000
+#3 stub IsJITInProgress
+
 @ stub AsyncGetClassBits
 @ stub AsyncInstallDistributionUnit
 @ stub BindAsyncMoniker

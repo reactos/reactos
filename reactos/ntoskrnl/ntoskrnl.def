@@ -120,7 +120,6 @@ ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4
 ExLocalTimeToSystemTime@8
 ExNotifyCallback@12
-ExPostSystemEvent@12
 ExQueryPoolBlockSize@8
 ExQueueWorkItem@8
 ExRaiseAccessViolation@0
@@ -151,24 +150,6 @@ ExUuidCreate@4
 ExVerifySuite@4
 @ExWaitForRundownProtectionRelease@4
 ExWindowStationObjectType DATA
-ExInitializeBinaryTree@12
-ExDeleteBinaryTree@4
-ExInsertBinaryTree@12
-ExSearchBinaryTree@12
-ExRemoveBinaryTree@12
-ExTraverseBinaryTree@16
-ExInitializeSplayTree@16
-ExDeleteSplayTree@4
-ExInsertSplayTree@12
-ExSearchSplayTree@12
-ExRemoveSplayTree@12
-ExWeightOfSplayTree@8
-ExTraverseSplayTree@16
-ExInitializeHashTable@16
-ExDeleteHashTable@4
-ExInsertHashTable@16
-ExSearchHashTable@16
-ExRemoveHashTable@16
 @ExfAcquirePushLockExclusive@4
 @ExfAcquirePushLockShared@4
 @ExfReleasePushLock@4
@@ -528,7 +509,7 @@ Ke386IoSetAccessProcess@8
 Ke386QueryIoAccessMap@8
 Ke386SetIoAccessMap@8
 KeAcquireSpinLockAtDpcLevel@4
-KeAcquireDispatcherDatabaseLockAtDpcLevel
+@KeAcquireDispatcherDatabaseLockAtDpcLevel@0
 @KeAcquireInStackQueuedSpinLockAtDpcLevel@8
 KeAcquireInterruptSpinLock@4
 KeAddSystemServiceTable@20
@@ -609,7 +590,7 @@ KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
 KeRegisterBugCheckReasonCallback@16
-KeReleaseDispatcherDatabaseLockFromDpcLevel
+@KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 @KeReleaseInStackQueuedSpinLockFromDpcLevel@4
 KeReleaseInterruptSpinLock@8
 KeReleaseMutant@16

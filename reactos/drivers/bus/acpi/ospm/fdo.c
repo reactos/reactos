@@ -60,12 +60,7 @@ AcpiCreateDeviceIDString(PUNICODE_STRING DeviceID,
            L"ACPI\\%S",
            Node->device.id.hid);
 
-  if (!AcpiCreateUnicodeString(DeviceID, Buffer, PagedPool))
-  {
-    return FALSE;
-  }
-
-  return TRUE;
+  return AcpiCreateUnicodeString(DeviceID, Buffer, PagedPool);
 }
 
 
@@ -108,8 +103,15 @@ BOOLEAN
 AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
                            BM_NODE *Node)
 {
-  /* FIXME: Create unique instnce id. */
-  return AcpiCreateUnicodeString(InstanceID, L"0000", PagedPool);
+  WCHAR Buffer[10];
+
+  if (Node->device.id.uid[0])
+    swprintf(Buffer, L"%S", Node->device.id.uid);
+  else
+    /* FIXME: Generate unique id! */
+    swprintf(Buffer, L"0000");
+
+  return AcpiCreateUnicodeString(InstanceID, Buffer, PagedPool);
 }
 
 
@@ -126,7 +128,7 @@ FdoQueryBusRelations(
   ANSI_STRING AnsiString;
   ACPI_STATUS AcpiStatus;
   PACPI_DEVICE Device;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BM_NODE *Node;
   ULONG Size;
   ULONG i;

@@ -64,21 +64,27 @@ extern "C" {
 #define  IDE_REG_COMMAND          0x0007
 
 /* IDE/ATA commands */
-#define    IDE_CMD_RESET            0x08
-#define    IDE_CMD_READ             0x20
-#define    IDE_CMD_READ_RETRY       0x21
-#define    IDE_CMD_WRITE            0x30
-#define    IDE_CMD_WRITE_RETRY      0x31
-#define    IDE_CMD_PACKET           0xA0
-#define    IDE_CMD_READ_MULTIPLE    0xC4
-#define    IDE_CMD_WRITE_MULTIPLE   0xC5
-#define    IDE_CMD_READ_DMA         0xC8
-#define    IDE_CMD_WRITE_DMA        0xCA
-#define    IDE_CMD_FLUSH_CACHE      0xE7
-#define    IDE_CMD_FLUSH_CACHE_EXT  0xEA
-#define    IDE_CMD_IDENT_ATA_DRV    0xEC
-#define    IDE_CMD_IDENT_ATAPI_DRV  0xA1
-#define    IDE_CMD_GET_MEDIA_STATUS 0xDA
+#define    IDE_CMD_RESET		0x08
+#define    IDE_CMD_READ			0x20
+#define    IDE_CMD_READ_ONCE		0x21
+#define    IDE_CMD_READ_EXT		0x24	/* 48 bit */
+#define    IDE_CMD_READ_DMA_EXT		0x25	/* 48 bit */
+#define    IDE_CMD_READ_MULTIPLE_EXT	0x29	/* 48 bit */
+#define    IDE_CMD_WRITE		0x30
+#define    IDE_CMD_WRITE_ONCE		0x31
+#define    IDE_CMD_WRITE_EXT		0x34	/* 48 bit */
+#define    IDE_CMD_WRITE_DMA_EXT	0x35	/* 48 bit */
+#define    IDE_CMD_WRITE_MULTIPLE_EXT	0x39	/* 48 bit */
+#define    IDE_CMD_PACKET		0xA0
+#define    IDE_CMD_READ_MULTIPLE	0xC4
+#define    IDE_CMD_WRITE_MULTIPLE	0xC5
+#define    IDE_CMD_READ_DMA		0xC8
+#define    IDE_CMD_WRITE_DMA		0xCA
+#define    IDE_CMD_FLUSH_CACHE		0xE7
+#define    IDE_CMD_FLUSH_CACHE_EXT	0xEA	/* 48 bit */
+#define    IDE_CMD_IDENT_ATA_DRV	0xEC
+#define    IDE_CMD_IDENT_ATAPI_DRV	0xA1
+#define    IDE_CMD_GET_MEDIA_STATUS	0xDA
 
 //
 //  Access macros for command registers

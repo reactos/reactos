@@ -21,6 +21,7 @@
 
 extern POBJECT_TYPE  CmiKeyType;
 extern PREGISTRY_HIVE  CmiVolatileHive;
+extern LIST_ENTRY CmiKeyObjectListHead;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
@@ -300,6 +301,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
+  InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
+
   /* add key to subkeys of parent if needed */
   Status = CmiAddSubKey(KeyObject->RegistryHive,
 			KeyObject->ParentKey,
@@ -355,7 +358,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  ObDereferenceObject(KeyObject);
+  
   ObDereferenceObject(Object);
 
   if (Disposition)
@@ -419,6 +422,9 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
+  /* Remove the keep-alive reference */
+  ObDereferenceObject(KeyObject);
+
   if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
 
@@ -454,9 +460,12 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_FULL_INFORMATION  FullInformation;
   PDATA_CELL ClassCell;
   ULONG NameSize, ClassSize;
+  KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
   
   PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
 	 KeyHandle,
@@ -470,7 +479,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_ENUMERATE_SUB_KEYS,
 		CmiKeyType,
-		UserMode,
+		PreviousMode,
 		(PVOID *) &KeyObject,
 		NULL);
   if (!NT_SUCCESS(Status))
@@ -513,8 +522,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
 	{
 	  CurKey = KeyObject->SubKeys[i];
-	  if (CurKey->RegistryHive == CmiVolatileHive ||
-	      CurKey->RegistryHive != RegistryHive)
+	  if (CurKey->RegistryHive != RegistryHive)
 	    {
 	      if (j == Index)
 		break;
@@ -1051,7 +1059,7 @@ NtFlushKey(IN HANDLE KeyHandle)
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-				     KEY_QUERY_VALUE,
+				     0,
 				     CmiKeyType,
 				     PreviousMode,
 				     (PVOID *)&KeyObject,
@@ -1213,7 +1221,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_READ,
+		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
 		CmiKeyType,
 		UserMode,
 		(PVOID *) &KeyObject,
@@ -1371,6 +1379,13 @@ NtQueryKey(IN HANDLE KeyHandle,
 	      }
 	  }
 	break;
+
+      case KeyNameInformation:
+      case KeyCachedInformation:
+      case KeyFlagsInformation:
+        DPRINT1("Key information class 0x%x not yet implemented!\n", KeyInformationClass);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
 
       default:
 	DPRINT1("Not handling 0x%x\n", KeyInformationClass);
@@ -1653,14 +1668,12 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	 KeyHandle, ValueName, Type);
 
   DesiredAccess = KEY_SET_VALUE;
-  if (Type == REG_LINK)
-    DesiredAccess |= KEY_CREATE_LINK;
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DesiredAccess,
 				     CmiKeyType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -1998,6 +2011,34 @@ NtNotifyChangeKey (IN HANDLE KeyHandle,
 	return(STATUS_NOT_IMPLEMENTED);
 }
 
+#if 0
+NTSTATUS STDCALL
+NtNotifyChangeKey (IN HANDLE KeyHandle,
+		   IN HANDLE Event,
+		   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+		   IN PVOID ApcContext OPTIONAL,
+		   OUT PIO_STATUS_BLOCK IoStatusBlock,
+		   IN ULONG CompletionFilter,
+		   IN BOOLEAN WatchSubtree,
+		   OUT PVOID Buffer,
+		   IN ULONG Length,
+		   IN BOOLEAN Asynchronous)
+{
+     return NtNotifyChangeMultipleKeys(KeyHandle,          
+                                       0,
+                                       NULL,
+                                       Event,
+                                       ApcRoutine,
+                                       ApcContext,
+                                       IoStatusBlock,
+                                       CompletionFilter,
+                                       WatchTree,
+                                       Buffer,
+                                       Length,
+                                       Asynchronous);
+}
+
+#endif
 
 NTSTATUS STDCALL
 NtQueryMultipleValueKey (IN HANDLE KeyHandle,

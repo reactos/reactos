@@ -38,13 +38,41 @@ NtNotifyChangeDirectoryFile (
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
-   NTSTATUS Status;
    PIO_STACK_LOCATION IoStack;
    KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
    
    DPRINT("NtNotifyChangeDirectoryFile()\n");
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(IoStatusBlock,
+                     sizeof(IO_STATUS_BLOCK),
+                     sizeof(ULONG));
+       if(BufferSize != 0)
+       {
+         ProbeForWrite(Buffer,
+                       BufferSize,
+                       sizeof(ULONG));
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,
@@ -155,13 +183,38 @@ NtQueryDirectoryFile(
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
-   NTSTATUS Status;
    PIO_STACK_LOCATION IoStack;
    KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
    
    DPRINT("NtQueryDirectoryFile()\n");
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(IoStatusBlock,
+                     sizeof(IO_STATUS_BLOCK),
+                     sizeof(ULONG));
+       ProbeForWrite(FileInformation,
+                     Length,
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,

@@ -228,6 +228,7 @@ VOID error_sfile_not_found (LPTSTR);
 VOID error_file_not_found (VOID);
 VOID error_path_not_found (VOID);
 VOID error_too_many_parameters (LPTSTR);
+VOID error_parameter_format(TCHAR);
 VOID error_invalid_switch (TCHAR);
 VOID error_invalid_parameter_format (LPTSTR);
 VOID error_out_of_memory (VOID);

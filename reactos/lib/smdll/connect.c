@@ -49,21 +49,24 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
 
   DPRINT("SMDLL: %s called\n", __FUNCTION__);
 
-  if (pSbApiPortName->Length > (sizeof pSbApiPortName->Buffer[0] * SM_SB_NAME_MAX_LENGTH))
-  {
-	  return STATUS_INVALID_PARAMETER_1;
-  }
   if (pSbApiPortName)
   {
+    if (pSbApiPortName->Length > (sizeof pSbApiPortName->Buffer[0] * SM_SB_NAME_MAX_LENGTH))
+    {
+	  return STATUS_INVALID_PARAMETER_1;
+    }
     if (NULL == hSbApiPort || IMAGE_SUBSYSTEM_UNKNOWN == dwSubsystem)
     {
       return STATUS_INVALID_PARAMETER_MIX;
     }
     RtlZeroMemory (& ConnectData, sizeof ConnectData);
     ConnectData.Subsystem = dwSubsystem;
-    RtlCopyMemory (& ConnectData.SbName,
-		   pSbApiPortName->Buffer,
-		   pSbApiPortName->Length);
+    if (pSbApiPortName->Length > 0)
+    {
+      RtlCopyMemory (& ConnectData.SbName,
+		     pSbApiPortName->Buffer,
+		     pSbApiPortName->Length);
+    }
   }
   ConnectDataLength = sizeof ConnectData;
 

@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ winmm.a wine.a wine_uuid.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ urlmon.a winmm.a wine.a wine_uuid.a ntdll.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_OLEAUT32)
 

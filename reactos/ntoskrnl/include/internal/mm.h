@@ -639,6 +639,7 @@ PFN_TYPE MmGetLRUFirstUserPage(VOID);
 VOID MmSetLRULastPage(PFN_TYPE Page);
 
 VOID MmLockPage(PFN_TYPE Page);
+VOID MmLockPageUnsafe(PFN_TYPE Page);
 
 VOID MmUnlockPage(PFN_TYPE Page);
 
@@ -723,6 +724,7 @@ LONG MmAllocPagesSpecifyRange(ULONG Consumer,
 VOID MmDereferencePage(PFN_TYPE Page);
 
 VOID MmReferencePage(PFN_TYPE Page);
+VOID MmReferencePageUnsafe(PFN_TYPE Page);
 
 BOOLEAN MmIsAccessedAndResetAccessPage(struct _EPROCESS* Process, PVOID Address);
 

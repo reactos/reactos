@@ -242,22 +242,22 @@ KeUpdateRunTime(
     IN KIRQL  Irql
     )
 {
-   PKPCR Pcr;
+   PKPRCB Prcb;
    PKTHREAD CurrentThread;
    PKPROCESS CurrentProcess;
 #if 0
    ULONG DpcLastCount;
 #endif
 
-   Pcr = KeGetCurrentKPCR();
+   Prcb = KeGetCurrentPrcb();
 
    /* Make sure we don't go further if we're in early boot phase. */
-   if (Pcr == NULL || Pcr->PrcbData.CurrentThread == NULL)
+   if (Prcb == NULL || Prcb->CurrentThread == NULL)
       return;
 
-   DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
+   DPRINT("KernelTime  %u, UserTime %u \n", Prcb->KernelTime, Prcb->UserTime);
 
-   CurrentThread = Pcr->PrcbData.CurrentThread;
+   CurrentThread = Prcb->CurrentThread;
    CurrentProcess = CurrentThread->ApcState.Process;
 
    /* 
@@ -269,36 +269,36 @@ KeUpdateRunTime(
    {
       InterlockedIncrementUL(&CurrentThread->UserTime);
       InterlockedIncrementUL(&CurrentProcess->UserTime);
-      Pcr->PrcbData.UserTime++;
+      Prcb->UserTime++;
    }
    else
    {
       if (Irql > DISPATCH_LEVEL)
       {
-         Pcr->PrcbData.InterruptTime++;
+         Prcb->InterruptTime++;
       }
       else if (Irql == DISPATCH_LEVEL)
       {
-         Pcr->PrcbData.DpcTime++;
+         Prcb->DpcTime++;
       }
       else
       {
          InterlockedIncrementUL(&CurrentThread->KernelTime);
          InterlockedIncrementUL(&CurrentProcess->KernelTime);
-	 Pcr->PrcbData.KernelTime++;
+         Prcb->KernelTime++;
       }
    }
 
 #if 0
-   DpcLastCount = Pcr->PrcbData.DpcLastCount;
-   Pcr->PrcbData.DpcLastCount = Pcr->PrcbData.DpcCount;
-   Pcr->PrcbData.DpcRequestRate = ((Pcr->PrcbData.DpcCount - DpcLastCount) +
-                                   Pcr->PrcbData.DpcRequestRate) / 2;
+   DpcLastCount = Prcb->DpcLastCount;
+   Prcb->DpcLastCount = Prcb->DpcCount;
+   Prcb->DpcRequestRate = ((Prcb->DpcCount - DpcLastCount) +
+                                   Prcb->DpcRequestRate) / 2;
 #endif
 
-   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 &&
-       Pcr->PrcbData.DpcRoutineActive == FALSE &&
-       Pcr->PrcbData.DpcInterruptRequested == FALSE)
+   if (Prcb->DpcData[0].DpcQueueDepth > 0 &&
+       Prcb->DpcRoutineActive == FALSE &&
+       Prcb->DpcInterruptRequested == FALSE)
    {
       HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
@@ -311,7 +311,7 @@ KeUpdateRunTime(
     */
    if ((CurrentThread->Quantum -= 3) <= 0)
    {
-     Pcr->PrcbData.QuantumEnd = TRUE;
+     Prcb->QuantumEnd = TRUE;
      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 }

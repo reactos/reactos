@@ -20,11 +20,14 @@
 
 POBJECT_TYPE  CmiKeyType = NULL;
 PREGISTRY_HIVE  CmiVolatileHive = NULL;
-KSPIN_LOCK  CmiKeyListLock;
 
 LIST_ENTRY CmiHiveListHead;
 
 ERESOURCE CmiRegistryLock;
+
+KTIMER CmiWorkerTimer;
+LIST_ENTRY CmiKeyObjectListHead;
+ULONG CmiTimer = 0;
 
 volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
@@ -241,6 +244,92 @@ CmiCheckRegistry(BOOLEAN Verbose)
   CmiCheckByName(Verbose, L"User");
 }
 
+VOID STDCALL
+CmiWorkerThread(PVOID Param)
+{
+  NTSTATUS Status;
+  PLIST_ENTRY CurrentEntry;
+  PKEY_OBJECT CurrentKey;
+  ULONG Count;
+
+
+  while (1)
+  {
+    Status = KeWaitForSingleObject(&CmiWorkerTimer, 
+	                           Executive, 
+				   KernelMode, 
+				   FALSE, 
+				   NULL);
+    if (Status == STATUS_SUCCESS)
+    {
+      DPRINT("CmiWorkerThread\n");
+
+      /* Acquire hive lock */
+      KeEnterCriticalRegion();
+      ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+
+      CmiTimer++;
+
+      Count = 0;
+      CurrentEntry = CmiKeyObjectListHead.Blink;
+      while (CurrentEntry != &CmiKeyObjectListHead)
+      {
+         CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
+	 if (CurrentKey->TimeStamp + 120 > CmiTimer)
+	 {
+	    /* The object was accessed in the last 10min */
+	    break;
+	 }
+	 if (1 == ObGetObjectPointerCount(CurrentKey) &&
+	     !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
+	 {
+	    ObDereferenceObject(CurrentKey);
+            CurrentEntry = CmiKeyObjectListHead.Blink;
+	    Count++;
+	 }
+	 else
+	 {
+	    CurrentEntry = CurrentEntry->Blink;
+	 }
+      }
+      ExReleaseResourceLite(&CmiRegistryLock);
+      KeLeaveCriticalRegion();
+
+      DPRINT("Removed %d key objects\n", Count);
+
+    }
+    else
+    {
+      KEBUGCHECK(0);
+    }
+  }
+}
+
+VOID
+INIT_FUNCTION
+STDCALL
+CmInitHives(BOOLEAN SetupBoot)
+{
+    PCHAR BaseAddress;
+    
+    /* Load Registry Hives. This one can be missing. */
+    if (CachedModules[SystemRegistry]) {
+        BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
+        CmImportSystemHive(BaseAddress,
+                           CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    }
+    
+    BaseAddress = (PCHAR)CachedModules[HardwareRegistry]->ModStart;
+    CmImportHardwareHive(BaseAddress,
+                         CachedModules[HardwareRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    
+
+    /* Create dummy keys if no hardware hive was found */
+    CmImportHardwareHive (NULL, 0);
+
+    /* Initialize volatile registry settings */
+    if (SetupBoot == FALSE) CmInit2((PCHAR)KeLoaderBlock.CommandLine);
+}   
 
 VOID INIT_FUNCTION
 CmInitializeRegistry(VOID)
@@ -254,6 +343,9 @@ CmInitializeRegistry(VOID)
   HANDLE RootKeyHandle;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  LARGE_INTEGER DueTime;
+  HANDLE ThreadHandle;
+  CLIENT_ID ThreadId;
 
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -286,6 +378,29 @@ CmInitializeRegistry(VOID)
   /* Initialize registry lock */
   ExInitializeResourceLite(&CmiRegistryLock);
 
+  /* Initialize the key object list */
+  InitializeListHead(&CmiKeyObjectListHead);
+
+  /* Initialize the worker timer */
+  KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
+
+  /* Initialize the worker thread */
+  Status = PsCreateSystemThread(&ThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&ThreadId,
+				CmiWorkerThread,
+				NULL);
+  if (!NT_SUCCESS(Status))
+  {
+    KEBUGCHECK(0);
+  }
+
+  /* Start the timer */  
+  DueTime.QuadPart = -1;
+  KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
+
   /*  Build volatile registry store  */
   Status = CmiCreateVolatileHive (&CmiVolatileHive);
   ASSERT(NT_SUCCESS(Status));
@@ -308,7 +423,7 @@ CmInitializeRegistry(VOID)
   ASSERT(NT_SUCCESS(Status));
   Status = ObInsertObject(RootKey,
 			  NULL,
-			  STANDARD_RIGHTS_REQUIRED,
+			  KEY_ALL_ACCESS,
 			  0,
 			  NULL,
 			  &RootKeyHandle);
@@ -321,6 +436,7 @@ CmInitializeRegistry(VOID)
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
+  InsertTailList(&CmiKeyObjectListHead, &RootKey->ListEntry);
   Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
   ASSERT(NT_SUCCESS(Status));
 
@@ -336,7 +452,6 @@ CmInitializeRegistry(VOID)
   CmiVolatileHive->RootSecurityCell = RootSecurityCell;
 #endif
 
-  KeInitializeSpinLock(&CmiKeyListLock);
 
   /* Create '\Registry\Machine' key. */
   RtlInitUnicodeString(&KeyName,
@@ -347,7 +462,7 @@ CmInitializeRegistry(VOID)
 			     RootKeyHandle,
 			     NULL);
   Status = ZwCreateKey(&KeyHandle,
-		       STANDARD_RIGHTS_REQUIRED,
+		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
 		       NULL,
@@ -364,7 +479,7 @@ CmInitializeRegistry(VOID)
 			     RootKeyHandle,
 			     NULL);
   Status = ZwCreateKey(&KeyHandle,
-		       STANDARD_RIGHTS_REQUIRED,
+		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
 		       NULL,
@@ -648,6 +763,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
+  InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
   if (NewKey->KeyCell->NumberOfSubKeys != 0)
     {
       NewKey->SubKeys = ExAllocatePool(NonPagedPool,
@@ -702,6 +818,8 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   PREGISTRY_HIVE Hive;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  PLIST_ENTRY CurrentEntry;
+  PKEY_OBJECT CurrentKey;
 
   DPRINT("CmiDisconnectHive() called\n");
 
@@ -741,11 +859,36 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_INVALID_PARAMETER;
     }
 
+  /* Acquire registry lock exclusively */
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+
+  CurrentEntry = CmiKeyObjectListHead.Flink;
+  while (CurrentEntry != &CmiKeyObjectListHead)
+  {
+     CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
+     if (1 == ObGetObjectPointerCount(CurrentKey) &&
+	 !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
+     {
+        ObDereferenceObject(CurrentKey);
+        CurrentEntry = CmiKeyObjectListHead.Flink;
+     }
+     else
+     {
+        CurrentEntry = CurrentEntry->Flink;
+     }
+  }
+
   if (ObGetObjectHandleCount (KeyObject) != 0 ||
       ObGetObjectPointerCount (KeyObject) != 2)
     {
-      DPRINT1 ("Hive is still in use\n");
+      DPRINT1 ("Hive is still in use (hc %d, rc %d)\n", ObGetObjectHandleCount (KeyObject), ObGetObjectPointerCount (KeyObject));
       ObDereferenceObject (KeyObject);
+      
+      /* Release registry lock */
+      ExReleaseResourceLite (&CmiRegistryLock);
+      KeLeaveCriticalRegion();
+
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -756,6 +899,10 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   ObDereferenceObject (KeyObject);
 
   *RegistryHive = Hive;
+
+  /* Release registry lock */
+  ExReleaseResourceLite (&CmiRegistryLock);
+  KeLeaveCriticalRegion();
 
   DPRINT ("CmiDisconnectHive() done\n");
 

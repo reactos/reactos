@@ -164,10 +164,7 @@
 #include "utils.h"
 #include "parser.h"
 #include "header.h"
-#include "proxy.h"
 #include "typelib.h"
-#include "client.h"
-#include "server.h"
 
 #if defined(YYBYACC)
 	/* Berkeley yacc (byacc) doesn't seem to know about these */

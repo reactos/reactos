@@ -20,6 +20,7 @@
 #include "precomp.h"
 
 
+#define PARAMETERF_ERROR	_T("Parameter format not correct - %c\n")
 #define INVALID_SWITCH		_T("Invalid switch - /%c\n")
 #define TOO_MANY_PARAMETERS	_T("Too many parameters - %s\n")
 #define PATH_NOT_FOUND		_T("Path not found\n")
@@ -95,6 +96,10 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 #endif
 }
 
+VOID error_parameter_format(TCHAR ch)
+{
+	ConErrPrintf (PARAMETERF_ERROR, ch);
+}
 
 
 VOID error_invalid_switch (TCHAR ch)
