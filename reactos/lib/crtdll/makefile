@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.43 2001/01/17 17:00:22 jean Exp $
+# $Id: makefile,v 1.44 2001/02/01 16:44:19 jean Exp $
 #
 # ReactOS Operating System
 #
@@ -107,7 +107,7 @@ STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdli
 
 SIGNAL_OBJECTS = signal/signal.o signal/xcptfil.o signal/xcptinfo.o
 
-PROCESS_OBJECTS = process/_cwait.o process/dll.o process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvpe.o process/spawnvp.o \
+PROCESS_OBJECTS = process/_cwait.o process/dll.o process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvp.o \
 		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
 		process/execvpe.o process/execvp.o process/execv.o process/execle.o process/_system.o\
 		process/execve.o process/threadid.o process/thread.o process/procid.o

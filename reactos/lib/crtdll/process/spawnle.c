@@ -8,23 +8,22 @@ int _spawnle(int mode, const char *path, const char *szArgv0, ... /*, const char
   char *szArg[100];
   char *a;
   char *ptr;
-  int i = 0;
+  int i = 1;
   va_list l = 0;
+  szArg[0]=szArgv0;
   va_start(l,szArgv0);
   do {
   	a = (char *)va_arg(l,const char *);
 	szArg[i++] = (char *)a;
   } while ( a != NULL && i < 100 );
 
-
-// szArg0 is passed and not environment if there is only one parameter;
-
-  if ( i >=2 ) {
-  	ptr = szArg[i-2];
-  	szArg[i-2] = NULL;
+  if(a != NULL)
+  {
+//    __set_errno(E2BIG);
+    return -1;
   }
-  else
-	ptr = NULL;
+
+  ptr = (char *)va_arg(l,const char *);
 
   return _spawnve(mode, path, (char * const *)szArg, (char * const *)ptr);
 }

@@ -35,10 +35,10 @@ int _fileinfo_dll = 0;
 
 static int
 direct_exec_tail(const char *program, const char *args,
-		 char * const envp[])
+		 char * const envp[],
+		PROCESS_INFORMATION *ProcessInformation)
 {
 
-	static PROCESS_INFORMATION ProcessInformation;
 	static STARTUPINFO StartupInfo;
 
 	StartupInfo.cb = sizeof(STARTUPINFO);
@@ -49,14 +49,17 @@ direct_exec_tail(const char *program, const char *args,
 	StartupInfo.cbReserved2 = 0; 
 
 
-	if ( CreateProcessA((char *)program,(char *)args,NULL,NULL,FALSE,0,(char **)envp,NULL,&StartupInfo,&ProcessInformation) ) {
-        return -1;
+	if (! CreateProcessA((char *)program,(char *)args,NULL,NULL,FALSE,0,(char **)envp,NULL,&StartupInfo,ProcessInformation) ) 
+	{
+	  __set_errno( GetLastError() );
+          return -1;
 	}
 
-	return ProcessInformation.dwProcessId;
+	return (int)ProcessInformation->hProcess;
 }
 
-static int vdm_exec(const char *program, char **argv, char **envp)
+static int vdm_exec(const char *program, char **argv, char **envp,
+	PROCESS_INFORMATION *ProcessInformation)
 {
 	static char args[1024];
 	int i = 0;
@@ -69,24 +72,29 @@ static int vdm_exec(const char *program, char **argv, char **envp)
         i++; 
 	}
   
-	return direct_exec_tail(program,args,envp);
+	return direct_exec_tail(program,args,envp,ProcessInformation);
 }
 
-static int go32_exec(const char *program, char **argv, char **envp)
+static int go32_exec(const char *program, char **argv, char **envp,
+	PROCESS_INFORMATION *ProcessInformation)
 {
 
 
 	static char args[1024];
+	static char envblock[2048];
+	char * penvblock;
 	int i = 0;
 
 
-	args[0] = 0;
+	envblock[0] = 0;
+	penvblock=envblock;
 
-	while(argv[i] != NULL ) {
-          strcat(args,envp[i]);
-          strcat(args," ");
+	while(envp[i] != NULL ) {
+          strcat(penvblock,envp[i]);
+	  penvblock+=strlen(envp[i])+1;
           i++; 
 	}
+	penvblock[0]=0;
 
 	args[0] = 0;
         i = 0;
@@ -96,11 +104,12 @@ static int go32_exec(const char *program, char **argv, char **envp)
           i++; 
 	}
   
-	return direct_exec_tail(program,args,envp);
+	return direct_exec_tail(program,args,envp,ProcessInformation);
 }
 
 int
-command_exec(const char *program, char **argv, char **envp)
+command_exec(const char *program, char **argv, char **envp,
+	PROCESS_INFORMATION *ProcessInformation)
 {
  	static char args[1024];
 	int i = 0;
@@ -116,11 +125,12 @@ command_exec(const char *program, char **argv, char **envp)
         i++; 
 	}
   
-	return direct_exec_tail(program,args,envp);
+	return direct_exec_tail(program,args,envp,ProcessInformation);
 
 }
 
-static int script_exec(const char *program, char **argv, char **envp)
+static int script_exec(const char *program, char **argv, char **envp,
+	PROCESS_INFORMATION *ProcessInformation)
 {
 	return 0;
 }
@@ -132,10 +142,13 @@ static int script_exec(const char *program, char **argv, char **envp)
    executable from one of the shells used on MSDOS.  */
 static struct {
   const char *extension;
-  int (*interp)(const char *, char **, char **);
+  int (*interp)(const char *, char **, char **,
+	PROCESS_INFORMATION *);
 } interpreters[] = {
 	{ ".com", vdm_exec },
 	{ ".exe", go32_exec },
+	{ ".dll", go32_exec },
+	{ ".cmd", command_exec },
 	{ ".bat", command_exec },
 	{ ".btm", command_exec },
 	{ ".sh",  script_exec },  /* for compatibility with ms_sh */
@@ -159,6 +172,7 @@ static struct {
 int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
 {
   /* This is the one that does the work! */
+  PROCESS_INFORMATION ProcessInformation;
   union { char *const *x; char **p; } u;
   int i = -1;
   char **argvp;
@@ -237,13 +251,86 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
     return -1;
   }
   errno = e;
-  i = interpreters[i].interp(rpath, argvp, envpp);
+  i = interpreters[i].interp(rpath, argvp, envpp, &ProcessInformation);
   if (mode == P_OVERLAY)
     exit(i);
+  if (mode == P_WAIT)
+  {
+    WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
+    GetExitCodeProcess(ProcessInformation.hProcess,&i);
+  }
   return i;
 }
 
 
 
 
+const char * find_exec(char * path,char *rpath)
+{
+ char *rp, *rd=0;
+ int i;
+ int is_dir = 0;
+ int found = 0;
+  if (path == 0 )
+    return 0;
+  if (strlen(path) > FILENAME_MAX - 1)
+    return path;
 
+  /* copy path in rpath */
+  for (rd=path,rp=rpath; *rd; *rp++ = *rd++)
+    ;
+  *rp = 0;
+  /* try first with the name as is */
+  for (i=0; interpreters[i].extension; i++)
+  {
+    strcpy(rp, interpreters[i].extension);
+    if (_access(rpath, F_OK) == 0 && !(is_dir = (_access(rpath, D_OK) == 0)))
+    {
+	found = 1;
+	break;
+    }
+  }
+
+  if (!found)
+  {
+    /* search in the PATH */
+    char winpath[MAX_PATH];
+    if( GetEnvironmentVariableA("PATH",winpath,MAX_PATH))
+    {
+     char *ep=winpath;
+      while( *ep)
+      {
+        if(*ep == ';') ep++;
+        rp=rpath;
+        for ( ; *ep && (*ep != ';') ; *rp++ = *ep++)
+	  ;
+        *rp++='/';
+        for (rd=path ; *rd ; *rp++ = *rd++)
+	  ;
+
+        for (i=0; interpreters[i].extension; i++)
+        {
+          strcpy(rp, interpreters[i].extension);
+          if (_access(rpath, F_OK) == 0 && !(is_dir = (_access(rpath, D_OK) == 0)))
+          {
+	    found = 1;
+	    break;
+          }
+        }
+	if (found) break;
+      }
+    }
+  }
+  if (!found)
+    return path;
+
+  return rpath;
+}
+
+int _spawnvpe(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv)
+{
+ char rpath[FILENAME_MAX];
+
+  return _spawnve(nMode, find_exec(szPath,rpath), szaArgv, szaEnv);
+
+}

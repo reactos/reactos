@@ -8,8 +8,9 @@ int _spawnl(int nMode, const char* szPath, const char* szArgv0,...)
 {
   char *szArg[100];
   const char *a;
-  int i = 0;
+  int i = 1;
   va_list l = 0;
+  szArg[0]=szArgv0;
   va_start(l,szArgv0);
   do {
   	a = va_arg(l,const char *);

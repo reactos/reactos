@@ -22,5 +22,5 @@ int	_cwait (int* pnStatus, int hProc, int nAction)
 
 	if ( !GetExitCodeProcess((void *)hProc,pnStatus) )
 		return -1;
-	return *pnStatus;
+	return hProc;
 }
