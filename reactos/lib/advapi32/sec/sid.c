@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.12 2004/03/25 11:30:07 ekohl Exp $
+/* $Id: sid.c,v 1.13 2004/06/20 23:39:07 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -117,11 +117,15 @@ EqualSid (PSID pSid1,
 
 /*
  * @implemented
+ *
+ * RETURNS
+ *  Docs says this function does NOT return a value
+ *  even thou it's defined to return a PVOID...
  */
 PVOID STDCALL
 FreeSid (PSID pSid)
 {
-  return RtlFreeSid (pSid);
+   return RtlFreeSid (pSid);
 }
 
 
