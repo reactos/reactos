@@ -154,8 +154,8 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "tell me..., in the future... will I be artificial intelligent enough to actually feel\n"
        "sad serving you this screen?\n",
        "Thank you for some well deserved rest.\n",
-       "It’s been great, maybe we can boot me up again some time soon.\n",
-       "For what’s it worth, I’ve enjoyed every single CPU cycle.\n",
+       "It's been great, maybe we can boot me up again some time soon.\n",
+       "For what's it worth, I've enjoyed every single CPU cycle.\n",
        "There are many questions when the end is near.\n"
        "What to expect, what will it be like...what should I look for?\n",
        "I've seen things you people wouldn't believe. Attack ships on fire\n"
@@ -212,6 +212,4 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    return STATUS_SUCCESS;
 }
 
-
 /* EOF */
-
