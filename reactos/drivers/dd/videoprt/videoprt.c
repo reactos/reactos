@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.6 2003/06/21 14:25:30 gvg Exp $
+/* $Id: videoprt.c,v 1.7 2003/07/08 17:06:44 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -583,8 +583,12 @@ VideoPortLogError(IN PVOID  HwDeviceExtension,
                   IN VP_STATUS  ErrorCode,
                   IN ULONG  UniqueId)
 {
-  DPRINT("VideoPortLogError\n");
-  UNIMPLEMENTED;
+  DPRINT1("VideoPortLogError ErrorCode %d (0x%x) UniqueId %lu (0x%lx)\n",
+          ErrorCode, ErrorCode, UniqueId, UniqueId);
+  if (NULL != Vrp)
+    {
+      DPRINT1("Vrp->IoControlCode %lu (0x%lx)\n", Vrp->IoControlCode, Vrp->IoControlCode);
+    }
 }
 
 VP_STATUS 
