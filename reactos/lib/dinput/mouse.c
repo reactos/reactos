@@ -610,9 +610,13 @@ static HRESULT WINAPI SysMouseAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
     
     TRACE("(this=%p)\n",This);
     
+	
+
     if (This->acquired == 0) {
 	POINT point;
 	
+	
+
 	/* Store (in a global variable) the current lock */
 	current_lock = (IDirectInputDevice8A*)This;
 	
@@ -711,6 +715,57 @@ static HRESULT WINAPI SysMouseAImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface)
 // if you call poll then to getdevicestate
 // it did not send back right value in windows 
 int poll_mouse=0;
+
+#ifdef __REACTOS__
+void getmousesvalue(LPDIRECTINPUTDEVICE8A iface);
+int filp=0;
+void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
+{
+	static long last_event = 0;
+
+    POINT point;
+	SysMouseImpl *This = (SysMouseImpl *)iface;        
+
+	This->m_state.rgbButtons[0] =  ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[1] =  ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[2] =  ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[3] =  ((GetKeyState(VK_XBUTTON1) & 0x80) ? 0xFF : 0x00);	
+	This->m_state.rgbButtons[4] =  ((GetKeyState(VK_XBUTTON2) & 0x80) ? 0xFF : 0x00);	
+
+    
+	
+
+	if (poll_mouse==1) filp=0;
+	if (filp==2) filp=0;
+	if (filp==0) {
+                  GetCursorPos( &point );   	
+		
+	if (This->prevX == point.x) This->m_state.lX = 0;
+	else {
+          This->prevX = point.x;
+          This->m_state.lX = point.x - This->org_coords.x; 
+	      } 
+
+	if (This->prevY == point.y) This->m_state.lY = 0;
+	else {
+         This->prevY = point.y;
+          This->m_state.lY = point.y - This->org_coords.y; 
+	    } 
+
+   	}
+	else 
+	{
+	 This->m_state.lX = 0;
+     This->m_state.lY = 0;	 
+	}
+    filp++;
+    
+// check see if buffer have been set
+
+}
+
+#endif
+
 static HRESULT WINAPI SysMouseAImpl_Poll(LPDIRECTINPUTDEVICE8A iface)
 {
  int retValue = DI_OK;
@@ -741,6 +796,10 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
 
 #ifndef __REACTOS__
     EnterCriticalSection(&(This->crit));
+#endif
+
+#ifdef __REACTOS__
+getmousesvalue(iface);
 #endif
     TRACE("(this=%p,0x%08lx,%p): \n",This,len,ptr);
     	
@@ -800,10 +859,19 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
     SysMouseImpl *This = (SysMouseImpl *)iface;
     DWORD len;
     int nqtail;
-	
+#ifdef __REACTOS__
+static int last_event=0;
+const int size = sizeof(DIDEVICEOBJECTDATA) * 1;
+static count=0;
+static DWORD time=0;
+#endif
+
     
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
     
+#ifdef __REACTOS__
+getmousesvalue(iface);
+#endif
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
@@ -818,10 +886,43 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 	return DIERR_NOTACQUIRED;
     }
     
-	
+#ifdef __REACTOS__	
+  FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
+
+  *entries = 5;
+  if (GetTickCount()-time <50) return DI_OK;
+  time = GetTickCount();
+   
+  dod[0].dwOfs =   DIMOFS_X;
+  dod[0].dwData =   This->m_state.lX;
+  dod[0].dwTimeStamp =  0;
+  dod[0].dwSequence = last_event++;
+   
+  dod[1].dwOfs =   DIMOFS_Y;
+  dod[1].dwData =   This->m_state.lY;
+  dod[1].dwTimeStamp =  0;
+  dod[1].dwSequence = last_event++;
+  
+  dod[2].dwOfs =   DIMOFS_BUTTON0;
+  dod[2].dwData =   This->m_state.rgbButtons[0];
+  dod[2].dwTimeStamp =  0;
+  dod[2].dwSequence = last_event++;
+  
+  dod[3].dwOfs =   DIMOFS_BUTTON1;
+  dod[3].dwData =   This->m_state.rgbButtons[1];
+  dod[3].dwTimeStamp =  0;
+  dod[0].dwSequence = last_event++;
+  
+  dod[4].dwOfs =   DIMOFS_BUTTON2;
+  dod[4].dwData =   This->m_state.rgbButtons[2];
+  dod[4].dwTimeStamp =  50;
+  dod[4].dwSequence = last_event++;
+
+#endif
+
 #ifndef __REACTOS__
     EnterCriticalSection(&(This->crit));
-#endif
+
 
 	// FIXME mouse are bit choppy here. 
 
@@ -839,9 +940,9 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
     } else {
 	if (dodsize < sizeof(DIDEVICEOBJECTDATA_DX3)) {
 	    ERR("Wrong structure size !\n");
-#ifndef __REACTOS__
+
 	    LeaveCriticalSection(&(This->crit));
-#endif
+
 	    return DIERR_INVALIDPARAM;
 	}
 	
@@ -867,9 +968,9 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
     }
     if (!(flags & DIGDD_PEEK))
 	This->queue_tail = nqtail;
-#ifndef __REACTOS__    
+
     LeaveCriticalSection(&(This->crit));
-#endif    
+
     /* Check if we need to do a mouse warping */
    
 
@@ -887,6 +988,7 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 	This->need_warp = WARP_STARTED;
 #endif
     }
+#endif    
     return DI_OK;
 }
 
