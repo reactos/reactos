@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.33 2002/09/23 19:20:34 sedwards Exp $
+/* $Id: stubs.c,v 1.34 2002/09/27 15:29:03 hbirr Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -993,7 +993,6 @@ MultiByteToWideChar (
 	)
 {
 	int	InStringLength = 0;
-	BOOL	InIsNullTerminated = TRUE;
 	PCHAR	r;
 	PWCHAR	w;
 	int	cchConverted;
@@ -1008,7 +1007,7 @@ MultiByteToWideChar (
 			&& (FALSE == IsInstalledCP (CodePage))
 			)
 		/* --- FLAGS --- */
-		|| (dwFlags ^ (	MB_PRECOMPOSED
+		|| (dwFlags & ~(MB_PRECOMPOSED
 				| MB_COMPOSITE
 				| MB_ERR_INVALID_CHARS
 				| MB_USEGLYPHCHARS
@@ -1026,11 +1025,10 @@ MultiByteToWideChar (
 	 */
 	if (-1 == cchMultiByte)
 	{
-		InStringLength = lstrlen (lpMultiByteStr);
+		InStringLength = lstrlen (lpMultiByteStr) + 1;
 	}
 	else
 	{
-		InIsNullTerminated = FALSE;
 		InStringLength = cchMultiByte;
 	}
 	/*
@@ -1058,21 +1056,14 @@ MultiByteToWideChar (
 		r = (PCHAR) lpMultiByteStr,
 		w = (PWCHAR) lpWideCharStr;
 
-		((*r) && (cchConverted < cchWideChar));
+		cchConverted < InStringLength;
 
 		r++,
+		w++,
 		cchConverted++
 		)
 	{
 		*w = (WCHAR) *r;
-	}
-	/*
-	 * Is the input string NULL terminated?
-	 */
-	if (TRUE == InIsNullTerminated)
-	{
-		*w = L'\0';
-		++cchConverted;
 	}
 	/*
 	 * Return how many characters we
