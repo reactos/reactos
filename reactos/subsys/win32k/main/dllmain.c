@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.46 2003/10/16 22:07:37 weiden Exp $
+/* $Id: dllmain.c,v 1.47 2003/11/03 18:51:40 ekohl Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -39,6 +39,7 @@
 #include <include/timer.h>
 #include <include/text.h>
 #include <include/caret.h>
+#include <include/hotkey.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -155,6 +156,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 #endif
 
       RemoveTimersThread(Thread->Cid.UniqueThread);
+      UnregisterThreadHotKeys(Thread);
       DestroyThreadWindows(Thread);
     }
 
@@ -166,8 +168,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
  * This definition doesn't work
  */
 // WINBOOL STDCALL DllMain(VOID)
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 DllMain (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
@@ -224,13 +225,20 @@ DllMain (
     DbgPrint("Failed to initialize window implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
-  
+
   Status = InitMenuImpl();
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("Failed to initialize menu implementation!\n");
     return STATUS_UNSUCCESSFUL;
-  }  
+  }
+
+  Status = InitHotKeyImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize hot key implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
 
   Status = InitInputImpl();
   if (!NT_SUCCESS(Status))
@@ -257,8 +265,7 @@ DllMain (
 }
 
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 Win32kInitialize (VOID)
 {
   DPRINT("in Win32kInitialize\n");
@@ -268,7 +275,8 @@ Win32kInitialize (VOID)
   InitGdiObjectHandleTable ();
 
   // Initialize FreeType library
-  if(!InitFontSupport()) return FALSE;
+  if (!InitFontSupport())
+    return FALSE;
 
   // Create stock objects, ie. precreated objects commonly used by win32 applications
   CreateStockObjects();

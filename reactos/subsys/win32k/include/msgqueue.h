@@ -127,6 +127,8 @@ IntSendMessage(HWND hWnd,
 		BOOL KernelMessage);
 VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID STDCALL
+MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg);
 

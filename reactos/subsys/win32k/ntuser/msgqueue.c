@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.29 2003/11/02 14:08:34 navaraf Exp $
+/* $Id: msgqueue.c,v 1.30 2003/11/03 18:52:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -521,6 +521,66 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	DPRINT("Invalid focus window handle\n");
       }
   }
+}
+
+VOID STDCALL
+MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  PWINDOW_OBJECT Window;
+  PUSER_MESSAGE Message;
+  PW32THREAD Win32Thread;
+  PW32PROCESS Win32Process;
+  MSG Mesg;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByPointer (Thread,
+				       THREAD_ALL_ACCESS,
+				       PsThreadType,
+				       KernelMode);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  Win32Thread = ((PETHREAD)Thread)->Win32Thread;
+  if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
+    {
+      ObDereferenceObject ((PETHREAD)Thread);
+      return;
+    }
+
+  Win32Process = ((PETHREAD)Thread)->ThreadsProcess->Win32Process;
+  if (Win32Process == NULL || Win32Process->WindowStation == NULL)
+    {
+      ObDereferenceObject ((PETHREAD)Thread);
+      return;
+    }
+
+  Status = ObmReferenceObjectByHandle(Win32Process->WindowStation->HandleTable,
+                                      hWnd, otWindow, (PVOID*)&Window);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject ((PETHREAD)Thread);
+      return;
+    }
+
+  Mesg.hwnd = hWnd;
+  Mesg.message = WM_HOTKEY;
+  Mesg.wParam = wParam;
+  Mesg.lParam = lParam;
+//      Mesg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
+//      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
+//      KeQueryTickCount(&LargeTickCount);
+//      Mesg.time = LargeTickCount.u.LowPart;
+  Message = MsqCreateMessage(&Mesg);
+  MsqPostMessage(Window->MessageQueue, Message);
+  ObmDereferenceObject(Window);
+  ObDereferenceObject (Thread);
+
+//  ExAcquireFastMutex(&pThread->MessageQueue->Lock);
+//  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,
+//		 &Message->ListEntry);
+//  KeSetEvent(&pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+//  ExReleaseFastMutex(&pThread->MessageQueue->Lock);
+
 }
 
 VOID FASTCALL

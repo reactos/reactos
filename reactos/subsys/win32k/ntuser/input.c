@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.16 2003/11/02 16:33:33 ekohl Exp $
+/* $Id: input.c,v 1.17 2003/11/03 18:52:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,6 +39,7 @@
 #include <ddk/ntddmou.h>
 #include <include/mouse.h>
 #include <include/input.h>
+#include <include/hotkey.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -101,7 +102,10 @@ KeyboardThreadMain(PVOID StartContext)
 	{
 	  KEY_EVENT_RECORD KeyEvent;
 	  LPARAM lParam = 0;
-	  BOOLEAN SysKey;
+	  UINT fsModifiers;
+	  struct _ETHREAD *Thread;
+	  HWND hWnd;
+	  int id;
 
 	  Status = NtReadFile (KeyboardDeviceHandle,
 			       NULL,
@@ -126,8 +130,36 @@ KeyboardThreadMain(PVOID StartContext)
 	      return; //(Status);
 	    }
 
-	  SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
 	  DPRINT( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
+
+	  fsModifiers = 0;
+	  if (KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+	    fsModifiers |= MOD_ALT;
+
+	  if (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+	    fsModifiers |= MOD_CONTROL;
+
+	  if (KeyEvent.dwControlKeyState & SHIFT_PRESSED)
+	    fsModifiers |= MOD_SHIFT;
+
+	  /* FIXME: Support MOD_WIN */
+
+	  if (GetHotKey(fsModifiers,
+			KeyEvent.wVirtualKeyCode,
+			&Thread,
+			&hWnd,
+			&id))
+	    {
+	      if (KeyEvent.bKeyDown)
+		{
+		  DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
+		  MsqPostHotKeyMessage (Thread,
+					hWnd,
+					(WPARAM)id,
+					MAKELPARAM((WORD)fsModifiers, (WORD)KeyEvent.wVirtualKeyCode));
+		}
+	    }
+	  else
 
 	  /*
 	   * Post a keyboard message.
@@ -143,12 +175,13 @@ KeyboardThreadMain(PVOID StartContext)
 		  lParam |= (1 << 24);
 		}
 
-	      if (SysKey)
+	      if (fsModifiers & MOD_ALT)
 		{
-		  lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		  lParam |= (1 << 29);
 		}
 
-	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN,
+	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYDOWN : WM_KEYDOWN,
 				     KeyEvent.wVirtualKeyCode,
 				     lParam);
 	    }
@@ -163,12 +196,13 @@ KeyboardThreadMain(PVOID StartContext)
 		  lParam |= (1 << 24);
 		}
 
-	      if (SysKey)
+	      if (fsModifiers & MOD_ALT)
 		{
-		  lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		  lParam |= (1 << 29);
 		}
 
-	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYUP : WM_KEYUP,
+	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYUP : WM_KEYUP,
 				     KeyEvent.wVirtualKeyCode,
 				     lParam);
 	    }
@@ -176,6 +210,7 @@ KeyboardThreadMain(PVOID StartContext)
       DbgPrint( "Input Thread Stopped...\n" );
     }
 }
+
 
 NTSTATUS STDCALL
 NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)

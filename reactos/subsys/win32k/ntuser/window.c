@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.128 2003/11/02 14:08:34 navaraf Exp $
+/* $Id: window.c,v 1.129 2003/11/03 18:52:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,6 +47,7 @@
 #include <include/scroll.h>
 #include <include/vis.h>
 #include <include/menu.h>
+#include <include/hotkey.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -361,6 +362,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 
   if (Window->Self == hwndShellListView)
     hwndShellListView = 0;
+
+  /* Unregister hot keys */
+  UnregisterWindowHotKeys (Window->Self);
 
   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
