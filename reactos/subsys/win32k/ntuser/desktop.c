@@ -66,6 +66,60 @@ CleanupDesktopImpl(VOID)
   return STATUS_SUCCESS;
 }
 
+/* OBJECT CALLBACKS **********************************************************/
+
+NTSTATUS STDCALL
+IntDesktopObjectCreate(PVOID ObjectBody,
+		       PVOID Parent,
+		       PWSTR RemainingPath,
+		       struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+{
+  PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)ObjectBody;
+  UNICODE_STRING UnicodeString;
+
+  if (RemainingPath == NULL)
+	{
+		return STATUS_SUCCESS;
+	}
+
+  if (wcschr((RemainingPath + 1), '\\') != NULL)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
+
+  RtlInitUnicodeString(&UnicodeString, (RemainingPath + 1));
+
+  DPRINT("Creating desktop (0x%X)  Name (%wZ)\n", Desktop, &UnicodeString);
+
+  KeInitializeSpinLock(&Desktop->Lock);
+
+  Desktop->WindowStation = (PWINSTATION_OBJECT)Parent;
+
+  /* Put the desktop on the window station's list of associcated desktops */
+  ExInterlockedInsertTailList(
+    &Desktop->WindowStation->DesktopListHead,
+    &Desktop->ListEntry,
+    &Desktop->WindowStation->Lock);
+
+  return RtlCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer);
+}
+
+VOID STDCALL
+IntDesktopObjectDelete(PVOID DeletedObject)
+{
+  PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)DeletedObject;
+  KIRQL OldIrql;
+
+  DPRINT("Deleting desktop (0x%X)\n", Desktop);
+
+  /* Remove the desktop from the window station's list of associcated desktops */
+  KeAcquireSpinLock(&Desktop->WindowStation->Lock, &OldIrql);
+  RemoveEntryList(&Desktop->ListEntry);
+  KeReleaseSpinLock(&Desktop->WindowStation->Lock, OldIrql);
+
+  RtlFreeUnicodeString(&Desktop->Name);
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS FASTCALL

@@ -80,6 +80,165 @@ CleanupWindowStationImpl(VOID)
    return STATUS_SUCCESS;
 }
 
+/* OBJECT CALLBACKS  **********************************************************/
+                      
+NTSTATUS 
+STDCALL
+IntWinStaObjectCreate(PVOID ObjectBody,
+                      PVOID Parent,
+                      PWSTR RemainingPath,
+                      struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+{    
+  PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
+  UNICODE_STRING UnicodeString;
+  NTSTATUS Status;
+
+  if (RemainingPath == NULL)
+	{
+		return STATUS_SUCCESS;
+	}
+
+  if (wcschr((RemainingPath + 1), '\\') != NULL)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
+
+  RtlInitUnicodeString(&UnicodeString, (RemainingPath + 1));
+
+  DPRINT("Creating window station (0x%X)  Name (%wZ)\n", WinSta, &UnicodeString);
+
+  Status = RtlCreateUnicodeString(&WinSta->Name, UnicodeString.Buffer);
+  if (!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+
+  KeInitializeSpinLock(&WinSta->Lock);
+
+  InitializeListHead(&WinSta->DesktopListHead);
+
+#if 1
+  WinSta->AtomTable = NULL;
+#endif
+
+  Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeUnicodeString(&WinSta->Name);
+    return Status;
+  }
+
+  WinSta->SystemMenuTemplate = (HANDLE)0;
+
+  DPRINT("Window station successfully created. Name (%wZ)\n", &WinSta->Name);
+
+  return STATUS_SUCCESS;
+}
+
+VOID STDCALL
+IntWinStaObjectDelete(PVOID DeletedObject)
+{
+  PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)DeletedObject;
+
+  DPRINT("Deleting window station (0x%X)\n", WinSta);
+
+  RtlDestroyAtomTable(WinSta->AtomTable);
+
+  RtlFreeUnicodeString(&WinSta->Name);
+}
+
+PVOID STDCALL
+IntWinStaObjectFind(PVOID Object,
+		    PWSTR Name,
+		    ULONG Attributes)
+{
+  PLIST_ENTRY Current;
+  PDESKTOP_OBJECT CurrentObject;
+  PWINSTATION_OBJECT WinStaObject = (PWINSTATION_OBJECT)Object;
+
+  DPRINT("WinStaObject (0x%X)  Name (%wS)\n", WinStaObject, Name);
+
+  if (Name[0] == 0)
+  {
+    return NULL;
+  }
+
+  Current = WinStaObject->DesktopListHead.Flink;
+  while (Current != &WinStaObject->DesktopListHead)
+  {
+    CurrentObject = CONTAINING_RECORD(Current, DESKTOP_OBJECT, ListEntry);
+    DPRINT("Scanning %wZ for %wS\n", &CurrentObject->Name, Name);
+    if (Attributes & OBJ_CASE_INSENSITIVE)
+    {
+      if (_wcsicmp(CurrentObject->Name.Buffer, Name) == 0)
+      {
+        DPRINT("Found desktop at (0x%X)\n", CurrentObject);
+        return CurrentObject;
+      }
+    }
+    else
+    {
+      if (wcscmp(CurrentObject->Name.Buffer, Name) == 0)
+      {
+        DPRINT("Found desktop at (0x%X)\n", CurrentObject);
+        return CurrentObject;
+      }
+    }
+    Current = Current->Flink;
+  }
+
+  DPRINT("Returning NULL\n");
+
+  return NULL;
+}
+
+NTSTATUS 
+STDCALL
+IntWinStaObjectParse(PVOID Object,
+                     PVOID *NextObject,
+                     PUNICODE_STRING FullPath,
+                     PWSTR *Path,
+                     ULONG Attributes)
+{
+  PVOID FoundObject;
+  NTSTATUS Status;
+  PWSTR End;
+
+  DPRINT("Object (0x%X)  Path (0x%X)  *Path (%wS)\n", Object, Path, *Path);
+
+  *NextObject = NULL;
+
+  if ((Path == NULL) || ((*Path) == NULL))
+  {
+    return STATUS_SUCCESS;
+  }
+
+  End = wcschr((*Path) + 1, '\\');
+  if (End != NULL)
+  {
+    DPRINT("Name contains illegal characters\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  FoundObject = IntWinStaObjectFind(Object, (*Path) + 1, Attributes);
+  if (FoundObject == NULL)
+  {
+    DPRINT("Name was not found\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Status = ObReferenceObjectByPointer(
+    FoundObject,
+    STANDARD_RIGHTS_REQUIRED,
+    NULL,
+    UserMode);
+
+  *NextObject = FoundObject;
+  *Path = NULL;
+
+  return Status;
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*

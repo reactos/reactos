@@ -126,6 +126,18 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
   return (struct _KPCR *) Value;
 }
 
+static __inline struct _KPRCB * KeGetCurrentPrcb(
+  VOID)
+{
+  ULONG Value;
+
+  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
+	  : "=r" (Value)
+    : /* no inputs */
+  );
+  return (struct _KPRCB *) Value;
+}
+
 /*
 ** Simple structures
 */
@@ -3795,6 +3807,10 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
+  ProcessUnknown33,
+  ProcessUnknown34,
+  ProcessUnknown35,
+  ProcessCookie,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 

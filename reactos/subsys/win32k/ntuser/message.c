@@ -30,6 +30,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <w32k.h>
+#include <pseh.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -113,6 +114,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
   PUNICODE_STRING ClassName;
   UINT Size;
 
+  _SEH_TRY {
   if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
     {
       return (UINT) wParam;
@@ -163,6 +165,11 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     {
       return MsgMemoryEntry->Size;
     }
+    } _SEH_HANDLE {
+    
+        DPRINT1("BOO!\n");
+        return 0;
+    } _SEH_END;
 }
 
 static FASTCALL NTSTATUS

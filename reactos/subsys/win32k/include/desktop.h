@@ -20,6 +20,16 @@ InitDesktopImpl(VOID);
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
 
+NTSTATUS 
+STDCALL
+IntDesktopObjectCreate(PVOID ObjectBody,
+                       PVOID Parent,
+                       PWSTR RemainingPath,
+                       struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+                      
+VOID STDCALL
+IntDesktopObjectDelete(PVOID DeletedObject);
+
 VOID FASTCALL
 IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
 
