@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.14 2004/03/14 09:21:41 weiden Exp $ */
+/* $Id: fstypes.h,v 1.15 2004/03/18 16:19:25 weiden Exp $ */
 
 #ifndef __USE_W32API
 
@@ -20,6 +20,10 @@ typedef struct _FILE_LINK_INFORMATION {
     ULONG   FileNameLength;
     WCHAR   FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
+    LARGE_INTEGER  ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
 
 typedef NTSTATUS (*PCOMPLETE_LOCK_IRP_ROUTINE) (
     IN PVOID    Context,

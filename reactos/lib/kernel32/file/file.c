@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.51 2004/03/14 13:20:10 weiden Exp $
+/* $Id: file.c,v 1.52 2004/03/18 16:19:25 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,6 +13,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <ddk/ntifs.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -1156,6 +1157,39 @@ SetEndOfFile(HANDLE hFile)
 	
 	return TRUE;
 
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetFileValidData(
+    HANDLE hFile,
+    LONGLONG ValidDataLength
+    )
+{
+	IO_STATUS_BLOCK IoStatusBlock;
+	FILE_VALID_DATA_LENGTH_INFORMATION ValidDataLengthInformation;
+	NTSTATUS Status;
+	
+	ValidDataLengthInformation.ValidDataLength.QuadPart = ValidDataLength;
+	
+	Status = NtSetInformationFile(
+						hFile,
+						&IoStatusBlock,	 //out
+						&ValidDataLengthInformation,
+						sizeof(FILE_VALID_DATA_LENGTH_INFORMATION),
+						FileValidDataLengthInformation
+						);
+
+	if (!NT_SUCCESS(Status)){
+		SetLastErrorByStatus(Status);
+		return FALSE;
+	}
+	
+	return TRUE;
 }
 
 /* EOF */
