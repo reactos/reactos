@@ -588,6 +588,13 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 }
 
 string
+MingwModuleHandler::GetObjectsMacro ( const Module& module ) const
+{
+	return ssprintf ( "$(%s_OBJS)",
+	                  module.name.c_str () );
+}
+
+string
 MingwModuleHandler::GetLinkerMacro ( const Module& module ) const
 {
 	return ssprintf ( "$(%s_LFLAGS)",
@@ -840,9 +847,9 @@ void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 {
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
-	string target ( FixupTargetFilename(module.GetPath()) );
-	string workingDirectory = GetWorkingDirectory ( );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string target ( FixupTargetFilename (module.GetPath ()) );
+	string workingDirectory = GetWorkingDirectory ();
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 	string base_tmp = ros_junk + module.name + ".base.tmp";
 	string junk_tmp = ros_junk + module.name + ".junk.tmp";
@@ -854,7 +861,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 
 	fprintf ( fMakefile, "%s: %s %s\n",
 	          target.c_str (),
-	          archiveFilename.c_str (),
+	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
 	          "\t${gcc} %s %s -Wl,--base-file,%s -o %s %s %s\n",
@@ -862,7 +869,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          gccOptions.c_str (),
 	          base_tmp.c_str (),
 	          junk_tmp.c_str (),
-	          archiveFilename.c_str (),
+	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n",
@@ -871,7 +878,6 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s --kill-at\n",
 	          target.c_str (),
 	          base_tmp.c_str (),
-	          //FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
 	          temp_exp.c_str () );
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n",
@@ -882,7 +888,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          gccOptions.c_str (),
 	          temp_exp.c_str (),
 	          target.c_str (),
-	          archiveFilename.c_str (),
+	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n\n",

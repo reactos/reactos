@@ -345,7 +345,6 @@
 				<file>aulldiv.s</file>
 				<file>aullrem.s</file>
 				<file>aullshr.s</file>
-				<file>except.s</file>
 				<file>exception.c</file>
 				<file>seh.s</file>
 			</directory>

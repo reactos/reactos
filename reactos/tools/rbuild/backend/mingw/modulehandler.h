@@ -36,6 +36,7 @@ protected:
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
+	std::string GetObjectsMacro ( const Module& module ) const;
 	std::string GetLinkerMacro ( const Module& module ) const;
 	std::string GenerateMacros ( const Module& module,
 	                             const std::string& cflags_macro,
