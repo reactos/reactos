@@ -642,13 +642,33 @@ DetectBiosDisks(HKEY SystemKey,
   U32 Size;
   U32 i;
   S32 Error;
+  BOOL Changed;
 
   /* Count the number of visible drives */
   DiskReportError(FALSE);
   DiskCount = 0;
+
+  /* There are some really broken BIOSes out there. There are even BIOSes
+   * that happily report success when you ask them to read from non-existent
+   * harddisks. So, we set the buffer to known contents first, then try to
+   * read. If the BIOS reports success but the buffer contents haven't
+   * changed then we fail anyway */
+  memset((PVOID) DISKREADBUFFER, 0xcd, 512);
   while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
+      Changed = FALSE;
+      for (i = 0; ! Changed && i < 512; i++)
+        {
+          Changed = ((PUCHAR)DISKREADBUFFER)[i] != 0xcd;
+        }
+      if (! Changed)
+        {
+          DbgPrint((DPRINT_HWDETECT, "BIOS reports success for disk %d but data didn't change\n",
+                    (int)DiskCount));
+          break;
+        }
       DiskCount++;
+      memset((PVOID) DISKREADBUFFER, 0xcd, 512);
     }
   DiskReportError(TRUE);
   DbgPrint((DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
