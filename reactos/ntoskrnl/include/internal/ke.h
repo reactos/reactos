@@ -28,7 +28,7 @@
 #include <stdarg.h>
 #endif /* not __ASM__ */
 
-#include <internal/arch/ke.h>
+#include "arch/ke.h"
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 

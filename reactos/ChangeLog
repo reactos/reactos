@@ -1,3 +1,10 @@
+2002-10-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/ntos.h: Include relevant files.
+	* include/internal/ke.h: Include files relative to
+	ntoskrnl/include.
+	* include/internal/arch/ke.h: Ditto.
+
 2002-10-01  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/dd/floppy/floppy.c: Changed PAGESIZE to PAGE_SIZE.
