@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.27 2001/08/06 18:35:15 hbirr Exp $
+/* $Id: file.c,v 1.28 2001/11/01 10:35:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -388,31 +388,35 @@ WINBOOL STDCALL
 GetFileInformationByHandle(HANDLE hFile,
 			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
 {
-   FILE_DIRECTORY_INFORMATION FileDirectory;
+   struct
+   {
+        FILE_FS_VOLUME_INFORMATION FileFsVolume;
+        WCHAR Name[255];
+   }
+   FileFsVolume;
+
+   FILE_BASIC_INFORMATION FileBasic;
    FILE_INTERNAL_INFORMATION FileInternal;
-   FILE_FS_VOLUME_INFORMATION FileFsVolume;
    FILE_STANDARD_INFORMATION FileStandard;
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
-   
+
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileDirectory,
-				    sizeof(FILE_DIRECTORY_INFORMATION),
-				    FileDirectoryInformation);
+				    &FileBasic,
+				    sizeof(FILE_BASIC_INFORMATION),
+				    FileBasicInformation);
    if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
-   lpFileInformation->dwFileAttributes = (DWORD)FileDirectory.FileAttributes;
-   memcpy(&lpFileInformation->ftCreationTime,&FileDirectory.CreationTime,sizeof(LARGE_INTEGER));
-   memcpy(&lpFileInformation->ftLastAccessTime,&FileDirectory.LastAccessTime,sizeof(LARGE_INTEGER));
-   memcpy(&lpFileInformation->ftLastWriteTime, &FileDirectory.LastWriteTime,sizeof(LARGE_INTEGER));
-   lpFileInformation->nFileSizeHigh = FileDirectory.AllocationSize.u.HighPart;
-   lpFileInformation->nFileSizeLow = FileDirectory.AllocationSize.u.LowPart;
-   
+   lpFileInformation->dwFileAttributes = (DWORD)FileBasic.FileAttributes;
+   memcpy(&lpFileInformation->ftCreationTime,&FileBasic.CreationTime,sizeof(LARGE_INTEGER));
+   memcpy(&lpFileInformation->ftLastAccessTime,&FileBasic.LastAccessTime,sizeof(LARGE_INTEGER));
+   memcpy(&lpFileInformation->ftLastWriteTime, &FileBasic.LastWriteTime,sizeof(LARGE_INTEGER));
+
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
 				    &FileInternal,
@@ -426,11 +430,11 @@ GetFileInformationByHandle(HANDLE hFile,
 
    lpFileInformation->nFileIndexHigh = FileInternal.IndexNumber.u.HighPart;
    lpFileInformation->nFileIndexLow = FileInternal.IndexNumber.u.LowPart;
-   
+
    errCode = NtQueryVolumeInformationFile(hFile,
 					  &IoStatusBlock,
 					  &FileFsVolume,
-					  sizeof(FILE_FS_VOLUME_INFORMATION),
+					  sizeof(FileFsVolume),
 					  FileFsVolumeInformation);
    if (!NT_SUCCESS(errCode))
      {
@@ -438,8 +442,8 @@ GetFileInformationByHandle(HANDLE hFile,
 	return FALSE;
      }
 
-   lpFileInformation->dwVolumeSerialNumber = FileFsVolume.VolumeSerialNumber;
-   
+   lpFileInformation->dwVolumeSerialNumber = FileFsVolume.FileFsVolume.VolumeSerialNumber;
+
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
 				    &FileStandard,
@@ -452,6 +456,8 @@ GetFileInformationByHandle(HANDLE hFile,
      }
 
    lpFileInformation->nNumberOfLinks = FileStandard.NumberOfLinks;
+   lpFileInformation->nFileSizeHigh = FileStandard.AllocationSize.u.HighPart;
+   lpFileInformation->nFileSizeLow = FileStandard.AllocationSize.u.LowPart;
 
    return TRUE;
 }
