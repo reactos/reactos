@@ -64,6 +64,8 @@ ExplorerGlobals::ExplorerGlobals()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	_SHRestricted = 0;
 #endif
+	_hwndDesktopBar = 0;
+	_hwndShellView = 0;
 }
 
 

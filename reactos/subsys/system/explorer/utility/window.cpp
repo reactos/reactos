@@ -1272,13 +1272,17 @@ int	PropertySheetDialog::DoModal(int start_page)
 
 	HWND hwndPropSheet = *pwnd;
 */
-	HWND hwndPropSheet = (HWND) PropertySheet(this);
+	int ret = PropertySheet(this);
+	if (ret == -1)
+		return -1;
+
+	HWND hwndPropSheet = (HWND) ret;
 	HWND hwndparent = GetParent(hwndPropSheet);
 
 	if (hwndparent)
 		EnableWindow(hwndparent, FALSE);
 
-	int ret = 0;
+	ret = 0;
 	MSG msg;
 
 	while(GetMessage(&msg, 0, 0, 0)) {

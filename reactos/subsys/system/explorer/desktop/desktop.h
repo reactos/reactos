@@ -26,6 +26,9 @@
  //
 
 
+#define	PM_POSITION_ICONS		(WM_APP+0x19)
+
+
  /// subclassed Background window behind the visible desktop window
 struct BackgroundWindow : public SubclassedWindow
 {
@@ -173,6 +176,9 @@ protected:
 
 	bool	DoContextMenu(int x, int y);
 	HRESULT DoDesktopContextMenu(int x, int y);
+	void	PositionIcons(int alignment, int dir=1);
 
 	DesktopDropTarget* _pDropTarget;
+	HWND	_hwndListView;
+	int		_alignment;
 };

@@ -173,6 +173,8 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		///@todo use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
 
 		if (SUCCEEDED(hr)) {
+			g_Globals._hwndShellView = hWndView;
+
 			 // subclass shellview window
 			new DesktopShellView(hWndView, _pShellView);
 
@@ -205,17 +207,6 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 				hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
 			}
 		*/
-
-			HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
-
-			SetWindowStyle(hwndFolderView, (GetWindowStyle(hwndFolderView)&~LVS_ALIGNLEFT)|LVS_ALIGNTOP|LVS_AUTOARRANGE);
-
-			 // work around for Windows NT, Win 98, ...
-			 // Without this the desktop has mysteriously only a size of 800x600 pixels.
-			MoveWindow(hwndFolderView, 0, 0, rect.right, rect.bottom, TRUE);
-
-			 // subclass background window
-			new BackgroundWindow(hwndFolderView);
 		}
 	}
 
@@ -288,6 +279,21 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
  :	super(hwnd),
 	_pShellView(pShellView)
 {
+	_hwndListView = ::GetNextWindow(hwnd, GW_CHILD);
+
+	SetWindowStyle(_hwndListView, GetWindowStyle(_hwndListView)&~LVS_ALIGNMASK);//|LVS_ALIGNTOP|LVS_AUTOARRANGE);
+
+	 // work around for Windows NT, Win 98, ...
+	 // Without this the desktop has mysteriously only a size of 800x600 pixels.
+	ClientRect rect(hwnd);
+	MoveWindow(_hwndListView, 0, 0, rect.right, rect.bottom, TRUE);
+
+	 // subclass background window
+	new BackgroundWindow(_hwndListView);
+
+	_alignment = 0;
+
+	PositionIcons(_alignment);
 	InitDragDrop();
 }
 
@@ -328,6 +334,11 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CONTEXTMENU:
 		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
 			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+		break;
+
+	  case PM_POSITION_ICONS:
+		PositionIcons(wparam);
+		_alignment = wparam;
 		break;
 
 	  default:
@@ -428,4 +439,118 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 	}
 
 	return hr;
+}
+
+
+static const POINTS s_align_start[8] = {
+	{0, 0},	// left/top
+	{0, 0},
+	{1, 0},	// right/top
+	{1, 0},
+	{0, 1},	// left/bottom
+	{0, 1},
+	{1, 1},	// right/bottom
+	{1, 1}
+};
+
+static const POINTS s_align_dir1[8] = {
+	{ 0, +1},	// down
+	{+1,  0},	// right
+	{-1,  0},	// left
+	{ 0, +1},	// down
+	{ 0, -1},	// up
+	{+1,  0},	// right
+	{-1,  0},	// left
+	{ 0, -1}	// up
+};
+
+static const POINTS s_align_dir2[8] = {
+	{+1,  0},	// right
+	{ 0, +1},	// down
+	{ 0, +1},	// down
+	{-1,  0},	// left
+	{+1,  0},	// right
+	{ 0, -1},	// up
+	{ 0, -1},	// up
+	{-1,  0}	// left
+};
+
+typedef pair<int,int> IconPos;
+typedef map<IconPos, int> IconMap;
+
+void DesktopShellView::PositionIcons(int alignment, int dir)
+{
+	DWORD spacing = ListView_GetItemSpacing(_hwndListView, FALSE);
+
+	RECT work_area;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
+
+	const POINTS& dir1 = s_align_dir1[alignment];
+	const POINTS& dir2 = s_align_dir2[alignment];
+	const POINTS& start_pos = s_align_start[alignment];
+
+	int dir_x1 = dir1.x;
+	int dir_y1 = dir1.y;
+	int dir_x2 = dir2.x;
+	int dir_y2 = dir2.y;
+
+	int cx = LOWORD(spacing);
+	int cy = HIWORD(spacing);
+
+	int dx1 = dir_x1 * cx;
+	int dy1 = dir_y1 * cy;
+	int dx2 = dir_x2 * cx;
+	int dy2 = dir_y2 * cy;
+
+	int start_x = start_pos.x * work_area.right + (cx-32)/2;
+	int start_y = start_pos.y * work_area.bottom + 4/*(cy-32)/2*/;
+
+	if (start_x >= work_area.right)
+		start_x -= cx;
+
+	if (start_y >= work_area.bottom)
+		start_y -= cy;
+
+	int x = start_x;
+	int y = start_y;
+
+	int cnt = ListView_GetItemCount(_hwndListView);
+	int i1, i2;
+
+	if (dir > 0) {
+		i1 = 0;
+		i2 = cnt;
+	} else {
+		i1 = cnt-1;
+		i2 = -1;
+	}
+
+	IconMap pos_idx;
+
+	for(int idx=i1; idx!=i2; idx+=dir) {
+		pos_idx[IconPos(y, x)] = idx;
+
+		x += dx1;
+		y += dy1;
+
+		if (x<0 || x>=work_area.right) {
+			x = start_x;
+			y += dy2;
+		} else if (y<0 || y>=work_area.bottom) {
+			y = start_y;
+			x += dx2;
+		}
+	}
+
+	for(IconMap::const_iterator it=pos_idx.end(); --it!=pos_idx.begin(); ) {
+		const IconPos& pos = it->first;
+
+		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
+	}
+
+	for(IconMap::const_iterator it=pos_idx.begin(); it!=pos_idx.end(); ++it) {
+		const IconPos& pos = it->first;
+
+		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
+	}
 }

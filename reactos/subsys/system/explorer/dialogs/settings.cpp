@@ -34,6 +34,7 @@
 #include "../globals.h"
 #include "../externals.h"
 #include "../explorer_intres.h"
+#include "../desktop/desktop.h"
 
 #include "settings.h"
 
@@ -113,7 +114,10 @@ int	DesktopSettingsDlg::Command(int id, int code)
 
 		if (alignment != _alignment) {
 			_alignment = alignment;
+
 			PropSheet_Changed(GetParent(_hwnd), _hwnd);
+
+			SendMessage(g_Globals._hwndShellView, PM_POSITION_ICONS, alignment, 0);
 		}
 	}
 

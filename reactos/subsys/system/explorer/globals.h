@@ -161,6 +161,7 @@ extern struct ExplorerGlobals
 	IconCache	_icon_cache;
 
 	HWND		_hwndDesktopBar;
+	HWND		_hwndShellView;
 } g_Globals;
 
 
