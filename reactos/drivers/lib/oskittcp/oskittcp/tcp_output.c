@@ -707,6 +707,17 @@ send:
 		((struct ip *)ti)->ip_off |= IP_DF;
 	}
 #endif
+        /*
+         * XXX: It seems that osktittcp expect synchronous packet processing
+         * and so our current asynchronous way causes infinite loop. The
+         * ACK flags are normally masked out at the end of this function
+         * and the incomming packets are processed then, but since 
+         * currently the loopback packet can be received during the 
+         * ip_output call, the function end is never reached.
+         */
+#ifdef __REACTOS__
+	tp->t_flags &= ~(TF_ACKNOW|TF_DELACK);
+#endif
 	error = ip_output(m, tp->t_inpcb->inp_options, &tp->t_inpcb->inp_route,
 			  so->so_options & SO_DONTROUTE, 0);
     }
