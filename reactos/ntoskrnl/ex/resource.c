@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.18 2002/06/05 19:36:10 hbirr Exp $
+/* $Id: resource.c,v 1.19 2002/08/27 06:31:55 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -167,9 +167,9 @@ static BOOLEAN EiRemoveSharedOwner(PERESOURCE Resource,
    if (Resource->OwnerThreads[1].OwnerThread == ResourceThreadId)
      {
 	Resource->OwnerThreads[1].a.OwnerCount--;
-	Resource->ActiveCount--;
 	if (Resource->OwnerThreads[1].a.OwnerCount == 0)
 	  {
+             Resource->ActiveCount--;
 	     Resource->OwnerThreads[1].OwnerThread = 0;
 	  }
 	return(TRUE);
@@ -185,14 +185,14 @@ static BOOLEAN EiRemoveSharedOwner(PERESOURCE Resource,
      {
 	if (Resource->OwnerTable[i].OwnerThread == ResourceThreadId)
 	  {
-	     Resource->OwnerTable[1].a.OwnerCount--;
-	     Resource->ActiveCount--;
-	     if (Resource->OwnerTable[1].a.OwnerCount == 0)
+	     Resource->OwnerTable[i].a.OwnerCount--;
+	     if (Resource->OwnerTable[i].a.OwnerCount == 0)
 	       {
+	          Resource->ActiveCount--;
 		  Resource->OwnerTable[i].OwnerThread = 0;
 	       }
+	     return TRUE;
 	  }
-	return(TRUE);
      }
    return(FALSE);
 }
@@ -254,6 +254,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	
 	Resource->OwnerTable[1].OwnerThread = CurrentThread;
 	Resource->OwnerTable[1].a.OwnerCount = 1;
+        Resource->ActiveCount++;
 	
 	return(TRUE);
      }
@@ -275,6 +276,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	if (Resource->OwnerTable[i].OwnerThread == 0)
 	  {
 	     freeEntry = &Resource->OwnerTable[i];
+	     break;
 	  }
      }
    
@@ -368,12 +370,18 @@ ExAcquireResourceSharedLite (
 	  }
 	else
 	  {
-	     Resource->NumberOfSharedWaiters++;
-	     /* wait for the semaphore */
-	     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
-	     KeWaitForSingleObject(Resource->SharedWaiters,0,0,0,0);
-	     KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-	     Resource->NumberOfSharedWaiters--;
+	    Resource->NumberOfSharedWaiters++;
+	    do
+	    {
+	       /* wait for the semaphore */
+	       KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
+	       KeWaitForSingleObject(Resource->SharedWaiters,0, KernelMode, FALSE, NULL);
+	       KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
+	       /* the spin lock was released we must check again */
+	    }
+	    while ((Resource->Flag & ResourceOwnedExclusive)
+		|| Resource->NumberOfExclusiveWaiters);
+	    Resource->NumberOfSharedWaiters--;
 	  }
      }
    
@@ -428,8 +436,8 @@ ExConvertExclusiveToSharedLite (
 	return;
      }
    /* else, awake the waiters */
-   KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
    KeReleaseSemaphore(Resource->SharedWaiters,0,oldWaiters,0);
+   KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
    DPRINT("ExConvertExclusiveToSharedLite() finished\n");
 }
 
