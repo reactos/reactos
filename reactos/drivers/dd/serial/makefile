@@ -6,7 +6,17 @@ TARGET_TYPE = driver
 
 TARGET_NAME = serial
 
-TARGET_OBJECTS = serial.o
+TARGET_OBJECTS = \
+	cleanup.o \
+	close.o \
+	create.o \
+	devctrl.o \
+	info.o \
+	misc.o \
+	pnp.o \
+	power.o \
+	rw.o \
+	serial.o
 
 TARGET_CFLAGS = -Wall -Werror -D__USE_W32API 
 
