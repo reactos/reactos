@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.34 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: wapi.c,v 1.35 2004/06/27 10:16:59 weiden Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -135,7 +135,12 @@ Thread_Api2(HANDLE ServerPort)
       Reply = (PCSRSS_API_REPLY)&LpcReply;
 	
       ProcessData = CsrGetProcessData((ULONG)LpcRequest.Header.ClientId.UniqueProcess);
-
+      if (ProcessData == NULL)
+	{
+          DPRINT1("CSR: Unable to find process data for process 0x%x\n", (ULONG)LpcRequest.Header.ClientId.UniqueProcess);
+          NtClose(ServerPort);
+          continue;
+        }
       CsrApiCallHandler(ProcessData, Request, Reply);
     }
 }
@@ -182,6 +187,12 @@ void Thread_Api(PVOID PortHandle)
 	  }
 
 	ProcessData = CsrGetProcessData((ULONG)Request.Header.ClientId.UniqueProcess);
+	if (ProcessData == NULL)
+	  {
+	    DPRINT1("CSR: Unable to find process data for process 0x%x\n", (ULONG)Request.Header.ClientId.UniqueProcess);
+	    NtClose(ServerPort);
+	    continue;
+	  }
 	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
 	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
 	
