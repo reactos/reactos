@@ -27,6 +27,7 @@
 
 
 #define _LIGHT_STARTMENU
+#define _LAZY_ICONEXTRACT
 
 
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
@@ -46,6 +47,8 @@
 #ifndef _LIGHT_STARTMENU
 #define	PM_STARTENTRY_FOCUSED	(WM_APP+0x13)
 #endif
+
+#define	PM_UPDATE_ICONS			(WM_APP+0x15)
 
 
  /// StartMenuDirectory is used to store the base directory of start menus.
@@ -273,6 +276,7 @@ protected:
 	void	GetFloatingButonRect(LPRECT prect);
 
 	void	Paint(PaintCanvas& canvas);
+	void	UpdateIcons();
 };
 
 

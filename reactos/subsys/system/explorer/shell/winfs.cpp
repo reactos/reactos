@@ -119,7 +119,7 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 }
 
 
-void WinDirectory::read_directory()
+void WinDirectory::read_directory(bool read_icons)
 {
 	Entry* first_entry = NULL;
 	Entry* last = NULL;

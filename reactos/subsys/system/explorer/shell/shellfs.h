@@ -97,11 +97,13 @@ struct ShellDirectory : public ShellEntry, public Directory
 		pFolder->Release();
 	}
 
-	virtual void read_directory();
+	virtual void read_directory(bool read_icons=true);
 	virtual const void* get_next_path_component(const void*);
 	virtual Entry* find_entry(const void* p);
 
 	virtual void get_path(PTSTR path) const;
+
+	int	extract_icons();
 
 	ShellFolder _folder;
 	HWND	_hwnd;

@@ -126,17 +126,17 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 }
 
 
-void Entry::read_directory(SORT_ORDER sortOrder)
+void Entry::read_directory(SORT_ORDER sortOrder, bool read_icons)
 {
 	CONTEXT("Entry::read_directory(SORT_ORDER)");
 
 	 // call into subclass
-	read_directory();
+	read_directory(read_icons);
 
-	if (g_Globals._prescan_nodes) {
+	if (g_Globals._prescan_nodes) {	//@todo _prescan_nodes should not be used for filling the start menu.
 		for(Entry*entry=_down; entry; entry=entry->_next)
 			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				entry->read_directory();
+				entry->read_directory(read_icons);
 				entry->sort_directory(sortOrder);
 			}
 	}
@@ -284,13 +284,13 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 }
 
 
-void Entry::smart_scan()
+void Entry::smart_scan(bool read_icons)
 {
 	CONTEXT("Entry::smart_scan()");
 
 	if (!_scanned) {
 		free_subentries();
-		read_directory(SORT_NAME);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
+		read_directory(SORT_NAME, read_icons);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
 	}
 }
 

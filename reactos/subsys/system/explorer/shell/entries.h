@@ -73,12 +73,12 @@ public:
 
 	void	free_subentries();
 
-	void	read_directory(SORT_ORDER sortOrder);
+	void	read_directory(SORT_ORDER sortOrder, bool read_icons=true);
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	sort_directory(SORT_ORDER sortOrder);
-	void	smart_scan();
+	void	smart_scan(bool read_icons=true);
 
-	virtual void read_directory() {}
+	virtual void read_directory(bool read_icons=true) {}
 	virtual const void* get_next_path_component(const void*) {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
 	virtual void get_path(PTSTR path) const = 0;

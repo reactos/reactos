@@ -167,6 +167,10 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 #ifdef _LIGHT_STARTMENU
 		ResizeToButtons();
 #endif
+
+#ifdef _LAZY_ICONEXTRACT
+		PostMessage(_hwnd, PM_UPDATE_ICONS, 0, 0);
+#endif
 	} catch(COMException& e) {
 		HandleException(e, pcs->hwndParent);	// destroys the start menu window while switching focus
 	}
@@ -183,7 +187,11 @@ void StartMenu::AddEntries()
 		if (!dir._scanned) {
 			WaitCursor wait;
 
-			dir.smart_scan();
+#ifdef _LAZY_ICONEXTRACT
+			dir.smart_scan(false);	// lazy icon extraction
+#else
+			dir.smart_scan(true);
+#endif
 		}
 
 		AddShellEntries(dir, -1, smd._subfolders);
@@ -324,6 +332,12 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 #endif
 
+#ifdef _LAZY_ICONEXTRACT
+	  case PM_UPDATE_ICONS:
+		UpdateIcons();
+		break;
+#endif
+
 	  case PM_STARTENTRY_LAUNCHED:
 		if (GetWindowStyle(_hwnd) & WS_CAPTION)	// don't automatically close floating menus
 			return 0;
@@ -344,47 +358,6 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-
-void StartMenu::Paint(PaintCanvas& canvas)
-{
-	if (_border_top)
-		DrawFloatingButton(canvas);
-
-#ifdef _LIGHT_STARTMENU
-	ClientRect clnt(_hwnd);
-	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
-
-	int sep_width = rect.right-rect.left - 4;
-
-	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
-	BkMode bk_mode(canvas, TRANSPARENT);
-
-	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
-		const SMBtnInfo& info = *it;
-
-		if (rect.top > canvas.rcPaint.bottom)
-			break;
-
-		if (info._id == -1) {	// a separator?
-			rect.bottom = rect.top + STARTMENU_SEP_HEIGHT;
-
-			BrushSelection brush_sel(canvas, GetSysColorBrush(COLOR_BTNSHADOW));
-			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2-1, sep_width, 1, PATCOPY);
-
-			SelectBrush(canvas, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
-			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2, sep_width, 1, PATCOPY);
-		} else {
-			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
-
-			if (rect.top >= canvas.rcPaint.top)
-				DrawStartMenuButton(canvas, rect, info._title, info._hIcon,
-									info._hasSubmenu, info._enabled, info._id==_selected_id, false);
-		}
-
-		rect.top = rect.bottom;
-	}
-#endif
-}
 
 #ifdef _LIGHT_STARTMENU
 
@@ -519,6 +492,97 @@ void StartMenu::GetFloatingButonRect(LPRECT prect)
 	prect->left = prect->right - 8;
 	prect->bottom = 4;
 }
+
+
+void StartMenu::Paint(PaintCanvas& canvas)
+{
+	if (_border_top)
+		DrawFloatingButton(canvas);
+
+#ifdef _LIGHT_STARTMENU
+	ClientRect clnt(_hwnd);
+	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
+
+	int sep_width = rect.right-rect.left - 4;
+
+	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
+	BkMode bk_mode(canvas, TRANSPARENT);
+
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+		const SMBtnInfo& info = *it;
+
+		if (rect.top > canvas.rcPaint.bottom)
+			break;
+
+		if (info._id == -1) {	// a separator?
+			rect.bottom = rect.top + STARTMENU_SEP_HEIGHT;
+
+			BrushSelection brush_sel(canvas, GetSysColorBrush(COLOR_BTNSHADOW));
+			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2-1, sep_width, 1, PATCOPY);
+
+			SelectBrush(canvas, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
+			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2, sep_width, 1, PATCOPY);
+		} else {
+			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
+
+			if (rect.top >= canvas.rcPaint.top)
+				DrawStartMenuButton(canvas, rect, info._title, info._hIcon,
+									info._hasSubmenu, info._enabled, info._id==_selected_id, false);
+		}
+
+		rect.top = rect.bottom;
+	}
+#endif
+}
+
+#ifdef _LAZY_ICONEXTRACT
+void StartMenu::UpdateIcons()
+{
+	UpdateWindow(_hwnd);
+
+	int icons_extracted = 0;
+	int icons_refreshed = 0;
+
+	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
+		ShellDirectory& dir = it->_dir;
+
+		icons_extracted += dir.extract_icons();
+	}
+
+	if (icons_extracted) {
+		for(ShellEntryMap::iterator it1=_entries.begin(); it1!=_entries.end(); ++it1) {
+			StartMenuEntry& sme = it1->second;
+
+			if (!sme._hIcon) {
+				sme._hIcon = (HICON)-1;
+
+				for(ShellEntrySet::const_iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
+					const ShellEntry* sm_entry = *it2;
+
+					if (sm_entry->_hIcon) {
+						sme._hIcon = sm_entry->_hIcon;
+						break;
+					}
+				}
+			}
+		}
+
+		for(SMBtnVector::iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+			SMBtnInfo& info = *it;
+
+			if (info._id>0 && !info._hIcon) {
+				info._hIcon = _entries[info._id]._hIcon;
+				++icons_refreshed;
+			}
+		}
+	}
+
+	if (icons_refreshed) {
+		InvalidateRect(_hwnd, NULL, TRUE);
+		UpdateWindow(_hwnd);
+	}
+}
+#endif
 
 
  // resize child button controls to accomodate for new window size
@@ -1441,6 +1505,10 @@ void SearchMenu::AddEntries()
 
 void RecentStartMenu::AddEntries()
 {
+
+	///@todo A cache would really speed up processing of long recent doc lists.
+	///@todo Alternativelly we could also use direct file system access instead of iterating in shell namespace.
+
 	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
@@ -1448,7 +1516,11 @@ void RecentStartMenu::AddEntries()
 		if (!dir._scanned) {
 			WaitCursor wait;
 
-			dir.smart_scan();
+#ifdef _LAZY_ICONEXTRACT
+			dir.smart_scan(false);	// lazy icon extraction
+#else
+			dir.smart_scan(true);
+#endif
 		}
 
 		dir.sort_directory(SORT_DATE);

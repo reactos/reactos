@@ -234,8 +234,25 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 	return 0;
 }
 
+static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl, ShellEntry* entry)
+{
+	HICON hIcon = extract_icon(folder, pidl);
 
-void ShellDirectory::read_directory()
+	if (!hIcon) {
+		ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
+		LPCITEMIDLIST pidl = pidl_abs;
+
+		SHFILEINFO sfi;
+
+		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
+			entry->_hIcon = sfi.hIcon;
+	}
+
+	return hIcon;
+}
+
+
+void ShellDirectory::read_directory(bool read_icons)
 {
 	CONTEXT("ShellDirectory::read_directory()");
 
@@ -328,23 +345,15 @@ void ShellDirectory::read_directory()
 				 // get display icons for files and virtual objects
 				if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 					!(attribs & SFGAO_FILESYSTEM)) {
-					entry->_hIcon = extract_icon(_folder, pidls[n]/*, (ShellEntry*)entry*/);
-
-					if (!entry->_hIcon) {
-						if (!entry->_hIcon) {
-							ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
-							LPCITEMIDLIST pidl = pidl_abs;
-
-							SHFILEINFO sfi;
-
-							if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
-								entry->_hIcon = sfi.hIcon;
-						}
+					if (read_icons) {
+						entry->_hIcon = extract_icon(_folder, pidls[n], static_cast<ShellEntry*>(entry));
 
 						if (!entry->_hIcon)
 							entry->_hIcon = (HICON)-1;	// don't try again later
-					}
-				}
+					} else
+						entry->_hIcon = 0;
+				} else
+					entry->_hIcon = (HICON)-1;	// don't try again later
 
 				entry->_down = NULL;
 				entry->_expanded = false;
@@ -385,11 +394,31 @@ Entry* ShellDirectory::find_entry(const void* p)
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
 
 	for(Entry*entry=_down; entry; entry=entry->_next) {
-		ShellEntry* e = static_cast<ShellEntry*>(entry);
+		ShellEntry* se = static_cast<ShellEntry*>(entry);
 
-		if (e->_pidl && e->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(e->_pidl, pidl, e->_pidl->mkid.cb))
+		if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
 			return entry;
 	}
 
 	return NULL;
+}
+
+int ShellDirectory::extract_icons()
+{
+	int cnt = 0;
+
+	for(Entry*entry=_down; entry; entry=entry->_next) {
+		ShellEntry* se = static_cast<ShellEntry*>(entry);
+
+		if (!se->_hIcon) {
+			se->_hIcon = extract_icon(_folder, se->_pidl, static_cast<ShellEntry*>(se));
+
+			if (entry->_hIcon)
+				++cnt;
+			else
+				entry->_hIcon = (HICON)-1;	// don't try again later
+		}
+	}
+
+	return cnt;
 }

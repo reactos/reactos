@@ -501,12 +501,14 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			if (cx > IMAGE_WIDTH)
 				cx = IMAGE_WIDTH;
 
-			if (entry->_hIcon && entry->_hIcon!=(HICON)-1)
-				DrawIconEx(dis->hDC, img_pos, dis->rcItem.top, entry->_hIcon, cx, GetSystemMetrics(SM_CYSMICON), 0, 0, DI_NORMAL);
-			else
-				ImageList_DrawEx(_himl, img, dis->hDC,
-								 img_pos, dis->rcItem.top, cx,
-								 IMAGE_HEIGHT, bkcolor, CLR_DEFAULT, ILD_NORMAL);
+			if (entry->_hIcon != (HICON)-1) {
+				if (entry->_hIcon)
+					DrawIconEx(dis->hDC, img_pos, dis->rcItem.top, entry->_hIcon, cx, GetSystemMetrics(SM_CYSMICON), 0, 0, DI_NORMAL);
+				else
+					ImageList_DrawEx(_himl, img, dis->hDC,
+									 img_pos, dis->rcItem.top, cx,
+									 IMAGE_HEIGHT, bkcolor, CLR_DEFAULT, ILD_NORMAL);
+			}
 		}
 	}
 

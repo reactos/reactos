@@ -51,3 +51,4 @@ If you search for more information, look into the CVS repository.
 20.12.2003	m. fuchs	context menu implementation for desktop window 
 01.01.2004	m. fuchs	integrated icons of Everaldo (http://www.everaldo.com) into the start menu.
 02.01.2004	m. fuchs	reimplemented start menu as light weight version
+03.01.2004	m. fuchs	lazy icon extraction for start menu

@@ -59,7 +59,7 @@ struct WinDirectory : public WinEntry, public Directory
 		_path = NULL;
 	}
 
-	virtual void read_directory();
+	virtual void read_directory(bool read_icons=true);
 	virtual const void* get_next_path_component(const void*);
 	virtual Entry* find_entry(const void*);
 };
