@@ -18,13 +18,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-	
-/* run.h - definitions necessary to use Microsoft's "Run" dialog
+ *	
+ * run.h - definitions necessary to use Microsoft's "Run" dialog
  * Undocumented Windows call
  * use the type below to declare a function pointer
  *
- * Information taken from http:/*www.geocities.com/SiliconValley/4942/
+ * Information taken from http://www.geocities.com/SiliconValley/4942/
  * Copyright © 1998-1999 James Holderness. All Rights Reserved.
  * jholderness@geocities.com
  */
@@ -35,12 +34,12 @@
 void TaskManager_OnFileNew(void);
 
 typedef	void (WINAPI *RUNFILEDLG)(
-						HWND    hwndOwner, 
-						HICON   hIcon, 
-						LPCSTR  lpstrDirectory, 
-						LPCSTR  lpstrTitle, 
-						LPCSTR  lpstrDescription,
-						UINT    uFlags); 
+HWND    hwndOwner, 
+HICON   hIcon, 
+LPCSTR  lpstrDirectory, 
+LPCSTR  lpstrTitle, 
+LPCSTR  lpstrDescription,
+UINT    uFlags); 
 
 /*
  * Flags for RunFileDlg

@@ -1,26 +1,26 @@
 /*
  *  ReactOS Task Manager
  *
- *  trayicon.cpp
+ *  trayicon.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -49,23 +49,23 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
 	HBRUSH		hBitmapBrush = NULL;
 	RECT		rc;
 
-	//
-	// Get a handle to the screen DC
-	//
+	/*
+	 * Get a handle to the screen DC
+	 */
 	hScreenDC = GetDC(NULL);
 	if (!hScreenDC)
 		goto done;
 	
-	//
-	// Create our own DC from it
-	//
+	/*
+	 * Create our own DC from it
+	 */
 	hDC = CreateCompatibleDC(hScreenDC);
 	if (!hDC)
 		goto done;
 
-	//
-	// Load the bitmaps
-	//
+	/*
+	 * Load the bitmaps
+	 */
 	hBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYICON));
 	hBitmapMask = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYMASK));
 	if (!hBitmap || !hBitmapMask)
@@ -75,39 +75,39 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
 	if (!hBitmapBrush)
 		goto done;
 	
-	//
-	// Select the bitmap into our device context
-	// so we can draw on it.
-	//
+	/*
+	 * Select the bitmap into our device context
+	 * so we can draw on it.
+	 */
 	hOldBitmap = (HBITMAP) SelectObject(hDC, hBitmap);
 
-	//
-	// Get the cpu usage
-	//
+	/*
+	 * Get the cpu usage
+	 */
 	ProcessorUsage = PerfDataGetProcessorUsage();
 
-	//
-	// Calculate how many lines to draw
-	// since we have 11 rows of space
-	// to draw the cpu usage instead of
-	// just having 10.
-	//
+	/*
+	 * Calculate how many lines to draw
+	 * since we have 11 rows of space
+	 * to draw the cpu usage instead of
+	 * just having 10.
+	 */
 	nLinesToDraw = (ProcessorUsage + (ProcessorUsage / 10)) / 11;
 	rc.left = 3;
 	rc.top = 12 - nLinesToDraw;
 	rc.right = 13;
 	rc.bottom = 13;
 
-	//
-	// Now draw the cpu usage
-	//
+	/*
+	 * Now draw the cpu usage
+	 */
 	if (nLinesToDraw)
 		FillRect(hDC, &rc, hBitmapBrush);
 
-	//
-	// Now that we are done drawing put the
-	// old bitmap back.
-	//
+	/*
+	 * Now that we are done drawing put the
+	 * old bitmap back.
+	 */
 	SelectObject(hDC, hOldBitmap);
 	hOldBitmap = NULL;
 	
@@ -120,9 +120,9 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
 	hTrayIcon = CreateIconIndirect(&iconInfo);
 
 done:
-	//
-	// Cleanup
-	//
+	/*
+	 * Cleanup
+	 */
 	if (hScreenDC)
 		ReleaseDC(NULL, hScreenDC);
 	if (hOldBitmap)
@@ -136,9 +136,9 @@ done:
 	if (hBitmapMask)
 		DeleteObject(hBitmapMask);
 	
-	//
-	// Return the newly created tray icon (if successful)
-	//
+	/*
+	 * Return the newly created tray icon (if successful)
+	 */
 	return hTrayIcon;
 }
 
@@ -156,7 +156,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
 	nid.hWnd = hMainWnd;
 	nid.uID = 0;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	//nid.uCallbackMessage = ??;
+	/* nid.uCallbackMessage = ??; */
 	nid.hIcon = hIcon;
 	wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
 
@@ -179,7 +179,7 @@ BOOL TrayIcon_ShellRemoveTrayIcon(void)
 	nid.hWnd = hMainWnd;
 	nid.uID = 0;
 	nid.uFlags = 0;
-	//nid.uCallbackMessage = ??;
+	/* nid.uCallbackMessage = ??; */
 	
 	bRetVal = Shell_NotifyIcon(NIM_DELETE, &nid);
 	
@@ -200,7 +200,7 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
 	nid.hWnd = hMainWnd;
 	nid.uID = 0;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	//nid.uCallbackMessage = ??;
+	/* nid.uCallbackMessage = ??; */
 	nid.hIcon = hIcon;
 	wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
 	

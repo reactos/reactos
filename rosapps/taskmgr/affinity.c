@@ -5,22 +5,22 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-//#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -80,19 +80,19 @@ LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, L
 	switch (message) {
 	case WM_INITDIALOG:
 
-		//
-		// Get the current affinity mask for the process and
-		// the number of CPUs present in the system
-		//
+		/*
+		 * Get the current affinity mask for the process and
+		 * the number of CPUs present in the system
+		 */
 		if (!GetProcessAffinityMask(hProcessAffinityHandle, &dwProcessAffinityMask, &dwSystemAffinityMask))	{
 			GetLastErrorText(strErrorText, 260);
 			EndDialog(hDlg, 0);
 			MessageBox(hMainWnd, strErrorText, _T("Unable to Access or Set Process Affinity"), MB_OK|MB_ICONSTOP);
 		}
 
-		//
-		// Enable a checkbox for each processor present in the system
-		//
+		/*
+		 * Enable a checkbox for each processor present in the system
+		 */
 		if (dwSystemAffinityMask & 0x00000001)
 			EnableWindow(GetDlgItem(hDlg, IDC_CPU0), TRUE);
 		if (dwSystemAffinityMask & 0x00000002)
@@ -159,10 +159,10 @@ LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, L
 			EnableWindow(GetDlgItem(hDlg, IDC_CPU31), TRUE);
 
 
-		//
-		// Check each checkbox that the current process
-		// has affinity with
-		//
+		/*
+		 * Check each checkbox that the current process
+		 * has affinity with
+		 */
 		if (dwProcessAffinityMask & 0x00000001)
 			SendMessage(GetDlgItem(hDlg, IDC_CPU0), BM_SETCHECK, BST_CHECKED, 0);
 		if (dwProcessAffinityMask & 0x00000002)
@@ -232,24 +232,24 @@ LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, L
 
 	case WM_COMMAND:
 
-		//
-		// If the user has cancelled the dialog box
-		// then just close it
-		//
+		/*
+		 * If the user has cancelled the dialog box
+		 * then just close it
+		 */
 		if (LOWORD(wParam) == IDCANCEL) {
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 
-		//
-		// The user has clicked OK -- so now we have
-		// to adjust the process affinity mask
-		//
+		/*
+		 * The user has clicked OK -- so now we have
+		 * to adjust the process affinity mask
+		 */
 		if (LOWORD(wParam) == IDOK) {
-			//
-			// First we have to create a mask out of each
-			// checkbox that the user checked.
-			//
+			/*
+			 * First we have to create a mask out of each
+			 * checkbox that the user checked.
+			 */
 			if (SendMessage(GetDlgItem(hDlg, IDC_CPU0), BM_GETCHECK, 0, 0))
 				dwProcessAffinityMask |= 0x00000001;
 			if (SendMessage(GetDlgItem(hDlg, IDC_CPU1), BM_GETCHECK, 0, 0))
@@ -315,20 +315,20 @@ LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, L
 			if (SendMessage(GetDlgItem(hDlg, IDC_CPU31), BM_GETCHECK, 0, 0))
 				dwProcessAffinityMask |= 0x80000000;
 
-			//
-			// Make sure they are giving the process affinity
-			// with at least one processor. I'd hate to see a
-			// process that is not in a wait state get deprived
-			// of it's cpu time.
-			//
+			/*
+			 * Make sure they are giving the process affinity
+			 * with at least one processor. I'd hate to see a
+			 * process that is not in a wait state get deprived
+			 * of it's cpu time.
+			 */
 			if (!dwProcessAffinityMask) {
 				MessageBox(hDlg, _T("The process must have affinity with at least one processor."), _T("Invalid Option"), MB_OK|MB_ICONSTOP);
 				return TRUE;
 			}
 
-			//
-			// Try to set the process affinity
-			//
+			/*
+			 * Try to set the process affinity
+			 */
 			if (!SetProcessAffinityMask(hProcessAffinityHandle, dwProcessAffinityMask)) {
 				GetLastErrorText(strErrorText, 260);
 				EndDialog(hDlg, LOWORD(wParam));

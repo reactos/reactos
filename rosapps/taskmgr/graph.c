@@ -5,22 +5,22 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -54,10 +54,10 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 		return TRUE;
 
-	//
-	// Filter out mouse  & keyboard messages
-	//
-	//case WM_APPCOMMAND:
+	/*
+	 * Filter out mouse  & keyboard messages
+	 */
+	/* case WM_APPCOMMAND: */
 	case WM_CAPTURECHANGED:
 	case WM_LBUTTONDBLCLK:
 	case WM_LBUTTONDOWN:
@@ -69,7 +69,7 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	case WM_MOUSEHOVER:
 	case WM_MOUSELEAVE:
 	case WM_MOUSEMOVE:
-	//case WM_MOUSEWHEEL:
+	/* case WM_MOUSEWHEEL: */
 	case WM_NCHITTEST:
 	case WM_NCLBUTTONDBLCLK:
 	case WM_NCLBUTTONDOWN:
@@ -77,21 +77,21 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	case WM_NCMBUTTONDBLCLK:
 	case WM_NCMBUTTONDOWN:
 	case WM_NCMBUTTONUP:
-	//case WM_NCMOUSEHOVER:
-	//case WM_NCMOUSELEAVE:
+	/* case WM_NCMOUSEHOVER: */
+	/* case WM_NCMOUSELEAVE: */
 	case WM_NCMOUSEMOVE:
 	case WM_NCRBUTTONDBLCLK:
 	case WM_NCRBUTTONDOWN:
 	case WM_NCRBUTTONUP:
-	//case WM_NCXBUTTONDBLCLK:
-	//case WM_NCXBUTTONDOWN:
-	//case WM_NCXBUTTONUP:
+	/* case WM_NCXBUTTONDBLCLK: */
+	/* case WM_NCXBUTTONDOWN: */
+	/* case WM_NCXBUTTONUP: */
 	case WM_RBUTTONDBLCLK:
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
-	//case WM_XBUTTONDBLCLK:
-	//case WM_XBUTTONDOWN:
-	//case WM_XBUTTONUP:
+	/* case WM_XBUTTONDBLCLK: */
+	/* case WM_XBUTTONDOWN: */
+	/* case WM_XBUTTONUP: */
 	case WM_ACTIVATE:
 	case WM_CHAR:
 	case WM_DEADCHAR:
@@ -135,9 +135,9 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 		
 	}
 	
-	//
-	// We pass on all non-handled messages
-	//
+	/*
+	 * We pass on all non-handled messages
+	 */
 	return CallWindowProc((WNDPROC)OldGraphWndProc, hWnd, message, wParam, lParam);
 }
 
@@ -150,24 +150,27 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	ULONG			CpuUsage;
 	ULONG			CpuKernelUsage;
 	int				nBars;
-	int				nBarsUsed; // Bottom bars that are "used", i.e. are bright green, representing used cpu time
-	int				nBarsUsedKernel; // Bottom bars that are "used", i.e. are bright green, representing used cpu kernel time
-	int				nBarsFree; // Top bars that are "unused", i.e. are dark green, representing free cpu time
+	int				nBarsUsed; 
+/* Bottom bars that are "used", i.e. are bright green, representing used cpu time */
+	int				nBarsUsedKernel; 
+/* Bottom bars that are "used", i.e. are bright green, representing used cpu kernel time */
+	int				nBarsFree; 
+/* Top bars that are "unused", i.e. are dark green, representing free cpu time */
 	int				i;
 	
-	//
-	// Get the client area rectangle
-	//
+	/*
+	 * Get the client area rectangle
+	 */
 	GetClientRect(hWnd, &rcClient);
 	
-	//
-	// Fill it with blackness
-	//
+	/*
+	 * Fill it with blackness
+	 */
 	FillSolidRect(hDC, &rcClient, RGB(0, 0, 0));
 	
-	//
-	// Get the CPU usage
-	//
+	/*
+	 * Get the CPU usage
+	 */
 	CpuUsage = PerfDataGetProcessorUsage();
 	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
 	if (CpuUsage < 0)         CpuUsage = 0;
@@ -175,10 +178,10 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
 	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
 
-	//
-	// Check and see how many digits it will take
-	// so we get the indentation right every time.
-	//
+	/*
+	 * Check and see how many digits it will take
+	 * so we get the indentation right every time.
+	 */
 	if (CpuUsage == 100)
 	{
 		_stprintf(Text, _T("%d%%"), (int)CpuUsage);
@@ -192,16 +195,16 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 		_stprintf(Text, _T(" %d%%"), (int)CpuUsage);
 	}
 	
-	//
-	// Draw the font text onto the graph
-	// The bottom 20 pixels are reserved for the text
-	//
+	/*
+	 * Draw the font text onto the graph
+	 * The bottom 20 pixels are reserved for the text
+	 */
 	Font_DrawText(hDC, Text, ((rcClient.right - rcClient.left) - 32) / 2, rcClient.bottom - 11 - 5);
 
-	//
-	// Now we have to draw the graph
-	// So first find out how many bars we can fit
-	//
+	/*
+	 * Now we have to draw the graph
+	 * So first find out how many bars we can fit
+	 */
 	nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
 	nBarsUsed = (nBars * CpuUsage) / 100;
 	if ((CpuUsage) && (nBarsUsed == 0))
@@ -219,9 +222,9 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 		nBarsUsedKernel = 0;
 	}
 
-	//
-	// Now draw the bar graph
-	//
+	/*
+	 * Now draw the bar graph
+	 */
 	rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
 	rcBarLeft.right =  rcBarLeft.left + 16;
 	rcBarRight.left = rcBarLeft.left + 17;
@@ -238,9 +241,9 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     if (nBarsUsedKernel < 0)     nBarsUsedKernel = 0;
     if (nBarsUsedKernel > nBars) nBarsUsedKernel = nBars;
 
-	//
-	// Draw the "free" bars
-	//
+	/*
+	 * Draw the "free" bars
+	 */
 	for (i=0; i<nBarsFree; i++)
 	{
 		FillSolidRect(hDC, &rcBarLeft, DARK_GREEN);
@@ -253,9 +256,9 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 		rcBarRight.bottom += 3;
 	}
 	
-	//
-	// Draw the "used" bars
-	//
+	/*
+	 * Draw the "used" bars
+	 */
 	for (i=0; i<nBarsUsed; i++)
 	{
         if (nBarsUsed > 5000) nBarsUsed = 5000;
@@ -270,9 +273,9 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 		rcBarRight.bottom += 3;
 	}
 	
-	//
-	// Draw the "used" kernel bars
-	//
+	/*
+	 * Draw the "used" kernel bars
+	 */
 	rcBarLeft.bottom--;
 	rcBarRight.bottom--;
 	if (nBarsUsedKernel && nBarsUsedKernel % 2)
@@ -327,38 +330,40 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	ULONGLONG		CommitChargeTotal;
 	ULONGLONG		CommitChargeLimit;
 	int				nBars;
-	int				nBarsUsed; // Bottom bars that are "used", i.e. are bright green, representing used memory
-	int				nBarsFree; // Top bars that are "unused", i.e. are dark green, representing free memory
+	int				nBarsUsed; 
+/* Bottom bars that are "used", i.e. are bright green, representing used memory */
+	int				nBarsFree; 
+/* Top bars that are "unused", i.e. are dark green, representing free memory */
 	int				i;
 	
-	//
-	// Get the client area rectangle
-	//
+	/*
+	 * Get the client area rectangle
+	 */
 	GetClientRect(hWnd, &rcClient);
 	
-	//
-	// Fill it with blackness
-	//
+	/*
+	 * Fill it with blackness
+	 */
 	FillSolidRect(hDC, &rcClient, RGB(0, 0, 0));
 	
-	//
-	// Get the memory usage
-	//
+	/*
+	 * Get the memory usage
+	 */
 	CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
 	CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
 	_stprintf(Text, _T("%dK"), (int)CommitChargeTotal);
 	
-	//
-	// Draw the font text onto the graph
-	// The bottom 20 pixels are reserved for the text
-	//
+	/*
+	 * Draw the font text onto the graph
+	 * The bottom 20 pixels are reserved for the text
+	 */
 	Font_DrawText(hDC, Text, ((rcClient.right - rcClient.left) - (_tcslen(Text) * 8)) / 2, rcClient.bottom - 11 - 5);
 
-	//
-	// Now we have to draw the graph
-	// So first find out how many bars we can fit
-	//
+	/*
+	 * Now we have to draw the graph
+	 * So first find out how many bars we can fit
+	 */
 	nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
 	nBarsUsed = (nBars * (int)((CommitChargeTotal * 100) / CommitChargeLimit)) / 100;
 	nBarsFree = nBars - nBarsUsed;
@@ -369,9 +374,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     if (nBarsFree < 0)     nBarsFree = 0;
     if (nBarsFree > nBars) nBarsFree = nBars;
 
-	//
-	// Now draw the bar graph
-	//
+	/*
+	 * Now draw the bar graph
+	 */
 	rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
 	rcBarLeft.right =  rcBarLeft.left + 16;
 	rcBarRight.left = rcBarLeft.left + 17;
@@ -379,9 +384,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	rcBarLeft.top = rcBarRight.top = 5;
 	rcBarLeft.bottom = rcBarRight.bottom = 7;
 	
-	//
-	// Draw the "free" bars
-	//
+	/*
+	 * Draw the "free" bars
+	 */
 	for (i=0; i<nBarsFree; i++)
 	{
 		FillSolidRect(hDC, &rcBarLeft, DARK_GREEN);
@@ -394,9 +399,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 		rcBarRight.bottom += 3;
 	}
 	
-	//
-	// Draw the "used" bars
-	//
+	/*
+	 * Draw the "used" bars
+	 */
 	for (i=0; i<nBarsUsed; i++)
 	{
 		FillSolidRect(hDC, &rcBarLeft, BRIGHT_GREEN);
@@ -420,47 +425,47 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
 	if (offset++ >= 10)
 		offset = 0;
 	
-	//
-	// Get the client area rectangle
-	//
+	/*
+	 * Get the client area rectangle
+	 */
 	GetClientRect(hWnd, &rcClient);
 	
-	//
-	// Fill it with blackness
-	//
+	/*
+	 * Fill it with blackness
+	 */
 	FillSolidRect(hDC, &rcClient, RGB(0, 0, 0));
 
-	//
-	// Get the memory usage
-	//
+	/*
+	 * Get the memory usage
+	 */
 	CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
-	//
-	// Draw the graph background
-	//
-	// Draw the horizontal bars
-	//
+	/*
+	 * Draw the graph background
+	 *
+	 * Draw the horizontal bars
+	 */
 	for (i=0; i<rcClient.bottom; i++)
 	{
 		if ((i % 11) == 0)
 		{
-			// FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);
+			/* FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);  */
 		}
 	}
-	//
-	// Draw the vertical bars
-	//
+	/*
+	 * Draw the vertical bars
+	 */
 	for (i=11; i<rcClient.right + offset; i++)
 	{
 		if ((i % 11) == 0)
 		{
-			// FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);
+			/* FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);  */
 		}
 	}
 
-	//
-	// Draw the memory usage
-	//
+	/*
+	 * Draw the memory usage
+	 */
 	for (i=rcClient.right; i>=0; i--)
 	{
 	}

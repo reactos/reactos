@@ -1,26 +1,26 @@
 /*
  *  ReactOS Task Manager
  *
- *  processpage.cpp
+ *  procpage.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -37,17 +37,17 @@
 #include "proclist.h"
 #include <ctype.h>
 
-HWND hProcessPage;						// Process List Property Page
+HWND hProcessPage;						/* Process List Property Page */
 
-HWND hProcessPageListCtrl;				// Process ListCtrl Window
-HWND hProcessPageHeaderCtrl;			// Process Header Control
-HWND hProcessPageEndProcessButton;		// Process End Process button
-HWND hProcessPageShowAllProcessesButton;// Process Show All Processes checkbox
+HWND hProcessPageListCtrl;				/* Process ListCtrl Window */
+HWND hProcessPageHeaderCtrl;			/* Process Header Control */
+HWND hProcessPageEndProcessButton;		/* Process End Process button */
+HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox */
 
 static int	nProcessPageWidth;
 static int	nProcessPageHeight;
 
-static HANDLE	hProcessPageEvent = NULL;	// When this event becomes signaled then we refresh the process list
+static HANDLE	hProcessPageEvent = NULL;	/* When this event becomes signaled then we refresh the process list */
 
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
 void CommaSeparateNumberString(LPTSTR strNumber, int nMaxCount);
@@ -63,46 +63,46 @@ LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 	switch (message) {
 	case WM_INITDIALOG:
-		//
-		// Save the width and height
-		//
+		/*
+		 * Save the width and height
+		 */
 		GetClientRect(hDlg, &rc);
 		nProcessPageWidth = rc.right;
 		nProcessPageHeight = rc.bottom;
 
-		// Update window position
+		/* Update window position */
 		SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
-		//
-		// Get handles to the controls
-		//
+		/*
+		 * Get handles to the controls
+		 */
 		hProcessPageListCtrl = GetDlgItem(hDlg, IDC_PROCESSLIST);
 		hProcessPageHeaderCtrl = ListView_GetHeader(hProcessPageListCtrl);
 		hProcessPageEndProcessButton = GetDlgItem(hDlg, IDC_ENDPROCESS);
 		hProcessPageShowAllProcessesButton = GetDlgItem(hDlg, IDC_SHOWALLPROCESSES);
 
-		//
-		// Set the font, title, and extended window styles for the list control
-		//
+		/*
+		 * Set the font, title, and extended window styles for the list control
+		 */
 		SendMessage(hProcessPageListCtrl, WM_SETFONT, SendMessage(hProcessPage, WM_GETFONT, 0, 0), TRUE);
 		SetWindowText(hProcessPageListCtrl, _T("Processes"));
 		ListView_SetExtendedListViewStyle(hProcessPageListCtrl, ListView_GetExtendedListViewStyle(hProcessPageListCtrl) | LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 
 		AddColumns();
 
-		//
-		// Subclass the process list control so we can intercept WM_ERASEBKGND
-		//
+		/*
+		 * Subclass the process list control so we can intercept WM_ERASEBKGND
+		 */
 		OldProcessListWndProc = SetWindowLong(hProcessPageListCtrl, GWL_WNDPROC, (LONG)ProcessListWndProc);
 
-		// Start our refresh thread
+		/* Start our refresh thread */
 		_beginthread(ProcessPageRefreshThread, 0, NULL);
 
 		return TRUE;
 
 	case WM_DESTROY:
-		// Close the event handle, this will make the
-		// refresh thread exit when the wait fails
+		/* Close the event handle, this will make the */
+		/* refresh thread exit when the wait fails */
 		CloseHandle(hProcessPageEvent);
 
 		SaveColumnSettings();
@@ -123,7 +123,7 @@ LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 		nProcessPageWidth = cx;
 		nProcessPageHeight = cy;
 
-		// Reposition the application page's controls
+		/* Reposition the application page's controls */
 		GetWindowRect(hProcessPageListCtrl, &rc);
 		cx = (rc.right - rc.left) + nXDifference;
 		cy = (rc.bottom - rc.top) + nYDifference;
@@ -178,9 +178,11 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 	{
 		switch (pnmh->code)
 		{
-		/*case LVN_ITEMCHANGED:
+		#if 0
+		case LVN_ITEMCHANGED:
 			ProcessPageUpdate();
-			break;*/
+			break;
+		#endif
 			
 		case LVN_GETDISPINFO:
 
@@ -367,11 +369,12 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 		{
 		case HDN_ITEMCLICK:
 
-			//
-			// FIXME: Fix the column sorting
-			//
-			//ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, NULL);
-			//bSortAscending = !bSortAscending;
+			/*
+			 * FIXME: Fix the column sorting
+			 *
+			 *ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, NULL);
+			 *bSortAscending = !bSortAscending;
+			 */
 
 			break;
 
@@ -483,8 +486,8 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
 void RefreshProcessPage(void)
 {
-	// Signal the event so that our refresh thread
-	// will wake up and refresh the process page
+	/* Signal the event so that our refresh thread */
+	/* will wake up and refresh the process page */
 	SetEvent(hProcessPageEvent);
 }
 
@@ -493,28 +496,28 @@ void ProcessPageRefreshThread(void *lpParameter)
 	ULONG	OldProcessorUsage = 0;
 	ULONG	OldProcessCount = 0;
 
-	// Create the event
+	/* Create the event */
 	hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Process Page Event"));
 
-	// If we couldn't create the event then exit the thread
+	/* If we couldn't create the event then exit the thread */
 	if (!hProcessPageEvent)
 		return;
 
 	while (1) {
 		DWORD	dwWaitVal;
 
-		// Wait on the event
+		/* Wait on the event */
 		dwWaitVal = WaitForSingleObject(hProcessPageEvent, INFINITE);
 
-		// If the wait failed then the event object must have been
-		// closed and the task manager is exiting so exit this thread
+		/* If the wait failed then the event object must have been */
+		/* closed and the task manager is exiting so exit this thread */
 		if (dwWaitVal == WAIT_FAILED)
 			return;
 
 		if (dwWaitVal == WAIT_OBJECT_0) {
 			TCHAR	text[260];
 
-			// Reset our event
+			/* Reset our event */
 			ResetEvent(hProcessPageEvent);
 
 			if ((ULONG)SendMessage(hProcessPageListCtrl, LVM_GETITEMCOUNT, 0, 0) != PerfDataGetProcessCount())

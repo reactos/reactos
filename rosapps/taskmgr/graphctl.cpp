@@ -5,19 +5,19 @@
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
@@ -62,23 +62,25 @@ TGraphCtrl::TGraphCtrl() :
   m_penPlot[2] = 0;
   m_penPlot[3] = 0;
 
-  // since plotting is based on a LineTo for each new point
-  // we need a starting point (i.e. a "previous" point)
-  // use 0.0 as the default first point.
-  // these are public member variables, and can be changed outside
-  // (after construction).  Therefore m_perviousPosition could be set to
-  // a more appropriate value prior to the first call to SetPosition.
+  /* since plotting is based on a LineTo for each new point
+   * we need a starting point (i.e. a "previous" point)
+   * use 0.0 as the default first point.
+   * these are public member variables, and can be changed outside
+   * (after construction).  Therefore m_perviousPosition could be set to
+   * a more appropriate value prior to the first call to SetPosition.
+   */
   m_dPreviousPosition[0] = 0.0;
   m_dPreviousPosition[1] = 0.0;
   m_dPreviousPosition[2] = 0.0;
   m_dPreviousPosition[3] = 0.0;
 
-  // public variable for the number of decimal places on the y axis
+  /* public variable for the number of decimal places on the y axis */
   m_nYDecimals = 3;
 
-  // set some initial values for the scaling until "SetRange" is called.
-  // these are protected varaibles and must be set with SetRange
-  // in order to ensure that m_dRange is updated accordingly
+  /* set some initial values for the scaling until "SetRange" is called.
+   * these are protected varaibles and must be set with SetRange
+   * in order to ensure that m_dRange is updated accordingly
+   */
 //  m_dLowerLimit = -10.0;
 //  m_dUpperLimit =  10.0;
   m_dLowerLimit = 0.0;
@@ -100,14 +102,14 @@ TGraphCtrl::TGraphCtrl() :
   m_crPlotColor[2] = RGB(255, 100, 255);  // see also SetPlotColor
   m_crPlotColor[3] = RGB(255, 255, 100);  // see also SetPlotColor
 
-  // protected variables
+  /* protected variables */
   int i;
   for (i = 0; i < MAX_PLOTS; i++) {
     m_penPlot[i] = CreatePen(PS_SOLID, 0, m_crPlotColor[i]);
   }
   m_brushBack = CreateSolidBrush(m_crBackColor);
 
-  // public member variables, can be set directly 
+  /* public member variables, can be set directly */
   strcpy(m_strXUnitsString, "Samples");  // can also be set with SetXUnits
   strcpy(m_strYUnitsString, "Y units");  // can also be set with SetYUnits
 

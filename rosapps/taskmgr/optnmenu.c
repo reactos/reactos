@@ -5,28 +5,28 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-//
-// options.c
-//
-// Menu item handlers for the options menu.
-//
+/*
+ * options.c
+ *
+ * Menu item handlers for the options menu.
+ */
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -50,10 +50,10 @@ void TaskManager_OnOptionsAlwaysOnTop(void)
 	hMenu = GetMenu(hMainWnd);
 	hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
 
-	//
-	// Check or uncheck the always on top menu item
-	// and update main window.
-	//
+	/*
+	 * Check or uncheck the always on top menu item
+	 * and update main window.
+	 */
 	if (GetMenuState(hOptionsMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND) & MF_CHECKED)
 	{
 		CheckMenuItem(hOptionsMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND|MF_UNCHECKED);
@@ -76,9 +76,9 @@ void TaskManager_OnOptionsMinimizeOnUse(void)
 	hMenu = GetMenu(hMainWnd);
 	hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
 
-	//
-	// Check or uncheck the minimize on use menu item.
-	//
+	/*
+	 * Check or uncheck the minimize on use menu item.
+	 */
 	if (GetMenuState(hOptionsMenu, ID_OPTIONS_MINIMIZEONUSE, MF_BYCOMMAND) & MF_CHECKED)
 	{
 		CheckMenuItem(hOptionsMenu, ID_OPTIONS_MINIMIZEONUSE, MF_BYCOMMAND|MF_UNCHECKED);
@@ -99,9 +99,9 @@ void TaskManager_OnOptionsHideWhenMinimized(void)
 	hMenu = GetMenu(hMainWnd);
 	hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
 
-	//
-	// Check or uncheck the hide when minimized menu item.
-	//
+	/*
+	 * Check or uncheck the hide when minimized menu item.
+	 */
 	if (GetMenuState(hOptionsMenu, ID_OPTIONS_HIDEWHENMINIMIZED, MF_BYCOMMAND) & MF_CHECKED)
 	{
 		CheckMenuItem(hOptionsMenu, ID_OPTIONS_HIDEWHENMINIMIZED, MF_BYCOMMAND|MF_UNCHECKED);
@@ -122,16 +122,16 @@ void TaskManager_OnOptionsShow16BitTasks(void)
 	hMenu = GetMenu(hMainWnd);
 	hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
 
-	//
-	// FIXME: Currently this is useless because the
-	// current implemetation doesn't list the 16-bit
-	// processes. I believe that would require querying
-	// each ntvdm.exe process for it's children.
-	//
+	/*
+	 * FIXME: Currently this is useless because the
+	 * current implemetation doesn't list the 16-bit
+	 * processes. I believe that would require querying
+	 * each ntvdm.exe process for it's children.
+	 */
 
-	//
-	// Check or uncheck the show 16-bit tasks menu item
-	//
+	/*
+	 * Check or uncheck the show 16-bit tasks menu item
+	 */
 	if (GetMenuState(hOptionsMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND) & MF_CHECKED)
 	{
 		CheckMenuItem(hOptionsMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_UNCHECKED);
@@ -143,8 +143,8 @@ void TaskManager_OnOptionsShow16BitTasks(void)
 		TaskManagerSettings.Show16BitTasks = TRUE;
 	}
 
-	//
-	// Refresh the list of processes.
-	//
+	/*
+	 * Refresh the list of processes.
+	 */
 	RefreshProcessPage();
 }

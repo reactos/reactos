@@ -5,22 +5,22 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -36,9 +36,9 @@
 PROCNTQSI						NtQuerySystemInformation = NULL;
 PROCGGR							pGetGuiResources = NULL;
 PROCGPIC						pGetProcessIoCounters = NULL;
-CRITICAL_SECTION				PerfDataCriticalSection;
-PPERFDATA						pPerfDataOld = NULL;	// Older perf data (saved to establish delta values)
-PPERFDATA						pPerfData = NULL;		// Most recent copy of perf data
+CRITICAL_SECTION					PerfDataCriticalSection;
+PPERFDATA						pPerfDataOld = NULL;	/* Older perf data (saved to establish delta values) */
+PPERFDATA						pPerfData = NULL;	/* Most recent copy of perf data */
 ULONG							ProcessCountOld = 0;
 ULONG							ProcessCount = 0;
 double							dbIdleTime;
@@ -66,9 +66,9 @@ BOOL PerfDataInitialize(void)
 	if (!NtQuerySystemInformation)
 		return FALSE;
 	
-	//
-	// Get number of processors in the system
-	//
+	/*
+	 * Get number of processors in the system
+	 */
 	status = NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), NULL);
 	if (status != NO_ERROR)
 		return FALSE;
@@ -107,31 +107,32 @@ void PerfDataRefresh(void)
 	if (!NtQuerySystemInformation)
 		return;
 
-	// Get new system time
+	/* Get new system time */
 	status = NtQuerySystemInformation(SystemTimeInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
 	if (status != NO_ERROR)
 		return;
 
-	// Get new CPU's idle time
+	/* Get new CPU's idle time */
 	status = NtQuerySystemInformation(SystemPerformanceInformation, &SysPerfInfo, sizeof(SysPerfInfo), NULL);
 	if (status != NO_ERROR)
 		return;
 
-	// Get system cache information
+	/* Get system cache information */
 	status = NtQuerySystemInformation(SystemCacheInformation, &SysCacheInfo, sizeof(SysCacheInfo), NULL);
 	if (status != NO_ERROR)
 		return;
 
-	// Get processor time information
+	/* Get processor time information */
 	//SysProcessorTimeInfo = new SYSTEM_PROCESSORTIME_INFO[SystemBasicInfo.bKeNumberProcessors];
 	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors);
 	status = NtQuerySystemInformation(SystemProcessorTimeInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors, &ulSize);
 	if (status != NO_ERROR)
 		return;
 
-	// Get handle information
-	// We don't know how much data there is so just keep
-	// increasing the buffer size until the call succeeds
+	/* Get handle information
+	 * We don't know how much data there is so just keep
+	 * increasing the buffer size until the call succeeds
+	 */
 	BufferSize = 0;
 	do
 	{
@@ -148,9 +149,10 @@ void PerfDataRefresh(void)
 
 	} while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
 
-	// Get process information
-	// We don't know how much data there is so just keep
-	// increasing the buffer size until the call succeeds
+	/* Get process information
+	 * We don't know how much data there is so just keep
+	 * increasing the buffer size until the call succeeds
+	 */
 	BufferSize = 0;
 	do
 	{
@@ -169,28 +171,28 @@ void PerfDataRefresh(void)
 
 	EnterCriticalSection(&PerfDataCriticalSection);
 
-	//
-	// Save system performance info
-	//
+	/*
+	 * Save system performance info
+	 */
 	memcpy(&SystemPerfInfo, &SysPerfInfo, sizeof(SYSTEM_PERFORMANCE_INFORMATION));
 
-	//
-	// Save system cache info
-	//
+	/*
+	 * Save system cache info
+	 */
 	memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_CACHE_INFORMATION));
 	
-	//
-	// Save system processor time info
-	//
+	/*
+	 * Save system processor time info
+	 */
 	if (SystemProcessorTimeInfo) {
 		//delete[] SystemProcessorTimeInfo;
 		free(SystemProcessorTimeInfo);
 	}
 	SystemProcessorTimeInfo = SysProcessorTimeInfo;
 	
-	//
-	// Save system handle info
-	//
+	/*
+	 * Save system handle info
+	 */
 	memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
 	//delete[] SysHandleInfoData;
 	free(SysHandleInfoData);
@@ -201,9 +203,9 @@ void PerfDataRefresh(void)
 		CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].InterruptTime);
 	}
 
-	// If it's a first call - skip idle time calcs
+	/* If it's a first call - skip idle time calcs */
 	if (liOldIdleTime.QuadPart != 0) {
-		// CurrentValue = NewValue - OldValue
+		// CurrentValue = NewValue - OldValue */
 		dbIdleTime = Li2Double(SysPerfInfo.liIdleTime) - Li2Double(liOldIdleTime);
 		dbKernelTime = CurrentKernelTime - OldKernelTime;
 		dbSystemTime = Li2Double(SysTimeInfo.liKeSystemTime) - Li2Double(liOldSystemTime);
@@ -213,18 +215,19 @@ void PerfDataRefresh(void)
 		dbKernelTime = dbKernelTime / dbSystemTime;
 		
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5;
-		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5;
+		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
+		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
 	}
 
-	// Store new CPU's idle and system time
+	/* Store new CPU's idle and system time */
 	liOldIdleTime = SysPerfInfo.liIdleTime;
 	liOldSystemTime = SysTimeInfo.liKeSystemTime;
 	OldKernelTime = CurrentKernelTime;
 
-	// Determine the process count
-	// We loop through the data we got from NtQuerySystemInformation
-	// and count how many structures there are (until RelativeOffset is 0)
+	/* Determine the process count
+	 * We loop through the data we got from NtQuerySystemInformation
+	 * and count how many structures there are (until RelativeOffset is 0)
+	 */
 	ProcessCountOld = ProcessCount;
 	ProcessCount = 0;
 	pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
@@ -235,7 +238,7 @@ void PerfDataRefresh(void)
 		pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
 	}
 
-	// Now alloc a new PERFDATA array and fill in the data
+	/* Now alloc a new PERFDATA array and fill in the data */
 	if (pPerfDataOld) {
 		//delete[] pPerfDataOld;
 		free(pPerfDataOld);
@@ -245,8 +248,8 @@ void PerfDataRefresh(void)
 	pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
 	pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
 	for (Idx=0; Idx<ProcessCount; Idx++) {
-		// Get the old perf data for this process (if any)
-		// so that we can establish delta values
+		/* Get the old perf data for this process (if any) */
+		/* so that we can establish delta values */
 		pPDOld = NULL;
 		for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
 			if (pPerfDataOld[Idx2].ProcessId == pSPI->ProcessId) {
@@ -255,7 +258,7 @@ void PerfDataRefresh(void)
 			}
 		}
 
-		// Clear out process perf data structure
+		/* Clear out process perf data structure */
 		memset(&pPerfData[Idx], 0, sizeof(PERFDATA));
 
 		if (pSPI->Name.Buffer)
@@ -269,7 +272,7 @@ void PerfDataRefresh(void)
 			double	CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
 			double	OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
 			double	CpuTime = (CurTime - OldTime) / dbSystemTime;
-			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors;// + 0.5;
+			CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
 			pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
 		}
 		pPerfData[Idx].CPUTime.QuadPart = pSPI->UserTime.QuadPart + pSPI->KernelTime.QuadPart;
