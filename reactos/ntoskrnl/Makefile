@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.123 2004/06/05 12:06:41 hbirr Exp $
+# $Id: Makefile,v 1.124 2004/06/21 04:12:59 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -341,7 +341,9 @@ OBJECTS_PO = \
 OBJECTS_CC = \
 	cc/cacheman.o \
 	cc/copy.o \
+	cc/fs.o \
 	cc/pin.o \
+	cc/mdl.o \
 	cc/misc.o \
 	cc/view.o
 
