@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.55 2004/09/26 09:14:20 hbirr Exp $
+/* $Id: atapi.c,v 1.56 2004/11/18 08:32:32 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -169,7 +169,6 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	     BYTE cmd);
 #endif
 
-#ifdef ENABLE_PCI
 static ULONG STDCALL
 AtapiFindCompatiblePciController(PVOID DeviceExtension,
 				 PVOID HwContext,
@@ -177,9 +176,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 				 PCHAR ArgumentString,
 				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 				 PBOOLEAN Again);
-#endif
 
-#ifdef ENABLE_ISA
 static ULONG STDCALL
 AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PVOID HwContext,
@@ -187,9 +184,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PCHAR ArgumentString,
 			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			  PBOOLEAN Again);
-#endif
 
-#ifdef ENABLE_NATIVE_PCI
 static ULONG STDCALL
 AtapiFindNativePciController(PVOID DeviceExtension,
 			     PVOID HwContext,
@@ -197,7 +192,6 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 			     PCHAR ArgumentString,
 			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			     PBOOLEAN Again);
-#endif
 
 static BOOLEAN STDCALL
 AtapiInitialize(IN PVOID DeviceExtension);
@@ -294,10 +288,7 @@ AtapiErrorToScsi(PVOID DeviceExtension,
 		 PSCSI_REQUEST_BLOCK Srb);
 
 static VOID
-AtapiScsiSrbToAtapi(PSCSI_REQUEST_BLOCK Srb);
-
-static BOOLEAN
-AtapiWaitForStatus(ULONG CommandPort, ULONG Mask, ULONG Value, ULONG Timeout);
+AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb);
 
 //  ----------------------------------------------------------------  Inlines
 
@@ -1097,10 +1088,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ULONG CommandPortBase;
   ULONG ControlPortBase;
   ULONG UnitNumber;
-  ULONG Status;
+  ULONG Retries;
   UCHAR High;
   UCHAR Low;
-  BOOL UnitPresent[2];
 
   DPRINT("AtapiFindDevices() called\n");
 
@@ -1113,68 +1103,47 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
     {
       /* Select drive */
-      IDEWriteDriveControl(ControlPortBase, 0);
-      IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED |
-                        (UnitNumber ? IDE_DH_DRV1 : IDE_DH_DRV0));
+      IDEWriteDriveHead(CommandPortBase,
+			IDE_DH_FIXED | (UnitNumber ? IDE_DH_DRV1 : 0));
       ScsiPortStallExecution(500);
+
+      /* Disable interrupts */
+      IDEWriteDriveControl(ControlPortBase,
+			   IDE_DC_nIEN);
+      ScsiPortStallExecution(500);
+
       /* Check if a device is attached to the interface */
       IDEWriteCylinderHigh(CommandPortBase, 0xaa);
       IDEWriteCylinderLow(CommandPortBase, 0x55);
+
       High = IDEReadCylinderHigh(CommandPortBase);
       Low = IDEReadCylinderLow(CommandPortBase);
-      UnitPresent[UnitNumber] = (Low == 0x55 || High == 0xaa);
-#ifndef NDEBUG
+
+      IDEWriteCylinderHigh(CommandPortBase, 0);
+      IDEWriteCylinderLow(CommandPortBase, 0);
+
       if (Low != 0x55 || High != 0xaa)
-        {
-          DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
-        }
-#endif
-   }
+	{
+	  DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
+	  continue;
+	}
 
-   /* Check if any unit was found. */
-   if (UnitPresent[0] == FALSE && UnitPresent[1] == FALSE)
-     {
-       DPRINT("No device found\n");
-       return FALSE;
-     }
+      AtapiExecuteCommand(DeviceExtension, IDE_CMD_RESET, NULL);
 
-  for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
-    {
-      /* Skip initilization of non-existent units */
-      if (!UnitPresent[UnitNumber])
-        {
-          continue;
-        }
-
-      /* Select drive */
-      IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED |
-                        (UnitNumber ? IDE_DH_DRV1 : IDE_DH_DRV0));
-      /* Soft reset */
-      IDEWriteDriveControl(ControlPortBase, IDE_DC_SRST);
-      ScsiPortStallExecution(500);
-      IDEWriteDriveControl(ControlPortBase, IDE_DC_nIEN);
-      ScsiPortStallExecution(200);
-
-      /* Wait for busy to clear */
-      if (!AtapiWaitForStatus(CommandPortBase, IDE_SR_BUSY, 0, 20000))
-        {
-          DPRINT("Timeout on drive %lu\n", UnitNumber);
-          return FALSE;
-        }
-      else
-        {
-          Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-          if (Status & IDE_SR_ERR)
-           {
-             DPRINT("Error while doing software reset\n");
-             return FALSE;
-           }
-        }
-
-      /* Select drive */
-      IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED |
-                        (UnitNumber ? IDE_DH_DRV1 : IDE_DH_DRV0));
-      ScsiPortStallExecution(500);
+      for (Retries = 0; Retries < 20000; Retries++)
+	{
+	  if (!(IDEReadStatus(CommandPortBase) & IDE_SR_BUSY))
+	    {
+	      break;
+	    }
+	  ScsiPortStallExecution(150);
+	}
+      if (Retries >= 20000)
+	{
+	  DPRINT("Timeout on drive %lu\n", UnitNumber);
+	  DeviceExtension->DeviceFlags[UnitNumber] &= ~DEVICE_PRESENT;
+	  continue;
+	}
 
       High = IDEReadCylinderHigh(CommandPortBase);
       Low = IDEReadCylinderLow(CommandPortBase);
@@ -1203,8 +1172,6 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
 		}
 #endif
-              AtapiExecuteCommand(DeviceExtension, IDE_CMD_RESET, NULL);
-              ScsiPortStallExecution(500);
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1259,6 +1226,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEReadStatus(CommandPortBase);
   /* Reenable interrupts */
   IDEWriteDriveControl(ControlPortBase, 0);
+  ScsiPortStallExecution(500);
+  /* Return with drive 0 selected */
+  IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED);
   ScsiPortStallExecution(500);
 
   DPRINT("AtapiFindDrives() done (DeviceFound %s)\n", (DeviceFound) ? "TRUE" : "FALSE");
@@ -3063,24 +3033,5 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
   return TRUE;
 }
 #endif
-
-static BOOLEAN
-AtapiWaitForStatus( ULONG CommandPort, ULONG Mask, ULONG Value, ULONG Timeout )
-{
-  ULONG RetryCount, Status;
-  
-  for (RetryCount = 0; RetryCount < Timeout; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if ((Status & Mask) == Value)
-        {
-          return TRUE;
-        }
-      ScsiPortStallExecution(10);
-    }
-  DPRINT("status=%02x\n", Status);
-  DPRINT("waited %ld usecs\n", RetryCount * 10);
-  return FALSE;
-}
 
 /* EOF */
