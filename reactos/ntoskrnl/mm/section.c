@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.125 2003/07/24 18:37:44 hbirr Exp $
+/* $Id: section.c,v 1.126 2003/07/26 12:47:51 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3262,28 +3262,19 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     }
 }
 
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-MmUnmapViewOfSection(PEPROCESS Process,
+NTSTATUS
+MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
 		     PVOID BaseAddress)
 {
-   NTSTATUS	Status;
+   NTSTATUS Status;
    PMEMORY_AREA MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    KIRQL oldIrql;
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion;
+   PLIST_ENTRY RegionListHead;
 
-   assert(Process);
-   
-   AddressSpace = &Process->AddressSpace;
-   
-   DPRINT("Opening memory area Process %x BaseAddress %x\n",
-	  Process, BaseAddress);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
@@ -3300,33 +3291,109 @@ MmUnmapViewOfSection(PEPROCESS Process,
    RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
-   CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
-   while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
+   RegionListHead = &MemoryArea->Data.SectionData.RegionListHead;
+   while (!IsListEmpty(RegionListHead))
      {
-       CurrentRegion = 
-	 CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
-       CurrentEntry = CurrentEntry->Flink;
+       CurrentEntry = RemoveHeadList(RegionListHead);
+       CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
        ExFreePool(CurrentRegion);
      }
 
    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
      {
-       Status = MmFreeMemoryArea(&Process->AddressSpace,
-				 BaseAddress,
+       Status = MmFreeMemoryArea(AddressSpace,
+		                 BaseAddress,
 				 0,
 				 NULL,
 				 NULL);
      }
    else
      {
-       Status = MmFreeMemoryArea(&Process->AddressSpace,
+       Status = MmFreeMemoryArea(AddressSpace,
 				 BaseAddress,
 				 0,
 				 MmFreeSectionPage,
 				 MemoryArea);
-      }
+     }
    MmUnlockSectionSegment(Segment);
    ObDereferenceObject(Section);
+   return(STATUS_SUCCESS);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+MmUnmapViewOfSection(PEPROCESS Process,
+		     PVOID BaseAddress)
+{
+   NTSTATUS	Status;
+   PMEMORY_AREA MemoryArea;
+   PMADDRESS_SPACE AddressSpace;
+   PSECTION_OBJECT Section;
+   
+   DPRINT("Opening memory area Process %x BaseAddress %x\n",
+	  Process, BaseAddress);
+
+   assert(Process);
+   
+   AddressSpace = &Process->AddressSpace;
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+					  BaseAddress);
+   if (MemoryArea == NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+
+   Section = MemoryArea->Data.SectionData.Section;
+
+   if (Section->AllocationAttributes & SEC_IMAGE)
+     {
+       ULONG i;
+       ULONG NrSegments;
+       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+       PMM_SECTION_SEGMENT SectionSegments;
+       PVOID ImageBaseAddress;
+       PMM_SECTION_SEGMENT Segment;
+   
+       Segment = MemoryArea->Data.SectionData.Segment;
+       ImageSectionObject = Section->ImageSection;
+       SectionSegments = ImageSectionObject->Segments;
+       NrSegments = ImageSectionObject->NrSegments;
+
+       /* Search for the current segment within the section segments 
+        * and calculate the image base address */
+       for (i = 0; i < NrSegments; i++)
+         {
+	   if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+	     {
+	       if (Segment == &SectionSegments[i])
+	         {
+		   ImageBaseAddress = BaseAddress - (ULONG_PTR)SectionSegments[i].VirtualAddress;
+		   break;
+		 }
+	     }
+	 }
+       if (i >= NrSegments)
+         {
+           KEBUGCHECK(0);
+	 }
+
+       for (i = 0; i < NrSegments; i++)
+	 {
+	   if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+	     {
+	       PVOID SBaseAddress = (PVOID)
+		 (ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
+
+	       Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+	     }
+	 }
+     }
+   else
+     {
+       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
+     }
    return(STATUS_SUCCESS);
 }
 
@@ -3870,67 +3937,16 @@ MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 NTSTATUS STDCALL
 MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 {
-  PMEMORY_AREA MemoryArea;
   PMADDRESS_SPACE AddressSpace;
-  PSECTION_OBJECT Section;
-  PMM_SECTION_SEGMENT Segment;
-  KIRQL oldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PMM_REGION CurrentRegion;
   NTSTATUS Status;
 
   DPRINT("MmUnmapViewInSystemSpace() called\n");
 
   AddressSpace = MmGetKernelAddressSpace();
 
-  DPRINT("Opening memory area at base address %x\n",
-	 MappedBase);
-  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					 MappedBase);
-  if (MemoryArea == NULL)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
+  Status = MmUnmapViewOfSegment(AddressSpace, MappedBase);
 
-  MemoryArea->DeleteInProgress = TRUE;
-  Section = MemoryArea->Data.SectionData.Section;
-  Segment = MemoryArea->Data.SectionData.Segment;
-
-  MmLockSectionSegment(Segment);
-  KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-  RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
-  KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-
-  CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
-  while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
-    {
-      CurrentRegion =
-	CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
-      CurrentEntry = CurrentEntry->Flink;
-      ExFreePool(CurrentRegion);
-    }
-
-  if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
-    {
-      Status = MmFreeMemoryArea(AddressSpace,
-				MappedBase,
-				0,
-				NULL,
-				NULL);
-    }
-  else
-    {
-      Status = MmFreeMemoryArea(AddressSpace,
-				MappedBase,
-				0,
-				MmFreeSectionPage,
-				MemoryArea);
-    }
-
-  MmUnlockSectionSegment(Segment);
-  ObDereferenceObject(Section);
-
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
