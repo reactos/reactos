@@ -1,5 +1,28 @@
-/* $Id: disk.c,v 1.7 2002/03/04 22:31:35 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2001, 2002 ReactOS Team
  *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: disk.c,v 1.8 2002/03/08 12:01:26 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            services/storage/disk/disk.c
+ * PURPOSE:         disk class driver
+ * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,7 +36,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define VERSION "V0.0.1"
+#define VERSION  "0.0.1"
 
 
 typedef struct _DISK_DATA
@@ -198,7 +221,7 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
-  DPRINT1("Found %lu unclaimed devices!\n", DeviceCount);
+  DPRINT("Found %lu unclaimed devices!\n", DeviceCount);
 
   ConfigInfo = IoGetConfigurationInformation();
 
@@ -218,7 +241,7 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 	      (InquiryData->DeviceTypeQualifier == 0) &&
 	      (UnitInfo->DeviceClaimed == FALSE))
 	    {
-	      DPRINT1("Vendor: '%.24s'\n",
+	      DPRINT("Vendor: '%.24s'\n",
 		     InquiryData->VendorId);
 
 	      /* Create device objects for disk */
@@ -282,11 +305,33 @@ DiskClassCheckDevice(IN PINQUIRYDATA InquiryData)
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassCheckReadWrite
+ *
+ * DESCRIPTION
+ *	This function checks the given IRP for correct data.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceObject
+ *		Pointer to the device.
+ *
+ *	Irp
+ *		Irp to check.
+ *
+ * RETURN VALUE
+ *	STATUS_SUCCESS: The IRP matches the requirements of the given device.
+ *	Others: Failure.
+ */
+
 NTSTATUS STDCALL
 DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp)
 {
-  DPRINT("DiskClassCheckReadWrite() called\n");
+  DPRINT1("DiskClassCheckReadWrite() called\n");
 
   return(STATUS_SUCCESS);
 }
@@ -346,7 +391,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   ANSI_STRING DeviceNameA;
   UNICODE_STRING DeviceName;
 
-  DPRINT1("DiskClassCreateDeviceObject() called\n");
+  DPRINT("DiskClassCreateDeviceObject() called\n");
 
   /* Create the harddisk device directory */
   swprintf(NameBuffer,
@@ -426,6 +471,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->LockCount = 0;
   DiskDeviceExtension->DeviceNumber = DiskNumber;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
+  DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
 
   /* FIXME: Not yet! Will cause pointer corruption! */
 //  DiskDeviceExtension->PortCapabilities = PortCapabilities;
@@ -477,7 +523,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     }
 
-  DPRINT1("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
+  DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
   /* assign arc name */
   RtlInitAnsiString(&DeviceNameA,
@@ -490,8 +536,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	   DiskNumber);
   RtlInitUnicodeString(&ArcName,
 		       ArcNameBuffer);
-  DPRINT1("ArcNameBuffer '%S'\n", ArcNameBuffer);
-  DPRINT1("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+  DPRINT("ArcNameBuffer '%S'\n", ArcNameBuffer);
+  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
   Status = IoAssignArcName(&ArcName,
 			   &DeviceName);
   RtlFreeUnicodeString(&DeviceName);
@@ -509,7 +555,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 				TRUE,
 				&PartitionList);
 
-  DPRINT1("IoReadPartitionTable(): Status: %lx\n", Status);
+  DPRINT("IoReadPartitionTable(): Status: %lx\n", Status);
 
   if ((!NT_SUCCESS(Status) || PartitionList->PartitionCount == 0) &&
       DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
@@ -540,7 +586,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   if (NT_SUCCESS(Status))
     {
-      DPRINT1("Read partition table!\n");
+      DPRINT("Read partition table!\n");
 
       DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
 
@@ -548,13 +594,13 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	{
 	  PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
 
-	  DPRINT1("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
-		  PartitionNumber,
-		  PartitionEntry->PartitionNumber,
-		  PartitionEntry->BootIndicator,
-		  PartitionEntry->PartitionType,
-		  PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-		  PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+	  DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
+		 PartitionNumber,
+		 PartitionEntry->PartitionNumber,
+		 PartitionEntry->BootIndicator,
+		 PartitionEntry->PartitionType,
+		 PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
+		 PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
 
 	  /* Create partition device (Partition 0) */
 	  sprintf(NameBuffer2,
@@ -567,7 +613,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 					       DiskDeviceObject,
 					       &PartitionDeviceObject,
 					       InitializationData);
-	  DPRINT1("ScsiClassCreateDeviceObject(): Status %x\n", Status);
+	  DPRINT("ScsiClassCreateDeviceObject(): Status %x\n", Status);
 	  if (NT_SUCCESS(Status))
 	    {
 	      PartitionDeviceObject->Flags = DiskDeviceObject->Flags;
@@ -580,6 +626,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->DeviceNumber = DiskNumber;
 	      PartitionDeviceExtension->PortDeviceObject = PortDeviceObject;
 	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
+	      PartitionDeviceExtension->PhysicalDevice = DiskDeviceExtension->PhysicalDevice;
 
 	  /* FIXME: Not yet! Will cause pointer corruption! */
 //	  PartitionDeviceExtension->PortCapabilities = PortCapabilities;
@@ -613,8 +660,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		       PartitionNumber + 1);
 	      RtlInitUnicodeString(&ArcName,
 				   ArcNameBuffer);
-	      DPRINT1("ArcNameBuffer '%S'\n", ArcNameBuffer);
-	      DPRINT1("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+	      DPRINT("ArcNameBuffer '%S'\n", ArcNameBuffer);
+	      DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
 	      Status = IoAssignArcName(&ArcName,
 				       &DeviceName);
 	      RtlFreeUnicodeString(&DeviceName);
@@ -640,7 +687,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if (PartitionList != NULL)
     ExFreePool(PartitionList);
 
-  DPRINT1("DiskClassCreateDeviceObjects() done\n");
+  DPRINT("DiskClassCreateDeviceObjects() done\n");
 
   return(STATUS_SUCCESS);
 }
@@ -672,33 +719,33 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IrpStack;
   ULONG ControlCode, InputLength, OutputLength;
   PDISK_DATA DiskData;
+  ULONG Information;
   NTSTATUS Status;
 
-  DPRINT1("DiskClassDeviceControl() called!\n");
+  DPRINT("DiskClassDeviceControl() called!\n");
 
-  Status = STATUS_SUCCESS;
+  Status = STATUS_INVALID_DEVICE_REQUEST;
+  Information = 0;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
   ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
-  DeviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
   DiskData = (PDISK_DATA)(DeviceExtension + 1);
 
   /* A huge switch statement in a Windows program?! who would have thought? */
   switch (ControlCode)
     {
       case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-	DPRINT1("IOCTL_DISK_GET_DRIVE_GEOMETRY\n");
+	DPRINT("IOCTL_DISK_GET_DRIVE_GEOMETRY\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
-	    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-	    Irp->IoStatus.Information = 0;
+	    Status = STATUS_INVALID_PARAMETER;
 	  }
 	else if (DeviceExtension->DiskGeometry == NULL)
 	  {
 	    DPRINT1("No disk geometry available!\n");
-	    Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
-	    Irp->IoStatus.Information = 0;
+	    Status = STATUS_NO_SUCH_DEVICE;
 	  }
 	else
 	  {
@@ -709,37 +756,21 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 			  DeviceExtension->DiskGeometry,
 			  sizeof(DISK_GEOMETRY));
 
-#if 0
-
-  RtlCopyMemory(DiskData->Geometry,
-		DiskDeviceExtension->DiskGeometry,
-		sizeof(DISK_GEOMETRY));
-          Geometry->MediaType = FixedMedia;
-              // FIXME: should report for RawDevice even on partition
-          Geometry->Cylinders.QuadPart = DeviceExtension->Size / 
-              DeviceExtension->SectorsPerLogCyl;
-          Geometry->TracksPerCylinder = DeviceExtension->SectorsPerLogTrk /
-              DeviceExtension->SectorsPerLogCyl;
-          Geometry->SectorsPerTrack = DeviceExtension->SectorsPerLogTrk;
-          Geometry->BytesPerSector = DeviceExtension->BytesPerSector;
-#endif
-	    Irp->IoStatus.Status = STATUS_SUCCESS;
-	    Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+	    Status = STATUS_SUCCESS;
+	    Information = sizeof(DISK_GEOMETRY);
 	  }
 	break;
 
       case IOCTL_DISK_GET_PARTITION_INFO:
-	DPRINT1("IOCTL_DISK_GET_PARTITION_INFO\n");
+	DPRINT("IOCTL_DISK_GET_PARTITION_INFO\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
 	    sizeof(PARTITION_INFORMATION))
 	  {
-	    Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
-	    Irp->IoStatus.Information = 0;
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
 	  }
 	else if (DiskData->PartitionNumber == 0)
 	  {
-	    Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-	    Irp->IoStatus.Information = 0;
+	    Status = STATUS_INVALID_DEVICE_REQUEST;
 	  }
 	else
 	  {
@@ -757,13 +788,54 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	    PartitionInfo->RecognizedPartition =
 	      IsRecognizedPartition(DiskData->PartitionType);
 
-	    Irp->IoStatus.Status = STATUS_SUCCESS;
-	    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+	    Status = STATUS_SUCCESS;
+	    Information = sizeof(PARTITION_INFORMATION);
 	  }
 	break;
 
       case IOCTL_DISK_SET_PARTITION_INFO:
+	DPRINT1("Unhandled IOCTL_DISK_SET_PARTITION_INFO\n");
+	break;
+
       case IOCTL_DISK_GET_DRIVE_LAYOUT:
+	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
+	    sizeof(DRIVE_LAYOUT_INFORMATION))
+	  {
+	    Status = STATUS_BUFFER_TOO_SMALL;
+	  }
+	else
+	  {
+	    PDRIVE_LAYOUT_INFORMATION PartitionList;
+
+	    Status = IoReadPartitionTable(DeviceExtension->PhysicalDevice,
+					  DeviceExtension->DiskGeometry->BytesPerSector,
+					  FALSE,
+					  &PartitionList);
+	    if (NT_SUCCESS(Status))
+	      {
+		ULONG BufferSize;
+
+		BufferSize = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION,
+					  PartitionEntry[0]);
+		BufferSize += PartitionList->PartitionCount * sizeof(PARTITION_INFORMATION);
+
+		if (BufferSize > IrpStack->Parameters.DeviceIoControl.OutputBufferLength)
+		  {
+		    Status = STATUS_BUFFER_TOO_SMALL;
+		  }
+		else
+		  {
+		    RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
+				  PartitionList,
+				  BufferSize);
+		    Status = STATUS_SUCCESS;
+		    Information = BufferSize;
+		  }
+		ExFreePool(PartitionList);
+	      }
+	  }
+	break;
+
       case IOCTL_DISK_SET_DRIVE_LAYOUT:
       case IOCTL_DISK_VERIFY:
       case IOCTL_DISK_FORMAT_TRACKS:
@@ -781,11 +853,12 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
       default:
 	DPRINT1("Unhandled control code: %lx\n", ControlCode);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = 0;
+	Information = 0;
 	break;
     }
 
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = Information;
   IoCompleteRequest(Irp,
 		    IO_NO_INCREMENT);
 
