@@ -1,4 +1,4 @@
-/* $Id: oplock.c,v 1.6 2003/07/10 06:27:13 royce Exp $
+/* $Id: oplock.c,v 1.7 2003/08/05 21:37:21 ea Exp $
  *
  * reactos/ntoskrnl/fs/oplock.c
  *
@@ -62,7 +62,7 @@ FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
  * NOTE
  *	Obsolete function.
  *
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
