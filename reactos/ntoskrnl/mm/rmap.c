@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.16 2003/05/17 13:46:05 hbirr Exp $
+/* $Id: rmap.c,v 1.17 2003/05/19 15:58:09 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -109,6 +109,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     }
   else
     {
+      ExReleaseFastMutex(&RmapListLock);
       AddressSpace = MmGetKernelAddressSpace();
     }
 
@@ -247,6 +248,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     }
   else
     {
+      ExReleaseFastMutex(&RmapListLock);
       AddressSpace = MmGetKernelAddressSpace();
     }
 
