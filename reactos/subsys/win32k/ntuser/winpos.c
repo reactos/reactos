@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.27 2003/08/21 20:14:45 gvg Exp $
+/* $Id: winpos.c,v 1.28 2003/08/24 16:20:30 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -686,6 +686,37 @@ nocopy:
  return uFlags;
 }
 
+/***********************************************************************
+ *	     WinPosInternalMoveWindow
+ *
+ * Update WindowRect and ClientRect of Window and all of its children
+ * We keep both WindowRect and ClientRect in screen coordinates internally
+ */
+static VOID
+WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
+{
+  PWINDOW_OBJECT Child;
+
+  Window->WindowRect.left += MoveX;
+  Window->WindowRect.right += MoveX;
+  Window->WindowRect.top += MoveY;
+  Window->WindowRect.bottom += MoveY;
+
+  Window->ClientRect.left += MoveX;
+  Window->ClientRect.right += MoveX;
+  Window->ClientRect.top += MoveY;
+  Window->ClientRect.bottom += MoveY;
+
+  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+  Child = Window->FirstChild;
+  while (Child)
+    {
+      WinPosInternalMoveWindow(Child, MoveX, MoveY);
+      Child = Child->NextSibling;
+    }
+  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+}
+
 
 BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
@@ -817,6 +848,12 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
   /* FIXME: Check for redrawing the whole client rect. */
 
+  if (! (WinPos.flags & SWP_NOMOVE))
+    {
+      WinPosInternalMoveWindow(Window,
+                               NewWindowRect.left - OldWindowRect.left,
+                               NewWindowRect.top - OldWindowRect.top);
+    }
   Window->WindowRect = NewWindowRect;
   Window->ClientRect = NewClientRect;
 
@@ -874,6 +911,14 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       NtGdiDeleteObject(VisibleRgn);
     }
 
+  if (! (WinPos.flags & SWP_NOMOVE))
+    {
+      VisibleRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+      NtGdiCombineRgn(VisibleRgn, VisRgn, VisibleRgn, RGN_DIFF);
+      VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
+      NtGdiDeleteObject(VisibleRgn);
+    }
+
   /* FIXME: Hide or show the claret */
 
   if (VisRgn)
@@ -888,6 +933,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 				RDW_ALLCHILDREN | RDW_ERASENOW, 
 				RDW_EX_XYWINDOW | RDW_EX_USEHRGN);
 	    }
+#if 0
 	  else
 	    {
 	      PaintRedrawWindow(Window->Parent, NULL,
@@ -896,6 +942,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	                        RDW_ERASENOW,
 				RDW_EX_USEHRGN);
 	    }
+#endif
 	  /* FIXME: Redraw the window parent. */
 	}
       if ((HRGN) 1 != VisRgn)
