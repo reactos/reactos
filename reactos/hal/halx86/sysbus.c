@@ -1,4 +1,4 @@
-/* $Id: sysbus.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: sysbus.c,v 1.4 2002/12/09 19:46:39 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@ HalpGetSystemInterruptVector(PVOID BusHandler,
 			     PKIRQL Irql,
 			     PKAFFINITY Affinity)
 {
-   *Irql = HIGH_LEVEL - BusInterruptVector;
+   *Irql = PROFILE_LEVEL - BusInterruptVector;
    *Affinity = 0xFFFFFFFF;
    return BusInterruptVector;
 }
