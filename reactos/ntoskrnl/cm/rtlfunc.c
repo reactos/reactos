@@ -292,7 +292,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 					       ValueString->MaximumLength - sizeof(WCHAR));
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,
-			 ValueInfo->DataLength);
+			 ValueString->Length);
 		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
 		}
 	      else
