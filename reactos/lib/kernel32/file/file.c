@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.46 2003/08/07 09:05:43 hbirr Exp $
+/* $Id: file.c,v 1.47 2003/12/08 19:50:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -144,7 +144,7 @@ OpenFile(LPCSTR lpFileName,
 	                      &ObjectAttributes,
 	                      &IoStatusBlock,
 	                      FILE_SHARE_READ,
-	                      FILE_NON_DIRECTORY_FILE);
+	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
 
 	RtlFreeUnicodeString(&FileNameString);
 
