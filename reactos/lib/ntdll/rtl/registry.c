@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.12 2002/05/24 18:07:01 ekohl Exp $
+/* $Id: registry.c,v 1.13 2002/06/06 14:03:58 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,6 @@
 /*
  * TODO:
  *   - finish RtlQueryRegistryValues()
- *	- expand REG_EXPAND_SZ
  *	- support RTL_QUERY_REGISTRY_DELETE
  *
  *   - finish RtlFormatCurrentUserKeyPath()
@@ -313,7 +312,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 					    ValueString->MaximumLength - sizeof(WCHAR));
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,
-			 ValueInfo->DataLength);
+			 ValueString->Length);
 		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
 		}
 	      else
