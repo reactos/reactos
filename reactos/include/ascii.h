@@ -2904,7 +2904,7 @@ WINBOOL
 STDCALL
 QueryServiceConfigA(
     SC_HANDLE               hService,
-    LPQUERY_SERVICE_CONFIG lpServiceConfig,
+    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded
     );
