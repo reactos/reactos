@@ -246,7 +246,8 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!SetCurrentDirectory (dir))
 	{
-		ErrorMessage (GetLastError(), _T("CD"));
+		//ErrorMessage (GetLastError(), _T("CD"));
+		ConErrPrintf (_T("Dir \"%s\" doesn't seem to exist!"),dir);
 
 		/* throw away current directory */
 		free (lpOldPath);
