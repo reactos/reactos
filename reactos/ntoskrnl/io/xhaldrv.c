@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.35 2003/08/10 16:49:07 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.36 2003/08/15 19:37:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -183,7 +183,7 @@ xHalpReadSector(IN PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("xHalReadMBR()\n");
+  DPRINT("xHalpReadSector()\n");
 
   assert(DeviceObject);
   assert(Buffer);
@@ -204,7 +204,7 @@ xHalpReadSector(IN PDEVICE_OBJECT DeviceObject,
 		    NotificationEvent,
 		    FALSE);
 
-  /* Read MBR (Master Boot Record) */
+  /* Read the sector */
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				     DeviceObject,
 				     Sector,
@@ -239,6 +239,58 @@ xHalpReadSector(IN PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
+xHalpReadSector2 (IN PDEVICE_OBJECT DeviceObject,
+		  IN ULONG SectorSize,
+		  IN PLARGE_INTEGER SectorOffset,
+		  IN PVOID Sector)
+{
+  IO_STATUS_BLOCK StatusBlock;
+  KEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  DPRINT("xHalpReadSector2() called\n");
+
+  assert(DeviceObject);
+  assert(Buffer);
+
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
+
+  /* Read the sector */
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				     DeviceObject,
+				     Sector,
+				     SectorSize,
+				     SectorOffset,
+				     &Event,
+				     &StatusBlock);
+
+  Status = IoCallDriver(DeviceObject,
+			Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Executive,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      Status = StatusBlock.Status;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Reading sector failed (Status 0x%08lx)\n",
+	     Status);
+      return Status;
+    }
+
+  return Status;
+}
+
+
+static NTSTATUS
 xHalpWriteSector(IN PDEVICE_OBJECT DeviceObject,
 		 IN ULONG SectorSize,
 		 IN PLARGE_INTEGER SectorOffset,
@@ -249,7 +301,7 @@ xHalpWriteSector(IN PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("xHalWriteMBR()\n");
+  DPRINT("xHalpWriteSector() called\n");
 
   if (SectorSize < 512)
     SectorSize = 512;
@@ -260,7 +312,7 @@ xHalpWriteSector(IN PDEVICE_OBJECT DeviceObject,
 		    NotificationEvent,
 		    FALSE);
 
-  /* Write MBR (Master Boot Record) */
+  /* Write the sector */
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
 				     DeviceObject,
 				     Sector,
@@ -283,7 +335,7 @@ xHalpWriteSector(IN PDEVICE_OBJECT DeviceObject,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Writing MBR failed (Status 0x%08lx)\n",
+      DPRINT("Writing sector failed (Status 0x%08lx)\n",
 	     Status);
       return Status;
     }
@@ -695,10 +747,10 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 {
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
-  ULARGE_INTEGER PartitionOffset;
-  ULARGE_INTEGER RealPartitionOffset;
-  ULARGE_INTEGER nextPartitionOffset;
-  ULARGE_INTEGER containerOffset;
+  LARGE_INTEGER RealPartitionOffset;
+  ULONGLONG PartitionOffset;
+  ULONGLONG nextPartitionOffset;
+  ULONGLONG containerOffset;
   PIRP Irp;
   NTSTATUS Status;
   PPARTITION_SECTOR PartitionSector;
@@ -760,8 +812,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(LayoutBuffer,
 		0x1000);
 
-  PartitionOffset.QuadPart = (ULONGLONG)0;
-  containerOffset.QuadPart = (ULONGLONG)0;
+  PartitionOffset = 0ULL;
+  containerOffset = 0ULL;
 
   do
     {
@@ -769,11 +821,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
       if (DiskManager == OntrackDiskManager)
 	{
-	  RealPartitionOffset.QuadPart = PartitionOffset.QuadPart + (ULONGLONG)(63 * SectorSize);
+	  RealPartitionOffset.QuadPart = PartitionOffset + (ULONGLONG)(63 * SectorSize);
 	}
       else
 	{
-	  RealPartitionOffset.QuadPart = PartitionOffset.QuadPart;
+	  RealPartitionOffset.QuadPart = PartitionOffset;
 	}
 
       DPRINT("RealPartitionOffset: %I64u\n", RealPartitionOffset.QuadPart / SectorSize);
@@ -784,7 +836,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
       Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 					 DeviceObject,
-					 PartitionSector, //SectorBuffer,
+					 PartitionSector,
 					 SectorSize,
 					 (PLARGE_INTEGER)&RealPartitionOffset,
 					 &Event,
@@ -840,7 +892,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	}
 #endif
 
-      if (PartitionOffset.QuadPart == 0ULL)
+//      if (PartitionOffset.QuadPart == 0ULL)
+      if (PartitionOffset == 0ULL)
 	{
 	  LayoutBuffer->Signature = PartitionSector->Signature;
 	  DPRINT("Disk signature: %lx\n", LayoutBuffer->Signature);
@@ -853,11 +906,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	  if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
 	    {
 	      ExtendedFound = TRUE;
-	      if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
+	      if ((ULONGLONG) containerOffset == (ULONGLONG) 0)
 		{
 		  containerOffset = PartitionOffset;
 		}
-	      nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
+	      nextPartitionOffset = (ULONGLONG) containerOffset +
 		(ULONGLONG) PartitionSector->Partition[i].StartingBlock *
 		(ULONGLONG) SectorSize;
 	    }
@@ -878,14 +931,14 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	      else if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
-		    (ULONGLONG) containerOffset.QuadPart +
+		    (ULONGLONG) containerOffset +
 		    (ULONGLONG) PartitionSector->Partition[i].StartingBlock *
 		    (ULONGLONG) SectorSize;
 		}
 	      else
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
-		    (ULONGLONG)PartitionOffset.QuadPart +
+		    (ULONGLONG)PartitionOffset +
 		    ((ULONGLONG)PartitionSector->Partition[i].StartingBlock * (ULONGLONG)SectorSize);
 		}
 	      LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart =
@@ -951,10 +1004,13 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
   PPARTITION_SECTOR PartitionSector;
-  LARGE_INTEGER SectorOffset;
-  NTSTATUS Status;
+  LARGE_INTEGER RealPartitionOffset;
+  ULONGLONG PartitionOffset;
+  ULONGLONG NextPartitionOffset;
+  ULONGLONG ContainerOffset;
+  BOOLEAN ContainerEntry;
   ULONG i;
-
+  ULONG j;
   ULONG StartBlock;
   ULONG SectorCount;
   ULONG StartCylinder;
@@ -965,13 +1021,14 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   ULONG EndHead;
   ULONG lba;
   ULONG x;
+  NTSTATUS Status;
 
-  DPRINT("xHalIoWritePartitionTable(%p %lu %lu %lu %p)\n",
-	 DeviceObject,
-	 SectorSize,
-	 SectorsPerTrack,
-   NumberOfHeads,
-	 PartitionBuffer);
+  DPRINT1 ("xHalIoWritePartitionTable(%p %lu %lu %lu %p)\n",
+	   DeviceObject,
+	   SectorSize,
+	   SectorsPerTrack,
+	   NumberOfHeads,
+	   PartitionBuffer);
 
   assert(DeviceObject);
   assert(PartitionBuffer);
@@ -1000,136 +1057,180 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
       return STATUS_UNSUCCESSFUL;
     }
 
-
-  for (i = 0; i < PartitionBuffer->PartitionCount; i++)
+  /* Allocate partition sector */
+  PartitionSector = (PPARTITION_SECTOR)ExAllocatePool(PagedPool,
+						      SectorSize);
+  if (PartitionSector == NULL)
     {
-      if (IsContainerPartition(PartitionBuffer->PartitionEntry[i].PartitionType))
-        {
-          /* FIXME: Implement */
-          DPRINT1("Writing MBRs with extended partitions is not implemented\n");
-          return STATUS_UNSUCCESSFUL;
-        }
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-
-  SectorOffset.QuadPart = 0ULL;
-  Status = xHalpReadSector(DeviceObject,
-			   SectorSize,
-			   &SectorOffset,
-			   (PVOID *) &PartitionSector);
-    if (!NT_SUCCESS(Status))
+  Status = STATUS_SUCCESS;
+  PartitionOffset = 0ULL;
+  ContainerOffset = 0ULL;
+  for (i = 0; i < PartitionBuffer->PartitionCount; i += 4)
     {
-      DPRINT1("xHalpReadSector() failed (Status %lx)\n", Status);
-      return Status;
-    }
+      DPRINT1 ("PartitionOffset: %I64u\n", PartitionOffset);
+      DPRINT1 ("ContainerOffset: %I64u\n", ContainerOffset);
 
-  for (i = 0; i < PartitionBuffer->PartitionCount; i++)
-    {
-      if (PartitionBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED)
+      /* FIXME: Handle partition managers */
+      RealPartitionOffset.QuadPart = PartitionOffset;
+
+
+      /* Write modified partition tables */
+      if (PartitionBuffer->PartitionEntry[i].RewritePartition == TRUE ||
+	  PartitionBuffer->PartitionEntry[i + 1].RewritePartition == TRUE ||
+	  PartitionBuffer->PartitionEntry[i + 2].RewritePartition == TRUE ||
+	  PartitionBuffer->PartitionEntry[i + 3].RewritePartition == TRUE)
 	{
-          /*
-           * CHS formulas:
-           * x = LBA DIV SectorsPerTrack
-           * cylinder = x DIV NumberOfHeads
-           * head = x MOD NumberOfHeads
-           * sector = (LBA MOD SectorsPerTrack) + 1
-           */
+	  /* Read partition sector */
+	  Status = xHalpReadSector2 (DeviceObject,
+				     SectorSize,
+				     &RealPartitionOffset,
+				     PartitionSector);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1 ("xHalpReadSector2() failed (Status %lx)\n", Status);
+	      break;
+	    }
 
-          if (PartitionBuffer->PartitionEntry[i].BootIndicator)
-            {
-              PartitionSector->Partition[i].BootFlags |= 0x80;
-            }
-          else
-            {
-              PartitionSector->Partition[i].BootFlags &= ~0x80;
-            }
+	  /* Initialize a new partition sector */
+	  if (PartitionSector->Magic != PARTITION_MAGIC)
+	    {
+	      /* Create empty partition sector */
+	      RtlZeroMemory (PartitionSector,
+			     SectorSize);
+	      PartitionSector->Magic = PARTITION_MAGIC;
+	    }
 
-          PartitionSector->Partition[i].PartitionType = PartitionBuffer->PartitionEntry[i].PartitionType;
+	  /* Update partition sector entries */
+	  for (j = 0; j < 4; j++)
+	    {
+	      if (PartitionBuffer->PartitionEntry[i + j].RewritePartition == TRUE)
+		{
+		  /* Set partition boot flag */
+		  if (PartitionBuffer->PartitionEntry[i + j].BootIndicator)
+		    {
+		      PartitionSector->Partition[j].BootFlags |= 0x80;
+		    }
+		  else
+		    {
+		      PartitionSector->Partition[j].BootFlags &= ~0x80;
+		    }
 
-          /* Compute starting CHS values */
-          lba = (PartitionBuffer->PartitionEntry[i].StartingOffset.QuadPart / SectorSize);
-          StartBlock = lba; /* Save this for later */
-          x = lba / SectorsPerTrack;
-          StartCylinder = x / NumberOfHeads;
-          StartHead = x % NumberOfHeads;
-          StartSector = (lba % SectorsPerTrack) + 1;
-          DPRINT("StartingOffset (LBA:%d  C:%d  H:%d  S:%d)\n", lba, StartCylinder, StartHead, StartSector);
+		  /* Set partition type */
+		  PartitionSector->Partition[j].PartitionType =
+		    PartitionBuffer->PartitionEntry[i + j].PartitionType;
 
-          /* Compute ending CHS values */
-          lba = (PartitionBuffer->PartitionEntry[i].StartingOffset.QuadPart
-            + (PartitionBuffer->PartitionEntry[i].PartitionLength.QuadPart - 1)) / SectorSize;
-          SectorCount = lba - StartBlock; /* Save this for later */
-          x = lba / SectorsPerTrack;
-          EndCylinder = x / NumberOfHeads;
-          EndHead = x % NumberOfHeads;
-          EndSector = (lba % SectorsPerTrack) + 1;
-          DPRINT("EndingOffset (LBA:%d  C:%d  H:%d  S:%d)\n", lba, EndCylinder, EndHead, EndSector);
+		  /* Set partition data */
+		  if (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart == 0ULL &&
+		      PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart == 0ULL)
+		    {
+		      PartitionSector->Partition[j].StartingBlock = 0;
+		      PartitionSector->Partition[j].SectorCount = 0;
+		      PartitionSector->Partition[j].StartingCylinder = 0;
+		      PartitionSector->Partition[j].StartingHead = 0;
+		      PartitionSector->Partition[j].StartingSector = 0;
+		      PartitionSector->Partition[j].EndingCylinder = 0;
+		      PartitionSector->Partition[j].EndingHead = 0;
+		      PartitionSector->Partition[j].EndingSector = 0;
+		    }
+		  else
+		    {
+		      /*
+		       * CHS formulas:
+		       * x = LBA DIV SectorsPerTrack
+		       * cylinder = (x DIV NumberOfHeads) % 1024
+		       * head = x MOD NumberOfHeads
+		       * sector = (LBA MOD SectorsPerTrack) + 1
+		       */
 
-          /* Set startsector and sectorcount */
-          PartitionSector->Partition[i].StartingBlock = StartBlock;
-          PartitionSector->Partition[i].SectorCount = SectorCount;
+		      /* Compute starting CHS values */
+		      lba = (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart) / SectorSize;
+		      x = lba / SectorsPerTrack;
+		      StartCylinder = (x / NumberOfHeads) %1024;
+		      StartHead = x % NumberOfHeads;
+		      StartSector = (lba % SectorsPerTrack) + 1;
+		      DPRINT1 ("StartingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
+			       lba, StartCylinder, StartHead, StartSector);
 
-          /* Set starting CHS values */
-          PartitionSector->Partition[i].StartingCylinder = StartCylinder & 0xff;
-          PartitionSector->Partition[i].StartingHead = StartHead;
-          PartitionSector->Partition[i].StartingSector = ((StartCylinder & 0x0300) >> 2) + (StartSector & 0x3f);
+		      /* Compute ending CHS values */
+		      lba = (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart +
+			     (PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart - 1)) / SectorSize;
+		      x = lba / SectorsPerTrack;
+		      EndCylinder = (x / NumberOfHeads) % 1024;
+		      EndHead = x % NumberOfHeads;
+		      EndSector = (lba % SectorsPerTrack) + 1;
+		      DPRINT1 ("EndingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
+			       lba, EndCylinder, EndHead, EndSector);
 
-          /* Set ending CHS values */
-          PartitionSector->Partition[i].EndingCylinder = EndCylinder & 0xff;
-          PartitionSector->Partition[i].EndingHead = EndHead;
-          PartitionSector->Partition[i].EndingSector = ((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
+		      /* Set starting CHS values */
+		      PartitionSector->Partition[j].StartingCylinder = StartCylinder & 0xff;
+		      PartitionSector->Partition[j].StartingHead = StartHead;
+		      PartitionSector->Partition[j].StartingSector =
+			((StartCylinder & 0x0300) >> 2) + (StartSector & 0x3f);
+
+		      /* Set ending CHS values */
+		      PartitionSector->Partition[j].EndingCylinder = EndCylinder & 0xff;
+		      PartitionSector->Partition[j].EndingHead = EndHead;
+		      PartitionSector->Partition[j].EndingSector = 
+			((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
+
+		      /* Calculate start sector and sector count */
+		      StartBlock =
+			(PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart - ContainerOffset) / SectorSize;
+		      SectorCount =
+			PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart / SectorSize;
+		      DPRINT1 ("LBA (StartBlock:%lu  SectorCount:%lu)\n",
+			       StartBlock, SectorCount);
+
+		      /* Set start sector and sector count */
+		      PartitionSector->Partition[j].StartingBlock = StartBlock;
+		      PartitionSector->Partition[j].SectorCount = SectorCount;
+		    }
+		}
+	    }
+
+	  /* Write partition sector */
+	  Status = xHalpWriteSector (DeviceObject,
+				     SectorSize,
+				     &RealPartitionOffset,
+				     PartitionSector);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("xHalpWriteSector() failed (Status %lx)\n", Status);
+	      break;
+	    }
 	}
-      else
+
+      ContainerEntry = FALSE;
+      for (j = 0; j < 4; j++)
 	{
-	  PartitionSector->Partition[i].BootFlags = 0;
-	  PartitionSector->Partition[i].PartitionType = PARTITION_ENTRY_UNUSED;
-	  PartitionSector->Partition[i].StartingHead = 0;
-	  PartitionSector->Partition[i].StartingSector = 0;
-	  PartitionSector->Partition[i].StartingCylinder = 0;
-	  PartitionSector->Partition[i].EndingHead = 0;
-	  PartitionSector->Partition[i].EndingSector = 0;
-	  PartitionSector->Partition[i].EndingCylinder = 0;
-	  PartitionSector->Partition[i].StartingBlock = 0;
-	  PartitionSector->Partition[i].SectorCount = 0;
+	  if (IsContainerPartition (PartitionBuffer->PartitionEntry[i + j].PartitionType))
+	    {
+	      ContainerEntry = TRUE;
+	      NextPartitionOffset = 
+		PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart;
+
+	      if (ContainerOffset == 0ULL)
+		{
+		  ContainerOffset = NextPartitionOffset;
+		}
+	    }
 	}
+
+      if (ContainerEntry == FALSE)
+	{
+	  DPRINT ("No container entry in partition sector!\n");
+	  break;
+	}
+
+      PartitionOffset = NextPartitionOffset;
     }
 
+  ExFreePool (PartitionSector);
 
-  SectorOffset.QuadPart = 0ULL;
-  Status = xHalpWriteSector(DeviceObject,
-			    SectorSize,
-			    &SectorOffset,
-			    (PVOID) PartitionSector);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("xHalpWriteSector() failed (Status %lx)\n", Status);
-      ExFreePool(PartitionSector);
-      return Status;
-    }
-
-#ifndef NDEBUG
-  for (i = 0; i < PARTITION_TBL_SIZE; i++)
-    {
-      DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
-	      i,
-	      PartitionSector->Partition[i].BootFlags,
-	      PartitionSector->Partition[i].PartitionType,
-	      PartitionSector->Partition[i].StartingHead,
-	      PartitionSector->Partition[i].StartingSector & 0x3f,
-	      (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
-		 PartitionSector->Partition[i].StartingCylinder,
-	      PartitionSector->Partition[i].EndingHead,
-	      PartitionSector->Partition[i].EndingSector & 0x3f,
-	      (((PartitionSector->Partition[i].EndingSector) & 0xc0) << 2) +
-		 PartitionSector->Partition[i].EndingCylinder,
-	      PartitionSector->Partition[i].StartingBlock,
-	      PartitionSector->Partition[i].SectorCount);
-    }
-#endif
-
-  ExFreePool(PartitionSector);
-
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 /* EOF */
