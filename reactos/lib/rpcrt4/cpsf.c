@@ -114,7 +114,7 @@ static HRESULT WINAPI CStdPSFactory_CreateStub(LPPSFACTORYBUFFER iface,
                                   ProxyInfo->pStubVtblList[Index], iface, ppStub);
 }
 
-static ICOM_VTABLE(IPSFactoryBuffer) CStdPSFactory_Vtbl =
+static IPSFactoryBufferVtbl CStdPSFactory_Vtbl =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   CStdPSFactory_QueryInterface,

@@ -41,7 +41,7 @@ struct StublessThunk;
 /* I don't know what MS's std proxy structure looks like,
    so this probably doesn't match, but that shouldn't matter */
 typedef struct {
-  ICOM_VTABLE(IRpcProxyBuffer) *lpVtbl;
+  IRpcProxyBufferVtbl *lpVtbl;
   LPVOID *PVtbl;
   DWORD RefCount;
   const MIDL_STUBLESS_PROXY_INFO *stubless;
@@ -53,7 +53,9 @@ typedef struct {
   struct StublessThunk *thunks;
 } StdProxyImpl;
 
-static ICOM_VTABLE(IRpcProxyBuffer) StdProxy_Vtbl;
+static IRpcProxyBufferVtbl StdProxy_Vtbl;
+
+#define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 /* How the Windows stubless proxy thunks work is explained at
  * http://msdn.microsoft.com/library/en-us/dnmsj99/html/com0199.asp,
@@ -265,7 +267,7 @@ static VOID WINAPI StdProxy_Disconnect(LPRPCPROXYBUFFER iface)
   This->pChannel = NULL;
 }
 
-static ICOM_VTABLE(IRpcProxyBuffer) StdProxy_Vtbl =
+static IRpcProxyBufferVtbl StdProxy_Vtbl =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   StdProxy_QueryInterface,
