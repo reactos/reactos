@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.15 2003/07/21 05:53:15 royce Exp $
+/* $Id: stubsw.c,v 1.16 2003/07/21 19:05:53 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -306,22 +306,22 @@ GetOutlineTextMetricsW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetTextExtentExPointW(
-	HDC		hDc,
-	LPCWSTR		a1,
-	int		a2,
-	int		a3,
-	LPINT		a4,
-	LPINT		a5,
-	LPSIZE		a6
+	HDC		hdc,
+	LPCWSTR		lpszStr,
+	int		cchString,
+	int		nMaxExtent,
+	LPINT		lpnFit,
+	LPINT		alpDx,
+	LPSIZE		lpSize
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetTextExtentExPoint (
+    hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
 }
 
 
@@ -345,93 +345,87 @@ GetCharacterPlacementW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
 ResetDCW(
-	HDC		a0,
-	CONST DEVMODEW	*a1
+	HDC		hdc,
+	CONST DEVMODEW	*lpInitData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kResetDC ( hdc, lpInitData );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 RemoveFontResourceW(
-	LPCWSTR	a0
+	LPCWSTR	lpFileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kRemoveFontResource ( lpFileName );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HENHMETAFILE 
 STDCALL 
 CopyEnhMetaFileW(
-	HENHMETAFILE	a0, 
-	LPCWSTR		a1
+	HENHMETAFILE	hemfSrc,
+	LPCWSTR		lpszFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCopyEnhMetaFile ( hemfSrc, lpszFile );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HDC   
-STDCALL 
+HDC
+STDCALL
 CreateEnhMetaFileW(
-	HDC		a0, 
-	LPCWSTR		a1, 
-	CONST RECT	*a2, 
-	LPCWSTR		a3
+	HDC		hdc,
+	LPCWSTR		lpFileName,
+	CONST RECT	*lpRect,
+	LPCWSTR		lpDescription
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCreateEnhMetaFile ( hdc, lpFileName, (CONST LPRECT)lpRect, lpDescription );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HENHMETAFILE  
-STDCALL 
+HENHMETAFILE
+STDCALL
 GetEnhMetaFileW(
-	LPCWSTR	a0
+	LPCWSTR	lpszMetaFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kGetEnhMetaFile ( lpszMetaFile );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-UINT  
-STDCALL 
+UINT
+STDCALL
 GetEnhMetaFileDescriptionW(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPWSTR		a2
+	HENHMETAFILE	hemf,
+	UINT		cchBuffer,
+	LPWSTR		lpszDescription
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescription );
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.15 2003/07/21 05:53:15 royce Exp $
+/* $Id: stubsa.c,v 1.16 2003/07/21 19:05:52 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -175,7 +175,7 @@ CreateMetaFileA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -528,17 +528,33 @@ GetOutlineTextMetricsA(
 BOOL
 APIENTRY
 GetTextExtentExPointA(
-	HDC		hDc,
-	LPCSTR		a1,
-	int		a2,
-	int		a3,
-	LPINT		a4,
-	LPINT		a5,
-	LPSIZE		a6
+	HDC		hdc,
+	LPCSTR		lpszStr,
+	int		cchString,
+	int		nMaxExtent,
+	LPINT		lpnFit,
+	LPINT		alpDx,
+	LPSIZE		lpSize
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  NTSTATUS Status;
+  UNICODE_STRING Str;
+  BOOL rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Str,
+					      (PCSZ)lpszStr );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kGetTextExtentExPoint (
+    hdc, Str.Buffer, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
+
+  RtlFreeUnicodeString ( &Str );
+
+  return rc;
 }
 
 
@@ -562,93 +578,192 @@ GetCharacterPlacementA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
 ResetDCA(
-	HDC		a0,
-	CONST DEVMODEA	*a1
+	HDC		hdc,
+	CONST DEVMODEA	*lpInitData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  DEVMODEW InitDataW;
+
+  RosRtlDevModeA2W ( &InitDataW, (CONST LPDEVMODEA)lpInitData );
+
+  return W32kResetDC ( hdc, &InitDataW );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 RemoveFontResourceA(
-	LPCSTR	a0
+	LPCSTR	lpFileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  NTSTATUS Status;
+  UNICODE_STRING FileName;
+  BOOL rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FileName,
+					      (PCSZ)lpFileName );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kRemoveFontResource ( FileName.Buffer );
+
+  RtlFreeUnicodeString ( &FileName );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HENHMETAFILE 
-STDCALL 
+HENHMETAFILE
+STDCALL
 CopyEnhMetaFileA(
-	HENHMETAFILE	a0,
-	LPCSTR		a1
+	HENHMETAFILE	hemfSrc,
+	LPCSTR		lpszFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING File;
+  HENHMETAFILE rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &File,
+					      (PCSZ)lpszFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kCopyEnhMetaFile ( hemfSrc, File.Buffer );
+
+  RtlFreeUnicodeString ( &File );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HDC   
-STDCALL 
+HDC
+STDCALL
 CreateEnhMetaFileA(
-	HDC		a0,
-	LPCSTR		a1,
-	CONST RECT	*a2,
-	LPCSTR		a3
+	HDC		hdc,
+	LPCSTR		lpFileName,
+	CONST RECT	*lpRect,
+	LPCSTR		lpDescription
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING FileName, Description;
+  HDC rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FileName,
+					      (PCSZ)lpFileName );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Description,
+					      (PCSZ)lpDescription );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kCreateEnhMetaFile ( hdc, FileName.Buffer, (CONST LPRECT)lpRect, Description.Buffer );
+
+  RtlFreeUnicodeString ( &FileName );
+  RtlFreeUnicodeString ( &Description );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-HENHMETAFILE  
-STDCALL 
+HENHMETAFILE
+STDCALL
 GetEnhMetaFileA(
-	LPCSTR	a0
+	LPCSTR	lpszMetaFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING MetaFile;
+  HENHMETAFILE rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &MetaFile,
+					      (PCSZ)lpszMetaFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kGetEnhMetaFile ( MetaFile.Buffer );
+
+  RtlFreeUnicodeString ( &MetaFile );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT  
 STDCALL 
 GetEnhMetaFileDescriptionA(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPSTR		a2
+	HENHMETAFILE	hemf,
+	UINT		cchBuffer,
+	LPSTR		lpszDescription
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  HANDLE hHeap;
+  NTSTATUS Status;
+  LPWSTR lpszDescriptionW;
+  UINT rc;
+
+  if ( lpszDescription && cchBuffer )
+    {
+      hHeap = RtlGetProcessHeap();
+      lpszDescriptionW = RtlAllocateHeap ( hHeap, 0, cchBuffer );
+    }
+
+  rc = W32kGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
+
+  if ( lpszDescription && cchBuffer )
+    {
+      Status = RtlUnicodeToMultiByteN ( lpszDescription,
+	                                cchBuffer,
+	                                NULL,
+	                                lpszDescriptionW,
+	                                cchBuffer );
+      RtlFreeHeap ( hHeap, 0, lpszDescriptionW );
+      if ( !NT_SUCCESS(Status) )
+	{
+	  SetLastError (RtlNtStatusToDosError(Status));
+	  return 0;
+	}
+    }
+
+  return rc;
 }
 
 
