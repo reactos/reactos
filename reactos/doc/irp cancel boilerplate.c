@@ -38,10 +38,12 @@ QUEUE_BOLIERPLATE
    IoSetCancelRoutine(Irp, CancelRoutine);
    if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
    {              
-      // IRP has already been cancelled (before we got to queue it),
-      // but we got to remove the cancel routine before the canceler could, 
-      // so complete irp ourself
- 
+      /*
+      Irp has already been cancelled (before we got to queue it),
+      and we got to remove the cancel routine before the canceler could, 
+      so we cancel/complete the irp ourself.
+      */
+      
       Unlock(theLock);
  
       Irp->IoStatus.Status = STATUS_CANCELLED;
@@ -79,6 +81,10 @@ DEQUEUE_BOILERPLATE
       */
  
       InitializeListHead(&Irp->Tail.Overlay.ListEntry);
+      
+      Unlock(theLock);
+      
+      return;
    } 
  
  
