@@ -57,14 +57,11 @@ UINT CountInterfaces() {
 }
 
 NTSTATUS GetInterfaceSpeed( PIP_INTERFACE Interface, PUINT Speed ) {
-    NDIS_STATUS NdisStatus;
     PLAN_ADAPTER IF = (PLAN_ADAPTER)Interface->Context;
 
     *Speed = IF->Speed;
     
     return STATUS_SUCCESS;
-	NdisStatus != NDIS_STATUS_SUCCESS ? 
-	STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 }
 
 NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, 
