@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.37 2003/07/11 14:07:13 ekohl Exp $
+/* $Id: class2.c,v 1.38 2003/07/12 13:10:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -562,7 +562,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID STDCALL
 ScsiClassFindModePage(IN PCHAR ModeSenseBuffer,
@@ -570,7 +570,46 @@ ScsiClassFindModePage(IN PCHAR ModeSenseBuffer,
 		      IN UCHAR PageMode,
 		      IN BOOLEAN Use6Byte)
 {
-  UNIMPLEMENTED;
+  ULONG DescriptorLength;
+  ULONG HeaderLength;
+  PCHAR End;
+  PCHAR Ptr;
+
+  DPRINT("ScsiClassFindModePage() called\n");
+
+  /* Get header length */
+  HeaderLength = (Use6Byte) ? sizeof(MODE_PARAMETER_HEADER) : sizeof(MODE_PARAMETER_HEADER10);
+
+  /* Check header length */
+  if (Length < HeaderLength)
+    return NULL;
+
+  /* Get descriptor length */
+  if (Use6Byte == TRUE)
+    {
+      DescriptorLength = ((PMODE_PARAMETER_HEADER)ModeSenseBuffer)->BlockDescriptorLength;
+    }
+  else
+    {
+      DescriptorLength = ((PMODE_PARAMETER_HEADER10)ModeSenseBuffer)->BlockDescriptorLength[1];
+    }
+
+  /* Set page pointers */
+  Ptr = ModeSenseBuffer + HeaderLength + DescriptorLength;
+  End = ModeSenseBuffer + Length;
+
+  /* Search for page */
+  while (Ptr < End)
+    {
+      /* Check page code */
+      if (((PMODE_DISCONNECT_PAGE)Ptr)->PageCode == PageMode)
+	return Ptr;
+
+      /* Skip to next page */
+      Ptr += ((PMODE_DISCONNECT_PAGE)Ptr)->PageLength;
+    }
+
+  return NULL;
 }
 
 
@@ -914,10 +953,21 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 
       switch (SenseData->SenseKey & 0xf)
 	{
-	  /* FIXME: add more sense key codes */
-#if 0
 	  case SCSI_SENSE_NO_SENSE:
-#endif
+	    DPRINT("SCSI_SENSE_NO_SENSE\n");
+	    if (SenseData->IncorrectLength)
+	      {
+		DPRINT("Incorrect block length\n");
+		*Status = STATUS_INVALID_BLOCK_LENGTH;
+		Retry = FALSE;
+	      }
+	    else
+	      {
+		DPRINT("Unspecified error\n");
+		*Status = STATUS_IO_DEVICE_ERROR;
+		Retry = FALSE;
+	      }
+	    break;
 
 	  case SCSI_SENSE_RECOVERED_ERROR:
 	    DPRINT("SCSI_SENSE_RECOVERED_ERROR\n");
@@ -956,7 +1006,45 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	  case SCSI_SENSE_ILLEGAL_REQUEST:
 	    DPRINT("SCSI_SENSE_ILLEGAL_REQUEST\n");
 	    *Status = STATUS_INVALID_DEVICE_REQUEST;
-	    Retry = FALSE;
+	    switch (SenseData->AdditionalSenseCode)
+	      {
+		case SCSI_ADSENSE_ILLEGAL_COMMAND:
+		  DPRINT("SCSI_ADSENSE_ILLEGAL_COMMAND\n");
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_ILLEGAL_BLOCK:
+		  DPRINT("SCSI_ADSENSE_ILLEGAL_BLOCK\n");
+		  *Status = STATUS_NONEXISTENT_SECTOR;
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_INVALID_LUN:
+		  DPRINT("SCSI_ADSENSE_INVALID_LUN\n");
+		  *Status = STATUS_NO_SUCH_DEVICE;
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_MUSIC_AREA:
+		  DPRINT("SCSI_ADSENSE_MUSIC_AREA\n");
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_DATA_AREA:
+		  DPRINT("SCSI_ADSENSE_DATA_AREA\n");
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_VOLUME_OVERFLOW:
+		  DPRINT("SCSI_ADSENSE_VOLUME_OVERFLOW\n");
+		  Retry = FALSE;
+		  break;
+
+		case SCSI_ADSENSE_INVALID_CDB:
+		  DPRINT("SCSI_ADSENSE_INVALID_CDB\n");
+		  Retry = FALSE;
+		  break;
+	      }
 	    break;
 
 	  case SCSI_SENSE_UNIT_ATTENTION:
