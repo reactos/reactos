@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.21 2004/12/28 14:41:46 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -99,11 +99,13 @@ RunVMWInstall(VOID)
 #endif
 
 
-HRESULT CreateShellLink(LPCSTR linkPath, LPCSTR cmd, LPCSTR arg, LPCSTR dir, LPCSTR iconPath, int icon_nr, LPCSTR comment)
+HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir, LPCTSTR iconPath, int icon_nr, LPCTSTR comment)
 {
-  IShellLinkA* psl;
+  IShellLink* psl;
   IPersistFile* ppf;
+#ifndef _UNICODE
   WCHAR buffer[MAX_PATH];
+#endif /* _UNICODE */
 
   HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
 
@@ -135,9 +137,13 @@ HRESULT CreateShellLink(LPCSTR linkPath, LPCSTR cmd, LPCSTR arg, LPCSTR dir, LPC
 
       if (SUCCEEDED(hr))
         {
+#ifdef _UNICODE
+          hr = ppf->lpVtbl->Save(ppf, linkPath, TRUE);
+#else /* _UNICODE */
           MultiByteToWideChar(CP_ACP, 0, linkPath, -1, buffer, MAX_PATH);
 
           hr = ppf->lpVtbl->Save(ppf, buffer, TRUE);
+#endif /* _UNICODE */
 
           ppf->lpVtbl->Release(ppf);
         }
@@ -152,16 +158,16 @@ HRESULT CreateShellLink(LPCSTR linkPath, LPCSTR cmd, LPCSTR arg, LPCSTR dir, LPC
 static VOID
 CreateCmdLink(VOID)
 {
-  char path[MAX_PATH];
-  LPSTR p;
+  TCHAR path[MAX_PATH];
+  LPTSTR p;
 
   CoInitialize(NULL);
 
-  SHGetSpecialFolderPathA(0, path, CSIDL_DESKTOP, TRUE);
-  p = PathAddBackslashA(path);
+  SHGetSpecialFolderPath(0, path, CSIDL_DESKTOP, TRUE);
+  p = PathAddBackslash(path);
 
-  strcpy(p, "Command Prompt.lnk");
-  CreateShellLink(path, "cmd.exe", "", NULL, NULL, 0, "Open command prompt");
+  _tcscpy(p, _T("Command Prompt.lnk"));
+  CreateShellLink(path, _T("cmd.exe"), _T(""), NULL, NULL, 0, _T("Open command prompt"));
 
   CoUninitialize();
 }
