@@ -19,8 +19,8 @@
 # include <resolv.h>
 #endif
 
-#define NTOS_MODE_USER
-#include <ntos.h>
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x500
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
 #include <ntdll/rtl.h>
