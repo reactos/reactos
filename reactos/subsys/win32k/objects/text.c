@@ -2661,7 +2661,7 @@ BOOL
 STDCALL
 NtGdiRemoveFontResource(LPCWSTR  FileName)
 {
-  UNIMPLEMENTED;
+  DPRINT1("NtGdiRemoveFontResource is UNIMPLEMENTED\n");
   return FALSE;
 }
 
