@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.17 2003/04/06 10:45:16 chorns Exp $
+/* $Id: trap.s,v 1.18 2003/04/27 16:21:16 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -104,6 +104,7 @@ _KiTrapProlog:
 	
         /* Set the new previous mode based on the saved CS selector */
 	movl	 0x24(%esp), %ebx
+	andl     $0x0000FFFF, %ebx
 	cmpl     $KERNEL_CS, %ebx
 	jne      .L1
 	movb     $KernelMode, %ss:KTHREAD_PREVIOUS_MODE(%edi)
@@ -318,6 +319,7 @@ _KiTrap14:
 
 .globl _KiTrap15
 _KiTrap15:
+	pushl	$0
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%esi
@@ -326,6 +328,7 @@ _KiTrap15:
 
 .globl _KiTrap16
 _KiTrap16:
+	pushl	$0
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%esi
