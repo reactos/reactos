@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.28 2001/03/31 15:35:07 jfilby Exp $
+# $Id: makefile,v 1.29 2001/03/31 16:09:17 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -27,11 +27,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o objects/palette.o
 DIB_OBJECTS = dib/dib4bpp.o dib/dib24bpp.o
-FREETYPE_OBJECTS = freetype/grfont.o freetype/ctype.o \
-	freetype/ftsystem.o freetype/ftdebug.o freetype/ftinit.o freetype/ftbase.o \
-	freetype/ftglyph.o freetype/ftmm.o freetype/autohint.o freetype/cff.o \
-	freetype/type1cid.o freetype/psnames.o freetype/raster1.o freetype/sfnt.o \
-	freetype/smooth.o freetype/truetype.o freetype/winfnt.o freetype/type1z.o
+FREETYPE_OBJECTS = freetype/grfont.o
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
