@@ -31,8 +31,6 @@
 
 #include <eng/objects.h>
 #include <eng/misc.h>
-#include <eng/handle.h>
-#include <eng/clip.h>
 
 #include <include/misc.h>
 #include <include/color.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.24 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: path.c,v 1.24.2.1 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -72,7 +72,7 @@ NtGdiCloseFigure ( HDC hDC )
   if ( dc )
   {
     ret = IntCloseFigure ( dc );
-    DC_UnlockDc ( hDC );
+    DC_UnlockDc ( dc );
   }
 
   return ret;

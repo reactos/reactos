@@ -233,10 +233,10 @@ BOOL           FASTCALL IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJE
 #define DCHF_VALIDATEVISRGN     0x0002
 
 #define  DCEOBJ_AllocDCE()  \
-  ((HDCE) GDIOBJ_AllocObj (sizeof (DCE), GDI_OBJECT_TYPE_DCE, (GDICLEANUPPROC) DCE_InternalDelete))
-#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE, GDIOBJFLAG_DEFAULT)
+  ((HDCE) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_DCE))
+#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE)
 #define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE))
-#define  DCEOBJ_UnlockDCE(hDCE) GDIOBJ_UnlockObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE)
+#define  DCEOBJ_UnlockDCE(DCE) GDIOBJ_UnlockObj((PGDIOBJ)DCE)
 
 typedef enum
 {
@@ -260,10 +260,10 @@ typedef struct tagDCE
 PDCE           FASTCALL DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type);
 PDCE           FASTCALL DCE_FreeDCE(PDCE dce);
 VOID           FASTCALL DCE_FreeWindowDCE(PWINDOW_OBJECT);
+BOOL           FASTCALL DCE_Cleanup(PDCE pDce);
 HRGN           FASTCALL DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, PWINDOW_OBJECT Child, ULONG CFlags);
 INT            FASTCALL DCE_ExcludeRgn(HDC, PWINDOW_OBJECT, HRGN);
 BOOL           FASTCALL DCE_InvalidateDCE(PWINDOW_OBJECT, const PRECTL);
-BOOL           FASTCALL DCE_InternalDelete(PDCE dce);
 PWINDOW_OBJECT FASTCALL IntWindowFromDC(HDC hDc);
 PDCE           FASTCALL DceFreeDCE(PDCE dce);
 void           FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
@@ -293,6 +293,7 @@ NTSTATUS            FASTCALL IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width
 NTSTATUS            FASTCALL IntHideDesktop(PDESKTOP_OBJECT Desktop);
 HDESK               FASTCALL IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
 NTSTATUS            FASTCALL IntValidateDesktopHandle(HDESK Desktop, KPROCESSOR_MODE AccessMode, ACCESS_MASK DesiredAccess, PDESKTOP_OBJECT *Object);
+BOOL                FASTCALL IntPaintDesktop(HDC hDC);
 
 /* FOCUS **********************************************************************/
 

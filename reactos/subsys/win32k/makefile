@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.101.4.1 2004/07/15 20:07:17 weiden Exp $
+# $Id: makefile,v 1.101.4.2 2004/09/12 19:21:07 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -32,6 +32,7 @@ TARGET_CFLAGS =\
  -I$(PATH_TO_TOP)/ntoskrnl/include \
  -I$(FREETYPE_DIR)/include \
  -DUNICODE \
+ -DGDI_DEBUG \
  -Wall -Werror \
  -D__USE_W32API -D_WIN32_WINNT=0x0501 \
  -DWINVER=0x600 -D_WIN32K_
@@ -42,7 +43,7 @@ TARGET_LFLAGS =\
  --disable-stdcall-fixup
 
 ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
-    eng/clip.o eng/copybits.o eng/device.o eng/handle.o eng/lineto.o \
+    eng/clip.o eng/copybits.o eng/device.o eng/lineto.o \
     eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
     eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/sort.o \
     eng/gradient.o eng/event.o eng/float.o
@@ -62,13 +63,13 @@ NTUSER_OBJECTS = ntuser/ntuser.o ntuser/accelerator.o ntuser/callback.o ntuser/c
                  ntuser/vis.o ntuser/windc.o ntuser/window.o ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
-                  objects/color.o objects/coord.o objects/dc.o  \
-                  objects/fillshap.o objects/gdiobj.o objects/icm.o  \
-                  objects/line.o objects/metafile.o objects/paint.o  \
+                  objects/color.o objects/coord.o objects/cursoricon.o  \
+                  objects/dc.o objects/fillshap.o objects/gdiobj.o  \
+                  objects/icm.o objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/dib.o objects/palette.o \
-                  objects/rect.o objects/polyfill.o objects/cursoricon.o
+                  objects/rect.o objects/polyfill.o objects/stockobj.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o

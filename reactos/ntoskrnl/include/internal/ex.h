@@ -106,5 +106,9 @@ ExpSwapThreadEventPair(
 	IN struct _KEVENT_PAIR* EventPair
 	);
 
+LONGLONG
+FASTCALL
+ExfpInterlockedExchange64(LONGLONG volatile * Destination,
+	PLONGLONG Exchange);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

@@ -113,11 +113,25 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.62 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: region.c,v 1.62.2.1 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
 // Internal Functions
+
+#if 1
+#define COPY_RECTS(dest, src, nRects) \
+  do {                                \
+    PRECT xDest = (dest);             \
+    PRECT xSrc = (src);               \
+    UINT xRects = (nRects);           \
+    while(xRects-- > 0) {             \
+      *(xDest++) = *(xSrc++);         \
+    }                                 \
+  } while(0)
+#else
+#define COPY_RECTS(dest, src, nRects) RtlCopyMemory(dest, src, (nRects) * sizeof(RECT))
+#endif
 
 #define EMPTY_REGION(pReg) { \
   (pReg)->rdh.nCount = 0; \
@@ -382,8 +396,6 @@ typedef struct _ScanLineListBlock {
 #define LARGE_COORDINATE  0x7fffffff /* FIXME */
 #define SMALL_COORDINATE  0x80000000
 
-
-
 /*
  *   Check to see if there is enough memory in the present region.
  */
@@ -394,7 +406,10 @@ static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 
 		if (temp == 0)
 		    return 0;
-		RtlCopyMemory( temp, *firstrect, reg->rdh.nRgnSize );
+
+                /* copy the rectangles */
+                COPY_RECTS(temp, *firstrect, reg->rdh.nCount);
+                
 		reg->rdh.nRgnSize *= 2;
 		if (*firstrect != &reg->rdh.rcBound)
 		    ExFreePool( *firstrect );
@@ -446,7 +461,7 @@ IntDumpRegion(HRGN hRgn)
       Data->rdh.rcBound.bottom,
       Data->rdh.iType);
 
-   RGNDATA_UnlockRgn(hRgn);
+   RGNDATA_UnlockRgn(Data);
 }
 #endif /* NDEBUG */
 
@@ -473,7 +488,7 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
     dst->rdh.rcBound.right = src->rdh.rcBound.right;
     dst->rdh.rcBound.bottom = src->rdh.rcBound.bottom;
     dst->rdh.iType = src->rdh.iType;
-    RtlCopyMemory(dst->Buffer, src->Buffer, (int)(src->rdh.nCount * sizeof(RECT)));
+    COPY_RECTS(dst->Buffer, src->Buffer, src->rdh.nCount);
   }
   return TRUE;
 }
@@ -546,7 +561,9 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       ULONG i;
 
       if(rgnDst != rgnSrc)
-	  	RtlCopyMemory(rgnDst, rgnSrc, sizeof(ROSRGNDATA));
+      {
+	  	*rgnDst = *rgnSrc;
+      }
 
       if(off->x || off->y)
       {
@@ -563,7 +580,9 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
         rgnDst->rdh.rcBound.bottom += off->y;
       }
       else
-        RtlCopyMemory(xrect, rgnSrc->Buffer, rgnDst->rdh.nCount * sizeof(RECT));
+      {
+        COPY_RECTS(xrect, rgnSrc->Buffer, rgnDst->rdh.nCount);
+      }
 
 	  rgnDst->Buffer = xrect;
     } else
@@ -1137,7 +1156,7 @@ REGION_RegionOp(
 				newReg->Buffer = prev_rects;
 			else{
 				newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
-				RtlCopyMemory( newReg->Buffer, prev_rects, newReg->rdh.nRgnSize );
+				COPY_RECTS(newReg->Buffer, prev_rects, newReg->rdh.nCount);
 				if (prev_rects != &newReg->rdh.rcBound)
 					ExFreePool( prev_rects );
 			}
@@ -1700,7 +1719,7 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 
   trb = RGNDATA_LockRgn( htrb );
   if( !trb ){
-    RGNDATA_UnlockRgn( htra );
+    RGNDATA_UnlockRgn( tra );
     NtGdiDeleteObject( htra );
     NtGdiDeleteObject( htrb );
     return;
@@ -1709,8 +1728,8 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
   REGION_SubtractRegion(tra,sra,srb);
   REGION_SubtractRegion(trb,srb,sra);
   REGION_UnionRegion(dr,tra,trb);
-  RGNDATA_UnlockRgn( htra );
-  RGNDATA_UnlockRgn( htrb );
+  RGNDATA_UnlockRgn( tra );
+  RGNDATA_UnlockRgn( trb );
 
   NtGdiDeleteObject( htra );
   NtGdiDeleteObject( htrb );
@@ -1744,20 +1763,20 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
    }
    if (!REGION_NOT_EMPTY(srcObj))
    {
-      RGNDATA_UnlockRgn(hSrc);
+      RGNDATA_UnlockRgn(srcObj);
       return FALSE;
    }
    if (!(destObj = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
    {
-      RGNDATA_UnlockRgn(hSrc);
+      RGNDATA_UnlockRgn(srcObj);
       return FALSE;
    }
   
    EMPTY_REGION(destObj);
    if (!REGION_CopyRegion(destObj, srcObj))
    {
-      RGNDATA_UnlockRgn(hDest);
-      RGNDATA_UnlockRgn(hSrc);
+      RGNDATA_UnlockRgn(destObj);
+      RGNDATA_UnlockRgn(srcObj);
       return FALSE;
    }
   
@@ -1813,8 +1832,8 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
    }
    REGION_SubtractRegion(destObj, srcObj, destObj);
   
-   RGNDATA_UnlockRgn(hDest);
-   RGNDATA_UnlockRgn(hSrc);
+   RGNDATA_UnlockRgn(destObj);
+   RGNDATA_UnlockRgn(srcObj);
    return TRUE;
 }
 
@@ -1846,7 +1865,7 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
         goto done;
   if(!( destObj = (PROSRGNDATA) RGNDATA_LockRgn( hDest ) ))
   {
-    RGNDATA_UnlockRgn( hSrc );
+    RGNDATA_UnlockRgn( srcObj );
     goto done;
   }
   EMPTY_REGION(destObj);
@@ -1869,11 +1888,11 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   }
   ret = TRUE;
 
-  RGNDATA_UnlockRgn( hSrc );
-  RGNDATA_UnlockRgn( hDest );
+  RGNDATA_UnlockRgn( srcObj );
+  RGNDATA_UnlockRgn( destObj );
 
 done:
-  DC_UnlockDc( hdc );
+  DC_UnlockDc( dc );
   return ret;
 }
 
@@ -1883,8 +1902,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   PROSRGNDATA pReg;
   BOOL bRet;
 
-  if ((hReg = (HRGN) GDIOBJ_AllocObj(sizeof(ROSRGNDATA), GDI_OBJECT_TYPE_REGION,
-                                     (GDICLEANUPPROC) RGNDATA_InternalDelete)))
+  if ((hReg = (HRGN) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_REGION)))
     {
       if (NULL != (pReg = RGNDATA_LockRgn(hReg)))
         {
@@ -1906,7 +1924,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
               pReg->rdh.nCount = n;
               pReg->rdh.nRgnSize = n*sizeof(RECT);
 
-              bRet = RGNDATA_UnlockRgn(hReg);
+              bRet = RGNDATA_UnlockRgn(pReg);
               ASSERT(bRet);
 
               return hReg;
@@ -1921,9 +1939,9 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   return NULL;
 }
 
-BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
+BOOL FASTCALL
+RGNDATA_Cleanup(PROSRGNDATA pRgn)
 {
-  ASSERT(pRgn);
   if(pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
     ExFreePool(pRgn->Buffer);
   return TRUE;
@@ -2151,7 +2169,7 @@ NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
 	rect.bottom = bottom;
 	UnsafeIntUnionRectWithRgn( obj, &rect );
     }
-    RGNDATA_UnlockRgn( hrgn );
+    RGNDATA_UnlockRgn( obj );
     return hrgn;
 }
 
@@ -2169,7 +2187,7 @@ NtGdiEqualRgn(HRGN  hSrcRgn1,
 	return ERROR;
 
   if( !(rgn2 = RGNDATA_LockRgn(hSrcRgn2))){
-	RGNDATA_UnlockRgn( hSrcRgn1 );
+	RGNDATA_UnlockRgn( rgn1 );
 	return ERROR;
   }
 
@@ -2198,8 +2216,8 @@ NtGdiEqualRgn(HRGN  hSrcRgn1,
   bRet = TRUE;
 
 exit:
-  RGNDATA_UnlockRgn( hSrcRgn1 );
-  RGNDATA_UnlockRgn( hSrcRgn2 );
+  RGNDATA_UnlockRgn( rgn1 );
+  RGNDATA_UnlockRgn( rgn2 );
   return bRet;
 }
 
@@ -2228,7 +2246,7 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 
   if (NULL == (oldhBrush = NtGdiSelectObject(hDC, hBrush)))
     {
-      RGNDATA_UnlockRgn(hRgn);
+      RGNDATA_UnlockRgn(rgn);
       return FALSE;
     }
 
@@ -2237,8 +2255,8 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
       NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
     }
 
+  RGNDATA_UnlockRgn( rgn );
   NtGdiSelectObject(hDC, oldhBrush);
-  RGNDATA_UnlockRgn( hRgn );
 
   return TRUE;
 }
@@ -2297,7 +2315,7 @@ NtGdiGetRgnBox(HRGN  hRgn,
     }
 
   ret = UnsafeIntGetRgnBox(Rgn, &SafeRect);
-  RGNDATA_UnlockRgn(hRgn);
+  RGNDATA_UnlockRgn(Rgn);
   if (ERROR == ret)
     {
       return ret;
@@ -2332,13 +2350,13 @@ NtGdiInvertRgn(HDC  hDC,
     
     if(!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
     {
-      RGNDATA_UnlockRgn(hRgn);
+      RGNDATA_UnlockRgn(RgnData);
       return FALSE;
     }
     rc++;
   }
   
-  RGNDATA_UnlockRgn(hRgn);
+  RGNDATA_UnlockRgn(RgnData);
   return TRUE;
 }
 
@@ -2380,7 +2398,7 @@ NtGdiOffsetRgn(HRGN  hRgn,
     }
   }
   ret = rgn->rdh.iType;
-  RGNDATA_UnlockRgn( hRgn );
+  RGNDATA_UnlockRgn( rgn );
   return ret;
 }
 
@@ -2404,7 +2422,7 @@ NtGdiPaintRgn(HDC  hDC,
 	return FALSE;
 
   if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))){
-	DC_UnlockDc( hDC );
+	DC_UnlockDc( dc );
   	return FALSE;
   }
 
@@ -2412,7 +2430,7 @@ NtGdiPaintRgn(HDC  hDC,
   // Transform region into device co-ords
   if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
     NtGdiDeleteObject( tmpVisRgn );
-	DC_UnlockDc( hDC );
+	DC_UnlockDc( dc );
     return FALSE;
   }
 */
@@ -2424,7 +2442,7 @@ NtGdiPaintRgn(HDC  hDC,
   visrgn = RGNDATA_LockRgn(hRgn);
   if (visrgn == NULL)
   {
-  	DC_UnlockDc( hDC );
+  	DC_UnlockDc( dc );
     return FALSE;
   }
 
@@ -2438,6 +2456,7 @@ NtGdiPaintRgn(HDC  hDC,
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  /* FIXME - Handle BitmapObj == NULL !!!! */
 
   bRet = IntEngPaint(BitmapObj,
 	 ClipRegion,
@@ -2445,11 +2464,11 @@ NtGdiPaintRgn(HDC  hDC,
 	 &BrushOrigin,
 	 0xFFFF);//FIXME:don't know what to put here
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-  RGNDATA_UnlockRgn( tmpVisRgn );
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
+  RGNDATA_UnlockRgn( visrgn );
 
   // Fill the region
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return TRUE;
 }
 
@@ -2470,13 +2489,13 @@ NtGdiPtInRegion(HRGN  hRgn,
     r = (PRECT) rgn->Buffer;
     for(i = 0; i < rgn->rdh.nCount; i++) {
       if(INRECT(*r, X, Y)){
-	RGNDATA_UnlockRgn(hRgn);
+	RGNDATA_UnlockRgn(rgn);
 	return TRUE;
       }
       r++;
     }
   }
-  RGNDATA_UnlockRgn(hRgn);
+  RGNDATA_UnlockRgn(rgn);
   return FALSE;
 }
 
@@ -2519,13 +2538,13 @@ NtGdiRectInRegion(HRGN  hRgn,
 
   if (!NT_SUCCESS(MmCopyFromCaller(&rc, unsaferc, sizeof(RECT))))
     {
-      RGNDATA_UnlockRgn(hRgn);
+      RGNDATA_UnlockRgn(Rgn);
       DPRINT1("NtGdiRectInRegion: bogus rc\n");
       return ERROR;
     }
   
   Ret = UnsafeIntRectInRegion(Rgn, &rc);
-  RGNDATA_UnlockRgn(hRgn);
+  RGNDATA_UnlockRgn(Rgn);
   return Ret;
 }
 
@@ -2561,7 +2580,7 @@ NtGdiSetRectRgn(HRGN  hRgn,
   } else
     EMPTY_REGION(rgn);
 
-  RGNDATA_UnlockRgn( hRgn );
+  RGNDATA_UnlockRgn( rgn );
   return TRUE;
 }
 
@@ -2571,7 +2590,7 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
   RECT SafeRect;
   PROSRGNDATA Rgn;
   
-  if(!(Rgn = (PROSRGNDATA)RGNDATA_UnlockRgn(hDest)))
+  if(!(Rgn = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return NULL;
@@ -2579,13 +2598,13 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 
   if (! NT_SUCCESS(MmCopyFromCaller(&SafeRect, UnsafeRect, sizeof(RECT))))
     {
-      RGNDATA_UnlockRgn(hDest);
+      RGNDATA_UnlockRgn(Rgn);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return NULL;
     }
   
   UnsafeIntUnionRectWithRgn(Rgn, &SafeRect);
-  RGNDATA_UnlockRgn(hDest);
+  RGNDATA_UnlockRgn(Rgn);
   return hDest;
 }
 
@@ -2610,7 +2629,7 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
     size = obj->rdh.nCount * sizeof(RECT);
     if(count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
     {
-        RGNDATA_UnlockRgn( hrgn );
+        RGNDATA_UnlockRgn( obj );
 		if (rgndata) /* buffer is too small, signal it by return 0 */
 		    return 0;
 		else		/* user requested buffer size with rgndata NULL */
@@ -2619,15 +2638,15 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 
 	//first we copy the header then we copy buffer
 	if( !NT_SUCCESS( MmCopyToCaller( rgndata, obj, sizeof( RGNDATAHEADER )))){
-		RGNDATA_UnlockRgn( hrgn );
+		RGNDATA_UnlockRgn( obj );
 		return 0;
 	}
 	if( !NT_SUCCESS( MmCopyToCaller( (char*)rgndata+sizeof( RGNDATAHEADER ), obj->Buffer, size ))){
-		RGNDATA_UnlockRgn( hrgn );
+		RGNDATA_UnlockRgn( obj );
 		return 0;
 	}
 
-    RGNDATA_UnlockRgn( hrgn );
+    RGNDATA_UnlockRgn( obj );
     return size + sizeof(RGNDATAHEADER);
 }
 
@@ -2870,7 +2889,7 @@ static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
     }
     if(reg->Buffer != NULL)
     {
-      RtlCopyMemory(temp, reg->Buffer, reg->rdh.nCount * sizeof(RECT));
+      COPY_RECTS(temp, reg->Buffer, reg->rdh.nCount);
       if(reg->Buffer != &reg->rdh.rcBound)
         ExFreePool(reg->Buffer);
     }
@@ -3082,7 +3101,7 @@ IntCreatePolyPolgonRgn(POINT *Pts,
 	  (Pts[2].x == Pts[3].x) &&
 	  (Pts[3].y == Pts[0].y))))
     {
-        RGNDATA_UnlockRgn( hrgn );
+        RGNDATA_UnlockRgn( region );
 	NtGdiSetRectRgn( hrgn, min(Pts[0].x, Pts[2].x), min(Pts[0].y, Pts[2].y),
 		            max(Pts[0].x, Pts[2].x), max(Pts[0].y, Pts[2].y) );
 	return hrgn;
@@ -3215,7 +3234,7 @@ IntCreatePolyPolgonRgn(POINT *Pts,
 	curPtBlock = tmpPtBlock;
     }
     ExFreePool( pETEs );
-    RGNDATA_UnlockRgn( hrgn );
+    RGNDATA_UnlockRgn( region );
     return hrgn;
 }
 
@@ -3261,7 +3280,7 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
       
       EMPTY_REGION(rgn);
       
-      RGNDATA_UnlockRgn(hRgn);
+      RGNDATA_UnlockRgn(rgn);
       return hRgn;
    }
    

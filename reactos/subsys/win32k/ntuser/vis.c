@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.29.12.1 2004/07/15 20:07:18 weiden Exp $
+ * $Id: vis.c,v 1.29.12.2 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -111,7 +111,7 @@ VIS_ComputeVisibleRegion(
          }
       }
 
-      CurrentWindow = IntGetParentObject(CurrentWindow);
+      Window = CurrentWindow;
    }
 
    if (ClipChildren)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.76.2.2 2004/08/27 15:56:04 weiden Exp $
+/* $Id: mouse.c,v 1.76.2.3 2004/09/12 19:21:06 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -50,8 +50,10 @@ EnableMouse(HDC hDisplayDC)
     }
     
     dc = DC_LockDc(hDisplayDC);
+    /* FIXME - dc can be NULL!! Don't assert here! */
     ASSERT(dc);
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    /* FIXME - BitmapObj can be NULL!!!! Don't assert here! */
     ASSERT(BitmapObj);
     
     /* Move the cursor to the screen center */
@@ -62,8 +64,8 @@ EnableMouse(HDC hDisplayDC)
     ExReleaseFastMutex(&CurInfo->CursorMutex);
     
     GdiDev = GDIDEV(&BitmapObj->SurfObj);
-    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-    DC_UnlockDc( hDisplayDC );
+    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    DC_UnlockDc( dc );
     
     IntSetCursor(NULL, TRUE);
     
@@ -494,18 +496,14 @@ EngSetPointerShape(
       HPALETTE BWPalette, DestPalette;
       ULONG BWColors[] = {0, 0xFFFFFF};
       PDC Dc;
-      PPALGDI PalObj;
-      LONG DestMode;
 
       BWPalette = EngCreatePalette(PAL_INDEXED, sizeof(BWColors) / sizeof(ULONG),
          BWColors, 0, 0, 0);
       Dc = DC_LockDc(IntGetScreenDC());
+      /* FIXME - Handle DC == NULL!!!!! */
       DestPalette = Dc->w.hPalette;
-      PalObj = PALETTE_LockPalette(DestPalette);
-      DestMode = PalObj->Mode;
-      PALETTE_UnlockPalette(DestPalette);
-      DC_UnlockDc(IntGetScreenDC());
-      ppdev->PointerXlateObject = IntEngCreateXlate(DestMode, PAL_INDEXED,
+      DC_UnlockDc(Dc);
+      ppdev->PointerXlateObject = IntEngCreateXlate(0, PAL_INDEXED,
          DestPalette, BWPalette);
       EngDeletePalette(BWPalette);
    }

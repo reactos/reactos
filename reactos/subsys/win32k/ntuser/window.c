@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.5 2004/09/01 22:14:50 weiden Exp $
+/* $Id: window.c,v 1.244.2.6 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -229,10 +229,10 @@ IntDestroyWindow(PWINDOW_OBJECT Window,
     InterlockedCompareExchangePointer(&ProcessData->WindowStation->ShellListView, NULL, Window);
   }
   
-  #if 0
+#if 0
   /* Unregister hot keys */
   UnregisterWindowHotKeys (Window);
-  #endif
+#endif
 
   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
@@ -1857,7 +1857,7 @@ IntGetWindowRgn(PWINDOW_OBJECT WindowObject, HRGN hRgn)
   if((pRgn = RGNDATA_LockRgn(hRgn)))
   {
     Ret = pRgn->rdh.iType;
-    RGNDATA_UnlockRgn(hRgn);
+    RGNDATA_UnlockRgn(pRgn);
   }
   else
     Ret = ERROR;
@@ -1892,7 +1892,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT WindowObject, RECT *Rect)
   {
     Ret = pRgn->rdh.iType;
     *Rect = pRgn->rdh.rcBound;
-    RGNDATA_UnlockRgn(VisRgn);
+    RGNDATA_UnlockRgn(pRgn);
   }
   else
     Ret = ERROR;

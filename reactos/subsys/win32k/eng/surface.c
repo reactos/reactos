@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.44 2004/07/07 16:33:44 navaraf Exp $
+/* $Id: surface.c,v 1.44.4.1 2004/09/12 19:21:06 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -280,7 +280,7 @@ IntCreateBitmap(IN SIZEL Size,
             }
           if (SurfObj->pvBits == NULL)
             {
-              BITMAPOBJ_UnlockBitmap(NewBitmap);
+              BITMAPOBJ_UnlockBitmap(BitmapObj);
               BITMAPOBJ_FreeBitmap(NewBitmap);
               return 0;
             }
@@ -314,7 +314,7 @@ IntCreateBitmap(IN SIZEL Size,
   BitmapObj->dimension.cy = 0;
   BitmapObj->dib = NULL;
 
-  BITMAPOBJ_UnlockBitmap(NewBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return NewBitmap;
 }
@@ -368,7 +368,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
 
   BitmapObj->flHooks = 0;
 
-  BITMAPOBJ_UnlockBitmap(NewSurface);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return NewSurface;
 }
@@ -410,7 +410,7 @@ EngAssociateSurface(IN HSURF Surface,
   /* Hook up specified functions */
   BitmapObj->flHooks = Hooks;
 
-  BITMAPOBJ_UnlockBitmap(Surface);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return TRUE;
 }
@@ -490,6 +490,10 @@ EngLockSurface(IN HSURF Surface)
 VOID STDCALL
 EngUnlockSurface(IN SURFOBJ *Surface)
 {
-  BITMAPOBJ_UnlockBitmap ( Surface->hsurf );
+  /* FIXME - Determine the address of the PBITMAPOBJ structure, this is just a hack
+             as we know that the PSURFOBJ is the first field so we can just typecast it.
+             But it might change some day, so please fix this! */
+
+  BITMAPOBJ_UnlockBitmap ( (BITMAPOBJ*)Surface );
 }
 /* EOF */

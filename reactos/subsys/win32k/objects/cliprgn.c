@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.42 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.42.2.1 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 
 int FASTCALL
@@ -34,6 +34,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    NtGdiOffsetRgn(Dc->w.hGCClipRgn, Dc->w.DCOrgX, Dc->w.DCOrgY);
 
    CombinedRegion = RGNDATA_LockRgn(Dc->w.hGCClipRgn);
+   /* FIXME - CombinedRegion can be NULL!!!! Don't assert here ! */
    ASSERT(CombinedRegion != NULL);
 
    if (Dc->CombinedClip != NULL)
@@ -45,7 +46,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       (PRECTL)&CombinedRegion->rdh.rcBound);
    ASSERT(Dc->CombinedClip != NULL);
 
-   RGNDATA_UnlockRgn(Dc->w.hGCClipRgn);
+   RGNDATA_UnlockRgn(CombinedRegion);
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
@@ -58,18 +59,19 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   if (!dc) return 0;
 
   obj = RGNDATA_LockRgn(dc->w.hVisRgn);
+  /* FIXME - Handle obj == NULL!!! */
 
   if(!(copy = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
-    RGNDATA_UnlockRgn(dc->w.hVisRgn);
-    DC_UnlockDc(hdc);
+    RGNDATA_UnlockRgn(obj);
+    DC_UnlockDc(dc);
     return 0;
   }
   NtGdiCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
   copyObj = RGNDATA_LockRgn(copy);
 /*  copyObj->header.hNext = obj->header.hNext;
   header.hNext = copy; */
-
+  DC_UnlockDc(dc);
   return copy;
 }
 
@@ -100,7 +102,7 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   CLIPPING_UpdateGCRegion(dc);
-  DC_UnlockDc( hdc );
+  DC_UnlockDc( dc );
 
   return retval;
 }
@@ -133,7 +135,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
     }
     else
     {
-      DC_UnlockDc( hDC );
+      DC_UnlockDc( dc );
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return ERROR;
     }
@@ -147,7 +149,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
       if((Rgn = RGNDATA_LockRgn(dc->w.hVisRgn)))
       {
         UnsafeIntGetRgnBox(Rgn, &rect);
-        RGNDATA_UnlockRgn(dc->w.hVisRgn);
+        RGNDATA_UnlockRgn(Rgn);
         dc->w.hClipRgn = UnsafeIntCreateRectRgnIndirect(&rect);
       }
       else
@@ -164,7 +166,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   }
 
   retval = CLIPPING_UpdateGCRegion(dc);
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
 
   return retval;
 }
@@ -184,14 +186,14 @@ IntGdiGetClipBox(HDC hDC, LPRECT rc)
 
    if (!(Rgn = RGNDATA_LockRgn(dc->w.hGCClipRgn)))
    {
-      DC_UnlockDc( hDC );
+      DC_UnlockDc( dc );
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return ERROR;
    }
    retval = UnsafeIntGetRgnBox(Rgn, rc);
-   RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
+   RGNDATA_UnlockRgn(Rgn);
    IntDPtoLP(dc, (LPPOINT)rc, 2);
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return retval;
 }
@@ -269,7 +271,7 @@ int STDCALL NtGdiExcludeClipRect(HDC  hDC,
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return Result;
 }
@@ -319,7 +321,7 @@ int STDCALL NtGdiIntersectClipRect(HDC  hDC,
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return Result;
 }
@@ -346,7 +348,7 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
   }
   
   rgn = dc->w.hGCClipRgn;
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   
   return (rgn ? NtGdiPtInRegion(rgn, X, Y) : FALSE);
 }
@@ -369,7 +371,7 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
    Status = MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
    if(!NT_SUCCESS(Status))
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       return FALSE;
    }
 
@@ -379,10 +381,10 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
       {
          IntLPtoDP(dc, (LPPOINT)&Rect, 2);
          Result = UnsafeIntRectInRegion(Rgn, &Rect);
-         RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
+         RGNDATA_UnlockRgn(Rgn);
       }
    }
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
 
    return Result;
 }

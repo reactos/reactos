@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.144.2.1 2004/07/18 23:44:01 weiden Exp $
+/* $Id: dc.c,v 1.144.2.2 2004/09/12 19:21:08 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -47,7 +47,7 @@ func_type STDCALL  func_name( HDC hdc ) \
     return 0;                       \
   }                                 \
   ft = dc->dc_field;                \
-  DC_UnlockDc( hdc );				\
+  DC_UnlockDc( dc );				\
   return ft;                        \
 }
 
@@ -79,7 +79,7 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
     return FALSE; \
   } \
   Int##FuncName( dc, &Safept); \
-  DC_UnlockDc(hdc); \
+  DC_UnlockDc(dc); \
   Status = MmCopyToCaller(pt, &Safept, sizeof( type )); \
   if(!NT_SUCCESS(Status)) \
   { \
@@ -107,7 +107,7 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
   } \
   prevMode = dc->dc_field;                  \
   dc->dc_field = mode;                      \
-  DC_UnlockDc ( hdc );                    \
+  DC_UnlockDc ( dc );                    \
   return prevMode;                          \
 }
 
@@ -158,7 +158,7 @@ NtGdiCreateCompatableDC(HDC hDC)
 
   if (NULL == hNewDC)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(OrigDC);
       if (NULL != DisplayDC)
         {
           NtGdiDeleteDC(DisplayDC);
@@ -193,8 +193,8 @@ NtGdiCreateCompatableDC(HDC hDC)
   /* Create default bitmap */
   if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
     {
-      DC_UnlockDc( hDC );
-      DC_UnlockDc( hNewDC );
+      DC_UnlockDc( OrigDC );
+      DC_UnlockDc( NewDC );
       DC_FreeDC( hNewDC );
       if (NULL != DisplayDC)
         {
@@ -212,12 +212,12 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->w.textAlign = OrigDC->w.textAlign;
   NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
   NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( OrigDC );
   if (NULL != DisplayDC)
     {
       NtGdiDeleteDC(DisplayDC);
     }
-  DC_UnlockDc(hNewDC);
+  DC_UnlockDc(NewDC);
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
   NtGdiSelectVisRgn(hNewDC, hVisRgn);
@@ -720,6 +720,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   }
 
   NewDC = DC_LockDc( hNewDC );
+  /* FIXME - NewDC can be NULL!!! Don't assert here! */
   ASSERT( NewDC );
 
   NewDC->DMW = PrimarySurface.DMW;
@@ -751,7 +752,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
   
-  DC_UnlockDc( hNewDC );
+  DC_UnlockDc( NewDC );
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
                               SurfObj->sizlBitmap.cy);
@@ -854,7 +855,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     }
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
-	DC_UnlockDc( savedHDC );
+	DC_UnlockDc( savedDC );
     NtGdiDeleteDC (savedHDC);
   }
 
@@ -894,7 +895,7 @@ NtGdiDeleteDC(HDC  DCHandle)
 #if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
 #endif
-  DC_UnlockDc( DCHandle );
+  DC_UnlockDc( DCToDelete );
   DC_FreeDC ( DCHandle );
 
   return TRUE;
@@ -965,7 +966,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
       break;
   }
   
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   return SelObject;
 }
 
@@ -1007,11 +1008,11 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     return FALSE;
   }
   
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   return Ret;
 }
 
@@ -1031,7 +1032,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
   hBrush = dc->w.hBrush;
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc ( dc );
   NtGdiSelectObject(hDC, hBrush);
   return oldColor;
 }
@@ -1052,10 +1053,11 @@ NtGdiGetDCState(HDC  hDC)
   hnewdc = DC_AllocDC(NULL);
   if (hnewdc == NULL)
   {
-    DC_UnlockDc( hDC );
+    DC_UnlockDc( dc );
     return 0;
   }
   newdc = DC_LockDc( hnewdc );
+  /* FIXME - newdc can be NULL!!!! Don't assert here!!! */
   ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
@@ -1123,8 +1125,8 @@ NtGdiGetDCState(HDC  hDC)
     newdc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
     NtGdiCombineRgn( newdc->w.hClipRgn, dc->w.hClipRgn, 0, RGN_COPY );
   }
-  DC_UnlockDc( hnewdc );
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( newdc );
+  DC_UnlockDc( dc );
   return  hnewdc;
 }
 
@@ -1216,9 +1218,9 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	  dc->w.hClipRgn = 0;
 	}
 	CLIPPING_UpdateGCRegion( dc );
-	DC_UnlockDc ( hDC );
+	DC_UnlockDc ( dc );
 #else
-	DC_UnlockDc ( hDC );
+	DC_UnlockDc ( dc );
 	NtGdiSelectClipRgn(hDC, dcs->w.hClipRgn);
 #endif
 
@@ -1235,11 +1237,11 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
 #endif
       } else {
-	DC_UnlockDc(hDC);      
+	DC_UnlockDc(dc);
       }
-      DC_UnlockDc ( hDCSave );
+      DC_UnlockDc ( dcs );
     } else {
-      DC_UnlockDc ( hDC );
+      DC_UnlockDc ( dc );
       SetLastWin32Error(ERROR_INVALID_HANDLE);
     }
   }
@@ -1450,7 +1452,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
 
   DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
 
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return ret;
 }
 
@@ -1505,7 +1507,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
         break;
     }
 
-  GDIOBJ_UnlockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(GdiObject);
 
   return Result;
 }
@@ -1546,7 +1548,7 @@ DWORD STDCALL
 NtGdiGetObjectType(HANDLE handle)
 {
   GDIOBJHDR * ptr;
-  INT result = 0;
+  INT result;
   DWORD objectType;
 
   ptr = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
@@ -1598,11 +1600,13 @@ NtGdiGetObjectType(HANDLE handle)
     case GDI_OBJECT_TYPE_MEMDC:
       result = OBJ_MEMDC;
       break;
+
     default:
       DPRINT1("Magic 0x%08x not implemented\n", objectType);
+      result = 0;
       break;
   }
-  GDIOBJ_UnlockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(ptr);
   return result;
 }
 
@@ -1643,7 +1647,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
 
   if ((SaveLevel < 1) || (SaveLevel > dc->saveLevel))
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     return FALSE;
   }
 
@@ -1655,14 +1659,14 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     dcs = DC_LockDc (hdcs);
     if (dcs == NULL)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       return FALSE;
     }
     DC_SetNextDC (dcs, DC_GetNextDC (dcs));
     if (--dc->saveLevel < SaveLevel)
       {
-	DC_UnlockDc( hDC );
-        DC_UnlockDc( hdcs );
+	DC_UnlockDc( dc );
+        DC_UnlockDc( dcs );
         NtGdiSetDCState(hDC, hdcs);
 #if 0
         if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
@@ -1680,11 +1684,11 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
       }
     else
       {
-      DC_UnlockDc( hdcs );
+      DC_UnlockDc( dcs );
       }
     NtGdiDeleteDC (hdcs);
   }
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return  success;
 }
 
@@ -1711,7 +1715,7 @@ NtGdiSaveDC(HDC  hDC)
   dc = DC_LockDc (hDC);
   if (dc == NULL)
   {
-    DC_UnlockDc(dc);
+    DC_UnlockDc(dcs);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
@@ -1733,8 +1737,8 @@ NtGdiSaveDC(HDC  hDC)
   DC_SetNextDC (dcs, DC_GetNextDC (dc));
   DC_SetNextDC (dc, hdcs);
   ret = ++dc->saveLevel;
-  DC_UnlockDc( hdcs );
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dcs );
+  DC_UnlockDc( dc );
 
   return  ret;
 }
@@ -1776,7 +1780,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, pen, &Failed);
-      PENOBJ_UnlockPen((HPEN) hGDIObj);
+      PENOBJ_UnlockPen(pen);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1799,7 +1803,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, brush, &Failed);
-      BRUSHOBJ_UnlockBrush((HPEN) hGDIObj);
+      BRUSHOBJ_UnlockBrush(brush);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1814,23 +1818,25 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       break;
 
     case GDI_OBJECT_TYPE_FONT:
-      objOrg = (HGDIOBJ)dc->w.hFont;
-      dc->w.hFont = (HFONT) hGDIObj;
-      TextIntRealizeFont(dc->w.hFont);
+      if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
+      {
+        objOrg = (HGDIOBJ)dc->w.hFont;
+        dc->w.hFont = (HFONT) hGDIObj;
+      }
       break;
 
     case GDI_OBJECT_TYPE_BITMAP:
       // must be memory dc to select bitmap
       if (!(dc->w.flags & DC_MEMORY))
         {
-          DC_UnlockDc(hDC);
+          DC_UnlockDc(dc);
           return NULL;
         }
       pb = BITMAPOBJ_LockBitmap(hGDIObj);
       if (NULL == pb)
 	{
 	  SetLastWin32Error(ERROR_INVALID_HANDLE);
-          DC_UnlockDc(hDC);
+          DC_UnlockDc(dc);
 	  return NULL;
 	}
       objOrg = (HGDIOBJ)dc->w.hBitmap;
@@ -1868,16 +1874,16 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       NtGdiSelectObject ( hDC, dc->w.hBrush );
       NtGdiSelectObject ( hDC, dc->w.hPen );
 
-      DC_UnlockDc ( hDC );
+      DC_UnlockDc ( dc );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
+      BITMAPOBJ_UnlockBitmap( pb );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
-      BITMAPOBJ_UnlockBitmap(hGDIObj);
 
       return objOrg;
 
     case GDI_OBJECT_TYPE_REGION:
-      DC_UnlockDc (hDC);
+      DC_UnlockDc (dc);
       /*
        * The return value is one of the following values:
        *  SIMPLEREGION
@@ -1889,7 +1895,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     default:
       break;
   }
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return objOrg;
 }
 
@@ -1921,7 +1927,7 @@ NtGdiSetHookFlags(HDC hDC, WORD Flags)
       dc->w.flags &= ~DC_DIRTY;
     }
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return wRet;
 }
@@ -1951,7 +1957,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GDI_OBJECT_TYPE_DC, (GDICLEANUPPROC) DC_InternalDeleteDC);
+  hDC = (HDC) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DC);
   if (hDC == NULL)
   {
     if(Buf)
@@ -1962,6 +1968,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   }
 
   NewDC = DC_LockDc(hDC);
+  /* FIXME - Handle NewDC == NULL! */
   
   if (Driver != NULL)
   {
@@ -1991,7 +1998,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(NewDC);
 
   return  hDC;
 }
@@ -2021,17 +2028,16 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC, GDIOBJFLAG_DEFAULT))
+  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
   }
 }
 
 BOOL FASTCALL
-DC_InternalDeleteDC( PDC DCToDelete )
+DC_Cleanup( PDC pDC )
 {
-
-  RtlFreeUnicodeString(&DCToDelete->DriverName);
+  RtlFreeUnicodeString(&pDC->DriverName);
   return TRUE;
 }
 
@@ -2113,7 +2119,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         {
           GDIOBJ_CopyOwnership(hDC, DC->w.hGCClipRgn);
         }
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(DC);
     }
 }
 

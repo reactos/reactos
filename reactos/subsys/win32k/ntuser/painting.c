@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84.2.2 2004/08/31 11:38:56 weiden Exp $
+ *  $Id: painting.c,v 1.84.2.3 2004/09/12 19:21:07 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -786,12 +786,12 @@ IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase)
     }
   if (ERROR == UnsafeIntGetRgnBox(RgnData, Rect))
     {
-      RGNDATA_UnlockRgn(Rgn);
+      RGNDATA_UnlockRgn(RgnData);
       NtGdiDeleteObject(Rgn);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return FALSE;
     }
-  RGNDATA_UnlockRgn(Rgn);
+  RGNDATA_UnlockRgn(RgnData);
   NtGdiDeleteObject(Rgn);
 
   return ((Rect->left < Rect->right) && (Rect->top < Rect->bottom));
@@ -845,7 +845,7 @@ IntScrollDC(HDC hDC, INT dx, INT dy, LPRECT lprcScroll,
       NtGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
       IntDPtoLP(DC, (LPPOINT)&rDst_lp, 2);
       IntDPtoLP(DC, (LPPOINT)&rSrc_lp, 2);
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(DC);
 
       if (!NtGdiBitBlt(hDC, rDst_lp.left, rDst_lp.top, rDst_lp.right - rDst_lp.left,
                        rDst_lp.bottom - rDst_lp.top, hDC, rSrc_lp.left, rSrc_lp.top,
@@ -854,7 +854,7 @@ IntScrollDC(HDC hDC, INT dx, INT dy, LPRECT lprcScroll,
    }
    else
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(DC);
    }
 
    /*

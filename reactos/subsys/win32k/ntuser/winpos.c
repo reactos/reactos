@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.120.2.2 2004/09/01 22:14:50 weiden Exp $
+/* $Id: winpos.c,v 1.120.2.3 2004/09/12 19:21:08 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -788,7 +788,6 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
    if (Window == IntGetDesktopWindow() &&
        Window->MessageQueue->Thread->ThreadsProcess != PsGetCurrentProcess())
    {
-      IntReleaseWindowObject(Window);
       return FALSE;
    }
 
@@ -839,13 +838,13 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisBefore)) &&
           UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
-         RGNDATA_UnlockRgn(VisBefore);
+         RGNDATA_UnlockRgn(VisRgn);
          NtGdiDeleteObject(VisBefore);
          VisBefore = NULL;
       }
       else if(VisRgn)
       {
-         RGNDATA_UnlockRgn(VisBefore);
+         RGNDATA_UnlockRgn(VisRgn);
       }
    }
 
@@ -962,13 +961,13 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
    if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisAfter)) &&
        UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
    {
-      RGNDATA_UnlockRgn(VisAfter);
+      RGNDATA_UnlockRgn(VisRgn);
       NtGdiDeleteObject(VisAfter);
       VisAfter = NULL;
    }
    else if(VisRgn)
    {
-      RGNDATA_UnlockRgn(VisAfter);
+      RGNDATA_UnlockRgn(VisRgn);
    }
 
    /*
@@ -1023,7 +1022,7 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
           UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
       {
          /* Nothing to copy, clean up */
-         RGNDATA_UnlockRgn(CopyRgn);
+         RGNDATA_UnlockRgn(VisRgn);
          NtGdiDeleteObject(CopyRgn);
          CopyRgn = NULL;
       }
@@ -1032,7 +1031,7 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       {
          if(VisRgn)
          {
-            RGNDATA_UnlockRgn(CopyRgn);
+            RGNDATA_UnlockRgn(VisRgn);
          }
          /*
           * Small trick here: there is no function to bitblt a region. So
@@ -1058,7 +1057,7 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       }
       else if(VisRgn)
       {
-         RGNDATA_UnlockRgn(CopyRgn);
+         RGNDATA_UnlockRgn(VisRgn);
       }
    }
    else
@@ -1144,8 +1143,6 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       IntSendMessage(WinPos.Window, WM_WINDOWPOSCHANGED, 0, (LPARAM) &wp);
       WinPosToInternalWindowPosStructure(&WinPos, &wp);
    }
-
-   IntReleaseWindowObject(Window);
 
    return TRUE;
 }
@@ -1338,19 +1335,9 @@ WinPosSearchChildren(
 
    for(Current = ScopeWin->FirstChild; Current != NULL; Current = Current->NextSibling)
    {
-     if (!(Current->Style & WS_VISIBLE))
-     {
-        IntReleaseWindowObject(Current);
-        continue;
-     }
-
-     if ((Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
-         (WS_CHILD | WS_DISABLED))
-     {
-        continue;
-     }
-
-     if (!IntPtInWindow(Current, Point->x, Point->y))
+     if (!(Current->Style & WS_VISIBLE) ||
+         (Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) == (WS_CHILD | WS_DISABLED) ||
+         !IntPtInWindow(Current, Point->x, Point->y))
      {
         continue;
      }

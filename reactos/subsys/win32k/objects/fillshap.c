@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.52 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: fillshap.c,v 1.52.2.1 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 
 /*
@@ -59,6 +59,7 @@ IntGdiPolygon(PDC    dc,
     }
 
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
   ASSERT(BitmapObj);
 
       /* Convert to screen coordinates */
@@ -87,16 +88,18 @@ IntGdiPolygon(PDC    dc,
 
 	/* Now fill the polygon with the current brush. */
 	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+	/* FIXME - FillBrushObj can be NULL!!!!!!!! Don't Assert! */
 	ASSERT(FillBrushObj);
 	if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, dc->w.ROPmode, UnsafePoints, Count, DestRect );
 	}
-	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+	BRUSHOBJ_UnlockBrush(FillBrushObj);
 
 	/* get BRUSHOBJ from current pen. */
 	PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
+	/* FIXME - handle PenBrushObj == NULL !!!!! */
         IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
 	// Draw the Polygon Edges with the current pen ( if not a NULL pen )
@@ -128,10 +131,10 @@ IntGdiPolygon(PDC    dc,
 			       dc->w.ROPmode); /* MIX */
 	  }
 	}
+	PENOBJ_UnlockPen( PenBrushObj );
       }
 
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-      PENOBJ_UnlockPen( dc->w.hPen );
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
   
   return ret;
 }
@@ -242,7 +245,7 @@ NtGdiEllipse(
    FillBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
    if (NULL == FillBrush)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
    }
@@ -250,13 +253,14 @@ NtGdiEllipse(
    PenBrush = PENOBJ_LockPen(dc->w.hPen);
    if (NULL == PenBrush)
    {
-      PENOBJ_UnlockPen(dc->w.hPen);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrush);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   /* FIXME - BitmapObj can be NULL!!!! Don't assert but handle this case gracefully! */
    ASSERT(BitmapObj);
 
    IntGdiInitBrushInstance(&FillBrushInst, FillBrush, dc->XlateBrush);
@@ -379,10 +383,10 @@ NtGdiEllipse(
       }
    } while (B > A);
 
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-   PENOBJ_UnlockPen(dc->w.hPen);
-   DC_UnlockDc(hDC);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   BRUSHOBJ_UnlockBrush(FillBrush);
+   PENOBJ_UnlockPen(PenBrush);
+   DC_UnlockDc(dc);
 
    return ret;
 }
@@ -662,7 +666,7 @@ NtGdiPie(HDC  hDC,
   FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   if (NULL == FillBrushObj)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return FALSE;
     }
@@ -690,8 +694,8 @@ NtGdiPie(HDC  hDC,
   ShapePoints = ExAllocatePoolWithTag(PagedPool, 8 * (Right - Left + 1) / 2 * sizeof(SHAPEPOINT), TAG_SHAPE);
   if (NULL == ShapePoints)
     {
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+      DC_UnlockDc(dc);
 
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
@@ -700,8 +704,8 @@ NtGdiPie(HDC  hDC,
   if (Left == Right)
     {
       PUTPIXEL(Left, Top, &PenBrushObj);
-      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-      DC_UnlockDc(hDC);
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+      DC_UnlockDc(dc);
 
       return ret;
     }
@@ -786,8 +790,8 @@ NtGdiPie(HDC  hDC,
     }
 
   ExFreePool(ShapePoints);
-  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-  DC_UnlockDc(hDC);
+  BRUSHOBJ_UnlockBrush(FillBrushObj);
+  DC_UnlockDc(dc);
 
   return ret;
 #else
@@ -851,7 +855,7 @@ NtGdiPolygon(HDC          hDC,
         
       ExFreePool(Safept);
     }
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
   }
   
   return Ret;
@@ -883,7 +887,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
     if(!Safept)
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
@@ -893,7 +897,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Status = MmCopyFromCaller(Safept, Points, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -901,7 +905,7 @@ NtGdiPolyPolygon(HDC           hDC,
     Status = MmCopyFromCaller(SafePolyPoints, PolyCounts, sizeof(INT) * Count);
     if(!NT_SUCCESS(Status))
     {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -909,7 +913,7 @@ NtGdiPolyPolygon(HDC           hDC,
   }
   else
   {
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -917,7 +921,7 @@ NtGdiPolyPolygon(HDC           hDC,
   Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
   
   ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   
   return Ret;
 }
@@ -937,6 +941,7 @@ IntRectangle(PDC dc,
   RECTL      DestRect;
 
   ASSERT ( dc ); // caller's responsibility to set this up
+  /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT ( BitmapObj );
 
   if ( PATH_IsPathOpen(dc->w.path) )
@@ -956,6 +961,7 @@ IntRectangle(PDC dc,
     DestRect.bottom = BottomRect;
 
     FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+    /* FIXME - Handle FillBrushObj == NULL !!!! */
     IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
 
     if ( FillBrushObj )
@@ -976,14 +982,14 @@ IntRectangle(PDC dc,
       }
     }
 
-    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+    BRUSHOBJ_UnlockBrush(FillBrushObj);
 
     /* get BRUSHOBJ from current pen. */
     PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
     if (PenBrushObj == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
       return FALSE;
     }
 
@@ -1024,10 +1030,10 @@ IntRectangle(PDC dc,
 			 dc->w.ROPmode); // MIX */
     }
 
-    PENOBJ_UnlockPen(dc->w.hPen);
+    PENOBJ_UnlockPen(PenBrushObj);
   }
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   /* Move current position in DC?
      MSDN: The current position is neither used nor updated by Rectangle. */
@@ -1054,7 +1060,7 @@ NtGdiRectangle(HDC  hDC,
   }
   
   ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc ( dc );
 
   return ret;
 }
@@ -1105,21 +1111,24 @@ IntRoundRect(
   RectBounds.bottom = bottom;
 
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  /* FIXME - BitmapObj can be NULL!!!! Handle this case gracefully instead of ASSERT! */
   ASSERT(BitmapObj);
 
   FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  /* FIXME - Don't assert if FillBrushObj == NULL, handle this case !!!! */
   ASSERT(FillBrushObj);
   if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
   {
-    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+    BRUSHOBJ_UnlockBrush(FillBrushObj);
     FillBrushObj = NULL; // make null brush check simpler...
   }
 
   PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
+  /* FIXME - PenBrushObject can be NULL!!! Don't assert!!!! */
   ASSERT(PenBrushObj);
   if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
   {
-    PENOBJ_UnlockPen(dc->w.hPen);
+    PENOBJ_UnlockPen(PenBrushObj);
     PenBrushObj = NULL;
   }
 
@@ -1303,9 +1312,10 @@ IntRoundRect(
     PUTLINE ( left,  y2,     left,  y1,     PenBrushInst );
   }
 
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-  PENOBJ_UnlockPen(dc->w.hPen);
-  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
+  if(PenBrushObj != NULL)
+    PENOBJ_UnlockPen(PenBrushObj);
+  BRUSHOBJ_UnlockBrush(FillBrushObj);
 
   return ret;
 }
@@ -1333,7 +1343,7 @@ NtGdiRoundRect(
   else
   {
     ret = IntRoundRect ( dc, LeftRect, TopRect, RightRect, BottomRect, Width, Height );
-    DC_UnlockDc ( hDC );
+    DC_UnlockDc ( dc );
   }
 
   return ret;
@@ -1410,12 +1420,14 @@ IntGdiGradientFill(
   Extent.bottom += DitherOrg.y;
   
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT(BitmapObj);
   
   PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
+  /* FIXME - PalDestGDI can be NULL!!! Don't assert but handle this case gracefully! */
   ASSERT(PalDestGDI);
   Mode = PalDestGDI->Mode;
-  PALETTE_UnlockPalette(dc->w.hPalette);
+  PALETTE_UnlockPalette(PalDestGDI);
   
   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   ASSERT(XlateObj);
@@ -1431,7 +1443,7 @@ IntGdiGradientFill(
                            &DitherOrg,
                            ulMode);
   
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+  BITMAPOBJ_UnlockBitmap(BitmapObj);
   EngDeleteXlate(XlateObj);
   
   return Ret;
@@ -1462,7 +1474,7 @@ NtGdiGradientFill(
   }
   if(!pVertex || !uVertex || !pMesh || !uMesh)
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
@@ -1477,21 +1489,21 @@ NtGdiGradientFill(
       SizeMesh = uMesh * sizeof(TRIVERTEX);
       break;
     default:
-      DC_UnlockDc(hdc);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
 
   if(!(SafeVertex = ExAllocatePoolWithTag(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh, TAG_SHAPE)))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
   Status = MmCopyFromCaller(SafeVertex, pVertex, uVertex * sizeof(TRIVERTEX));
   if(!NT_SUCCESS(Status))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     ExFreePool(SafeVertex);
     SetLastNtError(Status);
     return FALSE;
@@ -1500,7 +1512,7 @@ NtGdiGradientFill(
   Status = MmCopyFromCaller(SafeMesh, pMesh, SizeMesh);
   if(!NT_SUCCESS(Status))
   {
-    DC_UnlockDc(hdc);
+    DC_UnlockDc(dc);
     ExFreePool(SafeVertex);
     SetLastNtError(Status);
     return FALSE;
@@ -1508,7 +1520,7 @@ NtGdiGradientFill(
   
   Ret = IntGdiGradientFill(dc, SafeVertex, uVertex, SafeMesh, uMesh, ulMode);
   
-  DC_UnlockDc(hdc);
+  DC_UnlockDc(dc);
   ExFreePool(SafeVertex);
   return Ret;
 }

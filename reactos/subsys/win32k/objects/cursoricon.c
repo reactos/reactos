@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.63.2.1 2004/07/15 20:07:19 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.63.2.2 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 
 #define COLORCURSORS_ALLOWED FALSE
@@ -43,7 +43,7 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
    {
       return OldCursor;
    }
-  
+   else
    {
       if(!(Screen = IntGetScreenDC()))
       {
@@ -58,9 +58,10 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
       }
   
       BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+      /* FIXME - BitmapObj can be NULL!!!!! */
       SurfObj = &BitmapObj->SurfObj;
       DevInfo = dc->DevInfo;
-      DC_UnlockDc(Screen);
+      DC_UnlockDc(dc);
    }
   
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
@@ -77,13 +78,13 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
 
       CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
       CurInfo->ShowingCursor = 0;
-      BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
       return OldCursor;
    }
   
    if (!NewCursor)
    {
-      BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
       return OldCursor;
    }
 
@@ -94,9 +95,10 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
    if (MaskBmpObj)
    {
       const int maskBpp = BitsPerFormat(MaskBmpObj->SurfObj.iBitmapFormat);
-      BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+      BITMAPOBJ_UnlockBitmap(MaskBmpObj);
       if (maskBpp != 1)
       {
+         BITMAPOBJ_UnlockBitmap(BitmapObj);
          DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
          return OldCursor;
       }
@@ -143,7 +145,7 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
             soMask = EngLockSurface((HSURF)hMask);
             EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
               &DestRect, &SourcePoint);
-            BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+            BITMAPOBJ_UnlockBitmap(MaskBmpObj);
           }
         }
       }
@@ -192,7 +194,7 @@ IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
     
     SetPointerRect(CurInfo, &PointerRect);
     
-    BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
+    BITMAPOBJ_UnlockBitmap(BitmapObj);
     if(hMask)
     {
       EngUnlockSurface(soMask);
@@ -388,7 +390,7 @@ IntGetCursorIconSize(PCURSOR_OBJECT Cursor,
   Size->cx = bmp->SurfObj.sizlBitmap.cx;
   Size->cy = (hbmp != Cursor->IconInfo.hbmMask ? bmp->SurfObj.sizlBitmap.cy : bmp->SurfObj.sizlBitmap.cy / 2);
   
-  BITMAPOBJ_UnlockBitmap(hbmp);
+  BITMAPOBJ_UnlockBitmap(bmp);
   
   return TRUE;
 }

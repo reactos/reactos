@@ -163,6 +163,7 @@ NtUserCallNextHookEx(
 #define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO	0xffff0005
 #define NOPARAM_ROUTINE_ANYPOPUP	0xffff0006
 #define NOPARAM_ROUTINE_CSRSS_INITIALIZED	0xffff0007
+#define NOPARAM_ROUTINE_GDI_QUERY_TABLE	0xffff0008
 DWORD
 STDCALL
 NtUserCallNoParam(
@@ -211,6 +212,10 @@ NtUserCallOneParam(
 #define TWOPARAM_ROUTINE_SETCARETPOS        0x60
 #define TWOPARAM_ROUTINE_GETWINDOWINFO      0x61
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0x62
+#define TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES 0x63
+#define TWOPARAM_ROUTINE_GETSYSCOLORPENS    0x64
+#define TWOPARAM_ROUTINE_GETSYSCOLORS       0x65
+#define TWOPARAM_ROUTINE_SETSYSCOLORS       0x66
 DWORD
 STDCALL
 NtUserCallTwoParam(
@@ -1769,6 +1774,14 @@ typedef struct tagKMDDELPARAM
       LPARAM Unpacked;
     } Value;
 } KMDDELPARAM, *PKMDDELPARAM;
+
+typedef struct _GDI_TABLE_ENTRY
+{
+  PVOID KernelData; /* Points to the kernel mode structure */
+  LONG ProcessId;   /* process id that created the object, 0 for stock objects */
+  LONG Type;        /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
+  PVOID UserData;   /* Points to the user mode structure, usually NULL though */
+} GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 
 #endif /* __WIN32K_NTUSER_H */
 

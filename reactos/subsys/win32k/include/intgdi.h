@@ -145,5 +145,19 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2);
 
+/* Stock objects */
+
+BOOL FASTCALL
+IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
+
+BOOL FASTCALL
+IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes);
+
+BOOL FASTCALL
+IntGetSysColorPens(HPEN *Pens, UINT nPens);
+
+BOOL FASTCALL
+IntGetSysColors(COLORREF *Colors, UINT nColors);
+
 #endif /* _WIN32K_INTGDI_H */
 

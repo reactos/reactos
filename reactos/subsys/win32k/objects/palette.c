@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.20 2004/06/22 20:08:17 gvg Exp $ */
+/* $Id: palette.c,v 1.20.4.1 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 
 #ifndef NO_MAPPING
@@ -36,12 +36,12 @@ PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID)
   return COLOR_sysPal;
 }
 
-static BOOL FASTCALL
-PALETTE_InternalDelete(PPALGDI Palette)
+BOOL FASTCALL
+PALETTE_Cleanup(PPALGDI pPal)
 {
-  if (NULL != Palette->IndexedColors)
+  if (NULL != pPal->IndexedColors)
     {
-      ExFreePool(Palette->IndexedColors);
+      ExFreePool(pPal->IndexedColors);
     }
 
   return TRUE;
@@ -58,13 +58,14 @@ PALETTE_AllocPalette(ULONG Mode,
   HPALETTE NewPalette;
   PPALGDI PalGDI;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(sizeof(PALGDI), GDI_OBJECT_TYPE_PALETTE, (GDICLEANUPPROC) PALETTE_InternalDelete);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;
     }
 
   PalGDI = PALETTE_LockPalette(NewPalette);
+  /* FIXME - PalGDI can be NULL!!! Don't assert here! */
   ASSERT( PalGDI );
 
   PalGDI->Self = NewPalette;
@@ -75,7 +76,7 @@ PALETTE_AllocPalette(ULONG Mode,
       PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
       if (NULL == PalGDI->IndexedColors)
 	{
-	  PALETTE_UnlockPalette(NewPalette);
+	  PALETTE_UnlockPalette(PalGDI);
 	  PALETTE_FreePalette(NewPalette);
 	  return NULL;
 	}
@@ -93,7 +94,7 @@ PALETTE_AllocPalette(ULONG Mode,
       PalGDI->BlueMask = Blue;
     }
 
-  PALETTE_UnlockPalette(NewPalette);
+  PALETTE_UnlockPalette(PalGDI);
 
   return NewPalette;
 }
@@ -106,13 +107,14 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   PPALGDI PalGDI;
   unsigned i;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(sizeof(PALGDI), GDI_OBJECT_TYPE_PALETTE, (GDICLEANUPPROC) PALETTE_InternalDelete);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;
     }
 
   PalGDI = PALETTE_LockPalette(NewPalette);
+  /* FIXME - PalGDI can be NULL!!! Don't assert here! */
   ASSERT( PalGDI );
 
   PalGDI->Self = NewPalette;
@@ -121,7 +123,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
   if (NULL == PalGDI->IndexedColors)
     {
-      PALETTE_UnlockPalette(NewPalette);
+      PALETTE_UnlockPalette(PalGDI);
       PALETTE_FreePalette(NewPalette);
       return NULL;
     }
@@ -135,7 +137,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
 
   PalGDI->NumColors = NumColors;
 
-  PALETTE_UnlockPalette(NewPalette);
+  PALETTE_UnlockPalette(PalGDI);
 
   return NewPalette;
 }
@@ -177,7 +179,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
       DbgPrint("Win32k: Can not create palette mapping -- out of memory!");
       return FALSE;
     }
-    PALETTE_UnlockPalette(hpalette);
+    PALETTE_UnlockPalette(palObj);
   }
 #endif
 
@@ -227,9 +229,10 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   HPALETTE hSysPal = NtGdiGetStockObject(DEFAULT_PALETTE);
   PPALGDI pSysPal = PALETTE_LockPalette(hSysPal);
   PPALGDI palGDI = (PPALGDI) palPtr;
+  /* FIXME - handle pSysPal == NULL!!!!!!! */
 
   COLOR_sysPal = pSysPal->IndexedColors;
-  PALETTE_UnlockPalette(hSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
+  PALETTE_UnlockPalette(pSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
 
 
   // reset dynamic system palette entries

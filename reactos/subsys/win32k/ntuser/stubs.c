@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.5 2004/09/01 22:14:50 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.6 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -737,19 +737,6 @@ NtUserGetQueueStatus(BOOL ClearChanges)
    return 0;
 }
 
-
-/*
- * Painting
- */
-
-
-BOOL STDCALL
-NtUserUpdateWindow(HWND hWnd)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
 /*
  * Scroll
  */
@@ -1022,14 +1009,6 @@ NtUserFlashWindowEx(DWORD Unknown0)
 {
    UNIMPLEMENTED;
    return 0;
-}
-
-
-BOOL STDCALL
-NtUserPaintDesktop(HDC hDC)
-{
-   UNIMPLEMENTED;
-   return FALSE;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.20.2.1 2004/07/18 23:44:01 weiden Exp $ */
+/* $Id: print.c,v 1.20.2.2 2004/09/12 19:21:08 weiden Exp $ */
 #include <w32k.h>
 
 INT
@@ -85,6 +85,8 @@ IntGdiExtEscape(
    BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    INT Result;
 
+   /* FIXME - Handle BitmapObj == NULL !!!!!! */
+
    if ( NULL == dc->DriverFunctions.Escape )
    {
       Result = IntEngExtEscape(
@@ -105,7 +107,7 @@ IntGdiExtEscape(
          OutSize,
          (PVOID)OutData );
    }
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
 
    return Result;
 }
@@ -137,7 +139,7 @@ NtGdiExtEscape(
       SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, TAG_PRINT );
       if ( !SafeInData )
       {
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
@@ -145,7 +147,7 @@ NtGdiExtEscape(
       if ( !NT_SUCCESS(Status) )
       {
          ExFreePool ( SafeInData );
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastNtError(Status);
          return -1;
       }
@@ -158,7 +160,7 @@ NtGdiExtEscape(
       {
          if ( SafeInData )
             ExFreePool ( SafeInData );
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
@@ -166,7 +168,7 @@ NtGdiExtEscape(
 
    Result = IntGdiExtEscape ( pDC, Escape, InSize, SafeInData, OutSize, SafeOutData );
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(pDC);
 
    if ( SafeInData )
       ExFreePool ( SafeInData );

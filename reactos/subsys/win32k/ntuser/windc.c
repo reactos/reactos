@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.66.12.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: windc.c,v 1.66.12.2 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,8 +82,9 @@ DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type)
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
   
   Dce = DCEOBJ_LockDCE(DceHandle);
-  /* No real locking, just get the pointer */
-  DCEOBJ_UnlockDCE(DceHandle);
+  /* FIXME - Dce can be NULL!!!!
+     No real locking, just get the pointer */
+  DCEOBJ_UnlockDCE(Dce);
   Dce->Handle = DceHandle;
   Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
   if (NULL == defaultDCstate)
@@ -146,7 +147,7 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	  dc->w.DCOrgY = WindowObject->ClientRect.top;
 	}
     }
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 }
 
 
@@ -517,24 +518,24 @@ IntGetDCEx(PWINDOW_OBJECT Window, HRGN ClipRegion, ULONG Flags)
 }
 
 BOOL FASTCALL
-DCE_InternalDelete(PDCE Dce)
+DCE_Cleanup(PDCE pDce)
 {
   PDCE PrevInList;
   
   /* FIXME - check global lock */
   
-  if (Dce == FirstDce)
+  if (pDce == FirstDce)
     {
-      FirstDce = Dce->next;
-      PrevInList = Dce;
+      FirstDce = pDce->next;
+      PrevInList = pDce;
     }
   else
     {
       for (PrevInList = FirstDce; NULL != PrevInList; PrevInList = PrevInList->next)
 	{
-	  if (Dce == PrevInList->next)
+	  if (pDce == PrevInList->next)
 	    {
-	      PrevInList->next = Dce->next;
+	      PrevInList->next = pDce->next;
 	      break;
 	    }
 	}
@@ -718,7 +719,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
                   NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
                 }
             }
-          DC_UnlockDc(pDCE->hDC);
+          DC_UnlockDc(dc);
 
           DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
         }

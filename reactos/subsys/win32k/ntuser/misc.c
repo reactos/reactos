@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.83.2.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: misc.c,v 1.83.2.2 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -300,6 +300,9 @@ IntSystemParametersInfo(
       FocusBorderWidth = (UINT)pvParam;
       return TRUE;
     }
+    
+    case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
+      return (DWORD)GDI_MapHandleTable(NtCurrentProcess());
     
     default:
     {

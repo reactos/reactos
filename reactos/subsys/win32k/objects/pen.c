@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: pen.c,v 1.16 2004/07/14 20:48:58 navaraf Exp $
+ * $Id: pen.c,v 1.16.2.1 2004/09/12 19:21:08 weiden Exp $
  */
 #include <w32k.h>
 
@@ -42,6 +42,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
    }
 
    PenObject = PENOBJ_LockPen(hPen);  
+   /* FIXME - Handle PenObject == NULL!!! */
    PenObject->ptPenWidth = LogPen->lopnWidth;
    PenObject->ulPenStyle = LogPen->lopnStyle;
    PenObject->BrushAttr.lbColor = LogPen->lopnColor;
@@ -65,7 +66,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
          UNIMPLEMENTED;
    }
 
-   PENOBJ_UnlockPen(hPen);
+   PENOBJ_UnlockPen(PenObject);
   
    return hPen;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.56 2004/07/03 13:55:36 navaraf Exp $
+ * $Id: dib.c,v 1.56.4.1 2004/09/12 19:21:08 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -31,15 +31,15 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
    if (BitmapObj->dib == NULL)
    {
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-      DC_UnlockDc(hDC);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
@@ -60,8 +60,8 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
    else
       Entries = 0;
 
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-   DC_UnlockDc(hDC);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   DC_UnlockDc(dc);
 
    return Entries;
 }
@@ -77,15 +77,15 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
    if (BitmapObj->dib == NULL)
    {
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-      DC_UnlockDc(hDC);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
@@ -101,8 +101,8 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    else
       Entries = 0;
 
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-   DC_UnlockDc(hDC);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   DC_UnlockDc(dc);
 
    return Entries;
 }
@@ -167,13 +167,13 @@ IntSetDIBits(
     {
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(hBitmap);
+      BITMAPOBJ_UnlockBitmap(bitmap);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
   DDB_Palette_Type = hDCPalette->Mode;
   DDB_Palette = DC->DevInfo->hpalDefault;
-  PALETTE_UnlockPalette(DC->DevInfo->hpalDefault);
+  PALETTE_UnlockPalette(hDCPalette);
 
   // Source palette obtained from the BITMAPINFO
   DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
@@ -181,7 +181,7 @@ IntSetDIBits(
     {
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(hBitmap);
+      BITMAPOBJ_UnlockBitmap(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -193,7 +193,7 @@ IntSetDIBits(
       PALETTE_FreePalette(DIB_Palette);
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(hBitmap);
+      BITMAPOBJ_UnlockBitmap(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -225,7 +225,7 @@ IntSetDIBits(
 //  if (ColorUse == DIB_PAL_COLORS)
 //    WinFree((LPSTR)lpRGB);
 
-  BITMAPOBJ_UnlockBitmap(hBitmap);
+  BITMAPOBJ_UnlockBitmap(bitmap);
 
   return result;
 }
@@ -253,7 +253,7 @@ NtGdiSetDIBits(
 
   Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(Dc);
 
   return Ret;
 }
@@ -314,7 +314,7 @@ NtGdiGetDIBits(HDC hDC,
    hSourcePalette = Dc->w.hPalette;
    /* FIXME: This is incorrect. hDestPalette should be something other. */
    hDestPalette = Dc->DevInfo->hpalDefault;
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(Dc);
 
    /* Get pointer to the source bitmap object. */
    BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
@@ -385,11 +385,13 @@ NtGdiGetDIBits(HDC hDC,
          DestSurfObj = EngLockSurface((HSURF)DestBitmap);
 
          SourcePalette = PALETTE_LockPalette(hSourcePalette);
+         /* FIXME - SourcePalette can be NULL!!! Don't assert here! */
          ASSERT(SourcePalette);
          SourcePaletteType = SourcePalette->Mode;
-         PALETTE_UnlockPalette(hSourcePalette);
+         PALETTE_UnlockPalette(SourcePalette);
 
          DestPalette = PALETTE_LockPalette(hDestPalette);
+         /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
          ASSERT(DestPalette);
          DestPaletteType = DestPalette->Mode;
          
@@ -418,7 +420,7 @@ NtGdiGetDIBits(HDC hDC,
             }
          }
 
-         PALETTE_UnlockPalette(hDestPalette);
+         PALETTE_UnlockPalette(DestPalette);
 
          XlateObj = IntEngCreateXlate(
             DestPaletteType, SourcePaletteType, hDestPalette, hSourcePalette);
@@ -443,7 +445,7 @@ NtGdiGetDIBits(HDC hDC,
       }
    }
 
-   BITMAPOBJ_UnlockBitmap(hBitmap);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
 
    return Result;
 }
@@ -527,7 +529,7 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
   if (Bits == NULL)
   {
     ret = bmp->SurfObj.cjBits;
-    BITMAPOBJ_UnlockBitmap (hBitmap);
+    BITMAPOBJ_UnlockBitmap (bmp);
     return ret;
   }
 
@@ -547,7 +549,7 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
   if (Count == 0)
   {
     DPRINT("Less then one entire line requested\n");
-    BITMAPOBJ_UnlockBitmap (hBitmap);
+    BITMAPOBJ_UnlockBitmap (bmp);
     return  0;
   }
 
@@ -578,7 +580,7 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
     ret = Count;
   }
 
-  BITMAPOBJ_UnlockBitmap (hBitmap);
+  BITMAPOBJ_UnlockBitmap (bmp);
 
   return  ret;
 }
@@ -680,7 +682,7 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
 
   Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
 
-  DC_UnlockDc(hDc);
+  DC_UnlockDc(Dc);
 
   return Bmp;
 }
@@ -707,7 +709,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   {
     hbitmap = DIB_CreateDIBSection ( dc, (BITMAPINFO*)bmi, Usage, Bits,
       hSection, dwOffset, 0);
-    DC_UnlockDc(hDC);
+    DC_UnlockDc(dc);
   }
 
   if (bDesktopDC)
@@ -774,6 +776,11 @@ DIB_CreateDIBSection(
   if (bm.bmBits)
   {
     dib = ExAllocatePoolWithTag(PagedPool, sizeof(DIBSECTION), TAG_DIB);
+    if(dib == NULL)
+    {
+      DPRINT("DIB_CreateDIBSection: Failed to allocate memory for the DIBSECTION\n");
+      return 0;
+    }
     RtlZeroMemory(dib, sizeof(DIBSECTION));
   }
 
@@ -809,11 +816,8 @@ DIB_CreateDIBSection(
     }
     dib->dshSection = section;
     dib->dsOffset = offset;
-  }
-
-  // Create Device Dependent Bitmap and add DIB pointer
-  if (dib)
-  {
+    
+    // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
     Size.cy = bm.bmHeight;
     res = IntCreateBitmap(Size, bm.bmWidthBytes,
@@ -840,8 +844,15 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 4) { Entries = 16; } else
     if(bi->biBitCount == 8) { Entries = 256; }
 
-    bmp->ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
-    RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
+    if(Entries > 0)
+    {
+      if((bmp->ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP)))
+      {
+        RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
+      }
+    }
+    else
+      bmp->ColorMap = NULL;
   }
 
   // Clean up in case of errors
@@ -863,7 +874,7 @@ DIB_CreateDIBSection(
 
   if (bmp)
     {
-      BITMAPOBJ_UnlockBitmap(res);
+      BITMAPOBJ_UnlockBitmap(bmp);
     }
 
   // Return BITMAP handle and storage location
@@ -1029,7 +1040,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       lpIndex++;
     }
 //    RELEASEDCINFO(hDC);
-  PALETTE_UnlockPalette(dc->w.hPalette);
+  PALETTE_UnlockPalette(palGDI);
 
   return lpRGB;
 }

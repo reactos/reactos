@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17.2.4 2004/09/01 22:14:50 weiden Exp $
+ *  $Id: desktop.c,v 1.17.2.5 2004/09/12 19:21:07 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -112,14 +112,15 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
     PDC dc;
     BITMAPOBJ *BitmapObj;
     dc = DC_LockDc(ScreenDeviceContext);
+    /* FIXME - Handle dc == NULL!!!! */
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
     if(BitmapObj)
     {
       Ret->right = BitmapObj->SurfObj.sizlBitmap.cx;
       Ret->bottom = BitmapObj->SurfObj.sizlBitmap.cy;
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
     }
-    DC_UnlockDc(ScreenDeviceContext);
+    DC_UnlockDc(dc);
   }
   
   if(Rect)
@@ -694,28 +695,31 @@ NtUserCloseDesktop(HDESK hDesktop)
 BOOL FASTCALL
 IntPaintDesktop(HDC hDC)
 {
-  RECT Rect;
-  HBRUSH DesktopBrush, PreviousBrush;
-  PWINDOW_OBJECT WndDesktop;
+  PWINDOW_OBJECT DesktopWindow;
+  BOOL Ret = FALSE;
 
-  IntGdiGetClipBox(hDC, &Rect);
-
-  if(!(WndDesktop = IntGetDesktopWindow()))
+  DesktopWindow = IntGetDesktopWindow();
+  if(DesktopWindow != NULL)
   {
-    return FALSE;
+    HRGN hRgn;
+    hRgn = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->ClientRect);
+    if(hRgn != NULL)
+    {
+      int type = IntGetUpdateRgn(DesktopWindow, hRgn, FALSE);
+      if(type == COMPLEXREGION || type == SIMPLEREGION)
+      {
+        HBRUSH hDesktopBrush = (HBRUSH)IntGetClassLong(DesktopWindow, GCL_HBRBACKGROUND, FALSE);
+        if(hDesktopBrush != NULL)
+        {
+          Ret = NtGdiFillRgn(hDC, hRgn, hDesktopBrush);
+        }
+      }
+
+      NtGdiDeleteObject(hRgn);
+    }
   }
-  
-  DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE);
 
-  /*
-   * Paint desktop background
-   */
-
-  PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
-  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-  NtGdiSelectObject(hDC, PreviousBrush);
-
-  return TRUE;
+  return Ret;
 }
 
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.5 2004/09/01 22:14:50 weiden Exp $
+/* $Id: input.c,v 1.36.4.6 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -532,7 +532,7 @@ IntMouseInput(MOUSEINPUT *mi)
     DesktopWindow = WinSta->InputDesktop->DesktopWindow;
     if (DesktopWindow != NULL)
     {
-      DbgPrint("DesktopWindow 0x%x: %d, %d\n", DesktopWindow, DesktopWindow->ClientRect.right, DesktopWindow->ClientRect.bottom);
+      DbgPrint("DesktopWindow 0x%x: %d, %d\n", DesktopWindow->Handle, DesktopWindow->ClientRect.right, DesktopWindow->ClientRect.bottom);
       if(MousePos.x >= DesktopWindow->ClientRect.right)
         MousePos.x = DesktopWindow->ClientRect.right - 1;
       if(MousePos.y >= DesktopWindow->ClientRect.bottom)
@@ -574,7 +574,7 @@ IntMouseInput(MOUSEINPUT *mi)
     if (dc)
     {
       hBitmap = dc->w.hBitmap;
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
       
       BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
       if (BitmapObj)
@@ -585,7 +585,7 @@ IntMouseInput(MOUSEINPUT *mi)
         {
           GDIDEV(SurfObj)->MovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
         }
-        BITMAPOBJ_UnlockBitmap(hBitmap);
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
         
         ExAcquireFastMutex(&CurInfo->CursorMutex);
         SetPointerRect(CurInfo, &PointerRect);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.8 2004/09/01 22:14:50 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.9 2004/09/12 19:21:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,12 +33,10 @@
  */
 
 #define BEGIN_NTUSER(ReturnType, ErrorReturn) \
-  ReturnType Result, ErrorResult = ErrorReturn; \
-  DbgPrint("%s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__)
+  ReturnType Result, ErrorResult = ErrorReturn
 
 #define BEGIN_NTUSER_NOERR(ReturnType) \
-  ReturnType Result; \
-  DbgPrint("%s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__)
+  ReturnType Result
 
 #define END_NTUSER() \
   if(IN_CRITICAL()) \
@@ -69,7 +67,7 @@ error: \
     goto error; \
   }
 
-/* FIXME - Prope SizeMember first!!! */
+/* FIXME - Probe SizeMember first!!! */
 #define NTUSER_FAIL_INVALID_STRUCT(StructType, StructAddr, SizeMember) \
   if((StructAddr)->SizeMember != sizeof(StructType)) \
   { \
@@ -417,14 +415,14 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   {
     sz.cx = bmp->SurfObj.sizlBitmap.cx;
     sz.cy = bmp->SurfObj.sizlBitmap.cy;
-    BITMAPOBJ_UnlockBitmap(SafeInfo.hbmColor);
+    BITMAPOBJ_UnlockBitmap(bmp);
   }
   else if(SafeInfo.hbmMask && 
           (bmp = BITMAPOBJ_LockBitmap(SafeInfo.hbmMask)))
   {
     sz.cx = bmp->SurfObj.sizlBitmap.cx;
     sz.cy = bmp->SurfObj.sizlBitmap.cy / 2;
-    BITMAPOBJ_UnlockBitmap(SafeInfo.hbmMask);
+    BITMAPOBJ_UnlockBitmap(bmp);
   }
   
   ENTER_CRITICAL();
@@ -1097,6 +1095,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     NTSTATUS Status;
     
     MsgCopyKMsgToMsg(&(Info.Msg), &(Msg.Msg));
+    DbgPrint("GotMessage for window 0x%x (h: 0x%x)\n", Msg.Msg.Window, (Msg.Msg.Window ? Msg.Msg.Window->Handle : NULL));
     
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
@@ -1406,6 +1405,18 @@ NtUserInvalidateRgn(HWND hWnd, HRGN Rgn, BOOL Erase)
   LEAVE_CRITICAL();
   
   END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserPaintDesktop(HDC hDC)
+{
+  BEGIN_NTUSER_NOERR(BOOL);
+  
+  ENTER_CRITICAL_SHARED();
+  Result = IntPaintDesktop(hDC);
+  LEAVE_CRITICAL();
+  
+  END_NTUSER_NOERR();
 }
 
 BOOL STDCALL
@@ -2072,6 +2083,11 @@ NtUserSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy
     VALIDATE_USER_OBJECT(WINDOW, hWndInsertAfter, InsertAfterWindow);
   }
   Result = WinPosSetWindowPos(Window, InsertAfterWindow, X, Y, cx, cy, uFlags);
+  if(hWnd == (HWND)1)
+  {
+    DbgPrint("SetWindowPos(w): %i,%i,%i,%i\n", Window->WindowRect.left, Window->WindowRect.top, Window->WindowRect.right, Window->WindowRect.bottom);
+    DbgPrint("SetWindowPos(c): %i,%i,%i,%i\n", Window->ClientRect.left, Window->ClientRect.top, Window->ClientRect.right, Window->ClientRect.bottom);
+  }
   LEAVE_CRITICAL();
 
   END_NTUSER();
@@ -2200,6 +2216,25 @@ NtUserTranslateMessage(LPMSG lpMsg,
   Result = IntTranslateKbdMessage(&KMsg, dwhkl);
   LEAVE_CRITICAL();
   
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserUpdateWindow(HWND hWnd)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(BOOL, FALSE);
+
+  ENTER_CRITICAL();
+  if(hWnd != NULL)
+  {
+    VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  }
+
+  Result = IntUpdateWindow(Window);
+
+  LEAVE_CRITICAL();
+
   END_NTUSER();
 }
 
