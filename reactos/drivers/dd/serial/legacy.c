@@ -62,7 +62,11 @@ SerialDetectUartType(
 	{
 		case 0x00:
 			return Uart16450;
+		case 0x40:
 		case 0x80:
+			/* Not sure about this but the documentation says that 0x40
+			 * indicates an unusable FIFO but my tests only worked
+			 * with 0x80 */
 			return Uart16550;
 	}
 	
