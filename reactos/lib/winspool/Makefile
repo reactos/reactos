@@ -20,8 +20,7 @@ TARGET_CFLAGS = \
  -D__REACTOS__ \
  -D__USE_W32API \
  -DUNICODE \
- -DLE \
- -DDBG
+ -DLE
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
