@@ -7,7 +7,7 @@ Module Name:
     util.c
 
 Abstract:
-	
+
 Environment:
 
     Kernel mode only
@@ -36,12 +36,13 @@ Copyright notice:
 #include <asm/page.h>
 #include <asm/pgtable.h>
 #include <linux/fs.h>
-#include <linux/vmalloc.h>
 #include <asm/uaccess.h>
 #include <asm/delay.h>
 #include <linux/types.h>
 #include <linux/string.h>
 #include <linux/ctype.h>
+
+#include <defines.h>
 
 
 ////////////////////////////////////////////////////
@@ -129,10 +130,10 @@ SCANTOASCII ucShiftScanToAscii_US[]=
 // FUNCTIONS
 ////
 
-//************************************************************************* 
-// PICE_memset() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_memset()
+//
+//*************************************************************************
 void PICE_memset(void* p,unsigned char c,int sz)
 {
     unsigned char *p2 = (unsigned char *)p;
@@ -140,19 +141,19 @@ void PICE_memset(void* p,unsigned char c,int sz)
         *p2++ = c;
 }
 
-//************************************************************************* 
-// PICE_memcpy() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_memcpy()
+//
+//*************************************************************************
 void PICE_memcpy(void* t,void* s,int sz)
 {
     memcpy(t,s,sz);
 }
 
-//************************************************************************* 
-// PICE_isprint() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_isprint()
+//
+//*************************************************************************
 BOOLEAN PICE_isprint(char c)
 {
 	BOOLEAN bResult = FALSE;
@@ -163,10 +164,10 @@ BOOLEAN PICE_isprint(char c)
 	return bResult;
 }
 
-//************************************************************************* 
-// PICE_strchr() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_strchr()
+//
+//*************************************************************************
 char* PICE_strchr(char* s,char c)
 {
     while(IsAddressValid((ULONG)s) && *s)
@@ -187,10 +188,10 @@ char* PICE_strchr(char* s,char c)
     return NULL;
 }
 
-//************************************************************************* 
-// PICE_strncpy() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_strncpy()
+//
+//*************************************************************************
 char* PICE_strncpy(char* s1,char* s2,int len)
 {
 	ULONG len2 =  PICE_strlen(s2);
@@ -199,41 +200,41 @@ char* PICE_strncpy(char* s1,char* s2,int len)
 		PICE_memcpy(s1,s2,len2+1);
 	else
 		PICE_memcpy(s1,s2,len);
-	
+
 	return s1;
 }
 
-//************************************************************************* 
-// PICE_strcpy() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_strcpy()
+//
+//*************************************************************************
 char* PICE_strcpy(char* s1,char* s2)
 {
 	ULONG len2 =  PICE_strlen(s2);
 
 	PICE_memcpy(s1,s2,len2+1);
-	
+
 	return s1;
 }
 
-//************************************************************************* 
-// PICE_strcat() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_strcat()
+//
+//*************************************************************************
 char* PICE_strcat(char* s1,char* s2)
 {
 	ULONG len1 = PICE_strlen(s1);
 	ULONG len2 = PICE_strlen(s2);
 
 	PICE_memcpy(&s1[len1],s2,len2+1);
-	
+
 	return s1;
 }
 
-//************************************************************************* 
-// PICE_toupper() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// PICE_toupper()
+//
+//*************************************************************************
 char PICE_toupper(char c)
 {
 	if(c>='a' && c<='z')
@@ -312,7 +313,7 @@ char c;
 // PICE_strlen()
 //
 // my version of strlen()
-// 
+//
 // does a page validity check on every character in th string
 //*************************************************************************
 USHORT PICE_strlen(char* s)
@@ -337,7 +338,7 @@ LPSTR GetShortName(LPSTR p)
 {
 ULONG i;
 
-	// scan backwards till backslash or start 
+	// scan backwards till backslash or start
 	for(i=PICE_strlen(p);p[i]!='\\' && &p[i]!=p;i--);
 	// it's not start, inc. counter
 	if(&p[i]!=p)i++;
@@ -367,12 +368,12 @@ ULONG j;
 }
 #endif // LINUX
 
-//************************************************************************* 
-// IsAddressValid() 
-// 
-//************************************************************************* 
-BOOLEAN IsAddressValid(ULONG address) 
-{ 
+//*************************************************************************
+// IsAddressValid()
+//
+//*************************************************************************
+BOOLEAN IsAddressValid(ULONG address)
+{
 	pgd_t * pPGD;
 	pmd_t * pPMD;
 	pte_t * pPTE;
@@ -415,28 +416,28 @@ BOOLEAN IsAddressValid(ULONG address)
 					}
 				}
 			}
-			// large page 
+			// large page
 			else
 			{
 				bResult = TRUE;
 			}
 		}
 	}
-	
+
 	return bResult;
-} 
+}
 
 
-//************************************************************************* 
-// IsAddressWriteable() 
+//*************************************************************************
+// IsAddressWriteable()
 //
 // returns:
 //  TRUE    if adress/page is writeable
 //  FALSE   if adress/page is not writeable
-// 
-//************************************************************************* 
-BOOLEAN IsAddressWriteable(ULONG address) 
-{ 
+//
+//*************************************************************************
+BOOLEAN IsAddressWriteable(ULONG address)
+{
 	pgd_t * pPGD;
 	pmd_t * pPMD;
 	pte_t * pPTE;
@@ -475,7 +476,7 @@ BOOLEAN IsAddressWriteable(ULONG address)
 				if(pPMD)
 				{
 		    		bResult |= pmd_val(*pPMD) & _PAGE_RW;
-					
+
 					pPTE = pte_offset(pPMD,address);
 					if(pPTE)
 					{
@@ -484,24 +485,24 @@ BOOLEAN IsAddressWriteable(ULONG address)
 					}
 				}
 			}
-			// large page 
+			// large page
 			else
 			{
 				bResult |= pgd_val(*pPGD) & _PAGE_RW;
 			}
 		}
 	}
-	
+
 	return bResult;
-} 
+}
 
 
-//************************************************************************* 
+//*************************************************************************
 // SetAddressWriteable()
-// 
-//************************************************************************* 
-BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet) 
-{ 
+//
+//*************************************************************************
+BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
+{
 	pgd_t * pPGD;
 	pmd_t * pPMD;
 	pte_t * pPTE;
@@ -551,7 +552,7 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 					}
 				}
 			}
-			// large page 
+			// large page
 			else
 			{
                 if( bSet )
@@ -562,9 +563,9 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 			}
 		}
 	}
-	
+
 	return bResult;
-} 
+}
 //*************************************************************************
 // IsRangeValid()
 //
@@ -592,24 +593,24 @@ ULONG i,NumPages,PageNum;
 	return TRUE;
 }
 
-//************************************************************************* 
-// IsModuleLoaded() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// IsModuleLoaded()
+//
+//*************************************************************************
 struct module* IsModuleLoaded(LPSTR p)
 {
     struct module* pMod;
-    DPRINT((0,"IsModuleLoaded(%s)\n",p)); 
+    DPRINT((0,"IsModuleLoaded(%s)\n",p));
 
     if(pmodule_list)
     {
         pMod = *pmodule_list;
         do
         {
-            DPRINT((0,"module (%x) %s\n",pMod->size,pMod->name)); 
+            DPRINT((0,"module (%x) %s\n",pMod->size,pMod->name));
             if(pMod->size && strcmp(p,(LPSTR)pMod->name) == 0)
             {
-                DPRINT((0,"module %s is loaded!\n",pMod->name)); 
+                DPRINT((0,"module %s is loaded!\n",pMod->name));
                 return pMod;
             }
         }while((pMod = pMod->next));
@@ -618,86 +619,86 @@ struct module* IsModuleLoaded(LPSTR p)
     return NULL;
 }
 
-//************************************************************************* 
-// GetGDTPtr() 
-// 
-// return flat address of GDT 
-//************************************************************************* 
-PGDT GetGDTPtr(void) 
-{ 
-ULONG gdtr[2]; 
-PGDT pGdt; 
- 
-    ENTER_FUNC(); 
- 
-	__asm__("sgdt %0;":"=m" (gdtr)); 
-	pGdt=(PGDT)(((ULONG)(gdtr[1]<<16))|((ULONG)(gdtr[0]>>16))); 
- 
-    LEAVE_FUNC(); 
- 
-	return pGdt; 
-} 
-
-//************************************************************************* 
-// GetLinearAddress() 
-// 
-// return flat address for SEGMENT:OFFSET 
-//************************************************************************* 
-ULONG GetLinearAddress(USHORT Segment,ULONG Offset) 
+//*************************************************************************
+// GetGDTPtr()
+//
+// return flat address of GDT
+//*************************************************************************
+PGDT GetGDTPtr(void)
 {
-    PGDT pGdt; 
-    ULONG result=0; 
-    PDESCRIPTOR pSel; 
-    USHORT OriginalSegment=Segment; 
- 
-    ENTER_FUNC(); 
- 
-	pSel=(struct tagDESCRIPTOR*)&Segment; 
- 
-	// get GDT pointer 
-	pGdt=GetGDTPtr(); 
-    DPRINT((0,"GetLinearAddress(): pGDT = %.8X\n",pGdt)); 
-    DPRINT((0,"GetLinearAddress(): original Segment:Offset = %.4X:%.8X\n",Segment,Offset)); 
- 
-	// see if segment selector is in LDT 
-	if(pSel->Ti) 
-	{ 
-		DPRINT((0,"GetLinearAddress(): Segment is in LDT\n")); 
-		// get LDT selector 
-		__asm__(" 
-			sldt %%ax 
+ULONG gdtr[2];
+PGDT pGdt;
+
+    ENTER_FUNC();
+
+	__asm__("sgdt %0;":"=m" (gdtr));
+	pGdt=(PGDT)(((ULONG)(gdtr[1]<<16))|((ULONG)(gdtr[0]>>16)));
+
+    LEAVE_FUNC();
+
+	return pGdt;
+}
+
+//*************************************************************************
+// GetLinearAddress()
+//
+// return flat address for SEGMENT:OFFSET
+//*************************************************************************
+ULONG GetLinearAddress(USHORT Segment,ULONG Offset)
+{
+    PGDT pGdt;
+    ULONG result=0;
+    PDESCRIPTOR pSel;
+    USHORT OriginalSegment=Segment;
+
+    ENTER_FUNC();
+
+	pSel=(struct tagDESCRIPTOR*)&Segment;
+
+	// get GDT pointer
+	pGdt=GetGDTPtr();
+    DPRINT((0,"GetLinearAddress(): pGDT = %.8X\n",pGdt));
+    DPRINT((0,"GetLinearAddress(): original Segment:Offset = %.4X:%.8X\n",Segment,Offset));
+
+	// see if segment selector is in LDT
+	if(pSel->Ti)
+	{
+		DPRINT((0,"GetLinearAddress(): Segment is in LDT\n"));
+		// get LDT selector
+		__asm__("
+			sldt %%ax
 			mov %%ax,%0"
 			:"=m" (Segment));
-		if(Segment) 
-		{ 
-			DPRINT((0,"GetLinearAddress(): no LDT\n")); 
-			// get LDT selector 
-			pGdt=(PGDT)((pGdt[pSel->Val].Base_31_24<<24)| 
-					   (pGdt[pSel->Val].Base_23_16<<16)| 
-				       (pGdt[pSel->Val].Base_15_0)); 
-			if(!IsRangeValid((ULONG)pGdt,0x8) ) 
-				pGdt=0; 
-		} 
-		else 
-		{ 
-			pGdt=0; 
-		} 
-	} 
- 
-	if(pGdt && Segment) 
-	{ 
-        DPRINT((0,"GetLinearAddress(): Segment:Offset = %.4X:%.8X\n",Segment,Offset)); 
-		result=pGdt[OriginalSegment>>3].Base_15_0| 
-			   (pGdt[OriginalSegment>>3].Base_23_16<<16)| 
-			   (pGdt[OriginalSegment>>3].Base_31_24<<24); 
-		result+=Offset; 
-	} 
-	DPRINT((0,"GetLinearAddress(%.4X:%.8X)=%.8X\n",OriginalSegment,Offset,result)); 
- 
-    LEAVE_FUNC(); 
- 
-	return result; 
-} 
+		if(Segment)
+		{
+			DPRINT((0,"GetLinearAddress(): no LDT\n"));
+			// get LDT selector
+			pGdt=(PGDT)((pGdt[pSel->Val].Base_31_24<<24)|
+					   (pGdt[pSel->Val].Base_23_16<<16)|
+				       (pGdt[pSel->Val].Base_15_0));
+			if(!IsRangeValid((ULONG)pGdt,0x8) )
+				pGdt=0;
+		}
+		else
+		{
+			pGdt=0;
+		}
+	}
+
+	if(pGdt && Segment)
+	{
+        DPRINT((0,"GetLinearAddress(): Segment:Offset = %.4X:%.8X\n",Segment,Offset));
+		result=pGdt[OriginalSegment>>3].Base_15_0|
+			   (pGdt[OriginalSegment>>3].Base_23_16<<16)|
+			   (pGdt[OriginalSegment>>3].Base_31_24<<24);
+		result+=Offset;
+	}
+	DPRINT((0,"GetLinearAddress(%.4X:%.8X)=%.8X\n",OriginalSegment,Offset,result));
+
+    LEAVE_FUNC();
+
+	return result;
+}
 
 //*************************************************************************
 // ShowRunningMsg()
@@ -735,11 +736,11 @@ void ShowStoppedMsg(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// SetHardwareBreakPoint() 
-// 
-//************************************************************************* 
-void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg) 
+//*************************************************************************
+// SetHardwareBreakPoint()
+//
+//*************************************************************************
+void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
 {
     ULONG mask = 0x300;
     ULONG enable_mask = 0x3;
@@ -808,48 +809,48 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
     }
 }
 
-//************************************************************************* 
-// SetHardwareBreakPoints() 
-// 
-// install HW breakpoints 
-//************************************************************************* 
-void SetHardwareBreakPoints(void) 
-{ 
-ULONG i; 
-ULONG mask; 
-ULONG LinAddr0,LinAddr1,LinAddr2,LinAddr3; 
-PULONG LinAddr[4]={&LinAddr0,&LinAddr1,&LinAddr2,&LinAddr3}; 
- 
-    ENTER_FUNC(); 
- 
-	// cancel all debug activity 
-	__asm__(" 
+//*************************************************************************
+// SetHardwareBreakPoints()
+//
+// install HW breakpoints
+//*************************************************************************
+void SetHardwareBreakPoints(void)
+{
+ULONG i;
+ULONG mask;
+ULONG LinAddr0,LinAddr1,LinAddr2,LinAddr3;
+PULONG LinAddr[4]={&LinAddr0,&LinAddr1,&LinAddr2,&LinAddr3};
+
+    ENTER_FUNC();
+
+	// cancel all debug activity
+	__asm__("
 		pushl %eax
-		xorl %eax,%eax 
-		mov %eax,%dr6 
-		mov %eax,%dr7 
+		xorl %eax,%eax
+		mov %eax,%dr6
+		mov %eax,%dr7
 		popl %eax");
-	// build DR7 mask 
-	for(mask=0,i=0;i<4;i++) 
-	{ 
-		mask<<=2; 
-		if(Bp[i].Active && Bp[i].Used && !Bp[i].Virtual) 
-		{ 
-			mask|=0x03; 
-			*LinAddr[3-i]=Bp[i].LinearAddress; 
-			DPRINT((0,"breakpoint %u at %.8X\n",i,Bp[i].LinearAddress)); 
-		} 
-	} 
-	if(mask) 
-	{ 
+	// build DR7 mask
+	for(mask=0,i=0;i<4;i++)
+	{
+		mask<<=2;
+		if(Bp[i].Active && Bp[i].Used && !Bp[i].Virtual)
+		{
+			mask|=0x03;
+			*LinAddr[3-i]=Bp[i].LinearAddress;
+			DPRINT((0,"breakpoint %u at %.8X\n",i,Bp[i].LinearAddress));
+		}
+	}
+	if(mask)
+	{
 		__asm__("
 			pushl %%eax
-			movl %0,%%eax 
-			andl $0x000000FF,%%eax 
-			orl $0x300,%%eax 
-			mov %%eax,%%dr7 
+			movl %0,%%eax
+			andl $0x000000FF,%%eax
+			orl $0x300,%%eax
+			mov %%eax,%%dr7
 			mov %1,%%eax
-			mov %%eax,%%dr0 
+			mov %%eax,%%dr0
 			mov %2,%%eax
 			mov %%eax,%%dr1
 			mov %3,%%eax
@@ -859,15 +860,15 @@ PULONG LinAddr[4]={&LinAddr0,&LinAddr1,&LinAddr2,&LinAddr3};
 			popl %%eax"
 			:
 			:"m" (mask),"m" (LinAddr0),"m" (LinAddr1),"m" (LinAddr2),"m" (LinAddr3));
-	} 
- 
-    LEAVE_FUNC(); 
-} 
+	}
+
+    LEAVE_FUNC();
+}
 
 //*************************************************************************
 // IsCallInstrAtEIP()
 //
-// check if instruction at CS:EIP changes program flow 
+// check if instruction at CS:EIP changes program flow
 //*************************************************************************
 BOOLEAN IsCallInstrAtEIP(void)
 {
@@ -876,7 +877,7 @@ BOOLEAN result=FALSE;
 
     ENTER_FUNC();
 	DPRINT((0,"IsCallInstrAtEIP()\n"));
-	
+
 	linear=(PUCHAR)GetLinearAddress(CurrentCS,CurrentEIP);
 	if(IsRangeValid((ULONG)linear,2))
 	{
@@ -906,7 +907,7 @@ BOOLEAN IsRetAtEIP(void)
 
     ENTER_FUNC();
 	DPRINT((0,"IsRetAtEIP()\n"));
-	
+
 	linear=(PUCHAR)GetLinearAddress(CurrentCS,CurrentEIP);
 
     switch(*linear)
@@ -1210,46 +1211,46 @@ void SaveOldRegs(void)
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// GetKeyStatus() 
-// 
-//************************************************************************* 
-UCHAR GetKeyStatus(void) 
-{ 
-    UCHAR ucRet; 
+//*************************************************************************
+// GetKeyStatus()
+//
+//*************************************************************************
+UCHAR GetKeyStatus(void)
+{
+    UCHAR ucRet;
     ucRet = inb_p(I8042_PHYSICAL_BASE + I8042_STATUS_REGISTER_OFFSET);
-    return ucRet; 
-} 
- 
-//************************************************************************* 
-// GetKeyData() 
-// 
-//************************************************************************* 
-UCHAR GetKeyData(void) 
-{ 
-    UCHAR ucRet; 
+    return ucRet;
+}
+
+//*************************************************************************
+// GetKeyData()
+//
+//*************************************************************************
+UCHAR GetKeyData(void)
+{
+    UCHAR ucRet;
     ucRet = inb_p(I8042_PHYSICAL_BASE + I8042_DATA_REGISTER_OFFSET);
-    return ucRet; 
-} 
- 
-//************************************************************************* 
-// GetKeyPolled 
-// 
-//************************************************************************* 
-UCHAR KeyboardGetKeyPolled(void) 
-{ 
-    UCHAR ucKey; 
-    UCHAR ucStatus; 
+    return ucRet;
+}
+
+//*************************************************************************
+// GetKeyPolled
+//
+//*************************************************************************
+UCHAR KeyboardGetKeyPolled(void)
+{
+    UCHAR ucKey;
+    UCHAR ucStatus;
     static BOOLEAN bExtended = FALSE;
- 
-    while(ucKey=0,(ucStatus=GetKeyStatus())&OUTPUT_BUFFER_FULL) 
-    { 
+
+    while(ucKey=0,(ucStatus=GetKeyStatus())&OUTPUT_BUFFER_FULL)
+    {
         ucKey = 0;
-        ucKey = GetKeyData(); 
- 
-        if(ucStatus&MOUSE_OUTPUT_BUFFER_FULL) 
-            continue; 
-        
+        ucKey = GetKeyData();
+
+        if(ucStatus&MOUSE_OUTPUT_BUFFER_FULL)
+            continue;
+
         DPRINT((1,"GetKeyPolled(): key = %x bExtended=%s\n",ucKey,bExtended?"TRUE":"FALSE"));
 
         if(SCANCODE_EXTENDED == ucKey)
@@ -1260,57 +1261,57 @@ UCHAR KeyboardGetKeyPolled(void)
         }
         else
         {
-            if(!(ucKey&0x80)) // keypress 
-            { 
+            if(!(ucKey&0x80)) // keypress
+            {
 				switch(ucKey&0x7f)
 				{
 					case SCANCODE_L_CTRL:
 					case SCANCODE_R_CTRL:
 						if(!bExtended)
-							bControl=TRUE; 
+							bControl=TRUE;
 						break;
 					case SCANCODE_L_SHIFT:
 					case SCANCODE_R_SHIFT:
 						if(!bExtended)
-							bShift=TRUE; 
+							bShift=TRUE;
 						break;
 					case SCANCODE_L_ALT:
 					case SCANCODE_R_ALT:
 	                    if(!bExtended)
-		                    bAlt=TRUE; 
+		                    bAlt=TRUE;
 						break;
 					default:
 				        DPRINT((0,"GetKeyPolled(): control = %u shift = %u alt = %u\n",bControl,bShift,bAlt));
 						return ucKey;
                 }
-            } 
-		    else 
-		    { 
+            }
+		    else
+		    {
 				switch(ucKey&0x7f)
 				{
 					case SCANCODE_L_CTRL:
 					case SCANCODE_R_CTRL:
 						if(!bExtended)
-							bControl=FALSE; 
+							bControl=FALSE;
 						break;
 					case SCANCODE_L_SHIFT:
 					case SCANCODE_R_SHIFT:
 						if(!bExtended)
-							bShift=FALSE; 
+							bShift=FALSE;
 						break;
 					case SCANCODE_L_ALT:
 					case SCANCODE_R_ALT:
 	                    if(!bExtended)
-		                    bAlt=FALSE; 
+		                    bAlt=FALSE;
 						break;
                 }
-		    } 
+		    }
         }
         bExtended=FALSE;
-    } 
- 
-    return ucKey; 
-} 
+    }
+
+    return ucKey;
+}
 
 //*************************************************************************
 // KeyboardFlushKeyboardQueue()
@@ -1374,7 +1375,7 @@ load:
 
 	tempUtil[0] = 0;
 	FlushKeyboardQueue();
-	
+
     RestoreGraphicsState();
 
 	UnmaskIrqs();
@@ -1385,10 +1386,10 @@ load:
 
 
 
-//************************************************************************* 
-// IntelStackWalk() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// IntelStackWalk()
+//
+//*************************************************************************
 void IntelStackWalk(ULONG pc,ULONG ebp,ULONG esp)
 {
     PULONG pFrame, pPrevFrame;
@@ -1406,7 +1407,7 @@ void IntelStackWalk(ULONG pc,ULONG ebp,ULONG esp)
              ( (pFrame <= pPrevFrame) ) )
         {
             DPRINT((0,"IntelStackWalk(): pFrame is either unaligned or not less than previous\n"));
-            if( !IsRangeValid((ULONG)pFrame, sizeof(PVOID)*2) ) 
+            if( !IsRangeValid((ULONG)pFrame, sizeof(PVOID)*2) )
             {
                 DPRINT((0,"IntelStackWalk(): pFrame not valid pointer!\n"));
                 break;
@@ -1478,7 +1479,7 @@ pte_t * FindPteForLinearAddress(ULONG address)
 					}
 				}
 			}
-			// large page 
+			// large page
 			else
 			{
                 LEAVE_FUNC();
@@ -1486,7 +1487,7 @@ pte_t * FindPteForLinearAddress(ULONG address)
 			}
 		}
 	}
-	
+
     LEAVE_FUNC();
 	return NULL;
 }
@@ -1739,7 +1740,7 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 			*str++ = *fmt;
 			continue;
 		}
-			
+
 		/* process flags */
 		flags = 0;
 		repeat:
@@ -1751,7 +1752,7 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 				case '#': flags |= NUM_SPECIAL; goto repeat;
 				case '0': flags |= NUM_ZEROPAD; goto repeat;
 				}
-		
+
 		/* get field width */
 		field_width = -1;
 		if (is_digit(*fmt))
@@ -1769,7 +1770,7 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 		/* get the precision */
 		precision = -1;
 		if (*fmt == '.') {
-			++fmt;	
+			++fmt;
 			if (is_digit(*fmt))
 				precision = skip_atoi(&fmt);
 			else if (*fmt == '*') {
@@ -2006,13 +2007,19 @@ UCHAR AsciiToScan(UCHAR s)
 //************************************************************************
 void outportb(USHORT port,UCHAR data)
 {
-    WRITE_PORT_UCHAR(data,port);
+    WRITE_PORT_UCHAR(port, data);
 }
 
 void outb_p(UCHAR data, USHORT port)
 {
-	WRITE_PORT_UCHAR(data,port);
+	WRITE_PORT_UCHAR(port, data);
 }
+
+VOID  outl(ULONG data, PULONG port)
+{
+	WRITE_PORT_ULONG(port, data);
+}
+
 
 //************************************************************************
 // inportb()
@@ -2022,17 +2029,22 @@ UCHAR inportb(USHORT port)
 {
     return READ_PORT_UCHAR(port);
 }
-			   
+
 UCHAR inb_p(USHORT port)
 {
     return READ_PORT_UCHAR(port);
-}			   
+}
+
+ULONG  inl(PULONG port)
+{
+	return READ_PORT_ULONG(port);
+}
 
 
-//************************************************************************* 
-// GetInitMm() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// GetInitMm()
+//
+//*************************************************************************
 struct mm_struct *GetInitMm(void)
 {
 
@@ -2046,7 +2058,7 @@ struct mm_struct *GetInitMm(void)
 	struct task_struct *pt;
 
     ENTER_FUNC();
-	
+
 	for (pt = current->next_task; pt != current; pt = pt->next_task) {
 		if (pt->pid == 0) {
             LEAVE_FUNC();
@@ -2057,14 +2069,14 @@ struct mm_struct *GetInitMm(void)
     DPRINT((0,"GetInitMm(): failure\n"));
     LEAVE_FUNC();
 	return NULL;
-#endif 
+#endif
 }
 
-//************************************************************************* 
-// EnablePassThrough() 
-// 
+//*************************************************************************
+// EnablePassThrough()
+//
 // enable MDA passthrough on AGP chipset
-//************************************************************************* 
+//*************************************************************************
 void EnablePassThrough(void)
 {
 	ULONG oldCF8,flags;
@@ -2079,3 +2091,109 @@ void EnablePassThrough(void)
 
 	restore_flags(flags);
 }
+
+//***********************************************************************************
+//	Pice_malloc - allocate memory from paged or non-paged pool
+//***********************************************************************************
+void * PICE_malloc( size_t numBytes, BOOLEAN fromPaged )
+{
+	void* res = ExAllocatePool( (fromPaged)?PagedPool:NonPagedPool, numBytes );
+	assert(res);
+	return res;
+}
+
+//***********************************************************************************
+//	PICE_free - free memory allocated by PICE_malloc
+//***********************************************************************************
+void PICE_free( void* p )
+{
+	assert( p );
+	ExFreePool( p );
+}
+
+long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes)
+{
+	DWORD	NumberOfBytesRead;
+	IO_STATUS_BLOCK  iosb;
+
+	assert( lpBuffer );
+
+	if (!NT_SUCCESS(NtReadFile(
+		(HANDLE) hFile,
+		NULL, NULL, NULL, &iosb,
+		(LPVOID) lpBuffer,
+		(DWORD) lBytes,
+		NULL,
+		NULL
+		)))
+	{
+		return -1;
+	}
+	NumberOfBytesRead = iosb.Information;
+	return NumberOfBytesRead;
+}
+
+HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
+{
+	DWORD dwAccessMask = 0;
+	DWORD dwShareMode = 0;
+	UNICODE_STRING TmpFileName;
+ 	OBJECT_ATTRIBUTES ObjectAttributes;
+	HANDLE hfile;
+	NTSTATUS status;
+
+	if ( (iReadWrite & OF_READWRITE ) == OF_READWRITE )
+		dwAccessMask = GENERIC_READ | GENERIC_WRITE;
+	else if ( (iReadWrite & OF_READ ) == OF_READ )
+		dwAccessMask = GENERIC_READ;
+	else if ( (iReadWrite & OF_WRITE ) == OF_WRITE )
+		dwAccessMask = GENERIC_WRITE;
+
+	if ((iReadWrite & OF_SHARE_COMPAT) == OF_SHARE_COMPAT )
+		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
+	else if ((iReadWrite & OF_SHARE_DENY_NONE) == OF_SHARE_DENY_NONE)
+		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
+	else if ((iReadWrite & OF_SHARE_DENY_READ) == OF_SHARE_DENY_READ)
+		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+	else if ((iReadWrite & OF_SHARE_DENY_WRITE) == OF_SHARE_DENY_WRITE )
+		dwShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;
+	else if ((iReadWrite & OF_SHARE_EXCLUSIVE) == OF_SHARE_EXCLUSIVE)
+		dwShareMode = 0;
+
+	RtlInitUnicodeString (&TmpFileName, lpPathName);
+  	InitializeObjectAttributes(&ObjectAttributes,
+                             &TmpFileName,
+                             0,
+                             NULL,
+                             NULL);
+
+
+	status = NtOpenFile( &hfile,
+                      dwAccessMask,
+                      &ObjectAttributes,
+                      NULL, dwShareMode, 0);
+	//BUG BUG check status!!!
+	return hfile;
+}
+
+int PICE_close (HANDLE	hFile)
+{
+	if (NT_SUCCESS( ZwClose((HANDLE)hFile)))
+	{
+		return 0;
+	}
+	DbgPrint("ZwClose failed:\n");
+	return -1;
+}
+
+size_t PICE_len( HANDLE hFile )
+{
+	FILE_STANDARD_INFORMATION fs;
+	IO_STATUS_BLOCK  iosb;
+	NTSTATUS status;
+
+  	status = ZwQueryInformationFile( hFile, &iosb, &fs, sizeof fs, FileStandardInformation );
+	assert(fs.EndOfFile.HighPart == 0);
+	return (size_t)fs.EndOfFile.LowPart;
+}
+

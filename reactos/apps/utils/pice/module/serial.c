@@ -609,7 +609,7 @@ BOOLEAN ConsoleInitSerial(void)
     GLOBAL_SCREEN_WIDTH = 80;
     GLOBAL_SCREEN_HEIGHT = 60;
 
-	pScreenBufferSerial = vmalloc(FRAMEBUFFER_SIZE); 
+	pScreenBufferSerial = PICE_malloc(FRAMEBUFFER_SIZE, NONPAGEDPOOL); 
 
     if(pScreenBufferSerial)
     {
@@ -648,7 +648,7 @@ void ConsoleShutdownSerial(void)
     FlushSerialBuffer();
 
     if(pScreenBufferSerial)
-        vfree(pScreenBufferSerial);
+        PICE_free(pScreenBufferSerial);
 
     LEAVE_FUNC();
 }

@@ -242,6 +242,10 @@ UCHAR inportb(USHORT port);
 void outb_p(UCHAR data, USHORT port);
 UCHAR inb_p(USHORT port);
 
+VOID  outl(ULONG l, PULONG port);
+ULONG  inl(PULONG port);
+
+
 #define save_flags(x)         __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define restore_flags(x)      __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory", "cc")
 #define cli()                 __asm__ __volatile__("cli": : :"memory")
@@ -253,3 +257,14 @@ extern unsigned long sys_call_table[];
 struct mm_struct *GetInitMm(void);
 
 void EnablePassThrough(void);
+
+#define PAGEDPOOL		(1)
+#define NONPAGEDPOOL	(0)
+
+void * PICE_malloc( size_t numBytes, BOOLEAN fromPaged );
+void PICE_free( void* p );
+
+HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite);
+long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes);
+int PICE_close (HANDLE	hFile);
+size_t PICE_len( HANDLE hFile );

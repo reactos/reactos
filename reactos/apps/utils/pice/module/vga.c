@@ -393,11 +393,11 @@ BOOLEAN ConsoleInitVga(void)
 
 #ifdef LOCAL_CONSOLE
     // the real framebuffer
-	pScreenBufferHardwareVga = ioremap(0xB8000,FRAMEBUFFER_SIZE); 
+	pScreenBufferHardwareVga = MmMapIoSpace(0xB8000,FRAMEBUFFER_SIZE,MmWriteCombined); 
     // the console
-	pScreenBufferVga = vmalloc(FRAMEBUFFER_SIZE); 
+	pScreenBufferVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL); 
     // the save area
-	pScreenBufferTempVga = vmalloc(FRAMEBUFFER_SIZE); 
+	pScreenBufferTempVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL); 
 #else
 	outb_p(0,0x3b8);
 	outb_p(0,0x3bf);
@@ -410,7 +410,7 @@ BOOLEAN ConsoleInitVga(void)
 	}
 	outb_p(0x08,0x3b8);
 
-	pScreenBufferVga=ioremap(0xB0000,FRAMEBUFFER_SIZE); 
+	pScreenBufferVga=MmMapIoSpace(0xB0000,FRAMEBUFFER_SIZE,MmWriteCombined); 
 #endif 
 	if(pScreenBufferVga)
 	{
@@ -446,9 +446,9 @@ void ConsoleShutdownVga(void)
 #ifdef LOCAL_CONSOLE
 	if(pScreenBufferVga)
     {
-        vfree(pScreenBufferVga);
-        vfree(pScreenBufferTempVga);
-		iounmap(pScreenBufferHardwareVga); 
+        PICE_free(pScreenBufferVga);
+        PICE_free(pScreenBufferTempVga);
+		MmUnmapIoSpace(pScreenBufferHardwareVga,FRAMEBUFFER_SIZE); 
     }
 #else
 	// HERC video off 
@@ -456,7 +456,7 @@ void ConsoleShutdownVga(void)
 	outb_p(0,0x3bf);
 
 	if(pScreenBufferVga)
-		iounmap(pScreenBufferVga); 
+		MmUnmapIoSpace(pScreenBufferVga,FRAMEBUFFER_SIZE); 
 #endif
 
     LEAVE_FUNC();

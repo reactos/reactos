@@ -92,11 +92,12 @@ NTSTATUS STDCALL pice_close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     DPRINT((0,"pice_close\n"));
     
-    CleanUpPICE();                      // used to be in cleanup_module
+	CleanUpPICE();                      // used to be in cleanup_module
     
 	/* We're now ready for our next caller */
     bDeviceAlreadyOpen = FALSE;
 	IoCompleteRequest (Irp, IO_NO_INCREMENT);
+	
 	return STATUS_SUCCESS;
 }
 
@@ -179,7 +180,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    
    if(InitPICE()){
 		DriverObject->MajorFunction[IRP_MJ_CREATE] = pice_open;
-		DriverObject->MajorFunction[IRP_MJ_CLOSE] = pice_close;
+		//ei unimplemented DriverObject->MajorFunction[IRP_MJ_CLOSE] = pice_close;
 		DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = pice_ioctl;
 
 		RtlInitUnicodeString(&DeviceName, L"\\Device\\Pice");

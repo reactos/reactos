@@ -28,8 +28,8 @@ Copyright notice:
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
-void InstallKeyboardHook(void);
-void DeInstallKeyboardHook(void);
+//void InstallKeyboardHook(void);
+//void DeInstallKeyboardHook(void);
 void InstallGlobalKeyboardHook(void);
 void DeInstallGlobalKeyboardHook(void);
 

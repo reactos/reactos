@@ -39,7 +39,6 @@ Copyright notice:
 #include <asm/page.h>
 #include <asm/pgtable.h>
 #include <linux/fs.h>
-#include <linux/vmalloc.h>
 #include <asm/uaccess.h>
 #include <asm/delay.h>
 #include <linux/interrupt.h>

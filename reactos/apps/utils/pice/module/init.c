@@ -36,7 +36,6 @@ Copyright notice:
 #include "precomp.h"
 
 #include <linux/fs.h>
-#include <linux/vmalloc.h>
 #include <asm/uaccess.h>
 #include <asm/io.h>
 #include <asm/delay.h>
@@ -187,13 +186,12 @@ BOOLEAN InitPICE(void)
     }
 
     DPRINT((0,"InitPICE(): trace step 12\n"));
-    // need these two to hook the keyboard
-    ScanExports("handle_scancode",&ulHandleScancode);
-    ScanExports("handle_kbd_event",&ulHandleKbdEvent);
+    
 
     DPRINT((0,"InitPICE(): trace step 13\n"));
     // patch the keyboard driver
-    if(!(ulHandleScancode && ulHandleKbdEvent && PatchKeyboardDriver(ulHandleKbdEvent,ulHandleScancode)) )
+    
+	if(PatchKeyboardDriver())
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't patch keyboard driver)\n");
 		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");

@@ -17,11 +17,13 @@ Environment:
 Author:
 
     Klaus P. Gerlicher
+ 	Reactos Port: Eugene Ingerman
 
 Revision History:
 
     10-Jul-1999:	created
     15-Nov-2000:    general cleanup of source files
+  	12/1/2001		reactos port
 
 Copyright notice:
 
@@ -37,6 +39,9 @@ Copyright notice:
 
 #include <asm/system.h>
 
+#include <ddk/ntddkbd.h>
+#include <ddk/ntdd8042.h>
+
 ////////////////////////////////////////////////////
 // GLOBALS
 ////
@@ -44,7 +49,7 @@ Copyright notice:
 static PUCHAR pPatchAddress;
 static ULONG ulOldOffset = 0;
 static ULONG ulKeyPatchFlags;
-BOOLEAN bPatched = FALSE;
+
 void (*old_handle_scancode)(UCHAR,int);
 char tempPatch[256];
 UCHAR ucBreakKey = 'D'; // key that will break into debugger in combination with CTRL
@@ -53,29 +58,44 @@ UCHAR ucBreakKey = 'D'; // key that will break into debugger in combination with
 // FUNCTIONS
 ////
 
-// the keyboard hook
-void pice_handle_scancode(UCHAR scancode,int bKeyPressed)
+//***********************************************************************************
+//	PiceKbdIsr - keyboard isr hook routine. 
+//	IsrContext - context that we passed to keyboard driver in  internal iocontrol
+//	pCurrentInput, pCurrentOutput - not implemented yet
+//	StatusByte -  keyboard status register
+//	pByte - pointer to the byte read from keyboard data port. can be changed.
+//	pContinueProcessing - should keyboard driver continue processing this byte.
+//***********************************************************************************
+BOOLEAN PiceKbdIsr (
+    PVOID                   IsrContext,
+    PKEYBOARD_INPUT_DATA    pCurrentInput,
+    POUTPUT_PACKET          pCurrentOutput,
+    UCHAR                   StatusByte,
+    PUCHAR                  pByte,
+    PBOOLEAN                pContinueProcessing,
+    PKEYBOARD_SCAN_STATE    pScanState
+    )
 {
-	UCHAR ucKey = scancode & 0x7f;
 	static BOOLEAN bControl = FALSE;
-	BOOLEAN bForward=TRUE;
+	BOOLEAN bForward=TRUE;              // should we let keyboard driver process this keystroke
+	BOOLEAN isDown=!(*pByte & 0x80);
+	UCHAR ucKey = *pByte & 0x7f;
 
     ENTER_FUNC();
-
-    DPRINT((0,"pice_handle_scancode(%x,%u)\n",scancode,bKeyPressed));
-    DPRINT((0,"pice_handle_scancode(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
-	if(bKeyPressed)
+	// BUG!! should protect with spinlock since bControl is static.
+    DPRINT((0,"PiceKbdIsr(%x,%u)\n",pByte,isDown));
+    DPRINT((0,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
+	
+	if(isDown)
 	{
         // CTRL pressed
 		if(ucKey==0x1d)
 		{
 			bControl=TRUE;
 		}
-		else if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-F
+		else if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
 		{
-            // fake a CTRL-F release call
-    	    old_handle_scancode(0x1d|0x80,FALSE);
-    	    old_handle_scancode(AsciiToScan(ucBreakKey)|0x80,FALSE);
+            // fake a CTRL-D release call
 			bForward=FALSE;
             bEnterNow=TRUE;
 			bControl=FALSE;
@@ -98,80 +118,102 @@ void pice_handle_scancode(UCHAR scancode,int bKeyPressed)
 			bForward=FALSE;
         }
     }
+	*ContinueProcessing = bForward;
+    LEAVE_FUNC();
+	return TRUE;
+}	
 
-    if(bForward)
-    {
-        DPRINT((0,"pice_handle_scancode(): forwarding key stroke\n"));
-	    old_handle_scancode(scancode,bKeyPressed);
+//***********************************************************************************
+//	PiceSendIoctl - send internal_io_control to the driver
+//	Target - Device Object that receives control request
+//	Ioctl - request
+//	InputBuffer - Type3Buffer will be pointing here
+//	InputBufferLength - length of inputbuffer
+//***********************************************************************************
+NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
+					PVOID InputBuffer, ULONG InputBufferLength)
+{
+    KEVENT          event;
+    NTSTATUS        status = STATUS_SUCCESS;
+    IO_STATUS_BLOCK iosb;
+    PIRP            irp;
+
+    KeInitializeEvent(&event,
+                      NotificationEvent,
+                      FALSE
+                      );
+
+    if (NULL == (irp = IoBuildDeviceIoControlRequest(Ioctl,
+                                                     Target,
+                                                     InputBuffer,       
+                                                     InputBufferLength,
+                                                     0, 
+                                                     0,
+                                                     TRUE,
+                                                     &event,
+                                                     &iosb))) {
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    LEAVE_FUNC();
+    status = IoCallDriver(Target, irp);
+
+    if (STATUS_PENDING == status) {
+        
+		status = KeWaitForSingleObject(&event,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE, 
+                                       NULL); 
+
+        assert(STATUS_SUCCESS == status);
+        status = iosb.Status;
+    }
+
+    return status;
 }
 
-BOOLEAN PatchKeyboardDriver(ULONG AddrOfKbdEvent,ULONG AddrOfScancode)
+//**************************************************
+// PatchKeyboardDriver - set keyboard driver hook.
+// We use interface supported by standard keyboard drivers. 
+//**************************************************
+BOOLEAN PatchKeyboardDriver(void)
 {
-	UCHAR ucPattern[5] = {0xE8,0x0,0x0,0x0,0x0};
-	PULONG pOffset = (PULONG)&ucPattern[1];
-	ULONG ulOffset,countBytes = 0;
+	PINTERNAL_I8042_HOOK_KEYBOARD phkData;
+    UNICODE_STRING DevName;
+	PDEVICE_OBJECT kbdDevice = NULL;
+	PFILE_OBJECT FO = NULL;
+	NTSTATUS status;
 
-    ENTER_FUNC();
+	ENTER_FUNC();
+	//When we have i8042 driver this should be changed!!!!!!!
+	RtlInitUnicodeString(&DevName, L"\\Device\\Keyboard");
 
-	(void*)old_handle_scancode = AddrOfScancode;
-    DPRINT((0,"handle_scancode = %X\n",AddrOfScancode));
-
-	pPatchAddress = (PUCHAR)AddrOfKbdEvent; // handle_kbd_event
-    DPRINT((0,"initial patch address = %X\n",AddrOfKbdEvent));
-    ulOffset = (ULONG)old_handle_scancode - ((ULONG)pPatchAddress+sizeof(ULONG)+1);
-    DPRINT((0,"initial offset = %X\n",ulOffset));
-	*pOffset = ulOffset;
-
-	while((RtlCompareMemory(pPatchAddress,ucPattern,sizeof(ucPattern))!=0) &&
-	      (countBytes<0x1000))
-	{
-/*        DPRINT((0,"offset = %X\n",ulOffset));
-        DPRINT((0,"patch address = %X\n",pPatchAddress));
-        DPRINT((0,"pattern1 = %.2X %.2X %.2X %.2X %.2X\n",ucPattern[0],ucPattern[1],ucPattern[2],ucPattern[3],ucPattern[4]));
-        DPRINT((0,"pattern2 = %.2X %.2X %.2X %.2X %.2X\n",pPatchAddress[0],pPatchAddress[1],pPatchAddress[2],pPatchAddress[3],pPatchAddress[4]));*/
-
-		countBytes++;
-		pPatchAddress++;
-
-		ulOffset = (ULONG)old_handle_scancode - ((ULONG)pPatchAddress+sizeof(ULONG)+1);
-		*pOffset = ulOffset;
-	}
+	//Get pointer to keyboard device
+    if( !NT_SUCCESS( IoGetDeviceObjectPointer( &DevName, FILE_READ_ACCESS, &FO, &kbdDevice ) ) )
+		return FALSE;
+			
+	phkData = ExAllocatePool( PagedPool, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
+	RtlZeroMemory( phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
 	
-	if(RtlCompareMemory(pPatchAddress,ucPattern,sizeof(ucPattern))==0)
-	{
-		DPRINT((0,"pattern found @ %x\n",pPatchAddress));
+	phkData->IsrRoutine = (PI8042_KEYBOARD_ISR) PiceKbdIsr;
+	phkData->Context = (PVOID) NULL; //DeviceObject;
+
+	//call keyboard device internal io control to hook keyboard input stream
+	status = PiceSendIoctl( kbdDevice, IOCTL_INTERNAL_I8042_HOOK_KEYBOARD, 
+			phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
+
 		
-		ulOffset = (ULONG)&pice_handle_scancode - ((ULONG)pPatchAddress+sizeof(ULONG)+1);
-		ulOldOffset = *(PULONG)(pPatchAddress + 1);
-		DPRINT((0,"old offset = %x new offset = %x\n",ulOldOffset,ulOffset));
+	ObDereferenceObject(FO);
+	ExFreePool(phkData);
+    
+	LEAVE_FUNC();
 
-		save_flags(ulKeyPatchFlags);
-		cli();
-		*(PULONG)(pPatchAddress + 1) = ulOffset;
-
-		bPatched = TRUE;
-
-		restore_flags(ulKeyPatchFlags);
-		DPRINT((0,"PatchKeyboardDriver(): SUCCESS!\n"));
-	}
-
-    LEAVE_FUNC();
-
-    return bPatched;
+    return NT_SUCCESS(status);
 }
 
 void RestoreKeyboardDriver(void)
 {
     ENTER_FUNC();
-	if(bPatched)
-	{
-		save_flags(ulKeyPatchFlags);
-		cli();
-		*(PULONG)(pPatchAddress + 1) = ulOldOffset;
-		restore_flags(ulKeyPatchFlags);
-	}
-    LEAVE_FUNC();
+    DbgPrint("RestoreKeyboardDriver: Not Implemented yet!!!\n");
+	LEAVE_FUNC();
 } 

@@ -35,12 +35,10 @@ Copyright notice:
 #include <linux/elf.h>
 #include "stab_gnu.h"
 
-#include <linux/vmalloc.h>
 #include <asm/io.h>
 #include <asm/page.h>
 #include <asm/pgtable.h>
 #include <linux/fs.h>
-#include <linux/vmalloc.h>
 #include <asm/uaccess.h>
 #include <asm/delay.h>
 #include <linux/ctype.h>
@@ -85,16 +83,16 @@ ULONG ulNumStructMembers;
 
 BOOLEAN Expression(PVRET pvr);
 
-//************************************************************************* 
-// InitFakeKernelModule() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// InitFakeKernelModule()
+//
+//*************************************************************************
 BOOLEAN InitFakeKernelModule(void)
 {
     struct module* pMod;
 
     ENTER_FUNC();
-    
+
     if(pmodule_list)
     {
 
@@ -122,10 +120,10 @@ BOOLEAN InitFakeKernelModule(void)
 	return FALSE;
 }
 
-//************************************************************************* 
-// ScanExports() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ScanExports()
+//
+//*************************************************************************
 BOOLEAN ScanExports(const char *pFind,PULONG pValue)
 {
 	char temp[256];
@@ -164,14 +162,14 @@ nomatch:
 				case 2:
 					if(PICE_strcmp(p,pFind)!=0)
 					{
-						pExp = pOldStr+1;	
+						pExp = pOldStr+1;
 						goto nomatch;
 					}
 					state = -1;
 					bResult = TRUE;
 		            DPRINT((0,"%s @ %x\n",pFind,*pValue));
 					break;
-						
+
 			}
 			state++;
 			p = PICE_strtok(NULL," ");
@@ -183,10 +181,10 @@ nomatch:
 	return bResult;
 }
 
-//************************************************************************* 
-// ReadHex() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ReadHex()
+//
+//*************************************************************************
 BOOLEAN ReadHex(LPSTR p,PULONG pValue)
 {
     ULONG result=0,i;
@@ -216,10 +214,10 @@ BOOLEAN ReadHex(LPSTR p,PULONG pValue)
     return TRUE;
 }
 
-//************************************************************************* 
-// ScanExportLine() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ScanExportLine()
+//
+//*************************************************************************
 BOOLEAN ScanExportLine(LPSTR p,PULONG ulValue,LPSTR* ppPtrToSymbol)
 {
     BOOLEAN bResult = FALSE;
@@ -234,10 +232,10 @@ BOOLEAN ScanExportLine(LPSTR p,PULONG ulValue,LPSTR* ppPtrToSymbol)
     return bResult;
 }
 
-//************************************************************************* 
-// ValidityCheckSymbols() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ValidityCheckSymbols()
+//
+//*************************************************************************
 BOOLEAN ValidityCheckSymbols(PICE_SYMBOLFILE_HEADER* pSymbols)
 {
 	BOOLEAN bRet;
@@ -252,14 +250,14 @@ BOOLEAN ValidityCheckSymbols(PICE_SYMBOLFILE_HEADER* pSymbols)
 		    IsRangeValid((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings,pSymbols->ulSizeOfStabsStrings) );
 
     DPRINT((0,"ValidityCheckSymbols(): symbols are %s\n",bRet?"VALID":"NOT VALID"));
-			
+
 	return bRet;
 }
 
-//************************************************************************* 
-// FindModuleSymbols() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindModuleSymbols()
+//
+//*************************************************************************
 PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
 {
     struct module* pMod;
@@ -318,10 +316,10 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
     return NULL;
 }
 
-//************************************************************************* 
-// FindModuleFromAddress() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindModuleFromAddress()
+//
+//*************************************************************************
 struct module* FindModuleFromAddress(ULONG addr)
 {
     struct module* pMod;
@@ -362,10 +360,10 @@ struct module* FindModuleFromAddress(ULONG addr)
     return NULL;
 }
 
-//************************************************************************* 
-// FindModuleByName() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindModuleByName()
+//
+//*************************************************************************
 struct module* FindModuleByName(LPSTR modname)
 {
     struct module* pMod;
@@ -398,10 +396,10 @@ struct module* FindModuleByName(LPSTR modname)
     return NULL;
 }
 
-//************************************************************************* 
-// FindModuleSymbolsByModuleName() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindModuleSymbolsByModuleName()
+//
+//*************************************************************************
 PICE_SYMBOLFILE_HEADER* FindModuleSymbolsByModuleName(LPSTR modname)
 {
     ULONG i;
@@ -416,10 +414,10 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbolsByModuleName(LPSTR modname)
     return NULL;
 }
 
-//************************************************************************* 
-// ScanExportsByAddress() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ScanExportsByAddress()
+//
+//*************************************************************************
 BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 {
 	char temp[256];
@@ -475,7 +473,7 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 					for(i=0;i<(pSymbols->ulSizeOfGlobals/sizeof(Elf32_Sym));i++)
 					{
 						if((ELF32_ST_BIND(pElfSym->st_info)==STB_GLOBAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL || ELF32_ST_BIND(pElfSym->st_info)==STB_WEAK)  &&
-						   (ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT || ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC) && 
+						   (ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT || ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC) &&
 						   (pElfSym->st_shndx<SHN_LORESERVE || pElfSym->st_shndx==SHN_ABS || pElfSym->st_shndx==SHN_COMMON))
 						{
 							LPSTR pName = &pElfStr[pElfSym->st_name];
@@ -675,10 +673,10 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 	return bResult;
 }
 
-//************************************************************************* 
-// FindFunctionByAddress() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindFunctionByAddress()
+//
+//*************************************************************************
 LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 {
 	Elf32_Sym* pElfSym;
@@ -728,7 +726,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 					for(i=0;i<(pSymbols->ulSizeOfGlobals/sizeof(Elf32_Sym));i++)
 					{
 						if((ELF32_ST_BIND(pElfSym->st_info)==STB_GLOBAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL)&&
-						   ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC && 
+						   ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC &&
 						   (pElfSym->st_shndx<SHN_LORESERVE || pElfSym->st_shndx==SHN_ABS || pElfSym->st_shndx==SHN_COMMON))
 						{
 							LPSTR pName = &pElfStr[pElfSym->st_name];
@@ -774,7 +772,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 								DPRINT((0,"in section [%u] %8x value = %x module struct %x (%x)\n",pElfSym->st_shndx,pElfShdr[pElfSym->st_shndx].sh_offset,ulValue,sizeof(struct module),((sizeof(struct module)+0x10)&~0x0F)));
 								DPRINT((0,"[%u] %32s %.8X %.8X %.8X %.8X %.8X %.8X\n",i,pName,pElfSym->st_name,pElfSym->st_value,pElfSym->st_info,pElfSym->st_other,pElfSym->st_size,pElfSym->st_shndx));
 								DPRINT((0,"start %x end %x\n",start,end));
-                            
+
                                 if(pulstart)
                                     *pulstart = start;
                                 if(pulend)
@@ -793,10 +791,10 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 	return NULL;
 }
 
-//************************************************************************* 
-// FindDataSectionOffset() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindDataSectionOffset()
+//
+//*************************************************************************
 ULONG FindDataSectionOffset(Elf32_Shdr* pSHdr)
 {
 
@@ -816,10 +814,10 @@ ULONG FindDataSectionOffset(Elf32_Shdr* pSHdr)
     return 0;
 }
 
-//************************************************************************* 
-// FindFunctionInModuleByNameViaKsyms() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindFunctionInModuleByNameViaKsyms()
+//
+//*************************************************************************
 ULONG FindFunctionInModuleByNameViaKsyms(struct module* pMod,LPSTR szFunctionname)
 {
     ULONG i;
@@ -846,10 +844,10 @@ ULONG FindFunctionInModuleByNameViaKsyms(struct module* pMod,LPSTR szFunctionnam
     return 0;
 }
 
-//************************************************************************* 
-// FindFunctionInModuleByName() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindFunctionInModuleByName()
+//
+//*************************************************************************
 ULONG FindFunctionInModuleByName(LPSTR szFunctionname,struct module* pMod)
 {
     ULONG i,addr;
@@ -888,7 +886,7 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname,struct module* pMod)
             DPRINT((0,"FindFunctionInModuleByName(): BIND = %.8X TYPE = %.8X\n",ELF32_ST_BIND(pElfSym->st_info),ELF32_ST_TYPE(pElfSym->st_info)));
 
 			if((ELF32_ST_BIND(pElfSym->st_info)==STB_GLOBAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL || ELF32_ST_BIND(pElfSym->st_info)==STB_WEAK) &&
-			    (ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC || ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT) && 
+			    (ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC || ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT) &&
 			   (pElfSym->st_shndx<SHN_LORESERVE))
 			{
                 LPSTR pName = &pElfStr[pElfSym->st_name];
@@ -940,10 +938,10 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname,struct module* pMod)
     return FindFunctionInModuleByNameViaKsyms(pMod,szFunctionname);
 }
 
-//************************************************************************* 
-// ExtractTypeNumber() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractTypeNumber()
+//
+//*************************************************************************
 ULONG ExtractTypeNumber(LPSTR p)
 {
 	LPSTR pTypeNumber;
@@ -970,10 +968,10 @@ ULONG ExtractTypeNumber(LPSTR p)
 	return ulTypeNumber;
 }
 
-//************************************************************************* 
-// FindTypeDefinitionForCombinedTypes() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindTypeDefinitionForCombinedTypes()
+//
+//*************************************************************************
 LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULONG ulFileNumber)
 {
     ULONG i;
@@ -1084,10 +1082,10 @@ LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG 
     return NULL;
 }
 
-//************************************************************************* 
-// FindTypeDefinition() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindTypeDefinition()
+//
+//*************************************************************************
 LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULONG ulFileNumber)
 {
     ULONG i;
@@ -1200,10 +1198,10 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 
 }
 
-//************************************************************************* 
-// TruncateString() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// TruncateString()
+//
+//*************************************************************************
 LPSTR TruncateString(LPSTR p,char c)
 {
 	static char temp[1024];
@@ -1219,12 +1217,12 @@ LPSTR TruncateString(LPSTR p,char c)
 	return temp;
 }
 
-//************************************************************************* 
-// FindLocalsByAddress() 
-// 
+//*************************************************************************
+// FindLocalsByAddress()
+//
 // find all locals for a given address by first looking up the function
 // and then it's locals
-//************************************************************************* 
+//*************************************************************************
 PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
 {
     ULONG i;
@@ -1379,10 +1377,10 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
 	return NULL;
 }
 
-//************************************************************************* 
-// FindSourceLineForAddress() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindSourceLineForAddress()
+//
+//*************************************************************************
 LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart,LPSTR* ppSrcEnd,LPSTR* ppFilename)
 {
     ULONG i; // index for walking through STABS
@@ -1391,7 +1389,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
     int nStabLen;     // length of STAB section in bytes
     int nOffset=0,nNextOffset=0;    // offset and next offset in string table
     PICE_SYMBOLFILE_HEADER* pSymbols;   // pointer to module's STAB symbol table
-    static char szCurrentFunction[256]; 
+    static char szCurrentFunction[256];
     static char szCurrentPath[256];
     static char szWantedPath[256];
     LPSTR pFunctionName; // name of function that brackets the current address
@@ -1588,10 +1586,10 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
     return NULL;
 }
 
-//************************************************************************* 
-// FindAddressForSourceLine() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindAddressForSourceLine()
+//
+//*************************************************************************
 BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,struct module* pMod,PULONG pValue)
 {
     ULONG i;
@@ -1696,10 +1694,10 @@ BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,struct modul
     return bFound;
 }
 
-//************************************************************************* 
-// ListSymbolStartingAt() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ListSymbolStartingAt()
+//
+//*************************************************************************
 ULONG ListSymbolStartingAt(struct module* pMod,PICE_SYMBOLFILE_HEADER* pSymbols,ULONG index,LPSTR pOutput)
 {
     ULONG i;
@@ -1723,7 +1721,7 @@ ULONG ListSymbolStartingAt(struct module* pMod,PICE_SYMBOLFILE_HEADER* pSymbols,
         DPRINT((0,"ListSymbolStartingAt(): [%u] %.8X %.8X %s\n",i,pElfSym->st_info,pElfSym->st_shndx,pName));
 
 		if((ELF32_ST_BIND(pElfSym->st_info)==STB_GLOBAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL || ELF32_ST_BIND(pElfSym->st_info)==STB_WEAK) &&
-			(ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC || ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT)&& 
+			(ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC || ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT)&&
 		   (pElfSym->st_shndx<SHN_LORESERVE || pElfSym->st_shndx==SHN_ABS || pElfSym->st_shndx==SHN_COMMON) )
 		{
             ULONG section_flags = pElfShdr[pElfSym->st_shndx].sh_flags;
@@ -1761,10 +1759,10 @@ ULONG ListSymbolStartingAt(struct module* pMod,PICE_SYMBOLFILE_HEADER* pSymbols,
     return 0;
 }
 
-//************************************************************************* 
-// SanityCheckExports() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// SanityCheckExports()
+//
+//*************************************************************************
 BOOLEAN SanityCheckExports(void)
 {
     BOOLEAN bResult = FALSE;
@@ -1808,64 +1806,60 @@ BOOLEAN SanityCheckExports(void)
     return bResult;
 }
 
-//************************************************************************* 
-// LoadExports() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// LoadExports()
+//
+//*************************************************************************
 BOOLEAN LoadExports(void)
 {
-	struct file* pf;
+	HANDLE hf;
     BOOLEAN bResult = TRUE;
 
 	ENTER_FUNC();
-	
-    Print(OUTPUT_WINDOW,"pICE: loading exports...\n");
-	pf = filp_open("/boot/System.map",O_RDONLY,S_IRUSR);
 
-	if(IS_ERR(pf))
+    Print(OUTPUT_WINDOW,"pICE: loading exports...\n");
+	hf = PICE_open(L"\\SystemRoot\\symbols\\ntoskrnl.sym",OF_READ);
+	/*
+	if(hf)
     {
         Print(OUTPUT_WINDOW,"pICE: no System.map in /boot\n");
-	    pf = filp_open("/System.map",O_RDONLY,S_IRUSR);
+	    hf = PICE_open("/System.map",OF_READ);
     }
+	*/
 
-    if(!IS_ERR(pf))
+    if(hf)
 	{
 		mm_segment_t oldfs;
 		size_t len;
 
-        if(pf->f_op)
+		len = PICE_len(hf);
+        if(len)
         {
-		    DPRINT((0,"pf = %x pf->f_op->read @ %x\n",(ULONG)pf,(ULONG)pf->f_op->read));
-		    DPRINT((0,"pf->f_count = %x p->f_flags %x\n",pf->f_count,pf->f_flags));
+		    DPRINT((0,"file len = %d\n",len));
 
-		    len = pf->f_dentry->d_inode->i_size;
-            if(len)
-            {
-		        DPRINT((0,"file len = %d\n",len));
+		    pExports = PICE_malloc(len+1,NONPAGEDPOOL);  // maybe make pool setting an option
 
-		        pExports = vmalloc(len+1);
+		    DPRINT((0,"pExports = %x\n",pExports));
 
-		        DPRINT((0,"pExports = %x\n",pExports));
+            if(pExports)
+		    {
+        		//oldfs = get_fs(); set_fs(KERNEL_DS);
+                ulExportLen = len;
+			    ((PUCHAR)pExports)[len]=0;
+			    if(len == PICE_read(hf,pExports,len))
+			    {
+				    DPRINT((0,"success reading system map!\n"));
+            		PICE_sprintf(tempSym,"pICE: ntoskrnl.sym @ %x (size %x)\n",pExports,len);
+		    		Print(OUTPUT_WINDOW,tempSym);
+				}
+				else
+					DbgPrint("error reading ntoskrnl map!\n");
+    		    //set_fs(oldfs);
+		    }
 
-                PICE_sprintf(tempSym,"pICE: exports loaded @ %x (size %x)\n",pExports,len);
-		        Print(OUTPUT_WINDOW,tempSym);
-		        
-                if(pExports)
-		        {
-        		    oldfs = get_fs(); set_fs(KERNEL_DS);
-                    ulExportLen = len;
-			        ((PUCHAR)pExports)[len]=0;
-			        if(len == pf->f_op->read(pf,pExports,len,&pf->f_pos))
-			        {
-				        DPRINT((0,"success reading system map!\n"));
-			        }
-    		        set_fs(oldfs);
-		        }
-
-            }
         }
 
-		filp_close(pf,0);
+		PICE_close(hf);
 	}
     else
     {
@@ -1879,91 +1873,87 @@ BOOLEAN LoadExports(void)
     return bResult;
 }
 
-//************************************************************************* 
-// UnloadExports() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// UnloadExports()
+//
+//*************************************************************************
 void UnloadExports(void)
 {
 	ENTER_FUNC();
 	if(pExports)
-	{	
+	{
 		DPRINT((0,"freeing %x\n",pExports));
-		vfree(pExports);
+		PICE_free(pExports);
         pExports = NULL;
 	}
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// LoadSymbols() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// LoadSymbols()
+//
+//*************************************************************************
 PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 {
-	struct file* pf;
+	HANDLE hf;
     PICE_SYMBOLFILE_HEADER* pSymbols=NULL;
 
 	ENTER_FUNC();
-	
+
     if(ulNumSymbolsLoaded<DIM(apSymbols))
     {
-	    pf = filp_open(filename,O_RDONLY,S_IRUSR);
-	    if(!IS_ERR(pf))
+	    hf = PICE_open(filename,OF_READ);
+	    if(hf)
 	    {
-		    mm_segment_t oldfs;
+		    //mm_segment_t oldfs;
 		    size_t len;
 
-            DPRINT((0,"pf = %x\n",pf));
-            if(pf->f_op)
+            DPRINT((0,"hf = %x\n",hf));
+
+		    len = PICE_len(hf);
+		    DPRINT((0,"file len = %d\n",len));
+
+            if(len)
             {
-		        DPRINT((0,"pf = %x pf->f_op->read @ %x\n",(ULONG)pf,(ULONG)pf->f_op->read));
-		        DPRINT((0,"pf->f_count = %x p->f_flags %x\n",pf->f_count,pf->f_flags));
+		        pSymbols = PICE_malloc(len+1,NONPAGEDPOOL);  // maybe make pool setting an option
+		        DPRINT((0,"pSymbols = %x\n",pSymbols));
 
-		        len = pf->f_dentry->d_inode->i_size;
-		        DPRINT((0,"file len = %d\n",len));
-
-                if(len)
-                {
-		            pSymbols = vmalloc(len+1);
-		            DPRINT((0,"pSymbols = %x\n",pSymbols));
-
-		            if(pSymbols)
-		            {
-        		        oldfs = get_fs(); set_fs(KERNEL_DS);
-			            if(len == pf->f_op->read(pf,(PVOID)pSymbols,len,&pf->f_pos))
-			            {
-				            DPRINT((0,"LoadSymbols(): success reading symbols!\n"));
-				            DPRINT((0,"LoadSymbols(): pSymbols->magic = %X\n",pSymbols->magic));
-			            }
-        		        set_fs(oldfs);
+		        if(pSymbols)
+		        {
+        		    //oldfs = get_fs(); set_fs(KERNEL_DS);
+			        if(len == PICE_read(hf,(PVOID)pSymbols,len))
+			        {
+				        DPRINT((0,"LoadSymbols(): success reading symbols!\n"));
+				        DPRINT((0,"LoadSymbols(): pSymbols->magic = %X\n",pSymbols->magic));
+			        }
+        		    //set_fs(oldfs);
 
 
-						if(pSymbols->magic == PICE_MAGIC)
-						{
-                            DPRINT((0,"magic = %X\n",pSymbols->magic));
-	                        DPRINT((0,"name = %s\n",pSymbols->name));;
-                            DPRINT((0,"ulOffsetToHeaders,ulSizeOfHeader = %X,%X\n",pSymbols->ulOffsetToHeaders,pSymbols->ulSizeOfHeader));
-                            DPRINT((0,"ulOffsetToGlobals,ulSizeOfGlobals = %X,%X\n",pSymbols->ulOffsetToGlobals,pSymbols->ulSizeOfGlobals));
-                            DPRINT((0,"ulOffsetToGlobalsStrings,ulSizeOfGlobalsStrings = %X,%X\n",pSymbols->ulOffsetToGlobalsStrings,pSymbols->ulSizeOfGlobalsStrings));
-                            DPRINT((0,"ulOffsetToStabs,ulSizeOfStabs = %X,%X\n",pSymbols->ulOffsetToStabs,pSymbols->ulSizeOfStabs));
-                            DPRINT((0,"ulOffsetToStabsStrings,ulSizeOfStabsStrings = %X,%X\n",pSymbols->ulOffsetToStabsStrings,pSymbols->ulSizeOfStabsStrings));
-                            DPRINT((0,"ulOffsetToSrcFiles,ulNumberOfSrcFiles = %X,%X\n",pSymbols->ulOffsetToSrcFiles,pSymbols->ulNumberOfSrcFiles));
-							DPRINT((0,"pICE: symbols loaded for module \"%s\" @ %x\n",pSymbols->name,pSymbols));
-							apSymbols[ulNumSymbolsLoaded++]=pSymbols;
-						}
-						else
-						{
-    						DPRINT((0,"LoadSymbols(): freeing %x\n",pSymbols));
-							DPRINT((0,"pICE: symbols file \"%s\" corrupt\n",filename));
-	    					vfree(pSymbols);
-						}
-		            }
+					if(pSymbols->magic == PICE_MAGIC)
+					{
+                        DPRINT((0,"magic = %X\n",pSymbols->magic));
+	                    DPRINT((0,"name = %s\n",pSymbols->name));;
+                        DPRINT((0,"ulOffsetToHeaders,ulSizeOfHeader = %X,%X\n",pSymbols->ulOffsetToHeaders,pSymbols->ulSizeOfHeader));
+                        DPRINT((0,"ulOffsetToGlobals,ulSizeOfGlobals = %X,%X\n",pSymbols->ulOffsetToGlobals,pSymbols->ulSizeOfGlobals));
+                        DPRINT((0,"ulOffsetToGlobalsStrings,ulSizeOfGlobalsStrings = %X,%X\n",pSymbols->ulOffsetToGlobalsStrings,pSymbols->ulSizeOfGlobalsStrings));
+                        DPRINT((0,"ulOffsetToStabs,ulSizeOfStabs = %X,%X\n",pSymbols->ulOffsetToStabs,pSymbols->ulSizeOfStabs));
+                        DPRINT((0,"ulOffsetToStabsStrings,ulSizeOfStabsStrings = %X,%X\n",pSymbols->ulOffsetToStabsStrings,pSymbols->ulSizeOfStabsStrings));
+                        DPRINT((0,"ulOffsetToSrcFiles,ulNumberOfSrcFiles = %X,%X\n",pSymbols->ulOffsetToSrcFiles,pSymbols->ulNumberOfSrcFiles));
+						DPRINT((0,"pICE: symbols loaded for module \"%s\" @ %x\n",pSymbols->name,pSymbols));
+						apSymbols[ulNumSymbolsLoaded++]=pSymbols;
+					}
+					else
+					{
+    					DPRINT((0,"LoadSymbols(): freeing %x\n",pSymbols));
+						DPRINT((0,"pICE: symbols file \"%s\" corrupt\n",filename));
+	    				PICE_free(pSymbols);
+					}
+		        }
 
-                }
             }
 
-		    filp_close(pf,0);
+
+		    PICE_close(hf);
 	    }
         else
         {
@@ -1976,10 +1966,10 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
     return pSymbols;
 }
 
-//************************************************************************* 
-// ReloadSymbols() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ReloadSymbols()
+//
+//*************************************************************************
 BOOLEAN ReloadSymbols(void)
 {
     BOOLEAN bResult;
@@ -1987,7 +1977,7 @@ BOOLEAN ReloadSymbols(void)
 	ENTER_FUNC();
 
     UnloadSymbols();
-    
+
     bResult = LoadSymbolsFromConfig(TRUE);
 
     LEAVE_FUNC();
@@ -1995,10 +1985,10 @@ BOOLEAN ReloadSymbols(void)
     return bResult;
 }
 
-//************************************************************************* 
-// UnloadSymbols() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// UnloadSymbols()
+//
+//*************************************************************************
 void UnloadSymbols()
 {
     ULONG i;
@@ -2006,11 +1996,11 @@ void UnloadSymbols()
 	ENTER_FUNC();
 
     if(ulNumSymbolsLoaded)
-	{	
+	{
         for(i=0;i<ulNumSymbolsLoaded;i++)
         {
     		DPRINT((0,"freeing [%u] %x\n",i,apSymbols[i]));
-	    	vfree(apSymbols[i]);
+	    	PICE_free(apSymbols[i]);
             apSymbols[i] = NULL;
         }
         ulNumSymbolsLoaded = 0;
@@ -2018,13 +2008,13 @@ void UnloadSymbols()
     LEAVE_FUNC();
 }
 
-//************************************************************************* 
-// LoadSymbolsFromConfig() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// LoadSymbolsFromConfig()
+//
+//*************************************************************************
 BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 {
-	struct file* pf;
+	HANDLE hf;
 	LPSTR pConfig,pConfigEnd,pTemp;
 	char temp[256];
 	ULONG line = 1;
@@ -2032,143 +2022,141 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 
 	ENTER_FUNC();
 
-	pf = filp_open("/etc/pice.conf",O_RDONLY,0600);
-	if(!IS_ERR(pf))
+	hf = PICE_open("L"\\SystemRoot\\symbols\\pice.conf",OF_READ);
+	if(hf)
 	{
-		mm_segment_t oldfs;
+		//mm_segment_t oldfs;
 		size_t len;
 
-        DPRINT((0,"pf = %x\n",pf));
-        if(pf->f_op)
+        DPRINT((0,"hf = %x\n",hf));
+
+		len = PICE_len(hf);
+		DPRINT((0,"file len = %d\n",len));
+
+        if(len)
         {
-		    DPRINT((0,"pf = %x pf->f_op->read @ %x\n",(ULONG)pf,(ULONG)pf->f_op->read));
-		    DPRINT((0,"pf->f_count = %x p->f_flags %x\n",pf->f_count,pf->f_flags));
+		    pConfig = PICE_malloc(len+1,NONPAGEDPOOL);  // maybe make pool setting an option
+		    DPRINT((0,"pConfig = %x\n",pConfig));
+        	//oldfs = get_fs(); set_fs(KERNEL_DS);
 
-		    len = pf->f_dentry->d_inode->i_size;
-		    DPRINT((0,"file len = %d\n",len));
+			if(len == PICE_read(pf,(PVOID)pConfig,len))
+			{
+	    		//set_fs(oldfs);
 
-            if(len)
-            {
-		        pConfig = vmalloc(len+1);
-		        DPRINT((0,"pConfig = %x\n",pConfig));
-        		oldfs = get_fs(); set_fs(KERNEL_DS);
-			    if(len == pf->f_op->read(pf,(PVOID)pConfig,len,&pf->f_pos))
+				pConfigEnd = pConfig + len;
+
+				while(pConfig<pConfigEnd)
 				{
-	    		    set_fs(oldfs);
+					// skip leading spaces
+					while(*pConfig==' ' && pConfig<pConfigEnd)
+						pConfig++;
+					// get ptr to temporary
+					pTemp = temp;
+					// fill in temporary with symbol path
+					while(*pConfig!=0 && *pConfig!=0x0a && *pConfig!=0x0d && pConfig<pConfigEnd)
+						*pTemp++ = *pConfig++;
+					// finish up symbol path string
+					*pTemp = 0;
+					// skip any line ends
+					while((*pConfig==0x0a || *pConfig==0x0d) && pConfig<pConfigEnd)
+						pConfig++;
 
-					pConfigEnd = pConfig + len;
-
-					while(pConfig<pConfigEnd)
+					// finally try to load the symbols
+					if(PICE_strlen(temp))
 					{
-						// skip leading spaces
-						while(*pConfig==' ' && pConfig<pConfigEnd)
-							pConfig++;
-						// get ptr to temporary
-						pTemp = temp;
-						// fill in temporary with symbol path
-						while(*pConfig!=0 && *pConfig!=0x0a && *pConfig!=0x0d && pConfig<pConfigEnd)
-							*pTemp++ = *pConfig++;
-						// finish up symbol path string
-						*pTemp = 0;
-						// skip any line ends
-						while((*pConfig==0x0a || *pConfig==0x0d) && pConfig<pConfigEnd)
-							pConfig++;
+                        PICE_SYMBOLFILE_HEADER *pSymbols;
 
-						// finally try to load the symbols
-						if(PICE_strlen(temp))
-						{
-                            PICE_SYMBOLFILE_HEADER *pSymbols;
-
-                            // boot parameter
-                            if(*temp == '!')
+                        // boot parameter
+                        if(*temp == '!')
+                        {
+                            if(!bIgnoreBootParams)
                             {
-                                if(!bIgnoreBootParams)
+                                if(!PICE_strlen(szBootParams))
                                 {
-                                    if(!PICE_strlen(szBootParams))
-                                    {
-                                        PICE_strcpy(szBootParams,temp+1);
-                                        DPRINT((0,"pICE: boot params = %s\n",szBootParams));
-                                    }
-                                    else
-                                    {
-                                        DPRINT((0,"pICE: boot params already exist! ignoring...\n",szBootParams));
-                                    }
-                                }
-                            }
-                            // options
-                            else if(*temp == '+')
-                            {
-                                if(PICE_strlen(temp)>1)
-                                {
-                                    if(PICE_strcmp(temp,"+vga")==0)
-                                    {
-                                        eTerminalMode = TERMINAL_MODE_VGA_TEXT;
-                                        DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_VGA_TEXT\n"));
-                                    }
-                                    else if(PICE_strcmp(temp,"+hercules")==0)
-                                    {
-                                        eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS;
-                                        DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS\n"));
-                                    }
-                                    else if(PICE_strcmp(temp,"+serial")==0)
-                                    {
-                                        eTerminalMode = TERMINAL_MODE_SERIAL;
-                                        DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_SERIAL\n"));
-                                    }
+                                    PICE_strcpy(szBootParams,temp+1);
+                                    DPRINT((0,"pICE: boot params = %s\n",szBootParams));
                                 }
                                 else
                                 {
-                                    DPRINT((0,"pICE: found option, but no value\n"));
+                                    DPRINT((0,"pICE: boot params already exist! ignoring...\n",szBootParams));
                                 }
                             }
-                            // comment
-                            else if(*temp == '#')
+                        }
+                        // options
+                        else if(*temp == '+')
+                        {
+                            if(PICE_strlen(temp)>1)
                             {
-                                DPRINT((0,"comment out\n"));
+                                if(PICE_strcmp(temp,"+vga")==0)
+                                {
+                                    eTerminalMode = TERMINAL_MODE_VGA_TEXT;
+                                    DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_VGA_TEXT\n"));
+                                }
+                                else if(PICE_strcmp(temp,"+hercules")==0)
+                                {
+                                    eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS;
+                                    DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS\n"));
+                                }
+                                else if(PICE_strcmp(temp,"+serial")==0)
+                                {
+                                    eTerminalMode = TERMINAL_MODE_SERIAL;
+                                    DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_SERIAL\n"));
+                                }
                             }
-                            // symbol file name/path
                             else
                             {
-							    pSymbols = LoadSymbols(temp);
-                                if(pSymbols)
-                                {
-                                    PICE_SYMBOLFILE_SOURCE* pSrc;
-                                    LPSTR p;
+                                DPRINT((0,"pICE: found option, but no value\n"));
+                            }
+                        }
+                        // comment
+                        else if(*temp == '#')
+                        {
+                            DPRINT((0,"comment out\n"));
+                        }
+                        // symbol file name/path
+                        else
+                        {
+							DPRINT((0,"Load symbols from file %s\n", temp));
+							pSymbols = LoadSymbols(temp);
+                            if(pSymbols)
+                            {
+                                PICE_SYMBOLFILE_SOURCE* pSrc;
+                                LPSTR p;
 
-                                    pSrc = (PICE_SYMBOLFILE_SOURCE*)((ULONG)pSymbols + pSymbols->ulOffsetToSrcFiles);
-                                    pCurrentSymbols = pSymbols;
-                                    p = strrchr(pSrc->filename,'/');
-                                    if(p)
-                                    {
-                                        PICE_strcpy(szCurrentFile,p+1);
-                                    }
-                                    else
-                                    {
-                                        PICE_strcpy(szCurrentFile,pSrc->filename);
-                                    }
+                                pSrc = (PICE_SYMBOLFILE_SOURCE*)((ULONG)pSymbols + pSymbols->ulOffsetToSrcFiles);
+                                pCurrentSymbols = pSymbols;
+                                p = strrchr(pSrc->filename,'\\');
+                                if(p)
+                                {
+                                    PICE_strcpy(szCurrentFile,p+1);
+                                }
+                                else
+                                {
+                                    PICE_strcpy(szCurrentFile,pSrc->filename);
                                 }
                             }
-						}
-						else
-						{
-                            DPRINT((0,"invalid line [%u] in config!\n",line));
-						}
-						line++;
+                        }
 					}
-				}
-				else
-				{
-	    		    set_fs(oldfs);
+					else
+					{
+                        DPRINT((0,"invalid line [%u] in config!\n",line));
+					}
+					line++;
 				}
 			}
+			else
+			{
+	    		//set_fs(oldfs);
+			}
 		}
-	    filp_close(pf,0);
+
+	    PICE_close(hf);
         bResult = TRUE;
 	}
 	else
 	{
 		DPRINT((0,"pICE: config file not found! No symbols loaded.\n"));
-		DPRINT((0,"pICE: Please make sure to create a file /etc/pice.conf\n"));
+		DPRINT((0,"pICE: Please make sure to create a file \\systemroot\\symbols\\pice.conf\n"));
 		DPRINT((0,"pICE: if you want to have symbols for any module loaded.\n"));
 	}
 
@@ -2178,24 +2166,24 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 }
 
 
-//************************************************************************* 
+//*************************************************************************
 // EVALUATION OF EXPRESSIONS
-//************************************************************************* 
+//*************************************************************************
 
-//************************************************************************* 
-// SkipSpaces() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// SkipSpaces()
+//
+//*************************************************************************
 void SkipSpaces(void)
 {
 	while(pExpression[ulIndex]==' ')
 		ulIndex++;
 };
 
-//************************************************************************* 
-// FindGlobalStabSymbol() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// FindGlobalStabSymbol()
+//
+//*************************************************************************
 BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumber,PULONG pulFileNumber)
 {
     ULONG i;
@@ -2306,10 +2294,10 @@ BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumbe
 	return FALSE;
 }
 
-//************************************************************************* 
-// ExtractToken() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractToken()
+//
+//*************************************************************************
 void ExtractToken(LPSTR pStringToken)
 {
 	while(isalpha(pExpression[ulIndex]) || isdigit(pExpression[ulIndex]) || pExpression[ulIndex]=='_')
@@ -2319,10 +2307,10 @@ void ExtractToken(LPSTR pStringToken)
 	}
 }
 
-//************************************************************************* 
-// ExtractTypeName() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractTypeName()
+//
+//*************************************************************************
 LPSTR ExtractTypeName(LPSTR p)
 {
     static char temp[1024];
@@ -2343,10 +2331,10 @@ LPSTR ExtractTypeName(LPSTR p)
     return temp;
 }
 
-//************************************************************************* 
-// ExtractNumber() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractNumber()
+//
+//*************************************************************************
 LONG ExtractNumber(LPSTR p)
 {
     LONG lMinus = 1,lBase;
@@ -2376,7 +2364,7 @@ LONG ExtractNumber(LPSTR p)
         lBase = 10;
     else
         lBase = 8;
-    
+
     if(!IsAddressValid((ULONG)p) )
     {
         DPRINT((0,"ExtractNumber(): [3] invalid page %x hit!\n",p));
@@ -2398,10 +2386,10 @@ LONG ExtractNumber(LPSTR p)
     return (lNumber*lMinus);
 }
 
-//************************************************************************* 
-// ExtractArray() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractArray()
+//
+//*************************************************************************
 BOOLEAN ExtractArray(PVRET pvr,LPSTR p)
 {
     ULONG index_typenumber,type_number;
@@ -2447,10 +2435,10 @@ BOOLEAN ExtractArray(PVRET pvr,LPSTR p)
     return FALSE;
 }
 
-//************************************************************************* 
-// ExtractStructMembers() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// ExtractStructMembers()
+//
+//*************************************************************************
 PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
 {
     ULONG len;
@@ -2480,7 +2468,7 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
             DPRINT((0,"ExtractStructMembers(): type_number = %x\n",type_number));
 
             vr.type = type_number;
-            
+
             pEqual = PICE_strchr(p,')');
             // see if it includes type def
             if(pEqual)
@@ -2580,10 +2568,10 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
     return &vr;
 }
 
-//************************************************************************* 
-// EvaluateSymbol() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// EvaluateSymbol()
+//
+//*************************************************************************
 BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
 {
     LPSTR pTypeDef,pTypeName,pTypeBase,pSemiColon,pStructMembers;
@@ -2751,7 +2739,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         {
                             DPRINT((0,"EvaluateSymbol(): ptr is now %s\n",pStructMembers));
                             // go back to where member name starts
-                            while(*pStructMembers!=';') 
+                            while(*pStructMembers!=';')
                                 pStructMembers--;
                             // if ';' present, go to next char
                             if(pStructMembers)
@@ -2781,11 +2769,11 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
     return FALSE;
 }
 
-//************************************************************************* 
-// Symbol() 
-// 
+//*************************************************************************
+// Symbol()
+//
 // Symbol := v
-//************************************************************************* 
+//*************************************************************************
 BOOLEAN Symbol(PVRET pvr)
 {
 	char SymbolToken[128];
@@ -2797,11 +2785,11 @@ BOOLEAN Symbol(PVRET pvr)
     return EvaluateSymbol(pvr,SymbolToken);
 }
 
-//************************************************************************* 
-// Expression() 
-// 
+//*************************************************************************
+// Expression()
+//
 // Expression := Symbol | Symbol->Symbol
-//************************************************************************* 
+//*************************************************************************
 BOOLEAN Expression(PVRET pvr)
 {
 	if(!Symbol(pvr))
@@ -2810,10 +2798,10 @@ BOOLEAN Expression(PVRET pvr)
 	return TRUE;
 }
 
-//************************************************************************* 
-// Evaluate() 
-// 
-//************************************************************************* 
+//*************************************************************************
+// Evaluate()
+//
+//*************************************************************************
 void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
 {
     ULONG i;
