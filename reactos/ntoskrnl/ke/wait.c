@@ -29,7 +29,7 @@ static KSPIN_LOCK DispatcherDatabaseLock;
 #define KeDispatcherObjectWakeAll(hdr) KeDispatcherObjectWakeOneOrAll(hdr, TRUE)
 
 extern POBJECT_TYPE EXPORTED ExMutantObjectType;
-extern POBJECT_TYPE EXPORTED ExSemaphoreType;
+extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
 extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* FUNCTIONS *****************************************************************/
@@ -453,7 +453,7 @@ KiIsObjectWaitable(PVOID Object)
     if (Header->ObjectType == ExEventObjectType ||
 	Header->ObjectType == ExIoCompletionType ||
 	Header->ObjectType == ExMutantObjectType ||
-	Header->ObjectType == ExSemaphoreType ||
+	Header->ObjectType == ExSemaphoreObjectType ||
 	Header->ObjectType == ExTimerType ||
 	Header->ObjectType == PsProcessType ||
 	Header->ObjectType == PsThreadType ||

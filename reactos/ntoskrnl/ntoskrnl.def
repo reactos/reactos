@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.205 2004/12/21 04:05:18 royce Exp $
+; $Id: ntoskrnl.def,v 1.206 2004/12/26 17:48:19 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -142,6 +142,7 @@ ExReleaseResourceForThreadLite@8
 ExRosDumpPagedPoolByTag@4
 ExRosQueryPoolTag@4
 @ExRundownCompleted@4
+ExSemaphoreObjectType DATA
 ExSetResourceOwnerPointer@8
 ExSetTimerResolution@8
 ExSystemExceptionFilter@0
