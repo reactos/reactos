@@ -1,4 +1,5 @@
-/*
+/* $Id: npipe.c,v 1.2 2000/05/14 09:31:01 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/npipe.c
@@ -19,7 +20,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-HANDLE CreateNamedPipeA(LPCSTR lpName,
+HANDLE STDCALL CreateNamedPipeA(LPCSTR lpName,
 			DWORD dwOpenMode,
 			DWORD dwPipeMode,
 			DWORD nMaxInstances,
@@ -49,7 +50,7 @@ HANDLE CreateNamedPipeA(LPCSTR lpName,
    return(NamedPipeHandle);
 }
 
-HANDLE CreateNamedPipeW(LPCWSTR lpName,
+HANDLE STDCALL CreateNamedPipeW(LPCWSTR lpName,
 			DWORD dwOpenMode,
 			DWORD dwPipeMode,
 			DWORD nMaxInstances,
@@ -168,7 +169,7 @@ HANDLE CreateNamedPipeW(LPCWSTR lpName,
    return(PipeHandle);
 }
 
-BOOL WaitNamedPipeA(LPCSTR lpNamedPipeName,
+BOOL STDCALL WaitNamedPipeA(LPCSTR lpNamedPipeName,
 		    DWORD nTimeOut)
 {
    BOOL r;
@@ -185,7 +186,7 @@ BOOL WaitNamedPipeA(LPCSTR lpNamedPipeName,
    return(r);
 }
 
-BOOL WaitNamedPipeW(LPCWSTR lpNamedPipeName,
+BOOL STDCALL WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 		    DWORD nTimeOut)
 {
    UNICODE_STRING NamedPipeName;
@@ -245,7 +246,7 @@ BOOL WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    return(TRUE);
 }
 
-BOOL ConnectNamedPipe(HANDLE hNamedPipe,
+BOOL STDCALL ConnectNamedPipe(HANDLE hNamedPipe,
 		      LPOVERLAPPED lpOverLapped)
 {
    NPFS_LISTEN ListenPipe;
@@ -284,7 +285,7 @@ BOOL ConnectNamedPipe(HANDLE hNamedPipe,
    return(TRUE);
 }
 
-BOOL SetNamedPipeHandleState(HANDLE hNamedPipe,
+BOOL STDCALL SetNamedPipeHandleState(HANDLE hNamedPipe,
 			     LPDWORD lpMode,
 			     LPDWORD lpMaxCollectionCount,
 			     LPDWORD lpCollectDataTimeout)
@@ -374,3 +375,5 @@ BOOL SetNamedPipeHandleState(HANDLE hNamedPipe,
      }
    return(TRUE);
 }
+
+/* EOF */

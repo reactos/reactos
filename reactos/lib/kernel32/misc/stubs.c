@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.16 2000/05/13 13:50:57 dwelch Exp $
+/* $Id: stubs.c,v 1.17 2000/05/14 09:31:04 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -326,19 +326,6 @@ ConsoleMenuControl (
 	HANDLE	hConsole,
 	DWORD	Unknown1,
 	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-ContinueDebugEvent (
-	DWORD	dwProcessId,
-	DWORD	dwThreadId,
-	DWORD	dwContinueStatus
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3419,18 +3406,6 @@ SetMailslotInfo (
 
 WINBOOL
 STDCALL
-SetPriorityClass (
-	HANDLE	hProcess,
-	DWORD	dwPriorityClass
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
 SetProcessShutdownParameters (
 	DWORD	dwLevel,
 	DWORD	dwFlags
@@ -3706,19 +3681,6 @@ WaitCommEvent (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-WINBOOL
-STDCALL
-WaitForDebugEvent (
-	LPDEBUG_EVENT	lpDebugEvent,
-	DWORD		dwMilliseconds
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 
 int

@@ -1,4 +1,5 @@
-/*
+/* $Id: process.c,v 1.41 2000/05/14 09:31:05 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * FILE:              ntoskrnl/ps/process.c
@@ -730,3 +731,152 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
    return(Status);
 }
 
+
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	PiSnapshotProcessTable
+ *
+ * DESCRIPTION
+ * 	Compute the size of a process+thread snapshot as 
+ * 	expected by NtQuerySystemInformation.
+ *
+ * RETURN VALUE
+ * 	0 on error; otherwise the size, in bytes of the buffer
+ * 	required to write a full snapshot.
+ *
+ * NOTE
+ * 	We assume (sizeof (PVOID) == sizeof (ULONG)) holds.
+ */
+NTSTATUS
+STDCALL
+PiSnapshotProcessTable (
+	IN	PVOID	SnapshotBuffer,
+	IN	ULONG	Size,
+	IN	PULONG	pRequiredSize
+	)
+{
+	KIRQL		OldIrql;
+	PLIST_ENTRY	CurrentEntry;
+	PEPROCESS	Current;
+	
+	ULONG		RequiredSize = 0L;
+	BOOLEAN		SizeOnly = FALSE;
+
+	ULONG		SpiSizeLast = 0L;
+	ULONG		SpiSizeCurrent = 0L;
+	
+	PSYSTEM_PROCESS_INFORMATION	pInfoP = (PSYSTEM_PROCESS_INFORMATION) SnapshotBuffer;
+	PSYSTEM_THREAD_INFO		pInfoT = NULL;
+	
+
+	/*
+	 * Lock the process list.
+	 */
+	KeAcquireSpinLock (
+		& PsProcessListLock,
+		& OldIrql
+		);
+	/*
+	 * Scan the process list. Since the
+	 * list is circular, the guard is false
+	 * after the last process.
+	 */
+	for (	CurrentEntry = PsProcessListHead.Flink;
+		(CurrentEntry != & PsProcessListHead);
+		CurrentEntry = CurrentEntry->Flink
+		)
+	{
+		/* 
+		 * Get a reference to the 
+		 * process object we are
+		 * handling.
+		 */
+		Current = CONTAINING_RECORD(
+				CurrentEntry,
+				EPROCESS, 
+				Pcb.ProcessListEntry
+				);
+		/* FIXME: assert (NULL != Current) */
+		/*
+		 * Compute how much space is
+		 * occupied in the snapshot
+		 * by adding this process info.
+		 */
+		SpiSizeCurrent = 
+			sizeof (SYSTEM_PROCESS_INFORMATION)
+			+ (
+				(Current->ThreadCount - 1)
+				* sizeof (SYSTEM_THREAD_INFORMATION)
+				);
+		RequiredSize += SpiSizeCurrent;
+		/*
+		 * Do not write process data in the
+		 * buffer if it is too small.
+		 */
+		if (TRUE == SizeOnly) continue;
+		/*
+		 * Check if the buffer can contain
+		 * the full snapshot.
+		 */
+		if (Size < RequiredSize)
+		{
+			SizeOnly = TRUE;
+			continue;
+		}
+		/*
+		 * Compute the offset of the 
+		 * SYSTEM_PROCESS_INFORMATION
+		 * descriptor in the snapshot 
+		 * buffer for this process.
+		 */
+		if (0L != SpiSizeLast)
+		{
+			(ULONG) pInfoP += SpiSizeLast;
+			/* Save current process SpiSize */
+			SpiSizeLast = SpiSizeCurrent;
+		}
+		/*
+		 * Write process data in the buffer.
+		 */
+		pInfoP->RelativeOffset = SpiSizeCurrent;
+		/* PROCESS */
+		pInfoP->ThreadCount =
+		pInfoP->ProcessId = Current->UniqueProcessId;
+		RtlInitUnicodeString (
+			& pInfoP->Name,
+			Current->ImageFileName
+			);
+		/* THREAD */
+		for (	ThreadIndex = 0;
+			(ThreadIndex < Current->ThreadCount);
+			ThreadIndex ++
+			)
+		{
+		}
+	}
+	/*
+	 * Unlock the process list.
+	 */
+	KeReleaseSpinLock (
+		& PsProcessListLock,
+		OldIrql
+		);
+	/*
+	 * Return the proper error status code,
+	 * if the buffer was too small.
+	 */
+	if (TRUE == SizeOnly)
+	{
+		*pRequiredSize = RequiredSize;
+		return STATUS_INFO_LENGTH_MISMATCH;
+	}
+	/*
+	 * Mark the end of the snapshot.
+	 */
+	pInfoP->RelativeOffset = 0L;
+	/* OK */	
+	return STATUS_SUCCESS;
+}
+
+
+/* EOF */
