@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: autochk.c,v 1.4 2002/10/25 22:08:20 chorns Exp $
+/* $Id: autochk.c,v 1.5 2004/11/21 10:39:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,14 +68,22 @@ PrintString(char* fmt,...)
 VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
+  PROCESS_DEVICEMAP_INFORMATION DeviceMap;
   ULONG i;
+  NTSTATUS Status;
 
   PrintString("Autochk 0.0.1\n");
+  
+  Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                     ProcessDeviceMap,
+                                     &DeviceMap,
+                                     sizeof(DeviceMap),
+                                     NULL);
 
   for (i = 0; i < 26; i++)
     {
-      if ((SharedUserData->DosDeviceMap & (1 << i)) &&
-	  (SharedUserData->DosDeviceDriveType[i] == DOSDEVICE_DRIVE_FIXED))
+      if ((DeviceMap.Query.DriveMap & (1 << i)) &&
+	  (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
 	{
 	  PrintString("  Checking drive %c:", 'A'+i);
 	  PrintString("      OK\n");

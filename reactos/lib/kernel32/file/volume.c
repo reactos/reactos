@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.43 2004/11/21 06:51:17 ion Exp $
+/* $Id: volume.c,v 1.44 2004/11/21 10:39:11 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -161,16 +161,18 @@ GetLogicalDrives(VOID)
 	/* Get the Device Map for this Process */
 	Status = NtQueryInformationProcess(NtCurrentProcess(),
 					   ProcessDeviceMap,
-					   &ProcessDeviceMapInfo.Query,
-					   sizeof(ProcessDeviceMapInfo.Query),
+					   &ProcessDeviceMapInfo,
+					   sizeof(ProcessDeviceMapInfo),
 					   NULL);
-					   
+
 	/* Return the Drive Map */
-	if (!NT_SUCCESS(Status)) {
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus(Status);
 		return 0;
-	} else {
-		return ProcessDeviceMapInfo.Query.DriveMap;
 	}
+
+        return ProcessDeviceMapInfo.Query.DriveMap;
 }
 
 
