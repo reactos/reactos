@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.81 2004/07/22 18:38:08 ekohl Exp $
+/* $Id: object.c,v 1.82 2004/07/26 13:19:34 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -480,9 +480,6 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 						0,
 						NewSecurityDescriptor,
 						NULL);
-#if 0
-	  Status = STATUS_SUCCESS;
-#endif
 	}
       else
 	{
@@ -538,7 +535,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 		Header->ObjectType,
 		Header->ObjectType->TypeName.Buffer,
 		ObjectType,
-    ObjectType->TypeName.Buffer);
+		ObjectType->TypeName.Buffer);
 	return(STATUS_UNSUCCESSFUL);
      }
    if (Header->ObjectType == PsProcessType)
