@@ -14,12 +14,12 @@ BEGIN
    IDS_COLUMN_PF           "Page Faults"
 
    IDS_IDLE_PROCESS        "System Idle Process"
-   IDS_YES                 "y"
-   IDS_NO                  "n"
+   IDS_YES                 "Y"
+   IDS_NO                  "N"
    
    IDS_MENU                "Press: q - quit, k - kill process"
-   IDS_MENU_QUIT           "q"
-   IDS_MENU_KILL_PROCESS   "k"
+   IDS_MENU_QUIT           "Q"
+   IDS_MENU_KILL_PROCESS   "K"
    
    IDS_KILL_PROCESS        "Are you sure you want to kill this process? (y/n)"
    IDS_KILL_PROCESS_ERR1   "Unable to terminate this process..."
