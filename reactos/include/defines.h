@@ -1314,6 +1314,7 @@ extern "C" {
 #define SCS_PIF_BINARY	(3)
 #define SCS_POSIX_BINARY	(4)
 #define SCS_WOW_BINARY	(2)
+#define SCS_64BIT_BINARY	(6)
 
 /* GetBoundsRect, SetBoundsRect */
 #define DCB_DISABLE	(8)

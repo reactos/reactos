@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.73 2004/04/22 02:20:52 jimtabor Exp $
+/* $Id: stubs.c,v 1.74 2004/05/02 14:47:05 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -165,35 +165,6 @@ BOOL
 STDCALL
 FreeVirtualBuffer (
     HANDLE  hVirtualBuffer
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetBinaryTypeW (
-    LPCWSTR lpApplicationName,
-    LPDWORD lpBinaryType
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetBinaryTypeA (
-    LPCSTR  lpApplicationName,
-    LPDWORD lpBinaryType
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
