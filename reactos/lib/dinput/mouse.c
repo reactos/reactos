@@ -871,6 +871,7 @@ static int b[5];
 static POINT point;
 int calc;
 int count_button;
+int add = 0;
 #endif
 
     
@@ -898,19 +899,13 @@ GetCursorPos( &point );
 
   if (This->acquired == 0) {
 	WARN(" application tries to get data from an unacquired device !\n");
-	//return DIERR_NOTACQUIRED;
+	return DIERR_NOTACQUIRED;
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	 if (last_event==0)
-	 {
-	  This->absolute = 0;
-	  SysMouseAImpl_Acquire(iface);
-	  FIXME("This make the mouse choppy in Tribes , need new center code for calcuation of the mouse !!!!!!!!\n"); 
-	 }	
 	}
 	
     
@@ -918,6 +913,7 @@ GetCursorPos( &point );
    
 
 #ifdef __REACTOS__	
+
 
   if (*entries == 0) return DIERR_INVALIDPARAM;
 
@@ -930,44 +926,56 @@ GetCursorPos( &point );
        return DIERR_NOTINITIALIZED;
 	}   	      
     
+/* this code are not need it but if we want 100% compatible
+  with ms we should keep it. but the mouse will be choppy 
+  in Unreal 2004 Demo
+
   if (GetTickCount()-time <50) {
 	  *entries=0;
 	  return DI_OK;
       }
-
   time = GetTickCount();
-  
-  
+*/  
+	if (GetTickCount()-time <50)
+	   {
+	    add=0;
+	   }
+	else 
+	{
+	 add=1;
+	 time = GetTickCount();
+	}
 
 
   for (count=0;count<*entries;count++) {
 	  
-	 if (save_point.x != point.x) {
-         dod[count_ent].dwOfs =   DIMOFS_X;         
+	 
+	  if (save_point.x != point.x) {
+             dod[count_ent].dwOfs =   DIMOFS_X;         
 
-		 dod[count_ent].dwData =  point.x - save_point.x;		         		 
-         dod[count_ent].dwTimeStamp =  time +1; 
-         dod[count_ent].dwSequence = last_event++;  
-		 count_ent++;
-         save_point.x = point.x;
-         }
+		     dod[count_ent].dwData =  point.x - save_point.x;		         		 
+             dod[count_ent].dwTimeStamp =  GetTickCount();
+             dod[count_ent].dwSequence = last_event+=add;  
+		     count_ent++;
+             save_point.x = point.x;
+		     }
 
-     else if (save_point.y != point.y) {
-        dod[count_ent].dwOfs =   DIMOFS_Y;		
-		dod[count_ent].dwData =  point.y - save_point.y;	
+	   else  if (save_point.y != point.y) {
+              dod[count_ent].dwOfs =   DIMOFS_Y;		
+		      dod[count_ent].dwData =  point.y - save_point.y;	
 
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event;
-		count_ent++;
-		save_point.y = point.y;		
-	    }
-          
+              dod[count_ent].dwTimeStamp =  GetTickCount();
+              dod[count_ent].dwSequence =  last_event+=add;  
+		      count_ent++;
+		      save_point.y = point.y;				
+	          }	      
+
 	 else if (save_b[0] != b[0]) {		 
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON0;
 			
         dod[count_ent].dwData =   b[0];
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event;
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
 		count_ent++;
 		save_b[0] = b[0];
 	    }
@@ -976,8 +984,8 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON1;
 			
         dod[count_ent].dwData =   b[1];
-        dod[count_ent].dwTimeStamp =  time ;
-        dod[count_ent].dwSequence = last_event;
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
 		count_ent++;
 		save_b[1] = b[1];
 	    }
@@ -986,8 +994,8 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON2;
 			
         dod[count_ent].dwData =   b[2];
-        dod[count_ent].dwTimeStamp =  time ;
-        dod[count_ent].dwSequence = last_event;
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
 		count_ent++;
 		save_b[2] = b[2];
 	    }
@@ -996,8 +1004,8 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON3;
 			
         dod[count_ent].dwData =   b[3];
-        dod[count_ent].dwTimeStamp =  time ;
-        dod[count_ent].dwSequence = last_event;
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
 		count_ent++;
 		save_b[3] = b[3];
 	    }
@@ -1005,8 +1013,8 @@ GetCursorPos( &point );
 
   }  // end for
 
-if (count_ent>0)last_event++;
-SetCursorPos(save_point.x, save_point.y);
+
+SetCursorPos(point.x, point.y);
 *entries = count_ent;
 #endif
 
