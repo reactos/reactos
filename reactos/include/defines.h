@@ -5084,10 +5084,6 @@ DECLARE_HANDLE(HANDLE);
 
 #define QID_SYNC 0xFFFFFFFF
 
-/* Magic numbers in PE executable header.  */
-
-#define IMAGE_DOS_SIGNATURE	(0x5a4d) /* e_magic field */
-#define IMAGE_NT_SIGNATURE	(0x4550) /* nt_signature field */
 
 /* To mark direction in formal parameters list */
 
