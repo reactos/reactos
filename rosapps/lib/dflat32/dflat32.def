@@ -1,0 +1,68 @@
+;
+; ReactOS dflat32 COnsole Windowing Library
+;
+LIBRARY DFLAT32.DLL
+
+EXPORTS
+AllocError			; dfalloc.c
+AltConvert			; console.c
+beep				; console.c
+cursor				; console.c
+curr_cursor			; console.c
+CopyTextToClipboard		; clipbord.c
+CopyToClipboard			; clipbord.c
+ClearClipboard			; clipbord.c
+DFcalloc			; dfalloc.c
+DFmalloc			; dfalloc.c
+DFrealloc			; dfalloc.c
+GetKey				; console.c
+getshift			; console.c
+hidecursor			; console.c
+normalcursor			; console.c
+PasteText			; clipbord.c
+restorecursor			; console.c
+savecursor			; console.c
+set_cursor_size			; console.c
+SetStandardColor		; config.c
+SetReverseColor			; config.c
+SwapCursorStack			; console.c
+unhidecursor			; console.c
+; Update this stuff below from message.c
+DfDispatchMessage		; message.c
+handshake			; message.c
+DfSendMessage			; message.c
+DfPostMessage			; message.c
+DfTerminate			; message.c
+DfInitialize			; message.c
+DfGetScreenWidth		; message.c
+DfGetScreenHeight		; message.c
+; Update this stuff below from Rect.c 
+subRectangle
+ClientRect
+RelativeWindowRect
+ClipRectangle
+; stuff from video.c
+GetVideo
+StoreVideo
+GetVideoChar
+PutVideoChar
+CharInView
+wputch
+wputs
+scroll_window
+; stuff from window.c
+DfCreateWindow
+AddTitle
+InsertTitle
+writeline
+AdjustRectangle
+DisplayTitle
+PaintShadow
+RepaintBorder
+ClearWindow
+LineLength
+InitWindowColors
+PutWindowChar
+PutWindowLine
+; exports from the stubs
+classdefs
