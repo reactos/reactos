@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.41 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: mdl.c,v 1.42 2002/06/10 21:36:31 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -209,6 +209,16 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
   /* Calculate the number of pages we mapped. */
   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGESIZE;
 
+  /* Unmap all the pages. */
+  for (i = 0; i < RegionSize; i++)
+    {
+      MmDeleteVirtualMapping(NULL, 
+			     BaseAddress + (i * PAGESIZE),
+			     FALSE,
+			     NULL,
+			     NULL);
+    }
+
   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
   Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase - Mdl->ByteOffset);
@@ -225,16 +235,6 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
     }
   KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
   
-  /* Unmap all the pages. */
-  for (i = 0; i < RegionSize; i++)
-    {
-      MmDeleteVirtualMapping(NULL, 
-			     BaseAddress + (i * PAGESIZE),
-			     FALSE,
-			     NULL,
-			     NULL);
-    }
-
   /* Reset the MDL state. */
   Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
   Mdl->MappedSystemVa = NULL;
