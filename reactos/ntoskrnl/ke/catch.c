@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.37 2003/12/12 17:09:27 weiden Exp $
+/* $Id: catch.c,v 1.38 2003/12/14 19:43:09 navaraf Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -99,6 +99,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      PULONG Stack;
 	      ULONG CDest;
 	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; // FIXME: HACKHACK
+	      PULONG pNewUserStack = (PULONG)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
 	      NTSTATUS StatusOfCopy;
 
 	      /* FIXME: Forward exception to user mode debugger */
@@ -113,19 +114,18 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      /* Return address */
 	      Stack[0] = 0;    
 	      /* Pointer to EXCEPTION_RECORD structure */
-	      Stack[1] = (ULONG)&Stack[3];
+	      Stack[1] = (ULONG)&pNewUserStack[3];
 	      /* Pointer to CONTEXT structure */
-	      Stack[2] = (ULONG)&Stack[CDest];
+	      Stack[2] = (ULONG)&pNewUserStack[CDest];
 	      memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	      memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
-	      StatusOfCopy = MmCopyToCaller((PVOID)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT))),
-	                                    temp_space,
-	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
+	      StatusOfCopy = MmCopyToCaller(pNewUserStack,
+ 	                                    temp_space,
+ 	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
 	      if (NT_SUCCESS(StatusOfCopy))
 	        {
-	          Tf->Esp = Tf->Esp - 
-	            (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
+	          Tf->Esp = (ULONG)pNewUserStack;
 	        }
 	      else
 	        {
