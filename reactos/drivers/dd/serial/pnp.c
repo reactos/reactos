@@ -14,9 +14,10 @@
 #include "serial.h"
 
 NTSTATUS STDCALL
-SerialAddDevice(
+SerialAddDeviceInternal(
 	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT Pdo)
+	IN PDEVICE_OBJECT Pdo,
+	OUT PDEVICE_OBJECT* pFdo OPTIONAL)
 {
 	PDEVICE_OBJECT Fdo = NULL;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension = NULL;
@@ -26,7 +27,7 @@ SerialAddDevice(
 	//UNICODE_STRING SymbolicLinkName;
 	static ULONG DeviceNumber = 0;
 
-	DPRINT("Serial: SerialAddDevice called\n");
+	DPRINT("Serial: SerialAddDeviceInternal called\n");
    
 	/* Create new device object */
 	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceNumber);
@@ -81,6 +82,10 @@ SerialAddDevice(
 		goto ByeBye;
 	}
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+	if (pFdo)
+	{
+		*pFdo = Fdo;
+	}
 	
 	return STATUS_SUCCESS;
 
@@ -95,12 +100,34 @@ ByeBye:
 }
 
 NTSTATUS STDCALL
+SerialAddDevice(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PDEVICE_OBJECT Pdo)
+{
+	/* Serial.sys is a legacy driver. AddDevice is called once
+	 * with a NULL Pdo just after the driver initialization.
+	 * Detect this case and return success.
+	 */
+	if (Pdo == NULL)
+		return STATUS_SUCCESS;
+	
+	/* We have here a PDO that does not correspond to a legacy
+	 * serial port. So call the internal AddDevice function.
+	 */
+	DPRINT1("Serial: SerialAddDevice() called. Pdo 0x%p (should be NULL)\n", Pdo);
+	/* FIXME: due to a bug, previously described AddDevice is
+	 * not called with a NULL Pdo. Block this call (blocks
+	 * unfortunately all the other PnP serial ports devices).
+	 */
+	//return SerialAddDeviceInternal(DriverObject, Pdo, NULL);
+	return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS STDCALL
 SerialPnpStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp)
+	IN PCM_RESOURCE_LIST ResourceList)
 {
-	PIO_STACK_LOCATION Stack;
-	//PCM_RESOURCE_LIST ResourceList;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	WCHAR DeviceNameBuffer[32];
 	UNICODE_STRING DeviceName;
@@ -108,16 +135,17 @@ SerialPnpStartDevice(
 	UNICODE_STRING LinkName;
 	WCHAR ComPortBuffer[32];
 	UNICODE_STRING ComPort;
-	ULONG Vector;
-	//ULONG i, j;
+	ULONG Vector = 0;
+	ULONG i, j;
 	KIRQL Dirql;
 	KAFFINITY Affinity;
+	KINTERRUPT_MODE InterruptMode = Latched;
+	BOOLEAN ShareInterrupt = TRUE;
 	OBJECT_ATTRIBUTES objectAttributes;
 	UNICODE_STRING KeyName;
 	HANDLE hKey;
 	NTSTATUS Status;
 	
-	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
 	/* FIXME: actually, IRP_MN_START_DEVICE is sent twice to each serial device:
@@ -128,66 +156,47 @@ SerialPnpStartDevice(
 	 */
 	if (DeviceExtension->PnpState == dsStarted) return STATUS_SUCCESS;
 	
-#if 1
-	/* FIXME: PnP isn't correctly implemented and doesn't give us a list
-	 * of our own resources. Use default values instead.
-	 */
-	switch (DeviceExtension->SerialPortNumber)
-	{
-		case 0:
-			DPRINT("Serial: creating COM1:\n");
-			DeviceExtension->ComPort = 1;
-			DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
-			DeviceExtension->BaseAddress = 0x3F8;
-			DeviceExtension->Irq = 4;
-			break;
-		case 1:
-			DPRINT("Serial: creating COM2:\n");
-			DeviceExtension->ComPort = 2;
-			DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
-			DeviceExtension->BaseAddress = 0x2F8;
-			DeviceExtension->Irq = 3;
-			break;
-		default:
-			DPRINT1("Serial: too much ports detected. Forgetting this one...\n");
-			return STATUS_INSUFFICIENT_RESOURCES;
-	}
-#else
-	DPRINT1("Serial: ResourceList %p, ResourceListTranslated %p\n",
-		Stack->Parameters.StartDevice.AllocatedResources,
-		Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
-	ResourceList = Stack->Parameters.StartDevice.AllocatedResourcesTranslated;
+	DeviceExtension->ComPort = DeviceExtension->SerialPortNumber + 1;
+	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
+	DeviceExtension->BaseAddress = 0;
+	Dirql = 0;
 	for (i = 0; i < ResourceList->Count; i++)
 	{
-		DPRINT1("Serial: Interface type = 0x%x\n", ResourceList->List[i].InterfaceType);
-		DPRINT1("Serial: Bus number = 0x%x\n", ResourceList->List[i].BusNumber);
-		for (j = 0; i < ResourceList->List[i].PartialResourceList.Count; j++)
+		for (j = 0; j < ResourceList->List[i].PartialResourceList.Count; j++)
 		{
 			PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[i].PartialResourceList.PartialDescriptors[j];
-			DPRINT1("Serial: Type 0x%x, Share disposition 0x%x, Flags 0x%x\n",
-				PartialDescriptor->Type,
-				PartialDescriptor->ShareDisposition,
-				PartialDescriptor->Flags);
 			switch (PartialDescriptor->Type)
 			{
 				case CmResourceTypePort:
+					if (PartialDescriptor->u.Port.Length < 8)
+						return STATUS_INSUFFICIENT_RESOURCES;
+					if (DeviceExtension->BaseAddress != 0)
+						return STATUS_UNSUCCESSFUL;
 					DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;
-					DPRINT1("Serial: CmResourceTypePort = %lu\n", DeviceExtension->BaseAddress);
 					break;
 				case CmResourceTypeInterrupt:
-					/* FIXME: Detect if interrupt is shareable and/or latched */
-					/* FIXME: use also ->u.Interrupt.Vector and ->u.Interrupt.Affinity
-					 * to remove call to HalGetInterruptVector(...) */
-					DeviceExtension->Irq = PartialDescriptor->u.Interrupt.Level;
-					DPRINT1("Serial: Irq = %lu\n", DeviceExtension->Irq);
+					if (Dirql != 0)
+						return STATUS_UNSUCCESSFUL;
+					Dirql = (KIRQL)PartialDescriptor->u.Interrupt.Level;
+					Vector = PartialDescriptor->u.Interrupt.Vector;
+					Affinity = PartialDescriptor->u.Interrupt.Affinity;
+					if (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+						InterruptMode = Latched;
+					else
+						InterruptMode = LevelSensitive;
+					ShareInterrupt = (PartialDescriptor->ShareDisposition == CmResourceShareShared);
 					break;
 			}
 		}
 	}
-	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
-	/* FIXME: use polling if no interrupt was found? */
-	DeviceExtension->ComPort = 5; /* FIXME: use incremental value, or find it in resource list */
-#endif
+	DPRINT("Serial: New COM port. Base = 0x%lx, Irql = %u\n",
+		DeviceExtension->BaseAddress, Dirql);
+	if (!DeviceExtension->BaseAddress)
+		return STATUS_INSUFFICIENT_RESOURCES;
+	/* FIXME: we should be able to continue and use polling method
+	 * for read/write if we don't have an interrupt */
+	if (!Dirql)
+		return STATUS_INSUFFICIENT_RESOURCES;
 	
 	/* Get current settings */
 	DeviceExtension->IER = READ_PORT_UCHAR(SER_IER((PUCHAR)DeviceExtension->BaseAddress));
@@ -229,11 +238,11 @@ SerialPnpStartDevice(
 	}
 	
 	/* Connect interrupt and enable them */
-	Vector = HalGetInterruptVector(Internal, 0, 0, DeviceExtension->Irq, &Dirql, &Affinity);
 	Status = IoConnectInterrupt(
 		&DeviceExtension->Interrupt, SerialInterruptService,
-		DeviceObject, NULL, Vector, Dirql, Dirql, Latched,
-		FALSE /* FIXME: or TRUE to share interrupt on PCI bus? */,
+		DeviceObject, NULL,
+		Vector, Dirql, Dirql,
+		InterruptMode, ShareInterrupt,
 		Affinity, FALSE);
 	if (!NT_SUCCESS(Status))
 	{
@@ -288,7 +297,9 @@ SerialPnp(
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status))
-				Status = SerialPnpStartDevice(DeviceObject, Irp);
+				Status = SerialPnpStartDevice(
+					DeviceObject,
+					Stack->Parameters.StartDevice.AllocatedResources);
 			break;
 		}
 		/* IRP_MN_QUERY_STOP_DEVICE (FIXME: required) */

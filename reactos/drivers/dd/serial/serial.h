@@ -70,7 +70,6 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	ULONG ComPort;
 	ULONG BaudRate;
 	ULONG BaseAddress;
-	ULONG Irq;
 	PKINTERRUPT Interrupt;
 	
 	SERIAL_LINE_CONTROL SerialLineControl;
@@ -235,9 +234,20 @@ SerialInterruptService(
 /************************************ pnp.c */
 
 NTSTATUS STDCALL
+SerialAddDeviceInternal(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PDEVICE_OBJECT Pdo,
+	OUT PDEVICE_OBJECT* pFdo OPTIONAL);
+
+NTSTATUS STDCALL
 SerialAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo);
+
+NTSTATUS STDCALL
+SerialPnpStartDevice(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PCM_RESOURCE_LIST ResourceList);
 
 NTSTATUS STDCALL
 SerialPnp(
