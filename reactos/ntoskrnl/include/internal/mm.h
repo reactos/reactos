@@ -146,7 +146,7 @@ typedef struct
 typedef struct _MADDRESS_SPACE
 {
   LIST_ENTRY MAreaListHead;
-  KMUTEX Lock;
+  FAST_MUTEX Lock;
   ULONG LowestAddress;
   struct _EPROCESS* Process;
   PUSHORT PageTableRefCountTable;
@@ -509,5 +509,7 @@ BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address);
 VOID
 MmTransferOwnershipPage(PVOID PhysicalAddress, ULONG NewConsumer);
 VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
+VOID
+MmInitializeMdlImplementation(VOID);
 
 #endif

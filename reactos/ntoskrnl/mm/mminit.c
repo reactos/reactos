@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.33 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: mminit.c,v 1.34 2002/05/17 23:01:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -338,6 +338,8 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * Intialize memory areas
     */
    MmInitVirtualMemory(LastKernelAddress, kernel_len);
+
+   MmInitializeMdlImplementation();
 }
 
 VOID MmInit2(VOID)

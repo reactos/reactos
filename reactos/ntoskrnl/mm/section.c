@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.82 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: section.c,v 1.83 2002/05/17 23:01:56 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2396,7 +2396,7 @@ NtOpenSection(PHANDLE			SectionHandle,
    return(Status);
 }
 
-NTSTATUS
+NTSTATUS STATIC
 MmMapViewOfSegment(PEPROCESS Process,
 		   PMADDRESS_SPACE AddressSpace,
 		   PSECTION_OBJECT Section,
@@ -2410,7 +2410,6 @@ MmMapViewOfSegment(PEPROCESS Process,
   NTSTATUS Status;
   KIRQL oldIrql;
 
-  MmLockAddressSpace(&Process->AddressSpace);
   if (Protect == PAGE_NOACCESS || Protect == PAGE_GUARD)
     {
       DPRINT1("Mapping inaccessible region between 0x%.8X and 0x%.8X\n",
@@ -2424,29 +2423,28 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      Protect,
 			      &MArea,
 			      FALSE);
-   MmUnlockAddressSpace(&Process->AddressSpace);
-   if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
-	       (*BaseAddress), (*BaseAddress) + ViewSize);
-       return(Status);
-     }
-   
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   InsertTailList(&Section->ViewListHead, 
-		  &MArea->Data.SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
- 
-   ObReferenceObjectByPointer((PVOID)Section,
-			      SECTION_MAP_READ,
-			      NULL,
-			      ExGetPreviousMode());
-   MArea->Data.SectionData.Segment = Segment;
-   MArea->Data.SectionData.Section = Section;
-   MArea->Data.SectionData.ViewOffset = ViewOffset;
-   MArea->Data.SectionData.WriteCopyView = FALSE;
-
-   return(STATUS_SUCCESS);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
+	      (*BaseAddress), (*BaseAddress) + ViewSize);
+      return(Status);
+    }
+  
+  KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
+  InsertTailList(&Section->ViewListHead, 
+		 &MArea->Data.SectionData.ViewListEntry);
+  KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+  
+  ObReferenceObjectByPointer((PVOID)Section,
+			     SECTION_MAP_READ,
+			     NULL,
+			     ExGetPreviousMode());
+  MArea->Data.SectionData.Segment = Segment;
+  MArea->Data.SectionData.Section = Section;
+  MArea->Data.SectionData.ViewOffset = ViewOffset;
+  MArea->Data.SectionData.WriteCopyView = FALSE;
+  
+  return(STATUS_SUCCESS);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.39 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: mdl.c,v 1.40 2002/05/17 23:01:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,7 +23,45 @@
 
 #define TAG_MDL    TAG('M', 'M', 'D', 'L')
 
+#define MI_MDL_MAPPING_REGION_SIZE       (256*1024*1024)
+
+static PVOID MiMdlMappingRegionBase = NULL;
+static PULONG MiMdlMappingRegionAllocMap = NULL;
+static ULONG MiMdlMappingRegionHighWaterMark = 0;
+static KSPIN_LOCK MiMdlMappingRegionLock;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+MmInitializeMdlImplementation(VOID)
+{
+  MEMORY_AREA* Result;
+  NTSTATUS Status;
+
+  MiMdlMappingRegionBase = NULL;
+
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  Status = MmCreateMemoryArea(NULL,
+			      MmGetKernelAddressSpace(),
+			      MEMORY_AREA_MDL_MAPPING,
+			      &MiMdlMappingRegionBase,
+			      MI_MDL_MAPPING_REGION_SIZE,
+			      0,
+			      &Result,
+			      FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+      KeBugCheck(0);
+    }
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
+  MiMdlMappingRegionAllocMap = 
+    ExAllocatePool(NonPagedPool,
+		   MI_MDL_MAPPING_REGION_SIZE / (PAGESIZE * 32));
+  MiMdlMappingRegionHighWaterMark = 0;
+  KeInitializeSpinLock(&MiMdlMappingRegionLock);
+}
 
 PVOID 
 MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
@@ -75,22 +113,23 @@ MmUnlockPages(PMDL Mdl)
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
 
-PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
+PVOID STDCALL
+MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 /*
  * FUNCTION: Maps the physical pages described by a given MDL
  * ARGUMENTS:
  *       Mdl = Points to an MDL updated by MmProbeAndLockPages
- *       AccessMode = Specifies the access mode in which to map the MDL
+ *       AccessMode = Specifies the portion of the address space to map the
+ *                    pages.
  * RETURNS: The base virtual address that maps the locked pages for the
  * range described by the MDL
- * FIXME: What does AccessMode do?
  */
 {
    PVOID Base;
    ULONG i;
    PULONG MdlPages;
-   MEMORY_AREA* Result;
-   NTSTATUS Status;
+   KIRQL oldIrql;
+   ULONG RegionSize;
    
    DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
 
@@ -98,45 +137,49 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
      {
        return(Mdl->MappedSystemVa);
      }
-   
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   
-   Base = NULL;
-   Status = MmCreateMemoryArea(NULL,
-			       MmGetKernelAddressSpace(),
-			       MEMORY_AREA_MDL_MAPPING,
-			       &Base,
-			       Mdl->ByteCount + Mdl->ByteOffset,
-			       0,
-			       &Result,
-			       FALSE);
-   if (!NT_SUCCESS(Status))
+
+   if (AccessMode == UserMode)
      {
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
-	KeBugCheck(0);
-	return(STATUS_SUCCESS);
+       DPRINT1("MDL mapping to user-mode not yet handled.\n");
+       KeBugCheck(0);
      }
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
-   
+
+   /* Calculate the number of pages required. */
+   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGESIZE;
+
+   /* Allocate that number of pages from the mdl mapping region. */
+   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+   Base = MiMdlMappingRegionBase + MiMdlMappingRegionHighWaterMark * PAGESIZE;
+   for (i = 0; i < RegionSize; i++)
+     {
+       ULONG Offset = MiMdlMappingRegionHighWaterMark + i;
+       MiMdlMappingRegionAllocMap[Offset / 32] |= (1 << (Offset % 32));
+     }
+   MiMdlMappingRegionHighWaterMark += RegionSize;
+   KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+
+   /* Set the virtual mappings for the MDL pages. */
    MdlPages = (PULONG)(Mdl + 1);
-   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
+   for (i = 0; i < RegionSize; i++)
      {
-	Status = MmCreateVirtualMapping(NULL,
-					(PVOID)((ULONG)Base+(i*PAGESIZE)),
-					PAGE_READWRITE,
-					MdlPages[i],
-					TRUE);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
-	  }
+       NTSTATUS Status;
+       Status = MmCreateVirtualMapping(NULL,
+				       (PVOID)((ULONG)Base+(i*PAGESIZE)),
+				       PAGE_READWRITE,
+				       MdlPages[i],
+				       FALSE);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("Unable to create virtual mapping\n");
+	   KeBugCheck(0);
+	 }
      }
+
+   /* Mark the MDL has having being mapped. */
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;
    Mdl->MappedSystemVa = Base + Mdl->ByteOffset;
    return(Base + Mdl->ByteOffset);
 }
-
 
 VOID STDCALL 
 MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
@@ -147,26 +190,54 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
  *         MemoryDescriptorList = MDL describing the mapped pages
  */
 {
-   DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
+  KIRQL oldIrql;
+  ULONG i;
+  ULONG RegionSize;
+  ULONG Base;
 
-   /*
-    * In this case, the MDL has the same system address as the base address
-    * so there is no need to free it
-    */
-   if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
-     {
-       return;
-     }
+  DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
 
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   (VOID)MmFreeMemoryArea(MmGetKernelAddressSpace(),
-			  BaseAddress - Mdl->ByteOffset,
-			  Mdl->ByteOffset + Mdl->ByteCount,
-			  NULL,
-			  NULL);
-   Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
-   Mdl->MappedSystemVa = NULL;
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+  /*
+   * In this case, the MDL has the same system address as the base address
+   * so there is no need to free it
+   */
+  if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+    {
+      return;
+    }
+
+  /* Calculate the number of pages we mapped. */
+  RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGESIZE;
+
+  KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+  /* Deallocate all the pages used. */
+  Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase - Mdl->ByteOffset);
+  Base = Base / PAGESIZE;
+  for (i = 0; i < RegionSize; i++)
+    {
+      ULONG Offset = Base + i;
+      MiMdlMappingRegionAllocMap[Offset / 32] &= ~(1 << (Offset % 32));
+    }
+  /* If all the pages below the high-water mark are free then move it down. */
+  if ((Base + RegionSize) == MiMdlMappingRegionHighWaterMark)
+    {
+      MiMdlMappingRegionHighWaterMark = Base;
+    }
+  KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+  
+  /* Unmap all the pages. */
+  for (i = 0; i < RegionSize; i++)
+    {
+      MmDeleteVirtualMapping(NULL, 
+			     BaseAddress + (i * PAGESIZE),
+			     FALSE,
+			     NULL,
+			     NULL);
+    }
+
+  /* Reset the MDL state. */
+  Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
+  Mdl->MappedSystemVa = NULL;
 }
 
 

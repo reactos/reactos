@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.92 2002/05/14 21:19:21 dwelch Exp $
+/* $Id: thread.c,v 1.93 2002/05/17 23:01:56 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -125,7 +125,7 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 	       i = 0;
 	       while (Ebp != 0 && Ebp >= (PULONG)current->Tcb.StackLimit)
 		 {
-		   DbgPrint("%.8X%s", Ebp[0], Ebp[1],
+		   DbgPrint("%.8X %.8X%s", Ebp[0], Ebp[1],
 			    (i % 8) == 7 ? "\n" : "  ");
 		   Ebp = (PULONG)Ebp[0];
 		   i++;
