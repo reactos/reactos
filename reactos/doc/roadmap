@@ -1,0 +1,26 @@
+
+ ReactOS RoadMap
+=================
+
+This file should give developers and users some hints about where
+the project development is heading to. This list is intended to be
+a base for discussions and can be changed to reflect the results of
+these discussions. Every developer is encouraged to add his/her own
+ideas to this list.
+
+
+Version 0.0.19:
+ - FreeLoader can boot ReactOS from hard-disk
+ - Registry support for FreeLoader
+ - ATAPI storage driver stack
+
+Version 0.0.20:
+ - CDROM class driver
+ - CDFS file system driver (iso9660,...)
+
+Version 0.0.21:
+ - ReactOS can boot from CDROM
+
+
+List includes personal 'to-do' topics by:
+  Eric Kohl
