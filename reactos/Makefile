@@ -36,7 +36,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-#DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1 parallel serial
+#DEVICE_DRIVERS = beep floppy mouse sound test parallel serial
 DEVICE_DRIVERS = vidport vga blue ide null floppy
 
 #INPUT_DRIVERS = keyboard
@@ -51,7 +51,10 @@ NET_DRIVERS = ndis tcpip tditest wshtcpip afd
 #NET_DEVICE_DRIVERS = ne2000
 NET_DEVICE_DRIVERS = ne2000
 
-STORAGE_DRIVERS = class2 scsiport
+#
+# storage drivers (don't change the order)
+#
+STORAGE_DRIVERS = class2 scsiport disk
 
 #
 # system applications (required for startup)
