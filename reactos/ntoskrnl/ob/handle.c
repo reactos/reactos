@@ -70,30 +70,17 @@ static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
    return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
 
-NTSTATUS STDCALL NtDuplicateObject(IN HANDLE SourceProcessHandle,
-				   IN PHANDLE SourceHandle,
-				   IN HANDLE TargetProcessHandle,
-				   OUT PHANDLE TargetHandle,
-				   IN ACCESS_MASK DesiredAccess,
-				   IN BOOLEAN InheritHandle,
-				   ULONG Options)
-{
-   return(ZwDuplicateObject(SourceProcessHandle,
-			    SourceHandle,
-			    TargetProcessHandle,
-			    TargetHandle,
-			    DesiredAccess,
-			    InheritHandle,
-			    Options));
-}
-
-NTSTATUS STDCALL ZwDuplicateObject(IN HANDLE SourceProcessHandle,
-				   IN PHANDLE SourceHandle,
-				   IN HANDLE TargetProcessHandle,
-				   OUT PHANDLE TargetHandle,
-				   IN ACCESS_MASK DesiredAccess,
-				   IN BOOLEAN InheritHandle,
-				   ULONG Options)
+NTSTATUS
+STDCALL
+NtDuplicateObject (
+	IN	HANDLE		SourceProcessHandle,
+	IN	PHANDLE		SourceHandle,
+	IN	HANDLE		TargetProcessHandle,
+	OUT	PHANDLE		TargetHandle,
+	IN	ACCESS_MASK	DesiredAccess,
+	IN	BOOLEAN		InheritHandle,
+		ULONG		Options
+	)
 /*
  * FUNCTION: Copies a handle from one process space to another
  * ARGUMENTS:
@@ -391,7 +378,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS ZwClose(HANDLE Handle)
+NTSTATUS NtClose(HANDLE Handle)
 /*
  * FUNCTION: Closes a handle reference to an object
  * ARGUMENTS:
@@ -405,7 +392,7 @@ NTSTATUS ZwClose(HANDLE Handle)
    
    assert_irql(PASSIVE_LEVEL);
    
-   DPRINT("ZwClose(Handle %x)\n",Handle);
+   DPRINT("NtClose(Handle %x)\n",Handle);
    
    HandleRep = ObpGetObjectByHandle(PsGetCurrentProcess(),
 				    Handle);

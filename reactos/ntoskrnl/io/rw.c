@@ -21,36 +21,18 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS NtReadFile(HANDLE FileHandle,
-                    HANDLE EventHandle,
-		    PIO_APC_ROUTINE ApcRoutine,
-		    PVOID ApcContext,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    PVOID Buffer,
-		    ULONG Length,
-		    PLARGE_INTEGER ByteOffset,
-		    PULONG Key)
-{
-   return(ZwReadFile(FileHandle,
-		     EventHandle,
-		     ApcRoutine,
-		     ApcContext,
-		     IoStatusBlock,
-		     Buffer,
-		     Length,
-		     ByteOffset,
-		     Key));
-}
-
-NTSTATUS ZwReadFile(HANDLE FileHandle,
-                    HANDLE EventHandle,
-		    PIO_APC_ROUTINE ApcRoutine,
-		    PVOID ApcContext,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    PVOID Buffer,
-		    ULONG Length,
-		    PLARGE_INTEGER ByteOffset,
-		    PULONG Key)
+NTSTATUS
+NtReadFile (
+	HANDLE			FileHandle,
+	HANDLE			EventHandle,
+	PIO_APC_ROUTINE		ApcRoutine,
+	PVOID			ApcContext,
+	PIO_STATUS_BLOCK	IoStatusBlock,
+	PVOID			Buffer,
+	ULONG			Length,
+	PLARGE_INTEGER		ByteOffset,
+	PULONG			Key
+	)
 {
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -59,7 +41,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PKEVENT ptrEvent = NULL;
    KEVENT Event;
    
-   DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+   DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	  "IoStatusBlock %x)\n",
 	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
 
@@ -73,7 +55,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ZwReadFile() = %x\n",Status);
+	DPRINT("NtReadFile() = %x\n",Status);
 	return(Status);
      }
    
@@ -133,41 +115,24 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
        Status = IoStatusBlock->Status;
      }
-   DPRINT("ZwReadFile() = %x\n",Status);
+   DPRINT("NtReadFile() = %x\n",Status);
    assert_irql(PASSIVE_LEVEL);
    return(Status);
 }
 
-NTSTATUS NtWriteFile(HANDLE FileHandle,
-		     HANDLE EventHandle,
-		     PIO_APC_ROUTINE ApcRoutine,
-		     PVOID ApcContext,
-		     PIO_STATUS_BLOCK IoStatusBlock,
-		     PVOID Buffer,
-		     ULONG Length,
-		     PLARGE_INTEGER ByteOffset,
-		     PULONG Key)
-{
-   return(ZwWriteFile(FileHandle,
-		      EventHandle,
-		      ApcRoutine,
-		      ApcContext,
-		      IoStatusBlock,
-		      Buffer,
-		      Length,
-		      ByteOffset,
-		      Key));
-}
 
-NTSTATUS ZwWriteFile(HANDLE FileHandle,
-		     HANDLE EventHandle,
-		     PIO_APC_ROUTINE ApcRoutine,
-		     PVOID ApcContext,
-		     PIO_STATUS_BLOCK IoStatusBlock,
-		     PVOID Buffer,
-		     ULONG Length,
-		     PLARGE_INTEGER ByteOffset,
-		     PULONG Key)
+NTSTATUS
+NtWriteFile (
+	HANDLE			FileHandle,
+	HANDLE			EventHandle,
+	PIO_APC_ROUTINE		ApcRoutine,
+	PVOID			ApcContext,
+	PIO_STATUS_BLOCK	IoStatusBlock,
+	PVOID			Buffer,
+	ULONG			Length,
+	PLARGE_INTEGER		ByteOffset,
+	PULONG			Key
+	)
 {
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -175,7 +140,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    
-   DPRINT("ZwWriteFile(FileHandle %x, Buffer %x, Length %d)\n",
+   DPRINT("NtWriteFile(FileHandle %x, Buffer %x, Length %d)\n",
 	  FileHandle,Buffer,Length);
    
    Status = ObReferenceObjectByHandle(FileHandle,
@@ -225,71 +190,38 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    return(Status);
 }
 
-NTSTATUS STDCALL NtReadFileScatter(IN HANDLE FileHandle, 
-				   IN HANDLE Event OPTIONAL, 
-				   IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-				   IN  PVOID UserApcContext OPTIONAL, 
-				   OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
-				   IN FILE_SEGMENT_ELEMENT BufferDescription[], 
-				   IN ULONG BufferLength, 
-				   IN PLARGE_INTEGER ByteOffset, 
-				   IN PULONG Key OPTIONAL)
-{
-   return(ZwReadFileScatter(FileHandle,
-			    Event,
-			    UserApcRoutine,
-			    UserApcContext,
-			    UserIoStatusBlock,
-			    BufferDescription,
-			    BufferLength,
-			    ByteOffset,
-			    Key));
-}
 
-NTSTATUS STDCALL ZwReadFileScatter(IN HANDLE FileHandle, 
-				   IN HANDLE Event OPTIONAL, 
-				   IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-				   IN  PVOID UserApcContext OPTIONAL, 
-				   OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
-				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
-				   IN ULONG BufferLength, 
-				   IN PLARGE_INTEGER ByteOffset, 
-				   IN PULONG Key OPTIONAL)
+NTSTATUS
+STDCALL
+NtReadFileScatter (
+	IN	HANDLE			FileHandle, 
+	IN	HANDLE			Event			OPTIONAL, 
+	IN	PIO_APC_ROUTINE		UserApcRoutine		OPTIONAL, 
+	IN	PVOID			UserApcContext		OPTIONAL, 
+	OUT	PIO_STATUS_BLOCK	UserIoStatusBlock, 
+	IN	FILE_SEGMENT_ELEMENT	BufferDescription [], 
+	IN	ULONG			BufferLength, 
+	IN	PLARGE_INTEGER		ByteOffset, 
+	IN	PULONG			Key			OPTIONAL
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtWriteFileGather(IN HANDLE FileHandle, 
-				   IN HANDLE Event OPTIONAL, 
-				   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-				   IN PVOID ApcContext OPTIONAL, 
-				   OUT PIO_STATUS_BLOCK IoStatusBlock,
-				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
-				   IN ULONG BufferLength, 
-				   IN PLARGE_INTEGER ByteOffset, 
-				   IN PULONG Key OPTIONAL)
+NTSTATUS
+STDCALL
+NtWriteFileGather (
+	IN	HANDLE			FileHandle, 
+	IN	HANDLE			Event OPTIONAL, 
+	IN	PIO_APC_ROUTINE		ApcRoutine		OPTIONAL, 
+	IN	PVOID			ApcContext		OPTIONAL, 
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	FILE_SEGMENT_ELEMENT	BufferDescription [],
+	IN	ULONG			BufferLength, 
+	IN	PLARGE_INTEGER		ByteOffset, 
+	IN	PULONG			Key			OPTIONAL
+	)
 {
-   return(ZwWriteFileGather(FileHandle,
-			    Event,
-			    ApcRoutine,
-			    ApcContext,
-			    IoStatusBlock,
-			    BufferDescription,
-			    BufferLength,
-			    ByteOffset,
-			    Key));
-}
-
-NTSTATUS STDCALL ZwWriteFileGather(IN HANDLE FileHandle, 
-				   IN HANDLE Event OPTIONAL, 
-				   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-				   IN PVOID ApcContext OPTIONAL, 
-				   OUT PIO_STATUS_BLOCK IoStatusBlock,
-				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
-				   IN ULONG BufferLength, 
-				   IN PLARGE_INTEGER ByteOffset, 
-				   IN PULONG Key OPTIONAL)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

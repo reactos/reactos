@@ -120,48 +120,38 @@ VOID KeCalibrateTimerLoop(VOID)
 }
 
 
-NTSTATUS STDCALL NtQueryTimerResolution (OUT PULONG MinimumResolution,
-					 OUT PULONG MaximumResolution, 
-					 OUT PULONG ActualResolution)
+NTSTATUS
+STDCALL
+NtQueryTimerResolution (
+	OUT	PULONG	MinimumResolution,
+	OUT	PULONG	MaximumResolution, 
+	OUT	PULONG	ActualResolution
+	)
 {
-   return(ZwQueryTimerResolution(MinimumResolution,MaximumResolution,
-				 ActualResolution));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwQueryTimerResolution (OUT PULONG MinimumResolution,
-					 OUT PULONG MaximumResolution, 
-					 OUT PULONG ActualResolution)
+
+NTSTATUS
+STDCALL
+NtSetTimerResolution (
+	IN	ULONG	RequestedResolution,
+	IN	BOOL	SetOrUnset,
+	OUT	PULONG	ActualResolution
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtSetTimerResolution(IN ULONG RequestedResolution,
-				      IN BOOL SetOrUnset,
-				      OUT PULONG ActualResolution)
-{
-   return(ZwSetTimerResolution(RequestedResolution,
-			       SetOrUnset,
-			       ActualResolution));
-}
 
-NTSTATUS STDCALL ZwSetTimerResolution(IN ULONG RequestedResolution,
-				      IN BOOL SetOrUnset,
-				      OUT PULONG ActualResolution)
+NTSTATUS
+STDCALL
+NtQueryPerformanceCounter (
+	IN	PLARGE_INTEGER	Counter,
+	IN	PLARGE_INTEGER	Frequency
+	)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
-					   IN PLARGE_INTEGER Frequency)
-{
-   return(ZwQueryPerformanceCounter(Counter,
-				    Frequency));
-}
-
-NTSTATUS STDCALL ZwQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
-					   IN PLARGE_INTEGER Frequency)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 
@@ -182,18 +172,17 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 }
 
 
-NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
-				  IN TIME *Interval)
+NTSTATUS
+STDCALL
+NtDelayExecution (
+	IN	BOOLEAN	Alertable,
+	IN	TIME	* Interval
+	)
 {
-   return(ZwDelayExecution(Alertable,Interval));
+	KeBugCheck(0);
+	return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS STDCALL ZwDelayExecution(IN BOOLEAN Alertable,
-				  IN TIME *Interval)
-{
-   KeBugCheck(0);
-   return(STATUS_UNSUCCESSFUL);
-}
 
 NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 				BOOLEAN Alertable,
@@ -307,15 +296,14 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
   CurrentTime->QuadPart = system_time;
 }
 
-NTSTATUS STDCALL NtGetTickCount(PULONG UpTime)
+
+NTSTATUS
+STDCALL
+NtGetTickCount (PULONG UpTime)
 {
-   return(ZwGetTickCount(UpTime));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwGetTickCount(PULONG UpTime)
-{
-   UNIMPLEMENTED;
-}
 
 BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc)
 /*

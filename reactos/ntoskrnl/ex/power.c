@@ -23,10 +23,6 @@ NTSTATUS STDCALL NtSetSystemPowerState(VOID)
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtShutdownSystem(IN SHUTDOWN_ACTION Action)
-{
-   return(ZwShutdownSystem(Action));
-}
 
 static void kb_wait(void)
 {
@@ -41,7 +37,11 @@ static void kb_wait(void)
      }
 }
 
-NTSTATUS STDCALL ZwShutdownSystem(IN SHUTDOWN_ACTION Action)
+NTSTATUS
+STDCALL
+NtShutdownSystem (
+	IN	SHUTDOWN_ACTION	Action
+	)
 /*
  * FIXME: Does a reboot only
  */

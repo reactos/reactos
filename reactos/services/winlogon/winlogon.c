@@ -95,6 +95,19 @@ GuiLogin (VOID)
 
 
 /***********************************************************************
+ * 	GuiMonitor
+ * 	
+ * DESCRIPTION
+ * 	Graphical monitor procedure
+ */
+VOID
+GuiMonitor (VOID)
+{
+	/* FIXME: Open Monitor dialog */
+}
+
+
+/***********************************************************************
  * 	CuiLogin
  * 	
  * DESCRIPTION
@@ -112,6 +125,89 @@ CuiLogin (VOID)
 	fgets(username, 255, stdin);
 	printf("Password: ");
 	fgets(password, 255, stdin);
+	/*
+	 * 
+	 */
+	NtCreateProcess(
+		L"\\\\??\\C:\\reactos\\system\\userinit.exe",
+		);
+	/*
+	 *	Security issue: buffers are cleared.
+	 */
+	NtZeroMemory(username, sizeof username);
+	NtZeroMemory(password, sizeof password);
+}
+
+
+/***********************************************************************
+ * 	CuiMonitor
+ * 	
+ * DESCRIPTION
+ * 	Text mode (console) Monitor procedure
+ */
+VOID
+CuiMonitor (VOID)
+{
+	WCHAR	HostName [64];
+	WCHAR	UserName [64];
+	WCHAR	FormattedDate [64];
+	WCHAR	InputKey = L'\0';
+
+	/* FIXME: query the system to get these info */
+	wcscpy( HostName, L"BACH" );
+	wcscpy( UserName, L"Administrator" );
+
+	/* FIXME: use locale info to format */
+	NtGetSystemtime(
+		);
+
+	/* Print info and Monitor menu */
+	NtDisplayString(L"\
+ReactOS Security:\n\
+\tYou are logged on as %s/%s\n\
+\yLogon date: %s\n\n\
+Use the Task Manager to close an application that is not responding.\n\n\
+1) Lock Workstation\n\
+2) Change Password\n\
+3) Logoff...\n\
+4) Task Manager...\n\
+5) Shut Down...\n\
+6) Cancel\n\n? ",
+		HostName,
+		UserName,
+		FormattedDate
+		);
+	while (TRUE)
+	{
+		/* FIXME: get a char and perform the requested action */
+		switch (InputKey)
+		{
+		case L'1':
+			DisplayString(L"Workstation locked...\n");
+			return;
+		case L'2':
+			DisplayString(L"Changing Password:\n");
+			return;
+		case L'3':
+			DisplayString(L"Logging off...\n");
+			return;
+		case L'4':
+			DisplayString(L"Task Manager:\n");
+			return;
+		case L'5':
+			DisplayString(L"Shutting Down:\n");
+			DisplayString(L"1) Shutdown\n");
+			DisplayString(L"2) Restart\n");
+			DisplayString(L"3) Logoff\n");
+			DisplayString(L"4) Cancel\n");
+			return;
+		case 27L: /* ESC */
+		case L'6':
+			return;
+		default:
+			DisplayString(L"Invalid key (1-6).\n");
+		}
+	}
 }
 
 
@@ -155,11 +251,20 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 			);
 		/*
 		 * If there is no local session, begin
-		 * the login procedure; otherwise print
-		 * display
+		 * the logon procedure; otherwise open
+		 * the monitor dialog.
 		 */
 		if (TRUE == HasSystemActiveSession())
 		{
+			/* MONITOR */
+			if (TRUE == HasSystemGui())
+			{
+				/* GUI active: monitor in graphical mode */
+				GuiMonitor();
+				continue;
+			}
+			/* No GUI: monitor in text mode */
+			CuiMonitor();
 			continue;
 		}
 		/* LOGON */

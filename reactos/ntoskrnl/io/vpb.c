@@ -95,12 +95,15 @@ PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,
    return(Irp);
 }
 
-NTSTATUS STDCALL NtQueryVolumeInformationFile(
-					    IN HANDLE FileHandle,
-					    OUT PIO_STATUS_BLOCK IoStatusBlock,
-					    OUT PVOID FSInformation,
-					    IN ULONG Length,
-					    IN FS_INFORMATION_CLASS FSInformationClass)
+NTSTATUS
+STDCALL
+NtQueryVolumeInformationFile (
+	IN	HANDLE			FileHandle,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	OUT	PVOID			FSInformation,
+	IN	ULONG			Length,
+	IN	FS_INFORMATION_CLASS	FSInformationClass
+	)
 
 /*
  * FUNCTION: Queries the volume information
@@ -124,19 +127,6 @@ NTSTATUS STDCALL NtQueryVolumeInformationFile(
  *
  * RETURNS: Status
  */
-{
-   return(ZwQueryVolumeInformationFile(FileHandle,IoStatusBlock,FSInformation,
-				       Length,FSInformationClass));
-}
-
-NTSTATUS
-STDCALL
-ZwQueryVolumeInformationFile(
-	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID FSInformation,
-	IN ULONG Length,
-	IN FS_INFORMATION_CLASS FSInformationClass)
 {
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
@@ -179,27 +169,13 @@ ZwQueryVolumeInformationFile(
 
 NTSTATUS
 STDCALL
-NtSetVolumeInformationFile(
-	IN HANDLE FileHandle,
-	IN CINT VolumeInformationClass,
-	PVOID VolumeInformation,
-	ULONG Length
+NtSetVolumeInformationFile (
+	IN	HANDLE	FileHandle,
+	IN	CINT	VolumeInformationClass,
+		PVOID	VolumeInformation,
+		ULONG	Length
 	)
 {
-   return(ZwSetVolumeInformationFile(FileHandle,VolumeInformationClass,
-				     VolumeInformation,Length));
-}
-
-NTSTATUS
-STDCALL
-ZwSetVolumeInformationFile(
-	IN HANDLE FileHandle,
-	IN CINT VolumeInformationClass,
-	PVOID VolumeInformation,
-	ULONG Length
-	)
-{
-   
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;

@@ -19,24 +19,19 @@
 /* FUNCTIONS *****************************************************************/
 
 
-NTSTATUS STDCALL NtFlushWriteBuffer(VOID)
+NTSTATUS
+STDCALL
+NtFlushWriteBuffer(VOID)
 {
-   return(ZwFlushWriteBuffer());
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwFlushWriteBuffer(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtFlushBuffersFile(IN HANDLE FileHandle,
-				    OUT PIO_STATUS_BLOCK IoStatusBlock)
-{
-   return(ZwFlushBuffersFile(FileHandle,IoStatusBlock));
-}
-
-NTSTATUS STDCALL ZwFlushBuffersFile(IN HANDLE FileHandle,
-				    OUT PIO_STATUS_BLOCK IoStatusBlock)
+NTSTATUS
+STDCALL
+NtFlushBuffersFile (
+	IN	HANDLE			FileHandle,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock
+	)
 /*
  * FUNCTION: Flushes cached file data to disk
  * ARGUMENTS:

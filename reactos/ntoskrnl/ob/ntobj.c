@@ -20,46 +20,32 @@
 
 /* FUNCTIONS ************************************************************/
 
-NTSTATUS STDCALL NtSetInformationObject(IN HANDLE ObjectHandle,
-					IN CINT ObjectInformationClass,
-					IN PVOID ObjectInformation,
-					IN ULONG Length)
+NTSTATUS
+STDCALL
+NtSetInformationObject (
+	IN	HANDLE	ObjectHandle,
+	IN	CINT	ObjectInformationClass,
+	IN	PVOID	ObjectInformation,
+	IN	ULONG	Length
+	)
 {
-   return(ZwSetInformationObject(ObjectHandle,
-				 ObjectInformationClass,
-				 ObjectInformation,
-				 Length));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwSetInformationObject(IN HANDLE ObjectHandle,
-					IN CINT ObjectInformationClass,
-					IN PVOID ObjectInformation,
-					IN ULONG Length)
+
+NTSTATUS
+STDCALL
+NtQueryObject (
+	IN	HANDLE	ObjectHandle,
+	IN	CINT	ObjectInformationClass,
+	OUT	PVOID	ObjectInformation,
+	IN	ULONG	Length,
+	OUT	PULONG	ResultLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED
 }
 
-NTSTATUS STDCALL NtQueryObject(IN HANDLE ObjectHandle,
-			       IN CINT ObjectInformationClass,
-			       OUT PVOID ObjectInformation,
-			       IN ULONG Length,
-			       OUT PULONG ResultLength)
-{
-   return(ZwQueryObject(ObjectHandle,
-			ObjectInformationClass,
-			ObjectInformation,
-			Length,
-			ResultLength));
-}
-
-NTSTATUS STDCALL ZwQueryObject(IN HANDLE ObjectHandle,
-			       IN CINT ObjectInformationClass,
-			       OUT PVOID ObjectInformation,
-			       IN ULONG Length,
-			       OUT PULONG ResultLength)
-{
-   UNIMPLEMENTED
-}
 
 VOID ObMakeTemporaryObject(PVOID ObjectBody)
 {
@@ -69,12 +55,11 @@ VOID ObMakeTemporaryObject(PVOID ObjectBody)
    ObjectHeader->Permanent = FALSE;
 }
 
-NTSTATUS NtMakeTemporaryObject(HANDLE Handle)
-{
-   return(ZwMakeTemporaryObject(Handle));
-}
 
-NTSTATUS ZwMakeTemporaryObject(HANDLE Handle)
+NTSTATUS
+NtMakeTemporaryObject (
+	HANDLE	Handle
+	)
 {
    PVOID Object;
    NTSTATUS Status;  
@@ -98,9 +83,3 @@ NTSTATUS ZwMakeTemporaryObject(HANDLE Handle)
    
    return(STATUS_SUCCESS);
 }
-
-NTSTATUS NtClose(HANDLE Handle)
-{
-   return(ZwClose(Handle));
-}
-

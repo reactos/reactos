@@ -16,61 +16,34 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtLockFile(IN  HANDLE FileHandle,
-			    IN  HANDLE Event OPTIONAL,
-			    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-			    IN  PVOID ApcContext OPTIONAL,
-			    OUT PIO_STATUS_BLOCK IoStatusBlock,
-			    IN  PLARGE_INTEGER ByteOffset,
-			    IN  PLARGE_INTEGER Length,
-			    IN  PULONG Key,
-			    IN  BOOLEAN FailImmediatedly,
-			    IN  BOOLEAN ExclusiveLock)
+NTSTATUS
+STDCALL
+NtLockFile (
+	IN	HANDLE			FileHandle,
+	IN	HANDLE			Event		OPTIONAL,
+	IN	PIO_APC_ROUTINE		ApcRoutine	OPTIONAL,
+	IN	PVOID			ApcContext	OPTIONAL,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	PLARGE_INTEGER		ByteOffset,
+	IN	PLARGE_INTEGER		Length,
+	IN	PULONG			Key,
+	IN	BOOLEAN			FailImmediatedly,
+	IN	BOOLEAN			ExclusiveLock
+	)
 {
-   return(ZwLockFile(FileHandle,
-		     Event,
-		     ApcRoutine,
-		     ApcContext,
-		     IoStatusBlock,
-		     ByteOffset,
-		     Length,
-		     Key,
-		     FailImmediatedly,
-		     ExclusiveLock));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwLockFile(IN  HANDLE FileHandle,
-			    IN  HANDLE Event OPTIONAL,
-			    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-			    IN  PVOID ApcContext OPTIONAL,
-			    OUT PIO_STATUS_BLOCK IoStatusBlock,
-			    IN  PLARGE_INTEGER ByteOffset,
-			    IN  PLARGE_INTEGER Length,
-			    IN  PULONG Key,
-			    IN  BOOLEAN FailImmediatedly,
-			    IN  BOOLEAN ExclusiveLock)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtUnlockFile(IN HANDLE FileHandle,
-			      OUT PIO_STATUS_BLOCK IoStatusBlock,
-			      IN PLARGE_INTEGER ByteOffset,
-			      IN PLARGE_INTEGER Length,
-			      OUT PULONG Key OPTIONAL)
+NTSTATUS
+STDCALL
+NtUnlockFile (
+	IN	HANDLE			FileHandle,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	PLARGE_INTEGER		ByteOffset,
+	IN	PLARGE_INTEGER		Length,
+	OUT	PULONG			Key		OPTIONAL
+	)
 {
-   return(ZwUnlockFile(FileHandle,
-		       IoStatusBlock,
-		       ByteOffset,
-		       Length,
-		       Key));
-}
-
-NTSTATUS STDCALL ZwUnlockFile(IN HANDLE FileHandle,
-			      OUT PIO_STATUS_BLOCK IoStatusBlock,
-			      IN PLARGE_INTEGER ByteOffset,
-			      IN PLARGE_INTEGER Length,
-			      OUT PULONG Key OPTIONAL)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

@@ -1,16 +1,21 @@
+# $Id: makefile,v 1.16 1999/06/18 22:11:03 ea Exp $
+#
+# ReactOS Operating System
+#
+TARGET=ntdll
 
 IMAGE_BASE = 0x77f60000
 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=ntdll.a
+    DLLTARGET=$(TARGET).a
     DLLMAIN=
   else
-    DLLTARGET=ntdll.dll
+    DLLTARGET=$(TARGET).dll
     DLLMAIN=main/dllmain.o
   endif
 else
-  DLLTARGET=ntdll.dll
+  DLLTARGET=$(TARGET).dll
   DLLMAIN=main/dllmain.o
 endif
 
@@ -30,42 +35,61 @@ STRING_OBJECTS = string/ctype.o string/memcpy.o string/memmove.o \
 OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
           stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
           stubs/stubs.o rtl/heap.o rtl/critical.o rtl/mem.o \
-          ldr/utils.o ntdll.coff
+          ldr/utils.o $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \
-              ntdll.a main\dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
+              $(TARGET).a main\dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
+	      base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o \
-              ntall.a main/dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
+              $(TARGET).a main/dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
+	      base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 endif
 
-ntdll.coff: ntdll.rc ../../include/reactos/resource.h
-	$(RC) ntdll.rc ntdll.coff
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
-ntdll.a: $(OBJECTS)
-	$(AR) csr ntdll.a $(OBJECTS)
+$(TARGET).a: $(OBJECTS)
+	$(AR) csr $(TARGET).a $(OBJECTS)
 
-ntdll.dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
-	$(LD) -r $(DLLMAIN) $(OBJECTS) -o ntdll.o
-	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
-	           --output-lib ntdll.a --add-stdcall-alias \
-		   --kill-at
-	$(CC) -specs=ntdll_specs -mdll -o junk.tmp \
-	      -Wl,--base-file,base.tmp ntdll.o
+$(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
+	$(LD) \
+		-r $(DLLMAIN) \
+		$(OBJECTS) \
+		-o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--def def/$(TARGET).def \
+		--output-lib $(TARGET).a \
+		--add-stdcall-alias \
+		--kill-at
+	$(CC) \
+		-specs=$(TARGET)_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--base-file,base.tmp \
+		$(TARGET).o
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname ntdll.dll --base-file base.tmp \
-	           --output-exp temp.exp --def def/ntdll.def \
-		   --add-stdcall-alias --kill-at
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def def/$(TARGET).def \
+		--add-stdcall-alias \
+		--kill-at
 	- $(RM) base.tmp
-	$(CC) -specs=ntdll_specs -mdll -o ntdll.dll ntdll.o \
-	      -Wl,--entry=_LdrStartup \
-	      -Wl,--image-base,$(IMAGE_BASE) \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,temp.exp
+	$(CC) \
+		-specs=$(TARGET)_specs \
+		-mdll \
+		-o $(TARGET).dll \
+		$(TARGET).o \
+		-Wl,--entry=_LdrStartup \
+		-Wl,--image-base,$(IMAGE_BASE) \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,temp.exp
 	- $(RM) temp.exp
-	$(NM) --numeric-sort ntdll.dll > ntdll.sym
+	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 

@@ -1,11 +1,16 @@
+# $Id: makefile,v 1.30 1999/06/18 22:11:00 ea Exp $
+#
+# ReactOS Operating System
+#
+TARGET=crtdll
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=crtdll.a
+    DLLTARGET=$(TARGET).a
   else
-    DLLTARGET=crtdll.dll
+    DLLTARGET=$(TARGET).dll
   endif
 else
-  DLLTARGET=crtdll.dll
+  DLLTARGET=$(TARGET).dll
 endif
 
 all: $(DLLTARGET)
@@ -132,7 +137,7 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 		math/tanh.o math/stubs.o math/j0_y0.o math/j1_y1.o math/jn_yn.o\
 		math/cabs.o math/ftol.o
 
-RESOURCE_OBJECT = crtdll.coff
+RESOURCE_OBJECT = $(TARGET).coff
 
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
 	  $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
@@ -148,39 +153,54 @@ CLEAN_FILES = assert\*.o conio\*.o ctype\*.o direct\*.o dirent\*.o \
 	except\*.o float\*.o io\*.o libc\*.o locale\*.o malloc\*.o \
 	math\*.o mbstring\*.o misc\*.o process\*.o quad\*.o search\*.o \
 	setjmp\*.o stdio\*.o stdlib\*.o string\*.o sys_stat\*.o tchar\*.o \
-	time\*.o wchar\*.o crtdll.a crtdll.o crtdll.dll crtdll.sym
+	time\*.o wchar\*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
+	$(TARGET).coff
 else
 CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
 	except/*.o float/*.o io/*.o libc/*.o locale/*.o malloc/*.o \
 	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
 	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
-	time/*.o wchar/*.o crtdll.a crtdll.o crtdll.dll crtdll.sym
+	time/*.o wchar/*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
+	$(TARGET).coff
 endif
 
-crtdll.coff: crtdll.rc ../../include/reactos/resource.h
-	$(RC) crtdll.rc crtdll.coff
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
-crtdll.a: $(OBJECTS)
-	$(LD)  -r $(OBJECTS) -o crtdll.a
+$(TARGET).a: $(OBJECTS)
+	$(LD)  -r $(OBJECTS) -o $(TARGET).a
 
-crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
-	$(LD) -r $(OBJECTS) -o crtdll.o
-	$(DLLTOOL) --dllname crtdll.dll --def crtdll.def \
-	           --output-lib crtdll.a
-	$(CC) -specs=crt_specs -mdll -o junk.tmp \
-	      -Wl,--base-file,base.tmp crtdll.o  ../kernel32/kernel32.a 
+$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
+	$(LD) -r $(OBJECTS) -o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
+	$(CC) \
+		-specs=crt_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--base-file,base.tmp \
+		$(TARGET).o \
+		../kernel32/kernel32.a 
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname crtdll.dll --base-file base.tmp \
-	           --output-exp temp.exp --def crtdll.def
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).def
 	- $(RM) base.tmp
-	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  \
-	       ../kernel32/kernel32.a \
-	      -Wl,--image-base,0x20000000 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,temp.exp
+	$(CC) \
+		-specs=crt_specs \
+		-mdll \
+		-o $(TARGET).dll \
+		$(TARGET).o  \
+		../kernel32/kernel32.a \
+		-Wl,--image-base,0x20000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,temp.exp
 	- $(RM) temp.exp
-	$(NM) --numeric-sort crtdll.dll > crtdll.sym
+	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 

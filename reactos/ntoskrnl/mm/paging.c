@@ -17,18 +17,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCreatePagingFile(IN PUNICODE_STRING PageFileName,
-				    IN ULONG MiniumSize,
-				    IN ULONG MaxiumSize,
-				    OUT PULONG ActualSize)
+NTSTATUS
+STDCALL
+NtCreatePagingFile (
+	IN	PUNICODE_STRING	PageFileName,
+	IN	ULONG		MiniumSize,
+	IN	ULONG		MaxiumSize,
+	OUT	PULONG		ActualSize
+	)
 {
-   return(ZwCreatePagingFile(PageFileName,MiniumSize,MaxiumSize,ActualSize));
-}
-
-NTSTATUS STDCALL ZwCreatePagingFile(IN PUNICODE_STRING PageFileName,
-				    IN ULONG MiniumSize,
-				    IN ULONG MaxiumSize,
-				    OUT PULONG ActualSize)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

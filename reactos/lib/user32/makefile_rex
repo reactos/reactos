@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.4 1999/06/14 07:37:52 rex Exp $
+# $Id: makefile_rex,v 1.5 1999/06/18 22:11:04 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -39,7 +39,6 @@ CLEAN_FILES = misc/*.o  \
 endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).a: $(OBJECTS)
 	$(AR) csr $(TARGET).a $(OBJECTS)

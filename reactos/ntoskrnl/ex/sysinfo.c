@@ -16,84 +16,62 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtQuerySystemEnvironmentValue(IN PUNICODE_STRING Name,
-					       OUT PVOID Value,
-					       ULONG Length,
-					       PULONG ReturnLength)
+NTSTATUS
+STDCALL
+NtQuerySystemEnvironmentValue (
+	IN	PUNICODE_STRING	Name,
+	OUT	PVOID		Value,
+		ULONG		Length,
+		PULONG		ReturnLength
+	)
 {
-   return(ZwQuerySystemEnvironmentValue(Name,
-					Value,
-					Length,
-					ReturnLength));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwQuerySystemEnvironmentValue(IN PUNICODE_STRING Name,
-					       OUT PVOID Value,
-					       ULONG Length,
-					       PULONG ReturnLength)
+
+NTSTATUS
+STDCALL
+NtQuerySystemInformation (
+	IN	CINT	SystemInformationClass,
+	OUT	PVOID	SystemInformation,
+	IN	ULONG	Length,
+	OUT	PULONG	ResultLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtQuerySystemInformation(IN CINT SystemInformationClass,
-					  OUT PVOID SystemInformation,
-					  IN ULONG Length,
-					  OUT PULONG ResultLength)
+
+NTSTATUS
+STDCALL
+NtSetSystemEnvironmentValue (
+	IN	PUNICODE_STRING	VariableName,
+	IN	PUNICODE_STRING	Value
+	)
 {
-   return(ZwQuerySystemInformation(SystemInformationClass,
-				   SystemInformation,
-				   Length,
-				   ResultLength));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwQuerySystemInformation(IN CINT SystemInformationClass,
-					  OUT PVOID SystemInformation,
-					  IN ULONG Length,
-					  OUT PULONG ResultLength)
+
+NTSTATUS
+STDCALL
+NtSetSystemInformation (
+	IN	CINT	SystemInformationClass,
+	IN	PVOID	SystemInformation,
+	IN	ULONG	SystemInformationLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtSetSystemEnvironmentValue(IN PUNICODE_STRING VariableName,
-					     IN PUNICODE_STRING Value)
-{
-   return(ZwSetSystemEnvironmentValue(VariableName,Value));
-}
 
-NTSTATUS STDCALL ZwSetSystemEnvironmentValue(IN PUNICODE_STRING VariableName,
-					     IN PUNICODE_STRING Value)
+NTSTATUS
+STDCALL
+NtFlushInstructionCache (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	BaseAddress,
+	IN	UINT	NumberOfBytesToFlush
+	)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtSetSystemInformation(IN CINT SystemInformationClass,
-					IN PVOID SystemInformation,
-					IN ULONG SystemInformationLength)
-{
-   return(ZwSetSystemInformation(SystemInformationClass,
-				 SystemInformation,
-				 SystemInformationLength));
-}
-
-NTSTATUS STDCALL ZwSetSystemInformation(IN CINT SystemInformationClass,
-					IN PVOID SystemInformation,
-					IN ULONG SystemInformationLength)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtFlushInstructionCache(IN HANDLE ProcessHandle,
-					 IN PVOID BaseAddress,
-					 IN UINT NumberOfBytesToFlush)
-{
-   return(ZwFlushInstructionCache(ProcessHandle,
-				  BaseAddress,
-				  NumberOfBytesToFlush));
-}
-
-NTSTATUS STDCALL ZwFlushInstructionCache(IN HANDLE ProcessHandle,
-					 IN PVOID BaseAddress,
-					 IN UINT NumberOfBytesToFlush)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

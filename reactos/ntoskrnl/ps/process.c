@@ -133,35 +133,18 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
      }
 }
 
-NTSTATUS STDCALL NtCreateProcess(
-			   OUT PHANDLE ProcessHandle,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-			   IN HANDLE ParentProcessHandle,
-			   IN BOOLEAN InheritObjectTable,
-			   IN HANDLE SectionHandle OPTIONAL,
-			   IN HANDLE DebugPort OPTIONAL,
-			   IN HANDLE ExceptionPort OPTIONAL)
-{
-   return(ZwCreateProcess(ProcessHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
-			  ParentProcessHandle,
-			  InheritObjectTable,
-			  SectionHandle,
-			  DebugPort,
-			  ExceptionPort));
-}
-
-NTSTATUS STDCALL ZwCreateProcess(
-			   OUT PHANDLE ProcessHandle,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-			   IN HANDLE ParentProcessHandle,
-			   IN BOOLEAN InheritObjectTable,
-			   IN HANDLE SectionHandle OPTIONAL,
-			   IN HANDLE DebugPort OPTIONAL,
-			   IN HANDLE ExceptionPort OPTIONAL)
+NTSTATUS
+STDCALL
+NtCreateProcess (
+	OUT	PHANDLE			ProcessHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	HANDLE			ParentProcessHandle,
+	IN	BOOLEAN			InheritObjectTable,
+	IN	HANDLE			SectionHandle		OPTIONAL,
+	IN	HANDLE			DebugPort		OPTIONAL,
+	IN	HANDLE			ExceptionPort		OPTIONAL
+	)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -190,7 +173,7 @@ NTSTATUS STDCALL ZwCreateProcess(
    NTSTATUS Status;
    KIRQL oldIrql;
    
-   DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
+   DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
    Status = ObReferenceObjectByHandle(ParentProcessHandle,
 				      PROCESS_CREATE_PROCESS,
@@ -201,7 +184,7 @@ NTSTATUS STDCALL ZwCreateProcess(
 
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("ZwCreateProcess() = %x\n",Status);
+	DPRINT("NtCreateProcess() = %x\n",Status);
 	return(Status);
      }
 
@@ -233,7 +216,7 @@ NTSTATUS STDCALL ZwCreateProcess(
     */
    if (SectionHandle != NULL)
      {
-	DbgPrint("ZwCreateProcess() non-NULL SectionHandle\n");
+	DbgPrint("NtCreateProcess() non-NULL SectionHandle\n");
 	return(STATUS_UNSUCCESSFUL);
      }
 
@@ -244,23 +227,16 @@ NTSTATUS STDCALL ZwCreateProcess(
 }
 
 
-NTSTATUS STDCALL NtOpenProcess (OUT PHANDLE ProcessHandle,
-				IN ACCESS_MASK DesiredAccess,
-				IN POBJECT_ATTRIBUTES ObjectAttributes,
-				IN PCLIENT_ID ClientId)
+NTSTATUS
+STDCALL
+NtOpenProcess (
+	OUT	PHANDLE			ProcessHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	PCLIENT_ID		ClientId
+	)
 {
-   return(ZwOpenProcess(ProcessHandle,
-			DesiredAccess,
-			ObjectAttributes,
-			ClientId));
-}
-
-NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
-				IN ACCESS_MASK DesiredAccess,
-				IN POBJECT_ATTRIBUTES ObjectAttributes,
-				IN PCLIENT_ID ClientId)
-{
-   DPRINT("ZwOpenProcess(ProcessHandle %x, DesiredAccess %x, "
+   DPRINT("NtOpenProcess(ProcessHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
 	  ProcessHandle, DesiredAccess, ObjectAttributes, ClientId,
 	  ClientId->UniqueProcess, ClientId->UniqueThread);
@@ -324,36 +300,28 @@ NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
 					  ProcessHandle);
 		  ObDereferenceObject(current);
 		  DPRINT("*ProcessHandle %x\n", ProcessHandle);
-		  DPRINT("ZwOpenProcess() = %x\n", Status);
+		  DPRINT("NtOpenProcess() = %x\n", Status);
 		  return(Status);			  
 	       }
 	     current_entry = current_entry->Flink;
 	  }
 	KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-	DPRINT("ZwOpenProcess() = STATUS_UNSUCCESSFUL\n");
+	DPRINT("NtOpenProcess() = STATUS_UNSUCCESSFUL\n");
 	return(STATUS_UNSUCCESSFUL);
      }
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS STDCALL NtQueryInformationProcess(IN HANDLE ProcessHandle,
-					   IN CINT ProcessInformationClass,
-					   OUT PVOID ProcessInformation,
-					   IN ULONG ProcessInformationLength,
-					   OUT PULONG ReturnLength)
-{
-   return(ZwQueryInformationProcess(ProcessHandle,
-				    ProcessInformationClass,
-				    ProcessInformation,
-				    ProcessInformationLength,
-				    ReturnLength));
-}
 
-NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
-					   IN CINT ProcessInformationClass,
-					   OUT PVOID ProcessInformation,
-					   IN ULONG ProcessInformationLength,
-					   OUT PULONG ReturnLength)
+NTSTATUS
+STDCALL
+NtQueryInformationProcess (
+	IN	HANDLE	ProcessHandle,
+	IN	CINT	ProcessInformationClass,
+	OUT	PVOID	ProcessInformation,
+	IN	ULONG	ProcessInformationLength,
+	OUT	PULONG	ReturnLength
+	)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -411,21 +379,15 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
    return(Status);
 }
 
-NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
-					 IN CINT ProcessInformationClass,
-					 IN PVOID ProcessInformation,
-					 IN ULONG ProcessInformationLength)
-{
-   return(ZwSetInformationProcess(ProcessHandle,
-				  ProcessInformationClass,
-				  ProcessInformation,
-				  ProcessInformationLength));
-}
 
-NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
-					 IN CINT ProcessInformationClass,
-					 IN PVOID ProcessInformation,
-					 IN ULONG ProcessInformationLength)
+NTSTATUS
+STDCALL
+NtSetInformationProcess (
+	IN	HANDLE	ProcessHandle,
+	IN	CINT	ProcessInformationClass,
+	IN	PVOID	ProcessInformation,
+	IN	ULONG	ProcessInformationLength
+	)
 {
    PEPROCESS Process;
    NTSTATUS Status;

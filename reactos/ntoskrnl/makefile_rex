@@ -1,4 +1,10 @@
-all: objects ntoskrnl.exe
+# $Id: makefile_rex,v 1.25 1999/06/18 22:11:05 ea Exp $
+#
+# ReactOS Operating System
+#
+TARGET=ntoskrnl
+
+all: objects $(TARGET).exe
 
 #
 # Defines $(HAL_OBJECTS)
@@ -7,7 +13,7 @@ include hal/x86/sources
 
 NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
              nt/evtpair.o nt/ntsem.o nt/mutant.o nt/misc.o nt/plugplay.o \
-	     nt/profile.o nt/nt.o
+	     nt/profile.o nt/nt.o nt/zw.o
 
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
@@ -53,7 +59,7 @@ LDR_OBJECTS = ldr/loader.o ldr/init.o
 
 CC_OBJECTS = cc/cacheman.o cc/view.o
 
-RESOURCE_OBJECT = ntoskrnl.coff
+RESOURCE_OBJECT = $(TARGET).coff
 
 objects: 
 	mkdir objects
@@ -100,59 +106,77 @@ objects/nt.o: $(NT_OBJECTS)
 objects/cc.o: $(CC_OBJECTS)
 	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
 
-objects/ntoskrnl.coff: ntoskrnl.rc ../include/reactos/resource.h
-	$(RC) ntoskrnl.rc objects/ntoskrnl.coff
+$(TARGET).coff: $(TARGET).rc ../include/reactos/resource.h
 
 
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
 	  objects/se.o objects/cm.o objects/dbg.o \
 	  objects/nt.o objects/cc.o objects/ldr.o \
-	  objects/ntoskrnl.coff
+	  $(TARGET).coff
 	  
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o  \
-              ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o  \
-              utils\export\export.exe ntoskrnl.o ntoskrnl.a junk.tmp base.tmp  \
-              temp.exp ntoskrnl.exe ntoskrnl.sym
+CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
+              ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
+              utils\export\export.exe $(TARGET).o $(TARGET).a junk.tmp \
+	      base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 else
-CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o  \
-              ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o  \
-              utils/export/export ntoskrnl.o ntoskrnl.a junk.tmp base.tmp  \
-              temp.exp ntoskrnl.exe ntoskrnl.sym
+CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
+              ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
+              utils/export/export $(TARGET).o $(TARGET).a junk.tmp base.tmp \
+              temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 endif
 
-ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
-	$(LD) -r $(OBJECTS) -o ntoskrnl.o
-	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
-	           --output-lib ntoskrnl.a
-	$(CC) -Wl,-d -specs=../specs -mdll -o junk.tmp \
-	      -Wl,--image-base,0xc0000000 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_end=__bss_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp ntoskrnl.o
+$(TARGET).exe: $(OBJECTS) $(TARGET).def
+	$(LD) \
+		-r $(OBJECTS) \
+		-o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).exe \
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
+	$(CC) \
+		$(TARGET).o \
+		-Wl,-d -specs=../specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_end=__bss_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
-	           --output-exp temp.exp --def ntoskrnl.def
+	$(DLLTOOL) \
+		--dllname $(TARGET).exe \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).def
 	- $(RM) base.tmp
-	$(CC) -Wl,-d -specs=../specs -mdll -o ntoskrnl.exe ntoskrnl.o \
-	      -Wl,--image-base,0xc0000000 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_end=__bss_end__ \
-	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,temp.exp
+	$(CC) \
+		$(TARGET).o \
+		-Wl,-d -specs=../specs \
+		-mdll \
+		-o $(TARGET).exe \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_end=__bss_end__ \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,temp.exp
 	- $(RM) temp.exp
-	$(NM) --numeric-sort ntoskrnl.exe > ntoskrnl.sym
+	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
-ntoskrnl.o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o ntoskrnl.o
+$(TARGET).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET).o
 
-ntoskrnl.a: ntoskrnl.def
-	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
-	           --output-lib ntoskrnl.a
+$(TARGET).a: $(TARGET).def
+	$(DLLTOOL) \
+		--dllname $(TARGET).exe \
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
 
 clean: $(CLEAN_FILES:%=%_clean)
 

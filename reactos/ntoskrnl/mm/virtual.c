@@ -94,27 +94,17 @@ BOOLEAN MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
-NTSTATUS STDCALL NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
-					 IN OUT PVOID *BaseAddress,
-					 IN ULONG  ZeroBits,
-					 IN OUT PULONG  RegionSize,
-					 IN ULONG  AllocationType, 
-					 IN ULONG  Protect)
-{
-   return(ZwAllocateVirtualMemory(ProcessHandle,
-				  BaseAddress,
-				  ZeroBits,
-				  RegionSize,
-				  AllocationType,
-				  Protect));
-}
 
-NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
-					 IN OUT PVOID *BaseAddress,
-					 IN ULONG  ZeroBits,
-					 IN OUT PULONG  RegionSize,
-					 IN ULONG  AllocationType, 
-					 IN ULONG  Protect)
+NTSTATUS
+STDCALL
+NtAllocateVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN OUT	PVOID	* BaseAddress,
+	IN	ULONG	ZeroBits,
+	IN OUT	PULONG	RegionSize,
+	IN	ULONG	AllocationType, 
+	IN	ULONG	Protect
+	)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -149,7 +139,7 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
    ULONG Type;
    NTSTATUS Status;
    
-   DPRINT("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
+   DPRINT("NtAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	  "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
 	  ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	  Protect);
@@ -162,7 +152,7 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("ZwAllocateVirtualMemory() = %x\n",Status);
+	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	return(Status);
      }
    
@@ -216,7 +206,7 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
    
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("ZwAllocateVirtualMemory() = %x\n",Status);
+	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	ObDereferenceObject(Process);
 	return(Status);
      }
@@ -226,22 +216,15 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtFlushVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID BaseAddress,
-				      IN ULONG NumberOfBytesToFlush,
-				      OUT PULONG NumberOfBytesFlushed OPTIONAL)
-{
-   return(ZwFlushVirtualMemory(ProcessHandle,
-			       BaseAddress,
-			       NumberOfBytesToFlush,
-			       NumberOfBytesFlushed));
-}
 
-NTSTATUS STDCALL ZwFlushVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID BaseAddress,
-				      IN ULONG NumberOfBytesToFlush,
-				      OUT PULONG NumberOfBytesFlushed OPTIONAL)
-
+NTSTATUS
+STDCALL
+NtFlushVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	BaseAddress,
+	IN	ULONG	NumberOfBytesToFlush,
+	OUT	PULONG	NumberOfBytesFlushed	OPTIONAL
+	)
 /*
  * FUNCTION: Flushes virtual memory to file
  * ARGUMENTS:
@@ -253,25 +236,18 @@ NTSTATUS STDCALL ZwFlushVirtualMemory(IN HANDLE ProcessHandle,
  * RETURNS: Status 
  */
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtFreeVirtualMemory(IN HANDLE ProcessHandle,
-				     IN PVOID  *BaseAddress,	
-				     IN PULONG  RegionSize,	
-				     IN ULONG  FreeType)
-{
-   return(ZwFreeVirtualMemory(ProcessHandle,
-			      BaseAddress,
-			      RegionSize,
-			      FreeType));
-}
 
-NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
-				     IN PVOID  *BaseAddress,	
- 				     IN PULONG  RegionSize,	
-				     IN ULONG  FreeType)
-
+NTSTATUS
+STDCALL
+NtFreeVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	* BaseAddress,	
+	IN	PULONG	RegionSize,	
+	IN	ULONG	FreeType
+	)
 /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
@@ -289,7 +265,7 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    
-   DPRINT("ZwFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
+   DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	  "*RegionSize %x, FreeType %x)\n",ProcessHandle,*BaseAddress,
 	  *RegionSize,FreeType);
 				 
@@ -341,37 +317,19 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS STDCALL NtLockVirtualMemory(HANDLE ProcessHandle,
-				     PVOID BaseAddress,
-				     ULONG NumberOfBytesToLock,
-				     PULONG NumberOfBytesLocked)
+
+NTSTATUS
+STDCALL
+NtLockVirtualMemory (
+	HANDLE	ProcessHandle,
+	PVOID	BaseAddress,
+	ULONG	NumberOfBytesToLock,
+	PULONG	NumberOfBytesLocked
+	)
 {
-   return(ZwLockVirtualMemory(ProcessHandle,
-			      BaseAddress,
-			      NumberOfBytesToLock,
-			      NumberOfBytesLocked));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwLockVirtualMemory(HANDLE ProcessHandle,
-				     PVOID BaseAddress,
-				     ULONG NumberOfBytesToLock,
-				     PULONG NumberOfBytesLocked)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtProtectVirtualMemory(IN HANDLE ProcessHandle,
-					IN PVOID BaseAddress,
-					IN ULONG NumberOfBytesToProtect,
-					IN ULONG NewAccessProtection,
-					OUT PULONG OldAccessProtection)
-{
-   return(ZwProtectVirtualMemory(ProcessHandle,
-				 BaseAddress,
-				 NumberOfBytesToProtect,
-				 NewAccessProtection,
-				 OldAccessProtection));
-}
 
 VOID MmChangeAreaProtection(PEPROCESS Process, 
 			    PVOID BaseAddress,
@@ -389,11 +347,16 @@ VOID MmChangeAreaProtection(PEPROCESS Process,
      }
 }
 
-NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
-					IN PVOID BaseAddress,
-					IN ULONG NumberOfBytesToProtect,
-					IN ULONG NewAccessProtection,
-					OUT PULONG OldAccessProtection)
+
+NTSTATUS
+STDCALL
+NtProtectVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	BaseAddress,
+	IN	ULONG	NumberOfBytesToProtect,
+	IN	ULONG	NewAccessProtection,
+	OUT	PULONG	OldAccessProtection
+	)
 {
    PMEMORY_AREA MemoryArea;
    PEPROCESS Process;
@@ -407,14 +370,14 @@ NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("ZwProtectVirtualMemory() = %x\n",Status);
+	DPRINT("NtProtectVirtualMemory() = %x\n",Status);
 	return(Status);
      }
 
    MemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);
    if (MemoryArea == NULL)
      {
-	DPRINT("ZwProtectVirtualMemory() = %x\n",STATUS_UNSUCCESSFUL);
+	DPRINT("NtProtectVirtualMemory() = %x\n",STATUS_UNSUCCESSFUL);
 	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -442,56 +405,37 @@ NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtQueryVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID Address,
-				      IN IN CINT VirtualMemoryInformationClass,
-				      OUT PVOID VirtualMemoryInformation,
-				      IN ULONG Length,
-				      OUT PULONG ResultLength)
+NTSTATUS
+STDCALL
+NtQueryVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	Address,
+	IN 	CINT	VirtualMemoryInformationClass,
+	OUT	PVOID	VirtualMemoryInformation,
+	IN	ULONG	Length,
+	OUT	PULONG	ResultLength
+	)
 {
-   return(ZwQueryVirtualMemory(ProcessHandle,
-			       Address,
-			       VirtualMemoryInformationClass,
-			       VirtualMemoryInformation,
-			       Length,
-			       ResultLength));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwQueryVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID Address,
-				      IN CINT VirtualMemoryInformationClass,
-				      OUT PVOID VirtualMemoryInformation,
-				      IN ULONG Length,
-				      OUT PULONG ResultLength)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtReadVirtualMemory(IN HANDLE ProcessHandle,
-				     IN PVOID BaseAddress,
-				     OUT PVOID Buffer,
-				     IN ULONG  NumberOfBytesToRead,
-				     OUT PULONG NumberOfBytesRead)
-{
-   return(ZwReadVirtualMemory(ProcessHandle,
-			      BaseAddress,
-			      Buffer,
-			      NumberOfBytesToRead,
-			      NumberOfBytesRead));
-}
-
-NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
-				     IN PVOID BaseAddress,
-				     OUT PVOID Buffer,
-				     IN ULONG  NumberOfBytesToRead,
-				     OUT PULONG NumberOfBytesRead)
+NTSTATUS
+STDCALL
+NtReadVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	BaseAddress,
+	OUT	PVOID	Buffer,
+	IN	ULONG	NumberOfBytesToRead,
+	OUT	PULONG	NumberOfBytesRead
+	)
 {
    NTSTATUS Status;
    PMDL Mdl;
    PVOID SystemAddress;
    PEPROCESS Process;
    
-   DPRINT("ZwReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+   DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
 	    "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
 	    Buffer,NumberOfBytesToRead);
    
@@ -526,50 +470,36 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtUnlockVirtualMemory(HANDLE ProcessHandle,
-				       PVOID BaseAddress,
-				       ULONG  NumberOfBytesToUnlock,
-				       PULONG NumberOfBytesUnlocked OPTIONAL)
+
+NTSTATUS
+STDCALL
+NtUnlockVirtualMemory (
+	HANDLE	ProcessHandle,
+	PVOID	BaseAddress,
+	ULONG	NumberOfBytesToUnlock,
+	PULONG	NumberOfBytesUnlocked	OPTIONAL
+	)
 {
-   return(ZwUnlockVirtualMemory(ProcessHandle,
-				BaseAddress,
-				NumberOfBytesToUnlock,
-				NumberOfBytesUnlocked));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwUnlockVirtualMemory(HANDLE ProcessHandle,
-				       PVOID BaseAddress,
-				       ULONG  NumberOfBytesToUnlock,
-				       PULONG NumberOfBytesUnlocked OPTIONAL)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtWriteVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID  BaseAddress,
-				      IN PVOID Buffer,
-				      IN ULONG NumberOfBytesToWrite,
-				      OUT PULONG NumberOfBytesWritten)
-{
-   return(ZwWriteVirtualMemory(ProcessHandle,
-			       BaseAddress,
-			       Buffer,
-			       NumberOfBytesToWrite,
-			       NumberOfBytesWritten));
-}
-
-NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
-				      IN PVOID BaseAddress,
-				      IN PVOID Buffer,
-				      IN ULONG NumberOfBytesToWrite,
-				      OUT PULONG NumberOfBytesWritten)
+NTSTATUS
+STDCALL
+NtWriteVirtualMemory (
+	IN	HANDLE	ProcessHandle,
+	IN	PVOID	BaseAddress,
+	IN	PVOID	Buffer,
+	IN	ULONG	NumberOfBytesToWrite,
+	OUT	PULONG	NumberOfBytesWritten
+	)
 {
    NTSTATUS Status;
    PMDL Mdl;
    PVOID SystemAddress;
    PEPROCESS Process;
    
-   DPRINT("ZwWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+   DPRINT("NtWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
 	    "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
 	    Buffer,NumberOfBytesToWrite);
    

@@ -354,38 +354,22 @@ VOID PsInitThreadManagment(VOID)
    DoneInitYet = TRUE;
 }
 
-NTSTATUS NtCreateThread(PHANDLE ThreadHandle,
-			ACCESS_MASK DesiredAccess,
-			POBJECT_ATTRIBUTES ObjectAttributes,
-			HANDLE ProcessHandle,
-			PCLIENT_ID Client,
-			PCONTEXT ThreadContext,
-			PINITIAL_TEB InitialTeb,
-			BOOLEAN CreateSuspended)
-{
-   return(ZwCreateThread(ThreadHandle,
-			 DesiredAccess,
-			 ObjectAttributes,
-			 ProcessHandle,
-			 Client,
-			 ThreadContext,
-			 InitialTeb,
-			 CreateSuspended));
-}
-
-NTSTATUS ZwCreateThread(PHANDLE ThreadHandle,
-			ACCESS_MASK DesiredAccess,
-			POBJECT_ATTRIBUTES ObjectAttributes,
-			HANDLE ProcessHandle,
-			PCLIENT_ID Client,
-			PCONTEXT ThreadContext,
-			PINITIAL_TEB InitialTeb,
-			BOOLEAN CreateSuspended)
+NTSTATUS
+NtCreateThread (
+	PHANDLE			ThreadHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
+	HANDLE			ProcessHandle,
+	PCLIENT_ID		Client,
+	PCONTEXT		ThreadContext,
+	PINITIAL_TEB		InitialTeb,
+	BOOLEAN			CreateSuspended
+	)
 {
    PETHREAD Thread;
    NTSTATUS Status;
    
-   DPRINT("ZwCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
+   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	  ThreadHandle,ThreadContext);
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
@@ -488,67 +472,58 @@ KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
    return(OldPriority);
 }
 
-NTSTATUS STDCALL NtAlertResumeThread(IN HANDLE ThreadHandle,
-				     OUT PULONG SuspendCount)
+
+NTSTATUS
+STDCALL
+NtAlertResumeThread (
+	IN	HANDLE	ThreadHandle,
+	OUT	PULONG	SuspendCount
+	)
 {
-   return(ZwAlertResumeThread(ThreadHandle,SuspendCount));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwAlertResumeThread(IN HANDLE ThreadHandle,
-				     OUT PULONG SuspendCount)
+
+NTSTATUS
+STDCALL
+NtAlertThread (
+	IN	HANDLE	ThreadHandle
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtAlertThread(IN HANDLE ThreadHandle)
+
+NTSTATUS
+STDCALL
+NtGetContextThread (
+	IN	HANDLE		ThreadHandle, 
+	OUT	PCONTEXT	Context
+	)
 {
-   return(ZwAlertThread(ThreadHandle));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwAlertThread(IN HANDLE ThreadHandle)
+
+NTSTATUS
+STDCALL
+NtOpenThread (
+	OUT	PHANDLE			ThreadHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	PCLIENT_ID		ClientId
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtGetContextThread(IN HANDLE ThreadHandle, 
-				    OUT PCONTEXT Context)
-{
-   return(ZwGetContextThread(ThreadHandle,Context));
-}
 
-NTSTATUS STDCALL ZwGetContextThread(IN HANDLE ThreadHandle, 
-				    OUT PCONTEXT Context)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtOpenThread(OUT PHANDLE ThreadHandle,
-			      IN ACCESS_MASK DesiredAccess,
-			      IN POBJECT_ATTRIBUTES ObjectAttributes,
-			      IN PCLIENT_ID ClientId)
-{
-   return(ZwOpenThread(ThreadHandle,
-		       DesiredAccess,
-		       ObjectAttributes,
-		       ClientId));
-}
-
-NTSTATUS STDCALL ZwOpenThread(OUT PHANDLE ThreadHandle,
-			      IN ACCESS_MASK DesiredAccess,
-			      IN POBJECT_ATTRIBUTES ObjectAttributes,
-			      IN PCLIENT_ID ClientId)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtResumeThread(IN HANDLE ThreadHandle,
-				IN PULONG SuspendCount)
-{
-   return(ZwResumeThread(ThreadHandle,SuspendCount));
-}
-
-NTSTATUS STDCALL ZwResumeThread(IN HANDLE ThreadHandle,
-				IN PULONG SuspendCount)
+NTSTATUS
+STDCALL
+NtResumeThread (
+	IN	HANDLE	ThreadHandle,
+	IN	PULONG	SuspendCount
+	)
 /*
  * FUNCTION: Decrements a thread's resume count
  * ARGUMENTS: 
@@ -584,26 +559,24 @@ NTSTATUS STDCALL ZwResumeThread(IN HANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtSetContextThread(IN HANDLE ThreadHandle,
-				    IN PCONTEXT Context)
+
+NTSTATUS
+STDCALL
+NtSetContextThread (
+	IN	HANDLE		ThreadHandle,
+	IN	PCONTEXT	Context
+	)
 {
-   return(ZwSetContextThread(ThreadHandle,Context));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwSetContextThread(IN HANDLE ThreadHandle,
-				    IN PCONTEXT Context)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtSuspendThread(IN HANDLE ThreadHandle,
-				 IN PULONG PreviousSuspendCount)
-{
-   return(ZwSuspendThread(ThreadHandle,PreviousSuspendCount));
-}
-
-NTSTATUS STDCALL ZwSuspendThread(IN HANDLE ThreadHandle,
-				 IN PULONG PreviousSuspendCount)
+NTSTATUS
+STDCALL
+NtSuspendThread (
+	IN	HANDLE	ThreadHandle,
+	IN	PULONG	PreviousSuspendCount
+	)
 /*
  * FUNCTION: Increments a thread's suspend count
  * ARGUMENTS: 
@@ -646,23 +619,22 @@ NTSTATUS STDCALL ZwSuspendThread(IN HANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtContinue(IN PCONTEXT Context, IN CINT IrqLevel)
+
+NTSTATUS
+STDCALL
+NtContinue (
+	IN	PCONTEXT	Context,
+	IN	CINT		IrqLevel
+	)
 {
-   return(ZwContinue(Context,IrqLevel));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtYieldExecution(VOID)
+NTSTATUS
+STDCALL
+NtYieldExecution(VOID)
 {
-   return(ZwYieldExecution());
-}
-
-NTSTATUS STDCALL ZwYieldExecution(VOID)
-{
-   PsDispatchThread();
-   return(STATUS_SUCCESS);
+	PsDispatchThread();
+	return(STATUS_SUCCESS);
 }

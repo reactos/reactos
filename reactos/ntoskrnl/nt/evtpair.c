@@ -16,96 +16,87 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCreateEventPair(OUT PHANDLE EventPairHandle,
-				   IN ACCESS_MASK DesiredAccess,
-				   IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL
+NtCreateEventPair (
+	OUT	PHANDLE			EventPairHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
-   return(ZwCreateEventPair(EventPairHandle,
-			    DesiredAccess,
-			    ObjectAttributes));
-}
-
-NTSTATUS STDCALL ZwCreateEventPair(OUT PHANDLE EventPairHandle,
-				   IN ACCESS_MASK DesiredAccess,
-				   IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtSetHighEventPair(IN HANDLE EventPairHandle)
-{
-   return(ZwSetHighEventPair(EventPairHandle));
-}
-
-NTSTATUS STDCALL ZwSetHighEventPair(IN HANDLE EventPairHandle)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
-{
-   return(ZwSetHighWaitLowEventPair(EventPairHandle));
-}
-
-NTSTATUS STDCALL ZwSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtSetLowEventPair(HANDLE EventPairHandle)
+NTSTATUS
+STDCALL
+NtSetHighEventPair (
+	IN	HANDLE	EventPairHandle
+	)
 {
-   return(ZwSetLowEventPair(EventPairHandle));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwSetLowEventPair(HANDLE EventPairHandle)
+
+NTSTATUS
+STDCALL
+NtSetHighWaitLowEventPair (
+	IN	HANDLE	EventPairHandle
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtSetLowWaitHighEventPair(HANDLE EventPairHandle)
+NTSTATUS
+STDCALL
+NtSetLowEventPair (
+	HANDLE	EventPairHandle
+	)
 {
-   return(ZwSetLowWaitHighEventPair(EventPairHandle));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwSetLowWaitHighEventPair(HANDLE EventPairHandle)
+
+NTSTATUS
+STDCALL
+NtSetLowWaitHighEventPair (
+	HANDLE	EventPairHandle
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtWaitLowEventPair(IN HANDLE EventPairHandle)
+
+NTSTATUS
+STDCALL
+NtWaitLowEventPair (
+	IN	HANDLE	EventPairHandle
+	)
 {
-   return(ZwWaitLowEventPair(EventPairHandle));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwWaitLowEventPair(IN HANDLE EventPairHandle)
+
+NTSTATUS
+STDCALL
+NtOpenEventPair (
+	OUT	PHANDLE			EventPairHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtOpenEventPair(OUT PHANDLE EventPairHandle,
-				 IN ACCESS_MASK DesiredAccess,
-				 IN POBJECT_ATTRIBUTES ObjectAttributes)
+
+NTSTATUS
+STDCALL
+NtWaitHighEventPair (
+	IN	HANDLE	EventPairHandle
+	)
 {
-   return(ZwOpenEventPair(EventPairHandle,
-			  DesiredAccess,
-			  ObjectAttributes));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwOpenEventPair(OUT PHANDLE EventPairHandle,
-				 IN ACCESS_MASK DesiredAccess,
-				 IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtWaitHighEventPair(IN HANDLE EventPairHandle)
-{
-   return(ZwWaitHighEventPair(EventPairHandle));
-}
-
-NTSTATUS STDCALL ZwWaitHighEventPair(IN HANDLE EventPairHandle)
-{
-   UNIMPLEMENTED;
-}
+/* EOF */

@@ -257,45 +257,32 @@ VOID KeInitializeDispatcher(VOID)
    KeInitializeSpinLock(&DispatcherDatabaseLock);
 }
 
-NTSTATUS STDCALL NtWaitForMultipleObjects (IN ULONG Count,
-					   IN HANDLE Object[],
-					   IN CINT WaitType,
-					   IN BOOLEAN Alertable,
-					   IN PLARGE_INTEGER Time)
+NTSTATUS
+STDCALL
+NtWaitForMultipleObjects (
+	IN	ULONG		Count,
+	IN	HANDLE		Object [],
+	IN	CINT		WaitType,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
+	)
 {
-   return(ZwWaitForMultipleObjects(Count,
-				   Object,
-				   WaitType,
-				   Alertable,
-				   Time));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwWaitForMultipleObjects (IN ULONG Count,
-					   IN HANDLE Object[],
-					   IN CINT WaitType,
-					   IN BOOLEAN Alertable,
-					   IN PLARGE_INTEGER Time)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtWaitForSingleObject (IN HANDLE Object,
-					IN BOOLEAN Alertable,
-					IN PLARGE_INTEGER Time)
-{
-   return(ZwWaitForSingleObject(Object,
-				Alertable,
-				Time));
-}
-
-NTSTATUS STDCALL ZwWaitForSingleObject (IN HANDLE Object,
-					IN BOOLEAN Alertable,
-					IN PLARGE_INTEGER Time)
+NTSTATUS
+STDCALL
+NtWaitForSingleObject (
+	IN	HANDLE		Object,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time
+	)
 {
    PVOID ObjectPtr;
    NTSTATUS Status;
    
-   DPRINT("ZwWaitForSingleObject(Object %x, Alertable %d, Time %x)\n",
+   DPRINT("NtWaitForSingleObject(Object %x, Alertable %d, Time %x)\n",
 	  Object,Alertable,Time);
    
    Status = ObReferenceObjectByHandle(Object,
@@ -321,23 +308,14 @@ NTSTATUS STDCALL ZwWaitForSingleObject (IN HANDLE Object,
 }
 
 
-NTSTATUS STDCALL NtSignalAndWaitForSingleObject(
-				 IN HANDLE EventHandle,
-	                         IN BOOLEAN Alertable,
-	                         IN PLARGE_INTEGER Time,
-	                         PULONG NumberOfWaitingThreads OPTIONAL)
+NTSTATUS
+STDCALL
+NtSignalAndWaitForSingleObject (
+	IN	HANDLE		EventHandle,
+	IN	BOOLEAN		Alertable,
+	IN	PLARGE_INTEGER	Time,
+		PULONG		NumberOfWaitingThreads	OPTIONAL
+	)
 {
-   return(ZwSignalAndWaitForSingleObject(EventHandle,
-					 Alertable,
-					 Time,
-					 NumberOfWaitingThreads));
-}
-
-NTSTATUS STDCALL ZwSignalAndWaitForSingleObject(
-				 IN HANDLE EventHandle,
-				 IN BOOLEAN Alertable,
-				 IN PLARGE_INTEGER Time,
-				 PULONG NumberOfWaitingThreads OPTIONAL)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

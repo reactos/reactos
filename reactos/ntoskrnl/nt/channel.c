@@ -24,32 +24,50 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCreateChannel(VOID)
+NTSTATUS
+STDCALL
+NtCreateChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtListenChannel(VOID)
+
+NTSTATUS
+STDCALL
+NtListenChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtOpenChannel(VOID)
+NTSTATUS
+STDCALL
+NtOpenChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtReplyWaitSendChannel(VOID)
+
+NTSTATUS
+STDCALL
+NtReplyWaitSendChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtSendWaitReplyChannel(VOID)
+
+NTSTATUS
+STDCALL
+NtSendWaitReplyChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtSetContextChannel(VOID)
+
+NTSTATUS
+STDCALL
+NtSetContextChannel(VOID)
 {
-   UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
+
+/* EOF */

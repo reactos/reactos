@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.7 1999/06/17 18:09:27 ea Exp $
+/* $Id: genntdll.c,v 1.8 1999/06/18 22:10:58 ea Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -112,7 +112,7 @@ process(
 				*stmp = '\0';
 			}
 #ifdef VERBOSE
-			printf("name = \"%s\" value = %d\n",name,sys_call_idx);
+			printf("%3d \"%s\"\n",sys_call_idx,name);
 #endif
 			/*
 			 * Write the NTDLL stub for the current

@@ -126,11 +126,88 @@ RtlMoveMemory
 RtlTimeFieldsToTime
 RtlTimeToTimeFields
 RtlZeroMemory
-ZwCreateDirectoryObject@12
 CcInitializeFileCache
 CcRequestCachePage
 CcReleaseCachePage
 CcReleaseFileCache
+ZwAccessCheckAndAuditAlarm = ZwAccessCheckAndAuditAlarm@44
+ZwAlertThread = ZwAlertThread@4
+ZwAllocateVirtualMemory = ZwAllocateVirtualMemory@24
+ZwClearEvent = ZwClearEvent@4
+ZwClose = ZwClose@4
+ZwCloseObjectAuditAlarm = ZwCloseObjectAuditAlarm@12
+ZwConnectPort = ZwConnectPort@32
+ZwCreateDirectoryObject = ZwCreateDirectoryObject@12
+ZwCreateDirectoryObject@12
+ZwCreateEvent = ZwCreateEvent@20
+ZwCreateFile = ZwCreateFile@44
+ZwCreateKey = ZwCreateKey@28
+ZwCreateSection = ZwCreateSection@28
+ZwCreateSymbolicLinkObject = ZwCreateSymbolicLinkObject@16
+ZwDeleteFile = ZwDeleteFile@4
+ZwDeleteKey = ZwDeleteKey@4
+ZwDeleteValueKey = ZwDeleteValueKey@8
+ZwDeviceIoControlFile = ZwDeviceIoControlFile@40
+ZwDisplayString = ZwDisplayString@4
+ZwDuplicateObject = ZwDuplicateObject@28
+ZwDuplicateToken = ZwDuplicateToken@24
+ZwEnumerateKey = ZwEnumerateKey@24
+ZwEnumerateValueKey = ZwEnumerateValueKey@24
+ZwFlushInstructionCache = ZwFlushInstructionCache@12
+ZwFlushKey = ZwFlushKey@4
+ZwFreeVirtualMemory = ZwFreeVirtualMemory@16
+ZwFsControlFile = ZwFsControlFile@40
+ZwLoadDriver = ZwLoadDriver@4
+ZwLoadKey = ZwLoadKey@8
+ZwMakeTemporaryObject = ZwMakeTemporaryObject@4
+ZwMapViewOfSection = ZwMapViewOfSection@40
+ZwNotifyChangeKey = ZwNotifyChangeKey@40
+ZwOpenDirectoryObject = ZwOpenDirectoryObject@12
+ZwOpenEvent = ZwOpenEvent@12
+ZwOpenFile = ZwOpenFile@24
+ZwOpenKey = ZwOpenKey@12
+ZwOpenProcess = ZwOpenProcess@16
+ZwOpenProcessToken = ZwOpenProcessToken@12
+ZwOpenSection = ZwOpenSection@12
+ZwOpenSymbolicLinkObject = ZwOpenSymbolicLinkObject@12
+ZwOpenThread = ZwOpenThread@16
+ZwOpenThreadToken = ZwOpenThreadToken@16
+ZwPulseEvent = ZwPulseEvent@8
+ZwQueryDefaultLocale = ZwQueryDefaultLocale@8
+ZwQueryDirectoryFile = ZwQueryDirectoryFile@44
+ZwQueryInformationFile = ZwQueryInformationFile@20
+ZwQueryInformationProcess = ZwQueryInformationProcess@20
+ZwQueryInformationToken = ZwQueryInformationToken@20
+ZwQueryKey = ZwQueryKey@20
+ZwQueryObject = ZwQueryObject@20
+ZwQuerySection = ZwQuerySection@20
+ZwQuerySecurityObject = ZwQuerySecurityObject@20
+ZwQuerySymbolicLinkObject = ZwQuerySymbolicLinkObject@12
+ZwQuerySystemInformation = ZwQuerySystemInformation@16
+ZwQueryValueKey = ZwQueryValueKey@24
+ZwQueryVolumeInformationFile = ZwQueryVolumeInformationFile@20
+ZwReadFile = ZwReadFile@36
+ZwReplaceKey = ZwReplaceKey@12
+ZwRequestWaitReplyPort = ZwRequestWaitReplyPort@12
+ZwResetEvent = ZwResetEvent@8
+ZwSaveKey = ZwSaveKey@8
+ZwSetDefaultLocale = ZwSetDefaultLocale@8
+ZwSetEvent = ZwSetEvent@8
+ZwSetInformationFile = ZwSetInformationFile@20
+ZwSetInformationObject = ZwSetInformationObject@16
+ZwSetInformationProcess = ZwSetInformationProcess@16
+ZwSetInformationThread = ZwSetInformationThread@16
+ZwSetSystemInformation = ZwSetSystemInformation@12
+ZwSetSystemTime = ZwSetSystemTime@8
+ZwSetValueKey = ZwSetValueKey@24
+ZwTerminateProcess = ZwTerminateProcess@8
+ZwUnloadDriver = ZwUnloadDriver@4
+ZwUnloadKey = ZwUnloadKey@4
+ZwUnmapViewOfSection = ZwUnmapViewOfSection@8
+ZwWaitForMultipleObjects = ZwWaitForMultipleObjects@20
+ZwWaitForSingleObject = ZwWaitForSingleObject@12
+ZwWriteFile = ZwWriteFile@36
+ZwYieldExecution = ZwYieldExecution@0
 isdigit
 islower
 isprint

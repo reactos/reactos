@@ -93,30 +93,18 @@ NTSTATUS MmInitSectionImplementation(VOID)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtCreateSection(OUT PHANDLE SectionHandle, 
-				 IN ACCESS_MASK DesiredAccess,
-			    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,  
-	                    IN PLARGE_INTEGER MaximumSize OPTIONAL,  
-	                    IN ULONG SectionPageProtection OPTIONAL,
-	                    IN ULONG AllocationAttributes,
-	                    IN HANDLE FileHandle OPTIONAL)
-{
-   return(ZwCreateSection(SectionHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
-			  MaximumSize,
-			  SectionPageProtection,
-			  AllocationAttributes,
-			  FileHandle));
-}
 
-NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle, 
-				 IN ACCESS_MASK DesiredAccess,
-			    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,  
-	                    IN PLARGE_INTEGER MaximumSize OPTIONAL,  
-	                    IN ULONG SectionPageProtection OPTIONAL,
-	                    IN ULONG AllocationAttributes,
-	                    IN HANDLE FileHandle OPTIONAL)
+NTSTATUS
+STDCALL
+NtCreateSection (
+	OUT	PHANDLE			SectionHandle, 
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,  
+	IN	PLARGE_INTEGER		MaximumSize		OPTIONAL,  
+	IN	ULONG			SectionPageProtection	OPTIONAL,
+	IN	ULONG			AllocationAttributes,
+	IN	HANDLE			FileHandle		OPTIONAL
+	)
 /*
  * FUNCTION: Creates a section object.
  * ARGUMENTS:
@@ -145,7 +133,7 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
    PSECTION_OBJECT Section;
    NTSTATUS Status;
    
-   DPRINT("ZwCreateSection()\n");
+   DPRINT("NtCreateSection()\n");
 
    Section = ObCreateObject(SectionHandle,
 			    DesiredAccess,
@@ -177,7 +165,7 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
 					   NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
-	     DPRINT("ZwCreateSection() = %x\n",Status);
+	     DPRINT("NtCreateSection() = %x\n",Status);
 	     return(Status);
 	  }
      }
@@ -186,22 +174,17 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
 	Section->FileObject = NULL;
      }
    
-   DPRINT("ZwCreateSection() = STATUS_SUCCESS\n");
+   DPRINT("NtCreateSection() = STATUS_SUCCESS\n");
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS NtOpenSection(PHANDLE SectionHandle,
-		       ACCESS_MASK DesiredAccess,
-		       POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   return(ZwOpenSection(SectionHandle,
-			DesiredAccess,
-			ObjectAttributes));
-}
 
-NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
-		       ACCESS_MASK DesiredAccess,
-		       POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+NtOpenSection (
+	PHANDLE			SectionHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
    PVOID Object;
    NTSTATUS Status;
@@ -229,39 +212,20 @@ NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
    return(Status);
 }
 
-NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
-				    HANDLE ProcessHandle,
-				    PVOID* BaseAddress,
-				    ULONG ZeroBits,
-				    ULONG CommitSize,
-				    PLARGE_INTEGER SectionOffset,
-				    PULONG ViewSize,
-				    SECTION_INHERIT InheritDisposition,
-				    ULONG AllocationType,
-				    ULONG Protect)
-{
-   return(ZwMapViewOfSection(SectionHandle,
-			     ProcessHandle,
-			     BaseAddress,
-			     ZeroBits,
-			     CommitSize,
-			     SectionOffset,
-			     ViewSize,
-			     InheritDisposition,
-			     AllocationType,
-			     Protect));
-}
-
-NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
-				    HANDLE ProcessHandle,
-				    PVOID* BaseAddress,
-				    ULONG ZeroBits,
-				    ULONG CommitSize,
-				    PLARGE_INTEGER SectionOffset,
-				    PULONG ViewSize,
-				    SECTION_INHERIT InheritDisposition,
-				    ULONG AllocationType,
-				    ULONG Protect)
+NTSTATUS
+STDCALL
+NtMapViewOfSection (
+	HANDLE		SectionHandle,
+	HANDLE		ProcessHandle,
+	PVOID		* BaseAddress,
+	ULONG		ZeroBits,
+	ULONG		CommitSize,
+	PLARGE_INTEGER	SectionOffset,
+	PULONG		ViewSize,
+	SECTION_INHERIT	InheritDisposition,
+	ULONG		AllocationType,
+	ULONG		Protect
+	)
 /*
  * FUNCTION: Maps a view of a section into the virtual address space of a 
  *           process
@@ -289,7 +253,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
    MEMORY_AREA* Result;
    NTSTATUS Status;
    
-   DPRINT("ZwMapViewOfSection(Section:%08lx, Process:%08lx,\n"
+   DPRINT("NtMapViewOfSection(Section:%08lx, Process:%08lx,\n"
           "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
           "  SectionOffs:%08lx, *ViewSize:%08lx, InheritDisp:%08lx,\n"
           "  AllocType:%08lx, Protect:%08lx)\n",
@@ -346,7 +310,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
 			       &Result);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ZwMapViewOfSection() = %x\n",Status);
+	DPRINT("NtMapViewOfSection() = %x\n",Status);
 	ObDereferenceObject(Process);
 	ObDereferenceObject(Section);
 	return(Status);
@@ -370,12 +334,12 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS NtUnmapViewOfSection(HANDLE ProcessHandle, PVOID BaseAddress)
-{
-   return(ZwUnmapViewOfSection(ProcessHandle,BaseAddress));
-}
 
-NTSTATUS ZwUnmapViewOfSection(HANDLE ProcessHandle, PVOID BaseAddress)
+NTSTATUS
+NtUnmapViewOfSection (
+	HANDLE	ProcessHandle,
+	PVOID	BaseAddress
+	)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -395,24 +359,16 @@ NTSTATUS ZwUnmapViewOfSection(HANDLE ProcessHandle, PVOID BaseAddress)
    return(Status);
 }
 
-NTSTATUS STDCALL NtQuerySection(IN HANDLE SectionHandle,
-				IN CINT SectionInformationClass,
-				OUT PVOID SectionInformation,
-				IN ULONG Length, 
-				OUT PULONG ResultLength)
-{
-   return(ZwQuerySection(SectionHandle,
-			 SectionInformationClass,
-			 SectionInformation,
-			 Length,
-			 ResultLength));
-}
 
-NTSTATUS STDCALL ZwQuerySection(IN HANDLE SectionHandle,
-				IN CINT SectionInformationClass,
-				OUT PVOID SectionInformation,
-				IN ULONG Length, 
-				OUT PULONG ResultLength)
+NTSTATUS
+STDCALL
+NtQuerySection (
+	IN	HANDLE	SectionHandle,
+	IN	CINT	SectionInformationClass,
+	OUT	PVOID	SectionInformation,
+	IN	ULONG	Length, 
+	OUT	PULONG	ResultLength
+	)
 /*
  * FUNCTION: Queries the information of a section object.
  * ARGUMENTS: 
@@ -426,17 +382,16 @@ NTSTATUS STDCALL ZwQuerySection(IN HANDLE SectionHandle,
  *
  */
 {
-   return(STATUS_UNSUCCESSFUL);
+	return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS STDCALL NtExtendSection(IN HANDLE SectionHandle,
-				 IN ULONG NewMaximumSize)
-{
-   return(ZwExtendSection(SectionHandle,NewMaximumSize));
-}
 
-NTSTATUS STDCALL ZwExtendSection(IN HANDLE SectionHandle,
-				 IN ULONG NewMaximumSize)
+NTSTATUS
+STDCALL
+NtExtendSection (
+	IN	HANDLE	SectionHandle,
+	IN	ULONG	NewMaximumSize
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

@@ -16,79 +16,53 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-			   IN ULONG InitialCount,
-			   IN ULONG MaximumCount)
+NTSTATUS
+STDCALL
+NtCreateSemaphore (
+	OUT	PHANDLE			SemaphoreHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	ULONG			InitialCount,
+	IN	ULONG			MaximumCount
+	)
 {
-   return(ZwCreateSemaphore(SemaphoreHandle,
-			    DesiredAccess,
-			    ObjectAttributes,
-			    InitialCount,
-			    MaximumCount));
-}
-
-NTSTATUS STDCALL ZwCreateSemaphore(OUT PHANDLE SemaphoreHandle,
-			      IN ACCESS_MASK DesiredAccess,
-			      IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-			      IN ULONG InitialCount,
-			      IN ULONG MaximumCount)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtOpenSemaphore(IN HANDLE SemaphoreHandle,
-				 IN ACCESS_MASK DesiredAccess,
-				 IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL
+NtOpenSemaphore (
+	IN	HANDLE			SemaphoreHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
-   return(ZwOpenSemaphore(SemaphoreHandle,
-			  DesiredAccess,
-			  ObjectAttributes));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwOpenSemaphore(IN HANDLE SemaphoreHandle,
-				 IN ACCESS_MASK DesiredAccess,
-				 IN POBJECT_ATTRIBUTES ObjectAttributes)
+
+NTSTATUS
+STDCALL
+NtQuerySemaphore (
+		HANDLE	SemaphoreHandle,
+		CINT	SemaphoreInformationClass,
+	OUT	PVOID	SemaphoreInformation,
+		ULONG	Length,
+		PULONG	ReturnLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtQuerySemaphore(HANDLE SemaphoreHandle,
-				  CINT SemaphoreInformationClass,
-				  OUT PVOID SemaphoreInformation,
-				  ULONG Length,
-				  PULONG ReturnLength)
-{
-   return(ZwQuerySemaphore(SemaphoreHandle,
-			   SemaphoreInformationClass,
-			   SemaphoreInformation,
-			   Length,
-			   ReturnLength));
-}
 
-NTSTATUS STDCALL ZwQuerySemaphore(HANDLE SemaphoreHandle,
-				  CINT SemaphoreInformationClass,
-				  OUT PVOID SemaphoreInformation,
-				  ULONG Length,
-				  PULONG ReturnLength)
+NTSTATUS
+STDCALL
+NtReleaseSemaphore (
+	IN	HANDLE	SemaphoreHandle,
+	IN	ULONG	ReleaseCount,
+	IN	PULONG	PreviousCount
+	)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
-				    IN ULONG ReleaseCount,
-				    IN PULONG PreviousCount)
-{
-   return(ZwReleaseSemaphore(SemaphoreHandle,
-			     ReleaseCount,
-			     PreviousCount));
-}
-
-NTSTATUS STDCALL ZwReleaseSemaphore(IN HANDLE SemaphoreHandle,
-				    IN ULONG ReleaseCount,
-				    IN PULONG PreviousCount)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

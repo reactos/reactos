@@ -64,20 +64,18 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 }
 
 
-NTSTATUS STDCALL NtTerminateProcess(IN HANDLE ProcessHandle,
-				    IN NTSTATUS ExitStatus)
-{
-   return(ZwTerminateProcess(ProcessHandle,ExitStatus));
-}
-
-NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
-				    IN NTSTATUS ExitStatus)
+NTSTATUS
+STDCALL
+NtTerminateProcess (
+	IN	HANDLE		ProcessHandle,
+	IN	NTSTATUS	ExitStatus
+	)
 {
    NTSTATUS Status;
    PEPROCESS Process;
    KIRQL oldlvl;
    
-   DPRINT("ZwTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
+   DPRINT("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
           ProcessHandle, ExitStatus);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -107,14 +105,12 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtTerminateThread(IN HANDLE ThreadHandle,
-				   IN NTSTATUS ExitStatus)
-{
-   return(ZwTerminateThread(ThreadHandle,ExitStatus));
-}
-
-NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle, 
-				   IN NTSTATUS ExitStatus)
+NTSTATUS
+STDCALL
+NtTerminateThread (
+	IN	HANDLE		ThreadHandle,
+	IN	NTSTATUS	ExitStatus
+	)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -169,12 +165,12 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE TerminationPort)
-{
-   return(ZwRegisterThreadTerminatePort(TerminationPort));
-}
 
-NTSTATUS STDCALL ZwRegisterThreadTerminatePort(HANDLE TerminationPort)
+NTSTATUS
+STDCALL
+NtRegisterThreadTerminatePort (
+	HANDLE	TerminationPort
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }

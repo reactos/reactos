@@ -22,40 +22,15 @@
 
 /* FUNCTIONS *************************************************************/
 
-NTSTATUS STDCALL NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL
+NtDeleteFile (
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
-   return(ZwDeleteFile(ObjectAttributes));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtCreateFile(PHANDLE FileHandle,
-			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      PIO_STATUS_BLOCK IoStatusBlock,
-			      PLARGE_INTEGER AllocateSize,
-			      ULONG FileAttributes,
-			      ULONG ShareAccess,
-			      ULONG CreateDisposition,
-			      ULONG CreateOptions,
-			      PVOID EaBuffer,
-			      ULONG EaLength)
-{
-   return(ZwCreateFile(FileHandle,
-		       DesiredAccess,
-		       ObjectAttributes,
-		       IoStatusBlock,
-		       AllocateSize,
-		       FileAttributes,
-		       ShareAccess,
-		       CreateDisposition,
-		       CreateOptions,
-		       EaBuffer,
-		       EaLength));
-}
 
 NTSTATUS IopCreateFile(PVOID ObjectBody,
 		       PVOID Parent,
@@ -160,17 +135,21 @@ PFILE_OBJECT IoCreateStreamFileObject(PFILE_OBJECT FileObject,
    return(CreatedFileObject);
 }
 
-NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
-			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      PIO_STATUS_BLOCK IoStatusBlock,
-			      PLARGE_INTEGER AllocateSize,
-			      ULONG FileAttributes,
-			      ULONG ShareAccess,
-			      ULONG CreateDisposition,
-			      ULONG CreateOptions,
-			      PVOID EaBuffer,
-			      ULONG EaLength)
+NTSTATUS
+STDCALL
+NtCreateFile (
+	PHANDLE			FileHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
+	PIO_STATUS_BLOCK	IoStatusBlock,
+	PLARGE_INTEGER		AllocateSize,
+	ULONG			FileAttributes,
+	ULONG			ShareAccess,
+	ULONG			CreateDisposition,
+	ULONG			CreateOptions,
+	PVOID			EaBuffer,
+	ULONG			EaLength
+	)
 /*
  * FUNCTION: Either causes a new file or directory to be created, or it opens
  * an existing file, device, directory or volume, giving the caller a handle
@@ -200,7 +179,7 @@ NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
    KEVENT Event;
    PIO_STACK_LOCATION StackLoc;
    
-   DPRINT("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
+   DPRINT("NtCreateFile(FileHandle %x, DesiredAccess %x, "
 	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
 	    FileHandle,DesiredAccess,ObjectAttributes,
 	    ObjectAttributes->ObjectName->Buffer);   
@@ -261,31 +240,21 @@ NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
      }
    
    assert_irql(PASSIVE_LEVEL);
-   DPRINT("Finished ZwCreateFile() (*FileHandle) %x\n",(*FileHandle));
+   DPRINT("Finished NtCreateFile() (*FileHandle) %x\n",(*FileHandle));
    return(Status);
 }
 
-NTSTATUS STDCALL NtOpenFile(PHANDLE FileHandle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    PIO_STATUS_BLOCK IoStatusBlock,
-			    ULONG ShareAccess,
-			    ULONG OpenOptions)
-{
-   return(ZwOpenFile(FileHandle,
-		     DesiredAccess,
-		     ObjectAttributes,
-		     IoStatusBlock,
-		     ShareAccess,
-		     OpenOptions));
-}
 
-NTSTATUS STDCALL ZwOpenFile(PHANDLE FileHandle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    PIO_STATUS_BLOCK IoStatusBlock,
-			    ULONG ShareAccess,
-			    ULONG OpenOptions)
+NTSTATUS
+STDCALL
+NtOpenFile (
+	PHANDLE			FileHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
+	PIO_STATUS_BLOCK	IoStatusBlock,
+	ULONG			ShareAccess,
+	ULONG			OpenOptions
+	)
 /*
  * FUNCTION: Opens a file (simpler than ZwCreateFile)
  * ARGUMENTS:
@@ -300,17 +269,18 @@ NTSTATUS STDCALL ZwOpenFile(PHANDLE FileHandle,
  * NOTE: Undocumented
  */
 {
-   return(ZwCreateFile(FileHandle,
-		       DesiredAccess,
-		       ObjectAttributes,
-		       IoStatusBlock,
-		       NULL,
-		       0,
-		       ShareAccess,
-		       FILE_OPEN,
-		       OpenOptions,
-		       NULL,
-		       0));
+   return(ZwCreateFile(
+		FileHandle,
+		DesiredAccess,
+		ObjectAttributes,
+		IoStatusBlock,
+		NULL,
+		0,
+		ShareAccess,
+		FILE_OPEN,
+		OpenOptions,
+		NULL,
+		0));
 }
 
 

@@ -25,43 +25,24 @@ ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtDeviceIoControlFile(IN HANDLE DeviceHandle,
-				       IN HANDLE Event OPTIONAL,
-				       IN PIO_APC_ROUTINE UserApcRoutine,
-				       IN PVOID UserApcContext OPTIONAL,
-				       OUT PIO_STATUS_BLOCK IoStatusBlock,
-				       IN ULONG IoControlCode,
-				       IN PVOID InputBuffer,
-				       IN ULONG InputBufferSize,
-				       OUT PVOID OutputBuffer,
-				       IN ULONG OutputBufferSize)
-{
-    return(ZwDeviceIoControlFile(DeviceHandle,
-				 Event,
-				 UserApcRoutine,
-				 UserApcContext,
-				 IoStatusBlock,
-				 IoControlCode,
-				 InputBuffer,
-				 InputBufferSize,
-				 OutputBuffer,
-				 OutputBufferSize));
-}
 
 /*
  * NOTES: No apc support yet!
  */
-
-NTSTATUS STDCALL ZwDeviceIoControlFile(IN HANDLE DeviceHandle,
-				       IN HANDLE Event OPTIONAL,
-				       IN PIO_APC_ROUTINE UserApcRoutine,
-				       IN PVOID UserApcContext OPTIONAL,
-				       OUT PIO_STATUS_BLOCK IoStatusBlock,
-				       IN ULONG IoControlCode,
-				       IN PVOID InputBuffer,
-				       IN ULONG InputBufferSize,
-				       OUT PVOID OutputBuffer,
-				       IN ULONG OutputBufferSize)
+NTSTATUS
+STDCALL
+NtDeviceIoControlFile (
+	IN	HANDLE			DeviceHandle,
+	IN	HANDLE			Event		OPTIONAL,
+	IN	PIO_APC_ROUTINE		UserApcRoutine,
+	IN	PVOID			UserApcContext	OPTIONAL,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	ULONG			IoControlCode,
+	IN	PVOID			InputBuffer,
+	IN	ULONG			InputBufferSize,
+	OUT	PVOID			OutputBuffer,
+	IN	ULONG			OutputBufferSize
+	)
 {
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -72,7 +53,7 @@ NTSTATUS STDCALL ZwDeviceIoControlFile(IN HANDLE DeviceHandle,
    
    assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
    
-   DPRINT("ZwDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
+   DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
           "UserApcContext %x IoStatusBlock %x InputBuffer %x "
           "InputBufferSize %x OutputBuffer %x OutputBufferSize %x)\n",
           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/05/19 16:43:30 ea Exp $
+# $Id: makefile,v 1.3 1999/06/18 22:10:58 ea Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -73,7 +73,6 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 clean:
 

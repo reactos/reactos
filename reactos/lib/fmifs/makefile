@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/05/21 05:25:12 ea Exp $
+# $Id: makefile,v 1.3 1999/06/18 22:11:01 ea Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -25,7 +25,6 @@ OBJECTS = $(IFS_OBJECTS) $(MISC_OBJECTS)
 CLEAN_FILES = *.o *.a *.tmp *.dll *.sym *.coff
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).a: $(OBJECTS)
 	$(AR) csr $(TARGET).a $(OBJECTS)

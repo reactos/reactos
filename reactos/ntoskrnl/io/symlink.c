@@ -93,18 +93,12 @@ VOID IoInitSymbolicLinkImplementation(VOID)
 }
 
 
-NTSTATUS NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
-				  IN ACCESS_MASK DesiredAccess,
-				  IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   return(ZwOpenSymbolicLinkObject(LinkHandle,
-				   DesiredAccess,
-				   ObjectAttributes));
-}
-
-NTSTATUS ZwOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
-				  IN ACCESS_MASK DesiredAccess,
-				  IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+NtOpenSymbolicLinkObject (
+	OUT	PHANDLE			LinkHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
    NTSTATUS Status;
    PVOID Object;
@@ -135,16 +129,13 @@ NTSTATUS ZwOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
-				   IN OUT PUNICODE_STRING LinkTarget,
-				   OUT PULONG ReturnedLength OPTIONAL)
-{
-   return(ZwQuerySymbolicLinkObject(LinkHandle,LinkTarget,ReturnedLength));
-}
 
-NTSTATUS ZwQuerySymbolicLinkObject(IN HANDLE LinkHandle,
-				   IN OUT PUNICODE_STRING LinkTarget,
-				   OUT PULONG ReturnedLength OPTIONAL)
+NTSTATUS
+NtQuerySymbolicLinkObject (
+	IN	HANDLE		LinkHandle,
+	IN OUT	PUNICODE_STRING	LinkTarget,
+	OUT	PULONG		ReturnedLength	OPTIONAL
+	)
 {
    PSYMLNK_OBJECT SymlinkObject;
    NTSTATUS Status;
@@ -211,29 +202,23 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS IoDeleteSymbolicLink(PUNICODE_STRING DeviceName)
+
+NTSTATUS
+IoDeleteSymbolicLink(PUNICODE_STRING DeviceName)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtCreateSymbolicLinkObject(
-	                            OUT PHANDLE SymbolicLinkHandle,
-	                            IN ACCESS_MASK DesiredAccess,
-	                            IN POBJECT_ATTRIBUTES ObjectAttributes,
-	                            IN PUNICODE_STRING Name)
-{
-   return(NtCreateSymbolicLinkObject(SymbolicLinkHandle,
-				     DesiredAccess,
-				     ObjectAttributes,
-				     Name));
-}
 
-NTSTATUS STDCALL ZwCreateSymbolicLinkObject(
-				    OUT PHANDLE SymbolicLinkHandle,
-				    IN ACCESS_MASK DesiredAccess,
-				    IN POBJECT_ATTRIBUTES ObjectAttributes,
-				    IN PUNICODE_STRING Name)
+NTSTATUS
+STDCALL
+NtCreateSymbolicLinkObject (
+	OUT	PHANDLE			SymbolicLinkHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	PUNICODE_STRING		Name
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 

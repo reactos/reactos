@@ -22,18 +22,12 @@
 
 /* FUNCTIONS **************************************************************/
 
-NTSTATUS NtOpenDirectoryObject(PHANDLE DirectoryHandle,
-			       ACCESS_MASK DesiredAccess,
-			       POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   return(ZwOpenDirectoryObject(DirectoryHandle,
-				DesiredAccess,
-				ObjectAttributes));
-}
-
-NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
-			       ACCESS_MASK DesiredAccess,
-			       POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+NtOpenDirectoryObject (
+	PHANDLE			DirectoryHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 /*
  * FUNCTION: Opens a namespace directory object
  * ARGUMENTS:
@@ -70,30 +64,17 @@ NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS NtQueryDirectoryObject(IN HANDLE DirObjHandle,
-				OUT POBJDIR_INFORMATION DirObjInformation, 
-				IN ULONG                BufferLength, 
-				IN BOOLEAN              GetNextIndex, 
-				IN BOOLEAN              IgnoreInputIndex, 
-				IN OUT PULONG           ObjectIndex,
-				OUT PULONG              DataWritten OPTIONAL)
-{
-   return(ZwQueryDirectoryObject(DirObjHandle,
-				 DirObjInformation,
-				 BufferLength,
-				 GetNextIndex,
-				 IgnoreInputIndex,
-				 ObjectIndex,
-				 DataWritten));
-}
 
-NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
-				OUT POBJDIR_INFORMATION DirObjInformation, 
-				IN ULONG                BufferLength, 
-				IN BOOLEAN              GetNextIndex, 
-				IN BOOLEAN              IgnoreInputIndex, 
-				IN OUT PULONG           ObjectIndex,
-				OUT PULONG              DataWritten OPTIONAL)
+NTSTATUS
+NtQueryDirectoryObject (
+	IN	HANDLE			DirObjHandle,
+	OUT	POBJDIR_INFORMATION	DirObjInformation, 
+	IN	ULONG			BufferLength, 
+	IN	BOOLEAN			GetNextIndex, 
+	IN	BOOLEAN			IgnoreInputIndex, 
+	IN OUT	PULONG			ObjectIndex,
+	OUT	PULONG			DataWritten	OPTIONAL
+	)
 /*
  * FUNCTION: Reads information from a namespace directory
  * ARGUMENTS:
@@ -121,7 +102,7 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
    ULONG EntriesToSkip;
    NTSTATUS Status;
    
-   DPRINT("ZwQueryDirectoryObject(DirObjHandle %x)\n",DirObjHandle);
+   DPRINT("NtQueryDirectoryObject(DirObjHandle %x)\n",DirObjHandle);
    DPRINT("dir %x namespc_root %x\n",dir,HEADER_TO_BODY(&(namespc_root.hdr)));
    
 //   assert_irql(PASSIVE_LEVEL);
@@ -202,18 +183,13 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
 }
 
 
-NTSTATUS STDCALL NtCreateDirectoryObject(PHANDLE DirectoryHandle,
-					 ACCESS_MASK DesiredAccess,
-					 POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   return(ZwCreateDirectoryObject(DirectoryHandle,
-				  DesiredAccess,
-				  ObjectAttributes));
-}
-
-NTSTATUS STDCALL ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
-					 ACCESS_MASK DesiredAccess,
-					 POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL
+NtCreateDirectoryObject (
+	PHANDLE			DirectoryHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 /*
  * FUNCTION: Creates or opens a directory object (a container for other
  * objects)

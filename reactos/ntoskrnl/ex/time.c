@@ -23,39 +23,44 @@ static LONG lTimeZoneBias = 0;  /* bias[minutes] = UTC - local time */
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
-				 IN PLARGE_INTEGER NewSystemTime OPTIONAL)
+NTSTATUS
+STDCALL
+NtSetSystemTime (
+	IN	PLARGE_INTEGER	SystemTime,
+	IN	PLARGE_INTEGER	NewSystemTime	OPTIONAL
+	)
 {
-   return(ZwSetSystemTime(SystemTime,NewSystemTime));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwSetSystemTime(IN PLARGE_INTEGER SystemTime,
-				 IN PLARGE_INTEGER NewSystemTime OPTIONAL)
+
+NTSTATUS
+STDCALL
+NtQuerySystemTime (
+	OUT	TIME	* CurrentTime
+	)
 {
-   UNIMPLEMENTED;
+	KeQuerySystemTime((PLARGE_INTEGER)CurrentTime);
+	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL NtQuerySystemTime (OUT TIME *CurrentTime)
-{
-   return(ZwQuerySystemTime(CurrentTime));
-}
 
-NTSTATUS STDCALL ZwQuerySystemTime (OUT TIME *CurrentTime)
-{
-   KeQuerySystemTime((PLARGE_INTEGER)CurrentTime);
-   return STATUS_SUCCESS;
-//   UNIMPLEMENTED;
-}
-
-VOID ExLocalTimeToSystemTime(PLARGE_INTEGER LocalTime, 
-			     PLARGE_INTEGER SystemTime)
+VOID
+ExLocalTimeToSystemTime (
+	PLARGE_INTEGER	LocalTime, 
+	PLARGE_INTEGER	SystemTime
+	)
 {
    SystemTime->QuadPart = LocalTime->QuadPart +
                           lTimeZoneBias * TICKSPERMINUTE;
 }
 
-VOID ExSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
-			     PLARGE_INTEGER LocalTime)
+
+VOID
+ExSystemTimeToLocalTime (
+	PLARGE_INTEGER	SystemTime,
+	PLARGE_INTEGER	LocalTime
+	)
 {
    LocalTime->QuadPart = SystemTime->QuadPart -
                          lTimeZoneBias * TICKSPERMINUTE;

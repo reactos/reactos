@@ -227,24 +227,15 @@ VOID KeInitializeApc(PKAPC Apc,
 }
 
 
-NTSTATUS STDCALL NtQueueApcThread(HANDLE ThreadHandle,
-				  PKNORMAL_ROUTINE ApcRoutine,
-				  PVOID NormalContext,
-				  PVOID SystemArgument1,
-				  PVOID SystemArgument2)
-{
-   return(ZwQueueApcThread(ThreadHandle,
-			   ApcRoutine,
-			   NormalContext,
-			   SystemArgument1,
-			   SystemArgument2));
-}
-
-NTSTATUS STDCALL ZwQueueApcThread(HANDLE ThreadHandle,
-				  PKNORMAL_ROUTINE ApcRoutine,
-				  PVOID NormalContext,
-				  PVOID SystemArgument1,
-				  PVOID SystemArgument2)
+NTSTATUS
+STDCALL
+NtQueueApcThread (
+	HANDLE			ThreadHandle,
+	PKNORMAL_ROUTINE	ApcRoutine,
+	PVOID			NormalContext,
+	PVOID			SystemArgument1,
+	PVOID			SystemArgument2
+	)
 {
    PKAPC Apc;
    PETHREAD Thread;
@@ -285,14 +276,14 @@ NTSTATUS STDCALL ZwQueueApcThread(HANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtTestAlert(VOID)
-{
-   return(ZwTestAlert());
-}
 
-NTSTATUS STDCALL ZwTestAlert(VOID)
+NTSTATUS
+STDCALL
+NtTestAlert(VOID)
 {
-   KiTestAlert(KeGetCurrentThread(),
-	       NULL /* ?? */);
-   return(STATUS_SUCCESS);
+	KiTestAlert(
+		KeGetCurrentThread(),
+		NULL /* ?? */
+		);
+	return(STATUS_SUCCESS);
 }

@@ -18,89 +18,41 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL 
+
+
+NTSTATUS
+STDCALL
+NtNotifyChangeDirectoryFile (
+	IN	HANDLE			FileHandle,
+	IN	HANDLE			Event		OPTIONAL, 
+	IN	PIO_APC_ROUTINE		ApcRoutine	OPTIONAL, 
+	IN	PVOID			ApcContext	OPTIONAL, 
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	OUT	PVOID			Buffer,
+	IN	ULONG			BufferSize,
+	IN	ULONG			CompletionFilter,
+	IN	BOOLEAN			WatchTree
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL 
 NtQueryDirectoryFile(
-	IN HANDLE FileHandle,
-	IN HANDLE Event OPTIONAL,
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-	IN PVOID ApcContext OPTIONAL,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID FileInformation,
-	IN ULONG Length,
-	IN FILE_INFORMATION_CLASS FileInformationClass,
-	IN BOOLEAN ReturnSingleEntry,
-	IN PUNICODE_STRING FileName OPTIONAL,
-	IN BOOLEAN RestartScan
+	IN	HANDLE			FileHandle,
+	IN	HANDLE			Event		OPTIONAL,
+	IN	PIO_APC_ROUTINE		ApcRoutine	OPTIONAL,
+	IN	PVOID			ApcContext	OPTIONAL,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	OUT	PVOID			FileInformation,
+	IN	ULONG			Length,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass,
+	IN	BOOLEAN			ReturnSingleEntry,
+	IN	PUNICODE_STRING		FileName	OPTIONAL,
+	IN	BOOLEAN			RestartScan
 	)
-{
-   return(ZwQueryDirectoryFile(FileHandle,
-			       Event,
-			       ApcRoutine,
-			       ApcContext,
-			       IoStatusBlock,
-			       FileInformation,
-			       Length,
-			       FileInformationClass,
-			       ReturnSingleEntry,
-			       FileName,
-			       RestartScan));
-}
-
-
-NTSTATUS
-STDCALL
-NtNotifyChangeDirectoryFile(
-	IN HANDLE FileHandle,
-	IN HANDLE Event OPTIONAL, 
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-	IN PVOID ApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID Buffer,
-	IN ULONG BufferSize,
-	IN ULONG CompletionFilter,
-	IN BOOLEAN WatchTree
-	)
-{
-   return(ZwNotifyChangeDirectoryFile(FileHandle,
-				      Event,
-				      ApcRoutine,
-				      ApcContext,
-				      IoStatusBlock,
-				      Buffer,
-				      BufferSize,
-				      CompletionFilter,
-				      WatchTree));
-}
-
-NTSTATUS
-STDCALL
-ZwNotifyChangeDirectoryFile(
-	IN HANDLE FileHandle,
-	IN HANDLE Event OPTIONAL, 
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-	IN PVOID ApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID Buffer,
-	IN ULONG BufferSize,
-	IN ULONG CompletionFilter,
-	IN BOOLEAN WatchTree
-	)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL ZwQueryDirectoryFile(
-	IN HANDLE FileHandle,
-	IN HANDLE EventHandle OPTIONAL,
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-	IN PVOID ApcContext OPTIONAL,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID FileInformation,
-	IN ULONG Length,
-	IN FILE_INFORMATION_CLASS FileInformationClass,
-	IN BOOLEAN ReturnSingleEntry,
-	IN PUNICODE_STRING FileName OPTIONAL,
-	IN BOOLEAN RestartScan)
 /*
  * FUNCTION: Queries a directory file.
  * ARGUMENTS:
@@ -135,7 +87,7 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    KEVENT Event;
    PIO_STACK_LOCATION IoStack;
    
-   DPRINT("ZwQueryDirectoryFile()\n");
+   DPRINT("NtQueryDirectoryFile()\n");
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,

@@ -23,22 +23,20 @@
 /* FUNCTIONS ***************************************************************/
 
 
-NTSTATUS STDCALL NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
+NTSTATUS
+STDCALL
+NtUnloadDriver (
+	IN	PUNICODE_STRING	DriverServiceName
+	)
 {
-   return(ZwUnloadDriver(DriverServiceName));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwUnloadDriver(IN PUNICODE_STRING DriverServiceName)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS NtLoadDriver(PUNICODE_STRING DriverServiceName)
-{
-   return(ZwLoadDriver(DriverServiceName));
-}
-
-NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
+NTSTATUS
+NtLoadDriver (
+	PUNICODE_STRING	DriverServiceName
+	)
 /*
  * FUNCTION: Loads a driver
  * ARGUMENTS:
@@ -46,21 +44,28 @@ NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
  * RETURNS: Status
  */
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT SourceDevice,
-				 PDEVICE_OBJECT TargetDevice)
+NTSTATUS
+IoAttachDeviceByPointer (
+	PDEVICE_OBJECT	SourceDevice,
+	PDEVICE_OBJECT	TargetDevice
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-VOID IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
+
+VOID
+IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-PDEVICE_OBJECT IoGetRelatedDeviceObject(PFILE_OBJECT FileObject)
+
+PDEVICE_OBJECT
+IoGetRelatedDeviceObject(PFILE_OBJECT FileObject)
 {
    return(FileObject->DeviceObject);
 }

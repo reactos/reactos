@@ -16,307 +16,268 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL ZwQueryInformationToken(IN HANDLE TokenHandle,     
-	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-	OUT PVOID TokenInformation,  
-  	IN ULONG TokenInformationLength,
-  	OUT PULONG ReturnLength)
+
+NTSTATUS
+STDCALL
+NtQueryInformationToken (
+	IN	HANDLE			TokenHandle,     
+	IN	TOKEN_INFORMATION_CLASS	TokenInformationClass,
+	OUT	PVOID			TokenInformation,  
+  	IN	ULONG			TokenInformationLength,
+  	OUT	PULONG			ReturnLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,     
-	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-	OUT PVOID TokenInformation,  
-  	IN ULONG TokenInformationLength,
-  	OUT PULONG ReturnLength)
+
+NTSTATUS
+STDCALL
+NtQuerySecurityObject (
+	IN	HANDLE	Object,
+	IN	CINT	SecurityObjectInformationClass,
+	OUT	PVOID	SecurityObjectInformation,
+	IN	ULONG	Length,
+	OUT	PULONG	ReturnLength
+	)
 {
-   return(ZwQueryInformationToken(TokenHandle,
-				  TokenInformationClass,
-				  TokenInformation,
-				  TokenInformationLength,
-				  ReturnLength));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwQuerySecurityObject(IN HANDLE Object,
-				       IN CINT SecurityObjectInformationClass,
-				       OUT PVOID SecurityObjectInformation,
-				       IN ULONG Length,
-				       OUT PULONG ReturnLength)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtQuerySecurityObject(IN HANDLE Object,
-				       IN CINT SecurityObjectInformationClass,
-				       OUT PVOID SecurityObjectInformation,
-				       IN ULONG Length,
-				       OUT PULONG ReturnLength)
-{
-   return(ZwQuerySecurityObject(Object,
-				SecurityObjectInformationClass,
-				SecurityObjectInformation,
-				Length,
-				ReturnLength));
-}
 
 NTSTATUS
 STDCALL
 NtSetSecurityObject(
-	IN HANDLE Handle, 
-	IN SECURITY_INFORMATION SecurityInformation, 
-	IN PSECURITY_DESCRIPTOR SecurityDescriptor 
+	IN	HANDLE			Handle, 
+	IN	SECURITY_INFORMATION	SecurityInformation, 
+	IN	PSECURITY_DESCRIPTOR	SecurityDescriptor 
 	)
 {
    UNIMPLEMENTED;
 }
+
 
 NTSTATUS
 STDCALL
 NtSetInformationToken(
-	IN HANDLE TokenHandle,            
-	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-	OUT PVOID TokenInformation,       
-	IN ULONG TokenInformationLength   
+	IN	HANDLE			TokenHandle,            
+	IN	TOKEN_INFORMATION_CLASS	TokenInformationClass,
+	OUT	PVOID			TokenInformation,       
+	IN	ULONG			TokenInformationLength   
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtPrivilegeCheck (
+	IN	HANDLE		ClientToken,             
+	IN	PPRIVILEGE_SET	RequiredPrivileges,  
+	IN	PBOOLEAN	Result                    
 	)
 {
    UNIMPLEMENTED;
 }
 
+
 NTSTATUS
 STDCALL
-NtPrivilegeCheck(
-	IN HANDLE ClientToken,             
-	IN PPRIVILEGE_SET RequiredPrivileges,  
-	IN PBOOLEAN Result                    
+NtPrivilegedServiceAuditAlarm (
+	IN	PUNICODE_STRING	SubsystemName,	
+	IN	PUNICODE_STRING	ServiceName,	
+	IN	HANDLE		ClientToken,
+	IN	PPRIVILEGE_SET	Privileges,	
+	IN	BOOLEAN		AccessGranted 	
 	)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtPrivilegedServiceAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PUNICODE_STRING ServiceName,	
-	IN HANDLE ClientToken,
-	IN PPRIVILEGE_SET Privileges,	
-	IN BOOLEAN AccessGranted 	
-	)
-{
-   UNIMPLEMENTED;
-}
 
 NTSTATUS
 STDCALL
-NtPrivilegeObjectAuditAlarm(
+NtPrivilegeObjectAuditAlarm (
+	IN	PUNICODE_STRING	SubsystemName,
+	IN	PVOID		HandleId,	
+	IN	HANDLE		ClientToken,
+	IN	ULONG		DesiredAccess,
+	IN	PPRIVILEGE_SET	Privileges,
+	IN	BOOLEAN		AccessGranted 
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtOpenObjectAuditAlarm (
+	IN	PUNICODE_STRING		SubsystemName,	
+	IN	PVOID			HandleId,	
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	HANDLE			ClientToken,	
+	IN	ULONG			DesiredAccess,	
+	IN	ULONG			GrantedAccess,	
+	IN	PPRIVILEGE_SET		Privileges,
+	IN	BOOLEAN			ObjectCreation,	
+	IN	BOOLEAN			AccessGranted,	
+	OUT	PBOOLEAN		GenerateOnClose 	
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtOpenProcessToken (  
+	IN	HANDLE		ProcessHandle,
+	IN	ACCESS_MASK	DesiredAccess,  
+	OUT	PHANDLE		TokenHandle  
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtOpenThreadToken (  
+	IN	HANDLE		ThreadHandle,  
+  	IN	ACCESS_MASK	DesiredAccess,  
+  	IN	BOOLEAN		OpenAsSelf,     
+  	OUT	PHANDLE		TokenHandle  
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtDuplicateToken (
+	IN	HANDLE				ExistingToken, 
+	IN	ACCESS_MASK			DesiredAccess, 
+	IN	POBJECT_ATTRIBUTES		ObjectAttributes,
+	IN	SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel,
+	IN	TOKEN_TYPE			TokenType,  
+	OUT	PHANDLE				NewToken
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtImpersonateClientOfPort(VOID)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtImpersonateThread (
+	IN	HANDLE				ThreadHandle,
+	IN	HANDLE				ThreadToImpersonate,
+	IN	PSECURITY_QUALITY_OF_SERVICE	SecurityQualityOfService
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtCreateToken (
+	OUT PHANDLE TokenHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN TOKEN_TYPE TokenType,
+	IN PLUID AuthenticationId,
+	IN PLARGE_INTEGER ExpirationTime,
+	IN PTOKEN_USER TokenUser,
+	IN PTOKEN_GROUPS TokenGroups,
+	IN PTOKEN_PRIVILEGES TokenPrivileges,
+	IN PTOKEN_OWNER TokenOwner,
+	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
+	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+	IN PTOKEN_SOURCE TokenSource
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtAllocateLocallyUniqueId (
+	OUT	LUID	* LocallyUniqueId
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtAccessCheckAndAuditAlarm (
 	IN PUNICODE_STRING SubsystemName,
-	IN PVOID HandleId,	
-	IN HANDLE ClientToken,
-	IN ULONG DesiredAccess,
-	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN AccessGranted 
-	
-			    )
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtOpenObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
+	IN PHANDLE ObjectHandle,	
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN HANDLE ClientToken,	
-	IN ULONG DesiredAccess,	
-	IN ULONG GrantedAccess,	
-	IN PPRIVILEGE_SET Privileges,
+	IN ACCESS_MASK DesiredAccess,	
+	IN PGENERIC_MAPPING GenericMapping,	
 	IN BOOLEAN ObjectCreation,	
-	IN BOOLEAN AccessGranted,	
-	OUT PBOOLEAN GenerateOnClose 	
+	OUT PULONG GrantedAccess,	
+	OUT PBOOLEAN AccessStatus,	
+	OUT PBOOLEAN GenerateOnClose
 	)
 {
    UNIMPLEMENTED;
 }
+
 
 NTSTATUS
 STDCALL
-NtOpenProcessToken(  
-	IN HANDLE ProcessHandle, 
-	IN ACCESS_MASK DesiredAccess,  
-	OUT PHANDLE TokenHandle  
+NtAdjustGroupsToken (
+	IN	HANDLE		TokenHandle,
+	IN	BOOLEAN		ResetToDefault,	
+	IN	PTOKEN_GROUPS	NewState, 
+	IN	ULONG		BufferLength,	
+	OUT	PTOKEN_GROUPS	PreviousState		OPTIONAL,	
+	OUT	PULONG		ReturnLength
 	)
 {
    UNIMPLEMENTED;
 }
+
 
 NTSTATUS
 STDCALL
-NtOpenThreadToken(  
-	IN HANDLE ThreadHandle,  
-  	IN ACCESS_MASK DesiredAccess,  
-  	IN BOOLEAN OpenAsSelf,     
-  	OUT PHANDLE TokenHandle  
-	)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtDuplicateToken(IN HANDLE ExistingToken, 
-				  IN ACCESS_MASK DesiredAccess, 
-				  IN POBJECT_ATTRIBUTES ObjectAttributes,
-				  IN SECURITY_IMPERSONATION_LEVEL 
-				  ImpersonationLevel,
-				  IN TOKEN_TYPE TokenType,  
-				  OUT PHANDLE NewToken)
-{
-   UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL NtImpersonateClientOfPort(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtImpersonateThread(IN HANDLE ThreadHandle,
-				     IN HANDLE ThreadToImpersonate,
-				     IN PSECURITY_QUALITY_OF_SERVICE 
-				          SecurityQualityOfService)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtCreateToken(
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	)
-{
-	return ZwCreateToken(TokenHandle,
-	DesiredAccess,
-	ObjectAttributes,
-	TokenType,
-	AuthenticationId,
-	ExpirationTime,
-	TokenUser,
-	TokenGroups,
-	TokenPrivileges,
-	TokenOwner,
-	TokenPrimaryGroup,
-	TokenDefaultDacl,
-	TokenSource
-	);
-}
-
-NTSTATUS
-STDCALL
-ZwCreateToken(
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
-{
-   return(ZwAllocateLocallyUniqueId(LocallyUniqueId));
-}
-
-NTSTATUS STDCALL ZwAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-					    IN PHANDLE ObjectHandle,	
-					    IN POBJECT_ATTRIBUTES ObjectAttributes,
-					    IN ACCESS_MASK DesiredAccess,	
-					    IN PGENERIC_MAPPING GenericMapping,	
-					    IN BOOLEAN ObjectCreation,	
-					    OUT PULONG GrantedAccess,	
-					    OUT PBOOLEAN AccessStatus,	
-					    OUT PBOOLEAN GenerateOnClose)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtAdjustGroupsToken(IN HANDLE TokenHandle,
-				     IN BOOLEAN  ResetToDefault,	
-				     IN PTOKEN_GROUPS  NewState, 
-				     IN ULONG  BufferLength,	
-				     OUT PTOKEN_GROUPS  PreviousState OPTIONAL,	
-				     OUT PULONG  ReturnLength)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtAdjustPrivilegesToken(IN HANDLE  TokenHandle,	
+NtAdjustPrivilegesToken(IN HANDLE  TokenHandle,	
 					 IN BOOLEAN  DisableAllPrivileges,
 					 IN PTOKEN_PRIVILEGES  NewState,	
 					 IN ULONG  BufferLength,	
 					 OUT PTOKEN_PRIVILEGES  PreviousState,	
 					 OUT PULONG ReturnLength)
 {
-   return(ZwAdjustPrivilegesToken(TokenHandle,
-				  DisableAllPrivileges,
-				  NewState,
-				  BufferLength,
-				  PreviousState,
-				  ReturnLength));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwAdjustPrivilegesToken(IN HANDLE TokenHandle,	
-					 IN BOOLEAN  DisableAllPrivileges,
-					 IN PTOKEN_PRIVILEGES  NewState,	
-					 IN ULONG  BufferLength,	
-					 OUT PTOKEN_PRIVILEGES  PreviousState,	
-					 OUT PULONG ReturnLength)
+NTSTATUS
+STDCALL
+NtAllocateUuids (
+	PLARGE_INTEGER	Time,
+	PULONG		Version, // ???
+	PULONG		ClockCycle
+	)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtAllocateUuids(PLARGE_INTEGER Time,
-				 PULONG Version, // ???
-				 PULONG ClockCycle)
-{
-   return(ZwAllocateUuids(Time,
-			  Version,
-			  ClockCycle));
-}
-
-NTSTATUS STDCALL ZwAllocateUuids(PLARGE_INTEGER Time,
-				 PULONG Version, // ???
-				 PULONG ClockCycle)
-{
-   UNIMPLEMENTED;
-}
 
 NTSTATUS STDCALL NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,	
 					 IN PVOID HandleId,	
@@ -334,25 +295,6 @@ NTSTATUS STDCALL NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       OUT PULONG GrantedAccess,
 			       OUT PBOOLEAN AccessStatus)
 {
-   return(ZwAccessCheck(SecurityDescriptor,
-			ClientToken,
-			DesiredAccess,
-			GenericMapping,
-			PrivilegeSet,
-			ReturnLength,
-			GrantedAccess,
-			AccessStatus));
-}
-
-NTSTATUS STDCALL ZwAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-			       IN HANDLE ClientToken,
-			       IN ACCESS_MASK DesiredAcces,
-			       IN PGENERIC_MAPPING GenericMapping,
-			       OUT PRIVILEGE_SET PrivilegeSet,
-			       OUT PULONG ReturnLength,
-			       OUT PULONG GrantedAccess,
-			       OUT PBOOLEAN AccessStatus)
-{
    UNIMPLEMENTED;
 }
 
@@ -360,23 +302,6 @@ NTSTATUS STDCALL ZwAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 NTSTATUS
 STDCALL
 NtDeleteObjectAuditAlarm ( 
-	IN PUNICODE_STRING SubsystemName, 
-	IN PVOID HandleId, 
-	IN BOOLEAN GenerateOnClose 
-	)
-{
-
-return ZwDeleteObjectAuditAlarm ( 
-	SubsystemName, 
-	HandleId, 
-	GenerateOnClose 
-	);
-}
-
-
-NTSTATUS
-STDCALL
-ZwDeleteObjectAuditAlarm ( 
 	IN PUNICODE_STRING SubsystemName, 
 	IN PVOID HandleId, 
 	IN BOOLEAN GenerateOnClose 

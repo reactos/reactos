@@ -52,7 +52,7 @@ typedef struct _EPORT
 POBJECT_TYPE ExPortType = NULL;
 
 /* FUNCTIONS *****************************************************************/
-
+#ifndef PROTO_LPC
 NTSTATUS NiInitPort(VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
@@ -279,3 +279,187 @@ NTSTATUS STDCALL NtQueryInformationPort(VOID)
 {
    UNIMPLEMENTED;
 }
+
+#else
+NTSTATUS
+STDCALL
+NtAcceptConnectPort ( /* @24 */
+	IN	HANDLE	PortHandle,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtCompleteConnectPort ( /* @4 */
+	HANDLE	PortHandle
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtConnectPort ( /* @32 */
+	IN	HANDLE	PortHandle,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5,
+	DWORD	a6,
+	DWORD	a7,
+	DWORD	a8
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtCreatePort ( /* @20 */
+	OUT	PHANDLE			PortHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,  
+	IN	DWORD			a3,
+	IN	DWORD			a4
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtImpersonateClientOfPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN	PCLIENT_ID	ClientId
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtListenPort ( /* @8 */
+	IN	HANDLE	PortHAndle,
+	IN	DWORD	QueueSize	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtQueryInformationPort ( /* @20 */
+	IN	HANDLE	PortHandle,
+	IN	CINT	PortInformationClass,	/* guess */
+	OUT	PVOID	PortInformation,	/* guess */
+	IN	ULONG	PortInformationLength,	/* guess */
+	OUT	PULONG	ReturnLength		/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtReplyPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN	PLPC_REPLY	LpcReply	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtReplyWaitReceivePort ( /* @16 */
+	IN	HANDLE		PortHandle,
+	IN	PLPC_REPLY	LpcReply,	/* guess */
+	OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
+	OUT	PULONG		MessageLength	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtReplyWaitReplyPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN OUT	PLPC_REPLY	LpcReply	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtRequestPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN 	PLPC_MESSAGE	LpcMessage	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtRequestWaitReplyPort ( /* @12 */
+	IN	HANDLE		PortHandle,
+	IN OUT	PLPC_REPLY	LpcReply,	/* guess */
+	IN	TIME		* TimeToWait 	/* guess */
+	)
+{
+	UNIMPLEMENTED;
+}
+
+ 
+NTSTATUS
+STDCALL
+NtReadRequestData ( /* @24 */
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtWriteRequestData ( /* @24 */
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	)
+{
+	UNIMPLEMENTED;
+}
+#endif /* ndef PROTO_LPC */
+
+/* EOF */

@@ -78,6 +78,8 @@ RC = $(PREFIX)windres
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
+%.coff: %.rc
+	$(RC) $< $@
 
 
 RULES_MAK_INCLUDED = 1

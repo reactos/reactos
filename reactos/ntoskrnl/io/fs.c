@@ -33,41 +33,18 @@ static LIST_ENTRY FileSystemListHead = {NULL,NULL};
 
 NTSTATUS
 STDCALL
-NtFsControlFile(
-	IN HANDLE DeviceHandle,
-	IN HANDLE EventHandle OPTIONAL, 
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-	IN PVOID ApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK IoStatusBlock, 
-	IN ULONG IoControlCode,
-	IN PVOID InputBuffer, 
-	IN ULONG InputBufferSize,
-	OUT PVOID OutputBuffer,
-	IN ULONG OutputBufferSize
+NtFsControlFile (
+	IN	HANDLE			DeviceHandle,
+	IN	HANDLE			EventHandle	OPTIONAL, 
+	IN	PIO_APC_ROUTINE		ApcRoutine	OPTIONAL, 
+	IN	PVOID			ApcContext	OPTIONAL, 
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock, 
+	IN	ULONG			IoControlCode,
+	IN	PVOID			InputBuffer, 
+	IN	ULONG			InputBufferSize,
+	OUT	PVOID			OutputBuffer,
+	IN	ULONG			OutputBufferSize
 	)
-{
-   return(ZwFsControlFile(DeviceHandle,
-			  EventHandle,
-			  ApcRoutine,
-			  ApcContext,
-			  IoStatusBlock,
-			  IoControlCode,
-			  InputBuffer,
-			  InputBufferSize,
-			  OutputBuffer,
-			  OutputBufferSize));
-}
-
-NTSTATUS STDCALL ZwFsControlFile(IN HANDLE DeviceHandle,
-				 IN HANDLE EventHandle OPTIONAL, 
-				 IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-				 IN PVOID ApcContext OPTIONAL, 
-				 OUT PIO_STATUS_BLOCK IoStatusBlock, 
-				 IN ULONG IoControlCode,
-				 IN PVOID InputBuffer, 
-				 IN ULONG InputBufferSize,
-				 OUT PVOID OutputBuffer,
-				 IN ULONG OutputBufferSize)
 {
    NTSTATUS Status = -1;
    PFILE_OBJECT FileObject;

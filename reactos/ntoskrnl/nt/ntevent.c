@@ -46,12 +46,9 @@ VOID NtInitializeEventImplementation(VOID)
    ExEventType->OkayToClose = NULL;
 }
 
-NTSTATUS STDCALL NtClearEvent(IN HANDLE EventHandle)
-{
-   return(ZwClearEvent(EventHandle));
-}
-
-NTSTATUS STDCALL ZwClearEvent(IN HANDLE EventHandle)
+NTSTATUS
+STDCALL
+NtClearEvent (IN HANDLE EventHandle)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -71,24 +68,16 @@ NTSTATUS STDCALL ZwClearEvent(IN HANDLE EventHandle)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtCreateEvent(OUT PHANDLE EventHandle,
-			       IN ACCESS_MASK DesiredAccess,
-			       IN POBJECT_ATTRIBUTES ObjectAttributes,
-			       IN BOOLEAN ManualReset,
-			       IN BOOLEAN InitialState)
-{
-   return(ZwCreateEvent(EventHandle,
-			DesiredAccess,
-			ObjectAttributes,
-			ManualReset,
-			InitialState));
-}
 
-NTSTATUS STDCALL ZwCreateEvent(OUT PHANDLE EventHandle,
-			       IN ACCESS_MASK DesiredAccess,
-			       IN POBJECT_ATTRIBUTES ObjectAttributes,
-			       IN BOOLEAN ManualReset,
-			       IN BOOLEAN InitialState)
+NTSTATUS
+STDCALL
+NtCreateEvent (
+	OUT	PHANDLE			EventHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	BOOLEAN			ManualReset,
+	IN	BOOLEAN			InitialState
+	)
 {
    PKEVENT Event;
    
@@ -108,16 +97,13 @@ NTSTATUS STDCALL ZwCreateEvent(OUT PHANDLE EventHandle,
 }
 
 
-NTSTATUS STDCALL NtOpenEvent(OUT PHANDLE EventHandle,
-			     IN ACCESS_MASK DesiredAccess,
-			     IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   return(ZwOpenEvent(EventHandle,DesiredAccess,ObjectAttributes));
-}
-
-NTSTATUS STDCALL ZwOpenEvent(OUT PHANDLE EventHandle,
-			     IN ACCESS_MASK DesiredAccess,
-			     IN POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL
+NtOpenEvent (
+	OUT	PHANDLE			EventHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
    NTSTATUS Status;
    PKEVENT Event;   
@@ -146,48 +132,38 @@ NTSTATUS STDCALL ZwOpenEvent(OUT PHANDLE EventHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtPulseEvent(IN HANDLE EventHandle,
-			      IN PULONG PulseCount OPTIONAL)
+
+NTSTATUS
+STDCALL
+NtPulseEvent (
+	IN	HANDLE	EventHandle,
+	IN	PULONG	PulseCount	OPTIONAL
+	)
 {
-   return(ZwPulseEvent(EventHandle,PulseCount));
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL ZwPulseEvent(IN HANDLE EventHandle, 
-			      IN PULONG PulseCount OPTIONAL)
+
+NTSTATUS
+STDCALL
+NtQueryEvent (
+	IN	HANDLE	EventHandle,
+	IN	CINT	EventInformationClass,
+	OUT	PVOID	EventInformation,
+	IN	ULONG	EventInformationLength,
+	OUT	PULONG	ReturnLength
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtQueryEvent(IN HANDLE EventHandle,
-			      IN CINT EventInformationClass,
-			      OUT PVOID EventInformation,
-			      IN ULONG EventInformationLength,
-			      OUT PULONG ReturnLength)
-{
-   return(ZwQueryEvent(EventHandle,
-		       EventInformationClass,
-		       EventInformation,
-		       EventInformationLength,
-		       ReturnLength));
-}
 
-NTSTATUS STDCALL ZwQueryEvent(IN HANDLE EventHandle,
-			      IN CINT EventInformationClass,
-			      OUT PVOID EventInformation,
-			      IN ULONG EventInformationLength,
-			      OUT PULONG ReturnLength)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtResetEvent(HANDLE EventHandle,
-			      PULONG NumberOfWaitingThreads OPTIONAL)
-{
-   return(ZwResetEvent(EventHandle,NumberOfWaitingThreads));
-}
-
-NTSTATUS STDCALL ZwResetEvent(HANDLE EventHandle,
-			      PULONG NumberOfWaitingThreads OPTIONAL)
+NTSTATUS
+STDCALL
+NtResetEvent (
+	HANDLE	EventHandle,
+	PULONG	NumberOfWaitingThreads	OPTIONAL
+	)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -207,14 +183,13 @@ NTSTATUS STDCALL ZwResetEvent(HANDLE EventHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtSetEvent(IN HANDLE EventHandle,
-			    PULONG NumberOfThreadsReleased)
-{
-   return(ZwSetEvent(EventHandle,NumberOfThreadsReleased));
-}
 
-NTSTATUS STDCALL ZwSetEvent(IN HANDLE EventHandle,
-			    PULONG NumberOfThreadsReleased)
+NTSTATUS
+STDCALL
+NtSetEvent (
+	IN	HANDLE	EventHandle,
+	PULONG	NumberOfThreadsReleased
+	)
 {
    PKEVENT Event;
    NTSTATUS Status;

@@ -17,10 +17,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS ZwSetInformationThread(HANDLE ThreadHandle,
-				THREADINFOCLASS ThreadInformationClass,
-				PVOID ThreadInformation,
-				ULONG ThreadInformationLength)
+NTSTATUS
+NtSetInformationThread (
+	HANDLE		ThreadHandle,
+	THREADINFOCLASS	ThreadInformationClass,
+	PVOID		ThreadInformation,
+	ULONG		ThreadInformationLength
+	)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -97,41 +100,15 @@ NTSTATUS ZwSetInformationThread(HANDLE ThreadHandle,
    return(Status);
 }
 
-NTSTATUS NtSetInformationThread(HANDLE ThreadHandle,
-				THREADINFOCLASS ThreadInformationClass,
-				PVOID ThreadInformation,
-				ULONG ThreadInformationLength)
-{
-   return(ZwSetInformationThread(ThreadHandle,
-				 ThreadInformationClass,
-				 ThreadInformation,
-				 ThreadInformationLength));
-}
-
-
-
-NTSTATUS STDCALL ZwQueryInformationThread(
-			      IN HANDLE ThreadHandle,
-			      IN THREADINFOCLASS ThreadInformationClass,
-			      OUT PVOID ThreadInformation,
-			      IN ULONG ThreadInformationLength,
-			      OUT PULONG ReturnLength)
-{
-   UNIMPLEMENTED;
-}
 
 NTSTATUS
 STDCALL
 NtQueryInformationThread(
-	IN HANDLE ThreadHandle,
-	IN THREADINFOCLASS ThreadInformationClass,
-	OUT PVOID ThreadInformation,
-	IN ULONG ThreadInformationLength,
-	OUT PULONG ReturnLength)
+	IN	HANDLE		ThreadHandle,
+	IN	THREADINFOCLASS	ThreadInformationClass,
+	OUT	PVOID		ThreadInformation,
+	IN	ULONG		ThreadInformationLength,
+	OUT	PULONG		ReturnLength)
 {
-   return(ZwQueryInformationThread(ThreadHandle,
-				   ThreadInformationClass,
-				   ThreadInformation,
-				   ThreadInformationLength,
-				   ReturnLength));
+	UNIMPLEMENTED
 }

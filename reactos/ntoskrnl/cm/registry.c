@@ -324,26 +324,9 @@ CmInitializeRegistry(VOID)
 #endif
 }
 
-NTSTATUS 
-NtCreateKey(OUT PHANDLE  KeyHandle, 
-            IN ACCESS_MASK  DesiredAccess,
-            IN POBJECT_ATTRIBUTES  ObjectAttributes, 
-            IN ULONG  TitleIndex,
-            IN PUNICODE_STRING  Class, 
-            IN ULONG  CreateOptions, 
-            OUT PULONG  Disposition)
-{
-  return ZwCreateKey(KeyHandle, 
-                     DesiredAccess,
-                     ObjectAttributes, 
-                     TitleIndex,
-                     Class, 
-                     CreateOptions,
-                     Disposition);
-}
 
 NTSTATUS 
-ZwCreateKey(OUT PHANDLE  KeyHandle,
+NtCreateKey(OUT PHANDLE  KeyHandle,
             IN ACCESS_MASK  DesiredAccess,
             IN POBJECT_ATTRIBUTES  ObjectAttributes, 
             IN ULONG  TitleIndex,
@@ -433,14 +416,9 @@ ZwCreateKey(OUT PHANDLE  KeyHandle,
 #endif
 }
 
-NTSTATUS 
-NtDeleteKey(IN HANDLE  KeyHandle)
-{
-  return  ZwDeleteKey(KeyHandle);
-}
 
 NTSTATUS 
-ZwDeleteKey(IN HANDLE  KeyHandle)
+NtDeleteKey(IN HANDLE  KeyHandle)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -472,24 +450,9 @@ ZwDeleteKey(IN HANDLE  KeyHandle)
 #endif
 }
 
-NTSTATUS 
-NtEnumerateKey(IN HANDLE  KeyHandle, 
-               IN ULONG  Index,
-               IN KEY_INFORMATION_CLASS  KeyInformationClass,
-               OUT PVOID  KeyInformation,
-               IN ULONG  Length,
-               OUT PULONG  ResultLength)
-{
-  return  ZwEnumerateKey(KeyHandle,
-                         Index,
-                         KeyInformationClass,
-                         KeyInformation,
-                         Length,
-                         ResultLength);
-}
 
 NTSTATUS 
-ZwEnumerateKey(IN HANDLE  KeyHandle, 
+NtEnumerateKey(IN HANDLE  KeyHandle, 
                IN ULONG  Index,
                IN KEY_INFORMATION_CLASS  KeyInformationClass,
                OUT PVOID  KeyInformation,
@@ -638,28 +601,14 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
 }
 
 NTSTATUS 
-NtEnumerateValueKey(IN HANDLE  KeyHandle, 
-                    IN ULONG  Index, 
-                    IN KEY_VALUE_INFORMATION_CLASS  KeyInformationClass,
-                    OUT PVOID  KeyInformation,
-                    IN ULONG  Length,
-                    OUT PULONG  ResultLength)
-{
-  return  ZwEnumerateValueKey(KeyHandle, 
-                              Index, 
-                              KeyInformationClass,
-                              KeyInformation,
-                              Length,
-                              ResultLength);
-}
-
-NTSTATUS 
-ZwEnumerateValueKey(IN HANDLE  KeyHandle, 
-                    IN ULONG  Index, 
-                    IN KEY_VALUE_INFORMATION_CLASS  KeyInformationClass,
-                    OUT PVOID  KeyInformation,
-                    IN ULONG  Length,
-                    OUT PULONG  ResultLength)
+NtEnumerateValueKey (
+	IN	HANDLE				KeyHandle,
+	IN	ULONG				Index,
+	IN	KEY_VALUE_INFORMATION_CLASS	KeyInformationClass,
+	OUT	PVOID				KeyInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ResultLength
+	)
 {
 #ifdef PROTO_REG
   UNIMPLEMENTED;  
@@ -671,12 +620,6 @@ ZwEnumerateValueKey(IN HANDLE  KeyHandle,
 NTSTATUS 
 NtFlushKey(IN HANDLE  KeyHandle)
 {
-  return ZwFlushKey(KeyHandle);
-}
-
-NTSTATUS 
-ZwFlushKey(IN HANDLE  KeyHandle)
-{
 #ifdef PROTO_REG
   return  STATUS_SUCCESS;
 #else
@@ -686,16 +629,6 @@ ZwFlushKey(IN HANDLE  KeyHandle)
 
 NTSTATUS 
 NtOpenKey(OUT PHANDLE  KeyHandle, 
-          IN ACCESS_MASK  DesiredAccess,
-          IN POBJECT_ATTRIBUTES  ObjectAttributes)
-{
-  return ZwOpenKey(KeyHandle, 
-                   DesiredAccess,
-                   ObjectAttributes);
-}
-
-NTSTATUS 
-ZwOpenKey(OUT PHANDLE  KeyHandle, 
           IN ACCESS_MASK  DesiredAccess,
           IN POBJECT_ATTRIBUTES  ObjectAttributes)
 {
@@ -788,25 +721,13 @@ ZwOpenKey(OUT PHANDLE  KeyHandle,
 }
 
 NTSTATUS 
-NtQueryKey(IN HANDLE  KeyHandle, 
-           IN KEY_INFORMATION_CLASS  KeyInformationClass,
-           OUT PVOID  KeyInformation,
-           IN ULONG  Length,
-           OUT PULONG  ResultLength)
-{
-  return ZwQueryKey(KeyHandle, 
-                    KeyInformationClass,
-                    KeyInformation,
-                    Length,
-                    ResultLength);
-}
-
-NTSTATUS 
-ZwQueryKey(IN HANDLE  KeyHandle, 
-           IN KEY_INFORMATION_CLASS  KeyInformationClass,
-           OUT PVOID  KeyInformation,
-           IN ULONG  Length,
-           OUT PULONG  ResultLength)
+NtQueryKey (
+	IN	HANDLE			KeyHandle, 
+	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
+	OUT	PVOID			KeyInformation,
+	IN	ULONG			Length,
+	OUT	PULONG			ResultLength
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -938,28 +859,14 @@ ZwQueryKey(IN HANDLE  KeyHandle,
 }
 
 NTSTATUS 
-NtQueryValueKey(IN HANDLE  KeyHandle,
-                IN PUNICODE_STRING  ValueName,
-                IN KEY_VALUE_INFORMATION_CLASS  KeyValueInformationClass,
-                OUT PVOID  KeyValueInformation,
-                IN ULONG  Length,
-                OUT PULONG  ResultLength)
-{
-  return ZwQueryValueKey(KeyHandle,
-                         ValueName,
-                         KeyValueInformationClass,
-                         KeyValueInformation,
-                         Length,
-                         ResultLength);
-}
-
-NTSTATUS 
-ZwQueryValueKey(IN HANDLE  KeyHandle,
-                IN PUNICODE_STRING  ValueName,
-                IN KEY_VALUE_INFORMATION_CLASS  KeyValueInformationClass,
-                OUT PVOID  KeyValueInformation,
-                IN ULONG  Length,
-                OUT PULONG  ResultLength)
+NtQueryValueKey (
+	IN	HANDLE				KeyHandle,
+	IN	PUNICODE_STRING			ValueName,
+	IN	KEY_VALUE_INFORMATION_CLASS	KeyValueInformationClass,
+	OUT	PVOID				KeyValueInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ResultLength
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -1081,28 +988,14 @@ ZwQueryValueKey(IN HANDLE  KeyHandle,
 }
 
 NTSTATUS 
-NtSetValueKey(IN HANDLE  KeyHandle, 
-              IN PUNICODE_STRING  ValueName,
-              IN ULONG  TitleIndex,
-              IN ULONG  Type, 
-              IN PVOID  Data,
-              IN ULONG  DataSize)
-{
-  return ZwSetValueKey(KeyHandle, 
-                       ValueName,
-                       TitleIndex, 
-                       Type, 
-                       Data,
-                       DataSize);
-}
-
-NTSTATUS 
-ZwSetValueKey(IN HANDLE  KeyHandle, 
-              IN PUNICODE_STRING  ValueName,
-              IN ULONG  TitleIndex,
-              IN ULONG  Type, 
-              IN PVOID  Data,
-              IN ULONG  DataSize)
+NtSetValueKey (
+	IN	HANDLE			KeyHandle, 
+	IN	PUNICODE_STRING		ValueName,
+	IN	ULONG			TitleIndex,
+	IN	ULONG			Type, 
+	IN	PVOID			Data,
+	IN	ULONG			DataSize
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -1159,16 +1052,10 @@ ZwSetValueKey(IN HANDLE  KeyHandle,
 }
 
 NTSTATUS STDCALL
-NtDeleteValueKey(IN HANDLE  KeyHandle,
-                 IN PUNICODE_STRING  ValueName)
-{
-  return ZwDeleteValueKey(KeyHandle,
-                          ValueName);
-}
-
-NTSTATUS STDCALL
-ZwDeleteValueKey(IN HANDLE  KeyHandle,
-                 IN PUNICODE_STRING  ValueName)
+NtDeleteValueKey (
+	IN	HANDLE		KeyHandle,
+	IN	PUNICODE_STRING	ValueName
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -1201,227 +1088,181 @@ ZwDeleteValueKey(IN HANDLE  KeyHandle,
 #endif
 }
 
-NTSTATUS STDCALL 
-NtLoadKey(PHANDLE KeyHandle,
-          OBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+STDCALL 
+NtLoadKey (
+	PHANDLE			KeyHandle,
+	OBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
-  return ZwLoadKey(KeyHandle,
-                   ObjectAttributes);
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
-ZwLoadKey(PHANDLE KeyHandle,
-          OBJECT_ATTRIBUTES ObjectAttributes)
+
+NTSTATUS
+STDCALL
+NtLoadKey2(VOID)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtLoadKey2(VOID)
+
+NTSTATUS
+STDCALL
+NtNotifyChangeKey (
+	IN	HANDLE			KeyHandle,
+	IN	HANDLE			Event,
+	IN	PIO_APC_ROUTINE		ApcRoutine		OPTIONAL, 
+	IN	PVOID			ApcContext		OPTIONAL, 
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	ULONG			CompletionFilter,
+	IN	BOOLEAN			Asynchroneous, 
+	OUT	PVOID			ChangeBuffer,
+	IN	ULONG			Length,
+	IN	BOOLEAN			WatchSubtree
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtNotifyChangeKey(IN HANDLE  KeyHandle,
-                  IN HANDLE  Event,
-                  IN PIO_APC_ROUTINE  ApcRoutine OPTIONAL, 
-                  IN PVOID ApcContext  OPTIONAL, 
-                  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-                  IN ULONG  CompletionFilter,
-                  IN BOOLEAN  Asynchroneous, 
-                  OUT PVOID  ChangeBuffer,
-                  IN ULONG  Length,
-                  IN BOOLEAN  WatchSubtree)
+
+NTSTATUS
+STDCALL
+NtQueryMultipleValueKey (
+	IN	HANDLE	KeyHandle,	
+	IN	PVALENT	ListOfValuesToQuery,	
+	IN	ULONG	NumberOfItems,	
+	OUT	PVOID	MultipleValueInformation,		
+	IN	ULONG	Length,
+	OUT	PULONG	ReturnLength)
 {
-  return ZwNotifyChangeKey(KeyHandle,
-                           Event,
-                           ApcRoutine, 
-                           ApcContext, 
-                           IoStatusBlock,
-                           CompletionFilter,
-                           Asynchroneous, 
-                           ChangeBuffer,
-                           Length,
-                           WatchSubtree);
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-ZwNotifyChangeKey(IN HANDLE  KeyHandle,
-                  IN HANDLE  Event,
-                  IN PIO_APC_ROUTINE  ApcRoutine OPTIONAL, 
-                  IN PVOID  ApcContext OPTIONAL, 
-                  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-                  IN ULONG  CompletionFilter,
-                  IN BOOLEAN  Asynchroneous, 
-                  OUT PVOID  ChangeBuffer,
-                  IN ULONG  Length,
-                  IN BOOLEAN  WatchSubtree)
+
+NTSTATUS
+STDCALL
+NtReplaceKey (
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes, 
+	IN	HANDLE			Key,
+	IN	POBJECT_ATTRIBUTES	ReplacedObjectAttributes
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtQueryMultipleValueKey(IN HANDLE  KeyHandle,	
-                        IN PVALENT  ListOfValuesToQuery,	
-                        IN ULONG  NumberOfItems,	
-                        OUT PVOID  MultipleValueInformation,		
-                        IN ULONG  Length,
-                        OUT PULONG  ReturnLength)
+
+NTSTATUS
+STDCALL
+NtRestoreKey (
+	IN	HANDLE	KeyHandle,
+	IN	HANDLE	FileHandle,
+	IN	ULONG	RestoreFlags
+	)
 {
-  return ZwQueryMultipleValueKey(KeyHandle,	
-                                 ListOfValuesToQuery,	
-                                 NumberOfItems,	
-                                 MultipleValueInformation,		
-                                 Length,
-                                 ReturnLength);
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
-ZwQueryMultipleValueKey(IN HANDLE  KeyHandle,	
-                        IN PVALENT  ListOfValuesToQuery,	
-                        IN ULONG  NumberOfItems,	
-                        OUT PVOID  MultipleValueInformation,		
-                        IN ULONG  Length,
-                        OUT PULONG  ReturnLength)
+
+NTSTATUS
+STDCALL
+NtSaveKey (
+	IN	HANDLE	KeyHandle,
+	IN	HANDLE	FileHandle
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtReplaceKey(IN POBJECT_ATTRIBUTES  ObjectAttributes, 
-             IN HANDLE  Key,
-             IN POBJECT_ATTRIBUTES  ReplacedObjectAttributes)
+
+NTSTATUS
+STDCALL
+NtSetInformationKey (
+	IN	HANDLE	KeyHandle,
+	IN	CINT	KeyInformationClass,
+	IN	PVOID	KeyInformation,
+	IN	ULONG	KeyInformationLength
+	)
 {
-  return ZwReplaceKey(ObjectAttributes, 
-                      Key,
-                      ReplacedObjectAttributes);
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-ZwReplaceKey(IN POBJECT_ATTRIBUTES  ObjectAttributes, 
-             IN HANDLE  Key,
-             IN POBJECT_ATTRIBUTES  ReplacedObjectAttributes)
+
+NTSTATUS
+STDCALL 
+NtUnloadKey (
+	HANDLE	KeyHandle
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtRestoreKey(IN HANDLE  KeyHandle,
-             IN HANDLE  FileHandle,
-             IN ULONG  RestoreFlags)
+
+NTSTATUS
+STDCALL 
+NtInitializeRegistry (
+	BOOLEAN	SetUpBoot
+	)
 {
-  return ZwRestoreKey(KeyHandle,
-                      FileHandle,
-                      RestoreFlags);
+	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-ZwRestoreKey(IN HANDLE  KeyHandle,
-             IN HANDLE  FileHandle,
-             IN ULONG  RestoreFlags)
-{
-  UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL
-NtSaveKey(IN HANDLE  KeyHandle,
-          IN HANDLE  FileHandle)
-{
-  return ZwSaveKey(KeyHandle,
-                   FileHandle);
-}
-
-NTSTATUS STDCALL
-ZwSaveKey(IN HANDLE  KeyHandle,
-          IN HANDLE  FileHandle)
-{
-  UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL
-NtSetInformationKey(IN HANDLE  KeyHandle,
-                    IN CINT  KeyInformationClass,
-                    IN PVOID  KeyInformation,
-                    IN ULONG  KeyInformationLength)
-{
-  return ZwSetInformationKey(KeyHandle,
-                             KeyInformationClass,
-                             KeyInformation,
-                             KeyInformationLength);
-}
-
-NTSTATUS STDCALL
-ZwSetInformationKey(IN HANDLE  KeyHandle,
-                    IN CINT  KeyInformationClass,
-                    IN PVOID  KeyInformation,
-                    IN ULONG  KeyInformationLength)
-{
-  UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL 
-NtUnloadKey(HANDLE KeyHandle)
-{
-  return ZwUnloadKey(KeyHandle);
-}
-
-NTSTATUS STDCALL 
-ZwUnloadKey(HANDLE KeyHandle)
-{
-  UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL 
-NtInitializeRegistry(BOOLEAN SetUpBoot)
-{
-  return ZwInitializeRegistry(SetUpBoot);
-}
-
-NTSTATUS STDCALL 
-ZwInitializeRegistry(BOOLEAN SetUpBoot)
-{
-  UNIMPLEMENTED;
-}
 
 NTSTATUS 
-RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
+RtlCheckRegistryKey (
+	ULONG	RelativeTo,
+	PWSTR	Path
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS 
-RtlCreateRegistryKey(IN ULONG RelativeTo, IN PWSTR Path)
-{
-  UNIMPLEMENTED;
-}
 
 NTSTATUS 
-RtlDeleteRegistryValue(IN ULONG  RelativeTo, 
-                       IN PWSTR  Path,
-                       IN PWSTR  ValueName)
+RtlCreateRegistryKey (
+	IN	ULONG	RelativeTo,
+	IN	PWSTR	Path
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-NTSTATUS 
-RtlQueryRegistryValues(IN ULONG  RelativeTo,
-                       IN PWSTR  Path,
-                       PRTL_QUERY_REGISTRY_TABLE  QueryTable,
-                       PVOID  Context,
-                       PVOID  Environment)
-{
-  UNIMPLEMENTED;
-}
 
 NTSTATUS 
-RtlWriteRegistryValue(ULONG RelativeTo,
-                      PWSTR Path,
-                      PWSTR ValueName,
-                      ULONG ValueType,
-                      PVOID ValueData,
-                      ULONG ValueLength)
+RtlDeleteRegistryValue (
+	IN	ULONG	RelativeTo, 
+	IN	PWSTR	Path,
+	IN	PWSTR	ValueName
+	)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS 
+RtlQueryRegistryValues (
+	IN	ULONG				RelativeTo,
+	IN	PWSTR				Path,
+		PRTL_QUERY_REGISTRY_TABLE	QueryTable,
+		PVOID				Context,
+		PVOID				Environment
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS 
+RtlWriteRegistryValue (
+	ULONG	RelativeTo,
+	PWSTR	Path,
+	PWSTR	ValueName,
+	ULONG	ValueType,
+	PVOID	ValueData,
+	ULONG	ValueLength
+	)
+{
+	UNIMPLEMENTED;
 }
 
 /*  ------------------------------------------  Private Implementation  */

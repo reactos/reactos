@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 1999/05/24 20:04:44 ea Exp $
+# $Id: makefile,v 1.4 1999/06/18 22:11:02 ea Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -27,8 +27,7 @@ OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(RESOURCE_OBJECTS)
 $(TARGET).a: $(OBJECTS)
 	$(AR) csr $(TARGET).a $(OBJECTS)
 
-$(TARGET).coff: $(TARGET).rc
-	$(RC) $(TARGET).rc $(TARGET).coff
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(LD) -r $(OBJECTS) -o $(TARGET).o

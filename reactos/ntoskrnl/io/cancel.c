@@ -21,16 +21,14 @@ static KSPIN_LOCK CancelSpinLock = {0,};
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCancelIoFile(IN HANDLE FileHandle,
-				OUT PIO_STATUS_BLOCK IoStatusBlock)
+NTSTATUS
+STDCALL
+NtCancelIoFile (
+	IN	HANDLE			FileHandle,
+	OUT	PIO_STATUS_BLOCK	IoStatusBlock
+	)
 {
-   return(ZwCancelIoFile(FileHandle,IoStatusBlock));
-}
-
-NTSTATUS STDCALL ZwCancelIoFile(IN HANDLE FileHandle,
-				OUT PIO_STATUS_BLOCK IoStatusBlock)
-{
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
 BOOLEAN IoCancelIrp(PIRP Irp)

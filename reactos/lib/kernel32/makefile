@@ -1,3 +1,8 @@
+# $Id: makefile,v 1.20 1999/06/18 22:11:03 ea Exp $
+#
+# ReactOS Operating System
+#
+TARGET=kernel32
 
 KERNEL32_BASE = 0x77f00000
 
@@ -5,12 +10,12 @@ CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=kernel32.a
+    DLLTARGET=$(TARGET).a
   else
-    DLLTARGET=kernel32.dll
+    DLLTARGET=$(TARGET).dll
   endif
 else
-  DLLTARGET=kernel32.dll
+  DLLTARGET=$(TARGET).dll
 endif
 
 all: $(DLLTARGET)
@@ -59,7 +64,7 @@ INTERNAL_OBJECTS = internal/dprintf.o internal/string.o
 
 EXCEPT_OBJECTS = except/except.o
 
-RESOURCE_OBJECT = kernel32.coff
+RESOURCE_OBJECT = $(TARGET).coff
 
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
@@ -68,41 +73,59 @@ OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
 	  $(RESOURCE_OBJECT)
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o  \
-              process\*.o string\*.o synch\*.o thread\*.o  \
-              kernel32.o kernel32.a junk.tmp base.tmp temp.exp kernel32.dll kernel32.sym
+CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o \
+              process\*.o string\*.o synch\*.o thread\*.o \
+              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
+	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = except/*.o file/*.o internal/*.o mem/*.o misc/*.o nls/*.o  \
               process/*.o string/*.o synch/*.o thread/*.o  \
-              kernel32.o kernel32.a junk.tmp base.tmp temp.exp kernel32.dll kernel32.sym
+              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
+	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
 endif
 
 nls/ole2nls.o: nls/ole2nls.c
 	$(CC) $(CFLAGS) -I. nls/ole2nls.c
 
-kernel32.coff: kernel32.rc ../../include/reactos/resource.h
-	$(RC) kernel32.rc kernel32.coff
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
-kernel32.a: $(OBJECTS)
-	$(AR) csr kernel32.a $(OBJECTS)
+$(TARGET).a: $(OBJECTS)
+	$(AR) csr $(TARGET).a $(OBJECTS)
 
-kernel32.dll: $(DLLMAIN) $(OBJECTS) kernel32.def
-	$(LD) -r $(OBJECTS) -o kernel32.o
-	$(DLLTOOL) --dllname kernel32.dll --def kernel32.def \
-	           --output-lib kernel32.a
-	$(CC) -specs=k32_specs -mdll -o junk.tmp \
-	      -Wl,--base-file,base.tmp kernel32.o  ../ntdll/ntdll.a
+$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
+	$(LD) \
+		-r $(OBJECTS) \
+		-o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
+	$(CC) \
+		-specs=k32_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--base-file,base.tmp \
+		$(TARGET).o \
+		../ntdll/ntdll.a
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname kernel32.dll --base-file base.tmp \
-	           --output-exp temp.exp --def kernel32.def
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).def
 	- $(RM) base.tmp
-	$(CC) -specs=k32_specs -mdll -o kernel32.dll kernel32.o  ../ntdll/ntdll.a\
-	      -Wl,--image-base,$(KERNEL32_BASE) \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,temp.exp
+	$(CC) \
+		-specs=k32_specs \
+		-mdll \
+		-o $(TARGET).dll \
+		$(TARGET).o \
+		../ntdll/ntdll.a \
+		-Wl,--image-base,$(KERNEL32_BASE) \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,temp.exp
 	- $(RM) temp.exp
-	$(NM) --numeric-sort kernel32.dll > kernel32.sym
+	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
