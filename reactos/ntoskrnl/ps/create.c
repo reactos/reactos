@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.44 2002/02/15 14:47:55 ekohl Exp $
+/* $Id: create.c,v 1.45 2002/02/20 20:15:07 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -24,7 +24,7 @@
 #include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
-#include <internal/ob.h>
+#include <internal/se.h>
 #include <internal/id.h>
 #include <internal/dbg.h>
 
@@ -60,7 +60,7 @@ PsAssignImpersonationToken(PETHREAD Thread,
      {
 	Status = ObReferenceObjectByHandle(TokenHandle,
 					   0,
-					   SeTokenType,
+					   SepTokenObjectType,
 					   UserMode,
 					   (PVOID*)&Token,
 					   NULL);
@@ -133,7 +133,7 @@ PsImpersonateClient(PETHREAD Thread,
    Thread->ImpersonationInfo->Token = Token;
    ObReferenceObjectByPointer(Token,
 			      0,
-			      SeTokenType,
+			      SepTokenObjectType,
 			      KernelMode);
    Thread->ActiveImpersonationInfo = 1;
 }
@@ -164,16 +164,15 @@ PsReferenceEffectiveToken(PETHREAD Thread,
    return(Token);
 }
 
-NTSTATUS STDCALL 
-NtImpersonateThread (IN HANDLE ThreadHandle,
-		     IN HANDLE ThreadToImpersonateHandle,
-		     IN PSECURITY_QUALITY_OF_SERVICE	
-		     SecurityQualityOfService)
+NTSTATUS STDCALL
+NtImpersonateThread(IN HANDLE ThreadHandle,
+		    IN HANDLE ThreadToImpersonateHandle,
+		    IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService)
 {
    PETHREAD Thread;
    PETHREAD ThreadToImpersonate;
    NTSTATUS Status;
-   SE_SOME_STRUCT2 b;
+   SECURITY_CLIENT_CONTEXT ClientContext;
    
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      0,
@@ -201,7 +200,7 @@ NtImpersonateThread (IN HANDLE ThreadHandle,
    Status = SeCreateClientSecurity(ThreadToImpersonate,
 				   SecurityQualityOfService,
 				   0,
-				   &b);
+				   &ClientContext);
    if (!NT_SUCCESS(Status))
      {
 	ObDereferenceObject(Thread);
@@ -209,15 +208,15 @@ NtImpersonateThread (IN HANDLE ThreadHandle,
 	return(Status);
      }
    
-   SeImpersonateClient(&b, Thread);
-   if (b.Token != NULL)
+   SeImpersonateClient(&ClientContext, Thread);
+   if (ClientContext.Token != NULL)
      {
-	ObDereferenceObject(b.Token);
+	ObDereferenceObject(ClientContext.Token);
      }
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtOpenThreadToken(IN	HANDLE		ThreadHandle,  
 		  IN	ACCESS_MASK	DesiredAccess,  
 		  IN	BOOLEAN		OpenAsSelf,     
@@ -261,7 +260,7 @@ PsReferenceImpersonationToken(PETHREAD Thread,
    *Unknown2 = Thread->ImpersonationInfo->Unknown2;
    ObReferenceObjectByPointer(Thread->ImpersonationInfo->Token,
 			      TOKEN_ALL_ACCESS,
-			      SeTokenType,
+			      SepTokenObjectType,
 			      KernelMode);
    return(Thread->ImpersonationInfo->Token);
 }

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.12 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: token.c,v 1.13 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,13 +14,13 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
-#include <internal/pool.h>
+#include <internal/se.h>
 
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED SeTokenType = NULL;
+POBJECT_TYPE SepTokenObjectType = NULL;
 
 static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
 					  TOKEN_WRITE,
@@ -58,7 +58,7 @@ NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
    NewToken->TokenInUse = 1;
    ObReferenceObjectByPointer(NewToken,
 			      TOKEN_ALL_ACCESS,
-			      SeTokenType,
+			      SepTokenObjectType,
 			      KernelMode);
    OldToken->TokenInUse = 0;
    *OldTokenP = OldToken;
@@ -99,20 +99,18 @@ NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
    return(Status);
 }
 
-NTSTATUS
-STDCALL
-SeCreateClientSecurity (
-	PETHREAD			Thread,
-	PSECURITY_QUALITY_OF_SERVICE	Qos,
-	ULONG				e,
-	PSE_SOME_STRUCT2		f
-	)
+
+NTSTATUS STDCALL
+SeCreateClientSecurity(IN struct _ETHREAD *Thread,
+		       IN PSECURITY_QUALITY_OF_SERVICE Qos,
+		       IN BOOLEAN RemoteClient,
+		       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
 {
    TOKEN_TYPE TokenType;
    UCHAR b;
    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
    PACCESS_TOKEN Token;
-   ULONG g;   
+   ULONG g;
    PACCESS_TOKEN NewToken;
    
    Token = PsReferenceEffectiveToken(Thread,
@@ -121,7 +119,7 @@ SeCreateClientSecurity (
 				     &ImpersonationLevel);
    if (TokenType != 2)
      {
-	f->Unknown9 = Qos->EffectiveOnly;
+	ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
      }
    else
      {
@@ -135,7 +133,7 @@ SeCreateClientSecurity (
 	  }
 	if (ImpersonationLevel == 0 ||
 	    ImpersonationLevel == 1 ||
-	    (e != 0 && ImpersonationLevel != 3))
+	    (RemoteClient != FALSE && ImpersonationLevel != 3))
 	  {
 	     if (Token != NULL)
 	       {
@@ -146,23 +144,23 @@ SeCreateClientSecurity (
 	if (b != 0 ||
 	    Qos->EffectiveOnly != 0)
 	  {
-	     f->Unknown9 = 1;
+	     ClientContext->DirectAccessEffectiveOnly = TRUE;
 	  }
 	else
 	  {
-	     f->Unknown9 = 0;
-	  }       
+	     ClientContext->DirectAccessEffectiveOnly = FALSE;
+	  }
      }
    
    if (Qos->ContextTrackingMode == 0)
      {
-	f->Unknown8 = 0;
+	ClientContext->DirectlyAccessClientToken = FALSE;
 	g = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
 	if (g >= 0)
 	  {
 //	     ObDeleteCapturedInsertInfo(NewToken);
 	  }
-	if (TokenType == TokenPrimary || Token != NULL)		 
+	if (TokenType == TokenPrimary || Token != NULL)
 	  {
 	     ObDereferenceObject(Token);
 	  }
@@ -170,90 +168,88 @@ SeCreateClientSecurity (
 	  {
 	     return(g);
 	  }
-     }
-   else
-     {
-	f->Unknown8 = 1;
-	if (e != 0)
+    }
+  else
+    {
+	ClientContext->DirectlyAccessClientToken = TRUE;
+	if (RemoteClient != FALSE)
 	  {
-//	     SeGetTokenControlInformation(Token, &f->Unknown11);
+//	     SeGetTokenControlInformation(Token, &ClientContext->Unknown11);
 	  }
 	NewToken = Token;
-     }
-   f->Unknown1 = 0xc;
-   f->Level = Qos->ImpersonationLevel;
-   f->ContextTrackingMode = Qos->ContextTrackingMode;
-   f->EffectiveOnly = Qos->EffectiveOnly;
-   f->Unknown10 = e;
-   f->Token = NewToken;
-   
-   return(STATUS_SUCCESS);
+    }
+  ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+  ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
+  ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
+  ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
+  ClientContext->ServerIsRemote = RemoteClient;
+  ClientContext->Token = NewToken;
+
+  return(STATUS_SUCCESS);
+}
+
+
+VOID STDCALL
+SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
+		    IN PETHREAD ServerThread OPTIONAL)
+{
+  UCHAR b;
+  
+  if (ClientContext->DirectlyAccessClientToken == FALSE)
+    {
+      b = ClientContext->SecurityQos.EffectiveOnly;
+    }
+  else
+    {
+      b = ClientContext->DirectAccessEffectiveOnly;
+    }
+  if (ServerThread == NULL)
+    {
+      ServerThread = PsGetCurrentThread();
+    }
+  PsImpersonateClient(ServerThread,
+		      ClientContext->Token,
+		      1,
+		      (ULONG)b,
+		      ClientContext->SecurityQos.ImpersonationLevel);
 }
 
 
 VOID
-STDCALL
-SeImpersonateClient (
-	PSE_SOME_STRUCT2	a,
-	PETHREAD		Thread
-	)
+SeInitializeTokenManager(VOID)
 {
-   UCHAR b;
-   
-   if (a->Unknown8 == 0)
-     {
-	b = a->EffectiveOnly;
-     }
-   else
-     {
-	b = a->Unknown9;
-     }
-   if (Thread == NULL)
-     {
-	Thread = PsGetCurrentThread();
-     }
-   PsImpersonateClient(Thread, 
-		       a->Token, 
-		       1, 
-		       (ULONG)b, 
-		       a->Level);
+  SepTokenObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+  
+  SepTokenObjectType->Tag = TAG('T', 'O', 'K', 'T');
+  SepTokenObjectType->MaxObjects = ULONG_MAX;
+  SepTokenObjectType->MaxHandles = ULONG_MAX;
+  SepTokenObjectType->TotalObjects = 0;
+  SepTokenObjectType->TotalHandles = 0;
+  SepTokenObjectType->PagedPoolCharge = 0;
+  SepTokenObjectType->NonpagedPoolCharge = sizeof(ACCESS_TOKEN);
+  SepTokenObjectType->Mapping = &SepTokenMapping;
+  SepTokenObjectType->Dump = NULL;
+  SepTokenObjectType->Open = NULL;
+  SepTokenObjectType->Close = NULL;
+  SepTokenObjectType->Delete = NULL;
+  SepTokenObjectType->Parse = NULL;
+  SepTokenObjectType->Security = NULL;
+  SepTokenObjectType->QueryName = NULL;
+  SepTokenObjectType->OkayToClose = NULL;
+  SepTokenObjectType->Create = NULL;
+  SepTokenObjectType->DuplicationNotify = NULL;
+  RtlCreateUnicodeString(&SepTokenObjectType->TypeName,
+			 L"Token");
 }
 
-VOID SeInitializeTokenManager(VOID)
-{
-   UNICODE_STRING TypeName;
-   
-   RtlInitUnicodeString(&TypeName, L"Token");
-   
-   SeTokenType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   
-   SeTokenType->Tag = TAG('T', 'O', 'K', 'T');
-   SeTokenType->MaxObjects = ULONG_MAX;
-   SeTokenType->MaxHandles = ULONG_MAX;
-   SeTokenType->TotalObjects = 0;
-   SeTokenType->TotalHandles = 0;
-   SeTokenType->PagedPoolCharge = 0;
-   SeTokenType->NonpagedPoolCharge = 0;
-   SeTokenType->Mapping = &SepTokenMapping;
-   SeTokenType->Dump = NULL;
-   SeTokenType->Open = NULL;
-   SeTokenType->Close = NULL;
-   SeTokenType->Delete = NULL;
-   SeTokenType->Parse = NULL;
-   SeTokenType->Security = NULL;
-   SeTokenType->QueryName = NULL;
-   SeTokenType->OkayToClose = NULL;
-   SeTokenType->Create = NULL;
-   SeTokenType->DuplicationNotify = NULL;
-}
-
-NTSTATUS RtlCopySidAndAttributesArray(ULONG Count,             // ebp + 8
-				      PSID_AND_ATTRIBUTES Src,   // ebp + C
-				      ULONG MaxLength,         // ebp + 10
-				      PSID_AND_ATTRIBUTES Dest, // ebp + 14
-				      PVOID e,    // ebp + 18
-				      PVOID* f,                 // ebp + 1C
-				      PULONG g)                 // ebp + 20
+NTSTATUS
+RtlCopySidAndAttributesArray(ULONG Count,             // ebp + 8
+			     PSID_AND_ATTRIBUTES Src,   // ebp + C
+			     ULONG MaxLength,         // ebp + 10
+			     PSID_AND_ATTRIBUTES Dest, // ebp + 14
+			     PVOID e,    // ebp + 18
+			     PVOID* f,                 // ebp + 1C
+			     PULONG g)                 // ebp + 20
 {
    ULONG Length; // ebp - 4
    ULONG i;
@@ -277,12 +273,13 @@ NTSTATUS RtlCopySidAndAttributesArray(ULONG Count,             // ebp + 8
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,     
-					 IN TOKEN_INFORMATION_CLASS 
-					 TokenInformationClass,
-					 OUT PVOID TokenInformation,  
-					 IN ULONG TokenInformationLength,
-					 OUT PULONG ReturnLength)
+
+NTSTATUS STDCALL
+NtQueryInformationToken(IN HANDLE TokenHandle,
+			IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+			OUT PVOID TokenInformation,
+			IN ULONG TokenInformationLength,
+			OUT PULONG ReturnLength)
 {
    NTSTATUS Status;
    PACCESS_TOKEN Token;
@@ -294,7 +291,7 @@ NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,
    
    Status = ObReferenceObjectByHandle(TokenHandle,
 				      0,
-				      SeTokenType,
+				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);
@@ -340,7 +337,7 @@ NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	break;
 	
-      case TokenPrivileges:	
+      case TokenPrivileges:
 	break;
 	
       case TokenOwner:
@@ -400,27 +397,23 @@ NTSTATUS STDCALL NtQueryInformationToken(IN HANDLE TokenHandle,
 }
 
 
-
-
-NTSTATUS
-STDCALL
-NtSetInformationToken(
-	IN	HANDLE			TokenHandle,            
-	IN	TOKEN_INFORMATION_CLASS	TokenInformationClass,
-	OUT	PVOID			TokenInformation,       
-	IN	ULONG			TokenInformationLength   
-	)
+NTSTATUS STDCALL
+NtSetInformationToken(IN HANDLE TokenHandle,
+		      IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+		      OUT PVOID TokenInformation,
+		      IN ULONG TokenInformationLength)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtDuplicateToken(IN HANDLE ExistingTokenHandle,
-				  IN ACCESS_MASK DesiredAccess, 
-				  IN POBJECT_ATTRIBUTES ObjectAttributes,
-				  IN SECURITY_IMPERSONATION_LEVEL 
-				                      ImpersonationLevel,
-				  IN TOKEN_TYPE TokenType,  
-				  OUT PHANDLE NewTokenHandle)
+
+NTSTATUS STDCALL
+NtDuplicateToken(IN HANDLE ExistingTokenHandle,
+		 IN ACCESS_MASK DesiredAccess,
+		 IN POBJECT_ATTRIBUTES ObjectAttributes,
+		 IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+		 IN TOKEN_TYPE TokenType,
+		 OUT PHANDLE NewTokenHandle)
 {
 #if 0
    PACCESS_TOKEN Token;
@@ -430,7 +423,7 @@ NTSTATUS STDCALL NtDuplicateToken(IN HANDLE ExistingTokenHandle,
    
    Status = ObReferenceObjectByHandle(ExistingTokenHandle,
 				      ?,
-				      SeTokenType,
+				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);
@@ -462,12 +455,14 @@ VOID SepAdjustGroups(PACCESS_TOKEN Token,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtAdjustGroupsToken(IN	HANDLE		TokenHandle,
-				     IN	BOOLEAN		ResetToDefault,	
-				     IN	PTOKEN_GROUPS	NewState, 
-				     IN	ULONG		BufferLength,	
-				     OUT PTOKEN_GROUPS	PreviousState OPTIONAL,
-				     OUT PULONG		ReturnLength)
+
+NTSTATUS STDCALL
+NtAdjustGroupsToken(IN HANDLE TokenHandle,
+		    IN BOOLEAN ResetToDefault,
+		    IN PTOKEN_GROUPS NewState,
+		    IN ULONG BufferLength,
+		    OUT PTOKEN_GROUPS PreviousState OPTIONAL,
+		    OUT PULONG ReturnLength)
 {
 #if 0
    NTSTATUS Status;
@@ -478,7 +473,7 @@ NTSTATUS STDCALL NtAdjustGroupsToken(IN	HANDLE		TokenHandle,
    
    Status = ObReferenceObjectByHandle(TokenHandle,
 				      ?,
-				      SeTokenType,
+				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);
@@ -498,6 +493,7 @@ NTSTATUS STDCALL NtAdjustGroupsToken(IN	HANDLE		TokenHandle,
    UNIMPLEMENTED;
 #endif
 }
+
 
 #if 0
 NTSTATUS SepAdjustPrivileges(PACCESS_TOKEN Token,           // 0x8
@@ -552,13 +548,15 @@ NTSTATUS SepAdjustPrivileges(PACCESS_TOKEN Token,           // 0x8
    if (
 }
 #endif
-   
-NTSTATUS STDCALL NtAdjustPrivilegesToken(IN HANDLE  TokenHandle,	
-					 IN BOOLEAN  DisableAllPrivileges,
-					 IN PTOKEN_PRIVILEGES  NewState,
-					 IN ULONG  BufferLength,
-					 OUT PTOKEN_PRIVILEGES  PreviousState,
-					 OUT PULONG ReturnLength)
+
+
+NTSTATUS STDCALL
+NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
+			IN BOOLEAN DisableAllPrivileges,
+			IN PTOKEN_PRIVILEGES NewState,
+			IN ULONG BufferLength,
+			OUT PTOKEN_PRIVILEGES PreviousState,
+			OUT PULONG ReturnLength)
 {
 #if 0
    ULONG PrivilegeCount;
@@ -593,19 +591,20 @@ NTSTATUS STDCALL NtAdjustPrivilegesToken(IN HANDLE  TokenHandle,
 #endif
 }
 
-NTSTATUS STDCALL NtCreateToken(OUT PHANDLE TokenHandle,
-			       IN ACCESS_MASK DesiredAccess,
-			       IN POBJECT_ATTRIBUTES ObjectAttributes,
-			       IN TOKEN_TYPE TokenType,
-			       IN PLUID AuthenticationId,
-			       IN PLARGE_INTEGER ExpirationTime,
-			       IN PTOKEN_USER TokenUser,
-			       IN PTOKEN_GROUPS TokenGroups,
-			       IN PTOKEN_PRIVILEGES TokenPrivileges,
-			       IN PTOKEN_OWNER TokenOwner,
-			       IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-			       IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-			       IN PTOKEN_SOURCE TokenSource)
+NTSTATUS STDCALL
+NtCreateToken(OUT PHANDLE TokenHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN TOKEN_TYPE TokenType,
+	      IN PLUID AuthenticationId,
+	      IN PLARGE_INTEGER ExpirationTime,
+	      IN PTOKEN_USER TokenUser,
+	      IN PTOKEN_GROUPS TokenGroups,
+	      IN PTOKEN_PRIVILEGES TokenPrivileges,
+	      IN PTOKEN_OWNER TokenOwner,
+	      IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
+	      IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+	      IN PTOKEN_SOURCE TokenSource)
 {
 #if 0
    PACCESS_TOKEN AccessToken;
@@ -628,5 +627,10 @@ NTSTATUS STDCALL NtCreateToken(OUT PHANDLE TokenHandle,
      UNIMPLEMENTED;
 }
 
+TOKEN_TYPE STDCALL
+SeTokenType(IN PACCESS_TOKEN Token)
+{
+  return(Token->TokenType);
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.5 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: sd.c,v 1.6 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,10 +12,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/se.h>
 
 #include <internal/debug.h>
 
+
 /* FUNCTIONS ***************************************************************/
+
+BOOLEAN
+SepInitSDs(VOID)
+{
+  return(TRUE);
+}
+
 
 NTSTATUS STDCALL
 RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,

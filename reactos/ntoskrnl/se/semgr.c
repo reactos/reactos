@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.17 2000/09/03 14:53:13 ekohl Exp $
+/* $Id: semgr.c,v 1.18 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,10 +13,111 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <internal/se.h>
 
 #include <internal/debug.h>
 
-/* FUNCTIONS ***************************************************************/
+#define TAG_SXPT   TAG('S', 'X', 'P', 'T')
+
+
+/* GLOBALS ******************************************************************/
+
+PSE_EXPORTS EXPORTED SeExports = NULL;
+
+
+/* PROTOTYPES ***************************************************************/
+
+static BOOLEAN SepInitExports(VOID);
+
+/* FUNCTIONS ****************************************************************/
+
+
+BOOLEAN
+SeInit1(VOID)
+{
+  SepInitLuid();
+
+  if (!SepInitSecurityIDs())
+    return(FALSE);
+
+  if (!SepInitDACLs())
+    return(FALSE);
+
+  if (!SepInitSDs())
+    return(FALSE);
+
+  SepInitPrivileges();
+
+  if (!SepInitExports())
+    return(FALSE);
+
+  return(TRUE);
+}
+
+
+BOOLEAN
+SeInit2(VOID)
+{
+  return TRUE;
+}
+
+
+static BOOLEAN
+SepInitExports(VOID)
+{
+  SeExports = ExAllocatePoolWithTag(NonPagedPool,
+				    sizeof(SE_EXPORTS),
+				    TAG_SXPT);
+  if (SeExports == NULL)
+    return(FALSE);
+
+  SeExports->SeCreateTokenPrivilege = SeCreateTokenPrivilege;
+  SeExports->SeAssignPrimaryTokenPrivilege = SeAssignPrimaryTokenPrivilege;
+  SeExports->SeLockMemoryPrivilege = SeLockMemoryPrivilege;
+  SeExports->SeIncreaseQuotaPrivilege = SeIncreaseQuotaPrivilege;
+  SeExports->SeUnsolicitedInputPrivilege = SeUnsolicitedInputPrivilege;
+  SeExports->SeTcbPrivilege = SeTcbPrivilege;
+  SeExports->SeSecurityPrivilege = SeSecurityPrivilege;
+  SeExports->SeTakeOwnershipPrivilege = SeTakeOwnershipPrivilege;
+  SeExports->SeLoadDriverPrivilege = SeLoadDriverPrivilege;
+  SeExports->SeCreatePagefilePrivilege = SeCreatePagefilePrivilege;
+  SeExports->SeIncreaseBasePriorityPrivilege = SeIncreaseBasePriorityPrivilege;
+  SeExports->SeSystemProfilePrivilege = SeSystemProfilePrivilege;
+  SeExports->SeSystemtimePrivilege = SeSystemtimePrivilege;
+  SeExports->SeProfileSingleProcessPrivilege = SeProfileSingleProcessPrivilege;
+  SeExports->SeCreatePermanentPrivilege = SeCreatePermanentPrivilege;
+  SeExports->SeBackupPrivilege = SeBackupPrivilege;
+  SeExports->SeRestorePrivilege = SeRestorePrivilege;
+  SeExports->SeShutdownPrivilege = SeShutdownPrivilege;
+  SeExports->SeDebugPrivilege = SeDebugPrivilege;
+  SeExports->SeAuditPrivilege = SeAuditPrivilege;
+  SeExports->SeSystemEnvironmentPrivilege = SeSystemEnvironmentPrivilege;
+  SeExports->SeChangeNotifyPrivilege = SeChangeNotifyPrivilege;
+  SeExports->SeRemoteShutdownPrivilege = SeRemoteShutdownPrivilege;
+
+  SeExports->SeNullSid = SeNullSid;
+  SeExports->SeWorldSid = SeWorldSid;
+  SeExports->SeLocalSid = SeLocalSid;
+  SeExports->SeCreatorOwnerSid = SeCreatorOwnerSid;
+  SeExports->SeCreatorGroupSid = SeCreatorGroupSid;
+  SeExports->SeNtAuthoritySid = SeNtAuthoritySid;
+  SeExports->SeDialupSid = SeDialupSid;
+  SeExports->SeNetworkSid = SeNetworkSid;
+  SeExports->SeBatchSid = SeBatchSid;
+  SeExports->SeInteractiveSid = SeInteractiveSid;
+  SeExports->SeLocalSystemSid = SeLocalSystemSid;
+  SeExports->SeAliasAdminsSid = SeAliasAdminsSid;
+  SeExports->SeAliasUsersSid = SeAliasUsersSid;
+  SeExports->SeAliasGuestsSid = SeAliasGuestsSid;
+  SeExports->SeAliasPowerUsersSid = SeAliasPowerUsersSid;
+  SeExports->SeAliasAccountOpsSid = SeAliasAccountOpsSid;
+  SeExports->SeAliasSystemOpsSid = SeAliasSystemOpsSid;
+  SeExports->SeAliasPrintOpsSid = SeAliasPrintOpsSid;
+  SeExports->SeAliasBackupOpsSid = SeAliasBackupOpsSid;
+
+  return(TRUE);
+}
+
 
 VOID SepReferenceLogonSession(PLUID AuthenticationId)
 {
@@ -28,109 +129,99 @@ VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtPrivilegedServiceAuditAlarm(
-					     IN PUNICODE_STRING SubsystemName, 
-					     IN	PUNICODE_STRING	ServiceName,   
-					     IN	HANDLE		ClientToken,
-					     IN	PPRIVILEGE_SET	Privileges,    
-					     IN	BOOLEAN		AccessGranted)
+NTSTATUS STDCALL
+NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
+			      IN PUNICODE_STRING ServiceName,
+			      IN HANDLE ClientToken,
+			      IN PPRIVILEGE_SET Privileges,
+			      IN BOOLEAN AccessGranted)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtPrivilegeObjectAuditAlarm (
-	IN	PUNICODE_STRING	SubsystemName,
-	IN	PVOID		HandleId,	
-	IN	HANDLE		ClientToken,
-	IN	ULONG		DesiredAccess,
-	IN	PPRIVILEGE_SET	Privileges,
-	IN	BOOLEAN		AccessGranted 
+NTSTATUS STDCALL
+NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
+			    IN PVOID HandleId,
+			    IN HANDLE ClientToken,
+			    IN ULONG DesiredAccess,
+			    IN PPRIVILEGE_SET Privileges,
+			    IN BOOLEAN AccessGranted)
+{
+  UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL
+NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
+		       IN PVOID HandleId,
+		       IN POBJECT_ATTRIBUTES ObjectAttributes,
+		       IN HANDLE ClientToken,
+		       IN ULONG DesiredAccess,
+		       IN ULONG GrantedAccess,
+		       IN PPRIVILEGE_SET Privileges,
+		       IN BOOLEAN ObjectCreation,
+		       IN BOOLEAN AccessGranted,
+		       OUT PBOOLEAN GenerateOnClose)
+{
+  UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL
+NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
+			   IN PHANDLE ObjectHandle,
+			   IN POBJECT_ATTRIBUTES ObjectAttributes,
+			   IN ACCESS_MASK DesiredAccess,
+			   IN PGENERIC_MAPPING GenericMapping,
+			   IN BOOLEAN ObjectCreation,
+			   OUT PULONG GrantedAccess,
+			   OUT PBOOLEAN AccessStatus,
+			   OUT PBOOLEAN GenerateOnClose
 	)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtOpenObjectAuditAlarm (
-	IN	PUNICODE_STRING		SubsystemName,	
-	IN	PVOID			HandleId,	
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	HANDLE			ClientToken,	
-	IN	ULONG			DesiredAccess,	
-	IN	ULONG			GrantedAccess,	
-	IN	PPRIVILEGE_SET		Privileges,
-	IN	BOOLEAN			ObjectCreation,	
-	IN	BOOLEAN			AccessGranted,	
-	OUT	PBOOLEAN		GenerateOnClose 	
-	)
+NTSTATUS STDCALL
+NtAllocateUuids(PULARGE_INTEGER Time,
+		PULONG Range,
+		PULONG Sequence)
 {
-	UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtAccessCheckAndAuditAlarm (
-	IN PUNICODE_STRING SubsystemName,
-	IN PHANDLE ObjectHandle,	
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ACCESS_MASK DesiredAccess,	
-	IN PGENERIC_MAPPING GenericMapping,	
-	IN BOOLEAN ObjectCreation,	
-	OUT PULONG GrantedAccess,	
-	OUT PBOOLEAN AccessStatus,	
-	OUT PBOOLEAN GenerateOnClose
-	)
-{
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtAllocateUuids (
-	PULARGE_INTEGER	Time,
-	PULONG		Range,
-	PULONG		Sequence
-	)
+NTSTATUS STDCALL
+NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
+			IN PVOID HandleId,
+			IN BOOLEAN GenerateOnClose)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,	
-					 IN PVOID HandleId,	
-					 IN BOOLEAN GenerateOnClose)
+NTSTATUS STDCALL
+NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	      IN HANDLE ClientToken,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN PGENERIC_MAPPING GenericMapping,
+	      OUT PPRIVILEGE_SET PrivilegeSet,
+	      OUT PULONG ReturnLength,
+	      OUT PULONG GrantedAccess,
+	      OUT PBOOLEAN AccessStatus)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-			       IN HANDLE ClientToken,
-			       IN ACCESS_MASK DesiredAccess,
-			       IN PGENERIC_MAPPING GenericMapping,
-                               OUT PPRIVILEGE_SET PrivilegeSet,
-			       OUT PULONG ReturnLength,
-			       OUT PULONG GrantedAccess,
-			       OUT PBOOLEAN AccessStatus)
-{
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtDeleteObjectAuditAlarm ( 
-	IN PUNICODE_STRING SubsystemName, 
-	IN PVOID HandleId, 
-	IN BOOLEAN GenerateOnClose 
-	)
+NTSTATUS STDCALL
+NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
+			 IN PVOID HandleId,
+			 IN BOOLEAN GenerateOnClose)
 {
- UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
@@ -160,16 +251,19 @@ VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 				   &SubjectContext->ImpersonationLevel);
    SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
-   
-NTSTATUS STDCALL SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
+
+
+NTSTATUS STDCALL
+SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
 {
-   if ((*SecurityDescriptor) != NULL)
-     {
-	ExFreePool(*SecurityDescriptor);
-	(*SecurityDescriptor) = NULL;
-     }
-   return(STATUS_SUCCESS);
+  if ((*SecurityDescriptor) != NULL)
+    {
+      ExFreePool(*SecurityDescriptor);
+      (*SecurityDescriptor) = NULL;
+    }
+  return(STATUS_SUCCESS);
 }
+
 
 #if 0
 VOID SepGetDefaultsSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext,
@@ -219,13 +313,14 @@ NTSTATUS SepInheritAcl(PACL Acl,
 }
 #endif
 
-NTSTATUS STDCALL SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
-				  PSECURITY_DESCRIPTOR ExplicitDescriptor,
-				  PSECURITY_DESCRIPTOR* NewDescriptor,
-				  BOOLEAN IsDirectoryObject,
-				  PSECURITY_SUBJECT_CONTEXT SubjectContext,
-				  PGENERIC_MAPPING GenericMapping,
-				  POOL_TYPE PoolType)
+NTSTATUS STDCALL
+SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
+		 PSECURITY_DESCRIPTOR ExplicitDescriptor,
+		 PSECURITY_DESCRIPTOR* NewDescriptor,
+		 BOOLEAN IsDirectoryObject,
+		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
+		 PGENERIC_MAPPING GenericMapping,
+		 POOL_TYPE PoolType)
 {
 #if 0
    PSECURITY_DESCRIPTOR Descriptor;
@@ -308,16 +403,18 @@ BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
    return(FALSE);
 }
 
-BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-		      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-		      IN BOOLEAN SubjectContextLocked,
-		      IN ACCESS_MASK DesiredAccess,
-		      IN ACCESS_MASK PreviouslyGrantedAccess,
-		      OUT PPRIVILEGE_SET* Privileges,
-		      IN PGENERIC_MAPPING GenericMapping,
-		      IN KPROCESSOR_MODE AccessMode,
-		      OUT PACCESS_MODE GrantedAccess,
-		      OUT PNTSTATUS AccessStatus)
+
+BOOLEAN STDCALL
+SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+	      IN BOOLEAN SubjectContextLocked,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN ACCESS_MASK PreviouslyGrantedAccess,
+	      OUT PPRIVILEGE_SET* Privileges,
+	      IN PGENERIC_MAPPING GenericMapping,
+	      IN KPROCESSOR_MODE AccessMode,
+	      OUT PACCESS_MODE GrantedAccess,
+	      OUT PNTSTATUS AccessStatus)
 /*
  * FUNCTION: Determines whether the requested access rights can be granted
  * to an object protected by a security descriptor and an object owner
@@ -380,7 +477,7 @@ BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	     if (SepSidInToken(SubjectSecurityContext->ClientToken, Sid))
 	       {
 		  CurrentAccess = CurrentAccess | 
-		    CurrentAce->Header.AccessMask;		  
+		    CurrentAce->Header.AccessMask;
 	       }
 	  }
      }

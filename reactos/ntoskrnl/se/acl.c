@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.4 2000/04/05 15:52:23 ekohl Exp $
+/* $Id: acl.c,v 1.5 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,10 +12,123 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/se.h>
 
 #include <internal/debug.h>
 
-/* FUNCTIONS ***************************************************************/
+#define TAG_ACL    TAG('A', 'C', 'L', 'T')
+
+
+/* GLOBALS ******************************************************************/
+
+PACL EXPORTED SePublicDefaultDacl = NULL;
+PACL EXPORTED SeSystemDefaultDacl = NULL;
+
+PACL SePublicDefaultUnrestrictedDacl = NULL;
+PACL SePublicOpenDacl = NULL;
+PACL SePublicOpenUnrestrictedDacl = NULL;
+PACL SeUnrestrictedDacl = NULL;
+
+
+/* FUNCTIONS ****************************************************************/
+
+BOOLEAN
+SepInitDACLs(VOID)
+{
+  ULONG AclLength2;
+  ULONG AclLength3;
+  ULONG AclLength4;
+
+  AclLength2 = sizeof(ACL) +
+	       2 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+  AclLength3 = sizeof(ACL) +
+	       3 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+  AclLength4 = sizeof(ACL) +
+	       4 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
+
+  /* create PublicDefaultDacl */
+  SePublicDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
+					      AclLength2,
+					      TAG_ACL);
+  if (SePublicDefaultDacl == NULL)
+    return(FALSE);
+
+  RtlCreateAcl(SePublicDefaultDacl,
+	       AclLength2,
+	       2);
+
+  RtlAddAccessAllowedAce(SePublicDefaultDacl,
+			 2,
+			 GENERIC_EXECUTE,
+			 SeWorldSid);
+
+  RtlAddAccessAllowedAce(SePublicDefaultDacl,
+			 2,
+			 GENERIC_ALL,
+			 SeLocalSystemSid);
+
+
+  /* create PublicDefaultUnrestrictedDacl */
+  SePublicDefaultUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
+							  AclLength4,
+							  TAG_ACL);
+  if (SePublicDefaultUnrestrictedDacl == NULL)
+    return(FALSE);
+
+  RtlCreateAcl(SePublicDefaultUnrestrictedDacl,
+	       AclLength4,
+	       2);
+
+  RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
+			 4,
+			 GENERIC_EXECUTE,
+			 SeWorldSid);
+
+  RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
+			 4,
+			 GENERIC_ALL,
+			 SeLocalSystemSid);
+
+  RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
+			 4,
+			 GENERIC_ALL,
+			 SeAliasAdminsSid);
+
+  RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
+			 4,
+			 GENERIC_READ | GENERIC_EXECUTE | STANDARD_RIGHTS_READ,
+			 SeRestrictedCodeSid);
+
+  /* create PublicOpenDacl */
+  SePublicOpenDacl = ExAllocatePoolWithTag(NonPagedPool,
+					   AclLength3,
+					   TAG_ACL);
+  if (SePublicOpenDacl == NULL)
+    return(FALSE);
+
+  RtlCreateAcl(SePublicOpenDacl,
+	       AclLength3,
+	       3);
+
+  RtlAddAccessAllowedAce(SePublicOpenDacl,
+			 2,
+			 GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
+			 SeWorldSid);
+
+  RtlAddAccessAllowedAce(SePublicOpenDacl,
+			 2,
+			 GENERIC_ALL,
+			 SeLocalSystemSid);
+
+  RtlAddAccessAllowedAce(SePublicOpenDacl,
+			 2,
+			 GENERIC_ALL,
+			 SeAliasAdminsSid);
+
+
+  return(TRUE);
+}
+
 
 BOOLEAN
 STDCALL
@@ -102,8 +215,7 @@ NTSTATUS RtlpAddKnownAce(PACL Acl,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlAddAccessAllowedAce(PACL Acl,
 		       ULONG Revision,
 		       ACCESS_MASK AccessMask,
@@ -112,8 +224,7 @@ RtlAddAccessAllowedAce(PACL Acl,
    return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
 }
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlAddAce(PACL Acl,
 	  ULONG AclRevision,
 	  ULONG StartingIndex,
@@ -179,9 +290,11 @@ RtlAddAce(PACL Acl,
    return(TRUE);
 }
 
-NTSTATUS
-STDCALL
-RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision)
+
+NTSTATUS STDCALL
+RtlCreateAcl(PACL Acl,
+	     ULONG AclSize,
+	     ULONG AclRevision)
 {
    if (AclSize < 8)
      {

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.59 2002/01/14 01:41:08 ekohl Exp $
+/* $Id: rtl.h,v 1.60 2002/02/20 20:09:52 ekohl Exp $
  * 
  */
 
@@ -1779,6 +1779,9 @@ STDCALL
 RtlValidSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor
 	);
+
+BOOLEAN STDCALL
+RtlValidSid(IN PSID Sid);
 
 NTSTATUS
 STDCALL

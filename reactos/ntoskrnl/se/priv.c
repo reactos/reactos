@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.1 2000/01/26 10:07:30 dwelch Exp $
+/* $Id: priv.c,v 1.2 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,10 +12,68 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/se.h>
 
 #include <internal/debug.h>
 
+
+/* GLOBALS *******************************************************************/
+
+LUID SeCreateTokenPrivilege;
+LUID SeAssignPrimaryTokenPrivilege;
+LUID SeLockMemoryPrivilege;
+LUID SeIncreaseQuotaPrivilege;
+LUID SeUnsolicitedInputPrivilege;
+LUID SeTcbPrivilege;
+LUID SeSecurityPrivilege;
+LUID SeTakeOwnershipPrivilege;
+LUID SeLoadDriverPrivilege;
+LUID SeCreatePagefilePrivilege;
+LUID SeIncreaseBasePriorityPrivilege;
+LUID SeSystemProfilePrivilege;
+LUID SeSystemtimePrivilege;
+LUID SeProfileSingleProcessPrivilege;
+LUID SeCreatePermanentPrivilege;
+LUID SeBackupPrivilege;
+LUID SeRestorePrivilege;
+LUID SeShutdownPrivilege;
+LUID SeDebugPrivilege;
+LUID SeAuditPrivilege;
+LUID SeSystemEnvironmentPrivilege;
+LUID SeChangeNotifyPrivilege;
+LUID SeRemoteShutdownPrivilege;
+
+
 /* FUNCTIONS ***************************************************************/
+
+VOID
+SepInitPrivileges(VOID)
+{
+  SeCreateTokenPrivilege.QuadPart = SE_CREATE_TOKEN_PRIVILEGE;
+  SeAssignPrimaryTokenPrivilege.QuadPart = SE_ASSIGNPRIMARYTOKEN_PRIVILEGE;
+  SeLockMemoryPrivilege.QuadPart = SE_LOCK_MEMORY_PRIVILEGE;
+  SeIncreaseQuotaPrivilege.QuadPart = SE_INCREASE_QUOTA_PRIVILEGE;
+  SeUnsolicitedInputPrivilege.QuadPart = SE_UNSOLICITED_INPUT_PRIVILEGE;
+  SeTcbPrivilege.QuadPart = SE_TCB_PRIVILEGE;
+  SeSecurityPrivilege.QuadPart = SE_SECURITY_PRIVILEGE;
+  SeTakeOwnershipPrivilege.QuadPart = SE_TAKE_OWNERSHIP_PRIVILEGE;
+  SeLoadDriverPrivilege.QuadPart = SE_LOAD_DRIVER_PRIVILEGE;
+  SeSystemProfilePrivilege.QuadPart = SE_SYSTEM_PROFILE_PRIVILEGE;
+  SeSystemtimePrivilege.QuadPart = SE_SYSTEMTIME_PRIVILEGE;
+  SeProfileSingleProcessPrivilege.QuadPart = SE_PROF_SINGLE_PROCESS_PRIVILEGE;
+  SeIncreaseBasePriorityPrivilege.QuadPart = SE_INC_BASE_PRIORITY_PRIVILEGE;
+  SeCreatePagefilePrivilege.QuadPart = SE_CREATE_PAGEFILE_PRIVILEGE;
+  SeCreatePermanentPrivilege.QuadPart = SE_CREATE_PERMANENT_PRIVILEGE;
+  SeBackupPrivilege.QuadPart = SE_BACKUP_PRIVILEGE;
+  SeRestorePrivilege.QuadPart = SE_RESTORE_PRIVILEGE;
+  SeShutdownPrivilege.QuadPart = SE_SHUTDOWN_PRIVILEGE;
+  SeDebugPrivilege.QuadPart = SE_DEBUG_PRIVILEGE;
+  SeAuditPrivilege.QuadPart = SE_AUDIT_PRIVILEGE;
+  SeSystemEnvironmentPrivilege.QuadPart = SE_SYSTEM_ENVIRONMENT_PRIVILEGE;
+  SeChangeNotifyPrivilege.QuadPart = SE_CHANGE_NOTIFY_PRIVILEGE;
+  SeRemoteShutdownPrivilege.QuadPart = SE_REMOTE_SHUTDOWN_PRIVILEGE;
+}
+
 
 BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
 			  PLUID_AND_ATTRIBUTES Privileges,
@@ -122,17 +180,19 @@ NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
    memmove(*Dest, Src, SrcLength);
    return(STATUS_SUCCESS);
 }
-					 
-VOID SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
-				     KPROCESSOR_MODE PreviousMode,
-				     ULONG a)
+
+VOID
+SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
+				KPROCESSOR_MODE PreviousMode,
+				ULONG a)
 {
    ExFreePool(Privilege);
 }
 
-NTSTATUS STDCALL NtPrivilegeCheck (IN	HANDLE		ClientToken,
-				   IN	PPRIVILEGE_SET	RequiredPrivileges,  
-				   IN	PBOOLEAN	Result)
+NTSTATUS STDCALL
+NtPrivilegeCheck(IN HANDLE ClientToken,
+		 IN PPRIVILEGE_SET RequiredPrivileges,
+		 IN PBOOLEAN Result)
 {
    NTSTATUS Status;
    PACCESS_TOKEN Token;
@@ -144,7 +204,7 @@ NTSTATUS STDCALL NtPrivilegeCheck (IN	HANDLE		ClientToken,
    
    Status = ObReferenceObjectByHandle(ClientToken,
 				      0,
-				      SeTokenType,
+				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);
@@ -186,9 +246,10 @@ NTSTATUS STDCALL NtPrivilegeCheck (IN	HANDLE		ClientToken,
    return(STATUS_SUCCESS);
 }
 
-BOOLEAN STDCALL SePrivilegeCheck(PPRIVILEGE_SET Privileges,
-			 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-			 KPROCESSOR_MODE PreviousMode)
+BOOLEAN STDCALL
+SePrivilegeCheck(PPRIVILEGE_SET Privileges,
+		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
+		 KPROCESSOR_MODE PreviousMode)
 {
    PACCESS_TOKEN Token = NULL;
    
@@ -209,11 +270,12 @@ BOOLEAN STDCALL SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 			    Privileges->Privilege,
 			    Privileges->PrivilegeCount,
 			    Privileges->Control,
-			    PreviousMode));			    
+			    PreviousMode));
 }
 
-BOOLEAN STDCALL SeSinglePrivilegeCheck(LUID PrivilegeValue,
-			       KPROCESSOR_MODE PreviousMode)
+BOOLEAN STDCALL
+SeSinglePrivilegeCheck(LUID PrivilegeValue,
+		       KPROCESSOR_MODE PreviousMode)
 {
    SECURITY_SUBJECT_CONTEXT SubjectContext;
    BOOLEAN r;

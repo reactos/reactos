@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.113 2002/02/19 00:09:21 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.114 2002/02/20 20:16:49 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -344,7 +344,7 @@ KeGetPreviousMode=KeGetPreviousMode@0
 ;KeI386Call16BitFunction
 ;KeI386FlatToGdtSelector
 ;KeI386GetLid
-;KeI386MachineType
+;KeI386MachineType DATA
 ;KeI386ReleaseGdtSelectors
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
@@ -828,7 +828,7 @@ SeCreateClientSecurity=SeCreateClientSecurity@16
 SeDeassignSecurity=SeDeassignSecurity@4
 ;SeDeleteAccessState=SeDeleteAccessState@4
 ;SeDeleteObjectAuditAlarm=SeDeleteObjectAuditAlarm@8
-;SeExports DATA
+SeExports DATA
 ;SeFreePrivileges=SeFreePrivileges@4
 SeImpersonateClient=SeImpersonateClient@8
 ;SeLockSubjectContext=SeLockSubjectContext@4
@@ -837,7 +837,7 @@ SeImpersonateClient=SeImpersonateClient@8
 ;SeOpenObjectForDeleteAuditAlarm=SeOpenObjectForDeleteAuditAlarm@36
 SePrivilegeCheck=SePrivilegeCheck@12
 ;SePrivilegeObjectAuditAlarm=SePrivilegeObjectAuditAlarm@24
-;SePublicDefaultDacl DATA
+SePublicDefaultDacl DATA
 ;SeQueryAuthenticationIdToken=SeQueryAuthenticationIdToken@8
 ;SeQuerySecurityDescriptorInfo=SeQuerySecurityDescriptorInfo@16
 ;SeRegisterLogonSessionTerminatedRoutine=SeRegisterLogonSessionTerminatedRoutine@4
@@ -846,9 +846,9 @@ SeReleaseSubjectContext=SeReleaseSubjectContext@4
 ;SeSetAccessStateGenericMapping=SeSetAccessStateGenericMapping@8
 ;SeSetSecurityDescriptorInfo=SeSetSecurityDescriptorInfo@24
 ;SeSinglePrivilegeCheck=SeSinglePrivilegeCheck@12
-;SeSystemDefaultDacl DATA
+SeSystemDefaultDacl DATA
 ;SeTokenImpersonationLevel=SeTokenImpersonationLevel@4
-SeTokenType DATA
+SeTokenType=SeTokenType@4
 ;SeUnlockSubjectContext=SeUnlockSubjectContext@4
 ;SeUnregisterLogonSessionTerminatedRoutine=SeUnregisterLogonSessionTerminatedRoutine@4
 ;SeValidSecurityDescriptor=SeValidSecurityDescriptor@8

@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.3 1999/12/29 01:36:06 ekohl Exp $
+/* $Id: luid.c,v 1.4 2002/02/20 20:15:38 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -23,37 +23,47 @@ static LUID Luid;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtAllocateLocallyUniqueId(OUT LUID* LocallyUniqueId)
-{
-   KIRQL oldIrql;
-   LUID ReturnedLuid;
-   
-   KeAcquireSpinLock(&LuidLock, &oldIrql);
-   ReturnedLuid = Luid;
-   Luid = RtlLargeIntegerAdd(Luid, LuidIncrement);
-   KeReleaseSpinLock(&LuidLock, oldIrql);
-   *LocallyUniqueId = ReturnedLuid;
-   return(STATUS_SUCCESS);
-}
-
 VOID
-STDCALL
-RtlCopyLuid (
-	PLUID LuidDest,
-	PLUID LuidSrc
-	)
+SepInitLuid(VOID)
 {
-	LuidDest->QuadPart = LuidSrc->QuadPart;
+  KeInitializeSpinLock(&LuidLock);
+  Luid.QuadPart = 999;   /* SYSTEM_LUID */
+  LuidIncrement.QuadPart = 1;
 }
 
-BOOLEAN
-STDCALL
-RtlEqualLuid (
-	PLUID	Luid1,
-	PLUID	Luid2
-	)
+
+NTSTATUS STDCALL
+NtAllocateLocallyUniqueId(OUT LUID* LocallyUniqueId)
 {
-	return ((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
+  KIRQL oldIrql;
+  LUID ReturnedLuid;
+
+  KeAcquireSpinLock(&LuidLock,
+		    &oldIrql);
+  ReturnedLuid = Luid;
+  Luid = RtlLargeIntegerAdd(Luid,
+			    LuidIncrement);
+  KeReleaseSpinLock(&LuidLock,
+		    oldIrql);
+  *LocallyUniqueId = ReturnedLuid;
+
+  return(STATUS_SUCCESS);
+}
+
+
+VOID STDCALL
+RtlCopyLuid(IN PLUID LuidDest,
+	    IN PLUID LuidSrc)
+{
+  LuidDest->QuadPart = LuidSrc->QuadPart;
+}
+
+
+BOOLEAN STDCALL
+RtlEqualLuid(IN PLUID Luid1,
+	     IN PLUID Luid2)
+{
+  return((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.127 2002/02/19 00:09:21 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.128 2002/02/20 20:16:49 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -344,7 +344,7 @@ KeGetPreviousMode@0
 ;KeI386Call16BitFunction
 ;KeI386FlatToGdtSelector
 ;KeI386GetLid
-;KeI386MachineType
+;KeI386MachineType DATA
 ;KeI386ReleaseGdtSelectors
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
@@ -829,7 +829,7 @@ SeCreateClientSecurity@16
 SeDeassignSecurity@4
 ;SeDeleteAccessState@4
 ;SeDeleteObjectAuditAlarm@8
-;SeExports DATA ???
+SeExports DATA
 ;SeFreePrivileges@4
 SeImpersonateClient@8
 ;SeLockSubjectContext@4
@@ -838,7 +838,7 @@ SeImpersonateClient@8
 ;SeOpenObjectForDeleteAuditAlarm@36
 SePrivilegeCheck@12
 ;SePrivilegeObjectAuditAlarm@24
-;SePublicDefaultDacl DATA
+SePublicDefaultDacl DATA
 ;SeQueryAuthenticationIdToken@8
 ;SeQuerySecurityDescriptorInfo@16
 ;SeRegisterLogonSessionTerminatedRoutine@4
@@ -847,9 +847,9 @@ SeReleaseSubjectContext@4
 ;SeSetAccessStateGenericMapping@8
 ;SeSetSecurityDescriptorInfo@24
 ;SeSinglePrivilegeCheck@12
-;SeSystemDefaultDacl DATA
+SeSystemDefaultDacl DATA
 ;SeTokenImpersonationLevel@4
-SeTokenType DATA
+SeTokenType@4
 ;SeUnlockSubjectContext@4
 ;SeUnregisterLogonSessionTerminatedRoutine@4
 ;SeValidSecurityDescriptor@8

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.77 2002/02/08 02:57:07 chorns Exp $
+/* $Id: process.c,v 1.78 2002/02/20 20:15:07 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/mm.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <internal/se.h>
 #include <internal/id.h>
 #include <napi/teb.h>
 #include <internal/ldr.h>
@@ -132,7 +133,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,
 			      TOKEN_ALL_ACCESS,
-			      SeTokenType,
+			      SepTokenObjectType,
 			      UserMode);
    return(Process->Token);
 }
@@ -863,7 +864,7 @@ PspAssignPrimaryToken(PEPROCESS Process,
    
    Status = ObReferenceObjectByHandle(TokenHandle,
 				      0,
-				      SeTokenType,
+				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);

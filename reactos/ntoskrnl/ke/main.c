@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.113 2002/02/08 02:57:06 chorns Exp $
+/* $Id: main.c,v 1.114 2002/02/20 20:14:22 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -40,13 +40,14 @@
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/cc.h>
-//#include <internal/se.h>
+#include <internal/se.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
 #include <internal/trap.h>
 #include "../dbg/kdb.h"
 #include <internal/registry.h>
+#include <reactos/bugcodes.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -959,6 +960,9 @@ ExpInitializeExecutive(VOID)
   
   KeLowerIrql(PASSIVE_LEVEL);
 
+  if (!SeInit1())
+    KeBugCheck(SECURITY_INITIALIZATION_FAILED);
+
   ObInit();
   PiInitProcessManager();
 
@@ -1169,6 +1173,9 @@ ExpInitializeExecutive(VOID)
    *  - set dos system path, dos device map, etc.
    */
   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
+
+  if (!SeInit2())
+    KeBugCheck(SECURITY1_INITIALIZATION_FAILED);
 
   /*
    *  Launch initial process
