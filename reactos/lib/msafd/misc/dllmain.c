@@ -621,7 +621,10 @@ WSPAccept(
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
 
-	if( !NT_SUCCESS(Status) ) return -1;
+	if( !NT_SUCCESS(Status) ) {
+		MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+		return INVALID_SOCKET;
+	}
 
 	/* Dynamic Structure...ugh */
 	ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
@@ -651,6 +654,18 @@ WSPAccept(
 					ListenReceiveData,
 					0xA + sizeof(*ListenReceiveData));
 	
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
+	}
+
+	if (!NT_SUCCESS(Status)) {
+		NtClose( SockEvent );
+		MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+		return INVALID_SOCKET;
+	}
+
 	if (lpfnCondition != NULL) {
 		if ((Socket->SharedData.ServiceFlags1 & XP1_CONNECT_DATA) != 0) {
 			/* Find out how much data is pending */
@@ -668,6 +683,12 @@ WSPAccept(
 							sizeof(PendingAcceptData),
 							&PendingAcceptData,
 							sizeof(PendingAcceptData));
+
+			if (!NT_SUCCESS(Status)) {
+				NtClose( SockEvent );
+				MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+				return INVALID_SOCKET;
+			}
 
 			/* How much data to allocate */
 			PendingDataLength = IOSB.Information;
@@ -690,6 +711,12 @@ WSPAccept(
 								sizeof(PendingAcceptData),
 								PendingData,
 								PendingDataLength);
+
+				if (!NT_SUCCESS(Status)) {
+					NtClose( SockEvent );
+					MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+					return INVALID_SOCKET;
+				}
 			}
 		}
 
@@ -773,10 +800,17 @@ WSPAccept(
 
 			NtClose( SockEvent );
 
+			if (!NT_SUCCESS(Status)) {
+				MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+				return INVALID_SOCKET;
+			}
+
 			if (CallBack == CF_REJECT ) {
-				return WSAECONNREFUSED;
+				*lpErrno = WSAECONNREFUSED;
+				return INVALID_SOCKET;
 			} else {
-				return WSATRY_AGAIN;
+				*lpErrno = WSAECONNREFUSED;
+				return INVALID_SOCKET;
 			}
 		}
 	}
@@ -810,6 +844,12 @@ WSPAccept(
 					NULL,
 					0);
 	
+	if (!NT_SUCCESS(Status)) {
+		WSPCloseSocket( AcceptSocket, lpErrno );
+		MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+		return INVALID_SOCKET;
+	}
+
 	/* Return Address in SOCKADDR FORMAT */
 	RtlCopyMemory (SocketAddress, 
 					&ListenReceiveData->Address.Address[0].AddressType, 
@@ -842,7 +882,7 @@ WSPConnect(
 	UCHAR						ConnectBuffer[0x22];
 	ULONG						ConnectDataLength;
 	ULONG						InConnectDataLength;
-	UINT						BindAddressLength;
+	INT						BindAddressLength;
 	PSOCKADDR					BindAddress;
 	HANDLE                                  SockEvent;
 
