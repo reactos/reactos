@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.3 2004/08/22 02:15:57 arty Exp $
+/* $Id: read.c,v 1.4 2004/08/22 18:42:42 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -76,6 +76,9 @@ NTSTATUS DDKAPI ReceiveComplete
     AFD_DbgPrint(MID_TRACE,("Called\n"));
     
     if( !SocketAcquireStateLock( FCB ) ) return Status;
+
+    /* Reset in flight request because the last has been completed */
+    FCB->ReceiveIrp.InFlightRequest = NULL;
     
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	/* Update the receive window */
@@ -120,7 +123,7 @@ NTSTATUS DDKAPI ReceiveComplete
 	    }
 	}
 
-	if( FCB->Recv.Window && !FCB->Recv.Content ) {
+	if( NT_SUCCESS(Status) && FCB->Recv.Window && !FCB->Recv.Content ) {
 	    AFD_DbgPrint(MID_TRACE,
 			 ("Exhausted our buffer.  Requesting new: %x\n", FCB));
 
@@ -180,9 +183,27 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					RecvReq->BufferCount,
 					TRUE );
 
-    Status = TryToSatisfyRecvRequestFromBuffer
-	( FCB, RecvReq, &TotalBytesCopied );
+    /* Launch a new recv request if we have no data */
 
+    if( FCB->Recv.Window && !(FCB->Recv.Content - FCB->Recv.BytesUsed) && 
+	!FCB->ReceiveIrp.InFlightRequest ) {
+	FCB->Recv.Content = 0;
+	FCB->Recv.BytesUsed = 0;
+	AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
+	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+			     FCB->Connection.Object,
+			     TDI_RECEIVE_NORMAL,
+			     FCB->Recv.Window,
+			     FCB->Recv.Size,
+			     &FCB->ReceiveIrp.Iosb,
+			     ReceiveComplete,
+			     FCB );
+    } else Status = STATUS_SUCCESS;
+
+    if( NT_SUCCESS(Status) ) 
+	Status = TryToSatisfyRecvRequestFromBuffer
+	    ( FCB, RecvReq, &TotalBytesCopied );
+    
     if( Status != STATUS_PENDING ) {
 	UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 

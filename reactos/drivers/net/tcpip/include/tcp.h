@@ -7,6 +7,9 @@
 #ifndef __TCP_H
 #define __TCP_H
 
+typedef VOID 
+(*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
+
 /* TCPv4 header structure */
 typedef struct TCPv4_HEADER {
   USHORT SourcePort;        /* Source port */

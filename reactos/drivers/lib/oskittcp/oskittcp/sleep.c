@@ -77,6 +77,10 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
 	flags |= SEL_READ;
     }
+    if( so->so_state & SS_CANTRCVMORE ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket can't be read any longer\n"));
+	flags |= SEL_FIN;
+    }
 
     OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x (socket %x, state %x)!\n",
 			       token, so,

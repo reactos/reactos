@@ -541,8 +541,12 @@ soreceive(so, paddr, uio, _mp0, controlp, flagsp)
     if( mp0->m_len == 0 )
 	return 0;
 
-    if( so->so_rcv.sb_cc == 0 && so->so_rcv.sb_sel.si_flags & SEL_FIN )
+    if( so->so_rcv.sb_cc == 0 && 
+	/*so->so_rcv.sb_sel.si_flags & SEL_FIN*/
+	(so->so_state & SS_CANTRCVMORE) ) {
+	OS_DbgPrint(OSK_MID_TRACE, ("Receive: SEL_FIN\n"));
 	return OSK_ESHUTDOWN;
+    }
 
     while( mb->m_nextpkt && total < mp0->m_len ) {
 	OS_DbgPrint(OSK_MID_TRACE, ("Looking at packet %x\n", mb));
@@ -601,7 +605,7 @@ soreceive(so, paddr, uio, _mp0, controlp, flagsp)
 
     uio->uio_resid = total;
 
-    OS_DbgPrint(OSK_MID_TRACE,("Leaving (success)\n"));
+    OS_DbgPrint(OSK_MID_TRACE,("Leaving (success: %d bytes)\n", total));
 
     return 0;
 }

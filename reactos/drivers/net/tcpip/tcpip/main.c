@@ -9,7 +9,7 @@
  */
 #include "precomp.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -494,6 +494,7 @@ TiDispatchInternal(
   switch (IrpSp->MinorFunction) {
   case TDI_RECEIVE:
     Status = DispTdiReceive(Irp);
+    Complete = FALSE;
     break;
 
   case TDI_RECEIVE_DATAGRAM:
@@ -519,6 +520,7 @@ TiDispatchInternal(
 
   case TDI_CONNECT:
     Status = DispTdiConnect(Irp);
+    Complete = FALSE; /* Completed by the TCP event handler */
     break;
 
   case TDI_DISCONNECT:

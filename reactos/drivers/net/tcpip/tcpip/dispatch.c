@@ -220,7 +220,7 @@ VOID DispDataRequestComplete(
 			    Irp->IoStatus.Information));
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-    IRPFinish(Irp, STATUS_SUCCESS);
+    IRPFinish(Irp, Irp->IoStatus.Status);
 }
 
 

@@ -402,9 +402,13 @@ m_copydata(m, off, len, cp)
 		if (m == 0)
 			panic("m_copydata");
 		count = min(m->m_len - off, len);
+#ifdef __REACTOS__
+		memcpy(cp, mtod(m, caddr_t) + off, count);
+#else
 		bcopy(mtod(m, caddr_t) + off, cp, count);
-		OS_DbgPrint(OSK_MID_TRACE,("buf %x, len %d\n", m, m->m_len));
-		OskitDumpBuffer(m->m_data, m->m_len);
+#endif
+		OS_DbgPrint(OSK_MID_TRACE,("buf %x, len %d\n", m, count));
+		OskitDumpBuffer(m->m_data, count);
 		len -= count;
 		cp += count;
 		off = 0;

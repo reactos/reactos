@@ -12,9 +12,6 @@
 
 extern ULONG TCP_IPIdentification;
 
-typedef VOID 
-(*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
-
 int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
 		   void *WhichConnection,
@@ -44,7 +41,7 @@ int TCPSocketState(void *ClientData,
 	    /* Frees the bucket allocated in TCPConnect */
 	    ExFreePool( Bucket );
 	}
-    } else if( NewState & SEL_READ ) {
+    } else if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
 	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
 	    PIRP Irp;
 	    OSK_UINT RecvLen = 0, Received = 0;
@@ -71,12 +68,16 @@ int TCPSocketState(void *ClientData,
 	    TI_DbgPrint(MID_TRACE,
 			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
 
-	    Status = TCPTranslateError
-		( OskitTCPRecv( Connection->SocketContext,
-				RecvBuffer,
-				RecvLen,
-				&Received,
-				0 ) );
+	    if( NewState & SEL_FIN ) {
+		Status = STATUS_END_OF_FILE;
+		Received = 0;
+	    } else 
+		Status = TCPTranslateError
+		    ( OskitTCPRecv( Connection->SocketContext,
+				    RecvBuffer,
+				    RecvLen,
+				    &Received,
+				    0 ) );
 
 	    TI_DbgPrint(MID_TRACE,("TCP Bytes: %d\n", Received));
 
@@ -96,7 +97,7 @@ int TCPSocketState(void *ClientData,
 				&Bucket->Entry );
 	    }
 	}
-    }
+    } 
 
     return 0;
 }

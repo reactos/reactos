@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2004/07/29 04:10:53 arty Exp $
+/* $Id: main.c,v 1.5 2004/08/22 18:42:42 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -22,7 +22,8 @@
 extern NTSTATUS DDKAPI MmCopyFromCaller( PVOID Dst, PVOID Src, UINT Size );
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = 0;
 
 #endif /* DBG */
 
@@ -163,6 +164,8 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
 	NTSTATUS Status = STATUS_NO_SUCH_FILE;
 	if( InFlightRequest[i]->InFlightRequest ) {
+	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
+				    i, InFlightRequest[i]->InFlightRequest));
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
 	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );

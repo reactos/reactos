@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.3 2004/08/22 02:15:57 arty Exp $
+/* $Id: write.c,v 1.4 2004/08/22 18:42:42 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -31,6 +31,9 @@ NTSTATUS DDKAPI SendComplete
 			    Irp->IoStatus.Information));
 
     if( !SocketAcquireStateLock( FCB ) ) return Status;
+
+    FCB->SendIrp.InFlightRequest = NULL; 
+    /* Request is not in flight any longer */
 
     if( !NT_SUCCESS(Status) ) {
 	/* Complete all following send IRPs with error */
@@ -119,8 +122,6 @@ NTSTATUS DDKAPI SendComplete
 	if( Status == STATUS_PENDING )
 	    Status = STATUS_SUCCESS;
 
-	SocketStateUnlock( FCB );
-
 	AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 	
 	return UnlockAndMaybeComplete( FCB, Status, Irp, TotalBytesCopied, 
@@ -130,9 +131,9 @@ NTSTATUS DDKAPI SendComplete
 				NextIrp));
 	InsertHeadList( &FCB->PendingIrpList[FUNCTION_SEND],
 			&Irp->Tail.Overlay.ListEntry );
-
-	SocketStateUnlock( FCB );
     }
+
+    SocketStateUnlock( FCB );
 	
     return STATUS_SUCCESS;
 }

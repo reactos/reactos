@@ -111,7 +111,7 @@ NTSTATUS TCPTranslateError( int OskitError ) {
 
     switch( OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
-	/*case OAK_EADDRNOTAVAIL: */
+    case OSK_EADDRNOTAVAIL:
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED:
     case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
@@ -260,6 +260,8 @@ NTSTATUS TCPReceiveData
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
 
+    TI_DbgPrint(MID_TRACE,("Called for %d bytes\n", ReceiveLength));
+
     Connection = Request->Handle.ConnectionContext;
 
     KeAcquireSpinLock(&Connection->Lock, &OldIrql);
@@ -274,10 +276,13 @@ NTSTATUS TCPReceiveData
 	    DataBuffer,
 	    DataLen,
 	    &Received,
-	    ReceiveFlags ) );    
+	    ReceiveFlags ) );
+
+    TI_DbgPrint(MID_TRACE,("OskitTCPReceive: %x, %d\n", Status, Received));
 
     /* Keep this request around ... there was no data yet */
-    if( Status == STATUS_PENDING || Received == 0 ) {
+    if( Status == STATUS_PENDING || 
+	(Status == STATUS_SUCCESS && Received == 0) ) {
 	/* Freed in TCPSocketState */
 	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
 	if( !Bucket ) return STATUS_NO_MEMORY;
@@ -285,6 +290,8 @@ NTSTATUS TCPReceiveData
 	Bucket->Request = *Request;
 	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
 	Status = STATUS_PENDING;
+    } else {
+	TI_DbgPrint(MID_TRACE,("Got status %x, bytes %d\n", Status, Received));
     }
 
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
