@@ -671,12 +671,13 @@ IntCreatePrimarySurface()
       return FALSE;
    }
 
+   PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, TRUE);
+
    /* attach monitor */
    IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
    SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
    SurfObj->dhpdev = PrimarySurface.PDev;
-   SurfSize = SurfObj->sizlBitmap;
    SurfSize = SurfObj->sizlBitmap;
    SurfaceRect.left = SurfaceRect.top = 0;
    SurfaceRect.right = SurfObj->sizlBitmap.cx;
@@ -760,7 +761,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (Driver != NULL && Driver->Buffer != NULL)
   {
-    DPRINT("NAME: %ws\n", Driver); // FIXME: Should not crash if NULL
+    DPRINT("NAME: %wZ\n", Driver); // FIXME: Should not crash if NULL
   }
 
   /*  Allocate a DC object  */
