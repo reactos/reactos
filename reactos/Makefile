@@ -34,7 +34,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = vidport vga blue ide keyboard null parallel serial
+DEVICE_DRIVERS = vidport vga blue ide keyboard null parallel serial floppy
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
 
 FS_DRIVERS = vfat
@@ -47,7 +47,7 @@ KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
        pteb consume
-       
+
 #       objdir
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
@@ -56,7 +56,7 @@ all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APP
 
 clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
        $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(APPS:%=%_clean)
-       
+
 .PHONY: clean
 
 floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
@@ -125,8 +125,8 @@ iface_additional_dist:
 
 .PHONY: iface_native iface_native_clean iface_native_floppy \
         iface_native_dist \
-	iface_additional iface_additional_clean iface_additional_floppy \
-        iface_additional_dist \
+        iface_additional iface_additional_clean iface_additional_floppy \
+        iface_additional_dist
 
 #
 # Device driver rules
@@ -167,8 +167,14 @@ $(NET_DRIVERS): %:
 $(NET_DRIVERS:%=%_clean): %_clean:
 	make -C services/net/$* clean
 
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean)
+$(NET_DRIVERS:%=%_floppy): %_floppy:
+	make -C services/net/$* floppy
 
+$(NET_DRIVERS:%=%_dist): %_dist:
+	make -C services/net/$* dist
+
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_floppy) \
+        $(NET_DRIVERS:%=%_dist)
 
 #
 # Kernel loaders
@@ -228,6 +234,7 @@ $(DLLS:%=%_dist): %_dist:
 #
 # Kernel Subsystems
 #
+
 $(SUBSYS): %:
 	make -C subsys/$*
 
@@ -313,3 +320,5 @@ endif
 #
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -
+
+# EOF

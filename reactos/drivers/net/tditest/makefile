@@ -73,9 +73,9 @@ dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
 else
-	$(CP) $(TARGETNAME).sys ../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 endif
 
 #WITH_DEBUGGING      = yes

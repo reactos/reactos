@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000/08/05 18:01:56 dwelch Exp $
+# $Id: Makefile,v 1.7 2000/08/08 17:41:25 ekohl Exp $
 #
 # TDI.SYS build spec
 #
@@ -101,9 +101,9 @@ dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
 else
-	$(CP) $(TARGETNAME).sys ../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 endif
 
 #WITH_DEBUGGING = yes
