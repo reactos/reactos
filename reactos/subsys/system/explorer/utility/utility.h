@@ -145,6 +145,9 @@ extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
  // call an DLL export like rundll32
 BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
 
+ // create a directory with all missing parent directories
+BOOL RecursiveCreateDirectory(LPCTSTR path_in);
+
 
 #ifdef __cplusplus
 } // extern "C"

@@ -262,3 +262,57 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 
 	return TRUE;
 }
+
+
+BOOL RecursiveCreateDirectory(LPCTSTR path_in)
+{
+	TCHAR drive[_MAX_DRIVE], path[MAX_PATH], hole_path[MAX_PATH];
+
+	_tcscpy(hole_path, path_in);
+
+	_tsplitpath(hole_path, drive, NULL, NULL, NULL);
+	LPTSTR dir = hole_path + _tcslen(drive);
+
+	int l;
+	LPTSTR p = hole_path + (l=_tcslen(hole_path));
+
+	while(--p>=hole_path && (*p=='/' || *p=='\\'))
+		*p = '\0';
+
+	WIN32_FIND_DATA w32fd;
+
+	HANDLE hFind = FindFirstFile(hole_path, &w32fd);
+
+	if (hFind == INVALID_HANDLE_VALUE) {
+		int i;
+
+		_tcscpy(path, drive);
+		i = _tcslen(path);
+
+		for(p=dir; *p=='/'||*p=='\\'; p++)
+			path[i++-1] = *p++;
+
+		for(; i<l; i++) {
+			memcpy(path, hole_path, i);
+
+			for(; hole_path[i] && hole_path[i]!='/' && hole_path[i]!='\\'; i++)
+				path[i] = hole_path[i];
+
+			path[i] = '\0';
+
+			if (i >= l)
+				break;
+
+			hFind = FindFirstFile(path, &w32fd);
+
+			if (hFind != INVALID_HANDLE_VALUE)
+				FindClose(hFind);
+			else
+				if (!CreateDirectory(path, 0))
+					return FALSE;
+		}
+	} else
+		FindClose(hFind);
+
+	return TRUE;
+}
