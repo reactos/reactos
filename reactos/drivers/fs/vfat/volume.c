@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.14 2001/11/02 22:47:36 hbirr Exp $
+/* $Id: volume.c,v 1.15 2002/03/18 22:37:13 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,29 +62,39 @@ FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
-FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
+FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
+			     PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
 			     PULONG BufferLength)
 {
+  ULONG Length = DeviceExt->FatInfo.FatType == FAT32 ? 10 : 6;
+
   DPRINT("FsdGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
-  DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length));
 
   if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
-  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6))
+  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length))
     return STATUS_BUFFER_OVERFLOW;
 
   FsAttributeInfo->FileSystemAttributes =
     FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
   FsAttributeInfo->MaximumComponentNameLength = 255;
-  FsAttributeInfo->FileSystemNameLength = 6;
-  wcscpy(FsAttributeInfo->FileSystemName, L"FAT");
+  FsAttributeInfo->FileSystemNameLength = Length;
+  if (DeviceExt->FatInfo.FatType == FAT32)
+  {
+    memcpy(FsAttributeInfo->FileSystemName, L"FAT32", 10);
+  }
+  else
+  {
+    memcpy(FsAttributeInfo->FileSystemName, L"FAT", 6);
+  }
 
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
 
-  *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6);
+  *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length);
   DPRINT("BufferLength %lu\n", *BufferLength);
 
   return(STATUS_SUCCESS);
@@ -106,35 +116,11 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
     return(STATUS_BUFFER_OVERFLOW);
 
   DeviceExt = DeviceObject->DeviceExtension;
+  Status = CountAvailableClusters(DeviceExt, &FsSizeInfo->AvailableAllocationUnits);
 
-  if (DeviceExt->FatType == FAT32)
-    {
-      struct _BootSector32 *BootSect =
-	(struct _BootSector32 *) DeviceExt->Boot;
-
-      FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
-
-      Status = FAT32CountAvailableClusters(DeviceExt,
-					   &FsSizeInfo->AvailableAllocationUnits);
-
-      FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
-      FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
-    }
-  else
-    {
-      struct _BootSector *BootSect = (struct _BootSector *) DeviceExt->Boot;
-
-      FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
-
-      if (DeviceExt->FatType == FAT16)
-	Status = FAT16CountAvailableClusters(DeviceExt,
-					     &FsSizeInfo->AvailableAllocationUnits);
-      else
-	Status = FAT12CountAvailableClusters(DeviceExt,
-					     &FsSizeInfo->AvailableAllocationUnits);
-      FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
-      FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
-    }
+  FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->FatInfo.NumberOfClusters;
+  FsSizeInfo->SectorsPerAllocationUnit = DeviceExt->FatInfo.SectorsPerCluster;
+  FsSizeInfo->BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
 
   DPRINT("Finished FsdGetFsSizeInformation()\n");
   if (NT_SUCCESS(Status))
@@ -216,7 +202,8 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
       break;
 
     case FileFsAttributeInformation:
-      RC = FsdGetFsAttributeInformation(SystemBuffer,
+      RC = FsdGetFsAttributeInformation(IrpContext->DeviceObject->DeviceExtension,
+					SystemBuffer,
 					&BufferLength);
       break;
 

@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.5 2001/10/10 22:14:34 hbirr Exp $
+/* $Id: direntry.c,v 1.6 2002/03/18 22:37:12 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -20,11 +20,11 @@
 
 #include "vfat.h"
 
-#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->BytesPerCluster > PAGESIZE ? \
-		   (pDeviceExt)->BytesPerCluster : PAGESIZE)
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGESIZE)
 
 #define  ENTRIES_PER_CACHEPAGE(pDeviceExt)  (ENTRIES_PER_SECTOR * \
-		   (CACHEPAGESIZE(pDeviceExt) / ((pDeviceExt)->BytesPerSector)))
+		   (CACHEPAGESIZE(pDeviceExt) / ((pDeviceExt)->FatInfo.BytesPerSector)))
 
 
 ULONG 
@@ -33,7 +33,7 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
 {
   ULONG  cluster;
 
-  if (pDeviceExt->FatType == FAT32)
+  if (pDeviceExt->FatInfo.FatType == FAT32)
   {
     cluster = pFatDirEntry->FirstCluster + 
       pFatDirEntry->FirstClusterHigh * 65536;

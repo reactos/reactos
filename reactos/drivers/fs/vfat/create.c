@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.38 2002/02/08 02:57:09 chorns Exp $
+/* $Id: create.c,v 1.39 2002/03/18 22:37:12 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -220,80 +220,60 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
  * FUNCTION: Read the volume label
  */
 {
-  ULONG i = 0;
-  ULONG j;
-  ULONG Size;
-  char *block;
-  ULONG StartingSector;
-  ULONG NextCluster;
-  NTSTATUS Status;
+  PVOID Context = NULL;
+  ULONG Offset = 0;
+  ULONG DirIndex = 0;
+  FATDirEntry* Entry;
+  PVFATFCB pFcb;
+  LARGE_INTEGER FileOffset;
 
-  Size = DeviceExt->rootDirectorySectors;      /* FIXME : in fat32, no limit */
-  StartingSector = DeviceExt->rootStart;
-  NextCluster = 0;
-
-  block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-  DPRINT ("ReadVolumeLabel : start at sector %lx, entry %ld\n", StartingSector, i);
-  for (j = 0; j < Size; j++)
-    {
-      /* FIXME: Check status */
-      Status = VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
-      if (!NT_SUCCESS(Status))
-	{
-	  *(Vpb->VolumeLabel) = 0;
-	  Vpb->VolumeLabelLength = 0;
-	  ExFreePool(block);
-	  return(Status);
-	}
-
-      for (i = 0; i < ENTRIES_PER_SECTOR; i++)
-	{
-	  if (IsVolEntry ((PVOID) block, i))
-	    {
-	      FATDirEntry *test = (FATDirEntry *) block;
-
-	      /* copy volume label */
-	      vfat8Dot3ToVolumeLabel (test[i].Filename, test[i].Ext, Vpb->VolumeLabel);
-	      Vpb->VolumeLabelLength = wcslen (Vpb->VolumeLabel);
-
-	      ExFreePool (block);
-	      return (STATUS_SUCCESS);
-	    }
-	  if (IsLastEntry ((PVOID) block, i))
-	    {
-	      *(Vpb->VolumeLabel) = 0;
-	      Vpb->VolumeLabelLength = 0;
-	      ExFreePool (block);
-	      return (STATUS_UNSUCCESSFUL);
-	    }
-	}
-      /* not found in this sector, try next : */
-
-      /* directory can be fragmented although it is best to keep them
-         unfragmented.*/
-      StartingSector++;
-
-      if (DeviceExt->FatType == FAT32)
-	{
-	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
-	    {
-	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster,
-				       FALSE);
-	      if (NextCluster == 0 || NextCluster == 0xffffffff)
-		{
-		  *(Vpb->VolumeLabel) = 0;
-		  Vpb->VolumeLabelLength = 0;
-		  ExFreePool (block);
-		  return (STATUS_UNSUCCESSFUL);
-		}
-	      StartingSector = ClusterToSector (DeviceExt, NextCluster);
-	    }
-	}
-    }
   *(Vpb->VolumeLabel) = 0;
   Vpb->VolumeLabelLength = 0;
-  ExFreePool (block);
-  return (STATUS_UNSUCCESSFUL);
+
+  pFcb = vfatOpenRootFCB (DeviceExt);
+
+  while (TRUE)
+  {
+    if (Context == NULL || Offset == ENTRIES_PER_PAGE)
+    {
+      if (Offset == ENTRIES_PER_PAGE)
+      {
+        Offset = 0;
+      }
+      if (Context)
+      {
+        CcUnpinData(Context);
+      }
+      FileOffset.u.HighPart = 0;
+      FileOffset.u.LowPart = (DirIndex - Offset) * sizeof(FATDirEntry);
+      if (!CcMapData(pFcb->FileObject, &FileOffset, PAGESIZE, TRUE, &Context, (PVOID*)&Entry))
+      {
+        Context = NULL;
+        break;
+      }
+    }
+    if (IsVolEntry(Entry, Offset))
+    {
+      /* copy volume label */
+      vfat8Dot3ToVolumeLabel (Entry[Offset].Filename, Entry[Offset].Ext, Vpb->VolumeLabel);
+      Vpb->VolumeLabelLength = wcslen (Vpb->VolumeLabel) * sizeof(WCHAR);
+      break;
+    }
+    if (IsLastEntry(Entry, Offset))
+    {
+      break;
+    }
+    Offset++;
+    DirIndex++;
+  }
+
+  if (Context)
+  {
+    CcUnpinData(Context);
+  }
+  vfatReleaseFCB (DeviceExt, pFcb);
+
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -336,9 +316,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   if (Parent)
   {
     FirstCluster = vfatDirEntryGetFirstCluster(DeviceExt, &Parent->entry);
-    if (DeviceExt->FatType == FAT32)
+    if (DeviceExt->FatInfo.FatType == FAT32)
     {
-      if (FirstCluster == ((struct _BootSector32*)(DeviceExt->Boot))->RootCluster)
+      if (FirstCluster == DeviceExt->FatInfo.RootCluster)
         isRoot = TRUE;
     }
     else
@@ -351,8 +331,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
     isRoot = TRUE;
   if (isRoot)
   {
-    if (DeviceExt->FatType == FAT32)
-      FirstCluster = ((struct _BootSector32*)(DeviceExt->Boot))->RootCluster;
+    if (DeviceExt->FatInfo.FatType == FAT32)
+      FirstCluster = DeviceExt->FatInfo.RootCluster;
     else
       FirstCluster = 1;
 
@@ -366,9 +346,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	  CHECKPOINT;
 	  Fcb->PathName[0]='\\';
 	  Fcb->ObjectName = &Fcb->PathName[1];
-	  Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
+	  Fcb->entry.FileSize = DeviceExt->FatInfo.rootDirectorySectors * BLOCKSIZE;
 	  Fcb->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
-	  if (DeviceExt->FatType == FAT32)
+	  if (DeviceExt->FatInfo.FatType == FAT32)
       {
 	    Fcb->entry.FirstCluster = ((PUSHORT)FirstCluster)[0];
         Fcb->entry.FirstClusterHigh = ((PUSHORT)FirstCluster)[1];
@@ -630,7 +610,11 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       Irp->IoStatus.Status = Status;
       return Status;
     }
-
+  if (Status == STATUS_INVALID_PARAMETER)
+    {
+      Irp->IoStatus.Status = Status;
+      return Status;
+    }
   if (Status == STATUS_DELETE_PENDING)
   {
     Irp->IoStatus.Status = Status;
@@ -694,7 +678,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
        ULONG Cluster, NextCluster;
        /* FIXME set size to 0 and free clusters */
        pFcb->entry.FileSize = 0;
-       if (DeviceExt->FatType == FAT32)
+       if (DeviceExt->FatInfo.FatType == FAT32)
 	    Cluster = pFcb->entry.FirstCluster
 	      + pFcb->entry.FirstClusterHigh * 65536;
        else
@@ -726,15 +710,15 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	ULONG CurrentCluster, NextCluster, i;
 	DPRINT("Open an existing paging file\n");
 	pFcb->Flags |= FCB_IS_PAGE_FILE;
-	pFcb->FatChainSize = 
-	  ((pFcb->entry.FileSize + DeviceExt->BytesPerCluster - 1) / DeviceExt->BytesPerCluster);
+	pFcb->FatChainSize =
+	  ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) / DeviceExt->FatInfo.BytesPerCluster);
 	if (pFcb->FatChainSize)
 	{
 	  pFcb->FatChain = ExAllocatePool(NonPagedPool, 
 					pFcb->FatChainSize * sizeof(ULONG));
 	}
 
-	if (DeviceExt->FatType == FAT32)
+	if (DeviceExt->FatInfo.FatType == FAT32)
 	  {
 	    CurrentCluster = pFcb->entry.FirstCluster + 
 	      pFcb->entry.FirstClusterHigh * 65536;

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.13 2002/01/15 21:54:51 hbirr Exp $
+/* $Id: fcb.c,v 1.14 2002/03/18 22:37:12 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -156,7 +156,6 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
 {
   NTSTATUS  status;
   PFILE_OBJECT  fileObject;
-  ULONG  bytesPerCluster;
   ULONG  fileCacheQuantum;
   PVFATCCB  newCCB;
 
@@ -180,9 +179,8 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
   fcb->pDevExt = vcb;
 
 
-  bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
-  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ?
-      bytesPerCluster : PAGESIZE;
+  fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGESIZE) ?
+      vcb->FatInfo.BytesPerCluster : PAGESIZE;
 
   status = CcRosInitializeFileCache (fileObject,
                                      &fcb->RFCB.Bcb,
@@ -208,25 +206,25 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
 
   FCB = vfatNewFCB(L"\\");
   memset(FCB->entry.Filename, ' ', 11);
-  FCB->entry.FileSize = pVCB->rootDirectorySectors * BLOCKSIZE;
+  FCB->entry.FileSize = pVCB->FatInfo.rootDirectorySectors * BLOCKSIZE;
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
-  if (pVCB->FatType == FAT32)
+  if (pVCB->FatInfo.FatType == FAT32)
   {
-    CurrentCluster = FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster;
+    CurrentCluster = FirstCluster = pVCB->FatInfo.RootCluster;
     FCB->entry.FirstCluster = FirstCluster & 0xffff;
     FCB->entry.FirstClusterHigh = FirstCluster >> 16;
     CurrentCluster = FirstCluster;
 
     while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
-      Size += pVCB->BytesPerCluster;
+      Size += pVCB->FatInfo.BytesPerCluster;
       Status = NextCluster (pVCB, NULL, FirstCluster, &CurrentCluster, FALSE);
     }
   }
   else
   {
     FCB->entry.FirstCluster = 1;
-    Size = pVCB->rootDirectorySectors * BLOCKSIZE;
+    Size = pVCB->FatInfo.rootDirectorySectors * BLOCKSIZE;
   }
   FCB->RefCount = 1;
   FCB->dirIndex = 0;
@@ -298,14 +296,14 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
     FirstCluster = vfatDirEntryGetFirstCluster (vcb, &rcFCB->entry);
     if (FirstCluster == 1)
     {
-      Size = vcb->rootDirectorySectors * BLOCKSIZE;
+      Size = vcb->FatInfo.rootDirectorySectors * BLOCKSIZE;
     }
     else
     {
       CurrentCluster = FirstCluster;
       while (CurrentCluster != 0xffffffff)
       {
-         Size += vcb->BytesPerCluster;
+         Size += vcb->FatInfo.BytesPerCluster;
          Status = NextCluster (vcb, NULL, FirstCluster, &CurrentCluster, FALSE);
       }
     }
@@ -317,7 +315,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   rcFCB->dirIndex = dirIndex;
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
-  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->BytesPerCluster);
+  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
 //  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
   vfatFCBInitializeCache (vcb, rcFCB);
   rcFCB->RefCount++;
@@ -353,11 +351,10 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 
   if (!(fcb->Flags & FCB_CACHE_INITIALIZED))
   {
-    ULONG  bytesPerCluster;
     ULONG  fileCacheQuantum;
 
-    bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
-    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster : PAGESIZE;
+    fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGESIZE) ? 
+				vcb->FatInfo.BytesPerCluster : PAGESIZE;
     status = CcRosInitializeFileCache (fileObject,
                                        &fcb->RFCB.Bcb,
                                        fileCacheQuantum);

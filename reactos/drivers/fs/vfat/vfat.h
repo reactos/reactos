@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.39 2002/02/05 21:31:03 hbirr Exp $ */
+/* $Id: vfat.h,v 1.40 2002/03/18 22:37:13 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -61,12 +61,13 @@ struct _BootBackupSector
 
 typedef struct _BootSector BootSector;
 
-struct _FATDirEntry {
+struct _FATDirEntry
+{
   unsigned char  Filename[8], Ext[3], Attrib, Res[2];
   unsigned short CreationTime,CreationDate,AccessDate;
-  unsigned short FirstClusterHigh;// higher
-  unsigned short UpdateTime;//time create/update
-  unsigned short UpdateDate;//date create/update
+  unsigned short FirstClusterHigh;                      // higher
+  unsigned short UpdateTime;                            //time create/update
+  unsigned short UpdateDate;                            //date create/update
   unsigned short FirstCluster;
   unsigned long  FileSize;
 } __attribute__((packed));
@@ -76,13 +77,13 @@ typedef struct _FATDirEntry FATDirEntry, FAT_DIR_ENTRY, *PFAT_DIR_ENTRY;
 struct _slot
 {
   unsigned char id;               // sequence number for slot
-  WCHAR  name0_4[5];      // first 5 characters in name
+  WCHAR  name0_4[5];              // first 5 characters in name
   unsigned char attr;             // attribute byte
   unsigned char reserved;         // always 0
   unsigned char alias_checksum;   // checksum for 8.3 alias
-  WCHAR  name5_10[6];     // 6 more characters in name
+  WCHAR  name5_10[6];             // 6 more characters in name
   unsigned char start[2];         // starting cluster number
-  WCHAR  name11_12[2];     // last 2 characters in name
+  WCHAR  name11_12[2];            // last 2 characters in name
 } __attribute__((packed));
 
 
@@ -94,6 +95,27 @@ typedef struct _slot slot;
 #define FAT12 (2)
 #define FAT32 (3)
 
+#define VCB_VOLUME_LOCKED       0x0001
+#define VCB_DISMOUNT_PENDING    0x0002
+
+typedef struct
+{
+  ULONG VolumeID;
+  ULONG FATStart;
+  ULONG FATCount;
+  ULONG FATSectors;
+  ULONG rootDirectorySectors;
+  ULONG rootStart;
+  ULONG dataStart;
+  ULONG RootCluster;
+  ULONG SectorsPerCluster;
+  ULONG BytesPerSector;
+  ULONG BytesPerCluster;
+  ULONG NumberOfClusters;
+  ULONG FatType;
+}
+FATINFO, *PFATINFO;
+
 typedef struct
 {
   ERESOURCE DirResource;
@@ -104,15 +126,23 @@ typedef struct
 
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT FATFileObject;
-  BootSector *Boot;
-  int rootDirectorySectors, FATStart, rootStart, dataStart;
-  int BytesPerSector;
-  int FATEntriesPerSector, FATUnit;
-  ULONG BytesPerCluster;
-  ULONG FatType;
+  FATINFO FatInfo;
   ULONG LastAvailableCluster;
-  ULONG NumberOfClusters;
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
+  ULONG AvailableClusters;
+  BOOLEAN AvailableClustersValid;
+  ULONG Flags;
+}
+DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
+
+typedef struct
+{
+  PDRIVER_OBJECT DriverObject;
+  PDEVICE_OBJECT DeviceObject;
+  ULONG Flags;
+}
+VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
+
+extern PVFAT_GLOBAL_DATA VfatGlobalData;
 
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_DELETE_PENDING      0x0002
@@ -137,11 +167,13 @@ typedef struct _VFATFCB
   ULONG dirIndex;
   ERESOURCE PagingIoResource;
   ERESOURCE MainResource;
+  ULONG TimerCount;
 
   /* Structure members used only for paging files. */
   ULONG FatChainSize;
   PULONG FatChain;
-} VFATFCB, *PVFATFCB;
+}
+VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
 {
@@ -156,7 +188,8 @@ typedef struct _VFATCCB
   ULONG LastCluster;
   ULONG LastOffset;
 
-} VFATCCB, *PVFATCCB;
+}
+VFATCCB, *PVFATCCB;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
@@ -169,14 +202,16 @@ typedef struct __DOSTIME
    WORD	Second:5;
    WORD	Minute:6;
    WORD Hour:5;
-} DOSTIME, *PDOSTIME;
+}
+DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
    WORD	Day:5;
    WORD	Month:4;
    WORD Year:5;
-} DOSDATE, *PDOSDATE;
+}
+DOSDATE, *PDOSDATE;
 
 #define IRPCONTEXT_CANWAIT  0x0001
 
@@ -194,216 +229,299 @@ typedef struct
 }
 VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
 
+/*  ------------------------------------------------------  shutdown.c  */
 
-/* functions called by i/o manager : */
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
+NTSTATUS STDCALL VfatShutdown (PDEVICE_OBJECT DeviceObject,
+                               PIRP Irp);
+
+/*  --------------------------------------------------------  volume.c  */
+
+NTSTATUS VfatQueryVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ------------------------------------------------------  blockdev.c  */
+
+NTSTATUS VfatReadSectors(IN PDEVICE_OBJECT pDeviceObject,
+                         IN ULONG DiskSector,
+                         IN ULONG SectorCount,
+                         IN PUCHAR Buffer);
+
+NTSTATUS VfatWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
+                          IN ULONG DiskSector,
+                          IN ULONG SectorCount,
+                          IN PUCHAR Buffer);
+
+NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
+				   IN ULONG CtlCode,
+				   IN PVOID InputBuffer,
+				   IN ULONG InputBufferSize,
+				   IN OUT PVOID OutputBuffer, 
+				   IN OUT PULONG pOutputBufferSize);
+
+/*  -----------------------------------------------------------  dir.c  */
+
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatRead (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatClose (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatFileSystemControl (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT);
-NTSTATUS STDCALL
-VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS VfatQueryVolumeInformation (PVFAT_IRP_CONTEXT);
-NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT);
 
+BOOL FsdDosDateTimeToFileTime (WORD wDosDate,
+                               WORD wDosTime,
+                               TIME *FileTime);
 
-NTSTATUS
-NextCluster(PDEVICE_EXTENSION DeviceExt,
-	    PVFATFCB Fcb,
-	    ULONG FirstCluster,
-	    PULONG CurrentCluster,
-	    BOOLEAN Extend);
+BOOL FsdFileTimeToDosDateTime (TIME *FileTime,
+                               WORD *pwDosDate,
+                               WORD *pwDosTime);
 
-/* internal functions in blockdev.c */
-NTSTATUS
-VfatReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-		IN ULONG   DiskSector,
-		IN ULONG       SectorCount,
-		IN UCHAR*	Buffer);
+/*  --------------------------------------------------------  create.c  */
 
-NTSTATUS
-VfatWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
-		 IN ULONG   DiskSector,
-		 IN ULONG        SectorCount,
-		 IN UCHAR*	Buffer);
+NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
 
-/* internal functions in dir.c : */
-BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime);
-BOOL FsdFileTimeToDosDateTime(TIME *FileTime,WORD *pwDosDate,WORD *pwDosTime);
+NTSTATUS VfatOpenFile (PDEVICE_EXTENSION DeviceExt,
+                       PFILE_OBJECT FileObject,
+                       PWSTR FileName);
 
-/* internal functions in iface.c : */
-NTSTATUS 
-FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
-	 PVFATFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
-NTSTATUS 
-VfatCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject);
-NTSTATUS 
-VfatOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
-	    PWSTR FileName);
-NTSTATUS 
-VfatReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-	     PVOID Buffer, ULONG Length, ULONG ReadOffset,
-             PULONG LengthRead, ULONG NoCache);
-NTSTATUS
-VfatWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-              PVOID Buffer, ULONG Length, ULONG WriteOffset, BOOLEAN NoCache, BOOLEAN PageIo);
-NTSTATUS
-GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, 
-		    ULONG FirstCluster,
-		    ULONG CurrentCluster,
-		    PULONG NextCluster);
-BOOLEAN 
-IsDeletedEntry(PVOID Block, ULONG Offset);
-BOOLEAN 
-IsLastEntry(PVOID Block, ULONG Offset);
-wchar_t* 
-vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
+NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
+                   PVFATFCB Fcb,
+                   PVFATFCB Parent,
+                   PWSTR FileToFind,
+                   PULONG pDirIndex,
+                   PULONG pDirIndex2);
 
-/* internal functions in dirwr.c */
-NTSTATUS 
-addEntry(PDEVICE_EXTENSION DeviceExt,
-	 PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr);
-NTSTATUS 
-updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
-NTSTATUS
-delEntry(PDEVICE_EXTENSION, PFILE_OBJECT);
+VOID vfat8Dot3ToString (PCHAR pBasename,
+                        PCHAR pExtension,
+                        PWSTR pName);
 
-/*
- * String functions
- */
-VOID 
-vfat_initstr(wchar_t *wstr, ULONG wsize);
-wchar_t* 
-vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount);
-wchar_t* 
-vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
-wchar_t* 
-vfat_movstr(wchar_t *src, ULONG dpos, ULONG spos, ULONG len);
-BOOLEAN 
-wstrcmpi(PWSTR s1, PWSTR s2);
-BOOLEAN
-wstrcmpjoki(PWSTR s1, PWSTR s2);
-PWCHAR  vfatGetNextPathElement (PWCHAR  pFileName);
-void  vfatWSubString (PWCHAR pTarget, const PWCHAR pSource, size_t pLength);
+NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt,
+                         PVPB Vpb);
+
+BOOLEAN IsDeletedEntry (PVOID Block,
+                        ULONG Offset);
+
+BOOLEAN IsLastEntry (PVOID Block,
+                     ULONG Offset);
+
+/*  ---------------------------------------------------------  close.c  */
+
+NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS VfatCloseFile(PDEVICE_EXTENSION DeviceExt,
+                       PFILE_OBJECT FileObject);
+
+/*  -------------------------------------------------------  cleanup.c  */
+
+NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ---------------------------------------------------------  fsctl.c  */
+
+NTSTATUS VfatFileSystemControl (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ---------------------------------------------------------  finfo.c  */
+
+NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ---------------------------------------------------------  iface.c  */
+
+NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
+                              PUNICODE_STRING RegistryPath);
+
+/*  ---------------------------------------------------------  dirwr.c  */
+
+NTSTATUS addEntry (PDEVICE_EXTENSION DeviceExt,
+                   PFILE_OBJECT pFileObject,
+                   ULONG RequestedOptions,UCHAR ReqAttr);
+
+NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt,
+                   PFILE_OBJECT pFileObject);
+
+NTSTATUS delEntry(PDEVICE_EXTENSION,
+                  PFILE_OBJECT);
+
+/*  --------------------------------------------------------  string.c  */
+
+VOID vfat_initstr (wchar_t *wstr,
+                   ULONG wsize);
+
+wchar_t* vfat_wcsncat (wchar_t * dest,
+                       const wchar_t * src,
+                       size_t wstart,
+                       size_t wcount);
+
+wchar_t* vfat_wcsncpy (wchar_t * dest,
+                       const wchar_t *src,
+                       size_t wcount);
+
+wchar_t* vfat_movstr (wchar_t *src,
+                      ULONG dpos,
+                      ULONG spos,
+                      ULONG len);
+
+BOOLEAN wstrcmpi (PWSTR s1,
+                  PWSTR s2);
+
+BOOLEAN wstrcmpjoki (PWSTR s1,
+                     PWSTR s2);
+
+PWCHAR vfatGetNextPathElement (PWCHAR  pFileName);
+
+VOID vfatWSubString (PWCHAR pTarget,
+                     const PWCHAR pSource,
+                     size_t pLength);
+
 BOOL  vfatIsFileNameValid (PWCHAR pFileName);
 
-/*
- * functions from fat.c
- */
-NTSTATUS
-OffsetToCluster(PDEVICE_EXTENSION DeviceExt, 
-		PVFATFCB Fcb,
-		ULONG FirstCluster, 
-		ULONG FileOffset,
-		PULONG Cluster,
-		BOOLEAN Extend);
-ULONG
-ClusterToSector(PDEVICE_EXTENSION DeviceExt,
-		ULONG Cluster);
-NTSTATUS
-GetNextCluster(PDEVICE_EXTENSION DeviceExt,
-	       ULONG CurrentCluster,
-	       PULONG NextCluster,
-	       BOOLEAN Extend);
-NTSTATUS
-GetNextSector(PDEVICE_EXTENSION DeviceExt,
-	      ULONG CurrentSector,
-	      PULONG NextSector,
-	      BOOLEAN Extend);
-NTSTATUS
-VfatRawReadCluster(PDEVICE_EXTENSION DeviceExt,
-		   ULONG FirstCluster,
-		   PVOID Buffer,
-		   ULONG Cluster,
-           ULONG Count);
-NTSTATUS
-VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
-		    ULONG FirstCluster,
-		    PVOID Buffer,
-		    ULONG Cluster,
-            ULONG Count);
-NTSTATUS
-FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
-			    PLARGE_INTEGER Clusters);
-NTSTATUS
-FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
-			    PLARGE_INTEGER Clusters);
-NTSTATUS
-FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
-			    PLARGE_INTEGER Clusters);
-NTSTATUS
-WriteCluster(PDEVICE_EXTENSION DeviceExt,
-	     ULONG ClusterToWrite,
-	     ULONG NewValue);
+/*  -----------------------------------------------------------  fat.c  */
 
-/*  ---------------------------------------------------------  create.c  */
+NTSTATUS OffsetToCluster (PDEVICE_EXTENSION DeviceExt,
+                          PVFATFCB Fcb,
+                          ULONG FirstCluster,
+                          ULONG FileOffset,
+                          PULONG Cluster,
+                          BOOLEAN Extend);
 
-void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName);
-NTSTATUS
-ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
-NTSTATUS
-VfatOpenFile(PDEVICE_EXTENSION DeviceExt,
-	     PFILE_OBJECT FileObject,
-	     PWSTR FileName);
+ULONG ClusterToSector (PDEVICE_EXTENSION DeviceExt,
+                       ULONG Cluster);
 
-/*  -----------------------------------------------  DirEntry Functions  */
+NTSTATUS GetNextCluster (PDEVICE_EXTENSION DeviceExt,
+                         ULONG CurrentCluster,
+                         PULONG NextCluster,
+                         BOOLEAN Extend);
+
+NTSTATUS GetNextSector (PDEVICE_EXTENSION DeviceExt,
+                        ULONG CurrentSector,
+                        PULONG NextSector,
+                        BOOLEAN Extend);
+
+NTSTATUS VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt,
+                             ULONG FirstCluster,
+                             PVOID Buffer,
+                             ULONG Cluster,
+                             ULONG Count);
+
+NTSTATUS VfatRawWriteCluster (PDEVICE_EXTENSION DeviceExt,
+                              ULONG FirstCluster,
+                              PVOID Buffer,
+                              ULONG Cluster,
+                              ULONG Count);
+
+NTSTATUS CountAvailableClusters (PDEVICE_EXTENSION DeviceExt,
+                                 PLARGE_INTEGER Clusters);
+
+/*  ------------------------------------------------------  direntry.c  */
 
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PFAT_DIR_ENTRY  pDirEntry);
+
 BOOL  vfatIsDirEntryDeleted (FATDirEntry * pFatDirEntry);
+
 BOOL  vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry);
+
 BOOL  vfatIsDirEntryEndMarker (FATDirEntry * pFatDirEntry);
-void  vfatGetDirEntryName (PFAT_DIR_ENTRY pDirEntry,  PWSTR  pEntryName);
+
+VOID vfatGetDirEntryName (PFAT_DIR_ENTRY pDirEntry,
+                          PWSTR  pEntryName);
+
 NTSTATUS  vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                                PVFATFCB  pDirectoryFCB,
                                ULONG * pDirectoryIndex,
                                PWSTR pLongFileName,
                                PFAT_DIR_ENTRY pDirEntry);
 
-/*  -----------------------------------------------------  FCB Functions */
+/*  -----------------------------------------------------------  fcb.c  */
 
-PVFATFCB  vfatNewFCB (PWCHAR pFileName);
-void  vfatDestroyFCB (PVFATFCB  pFCB);
-void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
-void  vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
-void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  
-                         PVFATFCB  pFCB);
-PVFATFCB  vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt, 
-                                PWSTR  pFileName);
-PVFATFCB  vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
-PVFATFCB  vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
-BOOL  vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB, PVFATFCB FCB);
-NTSTATUS  vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb, 
-                                     PVFATFCB  fcb,
-                                     PFILE_OBJECT  fileObject);
-NTSTATUS  vfatDirFindFile (PDEVICE_EXTENSION  pVCB, 
-                           PVFATFCB  parentFCB,
-                           PWSTR  elementName,
-                           PVFATFCB * fileFCB);
-NTSTATUS  vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
-                             PVFATFCB  *pParentFCB, 
-                             PVFATFCB  *pFCB, 
-                             const PWSTR  pFileName);
-NTSTATUS vfatMakeFCBFromDirEntry(PVCB  vcb,
-			                     PVFATFCB  directoryFCB,
-			                     PWSTR  longName,
-			                     PFAT_DIR_ENTRY  dirEntry,
-                                 ULONG dirIndex,
-			                     PVFATFCB * fileFCB);
+PVFATFCB vfatNewFCB (PWCHAR pFileName);
 
-/*  -------------------------------------------------------------  rw.c  */
+VOID vfatDestroyFCB (PVFATFCB  pFCB);
 
-NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject, ULONG NewSize);
+VOID vfatGrabFCB (PDEVICE_EXTENSION  pVCB,
+                  PVFATFCB  pFCB);
 
-/*  ------------------------------------------------------------- misc.c */
+VOID vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,
+                     PVFATFCB  pFCB);
+
+VOID vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,
+                        PVFATFCB  pFCB);
+
+PVFATFCB vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt,
+                               PWSTR  pFileName);
+
+PVFATFCB vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
+
+PVFATFCB vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
+
+BOOL vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB,
+                         PVFATFCB FCB);
+
+NTSTATUS vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
+                                    PVFATFCB  fcb,
+                                    PFILE_OBJECT  fileObject);
+
+NTSTATUS vfatDirFindFile (PDEVICE_EXTENSION  pVCB,
+                          PVFATFCB  parentFCB,
+                          PWSTR  elementName,
+                          PVFATFCB * fileFCB);
+
+NTSTATUS vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
+                            PVFATFCB  *pParentFCB,
+                            PVFATFCB  *pFCB,
+                            const PWSTR  pFileName);
+
+NTSTATUS vfatMakeFCBFromDirEntry (PVCB  vcb,
+                                  PVFATFCB  directoryFCB,
+                                  PWSTR  longName,
+                                  PFAT_DIR_ENTRY  dirEntry,
+                                  ULONG dirIndex,
+                                  PVFATFCB * fileFCB);
+
+/*  ------------------------------------------------------------  rw.c  */
+
+NTSTATUS VfatRead (PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt,
+                          PFILE_OBJECT pFileObject,
+                          ULONG NewSize);
+/*
+NTSTATUS VfatWriteFile (PDEVICE_EXTENSION DeviceExt,
+                        PFILE_OBJECT FileObject,
+                        PVOID Buffer,
+                        ULONG Length,
+                        ULONG WriteOffset,
+                        BOOLEAN NoCache,
+                        BOOLEAN PageIo);
+
+
+NTSTATUS VfatReadFile (PDEVICE_EXTENSION DeviceExt,
+                       PFILE_OBJECT FileObject,
+                       PVOID Buffer, ULONG Length,
+                       ULONG ReadOffset,
+                       PULONG LengthRead,
+                       ULONG NoCache);
+*/
+
+NTSTATUS NextCluster(PDEVICE_EXTENSION DeviceExt,
+                     PVFATFCB Fcb,
+                     ULONG FirstCluster,
+                     PULONG CurrentCluster,
+                     BOOLEAN Extend);
+
+/*  -----------------------------------------------------------  misc.c  */
+
 NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext);
-PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
-NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
+                                         PIRP Irp);
+
+VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
+                                   PIRP Irp);
+/*
+PVOID VfatGetUserBuffer(IN PIRP);
+
+NTSTATUS VfatLockUserBuffer(IN PIRP, IN ULONG,
+                            IN LOCK_OPERATION);
+*/
+
+/* EOF */

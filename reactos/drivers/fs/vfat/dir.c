@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.23 2002/02/05 21:31:03 hbirr Exp $
+ * $Id: dir.c,v 1.24 2002/03/18 22:37:12 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -136,8 +136,8 @@ VfatGetFileDirectoryInformation (PVFATFCB pFcb,
 			    &pInfo->ChangeTime);
   pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->BytesPerCluster - 1) /
-	       DeviceExt->BytesPerCluster) * DeviceExt->BytesPerCluster;
+  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
+	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
   pInfo->AllocationSize.QuadPart = AllocSize;
   pInfo->FileAttributes = pFcb->entry.Attrib;
 
@@ -170,8 +170,8 @@ VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
 			    &pInfo->ChangeTime);
   pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->BytesPerCluster - 1) /
-	       DeviceExt->BytesPerCluster) * DeviceExt->BytesPerCluster;
+  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
+	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
   pInfo->AllocationSize.QuadPart = AllocSize;
   pInfo->FileAttributes = pFcb->entry.Attrib;
 //      pInfo->EaSize=;
@@ -205,8 +205,8 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
 			    &pInfo->ChangeTime);
   pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->BytesPerCluster - 1) /
-	       DeviceExt->BytesPerCluster) * DeviceExt->BytesPerCluster;
+  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
+	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
   pInfo->AllocationSize.QuadPart = AllocSize;
   pInfo->FileAttributes = pFcb->entry.Attrib;
 //      pInfo->EaSize=;
@@ -255,10 +255,11 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     if (!pCcb->DirectorySearchPattern)
     {
       First = TRUE;
-      pCcb->DirectorySearchPattern = 
+      pCcb->DirectorySearchPattern =
         ExAllocatePool(NonPagedPool, pSearchPattern->Length + sizeof(WCHAR));
       if (!pCcb->DirectorySearchPattern)
       {
+        ExReleaseResourceLite(&pFcb->MainResource);
         return STATUS_INSUFFICIENT_RESOURCES;
       }
       memcpy(pCcb->DirectorySearchPattern, pSearchPattern->Buffer,
@@ -272,12 +273,13 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     pCcb->DirectorySearchPattern = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
     if (!pCcb->DirectorySearchPattern)
     {
+      ExReleaseResourceLite(&pFcb->MainResource);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
     pCcb->DirectorySearchPattern[0] = L'*';
     pCcb->DirectorySearchPattern[1] = 0;
-  }  
-     
+  }
+
   if (IrpContext->Stack->Flags & SL_INDEX_SPECIFIED)
   {
     pCcb->Entry = pCcb->CurrentByteOffset.u.LowPart;
@@ -369,11 +371,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   {
     RC = STATUS_SUCCESS;
   }
-  if (IrpContext->Flags & IRPCONTEXT_CANWAIT)
-  {
-    ExReleaseResourceLite(&pFcb->MainResource);
-  }
-
+  ExReleaseResourceLite(&pFcb->MainResource);
   return RC;
 }
 

@@ -141,3 +141,67 @@ VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
   DPRINT ("Block request succeeded\n");
   return (STATUS_SUCCESS);
 }
+
+NTSTATUS
+VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
+			  IN ULONG CtlCode,
+			  IN PVOID InputBuffer,
+			  IN ULONG InputBufferSize,
+			  IN OUT PVOID OutputBuffer, 
+			  IN OUT PULONG pOutputBufferSize)
+{
+	ULONG OutputBufferSize = 0;
+	KEVENT Event;
+	PIRP Irp;
+	IO_STATUS_BLOCK IoStatus;
+	NTSTATUS Status;
+
+	DPRINT("VfatBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
+	       "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
+	       "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
+	       InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
+	       pOutputBufferSize ? *pOutputBufferSize : 0);
+
+	if (pOutputBufferSize)
+	{
+		OutputBufferSize = *pOutputBufferSize;
+	}
+
+	KeInitializeEvent (&Event, NotificationEvent, FALSE);
+
+	DPRINT("Building device I/O control request ...\n");
+	Irp = IoBuildDeviceIoControlRequest(CtlCode, 
+					    DeviceObject, 
+					    InputBuffer, 
+					    InputBufferSize, 
+					    OutputBuffer,
+					    OutputBufferSize, 
+					    FALSE, 
+					    &Event, 
+					    &IoStatus);
+
+	if (Irp == NULL)
+	{
+		DPRINT("IoBuildDeviceIoControlRequest failed\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+	Status = IoCallDriver(DeviceObject, Irp);
+
+	DPRINT ("Waiting for IO Operation for %x\n", Irp);
+	if (Status == STATUS_PENDING)
+	{
+		DPRINT ("Operation pending\n");
+		KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
+		DPRINT ("Getting IO Status... for %x\n", Irp);
+
+		Status = IoStatus.Status;
+	}
+	if (OutputBufferSize)
+	{
+		*pOutputBufferSize = OutputBufferSize;
+	}
+	DPRINT("Returning Status %x\n", Status);
+	return Status;
+}

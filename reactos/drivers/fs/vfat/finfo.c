@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.11 2001/11/02 22:47:36 hbirr Exp $
+/* $Id: finfo.c,v 1.12 2002/03/18 22:37:12 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,7 +37,7 @@ VfatGetStandardInformation(PVFATFCB FCB,
   DeviceExtension = DeviceObject->DeviceExtension;
   /* PRECONDITION */
   assert (DeviceExtension != NULL);
-  assert (DeviceExtension->BytesPerCluster != 0);
+  assert (DeviceExtension->FatInfo.BytesPerCluster != 0);
   assert (StandardInfo != NULL);
   assert (FCB != NULL);
 
@@ -143,7 +143,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   DPRINT ("FsdSetDispositionInformation()\n");
 
   assert (DeviceExt != NULL);
-  assert (DeviceExt->BytesPerCluster != 0);
+  assert (DeviceExt->FatInfo.BytesPerCluster != 0);
   assert (FCB != NULL);
 
   if (!wcscmp(FCB->PathName, L"\\") || !wcscmp(FCB->ObjectName, L"..")
