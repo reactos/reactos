@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.51 2004/09/07 11:48:16 ekohl Exp $
+/* $Id: driver.c,v 1.52 2004/09/20 19:47:25 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -29,6 +29,8 @@ typedef struct _SERVICE_GROUP
   LIST_ENTRY GroupListEntry;
   UNICODE_STRING GroupName;
   BOOLEAN ServicesRunning;
+  ULONG TagCount;
+  PULONG TagArray;
 } SERVICE_GROUP, *PSERVICE_GROUP;
 
 typedef struct _SERVICE
@@ -705,6 +707,48 @@ IopAttachFilterDrivers(
    return STATUS_SUCCESS;
 }
 
+static NTSTATUS STDCALL 
+IopGetGroupOrderList(PWSTR ValueName,
+		     ULONG ValueType,
+		     PVOID ValueData,
+		     ULONG ValueLength,
+		     PVOID Context,
+		     PVOID EntryContext)
+{
+  PSERVICE_GROUP Group;
+
+  DPRINT("IopGetGroupOrderList(%S, %x, %x, %x, %x, %x)\n",
+         ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
+
+  if (ValueType == REG_BINARY &&
+      ValueData != NULL &&
+      ValueLength >= sizeof(DWORD) &&
+      ValueLength >= (*(PULONG)ValueData + 1) * sizeof(DWORD))
+    {
+      Group = (PSERVICE_GROUP)Context;
+      Group->TagCount = ((PULONG)ValueData)[0];
+      if (Group->TagCount > 0)
+        {
+	  if (ValueLength >= (Group->TagCount + 1) * sizeof(DWORD))
+            {
+              Group->TagArray = ExAllocatePool(NonPagedPool, Group->TagCount * sizeof(DWORD));
+	      if (Group->TagArray == NULL)
+	        {
+		  Group->TagCount = 0;
+	          return STATUS_INSUFFICIENT_RESOURCES;
+		}
+	      memcpy(Group->TagArray, (PULONG)ValueData + 1, Group->TagCount * sizeof(DWORD));
+	    }
+	  else
+	    {
+	      Group->TagCount = 0;
+	      return STATUS_UNSUCCESSFUL;
+	    }
+	}
+    }
+  return STATUS_SUCCESS;
+}
+
 static NTSTATUS STDCALL
 IopCreateGroupListEntry(PWSTR ValueName,
 			ULONG ValueType,
@@ -714,6 +758,9 @@ IopCreateGroupListEntry(PWSTR ValueName,
 			PVOID EntryContext)
 {
   PSERVICE_GROUP Group;
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
 
   if (ValueType == REG_SZ)
     {
@@ -735,6 +782,16 @@ IopCreateGroupListEntry(PWSTR ValueName,
 	  return(STATUS_INSUFFICIENT_RESOURCES);
 	}
 
+      RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+      QueryTable[0].Name = (PWSTR)ValueData;
+      QueryTable[0].QueryRoutine = IopGetGroupOrderList;
+
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				      L"GroupOrderList",
+				      QueryTable,
+				      (PVOID)Group,
+				      NULL);
+      DPRINT("%x %d %S\n", Status, Group->TagCount, (PWSTR)ValueData);
 
       InsertTailList(&GroupListHead,
 		     &Group->GroupListEntry);
@@ -747,7 +804,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
 static NTSTATUS STDCALL
 IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 {
-  RTL_QUERY_REGISTRY_TABLE QueryTable[6];
+  RTL_QUERY_REGISTRY_TABLE QueryTable[7];
   PSERVICE Service;
   NTSTATUS Status;
 
@@ -786,6 +843,10 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
   QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
   QueryTable[4].EntryContext = &Service->ImagePath;
 
+  QueryTable[5].Name = L"Tag";
+  QueryTable[5].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[5].EntryContext = &Service->Tag;
+
   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
 				  ServiceName->Buffer,
 				  QueryTable,
@@ -823,8 +884,8 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
   DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
   DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
   DPRINT("ImagePath: '%wZ'\n", &Service->ImagePath);
-  DPRINT("Start %lx  Type %lx  ErrorControl %lx\n",
-	 Service->Start, Service->Type, Service->ErrorControl);
+  DPRINT("Start %lx  Type %lx  Tag %lx ErrorControl %lx\n",
+	 Service->Start, Service->Type, Service->Tag, Service->ErrorControl);
 
   /* Append service entry */
   InsertTailList(&ServiceListHead,
@@ -952,6 +1013,10 @@ IoDestroyDriverList(VOID)
 
       RtlFreeUnicodeString(&CurrentGroup->GroupName);
       RemoveEntryList(GroupEntry);
+      if (CurrentGroup->TagArray)
+        {
+	  ExFreePool(CurrentGroup->TagArray);
+	}
       ExFreePool(CurrentGroup);
 
       GroupEntry = GroupListHead.Flink;
@@ -978,7 +1043,7 @@ IoDestroyDriverList(VOID)
   return(STATUS_SUCCESS);
 }
 
-VOID STATIC
+VOID STATIC INIT_FUNCTION
 MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
 {
    ULONG i;
@@ -995,7 +1060,7 @@ MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
  * Initialize a driver that is already loaded in memory.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS FASTCALL INIT_FUNCTION
 IopInitializeBuiltinDriver(
    PDEVICE_NODE ModuleDeviceNode,
    PVOID ModuleLoadBase,
@@ -1179,6 +1244,45 @@ IopInitializeBootDrivers(VOID)
    }
 }
 
+static INIT_FUNCTION NTSTATUS
+IopLoadDriver(PSERVICE Service)
+{
+   NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+   IopDisplayLoadingMessage(Service->ServiceName.Buffer);
+   Status = NtLoadDriver(&Service->RegistryPath);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("NtLoadDriver() failed (Status %lx)\n", Status);
+#if 0
+      if (Service->ErrorControl == 1)
+      {
+         /* Log error */
+      } 
+      else if (Service->ErrorControl == 2)
+      {
+         if (IsLastKnownGood == FALSE)
+         {
+            /* Boot last known good configuration */
+         }
+      } 
+      else if (Service->ErrorControl == 3)
+      {
+         if (IsLastKnownGood == FALSE)
+         {
+            /* Boot last known good configuration */
+         } 
+         else
+         {
+            /* BSOD! */
+         }
+      }
+#endif
+   }
+   return Status;
+}
+
+
 /*
  * IopInitializeSystemDrivers
  *
@@ -1199,6 +1303,7 @@ IopInitializeSystemDrivers(VOID)
    PSERVICE_GROUP CurrentGroup;
    PSERVICE CurrentService;
    NTSTATUS Status;
+   ULONG i;
 
    DPRINT("IopInitializeSystemDrivers()\n");
 
@@ -1209,45 +1314,47 @@ IopInitializeSystemDrivers(VOID)
 
       DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
 
+      /* Load all drivers with a valid tag */ 
+      for (i = 0; i < CurrentGroup->TagCount; i++)
+      {
+         ServiceEntry = ServiceListHead.Flink;
+         while (ServiceEntry != &ServiceListHead)
+         {
+            CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+            if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
+                                         &CurrentService->ServiceGroup, TRUE) == 0) &&
+	        (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/) &&
+		(CurrentService->Tag == CurrentGroup->TagArray[i]))
+	    {
+	       DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
+               Status = IopLoadDriver(CurrentService);
+ 	    }
+            ServiceEntry = ServiceEntry->Flink;
+         }
+      }
+
+      /* Load all drivers without a tag or with an invalid tag */
       ServiceEntry = ServiceListHead.Flink;
       while (ServiceEntry != &ServiceListHead)
       {
          CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-
          if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
-              &CurrentService->ServiceGroup, TRUE) == 0) &&
+                                      &CurrentService->ServiceGroup, TRUE) == 0) &&
 	     (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/))
 	 {
-            DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
-            IopDisplayLoadingMessage(CurrentService->ServiceName.Buffer);
-            Status = NtLoadDriver(&CurrentService->RegistryPath);
-            if (!NT_SUCCESS(Status))
-            {
-               DPRINT("NtLoadDriver() failed (Status %lx)\n", Status);
-#if 0
-               if (CurrentService->ErrorControl == 1)
-               {
-                  /* Log error */
-               } else
-               if (CurrentService->ErrorControl == 2)
-               {
-                  if (IsLastKnownGood == FALSE)
-                  {
-                     /* Boot last known good configuration */
-                  }
-               } else
-               if (CurrentService->ErrorControl == 3)
-               {
-                  if (IsLastKnownGood == FALSE)
-                  {
-                     /* Boot last known good configuration */
-                  } else
-                  {
-                     /* BSOD! */
-                  }
-               }
-#endif
-            }
+	    for (i = 0; i < CurrentGroup->TagCount; i++)
+	    {
+	       if (CurrentGroup->TagArray[i] == CurrentService->Tag)
+	       {
+	          break;
+	       }
+	    }
+	    if (i >= CurrentGroup->TagCount)
+	    {
+               DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
+               Status = IopLoadDriver(CurrentService);
+ 	    }
 	 }
          ServiceEntry = ServiceEntry->Flink;
       }
