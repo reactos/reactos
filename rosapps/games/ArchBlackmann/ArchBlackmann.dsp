@@ -118,6 +118,14 @@ SOURCE=.\cram_md5.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\File.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\File.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\IRCClient.cpp
 # End Source File
 # Begin Source File
@@ -171,6 +179,14 @@ SOURCE=.\SplitJoin.cpp
 # Begin Source File
 
 SOURCE=.\SplitJoin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ssprintf.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ssprintf.h
 # End Source File
 # Begin Source File
 

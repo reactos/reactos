@@ -4,18 +4,35 @@
 #pragma warning ( disable : 4786 )
 #endif//_MSC_VER
 
-#include <conio.h>
+#include <time.h>
 #include <stdio.h>
+
+#include "File.h"
+#include "ssprintf.h"
 
 #include "IRCClient.h"
 
 using std::string;
 using std::vector;
 
+const char* ArchBlackmann = "ArchBlackmann";
+
+vector<string> tech_replies;
+
+const char* TechReply()
+{
+	return tech_replies[rand()%tech_replies.size()].c_str();
+}
+
 // do custom stuff with the IRCClient from your subclass via the provided callbacks...
 class MyIRCClient : public IRCClient
 {
+	File flog;
 public:
+	MyIRCClient()
+	{
+		flog.open ( "arch.log", "w+" );
+	}
 	// see IRCClient.h for documentation on these callbacks...
 	bool OnConnected()
 	{
@@ -32,13 +49,21 @@ public:
 	bool OnPrivMsg ( const string& from, const string& text )
 	{
 		printf ( "<%s> %s\n", from.c_str(), text.c_str() );
-		return true;
+		flog.printf ( "<%s> %s\n", from.c_str(), text.c_str() );
+		return PrivMsg ( from, "hey, your tongue doesn't belong there!" );
 	}
 	bool OnChannelMsg ( const string& channel, const string& from, const string& text )
 	{
 		printf ( "%s <%s> %s\n", channel.c_str(), from.c_str(), text.c_str() );
-		if ( !stricmp ( from.c_str(), "royce3" ) )
-			PrivMsg ( channel, text );
+		flog.printf ( "%s <%s> %s\n", channel.c_str(), from.c_str(), text.c_str() );
+		string text2(text);
+		strlwr ( &text2[0] );
+		if ( !strnicmp ( text2.c_str(), ArchBlackmann, strlen(ArchBlackmann) ) )
+		{
+			string reply = ssprintf("%s: %s", from.c_str(), TechReply());
+			flog.printf ( "TECH-REPLY: %s\n", reply.c_str() );
+			return PrivMsg ( channel, reply );
+		}
 		return true;
 	}
 	bool OnChannelMode ( const string& channel, const string& mode )
@@ -72,6 +97,13 @@ public:
 
 int main ( int argc, char** argv )
 {
+	srand ( time(NULL) );
+	File f ( "tech.txt", "r" );
+	string line;
+	while ( f.next_line ( line, true ) )
+		tech_replies.push_back ( line );
+	f.close();
+
 	printf ( "initializing IRCClient debugging\n" );
 	IRCClient::SetDebug ( true );
 	printf ( "calling suStartup()\n" );
@@ -79,19 +111,19 @@ int main ( int argc, char** argv )
 	printf ( "creating IRCClient object\n" );
 	MyIRCClient irc;
 	printf ( "connecting to freenode\n" );
-	if ( !irc.Connect ( "140.211.166.3" ) ) // irc.freenode.net
+	if ( !irc.Connect ( "212.204.214.114" ) ) // irc.freenode.net
 	{
 		printf ( "couldn't connect to server\n" );
 		return -1;
 	}
 	printf ( "sending user command\n" );
-	if ( !irc.User ( "Royce3", "", "irc.freenode.net", "Royce Mitchell III" ) )
+	if ( !irc.User ( "ArchBlackmann", "", "irc.freenode.net", "Arch Blackmann" ) )
 	{
 		printf ( "USER command failed\n" );
 		return -1;
 	}
 	printf ( "sending nick\n" );
-	if ( !irc.Nick ( "Royce3" ) )
+	if ( !irc.Nick ( "ArchBlackmann" ) )
 	{
 		printf ( "NICK command failed\n" );
 		return -1;
@@ -109,15 +141,6 @@ int main ( int argc, char** argv )
 		return -1;
 	}
 	printf ( "entering irc client processor\n" );
-	irc.Run ( true ); // do the processing in this thread...
-	string cmd;
-	for ( ;; )
-	{
-		char c = getch();
-		if ( c == '\n' || c == '\r' )
-		{
-
-		}
-	}
+	irc.Run ( false ); // do the processing in this thread...
 	return 0;
 }
