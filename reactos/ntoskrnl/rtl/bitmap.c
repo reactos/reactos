@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.4 2002/09/08 10:23:41 chorns Exp $
+/* $Id: bitmap.c,v 1.5 2002/11/05 20:52:38 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -136,7 +136,7 @@ RtlClearBits (
 	if (StartingIndex + NumberToClear > Size)
 		NumberToClear = Size - StartingIndex;
 
-	Ptr = (PCHAR)(BitMapHeader->Buffer + (StartingIndex / 8));
+	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
 	while (NumberToClear)
 	{
 		/* bit shift in current byte */
