@@ -699,6 +699,7 @@ GspSetThread(PCHAR Request)
                             if(GspRunThread) ObDereferenceObject(GspRunThread);
 
 	                    GspRunThread = ThreadInfo;
+	                    if (GspRunThread) ObReferenceObject(GspRunThread);
 			  }
 			  else
 			  {
@@ -1057,6 +1058,7 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   LONG NewPC;
   PCHAR ptr;
   LONG Esp;
+  KIRQL OldIrql;
 
   /* FIXME: Stop on other CPUs too */
   /* Disable hardware debugging while we are inside the stub */
@@ -1079,6 +1081,20 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
+      /* Don't switch threads */
+      OldIrql = KeGetCurrentIrql();
+      if (OldIrql < DISPATCH_LEVEL)
+        {
+          KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        }
+          
+      /* Always use the current thread when entering the exception handler */
+      if (NULL != GspDbgThread)
+        {
+          ObDereferenceObject(GspDbgThread);
+          GspDbgThread = NULL;
+        }
+
       /* reply to host that an exception has occurred */
       SigVal = GspComputeSignal (ExceptionRecord->ExceptionCode);
 
@@ -1129,17 +1145,24 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
               GspRemoteDebug = !GspRemoteDebug; /* toggle debug flag */
               break;
             case 'g':		/* return the value of the CPU Registers */
-              if (GspDbgThread)
-                GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, GspDbgThread->Tcb.TrapFrame);
+              if (NULL != GspDbgThread)
+                {
+                  GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, GspDbgThread->Tcb.TrapFrame);
+                }
               else
-                GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, TrapFrame);
+                {
+                  GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, TrapFrame);
+                }
               break;
             case 'G':		/* set the value of the CPU Registers - return OK */
-              if (GspDbgThread)
-/*                GspSetRegistersInTrapFrame (ptr, Context, GspDbgThread->Tcb.TrapFrame);*/
-GspSetRegistersInTrapFrame (ptr, Context, TrapFrame);
+              if (NULL != GspDbgThread)
+                {
+                  GspSetRegistersInTrapFrame (ptr, Context, GspDbgThread->Tcb.TrapFrame);
+                }
               else
-                GspSetRegistersInTrapFrame (ptr, Context, TrapFrame);
+                {
+                  GspSetRegistersInTrapFrame (ptr, Context, TrapFrame);
+                }
               strcpy (GspOutBuffer, "OK");
               break;
             case 'P':		/* set the value of a single CPU register - return OK */
@@ -1150,11 +1173,14 @@ GspSetRegistersInTrapFrame (ptr, Context, TrapFrame);
                   if ((Register >= 0) && (Register < NUMREGS))
                     {
                       if (GspDbgThread)
-/*                        GspSetSingleRegisterInTrapFrame (ptr, Register,
-                                                         Context, GspDbgThread->Tcb.TrapFrame);*/
-GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
+                        {
+                          GspSetSingleRegisterInTrapFrame(ptr, Register,
+                                                          Context, GspDbgThread->Tcb.TrapFrame);
+                        }
                       else
-                        GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
+                        {
+                          GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
+                        }
                       strcpy (GspOutBuffer, "OK");
                       break;
                     }
@@ -1222,7 +1248,7 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
 
                 /* try to read optional parameter, pc unchanged if no parm */
                 if (GspHex2Long (&ptr, &Address))
-                Context->Eip = Address;
+                  Context->Eip = Address;
 
                 NewPC = Context->Eip;
 
@@ -1263,6 +1289,10 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
 #else
 #error Unknown compiler for inline assembler
 #endif
+                if (OldIrql < DISPATCH_LEVEL)
+                  {
+                    KeLowerIrql(OldIrql);
+                  }
 
                 return kdHandleException;
                 break;
