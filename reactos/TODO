@@ -1,0 +1,11 @@
+Hardware resource management
+Deleting namespace objects
+Directory functions
+File sharing
+Event pairs
+Io completion ports
+Cancel io support
+DMA support
+Registry support
+Cache read ahead
+Caching file mapping

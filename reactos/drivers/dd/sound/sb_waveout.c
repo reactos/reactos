@@ -1,0 +1,3 @@
+void write_wave()
+{
+}

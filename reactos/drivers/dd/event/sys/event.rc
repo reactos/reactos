@@ -1,0 +1,11 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	            VFT_DRV
+#define	VER_FILESUBTYPE	            VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "Sample Event Driver"
+#define VER_INTERNALNAME_STR        "event.sys"
+
+#include "common.ver"
+
