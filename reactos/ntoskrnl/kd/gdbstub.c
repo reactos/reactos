@@ -540,14 +540,17 @@ GspLong2Hex (PCHAR *Address,
 
 
 /*
- * Esp is not stored in the trap frame, although there is a member with it's name.
- * Instead, it was pointing to the location of the TrapFrame Esp member when the
- * exception occured.
+ * When coming from kernel mode, Esp is not stored in the trap frame.
+ * Instead, it was pointing to the location of the TrapFrame Esp member
+ * when the exception occured. When coming from user mode, Esp is just
+ * stored in the TrapFrame Esp member.
  */
 static LONG
 GspGetEspFromTrapFrame(PKTRAP_FRAME TrapFrame)
 {
-  return (LONG) &TrapFrame->Esp;
+
+  return KeGetPreviousMode() == KernelMode
+         ? (LONG) &TrapFrame->Esp : TrapFrame->Esp;
 }
 
 
