@@ -315,6 +315,8 @@ DirReadParam (LPTSTR line, LPTSTR *param, LPDWORD lpFlags)
 static VOID
 ExtendFilespec (LPTSTR file)
 {
+        INT len = 0;
+
 	if (!file)
 		return;
 
@@ -330,7 +332,6 @@ ExtendFilespec (LPTSTR file)
 	{
 		memmove (&file[1], &file[0], (_tcslen (file) + 1) * sizeof(TCHAR));
 		file[0] = _T('*');
-		return;
 	}
 
 	/* if no . add .* */
@@ -339,6 +340,14 @@ ExtendFilespec (LPTSTR file)
 		_tcscat (file, _T(".*"));
 		return;
 	}
+
+        /* if last character is '.' add '*' */
+        len = _tcslen (file);
+        if (file[len - 1] == _T('.'))
+        {
+                _tcscat (file, _T("*"));
+                return;
+        }
 }
 
 
@@ -1105,9 +1114,6 @@ INT cmd_dir (LPTSTR first, LPTSTR rest)
 	/* default to current directory */
 	if (!param)
 		param = ".";
-
-	if (_tcschr (param, _T('/')))
-		param = _tcstok (param, _T("/"));
 
 	/* parse the directory info */
 	if (DirParsePathspec (param, szPath, szFilespec))
