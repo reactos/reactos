@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.93 2003/08/15 10:53:16 rcampbell Exp $
+/* $Id: window.c,v 1.94 2003/08/15 11:11:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2551,6 +2551,8 @@ NtUserSetMenu(
     }
     
     WindowObject->Menu = hMenu;
+    
+    W32kReleaseMenuObject(MenuObject);
   }
   else
   {
@@ -2558,7 +2560,6 @@ NtUserSetMenu(
     WindowObject->Menu = 0;
   }
   
-  W32kReleaseMenuObject(MenuObject);
   W32kReleaseWindowObject(WindowObject);
   
   /* FIXME (from wine)
