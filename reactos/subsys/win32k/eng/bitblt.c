@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.37 2003/12/31 16:06:48 weiden Exp $
+/* $Id: bitblt.c,v 1.38 2004/01/11 19:52:27 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -226,6 +226,16 @@ EngBitBlt(SURFOBJ *DestObj,
   unsigned           i;
   POINTL             Pt;
   ULONG              Direction;
+  BOOL               UsesSource;
+  BOOL               UsesPattern;
+
+  UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+  UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);
+  if (! UsesSource && ! UsesPattern && 0xaacc != Rop4)
+    {
+    /* Copy destination onto itself: nop */
+    return TRUE;
+    }
 
   if (NULL != SourcePoint)
     {
@@ -1070,6 +1080,11 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
+
+  /* Dummy BitBlt to let driver know that something has changed.
+     0x00AA0029 is the Rop for D (no-op) */
+  IntEngBitBlt(DestObj, NULL, Mask, ClipRegion, DestColorTranslation,
+               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, 0x00AA0029);
 
   return Ret;
 }
