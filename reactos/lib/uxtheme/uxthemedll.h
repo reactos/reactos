@@ -19,12 +19,35 @@ struct UXTHEME_VTABLE_
 {
  HRESULT STDAPICALLTYPE (* p_DrawBackground)
  (
-  struct UXTHEME_DATA_ * pData,
-  HDC hdc,
-  int iPartId,
-  int iStateId,
-  const RECT * pRect,
-  const RECT * pClipRect
+  IN OUT struct UXTHEME_DATA_ * pData,
+  IN HDC hdc,
+  IN int iPartId,
+  IN int iStateId,
+  IN const RECT * pRect,
+  IN const RECT * pClipRect
+ );
+
+ HRESULT STDAPICALLTYPE (* p_DrawText)
+ (
+  IN OUT struct UXTHEME_DATA_ * pData,
+  IN HDC hdc,
+  IN int iPartId,
+  IN int iStateId,
+  IN LPCWSTR pszText,
+  IN int iCharCount,
+  IN DWORD dwTextFlags,
+  IN DWORD dwTextFlags2,
+  IN const RECT * pRect
+ );
+
+ HRESULT STDAPICALLTYPE (* p_GetBackgroundContentRect)
+ (
+  IN OUT struct UXTHEME_DATA_ * pData,
+  IN HDC hdc,
+  IN int iPartId,
+  IN int iStateId,
+  IN const RECT * pBoundingRect,
+  OUT RECT * pContentRect
  );
 };
 

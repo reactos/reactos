@@ -151,6 +151,58 @@ THEMEAPI DrawThemeParentBackground
  return E_FAIL;
 }
 
+THEMEAPI DrawThemeText
+(
+ IN HTHEME hTheme,
+ IN HDC hdc,
+ IN int iPartId,
+ IN int iStateId,
+ IN LPCWSTR pszText,
+ IN int iCharCount,
+ IN DWORD dwTextFlags,
+ IN DWORD dwTextFlags2,
+ IN const RECT * pRect
+)
+{
+ PUXTHEME_DATA pUxTheme = HTHEME_TO_UXTHEME_(hTheme);
+
+ return pUxTheme->pvt->p_DrawText
+ (
+  pUxTheme,
+  hdc,
+  iPartId,
+  iStateId,
+  pszText,
+  iCharCount,
+  dwTextFlags,
+  dwTextFlags2,
+  pRect
+ );
+}
+
+THEMEAPI GetThemeBackgroundContentRect
+(
+ IN HTHEME hTheme,
+ IN HDC hdc,
+ IN int iPartId,
+ IN int iStateId,
+ IN const RECT * pBoundingRect,
+ OUT RECT * pContentRect
+)
+{
+ PUXTHEME_DATA pUxTheme = HTHEME_TO_UXTHEME_(hTheme);
+
+ return pUxTheme->pvt->p_GetBackgroundContentRect
+ (
+  pUxTheme,
+  hdc,
+  iPartId,
+  iStateId,
+  pBoundingRect,
+  pContentRect
+ );
+}
+
 THEMEAPI_(BOOL) IsThemeBackgroundPartiallyTransparent
 (
  HTHEME hTheme,

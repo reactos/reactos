@@ -40,7 +40,7 @@ DrawThemeBackground            @6
 ; <unknown>                    @36
 ;DrawThemeIcon                 @37
 DrawThemeParentBackground      @38
-;DrawThemeText                 @39
+DrawThemeText                  @39
 ;EnableThemeDialogTexture      @40
 ;EnableTheming                 @41
 ;GetCurrentThemeName           @42
@@ -51,7 +51,7 @@ DrawThemeParentBackground      @38
 ; <unknown>                    @47
 ; <unknown>                    @48
 ;GetThemeAppProperties         @49
-;GetThemeBackgroundContentRect @50
+GetThemeBackgroundContentRect  @50
 ;GetThemeBackgroundExtent      @51
 ;GetThemeBackgroundRegion      @52
 ;GetThemeBool                  @53
