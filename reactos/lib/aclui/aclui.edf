@@ -16,7 +16,7 @@ EditSecurity=EditSecurity@8 @2
 ;ACLUI.13
 ;ACLUI.14
 ;ACLUI.15
-IID_ISecurityInformation DATA @16
+IID_ISecurityInformation @16 DATA
 
 
 ; EOF
