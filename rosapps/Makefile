@@ -29,6 +29,7 @@ APPS = 	calc \
         net$(SEP)netstat \
 	net$(SEP)ipconfig \
 	regedt32 \
+	regsvr32 \
 	welcome \
 	winfile
 
