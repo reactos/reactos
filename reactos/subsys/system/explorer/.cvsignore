@@ -4,6 +4,12 @@
 *.o
 *.sym
 *.map
+Debug
+Release
+UDebug
+URelease
+*.ncb
 *.opt
+*.aps
 *.ncb
 *.plg
