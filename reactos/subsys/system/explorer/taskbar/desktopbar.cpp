@@ -159,7 +159,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		int cy = HIWORD(lparam);
 
 		if (_hwndTaskBar)
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT+QUICKLAUNCH_WIDTH, 0, cx-(TASKBAR_LEFT+QUICKLAUNCH_WIDTH)-(NOTIFYAREA_WIDTH+1), cy, TRUE);
+			MoveWindow(_hwndTaskBar, TASKBAR_LEFT+QUICKLAUNCH_WIDTH, 0, cx-TASKBAR_LEFT-QUICKLAUNCH_WIDTH-(NOTIFYAREA_WIDTH+1), cy, TRUE);
 
 		if (_hwndNotify)
 			MoveWindow(_hwndNotify, cx-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
