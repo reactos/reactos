@@ -53,7 +53,7 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","MinorVersion",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","BuildNumber",0x00010001,0x00000565
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","PlatformId",0x00010001,0x00000002
-HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","SPMajorVersion",0x00010001,0x00000006
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","SPMajorVersion",0x00010001,0x00000005
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","SPMinorVersion",0x00010001,0x00000000
 ; application compatibility settings for Windows 2000
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","MajorVersion",0x00010001,0x00000005
