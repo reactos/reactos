@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.85 2004/09/21 19:17:26 weiden Exp $
+# $Id: makefile,v 1.86 2004/09/23 18:02:19 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -62,6 +62,7 @@ PROCESS_OBJECTS = \
 	process/proc.o \
 	process/cmdline.o \
 	process/create.o \
+	process/job.o \
 	process/session.o
 
 STRING_OBJECTS = string/lstring.o

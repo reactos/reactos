@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.89 2004/09/22 10:58:06 weiden Exp $
+/* $Id: stubs.c,v 1.90 2004/09/23 18:02:19 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -576,20 +576,6 @@ AllocateUserPhysicalPages(
  */
 BOOL
 STDCALL
-AssignProcessToJobObject(
-    HANDLE hJob,
-    HANDLE hProcess
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 BindIoCompletionCallback (
     HANDLE FileHandle,
     LPOVERLAPPED_COMPLETION_ROUTINE Function,
@@ -875,21 +861,6 @@ HeapSetInformation (
  */
 BOOL
 STDCALL
-IsProcessInJob (
-    HANDLE ProcessHandle,
-    HANDLE JobHandle,
-    PBOOL Result
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 IsSystemResumeAutomatic(
     VOID
     )
@@ -955,23 +926,6 @@ QueryActCtxW(
     PVOID pvBuffer,
     SIZE_T cbBuffer OPTIONAL,
     SIZE_T *pcbWrittenOrRequired OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-QueryInformationJobObject(
-    HANDLE hJob,
-    JOBOBJECTINFOCLASS JobObjectInformationClass,
-    LPVOID lpJobObjectInformation,
-    DWORD cbJobObjectInformationLength,
-    LPDWORD lpReturnLength
     )
 {
     STUB;
@@ -1157,23 +1111,6 @@ RestoreLastError(
     STUB;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetInformationJobObject(
-    HANDLE hJob,
-    JOBOBJECTINFOCLASS JobObjectInformationClass,
-    LPVOID lpJobObjectInformation,
-    DWORD cbJobObjectInformationLength
-    )
-{
-    STUB;
-    return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -1195,20 +1132,6 @@ EXECUTION_STATE
 STDCALL
 SetThreadExecutionState(
     EXECUTION_STATE esFlags
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-TerminateJobObject(
-    HANDLE hJob,
-    UINT uExitCode
     )
 {
     STUB;
