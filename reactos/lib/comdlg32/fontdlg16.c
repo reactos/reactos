@@ -231,7 +231,7 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
     lpChFont->lpTemplateName=(SEGPTR)&cf32a;
 
     ptr = GetProcAddress16(GetModuleHandle16("COMMDLG"), (LPCSTR) 16);
-    hInst = GetWindowLongA(HWND_32(lpChFont->hwndOwner), GWL_HINSTANCE);
+    hInst = GetWindowLongPtrA(HWND_32(lpChFont->hwndOwner), GWLP_HINSTANCE);
     bRet = DialogBoxIndirectParam16(hInst, hDlgTmpl16, lpChFont->hwndOwner,
                      (DLGPROC16) ptr, (DWORD)lpChFont);
     if (hResource16) FreeResource16(hDlgTmpl16);

@@ -55,8 +55,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -2118,7 +2120,7 @@ ret:
  *
  * Initialisation of the shell objects
  */
-static HRESULT FILEDLG95_SHELL_Init(HWND hwnd)
+static LRESULT FILEDLG95_SHELL_Init(HWND hwnd)
 {
   FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 
@@ -3635,7 +3637,7 @@ static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* addess of structure with da
     lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
     if (lfs)
     {
-        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        hInst = (HINSTANCE)GetWindowLongPtrA( lpofn->hwndOwner, GWLP_HINSTANCE );
         bRet = DialogBoxIndirectParamA( hInst, lfs->template, lpofn->hwndOwner,
                                         FD32_FileOpenDlgProc, (LPARAM)lfs);
         FD31_DestroyPrivate(lfs);
@@ -3665,7 +3667,7 @@ static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* addess of structure with da
     lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
     if (lfs)
     {
-        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        hInst = (HINSTANCE)GetWindowLongPtrW( lpofn->hwndOwner, GWLP_HINSTANCE );
         bRet = DialogBoxIndirectParamW( hInst, lfs->template, lpofn->hwndOwner,
                                         FD32_FileOpenDlgProc, (LPARAM)lfs);
         FD31_DestroyPrivate(lfs);

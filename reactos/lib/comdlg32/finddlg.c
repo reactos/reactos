@@ -182,7 +182,7 @@ HWND16 WINAPI FindText16( SEGPTR find )
     lfr->find = TRUE;
     if (FINDDLG_Get16BitsTemplate(lfr))
     {
-        hInst = GetWindowLongA( HWND_32(lfr->fr16->hwndOwner), GWL_HINSTANCE);
+        hInst = GetWindowLongPtrA( HWND_32(lfr->fr16->hwndOwner), GWLP_HINSTANCE);
         ptr = GetProcAddress16(GetModuleHandle16("COMMDLG"), (LPCSTR) 13);
         ret = CreateDialogIndirectParam16( hInst, lfr->template,
                     lfr->fr16->hwndOwner, (DLGPROC16) ptr, find);
@@ -212,7 +212,7 @@ HWND16 WINAPI ReplaceText16( SEGPTR find )
     lfr->find = FALSE;
     if (FINDDLG_Get16BitsTemplate(lfr))
     {
-        hInst = GetWindowLongA( HWND_32(lfr->fr16->hwndOwner), GWL_HINSTANCE);
+        hInst = GetWindowLongPtrA( HWND_32(lfr->fr16->hwndOwner), GWLP_HINSTANCE);
         ptr = GetProcAddress16(GetModuleHandle16("COMMDLG"), (LPCSTR) 14);
         ret = CreateDialogIndirectParam16( hInst, lfr->template,
                     lfr->fr16->hwndOwner, (DLGPROC16) ptr, find);

@@ -463,7 +463,7 @@ BOOL16 WINAPI ChooseColor16( LPCHOOSECOLOR16 lpChCol )
     }
 
     ptr = GetProcAddress16(GetModuleHandle16("COMMDLG"), (LPCSTR) 8);
-    hInst = GetWindowLongA(HWND_32(lpChCol->hwndOwner), GWL_HINSTANCE);
+    hInst = GetWindowLongPtrA(HWND_32(lpChCol->hwndOwner), GWLP_HINSTANCE);
     bRet = DialogBoxIndirectParam16(hInst, hDlgTmpl16, lpChCol->hwndOwner,
                      (DLGPROC16) ptr, (DWORD)lpChCol);
     if (hResource16) FreeResource16(hDlgTmpl16);
