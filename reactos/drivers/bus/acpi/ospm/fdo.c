@@ -11,7 +11,7 @@
 #include <bm.h>
 #include <bn.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 FADT_DESCRIPTOR_REV2 acpi_fadt;
