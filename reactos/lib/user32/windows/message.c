@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.19 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: message.c,v 1.20 2003/07/30 19:36:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -143,7 +143,10 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 	Cs = (CREATESTRUCTA*)lParam;
 	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszName);
-	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
+	if (HIWORD((ULONG)Cs->lpszClass) != 0)
+	  {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
+	  }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, Cs);
 	break;
       }
@@ -170,11 +173,12 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 	RtlInitUnicodeString(&UString, CsW->lpszName);
 	RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
 	CsA->lpszName = AString.Buffer;
-
-	RtlInitUnicodeString(&UString, CsW->lpszClass);
-	RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-	CsA->lpszClass = AString.Buffer;
-
+	if (HIWORD((ULONG)CsW->lpszClass) != 0)
+	  {
+	    RtlInitUnicodeString(&UString, CsW->lpszClass);
+	    RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+	    CsA->lpszClass = AString.Buffer;
+	  }
 	(*lParam) = (LPARAM)CsA;
 	break;
       }
@@ -192,7 +196,6 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 	break;
       }
     }
-  return;
 }
 
 
