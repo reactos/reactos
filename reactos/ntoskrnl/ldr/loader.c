@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.33 1999/10/20 23:09:26 rex Exp $
+/* $Id: loader.c,v 1.34 1999/10/23 18:58:40 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -217,6 +217,10 @@ LdrLoadAutoConfigDrivers (VOID)
 	 * Raw console driver
 	 */
 	LdrLoadAutoConfigDriver( L"blue.sys" );
+        /*
+         * VideoPort driver
+         */
+        LdrLoadAutoConfigDriver( L"vidport.sys" );
 }
 
 
