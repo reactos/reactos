@@ -442,12 +442,13 @@ NdisAllocateBufferPool(
 
         if (NumberOfDescriptors > 0) {
             Buffer             = &Pool->Buffers[0];
-	    DbgPrint("NDIS BUFFER ADDRESS << %x >>\n", Buffer);
+	    NDIS_DbgPrint(MAX_TRACE, ("NDIS BUFFER ADDRESS << %x >>\n", Buffer));
             Pool->FreeList     = Buffer;
             for (i = 1; i < NumberOfDescriptors; i++) {
                 Buffer->Next = &Pool->Buffers[i];
                 Buffer       = Buffer->Next;
-		DbgPrint("NDIS BUFFER ADDRESS << %x >>\n", Buffer);
+		NDIS_DbgPrint(MAX_TRACE, ("NDIS BUFFER ADDRESS << %x >>\n",
+		              Buffer));
             }
             Buffer->Next = NULL;
         } else
