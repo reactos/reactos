@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.33 2004/08/21 20:55:41 tamlin Exp $
+/* $Id: pnpmgr.c,v 1.34 2004/10/09 18:16:58 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -87,11 +87,6 @@ IoGetDeviceProperty(
     return STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  /*
-   * Used IRPs:
-   *  IRP_MN_QUERY_ID
-   *  IRP_MN_QUERY_BUS_INFORMATION
-   */
   switch (DeviceProperty)
   {
     case DevicePropertyBusNumber:
@@ -134,18 +129,94 @@ IoGetDeviceProperty(
       Data = &DeviceNode->CapabilityFlags->UINumber;
       break;
 
+    case DevicePropertyClassName:
+    case DevicePropertyClassGuid:
+    case DevicePropertyDriverKeyName:
+    case DevicePropertyManufacturer:
+    case DevicePropertyFriendlyName:
+      {
+        LPWSTR RegistryPropertyName, KeyNameBuffer;
+        UNICODE_STRING KeyName, ValueName;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
+        ULONG ValueInformationLength;
+        HANDLE KeyHandle;
+        NTSTATUS Status;
+
+        switch (DeviceProperty)
+        {
+          case DevicePropertyClassName:
+            RegistryPropertyName = L"Class"; break;
+          case DevicePropertyClassGuid:
+            RegistryPropertyName = L"ClassGuid"; break;
+          case DevicePropertyDriverKeyName:
+            RegistryPropertyName = L"Driver"; break;
+          case DevicePropertyManufacturer:
+            RegistryPropertyName = L"Mfg"; break;
+          case DevicePropertyFriendlyName:
+            RegistryPropertyName = L"FriendlyName"; break;
+          default: ;
+        }
+
+        KeyNameBuffer = ExAllocatePool(PagedPool,
+          (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+        if (KeyNameBuffer == NULL)
+          return STATUS_INSUFFICIENT_RESOURCES;
+
+        wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+        wcscat(KeyNameBuffer, DeviceNode->InstancePath.Buffer);
+
+        RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+        InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                                   OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+        Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+        ExFreePool(KeyNameBuffer);
+        if (!NT_SUCCESS(Status))
+          return Status;
+
+        RtlInitUnicodeString(&ValueName, RegistryPropertyName);
+        ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                                 Data[0]) + BufferLength;
+        ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
+        if (ValueInformation == NULL)
+        {
+          ZwClose(KeyHandle);
+          return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Status = ZwQueryValueKey(KeyHandle, &ValueName,
+                                 KeyValuePartialInformation, ValueInformation,
+                                 ValueInformationLength,
+                                 &ValueInformationLength);
+        *ResultLength = ValueInformation->DataLength;
+        ZwClose(KeyHandle);
+
+        if (ValueInformation->DataLength > BufferLength)
+          Status = STATUS_BUFFER_TOO_SMALL;
+
+        if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(ValueInformation);
+          return Status;
+        }
+
+        /* FIXME: Verify the value (NULL-terminated, correct format). */
+
+        RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
+                      ValueInformation->DataLength);
+        ExFreePool(ValueInformation);
+
+        return STATUS_SUCCESS;
+      }
+
     case DevicePropertyBootConfiguration:
     case DevicePropertyBootConfigurationTranslated:
-    case DevicePropertyClassGuid:
-    case DevicePropertyClassName:
     case DevicePropertyCompatibleIDs:
     case DevicePropertyDeviceDescription:
-    case DevicePropertyDriverKeyName:
     case DevicePropertyEnumeratorName: 
-    case DevicePropertyFriendlyName:
     case DevicePropertyHardwareID:
     case DevicePropertyLocationInformation:
-    case DevicePropertyManufacturer:
     case DevicePropertyPhysicalDeviceObjectName:
       return STATUS_NOT_IMPLEMENTED;
 
@@ -182,6 +253,47 @@ IoOpenDeviceRegistryKey(
   IN ACCESS_MASK DesiredAccess,
   OUT PHANDLE DevInstRegKey)
 {
+  static const WCHAR ClassKeyName[] = {
+    '\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',
+    'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t',
+    'r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\',
+    'C','l','a','s','s','\\'};
+  LPWSTR KeyNameBuffer;
+  UNICODE_STRING KeyName;
+  ULONG DriverKeyLength;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
+
+  if (DevInstKeyType == PLUGPLAY_REGKEY_DRIVER)
+  {
+    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                 0, NULL, &DriverKeyLength);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+      return Status;
+  
+    KeyNameBuffer = ExAllocatePool(PagedPool, DriverKeyLength + sizeof(ClassKeyName));
+    if (KeyNameBuffer == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopyMemory(KeyNameBuffer, ClassKeyName, sizeof(ClassKeyName));
+    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                 DriverKeyLength, KeyNameBuffer +
+                                 (sizeof(ClassKeyName) / sizeof(WCHAR)),
+                                 &DriverKeyLength);
+    if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(KeyNameBuffer);
+      return Status;
+    }
+
+    RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = ZwOpenKey(DevInstRegKey, DesiredAccess, &ObjectAttributes);
+    ExFreePool(KeyNameBuffer);
+    return Status;
+  }
+
   return STATUS_NOT_IMPLEMENTED;
 }
 

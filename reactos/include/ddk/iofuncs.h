@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.43 2004/08/21 12:12:35 tamlin Exp $ */
+/* $Id: iofuncs.h,v 1.44 2004/10/09 18:16:57 navaraf Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -1781,6 +1781,20 @@ IoWMIDeviceObjectToInstanceName(
     OUT PUNICODE_STRING InstanceName
     );
 
+NTSTATUS
+STDCALL
+IoAllocateDriverObjectExtension(
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PVOID  ClientIdentificationAddress,
+  IN ULONG  DriverObjectExtensionSize,
+  OUT PVOID  *DriverObjectExtension);
+
+
+PVOID
+STDCALL
+IoGetDriverObjectExtension(
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PVOID  ClientIdentificationAddress);
 
 /* --- --- --- INTERNAL or REACTOS ONLY --- --- --- */
 
