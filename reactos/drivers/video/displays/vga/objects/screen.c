@@ -1,4 +1,5 @@
 #include "../vgaddi.h"
+#include "../vgavideo/vgavideo.h"
 
 static WORD PaletteBuffer[] = {
    16, 0, // 16 entries, start with 0
@@ -101,9 +102,33 @@ DWORD getAvailableModes(HANDLE Driver,
   return modes.NumModes;
 }
 
+BOOL DeinitVGA(PPDEV ppdev)
+{
+  VIDEO_MEMORY VideoMemory;
+  ULONG ReturnedDataLength;
+
+  VideoMemory.RequestedVirtualAddress = (PVOID)ppdev->fbScreen;
+
+  if (EngDeviceIoControl(ppdev->KMDriver,
+			 IOCTL_VIDEO_UNMAP_VIDEO_MEMORY,
+			 (PVOID)&VideoMemory,
+			 sizeof(VIDEO_MEMORY),
+			 NULL,
+			 0,
+			 &ReturnedDataLength))
+    {
+      DbgPrint("Failed to unmap video memory.\n");
+      DbgBreakPoint();
+      return(FALSE);
+    }
+  return(TRUE);
+}
+
 BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 {
   ULONG ReturnedDataLength;
+  VIDEO_MEMORY VideoMemory;
+  VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
 
   ppdev->sizeSurf.cx = 640;
   ppdev->sizeSurf.cy = 480;
@@ -142,11 +167,7 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
     return(FALSE);
   }
 
-/*
-
-gotta fix this up.. it prevents drawing to vidmem right now
-
-    if (bFirst) {
+  if (bFirst) {
       // map video memory into virtual memory
       VideoMemory.RequestedVirtualAddress = NULL;
 
@@ -162,7 +183,8 @@ gotta fix this up.. it prevents drawing to vidmem right now
       }
 
       ppdev->fbScreen = VideoMemoryInfo.FrameBufferBase;
+      vidmem = (PUCHAR)ppdev->fbScreen;
    }
-*/
+
   return TRUE;
 }

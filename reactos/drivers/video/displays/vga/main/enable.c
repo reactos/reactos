@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: dwelch $
- * $Date: 2004/03/04 23:11:43 $
+ * $Date: 2004/03/16 21:11:44 $
  *
  */
 
@@ -189,9 +189,6 @@ DrvEnableDriver(IN ULONG EngineVersion,
 
   vgaPreCalc();
 
-  // FIXME: Use Vidport to map the memory properly
-  vidmem = (char *)(0xd0000000 + 0xa0000);
-
   VGADDI_InitializeOffScreenMem((640 * 480) >> 3, 65536 - ((640 * 480) >> 3));
 
   DriveEnableData->pdrvfn = FuncList;
@@ -367,6 +364,7 @@ DrvDisableSurface(IN DHPDEV PDev)
   PDEVSURF pdsurf = ppdev->AssociatedSurf;
   CHECKPOINT;
   DPRINT( "KMDriver: %x\n", ppdev->KMDriver );
+  DeinitVGA(ppdev);
   //  EngFreeMem(pdsurf->BankSelectInfo);
   CHECKPOINT;
   if (pdsurf->BankInfo != NULL) {

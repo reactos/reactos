@@ -201,6 +201,7 @@ typedef VOID (*PFN_ScreenToScreenBlt)(PDEVSURF, PRECTL, PPOINTL, INT);
 #define DEVSURF_IDENT   ('V' + ('S' << 8) + ('R' << 16) + ('F' << 24))
 
 BOOL InitVGA(PPDEV ppdev, BOOL bFirst); // screen.c: initialize VGA mode
+BOOL DeinitVGA(PPDEV ppdev); // screen.c: Free resources allocated in InitVGA
 
 #define DRIVER_EXTRA_SIZE 0
 #define ALLOC_TAG  TAG('D', 'v', 'g', 'a') // Dvga tag
