@@ -51,7 +51,25 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     ExAcquireFastMutex( &PortSet->Mutex );
     AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, 0 );
     if( AllocatedPort != (ULONG)-1 ) {
-	RtlSetBits( &PortSet->ProtoBitmap, AllocatedPort, 1 );
+	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
+	AllocatedPort += PortSet->StartingPort;
+    }
+    ExReleaseFastMutex( &PortSet->Mutex );
+
+    return AllocatedPort;
+}
+
+ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
+    ULONG AllocatedPort;
+
+    Lowest -= PortSet->StartingPort;
+    Highest -= PortSet->StartingPort;
+
+    ExAcquireFastMutex( &PortSet->Mutex );
+    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Lowest );
+    if( AllocatedPort != (ULONG)-1 && AllocatedPort >= Lowest &&
+        AllocatedPort <= Highest) {
+	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
     }
     ExReleaseFastMutex( &PortSet->Mutex );

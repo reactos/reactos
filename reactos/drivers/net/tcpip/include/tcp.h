@@ -151,6 +151,10 @@ NTSTATUS TCPTranslateError( int OskitError );
 
 VOID TCPTimeout();
 
+UINT TCPAllocatePort( UINT HintPort );
+
+VOID TCPFreePort( UINT Port );
+
 NTSTATUS TCPStartup(
   VOID);
 

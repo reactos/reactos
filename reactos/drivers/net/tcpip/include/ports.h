@@ -26,5 +26,6 @@ VOID PortsShutdown( PPORT_SET PortSet );
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port );
 BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port );
 ULONG AllocateAnyPort( PPORT_SET PortSet );
+ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest );
 
 #endif/*_TCPIP_PORTS_H*/

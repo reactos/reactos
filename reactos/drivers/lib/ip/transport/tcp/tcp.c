@@ -17,6 +17,7 @@ LIST_ENTRY SignalledConnections;
 LIST_ENTRY SleepingThreadsList;
 FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
+PORT_SET TCPPorts;
 
 static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 				       ULONG NewState ) {
@@ -268,6 +269,8 @@ NTSTATUS TCPStartup(VOID)
     InitializeListHead( &SleepingThreadsList );    
     InitializeListHead( &SignalledConnections );
 
+    PortsStartup( &TCPPorts, 1, 0xfffe );
+
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();
     
@@ -307,6 +310,8 @@ NTSTATUS TCPShutdown(VOID)
     TCPInitialized = FALSE;
 
     DeinitOskitTCP();
+
+    PortsShutdown( &TCPPorts );
 
     return STATUS_SUCCESS;
 }
@@ -618,6 +623,17 @@ VOID TCPTimeout(VOID) {
     }
     DrainSignals();
     TcpipRecursiveMutexLeave( &TCPLock );
+}
+
+UINT TCPAllocatePort( UINT HintPort ) {
+    if( HintPort ) {
+	if( AllocatePort( &TCPPorts, HintPort ) ) return HintPort; 
+	else return (UINT)-1;
+    } else return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
+}
+
+VOID TCPFreePort( UINT Port ) {
+    DeallocatePort( &TCPPorts, Port );
 }
 
 /* EOF */
