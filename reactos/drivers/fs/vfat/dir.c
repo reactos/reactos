@@ -36,7 +36,7 @@ BOOL fsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
  long long int mult;
   Day=wDosDate&0x001f;
   Month= (wDosDate&0x00e0)>>5;//1=January
-  Year= ((wDosDate&0xff00)>>8)+1980;
+  Year= ((wDosDate&0xfe00)>>9)+1980;
   Second=(wDosTime&0x001f)<<1;
   Minute=(wDosTime&0x07e0)>>5;
   Hour=  (wDosTime&0xf100)>>11;
@@ -49,13 +49,13 @@ BOOL fsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
   mult *=24;
   *pTime +=(Day-1)*mult;
   if((Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0))
-    *pTime += MonthsDF1[1][Month-1];
+    *pTime += MonthsDF1[1][Month-1]*mult;
   else
-    *pTime += MonthsDF1[0][Month-1];
-  *pTime +=(Year-1601)*mult*365
+    *pTime += MonthsDF1[0][Month-1]*mult;
+  *pTime +=((Year-1601)*365
            +(Year-1601)/4
            -(Year-1601)/100
-           +(Year-1601)/400;
+           +(Year-1601)/400)*mult;
   return TRUE;
 }
 #define DosDateTimeToFileTime fsdDosDateTimeToFileTime
@@ -246,6 +246,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   while(RC==STATUS_SUCCESS && BufferLength >0)
   {
     OldEntry=pCcb->StartEntry;
+CHECKPOINT;
     RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartEntry);
 DPRINT("Found %w,RC=%x,entry %x\n",tmpFcb.ObjectName,RC
  ,pCcb->StartEntry);
