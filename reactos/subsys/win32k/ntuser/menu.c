@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.33 2003/11/23 12:31:53 weiden Exp $
+/* $Id: menu.c,v 1.34 2003/12/17 19:56:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,11 +162,11 @@ IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
   if(bRecurse && MenuItem->hSubMenu)
   {
     PMENU_OBJECT SubMenuObject;
-    SubMenuObject = (PMENU_OBJECT)IntGetWindowObject(
-		MenuItem->hSubMenu );
+    SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu );
     if(SubMenuObject)
     {
       IntDestroyMenuObject(SubMenuObject, bRecurse, TRUE);
+      IntReleaseMenuObject(SubMenuObject);
     }
   }
   
@@ -217,14 +217,11 @@ IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse)
 }
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess)
+IntDestroyMenuObject(PMENU_OBJECT MenuObject, 
+                     BOOL bRecurse, BOOL RemoveFromProcess)
 {
-  PW32PROCESS W32Process;
-  
   if(MenuObject)
   {
-    W32Process = PsGetWin32Process();
-    
     /* remove all menu items */
     ExAcquireFastMutexUnsafe (&MenuObject->MenuItemsLock);
     IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
@@ -232,14 +229,12 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProc
     
     if(RemoveFromProcess)
     {
-      ExAcquireFastMutexUnsafe(&W32Process->MenuListLock);
+      ExAcquireFastMutexUnsafe(&MenuObject->W32Process->MenuListLock);
       RemoveEntryList(&MenuObject->ListEntry);
-      ExReleaseFastMutexUnsafe(&W32Process->MenuListLock);
+      ExReleaseFastMutexUnsafe(&MenuObject->W32Process->MenuListLock);
     }
     
-    IntReleaseMenuObject(MenuObject); // needed?
-    
-    ObmCloseHandle(W32Process->WindowStation->HandleTable, MenuObject->Self);
+    ObmCloseHandle(MenuObject->W32Process->WindowStation->HandleTable, MenuObject->Self);
   
     return TRUE;
   }
@@ -261,8 +256,9 @@ IntCreateMenu(PHANDLE Handle)
     *Handle = 0;
     return NULL;
   }
-
+  
   MenuObject->Self = *Handle;
+  MenuObject->W32Process = Win32Process;
   MenuObject->RtoL = FALSE; /* default */
   MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
   MenuObject->MenuInfo.fMask = 0; /* not used */
@@ -277,9 +273,9 @@ IntCreateMenu(PHANDLE Handle)
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
 
   /* Insert menu item into process menu handle list */
-  ExAcquireFastMutexUnsafe (&Win32Process->MenuListLock);
-  InsertTailList (&Win32Process->MenuListHead,  &MenuObject->ListEntry);
-  ExReleaseFastMutexUnsafe (&Win32Process->MenuListLock);
+  ExAcquireFastMutexUnsafe(&Win32Process->MenuListLock);
+  InsertTailList(&Win32Process->MenuListHead, &MenuObject->ListEntry);
+  ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
 
   return MenuObject;
 }
@@ -356,17 +352,19 @@ IntCloneMenu(PMENU_OBJECT Source)
 {
   HANDLE Handle;
   PMENU_OBJECT MenuObject;
+  PW32PROCESS Process = PsGetWin32Process();
   
   if(!Source)
     return NULL;
     
   MenuObject = (PMENU_OBJECT)ObmCreateObject(
-    PsGetWin32Process()->WindowStation->HandleTable, Handle, 
+    Process->WindowStation->HandleTable, &Handle, 
     otMenu, sizeof(MENU_OBJECT));  
   if(!MenuObject)
     return NULL;
   
   MenuObject->Self = Handle;
+  MenuObject->W32Process = Process;
   MenuObject->RtoL = Source->RtoL;
   MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
   MenuObject->MenuInfo.fMask = Source->MenuInfo.fMask;
@@ -379,6 +377,11 @@ IntCloneMenu(PMENU_OBJECT Source)
   MenuObject->MenuItemCount = 0;
   MenuObject->MenuItemList = NULL;  
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
+  
+  /* Insert menu item into process menu handle list */
+  ExAcquireFastMutexUnsafe(&Process->MenuListLock);
+  InsertTailList(&Process->MenuListHead, &MenuObject->ListEntry);
+  ExReleaseFastMutexUnsafe(&Process->MenuListLock);
 
   IntCloneMenuItems(MenuObject, Source);
 
@@ -1033,7 +1036,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   PEPROCESS CurrentProcess;
   PLIST_ENTRY LastHead = NULL;
   PMENU_OBJECT MenuObject;
-
+  
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
   {
@@ -1183,7 +1186,7 @@ BOOL STDCALL
 NtUserDestroyMenu(
   HMENU hMenu)
 {
-  /* FIXME, check if menu belongs to the process */
+  BOOL Ret;
   
   PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
@@ -1191,8 +1194,17 @@ NtUserDestroyMenu(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
+  if(MenuObject->W32Process != PsGetWin32Process())
+  {
+    IntReleaseMenuObject(MenuObject);
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return FALSE;
+  }
 
-  return IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+  Ret = IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+  
+  IntReleaseMenuObject(MenuObject);
+  return Ret;
 }
 
 

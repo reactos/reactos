@@ -32,6 +32,7 @@ typedef struct _MENU_ITEM
 typedef struct _MENU_OBJECT
 {
   HANDLE Self;
+  PW32PROCESS W32Process;
   LIST_ENTRY ListEntry;
   int MenuItemCount;
   FAST_MUTEX MenuItemsLock;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.7 2003/12/12 14:22:37 gvg Exp $
+/* $Id: object.c,v 1.8 2003/12/17 19:56:13 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -113,7 +113,7 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
       Current = Current->Flink;
       if (Current == &(HandleTable->ListHead))
 	{
-          DPRINT1("Invalid handle\n");
+          DPRINT1("Invalid handle 0x%x\n", Handle);
 	  return NULL;
 	}
     }
@@ -479,7 +479,7 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
-      DPRINT1("Object type mismatch\n");
+      DPRINT1("Object type mismatch 0x%x 0x%x\n", ObjectType, ObjectHeader->Type);
       return STATUS_UNSUCCESSFUL;
     }
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.165 2003/12/17 13:11:55 weiden Exp $
+/* $Id: window.c,v 1.166 2003/12/17 19:56:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -246,6 +246,56 @@ IntWinListChildren(PWINDOW_OBJECT Window)
 }
 
 /***********************************************************************
+ *           IntSendDestroyMsg
+ */
+static void IntSendDestroyMsg(HWND Wnd)
+{
+#if 0 /* FIXME */
+  GUITHREADINFO info;
+
+  if (GetGUIThreadInfo(GetCurrentThreadId(), &info))
+    {
+      if (Wnd == info.hwndCaret)
+	{
+	  DestroyCaret();
+	}
+    }
+#endif
+
+  /*
+   * Send the WM_DESTROY to the window.
+   */
+  IntSendMessage(Wnd, WM_DESTROY, 0, 0, TRUE);
+
+  /*
+   * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
+   * make sure that the window still exists when we come back.
+   */
+#if 0 /* FIXME */
+  if (IsWindow(Wnd))
+    {
+      HWND* pWndArray;
+      int i;
+
+      if (!(pWndArray = WIN_ListChildren( hwnd ))) return;
+
+      /* start from the end (FIXME: is this needed?) */
+      for (i = 0; pWndArray[i]; i++) ;
+
+      while (--i >= 0)
+	{
+	  if (IsWindow( pWndArray[i] )) WIN_SendDestroyMsg( pWndArray[i] );
+	}
+      HeapFree(GetProcessHeap(), 0, pWndArray);
+    }
+  else
+    {
+      DPRINT("destroyed itself while in WM_DESTROY!\n");
+    }
+#endif
+}
+
+/***********************************************************************
  *           IntDestroyWindow
  *
  * Destroy storage associated to a window. "Internals" p.358
@@ -258,12 +308,18 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   HWND *Children;
   HWND *ChildHandle;
   PWINDOW_OBJECT Child;
-
+  PMENU_OBJECT Menu;
+  
   if (! IntWndBelongsToThread(Window, ThreadData))
     {
-      DPRINT1("Window doesn't belong to current thread\n");
       return 0;
     }
+  
+  if(SendMessages)
+  {
+    /* Send destroy messages */
+    IntSendDestroyMsg(Window->Self);
+  }
 
   /* free child windows */
   Children = IntWinListChildren(Window);
@@ -274,10 +330,15 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
           Child = IntGetProcessWindowObject(ProcessData, *ChildHandle);
           if (NULL != Child)
             {
-              if (IntWndBelongsToThread(Child, ThreadData))
-                  IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
+              if(IntWndBelongsToThread(Child, ThreadData))
+              {
+                IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
+              }
               else
-                  IntSendMessage(Child->Self, WM_DESTROY, 0, 0, TRUE);
+              {
+                IntSendDestroyMsg(Child->Self);
+                IntDestroyWindow(Child, ProcessData, Child->OwnerThread->Win32Thread, FALSE);
+              }
               IntReleaseWindowObject(Child);
             }
         }
@@ -285,7 +346,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
 
   if (SendMessages)
-    {
+    {      
       /*
        * Clear the update region to make sure no WM_PAINT messages will be
        * generated for this window while processing the WM_NCDESTROY.
@@ -325,22 +386,23 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   /* free resources associated with the window */
   TIMER_RemoveWindowTimers(Window->Self);
 #endif
-
-#if 0 /* FIXME */
-  if (0 == (Window->Style & WS_CHILD))
+  
+  if (!(Window->Style & WS_CHILD) && Window->IDMenu
+      && (Menu = IntGetMenuObject((HMENU)Window->IDMenu)))
     {
-      HMENU Menu = (HMENU) NtUserSetWindowLongW(Window->Self, GWL_ID, 0);
-      if (NULL != Menu)
-	{
-	  DestroyMenu(Menu);
-	}
+	IntDestroyMenuObject(Menu, TRUE, TRUE);
+	Window->IDMenu = 0;
+	IntReleaseMenuObject(Menu);
     }
-  if (Window->hSysMenu)
-    {
-      DestroyMenu(Window->hSysMenu);
-      Window->hSysMenu = 0;
-    }
-#endif
+  
+  if(Window->SystemMenu
+     && (Menu = IntGetMenuObject(Window->SystemMenu)))
+  {
+    IntDestroyMenuObject(Menu, TRUE, TRUE);
+    Window->SystemMenu = (HMENU)0;
+    IntReleaseMenuObject(Menu);
+  }
+  
   DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 #if 0 /* FIXME */
   WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
@@ -477,6 +539,8 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       if(MenuObject)
       {
         IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+        WindowObject->SystemMenu = (HMENU)0;
+        IntReleaseMenuObject(MenuObject);
       }
     }
       
@@ -515,6 +579,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
         //IntReleaseMenuObject(NewMenuObject);
       }
       IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+      IntReleaseMenuObject(MenuObject);
     }
     if(RetMenu)
       return ret;
@@ -523,7 +588,10 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
   }
   else
   {
-    return IntGetMenuObject((HMENU)WindowObject->SystemMenu);
+    if(WindowObject->SystemMenu)
+      return IntGetMenuObject((HMENU)WindowObject->SystemMenu);
+    else
+      return NULL;
   }
 }
 
@@ -714,58 +782,6 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    return !IntIsWindow(hWndOldParent) ? NULL : WndOldParent;
 }
 
-
-/***********************************************************************
- *           IntSendDestroyMsg
- */
-static void IntSendDestroyMsg(HWND Wnd)
-{
-#if 0 /* FIXME */
-  GUITHREADINFO info;
-
-  if (GetGUIThreadInfo(GetCurrentThreadId(), &info))
-    {
-      if (Wnd == info.hwndCaret)
-	{
-	  DestroyCaret();
-	}
-    }
-#endif
-
-  /*
-   * Send the WM_DESTROY to the window.
-   */
-  IntSendMessage(Wnd, WM_DESTROY, 0, 0, TRUE);
-
-  /*
-   * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
-   * make sure that the window still exists when we come back.
-   */
-#if 0 /* FIXME */
-  if (IsWindow(Wnd))
-    {
-      HWND* pWndArray;
-      int i;
-
-      if (!(pWndArray = WIN_ListChildren( hwnd ))) return;
-
-      /* start from the end (FIXME: is this needed?) */
-      for (i = 0; pWndArray[i]; i++) ;
-
-      while (--i >= 0)
-	{
-	  if (IsWindow( pWndArray[i] )) WIN_SendDestroyMsg( pWndArray[i] );
-	}
-      HeapFree(GetProcessHeap(), 0, pWndArray);
-    }
-  else
-    {
-      DPRINT("destroyed itself while in WM_DESTROY!\n");
-    }
-#endif
-}
-
-
 BOOL FASTCALL
 IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
 {
@@ -780,9 +796,14 @@ IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
     }
   }
   
-  WindowObject->SystemMenu = MenuObject->Self;
-  if(MenuObject) /* FIXME check window style, propably return FALSE ? */
+  if(MenuObject)
+  {
+    /* FIXME check window style, propably return FALSE ? */
+    WindowObject->SystemMenu = MenuObject->Self;
     MenuObject->IsSystemMenu = TRUE;
+  }
+  else
+    WindowObject->SystemMenu = (HMENU)0;
   
   return TRUE;
 }
@@ -1137,15 +1158,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DPRINT("1: Style is now %d\n", WindowObject->Style);
   
-  SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
-  if(SystemMenu)
-  {
-    WindowObject->SystemMenu = SystemMenu->Self;
-    IntReleaseMenuObject(SystemMenu);
-  }
-  else
-    WindowObject->SystemMenu = (HANDLE)0;
-  
+  WindowObject->SystemMenu = (HMENU)0;
   WindowObject->ContextHelpId = 0;
   WindowObject->IDMenu = (UINT)hMenu;
   WindowObject->Instance = hInstance;
@@ -1203,7 +1216,18 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	  /* FIXME: Note the window needs a size. */ 
 	}
     }
-
+  
+  /* create system menu */
+  if((WindowObject->Style & WS_SYSMENU) && (WindowObject->Style & WS_CAPTION))
+  {
+    SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
+    if(SystemMenu)
+    {
+      WindowObject->SystemMenu = SystemMenu->Self;
+      IntReleaseMenuObject(SystemMenu);
+    }
+  }
+  
   /* Insert the window into the thread's window list. */
   ExAcquireFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
   InsertTailList (&PsGetWin32Thread()->WindowListHead, 
@@ -1581,9 +1605,6 @@ NtUserDestroyWindow(HWND Wnd)
     }
 #endif
 
-  /* Send destroy messages */
-  IntSendDestroyMsg(Wnd);
-
   if (!IntIsWindow(Wnd))
     {
       return TRUE;
@@ -1594,7 +1615,8 @@ NtUserDestroyWindow(HWND Wnd)
 
   /* Destroy the window storage */
   IntDestroyWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);
-
+  
+  IntReleaseWindowObject(Window);
   return TRUE;
 }
 
