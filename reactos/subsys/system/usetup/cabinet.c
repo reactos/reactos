@@ -1618,6 +1618,7 @@ CabinetExtractFile(PWCHAR FileName)
   FILETIME FileTime;
   WCHAR DestName[MAX_PATH];
   WCHAR TempName[MAX_PATH];
+  PWCHAR s;
   NTSTATUS NtStatus;
   UNICODE_STRING UnicodeString;
   IO_STATUS_BLOCK IoStatusBlock;
@@ -1653,10 +1654,16 @@ CabinetExtractFile(PWCHAR FileName)
 
   wcscpy(DestName, DestPath);
   wcscat(DestName, FileName);
-  
+
+  while (NULL != (s = wcsstr(DestName, L"\\.\\")))
+    {
+      memmove(s, s + 2, (wcslen(s + 2) + 1) *sizeof(WCHAR));
+    }
+
   /* Create destination file, fail if it already exists */
   RtlInitUnicodeString(&UnicodeString,
     DestName);
+
 
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
