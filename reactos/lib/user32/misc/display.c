@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.9 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: display.c,v 1.10 2004/07/08 00:46:22 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -241,19 +241,30 @@ ChangeDisplaySettingsExA(
 {
   LONG rc;
   UNICODE_STRING DeviceName;
+  PUNICODE_STRING pDeviceName = &DeviceName;
   DEVMODEW DevModeW;
+  LPDEVMODEW pDevModeW = &DevModeW;
 
-  if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
+  if (lpszDeviceName != NULL)
     {
-      SetLastError ( ERROR_OUTOFMEMORY );
-      return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
+      if ( !RtlCreateUnicodeStringFromAsciiz ( pDeviceName, (PCSZ)lpszDeviceName ) )
+        {
+          SetLastError ( ERROR_OUTOFMEMORY );
+          return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
+        }
     }
+  else
+    pDeviceName = NULL;
 
-  RosRtlDevModeA2W ( &DevModeW, lpDevMode );
+  if (lpDevMode != NULL)
+    RosRtlDevModeA2W ( pDevModeW, lpDevMode );
+  else
+    pDevModeW = NULL;
 
-  rc = NtUserChangeDisplaySettings ( &DeviceName, &DevModeW, hwnd, dwflags, lParam );
+  rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
 
-  RtlFreeUnicodeString ( &DeviceName );
+  if (lpszDeviceName != NULL)
+    RtlFreeUnicodeString ( &DeviceName );
 
   return rc;
 }
@@ -286,12 +297,17 @@ ChangeDisplaySettingsExW(
 {
   LONG rc;
   UNICODE_STRING DeviceName;
+  PUNICODE_STRING pDeviceName = &DeviceName;
 
-  RtlInitUnicodeString ( &DeviceName, lpszDeviceName );
+  if (lpszDeviceName != NULL)
+    RtlInitUnicodeString ( pDeviceName, lpszDeviceName );
+  else
+    pDeviceName = NULL;
 
-  rc = NtUserChangeDisplaySettings ( &DeviceName, lpDevMode, hwnd, dwflags, lParam );
+  rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, hwnd, dwflags, lParam );
 
-  RtlFreeUnicodeString ( &DeviceName );
+  if (lpszDeviceName != NULL)
+    RtlFreeUnicodeString ( pDeviceName );
 
   return rc;
 }
