@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.111 2003/08/04 20:44:54 ekohl Exp $
+/* $Id: process.c,v 1.112 2003/08/10 20:33:05 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -952,7 +952,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
-	if (ProcessInformationLength < sizeof(PROCESS_BASIC_INFORMATION))
+	if (ProcessInformationLength != sizeof(PROCESS_BASIC_INFORMATION))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
@@ -989,7 +989,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessVmCounters:
-	if (ProcessInformationLength < sizeof(VM_COUNTERS))
+	if (ProcessInformationLength != sizeof(VM_COUNTERS))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
@@ -1021,7 +1021,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessDefaultHardErrorMode:
-	if (ProcessInformationLength < sizeof(ULONG))
+	if (ProcessInformationLength != sizeof(ULONG))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
@@ -1038,7 +1038,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessPriorityBoost:
-	if (ProcessInformationLength < sizeof(ULONG))
+	if (ProcessInformationLength != sizeof(ULONG))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
@@ -1059,7 +1059,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessPriorityClass:
-	if (ProcessInformationLength < sizeof(USHORT))
+	if (ProcessInformationLength != sizeof(USHORT))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
