@@ -405,6 +405,11 @@ template<typename T> struct SIfacePtr
 		return _p->QueryInterface(riid, (LPVOID*)p);
 	}
 
+	T* get()
+	{
+		return _p;
+	}
+
 	void Free()
 	{
 		T* h = _p;

@@ -569,11 +569,14 @@ struct DWebBrowserEvents2IF
  // die nicht auf das Internet zugreift (z.B. addcom/./index.html) dargestellt werden kann.
 struct ANSUNC BrowserNavigator
 {
-	BrowserNavigator(IWebBrowser* browser);
+	BrowserNavigator();
 
+	void	attach(IWebBrowser* browser);
 	void	goto_url(LPCTSTR url);
 	void	set_html_page(const String& html_txt);
 	void	navigated(LPCTSTR url);
+
+	IWebBrowser* get_browser() {return _browser.get();}
 
 protected:
 	SIfacePtr<IWebBrowser> _browser;
@@ -889,13 +892,13 @@ struct DWebBrowserEvents2Handler : public DWebBrowserEvents2Impl
 {
 	typedef DWebBrowserEvents2Impl super;
 
-	DWebBrowserEvents2Handler(HWND hwnd, HWND hwndFrame, IWebBrowser* browser)
-	 :	_hwnd(hwnd),
+	DWebBrowserEvents2Handler(HWND hwnd, HWND hwndFrame, BrowserNavigator& navigator)
+	 :	DWebBrowserEvents2Impl(navigator),
+		_hwnd(hwnd),
 		_hwndFrame(hwndFrame),
-		_navigator(browser),
-		DWebBrowserEvents2Impl(_navigator),
-		_browser(browser, IID_IWebBrowser2),
-		_connector(browser, DIID_DWebBrowserEvents2, this)
+		_navigator(navigator),
+		_browser(navigator.get_browser(), IID_IWebBrowser2),
+		_connector(navigator.get_browser(), DIID_DWebBrowserEvents2, this)
 	{
 	}
 
@@ -1058,7 +1061,7 @@ protected:
 protected:
 	HWND	_hwnd;
 	HWND	_hwndFrame;
-	BrowserNavigator _navigator;
+	BrowserNavigator& _navigator;
 	SIfacePtr<IWebBrowser2> _browser;
 	EventConnector _connector;
 };
@@ -1087,6 +1090,7 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 protected:
+	BrowserNavigator _navigator;
 	auto_ptr<DWebBrowserEvents2Handler> _evt_handler;
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);

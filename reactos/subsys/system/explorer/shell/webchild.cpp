@@ -101,10 +101,14 @@ void BStr::assign(const VARIANT& var)
 }
 
 
-BrowserNavigator::BrowserNavigator(IWebBrowser* browser)
- :	_browser(browser),
-	_browser_initialized(false)
+BrowserNavigator::BrowserNavigator()
+ :	_browser_initialized(false)
 {
+}
+
+void BrowserNavigator::attach(IWebBrowser* browser)
+{
+	_browser = browser;
 }
 
 void BrowserNavigator::goto_url(LPCTSTR url)
@@ -198,18 +202,17 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 		hr = create_control(hwnd, CLSID_MozillaBrowser, IID_IWebBrowser2);
 
 	if (SUCCEEDED(hr)) {
+		_navigator.attach(_control);
+
 		HWND hwndFrame = GetParent(info._hmdiclient);
 
 		 // handling events using DWebBrowserEvents2
-		_evt_handler = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _control));
-
-		SIfacePtr<IWebBrowser2> browser(get_browser());
+		_evt_handler = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _navigator));
 
 #ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
 		Variant vtMissing;
 #endif
-
-		browser->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
+		get_browser()->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 		//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 	}
 }
