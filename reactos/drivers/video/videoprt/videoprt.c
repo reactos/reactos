@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.13 2004/03/08 14:31:49 navaraf Exp $
+ * $Id: videoprt.c,v 1.14 2004/03/08 20:27:33 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -144,7 +144,6 @@ UCHAR
 STDCALL
 VideoPortGetCurrentIrql(VOID)
 {
-  DPRINT("VideoPortGetCurrentIrql\n");
   return KeGetCurrentIrql();
 }
 
@@ -408,8 +407,6 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
     {
       UNIMPLEMENTED;
     }
-
-  DPRINT("ParameterName %S\n", ParameterName);
 
   Context.HwDeviceExtension = HwDeviceExtension;
   Context.HwContext = HwContext;
@@ -965,8 +962,6 @@ VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
   KIRQL OldIrql;
 
-  DPRINT("VideoPortSynchronizeExecution\n");
-
   switch(Priority)
     {
     case VpLowPriority:
@@ -1400,6 +1395,7 @@ VideoPortDDCMonitorHelper(
    ULONG EdidBufferSize
    )
 {
+   DPRINT1("VideoPortDDCMonitorHelper() - Unimplemented.\n");
    return FALSE;
 }
 
@@ -1564,8 +1560,10 @@ VideoPortAllocateCommonBuffer ( IN PVOID HwDeviceExtension,
 				IN BOOLEAN CacheEnabled,
 				PVOID Reserved )
 {
-  DPRINT1("VideoPortAllocateCommonBuffer(): Unimplemented.\n");
-  return(NULL);
+  return HalAllocateCommonBuffer((PADAPTER_OBJECT)VpDmaAdapter,
+				 DesiredLength,
+				 LogicalAddress,
+				 CacheEnabled);
 }
 
 VOID
@@ -1577,7 +1575,11 @@ VideoPortReleaseCommonBuffer ( IN PVOID HwDeviceExtension,
 			       IN PVOID VirtualAddress,
 			       IN BOOLEAN CacheEnabled )
 {
-  DPRINT1("VideoPortReleaseCommonBuffer(): Unimplemented.\n");
+  HalFreeCommonBuffer((PADAPTER_OBJECT)VpDmaAdapter,
+		      Length,
+		      LogicalAddress,
+		      VirtualAddress,
+		      CacheEnabled);
 }
 
 VP_STATUS
@@ -1590,13 +1592,50 @@ VideoPortCreateSecondaryDisplay ( IN PVOID HwDeviceExtension,
   return STATUS_UNSUCCESSFUL;
 }
 
+VOID
+STDCALL
+VideoPortPutDmaAdapter ( IN PVOID HwDeviceExtension,
+			 IN PVP_DMA_ADAPTER VpDmaAdapter )
+{
+  DPRINT("VideoPortPutDmaAdapter(): Unimplemented.\n");
+}
+
 PVP_DMA_ADAPTER
 STDCALL
 VideoPortGetDmaAdapter ( IN PVOID HwDeviceExtension,
 			 IN PVP_DEVICE_DESCRIPTION VpDeviceExtension )
 {
-  DPRINT1("VideoPortGetDmaAdapter(): Unimplemented.\n");
-  return NULL;
+  DEVICE_DESCRIPTION DeviceDescription;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+  ULONG NumberOfMapRegisters;
+  PVP_DMA_ADAPTER Adapter;
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  DPRINT("VideoPortGetDmaAdapter()\n");
+  
+  DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
+  DeviceDescription.Master = TRUE /* ?? */;
+  DeviceDescription.ScatterGather = TRUE /* ?? */;
+  DeviceDescription.DemandMode = FALSE /* ?? */;
+  DeviceDescription.AutoInitialize = FALSE /* ?? */;
+  DeviceDescription.Dma32BitAddresses = TRUE /* ?? */;
+  DeviceDescription.IgnoreCount = FALSE /* ?? */;
+  DeviceDescription.Reserved1 = FALSE;
+  DeviceDescription.BusNumber = DeviceExtension->SystemIoBusNumber;
+  DeviceDescription.DmaChannel = 0 /* ?? */;
+  DeviceDescription.InterfaceType = DeviceExtension->AdapterInterfaceType;
+  DeviceDescription.DmaWidth = Width8Bits;
+  DeviceDescription.DmaSpeed = Compatible;
+  DeviceDescription.MaximumLength = 65536 /* ?? */;
+  DeviceDescription.DmaPort = 0;
+
+  Adapter = 
+    (PVP_DMA_ADAPTER)HalGetAdapter(&DeviceDescription, &NumberOfMapRegisters);
+  DPRINT("Adapter %X\n", Adapter);
+  return(Adapter);
 }
 
 
@@ -1613,6 +1652,7 @@ VideoPortGetVersion ( IN PVOID HwDeviceExtension,
    Version.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
    if (VpOsVersionInfo->Size >= sizeof(VPOSVERSIONINFO))
    {
+#if 1
       if (NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&Version)))
       {
          VpOsVersionInfo->MajorVersion = Version.dwMajorVersion;
@@ -1623,6 +1663,14 @@ VideoPortGetVersion ( IN PVOID HwDeviceExtension,
          return STATUS_SUCCESS;
       }
       return STATUS_UNSUCCESSFUL;
+#else
+      VpOsVersionInfo->MajorVersion = 5;
+      VpOsVersionInfo->MinorVersion = 0;
+      VpOsVersionInfo->BuildNumber = 2195;
+      VpOsVersionInfo->ServicePackMajor = 4;
+      VpOsVersionInfo->ServicePackMinor = 0;
+      return(STATUS_SUCCESS);
+#endif
    }
 
    return ERROR_INVALID_PARAMETER;
