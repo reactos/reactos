@@ -2,7 +2,7 @@
 
 #define STRING_CHOICE_OPTION               200
 #define STRING_COPY_OPTION                 201
-
+#define STRING_DEL_OPTION                  202
 
 #define STRING_ALIAS_ERROR                 300
 #define STRING_BATCH_ERROR                 301
@@ -18,13 +18,25 @@
 #define STRING_CMD_ERROR3                  311
 #define STRING_CMD_ERROR4                  312
 #define STRING_CMD_ERROR5                  313
-#define STRING_CONSOLE_ERROR               314
-#define STRING_COPY_ERROR1                 315
-#define STRING_COPY_ERROR2                 316
-#define STRING_COPY_ERROR3                 317
-#define STRING_COPY_ERROR4                 318
-#define STRING_DATE_ERROR                  319
-#define STRING_PARAM_ERROR                 320
+#define STRING_COLOR_ERROR1                314
+#define STRING_COLOR_ERROR2                315
+#define STRING_COLOR_ERROR3                316
+#define STRING_COLOR_ERROR4                317
+#define STRING_CONSOLE_ERROR               318
+#define STRING_COPY_ERROR1                 319
+#define STRING_COPY_ERROR2                 320
+#define STRING_COPY_ERROR3                 321
+#define STRING_COPY_ERROR4                 322
+#define STRING_DATE_ERROR                  323
+#define STRING_DEL_ERROR1                  324
+#define STRING_DEL_ERROR2                  325
+#define STRING_DEL_ERROR3                  326
+#define STRING_DEL_ERROR4                  327
+#define STRING_DEL_ERROR5                  328
+#define STRING_DEL_ERROR6                  329
+#define STRING_DEL_ERROR7                  330
+#define STRING_DEL_ERROR8                  331
+#define STRING_PARAM_ERROR                 332
 
 #define STRING_ATTRIB_HELP                 400
 #define STRING_ALIAS_HELP                  401
@@ -49,10 +61,14 @@
 #define STRING_DATE_HELP2                  420
 #define STRING_DATE_HELP3                  421
 #define STRING_DATE_HELP4                  422
-#define STRING_EXIT_HELP                   423
-#define STRING_MKDIR_HELP                  424
-#define STRING_RMDIR_HELP                  425
-#define STRING_REM_HELP                    426
+#define STRING_DEL_HELP1                   423
+#define STRING_DEL_HELP2	               424
+#define STRING_DEL_HELP3                   425
+#define STRING_DEL_HELP4                   426
+#define STRING_EXIT_HELP                   427
+#define STRING_MKDIR_HELP                  428
+#define STRING_RMDIR_HELP                  429
+#define STRING_REM_HELP                    430
 
 
 

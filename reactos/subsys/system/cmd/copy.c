@@ -303,7 +303,7 @@ Overwrite (LPTSTR fn)
 	TCHAR Options[3];
 	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) Options,sizeof(lpOptions));
+    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) Options,sizeof(Options)+sizeof(WCHAR));
     lpOptions = _T(Options);
 
     LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));

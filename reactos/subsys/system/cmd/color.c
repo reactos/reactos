@@ -41,10 +41,12 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-	  ConErrPuts (_T("Same colors error! (Background and foreground can't be the same color)")); 
+	  LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+      ConErrPuts (_T((LPTSTR)szMsg));
     }
     else 
     {
@@ -72,6 +74,8 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
  */
 INT CommandColor (LPTSTR first, LPTSTR rest)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
 		ColorHelp ();
@@ -88,15 +92,18 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	if (StringToColor (&wColor, &rest) == FALSE)
 	{
-		ConErrPuts(_T("error in color specification"));
+		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPuts (_T((LPTSTR)szMsg));
 		return 1;
 	}
 
-	ConErrPrintf (_T("Color %x\n"), wColor);
+	LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg), wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		ConErrPuts (_T("same colors error!"));
+		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPrintf (_T((LPTSTR)szMsg), wColor);		
 		return 1;
 	}
 

@@ -134,6 +134,23 @@ DATE [/T][date]\n\n \
 Type DATE without parameters to display the current date setting and\n \
 a prompt for a new one.  Press ENTER to keep the same date."
 				
+STRING_DEL_HELP1,  "Deletes one or more files.\n\n \
+DEL [/%c /%c /%c /%c /%c /%c /%c] file ...\n \
+DELETE [/%c /%c /%c /%c /%c /%c /%c] file ...\n \
+ERASE [/%c /%c /%c /%c /%c /%c /%c] file ...\n\n \
+  file  Specifies the file(s) to delete.\n\n \
+  /%c    Nothing.\n \
+  /%c    Prompt. Ask before deleting each file.\n \
+  /%c    Total. Display total number of deleted files and freed disk space.\n \
+  /%c    Quiet.\n \
+  /%c    Wipe. Overwrite the file with random numbers before deleting it.\n \
+  /%c    Yes. Kill even *.* without asking.\n \
+  /%c    Zap. Delete hidden, read-only and system files).\n"
+
+STRING_DEL_HELP3, "    %lu file%s deleted\n"
+
+STRING_DEL_HELP4, "    %lu files deleted\n"
+
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
 
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
@@ -144,7 +161,10 @@ RMDIR [drive:]path\nRD [drive:]path"
 
 STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
+STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
 
+
+	
 
 
 
@@ -152,6 +172,7 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
+STRING_DEL_OPTION,            "AENPQSTWXYZ"
 
 
 STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
@@ -168,12 +189,24 @@ STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
 STRING_CMD_ERROR3,           "Can't redirect to file %s\n"
 STRING_CMD_ERROR4,           "Running %s...\n"
 STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
+STRING_COLOR_ERROR1,         "Same colors error! (Background and foreground can't be the same color)"
+STRING_COLOR_ERROR2,         "error in color specification"
+STRING_COLOR_ERROR3,         "Color %x\n"
+STRING_COLOR_ERROR4,         "same colors error!"
 STRING_CONSOLE_ERROR,        "Unknown error: %d\n"
 STRING_COPY_ERROR1,          "Error: Cannot open source - %s!\n"
 STRING_COPY_ERROR2,          "Error: Can't copy onto itself!\n"
 STRING_COPY_ERROR3,          "Error writing destination!\n"
 STRING_COPY_ERROR4,          "Error: Not implemented yet!\n"
 STRING_DATE_ERROR,           "Invalid date."
+STRING_DEL_ERROR1,           "Wildcards!\n\n"
+STRING_DEL_ERROR2,           "Full path: %s\n"
+STRING_DEL_ERROR3,           "File part: %s\n"
+STRING_DEL_ERROR4,           "Full filename: %s\n"
+STRING_DEL_ERROR5,           "The file %s will be deleted! "
+STRING_DEL_ERROR6,           "Are you sure (Y/N)?"
+STRING_DEL_ERROR7,           "Deleting: %s\n"
+STRING_DEL_ERROR8,           "No Wildcards!\n"
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 
 

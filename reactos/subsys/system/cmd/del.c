@@ -35,6 +35,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_DEL
 
@@ -108,29 +109,30 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	HANDLE hFile;
 	WIN32_FIND_DATA f;
 
+	LPTSTR lpOptions;
+	TCHAR Options[11];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LONG ch;
+	
+	
+
+	LoadString( GetModuleHandle(NULL), STRING_DEL_OPTION, (LPTSTR) Options,sizeof(Options)+sizeof(WCHAR));
+    lpOptions = _T(Options);
+
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Deletes one or more files.\n"
-		               "\n"
-		               "DEL [/N /P /T /Q /W /Y /Z] file ...\n"
-		               "DELETE [/N /P /T /Q /W /Y /Z] file ...\n"
-		               "ERASE [/N /P /T /Q /W /Y /Z] file ...\n"
-		               "\n"
-		               "  file  Specifies the file(s) to delete.\n"
-		               "\n"
-		               "  /N    Nothing.\n"
-		               "  /P    Prompt. Ask before deleting each file.\n"
-		               "  /T    Total. Display total number of deleted files and freed disk space.\n"
-		               "  /Q    Quiet.\n"
-		               "  /W    Wipe. Overwrite the file with random numbers before deleting it.\n"
-		               "  /Y    Yes. Kill even *.* without asking.\n"
-		               "  /Z    Zap. Delete hidden, read-only and system files).\n"));
-
+		 LoadString( GetModuleHandle(NULL), STRING_DEL_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+         ConOutPrintf (_T((LPTSTR)szMsg),
+					   lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
+                       lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
+		               lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
+                       lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10]					   
+					   );			
 		return 0;
 	}
 
 	arg = split (param, &args, FALSE);
-
+	
 	if (args > 0)
 	{
 		/* check for options anywhere in command line */
@@ -140,38 +142,48 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			{
 				if (_tcslen (arg[i]) >= 2)
 				{
-					switch (_totupper (arg[i][1]))
-					{
-						case _T('N'):
-							dwFlags |= DEL_NOTHING;
-							break;
+					
+				  ch =	_totupper (arg[i][1]);
+				  				  
+                  if (_totupper (lpOptions[2]) == ch)
+				     {
+                      dwFlags |= DEL_NOTHING;
+					 }
 
-						case _T('P'):
-							dwFlags |= DEL_PROMPT;
-							break;
+				  else if (_totupper (lpOptions[3]) == ch)
+				     {
+                     dwFlags |= DEL_PROMPT;
+					 }
+                 
+				  else if (_totupper (lpOptions[4]) == ch)
+				     {
+                      dwFlags |= DEL_QUIET;
+					 }
 
-						case _T('Q'):
-							dwFlags |= DEL_QUIET;
-							break;
+				  else if (_totupper (lpOptions[5]) == ch)
+				     {
+                      dwFlags |= DEL_SUBDIR;
+					 }
 
-						case _T('S'):
-							dwFlags |= DEL_SUBDIR;
-							break;
+				  else if (_totupper (lpOptions[6]) == ch)
+				     {
+                      dwFlags |= DEL_TOTAL;
+					 }
 
-						case _T('T'):
-							dwFlags |= DEL_TOTAL;
-							break;
+				  else if (_totupper (lpOptions[7]) == ch)
+				     {
+                      dwFlags |= DEL_WIPE;
+					 }
 
-						case _T('W'):
-							dwFlags |= DEL_WIPE;
-							break;
-						case _T('Y'):
-							dwFlags |= DEL_YES;
-							break;
-						case _T('Z'):
-							dwFlags |= DEL_ZAP;
-							break;
-					}
+                  else if (_totupper (lpOptions[9]) == ch)
+				     {
+                      dwFlags |= DEL_YES;
+					 }
+
+				  else if (_totupper (lpOptions[10]) == ch)
+				     {
+                      dwFlags |= DEL_ZAP;
+					 }				
 
 				}
 
@@ -199,8 +211,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			{
 				if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
 				{
-					res = FilePromptYN (_T("All files in the directory will be deleted!\n"
-					                       "Are you sure (Y/N)?"));
+					
+					LoadString( GetModuleHandle(NULL), STRING_DEL_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+
+					res = FilePromptYN (_T( (LPTSTR) szMsg));
 
 					if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 						break;
@@ -217,7 +231,8 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 				{
 					/* wildcards in filespec */
 #ifdef _DEBUG
-					ConErrPrintf (_T("Wildcards!\n\n"));
+					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+                    ConErrPrintf (_T((LPTSTR)szMsg));
 #endif
 
 					GetFullPathName (arg[i],
@@ -226,8 +241,12 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					                 &pFilePart);
 
 #ifdef _DEBUG
-					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
-					ConErrPrintf (_T("File part: %s\n"), pFilePart);
+					 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+                     ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+
+					 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
+                     ConErrPrintf (_T((LPTSTR)szMsg), pFilePart);
+					
 #endif
 
 					hFile = FindFirstFile (szFullPath, &f);
@@ -249,13 +268,18 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						_tcscpy (pFilePart, f.cFileName);
 
 #ifdef _DEBUG
-						ConErrPrintf (_T("Full filename: %s\n"), szFullPath);
+						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
+                        ConErrPrintf (_T((LPTSTR)szMsg));
+
 #endif
 						/* ask for deleting */
 						if (dwFlags & DEL_PROMPT) 
-						{
-							ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
-							res = FilePromptYN (_T("Are you sure (Y/N)?"));
+						{							
+							LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
+                            ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+							
+							LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR6, (LPTSTR) szMsg,sizeof(szMsg));
+							res = FilePromptYN (_T((LPTSTR)szMsg));
 
 							if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 							{
@@ -264,7 +288,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						}
 
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
-							ConErrPrintf (_T("Deleting: %s\n"), szFullPath);
+						    {
+							 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR7, (LPTSTR) szMsg,sizeof(szMsg));
+                             ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);								
+							}
 
 						/* delete the file */
 						if (!(dwFlags & DEL_NOTHING))
@@ -307,7 +334,8 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 				{
 					/* no wildcards in filespec */
 #ifdef _DEBUG
-					ConErrPrintf (_T("No Wildcards!\n"));
+					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR8, (LPTSTR) szMsg,sizeof(szMsg));
+                    ConErrPrintf (_T((LPTSTR)szMsg));
 #endif
 					GetFullPathName (arg[i],
 					                 MAX_PATH,
@@ -317,8 +345,11 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					/*ask for deleting */
 					if((dwFlags & DEL_PROMPT) && (FindFirstFile(szFullPath, &f) != INVALID_HANDLE_VALUE)) //Don't ask if the file doesn't exist, the following code will make the error-msg 
 					{
-						ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
-						res = FilePromptYN (_T("Are you sure (Y/N)?"));
+						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
+                        ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+						
+						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR6, (LPTSTR) szMsg,sizeof(szMsg));
+						res = FilePromptYN (_T((LPTSTR)szMsg));
 
 						if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 						{
@@ -327,10 +358,14 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					}
 
 #ifdef _DEBUG
-					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
+					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
+                    ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
 #endif
 					if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
-						ConOutPrintf (_T("Deleting %s\n"), szFullPath);
+					   {
+					     LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR7, (LPTSTR) szMsg,sizeof(szMsg));
+                         ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+					    }
 
 					if (!(dwFlags & DEL_NOTHING))
 					{
@@ -380,12 +415,16 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 	if (!(dwFlags & DEL_QUIET))
 	{
-		if (dwFiles == 0)
-			ConOutPrintf (_T("    0 files deleted\n"));
+		if (dwFiles < 2)
+		   {
+		    LoadString( GetModuleHandle(NULL), STRING_DEL_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+		   }
 		else
-			ConOutPrintf (_T("    %lu file%s deleted\n"),
-			              dwFiles,
-			              (dwFiles == 1) ? _T("") : _T("s"));
+		   {
+             LoadString( GetModuleHandle(NULL), STRING_DEL_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
+		   }
+		
+	   ConOutPrintf (_T((LPTSTR)szMsg), dwFiles);	   		
 	}
 
 	return 0;
