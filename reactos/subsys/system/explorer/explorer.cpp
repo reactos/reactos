@@ -92,6 +92,35 @@ void _log_(LPCTSTR txt)
 }
 
 
+bool FileTypeManager::is_exe_file(LPCTSTR ext)
+{
+	static const LPCTSTR s_executable_extensions[] = {
+		TEXT("COM"),
+		TEXT("EXE"),
+		TEXT("BAT"),
+		TEXT("CMD"),
+		TEXT("CMM"),
+		TEXT("BTM"),
+		TEXT("AWK"),
+		0
+	};
+
+	TCHAR ext_buffer[_MAX_EXT];
+	const LPCTSTR* p;
+	LPCTSTR s;
+	LPTSTR d;
+
+	for(s=ext+1,d=ext_buffer; (*d=toupper(*s)); s++)
+		++d;
+
+	for(p=s_executable_extensions; *p; p++)
+		if (!lstrcmp(ext_buffer, *p))
+			return true;
+
+	return false;
+}
+
+
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
 #ifndef __WINE__ ///@todo
@@ -107,11 +136,15 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	ftype._neverShowExt = false;
 
 	HKEY hkey;
-	TCHAR value[MAX_PATH];
-	LONG valuelen = MAX_PATH;
+	TCHAR value[MAX_PATH], display_name[MAX_PATH];;
+	LONG valuelen = sizeof(value);
 
 	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, value, &valuelen)) {
 		ftype._classname = value;
+
+		valuelen = sizeof(display_name);
+		if (!RegQueryValue(HKEY_CLASSES_ROOT, ftype._classname, display_name, &valuelen))
+			ftype._displayname = display_name;
 
 		if (!RegOpenKey(HKEY_CLASSES_ROOT, ftype._classname, &hkey)) {
 			if (!RegQueryValueEx(hkey, TEXT("NeverShowExt"), 0, NULL, NULL, NULL))
@@ -122,6 +155,31 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	}
 
 	return ftype;
+}
+
+LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
+{
+	LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
+
+	if (ext) {
+		const FileTypeInfo& type = (*this)[ext];
+
+		if (!type._displayname.empty())
+			entry->_type_name = _tcsdup(type._displayname);
+
+		 // hide some file extensions
+		if (type._neverShowExt && !dont_hide_ext) {
+			int len = ext - entry->_data.cFileName;
+			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
+			_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
+			entry->_display_name[len] = TEXT('\0');
+		}
+
+		if (is_exe_file(ext))
+			entry->_data.dwFileAttributes |= ATTRIBUTE_EXECUTABLE;
+	}
+
+	return ext;
 }
 
 

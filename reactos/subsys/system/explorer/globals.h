@@ -29,6 +29,7 @@
  /// management of file types
 struct FileTypeInfo {
 	String	_classname;
+	String	_displayname;
 	bool	_neverShowExt;
 };
 
@@ -37,6 +38,10 @@ struct FileTypeManager : public map<String, FileTypeInfo>
 	typedef map<String, FileTypeInfo> super;
 
 	const FileTypeInfo& operator[](String ext);
+
+	static bool is_exe_file(LPCTSTR ext);
+
+	LPCTSTR set_type(struct Entry* entry, bool dont_hide_ext=false);
 };
 
 

@@ -282,14 +282,8 @@ void ShellDirectory::read_directory(int scan_flags)
 					}
 				}
 
-				LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
-
-				if (ext && g_Globals._ftype_mgr[ext]._neverShowExt) {
-					int len = ext - entry->_data.cFileName;
-					entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
-					_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
-					entry->_display_name[len] = TEXT('\0');
-				}
+				 // set file type name
+				LPCTSTR ext = g_Globals._ftype_mgr.set_type(entry);
 
 				DWORD attribs = SFGAO_FILESYSTEM;
 
@@ -407,6 +401,9 @@ void ShellDirectory::read_directory(int scan_flags)
 					entry->_level = level;
 					entry->_shell_attribs = attribs;
 					entry->_bhfi_valid = bhfi_valid;
+
+					 // set file type name
+					g_Globals._ftype_mgr.set_type(entry);
 
 					 // get icons for files and virtual objects
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||

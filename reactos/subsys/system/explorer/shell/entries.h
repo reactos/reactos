@@ -53,6 +53,12 @@ enum SCAN_FLAGS {
 	SCAN_FILESYSTEM		= 4
 };
 
+#ifndef ATTRIBUTE_SYMBOLIC_LINK
+#define ATTRIBUTE_SYMBOLIC_LINK		0x40000000
+#define	ATTRIBUTE_EXECUTABLE		0x80000000
+#endif
+
+
  /// base of all file and directory entries
 struct Entry
 {
@@ -76,6 +82,7 @@ public:
 
 	SFGAOF		_shell_attribs;
 	LPTSTR		_display_name;
+	LPTSTR		_type_name;
 
 	ENTRY_TYPE	_etype;
 	int /*ICON_ID*/ _icon_id;

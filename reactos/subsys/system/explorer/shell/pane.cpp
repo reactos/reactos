@@ -45,45 +45,10 @@ enum IMAGE {
 #define IMAGE_HEIGHT		13
 
 
-static int is_exe_file(LPCTSTR ext)
-{
-	static const LPCTSTR executable_extensions[] = {
-		TEXT("COM"),
-		TEXT("EXE"),
-		TEXT("BAT"),
-		TEXT("CMD"),
-		TEXT("CMM"),
-		TEXT("BTM"),
-		TEXT("AWK"),
-		0
-	};
-
-	TCHAR ext_buffer[_MAX_EXT];
-	const LPCTSTR* p;
-	LPCTSTR s;
-	LPTSTR d;
-
-	for(s=ext+1,d=ext_buffer; (*d=tolower(*s)); s++)
-		++d;
-
-	for(p=executable_extensions; *p; p++)
-		if (!lstrcmp(ext_buffer, *p))
-			return 1;
-
-	return 0;
-}
-
-static int is_registered_type(LPCTSTR ext)
-{
-	 // TODO
-
-	return 1;
-}
-
-
 static const LPTSTR g_pos_names[COLUMNS] = {
 	TEXT(""),			/* symbol */
 	TEXT("Name"),
+	TEXT("Type"),
 	TEXT("Size"),
 	TEXT("CDate"),
 	TEXT("ADate"),
@@ -97,6 +62,7 @@ static const LPTSTR g_pos_names[COLUMNS] = {
 static const int g_pos_align[] = {
 	0,
 	HDF_LEFT,	/* Name */
+	HDF_LEFT,	/* Type */
 	HDF_RIGHT,	/* Size */
 	HDF_LEFT,	/* CDate */
 	HDF_LEFT,	/* ADate */
@@ -353,13 +319,9 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			else
 				img = IMG_FOLDER;
 		} else {
-			LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
-			if (!ext)
-				ext = TEXT("");
-
-			if (is_exe_file(ext))
+			if (attrs & ATTRIBUTE_EXECUTABLE)
 				img = IMG_EXECUTABLE;
-			else if (is_registered_type(ext))
+			else if (entry->_type_name)
 				img = IMG_DOCUMENT;
 			else
 				img = IMG_FILE;
@@ -520,6 +482,14 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		_out_wrkr.output_text(dis, _positions, col, entry->_display_name, 0);
 	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 		calc_width(dis, col, entry->_display_name);
+
+	++col;
+
+	 // ouput type/class name
+	if (calcWidthCol == -1)
+		_out_wrkr.output_text(dis, _positions, col, entry->_type_name, 0);
+	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
+		calc_width(dis, col, entry->_type_name);
 
 	++col;
 

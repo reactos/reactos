@@ -68,13 +68,15 @@ void RegDirectory::read_directory(int scan_flags)
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
 			_tcscpy(p, name);
-			///@todo class_name -> _entry->_class_name
 
 			lstrcpy(w32fd.cFileName, p);
 
 			entry = new RegDirectory(this, buffer, _hKeyRoot);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+
+			if (*class_name)
+				entry->_type_name = _tcsdup(class_name);
 
 			if (!first_entry)
 				first_entry = entry;
@@ -100,13 +102,27 @@ void RegDirectory::read_directory(int scan_flags)
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
 			_tcscpy(p, name);
-			///@todo type -> _entry->_class_name
 
 			lstrcpy(w32fd.cFileName, p);
 
 			entry = new RegEntry(this);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+
+			switch(type) {
+			  case REG_NONE:						entry->_type_name = _tcsdup(TEXT("REG_NONE"));						break;
+			  case REG_SZ:							entry->_type_name = _tcsdup(TEXT("REG_SZ"));						break;
+			  case REG_EXPAND_SZ:					entry->_type_name = _tcsdup(TEXT("REG_EXPAND_SZ"));					break;
+			  case REG_BINARY:						entry->_type_name = _tcsdup(TEXT("REG_BINARY"));					break;
+			  case REG_DWORD:						entry->_type_name = _tcsdup(TEXT("REG_DWORD"));						break;
+			  case REG_DWORD_BIG_ENDIAN:			entry->_type_name = _tcsdup(TEXT("REG_DWORD_BIG_ENDIAN"));			break;
+			  case REG_LINK:						entry->_type_name = _tcsdup(TEXT("REG_LINK"));						break;
+			  case REG_MULTI_SZ:					entry->_type_name = _tcsdup(TEXT("REG_MULTI_SZ"));					break;
+			  case REG_RESOURCE_LIST:				entry->_type_name = _tcsdup(TEXT("REG_RESOURCE_LIST"));				break;
+			  case REG_FULL_RESOURCE_DESCRIPTOR:	entry->_type_name = _tcsdup(TEXT("REG_FULL_RESOURCE_DESCRIPTOR"));	break;
+			  case REG_RESOURCE_REQUIREMENTS_LIST:	entry->_type_name = _tcsdup(TEXT("REG_RESOURCE_REQUIREMENTS_LIST"));break;
+			  case REG_QWORD:						entry->_type_name = _tcsdup(TEXT("REG_QWORD"));						break;
+			}
 
 			if (!first_entry)
 				first_entry = entry;

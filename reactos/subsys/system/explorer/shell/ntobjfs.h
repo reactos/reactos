@@ -81,12 +81,6 @@ struct NtObject {
 };
 
 
-#ifndef ATTRIBUTE_SYMBOLIC_LINK
-#define ATTRIBUTE_SYMBOLIC_LINK		0x40000000
-#define	ATTRIBUTE_EXECUTABLE		0x80000000
-#endif
-
-
  /// NtObj file system file-entry
 struct NtObjEntry : public Entry
 {

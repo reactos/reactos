@@ -230,10 +230,8 @@ void NtObjDirectory::read_directory(int scan_flags)
 
 #ifdef UNICODE
 				wcscpyn(p, info->name.string_ptr, _MAX_PATH);
-				//@@wcscpyn(_class, info->type.string_ptr, 32);
 #else
 				WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);
-				//@@U2T(info->type.string_ptr, _class, 32);
 #endif
 
 				lstrcpy(w32fd.cFileName, p);
@@ -300,6 +298,14 @@ void NtObjDirectory::read_directory(int scan_flags)
 				}
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+
+#ifdef UNICODE
+				entry->_type_name = _wcsdup(info->type.string_ptr);
+#else
+				char type_name[32];
+				WideCharToMultiByte(CP_ACP, 0, info->type.string_ptr, info->type.string_len, type_name, 32, 0, 0);
+				entry->_type_name = strdup(type_name);
+#endif
 
 				if (!first_entry)
 					first_entry = entry;

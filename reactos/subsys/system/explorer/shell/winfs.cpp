@@ -28,6 +28,7 @@
 
 #include "../utility/utility.h"
 #include "../utility/shellclasses.h"
+#include "../globals.h"
 
 #include "entries.h"
 #include "winfs.h"
@@ -158,6 +159,9 @@ void WinDirectory::read_directory(int scan_flags)
 			entry->_expanded = false;
 			entry->_scanned = false;
 			entry->_level = level;
+
+			 // display file type names, but don't hide file extensions
+			g_Globals._ftype_mgr.set_type(entry, true);
 
 			if (scan_flags & SCAN_DO_ACCESS) {
 				HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,

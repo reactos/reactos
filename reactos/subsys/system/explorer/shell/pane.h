@@ -67,7 +67,7 @@ struct Pane : public SubclassedWindow
 
 	Pane(HWND hparent, int id, int id_header, Entry* rool, bool treePane, int visible_cols);
 
-#define COLUMNS 10
+#define COLUMNS 11
 	int 	_widths[COLUMNS];
 	int 	_positions[COLUMNS+1];
 		
