@@ -117,7 +117,12 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     tvi.cChildren = dwChildren;
     tvi.lParam = (LPARAM)hKey;
     tvins.u.item = tvi;
-    tvins.hInsertAfter = (HTREEITEM)(hKey ? TVI_LAST : TVI_SORT);
+    /* 
+     * Inserting items at front is faster then inserting to back.
+     * Sorting after inserting each item is painfully slow...
+     * -Gunnar
+     */
+    tvins.hInsertAfter = TVI_FIRST;//(HTREEITEM)(hKey ? TVI_LAST : TVI_SORT);
     tvins.hParent = hParent;
     return TreeView_InsertItem(hwndTV, &tvins);
 }
@@ -150,6 +155,8 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1)) return FALSE;
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1)) return FALSE;
     if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1)) return FALSE;
+    
+    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, hRoot);
     
     /* expand and select host name */
     TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
@@ -242,6 +249,9 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 	printf("dwSubCount=%ld, Name=%s\n", dwSubCount, Name);
         AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwSubCount);
     }
+    
+    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, pnmtv->itemNew.hItem);
+   
     RegCloseKey(hNewKey);
     HeapFree(GetProcessHeap(), 0, Name);
 
