@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.68 2004/05/16 19:31:07 navaraf Exp $
+/* $Id: menu.c,v 1.69 2004/06/05 18:39:46 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -917,6 +917,8 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
 				       MenuInfo.Height, FALSE, ODA_DRAWENTIRE);
                     }
                 }
+
+	      MenuCleanupRosMenuItemInfo(&ItemInfo);
 	    }
 	}
       else
@@ -3740,59 +3742,83 @@ GetMenuItemID(HMENU hMenu,
  */
 BOOL STDCALL
 GetMenuItemInfoA(
-  HMENU Menu,
-  UINT Item,
-  BOOL ByPosition,
-  LPMENUITEMINFOA mii)
+   HMENU Menu,
+   UINT Item,
+   BOOL ByPosition,
+   LPMENUITEMINFOA mii)
 {
-  LPSTR AString;
-  UINT ACch;
+   UNICODE_STRING Text;
+   CHAR *AnsiString;
 
-  if (0 == (mii->fMask & (MIIM_STRING | MIIM_TYPE)))
-    {
+   if ((mii->fMask & (MIIM_STRING | MIIM_TYPE)) == 0)
+   {
       /* No text requested, just pass on */
       return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
-    }
+   }
 
-  AString = mii->dwTypeData;
-  ACch = mii->cch;
-  mii->dwTypeData = HeapAlloc(GetProcessHeap(), 0, mii->cch * sizeof(WCHAR));
-  if (NULL == mii->dwTypeData)
-    {
-      mii->dwTypeData = AString;
+   Text.Length = 0;
+   Text.MaximumLength = mii->cch * sizeof(WCHAR);
+   Text.Buffer = RtlAllocateHeap(GetProcessHeap(), 0, mii->cch * sizeof(WCHAR));
+   if (mii->dwTypeData == NULL)
       return FALSE;
-    }
-  if (! NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE))
-    {
+   AnsiString = mii->dwTypeData;
+   mii->dwTypeData = (LPSTR) &Text;
+   
+   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)mii, FALSE))
+   {
       HeapFree(GetProcessHeap(), 0, mii->dwTypeData);
-      mii->dwTypeData = AString;
+      mii->dwTypeData = AnsiString;
       return FALSE;
-    }
-  
-  if (IS_STRING_ITEM(mii->fType))
-    {
-      WideCharToMultiByte(CP_ACP, 0, (LPWSTR) mii->dwTypeData, mii->cch, AString, ACch,
-                          NULL, NULL);
-    }
-  HeapFree(GetProcessHeap(), 0, mii->dwTypeData);
-  mii->dwTypeData = AString;
+   }
 
-  return TRUE;
+   if (IS_STRING_ITEM(mii->fType))
+   {
+      WideCharToMultiByte(CP_ACP, 0, Text.Buffer, mii->cch, AnsiString, mii->cch,
+                          NULL, NULL);
+      if (Text.MaximumLength > Text.Length)
+         AnsiString[mii->cch] = 0;
+   }
+
+   RtlFreeHeap(GetProcessHeap(), 0, Text.Buffer);
+   mii->dwTypeData = AnsiString;
+
+   return TRUE;
 }
 
 
 /*
  * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 GetMenuItemInfoW(
-  HMENU Menu,
-  UINT Item,
-  BOOL ByPosition,
-  LPMENUITEMINFOW mii)
+   HMENU Menu,
+   UINT Item,
+   BOOL ByPosition,
+   LPMENUITEMINFOW mii)
 {
-  return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+   UNICODE_STRING Text;
+   WCHAR *UnicodeString;
+
+   if ((mii->fMask & (MIIM_STRING | MIIM_TYPE)) == 0)
+   {
+      /* No text requested, just pass on */
+      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+   }
+
+   Text.Length = 0;
+   Text.MaximumLength = mii->cch * sizeof(WCHAR);
+   Text.Buffer = mii->dwTypeData;
+   UnicodeString = mii->dwTypeData;
+   mii->dwTypeData = (LPWSTR) &Text;
+
+   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)mii, FALSE))
+   {
+      mii->dwTypeData = UnicodeString;
+      return FALSE;
+   }
+
+   mii->dwTypeData = UnicodeString;
+   return TRUE;
 }
 
 
