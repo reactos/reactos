@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.31 2003/08/17 20:29:56 silverblade Exp $
+/* $Id: stubs.c,v 1.32 2003/08/18 09:59:29 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1246,22 +1246,6 @@ TileChildWindows ( HWND hWndParent, WORD wFlags )
 HDESK
 STDCALL
 GetInputDesktop ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DrawFrame(
-	  HDC    hDc,
-	  RECT  *r,
-	  DWORD  width,
-	  DWORD  type
-	  )
 {
   UNIMPLEMENTED;
   return FALSE;

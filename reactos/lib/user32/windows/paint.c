@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.16 2003/07/10 21:04:32 chorns Exp $
+/* $Id: paint.c,v 1.17 2003/08/18 09:59:29 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -233,4 +233,59 @@ GetWindowRgn(
 {
   UNIMPLEMENTED;
   return 0;
+}
+
+const BYTE MappingTable[33] = {5,9,2,3,5,7,0,0,0,7,5,5,3,2,7,5,3,3,0,5,7,10,5,0,11,4,1,1,3,8,6,12,7};
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+DrawFrame(
+	  HDC    hDc,
+	  RECT  *r,
+	  DWORD  width,
+	  DWORD  type
+	  )
+{
+	DWORD rop;
+	DWORD brush;
+	HBRUSH hbrFrame;
+	PATRECT p[4];
+	if (type & 4)
+	{
+		rop = PATINVERT;
+	}
+	else
+	{
+		rop = PATCOPY;
+	}
+	brush = type / 8;
+	if (brush >= 33)
+	{
+		brush = 32;
+	}
+	brush = MappingTable[brush];
+	hbrFrame = FrameBrushes[brush];
+	p[0].hBrush = hbrFrame;
+	p[1].hBrush = hbrFrame;
+	p[2].hBrush = hbrFrame;
+	p[3].hBrush = hbrFrame;
+	p[0].r.left = r->left;
+	p[0].r.top = r->top;
+	p[0].r.right = r->right - r->left;
+	p[0].r.bottom = width;
+	p[1].r.left = r->left;
+	p[1].r.top = r->bottom - width;
+	p[1].r.right = r->right - r->left;
+	p[1].r.bottom = width;
+	p[2].r.left = r->left;
+	p[2].r.top = r->top + width;
+	p[2].r.right = width;
+	p[2].r.bottom = r->bottom - r->top - (width * 2);
+	p[3].r.left = r->right - width;
+	p[3].r.top = r->top + width;
+	p[3].r.right = width;
+	p[3].r.bottom = r->bottom - r->top - (width * 2);
+	return PolyPatBlt(hDc,rop,p,4,0);
 }

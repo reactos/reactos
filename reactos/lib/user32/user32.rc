@@ -38,6 +38,7 @@ BEGIN
 END
 
 OBM_CLOSE BITMAP "resources/obm_close.bmp"
+DF_HATCH BITMAP "resources/df_hatch.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

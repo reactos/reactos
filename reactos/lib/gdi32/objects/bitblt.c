@@ -346,10 +346,10 @@ PolyPatBlt(HDC hDC,DWORD dwRop,PPATRECT pRects,int cRects,ULONG Reserved)
 	HBRUSH hBrOld;
 	for (i = 0;i<cRects;i++)
 	{
-		hBrOld = SelectObject(hDC,r.hBrush);
 		r = *pRects;
-		PatBlt(hDC,r.r.top,r.r.left,r.r.bottom-r.r.top,r.r.right-r.r.left,dwRop);
-		pRects+=sizeof(PATRECT);
+		hBrOld = (HBRUSH)SelectObject(hDC,r.hBrush);
+		PatBlt(hDC,r.r.left,r.r.top,r.r.right,r.r.bottom,dwRop);
+		pRects++;
 		SelectObject(hDC,hBrOld);
 	}
 	return TRUE;

@@ -14,3 +14,5 @@ typedef struct _USER32_THREAD_DATA
 
 PUSER32_THREAD_DATA
 User32GetThreadData();
+extern HBRUSH FrameBrushes[13];
+#define DF_HATCH	(30000)
