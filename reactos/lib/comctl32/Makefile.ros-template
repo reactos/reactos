@@ -1,10 +1,10 @@
-# $Id: Makefile.ros-template,v 1.1 2004/01/02 19:49:45 gvg Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/01/12 23:48:37 sedwards Exp $
 
 TARGET_NAME = comctl32
 
 TARGET_OBJECTS = @C_SRCS@
 
-TARGET_CFLAGS = @EXTRADEFS@
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
 
