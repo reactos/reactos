@@ -43,10 +43,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winerror.h"
 #include "winbase.h"
 #include "winnls.h"
+#include "objbase.h"
 #include "servprov.h"
 #include "shlguid.h"
 #include "wingdi.h"
@@ -315,14 +320,14 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
         This->ListViewSortInfo.nHeaderID = -1;
         This->ListViewSortInfo.nLastHeaderID = -1;
 
-	if (This->FolderSettings.fFlags & FWF_DESKTOP) {
-	  if (0)  /* FIXME: look into registry vale HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow and activate drop shadows */
-	    ListView_SetTextBkColor(This->hWndList, CLR_NONE);
-	  else
-	    ListView_SetTextBkColor(This->hWndList, GetSysColor(COLOR_DESKTOP));
+       if (This->FolderSettings.fFlags & FWF_DESKTOP) {
+         if (0)  /* FIXME: look into registry vale HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow and activate drop shadows */
+           ListView_SetTextBkColor(This->hWndList, CLR_NONE);
+         else
+           ListView_SetTextBkColor(This->hWndList, GetSysColor(COLOR_DESKTOP));
 
-	  ListView_SetTextColor(This->hWndList, RGB(255,255,255));
-	}
+         ListView_SetTextColor(This->hWndList, RGB(255,255,255));
+       }
 
         /*  UpdateShellSettings(); */
 	return TRUE;
@@ -819,8 +824,7 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	HRESULT hr;
 	IDataObject* selection;
 	FORMATETC fetc;
-	STGMEDIUM stgm = {sizeof(STGMEDIUM), {0}, 0};
-	DWORD pData;
+	STGMEDIUM stgm;
 	LPIDA pIDList;
 	LPCITEMIDLIST parent_pidl;
 	int i;
@@ -853,8 +857,7 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	if (FAILED(hr))
 	  return hr;
 
-	pData = (DWORD)GlobalLock(stgm.hGlobal);
-	pIDList = (LPIDA)pData;
+	pIDList = GlobalLock(stgm.u.hGlobal);
 
 	parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pIDList+pIDList->aoffset[0]);
 	for (i = pIDList->cidl; i > 0; --i)
@@ -887,7 +890,7 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	  }
 	}
 
-	GlobalUnlock(stgm.hGlobal);
+	GlobalUnlock(stgm.u.hGlobal);
 	ReleaseStgMedium(&stgm);
 
 	IDataObject_Release(selection);
@@ -947,7 +950,7 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 		else
 		{
 		  TRACE("-- track popup\n");
-		  uCommand = TrackPopupMenu(hMenu,TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,This->hWnd, NULL);
+		  uCommand = TrackPopupMenu( hMenu,TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,This->hWnd,NULL);
 		}
 
 		if(uCommand > 0)
@@ -1490,7 +1493,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	    break;
 
 	  default:
-	    FIXME("-- %p WM_COMMAND %x unhandled\n", This, lpnmh->code);
+	    TRACE("-- %p WM_COMMAND %x unhandled\n", This, lpnmh->code);
 	    break;
 	}
 	return 0;
@@ -1562,7 +1565,6 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 				break;
 
 	  case WM_GETDLGCODE:   return SendMessageA(pThis->hWndList,uMessage,0,0);
-
 
 	  case WM_DESTROY:	
 	  			RevokeDragDrop(pThis->hWnd);
