@@ -9,8 +9,11 @@ echo on
 echo Installing to %ROS_INSTALL%
 @echo off
 
+set ROS_INSTALL_TESTS=%ROS_INSTALL%\tests
+
 md %ROS_INSTALL%
 md %ROS_INSTALL%\bin
+md %ROS_INSTALL_TESTS%
 md %ROS_INSTALL%\symbols
 md %ROS_INSTALL%\system32
 md %ROS_INSTALL%\system32\config
@@ -95,6 +98,7 @@ copy apps\utils\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\utils\pice\module\pice.sys %ROS_INSTALL%\system32\drivers
 copy apps\utils\pice\module\pice.sym %ROS_INSTALL%\symbols
 copy apps\utils\pice\pice.cfg %ROS_INSTALL%\symbols
+copy apps\utils\sc\sc.exe %ROS_INSTALL%\bin
 copy apps\tests\hello\hello.exe %ROS_INSTALL%\bin
 copy apps\tests\args\args.exe %ROS_INSTALL%\bin
 copy apps\tests\apc\apc.exe %ROS_INSTALL%\bin
@@ -122,6 +126,10 @@ copy apps\tests\isotest\isotest.exe %ROS_INSTALL%\bin
 copy apps\tests\regtest\regtest.exe %ROS_INSTALL%\bin
 copy apps\tests\restest\restest.exe %ROS_INSTALL%\bin
 copy apps\tests\tokentest\tokentest.exe %ROS_INSTALL%\bin
+copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
+copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%
+copy apps\testsets\test\test.exe %ROS_INSTALL_TESTS%
+copy apps\testsets\testperl\testperl.exe %ROS_INSTALL_TESTS%
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 copy media\nls\*.nls %ROS_INSTALL%\system32
