@@ -102,80 +102,11 @@ NdisInterlockedRemoveHeadList(
 
 VOID
 EXPORT
-NdisMArcIndicateReceive(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  PUCHAR      HeaderBuffer,
-    IN  PUCHAR      DataBuffer,
-    IN  UINT        Length)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMArcIndicateReceiveComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
 NdisMCompleteBufferPhysicalMapping(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_BUFFER    Buffer,
     IN  ULONG           PhysicalMapRegister)
 {
-}
-
-
-VOID
-EXPORT
-NdisMEthIndicateReceive (
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_HANDLE MiniportReceiveContext,
-    IN  PVOID       HeaderBuffer,
-    IN  UINT        HeaderBufferSize,
-    IN  PVOID       LookaheadBuffer,
-    IN  UINT        LookaheadBufferSize,
-    IN  UINT        PacketSize)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMEthIndicateReceiveComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMFddiIndicateReceive(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_HANDLE MiniportReceiveContext,
-    IN  PVOID       HeaderBuffer,
-    IN  UINT        HeaderBufferSize,
-    IN  PVOID       LookaheadBuffer,
-    IN  UINT        LookaheadBufferSize,
-    IN  UINT        PacketSize)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMFddiIndicateReceiveComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
-{
-    UNIMPLEMENTED
 }
 
 
@@ -188,30 +119,6 @@ NdisMStartBufferPhysicalMapping(
     IN  BOOLEAN                     WriteToDevice,
     OUT PNDIS_PHYSICAL_ADDRESS_UNIT	PhysicalAddressArray,
     OUT PUINT                       ArraySize)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMTrIndicateReceive(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_HANDLE MiniportReceiveContext,
-    IN  PVOID       HeaderBuffer,
-    IN  UINT        HeaderBufferSize,
-    IN  PVOID       LookaheadBuffer,
-    IN  UINT        LookaheadBufferSize,
-    IN  UINT        PacketSize)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMTrIndicateReceiveComplete(
-    IN  NDIS_HANDLE  MiniportAdapterHandle)
 {
     UNIMPLEMENTED
 }

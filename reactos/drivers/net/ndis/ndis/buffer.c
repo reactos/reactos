@@ -10,6 +10,284 @@
 #include <buffer.h>
 
 
+
+__inline ULONG SkipToOffset(
+    PNDIS_BUFFER Buffer,
+    UINT Offset,
+    PUCHAR *Data,
+    PUINT Size)
+/*
+ * FUNCTION: Skips Offset bytes into a buffer chain
+ * ARGUMENTS:
+ *     Buffer = Pointer to NDIS buffer
+ *     Offset = Number of bytes to skip
+ *     Data   = Address of a pointer that on return will contain the
+ *              address of the offset in the buffer
+ *     Size   = Address of a pointer that on return will contain the
+ *              size of the destination buffer
+ * RETURNS:
+ *     Offset into buffer, -1 if buffer chain was smaller than Offset bytes
+ * NOTES:
+ *     Buffer may be NULL
+ */
+{
+    for (;;) {
+
+        if (!Buffer)
+            return -1;
+
+        NdisQueryBuffer(Buffer, (PVOID)Data, Size);
+
+        if (Offset < *Size) {
+            ((ULONG_PTR)*Data) += Offset;
+            *Size              -= Offset;
+            break;
+        }
+
+        Offset -= *Size;
+
+        NdisGetNextBuffer(Buffer, &Buffer);
+    }
+
+    return Offset;
+}
+
+
+UINT CopyBufferToBufferChain(
+    PNDIS_BUFFER DstBuffer,
+    UINT DstOffset,
+    PUCHAR SrcData,
+    UINT Length)
+/*
+ * FUNCTION: Copies data from a buffer to an NDIS buffer chain
+ * ARGUMENTS:
+ *     DstBuffer = Pointer to destination NDIS buffer 
+ *     DstOffset = Destination start offset
+ *     SrcData   = Pointer to source buffer
+ *     Length    = Number of bytes to copy
+ * RETURNS:
+ *     Number of bytes copied to destination buffer
+ * NOTES:
+ *     The number of bytes copied may be limited by the destination
+ *     buffer size
+ */
+{
+    UINT BytesCopied, BytesToCopy, DstSize;
+    PUCHAR DstData;
+
+    NDIS_DbgPrint(MAX_TRACE, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcData (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcData, Length));
+
+    /* Skip DstOffset bytes in the destination buffer chain */
+    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
+        return 0;
+
+    /* Start copying the data */
+    BytesCopied = 0;
+    for (;;) {
+        BytesToCopy = MIN(DstSize, Length);
+
+        RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
+        BytesCopied        += BytesToCopy;
+        (ULONG_PTR)SrcData += BytesToCopy;
+
+        Length -= BytesToCopy;
+        if (Length == 0)
+            break;
+
+        DstSize -= BytesToCopy;
+        if (DstSize == 0) {
+            /* No more bytes in desination buffer. Proceed to
+               the next buffer in the destination buffer chain */
+            NdisGetNextBuffer(DstBuffer, &DstBuffer);
+            if (!DstBuffer)
+                break;
+
+            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+        }
+    }
+
+    return BytesCopied;
+}
+
+
+UINT CopyBufferChainToBuffer(
+    PUCHAR DstData,
+    PNDIS_BUFFER SrcBuffer,
+    UINT SrcOffset,
+    UINT Length)
+/*
+ * FUNCTION: Copies data from an NDIS buffer chain to a buffer
+ * ARGUMENTS:
+ *     DstData   = Pointer to destination buffer
+ *     SrcBuffer = Pointer to source NDIS buffer
+ *     SrcOffset = Source start offset
+ *     Length    = Number of bytes to copy
+ * RETURNS:
+ *     Number of bytes copied to destination buffer
+ * NOTES:
+ *     The number of bytes copied may be limited by the source
+ *     buffer size
+ */
+{
+    UINT BytesCopied, BytesToCopy, SrcSize;
+    PUCHAR SrcData;
+
+    NDIS_DbgPrint(MAX_TRACE, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
+    
+    /* Skip SrcOffset bytes in the source buffer chain */
+    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
+        return 0;
+
+    /* Start copying the data */
+    BytesCopied = 0;
+    for (;;) {
+        BytesToCopy = MIN(SrcSize, Length);
+
+        NDIS_DbgPrint(MAX_TRACE, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
+
+        RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
+        BytesCopied        += BytesToCopy;
+        (ULONG_PTR)DstData += BytesToCopy;
+
+        Length -= BytesToCopy;
+        if (Length == 0)
+            break;
+
+        SrcSize -= BytesToCopy;
+        if (SrcSize == 0) {
+            /* No more bytes in source buffer. Proceed to
+               the next buffer in the source buffer chain */
+            NdisGetNextBuffer(SrcBuffer, &SrcBuffer);
+            if (!SrcBuffer)
+                break;
+
+            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
+        }
+    }
+
+    return BytesCopied;
+}
+
+
+UINT CopyPacketToBuffer(
+    PUCHAR DstData,
+    PNDIS_PACKET SrcPacket,
+    UINT SrcOffset,
+    UINT Length)
+/*
+ * FUNCTION: Copies data from an NDIS packet to a buffer
+ * ARGUMENTS:
+ *     DstData   = Pointer to destination buffer
+ *     SrcPacket = Pointer to source NDIS packet
+ *     SrcOffset = Source start offset
+ *     Length    = Number of bytes to copy
+ * RETURNS:
+ *     Number of bytes copied to destination buffer
+ * NOTES:
+ *     The number of bytes copied may be limited by the source
+ *     buffer size
+ */
+{
+    PNDIS_BUFFER FirstBuffer;
+    PVOID Address;
+    UINT FirstLength;
+    UINT TotalLength;
+
+    NDIS_DbgPrint(MAX_TRACE, ("DstData (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstData, SrcPacket, SrcOffset, Length));
+
+    NdisGetFirstBufferFromPacket(SrcPacket,
+                                 &FirstBuffer,
+                                 &Address,
+                                 &FirstLength,
+                                 &TotalLength);
+
+    return CopyBufferChainToBuffer(DstData, FirstBuffer, SrcOffset, Length);
+}
+
+
+UINT CopyPacketToBufferChain(
+    PNDIS_BUFFER DstBuffer,
+    UINT DstOffset,
+    PNDIS_PACKET SrcPacket,
+    UINT SrcOffset,
+    UINT Length)
+/*
+ * FUNCTION: Copies data from an NDIS packet to an NDIS buffer chain
+ * ARGUMENTS:
+ *     DstBuffer = Pointer to destination NDIS buffer
+ *     DstOffset = Destination start offset
+ *     SrcPacket = Pointer to source NDIS packet
+ *     SrcOffset = Source start offset
+ *     Length    = Number of bytes to copy
+ * RETURNS:
+ *     Number of bytes copied to destination buffer
+ * NOTES:
+ *     The number of bytes copied may be limited by the source and
+ *     destination buffer sizes
+ */
+{
+    PNDIS_BUFFER SrcBuffer;
+    PUCHAR DstData, SrcData;
+    UINT DstSize, SrcSize;
+    UINT Count, Total;
+
+    NDIS_DbgPrint(MAX_TRACE, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcPacket, SrcOffset, Length));
+
+    /* Skip DstOffset bytes in the destination buffer chain */
+    NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+    if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
+        return 0;
+
+    /* Skip SrcOffset bytes in the source packet */
+    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
+    if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
+        return 0;
+
+    /* Copy the data */
+    for (Total = 0;;) {
+        /* Find out how many bytes we can copy at one time */
+        if (Length < SrcSize)
+            Count = Length;
+        else
+            Count = SrcSize;
+        if (DstSize < Count)
+            Count = DstSize;
+
+        RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, Count);
+
+        Total  += Count;
+        Length -= Count;
+        if (Length == 0)
+            break;
+
+        DstSize -= Count;
+        if (DstSize == 0) {
+            /* No more bytes in destination buffer. Proceed to
+               the next buffer in the destination buffer chain */
+            NdisGetNextBuffer(DstBuffer, &DstBuffer);
+            if (!DstBuffer)
+                break;
+
+            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+        }
+
+        SrcSize -= Count;
+        if (SrcSize == 0) {
+            /* No more bytes in source buffer. Proceed to
+               the next buffer in the source buffer chain */
+            NdisGetNextBuffer(SrcBuffer, &SrcBuffer);
+            if (!SrcBuffer)
+                break;
+
+            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
+        }
+    }
+
+    return Total;
+}
+
+
+
 VOID
 EXPORT
 NdisAdjustBufferLength(
@@ -276,15 +554,17 @@ EXPORT
 NdisBufferLength(
     IN  PNDIS_BUFFER    Buffer)
 /*
- * FUNCTION:
+ * FUNCTION: Modifies the length of an NDIS buffer
  * ARGUMENTS:
+ *     Buffer = Pointer to NDIS buffer descriptor
+ *     Length = New size of buffer
  * NOTES:
  *    NDIS 5.0
+ * RETURNS:
+ *     Length of NDIS buffer
  */
 {
-    UNIMPLEMENTED
-
-    return 0;
+    return Buffer->ByteCount;
 }
 
 
@@ -329,52 +609,6 @@ NdisCopyBuffer(
 }
 
 
-__inline ULONG SkipToOffset(
-    PNDIS_BUFFER Buffer,
-    UINT Offset,
-    PVOID *Data,
-    PUINT Size)
-/*
- * FUNCTION: Skips Offset bytes into a buffer chain
- * ARGUMENTS:
- *     Buffer = Pointer to NDIS buffer
- *     Offset = Number of bytes to skip
- *     Data   = Address of a pointer that on return will contain the
- *              address of the offset in the buffer
- *     Size   = Address of a pointer that on return will contain the
- *              size of the destination buffer
- * RETURNS:
- *     Offset into buffer, -1 if buffer chain was smaller than Offset bytes
- * NOTES:
- *     Buffer may be NULL
- */
-{
-    ULONG Address = 0;
-
-    for (;;) {
-
-        if (!Buffer)
-            return -1;
-
-        NdisQueryBuffer(Buffer, Data, Size);
-
-        if (Offset < *Size) {
-            Address += Offset;
-            *Size   -= Offset;
-            break;
-        }
-
-        Offset -= *Size;
-
-        NdisGetNextBuffer(Buffer, &Buffer);
-    }
-
-    *Data = (PVOID)Address;
-
-    return Offset;
-}
-
-
 VOID
 EXPORT
 NdisCopyFromPacketToPacket(
@@ -397,19 +631,19 @@ NdisCopyFromPacketToPacket(
 {
     PNDIS_BUFFER SrcBuffer;
     PNDIS_BUFFER DstBuffer;
-    PVOID DstData, SrcData;
+    PUCHAR DstData, SrcData;
     UINT DstSize, SrcSize;
     UINT Count, Total;
 
     *BytesCopied = 0;
 
     /* Skip DestinationOffset bytes in the destination packet */
-    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, &DstData, &DstSize, &Total);
+    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID)&DstData, &DstSize, &Total);
     if (SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == -1)
         return;
 
     /* Skip SourceOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, &SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == -1)
         return;
 
@@ -438,7 +672,7 @@ NdisCopyFromPacketToPacket(
             if (!DstBuffer)
                 break;
 
-            NdisQueryBuffer(DstBuffer, &DstData, &DstSize);
+            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
         }
 
         SrcSize -= Count;
@@ -449,7 +683,7 @@ NdisCopyFromPacketToPacket(
             if (!SrcBuffer)
                 break;
 
-            NdisQueryBuffer(SrcBuffer, &SrcData, &SrcSize);
+            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
         }
     }
 
@@ -616,8 +850,34 @@ NdisGetFirstBufferFromPacket(
     OUT PVOID           *_FirstBufferVA,
     OUT PUINT           _FirstBufferLength,
     OUT PUINT           _TotalBufferLength)
+/*
+ * FUNCTION: Retrieves information about an NDIS packet
+ * ARGUMENTS:
+ *     _Packet            = Pointer to NDIS packet
+ *     _FirstBuffer       = Address of buffer for pointer to first NDIS buffer
+ *     _FirstBufferVA     = Address of buffer for address of first NDIS buffer
+ *     _FirstBufferLength = Address of buffer for length of first buffer
+ *     _TotalBufferLength = Address of buffer for total length of packet
+ */
 {
-    UNIMPLEMENTED
+    PNDIS_BUFFER Buffer;
+
+    Buffer          = _Packet->Private.Head;
+    *_FirstBuffer   = Buffer;
+    *_FirstBufferVA = MmGetMdlVirtualAddress(Buffer);
+
+    if (Buffer != NULL) {
+        *_FirstBufferLength = MmGetMdlByteCount(Buffer);
+        Buffer = Buffer->Next;
+    } else
+        *_FirstBufferLength = 0;
+
+    *_TotalBufferLength = *_FirstBufferLength;
+
+    while (Buffer != NULL) {
+        *_TotalBufferLength += MmGetMdlByteCount(Buffer);
+        Buffer = Buffer->Next;
+    }
 }
 
 
@@ -683,7 +943,8 @@ NdisQueryBufferOffset(
     OUT PUINT           Offset,
     OUT PUINT           Length)
 {
-    UNIMPLEMENTED
+    *((PUINT)Offset) = MmGetMdlByteOffset(Buffer);
+    *((PUINT)Length) = MmGetMdlByteCount(Buffer);
 }
 
 

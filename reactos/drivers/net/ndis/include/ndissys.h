@@ -107,6 +107,13 @@
         PoolFreeBuffer(Object);                           \
 }
 
+
+#define MIN(value1, value2) \
+    ((value1 < value2)? value1 : value2)
+
+#define MAX(value1, value2) \
+    ((value1 > value2)? value1 : value2)
+
 #endif /* __NDISSYS_H */
 
 /* EOF */

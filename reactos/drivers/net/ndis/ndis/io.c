@@ -25,10 +25,33 @@ VOID HandleDeferredProcessing(
  *     SystemArgument2 = Unused
  */
 {
+    BOOLEAN WasBusy;
     PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+    WasBusy = Adapter->MiniportBusy;
+    Adapter->MiniportBusy = TRUE;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Before HandleInterruptHandler.\n"));
+
     /* Call the deferred interrupt service handler for this adapter */
-    (*Adapter->Miniport->Chars.HandleInterruptHandler)(Adapter);
+    (*Adapter->Miniport->Chars.HandleInterruptHandler)(
+        Adapter->MiniportAdapterContext);
+
+    NDIS_DbgPrint(MAX_TRACE, ("After HandleInterruptHandler.\n"));
+
+    KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+    if ((!WasBusy) && (Adapter->WorkQueueHead)) {
+        KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+    } else {
+        Adapter->MiniportBusy = WasBusy;
+    }
+    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -41,23 +64,27 @@ BOOLEAN ServiceRoutine(
  *     Interrupt      = Pointer to interrupt object
  *     ServiceContext = Pointer to context information (LOGICAL_ADAPTER)
  * RETURNS
- *     TRUE if our device generated the interrupt
+ *     TRUE if a miniport controlled device generated the interrupt
  */
 {
     BOOLEAN InterruptRecognized;
     BOOLEAN QueueMiniportHandleInterrupt;
     PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(ServiceContext);
 
-    /* FIXME: Support shared interrupts */
+    NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
 
     (*Adapter->Miniport->Chars.ISRHandler)(&InterruptRecognized,
-        &QueueMiniportHandleInterrupt, Adapter);
+                                           &QueueMiniportHandleInterrupt,
+                                           Adapter->MiniportAdapterContext);
 
     if (QueueMiniportHandleInterrupt) {
-        KeInsertQueueDpc(&Adapter->InterruptObject->InterruptDpc, NULL, NULL);
+        NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
+        KeInsertQueueDpc(&Adapter->Interrupt->InterruptDpc, NULL, NULL);
     }
 
-    return TRUE;
+    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+    return InterruptRecognized;
 }
 
 
@@ -230,7 +257,9 @@ NdisMDeregisterIoPortRange(
  *     PortOffset            = Pointer to mapped base port address
  */
 {
-    UNIMPLEMENTED
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* Thank you */
 }
 
 
@@ -254,16 +283,6 @@ NdisMMapIoSpace(
     UNIMPLEMENTED
 
 	return NDIS_STATUS_FAILURE;
-}
-
-
-VOID
-EXPORT
-NdisMQueryInformationComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_STATUS Status)
-{
-    UNIMPLEMENTED
 }
 
 
@@ -312,39 +331,70 @@ NdisMRegisterInterrupt(
  *     InterruptVector       = Specifies bus-relative vector to register
  *     InterruptLevel        = Specifies bus-relative DIRQL vector for interrupt
  *     RequestIsr            = TRUE if MiniportISR should always be called
- *     SharedInterrupt       = TRUE if other devices may use tha same interrupt
+ *     SharedInterrupt       = TRUE if other devices may use the same interrupt
  *     InterruptMode         = Specifies type of interrupt
  * RETURNS:
  *     Status of operation
  */
 {
-    NTSTATUS NtStatus;
+    NTSTATUS Status;
     ULONG MappedIRQ;
     KIRQL DIrql;
-    KAFFINITY Affinity = 0xFFFFFFFF;
-    PLOGICAL_ADAPTER Adapter  = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
+    KAFFINITY Affinity;
+    PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called. InterruptVector (0x%X)  InterruptLevel (0x%X)  "
+        "SharedInterrupt (%d)  InterruptMode (0x%X)\n",
+        InterruptVector, InterruptLevel, SharedInterrupt, InterruptMode));
 
     RtlZeroMemory(Interrupt, sizeof(NDIS_MINIPORT_INTERRUPT));
 
     KeInitializeSpinLock(&Interrupt->DpcCountLock);
 
-    KeInitializeDpc(&Interrupt->InterruptDpc, HandleDeferredProcessing, Adapter);
+    KeInitializeDpc(&Interrupt->InterruptDpc,
+                    HandleDeferredProcessing,
+                    Adapter);
 
     KeInitializeEvent(&Interrupt->DpcsCompletedEvent,
-        NotificationEvent, FALSE);
+                      NotificationEvent,
+                      FALSE);
 
     Interrupt->SharedInterrupt = SharedInterrupt;
 
-    Adapter->InterruptObject = Interrupt;
+    Adapter->Interrupt = Interrupt;
 
-    MappedIRQ = HalGetInterruptVector(Adapter->AdapterType, 0,
-        InterruptLevel, InterruptVector, &DIrql, &Affinity);
+    MappedIRQ = HalGetInterruptVector(Internal, /* Adapter->AdapterType, */
+                                      0,
+                                      InterruptLevel,
+                                      InterruptVector,
+                                      &DIrql,
+                                      &Affinity);
 
-    NtStatus = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Adapter,
-        &Interrupt->DpcCountLock, MappedIRQ, DIrql, DIrql, InterruptMode,
-        SharedInterrupt, Affinity, FALSE);
+    NDIS_DbgPrint(MAX_TRACE, ("Connecting to interrupt vector (0x%X)  Affinity (0x%X).\n", MappedIRQ, Affinity));
 
-	return NDIS_STATUS_SUCCESS;
+    Status = IoConnectInterrupt(&Interrupt->InterruptObject,
+                                ServiceRoutine,
+                                Adapter,
+                                &Interrupt->DpcCountLock,
+                                MappedIRQ,
+                                DIrql,
+                                DIrql,
+                                InterruptMode,
+                                SharedInterrupt,
+                                Affinity,
+                                FALSE);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
+
+    if (NT_SUCCESS(Status))
+        return NDIS_STATUS_SUCCESS;
+
+    if (Status == STATUS_INSUFFICIENT_RESOURCES) {
+        /* FIXME: Log error */
+        return NDIS_STATUS_RESOURCE_CONFLICT;
+    }
+
+    return NDIS_STATUS_FAILURE;
 }
 
 
@@ -367,37 +417,30 @@ NdisMRegisterIoPortRange(
  */
 {
 #if 0
-    NTSTATUS NtStatus;
+    NTSTATUS Status;
     BOOLEAN ConflictDetected;
     PLOGICAL_ADAPTER Adapter  = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
     PMINIPORT_DRIVER Miniport = Adapter->Miniport;
 
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     /* Non-PnP hardware. NT5 function */
-    NtStatus = IoReportResourceForDetection(
-        Miniport->DriverObject,
-        NULL,
-        0,
-        NULL,
-        NULL,
-        0,
-        &ConflictDetected);
+    Status = IoReportResourceForDetection(Miniport->DriverObject,
+                                          NULL,
+                                          0,
+                                          NULL,
+                                          NULL,
+                                          0,
+                                          &ConflictDetected);
     return NDIS_STATUS_FAILURE;
 #else
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     /* It's yours! */
     *PortOffset = (PVOID)InitialPort;
 
     return NDIS_STATUS_SUCCESS;
 #endif
-}
-
-
-VOID
-EXPORT
-NdisMSetInformationComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_STATUS Status)
-{
-    UNIMPLEMENTED
 }
 
 
@@ -410,18 +453,6 @@ NdisMSetupDmaTransfer(
     IN	ULONG           Offset,
     IN	ULONG           Length,
     IN	BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
-}
-
-
-VOID
-EXPORT
-NdisMTransferDataComplete(
-    IN  NDIS_HANDLE     MiniportAdapterHandle,
-    IN  PNDIS_PACKET    Packet,
-    IN  NDIS_STATUS     Status,
-    IN  UINT            BytesTransferred)
 {
     UNIMPLEMENTED
 }

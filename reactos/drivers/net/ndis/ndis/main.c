@@ -8,10 +8,15 @@
  *   CSH 01/08-2000 Created
  */
 #include <ndissys.h>
+#include <protocol.h>
+#include <miniport.h>
+
 
 #ifdef DBG
+
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
+
 #endif /* DBG */
 
 
@@ -44,6 +49,15 @@ DriverEntry(
  */
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    InitializeListHead(&ProtocolListHead);
+    KeInitializeSpinLock(&ProtocolListLock);
+
+    InitializeListHead(&MiniportListHead);
+    KeInitializeSpinLock(&MiniportListLock);
+
+    InitializeListHead(&AdapterListHead);
+    KeInitializeSpinLock(&AdapterListLock);
 
 #ifdef _MSC_VER
     DriverObject->DriverUnload = MainUnload;

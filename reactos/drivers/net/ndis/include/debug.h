@@ -18,6 +18,7 @@
 #define DEBUG_REFCOUNT 0x00000100
 #define DEBUG_MINIPORT 0x00000200
 #define DEBUG_PROTOCOL 0x00000400
+#define DEBUG_PACKET   0x00000800
 #define DEBUG_ULTRA    0xFFFFFFFF
 
 #ifdef DBG
@@ -74,7 +75,7 @@ extern DWORD DebugTraceLevel;
 #ifdef _MSC_VER
 
 #define UNIMPLEMENTED \
-    NDIS_DbgPrint(MIN_TRACE, ("The function at %s:%d is unimplemented.\n", __FILE__, __LINE__));
+    NDIS_DbgPrint(MIN_TRACE, ("The function at (%s:%d) is unimplemented.\n", __FILE__, __LINE__));
 
 #else /* _MSC_VER */
 
@@ -85,7 +86,7 @@ extern DWORD DebugTraceLevel;
 
 
 #define CHECKPOINT \
-    do { NDIS_DbgPrint(MIN_TRACE, ("%s:%d\n", __FILE__, __LINE__)); } while(0);
+    do { NDIS_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
 
 #endif /* __DEBUG_H */
 

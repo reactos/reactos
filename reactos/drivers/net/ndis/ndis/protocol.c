@@ -10,25 +10,291 @@
 #include <ndissys.h>
 #include <miniport.h>
 #include <protocol.h>
+#include <buffer.h>
+
 
 LIST_ENTRY ProtocolListHead;
 KSPIN_LOCK ProtocolListLock;
 
 
-VOID ProtocolWorker(
-    PVOID Context)
+NDIS_STATUS
+ProIndicatePacket(
+    PLOGICAL_ADAPTER Adapter,
+    PNDIS_PACKET Packet)
 /*
- * FUNCTION: Worker function for ProtocolXxx functions
+ * FUNCTION: Indicates a packet to bound protocols
  * ARGUMENTS:
- *     Context = Pointer to context information (PROTOCOL_BINDING)
+ *     Adapter = Pointer to logical adapter
+ *     Packet  = Pointer to packet to indicate
+ * RETURNS:
+ *     Status of operation
  */
 {
+    KIRQL OldIrql;
+    UINT Length;
+    UINT Total;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+#ifdef DBG
+    MiniDisplayPacket(Packet);
+#endif
+
+    NdisQueryPacket(Packet, NULL, NULL, NULL, &Total);
+
+    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+
+    Adapter->LoopPacket = Packet;
+
+    Length = CopyPacketToBuffer(
+        Adapter->LookaheadBuffer,
+        Packet,
+        0,
+        Adapter->CurLookaheadLength);
+
+    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+
+    if (Length > Adapter->MediumHeaderSize) {
+        MiniIndicateData(Adapter,
+                         NULL,
+                         Adapter->LookaheadBuffer,
+                         Adapter->MediumHeaderSize,
+                         &Adapter->LookaheadBuffer[Adapter->MediumHeaderSize],
+                         Length - Adapter->MediumHeaderSize,
+                         Total - Adapter->MediumHeaderSize);
+    } else {
+        MiniIndicateData(Adapter,
+                         NULL,
+                         Adapter->LookaheadBuffer,
+                         Adapter->MediumHeaderSize,
+                         NULL,
+                         0,
+                         0);
+    }
+
+    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+
+    Adapter->LoopPacket = NULL;
+
+    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+
+    return STATUS_SUCCESS;
+}
+
+
+NDIS_STATUS
+ProRequest(
+    IN  NDIS_HANDLE     MacBindingHandle,
+    IN  PNDIS_REQUEST   NdisRequest)
+/*
+ * FUNCTION: Forwards a request to an NDIS miniport
+ * ARGUMENTS:
+ *     MacBindingHandle = Adapter binding handle
+ *     NdisRequest      = Pointer to request to perform
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    KIRQL OldIrql;
+    BOOLEAN Queue;
+    NDIS_STATUS NdisStatus;
+    PADAPTER_BINDING AdapterBinding = GET_ADAPTER_BINDING(MacBindingHandle);
+    PLOGICAL_ADAPTER Adapter        = AdapterBinding->Adapter;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    Queue = Adapter->MiniportBusy;
+    if (Queue) {
+        MiniQueueWorkItem(Adapter,
+                          NdisWorkItemRequest,
+                          (PVOID)NdisRequest,
+                          (NDIS_HANDLE)AdapterBinding);
+    } else {
+        Adapter->MiniportBusy = TRUE;
+    }
+    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+
+    if (!Queue) {
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        NdisStatus = MiniDoRequest(Adapter, NdisRequest);
+        KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+        Adapter->MiniportBusy = FALSE;
+        if (Adapter->WorkQueueHead)
+            KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+        KeLowerIrql(OldIrql);
+    } else {
+        NdisStatus = NDIS_STATUS_PENDING;
+    }
+    return NdisStatus;
+}
+
+
+NDIS_STATUS
+ProReset(
+    IN  NDIS_HANDLE MacBindingHandle)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
+
+
+NDIS_STATUS
+ProSend(
+    IN  NDIS_HANDLE     MacBindingHandle,
+    IN  PNDIS_PACKET    Packet)
+/*
+ * FUNCTION: Forwards a request to send a packet to an NDIS miniport
+ * ARGUMENTS:
+ *     MacBindingHandle = Adapter binding handle
+ *     Packet           = Pointer to NDIS packet descriptor
+ */
+{
+    KIRQL OldIrql;
+    BOOLEAN Queue;
+    NDIS_STATUS NdisStatus;
+    PADAPTER_BINDING AdapterBinding  = GET_ADAPTER_BINDING(MacBindingHandle);
+    PLOGICAL_ADAPTER Adapter         = AdapterBinding->Adapter;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* FIXME: Should queue packet if miniport returns NDIS_STATUS_RESOURCES */
+
+    Packet->Reserved[0] = (ULONG_PTR)MacBindingHandle;
+
+    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    Queue = Adapter->MiniportBusy;
+
+    /* We may have to loop this packet if miniport cannot */
+    if (Adapter->MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) {
+        if (MiniAdapterHasAddress(Adapter, Packet)) {
+            /* Do software loopback because miniport does not support it */
+
+            NDIS_DbgPrint(MIN_TRACE, ("Looping packet.\n"));
+
+            if (Queue) {
+
+                /* FIXME: Packets should properbly be queued directly on the adapter instead */
+
+                MiniQueueWorkItem(Adapter,
+                                  NdisWorkItemSendLoopback,
+                                  (PVOID)Packet,
+                                  (NDIS_HANDLE)AdapterBinding);
+            } else {
+                Adapter->MiniportBusy = TRUE;
+            }
+            KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+
+            if (!Queue) {
+                KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+                NdisStatus = ProIndicatePacket(Adapter, Packet);
+                KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+                Adapter->MiniportBusy = FALSE;
+                if (Adapter->WorkQueueHead)
+                    KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+                KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+                KeLowerIrql(OldIrql);
+                return NdisStatus;
+            } else {
+                return NDIS_STATUS_PENDING;
+            }
+        }
+    }
+
+    if (Queue) {
+
+        /* FIXME: Packets should properbly be queued directly on the adapter instead */
+
+        MiniQueueWorkItem(Adapter,
+                          NdisWorkItemSend,
+                          (PVOID)Packet,
+                          (NDIS_HANDLE)AdapterBinding);
+    } else {
+        Adapter->MiniportBusy = TRUE;
+    }
+    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+
+    if (!Queue) {
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(
+            Adapter->MiniportAdapterContext,
+            Packet,
+            0);
+        KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+        Adapter->MiniportBusy = FALSE;
+        if (Adapter->WorkQueueHead)
+            KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+        KeLowerIrql(OldIrql);
+    } else {
+        NdisStatus = NDIS_STATUS_PENDING;
+    }
+    return NdisStatus;
 }
 
 
 VOID
+ProSendPackets(
+    IN  NDIS_HANDLE     NdisBindingHandle,
+    IN  PPNDIS_PACKET   PacketArray,
+    IN  UINT            NumberOfPackets)
+{
+    UNIMPLEMENTED
+}
+
+
+NDIS_STATUS
+ProTransferData(
+    IN  NDIS_HANDLE         MacBindingHandle,
+    IN  NDIS_HANDLE         MacReceiveContext,
+    IN  UINT                ByteOffset,
+    IN  UINT                BytesToTransfer,
+    IN  OUT	PNDIS_PACKET    Packet,
+    OUT PUINT               BytesTransferred)
+/*
+ * FUNCTION: Forwards a request to copy received data into a protocol-supplied packet
+ * ARGUMENTS:
+ *     MacBindingHandle  = Adapter binding handle
+ *     MacReceiveContext = MAC receive context
+ *     ByteOffset        = Offset in packet to place data
+ *     BytesToTransfer   = Number of bytes to copy into packet
+ *     Packet            = Pointer to NDIS packet descriptor
+ *     BytesTransferred  = Address of buffer to place number of bytes copied
+ */
+{
+    PADAPTER_BINDING AdapterBinding = GET_ADAPTER_BINDING(MacBindingHandle);
+    PLOGICAL_ADAPTER Adapter        = AdapterBinding->Adapter;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* FIXME: Interrupts must be disabled for adapter */
+
+    if (Packet == Adapter->LoopPacket) {
+        /* NDIS is responsible for looping this packet */
+        NdisCopyFromPacketToPacket(Packet,
+                                   ByteOffset,
+                                   BytesToTransfer,
+                                   Adapter->LoopPacket,
+                                   0,
+                                   BytesTransferred);
+        return NDIS_STATUS_SUCCESS;
+    }
+
+    return (*Adapter->Miniport->Chars.u2.TransferDataHandler)(
+        Packet,
+        BytesTransferred,
+        Adapter->MiniportAdapterContext,
+        MacReceiveContext,
+        ByteOffset,
+        BytesToTransfer);
+}
+
+
+
+VOID
 EXPORT
-STDCALL
 NdisCloseAdapter(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle)
@@ -39,7 +305,20 @@ NdisCloseAdapter(
  *     NdisBindingHandle = Handle returned by NdisOpenAdapter
  */
 {
+    KIRQL OldIrql;
     PADAPTER_BINDING AdapterBinding = GET_ADAPTER_BINDING(NdisBindingHandle);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* Remove from protocol's bound adapters list */
+    KeAcquireSpinLock(&AdapterBinding->ProtocolBinding->Lock, &OldIrql);
+    RemoveEntryList(&AdapterBinding->ProtocolListEntry);
+    KeReleaseSpinLock(&AdapterBinding->ProtocolBinding->Lock, OldIrql);
+
+    /* Remove protocol from adapter's bound protocols list */
+    KeAcquireSpinLock(&AdapterBinding->Adapter->Lock, &OldIrql);
+    RemoveEntryList(&AdapterBinding->AdapterListEntry);
+    KeReleaseSpinLock(&AdapterBinding->Adapter->Lock, OldIrql);
 
     ExFreePool(AdapterBinding);
 
@@ -59,7 +338,20 @@ NdisDeregisterProtocol(
  *     NdisProtocolHandle = Handle returned by NdisRegisterProtocol
  */
 {
-    ExFreePool(NdisProtocolHandle);
+    KIRQL OldIrql;
+    PPROTOCOL_BINDING Protocol = GET_PROTOCOL_BINDING(NdisProtocolHandle);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* FIXME: Make sure no adapter bindings exist */
+
+    /* Remove protocol from global list */
+    KeAcquireSpinLock(&ProtocolListLock, &OldIrql);
+    RemoveEntryList(&Protocol->ListEntry);
+    KeReleaseSpinLock(&ProtocolListLock, OldIrql);
+
+    ExFreePool(Protocol);
+
     *Status = NDIS_STATUS_SUCCESS;
 }
 
@@ -94,60 +386,38 @@ NdisOpenAdapter(
  *     AddressingInformation  = Optional pointer to buffer with NIC specific information
  */
 {
-    PADAPTER_BINDING AdapterBinding;
-    PLOGICAL_ADAPTER Adapter;
-    NDIS_STATUS NdisStatus;
-    PNDIS_MEDIUM Medium1;
-    PNDIS_MEDIUM Medium2;
-    ULONG BytesWritten;
+    UINT i;
     BOOLEAN Found;
-    UINT i, j;
-    PPROTOCOL_BINDING Protocol = GET_PROTOCOL_BINDING(ProtocolBindingContext);
+    PLOGICAL_ADAPTER Adapter;
+    PADAPTER_BINDING AdapterBinding;
+    PPROTOCOL_BINDING Protocol = GET_PROTOCOL_BINDING(NdisProtocolHandle);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     Adapter = MiniLocateDevice(AdapterName);
-
     if (!Adapter) {
         NDIS_DbgPrint(MIN_TRACE, ("Adapter not found.\n"));
         *Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
         return;
     }
 
-    /* Query the miniport driver for it's supported medias and search the list
-       to find the first medium also supported by the protocol driver */
-
-    NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MEDIA_SUPPORTED, 0, &BytesWritten);
-
-    /* FIXME: Handle this */
-    if (NdisStatus == NDIS_STATUS_PENDING) {
-        NDIS_DbgPrint(MIN_TRACE, ("NDIS_STATUS_PENDING returned!\n"));
-    }
-
-    if (!NT_SUCCESS(NdisStatus))
-        *Status = NdisStatus;
-
-    Medium1 = Adapter->QueryBuffer;
-    Medium2 = MediumArray;
-    Found   = FALSE;
-    for (i = 0; i < BytesWritten / sizeof(NDIS_MEDIUM); i++) {
-        for (j = 0; j < MediumArraySize; j++) {
-            if (Medium2[j] == Medium1[i]) {
-                *SelectedMediumIndex = j;
-                Found = TRUE;
-                break;
-            }
-        }
-        if (Found)
+    /* Find the media type in the list provided by the protocol driver */
+    Found = FALSE;
+    for (i = 0; i < MediumArraySize; i++) {
+        if (Adapter->MediaType == MediumArray[i]) {
+            *SelectedMediumIndex = i;
+            Found = TRUE;
             break;
+        }
     }
 
     if (!Found) {
-        NDIS_DbgPrint(MIN_TRACE, ("Media is not supported.\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Medium is not supported.\n"));
         *Status = NDIS_STATUS_UNSUPPORTED_MEDIA;
         return;
     }
 
     AdapterBinding = ExAllocatePool(NonPagedPool, sizeof(ADAPTER_BINDING));
-
     if (!AdapterBinding) {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         *Status = NDIS_STATUS_RESOURCES;
@@ -156,12 +426,32 @@ NdisOpenAdapter(
 
     RtlZeroMemory(AdapterBinding, sizeof(ADAPTER_BINDING));
 
-    /* Put on protocol binding adapter list */
+    AdapterBinding->ProtocolBinding        = Protocol;
+    AdapterBinding->Adapter                = Adapter;
+    AdapterBinding->ProtocolBindingContext = ProtocolBindingContext;
+
+    /* Set fields required by some NDIS macros */
+    AdapterBinding->MacBindingHandle = (NDIS_HANDLE)AdapterBinding;
+    
+    /* Set handlers (some NDIS macros require these) */
+
+    AdapterBinding->RequestHandler      = ProRequest;
+    AdapterBinding->ResetHandler        = ProReset;
+    AdapterBinding->u1.SendHandler      = ProSend;
+    AdapterBinding->SendPacketsHandler  = ProSendPackets;
+    AdapterBinding->TransferDataHandler = ProTransferData;
+
+    /* Put on protocol's bound adapters list */
     ExInterlockedInsertTailList(&Protocol->AdapterListHead,
                                 &AdapterBinding->ProtocolListEntry,
                                 &Protocol->Lock);
 
-    *NdisBindingHandle = AdapterBinding;
+    /* Put protocol on adapter's bound protocols list */
+    ExInterlockedInsertTailList(&Adapter->ProtocolListHead,
+                                &AdapterBinding->AdapterListEntry,
+                                &Adapter->Lock);
+
+    *NdisBindingHandle = (NDIS_HANDLE)AdapterBinding;
 
     *Status = NDIS_STATUS_SUCCESS;
 }
@@ -186,6 +476,8 @@ NdisRegisterProtocol(
     PPROTOCOL_BINDING Protocol;
     NTSTATUS NtStatus;
     UINT MinSize;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     switch (ProtocolCharacteristics->MajorNdisVersion) {
     case 0x03:
@@ -221,10 +513,9 @@ NdisRegisterProtocol(
     RtlZeroMemory(Protocol, sizeof(PROTOCOL_BINDING));
     RtlCopyMemory(&Protocol->Chars, ProtocolCharacteristics, MinSize);
 
-    NtStatus = RtlUpcaseUnicodeString(
-        &Protocol->Chars.Name,
-        &ProtocolCharacteristics->Name,
-        TRUE);
+    NtStatus = RtlUpcaseUnicodeString(&Protocol->Chars.Name,
+                                      &ProtocolCharacteristics->Name,
+                                      TRUE);
     if (!NT_SUCCESS(NtStatus)) {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         ExFreePool(Protocol);
@@ -236,9 +527,12 @@ NdisRegisterProtocol(
 
     Protocol->RefCount = 1;
 
-    ExInitializeWorkItem(&Protocol->WorkItem, ProtocolWorker, Protocol);
-
     InitializeListHead(&Protocol->AdapterListHead);
+
+    /* Put protocol binding on global list */
+    ExInterlockedInsertTailList(&ProtocolListHead,
+                                &Protocol->ListEntry,
+                                &ProtocolListLock);
 
     *NdisProtocolHandle = Protocol;
     *Status             = NDIS_STATUS_SUCCESS;
@@ -251,8 +545,15 @@ NdisRequest(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PNDIS_REQUEST   NdisRequest)
+/*
+ * FUNCTION: Forwards a request to an NDIS driver
+ * ARGUMENTS:
+ *     Status            = Address of buffer for status information
+ *     NdisBindingHandle = Adapter binding handle
+ *     NdisRequest       = Pointer to request to perform
+ */
 {
-    UNIMPLEMENTED
+    *Status = ProRequest(NdisBindingHandle, NdisRequest);
 }
 
 
@@ -262,7 +563,7 @@ NdisReset(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle)
 {
-    UNIMPLEMENTED
+    *Status = ProReset(NdisBindingHandle);
 }
 
 
@@ -272,8 +573,15 @@ NdisSend(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PNDIS_PACKET    Packet)
+/*
+ * FUNCTION: Forwards a request to send a packet
+ * ARGUMENTS:
+ *     Status             = Address of buffer for status information
+ *     NdisBindingHandle  = Adapter binding handle
+ *     Packet             = Pointer to NDIS packet descriptor
+ */
 {
-    UNIMPLEMENTED
+    *Status = ProSend(NdisBindingHandle, Packet);
 }
 
 
@@ -284,22 +592,38 @@ NdisSendPackets(
     IN  PPNDIS_PACKET   PacketArray,
     IN  UINT            NumberOfPackets)
 {
-    UNIMPLEMENTED
+    ProSendPackets(NdisBindingHandle, PacketArray, NumberOfPackets);
 }
 
 
 VOID
 EXPORT
 NdisTransferData(
-    OUT PNDIS_STATUS        Status,
-    IN  NDIS_HANDLE         NdisBindingHandle,
-    IN  NDIS_HANDLE         MacReceiveContext,
-    IN  UINT                ByteOffset,
-    IN  UINT                BytesToTransfer,
-    IN  OUT	PNDIS_PACKET    Packet,
-    OUT PUINT               BytesTransferred)
+    OUT     PNDIS_STATUS    Status,
+    IN      NDIS_HANDLE     NdisBindingHandle,
+    IN      NDIS_HANDLE     MacReceiveContext,
+    IN      UINT            ByteOffset,
+    IN      UINT            BytesToTransfer,
+    IN OUT	PNDIS_PACKET    Packet,
+    OUT     PUINT           BytesTransferred)
+/*
+ * FUNCTION: Forwards a request to copy received data into a protocol-supplied packet
+ * ARGUMENTS:
+ *     Status            = Address of buffer for status information
+ *     NdisBindingHandle = Adapter binding handle
+ *     MacReceiveContext = MAC receive context
+ *     ByteOffset        = Offset in packet to place data
+ *     BytesToTransfer   = Number of bytes to copy into packet
+ *     Packet            = Pointer to NDIS packet descriptor
+ *     BytesTransferred  = Address of buffer to place number of bytes copied
+ */
 {
-    UNIMPLEMENTED
+    *Status = ProTransferData(NdisBindingHandle,
+                              MacReceiveContext,
+                              ByteOffset,
+                              BytesToTransfer,
+                              Packet,
+                              BytesTransferred);
 }
 
 /* EOF */

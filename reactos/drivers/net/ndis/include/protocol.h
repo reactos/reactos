@@ -25,11 +25,15 @@ typedef struct _PROTOCOL_BINDING {
 
 
 typedef struct _ADAPTER_BINDING {
-    LIST_ENTRY       ListEntry;         /* Entry on global list */
-    LIST_ENTRY       ProtocolListEntry; /* Entry on protocol binding adapter list */
-    KSPIN_LOCK       Lock;              /* Protecting spin lock */
-    ULONG            RefCount;          /* Reference count */
-    PLOGICAL_ADAPTER Adapter;           /* Adapter opened by protocol */
+    NDIS_OPEN_BLOCK;                            /* NDIS defined fields */
+
+    LIST_ENTRY        ListEntry;                /* Entry on global list */
+    LIST_ENTRY        ProtocolListEntry;        /* Entry on protocol binding adapter list */
+    LIST_ENTRY        AdapterListEntry;         /* Entry on logical adapter list */
+    KSPIN_LOCK        Lock;                     /* Protecting spin lock */
+    ULONG             RefCount;                 /* Reference count */
+    PPROTOCOL_BINDING ProtocolBinding;          /* Protocol that opened adapter */
+    PLOGICAL_ADAPTER  Adapter;                  /* Adapter opened by protocol */
 } ADAPTER_BINDING, *PADAPTER_BINDING;
 
 #define GET_ADAPTER_BINDING(Handle)((PADAPTER_BINDING)Handle)
@@ -37,6 +41,12 @@ typedef struct _ADAPTER_BINDING {
 
 extern LIST_ENTRY ProtocolListHead;
 extern KSPIN_LOCK ProtocolListLock;
+
+
+NDIS_STATUS
+ProIndicatePacket(
+    PLOGICAL_ADAPTER Adapter,
+    PNDIS_PACKET Packet);
 
 #endif /* __PROTOCOL_H */
 

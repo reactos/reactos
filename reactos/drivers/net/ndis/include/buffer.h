@@ -25,6 +25,32 @@ typedef struct _NDIS_BUFFER_POOL
     NETWORK_HEADER Buffers[0];
 } NDIS_BUFFER_POOL, *PNDIS_BUFFER_POOL;
 
+
+UINT CopyBufferToBufferChain(
+    PNDIS_BUFFER DstBuffer,
+    UINT DstOffset,
+    PUCHAR SrcData,
+    UINT Length);
+
+UINT CopyBufferChainToBuffer(
+    PUCHAR DstData,
+    PNDIS_BUFFER SrcBuffer,
+    UINT SrcOffset,
+    UINT Length);
+
+UINT CopyPacketToBuffer(
+    PUCHAR DstData,
+    PNDIS_PACKET SrcPacket,
+    UINT SrcOffset,
+    UINT Length);
+
+UINT CopyPacketToBufferChain(
+    PNDIS_BUFFER DstBuffer,
+    UINT DstOffset,
+    PNDIS_PACKET SrcPacket,
+    UINT SrcOffset,
+    UINT Length);
+
 #endif /* __BUFFER_H */
 
 /* EOF */
