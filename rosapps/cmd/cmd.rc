@@ -26,7 +26,7 @@ BEGIN
             VALUE "FileVersion",	CMD_VER_RC
             VALUE "InternalName",	"cmd\0"
 	    VALUE "OriginalCopyright",	"Copyright (C) 1994-1998 Tim Norman and others\0"
-            VALUE "LegalCopyright",	"Copyright (C) 1998-2000 Eric Kohl\0"
+            VALUE "LegalCopyright",	"Copyright (C) 1998-2001 Eric Kohl and others\0"
             VALUE "OriginalFilename",	"cmd.exe\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
