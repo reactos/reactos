@@ -157,7 +157,9 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         return FALSE;
     }
 
-    if ((dwDevType==0) || (GET_DIDEVICE_TYPE(dwDevType)==DIDEVTYPE_JOYSTICK)) {
+    if ((dwDevType == 0) ||
+	((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 8)) ||
+	(((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 8))) {
         /* check whether we have a joystick */
         sprintf(dev, "%s%d", JOYDEV, id);
         if ((fd = open(dev,O_RDONLY)) < 0) {
@@ -205,7 +207,9 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         return FALSE;
     }
 
-    if ((dwDevType==0) || (GET_DIDEVICE_TYPE(dwDevType)==DIDEVTYPE_JOYSTICK)) {
+    if ((dwDevType == 0) ||
+	((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 8)) ||
+	(((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 8))) {
         /* check whether we have a joystick */
         sprintf(dev, "%s%d", JOYDEV, id);
         if ((fd = open(dev,O_RDONLY)) < 0) {
@@ -552,7 +556,10 @@ static HRESULT alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *dinput,
 
     newDevice->devcaps.dwSize = sizeof(newDevice->devcaps);
     newDevice->devcaps.dwFlags = DIDC_ATTACHED;
-    newDevice->devcaps.dwDevType = DIDEVTYPE_JOYSTICK;
+    if (newDevice->dinput->version >= 8)
+        newDevice->devcaps.dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
+    else
+        newDevice->devcaps.dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
     newDevice->devcaps.dwFFSamplePeriod = 0;
     newDevice->devcaps.dwFFMinTimeResolution = 0;
     newDevice->devcaps.dwFirmwareRevision = 0;
@@ -573,18 +580,12 @@ static HRESULT alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *dinput,
 FAILED:
     hr = DIERR_OUTOFMEMORY;
 FAILED1:
-    if (newDevice->axis_map)
-        HeapFree(GetProcessHeap(),0,newDevice->axis_map);
-    if (newDevice->name)
-        HeapFree(GetProcessHeap(),0,newDevice->name);
-    if (newDevice->props)
-        HeapFree(GetProcessHeap(),0,newDevice->props);
-    if (newDevice->user_df->rgodf)
-        HeapFree(GetProcessHeap(),0,newDevice->user_df->rgodf);
-    if (newDevice->user_df)
-        HeapFree(GetProcessHeap(),0,newDevice->user_df);
-    if (newDevice)
-        HeapFree(GetProcessHeap(),0,newDevice);
+    HeapFree(GetProcessHeap(),0,newDevice->axis_map);
+    HeapFree(GetProcessHeap(),0,newDevice->name);
+    HeapFree(GetProcessHeap(),0,newDevice->props);
+    HeapFree(GetProcessHeap(),0,newDevice->user_df->rgodf);
+    HeapFree(GetProcessHeap(),0,newDevice->user_df);
+    HeapFree(GetProcessHeap(),0,newDevice);
     *pdev = 0;
 
     return hr;
@@ -671,16 +672,13 @@ static ULONG WINAPI JoystickAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
         return ref;
 
     /* Free the device name */
-    if (This->name)
-        HeapFree(GetProcessHeap(),0,This->name);
+    HeapFree(GetProcessHeap(),0,This->name);
 
     /* Free the axis map */
-    if (This->axis_map)
-        HeapFree(GetProcessHeap(),0,This->axis_map);
+    HeapFree(GetProcessHeap(),0,This->axis_map);
 
     /* Free the data queue */
-    if (This->data_queue != NULL)
-        HeapFree(GetProcessHeap(),0,This->data_queue);
+    HeapFree(GetProcessHeap(),0,This->data_queue);
 
     /* Free the DataFormat */
     HeapFree(GetProcessHeap(), 0, This->user_df->rgodf);
@@ -764,12 +762,9 @@ static HRESULT WINAPI JoystickAImpl_SetDataFormat(
 
 FAILED:
     WARN("out of memory\n");
-    if (new_props)
-        HeapFree(GetProcessHeap(),0,new_props);
-    if (new_rgodf)
-        HeapFree(GetProcessHeap(),0,new_rgodf);
-    if (new_df)
-        HeapFree(GetProcessHeap(),0,new_df);
+    HeapFree(GetProcessHeap(),0,new_props);
+    HeapFree(GetProcessHeap(),0,new_rgodf);
+    HeapFree(GetProcessHeap(),0,new_df);
     return DIERR_OUTOFMEMORY;
 }
 
@@ -1580,10 +1575,7 @@ HRESULT WINAPI JoystickAImpl_GetDeviceInfo(
     pdidi->guidInstance = GUID_Joystick;
     pdidi->guidProduct = DInput_Wine_Joystick_GUID;
     /* we only support traditional joysticks for now */
-    if (This->dinput->version >= 8)
-        pdidi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        pdidi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+    pdidi->dwDevType = This->devcaps.dwDevType;
     strcpy(pdidi->tszInstanceName, "Joystick");
     strcpy(pdidi->tszProductName, This->name);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3A)) {
@@ -1618,10 +1610,7 @@ HRESULT WINAPI JoystickWImpl_GetDeviceInfo(
     pdidi->guidInstance = GUID_Joystick;
     pdidi->guidProduct = DInput_Wine_Joystick_GUID;
     /* we only support traditional joysticks for now */
-    if (This->dinput->version >= 8)
-        pdidi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        pdidi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+    pdidi->dwDevType = This->devcaps.dwDevType;
     MultiByteToWideChar(CP_ACP, 0, "Joystick", -1, pdidi->tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, This->name, -1, pdidi->tszProductName, MAX_PATH);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3W)) {
