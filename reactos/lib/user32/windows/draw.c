@@ -922,8 +922,8 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
          */
 
         POINT start, oldPos;
-        INT width = myr.right - myr.left - 5;
-        INT height = myr.bottom - myr.top - 6;
+        INT width = myr.right - (++myr.left) - 5;
+        INT height = (--myr.bottom) - myr.top - 6;
         INT numLines = (width / 6) + 1;
 
         hpsave = (HPEN)SelectObject(dc, GetSysColorPen(colorIdx));
