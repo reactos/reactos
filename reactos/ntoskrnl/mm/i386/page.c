@@ -258,7 +258,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 	       }
 	    }
 	 }
-	 else
+	 if (i == PAE_ADDR_TO_PDTE_OFFSET(HYPERSPACE))
 	 {
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)]));
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)+1]));
