@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.49 2004/11/21 06:51:18 ion Exp $
+/* $Id: namespc.c,v 1.50 2004/11/21 10:59:10 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -164,20 +164,19 @@ STDCALL
 ObQueryDeviceMapInformation(PEPROCESS Process,
 			    PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
 {
-        PDEVICE_MAP DeviceMap;
 	//KIRQL OldIrql ;
 	
 	/*
 	 * FIXME: This is an ugly hack for now, to always return the System Device Map
 	 * instead of returning the Process Device Map. Not important yet since we don't use it
 	 */
-	 DeviceMap = ObSystemDeviceMap;
 	   
 	 /* FIXME: Acquire the DeviceMap Spinlock */
 	 // KeAcquireSpinLock(DeviceMap->Lock, &OldIrql);
 	 
 	 /* Make a copy */
-	 RtlMoveMemory(DeviceMapInfo, &DeviceMap->DriveMap, sizeof(DeviceMapInfo->Query));
+	 DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
+	 RtlMoveMemory(DeviceMapInfo->Query.DriveType, ObSystemDeviceMap->DriveType, sizeof(ObSystemDeviceMap->DriveType));
 	 
 	 /* FIXME: Release the DeviceMap Spinlock */
 	 // KeReleasepinLock(DeviceMap->Lock, OldIrql);

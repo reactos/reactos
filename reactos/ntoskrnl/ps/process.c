@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.153 2004/11/21 06:51:18 ion Exp $
+/* $Id: process.c,v 1.154 2004/11/21 10:59:11 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1224,13 +1224,15 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessDeviceMap:
-	if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION)) {
+	if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+        {
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
-	} else {
-	  PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo;
-	  DeviceMapInfo = (PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation;
-	  ObQueryDeviceMapInformation(Process, DeviceMapInfo);
-	  if (ReturnLength) {
+	}
+        else
+        {
+	  ObQueryDeviceMapInformation(Process, (PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation);
+	  if (ReturnLength)
+          {
 	    *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
 	  }
 	}
