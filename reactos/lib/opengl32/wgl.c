@@ -21,12 +21,22 @@ extern "C" {
 #define UNIMPLEMENTED DBGPRINT( "UNIMPLEMENTED" )
 #endif//_MSC_VER
 
+
+#define EXT_GET_DRIVERINFO		0x1101 /* ExtEscape code to get driver info */
+typedef struct tagEXTDRIVERINFO
+{
+	DWORD version;          /* driver interface version */
+	DWORD driver_version;	/* driver version */
+	WCHAR driver_name[256]; /* driver name */
+} EXTDRIVERINFO;
+
+
 /* FUNCTION: Append OpenGL Rendering Context (GLRC) to list
  * ARGUMENTS: [IN] glrc: GLRC to append to list
  */
 static
 void
-WGL_AppendContext( GLRC *glrc )
+ROSGL_AppendContext( GLRC *glrc )
 {
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
@@ -57,7 +67,7 @@ WGL_AppendContext( GLRC *glrc )
  */
 static
 void
-WGL_RemoveContext( GLRC *glrc )
+ROSGL_RemoveContext( GLRC *glrc )
 {
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
@@ -89,12 +99,55 @@ WGL_RemoveContext( GLRC *glrc )
 		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
+
+/* FUNCTION: Create a new GL Context (GLRC) and append it to the list
+ * RETURNS: Pointer to new GLRC on success; NULL on failure
+ */
+static
+GLRC *
+ROSGL_NewContext()
+{
+	GLRC *glrc;
+
+	/* allocate GLRC */
+	glrc = (GLRC*)HeapAlloc( GetProcessHeap(),
+	              HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, sizeof (GLRC) );
+
+	/* append to list */
+	ROSGL_AppendContext( glrc );
+
+	return glrc;
+}
+
+
+/* FUNCTION: Delete a GL Context (GLRC) and remove it from the list
+ * ARGUMENTS: [IN] glrc  GLRC to delete
+ * RETURNS: TRUE if there were no error; FALSE otherwise
+ */
+static
+BOOL
+ROSGL_DeleteContext( GLRC *glrc )
+{
+	/* unload icd */
+	if (glrc->icd != NULL)
+		OPENGL32_UnloadICD( glrc->icd );
+
+	/* remove from list */
+	ROSGL_RemoveContext( glrc );
+
+	/* free memory */
+	HeapFree( GetProcessHeap(), 0, glrc );
+
+	return TRUE;
+}
+
+
 /* FUNCTION: Check wether a GLRC is in the list
  * ARGUMENTS: [IN] glrc: GLRC to remove from list
  */
 static
 BOOL
-WGL_ContainsContext( GLRC *glrc )
+ROSGL_ContainsContext( GLRC *glrc )
 {
 	GLRC *p;
 
@@ -122,16 +175,119 @@ WGL_ContainsContext( GLRC *glrc )
 }
 
 
+/* FUNCTION: Get GL private DC data. Adds an empty GLDCDATA to the list if
+ *           there is no data for the given DC and returns it.
+ * ARGUMENTS: [IN] hdc  Device Context for which to get the data
+ * RETURNS: Pointer to GLDCDATA on success; NULL on failure
+ */
+static
+GLDCDATA *
+ROSGL_GetPrivateDCData( HDC hdc )
+{
+	GLDCDATA *data;
+
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.dcdata_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return NULL; /* FIXME: do we have to expect such an error and handle it? */
+	}
+
+	/* look for data in list */
+	data = OPENGL32_processdata.dcdata_list;
+	while (data != NULL)
+	{
+		if (data->hdc == hdc) /* found */
+			break;
+		data = data->next;
+	}
+
+	/* allocate new data if not found in list */
+	if (data == NULL)
+	{
+		data = HeapAlloc( GetProcessHeap(),
+		                  HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
+		                  sizeof (GLDCDATA) );
+		if (data == NULL)
+		{
+			DBGPRINT( "Error: HeapAlloc() failed (%d)", GetLastError() );
+		}
+		else
+		{
+			data->hdc = hdc;
+
+			/* append data to list */
+			if (OPENGL32_processdata.dcdata_list == NULL)
+				OPENGL32_processdata.dcdata_list = data;
+			else
+			{
+				GLDCDATA *p = OPENGL32_processdata.dcdata_list;
+				while (p->next != NULL)
+					p = p->next;
+				p->next = data;
+			}
+		}
+	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.dcdata_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
+
+	return data;
+}
+
+
+/* FUNCTION: Get ICD from HDC
+ * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
+ * NOTES: Make sure the handle you pass in is one for a DC!
+ */
+static
+GLDRIVERDATA *
+ROSGL_ICDForHDC( HDC hdc )
+{
+	GLDCDATA *dcdata;
+
+	dcdata = ROSGL_GetPrivateDCData( hdc );
+	if (dcdata == NULL)
+		return NULL;
+
+	if (dcdata->icd == NULL)
+#if 1
+	{
+		DWORD dwInput = 0;
+		LONG ret;
+		EXTDRIVERINFO info;
+
+		/* get driver name */
+		ret = ExtEscape( hdc, EXT_GET_DRIVERINFO, sizeof (dwInput), (LPCSTR)&dwInput,
+						 sizeof (EXTDRIVERINFO), (LPSTR)&info );
+		if (ret < 0)
+		{
+			DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
+			return 0;
+		}
+
+		/* load driver (or get a reference) */
+		dcdata->icd = OPENGL32_LoadICD( info.driver_name );
+	}
+#else
+		dcdata->icd = OPENGL32_LoadICD( L"OGLICD" );
+#endif
+
+	return dcdata->icd;
+}
+
+
 /* FUNCTION: SetContextCallBack passed to DrvSetContext. Gets called whenever
- *           the current GL context (dispatch table) is to be changed - can
- *           be multiple times for one DrvSetContext call.
+ *           the current GL context (dispatch table) is to be changed.
  * ARGUMENTS: [IN] table  Function pointer table (first DWORD is number of
  *                        functions)
  * RETURNS: unkown (maybe void?)
  */
 DWORD
 CALLBACK
-WGL_SetContextCallBack( const ICDTable *table )
+ROSGL_SetContextCallBack( const ICDTable *table )
 {
 /*	UINT i;*/
 	TEB *teb;
@@ -211,26 +367,27 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	const DWORD compareFlags = PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
 	                           PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL;
 
+	DBGTRACE( "Called!" );
+
 	/* load ICD */
-	icd = OPENGL32_LoadICDForHDC( hdc );
+	icd = ROSGL_ICDForHDC( hdc );
 	if (icd == NULL)
 		return 0;
 
 	/* check input */
 	if (pfd->nSize != sizeof (PIXELFORMATDESCRIPTOR) || pfd->nVersion != 1)
 	{
-		OPENGL32_UnloadICD( icd );
 		SetLastError( 0 ); /* FIXME: use appropriate errorcode */
 		return 0;
 	}
 
-	/* get number of formats -- FIXME: use 1 or 0 as index? */
-	icdNumFormats = icd->DrvDescribePixelFormat( hdc, 0,
-	                                  sizeof (PIXELFORMATDESCRIPTOR), NULL );
+	/* get number of formats */
+//	__asm__( "int $3" );
+	icdNumFormats = icd->DrvDescribePixelFormat( hdc, 1,
+	                                 sizeof (PIXELFORMATDESCRIPTOR), &icdPfd );
 	if (icdNumFormats == 0)
 	{
 		DBGPRINT( "Error: DrvDescribePixelFormat failed (%d)", GetLastError() );
-		OPENGL32_UnloadICD( icd );
 		return 0;
 	}
 	DBGPRINT( "Info: Enumerating %d pixelformats", icdNumFormats );
@@ -281,7 +438,6 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 
 	if (best == 0)
 		SetLastError( 0 ); /* FIXME: set appropriate error */
-	OPENGL32_UnloadICD( icd );
 
 	DBGPRINT( "Info: Suggesting pixelformat %d", best );
 	return best;
@@ -302,12 +458,12 @@ rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 	GLRC *dst = (GLRC *)hdst;
 
 	/* check glrcs */
-	if (!WGL_ContainsContext( src ))
+	if (!ROSGL_ContainsContext( src ))
 	{
 		DBGPRINT( "Error: src GLRC not found!" );
 		return FALSE; /* FIXME: SetLastError() */
 	}
-	if (!WGL_ContainsContext( dst ))
+	if (!ROSGL_ContainsContext( dst ))
 	{
 		DBGPRINT( "Error: dst GLRC not found!" );
 		return FALSE; /* FIXME: SetLastError() */
@@ -335,10 +491,6 @@ HGLRC
 APIENTRY
 rosglCreateLayerContext( HDC hdc, int layer )
 {
-/*	LONG ret;
-	WCHAR driver[256];
-	DWORD dw, size;*/
-
 	GLDRIVERDATA *icd = NULL;
 	GLRC *glrc;
 	HGLRC drvHglrc = NULL;
@@ -349,57 +501,13 @@ rosglCreateLayerContext( HDC hdc, int layer )
 		return NULL;
 	}
 */
-	/* allocate our GLRC */
-	glrc = (GLRC*)HeapAlloc( GetProcessHeap(),
-	               HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, sizeof (GLRC) );
+	/* create new GLRC */
+	glrc = ROSGL_NewContext();
 	if (glrc == NULL)
 		return NULL;
 
-#if 0 /* old code */
-	/* try to find an ICD */
-	for (dw = 0; drvHglrc == NULL; dw++) /* enumerate values */
-	{
-		size = sizeof (driver) / sizeof (driver[0]);
-		ret = OPENGL32_RegEnumDrivers( dw, driver, &size );
-		if (ret != ERROR_SUCCESS)
-			break;
-
-		icd = OPENGL32_LoadICD( driver );
-		if (icd == NULL) /* try next ICD */
-			continue;
-
-		if (icd->DrvCreateLayerContext)
-			drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
-		if (drvHglrc == NULL)
-		{
-			if (layer == 0)
-				drvHglrc = icd->DrvCreateContext( hdc );
-			else
-				DBGPRINT( "Warning: CreateLayerContext not supported by ICD!" );
-		}
-		if (drvHglrc == NULL) /* try next ICD */
-		{
-			DBGPRINT( "Info: DrvCreateContext (driver = %ws) failed: %d",
-			          icd->driver_name, GetLastError() );
-			OPENGL32_UnloadICD( icd );
-			continue;
-		}
-
-		/* the ICD was loaded successfully and we got a HGLRC in drvHglrc */
-		break;
-	}
-
-	if (drvHglrc == NULL || icd == NULL) /* no ICD was found */
-	{
-		/* FIXME: fallback to mesa */
-		DBGPRINT( "Error: No working ICD found!" );
-		HeapFree( GetProcessHeap(), 0, glrc );
-		return NULL;
-	}
-#endif /* unused */
-
 	/* load ICD */
-	icd = OPENGL32_LoadICDForHDC( hdc );
+	icd = ROSGL_ICDForHDC( hdc );
 	if (icd == NULL)
 	{
 		DBGPRINT( "Couldn't get ICD by HDC :-(" );
@@ -422,17 +530,13 @@ rosglCreateLayerContext( HDC hdc, int layer )
 	{
 		/* FIXME: fallback to mesa? */
 		DBGPRINT( "Error: DrvCreate[Layer]Context failed! (%d)", GetLastError() );
-		OPENGL32_UnloadICD( icd );
-		HeapFree( GetProcessHeap(), 0, glrc );
+		ROSGL_DeleteContext( glrc );
 		return NULL;
 	}
 
 	/* we have our GLRC in glrc and the ICD's GLRC in drvHglrc */
 	glrc->hglrc = drvHglrc;
 	glrc->icd = icd;
-
-	/* append glrc to context list */
-	WGL_AppendContext( glrc );
 
 	return (HGLRC)glrc;
 }
@@ -461,7 +565,7 @@ rosglDeleteContext( HGLRC hglrc )
 	GLRC *glrc = (GLRC *)hglrc;
 
 	/* check if we know about this context */
-	if (!WGL_ContainsContext( glrc ))
+	if (!ROSGL_ContainsContext( glrc ))
 	{
 		DBGPRINT( "Error: hglrc not found!" );
 		return FALSE; /* FIXME: SetLastError() */
@@ -485,38 +589,41 @@ rosglDeleteContext( HGLRC hglrc )
 	}
 
 	/* free resources */
-	OPENGL32_UnloadICD( glrc->icd );
-	WGL_RemoveContext( glrc );
-	HeapFree( GetProcessHeap(), 0, glrc );
-
-	return TRUE;
+	return ROSGL_DeleteContext( glrc );
 }
 
 
 BOOL
 APIENTRY
 rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
-                                   UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
+                         UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
+/* FUNCTION: Gets information about the pixelformat specified by iFormat and
+ *           puts it into pfd.
+ * ARGUMENTS: [IN] hdc      Handle to DC
+ *            [IN] iFormat  Pixelformat index
+ *            [IN] nBytes   sizeof (pfd) - at most nBytes are copied into pfd
+ *            [OUT] pfd     Pointer to a PIXELFORMATDESCRIPTOR
+ * RETURNS: Maximum pixelformat index/number of formats on success; 0 on failure
+ */
 int
 APIENTRY
 rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
-                                   LPPIXELFORMATDESCRIPTOR pfd )
+                          LPPIXELFORMATDESCRIPTOR pfd )
 {
 	int ret = 0;
-	GLDRIVERDATA *icd = OPENGL32_LoadICDForHDC( hdc );
+	GLDRIVERDATA *icd = ROSGL_ICDForHDC( hdc );
 
 	if (icd != NULL)
 	{
 		ret = icd->DrvDescribePixelFormat( hdc, iFormat, nBytes, pfd );
 		if (ret == 0)
 			DBGPRINT( "Error: DrvDescribePixelFormat(format=%d) failed (%d)", iFormat, GetLastError() );
-		OPENGL32_UnloadICD( icd );
 	}
 
 	/* FIXME: implement own functionality? */
@@ -553,24 +660,33 @@ rosglGetCurrentDC()
 int
 APIENTRY
 rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                               int cEntries, COLORREF *pcr )
+                             int cEntries, COLORREF *pcr )
 {
 	UNIMPLEMENTED;
 	return 0;
 }
 
 
+/* FUNCTION: Returns the current pixelformat for the given hdc.
+ * ARGUMENTS: [IN] hdc  Handle to DC of which to get the pixelformat
+ * RETURNS: Pixelformat index on success; 0 on failure
+ */
 int
 WINAPI
 rosglGetPixelFormat( HDC hdc )
 {
-	if (OPENGL32_processdata.cachedHdc == hdc)
-		return OPENGL32_processdata.cachedFormat;
+	GLDCDATA *dcdata;
 
-	/* FIXME: create real implementation of this function */
-	DBGPRINT( "Warning: Pixel format not cached, returning 0" );
+	DBGTRACE( "Called!" );
 
-	return 0;
+	dcdata = ROSGL_GetPrivateDCData( hdc );
+	if (dcdata == NULL)
+	{
+		DBGPRINT( "Error: ROSGL_GetPrivateDCData failed!" );
+		return 0;
+	}
+
+	return dcdata->pixel_format;
 }
 
 
@@ -654,7 +770,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		}
 
 		/* check if we know about this glrc */
-		if (!WGL_ContainsContext( glrc ))
+		if (!ROSGL_ContainsContext( glrc ))
 		{
 			DBGPRINT( "Error: hglrc not found!" );
 			return FALSE; /* FIXME: SetLastError() */
@@ -671,7 +787,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		if (glrc->hglrc != NULL)
 		{
 			icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
-												 WGL_SetContextCallBack );
+												 ROSGL_SetContextCallBack );
 			if (icdTable == NULL)
 			{
 				DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
@@ -689,13 +805,10 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		OPENGL32_threaddata->glrc = glrc;
 	}
 
-	WGL_SetContextCallBack( icdTable );
-
-	if (icdTable != NULL)
-		if (WGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS)
-		{
-			DBGPRINT( "Warning: WGL_SetContextCallBack failed!" );
-		}
+	if (ROSGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS)
+	{
+		DBGPRINT( "Warning: ROSGL_SetContextCallBack failed!" );
+	}
 
 	return TRUE;
 }
@@ -713,34 +826,52 @@ rosglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 int
 APIENTRY
 rosglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                               int cEntries, CONST COLORREF *pcr )
+                             int cEntries, CONST COLORREF *pcr )
 {
 	UNIMPLEMENTED;
 	return 0;
 }
 
 
+/* FUNCTION: Set pixelformat of given DC
+ * ARGUMENTS: [IN] hdc      Handle to DC for which to set the format
+ *            [IN] iFormat  Index of the pixelformat to set
+ *            [IN] pfd      Not sure what this is for
+ * RETURNS: TRUE on success, FALSE on failure
+ */
 BOOL
 WINAPI
 rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
 	GLDRIVERDATA *icd;
+	GLDCDATA *dcdata;
 
-	icd = OPENGL32_LoadICDForHDC( hdc );
+	DBGTRACE( "Called!" );
+
+	/* load ICD */
+	icd = ROSGL_ICDForHDC( hdc );
 	if (icd == NULL)
+	{
+		DBGPRINT( "Warning: ICDForHDC() failed" );
 		return FALSE;
+	}
 
+	/* call ICD */
 	if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
 	{
 		DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
 		          iFormat, GetLastError() );
-		OPENGL32_UnloadICD( icd );
 		return FALSE;
 	}
 
-	OPENGL32_processdata.cachedHdc = hdc;
-	OPENGL32_processdata.cachedFormat = iFormat;
-	OPENGL32_UnloadICD( icd );
+	/* store format in private DC data */
+	dcdata = ROSGL_GetPrivateDCData( hdc );
+	if (dcdata == NULL)
+	{
+		DBGPRINT( "Error: ROSGL_GetPrivateDCData() failed!" );
+		return FALSE;
+	}
+	dcdata->pixel_format = iFormat;
 
 	return TRUE;
 }
@@ -749,7 +880,7 @@ rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 /* FUNCTION: Enable display-list sharing between multiple GLRCs
  * ARGUMENTS: [IN] hglrc1 GLRC number 1
  *            [IN] hglrc2 GLRC number 2
- * RETURNS: TRUR on success, FALSE on failure
+ * RETURNS: TRUE on success, FALSE on failure
  */
 BOOL
 APIENTRY
@@ -759,12 +890,12 @@ rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 	GLRC *glrc2 = (GLRC *)hglrc2;
 
 	/* check glrcs */
-	if (!WGL_ContainsContext( glrc1 ))
+	if (!ROSGL_ContainsContext( glrc1 ))
 	{
 		DBGPRINT( "Error: hglrc1 not found!" );
 		return FALSE; /* FIXME: SetLastError() */
 	}
-	if (!WGL_ContainsContext( glrc2 ))
+	if (!ROSGL_ContainsContext( glrc2 ))
 	{
 		DBGPRINT( "Error: hglrc2 not found!" );
 		return FALSE; /* FIXME: SetLastError() */
@@ -790,16 +921,14 @@ BOOL
 APIENTRY
 rosglSwapBuffers( HDC hdc )
 {
-	GLDRIVERDATA *icd = OPENGL32_LoadICDForHDC( hdc );
+	GLDRIVERDATA *icd = ROSGL_ICDForHDC( hdc );
 	if (icd != NULL)
 	{
 		if (!icd->DrvSwapBuffers( hdc ))
 		{
 			DBGPRINT( "Error: DrvSwapBuffers failed (%d)", GetLastError() );
-			OPENGL32_UnloadICD( icd );
 			return FALSE;
 		}
-		OPENGL32_UnloadICD( icd );
 		return TRUE;
 	}
 
@@ -838,8 +967,8 @@ rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 BOOL
 APIENTRY
 rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                          FLOAT deviation, FLOAT extrusion, int  format,
-                          LPGLYPHMETRICSFLOAT  lpgmf )
+                       FLOAT deviation, FLOAT extrusion, int format,
+                       GLYPHMETRICSFLOAT *pgmf )
 {
 	UNIMPLEMENTED;
 	return FALSE;
@@ -849,8 +978,8 @@ rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
 BOOL
 APIENTRY
 rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                          FLOAT deviation, FLOAT extrusion, int  format,
-                          LPGLYPHMETRICSFLOAT  lpgmf )
+                       FLOAT deviation, FLOAT extrusion, int format,
+                       GLYPHMETRICSFLOAT *pgmf )
 {
 	UNIMPLEMENTED;
 	return FALSE;

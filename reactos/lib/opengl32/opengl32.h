@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.14 2004/02/12 23:56:15 royce Exp $
+/* $Id: opengl32.h,v 1.15 2004/03/01 19:36:21 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -28,6 +28,7 @@ extern "C" {
 # define DEBUG_OPENGL32_BRKPTS		/* enable breakpoints */
 # define DEBUG_OPENGL32_ICD_EXPORTS	/* dumps the list of (un)supported glXXX
                                        functions when an ICD is loaded. */
+# define DEBUG_OPENGL32_TRACE       /* prints much information about whats going on */
 #endif /* !NDEBUG */
 
 /* debug macros */
@@ -52,6 +53,10 @@ ULONG DbgPrint(PCH Format,...);
 # else
 #  error Unsupported compiler!
 # endif
+#endif
+
+#ifdef DEBUG_OPENGL32_TRACE
+# define DBGTRACE( args... ) DBGPRINT( args )
 #endif
 
 /* function/data attributes */
@@ -129,7 +134,7 @@ typedef struct tagGLDRIVERDATA
 	struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
 } GLDRIVERDATA;
 
-/* Out private OpenGL context (saved in TLS) */
+/* Our private OpenGL context (stored in TLS) */
 typedef struct tagGLRC
 {
 	GLDRIVERDATA *icd;  /* driver used for this context */
@@ -142,15 +147,26 @@ typedef struct tagGLRC
 	struct tagGLRC *next; /* linked list */
 } GLRC;
 
+/* OpenGL private device context data */
+typedef struct tagGLDCDATA
+{
+	HDC hdc;           /* device context handle for which this data is */
+	GLDRIVERDATA *icd; /* driver used for this DC */
+	int pixel_format;  /* selected pixel format */
+
+	struct tagGLDCDATA *next; /* linked list */
+} GLDCDATA;
+
+
 /* Process data */
 typedef struct tagGLPROCESSDATA
 {
 	GLDRIVERDATA *driver_list;  /* list of loaded drivers */
 	HANDLE        driver_mutex; /* mutex to protect driver list */
-	GLRC  *glrc_list;           /* list of GL rendering contexts */
-	HANDLE glrc_mutex;          /* mutex to protect glrc list */
-	HDC    cachedHdc;           /* cached HDC from last SetPixelFormat */
-	INT    cachedFormat;        /* cached format from last SetPixelFormat */
+	GLRC         *glrc_list;    /* list of GL rendering contexts */
+	HANDLE        glrc_mutex;   /* mutex to protect glrc list */
+	GLDCDATA     *dcdata_list;  /* list of GL private DC data */
+	HANDLE        dcdata_mutex; /* mutex to protect glrc list */
 } GLPROCESSDATA;
 
 /* TLS data */
@@ -164,7 +180,7 @@ extern GLPROCESSDATA OPENGL32_processdata;
 #define OPENGL32_threaddata ((GLTHREADDATA *)TlsGetValue( OPENGL32_tls ))
 
 /* function prototypes */
-GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc );
+/*GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc );*/
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName );

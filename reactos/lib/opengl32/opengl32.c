@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.15 2004/02/12 23:56:15 royce Exp $
+/* $Id: opengl32.c,v 1.16 2004/03/01 19:36:20 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,14 +16,6 @@
 
 #include <string.h>
 #include "opengl32.h"
-
-#define EXT_GET_DRIVERINFO		0x1101 /* ExtEscape code to get driver info */
-typedef struct tagEXTDRIVERINFO
-{
-	DWORD version;          /* driver interface version */
-	DWORD driver_version;	/* driver version */
-	WCHAR driver_name[256]; /* driver name */
-} EXTDRIVERINFO;
 
 /* function prototypes */
 /*static BOOL OPENGL32_LoadDrivers();*/
@@ -54,15 +46,63 @@ OPENGL32_ThreadDetach()
 			          GetLastError() );
 	}
 
-
 	dispatchTable = NtCurrentTeb()->glTable;
-
 	if (dispatchTable != NULL)
 	{
 		if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
 			DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
 			          GetLastError() );
 	}
+}
+
+
+static
+void
+OPENGL32_ProcessDetach()
+{
+	GLDRIVERDATA *icd, *icd2;
+	GLDCDATA *dcdata, *dcdata2;
+	GLRC *glrc, *glrc2;
+
+	/* free lists */
+	for (dcdata = OPENGL32_processdata.dcdata_list; dcdata != NULL;)
+	{
+		dcdata2 = dcdata;
+		dcdata = dcdata->next;
+		if (!HeapFree( GetProcessHeap(), 0, dcdata ))
+			DBGPRINT( "Warning: HeapFree() on DCDATA 0x%08x failed (%d)",
+			          dcdata, GetLastError() );
+	}
+
+	for (glrc = OPENGL32_processdata.glrc_list; glrc != NULL;)
+	{
+		glrc2 = glrc;
+		glrc = glrc->next;
+		if (!HeapFree( GetProcessHeap(), 0, glrc ))
+			DBGPRINT( "Warning: HeapFree() on GLRC 0x%08x failed (%d)",
+			          glrc, GetLastError() );
+	}
+
+	for (icd = OPENGL32_processdata.driver_list; icd != NULL;)
+	{
+		icd2 = icd;
+		icd = icd->next;
+		if (!HeapFree( GetProcessHeap(), 0, icd ))
+			DBGPRINT( "Warning: HeapFree() on DRIVERDATA 0x%08x failed (%d)",
+			          icd, GetLastError() );
+	}
+
+	/* free mutexes */
+	if (OPENGL32_processdata.driver_mutex != NULL)
+		CloseHandle( OPENGL32_processdata.driver_mutex );
+	if (OPENGL32_processdata.glrc_mutex != NULL)
+		CloseHandle( OPENGL32_processdata.glrc_mutex );
+	if (OPENGL32_processdata.dcdata_mutex != NULL)
+		CloseHandle( OPENGL32_processdata.dcdata_mutex );
+
+	/* free TLS */
+	if (OPENGL32_tls != 0xffffffff)
+		TlsFree(OPENGL32_tls);
 }
 
 
@@ -84,33 +124,41 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 	 * initialization or a call to LoadLibrary.
 	 */
 	case DLL_PROCESS_ATTACH:
+		DBGTRACE( "Process attach" );
 		OPENGL32_tls = TlsAlloc();
 		if ( 0xFFFFFFFF == OPENGL32_tls )
 			return FALSE;
 
 		memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
 
-		/* create driver & glrc list mutex */
+		/* create driver, glrc & dcdata list mutex */
 		OPENGL32_processdata.driver_mutex = CreateMutex( &attrib, FALSE, NULL );
 		if (OPENGL32_processdata.driver_mutex == NULL)
 		{
 			DBGPRINT( "Error: Couldn't create driver_list mutex (%d)",
 			          GetLastError() );
-			TlsFree( OPENGL32_tls );
+			return FALSE;
 		}
 		OPENGL32_processdata.glrc_mutex = CreateMutex( &attrib, FALSE, NULL );
 		if (OPENGL32_processdata.glrc_mutex == NULL)
 		{
 			DBGPRINT( "Error: Couldn't create glrc_list mutex (%d)",
 			          GetLastError() );
-			CloseHandle( OPENGL32_processdata.driver_mutex );
-			TlsFree( OPENGL32_tls );
+			return FALSE;
+		}
+		OPENGL32_processdata.dcdata_mutex = CreateMutex( &attrib, FALSE, NULL );
+		if (OPENGL32_processdata.dcdata_mutex == NULL)
+		{
+			DBGPRINT( "Error: Couldn't create dcdata_list mutex (%d)",
+			          GetLastError() );
+			return FALSE;
 		}
 
 		/* No break: Initialize the index for first thread. */
 
 	/* The attached process creates a new thread. */
 	case DLL_THREAD_ATTACH:
+		DBGTRACE( "Thread attach" );
 		dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
 		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
 		                            sizeof (((ICDTable *)(0))->dispatch_table) );
@@ -146,18 +194,16 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 	/* The thread of the attached process terminates. */
 	case DLL_THREAD_DETACH:
+		DBGTRACE( "Thread detach" );
 		/* Release the allocated memory for this thread.*/
 		OPENGL32_ThreadDetach();
 		break;
 
 	/* DLL unload due to process termination or FreeLibrary. */
 	case DLL_PROCESS_DETACH:
+		DBGTRACE( "Process detach" );
 		OPENGL32_ThreadDetach();
-
-		/* FIXME: free resources (driver list, glrc list) */
-		CloseHandle( OPENGL32_processdata.driver_mutex );
-		CloseHandle( OPENGL32_processdata.glrc_mutex );
-		TlsFree(OPENGL32_tls);
+		OPENGL32_ProcessDetach();
 		break;
 	}
 	return TRUE;
@@ -379,32 +425,6 @@ OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 	}
 
 	return allOk;
-}
-
-
-/* FUNCTION: Load ICD from HDC (shared ICD data)
- * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
- * NOTES: Make sure the handle you pass in is one for a DC!
- *        Increases the refcount of the ICD - use
- *        OPENGL32_UnloadICD to release the ICD.
- */
-GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc )
-{
-	DWORD dwInput = 0;
-	LONG ret;
-	EXTDRIVERINFO info;
-
-	/* get driver name */
-	ret = ExtEscape( hdc, EXT_GET_DRIVERINFO, sizeof (dwInput), (LPCSTR)&dwInput,
-	                 sizeof (EXTDRIVERINFO), (LPSTR)&info );
-	if (ret < 0)
-	{
-		DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
-		return 0;
-	}
-
-	/* load driver (or get a reference) */
-	return OPENGL32_LoadICD( info.driver_name );
 }
 
 
