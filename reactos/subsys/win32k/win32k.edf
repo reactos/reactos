@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.14 2003/08/13 16:32:55 royce Exp $
+; $Id: win32k.edf,v 1.15 2003/08/14 10:43:42 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -76,9 +76,8 @@ EngMulDiv=EngMulDiv@12
 EngMultiByteToUnicodeN=EngMultiByteToUnicodeN@20
 EngMultiByteToWideChar
 EngPaint=EngPaint@20
-EngProbeForRead
-; EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
-EngProbeForReadAndWrite
+EngProbeForRead = NTOSKRNL.ProbeForRead
+EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
 EngQueryLocalTime
 EngQueryPalette
 EngQueryPerformanceCounter=EngQueryPerformanceCounter@4
