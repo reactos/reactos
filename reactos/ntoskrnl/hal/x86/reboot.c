@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.3 1999/12/12 03:48:47 phreak Exp $
+/* $Id: reboot.c,v 1.4 2000/03/19 13:34:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,7 +52,10 @@ HalReboot (VOID)
 
 
 VOID
-HalReturnToFirmware (ULONG Action)
+STDCALL
+HalReturnToFirmware (
+	ULONG	Action
+	)
 {
     if (Action == FIRMWARE_HALT)
     {

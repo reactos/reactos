@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.5 2000/01/09 21:39:07 ekohl Exp $
+/* $Id: display.c,v 1.6 2000/03/19 13:34:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -162,9 +162,10 @@ HalResetDisplay (VOID)
 /* PUBLIC FUNCTIONS *********************************************************/
 
 VOID
+STDCALL
 HalAcquireDisplayOwnership (
-        IN  PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters
-        )
+	IN	PHAL_RESET_DISPLAY_PARAMETERS	ResetDisplayParameters
+	)
 /*
  * FUNCTION: 
  * ARGUMENTS:
@@ -178,7 +179,10 @@ HalAcquireDisplayOwnership (
 
 
 VOID
-HalDisplayString(PCH String)
+STDCALL
+HalDisplayString (
+	IN	PCH	String
+	)
 /*
  * FUNCTION: Switches the screen to HAL console mode (BSOD) if not there
  * already and displays a string
@@ -251,10 +255,13 @@ HalDisplayString(PCH String)
 
 
 VOID
-HalQueryDisplayParameters (PULONG DispSizeX,
-                           PULONG DispSizeY,
-                           PULONG CursorPosX,
-                           PULONG CursorPosY)
+STDCALL
+HalQueryDisplayParameters (
+	PULONG	DispSizeX,
+	PULONG	DispSizeY,
+	PULONG	CursorPosX,
+	PULONG	CursorPosY
+	)
 {
     if (DispSizeX)
         *DispSizeX = SizeX;
@@ -268,11 +275,14 @@ HalQueryDisplayParameters (PULONG DispSizeX,
 
 
 VOID
-HalSetDisplayParameters (ULONG CursorPosX,
-                         ULONG CursorPosY)
+STDCALL
+HalSetDisplayParameters (
+	ULONG	CursorPosX,
+	ULONG	CursorPosY
+	)
 {
-    CursorX = (CursorPosX < SizeX) ? CursorPosX : SizeX - 1;
-    CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
+	CursorX = (CursorPosX < SizeX) ? CursorPosX : SizeX - 1;
+	CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
 }
 
 /* EOF */

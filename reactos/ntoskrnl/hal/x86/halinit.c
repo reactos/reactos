@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.7 1999/12/12 03:48:47 phreak Exp $
+/* $Id: halinit.c,v 1.8 2000/03/19 13:34:47 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -22,7 +22,11 @@
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN
-HalInitSystem (ULONG Phase, boot_param *bp)
+STDCALL
+HalInitSystem (
+	ULONG		Phase,
+	boot_param	*bp
+	)
 {
    if (Phase == 0)
    {
@@ -34,6 +38,8 @@ HalInitSystem (ULONG Phase, boot_param *bp)
       KeInitIRQ();
       KeLowerIrql(DISPATCH_LEVEL);
    
+      HalpInitBusHandlers ();
+
       /*
        * Probe for a BIOS32 extension
        */

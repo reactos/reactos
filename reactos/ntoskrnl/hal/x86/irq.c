@@ -1,4 +1,5 @@
-/*
+/* $Id: irq.c,v 1.8 2000/03/19 13:34:47 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/irq.c
@@ -29,6 +30,7 @@
 
 #include <internal/i386/segment.h>
 #include <internal/halio.h>
+#include <internal/hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -364,8 +366,9 @@ VOID IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
    KeLowerIrql(oldlvl);
 }
 
-ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
-			    ULONG BusNumber,
+ULONG
+STDCALL
+HalpGetSystemInterruptVector(PVOID BusHandler,
 			    ULONG BusInterruptLevel,
 			    ULONG BusInterruptVector,
 			    PKIRQL Irql,
@@ -389,11 +392,14 @@ ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
    
 //   ASSERT_IRQL(PASSIVE_LEVEL);
    
+#if 0
    switch (InterfaceType)
      {
       case Internal:
+#endif
 	*Irql = HIGH_LEVEL -  BusInterruptVector;
 	ret = BusInterruptVector;
+#if 0
 	break;
 	
       default:
@@ -401,7 +407,8 @@ ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 	DbgPrint("(%s:%d) Don't know that bus type\n",__FILE__,__LINE__);
 	break;
      }
+#endif
    return(ret);
 }
 
-
+/* EOF */

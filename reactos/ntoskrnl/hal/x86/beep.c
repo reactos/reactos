@@ -32,7 +32,10 @@
  */
 
 BOOLEAN
-HalMakeBeep(ULONG Frequency)
+STDCALL
+HalMakeBeep (
+	ULONG	Frequency
+	)
 {
     /* save flags and disable interrupts */
     __asm__("pushf\n\t" \
