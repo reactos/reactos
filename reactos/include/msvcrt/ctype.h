@@ -18,9 +18,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: robd $
- * $Date: 2003/01/15 20:05:50 $
+ * $Revision: 1.7 $
+ * $Author: chorns $
+ * $Date: 2003/01/15 21:07:18 $
  *
  */
 
@@ -120,9 +120,9 @@ int iswupper(wint_t);
 int iswxdigit(wint_t);
 
 //wchar_t towlower(wchar_t);
-//wchar_t towupper(wchar_t);
+wchar_t towupper(wchar_t);
 int towlower(wint_t);
-int towupper(wint_t);
+//int towupper(wint_t);
 
 int isleadbyte(int);
 

@@ -8,7 +8,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 
 # Testset applications
-TEST_SETS = ldr loadlib
+TEST_SETS = loadlib
 
 TEST_KERNEL32 = 
 

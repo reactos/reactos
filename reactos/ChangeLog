@@ -1,5 +1,10 @@
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* apps/testsets/Makefile (TEST_SETS): Remove ldr.
+	* include/msvcrt/ctype.h (towupper): Make returntype wchar_t.
+
+2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/rtouch.c: Include <sys/utime.h>, not <utime.h>.
 
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
