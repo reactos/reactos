@@ -28,7 +28,6 @@
 #endif
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0)
 
-
 #ifdef DBG
 
 /* Assert only on "checked" version */

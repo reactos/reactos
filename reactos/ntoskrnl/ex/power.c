@@ -52,7 +52,14 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
         HalReturnToFirmware (FIRMWARE_OFF);
 #else
         PopSetSystemPowerState(PowerSystemShutdown);
-        __asm__("cli\n");
+
+#ifdef __GNUC__
+    __asm__("cli\n");
+#elif defined(_MSC_VER)
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 	while (TRUE)
 	  {
 	    ;

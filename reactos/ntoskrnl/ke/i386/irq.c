@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.37 2003/12/30 18:52:05 fireball Exp $
+/* $Id: irq.c,v 1.38 2003/12/30 22:10:45 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -491,7 +491,13 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
     */
-   __asm__("sti\n\t");
+#ifdef __GNUC__
+    __asm__("sti\n\t");
+#elif defined(_MSC_VER)
+  __asm sti
+#else
+#error Unknown compiler for inline assembler
+#endif
 
    /*
     * Actually call the ISR.
@@ -517,7 +523,14 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    /*
     * End the system interrupt.
     */
-   __asm__("cli\n\t");
+#ifdef __GNUC__
+    __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
+
    HalEndSystemInterrupt (old_level, 0);
 
    if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)

@@ -39,7 +39,13 @@ PsIdleThreadMain(PVOID Context)
 	   KeLowerIrql(oldlvl);
 	 }
        NtYieldExecution();
-       __asm__( "hlt" );
+#ifdef __GNUC__
+    __asm__("hlt\n\t");
+#elif defined(_MSC_VER)
+  __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
      }
 }
 
