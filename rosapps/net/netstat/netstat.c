@@ -18,11 +18,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#ifdef __GNUC__
-#undef WINAPI
-#define WINAPI
-#endif
-
 #include <iptypes.h>
 #include <ipexport.h>
 #include <tlhelp32.h>
