@@ -91,6 +91,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
 
 ; Known DLLs
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","DllDirectory",0x00020000,"%SystemRoot%\system32"
