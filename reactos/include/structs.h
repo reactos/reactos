@@ -4008,7 +4008,7 @@ typedef struct _SYSTEM_POWER_STATUS {
   DWORD  BatteryLifeTime;      
   DWORD  BatteryFullLifeTime;  
 } SYSTEM_POWER_STATUS;
-typedef struct SYSTEM_POWER_STATUS *LPSYSTEM_POWER_STATUS;
+typedef SYSTEM_POWER_STATUS *LPSYSTEM_POWER_STATUS;
  
 typedef struct _TAPE_ERASE { 
   ULONG Type; 
