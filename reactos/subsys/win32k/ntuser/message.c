@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.79 2004/12/29 19:55:01 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -835,7 +835,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             }
           Info.Msg.lParam = (LPARAM) UserMem;
         }
-      if (Msg.FreeLParam && 0 != Msg.Msg.lParam)
+      if (RemoveMsg && Msg.FreeLParam && 0 != Msg.Msg.lParam)
         {
           ExFreePool((void *) Msg.Msg.lParam);
         }
