@@ -468,7 +468,7 @@ LdrAddModuleEntry(PVOID ImageBase,
   Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
     Module->EntryPoint += (ULONG)Module->BaseAddress;
-  Module->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+  Module->ResidentSize = LdrpGetResidentSize(NTHeaders);
   if (NtCurrentPeb()->Ldr->Initialized == TRUE)
     {
       /* loading while app is running */
@@ -799,7 +799,7 @@ LdrFindEntryForAddress(PVOID Address,
       DPRINT("Scanning %wZ at %p\n", &ModulePtr->BaseDllName, ModulePtr->BaseAddress);
 
       if ((Address >= ModulePtr->BaseAddress) &&
-          (Address <= (ModulePtr->BaseAddress + ModulePtr->SizeOfImage)))
+          (Address <= (ModulePtr->BaseAddress + ModulePtr->ResidentSize)))
         {
           *Module = ModulePtr;
           RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
@@ -1581,7 +1581,7 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
 
            NTHeaders = RtlImageNtHeader (ImportedModule->BaseAddress);
            Start = (PVOID)NTHeaders->OptionalHeader.ImageBase;
-           End = Start + ImportedModule->SizeOfImage;
+           End = Start + ImportedModule->ResidentSize;
            Offset = ImportedModule->BaseAddress - Start;
 
            /* Walk through function list and fixup addresses. */
@@ -2708,7 +2708,7 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
         {
           ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
           ModulePtr->Base = Module->BaseAddress;
-          ModulePtr->Size = Module->SizeOfImage;
+          ModulePtr->Size = Module->ResidentSize;
           ModulePtr->Flags = Module->Flags;
           ModulePtr->Index = 0;      // FIXME: index ??
           ModulePtr->Unknown = 0;      // FIXME: ??
@@ -2812,6 +2812,33 @@ LdrpCheckImageChecksum (IN PVOID BaseAddress,
   CalcSum += ImageSize;
 
   return (BOOLEAN)(CalcSum == HeaderSum);
+}
+
+/*
+ * Compute size of an image as it is actually present in virt memory
+ * (i.e. excluding NEVER_LOAD sections)
+ */
+ULONG
+LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders)
+{
+  PIMAGE_SECTION_HEADER SectionHeader;
+  unsigned SectionIndex;
+  ULONG ResidentSize;
+
+  SectionHeader = (PIMAGE_SECTION_HEADER)((char *) &NTHeaders->OptionalHeader
+                                          + NTHeaders->FileHeader.SizeOfOptionalHeader);
+  ResidentSize = 0;
+  for (SectionIndex = 0; SectionIndex < NTHeaders->FileHeader.NumberOfSections; SectionIndex++)
+    {
+      if (0 == (SectionHeader->Characteristics & IMAGE_SCN_LNK_REMOVE)
+          && ResidentSize < SectionHeader->VirtualAddress + SectionHeader->Misc.VirtualSize)
+        {
+          ResidentSize = SectionHeader->VirtualAddress + SectionHeader->Misc.VirtualSize;
+        }
+      SectionHeader++;
+    }
+
+  return ResidentSize;
 }
 
 

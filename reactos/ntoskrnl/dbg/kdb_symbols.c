@@ -92,7 +92,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
       current = CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
 
       if ((Address != NULL && (Address >= (PVOID)current->BaseAddress &&
-                               Address < (PVOID)((char *)current->BaseAddress + current->SizeOfImage))) ||
+                               Address < (PVOID)((char *)current->BaseAddress + current->ResidentSize))) ||
           (Name != NULL && _wcsicmp(current->BaseDllName.Buffer, Name) == 0) ||
           (Index >= 0 && Count++ == Index))
         {
@@ -102,7 +102,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
 	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
 	  pInfo->Name[Length] = L'\0';
           pInfo->Base = (ULONG_PTR)current->BaseAddress;
-          pInfo->Size = current->SizeOfImage;
+          pInfo->Size = current->ResidentSize;
           pInfo->RosSymInfo = current->RosSymInfo;
           return TRUE;
         }

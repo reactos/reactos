@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,7 +54,7 @@ print_user_address(PVOID address)
 	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
 	
 	if (address >= (PVOID)current->BaseAddress &&
-	    address < (PVOID)((char*)current->BaseAddress + current->SizeOfImage))
+	    address < (PVOID)((char*)current->BaseAddress + current->ResidentSize))
 	  {
             RelativeAddress = 
 	      (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;

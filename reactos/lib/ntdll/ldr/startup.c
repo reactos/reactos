@@ -222,7 +222,6 @@ finish:
 	return FALSE;
 }
 
-
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
@@ -382,7 +381,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        NtModule->CheckSum = 0;
 
        NTHeaders = RtlImageNtHeader (NtModule->BaseAddress);
-       NtModule->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+       NtModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
        NtModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
@@ -430,7 +429,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        ExeModule->CheckSum = 0;
 
        NTHeaders = RtlImageNtHeader (ExeModule->BaseAddress);
-       ExeModule->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+       ExeModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
        ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,

@@ -59,7 +59,7 @@ typedef struct _LDR_MODULE
    LIST_ENTRY     InInitializationOrderModuleList;	/* not used */
    PVOID          BaseAddress;
    ULONG          EntryPoint;
-   ULONG          SizeOfImage;
+   ULONG          ResidentSize;
    UNICODE_STRING FullDllName;
    UNICODE_STRING BaseDllName;
    ULONG          Flags;
@@ -91,6 +91,9 @@ VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
 
 #endif
+
+ULONG
+LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
 
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,

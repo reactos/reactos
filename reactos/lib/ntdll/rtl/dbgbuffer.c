@@ -219,7 +219,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
         {
           ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
           ModulePtr->Base        = lmModule.BaseAddress;
-          ModulePtr->Size        = lmModule.SizeOfImage;
+          ModulePtr->Size        = lmModule.ResidentSize;
           ModulePtr->Flags       = lmModule.Flags;
           ModulePtr->Index       = 0;      // FIXME:  ??
           ModulePtr->Unknown     = 0;      // FIXME: ??

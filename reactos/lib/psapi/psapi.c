@@ -521,10 +521,10 @@ exitWithStatus:
       }
 
       /* image size */
-      if(nSize >= sizeof(CurrentModule->SizeOfImage))
+      if(nSize >= sizeof(CurrentModule->ResidentSize))
       {
-        Context->lpmodinfo->SizeOfImage = CurrentModule->SizeOfImage;
-        nSize -= sizeof(CurrentModule->SizeOfImage);
+        Context->lpmodinfo->SizeOfImage = CurrentModule->ResidentSize;
+        nSize -= sizeof(CurrentModule->ResidentSize);
       }
 
       /* entry point */
