@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.36 2002/01/15 21:54:51 hbirr Exp $
+/* $Id: create.c,v 1.37 2002/02/05 21:32:30 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -484,7 +484,7 @@ vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject,
   /* verify related object is a directory and target name
      don't start with \. */
   if (!(fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-      || (pRelativeFileName[0] != '\\'))
+      || (pRelativeFileName[0] == L'\\'))
   {
     return  STATUS_INVALID_PARAMETER;
   }
@@ -492,9 +492,14 @@ vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject,
   /* construct absolute path name */
   assert (wcslen (fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
           <= MAX_PATH);
-  rcName = ExAllocatePool (NonPagedPool, MAX_PATH);
+  rcName = ExAllocatePool (NonPagedPool, MAX_PATH * sizeof(WCHAR));
+  if (!rcName)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
   wcscpy (rcName, fcb->PathName);
-  wcscat (rcName, L"\\");
+  if (!vfatFCBIsRoot(fcb))
+    wcscat (rcName, L"\\");
   wcscat (rcName, pRelativeFileName);
   *pAbsoluteFilename = rcName;
 
@@ -522,6 +527,10 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
                                          FileName,
                                          &AbsFileName);
       FileName = AbsFileName;
+      if (!NT_SUCCESS(Status))
+      {
+        return Status;
+      }
     }
 
   //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
