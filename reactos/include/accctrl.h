@@ -44,6 +44,39 @@ typedef enum _SE_OBJECT_TYPE
     SE_REGISTRY_WOW64_32KEY
 } SE_OBJECT_TYPE;
 
+typedef struct _SI_OBJECT_INFO
+{
+    DWORD     dwFlags;
+    HINSTANCE hInstance;
+    LPWSTR    pszServerName;
+    LPWSTR    pszObjectName;
+    LPWSTR    pszPageTitle;
+    GUID      guidObjectType;
+} SI_OBJECT_INFO, *PSI_OBJECT_INFO;
+
+typedef struct _SI_ACCESS
+{
+    const GUID  *pguid;
+    ACCESS_MASK mask;
+    LPCWSTR     pszName;
+    DWORD       dwFlags;
+} SI_ACCESS, *PSI_ACCESS;
+
+typedef struct _SI_INHERIT_TYPE
+{
+    const GUID *pguid;
+    ULONG      dwFlags;
+    LPCWSTR    pszName;
+} SI_INHERIT_TYPE, *PSI_INHERIT_TYPE;
+
+typedef enum _SI_PAGE_TYPE
+{
+    SI_PAGE_PERM = 0, 
+    SI_PAGE_ADVPERM, 
+    SI_PAGE_AUDIT, 
+    SI_PAGE_OWNER
+} SI_PAGE_TYPE;
+
 typedef enum _TRUSTEE_TYPE
 {
     TRUSTEE_IS_UNKNOWN,
