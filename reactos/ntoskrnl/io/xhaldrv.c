@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.37 2003/08/17 10:36:45 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.38 2003/08/18 17:34:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -931,7 +931,6 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
   ULONG i;
   ULONG Number = 1;
   BOOLEAN ExtendedFound = FALSE;
-  PVOID MbrBuffer;
   DISK_MANAGER DiskManager = NoDiskManager;
 
   DPRINT ("xHalIoSetPartitionInformation(%p %lu %lu %lu)\n",
@@ -947,27 +946,27 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     SectorSize = 4096;
 
   /* Check for 'Ontrack Disk Manager' */
-  xHalExamineMBR(DeviceObject,
-		 SectorSize,
-		 0x54,
-		 &MbrBuffer);
-  if (MbrBuffer != NULL)
+  xHalExamineMBR (DeviceObject,
+		  SectorSize,
+		  0x54,
+		  (PVOID*) &PartitionSector);
+  if (PartitionSector != NULL)
     {
-      DPRINT("Found 'Ontrack Disk Manager'\n");
+      DPRINT ("Found 'Ontrack Disk Manager'\n");
       DiskManager = OntrackDiskManager;
-      ExFreePool(MbrBuffer);
+      ExFreePool (PartitionSector);
     }
 
   /* Check for 'EZ-Drive' */
-  xHalExamineMBR(DeviceObject,
-		 SectorSize,
-		 0x55,
-		 &MbrBuffer);
-  if (MbrBuffer != NULL)
+  xHalExamineMBR (DeviceObject,
+		  SectorSize,
+		  0x55,
+		  (PVOID*) &PartitionSector);
+  if (PartitionSector != NULL)
     {
-      DPRINT("Found 'EZ-Drive'\n");
+      DPRINT ("Found 'EZ-Drive'\n");
       DiskManager = EZ_Drive;
-      ExFreePool (MbrBuffer);
+      ExFreePool (PartitionSector);
     }
 
   /* Allocate partition sector */
@@ -1151,7 +1150,6 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
       DPRINT ("Found 'Ontrack Disk Manager'\n");
       DiskManager = OntrackDiskManager;
       ExFreePool (PartitionSector);
-      return STATUS_UNSUCCESSFUL;
     }
 
   /* Check for 'EZ-Drive' */
@@ -1164,7 +1162,6 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
       DPRINT ("Found 'EZ-Drive'\n");
       DiskManager = EZ_Drive;
       ExFreePool (PartitionSector);
-      return STATUS_UNSUCCESSFUL;
     }
 
   /* Allocate partition sector */
