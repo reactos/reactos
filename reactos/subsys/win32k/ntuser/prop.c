@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.7 2004/02/19 21:12:09 weiden Exp $
+/* $Id: prop.c,v 1.8 2004/02/22 14:09:51 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -185,11 +185,8 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data = NULL;
 
-  IntAcquireWinLockShared();
-
   if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
-    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
@@ -201,8 +198,6 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   {
     Data = Prop->Data;
   }
-  
-  IntReleaseWinLock();
 
   return(Data);
 }
@@ -237,11 +232,8 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
   PWINDOW_OBJECT Wnd;
   BOOL ret;
 
-  IntAcquireWinLockExclusive();
-
   if (!(Wnd = IntGetWindowObject(hWnd)))
   {
-    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
@@ -250,7 +242,6 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
   ret = IntSetProp(Wnd, Atom, Data);
   ExReleaseFastMutexUnsafe(&Wnd->PropListLock);
   
-  IntReleaseWinLock();
   return ret;
 }
 
