@@ -2212,7 +2212,7 @@ NtOpenSemaphore(
 NTSTATUS
 STDCALL
 ZwOpenSemaphore(
-	IN HANDLE SemaphoreHandle,
+	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAcces,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
