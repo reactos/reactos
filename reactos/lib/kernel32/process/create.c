@@ -1011,6 +1011,29 @@ CreateProcessW
 	         lpProcessInformation);
    }
 /////////////////////////////////////////
+
+   /*
+    * Get some information about the executable
+    */
+   Status = ZwQuerySection(hSection,
+			   SectionImageInformation,
+			   &Sii,
+			   sizeof(Sii),
+			   &i);
+   if (! NT_SUCCESS(Status))
+   {
+     NtClose(hSection);
+     SetLastErrorByStatus(Status);
+     return FALSE;
+   }
+
+   if (0 != (Sii.Characteristics & IMAGE_FILE_DLL))
+   {
+     NtClose(hSection);
+     SetLastError(ERROR_BAD_EXE_FORMAT);
+     return FALSE;
+   }
+
    /*
     * Initialize the process object attributes
     */
@@ -1133,16 +1156,6 @@ CreateProcessW
 			 DUPLICATE_SAME_ACCESS);
       /* FIXME - handle failure!!!!! */
    }
-
-   /*
-    * Get some information about the executable
-    */
-   Status = ZwQuerySection(hSection,
-			   SectionImageInformation,
-			   &Sii,
-			   sizeof(Sii),
-			   &i);
-   /* FIXME - handle failure!!!!! */
    
    /*
     * Close the section
