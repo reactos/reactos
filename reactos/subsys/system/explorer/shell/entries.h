@@ -41,6 +41,7 @@ enum SORT_ORDER {
 	SORT_DATE
 };
 
+ /// base of all file and directory entries
 struct Entry
 {
 protected:
