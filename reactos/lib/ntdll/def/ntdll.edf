@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.72 2002/06/05 16:51:20 ekohl Exp $
+; $Id: ntdll.edf,v 1.73 2002/07/25 16:58:58 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -556,7 +556,7 @@ RtlSubAuthoritySid=RtlSubAuthoritySid@8
 ;RtlSubtreeSuccessor
 RtlSystemTimeToLocalTime=RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
-;RtlTimeToElapsedTimeFields
+RtlTimeToElapsedTimeFields=RtlTimeToElapsedTimeFields@8
 RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields=RtlTimeToTimeFields@8

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.83 2002/06/05 16:51:20 ekohl Exp $
+; $Id: ntdll.def,v 1.84 2002/07/25 16:58:58 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -557,7 +557,7 @@ RtlSubAuthoritySid@8
 ;RtlSubtreeSuccessor
 RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime@8
-;RtlTimeToElapsedTimeFields
+RtlTimeToElapsedTimeFields@8
 RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields@8

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.9 2001/06/22 12:36:23 ekohl Exp $
+/* $Id: time.c,v 1.10 2002/07/25 16:58:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,6 +54,40 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 }
 
 /* FUNCTIONS *****************************************************************/
+
+VOID STDCALL
+RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
+			   OUT PTIME_FIELDS TimeFields)
+{
+  ULONGLONG ElapsedSeconds;
+  ULONG SecondsInDay;
+  ULONG SecondsInMinute;
+
+  /* Extract millisecond from time */
+  TimeFields->Milliseconds = (CSHORT)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
+
+  /* Compute elapsed seconds */
+  ElapsedSeconds = (ULONGLONG)Time->QuadPart / TICKSPERSEC;
+
+  /* Compute seconds within the day */
+  SecondsInDay = ElapsedSeconds % SECSPERDAY;
+
+  /* Compute elapsed minutes within the day */
+  SecondsInMinute = SecondsInDay % SECSPERHOUR;
+
+  /* Compute elapsed time of day */
+  TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
+  TimeFields->Minute = (CSHORT)(SecondsInMinute / SECSPERMIN);
+  TimeFields->Second = (CSHORT)(SecondsInMinute % SECSPERMIN);
+
+  /* Compute elapsed days */
+  TimeFields->Day = (CSHORT)(ElapsedSeconds / SECSPERDAY);
+
+  /* The elapsed number of months and days cannot be calculated */
+  TimeFields->Month = 0;
+  TimeFields->Year = 0;
+}
+
 
 VOID STDCALL
 RtlTimeToTimeFields(PLARGE_INTEGER liTime,
@@ -195,11 +229,11 @@ VOID STDCALL
 RtlSecondsSince1970ToTime(ULONG SecondsSince1970,
 			  PLARGE_INTEGER Time)
 {
-   LONGLONG llTime;
+  LONGLONG llTime;
 
-   llTime = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
+  llTime = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
 
-   *Time = *(LARGE_INTEGER *)&llTime;
+  *Time = *(LARGE_INTEGER *)&llTime;
 }
 
 
@@ -207,11 +241,11 @@ VOID STDCALL
 RtlSecondsSince1980ToTime(ULONG SecondsSince1980,
 			  PLARGE_INTEGER Time)
 {
-   LONGLONG llTime;
+  LONGLONG llTime;
 
-   llTime = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
+  llTime = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
 
-   *Time = *(LARGE_INTEGER *)&llTime;
+  *Time = *(LARGE_INTEGER *)&llTime;
 }
 
 
@@ -219,17 +253,17 @@ BOOLEAN STDCALL
 RtlTimeToSecondsSince1970(PLARGE_INTEGER Time,
 			  PULONG SecondsSince1970)
 {
-   LARGE_INTEGER liTime;
+  LARGE_INTEGER liTime;
 
-   liTime.QuadPart = Time->QuadPart - TICKSTO1970;
-   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+  liTime.QuadPart = Time->QuadPart - TICKSTO1970;
+  liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
 
-   if (liTime.u.HighPart != 0)
-      return FALSE;
+  if (liTime.u.HighPart != 0)
+    return(FALSE);
 
-   *SecondsSince1970 = liTime.u.LowPart;
+  *SecondsSince1970 = liTime.u.LowPart;
 
-   return TRUE;
+  return(TRUE);
 }
 
 
@@ -237,17 +271,17 @@ BOOLEAN STDCALL
 RtlTimeToSecondsSince1980(PLARGE_INTEGER Time,
 			  PULONG SecondsSince1980)
 {
-   LARGE_INTEGER liTime;
+  LARGE_INTEGER liTime;
 
-   liTime.QuadPart = Time->QuadPart - TICKSTO1980;
-   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+  liTime.QuadPart = Time->QuadPart - TICKSTO1980;
+  liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
 
-   if (liTime.u.HighPart != 0)
-      return FALSE;
+  if (liTime.u.HighPart != 0)
+    return(FALSE);
 
-   *SecondsSince1980 = liTime.u.LowPart;
+  *SecondsSince1980 = liTime.u.LowPart;
 
-   return TRUE;
+  return(TRUE);
 }
 
 
@@ -255,20 +289,20 @@ NTSTATUS STDCALL
 RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
 			 PLARGE_INTEGER SystemTime)
 {
-   SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
-   NTSTATUS Status;
+  SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
+  NTSTATUS Status;
 
-   Status = NtQuerySystemInformation (SystemTimeOfDayInformation,
-                                      &TimeInformation,
-                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-      return Status;
+  Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                    &TimeInformation,
+                                    sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
+                                    NULL);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-   SystemTime->QuadPart = LocalTime->QuadPart +
-                          TimeInformation.TimeZoneBias.QuadPart;
+  SystemTime->QuadPart = LocalTime->QuadPart +
+                         TimeInformation.TimeZoneBias.QuadPart;
 
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 
@@ -276,20 +310,20 @@ NTSTATUS STDCALL
 RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
 			 PLARGE_INTEGER LocalTime)
 {
-   SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
-   NTSTATUS Status;
+  SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
+  NTSTATUS Status;
 
-   Status = NtQuerySystemInformation (SystemTimeOfDayInformation,
-                                      &TimeInformation,
-                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-      return Status;
+  Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                    &TimeInformation,
+                                    sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
+                                    NULL);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-   LocalTime->QuadPart = SystemTime->QuadPart -
-                         TimeInformation.TimeZoneBias.QuadPart;
+  LocalTime->QuadPart = SystemTime->QuadPart -
+                        TimeInformation.TimeZoneBias.QuadPart;
 
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */
