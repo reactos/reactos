@@ -52,11 +52,16 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2);
 
-/* GLOBALS *******************************************************************/
-
-#define TAG_THREAD_STACK    TAG('T', 'S', 'T', 'K')
-
 /* FUNCTIONS *****************************************************************/
+
+VOID
+KeFreeStackPage(PVOID Context, PVOID Address, ULONG PhysAddr)
+{
+  if (PhysAddr != 0)
+    {
+      MmDereferencePage((PVOID)PhysAddr);
+    }
+}
 
 NTSTATUS 
 HalReleaseTask(PETHREAD Thread)
@@ -67,10 +72,14 @@ HalReleaseTask(PETHREAD Thread)
  */
 {
   extern unsigned int init_stack;
-   
+
   if (Thread->Tcb.StackLimit != (ULONG)&init_stack)
     {       
-      ExFreePool((PVOID)Thread->Tcb.StackLimit);
+      MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		       (PVOID)Thread->Tcb.StackLimit,
+		       MM_STACK_SIZE,
+		       KeFreeStackPage,
+		       NULL);
     }
   Thread->Tcb.StackLimit = 0;
   Thread->Tcb.InitialStack = NULL;
@@ -86,8 +95,11 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
  */
 {
    PVOID KernelStack;
+   NTSTATUS Status;
    extern unsigned int init_stack_top;
    extern unsigned int init_stack;
+   PMEMORY_AREA StackArea;
+   ULONG i;
 
    KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                 InternalThreadType,
@@ -96,8 +108,27 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    InitializeListHead(&Thread->MutantListHead);
    if (!First)
      {
-       KernelStack = ExAllocatePoolWithTag(NonPagedPool, MM_STACK_SIZE,
-					   TAG_THREAD_STACK);
+       KernelStack = NULL;
+       Status = MmCreateMemoryArea(NULL,
+				   MmGetKernelAddressSpace(),
+				   MEMORY_AREA_KERNEL_STACK,
+				   &KernelStack,
+				   MM_STACK_SIZE,
+				   0,
+				   &StackArea,
+				   FALSE);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DPRINT1("Failed to create thread stack\n");
+	   KeBugCheck(0);
+	 }
+       for (i = 0; i < (MM_STACK_SIZE / PAGESIZE); i++)
+	 {
+	   Status = MmCreateVirtualMapping(NULL,
+					   KernelStack + (i * PAGESIZE),
+					   PAGE_EXECUTE_READWRITE,
+					   (ULONG)MmAllocPage(0));
+	 }
        Thread->InitialStack = KernelStack + MM_STACK_SIZE;
        Thread->StackBase = KernelStack + MM_STACK_SIZE;
        Thread->StackLimit = (ULONG)KernelStack;

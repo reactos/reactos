@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2000  ReactOS Team
+ *  Copyright (C) 2000, 2001  ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@
 #define IOPL_FLAG          ((1 << 12) | (1 << 13))
 #define INTERRUPT_FLAG     (1 << 9)
 #define TRAP_FLAG          (1 << 8)
+#define DIRECTION_FLAG     (1 << 10)
 
 #define VALID_FLAGS         (0xDFF)
 
@@ -53,7 +54,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
   PULONG dsp;
   BOOL BigDataPrefix = FALSE;
   BOOL BigAddressPrefix = FALSE;
-  //  BOOL RepPrefix = FALSE;
+  BOOL RepPrefix = FALSE;
   ULONG i = 0;
   BOOL Exit = FALSE;
 
@@ -82,10 +83,18 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  Tf->Eip++;
 	  break;
 
+	  /* rep prefix */
+	case 0xFC:
+	  RepPrefix = TRUE;
+	  i++;
+	  Tf->Eip++;
+	  break;
+
 	  /* sti */
 	case 0xFB:
-	  if (BigDataPrefix || BigAddressPrefix)
+	  if (BigDataPrefix || BigAddressPrefix || RepPrefix)
 	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
 	      return(1);
 	    }
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
@@ -99,8 +108,9 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* cli */
 	case 0xFA:
-	  if (BigDataPrefix || BigAddressPrefix)
+	  if (BigDataPrefix || BigAddressPrefix || RepPrefix)
 	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
 	      return(1);
 	    }
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
@@ -114,6 +124,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* pushf */
 	case 0x9C:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
 	    {
 	      Tf->Eip++;
@@ -153,6 +168,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* popf */
 	case 0x9D:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
 	    {
 	      Tf->Eip++;
@@ -192,6 +212,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
       /* iret */
 	case 0xCF:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
 	    {
 	      Tf->Eip = sp[0];
@@ -215,9 +240,14 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
 	  /* out imm8, al */
 	case 0xE6:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
-	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[1], 
+	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[i + 1], 
 			       Tf->Eax & 0xFF);
 	      Tf->Eip = Tf->Eip + 2;
 	      return(0);
@@ -227,9 +257,21 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* out imm8, ax */
 	case 0xE7:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
-	      WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
+	      if (!BigDataPrefix)
+		{
+		  WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
+		}
+	      else
+		{
+		  WRITE_PORT_ULONG((PULONG)(ULONG)ip[1], Tf->Eax);
+		}
 	      Tf->Eip = Tf->Eip + 2;
 	      return(0);
 	    }
@@ -238,6 +280,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
 	  /* out dx, al */
 	case 0xEE:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFF);
@@ -249,9 +296,23 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* out dx, ax */
 	case 0xEF:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
-	      WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFFFF);
+	      if (!BigDataPrefix)
+		{
+		  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), 
+				    Tf->Eax & 0xFFFF);
+		}
+	      else
+		{
+		  WRITE_PORT_ULONG((PULONG)(Tf->Edx & 0xFFFF), 
+				   Tf->Eax);
+		}
 	      Tf->Eip = Tf->Eip + 1;
 	      return(0);
 	    }
@@ -260,6 +321,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* in al, imm8 */
 	case 0xE4:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      UCHAR v;
@@ -275,6 +341,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* in ax, imm8 */
 	case 0xE5:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      USHORT v;
@@ -290,6 +361,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
 	  /* in al, dx */
 	case 0xEC:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      UCHAR v;
@@ -305,6 +381,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  
 	  /* in ax, dx */
 	case 0xED:
+	  if (RepPrefix)
+	    {
+	      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
+	      return(1);
+	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      USHORT v;
@@ -317,16 +398,241 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  Exit = TRUE;
 	  break;
+
+      /* outsb */
+	case 0x6E:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      ULONG Count;
+	      PUCHAR Port;
+	      PUCHAR Buffer;
+	      ULONG Offset;
+	      
+	      Count = 1;
+	      if (RepPrefix)
+		{
+		  Count = Tf->Ecx;
+		  if (!BigAddressPrefix)
+		    {
+		      Count = Count & 0xFFFF;
+		    }
+		}
+
+	      Port = (PUCHAR)(Tf->Edx & 0xFFFF);
+	      Offset = Tf->Edi;
+	      if (!BigAddressPrefix)
+		{
+		  Offset = Offset & 0xFFFF;
+		}
+	      Buffer = (PUCHAR)((Tf->Es * 16) + Offset);
+	      for (; Count > 0; Count--)
+		{
+		  WRITE_PORT_UCHAR(Port, *Buffer);
+		  if (Tf->Eflags & DIRECTION_FLAG)
+		    {
+		      Buffer++;
+		    }
+		  else
+		    {
+		      Buffer--;
+		    }
+		}				
+	      Tf->Eip++;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+
+	  /* insw/insd */
+	case 0x6F:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      ULONG Count;
+	      PUCHAR Port;
+	      PUSHORT BufferS;
+	      PULONG BufferL;
+	      ULONG Offset;
+	      
+	      Count = 1;
+	      if (RepPrefix)
+		{
+		  Count = Tf->Ecx;
+		  if (!BigAddressPrefix)
+		    {
+		      Count = Count & 0xFFFF;
+		    }
+		}
+
+	      Port = (PUCHAR)(Tf->Edx & 0xFFFF);
+	      Offset = Tf->Edi;
+	      if (!BigAddressPrefix)
+		{
+		  Offset = Offset & 0xFFFF;
+		}
+	      if (BigDataPrefix)
+		{
+		  BufferL = (PULONG)((Tf->Es * 16) + Offset);
+		}
+	      else
+		{
+		  BufferS = (PUSHORT)((Tf->Es * 16) + Offset);
+		}
+	      for (; Count > 0; Count--)
+		{
+		  if (BigDataPrefix)
+		    {
+		      WRITE_PORT_ULONG((PULONG)Port, *BufferL);
+		    }
+		  else
+		    {
+		      WRITE_PORT_USHORT((PUSHORT)Port, *BufferS);
+		    }
+		  if (Tf->Eflags & DIRECTION_FLAG)
+		    {
+		      if (BigDataPrefix)
+			{
+			  BufferL++;
+			}
+		      else
+			{
+			  BufferS++;
+			}
+		    }
+		  else
+		    {
+		      if (BigDataPrefix)
+			{
+			  BufferL--;
+			}
+		      else
+			{
+			  BufferS--;
+			}
+		    }
+		}				
+	      Tf->Eip++;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
       
       /* insb */
 	case 0x6C:
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
+	      ULONG Count;
+	      PUCHAR Port;
+	      PUCHAR Buffer;
+	      ULONG Offset;
 	      
+	      Count = 1;
+	      if (RepPrefix)
+		{
+		  Count = Tf->Ecx;
+		  if (!BigAddressPrefix)
+		    {
+		      Count = Count & 0xFFFF;
+		    }
+		}
+
+	      Port = (PUCHAR)(Tf->Edx & 0xFFFF);
+	      Offset = Tf->Edi;
+	      if (!BigAddressPrefix)
+		{
+		  Offset = Offset & 0xFFFF;
+		}
+	      Buffer = (PUCHAR)((Tf->Es * 16) + Offset);
+	      for (; Count > 0; Count--)
+		{
+		  *Buffer = READ_PORT_UCHAR(Port);
+		  if (Tf->Eflags & DIRECTION_FLAG)
+		    {
+		      Buffer++;
+		    }
+		  else
+		    {
+		      Buffer--;
+		    }
+		}				
+	      Tf->Eip++;
+	      return(0);
 	    }
 	  Exit = TRUE;
 	  break;
-	  
+
+	  /* insw/insd */
+	case 0x6D:
+	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
+	    {
+	      ULONG Count;
+	      PUCHAR Port;
+	      PUSHORT BufferS;
+	      PULONG BufferL;
+	      ULONG Offset;
+	      
+	      Count = 1;
+	      if (RepPrefix)
+		{
+		  Count = Tf->Ecx;
+		  if (!BigAddressPrefix)
+		    {
+		      Count = Count & 0xFFFF;
+		    }
+		}
+
+	      Port = (PUCHAR)(Tf->Edx & 0xFFFF);
+	      Offset = Tf->Edi;
+	      if (!BigAddressPrefix)
+		{
+		  Offset = Offset & 0xFFFF;
+		}
+	      if (BigDataPrefix)
+		{
+		  BufferL = (PULONG)((Tf->Es * 16) + Offset);
+		}
+	      else
+		{
+		  BufferS = (PUSHORT)((Tf->Es * 16) + Offset);
+		}
+	      for (; Count > 0; Count--)
+		{
+		  if (BigDataPrefix)
+		    {
+		      *BufferL = READ_PORT_ULONG((PULONG)Port);
+		    }
+		  else
+		    {
+		      *BufferS = READ_PORT_USHORT((PUSHORT)Port);
+		    }
+		  if (Tf->Eflags & DIRECTION_FLAG)
+		    {
+		      if (BigDataPrefix)
+			{
+			  BufferL++;
+			}
+		      else
+			{
+			  BufferS++;
+			}
+		    }
+		  else
+		    {
+		      if (BigDataPrefix)
+			{
+			  BufferL--;
+			}
+		      else
+			{
+			  BufferS--;
+			}
+		    }
+		}				
+	      Tf->Eip++;
+	      return(0);
+	    }
+	  Exit = TRUE;
+	  break;
+
 	  /* Int nn */
 	case 0xCD:
 	  {
@@ -360,7 +666,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
       /* FIXME: Don't allow the BIOS to write to sensitive I/O ports */
     }
    
-  DPRINT("V86GPF unhandled\n");
+  DPRINT1("V86GPF unhandled (was %x)\n", ip[i]);
   *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
   return(1);
 }

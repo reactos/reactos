@@ -25,6 +25,7 @@ typedef ULONG SWAPENTRY;
 #define MEMORY_AREA_CACHE_SEGMENT        (10)
 #define MEMORY_AREA_SHARED_DATA          (11)
 #define MEMORY_AREA_WORKING_SET          (12)
+#define MEMORY_AREA_KERNEL_STACK         (13)
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))

@@ -16,8 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
-/* static */ UCHAR OrigIVT[1024];
-/* static UCHAR OrigBDA[]; */
+static UCHAR OrigIVT[1024];
+static UCHAR OrigBDA[256];
 /* static UCHAR OrigEBDA[]; */
 
 /* FUNCTIONS *****************************************************************/
@@ -30,12 +30,22 @@ NtEarlyInitVdm(VOID)
    * map is still active so we can just copy the data from low memory.
    */
   memcpy(OrigIVT, (PVOID)0x0, 1024);
+  memcpy(OrigBDA, (PVOID)0x400, 256);
 }
 
 NTSTATUS STDCALL NtVdmControl(ULONG ControlCode,
 			      PVOID ControlData)
 {
-  memcpy(ControlData, OrigIVT, 1024);
+  switch (ControlCode)
+    {
+    case 0:
+      memcpy(ControlData, OrigIVT, 1024);
+      break;
+
+    case 1:
+      memcpy(ControlData, OrigBDA, 256);
+      break;
+    }
   return(STATUS_SUCCESS);
 }
 

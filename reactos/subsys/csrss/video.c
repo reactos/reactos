@@ -12,6 +12,7 @@ InitializeVideoAddressSpace(VOID)
    ULONG ViewSize;
    PUCHAR TextMap;
    CHAR IVT[1024];
+   CHAR BDA[256];
 
    /*
     * Open the physical memory section
@@ -99,5 +100,20 @@ InitializeVideoAddressSpace(VOID)
     */
    memcpy((PVOID)0x0, IVT, 1024);
    
+   /*
+    * Get the BDA from the kernel
+    */
+   Status = NtVdmControl(1, BDA);
+   if (!NT_SUCCESS(Status))
+     {
+       DbgPrint("NtVdmControl failed (status %x)\n", Status);
+       return(0);
+     }
+   
+   /*
+    * Copy the BDA into the right place
+    */
+   memcpy((PVOID)0x400, BDA, 256);
+
    return(1);
 }

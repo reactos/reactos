@@ -64,10 +64,12 @@ _Ki386ContextSwitch:
 	 * Set the base of the TEB selector to the base of the TEB for
 	 * this thread.
 	 */
+	pushl	%ebx
 	pushl	KTHREAD_TEB(%ebx)
 	pushl	$TEB_SELECTOR
 	call	_KeSetBaseGdtSelector
 	addl	$8, %esp
+	popl	%ebx
 
 	/*
 	 * Set the current thread information in the PCR

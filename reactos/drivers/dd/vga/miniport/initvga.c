@@ -101,6 +101,7 @@ void InitVGAMode()
 
    // FIXME: Use Vidport to map the memory properly
    vidmem = (char *)(0xd0000000 + 0xa0000);
+   memset(&vxba, 0, sizeof(vxba));
    vxba.Eax = 0x0012;
    vps = VideoPortInt10(NULL, &vxba);
    //   setMode(Mode12);
