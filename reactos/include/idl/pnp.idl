@@ -1,0 +1,19 @@
+/*
+ * Plug and Play Manager interface definition
+ */
+
+#define WORD unsigned short
+
+[
+  uuid (809F4e40-A03D-11CE-8F69-08003E30051B),
+  version(1.0),
+  pointer_default(unique),
+  explicit_handle
+]
+interface pnp
+{
+//  unsigned long PNP_GetRootDeviceInstance(handle_t BindingHandle,
+//					  [out, string, size_is(Length)] wchar_t *DeviceInstance,
+//					  [in] unsigned long Length);
+  WORD PNP_GetVersion(handle_t BindingHandle);
+}

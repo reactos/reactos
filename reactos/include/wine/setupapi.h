@@ -666,6 +666,8 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 
 
 LONG     WINAPI AddTagToGroupOrderList(PCWSTR lpGroupName, DWORD dwUnknown2, DWORD dwUnknown3);
+DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
+DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
 BOOL     WINAPI DelayedMove(PCWSTR lpExistingFileName, PCWSTR lpNewFileName);
 BOOL     WINAPI DoesUserHavePrivilege(PCWSTR lpPrivilegeName);
 PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);

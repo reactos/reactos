@@ -31,9 +31,18 @@
 #include "cfgmgr32.h"
 #include "setupapi_private.h"
 
+#include "rpc.h"
+
+#include "pnp.h"
+
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+
+typedef struct _MACHINE_INFO
+{
+  RPC_BINDING_HANDLE BindingHandle;
+} MACHINE_INFO, *PMACHINE_INFO;
 
 
 /***********************************************************************
@@ -47,14 +56,10 @@ CONFIGRET WINAPI CM_Connect_MachineA(PCSTR UNCServerName, PHMACHINE phMachine)
     TRACE("%s %p\n", UNCServerName, phMachine);
 
     if (UNCServerName == NULL || *UNCServerName == 0)
-    {
         return CM_Connect_MachineW(NULL, phMachine);
-    }
 
     if (CaptureAndConvertAnsiArg(UNCServerName, &pServerNameW))
-    {
         return CR_INVALID_DATA;
-    }
 
     ret = CM_Connect_MachineW(pServerNameW, phMachine);
 
@@ -69,8 +74,23 @@ CONFIGRET WINAPI CM_Connect_MachineA(PCSTR UNCServerName, PHMACHINE phMachine)
  */
 CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
 {
-    FIXME("%s %p\n", debugstr_w(UNCServerName), phMachine);
-    return CR_ACCESS_DENIED;
+    PMACHINE_INFO pMachine;
+
+    TRACE("%s %p\n", debugstr_w(UNCServerName), phMachine);
+
+    pMachine = (PMACHINE_INFO)GlobalAlloc(GPTR, sizeof(MACHINE_INFO));
+    if (pMachine == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    if (!PnpBindRpc(UNCServerName, &pMachine->BindingHandle))
+    {
+        GlobalFree(pMachine);
+        return CR_INVALID_MACHINENAME;
+    }
+
+    phMachine = (PHMACHINE)pMachine;
+
+    return CR_SUCCESS;
 }
 
 
@@ -79,7 +99,41 @@ CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
  */
 CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
 {
-    FIXME("%lx\n", hMachine);
+    PMACHINE_INFO pMachine;
+
+    TRACE("%lx\n", hMachine);
+
+    if (hMachine == NULL)
+        return CR_SUCCESS;
+
+    pMachine = (PMACHINE_INFO)hMachine;
+    if (!PnpUnbindRpc(pMachine->BindingHandle))
+        return CR_ACCESS_DENIED;
+
+    GlobalFree(pMachine);
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Child [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Child(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
+    return CM_Get_Sibling_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Child_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Child_Ex(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
     return CR_SUCCESS;
 }
 
@@ -154,9 +208,8 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_SizeA(
 CONFIGRET WINAPI CM_Get_Device_ID_List_SizeW(
     PULONG pulLen, PCWSTR pszFilter, ULONG ulFlags)
 {
-    FIXME("%p %s %ld\n", pulLen, debugstr_w(pszFilter), ulFlags);
-    *pulLen = 2;
-    return CR_SUCCESS;
+    TRACE("%p %s %ld\n", pulLen, debugstr_w(pszFilter), ulFlags);
+    return CM_Get_Device_ID_List_Size_ExW(pulLen, pszFilter, ulFlags, NULL);
 }
 
 
@@ -181,4 +234,129 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
     FIXME("%p %s %ld %lx\n", pulLen, debugstr_w(pszFilter), ulFlags, hMachine);
     *pulLen = 2;
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Parent [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Parent(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
+    return CM_Get_Sibling_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Parent_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Parent_Ex(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Sibling [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Sibling(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
+    return CM_Get_Sibling_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Sibling_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Sibling_Ex(
+    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Version [SETUPAPI.@]
+ */
+WORD WINAPI CM_Get_Version(VOID)
+{
+    TRACE("\n");
+    return CM_Get_Version_Ex(NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Version_Ex [SETUPAPI.@]
+ */
+WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    RPC_STATUS Status;
+
+    FIXME("%lx\n", hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return 0;
+    }
+    else
+    {
+        Status = PnpGetLocalBindingHandle(&BindingHandle);
+        if (Status != RPC_S_OK)
+            return 0;
+    }
+
+    return PNP_GetVersion(BindingHandle);
+}
+
+
+/***********************************************************************
+ * CM_Locate_DevNodeA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Locate_DevNodeA(
+    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags)
+{
+  FIXME("%p %p %lu\n", pdnDevInst, pDeviceID, ulFlags);
+  return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Locate_DevNodeW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Locate_DevNodeW(
+    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+{
+  TRACE("%p %p %lu\n", pdnDevInst, pDeviceID, ulFlags);
+  return CM_Locate_DevNode_ExW(pdnDevInst, pDeviceID, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Locate_DevNode_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Locate_DevNode_ExA(
+    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags, HMACHINE hMachine)
+{
+  FIXME("%p %p %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
+  return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Locate_DevNode_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Locate_DevNode_ExW(
+    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags, HMACHINE hMachine)
+{
+  FIXME("%p %p %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
+  return CR_SUCCESS;
 }
