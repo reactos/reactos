@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.3 2004/09/05 04:26:29 arty Exp $
+/* $Id: select.c,v 1.4 2004/09/23 06:42:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -58,11 +58,13 @@ ScanForImmediateTrigger( PAFD_HANDLE HandleArray,
 	    /* Check select bits */
 	    if( !SocketAcquireStateLock( FCB ) ) 
 		Status = STATUS_UNSUCCESSFUL;
-	    if( NT_SUCCESS(Status) )
+	    if( NT_SUCCESS(Status) ) {
 		HandleArray[i].Status = 
 		    FCB->PollState & HandleArray[i].Events;
-	    if( HandleArray[i].Status ) ShouldReturnNow = TRUE;
-	    ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+		if( HandleArray[i].Status ) ShouldReturnNow = TRUE;
+		ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+		SocketStateUnlock( FCB );
+	    }
 	}
     }
 

@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: lock.c,v 1.3 2004/09/23 06:42:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -100,6 +100,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count ) {
 UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
+    KIRQL CurrentIrql = KeGetCurrentIrql();
 
     AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
 
@@ -120,7 +121,8 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
 		      CurrentThread, FCB->CurrentThread));
     }
 
-    if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
+
+    if( CurrentIrql == PASSIVE_LEVEL ) {
 	ExAcquireFastMutex( &FCB->Mutex );
 	while( FCB->Locked ) {
 	    AFD_DbgPrint
@@ -139,8 +141,7 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
 	FCB->CurrentThread = CurrentThread;
 	FCB->LockCount++;
 	ExReleaseFastMutex( &FCB->Mutex );
-    } else {
-	KeAcquireSpinLock( &FCB->SpinLock, &FCB->OldIrql );
+    } else { /* Nothing since we're not at PASSIVE_LEVEL */
 	FCB->Locked = TRUE;
 	FCB->CurrentThread = CurrentThread;
 	FCB->LockCount++;
@@ -156,14 +157,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 
     if( !FCB->LockCount ) {
 	FCB->CurrentThread = NULL;
-	if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
-	    ExAcquireFastMutex( &FCB->Mutex );
-	    FCB->Locked = FALSE;
-	    ExReleaseFastMutex( &FCB->Mutex );
-	} else {
-	    FCB->Locked = FALSE;
-	    KeReleaseSpinLock( &FCB->SpinLock, FCB->OldIrql );
-	}
+	FCB->Locked = FALSE;
 
 	AFD_DbgPrint(MAX_TRACE,("Unlocked.\n"));
 	KePulseEvent( &FCB->StateLockedEvent, IO_NETWORK_INCREMENT, FALSE );

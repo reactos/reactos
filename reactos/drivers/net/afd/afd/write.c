@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.5 2004/09/05 04:26:29 arty Exp $
+/* $Id: write.c,v 1.6 2004/09/23 06:42:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -285,7 +285,14 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !(SendReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
-
+    
+    AFD_DbgPrint
+	(MID_TRACE,("RemoteAddress #%d Type %d\n", 
+		    ((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+		    TAAddressCount,
+		    ((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+		    Address[0].AddressType));
+    
     /* Check the size of the Address given ... */
 
     Status = TdiSendDatagram

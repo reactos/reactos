@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2004/09/05 04:26:29 arty Exp $
+/* $Id: main.c,v 1.7 2004/09/23 06:42:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -139,7 +139,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 VOID DestroySocket( PAFD_FCB FCB ) {
     UINT i;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
-    BOOLEAN DontDeleteYet = FALSE;
 
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
 
@@ -151,6 +150,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
 
+    /* Return early here because we might be called in the mean time. */
     if( FCB->ListenIrp.InFlightRequest || 
 	FCB->ReceiveIrp.InFlightRequest || 
 	FCB->SendIrp.InFlightRequest ) {
@@ -158,7 +158,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
 				FCB->SendIrp.InFlightRequest));
-	DontDeleteYet = TRUE;
+	SocketStateUnlock( FCB );
+	return;
     }
 
     FCB->PollState |= AFD_EVENT_CLOSE;
@@ -180,21 +181,19 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 
     SocketStateUnlock( FCB );
     
-    if( !DontDeleteYet ) {
-	if( FCB->Recv.Window ) 
-	    ExFreePool( FCB->Recv.Window );
-	if( FCB->Send.Window )
-	    ExFreePool( FCB->Send.Window );
-	if( FCB->AddressFrom ) 
-	    ExFreePool( FCB->AddressFrom );
-	if( FCB->LocalAddress )
-	    ExFreePool( FCB->LocalAddress );
-	
-	ExFreePool(FCB->TdiDeviceName.Buffer);
-	
-	ExFreePool(FCB);
-	AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
-    }
+    if( FCB->Recv.Window ) 
+	ExFreePool( FCB->Recv.Window );
+    if( FCB->Send.Window )
+	ExFreePool( FCB->Send.Window );
+    if( FCB->AddressFrom ) 
+	ExFreePool( FCB->AddressFrom );
+    if( FCB->LocalAddress )
+	ExFreePool( FCB->LocalAddress );
+    
+    ExFreePool(FCB->TdiDeviceName.Buffer);
+    
+    ExFreePool(FCB);
+    AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
 
     AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
 }

@@ -1024,7 +1024,7 @@ NTSTATUS TdiSendDatagram(
  *     TransportObject = Pointer to transport object
  *     From            = Send filter (NULL if none)
  *     Address         = Address of buffer to place remote address
- *     Buffer          = Address of buffer to place sendd data
+ *     Buffer          = Address of buffer to place send data
  *     BufferSize      = Address of buffer with length of Buffer (updated)
  * RETURNS:
  *     Status of operation
