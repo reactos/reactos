@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.210 2004/02/07 18:53:58 mf Exp $
+# $Id: Makefile,v 1.211 2004/02/22 17:30:32 chorns Exp $
 #
 # Global makefile
 #
@@ -117,9 +117,9 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 # Regression tests
 REGTESTS = regtests
 
-all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
+all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
-     $(APPS) $(EXT_MODULES) $(REGTESTS)
+     $(APPS) $(EXT_MODULES)
 
 #config: $(TOOLS:%=%_config)
 

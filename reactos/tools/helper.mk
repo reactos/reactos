@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.54 2004/02/22 09:59:17 chorns Exp $
+# $Id: helper.mk,v 1.55 2004/02/22 17:30:33 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -618,6 +618,9 @@ else
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
+ifeq ($(MK_MODE),user)
+    MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
+endif
   MK_REGTESTS := gen_regtests
   MK_REGTESTS_CLEAN := clean_regtests
   MK_OBJECTS += tests/_rtstub.o tests/regtests.a

@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.76 2004/02/15 07:03:55 arty Exp $
+# $Id: makefile,v 1.77 2004/02/22 17:30:32 chorns Exp $
 
 PATH_TO_TOP = ../..
+
+TARGET_REGTESTS = yes
 
 TARGET_TYPE = dynlink
 

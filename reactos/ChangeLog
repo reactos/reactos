@@ -1,5 +1,25 @@
 2004-02-22  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile (all): Put REGTESTS dependency earlier in the list.
+	* lib/kernel32/makefile: Support regression tests.
+	* lib/kernel32/misc/dllmain.c: Prepare regression tests.
+	* regtests/win32base/driver.c: (DummyThreadMain,
+	RunPrivateTests): Add.
+	(RegTestMain): Run private module regression tests.
+	* tools/helper.mk: Add rtshared.a to MK_LIBS if building
+	user-mode regression tests.
+	* tools/regtests.c (UMSTUB): Add.
+	(main): Output user-mode stub.
+	* lib/kernel32/tests: New directory.
+	* lib/kernel32/tests/.cvsignore: New file.
+	* lib/kernel32/tests/Makefile: New file.
+	* lib/kernel32/tests/tests: New directory.
+	* lib/kernel32/tests/tests/.cvsignore: New file.
+	* regtests/win32base/tests/file-1.c: move...
+	* lib/kernel32/tests/tests/file-1.c: ...here.
+
+2004-02-22  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* config (REGRESSIONTESTS): Add.
 	* rules.mak (REGTESTS_PATH_INC): Add.
 	* drivers/net/tcpip/makefile: Support regression tests.
