@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.69 2003/07/27 11:54:42 dwelch Exp $
+/* $Id: window.c,v 1.70 2003/07/28 01:22:28 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1475,12 +1475,7 @@ NtUserMoveWindow(
 DWORD STDCALL
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
-/*
-        W32kGetWndObj uses PsGetWin32Process() which came from
-        PsGetCurrentProcess() made from PsGetCurrentThread().
-        What would happen if hWnd was under a different EThread
-        all togeather?
-*/
+
 PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
 
         if(Window == NULL) return((DWORD)NULL);
@@ -1490,10 +1485,10 @@ PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
         switch(Index)
         {
         case 0x00:
-                return((DWORD)PsGetCurrentProcessId());
+                return((DWORD)Window->OwnerThread->ThreadsProcess->UniqueProcessId);
 
         case 0x01:
-                return((DWORD)PsGetCurrentThreadId());
+                return((DWORD)Window->OwnerThread->Cid.UniqueThread);
 
         default:
                 return((DWORD)NULL);
