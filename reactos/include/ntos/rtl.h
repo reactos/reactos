@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.15 2003/08/14 10:32:09 ekohl Exp $
+/* $Id: rtl.h,v 1.16 2003/08/14 17:54:27 ekohl Exp $
  * 
  */
 
@@ -479,26 +479,25 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 #define LONG_MOST_SIGNIFICANT_BIT	3
 
 
-
-#if defined(__NTOSKRNL__) || defined(__NTDLL__)
 #define NLS_ANSI_CODE_PAGE       NlsAnsiCodePage
 #define NLS_LEAD_BYTE_INFO       NlsLeadByteInfo
 #define NLS_MB_CODE_PAGE_TAG     NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO   NlsOemLeadByteInfo
-#else
-#define NLS_ANSI_CODE_PAGE       (*NlsAnsiCodePage)
-#define NLS_LEAD_BYTE_INFO       (*NlsLeadByteInfo)
-#define NLS_MB_CODE_PAGE_TAG     (*NlsMbCodePageTag)
-#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
-#define NLS_OEM_LEAD_BYTE_INFO   (*NlsOemLeadByteInfo)
-#endif /* __NTOSKRNL__ || __NTDLL__ */
 
-extern USHORT NLS_ANSI_CODE_PAGE;
-extern PUSHORT NLS_LEAD_BYTE_INFO;
-extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
-extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
-extern PUSHORT NLS_OEM_LEAD_BYTE_INFO;
+#if defined(__NTOSKRNL__) || defined(__NTDLL__)
+extern USHORT  EXPORTED NlsAnsiCodePage;
+extern PUSHORT EXPORTED NlsLeadByteInfo;
+extern BOOLEAN EXPORTED NlsMbCodePageTag;
+extern BOOLEAN EXPORTED NlsMbOemCodePageTag;
+extern PUSHORT EXPORTED NlsOemLeadByteInfo;
+#else
+extern USHORT  IMPORTED NlsAnsiCodePage;
+extern PUSHORT IMPORTED NlsLeadByteInfo;
+extern BOOLEAN IMPORTED NlsMbCodePageTag;
+extern BOOLEAN IMPORTED NlsMbOemCodePageTag;
+extern PUSHORT IMPORTED NlsOemLeadByteInfo;
+#endif /* __NTOSKRNL__ || __NTDLL__ */
 
 
 /*
