@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.6 2004/09/23 21:01:23 ea Exp $
+/* $Id: session.c,v 1.7 2004/10/02 21:14:08 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -48,44 +48,52 @@ DosPathToSessionPathA (DWORD SessionId, LPSTR InPath, LPSTR * OutPath)
 BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
 				   OUT DWORD* pSessionId)
 {
-	NTSTATUS           Status = STATUS_SUCCESS;
-	HANDLE             ProcessHandle = INVALID_HANDLE_VALUE;
-	OBJECT_ATTRIBUTES  Oa = { sizeof (OBJECT_ATTRIBUTES), 0, };
-	DWORD              SessionId = 0;
+  PROCESS_SESSION_INFORMATION SessionInformation;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID ClientId;
+  HANDLE ProcessHandle;
+  NTSTATUS Status;
+  
+  if(IsBadWritePtr(pSessionId, sizeof(DWORD)))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  ClientId.UniqueProcess = (HANDLE)dwProcessId;
+  ClientId.UniqueThread = INVALID_HANDLE_VALUE;
 
-	if (IsBadWritePtr(pSessionId, sizeof (DWORD)))
-	{
-		SetLastError (ERROR_INVALID_DATA); //FIXME
-		goto ProcessIdToSessionId_FAIL_EXIT;
-	}
-	Status = NtOpenProcess (
-			& ProcessHandle,
-			PROCESS_QUERY_INFORMATION,
-			& Oa,
-			NULL);
-	if (!NT_SUCCESS(Status))
-	{
-		goto ProcessIdToSessionId_FAIL;
-	}
-	Status = NtQueryInformationProcess (
-			ProcessHandle,
-			ProcessSessionInformation,
-			& SessionId,
-			sizeof SessionId,
-			NULL);
-	if (!NT_SUCCESS(Status))
-	{
-		NtClose (ProcessHandle);
-		goto ProcessIdToSessionId_FAIL;
-	}
-	NtClose (ProcessHandle);
-	*pSessionId = SessionId;
-	return TRUE;
-
-ProcessIdToSessionId_FAIL:
-	SetLastErrorByStatus(Status);
-ProcessIdToSessionId_FAIL_EXIT:
-	return FALSE;
+  InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+  
+  Status = NtOpenProcess(&ProcessHandle,
+                         PROCESS_QUERY_INFORMATION,
+                         &ObjectAttributes,
+                         &ClientId);
+  if(NT_SUCCESS(Status))
+  {
+    Status = NtQueryInformationProcess(ProcessHandle,
+                                       ProcessSessionInformation,
+                                       &SessionInformation,
+                                       sizeof(SessionInformation),
+                                       NULL);
+    NtClose(ProcessHandle);
+    
+    if(NT_SUCCESS(Status))
+    {
+      *pSessionId = SessionInformation.SessionId;
+      return TRUE;
+    }
+    else
+    {
+      SetLastErrorByStatus(Status);
+    }
+  }
+  else
+  {
+    SetLastErrorByStatus(Status);
+  }
+  
+  return FALSE;
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.68 2004/09/23 19:01:38 weiden Exp $
+/* $Id: proc.c,v 1.69 2004/10/02 21:14:08 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -356,7 +356,7 @@ OpenProcess(DWORD dwDesiredAccess,
    NTSTATUS errCode;
    HANDLE ProcessHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   CLIENT_ID ClientId ;
+   CLIENT_ID ClientId;
    
    ClientId.UniqueProcess = (HANDLE)dwProcessId;
    ClientId.UniqueThread = INVALID_HANDLE_VALUE;
