@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.58 2004/11/06 16:04:58 ekohl Exp $
+/* $Id: sysinfo.c,v 1.59 2004/11/13 23:08:35 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,9 +22,6 @@ extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
 ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
 VOID MmPrintMemoryStatistic(VOID);
-
-extern ULONG Ke386CpuidFlags;
-extern ULONG Ke386Cpuid;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -375,7 +372,7 @@ QSI_DEF(SystemProcessorInformation)
 {
 	PSYSTEM_PROCESSOR_INFORMATION Spi 
 		= (PSYSTEM_PROCESSOR_INFORMATION) Buffer;
-
+	PKPCR Pcr;
 	*ReqSize = sizeof (SYSTEM_PROCESSOR_INFORMATION);
 	/*
 	 * Check user buffer's size 
@@ -384,11 +381,12 @@ QSI_DEF(SystemProcessorInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
+	Pcr = KeGetCurrentKPCR();
 	Spi->ProcessorArchitecture = 0; /* Intel Processor */
-	Spi->ProcessorLevel	   = ((Ke386Cpuid >> 8) & 0xf);
-	Spi->ProcessorRevision	   = (Ke386Cpuid & 0xf) | ((Ke386Cpuid << 4) & 0xf00);
+	Spi->ProcessorLevel	   = Pcr->PrcbData.CpuType;
+	Spi->ProcessorRevision	   = Pcr->PrcbData.CpuStep;
 	Spi->Unknown 		   = 0;
-	Spi->FeatureBits	   = Ke386CpuidFlags;
+	Spi->FeatureBits	   = Pcr->PrcbData.FeatureBits;
 
 	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);

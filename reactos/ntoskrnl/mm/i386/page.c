@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.76 2004/11/11 22:23:52 ion Exp $
+/* $Id: page.c,v 1.77 2004/11/13 23:08:35 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -77,10 +77,9 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 }
 #endif
 
-extern ULONG Ke386CpuidFlags;
-extern ULONG Ke386Cpuid;
 extern BOOLEAN Ke386Pae;
 extern BOOLEAN Ke386NoExecute;
+extern BOOLEAN Ke386GlobalPagesEnabled;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -541,7 +540,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	       KEBUGCHECK(0);
 	    }
 	    Entry = PAE_PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-            if (Ke386CpuidFlags & X86_FEATURE_PGE)
+            if (Ke386GlobalPagesEnabled)
 	    {
 	       Entry |= PA_GLOBAL;
 	    }
@@ -638,7 +637,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	       KEBUGCHECK(0);
 	    }
 	    Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-            if (Ke386CpuidFlags & X86_FEATURE_PGE)
+            if (Ke386GlobalPagesEnabled)
 	    {
 	       Entry |= PA_GLOBAL;
 	    }
@@ -1500,7 +1499,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
       NoExecute = TRUE;
    }
    Attributes &= 0xfff;
-   if (Ke386CpuidFlags & X86_FEATURE_PGE)
+   if (Ke386GlobalPagesEnabled)
    {
       Attributes |= PA_GLOBAL;
    }
@@ -1747,7 +1746,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
-      if (Ke386CpuidFlags & X86_FEATURE_PGE)
+      if (Ke386GlobalPagesEnabled)
       {
 	 Attributes |= PA_GLOBAL;
       }
@@ -1985,7 +1984,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
-      if (Ke386CpuidFlags & X86_FEATURE_PGE)
+      if (Ke386GlobalPagesEnabled)
       {
 	 Attributes |= PA_GLOBAL;
       }
@@ -2180,7 +2179,7 @@ MmInitGlobalKernelPageDirectory(VOID)
              0LL == MmGlobalKernelPageDirectoryForPAE[i] && 0LL != CurrentPageDirectory[i])
          {
             ExfpInterlockedExchange64(&MmGlobalKernelPageDirectoryForPAE[i], &CurrentPageDirectory[i]);
-	    if (Ke386CpuidFlags & X86_FEATURE_PGE)
+	    if (Ke386GlobalPagesEnabled)
 	    {
                MmGlobalKernelPageDirectoryForPAE[i] |= PA_GLOBAL;
 	    }
@@ -2196,7 +2195,7 @@ MmInitGlobalKernelPageDirectory(VOID)
              0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
          {
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
-	    if (Ke386CpuidFlags & X86_FEATURE_PGE)
+	    if (Ke386GlobalPagesEnabled)
 	    {
                MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
 	    }

@@ -35,16 +35,14 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
-ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
-ULONG Ke386Cpuid = 0x300;
+static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags;
 ULONG Ke386CacheAlignment;
-CHAR Ke386CpuidVendor[13] = {0,};
 CHAR Ke386CpuidModel[49] = {0,};
 ULONG Ke386L1CacheSize;
-ULONG Ke386L2CacheSize;
 BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386PaeEnabled = FALSE;
+BOOLEAN Ke386GlobalPagesEnabled = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -53,39 +51,43 @@ Ki386GetCpuId(VOID)
 {
    ULONG OrigFlags, Flags, FinalFlags;
    ULONG MaxCpuidLevel;
-   ULONG Dummy, Ebx, Ecx, Edx;
+   ULONG Dummy, Eax, Ebx, Ecx, Edx;
+   PKPCR Pcr = KeGetCurrentKPCR();
 
-   Ke386CpuidFlags = Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
+   Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
    Ke386CacheAlignment = 32;
 
    /* Try to toggle the id bit in eflags. */
-   __asm__ ("pushfl\n\t"
-	    "popl %0\n\t"
-	    : "=r" (OrigFlags));
+   Ke386SaveFlags(OrigFlags);
    Flags = OrigFlags ^ X86_EFLAGS_ID;
-   __asm__ ("pushl %1\n\t"
-	    "popfl\n\t"
-	    "pushfl\n\t"
-	    "popl %0\n\t"
-	    : "=r" (FinalFlags)
-	    : "r" (Flags));
+   Ke386RestoreFlags(Flags);
+   Ke386SaveFlags(FinalFlags);
    if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
    {
       /* No cpuid supported. */
+      Pcr->PrcbData.CpuID = FALSE;
+      Pcr->PrcbData.CpuType = 3;
       return;
    }
+   Pcr->PrcbData.CpuID = TRUE;
 
    /* Get the vendor name and the maximum cpuid level supported. */
-   Ki386Cpuid(0, &MaxCpuidLevel, (PULONG)&Ke386CpuidVendor[0], (PULONG)&Ke386CpuidVendor[8], (PULONG)&Ke386CpuidVendor[4]);
+   Ki386Cpuid(0, &MaxCpuidLevel, (PULONG)&Pcr->PrcbData.VendorString[0], (PULONG)&Pcr->PrcbData.VendorString[8], (PULONG)&Pcr->PrcbData.VendorString[4]);
    if (MaxCpuidLevel > 0)
    { 
       /* Get the feature flags. */
-      Ki386Cpuid(1, &Ke386Cpuid, &Ebx, &Ke386CpuidFlags2, &Ke386CpuidFlags);
+      Ki386Cpuid(1, &Eax, &Ebx, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
       /* Get the cache alignment, if it is available */
-      if (Ke386CpuidFlags & (1<<19))
+      if (Pcr->PrcbData.FeatureBits & (1<<19))
       {
          Ke386CacheAlignment = ((Ebx >> 8) & 0xff) * 8;
       }
+      Pcr->PrcbData.CpuType = (Eax >> 8) & 0xf;
+      Pcr->PrcbData.CpuStep = (Eax & 0xf) | ((Eax << 4) & 0xf00);
+   }
+   else
+   {
+      Pcr->PrcbData.CpuType = 4;
    }
 
    /* Get the maximum extended cpuid level supported. */
@@ -99,7 +101,7 @@ Ki386GetCpuId(VOID)
    /* Get the model name. */
    if (MaxCpuidLevel >= 0x80000004)
    {
-      PULONG v = (PULONG)&Ke386CpuidModel;
+      PULONG v = (PULONG)Ke386CpuidModel;
       Ki386Cpuid(0x80000002, v, v + 1, v + 2, v + 3);
       Ki386Cpuid(0x80000003, v + 4, v + 5, v + 6, v + 7);
       Ki386Cpuid(0x80000004, v + 8, v + 9, v + 10, v + 11);
@@ -120,7 +122,7 @@ Ki386GetCpuId(VOID)
    if (MaxCpuidLevel >= 0x80000006)
    {
       Ki386Cpuid(0x80000006, &Dummy, &Dummy, &Ecx, &Dummy);
-      Ke386L2CacheSize = Ecx >> 16;
+      Pcr->L2CacheSize = Ecx >> 16;
    }
 }
 
@@ -164,14 +166,14 @@ KeApplicationProcessorInit(VOID)
 
   DPRINT("KeApplicationProcessorInit()\n");
 
-  if (Ke386CpuidFlags & X86_FEATURE_PGE)
+  if (Ke386GlobalPagesEnabled)
   {
      /* Enable global pages */
      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
   }
   
   /* Enable PAE mode */
-  if (Ke386CpuidFlags & X86_FEATURE_PAE)
+  if (Ke386PaeEnabled)
   {
      MiEnablePAE(NULL);
   }
@@ -186,6 +188,8 @@ KeApplicationProcessorInit(VOID)
    */
   KiInitializeGdt(Pcr);
 
+  /* Get processor information. */
+  Ki386GetCpuId();
 
   /*
    * It is now safe to process interrupts
@@ -250,10 +254,11 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    /* Get processor information. */
    Ki386GetCpuId();
 
-   if (Ke386CpuidFlags & X86_FEATURE_PGE)
+   if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {
       ULONG Flags;
       /* Enable global pages */
+      Ke386GlobalPagesEnabled = TRUE;
       Ke386SaveFlags(Flags);
       Ke386DisableInterrupts();
       Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
@@ -288,8 +293,8 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
     * FIXME:
     *   Make the detection of the noexecute feature more portable.
     */
-   if(((Ke386Cpuid >> 8) & 0xf) == 0xf &&
-      0 == strcmp("AuthenticAMD", Ke386CpuidVendor))
+   if(KPCR->PrcbData.CpuType == 0xf &&
+      0 == strcmp("AuthenticAMD", KPCR->PrcbData.VendorString))
    {
       if (NoExecute)
       {
@@ -311,7 +316,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 
       
    /* Enable PAE mode */
-   if ((Pae && (Ke386CpuidFlags & X86_FEATURE_PAE)) || NoExecute)
+   if ((Pae && (KPCR->PrcbData.FeatureBits & X86_FEATURE_PAE)) || NoExecute)
    {
       MiEnablePAE((PVOID*)LastKernelAddress);
       Ke386PaeEnabled = TRUE;
@@ -321,11 +326,13 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 VOID INIT_FUNCTION
 KeInit2(VOID)
 {
+   PKPCR Pcr = KeGetCurrentKPCR();
+
    KeInitializeBugCheck();
    KeInitializeDispatcher();
    KeInitializeTimerImpl();
 
-   if (Ke386CpuidFlags & X86_FEATURE_PAE)
+   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_PAE)
    {
       DPRINT1("CPU supports PAE mode\n");
       if (Ke386Pae)
@@ -341,9 +348,9 @@ KeInit2(VOID)
          DPRINT1("CPU doesn't run in PAE mode\n");
       }
    }
-   if (Ke386CpuidVendor[0])
+   if (Pcr->PrcbData.VendorString[0])
    {
-      DPRINT1("CPU Vendor: %s\n", Ke386CpuidVendor);
+      DPRINT1("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
    }
    if (Ke386CpuidModel[0])
    {
@@ -355,30 +362,32 @@ KeInit2(VOID)
    {
       DPRINT1("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
-   if (Ke386L2CacheSize)
+   if (Pcr->L2CacheSize)
    {
-      DPRINT1("Ke386L2CacheSize: %dkB\n", Ke386L2CacheSize);
+      DPRINT1("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
    }
 }
 
 VOID INIT_FUNCTION
 Ki386SetProcessorFeatures(VOID)
 {
+  PKPCR Pcr = KeGetCurrentKPCR();
+
   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
   SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-    (Ke386CpuidFlags & X86_FEATURE_CX8);
+    (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8);
   SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-    (Ke386CpuidFlags & X86_FEATURE_MMX);
+    (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX);
   SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
   SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] = 
-    (Ke386CpuidFlags & X86_FEATURE_SSE);
+    (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE);
   SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
     (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
   SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-    (Ke386CpuidFlags & X86_FEATURE_TSC);
+    (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC);
   SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386PaeEnabled;
   SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-    (Ke386CpuidFlags & X86_FEATURE_SSE2);
+    (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
 }

@@ -10,7 +10,7 @@
 .globl _KeFlushCurrentTb@0
 _KeFlushCurrentTb@0:
     /* Check for global page support */	
-	testl	$X86_FEATURE_PGE, (_Ke386CpuidFlags)
+	testb   $0xff, (_Ke386GlobalPagesEnabled)
 	jz	  .L1
 
 	/* Modifying the PSE, PGE or PAE Flag in CR4 causes the TLB to be flushed */
