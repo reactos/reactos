@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.154 2004/11/21 10:59:11 weiden Exp $
+/* $Id: process.c,v 1.155 2004/11/21 13:18:19 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -2194,7 +2194,7 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
 VOID
 PsUnlockProcess(PEPROCESS Process)
 {
-  assert(Process->LockOwner == KeGetCurrentThread());
+  ASSERT(Process->LockOwner == KeGetCurrentThread());
   
   if(InterlockedDecrement((LONG*)&Process->LockCount) == 0)
   {
