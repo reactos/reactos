@@ -54,7 +54,7 @@ ControlService@12
 ConvertSidToStringSidA@8
 ConvertSidToStringSidW@8
 CopySid@12
-CreatePrivateObjectSecurity@24
+;CreatePrivateObjectSecurity@24
 CreateProcessAsUserA@44
 CreateProcessAsUserW@44
 CreateServiceA@52
@@ -93,7 +93,7 @@ DeleteService@4
 ;DenyAccessRightsA
 ;DenyAccessRightsW
 DeregisterEventSource@4
-DestroyPrivateObjectSecurity@4
+;DestroyPrivateObjectSecurity@4
 DuplicateToken@12
 DuplicateTokenEx@24
 ;ElfBackupEventLogFileA@8
@@ -157,12 +157,13 @@ GetNamedSecurityInfoA@32
 GetNamedSecurityInfoW@32
 GetNumberOfEventLogRecords@8
 GetOldestEventLogRecord@8
-GetPrivateObjectSecurity@20
+;GetPrivateObjectSecurity@20
 GetSecurityDescriptorControl@12
 GetSecurityDescriptorDacl@16
 GetSecurityDescriptorGroup@12
 GetSecurityDescriptorLength@4
 GetSecurityDescriptorOwner@12
+GetSecurityDescriptorRMControl@8
 GetSecurityDescriptorSacl@16
 GetSecurityInfo@32
 GetSecurityInfoExA@36
@@ -379,11 +380,12 @@ SetFileSecurityW@12
 SetKernelObjectSecurity@12
 SetNamedSecurityInfoA@28
 SetNamedSecurityInfoW@28
-SetPrivateObjectSecurity@20
+;SetPrivateObjectSecurity@20
 SetSecurityDescriptorControl@12
 SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12
 SetSecurityDescriptorOwner@12
+SetSecurityDescriptorRMControl@8
 SetSecurityDescriptorSacl@16
 SetSecurityInfo@28
 SetServiceBits@16
