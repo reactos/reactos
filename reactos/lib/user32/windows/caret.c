@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.3 2003/10/17 20:31:56 weiden Exp $
+/* $Id: caret.c,v 1.4 2003/10/17 20:50:59 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -131,7 +131,7 @@ WINBOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
 {
-  return (WINBOOL)NtUserCallTwoParam(TWOPARAM_ROUTINE_SETCARETPOS, (DWORD)X, (DWORD)Y);
+  return (WINBOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS);
 }
 
 
