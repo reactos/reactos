@@ -260,6 +260,27 @@ BEGIN
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(zero-length binary value)"
+    IDS_DEFAULT_VALUE_NAME  "(Default)"
+    IDS_VALUE_NOT_SET       "(value not set)"
+    IDS_UNKNOWN_TYPE        "Unknown type: (0x%lx)"
+    IDS_MY_COMPUTER         "My Computer"
+    IDS_IMPORT_REG_FILE     "Import Registry File"
+    IDS_EXPORT_REG_FILE     "Export Registry File"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Registration Files"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registration Files (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "All Files (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
 /*****************************************************************/
 
 

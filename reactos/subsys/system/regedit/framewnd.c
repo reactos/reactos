@@ -207,14 +207,48 @@ TCHAR CustomFilterBuffer[MAX_CUSTOM_FILTER_SIZE];
 TCHAR FileNameBuffer[_MAX_PATH];
 TCHAR FileTitleBuffer[_MAX_PATH];
 
+typedef struct
+{
+  UINT DisplayID;
+  UINT FilterID;
+} FILTERPAIR, *PFILTERPAIR;
+
+void
+BuildFilterStrings(TCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
+{
+  int i, c;
+  
+  c = 0;
+  for(i = 0; i < PairCount; i++)
+  {
+    c += LoadString(hInst, Pairs[i].DisplayID, &Filter[c], 255 * sizeof(TCHAR));
+    Filter[++c] = '\0';
+    c += LoadString(hInst, Pairs[i].FilterID, &Filter[c], 255 * sizeof(TCHAR));
+    Filter[++c] = '\0';
+  }
+  Filter[++c] = '\0';
+}
+
 static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
 {
+    FILTERPAIR FilterPairs[3];
+    static TCHAR Filter[1024];
+    
     memset(pofn, 0, sizeof(OPENFILENAME));
     pofn->lStructSize = sizeof(OPENFILENAME);
     pofn->hwndOwner = hWnd;
     pofn->hInstance = hInst;
-
-    pofn->lpstrFilter = _T("Registration Files\0*.reg\0Win9x/NT4 Registration Files (REGEDIT4)\0*.reg\0All Files (*.*)\0*.*\0\0");
+    
+    /* create filter string */
+    FilterPairs[0].DisplayID = IDS_FLT_REGFILES;
+    FilterPairs[0].FilterID = IDS_FLT_REGFILES_FLT;
+    FilterPairs[1].DisplayID = IDS_FLT_REGEDIT4;
+    FilterPairs[1].FilterID = IDS_FLT_REGEDIT4_FLT;
+    FilterPairs[2].DisplayID = IDS_FLT_ALLFILES;
+    FilterPairs[2].FilterID = IDS_FLT_ALLFILES_FLT;
+    BuildFilterStrings(Filter, FilterPairs, sizeof(FilterPairs) / sizeof(FILTERPAIR));
+    
+    pofn->lpstrFilter = Filter;
     pofn->lpstrCustomFilter = CustomFilterBuffer;
     pofn->nMaxCustFilter = MAX_CUSTOM_FILTER_SIZE;
     pofn->nFilterIndex = 0;
@@ -240,9 +274,11 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
 static BOOL ImportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
+    TCHAR Caption[128];
 
     InitOpenFileName(hWnd, &ofn);
-    ofn.lpstrTitle = _T("Import Registry File");
+    LoadString(hInst, IDS_IMPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
+    ofn.lpstrTitle = Caption;
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn)) {
         /* FIXME - convert to ascii */
@@ -279,10 +315,12 @@ static BOOL ExportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];
+    TCHAR Caption[128];
 
     ExportKeyPath[0] = _T('\0');
     InitOpenFileName(hWnd, &ofn);
-    ofn.lpstrTitle = _T("Export Registry File");
+    LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
+    ofn.lpstrTitle = Caption;
     /*    ofn.lCustData = ;*/
     ofn.Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER;
     ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
@@ -557,7 +595,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 {
     switch (message) {
     case WM_CREATE:
-        CreateWindowEx(0, szChildClass, _T("regedit child window"), WS_CHILD | WS_VISIBLE,
+        CreateWindowEx(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                        hWnd, (HMENU)0, hInst, 0);
         break;

@@ -201,20 +201,29 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
             break;
-        case REG_NONE:
-        case REG_BINARY: {
+        default:
+	    {
                 unsigned int i;
                 LPBYTE pData = (LPBYTE)ValBuf;
-                LPTSTR strBinary = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(TCHAR) * 3 + 1);
-                for (i = 0; i < dwCount; i++)
-                    wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
-                strBinary[dwCount * 3] = 0;
-                ListView_SetItemText(hwndLV, index, 2, strBinary);
-                HeapFree(GetProcessHeap(), 0, strBinary);
+                LPTSTR strBinary;
+                if(dwCount > 0)
+                {
+		    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + 1);
+                    for (i = 0; i < dwCount; i++)
+                    {
+                        wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
+                    }
+                    strBinary[dwCount * 3] = 0;
+                    ListView_SetItemText(hwndLV, index, 2, strBinary);
+                    HeapFree(GetProcessHeap(), 0, strBinary);
+                }
+                else
+                {
+                    TCHAR szText[128];
+		    LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
+		    ListView_SetItemText(hwndLV, index, 2, szText);
+                }
             }
-            break;
-        default:
-            ListView_SetItemText(hwndLV, index, 2, _T("(value)"));
             break;
         }
     }
@@ -281,7 +290,8 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 
     switch (plvdi->item.iSubItem) {
     case 0:
-        plvdi->item.pszText = _T("(Default)");
+        LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+	plvdi->item.pszText = buffer;
         break;
     case 1:
         switch (((LINE_INFO*)plvdi->item.lParam)->dwValType) {
@@ -318,14 +328,18 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_NONE:
             plvdi->item.pszText = _T("REG_NONE");
             break;
-        default:
-            wsprintf(buffer, _T("unknown(0x%lx)"), ((LINE_INFO*)plvdi->item.lParam)->dwValType);
+        default: {
+            TCHAR buf2[200];
+	    LoadString(hInst, IDS_UNKNOWN_TYPE, buf2, sizeof(buf2)/sizeof(TCHAR));
+	    wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
             plvdi->item.pszText = buffer;
             break;
+          }
         }
         break;
     case 2:
-        plvdi->item.pszText = _T("(value not set)");
+        LoadString(hInst, IDS_VALUE_NOT_SET, buffer, sizeof(buffer)/sizeof(TCHAR));
+	plvdi->item.pszText = buffer;
         break;
     case 3:
         plvdi->item.pszText = _T("");

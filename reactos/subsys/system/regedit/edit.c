@@ -111,7 +111,9 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         }
         else
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+          TCHAR buffer[255];
+	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -174,7 +176,9 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
         }
         else
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+          TCHAR buffer[255];
+	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -291,7 +295,9 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         }
         else
         {
-            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+	    TCHAR buffer[255];
+	    LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+	    SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
         _stprintf (ValueString, _T("%lx"), dwordValueData);
@@ -404,7 +410,9 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         }
         else
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+          TCHAR buffer[255];
+	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
         HexEdit_LoadBuffer(hwndValue, binValueData, valueDataLen);

@@ -31,5 +31,7 @@
 
 void ShowAboutBox(HWND hWnd)
 {
-    ShellAbout(hWnd, _T("Registry Explorer"), _T(""), LoadIcon(hInst, MAKEINTRESOURCE(IDI_REGEDIT)));
+    TCHAR AppStr[255];
+    LoadString(hInst, IDS_APP_TITLE, AppStr, sizeof(AppStr)/sizeof(TCHAR));
+    ShellAbout(hWnd, AppStr, _T(""), LoadIcon(hInst, MAKEINTRESOURCE(IDI_REGEDIT)));
 }

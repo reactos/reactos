@@ -134,15 +134,21 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message) {
     case WM_CREATE:
-        g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), 0, sizeof(ChildWnd));
+    {
+        TCHAR buffer[MAX_PATH];
+        /* load "My Computer" string */
+        LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
+        
+	g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), 0, sizeof(ChildWnd));
         if (!pChildWnd) return 0;
-        _tcsncpy(pChildWnd->szPath, _T("My Computer"), MAX_PATH);
+        _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
         pChildWnd->nSplitPos = 250;
         pChildWnd->hWnd = hWnd;
         pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, TREE_WINDOW);
         pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW/*, pChildWnd->szPath*/);
         SetFocus(pChildWnd->hTreeWnd);
         break;
+    }
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
             goto def;
