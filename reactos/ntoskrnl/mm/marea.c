@@ -370,7 +370,7 @@ ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
    while (current_entry != ListHead)
    {
       current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-      if (current->BaseAddress <= Address && Address < current->BaseAddress + current->Length)
+      if (current->BaseAddress <= Address && (char*)Address < (char*)current->BaseAddress + current->Length)
       {
          return 0;
       }
@@ -410,7 +410,8 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
                  PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
-   PVOID Address, EndAddress;
+   char* Address;
+   char* EndAddress;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
@@ -429,7 +430,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    {
       KeAttachProcess(AddressSpace->Process);
    }
-   EndAddress = MemoryArea->BaseAddress + PAGE_ROUND_UP(MemoryArea->Length); 
+   EndAddress = (char*)MemoryArea->BaseAddress + PAGE_ROUND_UP(MemoryArea->Length); 
    for (Address = MemoryArea->BaseAddress; Address < EndAddress; Address += PAGE_SIZE)
    {
 
