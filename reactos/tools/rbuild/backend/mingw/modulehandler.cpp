@@ -857,7 +857,7 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 	else
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s -o %s %s %s %s\n\n",
+		          "\t%s %s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          target.c_str (),
@@ -867,7 +867,7 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 	}
 
 	fprintf ( fMakefile,
-		      "\t${rsym} %s %s\n",
+		      "\t${rsym} %s %s\n\n",
 		      target.c_str (),
 		      target.c_str () );
 }
@@ -1405,10 +1405,10 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${rm} %s\n\n",
+	          "\t${rm} %s\n",
 	          temp_exp.c_str () );
 	fprintf ( fMakefile,
-		      "\t${rsym} %s %s\n",
+		      "\t${rsym} %s %s\n\n",
 		      target.c_str (),
 		      target.c_str () );
 }
