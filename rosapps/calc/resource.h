@@ -5,6 +5,7 @@
 #define ID_MENU_EDIT                 0
 #define ID_MENU_VIEW                 1
 #define ID_MENU_HELP                 2
+#define IDI_CALC                    100
 #define IDD_STANDARD                 101
 #define IDD_SCIENTIFIC               102
 #define IDR_CALC_STANDARD            103

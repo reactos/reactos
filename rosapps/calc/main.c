@@ -22,6 +22,7 @@
     
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
+#include <shellapi.h>
 #include <tchar.h>
 
 #include "main.h"
@@ -134,7 +135,9 @@ void OnHelpTopics(void)
 
 void OnHelpAbout(void)
 {
+    ShellAbout(hDlgWnd, _T("ReactOS Calculator"), _T(""), LoadIcon(hInst, MAKEINTRESOURCE(IDI_CALC)));
 }
+
 void OnButtonClick(int ButtonID)
 {
 }
