@@ -96,6 +96,7 @@ DPRINT("CmiObjectParse %s\n",cPath);
        FoundObject->BlockOffset = BlockOffset;
        FoundObject->RegistryFile = ParsedKey->RegistryFile;
        CmiAddKeyToList(ParsedKey,FoundObject);
+DPRINT("CmiObjectParse(): created object 0x%x\n",FoundObject);
    }
    else
      ObReferenceObjectByPointer(FoundObject,
@@ -150,7 +151,7 @@ CmiObjectDelete(PVOID DeletedObject)
 {
   PKEY_OBJECT  KeyObject;
 
-DPRINT("delete object key\n");
+  DPRINT("delete object key\n");
   KeyObject = (PKEY_OBJECT) DeletedObject;
   if(!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
   {
@@ -158,7 +159,7 @@ DPRINT("delete object key\n");
   }
   if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
     {
-DPRINT1("delete really key\n");
+      DPRINT("delete really key\n");
       CmiDestroyBlock(KeyObject->RegistryFile,
                          KeyObject->KeyBlock,
 			 KeyObject->BlockOffset);
@@ -173,7 +174,7 @@ DPRINT1("delete really key\n");
 void
 CmiAddKeyToList(PKEY_OBJECT ParentKey,PKEY_OBJECT  NewKey)
 {
- KIRQL  OldIrql;
+  KIRQL  OldIrql;
   
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
   if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
@@ -190,10 +191,11 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,PKEY_OBJECT  NewKey)
   /* FIXME : please maintain the list in alphabetic order */
   /*      to allow a dichotomic search */
   ParentKey->SubKeys[ParentKey->NumberOfSubKeys++] = NewKey;
+DPRINT("Reference parent key: 0x%x\n", ParentKey);
   ObReferenceObjectByPointer(ParentKey,
-			      STANDARD_RIGHTS_REQUIRED,
-			      NULL,
-			      UserMode);
+			     STANDARD_RIGHTS_REQUIRED,
+			     NULL,
+			     UserMode);
   NewKey->ParentKey = ParentKey;
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 }
@@ -218,6 +220,7 @@ CmiRemoveKeyFromList(PKEY_OBJECT  KeyToRemove)
 		,(ParentKey->NumberOfSubKeys-Index-1)*sizeof(PKEY_OBJECT));
       ParentKey->NumberOfSubKeys--;
       KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+DPRINT("Dereference parent key: 0x%x\n",ParentKey);
       ObDereferenceObject(ParentKey);
       return STATUS_SUCCESS;
     }
