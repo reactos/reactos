@@ -7,3 +7,5 @@
 *.map
 *.tmp
 temp.exp
+wavemap.spec.def
+Makefile.ros
