@@ -21,18 +21,17 @@
 - implement more than one column for very crowded start menus
 - Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
 
-- autostart doesn't on NT4 ?
+- autostart doesn't work on NT4 ?
 
 - Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
   with pressing Win-key, but can't close with another hit of Win-key.
 
 - Despite of settings, the clock's always shown I set my Win-Exp to hide the clock shown in
   the taskbar, but the ROS-Exp ignores the setting and always shows the clock.
-  Yes, ROS epxlorer doesn't read many settings from the registry currently,
+  Yes, ROS explorer doesn't read many settings from the registry currently,
   as it doesn't have a way to configure them. (missing configuration dialogs)
 
 - Vollbildfenster suchen -> Taskleiste ausblenden
-- Fenster-Aktivierung nach Desktop-Umschaltung
 - Desktop-Manager: Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops; Desktop-Namen
 - neuer Startmenü-Eintrag: "Filemanager" neben "Explore"  ->  Anzeige von C: und D:
 
