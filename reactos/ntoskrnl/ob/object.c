@@ -1,12 +1,14 @@
-/* $Id: object.c,v 1.67 2003/09/14 10:48:39 hbirr Exp $
+/* $Id: object.c,v 1.68 2003/09/25 05:12:24 vizzini Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/ob/object.c
  * PURPOSE:       Implements generic object managment functions
- * PROGRAMMER:    David Welch (welch@cwcom.net)
+ * PROGRAMMERS    David Welch (welch@cwcom.net), Skywing (skywing@valhallalegends.com)
  * UPDATE HISTORY:
  *               10/06/98: Created
+ *               09/13/03: Fixed various ObXxx routines to not call retention
+ *                         checks directly at a raised IRQL.
  */
 
 /* INCLUDES *****************************************************************/
@@ -609,6 +611,12 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
 {
 //  DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
 //	  Header,Header->RefCount,Header->HandleCount);
+  if(KeGetCurrentIrql() != PASSIVE_LEVEL)
+  {
+    DPRINT("ObpPerformRetentionChecks called at an unsupported IRQL.  Use ObpPerformRetentionChecksDpcLevel instead.\n");
+	KEBUGCHECK(0);
+  }
+
   
   if (Header->RefCount < 0)
     {
@@ -649,6 +657,59 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
   return(STATUS_SUCCESS);
 }
 
+typedef struct _RETENTION_CHECK_PARAMS {
+  WORK_QUEUE_ITEM WorkItem;
+  POBJECT_HEADER ObjectHeader;
+} RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
+
+VOID
+STDCALL
+ObpPerformRetentionChecksWorkRoutine(
+  IN PVOID Parameter
+  )
+{
+  PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
+  /* ULONG Tag; */ /* See below */
+
+  assert(Params);
+  assert(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
+
+  /* Turn this on when we have ExFreePoolWithTag
+  Tag = Params->ObjectHeader->ObjectType->Tag; */
+  ObpPerformRetentionChecks(Params->ObjectHeader);
+  ExFreePool(Params);
+  /* ExFreePoolWithTag(Params, Tag); */
+}
+
+static NTSTATUS
+ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader)
+{
+  switch(KeGetCurrentIrql()) {
+
+	case PASSIVE_LEVEL:
+        return ObpPerformRetentionChecks(ObjectHeader);
+
+	case APC_LEVEL:
+	case DISPATCH_LEVEL:
+        {
+		  /* Can we get rid of this NonPagedPoolMustSucceed call and still be a 'must succeed' function?  I don't like to bugcheck on no memory! */
+          PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)ExAllocatePoolWithTag(NonPagedPoolMustSucceed, sizeof(RETENTION_CHECK_PARAMS),
+			  ObjectHeader->ObjectType->Tag);
+		  Params->ObjectHeader = ObjectHeader;
+		  ExInitializeWorkItem(&Params->WorkItem, ObpPerformRetentionChecksWorkRoutine, (PVOID)Params);
+		  ExQueueWorkItem(&Params->WorkItem, CriticalWorkQueue);
+        }
+        return STATUS_PENDING;
+
+	default:
+        DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported IRQL %u!\n", KeGetCurrentIrql());
+        KEBUGCHECK(0);
+        return STATUS_UNSUCCESSFUL;
+
+  }
+
+}
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -681,7 +742,7 @@ ObfReferenceObject(IN PVOID Object)
   }
   InterlockedIncrement(&Header->RefCount);
 
-  ObpPerformRetentionChecks(Header);
+  ObpPerformRetentionChecksDpcLevel(Header);
 }
 
 
@@ -726,7 +787,7 @@ ObfDereferenceObject(IN PVOID Object)
   
   InterlockedDecrement(&Header->RefCount);
   
-  ObpPerformRetentionChecks(Header);
+  ObpPerformRetentionChecksDpcLevel(Header);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.170 2003/08/27 21:28:08 dwelch Exp $
+/* $Id: main.c,v 1.171 2003/09/25 05:12:24 vizzini Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -501,8 +501,6 @@ ExpInitializeExecutive(VOID)
 
   PiInitProcessManager();
 
-  KdInit1();
-
   if (KdPollBreakIn ())
     {
       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
@@ -536,6 +534,7 @@ ExpInitializeExecutive(VOID)
   HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   ExInit();
+  KdInit1();
   IoInit();
   PoInit();
   LdrInitModuleManagement();
