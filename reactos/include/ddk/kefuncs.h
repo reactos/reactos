@@ -720,7 +720,7 @@ KeCapturePersistentThreadState(
 BOOLEAN
 STDCALL
 KeRemoveSystemServiceTable(
-    IN PUCHAR Number
+    IN ULONG TableIndex
 );
 
 NTSTATUS

@@ -37,7 +37,7 @@ else
 OBJECTS_KDBG :=
 endif
 ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o dbg/profile.o
+OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o
 endif
 
 TARGET_ASFLAGS = -I./include
@@ -57,9 +57,6 @@ endif
 ifneq ($(DBG), 0)
 TARGET_CFLAGS += -DDBG
 endif
-
-# enable thread event pair features (NT4 only!)
-# TARGET_CFLAGS += -D_ENABLE_THRDEVTPAIR
 
 #
 # Javascript extension for kdb
@@ -238,24 +235,20 @@ OBJECTS_PS = \
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
-	ex/btree.o \
 	ex/callback.o \
 	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
 	ex/fmutex.o \
-	ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
 	ex/lookas.o \
 	ex/mutant.o \
-	ex/napi.o \
 	ex/power.o \
 	ex/profile.o \
 	ex/resource.o \
 	ex/rundown.o \
-	ex/stree.o \
 	ex/sem.o \
 	ex/synch.o \
 	ex/sysinfo.o \
@@ -548,8 +541,6 @@ $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
   $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc
-
-ex/napi.o: ex/zw.S $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 

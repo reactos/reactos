@@ -244,7 +244,7 @@ KdInitSystem(ULONG BootPhase,
 #if defined(KDBG) || defined(DBG)
     else if (!_strnicmp(p2, "PROFILE", 7)  && BootPhase > 0)
       {
-        KdbInitProfiling();
+        //KdbInitProfiling();
       }
 #endif /* KDBG */
       p1 = p2;
