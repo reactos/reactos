@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.29 2004/11/21 16:34:55 navaraf Exp $ */
+/* $Id: fsfuncs.h,v 1.30 2004/11/21 17:47:22 navaraf Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -336,11 +336,11 @@ FsRtlInitializeFileLock (
 	);
 
 VOID STDCALL
-FsRtlInitializeLargeMcb(IN PLARGE_MCB *Mcb,
+FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType);
 
 VOID STDCALL
-FsRtlInitializeMcb (IN PMCB        *Mcb,
+FsRtlInitializeMcb (IN PMCB         Mcb,
 		    IN POOL_TYPE    PoolType);
 
 VOID STDCALL
