@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2000/11/20 19:59:13 ekohl Exp $
+# $Id: Makefile,v 1.11 2001/06/22 12:29:40 ekohl Exp $
 #
 # TDI.SYS build spec
 #
@@ -6,7 +6,7 @@ PATH_TO_TOP = ../../../
 
 TARGETNAME=tdi
 
-CFLAGS = 
+CFLAGS = -D__NTDRIVER__
 
 OBJECTS_CTE = cte/stubs.o cte/string.o
 OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o tdi/dereg.o

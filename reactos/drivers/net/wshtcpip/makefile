@@ -2,7 +2,7 @@
 
 PATH_TO_TOP = ../../..
 
-CFLAGS = -I./ -DUNICODE
+CFLAGS = -D__NTDRIVER__ -I./ -DUNICODE
 
 TARGETNAME=wshtcpip
 

@@ -1,11 +1,13 @@
-# $Id: makefile,v 1.10 2000/11/20 19:59:11 ekohl Exp $
+# $Id: makefile,v 1.11 2001/06/22 12:26:18 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
+
 TARGET=vidport
+
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 all: $(TARGET).sys vidport.a
 

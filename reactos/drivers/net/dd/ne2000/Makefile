@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.7 2001/01/17 17:14:34 jean Exp $
+# $Id: Makefile,v 1.8 2001/06/22 12:28:52 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../../..
 
-CFLAGS = -Iinclude
+CFLAGS = -D__NTDRIVER__ -Iinclude
 
 TARGETNAME = ne2000
 

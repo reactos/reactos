@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2000/11/20 19:59:11 ekohl Exp $
+# $Id: makefile,v 1.4 2001/06/22 12:28:07 ekohl Exp $
 #
 #
 TARGET = mouclass
@@ -7,7 +7,7 @@ PATH_TO_TOP = ../../..
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -O2 -I.
+CFLAGS = -D__NTDRIVER__ -O2 -I.
 
 all: $(TARGET).sys
 

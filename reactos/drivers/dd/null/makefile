@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2000/11/20 19:59:10 ekohl Exp $
+# $Id: makefile,v 1.11 2001/06/22 12:25:04 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -6,7 +6,7 @@ PATH_TO_TOP = ../../..
 TARGETNAME=null
 OBJECTS= $(TARGETNAME).o $(TARGETNAME).coff ../../../ntoskrnl/ntoskrnl.a
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 all: $(TARGETNAME).sys
 

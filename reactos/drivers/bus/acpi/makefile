@@ -2,7 +2,7 @@ PATH_TO_TOP = ../../..
 
 TARGET=acpi
 
-CFLAGS = -I./include -I./ospm/include
+CFLAGS = -D__NTDRIVER__ -I./include -I./ospm/include
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 

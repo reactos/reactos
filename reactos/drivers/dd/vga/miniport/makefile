@@ -1,8 +1,8 @@
-# $Id: makefile,v 1.5 2000/11/20 19:59:11 ekohl Exp $
+# $Id: makefile,v 1.6 2001/06/22 12:26:09 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../../..
-CFLAGS = 
+CFLAGS = -D__NTDRIVER__
 
 MP_OBJECTS = vgamp.o initvga.o vgavideo.o vgamp.coff ../../../../ntoskrnl/ntoskrnl.a ../../vidport/vidport.a
 

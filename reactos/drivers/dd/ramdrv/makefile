@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2001/06/18 03:10:00 phreak Exp $
+# $Id: makefile,v 1.2 2001/06/22 12:25:24 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,7 +7,7 @@ TARGET=ramdrv
 
 OBJECTS = ramdrv.o ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -I.
+CFLAGS = -D__NTDRIVER__ -I.
 
 all: $(TARGET).sys
 

@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.9 2000/11/20 19:59:10 ekohl Exp $
+# $Id: makefile,v 1.10 2001/06/22 12:23:49 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
 TARGET = beep
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 OBJECTS = beep.o beep.coff ../../../ntoskrnl/ntoskrnl.a
 

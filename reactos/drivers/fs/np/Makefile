@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2001/06/12 12:35:04 ekohl Exp $
+# $Id: Makefile,v 1.8 2001/06/22 12:27:02 ekohl Exp $
 #
 # Named Pipes File System
 #
@@ -6,7 +6,7 @@ PATH_TO_TOP = ../../..
 
 TARGETNAME=npfs
 
-#BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 OBJECTS = create.o finfo.o fsctrl.o mount.o rw.o volume.o npfs.coff
 

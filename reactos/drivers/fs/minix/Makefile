@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001/06/13 10:59:50 ekohl Exp $
+# $Id: Makefile,v 1.5 2001/06/22 12:26:38 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,7 +7,7 @@ TARGET=minixfs
 
 OBJECTS = $(TARGET).o minix.coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -I. -g
+CFLAGS = -D__NTDRIVER__ -I. -g
 
 all: $(TARGET).sys
 

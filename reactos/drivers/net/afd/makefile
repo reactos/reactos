@@ -4,7 +4,7 @@ PATH_TO_TOP = ../../..
 
 TARGETNAME=afd
 
-CFLAGS = -I./include -DDBG
+CFLAGS = -D__NTDRIVER__ -I./include -DDBG
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 AFD_OBJECTS = afd/afd.o afd/dispatch.o afd/event.o afd/opnclose.o afd/rdwr.o \

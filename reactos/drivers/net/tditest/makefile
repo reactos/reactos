@@ -4,7 +4,7 @@ PATH_TO_TOP = ../../..
 
 TARGETNAME=tditest
 
-CFLAGS = -I./include 
+CFLAGS = -D__NTDRIVER__ -I./include 
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 TDITEST_OBJECTS = tditest/tditest.o

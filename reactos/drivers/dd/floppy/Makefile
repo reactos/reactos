@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2001/03/31 15:53:56 phreak Exp $
+# $Id: Makefile,v 1.7 2001/06/22 12:24:04 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,7 +7,7 @@ TARGET=floppy
 
 OBJECTS = floppy.o isr.o dpc.o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -I.
+CFLAGS = -D__NTDRIVER__ -I.
 
 all: $(TARGET).sys
 

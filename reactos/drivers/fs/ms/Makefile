@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2001/05/06 19:28:50 ea Exp $
+# $Id: Makefile,v 1.3 2001/06/22 12:26:46 ekohl Exp $
 #
 # Mailslot File System
 #
@@ -9,6 +9,8 @@ TARGETNAME=msfs
 OBJECTS = create.o finfo.o fsctrl.o msfs.o rw.o msfs.coff
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+
+CFLAGS = -D__NTDRIVER__
 
 all: $(TARGETNAME).sys
 

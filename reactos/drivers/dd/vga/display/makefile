@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.14 2001/05/02 12:29:07 jfilby Exp $
+# $Id: makefile,v 1.15 2001/06/22 12:26:01 ekohl Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
 PATH_TO_TOP = ../../../..
 TARGET=vgaddi
 
-CFLAGS = -I.
+CFLAGS = -D__NTDRIVER__ -I.
  
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)

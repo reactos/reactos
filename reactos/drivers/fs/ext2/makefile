@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2001/06/13 10:59:29 ekohl Exp $
+# $Id: makefile,v 1.11 2001/06/22 12:26:30 ekohl Exp $
 #
 # Linux Ext2 IFS Driver
 #
@@ -11,7 +11,7 @@ OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o quota.o security.o \
 
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -g -Wall 
+CFLAGS = -D__NTDRIVER__ -g -Wall 
 
 all: $(TARGETNAME).sys
 

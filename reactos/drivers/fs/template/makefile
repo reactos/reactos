@@ -3,7 +3,7 @@
 #
 OBJECTS = template.o
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 all: tfsd.o
 

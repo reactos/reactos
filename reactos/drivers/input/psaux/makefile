@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2000/11/20 19:59:12 ekohl Exp $
+# $Id: makefile,v 1.3 2001/06/22 12:28:16 ekohl Exp $
 #
 #
 TARGET = psaux
@@ -7,7 +7,7 @@ PATH_TO_TOP = ../../..
 
 OBJECTS = $(TARGET).o  controller.o mouse.o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -O2 -I.
+CFLAGS = -D__NTDRIVER__ -O2 -I.
 
 all: $(TARGET).sys
 

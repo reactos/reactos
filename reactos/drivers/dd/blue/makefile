@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.15 2000/09/12 10:12:12 jean Exp $
+# $Id: makefile,v 1.16 2001/06/22 12:23:56 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
 TARGET = blue
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = -D__NTDRIVER__ -I../../../include
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 

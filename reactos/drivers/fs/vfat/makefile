@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.30 2001/06/15 11:15:32 ekohl Exp $
+# $Id: makefile,v 1.31 2001/06/22 12:27:48 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -10,7 +10,7 @@ OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
-CFLAGS = -g -Wall -Werror
+CFLAGS = -D__NTDRIVER__ -g -Wall -Werror
 
 all: $(TARGET).sys.unstripped $(TARGET).sys
 
@@ -27,7 +27,7 @@ ifeq ($(DOSCLI),yes)
 	- $(RM) $(TARGET).sys
 	- $(RM) $(TARGET).sys.unstripped
 else
-	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
+	- $(RM) *.o $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 endif
 
 .phony: clean

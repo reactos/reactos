@@ -2,7 +2,7 @@ PATH_TO_TOP = ../../..
 
 TARGET=isapnp
 
-CFLAGS = -I.
+CFLAGS = -D__NTDRIVER__ -I.
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
