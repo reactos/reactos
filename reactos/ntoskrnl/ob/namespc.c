@@ -68,9 +68,9 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    return(STATUS_SUCCESS);
 }
 
-VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-			 POBJECT Object,
-			 PWSTR Name)
+VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+				 POBJECT Object,
+				 PWSTR Name)
 /*
  * FUNCTION: Add an entry to a namespace directory
  * ARGUMENTS:
