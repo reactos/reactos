@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: desk.c,v 1.2 2004/10/11 21:08:04 weiden Exp $
+/* $Id: desk.c,v 1.3 2004/10/13 10:17:41 ekohl Exp $
  *
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/desk.c
@@ -33,15 +33,10 @@
 #include <tchar.h>
 #include <windows.h>
 
-#ifdef _MSC_VER
 #include <commctrl.h>
 #include <cpl.h>
-#endif
 
-#include <stdlib.h>
-#include <tchar.h>
 #include <process.h>
-#include <stdio.h>
 
 #include "resource.h"
 #include "desk.h"
@@ -53,6 +48,8 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+
 HINSTANCE hApplet = 0;
 
 /* Applets */
@@ -69,46 +66,7 @@ BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg)
 	{
-    case WM_INITDIALOG:	
-		break;
-	case WM_COMMAND:
-		break;
-	}
-	return FALSE;
-}
-/* Property page dialog callback */
-INT_PTR CALLBACK
-ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch(uMsg)
-	{
-    case WM_INITDIALOG:	
-		break;
-	case WM_COMMAND:
-		break;
-	}
-	return FALSE;
-}
-/* Property page dialog callback */
-INT_PTR CALLBACK
-AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch(uMsg)
-	{
-    case WM_INITDIALOG:	
-		break;
-	case WM_COMMAND:
-		break;
-	}
-	return FALSE;
-}
-/* Property page dialog callback */
-INT_PTR CALLBACK
-SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch(uMsg)
-	{
-    case WM_INITDIALOG:	
+	case WM_INITDIALOG:
 		break;
 	case WM_COMMAND:
 		break;
@@ -116,17 +74,60 @@ SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-static void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_INITDIALOG:
+		break;
+	case WM_COMMAND:
+		break;
+	}
+	return FALSE;
+}
+
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_INITDIALOG:
+		break;
+	case WM_COMMAND:
+		break;
+	}
+	return FALSE;
+}
+
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_INITDIALOG:
+		break;
+	case WM_COMMAND:
+		break;
+	}
+	return FALSE;
+}
+
+
+static VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
 	ZeroMemory(psp, sizeof(PROPSHEETPAGE));
 	psp->dwSize = sizeof(PROPSHEETPAGE);
 	psp->dwFlags = PSP_DEFAULT;
 	psp->hInstance = hApplet;
-#ifdef _MSC_VER
 	psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-#else
-	psp->u1.pszTemplate = MAKEINTRESOURCE(idDlg);
-#endif
 	psp->pfnDlgProc = DlgProc;
 }
 
@@ -139,55 +140,47 @@ DisplayApplet(VOID)
 	PROPSHEETPAGE psp[4];
 	PROPSHEETHEADER psh;
 	TCHAR Caption[1024];
-	
+
 	LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-	
+
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
 	psh.hwndParent = NULL;
 	psh.hInstance = hApplet;
-#ifdef _MSC_VER
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-#else
-	psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-#endif
 	psh.pszCaption = Caption;
 	psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-#ifdef _MSC_VER
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
-#else
-	psh.u2.nStartPage = 0;
-	psh.u3.ppsp = psp;
-#endif
 	psh.pfnCallback = NULL;
-	
 
 	InitPropSheetPage(&psp[0], IDD_PROPPAGEBACKGROUND, BackgroundPageProc);
 	InitPropSheetPage(&psp[1], IDD_PROPPAGESCREENSAVER, ScreenSaverPageProc);
 	InitPropSheetPage(&psp[2], IDD_PROPPAGEAPPEARANCE, AppearancePageProc);
 	InitPropSheetPage(&psp[3], IDD_PROPPAGESETTINGS, SettingsPageProc);
-	
+
 	return (LONG)(PropertySheet(&psh) != -1);
 }
 
+
 /* Control Panel Callback */
-LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+LONG CALLBACK
+CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
 	int i = (int)lParam1;
-	
+
 	switch(uMsg)
 	{
-    case CPL_INIT:
+	case CPL_INIT:
 		{
 			return TRUE;
 		}
-    case CPL_GETCOUNT:
+	case CPL_GETCOUNT:
 		{
 			return NUM_APPLETS;
 		}
-    case CPL_INQUIRE:
+	case CPL_INQUIRE:
 		{
 			CPLINFO *CPlInfo = (CPLINFO*)lParam2;
 			CPlInfo->lData = 0;
@@ -196,7 +189,7 @@ LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 			CPlInfo->idInfo = Applets[i].idDescription;
 			break;
 		}
-    case CPL_DBLCLK:
+	case CPL_DBLCLK:
 		{
 			Applets[i].AppletProc();
 			break;
@@ -206,12 +199,13 @@ LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 }
 
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
 	switch(dwReason)
 	{
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
 		hApplet = hinstDLL;
 		break;
 	}
