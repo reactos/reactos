@@ -4,10 +4,10 @@
 #undef isprint
 int isprint(int c)
 {
-  return _isctype(c,_PRINT);
+  return _isctype(c,_BLANK | _PUNCT | _ALPHA | _DIGIT);
 }
 
 int iswprint(wint_t c)
 {
-  return iswctype((unsigned short)c,_PRINT);
+  return iswctype((unsigned short)c,_BLANK | _PUNCT | _ALPHA | _DIGIT);
 }

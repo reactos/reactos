@@ -1,24 +1,34 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/ctype.h>
+
 #undef tolower
 int tolower(int c)
 {
- return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+   if (_isctype (c, _UPPER))
+       return (c - ('A' - 'a'));
+   return(c);
 }
+
 #undef towlower
 wchar_t towlower(wchar_t c)
 {
- return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+   if (iswctype (c, _UPPER))
+       return (c - (L'A' - L'a'));
+   return(c);
 }
 
 int _tolower(int c)
 {
- return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+   if (_isctype (c, _UPPER))
+       return (c - ('A' - 'a'));
+   return(c);
 }
 
 wchar_t _towlower(wchar_t c)
 {
- return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+   if (iswctype (c, _UPPER))
+       return (c - (L'A' - L'a'));
+   return(c);
 }
 
 

@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: ariadne $
- * $Date: 1999/04/14 07:10:15 $
+ * $Revision: 1.5 $
+ * $Author: ekohl $
+ * $Date: 2000/01/05 19:42:56 $
  *
  */
 #ifndef _LINUX_CTYPE_H
@@ -46,9 +46,8 @@
 #define	_CONTROL	0x0020
 #define	_BLANK		0x0040
 #define	_HEX		0x0080
+
 #define	_ALPHA		0x0103
-#define _GRAPH		0x0200	// added
-#define _PRINT		0x0400  // added
 #define	_LEADBYTE	0x8000
 
 

@@ -5,20 +5,29 @@
 #undef toupper
 int toupper(int c)
 {
-  return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
+   if (_isctype (c, _LOWER))
+      return (c + ('A' - 'a'));
+   return(c);
 }
+
 #undef towupper
 wchar_t towupper(wchar_t c)
 {
-  return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
+   if (iswctype (c, _LOWER))
+      return (c + (L'A' - L'a'));
+   return(c);
 }
 
 int _toupper(int c)
 {
-  return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
+   if (_isctype (c, _LOWER))
+      return (c + ('A' - 'a'));
+   return(c);
 }
 
 wchar_t _towupper(wchar_t c)
 {
-  return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
+   if (iswctype (c, _LOWER))
+      return (c + (L'A' - L'a'));
+   return(c);
 }
