@@ -177,56 +177,73 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
 		    IN HANDLE ThreadToImpersonateHandle,
 		    IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService)
 {
+  SECURITY_QUALITY_OF_SERVICE SafeServiceQoS;
   SECURITY_CLIENT_CONTEXT ClientContext;
   PETHREAD Thread;
   PETHREAD ThreadToImpersonate;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(SecurityQualityOfService,
+                   sizeof(SECURITY_QUALITY_OF_SERVICE),
+                   sizeof(ULONG));
+      SafeServiceQoS = *SecurityQualityOfService;
+      SecurityQualityOfService = &SafeServiceQoS;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
-  Status = ObReferenceObjectByHandle (ThreadHandle,
+  Status = ObReferenceObjectByHandle(ThreadHandle,
+				     THREAD_IMPERSONATE,
+				     PsThreadType,
+				     PreviousMode,
+				     (PVOID*)&Thread,
+				     NULL);
+  if(NT_SUCCESS(Status))
+  {
+    Status = ObReferenceObjectByHandle(ThreadToImpersonateHandle,
+				       THREAD_DIRECT_IMPERSONATION,
+				       PsThreadType,
+				       PreviousMode,
+				       (PVOID*)&ThreadToImpersonate,
+				       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      Status = SeCreateClientSecurity(ThreadToImpersonate,
+				      SecurityQualityOfService,
 				      0,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-  if (!NT_SUCCESS (Status))
-    {
-      return Status;
+				     &ClientContext);
+      if(NT_SUCCESS(Status))
+      {
+        SeImpersonateClient(&ClientContext,
+		            Thread);
+        if(ClientContext.ClientToken != NULL)
+        {
+          ObDereferenceObject (ClientContext.ClientToken);
+        }
+      }
+
+      ObDereferenceObject(ThreadToImpersonate);
     }
+    ObDereferenceObject(Thread);
+  }
 
-  Status = ObReferenceObjectByHandle (ThreadToImpersonateHandle,
-				      0,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&ThreadToImpersonate,
-				      NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject (Thread);
-      return Status;
-    }
-
-  Status = SeCreateClientSecurity (ThreadToImpersonate,
-				   SecurityQualityOfService,
-				   0,
-				   &ClientContext);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject (ThreadToImpersonate);
-      ObDereferenceObject (Thread);
-      return Status;
-     }
-
-  SeImpersonateClient (&ClientContext,
-		       Thread);
-  if (ClientContext.ClientToken != NULL)
-    {
-      ObDereferenceObject (ClientContext.ClientToken);
-    }
-
-  ObDereferenceObject (ThreadToImpersonate);
-  ObDereferenceObject (Thread);
-
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 /*
