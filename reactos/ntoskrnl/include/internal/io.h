@@ -1,4 +1,4 @@
-/* $Id: io.h,v 1.1 2000/06/29 23:35:36 dwelch Exp $
+/* $Id: io.h,v 1.2 2000/07/07 02:09:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 VOID IoInitCancelHandling(VOID);
 VOID IoInitSymbolicLinkImplementation(VOID);
 VOID IoInitFileSystemImplementation(VOID);
+VOID IoInitVpbImplementation (VOID);
 
 NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject);
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);

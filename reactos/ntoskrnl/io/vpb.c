@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.9 2000/03/26 19:38:26 ea Exp $
+/* $Id: vpb.c,v 1.10 2000/07/07 02:10:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,14 +12,24 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
-#include <internal/ob.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+static KSPIN_LOCK IoVpbLock;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+IoInitVpbImplementation (
+	VOID
+	)
+{
+	KeInitializeSpinLock(&IoVpbLock);
+}
 
 NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 {
@@ -235,10 +245,11 @@ NtSetVolumeInformationFile (
 VOID
 STDCALL
 IoAcquireVpbSpinLock (
-	PKIRQL	Irpl
+	OUT	PKIRQL	Irql
 	)
 {
-	UNIMPLEMENTED;
+	KeAcquireSpinLock (&IoVpbLock,
+	                   Irql);
 }
 
 
@@ -248,7 +259,8 @@ IoReleaseVpbSpinLock (
 	IN	KIRQL	Irql
 	)
 {
-	UNIMPLEMENTED;
+	KeReleaseSpinLock (&IoVpbLock,
+	                   Irql);
 }
 
 

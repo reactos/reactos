@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.12 2000/06/29 23:35:37 dwelch Exp $
+/* $Id: iomgr.c,v 1.13 2000/07/07 02:10:18 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -235,6 +235,7 @@ VOID IoInit (VOID)
 	IoInitCancelHandling ();
 	IoInitSymbolicLinkImplementation ();
 	IoInitFileSystemImplementation ();
+	IoInitVpbImplementation ();
 
 	/*
 	 * Create link from \DosDevices to \?? directory
