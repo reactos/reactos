@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.39 2003/08/27 21:28:08 dwelch Exp $
+/* $Id: class2.c,v 1.40 2003/09/20 22:44:22 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -822,14 +822,14 @@ ScsiClassInitialize(IN PVOID Argument1,
 
   DPRINT("ScsiClassInitialize() called!\n");
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiClassCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiClassCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = ScsiClassReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = ScsiClassReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiClassInternalIoControl;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiClassDeviceDispatch;
-  DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = ScsiClassShutdownFlush;
-  DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = ScsiClassShutdownFlush;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)ScsiClassCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)ScsiClassCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)ScsiClassReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)ScsiClassReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_SCSI] = (PDRIVER_DISPATCH)ScsiClassInternalIoControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)ScsiClassDeviceDispatch;
+  DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = (PDRIVER_DISPATCH)ScsiClassShutdownFlush;
+  DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = (PDRIVER_DISPATCH)ScsiClassShutdownFlush;
   if (InitializationData->ClassStartIo)
     {
       DriverObject->DriverStartIo = InitializationData->ClassStartIo;
