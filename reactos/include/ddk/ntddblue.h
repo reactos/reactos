@@ -21,6 +21,8 @@
 #define IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER    CTL_CODE(FILE_DEVICE_SCREEN, 0x822, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 
 
+#define IOCTL_CONSOLE_DRAW                      CTL_CODE(FILE_DEVICE_SCREEN, 0x830, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+
 
 /* TYPEDEFS **************************************************************/
 
@@ -48,6 +50,14 @@ typedef struct _OUTPUT_CHARACTER
     DWORD dwTransfered;
 } OUTPUT_CHARACTER, *POUTPUT_CHARACTER;
 
+
+typedef struct _CONSOLE_DRAW
+{
+	SHORT	X;		// Origin
+	SHORT	Y;
+	SHORT	SizeX;		// Size of the screen buffer
+	SHORT	SizeY;
+} CONSOLE_DRAW, *PCONSOLE_DRAW;
 
 
 #endif /* _NTDDBLUE_H_INCLUDED_ */

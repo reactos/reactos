@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 1999/12/18 10:17:41 ea Exp $
+# $Id: makefile,v 1.11 2000/05/08 23:25:36 ekohl Exp $
 #
 #
 TARGET = blue
@@ -47,7 +47,8 @@ $(TARGET).sys: $(OBJECTS)
 		-Wl,--defsym,_end=end \
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $(OBJECTS)
+		-Wl,--base-file,base.tmp \
+		$(OBJECTS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \

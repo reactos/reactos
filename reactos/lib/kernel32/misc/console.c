@@ -120,31 +120,34 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
      {
 	return(FALSE);
      }
-   
+
    Request->Type = CSRSS_WRITE_CONSOLE;
    Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
    Request->Data.WriteConsoleRequest.NrCharactersToWrite =
      nNumberOfCharsToWrite;
+
 //   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
 //   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
+
    memcpy(Request->Data.WriteConsoleRequest.Buffer,
 	  lpBuffer,
 	  nNumberOfCharsToWrite);
    
-   Status = CsrClientCallServer(Request, 
+   Status = CsrClientCallServer(Request,
 				&Reply,
 				sizeof(CSRSS_API_REQUEST) + 
 				nNumberOfCharsToWrite,
 				sizeof(CSRSS_API_REPLY));
+
+   HeapFree(GetProcessHeap(),
+	    0,
+	    Request);
+
    if (!NT_SUCCESS(Status))
      {
 	return(FALSE);
      }
-   
-   HeapFree(GetProcessHeap(),
-	    0,
-	    Request);
-	    
+
    if (lpNumberOfCharsWritten != NULL)
      {
 	*lpNumberOfCharsWritten = 
@@ -1292,8 +1295,53 @@ WriteConsoleW(
 	LPVOID		 lpReserved
 	)
 {
-/* --- TO DO --- */
-	return FALSE;
+#if 0
+   PCSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   
+   Request = HeapAlloc(GetProcessHeap(),
+		       HEAP_ZERO_MEMORY,
+		       sizeof(CSRSS_API_REQUEST) + nNumberOfCharsToWrite * sizeof(WCHAR));
+   if (Request == NULL)
+     {
+	return(FALSE);
+     }
+
+   Request->Type = CSRSS_WRITE_CONSOLE;
+   Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
+   Request->Data.WriteConsoleRequest.NrCharactersToWrite =
+     nNumberOfCharsToWrite;
+//   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
+//   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
+   memcpy(Request->Data.WriteConsoleRequest.Buffer,
+	  lpBuffer,
+	  nNumberOfCharsToWrite * sizeof(WCHAR));
+
+   Status = CsrClientCallServer(Request,
+				&Reply,
+				sizeof(CSRSS_API_REQUEST) +
+				nNumberOfCharsToWrite,
+				sizeof(CSRSS_API_REPLY));
+
+   HeapFree(GetProcessHeap(),
+	    0,
+	    Request);
+
+   if (!NT_SUCCESS(Status))
+     {
+	return(FALSE);
+     }
+
+   if (lpNumberOfCharsWritten != NULL)
+     {
+	*lpNumberOfCharsWritten = 
+	  Reply.Data.WriteConsoleReply.NrCharactersWritten;
+     }
+
+   return(TRUE);
+#endif
+   return FALSE;
 }
 
 

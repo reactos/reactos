@@ -28,12 +28,12 @@ typedef struct CSRSS_CONSOLE_t
    CRITICAL_SECTION Lock;
    struct CSRSS_CONSOLE_t *Prev, *Next; /* Next and Prev consoles in console wheel */
    HANDLE ActiveEvent;
-   BYTE *Buffer;
+   PCHAR_INFO Buffer;
    USHORT MaxX, MaxY;          /* size of the entire scrollback buffer */
    USHORT ShowX, ShowY;        /* beginning offset for the actual display area */
    ULONG CurrentX;
    ULONG CurrentY;
-   BYTE DefaultAttrib;        /* default char attribute */
+   WORD DefaultAttrib;        /* default char attribute */
    LIST_ENTRY InputEvents;    /* List head for input event queue */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
