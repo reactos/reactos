@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.43 2003/10/29 08:38:55 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.44 2003/10/29 16:25:00 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -70,13 +70,20 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
 
   if (UsesSource)
     {
-      DCSrc = DC_LockDc(hDCSrc);
-      if (NULL == DCSrc)
+      if (hDCSrc != hDCDest)
         {
-          DC_UnlockDc(hDCDest);
-          DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-          return FALSE;
+          DCSrc = DC_LockDc(hDCSrc);
+          if (NULL == DCSrc)
+            {
+              DC_UnlockDc(hDCDest);
+              DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
+              SetLastWin32Error(ERROR_INVALID_HANDLE);
+              return FALSE;
+            }
+        }
+      else
+        {
+           DCSrc = DCDest;
         }
     }
   else
@@ -120,7 +127,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
       BrushObj = BRUSHOBJ_LockBrush(DCDest->w.hBrush);
       if (NULL == BrushObj)
         {
-          if (UsesSource)
+          if (UsesSource && hDCSrc != hDCDest)
             {
               DC_UnlockDc(hDCSrc);
             }
@@ -155,7 +162,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   PalSourceGDI = PALETTE_LockPalette(SourcePalette);
   if (NULL == PalSourceGDI)
     {
-      if (UsesSource)
+      if (UsesSource && hDCSrc != hDCDest)
         {
           DC_UnlockDc(hDCSrc);
         }
@@ -175,7 +182,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
       PalDestGDI = PALETTE_LockPalette(DestPalette);
       if (NULL == PalDestGDI)
         {
-          if (UsesSource)
+          if (UsesSource && hDCSrc != hDCDest)
             {
               DC_UnlockDc(hDCSrc);
             }
@@ -190,7 +197,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
   if (NULL == XlateObj)
     {
-      if (UsesSource)
+      if (UsesSource && hDCSrc != hDCDest)
         {
           DC_UnlockDc(hDCSrc);
         }
@@ -208,7 +215,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
     {
       BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
     }
-  if (UsesSource)
+  if (UsesSource && hDCSrc != hDCDest)
     {
       DC_UnlockDc(hDCSrc);
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.125 2003/10/29 10:04:55 navaraf Exp $
+/* $Id: window.c,v 1.126 2003/10/29 16:24:59 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,6 +101,17 @@ inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT Wnd)
 }
 
 
+BOOL IntIsWindow(HWND hWnd)
+{
+   PWINDOW_OBJECT Window;
+   if (!(Window = IntGetWindowObject(hWnd)))
+      return FALSE;
+   else
+      IntReleaseWindowObject(Window);
+   return TRUE;
+}
+
+
 static PWINDOW_OBJECT FASTCALL
 IntGetProcessWindowObject(PW32PROCESS ProcessData, HWND hWnd)
 {
@@ -160,7 +171,7 @@ static BOOL BuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsign
   ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
 
 
-  return 0 == *NumChildren || NULL != *Children;
+  return 0 != *NumChildren && NULL != *Children;
 }
 
 
@@ -186,18 +197,20 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
 
   /* free child windows */
-  if (! BuildChildWindowArray(Window, &Children, &NumChildren))
+  if (BuildChildWindowArray(Window, &Children, &NumChildren))
     {
-      return 0;
-    }
-  for (Index = NumChildren; 0 < Index; Index--)
-    {
-      Child = IntGetProcessWindowObject(ProcessData, Children[Index - 1]);
-      if (NULL != Child)
+      DbgPrint("NumChildren: %d\n", NumChildren);
+      for (Index = NumChildren; 0 < Index; Index--)
+        {
+          Child = IntGetProcessWindowObject(ProcessData, Children[Index - 1]);
+          DbgPrint("Child %d: %x\n", Index - 1, Child);
+          if (NULL != Child)
 	{
 	  if (IntWndBelongsToThread(Child, ThreadData))
 	    {
+	      DbgPrint("Destroying\n");
 	      IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
+	      DbgPrint("End Destroying\n");
 	    }
 #if 0 /* FIXME */
 	  else
@@ -206,10 +219,11 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 	    }
 #endif
 	}
-    }
-  if (0 != NumChildren)
-    {
-      ExFreePool(Children);
+        }
+      if (0 != NumChildren)
+        {
+          ExFreePool(Children);
+        }
     }
 
   if (SendMessages)
@@ -353,7 +367,7 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->Height = Height;
   WindowObject->ParentHandle = NULL;
   WindowObject->Parent = NULL;
-  WindowObject->hWndOwner = NULL;
+  WindowObject->Owner = NULL;
   WindowObject->IDMenu = 0;
   WindowObject->Instance = NULL;
   WindowObject->Parameters = NULL;
@@ -488,7 +502,7 @@ IntGetParent(PWINDOW_OBJECT Wnd)
  * I don't understand this either, but I trust Wine test suite.
  * -- Filip, 28/oct/2003
  */
-    return IntGetWindowObject(Wnd->hWndOwner);
+    return Wnd->Owner;
   }
   else if (Wnd->Style & WS_CHILD) 
   {
@@ -722,9 +736,7 @@ set_focus_window(HWND New, PWINDOW_OBJECT Window, HWND Previous)
         }
     }
 
-#if 0 /* FIXME */
-  if (IsWindow(New))
-#endif
+  if (IntIsWindow(New))
     {
       NtUserSendMessage(New, WM_SETFOCUS, (WPARAM) Previous, 0);
     }
@@ -856,12 +868,21 @@ IntSetFocusWindow(HWND hWnd)
 HWND FASTCALL
 IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 {
-  PWINDOW_OBJECT Wnd;
+  PWINDOW_OBJECT Wnd, WndOldOwner;
   HWND ret;
   
   Wnd = IntGetWindowObject(hWnd);
-  ret = Wnd->hWndOwner;
-  Wnd->hWndOwner = hWndNewOwner;
+  WndOldOwner = Wnd->Owner;
+  if (WndOldOwner)
+  {
+     ret = WndOldOwner->Self;
+     IntReleaseWindowObject(WndOldOwner);
+  }
+  else
+  {
+     ret = 0;
+  }
+  Wnd->Owner = IntGetWindowObject(hWndNewOwner);
   IntReleaseWindowObject(Wnd);
   return ret;
 }
@@ -1388,13 +1409,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Height = nHeight;
   WindowObject->ContextHelpId = 0;
   WindowObject->ParentHandle = ParentWindowHandle;
-  WindowObject->hWndOwner = OwnerWindowHandle;
   WindowObject->IDMenu = (UINT)hMenu;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
+  WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
   WindowObject->UserData = 0;
   WindowObject->Unicode = ClassObject->Unicode;
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
@@ -1678,8 +1699,8 @@ NtUserDestroyWindow(HWND Wnd)
       return FALSE;
     }
 
-  /* Check for desktop window (has NULL parent) */
-  if (NULL == Window->Parent)
+  /* Check for desktop window */
+  if (IntIsDesktopWindow(Window))
     {
       IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -1758,24 +1779,35 @@ NtUserDestroyWindow(HWND Wnd)
 	{
 	  int i;
 	  BOOL GotOne = FALSE;
-	  HWND *list = WIN_ListChildren(GetDesktopWindow());
-	  if (list)
+	  HWND *list;
+	  UINT NumChildren;
+	  PWINDOW_OBJECT Child;
+
+	  if (BuildChildWindowArray(IntGetWindowObject(IntGetDesktopWindow()),
+	          &list, &NumChildren))
 	    {
-	      for (i = 0; list[i]; i++)
+	      for (i = 0; i < NumChildren; i++)
 		{
-		  if (GetWindow(list[i], GW_OWNER) != Wnd)
+		  Child = IntGetWindowObject(list[i]);
+		  if (Child->Owner != Window)
 		    {
 		      continue;
 		    }
-		  if (WIN_IsCurrentThread(list[i]))
+		  if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
 		    {
-		      DestroyWindow(list[i]);
-		      GotOne = TRUE;
+		      IntReleaseWindowObject(Child);
+		      NtUserDestroyWindow(list[i]);
+		      GotOne = TRUE;		      
 		      continue;
 		    }
-		  WIN_SetOwner(list[i], NULL);
+		  if (Child->Owner != NULL)
+		    {
+		      IntReleaseWindowObject(Child->Owner);
+		      Child->Owner = NULL;
+		    }
+		  IntReleaseWindowObject(Child);
 		}
-	      HeapFree(GetProcessHeap(), 0, list);
+	      ExFreePool(list);
 	    }
 	  if (! GotOne)
 	    {
@@ -2258,7 +2290,10 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
       }
       break;
     case GW_OWNER:
-      hWndResult = Wnd->hWndOwner;
+      if (Wnd->Owner)
+      {
+        hWndResult = Wnd->Owner->Self;
+      }
       break;
     case GW_CHILD:
       if (Wnd->FirstChild)
@@ -2350,12 +2385,10 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
 	  {
 		Result = (LONG) NtUserGetWindow(WindowObject->Self, GW_OWNER);
-		/*WindowObject->hWndOwner*/
 	  }
 	  else
 	  {
 		Result = (LONG) NtUserGetAncestor(WindowObject->Self, GA_PARENT);
-		/*WindowObject->ParentHandle*/
 	  }
 	  break;
 
@@ -2931,7 +2964,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
     /* move shell window into background */
     if (hwndListView && hwndListView!=hwndShell)
     {
-        WinPosSetWindowPos(hwndListView, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+/*        WinPosSetWindowPos(hwndListView, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);*/
 
 	if (NtUserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
 	    return FALSE;

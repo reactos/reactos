@@ -78,6 +78,8 @@ typedef struct _WINDOW_OBJECT
   LIST_ENTRY ThreadListEntry;
   /* Pointer to the parent window. */
   struct _WINDOW_OBJECT* Parent;
+  /* Pointer to the owner window. */
+  struct _WINDOW_OBJECT* Owner;
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Property list head.*/
@@ -91,7 +93,6 @@ typedef struct _WINDOW_OBJECT
   WNDPROC WndProcA;
   WNDPROC WndProcW;
   PETHREAD OwnerThread;
-  HWND hWndOwner; /* handle to the owner window (wine doesn't use pointer, for unk. reason)*/
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 

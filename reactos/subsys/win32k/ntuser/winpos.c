@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.39 2003/10/29 10:04:55 navaraf Exp $
+/* $Id: winpos.c,v 1.40 2003/10/29 16:24:59 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -772,7 +772,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT InsertAfterWindow;
 
-      ParentWindow = IntGetWindowObject(Window->ParentHandle);
+      ParentWindow = Window->Parent;
       if (ParentWindow)
         {
           if (WndInsertAfter == HWND_TOP)
@@ -785,7 +785,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           IntUnlinkWindow(Window);
           IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
           ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          IntReleaseWindowObject(ParentWindow);
           if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
         }
