@@ -278,6 +278,11 @@ static int MCI_MapMsgAtoW(UINT msg, DWORD_PTR dwParam1, DWORD_PTR *dwParam2)
     case MCI_UPDATE:
     case MCI_RESUME:
     case MCI_DELETE:
+    case MCI_MONITOR:
+    case MCI_SETAUDIO:
+    case MCI_SIGNAL:
+    case MCI_SETVIDEO:
+    case MCI_LIST:
         return 0;
 
     case MCI_OPEN:
@@ -975,8 +980,8 @@ static	LPCWSTR		MCI_FindCommand(UINT uTbl, LPCWSTR verb)
  */
 static	DWORD		MCI_GetReturnType(LPCWSTR lpCmd)
 {
-    lpCmd += strlenW(lpCmd) + 1 + sizeof(DWORD) + sizeof(WORD);
-    if (*lpCmd == '\0' && *(const WORD*)(lpCmd + 1 + sizeof(DWORD)) == MCI_RETURN) {
+    lpCmd = (LPCWSTR)((BYTE*)(lpCmd + strlenW(lpCmd) + 1) + sizeof(DWORD) + sizeof(WORD));
+    if (*lpCmd == '\0' && *(const WORD*)((BYTE*)(lpCmd + 1) + sizeof(DWORD)) == MCI_RETURN) {
 	return *(const DWORD*)(lpCmd + 1);
     }
     return 0L;

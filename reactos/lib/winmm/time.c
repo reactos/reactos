@@ -408,9 +408,19 @@ MMRESULT WINAPI timeGetDevCaps(LPTIMECAPS lpCaps, UINT wSize)
 {
     TRACE("(%p, %u)\n", lpCaps, wSize);
 
+    if (lpCaps == 0) {
+        WARN("invalid lpCaps\n");
+        return TIMERR_NOCANDO;
+    }
+
+    if (wSize < sizeof(TIMECAPS)) {
+        WARN("invalid wSize\n");
+        return TIMERR_NOCANDO;
+    }
+
     lpCaps->wPeriodMin = MMSYSTIME_MININTERVAL;
     lpCaps->wPeriodMax = MMSYSTIME_MAXINTERVAL;
-    return 0;
+    return TIMERR_NOERROR;
 }
 
 /**************************************************************************
