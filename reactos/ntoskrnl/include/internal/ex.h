@@ -19,6 +19,7 @@ typedef struct _WINSTATION_OBJECT
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
   struct _DESKTOP_OBJECT* ActiveDesktop;
+  ERESOURCE Resource;
   /* FIXME: Clipboard */
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
