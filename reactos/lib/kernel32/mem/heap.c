@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.15 1999/08/29 06:59:01 ea Exp $
+/* $Id: heap.c,v 1.16 1999/09/12 22:09:34 ea Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -64,7 +64,7 @@ LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
 *********************************************************************/
 LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
 {
-   return(RtlReAllocHeap(hheap, flags, ptr, size));
+   return(RtlReAllocateHeap(hheap, flags, ptr, size));
 }
 
 /*********************************************************************

@@ -1,7 +1,9 @@
-; $Id: ntdll.def,v 1.14 1999/09/04 18:32:57 ekohl Exp $
+; $Id: ntdll.def,v 1.15 1999/09/12 22:06:26 ea Exp $
 ;
 ; ReactOS Operating System
 ;
+LIBRARY ntdll
+
 EXPORTS
 InitializeObjectAttributes
 NtAcceptConnectPort@24
@@ -425,6 +427,7 @@ ZwWriteVirtualMemory@20
 ZwW32Call@20
 ZwYieldExecution@0
 RtlAllocateHeap@12
+RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize
 RtlAnsiStringToUnicodeString
 RtlAppendUnicodeStringToString
@@ -444,6 +447,7 @@ RtlEnlargedUnsignedMultiply
 RtlEqualString
 RtlEqualUnicodeString
 RtlExtendedIntegerMultiply
+RtlFillMemory@12
 RtlFreeAnsiString
 RtlFreeHeap@12
 RtlFreeUnicodeString
@@ -457,16 +461,24 @@ RtlLargeIntegerAdd
 RtlLargeIntegerDivide
 RtlLengthSecurityDescriptor
 RtlLockHeap@4
+RtlMoveMemory@12
+RtlMultiByteToUnicodeN@0
 RtlNtStatusToDosError
-RtlReAllocHeap@16
+RtlReAllocateHeap@16
 RtlSizeHeap@12
 RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize
 RtlUnicodeStringToAnsiString
 RtlUnicodeStringToInteger
+RtlUnicodeToMultiByteN@0
+RtlUnicodeToMultiByteSize@0
+RtlUnwind@0
 RtlUpcaseString
+RtlUpcaseUnicodeChar@0
 RtlUpcaseUnicodeString
+RtlUpcaseUnicodeToMultiByteN@0
 RtlValidateHeap@12
+RtlZeroMemory@8
 _memccpy
 _memicmp
 _splitpath
