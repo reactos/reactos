@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.96 2003/05/27 19:21:14 hbirr Exp $
+# $Id: Makefile,v 1.97 2003/06/01 19:18:09 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -91,8 +91,6 @@ OBJECTS_RTL = \
 	rtl/largeint.o \
 	rtl/math.o \
 	rtl/mem.o \
-	rtl/memchr.o \
-	rtl/memmove.o \
 	rtl/message.o \
 	rtl/nls.o \
 	rtl/purecall.o \
@@ -106,7 +104,6 @@ OBJECTS_RTL = \
 	rtl/timezone.o \
 	rtl/unicode.o \
 	rtl/wstring.o \
-	rtl/memcmp.o \
 	rtl/capture.o
 
 OBJECTS_RTL := $(filter-out $(RTL_EXCLUDE_FILTER), $(OBJECTS_RTL))
