@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.44 2004/02/25 14:25:10 ekohl Exp $
+/* $Id: reg.c,v 1.45 2004/04/01 13:53:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2191,10 +2191,10 @@ RegQueryValueExW (HKEY hKey,
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
       MaxCopy = 0;
-      if (NULL != lpcbData)
-        {
-          ResultSize = sizeof(*ValueInfo) + *lpcbData;
-        }
+      if (lpcbData != NULL)
+	{
+	  ResultSize = sizeof(*ValueInfo) + *lpcbData;
+	}
     }
 
   if (lpType != NULL)
@@ -2202,27 +2202,35 @@ RegQueryValueExW (HKEY hKey,
       *lpType = ValueInfo->Type;
     }
 
-  if (NT_SUCCESS(Status))
-    RtlMoveMemory (lpData,
-		   ValueInfo->Data,
-		   min(ValueInfo->DataLength,MaxCopy));
+  if (NT_SUCCESS(Status) && lpData != NULL)
+    {
+      RtlMoveMemory (lpData,
+		     ValueInfo->Data,
+		     min(ValueInfo->DataLength, MaxCopy));
+    }
 
   if ((ValueInfo->Type == REG_SZ) ||
       (ValueInfo->Type == REG_MULTI_SZ) ||
       (ValueInfo->Type == REG_EXPAND_SZ))
     {
-      if (MaxCopy > ValueInfo->DataLength)
-	((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
-      
-      if (lpcbData) {
-	*lpcbData = (ResultSize - sizeof(*ValueInfo));
-	DPRINT("(string) Returning Size: %d\n", *lpcbData);
-      }
+      if (lpData != NULL && MaxCopy > ValueInfo->DataLength)
+	{
+	  ((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
+	}
+
+      if (lpcbData != NULL)
+	{
+	  *lpcbData = (ResultSize - sizeof(*ValueInfo));
+	  DPRINT("(string) Returning Size: %lu\n", *lpcbData);
+	}
     }
   else
-    if (lpcbData) {
-      *lpcbData = ResultSize - sizeof(*ValueInfo);
-      DPRINT("(other) Returning Size: %d\n", *lpcbData);
+    {
+      if (lpcbData != NULL)
+	{
+	  *lpcbData = ResultSize - sizeof(*ValueInfo);
+	  DPRINT("(other) Returning Size: %lu\n", *lpcbData);
+	}
     }
 
   DPRINT("Type %d  Size %d\n", ValueInfo->Type, ValueInfo->DataLength);
@@ -2255,7 +2263,7 @@ RegQueryValueExA (HKEY hKey,
   DWORD Length;
   DWORD Type;
 
-  if ((lpData) && (!lpcbData))
+  if (lpData != NULL && lpcbData == NULL)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
       return ERROR_INVALID_PARAMETER;
@@ -2269,10 +2277,10 @@ RegQueryValueExA (HKEY hKey,
 					  0,
 					  ValueData.MaximumLength);
       if (!ValueData.Buffer)
-        {
-          SetLastError(ERROR_OUTOFMEMORY);
-          return ERROR_OUTOFMEMORY;
-        }
+	{
+	  SetLastError(ERROR_OUTOFMEMORY);
+	  return ERROR_OUTOFMEMORY;
+	}
     }
   else
     {
@@ -2284,42 +2292,52 @@ RegQueryValueExA (HKEY hKey,
   RtlCreateUnicodeStringFromAsciiz (&ValueName,
 				    (LPSTR)lpValueName);
 
-  /* Convert length from USHORT to DWORD */
-  Length = ValueData.Length;
+  Length = *lpcbData * sizeof(WCHAR);
   ErrorCode = RegQueryValueExW (hKey,
 				ValueName.Buffer,
 				lpReserved,
 				&Type,
 				(LPBYTE)ValueData.Buffer,
 				&Length);
-  if (lpType != NULL)
-    *lpType = Type;
+  DPRINT("ErrorCode %lu\n", ErrorCode);
 
-  if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL))
+  if (ErrorCode == ERROR_SUCCESS ||
+      ErrorCode == ERROR_MORE_DATA)
     {
+      if (lpType != NULL)
+	{
+	  *lpType = Type;
+	}
+
       if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
 	{
-	  RtlInitAnsiString(&AnsiString, NULL);
-	  AnsiString.Buffer = lpData;
-	  AnsiString.MaximumLength = *lpcbData;
-	  ValueData.Length = Length;
-	  ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
-	  RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
+	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+	    {
+	      RtlInitAnsiString(&AnsiString, NULL);
+	      AnsiString.Buffer = lpData;
+	      AnsiString.MaximumLength = *lpcbData;
+	      ValueData.Length = Length;
+	      ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
+	      RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
+	    }
 	  Length = Length / sizeof(WCHAR);
 	}
       else
 	{
 	  Length = min(*lpcbData, Length);
-	  RtlMoveMemory(lpData, ValueData.Buffer, Length);
+	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+	    {
+	      RtlMoveMemory(lpData, ValueData.Buffer, Length);
+	    }
+	}
+
+      if (lpcbData != NULL)
+	{
+	  *lpcbData = Length;
 	}
     }
 
-  if (lpcbData != NULL)
-    {
-      *lpcbData = Length;
-    }
-
-  if (ValueData.Buffer)
+  if (ValueData.Buffer != NULL)
     {
       RtlFreeHeap(ProcessHeap, 0, ValueData.Buffer);
     }
