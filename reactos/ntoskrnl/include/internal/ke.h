@@ -30,12 +30,12 @@
 #include "arch/ke.h"
 
 
-
+#ifndef __ASM__
 extern LARGE_INTEGER SystemBootTime;
 extern ULONG KiKernelTime;
 extern ULONG KiUserTime;
 extern ULONG KiDpcTime;
-
+#endif
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
