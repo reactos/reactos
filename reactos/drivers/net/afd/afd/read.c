@@ -123,7 +123,7 @@ static VOID ProcessClose( PAFD_FCB FCB ) {
     PIRP NextIrp;
 
     AFD_DbgPrint(MID_TRACE,("Socket shutdown from remote side\n"));
-    
+
     /* Kill remaining recv irps */
     while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	NextIrpEntry = 
@@ -138,7 +138,7 @@ static VOID ProcessClose( PAFD_FCB FCB ) {
     }
     
     /* Handle closing signal */
-    FCB->PollState |= AFD_EVENT_DISCONNECT;
+    FCB->PollState |= AFD_EVENT_DISCONNECT | SOCKET_STATE_EOF_READ;
 
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 }
@@ -307,15 +307,19 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    Status = STATUS_SUCCESS;
 	}
     } else {
-	AFD_DbgPrint(MID_TRACE,("EOF Happened already\n"));
-	FCB->Recv.Content = 0;
-	FCB->Recv.BytesUsed = 0;
-	Status = STATUS_END_OF_FILE;
+	if( FCB->PollState & SOCKET_STATE_EOF_READ )
+            Status = STATUS_END_OF_FILE;
+        else
+            Status = STATUS_SUCCESS;
+        
+        AFD_DbgPrint(MID_TRACE,("EOF Happened already\n"));
+        FCB->Recv.Content = 0;
+        FCB->Recv.BytesUsed = 0;
 
 	ProcessClose( FCB );
 
         return UnlockAndMaybeComplete
-            ( FCB, STATUS_SUCCESS, Irp, 0, NULL, FALSE);
+            ( FCB, Status, Irp, 0, NULL, FALSE);
     }
 
     if( NT_SUCCESS(Status) ) {
