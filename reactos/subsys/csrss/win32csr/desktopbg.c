@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.1 2003/12/07 23:02:57 gvg Exp $
+/* $Id: desktopbg.c,v 1.2 2003/12/13 16:04:36 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -33,12 +33,20 @@ typedef struct tagDTBG_THREAD_DATA
 
 static BOOL Initialized = FALSE;
 
+static void FASTCALL
+DtbgPaint(HDC hDC, LPRECT lpRect)
+{
+  HBRUSH DesktopBrush;
+
+  DesktopBrush = CreateSolidBrush(RGB(58, 110, 165));
+  FillRect(hDC, lpRect, DesktopBrush);
+  DeleteObject(DesktopBrush);
+}
+
 static LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   LRESULT Result;
-  PAINTSTRUCT PS;
-  HBRUSH DesktopBrush;
 
   switch(Msg)
     {
@@ -49,12 +57,22 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         Result = 0;
         break;
       case WM_PAINT:
-        BeginPaint(Wnd, &PS);
-        DesktopBrush = CreateSolidBrush(RGB(58, 110, 165));
-        FillRect(PS.hdc, &(PS.rcPaint), DesktopBrush);
-        DeleteObject(DesktopBrush);
-        EndPaint(Wnd, &PS);
-        Result = 0;
+        {
+          PAINTSTRUCT PS;
+
+          BeginPaint(Wnd, &PS);
+          DtbgPaint(PS.hdc, &(PS.rcPaint));
+          EndPaint(Wnd, &PS);
+          Result = 0;
+        }
+        break;
+      case WM_ERASEBKGND:
+        {
+          RECT ClientRect;
+          GetClientRect(Wnd, &ClientRect);
+          DtbgPaint((HDC)wParam, &ClientRect);
+          Result = 1;
+        }
         break;
       case PM_SHOW_DESKTOP:
         Result = ! SetWindowPos(Wnd,
