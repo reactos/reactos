@@ -22,8 +22,8 @@
 #ifndef __ARCNAME_H
 #define __ARCNAME_H
 
-BOOL	DissectArcPath(char *ArcPath, char *BootPath, unsigned int *BootDrive, unsigned int *BootPartition);
-//BOOL	ConvertBiosDriveToArcName()
-//BOOL	ConvertArcNameToBiosDrive()
+BOOL	DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition);
+//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, ULONG BiosDriveNumber);
+//ULONG	ConvertArcNameToBiosDrive(PUCHAR ArcName);
 
 #endif // defined __ARCNAME_H

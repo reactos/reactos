@@ -24,7 +24,7 @@
 #include "stdlib.h"
 
 
-BOOL DissectArcPath(char *ArcPath, char *BootPath, unsigned int *BootDrive, unsigned int *BootPartition)
+BOOL DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition)
 {
 	char *p;
 

@@ -25,7 +25,7 @@
 
 #define	FS_DO_ERROR(s)	\
 	{ \
-		if (bTUILoaded) \
+		if (UserInterfaceUp) \
 			MessageBox(s); \
 		else \
 		{ \

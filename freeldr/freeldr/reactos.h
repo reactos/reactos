@@ -21,7 +21,7 @@
 #define __ROSBOOT_H
 
 
-void	LoadAndBootReactOS(char *OperatingSystemName);
+void	LoadAndBootReactOS(PUCHAR OperatingSystemName);
 
 
 #endif // defined __ROSBOOT_H

@@ -53,8 +53,6 @@
 #define MB_INFO_FLAG_APM_TABLE			0x00000400
 #define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-
 #ifndef ASM
 /* Do not include here in boot.S. */
 

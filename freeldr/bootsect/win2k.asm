@@ -27,7 +27,7 @@ start:
         jmp short main
         nop
 
-OEMName				db 'FreeLDR!'
+OEMName				db 'MSWIN4.0'
 BytesPerSector		dw 512
 SectsPerCluster		db 1
 ReservedSectors		dw 1
@@ -53,8 +53,8 @@ BootDrive			db 0
 Reserved			db 0
 ExtendSig			db 29h
 SerialNumber		dd 00000000h
-VolumeLabel			db 'FreeLoader!'
-FileSystem			db 'FAT12   '
+VolumeLabel			db 'NO NAME    '
+FileSystem			db 'FAT32   '
 
 main:
 00007C5A  33C9              xor		cx,cx
@@ -349,8 +349,8 @@ load_fat_sector:
 00008112  660FB74E0E        movzx ecx,word [bp+ReservedSectors]	; Add the reserved sectors
 00008117  6603C1            add eax,ecx							; To the hidden sectors + the value we computed earlier
 0000811A  660FB75E28        movzx ebx,word [bp+ExtendedFlags]	; Get extended flags and put into ebx
-0000811F  83E30F            and bx,byte +0xf					; Mask off everything but the active fat bits
-00008122  7416              jz load_fat_sector_into_memory		; If active fat is first fat skip fat size calcs
+0000811F  83E30F            and bx,byte +0xf					; Mask off upper 8 bits
+00008122  7416              jz load_fat_sector_into_memory		; If fat is mirrored then skip fat calcs
 00008124  3A5E10            cmp bl,[bp+NumberOfFats]			; Compare bl to number of fats
 00008127  0F83ABFB          jnc near print_ntldr_error_message	; If bl is bigger than numfats exit with error
 0000812B  52                push dx								; Save dx

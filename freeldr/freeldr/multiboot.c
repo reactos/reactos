@@ -24,6 +24,7 @@
 #include "fs.h"
 #include "multiboot.h"
 #include "tui.h"
+#include "parseini.h"
 
 unsigned long				next_module_load_base = 0;
 
@@ -145,10 +146,9 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 int GetBootPartition(char *OperatingSystemName)
 {
 	int		BootPartitionNumber = -1;
-	char	name[1024];
 	char	value[1024];
 
-	if (ReadSectionSettingByName(OperatingSystemName, "BootPartition", name, value))
+	if (ReadSectionSettingByName(OperatingSystemName, "BootPartition", value))
 	{
 		BootPartitionNumber = atoi(value);
 	}

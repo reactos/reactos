@@ -1,32 +1,31 @@
 #include <stdio.h>
 
-char	in_filename[260];
-char	out_filename[260];
 FILE	*in;
 FILE	*out;
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	unsigned char	ch;
 	int				cnt = 0;
 
-	printf("Enter data filename: ");
-	scanf("%s", in_filename);
-	printf("Enter output filename: ");
-	scanf("%s", out_filename);
+	if (argc < 4)
+	{
+		printf("usage: bin2c infile.bin outfile.h array_name\n");
+		return -1;
+	}
 
-	if ((in = fopen(in_filename, "rb")) == NULL)
+	if ((in = fopen(argv[1], "rb")) == NULL)
 	{
 		printf("Couldn't open data file.\n");
-		return 0;
+		return -1;
 	}
-	if ((out = fopen(out_filename, "wb")) == NULL)
+	if ((out = fopen(argv[2], "wb")) == NULL)
 	{
 		printf("Couldn't open output file.\n");
-		return 0;
+		return -1;
 	}
 
-	fprintf(out, "unsigned char data[] = {\n");
+	fprintf(out, "unsigned char %s[] = {\n", argv[3]);
 
 	ch = fgetc(in);
 	while (!feof(in))

@@ -24,6 +24,7 @@
 #include "stdlib.h"
 #include "fs.h"
 #include "tui.h"
+#include "parseini.h"
 
 void LoadAndBootBootSector(int nOSToBoot)
 {
@@ -43,7 +44,7 @@ void LoadAndBootBootSector(int nOSToBoot)
 			MessageLine(value);
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", name, value))
+	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -52,10 +53,10 @@ void LoadAndBootBootSector(int nOSToBoot)
 	BootDrive = atoi(value);
 
 	BootPartition = 0;
-	if (ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", name, value))
+	if (ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", value))
 		BootPartition = atoi(value);
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootSector", name, value))
+	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootSector", value))
 	{
 		MessageBox("Boot sector file not specified for selected OS!");
 		return;
@@ -89,9 +90,9 @@ void LoadAndBootBootSector(int nOSToBoot)
 		return;
 	}
 
-	RestoreScreen(pScreenBuffer);
+	RestoreScreen(ScreenBuffer);
 	showcursor();
-	gotoxy(nCursorXPos, nCursorYPos);
+	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
 	JumpToBootCode();
@@ -115,7 +116,7 @@ void LoadAndBootPartition(int nOSToBoot)
 			MessageLine(value);
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", name, value))
+	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -123,7 +124,7 @@ void LoadAndBootPartition(int nOSToBoot)
 
 	BootDrive = atoi(value);
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", name, value))
+	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", value))
 	{
 		MessageBox("Boot partition not specified for selected OS!");
 		return;
@@ -175,9 +176,9 @@ void LoadAndBootPartition(int nOSToBoot)
 		return;
 	}
 
-	RestoreScreen(pScreenBuffer);
+	RestoreScreen(ScreenBuffer);
 	showcursor();
-	gotoxy(nCursorXPos, nCursorYPos);
+	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
 	JumpToBootCode();
@@ -199,7 +200,7 @@ void LoadAndBootDrive(int nOSToBoot)
 			MessageLine(value);
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", name, value))
+	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
@@ -220,9 +221,9 @@ void LoadAndBootDrive(int nOSToBoot)
 		return;
 	}
 
-	RestoreScreen(pScreenBuffer);
+	RestoreScreen(ScreenBuffer);
 	showcursor();
-	gotoxy(nCursorXPos, nCursorYPos);
+	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
 	JumpToBootCode();

@@ -54,10 +54,14 @@ void	*memset(void *dest, int c, size_t count);
 char	*fgets(char *string, int n, FILE *stream);
 int	atoi(char *string);
 
+#define ZeroMemory(Destination, Length) memset(Destination, 0, Length)
+
 
 void	print(char *str);
 void	printf(char *fmt, ...);
 void	sprintf(char *buffer, char *format, ...);
+
+char *convert_to_ascii(char *buf, int c, ...);
 
 int	biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
 void	stop_floppy(void);		// Implemented in asmcode.S

@@ -24,10 +24,10 @@
 #include "multiboot.h"
 
 
-void	InitMemoryManager(void *HeapBaseAddress, unsigned long HeapLength);
+VOID	InitMemoryManager(PVOID BaseAddress, ULONG Length);
 
-void*	malloc(int size);
-void	free(void *memblock);
+PVOID	AllocateMemory(ULONG NumberOfBytes);
+VOID	FreeMemory(PVOID MemBlock);
 
 // These functions are implemented in mem.S
 int		GetExtendedMemorySize(void);				// Returns extended memory size in KB

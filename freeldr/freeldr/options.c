@@ -125,9 +125,9 @@ void DoBootOptionsMenu(int BootDriveNum, char *BootDriveText)
 				return;
 			}
 
-			RestoreScreen(pScreenBuffer);
+			RestoreScreen(ScreenBuffer);
 			showcursor();
-			gotoxy(nCursorXPos, nCursorYPos);
+			gotoxy(CursorXPos, CursorYPos);
 
 			stop_floppy();
 			JumpToBootCode();
@@ -237,9 +237,9 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 				return;
 			}
 
-			RestoreScreen(pScreenBuffer);
+			RestoreScreen(ScreenBuffer);
 			showcursor();
-			gotoxy(nCursorXPos, nCursorYPos);
+			gotoxy(CursorXPos, CursorYPos);
 
 			stop_floppy();
 			JumpToBootCode();

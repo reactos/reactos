@@ -27,11 +27,12 @@
 #include "multiboot.h"
 #include "arcname.h"
 #include "memory.h"
+#include "parseini.h"
 
-BOOL	LoadReactOSKernel(char *OperatingSystemName);
-BOOL	LoadReactOSDrivers(char *OperatingSystemName);
+BOOL	LoadReactOSKernel(PUCHAR OperatingSystemName);
+BOOL	LoadReactOSDrivers(PUCHAR OperatingSystemName);
 
-void LoadAndBootReactOS(char *OperatingSystemName)
+void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 {
 	FILE		file;
 	char		name[1024];
@@ -72,7 +73,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	/*
 	 * Make sure the system path is set in the .ini file
 	 */
-	if(!ReadSectionSettingByName(OperatingSystemName, "SystemPath", name, value))
+	if (!ReadSectionSettingByName(OperatingSystemName, "SystemPath", value))
 	{
 		MessageBox("System path not specified for selected operating system.");
 		return;
@@ -81,7 +82,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	/*
 	 * Verify system path
 	 */
-	if(!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
+	if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
 	{
 		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
 		MessageBox(MsgBuffer);
@@ -98,7 +99,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	if (ReadSectionSettingByName(OperatingSystemName, "Options", name, value))
+	if (ReadSectionSettingByName(OperatingSystemName, "Options", value))
 	{
 		strcat(multiboot_kernel_cmdline, " ");
 		strcat(multiboot_kernel_cmdline, value);
@@ -112,7 +113,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	/*
 	 * Find the kernel image name
 	 */
-	if(!ReadSectionSettingByName(OperatingSystemName, "Kernel", name, value))
+	if(!ReadSectionSettingByName(OperatingSystemName, "Kernel", value))
 	{
 		MessageBox("Kernel image file not specified for selected operating system.");
 		return;
@@ -149,7 +150,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	 * Find the kernel image name
 	 * and try to load the kernel off the disk
 	 */
-	if(ReadSectionSettingByName(OperatingSystemName, "Kernel", name, value))
+	if(ReadSectionSettingByName(OperatingSystemName, "Kernel", value))
 	{
 		/*
 		 * Set the name and try to open the PE image
@@ -254,7 +255,7 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	strcat(name, ".");
 	//MessageBox(name);
 
-	RestoreScreen(pScreenBuffer);
+	RestoreScreen(ScreenBuffer);
 
 	/*
 	 * Now boot the kernel

@@ -1,6 +1,6 @@
-; BTSECT32.ASM
+; FAT32.ASM
 ; FAT32 Boot Sector
-; Copyright (c) 1998, 2000 Brian Palmer
+; Copyright (c) 1998, 2000, 2001 Brian Palmer
 
 org 7c00h
 
@@ -12,15 +12,15 @@ start:
         jmp short main
         nop
 
-OEMName				db 'FreeLDR!'
+OEMName				db 'FrLdr1.0'
 BytesPerSector		dw 512
 SectsPerCluster		db 1
-ReservedSectors		dw 1
+ReservedSectors		dw 32
 NumberOfFats		db 2
-MaxRootEntries		dw 0			;512 - Always zero for FAT32 volumes
-TotalSectors		dw 0			;2880 - Always zero for FAT32 volumes
+MaxRootEntries		dw 0			; Always zero for FAT32 volumes
+TotalSectors		dw 0			; Always zero for FAT32 volumes
 MediaDescriptor		db 0f8h
-SectorsPerFat		dw 0			;9 - Always zero for FAT32 volumes
+SectorsPerFat		dw 0			; Always zero for FAT32 volumes
 SectorsPerTrack		dw 18
 NumberOfHeads		dw 2
 HiddenSectors		dd 0
@@ -38,7 +38,7 @@ BootDrive			db 0
 Reserved			db 0
 ExtendSig			db 29h
 SerialNumber		dd 00000000h
-VolumeLabel			db 'FreeLoader!'
+VolumeLabel			db 'NO NAME    '
 FileSystem			db 'FAT32   '
 
 main:
@@ -56,12 +56,19 @@ main:
         mov [BootDrive],dl      ; Save the boot drive
         xor ax,ax               ; Zero out AX
 
+        cmp	word [TotalSectors],byte 0x00	; Check the old 16-bit value of TotalSectors
+        jnz	ErrBoot							; If it is non-zero then exit with an error
+
+        cmp word [FSVersion],byte 0x00		; Check the file system version word
+        ja ErrBoot							; If it is not zero then exit with an error
+
+
         ; Reset disk controller
         int 13h         
-        jnc Continue
+        jnc LoadExtraBootCode
         jmp BadBoot             ; Reset failed...
 
-Continue:
+LoadExtraBootCode:
 		; First we have to load our extra boot code at
 		; sector 14 into memory at [0000:7e00h]
 		xor  dx,dx
@@ -73,96 +80,8 @@ Continue:
         mov  es,bx				; Read sector to [0000:7e00h]
 		xor  bx,bx
 		call ReadSectors
-		jnc  Continue1
-		jmp  BadBoot
+		jmp  StartSearch
 
-
-Continue1:
-        ; Now we must get the first cluster of the root directory
-		mov  eax,DWORD [RootDirStartCluster]
-		cmp  eax,0ffffff8h		; Check to see if this is the last cluster in the chain
-		jb	 Continue2			; If not continue, if so BadBoot
-		jmp  ErrBoot
-Continue2:
-        mov  bx,800h
-        mov  es,bx				; Read cluster to [0000:8000h]
-        call ReadCluster        ; Read the cluster
-
-
-        ; Now we have to find our way through the root directory to
-        ; The OSLOADER.SYS file
-		xor  bx,bx
-        mov  bl,[SectsPerCluster]
-		shl  bx,4				; BX = BX * 512 / 32
-        mov  ax,800h            ; We loaded at 0800:0000
-        mov  es,ax
-        xor  di,di
-        mov  si,filename
-        mov  cx,11
-        rep  cmpsb              ; Compare filenames
-        jz   FoundFile          ; If same we found it
-        dec  bx
-        jnz  FindFile
-        jmp  ErrBoot
-
-FindFile:
-        mov  ax,es              ; We didn't find it in the previous dir entry
-        add  ax,2               ; So lets move to the next one
-        mov  es,ax              ; And search again
-        xor  di,di
-        mov  si,filename        
-        mov  cx,11
-        rep  cmpsb              ; Compare filenames
-        jz   FoundFile          ; If same we found it
-        dec  bx                 ; Keep searching till we run out of dir entries
-        jnz  FindFile           ; Last entry?
-
-		; Get the next root dir cluster and try again until we run out of clusters
-		mov  eax,DWORD [RootDirStartCluster]
-		call GetFatEntry
-		mov  [RootDirStartCluster],eax
-        jmp  Continue1
-
-FoundFile:
-        xor  di,di              ; ES:DI has dir entry
-        xor  dx,dx
-        mov  ax,WORD [es:di+14h]        ; Get start cluster high word
-		shl  eax,16
-        mov  ax,WORD [es:di+1ah]        ; Get start cluster low word
-
-        mov  bx,800h
-        mov  es,bx
-
-FoundFile2:
-		cmp  eax,0ffffff8h		; Check to see if this is the last cluster in the chain
-		jae	 FoundFile3			; If so continue, if not then read then next one
-		push eax
-        xor  bx,bx              ; Load ROSLDR starting at 0000:8000h
-		push es
-		call ReadCluster
-		pop  es
-
-		xor  bx,bx
-        mov  bl,[SectsPerCluster]
-		shl  bx,5				; BX = BX * 512 / 16
-		mov  ax,es				; Increment the load address by
-		add  ax,bx				; The size of a cluster
-		mov  es,ax
-
-		pop  eax
-		push es
-		call GetFatEntry		; Get the next entry
-		pop  es
-
-        jmp  FoundFile2			; Load the next cluster (if any)
-
-FoundFile3:
-        mov  dl,[BootDrive]
-        xor  ax,ax
-        push ax
-        mov  ax,8000h
-        push ax                 ; We will do a far return to 0000:8000h
-        retf                    ; Transfer control to ROSLDR
 
 
 
@@ -189,15 +108,17 @@ ReadSectors:
         ror  ah,1                      ; Low 8 bits of cylinder in CH, high 2 bits
         ror  ah,1                      ;  in CL shifted to bits 6 & 7
         or   cl,ah                     ; Or with sector number
-        mov  ax,513
+        mov  ax,0201h
         int  13h     ; DISK - READ SECTORS INTO MEMORY
                      ; AL = number of sectors to read, CH = track, CL = sector
                      ; DH = head, DL    = drive, ES:BX -> buffer to fill
                      ; Return: CF set on error, AH =    status (see AH=01h), AL    = number of sectors read
+
+        jc   BadBoot
+
         pop  cx
         pop  dx
         pop  ax
-        jc   ReadFail
         inc  ax       ;Increment Sector to Read
         jnz  NoCarry
         inc  dx
@@ -206,15 +127,13 @@ ReadSectors:
 NoCarry:
         push bx
         mov  bx,es
-        add  bx,20h
+        add  bx,byte 20h
         mov  es,bx
         pop  bx
                                         ; Increment read buffer for next sector
         loop ReadSectors                ; Read next sector
 
-
-ReadFail:
-        ret
+        ret   
 
 
 
@@ -275,6 +194,99 @@ filename     db 'FREELDR SYS'
 ; Note: Win2k uses sector 12 for this purpose
 
 
+
+StartSearch:
+        ; Now we must get the first cluster of the root directory
+		mov  eax,DWORD [RootDirStartCluster]
+		cmp  eax,0ffffff8h		; Check to see if this is the last cluster in the chain
+		jb	 ContinueSearch		; If not continue, if so BadBoot
+		jmp  ErrBoot
+ContinueSearch:
+        mov  bx,800h
+        mov  es,bx				; Read cluster to [0000:8000h]
+        call ReadCluster        ; Read the cluster
+
+
+        ; Now we have to find our way through the root directory to
+        ; The OSLOADER.SYS file
+		xor  bx,bx
+        mov  bl,[SectsPerCluster]
+		shl  bx,4				; BX = BX * 512 / 32
+        mov  ax,800h            ; We loaded at 0800:0000
+        mov  es,ax
+        xor  di,di
+        mov  si,filename
+        mov  cx,11
+        rep  cmpsb              ; Compare filenames
+        jz   FoundFile          ; If same we found it
+        dec  bx
+        jnz  FindFile
+        jmp  ErrBoot
+
+FindFile:
+        mov  ax,es              ; We didn't find it in the previous dir entry
+        add  ax,2               ; So lets move to the next one
+        mov  es,ax              ; And search again
+        xor  di,di
+        mov  si,filename        
+        mov  cx,11
+        rep  cmpsb              ; Compare filenames
+        jz   FoundFile          ; If same we found it
+        dec  bx                 ; Keep searching till we run out of dir entries
+        jnz  FindFile           ; Last entry?
+
+		; Get the next root dir cluster and try again until we run out of clusters
+		mov  eax,DWORD [RootDirStartCluster]
+		call GetFatEntry
+		mov  [RootDirStartCluster],eax
+        jmp  StartSearch
+
+FoundFile:
+		; Display "Loading FreeLoader..." message
+        mov  si,msgLoading      ; Loading message
+        call PutChars           ; Display it
+
+        xor  di,di              ; ES:DI has dir entry
+        xor  dx,dx
+        mov  ax,WORD [es:di+14h]        ; Get start cluster high word
+		shl  eax,16
+        mov  ax,WORD [es:di+1ah]        ; Get start cluster low word
+
+        mov  bx,800h
+        mov  es,bx
+
+FoundFile2:
+		cmp  eax,0ffffff8h		; Check to see if this is the last cluster in the chain
+		jae	 FoundFile3			; If so continue, if not then read then next one
+		push eax
+        xor  bx,bx              ; Load ROSLDR starting at 0000:8000h
+		push es
+		call ReadCluster
+		pop  es
+
+		xor  bx,bx
+        mov  bl,[SectsPerCluster]
+		shl  bx,5				; BX = BX * 512 / 16
+		mov  ax,es				; Increment the load address by
+		add  ax,bx				; The size of a cluster
+		mov  es,ax
+
+		pop  eax
+		push es
+		call GetFatEntry		; Get the next entry
+		pop  es
+
+        jmp  FoundFile2			; Load the next cluster (if any)
+
+FoundFile3:
+        mov  dl,[BootDrive]
+        xor  ax,ax
+        push ax
+        mov  ax,8000h
+        push ax                 ; We will do a far return to 0000:8000h
+        retf                    ; Transfer control to ROSLDR
+
+
 ; Returns the FAT entry for a given cluster number
 ; On entry EAX has cluster number
 ; On return EAX has FAT entry for that cluster
@@ -288,13 +300,31 @@ GetFatEntry:
 		div   ebx						; FAT Sector Number = EAX / BytesPerSector
 		movzx ebx,WORD [ReservedSectors]
 		add   eax,ebx					; FAT Sector Number += ReservedSectors
-		movzx ebx,WORD [HiddenSectors]
+		mov   ebx,DWORD [HiddenSectors]
 		add   eax,ebx					; FAT Sector Number += HiddenSectors
 		pop   ebx
 		dec   ebx
 		and   ecx,ebx					; FAT Offset Within Sector = ECX % BytesPerSector
 		; EAX holds logical FAT sector number
 		; ECX holds FAT entry offset
+
+		; Now we have to check the extended flags
+		; to see which FAT is the active one
+		; and use it, or if they are mirrored then
+		; no worries
+		movzx ebx,WORD [ExtendedFlags]	; Get extended flags and put into ebx
+		and   bx,0x0f					; Mask off upper 8 bits
+		jz    GetFatEntry2				; If fat is mirrored then skip fat calcs
+		cmp   bl,[NumberOfFats]			; Compare bl to number of fats
+		jc    GetFatEntry1
+		jmp   ErrBoot					; If bl is bigger than numfats exit with error
+GetFatEntry1:
+		mov   edx,eax					; Put logical FAT sector number in edx
+		mov   eax,[SectorsPerFatBig]	; Get the number of sectors occupied by one fat in eax
+		mul   ebx						; Multiplied by the active FAT index we have in ebx
+		add   eax,edx					; Add the current FAT sector offset
+
+GetFatEntry2:
 		push  ecx
 		ror   eax,16
 		mov   dx,ax
@@ -305,9 +335,9 @@ GetFatEntry:
         xor  bx,bx              ; We will load it to [7000:0000h]
 		mov  cx,1
 		call ReadSectors
-		jnc  GetFatEntry1
+		jnc  GetFatEntry3
 		jmp  BadBoot
-GetFatEntry1:
+GetFatEntry3:
         mov  bx,7000h
         mov  es,bx
 		pop  ecx
@@ -341,11 +371,10 @@ ReadCluster:
         xor   bx,bx				; We will load it to [ES:0000], ES loaded before function call
 		movzx cx,BYTE [SectsPerCluster]
 		call  ReadSectors
-		jnc   ReadCluster1
-		jmp   BadBoot
-
-ReadCluster1:
 		ret
 
-        times 1022-($-$$) db 0   ; Pad to 1022 bytes
+        times 998-($-$$) db 0   ; Pad to 998 bytes
+
+msgLoading   db 'Loading FreeLoader...',0dh,0ah,0
+
         dw 0aa55h       ; BootSector signature

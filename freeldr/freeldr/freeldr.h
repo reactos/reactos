@@ -38,12 +38,20 @@
 #define WORD	unsigned short
 #define DWORD	unsigned long
 #define CHAR	char
+#define PCHAR	char *
+#define UCHAR	unsigned char
+#define PUCHAR	unsigned char *
 #define WCHAR	unsigned short
+#define PWCHAR	unsigned short *
 #define LONG	long
 #define ULONG	unsigned long
 #define PULONG	unsigned long *
 #define PDWORD	DWORD *
 #define PWORD	WORD *
+#define VOID	void
+#define PVOID	VOID*
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define	OSTYPE_REACTOS		1
 #define OSTYPE_LINUX		2
@@ -55,16 +63,15 @@ typedef struct
 {
 	char	name[260];
 	int		nOSType;			// ReactOS or Linux or a bootsector, etc.
-} OSTYPE;
+} OSTYPE, *POSTYPE;
 
-extern unsigned int	BootDrive; // BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-extern unsigned int	BootPartition;	// Boot Partition, 1-4
-extern BOOL			bTUILoaded; // Tells us if the user interface is loaded
+extern ULONG		BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
+extern ULONG		BootPartition;		// Boot Partition, 1-4
+extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
-extern char			*pFreeldrIni; // Load address for freeldr.ini
-extern char			*pScreenBuffer; // Save address for screen contents
-extern int			nCursorXPos;	// Cursor's X Position
-extern int			nCursorYPos;	// Cursor's Y Position
+extern PUCHAR		ScreenBuffer;		// Save buffer for screen contents
+extern int			CursorXPos;			// Cursor's X Position
+extern int			CursorYPos;			// Cursor's Y Position
 
 extern OSTYPE		OSList[16]; // The OS list
 extern int			nNumOS;		// Number of OSes listed
@@ -72,11 +79,5 @@ extern int			nNumOS;		// Number of OSes listed
 extern int			nTimeOut;		// Time to wait for the user before booting
 
 void	BootMain(void);
-BOOL	ParseIniFile(void);
-int		GetNumSectionItems(char *section); // returns the number of items in a particular section (i.e. [FREELOADER])
-BOOL	ReadSectionSettingByNumber(char *section, int num, char *name, char *value); // Reads the num'th value from section
-BOOL	ReadSectionSettingByName(char *section, char *valuename, char *name, char *value); // Reads the value named name from section
-BOOL	IsValidSetting(char *setting, char *value);
-void	SetSetting(char *setting, char *value);
 
 #endif  // defined __FREELDR_H

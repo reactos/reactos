@@ -92,9 +92,9 @@ void LoadAndBootLinux(int DriveNum, int Partition, char *vmlinuz, char *cmd_line
 	memcpy((void*)0x90000, bootsector, 512);
 	memcpy((void*)0x90200, setup, 2048);
 
-	RestoreScreen(pScreenBuffer);
+	RestoreScreen(ScreenBuffer);
 	showcursor();
-	gotoxy(nCursorXPos, nCursorYPos);
+	gotoxy(CursorXPos, CursorYPos);
 
 	stop_floppy();
 	JumpToLinuxBootCode();

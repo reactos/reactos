@@ -1,6 +1,6 @@
 #
 #  FreeLoader
-#  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+#  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -25,15 +25,17 @@ export RM = cmd /C del
 export CP = cmd /C copy
 
 #FLAGS = -Wall -nostdinc -fno-builtin
-FLAGS = -Wall -fno-builtin
+FLAGS = -Wall -fno-builtin -DDEBUG
 
 # asmcode.o has to be first in the link line because it contains the startup code
 OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
 	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
-	mem.o memory.o
+	mem.o memory.o debug.o parseini.o
 ASM_OBJS = asmcode.o mb.o boot.o mem.o
 C_OBJS = freeldr.o stdlib.o fs.a reactos.o tui.o menu.o miscboot.o options.o linux.o \
-	multiboot.o arcname.o memory.o
+	multiboot.o arcname.o memory.o debug.o parseini.o
+
+.PHONY : clean
 
 all:	freeldr.sys
 
@@ -97,8 +99,14 @@ arcname.o:	arcname.c freeldr.h arcname.h stdlib.h Makefile
 mem.o:	mem.S asmcode.h Makefile
 	$(CC) $(FLAGS) -o mem.o -c mem.S
 
-memory.o:	memory.c asmcode.h memory.h Makefile
+memory.o:	memory.c memory.h Makefile
 	$(CC) $(FLAGS) -o memory.o -c memory.c
+
+debug.o:	debug.c debug.h Makefile
+	$(CC) $(FLAGS) -o debug.o -c debug.c
+
+parseini.o:	parseini.c parseini.h Makefile
+	$(CC) $(FLAGS) -o parseini.o -c parseini.c
 
 clean:
 	$(RM) *.o
