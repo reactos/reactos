@@ -232,7 +232,7 @@ NtUserCheckMenuItem(
   UINT uIDCheckItem,
   UINT uCheck);
 
-DWORD STDCALL
+HWND STDCALL
 NtUserChildWindowFromPointEx(HWND Parent,
 			     LONG x,
 			     LONG y,
