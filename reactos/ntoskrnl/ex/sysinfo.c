@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.18 2002/10/01 19:27:21 chorns Exp $
+/* $Id: sysinfo.c,v 1.19 2003/03/24 00:09:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,9 @@
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  20/03/2003: implemented querying SystemProcessInformation,
+ *                              no more copying to-from the caller (Aleksey
+ *                              Bragin <aleksey@studiocerebral.com>)
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,6 +21,7 @@
 #include <internal/ex.h>
 #include <internal/ldr.h>
 #include <internal/safe.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 
@@ -457,8 +461,98 @@ QSI_DEF(SystemPathInformation)
 /* Class 5 - Process Information */
 QSI_DEF(SystemProcessInformation)
 {
-	/* FIXME: scan the process+thread list */
-	return (STATUS_NOT_IMPLEMENTED);
+	int ovlSize=0, nThreads=1;
+	PEPROCESS pr, syspr;
+	unsigned char *pCur;
+
+	/* scan the process list */
+	// TODO: Add thread information
+
+	PSYSTEM_PROCESSES Spi
+		= (PSYSTEM_PROCESSES) Buffer;
+
+	*ReqSize = sizeof(SYSTEM_PROCESSES);
+
+	if (Size < sizeof(SYSTEM_PROCESSES))
+	{
+		return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+	}
+	
+	syspr = PsGetNextProcess(NULL);
+	pr = syspr;
+	pCur = (unsigned char *)Spi;
+
+	do
+	{
+		PSYSTEM_PROCESSES SpiCur;
+		int curSize;
+		ANSI_STRING	imgName;
+		int inLen=32; // image name len in bytes
+		
+
+		SpiCur = (PSYSTEM_PROCESSES)pCur;
+
+		nThreads = 1; // FIXME
+		
+		// size of the structure for every process
+		curSize = sizeof(SYSTEM_PROCESSES)-sizeof(SYSTEM_THREADS)+sizeof(SYSTEM_THREADS)*nThreads;
+		ovlSize += curSize+inLen;
+
+		if (ovlSize > Size)
+		{
+			*ReqSize = ovlSize;
+
+			return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+		}
+
+		// fill system information
+		SpiCur->NextEntryDelta = curSize+inLen; // relative offset to the beginnnig of the next structure
+		SpiCur->ThreadCount = nThreads;
+		SpiCur->CreateTime = pr->CreateTime;
+		//SpiCur->UserTime = 0; // FIXME
+		//SpiCur->KernelTime = 0; // FIXME
+
+		SpiCur->ProcessName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
+		SpiCur->ProcessName.MaximumLength = inLen;
+		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
+
+		// copy name to the end of the struct
+		RtlInitAnsiString(&imgName, pr->ImageFileName);
+		RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+
+		SpiCur->BasePriority = 0; // FIXME
+		SpiCur->ProcessId = pr->UniqueProcessId;
+		SpiCur->InheritedFromProcessId = 0; // FIXME
+		SpiCur->HandleCount = 0; // FIXME
+		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
+		SpiCur->VmCounters.VirtualSize = 0; // FIXME
+		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
+		SpiCur->VmCounters.PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
+		SpiCur->VmCounters.WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
+		SpiCur->VmCounters.QuotaPeakPagedPoolUsage = 0; // FIXME
+		SpiCur->VmCounters.QuotaPagedPoolUsage = 0; // FIXME
+		SpiCur->VmCounters.QuotaPeakNonPagedPoolUsage = 0; // FIXME
+		SpiCur->VmCounters.QuotaNonPagedPoolUsage = 0; // FIXME
+		SpiCur->VmCounters.PagefileUsage = 0; // FIXME
+		SpiCur->VmCounters.PeakPagefileUsage = pr->PeakPagefileUsage;
+                // KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
+                // doesn't seem to contain any equivalent field
+		//SpiCur->TotalPrivateBytes = pr->NumberOfPrivatePages; //FIXME: bytes != pages
+
+		pr = PsGetNextProcess(pr);
+
+		if ((pr == syspr) || (pr == NULL))
+		{
+			SpiCur->NextEntryDelta = 0;
+			break;
+		}
+		else
+			pCur = pCur + curSize + inLen;
+	}  while ((pr != syspr) && (pr != NULL));
+
+	*ReqSize = ovlSize;
+
+	return (STATUS_SUCCESS);
 }
 
 /* Class 6 - Call Count Information */
@@ -1035,10 +1129,10 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   NTSTATUS Status;
   NTSTATUS FStatus;
 
-  if (ExGetPreviousMode() == KernelMode)
-    {
+  /*if (ExGetPreviousMode() == KernelMode)
+    {*/
       SystemInformation = UnsafeSystemInformation;
-    }
+    /*}
   else
     {
       SystemInformation = ExAllocatePool(NonPagedPool, Length);
@@ -1046,7 +1140,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	{
 	  return(STATUS_NO_MEMORY);
 	}
-    }
+    }*/
   
   /* Clear user buffer. */
   RtlZeroMemory(SystemInformation, Length);
@@ -1065,7 +1159,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	  FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
 							  Length,
 							  &ResultLength);
-	  if (ExGetPreviousMode() != KernelMode)
+	  /*if (ExGetPreviousMode() != KernelMode)
 	    {
 	      Status = MmCopyToCaller(UnsafeSystemInformation, 
 				      SystemInformation,
@@ -1075,15 +1169,15 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 		{
 		  return(Status);
 		}
-	    }
+	    }*/
 	  if (UnsafeResultLength != NULL)
 	    {
-	      if (ExGetPreviousMode() == KernelMode)
+	      /*if (ExGetPreviousMode() == KernelMode)
 		{
 		  *UnsafeResultLength = ResultLength;
 		}
 	      else
-		{
+		{*/
 		  Status = MmCopyToCaller(UnsafeResultLength,
 					  &ResultLength,
 					  sizeof(ULONG));
@@ -1091,7 +1185,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 		    {
 		      return(Status);
 		    }
-		}
+		/*}*/
 	    }
 	  return(FStatus);
 	}

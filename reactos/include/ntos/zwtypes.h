@@ -1213,53 +1213,61 @@ struct _SYSTEM_PATH_INFORMATION
 } SYSTEM_PATH_INFORMATION, * PSYSTEM_PATH_INFORMATION;
 
 // SystemProcessInformation (5)
-typedef
-struct _SYSTEM_THREAD_INFORMATION
-{
-	TIME		KernelTime;
-	TIME		UserTime;
-	TIME		CreateTime;
-	ULONG		TickCount;
-	ULONG		StartEIP;
-	CLIENT_ID	ClientId;
-	ULONG		DynamicPriority;
-	ULONG		BasePriority;
-	ULONG		nSwitches;
-	DWORD		State;
-	KWAIT_REASON	WaitReason;
-	
-} SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
 
-typedef
-struct SYSTEM_PROCESS_INFORMATION
+typedef struct _SYSTEM_THREADS
 {
-	ULONG				RelativeOffset;
-	ULONG				ThreadCount;
-	ULONG				Unused1 [6];
-	TIME				CreateTime;
-	TIME				UserTime;
-	TIME				KernelTime;
-	UNICODE_STRING			Name;
-	ULONG				BasePriority;
-	ULONG				ProcessId;
-	ULONG				ParentProcessId;
-	ULONG				HandleCount;
-	ULONG				Unused2[2];
-	ULONG				PeakVirtualSizeBytes;
-	ULONG				TotalVirtualSizeBytes;
-	ULONG				PageFaultCount;
-	ULONG				PeakWorkingSetSizeBytes;
-	ULONG				TotalWorkingSetSizeBytes;
-	ULONG				PeakPagedPoolUsagePages;
-	ULONG				TotalPagedPoolUsagePages;
-	ULONG				PeakNonPagedPoolUsagePages;
-	ULONG				TotalNonPagedPoolUsagePages;
-	ULONG				TotalPageFileUsageBytes;
-	ULONG				PeakPageFileUsageBytes;
-	ULONG				TotalPrivateBytes;
-	SYSTEM_THREAD_INFORMATION	ThreadSysInfo [1];
-	
-} SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+ TIME         KernelTime;
+ TIME         UserTime;
+ TIME         CreateTime;
+ ULONG        WaitTime;
+ PVOID        StartAddress;
+ CLIENT_ID    ClientId;
+ KPRIORITY    Priority;
+ KPRIORITY    BasePriority;
+ ULONG        ContextSwitchCount;
+ ULONG State;
+ KWAIT_REASON WaitReason;
+} SYSTEM_THREADS, *PSYSTEM_THREADS;
+
+typedef struct _SYSTEM_PROCESSES_NT4
+{
+ SIZE_T         NextEntryDelta;
+ ULONG          ThreadCount;
+ ULONG          Reserved1[6];
+ TIME           CreateTime;
+ TIME           UserTime;
+ TIME           KernelTime;
+ UNICODE_STRING ProcessName;
+ KPRIORITY      BasePriority;
+ ULONG          ProcessId;
+ ULONG          InheritedFromProcessId;
+ ULONG          HandleCount;
+ ULONG          Reserved2[2];
+ VM_COUNTERS    VmCounters;
+ SYSTEM_THREADS Threads[ANYSIZE_ARRAY];
+} SYSTEM_PROCESSES_NT4, *PSYSTEM_PROCESSES_NT4;
+
+typedef struct _SYSTEM_PROCESSES_NT5
+{
+ SIZE_T         NextEntryDelta;
+ ULONG          ThreadCount;
+ ULONG          Reserved1[6];
+ TIME           CreateTime;
+ TIME           UserTime;
+ TIME           KernelTime;
+ UNICODE_STRING ProcessName;
+ KPRIORITY      BasePriority;
+ ULONG          ProcessId;
+ ULONG          InheritedFromProcessId;
+ ULONG          HandleCount;
+ ULONG          Reserved2[2];
+ VM_COUNTERS    VmCounters;
+ IO_COUNTERS    IoCounters;
+ SYSTEM_THREADS Threads[ANYSIZE_ARRAY];
+} SYSTEM_PROCESSES_NT5, *PSYSTEM_PROCESSES_NT5;
+
+/* Not sure. What version are we emulating? */
+typedef SYSTEM_PROCESSES_NT5 SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
 
 // SystemCallCountInformation (6)
 typedef
