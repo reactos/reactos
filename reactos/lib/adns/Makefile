@@ -8,7 +8,7 @@ TARGET_NAME = adns
 
 TARGET_CFLAGS = \
  -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
- -Wstrict-prototypes -Wmissing-prototypes -Wall -DADNS_JGAA_WIN32
+ -Wstrict-prototypes -Wmissing-prototypes -Wall -DADNS_JGAA_WIN32 -D__USE_W32API -D__REACTOS__
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -Isrc -Iadns_win32
