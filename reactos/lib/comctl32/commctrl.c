@@ -220,8 +220,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             COMCTL32_aSubclass = NULL;
 
             /* destroy private heap */
+#if 0
             HeapDestroy (COMCTL32_hHeap);
             TRACE("Heap destroyed: %p\n", COMCTL32_hHeap);
+#endif
             COMCTL32_hHeap = NULL;
             break;
     }
