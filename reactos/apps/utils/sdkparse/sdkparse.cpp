@@ -87,8 +87,8 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
-	printf ( "press any key to start\n" );
-	getch();
+	//printf ( "press any key to start\n" );
+	//getch();
 #if 1
 	import_file ( "../test.h" );
 #else
@@ -208,8 +208,12 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 	p = end+1;
 	p = skip_ws ( p );
 
+	const string dbg_filename = "napi/lpc.h DISABLE DISABLE DISABLE";
+
 	if ( preproc == "include" )
 	{
+		//if ( h.filename == "napi/lpc.h" )
+		//	_CrtDbgBreak();
 		ASSERT ( *p == '<' || *p == '\"' );
 		p++;
 		p = skip_ws ( p );
@@ -224,7 +228,7 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 		else
 		{
 			bool loaded = false;
-			for ( int i = 0; i < headers.size(); i++ )
+			for ( int i = 0; i < headers.size() && !loaded; i++ )
 			{
 				if ( headers[i]->filename == include_filename )
 				{
@@ -277,6 +281,8 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 	}
 	else if ( preproc == "if" || preproc == "ifdef" || preproc == "ifndef" )
 	{
+		if ( dbg_filename == h.filename )
+			printf ( "(%s) PRE-PUSH preproc stack = %lu\n", preproc.c_str(), h.ifs.size() );
 		size_t len = element.size();
 		// check for header include guard...
 		if ( strstr ( element.c_str(), hdrguardtext.c_str() )
@@ -286,14 +292,23 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 		else
 			h.ifs.push_back ( element );
 		h.ifspreproc.push_back ( preproc );
+		if ( dbg_filename == h.filename )
+			printf ( "POST-PUSH preproc stack = %lu\n", h.ifs.size() );
 	}
 	else if ( preproc == "endif" )
 	{
+		if ( dbg_filename == h.filename )
+			printf ( "(%s) PRE-POP preproc stack = %lu\n", preproc.c_str(), h.ifs.size() );
+		ASSERT ( h.ifs.size() > 0 && h.ifs.size() == h.ifspreproc.size() );
 		h.ifs.pop_back();
 		h.ifspreproc.pop_back();
+		if ( dbg_filename == h.filename )
+			printf ( "POST-POP preproc stack = %lu\n", h.ifs.size() );
 	}
 	else if ( preproc == "elif" )
 	{
+		if ( dbg_filename == h.filename )
+			printf ( "(%s) PRE-PUSHPOP preproc stack = %lu\n", preproc.c_str(), h.ifs.size() );
 		string& oldpre = h.ifspreproc.back();
 		string old = h.ifs.back();
 		string condold;
@@ -311,9 +326,13 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 		}
 		h.ifs.back() = string("(") + element + ") && " + condold;
 		h.ifspreproc.back() = "if";
+		if ( dbg_filename == h.filename )
+			printf ( "POST-PUSHPOP preproc stack = %lu\n", h.ifs.size() );
 	}
 	else if ( preproc == "else" )
 	{
+		if ( dbg_filename == h.filename )
+			printf ( "(%s) PRE-PUSHPOP preproc stack = %lu\n", preproc.c_str(), h.ifs.size() );
 		string& oldpre = h.ifspreproc.back();
 		ASSERT ( oldpre != "else" );
 		if ( oldpre == "ifdef" )
@@ -329,6 +348,8 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 			return;
 		}
 		oldpre = "else";
+		if ( dbg_filename == h.filename )
+			printf ( "POST-PUSHPOP preproc stack = %lu\n", h.ifs.size() );
 	}
 	else if ( preproc == "include_next" )
 	{
@@ -511,13 +532,34 @@ char* findend ( char* p, bool& externc )
 	return end;
 }
 
+int skip_declspec ( const vector<string>& tokens, int off )
+{
+	if ( tokens[off] == "__declspec" )
+	{
+		off++;
+		TOKASSERT ( tokens[off] == "(" );
+		off++;
+		int parens = 1;
+		while ( parens )
+		{
+			if ( tokens[off] == "(" )
+				parens++;
+			else if ( tokens[off] == ")" )
+				parens--;
+			off++;
+		}
+	}
+	return off;
+}
+
 Type identify ( const vector<string>& tokens, int off )
 {
-	if ( tokens.size() > off+2 )
+	off = skip_declspec ( tokens, off );
+	/*if ( tokens.size() > off+4 )
 	{
-		if ( tokens[off+2] == "_lfind" )
+		if ( tokens[off+4] == "PCONTROLDISPATCHER" )
 			_CrtDbgBreak();
-	}
+	}*/
 	/*if ( tokens.size() > off+1 )
 	{
 		if ( tokens[off+1] == "_OSVERSIONINFOEXA" )
@@ -557,6 +599,8 @@ Type identify ( const vector<string>& tokens, int off )
 			}
 		}
 		else if ( tokens[i] == ";" )
+			break;
+		else if ( tokens[i] == "__attribute__" )
 			break;
 	}
 	if ( openparens > 1 && closeparens )
@@ -738,15 +782,41 @@ int parse_param ( const vector<string>& tokens, int off, vector<string>& names, 
 {
 	if ( tokens[off] == ")" )
 		return off;
-	while ( tokens[off+1] != "," && tokens[off+1] != ")" )
+	// special-case check for function pointer params
+	int done = off;
+	int parens = 1;
+	bool fptr = false;
+	for ( ;; )
+	{
+		if ( tokens[done] == "," && parens == 1 )
+			break;
+		if ( tokens[done] == ")" )
+		{
+			if ( parens == 1 )
+				break;
+			else
+				parens--;
+		}
+		if ( tokens[done] == "(" )
+			parens++;
+		if ( tokens[done] == "*" && tokens[done-1] == "(" )
+			fptr = true;
+		done++;
+	}
+	if ( !fptr )
+		done--;
+	while ( off < done )
 		depend ( tokens[off++], dependencies );
-	name ( tokens[off++], names );
+	if ( !fptr )
+		name ( tokens[off++], names );
 	return off;
 }
 
 int parse_function ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
 	vector<string> fauxnames;
+
+	off = skip_declspec ( tokens, off );
 
 	while ( tokens[off+1] != "(" )
 		depend ( tokens[off++], dependencies );
@@ -762,6 +832,23 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 	}
 
 	off++;
+
+	// check for "attributes"
+	if ( tokens[off] == "__attribute__" )
+	{
+		off++;
+		TOKASSERT ( tokens[off] == "(" );
+		off++;
+		int parens = 1;
+		while ( parens )
+		{
+			if ( tokens[off] == "(" )
+				parens++;
+			else if ( tokens[off] == ")" )
+				parens--;
+			off++;
+		}
+	}
 
 	// is this just a function *declaration* ?
 	if ( tokens[off] == ";" )
@@ -793,6 +880,8 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 
 int parse_function_ptr ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
+	off = skip_declspec ( tokens, off );
+
 	while ( tokens[off] != "(" )
 		depend ( tokens[off++], dependencies );
 

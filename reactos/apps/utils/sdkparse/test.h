@@ -1,4 +1,4 @@
-/* $Id: test.h,v 1.3 2003/11/06 19:38:23 royce Exp $
+/* $Id: test.h,v 1.4 2003/11/18 05:20:00 royce Exp $
 */
 /*
  * test.h
@@ -21,6 +21,8 @@
 
 #ifndef __INTERNAL_PSAPI_H_INCLUDED__
 #define __INTERNAL_PSAPI_H_INCLUDED__
+
+void  *_lfind(const void* match, const void* start,unsigned int* array_size, unsigned int elem_size,int (*cf)(const void*,const void*));
 
 static inline struct _TEB * NtCurrentTeb(void)
 {
