@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2003/07/20 00:06:27 ekohl Exp $
+# $Id: Makefile,v 1.21 2003/07/21 01:59:51 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = user32
 
 TARGET_BASE = 0x77e70000
 
-TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a rosrtl.a
 
 TARGET_CFLAGS = \
  -I./include \
@@ -32,7 +32,6 @@ CONTROLS_OBJECTS = \
 MISC_OBJECTS = \
 	misc/dde.o \
 	misc/desktop.o \
-	misc/devmode.o \
 	misc/display.o \
 	misc/dllmain.o \
 	misc/exit.o \

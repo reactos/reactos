@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.11 2003/07/10 15:35:49 chorns Exp $
+/* $Id: stubsa.c,v 1.12 2003/07/21 01:59:51 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -15,33 +15,73 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <win32k/text.h>
+#include <win32k/metafile.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
-AddFontResourceA(
-	LPCSTR		a0
-	)
+AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING FilenameU;
+  int rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FilenameU,
+					      (PCSZ)lpszFilename );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = AddFontResourceExW ( FilenameU.Buffer, fl, pvReserved );
+
+  RtlFreeUnicodeString ( &FilenameU );
+
+  return rc;
+}
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceA ( LPCSTR lpszFilename )
+{
+  return AddFontResourceExA ( lpszFilename, 0, 0 );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMETAFILE
 STDCALL
 CopyMetaFileA(
-	HMETAFILE	a0,
-	LPCSTR		a1
+	HMETAFILE	Src,
+	LPCSTR		lpszFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING FileU;
+  HMETAFILE rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FileU,
+					      (PCSZ)lpszFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kCopyMetaFile ( Src, FileU.Buffer );
+
+  RtlFreeUnicodeString ( &FileU );
+
+  return rc;
 }
 
 
@@ -51,14 +91,45 @@ CopyMetaFileA(
 HDC
 STDCALL
 CreateICA(
-	LPCSTR			a0,
-	LPCSTR			a1,
-	LPCSTR			a2,
-	CONST DEVMODEA *	a3
+	LPCSTR			lpszDriver,
+	LPCSTR			lpszDevice,
+	LPCSTR			lpszOutput,
+	CONST DEVMODEA *	lpdvmInit
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING Driver, Device, Output;
+  DEVMODEW dvmInitW;
+  HDC rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Driver,
+					      (PCSZ)lpszDriver );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Device,
+					      (PCSZ)lpszDevice );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Output,
+					      (PCSZ)lpszOutput );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  if ( lpdvmInit )
+    RosRtlDevModeA2W ( &dvmInitW, lpdvmInit );
+
+  return 0;
 }
 
 

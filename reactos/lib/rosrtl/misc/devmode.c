@@ -1,9 +1,8 @@
 #include <string.h>
 #include <windows.h>
-#include <user32.h>
 
 void
-USER32_DevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )
+RosRtlDevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )
 {
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148

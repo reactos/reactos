@@ -1858,6 +1858,10 @@ SystemParametersInfoW(
 
 int
 STDCALL
+AddFontResourceExW ( LPCWSTR, DWORD, PVOID );
+
+int
+STDCALL
 AddFontResourceW(LPCWSTR);
 
 HMETAFILE

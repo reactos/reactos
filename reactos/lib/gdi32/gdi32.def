@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.5 2000/02/22 20:55:23 ekohl Exp $
+; $Id: gdi32.def,v 1.6 2003/07/21 01:59:51 royce Exp $
 ;
 ; gdi32.def
 ;
@@ -11,6 +11,8 @@ EXPORTS
 AbortDoc@4
 AbortPath@4
 AddFontResourceA@4
+AddFontResourceExA@12
+AddFontResourceExW@12
 AddFontResourceW@4
 AngleArc@24
 AnimatePalette@16

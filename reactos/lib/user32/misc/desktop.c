@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.14 2003/07/19 01:35:27 royce Exp $
+/* $Id: desktop.c,v 1.15 2003/07/21 01:59:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <rosrtl/devmode.h>
 
 /*
  * @implemented
@@ -112,7 +113,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
       RtlInitUnicodeString(&DesktopNameU, NULL);
     }
 
-  USER32_DevModeA2W ( &DevmodeW, pDevmode );
+  RosRtlDevModeA2W ( &DevmodeW, pDevmode );
 
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,

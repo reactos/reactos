@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2003/07/11 20:55:43 gvg Exp $
+# $Id: makefile,v 1.4 2003/07/21 01:59:51 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,6 +12,7 @@ THREAD_OBJECTS = \
  thread/stack.o
 
 MISC_OBJECTS = \
+ misc/devmode.o \
  misc/qsort.o
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.10 2003/07/10 15:35:49 chorns Exp $
+/* $Id: stubsw.c,v 1.11 2003/07/21 01:59:51 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -17,27 +17,34 @@
  */
 int
 STDCALL
-AddFontResourceW(
-	LPCWSTR		a0
-	)
+AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  /* FIXME handle fl parameter */
+  return W32kAddFontResource ( lpszFilename );
+}
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceW ( LPCWSTR lpszFilename )
+{
+	return AddFontResourceExW ( lpszFilename, 0, 0 );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMETAFILE
 STDCALL
 CopyMetaFileW(
-	HMETAFILE	a0,
-	LPCWSTR		a1
+	HMETAFILE	Src,
+	LPCWSTR		File
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return W32kCopyMetaFile ( Src, File );
 }
 
 
@@ -432,22 +439,6 @@ STDCALL
 StartDocW(
 	HDC		hdc, 
 	CONST DOCINFO	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int   
-STDCALL 
-GetObjectW(
-	HGDIOBJ		a0, 
-	int		a1, 
-	LPVOID		a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.6 2003/07/19 01:35:27 royce Exp $
+/* $Id: display.c,v 1.7 2003/07/21 01:59:51 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -31,6 +31,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <rosrtl/devmode.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -128,7 +129,7 @@ EnumDisplaySettingsExA(
       return FALSE;
     }
 
-  USER32_DevModeA2W ( &DevModeW, lpDevMode );
+  RosRtlDevModeA2W ( &DevModeW, lpDevMode );
 
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &DevModeW, dwFlags );
 
@@ -240,7 +241,7 @@ ChangeDisplaySettingsExA(
       return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
     }
 
-  USER32_DevModeA2W ( &DevModeW, lpDevMode );
+  RosRtlDevModeA2W ( &DevModeW, lpDevMode );
 
   rc = NtUserChangeDisplaySettings ( &DeviceName, &DevModeW, hwnd, dwflags, lParam );
 
