@@ -8,7 +8,6 @@ include $(PATH_TO_TOP)/rules.mak
 
 # Broken tests 
 # dnsapi iptest lan regdump subclass
-# polytest - Needs a mingw makefile
 
 TEST_APPS = \
 accelerator \
@@ -66,6 +65,7 @@ oskittcp \
 p_dup_handle \
 palbitblt \
 patblt \
+polytest \
 popupmenu \
 primitives \
 pteb \
