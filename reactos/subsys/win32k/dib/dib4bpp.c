@@ -55,7 +55,7 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         PRECTL  DestRect,  POINTL  *SourcePoint,
         ULONG   Delta,     XLATEOBJ *ColorTranslation)
 {
-  ULONG    i, j, sx, f1, f2, xColor;
+  ULONG    i, j, sx, sy, f1, f2, xColor;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
   PBYTE    DestBits, DestLine, SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;
@@ -65,6 +65,27 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   switch(SourceGDI->BitsPerPixel)
   {
+    case 1:
+      sx = SourcePoint->x;
+      sy = SourcePoint->y;
+
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
+          {
+            DIB_4BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, 0));
+          } else {
+            DIB_4BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, 1));
+          }
+          sx++;
+        }
+        sy++;
+      }
+      break;
+
     case 4:
       SourceBits_4BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
 

@@ -88,7 +88,7 @@ BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         PRECTL  DestRect,  POINTL  *SourcePoint,
         ULONG   Delta,     XLATEOBJ *ColorTranslation)
 {
-  ULONG    i, j, sx, xColor, f1;
+  ULONG    i, j, sx, sy, xColor, f1;
   PBYTE    DestBits, SourceBits_24BPP, DestLine, SourceLine_24BPP;
   PRGBTRIPLE  SPDestBits, SPSourceBits_24BPP, SPDestLine, SPSourceLine_24BPP; // specially for 24-to-24 blit
   PBYTE    SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
@@ -99,6 +99,27 @@ BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   switch(SourceGDI->BitsPerPixel)
   {
+    case 1:
+      sx = SourcePoint->x;
+      sy = SourcePoint->y;
+
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
+          {
+            DIB_24BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, 0));
+          } else {
+            DIB_24BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, 1));
+          }
+          sx++;
+        }
+        sy++;
+      }
+      break;
+
     case 4:
       SourceBits_4BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
 
