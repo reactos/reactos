@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2000/11/20 19:59:13 ekohl Exp $
+# $Id: makefile,v 1.11 2001/01/14 15:27:15 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -25,8 +25,13 @@ all: $(TARGET).exe
 .phony: all
 
 clean:
+ifeq ($(DOSCLI),yes)
+	- $(RM) api\*.o
+	- $(RM) sbapi\*.o
+else
 	- $(RM) api/*.o
 	- $(RM) sbapi/*.o
+endif
 	- $(RM) *.o
 	- $(RM) $(TARGET).exe
 	- $(RM) $(TARGET).sym
