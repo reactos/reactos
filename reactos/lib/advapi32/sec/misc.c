@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.19 2004/07/06 22:08:48 gvg Exp $
+/* $Id: misc.c,v 1.20 2004/07/09 20:10:45 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -379,6 +379,8 @@ LookupAccountSidA (LPCSTR lpSystemName,
 		   PSID_NAME_USE peUse)
 {
   DPRINT1("LookupAccountSidA is unimplemented, but returns success\n");
+  lstrcpynA(lpName, "Administrator", *cchName);
+  lstrcpynA(lpReferencedDomainName, "ReactOS", *cchReferencedDomainName);
   return TRUE;
 }
 
@@ -398,6 +400,8 @@ LookupAccountSidW (LPCWSTR lpSystemName,
 		   PSID_NAME_USE peUse)
 {
   DPRINT1("LookupAccountSidW is unimplemented, but returns success\n");
+  lstrcpynW(lpName, L"Administrator", *cchName);
+  lstrcpynW(lpReferencedDomainName, L"ReactOS", *cchReferencedDomainName);
   return TRUE;
 }
 
