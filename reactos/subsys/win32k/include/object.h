@@ -12,6 +12,7 @@ typedef enum {
   otWindow,
   otMenu,
   otAcceleratorTable,
+  otCursorIcon
 } USER_OBJECT_TYPE;
 
 typedef struct _USER_OBJECT_HEADER

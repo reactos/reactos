@@ -17,14 +17,6 @@ typedef struct _CURSORCLIP_INFO
   UINT Bottom;
 } CURSORCLIP_INFO, *PCURSORCLIP_INFO;
 
-typedef struct _CURICONS
-{
-  FAST_MUTEX LockHandles;
-  PVOID Handles;
-  PVOID Objects;
-  UINT Count;
-} CURICONS, *PCURICONS;
-
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
@@ -34,7 +26,7 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL SafetySwitch, SafetySwitch2;
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
-  CURICONS CurIcons;
+  PVOID CurIconHandleTable;
   PVOID CurrentCursorObject;
   BYTE ShowingCursor;
   UINT DblClickSpeed;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.29 2003/12/08 22:51:11 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.30 2003/12/09 19:34:33 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -43,6 +43,28 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+PCURICON_OBJECT FASTCALL
+IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
+{
+  PCURICON_OBJECT Object;
+  PUSER_HANDLE_TABLE HandleTable;
+  
+  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
+  if(!NT_SUCCESS(ObmReferenceObjectByHandle(HandleTable, Handle, otCursorIcon, 
+                 (PVOID*)&Object)))
+  {
+    return FALSE;
+  }
+  
+  return Object;
+}
+
+VOID FASTCALL
+IntReleaseCurIconObject(PCURICON_OBJECT Object)
+{
+  ObmDereferenceObject(Object);
+}
 
 HBITMAP FASTCALL
 IntCopyBitmap(HBITMAP bmp)
@@ -199,239 +221,92 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
 BOOL FASTCALL
 IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject)
 {
-  PCURICONS Cursors;
-  
-  Cursors = &WinStaObject->SystemCursor.CurIcons;
-  
-  ExInitializeFastMutex(&Cursors->LockHandles);
-  
-  Cursors->Handles = ExAllocatePool(NonPagedPool, 2 * MAXCURICONHANDLES * sizeof(PCURICON_OBJECT));
-  if(Cursors->Handles)
+  if((WinStaObject->SystemCursor.CurIconHandleTable = (PVOID)ObmCreateHandleTable()))
   {
-    RtlZeroMemory(Cursors->Handles, 2 * MAXCURICONHANDLES * sizeof(PCURICON_OBJECT));
-    Cursors->Objects = (PVOID)(Cursors->Handles + MAXCURICONHANDLES);
+    ObmInitializeHandleTable((PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable);
   }
-  else
-    Cursors->Objects = NULL;
-  Cursors->Count = 0;
-  
-  return (Cursors->Handles != NULL);
-}
-
-PVOID FASTCALL
-IntFindFreeHandleSlot(PCURICONS Cursors, UINT *Index)
-{
-  UINT i;
-  PVOID *CurIconObject = Cursors->Handles;
-  
-  if(Cursors->Count >= MAXCURICONHANDLES)
-  {
-    return NULL;
-  }
-  
-  for(i = 0; i <= MAXCURICONHANDLES; i++)
-  {
-    CurIconObject++;
-    if(*CurIconObject == NULL)
-    {
-      *Index = i;
-      return CurIconObject;
-    }
-  }
-  
-  return NULL;
-}
-
-PCURICON_OBJECT FASTCALL
-IntFindByHandle(PCURICONS Cursors, HICON hIcon)
-{
-  UINT i, c = 0;
-  PVOID *CurIconObject, *Objects;
-  
-  if(!hIcon)
-    return NULL;
-  
-  CurIconObject = Cursors->Handles;
-  Objects = Cursors->Objects;
-  
-  for(i = 0; i <= MAXCURICONHANDLES; i++)
-  {
-    CurIconObject++;
-    if(*CurIconObject == hIcon)
-    {
-      return (PCURICON_OBJECT)(*(Objects + i));
-    }
-    if(*CurIconObject)
-    {
-      /* no more handles */
-      if(++c >= Cursors->Count)
-        return NULL;
-    }
-  }
-  
-  return NULL;
-}
-
-PCURICON_OBJECT FASTCALL
-IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HICON hIcon)
-{
-  PCURICONS Cursors;
-  PCURICON_OBJECT CurIconObject = NULL;
-
-  Cursors = &WinStaObject->SystemCursor.CurIcons;
-  
-  ExAcquireFastMutex(&Cursors->LockHandles);
-  CurIconObject = IntFindByHandle(Cursors, hIcon);
-  
-  if(!CurIconObject)
-    ExReleaseFastMutex(&Cursors->LockHandles);
-  
-  return CurIconObject;  
+  return (WinStaObject->SystemCursor.CurIconHandleTable != NULL);
 }
 
 PCURICON_OBJECT FASTCALL
 IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule, 
                              HRSRC hRsrc)
 {
-  UINT i, c = 0;
-  PVOID *Objects;
-  PCURICON_OBJECT Obj;
-  PCURICONS Cursors = &WinStaObject->SystemCursor.CurIcons;
+  PUSER_HANDLE_TABLE HandleTable;
+  PLIST_ENTRY CurrentEntry;
+  PUSER_HANDLE_BLOCK Current;
+  PCURICON_OBJECT Object;
+  ULONG i;
   
-  Objects = Cursors->Objects;
+  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
+  ExAcquireFastMutex(&HandleTable->ListLock);
   
-  ExAcquireFastMutex(&Cursors->LockHandles);
-  
-  for(i = 0; i <= MAXCURICONHANDLES; i++)
+  CurrentEntry = HandleTable->ListHead.Flink;
+  while(CurrentEntry != &HandleTable->ListHead)
   {
-    Obj = (PCURICON_OBJECT)(*Objects);
-    if(Obj)
+    Current = CONTAINING_RECORD(CurrentEntry, USER_HANDLE_BLOCK, ListEntry);
+    for(i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
     {
-      if((Obj->hModule == hModule) && (Obj->hRsrc == hRsrc))
+      Object = (PCURICON_OBJECT)Current->Handles[i].ObjectBody;
+      if(Object && (Object->hModule == hModule) && (Object->hRsrc == hRsrc))
       {
-        return Obj;
-      }
-      /* no more handles */
-      if(++c > Cursors->Count)
-      {
-        ExReleaseFastMutex(&Cursors->LockHandles);
-        return NULL;
+        ExReleaseFastMutex(&HandleTable->ListLock);
+        return Object;
       }
     }
-    Objects++;
   }
   
-  ExReleaseFastMutex(&Cursors->LockHandles);
+  ExReleaseFastMutex(&HandleTable->ListLock);
   return NULL;
-}
-
-VOID FASTCALL
-IntReleaseCurIconObject(PWINSTATION_OBJECT WinStaObject)
-{
-  ExReleaseFastMutex(&WinStaObject->SystemCursor.CurIcons.LockHandles);
 }
 
 PCURICON_OBJECT FASTCALL
 IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
 {
-  PCURICONS Cursors;
-  PVOID *Handle, *Objects;
-  UINT i;
-  PCURICON_OBJECT CurIconObject = NULL;
+  PUSER_HANDLE_TABLE HandleTable;
+  PCURICON_OBJECT Object;
+  HANDLE Handle;
   
-  Cursors = &WinStaObject->SystemCursor.CurIcons;
+  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
   
-  ExAcquireFastMutex(&Cursors->LockHandles);
+  Object = ObmCreateObject(HandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
   
-  Handle = IntFindFreeHandleSlot(Cursors, &i);
-  if(!Handle)
+  if(!Object)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return NULL;
+    return FALSE;
   }
   
-  /* create a new handle */
-  CurIconObject = ExAllocatePool(NonPagedPool, sizeof(CURICON_OBJECT));
-  if(!CurIconObject)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return NULL;
-  }
-  RtlZeroMemory(CurIconObject, sizeof(CURICON_OBJECT));
+  Object->Handle = Handle;
+  Object->Process = PsGetWin32Process();
   
-  CurIconObject->Handle = (HICON)(i + 1);
-  
-  CurIconObject->Process = PsGetWin32Process();
-  
-  Objects = Cursors->Objects;
-  
-  *Handle = (PVOID)CurIconObject->Handle;
-  *(Objects + i) = (PVOID)CurIconObject;
-  
-  Cursors->Count++;
-
-  return CurIconObject;
+  return Object;
 }
 
 BOOL FASTCALL
-IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HCURSOR hCursor)
+IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
 {
-  UINT i, c = 0;
-  PVOID *CurIconObject, *Objects;
-  PCURICON_OBJECT Cursor;
-  PSYSTEM_CURSORINFO CurInfo;
+  PUSER_HANDLE_TABLE HandleTable;
+  PCURICON_OBJECT Object;
+  NTSTATUS Status;
   
-  if(!hCursor)
-    return FALSE;
+  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
   
-  CurInfo = &WinStaObject->SystemCursor;
-  ExAcquireFastMutex(&CurInfo->CurIcons.LockHandles);
-  
-  CurIconObject = CurInfo->CurIcons.Handles;
-  Objects = CurInfo->CurIcons.Objects;
-  
-  for(i = 0; i <= MAXCURICONHANDLES; i++)
+  Status = ObmReferenceObjectByHandle(HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
+  if(!NT_SUCCESS(Status))
   {
-    CurIconObject++;
-    if(*CurIconObject == hCursor)
-    {
-      Cursor = (PCURICON_OBJECT)(*(Objects + i));
-      if(CurInfo->CurrentCursorObject == Cursor)
-      {
-        IntSetCursor(WinStaObject, NULL, FALSE);
-        CurInfo->CurrentCursorObject = NULL;
-      }
-      
-      /* remove from table */
-      *CurIconObject = NULL;
-      *(Objects + i) = NULL;
-      CurInfo->CurIcons.Count--;
-      
-      /* free bitmaps */
-      if(Cursor->IconInfo.hbmMask)
-        NtGdiDeleteObject(Cursor->IconInfo.hbmMask);
-      if(Cursor->IconInfo.hbmColor)
-        NtGdiDeleteObject(Cursor->IconInfo.hbmColor);
-      
-      /* free object */
-      ExFreePool(Cursor);
-      
-      ExReleaseFastMutex(&CurInfo->CurIcons.LockHandles);
-      return TRUE;
-    }
-    if(*CurIconObject)
-    {
-      /* no more handles */
-      if(++c >= CurInfo->CurIcons.Count)
-      {
-        ExReleaseFastMutex(&CurInfo->CurIcons.LockHandles);
-        return FALSE;
-      }
-    }
+    return FALSE;
   }
   
-  ExReleaseFastMutex(&CurInfo->CurIcons.LockHandles);
-  return FALSE;
+  /* Delete the bitmaps */
+  if(Object->IconInfo.hbmMask)
+    NtGdiDeleteObject(Object->IconInfo.hbmMask);
+  if(Object->IconInfo.hbmColor)
+    NtGdiDeleteObject(Object->IconInfo.hbmColor);
+  
+  ObmDereferenceObject(Object);
+  
+  return NT_SUCCESS(ObmCloseHandle(HandleTable, Handle));
 }
 
 /*
@@ -498,7 +373,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
       }
     }
     
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -557,7 +432,7 @@ NtUserGetIconInfo(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
     }
     
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -619,7 +494,7 @@ NtUserGetIconSize(
     BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
     
     done:
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -830,7 +705,7 @@ NtUserFindExistingCursorIcon(
   {
     Ret = CurIconObject->Handle;
     
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -926,7 +801,7 @@ NtUserSetCursor(
   if(CurIconObject)
   {
     OldCursor = IntSetCursor(WinStaObject, CurIconObject, FALSE);
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
   }
   else
     SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
@@ -995,7 +870,7 @@ NtUserSetCursorIconContents(
     Ret = TRUE;
     
     done:
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -1082,7 +957,7 @@ NtUserSetCursorIconData(
     }
     
     done:
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
@@ -1102,9 +977,7 @@ NtUserSetSystemCursor(
   HCURSOR hcur,
   DWORD id)
 {
-  BOOL res = FALSE;
-
-  return res;
+  return FALSE;
 }
 
 
@@ -1159,7 +1032,7 @@ NtUserDrawIconEx(
   {
     hbmMask = CurIconObject->IconInfo.hbmMask;
     hbmColor = CurIconObject->IconInfo.hbmColor;
-    IntReleaseCurIconObject(WinStaObject);
+    IntReleaseCurIconObject(CurIconObject);
     
     if(istepIfAniCur)
       DbgPrint("NtUserDrawIconEx: istepIfAniCur is not supported!\n");

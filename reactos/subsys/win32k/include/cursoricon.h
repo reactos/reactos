@@ -5,7 +5,7 @@
 
 typedef struct _CURICON_OBJECT
 {
-  HICON Handle;
+  HANDLE Handle;
   PW32PROCESS Process;
   HMODULE hModule;
   HRSRC hRsrc;
@@ -17,8 +17,8 @@ typedef struct _CURICON_OBJECT
 
 HCURSOR FASTCALL IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange);
 BOOL FASTCALL IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
-PCURICON_OBJECT FASTCALL IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HICON hIcon);
-VOID FASTCALL IntReleaseCurIconObject(PWINSTATION_OBJECT WinStaObject);
+PCURICON_OBJECT FASTCALL IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle);
+VOID FASTCALL IntReleaseCurIconObject(PCURICON_OBJECT Object);
 PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
 
 #endif /* _WIN32K_CURSORICON_H */
