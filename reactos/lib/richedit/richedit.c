@@ -45,6 +45,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 HANDLE RICHED32_hHeap = NULL;
 /* LPSTR  RICHED32_aSubclass = NULL; */
+static WNDPROC lpfnEditWndProc = NULL;
+static INT RTFInfoOffset = 0;
 
 #define TRACE_EDIT_MSG32(str) \
         TRACE(\
@@ -53,6 +55,7 @@ HANDLE RICHED32_hHeap = NULL;
                      hwnd, (UINT)wParam, (UINT)lParam)
 
 LPVOID* WINAPI CreateIRichEditOle();
+VOID RICHEDIT_InitEditControlInfo(void);
 
 /***********************************************************************
  * DllMain [Internal] Initializes the internal 'RICHED32.DLL'.
@@ -76,6 +79,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         DisableThreadLibraryCalls(hinstDLL);
         /* create private heap */
         RICHED32_hHeap = HeapCreate (0, 0x10000, 0);
+        /* Retrieve edit control class info */
+        RICHEDIT_InitEditControlInfo();
         /* register the Rich Edit class */
         RICHED32_Register ();
         break;
@@ -94,12 +99,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
    INT RICHEDIT_GetTextRange(HWND hwnd,TEXTRANGEA *tr);
    INT RICHEDIT_GetSelText(HWND hwnd,LPSTR lpstrBuffer);
 
-
-const WCHAR RichEditInfoStr[] = { '_','R','T','F','_','I','n','f','o', 0 };
-
 typedef struct _RTFControl_info
 {
-    HWND hwndEdit;
     HWND hwndParent;
     char* rtfBuffer;
     RTF_Info *parser;
@@ -121,7 +122,8 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     int rtfBufferSize;
     CHARRANGE *cr;
 
-    info = GetPropW( hwnd, RichEditInfoStr );
+    info = (RTFControl_Info *) GetWindowLongW( hwnd, RTFInfoOffset );
+
     TRACE("uMsg: 0x%x hwnd: %p\n",uMsg,hwnd);
 
     switch (uMsg)
@@ -129,8 +131,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
     case WM_CREATE:
             TRACE_EDIT_MSG32("WM_CREATE Passed to default");
-            DefWindowProcA( hwnd,uMsg,wParam,lParam);
-            return 0 ;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
         
     case WM_NCCREATE :
 	    TRACE_EDIT_MSG32("WM_NCCREATE");
@@ -139,7 +140,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                               sizeof (RTFControl_Info));
             info->parser = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
                               sizeof (RTF_Info));
-            SetPropW(hwnd, RichEditInfoStr, (HANDLE)info);
+            SetWindowLongW( hwnd, RTFInfoOffset, (LONG)info );
 
 	    /* remove SCROLLBARS from the current window style */
 	    info->hwndParent = ((LPCREATESTRUCTA) lParam)->hwndParent;
@@ -151,27 +152,15 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
             newstyle &= ~ES_AUTOVSCROLL;
 	    SetWindowLongA(hwnd,GWL_STYLE, newstyle);
 
-            TRACE("previous hwndEdit: %p\n",info->hwndEdit);
-            info->hwndEdit = CreateWindowA ("edit", ((LPCREATESTRUCTA) lParam)->lpszName,
-                                   style, 0, 0, 0, 0,
-                                   hwnd, (HMENU) ID_EDIT,
-                                   ((LPCREATESTRUCTA) lParam)->hInstance, NULL) ;
-            TRACE("hwndEdit: %p hwnd: %p\n",info->hwndEdit,hwnd);
-
-            if (info->hwndEdit)
-                return TRUE ;
-            else
-                return FALSE ;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     case WM_SETFOCUS :
 	    TRACE_EDIT_MSG32("WM_SETFOCUS");
-            SetFocus (info->hwndEdit) ;
-            return 0 ;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     case WM_SIZE :
             TRACE_EDIT_MSG32("WM_SIZE");
-            MoveWindow (info->hwndEdit, 0, 0, LOWORD (lParam), HIWORD (lParam), TRUE) ;
-            return 0 ;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     case WM_COMMAND :
         TRACE_EDIT_MSG32("WM_COMMAND");
@@ -210,7 +199,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 	    if(info->rtfBuffer)
 	    {
 	    	RTFToBuffer(info->parser,info->rtfBuffer, rtfBufferSize);
-            	SetWindowTextA(info->hwndEdit,info->rtfBuffer);
+                CallWindowProcA(lpfnEditWndProc, hwnd, WM_SETTEXT, 0, (LPARAM)info->rtfBuffer);
 	    	HeapFree(RICHED32_hHeap, 0,info->rtfBuffer);
 	    }
 	    else
@@ -239,7 +228,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     case EM_EXGETSEL:
             TRACE_EDIT_MSG32("EM_EXGETSEL -> EM_GETSEL");
             cr = (VOID *) lParam;
-            if (info->hwndEdit) SendMessageA( info->hwndEdit, EM_GETSEL, (INT)&cr->cpMin, (INT)&cr->cpMax);
+            CallWindowProcA(lpfnEditWndProc, hwnd, EM_GETSEL, (INT)&cr->cpMin, (INT)&cr->cpMax);
             TRACE("cpMin: 0x%x cpMax: 0x%x\n",(INT)cr->cpMin,(INT)cr->cpMax);
             return 0;
 
@@ -251,19 +240,17 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
            {
                 limit = 0xFFFFFFFF;
            }
-           return SendMessageA(info->hwndEdit,EM_SETLIMITTEXT,limit,0);
+           return CallWindowProcA(lpfnEditWndProc, hwnd, EM_SETLIMITTEXT, limit, 0);
         }
 
     case EM_EXLINEFROMCHAR:
             TRACE_EDIT_MSG32("EM_EXLINEFROMCHAR -> LINEFROMCHAR");
-            if (info->hwndEdit) return SendMessageA( info->hwndEdit, EM_LINEFROMCHAR, lParam, wParam);
-            return 0;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, EM_LINEFROMCHAR, lParam, wParam);
 
     case EM_EXSETSEL:
             TRACE_EDIT_MSG32("EM_EXSETSEL -> EM_SETSEL");
             cr = (VOID *) lParam;
-            if (info->hwndEdit) SendMessageA( info->hwndEdit, EM_SETSEL, cr->cpMin, cr->cpMax);
-            return 0;
+            return CallWindowProcA(lpfnEditWndProc, hwnd, EM_SETSEL, cr->cpMin, cr->cpMax);
 
     case EM_FINDTEXT:
             TRACE_EDIT_MSG32("EM_FINDTEXT Ignored");
@@ -351,7 +338,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
     case EM_GETSELTEXT:
             TRACE_EDIT_MSG32("EM_GETSELTEXT");
-            return RICHEDIT_GetSelText(info->hwndEdit,(void *)lParam);
+            return RICHEDIT_GetSelText(hwnd,(void *)lParam);
 
     case EM_GETTEXTEX:
             TRACE_EDIT_MSG32("EM_GETTEXTEX Ignored");
@@ -367,7 +354,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
     case EM_GETTEXTRANGE:
             TRACE_EDIT_MSG32("EM_GETTEXTRANGE");
-            return RICHEDIT_GetTextRange(info->hwndEdit,(TEXTRANGEA *)lParam);
+            return RICHEDIT_GetTextRange(hwnd,(TEXTRANGEA *)lParam);
 
     case EM_GETTYPOGRAPHYOPTIONS:
             TRACE_EDIT_MSG32("EM_GETTYPOGRAPHYOPTIONS Ignored");
@@ -520,238 +507,222 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 /* Messages dispatched to the edit control */
      case EM_CANUNDO:
             TRACE_EDIT_MSG32("EM_CANUNDO Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_CHARFROMPOS:
             TRACE_EDIT_MSG32("EM_CHARFROMPOS Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_EMPTYUNDOBUFFER:
             TRACE_EDIT_MSG32("EM_EMPTYUNDOBUFFER Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_FMTLINES:
             TRACE_EDIT_MSG32("EM_FMTLINES Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETFIRSTVISIBLELINE:
             TRACE_EDIT_MSG32("EM_GETFIRSTVISIBLELINE Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETHANDLE:
             TRACE_EDIT_MSG32("EM_GETHANDLE Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
  /*    case EM_GETIMESTATUS:*/
      case EM_GETLIMITTEXT:
             TRACE_EDIT_MSG32("EM_GETLIMITTEXT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETLINE:
             TRACE_EDIT_MSG32("EM_GETLINE Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETLINECOUNT:
             TRACE_EDIT_MSG32("EM_GETLINECOUNT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETMARGINS:
             TRACE_EDIT_MSG32("EM_GETMARGINS Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETMODIFY:
             TRACE_EDIT_MSG32("EM_GETMODIFY Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETPASSWORDCHAR:
             TRACE_EDIT_MSG32("EM_GETPASSWORDCHAR Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETRECT:
             TRACE_EDIT_MSG32("EM_GETRECT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETSEL:
             TRACE_EDIT_MSG32("EM_GETSEL Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETTHUMB:
             TRACE_EDIT_MSG32("EM_GETTHUMB Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_GETWORDBREAKPROC:
             TRACE_EDIT_MSG32("EM_GETWORDBREAKPROC Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_LINEFROMCHAR:
             TRACE_EDIT_MSG32("EM_LINEFROMCHAR Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_LINEINDEX:
             TRACE_EDIT_MSG32("EM_LINEINDEX Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_LINELENGTH:
             TRACE_EDIT_MSG32("EM_LINELENGTH Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_LINESCROLL:
             TRACE_EDIT_MSG32("EM_LINESCROLL Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_POSFROMCHAR:
             TRACE_EDIT_MSG32("EM_POSFROMCHAR Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_REPLACESEL:
             TRACE_EDIT_MSG32("case EM_REPLACESEL Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SCROLL:
             TRACE_EDIT_MSG32("case EM_SCROLL Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SCROLLCARET:
             TRACE_EDIT_MSG32("EM_SCROLLCARET Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETHANDLE:
             TRACE_EDIT_MSG32("EM_SETHANDLE Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
  /*    case EM_SETIMESTATUS:*/
      case EM_SETLIMITTEXT:
             TRACE_EDIT_MSG32("EM_SETLIMITTEXT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETMARGINS:
             TRACE_EDIT_MSG32("case EM_SETMARGINS Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETMODIFY:
             TRACE_EDIT_MSG32("EM_SETMODIFY Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETPASSWORDCHAR:
             TRACE_EDIT_MSG32("EM_SETPASSWORDCHAR Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETREADONLY:
             TRACE_EDIT_MSG32("EM_SETREADONLY Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETRECT:
             TRACE_EDIT_MSG32("EM_SETRECT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETRECTNP:
             TRACE_EDIT_MSG32("EM_SETRECTNP Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETSEL:
             TRACE_EDIT_MSG32("EM_SETSEL Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETTABSTOPS:
             TRACE_EDIT_MSG32("EM_SETTABSTOPS Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SETWORDBREAKPROC:
             TRACE_EDIT_MSG32("EM_SETWORDBREAKPROC Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_UNDO:
             TRACE_EDIT_MSG32("EM_UNDO Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
      case WM_STYLECHANGING:
             TRACE_EDIT_MSG32("WM_STYLECHANGING Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_STYLECHANGED:
             TRACE_EDIT_MSG32("WM_STYLECHANGED Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_GETTEXT:
             TRACE_EDIT_MSG32("WM_GETTEXT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_GETTEXTLENGTH:
             TRACE_EDIT_MSG32("WM_GETTEXTLENGTH Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_SETTEXT:
             TRACE_EDIT_MSG32("WM_SETTEXT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_CUT:
             TRACE_EDIT_MSG32("WM_CUT Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case WM_COPY:
             TRACE_EDIT_MSG32("WM_COPY Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_PASTE:
             TRACE_EDIT_MSG32("WM_PASTE Passed to edit control");
-	    return SendMessageA( info->hwndEdit, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     /* Messages passed to default handler. */
     case WM_NCCALCSIZE:
-        /* A fundamental problem with embedding an edit control within another
-           window to emulate the richedit control, is that normally, the 
-           WM_NCCALCSIZE message window would return the client area of the 
-           edit control.
-           
-           While we could send a message to the edit control here to get that size
-           and return that value, this causes problems with the WM_SIZE message.
-           That is because the WM_SIZE message uses the returned value of
-           WM_NCCALCSIZE (via X11DRV_SetWindowSize) to determine the size to make 
-           the edit control. If we return the size of the edit control client area
-           here, the result is the symptom of the edit control being inset on the 
-           right and bottom by the width of any existing scrollbars.
-           
-           The easy fix is to have WM_NCCALCSIZE return the true size of this 
-           enclosing window, which is what we have done here. The more difficult 
-           fix is to create a custom Richedit MoveWindow procedure for use in the 
-           WM_SIZE message above. Since it is very unlikely that an app would call
-           and use the WM_NCCALCSIZE message, we stick with the easy fix for now.
-         */
         TRACE_EDIT_MSG32("WM_NCCALCSIZE Passed to default");
-	return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_NCPAINT:
         TRACE_EDIT_MSG32("WM_NCPAINT Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_PAINT:
         TRACE_EDIT_MSG32("WM_PAINT Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_ERASEBKGND:
         TRACE_EDIT_MSG32("WM_ERASEBKGND Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_KILLFOCUS:
         TRACE_EDIT_MSG32("WM_KILLFOCUS Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_DESTROY:
         TRACE_EDIT_MSG32("WM_DESTROY Passed to default");
-	HeapFree( GetProcessHeap(), 0, info->parser );
-	HeapFree( GetProcessHeap(), 0, info );
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_CHILDACTIVATE:
 	TRACE_EDIT_MSG32("WM_CHILDACTIVATE Passed to default");
-	return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     case WM_WINDOWPOSCHANGING:
         TRACE_EDIT_MSG32("WM_WINDOWPOSCHANGING Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_WINDOWPOSCHANGED:
         TRACE_EDIT_MSG32("WM_WINDOWPOSCHANGED Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 /*    case WM_INITIALUPDATE:
         TRACE_EDIT_MSG32("WM_INITIALUPDATE Passed to default");
         return DefWindowProcA( hwnd,uMsg,wParam,lParam); */
     case WM_CTLCOLOREDIT:
         TRACE_EDIT_MSG32("WM_CTLCOLOREDIT Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_SETCURSOR:
         TRACE_EDIT_MSG32("WM_SETCURSOR Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_MOVE:
         TRACE_EDIT_MSG32("WM_MOVE Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_SHOWWINDOW:
         TRACE_EDIT_MSG32("WM_SHOWWINDOW Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_PARENTNOTIFY:
         TRACE_EDIT_MSG32("WM_PARENTNOTIFY Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_SETREDRAW:
         TRACE_EDIT_MSG32("WM_SETREDRAW Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_NCDESTROY:
+    {
         TRACE_EDIT_MSG32("WM_NCDESTROY Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        HeapFree( GetProcessHeap(), 0, info->parser );
+        HeapFree( GetProcessHeap(), 0, info );
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
+    }
+
     case WM_NCHITTEST:
         TRACE_EDIT_MSG32("WM_NCHITTEST Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_CTLCOLORSTATIC:
         TRACE_EDIT_MSG32("WM_CTLCOLORSTATIC Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_NCMOUSEMOVE:
         TRACE_EDIT_MSG32("WM_NCMOUSEMOVE Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_CLEAR:
         TRACE_EDIT_MSG32("WM_CLEAR Passed to default");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
    /*
     * used by IE in the EULA box
     */
     case WM_ALTTABACTIVE:
         TRACE_EDIT_MSG32("WM_ALTTABACTIVE");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_GETDLGCODE:
         TRACE_EDIT_MSG32("WM_GETDLGCODE");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
     case WM_SETFONT:
         TRACE_EDIT_MSG32("WM_SETFONT");
-        return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+        return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 
     }
 
@@ -760,7 +731,7 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 	       uMsg, hwnd, (UINT)wParam, (UINT)lParam);
     }
 
-   return DefWindowProcA( hwnd,uMsg,wParam,lParam);
+   return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************
@@ -817,7 +788,7 @@ VOID RICHED32_Register(void)
     wndClass.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
     wndClass.lpfnWndProc = (WNDPROC)RICHED32_WindowProc;
     wndClass.cbClsExtra = 0;
-    wndClass.cbWndExtra = 0; /*(sizeof(RICHED32_INFO *);*/
+    wndClass.cbWndExtra = RTFInfoOffset + sizeof(RTFControl_Info*);
     wndClass.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszClassName = RICHEDIT_CLASS10A; /* WC_RICHED32A; */
@@ -841,6 +812,25 @@ VOID RICHED32_Unregister(void)
 
     UnregisterClassA(RICHEDIT_CLASS10A, NULL);
 }
+
+
+/***
+ * DESCRIPTION:
+ * Initialize edit control class info
+ */
+VOID RICHEDIT_InitEditControlInfo(void)
+{
+    WNDCLASSA wcEdit;
+
+    if (GetClassInfoA(0, "edit",  &wcEdit))
+    {
+        lpfnEditWndProc = wcEdit.lpfnWndProc;
+        RTFInfoOffset = wcEdit.cbWndExtra;
+    }
+    else
+        ERR("Failed to retrieve edit control class info\n");
+}
+
 
 INT RICHEDIT_GetTextRange(HWND hwnd,TEXTRANGEA *tr)
 {
