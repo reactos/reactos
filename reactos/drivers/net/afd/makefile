@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2004/01/28 20:54:18 ekohl Exp $
+# $Id: makefile,v 1.9 2004/02/07 04:50:44 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -15,7 +15,8 @@ TARGET_OBJECTS = \
   afd/opnclose.o \
   afd/rdwr.o \
   afd/routines.o \
-  afd/tdi.o
+  afd/tdi.o \
+  afd/tdiconn.o
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -211,6 +211,7 @@ NTSTATUS AfdDispListen(
                           {
                             AFD_DbgPrint(MIN_TRACE, ("FIXME: Status (0x%X).\n", Status));
                           }
+                        Status = STATUS_SUCCESS;
                       }
 		                else
 		                  {
@@ -311,7 +312,7 @@ NTSTATUS AfdDispSendTo(
 
       /* FIXME: Should we handle special cases here? */
       if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET)) {
-        DataBufferAddress = SystemVirtualAddress + sizeof(IPv4_HEADER);
+        DataBufferAddress = ((PCHAR)SystemVirtualAddress) + sizeof(IPv4_HEADER);
 
         /* FIXME: Should TCP/IP driver assign source address for raw sockets? */
         ((PSOCKADDR_IN)&FCB->SocketName)->sin_addr.S_un.S_addr = 0x0100007F;

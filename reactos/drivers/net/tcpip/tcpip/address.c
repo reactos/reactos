@@ -181,7 +181,7 @@ NTSTATUS AddrBuildAddress(
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP)
     return STATUS_INVALID_ADDRESS;
 
-  if (TdiAddress->AddressLength >= TDI_ADDRESS_LENGTH_IP)
+  if (TdiAddress->AddressLength != TDI_ADDRESS_LENGTH_IP)
     return STATUS_INVALID_ADDRESS;
 
   ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;

@@ -8,6 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <afd.h>
+#include "tdiconn.h"
 
 #ifdef DBG
 VOID DisplayBuffer(
@@ -36,205 +37,6 @@ VOID DisplayBuffer(
     DbgPrint("\n");
 }
 #endif /* DBG */
-
-
-inline DWORD TdiAddressSizeFromType(
-  ULONG Type)
-/*
- * FUNCTION: Returns the size of a TDI style address of given address type
- * ARGUMENTS:
- *     Type = TDI style address type
- * RETURNS:
- *     Size of TDI style address, 0 if Type is not valid
- */
-{
-  switch (Type) {
-  case TDI_ADDRESS_TYPE_IP:
-    return sizeof(TA_IP_ADDRESS);
-  /* FIXME: More to come */
-  }
-  AFD_DbgPrint(MIN_TRACE, ("Unknown TDI address type (%d).\n", Type));
-  return 0;
-}
-
-inline DWORD TdiAddressSizeFromName(
-  LPSOCKADDR Name)
-/*
- * FUNCTION: Returns the size of a TDI style address equivalent to a
- *           WinSock style name
- * ARGUMENTS:
- *     Name = WinSock style name
- * RETURNS:
- *     Size of TDI style address, 0 if Name is not valid
- */
-{
-  switch (Name->sa_family) {
-  case AF_INET:
-    return sizeof(TA_IP_ADDRESS);
-  /* FIXME: More to come */
-  }
-  AFD_DbgPrint(MIN_TRACE, ("Unknown address family (%d).\n", Name->sa_family));
-  return 0;
-}
-
-
-VOID TdiBuildAddressIPv4(
-  PTA_IP_ADDRESS Address,
-  LPSOCKADDR Name)
-/*
- * FUNCTION: Builds an IPv4 TDI style address
- * ARGUMENTS:
- *     Address = Address of buffer to place TDI style IPv4 address
- *     Name    = Pointer to WinSock style IPv4 name
- */
-{
-  Address->TAAddressCount                 = 1;
-  Address->Address[0].AddressLength       = TDI_ADDRESS_LENGTH_IP;
-  Address->Address[0].AddressType         = TDI_ADDRESS_TYPE_IP;
-  Address->Address[0].Address[0].sin_port = ((LPSOCKADDR_IN)Name)->sin_port;
-  Address->Address[0].Address[0].in_addr  = ((LPSOCKADDR_IN)Name)->sin_addr.S_un.S_addr;
-}
-
-
-NTSTATUS TdiBuildAddress(
-  PTA_ADDRESS Address,
-  LPSOCKADDR Name)
-/*
- * FUNCTION: Builds a TDI style address
- * ARGUMENTS:
- *     Address = Address of buffer to place TDI style address
- *     Name    = Pointer to WinSock style name
- * RETURNS:
- *     Status of operation
- */
-{
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  switch (Name->sa_family) {
-  case AF_INET:
-    TdiBuildAddressIPv4((PTA_IP_ADDRESS)Address, Name);
-    break;
-  /* FIXME: More to come */
-  default:
-    AFD_DbgPrint(MID_TRACE, ("Unknown address family (%d).\n", Name->sa_family));
-    Status = STATUS_INVALID_PARAMETER;
-  }
-
-  return Status;
-}
-
-
-NTSTATUS TdiBuildName(
-  LPSOCKADDR Name,
-  PTA_ADDRESS Address)
-/*
- * FUNCTION: Builds a WinSock style address
- * ARGUMENTS:
- *     Name    = Address of buffer to place WinSock style name
- *     Address = Pointer to TDI style address
- * RETURNS:
- *     Status of operation
- */
-{
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  switch (Address->AddressType) {
-  case TDI_ADDRESS_TYPE_IP:
-    Name->sa_family = AF_INET;
-    ((LPSOCKADDR_IN)Name)->sin_port = 
-      ((PTDI_ADDRESS_IP)&Address->Address[0])->sin_port;
-    ((LPSOCKADDR_IN)Name)->sin_addr.S_un.S_addr = 
-      ((PTDI_ADDRESS_IP)&Address->Address[0])->in_addr;
-    break;
-  /* FIXME: More to come */
-  default:
-    AFD_DbgPrint(MID_TRACE, ("Unknown TDI address type (%d).\n", Address->AddressType));
-    Status = STATUS_INVALID_PARAMETER;
-  }
-
-  return Status;
-
-}
-
-
-NTSTATUS TdiBuildConnectionInfo(
-  PTDI_CONNECTION_INFORMATION *ConnectionInfo,
-  LPSOCKADDR Name)
-/*
- * FUNCTION: Builds a TDI connection information structure
- * ARGUMENTS:
- *     ConnectionInfo = Address of buffer to place connection information
- *     Name           = Pointer to WinSock style name
- * RETURNS:
- *     Status of operation
- */
-{
-  PTDI_CONNECTION_INFORMATION ConnInfo;
-  ULONG TdiAddressSize;
-
-  TdiAddressSize = TdiAddressSizeFromName(Name);
-
-  ConnInfo = (PTDI_CONNECTION_INFORMATION)
-    ExAllocatePool(NonPagedPool,
-    sizeof(TDI_CONNECTION_INFORMATION) +
-    TdiAddressSize);
-  if (!ConnInfo)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  RtlZeroMemory(ConnInfo,
-    sizeof(TDI_CONNECTION_INFORMATION) +
-    TdiAddressSize);
-
-  ConnInfo->OptionsLength = sizeof(ULONG);
-  ConnInfo->RemoteAddressLength = TdiAddressSize;
-  ConnInfo->RemoteAddress = (PVOID)
-    (ConnInfo + sizeof(TDI_CONNECTION_INFORMATION));
-
-  TdiBuildAddress(ConnInfo->RemoteAddress, Name);
-
-  *ConnectionInfo = ConnInfo;
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS TdiBuildNullConnectionInfo(
-  PTDI_CONNECTION_INFORMATION *ConnectionInfo,
-  ULONG Type)
-/*
- * FUNCTION: Builds a NULL TDI connection information structure
- * ARGUMENTS:
- *     ConnectionInfo = Address of buffer to place connection information
- *     Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
- * RETURNS:
- *     Status of operation
- */
-{
-  PTDI_CONNECTION_INFORMATION ConnInfo;
-  ULONG TdiAddressSize;
-
-  TdiAddressSize = TdiAddressSizeFromType(Type);
-
-  ConnInfo = (PTDI_CONNECTION_INFORMATION)
-    ExAllocatePool(NonPagedPool,
-    sizeof(TDI_CONNECTION_INFORMATION) +
-    TdiAddressSize);
-  if (!ConnInfo)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  RtlZeroMemory(ConnInfo,
-    sizeof(TDI_CONNECTION_INFORMATION) +
-    TdiAddressSize);
-
-  ConnInfo->OptionsLength = sizeof(ULONG);
-  ConnInfo->RemoteAddressLength = 0;
-  ConnInfo->RemoteAddress = NULL;
-
-  *ConnectionInfo = ConnInfo;
-
-  return STATUS_SUCCESS;
-}
-
 
 NTSTATUS TdiCall(
     PIRP Irp,
@@ -520,7 +322,8 @@ NTSTATUS TdiConnect(
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  Status = TdiBuildConnectionInfo(&RequestConnectionInfo, RemoteAddress);
+  Status = TdiBuildConnectionInfo
+      (&RequestConnectionInfo, RemoteAddress);
   if (!NT_SUCCESS(Status))
     return Status;
 
@@ -937,7 +740,9 @@ NTSTATUS TdiQueryAddress(
 
                 if (SnmpInfo.NumAddr != 1) {
                     /* Skip loopback address */
-                    *Address = DN2H(((PIPADDR_ENTRY)((ULONG)IpAddress + sizeof(IPADDR_ENTRY)))->Addr);
+		    PIPADDR_ENTRY IpAddressEntry = (PIPADDR_ENTRY)
+			((PCHAR)IpAddress) + sizeof(IPADDR_ENTRY);
+                    *Address = DN2H(IpAddressEntry->Addr);
                 } else {
                     /* Select the first address returned */
                     *Address = DN2H(IpAddress->Addr);
@@ -990,27 +795,9 @@ NTSTATUS TdiSend(
         return STATUS_INVALID_PARAMETER;
     }
 
-    TdiAddressSize = TdiAddressSizeFromName(Address);
-
-    ConnectInfo  = (PTDI_CONNECTION_INFORMATION)
-        ExAllocatePool(NonPagedPool,
-        sizeof(TDI_CONNECTION_INFORMATION) +
-        TdiAddressSize);
-
-    if (!ConnectInfo) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory(ConnectInfo,
-        sizeof(TDI_CONNECTION_INFORMATION) +
-        TdiAddressSize);
-
-    ConnectInfo->RemoteAddressLength = TdiAddressSize;
-    ConnectInfo->RemoteAddress = (PVOID)
-        (ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
-
-    TdiBuildAddress(ConnectInfo->RemoteAddress, Address);
+    Status = TdiBuildConnectionInfo( &ConnectInfo, Address );
+    if (!NT_SUCCESS(Status))
+	return STATUS_INSUFFICIENT_RESOURCES;
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -1105,7 +892,6 @@ NTSTATUS TdiSendDatagram(
     PTDI_CONNECTION_INFORMATION ConnectInfo;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
-    DWORD TdiAddressSize;
     NTSTATUS Status;
     KEVENT Event;
     PIRP Irp;
@@ -1121,30 +907,7 @@ NTSTATUS TdiSendDatagram(
     AFD_DbgPrint(MAX_TRACE, 
 		 ("TdiSendDatagram: TansportObject = %08x\n", TransportObject));
 
-    TdiAddressSize = TdiAddressSizeFromName(Address);
-
-    ConnectInfo = (PTDI_CONNECTION_INFORMATION)
-        ExAllocatePool(NonPagedPool,
-        sizeof(TDI_CONNECTION_INFORMATION) +
-        TdiAddressSize);
-    if (!ConnectInfo)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    AFD_DbgPrint(MAX_TRACE,
-		 ("TdiAddressSize = %d, sizeof(TDI_CONNECTION_INFORMATION) = %d\n",
-		  TdiAddressSize, sizeof(TDI_CONNECTION_INFORMATION)));
-
-    RtlZeroMemory(ConnectInfo,
-        sizeof(TDI_CONNECTION_INFORMATION) +
-        TdiAddressSize);
-
-    ConnectInfo->RemoteAddressLength = TdiAddressSize;
-    ConnectInfo->RemoteAddress       = (PVOID)
-        (((PCHAR)ConnectInfo) + sizeof(TDI_CONNECTION_INFORMATION));
-
-    AFD_DbgPrint(MAX_TRACE, ("Point A\n"));
-
-    TdiBuildAddress(ConnectInfo->RemoteAddress, Address);
+    TdiBuildConnectionInfo( &ConnectInfo, Address );
 
     AFD_DbgPrint(MAX_TRACE, ("Point B\n"));
 
@@ -1240,7 +1003,6 @@ NTSTATUS TdiReceiveDatagram(
     PTDI_CONNECTION_INFORMATION ReturnInfo;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
-    DWORD TdiAddressSize;
     NTSTATUS Status;
     KEVENT Event;
     PIRP Irp;
@@ -1256,42 +1018,8 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* FIXME: Get from socket information */
-    TdiAddressSize = sizeof(TA_IP_ADDRESS);
-
-    ReceiveInfo = (PTDI_CONNECTION_INFORMATION)
-        ExAllocatePool(NonPagedPool,
-                       sizeof(TDI_CONNECTION_INFORMATION) +
-                       sizeof(TDI_CONNECTION_INFORMATION) +
-                       2 * TdiAddressSize);
-    if (!ReceiveInfo) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory(ReceiveInfo,
-                  sizeof(TDI_CONNECTION_INFORMATION) +
-                  sizeof(TDI_CONNECTION_INFORMATION) +
-                  2 * TdiAddressSize);
-
-    if (From != NULL) {
-        ReceiveInfo->RemoteAddressLength = TdiAddressSize;
-        ReceiveInfo->RemoteAddress       = (PVOID)
-            (ReceiveInfo + sizeof(TDI_CONNECTION_INFORMATION));
-        /* Filter datagrams */
-        TdiBuildAddress(ReceiveInfo->RemoteAddress, From);
-    } else {
-        /* Receive from any address */
-        ReceiveInfo->RemoteAddressLength = 0;
-        ReceiveInfo->RemoteAddress       = NULL;
-    }
-
-    ReturnInfo = (PTDI_CONNECTION_INFORMATION)
-        (ReceiveInfo + sizeof(TDI_CONNECTION_INFORMATION) + TdiAddressSize);
-    ReturnInfo->RemoteAddressLength = TdiAddressSize;
-    ReturnInfo->RemoteAddress       = (PVOID)
-        (ReturnInfo + sizeof(TDI_CONNECTION_INFORMATION));
-
+    TdiBuildConnectionInfoPair( &ReceiveInfo, From, Address );
+    
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE_DATAGRAM,    /* Sub function */
@@ -1344,7 +1072,7 @@ NTSTATUS TdiReceiveDatagram(
     Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
     if (NT_SUCCESS(Status)) {
         *BufferSize = Iosb.Information;
-        TdiBuildName(Address, ReturnInfo->RemoteAddress);
+        TdiBuildName(Address, TdiGetRemoteAddress(ReturnInfo));
     }
 
     MmUnlockPages(Mdl);

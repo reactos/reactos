@@ -182,7 +182,7 @@ NTSTATUS TCPiBuildPacket(
 
 VOID TCPiSendRequestComplete(
   PVOID Context,
-  NTSTATUS Status,
+  NDIS_STATUS Status,
   ULONG Count)
 /*
  * FUNCTION: Completion routine for datagram send requests
@@ -348,6 +348,10 @@ NTSTATUS TCPConnect(
   LARGE_INTEGER DueTime;
   NTSTATUS Status;
   KIRQL OldIrql;
+  PNDIS_BUFFER NdisBuffer;
+  NDIS_STATUS NdisStatus;
+  PVOID DataBuffer;
+  ULONG Size;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -373,13 +377,29 @@ NTSTATUS TCPConnect(
     return Status;
   }
 
+  /* Allocate NDIS buffer */
+
+  Size = sizeof(IPv4_HEADER);
+  DataBuffer = ExAllocatePool(NonPagedPool, Size);
+  if (!DataBuffer) {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
+    DataBuffer, Size);
+  if (NdisStatus != NDIS_STATUS_SUCCESS) {
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    ExFreePool(Connection->RemoteAddress);
+    return NdisStatus;
+  }
+
   /* Issue SYN segment */
 
   Status = TCPBuildAndTransmitSendRequest(
     Connection,                   /* Connection endpoint */
     Request->RequestNotifyObject, /* Completion routine */
     Request->RequestContext,      /* Completion routine context */
-    NULL,                         /* Buffer */
+    NdisBuffer,                   /* Buffer */
     0,                            /* Size of buffer */
     SRF_SYN);                     /* Protocol specific flags */
   if (!NT_SUCCESS(Status)) {
@@ -387,6 +407,10 @@ NTSTATUS TCPConnect(
     ExFreePool(Connection->RemoteAddress);
     return Status;
   }
+
+  /* Free the NDIS buffer */
+  NdisFreeBuffer(NdisBuffer);
+  ExFreePool(DataBuffer);
 
   KeReleaseSpinLock(&Connection->Lock, OldIrql);
 

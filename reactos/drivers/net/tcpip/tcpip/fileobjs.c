@@ -277,7 +277,7 @@ NTSTATUS FileOpenAddress(
   /* Locate address entry. If specified address is 0, a random address is chosen */
 
   /* FIXME: IPv4 only */
-  IPv4Address = Address->Address[0].Address[0].in_addr;
+  IPv4Address = ((PTDI_ADDRESS_IP)Address->Address)->in_addr;
   if (IPv4Address == 0)
     AddrFile->ADE = IPGetDefaultADE(ADE_UNICAST);
   else
@@ -296,13 +296,13 @@ NTSTATUS FileOpenAddress(
   switch (Protocol) {
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = Address->Address[0].Address[0].sin_port;
+    AddrFile->Port = ((PTDI_ADDRESS_IP)Address->Address)->sin_port;
     AddrFile->Send = TCPSendDatagram;
     break;
 
   case IPPROTO_UDP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = Address->Address[0].Address[0].sin_port;
+    AddrFile->Port = ((PTDI_ADDRESS_IP)Address->Address)->sin_port;
     AddrFile->Send = UDPSendDatagram;
     break;
 
