@@ -19,8 +19,8 @@
 #undef memcpy
 void *memcpy (void *to, const void *from, size_t count)
 {
-  const char *f = from;
-  char *t = to;
+  const char *f = (char*)from;
+  char *t = (char *)to;
   int i = count;
 
   while (i-- > 0)

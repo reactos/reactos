@@ -1,15 +1,12 @@
-typedef  unsigned int size_t;
-
-void *
-memcpy (char *to, char *from, size_t count);
+#include <string.h>
 
 /* This is the most reliable way to avoid incompatibilities
    in available built-in functions on various systems.  */
 void *
-memcpy (char *to, char *from, size_t count)
+memcpy (void *to, const void *from, size_t count)
 {
-  register char *f = from;
-  register char *t = to;
+  register char *f = (char *)from;
+  register char *t = (char *)to;
   register int i = count;
 
   while (i-- > 0)
