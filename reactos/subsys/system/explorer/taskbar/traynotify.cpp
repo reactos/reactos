@@ -108,7 +108,7 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_clock_width = 0;
 	_show_hidden = false;
 
-	_tooltip.add(_hwnd, _hwnd);
+	_tooltip.add(_hwnd, _hwnd);	///@todo use one area for each icon
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)

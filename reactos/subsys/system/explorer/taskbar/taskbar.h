@@ -84,6 +84,7 @@ protected:
 	TaskBarMap	_map;
 	int			_next_id;
 	WindowHandle _last_foreground_wnd;
+	int		_last_btn_width;
 
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

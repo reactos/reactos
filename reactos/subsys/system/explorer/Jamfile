@@ -41,7 +41,7 @@ exe explorer :
 	dialogs/searchprogram.cpp
 	dialogs/settings.cpp
 	i386-stub-win32.c
- :	<define>WIN32 <define>_WIN32_IE=0x0501 <define>_WIN32_WINNT=0x0501
+ :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501
 	<cxxflags>-I$(INCLUDE)
 #nur für GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
 	<find-shared-library>gdi32
