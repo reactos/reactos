@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.29 2004/07/18 23:52:31 navaraf Exp $
+/* $Id: wait.c,v 1.30 2004/10/02 10:19:38 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -105,6 +105,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
 	      SetLastErrorByStatus (Status);
 	      return FALSE;
 	    }
+	  CloseWaitHandle = TRUE;
 	}
     }
 
@@ -123,7 +124,10 @@ WaitForSingleObjectEx(HANDLE hHandle,
 				 TimePtr);
 
   if (CloseWaitHandle)
+  {
+    TerminateThread(hHandle, 0);
     NtClose(hHandle);
+  }
 
   if (HIWORD(Status))
     {
@@ -245,7 +249,10 @@ WaitForMultipleObjectsEx(DWORD nCount,
 
   for (i = 0; i < nCount; i++)
     if (FreeThisHandle[i])
+    {
+      TerminateThread(HandleBuffer[i], 0);
       NtClose(HandleBuffer[i]);
+    }
 
   RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
 
