@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.57 2004/02/14 19:48:07 hbirr Exp $
+/* $Id: mdl.c,v 1.58 2004/02/15 17:04:52 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -383,7 +383,10 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 		ExRaiseStatus(Status);
 	      }
 	  }
-	MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+	else
+	  {
+	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+	  }
 	if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
 	    (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
 	  {
