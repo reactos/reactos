@@ -1,5 +1,10 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/controls/edit.c (EDIT_EM_SetLimitText,
+	EDIT_WM_StyleChanged): Fix unsigned/signed warning.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* config (DBG): Default to 0.
 
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>

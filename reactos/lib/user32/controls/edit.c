@@ -3025,7 +3025,7 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
  */
 static void EDIT_EM_SetLimitText(EDITSTATE *es, INT limit)
 {
-    if (limit == 0xFFFFFFFF)
+    if (limit == (INT)0xFFFFFFFF)
         es->buffer_limit = -1;
     else if (es->style & ES_MULTILINE) {
 		if (limit)
@@ -4359,7 +4359,7 @@ static void EDIT_WM_Size(EDITSTATE *es, UINT action, INT width, INT height)
  */
 static LRESULT  EDIT_WM_StyleChanged ( EDITSTATE *es, WPARAM which, const STYLESTRUCT *style)
 {
-        if (GWL_STYLE == which) {
+        if ((WPARAM)GWL_STYLE == which) {
                 DWORD style_change_mask;
                 DWORD new_style;
                 /* Only a subset of changes can be applied after the control
@@ -4383,7 +4383,7 @@ static LRESULT  EDIT_WM_StyleChanged ( EDITSTATE *es, WPARAM which, const STYLES
                 }
 
                 es->style = (es->style & ~style_change_mask) | new_style;
-        } else if (GWL_EXSTYLE == which) {
+        } else if ((WPARAM)GWL_EXSTYLE == which) {
                 ; /* FIXME - what is needed here */
         } else {
                 DbgPrint ("Invalid style change %d\n",which);
