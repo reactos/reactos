@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.68 2004/08/10 19:57:58 hbirr Exp $
+/* $Id: page.c,v 1.69 2004/08/14 09:17:05 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -46,6 +46,7 @@
 #define PA_BIT_CD        (4)
 #define PA_BIT_ACCESSED  (5)
 #define PA_BIT_DIRTY     (6)
+#define PA_BIT_GLOBAL	 (8)
 
 #define PA_PRESENT   (1 << PA_BIT_PRESENT)
 #define PA_READWRITE (1 << PA_BIT_READWRITE)
@@ -54,6 +55,7 @@
 #define PA_WT        (1 << PA_BIT_WT)
 #define PA_CD        (1 << PA_BIT_CD)
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
+#define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
@@ -72,6 +74,8 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
    return dummy;
 }
 #endif
+
+extern ULONG Ke386CpuidFlags;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -260,6 +264,7 @@ static PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde)
 {
    PULONG Pde, kePde;
    PFN_TYPE Pfn;
+   ULONG Attributes;
    NTSTATUS Status;
 
    DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
@@ -281,7 +286,12 @@ static PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde)
             {
                KEBUGCHECK(0);
             }
-            if (0 == InterlockedCompareExchange(kePde, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE, 0))
+	    Attributes =  PA_PRESENT | PA_READWRITE;
+            if (Ke386CpuidFlags & X86_FEATURE_PGE)
+	    {
+	       Attributes |= PA_GLOBAL;
+	    }
+            if (0 == InterlockedCompareExchange(kePde, PFN_TO_PTE(Pfn) | Attributes, 0))
 	    {
 	       Pfn = 0;
 	    }
@@ -808,6 +818,10 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    }
 
    Attributes = ProtectToPTE(flProtect);
+   if (Ke386CpuidFlags & X86_FEATURE_PGE)
+   {
+      Attributes |= PA_GLOBAL;
+   }
    Addr = Address;
    for (i = 0; i < PageCount; i++, Addr += PAGE_SIZE)
    {
@@ -947,6 +961,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
+      if (Ke386CpuidFlags & X86_FEATURE_PGE)
+      {
+	 Attributes |= PA_GLOBAL;
+      }
    }
    else
    {
@@ -1083,6 +1101,10 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
+      if (Ke386CpuidFlags & X86_FEATURE_PGE)
+      {
+	 Attributes |= PA_GLOBAL;
+      }
    }
    else
    {
@@ -1162,6 +1184,10 @@ MmInitGlobalKernelPageDirectory(VOID)
             0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
       {
          MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
+	 if (Ke386CpuidFlags & X86_FEATURE_PGE)
+	 {
+            MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
+	 }
       }
    }
 }

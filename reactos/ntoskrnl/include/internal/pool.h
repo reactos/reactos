@@ -38,6 +38,7 @@ extern ULONG MmPagedPoolSize;
  * Maximum size of the kmalloc area (this is totally arbitary)
  */
 #define MM_KERNEL_MAP_SIZE	(16*1024*1024)
+#define MM_KERNEL_MAP_BASE	(0xf0c00000)
 
 /*
  * FIXME - different architectures have different cache line sizes...

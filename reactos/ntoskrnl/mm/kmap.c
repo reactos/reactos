@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.33 2004/08/01 07:24:58 hbirr Exp $
+/* $Id: kmap.c,v 1.34 2004/08/14 09:17:05 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -31,16 +31,13 @@ static RTL_BITMAP AllocMap;
 static KSPIN_LOCK AllocMapLock;
 static ULONG AllocMapHint = 0;
 
-extern PVOID MiKernelMapStart;
-extern ULONG MiKernelMapLength;
-
 /* FUNCTIONS ***************************************************************/
 
 VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
-   ULONG Base = ((char*)Addr - (char*)MiKernelMapStart) / PAGE_SIZE;
+   ULONG Base = ((char*)Addr - (char*)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
 
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
 
@@ -110,7 +107,7 @@ ExAllocatePageWithPhysPage(PFN_TYPE Page)
    {
       AllocMapHint = Base + 1;
       KeReleaseSpinLock(&AllocMapLock, oldlvl);
-      Addr = (char*)MiKernelMapStart + Base * PAGE_SIZE;
+      Addr = (char*)MM_KERNEL_MAP_BASE + Base * PAGE_SIZE;
       Status = MmCreateVirtualMapping(NULL,
                                       Addr,
                                       PAGE_READWRITE | PAGE_SYSTEM,
@@ -139,7 +136,7 @@ VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
    ULONG i;
-   ULONG Base = ((char*)Addr - (char*)MiKernelMapStart) / PAGE_SIZE;
+   ULONG Base = ((char*)Addr - (char*)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
    KIRQL oldlvl;
 
    for (i = 0; i < Count; i++)
@@ -178,7 +175,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    }
    KeReleaseSpinLock(&AllocMapLock, oldlvl);
    //DPRINT("returning %x\n",NonPagedPoolBase + Base * PAGE_SIZE);
-   return (char*)MiKernelMapStart + Base * PAGE_SIZE;
+   return (char*)MM_KERNEL_MAP_BASE + Base * PAGE_SIZE;
 }
 
 

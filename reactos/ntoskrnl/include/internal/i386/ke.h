@@ -136,6 +136,11 @@ VOID
 NtEarlyInitVdm(VOID);
 
 
+#define X86_EFLAGS_ID       (1 << 21)
+
+#define X86_CR4_PGE			(1 << 8)
+#define X86_FEATURE_PGE		(1 << 13)
+
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");
 #define Ke386EnableInterrupts()  __asm__("sti\n\t");
@@ -146,6 +151,14 @@ NtEarlyInitVdm(VOID);
                                  __asm__("movl %0,%%cr3\n\t" \
 	                                 : /* no outputs */ \
 	                                 : "r" (X));
+#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
+#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
+#define Ke386GetCr4()            ({ \
+                                     unsigned int __d; \
+                                     __asm__("movl %%cr4,%0\n\t" :"=r" (__d)); \
+                                     __d; \
+                                 })
+#define Ke386SetCr4(X)           __asm__("movl %0,%%cr4": :"r" (X));
 #elif defined(_MSC_VER)
 #define Ke386DisableInterrupts() __asm cli
 #define Ke386EnableInterrupts()  __asm sti
@@ -153,7 +166,7 @@ NtEarlyInitVdm(VOID);
 #define Ke386GetPageTableDirectory(X) \
                                 __asm mov eax, cr3; \
                                 __asm mov X, eax;
-#define Ke386GetPageTableDirectory(X) \
+#define Ke386SetPageTableDirectory(X) \
                                 __asm mov eax, X; \
 	                        __asm mov cr3, eax;
 #else

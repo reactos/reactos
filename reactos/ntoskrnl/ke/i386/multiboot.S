@@ -27,6 +27,8 @@
 .globl _unmap_me2
 .globl _unmap_me3
 .globl _unmap_me4
+.globl _pagetable_start
+.globl _pagetable_end 
 		
 	/*
 	 * This is called by the realmode loader, with protected mode
@@ -140,6 +142,7 @@ _multiboot_entry:
 	movl	$(V2P(kernel_pagetable+31*4096) + 0x7), 0xC7c(%esi)
 
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
+	movl	$(V2P(kernelmap_pagetable) + 0x7), 0xF0C(%esi)
 #ifdef MP
 	movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
 #endif /* MP */
@@ -200,7 +203,7 @@ _multiboot_entry:
 	movl	%eax, (%esi, %edi)
 
 	/*
-	 * Initialize a part of the same pagetable to map the vga frame buffer.
+	 * Initialize a part of the same pagetable to map the vga frame buffer (at FF3A0000).
 	 */
 	movl	$0xa0007, %eax
 	movl	$0x20, %ecx
@@ -344,6 +347,7 @@ _multiboot_entry:
 	 * segment
 	 */
 .bss
+_pagetable_start:
 startup_pagedirectory:
 	.fill 4096, 1, 0
 
@@ -353,6 +357,9 @@ lowmem_pagetable:
 kernel_pagetable:
 	.fill 32*4096, 1, 0	
 
+kernelmap_pagetable:
+	.fill 4096, 1, 0
+
 #ifdef MP
 apic_pagetable:
 	.fill 4096, 1, 0	
@@ -360,7 +367,7 @@ apic_pagetable:
 
 kpcr_pagetable:
 	.fill 4096, 1, 0	
-
+_pagetable_end:
 _unmap_me:
 	.fill 4096, 1, 0
 	

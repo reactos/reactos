@@ -44,8 +44,6 @@ static PFN_TYPE PcrPages[MAXIMUM_PROCESSORS];
 ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
 ULONG Ke386Cpuid = 300;
 
-#define X86_EFLAGS_ID       (1 << 21)
-
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION STATIC
@@ -152,6 +150,12 @@ KeApplicationProcessorInit(VOID)
    */
   Ki386InitializeLdt();
 
+  if (Ke386CpuidFlags & X86_FEATURE_PGE)
+  {
+     /* Enable global pages */
+     Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
+  }
+
   /* Now we can enable interrupts. */
   Ke386EnableInterrupts();
 }
@@ -193,6 +197,17 @@ KeInit1(VOID)
    
    /* Get processor information. */
    Ki386GetCpuId();
+
+   if (Ke386CpuidFlags & X86_FEATURE_PGE)
+   {
+   	  ULONG Flags;
+      /* Enable global pages */
+      Ke386SaveFlags(Flags);
+      Ke386DisableInterrupts();
+      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
+      Ke386RestoreFlags(Flags);
+   }
+
 }
 
 VOID INIT_FUNCTION
