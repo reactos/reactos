@@ -279,10 +279,6 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
        NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 
-       /* Initialize Critical Section Data */
-       RtlpInitDeferedCriticalSection();
-             
-
        /* Get number of processors */
        Status = ZwQuerySystemInformation(SystemBasicInformation,
 	                                 &SystemInformation,
@@ -294,6 +290,10 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 	 }
 
        Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
+
+       /* Initialize Critical Section Data */
+       RtlpInitDeferedCriticalSection();
+
        /* create process heap */
        RtlInitializeHeapManager();
        Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
