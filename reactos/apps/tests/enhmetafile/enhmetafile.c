@@ -4,6 +4,7 @@
 
 //HFONT tf;
 HENHMETAFILE EnhMetafile;
+SIZE EnhMetafileSize;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI 
@@ -15,6 +16,7 @@ WinMain(HINSTANCE hInstance,
   WNDCLASS wc;
   MSG msg;
   HWND hWnd;
+  ENHMETAHEADER emh;
   
   EnhMetafile = GetEnhMetaFile("test.emf");
   if(!EnhMetafile)
@@ -23,6 +25,9 @@ WinMain(HINSTANCE hInstance,
         GetLastError());
     return(1);
   }
+  GetEnhMetaFileHeader(EnhMetafile, sizeof(ENHMETAHEADER), &emh);
+  EnhMetafileSize.cx = emh.rclBounds.right - emh.rclBounds.left;
+  EnhMetafileSize.cy = emh.rclBounds.bottom - emh.rclBounds.top;
 
   wc.lpszClassName = "EnhMetaFileClass";
   wc.lpfnWndProc = MainWndProc;
@@ -47,8 +52,8 @@ WinMain(HINSTANCE hInstance,
 		      WS_OVERLAPPEDWINDOW,
 		      0,
 		      0,
-		      250,
-		      200,
+		      EnhMetafileSize.cx + (2 * GetSystemMetrics(SM_CXSIZEFRAME)) + 2,
+		      EnhMetafileSize.cy + (2 * GetSystemMetrics(SM_CYSIZEFRAME)) + GetSystemMetrics(SM_CYCAPTION) + 2,
 		      NULL,
 		      NULL,
 		      hInstance,
@@ -64,7 +69,7 @@ WinMain(HINSTANCE hInstance,
 	//tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
 	//	ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 	//	DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
-
+  
   ShowWindow(hWnd, nCmdShow);
 
   while(GetMessage(&msg, NULL, 0, 0))
@@ -83,19 +88,29 @@ WinMain(HINSTANCE hInstance,
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	PAINTSTRUCT ps;
-	RECT rc;
-	HDC hDC;
-
 	switch(msg)
 	{
 
 	case WM_PAINT:
+	{
+	  PAINTSTRUCT ps;
+	  RECT rc;
+      HDC hDC;
+      int bk;
+      
 	  GetClientRect(hWnd, &rc);
 	  hDC = BeginPaint(hWnd, &ps);
+	  rc.left = (rc.right / 2) - (EnhMetafileSize.cx / 2);
+	  rc.top = (rc.bottom / 2) - (EnhMetafileSize.cy / 2);
+	  rc.right = rc.left + EnhMetafileSize.cx;
+	  rc.bottom = rc.top + EnhMetafileSize.cy;
+	  bk = SetBkMode(hDC, TRANSPARENT);
+	  Rectangle(hDC, rc.left - 1, rc.top - 1, rc.right + 1, rc.bottom + 1);
+	  SetBkMode(hDC, bk);
 	  PlayEnhMetaFile(hDC, EnhMetafile, &rc);
 	  EndPaint(hWnd, &ps);
 	  break;
+    }
 
 	case WM_DESTROY:
 	  PostQuitMessage(0);
