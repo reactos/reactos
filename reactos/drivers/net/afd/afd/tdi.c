@@ -860,8 +860,8 @@ NTSTATUS TdiReceive(
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
     PMDL Mdl;
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
@@ -896,12 +896,16 @@ NTSTATUS TdiReceive(
     }
 
     _SEH_TRY {
+        AFD_DbgPrint(MIN_TRACE, ("probe and lock\n"));
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+        AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeIrp(*Irp);
-        return STATUS_INSUFFICIENT_RESOURCES;
+	Status = STATUS_INSUFFICIENT_RESOURCES;
     } _SEH_END;
+
+    if( !NT_SUCCESS(Status) ) return Status;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -914,9 +918,13 @@ NTSTATUS TdiReceive(
 		    Flags,                  /* Flags */
 		    BufferLength);          /* Length of data */
 
+
     Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
+
+    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n", 
+			    Status, Iosb->Information));
 
     return Status;
 }

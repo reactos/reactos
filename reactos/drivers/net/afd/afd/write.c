@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.6 2004/09/23 06:42:16 arty Exp $
+/* $Id: write.c,v 1.7 2004/09/23 20:48:40 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -231,7 +231,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    if( Status == STATUS_PENDING )
 		Status = STATUS_SUCCESS;
 	    
-	    AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
+	    AFD_DbgPrint(MID_TRACE,("Dismissing request: %x (%d)\n", 
+				    Status, TotalBytesCopied));
 	    
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, TotalBytesCopied, NULL, TRUE );

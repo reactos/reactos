@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.5 2004/09/05 04:26:29 arty Exp $
+/* $Id: read.c,v 1.6 2004/09/23 20:48:40 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -56,6 +56,9 @@ NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 	    BytesAvailable -= BytesToCopy;
 	}
     }
+
+    if( FCB->Recv.BytesUsed == FCB->Recv.Content )
+	FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
 
     return STATUS_SUCCESS;
 }
@@ -165,6 +168,8 @@ NTSTATUS DDKAPI ReceiveComplete
 	FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     SocketStateUnlock( FCB );
+
+    if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,("Returned %x\n", Status));
 
