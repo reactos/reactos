@@ -666,8 +666,6 @@ int MainFrame::Command(int id, int code)
 
 void MainFrame::resize_frame_rect(PRECT prect)
 {
-	int new_top;
-
 	if (IsWindowVisible(_htoolbar)) {
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
 		ClientRect rt(_htoolbar);
@@ -678,7 +676,7 @@ void MainFrame::resize_frame_rect(PRECT prect)
 	if (IsWindowVisible(_hdrivebar)) {
 		SendMessage(_hdrivebar, WM_SIZE, 0, 0);
 		ClientRect rt(_hdrivebar);
-		new_top = --prect->top + rt.bottom+3;
+		int new_top = --prect->top + rt.bottom+3;
 		MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
 		prect->top = new_top;
 //		prect->bottom -= rt.bottom+2;

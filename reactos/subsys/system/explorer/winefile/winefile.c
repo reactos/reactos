@@ -3670,7 +3670,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 		for(p=Globals.drives; *p; ) {
 #ifdef _NO_EXTENSIONS
-		  /* insert drive letter */
+			/* insert drive letter */
 			TCHAR b[3] = {tolower(*p)};
 			SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b);
 #endif

@@ -265,7 +265,7 @@ struct IconWindowClass : public WindowClass
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 
 
- /// menu info structure for MDI child windows
+ /// menu info structure
 struct MenuInfo
 {
 	HMENU	_hMenuView;

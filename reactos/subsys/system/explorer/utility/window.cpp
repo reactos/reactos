@@ -503,7 +503,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 void ChildWindow::resize_children(int cx, int cy)
 {
-	HDWP hdwp = BeginDeferWindowPos(4);
+	HDWP hdwp = BeginDeferWindowPos(2);
 	RECT rt;
 
 	rt.left   = 0;
@@ -520,7 +520,8 @@ void ChildWindow::resize_children(int cx, int cy)
 		cx = 0;
 	}
 
-	hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	if (_right_hwnd)
+		hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
 }
