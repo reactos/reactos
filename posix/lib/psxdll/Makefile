@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2002/08/23 12:40:56 ea Exp $
+# $Id: Makefile,v 1.11 2002/08/25 10:20:51 sedwards Exp $
 
 PATH_TO_TOP = ../../../reactos
 
@@ -8,7 +8,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = psxdll
 
-TARGET_LIBPATH = $(PATH_TO_PSX_TOP)/dk/lib
+TARGET_LIBPATH = $(PATH_TO_TOP)/dk/psx/lib
 
 TARGET_LFLAGS = -nostartfiles
 
