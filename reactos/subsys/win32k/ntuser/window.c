@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.196 2004/02/27 01:05:45 weiden Exp $
+/* $Id: window.c,v 1.197 2004/02/27 22:21:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -872,7 +872,10 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    HWND hWnd, hWndNewParent, hWndOldParent;
    BOOL WasVisible;
    BOOL MenuChanged;
-
+   
+   ASSERT(Wnd);
+   ASSERT(WndNewParent);
+   
    hWnd = Wnd->Self;
    hWndNewParent = WndNewParent->Self;
 
@@ -908,8 +911,6 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
       }
    }
    
-   if(WndOldParent)
-     IntReleaseWindowObject(WndOldParent);
    /*
     * SetParent additionally needs to make hwnd the topmost window
     * in the x-order and send the expected WM_WINDOWPOSCHANGING and
@@ -927,7 +928,19 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
     * Validate that the old parent still exist, since it migth have been
     * destroyed during the last callbacks to user-mode 
     */
-   return !IntIsWindow(hWndOldParent) ? NULL : WndOldParent;
+   if(WndOldParent)
+   {
+     if(!IntIsWindow(WndOldParent->Self))
+     {
+       IntReleaseWindowObject(WndOldParent);
+       return NULL;
+     }
+     
+     /* don't dereference the window object here, it must be done by the caller
+        of IntSetParent() */
+     return WndOldParent;
+   }
+   return NULL;
 }
 
 BOOL FASTCALL
@@ -2311,6 +2324,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    if (!(Wnd = IntGetWindowObject(hWndChild)))
    {
+      IntReleaseWindowObject(WndParent);
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
@@ -2320,6 +2334,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
    if (WndOldParent)
    {
       hWndOldParent = WndOldParent->Self;
+      IntReleaseWindowObject(WndOldParent);
    }
 
    IntReleaseWindowObject(Wnd);
