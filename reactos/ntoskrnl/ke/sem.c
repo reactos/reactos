@@ -1,4 +1,5 @@
-/*
+/* $Id: sem.c,v 1.6 2000/06/04 19:50:12 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -18,9 +19,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeInitializeSemaphore(PKSEMAPHORE Semaphore,
-			   LONG Count,
-			   LONG Limit)
+VOID
+STDCALL
+KeInitializeSemaphore (
+	PKSEMAPHORE	Semaphore,
+	LONG		Count,
+	LONG		Limit
+	)
 {
    KeInitializeDispatcherHeader(&Semaphore->Header,
 				InternalSemaphoreType,
@@ -29,15 +34,23 @@ VOID KeInitializeSemaphore(PKSEMAPHORE Semaphore,
    Semaphore->Limit=Limit;
 }
 
-LONG KeReadStateSemaphore(PKSEMAPHORE Semaphore)
+LONG
+STDCALL
+KeReadStateSemaphore (
+	PKSEMAPHORE	Semaphore
+	)
 {
    return(Semaphore->Header.SignalState);
 }
 
-LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
-			KPRIORITY Increment,
-			LONG Adjustment,
-			BOOLEAN Wait)
+LONG
+STDCALL
+KeReleaseSemaphore (
+	PKSEMAPHORE	Semaphore,
+	KPRIORITY	Increment,
+	LONG		Adjustment,
+	BOOLEAN		Wait
+	)
 /*
  * FUNCTION: KeReleaseSemaphore releases a given semaphore object. This
  * routine supplies a runtime priority boost for waiting threads. If this
@@ -85,3 +98,4 @@ LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
   return initState;
 }
 
+/* EOF */

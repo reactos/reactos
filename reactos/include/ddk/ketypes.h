@@ -3,6 +3,13 @@
 #ifndef __INCLUDE_DDK_KETYPES_H
 #define __INCLUDE_DDK_KETYPES_H
 
+#ifdef __NTOSKRNL__
+extern CHAR EXPORTED KeNumberProcessors;
+#else
+extern CHAR IMPORTED KeNumberProcessors;
+#endif
+
+
 struct _KMUTANT;
 
 typedef LONG KPRIORITY;

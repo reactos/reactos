@@ -122,7 +122,11 @@ VOID KeSetPreviousMode(ULONG Mode)
    PsGetCurrentThread()->Tcb.PreviousMode = Mode;
 }
 
-ULONG KeGetPreviousMode(VOID)
+ULONG
+STDCALL
+KeGetPreviousMode (
+	VOID
+	)
 {
    /* CurrentThread is in ntoskrnl/ps/thread.c */
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;

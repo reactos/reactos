@@ -1,23 +1,15 @@
 #ifndef __INCLUDE_DDK_KEFUNCS_H
 #define __INCLUDE_DDK_KEFUNCS_H
 
+
 /* KERNEL FUNCTIONS ********************************************************/
 
-VOID KeInitializeApc(PKAPC Apc,
-		     PKTHREAD Thread,
-		     UCHAR StateIndex,
-		     PKKERNEL_ROUTINE KernelRoutine,
-		     PKRUNDOWN_ROUTINE RundownRoutine,
-		     PKNORMAL_ROUTINE NormalRoutine,
-		     UCHAR Mode,
-		     PVOID Context);
+VOID
+STDCALL
+KeAttachProcess (
+	struct _EPROCESS*	Process
+	);
 
-VOID KeInsertQueueApc(PKAPC Apc, 
-		      PVOID SystemArgument1,
-		      PVOID SystemArgument2, 
-		      UCHAR Mode);
-VOID KeAttachProcess(struct _EPROCESS* Process);
-VOID KeDetachProcess(VOID);
 VOID KeDrainApcQueue(VOID);
 PKPROCESS KeGetCurrentProcess(VOID);
 
@@ -28,127 +20,31 @@ PKPROCESS KeGetCurrentProcess(VOID);
  *         SpinLock = Initialized spinlock
  *         OldIrql (OUT) = Set the previous irql on return 
  */
-VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql);
-
-VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock);
-BOOLEAN KeCancelTimer(PKTIMER Timer);
-VOID KeClearEvent(PKEVENT Event);
-NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE WaitMode,
-					 BOOLEAN Alertable,
-					 PLARGE_INTEGER	Internal);
-BOOLEAN KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD
-				     CallbackRecord);
-VOID KeEnterCriticalRegion(VOID);
-VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
-KIRQL
-STDCALL
-KeGetCurrentIrql (
-	VOID
-	);
-ULONG KeGetCurrentProcessorNumber(VOID);
-ULONG KeGetDcacheFillSize(VOID);
-PKTHREAD KeGetCurrentThread(VOID);
-ULONG KeGetPreviousMode(VOID);
-VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
-VOID KeInitializeDeviceQueue(PKDEVICE_QUEUE DeviceQueue);
-VOID KeInitializeDpc(PKDPC Dpc, PKDEFERRED_ROUTINE DeferredRoutine,
-		     PVOID DeferredContext);
-VOID KeInitializeEvent(PKEVENT Event, EVENT_TYPE Type, BOOLEAN State);
-VOID KeInitializeMutex(PKMUTEX Mutex, ULONG Level);
-VOID KeInitializeSemaphore(PKSEMAPHORE Semaphore, LONG Count, LONG Limit);
-VOID KeInitializeTimer(PKTIMER Timer);
-VOID KeInitializeTimerEx(PKTIMER Timer, TIMER_TYPE Type);
-BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-				 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-				 ULONG SortKey);
-BOOLEAN KeInsertDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-			    PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
-BOOLEAN KeInsertQueueDpc(PKDPC Dpc, PVOID SystemArgument1, 
-			 PVOID SystemArgument2);
-VOID KeLeaveCriticalRegion(VOID);   
 VOID
 STDCALL
-KeLowerIrql (
-	KIRQL	NewIrql
+KeAcquireSpinLock (
+	PKSPIN_LOCK	SpinLock,
+	PKIRQL		OldIrql
 	);
-LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency);
-VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime);
-VOID KeQueryTickCount(PLARGE_INTEGER TickCount);
-ULONG KeQueryTimeIncrement(VOID);
+
 VOID
 STDCALL
-KeRaiseIrql (
-	KIRQL	NewIrql,
-	PKIRQL	OldIrql
+KeAcquireSpinLockAtDpcLevel (
+	PKSPIN_LOCK	SpinLock
 	);
-LONG KeReadStateEvent(PKEVENT Event);
-LONG KeReadStateMutex(PKMUTEX Mutex);
-LONG KeReadStateSemaphore(PKSEMAPHORE Semaphore);
-BOOLEAN KeReadStateTimer(PKTIMER Timer);
-BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
-				   PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine,
-				   PVOID Buffer,
-				   ULONG Length,
-				   PUCHAR Component);
-LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait);
-LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore, KPRIORITY Increment,
-			LONG Adjustment, BOOLEAN Wait);
-VOID KeReleaseSpinLock(PKSPIN_LOCK Spinlock, KIRQL NewIrql);
-VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK Spinlock);
-PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-					      ULONG SortKey);
-PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue);
-BOOLEAN KeRemoveEntryDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-				 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
-BOOLEAN KeRemoveQueueDpc(PKDPC Dpc);
-LONG KeResetEvent(PKEVENT Event);
-LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment);
-LONG KeSetEvent(PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait);
-KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority);
-BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc);
-BOOLEAN KeSetTimerEx(PKTIMER Timer, 
-		     LARGE_INTEGER DueTime, 
-		     LONG Period,
-		     PKDPC Dpc);
-VOID STDCALL KeStallExecutionProcessor(ULONG MicroSeconds);
-BOOLEAN KeSynchronizeExecution(PKINTERRUPT Interrupt, 
-			       PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
-			       PVOID SynchronizeContext);
-NTSTATUS KeWaitForMultipleObjects(ULONG Count,
-				  PVOID Object[],
-				  WAIT_TYPE WaitType,
-				  KWAIT_REASON WaitReason,
-				  KPROCESSOR_MODE WaitMode,
-				  BOOLEAN Alertable,
-				  PLARGE_INTEGER Timeout,
-				  PKWAIT_BLOCK WaitBlockArray);
-NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex, 
-			      KWAIT_REASON WaitReason,
-			      KPROCESSOR_MODE WaitMode, 
-			      BOOLEAN Alertable,
-			      PLARGE_INTEGER Timeout);
-NTSTATUS KeWaitForSingleObject(PVOID Object, 
-			       KWAIT_REASON WaitReason,
-			       KPROCESSOR_MODE WaitMode,
-			       BOOLEAN Alertable, 
-			       PLARGE_INTEGER Timeout);
-   
-/*
- * FUNCTION: Initializes a spinlock
- * ARGUMENTS:
- *        SpinLock = Spinlock to initialize
- */
-VOID KeInitializeSpinLock(PKSPIN_LOCK SpinLock);
-   
-/*
- * FUNCTION: Sets the current irql without altering the current processor 
- * state
- * ARGUMENTS:
- *          newlvl = IRQ level to set
- * NOTE: This is for internal use only
- */
-VOID KeSetCurrentIrql(KIRQL newlvl);
 
+/*
+ * FUNCTION: Brings the system down in a controlled manner when an 
+ * inconsistency that might otherwise cause corruption has been detected
+ * ARGUMENTS:
+ *           BugCheckCode = Specifies the reason for the bug check
+ * RETURNS: Doesn't
+ */
+VOID
+STDCALL
+KeBugCheck (
+	ULONG	BugCheckCode
+	);
 
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
@@ -158,20 +54,422 @@ VOID KeSetCurrentIrql(KIRQL newlvl);
  *           BugCheckParameter[1-4] = Additional information about bug
  * RETURNS: Doesn't
  */
-VOID KeBugCheckEx(ULONG BugCheckCode,
-		  ULONG BugCheckParameter1,
-		  ULONG BugCheckParameter2,
-		  ULONG BugCheckParameter3,
-		  ULONG BugCheckParameter4);
+VOID
+STDCALL
+KeBugCheckEx (
+	ULONG	BugCheckCode,
+	ULONG	BugCheckParameter1,
+	ULONG	BugCheckParameter2,
+	ULONG	BugCheckParameter3,
+	ULONG	BugCheckParameter4
+	);
+
+BOOLEAN
+STDCALL
+KeCancelTimer (
+	PKTIMER	Timer
+	);
+
+VOID
+STDCALL
+KeClearEvent (
+	PKEVENT	Event
+	);
+
+NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE WaitMode,
+					 BOOLEAN Alertable,
+					 PLARGE_INTEGER	Internal);
+BOOLEAN
+STDCALL
+KeDeregisterBugCheckCallback (
+	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
+	);
+
+VOID
+STDCALL
+KeDetachProcess (
+	VOID
+	);
+
+VOID
+STDCALL
+KeEnterCriticalRegion (
+	VOID
+	);
+
+VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
+
+KIRQL
+STDCALL
+KeGetCurrentIrql (
+	VOID
+	);
+
+ULONG KeGetCurrentProcessorNumber(VOID);
+
+PKTHREAD
+STDCALL
+KeGetCurrentThread (
+	VOID
+	);
+
+ULONG KeGetDcacheFillSize(VOID);
+
+ULONG
+STDCALL
+KeGetPreviousMode (
+	VOID
+	);
+
+VOID
+STDCALL
+KeInitializeApc (
+	PKAPC			Apc,
+	PKTHREAD		Thread,
+	UCHAR			StateIndex,
+	PKKERNEL_ROUTINE	KernelRoutine,
+	PKRUNDOWN_ROUTINE	RundownRoutine,
+	PKNORMAL_ROUTINE	NormalRoutine,
+	UCHAR			Mode,
+	PVOID			Context
+	);
+
+
+VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
+
+VOID
+STDCALL
+KeInitializeDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue
+	);
+
+VOID
+STDCALL
+KeInitializeDpc (
+	PKDPC			Dpc,
+	PKDEFERRED_ROUTINE	DeferredRoutine,
+	PVOID			DeferredContext
+	);
+
+VOID
+STDCALL
+KeInitializeEvent (
+	PKEVENT		Event,
+	EVENT_TYPE	Type,
+	BOOLEAN		State
+	);
+
+VOID
+STDCALL
+KeInitializeMutex (
+	PKMUTEX	Mutex,
+	ULONG	Level
+	);
+
+VOID
+STDCALL
+KeInitializeSemaphore (
+	PKSEMAPHORE	Semaphore,
+	LONG		Count,
+	LONG		Limit
+	);
 
 /*
- * FUNCTION: Brings the system down in a controlled manner when an 
- * inconsistency that might otherwise cause corruption has been detected
+ * FUNCTION: Initializes a spinlock
  * ARGUMENTS:
- *           BugCheckCode = Specifies the reason for the bug check
- * RETURNS: Doesn't
+ *        SpinLock = Spinlock to initialize
  */
-VOID KeBugCheck(ULONG BugCheckCode);
+VOID
+STDCALL
+KeInitializeSpinLock (
+	PKSPIN_LOCK	SpinLock
+	);
+
+VOID
+STDCALL
+KeInitializeTimer (
+	PKTIMER	Timer
+	);
+
+VOID
+STDCALL
+KeInitializeTimerEx (
+	PKTIMER		Timer,
+	TIMER_TYPE	Type
+	);
+
+BOOLEAN
+STDCALL
+KeInsertByKeyDeviceQueue (
+	PKDEVICE_QUEUE		DeviceQueue,
+	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
+	ULONG			SortKey
+	);
+
+BOOLEAN
+STDCALL
+KeInsertDeviceQueue (
+	PKDEVICE_QUEUE		DeviceQueue,
+	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
+	);
+
+VOID
+STDCALL
+KeInsertQueueApc (
+	PKAPC	Apc,
+	PVOID	SystemArgument1,
+	PVOID	SystemArgument2,
+	UCHAR	Mode
+	);
+
+BOOLEAN
+STDCALL
+KeInsertQueueDpc (
+	PKDPC	Dpc,
+	PVOID	SystemArgument1,
+	PVOID	SystemArgument2
+	);
+
+VOID
+STDCALL
+KeLeaveCriticalRegion (
+	VOID
+	);
+
+VOID
+STDCALL
+KeLowerIrql (
+	KIRQL	NewIrql
+	);
+
+LARGE_INTEGER
+STDCALL
+KeQueryPerformanceCounter (
+	PLARGE_INTEGER	PerformanceFrequency
+	);
+
+VOID
+STDCALL
+KeQuerySystemTime (
+	PLARGE_INTEGER	CurrentTime
+	);
+
+VOID
+STDCALL
+KeQueryTickCount (
+	PLARGE_INTEGER	TickCount
+	);
+
+ULONG
+STDCALL
+KeQueryTimeIncrement (
+	VOID
+	);
+
+VOID
+STDCALL
+KeRaiseIrql (
+	KIRQL	NewIrql,
+	PKIRQL	OldIrql
+	);
+
+LONG
+STDCALL
+KeReadStateEvent (
+	PKEVENT	Event
+	);
+
+LONG
+STDCALL
+KeReadStateMutex (
+	PKMUTEX	Mutex
+	);
+
+LONG
+STDCALL
+KeReadStateSemaphore (
+	PKSEMAPHORE	Semaphore
+	);
+
+BOOLEAN
+STDCALL
+KeReadStateTimer (
+	PKTIMER	Timer
+	);
+
+BOOLEAN
+STDCALL
+KeRegisterBugCheckCallback (
+	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord,
+	PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
+	PVOID				Buffer,
+	ULONG				Length,
+	PUCHAR				Component
+	);
+
+LONG
+STDCALL
+KeReleaseMutex (
+	PKMUTEX	Mutex,
+	BOOLEAN	Wait
+	);
+
+LONG
+STDCALL
+KeReleaseSemaphore (
+	PKSEMAPHORE	Semaphore,
+	KPRIORITY	Increment,
+	LONG		Adjustment,
+	BOOLEAN		Wait
+	);
+
+VOID
+STDCALL
+KeReleaseSpinLock (
+	PKSPIN_LOCK	Spinlock,
+	KIRQL		NewIrql
+	);
+
+VOID
+STDCALL
+KeReleaseSpinLockFromDpcLevel (
+	PKSPIN_LOCK	Spinlock
+	);
+
+PKDEVICE_QUEUE_ENTRY
+STDCALL
+KeRemoveByKeyDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue,
+	ULONG		SortKey
+	);
+
+PKDEVICE_QUEUE_ENTRY
+STDCALL
+KeRemoveDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue
+	);
+
+BOOLEAN
+STDCALL
+KeRemoveEntryDeviceQueue (
+	PKDEVICE_QUEUE		DeviceQueue,
+	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
+	);
+
+BOOLEAN
+STDCALL
+KeRemoveQueueDpc (
+	PKDPC	Dpc
+	);
+
+LONG
+STDCALL
+KeResetEvent (
+	PKEVENT	Event
+	);
+
+LONG
+STDCALL
+KeSetBasePriorityThread (
+	PKTHREAD	Thread,
+	LONG		Increment
+	);
+
+LONG
+STDCALL
+KeSetEvent (
+	PKEVENT		Event,
+	KPRIORITY	Increment,
+	BOOLEAN		Wait
+	);
+
+KPRIORITY
+STDCALL
+KeSetPriorityThread (
+	PKTHREAD	Thread,
+	KPRIORITY	Priority
+	);
+
+BOOLEAN
+STDCALL
+KeSetTimer (
+	PKTIMER		Timer,
+	LARGE_INTEGER	DueTime,
+	PKDPC		Dpc
+	);
+
+BOOLEAN
+STDCALL
+KeSetTimerEx (
+	PKTIMER		Timer,
+	LARGE_INTEGER	DueTime,
+	LONG		Period,
+	PKDPC		Dpc
+	);
+
+VOID
+STDCALL
+KeStallExecutionProcessor (
+	ULONG	MicroSeconds
+	);
+
+BOOLEAN
+STDCALL
+KeSynchronizeExecution (
+	PKINTERRUPT		Interrupt,
+	PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
+	PVOID			SynchronizeContext
+	);
+
+VOID
+STDCALL
+KeUpdateSystemTime (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+KeWaitForMultipleObjects (
+	ULONG		Count,
+	PVOID		Object[],
+	WAIT_TYPE	WaitType,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout,
+	PKWAIT_BLOCK	WaitBlockArray
+	);
+
+NTSTATUS
+STDCALL
+KeWaitForMutexObject (
+	PKMUTEX		Mutex,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout
+	);
+
+NTSTATUS
+STDCALL
+KeWaitForSingleObject (
+	PVOID		Object,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout
+	);
+
+
+/*
+ * FUNCTION: Sets the current irql without altering the current processor 
+ * state
+ * ARGUMENTS:
+ *          newlvl = IRQ level to set
+ * NOTE: This is for internal use only
+ */
+VOID KeSetCurrentIrql(KIRQL newlvl);
+
 
 // io permission map has a 8k size
 // Each bit in the IOPM corresponds to an io port byte address. The bitmap

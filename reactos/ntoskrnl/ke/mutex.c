@@ -1,4 +1,5 @@
-/*
+/* $Id: mutex.c,v 1.5 2000/06/04 19:50:12 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -17,7 +18,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeInitializeMutex(PKMUTEX Mutex, ULONG Level)
+VOID
+STDCALL
+KeInitializeMutex (
+	PKMUTEX	Mutex,
+	ULONG	Level
+	)
 {
    KeInitializeDispatcherHeader(&Mutex->Header,
 				InternalMutexType,
@@ -25,12 +31,21 @@ VOID KeInitializeMutex(PKMUTEX Mutex, ULONG Level)
 				TRUE);
 }
 
-LONG KeReadStateMutex(PKMUTEX Mutex)
+LONG
+STDCALL
+KeReadStateMutex (
+	PKMUTEX	Mutex
+	)
 {
    return(Mutex->Header.SignalState);
 }
 
-LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait)
+LONG
+STDCALL
+KeReleaseMutex (
+	PKMUTEX	Mutex,
+	BOOLEAN	Wait
+	)
 {
    KeAcquireDispatcherDatabaseLock(Wait);
    Mutex->Header.SignalState--;
@@ -43,12 +58,17 @@ LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait)
    return(0);
 }
 
-NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex,
-			      KWAIT_REASON WaitReason,
-			      KPROCESSOR_MODE WaitMode,
-			      BOOLEAN Alertable,
-			      PLARGE_INTEGER Timeout)
+NTSTATUS
+STDCALL
+KeWaitForMutexObject (
+	PKMUTEX		Mutex,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout
+	)
 {
    return(KeWaitForSingleObject(Mutex,WaitReason,WaitMode,Alertable,Timeout));
 }
 
+/* EOF */

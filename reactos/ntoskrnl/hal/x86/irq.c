@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.11 2000/04/09 15:58:13 ekohl Exp $
+/* $Id: irq.c,v 1.12 2000/06/04 19:49:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,7 +123,7 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
 
    if (irq==0)
    {
-        KiTimerInterrupt();
+        KeUpdateSystemTime ();
    }
    else
    {

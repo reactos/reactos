@@ -30,8 +30,13 @@ ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID KeInitializeDpc(PKDPC Dpc, PKDEFERRED_ROUTINE DeferredRoutine,
-		     PVOID DeferredContext)
+VOID
+STDCALL
+KeInitializeDpc (
+	PKDPC			Dpc,
+	PKDEFERRED_ROUTINE	DeferredRoutine,
+	PVOID			DeferredContext
+	)
 /*
  * FUNCTION: Initalizes a DPC
  * ARGUMENTS:
@@ -93,7 +98,11 @@ void KeDrainDpcQueue(void)
      }
 }
 
-BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
+BOOLEAN
+STDCALL
+KeRemoveQueueDpc (
+	PKDPC	Dpc
+	)
 /*
  * FUNCTION: Removes DPC object from the system dpc queue
  * ARGUMENTS:
@@ -118,8 +127,13 @@ BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
    return(TRUE);
 }
 
-BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
-			 PVOID SystemArgument2)
+BOOLEAN
+STDCALL
+KeInsertQueueDpc (
+	PKDPC	Dpc,
+	PVOID	SystemArgument1,
+	PVOID	SystemArgument2
+	)
 /*
  * FUNCTION: Queues a DPC for execution when the IRQL of a processor
  * drops below DISPATCH_LEVEL
@@ -132,24 +146,24 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
 {
    KIRQL oldlvl;
    DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
-	  dpc, SystemArgument1, SystemArgument2);
+	  Dpc, SystemArgument1, SystemArgument2);
 
    assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
 
-   dpc->Number=0;
-   dpc->Importance=Medium;
-   dpc->SystemArgument1=SystemArgument1;
-   dpc->SystemArgument2=SystemArgument2;
-   if (dpc->Lock)
+   Dpc->Number=0;
+   Dpc->Importance=Medium;
+   Dpc->SystemArgument1=SystemArgument1;
+   Dpc->SystemArgument2=SystemArgument2;
+   if (Dpc->Lock)
      {
 	return(FALSE);
      }
    KeRaiseIrql( HIGH_LEVEL, &oldlvl );
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
-   InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
-   DPRINT("dpc->DpcListEntry.Flink %x\n", dpc->DpcListEntry.Flink);
+   InsertHeadList(&DpcQueueHead,&Dpc->DpcListEntry);
+   DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
    DpcQueueSize++;
-   dpc->Lock=(PULONG)1;
+   Dpc->Lock=(PULONG)1;
    KeReleaseSpinLock( &DpcQueueLock, oldlvl );
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);

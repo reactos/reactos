@@ -364,11 +364,15 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 }
 
 
-NTSTATUS KeWaitForSingleObject(PVOID Object,
-			       KWAIT_REASON WaitReason,
-			       KPROCESSOR_MODE WaitMode,
-			       BOOLEAN Alertable,
-			       PLARGE_INTEGER Timeout)
+NTSTATUS
+STDCALL
+KeWaitForSingleObject (
+	PVOID		Object,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout
+	)
 /*
  * FUNCTION: Puts the current thread into a wait state until the
  * given dispatcher object is set to signalled 
@@ -449,14 +453,18 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 }
 
 
-NTSTATUS KeWaitForMultipleObjects(ULONG Count,
-				  PVOID Object[],
-				  WAIT_TYPE WaitType,
-				  KWAIT_REASON WaitReason,
-				  KPROCESSOR_MODE WaitMode,
-				  BOOLEAN Alertable,
-				  PLARGE_INTEGER Timeout,
-				  PKWAIT_BLOCK WaitBlockArray)
+NTSTATUS
+STDCALL
+KeWaitForMultipleObjects (
+	ULONG		Count,
+	PVOID		Object[],
+	WAIT_TYPE	WaitType,
+	KWAIT_REASON	WaitReason,
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Timeout,
+	PKWAIT_BLOCK	WaitBlockArray
+	)
 {
    DISPATCHER_HEADER* hdr;
    PKWAIT_BLOCK blk;

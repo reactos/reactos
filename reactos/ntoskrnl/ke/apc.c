@@ -133,10 +133,14 @@ VOID KeCallApcsThread(VOID)
 //   Thread->Tcb.WaitStatus = STATUS_KERNEL_APC;
 }
 
-VOID KeInsertQueueApc(PKAPC Apc, 
-		      PVOID SystemArgument1,
-		      PVOID SystemArgument2, 
-		      UCHAR Mode)
+VOID
+STDCALL
+KeInsertQueueApc (
+	PKAPC	Apc,
+	PVOID	SystemArgument1,
+	PVOID	SystemArgument2,
+	UCHAR	Mode
+	)
 /*
  * FUNCTION: Queues an APC for execution
  * ARGUMENTS:
@@ -200,14 +204,18 @@ VOID KeInsertQueueApc(PKAPC Apc,
      }
 }
 
-VOID KeInitializeApc(PKAPC Apc,
-		     PKTHREAD Thread,
-		     UCHAR StateIndex,
-		     PKKERNEL_ROUTINE KernelRoutine,
-		     PKRUNDOWN_ROUTINE RundownRoutine,
-		     PKNORMAL_ROUTINE NormalRoutine,
-		     UCHAR Mode,
-		     PVOID Context)
+VOID
+STDCALL
+KeInitializeApc (
+	PKAPC			Apc,
+	PKTHREAD		Thread,
+	UCHAR			StateIndex,
+	PKKERNEL_ROUTINE	KernelRoutine,
+	PKRUNDOWN_ROUTINE	RundownRoutine,
+	PKNORMAL_ROUTINE	NormalRoutine,
+	UCHAR			Mode,
+	PVOID			Context
+	)
 /*
  * FUNCTION: Initialize an APC object
  * ARGUMENTS:

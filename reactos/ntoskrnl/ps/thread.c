@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.47 2000/06/03 21:36:32 ekohl Exp $
+/* $Id: thread.c,v 1.48 2000/06/04 19:51:05 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -106,7 +106,11 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process)
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
-PKTHREAD KeGetCurrentThread(VOID)
+PKTHREAD
+STDCALL
+KeGetCurrentThread (
+	VOID
+	)
 {
    return(&(CurrentThread->Tcb));
 }
@@ -415,7 +419,12 @@ VOID PsInitThreadManagment(VOID)
  * Sets thread's base priority relative to the process' base priority
  * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
  */
-LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
+LONG
+STDCALL
+KeSetBasePriorityThread (
+	PKTHREAD	Thread,
+	LONG		Increment
+	)
 {
    Thread->BasePriority = ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
    if( Thread->BasePriority < 0 )
@@ -427,7 +436,12 @@ LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
 }
 
 
-KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
+KPRIORITY
+STDCALL
+KeSetPriorityThread (
+	PKTHREAD	Thread,
+	KPRIORITY	Priority
+	)
 {
    KPRIORITY OldPriority;
    KIRQL oldIrql;

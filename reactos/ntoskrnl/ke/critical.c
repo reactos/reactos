@@ -1,4 +1,5 @@
-/*
+/* $Id: critical.c,v 1.4 2000/06/04 19:50:12 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/critical.c
@@ -17,14 +18,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeEnterCriticalRegion()
+VOID
+STDCALL
+KeEnterCriticalRegion (
+	VOID
+	)
 {
    DPRINT("KeEnterCriticalRegion()\n");
    KeGetCurrentThread()->KernelApcDisable -= 1;
 }
 
-VOID KeLeaveCriticalRegion()
+VOID
+STDCALL
+KeLeaveCriticalRegion (
+	VOID
+	)
 {
    DPRINT("KeLeaveCriticalRegion()\n");
    KeGetCurrentThread()->KernelApcDisable += 1;
 }
+
+/* EOF */

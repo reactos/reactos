@@ -23,9 +23,13 @@ VOID InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After,
    InsertHeadList(After, Entry);
 }
 
-BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-				 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-				 ULONG SortKey)
+BOOLEAN
+STDCALL
+KeInsertByKeyDeviceQueue (
+	PKDEVICE_QUEUE		DeviceQueue,
+	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
+	ULONG			SortKey
+	)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current;
@@ -64,8 +68,12 @@ BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
    return(TRUE);
 }
 
-PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-					      ULONG SortKey)
+PKDEVICE_QUEUE_ENTRY
+STDCALL
+KeRemoveByKeyDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue,
+	ULONG		SortKey
+	)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current;
@@ -95,7 +103,11 @@ PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
    return(NULL);
 }
 
-PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
+PKDEVICE_QUEUE_ENTRY
+STDCALL
+KeRemoveDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue
+	)
 /*
  * FUNCTION: Removes an entry from a device queue
  * ARGUMENTS:
@@ -128,7 +140,11 @@ PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
    return(entry);
 }
 
-VOID KeInitializeDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
+VOID
+STDCALL
+KeInitializeDeviceQueue (
+	PKDEVICE_QUEUE	DeviceQueue
+	)
 /*
  * FUNCTION: Intializes a device queue
  * ARGUMENTS:
@@ -141,8 +157,12 @@ VOID KeInitializeDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
    KeInitializeSpinLock(&DeviceQueue->Lock);
 }
 
-BOOLEAN KeInsertDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-			    PKDEVICE_QUEUE_ENTRY DeviceQueueEntry)
+BOOLEAN
+STDCALL
+KeInsertDeviceQueue (
+	PKDEVICE_QUEUE		DeviceQueue,
+	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
+	)
 /*
  * FUNCTION: Inserts an entry in a device queue
  * ARGUMENTS:

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.27 2000/02/14 10:27:40 ariadne Exp $
+/* $Id: timer.c,v 1.28 2000/06/04 19:50:12 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -145,9 +145,13 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 }
 
 
-NTSTATUS STDCALL KeDelayExecutionThread(KPROCESSOR_MODE	WaitMode,
-					BOOLEAN		Alertable,
-					PLARGE_INTEGER	Interval)
+NTSTATUS
+STDCALL
+KeDelayExecutionThread (
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Interval
+	)
 /*
  * FUNCTION: Puts the current thread into an alertable or nonalertable 
  * wait state for a given internal
@@ -167,7 +171,11 @@ NTSTATUS STDCALL KeDelayExecutionThread(KPROCESSOR_MODE	WaitMode,
 				 NULL));
 }
 
-LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
+LARGE_INTEGER
+STDCALL
+KeQueryPerformanceCounter (
+	PLARGE_INTEGER	PerformanceFreq
+	)
 /*
  * FUNCTION: Queries the finest grained running count avaiable in the system
  * ARGUMENTS:
@@ -185,7 +193,11 @@ LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
   return *PerformanceFreq;
 }
 
-ULONG KeQueryTimeIncrement(VOID)
+ULONG
+STDCALL
+KeQueryTimeIncrement (
+	VOID
+	)
 /*
  * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to 
  * the system clock every time the clock interrupts
@@ -195,7 +207,11 @@ ULONG KeQueryTimeIncrement(VOID)
    return(CLOCK_INCREMENT);
 }
 
-VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
+VOID
+STDCALL
+KeQuerySystemTime (
+	PLARGE_INTEGER	CurrentTime
+	)
 /*
  * FUNCTION: Gets the current system time
  * ARGUMENTS:
@@ -208,7 +224,11 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 }
 
 
-NTSTATUS STDCALL NtGetTickCount (PULONG UpTime)
+NTSTATUS
+STDCALL
+NtGetTickCount (
+	PULONG	UpTime
+	)
 {
 	LARGE_INTEGER TickCount;
 	if ( UpTime == NULL )
@@ -219,7 +239,13 @@ NTSTATUS STDCALL NtGetTickCount (PULONG UpTime)
 }
 
 
-BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc)
+BOOLEAN
+STDCALL
+KeSetTimer (
+	PKTIMER		Timer,
+	LARGE_INTEGER	DueTime,
+	PKDPC		Dpc
+	)
 /*
  * FUNCTION: Sets the absolute or relative interval at which a timer object
  * is to be set to the signaled state and optionally supplies a 
@@ -236,8 +262,14 @@ BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc)
    return(KeSetTimerEx(Timer, DueTime, 0, Dpc));
 }
 
-BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
-		     PKDPC Dpc)
+BOOLEAN
+STDCALL
+KeSetTimerEx (
+	PKTIMER		Timer,
+	LARGE_INTEGER	DueTime,
+	LONG		Period,
+	PKDPC		Dpc
+	)
 /*
  * FUNCTION: Sets the absolute or relative interval at which a timer object
  * is to be set to the signaled state and optionally supplies a 
@@ -280,7 +312,11 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    return FALSE;
 }
 
-BOOLEAN KeCancelTimer(PKTIMER Timer)
+BOOLEAN
+STDCALL
+KeCancelTimer (
+	PKTIMER	Timer
+	)
 /*
  * FUNCTION: Removes a timer from the system timer list
  * ARGUMENTS:
@@ -308,12 +344,20 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
    return(TRUE);
 }
 
-BOOLEAN KeReadStateTimer(PKTIMER Timer)
+BOOLEAN
+STDCALL
+KeReadStateTimer (
+	PKTIMER	Timer
+	)
 {
    return(Timer->Header.SignalState);
 }
 
-VOID KeInitializeTimer(PKTIMER Timer)
+VOID
+STDCALL
+KeInitializeTimer (
+	PKTIMER	Timer
+	)
 /*
  * FUNCTION: Initalizes a kernel timer object
  * ARGUMENTS:
@@ -324,7 +368,12 @@ VOID KeInitializeTimer(PKTIMER Timer)
    KeInitializeTimerEx(Timer,NotificationTimer);
 }
 
-VOID KeInitializeTimerEx(PKTIMER Timer, TIMER_TYPE Type)
+VOID
+STDCALL
+KeInitializeTimerEx (
+	PKTIMER		Timer,
+	TIMER_TYPE	Type
+	)
 /*
  * FUNCTION: Initializes a kernel timer object
  * ARGUMENTS:
@@ -359,7 +408,11 @@ VOID KeInitializeTimerEx(PKTIMER Timer, TIMER_TYPE Type)
    Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
 }
 
-VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
+VOID
+STDCALL
+KeQueryTickCount (
+	PLARGE_INTEGER	TickCount
+	)
 /*
  * FUNCTION: Returns the number of ticks since the system was booted
  * ARGUMENTS:
@@ -429,7 +482,11 @@ VOID KeExpireTimers(VOID)
 }
 
 
-VOID KiTimerInterrupt(VOID)
+VOID
+STDCALL
+KeUpdateSystemTime (
+	VOID
+	)
 /*
  * FUNCTION: Handles a timer interrupt
  */

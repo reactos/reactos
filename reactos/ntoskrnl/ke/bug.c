@@ -1,4 +1,5 @@
-/*
+/* $Id: bug.c,v 1.11 2000/06/04 19:50:12 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -25,7 +26,11 @@ VOID PsDumpThreads(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
+BOOLEAN
+STDCALL
+KeDeregisterBugCheckCallback (
+	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
+	)
 {
    UNIMPLEMENTED;
 }
@@ -41,11 +46,15 @@ VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
    UNIMPLEMENTED;
 }
 
-BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
-				   PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine,
-				   PVOID Buffer,
-				   ULONG Length,
-				   PUCHAR Component)
+BOOLEAN
+STDCALL
+KeRegisterBugCheckCallback (
+	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord,
+	PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
+	PVOID				Buffer,
+	ULONG				Length,
+	PUCHAR				Component
+	)
 {
    InsertTailList(&BugcheckCallbackListHead,&CallbackRecord->Entry);
    CallbackRecord->Length=Length;
@@ -55,11 +64,15 @@ BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
    return(TRUE);
 }
 
-VOID KeBugCheckEx(ULONG BugCheckCode,
-		  ULONG BugCheckParameter1,
-		  ULONG BugCheckParameter2,
-		  ULONG BugCheckParameter3,
-		  ULONG BugCheckParameter4)
+VOID
+STDCALL
+KeBugCheckEx (
+	ULONG	BugCheckCode,
+	ULONG	BugCheckParameter1,
+	ULONG	BugCheckParameter2,
+	ULONG	BugCheckParameter3,
+	ULONG	BugCheckParameter4
+	)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -80,7 +93,11 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
 	   __asm__("hlt\n\t");	//PJS: use HLT instruction, rather than busy wait
 }
 
-VOID KeBugCheck(ULONG BugCheckCode)
+VOID
+STDCALL
+KeBugCheck (
+	ULONG	BugCheckCode
+	)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -105,3 +122,4 @@ VOID KeBugCheck(ULONG BugCheckCode)
      }
 }
 
+/* EOF */

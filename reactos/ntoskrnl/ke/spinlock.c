@@ -21,9 +21,13 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN KeSynchronizeExecution(PKINTERRUPT Interrupt,
-			       PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
-			       PVOID SynchronizeContext)
+BOOLEAN
+STDCALL
+KeSynchronizeExecution (
+	PKINTERRUPT		Interrupt,
+	PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
+	PVOID			SynchronizeContext
+	)
 /*
  * FUNCTION: Synchronizes the execution of a given routine with the ISR
  * of a given interrupt object
@@ -49,7 +53,11 @@ BOOLEAN KeSynchronizeExecution(PKINTERRUPT Interrupt,
    return(ret);
 }
 
-VOID KeInitializeSpinLock(PKSPIN_LOCK SpinLock)
+VOID
+STDCALL
+KeInitializeSpinLock (
+	PKSPIN_LOCK	SpinLock
+	)
 /*
  * FUNCTION: Initalizes a spinlock
  * ARGUMENTS:
@@ -59,7 +67,11 @@ VOID KeInitializeSpinLock(PKSPIN_LOCK SpinLock)
    SpinLock->Lock = 0;
 }
 
-VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
+VOID
+STDCALL
+KeAcquireSpinLockAtDpcLevel (
+	PKSPIN_LOCK	SpinLock
+	)
 /*
  * FUNCTION: Acquires a spinlock when the caller is already running at 
  * dispatch level
@@ -76,7 +88,11 @@ VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
      }
 }
 
-VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
+VOID
+STDCALL
+KeReleaseSpinLockFromDpcLevel (
+	PKSPIN_LOCK	SpinLock
+	)
 /*
  * FUNCTION: Releases a spinlock when the caller was running at dispatch
  * level before acquiring it
@@ -92,7 +108,12 @@ VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
    (void)InterlockedExchange(&SpinLock->Lock, 0);
 }
 
-VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql)
+VOID
+STDCALL
+KeAcquireSpinLock (
+	PKSPIN_LOCK	SpinLock,
+	PKIRQL		OldIrql
+	)
 /*
  * FUNCTION: Acquires a spinlock
  * ARGUMENTS:
@@ -104,7 +125,12 @@ VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql)
    KeAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
-VOID KeReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL NewIrql)
+VOID
+STDCALL
+KeReleaseSpinLock (
+	PKSPIN_LOCK	SpinLock,
+	KIRQL		NewIrql
+	)
 /*
  * FUNCTION: Releases a spinlock
  * ARGUMENTS:

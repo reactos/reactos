@@ -18,13 +18,23 @@
 
 /* FUNCTIONS ****************************************************************/
 
-VOID KeClearEvent(PKEVENT Event)
+VOID
+STDCALL
+KeClearEvent (
+	PKEVENT	Event
+	)
 {
    DPRINT("KeClearEvent(Event %x)\n", Event);
    Event->Header.SignalState=FALSE;   
 }
 
-VOID KeInitializeEvent(PKEVENT Event, EVENT_TYPE Type, BOOLEAN State)
+VOID
+STDCALL
+KeInitializeEvent (
+	PKEVENT		Event,
+	EVENT_TYPE	Type,
+	BOOLEAN		State
+	)
 {
    ULONG IType;
    
@@ -48,17 +58,31 @@ VOID KeInitializeEvent(PKEVENT Event, EVENT_TYPE Type, BOOLEAN State)
    InitializeListHead(&(Event->Header.WaitListHead));
 }
 
-LONG KeReadStateEvent(PKEVENT Event)
+LONG
+STDCALL
+KeReadStateEvent (
+	PKEVENT	Event
+	)
 {
    return(Event->Header.SignalState);
 }
 
-LONG KeResetEvent(PKEVENT Event)
+LONG
+STDCALL
+KeResetEvent (
+	PKEVENT	Event
+	)
 {
    return(InterlockedExchange(&(Event->Header.SignalState),0));
 }
 
-LONG KeSetEvent(PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait)
+LONG
+STDCALL
+KeSetEvent (
+	PKEVENT		Event,
+	KPRIORITY	Increment,
+	BOOLEAN		Wait
+	)
 {
    int ret;
 

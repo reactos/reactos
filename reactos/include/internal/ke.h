@@ -21,7 +21,6 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 
 VOID KiInterruptDispatch(ULONG irq);
 VOID KiDispatchInterrupt(ULONG irq);
-VOID KiTimerInterrupt(VOID);
 VOID KeDrainDpcQueue(VOID);
 VOID KeExpireTimers(VOID);
 NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval);

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.45 2000/06/03 21:35:51 ekohl Exp $
+/* $Id: main.c,v 1.46 2000/06/04 19:50:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
 
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
+CHAR  EXPORTED KeNumberProcessors = 1;
 
 /* FUNCTIONS ****************************************************************/
 

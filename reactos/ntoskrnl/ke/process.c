@@ -1,4 +1,5 @@
-/*
+/* $Id: process.c,v 1.4 2000/06/04 19:50:12 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -19,7 +20,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeAttachProcess(PEPROCESS Process)
+VOID
+STDCALL
+KeAttachProcess (
+	PEPROCESS	Process
+	)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
@@ -50,7 +55,11 @@ VOID KeAttachProcess(PEPROCESS Process)
    KeLowerIrql(oldlvl);
 }
 
-VOID KeDetachProcess(VOID)
+VOID
+STDCALL
+KeDetachProcess (
+	VOID
+	)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
@@ -78,3 +87,5 @@ VOID KeDetachProcess(VOID)
    
    KeLowerIrql(oldlvl);
 }
+
+/* EOF */
