@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.1 2000/03/05 19:17:42 ea Exp $
+/* $Id: mdl.c,v 1.2 2002/03/13 20:41:28 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
@@ -21,12 +21,12 @@
 BOOLEAN
 STDCALL
 FsRtlMdlRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus
 	)
 {
 	return FALSE; /* FIXME: call FsRtlMdlReadDev ? */
@@ -44,12 +44,9 @@ FsRtlMdlRead (
  * RETURN VALUE
  *
  */
-BOOLEAN
-STDCALL
-FsRtlMdlReadComplete (
-	IN	PFILE_OBJECT	FileObject,
-	IN OUT	PMDL		Mdl
-	)
+BOOLEAN STDCALL
+FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
+		     IN OUT PMDL Mdl)
 {
 	PDEVICE_OBJECT	DeviceObject [2] = {NULL};
 	PDRIVER_OBJECT	DriverObject = NULL;
@@ -157,13 +154,13 @@ FsRtlMdlReadCompleteDev (
 BOOLEAN
 STDCALL
 FsRtlMdlReadDev (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
 	return FALSE;
@@ -231,12 +228,12 @@ FsRtlMdlWriteCompleteDev (
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus
 	)
 {
 	return FALSE; /* call FsRtlPrepareMdlWriteDev ? */
@@ -257,13 +254,13 @@ FsRtlPrepareMdlWrite (
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWriteDev (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
 	return FALSE;

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.12 2002/01/13 22:02:30 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.13 2002/03/13 20:41:11 ekohl Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 VOID
 STDCALL
@@ -374,12 +374,12 @@ FsRtlLookupMcbEntry (
 BOOLEAN
 STDCALL
 FsRtlMdlRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus
 	);
 BOOLEAN
 STDCALL
@@ -397,13 +397,13 @@ FsRtlMdlReadCompleteDev (
 BOOLEAN
 STDCALL
 FsRtlMdlReadDev (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	);
 BOOLEAN
 STDCALL
@@ -511,23 +511,23 @@ FsRtlOplockIsFastIoPossible (
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus
 	);
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWriteDev (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	ULONG			LockKey,
+	OUT	PMDL			*MdlChain,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	);
 NTSTATUS
 STDCALL
@@ -568,9 +568,9 @@ FsRtlPrivateLock (
     IN PLARGE_INTEGER       Length,
     IN PEPROCESS            Process,
     IN ULONG                Key,
-    IN BOOLEAN              FailImmediately, 
+    IN BOOLEAN              FailImmediately,
     IN BOOLEAN              ExclusiveLock,
-    OUT PIO_STATUS_BLOCK    IoStatus, 
+    OUT PIO_STATUS_BLOCK    IoStatus,
     IN PIRP                 Irp OPTIONAL,
     IN PVOID                Context,
     IN BOOLEAN              AlreadySynchronized
