@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.15 2003/07/29 02:14:46 rcampbell Exp $
+/* $Id: winpos.c,v 1.16 2003/07/29 05:37:23 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -391,10 +391,6 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
     WindowObject->ClientRect;
 
 	/* Temp fix for WineMine */
-	ClientRect->left++;
-	ClientRect->top++;
-	ClientRect->right--;
-	ClientRect->bottom--;
 
   if (!(WinPos->flags & SWP_NOSIZE))
     {
