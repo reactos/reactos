@@ -7,8 +7,6 @@
 #include "../eng/handle.h"
 #include <ntos/minmax.h>
 
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
-
 UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
@@ -97,12 +95,10 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
     lpRGB = &bmi->bmiColors[0];
 
   // Create a temporary surface for the destination bitmap
-  DestBitmap = (HBITMAP)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
+  DestBitmap = BitmapToSurf(bitmap);
 
   DestSurf   = (PSURFOBJ) AccessUserObject( DestBitmap );
   DestGDI    = (PSURFGDI) AccessInternalObject( DestBitmap );
-
-  BitmapToSurf(hDC, DestGDI, DestSurf, bitmap);
 
   // Create source surface
   SourceSize.cx = bmi->bmiHeader.biWidth;

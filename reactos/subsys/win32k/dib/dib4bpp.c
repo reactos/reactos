@@ -10,7 +10,7 @@
 
 VOID DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
-  PBYTE addr = SurfObj->pvBits;
+  PBYTE addr = SurfObj->pvScan0;
 
   addr += (x>>1) + y * SurfObj->lDelta;
   *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
@@ -18,14 +18,14 @@ VOID DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 
 ULONG DIB_4BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
-  PBYTE addr = SurfObj->pvBits;
+  PBYTE addr = SurfObj->pvScan0;
 
   return (addr[(x>>1) + y * SurfObj->lDelta] >> ((1-(x&1))<<2) ) & 0x0f;
 }
 
 VOID DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE  addr = SurfObj->pvBits + (x1>>1) + y * SurfObj->lDelta;
+  PBYTE  addr = SurfObj->pvScan0 + (x1>>1) + y * SurfObj->lDelta;
   LONG  cx = x1;
 
   while(cx < x2) {
@@ -38,7 +38,7 @@ VOID DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 
 VOID DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-  PBYTE  addr = SurfObj->pvBits;
+  PBYTE  addr = SurfObj->pvScan0;
   int  lDelta = SurfObj->lDelta;
 
   addr += (x>>1) + y1 * lDelta;
@@ -48,16 +48,17 @@ VOID DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-        PRECTL  DestRect,  POINTL  *SourcePoint,
-        LONG   Delta,      XLATEOBJ *ColorTranslation)
+BOOLEAN DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+                        PRECTL  DestRect,  POINTL  *SourcePoint,
+                        XLATEOBJ *ColorTranslation)
 {
   LONG     i, j, sx, sy, f1, f2, xColor;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
   PBYTE    DestBits, DestLine, SourceBits_8BPP, SourceLine_8BPP;
+  PBYTE    SourceBits, SourceLine;
 
-  DestBits = DestSurf->pvBits + (DestRect->left>>1) + DestRect->top * DestSurf->lDelta;
+  DestBits = DestSurf->pvScan0 + (DestRect->left>>1) + DestRect->top * DestSurf->lDelta;
 
   switch(SourceGDI->BitsPerPixel)
   {
@@ -99,23 +100,20 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
     case 8:
-      SourceBits_8BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
+      SourceBits_8BPP = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x;
 
       for (j=DestRect->top; j<DestRect->bottom; j++)
       {
         SourceLine_8BPP = SourceBits_8BPP;
         DestLine = DestBits;
-        sx = SourcePoint->x;
-        f1 = sx & 1;
         f2 = DestRect->left & 1;
 
         for (i=DestRect->left; i<DestRect->right; i++)
         {
           *DestLine = (*DestLine & notmask[i&1]) |
-            ((XLATEOBJ_iXlate(ColorTranslation, *SourceLine_8BPP)) << ((4 * (1-(sx & 1)))));
+            ((XLATEOBJ_iXlate(ColorTranslation, *SourceLine_8BPP)) << ((4 * (1-(i & 1)))));
           if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
           SourceLine_8BPP++;
-          sx++;
         }
 
         SourceBits_8BPP += SourceSurf->lDelta;
@@ -123,15 +121,37 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       break;
 
+    case 16:
+      SourceLine = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + 2 * SourcePoint->x;
+      DestLine = DestBits;
+
+      for (j = DestRect->top; j < DestRect->bottom; j++)
+      {
+        SourceBits = SourceLine;
+        DestBits = DestLine;
+        f2 = DestRect->left & 1;
+
+        for (i = DestRect->left; i < DestRect->right; i++)
+        {
+          xColor = *((PWORD) SourceBits);
+          *DestBits = (*DestBits & notmask[i&1]) |
+            ((XLATEOBJ_iXlate(ColorTranslation, xColor)) << ((4 * (1-(i & 1)))));
+          if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
+          SourceBits += 2;
+        }
+
+        SourceLine += SourceSurf->lDelta;
+        DestLine += DestSurf->lDelta;
+      }
+      break;
+
     case 24:
-      SourceBits_24BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x * 3;
+      SourceBits_24BPP = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + SourcePoint->x * 3;
 
       for (j=DestRect->top; j<DestRect->bottom; j++)
       {
         SourceLine_24BPP = SourceBits_24BPP;
         DestLine = DestBits;
-        sx = SourcePoint->x;
-        f1 = sx & 1;
         f2 = DestRect->left & 1;
 
         for (i=DestRect->left; i<DestRect->right; i++)
@@ -140,14 +160,37 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
              (*(SourceLine_24BPP + 1) << 0x08) +
              (*(SourceLine_24BPP));
           *DestLine = (*DestLine & notmask[i&1]) |
-            ((XLATEOBJ_iXlate(ColorTranslation, xColor)) << ((4 * (1-(sx & 1)))));
+            ((XLATEOBJ_iXlate(ColorTranslation, xColor)) << ((4 * (1-(i & 1)))));
           if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
           SourceLine_24BPP+=3;
-          sx++;
         }
 
         SourceBits_24BPP += SourceSurf->lDelta;
         DestBits += DestSurf->lDelta;
+      }
+      break;
+
+    case 32:
+      SourceLine = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + 4 * SourcePoint->x;
+      DestLine = DestBits;
+
+      for (j = DestRect->top; j < DestRect->bottom; j++)
+      {
+        SourceBits = SourceLine;
+        DestBits = DestLine;
+        f2 = DestRect->left & 1;
+
+        for (i = DestRect->left; i < DestRect->right; i++)
+        {
+          xColor = *((PDWORD) SourceBits);
+          *DestBits = (*DestBits & notmask[i&1]) |
+            ((XLATEOBJ_iXlate(ColorTranslation, xColor)) << ((4 * (1-(i & 1)))));
+          if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
+          SourceBits += 4;
+        }
+
+        SourceLine += SourceSurf->lDelta;
+        DestLine += DestSurf->lDelta;
       }
       break;
 

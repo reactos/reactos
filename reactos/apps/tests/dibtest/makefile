@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2002/09/22 20:09:01 jfilby Exp $
+# $Id: makefile,v 1.2 2003/03/04 10:09:00 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_NORC = yes
 
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = dibtest
 

@@ -138,12 +138,25 @@ typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 
 typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
+/* Forward declare (circular reference) */
+typedef struct _SURFGDI *PSURFGDI;
+
+typedef VOID    (*PFN_DIB_PutPixel)(PSURFOBJ, LONG, LONG, ULONG);
+typedef ULONG   (*PFN_DIB_GetPixel)(PSURFOBJ, LONG, LONG);
+typedef VOID    (*PFN_DIB_HLine)   (PSURFOBJ, LONG, LONG, LONG, ULONG);
+typedef VOID    (*PFN_DIB_VLine)   (PSURFOBJ, LONG, LONG, LONG, ULONG);
+typedef BOOLEAN (*PFN_DIB_BitBlt)  (PSURFOBJ DestSurf, PSURFOBJ SourceSurf,
+                                    PSURFGDI DestGDI,  PSURFGDI SourceGDI,
+                                    PRECTL   DestRect, PPOINTL  SourcePoint,
+                                    XLATEOBJ *ColorTranslation);
+
 typedef struct _SURFGDI {
   ENGOBJ 		Header;
   SURFOBJ		SurfObj;
 
   INT BitsPerPixel;
 
+  /* Driver functions */
   PFN_BitBlt BitBlt;
   PFN_TransparentBlt TransparentBlt;
   PFN_StretchBlt StretchBlt;
@@ -160,7 +173,13 @@ typedef struct _SURFGDI {
   PFN_SetPalette SetPalette;
   PFN_MovePointer MovePointer;
   PFN_SetPointerShape SetPointerShape;
-} SURFGDI, *PSURFGDI;
+
+  /* DIB functions */
+  PFN_DIB_PutPixel DIB_PutPixel;
+  PFN_DIB_HLine    DIB_HLine;
+  PFN_DIB_VLine    DIB_VLine;
+  PFN_DIB_BitBlt   DIB_BitBlt;
+} SURFGDI;
 
 typedef struct _XFORMGDI {
   ENGOBJ 		Header;

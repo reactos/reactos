@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.47 2003/02/25 23:08:54 gvg Exp $
+/* $Id: dc.c,v 1.48 2003/03/04 10:09:01 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -84,8 +84,6 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
   return prevMode;                          \
 }
 
-
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
 
 //  ---------------------------------------------------------  File Statics
 
@@ -1083,12 +1081,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // setup mem dc for drawing into bitmap
       pb   = BITMAPOBJ_HandleToPtr (hGDIObj);
-      dc->w.hBitmap = CreateGDIHandle(sizeof( SURFGDI ), sizeof( SURFOBJ )); // Assign the DC's bitmap
-
-      surfobj = (PSURFOBJ) AccessUserObject( dc->w.hBitmap );
-      surfgdi = (PSURFGDI) AccessInternalObject( dc->w.hBitmap );
-      BitmapToSurf(hDC, surfgdi, surfobj, pb); // Put the bitmap in a surface
-
+      dc->w.hBitmap = BitmapToSurf(pb);
       dc->Surface = dc->w.hBitmap;
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
@@ -1104,9 +1097,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
           dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, pb->ColorMap, 0, 0, 0);
         } else
-        if((pb->dib->dsBmih.biBitCount > 8) && (pb->dib->dsBmih.biBitCount < 24))
+        if(16 == pb->dib->dsBmih.biBitCount)
         {
-          dc->w.hPalette = EngCreatePalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
+          dc->w.hPalette = EngCreatePalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0x7c00, 0x03e0, 0x001f);
         } else
         if(pb->dib->dsBmih.biBitCount >= 24)
         {

@@ -10,7 +10,7 @@
 
 VOID DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
-  PBYTE addr = SurfObj->pvBits;
+  PBYTE addr = SurfObj->pvScan0;
 
   addr += y * SurfObj->lDelta + (x >> 3);
 
@@ -26,7 +26,7 @@ VOID DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 
 ULONG DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
-  PBYTE addr = SurfObj->pvBits + y * SurfObj->lDelta + (x >> 3);
+  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
   return (*addr & mask1Bpp[x % 8] ? 1 : 0);
 }
@@ -47,10 +47,10 @@ VOID DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN DIB_To_1BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-        PRECTL  DestRect,  POINTL  *SourcePoint,
-        LONG    Delta,     XLATEOBJ *ColorTranslation)
+BOOLEAN DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+                        PRECTL  DestRect,  POINTL  *SourcePoint,
+                        XLATEOBJ *ColorTranslation)
 {
   LONG    i, j, sx, sy = SourcePoint->y;
 
@@ -92,6 +92,42 @@ BOOLEAN DIB_To_1BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       break;
 
+    case 8:
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          if(XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy)) == 0)
+          {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 0);
+          } else {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 1);
+          }
+          sx++;
+        }
+        sy++;
+      }
+      break;
+
+    case 16:
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          if(XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy)) == 0)
+          {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 0);
+          } else {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 1);
+          }
+          sx++;
+        }
+        sy++;
+      }
+      break;
+
     case 24:
       for (j=DestRect->top; j<DestRect->bottom; j++)
       {
@@ -99,6 +135,24 @@ BOOLEAN DIB_To_1BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         for (i=DestRect->left; i<DestRect->right; i++)
         {
           if(XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy)) == 0)
+          {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 0);
+          } else {
+            DIB_1BPP_PutPixel(DestSurf, i, j, 1);
+          }
+          sx++;
+        }
+        sy++;
+      }
+      break;
+
+    case 32:
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          if(XLATEOBJ_iXlate(ColorTranslation, DIB_32BPP_GetPixel(SourceSurf, sx, sy)) == 0)
           {
             DIB_1BPP_PutPixel(DestSurf, i, j, 0);
           } else {

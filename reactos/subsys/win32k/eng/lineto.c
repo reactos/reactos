@@ -23,15 +23,10 @@ EngLineTo(SURFOBJ *DestObj,
   LONG x, y, deltax, deltay, i, xchange, ychange, error, hx, vy;
   ULONG Pixel = Brush->iSolidColor;
   SURFOBJ *OutputObj;
+  SURFGDI *OutputGDI;
   RECTL DestRect;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
-
-  // These functions are assigned if we're working with a DIB
-  // The assigned functions depend on the bitsPerPixel of the DIB
-  PFN_DIB_PutPixel DIB_PutPixel;
-  PFN_DIB_HLine    DIB_HLine;
-  PFN_DIB_VLine    DIB_VLine;
 
   DestRect.left = x1;
   if (x1 != x2)
@@ -62,38 +57,7 @@ EngLineTo(SURFOBJ *DestObj,
   y1 += Translate.y;
   y2 += Translate.y;
 
-  // Assign DIB functions according to bytes per pixel
-  switch(BitsPerFormat(OutputObj->iBitmapFormat))
-    {
-    case 1:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_1BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_1BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_1BPP_VLine;
-      break;
-
-    case 4:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_4BPP_VLine;
-      break;
-
-    case 16:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_16BPP_VLine;
-      break;
-
-    case 24:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_24BPP_VLine;
-      break;
-
-    default:
-      DbgPrint("EngLineTo: unsupported DIB format %u (bitsPerPixel:%u)\n", OutputObj->iBitmapFormat,
-               BitsPerFormat(OutputObj->iBitmapFormat));
-      return FALSE;
-    }
+  OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
 
   // FIXME: Implement clipping
   x = x1;
@@ -129,11 +93,11 @@ EngLineTo(SURFOBJ *DestObj,
 
   if (y1 == y2)
     {
-    DIB_HLine(OutputObj, hx, hx + deltax, y1, Pixel);
+    OutputGDI->DIB_HLine(OutputObj, hx, hx + deltax, y1, Pixel);
     }
   else if (x1 == x2)
     {
-    DIB_VLine(OutputObj, x1, vy, vy + deltay, Pixel);
+    OutputGDI->DIB_VLine(OutputObj, x1, vy, vy + deltay, Pixel);
     }
   else
     {
@@ -143,7 +107,7 @@ EngLineTo(SURFOBJ *DestObj,
       {
       for (i = 0; i < deltay; i++)
         {
-        DIB_PutPixel(OutputObj, x, y, Pixel);
+        OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
         y = y + ychange;
         error = error + deltax;
 
@@ -158,7 +122,7 @@ EngLineTo(SURFOBJ *DestObj,
       {
       for (i = 0; i < deltax; i++)
         {
-        DIB_PutPixel(OutputObj, x, y, Pixel);
+        OutputGDI->DIB_PutPixel(OutputObj, x, y, Pixel);
         x = x + xchange;
         error = error + deltay;
         if (deltax <= error)

@@ -36,6 +36,8 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 		pObj->hObj = i;
 		GDIHandles[ i ].pEngObj = pObj;
 		DPRINT("CreateGDIHandle: obj: %x, handle: %d, usersize: %d\n", pObj, i, UserSize );
+if (15 == i)
+i = 15;
 		return i;
 	}
   }
@@ -109,6 +111,6 @@ VOID InitEngHandleTable( void )
 {
 	ULONG i;
   	for( i=1; i < MAX_GDI_HANDLES; i++ ){
-		GDIHandles[ i ].pEngObj == NULL;
+		GDIHandles[ i ].pEngObj = NULL;
 	}
 }

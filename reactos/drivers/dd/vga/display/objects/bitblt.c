@@ -15,7 +15,7 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, c8;
   BYTE  *GDIpos, *initial, *tMask, *lMask;
 
-  GDIpos = Source->pvBits;
+  GDIpos = Source->pvScan0;
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
@@ -23,9 +23,10 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   alterx = abs(SourcePoint->x - DestRect->left);
   altery = abs(SourcePoint->y - DestRect->top);
 
-  if (ColorTranslation == NULL)
+  if (NULL == ColorTranslation)
     {
-      DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits,
+      DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy,
+                   Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
 		   Source->lDelta);
     }
   else

@@ -53,33 +53,7 @@ BltMask(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
 {
   LONG i, j, dx, dy, c8;
   BYTE *tMask, *lMask;
-  PFN_DIB_PutPixel DIB_PutPixel;
   static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-
-  // Assign DIB functions according to bytes per pixel
-  switch(BitsPerFormat(Dest->iBitmapFormat))
-  {
-    case 1:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_1BPP_PutPixel;
-      break;
-
-    case 4:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
-      break;
-
-    case 16:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
-      break;
-
-    case 24:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
-      break;
-
-    default:
-      DbgPrint("BltMask: unsupported DIB format %u (bitsPerPixel:%u)\n", Dest->iBitmapFormat,
-               BitsPerFormat(Dest->iBitmapFormat));
-      return FALSE;
-  }
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
@@ -95,7 +69,7 @@ BltMask(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
 	    {
 	      if (0 != (*lMask & maskbit[c8]))
 		{
-		  DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+		  DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
 		}
 	      c8++;
 	      if (8 == c8)
@@ -121,37 +95,13 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
 {
   // These functions are assigned if we're working with a DIB
   // The assigned functions depend on the bitsPerPixel of the DIB
-  PFN_DIB_HLine    DIB_HLine;
   LONG y;
   ULONG LineWidth;
-
-  // Assign DIB functions according to bytes per pixel
-  DPRINT("BPF: %d\n", BitsPerFormat(Dest->iBitmapFormat));
-  switch(BitsPerFormat(Dest->iBitmapFormat))
-  {
-    case 4:
-      DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;
-      break;
-
-    case 16:
-      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
-      break;
-
-    case 24:
-      DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
-      break;
-
-    default:
-      DbgPrint("BltPatCopy: unsupported DIB format %u (bitsPerPixel:%u)\n", Dest->iBitmapFormat,
-               BitsPerFormat(Dest->iBitmapFormat));
-
-      return FALSE;
-  }
 
   LineWidth  = DestRect->right - DestRect->left;
   for (y = DestRect->top; y < DestRect->bottom; y++)
   {
-    DIB_HLine(Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
+    DestGDI->DIB_HLine(Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
   }
 
   return TRUE;
@@ -284,7 +234,7 @@ EngBitBlt(SURFOBJ *DestObj,
   switch(clippingType)
   {
     case DC_TRIVIAL:
-      CopyBitsCopy(OutputObj, InputObj, OutputGDI, InputGDI, &OutputRect, &InputPoint, InputObj->lDelta, ColorTranslation);
+      OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, &OutputRect, &InputPoint, ColorTranslation);
 
       IntEngLeave(&EnterLeaveDest);
       IntEngLeave(&EnterLeaveSource);

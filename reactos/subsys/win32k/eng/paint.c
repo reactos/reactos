@@ -25,62 +25,17 @@
 
 BOOL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {
-  // These functions are assigned if we're working with a DIB
-  // The assigned functions depend on the bitsPerPixel of the DIB
-  PFN_DIB_PutPixel DIB_PutPixel;
-  PFN_DIB_HLine    DIB_HLine;
-  PFN_DIB_VLine    DIB_VLine;
   LONG y;
-  ULONG x, LineWidth, leftOfBitmap;
+  ULONG LineWidth;
   SURFGDI *SurfaceGDI;
 
   SurfaceGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
   MouseSafetyOnDrawStart(Surface, SurfaceGDI, pRect->left, pRect->top, pRect->right, pRect->bottom);
-/*
-  if(Surface->iType!=STYPE_BITMAP)
-  {
-    // Call the driver's DrvLineTo
-    ret = SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
-    MouseSafetyOnDrawEnd(Surface, SurfGDI);
-    return ret;
-  }
-*/
-  // Assign DIB functions according to bytes per pixel
-  DPRINT("BPF: %d\n", BitsPerFormat(Surface->iBitmapFormat));
-  switch(BitsPerFormat(Surface->iBitmapFormat))
-  {
-    case 4:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_4BPP_VLine;
-      break;
-
-    case 16:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_16BPP_VLine;
-      break;
-
-    case 24:
-      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
-      DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
-      DIB_VLine    = (PFN_DIB_VLine)DIB_24BPP_VLine;
-      break;
-
-    default:
-      DbgPrint("FillSolid: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
-               BitsPerFormat(Surface->iBitmapFormat));
-
-      MouseSafetyOnDrawEnd(Surface, SurfaceGDI);
-      return FALSE;
-  }
-
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
   for (y = pRect->top; y < pRect->bottom; y++)
   {
-      //EngLineTo(Surface, SurfaceGDI, Dimensions->left, y, LineWidth, iColor);
-	  DIB_HLine(Surface, pRect->left, pRect->right, y, iColor);
+    SurfaceGDI->DIB_HLine(Surface, pRect->left, pRect->right, y, iColor);
   }
   MouseSafetyOnDrawEnd(Surface, SurfaceGDI);
 

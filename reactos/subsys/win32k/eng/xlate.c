@@ -37,12 +37,13 @@ ULONG BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
 // then we should cache more than one value. Same with the source.
 
 // Takes indexed palette and a
-ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
+ULONG ClosestColorMatch(XLATEOBJ *XlateObj, ULONG SourceColor, ULONG *DestColors,
                         ULONG NumColors)
 {
   PVIDEO_CLUTDATA cSourceColor;
   PVIDEO_CLUTDATA cDestColors;
   LONG idx = 0, i, rt;
+  ULONG SourceRed, SourceGreen, SourceBlue;
   ULONG cxRed, cxGreen, cxBlue, BestMatch = 16777215;
 
   // Simple cache -- only one value because we don't want to waste time
@@ -53,16 +54,29 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
     return CCMLastColorMatch;
   }
 
-  cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
+  if (PAL_BITFIELDS == XlateObj->iSrcType)
+    {
+    /* FIXME: must use bitfields */
+    SourceRed = (SourceColor >> 7) & 0xff;
+    SourceGreen = (SourceColor >> 2) & 0xff;
+    SourceBlue = (SourceColor << 3) & 0xff;
+    }
+  else
+    {
+    cSourceColor = (PVIDEO_CLUTDATA)&SourceColor;
+    SourceRed = cSourceColor->Red;
+    SourceGreen = cSourceColor->Green;
+    SourceBlue = cSourceColor->Blue;
+    } 
   for (i=0; i<NumColors; i++)
   {
     cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
 
-    cxRed = (cSourceColor->Red - cDestColors->Red);
+    cxRed = (SourceRed - cDestColors->Red);
 	cxRed *= cxRed;  //compute cxRed squared
-    cxGreen = (cSourceColor->Green - cDestColors->Green);
+    cxGreen = (SourceGreen - cDestColors->Green);
 	cxGreen *= cxGreen;
-    cxBlue = (cSourceColor->Blue - cDestColors->Blue);
+    cxBlue = (SourceBlue - cDestColors->Blue);
 	cxBlue *= cxBlue;
 
     rt = /* sqrt */ (cxRed + cxGreen + cxBlue);
@@ -80,14 +94,14 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
   return idx;
 }
 
-VOID IndexedToIndexedTranslationTable(ULONG *TranslationTable,
+VOID IndexedToIndexedTranslationTable(XLATEOBJ *XlateObj, ULONG *TranslationTable,
                                       PALGDI *PalDest, PALGDI *PalSource)
 {
   ULONG i;
 
   for(i=0; i<PalSource->NumColors; i++)
   {
-    TranslationTable[i] = ClosestColorMatch(PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
+    TranslationTable[i] = ClosestColorMatch(XlateObj, PalSource->IndexedColors[i], PalDest->IndexedColors, PalDest->NumColors);
   }
 }
 
@@ -255,7 +269,7 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     if(XlateObj->iDstType == PAL_INDEXED)
     {
       // Converting from indexed to indexed
-      IndexedToIndexedTranslationTable(XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
+      IndexedToIndexedTranslationTable(XlateObj, XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
     } else
       if (PAL_RGB == XlateObj->iDstType || PAL_BITFIELDS == XlateObj->iDstType )
       {
@@ -340,7 +354,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   {
     return ShiftAndMask(XlateGDI, Color);
   } else
-  if(XlateObj->iSrcType == PAL_RGB)
+  if(PAL_RGB == XlateObj->iSrcType || PAL_BITFIELDS == XlateObj->iSrcType)
   {
     // FIXME: should we cache colors used often?
     // FIXME: won't work if destination isn't indexed
@@ -348,8 +362,8 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
     // Extract the destination palette
     PalGDI = (PALGDI*)AccessInternalObject((ULONG)XlateGDI->DestPal);
 
-    // Return closest match for the given RGB color
-    return ClosestColorMatch(Color, PalGDI->IndexedColors, PalGDI->NumColors);
+    // Return closest match for the given color
+    return ClosestColorMatch(XlateObj, Color, PalGDI->IndexedColors, PalGDI->NumColors);
   } else
   if(XlateObj->iSrcType == PAL_INDEXED)
   {

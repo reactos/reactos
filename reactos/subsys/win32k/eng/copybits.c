@@ -16,51 +16,6 @@
 #include <include/object.h>
 #include <include/eng.h>
 
-BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                     SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-                     PRECTL  DestRect,  POINTL  *SourcePoint,
-                     LONG    Delta,     XLATEOBJ *ColorTranslation)
-{
-  LONG DestWidth, DestHeight, CurrentDestLine, CurrentSourceLine, CurrentDestCol, CurrentSourceCol, i, TranslationPixel;
-
-  PFN_DIB_GetPixel Source_DIB_GetPixel;
-  PFN_DIB_PutPixel Dest_DIB_PutPixel;
-
-  DestWidth  = DestRect->right - DestRect->left;
-  DestHeight = DestRect->bottom - DestRect->top;
-  CurrentSourceCol = SourcePoint->x;
-  CurrentSourceLine = SourcePoint->y;
-
-  // Assign GetPixel DIB function according to bytes per pixel
-  switch(DestGDI->BitsPerPixel)
-  {
-    case 1:
-      return DIB_To_1BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
-                                DestRect, SourcePoint, Delta, ColorTranslation);
-      break;
-
-    case 4:
-      return DIB_To_4BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
-                                DestRect, SourcePoint, Delta, ColorTranslation);
-      break;
-
-    case 16:
-      return DIB_To_16BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
-                                 DestRect, SourcePoint, Delta, ColorTranslation);
-      break;
-
-    case 24:
-      return DIB_To_24BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
-                                 DestRect, SourcePoint, Delta, ColorTranslation);
-      break;
-
-    default:
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
 BOOL STDCALL
 EngCopyBits(SURFOBJ *Dest,
 	    SURFOBJ *Source,
@@ -151,7 +106,7 @@ EngCopyBits(SURFOBJ *Dest,
     switch(clippingType)
     {
       case DC_TRIVIAL:
-        CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, Source->lDelta, ColorTranslation);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, ColorTranslation);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -165,7 +120,7 @@ EngCopyBits(SURFOBJ *Dest,
         ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
         ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
 
-        CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, Source->lDelta, ColorTranslation);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, ColorTranslation);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -190,8 +145,8 @@ EngCopyBits(SURFOBJ *Dest,
               ptlTmp.x = SourcePoint->x + prcl->left - DestRect->left;
               ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
 
-              if(!CopyBitsCopy(Dest, Source, DestGDI, SourceGDI,
-                               prcl, &ptlTmp, Source->lDelta, ColorTranslation)) return FALSE;
+              if(!DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI,
+                                      prcl, &ptlTmp, ColorTranslation)) return FALSE;
 
               prcl++;
 

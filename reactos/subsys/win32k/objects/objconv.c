@@ -30,32 +30,22 @@ PBRUSHOBJ PenToBrushObj(PDC dc, PENOBJ *pen)
   return BrushObj;
 }
 
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap)
+HBITMAP BitmapToSurf(PBITMAPOBJ BitmapObj)
 {
-  ASSERT( SurfGDI );
-  if( Bitmap ){
-  	if(Bitmap->dib)
-  	{
-  	  SurfGDI->BitsPerPixel = Bitmap->dib->dsBm.bmBitsPixel;
-  	  SurfObj->lDelta       = Bitmap->dib->dsBm.bmWidthBytes;
-  	  SurfObj->pvBits       = Bitmap->dib->dsBm.bmBits;
-  	  SurfObj->cjBits       = Bitmap->dib->dsBm.bmHeight * Bitmap->dib->dsBm.bmWidthBytes;
-  	} else {
-  	  SurfGDI->BitsPerPixel = Bitmap->bitmap.bmBitsPixel;
-  	  SurfObj->lDelta	  = Bitmap->bitmap.bmWidthBytes;
-  	  SurfObj->pvBits	  = Bitmap->bitmap.bmBits;
-  	  SurfObj->cjBits       = Bitmap->bitmap.bmHeight * Bitmap->bitmap.bmWidthBytes;
-  	}
-	SurfObj->sizlBitmap	= Bitmap->size; // FIXME: alloc memory for our own struct?
-  }
+  HBITMAP BitmapHandle;
 
-  SurfObj->dhsurf	= NULL;
-  SurfObj->hsurf	= NULL;
-  SurfObj->dhpdev	= NULL;
-  SurfObj->hdev		= NULL;
-  SurfObj->pvScan0	= SurfObj->pvBits; // start of bitmap
-  SurfObj->iUniq	 = 0; // not sure..
-  SurfObj->iBitmapFormat = BitmapFormat(SurfGDI->BitsPerPixel, BI_RGB);
-  SurfObj->iType	 = STYPE_BITMAP;
-  SurfObj->fjBitmap	 = BMF_TOPDOWN;
+  if (NULL != BitmapObj->dib)
+    {
+    BitmapHandle = EngCreateBitmap(BitmapObj->size, BitmapObj->dib->dsBm.bmWidthBytes,
+                                   BitmapFormat(BitmapObj->dib->dsBm.bmBitsPixel, BI_RGB),
+                                   0, BitmapObj->dib->dsBm.bmBits);
+    }
+  else
+    {
+    BitmapHandle = EngCreateBitmap(BitmapObj->size, BitmapObj->bitmap.bmWidthBytes,
+                                   BitmapFormat(BitmapObj->bitmap.bmBitsPixel, BI_RGB),
+                                   0, BitmapObj->bitmap.bmBits);
+    }
+
+  return BitmapHandle;
 }

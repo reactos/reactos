@@ -30,7 +30,7 @@ EngCreatePalette(ULONG Mode,
   if( !ValidEngHandle( NewPalette ) )
 	return 0;
 
-  PalGDI = (PALGDI*) AccessInternalObject( NewPalette );
+  PalGDI = (PALGDI*) AccessInternalObject( (ULONG) NewPalette );
   ASSERT( PalGDI );
 
   PalGDI->Mode = Mode;
@@ -68,7 +68,7 @@ PALOBJ_cGetColors(PALOBJ *PalObj,
 		  ULONG Colors,
 		  ULONG *PaletteEntry)
 {
-  ULONG i, entry;
+  ULONG i;
   PALGDI *PalGDI;
 
   PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj);

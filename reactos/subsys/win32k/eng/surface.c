@@ -18,6 +18,7 @@
 #include <include/object.h>
 #include <include/paint.h>
 #include "handle.h"
+#include "../dib/dib.h"
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -60,13 +61,94 @@ ULONG BitmapFormat(WORD Bits, DWORD Compression)
   }
 }
 
-VOID InitializeHooks(SURFGDI *SurfGDI)
+static VOID Dummy_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+{
+  return;
+}
+
+static VOID Dummy_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+{
+  return;
+}
+
+static VOID Dummy_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+{
+  return;
+}
+
+static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                            SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+                            PRECTL  DestRect,  POINTL  *SourcePoint,
+                            XLATEOBJ *ColorTranslation)
+{
+  return FALSE;
+}
+
+VOID InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
 {
   SurfGDI->BitBlt   = NULL;
   SurfGDI->CopyBits = NULL;
   SurfGDI->CreateDeviceBitmap = NULL;
   SurfGDI->SetPalette = NULL;
   SurfGDI->TransparentBlt = NULL;
+
+  switch(BitmapFormat)
+    {
+    case BMF_1BPP:
+      SurfGDI->DIB_PutPixel = DIB_1BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_1BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_1BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_1BPP_BitBlt;
+      break;
+
+    case BMF_4BPP:
+      SurfGDI->DIB_PutPixel = DIB_4BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_4BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_4BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_4BPP_BitBlt;
+      break;
+
+    case BMF_8BPP:
+      SurfGDI->DIB_PutPixel = DIB_8BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_8BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_8BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_8BPP_BitBlt;
+      break;
+
+    case BMF_16BPP:
+      SurfGDI->DIB_PutPixel = DIB_16BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_16BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_16BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_16BPP_BitBlt;
+      break;
+
+    case BMF_24BPP:
+      SurfGDI->DIB_PutPixel = DIB_24BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_24BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_24BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_24BPP_BitBlt;
+      break;
+
+    case BMF_32BPP:
+      SurfGDI->DIB_PutPixel = DIB_32BPP_PutPixel;
+      SurfGDI->DIB_HLine    = DIB_32BPP_HLine;
+      SurfGDI->DIB_VLine    = DIB_32BPP_VLine;
+      SurfGDI->DIB_BitBlt   = DIB_32BPP_BitBlt;
+      break;
+
+    case BMF_4RLE:
+    case BMF_8RLE:
+      /* Not supported yet, fall through to unrecognized case */
+    default:
+      DPRINT1("InitializeFuncs: unsupported DIB format %d\n",
+               BitmapFormat);
+
+      SurfGDI->DIB_PutPixel = Dummy_PutPixel;
+      SurfGDI->DIB_HLine    = Dummy_HLine;
+      SurfGDI->DIB_VLine    = Dummy_VLine;
+      SurfGDI->DIB_BitBlt   = Dummy_BitBlt;
+      break;
+    }
 }
 
 HBITMAP STDCALL
@@ -100,12 +182,10 @@ EngCreateBitmap(IN SIZEL Size,
   if( !ValidEngHandle( NewBitmap ) )
 	return 0;
 
-  SurfObj = (SURFOBJ*) AccessUserObject( NewBitmap );
-  SurfGDI = (SURFGDI*) AccessInternalObject( NewBitmap );
+  SurfObj = (SURFOBJ*) AccessUserObject( (ULONG) NewBitmap );
+  SurfGDI = (SURFGDI*) AccessInternalObject( (ULONG) NewBitmap );
   ASSERT( SurfObj );
   ASSERT( SurfGDI );
-
-  InitializeHooks(SurfGDI);
 
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   SurfObj->lDelta = Width;
@@ -136,6 +216,8 @@ EngCreateBitmap(IN SIZEL Size,
   SurfObj->iType = STYPE_BITMAP;
   SurfObj->pvScan0 = SurfObj->pvBits;
 
+  InitializeFuncs(SurfGDI, Format);
+
   // Use flags to determine bitmap type -- TOP_DOWN or whatever
 
   return NewBitmap;
@@ -154,12 +236,10 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   if( !ValidEngHandle( NewSurface ) )
 	return 0;
 
-  SurfObj = (SURFOBJ*) AccessUserObject( NewSurface );
-  SurfGDI = (SURFGDI*) AccessInternalObject( NewSurface );
+  SurfObj = (SURFOBJ*) AccessUserObject( (ULONG) NewSurface );
+  SurfGDI = (SURFGDI*) AccessInternalObject( (ULONG) NewSurface );
   ASSERT( SurfObj );
   ASSERT( SurfGDI );
-
-  InitializeHooks(SurfGDI);
 
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   SurfObj->dhsurf = dhsurf;
@@ -168,6 +248,8 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   SurfObj->iBitmapFormat = Format;
   SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
   SurfObj->iType = STYPE_DEVICE;
+
+  InitializeFuncs(SurfGDI, Format);
 
   return NewSurface;
 }
