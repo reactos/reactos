@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.1 2004/04/09 18:27:11 weiden Exp $
+/* $Id: vmwinst.c,v 1.2 2004/04/12 16:09:45 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -30,7 +30,7 @@
 #include "vmwinst.h"
 
 HINSTANCE hAppInstance;
-BOOL StartVMwConfigWizard, ActivateVBE = FALSE, UninstallDriver = FALSE;
+BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDriver = FALSE;
 
 static WCHAR DestinationDriversPath[MAX_PATH+1];
 static WCHAR CDDrive = L'\0';
@@ -376,8 +376,27 @@ PageWelcomeProc(
       switch(pnmh->code)
       {
         case PSN_SETACTIVE:
+        {
           PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
           break;
+        }
+        case PSN_WIZNEXT:
+        {
+          if(DriverFilesFound)
+          {
+            if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
+            {
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOACTIVATEDRIVER, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
+            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
+            return TRUE;
+          }
+          break;
+        }
       }
       break;
     }
@@ -417,9 +436,6 @@ PageInsertDiscProc(
             return TRUE;
           }
           
-          DestinationDriversPath[0] = L'\0';
-          wcscat(DestinationDriversPath, DestinationPath);
-          wcscat(DestinationDriversPath, L"drivers\\");
           if(!InstallFile(DestinationPath, vmx_fb) ||
              !InstallFile(DestinationPath, vmx_mode) ||
              !InstallFile(DestinationDriversPath, vmx_svga))
@@ -552,6 +568,11 @@ PageConfigProc(
           if(StartVMwConfigWizard)
           {
             SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+            return TRUE;
+          }
+          if(DriverFilesFound)
+          {
+            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
             return TRUE;
           }
           break;
@@ -833,9 +854,17 @@ WinMain(HINSTANCE hInstance,
   {
     wcscat(DestinationPath, L"\\");
   }
+  DestinationDriversPath[0] = L'\0';
+  wcscat(DestinationDriversPath, DestinationPath);
+  wcscat(DestinationDriversPath, L"drivers\\");
+  
   SetCurrentDirectory(DestinationPath);
   
-  StartVMwConfigWizard = IsVmwSVGAEnabled();
+  DriverFilesFound = FileExists(DestinationPath, vmx_fb) &&
+                     FileExists(DestinationPath, vmx_mode) &&
+                     FileExists(DestinationDriversPath, vmx_svga);
+  
+  StartVMwConfigWizard = DriverFilesFound && IsVmwSVGAEnabled();
   
   /* Show the wizard */
   CreateWizard();
