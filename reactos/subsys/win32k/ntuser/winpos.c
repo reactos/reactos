@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.19 2003/08/02 16:32:18 gdalsnes Exp $
+/* $Id: winpos.c,v 1.20 2003/08/02 19:56:19 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -520,6 +520,7 @@ static UINT WinPosCopyValidBits( PWINDOW_OBJECT Wnd, HRGN* pVisRgn,
      uFlags |= SWP_EX_NOCOPY; /* whole window is invalid, nothing to copy */
 
  newVisRgn = DceGetVisRgn( Wnd->Self, DCX_WINDOW | DCX_CLIPSIBLINGS, 0, 0);
+ W32kOffsetRgn(newVisRgn, -Wnd->WindowRect.left, -Wnd->WindowRect.top);
  dirtyRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
 
  if( !(uFlags & SWP_EX_NOCOPY) ) /* make sure dst region covers only valid bits */
@@ -797,6 +798,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	{
 	  VisRgn = DceGetVisRgn(Wnd, DCX_WINDOW, 0, 0);
 	}
+      W32kOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
     }
 
   WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect,
@@ -880,7 +882,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    }
 	  else
 	    {
-	      PaintRedrawWindow(Window->Self, NULL,
+	      PaintRedrawWindow(Window->Parent->Self, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN |
 	                        RDW_ERASENOW,
@@ -888,7 +890,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    }
 	  /* FIXME: Redraw the window parent. */
 	}
-      /* FIXME: Delete VisRgn */
+      W32kDeleteObject(VisRgn);
     }
 
   if (!(flags & SWP_NOACTIVATE))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.20 2003/08/01 14:38:51 dwelch Exp $
+/* $Id: painting.c,v 1.21 2003/08/02 19:56:19 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,7 +42,7 @@
 #include <include/rect.h>
 #include <win32k/coord.h>
 #include <win32k/region.h>
-
+#include <include/vis.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -75,7 +75,14 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
     {
       if (NULL != Window->UpdateRegion)
 	{
-	  NtUserSendMessage(hWnd, bIcon ? WM_PAINTICON : WM_PAINT, bIcon, 0);
+	  if (W32kIsDesktopWindow(Window))
+	    {
+	      VIS_RepaintDesktop(Window->Self, Window->UpdateRegion);
+	    }
+	  else
+	    {
+	      NtUserSendMessage(hWnd, bIcon ? WM_PAINTICON : WM_PAINT, bIcon, 0);
+	    }
 	}
     }
   else if (Flags & RDW_ERASENOW || ExFlags & RDW_EX_TOPFRAME)
@@ -121,10 +128,19 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
 		}
 	      if (NULL != (hDC = NtUserGetDCEx(hWnd, hRgnRet, Dcx)))
 		{
-		  if (0 != NtUserSendMessage(hWnd, bIcon ? WM_ICONERASEBKGND :
-		                             WM_ERASEBKGND, (WPARAM)hDC, 0))
+		  if (W32kIsDesktopWindow(Window))
 		    {
-		      Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
+		      VIS_RepaintDesktop(Window->Self, Window->UpdateRegion);
+		      W32kDeleteObject(Window->UpdateRegion);
+		      Window->UpdateRegion = 0;
+		    }
+		  else
+		    {
+		      if (0 != NtUserSendMessage(hWnd, bIcon ? WM_ICONERASEBKGND :
+						 WM_ERASEBKGND, (WPARAM)hDC, 0))
+			{
+			  Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
+			}		      
 		    }
 		  NtUserReleaseDC(hWnd, hDC);
 		}
@@ -284,7 +300,8 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	  hRgn = Window->UpdateRegion; /* this is a trick that depends on code in PaintRedrawWindow() */
 	}
 
-      if (! HadOne && 0 == (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+      if (! HadOne && 0 == (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) &&
+	  !W32kIsDesktopWindow(Window))
 	{
 	  MsqIncPaintCountQueue(Window->MessageQueue);
 	}
