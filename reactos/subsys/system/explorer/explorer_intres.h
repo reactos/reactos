@@ -118,7 +118,8 @@
 #define ID_DRIVE_DESKTOP                0x9000
 #define ID_DRIVE_SHELL_NS               0x9001
 #define ID_DRIVE_UNIX_FS                0x9002
-#define ID_DRIVE_FIRST                  0x9003
+#define ID_DRIVE_NTOBJ_NS               0x9003
+#define ID_DRIVE_FIRST                  0x9004
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
 #define ID_DESKTOPBAR_SETTINGS          40005

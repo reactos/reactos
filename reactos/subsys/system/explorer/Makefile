@@ -80,6 +80,7 @@ OBJECTS = \
 	winfs.o \
 	unixfs.o \
 	shellfs.o \
+	ntobjfs.o \
 	mainframe.o \
 	filechild.o \
 	pane.o \

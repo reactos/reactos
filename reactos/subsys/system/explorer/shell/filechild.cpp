@@ -30,6 +30,7 @@
 
 #include "../explorer.h"
 #include "../globals.h"
+#include "ntobjfs.h"
 
 #include "../explorer_intres.h"
 
@@ -63,7 +64,13 @@ ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_p
 	_root_shell_path(root_shell_path)
 {
 	_etype = ET_SHELL;
-	_path = path;
+}
+
+
+NtObjChildWndInfo::NtObjChildWndInfo(LPCTSTR path)
+ :	FileChildWndInfo(path)
+{
+	_etype = ET_NTOBJS;
 }
 
 
@@ -104,7 +111,20 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	}
 	else
 #endif
-	{// if (info._etype == ET_WINDOWS)
+	if (info._etype == ET_NTOBJS)
+	{
+		_root._drive_type = DRIVE_UNKNOWN;
+
+		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		lstrcat(drv, TEXT("\\"));
+		lstrcpy(_root._volname, TEXT("NT Object Namespace"));
+		lstrcpy(_root._fs, TEXT("NTOBJ"));
+		lstrcpy(_root._path, drv);
+		_root._entry = new NtObjDirectory(_root._path);
+		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+	}
+	else //if (info._etype == ET_WINDOWS)
+	{
 		_root._drive_type = GetDriveType(info._path);
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);

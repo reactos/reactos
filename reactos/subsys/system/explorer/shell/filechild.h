@@ -47,6 +47,12 @@ struct ShellChildWndInfo : public FileChildWndInfo
 	ShellPath	_root_shell_path;
 };
 
+ /// information structure for creation of FileChildWindow for NT object namespace
+struct NtObjChildWndInfo : public FileChildWndInfo
+{
+	NtObjChildWndInfo(LPCTSTR path);
+};
+
 
  /// MDI child window displaying file lists
 struct FileChildWindow : public ChildWindow

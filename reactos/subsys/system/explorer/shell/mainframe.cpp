@@ -114,6 +114,16 @@ MainFrame::MainFrame(HWND hwnd)
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
+#define	W_VER_NT 0
+	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
+		 // insert NT object namespace button
+		SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
+
+		drivebarBtn.idCommand = ID_DRIVE_NTOBJ_NS;
+		SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+		++drivebarBtn.iString;
+	}
+
 	 // register windows drive root strings
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
 
@@ -511,6 +521,14 @@ int MainFrame::Command(int id, int code)
 		///@todo SDI implementation
 #endif
 		break;}
+
+	  case ID_DRIVE_NTOBJ_NS: {
+#ifndef _NO_MDI
+		FileChildWindow::create(_hmdiclient, NtObjChildWndInfo(TEXT("\\")));
+#else
+		///@todo SDI implementation
+#endif
+	  break;}
 
 	  case ID_DRIVE_DESKTOP: {
 		TCHAR path[MAX_PATH];

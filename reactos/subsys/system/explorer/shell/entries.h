@@ -31,7 +31,8 @@ enum ENTRY_TYPE {
 #ifdef __WINE__
 	ET_UNIX,
 #endif
-	ET_SHELL
+	ET_SHELL,
+	ET_NTOBJS
 };
 
 enum SORT_ORDER {

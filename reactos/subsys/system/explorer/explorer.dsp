@@ -744,6 +744,14 @@ SOURCE=.\shell\mainframe.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\shell\ntobjfs.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\shell\ntobjfs.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\shell\pane.cpp
 # End Source File
 # Begin Source File
