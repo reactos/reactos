@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.10 2003/01/15 21:24:36 chorns Exp $
+/* $Id: tls.c,v 1.11 2003/03/17 22:39:09 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -72,12 +72,20 @@ TlsFree(DWORD dwTlsIndex)
 LPVOID STDCALL 
 TlsGetValue(DWORD dwTlsIndex)
 {
+   LPVOID Value;
+
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
      {
 	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
 	return(NULL);
      }
-   return(NtCurrentTeb()->TlsSlots[dwTlsIndex]);
+
+   Value = NtCurrentTeb()->TlsSlots[dwTlsIndex];
+   if (Value == 0)
+   {
+      SetLastError(NO_ERROR);
+   }
+   return Value;
 }
 
 WINBOOL STDCALL 
