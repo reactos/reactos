@@ -18,7 +18,7 @@
 
 
  //
- // Explorer clone
+ // Explorer clone, lean version
  //
  // dialogs/settings.h
  //
