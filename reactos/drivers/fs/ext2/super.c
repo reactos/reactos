@@ -13,7 +13,7 @@
 #include <wchar.h>
 #include <internal/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "ext2fs.h"
@@ -30,54 +30,44 @@ NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_OBJECT FileObject;
    PDEVICE_EXTENSION DeviceExtension;
    NTSTATUS Status;
+   PEXT2_FCB Fcb;
    
-   DPRINT("Ext2Close(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+   DbgPrint("Ext2Close(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
    Stack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = Stack->FileObject;
    DeviceExtension = DeviceObject->DeviceExtension;
+   
+   if (FileObject == DeviceExtension->FileObject)
+     {
+	Status = STATUS_SUCCESS;
+   
+	Irp->IoStatus.Status = Status;
+	Irp->IoStatus.Information = 0;
+	
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return(Status);
+     }
 
+   Fcb = (PEXT2_FCB)FileObject->FsContext;
+   if (Fcb != NULL)
+     {
+	if (Fcb->Bcb != NULL)
+	  {
+	     CcReleaseFileCache(FileObject, Fcb->Bcb);
+	  }
+	ExFreePool(Fcb);
+	FileObject->FsContext = NULL;
+     }
+   
+   Status = STATUS_SUCCESS;
+   
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    return(Status);
 }
-
-NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-   DPRINT("FsdWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-   
-   Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-   Irp->IoStatus.Information = 0;
-   return(STATUS_UNSUCCESSFUL);
-}
-
-NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-   ULONG Length;
-   PVOID Buffer;
-   LARGE_INTEGER Offset;
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-   NTSTATUS Status;
-   
-   DPRINT("FsdRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
-   Length = Stack->Parameters.Read.Length;
-   Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Read.ByteOffset;
-   
-   Status = Ext2ReadFile(DeviceExt,FileObject,Buffer,Length,Offset);
-   
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = Length;
-   IoCompleteRequest(Irp,IO_NO_INCREMENT);
-   
-   return(Status);
-}
-
 
 NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
 {
@@ -111,12 +101,19 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
 		  0,
 		  FALSE,
 		  &DeviceObject);
+   DPRINT("DeviceObject %x\n",DeviceObject);
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
    DeviceExt = (PVOID)DeviceObject->DeviceExtension;
-   
+   DPRINT("DeviceExt %x\n",DeviceExt);
    DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							  DeviceToMount);
+   DPRINT("DeviceExt->StorageDevice %x\n", DeviceExt->StorageDevice);
+   DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
    DeviceExt->superblock = superblock;
+   CcInitializeFileCache(DeviceExt->FileObject,
+			 &DeviceExt->Bcb);
+   
+   DPRINT("Ext2Mount() = STATUS_SUCCESS\n");
    
    return(STATUS_SUCCESS);
 }
@@ -177,13 +174,20 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_WRITE] = Ext2Write;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
                       Ext2FileSystemControl;
-   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]=
+   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       Ext2DirectoryControl;
-   DriverObject->DriverUnload = NULL;
+   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = 
+                      Ext2QueryInformation;
+   DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = Ext2SetInformation;
+   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = Ext2FlushBuffers;
+   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = Ext2Shutdown;
+   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = Ext2Cleanup;
+   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = Ext2QuerySecurity;
+   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = Ext2SetSecurity;
+   DriverObject->MajorFunction[IRP_MJ_QUERY_QUOTA] = Ext2QueryQuota;
+   DriverObject->MajorFunction[IRP_MJ_SET_QUOTA] = Ext2SetQuota;
    
-   DPRINT("DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] %x\n",
-	  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]);
-   DPRINT("IRP_MJ_DIRECTORY_CONTROL %d\n",IRP_MJ_DIRECTORY_CONTROL);
+   DriverObject->DriverUnload = NULL;
    
    IoRegisterFileSystem(DeviceObject);
    

@@ -69,6 +69,11 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %w)\n",
 	  ObjectBody,Parent,RemainingPath);
    
+   if (DeviceObject == NULL)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
    Status = ObReferenceObjectByPointer(DeviceObject,
 				       STANDARD_RIGHTS_REQUIRED,
 				       IoDeviceType,
@@ -118,6 +123,41 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    FileObject->Type = ID_FILE_OBJECT;
      
    return(STATUS_SUCCESS);
+}
+
+PFILE_OBJECT IoCreateStreamFileObject(PFILE_OBJECT FileObject,
+				      PDEVICE_OBJECT DeviceObject)
+{
+   HANDLE FileHandle;
+   PFILE_OBJECT CreatedFileObject;
+   
+   DbgPrint("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
+	    FileObject, DeviceObject);
+   
+   assert_irql(PASSIVE_LEVEL);
+   
+   CreatedFileObject = ObCreateObject(&FileHandle,
+				      STANDARD_RIGHTS_REQUIRED,
+				      NULL,
+				      IoFileType);
+   if (CreatedFileObject == NULL)
+     {
+	return(NULL);
+     }
+   
+   if (FileObject != NULL)
+     {
+	DeviceObject = FileObject->DeviceObject;
+     }
+   DeviceObject = IoGetAttachedDevice(DeviceObject);
+   CreatedFileObject->DeviceObject = DeviceObject;
+   CreatedFileObject->Vpb = DeviceObject->Vpb;
+   CreatedFileObject->Type = ID_FILE_OBJECT;   
+   CreatedFileObject->Flags = CreatedFileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+   
+   ZwClose(FileHandle);
+   
+   return(CreatedFileObject);
 }
 
 NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
@@ -215,10 +255,12 @@ NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
    
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("Failing create request with status %x\n",Status);
 	ZwClose(*FileHandle);
 	(*FileHandle) = 0;
      }
    
+   assert_irql(PASSIVE_LEVEL);
    DPRINT("Finished ZwCreateFile() (*FileHandle) %x\n",(*FileHandle));
    return(Status);
 }

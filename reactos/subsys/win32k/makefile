@@ -10,7 +10,7 @@ OBJECTS = $(MAIN_OBJECTS) $(STUBS_OBJECTS) $(RESOURCE_OBJECT)
 all: win32k.sys
 
 win32k.coff: win32k.rc ../../include/reactos/resource.h
-	windres win32k.rc win32k.coff
+	$(RC) win32k.rc win32k.coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = main\*.o stubs\*.o win32k.coff win32k.o win32k.a junk.tmp base.tmp  \

@@ -1,24 +1,13 @@
 /*
-** File: keyboard.c
-** Description: ReactOS keyboard driver
-** Current version: 0.0.4
-** Last modified: 28 May 1998
-**
- * 31/08/98: Changed to interrupt driven model
- * 29/06/98: NT interface by David Welch (welch@mcmail.com)
- * 
-** Written by Victor Kirhenshtein (sauros@iname.com)
-** Initial attempt by Jason Filby
-**
-** Some parts of this code are based on Linux keyboard driver
-**    written by Johan Myreen.
-**
-**
-** KNOWN BUGS:
-**
-**   * Repeat counter isn't supported
-**
-*/
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/dd/keyboard/keyboard.c
+ * PURPOSE:          Keyboard driver
+ * PROGRAMMER:       Victor Kirhenshtein (sauros@iname.com)
+ *                   Jason Filby (jasonfilby@yahoo.com);
+ */
+
+/* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/mmhal.h>
@@ -32,6 +21,8 @@
 
 #include "keyboard.h"
 
+/* GLOBALS *******************************************************************/
+
 /*
  * Driver data
  */
@@ -43,7 +34,6 @@ static int extKey;
 static BYTE ledStatus;
 static BYTE capsDown,numDown,scrollDown;
 static DWORD ctrlKeyState;
-static KSPIN_LOCK kbdBufferLock;
 static PKINTERRUPT KbdInterrupt;
 static KDPC KbdDpc;
 
@@ -119,12 +109,12 @@ static const BYTE asciiTable4[37]=
    '{', '|', '}', '"'
 };
 
-
-/*
- * Write data to keyboard
- */
+/* FUNCTIONS *****************************************************************/
 
 static void KbdWrite(int addr,BYTE data)
+/*
+ * FUNCTION: Write data to keyboard
+ */
 {
    BYTE status;
 
@@ -135,12 +125,10 @@ static void KbdWrite(int addr,BYTE data)
    outb_p(addr,data);
 }
 
-
-/*
- * Read data from port 0x60
- */
-
 static int KbdReadData(void)
+/*
+ * FUNCTION: Read data from port 0x60
+ */
 {
    int i;
    BYTE status,data;
@@ -371,7 +359,7 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
       return asciiTable2[keyCode-VK_NUMPAD0];
 
    if ((keyCode>=186)&&(keyCode<=222))
-   {
+  {
       if (ctrlKeyState & SHIFT_PRESSED)
          return asciiTable4[keyCode-186];
       else
@@ -525,7 +513,7 @@ static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
    if (keysInBuffer==KBD_BUFFER_SIZE)      // Buffer is full
    {
       extKey=0;
-      return FALSE;
+      return(TRUE);
    }
    kbdBuffer[bufHead].bKeyDown=isDown;
    kbdBuffer[bufHead].wRepeatCount=1;
@@ -541,7 +529,6 @@ static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
    bufHead&=KBD_WRAP_MASK;    // Modulo KBD_BUFFER_SIZE
    keysInBuffer++;
    extKey=0;
-
    return TRUE;
 }
 
@@ -593,16 +580,13 @@ static int InitializeKeyboard(void)
    return 0;
 }
 
-
 /*
  * Read data from keyboard buffer
  */
-
 BOOLEAN KbdSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
-   KEY_EVENT_RECORD* rec = (KEY_EVENT_RECORD *)
-     Irp->AssociatedIrp.SystemBuffer;
+   KEY_EVENT_RECORD* rec = (KEY_EVENT_RECORD *)Irp->AssociatedIrp.SystemBuffer;
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
    ULONG NrToRead = stk->Parameters.Read.Length/sizeof(KEY_EVENT_RECORD);
    int i;
@@ -634,7 +618,9 @@ BOOLEAN KbdSynchronizeRoutine(PVOID Context)
 
 VOID KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+#ifndef NDEBUG
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
+#endif
 
    DPRINT("KeyboardStartIo(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
 
@@ -691,18 +677,16 @@ NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject, 
+			     PUNICODE_STRING RegistryPath)
 /*
- * Module entry point
+ * FUNCTION: Module entry point
  */
-STDCALL NTSTATUS 
-DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   ANSI_STRING adevice_name;
-   UNICODE_STRING device_name;
-   ANSI_STRING asymlink_name;
-   UNICODE_STRING symlink_name;
-
+   UNICODE_STRING DeviceName;
+   UNICODE_STRING SymlinkName;
+   
    DbgPrint("Keyboard Driver 0.0.4\n");
    InitializeKeyboard();
 
@@ -710,16 +694,19 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;
    DriverObject->MajorFunction[IRP_MJ_READ] = KbdDispatch;
    DriverObject->DriverStartIo = KbdStartIo;
-
-   RtlInitAnsiString(&adevice_name,"\\Device\\Keyboard");
-   RtlAnsiStringToUnicodeString(&device_name,&adevice_name,TRUE);
-   IoCreateDevice(DriverObject,0,&device_name,FILE_DEVICE_KEYBOARD,0,
-		  TRUE,&DeviceObject);
-   DeviceObject->Flags = DO_BUFFERED_IO;
-
-   RtlInitAnsiString(&asymlink_name,"\\??\\Keyboard");
-   RtlAnsiStringToUnicodeString(&symlink_name,&asymlink_name,TRUE);
-   IoCreateSymbolicLink(&symlink_name,&device_name);
-
+   
+   RtlInitUnicodeString(&DeviceName, L"\\Device\\Keyboard");
+   IoCreateDevice(DriverObject,
+		  0,
+		  &DeviceName,
+		  FILE_DEVICE_KEYBOARD,
+		  0,
+		  TRUE,
+		  &DeviceObject);
+   DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
+   
+   RtlInitUnicodeString(&SymlinkName, L"\\??\\Keyboard");
+   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+   
    return(STATUS_SUCCESS);
 }

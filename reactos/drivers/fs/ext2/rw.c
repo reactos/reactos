@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -18,77 +19,196 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS Ext2ReadPage(PDEVICE_EXTENSION DeviceExt,
+		      PEXT2_FCB Fcb,
+		      PVOID Buffer,
+		      ULONG Offset)
+{
+   ULONG block, i;
+   
+   for (i=0; i<4; i++)
+     {
+	block = Ext2BlockMap(DeviceExt, 
+			     Fcb->i.inode, 
+			     Offset + i);
+	Ext2ReadSectors(DeviceExt->StorageDevice,
+			block,
+			1,
+			Buffer + (i*BLOCKSIZE));
+     }
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt, 
 		      PFILE_OBJECT FileObject,
 		      PVOID Buffer, 
 		      ULONG Length, 
 		      LARGE_INTEGER OffsetL)
-/*
- * FUNCTION: Reads data from a file
- */
 {
+   PVOID BaseAddress;
+   BOOLEAN Uptodate = FALSE;
+   PCACHE_SEGMENT CacheSeg;
+   ULONG Offset = (ULONG)OffsetL.u.LowPart;
    PEXT2_FCB Fcb;
-   PVOID TempBuffer;
-   ULONG Offset = OffsetL.u.LowPart;
-   ULONG block;
-   ULONG Delta;
-   ULONG i;
-   
+   ULONG block, i, Delta;
    DPRINT("Ext2ReadFile(DeviceExt %x, FileObject %x, Buffer %x, Length %d, \n"
 	  "OffsetL %d)\n",DeviceExt,FileObject,Buffer,Length,(ULONG)OffsetL);
-   
+
    Fcb = (PEXT2_FCB)FileObject->FsContext;
-   TempBuffer = ExAllocatePool(NonPagedPool, BLOCKSIZE);
+
+   Ext2LoadInode(DeviceExt,
+		 Fcb->inode,
+		 &Fcb->i);
    
-   if (Offset >= Fcb->inode.i_size)
+   if (Offset >= Fcb->i.inode->i_size)
      {
-	ExFreePool(TempBuffer);
+	DPRINT("Returning end of file\n");
 	return(STATUS_END_OF_FILE);
      }
-   if ((Offset + Length) > Fcb->inode.i_size)
+   if ((Offset + Length) > Fcb->i.inode->i_size)
      {
-	Length = Fcb->inode.i_size - Offset;
+	Length = Fcb->i.inode->i_size - Offset;
      }
    
-   CHECKPOINT;
-   if ((Offset % BLOCKSIZE) != 0)
+   Ext2ReleaseInode(DeviceExt,
+		    &Fcb->i);
+   
+   if ((Offset % PAGESIZE) != 0)
      {
-	block = Ext2BlockMap(DeviceExt, &Fcb->inode, Offset / BLOCKSIZE);
-	Delta = min(BLOCKSIZE - (Offset % BLOCKSIZE),Length);
-	Ext2ReadSectors(DeviceExt->StorageDevice,
-			block,
-			1,
-			TempBuffer);
-	memcpy(Buffer, TempBuffer + (Offset % BLOCKSIZE), Delta);
+	Delta = min(PAGESIZE - (Offset % PAGESIZE),Length);
+	CcRequestCachePage(Fcb->Bcb,
+			   Offset,
+			   &BaseAddress,
+			   &Uptodate,
+			   &CacheSeg);
+	if (Uptodate == FALSE)
+	  {
+	     Ext2ReadPage(DeviceExt,
+			  Fcb,
+			  BaseAddress,
+			  Offset / BLOCKSIZE);
+	  }
+	memcpy(Buffer, BaseAddress + (Offset % PAGESIZE), Delta);
+	CcReleaseCachePage(Fcb->Bcb,
+			   CacheSeg,
+			   TRUE);
 	Length = Length - Delta;
 	Offset = Offset + Delta;
 	Buffer = Buffer + Delta;
      }
    CHECKPOINT;
-   for (i=0; i<(Length/BLOCKSIZE); i++)
+   for (i=0; i<(Length/PAGESIZE); i++)
      {
-	block = Ext2BlockMap(DeviceExt, &Fcb->inode, 
-			     (Offset / BLOCKSIZE)+i);
-	Ext2ReadSectors(DeviceExt->StorageDevice,
-			block,
-			1,
-			Buffer);
-	Length = Length - BLOCKSIZE;
-	Offset = Offset + BLOCKSIZE;
-	Buffer = Buffer + BLOCKSIZE;
+	CcRequestCachePage(Fcb->Bcb,
+			   Offset,
+			   &BaseAddress,
+			   &Uptodate,
+			   &CacheSeg);
+	if (Uptodate == FALSE)
+	  {
+	     Ext2ReadPage(DeviceExt,
+			  Fcb,
+			  BaseAddress,
+			  (Offset / BLOCKSIZE));
+	  }
+	memcpy(Buffer, BaseAddress, PAGESIZE);
+	CcReleaseCachePage(Fcb->Bcb,
+			   CacheSeg,
+			   TRUE);	
+	Length = Length - PAGESIZE;
+	Offset = Offset + PAGESIZE;
+	Buffer = Buffer + PAGESIZE;
      }
    CHECKPOINT;
-   if ((Length % BLOCKSIZE) != 0)
+   if ((Length % PAGESIZE) != 0)
      {
-	block = Ext2BlockMap(DeviceExt, &Fcb->inode, Offset / BLOCKSIZE);
-	Ext2ReadSectors(DeviceExt->StorageDevice,
-			block,
-			1,
-			TempBuffer);
-	memcpy(Buffer,TempBuffer,Length);
+	CcRequestCachePage(Fcb->Bcb,
+			   Offset,
+			   &BaseAddress,
+			   &Uptodate,
+			   &CacheSeg);
+	if (Uptodate == FALSE)
+	  {
+	     Ext2ReadPage(DeviceExt,
+			  Fcb,
+			  BaseAddress,
+			  (Offset / BLOCKSIZE));
+	  }
+	DPRINT("Copying %x to %x Length %d\n",BaseAddress,Buffer,Length);
+	memcpy(Buffer,BaseAddress,Length);
+	CcReleaseCachePage(Fcb->Bcb,
+			   CacheSeg,
+			   TRUE);	
      }
-   
-   ExFreePool(TempBuffer);
+   CHECKPOINT;
    
    return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   DPRINT("Ext2Write(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+   
+   Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+   Irp->IoStatus.Information = 0;
+   return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   DPRINT("Ext2FlushBuffers(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+   
+   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Information = 0;
+   return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   DPRINT("Ext2Shutdown(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+   
+   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Information = 0;
+   return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   DbgPrint("Ext2Cleanup(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+   
+   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   Irp->IoStatus.Information = 0;
+   
+   DbgPrint("Ext2Cleanup() finished\n");
+   
+   return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   ULONG Length;
+   PVOID Buffer;
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   PFILE_OBJECT FileObject = Stack->FileObject;
+   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+   NTSTATUS Status;
+   
+   DPRINT("Ext2Read(DeviceObject %x, FileObject %x, Irp %x)\n",
+	  DeviceObject, FileObject, Irp);
+   
+   Length = Stack->Parameters.Read.Length;
+   CHECKPOINT;
+   Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+   CHECKPOINT;
+   CHECKPOINT;
+   
+   Status = Ext2ReadFile(DeviceExt,FileObject,Buffer,Length,
+			 Stack->Parameters.Read.ByteOffset);
+   
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = Length;
+   IoCompleteRequest(Irp,IO_NO_INCREMENT);
+   
+   return(Status);
 }

@@ -90,6 +90,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
    
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = UserEvent;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
@@ -153,6 +154,9 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	return(NULL);
      }
 
+   Irp->UserIosb = IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+   
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
    StackPtr->MinorFunction = 0;
@@ -161,30 +165,32 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
    StackPtr->CompletionRoutine = NULL;
-   StackPtr->Parameters.Write.Length = Length;
    
-   if (MajorFunction == IRP_MJ_READ || MajorFunction == IRP_MJ_WRITE)
+   if (Buffer != NULL)
      {
-	Irp->UserBuffer = (LPVOID)Buffer;
-	if (DeviceObject->Flags&DO_BUFFERED_IO)
+	IoPrepareIrpBuffer(Irp,
+			   DeviceObject,
+			   Buffer,
+			   Length,
+			   MajorFunction);
+     }
+
+   if (MajorFunction == IRP_MJ_READ)
+     {
+	StackPtr->Parameters.Read.Length = Length;
+	if (StartingOffset!=NULL)
 	  {
-	     DPRINT("Doing buffer i/o\n",0);
-	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	       ExAllocatePool(NonPagedPool,Length);
-	     if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	       {
-		  return(NULL);
-	       }
+	     StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
 	  }
-	if (DeviceObject->Flags&DO_DIRECT_IO)
+	else
 	  {
-	     DPRINT("Doing direct i/o\n",0);
-	     
-	     Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-	     Irp->UserBuffer = NULL;
-	     Irp->AssociatedIrp.SystemBuffer = NULL;
-	  }
+	     StackPtr->Parameters.Read.ByteOffset.u.LowPart = 0;
+	     StackPtr->Parameters.Read.ByteOffset.u.LowPart = 0;
+	  }     
+     }
+   else if (MajorFunction == IRP_MJ_WRITE)
+     {	
+	StackPtr->Parameters.Write.Length = Length;
 	if (StartingOffset!=NULL)
 	  {
 	     StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
@@ -194,7 +200,7 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
              StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
 	  }     
      }
-	
+   
    Irp->UserIosb = IoStatusBlock;
       
    return(Irp);
@@ -246,6 +252,7 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = InternalDeviceIoControl ? IRP_MJ_INTERNAL_DEVICE_CONTROL : IRP_MJ_DEVICE_CONTROL;
@@ -396,6 +403,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;

@@ -60,7 +60,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
    for (i=0;i<count;i++)
      {
 	current = current->Flink;
-	if (current==(&(Process->Pcb.HandleTable.ListHead)))
+	if (current == (&(Process->Pcb.HandleTable.ListHead)))
 	  {
 	     return(NULL);
 	  }
@@ -122,6 +122,8 @@ NTSTATUS STDCALL ZwDuplicateObject(IN HANDLE SourceProcessHandle,
    PEPROCESS SourceProcess;
    PEPROCESS TargetProcess;
    PHANDLE_REP SourceHandleRep;
+
+   ASSERT_IRQL(PASSIVE_LEVEL);
    
    ObReferenceObjectByHandle(SourceProcessHandle,
 			     PROCESS_DUP_HANDLE,
@@ -340,18 +342,30 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 	DPRINT("Referencing current process %x\n", PsGetCurrentProcess());
 	return(STATUS_SUCCESS);
      }
+   else if (Handle == NtCurrentProcess())
+     {
+	CHECKPOINT;
+	return(STATUS_OBJECT_TYPE_MISMATCH);
+     }
    if (Handle == NtCurrentThread() && 
        (ObjectType == PsThreadType || ObjectType == NULL))
      {
 	BODY_TO_HEADER(PsGetCurrentThread())->RefCount++;
 	*Object = PsGetCurrentThread();
+	CHECKPOINT;
 	return(STATUS_SUCCESS);
+     }
+   else if (Handle == NtCurrentThread())
+     {
+	CHECKPOINT;
+	return(STATUS_OBJECT_TYPE_MISMATCH);
      }
    
    HandleRep = ObpGetObjectByHandle(PsGetCurrentProcess(),
 				    Handle);
    if (HandleRep == NULL || HandleRep->ObjectBody == NULL)
      {
+	CHECKPOINT;
 	return(STATUS_INVALID_HANDLE);
      }
    
@@ -359,11 +373,13 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 
    if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
      {
+	CHECKPOINT;
 	return(STATUS_OBJECT_TYPE_MISMATCH);
      }   
    
    if (!(HandleRep->GrantedAccess & DesiredAccess))
      {
+	CHECKPOINT;
 	return(STATUS_ACCESS_DENIED);
      }
    
@@ -371,6 +387,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 
    *Object = HandleRep->ObjectBody;
    
+   CHECKPOINT;
    return(STATUS_SUCCESS);
 }
 

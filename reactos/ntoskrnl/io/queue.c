@@ -109,7 +109,7 @@ VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
    else
      {
 	stat = KeInsertDeviceQueue(&DeviceObject->DeviceQueue,
-				  &Irp->Tail.Overlay.DeviceQueueEntry);
+				   &Irp->Tail.Overlay.DeviceQueueEntry);
      }
    
    IoReleaseCancelSpinLock(oldirql);

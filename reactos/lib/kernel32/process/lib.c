@@ -25,15 +25,18 @@
 
 HINSTANCE LoadLibraryW(LPCWSTR lpLibFileName)
 {
-   dprintf("LoadLibraryW is unimplemented\n");
+   UNIMPLEMENTED;
+   return(NULL);
 }
 
 HINSTANCE LoadLibraryA(LPCSTR lpLibFileName)
 {
-   dprintf("LoadLibraryA is unimplemented\n");
+   UNIMPLEMENTED;
+   return(NULL);
 }
 
 BOOL STDCALL FreeLibrary(HMODULE hLibModule)
 {
-   dprintf("FreeLibrary is unimplemented\n");
+   UNIMPLEMENTED;
+   return(FALSE);
 }

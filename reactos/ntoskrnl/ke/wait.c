@@ -214,7 +214,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
       return(STATUS_SUCCESS);
    }
 
-   if (Timeout!=NULL)
+   if (Timeout != NULL)
      {
 	KeAddThreadTimeout(KeGetCurrentThread(),Timeout);
      }
@@ -228,11 +228,13 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 //   DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
 //          hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
    KeReleaseDispatcherDatabaseLock(FALSE);
+   DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__, 
+	  KeGetCurrentIrql());
    PsSuspendThread(PsGetCurrentThread());
    
-   if (Timeout!=NULL)
+   if (Timeout != NULL)
      {
-	KeCancelTimer(&KeGetCurrentThread()->TimerBlock);
+	KeCancelTimer(&KeGetCurrentThread()->Timer);
      }
    DPRINT("Returning from KeWaitForSingleObject()\n");
    return(STATUS_SUCCESS);

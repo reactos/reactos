@@ -3,7 +3,7 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/io/device.c
  * PURPOSE:        Manage devices
- * PROGRAMMER:     David Welch (welch@mcmail.com)
+ * PROGRAMMER:     David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                 15/05/98: Created
  */
@@ -82,25 +82,29 @@ PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 {
    PDEVICE_OBJECT Current = DeviceObject;
    
-   DPRINT("IoGetAttachDevice(DeviceObject %x)\n",DeviceObject);
+//   DPRINT("IoGetAttachedDevice(DeviceObject %x)\n",DeviceObject);
    
    while (Current->AttachedDevice!=NULL)
      {
 	Current = Current->AttachedDevice;
-	DPRINT("Current %x\n",Current);
+//	DPRINT("Current %x\n",Current);
      }
+   
+//   DPRINT("IoGetAttachedDevice() = %x\n",DeviceObject);
    return(Current);
 }
 
 PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 					   PDEVICE_OBJECT TargetDevice)
 {
-   PDEVICE_OBJECT AttachedDevice = IoGetAttachedDevice(TargetDevice);
+   PDEVICE_OBJECT AttachedDevice;
    
    DPRINT("IoAttachDeviceToDeviceStack(SourceDevice %x, TargetDevice %x)\n",
 	  SourceDevice,TargetDevice);
    
+   AttachedDevice = IoGetAttachedDevice(TargetDevice);
    AttachedDevice->AttachedDevice = SourceDevice;
+   SourceDevice->AttachedDevice = NULL;
    SourceDevice->StackSize = AttachedDevice->StackSize + 1;
    SourceDevice->Vpb = AttachedDevice->Vpb;
    return(AttachedDevice);
@@ -223,7 +227,9 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    PDEVICE_OBJECT CreatedDeviceObject;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE DeviceHandle;
-
+   
+   assert_irql(PASSIVE_LEVEL);
+   
    if (DeviceName != NULL)
      {
 	DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
@@ -250,7 +256,7 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 					     IoDeviceType);
      }
 					      
-   *DeviceObject=NULL;
+   *DeviceObject = NULL;
    
    if (CreatedDeviceObject == NULL)
      {

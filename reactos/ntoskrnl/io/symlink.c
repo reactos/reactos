@@ -182,6 +182,8 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
    HANDLE SymbolicLinkHandle;
    PSYMLNK_OBJECT SymbolicLink;
    
+   assert_irql(PASSIVE_LEVEL);
+   
    DPRINT("IoCreateSymbolicLink(SymbolicLinkName %w, DeviceName %w)\n",
 	  SymbolicLinkName->Buffer,DeviceName->Buffer);
    

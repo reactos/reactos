@@ -12,16 +12,19 @@
 
 #include <ddk/ntddk.h>
 
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 VOID KeEnterCriticalRegion()
 {
-   UNIMPLEMENTED;
+   DPRINT("KeEnterCriticalRegion()\n");
+   KeGetCurrentThread()->KernelApcDisable -= 1;
 }
 
 VOID KeLeaveCriticalRegion()
 {
-   UNIMPLEMENTED;
+   DPRINT("KeLeaveCriticalRegion()\n");
+   KeGetCurrentThread()->KernelApcDisable += 1;
 }

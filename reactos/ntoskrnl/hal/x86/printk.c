@@ -354,7 +354,6 @@ void HalInitConsole(boot_param* bp)
  *         bp = Parameters setup by the boot loader
  */
 {
-//   int offset;
 
 #ifdef SERIAL_DEBUGGING
    /*  turn on DTR and RTS  */

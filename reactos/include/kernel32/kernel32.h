@@ -1,5 +1,7 @@
 #include <windows.h>
 
+#define UNIMPLEMENTED dprintf("%s at %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
+
 #ifdef NDEBUG
 #define DPRINT(args...) 
 #define CHECKPOINT
@@ -28,3 +30,4 @@ PVOID __ErrorReturnNull(ULONG ErrorCode);
 BOOL KERNEL32_AnsiToUnicode(PWSTR DestStr,
 			    LPCSTR SrcStr,
 			    ULONG MaxLen);
+PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength);

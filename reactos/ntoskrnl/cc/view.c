@@ -14,36 +14,55 @@
 #include <ddk/ntifs.h>
 #include <internal/mm.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
-/* TYPES *********************************************************************/
-
-#define CACHE_SEGMENT_SIZE (0x1000)
-
-typedef struct _CACHE_SEGMENT
-{
-   PVOID BaseAddress;
-   PMEMORY_AREA MemoryArea;
-   BOOLEAN Valid;
-   LIST_ENTRY ListEntry;
-   ULONG FileOffset;
-   KEVENT Lock;
-   ULONG ReferenceCount;
-} CACHE_SEGMENT, *PCACHE_SEGMENT;
-
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
+/*
+ * FUNCTION: Asks the FSD to flush the contents of the page back to disk
+ */
+{
+   KeWaitForSingleObject(&CacheSeg->Lock,
+			 Executive,
+			 KernelMode,
+			 FALSE,
+			 NULL);
+   /* Build an IRP_MJ_WRITE and send it to the filesystem */
+   KeSetEvent(&CacheSeg->Lock, IO_NO_INCREMENT, 0);
+   return(STATUS_NOT_IMPLEMENTED);
+}
+
+NTSTATUS CcReleaseCachePage(PBCB Bcb,
+			    PCACHE_SEGMENT CacheSeg,
+			    BOOLEAN Valid)
+{
+   DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
+	  Bcb, CacheSeg, Valid);
+   
+   CacheSeg->ReferenceCount--;
+   CacheSeg->Valid = Valid;
+   KeSetEvent(&CacheSeg->Lock, IO_NO_INCREMENT, FALSE);
+   
+   DPRINT("CcReleaseCachePage() finished\n");
+   
+   return(STATUS_SUCCESS);
+}
 
 NTSTATUS CcRequestCachePage(PBCB Bcb,
 			    ULONG FileOffset,
 			    PVOID* BaseAddress,
-			    PBOOLEAN UptoDate)
+			    PBOOLEAN UptoDate,
+			    PCACHE_SEGMENT* CacheSeg)
 {
    KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    
-   DPRINT("CcRequestCachePage(Bcb %x, FileOffset %x)\n");
+   DPRINT("CcRequestCachePage(Bcb %x, FileOffset %x, BaseAddress %x, "
+	  "UptoDate %x, CacheSeg %x)\n", Bcb, FileOffset, BaseAddress,
+	  UptoDate, CacheSeg);
    
    KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
    
@@ -53,42 +72,96 @@ NTSTATUS CcRequestCachePage(PBCB Bcb,
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
 	if (current->FileOffset == PAGE_ROUND_DOWN(FileOffset))
 	  {
+	     DPRINT("Found existing segment at %x\n", current);
 	     current->ReferenceCount++;
 	     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+	     DPRINT("Waiting for segment\n");
 	     KeWaitForSingleObject(&current->Lock,
 				   Executive,
 				   KernelMode,
 				   FALSE,
 				   NULL);
 	     *UptoDate = current->Valid;
-	     BaseAddress = current->BaseAddress;
+	     *BaseAddress = current->BaseAddress;
+	     *CacheSeg = current;
+	     DPRINT("Returning %x (UptoDate %d)\n", current, current->Valid);
 	     return(STATUS_SUCCESS);
 	  }
 	current_entry = current_entry->Flink;
      }
 
+   DPRINT("Creating new segment\n");
+   
+   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+
    current = ExAllocatePool(NonPagedPool, sizeof(CACHE_SEGMENT));
    current->BaseAddress = NULL;
    MmCreateMemoryArea(KernelMode,
-		      PsGetCurrentProcess(),
+		      NULL,
 		      MEMORY_AREA_CACHE_SEGMENT,
 		      &current->BaseAddress,
 		      CACHE_SEGMENT_SIZE,
 		      PAGE_READWRITE,
-		      &current->MemoryArea);
+		      (PMEMORY_AREA*)&current->MemoryArea);
+   CHECKPOINT;
    current->Valid = FALSE;
    current->FileOffset = PAGE_ROUND_DOWN(FileOffset);
-   KeInitializeEvent(&current->Lock, SynchronizationEvent, TRUE);
+   current->Bcb = Bcb;
+   CHECKPOINT;
+   KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
    current->ReferenceCount = 1;
+   CHECKPOINT;
    InsertTailList(&Bcb->CacheSegmentListHead, &current->ListEntry);
+   CHECKPOINT;
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
-   MmSetPage(PsGetCurrentProcess(),
-	     current->BaseAddress, 
-	     (ULONG)MmAllocPage(), 
-	     PAGE_READWRITE);
+   *CacheSeg = current;
+   CHECKPOINT;
+   MmSetPage(NULL,
+	     current->BaseAddress,
+	     PAGE_READWRITE,
+	     (ULONG)MmAllocPage());
    
-   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+   
+   DPRINT("Returning %x (BaseAddress %x)\n", current, *BaseAddress);
+   
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS CcFreeCacheSegment(PFILE_OBJECT FileObject,
+			    PBCB Bcb,
+			    PCACHE_SEGMENT CacheSeg)
+{
+   MmFreeMemoryArea(NULL,
+		    CacheSeg->BaseAddress,
+		    CACHE_SEGMENT_SIZE,
+		    TRUE);
+   ExFreePool(CacheSeg);
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS CcReleaseFileCache(PFILE_OBJECT FileObject,
+			    PBCB Bcb)
+{
+   PLIST_ENTRY current_entry;
+   PCACHE_SEGMENT current;
+   
+   DPRINT("CcReleaseFileCache(FileObject %x, Bcb %x)\n",
+	  FileObject, Bcb);
+   
+   current_entry = Bcb->CacheSegmentListHead.Flink;
+   while (current_entry != (&Bcb->CacheSegmentListHead))
+     {
+	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
+	current_entry = current_entry->Flink;
+	CcFreeCacheSegment(FileObject,
+			   Bcb,
+			   current);
+     }
+   
+   ExFreePool(Bcb);
+   
+   DPRINT("CcReleaseFileCache() finished\n");
    
    return(STATUS_SUCCESS);
 }

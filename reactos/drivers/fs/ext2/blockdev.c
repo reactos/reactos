@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/blockdev.c
+ * FILE:             services/fs/ext2/blockdev.c
  * PURPOSE:          Temporary sector reading support
- * PROGRAMMER:       David Welch (welch@mcmail.com)
+ * PROGRAMMER:       David Welch (welch@cwcom.net)
  * UPDATE HISTORY: 
  */
 
@@ -13,7 +13,7 @@
 #include <string.h>
 #include <internal/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "ext2fs.h"
@@ -42,8 +42,8 @@ BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
            (unsigned long) DiskSector,
            (unsigned long) BLOCKSIZE,
-           (unsigned long) sectorNumber.HighPart,
-           (unsigned long) sectorNumber.LowPart);
+           (unsigned long) sectorNumber.u.HighPart,
+           (unsigned long) sectorNumber.u.LowPart);
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -59,17 +59,18 @@ BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                                        &event,
                                        &ioStatus );
 
-    if (!irp) {
+    if (!irp) 
+     {
         DbgPrint("READ failed!!!\n");
         return FALSE;
-    }
-
+     }
+   
     DPRINT("Calling IO Driver...\n");
-    status = IoCallDriver(pDeviceObject,
-                          irp);
+    status = IoCallDriver(pDeviceObject, irp);
 
     DPRINT("Waiting for IO Operation...\n");
-    if (status == STATUS_PENDING) {
+    if (status == STATUS_PENDING) 
+     {
         KeWaitForSingleObject(&event,
                               Suspended,
                               KernelMode,
@@ -77,14 +78,15 @@ BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                               NULL);
         DPRINT("Getting IO Status...\n");
         status = ioStatus.Status;
-    }
+     }
 
-    if (!NT_SUCCESS(status)) {
+   if (!NT_SUCCESS(status)) 
+     {
         DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
         return FALSE;
-    }
-
-    return TRUE;
+     }
+   
+   return TRUE;
 }
 
 BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,

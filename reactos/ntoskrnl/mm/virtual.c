@@ -27,17 +27,17 @@
 
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
-   ULONG i;
-   PHYSICAL_ADDRESS addr;
+   PVOID i;
    
    DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
    
    DPRINT("Releasing %x between %x %x\n",
 	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
-   for (i=Marea->BaseAddress; i<(Marea->BaseAddress + Marea->Length);
-	i=i+PAGESIZE)
+   for (i = Marea->BaseAddress; 
+	i < (Marea->BaseAddress + Marea->Length);
+	i = i+PAGESIZE)
      {
-	MmDeletePageEntry(Process, (PVOID)i, TRUE);
+	MmDeletePageEntry(Process, i, TRUE);
      }
    ExFreePool(Marea);
    
@@ -46,7 +46,6 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 
 NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
 {
-   ULONG i,j,addr;
    PLIST_ENTRY CurrentEntry;
    PMEMORY_AREA Current;
    

@@ -118,6 +118,7 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
 {
    PLIST_ENTRY current_entry;
    MEMORY_AREA* current;
+   PLIST_ENTRY previous_entry;
 
 //   MmDumpMemoryAreas();
    
@@ -129,10 +130,16 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
 	return(NULL);
      }
    
+   previous_entry = ListHead;
    current_entry = ListHead->Flink;
    while (current_entry!=ListHead)
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+	DPRINT("Scanning %x BaseAddress %x Length %x\n",
+	       current, current->BaseAddress, current->Length);
+	assert(current_entry->Blink->Flink == current_entry);
+	assert(current_entry->Flink->Blink == current_entry);
+	assert(previous_entry->Flink == current_entry);
 	if (current->BaseAddress <= Address &&
 	    (current->BaseAddress + current->Length) > Address)
 	  {
@@ -144,6 +151,7 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
 	     DPRINT("%s() = NULL\n",__FUNCTION__);
 	     return(NULL);
 	  }
+	previous_entry = current_entry;
 	current_entry = current_entry->Flink;
      }
    DPRINT("%s() = NULL\n",__FUNCTION__);
@@ -307,13 +315,14 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
 	     current_entry->Flink = inserted_entry;
 	     inserted_entry->Flink=ListHead;
 	     inserted_entry->Blink=current_entry;
+	     ListHead->Blink = inserted_entry;
 	     return;
 	  }
 	if (current->BaseAddress < marea->BaseAddress &&
 	    next->BaseAddress > marea->BaseAddress)
 	  {	     
 	     inserted_entry->Flink = current_entry->Flink;
-	     inserted_entry->Blink = current_entry->Blink;
+	     inserted_entry->Blink = current_entry;
 	     inserted_entry->Flink->Blink = inserted_entry;
 	     current_entry->Flink=inserted_entry;
 	     return;
@@ -399,7 +408,20 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
    
    DPRINT("MmFreeMemoryArea(Process %x, BaseAddress %x, Length %x,"
           "FreePages %d)\n",Process,BaseAddress,Length,FreePages);			    
-   
+
+   if (SystemAreaList.Flink != (&SystemAreaList) &&
+       SystemAreaList.Flink->Flink != (&SystemAreaList))
+     {
+	#ifndef NDEBUG
+	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
+					     MEMORY_AREA,
+					     Entry);
+	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
+	       Snd->BaseAddress);
+	#endif
+//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
+     }
+
    MmLockMemoryAreaList(BaseAddress, &oldlvl);
    
    MemoryArea = MmOpenMemoryAreaByAddressWithoutLock(Process,
@@ -407,6 +429,7 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
    if (MemoryArea==NULL)
      {
 	MmUnlockMemoryAreaList(BaseAddress, &oldlvl);
+	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
    if (FreePages)
@@ -429,6 +452,20 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
    RemoveEntryList(&(MemoryArea->Entry));
    ExFreePool(MemoryArea);
    MmUnlockMemoryAreaList(BaseAddress, &oldlvl);
+   
+   if (SystemAreaList.Flink != (&SystemAreaList) &&
+       SystemAreaList.Flink->Flink != (&SystemAreaList))
+     {
+	#ifndef NDEBUG
+	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
+					     MEMORY_AREA,
+					     Entry);
+	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
+	       Snd->BaseAddress);
+	#endif
+//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
+     }
+   
    return(STATUS_SUCCESS);
 }
 
@@ -507,7 +544,19 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
 	  "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
           Mode,Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
 
-   
+   if (SystemAreaList.Flink != (&SystemAreaList) &&
+       SystemAreaList.Flink->Flink != (&SystemAreaList))
+     {
+	#ifndef NDEBUG
+	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
+					     MEMORY_AREA,
+					     Entry);
+	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
+	       Snd->BaseAddress);
+//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
+	#endif
+     }
+      
    if ((*BaseAddress)==0)
      {
 	MmLockMemoryAreaListByMode(Mode,&oldlvl);
@@ -551,6 +600,18 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
    MmInsertMemoryAreaWithoutLock(Process,*Result);
    MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
    
+   if (SystemAreaList.Flink != (&SystemAreaList) &&
+       SystemAreaList.Flink->Flink != (&SystemAreaList))
+     {
+	#ifndef NDEBUG
+	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
+					     MEMORY_AREA,
+					     Entry);
+	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
+	       Snd->BaseAddress);
+	#endif
+//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
+     }
    
    return(STATUS_SUCCESS);
 }

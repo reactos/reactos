@@ -20,6 +20,7 @@
 #include <internal/i386/segment.h>
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
+#include <ntdll/base.h>
 
 //#define NDEBUG
 #include <kernel32/kernel32.h>
@@ -107,8 +108,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    PVOID BaseAddress;
    ULONG BytesWritten;
    HANDLE DupNTDllSectionHandle, DupSectionHandle;
-   
-   
+      
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = NULL;
@@ -340,8 +340,6 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    return(hSection);
 }
 
-#define NTDLL_BASE (0x80000000)
-
 static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
 {
    NTSTATUS Status;
@@ -353,7 +351,7 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
    ULONG StartupInfoSize;
    PROCESSINFOW StartupInfo;
    
-   PebBase = PEB_BASE;
+   PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    &PebBase,
@@ -368,7 +366,7 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
    
    
    memset(&Peb, 0, sizeof(Peb));
-   Peb.StartupInfo = PEB_STARTUPINFO;
+   Peb.StartupInfo = (PPROCESSINFOW)PEB_STARTUPINFO;
 
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
@@ -376,7 +374,7 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
 			sizeof(Peb),
 			&BytesWritten);
    
-   StartupInfoBase = PEB_STARTUPINFO;
+   StartupInfoBase = (PVOID)PEB_STARTUPINFO;
    StartupInfoSize = 0x1000;
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    &StartupInfoBase,
@@ -440,7 +438,8 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    hSection = KERNEL32_MapFile(lpApplicationName, 
 			       lpCommandLine,
-			       &Headers, &DosHeader);
+			       &Headers, 
+			       &DosHeader);
    
    Status = NtCreateProcess(&hProcess,
 			    PROCESS_ALL_ACCESS, 

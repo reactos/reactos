@@ -38,15 +38,36 @@ typedef struct
 
 typedef struct _DISPATCHER_HEADER
 {
-   UCHAR Type;
-   UCHAR Absolute;
-   UCHAR Size;
-   UCHAR Inserted;
-   LONG SignalState;
+   UCHAR      Type;
+   UCHAR      Absolute;
+   UCHAR      Size;
+   UCHAR      Inserted;
+   LONG       SignalState;
    LIST_ENTRY WaitListHead;
 } DISPATCHER_HEADER;
 
+
+typedef struct _KQUEUE
+{
+   DISPATCHER_HEADER Header;
+   LIST_ENTRY        EntryListHead;
+   ULONG             CurrentCount;
+   ULONG             MaximumCount;
+   LIST_ENTRY        ThreadListEntry;
+} KQUEUE, *PKQUEUE;
+
 struct _KDPC;
+
+/*
+typedef struct _KTIMER
+ {
+    DISPATCHER_HEADER Header;
+    ULARGE_INTEGER DueTime;
+    LIST_ENTRY TimerListEntry;
+    struct _KDPC* Dpc;
+    LONG Period;
+ } KTIMER, *PKTIMER;
+ */
 
 typedef struct _KTIMER
 {
@@ -63,7 +84,7 @@ struct _KSPIN_LOCK;
 
 typedef struct _KSPIN_LOCK
 {
-   KIRQL irql;
+   ULONG Lock;
 } KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef struct _KDEVICE_QUEUE
@@ -110,7 +131,7 @@ typedef struct
    struct _KTHREAD* OwnerThread;
    BOOLEAN Abandoned;
    UCHAR ApcDisable;
-} KMUTEX, *PKMUTEX;
+} KMUTEX, *PKMUTEX, KMUTANT, *PKMUTANT;
    
 typedef struct
 {

@@ -52,7 +52,7 @@ ULONG PiNrRunnableThreads = 0;
 
 static PETHREAD CurrentThread = NULL;
 
-static ULONG NextUniqueThreadId = 0;
+static ULONG PiNextThreadUniqueId = 0;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -98,7 +98,8 @@ static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
    KIRQL oldlvl;
    
    DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
-	    Thread);
+	  Thread);
+   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
    
    KeAcquireSpinLock(&ThreadListLock,&oldlvl);
    InsertTailList(&PriorityListHead[THREAD_PRIORITY_MAX+Priority],
@@ -110,7 +111,7 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 {
    NTSTATUS Ret;
    
-   KeReleaseSpinLock(&ThreadListLock,PASSIVE_LEVEL);
+//   KeReleaseSpinLock(&ThreadListLock,PASSIVE_LEVEL);
    Ret = StartRoutine(StartContext);
    PsTerminateSystemThread(Ret);
    KeBugCheck(0);
@@ -130,13 +131,13 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority)
      {
 	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.Entry);
 
-	if (current->Tcb.ThreadState == THREAD_STATE_TERMINATED &&
+	if (current->Tcb.State == THREAD_STATE_TERMINATED &&
 	    current != CurrentThread)
 	  {
 	     PsReleaseThread(current);
 	  }
 
-	if (current->Tcb.ThreadState == THREAD_STATE_RUNNABLE)
+	if (current->Tcb.State == THREAD_STATE_RUNNABLE)
 	  {
 	     if (oldest == NULL || oldest_time > current->Tcb.LastTick)
 	       {
@@ -166,9 +167,9 @@ VOID PsDispatchThread(VOID)
    
    DPRINT("PsDispatchThread() Current %x\n",CurrentThread);
       
-   if (CurrentThread->Tcb.ThreadState==THREAD_STATE_RUNNING)     
+   if (CurrentThread->Tcb.State==THREAD_STATE_RUNNING)     
      {
-	CurrentThread->Tcb.ThreadState=THREAD_STATE_RUNNABLE;
+	CurrentThread->Tcb.State=THREAD_STATE_RUNNABLE;
      }
    
    for (CurrentPriority=THREAD_PRIORITY_TIME_CRITICAL; 
@@ -181,7 +182,7 @@ VOID PsDispatchThread(VOID)
              DPRINT("Scheduling current thread\n");
              KeQueryTickCount(&TickCount);
              CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
-	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
+	     CurrentThread->Tcb.State = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
 	     return;
 	  }
@@ -189,7 +190,7 @@ VOID PsDispatchThread(VOID)
 	  {	
              DPRINT("Scheduling %x\n",Candidate);
 	     
-	     Candidate->Tcb.ThreadState = THREAD_STATE_RUNNING;
+	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
 	     
 	     KeQueryTickCount(&TickCount);
              CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
@@ -197,7 +198,7 @@ VOID PsDispatchThread(VOID)
 	     CurrentThread = Candidate;
 	     
 	     HalTaskSwitch(&CurrentThread->Tcb);
-	     KeReleaseSpinLock(&ThreadListLock,irql);
+	     KeReleaseSpinLock(&ThreadListLock, irql);
 	     return;
 	  }
      }
@@ -222,11 +223,13 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			   PsThreadType);
    DPRINT("Thread = %x\n",Thread);
    Thread->Tcb.LastTick = 0;
-   Thread->Tcb.ThreadState=THREAD_STATE_SUSPENDED;
-   Thread->Tcb.BasePriority=THREAD_PRIORITY_NORMAL;
-   Thread->Tcb.CurrentPriority=THREAD_PRIORITY_NORMAL;
-   Thread->Tcb.ApcList=ExAllocatePool(NonPagedPool,sizeof(LIST_ENTRY));
+   Thread->Tcb.State = THREAD_STATE_SUSPENDED;
+   Thread->Tcb.BasePriority = THREAD_PRIORITY_NORMAL;
    Thread->Tcb.SuspendCount = 1;
+   InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[0]);
+   InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[1]);
+   Thread->Tcb.KernelApcDisable = 1;
+   
    if (ProcessHandle != NULL)
      {
 	Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -253,18 +256,16 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			      PROCESS_CREATE_THREAD,
 			      PsProcessType,
 			      UserMode);
-   InitializeListHead(Thread->Tcb.ApcList);
    InitializeListHead(&(Thread->IrpList));
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
-                                                          &NextUniqueThreadId);
+					      &PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
-   DbgPrint("Thread->Cid.UniqueThread %d\nThread->Cid.UniqueProcess %d\n",
-            Thread->Cid.UniqueThread, Thread->Cid.UniqueThread);
+   DbgPrint("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    ObReferenceObjectByPointer(Thread,
 			      THREAD_ALL_ACCESS,
 			      PsThreadType,
 			      UserMode);
-   PsInsertIntoThreadList(Thread->Tcb.CurrentPriority,Thread);
+   PsInsertIntoThreadList(Thread->Tcb.BasePriority,Thread);
    
    *ThreadPtr = Thread;
    
@@ -277,10 +278,10 @@ VOID PsResumeThread(PETHREAD Thread)
    DPRINT("PsResumeThread(Thread %x)\n",Thread);
    Thread->Tcb.SuspendCount--;
    if (Thread->Tcb.SuspendCount <= 0 &&
-       Thread->Tcb.ThreadState != THREAD_STATE_RUNNING)
+       Thread->Tcb.State != THREAD_STATE_RUNNING)
      {
         DPRINT("Setting thread to runnable\n");
-	Thread->Tcb.ThreadState = THREAD_STATE_RUNNABLE;
+	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
      }
    DPRINT("Finished PsResumeThread()\n");
 }
@@ -291,7 +292,7 @@ VOID PsSuspendThread(PETHREAD Thread)
    Thread->Tcb.SuspendCount++;
    if (Thread->Tcb.SuspendCount > 0)
      {
-	Thread->Tcb.ThreadState = THREAD_STATE_SUSPENDED;
+	Thread->Tcb.State = THREAD_STATE_SUSPENDED;
 	if (Thread == CurrentThread)
 	  {
 	     PsDispatchThread();
@@ -343,7 +344,7 @@ VOID PsInitThreadManagment(VOID)
    PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
 		      THREAD_ALL_ACCESS,NULL);
    HalInitFirstTask(FirstThread);
-   FirstThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
+   FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.SuspendCount = 0;
 
    DPRINT("FirstThread %x\n",FirstThread);
@@ -477,11 +478,11 @@ LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
 KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
 {
    KPRIORITY OldPriority;
-   OldPriority = Thread->CurrentPriority;
-   Thread->CurrentPriority = Priority;
+   OldPriority = Thread->BasePriority;
+   Thread->BasePriority = Priority;
 
    RemoveEntryList(&Thread->Entry);
-   PsInsertIntoThreadList(Thread->CurrentPriority,
+   PsInsertIntoThreadList(Thread->BasePriority,
 			  CONTAINING_RECORD(Thread,ETHREAD,Tcb));
    
    return(OldPriority);
@@ -576,7 +577,7 @@ NTSTATUS STDCALL ZwResumeThread(IN HANDLE ThreadHandle,
    (*SuspendCount) = InterlockedDecrement(&Thread->Tcb.SuspendCount);
    if (Thread->Tcb.SuspendCount <= 0)
      {
-	Thread->Tcb.ThreadState = THREAD_STATE_RUNNABLE;
+	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
      }
    
    ObDereferenceObject(Thread);
@@ -634,7 +635,7 @@ NTSTATUS STDCALL ZwSuspendThread(IN HANDLE ThreadHandle,
    (*PreviousSuspendCount) = InterlockedIncrement(&Thread->Tcb.SuspendCount);
    if (Thread->Tcb.SuspendCount > 0)
      {
-	Thread->Tcb.ThreadState = THREAD_STATE_SUSPENDED;
+	Thread->Tcb.State = THREAD_STATE_SUSPENDED;
 	if (Thread == PsGetCurrentThread())
 	  {
 	     PsDispatchThread();

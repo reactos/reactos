@@ -231,20 +231,8 @@ enum
 /*
  * IRQ levels
  */
-enum
-{
-   PASSIVE_LEVEL,
-     
-   /*
-    * Which order for these (only DISPATCH_LEVEL is important for now)
-    */
-   APC_LEVEL,
-   DISPATCH_LEVEL,
-     
-   /*
-    * Above here are device specific IRQ levels
-    */
-   FIRST_DEVICE_SPECIFIC_LEVEL,
-   HIGH_LEVEL = FIRST_DEVICE_SPECIFIC_LEVEL + NR_DEVICE_SPECIFIC_LEVELS,
-};
-  
+#define PASSIVE_LEVEL                (1)
+#define APC_LEVEL                    (2)
+#define DISPATCH_LEVEL               (3)
+#define FIRST_DEVICE_SPECIFIC_LEVEL  (4)
+#define HIGH_LEVEL (FIRST_DEVICE_SPECIFIC_LEVEL + NR_DEVICE_SPECIFIC_LEVELS)

@@ -226,11 +226,17 @@ asmlinkage void exception_handler(unsigned int edi,
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
    if ((cs&0xffff) == KERNEL_CS)
      {
-	DbgPrint("ESP %.8x\n",esp);
+	DbgPrint("kESP %.8x\n",esp);
+	if (PsGetCurrentThread() != NULL)
+	  {
+	     DbgPrint("kernel stack base %x\n",
+		      PsGetCurrentThread()->Tcb.Context.KernelStackBase);
+		      	     
+	  }
      }
    else
      {
-	DbgPrint("ESP %.8x\n",esp);
+	DbgPrint("kernel ESP %.8x\n",esp);
      }
    
   if ((cs & 0xffff) == KERNEL_CS)
@@ -288,6 +294,8 @@ asmlinkage void exception_handler(unsigned int edi,
         }
      }
    
+   DPRINT("Killing current task\n");
+   KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {
 	ZwTerminateProcess(NtCurrentProcess(),
@@ -307,7 +315,8 @@ VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
    DbgPrint("Frames:\n");
    for (i=0; i<NrFrames; i++)
      {
-	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
+//	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
+	if (Stack[i] > KERNEL_BASE)
 	  {
 	     DbgPrint("%.8x  ",Stack[i]);
 	  }

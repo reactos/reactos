@@ -35,7 +35,7 @@ LOADERS = dos
 #
 DEVICE_DRIVERS = blue ide keyboard mouse null parallel serial
 # DEVICE_DRIVERS = beep event floppy ide_test sound test test1
-FS_DRIVERS = minix vfat ext2
+FS_DRIVERS = vfat ext2
 # FS_DRIVERS = template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 		  

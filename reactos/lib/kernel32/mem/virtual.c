@@ -91,9 +91,9 @@ WINBOOL STDCALL VirtualProtectEx(HANDLE hProcess,
    
    Status = ZwProtectVirtualMemory(hProcess,
 				   (PVOID)lpAddress,
-				   (PULONG)dwSize,
+				   dwSize,
 				   flNewProtect,
-				   lpflOldProtect);
+				   (PULONG)lpflOldProtect);
    if (Status != STATUS_SUCCESS)
      {
 	SetLastError(RtlNtStatusToDosError(Status));

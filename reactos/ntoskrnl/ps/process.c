@@ -29,7 +29,7 @@ HANDLE SystemProcessHandle = NULL;
 
 POBJECT_TYPE PsProcessType = NULL;
 
-static ULONG NextUniqueProcessId = 0;
+static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -80,9 +80,8 @@ VOID PsInitProcessManagment(VOID)
    InitializeListHead(&(KProcess->MemoryAreaList));
    ObCreateHandleTable(NULL,FALSE,SystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
-
-   SystemProcess->UniqueProcessId = NextUniqueProcessId;
-   SystemProcess->InheritedFromUniqueProcessId = NextUniqueProcessId;
+   SystemProcess->UniqueProcessId = 
+     InterlockedIncrement(&PiNextProcessUniqueId);
    
    ObCreateHandle(SystemProcess,
 		  SystemProcess,
@@ -197,12 +196,13 @@ NTSTATUS STDCALL ZwCreateProcess(
    KProcess = &(Process->Pcb);
    
    InitializeListHead(&(KProcess->MemoryAreaList));
-   Process->UniqueProcessId = InterlockedIncrement(&NextUniqueProcessId);
+   Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
 		       InheritObjectTable,
 		       Process);
    MmCopyMmInfo(ParentProcess, Process);
+   Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
 
    /*
     * FIXME: I don't what I'm supposed to know with a section handle

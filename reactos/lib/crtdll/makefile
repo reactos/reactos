@@ -158,7 +158,7 @@ CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
 endif
 
 crtdll.coff: crtdll.rc ../../include/reactos/resource.h
-	windres crtdll.rc crtdll.coff
+	$(RC) crtdll.rc crtdll.coff
 
 crtdll.a: $(OBJECTS)
 	$(LD)  -r $(OBJECTS) -o crtdll.a

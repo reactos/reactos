@@ -96,6 +96,10 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest);
 NTSTATUS MmReleaseMmInfo(PEPROCESS Process);
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process);
 VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage);
+NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
+		    PVOID Address,
+		    PLARGE_INTEGER Offset,
+		    PIO_STATUS_BLOCK StatusBlock);
 
 
 #endif

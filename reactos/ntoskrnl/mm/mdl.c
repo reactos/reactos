@@ -50,12 +50,14 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    ULONG* mdl_pages=NULL;
    MEMORY_AREA* Result;
    
+   DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
+   
    DPRINT("Mdl->ByteCount %x\n",Mdl->ByteCount);
    DPRINT("PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE) %x\n",
 	  PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);
    
    MmCreateMemoryArea(KernelMode,
-		      PsGetCurrentProcess(),
+		      NULL,
 		      MEMORY_AREA_MDL_MAPPING,
 		      &base,
 		      Mdl->ByteCount + Mdl->ByteOffset,
@@ -85,8 +87,12 @@ VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
  *         MemoryDescriptorList = MDL describing the mapped pages
  */
 {
-   (void)MmFreeMemoryArea(PsGetCurrentProcess(),BaseAddress-Mdl->ByteOffset,
-			  Mdl->ByteCount,FALSE);
+   DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
+   (void)MmFreeMemoryArea(NULL,
+			  BaseAddress-Mdl->ByteOffset,
+			  Mdl->ByteCount,
+			  FALSE);
+   DPRINT("MmUnmapLockedPages() finished\n");
 }
 
 VOID MmPrepareMdlForReuse(PMDL Mdl)
@@ -118,7 +124,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
    DPRINT("StartVa %x\n",Mdl->StartVa);
    
-   marea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),
+   marea = MmOpenMemoryAreaByAddress(Mdl->Process,
 				     Mdl->StartVa);
    DPRINT("marea %x\n",marea);
   
@@ -203,11 +209,14 @@ PVOID MmGetSystemAddressForMdl(PMDL Mdl)
  * pages described by the given MDL.
  */
 {
+   DPRINT("MmGetSystemAddressForMdl(Mdl %x)\n", Mdl);
+   
    if (!( (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) ||
 	  (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) ))
      {
 	Mdl->MappedSystemVa = MmMapLockedPages(Mdl,KernelMode);
      }
+   DPRINT("Returning %x\n",Mdl->MappedSystemVa);
    return(Mdl->MappedSystemVa);
 }
 

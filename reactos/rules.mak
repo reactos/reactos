@@ -70,6 +70,8 @@ CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
 
+%.o: %.cc
+	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.asm

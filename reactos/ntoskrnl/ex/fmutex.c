@@ -29,8 +29,11 @@ VOID ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 	return;
      }
    FastMutex->Contention++;
-   KeWaitForSingleObject(&(FastMutex->Event),Executive,KernelMode,
-			   FALSE,NULL);
+   KeWaitForSingleObject(&(FastMutex->Event),
+			 Executive,
+			 KernelMode,
+			 FALSE,
+			 NULL);
    FastMutex->Owner=KeGetCurrentThread();
 }
 
@@ -39,12 +42,14 @@ VOID ExInitializeFastMutex(PFAST_MUTEX FastMutex)
    FastMutex->Count=1;
    FastMutex->Owner=NULL;
    FastMutex->Contention=0;
-   KeInitializeEvent(&(FastMutex->Event),SynchronizationEvent,FALSE);
+   KeInitializeEvent(&(FastMutex->Event),
+		     SynchronizationEvent,
+		     FALSE);
 }
 
 VOID ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
-   assert(FastMutex->Owner==KeGetCurrentThread());
+   assert(FastMutex->Owner == KeGetCurrentThread());
    FastMutex->Owner=NULL;
    if (InterlockedIncrement(&(FastMutex->Count))<=0)
      {

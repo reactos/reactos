@@ -10,6 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <internal/hal/io.h>
 #include <internal/i386/segment.h>
 #include <internal/stddef.h>
 #include <internal/mm.h>
@@ -43,7 +44,7 @@ static BOOLEAN IsThisAnNtAsSystem = FALSE;
 static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 
 extern unsigned int etext;
-extern unsigned int end;
+extern unsigned int _bss_end__;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
@@ -52,7 +53,7 @@ static MEMORY_AREA* kernel_pool_desc = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-void VirtualInit(boot_param* bp)
+VOID MmInitVirtualMemory(boot_param* bp)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:
@@ -65,7 +66,7 @@ void VirtualInit(boot_param* bp)
    ULONG Length;
    ULONG ParamLength = kernel_len;
    
-   DPRINT("VirtualInit() %x\n",bp);
+   DPRINT("MmInitVirtualMemory(%x)\n",bp);
    
    MmInitMemoryAreas();
    ExInitNonPagedPool(KERNEL_BASE+ PAGE_ROUND_UP(kernel_len) + PAGESIZE);
@@ -80,10 +81,12 @@ void VirtualInit(boot_param* bp)
    MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
 		      Length,0,&kernel_text_desc);
    
-   Length = PAGE_ROUND_UP(((ULONG)&end)) - PAGE_ROUND_UP(((ULONG)&etext));
+   Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
+            PAGE_ROUND_UP(((ULONG)&etext));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&etext));
+   DPRINT("BaseAddress %x\n",BaseAddress);
    MmCreateMemoryArea(KernelMode,
 		      NULL,
 		      MEMORY_AREA_SYSTEM,
@@ -91,7 +94,6 @@ void VirtualInit(boot_param* bp)
 		      Length,
 		      0,
 		      &kernel_data_desc);
-   
    
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&end));
    Length = ParamLength;
@@ -105,6 +107,8 @@ void VirtualInit(boot_param* bp)
    
 //   MmDumpMemoryAreas();
    CHECKPOINT;
+   
+//  while (inb_p(0x60)!=0x1); inb_p(0x60);
    
    MmInitSectionImplementation();
 }
@@ -173,9 +177,9 @@ asmlinkage int page_fault_handler(unsigned int cs,
 
    cr2 = PAGE_ROUND_DOWN(cr2);
    
-   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+   if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
-	DbgPrint("Page fault at high IRQL\n");
+	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
 	return(0);
 //	KeBugCheck(0);
      }
@@ -307,8 +311,9 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
 	MmSetPage(NULL, (PVOID)(i), PAGE_NOACCESS, 0);
      }
    DPRINT("Almost done MmInit()\n");
+   
    /*
     * Intialize memory areas
     */
-   VirtualInit(bp);
+   MmInitVirtualMemory(bp);
 }

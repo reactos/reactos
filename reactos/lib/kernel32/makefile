@@ -1,4 +1,8 @@
 
+KERNEL32_BASE = 0x77f00000
+
+CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
+
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=kernel32.a
@@ -44,7 +48,7 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/lcSLV.o nls/lcSQI.o nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o nls/lcTRK.o nls/lcUKR.o\
  nls/locale.o nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
 
-THREAD_OBJECTS = thread/thread.o
+THREAD_OBJECTS = thread/thread.o thread/tls.o
 
 PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o \
                   process/lib.o
@@ -77,7 +81,7 @@ nls/ole2nls.o: nls/ole2nls.c
 	$(CC) $(CFLAGS) -I. nls/ole2nls.c
 
 kernel32.coff: kernel32.rc ../../include/reactos/resource.h
-	windres kernel32.rc kernel32.coff
+	$(RC) kernel32.rc kernel32.coff
 
 kernel32.a: $(OBJECTS)
 	$(AR) csr kernel32.a $(OBJECTS)
@@ -93,7 +97,7 @@ kernel32.dll: $(DLLMAIN) $(OBJECTS) kernel32.def
 	           --output-exp temp.exp --def kernel32.def
 	- $(RM) base.tmp
 	$(CC) -specs=k32_specs -mdll -o kernel32.dll kernel32.o  ../ntdll/ntdll.a\
-	      -Wl,--image-base,0x70000000 \
+	      -Wl,--image-base,$(KERNEL32_BASE) \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,temp.exp
@@ -107,4 +111,5 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
+#WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

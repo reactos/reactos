@@ -32,22 +32,23 @@ DWORD STDCALL GetEnvironmentVariableA(LPCSTR lpName,
 				      LPSTR lpBuffer,
 				      DWORD nSize)
 {
-	WCHAR BufferW[MAX_VALUE];
-	WCHAR NameW[MAX_PATH];
-	DWORD RetValue;
-	int i=0;
-	while ((*lpName)!=0 && i < MAX_PATH)
-     	{
-		NameW[i] = *lpName;
-		lpName++;
-		i++;
-     	}
-   	NameW[i] = 0;
-
-	RetValue = GetEnvironmentVariableW(NameW,BufferW,nSize);
-	for(i=0;i<nSize;i++)
-		lpBuffer[i] = (char)BufferW[i];	
-	return RetValue;
+   WCHAR BufferW[MAX_VALUE];
+   WCHAR NameW[MAX_PATH];
+   DWORD RetValue;
+   int i=0;
+   
+   while ((*lpName)!=0 && i < MAX_PATH)
+     {
+	NameW[i] = *lpName;
+	lpName++;
+	i++;
+     }
+   NameW[i] = 0;
+   
+   RetValue = GetEnvironmentVariableW(NameW,BufferW,nSize);
+   for(i=0;i<nSize;i++)
+     lpBuffer[i] = (char)BufferW[i];	
+   return RetValue;
 }
 
 DWORD
@@ -237,11 +238,13 @@ GetVersionExA(
 
 LPSTR STDCALL GetEnvironmentStringsA(VOID)
 {
+#if 0
    WCHAR *EnvironmentStringsW;
    char *EnvironmentStringsA;
    int size = 0;
    int i;
- 
+#endif
+   
    return(NULL);
    
    /* FIXME: This doesn't work */
@@ -270,11 +273,13 @@ LPSTR STDCALL GetEnvironmentStringsA(VOID)
 
 LPWSTR STDCALL GetEnvironmentStringsW(VOID)
 {
+#if 0
    int size = 0;
    int i;
    WCHAR *EnvironmentString;
    WCHAR *EnvironmentStringSave;
-
+#endif
+   
    return(NULL);
    
    /* FIXME: This doesn't work, why not? */

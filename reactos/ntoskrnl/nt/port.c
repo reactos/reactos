@@ -182,8 +182,8 @@ NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
    MmUnmapLockedPages(Data, KMsg->Mdl);
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   KMsg->ReplyPort,
-			   FALSE,
 			   STANDARD_RIGHTS_REQUIRED,
+			   FALSE,
 			   &Msg->ReplyPort);
    ObDereferenceObject(PortHandle);
    return(Status);

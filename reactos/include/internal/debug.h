@@ -30,8 +30,8 @@
 #define CHECKED
 #endif
 
-#ifdef CHECKED
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
+#ifndef NASSERT
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 #else
 #define assert(x)
 #endif

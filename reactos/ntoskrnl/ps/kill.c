@@ -49,7 +49,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    ObDereferenceObject(CurrentThread->ThreadsProcess);
    CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-   CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
+   CurrentThread->Tcb.State = THREAD_STATE_TERMINATED;
    ZwYieldExecution();
    for(;;);
 }

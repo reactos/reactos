@@ -25,7 +25,8 @@ void main(int argc, char* argv[])
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
-
+   
+   printf("GetCommandLineA() %s\n",GetCommandLineA());
    debug_printf("GetCommandLineA() %s\n",GetCommandLineA());
    for (i=0; i<argc; i++)
      {

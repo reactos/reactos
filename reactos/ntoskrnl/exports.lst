@@ -7,9 +7,6 @@
 #
 #
 #
-CbInitDccb
-CbAcquireForRead
-CbReleaseFromRead
 DbgPrint
 ExAcquireFastMutex
 ExAcquireFastMutexUnsafe
@@ -121,6 +118,7 @@ IoConnectInterrupt
 IoCreateController
 IoCreateDevice
 IoCreateNotificationEvent
+IoCreateStreamFileObject
 IoCreateSymbolicLink
 IoCreateSynchronizationEvent
 IoCreateUnprotectedSymbolicLink
@@ -397,3 +395,12 @@ wcschr
 wcscpy
 wcsncat
 wcsncpy
+#wtolower
+tolower
+toupper
+memcpy
+strtok
+CcInitializeFileCache
+CcRequestCachePage
+CcReleaseCachePage
+CcReleaseFileCache

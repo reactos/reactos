@@ -187,7 +187,6 @@ WINBOOL STDCALL CopyFileExA(LPCSTR lpExistingFileName,
 			    WINBOOL* pbCancel, 
 			    DWORD dwCopyFlags)
 {
-   ULONG i;
    WCHAR ExistingFileNameW[MAX_PATH];
    WCHAR NewFileNameW[MAX_PATH];
    

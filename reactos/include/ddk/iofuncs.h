@@ -527,3 +527,5 @@ OUT PULONG ReturnedLength
 );
 VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject);
 PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject);
+PFILE_OBJECT IoCreateStreamFileObject(PFILE_OBJECT FileObject,
+				      PDEVICE_OBJECT DeviceObject);

@@ -172,11 +172,11 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 
    DPRINT("KeAddThreadTimeout(Thread %x, Interval %x)\n",Thread,Interval);
    
-   KeInitializeTimer(&(Thread->TimerBlock));
-   KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+   KeInitializeTimer(&(Thread->Timer));
+   KeSetTimer(&(Thread->Timer),*Interval,NULL);
 
-   DPRINT("Thread->TimerBlock.entry.Flink %x\n",
-	    Thread->TimerBlock.entry.Flink);
+   DPRINT("Thread->Timer.entry.Flink %x\n",
+	    Thread->Timer.entry.Flink);
    
    return STATUS_SUCCESS;
 }
@@ -210,7 +210,7 @@ NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 {
    PKTHREAD CurrentThread = KeGetCurrentThread();
    KeAddThreadTimeout(CurrentThread,Interval);
-   return(KeWaitForSingleObject(&(CurrentThread->TimerBlock),Executive,
+   return(KeWaitForSingleObject(&(CurrentThread->Timer),Executive,
 				KernelMode,Alertable,NULL));
 }
 

@@ -23,8 +23,7 @@ char* strtok(char *s, const char *delim)
   int c, sc;
   char *tok;
   static char *last;
-
-
+   
   if (s == NULL && (s = last) == NULL)
     return (NULL);
 

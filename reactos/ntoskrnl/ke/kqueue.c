@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PURPOSE:              ReactOS kernel
- * FILE:                 ntoskrnl/ke/device.c
+ * FILE:                 ntoskrnl/ke/kqueue.c
  * PURPOSE:              Implement device queues
  * PROGRAMMER:           David Welch (welch@mcmail.com)
  * REVISION HISTORY:
@@ -10,7 +10,6 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 #define NDEBUG

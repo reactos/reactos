@@ -91,6 +91,8 @@ HANDLE WINAPI GetProcessHeap(VOID)
 ********************************************************************/
 DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles )
 {
+   UNIMPLEMENTED;
+   return(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 /*********************************************************************
@@ -125,7 +127,7 @@ UINT HeapCompact(HANDLE hheap, DWORD flags)
 *********************************************************************/
 DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
-   return(RtlSizeHeap(hheap, flags, pmem));
+   return(RtlSizeHeap(hheap, flags, (PVOID)pmem));
 }
 
 /*********************************************************************
@@ -135,6 +137,6 @@ DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
 *********************************************************************/
 BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
-   return(RtlValidateHeap(hheap, flags, pmem));
+   return(RtlValidateHeap(hheap, flags, (PVOID)pmem));
 }
 

@@ -8,13 +8,19 @@
  * UPDATE HISTORY:
  *                  Created 19/01/99
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <string.h>
+#include <internal/string.h>
 #include <string.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+/* TYPES *********************************************************************/
 
 typedef struct __DOSTIME
 {
@@ -65,6 +71,19 @@ static __inline void NormalizeTimeFields(WORD *FieldToNormalize,
   *CarryField = (WORD) (*CarryField + 1);
 }
 
+#define LISECOND RtlEnlargedUnsignedMultiply(SECOND,NSPERSEC)
+#define LIMINUTE RtlEnlargedUnsignedMultiply(MINUTE,NSPERSEC)
+#define LIHOUR RtlEnlargedUnsignedMultiply(HOUR,NSPERSEC)
+#define LIDAY RtlEnlargedUnsignedMultiply(DAY,NSPERSEC)
+#define LIYEAR RtlEnlargedUnsignedMultiply(YEAR,NSPERSEC)
+#define LIFOURYEAR RtlEnlargedUnsignedMultiply(FOURYEAR,NSPERSEC)
+#define LICENTURY RtlEnlargedUnsignedMultiply(CENTURY,NSPERSEC) 
+#define LIMILLENIUM RtlEnlargedUnsignedMultiply(CENTURY,10*NSPERSEC)
+
+
+
+
+/* FUNCTIONS ****************************************************************/
 
 WINBOOL
 STDCALL
@@ -230,7 +249,10 @@ SystemTimeToFileTime(
   return TRUE;
 }
 
+//   dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
+//   lpSystemTime->wDayOfWeek = 1 + GET_LARGE_INTEGER_LOW_PART(dwDayOfWeek) % 7;
 
+  
 
 WINBOOL
 STDCALL

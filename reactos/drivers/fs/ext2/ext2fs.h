@@ -1,3 +1,5 @@
+#include <ddk/ntifs.h>
+
 BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
                         IN ULONG        SectorCount,
@@ -214,8 +216,22 @@ typedef struct
 {
    PDEVICE_OBJECT StorageDevice;
    struct ext2_super_block* superblock;
+   PFILE_OBJECT FileObject;
+   PBCB Bcb;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+typedef struct _EXT2_GROUP_DESC
+{
+   ERESOURCE Lock;
+   struct ext2_group_desc* desc;
+   PCACHE_SEGMENT CacheSeg;
+   PVOID BaseAddress;
+} EXT2_GROUP_DESC, *PEXT2_GROUP_DESC;
+
+PEXT2_GROUP_DESC Ext2LoadGroup(PDEVICE_EXTENSION DeviceExt,
+			       ULONG BlockGrp);
+VOID Ext2ReleaseGroup(PDEVICE_EXTENSION DeviceExt,
+		      PEXT2_GROUP_DESC GrpDesc);
 
 VOID Ext2ReadInode(PDEVICE_EXTENSION DeviceExt,
 		   ULONG ino,
@@ -223,14 +239,23 @@ VOID Ext2ReadInode(PDEVICE_EXTENSION DeviceExt,
 struct ext2_group_desc* Ext2LoadGroupDesc(PDEVICE_EXTENSION DeviceExt,
 					  ULONG block_group);
 
+typedef struct _EXT2_INODE
+{
+   struct ext2_inode* inode;
+   PVOID BaseAddress;
+   PCACHE_SEGMENT CacheSeg;
+} EXT2_INODE, *PEXT2_INODE;
+
 typedef struct _EXT2_FCB
 {
-   struct ext2_inode inode;
+   ULONG inode;
+   EXT2_INODE i;
+   PBCB Bcb;
 } EXT2_FCB, *PEXT2_FCB;
 
 ULONG Ext2BlockMap(PDEVICE_EXTENSION DeviceExt,
-		  struct ext2_inode* inode,
-		  ULONG offset);
+		   struct ext2_inode* inode,
+		   ULONG offset);
 NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
 		      PWSTR FileName);
 NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt, 
@@ -240,3 +265,24 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
                       LARGE_INTEGER Offset);
 NTSTATUS Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2SetQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2SetSecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2QuerySecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS Ext2ReadPage(PDEVICE_EXTENSION DeviceExt,
+		      PEXT2_FCB Fcb,
+		      PVOID Buffer,
+		      ULONG Offset);
+VOID Ext2LoadInode(PDEVICE_EXTENSION DeviceExt,
+		   ULONG ino,
+		   PEXT2_INODE Inode);
+VOID Ext2ReleaseInode(PDEVICE_EXTENSION DeviceExt,
+		      PEXT2_INODE Inode);
+

@@ -1,8 +1,8 @@
 #
 #
 #
-OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o \
-          ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o quota.o security.o \
+          attr.o ../../../ntoskrnl/ntoskrnl.a
 
 all: ext2fs.sys
 

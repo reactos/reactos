@@ -14,7 +14,7 @@
 
 #include <internal/debug.h>
 
-/* #define  PROTO_REG  1  /* Comment out to disable */
+// #define  PROTO_REG  1  /* Comment out to disable */
 
 /* FILE STATICS *************************************************************/
 

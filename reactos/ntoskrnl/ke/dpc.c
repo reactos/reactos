@@ -55,6 +55,10 @@ void KeDrainDpcQueue(void)
    PKDPC current;
    KIRQL oldlvl;
    
+   if (DpcQueueSize == 0)
+     {
+	return;
+     }
    DPRINT("KeDrainDpcQueue()\n");
    
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
@@ -109,7 +113,9 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
  *          FALSE otherwise
  */
 {
-   DPRINT("KeInsertQueueDpc()\n",0);
+   DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
+	  dpc, SystemArgument1, SystemArgument2);
+   
    assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
    
    dpc->Number=0;

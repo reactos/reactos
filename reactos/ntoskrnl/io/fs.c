@@ -184,6 +184,8 @@ NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
    DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
 	  DeviceObject,DeviceToMount);
    
+   assert_irql(PASSIVE_LEVEL);
+   
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildFilesystemControlRequest(IRP_MN_MOUNT_VOLUME,
 					 DeviceObject,
@@ -217,6 +219,8 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    FILE_SYSTEM_OBJECT* current;
    NTSTATUS Status;
    
+   assert_irql(PASSIVE_LEVEL);
+   
    DPRINT("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
    
    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
@@ -224,8 +228,10 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    while (current_entry!=(&FileSystemListHead))
      {
 	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
+	KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 	Status = IoAskFileSystemToMountDevice(current->DeviceObject, 
 					      DeviceObject);
+	KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
 	switch (Status)
 	  {
 	   case STATUS_FS_DRIVER_REQUIRED:

@@ -501,6 +501,13 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    return wcslen(lpBuffer);
 }
 
+
+
+
+	
+		
+
+
 DWORD
 STDCALL
 GetShortPathNameA(
@@ -683,25 +690,106 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 
 		HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
 
-		return retCode;
+//   WCHAR BufferW[MAX_PATH];
+//   WCHAR FileAndExtensionW[MAX_PATH];
+//   WCHAR *EnvironmentBufferW = NULL;
+   
+//   UNICODE_STRING PathString;
+//   OBJECT_ATTRIBUTES ObjectAttributes;
+//   IO_STATUS_BLOCK IoStatusBlock;
 
+   DPRINT("SearchPath\n");
+   
+	
+   if (lpPath == NULL)
+     {      
+      // check the directory from which the application loaded
+
+	if (GetCurrentDirectoryW(MAX_PATH, BufferW) > 0)
+	  {
+	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
+	     if ( retCode != 0 )
+	       return retCode;
+	  }
+	if ( GetSystemDirectoryW(BufferW, MAX_PATH) > 0 ) 
+	  {
+	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength,  lpBuffer,	 lpFilePart 	 );
+	     if ( retCode != 0 )
+	       return retCode;
+	  }
+	
+	if ( GetWindowsDirectoryW(BufferW, MAX_PATH) > 0 ) 
+	  {
+	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
+	     if ( retCode != 0  )
+	       return retCode;
+	  }
+	
+	j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,0);
+	EnvironmentBufferW = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,(j+1)*sizeof(WCHAR));
+	
+	j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,j+1);
+	
+	for(i=0;i<j;i++) {
+	   if ( EnvironmentBufferW[i] == L';' )
+	     EnvironmentBufferW[i] = 0;
 	}
-	else {
+	i = 0;
+	while ( retCode == 0  && i < j ) {
+	   if (  EnvironmentBufferW[i] != 0 )
+	     retCode = SearchPathW(&EnvironmentBufferW[i],lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
+	   i += lstrlenW(&EnvironmentBufferW[i]) + 1;
+	   
+			
+	}
+	
+	
+	HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
+	
+	
 
-		FileAndExtensionW[0] = 0;
-		lpBuffer[0] = 0;
-		i = lstrlenW(lpFileName);
-		j = lstrlenW(lpPath);
+	return retCode;
+	
+     }
+   else {
 
-		if ( i + j + 8 < nBufferLength )
-			return i + j + 9;
-
-		if ( lpExtension != NULL ) {
+      FileAndExtensionW[0] = 0;
+      lpBuffer[0] = 0;
+      i = lstrlenW(lpFileName);
+      j = lstrlenW(lpPath);
+      
+      if ( i + j + 8 < nBufferLength )
+	return i + j + 9;
+      
+      if ( lpExtension != NULL ) {
 			if ( lpFileName[i-4] != L'.' ) {
-				wcscpy(FileAndExtensionW,lpFileName);
-				wcscat(FileAndExtensionW,lpExtension);
+			   wcscpy(FileAndExtensionW,lpFileName);
+			   wcscat(FileAndExtensionW,lpExtension);
 			}
 			else
+	   wcscpy(FileAndExtensionW,lpFileName);
+      }
+      else
+	wcscpy(FileAndExtensionW,lpFileName);
+      
+		
+      
+      
+      lstrcatW(BufferW,L"\\??\\");
+      lstrcatW(BufferW,lpPath);
+      
+      
+      //printf("%S\n",FileAndExtensionW);
+
+      
+      i = wcslen(BufferW);
+      if ( BufferW[i-1] != L'\\' ) {
+	 BufferW[i] = L'\\';
+	 BufferW[i+1] = 0;
+      }
+      if ( lpFilePart != NULL )
+	{
+	*lpFilePart = &BufferW[wcslen(BufferW)+1];
 				wcscpy(FileAndExtensionW,lpFileName);
 		}
 		else
@@ -709,7 +797,7 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 
 		lstrcatW(BufferW,L"\\??\\");
 		lstrcatW(BufferW,lpPath);
-
+	   
 		//printf("%S\n",FileAndExtensionW);
 
 		i = wcslen(BufferW);
@@ -720,7 +808,7 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 		if ( lpFilePart != NULL )
 			*lpFilePart = &BufferW[wcslen(BufferW)+1];
 		wcscat(BufferW,FileAndExtensionW);
-		//printf("%S\n",lpBuffer);
+      //printf("%S\n",lpBuffer);
 
 		PathString.Buffer = BufferW;
 		PathString.Length = lstrlenW(PathString.Buffer)*sizeof(WCHAR);
@@ -751,8 +839,10 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 			*lpFilePart = wcsrchr(lpBuffer,'\\')+1;
 		}
 
-	}
+	
 
 	return lstrlenW(lpBuffer);
+   }
+	}
 }
 

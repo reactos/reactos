@@ -11,31 +11,33 @@
 
 #include <windows.h>
 
+#include <kernel32/kernel32.h>
+
 /* FUNCTIONS *****************************************************************/
 
 VOID DeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
-   lpCriticalSection->Reserved = -1;
+   UNIMPLEMENTED;
 }
 
 VOID EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
+   UNIMPLEMENTED;
 }
 
 VOID InitializeCriticalSection(LPCRITICAL_SECTION pcritical)
 {
-   pcritical->LockCount = -1;
-   pcritical->RecursionCount = 0;
-   pcritical->LockSemaphore = NULL;
-   pcritical->OwningThread = (HANDLE)-1;
-   pcritical->Reserved = 0;
+   UNIMPLEMENTED;
 }
 
 VOID LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
+   UNIMPLEMENTED;
 }
 
 WINBOOL TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
+   UNIMPLEMENTED;
+   return(FALSE);
 }
 

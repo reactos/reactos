@@ -56,7 +56,7 @@ VOID KeInitializeSpinLock(PKSPIN_LOCK SpinLock)
  *           SpinLock = Caller supplied storage for the spinlock
  */
 {
-   SpinLock->irql = DISPATCH_LEVEL;
+   SpinLock->Lock = 0;
 }
 
 VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
@@ -67,6 +67,11 @@ VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
  *        SpinLock = Spinlock to acquire
  */
 {
+   while(InterlockedExchange(&SpinLock->Lock, 1) == 1)
+     {
+	DbgPrint("Spinning on spinlock\n");
+	KeBugCheck(0);
+     }
 }
 
 VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
@@ -77,6 +82,12 @@ VOID KeReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
  *         SpinLock = Spinlock to release
  */
 {
+   if (SpinLock->Lock != 1)
+     {
+	DbgPrint("Releasing unacquired spinlock\n");
+	KeBugCheck(0);
+     }
+   (void)InterlockedExchange(&SpinLock->Lock, 0);
 }
 
 VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql)
@@ -88,6 +99,7 @@ VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql)
  */
 {
    KeRaiseIrql(DISPATCH_LEVEL,OldIrql);
+   KeAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
 VOID KeReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL NewIrql)
@@ -98,6 +110,7 @@ VOID KeReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL NewIrql)
  *        NewIrql = Irql level before acquiring the spinlock
  */
 {
+   KeReleaseSpinLockFromDpcLevel(SpinLock);
    KeLowerIrql(NewIrql);
 }
 

@@ -687,7 +687,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase)
                   *ImportAddressList = (PVOID) LdrGetKernelSymbolAddr(SymbolNameBuf);
                   if (*ImportAddressList == 0L)
                     {
-                      DbgPrint("Unresolved kernel symbol: %s\n", pName);
+                     DbgPrint("Unresolved kernel symbol: %s\n", pName);
                     }
                 }
               ImportAddressList++;

@@ -1679,7 +1679,8 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_OBJECT DeviceToMount = Stack->Parameters.Mount.DeviceObject;
    NTSTATUS Status;
 
-   DPRINT("VFAT FSC\n");
+//   DPRINT("VFAT FSC\n");
+   DbgPrint("VFAT FSC\n");
 
    /* FIXME: should make sure that this is actually a mount request!  */
 

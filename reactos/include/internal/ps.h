@@ -19,37 +19,13 @@ VOID PsReleaseThread(PETHREAD Thread);
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
 VOID PsBeginThreadWithContextInternal(VOID);
 
-/*
- * PURPOSE: Thread states
- */
-enum
-{
-   /*
-    * PURPOSE: Don't touch 
-    */
-   THREAD_STATE_INVALID,
+#define THREAD_STATE_INVALID    (0)
+#define THREAD_STATE_RUNNABLE   (1)
+#define THREAD_STATE_RUNNING    (2)
+#define THREAD_STATE_SUSPENDED  (3)
+#define THREAD_STATE_TERMINATED (4)
+#define THREAD_STATE_MAX        (5)
      
-  /*
-    * PURPOSE: Waiting to be dispatched
-    */
-   THREAD_STATE_RUNNABLE,
-     
-   /*
-    * PURPOSE: Currently running
-    */
-   THREAD_STATE_RUNNING,
-     
-   /*
-    * PURPOSE: Doesn't want to run
-    */
-   THREAD_STATE_SUSPENDED,
-     
-   /*
-    * Waiting to be freed
-    */
-   THREAD_STATE_TERMINATED,
-};
-
 /*
  * Functions the HAL must provide
  */

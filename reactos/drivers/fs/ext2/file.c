@@ -26,6 +26,7 @@ ULONG Ext2BlockMap(PDEVICE_EXTENSION DeviceExt,
 {
    ULONG block;
    PULONG TempBuffer;
+   BOOL b;
    
    DPRINT("Ext2BlockMap(DeviceExt %x, inode %x, offset %d)\n",
 	   DeviceExt,inode,offset);
@@ -40,14 +41,21 @@ ULONG Ext2BlockMap(PDEVICE_EXTENSION DeviceExt,
      {
 	block = inode->i_block[EXT2_IND_BLOCK];
 	TempBuffer = ExAllocatePool(NonPagedPool, BLOCKSIZE);
-	Ext2ReadSectors(DeviceExt->StorageDevice,
-			block,
-			1,
-			TempBuffer);
+	b = Ext2ReadSectors(DeviceExt->StorageDevice,
+			    block,
+			    1,
+			    TempBuffer);
+	if (!b)
+	  {
+	     DbgPrint("ext2fs:%s:%d: Disk io failed\n", __FILE__, __LINE__);
+	     return(0);
+	  }
 	block = TempBuffer[offset];
 	ExFreePool(TempBuffer);
 	return(block);
      }
+   offset = offset - addr_per_block;
    DbgPrint("Failed at %s:%d\n",__FILE__,__LINE__);
    for(;;);
 }
+

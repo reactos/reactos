@@ -52,10 +52,14 @@ static void HiSwitchIrql(void)
  */
 {
    unsigned int i;
+   PKTHREAD CurrentThread;
+   
+   CurrentThread = KeGetCurrentThread();
    
    if (CurrentIrql == HIGH_LEVEL)
      {
 	HiSetCurrentPICMask(0xffff);
+//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	return;
      }
    if (CurrentIrql > DISPATCH_LEVEL)
@@ -68,16 +72,28 @@ static void HiSwitchIrql(void)
 	  }
 	
 	HiSetCurrentPICMask(current_mask);
+//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	__asm__("sti\n\t");
 	return;
      }
    
-   if (CurrentIrql <= DISPATCH_LEVEL)
+   if (CurrentIrql == DISPATCH_LEVEL)
      {
+//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	HiSetCurrentPICMask(0);
 	__asm__("sti\n\t");
 	return;
      }
+   if (CurrentIrql == APC_LEVEL)
+     {
+//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
+	HiSetCurrentPICMask(0);
+	__asm__("sti\n\t");
+	return;
+     }
+//   if (CurrentThread != NULL) CurrentThread->KernelApcDisable = FALSE;
+   HiSetCurrentPICMask(0);
+   __asm__("sti\n\t");
 }
 
 VOID KeSetCurrentIrql(KIRQL newlvl)
@@ -135,6 +151,7 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
      {
 	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",
 		 __FILE__,__LINE__,CurrentIrql,NewIrql,OldIrql);
+	KeBugCheck(0);
 	for(;;);
      }
    

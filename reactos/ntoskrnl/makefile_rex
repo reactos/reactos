@@ -51,7 +51,7 @@ DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 
 LDR_OBJECTS = ldr/loader.o ldr/init.o
 
-CC_OBJECTS = cc/cacheman.o cc/block.o cc/view.o
+CC_OBJECTS = cc/cacheman.o cc/view.o
 
 RESOURCE_OBJECT = ntoskrnl.coff
 
@@ -101,7 +101,7 @@ objects/cc.o: $(CC_OBJECTS)
 	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
 
 objects/ntoskrnl.coff: ntoskrnl.rc ../include/reactos/resource.h
-	windres ntoskrnl.rc objects/ntoskrnl.coff
+	$(RC) ntoskrnl.rc objects/ntoskrnl.coff
 
 
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
@@ -133,28 +133,26 @@ else
 endif
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
-all: ntoskrnl.a ntoskrnl.exe ntoskrnl.sym
-
-.PHONY: all
-
-ntoskrnl.exe: ntoskrnl.o ntoskrnl.def
-	$(CC) -specs=../specs -mdll -o junk.tmp \
+ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
+	$(LD) -r $(OBJECTS) -o ntoskrnl.o
+	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
+	           --output-lib ntoskrnl.a
+	$(CC) -Wl,-d -specs=../specs -mdll -o junk.tmp \
 	      -Wl,--image-base,0xc0000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp \
-              ntoskrnl.o
+	      -Wl,--defsym,_end=__bss_end__ \
+	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp ntoskrnl.o
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
 	           --output-exp temp.exp --def ntoskrnl.def
 	- $(RM) base.tmp
-	$(CC) -specs=../specs -mdll -o ntoskrnl.exe ntoskrnl.o \
+	$(CC) -Wl,-d -specs=../specs -mdll -o ntoskrnl.exe ntoskrnl.o \
 	      -Wl,--image-base,0xc0000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_end=__bss_end__ \
 	      -Wl,--defsym,_edata=__data_end__ \
 	      -Wl,--defsym,_etext=etext -Wl,temp.exp
 	- $(RM) temp.exp

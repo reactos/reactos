@@ -1,4 +1,6 @@
 
+IMAGE_BASE = 0x77f60000
+
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=ntdll.a
@@ -39,7 +41,7 @@ CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o \
 endif
 
 ntdll.coff: ntdll.rc ../../include/reactos/resource.h
-	windres ntdll.rc ntdll.coff
+	$(RC) ntdll.rc ntdll.coff
 
 ntdll.a: $(OBJECTS)
 	$(AR) csr ntdll.a $(OBJECTS)
@@ -58,7 +60,7 @@ ntdll.dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
 	- $(RM) base.tmp
 	$(CC) -specs=ntdll_specs -mdll -o ntdll.dll ntdll.o \
 	      -Wl,--entry=_LdrStartup \
-	      -Wl,--image-base,0x80000000 \
+	      -Wl,--image-base,$(IMAGE_BASE) \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,temp.exp

@@ -105,7 +105,10 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
     * Notify the rest of the kernel of the raised irq level
     */
    old_level = KeGetCurrentIrql();
-//   DPRINT("old_level %d\n",old_level);
+   if (irq != 0)
+     {
+	DPRINT("old_level %d\n",old_level);
+     }
    KeSetCurrentIrql(HIGH_LEVEL - irq);
    
    /*
@@ -120,7 +123,7 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
    }
    else
    {
-      DPRINT("KiInterruptDispatch(irq %x)\n",irq);
+      DPRINT("KiInterruptDispatch(irq %d)\n",irq);
       /*
        * Iterate the list until one of the isr tells us its device interrupted
        */
@@ -299,7 +302,6 @@ NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
      {   
 	isr_lock[Vector]=ExAllocatePool(NonPagedPool,sizeof(KSPIN_LOCK));
 	KeInitializeSpinLock(isr_lock[Vector]);
-	isr_lock[Vector]->irql = SynchronizeIrql;
      }
    
    /*

@@ -63,15 +63,15 @@ GetLogicalDriveStringsA(
     {
         LPSTR p = lpBuffer;
         for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-            if (DRIVE_IsValid(drive))
-            {
-                *p++ = 'A' + drive;
-                *p++ = ':';
-                *p++ = '\\';
-                *p++ = '\0';
-            }
+	  if (DRIVE_IsValid(drive))
+	  {
+	     *p++ = 'A' + drive;
+	     *p++ = ':';
+	     *p++ = '\\';
+	     *p++ = '\0';
+	  }
         *p = '\0';
-    }
+     }
     return count * 4 * sizeof(char);
 }
 

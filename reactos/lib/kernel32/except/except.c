@@ -65,12 +65,10 @@ LONG
 STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
-	char message[80];
 	DWORD	dbgRet;
 	HANDLE DebugPort;
 	NTSTATUS errCode;
 
-	DWORD DebuggerPresent;
 
 
 	if(ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {

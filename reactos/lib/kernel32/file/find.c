@@ -54,7 +54,8 @@ typedef struct _WIN32_FIND_DATA_ASCII {
   CHAR    cAlternateFileName[ 14 ]; 
 } WIN32_FIND_DATA_ASCII, *PWIN32_FIND_DATA_ASCII; 
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
+
 
 static void FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE_DATA IData)
 {

@@ -59,11 +59,11 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PKEVENT ptrEvent = NULL;
    KEVENT Event;
    
-   assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
-   
    DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	  "IoStatusBlock %x)\n",
 	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
+
+   assert_irql(PASSIVE_LEVEL);
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_DATA,
@@ -71,7 +71,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      UserMode,
 				      (PVOID *) &FileObject,
 				      NULL);
-   if (!NT_SUCCESS(STATUS_SUCCESS))
+   if (!NT_SUCCESS(Status))
      {
 	DPRINT("ZwReadFile() = %x\n",Status);
 	return(Status);
@@ -112,7 +112,10 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      ByteOffset,
 				      ptrEvent,
 				      IoStatusBlock);
-
+   
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+   
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    if (Key!=NULL)
@@ -124,13 +127,14 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
         StackPtr->Parameters.Read.Key = 0;
    }
    
-   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
    if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
        Status = IoStatusBlock->Status;
      }
    DPRINT("ZwReadFile() = %x\n",Status);
+   assert_irql(PASSIVE_LEVEL);
    return(Status);
 }
 
@@ -180,7 +184,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 				      UserMode,
 				      (PVOID *) &FileObject,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -197,17 +201,21 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 				      ByteOffset,
 				      &Event,
 				      IoStatusBlock);
+   
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+   
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    if (Key!=NULL)
-   {
-         StackPtr->Parameters.Write.Key = *Key;
-   }
+     {
+	StackPtr->Parameters.Write.Key = *Key;
+     }
    else
-   {
+     {
         StackPtr->Parameters.Write.Key = 0;
-   }
+     }
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {

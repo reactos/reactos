@@ -26,28 +26,31 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPDWORD lpNumberOfBytesWritten,	
 			  LPOVERLAPPED lpOverLapped)
 {
-
-   LARGE_INTEGER Offset;
    HANDLE hEvent = NULL;
+   LARGE_INTEGER Offset;
    NTSTATUS errCode;
-   PIO_STATUS_BLOCK IoStatusBlock;
    IO_STATUS_BLOCK IIosb;
+   PIO_STATUS_BLOCK IoStatusBlock;
+   PLARGE_INTEGER ptrOffset;
    
    DPRINT("WriteFile(hFile %x)\n",hFile);
    
-   if (lpOverLapped != NULL ) 
+   if (lpOverLapped != NULL) 
      {
         Offset.u.LowPart = lpOverLapped->Offset;
         Offset.u.HighPart = lpOverLapped->OffsetHigh;
 	lpOverLapped->Internal = STATUS_PENDING;
-	hEvent= lpOverLapped->hEvent;
-   	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+	hEvent = lpOverLapped->hEvent;
+	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+	ptrOffset = &Offset;
      }
-   else
+   else 
      {
+	ptrOffset = NULL;
 	IoStatusBlock = &IIosb;
         Offset.QuadPart = 0;
      }
+
    errCode = NtWriteFile(hFile,
 			 hEvent,
 			 NULL,
@@ -55,7 +58,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			 IoStatusBlock,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
-			 &Offset,
+			 ptrOffset,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {

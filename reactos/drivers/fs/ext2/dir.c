@@ -13,14 +13,15 @@
 #include <wchar.h>
 #include <internal/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "ext2fs.h"
 
 /* FUNCTIONS *****************************************************************/
 
-VOID Ext2ConvertName(PWSTR Out, PCH In, ULONG Len)
+
+static VOID Ext2ConvertName(PWSTR Out, PCH In, ULONG Len)
 {
    ULONG i;
    
@@ -42,8 +43,6 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
    PFILE_DIRECTORY_INFORMATION FDI;
    PFILE_NAMES_INFORMATION FNI;
    PFILE_BOTH_DIRECTORY_INFORMATION FBI;
-   ULONG i;
-   PWSTR FileName;
    struct ext2_inode inode;
    
    DPRINT("FileIndex %d\n",FileIndex);
@@ -108,13 +107,11 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
    ULONG Max;
    ULONG i;
    ULONG StartIndex;
-   PVOID Buffer;
+   PVOID Buffer = NULL;
    struct ext2_dir_entry dir_entry;
-   ULONG CurrentIndex;
-   
-   DPRINT("Buffer %x\n",Buffer);
    
    Buffer = Irp->UserBuffer;
+   DPRINT("Buffer %x\n",Buffer);
    DPRINT("IoStack->Flags %x\n",IoStack->Flags);
    
    if (IoStack->Flags & SL_RETURN_SINGLE_ENTRY)
@@ -201,6 +198,7 @@ BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
    char name[255];
    struct ext2_dir_entry* current;
    ULONG block;
+   BOOL b;
    
    DPRINT("Ext2ScanDir(dir %x, filename %s, ret %x)\n",dir,filename,ret);
    
@@ -210,10 +208,15 @@ BOOL Ext2ScanDir(PDEVICE_EXTENSION DeviceExt,
    for (; (block = Ext2BlockMap(DeviceExt, dir, i)) != 0; i++)
      {
 	DPRINT("block %d\n",block);
-	Ext2ReadSectors(DeviceExt->StorageDevice,
-			block,
-			1,
-			buffer);
+	b = Ext2ReadSectors(DeviceExt->StorageDevice,
+			    block,
+			    1,
+			    buffer);
+	if (!b)
+	  {
+	     DbgPrint("ext2fs:%s:%d: Disk io failed\n", __FILE__, __LINE__);
+	     return(FALSE);
+	  }
 	
 	offset = (*StartIndex)%BLOCKSIZE;
 	while (offset < BLOCKSIZE)
@@ -264,7 +267,7 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
  * FUNCTION: Opens a file
  */
 {
-   struct ext2_inode parent_inode;
+   EXT2_INODE parent_inode;
    struct ext2_dir_entry entry;
    char name[255];
    ULONG current_inode = 2;
@@ -279,28 +282,35 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    
    unicode_to_ansi(name,FileName);
    DPRINT("name %s\n",name);
-   
+   DPRINT("strtok %x\n",strtok);
    current_segment = strtok(name,"\\");
+   DPRINT("current_segment %x\n", current_segment);
    while (current_segment!=NULL)
      {
-	Ext2ReadInode(DeviceExt,
+	Ext2LoadInode(DeviceExt,
 		      current_inode,
 		      &parent_inode);
-        if (!Ext2ScanDir(DeviceExt,&parent_inode,current_segment,&entry,
+        if (!Ext2ScanDir(DeviceExt,
+			 parent_inode.inode,
+			 current_segment,
+			 &entry,
 			 &StartIndex))
 	  {
+	     Ext2ReleaseInode(DeviceExt,
+			      &parent_inode);
 	     ExFreePool(Fcb);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
 	current_inode = entry.inode;
 	current_segment = strtok(NULL,"\\");
 	StartIndex = 0;
+	Ext2ReleaseInode(DeviceExt,
+			 &parent_inode);
      }
    DPRINT("Found file\n");
    
-   Ext2ReadInode(DeviceExt,
-		 current_inode,
-		 &Fcb->inode);
+   Fcb->inode = current_inode;
+   CcInitializeFileCache(FileObject, &Fcb->Bcb);
    FileObject->FsContext = Fcb;
    
    return(STATUS_SUCCESS);

@@ -3,23 +3,21 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
-struct _KAPC;
+VOID KeInitializeApc(PKAPC Apc,
+		     PKTHREAD Thread,
+		     UCHAR StateIndex,
+		     PKKERNEL_ROUTINE KernelRoutine,
+		     PKRUNDOWN_ROUTINE RundownRoutine,
+		     PKNORMAL_ROUTINE NormalRoutine,
+		     UCHAR Mode,
+		     PVOID Context);
 
-void KeInitializeApc(
-	struct _KAPC *Apc,
-	PKTHREAD Thread,
-	UCHAR StateIndex,
-	PKKERNEL_ROUTINE KernelRoutine,
-	PKRUNDOWN_ROUTINE RundownRoutine,
-	PKNORMAL_ROUTINE NormalRoutine,
-	UCHAR Mode,
-	PVOID Context
-	);
-
-void KeInsertQueueApc(struct _KAPC *Apc, PVOID SystemArgument1,
-		      PVOID SystemArgument2, UCHAR Mode);
-void KeAttachProcess(struct _EPROCESS* Process);
-void KeDetachProcess(VOID);
+VOID KeInsertQueueApc(PKAPC Apc, 
+		      PVOID SystemArgument1,
+		      PVOID SystemArgument2, 
+		      UCHAR Mode);
+VOID KeAttachProcess(struct _EPROCESS* Process);
+VOID KeDetachProcess(VOID);
 VOID KeDrainApcQueue(VOID);
 PKPROCESS KeGetCurrentProcess(VOID);
 
@@ -94,7 +92,9 @@ LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment);
 LONG KeSetEvent(PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait);
 KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority);
 BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc);
-BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
+BOOLEAN KeSetTimerEx(PKTIMER Timer, 
+		     LARGE_INTEGER DueTime, 
+		     LONG Period,
 		     PKDPC Dpc);
 VOID KeStallExecutionProcessor(ULONG MicroSeconds);
 BOOLEAN KeSynchronizeExecution(PKINTERRUPT Interrupt, 
@@ -108,12 +108,16 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 				  BOOLEAN Alertable,
 				  PLARGE_INTEGER Timeout,
 				  PKWAIT_BLOCK WaitBlockArray);
-NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex, KWAIT_REASON WaitReason,
-			      KPROCESSOR_MODE WaitMode, BOOLEAN Alertable,
+NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex, 
+			      KWAIT_REASON WaitReason,
+			      KPROCESSOR_MODE WaitMode, 
+			      BOOLEAN Alertable,
 			      PLARGE_INTEGER Timeout);
-NTSTATUS KeWaitForSingleObject(PVOID Object, KWAIT_REASON WaitReason,
+NTSTATUS KeWaitForSingleObject(PVOID Object, 
+			       KWAIT_REASON WaitReason,
 			       KPROCESSOR_MODE WaitMode,
-			       BOOLEAN Alertable, PLARGE_INTEGER Timeout);
+			       BOOLEAN Alertable, 
+			       PLARGE_INTEGER Timeout);
    
 /*
  * FUNCTION: Initializes a spinlock
@@ -155,17 +159,6 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
  */
 VOID KeBugCheck(ULONG BugCheckCode);
 
-// kmutant definition slightly modified from nt5 ddk
-
-typedef struct _KMUTANT 
-{
-	DISPATCHER_HEADER Header;
-	LIST_ENTRY MutantListEntry;
-	struct _KTHREAD* OwnerThread;
-	BOOLEAN Abandoned;
-	UCHAR ApcDisable;
-} KMUTANT, *PKMUTANT;
-
 // io permission map has a 8k size
 // Each bit in the IOPM corresponds to an io port byte address. The bitmap
 // is initialized to allow IO at any port. [ all bits set ]. 
@@ -186,7 +179,7 @@ typedef struct _IOPM
  *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
  *	the minium privilege level required to perform IO prior to checking the permission map.
  */
-void Ke386SetIoAccessMap(int NewMap, PIOPM *IoPermissionMap);
+VOID Ke386SetIoAccessMap(ULONG NewMap, PIOPM *IoPermissionMap);
 
 /*
  * FUNCTION: Queries the io permission  map.
@@ -199,7 +192,7 @@ void Ke386SetIoAccessMap(int NewMap, PIOPM *IoPermissionMap);
  *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
  *	the minium privilege level required to perform IO prior to checking the permission map.
  */
-void Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
+VOID Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
 
 /*
  * FUNCTION: Set the process IOPL
@@ -215,10 +208,8 @@ NTSTATUS Ke386IoSetAccessProcess(PEPROCESS Eprocess, BOOLEAN EnableIo);
  *	SelArray = 
  *	NumOfSelectors = 
  */
-NTSTATUS KeI386ReleaseGdtSelectors(
-	OUT PULONG SelArray,
-	IN ULONG NumOfSelectors
-	);
+NTSTATUS KeI386ReleaseGdtSelectors(OUT PULONG SelArray,
+				   IN ULONG NumOfSelectors);
 
 /*
  * FUNCTION: Allocates a set of Global Descriptor Table Selectors
@@ -226,17 +217,15 @@ NTSTATUS KeI386ReleaseGdtSelectors(
  *	SelArray = 
  *	NumOfSelectors = 
  */
-NTSTATUS KeI386AllocateGdtSelectors(
-	OUT PULONG SelArray,
-	IN ULONG NumOfSelectors
-	);
+NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
+				    IN ULONG NumOfSelectors);
 
 /*
  * FUNCTION: Raises a user mode exception
  * ARGUMENTS:
  *	ExceptionCode = Status code of the exception 
  */
-void KeRaiseUserException(NTSTATUS ExceptionCode);
+VOID KeRaiseUserException(NTSTATUS ExceptionCode);
 
 
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

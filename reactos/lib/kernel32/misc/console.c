@@ -1135,7 +1135,7 @@ GetConsoleTitleA(
 {
 	wchar_t	WideTitle [MAX_CONSOLE_TITLE_LENGTH];
 	DWORD	nWideTitle = sizeof WideTitle;
-	DWORD	nWritten;
+//	DWORD	nWritten;
 	
 	if (!lpConsoleTitle || !nSize) return 0;
 	nWideTitle = GetConsoleTitleW( (LPWSTR) WideTitle, nWideTitle );

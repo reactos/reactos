@@ -30,7 +30,7 @@
 #include <internal/teb.h>
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -56,7 +56,7 @@ static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
    NT_PEB Peb;
    ULONG BytesWritten;
    
-   PebBase = PEB_BASE;
+   PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    &PebBase,
@@ -71,7 +71,7 @@ static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
    
    
    memset(&Peb, 0, sizeof(Peb));
-   Peb.StartupInfo = PEB_STARTUPINFO;
+   Peb.StartupInfo = (PPROCESSINFOW)PEB_STARTUPINFO;
 
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
