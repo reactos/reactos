@@ -59,10 +59,6 @@ void test1(void)
  KEY_BASIC_INFORMATION KeyInformation[5];
  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
 
-  AllocConsole();
-  InputHandle = GetStdHandle(STD_INPUT_HANDLE);
-  OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
-
   dprintf("NtOpenKey \\Registry : ");
   RtlInitUnicodeString(&KeyName, L"\\Registry");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -588,27 +584,53 @@ void test4(void)
 
 void test5(void)
 {
+ HKEY hKey,hKey1;
+ OBJECT_ATTRIBUTES ObjectAttributes; 
+ UNICODE_STRING KeyName,ValueName;
+ NTSTATUS Status; 
+ KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
+ ULONG Index,Length,i;
+ char Buffer[10];
+ DWORD Result;
+  dprintf("NtOpenKey : \n");
+  dprintf("  \\Registry\\Machine\\Software\\reactos : ");
+  RtlInitUnicodeString(&KeyName,L"\\Registry\\Machine\\Software\\reactos");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
+				, NULL, NULL);
+  Status=NtOpenKey( &hKey, KEY_ALL_ACCESS, &ObjectAttributes);
+  dprintf("\t\tStatus=%x\n",Status);
+  dprintf("NtFlushKey : \n");
+  Status = NtFlushKey(hKey);
+  dprintf("\t\tStatus=%x\n",Status);
+  dprintf("NtCloseKey : \n");
+  Status=NtClose(hKey);
+  dprintf("\t\tStatus=%x\n",Status);
+}
+
+void test6(void)
+{
  OBJECT_ATTRIBUTES ObjectAttributes;
  UNICODE_STRING KeyName;
  NTSTATUS Status;
  LONG dwError;
  TOKEN_PRIVILEGES NewPrivileges; 
- HANDLE Token; 
+ HANDLE Token,hKey;
  LUID Luid; 
  BOOLEAN bRes;
   Status=NtOpenProcessToken(GetCurrentProcess()
-	,TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&Token);
+	,TOKEN_ADJUST_PRIVILEGES,&Token);
+//	,TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&Token);
   dprintf("\t\t\t\tStatus =%x\n",Status);
-/*
-  bRes=LookupPrivilegeValueA(NULL,SE_RESTORE_NAME,&Luid);
-  dprintf("\t\t\t\tbRes =%x\n",bRes);
-*/
+//  bRes=LookupPrivilegeValueA(NULL,SE_RESTORE_NAME,&Luid);
+//  dprintf("\t\t\t\tbRes =%x\n",bRes);
   NewPrivileges.PrivilegeCount = 1; 
   NewPrivileges.Privileges[0].Luid = Luid; 
+//  NewPrivileges.Privileges[0].Luid.u.LowPart=18;
+//  NewPrivileges.Privileges[0].Luid.u.HighPart=0;
   NewPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
  
 //  Status = NtAdjustPrivilegesToken( 
-  Status = AdjustTokenPrivileges( 
+  bRes = AdjustTokenPrivileges( 
             Token, 
             FALSE, 
             &NewPrivileges, 
@@ -616,10 +638,10 @@ void test5(void)
             NULL, 
             NULL 
             ); 
-  dprintf("\t\t\t\tStatus =%x\n",Status);
+  dprintf("\t\t\t\tbRes =%x\n",bRes);
  
-  Status=NtClose(Token); 
-  dprintf("\t\t\t\tStatus =%x\n",Status);
+//  Status=NtClose(Token); 
+//  dprintf("\t\t\t\tStatus =%x\n",Status);
 
 
   RtlInitUnicodeString(&KeyName,L"test5");
@@ -631,6 +653,20 @@ void test5(void)
 		,"test5");
   dprintf("\t\t\t\tdwError =%x\n",dwError);
 
+  dprintf("NtOpenKey \\Registry\\Machine : ");
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine");
+  InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+  Status=NtOpenKey( &hKey, MAXIMUM_ALLOWED, &ObjectAttributes);
+  dprintf("\t\t\tStatus =%x\n",Status);
+  RtlInitUnicodeString(&KeyName,L"test5");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
+				, NULL, NULL);
+  Status = NtLoadKey(hKey,&ObjectAttributes);
+  dprintf("\t\t\t\tStatus =%x\n",Status);
 }
 
 int main(int argc, char* argv[])
@@ -641,30 +677,39 @@ int main(int argc, char* argv[])
   AllocConsole();
   InputHandle = GetStdHandle(STD_INPUT_HANDLE);
   OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
-
-  dprintf("choose test :\n");
-  dprintf("  1=Ntxxx read functions\n");
-  dprintf("  2=Ntxxx write functions : volatile keys\n");
-  dprintf("  3=Ntxxx write functions : non volatile keys\n");
-  dprintf("  4=Regxxx functions\n");
-  ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
-  switch (Buffer[0])
+  while(1)
   {
-   case '1':
-    test1();
-    break;
-   case '2':
-    test2();
-    break;
-   case '3':
-    test3();
-    break;
-   case '4':
-    test4();
-    break;
-   case '5':
-    test5();
-    break;
+    dprintf("choose test :\n");
+    dprintf("  0=Exit\n");
+    dprintf("  1=Ntxxx read functions\n");
+    dprintf("  2=Ntxxx write functions : volatile keys\n");
+    dprintf("  3=Ntxxx write functions : non volatile keys\n");
+    dprintf("  4=Regxxx functions\n");
+    dprintf("  5=FlushKey \n");
+    ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
+    switch (Buffer[0])
+    {
+     case '0':
+      return(0);
+     case '1':
+      test1();
+      break;
+     case '2':
+      test2();
+      break;
+     case '3':
+      test3();
+      break;
+     case '4':
+      test4();
+      break;
+     case '5':
+      test5();
+      break;
+     case '6':
+      test6();
+      break;
+    }
   }
   return 0;
 }
