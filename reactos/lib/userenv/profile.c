@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.10 2004/04/29 14:41:26 ekohl Exp $
+/* $Id: profile.c,v 1.11 2004/05/03 12:05:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -302,6 +302,38 @@ CreateUserProfileW (PSID Sid,
 
 
 BOOL WINAPI
+GetAllUsersProfileDirectoryA (LPSTR lpProfileDir,
+			      LPDWORD lpcchSize)
+{
+  LPWSTR lpBuffer;
+  BOOL bResult;
+
+  lpBuffer = GlobalAlloc (GMEM_FIXED,
+			  *lpcchSize * sizeof(WCHAR));
+  if (lpBuffer == NULL)
+    return FALSE;
+
+  bResult = GetAllUsersProfileDirectoryW (lpBuffer,
+					  lpcchSize);
+  if (bResult)
+    {
+      WideCharToMultiByte (CP_ACP,
+			   0,
+			   lpBuffer,
+			   -1,
+			   lpProfileDir,
+			   *lpcchSize,
+			   NULL,
+			   NULL);
+    }
+
+  GlobalFree (lpBuffer);
+
+  return bResult;
+}
+
+
+BOOL WINAPI
 GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
 			      LPDWORD lpcchSize)
 {
@@ -379,6 +411,38 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
   *lpcchSize = dwLength;
 
   return TRUE;
+}
+
+
+BOOL WINAPI
+GetDefaultUserProfileDirectoryA (LPSTR lpProfileDir,
+				 LPDWORD lpcchSize)
+{
+  LPWSTR lpBuffer;
+  BOOL bResult;
+
+  lpBuffer = GlobalAlloc (GMEM_FIXED,
+			  *lpcchSize * sizeof(WCHAR));
+  if (lpBuffer == NULL)
+    return FALSE;
+
+  bResult = GetDefaultUserProfileDirectoryW (lpBuffer,
+					     lpcchSize);
+  if (bResult)
+    {
+      WideCharToMultiByte (CP_ACP,
+			   0,
+			   lpBuffer,
+			   -1,
+			   lpProfileDir,
+			   *lpcchSize,
+			   NULL,
+			   NULL);
+    }
+
+  GlobalFree (lpBuffer);
+
+  return bResult;
 }
 
 
@@ -464,6 +528,38 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
 
 
 BOOL WINAPI
+GetProfilesDirectoryA (LPSTR lpProfileDir,
+		       LPDWORD lpcchSize)
+{
+  LPWSTR lpBuffer;
+  BOOL bResult;
+
+  lpBuffer = GlobalAlloc (GMEM_FIXED,
+			  *lpcchSize * sizeof(WCHAR));
+  if (lpBuffer == NULL)
+    return FALSE;
+
+  bResult = GetProfilesDirectoryW (lpBuffer,
+				   lpcchSize);
+  if (bResult)
+    {
+      WideCharToMultiByte (CP_ACP,
+			   0,
+			   lpBuffer,
+			   -1,
+			   lpProfileDir,
+			   *lpcchSize,
+			   NULL,
+			   NULL);
+    }
+
+  GlobalFree (lpBuffer);
+
+  return bResult;
+}
+
+
+BOOL WINAPI
 GetProfilesDirectoryW (LPWSTR lpProfilesDir,
 		       LPDWORD lpcchSize)
 {
@@ -523,6 +619,40 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
   *lpcchSize = dwLength;
 
   return TRUE;
+}
+
+
+BOOL WINAPI
+GetUserProfileDirectoryA (HANDLE hToken,
+			  LPSTR lpProfileDir,
+			  LPDWORD lpcchSize)
+{
+  LPWSTR lpBuffer;
+  BOOL bResult;
+
+  lpBuffer = GlobalAlloc (GMEM_FIXED,
+			  *lpcchSize * sizeof(WCHAR));
+  if (lpBuffer == NULL)
+    return FALSE;
+
+  bResult = GetUserProfileDirectoryW (hToken,
+				      lpBuffer,
+				      lpcchSize);
+  if (bResult)
+    {
+      WideCharToMultiByte (CP_ACP,
+			   0,
+			   lpBuffer,
+			   -1,
+			   lpProfileDir,
+			   *lpcchSize,
+			   NULL,
+			   NULL);
+    }
+
+  GlobalFree (lpBuffer);
+
+  return bResult;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.2 2004/05/01 11:55:01 ekohl Exp $
+/* $Id: desktop.c,v 1.3 2004/05/03 12:05:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -330,12 +330,55 @@ CreateGroupW (LPCWSTR lpGroupName,
   DPRINT ("Group path: '%S'\n", szGroupPath);
 
   /* FIXME: Create nested directories */
-  if (!CreateDirectory (szGroupPath, NULL))
+  if (!CreateDirectoryW (szGroupPath, NULL))
     return FALSE;
 
   /* FIXME: Notify the shell */
 
   DPRINT ("CreateGroupW() done\n");
+
+  return TRUE;
+}
+
+
+BOOL WINAPI
+DeleteGroupA (LPCSTR lpGroupName,
+	      BOOL bCommonGroup)
+{
+  DPRINT1 ("DeleteGroupA() not implemented!\n");
+  return FALSE;
+}
+
+
+BOOL WINAPI
+DeleteGroupW (LPCWSTR lpGroupName,
+	      BOOL bCommonGroup)
+{
+  WCHAR szGroupPath[MAX_PATH];
+
+  DPRINT ("DeleteGroupW() called\n");
+
+  if (lpGroupName == NULL || *lpGroupName == 0)
+    return TRUE;
+
+  if (!GetProgramsPath (bCommonGroup, szGroupPath))
+    {
+      DPRINT1 ("GetProgramsPath() failed\n");
+      return FALSE;
+    }
+  DPRINT ("Programs path: '%S'\n", szGroupPath);
+
+  wcscat (szGroupPath, L"\\");
+  wcscat (szGroupPath, lpGroupName);
+  DPRINT ("Group path: '%S'\n", szGroupPath);
+
+  /* FIXME: Remove nested directories */
+  if (!RemoveDirectoryW (szGroupPath))
+    return FALSE;
+
+  /* FIXME: Notify the shell */
+
+  DPRINT ("DeleteGroupW() done\n");
 
   return TRUE;
 }
