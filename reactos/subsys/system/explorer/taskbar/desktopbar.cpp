@@ -131,9 +131,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = HIWORD(SendMessage(_hwndQuickLaunch, TB_GETBUTTONSIZE, 0, 0)) + 2;
 	rbBand.cx = 250;
-LOG(TEXT("before RB_INSERTBAND"));
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
-LOG(TEXT("after RB_INSERTBAND"));
 
 	rbBand.lpText = TEXT("Taskbar");
 	rbBand.hwndChild = _hwndTaskBar;
