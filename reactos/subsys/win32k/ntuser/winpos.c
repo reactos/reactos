@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.60 2003/12/22 11:37:32 navaraf Exp $
+/* $Id: winpos.c,v 1.61 2003/12/22 15:30:21 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -577,7 +577,6 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
    {
       for (i = 0; List[i]; i++)
       {
-         DPRINT1("%x\n", List[i]);
          if (List[i] == hWnd)
             break;
          if ((NtUserGetWindowLong(List[i], GWL_STYLE, FALSE) & WS_POPUP) &&

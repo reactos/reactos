@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.35 2003/12/21 22:09:07 weiden Exp $
+/* $Id: menu.c,v 1.36 2003/12/22 15:30:21 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -271,7 +271,8 @@ IntCreateMenu(PHANDLE Handle)
   MenuObject->MenuInfo.fMask = 0; /* not used */
   MenuObject->MenuInfo.dwStyle = 0; /* FIXME */
   MenuObject->MenuInfo.cyMax = 0; /* default */
-  MenuObject->MenuInfo.hbrBack = NtGdiGetSysColorBrush(COLOR_MENU); /*default background color */
+  MenuObject->MenuInfo.hbrBack =
+     NtGdiCreateSolidBrush(RGB(192, 192, 192)); /* FIXME: default background color */
   MenuObject->MenuInfo.dwContextHelpID = 0; /* default */  
   MenuObject->MenuInfo.dwMenuData = 0; /* default */
   

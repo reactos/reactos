@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.32 2003/12/21 16:49:41 navaraf Exp $
+/* $Id: draw.c,v 1.33 2003/12/22 15:30:21 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -47,13 +47,22 @@
 
 /* INCLUDES ******************************************************************/
 
+#ifndef __USE_W32API
+#define __USE_W32API
+#define _WIN32_WINNT 0x0500
+#endif
+
 #include <windows.h>
+#ifndef __USE_W32API
 #include <user32.h>
+#endif
 
 // Needed for DrawState
 #include <string.h>
+#ifndef __USE_W32API
 #include <unicode.h>
 #include <draw.h>
+#endif
 
 #define NDEBUG
 #include <debug.h>
@@ -497,7 +506,7 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
 	 * otherwise.
 	 *                                          Dennis Björklund, 10 June, 99
 	 */
-/*	if( TWEAK_WineLook == WIN98_LOOK && LTInnerI != -1 ) */
+	if( LTInnerI != -1 )
             LTInnerI = RBInnerI = COLOR_BTNFACE;
     }
     else if(uFlags & BF_SOFT)
@@ -885,8 +894,10 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
     case DFCS_BUTTONRADIO:
         return UITOOLS95_DFC_ButtonRadio(hdc, rc, uState);
 
+/*
     default:
         DbgPrint("Invalid button state=0x%04x\n", uState);
+*/
     }
 
     return FALSE;
@@ -1348,7 +1359,9 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
         break;
 
     default:
+/*
         DbgPrint("Invalid menu; flags=0x%04x\n", uFlags);
+*/
         retval = FALSE;
         break;
     }
@@ -1380,8 +1393,10 @@ BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
     */
     case DFC_SCROLL:
       return UITOOLS95_DrawFrameScroll(hdc, rc, uState);
+/*
     default:
       DbgPrint("(%p,%p,%d,%x), bad type!\n", hdc,rc,uType,uState );
+*/
     }
     return FALSE;
 }
@@ -1736,7 +1751,9 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
         case DST_TEXT :
         case DST_PREFIXTEXT :
         {
+/*
             DbgPrint("Drawing DST_TEXT\n");
+*/
             if (unicode)
                 return DrawTextW(hdc, (LPWSTR)lData, (INT)wData, rc, dtflags);
             else
@@ -1746,26 +1763,34 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
         case DST_ICON :
         {
             // TODO
+/*
             DbgPrint("Drawing DST_ICON\n");
+*/
             return retval;
         }
         
         case DST_BITMAP :
         {
             // TODO
+/*
             DbgPrint("Drawing DST_BITMAP\n");
+*/
             return retval;
         }
         
         case DST_COMPLEX :
         {
+/*            
             DbgPrint("Drawing DST_COMPLEX\n");
+*/
             // Call lpOutputFunc, if necessary
             if (lpOutputFunc)
             {
                 // Something seems to be wrong with OffsetViewportOrgEx:
                 OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
+/*                
                 DbgPrint("Calling lpOutputFunc(0x%x, 0x%x, 0x%x, %d, %d)\n", hdc, lData, wData, cx, cy);
+*/
                 retval = lpOutputFunc(hdc, lData, wData, cx, cy);
                 OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
                 return retval;
@@ -1820,7 +1845,9 @@ WINBOOL INTERNAL_DrawState(
     state = fuFlags & 0x7ff0;      // DSS_xxx
     len = wData;                    // Data length
 
+/*
     DbgPrint("Entered DrawState, fuFlags %d, type %d, state %d\n", fuFlags, type, state);
+*/
 
     if ((type == DST_TEXT || type == DST_PREFIXTEXT) && ! len)
     {
@@ -1845,7 +1872,9 @@ WINBOOL INTERNAL_DrawState(
             {
                 BOOL success;
 
+/*
                 DbgPrint("Calculating rect of DST_TEXT / DST_PREFIXTEXT\n");
+*/
             
                 if (unicode)
                     success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
@@ -1858,14 +1887,18 @@ WINBOOL INTERNAL_DrawState(
 
             case DST_ICON :
             {
+/*
                 DbgPrint("Calculating rect of DST_ICON\n");
+*/
                 // TODO
                 break;
             }
 
             case DST_BITMAP :
             {
+/*
                 DbgPrint("Calculating rect of DST_BITMAP\n");
+*/
 
                 if (!GetObjectA((HBITMAP) lData, sizeof(bm), &bm))
                     return FALSE;
@@ -1876,7 +1909,9 @@ WINBOOL INTERNAL_DrawState(
             }
 
             case DST_COMPLEX :  // cx and cy must be set in this mode
+/*
                 DbgPrint("Calculating rect of DST_COMPLEX - Not allowed!\n");
+*/
                 return FALSE;
         }
         
@@ -1893,7 +1928,9 @@ WINBOOL INTERNAL_DrawState(
     // No additional processing needed for DSS_NORMAL
     if (state == DSS_NORMAL)
     {
+/*
         DbgPrint("DSS_NORMAL (no additional processing necessary)\n");
+*/
         SetRect(&rect, x, y, x + cx, y + cy);
         return INTERNAL_DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
     }
@@ -1915,7 +1952,9 @@ WINBOOL INTERNAL_DrawState(
     OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
     if (! OldBMP) goto cleanup;
 
+/*
     DbgPrint("Created and inited MemDC\n");
+*/
 
     // Set up the default colors and font
     if (! FillRect(MemDC, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH))) goto cleanup;
@@ -1923,7 +1962,9 @@ WINBOOL INTERNAL_DrawState(
     SetTextColor(MemDC, RGB(0, 0, 0));
     Font = (HFONT)SelectObject(MemDC, GetCurrentObject(hdc, OBJ_FONT));
 
+/*
     DbgPrint("Selected font and set colors\n");
+*/
 
     // Enable this line to use the current DC image to begin with (wrong?)
 //    if (! BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY)) goto cleanup;
@@ -1938,12 +1979,16 @@ WINBOOL INTERNAL_DrawState(
       if (! TempResult) goto cleanup;
     }
 
+/*
     DbgPrint("Done drawing\n");
+*/
 
     // Apply state(s?)
     if (state & DSS_UNION)
     {
+/*
         DbgPrint("DSS_UNION\n");
+*/
         // Dither the image (not implemented in ReactOS yet?)
         // TODO
     }
@@ -1957,7 +2002,9 @@ WINBOOL INTERNAL_DrawState(
     // Draw shadow
     if (state & (DSS_DISABLED /*|DSS_DEFAULT*/))
     {
+/*
         DbgPrint("DSS_DISABLED - Drawing shadow\n");
+*/
         if (! TempBrush) goto cleanup;
         OldBrush = (HBRUSH)SelectObject(hdc, TempBrush);
         if (! OldBrush) goto cleanup;
@@ -1969,29 +2016,39 @@ WINBOOL INTERNAL_DrawState(
 
     if (state & DSS_DISABLED)
     {
+/*
         DbgPrint("DSS_DISABLED - Creating shadow brush 2\n");
+*/
         hbr = TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
         if (! TempBrush) goto cleanup;
     }
     else if (! hbr)
     {
+/*
         DbgPrint("Creating a brush\n");
+*/
         hbr = (HBRUSH) GetStockObject(BLACK_BRUSH);
     }
     
+/*
     DbgPrint("Selecting new brush\n");
+*/
     OldBrush = (HBRUSH) SelectObject(hdc, hbr);
 
     // Copy to hdc from MemDC    
+/*
     DbgPrint("Blitting\n");
+*/
     if (! BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, 0x00B8074A)) goto cleanup;
     
     retval = TRUE;
 
     
     cleanup :
+/*
         DbgPrint("In cleanup : Font %x  OldBrush %x  OldBMP %x  Tempbrush %x  MemBMP %x  MemDC %x\n",
                   Font, OldBrush, OldBMP, TempBrush, MemBMP, MemDC);
+*/
         SetTextColor(hdc, ForeColor);
         SetBkColor(hdc, BackColor);
         if (OldBrush)   SelectObject(MemDC, OldBrush);
@@ -2000,7 +2057,9 @@ WINBOOL INTERNAL_DrawState(
         if (MemBMP)     DeleteObject(MemBMP);
         if (MemDC)      DeleteDC(MemDC);
         
+/*
         DbgPrint("Leaving DrawState() with retval %d\n", retval);
+*/
         
         return retval;
 }

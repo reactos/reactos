@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.2 2003/12/13 16:04:36 navaraf Exp $
+/* $Id: desktopbg.c,v 1.3 2003/12/22 15:30:21 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -33,16 +33,6 @@ typedef struct tagDTBG_THREAD_DATA
 
 static BOOL Initialized = FALSE;
 
-static void FASTCALL
-DtbgPaint(HDC hDC, LPRECT lpRect)
-{
-  HBRUSH DesktopBrush;
-
-  DesktopBrush = CreateSolidBrush(RGB(58, 110, 165));
-  FillRect(hDC, lpRect, DesktopBrush);
-  DeleteObject(DesktopBrush);
-}
-
 static LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -59,18 +49,15 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       case WM_PAINT:
         {
           PAINTSTRUCT PS;
-
           BeginPaint(Wnd, &PS);
-          DtbgPaint(PS.hdc, &(PS.rcPaint));
+          PaintDesktop((HDC)PS.hdc);
           EndPaint(Wnd, &PS);
           Result = 0;
         }
         break;
       case WM_ERASEBKGND:
         {
-          RECT ClientRect;
-          GetClientRect(Wnd, &ClientRect);
-          DtbgPaint((HDC)wParam, &ClientRect);
+          PaintDesktop((HDC)wParam);
           Result = 1;
         }
         break;
@@ -128,7 +115,7 @@ DtbgInit()
   Class.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
   Class.hIcon = NULL;
   Class.hCursor = NULL;
-  Class.hbrBackground = NULL;
+  Class.hbrBackground = GetSysColorBrush(COLOR_BACKGROUND);
   Class.lpszMenuName = NULL;
   Class.lpszClassName = (LPCWSTR) DESKTOP_WINDOW_ATOM;
   ClassAtom = RegisterClassExW(&Class);

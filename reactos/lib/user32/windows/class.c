@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.41 2003/12/07 22:25:34 weiden Exp $
+/* $Id: class.c,v 1.42 2003/12/22 15:30:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -267,24 +267,31 @@ GetClassInfoW(
  * @implemented
  */
 DWORD STDCALL
-GetClassLongA ( HWND hWnd, int nIndex )
+GetClassLongA(HWND hWnd, int nIndex)
 {
-  PUNICODE_STRING str;
+   switch (nIndex)
+   {
+      case GCL_HBRBACKGROUND:
+         {
+            DWORD hBrush = NtUserGetClassLong(hWnd, GCL_HBRBACKGROUND, TRUE);
+            if (hBrush != 0 && hBrush < 0x4000)
+               hBrush = (DWORD)GetSysColorBrush((ULONG)hBrush - 1);
+            return hBrush;
+         }
 
-  if ( nIndex != GCL_MENUNAME )
-  {
-    return NtUserGetClassLong ( hWnd, nIndex, TRUE );
-  }
+      case GCL_MENUNAME:
+         {
+            PUNICODE_STRING Name;
+            Name = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, TRUE);
+            if (IS_INTRESOURCE(Name))
+               return (DWORD)Name;
+            else
+               return (DWORD)heap_string_poolA(Name->Buffer, Name->Length);
+         }
 
-  str = (PUNICODE_STRING)NtUserGetClassLong ( hWnd, nIndex, TRUE );
-  if ( IS_INTRESOURCE(str) )
-  {
-    return (DWORD)str;
-  }
-  else
-  {
-    return (DWORD)heap_string_poolA ( str->Buffer, str->Length );
-  }
+      default:
+         return NtUserGetClassLong(hWnd, nIndex, TRUE);
+   }
 }
 
 /*
@@ -293,22 +300,29 @@ GetClassLongA ( HWND hWnd, int nIndex )
 DWORD STDCALL
 GetClassLongW ( HWND hWnd, int nIndex )
 {
-  PUNICODE_STRING str;
+   switch (nIndex)
+   {
+      case GCL_HBRBACKGROUND:
+         {
+            DWORD hBrush = NtUserGetClassLong(hWnd, GCL_HBRBACKGROUND, TRUE);
+            if (hBrush != 0 && hBrush < 0x4000)
+               hBrush = (DWORD)GetSysColorBrush((ULONG)hBrush - 1);
+            return hBrush;
+         }
 
-  if ( nIndex != GCL_MENUNAME )
-  {
-    return NtUserGetClassLong ( hWnd, nIndex, FALSE );
-  }
+      case GCL_MENUNAME:
+         {
+            PUNICODE_STRING Name;
+            Name = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, FALSE);
+            if (IS_INTRESOURCE(Name))
+               return (DWORD)Name;
+            else
+               return (DWORD)heap_string_poolW(Name->Buffer, Name->Length);
+         }
 
-  str = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, TRUE);
-  if ( IS_INTRESOURCE(str) )
-  {
-    return (DWORD)str;
-  }
-  else
-  {
-    return (DWORD)heap_string_poolW ( str->Buffer, str->Length );
-  }
+      default:
+         return NtUserGetClassLong(hWnd, nIndex, FALSE);
+   }
 }
 
 

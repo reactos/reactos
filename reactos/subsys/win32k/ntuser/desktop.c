@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.5 2003/12/13 18:40:34 gvg Exp $
+ *  $Id: desktop.c,v 1.6 2003/12/22 15:30:21 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -644,15 +644,19 @@ BOOL STDCALL
 NtUserPaintDesktop(HDC hDC)
 {
   RECT Rect;
-  HBRUSH PreviousBrush;
+  HBRUSH DesktopBrush, PreviousBrush;
+  HWND hWndDesktop;
 
   IntGdiGetClipBox(hDC, &Rect);
+
+  hWndDesktop = IntGetDesktopWindow();
+  DesktopBrush = (HBRUSH)NtUserGetClassLong(hWndDesktop, GCL_HBRBACKGROUND, FALSE);
 
   /*
    * Paint desktop background
    */
 
-  PreviousBrush = NtGdiSelectObject(hDC, NtGdiGetSysColorBrush(COLOR_BACKGROUND));
+  PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
   NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
   NtGdiSelectObject(hDC, PreviousBrush);
 

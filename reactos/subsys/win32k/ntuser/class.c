@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.44 2003/12/07 23:01:01 weiden Exp $
+/* $Id: class.c,v 1.45 2003/12/22 15:30:21 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -451,10 +451,6 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
       break;
     case GCL_HBRBACKGROUND:
       Ret = (ULONG)WindowObject->Class->hbrBackground;
-      if (Ret != 0 && Ret < 0x4000)
-        {
-          Ret = (ULONG)NtGdiGetSysColorBrush(Ret - 1);
-        }
       break;
     case GCL_HCURSOR:
       Ret = (ULONG)WindowObject->Class->hCursor;
