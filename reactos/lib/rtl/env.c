@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.2 2004/07/03 17:40:23 navaraf Exp $
+/* $Id: env.c,v 1.3 2004/09/18 09:31:53 greatlrd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -105,7 +105,7 @@ RtlDestroyEnvironment(PWSTR Environment)
    ULONG Size = 0;
 
    NtFreeVirtualMemory(NtCurrentProcess(),
-                       (PVOID*)&Environment,
+                       (PVOID)&Environment,
                        &Size,
                        MEM_RELEASE);
 }
@@ -344,7 +344,7 @@ found:
          {
             /* reallocate memory area */
             Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                             (VOID**)&new_env,
+                                             (PVOID)&new_env,
                                              0,
                                              &new_size,
                                              MEM_RESERVE | MEM_COMMIT,
@@ -390,7 +390,7 @@ found:
          {
             size = 0;
             NtFreeVirtualMemory(NtCurrentProcess(),
-                                (PVOID*)&env,
+                                (PVOID)&env,
                                 &size,
                                 MEM_RELEASE);
          }
