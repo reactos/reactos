@@ -384,6 +384,11 @@ NtOpenJobObject(PHANDLE JobHandle,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
   }
   
   if(NT_SUCCESS(Status))
