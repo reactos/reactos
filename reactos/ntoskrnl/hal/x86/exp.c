@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
+#include <internal/symbol.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
 
@@ -146,7 +147,7 @@ asmlinkage void exception_handler(unsigned int edi,
  */
 {
    unsigned int cr2;
-   unsigned int i;
+   unsigned int i, j, sym;
    unsigned int* stack;
    static char *TypeStrings[] = 
      {
@@ -242,7 +243,19 @@ asmlinkage void exception_handler(unsigned int edi,
                 if (stack[i] > KERNEL_BASE &&
                     stack[i] < ((unsigned int)&etext) )
                     {
-                        printk("%.8x  ",stack[i]);
+                        sym = 0;
+                        for (j = 0; symbol_table[j].name; j++)
+                          {
+                            if (stack[i] >= symbol_table[j].value &&
+                                symbol_table[j].value > symbol_table[sym].value)
+                              {
+                                sym = j;
+                              }
+                          }
+                        printk("  %.8x  (%s+%d)", 
+                               stack[i], 
+                               symbol_table[sym].name,
+                               stack[i] - symbol_table[sym].value);
                     }
         }
 //        #endif
