@@ -366,6 +366,7 @@ struct XMLNode : public String
 	}
 
 #ifdef UNICODE
+#ifndef __GNUC__	// avoid GCC complaining about: "ISO C++ says that `String  XMLStorage::XMLNode::operator[](const char *) const' and `String & XMLStorage::XMLNode::operator[](const String &)' are ambiguous even though the worst conversion for the former is better than the worst conversion for the latter
 	 /// read only access to an attribute
 	String operator[](const char* attr_name) const
 	{
@@ -376,6 +377,7 @@ struct XMLNode : public String
 		else
 			return TEXT("");
 	}
+#endif
 
 	 /// convenient value access in children node
 	String value(const char* name, const char* attr_name) const
