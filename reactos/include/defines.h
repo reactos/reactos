@@ -394,6 +394,7 @@ extern "C" {
 #define LR_MONOCHROME	(1)
 #define LR_CREATEDIBSECTION	(8192)
 #define LR_DEFAULTSIZE	(64)
+#define LR_SHARED	(32768)
 
 /* CreateDesktop */
 #define DF_ALLOWOTHERACCOUNTHOOK	(0x1L)

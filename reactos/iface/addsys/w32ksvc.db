@@ -40,6 +40,7 @@ W32kCreateFontIndirect			1
 W32kCreateHalftonePalette		1
 W32kCreateHatchBrush			2
 W32kCreateIC				4
+W32kCreateIcon					9
 W32kCreateMetaFile			1
 W32kCreatePalette			1
 W32kCreatePatternBrush			1
