@@ -1410,11 +1410,12 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           /* reply to the request */
           GspPutPacket (&GspOutBuffer[0]);
         }
+
+      /* not reached */
+      ASSERT(0);
     }
 
-    /* not reached */
-    ASSERT(0);
-    return kdHandleException;
+    return kdDoNotHandleException;
 }
 
 
