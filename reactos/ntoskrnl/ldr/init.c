@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.42 2003/11/06 16:37:28 ekohl Exp $
+/* $Id: init.c,v 1.43 2003/11/16 21:02:07 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -80,7 +80,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      0);
+		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
