@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.13 2003/08/04 15:54:05 ekohl Exp $
+/* $Id: partlist.h,v 1.14 2003/08/05 20:39:24 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -36,7 +36,11 @@ typedef struct _PARTENTRY
   CHAR VolumeLabel[17];
   CHAR FileSystemName[9];
 
+  /* Partition is unused disk space */
   BOOLEAN Unpartitioned;
+
+  /* Partition is new. Table does not exist on disk yet */
+  BOOLEAN New;
 
   /*
    * Raw offset and length of the unpartitioned disk space.

@@ -869,45 +869,40 @@ DrawInputField(ULONG FieldLength,
   memset(buf, '_', sizeof(buf));
   buf[FieldLength - strlen(FieldContent)] = 0;
   strcat(buf, FieldContent);
-  WriteConsoleOutputCharacters(buf,
-  	       strlen(buf),
-  	       coPos);
+
+  WriteConsoleOutputCharacters (buf,
+			        strlen (buf),
+			        coPos);
 }
+
 
 #define PARTITION_SIZE_INPUT_FIELD_LENGTH 6
 
 static VOID
-ShowPartitionSizeInputBox(ULONG MaxSize,
-  PCHAR InputBuffer,
-  PBOOLEAN Quit,
-  PBOOLEAN Cancel)
+ShowPartitionSizeInputBox(SHORT Left,
+			  SHORT Top,
+			  SHORT Right,
+			  SHORT Bottom,
+			  ULONG MaxSize,
+			  PCHAR InputBuffer,
+			  PBOOLEAN Quit,
+			  PBOOLEAN Cancel)
 {
-  SHORT Left;
-  SHORT Top;
-  SHORT Right;
-  SHORT Bottom;
   INPUT_RECORD Ir;
   COORD coPos;
   ULONG Written;
   SHORT i;
-  CHAR buf[100];
-  ULONG index;
+  CHAR Buffer[100];
+  ULONG Index;
   CHAR ch;
   SHORT iLeft;
   SHORT iTop;
-  SHORT xScreen;
-  SHORT yScreen;
 
   if (Quit != NULL)
     *Quit = FALSE;
+
   if (Cancel != NULL)
     *Cancel = FALSE;
-
-  GetScreenSize(&xScreen, &yScreen);
-  Left = 12;
-  Top = 14;
-  Right = xScreen - 12;
-  Bottom = 17;
 
   /* draw upper left corner */
   coPos.X = Left;
@@ -977,75 +972,89 @@ ShowPartitionSizeInputBox(ULONG MaxSize,
   /* Print message */
   coPos.X = Left + 2;
   coPos.Y = Top + 2;
-  strcpy(buf, "Size of new partition:");
-  iLeft = coPos.X + strlen(buf) + 1;
+  strcpy (Buffer, "Size of new partition:");
+  iLeft = coPos.X + strlen (Buffer) + 1;
   iTop = coPos.Y;
-  WriteConsoleOutputCharacters(buf,
-		       strlen(buf),
-		       coPos);
+  WriteConsoleOutputCharacters (Buffer,
+				 strlen (Buffer),
+				 coPos);
 
-  sprintf(buf, "MB (max. %d MB)", MaxSize / (1024 * 1024));
+  sprintf (Buffer, "MB (max. %d MB)", MaxSize);
   coPos.X = iLeft + PARTITION_SIZE_INPUT_FIELD_LENGTH + 1;
   coPos.Y = iTop;
-  WriteConsoleOutputCharacters(buf,
-		       strlen(buf),
-		       coPos);
+  WriteConsoleOutputCharacters (Buffer,
+				strlen (Buffer),
+				coPos);
 
-  buf[0] = 0;
-  index = 0;
-  DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH, iLeft, iTop, buf);
+  Buffer[0] = 0;
+  Index = 0;
+  DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
+		  iLeft,
+		  iTop,
+		  Buffer);
 
-  while(TRUE)
+  while (TRUE)
     {
-      ConInKey(&Ir);
+      ConInKey (&Ir);
+
       if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-  	    (Ir.Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
-      	{
-          if (Quit != NULL)
-            *Quit = TRUE;
-          buf[0] = 0;
-      	  break;
-      	}
+	  (Ir.Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
+	{
+	  if (Quit != NULL)
+	    *Quit = TRUE;
+	  Buffer[0] = 0;
+	  break;
+	}
       else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)	/* ENTER */
-      	{
-       	  break;
-      	}
+	{
+	  break;
+	}
       else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)	/* ESCAPE */
-      	{
-          if (Cancel != NULL)
-            *Cancel = FALSE;
-          buf[0] = 0;
-       	  break;
-      	}
-      else if ((Ir.Event.KeyEvent.wVirtualKeyCode == VK_BACK) && (index > 0)) /* BACKSPACE */
-      	{
-          index--;
-          buf[index] = 0;
-          DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH, iLeft, iTop, buf);
-      	}
-      else if ((Ir.Event.KeyEvent.uChar.AsciiChar != 0x00)
-        && (index < PARTITION_SIZE_INPUT_FIELD_LENGTH))
-        {
-          ch = Ir.Event.KeyEvent.uChar.AsciiChar;
-          if ((ch >= '0') && (ch <= '9'))
-            {
-              buf[index] = ch;
-              index++;
-              buf[index] = 0;
-              DrawInputField(PARTITION_SIZE_INPUT_FIELD_LENGTH, iLeft, iTop, buf);
-            }
-        }
+	{
+	  if (Cancel != NULL)
+	    *Cancel = TRUE;
+	  Buffer[0] = 0;
+	  break;
+	}
+      else if ((Ir.Event.KeyEvent.wVirtualKeyCode == VK_BACK) &&  /* BACKSPACE */
+	       (Index > 0))
+	{
+	  Index--;
+	  Buffer[Index] = 0;
+	  DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
+			  iLeft,
+			  iTop,
+			  Buffer);
+	}
+      else if ((Ir.Event.KeyEvent.uChar.AsciiChar != 0x00) &&
+	       (Index < PARTITION_SIZE_INPUT_FIELD_LENGTH))
+	{
+	  ch = Ir.Event.KeyEvent.uChar.AsciiChar;
+	  if ((ch >= '0') && (ch <= '9'))
+	    {
+	      Buffer[Index] = ch;
+	      Index++;
+	      Buffer[Index] = 0;
+	      DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
+			      iLeft,
+			      iTop,
+			      Buffer);
+	    }
+	}
     }
-  strcpy(InputBuffer, buf);
+
+  strcpy (InputBuffer,
+	  Buffer);
 }
 
 
 static PAGE_NUMBER
 CreatePartitionPage (PINPUT_RECORD Ir)
 {
-  BOOLEAN Valid;
   WCHAR PathBuffer[MAX_PATH];
+  PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
+  BOOLEAN Valid;
   SHORT xScreen;
   SHORT yScreen;
   BOOLEAN Quit;
@@ -1054,35 +1063,92 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   ULONG MaxSize;
   ULONGLONG PartSize;
 
-  SetTextXY(6, 8, "You have chosen to create a new partition in the unused disk space.");
-  SetTextXY(6, 9, "Please enter the size of the new partition in megabytes.");
+  ULONGLONG DiskSize;
+  PCHAR Unit;
+
+  if (PartitionList == NULL ||
+      PartitionList->CurrentDisk == NULL ||
+      PartitionList->CurrentPartition == NULL)
+    {
+      /* FIXME: show an error dialog */
+      return QUIT_PAGE;
+    }
+
+  DiskEntry = PartitionList->CurrentDisk;
+  PartEntry = PartitionList->CurrentPartition;
+
+  SetStatusText ("   Please wait...");
+
+  GetScreenSize (&xScreen, &yScreen);
+
+  SetTextXY (6, 8, "You have chosen to create a new partition on");
 
 #if 0
-  PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-	      PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
+  if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
+      Unit = "GB";
+    }
+  else
+#endif
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
+      if (DiskSize == 0)
+	DiskSize = 1;
+      Unit = "MB";
+    }
+
+  if (DiskEntry->DriverName.Length > 0)
+    {
+      PrintTextXY (6, 10,
+		   "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
+		   DiskSize,
+		   Unit,
+		   DiskEntry->DiskNumber,
+		   DiskEntry->Port,
+		   DiskEntry->Bus,
+		   DiskEntry->Id,
+		   &DiskEntry->DriverName);
+    }
+  else
+    {
+      PrintTextXY (6, 10,
+		   "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
+		   DiskSize,
+		   Unit,
+		   DiskEntry->DiskNumber,
+		   DiskEntry->Port,
+		   DiskEntry->Bus,
+		   DiskEntry->Id);
+    }
+
+
+  SetTextXY (6, 12, "Please enter the size of the new partition in megabytes.");
+
+#if 0
+  PrintTextXY (8, 10, "Maximum size of the new partition is %I64u MB",
+	       PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
 #endif
 
-  SetStatusText("   Please wait...");
-
-  GetScreenSize(&xScreen, &yScreen);
-
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  SetStatusText ("   ENTER = Create Partition   ESC = Cancel   F3 = Quit");
 
   PartEntry = PartitionList->CurrentPartition;
   while (TRUE)
     {
-      MaxSize = PartEntry->UnpartitionedLength;
-      ShowPartitionSizeInputBox (MaxSize, InputBuffer, &Quit, &Cancel);
+//      MaxSize = PartEntry->UnpartitionedLength / (1024 * 1024); /* in MBytes */
+      MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+      ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+				 MaxSize, InputBuffer, &Quit, &Cancel);
       if (Quit == TRUE)
 	{
-	  if (ConfirmQuit(Ir) == TRUE)
+	  if (ConfirmQuit (Ir) == TRUE)
 	    {
 	      return QUIT_PAGE;
 	    }
 	}
       else if (Cancel == TRUE)
 	{
-	  break;
+	  return SELECT_PARTITION_PAGE;
 	}
       else
 	{
@@ -1093,14 +1159,66 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 	      continue;
 	    }
 
-	  /* Convert to bytes */
-	  PartSize *= 1024 * 1024;
-
-	  if (PartSize > PartEntry->UnpartitionedLength)
+	  if (PartSize > MaxSize)
 	    {
 	      /* Too large */
 	      continue;
 	    }
+
+	  /* Convert to bytes */
+	  if (PartSize == MaxSize)
+	    {
+	      /* Use all of the unpartitioned disk space */
+	      PartSize = PartEntry->UnpartitionedLength;
+	    }
+	  else
+	    {
+	      /* Round-up by cylinder size */
+	      PartSize = ROUND_UP (PartSize * 1024 * 1024,
+				   DiskEntry->CylinderSize);
+
+	      /* But never get larger than the unpartitioned disk space */
+	      if (PartSize > PartEntry->UnpartitionedLength)
+		PartSize = PartEntry->UnpartitionedLength;
+	    }
+
+	  if (PartSize == PartEntry->UnpartitionedLength)
+	    {
+	      /* FIXME: Convert current entry to 'new (unformatted)' */
+	      PartEntry->PartInfo[0].StartingOffset.QuadPart =
+		PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
+	      PartEntry->PartInfo[0].PartitionLength.QuadPart =
+		PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
+	      PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
+	      PartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
+	      PartEntry->PartInfo[0].RewritePartition = TRUE;
+
+	      /* FIXME: Update extended partition entries */
+
+
+	      PartEntry->New = TRUE;
+	      PartEntry->Unpartitioned = FALSE;
+	      PartEntry->UnpartitionedOffset = 0ULL;
+	      PartEntry->UnpartitionedLength = 0ULL;
+	    }
+	  else
+	    {
+	      /*
+	       * FIXME:
+	       *  Insert new 'new (unformatted)' entry before the
+	       *  current entry and adjust offsets and sizes.
+	       */
+	    }
+
+	  DPRINT1 ("Partition size: %I64u bytes\n", PartSize);
+
+	  PopupError ("Entered valid partition size!\n"
+		      "\n"
+		      "  * Press any key to continue.",
+		      NULL);
+	  ConInKey (Ir);
+
+
 #if 0
           PartEntry->PartType = PARTITION_ENTRY_UNUSED;
           PartEntry->Used = TRUE;
@@ -1118,7 +1236,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
           	  RtlFreeUnicodeString(&DestinationRootPath);
           	  swprintf(PathBuffer,
           		   L"\\Device\\Harddisk%lu\\Partition%lu",
-          		   PartData.DiskNumber,
+          		   DiskEntry->DiskNumber,
           		   PartData.PartNumber);
           	  RtlCreateUnicodeString(&DestinationRootPath,
           				 PathBuffer);
@@ -1137,7 +1255,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
                   /* We mark the selected partition as bootable */
           	      swprintf(PathBuffer,
             		    L"\\Device\\Harddisk%lu\\Partition%lu",
-            		    PartData.DiskNumber,
+            		    DiskEntry->DiskNumber,
             		    PartData.PartNumber);
                 }
           	  RtlCreateUnicodeString(&SystemRootPath,
@@ -1155,30 +1273,144 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 	}
     }
 
-  return SELECT_PARTITION_PAGE;
+  return CREATE_PARTITION_PAGE;
 }
 
 
 static PAGE_NUMBER
 DeletePartitionPage (PINPUT_RECORD Ir)
 {
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  ULONGLONG DiskSize;
+  ULONGLONG PartSize;
+  PCHAR Unit;
+  PCHAR PartType;
 
-  SetTextXY(6, 8, "You have chosen to delete the following partition:");
+  if (PartitionList == NULL ||
+      PartitionList->CurrentDisk == NULL ||
+      PartitionList->CurrentPartition == NULL)
+    {
+      /* FIXME: show an error dialog */
+      return QUIT_PAGE;
+    }
 
+  DiskEntry = PartitionList->CurrentDisk;
+  PartEntry = PartitionList->CurrentPartition;
+
+  SetTextXY(6, 8, "You have chosen to delete the partition");
+
+  /* Determine partition type */
+  PartType = NULL;
+  if (PartEntry->New == TRUE)
+    {
+      PartType = "New (Unformatted)";
+    }
+  else if (PartEntry->Unpartitioned == FALSE)
+    {
+      if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
+	  (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
+	  (PartEntry->PartInfo[0].PartitionType == PARTITION_HUGE) ||
+	  (PartEntry->PartInfo[0].PartitionType == PARTITION_XINT13))
+	{
+	  PartType = "FAT";
+	}
+      else if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	       (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+	{
+	  PartType = "FAT32";
+	}
+      else if (PartEntry->PartInfo[0].PartitionType == PARTITION_IFS)
+	{
+	  PartType = "NTFS"; /* FIXME: Not quite correct! */
+	}
+    }
 
 #if 0
-  SetTextXY(6, 9, "Please enter the size of the new partition in megabytes.");
-
-  PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-	      PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000ULL) /* 10 GB */
+    {
+      PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
+      Unit = "GB";
+    }
+  else
 #endif
+  if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000ULL) /* 10 MB */
+    {
+      PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
+      Unit = "MB";
+    }
+  else
+    {
+      PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
+      Unit = "KB";
+    }
 
+  if (PartType == NULL)
+    {
+      PrintTextXY (6, 10,
+//		   "   %c%c  Type %-3lu                        %6I64u %s",
+		   "   %c%c  Type %lu    %I64u %s",
+		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		   (PartEntry->DriveLetter == 0) ? '-' : ':',
+		   PartEntry->PartInfo[0].PartitionType,
+		   PartSize,
+		   Unit);
+    }
+  else
+    {
+      PrintTextXY (6, 10,
+//		   "   %c%c  %-8s                         %6I64u %s",
+		   "   %c%c  %s    %I64u %s",
+		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		   (PartEntry->DriveLetter == 0) ? '-' : ':',
+		   PartType,
+		   PartSize,
+		   Unit);
+    }
 
-  SetTextXY(8, 13, "\x07  Press D to delete the partition.");
-  SetTextXY(11, 14, "WARNING: All data on this partition will be lost!");
+#if 0
+  if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
+      Unit = "GB";
+    }
+  else
+#endif
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
+      if (DiskSize == 0)
+	DiskSize = 1;
+      Unit = "MB";
+    }
 
-  SetTextXY(8, 16, "\x07  Press ESC to cancel.");
+  if (DiskEntry->DriverName.Length > 0)
+    {
+      PrintTextXY (6, 12,
+		   "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
+		   DiskSize,
+		   Unit,
+		   DiskEntry->DiskNumber,
+		   DiskEntry->Port,
+		   DiskEntry->Bus,
+		   DiskEntry->Id,
+		   &DiskEntry->DriverName);
+    }
+  else
+    {
+      PrintTextXY (6, 12,
+		   "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
+		   DiskSize,
+		   Unit,
+		   DiskEntry->DiskNumber,
+		   DiskEntry->Port,
+		   DiskEntry->Bus,
+		   DiskEntry->Id);
+    }
 
+  SetTextXY(8, 18, "\x07  Press D to delete the partition.");
+  SetTextXY(11, 19, "WARNING: All data on this partition will be lost!");
+
+  SetTextXY(8, 21, "\x07  Press ESC to cancel.");
 
   SetStatusText("   D = Delete Partition   ESC = Cancel   F3 = Quit");
 

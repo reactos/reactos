@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.13 2003/08/04 15:54:05 ekohl Exp $
+/* $Id: partlist.c,v 1.14 2003/08/05 20:39:24 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -46,6 +46,11 @@ GetDriverName(PDISKENTRY DiskEntry)
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   WCHAR KeyName[32];
   NTSTATUS Status;
+
+#if 0
+  RtlCreateUnicodeString (&DiskEntry->DriverName,
+			  L"atapi");
+#endif
 
   RtlInitUnicodeString(&DiskEntry->DriverName,
 		       NULL);
@@ -203,8 +208,15 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
       /* Check for trailing unpartitioned disk space */
       if (DiskEntry->DiskSize > (LastStartingOffset + LastPartitionLength))
 	{
+#if 0
 	  LastUnusedPartitionLength =
 	    DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength);
+#endif
+
+	  /* FIXME: Round-down to cylinder size */
+	  LastUnusedPartitionLength =
+	    ROUND_DOWN (DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength),
+			DiskEntry->CylinderSize);
 
 	  if (LastUnusedPartitionLength >= DiskEntry->CylinderSize)
 	    {
@@ -370,9 +382,11 @@ InitializePartitionList(VOID)
   UNICODE_STRING Name;
   HANDLE FileHandle;
 
-  List = (PPARTLIST)RtlAllocateHeap(ProcessHeap, 0, sizeof(PARTLIST));
+  List = (PPARTLIST)RtlAllocateHeap (ProcessHeap,
+				     0,
+				     sizeof (PARTLIST));
   if (List == NULL)
-    return(NULL);
+    return NULL;
 
   List->Left = 0;
   List->Top = 0;
@@ -440,7 +454,10 @@ InitializePartitionList(VOID)
     }
   else
     {
-      List->CurrentDisk = CONTAINING_RECORD(List->DiskListHead.Flink, DISKENTRY, ListEntry);
+      List->CurrentDisk =
+	CONTAINING_RECORD (List->DiskListHead.Flink,
+			   DISKENTRY,
+			   ListEntry);
 
       if (IsListEmpty (&List->CurrentDisk->PartListHead))
 	{
@@ -448,11 +465,14 @@ InitializePartitionList(VOID)
 	}
       else
 	{
-	  List->CurrentPartition = CONTAINING_RECORD(List->CurrentDisk->PartListHead.Flink, PARTENTRY, ListEntry);
+	  List->CurrentPartition =
+	    CONTAINING_RECORD (List->CurrentDisk->PartListHead.Flink,
+			       PARTENTRY,
+			       ListEntry);
 	}
     }
 
-  return(List);
+  return List;
 }
 
 
@@ -464,62 +484,18 @@ CreatePartitionList(SHORT Left,
 {
   PPARTLIST List;
 
-  List = InitializePartitionList();
+  List = InitializePartitionList ();
   if (List == NULL)
-    return(NULL);
+    return NULL;
 
   List->Left = Left;
   List->Top = Top;
   List->Right = Right;
   List->Bottom = Bottom;
 
-  DrawPartitionList(List);
+  DrawPartitionList (List);
 
-  return(List);
-}
-
-
-PPARTENTRY
-GetPartitionInformation(PPARTLIST List,
-			ULONG DiskNumber,
-			ULONG PartitionNumber,
-			PULONG PartEntryNumber)
-{
-  PPARTENTRY PartEntry;
-  ULONG i;
-
-  if (IsListEmpty(&List->DiskListHead))
-    {
-      return NULL;
-    }
-
-#if 0
-  if (DiskNumber >= List->DiskCount)
-    {
-      return NULL;
-    }
-
-  if (PartitionNumber >= List->DiskArray[DiskNumber].PartCount)
-    {
-      return NULL;
-    }
-
-  if (List->DiskArray[DiskNumber].FixedDisk != TRUE)
-    {
-      return NULL;
-    }
-
-  for (i = 0; i < List->DiskArray[DiskNumber].PartCount; i++)
-    {
-      PartEntry = &List->DiskArray[DiskNumber].PartArray[i];
-      if (PartEntry->PartNumber == PartitionNumber)
-        {
-          *PartEntryNumber = i;
-          return PartEntry;
-        }
-    }
-#endif
-  return NULL;
+  return List;
 }
 
 
@@ -635,8 +611,6 @@ PrintPartitionData(PPARTLIST List,
   coPos.X = List->Left + 1;
   coPos.Y = List->Top + 1 + List->Line;
 
-
-
   if (PartEntry->Unpartitioned == TRUE)
     {
 #if 0
@@ -668,7 +642,11 @@ PrintPartitionData(PPARTLIST List,
 
       /* Determine partition type */
       PartType = NULL;
-      if (PartEntry->Unpartitioned == FALSE)
+      if (PartEntry->New == TRUE)
+	{
+	  PartType = "New (Unformatted)";
+	}
+      else if (PartEntry->Unpartitioned == FALSE)
 	{
 	  if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
 	      (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
@@ -707,35 +685,25 @@ PrintPartitionData(PPARTLIST List,
 	  Unit = "KB";
 	}
 
-      if (PartEntry->DriveLetter != (CHAR)0)
+      if (PartType == NULL)
 	{
-	  if (PartType == NULL)
-	    {
-	      sprintf(LineBuffer,
-		      "%c:  Type %-3lu                        %6I64u %s",
-		      PartEntry->DriveLetter,
-		      PartEntry->PartInfo[0].PartitionType,
-		      PartSize,
-		      Unit);
-	    }
-	  else
-	    {
-	      sprintf(LineBuffer,
-		      "%c:  %-8s                         %6I64u %s",
-		      PartEntry->DriveLetter,
-		      PartType,
-		      PartSize,
-		      Unit);
-	    }
+	  sprintf (LineBuffer,
+		   "%c%c  Type %-3lu                        %6I64u %s",
+		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		   (PartEntry->DriveLetter == 0) ? '-' : ':',
+		   PartEntry->PartInfo[0].PartitionType,
+		   PartSize,
+		   Unit);
 	}
       else
 	{
-	  sprintf(LineBuffer,
-		  "--  %-8s  Type %-3lu   %6I64u %s",
-		  PartEntry->FileSystemName,
-		  PartEntry->PartInfo[0].PartitionType,
-		  PartSize,
-		  Unit);
+	  sprintf (LineBuffer,
+		   "%c%c  %-24s         %6I64u %s",
+		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		   (PartEntry->DriveLetter == 0) ? '-' : ':',
+		   PartType,
+		   PartSize,
+		   Unit);
 	}
     }
 

@@ -38,6 +38,11 @@
 #define DPRINT(args...)
 #define CHECKPOINT
 
+
+#define ROUND_DOWN(N, S) (((N) / (S)) * (S))
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
+
 typedef enum
 {
   FsFat = 0,
