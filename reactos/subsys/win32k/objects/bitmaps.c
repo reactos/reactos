@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.34 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.35 2003/08/20 20:45:28 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -30,6 +30,9 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+//FIXME: where should CLR_INVALID be defined?
+#define CLR_INVALID 0xffffffff
 
 BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
                  INT  XDest,
@@ -323,7 +326,17 @@ COLORREF STDCALL NtGdiGetPixel(HDC  hDC,
                        INT  XPos,
                        INT  YPos)
 {
-  UNIMPLEMENTED;
+  PDC      dc = NULL;
+  COLORREF cr = (COLORREF) 0;
+
+  dc = DC_LockDc (hDC);
+  if (NULL == dc)
+  {
+    return (COLORREF) CLR_INVALID;
+  }
+  //FIXME: get actual pixel RGB value
+  DC_UnlockDc (hDC);
+  return cr;
 }
 
 BOOL STDCALL NtGdiMaskBlt(HDC  hDCDest,
@@ -449,6 +462,8 @@ BOOL STDCALL NtGdiSetBitmapDimensionEx(HBITMAP  hBitmap,
   bmp->size.cx = Width;
   bmp->size.cy = Height;
 
+  BITMAPOBJ_UnlockBitmap (hBitmap);
+
   return TRUE;
 }
 
@@ -457,7 +472,12 @@ COLORREF STDCALL NtGdiSetPixel(HDC  hDC,
                        INT  Y,
                        COLORREF  Color)
 {
-  UNIMPLEMENTED;
+   if(NtGdiSetPixelV(hDC,X,Y,Color))
+   {
+      COLORREF cr = NtGdiGetPixel(hDC,X,Y);
+      if(CLR_INVALID != cr) return(cr);
+   }
+   return ((COLORREF) -1);
 }
 
 BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
@@ -465,7 +485,26 @@ BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
                     INT  Y,
                     COLORREF  Color)
 {
-  UNIMPLEMENTED;
+  PDC        dc = NULL;
+  PBITMAPOBJ bmp = NULL;
+  BITMAP     bm;
+
+  dc = DC_LockDc (hDC);
+  if(NULL == dc)
+  {
+    return(FALSE);
+  }
+  bmp = BITMAPOBJ_LockBitmap (dc->w.hBitmap);
+  if(NULL == bmp)
+  {
+    DC_UnlockDc (hDC);
+    return(FALSE);
+  }
+  bm = bmp->bitmap;
+  //FIXME: set the actual pixel value
+  BITMAPOBJ_UnlockBitmap (bmp);
+  DC_UnlockDc (hDC);
+  return(TRUE);
 }
 
 BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
