@@ -740,7 +740,6 @@ typedef VOID DDKAPI
   IN PVOID Context);
 
 
-
 /*
 ** System structures
 */
@@ -1725,8 +1724,7 @@ typedef struct _DEVICE_OBJECT {
   USHORT  Spare1;
   struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
   PVOID  Reserved;
-} DEVICE_OBJECT;
-typedef struct _DEVICE_OBJECT *PDEVICE_OBJECT;
+} DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
@@ -1922,6 +1920,150 @@ typedef struct _DMA_ADAPTER {
   USHORT  Size;
   PDMA_OPERATIONS  DmaOperations;
 } DMA_ADAPTER;
+
+
+typedef enum _ARBITER_REQUEST_SOURCE {
+  ArbiterRequestUndefined = -1,
+  ArbiterRequestLegacyReported,
+  ArbiterRequestHalReported,
+  ArbiterRequestLegacyAssigned,
+  ArbiterRequestPnpDetected,
+  ArbiterRequestPnpEnumerated
+} ARBITER_REQUEST_SOURCE;
+
+typedef enum _ARBITER_RESULT {
+  ArbiterResultUndefined = -1,
+  ArbiterResultSuccess,
+  ArbiterResultExternalConflict,
+  ArbiterResultNullRequest
+} ARBITER_RESULT;
+
+typedef enum _ARBITER_ACTION {
+  ArbiterActionTestAllocation,
+  ArbiterActionRetestAllocation,
+  ArbiterActionCommitAllocation,
+  ArbiterActionRollbackAllocation,
+  ArbiterActionQueryAllocatedResources,
+  ArbiterActionWriteReservedResources,
+  ArbiterActionQueryConflict,
+  ArbiterActionQueryArbitrate,
+  ArbiterActionAddReserved,
+  ArbiterActionBootAllocation
+} ARBITER_ACTION, *PARBITER_ACTION;
+
+typedef struct _ARBITER_CONFLICT_INFO {
+  PDEVICE_OBJECT  OwningObject;
+  ULONGLONG  Start;
+  ULONGLONG  End;
+} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
+
+typedef struct _ARBITER_PARAMETERS {
+  union {
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+      IN ULONG  AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
+    } TestAllocation;
+
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+      IN ULONG  AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
+    } RetestAllocation;
+
+    struct {
+      IN OUT PLIST_ENTRY  ArbitrationList;
+    } BootAllocation;
+
+    struct {
+      OUT PCM_PARTIAL_RESOURCE_LIST  *AllocatedResources;
+    } QueryAllocatedResources;
+
+    struct {
+      IN PDEVICE_OBJECT  PhysicalDeviceObject;
+      IN PIO_RESOURCE_DESCRIPTOR  ConflictingResource;
+      OUT PULONG  ConflictCount;
+      OUT PARBITER_CONFLICT_INFO  *Conflicts;
+    } QueryConflict;
+
+    struct {
+      IN PLIST_ENTRY  ArbitrationList;
+    } QueryArbitrate;
+
+    struct {
+      IN PDEVICE_OBJECT  ReserveDevice;
+    } AddReserved;
+  } Parameters;
+} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
+
+#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
+
+typedef struct _ARBITER_LIST_ENTRY {
+  LIST_ENTRY  ListEntry;
+  ULONG  AlternativeCount;
+  PIO_RESOURCE_DESCRIPTOR  Alternatives;
+  PDEVICE_OBJECT  PhysicalDeviceObject;
+  ARBITER_REQUEST_SOURCE  RequestSource;
+  ULONG  Flags;
+  LONG_PTR  WorkSpace;
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  SlotNumber;
+  ULONG  BusNumber;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR  Assignment;
+  PIO_RESOURCE_DESCRIPTOR  SelectedAlternative;
+  ARBITER_RESULT  Result;
+} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
+
+typedef NTSTATUS
+(DDKAPI *PARBITER_HANDLER)(
+  IN PVOID  Context,
+  IN ARBITER_ACTION  Action,
+  IN OUT PARBITER_PARAMETERS  Parameters);
+
+#define ARBITER_PARTIAL 0x00000001
+
+typedef struct _ARBITER_INTERFACE {
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  PARBITER_HANDLER  ArbiterHandler;
+  ULONG  Flags;
+} ARBITER_INTERFACE, *PARBITER_INTERFACE;
+
+typedef enum _RESOURCE_TRANSLATION_DIRECTION {
+  TranslateChildToParent,
+  TranslateParentToChild
+} RESOURCE_TRANSLATION_DIRECTION;
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_HANDLER)(
+  IN PVOID  Context,
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  Source,
+  IN RESOURCE_TRANSLATION_DIRECTION  Direction,
+  IN ULONG  AlternativesCount,
+  IN IO_RESOURCE_DESCRIPTOR  Alternatives[],
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR  Target);
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+  IN PVOID  Context,
+  IN PIO_RESOURCE_DESCRIPTOR  Source,
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  OUT PULONG  TargetCount,
+  OUT PIO_RESOURCE_DESCRIPTOR  *Target);
+
+typedef struct _TRANSLATOR_INTERFACE {
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  PTRANSLATE_RESOURCE_HANDLER  TranslateResources;
+  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER  TranslateResourceRequirements;
+} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -4348,7 +4490,7 @@ RtlConvertUlongToLuid(
  */
 #ifndef RtlCopyMemory
 #define RtlCopyMemory(Destination, Source, Length) \
-  memcpy(Destination, Source, Length);
+  memcpy(Destination, Source, Length)
 #endif
 
 #ifndef RtlCopyBytes
@@ -5343,7 +5485,7 @@ ExInterlockedAddLargeStatistic(
 
 NTOSAPI
 ULONG
-DDKFASTAPI
+DDKAPI
 ExInterlockedAddUlong(
   IN PULONG  Addend,
   IN ULONG  Increment,
@@ -5366,7 +5508,7 @@ ExInterlockedFlushSList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5374,7 +5516,7 @@ ExInterlockedInsertHeadList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5382,7 +5524,7 @@ ExInterlockedInsertTailList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPopEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -5399,7 +5541,7 @@ ExInterlockedPopEntryList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedPushEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -5419,7 +5561,7 @@ ExInterlockedPushEntryList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKFASTAPI
+DDKAPI
 ExInterlockedRemoveHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -6527,6 +6669,10 @@ IoOpenDeviceInterfaceRegistryKey(
   IN PUNICODE_STRING  SymbolicLinkName,
   IN ACCESS_MASK  DesiredAccess,
   OUT PHANDLE  DeviceInterfaceKey);
+
+#define PLUGPLAY_REGKEY_DEVICE                            1
+#define PLUGPLAY_REGKEY_DRIVER                            2
+#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
 
 NTOSAPI
 NTSTATUS
@@ -8505,8 +8651,8 @@ DDKAPI
 NtCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8515,8 +8661,8 @@ DDKAPI
 ZwCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8789,14 +8935,14 @@ NTSTATUS
 DDKAPI
 NtSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS

@@ -397,7 +397,7 @@ static void DebugChannels_OnNotify(HWND hDlg, LPARAM lParam)
     }
 }
 
-static LRESULT CALLBACK DebugChannelsDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK DebugChannelsDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
@@ -419,5 +419,5 @@ static LRESULT CALLBACK DebugChannelsDlgProc(HWND hDlg, UINT message, WPARAM wPa
 
 void ProcessPage_OnDebugChannels(void)
 {
-    DialogBox(hInst, (LPCTSTR)IDD_DEBUG_CHANNELS_DIALOG, hMainWnd, (DLGPROC)DebugChannelsDlgProc);
+    DialogBox(hInst, (LPCTSTR)IDD_DEBUG_CHANNELS_DIALOG, hMainWnd, DebugChannelsDlgProc);
 }

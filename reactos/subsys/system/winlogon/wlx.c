@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.5 2004/07/12 20:09:35 gvg Exp $
+/* $Id: wlx.c,v 1.6 2004/10/11 21:08:05 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -521,8 +521,7 @@ GetMsGinaPath(WCHAR *path)
   RegCloseKey(hKey);
 }
 
-BOOL 
-CALLBACK 
+INT_PTR CALLBACK
 GinaLoadFailedProc(
   HWND hwndDlg,
   UINT uMsg,

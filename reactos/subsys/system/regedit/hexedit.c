@@ -60,7 +60,7 @@ typedef struct
 #define HEHT_ASCIIDUMP	(0x6)
 #define HEHT_RIGHTMARGIN	(0x7)
 
-LRESULT WINAPI HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 ATOM
 STDCALL
@@ -858,8 +858,7 @@ HEXEDIT_WM_SIZE(PHEXEDIT_DATA hed, DWORD sType, WORD NewWidth, WORD NewHeight)
   return 0;
 }
 
-LRESULT
-WINAPI
+INT_PTR CALLBACK
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PHEXEDIT_DATA hed;

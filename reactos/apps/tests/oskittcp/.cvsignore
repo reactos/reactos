@@ -1,9 +1,0 @@
-*.d
-*.exe
-*.map
-*.ncb
-*.opt
-*.plg
-*.sym
-Debug
-Release

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.86 2004/09/28 15:02:30 weiden Exp $
+/* $Id: misc.c,v 1.87 2004/10/19 08:25:25 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -671,7 +671,7 @@ IntSystemParametersInfo(
     pMetrics.iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
     pMetrics.iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
     pMetrics.iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
-    pMetrics.cbSize = sizeof(LPNONCLIENTMETRICSW);
+    pMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
     
     bInitialized = TRUE;
   }
@@ -1006,8 +1006,7 @@ NtUserSystemParametersInfo(
         SetLastNtError(Status);
         return FALSE;
       }
-      if((metrics.cbSize != sizeof(NONCLIENTMETRICSW)) ||
-         (uiParam != sizeof(NONCLIENTMETRICSW)))
+      if(metrics.cbSize != sizeof(NONCLIENTMETRICSW))
       {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;

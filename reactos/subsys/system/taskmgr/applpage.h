@@ -30,7 +30,7 @@ extern    HWND        hApplicationPageEndTaskButton;    /* Application End Task 
 extern    HWND        hApplicationPageSwitchToButton;    /* Application Switch To button */
 extern    HWND        hApplicationPageNewTaskButton;    /* Application New Task button */
 
-LRESULT CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void                RefreshApplicationPage(void);
 void                UpdateApplicationListControlViewSetting(void);
 

@@ -40,18 +40,13 @@ typedef struct ISFHelper *LPISFHELPER;
  */
 
 #define INTERFACE ISFHelper
-DECLARE_INTERFACE_(ISFHelper,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** ISFHelper methods ***/
-    STDMETHOD(GetUniqueName)(THIS_ LPSTR  lpName, UINT  uLen) PURE;
-    STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCSTR  lpName, LPITEMIDLIST * ppidlOut) PURE;
-    STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE;
-    STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl) PURE;
-};
+#define ISFHelper_METHODS \
+	IUnknown_METHODS \
+	STDMETHOD(GetUniqueName)(THIS_ LPSTR  lpName, UINT  uLen) PURE; \
+	STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCSTR  lpName, LPITEMIDLIST * ppidlOut) PURE; \
+	STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE; \
+	STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl) PURE;
+DECLARE_INTERFACE_(ISFHelper, IUnknown) { ISFHelper_METHODS };
 #undef INTERFACE
 
 #ifdef COBJMACROS

@@ -23,7 +23,7 @@
 #ifndef __PROCLIST_H
 #define __PROCLIST_H
 
-LRESULT CALLBACK	ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK	ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 extern	WNDPROC		OldProcessListWndProc;
 

@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "&Berechtigungen...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Löschen\tEntf",                ID_EDIT_DELETE
-        MENUITEM "&Unbenennen",                     ID_EDIT_RENAME
+        MENUITEM "&Umbenennen",                     ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Schlüsselname &kopieren",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
@@ -210,21 +210,21 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "Befehle für für das Bearbeiten der ganzen Registry"
-    ID_EDIT_MENU            "Befehle für um Schlüssel oder Werte zu ändern"
-    ID_VIEW_MENU            "Befehle um das Fenster anzupassen"
-    ID_FAVOURITES_MENU      "Befehle für die Favoriten"
-    ID_HELP_MENU            "Befehle um die Hilfe oder Informationen über das Programm anzuzeigen"
-    ID_EDIT_NEW_MENU        "Befehle für das Erstellen von neuen Schlüsseln oder Daten"
+    ID_REGISTRY_MENU        "Enthält Befehle für das Arbeiten mit der ganzen Registry"
+    ID_EDIT_MENU            "Enthält Befehle für das Ändern von Schlüsseln oder Werten"
+    ID_VIEW_MENU            "Enthält Befehle für das Anpassen des Registry Editor Fensters"
+    ID_FAVOURITES_MENU      "Enthält Befehle um auf oft genutze Schlüssel zuzugreifen"
+    ID_HELP_MENU            "Enthält Befehle um Hilfe und Informationen über den Registry Editor anzuzeigen"
+    ID_EDIT_NEW_MENU        "Enthält Befehle für das Erstellen von neuen Schlüsseln oder Werten"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_MODIFY          "Ändert die Daten eines Wertes"
     ID_EDIT_NEW_KEY   "Fügt einen neuen Schlüssel hinzu"
-    ID_EDIT_NEW_STRINGVALUE "Fügt einen neuen Zeichenkette hinzu "
+    ID_EDIT_NEW_STRINGVALUE "Fügt eine neue Zeichenkette hinzu "
     ID_EDIT_NEW_BINARYVALUE "Fügt einen neuen Binärwärt hinzu"
-    ID_EDIT_NEW_DWORDVALUE  "Fügt einen neuen DWORT Wert hinzu"
+    ID_EDIT_NEW_DWORDVALUE  "Fügt einen neuen DWORD Wert hinzu"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importiert eine Textddatei in die Registry"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exportiert Teile oder die ganze Registry in eine Textdatei"
@@ -240,15 +240,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_EXIT        "Beendet den Registry Editor"
-    ID_FAVOURITES_ADDTOFAVOURITES "Fügt Schlüssel to den Favoriten hinzu"
-    ID_FAVOURITES_REMOVEFAVOURITE "Löscht Schlüssel von den Favoriten"
+    ID_FAVOURITES_ADDTOFAVOURITES "Fügt Schlüssel zu den Favoriten hinzu"
+    ID_FAVOURITES_REMOVEFAVOURITE "Löscht Schlüssel aus den Favoriten"
     ID_VIEW_STATUSBAR       "Zeigt oder versteckt die Statusleiste"
-    ID_VIEW_SPLIT           "Ändert die Position das Fensterteilers"
+    ID_VIEW_SPLIT           "Ändert die Position des Fensterteilers"
     ID_VIEW_REFRESH         "Aktualisiert das Fenster"
     ID_EDIT_DELETE          "Löscht die Auswahl"
-    ID_EDIT_RENAME          "Bennent die Auswahl um"
+    ID_EDIT_RENAME          "Benennt die Auswahl um"
     ID_EDIT_COPYKEYNAME     "Kopiert den Schlüsselnamen in die Zwischenablage"
-    ID_EDIT_FIND            "Findet eine Zeichenkette in einem Schlüssel, einem Namen oder in Daten"
+    ID_EDIT_FIND            "Findet eine Zeichenkette in einem Schlüssel, einem Namen oder in Werten"
     ID_EDIT_FINDNEXT        "Findet nächste Zeichenkette"
 END
 
@@ -256,9 +256,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Fehler"
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
-    IDS_UNSUPPORTED_TYPE    "Kann Schlüssel von diesem Typ (%ld) nicht ändern"
-    IDS_TOO_BIG_VALUE       "Der Wert ist zu groß (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenketten enthalten.\nDie leeren Zeichenkette wurden von der Liste gelöscht."
+    IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typen (%ld) nicht ändern"
+    IDS_TOO_BIG_VALUE       "Der Wert (%ld) ist zu groß"
+    IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenkette enthalten.\nDie leere Zeichenkette wurden von der Liste gelöscht."
     IDS_QUERY_DELETE_ONE    "Diesen Wert wirklich löschen?"
     IDS_QUERY_DELETE_MORE   "Diese Werte wirklich löschen?"
     IDS_QUERY_DELETE_CONFIRM "Löschen bestätigen"

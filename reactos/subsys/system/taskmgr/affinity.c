@@ -35,7 +35,7 @@
 
 HANDLE        hProcessAffinityHandle;
 
-LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void ProcessPage_OnSetAffinity(void)
 {
@@ -62,14 +62,15 @@ void ProcessPage_OnSetAffinity(void)
         MessageBox(hMainWnd, strErrorText, _T("Unable to Access or Set Process Affinity"), MB_OK|MB_ICONSTOP);
         return;
     }
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_AFFINITY_DIALOG), hMainWnd, (DLGPROC)AffinityDialogWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_AFFINITY_DIALOG), hMainWnd, AffinityDialogWndProc);
     if (hProcessAffinityHandle)    {
         CloseHandle(hProcessAffinityHandle);
         hProcessAffinityHandle = NULL;
     }
 }
 
-LRESULT CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     DWORD    dwProcessAffinityMask = 0;
     DWORD    dwSystemAffinityMask = 0;

@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.5 2004/02/21 15:34:51 ea Exp $
+/* $Id: buildno.c,v 1.6 2004/10/16 20:27:43 gvg Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -80,6 +80,7 @@ write_h (int build)
   char* s;
   char* s1;
   int length;
+  int dllversion = KERNEL_VERSION_MAJOR + 42;
 
   s1 = s = malloc(256 * 1024);
   
@@ -116,6 +117,38 @@ write_h (int build)
   s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
   s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d", 
 		   KERNEL_VERSION_MAJOR,
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define REACTOS_DLL_VERSION_MAJOR\t%d\n", dllversion);
+  s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_RC\t\"%d.%d",
+		   dllversion, KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_STR\t\"%d.%d",
+		   dllversion,
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define REACTOS_DLL_VERSION_RC\t\"%d.%d",
+		   dllversion,
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define REACTOS_DLL_VERSION_STR\t\"%d.%d", 
+		   dllversion,
 		   KERNEL_VERSION_MINOR);
   if (0 != KERNEL_VERSION_PATCH_LEVEL)
     {

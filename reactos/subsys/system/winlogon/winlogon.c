@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.34 2004/07/12 20:09:35 gvg Exp $
+/* $Id: winlogon.c,v 1.35 2004/10/11 21:08:05 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,7 +65,7 @@ PrintString (WCHAR* fmt,...)
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 ShutdownComputerProc (HWND hwndDlg,
 		      UINT uMsg,
 		      WPARAM wParam,

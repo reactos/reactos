@@ -53,7 +53,8 @@ void CommaSeparateNumberString(LPTSTR strNumber, int nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 
-LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT    rc;
     int        nXDifference;

@@ -1,6 +1,11 @@
-*.o
+temp.exp
 *.d
-*.exe
+*.a
+*.o
+*.dll
 *.coff
 *.sym
+*.tmp
+*.gch
+*.pch
 *.map

@@ -62,7 +62,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM SEPARATOR
 		MENUITEM "&Format Disk..." ,			203
 #ifdef _WIN95
-		MENUITEM "&Make System Disk...", -1	//TODO
+		MENUITEM "&Make System Disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "Connect &Network Drive" ,			252
@@ -80,7 +80,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "Expand &all\tStrg+*" ,		303
 		MENUITEM "Collapse &Tree\t-" ,			304
 		MENUITEM SEPARATOR
-		MENUITEM "&Mark Childs" ,				505
+		MENUITEM "&Mark Children" ,				505
 	}
 
 	POPUP "&View"  {
@@ -114,8 +114,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM "F&ull Screen\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
 #endif
 		MENUITEM SEPARATOR
-		MENUITEM "&Symbol nach Programmstart" ,		-1
-		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
+		MENUITEM "&Minimize on run" ,		-1
+		MENUITEM "&Save settings on exit" ,			511
 	}
 
 
@@ -183,4 +183,31 @@ STRINGTABLE
 {
 	IDS_FONT_SEL_DLG_NAME	"Applying font settings"
 	IDS_FONT_SEL_ERROR	"Error while selecting new font."
+}
+
+STRINGTABLE
+{
+	IDS_WINEFILE	"Winefile"
+	IDS_ERROR		"Error"
+	IDS_ROOT_FS		"root fs"
+	IDS_UNIXFS		"unixfs"
+	IDS_DESKTOP		"Desktop"
+	IDS_SHELL		"Shell"
+	IDS_TITLEFMT	"%s - %s"
+	IDS_NO_IMPL		"Not yet implemented"
+	IDS_WINE		"WINE"
+	IDS_WINE_FILE	"Wine File"
+}
+
+STRINGTABLE
+{
+	IDS_COL_NAME	"Name"
+	IDS_COL_SIZE	"Size"
+	IDS_COL_CDATE	"CDate"
+	IDS_COL_ADATE	"ADate"
+	IDS_COL_MDATE	"MDate"
+	IDS_COL_IDX		"Index/Inode"
+	IDS_COL_LINKS	"Links"
+	IDS_COL_ATTR	"Attributes"
+	IDS_COL_SEC		"Security"
 }

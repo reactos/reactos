@@ -34,7 +34,7 @@ extern "C" {
 
 extern	LONG				OldGraphWndProc;
 
-LRESULT CALLBACK	Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK	Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 
 #ifdef __cplusplus

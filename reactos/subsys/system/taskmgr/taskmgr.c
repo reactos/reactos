@@ -106,7 +106,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         return -1;
     }
 
-    DialogBox(hInst, (LPCTSTR)IDD_TASKMGR_DIALOG, NULL, (DLGPROC)TaskManagerWndProc);
+    DialogBox(hInst, (LPCTSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
  
     /* Save our settings to the registry */
     SaveSettings();
@@ -115,7 +115,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 }
 
 /* Message handler for dialog box. */
-LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC             hdc;
     PAINTSTRUCT     ps;
@@ -470,13 +471,13 @@ BOOL OnCreate(HWND hWnd)
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
 #if 1
-    hApplicationPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_APPLICATION_PAGE), hWnd, (DLGPROC)ApplicationPageWndProc);
-    hProcessPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PROCESS_PAGE), hWnd, (DLGPROC)ProcessPageWndProc);
-    hPerformancePage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PERFORMANCE_PAGE), hWnd, (DLGPROC)PerformancePageWndProc);
+    hApplicationPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc);
+    hProcessPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc);
+    hPerformancePage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc);
 #else
-    hApplicationPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_APPLICATION_PAGE), hTabWnd, (DLGPROC)ApplicationPageWndProc);
-    hProcessPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PROCESS_PAGE), hTabWnd, (DLGPROC)ProcessPageWndProc);
-    hPerformancePage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PERFORMANCE_PAGE), hTabWnd, (DLGPROC)PerformancePageWndProc);
+    hApplicationPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc);
+    hProcessPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc);
+    hPerformancePage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc);
 #endif
 
     /* Insert tabs */

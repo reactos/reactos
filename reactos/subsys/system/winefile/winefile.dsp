@@ -169,7 +169,32 @@ SOURCE=.\es.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\fr.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\hu.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\images.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\it.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\nl.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\pt.rc
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
@@ -178,6 +203,16 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=.\resource.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\ru.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\si.rc
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
@@ -192,6 +227,11 @@ SOURCE=.\winefile.ico
 
 SOURCE=.\winefile.rc
 # End Source File
+# Begin Source File
+
+SOURCE=.\zh.rc
+# PROP Exclude_From_Build 1
+# End Source File
 # End Group
 # Begin Source File
 
@@ -200,6 +240,16 @@ SOURCE=.\license.c
 # Begin Source File
 
 SOURCE=.\license.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\splitpath.c
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\unixcalls.c
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 

@@ -18,23 +18,24 @@
 #define NDEBUG
 #include <debug.h>
 
-LIST_ENTRY AllTests;
+int _Result;
+char *_Buffer;
 
-int
-DriverTest()
+static LIST_ENTRY AllTests;
+
+void *_alloca(size_t size)
 {
-  /* Dummy */
-  return 0;
+  void *ret;
+
+  asm ("movl %1, %%eax\n"
+       "addl $3, %%eax\n"
+       "andl $-4, %%eax\n"
+       "subl %%eax, %%esp\n"
+       "movl %%esp, %0\n"
+       : "=m" (ret) : "m" (size) : "eax");
+
+  return ret;
 }
-
-
-int
-_regtestsTest()
-{
-  /* Dummy */
-  return 0;
-}
-
 
 VOID
 InitializeTests()
@@ -45,15 +46,17 @@ InitializeTests()
 VOID
 PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 {
-  char OutputBuffer[200];
-  char Buffer[200];
+  char OutputBuffer[5000];
+  char Buffer[5000];
   char Name[200];
-  int Result;
 
-  memset(Name, 0, sizeof(Name));
   memset(Buffer, 0, sizeof(Buffer));
+  memset(Name, 0, sizeof(Name));
 
-  if (!((Test->Routine)(TESTCMD_TESTNAME, Name) == 0))
+  _Result = TS_OK;
+  _Buffer = Name;
+  (Test->Routine)(TESTCMD_TESTNAME);
+  if (_Result != TS_OK)
     {
       if (TestName != NULL)
         {
@@ -73,15 +76,17 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 #ifdef SEH
   __try {
 #endif
-    Result = (Test->Routine)(TESTCMD_RUN, Buffer);
+    _Result = TS_OK;
+    _Buffer = Buffer;
+    (Test->Routine)(TESTCMD_RUN);
 #ifdef SEH
   } __except(EXCEPTION_EXECUTE_HANDLER) {
-    Result = TS_FAILED;
+    _Result = TS_FAILED;
     strcpy(Buffer, "Failed due to exception");
   }
 #endif
 
-  if (Result != TS_OK)
+  if (_Result != TS_OK)
     {
       sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", Name, Buffer);
     }
@@ -121,7 +126,7 @@ AddTest(TestRoutine Routine)
 {
   PROS_TEST Test;
 
-  Test = (PROS_TEST) AllocateMemory(sizeof(ROS_TEST));
+  Test = (PROS_TEST) malloc(sizeof(ROS_TEST));
   if (Test == NULL)
     {
       DbgPrint("Out of memory");
@@ -131,4 +136,10 @@ AddTest(TestRoutine Routine)
   Test->Routine = Routine;
 
   InsertTailList(&AllTests, &Test->ListEntry);
+}
+
+PVOID STDCALL
+FrameworkGetHook(ULONG index)
+{
+  return FrameworkGetHookInternal(index);
 }
