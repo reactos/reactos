@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.58 2004/09/28 20:40:15 gvg Exp $
+/* $Id: reg.c,v 1.59 2004/10/08 21:19:12 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2304,7 +2304,7 @@ RegQueryValueExW (HKEY hKey,
 			    BufferSize,
 			    &ResultSize);
   DPRINT("Status 0x%X\n", Status);
-  if (Status == STATUS_BUFFER_TOO_SMALL)
+  if (Status == STATUS_BUFFER_OVERFLOW)
     {
       /* Return ERROR_SUCCESS and the buffer space needed for a successful call */
       MaxCopy = 0;

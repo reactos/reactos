@@ -313,7 +313,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
   PDATA_CELL ClassCell;
-  ULONG NameSize;
+  ULONG NameSize, ClassSize;
   NTSTATUS Status;
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
@@ -444,6 +444,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	      }
 	  }
 
+	*ResultLength = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) + NameSize;
+
 	/*
 	 * NOTE: It's perfetly valid to call NtEnumerateKey to get
          * all the information but name. Actually the NT4 sound
@@ -452,7 +454,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
          */
 	if (Length < FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]))
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
@@ -463,7 +465,12 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    BasicInformation->TitleIndex = Index;
 	    BasicInformation->NameLength = NameSize;
 
-	    NameSize = min(NameSize, Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]));
+	    if (Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) < NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]);
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
 
 	    if (SubKeyObject != NULL)
 	      {
@@ -487,8 +494,6 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 		  }
 	      }
 	  }
-
-	*ResultLength = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) + NameSize;
 	break;
 
       case KeyNodeInformation:
@@ -505,12 +510,14 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 		NameSize *= sizeof(WCHAR);
 	      }
 	  }
-	*ResultLength = FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) +
-	  NameSize + SubKeyCell->ClassSize;
+	ClassSize = SubKeyCell->ClassSize;
 
-	if (Length < *ResultLength)
+	*ResultLength = FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) +
+	  NameSize + ClassSize;
+
+	if (Length < FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]))
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
@@ -521,51 +528,68 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    NodeInformation->TitleIndex = Index;
 	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + NameSize;
 	    NodeInformation->ClassLength = SubKeyCell->ClassSize;
+	    NodeInformation->NameLength = NameSize;
+
+	    if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) < NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]);
+	        ClassSize = 0;
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	             NameSize < ClassSize)
+	      {
+	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	                    NameSize;
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
 
 	    if (SubKeyObject != NULL)
 	      {
-		NodeInformation->NameLength = SubKeyObject->Name.Length;
 		RtlCopyMemory(NodeInformation->Name,
 			      SubKeyObject->Name.Buffer,
-			      SubKeyObject->Name.Length);
+			      NameSize);
 	      }
 	    else
 	      {
-		NodeInformation->NameLength = NameSize;
 		if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
 		  {
 		    CmiCopyPackedName(NodeInformation->Name,
 				      SubKeyCell->Name,
-				      SubKeyCell->NameSize);
+				      NameSize / sizeof(WCHAR));
 		  }
 		else
 		  {
 		    RtlCopyMemory(NodeInformation->Name,
 				  SubKeyCell->Name,
-				  SubKeyCell->NameSize);
+				  NameSize);
 		  }
 	      }
 
-	    if (SubKeyCell->ClassSize != 0)
+	    if (ClassSize != 0)
 	      {
 		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					SubKeyCell->ClassNameOffset,
 					NULL);
 		RtlCopyMemory (NodeInformation->Name + SubKeyCell->NameSize,
 			       ClassCell->Data,
-			       SubKeyCell->ClassSize);
+			       ClassSize);
 	      }
 	  }
 	break;
 
       case KeyFullInformation:
-	/* Check size of buffer */
-	*ResultLength = FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) +
-	  SubKeyCell->ClassSize;
+	ClassSize = SubKeyCell->ClassSize;
 
-	if (Length < *ResultLength)
+	*ResultLength = FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) +
+	  ClassSize;
+
+	/* Check size of buffer */
+	if (Length < FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]))
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
@@ -585,14 +609,22 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	      CmiGetMaxValueNameLength(RegistryHive, SubKeyCell);
 	    FullInformation->MaxValueDataLen =
 	      CmiGetMaxValueDataLength(RegistryHive, SubKeyCell);
-	    if (SubKeyCell->ClassSize != 0)
+
+	    if (Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) < ClassSize)
+	      {
+	        ClassSize = Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]);
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+
+	    if (ClassSize != 0)
 	      {
 		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					SubKeyCell->ClassNameOffset,
 					NULL);
 		RtlCopyMemory (FullInformation->Class,
 			       ClassCell->Data,
-			       SubKeyCell->ClassSize);
+			       ClassSize);
 	      }
 	  }
 	break;
@@ -626,7 +658,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PKEY_CELL  KeyCell;
   PVALUE_CELL  ValueCell;
   PDATA_CELL  DataCell;
-  ULONG NameSize;
+  ULONG NameSize, DataSize;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
@@ -686,10 +718,12 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             {
 	      NameSize *= sizeof(WCHAR);
 	    }
+
           *ResultLength = FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) + NameSize;
-          if (Length < *ResultLength)
+
+          if (Length < FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]))
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -698,11 +732,20 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
               ValueBasicInformation->TitleIndex = 0;
               ValueBasicInformation->Type = ValueCell->DataType;
 	      ValueBasicInformation->NameLength = NameSize;
+
+	      if (Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) <
+	          NameSize)
+	        {
+	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]);
+	          Status = STATUS_BUFFER_OVERFLOW;
+	          CHECKPOINT;
+	        }
+
               if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
                 {
                   CmiCopyPackedName(ValueBasicInformation->Name,
                                     ValueCell->Name,
-                                    ValueCell->NameSize);
+                                    NameSize / sizeof(WCHAR));
                 }
               else
                 {
@@ -714,11 +757,14 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
           break;
 
         case KeyValuePartialInformation:
+          DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
           *ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + 
-            (ValueCell->DataSize & REG_DATA_SIZE_MASK);
-          if (Length < *ResultLength)
+            DataSize;
+
+          if (Length < FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]))
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -727,18 +773,27 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
               ValuePartialInformation->TitleIndex = 0;
               ValuePartialInformation->Type = ValueCell->DataType;
               ValuePartialInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
+              if (Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) <
+                  DataSize)
+                {
+                  DataSize = Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
+                  Status = STATUS_BUFFER_OVERFLOW;
+                  CHECKPOINT;
+                }
+              
               if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
               {
                 DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                 RtlCopyMemory(ValuePartialInformation->Data, 
                   DataCell->Data,
-                  ValueCell->DataSize & REG_DATA_SIZE_MASK);
+                  DataSize);
               }
               else
               {
                 RtlCopyMemory(ValuePartialInformation->Data, 
                   &ValueCell->DataOffset, 
-                  ValueCell->DataSize & REG_DATA_SIZE_MASK);
+                  DataSize);
               }
             }
           break;
@@ -749,11 +804,14 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             {
 	      NameSize *= sizeof(WCHAR);
 	    }
-          *ResultLength = FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) + 
-             NameSize + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
-          if (Length < *ResultLength)
+	  DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
+          *ResultLength = ROUND_UP(FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
+                          Name[0]) + NameSize, sizeof(PVOID)) + DataSize;
+
+          if (Length < FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]))
             {
-              Status = STATUS_BUFFER_OVERFLOW;
+              Status = STATUS_BUFFER_TOO_SMALL;
             }
           else
             {
@@ -762,18 +820,6 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
               ValueFullInformation->TitleIndex = 0;
               ValueFullInformation->Type = ValueCell->DataType;
               ValueFullInformation->NameLength = NameSize;
-              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-                {
-                  CmiCopyPackedName(ValueFullInformation->Name,
-				    ValueCell->Name,
-				    ValueCell->NameSize);
-                }
-              else
-                {
-                  RtlCopyMemory(ValueFullInformation->Name,
-				ValueCell->Name,
-				ValueCell->NameSize);
-                }
               ValueFullInformation->DataOffset = 
                 (ULONG_PTR)ValueFullInformation->Name -
                 (ULONG_PTR)ValueFullInformation +
@@ -781,20 +827,48 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
               ValueFullInformation->DataOffset =
                   ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+              
+	      if (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) <
+	          NameSize)
+	        {
+	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]);
+	          DataSize = 0;
+	          Status = STATUS_BUFFER_OVERFLOW;
+	          CHECKPOINT;
+	        }
+              else if (ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
+                       Name[0]) - NameSize, sizeof(PVOID)) < DataSize)
+	        {
+	          DataSize = ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) - NameSize, sizeof(PVOID));
+	          Status = STATUS_BUFFER_OVERFLOW;
+	          CHECKPOINT;
+	        }
+
+              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+                {
+                  CmiCopyPackedName(ValueFullInformation->Name,
+				    ValueCell->Name,
+				    NameSize / sizeof(WCHAR));
+                }
+              else
+                {
+                  RtlCopyMemory(ValueFullInformation->Name,
+				ValueCell->Name,
+				NameSize);
+                }
+
               if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
                   DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                   RtlCopyMemory((PCHAR) ValueFullInformation
                     + ValueFullInformation->DataOffset,
-                    DataCell->Data,
-                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
+                    DataCell->Data, DataSize);
                 }
               else
                 {
                   RtlCopyMemory((PCHAR) ValueFullInformation
                     + ValueFullInformation->DataOffset,
-                    &ValueCell->DataOffset,
-                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
+                    &ValueCell->DataOffset, DataSize);
                 }
             }
           break;
@@ -941,6 +1015,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   PDATA_CELL ClassCell;
   PKEY_OBJECT KeyObject;
   PKEY_CELL KeyCell;
+  ULONG NameSize, ClassSize;
   NTSTATUS Status;
 
   DPRINT("NtQueryKey(KH %x  KIC %x  KI %x  L %d  RL %x)\n",
@@ -976,11 +1051,12 @@ NtQueryKey(IN HANDLE KeyHandle,
   switch (KeyInformationClass)
     {
       case KeyBasicInformation:
-	/* Check size of buffer */
-	*ResultLength = sizeof(KEY_BASIC_INFORMATION) +
-	  KeyObject->Name.Length;
+        NameSize = KeyObject->Name.Length;
 
-	if (Length < *ResultLength)
+	*ResultLength = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]);
+
+	/* Check size of buffer */
+	if (Length < FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -993,17 +1069,28 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    BasicInformation->TitleIndex = 0;
 	    BasicInformation->NameLength = KeyObject->Name.Length;
 
+	    if (Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) <
+	        NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]);
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+
 	    RtlCopyMemory(BasicInformation->Name,
 			  KeyObject->Name.Buffer,
-			  KeyObject->Name.Length);
+			  NameSize);
 	  }
 	break;
 
       case KeyNodeInformation:
-	/* Check size of buffer */
-	*ResultLength = sizeof(KEY_NODE_INFORMATION) +
-	  KeyObject->Name.Length + KeyCell->ClassSize;
+        NameSize = KeyObject->Name.Length;
+        ClassSize = KeyCell->ClassSize;
 
+	*ResultLength = FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) +
+	  NameSize + ClassSize;
+
+	/* Check size of buffer */
 	if (Length < *ResultLength)
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
@@ -1020,28 +1107,46 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    NodeInformation->ClassLength = KeyCell->ClassSize;
 	    NodeInformation->NameLength = KeyObject->Name.Length;
 
+	    if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) < NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]);
+	        ClassSize = 0;
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	             NameSize < ClassSize)
+	      {
+	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) - 
+	                    NameSize;
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+
 	    RtlCopyMemory(NodeInformation->Name,
 			  KeyObject->Name.Buffer,
-			  KeyObject->Name.Length);
+			  NameSize);
 
-	    if (KeyCell->ClassSize != 0)
+	    if (ClassSize != 0)
 	      {
 		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					KeyCell->ClassNameOffset,
 					NULL);
 		RtlCopyMemory (NodeInformation->Name + KeyObject->Name.Length,
 			       ClassCell->Data,
-			       KeyCell->ClassSize);
+			       ClassSize);
 	      }
 	  }
 	break;
 
       case KeyFullInformation:
-	/* Check size of buffer */
-	*ResultLength = sizeof(KEY_FULL_INFORMATION) +
-	  KeyCell->ClassSize;
+        ClassSize = KeyCell->ClassSize;
 
-	if (Length < *ResultLength)
+	*ResultLength = FIELD_OFFSET(KEY_FULL_INFORMATION, Class) +
+	  ClassSize;
+
+	/* Check size of buffer */
+	if (Length < FIELD_OFFSET(KEY_FULL_INFORMATION, Class))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -1062,14 +1167,21 @@ NtQueryKey(IN HANDLE KeyHandle,
 	      CmiGetMaxValueNameLength(RegistryHive, KeyCell);
 	    FullInformation->MaxValueDataLen =
 	      CmiGetMaxValueDataLength(RegistryHive, KeyCell);
-	    if (KeyCell->ClassSize != 0)
+
+	    if (Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) < ClassSize)
+	      {
+	        ClassSize = Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]);
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+	      
+	    if (ClassSize)
 	      {
 		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					KeyCell->ClassNameOffset,
 					NULL);
 		RtlCopyMemory (FullInformation->Class,
-			       ClassCell->Data,
-			       KeyCell->ClassSize);
+			       ClassCell->Data, ClassSize);
 	      }
 	  }
 	break;
@@ -1097,7 +1209,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	OUT PULONG ResultLength)
 {
   NTSTATUS  Status;
-  ULONG NameSize;
+  ULONG NameSize, DataSize;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell;
@@ -1155,8 +1267,11 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	  {
 	    NameSize *= sizeof(WCHAR);
 	  }
-	*ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameSize;
-	if (Length < *ResultLength)
+
+	*ResultLength = FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) +
+	                NameSize;
+
+	if (Length < FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -1167,25 +1282,37 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	    ValueBasicInformation->TitleIndex = 0;
 	    ValueBasicInformation->Type = ValueCell->DataType;
 	    ValueBasicInformation->NameLength = NameSize;
+
+	    if (Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) <
+	        NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]);
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+
 	    if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
 	      {
 		CmiCopyPackedName(ValueBasicInformation->Name,
 				  ValueCell->Name,
-				  ValueCell->NameSize);
+				  NameSize / sizeof(WCHAR));
 	      }
 	    else
 	      {
 		RtlCopyMemory(ValueBasicInformation->Name,
 			      ValueCell->Name,
-			      ValueCell->NameSize * sizeof(WCHAR));
+			      NameSize);
 	      }
 	  }
 	break;
 
       case KeyValuePartialInformation:
-	*ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION)
-	  + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
-	if (Length < *ResultLength)
+        DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
+	*ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) +
+	                DataSize;
+
+	if (Length < FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -1195,19 +1322,28 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	      KeyValueInformation;
 	    ValuePartialInformation->TitleIndex = 0;
 	    ValuePartialInformation->Type = ValueCell->DataType;
-	    ValuePartialInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+	    ValuePartialInformation->DataLength = DataSize;
+
+            if (Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) <
+                DataSize)
+              {
+                DataSize = Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
+                Status = STATUS_BUFFER_OVERFLOW;
+                CHECKPOINT;
+              }
+	    
 	    if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
 	      {
 		DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
 		RtlCopyMemory(ValuePartialInformation->Data,
 			      DataCell->Data,
-			      ValueCell->DataSize & REG_DATA_SIZE_MASK);
+			      DataSize);
 	      }
 	    else
 	      {
 		RtlCopyMemory(ValuePartialInformation->Data,
 			      &ValueCell->DataOffset,
-			      ValueCell->DataSize & REG_DATA_SIZE_MASK);
+			      DataSize);
 	      }
 	  }
 	break;
@@ -1218,9 +1354,12 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	  {
 	    NameSize *= sizeof(WCHAR);
 	  }
-	*ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
-	NameSize + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
-	if (Length < *ResultLength)
+	DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
+	*ResultLength = ROUND_UP(FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
+	                Name[0]) + NameSize, sizeof(PVOID)) + DataSize;
+
+	if (Length < FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
@@ -1231,18 +1370,6 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	    ValueFullInformation->TitleIndex = 0;
 	    ValueFullInformation->Type = ValueCell->DataType;
 	    ValueFullInformation->NameLength = NameSize;
-	    if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-	      {
-		CmiCopyPackedName(ValueFullInformation->Name,
-				  ValueCell->Name,
-				  ValueCell->NameSize);
-	      }
-	    else
-	      {
-		RtlCopyMemory(ValueFullInformation->Name,
-			      ValueCell->Name,
-			      ValueCell->NameSize);
-	      }
 	    ValueFullInformation->DataOffset = 
 	      (ULONG_PTR)ValueFullInformation->Name -
 	      (ULONG_PTR)ValueFullInformation +
@@ -1250,20 +1377,50 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	    ValueFullInformation->DataOffset =
 	      ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
 	    ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+
+	    if (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) <
+	        NameSize)
+	      {
+	        NameSize = Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]);
+	        DataSize = 0;
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+            else if (ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
+                     Name[0]) - NameSize, sizeof(PVOID)) < DataSize)
+	      {
+	        DataSize = ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
+	                            Name[0]) - NameSize, sizeof(PVOID));
+	        Status = STATUS_BUFFER_OVERFLOW;
+	        CHECKPOINT;
+	      }
+
+	    if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+	      {
+		CmiCopyPackedName(ValueFullInformation->Name,
+				  ValueCell->Name,
+				  NameSize / sizeof(WCHAR));
+	      }
+	    else
+	      {
+		RtlCopyMemory(ValueFullInformation->Name,
+			      ValueCell->Name,
+			      NameSize);
+	      }
 	    if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
 	      {
 		DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
 		RtlCopyMemory((PCHAR) ValueFullInformation
 			      + ValueFullInformation->DataOffset,
 			      DataCell->Data,
-			      ValueCell->DataSize & REG_DATA_SIZE_MASK);
+			      DataSize);
 	      }
 	    else
 	      {
 		RtlCopyMemory((PCHAR) ValueFullInformation
 			      + ValueFullInformation->DataOffset,
 			      &ValueCell->DataOffset,
-			      ValueCell->DataSize & REG_DATA_SIZE_MASK);
+			      DataSize);
 	      }
 	  }
 	break;
