@@ -2,10 +2,6 @@
 #include <io.h>
 #include <string.h>
 
-#if 0
-
-//UnixTimeToFileTime
-//FileTimeToUnixTime
 /*
  * DOS file system functions
  *
@@ -18,7 +14,7 @@ void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime, DWORD remainder )
 time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder ); 
 
 
-long  _findfirst(char *_name, struct _finddata_t *result)
+int  _findfirst(const char *_name, struct _finddata_t *result)
 {
 	WIN32_FIND_DATA FindFileData;
 	char dir[MAX_PATH];
@@ -32,7 +28,7 @@ long  _findfirst(char *_name, struct _finddata_t *result)
 	}
 	else 
 		strcpy(dir,_name);
-	hFindFile = FindFirstFile( dir, &FindFileData );	
+	hFindFile = FindFirstFileA( dir, &FindFileData );	
 	result->attrib = FindFileData.dwFileAttributes; 
 
 
@@ -44,7 +40,7 @@ long  _findfirst(char *_name, struct _finddata_t *result)
 	return hFindFile;
 }
 
-int  _findnext(long handle, struct _finddata_t  *result)
+int  _findnext(int handle, struct _finddata_t  *result)
 {
 	WIN32_FIND_DATA FindFileData;
 	if (handle == -1 )
@@ -61,7 +57,7 @@ int  _findnext(long handle, struct _finddata_t  *result)
 	strncpy(result->name,&FindFileData.cFileName,260);
 	return 0;
 }
-int  _findclose(long handle)
+int  _findclose(int handle)
 {
 	return FindClose(handle);
 }
@@ -252,4 +248,4 @@ time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder )
 
 }
 
-#endif
+

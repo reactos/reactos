@@ -65,7 +65,7 @@ strtoul(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
-    errno = ERANGE;
+   // errno = ERANGE;
   }
   else if (neg)
     acc = -acc;
@@ -128,7 +128,7 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
-    errno = ERANGE;
+  //  errno = ERANGE;
   }
   else if (neg)
     acc = -acc;

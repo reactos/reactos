@@ -82,7 +82,7 @@ strtol(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = neg ? LONG_MIN : LONG_MAX;
-    errno = ERANGE;
+//    errno = ERANGE;
   }
   else if (neg)
     acc = -acc;
@@ -168,7 +168,7 @@ wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
   if (any < 0)
   {
     acc = neg ? LONG_MIN : LONG_MAX;
-    errno = ERANGE;
+  //  errno = ERANGE;
   }
   else if (neg)
     acc = -acc;
