@@ -181,15 +181,15 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	//
 	if (CpuUsage == 100)
 	{
-		_stprintf(Text, _T("%d%%"), CpuUsage);
+		_stprintf(Text, _T("%d%%"), (int)CpuUsage);
 	}
 	else if (CpuUsage < 10)
 	{
-		_stprintf(Text, _T("  %d%%"), CpuUsage);
+		_stprintf(Text, _T("  %d%%"), (int)CpuUsage);
 	}
 	else
 	{
-		_stprintf(Text, _T(" %d%%"), CpuUsage);
+		_stprintf(Text, _T(" %d%%"), (int)CpuUsage);
 	}
 	
 	//
@@ -347,7 +347,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
 	CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
-	_stprintf(Text, _T("%dK"), CommitChargeTotal);
+	_stprintf(Text, _T("%dK"), (int)CommitChargeTotal);
 	
 	//
 	// Draw the font text onto the graph

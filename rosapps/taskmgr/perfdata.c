@@ -44,9 +44,9 @@ ULONG							ProcessCount = 0;
 double							dbIdleTime;
 double							dbKernelTime;
 double							dbSystemTime;
-LARGE_INTEGER					liOldIdleTime = {0,0};
+LARGE_INTEGER					liOldIdleTime = {{0,0}};
 double							OldKernelTime = 0;
-LARGE_INTEGER					liOldSystemTime = {0,0};
+LARGE_INTEGER					liOldSystemTime = {{0,0}};
 SYSTEM_PERFORMANCE_INFORMATION	SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION		SystemBasicInfo;
 SYSTEM_CACHE_INFORMATION		SystemCacheInfo;
@@ -441,7 +441,7 @@ ULONG PerfDataGetCPUUsage(ULONG Index)
 
 TIME PerfDataGetCPUTime(ULONG Index)
 {
-	TIME	CpuTime = {0,0};
+	TIME	CpuTime = {{0,0}};
 
 	EnterCriticalSection(&PerfDataCriticalSection);
 

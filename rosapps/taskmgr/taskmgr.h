@@ -19,17 +19,43 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
 
-#if !defined(AFX_TASKMGR_H__392F6393_0279_11D3_9C02_004005E27102__INCLUDED_)
-#define AFX_TASKMGR_H__392F6393_0279_11D3_9C02_004005E27102__INCLUDED_
+#ifndef __TASKMGR_H__
+#define __TASKMGR_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#ifdef _MSC_VER
+
+typedef struct _IO_COUNTERS {
+	ULONGLONG  ReadOperationCount;
+	ULONGLONG  WriteOperationCount;
+	ULONGLONG  OtherOperationCount;
+	ULONGLONG ReadTransferCount;
+	ULONGLONG WriteTransferCount;
+	ULONGLONG OtherTransferCount;
+} IO_COUNTERS, *PIO_COUNTERS;
+
+#else
+
+#if __MINGW32_MAJOR_VERSION == 1
+#define HDITEM HD_ITEM
+#define LPNMLISTVIEW LPNM_LISTVIEW
+#define HDN_ENDDRAG TBN_ENDDRAG
+#define LVSICF_NOSCROLL LVS_NOSCROLL
+#define HDM_GETORDERARRAY	(HDM_FIRST+19)   // TODO: FIX ME
+#endif
+
+#endif
 
 #include "resource.h"
 
+#define RUN_APPS_PAGE
+#define RUN_PROC_PAGE
+#define RUN_PERF_PAGE
 
 #define STATUS_WINDOW	2001
 
@@ -114,12 +140,13 @@ extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
 LRESULT CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
 
 BOOL OnCreate(HWND hWnd);
-void OnSize( UINT nType, int cx, int cy );
+void OnSize(UINT nType, int cx, int cy);
+void OnMove(UINT nType, int cx, int cy);
 
 void FillSolidRect(HDC hDC, LPCRECT lpRect, COLORREF clr);
-void FillSolidRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clr);
+void FillSolidRect2(HDC hDC, int x, int y, int cx, int cy, COLORREF clr);
 void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLORREF clrBottomRight);
-void Draw3dRect(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight);
+void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight);
 
 void LoadSettings(void);
 void SaveSettings(void);
@@ -132,9 +159,15 @@ void TaskManager_OnViewUpdateSpeedHigh(void);
 void TaskManager_OnViewUpdateSpeedNormal(void);
 void TaskManager_OnViewUpdateSpeedLow(void);
 void TaskManager_OnViewUpdateSpeedPaused(void);
+void TaskManager_OnViewRefresh(void);
 
 void TaskManager_OnTabWndSelChange(void);
 
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 
-#endif // !defined(AFX_TASKMGR_H__392F6393_0279_11D3_9C02_004005E27102__INCLUDED_)
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif // __TASKMGR_H__

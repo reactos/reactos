@@ -98,7 +98,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #define _USE_CMD_MAP
 
 #ifdef _USE_CMD_MAP
-#define BEGIN_CMD_MAP(a) switch(##a) {
+#define BEGIN_CMD_MAP(a) switch( ##a ) {
 #define CMD_MAP_ENTRY(a, b) case a: b(); break;
 #define END_CMD_MAP(a) }
 
@@ -126,7 +126,7 @@ LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
             return TRUE;
         }
 #ifdef _USE_CMD_MAP
-        BEGIN_CMD_MAP(LOWORD(wParam))
+        BEGIN_CMD_MAP( LOWORD(wParam) )
             CMD_MAP_ENTRY(ID_FILE_NEW,                             TaskManager_OnFileNew)
             CMD_MAP_ENTRY(ID_OPTIONS_ALWAYSONTOP,                  TaskManager_OnOptionsAlwaysOnTop)
             CMD_MAP_ENTRY(ID_OPTIONS_MINIMIZEONUSE,                TaskManager_OnOptionsMinimizeOnUse)
@@ -1012,7 +1012,7 @@ void TaskManager_OnTabWndSelChange(void)
     }
 }
 
-LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize )
+LPTSTR GetLastErrorText(LPTSTR lpszBuf, DWORD dwSize)
 {
     DWORD  dwRet;
     LPTSTR lpszTemp = NULL;
@@ -1026,11 +1026,11 @@ LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize )
                            NULL );
 
     // supplied buffer is not long enough
-    if (!dwRet || ( (long)dwSize < (long)dwRet+14 )) {
+    if (!dwRet || ( (long)dwSize < (long)dwRet+14)) {
         lpszBuf[0] = TEXT('\0');
     } else {
         lpszTemp[lstrlen(lpszTemp)-2] = TEXT('\0');  //remove cr and newline character
-        _stprintf(lpszBuf, TEXT("%s (0x%x)"), lpszTemp, GetLastError() );
+        _stprintf(lpszBuf, TEXT("%s (0x%x)"), lpszTemp, (int)GetLastError());
     }
     if (lpszTemp) {
         LocalFree((HLOCAL)lpszTemp);
