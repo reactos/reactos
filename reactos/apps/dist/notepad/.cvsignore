@@ -4,3 +4,8 @@
 *.coff
 *.sym
 *.map
+notepad.nostrip.exe
+notepad.ncb
+notepad.suo
+notepad.exe
+Release

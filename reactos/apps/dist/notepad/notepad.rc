@@ -55,20 +55,19 @@ BEGIN
     POPUP "&Edit"
     BEGIN
         MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM "&Redo\tCtrl+Y",               ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Cu&t",                        ID_EDIT_CUT
-        MENUITEM "&Copy",                       ID_EDIT_COPY
-        MENUITEM "&Paste",                      ID_EDIT_PASTE
-        MENUITEM "De&lete",                     ID_EDIT_DELETE
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "De&lete\tDel",                ID_EDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Find...",                    ID_EDIT_FIND
-        MENUITEM "Find &Next",                  ID_EDIT_FINDNEXT
-        MENUITEM "&Replace...",                 ID_EDIT_REPLACE
-        MENUITEM "&Goto",                       ID_EDIT_GOTO
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find &Next\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&Replace...\tCtrl+H",         ID_EDIT_REPLACE
+        MENUITEM "&Goto\tCtrl+G",               ID_EDIT_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Select &All",                 ID_EDIT_SELECTALL
-        MENUITEM "Time/&Date",                  ID_EDIT_TIME
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM "Time/&Date\tF5",              ID_EDIT_TIME
     END
     POPUP "&Format"
     BEGIN
@@ -77,7 +76,7 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
     END
     POPUP "&Help"
     BEGIN
@@ -97,8 +96,21 @@ END
 
 IDC_NOTEPAD ACCELERATORS 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+    "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          ID_EDIT_FINDNEXT,       VIRTKEY, NOINVERT
+    "H",            ID_EDIT_REPLACE,        VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_EDIT_GOTO,           VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_EDIT_SELECTALL,      VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_EDIT_TIME,           VIRTKEY, NOINVERT
 END
 
 

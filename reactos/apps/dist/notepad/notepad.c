@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: notepad.c,v 1.1 2003/12/30 11:52:04 rcampbell Exp $
+ *  $Id: notepad.c,v 1.2 2003/12/31 00:38:09 rcampbell Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Applications
@@ -70,18 +70,12 @@ LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT WINAPI EditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
 HWND CreateMainWnd()
 {
     WNDCLASS wc;
 	HWND hWnd;
-	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpszMenuName = NULL;
-	wc.lpszClassName = TEXT("notepad");
+	wc.lpszClassName = TEXT("Notepad");
 	wc.lpfnWndProc = MainWndProc;
 	
 	wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
@@ -91,17 +85,20 @@ HWND CreateMainWnd()
 	if(!RegisterClass(&wc))
 		return NULL;
 
-	hWnd = CreateWindow("notepad",
-						"Notepad",
-						WS_OVERLAPPEDWINDOW,
-						CW_USEDEFAULT,
-						CW_USEDEFAULT,
-						CW_USEDEFAULT,
-						CW_USEDEFAULT,
-						0,
-						LoadMenu(NULL,MAKEINTRESOURCE(IDC_NOTEPAD)),
-						NULL,
-						0);
+	hWnd = CreateWindowEx( WS_EX_ACCEPTFILES | WS_EX_WINDOWEDGE |
+						   WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR |
+						   WS_EX_LEFT,
+						   "Notepad",
+						   "Notepad",
+						   WS_OVERLAPPEDWINDOW,
+						   CW_USEDEFAULT,
+						   CW_USEDEFAULT,
+						   CW_USEDEFAULT,
+						   CW_USEDEFAULT,
+						   0,
+						   LoadMenu(NULL,MAKEINTRESOURCE(IDC_NOTEPAD)),
+						   NULL,
+						   0);
 
     return hWnd;
 }
@@ -109,12 +106,11 @@ HWND CreateMainWnd()
 HWND CreateEditWnd(HWND hParent, DWORD dwWidth, DWORD dwHeight)
 {
 		HWND hWnd;
-		hWnd = CreateWindowEx(WS_EX_CLIENTEDGE,
+		hWnd = CreateWindowEx(WS_EX_CLIENTEDGE | WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR,
 						"EDIT",
 						NULL,
 						WS_HSCROLL | WS_VSCROLL | WS_VISIBLE |
-						WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL |
-						ES_MULTILINE | ES_WANTRETURN,
+						WS_CHILD | ES_LEFT | ES_MULTILINE | ES_NOHIDESEL,
 						0,
 						0,
 						dwWidth,
@@ -153,24 +149,13 @@ WinMain(HINSTANCE hInstance,
 
     hAccel = LoadAccelerators( hInstance, MAKEINTRESOURCE(IDC_NOTEPAD) );
 
-    if( hAccel != NULL )
-    {
-        while( GetMessage(&msg, 0, 0, 0)) {
-            if( !TranslateAccelerator(g_hWnd, hAccel, &msg ) )
-			{
-                TranslateMessage( &msg );
-                DispatchMessage( &msg );
-            }
-        }
-    }
-	else
-    {
-        while (GetMessage(&msg, 0, 0, 0))
+    while( GetMessage(&msg, 0, 0, 0))
+	{
+		if( !TranslateAccelerator(g_hWnd, hAccel, &msg ) )
 		{
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+			TranslateMessage( &msg );
+            DispatchMessage( &msg );
         }
     }
-
     return 0;
 }
