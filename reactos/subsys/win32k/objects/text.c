@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.111 2004/09/13 17:17:17 gvg Exp $ */
+/* $Id: text.c,v 1.112 2004/10/07 05:26:54 sedwards Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -652,7 +652,7 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  FontFile,
                                      LPCWSTR  CurrentPath)
 {
-  UNIMPLEMENTED;
+	DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
   return FALSE;
 }
 
