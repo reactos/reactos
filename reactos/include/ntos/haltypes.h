@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.4 2003/10/20 06:03:29 vizzini Exp $
+/* $Id: haltypes.h,v 1.5 2003/12/30 18:34:58 fireball Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -14,9 +14,11 @@
 #define __INCLUDE_NTOS_HALTYPES_H
 
 #ifdef __GNUC__
-#define STDCALL_FUNC STDCALL
+#define STDCALL_FUNC  STDCALL
+#define FASTCALL_FUNC FASTCALL
 #else
-#define STDCALL_FUNC(a) (__stdcall a )
+#define STDCALL_FUNC(a)  (__stdcall a )
+#define FASTCALL_FUNC(a) (__fastcall a )
 #endif /*__GNUC__*/
 
 #include "types.h"
@@ -393,42 +395,42 @@ typedef NTSTATUS STDCALL_FUNC
 		     IN PVOID Context,
 		     IN PDEVICE_CONTROL_COMPLETION CompletionRoutine);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalExamineMBR)(IN PDEVICE_OBJECT DeviceObject,
 		  IN ULONG SectorSize,
 		  IN ULONG MBRTypeIdentifier,
 		  OUT PVOID *Buffer);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalIoAssignDriveLetters)(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			    IN PSTRING NtDeviceName,
 			    OUT PUCHAR NtSystemPath,
 			    OUT PSTRING NtSystemPathString);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoReadPartitionTable)(IN PDEVICE_OBJECT DeviceObject,
 			    IN ULONG SectorSize,
 			    IN BOOLEAN ReturnRecognizedPartitions,
 			    OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoSetPartitionInformation)(IN PDEVICE_OBJECT DeviceObject,
 				 IN ULONG SectorSize,
 				 IN ULONG PartitionNumber,
 				 IN ULONG PartitionType);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoWritePartitionTable)(IN PDEVICE_OBJECT DeviceObject,
 			     IN ULONG SectorSize,
 			     IN ULONG SectorsPerTrack,
 			     IN ULONG NumberOfHeads,
 			     IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
 
-typedef PBUS_HANDLER FASTCALL
+typedef PBUS_HANDLER FASTCALL_FUNC
 (*pHalHandlerForBus)(IN INTERFACE_TYPE InterfaceType,
 		     IN ULONG BusNumber);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalReferenceBusHandler)(IN PBUS_HANDLER BusHandler);
 
 

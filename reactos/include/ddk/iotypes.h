@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.60 2003/12/20 16:51:05 navaraf Exp $
+/* $Id: iotypes.h,v 1.61 2003/12/30 18:34:58 fireball Exp $
  *
  */
 
@@ -1285,19 +1285,19 @@ typedef struct _DMA_OPERATIONS {
 
 struct _DEVICE_DESCRIPTION;
 
-typedef BOOLEAN STDCALL (*PTRANSLATE_BUS_ADDRESS)(
+typedef BOOLEAN STDCALL_FUNC (*PTRANSLATE_BUS_ADDRESS)(
   IN PVOID Context,
   IN PHYSICAL_ADDRESS BusAddress,
   IN ULONG Length,
   IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS TranslatedAddress);
 
-typedef PDMA_ADAPTER STDCALL (*PGET_DMA_ADAPTER)(
+typedef PDMA_ADAPTER STDCALL_FUNC (*PGET_DMA_ADAPTER)(
   IN PVOID Context,
   IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
   OUT PULONG NumberOfMapRegisters);
 
-typedef ULONG STDCALL (*PGET_SET_DEVICE_DATA)(
+typedef ULONG STDCALL_FUNC (*PGET_SET_DEVICE_DATA)(
   IN PVOID Context,
   IN ULONG DataType,
   IN PVOID Buffer,

@@ -7,5 +7,5 @@
 
 typedef struct
 {
-  BOOL STDCALL (*ResetDisplay)(VOID);
+  BOOL STDCALL_FUNC (*ResetDisplay)(VOID);
 } NTBOOTVID_FUNCTION_TABLE;

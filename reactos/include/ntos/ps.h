@@ -84,10 +84,17 @@
 #endif /* !__USE_W32API */
 
 #ifdef __NTOSKRNL__
+#ifdef __GNUC__
 extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
-extern POBJECT_TYPE EXPORTED PsProcessType;
-extern POBJECT_TYPE EXPORTED PsThreadType;
-#else
+extern POBJECT_TYPE EXPORTED      PsProcessType;
+extern POBJECT_TYPE EXPORTED      PsThreadType;
+#else /* __GNUC__ */
+/* Microsft-style */
+extern EXPORTED struct _EPROCESS* PsInitialSystemProcess;
+extern EXPORTED POBJECT_TYPE      PsProcessType;
+extern EXPORTED POBJECT_TYPE      PsThreadType;
+#endif /* __GNUC__ */
+#else /* __NTOSKRNL__ */
 #ifdef __GNUC__ // robd
 extern struct _EPROCESS* IMPORTED PsInitialSystemProcess;
 extern POBJECT_TYPE IMPORTED PsProcessType;

@@ -5,10 +5,10 @@
 #include <roscfg.h>
 #include <napi/teb.h>
 
-typedef NTSTATUS STDCALL (*PEPFUNC)(PPEB);
+typedef NTSTATUS STDCALL_FUNC (*PEPFUNC)(PPEB);
 
 /* Type for a DLL's entry point */
-typedef BOOL STDCALL
+typedef BOOL STDCALL_FUNC
 (* PDLLMAIN_FUNC)(HANDLE hInst,
 		  ULONG ul_reason_for_call,
 		  LPVOID lpReserved);

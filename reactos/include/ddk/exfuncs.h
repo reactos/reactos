@@ -205,7 +205,7 @@ ExGetExclusiveWaiterCount (
 	PERESOURCE	Resource
 	);
 
-ULONG
+KPROCESSOR_MODE
 STDCALL
 ExGetPreviousMode (
 	VOID

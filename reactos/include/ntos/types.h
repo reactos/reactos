@@ -51,7 +51,7 @@ typedef short SHORT;
 #define STDCALL __stdcall
 #define CDECL __cdecl
 #endif
-#define CALLBACK    WINAPI
+#define CALLBACK    STDCALL_FUNC
 #define PASCAL      WINAPI
 #else
 
@@ -138,42 +138,41 @@ typedef USHORT CSHORT;
 typedef const wchar_t *PCWSTR;
 typedef char* PCSZ;
 
-#ifdef __GNUC__
-typedef DWORD STDCALL (*PTHREAD_START_ROUTINE) (LPVOID);
-#else
-typedef DWORD (STDCALL *PTHREAD_START_ROUTINE) (LPVOID);
-#endif /*__GNUC__*/
+typedef DWORD STDCALL_FUNC (*PTHREAD_START_ROUTINE) (LPVOID);
+
 
 typedef union _LARGE_INTEGER
 {
-  struct
-  {
-    DWORD LowPart;
-    LONG  HighPart;
-  } u;
 #ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
     LONG  HighPart;
   };
+#else
+  struct
+  {
+    DWORD LowPart;
+    LONG  HighPart;
+  } u;
 #endif /* ANONYMOUSUNIONS */
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
 typedef union _ULARGE_INTEGER
 {
-  struct
-  {
-    DWORD LowPart;
-    DWORD HighPart;
-  } u;
 #ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
     DWORD HighPart;
   };
+#else
+  struct
+  {
+    DWORD LowPart;
+    DWORD HighPart;
+  } u;
 #endif /* ANONYMOUSUNIONS */
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
@@ -460,21 +459,12 @@ typedef struct _SMALL_RECT
 } SMALL_RECT, *PSMALL_RECT;
 
 
-#ifdef __GNUC__
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*PTIMERAPCROUTINE)(
 	LPVOID lpArgToCompletionRoutine,
 	DWORD dwTimerLowValue,
 	DWORD dwTimerHighValue
 	);
-#else
-typedef VOID
-(STDCALL *PTIMERAPCROUTINE)(
-	LPVOID lpArgToCompletionRoutine,
-	DWORD dwTimerLowValue,
-	DWORD dwTimerHighValue
-	);
-#endif /*__GNUC__*/
 
 #include "except.h"
 

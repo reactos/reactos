@@ -14,15 +14,23 @@
 #endif
 
 #ifdef NDEBUG
+#if defined(__GNUC__)
 #define DPRINT(args...)
+#else
+#define DPRINT
+#endif	/* __GNUC__ */
 #define CHECKPOINT
 #else
-#define DPRINT(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
+#define DPRINT(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#define CHECKPOINT do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0)
 #endif
 
-#define DPRINT1(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT1 do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
+#if defined(__GNUC__)
+#define DPRINT1(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define DPRINT1              DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
+#define CHECKPOINT1 do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0)
 
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))

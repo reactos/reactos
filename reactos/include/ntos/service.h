@@ -36,14 +36,30 @@ typedef struct t_KeServiceDescriptorTableEntry {
 
 /* --- NTOSKRNL.EXE --- */
 #if defined(__NTOSKRNL__)
+#ifdef __GNUC__
 extern
 SSDT_ENTRY
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllexport);
-#else
+#else /* __GNUC__ */
+/* Microsft-style */
+extern
+__declspec(dllexport)
+SSDT_ENTRY
+KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+#endif /* __GNUC__ */
+#else /* __NTOSKRNL__ */
+#ifdef __GNUC__
 extern
 SSDT_ENTRY
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllimport);
-#endif
+#else /* __GNUC__ */
+/* Microsft-style */
+extern
+__declspec(dllimport)
+SSDT_ENTRY
+KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+#endif /* __GNUC__ */
+#endif /* __NTOSKRNL__ */
 
 extern
 SSDT_ENTRY

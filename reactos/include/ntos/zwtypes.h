@@ -1124,15 +1124,22 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 #ifndef NtCurrentThread
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
 #endif /* NtCurrentThread */
-#if 1
-extern ULONG NtBuildNumber;
-#else
+
+#ifdef __GNUC__
 #ifdef __NTOSKRNL__
-extern ULONG NtBuildNumber;
+extern ULONG EXPORTED NtBuildNumber;
 #else
-extern ULONG NtBuildNumber;
+extern ULONG IMPORTED NtBuildNumber;
 #endif
+#else
+/* Microsoft-style declarations */
+#ifdef __NTOSKRNL__
+extern EXPORTED ULONG NtBuildNumber;
+#else
+extern IMPORTED ULONG NtBuildNumber;
 #endif
+#endif	/* __GNUC__ */
+
 
 // event access mask
 
