@@ -32,16 +32,6 @@ ULONG BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
   return ((Blue & 0xff) << 16) | ((Green & 0xff) << 8) | (Red & 0xff);
 }
 
-INT abs(INT nm)
-{
-  if(nm<0)
-  {
-    return nm * -1;
-  } else
-  {
-    return nm;
-  }
-}
 
 // FIXME: If the caller knows that the destinations are indexed and not RGB
 // then we should cache more than one value. Same with the source.
@@ -68,9 +58,9 @@ ULONG ClosestColorMatch(ULONG SourceColor, ULONG *DestColors,
   {
     cDestColors = (PVIDEO_CLUTDATA)&DestColors[i];
 
-    cxRed = abs(cSourceColor->Red - cDestColors->Red) ^ 2;
-    cxGreen = abs(cSourceColor->Green - cDestColors->Green) ^ 2;
-    cxBlue = abs(cSourceColor->Blue - cDestColors->Blue) ^ 2;
+    cxRed = (cSourceColor->Red - cDestColors->Red) ^ 2;
+    cxGreen = (cSourceColor->Green - cDestColors->Green) ^ 2;
+    cxBlue = (cSourceColor->Blue - cDestColors->Blue) ^ 2;
 
     rt = /* sqrt */ (cxRed + cxGreen + cxBlue);
 
