@@ -1130,7 +1130,7 @@ NTSTATUS FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
       DeviceExt->rootDirectorySectors=DeviceExt->Boot->SectorsPerCluster;
       DeviceExt->rootStart=
              DeviceExt->FATStart+DeviceExt->Boot->FATCount
-             * ((struct _BootSector32 *)( DeviceExt->Boot))->FATSectors32;
+             *((struct _BootSector32 *)( DeviceExt->Boot))->FATSectors32;
       DeviceExt->dataStart=DeviceExt->rootStart;
         }
    else
@@ -1216,6 +1216,11 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	CurrentCluster = Fcb->entry.FirstCluster;
    FirstCluster=CurrentCluster;
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
+   
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+     {
+	return(STATUS_FILE_IS_A_DIRECTORY);
+     }
    
    if (ReadOffset >= Fcb->entry.FileSize
        && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))

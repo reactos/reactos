@@ -16,7 +16,7 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -45,16 +45,16 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    ObDereferenceObject(CurrentThread->ThreadsProcess);
    CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-
-   PsDispatchThread(THREAD_STATE_TERMINATED);
-   KeBugCheck(0);
-#if 0
-   CurrentThread->Tcb.State = THREAD_STATE_TERMINATED;
+   
+   ObDereferenceObject(CurrentThread);
+   DPRINT("ObGetReferenceCount(CurrentThread) %d\n",
+	  ObGetReferenceCount(CurrentThread));
+   
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
-   ZwYieldExecution();
-   for(;;);
-#endif
+   
+   PsDispatchThread(THREAD_STATE_TERMINATED);
+   KeBugCheck(0);
 }
 
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
@@ -75,6 +75,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    ObDereferenceObject(Thread->ThreadsProcess);
+   ObDereferenceObject(Thread);
    Thread->ThreadsProcess = NULL;
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
@@ -118,12 +119,8 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
 }
 
 
-NTSTATUS
-STDCALL
-NtTerminateThread (
-	IN	HANDLE		ThreadHandle,
-	IN	NTSTATUS	ExitStatus
-	)
+NTSTATUS STDCALL NtTerminateThread(IN	HANDLE		ThreadHandle,
+				   IN	NTSTATUS	ExitStatus)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -150,21 +147,6 @@ NtTerminateThread (
    return(STATUS_SUCCESS);
 }
 
-VOID PsReleaseThread(PETHREAD Thread)
-/*
- * FUNCTION: Called internally to release a thread's resources from another
- * thread's context
- * ARGUMENTS:
- *        Thread = Thread to release
- */
-{
-   DPRINT("PsReleaseThread(Thread %x)\n",Thread);
-   
-//   RemoveEntryList(&Thread->Tcb.QueueListEntry);
-   HalReleaseTask(Thread);
-   ObDereferenceObject(Thread);
-}
-
 
 NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*
@@ -179,11 +161,7 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
 }
 
 
-NTSTATUS
-STDCALL
-NtRegisterThreadTerminatePort (
-	HANDLE	TerminationPort
-	)
+NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE	TerminationPort)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }

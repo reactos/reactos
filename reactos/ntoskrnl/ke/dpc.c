@@ -71,15 +71,21 @@ void KeDrainDpcQueue(void)
    while (current_entry!=(&DpcQueueHead))
      {
 	CHECKPOINT;
+	DPRINT("DpcQueueSize %d current %x current->DeferredContext %x\n", 
+	       DpcQueueSize, current, current->DeferredContext);
+	DPRINT("current->Flink %x\n", current->DpcListEntry.Flink);
 	current->DeferredRoutine(current,current->DeferredContext,
 				 current->SystemArgument1,
 				 current->SystemArgument2);
+	CHECKPOINT;
 	current->Lock=FALSE;
 	KeRaiseIrql(HIGH_LEVEL,&oldlvl);
 	current_entry = RemoveHeadList(&DpcQueueHead);
+	DPRINT("current_entry %x\n", current_entry);
 	DpcQueueSize--;
 	KeLowerIrql(oldlvl);
-	current = CONTAINING_RECORD(&current_entry,KDPC,DpcListEntry);
+	current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
+	DPRINT("current %x\n", current);
      }
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
 }
@@ -93,13 +99,18 @@ BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
  *          FALSE otherwise
  */
 {
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&DpcQueueLock, &oldIrql);
    if (!Dpc->Lock)
      {
+	KeReleaseSpinLock(&DpcQueueLock, oldIrql);
 	return(FALSE);
      }
    RemoveEntryList(&Dpc->DpcListEntry);
    DpcQueueSize--;
    Dpc->Lock=0;
+   KeReleaseSpinLock(&DpcQueueLock, oldIrql);
    return(TRUE);
 }
 
@@ -130,6 +141,7 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
      }
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
+   DPRINT("dpc->DpcListEntry.Flink %x\n", dpc->DpcListEntry.Flink);
    DpcQueueSize++;
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    dpc->Lock=(PULONG)1;

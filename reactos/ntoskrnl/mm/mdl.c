@@ -21,6 +21,14 @@
 
 /* FUNCTIONS ***************************************************************/
 
+PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
+{
+   PULONG mdl_pages;
+   
+   mdl_pages = (PULONG)(Mdl + 1);
+   
+   return((PVOID)mdl_pages[((ULONG)Offset) / PAGESIZE]);
+}
 
 VOID MmUnlockPages(PMDL MemoryDescriptorList)
 /*
@@ -106,6 +114,22 @@ VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation)
    /* See ntddk.h from Windows 98 DDK */
 }
 
+VOID MmBuildMdlFromPages(PMDL Mdl)
+{
+   ULONG i;
+   PULONG mdl_pages;
+   
+   mdl_pages = (PULONG)(Mdl + 1);
+   
+   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
+     {
+        mdl_pages[i] = MmAllocPage();
+	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
+     }
+   
+}
+			 
+
 VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 			 LOCK_OPERATION Operation)
 /*
@@ -160,7 +184,12 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 
 ULONG MmGetMdlByteCount(PMDL Mdl)
 /*
- *
+ * FUNCTION: MmGetMdlByteCount returns the length in bytes described 
+ * by a given MDL.
+ * ARGUMENTS:
+ *        Mdl = Points to an MDL
+ * RETURN: MmGetMdlByteCount returns the byte count of the buffer described
+ * by Mdl.
  */
 {
    return(Mdl->ByteCount);

@@ -2,13 +2,17 @@
  * Structure ids
  */
 
+#define InternalBaseType                      (0xcc)
+#define InternalNotificationEvent             (InternalBaseType + 1)
+#define InternalSynchronizationEvent          (InternalBaseType + 2)
+#define InternalSemaphoreType                 (InternalBaseType + 3)
+#define InternalProcessType                   (InternalBaseType + 4)
+#define InternalThreadType                    (InternalBaseType + 5)
+#define InternalFileType                      (InternalBaseType + 6)
+#define InternalDriverType                    (InternalBaseType + 7)
+#define InternalDeviceType                    (InternalBaseType + 8)
+#define InternalMutexType                     (InternalBaseType + 9)
+#define InternalNotificationTimer             (InternalBaseType + 10)
+#define InternalSynchronizationTimer          (InternalBaseType + 11)
 
-#define ID_BASE_OBJECT      (0x34)
-#define ID_FILE_OBJECT      (ID_BASE_OBJECT + 1)
-#define ID_DEVICE_OBJECT    (ID_BASE_OBJECT + 2)
-#define ID_DRIVER_OBJECT    (ID_BASE_OBJECT + 3)
-#define ID_DIRECTORY_OBJECT (ID_BASE_OBJECT + 4)
-#define ID_EVENT_OBJECT     (ID_BASE_OBJECT + 5)
-#define ID_TIMER_OBJECT     (ID_BASE_OBJECT + 6)
-#define ID_PROCESS_OBJECT   (ID_BASE_OBJECT + 7)
-#define ID_THREAD_OBJECT    (ID_BASE_OBJECT + 8) 
+

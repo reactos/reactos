@@ -41,10 +41,6 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PKEVENT UserEvent,
 				     PIO_STATUS_BLOCK IoStatusBlock,
 				     PDEVICE_OBJECT DeviceToMount);
-NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
-		    PVOID Address,
-		    PLARGE_INTEGER Offset,
-		    PIO_STATUS_BLOCK StatusBlock);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
 NTSTATUS IopCreateFile(PVOID ObjectBody,
@@ -56,5 +52,12 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 PWSTR RemainingPath,
 			 POBJECT_ATTRIBUTES ObjectAttributes);
 NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject);
+
+PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
+					 PDEVICE_OBJECT DeviceObject,
+					 PMDL Mdl,
+					 PLARGE_INTEGER StartingOffset,
+					 PKEVENT Event,
+					 PIO_STATUS_BLOCK IoStatusBlock);
 
 #endif

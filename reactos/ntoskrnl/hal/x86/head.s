@@ -1,14 +1,14 @@
 #define NR_TASKS 128
 
 .globl _stext
-.globl _idt
-.globl _gdt
 .globl _start
 .globl _mainCRTStartup
 .globl start
-/*.globl _DllMainCRTStartup@12*/
+.globl _DllMainCRTStartup@12
+.globl _init_stack
+.globl _init_stack_top
 
-/*_DllMainCRTStartup@12:*/
+_DllMainCRTStartup@12:
 _stext:
 _mainCRTStartup:
 _start:

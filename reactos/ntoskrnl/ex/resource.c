@@ -40,7 +40,7 @@
 #include <stddef.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -186,15 +186,34 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 {
    ERESOURCE_THREAD CurrentThread = ExGetCurrentResourceThread();
    POWNER_ENTRY freeEntry;
-   ULONG i;
+   ULONG i = 0;
+   
+   DPRINT("EiAddSharedOwner(Resource %x)\n", Resource);
+   
+   if (Resource->ActiveCount == 0) 
+     {
+	/* no owner, it's easy */
+	Resource->OwnerThreads[1].OwnerThread = ExGetCurrentResourceThread();
+	Resource->OwnerThreads[1].a.OwnerCount = 1;
+	if (Resource->OwnerTable != NULL)
+	  {
+	     ExFreePool(Resource->OwnerTable);
+	  }
+	Resource->OwnerTable = NULL;
+	Resource->ActiveCount = 1;
+	DPRINT("EiAddSharedOwner() = TRUE\n");
+	return(TRUE);
+     }
    
    /* 
     * now, we must search if this thread has already acquired this resource 
     * then increase ownercount if found, else create new entry or reuse free 
     * entry
     */
-   if (!Resource->OwnerThreads[1].a.TableSize)
+   if (Resource->OwnerTable == NULL)
      {
+	DPRINT("Creating owner table\n");
+	
 	/* allocate ownertable,memset to 0, initialize first entry */
 	Resource->OwnerTable = ExAllocatePool(NonPagedPool,
 					      sizeof(OWNER_ENTRY)*3);
@@ -216,11 +235,17 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	return(TRUE);
      }
    
+   DPRINT("Search free entries\n");
+   
+   DPRINT("Number of entries %d\n", 
+	  Resource->OwnerThreads[1].a.TableSize);
+   
    freeEntry = NULL;
    for (i=0; i<Resource->OwnerThreads[1].a.TableSize; i++)
      {
 	if (Resource->OwnerTable[i].OwnerThread == CurrentThread)
 	  {
+	     DPRINT("Thread already owns resource\n");
 	     Resource->OwnerTable[i].a.OwnerCount++;
 	     return(TRUE);
 	  }
@@ -230,8 +255,12 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	  }
      }
    
+   DPRINT("Found free entry %x\n", freeEntry);
+   
    if (!freeEntry)
      {
+	DPRINT("Allocating new entry\n");
+	
 	/* reallocate ownertable with one more entry */
 	freeEntry = ExAllocatePool(NonPagedPool,
 				   sizeof(OWNER_ENTRY)*
@@ -246,8 +275,9 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	ExFreePool(Resource->OwnerTable);
 	Resource->OwnerTable=freeEntry;
 	freeEntry=&Resource->OwnerTable[Resource->OwnerThreads[1].a.TableSize];
-	Resource->OwnerThreads[1].a.TableSize ++;
+	Resource->OwnerThreads[1].a.TableSize++;
      }
+   DPRINT("Creating entry\n");
    freeEntry->OwnerThread=ExGetCurrentResourceThread();
    freeEntry->a.OwnerCount=1;
    Resource->ActiveCount++;
@@ -277,12 +307,9 @@ BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
    /* first, resolve trivial cases */
    if (Resource->ActiveCount == 0) 
      {
-	/* no owner, it's easy */
-	Resource->OwnerThreads[1].OwnerThread = ExGetCurrentResourceThread();
-	Resource->OwnerThreads[1].a.OwnerCount = 1;
-	Resource->ActiveCount = 1;
+	EiAddSharedOwner(Resource);
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
-	DPRINT("ExAcquireResourceExclusiveLite() = TRUE\n");
+	DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
 	return(TRUE);
      }
    
@@ -295,7 +322,7 @@ BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
 	 */
 	Resource->OwnerThreads[0].a.OwnerCount++;
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
-	DPRINT("ExAcquireResourceExclusiveLite() = TRUE\n");
+	DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
 	return(TRUE);
      }
    
@@ -306,7 +333,7 @@ BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
 	if (!Wait) 
 	  {
 	     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
-	     DPRINT("ExAcquireResourceExclusiveLite() = FALSE\n");
+	     DPRINT("ExAcquireResourceSharedLite() = FALSE\n");
 	     return(FALSE);
 	  }
 	else
@@ -322,7 +349,7 @@ BOOLEAN ExAcquireResourceSharedLite(PERESOURCE Resource, BOOLEAN Wait)
    
    EiAddSharedOwner(Resource);
    KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
-   DPRINT("ExAcquireResourceExclusiveLite() = TRUE\n");
+   DPRINT("ExAcquireResourceSharedLite() = TRUE\n");
    return(TRUE);
 }
 
@@ -601,6 +628,8 @@ VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
    
    if (Resource->Flag & ResourceOwnedExclusive)
      {
+	DPRINT("Releasing from exclusive access\n");
+	
 	Resource->OwnerThreads[0].a.OwnerCount--;
 	if (Resource->OwnerThreads[0].a.OwnerCount > 0)
 	  {
@@ -613,6 +642,8 @@ VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
 	Resource->ActiveCount--;
 	Resource->Flag &=(~ResourceOwnedExclusive);
 	assert(Resource->ActiveCount == 0);
+	DPRINT("Resource->NumberOfExclusiveWaiters %d\n",
+	       Resource->NumberOfExclusiveWaiters);
 	if (Resource->NumberOfExclusiveWaiters)
 	  {
 	     /* get resource to first exclusive waiter */
@@ -623,11 +654,14 @@ VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
 	     DPRINT("ExReleaseResourceForThreadLite() finished\n");
 	     return;
 	  }
+	DPRINT("Resource->NumberOfSharedWaiters %d\n",
+	       Resource->NumberOfSharedWaiters);
 	if (Resource->NumberOfSharedWaiters)
 	  {
+	     DPRINT("Releasing semaphore\n");
 	     KeReleaseSemaphore(Resource->SharedWaiters,
 				IO_NO_INCREMENT,
-				Resource->ActiveCount,
+				Resource->NumberOfSharedWaiters,
 				FALSE);
 	  }
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);

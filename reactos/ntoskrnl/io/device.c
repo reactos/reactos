@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.11 1999/10/24 17:07:57 rex Exp $
+/* $Id: device.c,v 1.12 1999/11/12 12:01:13 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -24,13 +24,9 @@
 /* FUNCTIONS ***************************************************************/
 
 
-NTSTATUS
-STDCALL
-NtUnloadDriver (
-	IN	PUNICODE_STRING	DriverServiceName
-	)
+NTSTATUS STDCALL NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 
@@ -50,36 +46,27 @@ NtUnloadDriver (
  *
  * REVISIONS
  */
-NTSTATUS
-STDCALL
-NtLoadDriver (
-	PUNICODE_STRING	DriverServiceName
-	)
+NTSTATUS STDCALL NtLoadDriver (PUNICODE_STRING	DriverServiceName)
 {
   /* FIXME: this should lookup the filename from the registry and then call LdrLoadDriver  */
   return  LdrLoadDriver (DriverServiceName);
 }
 
 
-NTSTATUS
-IoAttachDeviceByPointer (
-	PDEVICE_OBJECT	SourceDevice,
-	PDEVICE_OBJECT	TargetDevice
-	)
+NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT	SourceDevice,
+				 PDEVICE_OBJECT	TargetDevice)
 {
 	UNIMPLEMENTED;
 }
 
 
-VOID
-IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
+VOID IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
 	UNIMPLEMENTED;
 }
 
 
-PDEVICE_OBJECT
-IoGetRelatedDeviceObject(PFILE_OBJECT FileObject)
+PDEVICE_OBJECT IoGetRelatedDeviceObject(PFILE_OBJECT FileObject)
 {
    return(FileObject->DeviceObject);
 }
@@ -163,7 +150,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
      }
    memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
    
-   DriverObject->Type = ID_DRIVER_OBJECT;
+   DriverObject->Type = InternalDriverType;
    
    for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
      {
@@ -293,7 +280,7 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	DriverObject->DeviceObject = CreatedDeviceObject;
      }
    
-   CreatedDeviceObject->Type = ID_DEVICE_OBJECT;
+   CreatedDeviceObject->Type = DeviceType;
    CreatedDeviceObject->DriverObject = DriverObject; 
    CreatedDeviceObject->CurrentIrp = NULL;
    CreatedDeviceObject->Flags = 0;

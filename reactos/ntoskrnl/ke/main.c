@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.29 1999/11/07 08:03:28 ea Exp $
+/* $Id: main.c,v 1.30 1999/11/12 12:01:15 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -126,6 +126,68 @@ unsigned int old_idt[256][2];
 //extern unsigned int idt[];
 unsigned int old_idt_valid = 1;
 
+ERESOURCE TestResource;
+
+VOID thread_main(PVOID param)
+{
+   ULONG Id;
+   
+   Id = (ULONG)param;
+   
+   DbgPrint("THREAD(%d) Resource %x\n",Id,&TestResource);
+   
+   DbgPrint("THREAD(%d) Acquiring resource for shared access\n", Id);
+   
+   ExAcquireResourceExclusiveLite(&TestResource, TRUE);
+   
+   DbgPrint("THREAD(%d) Acquired resource for shared access\n", Id);
+}
+
+VOID resource_test(VOID)
+{
+   HANDLE thread1_handle;
+   CLIENT_ID thread1_cid;
+   HANDLE thread2_handle;
+   CLIENT_ID thread2_cid;
+   ULONG i;
+   
+   ExInitializeResourceLite(&TestResource);
+   
+   DbgPrint("Resource %x\n", &TestResource);
+   
+   ExAcquireResourceExclusiveLite(&TestResource, TRUE);
+   
+   DbgPrint("Acquired resource for exclusive access\n");
+      
+   PsCreateSystemThread(&thread1_handle,
+		     THREAD_ALL_ACCESS,
+		     NULL,
+		     NULL,
+		     &thread1_cid,
+		     thread_main,
+		     (PVOID)1);
+   PsCreateSystemThread(&thread2_handle,
+		     THREAD_ALL_ACCESS,
+		     NULL,
+		     NULL,
+		     &thread2_cid,
+		     thread_main,
+		     (PVOID)2);
+
+   DbgPrint("KeGetCurrentIrql() %d\n", KeGetCurrentIrql());
+   
+   for (i=0; i<10000000; i++)
+     {
+	__asm__("nop\n\t");
+     }
+   
+   ExReleaseResourceLite(&TestResource);
+   
+   DbgPrint("Released resource\n");
+   
+   for(;;);
+}
+
 asmlinkage void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -180,13 +242,21 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Initalize various critical subsystems
     */
+   DPRINT("HalInitSystem()\n");
    HalInitSystem (1, &bp);
+   DPRINT("MmInitialize()\n");
    MmInitialize(&bp, last_kernel_address);
+   DPRINT("KeInit()\n");
    KeInit();
+   DPRINT("ExInit()\n");
    ExInit();
+   DPRINT("ObInit()\n");
    ObInit();
+   DPRINT("PsInit()\n");
    PsInit();
+   DPRINT("IoInit()\n");
    IoInit();
+   DPRINT("LdrInitModuleManagement()\n");
    LdrInitModuleManagement();
    CmInitializeRegistry();
       

@@ -77,7 +77,7 @@ VOID PsInitProcessManagment(VOID)
 				  NULL,
 				  PsProcessType);
    KeInitializeDispatcherHeader(&SystemProcess->Pcb.DispatcherHeader,
-				ID_PROCESS_OBJECT,
+				InternalProcessType,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &SystemProcess->Pcb;  
@@ -232,7 +232,7 @@ NtCreateProcess (
 			    ObjectAttributes,
 			    PsProcessType);
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
-				ID_PROCESS_OBJECT,
+				InternalProcessType,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &(Process->Pcb);

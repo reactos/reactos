@@ -45,6 +45,9 @@ static KSPIN_LOCK FreePageListLock;
 static LIST_ENTRY BiosPageListHead;
 static KSPIN_LOCK BiosPageListLock;
 
+ULONG MiNrFreePages;
+ULONG MiNrUsedPages;
+
 /* FUNCTIONS *************************************************************/
 
 PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
@@ -83,15 +86,22 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    
    DPRINT("Reserved %d\n", Reserved);
    
+   MiNrFreePages = 0;
+   MiNrUsedPages = 0;
+   
    i = 1;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
+	MiNrFreePages = MiNrFreePages + 
+	  ((ULONG)FirstPhysKernelAddress/PAGESIZE);
 	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
+	MiNrUsedPages = MiNrUsedPages +
+	  (((0xa0000) / PAGESIZE) - i);
 	for (; i<(0xa0000 / PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
@@ -107,6 +117,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
      }
    else
      {
+	MiNrFreePages = MiNrFreePages + (0xa0000 / PAGESIZE);	  
 	for (; i<(0xa0000 / PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
@@ -119,12 +130,16 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
+	MiNrFreePages = MiNrFreePages + 
+	  (((ULONG)FirstPhysKernelAddress/PAGESIZE) - i);
 	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
+	MiNrUsedPages = MiNrUsedPages +
+	  (((ULONG)LastPhysKernelAddress/PAGESIZE) - i);
 	for (; i<((ULONG)LastPhysKernelAddress/PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
@@ -133,12 +148,13 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  }
      }
    
+   MiNrFreePages = MiNrFreePages + (MemorySizeInPages - i);
    for (; i<MemorySizeInPages; i++)
      {
 	MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
-     }
+     }  
    DPRINT("\nMmInitializePageList() = %x\n",
 	  LastKernelAddress + Reserved * PAGESIZE);
    return((PVOID)(LastKernelAddress + Reserved * PAGESIZE));
@@ -151,6 +167,11 @@ VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr)
    KIRQL oldIrql;
    
    DPRINT("MmFreePage(PhysicalAddress %x, Nr %x)\n", PhysicalAddress, Nr);
+   
+   assert(((ULONG)PhysicalAddress) <= 0x400000);
+   
+   MiNrFreePages = MiNrFreePages + Nr;
+   MiNrUsedPages = MiNrUsedPages - Nr;
    
    for (i=0; i<Nr; i++)
      {
@@ -193,6 +214,11 @@ PVOID MmAllocPage(VOID)
    DPRINT("offset %x\n",offset);
    offset = offset / sizeof(PHYSICAL_PAGE) * PAGESIZE;
    DPRINT("offset %x\n",offset);
+   
+   MiNrUsedPages = MiNrUsedPages + 1;
+   MiNrFreePages = MiNrFreePages - 1;
+   
+   assert(offset <= 0x400000);
    
    DPRINT("MmAllocPage() = %x\n",offset);
    return((PVOID)offset);

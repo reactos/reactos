@@ -451,3 +451,85 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    return(Irp);
 }
 
+
+PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
+					 PDEVICE_OBJECT DeviceObject,
+					 PMDL Mdl,
+					 PLARGE_INTEGER StartingOffset,
+					 PKEVENT Event,
+					 PIO_STATUS_BLOCK IoStatusBlock)
+/*
+ * FUNCTION: Allocates and builds an IRP to be sent synchronously to lower
+ * level driver(s)
+ * ARGUMENTS:
+ *        MajorFunction = Major function code, one of IRP_MJ_READ,
+ *                        IRP_MJ_WRITE, IRP_MJ_FLUSH_BUFFERS, IRP_MJ_SHUTDOWN
+ *        DeviceObject = Target device object
+ *        Buffer = Buffer containing data for a read or write
+ *        Length = Length in bytes of the information to be transferred
+ *        StartingOffset = Offset to begin the read/write from
+ *        Event (OUT) = Will be set when the operation is complete
+ *        IoStatusBlock (OUT) = Set to the status of the operation
+ * RETURNS: The IRP allocated on success, or
+ *          NULL on failure
+ */
+{
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   
+   DPRINT("IoBuildSynchronousFsdRequestWithMdl(MajorFunction %x, "
+	  "DeviceObject %x, "
+	  "Mdl %x, StartingOffset %x, Event %x, "
+	  "IoStatusBlock %x\n",MajorFunction,DeviceObject,Mdl,
+	  StartingOffset,Event,IoStatusBlock);
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
+     {
+	return(NULL);
+     }
+   
+   Irp->UserEvent = Event;
+   Irp->UserIosb = IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = MajorFunction;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = NULL;
+   StackPtr->CompletionRoutine = NULL;
+   
+   Irp->MdlAddress = Mdl;
+   Irp->UserBuffer = NULL;
+   Irp->AssociatedIrp.SystemBuffer = NULL;
+      
+   if (MajorFunction == IRP_MJ_READ)
+     {
+       if (StartingOffset != NULL)
+	 {
+	    StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
+	 }
+       else
+	 {
+            StackPtr->Parameters.Read.ByteOffset.QuadPart = 0;
+	 }
+	StackPtr->Parameters.Read.Length = MmGetMdlByteCount(Mdl);
+     }
+   else
+     {
+       if (StartingOffset!=NULL)
+	 {
+	    StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
+	 }
+       else
+	 {
+            StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
+	 }
+	StackPtr->Parameters.Write.Length = MmGetMdlByteCount(Mdl);
+     }
+
+   return(Irp);
+}

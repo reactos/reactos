@@ -62,8 +62,6 @@ VOID KeApcProlog2(PKAPC Apc)
  * a kernel APC
  */
 {
-   KIRQL oldIrql;
-   
    DPRINT("KeApcProlog2(Apc %x)\n",Apc);
    KeEnterCriticalRegion();
    Apc->Thread->ApcState.KernelApcInProgress++;
@@ -77,7 +75,6 @@ VOID KeApcProlog2(PKAPC Apc)
    Apc->Thread->ApcState.KernelApcInProgress--;
    KeLeaveCriticalRegion();
    PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb));
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 }
 
 VOID KeDeliverKernelApc(PKAPC Apc)

@@ -52,6 +52,11 @@ static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 
+/*
+ * All pagefaults are synchronized on this 
+ */
+static KSPIN_LOCK MiPageFaultLock;
+
 /* FUNCTIONS ****************************************************************/
 
 VOID MmInitVirtualMemory(boot_param* bp)
@@ -127,14 +132,16 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
+   PMDL Mdl;
+   PVOID Page;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	  MemoryArea,Address);
    
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage());
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   MmBuildMdlFromPages(Mdl);
+     
+   Page = MmGetMdlPageAddress(Mdl, 0);
    
    Offset.QuadPart = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
@@ -148,9 +155,14 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
      }
    
    IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-	      (PVOID)Address,
+	      Mdl,
 	      &Offset,
 	      &IoStatus);
+      
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)Page);
    
    DPRINT("Returning from MmSectionHandleFault()\n");
    
@@ -188,6 +200,8 @@ asmlinkage int page_fault_handler(unsigned int cs,
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   
+   KeAcquireSpinLockAtDpcLevel(&MiPageFaultLock);
    
    /*
     * Find the memory area for the faulting address
@@ -237,6 +251,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
    DPRINT("Completed page fault handling\n");
    if (NT_SUCCESS(Status))
      {
+	KeReleaseSpinLockFromDpcLevel(&MiPageFaultLock);
 	KeLowerIrql(oldlvl);
      }
 //   DbgPrint("%%)");

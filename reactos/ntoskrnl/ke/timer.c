@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.19 1999/11/02 08:55:40 dwelch Exp $
+/* $Id: timer.c,v 1.20 1999/11/12 12:01:15 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -21,6 +21,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <stdio.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -28,7 +29,6 @@
 /* TYPES *****************************************************************/
 
 #define TIMER_IRQ 0
-
 
 /* GLOBALS ****************************************************************/
 
@@ -71,8 +71,8 @@ volatile ULONGLONG KiTimerTicks;
 /*
  * PURPOSE: List of timers
  */
-static LIST_ENTRY timer_list_head = {NULL,NULL};
-static KSPIN_LOCK timer_list_lock = {0,};
+static LIST_ENTRY TimerListHead;
+static KSPIN_LOCK TimerListLock;
 
 extern ULONG PiNrRunnableThreads;
 
@@ -83,74 +83,29 @@ extern ULONG PiNrRunnableThreads;
 
 static unsigned int loops_per_microsecond = 100;
 
+static BOOLEAN TimerInitDone = FALSE;
+
 /* FUNCTIONS **************************************************************/
 
-VOID KeCalibrateTimerLoop(VOID)
-{
-   unsigned int start_tick;
-//   unsigned int end_tick;
-//   unsigned int nr_ticks;
-   unsigned int i;
-   unsigned int microseconds;
-   
-   for (i=0;i<20;i++)
-     {
-   
-	start_tick = KiTimerTicks;
-        microseconds = 0;
-        while (start_tick == KiTimerTicks);
-        while (KiTimerTicks == (start_tick+TICKS_TO_CALIBRATE))
-        {
-                KeStallExecutionProcessor(1);
-                microseconds++;
-        };
 
-//        DbgPrint("microseconds %d\n",microseconds);
-
-        if (microseconds > (CALIBRATE_PERIOD+1000))
-        {
-           loops_per_microsecond = loops_per_microsecond + 1;
-        }
-        if (microseconds < (CALIBRATE_PERIOD-1000))
-        {
-           loops_per_microsecond = loops_per_microsecond - 1;
-        }
-//        DbgPrint("loops_per_microsecond %d\n",loops_per_microsecond);
-     }
-//     for(;;);
-}
-
-
-NTSTATUS
-STDCALL
-NtQueryTimerResolution (
-	OUT	PULONG	MinimumResolution,
-	OUT	PULONG	MaximumResolution, 
-	OUT	PULONG	ActualResolution
-	)
+NTSTATUS STDCALL NtQueryTimerResolution(OUT	PULONG	MinimumResolution,
+					OUT	PULONG	MaximumResolution, 
+					OUT	PULONG	ActualResolution)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtSetTimerResolution (
-	IN	ULONG	RequestedResolution,
-	IN	BOOL	SetOrUnset,
-	OUT	PULONG	ActualResolution
-	)
+NTSTATUS STDCALL NtSetTimerResolution(IN	ULONG	RequestedResolution,
+				      IN	BOOL	SetOrUnset,
+				      OUT	PULONG	ActualResolution)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryPerformanceCounter (
-	IN	PLARGE_INTEGER	Counter,
-	IN	PLARGE_INTEGER	Frequency
-	)
+NTSTATUS STDCALL NtQueryPerformanceCounter (IN	PLARGE_INTEGER	Counter,
+					    IN	PLARGE_INTEGER	Frequency)
 {
 	UNIMPLEMENTED;
 }
@@ -167,31 +122,23 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
    KeSetTimer(&(Thread->Timer),*Interval,NULL);
 
    DPRINT("Thread->Timer.entry.Flink %x\n",
-	    Thread->Timer.entry.Flink);
+	    Thread->Timer.TimerListEntry.Flink);
    
    return STATUS_SUCCESS;
 }
 
 
-NTSTATUS
-STDCALL
-NtDelayExecution (
-	IN	BOOLEAN	Alertable,
-	IN	TIME	* Interval
-	)
+NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
+				  IN TIME* Interval)
 {
-	KeBugCheck(0);
-	return(STATUS_UNSUCCESSFUL);
+   UNIMPLEMENTED;
+   return(STATUS_UNSUCCESSFUL);
 }
 
 
-NTSTATUS
-STDCALL
-KeDelayExecutionThread (
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Interval
-	)
+NTSTATUS STDCALL KeDelayExecutionThread(KPROCESSOR_MODE	WaitMode,
+					BOOLEAN		Alertable,
+					PLARGE_INTEGER	Interval)
 /*
  * FUNCTION: Puts the current thread into an alertable or nonalertable 
  * wait state for a given internal
@@ -202,73 +149,14 @@ KeDelayExecutionThread (
  * RETURNS: Status
  */
 {
-	PKTHREAD CurrentThread = KeGetCurrentThread();
-	KeAddThreadTimeout (
-		CurrentThread,
-		Interval
-		);
-	return (KeWaitForSingleObject (
-			& (CurrentThread->Timer),
-			Executive,
-			KernelMode,
-			Alertable,
-			NULL
-			)
-		);
+   PKTHREAD CurrentThread = KeGetCurrentThread();
+   KeAddThreadTimeout(CurrentThread, Interval);
+   return (KeWaitForSingleObject(&(CurrentThread->Timer),
+				 Executive,
+				 KernelMode,
+				 Alertable,
+				 NULL));
 }
-
-VOID KeStallExecutionProcessor(ULONG MicroSeconds)
-{
-   unsigned int i;
-   for (i=0; i<(loops_per_microsecond*MicroSeconds) ;i++)
-     {
-	__asm__("nop\n\t");
-     }
-}
-
-#if 0
-static inline void ULLToLargeInteger(unsigned long long src,
-				     PLARGE_INTEGER dest)
-{
-   dest->LowPart = src & 0xffffffff;
-   dest->HighPart = (src>>32);
-}
-
-static inline void SLLToLargeInteger(signed long long src,
-				     PLARGE_INTEGER dest)
-{
-   if (src > 0)
-     {
-	dest->LowPart = src & 0xffffffff;
-	dest->HighPart = (src>>32);
-     }
-   else
-     {
-	src = -src;
-	dest->LowPart = src & 0xffffffff;
-	dest->HighPart = -(src>>32);
-     }
-}
-
-static inline signed long long LargeIntegerToSLL(PLARGE_INTEGER src)
-{
-   signed long long r;
-   
-   r = src->LowPart;
-   if (src->HighPart >= 0)
-     {
-	r = r | (((unsigned long long)src->HighPart)<<32);
-     }
-   else
-     {
-	r = r | (((unsigned long long)(-(src->HighPart)))<<32);
-	r = -r;
-     }
-   return(r);
-}
-
-#endif
-
 
 LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 /*
@@ -311,9 +199,7 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 }
 
 
-NTSTATUS
-STDCALL
-NtGetTickCount (PULONG UpTime)
+NTSTATUS STDCALL NtGetTickCount (PULONG UpTime)
 {
 	UNIMPLEMENTED;
 }
@@ -333,7 +219,7 @@ BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc)
  *          False otherwise
  */
 {
-   return(KeSetTimerEx(Timer,DueTime,0,Dpc));
+   return(KeSetTimerEx(Timer, DueTime, 0, Dpc));
 }
 
 BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
@@ -355,32 +241,26 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    
    DPRINT("KeSetTimerEx(Timer %x)\n",Timer);
    
-   KeAcquireSpinLock(&timer_list_lock,&oldlvl);
+   KeAcquireSpinLock(&TimerListLock,&oldlvl);
    
-   Timer->dpc=Dpc;
-   Timer->period=Period;
-   Timer->expire_time = (*(long long int *)&DueTime);
-   if (Timer->expire_time < 0)
+   Timer->Dpc = Dpc;
+   if (DueTime.QuadPart < 0)
      {
-	Timer->expire_time = system_time + (-Timer->expire_time);
+	Timer->DueTime.QuadPart = system_time + (-(DueTime.QuadPart));
      }
-   DPRINT("System:%ld:%ld Expire:%d:%d Period:%d\n", 
-          (unsigned long) (system_time & 0xffffffff), 
-          (unsigned long) ((system_time >> 32) & 0xffffffff), 
-          (unsigned long) (Timer->expire_time & 0xffffffff), 
-          (unsigned long) ((Timer->expire_time >> 32) & 0xffffffff), 
-          Timer->period);
-   Timer->signaled = FALSE;
-   if (Timer->running)
+   else
      {
-	KeReleaseSpinLock(&timer_list_lock,oldlvl);
-	return TRUE;	
+	Timer->DueTime.QuadPart = DueTime.QuadPart;
      }
-   DPRINT("Inserting %x in list\n",&Timer->entry);
-   DPRINT("Timer->entry.Flink %x\n",Timer->entry.Flink);
-   Timer->running=TRUE;
-   InsertTailList(&timer_list_head,&Timer->entry);
-   KeReleaseSpinLock(&timer_list_lock,oldlvl);
+   Timer->Period = Period;
+   Timer->Header.SignalState = FALSE;
+   if (Timer->TimerListEntry.Flink != NULL)
+     {
+	KeReleaseSpinLock(&TimerListLock, oldlvl);
+	return(TRUE);
+     }
+   InsertTailList(&TimerListHead,&Timer->TimerListEntry);
+   KeReleaseSpinLock(&TimerListLock, oldlvl);
    
    return FALSE;
 }
@@ -398,23 +278,23 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
    
    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
    
-   KeAcquireSpinLock(&timer_list_lock, &oldlvl);
+   KeAcquireSpinLock(&TimerListLock, &oldlvl);
 		     
-   if (!Timer->running)
+   if (Timer->TimerListEntry.Flink == NULL)
      {
-	KeReleaseSpinLock(&timer_list_lock, oldlvl);
-	return FALSE;
+	KeReleaseSpinLock(&TimerListLock, oldlvl);
+	return(FALSE);
      }
-   RemoveEntryList(&Timer->entry);
-   Timer->running = FALSE;
-   KeReleaseSpinLock(&timer_list_lock, oldlvl);
+   RemoveEntryList(&Timer->TimerListEntry);
+   Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
+   KeReleaseSpinLock(&TimerListLock, oldlvl);
 
-   return TRUE;
+   return(TRUE);
 }
 
 BOOLEAN KeReadStateTimer(PKTIMER Timer)
 {
-   return Timer->signaled;
+   return(Timer->Header.SignalState);
 }
 
 VOID KeInitializeTimer(PKTIMER Timer)
@@ -440,9 +320,27 @@ VOID KeInitializeTimerEx(PKTIMER Timer, TIMER_TYPE Type)
  * single waiting thread is released and then the timer is reset.
  */
 {
-   Timer->running=FALSE;
-   Timer->type=Type;
-   Timer->signaled=FALSE;
+   ULONG IType;
+   
+   if (Type == NotificationTimer)
+     {
+	IType = InternalNotificationTimer;
+     }
+   else if (Type == SynchronizationTimer)
+     {
+	IType = InternalSynchronizationTimer;
+     }
+   else
+     {
+	assert(FALSE);
+	return;
+     }
+   
+   KeInitializeDispatcherHeader(&Timer->Header,
+				IType,
+				sizeof(KTIMER) / sizeof(ULONG),
+				FALSE);
+   Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
 }
 
 VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
@@ -458,64 +356,68 @@ VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
 static void HandleExpiredTimer(PKTIMER current)
 {
    DPRINT("HandleExpiredTime(current %x)\n",current);
-   if (current->dpc!=NULL)
+   if (current->Dpc != NULL)
      {
-	DPRINT("current->dpc->DeferredRoutine %x\n",
-		 current->dpc->DeferredRoutine);
-	current->dpc->DeferredRoutine(current->dpc,
-				      current->dpc->DeferredContext,
-				      current->dpc->SystemArgument1,
-				      current->dpc->SystemArgument2);
+	DPRINT("current->Dpc %x current->Dpc->DeferredRoutine %x\n",
+	       current->Dpc, current->Dpc->DeferredRoutine);
+	KeInsertQueueDpc(current->Dpc,
+			 NULL,
+			 NULL);
 	DPRINT("Finished dpc routine\n");
      }
-   current->signaled=TRUE;
-   if (current->period != 0)
+   current->Header.SignalState = TRUE;
+   if (current->Period != 0)
      {
-        DPRINT("System:%ld:%ld Expire:%d:%d Period:%d\n", 
-               (unsigned long) (system_time & 0xffffffff), 
-               (unsigned long) ((system_time >> 32) & 0xffffffff), 
-               (unsigned long) (current->expire_time & 0xffffffff), 
-               (unsigned long) ((current->expire_time >> 32) & 0xffffffff), 
-               current->period);
-	current->expire_time += current->period * SYSTEM_TIME_UNITS_PER_MSEC;
+	current->DueTime.QuadPart += 
+	  current->Period * SYSTEM_TIME_UNITS_PER_MSEC;
      }
    else
      {
-	RemoveEntryList(&current->entry);
-	current->running=FALSE;
+	RemoveEntryList(&current->TimerListEntry);
+	current->TimerListEntry.Flink = current->TimerListEntry.Blink = NULL;
      }
 }
 
-void KeExpireTimers(void)
+VOID KeExpireTimers(VOID)
 {
-   PLIST_ENTRY current_entry = timer_list_head.Flink;
-   PKTIMER current = CONTAINING_RECORD(current_entry,KTIMER,entry);
+   PLIST_ENTRY current_entry = NULL;
+   PKTIMER current = NULL;
    KIRQL oldlvl;
    
-   DPRINT("KeExpireTimers()\n");
-   DPRINT("&timer_list_head %x\n",&timer_list_head);
-   DPRINT("current_entry %x\n",current_entry);
-   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
-   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
+//   DPRINT("KeExpireTimers()\n");
    
-   KeAcquireSpinLock(&timer_list_lock,&oldlvl);
-   
-   while (current_entry!=(&timer_list_head))
+   if (TimerInitDone == FALSE)
      {
-	if (system_time >= current->expire_time)
+	return;
+     }
+   
+   current_entry = TimerListHead.Flink;
+   
+//   DPRINT("&TimerListHead %x\n",&TimerListHead);
+//   DPRINT("current_entry %x\n",current_entry);
+//   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
+//   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
+       
+   KeAcquireSpinLock(&TimerListLock, &oldlvl);
+   
+   while (current_entry!=(&TimerListHead))
+     {
+	current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
+	
+	current_entry = current_entry->Flink;
+	
+	if (system_time >= current->DueTime.QuadPart)
 	  {
 	     HandleExpiredTimer(current);
-	  }
-	
-	current_entry = current_entry->Flink;     
-	current = CONTAINING_RECORD(current_entry,KTIMER,entry);
+	  }      
      }
-   KeReleaseSpinLock(&timer_list_lock,oldlvl);
-   DPRINT("Finished KeExpireTimers()\n");
+   
+   KeReleaseSpinLock(&TimerListLock,oldlvl);
+//   DPRINT("Finished KeExpireTimers()\n");
 }
 
 
-BOOLEAN KiTimerInterrupt(VOID)
+VOID KiTimerInterrupt(VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -527,6 +429,7 @@ BOOLEAN KiTimerInterrupt(VOID)
    extern ULONG EiNrUsedBlocks;
    extern unsigned int EiFreeNonPagedPool;
    extern unsigned int EiUsedNonPagedPool;
+   extern ULONG MiNrFreePages;
    
    /*
     * Increment the number of timers ticks 
@@ -555,7 +458,8 @@ BOOLEAN KiTimerInterrupt(VOID)
 //   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,KiTimerTicks);
+//   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,KiTimerTicks);
+   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,MiNrFreePages);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];
@@ -576,9 +480,13 @@ VOID KeInitializeTimerImpl(VOID)
 {
    TIME_FIELDS TimeFields;
    LARGE_INTEGER SystemBootTime;
-
-   InitializeListHead(&timer_list_head);
-   KeInitializeSpinLock(&timer_list_lock);
+   
+   DPRINT("KeInitializeTimerImpl()\n");
+   
+   InitializeListHead(&TimerListHead);
+   KeInitializeSpinLock(&TimerListLock);
+   
+   TimerInitDone = TRUE;
    
    /*
     * Calculate the starting time for the system clock
@@ -587,4 +495,6 @@ VOID KeInitializeTimerImpl(VOID)
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
    boot_time=SystemBootTime.QuadPart;
    system_time=boot_time;
+   
+   DPRINT("Finished KeInitializeTimerImpl()\n");
 }

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.14 1999/08/29 06:59:10 ea Exp $
+/* $Id: section.c,v 1.15 1999/11/12 12:01:16 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -367,7 +367,7 @@ NtMapViewOfSection (
 			Process,
 			MEMORY_AREA_SECTION_VIEW_COMMIT,
 			BaseAddress,
-			* ViewSize,
+			*ViewSize,
 			Protect,
 			& Result
 			);

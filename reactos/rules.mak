@@ -14,6 +14,7 @@ ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
 PREFIX = i586-mingw32-
 EXE_POSTFIX = 
+EXE_PREFIX = ./
 CP = cp
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
@@ -61,6 +62,7 @@ endif
 
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
+NATIVE_NM = nm
 CFLAGS = $(BASE_CFLAGS) \
 	-pipe \
 	-O2 \

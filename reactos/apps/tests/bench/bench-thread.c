@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 
-#define NR_THREADS (0x5)
+#define NR_THREADS (0x1)
 
 
 DWORD WINAPI
@@ -28,7 +28,7 @@ int main (void)
    DWORD i=0;
    DWORD id;
 
-#if 0
+#if 1
    printf("Creating %d threads...\n",NR_THREADS*2);
    for (i=0;i<NR_THREADS;i++)
      {
@@ -39,16 +39,16 @@ int main (void)
 		     0,
 		     &id);
 
-	CreateThread(NULL,
+/*	CreateThread(NULL,
 		     0,
 		     thread_main2,
 		     (LPVOID)i,
 		     0,
-		     &id);
+		     &id);*/
      }
 
    printf("All threads created...\n");
-
+   
    /*
     * Waiting for threads is not implemented yet.
     * If you want to see all threads running, uncomment the

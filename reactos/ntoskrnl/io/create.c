@@ -21,13 +21,9 @@
 
 /* FUNCTIONS *************************************************************/
 
-NTSTATUS
-STDCALL
-NtDeleteFile (
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 
@@ -94,7 +90,7 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
    FileObject->DeviceObject = DeviceObject;
    FileObject->Vpb = DeviceObject->Vpb;
-   FileObject->Type = ID_FILE_OBJECT;
+   FileObject->Type = InternalFileType;
      
    return(STATUS_SUCCESS);
 }
@@ -126,7 +122,7 @@ PFILE_OBJECT IoCreateStreamFileObject(PFILE_OBJECT FileObject,
    DeviceObject = IoGetAttachedDevice(DeviceObject);
    CreatedFileObject->DeviceObject = DeviceObject;
    CreatedFileObject->Vpb = DeviceObject->Vpb;
-   CreatedFileObject->Type = ID_FILE_OBJECT;   
+   CreatedFileObject->Type = InternalFileType;
    CreatedFileObject->Flags = CreatedFileObject->Flags | FO_DIRECT_DEVICE_OPEN;
    
    ZwClose(FileHandle);

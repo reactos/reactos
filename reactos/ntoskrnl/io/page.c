@@ -19,7 +19,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
-		    PVOID Address,
+		    PMDL Mdl,
 		    PLARGE_INTEGER Offset,
 		    PIO_STATUS_BLOCK StatusBlock)
 {
@@ -37,13 +37,12 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 			      UserMode);
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				      FileObject->DeviceObject,
-				      Address,
-				      4096,
-				      Offset,
-				      &Event,
-				      StatusBlock);
+   Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_READ,
+					     FileObject->DeviceObject,
+					     Mdl,
+					     Offset,
+					     &Event,
+					     StatusBlock);
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    DPRINT("Before IoCallDriver\n");

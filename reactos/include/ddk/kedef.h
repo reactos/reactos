@@ -8,7 +8,6 @@ typedef enum _EVENT_TYPE
 {
    NotificationEvent,
    SynchronizationEvent,
-   SemaphoreType,
 } EVENT_TYPE;
 
 typedef enum _KWAIT_REASON

@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #include <internal/debug.h>
 
@@ -18,12 +19,10 @@
 
 VOID KeInitializeMutex(PKMUTEX Mutex, ULONG Level)
 {
-   Mutex->Header.Type=2;
-   Mutex->Header.SignalState=TRUE;
-   Mutex->Header.Size = 8;
-   Mutex->OwnerThread = NULL;
-   Mutex->ApcDisable = 0;
-   InitializeListHead(&Mutex->Header.WaitListHead);
+   KeInitializeDispatcherHeader(&Mutex->Header,
+				InternalMutexType,
+				sizeof(KMUTEX) / sizeof(ULONG),
+				TRUE);
 }
 
 LONG KeReadStateMutex(PKMUTEX Mutex)
@@ -33,7 +32,9 @@ LONG KeReadStateMutex(PKMUTEX Mutex)
 
 LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait)
 {
-   UNIMPLEMENTED;
+   KeAcquireDispatcherDatabaseLock(Wait);
+   KeDispatcherObjectWake(&Mutex->Header);
+   KeReleaseDispatcherDatabaseLock(Wait);
 }
 
 NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex,

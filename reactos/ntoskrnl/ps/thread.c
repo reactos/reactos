@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.29 1999/11/02 08:55:43 dwelch Exp $
+/* $Id: thread.c,v 1.30 1999/11/12 12:01:17 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -83,7 +83,6 @@ VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
 	if (current->ThreadsProcess == Process &&
 	    current != PsGetCurrentThread())
 	  {
-//	     RemoveEntryList(current->Tcb.ThreadListEntry);
 	     PsTerminateOtherThread(current, ExitStatus);
 	  }
 	current_entry = current_entry->Flink;
@@ -94,9 +93,9 @@ VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
 
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
-   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
-	  Thread);
-   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
+//   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
+//	  Thread);
+//   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
    
    InsertTailList(&PriorityListHead[THREAD_PRIORITY_MAX+Priority],
 		  &Thread->Tcb.QueueListEntry);
@@ -106,7 +105,8 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 {
    NTSTATUS Ret;
    
-   KeReleaseSpinLock(&PiThreadListLock,PASSIVE_LEVEL);
+//   KeReleaseSpinLock(&PiThreadListLock,PASSIVE_LEVEL);
+   KeLowerIrql(PASSIVE_LEVEL);
    Ret = StartRoutine(StartContext);
    PsTerminateSystemThread(Ret);
    KeBugCheck(0);
@@ -165,7 +165,6 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 {
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
-   LARGE_INTEGER TickCount;
    
    if (!DoneInitYet)
      {
@@ -186,6 +185,7 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
+	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     return;
 	  }
 	if (Candidate != NULL)
@@ -196,6 +196,7 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    	     
 	     CurrentThread = Candidate;
 	     
+	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     HalTaskSwitch(&CurrentThread->Tcb);
 	     return;
 	  }
@@ -207,7 +208,8 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 VOID PiBeforeBeginThread(VOID)
 {
    DPRINT("PiBeforeBeginThread()\n");
-   KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
+   //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
+   KeLowerIrql(PASSIVE_LEVEL);
    DPRINT("KeGetCurrentIrql() %d\n", KeGetCurrentIrql());
 }
 
@@ -217,7 +219,8 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    PsDispatchThreadNoLock(NewThreadStatus);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+//   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   KeLowerIrql(oldIrql);
 //   DPRINT("oldIrql %d\n",oldIrql);
 }
 
@@ -247,7 +250,7 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
    Thread->Tcb.KernelApcDisable = 1;
 
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
-                                ID_THREAD_OBJECT,
+                                InternalThreadType,
                                 sizeof(ETHREAD),
                                 FALSE);
 
@@ -312,7 +315,7 @@ ULONG PsResumeThread(PETHREAD Thread)
 //	DPRINT("Marking thread %x as runnable\n",Thread);
 	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
 	PsInsertIntoThreadList(Thread->Tcb.BasePriority, Thread);
-	PiNrRunnableThreads++;
+	PiNrRunnableThreads++;	
      }
    DPRINT("About release ThreadListLock = %x\n", &PiThreadListLock);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
@@ -343,17 +346,22 @@ ULONG PsSuspendThread(PETHREAD Thread)
 	       }
 	     Thread->Tcb.State = THREAD_STATE_SUSPENDED;
 	     PiNrRunnableThreads--;
+	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  }
 	else
 	  {
 	     DPRINT("Suspending current thread\n");
 	     PiNrRunnableThreads--;
 	     PsDispatchThreadNoLock(THREAD_STATE_SUSPENDED);
+	     KeLowerIrql(oldIrql);
 	  }
      }
-   DPRINT("About to release ThreadListLock = %x\n", &PiThreadListLock);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-   DPRINT("PsSuspendThread() finished\n");
+   else
+     {       
+	DPRINT("About to release ThreadListLock = %x\n", &PiThreadListLock);
+	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+	DPRINT("PsSuspendThread() finished\n");
+     }
    return(r);
 }
 
@@ -361,6 +369,8 @@ ULONG PsSuspendThread(PETHREAD Thread)
 VOID PiDeleteThread(PVOID ObjectBody)
 {
    DbgPrint("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+   
+   HalReleaseTask((PETHREAD)ObjectBody);
 }
 
 

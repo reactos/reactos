@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.4 1999/11/07 08:03:24 ea Exp $
+; $Id: advapi32.edf,v 1.5 1999/11/12 12:01:10 dwelch Exp $
 ;
 ; advapi32.def
 ;
@@ -408,3 +408,4 @@ UnlockServiceDatabase=UnlockServiceDatabase@4
 ;WinLoadTrustProvider=WinLoadTrustProvider@4
 ;WinSubmitCertificate=WinSubmitCertificate@4
 ;WinVerifyTrust=WinVerifyTrust@12
+

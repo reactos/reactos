@@ -96,16 +96,12 @@ BOOLEAN MmIsAddressValid(PVOID VirtualAddress)
 }
 
 
-NTSTATUS
-STDCALL
-NtAllocateVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN OUT	PVOID	* BaseAddress,
-	IN	ULONG	ZeroBits,
-	IN OUT	PULONG	RegionSize,
-	IN	ULONG	AllocationType, 
-	IN	ULONG	Protect
-	)
+NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
+					 IN OUT	PVOID	* BaseAddress,
+					 IN	ULONG	ZeroBits,
+					 IN OUT	PULONG	RegionSize,
+					 IN	ULONG	AllocationType, 
+					 IN	ULONG	Protect)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -194,8 +190,8 @@ NtAllocateVirtualMemory (
 	  }
      }
    
- //FIXME RegionSize should be passed as pointer
-
+   // FIXME RegionSize should be passed as pointer
+   // dwelch: Why?
 
    Status = MmCreateMemoryArea(UserMode,
 			       Process,
@@ -218,14 +214,10 @@ NtAllocateVirtualMemory (
 }
 
 
-NTSTATUS
-STDCALL
-NtFlushVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	BaseAddress,
-	IN	ULONG	NumberOfBytesToFlush,
-	OUT	PULONG	NumberOfBytesFlushed	OPTIONAL
-	)
+NTSTATUS STDCALL NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
+				      IN	PVOID	BaseAddress,
+				      IN	ULONG	NumberOfBytesToFlush,
+				      OUT PULONG NumberOfBytesFlushed OPTIONAL)
 /*
  * FUNCTION: Flushes virtual memory to file
  * ARGUMENTS:
@@ -241,14 +233,10 @@ NtFlushVirtualMemory (
 }
 
 
-NTSTATUS
-STDCALL
-NtFreeVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	* BaseAddress,	
-	IN	PULONG	RegionSize,	
-	IN	ULONG	FreeType
-	)
+NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
+				     IN	PVOID	* BaseAddress,	
+				     IN	PULONG	RegionSize,	
+				     IN	ULONG	FreeType)
 /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
@@ -319,14 +307,10 @@ NtFreeVirtualMemory (
 }
 
 
-NTSTATUS
-STDCALL
-NtLockVirtualMemory (
-	HANDLE	ProcessHandle,
-	PVOID	BaseAddress,
-	ULONG	NumberOfBytesToLock,
-	PULONG	NumberOfBytesLocked
-	)
+NTSTATUS STDCALL NtLockVirtualMemory(HANDLE	ProcessHandle,
+				     PVOID	BaseAddress,
+				     ULONG	NumberOfBytesToLock,
+				     PULONG	NumberOfBytesLocked)
 {
 	UNIMPLEMENTED;
 }
@@ -349,15 +333,11 @@ VOID MmChangeAreaProtection(PEPROCESS Process,
 }
 
 
-NTSTATUS
-STDCALL
-NtProtectVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	BaseAddress,
-	IN	ULONG	NumberOfBytesToProtect,
-	IN	ULONG	NewAccessProtection,
-	OUT	PULONG	OldAccessProtection
-	)
+NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
+					IN	PVOID	BaseAddress,
+					IN	ULONG	NumberOfBytesToProtect,
+					IN	ULONG	NewAccessProtection,
+					OUT	PULONG	OldAccessProtection)
 {
    PMEMORY_AREA MemoryArea;
    PEPROCESS Process;
@@ -406,16 +386,12 @@ NtProtectVirtualMemory (
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	Address,
-	IN 	CINT	VirtualMemoryInformationClass,
-	OUT	PVOID	VirtualMemoryInformation,
-	IN	ULONG	Length,
-	OUT	PULONG	ResultLength
-	)
+NTSTATUS STDCALL NtQueryVirtualMemory(IN	HANDLE	ProcessHandle,
+				      IN	PVOID	Address,
+				      IN CINT VirtualMemoryInformationClass,
+				      OUT PVOID	VirtualMemoryInformation,
+				      IN	ULONG	Length,
+				      OUT	PULONG	ResultLength)
 {
    NTSTATUS Status;
    PEPROCESS Process;
@@ -480,8 +456,8 @@ NtQueryVirtualMemory (
              Info->BaseAddress = MemoryArea->BaseAddress;
              Info->RegionSize  = MemoryArea->Length;
 
-   DbgPrint("BaseAddress %p, Length %x\n",
-             Info->BaseAddress, Info->RegionSize);
+	     DbgPrint("BaseAddress %p, Length %x\n",
+		      Info->BaseAddress, Info->RegionSize);
 
 
              ObDereferenceObject(Process);
@@ -491,20 +467,14 @@ NtQueryVirtualMemory (
      }
 
    return(STATUS_INVALID_INFO_CLASS);
-
-//    UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtReadVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	BaseAddress,
-	OUT	PVOID	Buffer,
-	IN	ULONG	NumberOfBytesToRead,
-	OUT	PULONG	NumberOfBytesRead
-	)
+NTSTATUS STDCALL NtReadVirtualMemory(IN	HANDLE	ProcessHandle,
+				     IN	PVOID	BaseAddress,
+				     OUT	PVOID	Buffer,
+				     IN	ULONG	NumberOfBytesToRead,
+				     OUT	PULONG	NumberOfBytesRead)
 {
    NTSTATUS Status;
    PMDL Mdl;
@@ -547,28 +517,20 @@ NtReadVirtualMemory (
 }
 
 
-NTSTATUS
-STDCALL
-NtUnlockVirtualMemory (
-	HANDLE	ProcessHandle,
-	PVOID	BaseAddress,
-	ULONG	NumberOfBytesToUnlock,
-	PULONG	NumberOfBytesUnlocked	OPTIONAL
-	)
+NTSTATUS STDCALL NtUnlockVirtualMemory(HANDLE	ProcessHandle,
+				       PVOID	BaseAddress,
+				       ULONG	NumberOfBytesToUnlock,
+				       PULONG NumberOfBytesUnlocked OPTIONAL)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-NtWriteVirtualMemory (
-	IN	HANDLE	ProcessHandle,
-	IN	PVOID	BaseAddress,
-	IN	PVOID	Buffer,
-	IN	ULONG	NumberOfBytesToWrite,
-	OUT	PULONG	NumberOfBytesWritten
-	)
+NTSTATUS STDCALL NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
+				      IN	PVOID	BaseAddress,
+				      IN	PVOID	Buffer,
+				      IN	ULONG	NumberOfBytesToWrite,
+				      OUT	PULONG	NumberOfBytesWritten)
 {
    NTSTATUS Status;
    PMDL Mdl;

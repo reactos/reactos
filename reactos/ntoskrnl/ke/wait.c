@@ -68,6 +68,57 @@ VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
      }
 }
 
+VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr)
+/*
+ * FUNCTION: Perform side effects on object before a wait for a thread is
+ *           satisfied
+ */
+{
+   switch (hdr->Type)
+     {
+      case InternalSynchronizationEvent:
+	hdr->SignalState = FALSE;
+	break;
+	
+      case InternalSemaphoreType:
+	hdr->SignalState--;
+	break;
+	
+      case InternalProcessType:
+	break;
+	
+      case InternalThreadType:
+	break;
+	
+      case InternalNotificationEvent:
+	break;
+	
+      case InternalSynchronizationTimer:
+	hdr->SignalState = FALSE;
+	break;
+	
+      case InternalNotificationTimer:
+	break;
+	
+      default:
+	DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
+		 __FILE__,__LINE__,hdr);
+	KeBugCheck(0);
+     }
+
+}
+
+static BOOLEAN KiIsObjectSignalled(DISPATCHER_HEADER* hdr)
+{
+   if (hdr->SignalState <= 0)
+     {
+	return(FALSE);
+     }
+   KiSideEffectsBeforeWake(hdr);
+   return(TRUE);
+}
+
+
 static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 {
    PKWAIT_BLOCK current;
@@ -125,7 +176,9 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
                   DPRINT("WaitAll: Wait Block List is empty!\n");
                }
           }
-
+	
+	KiSideEffectsBeforeWake(hdr);
+	
 	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
      };
    return(TRUE);
@@ -189,8 +242,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 
    DPRINT("Waking %x\n",current->Thread);
    
-   if (hdr->Type == SemaphoreType)
-      hdr->SignalState--;
+   KiSideEffectsBeforeWake(hdr);
    
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
@@ -210,33 +262,40 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
    DPRINT("hdr->Type %x\n",hdr->Type);
    switch (hdr->Type)
      {
-      case NotificationEvent:
+      case InternalNotificationEvent:
 	return(KeDispatcherObjectWakeAll(hdr));
+	
+      case InternalNotificationTimer:
+	return(KeDispatcherObjectWakeAll(hdr));
+	
+      case InternalSynchronizationEvent:
+	return(KeDispatcherObjectWakeOne(hdr));
 
-      case SynchronizationEvent:
-	Ret = KeDispatcherObjectWakeOne(hdr);
-	if (Ret)
-	  {
-	     hdr->SignalState = FALSE;
-	  }
-	return(Ret);
 
-      case SemaphoreType:
+      case InternalSynchronizationTimer:
+	return(KeDispatcherObjectWakeOne(hdr));
+	
+      case InternalSemaphoreType:
+	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 	if(hdr->SignalState>0)
 	{
-          do
-          {
-     	    Ret = KeDispatcherObjectWakeOne(hdr);
-          } while(hdr->SignalState > 0 &&  Ret) ;
-	  return(Ret);
+	   do
+	     {
+		DPRINT("Waking one semaphore waiter\n");
+		Ret = KeDispatcherObjectWakeOne(hdr);
+	     } while(hdr->SignalState > 0 &&  Ret) ;
+	   return(Ret);
 	}
 	else return FALSE;
 	
-      case ID_PROCESS_OBJECT:
+      case InternalProcessType:
 	return(KeDispatcherObjectWakeAll(hdr));
 
-      case ID_THREAD_OBJECT:
+      case InternalThreadType:
 	return(KeDispatcherObjectWakeAll(hdr));
+	
+      case InternalMutexType:
+	return(KeDispatcherObjectWakeOne(hdr));
      }
    DPRINT("Dispatcher object %x has unknown type\n",hdr);
    KeBugCheck(0);
@@ -276,32 +335,8 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 
    DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 
-   if (hdr->SignalState > 0)
+   if (KiIsObjectSignalled(hdr))
    {
-      switch (hdr->Type)
-	{
-	 case SynchronizationEvent:
-	   hdr->SignalState = FALSE;
-	   break;
-	   
-	 case SemaphoreType:
-	   break;
-	   
-	 case ID_PROCESS_OBJECT:
-	   break;
-
-	 case ID_THREAD_OBJECT:
-	   break;
-	   
-	 case NotificationEvent:
-	   break;
-	   
-	 default:
-	   DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
-		    __FILE__,__LINE__,hdr);
-	   KeBugCheck(0);
-	   
-	}
       KeReleaseDispatcherDatabaseLock(FALSE);
       return(STATUS_WAIT_0);
    }
@@ -336,6 +371,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    DPRINT("Returning from KeWaitForSingleObject()\n");
    return(STATUS_WAIT_0);
 }
+
 
 NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 				  PVOID Object[],
@@ -387,33 +423,9 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 
         DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 
-        if (hdr->SignalState > 0)
+        if (KiIsObjectSignalled(hdr))
         {
             CountSignaled++;
-
-            switch (hdr->Type)
-            {
-                case SynchronizationEvent:
-                    hdr->SignalState = FALSE;
-                    break;
-
-                case SemaphoreType:
-                    break;
-
-                case ID_PROCESS_OBJECT:
-                    break;
-
-                case ID_THREAD_OBJECT:
-                    break;
-
-                case NotificationEvent:
-                    break;
-
-                default:
-                    DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
-                             __FILE__,__LINE__,hdr);
-                    KeBugCheck(0);
-            }
 
             if (WaitType == WaitAny)
             {
@@ -552,13 +564,9 @@ NTSTATUS STDCALL NtWaitForMultipleObjects(IN ULONG Count,
 }
 
 
-NTSTATUS
-STDCALL
-NtWaitForSingleObject (
-	IN	HANDLE		Object,
-	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
-	)
+NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
+					IN	BOOLEAN		Alertable,
+					IN	PLARGE_INTEGER	Time)
 {
    PVOID ObjectPtr;
    NTSTATUS Status;
@@ -589,14 +597,11 @@ NtWaitForSingleObject (
 }
 
 
-NTSTATUS
-STDCALL
-NtSignalAndWaitForSingleObject (
-	IN	HANDLE		EventHandle,
-	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time,
-		PULONG		NumberOfWaitingThreads	OPTIONAL
-	)
+NTSTATUS STDCALL NtSignalAndWaitForSingleObject (IN HANDLE EventHandle,
+						 IN BOOLEAN Alertable,
+						 IN PLARGE_INTEGER Time,
+						 PULONG	
+					      NumberOfWaitingThreads OPTIONAL)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }

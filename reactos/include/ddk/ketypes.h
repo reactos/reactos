@@ -58,7 +58,6 @@ typedef struct _KQUEUE
 
 struct _KDPC;
 
-/*
 typedef struct _KTIMER
  {
     DISPATCHER_HEADER Header;
@@ -67,8 +66,8 @@ typedef struct _KTIMER
     struct _KDPC* Dpc;
     LONG Period;
  } KTIMER, *PKTIMER;
- */
 
+/*
 typedef struct _KTIMER
 {
    LIST_ENTRY entry;
@@ -79,7 +78,8 @@ typedef struct _KTIMER
    TIMER_TYPE type;
    ULONG period;   
 } KTIMER, *PKTIMER;
-
+*/
+ 
 struct _KSPIN_LOCK;
 
 typedef struct _KSPIN_LOCK

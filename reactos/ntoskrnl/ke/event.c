@@ -26,7 +26,24 @@ VOID KeClearEvent(PKEVENT Event)
 
 VOID KeInitializeEvent(PKEVENT Event, EVENT_TYPE Type, BOOLEAN State)
 {
-   KeInitializeDispatcherHeader(&(Event->Header),Type,
+   ULONG IType;
+   
+   if (Type == NotificationEvent)
+     {
+	IType = InternalNotificationEvent;
+     }
+   else if (Type == SynchronizationEvent)
+     {
+	IType = InternalSynchronizationEvent;
+     }
+   else
+     {
+	assert(FALSE);
+	return;
+     }
+   
+   KeInitializeDispatcherHeader(&(Event->Header),
+				IType,
 				sizeof(Event)/sizeof(ULONG),State);
    InitializeListHead(&(Event->Header.WaitListHead));
 }
