@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.16 2003/06/20 16:24:06 ekohl Exp $
+; $Id: win32k.def,v 1.17 2003/06/21 18:06:11 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -50,7 +50,7 @@ EngFindResource
 EngFreeMem@4
 EngFreeModule
 EngFreeUserMem@4
-EngGetCurrentCodePage
+EngGetCurrentCodePage@8
 EngGetDriverName
 EngGetFileChangeTime
 EngGetFilePath
@@ -73,7 +73,7 @@ EngMapModule
 EngMarkBandingSurface
 EngMovePointer
 EngMulDiv@12
-EngMultiByteToUnicodeN
+EngMultiByteToUnicodeN@20
 EngMultiByteToWideChar
 EngPaint@20
 EngProbeForRead
@@ -98,7 +98,7 @@ EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
 EngTransparentBlt@32
-EngUnicodeToMultiByteN
+EngUnicodeToMultiByteN@20
 EngUnloadImage
 EngUnlockDriverObj
 EngUnlockSurface@4
@@ -165,7 +165,7 @@ RtlUpcaseUnicodeToMultiByteN@20
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
-W32kInitialize
+W32kInitialize@0
 WNDOBJ_bEnum
 WNDOBJ_cEnumStart
 WNDOBJ_vSetConsumer
@@ -179,4 +179,4 @@ _abnormal_termination
 _except_handler2
 _global_unwind2
 _local_unwind2
-
+;EOF

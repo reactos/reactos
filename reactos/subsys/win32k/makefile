@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.67 2003/06/20 16:24:06 ekohl Exp $
+# $Id: makefile,v 1.68 2003/06/21 18:06:11 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -36,7 +36,7 @@ TARGET_LFLAGS =\
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
     eng/palette.o eng/perfcnt.o eng/surface.o eng/xlate.o eng/transblt.o \
-    eng/mouse.o eng/misc.o
+    eng/mouse.o eng/misc.o eng/nls.o
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 

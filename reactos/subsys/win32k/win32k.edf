@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.10 2003/06/20 16:24:06 ekohl Exp $
+; $Id: win32k.edf,v 1.11 2003/06/21 18:06:11 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -50,7 +50,7 @@ EngFindResource
 EngFreeMem=EngFreeMem@4
 EngFreeModule
 EngFreeUserMem=EngFreeUserMem@4
-EngGetCurrentCodePage
+EngGetCurrentCodePage=EngGetCurrentCodePage@8
 EngGetDriverName
 EngGetFileChangeTime
 EngGetFilePath
@@ -73,7 +73,7 @@ EngMapModule
 EngMarkBandingSurface
 EngMovePointer
 EngMulDiv=EngMulDiv@12
-EngMultiByteToUnicodeN
+EngMultiByteToUnicodeN=EngMultiByteToUnicodeN@20
 EngMultiByteToWideChar
 EngPaint=EngPaint@20
 EngProbeForRead
@@ -98,7 +98,7 @@ EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
 EngTransparentBlt=EngTransparentBlt@32
-EngUnicodeToMultiByteN
+EngUnicodeToMultiByteN=EngUnicodeToMultiByteN@20
 EngUnloadImage
 EngUnlockDriverObj
 EngUnlockSurface=EngUnlockSurface@4
@@ -176,11 +176,7 @@ XLATEOBJ_cGetPalette=XLATEOBJ_cGetPalette@16
 XLATEOBJ_iXlate=XLATEOBJ_iXlate@8
 XLATEOBJ_piVector=XLATEOBJ_piVector@4
 _abnormal_termination=NTOSKRNL._abnormal_termination
-;_abnormal_termination
 _except_handler2=NTOSKRNL._except_handler2
-;_except_handler2
 _global_unwind2=NTOSKRNL._global_unwind2
-;_global_unwind2
 _local_unwind2=NTOSKRNL._local_unwind2
-;_local_unwind2
-
+; EOF

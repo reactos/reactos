@@ -1161,8 +1161,11 @@ EngFreeModule
 VOID STDCALL
 EngFreeUserMem(PVOID pv);
 
+VOID STDCALL
+EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
+		      OUT PUSHORT AnsiCodePage);
+
 /*
-EngGetCurrentCodePage
 EngGetDriverName
 EngGetFileChangeTime
 EngGetFilePath
@@ -1204,14 +1207,23 @@ EngMapFontFile
 EngMapModule
 EngMarkBandingSurface
 EngMovePointer
-EngMultiByteToUnicodeN
-EngMultiByteToWideChar
 */
 
-INT STDCALL EngMulDiv(
-	     INT nMultiplicand,
-	     INT nMultiplier,
-	     INT nDivisor);
+INT STDCALL
+EngMulDiv(IN INT nMultiplicand,
+	  IN INT nMultiplier,
+	  IN INT nDivisor);
+
+VOID STDCALL
+EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
+		       IN ULONG MaxBytesInUnicodeString,
+		       OUT PULONG BytesInUnicodeString,
+		       IN PCHAR MultiByteString,
+		       IN ULONG BytesInMultiByteString);
+
+/*
+EngMultiByteToWideChar
+*/
 
 BOOL STDCALL
 EngPaint(IN SURFOBJ *Surface,
@@ -1244,17 +1256,23 @@ EngTextOut
 */
 
 BOOL STDCALL
-EngTransparentBlt(PSURFOBJ Dest,
-		  PSURFOBJ Source,
-		  PCLIPOBJ Clip,
-		  PXLATEOBJ ColorTranslation,
-		  PRECTL DestRect,
-		  PRECTL SourceRect,
-		  ULONG TransparentColor,
-		  ULONG Reserved);
+EngTransparentBlt(IN PSURFOBJ Dest,
+		  IN PSURFOBJ Source,
+		  IN PCLIPOBJ Clip,
+		  IN PXLATEOBJ ColorTranslation,
+		  IN PRECTL DestRect,
+		  IN PRECTL SourceRect,
+		  IN ULONG TransparentColor,
+		  IN ULONG Reserved);
+
+VOID STDCALL
+EngUnicodeToMultiByteN(OUT PCHAR MultiByteString,
+		       IN ULONG  MaxBytesInMultiByteString,
+		       OUT PULONG  BytesInMultiByteString,
+		       IN PWSTR  UnicodeString,
+		       IN ULONG  BytesInUnicodeString);
 
 /*
-EngUnicodeToMultiByteN
 EngUnloadImage
 EngUnlockDriverObj
 EngUnlockSurface
