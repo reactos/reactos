@@ -324,7 +324,7 @@ VBEInitialize(PVOID HwDeviceExtension)
     */
    
    for (CurrentMode = 0, ModeCount = 0, DefaultMode = 0;
-        ModeList[CurrentMode] != 0xFFFF && CurrentMode < 0x400;
+        ModeList[CurrentMode] != 0xFFFF && ModeList[CurrentMode] != 0;
         CurrentMode++)
    {
       BiosRegisters.Eax = 0x4F01;
