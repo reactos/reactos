@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.4 2001/01/16 09:55:02 dwelch Exp $
+/* $Id: close.c,v 1.5 2001/03/09 14:40:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   DPRINT ("VfatCloseFile(DeviceExt %x, FileObject %x)\n",
 	  DeviceExt, FileObject);
 
-  //FIXME : update entry in directory ?
+  /* FIXME : update entry in directory? */
   pCcb = (PVFATCCB) (FileObject->FsContext2);
 
   DPRINT ("pCcb %x\n", pCcb);
@@ -45,6 +45,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   pFcb->RefCount--;
   if (pFcb->RefCount <= 0)
     {
+      CcReleaseFileCache(FileObject, pFcb->RFCB.Bcb);
       KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
       RemoveEntryList (&pFcb->FcbListEntry);
       KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);

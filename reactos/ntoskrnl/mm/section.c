@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.49 2001/03/08 22:06:02 dwelch Exp $
+/* $Id: section.c,v 1.50 2001/03/09 14:40:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,63 @@ static GENERIC_MAPPING MmpSectionMapping = {
 #define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
+{
+  ULONG i;
+
+  for (i = 0; i < NR_SECTION_PAGE_TABLES; i++)
+    {
+      if (Segment->PageDirectory.PageTables[i] != NULL)
+	{
+	  ExFreePool(Segment->PageDirectory.PageTables[i]);
+	}
+    }
+}
+
+VOID
+MmFreeSectionSegments(PFILE_OBJECT FileObject)
+{
+  if (FileObject->SectionObjectPointers->ImageSectionObject != NULL)
+    {
+      PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+      ULONG i;
+
+      ImageSectionObject = 
+	(PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointers->
+	ImageSectionObject;
+      
+      for (i = 0; i < ImageSectionObject->NrSegments; i++)
+	{
+	  if (ImageSectionObject->Segments[i].ReferenceCount != 0)
+	    {
+	      DPRINT1("Image segment %d still referenced (was %d)\n", i,
+		      ImageSectionObject->Segments[i].ReferenceCount);
+	      KeBugCheck(0);
+	    }
+	  MmFreePageTablesSectionSegment(&ImageSectionObject->Segments[i]);
+	}
+      ExFreePool(ImageSectionObject);
+      FileObject->SectionObjectPointers->ImageSectionObject = NULL;
+    }
+  if (FileObject->SectionObjectPointers->DataSectionObject != NULL)
+    {
+      PMM_SECTION_SEGMENT Segment;
+
+      Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointers->
+	DataSectionObject;
+
+      if (Segment->ReferenceCount != 0)
+	{
+	  DPRINT1("Data segment still referenced\n");
+	  KeBugCheck(0);
+	}
+      MmFreePageTablesSectionSegment(Segment);
+      ExFreePool(Segment);
+      FileObject->SectionObjectPointers->DataSectionObject = NULL;
+    }
+}
 
 NTSTATUS 
 MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
@@ -77,6 +134,8 @@ MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
   KeReleaseMutex(&Segment->Lock, FALSE);
 }
+
+
 
 VOID 
 MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
@@ -662,7 +721,27 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 VOID 
 MmpDeleteSection(PVOID ObjectBody)
 {
-   DPRINT("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
+  PSECTION_OBJECT Section = (PSECTION_OBJECT)ObjectBody;
+
+  DPRINT("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
+   if (Section->Flags & MM_IMAGE_SECTION)
+     {
+       ULONG i;
+
+       for (i = 0; i < Section->NrSegments; i++)
+	 {
+	   InterlockedDecrement(&Section->Segments[i].ReferenceCount);
+	 }
+     }
+   else
+     {
+       InterlockedDecrement(&Section->Segments->ReferenceCount);
+     }
+  if (Section->FileObject != NULL)
+    {
+      ObDereferenceObject(Section->FileObject);
+      Section->FileObject = NULL;
+    }
 }
 
 VOID 
@@ -1104,6 +1183,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
   PIMAGE_SECTION_HEADER ImageSections;
   PMM_SECTION_SEGMENT SectionSegments;
   ULONG NrSegments;
+  PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
 
   /*
    * Check the protection
@@ -1316,12 +1396,13 @@ MmCreateImageSection(PHANDLE SectionHandle,
   if (FileObject->SectionObjectPointers->ImageSectionObject == NULL)
     {
       ULONG i;
-      
-      SectionSegments = 
-	ExAllocatePoolWithTag(NonPagedPool, 
-			     sizeof(MM_SECTION_SEGMENT) * NrSegments,
-			     TAG_MM_SECTION_SEGMENT);
-      if (SectionSegments == NULL)
+      ULONG Size;
+
+      Size = sizeof(MM_IMAGE_SECTION_OBJECT) + 
+	(sizeof(MM_SECTION_SEGMENT) * NrSegments);
+      ImageSectionObject = 
+	ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MM_SECTION_SEGMENT);
+      if (ImageSectionObject == NULL)
 	{
 	  KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
 	  ZwClose(*SectionHandle);
@@ -1330,6 +1411,8 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	  ExFreePool(ImageSections);
 	  return(STATUS_NO_MEMORY);
 	}
+      ImageSectionObject->NrSegments = NrSegments;
+      SectionSegments = ImageSectionObject->Segments;
       Section->Segments = SectionSegments;
 
       SectionSegments[0].FileOffset = 0;
@@ -1338,7 +1421,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
       SectionSegments[0].RawLength = PAGESIZE;
       SectionSegments[0].Length = PAGESIZE;
       SectionSegments[0].Flags = 0;
-      SectionSegments[0].ReferenceCount = 0;
+      SectionSegments[0].ReferenceCount = 1;
       SectionSegments[0].VirtualAddress = 0;
       KeInitializeMutex(&SectionSegments[0].Lock, 0);
 
@@ -1375,15 +1458,16 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	}
 
       FileObject->SectionObjectPointers->ImageSectionObject = 
-	(PVOID)SectionSegments;       
+	(PVOID)ImageSectionObject;       
       ExFreePool(ImageSections);
     }
   else
     {
       ULONG i;
 
-      SectionSegments = (PMM_SECTION_SEGMENT)
+      ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)
 	FileObject->SectionObjectPointers->ImageSectionObject;
+      SectionSegments = ImageSectionObject->Segments;
       Section->Segments = SectionSegments;
 
       /*

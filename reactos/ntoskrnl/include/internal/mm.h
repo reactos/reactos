@@ -421,5 +421,13 @@ VOID
 MmMarkPageMapped(PVOID PhysicalAddress);
 VOID 
 MmMarkPageUnmapped(PVOID PhysicalAddress);
+VOID
+MmFreeSectionSegments(PFILE_OBJECT FileObject);
+
+typedef struct _MM_IMAGE_SECTION_OBJECT
+{
+  ULONG NrSegments;
+  MM_SECTION_SEGMENT Segments[0];
+} MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 #endif

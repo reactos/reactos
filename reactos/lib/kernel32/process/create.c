@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.35 2001/02/10 22:51:08 dwelch Exp $
+/* $Id: create.c,v 1.36 2001/03/09 14:40:27 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,20 +31,17 @@
 
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL
-STDCALL
-CreateProcessA (
-	LPCSTR			lpApplicationName,
-	LPSTR			lpCommandLine,
-	LPSECURITY_ATTRIBUTES	lpProcessAttributes,
-	LPSECURITY_ATTRIBUTES	lpThreadAttributes,
-	WINBOOL			bInheritHandles,
-	DWORD			dwCreationFlags,
-	LPVOID			lpEnvironment,
-	LPCSTR			lpCurrentDirectory,
-	LPSTARTUPINFOA		lpStartupInfo,
-	LPPROCESS_INFORMATION	lpProcessInformation
-	)
+WINBOOL STDCALL
+CreateProcessA (LPCSTR			lpApplicationName,
+		LPSTR			lpCommandLine,
+		LPSECURITY_ATTRIBUTES	lpProcessAttributes,
+		LPSECURITY_ATTRIBUTES	lpThreadAttributes,
+		WINBOOL			bInheritHandles,
+		DWORD			dwCreationFlags,
+		LPVOID			lpEnvironment,
+		LPCSTR			lpCurrentDirectory,
+		LPSTARTUPINFOA		lpStartupInfo,
+		LPPROCESS_INFORMATION	lpProcessInformation)
 /*
  * FUNCTION: The CreateProcess function creates a new process and its
  * primary thread. The new process executes the specified executable file
@@ -124,12 +121,13 @@ CreateProcessA (
 }
 
 
-HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
-				   LPSECURITY_ATTRIBUTES lpThreadAttributes,
-				   DWORD dwStackSize,
-				   LPTHREAD_START_ROUTINE lpStartAddress,
-				   DWORD dwCreationFlags,
-				   LPDWORD lpThreadId)
+HANDLE STDCALL 
+KlCreateFirstThread(HANDLE ProcessHandle,
+		    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+		    DWORD dwStackSize,
+		    LPTHREAD_START_ROUTINE lpStartAddress,
+		    DWORD dwCreationFlags,
+		    LPDWORD lpThreadId)
 {
    NTSTATUS Status;
    HANDLE ThreadHandle;
@@ -200,8 +198,9 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    return(ThreadHandle);
 }
 
-HANDLE KlMapFile(LPCWSTR lpApplicationName,
-		 LPCWSTR lpCommandLine)
+HANDLE 
+KlMapFile(LPCWSTR lpApplicationName,
+	  LPCWSTR lpCommandLine)
 {
    HANDLE hFile;
    IO_STATUS_BLOCK IoStatusBlock;
@@ -270,8 +269,9 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
    return(hSection);
 }
 
-static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
-			   PRTL_USER_PROCESS_PARAMETERS	Ppb)
+static NTSTATUS 
+KlInitPeb (HANDLE ProcessHandle,
+	   PRTL_USER_PROCESS_PARAMETERS	Ppb)
 {
    NTSTATUS Status;
    PVOID PpbBase;
@@ -368,16 +368,17 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 }
 
 
-WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
-			       LPWSTR lpCommandLine,
-			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
-			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-			       WINBOOL bInheritHandles,
-			       DWORD dwCreationFlags,
-			       LPVOID lpEnvironment,
-			       LPCWSTR lpCurrentDirectory,
-			       LPSTARTUPINFOW lpStartupInfo,
-			       LPPROCESS_INFORMATION lpProcessInformation)
+WINBOOL STDCALL 
+CreateProcessW(LPCWSTR lpApplicationName,
+	       LPWSTR lpCommandLine,
+	       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	       WINBOOL bInheritHandles,
+	       DWORD dwCreationFlags,
+	       LPVOID lpEnvironment,
+	       LPCWSTR lpCurrentDirectory,
+	       LPSTARTUPINFOW lpStartupInfo,
+	       LPPROCESS_INFORMATION lpProcessInformation)
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
@@ -489,6 +490,11 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			    hSection,
 			    NULL,
 			    NULL);
+
+   /*
+    * Close the section
+    */
+   NtClose(hSection);
 
    /*
     * Get some information about the process

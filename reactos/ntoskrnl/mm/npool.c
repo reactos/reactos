@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.36 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: npool.c,v 1.37 2001/03/09 14:40:28 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -50,8 +50,7 @@ typedef struct _BLOCK_HDR
 {
   ULONG magic;
   ULONG size;
-  struct _BLOCK_HDR* previous;
-  struct _BLOCK_HDR* next;
+  LIST_ENTRY ListEntry;
   ULONG Tag;
   PVOID Caller;
   struct _BLOCK_HDR* tag_next;
@@ -68,8 +67,8 @@ static unsigned int kernel_pool_base = 0;
 /*
  * Pointer to the first block in the free list
  */
-static BLOCK_HDR* free_list_head = NULL;
-static BLOCK_HDR* used_list_head = NULL;
+static LIST_ENTRY FreeBlockListHead;
+static LIST_ENTRY UsedBlockListHead;
 static ULONG nr_free_blocks;
 ULONG EiNrUsedBlocks = 0;
 
@@ -168,6 +167,8 @@ VOID ExInitNonPagedPool(ULONG BaseAddress)
    KeInitializeSpinLock(&MmNpoolLock);
    MmInitKernelMap((PVOID)BaseAddress);
    memset(tag_hash_table, 0, sizeof(tag_hash_table));
+   InitializeListHead(&FreeBlockListHead);
+   InitializeListHead(&UsedBlockListHead);
 }
 
 VOID static
@@ -202,8 +203,12 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
   ULONG CurrentTag;
   ULONG CurrentNrBlocks;
   ULONG CurrentSize;
+  ULONG TotalBlocks;
+  ULONG TotalSize;
 
   DbgPrint("******* Dumping non paging pool stats ******\n");
+  TotalBlocks = 0;
+  TotalSize = 0;
   for (i = 0; i < TAG_HASH_TABLE_SIZE; i++)
     {
       CurrentTag = 0;
@@ -226,7 +231,9 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 	  if (!NewOnly || !current->Dumped)
 	    {
 	      CurrentNrBlocks++;
+	      TotalBlocks++;
 	      CurrentSize = CurrentSize + current->size;
+	      TotalSize = TotalSize + current->size;
 	      current->Dumped = TRUE;
 	    }
 	  current = current->tag_next;
@@ -236,20 +243,33 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 	  MiDumpTagStats(CurrentTag, CurrentNrBlocks, CurrentSize);
 	}
     }
-   DbgPrint("***************** Dump Complete ***************\n");
+  if (TotalBlocks != 0)
+    {
+      DbgPrint("TotalBlocks %d TotalSize %d AverageSize %d\n",
+	       TotalBlocks, TotalSize, TotalSize / TotalBlocks);
+    }
+  else
+    {
+      DbgPrint("TotalBlocks %d TotalSize %d\n",
+	       TotalBlocks, TotalSize);
+    }
+  DbgPrint("***************** Dump Complete ***************\n");
 }
 
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
 {
-   BLOCK_HDR* current = used_list_head;
+   BLOCK_HDR* current;
+   PLIST_ENTRY current_entry;
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    DbgPrint("******* Dumping non paging pool contents ******\n");
-   while (current != NULL)
+   current_entry = UsedBlockListHead.Flink;
+   while (current_entry != &UsedBlockListHead)
      {
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
        if (!NewOnly || !current->Dumped)
 	 {
 	   CHAR c1, c2, c3, c4;
@@ -272,7 +292,7 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
 	     }
 	   current->Dumped = TRUE;
 	 }
-       current=current->next;
+       current_entry = current_entry->Flink;
      }
    DbgPrint("***************** Dump Complete ***************\n");
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
@@ -449,19 +469,86 @@ static void validate_kernel_pool(void)
 }
 #endif
 
-static void add_to_free_list(BLOCK_HDR* blk)
+#if 0
+STATIC VOID
+free_pages(BLOCK_HDR* blk)
+{
+  if (PAGE_ROUND_UP(((unsigned int)blk)) != 
+      PAGE_ROUND_DOWN(((unsigned int)blk + blk->size)))
+    {
+      
+    }
+}
+#endif
+
+#if 0
+STATIC VOID
+merge_free_block(BLOCK_HDR* blk)
+{
+  PLIST_ENTRY next_entry;
+  BLOCK_HDR* next;
+  PLIST_ENTRY previous_entry;
+  BLOCK_HDR* previous;
+
+  next_entry = blk->ListEntry.Flink;
+  if (next_entry != &FreeBlockListHead)
+    {
+      next = CONTAINING_RECORD(next_entry, BLOCK_HDR, ListEntry);
+      if (((unsigned int)blk + blk->size) == (unsigned int)next)
+	{
+	  RemoveEntryList(&next->ListEntry);
+	  blk->size = blk->size + sizeof(BLOCK_HDR) + next->size;
+	}
+    }
+  previous_entry = blk->ListEntry.Blink;
+  if (previous_entry != &FreeBlockListHead)
+    {
+      previous = CONTAINING_RECORD(previous_entry, BLOCK_HDR, ListEntry);
+      if (((unsigned int)previous + previous->size) == (unsigned int)blk)
+	{
+	  RemoveEntryList(&blk->ListEntry);
+	  previous->size = previous->size + sizeof(BLOCK_HDR) + blk->size;
+	}
+    }
+}
+#endif
+
+STATIC VOID 
+add_to_free_list(BLOCK_HDR* blk)
 /*
  * FUNCTION: add the block to the free list (internal)
  */
 {
-  blk->next=free_list_head;
-  blk->previous=NULL;
-  if (free_list_head!=NULL)
+#if 0
+  PLIST_ENTRY current_entry;
+  PLIST_ENTRY next_entry;
+  BLOCK_HDR* current;
+  BLOCK_HDR* next;
+
+  current_entry = FreeBlockListHead.Flink;
+  next_entry = FreeBlockListHead.Flink->Flink;
+  while (current_entry != &FreeBlockListHead &&
+	 next_entry != &FreeBlockListHead)
     {
-      free_list_head->previous=blk;
+      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+      next = CONTAINING_RECORD(next_entry, BLOCK_HDR, ListEntry);
+
+      if ((unsigned int)current < (unsigned int)blk &&
+	  (unsigned int)next > (unsigned int)blk)
+	{
+	  InsertHeadList(current_entry, &blk->ListEntry);
+	  return;
+	}
+
+      current_entry = current_entry->Flink;
+      next_entry = next_entry->Flink;
     }
-  free_list_head=blk;
+  InsertTailList(&FreeBlockListHead, &blk->ListEntry);
   nr_free_blocks++;
+#else
+  InsertHeadList(&FreeBlockListHead, &blk->ListEntry);
+  nr_free_blocks++;
+#endif
 }
 
 static void add_to_used_list(BLOCK_HDR* blk)
@@ -469,71 +556,22 @@ static void add_to_used_list(BLOCK_HDR* blk)
  * FUNCTION: add the block to the used list (internal)
  */
 {
-  blk->next=used_list_head;
-  blk->previous=NULL;
-  if (used_list_head!=NULL)
-    {
-      used_list_head->previous=blk;
-    }
-  used_list_head=blk;
+  InsertHeadList(&UsedBlockListHead, &blk->ListEntry);
   EiNrUsedBlocks++;
 }
 
 
 static void remove_from_free_list(BLOCK_HDR* current)
 {
-  if (current->next==NULL&&current->previous==NULL)
-    {
-      free_list_head=NULL;                                
-    }
-  else
-    {
-      if (current->next==NULL)
-	{
-	  current->previous->next=NULL;
-	}
-      else if (current->previous==NULL)
-	{
-	  current->next->previous=NULL;
-	  free_list_head=current->next;
-	}
-      else
-	{
-	  current->next->previous=current->previous;
-	  current->previous->next=current->next;
-	}
-    }
+  RemoveEntryList(&current->ListEntry);
   nr_free_blocks--;
 }
 
 
 static void remove_from_used_list(BLOCK_HDR* current)
 {
-        if (current->next==NULL&&current->previous==NULL)
-        {
-                used_list_head=NULL;                                
-        }
-        else
-        {	   
-                if (current->previous==NULL)
-                {
-		   current->next->previous=NULL;
-		   used_list_head=current->next;
-                }
-                else
-                {
-		   current->previous->next=current->next;
-                }
-                if (current->next!=NULL)
-                {
-                        current->next->previous=current->previous;
-                }
-                else
-                {
-                        current->previous->next=NULL;
-                }
-        }
-        EiNrUsedBlocks--;
+  RemoveEntryList(&current->ListEntry);
+  EiNrUsedBlocks--;
 }
 
 
@@ -646,24 +684,13 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
         free_blk = (BLOCK_HDR *)(((int)current)
 				 + sizeof(BLOCK_HDR) + size);		
 	free_blk->magic = BLOCK_HDR_FREE_MAGIC;
-	free_blk->next = current->next;
-	free_blk->previous = current->previous;
-	if (current->next) 
-	  {
-	     current->next->previous = free_blk;
-	  }
-	if (current->previous)
-	  {
-	     current->previous->next = free_blk;
-	  }
+	InsertHeadList(&current->ListEntry, &free_blk->ListEntry);
 	free_blk->size = current->size - (sizeof(BLOCK_HDR) + size);
-	if (current==free_list_head)
-	  {
-	    free_list_head=free_blk;
-	  }
 	
 	current->size=size;
-	add_to_used_list(current);
+	RemoveEntryList(&current->ListEntry);
+	InsertHeadList(&UsedBlockListHead, &current->ListEntry);
+	EiNrUsedBlocks++;
 	current->magic = BLOCK_HDR_USED_MAGIC;
 	current->Tag = Tag;
 	current->Caller = Caller;
@@ -746,6 +773,7 @@ PVOID STDCALL ExAllocateNonPagedPoolWithTag(ULONG Type,
 					    PVOID Caller)
 {
    BLOCK_HDR* current = NULL;
+   PLIST_ENTRY current_entry;
    PVOID block;
    BLOCK_HDR* best = NULL;
    KIRQL oldIrql;
@@ -770,21 +798,18 @@ PVOID STDCALL ExAllocateNonPagedPoolWithTag(ULONG Type,
    /*
     * Look for an already created block of sufficent size
     */
-   current=free_list_head;
-   
-//   defrag_free_list();
-   
-   while (current!=NULL)
+   current_entry = FreeBlockListHead.Flink;   
+   while (current_entry != &FreeBlockListHead)
      {
 	OLD_DPRINT("current %x size %x next %x\n",current,current->size,
 	       current->next);
-	if (current->size>=Size &&
-	    (best == NULL ||
-	     current->size < best->size)) 
+	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+	if (current->size >= Size && 
+	    (best == NULL || current->size < best->size)) 
 	  {
-	     best = current;
+	    best = current;
 	  }
-	current=current->next;
+	current_entry = current_entry->Flink;
      }
    if (best != NULL)
      {

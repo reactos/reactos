@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.17 2001/03/08 22:06:01 dwelch Exp $
+/* $Id: view.c,v 1.18 2001/03/09 14:40:27 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -190,8 +190,8 @@ CcRequestCacheSegment(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-static
-VOID CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
+STATIC VOID 
+CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
   if (PhysAddr != 0)
     {
@@ -200,24 +200,23 @@ VOID CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
 }
 
 NTSTATUS STDCALL 
-CcFreeCacheSegment(PBCB Bcb,
-		   PCACHE_SEGMENT CacheSeg)
+CcFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Releases a cache segment associated with a BCB
  */
 {
-   MmFreeMemoryArea(NULL,
-		    CacheSeg->BaseAddress,
-		    Bcb->CacheSegmentSize,
-		    CcFreeCachePage,
-		    NULL);
-   ExFreePool(CacheSeg);
-   return(STATUS_SUCCESS);
+  DPRINT("Freeing cache segment %x\n", CacheSeg);
+  MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		   CacheSeg->BaseAddress,
+		   Bcb->CacheSegmentSize,
+		   CcFreeCachePage,
+		   NULL);
+  ExFreePool(CacheSeg);
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL 
-CcReleaseFileCache(PFILE_OBJECT FileObject,
-		   PBCB Bcb)
+CcReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 /*
  * FUNCTION: Releases the BCB associated with a file object
  */
@@ -225,16 +224,16 @@ CcReleaseFileCache(PFILE_OBJECT FileObject,
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    
-   DPRINT("CcReleaseFileCache(FileObject %x, Bcb %x)\n",
-	  FileObject, Bcb);
+   DPRINT("CcReleaseFileCache(FileObject %x, Bcb %x)\n", FileObject, Bcb);
+
+   MmFreeSectionSegments(FileObject);
    
    current_entry = Bcb->CacheSegmentListHead.Flink;
-   while (current_entry != (&Bcb->CacheSegmentListHead))
+   while (current_entry != &Bcb->CacheSegmentListHead)
      {
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
 	current_entry = current_entry->Flink;
-	CcFreeCacheSegment(Bcb,
-			   current);
+	CcFreeCacheSegment(Bcb, current);
      }
    
    ExFreePool(Bcb);
