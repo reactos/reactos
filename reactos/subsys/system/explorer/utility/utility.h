@@ -101,6 +101,8 @@ extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, 
 #else
 extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
 #endif
+#define	_tcsnicmp strncasecmp
+#define	_tcsicoll strcasecmp
 #endif
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED

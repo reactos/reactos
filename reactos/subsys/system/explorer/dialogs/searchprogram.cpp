@@ -154,7 +154,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 
 	TCHAR buffer[1024];
 	GetWindowText(GetDlgItem(_hwnd, IDC_TOPIC), buffer, 1024);
-#ifndef __WINE__ //TODO
+#ifndef __WINE__ ///@todo
 	_tcslwr(buffer);
 #endif
 	_lwr_filter = buffer;
@@ -194,10 +194,7 @@ void FindProgramDlg::collect_programs_callback(ShellFolder& folder, ShellEntry* 
 				String menu_path;
 
 				int len = pThis->_common_programs.size();
-#ifdef __WINE__ //TODO
-#define	_tcsnicmp strncasecmp
-#define	_tcsicoll strcasecmp
-#endif
+
 				if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
 					menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
 				else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
