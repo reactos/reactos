@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2004/01/12 22:45:53 sedwards Exp $
+# $Id: Makefile,v 1.5 2004/03/10 18:57:35 sedwards Exp $
 
 PATH_TO_TOP=../../../reactos
 
@@ -10,7 +10,7 @@ TARGET_NAME = telnet
 
 TARGET_SDKLIBS = ws2_32.a
 
-TARGET_CPPFLAGS = -D__REACTOS__ -D__USE_W32API
+TARGET_CPPFLAGS = -D__REACTOS__ -D__USE_W32API -Wall
 
 TARGET_GCCLIBS = stdc++
 

@@ -18,6 +18,7 @@ template <class T>
 class TArrayAsVector : public vector<T> {
 private:
 	const unsigned int growable;
+    typedef size_t size_type;
 	const size_type lowerbound;
 public:
 	TArrayAsVector(size_type upper,
@@ -128,15 +129,11 @@ public:
 #ifdef _MSC_VER
 		_Destroy(begin(), end());
 		_Last = _First;
-#else
-//		destroy(begin( ), end( ));
-#ifdef __CYGWIN__
+		destroy(begin( ), end( ));
+#elif defined (__CYGWIN__) || defined (__MINGW32__)
 		_M_finish = _M_start;
-#endif
-//		finish = start;		/* Removed for ReactOS */
-#ifdef __REACTOS__
-		_M_finish = _M_start;
-#endif
+#else /* Anything else */
+		finish = start;
 #endif
 	}
 	
