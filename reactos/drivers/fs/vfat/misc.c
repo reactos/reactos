@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.11 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: misc.c,v 1.12 2004/03/04 01:29:24 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,10 +135,12 @@ NTSTATUS STDCALL VfatBuildRequest (
          DPRINT1("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
       }
       Status = VfatDispatchRequest (IrpContext);
+      
       if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
       {
          FsRtlExitFileSystem();
       }
+      
    }
    return Status;
 }
@@ -191,7 +193,9 @@ VOID STDCALL VfatDoRequest (PVOID IrpContext)
 {
    InterlockedDecrement(&QueueCount);
    DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
+   FsRtlEnterFileSystem();
    VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
+   FsRtlExitFileSystem();
 
 }
 
