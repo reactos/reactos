@@ -15,9 +15,9 @@ int main(int argc, char* argv[])
 
    Teb = (PTEB)x;
 
-   printf("StackBase: 0x%08lX\n", Teb->Tib.StackBase);
-   printf("StackLimit: 0x%08lX\n", Teb->Tib.StackLimit);
-   printf("DeallocationStack: 0x%08lX\n", Teb->DeallocationStack);
+   printf("StackBase: 0x%08lX\n", (DWORD)Teb->Tib.StackBase);
+   printf("StackLimit: 0x%08lX\n", (DWORD)Teb->Tib.StackLimit);
+   printf("DeallocationStack: 0x%08lX\n", (DWORD)Teb->DeallocationStack);
 
    return(0);
 }

@@ -24,7 +24,6 @@ thread_main2(LPVOID param)
 
 int main (void)
 {
-   HANDLE hThread;
    DWORD i=0;
    DWORD id;
 

@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <msvcrt/io.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 #include <msvcrt/internal/file.h>
 
 #define NDEBUG

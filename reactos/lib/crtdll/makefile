@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.61 2003/08/07 04:03:22 royce Exp $
+# $Id: makefile,v 1.62 2003/11/14 17:13:30 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,7 +14,7 @@ TARGET_BASE = 0x77630000
 
 TARGET_LFLAGS = -nostartfiles
 
-TARGET_CFLAGS = -D_MSVCRT_LIB_
+TARGET_CFLAGS = -D_MSVCRT_LIB_ -Werror -Wall
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

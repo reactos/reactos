@@ -54,7 +54,6 @@ int main(int argc, char* argv[])
   FILE* in;
   FILE* out;
   char* in_buf;
-  char* out_buf;
   int in_size;
   int in_ptr;
   int linelen;

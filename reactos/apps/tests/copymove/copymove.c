@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tchar.h>
 #include <windows.h>
 
@@ -54,20 +55,20 @@ CreateTestFile(LPCTSTR filename, DWORD attributes)
 	                  0);
    
 	if (INVALID_HANDLE_VALUE == file) {
-		fprintf(stderr, "CreateFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "CreateFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	for(c = 0; c < sizeof(buffer); c++) {
 		buffer[c] = (char) c;
 	}
 	if (! WriteFile(file, buffer, sizeof(buffer), &wrote, NULL)) {
-		fprintf(stderr, "WriteFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "WriteFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	CloseHandle(file);
 
 	if (! SetFileAttributes(filename, attributes)) {
-		fprintf(stderr, "SetFileAttributes failed with code %d\n", GetLastError());
+		fprintf(stderr, "SetFileAttributes failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 }
@@ -82,7 +83,7 @@ static void
 CreateTestDir(LPCTSTR dirname)
 {
 	if (! CreateDirectory(dirname, NULL)) {
-		fprintf(stderr, "CreateDirectory failed with code %d\n", GetLastError());
+		fprintf(stderr, "CreateDirectory failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 }
@@ -105,21 +106,21 @@ CheckTestFile(LPCTSTR filename, DWORD attributes)
 	                  0);
 
 	if (INVALID_HANDLE_VALUE == file) {
-		fprintf(stderr, "CreateFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "CreateFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 
 	if (! ReadFile(file, buffer, sizeof(buffer), &read, NULL)) {
-		fprintf(stderr, "ReadFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "ReadFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	if (read != sizeof(buffer)) {
-		fprintf(stderr, "Trying to read %d bytes but got %d bytes\n", sizeof(buffer), read);
+		fprintf(stderr, "Trying to read %u bytes but got %lu bytes\n", sizeof(buffer), read);
 		exit(1);
 	}
 	for(c = 0; c < sizeof(buffer); c++) {
 		if (buffer[c] != (char) c) {
-			fprintf(stderr, "File contents changed at position %d\n", c);
+			fprintf(stderr, "File contents changed at position %u\n", c);
 			exit(1);
 		}
 	}
@@ -128,11 +129,11 @@ CheckTestFile(LPCTSTR filename, DWORD attributes)
 	
 	diskattr = GetFileAttributes(filename);
 	if (INVALID_FILE_ATTRIBUTES == diskattr) {
-		fprintf(stderr, "GetFileAttributes failed with code %d\n", GetLastError());
+		fprintf(stderr, "GetFileAttributes failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	if (diskattr != attributes) {
-		fprintf(stderr, "Attribute mismatch, expected 0x%08x found 0x%08x\n", attributes, diskattr);
+		fprintf(stderr, "Attribute mismatch, expected 0x%08lx found 0x%08lx\n", attributes, diskattr);
 		exit(1);
 	}
 }
@@ -149,7 +150,7 @@ main(int argc, char *argv[])
 	CreateTestFile(_T("begin.dat"), FILE_ATTRIBUTE_ARCHIVE);
 	DeleteTestFile(_T("end.dat"));
 	if (! MoveFile(_T("begin.dat"), _T("end.dat"))) {
-		fprintf(stderr, "MoveFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	CheckTestFile(_T("end.dat"), FILE_ATTRIBUTE_ARCHIVE);
@@ -162,7 +163,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "MoveFile succeeded but shouldn't have\n");
 		exit(1);
 	} else if (ERROR_FILE_NOT_FOUND != GetLastError()) {
-		fprintf(stderr, "MoveFile failed with unexpected code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with unexpected code %lu\n", GetLastError());
 		exit(1);
 	}
 	DeleteTestFile(_T("end.dat"));
@@ -176,7 +177,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "MoveFile succeeded but shouldn't have\n");
 		exit(1);
 	} else if (ERROR_ALREADY_EXISTS != GetLastError()) {
-		fprintf(stderr, "MoveFile failed with unexpected code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with unexpected code %lu\n", GetLastError());
 		exit(1);
 	}
 	DeleteTestFile(_T("begin.dat"));
@@ -190,7 +191,7 @@ main(int argc, char *argv[])
 	CreateTestFile(_T("begin\\file.dat"), FILE_ATTRIBUTE_NORMAL);
 	DeleteTestDir(_T("end"));
 	if (! MoveFile(_T("begin"), _T("end"))) {
-		fprintf(stderr, "MoveFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	CheckTestFile(_T("end\\file.dat"), FILE_ATTRIBUTE_NORMAL);
@@ -202,7 +203,7 @@ main(int argc, char *argv[])
 	CreateTestFile(_T("file.dat"), FILE_ATTRIBUTE_NORMAL);
 	CreateTestDir(_T("end"));
 	if (! MoveFile(_T("file.dat"), _T("end\\file.dat"))) {
-		fprintf(stderr, "MoveFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	CheckTestFile(_T("end\\file.dat"), FILE_ATTRIBUTE_ARCHIVE);
@@ -213,7 +214,7 @@ main(int argc, char *argv[])
 	CreateTestFile(_T("begin.dat"), FILE_ATTRIBUTE_READONLY);
 	DeleteTestFile(_T("end.dat"));
 	if (! MoveFile(_T("begin.dat"), _T("end.dat"))) {
-		fprintf(stderr, "MoveFile failed with code %d\n", GetLastError());
+		fprintf(stderr, "MoveFile failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	CheckTestFile(_T("end.dat"), FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_READONLY);
@@ -225,7 +226,7 @@ main(int argc, char *argv[])
 		CreateTestFile(_T("begin.dat"), FILE_ATTRIBUTE_ARCHIVE);
 		DeleteTestFile(otherfile);
 		if (! MoveFile(_T("begin.dat"), otherfile)) {
-			fprintf(stderr, "MoveFile failed with code %d\n", GetLastError());
+			fprintf(stderr, "MoveFile failed with code %lu\n", GetLastError());
 			exit(1);
 		}
 		CheckTestFile(otherfile, FILE_ATTRIBUTE_ARCHIVE);
@@ -238,7 +239,7 @@ main(int argc, char *argv[])
 	CreateTestFile(_T("begin.dat"), FILE_ATTRIBUTE_ARCHIVE);
 	CreateTestFile(_T("end.dat"), FILE_ATTRIBUTE_ARCHIVE);
 	if (! MoveFileEx(_T("begin.dat"), _T("end.dat"), MOVEFILE_REPLACE_EXISTING)) {
-		fprintf(stderr, "MoveFileEx failed with code %d\n", GetLastError());
+		fprintf(stderr, "MoveFileEx failed with code %lu\n", GetLastError());
 		exit(1);
 	}
 	DeleteTestFile(_T("begin.dat"));
@@ -254,7 +255,7 @@ main(int argc, char *argv[])
 		exit(1);
 	} else if (ERROR_ALREADY_EXISTS != GetLastError() &&
 	           ERROR_ACCESS_DENIED != GetLastError()) {
-		fprintf(stderr, "MoveFileEx failed with unexpected code %d\n", GetLastError());
+		fprintf(stderr, "MoveFileEx failed with unexpected code %lu\n", GetLastError());
 		exit(1);
 	}
 	DeleteTestFile(_T("begin.dat"));
@@ -272,7 +273,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, "MoveFileEx succeeded but shouldn't have\n");
 			exit(1);
 		} else if (ERROR_NOT_SAME_DEVICE != GetLastError()) {
-			fprintf(stderr, "MoveFileEx failed with unexpected code %d\n", GetLastError());
+			fprintf(stderr, "MoveFileEx failed with unexpected code %lu\n", GetLastError());
 			exit(1);
 		}
 		DeleteTestFile(otherfile);
@@ -287,7 +288,7 @@ main(int argc, char *argv[])
 		CreateTestFile(_T("begin.dat"), FILE_ATTRIBUTE_ARCHIVE);
 		DeleteTestFile(otherfile);
 		if (! MoveFileEx(_T("begin.dat"), otherfile, MOVEFILE_COPY_ALLOWED)) {
-			fprintf(stderr, "MoveFileEx failed with code %d\n", GetLastError());
+			fprintf(stderr, "MoveFileEx failed with code %lu\n", GetLastError());
 			exit(1);
 		}
 		CheckTestFile(otherfile, FILE_ATTRIBUTE_ARCHIVE);

@@ -6,6 +6,8 @@
 //#include <winioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
 
 
 void HexDump(char *buffer, ULONG size)
@@ -138,7 +140,6 @@ int main (int argc, char *argv[])
 {
   HANDLE hDisk;
   DWORD dwRead;
-  DWORD i;
   char *Buffer;
   CHAR Filename[80];
   LARGE_INTEGER FilePosition;

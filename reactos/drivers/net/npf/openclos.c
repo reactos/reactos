@@ -80,8 +80,6 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     NDIS_STATUS     Status;
     NDIS_STATUS     ErrorStatus;
     UINT            i;
-	PUCHAR			tpointer;
-    PLIST_ENTRY     PacketListEntry;
 	PCHAR			EvName;
 
     IF_LOUD(DbgPrint("NPF: OpenAdapter\n");)

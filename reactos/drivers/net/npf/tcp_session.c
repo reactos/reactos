@@ -173,6 +173,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 			break;
 		}
 		if (flags&ACK)
+		{
 			if (direction==session->direction)
 			{
 				uint32 new_ack=SW_ULONG_AT(mem_ex->buffer,20);
@@ -185,12 +186,14 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				if (new_ack-session->ack_cln<MAX_WINDOW)
 					session->ack_cln=new_ack;
 			}
+		}
 		if (flags&RST)
 		{
 			next_status=CLOSED_RST;
 			break;
 		}
 		if (flags&FIN)
+		{
 			if (direction==session->direction)
 			{   /* an hack to make all things work */
 				session->ack_cln=SW_ULONG_AT(mem_ex->buffer,16);
@@ -203,6 +206,7 @@ uint32 tcp_session(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_
 				next_status=FIN_SRV_RCV;
 				break;
 			}
+		}
 		next_status=ESTABLISHED;
 		break;
 	

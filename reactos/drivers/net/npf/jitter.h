@@ -95,16 +95,16 @@ JIT_BPF_Filter;
 
 /// mov r32,i32
 #define MOVid(r32, i32) \
-  emitm(&stream, 11 << 4 | 1 << 3 | r32 & 0x7, 1); emitm(&stream, i32, 4);
+  emitm(&stream, (11 << 4) | (1 << 3) | (r32 & 0x7), 1); emitm(&stream, i32, 4);
 
 /// mov dr32,sr32
 #define MOVrd(dr32, sr32) \
-  emitm(&stream, 8 << 4 | 3 | 1 << 3, 1); emitm(&stream,  3 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);
+  emitm(&stream, (8 << 4) | 3 | (1 << 3), 1); emitm(&stream,  (3 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);
 
 /// mov dr32,sr32[off]
 #define MOVodd(dr32, sr32, off) \
-  emitm(&stream, 8 << 4 | 3 | 1 << 3, 1); \
-  emitm(&stream,  1 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);\
+  emitm(&stream, (8 << 4) | 3 | (1 << 3), 1); \
+  emitm(&stream,  (1 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);\
   emitm(&stream,  off, 1);
 
 /// mov dr32,sr32[or32]
@@ -144,15 +144,15 @@ JIT_BPF_Filter;
 
 /// push r32
 #define PUSH(r32) \
-  emitm(&stream, 5 << 4 | 0 << 3 | r32 & 0x7, 1);
+  emitm(&stream, (5 << 4) | (0 << 3) | (r32 & 0x7), 1);
 
 /// pop r32
 #define POP(r32) \
-  emitm(&stream, 5 << 4 | 1 << 3 | r32 & 0x7, 1);
+  emitm(&stream, (5 << 4) | (1 << 3) | (r32 & 0x7), 1);
 
 /// ret
 #define RET() \
-  emitm(&stream, 12 << 4 | 0 << 3 | 3, 1);
+  emitm(&stream, (12 << 4) | (0 << 3) | 3, 1);
 
 /// add dr32,sr32
 #define ADDrd(dr32, sr32) \
@@ -215,12 +215,12 @@ JIT_BPF_Filter;
 /// and dr32,sr32
 #define ANDrd(dr32, sr32) \
   emitm(&stream, 0x23, 1);\
-  emitm(&stream,  3 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);
+  emitm(&stream,  (3 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);
 
 /// or dr32,sr32
 #define ORrd(dr32, sr32) \
   emitm(&stream, 0x0b, 1);\
-  emitm(&stream,  3 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);
+  emitm(&stream,  (3 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);
 
 /// or r32,i32
 #define ORid(r32, i32) \
@@ -235,40 +235,40 @@ JIT_BPF_Filter;
 /// shl r32,i8
 #define SHLib(r32, i8) \
   emitm(&stream, 0xc1, 1);\
-  emitm(&stream, 7 << 5 | r32 & 0x7, 1);\
+  emitm(&stream, (7 << 5) | (r32 & 0x7), 1);\
   emitm(&stream, i8, 1);
 
 /// shl dr32,cl
 #define SHL_CLrb(dr32) \
   emitm(&stream, 0xd3, 1);\
-  emitm(&stream,  7 << 5 | dr32 & 0x7, 1);
+  emitm(&stream,  (7 << 5) | (dr32 & 0x7), 1);
 
 /// shr r32,i8
 #define SHRib(r32, i8) \
   emitm(&stream, 0xc1, 1);\
-  emitm(&stream, 29 << 3 | r32 & 0x7, 1);\
+  emitm(&stream, (29 << 3) | (r32 & 0x7), 1);\
   emitm(&stream, i8, 1);
 
 /// shr dr32,cl
 #define SHR_CLrb(dr32) \
   emitm(&stream, 0xd3, 1);\
-  emitm(&stream,  29 << 3 | dr32 & 0x7, 1);
+  emitm(&stream,  (29 << 3) | (dr32 & 0x7), 1);
 
 /// neg r32
 #define NEGd(r32) \
   emitm(&stream, 0xf7, 1);\
-  emitm(&stream,  27 << 3 | r32 & 0x7, 1);
+  emitm(&stream,  (27 << 3) | (r32 & 0x7), 1);
 
 /// cmp dr32,sr32[off]
 #define CMPodd(dr32, sr32, off) \
-  emitm(&stream, 3 << 4 | 3 | 1 << 3, 1); \
-  emitm(&stream,  1 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);\
+  emitm(&stream, (3 << 4) | 3 | (1 << 3), 1); \
+  emitm(&stream,  (1 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);\
   emitm(&stream,  off, 1);
 
 /// cmp dr32,sr32
 #define CMPrd(dr32, sr32) \
   emitm(&stream, 0x3b, 1); \
-  emitm(&stream,  3 << 6 | (dr32 & 0x7) << 3 | sr32 & 0x7, 1);
+  emitm(&stream,  (3 << 6) | ((dr32 & 0x7) << 3) | (sr32 & 0x7), 1);
 
 /// cmp dr32,i32
 #define CMPid(dr32, i32) \

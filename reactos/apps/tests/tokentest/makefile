@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2003/07/30 14:08:16 royce Exp $
+# $Id: makefile,v 1.3 2003/11/14 17:13:22 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,8 @@ TARGET_NAME = tokentst
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_OBJECTS = tokentest.o
+
+TARGET_CFLAGS = -Wall -Werror -Wno-format
 
 include $(PATH_TO_TOP)/rules.mak
 

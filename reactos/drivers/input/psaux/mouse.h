@@ -54,13 +54,6 @@
 #define MOUSE_ISINTELLIMOUSE    0x03
 #define MOUSE_ISINTELLIMOUSE5BUTTONS    0x04
 
-static PIRP  CurrentIrp;
-static ULONG MouseDataRead;
-static ULONG MouseDataRequired;
-static BOOLEAN AlreadyOpened = FALSE;
-static KDPC MouseDpc;
-
-static VOID MouseDpcRoutine(PKDPC Dpc,
-			  PVOID DeferredContext,
-			  PVOID SystemArgument1,
-			  PVOID SystemArgument2);
+BOOLEAN DetectPS2Port(void);
+BOOLEAN SetupMouse(PDEVICE_OBJECT DeviceObject, PUNICODE_STRING RegistryPath);
+void controller_wait(void);

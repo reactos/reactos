@@ -15,7 +15,7 @@ BOOL Slock(DWORD start,DWORD len)
 
 
   stat = LockFileEx(hFile,LOCKFILE_FAIL_IMMEDIATELY,0,len,0,&overl) ;
-  printf("Slock %i-%i %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
+  printf("Slock %li-%li %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
 		return stat;
 
 }
@@ -32,7 +32,7 @@ BOOL Xlock(DWORD start,DWORD len)
 
   stat =  LockFileEx(hFile,LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY,0,len,0,&overl);
 
-  printf("Xlock %i-%i %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
+  printf("Xlock %li-%li %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
   return stat;
 
 
@@ -48,7 +48,7 @@ BOOL unlock(DWORD start,DWORD len)
   overl.hEvent = 0;
 
   stat = UnlockFileEx(hFile,0,len,0,&overl) ;
-  printf("unlock %i-%i %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
+  printf("unlock %li-%li %s\n",start,start+len,stat!=0 ? "OK" : "FAILED");
   return stat;
 
 }

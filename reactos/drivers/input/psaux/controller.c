@@ -10,6 +10,7 @@
 /* This reads the controller status port, and does the appropriate
    action. It requires that we hold the keyboard controller spinlock. */
 
+int controller_read_data(void);
 unsigned handle_event(void)
 {
   unsigned status = controller_read_status();

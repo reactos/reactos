@@ -43,6 +43,8 @@
 #include "format.h"
 #include "fslist.h"
 #include "cabinet.h"
+#include "filesup.h"
+#include "drivesup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -1125,7 +1127,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 				 strlen (Buffer),
 				 coPos);
 
-  sprintf (Buffer, "MB (max. %d MB)", MaxSize);
+  sprintf (Buffer, "MB (max. %lu MB)", MaxSize);
   coPos.X = iLeft + PARTITION_SIZE_INPUT_FIELD_LENGTH + 1;
   coPos.Y = iTop;
   WriteConsoleOutputCharacters (Buffer,
@@ -1718,7 +1720,6 @@ FormatPartitionPage (PINPUT_RECORD Ir)
   WCHAR PathBuffer[MAX_PATH];
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  PLIST_ENTRY Entry;
   NTSTATUS Status;
 
 #ifndef NDEBUG
@@ -2080,12 +2081,10 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  WCHAR PathBuffer[MAX_PATH];
   WCHAR InstallDir[51];
   PWCHAR DefaultPath;
   INFCONTEXT Context;
   ULONG Length;
-  NTSTATUS Status;
 
   if (PartitionList == NULL ||
       PartitionList->CurrentDisk == NULL ||
@@ -2189,13 +2188,11 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
   WCHAR PathBuffer[MAX_PATH];
   INFCONTEXT FilesContext;
   INFCONTEXT DirContext;
-  PWCHAR KeyName;
   PWCHAR KeyValue;
   ULONG Length;
   NTSTATUS Status;
   PWCHAR FileKeyName;
   PWCHAR FileKeyValue;
-  PWCHAR DirKeyName;
   PWCHAR DirKeyValue;
   PWCHAR TargetFileName;
 
@@ -2384,7 +2381,6 @@ PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
 static PAGE_NUMBER
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
-  INT CabStatus;
   HINF InfHandle;
   WCHAR PathBuffer[MAX_PATH];
   INFCONTEXT CabinetsContext;
@@ -2732,8 +2728,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
 {
   WCHAR SrcPath[MAX_PATH];
   WCHAR DstPath[MAX_PATH];
-  PINICACHE IniCache;
-  PINICACHESECTION IniSection;
   NTSTATUS Status;
 
   SetTextXY(6, 8, "Installing the boot loader");
@@ -3524,6 +3518,9 @@ NtProcessStartup(PPEB Peb)
 	  case REPAIR_INTRO_PAGE:
 	    Page = RepairIntroPage(&Ir);
 	    break;
+
+	  case REBOOT_PAGE:
+		break;
 
 
 	  /* Emergency pages */

@@ -1088,7 +1088,6 @@ NTSTATUS TdiReceiveDatagram(
 {
     PTDI_CONNECTION_INFORMATION ReceiveInfo;
     PTDI_CONNECTION_INFORMATION ReturnInfo;
-    PTA_ADDRESS_IP ReturnAddress;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
     DWORD TdiAddressSize;

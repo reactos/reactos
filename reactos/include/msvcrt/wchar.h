@@ -18,15 +18,17 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Revision: 1.5 $
+ * $Author: weiden $
+ * $Date: 2003/11/14 17:13:30 $
  *
  */
 
 #ifndef _WCHAR_H_
 #define _WCHAR_H_
 
+#define WCHAR_MIN	0
+#define WCHAR_MAX	((wchar_t)-1)
 
 #include <msvcrt/ctype.h>
 #include <msvcrt/stdio.h>

@@ -8,7 +8,7 @@ OBJECTS = rgenstat.o llmosrt.o
 
 CLEAN_FILES = *.o rgenstat$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I.
+HOST_CFLAGS = -I. -Wall -Werror
 
 rgenstat.o: rgenstat.c
 	$(HOST_CC) $(HOST_CFLAGS) -c rgenstat.c -o rgenstat.o

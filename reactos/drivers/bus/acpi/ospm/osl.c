@@ -34,7 +34,6 @@ static PVOID AcpiIrqContext = NULL;
 static ULONG AcpiIrqNumber = 0;
 static KDPC AcpiDpc;
 static PVOID IVTVirtualAddress = NULL;
-static PVOID BDAVirtualAddress = NULL;
 
 
 VOID STDCALL
@@ -525,7 +524,6 @@ acpi_os_wait_semaphore(
 	u32                     units,
 	u32                     timeout)
 {
-  ACPI_STATUS Status = AE_OK;
   PFAST_MUTEX Mutex = (PFAST_MUTEX)handle;
 
   if (!Mutex || (units < 1)) {

@@ -190,7 +190,6 @@ do_reg_operation(HANDLE KeyHandle,
   WCHAR EmptyStr = (WCHAR)0;
   ULONG Type;
   ULONG Size;
-  NTSTATUS Status;
 
   if (Flags & FLG_ADDREG_DELVAL)  /* deletion */
     {
@@ -435,7 +434,7 @@ CreateNestedKey (PHANDLE KeyHandle,
     {
       if (Length == FullNameLength)
 	{
-	  Status == STATUS_SUCCESS;
+	  Status = STATUS_SUCCESS;
 	  *KeyHandle = LocalKeyHandle;
 	  break;
 	}

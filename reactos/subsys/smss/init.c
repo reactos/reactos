@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.50 2003/08/11 18:50:12 chorns Exp $
+/* $Id: init.c,v 1.51 2003/11/14 17:13:32 weiden Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -811,7 +811,6 @@ InitSessionManager(HANDLE Children[])
   NTSTATUS Status;
   UNICODE_STRING UnicodeString;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING CmdLineW;
   PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
   RTL_PROCESS_INFO ProcessInfo;
   HANDLE CsrssInitEvent;

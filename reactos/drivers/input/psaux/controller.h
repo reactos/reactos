@@ -137,3 +137,4 @@
 #define controller_read_status() READ_PORT_UCHAR ((PUCHAR)CONTROLLER_REGISTER_STATUS)
 #define controller_write_output(value) WRITE_PORT_UCHAR ((PUCHAR)CONTROLLER_REGISTER_DATA, value)
 #define controller_write_command(value) WRITE_PORT_UCHAR ((PUCHAR)CONTROLLER_REGISTER_CONTROL, value)
+void controller_write_command_word(unsigned data);

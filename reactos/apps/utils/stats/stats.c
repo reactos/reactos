@@ -9,7 +9,7 @@
  */
 #include <windows.h>
 #include <tchar.h>
-
+#include <stdio.h>
 
 typedef struct _EXTENSION_INFO
 {
@@ -290,9 +290,9 @@ PrintStatistics()
     _tprintf (_T("\n"));
     _tprintf (_T("File extension         : %s\n"), Info->ExtName);
     _tprintf (_T("File ext. description  : %s\n"), Info->Description);
-    _tprintf (_T("Number of files        : %d\n"), Info->FileCount);
-    _tprintf (_T("Number of lines        : %d\n"), Info->LineCount);
-    _tprintf (_T("Average no. lines/file : %d\n"), AvgLF);
+    _tprintf (_T("Number of files        : %lu\n"), Info->FileCount);
+    _tprintf (_T("Number of lines        : %lu\n"), Info->LineCount);
+    _tprintf (_T("Average no. lines/file : %lu\n"), AvgLF);
 
     TotalFileCount += Info->FileCount;
     TotalLineCount += Info->LineCount;
@@ -303,9 +303,9 @@ PrintStatistics()
   TotalAvgLF = TotalLineCount / TotalFileCount;
 
   _tprintf (_T("\n"));
-  _tprintf (_T("Total number of files  : %d\n"), TotalFileCount);
-  _tprintf (_T("Total number of lines  : %d\n"), TotalLineCount);
-  _tprintf (_T("Average no. lines/file : %d\n"), TotalAvgLF);
+  _tprintf (_T("Total number of files  : %lu\n"), TotalFileCount);
+  _tprintf (_T("Total number of lines  : %lu\n"), TotalLineCount);
+  _tprintf (_T("Average no. lines/file : %lu\n"), TotalAvgLF);
 }
 
 

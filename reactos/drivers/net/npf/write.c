@@ -148,14 +148,12 @@ NPF_BufferedWrite(
     POPEN_INSTANCE		Open;
     PIO_STACK_LOCATION	IrpSp;
     PNDIS_PACKET		pPacket;
-	UINT				i;
     NDIS_STATUS		    Status;
-	LARGE_INTEGER		StartTicks, CurTicks, TargetTicks;
+	LARGE_INTEGER		StartTicks, CurTicks;
 	LARGE_INTEGER		TimeFreq;
 	struct timeval		BufStartTime;
 	struct sf_pkthdr	*winpcap_hdr;
 	PMDL				TmpMdl;
-	PCHAR				CurPos;
 	PCHAR				EndOfUserBuff = UserBuff + UserBuffSize;
 	
     IF_LOUD(DbgPrint("NPF: BufferedWrite, UserBuff=%x, Size=%u\n", UserBuff, UserBuffSize);)

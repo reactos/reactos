@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.7 2003/10/11 16:54:51 ekohl Exp $
+/* $Id: binhive.c,v 1.8 2003/11/14 17:13:36 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -29,6 +29,7 @@
 //#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "mkhive.h"
 #include "binhive.h"
@@ -738,7 +739,6 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 		 PBLOCK_OFFSET pBlockOffset)
 {
   PCELL_HEADER NewBlock;
-  PHBIN pBin;
   ULONG i;
 
   *Block = NULL;
@@ -1228,7 +1228,6 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 {
   PKEY_CELL KeyCell;
   HKEY Key;
-  ULONG i;
   ULONG SubKeyCount;
   ULONG ValueCount;
   PLIST_ENTRY Entry;

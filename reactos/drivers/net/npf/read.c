@@ -107,10 +107,7 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 	UINT				Ttail;
 	UINT				TLastByte;
 	PUCHAR				CurrBuff;
-	LARGE_INTEGER		CapTime;
-	LARGE_INTEGER		TimeFreq;
 	struct bpf_hdr		*header;
-	KIRQL				Irql;
 	PUCHAR				UserPointer;
 	ULONG				bytecopy;
 	UINT				SizeToCopy;
@@ -339,8 +336,6 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
     UINT                BytesTransfered;
     ULONG               BufferLength;
     PMDL                pMdl;
-	LARGE_INTEGER		CapTime;
-	LARGE_INTEGER		TimeFreq;
 	struct bpf_hdr		*header;
 	PUCHAR				CurrBuff;
 	UINT				Thead;

@@ -3,6 +3,7 @@
 
 #define ANONYMOUSUNIONS
 #include <windows.h>
+#include <stdlib.h>
 
 #define INCLUDE_THE_DDK_HEADERS
 #ifdef INCLUDE_THE_DDK_HEADERS
@@ -327,7 +328,7 @@ BOOL
 EnablePrivilege(LPWSTR wszName)
 {
     HANDLE hToken;
-    TOKEN_PRIVILEGES priv = {1, {0, 0, SE_PRIVILEGE_ENABLED}};
+    TOKEN_PRIVILEGES priv = {1, {{{0, 0}, SE_PRIVILEGE_ENABLED}}};
 	BOOL bResult;
 
     LookupPrivilegeValue(0, wszName, &priv.Privileges[0].Luid);
@@ -345,10 +346,10 @@ EnablePrivilege(LPWSTR wszName)
 NTSTATUS
 CreateInitialSystemToken(HANDLE* phSystemToken)
 {
-	static SID   sidSystem			  = { 1, 1, SECURITY_NT_AUTHORITY, SECURITY_LOCAL_SYSTEM_RID };
-	static SID   sidEveryone		  = { 1, 1, SECURITY_WORLD_SID_AUTHORITY, SECURITY_WORLD_RID };
-	static SID   sidAuthenticatedUser = { 1, 1, SECURITY_NT_AUTHORITY, SECURITY_AUTHENTICATED_USER_RID };
-	static SID_2 sidAdministrators	  = { 1, 2, SECURITY_NT_AUTHORITY, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS };
+	static SID   sidSystem			  = { 1, 1, {SECURITY_NT_AUTHORITY}, {SECURITY_LOCAL_SYSTEM_RID} };
+	static SID   sidEveryone		  = { 1, 1, {SECURITY_WORLD_SID_AUTHORITY}, {SECURITY_WORLD_RID} };
+	static SID   sidAuthenticatedUser = { 1, 1, {SECURITY_NT_AUTHORITY}, {SECURITY_AUTHENTICATED_USER_RID} };
+	static SID_2 sidAdministrators	  = { 1, 2, {SECURITY_NT_AUTHORITY}, {SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS} };
 	static const int nGroupCount = 3;
 
 	NTSTATUS status;
@@ -483,7 +484,7 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int
-main(int argc, char** argv[])
+main(int argc, char* argv[])
 {
 	NTSTATUS Status;
 	HANDLE hSystemToken;

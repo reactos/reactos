@@ -4,7 +4,7 @@
 #include <msvcrt/fcntl.h>
 #include <msvcrt/io.h>
 #include <msvcrt/errno.h>
-
+#include <msvcrt/internal/file.h>
 
 /*
  * @implemented

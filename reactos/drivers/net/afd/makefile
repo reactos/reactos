@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2001/08/21 20:13:15 chorns Exp $
+# $Id: makefile,v 1.6 2003/11/14 17:13:28 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = afd
 
-TARGET_CFLAGS = -I./include -DDBG
+TARGET_CFLAGS = -I./include -DDBG -Werror -Wall
 
 TARGET_OBJECTS = \
   afd/afd.o \

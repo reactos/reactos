@@ -13,6 +13,8 @@ TARGET_NAME = volinfo
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
+TARGET_CFLAGS = -Wall -Werror
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk

@@ -129,7 +129,6 @@ WriteConsole(PCHAR Buffer,
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status = STATUS_SUCCESS;
-  ULONG i;
 
   Status = NtWriteFile(StdOutput,
 		       NULL,
@@ -218,7 +217,6 @@ ReadConsoleOutputCharacters(LPSTR lpCharacter,
 			    PULONG lpNumberOfCharsRead)
 {
   IO_STATUS_BLOCK IoStatusBlock;
-  ULONG dwBytesReturned;
   OUTPUT_CHARACTER Buffer;
   NTSTATUS Status;
 
@@ -251,7 +249,6 @@ ReadConsoleOutputAttributes(PUSHORT lpAttribute,
 			    PULONG lpNumberOfAttrsRead)
 {
   IO_STATUS_BLOCK IoStatusBlock;
-  ULONG dwBytesReturned;
   OUTPUT_ATTRIBUTE Buffer;
   NTSTATUS Status;
 
@@ -408,7 +405,6 @@ FillConsoleOutputAttribute(USHORT wAttribute,
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_ATTRIBUTE Buffer;
-  ULONG dwBytesReturned;
   NTSTATUS Status;
 
   Buffer.wAttribute = wAttribute;
@@ -443,7 +439,6 @@ FillConsoleOutputCharacter(CHAR Character,
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_CHARACTER Buffer;
-  ULONG dwBytesReturned;
   NTSTATUS Status;
 
   Buffer.cCharacter = Character;
@@ -654,7 +649,6 @@ SetConsoleTextAttribute(USHORT wAttributes)
 VOID
 ConInKey(PINPUT_RECORD Buffer)
 {
-  ULONG KeysRead;
 
   while (TRUE)
     {

@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.28 $
- * $Author: gvg $
- * $Date: 2003/05/04 15:41:40 $
+ * $Revision: 1.29 $
+ * $Author: weiden $
+ * $Date: 2003/11/14 17:13:25 $
  *
  */
 
@@ -365,7 +365,6 @@ DrvDisableSurface(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
   PDEVSURF pdsurf = ppdev->AssociatedSurf;
-  PSAVED_SCREEN_BITS pSSB, pSSBNext;
   CHECKPOINT;
   DPRINT( "KMDriver: %x\n", ppdev->KMDriver );
   //  EngFreeMem(pdsurf->BankSelectInfo);
@@ -603,6 +602,7 @@ DrvGetModes(IN HANDLE Driver,
 
     } while (--NumModes);
   }
+  return OutputSize;
 }
 
 /* EOF */

@@ -6,6 +6,7 @@
 
 #include "usetup.h"
 #include "progress.h"
+#include "console.h"
 
 /* FUNCTIONS ****************************************************************/
 
@@ -90,7 +91,6 @@ DrawProgressBar(PPROGRESS Bar)
   CHAR TextBuffer[8];
   COORD coPos;
   ULONG Written;
-  SHORT i;
 
   /* Print percentage */
   sprintf(TextBuffer, "%-3lu%%", Bar->Percent);

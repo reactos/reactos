@@ -44,7 +44,7 @@
 //=============================================================================
 
 void Assert(void* assert, TCHAR* file, int line, void* msg);
-void Trace(TCHAR* lpszFormat, ...);
+void Trace(const TCHAR* lpszFormat, ...);
 void Trace1(int code, TCHAR* lpszFormat, ...);
 
 #else   // _DEBUG
@@ -55,7 +55,7 @@ void Trace1(int code, TCHAR* lpszFormat, ...);
 #endif
 
 void Assert(void* assert, TCHAR* file, int line, void* msg);
-void Trace(TCHAR* lpszFormat, ...);
+void Trace(const TCHAR* lpszFormat, ...);
 
 #endif // !_DEBUG
 

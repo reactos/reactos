@@ -374,7 +374,7 @@ bool CCABManager::DisplayCabinet()
                     printf("%s ", Date2Str((char*)&Str, Search.File->FileDate));
                     printf("%s ", Time2Str((char*)&Str, Search.File->FileTime));
                     printf("%s ", Attr2Str((char*)&Str, Search.File->Attributes));
-                    sprintf(Str, "%d", Search.File->FileSize);
+                    sprintf(Str, "%lu", Search.File->FileSize);
                     printf("%s ", Pad(Str, ' ', 13));
                     printf("%s\n", Search.FileName);
 
@@ -388,14 +388,14 @@ bool CCABManager::DisplayCabinet()
             if (FileCount == 1)
                 printf("                 1 file    ");
             else {
-                sprintf(Str, "%d", FileCount);
+                sprintf(Str, "%lu", FileCount);
                 printf("      %s files   ", Pad(Str, ' ', 12));
             }
 
             if (ByteCount == 1)
                 printf("           1 byte\n");
             else {
-                sprintf(Str, "%d", ByteCount);
+                sprintf(Str, "%lu", ByteCount);
                 printf("%s bytes\n", Pad(Str, ' ', 12));
             }
         } else {
@@ -481,8 +481,6 @@ bool CCABManager::OnOverwrite(PCFFILE File,
  *     true if the file should be overwritten, false if not
  */
 {
-    char ch;
-
     if (Mode == CM_MODE_CREATE)
         return true;
 

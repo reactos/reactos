@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.8 2002/08/09 17:23:56 dwelch Exp $
+/* $Id: thread.c,v 1.9 2003/11/14 17:13:21 weiden Exp $
  *
  *
  *
@@ -40,7 +40,6 @@ printf("\texample: thread.exe 100\n");
 
 int main (int argc, char* argv[])
 {
-   HANDLE hThread;
    DWORD i=0;
    DWORD id;
    ULONG nr;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logport.c,v 1.4 2002/09/08 10:23:44 chorns Exp $
+/* $Id: logport.c,v 1.5 2003/11/14 17:13:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -176,7 +176,7 @@ StartPortThread(VOID)
 
   PortThreadHandle = CreateThread(NULL,
 				  0x1000,
-				  PortThreadRoutine,
+				  (LPTHREAD_START_ROUTINE)PortThreadRoutine,
 				  NULL,
 				  0,
 				  &ThreadId);

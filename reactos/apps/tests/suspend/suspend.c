@@ -3,6 +3,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <stdio.h>
 
 #define DBG
 #define NDEBUG
@@ -58,11 +59,11 @@ main(int argc, char *argv[])
 
   for(;;)
   {
-    printf("%x ", z);
+    printf("%lx ", z);
     Sleep(100);x++;
     if(x>100 && GetThreadContext(thread, &context))
     {
-      printf("EIP: %x\n", context.Eip);
+      printf("EIP: %lx\n", context.Eip);
       printf("Calling resumethread ... \n");
       ResumeThread(thread);
     }

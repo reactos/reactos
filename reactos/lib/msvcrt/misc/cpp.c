@@ -1,4 +1,4 @@
-/* $Id: cpp.c,v 1.4 2003/10/05 18:13:26 navaraf Exp $
+/* $Id: cpp.c,v 1.5 2003/11/14 17:13:31 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS C runtime
@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stddef.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 #define CXX_FRAME_MAGIC    0x19930520
 #define CXX_EXCEPTION      0xe06d7363
@@ -157,7 +159,7 @@ inline static void call_dtor( void *func, void *object )
     __asm__ __volatile__("call *%0" : : "r" (func), "c" (object) : "eax", "edx", "memory" );
 }
 
-
+#if 0
 static void dump_type( cxx_type_info *type )
 {
 #if 0
@@ -215,7 +217,7 @@ static void dump_function_descr( cxx_function_descr *descr, cxx_exception_type *
     }
 #endif
 }
-
+#endif
 /* compute the this pointer for a base class of a given type */
 static void *get_this_pointer( cxx_type_info *type, void *object )
 {

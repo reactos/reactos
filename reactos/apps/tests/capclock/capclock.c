@@ -1,4 +1,4 @@
-/* $Id: capclock.c,v 1.2 2003/09/24 20:05:29 weiden Exp $
+/* $Id: capclock.c,v 1.3 2003/11/14 17:13:16 weiden Exp $
  *
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)
@@ -7,6 +7,7 @@
  * LICENSE    : GNU GPL v2.0
  */
 #include <windows.h>
+#include <string.h>
 
 UINT Timer = 1;
 

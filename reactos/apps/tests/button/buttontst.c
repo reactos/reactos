@@ -15,7 +15,6 @@ HINSTANCE AppInstance = NULL;
 LRESULT WmCreate(
    HWND Wnd)
 {
-   UCHAR i;
    DPRINT("WM_CREATE (enter).");
    DPRINT("test 1");
    CreateWindowEx(0, BUTTON_CLASS, "PushButton", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.5 2003/07/27 22:27:36 ekohl Exp $
+/* $Id: reginf.c,v 1.6 2003/11/14 17:13:36 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "mkhive.h"
 #include "registry.h"

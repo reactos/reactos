@@ -10,6 +10,7 @@
 #include <msvcrt/process.h>
 #include <msvcrt/ctype.h>
 #include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 
 #ifndef F_OK

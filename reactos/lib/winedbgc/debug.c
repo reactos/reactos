@@ -29,7 +29,9 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "porting.h"
+#include "wine/debug.h"
 /*
 #include "config.h"
 #include "wine/port.h"
@@ -40,7 +42,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "wine/debug.h"
 #include "wine/library.h"
 #include "wine/unicode.h"
  */
@@ -258,7 +259,7 @@ static const char *default_dbgstr_an( const char *str, int n )
     {
         if (!str) return "(null)";
         res = get_tmp_space( 6 );
-        sprintf( res, "#%04x", LOWORD(str) );
+        sprintf( res, "#%04x", LOWORD((DWORD)str) );
         return res;
     }
     if (n == -1) n = strlen(str);
@@ -309,7 +310,7 @@ static const char *default_dbgstr_wn( const WCHAR *str, int n )
     {
         if (!str) return "(null)";
         res = get_tmp_space( 6 );
-        sprintf( res, "#%04x", LOWORD(str) );
+        sprintf( res, "#%04x", LOWORD((DWORD)str) );
         return res;
     }
     if (n == -1) n = strlenW(str);

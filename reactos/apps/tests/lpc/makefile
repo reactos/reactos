@@ -10,7 +10,7 @@ CLT_OBJECTS= lpcclt.o
 
 PROGS= lpcsrv.exe lpcclt.exe
 
-BASE_CFLAGS = -I$(PATH_TO_TOP)/include
+BASE_CFLAGS = -I$(PATH_TO_TOP)/include -Wall -Werror
 
 LIBS = $(SDK_PATH_LIB)/kernel32.a \
   $(SDK_PATH_LIB)/ntdll.a

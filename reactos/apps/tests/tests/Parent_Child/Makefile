@@ -8,7 +8,7 @@ PROGS = Parent_Child
 OBJECTS = Parent_Child.o
 
 LIBS = $(PATH_TO_TOP)/dk/w32/lib/gdi32.a 
-CFLAGS =
+CFLAGS = -Wall -Werror
 
 all: $(PROGS:%=%.exe)
 

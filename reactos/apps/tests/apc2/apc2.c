@@ -7,7 +7,7 @@ VOID CALLBACK TimerApcProc(
   DWORD dwTimerLowValue,
   DWORD dwTimerHighValue ) 
 {
-  printf("APC Callback %i\n", *(PDWORD)lpArg);
+  printf("APC Callback %lu\n", *(PDWORD)lpArg);
 }
 
 
@@ -50,3 +50,4 @@ int main()
   CloseHandle( hTimer );
   return 0;
 }
+

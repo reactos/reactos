@@ -1,4 +1,4 @@
-# $Id: makefile.win32,v 1.1 2003/08/24 10:36:07 chorns Exp $
+# $Id: makefile.win32,v 1.2 2003/11/14 17:13:35 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,7 +15,7 @@ TARGET_OBJECTS = cabinet.o mszip.o raw.o main.o dfp.o
 
 TARGET_SDKLIBS = zlib.a
 
-TARGET_CFLAGS = -I$(PATH_TO_TOP)/lib/zlib
+TARGET_CFLAGS = -I$(PATH_TO_TOP)/lib/zlib -Werror -Wall
 
 TARGET_CPPFLAGS = $(TARGET_CFLAGS)
 

@@ -12,6 +12,8 @@
 
 #include <winsock2.h>
 #include <stdio.h>
+#include <string.h>
+#include <io.h>
 
 #undef ERROR
 #define SUCCESS 0

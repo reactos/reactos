@@ -11,7 +11,7 @@ OBJECTS = mkhive.o binhive.o infcache.o reginf.o registry.o
 
 CLEAN_FILES = *.o mkhive$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I.
+HOST_CFLAGS = -I. -Werror -Wall
 
 mkhive.o: mkhive.c
 	$(HOST_CC) $(HOST_CFLAGS) -c mkhive.c -o mkhive.o

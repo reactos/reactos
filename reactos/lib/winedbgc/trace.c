@@ -40,7 +40,7 @@ void _DebugBreak(void)
     DebugBreak();
 }
 
-void Trace(TCHAR* lpszFormat, ...)
+void Trace(const TCHAR* lpszFormat, ...)
 {
     va_list args;
     int nBuf;
@@ -76,7 +76,7 @@ void Assert(void* assert, TCHAR* file, int line, void* msg)
 
 //inline void Trace(TCHAR* lpszFormat, ...) { };
 //inline void Assert(void* assert, TCHAR* file, int line, void* msg) { };
-void Trace(TCHAR* lpszFormat, ...) { };
+void Trace(const TCHAR* lpszFormat, ...) { };
 void Assert(void* assert, TCHAR* file, int line, void* msg) { };
 
 #endif //_DEBUG

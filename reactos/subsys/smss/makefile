@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2003/08/07 04:03:24 royce Exp $
+# $Id: makefile,v 1.11 2003/11/14 17:13:32 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,7 +13,7 @@ TARGET_INSTALLDIR = system32
 TARGET_CFLAGS = -D__NTAPP__
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_OBJECTS = $(TARGET_NAME).o init.o smapi.o
 

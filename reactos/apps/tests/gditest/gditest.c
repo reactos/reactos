@@ -4,6 +4,9 @@
  */
 
 #include <windows.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern BOOL STDCALL GdiDllInitialize(HANDLE hInstance, DWORD Event, LPVOID Reserved);
 
@@ -159,13 +162,13 @@ void DumpRgnData( HRGN hRgn )
 		printf("GetRegionData( hRgn, size, rgnData ) returned 0\n");
 		return;
 	}
-	printf("Bounds: left=%d top=%d right=%d bottom=%d, count: %d, type: %i\n\n",
+	printf("Bounds: left=%lu top=%lu right=%lu bottom=%lu, count: %lu, type: %lu\n\n",
 		rgnData->rdh.rcBound.left, rgnData->rdh.rcBound.top, rgnData->rdh.rcBound.right, rgnData->rdh.rcBound.bottom,
 		rgnData->rdh.nCount, rgnData->rdh.iType);
 	printf("Rects:\t i \t left \t top \t right \t bottom\n");
 	for ( i = 0; i < rgnData->rdh.nCount; i++ ) {
 		PRECT pr = (PRECT) rgnData->Buffer + i;
-		printf("\t %d \t %d \t %d \t %d \t %d\n", i, pr->left, pr->top, pr->right, pr->bottom );
+		printf("\t %d \t %lu \t %lu \t %lu \t %lu\n", i, pr->left, pr->top, pr->right, pr->bottom );
 	}
 	printf("\n");
 }
@@ -186,7 +189,7 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("GetRgnBox( hRgn1, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("GetRgnBox( hRgn1, &Rect ): i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 
 	DumpRgnData( hRgn1 );
@@ -201,7 +204,7 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn2, &Rect )\n");
 		return;
 	}
-	printf("GetRgnBox( hRgn2, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("GetRgnBox( hRgn2, &Rect ): i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 
 	DumpRgnData( hRgn2 );
@@ -224,7 +227,7 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("After offset\nGetRgnBox( hRgn1, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After offset\nGetRgnBox( hRgn1, &Rect ): i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 
 	if( EqualRgn( hRgn1, hRgn2 ) == TRUE ){
@@ -244,13 +247,13 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("after SetRectRgn(hRgn1, 10, 11, 110, 111 ):\n i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("after SetRectRgn(hRgn1, 10, 11, 110, 111 ):\n i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 
 	hRgn3 = CreateRectRgn( 1, 1, 1, 1);
 	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND );
 	if( i==ERROR ){
-		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ). LastError: %d\n", GetLastError);
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ). LastError: %lu\n", GetLastError());
 		return;
 	}
 
@@ -258,13 +261,13 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
 
 	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR );
 	if( i==ERROR ){
-		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ). LastError: %d\n", GetLastError);
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ). LastError: %lu\n", GetLastError());
 		return;
 	}
 
@@ -272,13 +275,13 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
 
 	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF );
 	if( i==ERROR ){
-		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ). LastError: %d\n", GetLastError);
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ). LastError: %lu\n", GetLastError());
 		return;
 	}
 
@@ -286,13 +289,13 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
 
 	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR );
 	if( i==ERROR ){
-		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ). LastError: %d\n", GetLastError);
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ). LastError: %lu\n", GetLastError());
 		return;
 	}
 
@@ -300,13 +303,13 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn3, &Rect )\n");
 		return;
 	}
-	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
 
 	i = CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY );
 	if( i==ERROR ){
-		printf("Fail: CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ). LastError: %d\n", GetLastError);
+		printf("Fail: CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ). LastError: %lu\n", GetLastError());
 		return;
 	}
 
@@ -314,7 +317,7 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("After CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ): \nGetRgnBox( hRgn1, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("After CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ): \nGetRgnBox( hRgn1, &Rect ): CR_i=%u, left=%lu top=%lu right=%lu bottom=%lu\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn1 );
 

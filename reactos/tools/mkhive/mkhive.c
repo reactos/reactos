@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
+/* $Id: mkhive.c,v 1.3 2003/11/14 17:13:36 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
@@ -26,6 +26,7 @@
 
 #include <limits.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "mkhive.h"
 #include "registry.h"

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/09/08 10:22:24 chorns Exp $
+# $Id: Makefile,v 1.4 2003/11/14 17:13:29 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = driver_library
 
 TARGET_ASFLAGS = -D__NTHAL__ -I$(PATH_TO_TOP)/ntoskrnl/include
 
-TARGET_CFLAGS = -D__NTHAL__ -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_CFLAGS = -D__NTHAL__ -I$(PATH_TO_TOP)/ntoskrnl/include -Werror -Wall
 
 TARGET_NAME = hal
 

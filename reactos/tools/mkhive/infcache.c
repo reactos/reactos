@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.7 2003/10/16 08:39:28 robd Exp $
+/* $Id: infcache.c,v 1.8 2003/11/14 17:13:36 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/infcache.c
@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "mkhive.h"
 #include "infcache.h"
@@ -490,7 +491,6 @@ static PVOID add_section_from_token( struct parser *parser )
 static struct field *add_field_from_token( struct parser *parser, int is_key )
 {
   PVOID field;
-  CHAR *text;
 
   if (!parser->line)  /* need to start a new line */
     {

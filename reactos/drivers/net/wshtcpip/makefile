@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2002/09/08 10:22:21 chorns Exp $
+# $Id: makefile,v 1.10 2003/11/14 17:13:29 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = wshtcpip
 
 TARGET_BASE = 0x777c0000
 
-TARGET_CFLAGS = -DUNICODE
+TARGET_CFLAGS = -DUNICODE -Werror -Wall
 
 TARGET_SDKLIBS = ntdll.a kernel32.a ws2_32.a
 

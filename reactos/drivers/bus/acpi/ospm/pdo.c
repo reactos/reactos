@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.1 2001/08/23 17:32:04 chorns Exp $
+/* $Id: pdo.c,v 1.2 2003/11/14 17:13:23 weiden Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/pdo.c
@@ -23,7 +23,6 @@ PdoQueryId(
   PIO_STACK_LOCATION IrpSp)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
-  ACPI_STATUS AcpiStatus;
   NTSTATUS Status;
 
   DPRINT("Called\n");
@@ -55,9 +54,7 @@ PdoSetPower(
   PIO_STACK_LOCATION IrpSp)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
-  ACPI_STATUS AcpiStatus;
   NTSTATUS Status;
-  ULONG AcpiState;
 
   DPRINT("Called\n");
 

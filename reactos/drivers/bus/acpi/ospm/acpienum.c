@@ -1,4 +1,4 @@
-/* $Id: acpienum.c,v 1.3 2001/08/23 17:32:04 chorns Exp $
+/* $Id: acpienum.c,v 1.4 2003/11/14 17:13:23 weiden Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c
@@ -109,7 +109,6 @@ ACPIEnumerateRootBusses(
   BM_HANDLE_LIST HandleList;
   PACPI_DEVICE AcpiDevice;
   ACPI_STATUS AcpiStatus;
-  BM_HANDLE DeviceHandle;
 	BM_DEVICE_ID Criteria;
   KIRQL OldIrql;
   ULONG i;
@@ -174,7 +173,6 @@ ACPIEnumerateNamespace(
   BM_HANDLE_LIST HandleList;
   PACPI_DEVICE AcpiDevice;
   ACPI_STATUS AcpiStatus;
-  BM_HANDLE DeviceHandle;
 	BM_DEVICE_ID Criteria;
   BM_NODE *Node;
   KIRQL OldIrql;

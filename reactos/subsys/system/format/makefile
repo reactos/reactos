@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/04/05 23:17:22 chorns Exp $
+# $Id: makefile,v 1.2 2003/11/14 17:13:32 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,8 @@ TARGET_APPTYPE = console
 TARGET_SDKLIBS = ntdll.a fmifs.a
 
 TARGET_NAME = format
+
+TARGET_CFLAGS = -Werror -Wall -Wno-format
 
 TARGET_OBJECTS = \
 	$(TARGET_NAME).o

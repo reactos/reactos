@@ -41,7 +41,7 @@ DWORD WINAPI thread( LPVOID crap )
 
 	/* Now read some messages */
 	while( GetMessage( &msg, 0,0,0 ) ) {
-		printf( "Received message: %04x %04x %08x\n",
+		printf( "Received message: %04x %04x %08lx\n",
 		        (msg.message & 0xffff),
 			(msg.wParam & 0xffff),
 			msg.lParam );
@@ -56,7 +56,7 @@ DWORD WINAPI thread( LPVOID crap )
 
 int main( int argc, char **argv )
 {
-	DWORD id, Status;
+	DWORD id;
 
 	printf( "Creating events\n" );
 

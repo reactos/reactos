@@ -13,6 +13,11 @@
 #include <debug.h>
 
 
+int InitSynaptics(PDEVICE_EXTENSION DeviceExtension);
+void PS2PPProcessPacket(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input, int *wheel);
+void PS2PPSet800dpi(PDEVICE_EXTENSION DeviceExtension);
+int PS2PPDetectModel(PDEVICE_EXTENSION DeviceExtension, unsigned char *param);
+
 // Parse incoming packets
 BOOLEAN FASTCALL
 ParsePackets(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input)
@@ -128,7 +133,6 @@ MouseHandler(PKINTERRUPT Interrupt, PVOID ServiceContext)
   PMOUSE_INPUT_DATA Input;
   ULONG Queue;
   BOOLEAN ret;
-  int state_dx, state_dy;
   unsigned scancode;
   unsigned status = controller_read_status();
   scancode = controller_read_input();
@@ -177,6 +181,7 @@ MouseHandler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     
     return ret;
   }
+  return TRUE;
 }
 
 
@@ -567,8 +572,6 @@ BOOLEAN SetupMouse(PDEVICE_OBJECT DeviceObject, PUNICODE_STRING RegistryPath)
   ULONG MappedIrq;
   KIRQL Dirql;
   KAFFINITY Affinity;
-  unsigned scancode;
-  unsigned char status;
   LARGE_INTEGER Millisecond_Timeout;
   
   Millisecond_Timeout.QuadPart = 1;

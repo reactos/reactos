@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.2 2002/05/05 14:57:45 chorns Exp $ */
+/* $Id: pci.h,v 1.3 2003/11/14 17:13:24 weiden Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -107,6 +107,13 @@ extern PCI_BUS_TYPE PciBusConfigType;
 
 PCI_BUS_TYPE
 PciGetBusConfigType(VOID);
+
+ULONG
+PciGetBusData(ULONG BusNumber,
+	       ULONG SlotNumber,
+	       PVOID Buffer,
+	       ULONG Offset,
+               ULONG Length);
 
 BOOLEAN
 PciCreateUnicodeString(

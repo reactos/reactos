@@ -29,7 +29,7 @@
 
 static const wchar_t encoding_mask[] =
 {
-  ~0x7ff, ~0xffff, ~0x1fffff, ~0x3ffffff
+  (wchar_t)~0x7ff, (wchar_t)~0xffff, (wchar_t)~0x1fffff, (wchar_t)~0x3ffffff
 };
 
 static const unsigned char encoding_byte[] =
@@ -85,14 +85,6 @@ __wcrtomb (char *s, wchar_t wc)
     {
       s = fake;
       wc = L'\0';
-    }
-
-  /* Store the UTF8 representation of WC.  */
-  if (wc < 0 || wc > 0x7fffffff)
-    {
-      /* This is no correct ISO 10646 character.  */
-      __set_errno (EILSEQ);
-      return (size_t) -1;
     }
 
   if (wc < 0x80)

@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.19 2003/08/28 13:38:24 gvg Exp $
+/* $Id: winlogon.c,v 1.20 2003/11/14 17:13:35 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -116,6 +116,7 @@ static BOOLEAN StartServices(VOID)
    return TRUE;
 }
 
+#if 0
 static BOOLEAN StartLsass(VOID)
 {
    HANDLE LsassInitEvent;
@@ -170,7 +171,7 @@ static BOOLEAN StartLsass(VOID)
    
    return(TRUE);
 }
-
+#endif
 static BOOLEAN OpenRegistryKey(HANDLE *WinLogonKey)
 {
    return ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -303,14 +304,12 @@ WinMain(HINSTANCE hInstance,
   NTSTATUS Status;
   HANDLE LsaHandle;
   LSA_OPERATIONAL_MODE Mode;
-#endif
   CHAR LoginPrompt[] = "login:";
   CHAR PasswordPrompt[] = "password:";
-  DWORD Result;
+#endif
   CHAR LoginName[255];
   CHAR Password[255];
   BOOL Success;
-  ULONG i;
   NTSTATUS Status;
   
   /*

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2002/08/26 13:06:02 dwelch Exp $
+# $Id: makefile,v 1.12 2003/11/14 17:13:29 weiden Exp $
 #
 # ReactOS Operating System
 #
@@ -24,6 +24,8 @@ SVC_FILES = $(SVC_GDI_STUBS) $(SVC_USER_STUBS) $(SVC_SERVICE_TABLE)
 CLEAN_FILES = $(TARGETNAME)$(EXE_POSTFIX) $(SVC_FILES)
 
 BASE_CFLAGS = -I../../include
+
+CFLAGS += -Wall -Werror
 
 all: $(SVC_FILES)
 

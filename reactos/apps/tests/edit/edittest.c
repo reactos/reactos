@@ -62,6 +62,7 @@ char TextBuffer[BUFFERLEN]={'R','e','s','u','l','t',':',' '};
 typedef void FunctionHandler(HWND,DWORD,WPARAM,LPARAM);
 typedef FunctionHandler* LPFUNCTIONHANDLER;
 
+VOID
 PrintTextXY(char* Text,int x,int y,int len)
 {
       HDC hdc;
@@ -185,60 +186,60 @@ struct
 }
 Msg[] =
 {
-     "EM_CANUNDO",EM_CANUNDO,0,0,&HandlePrintReturnHex,
-     "EM_CHARFROMPOS",EM_CHARFROMPOS,(WPARAM)&point,0,&HandlePrintReturnHex,
-     "EM_EMPTYUNDOBUFFER",EM_EMPTYUNDOBUFFER,0,0,&HandlePrintReturnHex,
-     "EM_FMTLINES",EM_FMTLINES,TRUE,0,&HandlePrintReturnHex,
-     "EM_GETFIRSTVISIBLELINE",EM_GETFIRSTVISIBLELINE,0,0,&HandlePrintReturnHex,
+	{"EM_CANUNDO",EM_CANUNDO,0,0,&HandlePrintReturnHex},
+	{"EM_CHARFROMPOS",EM_CHARFROMPOS,(WPARAM)&point,0,&HandlePrintReturnHex},
+	{"EM_EMPTYUNDOBUFFER",EM_EMPTYUNDOBUFFER,0,0,&HandlePrintReturnHex},
+	{"EM_FMTLINES",EM_FMTLINES,TRUE,0,&HandlePrintReturnHex},
+	{"EM_GETFIRSTVISIBLELINE",EM_GETFIRSTVISIBLELINE,0,0,&HandlePrintReturnHex},
 
-     "EM_GETLIMITTEXT",EM_GETLIMITTEXT,0,0,&HandlePrintReturnHex,
-     "EM_GETLINE",EM_GETLINE,2,(WPARAM)&TextBuffer[8],&HandlePrintReturnStr,
-     "EM_GETLINECOUNT",EM_GETLINECOUNT,0,0,&HandlePrintReturnHex,
-     "EM_GETMARGINS",EM_GETMARGINS,0,0,&HandlePrintReturnHex,
-     "EM_SETMARGINS",EM_SETMARGINS,EC_LEFTMARGIN,10,&HandlePrintReturnHex,
+    {"EM_GETLIMITTEXT",EM_GETLIMITTEXT,0,0,&HandlePrintReturnHex},
+	{"EM_GETLINE",EM_GETLINE,2,(WPARAM)&TextBuffer[8],&HandlePrintReturnStr},
+	{"EM_GETLINECOUNT",EM_GETLINECOUNT,0,0,&HandlePrintReturnHex},
+	{"EM_GETMARGINS",EM_GETMARGINS,0,0,&HandlePrintReturnHex},
+	{"EM_SETMARGINS",EM_SETMARGINS,EC_LEFTMARGIN,10,&HandlePrintReturnHex},
 
-     "EM_GETMODIFY",EM_GETMODIFY,0,0,&HandlePrintReturnHex,
-     "EM_SETMODIFY",EM_SETMODIFY,TRUE,0,&HandlePrintReturnHex,
+	{"EM_GETMODIFY",EM_GETMODIFY,0,0,&HandlePrintReturnHex},
+	{"EM_SETMODIFY",EM_SETMODIFY,TRUE,0,&HandlePrintReturnHex},
      
-     "EM_GETSEL",EM_GETSEL,(WPARAM)&StartP,(LPARAM)&EndP,&HandlePrintReturnHex,
+	{"EM_GETSEL",EM_GETSEL,(WPARAM)&StartP,(LPARAM)&EndP,&HandlePrintReturnHex},
 
-     "EM_GETTHUMB",EM_GETTHUMB,0,0,&HandlePrintReturnHex,
+	{"EM_GETTHUMB",EM_GETTHUMB,0,0,&HandlePrintReturnHex},
      
-     "EM_LIMITTEXT",EM_LIMITTEXT,10,0,&HandlePrintReturnHex,
-     "EM_LINEFROMCHAR",EM_LINEFROMCHAR,-1,0,&HandlePrintReturnHex,
-     "EM_POSFROMCHAR",EM_POSFROMCHAR,10,0,&HandlePrintReturnHex,
-     "EM_LINEINDEX",EM_LINEINDEX,2,0,&HandlePrintReturnHex,
-     "EM_LINELENGTH",EM_LINELENGTH,-1,0,&HandlePrintReturnHex,
+	{"EM_LIMITTEXT",EM_LIMITTEXT,10,0,&HandlePrintReturnHex},
+	{"EM_LINEFROMCHAR",EM_LINEFROMCHAR,-1,0,&HandlePrintReturnHex},
+	{"EM_POSFROMCHAR",EM_POSFROMCHAR,10,0,&HandlePrintReturnHex},
+	{"EM_LINEINDEX",EM_LINEINDEX,2,0,&HandlePrintReturnHex},
+	{"EM_LINELENGTH",EM_LINELENGTH,-1,0,&HandlePrintReturnHex},
 
-     "EM_GETWORDBREAKPROC",EM_GETWORDBREAKPROC,0,0,&HandlePrintReturnHex,
-     "EM_REPLACESEL",EM_REPLACESEL,TRUE,(LPARAM)&ReplaceTextStr,&HandlePrintReturnHex,
+	{"EM_GETWORDBREAKPROC",EM_GETWORDBREAKPROC,0,0,&HandlePrintReturnHex},
+	{"EM_REPLACESEL",EM_REPLACESEL,TRUE,(LPARAM)&ReplaceTextStr,&HandlePrintReturnHex},
 
-     "EM_LINESCROLL",EM_LINESCROLL,5,1,&HandlePrintReturnHex,
-     "EM_SCROLL",EM_SCROLL,SB_LINEDOWN,0,&HandlePrintReturnHex,
-     "EM_SCROLLCARET",EM_SCROLLCARET,0,0,&HandlePrintReturnHex,
+	{"EM_LINESCROLL",EM_LINESCROLL,5,1,&HandlePrintReturnHex},
+	{"EM_SCROLL",EM_SCROLL,SB_LINEDOWN,0,&HandlePrintReturnHex},
+	{"EM_SCROLLCARET",EM_SCROLLCARET,0,0,&HandlePrintReturnHex},
 
-     "EM_SETHANDLE",EM_SETHANDLE,0,0,&HandleSetHandlePrintHex,
-     "EM_GETHANDLE",EM_GETHANDLE,0,0,&HandlePrintReturnHex,
-     "EM_GETPASSWORDCHAR",EM_GETPASSWORDCHAR,0,0,&HandlePrintPasswdChar,
-     "EM_SETPASSWORDCHAR - clear",EM_SETPASSWORDCHAR,0,0,&HandlePrintReturnHex,
-     "EM_SETPASSWORDCHAR - x",EM_SETPASSWORDCHAR,'x',0,&HandlePrintReturnHex,
+	{"EM_SETHANDLE",EM_SETHANDLE,0,0,&HandleSetHandlePrintHex},
+	{"EM_GETHANDLE",EM_GETHANDLE,0,0,&HandlePrintReturnHex},
+	{"EM_GETPASSWORDCHAR",EM_GETPASSWORDCHAR,0,0,&HandlePrintPasswdChar},
+	{"EM_SETPASSWORDCHAR - clear",EM_SETPASSWORDCHAR,0,0,&HandlePrintReturnHex},
+	{"EM_SETPASSWORDCHAR - x",EM_SETPASSWORDCHAR,'x',0,&HandlePrintReturnHex},
 
-     "EM_SETREADONLY - set",EM_SETREADONLY,TRUE,0,&HandlePrintReturnHex,
-     "EM_SETREADONLY - clear",EM_SETREADONLY,FALSE,0,&HandlePrintReturnHex,
+	{"EM_SETREADONLY - set",EM_SETREADONLY,TRUE,0,&HandlePrintReturnHex},
+	{"EM_SETREADONLY - clear",EM_SETREADONLY,FALSE,0,&HandlePrintReturnHex},
 
-     "EM_GETRECT",EM_GETRECT,0,(LPARAM)&rect2,&HandlePrintRect,
-     "EM_SETRECT",EM_SETRECT,0,(LPARAM)&rect,&HandlePrintReturnHex,
-     "EM_SETRECTNP",EM_SETRECTNP,0,(LPARAM)&rect,&HandlePrintReturnHex,
-     "EM_SETSEL",EM_SETSEL,1,3,&HandlePrintReturnHex,
+	{"EM_GETRECT",EM_GETRECT,0,(LPARAM)&rect2,&HandlePrintRect},
+	{"EM_SETRECT",EM_SETRECT,0,(LPARAM)&rect,&HandlePrintReturnHex},
+	{"EM_SETRECTNP",EM_SETRECTNP,0,(LPARAM)&rect,&HandlePrintReturnHex},
+	{"EM_SETSEL",EM_SETSEL,1,3,&HandlePrintReturnHex},
 
-     "EM_SETSEL - all",EM_SETSEL,0,-1,&HandlePrintReturnHex,
-     "EM_SETSEL - remove",EM_SETSEL,-1,0,&HandlePrintReturnHex,
-     "EM_UNDO",EM_UNDO,0,0,&HandlePrintReturnHex,
-     "WM_UNDO",WM_UNDO,0,0,&HandlePrintReturnHex,
-     "WM_PASTE",WM_PASTE,0,0,&HandlePrintReturnHex,
+	{"EM_SETSEL - all",EM_SETSEL,0,-1,&HandlePrintReturnHex},
+	{"EM_SETSEL - remove",EM_SETSEL,-1,0,&HandlePrintReturnHex},
+	{"EM_UNDO",EM_UNDO,0,0,&HandlePrintReturnHex},
+	{"WM_UNDO",WM_UNDO,0,0,&HandlePrintReturnHex},
+	{"WM_PASTE",WM_PASTE,0,0,&HandlePrintReturnHex},
 
-     "WM_CUT",WM_CUT,0,0,&HandlePrintReturnHex,
-     "WM_COPY",WM_COPY,0,0,&HandlePrintReturnHex
+	{"WM_CUT",WM_CUT,0,0,&HandlePrintReturnHex},
+	{"WM_COPY",WM_COPY,0,0,&HandlePrintReturnHex}
      
 };
 
@@ -574,7 +575,6 @@ WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
      }
      return DefWindowProc ( hwnd, msg, wParam, lParam );
 }
-
 
 HWND
 RegisterAndCreateWindow (HINSTANCE hInst,

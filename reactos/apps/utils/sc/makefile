@@ -11,7 +11,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = sc
 
-TARGET_CFLAGS = -DDBG
+TARGET_CFLAGS = -DDBG -Werror -Wall
 
 TARGET_SDKLIBS = kernel32.a ntdll.a advapi32.a
 

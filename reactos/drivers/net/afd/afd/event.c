@@ -96,7 +96,6 @@ NTSTATUS AfdEventReceiveDatagramHandler(
 {
   PAFDFCB FCB = (PAFDFCB)TdiEventContext;
   PAFD_READ_REQUEST ReadRequest;
-  PIO_STACK_LOCATION IrpSp;
   PVOID ReceiveBuffer;
   PAFD_BUFFER Buffer;
   PLIST_ENTRY Entry;

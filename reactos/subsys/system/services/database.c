@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.10 2003/09/03 20:15:35 ekohl Exp $
+/* $Id: database.c,v 1.11 2003/11/14 17:13:33 weiden Exp $
  *
  * service control manager
  * 
@@ -422,7 +422,6 @@ ScmGetBootAndSystemDriverState(VOID)
 {
   PLIST_ENTRY ServiceEntry;
   PSERVICE CurrentService;
-  NTSTATUS Status;
 
   DPRINT("ScmGetBootAndSystemDriverState() called\n");
 
@@ -635,7 +634,6 @@ ScmAutoStartServices(VOID)
   PLIST_ENTRY ServiceEntry;
   PSERVICE_GROUP CurrentGroup;
   PSERVICE CurrentService;
-  NTSTATUS Status;
 
   /* Clear 'ServiceVisited' flag */
   ServiceEntry = ServiceListHead.Flink;

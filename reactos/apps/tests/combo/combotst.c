@@ -73,7 +73,7 @@ char AddString[] = "string added";
 typedef void FunctionHandler(HWND,DWORD,WPARAM,LPARAM);
 typedef FunctionHandler* LPFUNCTIONHANDLER;
 
-PrintTextXY(char* Text,int x,int y,int len, RECT rect)
+void PrintTextXY(char* Text,int x,int y,int len, RECT rect)
     {
     HDC hdc;
     hdc = GetDC (g_hwnd);
@@ -141,61 +141,61 @@ struct
     }
 Msg[] =
     {
-    "CB_ADDSTRING",CB_ADDSTRING,0,(LPARAM)&AddString,&HandlePrintReturnHex,
-        "CB_ADDSTRING - long",CB_ADDSTRING,0,(LPARAM)"very loooooooooong striiinnnnnnnnnggg",&HandlePrintReturnHex,
-        "CB_DELETESTRING",CB_DELETESTRING,2,0,&HandlePrintReturnHex,   /* remember to catch WM_DELETEITEM*/
+		{"CB_ADDSTRING",CB_ADDSTRING,0,(LPARAM)&AddString,&HandlePrintReturnHex},
+        {"CB_ADDSTRING - long",CB_ADDSTRING,0,(LPARAM)"very loooooooooong striiinnnnnnnnnggg",&HandlePrintReturnHex},
+        {"CB_DELETESTRING",CB_DELETESTRING,2,0,&HandlePrintReturnHex},   /* remember to catch WM_DELETEITEM*/
 
         /* What a message, why M$ decided to implement his thing ? */
-        "CB_DIR - drives",CB_DIR,DDL_DRIVES,
+        {"CB_DIR - drives",CB_DIR,DDL_DRIVES,
         /* Hoping that most machines have this */
         (LPARAM)"C:\\",
-        &HandlePrintReturnHex,
+        &HandlePrintReturnHex},
 
-        "CB_DIR - dirs",CB_DIR,DDL_DIRECTORY,(LPARAM)"C:\\*",&HandlePrintReturnHex,
+        {"CB_DIR - dirs",CB_DIR,DDL_DIRECTORY,(LPARAM)"C:\\*",&HandlePrintReturnHex},
 
-        "CB_DIR - files",CB_DIR,
+        {"CB_DIR - files",CB_DIR,
         DDL_ARCHIVE | DDL_EXCLUSIVE | DDL_HIDDEN | DDL_READONLY | DDL_READWRITE | DDL_SYSTEM,
-        (LPARAM)"C:\\*",&HandlePrintReturnHex,
+        (LPARAM)"C:\\*",&HandlePrintReturnHex},
 
         /* Do not forget WM_COMPAREITEM */
 
-        "CB_FINDSTRING",CB_FINDSTRING,1,(LPARAM)"str",&HandlePrintReturnHex,
-        "CB_FINDSTRINGEXACT(-1)",CB_FINDSTRINGEXACT,-1,(LPARAM)&AddString,&HandlePrintReturnHex,
-        "CB_FINDSTRINGEXACT(2)",CB_FINDSTRINGEXACT,2,(LPARAM)&AddString,&HandlePrintReturnHex,
+        {"CB_FINDSTRING",CB_FINDSTRING,1,(LPARAM)"str",&HandlePrintReturnHex},
+        {"CB_FINDSTRINGEXACT(-1)",CB_FINDSTRINGEXACT,-1,(LPARAM)&AddString,&HandlePrintReturnHex},
+        {"CB_FINDSTRINGEXACT(2)",CB_FINDSTRINGEXACT,2,(LPARAM)&AddString,&HandlePrintReturnHex},
 
         /* "CB_GETCOMBOBOXINFO",CB_GETCOMBOBOXINFO,0,0,&HandlePrintReturnHex, winXP & .net server remember to handle the struct  */
 
-        "CB_GETCOUNT",CB_GETCOUNT,0,0,&HandlePrintReturnHex,
+        {"CB_GETCOUNT",CB_GETCOUNT,0,0,&HandlePrintReturnHex},
 
-        "CB_GETCURSEL",CB_GETCURSEL,0,0,&HandlePrintReturnHex,
+        {"CB_GETCURSEL",CB_GETCURSEL,0,0,&HandlePrintReturnHex},
 
         /* To implement "CB_GETEDITSEL - vars",CB_GETEDITSEL,,,&HandlePrintReturnHex, */
 
-        "CB_GETEXTENDEDUI",CB_GETEXTENDEDUI,0,0,&HandlePrintReturnHex,
-        "CB_GETHORIZONTALEXTENT",CB_GETHORIZONTALEXTENT,0,0,&HandlePrintReturnHex,
+        {"CB_GETEXTENDEDUI",CB_GETEXTENDEDUI,0,0,&HandlePrintReturnHex},
+        {"CB_GETHORIZONTALEXTENT",CB_GETHORIZONTALEXTENT,0,0,&HandlePrintReturnHex},
 
 
 
-        "CB_GETLBTEXT",CB_GETLBTEXT,1,(LPARAM)&TextBuffer[8],&HandlePrintReturnStr,
-        "CB_GETLBTEXTLEN",CB_GETLBTEXTLEN,1,0,&HandlePrintReturnHex,
-        "CB_GETLOCALE",CB_GETLOCALE,0,0,&HandlePrintReturnHex,
+        {"CB_GETLBTEXT",CB_GETLBTEXT,1,(LPARAM)&TextBuffer[8],&HandlePrintReturnStr},
+        {"CB_GETLBTEXTLEN",CB_GETLBTEXTLEN,1,0,&HandlePrintReturnHex},
+        {"CB_GETLOCALE",CB_GETLOCALE,0,0,&HandlePrintReturnHex},
 
         /* "CB_GETMINVISIBLE",CB_GETMINVISIBLE,0,0,&HandlePrintReturnHex, Included in Windows XP and Windows .NET Server. */
 
-        "CB_GETTOPINDEX",CB_GETTOPINDEX,0,0,&HandlePrintReturnHex,
+        {"CB_GETTOPINDEX",CB_GETTOPINDEX,0,0,&HandlePrintReturnHex},
 
-        "CB_INITSTORAGE",CB_INITSTORAGE,10,200,&HandlePrintReturnHex,
-        "CB_INSERTSTRING",CB_INSERTSTRING,2,(LPARAM)"inserted string",&HandlePrintReturnHex,
+        {"CB_INITSTORAGE",CB_INITSTORAGE,10,200,&HandlePrintReturnHex},
+        {"CB_INSERTSTRING",CB_INSERTSTRING,2,(LPARAM)"inserted string",&HandlePrintReturnHex},
 
-        "CB_LIMITTEXT",CB_LIMITTEXT,10,0,&HandlePrintReturnHex,
-        "CB_RESETCONTENT",CB_RESETCONTENT ,0,0,&HandlePrintReturnHex,
-        "CB_SELECTSTRING",CB_SELECTSTRING,2,(LPARAM)"str",&HandlePrintReturnHex,
-        "CB_SETCURSEL",CB_SETCURSEL,1,0,&HandlePrintReturnHex,
+        {"CB_LIMITTEXT",CB_LIMITTEXT,10,0,&HandlePrintReturnHex},
+        {"CB_RESETCONTENT",CB_RESETCONTENT ,0,0,&HandlePrintReturnHex},
+        {"CB_SELECTSTRING",CB_SELECTSTRING,2,(LPARAM)"str",&HandlePrintReturnHex},
+        {"CB_SETCURSEL",CB_SETCURSEL,1,0,&HandlePrintReturnHex},
 
-        "CB_SETDROPPEDWIDTH",CB_SETDROPPEDWIDTH,250,0,&HandlePrintReturnHex,
+        {"CB_SETDROPPEDWIDTH",CB_SETDROPPEDWIDTH,250,0,&HandlePrintReturnHex},
 
-        "CB_SETEXTENDEDUI - set",CB_SETEXTENDEDUI,TRUE,0,&HandlePrintReturnHex,
-        "CB_SETEXTENDEDUI - clear",CB_SETEXTENDEDUI,FALSE,0,&HandlePrintReturnHex,
+        {"CB_SETEXTENDEDUI - set",CB_SETEXTENDEDUI,TRUE,0,&HandlePrintReturnHex},
+        {"CB_SETEXTENDEDUI - clear",CB_SETEXTENDEDUI,FALSE,0,&HandlePrintReturnHex},
 
         /*
         * win2k have a small bug with this ^ , if you press F4 while it is cleared,
@@ -204,30 +204,30 @@ Msg[] =
         * to an arrow
         */
 
-        "CB_SETHORIZONTALEXTENT",CB_SETHORIZONTALEXTENT,500,0,&HandlePrintReturnHex,
+        {"CB_SETHORIZONTALEXTENT",CB_SETHORIZONTALEXTENT,500,0,&HandlePrintReturnHex},
 
-        "CB_GETITEMDATA",CB_GETITEMDATA,1,0,&HandlePrintReturnHex,
-        "CB_SETITEMDATA",CB_SETITEMDATA,1,0x791031,&HandlePrintReturnHex,
+        {"CB_GETITEMDATA",CB_GETITEMDATA,1,0,&HandlePrintReturnHex},
+        {"CB_SETITEMDATA",CB_SETITEMDATA,1,0x791031,&HandlePrintReturnHex},
 
-        "CB_SETITEMHEIGHT",CB_SETITEMHEIGHT,-1,30,&HandlePrintReturnHex,
-        "CB_GETITEMHEIGHT",CB_GETITEMHEIGHT,2,0,&HandlePrintReturnHex,
+        {"CB_SETITEMHEIGHT",CB_SETITEMHEIGHT,-1,30,&HandlePrintReturnHex},
+        {"CB_GETITEMHEIGHT",CB_GETITEMHEIGHT,2,0,&HandlePrintReturnHex},
 
         /* "CB_SETMINVISIBLE",CB_SETMINVISIBLE,4,0,&HandlePrintReturnHex, Included in Windows XP and Windows .NET Server */
 
-        "CB_GETEDITSEL",CB_GETEDITSEL,(WPARAM)NULL,(LPARAM)NULL,&HandlePrintReturnHex,
-        "CB_SETEDITSEL",CB_SETEDITSEL,0,0x00020005,&HandlePrintReturnHex,
-        "CB_SETEDITSEL - clear",CB_SETEDITSEL,0,0xFFFFFFFF,&HandlePrintReturnHex,
+        {"CB_GETEDITSEL",CB_GETEDITSEL,(WPARAM)NULL,(LPARAM)NULL,&HandlePrintReturnHex},
+        {"CB_SETEDITSEL",CB_SETEDITSEL,0,0x00020005,&HandlePrintReturnHex},
+        {"CB_SETEDITSEL - clear",CB_SETEDITSEL,0,0xFFFFFFFF,&HandlePrintReturnHex},
 
-        "CB_SETTOPINDEX",CB_SETTOPINDEX,3,0,&HandlePrintReturnHex,
+        {"CB_SETTOPINDEX",CB_SETTOPINDEX,3,0,&HandlePrintReturnHex},
 
-        "CB_SHOWDROPDOWN - true",CB_SHOWDROPDOWN,TRUE,0,&HandlePrintReturnHex,
-        "CB_SHOWDROPDOWN - false",CB_SHOWDROPDOWN,FALSE,0,&HandlePrintReturnHex,
+        {"CB_SHOWDROPDOWN - true",CB_SHOWDROPDOWN,TRUE,0,&HandlePrintReturnHex},
+        {"CB_SHOWDROPDOWN - false",CB_SHOWDROPDOWN,FALSE,0,&HandlePrintReturnHex},
 
-        "CB_GETDROPPEDCONTROLRECT",CB_GETDROPPEDCONTROLRECT,0,(LPARAM)&rect,&HandlePrintRect,
-        "CB_GETDROPPEDSTATE",CB_GETDROPPEDSTATE,0,0,&HandlePrintReturnHex,
-        "CB_GETDROPPEDWIDTH",CB_GETDROPPEDWIDTH,0,0,&HandlePrintReturnHex,
+        {"CB_GETDROPPEDCONTROLRECT",CB_GETDROPPEDCONTROLRECT,0,(LPARAM)&rect,&HandlePrintRect},
+        {"CB_GETDROPPEDSTATE",CB_GETDROPPEDSTATE,0,0,&HandlePrintReturnHex},
+        {"CB_GETDROPPEDWIDTH",CB_GETDROPPEDWIDTH,0,0,&HandlePrintReturnHex},
 
-        "WM_PASTE",WM_PASTE,0,0,&HandlePrintReturnHex,
+        {"WM_PASTE",WM_PASTE,0,0,&HandlePrintReturnHex},
     };
 
 #define MAXMESSAGEBUTTONS 40
@@ -238,23 +238,23 @@ struct
     DWORD Code;             	/* Style Code */
     }
 Styles[] = {
-    "WS_DISABLED",WS_DISABLED,
-        "CBS_AUTOHSCROLL",CBS_AUTOHSCROLL,
-        "CBS_DISABLENOSCROLL",CBS_DISABLENOSCROLL,
-        "CBS_DROPDOWN",CBS_DROPDOWN,
-        "CBS_DROPDOWNLIST",CBS_DROPDOWNLIST,
-        "CBS_HASSTRINGS",CBS_HASSTRINGS,
-        "CBS_LOWERCASE",CBS_LOWERCASE,
-        "CBS_NOINTEGRALHEIGHT",CBS_NOINTEGRALHEIGHT,
-        "CBS_OEMCONVERT",CBS_OEMCONVERT,
-        "CBS_OWNERDRAWFIXED",CBS_OWNERDRAWFIXED,
-        "CBS_OWNERDRAWVARIABLE",CBS_OWNERDRAWVARIABLE,
-        "CBS_SIMPLE",CBS_SIMPLE,
-        "CBS_SORT",CBS_SORT,
-        "CBS_UPPERCASE",CBS_UPPERCASE,
-        "CBS_DISABLENOSCROLL",CBS_DISABLENOSCROLL,
-        "WS_HSCROLL",WS_HSCROLL,
-        "WS_VSCROLL",WS_VSCROLL
+    {"WS_DISABLED",WS_DISABLED},
+	{"CBS_AUTOHSCROLL",CBS_AUTOHSCROLL},
+	{"CBS_DISABLENOSCROLL",CBS_DISABLENOSCROLL},
+	{"CBS_DROPDOWN",CBS_DROPDOWN},
+	{"CBS_DROPDOWNLIST",CBS_DROPDOWNLIST},
+	{"CBS_HASSTRINGS",CBS_HASSTRINGS},
+	{"CBS_LOWERCASE",CBS_LOWERCASE},
+	{"CBS_NOINTEGRALHEIGHT",CBS_NOINTEGRALHEIGHT},
+	{"CBS_OEMCONVERT",CBS_OEMCONVERT},
+	{"CBS_OWNERDRAWFIXED",CBS_OWNERDRAWFIXED},
+	{"CBS_OWNERDRAWVARIABLE",CBS_OWNERDRAWVARIABLE},
+	{"CBS_SIMPLE",CBS_SIMPLE},
+	{"CBS_SORT",CBS_SORT},
+	{"CBS_UPPERCASE",CBS_UPPERCASE},
+	{"CBS_DISABLENOSCROLL",CBS_DISABLENOSCROLL},
+	{"WS_HSCROLL",WS_HSCROLL},
+	{"WS_VSCROLL",WS_VSCROLL}
     };
 
 /* The number of check buttons we have. 

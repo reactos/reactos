@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001/08/21 20:13:15 chorns Exp $
+# $Id: Makefile,v 1.12 2003/11/14 17:13:28 weiden Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = ne2000
 
-TARGET_CFLAGS = -I./include
+TARGET_CFLAGS = -I./include -Werror -Wall
 
 TARGET_OBJECTS = \
   ne2000/8390.o \

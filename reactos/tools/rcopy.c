@@ -177,7 +177,6 @@ copy_directory (char *path1, char *path2)
   struct stat stbuf;
   char buf[MAX_PATH];
   char tobuf[MAX_PATH];
-  char err[400];
 
   dirp = opendir(path1); 
 
@@ -240,7 +239,6 @@ is_directory(char *path)
 {
   struct stat stbuf;
   char buf[MAX_PATH];
-  char err[400];
 
   // Convert to absolute path
   make_absolute(buf, path);

@@ -92,18 +92,8 @@ DriverEntry(
 {
 
     NDIS_PROTOCOL_CHARACTERISTICS  ProtocolChar;
-    UNICODE_STRING MacDriverName;
-    UNICODE_STRING UnicodeDeviceName;
-    PDEVICE_OBJECT DeviceObject = NULL;
-    PDEVICE_EXTENSION DeviceExtension = NULL;
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
-    NTSTATUS ErrorCode = STATUS_SUCCESS;
     NDIS_STRING ProtoName = NDIS_STRING_CONST("PacketDriver");
-    ULONG          DevicesCreated=0;
-    PWSTR          BindString;
-    PWSTR          ExportString;
-    PWSTR          BindStringSave;
-    PWSTR          ExportStringSave;
     NDIS_HANDLE    NdisProtocolHandle;
 	WCHAR* bindT;
 	PKEY_VALUE_PARTIAL_INFORMATION tcpBindingsP;
@@ -297,7 +287,6 @@ RegistryError:
 
 PWCHAR getAdaptersList(void)
 {
-	PKEY_VALUE_PARTIAL_INFORMATION result = NULL;
 	OBJECT_ATTRIBUTES objAttrs;
 	NTSTATUS status;
 	HANDLE keyHandle;
@@ -321,7 +310,6 @@ PWCHAR getAdaptersList(void)
 
     } else { //OK
 		ULONG resultLength;
-		KEY_VALUE_PARTIAL_INFORMATION valueInfo;
 		CHAR AdapInfo[1024];
 		UINT i=0;
 		
@@ -657,14 +645,10 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
     PINTERNAL_REQUEST   pRequest;
     ULONG               FunctionCode;
     NDIS_STATUS	        Status;
-    PLIST_ENTRY         PacketListEntry;
-	UINT				i;
 	PUCHAR				tpointer;
 	ULONG				dim,timeout;
 	PUCHAR				prog;
 	PPACKET_OID_DATA    OidData;
-	int					*StatsBuf;
-    PNDIS_PACKET        pPacket;
 	ULONG				mode;
 	PWSTR				DumpNameBuff;
 	PUCHAR				TmpBPFProgram;
@@ -1130,7 +1114,6 @@ NPF_RequestComplete(
     PIRP                Irp;
     PINTERNAL_REQUEST   pRequest;
     UINT                FunctionCode;
-	KIRQL				OldIrq;
 
     PPACKET_OID_DATA    OidData;
 
@@ -1249,7 +1232,6 @@ NPF_ReadRegistry(
 
     PWSTR      Bind       = L"Bind";
     PWSTR      Export     = L"Export";
-    PWSTR      Parameters = L"Parameters";
     PWSTR      Linkage    = L"Linkage";
 
     PWCHAR     Path;

@@ -32,21 +32,6 @@
 #define FreeMemory(buffer) HeapFree(GetProcessHeap(), 0, buffer)
 #define FILEHANDLE HANDLE
 #define CloseFile(handle) CloseHandle(handle)
-#define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static long _GetSizeOfFile(FILEHANDLE handle)
-{
-    long size = GetFileSize(handle, NULL);
-    if (size == INVALID_FILE_SIZE)
-      {
-        return -1;
-      }
-    return size;
-}
-#define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
-{
-    return ReadFile(handle, buffer, size, bytesread, NULL);
-}
 #else
 #define DIR_SEPARATOR_CHAR '/'
 #define DIR_SEPARATOR_STRING "/"
@@ -55,21 +40,6 @@ static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, u
 #define FreeMemory(buffer) free(buffer)
 #define CloseFile(handle) fclose(handle)
 #define FILEHANDLE FILE*
-#define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static long _GetSizeOfFile(FILEHANDLE handle)
-{
-    long size;
-    fseek(handle, 0, SEEK_END);
-    size = ftell(handle);
-    fseek(handle, 0, SEEK_SET);
-    return size;
-}
-#define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
-{
-    *bytesread = fread(buffer, 1, size, handle);
-    return *bytesread == size;
-}
 #endif
 
 /* Debugging */

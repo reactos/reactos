@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.15 2003/08/11 04:23:37 royce Exp $
+ * $Id: lineto.c,v 1.16 2003/11/14 17:13:25 weiden Exp $
  */
 
 #include "../vgaddi.h"
@@ -303,7 +303,6 @@ DrvLineTo(SURFOBJ *DestObj,
 {
   LONG x, y, deltax, deltay, i, xchange, ychange, hx, vy;
   ULONG Pixel = Brush->iSolidColor;
-  RECTL DestRect;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
 

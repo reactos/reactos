@@ -1,4 +1,4 @@
-/* $Id: serial.c,v 1.10 2002/10/06 13:16:26 robd Exp $
+/* $Id: serial.c,v 1.11 2003/11/14 17:13:25 weiden Exp $
  *
  * Serial driver
  * Written by Jason Filby (jasonfilby@yahoo.com)
@@ -32,7 +32,6 @@ int uart_detect(unsigned base)
 {
         // Returns 0 if no UART detected
 
-        int olddata=inb_p(base+4);
         outb_p(base+4, 0x10);
         if ((inb_p(base+6) & 0xf0)) return 0;
         return 1;

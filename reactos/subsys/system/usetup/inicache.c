@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.6 2003/11/08 09:13:46 ekohl Exp $
+/* $Id: inicache.c,v 1.7 2003/11/14 17:13:33 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -218,7 +218,7 @@ IniCacheAddKey(PINICACHESECTION Section,
   return(Key);
 }
 
-
+#if 0
 static PINICACHESECTION
 IniCacheFindSection(PINICACHE Cache,
 		    PWCHAR Name,
@@ -249,7 +249,7 @@ IniCacheFindSection(PINICACHE Cache,
 
   return(Section);
 }
-
+#endif
 
 static PINICACHESECTION
 IniCacheAddSection(PINICACHE Cache,
@@ -523,7 +523,6 @@ IniCacheLoad(PINICACHE *Cache,
   PCHAR Ptr;
   LARGE_INTEGER FileOffset;
 
-  ULONG i;
   PINICACHESECTION Section;
   PINICACHEKEY Key;
 
@@ -866,7 +865,6 @@ IniCacheInsertKey(PINICACHESECTION Section,
 		  PWCHAR Data)
 {
   PINICACHEKEY Key;
-  ULONG i;
 
   Key = NULL;
 
@@ -1136,7 +1134,6 @@ IniCacheAppendSection(PINICACHE Cache,
 		      PWCHAR Name)
 {
   PINICACHESECTION Section = NULL;
-  ULONG i;
 
   if (Cache == NULL || Name == NULL || *Name == 0)
     {

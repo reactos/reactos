@@ -1,5 +1,7 @@
 #include <windows.h>
 #include "resource.h"
+#include <string.h>
+#include <stdio.h>
 
 #ifndef GetCursorInfo
   #define _GetCursorInfo
@@ -100,8 +102,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     HDC hMemDC;
     CURSORINFO cursorinfo;
     ICONINFO iconinfo;
-    HBITMAP hMaskBitmap;
-    HBITMAP hColorBitmap;  
     BITMAP bmp;
     RECT rc;
     CHAR str[20];
@@ -162,7 +162,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GetIconInfo(cursorinfo.hCursor, &iconinfo);
           TextOut(hDC, 15, 365, titleDrwIco, strlen(titleDrwIco));
           
-          sprintf(str, "Hotspot: %d; %d", iconinfo.xHotspot, iconinfo.yHotspot);
+          sprintf(str, "Hotspot: %ld; %ld", iconinfo.xHotspot, iconinfo.yHotspot);
           TextOut(hDC, 15, 380, str, strlen(str));
           
           if(iconinfo.hbmMask)

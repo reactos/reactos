@@ -25,7 +25,7 @@ WinMain(HINSTANCE hInstance,
   wc.cbWndExtra = 0;
   if (RegisterClass(&wc) == 0)
     {
-      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+      fprintf(stderr, "RegisterClass failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -43,7 +43,7 @@ WinMain(HINSTANCE hInstance,
 		      NULL);
   if (hWnd == NULL)
     {
-      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+      fprintf(stderr, "CreateWindow failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -121,9 +121,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 	HDC hDC;
-	RECT clr, wir;
+	RECT clr;
 	HRGN ClipRgn, ExcludeRgn;
-        char spr[100], sir[100];
 	RECT Rect;
 
 	switch(msg)

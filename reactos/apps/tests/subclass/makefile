@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/11/08 22:10:15 gvg Exp $
+# $Id: makefile,v 1.2 2003/11/14 17:13:20 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,7 +14,7 @@ TARGET_SDKLIBS = kernel32.a gdi32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
 
 include $(PATH_TO_TOP)/rules.mak
 

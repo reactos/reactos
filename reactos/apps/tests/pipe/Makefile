@@ -9,7 +9,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = pipe
 
-TARGET_CFLAGS = -DSTANDALONE
+TARGET_CFLAGS = -DSTANDALONE -Wall -Werror
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

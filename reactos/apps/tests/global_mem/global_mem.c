@@ -7,6 +7,7 @@
 */
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 /*
 ** All output is line wrapped to fit a 80 column screen.
@@ -141,7 +142,7 @@ void OUTPUT_Result(TEST_STATUS status)
 void OUTPUT_HexDword(DWORD dw)
 {
     char buffer[32];
-    sprintf(buffer, "0x%X",dw);
+    sprintf(buffer, "0x%lX",dw);
     OUTPUT_Line(buffer);
 }
 
@@ -172,7 +173,7 @@ void OutputErrorCode()
 {
     char buffer[256];
 
-    sprintf(buffer,"GetLastError() returned %d", GetLastError());
+    sprintf(buffer,"GetLastError() returned %lu", GetLastError());
 
     OUTPUT_Line(buffer);
 }
@@ -260,7 +261,6 @@ TEST_STATUS TestGlobalLockNUnlock(UINT allocFlags)
 {
     HGLOBAL     hMem      = 0;
     LPVOID      pMem      = 0;
-    LONG        errorCode = 0;
     TEST_STATUS subtest   = SKIPPED;
     TEST_STATUS result    = FAILED;
     
@@ -627,7 +627,7 @@ TEST_STATUS TestGlobalFlagsMoveable()
 
         OUTPUT_Line("Testing for a lock of 0");
         uFlags = GlobalFlags(hMem);
-        if ((GMEM_LOCKCOUNT & uFlags == 0)) /*no locks*/
+        if (((GMEM_LOCKCOUNT & uFlags) == 0)) /*no locks*/
         {
             result = TEST_CombineStatus(result, PASSED);
         }
@@ -643,7 +643,7 @@ TEST_STATUS TestGlobalFlagsMoveable()
         OUTPUT_Line("Testing after a lock");
         OUTPUT_Line("Testing for a lock of 1");
         uFlags = GlobalFlags(hMem);
-        if ((GMEM_LOCKCOUNT & uFlags == 1)) /*no locks*/
+        if (((GMEM_LOCKCOUNT & uFlags) == 1)) /*no locks*/
         {
             result = TEST_CombineStatus(result, PASSED);
         }
@@ -657,7 +657,7 @@ TEST_STATUS TestGlobalFlagsMoveable()
         OUTPUT_Line("Testing after an unlock");
         OUTPUT_Line("Testing for a lock of 0");
         uFlags = GlobalFlags(hMem);
-        if ((GMEM_LOCKCOUNT & uFlags == 0)) /*no locks*/
+        if (((GMEM_LOCKCOUNT & uFlags) == 0)) /*no locks*/
         {
             result = TEST_CombineStatus(result, PASSED);
         }
@@ -725,7 +725,7 @@ TEST_STATUS TestGlobalFlagsFixed()
         OUTPUT_Line("Testing initial allocation");
         OUTPUT_Line("Testing for non-discarded and lock of 0");
         uFlags = GlobalFlags(hMem);
-        if ((GMEM_LOCKCOUNT & uFlags == 0) && /*no locks*/
+        if (((GMEM_LOCKCOUNT & uFlags) == 0) && /*no locks*/
             (((uFlags >> 8) & 0xff) == 0 ))   /*not discarded*/
         {
             result = TEST_CombineStatus(result, PASSED);
@@ -741,7 +741,7 @@ TEST_STATUS TestGlobalFlagsFixed()
         OUTPUT_Line("Testing after a lock");
         OUTPUT_Line("Testing for non-discarded and lock of 0");
         uFlags = GlobalFlags(hMem);
-        if ((GMEM_LOCKCOUNT & uFlags == 0) && /*no locks*/
+        if (((GMEM_LOCKCOUNT & uFlags) == 0) && /*no locks*/
             (((uFlags >> 8) & 0xff) == 0 ))   /*not discarded*/
         {
             result = TEST_CombineStatus(result, PASSED);

@@ -58,9 +58,7 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
 			PMOUSE_INPUT_DATA MouseDataEnd, PULONG InputCount)
 {
    PDEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
-   PIRP Irp;
    ULONG ReadSize;
-   PIO_STACK_LOCATION Stack;
    KIRQL OldIrql;
 
    // In classical NT, you would take the input data and pipe it through the IO system, for the GDI to read.

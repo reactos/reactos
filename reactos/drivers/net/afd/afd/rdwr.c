@@ -66,7 +66,6 @@ AfdWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION IoSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IoSp->FileObject;
     NTSTATUS Status;

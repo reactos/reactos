@@ -18,6 +18,7 @@
  * Process a PS2++ or PS2T++ packet.
  */
 
+int SendCommand(PDEVICE_EXTENSION DeviceExtension, unsigned char *param, int command);
 void PS2PPProcessPacket(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input, int *wheel)
 {
     unsigned char *packet = DeviceExtension->MouseBuffer;
@@ -154,7 +155,6 @@ int PS2PPDetectModel(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
 {
 	int i;
 	//char *vendor, *name;
-	static int logitech_4btn[] = { 12, 40, 41, 42, 43, 52, 73, 80, -1 };
 	static int logitech_wheel[] = { 52, 53, 75, 76, 80, 81, 83, 88, 112, -1 };
 	static int logitech_ps2pp[] = { 12, 13, 40, 41, 42, 43, 50, 51, 52, 53, 73, 75,
 						76, 80, 81, 83, 88, 96, 97, 112, -1 };

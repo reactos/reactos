@@ -13,14 +13,17 @@
 #include "mouse.h"
 #include "psaux.h"
 
+static PIRP  CurrentIrp;
+static ULONG MouseDataRead;
+static ULONG MouseDataRequired;
+static BOOLEAN AlreadyOpened = FALSE;
+
 BOOLEAN STDCALL
 MouseSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
-   PMOUSE_INPUT_DATA rec  = (PMOUSE_INPUT_DATA)Irp->AssociatedIrp.SystemBuffer;
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
    ULONG NrToRead         = stk->Parameters.Read.Length/sizeof(MOUSE_INPUT_DATA);
-   int i;
 
    if ((stk->Parameters.Read.Length/sizeof(MOUSE_INPUT_DATA))==NrToRead)
    {
@@ -237,9 +240,6 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
-   UNICODE_STRING SymlinkName;
-   PDEVICE_EXTENSION DeviceExtension;
 
    if (DetectPS2Port() == TRUE) {
      DbgPrint("PS2 Port Driver version 0.0.2\n");

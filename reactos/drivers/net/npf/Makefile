@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/01/08 19:55:01 robd Exp $
+# $Id: Makefile,v 1.2 2003/11/14 17:13:29 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,7 +9,7 @@ TARGET_NAME = npf
 
 #TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS -I$(PATH_TO_TOP)/ntoskrnl/include
 
-TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS -DUSE_KLOCKS -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS -DUSE_KLOCKS -I$(PATH_TO_TOP)/ntoskrnl/include -Wall -Werror
 
 TARGET_DDKLIBS = ndis.a
 

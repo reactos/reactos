@@ -16,6 +16,40 @@
 #include "dfp.h"
 
 
+#if defined(WIN32)
+#define GetSizeOfFile(handle) _GetSizeOfFile(handle)
+static long _GetSizeOfFile(FILEHANDLE handle)
+{
+    unsigned long size = GetFileSize(handle, NULL);
+    if (size == INVALID_FILE_SIZE)
+      {
+        return -1;
+      }
+    return size;
+}
+#define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
+{
+    return ReadFile(handle, buffer, size, bytesread, NULL);
+}
+#else
+#define GetSizeOfFile(handle) _GetSizeOfFile(handle)
+static long _GetSizeOfFile(FILEHANDLE handle)
+{
+    long size;
+    fseek(handle, 0, SEEK_END);
+    size = ftell(handle);
+    fseek(handle, 0, SEEK_SET);
+    return size;
+}
+#define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
+{
+    *bytesread = fread(buffer, 1, size, handle);
+    return *bytesread == size;
+}
+#endif
+
 /* CDFParser */
 
 CDFParser::CDFParser()
@@ -190,7 +224,7 @@ unsigned long CDFParser::Load(char* FileName)
 #endif
 
     FileSize = GetSizeOfFile(FileHandle);
-    if (FileSize == (unsigned long)-1) {
+    if (FileSize == -1) {
         CloseFile(FileHandle);
         return CAB_STATUS_CANNOT_OPEN;
     }
@@ -214,7 +248,7 @@ unsigned long CDFParser::Load(char* FileName)
 
     FileLoaded = true;
 
-    DPRINT(MAX_TRACE, ("File (%d bytes)\n", FileBufferSize));
+    DPRINT(MAX_TRACE, ("File (%lu bytes)\n", FileBufferSize));
 
     return CAB_STATUS_SUCCESS;
 }
@@ -278,7 +312,7 @@ unsigned long CDFParser::Parse()
             while (CurrentToken != TokenEnd) {
                 switch (CurrentToken) {
                 case TokenInteger:
-                    sprintf(CurrentString, "%d", CurrentInteger);
+                    sprintf(CurrentString, "%lu", CurrentInteger);
                 case TokenIdentifier:
                     if (Command) {
                         /* Command */
@@ -361,7 +395,8 @@ bool CDFParser::OnDiskLabel(unsigned long Number, char* Label)
  */
 {
     char Buffer[20];
-    int i, j;
+    unsigned int i;
+	int j;
     char ch;
 
     Number += 1;
@@ -377,7 +412,7 @@ bool CDFParser::OnDiskLabel(unsigned long Number, char* Label)
         for (i = 0; i < strlen(DiskLabelTemplate); i++) {
             ch = DiskLabelTemplate[i];
             if (ch == '*') {
-                sprintf(Buffer, "%d", Number);
+                sprintf(Buffer, "%lu", Number);
                 strcat(Label, Buffer);
                 j += strlen(Buffer);
             } else {
@@ -406,7 +441,8 @@ bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
  */
 {
     char Buffer[MAX_PATH];
-    int i, j;
+    unsigned int i;
+	int j;
     char ch;
 
     Number += 1;
@@ -425,7 +461,7 @@ bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
         for (i = 0; i < strlen(CabinetNameTemplate); i++) {
             ch = CabinetNameTemplate[i];
             if (ch == '*') {
-                sprintf(Buffer, "%d", Number);
+                sprintf(Buffer, "%lu", Number);
                 strcat(Name, Buffer);
                 j += strlen(Buffer);
             } else {
@@ -1033,7 +1069,7 @@ unsigned long CDFParser::PerformFileCopy()
         else if (Status == CAB_STATUS_NOMEMORY)
             printf("Insufficient memory to add file: %s.\n", SrcName);
         else
-            printf("Cannot add file: %s (%d).\n", SrcName, Status);
+            printf("Cannot add file: %s (%lu).\n", SrcName, Status);
         return Status;
     }
 

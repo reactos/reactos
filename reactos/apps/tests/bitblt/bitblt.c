@@ -12,6 +12,7 @@
 
 
 #include <windows.h>
+#include <string.h>
 
 HINSTANCE HInst;
 const char* WndClassName = "GMainWnd";

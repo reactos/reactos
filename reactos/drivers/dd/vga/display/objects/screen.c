@@ -104,10 +104,6 @@ DWORD getAvailableModes(HANDLE Driver,
 BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 {
   ULONG ReturnedDataLength;
-  VIDEO_MEMORY VideoMemory;
-  VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
-
-  char* vidmem;
 
   ppdev->sizeSurf.cx = 640;
   ppdev->sizeSurf.cy = 480;

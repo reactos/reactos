@@ -293,8 +293,6 @@ static char HELP[] =
 int main(int argc, char **argv)
 {
   char buf[MAX_PATH];
-  int i;
-
   if (argc < 2)
   {
     puts(HELP);

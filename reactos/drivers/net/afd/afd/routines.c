@@ -38,7 +38,6 @@ NTSTATUS MergeWSABuffers(
   ULONG MaxLength,
   PULONG BytesCopied)
 {
-  NTSTATUS Status;
   ULONG Length;
   LPWSABUF p;
   ULONG i;
@@ -84,13 +83,11 @@ NTSTATUS FillWSABuffers(
     DWORD BufferCount,
     PULONG BytesCopied)
 {
-  NTSTATUS Status;
   PUCHAR DstData, SrcData;
   UINT DstSize, SrcSize;
   UINT Count, Total;
   PAFD_BUFFER SrcBuffer;
   PLIST_ENTRY Entry;
-  ULONG Size;
 
   *BytesCopied = 0;
   if (BufferCount == 0)

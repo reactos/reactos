@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.8 2003/11/08 09:13:46 ekohl Exp $
+/* $Id: infcache.c,v 1.9 2003/11/14 17:13:33 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -506,7 +506,6 @@ static PVOID add_section_from_token( struct parser *parser )
 static struct field *add_field_from_token( struct parser *parser, int is_key )
 {
   PVOID field;
-  WCHAR *text;
 
   if (!parser->line)  /* need to start a new line */
     {

@@ -23,7 +23,7 @@ int main( void )
    
    if (file == INVALID_HANDLE_VALUE)
       {
-	 printf("Error opening file (Status %x)\n", GetLastError());
+	 printf("Error opening file (Status %lx)\n", GetLastError());
 	 return 1;
       }
    for( c = 0; c < sizeof( buffer ); c++ )
@@ -31,14 +31,14 @@ int main( void )
    printf("Writing file\n");
    if (WriteFile( file, buffer, 4096, &wrote, NULL) == FALSE)
      {
-       printf("Error writing file (Status %x)\n", GetLastError());
+       printf("Error writing file (Status %lx)\n", GetLastError());
        exit(2);
        }
    printf("Reading file\n");
    SetFilePointer( file, 0, 0, FILE_BEGIN );
    if (ReadFile( file, buffer, 4096, &wrote, NULL) == FALSE)
      {
-       printf("Error reading file (Status %x)\n", GetLastError());
+       printf("Error reading file (Status %lx)\n", GetLastError());
        exit(3);
      }
    for( c = 0; c < sizeof( buffer ); c++ )

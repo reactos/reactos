@@ -623,6 +623,7 @@ DestroyFileNodes()
 }
 
 
+#if 0
 static VOID
 DestroyDeletedFileNodes()
 /*
@@ -670,7 +671,7 @@ DestroyDeletedFileNodes()
       CurNode = NextNode;
     }
 }
-
+#endif
 
 static VOID
 DestroyFolderNodes()
@@ -693,7 +694,7 @@ DestroyFolderNodes()
   FolderListTail = NULL;
 }
 
-
+#if 0
 static VOID
 DestroyDeletedFolderNodes()
 /*
@@ -738,7 +739,7 @@ DestroyDeletedFolderNodes()
       CurNode = NextNode;
     }
 }
-
+#endif
 
 static PCFFOLDER_NODE
 LocateFolderNode(ULONG Index)
@@ -1063,7 +1064,7 @@ ReadDataBlocks(PCFFOLDER_NODE FolderNode)
   return CAB_STATUS_SUCCESS;
 }
 
-
+#if 0
 static ULONG
 ComputeChecksum(PVOID Buffer,
   UINT Size,
@@ -1122,7 +1123,7 @@ ComputeChecksum(PVOID Buffer,
   /* Return computed checksum */
   return Checksum;
 }
-
+#endif
 
 static ULONG
 CloseCabinet(VOID)
@@ -1132,10 +1133,6 @@ CloseCabinet(VOID)
  *     Status of operation
  */
 {
-  PCFFOLDER_NODE PrevNode;
-  PCFFOLDER_NODE NextNode;
-  ULONG Status;
-  
   DestroyFileNodes();
   
   DestroyFolderNodes();
@@ -1153,6 +1150,7 @@ CloseCabinet(VOID)
     }
 
   NtClose(FileHandle);
+  return 0;
 }
 
 

@@ -8,7 +8,7 @@ PROGS = GetSystemInfo
 OBJECTS = GetSystemInfo.o
 
 LIBS =  
-CFLAGS =
+CFLAGS = -Wall -Werror
 
 all: $(PROGS:%=%.exe)
 

@@ -1,4 +1,4 @@
-/* $Id: bootvid.c,v 1.3 2003/09/20 20:12:43 weiden Exp $
+/* $Id: bootvid.c,v 1.4 2003/11/14 17:13:24 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -788,7 +788,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
   PDEVICE_OBJECT BootVidDevice;
   UNICODE_STRING DeviceName;
-  UNICODE_STRING DosName;
   NTSTATUS Status;
 
   BootVidDriverObject = DriverObject;

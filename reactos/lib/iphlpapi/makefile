@@ -11,7 +11,7 @@ TARGET_BASE = 0x777c0000
 TARGET_CFLAGS = -DUNICODE -D_UNICODE
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

@@ -8,10 +8,10 @@
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
   int x, y, x2, y2, w, h;
-  ULONG offset, i, j, pre1;
+  ULONG offset, j, pre1;
   ULONG orgpre1, orgx, midpre1, tmppre1;
   ULONG ileftpix, imidpix, irightpix;
-  double leftpix, midpix, rightpix, temp;
+  double leftpix, midpix, rightpix;
   UCHAR a;
 
   DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);

@@ -14,7 +14,7 @@ CLEAN_FILES = *.o create_nls$(EXE_POSTFIX)
 create_nls$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CC) $(OBJECTS) -o create_nls$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I.
+HOST_CFLAGS = -I. -Wall -Werror
 
 create_nls.o: create_nls.c
 	$(HOST_CC) $(HOST_CFLAGS) -c create_nls.c -o create_nls.o

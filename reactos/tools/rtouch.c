@@ -3,10 +3,12 @@
 
 #ifdef WIN32
 #include <sys/utime.h>
+#include <time.h>
 #else
 #include <sys/time.h>
-#include <stdlib.h>
 #endif
+#include <stdlib.h>
+#include <string.h>
 
 #include <fcntl.h>
 #include <stdio.h>

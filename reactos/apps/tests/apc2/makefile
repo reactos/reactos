@@ -12,6 +12,8 @@ TARGET_NAME = apc2
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
+TARGET_CFLAGS = -Wall -Werror
+
 TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak

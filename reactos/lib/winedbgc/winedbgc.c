@@ -249,7 +249,7 @@ int wine_dbg_log(enum __DEBUG_CLASS cls, const char *channel,
 
     va_start(valist, format);
     if (TRACE_ON(winedbgc))
-        ret = wine_dbg_printf("%08lx:", NtCurrentTeb()->Cid.UniqueThread);
+        ret = wine_dbg_printf("%08lx:", (DWORD)NtCurrentTeb()->Cid.UniqueThread);
     if (cls < __DBCL_COUNT)
         ret += wine_dbg_printf("%s:%s:%s ", classes[cls], channel + 1, function);
     if (format)

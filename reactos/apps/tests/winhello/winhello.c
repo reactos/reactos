@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 //HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
@@ -26,7 +27,7 @@ WinMain(HINSTANCE hInstance,
   wc.cbWndExtra = 0;
   if (RegisterClass(&wc) == 0)
     {
-      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+      fprintf(stderr, "RegisterClass failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -44,7 +45,7 @@ WinMain(HINSTANCE hInstance,
 		      NULL);
   if (hWnd == NULL)
     {
-      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+      fprintf(stderr, "CreateWindow failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -99,8 +100,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
           GetClientRect(hWnd, &clr);
           GetWindowRect(hWnd, &wir);
-          sprintf(spr, "%d,%d,%d,%d              ", clr.left, clr.top, clr.right, clr.bottom);
-          sprintf(sir, "%d,%d,%d,%d              ", wir.left, wir.top, wir.right, wir.bottom);
+          sprintf(spr, "%lu,%lu,%lu,%lu              ", clr.left, clr.top, clr.right, clr.bottom);
+          sprintf(sir, "%lu,%lu,%lu,%lu              ", wir.left, wir.top, wir.right, wir.bottom);
           TextOut(hDC, 10, 30, spr, 20);
           TextOut(hDC, 10, 50, sir, 20);
 	  ReleaseDC ( hWnd, hDC );

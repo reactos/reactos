@@ -14,7 +14,7 @@ CLEAN_FILES = *.o wmc$(EXE_POSTFIX)
 wmc$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CC) $(OBJECTS) -g -o wmc$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I.
+HOST_CFLAGS = -I. -Werror -Wall
 
 getopt.o: getopt.c
 	$(HOST_CC) $(HOST_CFLAGS) -g -c getopt.c -o getopt.o

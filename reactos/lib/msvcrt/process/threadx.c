@@ -1,9 +1,10 @@
-/* $Id: threadx.c,v 1.4 2003/07/16 02:45:24 royce Exp $
+/* $Id: threadx.c,v 1.5 2003/11/14 17:13:31 weiden Exp $
  *
  */
 #include <windows.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/process.h>
+#include <msvcrt/internal/file.h>
 
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: ntvdm.c,v 1.3 2003/08/07 04:03:24 royce Exp $
+/* $Id: ntvdm.c,v 1.4 2003/11/14 17:13:32 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -204,7 +204,6 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
 //    BOOL result = TRUE;
     SYSTEM_INFO inf;
     MEMORYSTATUS stat;
-	PVOID lpMem = NULL;
 
     GlobalMemoryStatus(&stat);
     if (stat.dwLength != sizeof(MEMORYSTATUS)) {
@@ -271,9 +270,7 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
 {
     VDM_CONTROL_BLOCK VdmCB;
     DWORD Result;
-    BOOL Success;
     ULONG i;
-    NTSTATUS Status;
     BOOL vdmStarted = FALSE;
 
     WCHAR WelcomeMsg[] = L"ReactOS Virtual DOS Machine support.\n";

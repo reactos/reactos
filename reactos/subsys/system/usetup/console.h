@@ -60,6 +60,17 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 			     COORD dwWriteCoord,
 			     PULONG lpNumberOfAttrsWritten);
 
+NTSTATUS
+FillConsoleOutputAttribute(USHORT wAttribute,
+			   ULONG nLength,
+			   COORD dwWriteCoord,
+			   PULONG lpNumberOfAttrsWritten);
+NTSTATUS
+FillConsoleOutputCharacter(CHAR Character,
+			   ULONG Length,
+			   COORD WriteCoord,
+			   PULONG NumberOfCharsWritten);
+
 #if 0
 NTSTATUS
 SetConsoleMode(HANDLE hConsoleHandle,

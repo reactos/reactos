@@ -234,6 +234,11 @@ VGADDI_AllocSavedScreenBits(ULONG Size);
 VOID
 VGADDI_InitializeOffScreenMem(ULONG Start, ULONG Length);
 
+BOOL InitPointer(PPDEV ppdev);
+DWORD getAvailableModes(HANDLE Driver,
+                        PVIDEO_MODE_INFORMATION *modeInformation,
+                        DWORD *ModeSize);
+
 void FASTCALL
 vgaReadScan ( int x, int y, int w, void *b );
 

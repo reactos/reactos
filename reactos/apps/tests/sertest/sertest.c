@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
     CHAR rxBuffer[BUFSIZE];
     DWORD dwBaud = 9600;
     DWORD dwNumWritten;
-    DWORD dwNumRead;
     DWORD dwErrors;
     DCB dcb;
     BOOL bResult;
@@ -40,20 +39,20 @@ int main(int argc, char *argv[])
                        NULL); // no template
 
     if (hPort == (HANDLE)-1) {
-        printf("ERROR: CreateFile() failed with result: %lx\n", hPort);
+        printf("ERROR: CreateFile() failed with result: %lx\n", (DWORD)hPort);
         return 1;
     }
-    printf("CreateFile() returned: %lx\n", hPort);
+    printf("CreateFile() returned: %lx\n", (DWORD)hPort);
 
     printf("Fiddling with DTR and RTS control lines...\n");
 	for (i = 0; i < 100; i++) {
 	bResult = EscapeCommFunction(hPort, SETDTR);
     if (!bResult) {
-        printf("WARNING: EscapeCommFunction(SETDTR) failed: %lx\n", bResult);
+        printf("WARNING: EscapeCommFunction(SETDTR) failed: %lx\n", (DWORD)bResult);
     }
 	bResult = EscapeCommFunction(hPort, SETRTS);
     if (!bResult) {
-        printf("WARNING: EscapeCommFunction(SETRTS) failed: %lx\n", bResult);
+        printf("WARNING: EscapeCommFunction(SETRTS) failed: %lx\n", (DWORD)bResult);
     }
 	for (j = 0; j < 1000; j++) {
 		k *= j;
@@ -70,17 +69,17 @@ int main(int argc, char *argv[])
  */
 	bResult = EscapeCommFunction(hPort, CLRDTR);
     if (!bResult) {
-        printf("WARNING: EscapeCommFunction(CLRDTR) failed: %lx\n", bResult);
+        printf("WARNING: EscapeCommFunction(CLRDTR) failed: %lx\n", (DWORD)bResult);
     }
 	bResult = EscapeCommFunction(hPort, CLRRTS);
     if (!bResult) {
-        printf("WARNING: EscapeCommFunction(CLRRTS) failed: %lx\n", bResult);
+        printf("WARNING: EscapeCommFunction(CLRRTS) failed: %lx\n", (DWORD)bResult);
     }
 	}
     printf("Getting the default line characteristics...\n");
 	dcb.DCBlength = sizeof(DCB);
 	if (!GetCommState(hPort, &dcb)) {
-        printf("ERROR: failed to get the dcb: %d\n", GetLastError());
+        printf("ERROR: failed to get the dcb: %ld\n", GetLastError());
         return 2;
     }
     printf("Setting the line characteristics to 9600,8,N,1\n");
@@ -91,7 +90,7 @@ int main(int argc, char *argv[])
 
     bResult = SetCommState(hPort, &dcb);
     if (!bResult) {
-        printf("ERROR: failed to set the comm state: %lx\n", bResult);
+        printf("ERROR: failed to set the comm state: %lx\n", (DWORD)bResult);
         return 3;
     }
 	for (i = 0; i < BUFSIZE; i++) {
@@ -103,28 +102,28 @@ int main(int argc, char *argv[])
     printf("Writting transmit buffer to the serial port\n");
     bResult = WriteFile(hPort, txBuffer, BUFSIZE, &dwNumWritten, NULL);
     if (!bResult) {
-        printf("ERROR: failed to write to the serial port: %lx\n", bResult);
+        printf("ERROR: failed to write to the serial port: %lx\n", (DWORD)bResult);
         return 4;
     }
-    printf("WriteFile() returned: %lx, byteswritten: %lx\n", bResult, dwNumWritten);
+    printf("WriteFile() returned: %lx, byteswritten: %lx\n", (DWORD)bResult, dwNumWritten);
 #if 0
 	printf("Attempting to read %d bytes from the serial port\n", BUFSIZE);
     bResult = ReadFile(hPort, rxBuffer, BUFSIZE, &dwNumRead, NULL);
 	if (!bResult) {
-        printf("ERROR: failed to read from the serial port: %lx\n", bResult);
+        printf("ERROR: failed to read from the serial port: %lx\n", (DWORD)bResult);
         return 5;
     }
-    printf("ReadFile() returned: %lx, bytesread: %lx\n", bResult, dwNumRead);
+    printf("ReadFile() returned: %lx, bytesread: %lx\n", (DWORD)bResult, dwNumRead);
     for (i = 0; i < BUFSIZE; i++) {
         printf(" %d ",rxBuffer[i]);
     }
 #endif
     printf("Attempting to close the serial port\n");
     bResult = ClearCommError(hPort, &dwErrors, NULL);
-    printf("ClearCommError returned: %lx, dwErrors: %lx\n", bResult, dwErrors);
+    printf("ClearCommError returned: %lx, dwErrors: %lx\n", (DWORD)bResult, dwErrors);
     bResult = CloseHandle(hPort);
     if (!bResult) {
-        printf("ERROR: failed to close the serial port: %lx\n", bResult);
+        printf("ERROR: failed to close the serial port: %lx\n", (DWORD)bResult);
         return 6;
     }
     printf("Finished\n");

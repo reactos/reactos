@@ -28,7 +28,7 @@ WinMain(HINSTANCE hInstance,
   wc.cbWndExtra = 0;
   if (RegisterClass(&wc) == 0)
     {
-      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+      fprintf(stderr, "RegisterClass failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -71,7 +71,7 @@ WinMain(HINSTANCE hInstance,
 
   if (! hWnd1 || ! hWnd2 || ! hWndChild)
     {
-      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+      fprintf(stderr, "CreateWindow failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }

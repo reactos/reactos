@@ -7,11 +7,13 @@ unsigned char * _mbsrev(unsigned char *s)
 {
 	unsigned char  *e;
 	unsigned char  a;
+	unsigned char  *e2;
 	e=s;
 	while (*e) {
 		if ( _ismbblead(*e) ) {
 			a = *e;
-			*e = *++e;
+			e2 = e;
+			*e2 = *++e;
 			if ( *e == 0 )
 				break;
 			*e = a;

@@ -822,7 +822,7 @@ MmUnlockPage(PHYSICAL_ADDRESS PhysicalAddress)
    ULONG Start = PhysicalAddress.u.LowPart / PAGE_SIZE;
    KIRQL oldIrql;
    
-   DPRINT("MmUnlockPage(PhysicalAddress %llx)\n", PhysicalAddress);
+   DPRINT("MmUnlockPage(PhysicalAddress %I64x)\n", PhysicalAddress);
    
    if (PhysicalAddress.u.LowPart == 0)
      {

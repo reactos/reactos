@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2002/05/24 07:51:01 ekohl Exp $
+# $Id: makefile,v 1.2 2003/11/14 17:13:32 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = autochk
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -D__NTAPP__
+TARGET_CFLAGS = -D__NTAPP__ -Wall -Werror
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -20,6 +20,8 @@ HWND HListBox = NULL;
 const int ID_LISTBOX = 101;
 
 HINSTANCE HInst;
+HINSTANCE HPrevInst;
+TCHAR *cmdline;
 const char* WndClassName = "GMainWnd";
 LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
    LPARAM LParam);
@@ -29,6 +31,8 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
     LPTSTR lpCmdLine, int nCmdShow)
 {
    HInst = HInstance;
+   HPrevInst = HPrevInstance;
+   cmdline = lpCmdLine;
 
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));

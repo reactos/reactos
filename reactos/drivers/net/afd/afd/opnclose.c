@@ -89,7 +89,6 @@ AfdCreate(
     PAFD_SOCKET_INFORMATION SocketInfo;
     PFILE_FULL_EA_INFORMATION EaInfo;
     PDEVICE_EXTENSION DeviceExt;
-    PTA_ADDRESS Address;
     NTSTATUS Status;
     ULONG EaLength;
     PAFDFCB FCB;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.39 2003/08/07 04:03:23 royce Exp $
+# $Id: Makefile,v 1.40 2003/11/14 17:13:30 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,7 @@ TARGET_SDKLIBS = string.a kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_CFLAGS = -D_MSVCRT_LIB_
+TARGET_CFLAGS = -D_MSVCRT_LIB_ -Werror -Wall
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

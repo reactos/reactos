@@ -21,7 +21,7 @@ int main(int ac, char **av)
 	HANDLE Thread;
 
 	Thread = CreateThread(0, 0, threadfunc, 0, 0, &id);
-	printf("Main: ThreadId for new thread is %08x\n", id);
+	printf("Main: ThreadId for new thread is %08lx\n", id);
 	printf("Main: Waiting on thread...\n");
 	WaitForSingleObject(Thread, INFINITE);
 	printf("Main: OK, somebody fixed the PsUnblockThread spinlock double-acquire crash\n");

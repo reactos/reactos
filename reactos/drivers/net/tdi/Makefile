@@ -1,8 +1,10 @@
-# $Id: Makefile,v 1.13 2001/08/21 20:13:16 chorns Exp $
+# $Id: Makefile,v 1.14 2003/11/14 17:13:29 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = export_driver
+
+TARGET_CFLAGS = -Werror -Wall
 
 TARGET_NAME = tdi
 

@@ -9,7 +9,7 @@
 #define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 
 #define VERSION "0.0.0"
-
+void InitVGAMode();
 //  ----------------------------------------------------  Forward Declarations
 static VP_STATUS STDCALL
 VGAFindAdapter(PVOID DeviceExtension,

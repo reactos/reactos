@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.3 2003/04/26 07:06:55 hbirr Exp $
+/* $Id: pci.c,v 1.4 2003/11/14 17:13:24 weiden Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -48,6 +48,8 @@ PciReadConfigUchar(UCHAR Bus,
 	*Value = READ_PORT_UCHAR((PUCHAR)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }
@@ -77,6 +79,8 @@ PciReadConfigUshort(UCHAR Bus,
 	*Value = READ_PORT_USHORT((PUSHORT)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }
@@ -106,6 +110,8 @@ PciReadConfigUlong(UCHAR Bus,
 	*Value = READ_PORT_ULONG((PULONG)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }
@@ -130,6 +136,8 @@ PciWriteConfigUchar(UCHAR Bus,
 	WRITE_PORT_UCHAR((PUCHAR)(IOADDR(Slot,Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }
@@ -159,6 +167,8 @@ PciWriteConfigUshort(UCHAR Bus,
 	WRITE_PORT_USHORT((PUSHORT)(IOADDR(Slot, Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }
@@ -188,6 +198,8 @@ PciWriteConfigUlong(UCHAR Bus,
 	WRITE_PORT_ULONG((PULONG)(IOADDR(Slot, Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
 	return STATUS_SUCCESS;
+     case pbtUnknown:
+        break;
      }
    return STATUS_UNSUCCESSFUL;
 }

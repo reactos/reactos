@@ -14,12 +14,6 @@ int endmasks[8];
 char* vidmem;
 static ULONG UnpackPixel[256];
 
-static unsigned char saved_SEQ_mask;	/* 0x02 */
-static unsigned char saved_GC_eSR;	/* 0x01 */
-static unsigned char saved_GC_fun;	/* 0x03 */
-static unsigned char saved_GC_rmap;	/* 0x04 */
-static unsigned char saved_GC_mode;	/* 0x05 */
-static unsigned char saved_GC_mask;	/* 0x08 */
 static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
@@ -270,7 +264,7 @@ INT vgaGetPixel(INT x, INT y)
 BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 {
   UCHAR a;
-  ULONG pre1, i;
+  ULONG pre1;
   ULONG orgpre1, orgx, midpre1;
   ULONG ileftpix, imidpix, irightpix;
 
@@ -672,7 +666,6 @@ vgaReadScan ( int x, int y, int w, void *b )
   unsigned char data, mask, maskP;
   unsigned char *bp;
   unsigned char plane_mask;
-  int byte_per_line = SCREEN_X >> 3;
   int plane, i;
 
   ASSIGNVP4(x, y, vpP)

@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 
 #ifndef STANDALONE
 #include "wine/test.h"
@@ -588,6 +589,7 @@ void test_DisconnectNamedPipe(void)
 
 }
 
+int
 START_TEST(pipe)
 {
     msg("test 1 of 4:\n");
@@ -599,4 +601,5 @@ START_TEST(pipe)
     msg("test 4 of 4:\n");
     test_CreateNamedPipe();
     msg("all tests done\n");
+	return 0;
 }

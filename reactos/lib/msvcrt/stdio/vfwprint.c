@@ -682,7 +682,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 {
 	int len;
 	ULONGLONG num;
-	int i, base;
+	int base;
 	long double _ldouble;
 	double _double;
 	const char *s;

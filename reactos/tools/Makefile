@@ -1,5 +1,7 @@
 PATH_TO_TOP = ..
 
+CFLAGS += -Wall -Werror
+
 TOOLS = \
   buildno$(EXE_POSTFIX) \
   depends$(EXE_POSTFIX) \

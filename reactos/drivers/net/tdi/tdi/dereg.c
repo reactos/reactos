@@ -1,4 +1,4 @@
-/* $Id: dereg.c,v 1.5 2003/07/10 19:54:13 chorns Exp $
+/* $Id: dereg.c,v 1.6 2003/11/14 17:13:29 weiden Exp $
  *
  */
 #include <ntos.h>
@@ -46,8 +46,8 @@ TdiRegisterAddressChangeHandler (
 	DWORD	Unknown2
 	)
 {
-	NTSTATUS	Status = STATUS_SUCCESS;
 #if 0	
+	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_ADDRESS_CHANGE_HANDLER,
 			AddressChangeHandler
@@ -85,8 +85,8 @@ TdiRegisterDeviceObject (
 	DWORD	Unknown1
 	)
 {
-	NTSTATUS	Status = STATUS_SUCCESS;
 #if 0	
+	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_DEVICE_OBJECT,
 			DeviceObject
@@ -124,8 +124,8 @@ TdiRegisterNetAddress (
 	DWORD	Unknown1
 	)
 {
-	NTSTATUS	Status = STATUS_SUCCESS;
 #if 0	
+	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_NET_ADDRESS,
 			NetAddress
@@ -164,8 +164,8 @@ TdiRegisterNotificationHandler (
 	DWORD	Unknown2
 	)
 {
-	NTSTATUS	Status = STATUS_SUCCESS;
 #if 0	
+	NTSTATUS	Status = STATUS_SUCCESS;
 	Status = TdiDeRegister (
 			R_NOTIFICATION_HANDLER,
 			NotificationHandler

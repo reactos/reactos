@@ -11,6 +11,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = loadlib
 
+TARGET_CFLAGS = -Wall -Werror
+
 #TARGET_CFLAGS = -DDBG -DUNICODE -D_UNICODE
 
 TARGET_SDKLIBS = kernel32.a ntdll.a 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/08/07 04:03:24 royce Exp $
+# $Id: Makefile,v 1.5 2003/11/14 17:13:32 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,7 +14,7 @@ TARGET_NAME = winedbgc
 TARGET_CFLAGS = -D__NTDLL__
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \

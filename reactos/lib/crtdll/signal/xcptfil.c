@@ -11,4 +11,5 @@ int _XcptFilter (
 {
 	//fixme XcptFilter
 //	return UnhandledExceptionFilter(ExceptionInfo);
+        return 0;
 }

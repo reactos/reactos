@@ -584,14 +584,10 @@ void test4(void)
 
 void test5(void)
 {
-  HKEY hKey,hKey1;
+  HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName,ValueName;
+  UNICODE_STRING KeyName;
   NTSTATUS Status;
-  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
-  ULONG Index,Length,i;
-  char Buffer[10];
-  DWORD Result;
 
   dprintf("NtOpenKey : \n");
   dprintf("  \\Registry\\Machine\\Software\\reactos : ");
@@ -616,9 +612,7 @@ void test6(void)
   UNICODE_STRING KeyName,ValueName;
   NTSTATUS Status; 
   KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
-  ULONG Index,Length,i;
-  char Buffer[10];
-  DWORD Result;
+  ULONG Length,i;
 
   dprintf("Create target key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Reactos\n");

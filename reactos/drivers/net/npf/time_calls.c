@@ -39,8 +39,6 @@ VOID TIME_SYNCHRONIZE(struct time_conv *data)
 {
 	struct timeval tmp;
 	LARGE_INTEGER SystemTime;
-	LARGE_INTEGER i;
-	ULONG tmp2;
 	LARGE_INTEGER TimeFreq,PTime;
 
 	if (data->reference!=0)
@@ -73,7 +71,6 @@ void FORCE_TIME(struct timeval *src, struct time_conv *dest)
 void GET_TIME(struct timeval *dst, struct time_conv *data)
 {
 	LARGE_INTEGER PTime, TimeFreq;
-	LONG tmp;
 
 	PTime=KeQueryPerformanceCounter(&TimeFreq);
 #ifndef __GNUC__
@@ -96,7 +93,6 @@ void GET_TIME(struct timeval *dst, struct time_conv *data)
 /* callers must be at IRQL=PASSIVE_LEVEL */
 VOID TIME_SYNCHRONIZE(struct time_conv *data)
 {
-	struct timeval tmp;
 	LARGE_INTEGER system_time;
 	ULONGLONG curr_ticks;
 	KIRQL old;

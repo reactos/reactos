@@ -1,7 +1,9 @@
-/* $Id: sectest.c,v 1.4 2002/09/08 10:22:01 chorns Exp $ */
+/* $Id: sectest.c,v 1.5 2003/11/14 17:13:20 weiden Exp $ */
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
+#include <stdio.h>
+#include <string.h>
 
 int main(int argc, char* argv[])
 {
@@ -20,7 +22,7 @@ int main(int argc, char* argv[])
 		     0);
   if (hFile == INVALID_HANDLE_VALUE)
     {
-      printf("Failed to create file (err=%d)", GetLastError());
+      printf("Failed to create file (err=%ld)", GetLastError());
       return 1;
     }
   
@@ -32,7 +34,7 @@ int main(int argc, char* argv[])
 			      NULL);
   if (Section == NULL)
     {
-      printf("Failed to create section (err=%d)", GetLastError());
+      printf("Failed to create section (err=%ld)", GetLastError());
       return 1;
     }
   
@@ -45,7 +47,7 @@ int main(int argc, char* argv[])
   printf("BaseAddress %x\n", (UINT) BaseAddress);
   if (BaseAddress == NULL)
     {
-      printf("Failed to map section (%d)\n", GetLastError());
+      printf("Failed to map section (%ld)\n", GetLastError());
       return 1;
     }
   
@@ -56,13 +58,13 @@ int main(int argc, char* argv[])
   
   if (!UnmapViewOfFile(BaseAddress))
     {	
-      printf("Failed to unmap view of file (%d)\n", GetLastError());
+      printf("Failed to unmap view of file (%ld)\n", GetLastError());
       return 1;
     }
   
   if (!CloseHandle(hFile))
     {	
-      printf("Failed to close file (%d)\n", GetLastError());
+      printf("Failed to close file (%ld)\n", GetLastError());
       return 1;
     }
   

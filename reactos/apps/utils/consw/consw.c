@@ -1,4 +1,4 @@
-/* $Id: consw.c,v 1.1 2003/07/29 20:38:30 jimtabor Exp $
+/* $Id: consw.c,v 1.2 2003/11/14 17:13:22 weiden Exp $
  *
  * DESCRIPTION: Console mode switcher
  * PROGRAMMER:  Art Yerkes
@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
 			     0,
 			     !strcmp( argv[1], "hw" ) );
   }
+  return 0;
 }
 
 

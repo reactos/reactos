@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2002/06/07 22:57:41 ekohl Exp $
+# $Id: makefile,v 1.11 2003/11/14 17:13:22 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,8 @@ TARGET_APPTYPE = console
 TARGET_NAME = cat
 
 TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
-
+#include <string.h>
 //HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -26,7 +26,7 @@ WinMain(HINSTANCE hInstance,
   wc.cbWndExtra = 0;
   if (RegisterClass(&wc) == 0)
     {
-      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+      fprintf(stderr, "RegisterClass failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -44,7 +44,7 @@ WinMain(HINSTANCE hInstance,
 		      NULL);
   if (hWnd == NULL)
     {
-      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+      fprintf(stderr, "CreateWindow failed (last error 0x%lX)\n",
 	      GetLastError());
       return(1);
     }
@@ -68,22 +68,19 @@ WinMain(HINSTANCE hInstance,
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	PAINTSTRUCT ps;
 	HDC hDC;
-	RECT clr, wir;
     char txt[100];
 
 	switch(msg)
 	{
 	case WM_LBUTTONUP:
 	  {
-	    ULONG x, y;
 	    RECT Rect;
 	    GetWindowRect(hWnd, &Rect);
 	    SendMessage(hWnd, WM_NCCALCSIZE, 0, (LPARAM)(&Rect));
 	    hDC = GetWindowDC(0);
 	    Rectangle(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom);
-	    sprintf(txt, "Client coordinates: %d, %d, %d, %d\0", Rect.left, Rect.top, Rect.right, Rect.bottom);
+	    sprintf(txt, "Client coordinates: %lu, %lu, %lu, %lu", Rect.left, Rect.top, Rect.right, Rect.bottom);
 	    TextOut(hDC, Rect.left + 1, Rect.top + 1, (LPCTSTR)txt, strlen(txt));
 	    ReleaseDC(0, hDC);
 	    break;

@@ -1,4 +1,5 @@
 #include <msvcrt/stdlib.h>
+#include <msvcrt/ctype.h>
 
 
 /*

@@ -2,6 +2,7 @@
 // Systems Internals
 // http://www.sysinternals.com
 #include <stdio.h>
+#include <string.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <fmifs.h>
@@ -53,7 +54,7 @@ SIZEDEFINITION LegalSizes[] = {
 //----------------------------------------------------------------------
 void PrintWin32Error( PWCHAR Message, DWORD ErrorCode )
 {
-	LPVOID lpMsgBuf;
+	LPWSTR lpMsgBuf;
  
 	FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 					NULL, ErrorCode, 
@@ -179,7 +180,6 @@ BOOL __stdcall FormatExCallback( CALLBACKCOMMAND Command, DWORD Modifier, PVOID 
 	PDWORD percent;
 	PTEXTOUTPUT output;
 	PBOOLEAN status;
-	static createStructures = FALSE;
 
 	// 
 	// We get other types of commands, but we don't have to pay attention to them
@@ -188,7 +188,7 @@ BOOL __stdcall FormatExCallback( CALLBACKCOMMAND Command, DWORD Modifier, PVOID 
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		printf("%d percent completed.\r", *percent);
+		printf("%lu percent completed.\r", *percent);
 		break;
 
 	case OUTPUT:
@@ -204,6 +204,21 @@ BOOL __stdcall FormatExCallback( CALLBACKCOMMAND Command, DWORD Modifier, PVOID 
 			Error = TRUE;
 		}
 		break;
+	case DONEWITHSTRUCTURE:
+	case UNKNOWN2:
+	case UNKNOWN3:
+	case UNKNOWN4:
+	case UNKNOWN5:
+	case INSUFFICIENTRIGHTS:
+	case UNKNOWN7:
+	case UNKNOWN8:
+	case UNKNOWN9:
+	case UNKNOWNA:
+	case UNKNOWNC:
+	case UNKNOWND:
+	case STRUCTUREPROGRESS:
+		printf("Operation Not Supported");
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -385,7 +400,7 @@ media = FMIFS_HARDDISK;
 		
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 			
-			printf("Verifying %dM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			printf("Verifying %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 			
 		} else {
 
@@ -396,7 +411,7 @@ media = FMIFS_HARDDISK;
 
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 			
-			printf("QuickFormatting %dM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
+			printf("QuickFormatting %luM\n", (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
 			
 		} else {
 
@@ -476,8 +491,8 @@ media = FMIFS_HARDDISK;
 		PrintWin32Error( L"Could not query volume", GetLastError());
 		return -1;
 	}
-	printf("\nVolume Serial Number is %04X-%04X\n", serialNumber >> 16,
-					serialNumber & 0xFFFF );
+	printf("\nVolume Serial Number is %04X-%04X\n", (unsigned int)(serialNumber >> 16),
+					(unsigned int)(serialNumber & 0xFFFF) );
 			
 	return 0;
 }

@@ -159,7 +159,6 @@ int main(int argc, char* argv[])
   char* path2;
   FILE* in;
   FILE* out;
-  char* buf;
   int n_in;
   int n_out;
    

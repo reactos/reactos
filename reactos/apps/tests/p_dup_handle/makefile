@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/10/31 21:41:32 arty Exp $
+# $Id: makefile,v 1.2 2003/11/14 17:13:18 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,8 @@ TARGET_NAME = p_dup_handle
 TARGET_SDKLIBS = kernel32.a gdi32.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

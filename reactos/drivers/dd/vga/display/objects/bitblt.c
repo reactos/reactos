@@ -62,22 +62,18 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
                             Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
 		            Source->lDelta, ColorTranslation);
     }
+  return FALSE;
 }
 
 BOOL 
 VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
-  LONG i, j, dx, dy, RGBulong;
-  BYTE  *GDIpos, *initial, idxColor;
+  LONG i, j, dx, dy;
+  BYTE  *GDIpos, *initial;
   
   // Used by the temporary DFB
-  PDEVSURF	TargetSurf;
   DEVSURF	DestDevSurf;
-  PSURFOBJ	TargetBitmapSurf;
-  HBITMAP	hTargetBitmap;
-  SIZEL		InterSize;
-  POINTL	ZeroPoint;
 
   // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
@@ -106,12 +102,14 @@ VGAtoDIB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
        GDIpos = initial + Dest->lDelta;
     }
   }
+  return FALSE;
 }
 
 BOOL 
 DFBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
+  return FALSE;
   // Do DFBs need color translation??
 }
 
@@ -119,6 +117,7 @@ BOOL
 VGAtoDFB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
+  return FALSE;
   // Do DFBs need color translation??
 }
 
@@ -176,7 +175,6 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
 {
   UCHAR SolidColor = 0;
   ULONG Left;
-  ULONG Right;
   ULONG Length;
   PUCHAR Video;
   UCHAR Mask;
@@ -298,8 +296,6 @@ VGADDI_BltSrc(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
               PXLATEOBJ ColorTranslation, PRECTL DestRect, PPOINTL SourcePoint,
               PPOINTL MaskOrigin, PBRUSHOBJ Brush, PPOINTL BrushOrigin, ROP4 Rop4)
 {
-  RECT_ENUM RectEnum;
-  BOOL EnumMore;
   PFN_VGABlt  BltOperation;
   ULONG SourceType;
 
@@ -341,8 +337,8 @@ VGADDI_BltMask(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
                PPOINTL SourcePoint, PPOINTL MaskPoint, BRUSHOBJ* Brush,
 	       PPOINTL BrushPoint, ROP4 Rop4)
 {
-  LONG i, j, dx, dy, idxColor, RGBulong = 0, c8;
-  BYTE *initial, *tMask, *lMask;
+  LONG i, j, dx, dy, c8;
+  BYTE *tMask, *lMask;
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
@@ -369,6 +365,7 @@ VGADDI_BltMask(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
 	    }
 	}
     }
+  return TRUE;
 }
 
 BOOL STDCALL

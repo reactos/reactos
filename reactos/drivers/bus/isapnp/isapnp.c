@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.7 2003/09/20 20:31:57 weiden Exp $
+/* $Id: isapnp.c,v 1.8 2003/11/14 17:13:24 weiden Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -484,7 +484,6 @@ static NTSTATUS AddResourceList(
   PISAPNP_CONFIGURATION_LIST *NewList)
 {
   PISAPNP_CONFIGURATION_LIST List;
-  NTSTATUS Status;
 
   DPRINT("Adding resource list for logical device %d on card %d (Priority %d)\n",
         LogicalDevice->Number,
@@ -962,8 +961,8 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 		if (!ReadTag(&type, &Size, &Small))
 			return FALSE;
 
-		if (skip && !(Small && (type == ISAPNP_SRIN_LDEVICE_ID)
-      || (type == ISAPNP_SRIN_END_TAG)))
+                if (skip && !(Small && ((type == ISAPNP_SRIN_LDEVICE_ID)
+      || (type == ISAPNP_SRIN_END_TAG))))
 			goto skip;
 
     if (Small) {
@@ -1212,7 +1211,6 @@ static NTSTATUS BuildResourceList(PISAPNP_LOGICAL_DEVICE LogicalDevice,
   PLIST_ENTRY CurrentEntry, Entry;
   PISAPNP_CONFIGURATION_LIST List;
   PISAPNP_DESCRIPTOR Descriptor;
-  NTSTATUS Status;
   ULONG i;
 
   if (IsListEmpty(&LogicalDevice->Configuration))
@@ -1373,7 +1371,6 @@ static NTSTATUS BuildDeviceList(PISAPNP_DEVICE_EXTENSION DeviceExtension)
 	ULONG csn;
 	UCHAR header[9], checksum;
   PISAPNP_CARD Card;
-  NTSTATUS Status;
 
   DPRINT("Called\n");
 

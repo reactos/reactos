@@ -3,6 +3,7 @@
 #include <msvcrt/ctype.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
 
 /*
  * Convert a unicode string to an unsigned long integer.

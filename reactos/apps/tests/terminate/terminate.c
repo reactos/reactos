@@ -3,6 +3,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <stdio.h>
 
 #define DBG
 #define NDEBUG

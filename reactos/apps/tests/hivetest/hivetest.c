@@ -113,7 +113,7 @@ void DeleteKeyTest(void)
 
 void EnumerateKeyTest(void)
 {
-  HKEY hKey = NULL, hKey1;
+  HKEY hKey = NULL;
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
   UNICODE_STRING KeyName;
@@ -304,7 +304,6 @@ void DeleteValueTest(void)
 void EnumerateValueTest(void)
 {
   KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
-  KEY_BASIC_INFORMATION KeyInformation[5];
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   ULONG Index,Length,i;
@@ -375,7 +374,6 @@ void test1(void)
  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine\\Software");
  ULONG Index,Length,i;
  KEY_BASIC_INFORMATION KeyInformation[5];
- KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
 
 #if 0
   dprintf("NtOpenKey \\Registry : ");
@@ -494,12 +492,10 @@ void test1(void)
 
 void test3(void)
 {
- HKEY hKey,hKey1;
+ HKEY hKey;
  OBJECT_ATTRIBUTES ObjectAttributes; 
- UNICODE_STRING KeyName,ValueName;
+ UNICODE_STRING KeyName;
  NTSTATUS Status; 
- KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
- ULONG Index,Length,i;
  char Buffer[10];
  DWORD Result;
   dprintf("NtCreateKey non volatile: \n");
@@ -791,14 +787,10 @@ void test4(void)
 
 void test5(void)
 {
-  HKEY hKey,hKey1;
+  HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName,ValueName;
+  UNICODE_STRING KeyName;
   NTSTATUS Status;
-  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
-  ULONG Index,Length,i;
-  char Buffer[10];
-  DWORD Result;
 
   dprintf("NtOpenKey : \n");
   dprintf("  \\Registry\\Machine\\Software\\reactos : ");
@@ -823,9 +815,7 @@ void test6(void)
   UNICODE_STRING KeyName,ValueName;
   NTSTATUS Status; 
   KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
-  ULONG Index,Length,i;
-  char Buffer[10];
-  DWORD Result;
+  ULONG Length,i;
 
   dprintf("Create target key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Reactos\n");

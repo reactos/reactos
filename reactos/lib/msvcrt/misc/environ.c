@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.4 2003/07/11 21:58:09 royce Exp $
+/* $Id: environ.c,v 1.5 2003/11/14 17:13:31 weiden Exp $
  *
  * dllmain.c
  *
@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <direct.h>
 
 #ifdef UNIX_PATHS
 #define DIR_SEPARATOR_CHAR '/'
@@ -73,10 +75,7 @@ int mkdir_p(char* path)
 int main(int argc, char* argv[])
 {
    char* path1;
-   FILE* in;
-   FILE* out;
    char* csec;
-   int is_abs_path;
    char buf[256];
    
    if (argc != 2)

@@ -546,7 +546,6 @@ KeyboardHandler(PKINTERRUPT Interrupt,
      {
 	KEY_EVENT_RECORD* rec = (KEY_EVENT_RECORD *)
 	  CurrentIrp->AssociatedIrp.SystemBuffer;
-	PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(CurrentIrp);
 	
 	CHECKPOINT;
 	

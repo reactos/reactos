@@ -60,9 +60,14 @@ typedef struct __JUMP_BUFFER
     unsigned long UnwindData[6];
 } _JUMP_BUFFER;
 
+void
+_local_unwind2(MSVCRT_EXCEPTION_FRAME *RegistrationFrame,
+		      LONG TryLevel);
+
 /*
  * @implemented
 */
+
 void __stdcall _seh_longjmp_unwind(_JUMP_BUFFER *jmp)
 {
     _local_unwind2((MSVCRT_EXCEPTION_FRAME*) jmp->Registration, jmp->TryLevel);

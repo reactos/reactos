@@ -8,8 +8,6 @@ static char * const debug_channels[4] =
     __wine_dbch_winedbgc
 };
 
-static void *debug_registration;
-
 #ifdef __GNUC__
 static void __wine_dbg_winedbgc32_init(void) __attribute__((constructor));
 static void __wine_dbg_winedbgc32_fini(void) __attribute__((destructor));

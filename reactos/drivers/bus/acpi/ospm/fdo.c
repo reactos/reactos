@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
+/* $Id: fdo.c,v 1.3 2003/11/14 17:13:23 weiden Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/fdo.c
@@ -163,7 +163,6 @@ ACPIInitializeInternalDriver(
   ACPI_DRIVER_FUNCTION Terminate)
 {
   ACPI_STATUS AcpiStatus;
-  PACPI_DEVICE AcpiDevice;
 
   AcpiStatus = Initialize();
   if (!ACPI_SUCCESS(AcpiStatus)) {
@@ -197,8 +196,6 @@ ACPIInitializeInternalDrivers(
   PFDO_DEVICE_EXTENSION DeviceExtension)
 {
   NTSTATUS Status;
-
-  ULONG j;
 
   Status = ACPIInitializeInternalDriver(DeviceExtension,
     bn_initialize, bn_terminate);

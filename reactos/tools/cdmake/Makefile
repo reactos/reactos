@@ -11,7 +11,7 @@ OBJECTS = cdmake.o llmosrt.o
 
 CLEAN_FILES = *.o cdmake$(EXE_POSTFIX)
 
-HOST_CFLAGS = -I.
+HOST_CFLAGS = -I. -Werror -Wall
 
 cdmake.o: cdmake.c
 	$(HOST_CC) $(HOST_CFLAGS) -c cdmake.c -o cdmake.o

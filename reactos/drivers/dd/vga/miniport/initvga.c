@@ -14,7 +14,6 @@ void outxay(PUSHORT ad, UCHAR x, UCHAR y)
 void setMode(VideoMode mode)
 {
   unsigned char x;
-  unsigned int y, c, a, m, n;
 
   VideoPortWritePortUchar((PUCHAR)MISC, mode.Misc);
   VideoPortWritePortUchar((PUCHAR)STATUS, 0);
@@ -98,7 +97,6 @@ void InitVGAMode()
 
 VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
 {
-  char *vidmem;
   HANDLE Event;
   OBJECT_ATTRIBUTES Attr;
   UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\TextConsoleRefreshEvent");

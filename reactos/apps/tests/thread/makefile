@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2002/06/02 19:25:01 chorns Exp $
+# $Id: makefile,v 1.8 2003/11/14 17:13:21 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,8 @@ TARGET_NAME = thread
 TARGET_SDKLIBS = kernel32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

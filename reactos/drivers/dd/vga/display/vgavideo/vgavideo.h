@@ -69,3 +69,7 @@ void get_masks(int x, int w);
 
 #define mod8(n) ((n)&7)
 #define mod2(n) ((n)&1)
+void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta);
+void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int StartMod);
+void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelta, PXLATEOBJ Xlate);
+void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, ULONG trans);

@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include <winsock2.h>
 #include <iptypes.h>
@@ -328,10 +329,11 @@ GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
                 errCode = RegQueryValueExW(hKey, L"Bind", NULL, NULL, (LPBYTE)pData, &dwSize);
                 if (errCode == ERROR_SUCCESS) {
                     wchar_t* pStr = pData;
-                    for (i = 0; i < pIfTable->NumAdapters, *pStr != L'\0'; pStr += wcslen(pStr) + 1) {
+                    for (i = 0; i < pIfTable->NumAdapters && *pStr != L'\0'; pStr += wcslen(pStr) + 1) {
                         if (wcsstr(pStr, L"\\Device\\NdisWanIp") == 0) {
                             wcsncpy(pIfTable->Adapter[i].Name, pStr, MAX_ADAPTER_NAME);
-                            pIfTable->Adapter[i].Index = i++;
+                            pIfTable->Adapter[i].Index = i;
+							i++;
                         }
                     }
 

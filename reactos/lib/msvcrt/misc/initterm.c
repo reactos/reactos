@@ -27,6 +27,7 @@ typedef int (* _onexit_t)(void);
  */
 _onexit_t __dllonexit(_onexit_t func, void (** fStart[])(void),	void (** fEnd[])(void))
 {
+	return 0;
 }
 
 /*

@@ -15,6 +15,9 @@ TARGET_OBJECTS = \
 	combotst.o \
 	utils.o
 
+TARGET_CFLAGS = -Wall -Werror
+
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk

@@ -10,7 +10,7 @@ CLT_OBJECTS = npclient.o
 
 PROGS = npserver.exe npclient.exe
 
-BASE_CFLAGS = -I$(PATH_TO_TOP)/include
+BASE_CFLAGS = -I$(PATH_TO_TOP)/include -Wall -Werror
 
 LIBS = $(SDK_PATH_LIB)/kernel32.a
 

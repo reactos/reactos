@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.16 2003/11/10 19:42:57 weiden Exp $
+/* $Id: pointer.c,v 1.17 2003/11/14 17:13:25 weiden Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -218,7 +218,7 @@ DrvSetPointerShape(PSURFOBJ pso,
   PPDEV ppdev = (PPDEV)pso->dhpdev;
   ULONG NewWidth, NewHeight;
   PUCHAR Src, Dest;
-  ULONG i, j;
+  ULONG i;
   
   if(!psoMask)
   {
@@ -292,7 +292,6 @@ DrvSetPointerShape(PSURFOBJ pso,
 VOID
 VGADDI_HideCursor(PPDEV ppdev)
 {
-  ULONG i, j, cx, cy, bitpos;
   ULONG SizeX, SizeY;
 
   /* Display what was behind cursor */
@@ -311,7 +310,7 @@ VGADDI_HideCursor(PPDEV ppdev)
 VOID
 VGADDI_ShowCursor(PPDEV ppdev)
 {
-  ULONG i, j, cx, cy;
+  ULONG cx, cy;
   PUCHAR AndMask, XorMask;
   ULONG SizeX, SizeY;
 

@@ -1,7 +1,7 @@
-/* $Id: count.c,v 1.1 2001/03/26 21:30:20 ea Exp $
+/* $Id: count.c,v 1.2 2003/11/14 17:13:16 weiden Exp $
  *
  */
-#include <stdlib.h>
+#include <stdio.h>
 
 int n = 0;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.24 2003/10/06 19:22:42 chorns Exp $
+/* $Id: partlist.c,v 1.25 2003/11/14 17:13:34 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -36,7 +36,7 @@
 #include "console.h"
 #include "partlist.h"
 #include "drivesup.h"
-
+#include "bootsup.h"
 
 /* FUNCTIONS ****************************************************************/
 
@@ -567,7 +567,6 @@ CreatePartitionList (SHORT Left,
   PPARTLIST List;
   OBJECT_ATTRIBUTES ObjectAttributes;
   SYSTEM_DEVICE_INFORMATION Sdi;
-  DISK_GEOMETRY DiskGeometry;
   IO_STATUS_BLOCK Iosb;
   ULONG ReturnSize;
   NTSTATUS Status;
@@ -840,7 +839,7 @@ PrintPartitionData (PPARTLIST List,
       if (PartType == NULL)
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  Type %-3lu                         %6I64u %s",
+		   "%c%c  Type %-3u                         %6I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartEntry->PartInfo[0].PartitionType,
@@ -897,7 +896,6 @@ PrintDiskData (PPARTLIST List,
   USHORT Height;
   ULONGLONG DiskSize;
   PCHAR Unit;
-  SHORT PartIndex;
 
   Width = List->Right - List->Left - 1;
   Height = List->Bottom - List->Top - 1;
@@ -991,11 +989,9 @@ DrawPartitionList (PPARTLIST List)
 {
   PLIST_ENTRY Entry;
   PDISKENTRY DiskEntry;
-  CHAR LineBuffer[128];
   COORD coPos;
   ULONG Written;
   SHORT i;
-  SHORT DiskIndex;
 
   /* draw upper left corner */
   coPos.X = List->Left;
@@ -1191,7 +1187,6 @@ ScrollUpPartitionList (PPARTLIST List)
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry1;
   PLIST_ENTRY Entry2;
-  ULONG i;
 
   /* Check for empty disks */
   if (IsListEmpty (&List->DiskListHead))

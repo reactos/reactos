@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2002/06/16 04:47:56 sedwards Exp $
+# $Id: makefile,v 1.9 2003/11/14 17:13:27 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,6 +8,8 @@ TARGET_NAME = sermouse
 
 TARGET_OBJECTS = \
   sermouse.o
+
+TARGET_CFLAGS = -Wall -Werror
 
 #mouse.o - Old Serial mouse driver
 

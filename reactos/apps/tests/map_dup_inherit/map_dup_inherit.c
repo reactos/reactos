@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* This tests the ability of the target win32 to create an anonymous file
  * mapping, create a mapping view with MapViewOfFile, and then realize the
@@ -11,10 +13,10 @@ int main( int argc, char **argv ) {
   void *file_map;
   int *x;
 
-  fprintf( stderr, "%d: Starting\n", GetCurrentProcessId() );
+  fprintf( stderr, "%lu: Starting\n", GetCurrentProcessId() );
 
   if( argc == 2 ) {
-    file_map = atoi(argv[1]);
+    file_map = (void *)atoi(argv[1]);
   } else {
     file_map = CreateFileMapping( INVALID_HANDLE_VALUE, 
 				  NULL, 
@@ -23,14 +25,14 @@ int main( int argc, char **argv ) {
     if( !SetHandleInformation( file_map, 
 			       HANDLE_FLAG_INHERIT, 
 			       HANDLE_FLAG_INHERIT ) ) {
-      fprintf( stderr, "%d: Could not make handle inheritable.\n",
+      fprintf( stderr, "%lu: Could not make handle inheritable.\n",
 	       GetCurrentProcessId() );
       return 100;
     }
   }
    
   if( !file_map ) {
-    fprintf( stderr, "%d: Could not create anonymous file map.\n",
+    fprintf( stderr, "%lu: Could not create anonymous file map.\n",
 	     GetCurrentProcessId() );
     return 1;
   }
@@ -42,13 +44,13 @@ int main( int argc, char **argv ) {
 			     0x1000 );
   
   if( !file_view ) {
-    fprintf( stderr, "%d: Could not map view of file.\n",
+    fprintf( stderr, "%lu: Could not map view of file.\n",
 	     GetCurrentProcessId() );
     return 2;
   }
   
   if( !VirtualAlloc( file_view, 0x1000, MEM_COMMIT, PAGE_READWRITE ) ) {
-    fprintf( stderr, "%d: VirtualAlloc failed to realize the page.\n",
+    fprintf( stderr, "%lu: VirtualAlloc failed to realize the page.\n",
 	     GetCurrentProcessId() );
     return 3;
   }
@@ -57,8 +59,8 @@ int main( int argc, char **argv ) {
   x[0] = 0x12345678;
   
   if( x[0] != 0x12345678 ) {
-    fprintf( stderr, "%d: Can't write to the memory (%08x != 0x12345678)\n",
-	     GetCurrentProcessId() );
+    fprintf( stderr, "%lu: Can't write to the memory (%08x != 0x12345678)\n",
+	     GetCurrentProcessId(), x[0] );
     return 4;
   }
 
@@ -73,13 +75,13 @@ int main( int argc, char **argv ) {
     sprintf(cmdline,"%s %d", argv[0], (int)file_map);
     if( !CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
 		       &si, &pi ) ) {
-      fprintf( stderr, "%d: Could not create child process.\n",
+      fprintf( stderr, "%lu: Could not create child process.\n",
 	       GetCurrentProcessId() );
       return 5;
     }
 
     if( WaitForSingleObject( pi.hThread, INFINITE ) != WAIT_OBJECT_0 ) {
-      fprintf( stderr, "%d: Failed to wait for child process to terminate.\n",
+      fprintf( stderr, "%lu: Failed to wait for child process to terminate.\n",
 	       GetCurrentProcessId() );
       return 6;
     }

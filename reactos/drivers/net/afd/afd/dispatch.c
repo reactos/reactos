@@ -95,7 +95,6 @@ NTSTATUS AfdDispBind(
   PFILE_REQUEST_BIND Request;
   PFILE_REPLY_BIND Reply;
   PAFDFCB FCB;
-  INT Errno;
 
   InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -371,7 +370,6 @@ NTSTATUS AfdDispRecvFrom(
   UINT OutputBufferLength;
   PFILE_REQUEST_RECVFROM Request;
   PFILE_REPLY_RECVFROM Reply;
-  DWORD NumberOfBytesRecvd;
   PAFDFCB FCB;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
