@@ -94,7 +94,7 @@ KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS) \
+     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) \
      $(WINE_MODULES)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
