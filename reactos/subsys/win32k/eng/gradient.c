@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.1 2004/02/08 21:37:52 weiden Exp $
+/* $Id: gradient.c,v 1.2 2004/02/09 15:33:30 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -46,8 +46,33 @@
 
 /* MACROS *********************************************************************/
 
+const LONG LINC[2] = {-1, 1};
+
 #define VERTEX(n) (pVertex + gt->n)
 #define COMPAREVERTEX(a, b) ((a)->x == (b)->x && (a)->y == (b)->y)
+
+#define VCMPCLR(a,b,c,color) (a->color != b->color || a->color != c->color)
+#define VCMPCLRS(a,b,c) \
+  !(!VCMPCLR(a,b,c,Red) || !VCMPCLR(a,b,c,Green) || !VCMPCLR(a,b,c,Blue))
+
+#define MOVERECT(r,x,y) \
+  r.left += x; r.right += x; \
+  r.top += y; r.bottom += y
+  
+  
+/* Horizontal/Vertical gradients */
+#define HVINITCOL(Col, id) \
+  c[id] = v1->Col >> 8; \
+  dc[id] = abs((v2->Col >> 8) - c[id]); \
+  ec[id] = -(dy >> 1); \
+  ic[id] = LINC[(v2->Col >> 8) > c[id]]
+#define HVSTEPCOL(id) \
+  ec[id] += dc[id]; \
+  while(ec[id] > 0) \
+  { \
+    c[id] += ic[id]; \
+    ec[id] -= dy; \
+  }
 
 /* FUNCTIONS ******************************************************************/
 
@@ -61,31 +86,161 @@ IntEngGradientFillRect(
     IN PGRADIENT_RECT gRect,
     IN RECTL  *prclExtents,
     IN POINTL  *pptlDitherOrg,
-    IN BOOL Vertical)
+    IN BOOL Horizontal)
 {
-  /*
+  TRIVERTEX *v1, *v2;
+  RECT rcGradient, rcSG;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   ULONG i;
+  POINTL Translate;
+  INTENG_ENTER_LEAVE EnterLeave;
+  LONG y, dy, c[3], dc[3], ec[3], ic[3];
   
+  v1 = (pVertex + gRect->UpperLeft);
+  v2 = (pVertex + gRect->LowerRight);
+  
+  rcGradient.left = min(v1->x, v2->x);
+  rcGradient.right = max(v1->x, v2->x);
+  rcGradient.top = min(v1->y, v2->y);
+  rcGradient.bottom = max(v1->y, v2->y);
+  rcSG = rcGradient;
+  MOVERECT(rcSG, pptlDitherOrg->x, pptlDitherOrg->y);
+  
+  if(Horizontal)
+  {
+    dy = abs(rcGradient.right - rcGradient.left);
+  }
+  else
+  {
+    dy = abs(rcGradient.bottom - rcGradient.top);
+  }
+  
+  if((v1->Red != v2->Red || v1->Green != v2->Green || v1->Blue != v2->Blue) && dy > 1)
+  {
+    CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
+    do
+    {
+      RECT FillRect;
+      SURFOBJ *OutputObj;
+      SURFGDI *OutputGDI;
+      ULONG Color;
+      
+      if(Horizontal)
+      {
+        EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+        for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
+        {
+          if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+          {
+            HVINITCOL(Red, 0);
+            HVINITCOL(Green, 1);
+            HVINITCOL(Blue, 2);
+            if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
+            {
+              return FALSE;
+            }
+            OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
+            
+            for(y = rcSG.left; y < FillRect.right; y++)
+            {
+              if(y >= FillRect.left)
+              {
+                Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
+                OutputGDI->DIB_VLine(OutputObj, y, FillRect.top, FillRect.bottom, Color);
+              }
+              HVSTEPCOL(0);
+              HVSTEPCOL(1);
+              HVSTEPCOL(2);
+            }
+            
+            if(!IntEngLeave(&EnterLeave))
+            {
+              return FALSE;
+            }
+          }
+        }
+        
+        continue;
+      }
+      
+      /* vertical */
+      EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+      for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
+      {
+        if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+        {
+          HVINITCOL(Red, 0);
+          HVINITCOL(Green, 1);
+          HVINITCOL(Blue, 2);
+          if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
+          {
+            return FALSE;
+          }
+          OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
+          
+          for(y = rcSG.top; y < FillRect.bottom; y++)
+          {
+            if(y >= FillRect.top)
+            {
+              Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
+              OutputGDI->DIB_HLine(OutputObj, FillRect.left, FillRect.right, y, Color);
+            }
+            HVSTEPCOL(0);
+            HVSTEPCOL(1);
+            HVSTEPCOL(2);
+          }
+          
+          if(!IntEngLeave(&EnterLeave))
+          {
+            return FALSE;
+          }
+        }
+      }
+      
+    } while(EnumMore);
+    
+    return TRUE;
+  }
+  
+  /* rectangle has only one color, no calculation required */
   CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   do
   {
-    EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-    for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= y1; i++)
-    {
+    RECT FillRect;
+    SURFOBJ *OutputObj;
+    SURFGDI *OutputGDI;
+    ULONG Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red, v1->Green, v1->Blue));
     
+    EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+    for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
+    {
+      if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+      {
+        
+        if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
+        {
+          return FALSE;
+        }
+        OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
+        
+        for(; FillRect.top < FillRect.bottom; FillRect.top++)
+        {
+          OutputGDI->DIB_HLine(OutputObj, FillRect.left, FillRect.right, FillRect.top, Color);
+        }
+        
+        if(!IntEngLeave(&EnterLeave))
+        {
+          return FALSE;
+        }
+      }
     }
   } while(EnumMore);
-  */
-  return FALSE;
+  
+  return TRUE;
 }
 
 #define NLINES 3
-#define VCMPCLR(a,b,c,color) (a->color != b->color || a->color != c->color)
-#define VCMPCLRS(a,b,c) \
-  !(!VCMPCLR(a,b,c,Red) || !VCMPCLR(a,b,c,Green) || !VCMPCLR(a,b,c,Blue))
-
 BOOL FASTCALL
 IntEngGradientFillTriangle(
     IN SURFOBJ  *psoDest,
@@ -100,6 +255,7 @@ IntEngGradientFillTriangle(
   PTRIVERTEX v1, v2, v3;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
+  ULONG i;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
   
@@ -136,7 +292,6 @@ IntEngGradientFillTriangle(
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
     do
     {
-      LONG i;
       RECT FillRect;
       SURFOBJ *OutputObj;
       SURFGDI *OutputGDI;
@@ -208,7 +363,7 @@ EngGradientFill(
       for(i = 0; i < nMesh; i++, gr++)
       {
         if(!IntEngGradientFillRect(psoDest, pco, pxlo, pVertex, nVertex, gr, prclExtents,
-                                   pptlDitherOrg, (ulMode == GRADIENT_FILL_RECT_V)))
+                                   pptlDitherOrg, (ulMode == GRADIENT_FILL_RECT_H)))
         {
           return FALSE;
         }
