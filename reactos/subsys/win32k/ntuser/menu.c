@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.12 2003/08/06 18:43:58 weiden Exp $
+/* $Id: menu.c,v 1.13 2003/08/07 10:25:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,13 +162,45 @@ BOOL FASTCALL
 W32kFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse)
 {
-  if(MenuItem)
+  FreeMenuText(MenuItem->MenuItem);
+  if(RemoveFromList)
   {
-    FreeMenuText(MenuItem->MenuItem);
-    if(RemoveFromList)
+    /* FIXME - Remove from List */
+    MenuObject->MenuItemCount--;
+  }
+  if(bRecurse && MenuItem->MenuItem.hSubMenu)
+  {
+    PMENU_OBJECT SubMenuObject;
+    SubMenuObject = W32kGetWindowObject(MenuItem->MenuItem.hSubMenu);
+    if(SubMenuObject)
     {
-      /* FIXME - Remove from List */
-      MenuObject->MenuItemCount--;
+      W32kDestroyMenuObject(SubMenuObject, bRecurse);
+    }
+  }
+  
+  /* Free memory */
+  ExFreePool(MenuItem);
+  
+  return TRUE;
+}
+
+BOOL FASTCALL
+W32kRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags, 
+                   BOOL bRecurse)
+{
+  PMENU_ITEM PrevMenuItem, MenuItem;
+  if(W32kGetMenuItemByFlag(MenuObject, uPosition, uFlags, &MenuItem, 
+                           &PrevMenuItem) > -1)
+  {
+    if(MenuItem)
+    {
+      if(PrevMenuItem)
+        PrevMenuItem->Next = MenuItem->Next;
+      else
+      {
+        MenuObject->MenuItemList = MenuItem->Next;
+      }
+      return W32kFreeMenuItem(MenuObject, MenuItem, TRUE, bRecurse);
     }
   }
   return FALSE;
@@ -193,13 +225,13 @@ W32kDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse)
 }
 
 BOOL FASTCALL
-W32kDestroyMenuObject(PMENU_OBJECT MenuObject)
+W32kDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse)
 {
   if(MenuObject)
   {  
     /* remove all menu items */
     ExAcquireFastMutexUnsafe (&MenuObject->MenuItemsLock);
-    W32kDeleteMenuItems(MenuObject, FALSE); /* do not destroy submenus */
+    W32kDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
     ExReleaseFastMutexUnsafe (&MenuObject->MenuItemsLock);
     
     W32kReleaseMenuObject(MenuObject);
@@ -309,13 +341,14 @@ W32kSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
 
 
 int FASTCALL
-W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU_ITEM *MenuItem)
+W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
+                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem)
 {
+  PMENU_ITEM PrevItem = NULL;
   PMENU_ITEM CurItem = MenuObject->MenuItemList;
   int p;
   if(MF_BYPOSITION & fFlag)
   {
-    PMENU_ITEM PrevItem = NULL;
     p = uSearchBy;
     while(CurItem && (p > 0))
     {
@@ -323,15 +356,16 @@ W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU
       CurItem = CurItem->Next;
       p--;
     }
-    if(MenuItem)
+    if(CurItem)
     {
-      if(CurItem)
-        *MenuItem = CurItem;
-      else
-      {
-        *MenuItem = NULL;
-        return -1;
-      }
+      if(MenuItem) *MenuItem = CurItem;
+      if(PrevMenuItem) *PrevMenuItem = PrevItem;
+    }
+    else
+    {
+      if(MenuItem) *MenuItem = NULL;
+      if(PrevMenuItem) *PrevMenuItem = NULL; /* ? */
+      return -1;
     }
 
     return uSearchBy - p;
@@ -344,8 +378,10 @@ W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU
       if(CurItem->MenuItem.wID == uSearchBy)
       {
         if(MenuItem) *MenuItem = CurItem;
+        if(PrevMenuItem) *PrevMenuItem = PrevItem;
         return p;
       }
+      PrevItem = CurItem;
       CurItem = CurItem->Next;
       p++;
     }
@@ -510,7 +546,7 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   }
   else
   {
-    pos = W32kGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, NULL);
+    pos = W32kGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, NULL, NULL);
   }
   if(pos < -1) pos = -1;
   
@@ -527,7 +563,7 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   
   if(!W32kSetMenuItemInfo(MenuObject, MenuItem, lpmii))
   {
-    ExFreePool(MenuObject);
+    ExFreePool(MenuItem);
     return FALSE;
   }
   
@@ -540,7 +576,7 @@ UINT FASTCALL
 W32kEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable)
 {
   PMENU_ITEM MenuItem;
-  UINT res = W32kGetMenuItemByFlag(MenuObject, uIDEnableItem, uEnable, &MenuItem);
+  UINT res = W32kGetMenuItemByFlag(MenuObject, uIDEnableItem, uEnable, &MenuItem, NULL);
   if(!MenuItem || (res == (UINT)-1))
   {
     return (UINT)-1;
@@ -602,7 +638,7 @@ W32kCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
   PMENU_ITEM MenuItem;
   int res = -1;
 
-  if((W32kGetMenuItemByFlag(MenuObject, uIDCheckItem, uCheck, &MenuItem) < 0) || !MenuItem)
+  if((W32kGetMenuItemByFlag(MenuObject, uIDCheckItem, uCheck, &MenuItem, NULL) < 0) || !MenuItem)
   {
     return -1;
   }
@@ -627,7 +663,7 @@ W32kHiliteMenuItem(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject,
   UINT uItemHilite, UINT uHilite)
 {
   PMENU_ITEM MenuItem;
-  BOOL res = W32kGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, &MenuItem);
+  BOOL res = W32kGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, &MenuItem, NULL);
   if(!MenuItem || !res)
   {
     return FALSE;
@@ -790,7 +826,7 @@ NtUserCreateMenu(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 NtUserDeleteMenu(
@@ -798,10 +834,18 @@ NtUserDeleteMenu(
   UINT uPosition,
   UINT uFlags)
 {
+  BOOL res;
+  PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return FALSE;
+  }
 
-  UNIMPLEMENTED
-
-  return 0;
+  res = W32kRemoveMenuItem(MenuObject, uPosition, uFlags, TRUE);
+  W32kReleaseMenuObject(MenuObject);
+  
+  return res;
 }
 
 
@@ -821,7 +865,7 @@ NtUserDestroyMenu(
     return FALSE;
   }
 
-  return W32kDestroyMenuObject(MenuObject);
+  return W32kDestroyMenuObject(MenuObject, FALSE);
 }
 
 
@@ -908,10 +952,10 @@ NtUserGetMenuBarInfo(
 /*
  * @unimplemented
  */
-DWORD STDCALL
+UINT STDCALL
 NtUserGetMenuIndex(
-  DWORD Unknown0,
-  DWORD Unknown1)
+  HMENU hMenu,
+  UINT wID)
 {
   UNIMPLEMENTED
 
@@ -1046,7 +1090,7 @@ NtUserMenuItemInfo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 NtUserRemoveMenu(
@@ -1054,9 +1098,18 @@ NtUserRemoveMenu(
   UINT uPosition,
   UINT uFlags)
 {
-  UNIMPLEMENTED
+  BOOL res;
+  PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return FALSE;
+  }
 
-  return 0;
+  res = W32kRemoveMenuItem(MenuObject, uPosition, uFlags, FALSE);
+  W32kReleaseMenuObject(MenuObject);
+  
+  return res;
 }
 
 

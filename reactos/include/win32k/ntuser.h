@@ -757,11 +757,11 @@ NtUserGetMenuBarInfo(
   LONG idItem,
   PMENUBARINFO pmbi);
 
-DWORD
+UINT
 STDCALL
 NtUserGetMenuIndex(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HMENU hMenu,
+  UINT wID);
 
 BOOL
 STDCALL

@@ -44,11 +44,15 @@ BOOL FASTCALL
 W32kFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse);
     
+BOOL FASTCALL
+W32kRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags, 
+                   BOOL bRecurse);
+    
 UINT FASTCALL
 W32kDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 BOOL FASTCALL
-W32kDestroyMenuObject(PMENU_OBJECT MenuObject);
+W32kDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 PMENU_OBJECT FASTCALL
 W32kCreateMenu(PHANDLE Handle);
@@ -66,7 +70,8 @@ BOOL FASTCALL
 W32kSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
 
 int FASTCALL
-W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU_ITEM *MenuItem);
+W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
+                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
 
 BOOL FASTCALL
 W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
@@ -160,11 +165,11 @@ NtUserGetMenuBarInfo(
   LONG idItem,
   PMENUBARINFO pmbi);
   
-DWORD
+UINT
 STDCALL
 NtUserGetMenuIndex(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HMENU hMenu,
+  UINT wID);
   
 BOOL
 STDCALL
