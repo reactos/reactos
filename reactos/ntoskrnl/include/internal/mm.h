@@ -108,6 +108,8 @@ typedef struct _MADDRESS_SPACE
    ULONG WorkingSetLruFirst;
    ULONG WorkingSetLruLast;
    ULONG WorkingSetPagesAllocated;
+   PUSHORT PageTableRefCountTable;
+   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 /* FUNCTIONS */
@@ -164,9 +166,9 @@ NTSTATUS MmCopyMmInfo(struct _EPROCESS* Src,
 		      struct _EPROCESS* Dest);
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
-VOID MmDeletePageEntry(struct _EPROCESS* Process, 
-		       PVOID Address, 
-		       BOOL FreePage);
+VOID MmDeleteVirtualMapping(struct _EPROCESS* Process, 
+			    PVOID Address, 
+			    BOOL FreePage);
 
 VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);

@@ -64,6 +64,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 {
    ULONG i;
    ULONG Reserved;
+   NTSTATUS Status;
    
    DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
 	  "LastPhysKernelAddress %x, "
@@ -100,10 +101,17 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	if (!MmIsPagePresent(NULL, 
 			     (PVOID)((ULONG)MmPageArray + (i * PAGESIZE))))
 	  {
-	     MmSetPage(NULL,
-		       (PVOID)((ULONG)MmPageArray + (i * PAGESIZE)),
-		       PAGE_READWRITE,
-		       (ULONG)(LastPhysKernelAddress - (i * PAGESIZE)));
+	     Status = MmCreateVirtualMapping(NULL,
+					     (PVOID)((ULONG)MmPageArray + 
+						     (i * PAGESIZE)),
+					     PAGE_READWRITE,
+					     (ULONG)(LastPhysKernelAddress 
+						     - (i * PAGESIZE)));
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("Unable to create virtual mapping\n");
+		  KeBugCheck(0);
+	       }
 	  }
      }
    

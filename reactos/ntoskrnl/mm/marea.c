@@ -312,10 +312,9 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	  {
 //	     DPRINT("Freeing %x in kernel address space\n");
 	  }
-	MmSetPage(AddressSpace->Process,
-		  MemoryArea->BaseAddress + (i*PAGESIZE),
-		  0,
-		  0);
+	MmDeleteVirtualMapping(AddressSpace->Process,
+			       MemoryArea->BaseAddress + (i*PAGESIZE),
+			       FALSE);
      }
    
    RemoveEntryList(&(MemoryArea->Entry));

@@ -44,7 +44,7 @@ NET_DRIVERS = ndis tcpip tditest
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data
+       pteb consume dump_shared_data vmtest
 
 #       objdir
 

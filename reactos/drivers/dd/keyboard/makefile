@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/08/18 22:27:05 dwelch Exp $
+# $Id: makefile,v 1.12 2000/08/20 17:02:10 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -20,6 +20,7 @@ clean:
 	- $(RM) base.tmp
 	- $(RM) temp.exp
 	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGET).sys.unstripped
 
 .phony: clean
 

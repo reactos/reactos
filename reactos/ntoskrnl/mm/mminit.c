@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.5 2000/08/12 19:33:22 dwelch Exp $
+/* $Id: mminit.c,v 1.6 2000/08/20 17:02:08 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -85,6 +85,7 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
    PVOID BaseAddress;
    ULONG Length;
    ULONG ParamLength = kernel_len;
+   NTSTATUS Status;
    
    DPRINT("MmInitVirtualMemory(%x)\n",bp);
    
@@ -155,10 +156,15 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 		      0,
 		      &kernel_shared_data_desc);
    MmSharedDataPagePhysicalAddress = MmAllocPage(0);
-   MmSetPage(NULL,
-	     (PVOID)KERNEL_SHARED_DATA_BASE,
-	     PAGE_READWRITE,
-	     (ULONG)MmSharedDataPagePhysicalAddress);
+   Status = MmCreateVirtualMapping(NULL,
+				   (PVOID)KERNEL_SHARED_DATA_BASE,
+				   PAGE_READWRITE,
+				   (ULONG)MmSharedDataPagePhysicalAddress);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Unable to create virtual mapping\n");
+	KeBugCheck(0);
+     }
    ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
    DPRINT1("Finished creating shared data page\n");
    
@@ -250,7 +256,7 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 	i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
 	i=i+PAGESIZE)
      {
-	MmSetPage(NULL, (PVOID)(i), PAGE_NOACCESS, 0);
+	MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE);
      }
    DPRINT("Almost done MmInit()\n");
    

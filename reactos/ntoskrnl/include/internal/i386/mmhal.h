@@ -7,11 +7,6 @@
 
 struct _EPROCESS;
 
-#define PAGESIZE (4096)
-
-PULONG MmGetPageEntry(PVOID Address);
-
-
 /*
  * Page access attributes (or these together)
  */
@@ -26,6 +21,10 @@ PULONG MmGetPageEntry(PVOID Address);
  */
 #define PA_USER            (1<<2)
 #define PA_SYSTEM          (0)
+
+#define PAGESIZE (4096)
+
+PULONG MmGetPageEntry(PVOID Address);
 
 #define KERNEL_BASE        (0xc0000000)
 
@@ -49,10 +48,10 @@ extern inline PULONG get_page_directory(void)
 #define VADDR_TO_PT_OFFSET(x)  (((x/1024)%4096))
 #define VADDR_TO_PD_OFFSET(x)  ((x)/(4*1024*1024))
 
-VOID MmSetPage(struct _EPROCESS* Process,
-	       PVOID Address, 
-	       ULONG flProtect,
-	       ULONG PhysicalAddress);
+NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
+				PVOID Address, 
+				ULONG flProtect,
+				ULONG PhysicalAddress);
 
 
 VOID MmSetPageProtect(struct _EPROCESS* Process,

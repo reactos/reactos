@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.33 2000/08/18 22:27:03 dwelch Exp $
+/* $Id: virtual.c,v 1.34 2000/08/20 17:02:09 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -189,10 +189,7 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	
 	MmRemovePageFromWorkingSet(AddressSpace->Process,
 				   Address);
-	MmSetPage(PsGetCurrentProcess(),
-		  Address,
-		  0,
-		  0);
+	MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE);
 	MmDereferencePage((PVOID)PhysicalAddress.u.LowPart);
 	*Ul = TRUE;
 	return(1);
@@ -219,6 +216,9 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    PMM_SEGMENT Segment;
    PVOID CurrentAddress;
    
+   /*
+    * Get the segment corresponding to the virtual address
+    */
    Segment = MmGetSegmentForAddress(MemoryArea, Address, &CurrentAddress);
    if (Segment == NULL)
      {
@@ -234,6 +234,9 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	return(STATUS_SUCCESS);
      }
    
+   /*
+    * Try to allocate a page
+    */
    Page = MmAllocPage(0);
    while (Page == NULL)
      {
@@ -246,8 +249,21 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	  }
 	Page = MmAllocPage(0);
      }
-   Status = MmCreatePageTable(Address);
-   while (!NT_SUCCESS(Status))
+   
+   /*
+    * Add the page to the process's working set
+    */
+   MmAddPageToWorkingSet(PsGetCurrentProcess(), Address);
+   
+   /*
+    * Set the page. If we fail because we are out of memory then
+    * try again
+    */
+   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
+				   Address,
+				   MemoryArea->Attributes,
+				   (ULONG)Page);
+   while (Status == STATUS_NO_MEMORY)
      {
 	MmUnlockAddressSpace(AddressSpace);
 	MmWaitForFreePages();
@@ -257,13 +273,15 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	     MmDereferencePage(Page);
 	     return(STATUS_SUCCESS);
 	  }
-	Status = MmCreatePageTable(Address);     
+	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+					Address,
+					MemoryArea->Attributes,
+					(ULONG)Page);
      }
-   MmAddPageToWorkingSet(PsGetCurrentProcess(), Address);
-   MmSetPage(PsGetCurrentProcess(),
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
    
    return(STATUS_SUCCESS);
 }
@@ -275,6 +293,9 @@ VOID MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 			ULONG OldProtect,
 			ULONG NewType,
 			ULONG NewProtect)
+/*
+ * FUNCTION: Modify the attributes of a memory region
+ */
 {      
    if (NewType == MEM_RESERVE &&
        OldType == MEM_COMMIT)
@@ -314,6 +335,9 @@ VOID MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 
 VOID InsertAfterEntry(PLIST_ENTRY Previous,
 		      PLIST_ENTRY Entry)
+/*
+ * FUNCTION: Insert a list entry after another entry in the list
+ */
 {
    Previous->Flink->Blink = Entry;
    
@@ -323,78 +347,127 @@ VOID InsertAfterEntry(PLIST_ENTRY Previous,
    Previous->Flink = Entry;
 }
 
+VOID MmDumpSegmentsMemoryArea(PMEMORY_AREA MemoryArea)
+{
+   PVOID CurrentAddress;
+   PLIST_ENTRY CurrentEntry;
+   PMM_SEGMENT CurrentSegment;
+   PLIST_ENTRY ListHead;
+   
+   CurrentEntry = MemoryArea->Data.VirtualMemoryData.SegmentListHead.Flink;
+   ListHead = &MemoryArea->Data.VirtualMemoryData.SegmentListHead;
+   
+   CurrentAddress = MemoryArea->BaseAddress;
+   while (CurrentEntry != ListHead)
+     {
+	CurrentSegment = CONTAINING_RECORD(CurrentEntry,
+					   MM_SEGMENT,
+					   SegmentListEntry);
+	
+	DbgPrint("0x%x 0x%x %d %d\n", 
+		 CurrentAddress,
+		 CurrentSegment->Length,
+		 CurrentSegment->Type,
+		 CurrentSegment->Protect);
+	
+	CurrentAddress = CurrentAddress + CurrentSegment->Length;
+	CurrentEntry = CurrentEntry->Flink;
+     }
+}
+
 NTSTATUS MmSplitSegment(PMADDRESS_SPACE AddressSpace,
 			PMEMORY_AREA MemoryArea,
-			PVOID BaseAddress,
-			ULONG RegionSize,
+			PVOID RegionAddress,
+			ULONG RegionLength,
 			ULONG Type,
 			ULONG Protect,
-			PMM_SEGMENT CurrentSegment,
-			PVOID CurrentAddress)
+			PMM_SEGMENT FirstSegment,
+			PVOID FirstAddress)
 /*
  * FUNCTION: Split a memory segment internally 
  */
 {
-   PMM_SEGMENT NewSegment;
    PMM_SEGMENT NewTopSegment;
-   PMM_SEGMENT PreviousSegment;
+   PMM_SEGMENT RegionSegment;
    ULONG OldType;
    ULONG OldProtect;
+   ULONG OldLength;
    
-   OldType = CurrentSegment->Type;
-   OldProtect = CurrentSegment->Protect;
+   /*
+    * Save the type and protection and length of the current segment
+    */
+   OldType = FirstSegment->Type;
+   OldProtect = FirstSegment->Protect;
+   OldLength = FirstSegment->Length;
    
-   NewSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
-   if (NewSegment == NULL)
-     {
-	return(STATUS_NO_MEMORY);
-     }
+   /*
+    * Allocate the segment we might need here because if the allocation
+    * fails below it will be difficult to undo what we've done already.
+    */
    NewTopSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
    if (NewTopSegment == NULL)
      {
-	ExFreePool(NewSegment);
 	return(STATUS_NO_MEMORY);
      }
    
-   if (CurrentSegment->Type == Type &&
-       CurrentSegment->Protect == Protect)
+   /*
+    * If the segment is already of the right type and protection then
+    * there is nothing to do.
+    */
+   if (FirstSegment->Type == Type && FirstSegment->Protect == Protect)
      {
 	return(STATUS_SUCCESS);
      }
    
-   if (CurrentAddress < BaseAddress)
+   if (FirstAddress < RegionAddress)
      {
-	NewSegment->Type = Type;
-	NewSegment->Protect = Protect;
-	NewSegment->Length = RegionSize;
+	/*
+	 * If the region to be affected starts at a higher address than
+	 * the current segment then create a new segment for the
+	 * affected portion
+	 */	
+	RegionSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+	if (RegionSegment == NULL)
+	  {
+	     ExFreePool(NewTopSegment);
+	     return(STATUS_NO_MEMORY);
+	  }
 	
-	CurrentSegment->Length = BaseAddress - CurrentAddress;
+	RegionSegment->Type = Type;
+	RegionSegment->Protect = Protect;
+	RegionSegment->Length = RegionLength;
+	
+	FirstSegment->Length = RegionAddress - FirstAddress;
 
-	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
-			 &NewSegment->SegmentListEntry);
-	
-	PreviousSegment = NewSegment;
+	InsertAfterEntry(&FirstSegment->SegmentListEntry,
+			 &RegionSegment->SegmentListEntry);
      }
    else
      {
-	CurrentSegment->Type = Type;
-	CurrentSegment->Protect = Protect;
+	/*
+	 * Otherwise just set its type and protection and length
+	 */
 	
-	PreviousSegment = CurrentSegment;
+	FirstSegment->Type = Type;
+	FirstSegment->Protect = Protect;
+	FirstSegment->Length = RegionLength;
 	
-	ExFreePool(NewSegment);
-	NewSegment = NULL;
+        RegionSegment = FirstSegment;
      }
    
-   if ((CurrentAddress + CurrentSegment->Length) > (BaseAddress + RegionSize))
+   if ((FirstAddress + OldLength) > (RegionAddress + RegionLength))
      {
+	/*
+	 * If the top of the current segment extends after the affected
+	 * region then create a segment for the unaffected portion
+	 */
+	
 	NewTopSegment->Type = OldType;
 	NewTopSegment->Protect = OldProtect;
-	NewTopSegment->Length =
-	  (CurrentAddress + CurrentSegment->Length) -
-	  (BaseAddress + RegionSize);
+	NewTopSegment->Length = (FirstAddress + OldLength) -
+	  (RegionAddress + RegionLength);
 	
-	InsertAfterEntry(&PreviousSegment->SegmentListEntry,
+	InsertAfterEntry(&RegionSegment->SegmentListEntry,
 			 &NewTopSegment->SegmentListEntry);
      }
    else
@@ -403,19 +476,27 @@ NTSTATUS MmSplitSegment(PMADDRESS_SPACE AddressSpace,
 	NewTopSegment = NULL;
      }
    
-   MmModifyAttributes(AddressSpace, BaseAddress, RegionSize, 
-		      OldType, OldProtect, Type, Protect);
+   /*
+    * Actually set the type and protection of the affected region
+    */
+   MmModifyAttributes(AddressSpace, 
+		      RegionAddress, 
+		      RegionLength, 
+		      OldType, 
+		      OldProtect, 
+		      Type, 
+		      Protect);
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 			 PMEMORY_AREA MemoryArea,
-			 PVOID BaseAddress,
-			 ULONG RegionSize,
+			 PVOID RegionAddress,
+			 ULONG RegionLength,
 			 ULONG Type,
 			 ULONG Protect,
-			 PMM_SEGMENT CurrentSegment,
-			 PVOID CurrentAddress)
+			 PMM_SEGMENT FirstSegment,
+			 PVOID FirstAddress)
 /*
  * FUNCTION: Do a virtual memory operation that will effect several
  * memory segments. 
@@ -432,53 +513,46 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
  * RETURNS: Status
  */
 {
-   PMM_SEGMENT NewSegment;
-   PMM_SEGMENT NewTopSegment;
-   PMM_SEGMENT PreviousSegment;
-   PVOID LAddress;
-   ULONG RSize;
+   PMM_SEGMENT RegionSegment;
+   PVOID CurrentAddress;
+   ULONG RemainingLength;
    PLIST_ENTRY CurrentEntry;
    PLIST_ENTRY ListHead;
+   PMM_SEGMENT CurrentSegment;
    
-   /*
-    * We will need a maximum of two new segments. Allocate them now
-    * because if we fail latter we may not be able to reverse the
-    * what we've already done
-    */
-   NewSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
-   if (NewSegment == NULL)
-     {
-	return(STATUS_NO_MEMORY);
-     }
-   NewTopSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
-   if (NewTopSegment == NULL)
-     {
-	ExFreePool(NewSegment);
-	return(STATUS_NO_MEMORY);
-     }
-   
-   if (CurrentAddress < BaseAddress)
+   if (FirstAddress < RegionAddress)
      {
 	/*
 	 * If a portion of the first segment is not covered by the region then
 	 * we need to split it into two segments
 	 */
 	
-	NewSegment->Type = Type;
-	NewSegment->Protect = Protect;
-	NewSegment->Length = RegionSize;
+	RegionSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+	if (RegionSegment == NULL)
+	  {
+	     return(STATUS_NO_MEMORY);
+	  }
 	
-	CurrentSegment->Length = 
-	  BaseAddress - CurrentAddress;
+	RegionSegment->Type = Type;
+	RegionSegment->Protect = Protect;
+	RegionSegment->Length = (FirstAddress + FirstSegment->Length) -
+	  RegionAddress;
+	
+	FirstSegment->Length = RegionAddress - FirstAddress;
 
-	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
-			 &NewSegment->SegmentListEntry);
+	InsertAfterEntry(&FirstSegment->SegmentListEntry,
+			 &RegionSegment->SegmentListEntry);
 	
-	PreviousSegment = NewSegment;
+	MmModifyAttributes(AddressSpace, 
+			   RegionAddress, 
+			   RegionSegment->Length,
+			   FirstSegment->Type, 
+			   FirstSegment->Protect, 
+			   Type, 
+			   Protect);
 	
-	MmModifyAttributes(AddressSpace, BaseAddress, NewSegment->Length,
-			   CurrentSegment->Type, 
-			   CurrentSegment->Protect, Type, Protect);
+	CurrentAddress = FirstAddress + FirstSegment->Length +
+	  RegionSegment->Length;
      }
    else
      {
@@ -489,75 +563,106 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 	ULONG OldType;
 	ULONG OldProtect;		
 	
-	OldType = CurrentSegment->Type;
-	OldProtect = CurrentSegment->Protect;
+	OldType = FirstSegment->Type;
+	OldProtect = FirstSegment->Protect;
 	
-	CurrentSegment->Type = Type;
-	CurrentSegment->Protect = Protect;
+	FirstSegment->Type = Type;
+	FirstSegment->Protect = Protect;
 	
-	PreviousSegment = CurrentSegment;
+	RegionSegment = FirstSegment;
 	
-	ExFreePool(NewSegment);
-	NewSegment = NULL;
+	MmModifyAttributes(AddressSpace, 
+			   RegionAddress, 
+			   FirstSegment->Length,
+			   OldType, 
+			   OldProtect, 
+			   Type, 
+			   Protect);
 	
-	MmModifyAttributes(AddressSpace, BaseAddress, CurrentSegment->Length,
-			   OldType, OldProtect, Type, Protect);
+	CurrentAddress = FirstAddress + RegionSegment->Length;
      }
   
-   LAddress = BaseAddress + PreviousSegment->Length;
-   RSize = RegionSize - PreviousSegment->Length;
-   CurrentEntry = PreviousSegment->SegmentListEntry.Flink;
+   /*
+    * Change the attributes of all the complete segments lying inside the
+    * affected region
+    */   
+   RemainingLength = RegionLength - RegionSegment->Length;
+   CurrentEntry = RegionSegment->SegmentListEntry.Flink;
+   CurrentSegment = CONTAINING_RECORD(CurrentEntry,
+				      MM_SEGMENT,
+				      SegmentListEntry);
    ListHead = &MemoryArea->Data.VirtualMemoryData.SegmentListHead;
    
-   while (CurrentEntry != ListHead && RSize > 0)
+   while (CurrentEntry != ListHead && RemainingLength > 0)
      {
 	ULONG OldType;
 	ULONG OldProtect;
-	
-	CurrentSegment = CONTAINING_RECORD(CurrentEntry,
-					   MM_SEGMENT,
-					   SegmentListEntry);
-		
-	if (CurrentSegment->Length > RSize)
+	ULONG OldLength;
+			
+	/*
+	 * If this segment will not be completely covered by the
+	 * affected region then break
+	 */
+	if (CurrentSegment->Length > RemainingLength)
 	  {
 	     break;
 	  }
 	
 	OldType = CurrentSegment->Type;
 	OldProtect = CurrentSegment->Protect;
-	CurrentSegment->Type = Type;
-	CurrentSegment->Protect = Protect;
+	OldLength = CurrentSegment->Length;
 	
-	MmModifyAttributes(AddressSpace, LAddress, CurrentSegment->Length,
-			   OldType, OldProtect, Type, Protect);
-	
-	RSize = RSize - CurrentSegment->Length;
-	LAddress = LAddress + CurrentSegment->Length;
-	
+	/*
+	 * Extend the length of the previous segment to cover this one
+	 */
+	RegionSegment->Length = RegionSegment->Length + OldLength;
+	RemainingLength = RemainingLength - OldLength;
+	CurrentAddress = CurrentAddress + OldLength;
 	CurrentEntry = CurrentEntry->Flink;
+	
+	/*
+	 * Remove the current segment from the list
+	 */
+	RemoveEntryList(&CurrentSegment->SegmentListEntry);
+	ExFreePool(CurrentSegment);
+	
+	MmModifyAttributes(AddressSpace, 
+			   CurrentAddress, 
+			   OldLength,
+			   OldType, 
+			   OldProtect, 
+			   Type, 
+			   Protect);
+	
+	CurrentSegment = CONTAINING_RECORD(CurrentEntry,
+					   MM_SEGMENT,
+					   SegmentListEntry);
      }
    
-   if (CurrentEntry == ListHead && RSize > 0)
+   /*
+    * If we've run off the top of the memory area then bug check
+    */
+   if (CurrentEntry == ListHead && RemainingLength > 0)
      {
 	KeBugCheck(0);
      }
    
-   if (RSize > 0)
+   /*
+    * We've only affected a portion of a segment then split it in two
+    */
+   if (RemainingLength > 0)
      {
-	NewTopSegment->Type = CurrentSegment->Type;
-	NewTopSegment->Protect = CurrentSegment->Protect;
-	NewTopSegment->Length = CurrentSegment->Length - RSize;
+	CurrentSegment->Length = CurrentSegment->Length - RemainingLength;
 
-	CurrentSegment->Length = RSize;
-	CurrentSegment->Type = Type;
-	CurrentSegment->Protect = Protect;
+	RegionSegment->Length = RegionSegment->Length + RemainingLength;
 	
-	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
-			 &NewTopSegment->SegmentListEntry);
-	
-	MmModifyAttributes(AddressSpace, LAddress, RSize,
-			   NewTopSegment->Type, 
-			   NewTopSegment->Protect, Type, Protect);
+	MmModifyAttributes(AddressSpace, 
+			   CurrentAddress, 
+			   RemainingLength,
+			   CurrentSegment->Type, 
+			   CurrentSegment->Protect, 
+			   Type, 
+			   Protect);
      }
    
    return(STATUS_SUCCESS);

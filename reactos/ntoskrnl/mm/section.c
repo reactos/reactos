@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.37 2000/07/07 10:30:56 dwelch Exp $
+/* $Id: section.c,v 1.38 2000/08/20 17:02:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -148,10 +148,15 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
    MmLockAddressSpace(AddressSpace);
    MmLockSection(Section);
    
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
+   Status = MmCreateVirtualMapping(NULL,
+				   Address,
+				   MemoryArea->Attributes,
+				   (ULONG)Page);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Unable to create virtual mapping\n");
+	KeBugCheck(0);
+     }
    MmUnlockSection(Section);
    
    return(STATUS_SUCCESS);
@@ -246,10 +251,15 @@ NTSTATUS MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
     * and have a reference to a page containing valid data for the
     * section offset. Set the page and return success.
     */
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
+   Status = MmCreateVirtualMapping(NULL,
+				   Address,
+				   MemoryArea->Attributes,
+				   (ULONG)Page);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Unable to create virtual mapping\n");
+	KeBugCheck(0);
+     }
    MmUnlockSection(Section);
    
    return(STATUS_SUCCESS);
@@ -350,10 +360,15 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 		  Page = (PVOID)Entry;
 		  MmReferencePage(Page);	
 
-		  MmSetPage(NULL,
-			    Address,
-			    MemoryArea->Attributes,
-			    (ULONG)Page);
+		  Status = MmCreateVirtualMapping(NULL,
+						  Address,
+						  MemoryArea->Attributes,
+						  (ULONG)Page);
+		  if (!NT_SUCCESS(Status))
+		    {
+		       DbgPrint("Unable to create virtual mapping\n");
+		       KeBugCheck(0);
+		    }
 		  MmUnlockSection(Section);
    
 		  return(STATUS_SUCCESS);
@@ -434,10 +449,15 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 */
 	MmSetWaitPage(Page);
 	
-	MmSetPage(NULL,
-		  Address,
-		  MemoryArea->Attributes,
-		  (ULONG)Page);
+	Status = MmCreateVirtualMapping(NULL,
+					Address,
+					MemoryArea->Attributes,
+					(ULONG)Page);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("Unable to create virtual mapping\n");
+	     KeBugCheck(0);
+	  }
 	MmUnlockSection(Section);
 	
 	return(STATUS_SUCCESS);
@@ -462,10 +482,15 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
 	
-	MmSetPage(NULL,
-		  Address,
-		  MemoryArea->Attributes,
-		  (ULONG)Page);
+	Status = MmCreateVirtualMapping(NULL,
+					Address,
+					MemoryArea->Attributes,
+					(ULONG)Page);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("Unable to create virtual mapping\n");
+	     KeBugCheck(0);
+	  }
 	MmUnlockSection(Section);
 	
 	return(STATUS_SUCCESS);
@@ -1024,10 +1049,15 @@ PVOID STDCALL MmAllocateSection (IN ULONG Length)
    DPRINT("Result %p\n",Result);
    for (i = 0; (i <= (Length / PAGESIZE)); i++)
      {
-	MmSetPage (NULL,
-		   (Result + (i * PAGESIZE)),
-		   PAGE_READWRITE,
-		   (ULONG)MmAllocPage(0));
+	Status = MmCreateVirtualMapping (NULL,
+					 (Result + (i * PAGESIZE)),
+					 PAGE_READWRITE,
+					 (ULONG)MmAllocPage(0));
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("Unable to create virtual mapping\n");
+	     KeBugCheck(0);
+	  }
      }
    MmUnlockAddressSpace(AddressSpace);
    return ((PVOID)Result);

@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.5 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: iospace.c,v 1.6 2000/08/20 17:02:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,10 +76,15 @@ PVOID STDCALL MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
      }
    for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
      {
-	MmSetPage (NULL,
-		   (Result + (i * PAGESIZE)),
-		   PAGE_READWRITE,
-		   (PhysicalAddress.u.LowPart + (i * PAGESIZE)));
+	Status = MmCreateVirtualMapping (NULL,
+					 (Result + (i * PAGESIZE)),
+					 PAGE_READWRITE,
+					 (PhysicalAddress.u.LowPart + (i * PAGESIZE)));
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("Unable to create virtual mapping\n");
+	     KeBugCheck(0);
+	  }
      }
    return ((PVOID)Result);
 }

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.2 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: kmap.c,v 1.3 2000/08/20 17:02:08 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -46,7 +46,7 @@ VOID ExUnmapPage(PVOID Addr)
    DPRINT("i %x\n",i);
    
    KeAcquireSpinLock(&AllocMapLock, &oldIrql);
-   MmSetPage(NULL, (PVOID)Addr, 0, 0);
+   MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE);
    clear_bit(i%32, &alloc_map[i/32]);
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
@@ -57,6 +57,7 @@ PVOID ExAllocatePage(VOID)
    ULONG addr;
    ULONG i;
    ULONG PhysPage;
+   NTSTATUS Status;
 
    PhysPage = (ULONG)MmAllocPage(0);
    DPRINT("Allocated page %x\n",PhysPage);
@@ -73,7 +74,15 @@ PVOID ExAllocatePage(VOID)
 	     DPRINT("i %x\n",i);
 	     set_bit(i%32,&alloc_map[i/32]);
 	     addr = (ULONG)(kernel_pool_base + (i*PAGESIZE));
-	     MmSetPage(NULL, (PVOID)addr, PAGE_READWRITE, PhysPage);
+	     Status = MmCreateVirtualMapping(NULL, 
+					     (PVOID)addr, 
+					     PAGE_READWRITE, 
+					     PhysPage);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("Unable to create virtual mapping\n");
+		  KeBugCheck(0);
+	       }
 	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
 	     return((PVOID)addr);
 	  }

@@ -36,3 +36,4 @@ cp apps/pteb/pteb.exe $1/reactos/bin
 cp apps/consume/consume.exe $1/reactos/bin
 cp apps/float/float.exe $1/reactos/bin
 cp apps/dump_shared_data/dump_shared_data.exe $1/reactos/bin
+cp apps/vmtest/vmtest.exe $1/reactos/bin

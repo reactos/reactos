@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.36 2000/08/18 22:27:03 dwelch Exp $
+/* $Id: mm.c,v 1.37 2000/08/20 17:02:08 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -56,7 +56,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 	i < (Marea->BaseAddress + Marea->Length);
 	i = i+PAGESIZE)
      {
-	MmDeletePageEntry(Process, i, TRUE);
+	MmDeleteVirtualMapping(Process, i, TRUE);
      }
    ExFreePool(Marea);
    
@@ -198,11 +198,10 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	break;
 	
       case MEMORY_AREA_SHARED_DATA:
-	MmSetPage(PsGetCurrentProcess(),
-		  (PVOID)PAGE_ROUND_DOWN(Address),
-		  PAGE_READONLY,
-		  (ULONG)MmSharedDataPagePhysicalAddress);
-	Status = STATUS_SUCCESS;
+	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+					(PVOID)PAGE_ROUND_DOWN(Address),
+					PAGE_READONLY,
+					(ULONG)MmSharedDataPagePhysicalAddress);
 	break;
 	
       default:

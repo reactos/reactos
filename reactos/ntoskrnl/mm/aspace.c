@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.3 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: aspace.c,v 1.4 2000/08/20 17:02:08 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,7 +40,6 @@ VOID MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 VOID MmInitializeKernelAddressSpace(VOID)
 {
    MmInitializeAddressSpace(NULL, &KernelAddressSpace);
-   KernelAddressSpace.LowestAddress = KERNEL_BASE;
 }
 
 PMADDRESS_SPACE MmGetCurrentAddressSpace(VOID)
@@ -58,11 +57,29 @@ NTSTATUS MmInitializeAddressSpace(PEPROCESS Process,
 {
    InitializeListHead(&AddressSpace->MAreaListHead);
    KeInitializeMutex(&AddressSpace->Lock, 1);
-   AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
+   if (Process != NULL)
+     {
+	AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
+     }
+   else
+     {
+	AddressSpace->LowestAddress = KERNEL_BASE;
+     }
    AddressSpace->Process = Process;
    if (Process != NULL)
      {
 	MmInitializeWorkingSet(Process, AddressSpace);
+     }
+   if (Process != NULL)
+     {
+	AddressSpace->PageTableRefCountTable = 
+	  ExAllocatePool(NonPagedPool, 768 * sizeof(USHORT));
+	AddressSpace->PageTableRefCountTableSize = 768;
+     }
+   else
+     {
+	AddressSpace->PageTableRefCountTable = NULL;
+	AddressSpace->PageTableRefCountTableSize = 0;
      }
    return(STATUS_SUCCESS);
 }
