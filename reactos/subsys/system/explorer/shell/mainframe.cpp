@@ -277,8 +277,11 @@ MainFrame::MainFrame(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 
 	_hsidebar = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, TEXT("Sidebar"),
-					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
+
+	_himl = ImageList_LoadBitmap(g_Globals._hInstance, MAKEINTRESOURCE(IDB_IMAGES), 16, 0, RGB(0,255,0));
+	TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_CHECKED);
 
@@ -288,6 +291,8 @@ MainFrame::MainFrame(HWND hwnd)
 
 MainFrame::~MainFrame()
 {
+	ImageList_Destroy(_himl);
+
 	 // don't exit desktop when closing file manager window
 	if (!g_Globals._desktop_mode)
 		PostQuitMessage(0);
@@ -757,8 +762,25 @@ int MainFrame::Command(int id, int code)
 
 int MainFrame::Notify(int id, NMHDR* pnmh)
 {
-	if (pnmh->code == RBN_AUTOSIZE)
+	switch(pnmh->code) {
+	  case RBN_AUTOSIZE:
 		resize_frame_rect(ClientRect(_hwnd));
+		break;
+
+	  case TVN_GETINFOTIP: {
+		NMTVGETINFOTIP* pnmgit = (NMTVGETINFOTIP*)pnmh;
+		const BookmarkNode& node = *(BookmarkNode*)pnmgit->lParam;
+
+		if (node._type == BookmarkNode::BMNT_FOLDER) {
+			if (!node._pfolder->_description.empty())
+				lstrcpyn(pnmgit->pszText, node._pfolder->_description.c_str(), pnmgit->cchTextMax);
+		} else	// BookmarkNode::BMNT_BOOKMARK
+			if (!node._pbookmark->_description.empty())
+				lstrcpyn(pnmgit->pszText, node._pbookmark->_description.c_str(), pnmgit->cchTextMax);
+			else
+				lstrcpyn(pnmgit->pszText, node._pbookmark->_url.c_str(), pnmgit->cchTextMax);
+		break;}
+	}
 
 	return 0;
 }
@@ -766,6 +788,9 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 
 void MainFrame::resize_frame_rect(PRECT prect)
 {
+	if (prect->bottom <= prect->top)
+		return;	// avoid resizing children when receiving RBN_AUTOSIZE while getting minimized
+
 	if (_hwndrebar) {
 		int height = ClientRect(_hwndrebar).bottom;
 		MoveWindow(_hwndrebar, prect->left, prect->top, prect->right-prect->left, height, TRUE);

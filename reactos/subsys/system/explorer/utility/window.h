@@ -1017,7 +1017,7 @@ protected:
 		};
 
 		if (tooltip)
-			_tcsncpy(nid.szTip, tooltip, COUNTOF(nid.szTip));
+			lstrcpyn(nid.szTip, tooltip, COUNTOF(nid.szTip));
 
 		if (nid.szTip[0])
 			nid.uFlags |= NIF_TIP;

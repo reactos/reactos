@@ -31,8 +31,8 @@ struct Bookmark
 	Bookmark() : _icon_idx(0) {}
 
 	String	_name;
-	String	_url;
 	String	_description;
+	String	_url;
 	String	_icon_path;
 	int		_icon_idx;
 

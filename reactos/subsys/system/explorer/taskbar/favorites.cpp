@@ -159,7 +159,7 @@ void BookmarkList::write(XMLPos& pos) const
 			folder._bookmarks.write(pos);
 
 			pos.back();
-		} else {	// node._type == BookmarkNode::BMNT_BOOKMARK
+		} else {	// BookmarkNode::BMNT_BOOKMARK
 			Bookmark& bookmark = *node._pbookmark;
 
 			if (!bookmark._url.empty()) {
@@ -186,16 +186,19 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent) const
 	tvi.hInsertAfter = TVI_LAST;
 
 	TV_ITEM& tv = tvi.item;
-	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
+	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM;
 
 	for(const_iterator it=begin(); it!=end(); ++it) {
 		const BookmarkNode& node = *it;
+
+		tv.lParam = (LPARAM)&node;
 
 		if (node._type == BookmarkNode::BMNT_FOLDER) {
 			const BookmarkFolder& folder = *node._pfolder;
 
 			tv.pszText = (LPTSTR)folder._name.c_str();
-			tv.iSelectedImage = tv.iImage = 0;
+			tv.iImage = 3;
+			tv.iSelectedImage = 4;
 			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
 
 			folder._bookmarks.fill_tree(hwnd, hitem);
@@ -203,7 +206,8 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent) const
 			const Bookmark& bookmark = *node._pbookmark;
 
 			tv.pszText = (LPTSTR)bookmark._name.c_str();
-			tv.iSelectedImage = tv.iImage = 0;
+			tv.iImage = 0;
+			tv.iSelectedImage = 1;
 			TreeView_InsertItem(hwnd, &tvi);
 		}
 	}

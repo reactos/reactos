@@ -68,3 +68,10 @@ If you search for more information, look into the CVS repository.
 25.02.2004	m. fuchs	rebar control for desktop bar
 28.02.2004	m. fuchs	"minimize all" functionality
 						various fixes for notification icons, task bar and desktop switching
+12.03.2004	m. fuchs	automatic adjustment start button to text size
+15.03.2004	m. fuchs	implementation of volume control tray icon
+20.03.2004	m. fuchs	context menu for notification area
+21.03.2004	m. fuchs	configuration dialog for notification icons
+						XML storage for configuration options
+28.03.2004	m. fuchs	configuration options for showing/hiding clock, ...
+04.04.2004	m. fuchs	import of IE bookmarks; explorer sidebar with bookmark display

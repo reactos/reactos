@@ -96,7 +96,7 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE)
 		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,//|TVS_NOTOOLTIPS
 						0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
 						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 

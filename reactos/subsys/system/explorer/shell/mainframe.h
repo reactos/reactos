@@ -62,6 +62,8 @@ protected:
 	WindowHandle _hcommandedit;
 	WindowHandle _hsidebar;
 
+	HIMAGELIST	_himl;
+
 	HMENU	_hMenuFrame;
 	HMENU	_hMenuWindow;
 
