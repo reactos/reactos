@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.71 2001/03/30 17:26:42 dwelch Exp $
+/* $Id: loader.c,v 1.72 2001/04/11 12:46:05 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,7 @@
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  *                  Jason Filby (jasonfilby@yahoo.com)
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *   DW   22/05/98   Created
  *   RJJ  10/12/98   Completed image loader function and added hooks for MZ/PE
@@ -15,13 +16,15 @@
  *   JM   14/12/98   Built initial PE user module loader
  *   RJJ  06/03/99   Moved user PE loader into NTDLL
  *   JF   26/01/2000 Recoded some parts to retrieve export details correctly
- *   DW   27/06/00   Removed redundant header files
+ *   DW   27/06/2000 Removed redundant header files
+ *   CSH  11/04/2001 Added automatic loading of module symbols if they exist
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
 #include <internal/mm.h>
@@ -217,9 +220,313 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
      }
 }
 
+#ifdef KDBG
+
+BOOLEAN LdrReadLine(PCHAR Line,
+                    PVOID *Buffer,
+                    PULONG Size)
+{
+  CHAR ch;
+  PCHAR Block;
+
+  if (*Size == 0)
+    return FALSE;
+
+  Block = *Buffer;
+  while ((*Size > 0) && ((ch = *Block) != (CHAR)13))
+    {
+      *Line = ch;
+      Line++;
+      Block++;
+      *Size -= 1;
+    }
+  *Line = (CHAR)0;
+
+  Block++;
+  *Size -= 1;
+
+  if ((*Size > 0) && (*Block == (CHAR)10))
+    {
+      Block++;
+      *Size -= 1;
+    }
+
+  *Buffer = Block;
+
+  return TRUE;
+}
+
+ULONG HexL(PCHAR Buffer)
+{
+  CHAR ch;
+  UINT i, j;
+  ULONG Value;
+
+  j     = 32;
+  i     = 0;
+  Value = 0;
+  while ((j > 0) && ((ch = Buffer[i]) != ' '))
+    {
+      j -= 4;
+      if ((ch >= '0') && (ch <= '9'))
+        Value |= ((ch - '0') << j);
+        if ((ch >= 'A') && (ch <= 'F'))
+          Value |= ((10 + (ch - 'A')) << j);
+        else
+          if ((ch >= 'a') && (ch <= 'f'))
+            Value |= ((10 + (ch - 'a')) << j);
+      i++;
+    }
+  return Value;
+}
+
+PSYMBOL LdrParseLine(PCHAR Line,
+                     PULONG ImageBase,
+                     PBOOLEAN ImageBaseValid)
+/*
+    Line format: [ADDRESS] <TYPE> <NAME>
+    TYPE:
+      U = ?
+      A = Image information
+      t = Symbol in text segment
+      T = Symbol in text segment
+      d = Symbol in data segment
+      D = Symbol in data segment
+      b = Symbol in BSS segment
+      B = Symbol in BSS segment
+      ? = Unknown segment or symbol in unknown segment
+*/
+{
+  ANSI_STRING AnsiString;
+  CHAR Buffer[128];
+  PSYMBOL Symbol;
+  ULONG Address;
+  PCHAR Str;
+  CHAR Type;
+
+  *ImageBaseValid = FALSE;
+
+  if ((Line[0] == (CHAR)0) || (Line[0] == ' '))
+    return NULL;
+
+  Address = HexL(Line);
+
+  Line = strchr(Line, ' ');
+  if (Line == NULL)
+    return NULL;
+
+  Line++;
+  Type = *Line;
+
+  Line = strchr(Line, ' ');
+  if (Line == NULL)
+    return NULL;
+
+  Line++;
+  Str = strchr(Line, ' ');
+  if (Str == NULL)
+    strcpy((char*)&Buffer, Line);
+  else
+    strncpy((char*)&Buffer, Line, Str - Line);
+
+  if ((Type == 'A') && (strcmp((char*)&Buffer, "__image_base__")) == 0)
+    {
+      *ImageBase      = Address;
+      *ImageBaseValid = TRUE;
+      return NULL;
+    }
+
+  /* We only want symbols in the .text segment */
+  if ((Type != 't') && (Type != 'T'))
+    return NULL;
+
+  /* Discard other symbols we can't use */
+  if ((Buffer[0] != '_') || ((Buffer[0] == '_') && (Buffer[1] == '_')))
+    return NULL;
+
+  Symbol = ExAllocatePool(NonPagedPool, sizeof(SYMBOL));
+  if (!Symbol)
+    return NULL;
+
+  Symbol->Next = NULL;
+
+  Symbol->RelativeAddress = Address;
+
+  RtlInitAnsiString(&AnsiString, (PCSZ)&Buffer);
+  RtlAnsiStringToUnicodeString(&Symbol->Name, &AnsiString, TRUE);
+
+  return Symbol;
+}
+
+VOID LdrLoadModuleSymbols(PMODULE_OBJECT ModuleObject,
+													MODULE_TEXT_SECTION* ModuleTextSection)
+/*
+   Symbols must be sorted by address, e.g.
+   "nm --numeric-sort module.sys > module.sym"
+ */
+{
+  WCHAR TmpFileName[MAX_PATH];
+  LPWSTR Start, Ext;
+  ULONG Length, Tmp;
+  UNICODE_STRING Filename;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  PVOID FileBuffer, FilePtr;
+  CHAR Line[256];
+  FILE_STANDARD_INFORMATION FileStdInfo;
+  BOOLEAN ImageBaseValid;
+  ULONG ImageBase = 0;
+  PSYMBOL Symbol, CurrentSymbol = NULL;
+
+  /*  Get the path to the symbol store  */
+  wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
+
+  /*  Get the symbol filename from the module name  */
+  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
+  if (Start == NULL)
+    Start = ModuleObject->BaseName.Buffer;
+  else
+    Start++;
+
+  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
+  if (Ext != NULL)
+    Length = Ext - Start;
+  else
+    Length = wcslen(Start);
+
+  wcsncat(TmpFileName, Start, Length);
+  wcscat(TmpFileName, L".sym");
+  RtlInitUnicodeString(&Filename, TmpFileName);
+
+  /*  Open the file  */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &Filename,
+                             0,
+                             NULL,
+                             NULL);
+
+  Status = ZwOpenFile(&FileHandle,
+                      FILE_ALL_ACCESS,
+                      &ObjectAttributes,
+                      NULL, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not open symbol file: %wZ\n", &Filename);
+      return;
+    }
+
+  DbgPrint("Loading symbols from %wZ...\n", &Filename);
+
+  /*  Get the size of the file  */
+  Status = ZwQueryInformationFile(FileHandle,
+                                  NULL,
+                                  &FileStdInfo,
+                                  sizeof(FileStdInfo),
+                                  FileStandardInformation);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not get file size\n");
+      return;
+    }
+
+  /*  Allocate nonpageable memory for symbol file  */
+  FileBuffer = ExAllocatePool(NonPagedPool,
+                              FileStdInfo.EndOfFile.u.LowPart);
+
+  if (FileBuffer == NULL)
+    {
+      DPRINT("Could not allocate memory for symbol file\n");
+      return;
+    }
+   
+  /*  Load file into memory chunk  */
+  Status = ZwReadFile(FileHandle, 
+                      0, 0, 0, 0, 
+                      FileBuffer, 
+                      FileStdInfo.EndOfFile.u.LowPart, 
+                      0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not read symbol file into memory\n");
+      ExFreePool(FileBuffer);
+      return;
+    }
+
+  ZwClose(FileHandle);
+
+  ModuleTextSection->Symbols.SymbolCount = 0;
+  ModuleTextSection->Symbols.Symbols     = NULL;
+
+  FilePtr = FileBuffer;
+  Length  = FileStdInfo.EndOfFile.u.LowPart;
+
+  while (LdrReadLine((PCHAR)&Line, &FilePtr, &Length))
+    {
+      Symbol = LdrParseLine((PCHAR)&Line, &Tmp, &ImageBaseValid);
+
+      if (ImageBaseValid)
+        ImageBase = Tmp;
+
+      if (Symbol != NULL)
+        {
+          Symbol->RelativeAddress -= ImageBase;
+
+          if (ModuleTextSection->Symbols.Symbols == NULL)
+            ModuleTextSection->Symbols.Symbols = Symbol;
+          else
+            CurrentSymbol->Next = Symbol;
+
+          CurrentSymbol = Symbol;
+
+          ModuleTextSection->Symbols.SymbolCount++;
+        }
+    }
+
+  ExFreePool(FileBuffer);
+}
+
+#endif /* KDBG */
 
 VOID LdrLoadAutoConfigDrivers (VOID)
 {
+
+#ifdef KDBG
+
+  NTSTATUS Status;
+  WCHAR NameBuffer[60];
+  UNICODE_STRING ModuleName;
+  PMODULE_OBJECT ModuleObject;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING RemainingPath;
+
+  /* Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
+     is created after their module entries */
+
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  wcscat(NameBuffer, L"ntoskrnl.exe");
+  RtlInitUnicodeString(&ModuleName, NameBuffer);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &ModuleName,
+                             0,
+                             NULL,
+                             NULL);
+  
+  Status = ObFindObject(&ObjectAttributes,
+                        (PVOID*)&ModuleObject,
+                        &RemainingPath,
+                        NULL);
+  if (NT_SUCCESS(Status)) {
+    RtlFreeUnicodeString(&RemainingPath);
+
+    LdrLoadModuleSymbols(ModuleObject, &NtoskrnlTextSection);
+  }
+
+  /* FIXME: Load symbols for hal.dll */
+
+#endif /* KDBG */
+
    /*
     * Keyboard driver
     */
@@ -244,6 +551,36 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Minix filesystem driver
     */
    LdrLoadAutoConfigDriver(L"minixfs.sys");
+
+   /*
+    * Networking
+    */
+#if 0
+   /*
+    * NDIS library
+    */
+   LdrLoadAutoConfigDriver(L"ndis.sys");
+
+   /*
+    * Novell Eagle 2000 driver
+    */
+   LdrLoadAutoConfigDriver(L"ne2000.sys");
+
+   /*
+    * TCP/IP protocol driver
+    */
+   LdrLoadAutoConfigDriver(L"tcpip.sys");
+
+   /*
+    * TDI test driver
+    */
+   LdrLoadAutoConfigDriver(L"tditest.sys");
+
+   /*
+    * Ancillary Function Driver
+    */
+   LdrLoadAutoConfigDriver(L"afd.sys");
+#endif
 }
 
 
@@ -971,6 +1308,13 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
 		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
   wcscpy(ModuleTextSection->Name, NameBuffer);
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
+
+#ifdef KDBG
+
+	/* Load symbols for module if available */
+  LdrLoadModuleSymbols(ModuleObject, ModuleTextSection);
+
+#endif /* KDBG */
 
   return  ModuleObject;
 }

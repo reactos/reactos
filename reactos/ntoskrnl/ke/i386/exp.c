@@ -28,6 +28,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
@@ -101,6 +102,12 @@ extern unsigned int _text_start__, _text_end__;
 STATIC BOOLEAN 
 print_address(PVOID address)
 {
+#ifdef KDBG
+   ULONG Offset;
+   PSYMBOL Symbol, NextSymbol;
+   BOOLEAN Printed = FALSE;
+   ULONG NextAddress;
+#endif /* KDBG */
    PLIST_ENTRY current_entry;
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
@@ -116,16 +123,43 @@ print_address(PVOID address)
 	if (address >= (PVOID)current->Base &&
 	    address < (PVOID)(current->Base + current->Length))
 	  {
+
+#ifdef KDBG
+
+      Offset = (ULONG)((ULONG)address - current->Base);
+      Symbol = current->Symbols.Symbols;
+      while (Symbol != NULL)
+        {
+          NextSymbol = Symbol->Next;
+          if (NextSymbol != NULL)
+            NextAddress = NextSymbol->RelativeAddress;
+          else
+            NextAddress = current->Length;
+
+          if ((Offset >= Symbol->RelativeAddress) &&
+              (Offset < NextAddress))
+            {
+              DbgPrint("<%ws: %x (%wZ)>", current->Name, Offset, &Symbol->Name);
+              Printed = TRUE;
+              break;
+            }
+          Symbol = NextSymbol;
+        }
+      if (!Printed)
+        DbgPrint("<%ws: %x>", current->Name, Offset);
+
+#else /* KDBG */
+
 	     DbgPrint("<%ws: %x>", current->Name, 
 		      address - current->Base);
+
+#endif /* KDBG */
+
 	     return(TRUE);
 	  }
 
 	current_entry = current_entry->Flink;
      }
-#if 0
-   DbgPrint("<%x>", address);
-#endif
    return(FALSE);
 }
 
