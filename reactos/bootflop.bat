@@ -3,9 +3,11 @@
 :
 : copy files to HD...
 :
-COPY /Y SHELL.EXE C:\reactos\system\SHELL.bin
-COPY /Y BLUES.O C:\reactos\system\drivers\blues.O
-COPY /Y KEYBOARD.O C:\reactos\system\drivers\KEYBOARD.O
+COPY /Y BLUE.SYS C:\reactos\system\drivers\blue.SYS
+COPY /Y KEYBOARD.SYS C:\reactos\system\drivers\KEYBOARD.SYS
+COPY /Y NTDLL.DLL C:\reactos\system\NTDLL.DLL
+: COPY /Y CRTDLL.DLL C:\reactos\system\CRTDLL.DLL
+COPY /Y SHELL.EXE C:\reactos\system\SHELL.EXE
 
 :
 : present a menu to the booter...
@@ -13,7 +15,7 @@ COPY /Y KEYBOARD.O C:\reactos\system\drivers\KEYBOARD.O
 ECHO 1) Keyboard,IDE,VFatFSD
 ECHO 2) IDE,VFatFSD
 ECHO 3) No Drivers
-CHOICE /C:123 /T:2,10 "Select kernel boot config"
+CHOICE /C:123 /T:2,3 "Select kernel boot config"
 IF ERRORLEVEL 3 GOTO :L3
 IF ERRORLEVEL 2 GOTO :L2
 

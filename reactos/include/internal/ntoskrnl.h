@@ -93,12 +93,6 @@ VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID HalInitConsole(boot_param* bp);
 
-/*
- * Loader functions (called in main())
- */
-VOID LdrInitModuleManagement(VOID);
-VOID LdrLoadAutoConfigDrivers(VOID);
-
 extern WCHAR wtolower(WCHAR ch);
 
 #endif

@@ -28,15 +28,15 @@ ntdll.dll: $(DLLMAIN) $(OBJECTS)
 	$(AR) rcs ntdll.a $(OBJECTS) 
 	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
 	           --output-lib ntdll.lib
-	$(CC) -specs=../../specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
+	$(CC) -specs=ntdll_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
 	      -Wl,--base-file,base.tmp ntdll.o
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntdll.dll --base-file base.tmp \
 	           --output-exp temp.exp --def def/ntdll.def
 	- $(RM) base.tmp
-	$(CC) -specs=../../specs -mdll -o ntdll.dll ntdll.o \
-	      -Wl,--image-base,0x80000000 \
+	$(CC) -specs=ntdll_specs -mdll -o ntdll.dll ntdll.o \
+	      -Wl,--image-base,0x40000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,--defsym,_end=end \

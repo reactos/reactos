@@ -17,17 +17,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
+
 #include <internal/i386/segment.h>
-#include <internal/ntoskrnl.h>
 #include <internal/linkage.h>
 #include <internal/module.h>
+#include <internal/ntoskrnl.h>
 #include <internal/ob.h>
+#include <internal/ps.h>
 #include <internal/string.h>
 #include <internal/symbol.h>
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FIXME: this should appear in a kernel header file  */
@@ -101,7 +103,7 @@ VOID LdrLoadAutoConfigDrivers(VOID)
       DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
       DbgPrintErrorMessage(Status);
     }
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blues.sys");
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blue.sys");
   RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
   Status = LdrLoadDriver(&DriverName);
   RtlFreeUnicodeString(&DriverName);
@@ -219,7 +221,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 {
   unsigned int DriverSize, Idx;
   ULONG RelocDelta, NumRelocs;
-  DWORD CurrentSize;
+  DWORD CurrentSize, TotalRelocs;
   PVOID DriverBase, CurrentBase, EntryPoint;
   PULONG PEMagic;
   PIMAGE_DOS_HEADER PEDosHeader;
@@ -337,7 +339,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
          DriverBase,
          PEOptionalHeader->ImageBase,
          RelocDelta);
-   DPRINT("RelocDir %x\n",RelocDir);
+  DPRINT("RelocDir %x\n",RelocDir);
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
        if (PESectionHeaders[Idx].VirtualAddress == (DWORD)RelocDir)
@@ -347,11 +349,13 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 		   PESectionHeaders[Idx].PointerToRawData);
 	    RelocDir = PESectionHeaders[Idx].PointerToRawData +
 	      ModuleLoadBase;
+            CurrentSize = PESectionHeaders[Idx].Misc.VirtualSize;
 	    break;
 	 }
     }
-   DPRINT("RelocDir %x\n",RelocDir);
-  while (RelocDir->SizeOfBlock != 0)
+  DPRINT("RelocDir %08lx CurrentSize %08lx\n", RelocDir, CurrentSize);
+  TotalRelocs = 0;
+  while (TotalRelocs < CurrentSize && RelocDir->SizeOfBlock != 0)
     {
       NumRelocs = (RelocDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
         sizeof(WORD);
@@ -371,7 +375,6 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 	   Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
 	   RelocItem = (PDWORD)(DriverBase + RelocDir->VirtualAddress + 
 				Offset);
-	   
 	   DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
 		  RelocItem,
 		  Type,
@@ -388,13 +391,15 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
               return STATUS_UNSUCCESSFUL;
             }
         }
+      TotalRelocs += RelocDir->SizeOfBlock;
       RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
         RelocDir->SizeOfBlock);
+      DPRINT("TotalRelocs: %08lx  CurrentSize: %08lx\n", TotalRelocs, CurrentSize);
     }
    
-   DPRINT("PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] %x\n",
-	  PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
-	  .VirtualAddress);
+  DPRINT("PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] %x\n",
+         PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+         .VirtualAddress);
   /*  Perform import fixups  */
   if (PEOptionalHeader->DataDirectory[
       IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
@@ -889,16 +894,13 @@ LdrCOFFGetSymbolValueByName(module *Module,
  *   to load the initial user process.
  * ARGUMENTS:
  *   HANDLE   ProcessHandle  handle of the process to load the module into
- *   PHANDLE  ModuleHandle   handle of the loaded module
  *   PUNICODE_STRING  Filename  name of the module to load
  * RETURNS: 
  *   NTSTATUS
  */
 
 NTSTATUS 
-LdrLoadImage(HANDLE ProcessHandle, 
-             PHANDLE ModuleHandle, 
-             PUNICODE_STRING Filename)
+LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 {
   char BlockBuffer[1024];
   DWORD ImageBase, LdrStartupAddr, StackBase;
@@ -920,15 +922,21 @@ LdrLoadImage(HANDLE ProcessHandle,
                              0,
                              NULL,
                              NULL);
-  Status = ZwOpenFile(&FileHandle, 0, &FileObjectAttributes, NULL, 0, 0);
+  DPRINT("Opening NTDLL\n");
+  Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, NULL, 0, 0);
   RtlFreeUnicodeString(&DllPathname);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NTDLL open failed ");
+      DbgPrintErrorMessage(Status);
+
       return Status;
     }
   Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 1024, 0, 0);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NTDLL header read failed ");
+      DbgPrintErrorMessage(Status);
       ZwClose(FileHandle);
 
       return Status;
@@ -939,6 +947,7 @@ LdrLoadImage(HANDLE ProcessHandle,
       DosHeader->e_lfanew == 0L ||
       *(PULONG)((PUCHAR)BlockBuffer + DosHeader->e_lfanew) != IMAGE_PE_MAGIC)
     {
+      DPRINT("NTDLL format invalid\n");
       ZwClose(FileHandle);
 
       return STATUS_UNSUCCESSFUL;
@@ -946,7 +955,7 @@ LdrLoadImage(HANDLE ProcessHandle,
   NTHeaders = (PIMAGE_NT_HEADERS)(BlockBuffer + DosHeader->e_lfanew);
   ImageBase = NTHeaders->OptionalHeader.ImageBase;
   ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
-    /* FIXME: retrive the offset of LdrStartup from NTDLL  */
+    /* FIXME: retrieve the offset of LdrStartup from NTDLL  */
   LdrStartupAddr = 0x80001be0;
 
     /* Create a section for NTDLL */
@@ -959,6 +968,8 @@ LdrLoadImage(HANDLE ProcessHandle,
                            FileHandle);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NTDLL create section failed ");
+      DbgPrintErrorMessage(Status);
       ZwClose(FileHandle);
 
       return Status;
@@ -977,7 +988,11 @@ LdrLoadImage(HANDLE ProcessHandle,
                               PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NTDLL map view of secion failed ");
+      DbgPrintErrorMessage(Status);
+
       /* FIXME: destroy the section here  */
+
       ZwClose(FileHandle);
 
       return Status;
@@ -990,14 +1005,19 @@ LdrLoadImage(HANDLE ProcessHandle,
                              0,
                              NULL,
                              NULL);
-  Status = ZwOpenFile(&FileHandle, 0, &FileObjectAttributes, NULL, 0, 0);
+  Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, NULL, 0, 0);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Image open failed ");
+      DbgPrintErrorMessage(Status);
+
       return Status;
     }
   Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 1024, 0, 0);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Image header read failed ");
+      DbgPrintErrorMessage(Status);
       ZwClose(FileHandle);
 
       return Status;
@@ -1010,6 +1030,7 @@ LdrLoadImage(HANDLE ProcessHandle,
       DosHeader->e_lfanew == 0L ||
       *(PULONG)((PUCHAR)BlockBuffer + DosHeader->e_lfanew) != IMAGE_PE_MAGIC)
     {
+      DPRINT("Image invalid format rc=%08lx\n", Status);
       ZwClose(FileHandle);
 
       return STATUS_UNSUCCESSFUL;
@@ -1028,6 +1049,8 @@ LdrLoadImage(HANDLE ProcessHandle,
                            FileHandle);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Image create section failed ");
+      DbgPrintErrorMessage(Status);
       ZwClose(FileHandle);
 
       return Status;
@@ -1046,6 +1069,8 @@ LdrLoadImage(HANDLE ProcessHandle,
                               PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Image map view of section failed ");
+      DbgPrintErrorMessage(Status);
 
       /* FIXME: destroy the section here  */
 
@@ -1066,6 +1091,8 @@ LdrLoadImage(HANDLE ProcessHandle,
                                    PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Stack allocation failed ");
+      DbgPrintErrorMessage(Status);
 
       /* FIXME: unmap the section here  */
       /* FIXME: destroy the section here  */
@@ -1099,6 +1126,8 @@ LdrLoadImage(HANDLE ProcessHandle,
                           FALSE);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("Thread creation failed ");
+      DbgPrintErrorMessage(Status);
 
       /* FIXME: destroy the stack memory block here  */
       /* FIXME: unmap the section here  */
@@ -1110,3 +1139,34 @@ LdrLoadImage(HANDLE ProcessHandle,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+LdrLoadInitialProcess(VOID)
+{
+  NTSTATUS Status;
+  HANDLE ProcessHandle;
+  ANSI_STRING AnsiString;
+  UNICODE_STRING ProcessName;
+
+  Status = ZwCreateProcess(&ProcessHandle,
+                           PROCESS_ALL_ACCESS,
+                           NULL,
+                           SystemProcessHandle,
+                           FALSE,
+                           NULL,
+                           NULL,
+                           NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Could not create process\n");
+      return Status;
+    }
+
+  RtlInitAnsiString(&ProcessName, "\\??\\C:\\reactos\\system\\shell.exe"); 
+  RtlAnsiStringToUnicodeString(&ProcessName, &AnsiString, TRUE);
+  
+  Status = LdrLoadImage(ProcessHandle, &ProcessName);
+
+  RtlFreeUnicodeString(&ProcessName);
+
+  return Status;
+}

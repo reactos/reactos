@@ -230,7 +230,7 @@ IDESwapBytePairs(char *Buf,
 //  RETURNS:
 //    NTSTATUS  
 
-NTSTATUS 
+STDCALL NTSTATUS 
 DriverEntry(IN PDRIVER_OBJECT DriverObject, 
             IN PUNICODE_STRING RegistryPath) 
 {

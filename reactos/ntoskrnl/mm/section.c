@@ -16,7 +16,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -287,8 +287,21 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
    MEMORY_AREA* Result;
    NTSTATUS Status;
    
-   DPRINT("ZwMapViewOfSection(SectionHandle %x, ProcessHandle %x)\n",
-	  SectionHandle,ProcessHandle);
+   DPRINT("ZwMapViewOfSection(Section:%08lx, Process:%08lx,\n"
+          "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
+          "  SectionOffs:%08lx, ViewSize:%08lx, InheritDisp:%08lx,\n"
+          "  AllocType:%08lx, Protect:%08lx)\n",
+	  SectionHandle, 
+          ProcessHandle,
+          BaseAddress,
+          ZeroBits,
+          CommitSize,
+          SectionOffset,
+          ViewSize,
+          InheritDisposition,
+          AllocationType,
+          Protect);
+   DPRINT("  *Base:%08lx\n", *BaseAddress);
    
    Status = ObReferenceObjectByHandle(SectionHandle,
 				      SECTION_MAP_READ,
@@ -298,9 +311,10 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("%s() = %x\n",Status);
+	DPRINT("ObReference failed rc=%x\n",Status);
 	return(Status);
      }
+   DPRINT("Section handle reference fetched\n");
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -312,6 +326,7 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
      {
 	return(Status);
      }
+   DPRINT("Process handle reference fetched\n");
    
    if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
      {

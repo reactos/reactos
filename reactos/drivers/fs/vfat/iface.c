@@ -1625,8 +1625,8 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return RC;
 }
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
-		     PUNICODE_STRING RegistryPath)
+STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
+			     PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
