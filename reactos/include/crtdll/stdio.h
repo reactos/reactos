@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.7 $
+ * $Revision: 1.8 $
  * $Author: ariadne $
- * $Date: 1999/04/14 07:10:15 $
+ * $Date: 1999/04/17 09:11:02 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -86,11 +86,12 @@ typedef struct {
   int   _ungotchar;
   int   _bufsiz;
   char *_name_to_remove;
-  int 	_fillsize;
+//  int 	_fillsize;
 } FILE;
 #define _FILE_DEFINED
 #endif
 
+#define _fillsize _bufsiz
 
 /*
  * The three standard file pointers provided by the run time library.

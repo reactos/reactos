@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/17 09:11:02 $
  *
  */
 
@@ -105,11 +105,13 @@ double	log10 (double x);
 double	pow (double x, double y);
 double	sqrt (double x);
 double	ceil (double x);
-double	floor (double x);
+long double	ceill (long double x);
+long double	floorl (long double x);
 double	fabs (double x);
 double	ldexp (double x, int n);
 double	frexp (double x, int* exp);
 double	modf (double x, double* ip);
+long double	modfl (long double x,long double* ip);
 double	fmod (double x, double y);
 
 
