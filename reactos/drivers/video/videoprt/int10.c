@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.2 2004/02/22 22:19:42 navaraf Exp $
+ * $Id: int10.c,v 1.3 2004/03/06 01:22:02 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -56,12 +56,19 @@ VideoPortInt10(
    }
 
    memset(&Regs, 0, sizeof(Regs));
+   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
    Regs.Eax = BiosArguments->Eax;
+   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
    Regs.Ebx = BiosArguments->Ebx;
+   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
    Regs.Ecx = BiosArguments->Ecx;
+   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
    Regs.Edx = BiosArguments->Edx;
+   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
    Regs.Esi = BiosArguments->Esi;
+   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
    Regs.Edi = BiosArguments->Edi;
+   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
    Regs.Ebp = BiosArguments->Ebp;
    Status = Ke386CallBios(0x10, &Regs);
 

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.1 2004/01/19 15:56:53 navaraf Exp $
+ * $Id: videoprt.h,v 1.2 2004/03/06 01:22:02 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -86,9 +86,10 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 PVOID STDCALL
 InternalMapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
-   IN PHYSICAL_ADDRESS  IoAddress,
+   IN PHYSICAL_ADDRESS IoAddress,
    IN ULONG NumberOfUchars,
-   IN UCHAR InIoSpace);
+   IN UCHAR InIoSpace,
+   OUT NTSTATUS *Status);
 
 VOID STDCALL
 InternalUnmapMemory(

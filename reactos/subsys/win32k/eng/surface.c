@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.32 2004/02/14 22:24:54 navaraf Exp $
+/* $Id: surface.c,v 1.33 2004/03/06 01:22:03 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -475,6 +475,42 @@ EngAssociateSurface(IN HSURF Surface,
   SurfGDI->DriverLock = &Device->DriverLock;
 
   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+EngModifySurface(
+   IN HSURF hsurf,
+   IN HDEV hdev,
+   IN FLONG flHooks,
+   IN FLONG flSurface,
+   IN DHSURF dhsurf,
+   OUT VOID *pvScan0,
+   IN LONG lDelta,
+   IN VOID *pvReserved)
+{
+   SURFOBJ *pso;
+
+   pso = EngLockSurface(hsurf);
+   if (pso == NULL)
+   {
+      return FALSE;
+   }
+
+   if (!EngAssociateSurface(hsurf, hdev, flHooks))
+   {
+      return FALSE;
+   }
+
+   pso->dhsurf = dhsurf;
+   pso->lDelta = lDelta;
+   pso->pvScan0 = pvScan0;
+
+   EngUnlockSurface(pso);
+
+   return TRUE;
 }
 
 /*

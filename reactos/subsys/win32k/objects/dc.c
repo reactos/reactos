@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.122 2004/03/05 09:02:42 hbirr Exp $
+/* $Id: dc.c,v 1.123 2004/03/06 01:22:03 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -239,15 +239,17 @@ NtGdiCreateCompatableDC(HDC hDC)
 }
 
 static BOOL FASTCALL
-GetRegistryPath(PUNICODE_STRING RegistryPath)
+GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  WCHAR DeviceNameBuffer[20];
   NTSTATUS Status;
 
+  swprintf(DeviceNameBuffer, L"\\Device\\Video%d", DisplayNumber);
   RtlInitUnicodeString(RegistryPath, NULL);
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[0].Name = L"\\Device\\Video0";
+  QueryTable[0].Name = DeviceNameBuffer;
   QueryTable[0].EntryContext = RegistryPath;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
@@ -257,7 +259,7 @@ GetRegistryPath(PUNICODE_STRING RegistryPath)
                                   NULL);
   if (! NT_SUCCESS(Status))
     {
-      DPRINT1("No \\Device\\Video0 value in DEVICEMAP\\VIDEO found\n");
+      DPRINT1("No \\Device\\Video%d value in DEVICEMAP\\VIDEO found\n", DisplayNumber);
       return FALSE;
     }
 
@@ -267,13 +269,13 @@ GetRegistryPath(PUNICODE_STRING RegistryPath)
 }
 
 static BOOL FASTCALL
-FindDriverFileNames(PUNICODE_STRING DriverFileNames)
+FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   UNICODE_STRING RegistryPath;
   NTSTATUS Status;
 
-  if (! GetRegistryPath(&RegistryPath))
+  if (! GetRegistryPath(&RegistryPath, DisplayNumber))
     {
       DPRINT("GetRegistryPath failed\n");
       return FALSE;
@@ -350,7 +352,7 @@ DevModeCallback(IN PWSTR ValueName,
 }
 
 static BOOL FASTCALL
-SetupDevMode(PDEVMODEW DevMode)
+SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
 {
   static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
   static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
@@ -363,7 +365,7 @@ SetupDevMode(PDEVMODEW DevMode)
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
 
-  if (! GetRegistryPath(&RegistryPath))
+  if (! GetRegistryPath(&RegistryPath, DisplayNumber))
     {
       DPRINT("GetRegistryPath failed\n");
       return FALSE;
@@ -464,187 +466,208 @@ SetupDevMode(PDEVMODEW DevMode)
 BOOL FASTCALL
 IntCreatePrimarySurface()
 {
-  PGD_ENABLEDRIVER GDEnableDriver;
-  DRVENABLEDATA DED;
-  PSURFOBJ SurfObj;
-  PSURFGDI SurfGDI;
-  UNICODE_STRING DriverFileNames;
-  PWSTR CurrentName;
-  BOOL GotDriver;
-  BOOL DoDefault;
+   PGD_ENABLEDRIVER GDEnableDriver;
+   DRVENABLEDATA DED;
+   PSURFOBJ SurfObj;
+   PSURFGDI SurfGDI;
+   UNICODE_STRING DriverFileNames;
+   PWSTR CurrentName;
+   BOOL GotDriver;
+   BOOL DoDefault;
+   ULONG DisplayNumber;
 
-  RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
+   for (DisplayNumber = 0; ; DisplayNumber++)
+   {
+      DPRINT("Trying to load display driver no. %d\n", DisplayNumber);
 
-  ExInitializeFastMutex(&PrimarySurface.DriverLock);
+      RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
+      ExInitializeFastMutex(&PrimarySurface.DriverLock);
 
-  /*  Open the miniport driver  */
-  if ((PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
-    {
-      DPRINT1("FindMPDriver failed\n");
-      return FALSE;
-    }
+      PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
-  /*  Retrieve DDI driver names from registry */
-  RtlInitUnicodeString(&DriverFileNames, NULL);
-  if (! FindDriverFileNames(&DriverFileNames))
-    {
-      DPRINT1("FindDriverFileNames failed\n");
-      return FALSE;
-    }
+      /* Open the miniport driver  */
+      if (PrimarySurface.VideoFileObject == NULL)
+      {
+         DPRINT1("FindMPDriver failed\n");
+         return FALSE;
+      }
 
-  /* DriverFileNames may be a list of drivers in REG_SZ_MULTI format, scan all of
-     them until a good one found */
-  CurrentName = DriverFileNames.Buffer;
-  GotDriver = FALSE;
-  while (! GotDriver && CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-    {
-      /*  Get the DDI driver's entry point  */
-      GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
-      if (NULL == GDEnableDriver)
-        {
-          DPRINT("FindDDIDriver failed for %S\n", CurrentName);
-        }
+      /* Retrieve DDI driver names from registry */
+      RtlInitUnicodeString(&DriverFileNames, NULL);
+      if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
+      {
+         DPRINT1("FindDriverFileNames failed\n");
+         /* return FALSE; */
+         continue;
+      }
+
+      /*
+       * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
+       * scan all of them until a good one found.
+       */
+      CurrentName = DriverFileNames.Buffer;
+      GotDriver = FALSE;
+      while (!GotDriver &&
+             CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+      {
+         /* Get the DDI driver's entry point */
+         GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+         if (NULL == GDEnableDriver)
+         {
+            DPRINT("FindDDIDriver failed for %S\n", CurrentName);
+         }
+         else
+         {
+            /*  Call DDI driver's EnableDriver function  */
+            RtlZeroMemory(&DED, sizeof(DED));
+
+            if (! GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+            {
+               DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
+            }
+            else
+            {
+               GotDriver = TRUE;
+            }
+         }
+
+         if (! GotDriver)
+         {
+            /* Skip to the next name but never get past the Unicode string */
+            while (L'\0' != *CurrentName &&
+                   CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+            {
+               CurrentName++;
+            }
+            if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+            {
+               CurrentName++;
+            }
+         }
+      }
+
+      RtlFreeUnicodeString(&DriverFileNames);
+
+      if (!GotDriver)
+      {
+         ObDereferenceObject(PrimarySurface.VideoFileObject);
+         DPRINT1("No suitable DDI driver found\n");
+         /* return FALSE; */
+         continue;
+      }
+
+      DPRINT("Display driver %S loaded\n", CurrentName);
+
+      DPRINT("Building DDI Functions\n");
+
+      /* Construct DDI driver function dispatch table */
+      if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
+      {
+         ObDereferenceObject(PrimarySurface.VideoFileObject);
+         DPRINT1("BuildDDIFunctions failed\n");
+         return FALSE;
+      }
+
+      /* Allocate a phyical device handle from the driver */
+      if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
+      {
+         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDev(
+            &PrimarySurface.DMW,
+            L"",
+            HS_DDI_MAX,
+            PrimarySurface.FillPatterns,
+            sizeof(PrimarySurface.GDIInfo),
+            (ULONG *) &PrimarySurface.GDIInfo,
+            sizeof(PrimarySurface.DevInfo),
+            &PrimarySurface.DevInfo,
+            NULL,
+            L"",
+            (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
+         DoDefault = (NULL == PrimarySurface.PDev);
+         if (DoDefault)
+         {
+            DPRINT1("DrvEnablePDev with registry parameters failed\n");
+         }
+      }
       else
-        {
-          /*  Call DDI driver's EnableDriver function  */
-          RtlZeroMemory(&DED, sizeof(DED));
+      {
+         DoDefault = TRUE;
+      }
 
-          if (! GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
-            {
-              DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
-            }
-          else
-            {
-              GotDriver = TRUE;
-            }
-        }
-
-      if (! GotDriver)
-        {
-          /* Skip to the next name but never get past the Unicode string */
-          while (L'\0' != *CurrentName &&
-                 CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-            {
-              CurrentName++;
-            }
-          if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-            {
-              CurrentName++;
-            }
-        }
-    }
-  RtlFreeUnicodeString(&DriverFileNames);
-  if (! GotDriver)
-    {
-      ObDereferenceObject(PrimarySurface.VideoFileObject);
-      DPRINT1("No suitable DDI driver found\n");
-      return FALSE;
-    }
-
-  DPRINT("Display driver %S loaded\n", CurrentName);
-
-  DPRINT("Building DDI Functions\n");
-
-  /*  Construct DDI driver function dispatch table  */
-  if (! DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
-    {
-      ObDereferenceObject(PrimarySurface.VideoFileObject);
-      DPRINT1("BuildDDIFunctions failed\n");
-      return FALSE;
-    }
-
-  /*  Allocate a phyical device handle from the driver  */
-  if (SetupDevMode(&PrimarySurface.DMW))
-    {
-      PrimarySurface.PDev =
-        PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
-                                                  L"",
-                                                  HS_DDI_MAX,
-                                                  PrimarySurface.FillPatterns,
-                                                  sizeof(PrimarySurface.GDIInfo),
-                                                  (ULONG *) &PrimarySurface.GDIInfo,
-                                                  sizeof(PrimarySurface.DevInfo),
-                                                  &PrimarySurface.DevInfo,
-                                                  NULL,
-                                                  L"",
-                                                  (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
-      DoDefault = (NULL == PrimarySurface.PDev);
       if (DoDefault)
-        {
-          DPRINT1("DrvEnablePDev with registry parameters failed\n");
-        }
-    }
-  else
-    {
-      DoDefault = TRUE;
-    }
+      {
+         RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
+         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDev(
+            &PrimarySurface.DMW,
+            L"",
+            HS_DDI_MAX,
+            PrimarySurface.FillPatterns,
+            sizeof(PrimarySurface.GDIInfo),
+            (ULONG *) &PrimarySurface.GDIInfo,
+            sizeof(PrimarySurface.DevInfo),
+            &PrimarySurface.DevInfo,
+            NULL,
+            L"",
+            (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
 
-  if (DoDefault)
-    {
-      RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
-      PrimarySurface.PDev =
-        PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
-                                                  L"",
-                                                  HS_DDI_MAX,
-                                                  PrimarySurface.FillPatterns,
-                                                  sizeof(PrimarySurface.GDIInfo),
-                                                  (ULONG *) &PrimarySurface.GDIInfo,
-                                                  sizeof(PrimarySurface.DevInfo),
-                                                  &PrimarySurface.DevInfo,
-                                                  NULL,
-                                                  L"",
-                                                  (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
+         if (NULL == PrimarySurface.PDev)
+         {
+            ObDereferenceObject(PrimarySurface.VideoFileObject);
+            DPRINT1("DrvEnablePDEV with default parameters failed\n");
+            DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
+            /* return FALSE; */
+            continue;
+         }
+      }
 
-      if (NULL == PrimarySurface.PDev)
-        {
-          ObDereferenceObject(PrimarySurface.VideoFileObject);
-          DPRINT1("DrvEnablePDEV with default parameters failed\n");
-          DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
-          return FALSE;
-        }
-    }
+      if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
+      {
+         DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
+         PrimarySurface.GDIInfo.ulLogPixelsX = 96;
+      }
+      if (0 == PrimarySurface.GDIInfo.ulLogPixelsY)
+      {
+         DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
+         PrimarySurface.GDIInfo.ulLogPixelsY = 96;
+      }
 
-  if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
-    {
-      DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
-      PrimarySurface.GDIInfo.ulLogPixelsX = 96;
-    }
-  if (0 == PrimarySurface.GDIInfo.ulLogPixelsY)
-    {
-      DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
-      PrimarySurface.GDIInfo.ulLogPixelsY = 96;
-    }
+      DPRINT("calling completePDev\n");
 
-  DPRINT("calling completePDev\n");
+      /* Complete initialization of the physical device */
+      PrimarySurface.DriverFunctions.CompletePDev(
+         PrimarySurface.PDev,
+	 &PrimarySurface);
 
-  /*  Complete initialization of the physical device  */
-  PrimarySurface.DriverFunctions.CompletePDev(PrimarySurface.PDev,
-					      &PrimarySurface);
+      DPRINT("calling DRIVER_ReferenceDriver\n");
 
-  DPRINT("calling DRIVER_ReferenceDriver\n");
+      DRIVER_ReferenceDriver(L"DISPLAY");
 
-  DRIVER_ReferenceDriver(L"DISPLAY");
+      DPRINT("calling EnableSurface\n");
 
-  DPRINT("calling EnableSurface\n");
+      /* Enable the drawing surface */
+      PrimarySurface.Handle =
+         PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
+      if (NULL == PrimarySurface.Handle)
+      {
+/*         PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);*/
+         PrimarySurface.DriverFunctions.DisablePDev(PrimarySurface.PDev);
+         ObDereferenceObject(PrimarySurface.VideoFileObject);
+         DPRINT1("DrvEnableSurface failed\n");
+         /* return FALSE; */
+         continue;
+      }
 
-  /*  Enable the drawing surface  */
-  PrimarySurface.Handle =
-    PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
-  if (NULL == PrimarySurface.Handle)
-    {
-      ObDereferenceObject(PrimarySurface.VideoFileObject);
-      DPRINT1("DrvEnableSurface failed\n");
-      return FALSE;
-    }
+      SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
+      SurfObj->dhpdev = PrimarySurface.PDev;
+      SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+      IntShowDesktop(
+         IntGetActiveDesktop(),
+         SurfGDI->SurfObj.sizlBitmap.cx,
+         SurfGDI->SurfObj.sizlBitmap.cy);
+      break;
+   }
 
-  SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
-  SurfObj->dhpdev = PrimarySurface.PDev;
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
-  IntShowDesktop(IntGetActiveDesktop(),
-                 SurfGDI->SurfObj.sizlBitmap.cx,
-                 SurfGDI->SurfObj.sizlBitmap.cy);
-
-  return TRUE;
+   return TRUE;
 }
 
 VOID FASTCALL
@@ -704,7 +727,10 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     return  NtGdiCreateCompatableDC(hDC);
   }
 
-  DPRINT("NAME: %S\n", Driver); // FIXME: Should not crash if NULL
+  if (Driver != NULL && Driver->Buffer != NULL)
+  {
+    DPRINT("NAME: %S\n", Driver->Buffer); // FIXME: Should not crash if NULL
+  }
 
   /*  Allocate a DC object  */
   if ((hNewDC = DC_AllocDC(Driver)) == NULL)

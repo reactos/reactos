@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.36 2004/02/22 12:06:43 weiden Exp $
+/* $Id: driver.c,v 1.37 2004/03/06 01:22:03 navaraf Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -236,16 +236,18 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 
 typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
-PFILE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
+PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR DeviceNameBuffer[20];
   UNICODE_STRING DeviceName;
   IO_STATUS_BLOCK Iosb;
   HANDLE DisplayHandle;
   NTSTATUS Status;
   PFILE_OBJECT VideoFileObject;
 
-  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
+  swprintf(DeviceNameBuffer, L"\\??\\DISPLAY%d", DisplayNumber + 1);
+  RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,

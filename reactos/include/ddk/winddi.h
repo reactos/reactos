@@ -867,6 +867,13 @@ typedef struct _ENG_TIME_FIELDS
   USHORT  usWeekday;
 } ENG_TIME_FIELDS, *PENG_TIME_FIELDS;
 
+typedef enum _ENG_SYSTEM_ATTRIBUTE {
+  EngProcessorFeature = 1,
+  EngNumberOfProcessors,
+  EngOptimumAvailableUserMemory,
+  EngOptimumAvailableSystemMemory,
+} ENG_SYSTEM_ATTRIBUTE;
+
 typedef struct _LINEATTRS
 {
   FLONG  fl;

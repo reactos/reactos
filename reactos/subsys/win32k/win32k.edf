@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.20 2004/02/11 19:26:51 weiden Exp $
+; $Id: win32k.edf,v 1.21 2004/03/06 01:22:04 navaraf Exp $
 ;
 ; win32k.def
 ;
@@ -41,6 +41,7 @@ EngDeleteSemaphore=EngDeleteSemaphore@4
 EngDeleteSurface=EngDeleteSurface@4
 EngDeleteWnd=EngDeleteWnd@4
 EngDeviceIoControl=EngDeviceIoControl@28
+EngDitherColor=EngDitherColor@16
 EngEnumForms=EngEnumForms@24
 EngEraseSurface=EngEraseSurface@12
 EngFillPath=EngFillPath@28
@@ -73,6 +74,7 @@ EngMapEvent=EngMapEvent@20
 EngMapFontFile=EngMapFontFile@12
 EngMapModule=EngMapModule@8
 EngMarkBandingSurface=EngMarkBandingSurface@4
+EngModifySurface=EngModifySurface@32
 EngMovePointer=EngMovePointer@16
 EngMulDiv=EngMulDiv@12
 EngMultiByteToUnicodeN=EngMultiByteToUnicodeN@20
@@ -84,6 +86,7 @@ EngQueryLocalTime=EngQueryLocalTime@4
 EngQueryPalette=EngQueryPalette@16
 EngQueryPerformanceCounter=EngQueryPerformanceCounter@4
 EngQueryPerformanceFrequency=EngQueryPerformanceFrequency@4
+EngQuerySystemAttribute=EngQuerySystemAttribute@8
 EngReleaseSemaphore=EngReleaseSemaphore@4
 EngRestoreFloatingPointState=EngRestoreFloatingPointState@4
 EngSaveFloatingPointState=EngSaveFloatingPointState@8
@@ -143,6 +146,7 @@ FONTOBJ_pifi=FONTOBJ_pifi@4
 FONTOBJ_pvTrueTypeFontFile=FONTOBJ_pvTrueTypeFontFile@8
 FONTOBJ_pxoGetXform=FONTOBJ_pxoGetXform@4
 FONTOBJ_vGetInfo=FONTOBJ_vGetInfo@12
+HeapVidMemAllocAligned=HeapVidMemAllocAligned@20
 HT_ComputeRGBGammaTable=HT_ComputeRGBGammaTable@24
 HT_Get8BPPFormatPalette=HT_Get8BPPFormatPalette@16
 PALOBJ_cGetColors=PALOBJ_cGetColors@16
@@ -166,6 +170,7 @@ RtlUpcaseUnicodeToMultiByteN=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum=STROBJ_bEnum@12
 STROBJ_dwGetCodePage=STROBJ_dwGetCodePage@4
 STROBJ_vEnumStart=STROBJ_vEnumStart@4
+VidMemFree=VidMemFree@8
 Win32kInitialize=Win32kInitialize@0
 WNDOBJ_bEnum=WNDOBJ_bEnum@12
 WNDOBJ_cEnumStart=WNDOBJ_cEnumStart@16

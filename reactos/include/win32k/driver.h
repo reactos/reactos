@@ -162,7 +162,7 @@ typedef struct _DRIVER_FUNCTIONS
 
 BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver);
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name);
-PFILE_OBJECT DRIVER_FindMPDriver(LPCWSTR  Name);
+PFILE_OBJECT DRIVER_FindMPDriver(ULONG  DisplayNumber);
 BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
                                PDRIVER_FUNCTIONS  DF);
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name);

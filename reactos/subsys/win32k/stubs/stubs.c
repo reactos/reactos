@@ -1235,3 +1235,67 @@ STUB(FLOATOBJ_AddFloatObj)
 STUB(FLOATOBJ_DivFloatObj)
 STUB(FLOATOBJ_MulFloatObj)
 STUB(FLOATOBJ_SubFloatObj)
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+EngDitherColor(
+   IN HDEV hdev,
+   IN ULONG iMode,
+   IN ULONG rgb,
+   OUT ULONG *pul)
+{
+   return DCR_SOLID;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngQuerySystemAttribute(
+   IN ENG_SYSTEM_ATTRIBUTE CapNum,
+   OUT PDWORD pCapability)
+{
+   switch (CapNum)
+   {
+      case EngNumberOfProcessors:
+         *pCapability = 1;
+         return TRUE;
+
+      case EngProcessorFeature:
+         *pCapability = 0;
+         return TRUE;
+
+      default:
+         break;
+   }
+
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+FLATPTR STDCALL
+HeapVidMemAllocAligned(
+   IN VIDEOMEMORY *lpVidMem,
+   IN DWORD dwWidth,
+   IN DWORD dwHeight,
+   IN /*LPSURFACEALIGNMENT*/LPVOID lpAlignment,
+   OUT LPLONG lpNewPitch)
+{
+   UNIMPLEMENTED;
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+VidMemFree(
+   IN LPVMEMHEAP pvmh,
+   IN FLATPTR ptr)
+{
+   UNIMPLEMENTED;
+}
