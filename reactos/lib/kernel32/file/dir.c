@@ -197,7 +197,24 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
    
    if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
      {
-        lstrcpyA(lpBuffer, lpFileName);
+        if (lpFileName[2] == '\\')
+          {
+             lstrcpyA(lpBuffer, lpFileName);
+          }
+        else
+          {
+             CHAR  szRoot[4] = "A:\\";
+             DWORD len;
+
+             szRoot[0] = lpFileName[0];
+             len = GetCurrentDirectoryA(nBufferLength, lpBuffer);
+             if (lpBuffer[len - 1] != '\\')
+               {
+                  lpBuffer[len] = '\\';
+                  lpBuffer[len + 1] = 0;
+               }
+             lstrcatA(lpBuffer, &lpFileName[2]);
+          }
      }
    else if (lpFileName[0] == '\\')
      {
@@ -210,8 +227,8 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
         len = GetCurrentDirectoryA(nBufferLength, lpBuffer);
         if (lpBuffer[len - 1] != '\\')
           {
-                lpBuffer[len] = '\\';
-                lpBuffer[len + 1] = 0;
+             lpBuffer[len] = '\\';
+             lpBuffer[len + 1] = 0;
           }
         lstrcatA(lpBuffer, lpFileName);
      }
@@ -222,90 +239,56 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
 
    while ((*p) != 0) 
      {
-	DWORD dwDotLen;
+         DWORD dwDotLen;
 
-	dwDotLen = GetDotSequenceLengthA (p+1);
-	DPRINT("DotSequenceLength %u\n", dwDotLen);
-	DPRINT("prev %s p %s\n",prev,p);
+         dwDotLen = GetDotSequenceLengthA (p+1);
+         DPRINT("DotSequenceLength %u\n", dwDotLen);
+         DPRINT("prev %s p %s\n",prev,p);
 
-	if (dwDotLen == 0)
-	{
-		prev = p;
-		do
+         if (dwDotLen == 0)
+           {
+              prev = p;
+              do
 		{
-			p++;
+                   p++;
 		}
-		while ((*p) != 0 && (*p) != '\\');
-	}
-	else if (dwDotLen == 1)
-	{
-		lstrcpyA(p, p+2);
-	}
-	else
-	{
-		if (dwDotLen > 2)
+              while ((*p) != 0 && (*p) != '\\');
+           }
+         else if (dwDotLen == 1)
+           {
+              lstrcpyA(p, p+2);
+           }
+         else
+           {
+              if (dwDotLen > 2)
 		{
-			int n = dwDotLen - 2;
+                   int n = dwDotLen - 2;
 
-			while (n > 0)
-			{
-				prev--;
-				if ((*prev) == '\\')
-					n--;
-				if (prev == (lpBuffer+2))
-					break;
-			}
+                   while (n > 0)
+                     {
+                        prev--;
+                        if ((*prev) == '\\')
+                             n--;
+                        if (prev == (lpBuffer+2))
+                             break;
+                     }
 		}
 
-		lstrcpyA (prev, p+dwDotLen+1);
-		p = prev;
-		if (prev == (lpBuffer+2))
+              lstrcpyA (prev, p+dwDotLen+1);
+              p = prev;
+              if (prev == (lpBuffer+2))
 		{
-			prev = NULL;
+                   prev = NULL;
 		}
-		else
+              else
 		{
-			prev--;
-			while ((*prev) != '\\')
-			{
-				prev--;
-			}
+                   prev--;
+                   while ((*prev) != '\\')
+                     {
+                        prev--;
+                     }
 		}
-	}
-
-#if 0
-	if (p[1] == '.' && (p[2] == '\\' || p[2] == 0))
-	  {
-             lstrcpyA(p, p+2);
-	  }
-        else if (p[1] == '.' && p[2] == '.' && (p[3] == '\\' || p[3] == 0) &&
-		 prev != NULL)
-	  {
-             lstrcpyA(prev, p+3);
-	     p = prev;
-	     if (prev == (lpBuffer+2))
-	       {
-		  prev = NULL;
-	       }
-	     else
-	       {
-		  prev--;
-		  while ((*prev) != '\\')
-		    {
-		       prev--;
-		    }
-	       }
-	  }
-	else
-	  {
-	     prev = p;
-	     do
-	       {
-		  p++;
-	       } 
-	     while ((*p) != 0 && (*p) != '\\');
-	  }
-#endif
+           }
      }
    
    if (lpFilePart != NULL)
@@ -321,19 +304,19 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
 
 static DWORD GetDotSequenceLengthW (PWSTR p)
 {
-    DWORD dwCount = 0;
+   DWORD dwCount = 0;
 
-    for (;;)
-    {
+   for (;;)
+     {
 	if (*p == '.')
-	    dwCount++;
+             dwCount++;
 	else if ((*p == '\\' || *p == '\0') && dwCount)
-	    return dwCount;
+             return dwCount;
 	else
-	    return 0;
+             return 0;
 	p++;
-    }
-    return 0;
+     }
+   return 0;
 }
 
 
@@ -351,11 +334,28 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    if (!lpFileName || !lpBuffer)
         return 0;
    
-   if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
+   if (isalpha(lpFileName[0]) && lpFileName[1] == L':')
      {
-	lstrcpyW(lpBuffer, lpFileName);
+        if (lpFileName[2] == L'\\')
+          {
+             lstrcpyW(lpBuffer, lpFileName);
+          }
+        else
+          {
+             WCHAR szRoot[4] = L"A:\\";
+             DWORD len;
+
+             szRoot[0] = lpFileName[0];
+             len = GetCurrentDirectoryW(nBufferLength, lpBuffer);
+             if (lpBuffer[len - 1] != L'\\')
+               {
+                  lpBuffer[len] = L'\\';
+                  lpBuffer[len + 1] = 0;
+               }
+             lstrcatW(lpBuffer, &lpFileName[2]);
+          }
      }
-   else if (lpFileName[0] == '\\')
+   else if (lpFileName[0] == L'\\')
      {
         GetCurrentDirectoryW(nBufferLength, lpBuffer);
 	lstrcpyW(&lpBuffer[2], lpFileName);
@@ -366,8 +366,8 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
         len = GetCurrentDirectoryW(nBufferLength, lpBuffer);
         if (lpBuffer[len - 1] != L'\\')
           {
-                lpBuffer[len] = L'\\';
-                lpBuffer[len + 1] = 0;
+             lpBuffer[len] = L'\\';
+             lpBuffer[len + 1] = 0;
           }
 	lstrcatW(lpBuffer, lpFileName);
      }
@@ -385,87 +385,51 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
 	DPRINT("prev %w p %w\n",prev,p);
 
 	if (dwDotLen == 0)
-	{
-		prev = p;
-		do
-		{
-			p++;
-		}
-		while ((*p) != 0 && (*p) != '\\');
-	}
+          {
+             prev = p;
+             do
+               {
+                  p++;
+               }
+             while ((*p) != 0 && (*p) != L'\\');
+          }
 	else if (dwDotLen == 1)
-	{
-		lstrcpyW(p, p+2);
-	}
+          {
+             lstrcpyW(p, p+2);
+          }
 	else
-	{
-		if (dwDotLen > 2)
-		{
-			int n = dwDotLen - 2;
+          {
+             if (dwDotLen > 2)
+               {
+                  int n = dwDotLen - 2;
 
-			while (n > 0)
-			{
-				prev--;
-				if ((*prev) == '\\')
-					n--;
-				if (prev == (lpBuffer+2))
-					break;
-			}
-		}
+                  while (n > 0)
+                    {
+                       prev--;
+                       if ((*prev) == L'\\')
+                            n--;
+                       if (prev == (lpBuffer+2))
+                            break;
+                    }
+               }
 
-		lstrcpyW (prev, p+dwDotLen+1);
-		p = prev;
-		if (prev == (lpBuffer+2))
-		{
-			prev = NULL;
-		}
-		else
-		{
-			prev--;
-			while ((*prev) != '\\')
-			{
-				prev--;
-			}
-		}
-	}
-
-
-#if 0
-	DPRINT("prev %w p %w\n",prev,p);
-	if (p[1] == '.' && (p[2] == '\\' || p[2] == 0))
-	  {
-	     lstrcpyW(p, p+2);
-	  }
-	else if (p[1] == '.' && p[2] == '.' && (p[3] == '\\' || p[3] == 0) && 
-		 prev != NULL)
-	  {
-	     lstrcpyW(prev, p+3);
-	     p = prev;
-	     if (prev == (lpBuffer+2))
-	       {
-		  prev = NULL;
-	       }
-	     else
-	       {
-		  prev--;
-		  while ((*prev) != '\\')
-		    {
-		       prev--;
-		    }
-	       }
-	  }
-	else
-	  {
-	     prev = p;
-	     do
-	       {
-		  p++;
-	       } 
-	     while ((*p) != 0 && (*p) != '\\');
-	  }
-#endif
+             lstrcpyW (prev, p+dwDotLen+1);
+             p = prev;
+             if (prev == (lpBuffer+2))
+               {
+                  prev = NULL;
+               }
+             else
+               {
+                  prev--;
+                  while ((*prev) != L'\\')
+                    {
+                       prev--;
+                    }
+               }
+          }
      }
-   
+ 
    if (lpFilePart != NULL)
      {
 	(*lpFilePart) = prev + 1;
