@@ -23,7 +23,8 @@ int TCPSocketState(void *ClientData,
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
 
-    TI_DbgPrint(MID_TRACE,("Called: NewState %x\n", NewState));
+    TI_DbgPrint(MID_TRACE,("Called: NewState %x (Conn %x)\n", 
+			   NewState, Connection));
 
     if( !Connection ) {
 	TI_DbgPrint(MID_TRACE,("Socket closing.\n"));
@@ -44,6 +45,10 @@ int TCPSocketState(void *ClientData,
 	    ExFreePool( Bucket );
 	}
     } else if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
+	TI_DbgPrint(MID_TRACE,("Readable (or closed): irp list %s\n",
+			       IsListEmpty(&Connection->ReceiveRequest) ?
+			       "empty" : "nonempty"));
+
 	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
 	    PIRP Irp;
 	    OSK_UINT RecvLen = 0, Received = 0;
@@ -70,7 +75,7 @@ int TCPSocketState(void *ClientData,
 	    TI_DbgPrint(MID_TRACE,
 			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
 
-	    if( NewState & SEL_FIN ) {
+	    if( NewState & SEL_FIN && !RecvLen ) {
 		Status = STATUS_END_OF_FILE;
 		Received = 0;
 	    } else 
@@ -93,7 +98,7 @@ int TCPSocketState(void *ClientData,
 		
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
-	    } else if( Status == STATUS_SUCCESS ) {
+	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList( &Connection->ReceiveRequest,
 				&Bucket->Entry );
 		break;

@@ -310,11 +310,16 @@ NTSTATUS TCPReceiveData
 	(Status == STATUS_SUCCESS && Received == 0) ) {
 	/* Freed in TCPSocketState */
 	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
-	if( !Bucket ) return STATUS_NO_MEMORY;
+	if( !Bucket ) {
+	    TI_DbgPrint(MID_TRACE,("Failed to allocate bucket\n"));
+	    return STATUS_NO_MEMORY;
+	}
 	
 	Bucket->Request = *Request;
+	*BytesReceived = 0;
 	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
 	Status = STATUS_PENDING;
+	TI_DbgPrint(MID_TRACE,("Queued read irp\n"));
     } else {
 	TI_DbgPrint(MID_TRACE,("Got status %x, bytes %d\n", Status, Received));
 	*BytesReceived = Received;
