@@ -28,7 +28,7 @@
 
 #ifndef _MSC_VER
 #include <exdisp.h>		// for IConnectionPointContainer
-#include <exdispid.h>	// for DWebBrowserEvents IDs
+#include <exdispid.h>	// for DWebBrowserEvents2 IDs
 #endif
 
 #ifndef DISPID_BEFORENAVIGATE	// missing in MinGW (as of 07.02.2004)
@@ -448,192 +448,6 @@ protected:
 #include "exdispid.h"
 
 
-struct DWebBrowserEventsIF
-{
-    virtual HRESULT BeforeNavigate(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* cancel)
-		{return S_OK;}
-
-    virtual HRESULT NavigateComplete(const String& url)
-		{return S_OK;}
-
-    virtual HRESULT StatusTextChange(const String& text)
-		{return S_OK;}
-
-    virtual HRESULT ProgressChange(long Progress, long progressMax)
-		{return S_OK;}
-
-    virtual HRESULT DownloadComplete()
-		{return S_OK;}
-
-    virtual HRESULT CommandStateChange(long command/*CSC_NAVIGATEFORWARD, CSC_NAVIGATEBACK*/, VARIANT_BOOL enable)
-		{return S_OK;}
-
-    virtual HRESULT DownloadBegin()
-		{return S_OK;}
-
-    virtual HRESULT NewWindow(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* processed)
-		{return S_OK;}
-
-    virtual HRESULT TitleChange(const String& text)
-		{return S_OK;}
-
-    virtual HRESULT TitleIconChange(const String& text)
-		{return S_OK;}
-
-    virtual HRESULT FrameBeforeNavigate(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* cancel)
-		{return S_OK;}
-
-    virtual HRESULT FrameNavigateComplete(const String& url)
-		{return S_OK;}
-
-    virtual HRESULT FrameNewWindow(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* processed)
-		{return S_OK;}
-
-    virtual HRESULT Quit(VARIANT_BOOL* cancel)
-		{return S_OK;}
-
-    virtual HRESULT WindowMove()
-		{return S_OK;}
-
-    virtual HRESULT WindowResize()
-		{return S_OK;}
-
-    virtual HRESULT WindowActivate()
-		{return S_OK;}
-
-    virtual HRESULT PropertyChange(const BStr& property)
-		{return S_OK;}
-};
-
-
-#ifndef __DWebBrowserEvents_DISPINTERFACE_DEFINED__	// missing in MinGW (as of 07.02.2004)
-interface DWebBrowserEvents : public IDispatch
-{
-};
-#endif
-
-
-struct ANSUNC DWebBrowserEventsImpl : public SimpleComObject,
-						public IComSrvBase<DWebBrowserEvents, DWebBrowserEventsImpl>,
-						public DWebBrowserEventsIF
-{
-	typedef IComSrvBase<DWebBrowserEvents, DWebBrowserEventsImpl> super;
-
-
-	DWebBrowserEventsIF* _callback;
-
-
-	DWebBrowserEventsImpl()
-	 :	super(DIID_DWebBrowserEvents)
-	{
-		_callback = this;
-	}
-
-/*	 // IUnknown
-    STDMETHOD(QueryInterface)(REFIID riid, LPVOID* ppv)
-	{
-		*ppv = NULL;
-
-		if (SUCCEEDED(super::QueryInterface(riid, ppv)))
-			return S_OK;
-
-		return E_NOINTERFACE;
-	} */
-
-
-	 // IDispatch
-	STDMETHOD(GetTypeInfoCount)(UINT* pctinfo)
-		{return E_NOTIMPL;}
-
-	STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo)
-		{return E_NOTIMPL;}
-
-	STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId)
-		{return E_NOTIMPL;}
-
-	STDMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
-						DISPPARAMS __RPC_FAR *pDispParams, VARIANT __RPC_FAR *pVarResult, EXCEPINFO __RPC_FAR *pExcepInfo, UINT __RPC_FAR *puArgErr)
-	{
-		switch(dispIdMember) {
-		  case DISPID_BEFORENAVIGATE: {
-			if (pDispParams->cArgs != 6)
-				return E_INVALIDARG;
-
-			BSTR s5 = V_BSTR(&pDispParams->rgvarg[5]);
-			BSTR s3 = V_BSTR(&pDispParams->rgvarg[3]);	// Mozilla's Active X control gives us NULL in bstrVal.
-			BSTR s1 = V_BSTR(&pDispParams->rgvarg[1]);
-
-			return _callback->BeforeNavigate(s5? s5: L"", V_I4(&pDispParams->rgvarg[4]),
-								  s3? s3: L"", &pDispParams->rgvarg[2],
-								  s1? s1: L"", V_BOOLREF(&pDispParams->rgvarg[0]));}
-
-		  case DISPID_NAVIGATECOMPLETE:	// in async, this is sent when we have enough to show
-			if (pDispParams->cArgs != 1)
-				return E_INVALIDARG;
-			return _callback->NavigateComplete(V_BSTR(&pDispParams->rgvarg[0]));
-
-		  case DISPID_STATUSTEXTCHANGE:
-			if (pDispParams->cArgs != 1)
-				return E_INVALIDARG;
-			return _callback->StatusTextChange(V_BSTR(&pDispParams->rgvarg[0]));
-
-		  case DISPID_QUIT:
-			return _callback->Quit(NULL);
-
-		  case DISPID_DOWNLOADCOMPLETE:
-			return _callback->DownloadComplete();
-
-		  case DISPID_COMMANDSTATECHANGE:
-			if (pDispParams->cArgs != 2)
-				return E_INVALIDARG;
-			return _callback->CommandStateChange(V_I4(&pDispParams->rgvarg[1]), pDispParams->rgvarg[0].boolVal);
-
-		  case DISPID_DOWNLOADBEGIN:
-			return _callback->DownloadBegin();
-
-		  case DISPID_NEWWINDOW:		// sent when a new window should be created
-			if (pDispParams->cArgs != 6)
-				return E_INVALIDARG;
-			return _callback->NewWindow(V_BSTR(&pDispParams->rgvarg[5]), V_I4(&pDispParams->rgvarg[4]),
-							V_BSTR(&pDispParams->rgvarg[3]), &pDispParams->rgvarg[2],
-							V_BSTR(&pDispParams->rgvarg[1]), V_BOOLREF(&pDispParams->rgvarg[0]));
-
-		  case DISPID_PROGRESSCHANGE:	// sent when download progress is updated
-			if (pDispParams->cArgs != 2)
-				return E_INVALIDARG;
-			return _callback->ProgressChange(V_I4(&pDispParams->rgvarg[1]), V_I4(&pDispParams->rgvarg[0]));
-
-		  case DISPID_WINDOWMOVE:		// sent when main window has been moved
-			return _callback->WindowMove();
-
-		  case DISPID_WINDOWRESIZE:		// sent when main window has been sized
-			return _callback->WindowResize();
-
-		  case DISPID_WINDOWACTIVATE:	// sent when main window has been activated
-			return _callback->WindowActivate();
-
-		  case DISPID_PROPERTYCHANGE:	// sent when the PutProperty method is called
-			if (pDispParams->cArgs != 1)
-				return E_INVALIDARG;
-			return _callback->PropertyChange(V_BSTR(&pDispParams->rgvarg[0]));
-
-		  case DISPID_TITLECHANGE:		// sent when the document title changes
-			if (pDispParams->cArgs != 1)
-				return E_INVALIDARG;
-			return _callback->TitleChange(V_BSTR(&pDispParams->rgvarg[0]));
-
-		  case DISPID_TITLEICONCHANGE:	// sent when the top level window icon may have changed.
-			if (pDispParams->cArgs != 1)
-				return E_INVALIDARG;
-			return _callback->TitleIconChange(V_BSTR(&pDispParams->rgvarg[0]));
-
-		  default:
-			return NOERROR;
-		}
-	}
-};
-
-
 struct DWebBrowserEvents2IF
 {
     virtual void StatusTextChange(const BStr& text)
@@ -858,6 +672,9 @@ struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
 			_callback->TitleIconChange((BStr)Variant(pDispParams->rgvarg[0]));
 			break;
 
+
+			//-> anything below here is not present in DWebBrowserEvents, only in DWebBrowserEvents2:
+
 		  case DISPID_FRAMEBEFORENAVIGATE:
 			if (pDispParams->cArgs != 6)
 				return E_INVALIDARG;
@@ -1066,92 +883,7 @@ protected:
 };
 
 
-struct DWebBrowserEventsHandler : public DWebBrowserEventsImpl
-{
-	DWebBrowserEventsHandler(HWND hwnd, HWND hwndFrame, IWebBrowser* browser)
-	 :	_hwnd(hwnd),
-		_hwndFrame(hwndFrame),
-		_browser(browser, IID_IWebBrowser2),
-		_connector(browser, DIID_DWebBrowserEvents, this)
-	{
-	}
-
-protected:
-    HRESULT BeforeNavigate(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* cancel)
-	{
-		return S_OK;
-	}
-
-    HRESULT NavigateComplete(const String& url)
-		{return S_OK;}
-
-    HRESULT StatusTextChange(const String& text)
-	{
-		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)text.c_str());
-		return S_OK;
-	}
-
-    HRESULT ProgressChange(long Progress, long ProgressMax)
-		{return S_OK;}
-
-    HRESULT CommandStateChange(long command, VARIANT_BOOL enable)
-		{return S_OK;}
-
-    HRESULT DownloadComplete()
-		{return S_OK;}
-
-    HRESULT DownloadBegin()
-		{return S_OK;}
-
-    HRESULT NewWindow(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* processed)
-		{return S_OK;}
-
-    HRESULT TitleChange(const String& text)
-	{
-		SetWindowText(_hwnd, text);
-		return S_OK;
-	}
-
-    HRESULT TitleIconChange(const String& text)
-		{return S_OK;}
-
-    HRESULT FrameBeforeNavigate(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* cancel)
-		{return S_OK;}
-
-    HRESULT FrameNavigateComplete(const String& url)
-		{return S_OK;}
-
-    HRESULT FrameNewWindow(const String& url, long flags, const String& targetFrameName, VARIANT* postData, const String& headers, VARIANT_BOOL* processed)
-		{return S_OK;}
-
-    HRESULT Quit(VARIANT_BOOL* cancel)
-		{return S_OK;}
-
-    HRESULT WindowMove()
-		{return S_OK;}
-
-    HRESULT WindowResize()
-		{return S_OK;}
-
-    HRESULT WindowActivate()
-		{return S_OK;}
-
-    HRESULT PropertyChange(const BStr& property)
-	{
-		Variant value;
-		_browser->GetProperty(property, &value);
-		return S_OK;
-	}
-
-protected:
-	HWND	_hwnd;
-	HWND	_hwndFrame;
-	SIfacePtr<IWebBrowser2> _browser;
-	EventConnector _connector;
-};
-
-
- // Eventhandler using DWebBrowserEvents2Impl
+ /// Web control Eventhandler using DWebBrowserEvents2Impl
 
 struct DWebBrowserEvents2Handler : public DWebBrowserEvents2Impl
 {
@@ -1355,8 +1087,7 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 protected:
-	auto_ptr<DWebBrowserEventsHandler> _evt_handler1;
-	auto_ptr<DWebBrowserEvents2Handler> _evt_handler2;
+	auto_ptr<DWebBrowserEvents2Handler> _evt_handler;
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 };

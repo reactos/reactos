@@ -188,9 +188,7 @@ static const CLSID CLSID_MozillaBrowser =
 
 
 WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
- :	super(hwnd),
-	_evt_handler1(NULL),
-	_evt_handler2(NULL)
+ :	super(hwnd)
 {
 	 // first try to create a web control with MS IE's CLASSID
 	HRESULT hr = create_control(hwnd, CLSID_WebBrowser, IID_IWebBrowser2);
@@ -202,11 +200,8 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 	if (SUCCEEDED(hr)) {
 		HWND hwndFrame = GetParent(info._hmdiclient);
 
-		 // handling events using DWebBrowserEvents
-		_evt_handler1 = auto_ptr<DWebBrowserEventsHandler>(new DWebBrowserEventsHandler(_hwnd, hwndFrame, _control));
-
 		 // handling events using DWebBrowserEvents2
-		_evt_handler2 = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _control));
+		_evt_handler = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _control));
 
 		SIfacePtr<IWebBrowser2> browser(get_browser());
 
