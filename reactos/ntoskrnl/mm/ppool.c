@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.13 2003/07/11 01:23:15 royce Exp $
+/* $Id: ppool.c,v 1.14 2003/07/29 18:51:11 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,22 @@ static FAST_MUTEX MmPagedPoolLock;
 static PMM_PPOOL_FREE_BLOCK_HEADER MmPagedPoolFirstFreeBlock;
 
 /* FUNCTIONS *****************************************************************/
+
+inline static void* block_to_address (
+	MM_PPOOL_USED_BLOCK_HEADER* blk )
+/*
+ * FUNCTION: Translate a block header address to the corresponding block
+ * address (internal)
+ */
+{
+        return ( (void *) ((char*)blk + sizeof(MM_PPOOL_USED_BLOCK_HEADER)) );
+}
+
+inline static MM_PPOOL_USED_BLOCK_HEADER* address_to_block(void* addr)
+{
+        return (MM_PPOOL_USED_BLOCK_HEADER *)
+               ( ((char*)addr) - sizeof(MM_PPOOL_USED_BLOCK_HEADER) );
+}
 
 VOID MmInitializePagedPool(VOID)
 {
@@ -134,7 +150,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
       /*
        * Create the new free block.
        */
-      NextBlock = (PMM_PPOOL_FREE_BLOCK_HEADER)((PVOID)BestBlock + BlockSize);
+      NextBlock = (PMM_PPOOL_FREE_BLOCK_HEADER)((char*)BestBlock + BlockSize);
       NextBlock->Size = NewSize;
       NextBlock->NextFree = BestBlock->NextFree;
 
@@ -181,7 +197,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 
   ExReleaseFastMutex(&MmPagedPoolLock);
 
-  BlockAddress = (PVOID)NewBlock + sizeof(MM_PPOOL_USED_BLOCK_HEADER);
+  BlockAddress = block_to_address ( NewBlock );
 
   memset(BlockAddress, 0, NumberOfBytes);
 
@@ -192,8 +208,7 @@ VOID STDCALL
 ExFreePagedPool(IN PVOID Block)
 {
   PMM_PPOOL_FREE_BLOCK_HEADER PreviousBlock;
-  PMM_PPOOL_USED_BLOCK_HEADER UsedBlock = 
-    (PMM_PPOOL_USED_BLOCK_HEADER)(Block - sizeof(MM_PPOOL_USED_BLOCK_HEADER));
+  PMM_PPOOL_USED_BLOCK_HEADER UsedBlock = address_to_block(Block);
   ULONG UsedSize = UsedBlock->Size;
   PMM_PPOOL_FREE_BLOCK_HEADER FreeBlock = 
     (PMM_PPOOL_FREE_BLOCK_HEADER)UsedBlock;
@@ -237,7 +252,7 @@ ExFreePagedPool(IN PVOID Block)
    * merge them.
    */
   if (NextBlock != NULL && 
-      ((PVOID)FreeBlock + FreeBlock->Size) == (PVOID)NextBlock)
+      ((char*)FreeBlock + FreeBlock->Size) == (char*)NextBlock)
     {
       FreeBlock->Size = FreeBlock->Size + NextBlock->Size;
       FreeBlock->NextFree = NextBlock->NextFree;
@@ -253,7 +268,7 @@ ExFreePagedPool(IN PVOID Block)
    * merge them.
    */
   if (PreviousBlock != NULL && 
-      ((PVOID)PreviousBlock + PreviousBlock->Size) == (PVOID)FreeBlock)
+      ((char*)PreviousBlock + PreviousBlock->Size) == (char*)FreeBlock)
     {
       PreviousBlock->Size = PreviousBlock->Size + FreeBlock->Size;
       PreviousBlock->NextFree = NextNextBlock;
