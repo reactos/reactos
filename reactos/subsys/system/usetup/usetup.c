@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002, 2003 ReactOS Team
+ *  Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ typedef struct _COPYCONTEXT
 {
   ULONG TotalOperations;
   ULONG CompletedOperations;
-  PPROGRESS ProgressBar;
+  PPROGRESSBAR ProgressBar;
 } COPYCONTEXT, *PCOPYCONTEXT;
 
 
@@ -492,6 +492,7 @@ CheckUnattendedSetup()
       InfCloseFile(UnattendInf);
       return;
     }
+
   /* Get pointer 'InstallationDirectory' key */
   if (!InfGetData(&Context, NULL, &Value))
     {
@@ -688,19 +689,15 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
   SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
-
   SetTextXY(8, 17, "\x07  Press E to start the emergency console.");
-
   SetTextXY(8, 19, "\x07  Press R to repair ReactOS.");
-
   SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
-
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
   if (IsUnattendedSetup)
     {
-      return(INSTALL_INTRO_PAGE);
+      return INSTALL_INTRO_PAGE;
     }
 
   while(TRUE)
@@ -711,24 +708,24 @@ IntroPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
+	    return QUIT_PAGE;
 	  break;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(INSTALL_INTRO_PAGE);
+	  return INSTALL_INTRO_PAGE;
 	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
 	{
-	  return(EMERGENCY_INTRO_PAGE);
+	  return EMERGENCY_INTRO_PAGE;
 	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
 	{
-	  return(REPAIR_INTRO_PAGE);
+	  return REPAIR_INTRO_PAGE;
 	}
     }
 
-  return(INTRO_PAGE);
+  return INTRO_PAGE;
 }
 
 
@@ -1930,8 +1927,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		    wcscpy (PathBuffer, SourceRootPath.Buffer);
 		    wcscat (PathBuffer, L"\\loader\\fat32.bin");
 
-		    DPRINT1 ("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
-			     DestinationRootPath.Buffer);
+		    DPRINT ("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
+			    DestinationRootPath.Buffer);
 		    Status = InstallFat32BootCodeToDisk (PathBuffer,
 						         DestinationRootPath.Buffer);
 		    if (!NT_SUCCESS (Status))
@@ -1946,8 +1943,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		    wcscpy (PathBuffer, SourceRootPath.Buffer);
 		    wcscat (PathBuffer, L"\\loader\\fat.bin");
 
-		    DPRINT1 ("Install FAT bootcode: %S ==> %S\n", PathBuffer,
-			     DestinationRootPath.Buffer);
+		    DPRINT ("Install FAT bootcode: %S ==> %S\n", PathBuffer,
+			    DestinationRootPath.Buffer);
 		    Status = InstallFat16BootCodeToDisk (PathBuffer,
 						         DestinationRootPath.Buffer);
 		    if (!NT_SUCCESS (Status))
@@ -3334,7 +3331,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
 }
 
 
-
 static PAGE_NUMBER
 QuitPage(PINPUT_RECORD Ir)
 {
@@ -3534,9 +3530,6 @@ NtProcessStartup(PPEB Peb)
 	    Page = RepairIntroPage(&Ir);
 	    break;
 
-	  case REBOOT_PAGE:
-		break;
-
 
 	  /* Emergency pages */
 	  case EMERGENCY_INTRO_PAGE:
@@ -3554,6 +3547,9 @@ NtProcessStartup(PPEB Peb)
 
 	  case QUIT_PAGE:
 	    Page = QuitPage(&Ir);
+	    break;
+
+	  case REBOOT_PAGE:
 	    break;
 	}
     }

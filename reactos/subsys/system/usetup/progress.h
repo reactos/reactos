@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: progress.h,v 1.2 2003/02/27 14:42:43 ekohl Exp $
+/* $Id: progress.h,v 1.3 2004/02/23 11:58:27 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -42,25 +42,29 @@ typedef struct _PROGRESS
 
   ULONG StepCount;
   ULONG CurrentStep;
-} PROGRESS, *PPROGRESS;
+} PROGRESSBAR, *PPROGRESSBAR;
 
 /* FUNCTIONS ****************************************************************/
 
-PPROGRESS
+PPROGRESSBAR
 CreateProgressBar(SHORT Left,
 		  SHORT Top,
 		  SHORT Right,
 		  SHORT Bottom);
 
 VOID
-DestroyProgressBar(PPROGRESS Bar);
+DestroyProgressBar(PPROGRESSBAR Bar);
 
 VOID
-ProgressSetStepCount(PPROGRESS Bar,
+ProgressSetStepCount(PPROGRESSBAR Bar,
 		     ULONG StepCount);
 
 VOID
-ProgressNextStep(PPROGRESS Bar);
+ProgressNextStep(PPROGRESSBAR Bar);
+
+VOID
+ProgressSetStep (PPROGRESSBAR Bar,
+		 ULONG Step);
 
 #endif /* __PROGRESS_H__ */
 
