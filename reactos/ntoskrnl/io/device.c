@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.67 2004/03/14 17:10:48 navaraf Exp $
+/* $Id: device.c,v 1.68 2004/03/21 18:58:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -345,12 +345,129 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
-IopAttachFilterDrivers(PDEVICE_NODE DeviceNode,
-                       BOOLEAN Lower)
+
+NTSTATUS STDCALL
+IopAttachFilterDriversCallback(
+  PWSTR ValueName,
+  ULONG ValueType,
+  PVOID ValueData,
+  ULONG ValueLength,
+  PVOID Context,
+  PVOID EntryContext)
 {
+  PDEVICE_NODE DeviceNode = Context;
+  UNICODE_STRING ServiceName;
+  PWCHAR Filters;
+
+  Filters = ValueData;
+  while (((ULONG_PTR)Filters - (ULONG_PTR)ValueData) < ValueLength &&
+         *Filters != 0)
+  {
+    DPRINT1("Filter Driver: %S (%wZ)\n", Filters, &DeviceNode->InstancePath);
+    ServiceName.Buffer = Filters;
+    ServiceName.MaximumLength = 
+    ServiceName.Length = wcslen(Filters) * sizeof(WCHAR);
+    IopInitializeDeviceNodeService(
+      DeviceNode,
+      &ServiceName,
+      FALSE);  
+    Filters += (ServiceName.Length / sizeof(WCHAR)) + 1;
+  }
+
   return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+IopAttachFilterDrivers(
+  PDEVICE_NODE DeviceNode,
+  BOOLEAN Lower)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  PWCHAR KeyBuffer;
+  UNICODE_STRING Class;
+  WCHAR ClassBuffer[40];
+  NTSTATUS Status;
+
+  /*
+   * First load the device filters
+   */
+  
+  QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
+  if (Lower)
+    QueryTable[0].Name = L"LowerFilters";
+  else
+    QueryTable[0].Name = L"UpperFilters";
+  QueryTable[0].EntryContext = NULL;
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[1].QueryRoutine = NULL;
+  QueryTable[1].Name = NULL;
+
+  KeyBuffer = ExAllocatePool(
+    PagedPool, 
+    (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+  wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+  wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
+
+  RtlQueryRegistryValues(
+    RTL_REGISTRY_ABSOLUTE,
+    KeyBuffer,
+    QueryTable,
+    DeviceNode,
+    NULL);
+
+  /*
+   * Now get the class GUID
+   */
+
+  Class.Length = 0;
+  Class.MaximumLength = 40 * sizeof(WCHAR);
+  Class.Buffer = ClassBuffer;
+  QueryTable[0].QueryRoutine = NULL;
+  QueryTable[0].Name = L"ClassGUID";
+  QueryTable[0].EntryContext = &Class;
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+
+  Status = RtlQueryRegistryValues(
+    RTL_REGISTRY_ABSOLUTE,
+    KeyBuffer,
+    QueryTable,
+    DeviceNode,
+    NULL);
+
+  ExFreePool(KeyBuffer);
+
+  /*
+   * Load the class filter driver
+   */
+
+  if (NT_SUCCESS(Status))
+  {
+    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
+    if (Lower)
+      QueryTable[0].Name = L"LowerFilters";
+    else
+      QueryTable[0].Name = L"UpperFilters";
+    QueryTable[0].EntryContext = NULL;
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+
+    KeyBuffer = ExAllocatePool(PagedPool, (58 * sizeof(WCHAR)) + Class.Length);
+    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\");
+    wcscat(KeyBuffer, ClassBuffer);
+
+    RtlQueryRegistryValues(
+      RTL_REGISTRY_ABSOLUTE,
+      KeyBuffer,
+      QueryTable,
+      DeviceNode,
+      NULL);
+
+    ExFreePool(KeyBuffer);
+  }
+  
+  return STATUS_SUCCESS;
+}
+
 
 NTSTATUS 
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
@@ -443,12 +560,13 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 NTSTATUS
 IopInitializeService(
   PDEVICE_NODE DeviceNode,
+  PUNICODE_STRING ServiceName,
   PUNICODE_STRING ImagePath)
 {
   PMODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
-  ModuleObject = LdrGetModuleObject(&DeviceNode->ServiceName);
+  ModuleObject = LdrGetModuleObject(ServiceName);
   if (ModuleObject == NULL)
   {
     /* The module is currently not loaded, so load it now */

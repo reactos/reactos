@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.26 2004/03/20 17:34:25 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.27 2004/03/21 18:58:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -897,7 +897,9 @@ IopActionInterrogateDeviceStack(
     * Create registry key for the instance id, if it doesn't exist yet
     */  
 
-   KeyBuffer = ExAllocatePool(PagedPool, (49 + DeviceNode->InstancePath.Length) * sizeof(WCHAR));
+   KeyBuffer = ExAllocatePool(
+      PagedPool, 
+      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
    wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
    IopCreateDeviceKeyPath(KeyBuffer);
@@ -1066,9 +1068,13 @@ IopActionInitChildServices(
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED))
    {
-      Status = IopInitializeDeviceNodeService(DeviceNode, BootDrivers);
+      Status = IopInitializeDeviceNodeService(
+         DeviceNode,
+         &DeviceNode->ServiceName,
+         BootDrivers);
       if (NT_SUCCESS(Status))
       {
+         IopAttachFilterDrivers(DeviceNode, FALSE);
          IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
       } else
       {

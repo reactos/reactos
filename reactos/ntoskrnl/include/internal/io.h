@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.39 2004/03/14 17:10:48 navaraf Exp $
+/* $Id: io.h,v 1.40 2004/03/21 18:58:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -386,6 +386,19 @@ NTSTATUS
 PnpRootCreateDevice(
   PDEVICE_OBJECT *PhysicalDeviceObject);
 
+/* device.c */
+
+NTSTATUS
+IopAttachFilterDrivers(
+  PDEVICE_NODE DeviceNode,
+  BOOLEAN Lower);
+
+NTSTATUS
+IopInitializeService(
+  PDEVICE_NODE DeviceNode,
+  PUNICODE_STRING ServiceName,
+  PUNICODE_STRING ImagePath);
+
 /* driver.c */
 
 VOID
@@ -399,6 +412,7 @@ IopInitializeSystemDrivers(
 NTSTATUS
 IopInitializeDeviceNodeService(
   PDEVICE_NODE DeviceNode,
+  PUNICODE_STRING ServiceName,
   BOOLEAN BootDriverOnly);
 
 VOID

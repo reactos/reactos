@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.37 2004/03/19 17:37:57 navaraf Exp $
+/* $Id: driver.c,v 1.38 2004/03/21 18:58:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -32,11 +32,6 @@
 
 /* ke/main.c */
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
-
-NTSTATUS
-IopInitializeService(
-  PDEVICE_NODE DeviceNode,
-  PUNICODE_STRING ImagePath);
 
 NTSTATUS
 LdrProcessModule(PVOID ModuleLoadBase,
@@ -799,13 +794,16 @@ IopGetDriverNameFromServiceKey(
  */
 
 NTSTATUS
-IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
+IopInitializeDeviceNodeService(
+   PDEVICE_NODE DeviceNode,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN BootDriverOnly)
 {
    NTSTATUS Status;
    ULONG ServiceStart;
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
-   if (DeviceNode->ServiceName.Buffer == NULL)
+   if (ServiceName == NULL || ServiceName->Buffer == NULL)
    {
       return STATUS_UNSUCCESSFUL;
    }
@@ -819,7 +817,7 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[0].EntryContext = &ServiceStart;
    Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-      DeviceNode->ServiceName.Buffer, QueryTable, NULL, NULL);
+      ServiceName->Buffer, QueryTable, NULL, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
@@ -840,8 +838,7 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
          ULONG ModuleStart, ModuleSize;
          PCHAR ModuleName;
 
-         /* FIXME: Guard for buffer overflow */
-         sprintf(SearchName, "%S.sys", DeviceNode->ServiceName.Buffer);
+         _snprintf(SearchName, sizeof(SearchName), "%wZ.sys", ServiceName);
          for (i = 1; i < KeLoaderBlock.ModsCount; i++)
          {
             ModuleStart = KeLoaderModules[i].ModStart;
@@ -869,7 +866,7 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
        * Get service path
        */
       Status = IopGetDriverNameFromServiceKey(RTL_REGISTRY_SERVICES,
-          DeviceNode->ServiceName.Buffer, &ImagePath);
+          ServiceName->Buffer, &ImagePath);
       if (!NT_SUCCESS(Status))
       {
          DPRINT("IopGetDriverNameFromKeyNode() failed (Status %x)\n", Status);
@@ -879,12 +876,12 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode, BOOLEAN BootDriverOnly)
       /*
        * Display loading message
        */
-      IopDisplayLoadingMessage(DeviceNode->ServiceName.Buffer);
+      IopDisplayLoadingMessage(ServiceName->Buffer);
 
       /*
        * Load the service
        */
-      Status = IopInitializeService(DeviceNode, &ImagePath);
+      Status = IopInitializeService(DeviceNode, ServiceName, &ImagePath);
 
       /*
        * Free the service path
