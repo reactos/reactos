@@ -61,6 +61,7 @@ extern "C" {
 #define    IDE_SR_DRQ               0x08
 #define    IDE_SR_ERR               0x01
 #define  IDE_REG_COMMAND          0x0007
+#define    IDE_CMD_RESET            0x08
 #define    IDE_CMD_READ             0x20
 #define    IDE_CMD_READ_RETRY       0x21
 #define    IDE_CMD_WRITE            0x30
