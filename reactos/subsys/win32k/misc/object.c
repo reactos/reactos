@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12.8.4 2004/09/26 22:44:35 weiden Exp $
+/* $Id: object.c,v 1.12.8.5 2004/09/27 01:08:03 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -169,7 +169,14 @@ ObmObjectDeleted(PVOID ObjectBody)
 {
   PUSER_OBJECT_HEADER ObjectHeader;
   
-  ASSERT(ObjectBody);
+  ASSERT ( (size_t)ObjectBody > 0x1000 );
+  if ( (size_t)ObjectBody <= 0x1000 )
+  {
+    DPRINT1("ObmObjectDeleted() called with ObjectBody==0x%x\n",ObjectBody);
+    KeRosDumpStackFrames(NULL,10);
+    DPRINT1("I could obtain a pointer to the handle, but I'll just bugcheck instead, have a nice day!\n");
+    KEBUGCHECK(0);
+  }
   
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   return ((ObjectHeader->Slot == NULL) || (*(ObjectHeader->Slot) != ObjectHeader));
