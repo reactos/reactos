@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.20 2002/05/06 22:25:50 dwelch Exp $
+/* $Id: irq.c,v 1.21 2002/07/10 15:12:33 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -468,7 +468,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    if (old_level < DISPATCH_LEVEL && irq == 0)
      {
-       PsDispatchThread(THREAD_STATE_RUNNABLE);
+       PsDispatchThread(THREAD_STATE_READY);
      }
 }
 

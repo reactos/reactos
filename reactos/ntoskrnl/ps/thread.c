@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.98 2002/06/18 21:51:10 dwelch Exp $
+/* $Id: thread.c,v 1.99 2002/07/10 15:15:00 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -48,7 +48,7 @@ static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static BOOLEAN DoneInitYet = FALSE;
 static PETHREAD IdleThreads[MAXIMUM_PROCESSORS];
 ULONG PiNrThreads = 0;
-ULONG PiNrRunnableThreads = 0;
+ULONG PiNrReadyThreads = 0;
 
 static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 					  THREAD_WRITE,
@@ -82,7 +82,7 @@ PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 	KeBugCheck(0);
      }
    InsertTailList(&PriorityListHead[Priority], &Thread->Tcb.QueueListEntry);
-   PiNrRunnableThreads++;
+   PiNrReadyThreads++;
 }
 
 VOID PsDumpThreads(BOOLEAN IncludeSystem)
@@ -115,7 +115,7 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 		    current->ThreadsProcess->UniqueProcessId,
 		    current->Cid.UniqueThread, 
 		    current->ThreadsProcess->ImageFileName);
-	   if (current->Tcb.State == THREAD_STATE_RUNNABLE ||
+	   if (current->Tcb.State == THREAD_STATE_READY ||
 	       current->Tcb.State == THREAD_STATE_SUSPENDED ||
 	       current->Tcb.State == THREAD_STATE_BLOCKED)
 	     {
@@ -167,7 +167,7 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
      {
        current = CONTAINING_RECORD(current_entry, ETHREAD,
 				   Tcb.QueueListEntry);
-       assert(current->Tcb.State == THREAD_STATE_RUNNABLE);
+       assert(current->Tcb.State == THREAD_STATE_READY);
        DPRINT("current->Tcb.UserAffinity %x Affinity %x PID %d %d\n",
 	       current->Tcb.UserAffinity, Affinity, current->Cid.UniqueThread,
 	       Priority);
@@ -195,9 +195,9 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	   CurrentThread->Cid.UniqueThread);
    
    CurrentThread->Tcb.State = NewThreadStatus;
-   if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
+   if (CurrentThread->Tcb.State == THREAD_STATE_READY)
      {
-	PiNrRunnableThreads++;
+	PiNrReadyThreads++;
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
 			       CurrentThread);
      }
@@ -214,7 +214,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	     return;
 	  }
 	if (Candidate != NULL)
-	  {	
+	  {
 	    PETHREAD OldThread;
 
 	    DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
@@ -230,7 +230,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    return;
 	  }
      }
-   CPRINT("CRITICAL: No threads are runnable\n");
+   CPRINT("CRITICAL: No threads are ready\n");
    KeBugCheck(0);
 }
 
@@ -242,9 +242,9 @@ PsDispatchThread(ULONG NewThreadStatus)
    if (!DoneInitYet)
      {
 	return;
-     }   
+     }
    
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);  
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    /*
     * Save wait IRQL
     */
@@ -263,7 +263,7 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
     {
       Thread->Tcb.WaitStatus = *WaitStatus;
     }
-  Thread->Tcb.State = THREAD_STATE_RUNNABLE;
+  Thread->Tcb.State = THREAD_STATE_READY;
   PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
@@ -293,7 +293,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
     }
     Thread->Tcb.WaitBlockList = NULL;
     KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
-    PsDispatchThreadNoLock (THREAD_STATE_RUNNABLE);
+    PsDispatchThreadNoLock (THREAD_STATE_READY);
     if (Status != NULL)
     {
       *Status = STATUS_KERNEL_APC;
@@ -465,7 +465,7 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
    Thread->Priority = (CHAR)Priority;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   if (Thread->State == THREAD_STATE_RUNNABLE)
+   if (Thread->State == THREAD_STATE_READY)
     {
 	RemoveEntryList(&Thread->QueueListEntry);
 	PsInsertIntoThreadList(Thread->BasePriority, 
@@ -542,7 +542,7 @@ NtContinue(IN PCONTEXT	Context,
 NTSTATUS STDCALL
 NtYieldExecution(VOID)
 {
-  PsDispatchThread(THREAD_STATE_RUNNABLE);
+  PsDispatchThread(THREAD_STATE_READY);
   return(STATUS_SUCCESS);
 }
 

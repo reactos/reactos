@@ -157,8 +157,8 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
 
 static PCHAR GspThreadStates[THREAD_STATE_MAX] =
 {
-  "Invalid",      /* THREAD_STATE_INVALID */
-  "Runnable",     /* THREAD_STATE_RUNNABLE */
+  "Initialized",  /* THREAD_STATE_INITIALIZED */
+  "Ready",        /* THREAD_STATE_READY */
   "Running",      /* THREAD_STATE_RUNNING */
   "Suspended",    /* THREAD_STATE_SUSPENDED */
   "Frozen",       /* THREAD_STATE_FROZEN */

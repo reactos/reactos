@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.35 2002/07/04 19:56:35 dwelch Exp $
+/* $Id: ps.h,v 1.36 2002/07/10 15:11:46 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -515,8 +515,8 @@ NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
 NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
 
-#define THREAD_STATE_INVALID      (0)
-#define THREAD_STATE_RUNNABLE     (1)
+#define THREAD_STATE_INITIALIZED  (0)
+#define THREAD_STATE_READY        (1)
 #define THREAD_STATE_RUNNING      (2)
 #define THREAD_STATE_SUSPENDED    (3)
 #define THREAD_STATE_FROZEN       (4)

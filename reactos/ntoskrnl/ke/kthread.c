@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.27 2002/06/10 21:34:36 hbirr Exp $
+/* $Id: kthread.c,v 1.28 2002/07/10 15:13:33 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -152,7 +152,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->Teb = NULL;
   Thread->TlsArray = NULL;
   Thread->DebugActive = 0;
-  Thread->State = THREAD_STATE_BLOCKED;
+  Thread->State = THREAD_STATE_INITIALIZED;
   Thread->Alerted[0] = 0;
   Thread->Alerted[1] = 0;
   Thread->Iopl = 0;
