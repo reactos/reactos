@@ -67,3 +67,4 @@ If you search for more information, look into the CVS repository.
 						fixes for leaking GDI handles
 25.02.2004	m. fuchs	rebar control for desktop bar
 28.02.2004	m. fuchs	"minimize all" functionality
+						various fixes for notification icons, task bar and desktop switching

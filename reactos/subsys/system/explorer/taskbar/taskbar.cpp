@@ -201,7 +201,9 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
 {
 	HWND hwnd = it->first;
-	bool minimize_it = can_minimize && (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd);
+
+	bool minimize_it = can_minimize && !IsIconic(hwnd) &&
+						(hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd);
 
 	 // switch to selected application window
 	if (!minimize_it)
