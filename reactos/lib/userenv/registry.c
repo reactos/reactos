@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.3 2004/03/14 18:15:59 ekohl Exp $
+/* $Id: registry.c,v 1.4 2004/03/16 11:34:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -86,7 +86,7 @@ CopyKey (HKEY hDstKey,
 			     NULL,
 			     &LastWrite))
 	    {
-	      DPRINT ("Subkey enumeration failed (Error %lu)\n", GetLastError());
+	      DPRINT1 ("Subkey enumeration failed (Error %lu)\n", GetLastError());
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
@@ -103,7 +103,7 @@ CopyKey (HKEY hDstKey,
 			       &hDstSubKey,
 			       &dwDisposition))
 	    {
-	      DPRINT ("Subkey creation failed (Error %lu)\n", GetLastError());
+	      DPRINT1 ("Subkey creation failed (Error %lu)\n", GetLastError());
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
@@ -116,7 +116,7 @@ CopyKey (HKEY hDstKey,
 			     KEY_READ,
 			     &hSrcSubKey))
 	    {
-	      DPRINT ("Error: %lu\n", GetLastError());
+	      DPRINT1 ("Error: %lu\n", GetLastError());
 	      RegCloseKey (hDstSubKey);
 	      HeapFree (GetProcessHeap (),
 			0,
@@ -127,7 +127,7 @@ CopyKey (HKEY hDstKey,
 	  if (!CopyKey (hDstSubKey,
 			hSrcSubKey))
 	    {
-	      DPRINT ("Error: %lu\n", GetLastError());
+	      DPRINT1 ("Error: %lu\n", GetLastError());
 	      RegCloseKey (hSrcSubKey);
 	      RegCloseKey (hDstSubKey);
 	      HeapFree (GetProcessHeap (),
@@ -153,7 +153,7 @@ CopyKey (HKEY hDstKey,
 				dwMaxValueNameLength * sizeof(WCHAR));
       if (lpNameBuffer == NULL)
 	{
-	  DPRINT ("Buffer allocation failed\n");
+	  DPRINT1 ("Buffer allocation failed\n");
 	  return FALSE;
 	}
 
@@ -162,7 +162,7 @@ CopyKey (HKEY hDstKey,
 				dwMaxValueLength);
       if (lpDataBuffer == NULL)
 	{
-	  DPRINT ("Buffer allocation failed\n");
+	  DPRINT1 ("Buffer allocation failed\n");
 	  HeapFree (GetProcessHeap (),
 		    0,
 		    lpNameBuffer);
@@ -234,7 +234,6 @@ CreateUserHive (LPCWSTR lpKeyName)
 
   DPRINT ("CreateUserHive(%S) called\n", lpKeyName);
 
-
   if (RegOpenKeyExW (HKEY_USERS,
 		     L".Default",
 		     0,
@@ -258,6 +257,8 @@ CreateUserHive (LPCWSTR lpKeyName)
 
   bResult = CopyKey (hUserKey,
 		     hDefaultKey);
+
+  RegFlushKey (hUserKey);
 
   RegCloseKey (hUserKey);
   RegCloseKey (hDefaultKey);
