@@ -199,6 +199,9 @@ IntInitializeDesktopGraphics(VOID)
   
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 
+  /* Setup the cursor */
+  IntLoadDefaultCursors();
+
   return TRUE;
 }
 

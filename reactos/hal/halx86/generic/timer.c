@@ -99,7 +99,7 @@ static BOOLEAN UdelayCalibrated = FALSE;
  * For supported compilers we use inline assembler. For the others,
  * portable plain C.
  */
-VOID STDCALL
+VOID STDCALL __attribute__((noinline))
 __KeStallExecutionProcessor(ULONG Loops)
 {
   if (!Loops)

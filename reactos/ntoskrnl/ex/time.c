@@ -290,6 +290,8 @@ ExSetTimerResolution (
     )
 {
 	UNIMPLEMENTED;
+
+    return 0;
 }
 
 

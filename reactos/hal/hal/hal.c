@@ -384,6 +384,8 @@ HalReadDmaCounter(
   PADAPTER_OBJECT AdapterObject)
 {
   UNIMPLEMENTED;
+  
+  return 0;
 }
 
 
@@ -682,6 +684,8 @@ STDCALL
 KdPortDisableInterrupts()
 {
   UNIMPLEMENTED;
+
+  return FALSE;
 }
 
 
@@ -690,6 +694,8 @@ STDCALL
 KdPortEnableInterrupts()
 {
   UNIMPLEMENTED;
+
+  return FALSE;
 }
 
 
@@ -709,6 +715,8 @@ KeAcquireSpinLockRaiseToSynch(
   PKSPIN_LOCK SpinLock)
 {
   UNIMPLEMENTED;
+
+  return 0;
 }
 
 
