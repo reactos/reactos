@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.156 2004/08/05 19:59:13 navaraf Exp $
+/* $Id: section.c,v 1.157 2004/08/08 10:46:20 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2957,10 +2957,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                                0,
                                NULL,
                                SectionHandle);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(SectionObject);
-      }
+      ObDereferenceObject(SectionObject);
    }
 
    return Status;
