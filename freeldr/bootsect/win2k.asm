@@ -19,6 +19,8 @@
 ; sector number of the start of the data area.
 ;
 
+org 7c00h
+
 segment .text
 
 bits 16
@@ -49,7 +51,7 @@ FSInfoSector		dw	0
 BackupBootSector	dw	6
 Reserved1			times 12 db 0
 ; End FAT32 Inserted Info
-BootDrive			db 0
+BootDrive			db 80h
 Reserved			db 0
 ExtendSig			db 29h
 SerialNumber		dd 00000000h

@@ -107,6 +107,7 @@ VOID BootMain(VOID)
 			MessageBox("Press ENTER to reboot.\n");
 			goto reboot;
 		}
+		TimeOut = -1;
 
 		// Try to open the operating system section in the .ini file
 		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))

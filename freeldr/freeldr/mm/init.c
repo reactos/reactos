@@ -32,7 +32,6 @@ PVOID		HeapBaseAddress = NULL;
 ULONG		HeapLengthInBytes = 0;
 ULONG		HeapMemBlockCount = 0;
 PMEMBLOCK	HeapMemBlockArray = NULL;
-ULONG		Stack;
 
 VOID InitMemoryManager(VOID)
 {
@@ -42,6 +41,12 @@ VOID InitMemoryManager(VOID)
 
 	// Round up to the next page of memory
 	RealFreeLoaderModuleEnd = ROUND_UP(FreeLoaderModuleEnd, 4096);
+	// FIXME:
+	// Add extra space for .data & .bss sections
+	// which are listed after FreeLoaderModuleEnd
+	// because it is in the .text section.
+	// I need to have everything in one section...
+	RealFreeLoaderModuleEnd += 0x2000;
 	BaseAddress = RealFreeLoaderModuleEnd;
 	Length = (MAXLOWMEMADDR - RealFreeLoaderModuleEnd);
 
@@ -64,22 +69,17 @@ VOID InitMemoryManager(VOID)
 	// Adjust the heap length so we can reserve
 	// enough storage space for the MEMBLOCK array
 	Length -= (MemBlocks * sizeof(MEMBLOCK));
-	DbgPrint((DPRINT_MEMORY, "We get here.\n"));
 
 	// Initialize our tracking variables
 	HeapBaseAddress = (PVOID)BaseAddress;
 	HeapLengthInBytes = Length;
 	HeapMemBlockCount = (HeapLengthInBytes / MEM_BLOCK_SIZE);
 	HeapMemBlockArray = (PMEMBLOCK)(HeapBaseAddress + HeapLengthInBytes);
-	DbgPrint((DPRINT_MEMORY, "We get here2.\n"));
 
 	// Clear the memory
-	__asm__("movl	%esp,_Stack");
-	DbgPrint((DPRINT_MEMORY, "HeapBaseAddress: 0x%x HeapLengthInBytes: %d Stack: %d.\n", HeapBaseAddress, HeapLengthInBytes, Stack));
+	DbgPrint((DPRINT_MEMORY, "HeapBaseAddress: 0x%x HeapLengthInBytes: %d\n", HeapBaseAddress, HeapLengthInBytes));
 	RtlZeroMemory(HeapBaseAddress, HeapLengthInBytes);
-	DbgPrint((DPRINT_MEMORY, "We get here3.\n"));
 	RtlZeroMemory(HeapMemBlockArray, (HeapMemBlockCount * sizeof(MEMBLOCK)));
-	DbgPrint((DPRINT_MEMORY, "We get here4.\n"));
 
 #ifdef DEBUG
 	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. BaseAddress = 0x%x Length = 0x%x. %d blocks in heap.\n", BaseAddress, Length, HeapMemBlockCount));

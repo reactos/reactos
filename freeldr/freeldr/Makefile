@@ -34,8 +34,7 @@ LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a inifile/inifile.a
 all:	freeldr.sys
 
 freeldr.sys:	c_code.a end.o
-	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o f.sys c_code.a end.o
-	../bootsect/stubit ../bootsect/fatstub.bin f.sys freeldr.sys 
+	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys c_code.a end.o
 
 freeldr.exe:	asmcode.a c_code.a
 	$(LD) -o freeldr.exe asmcode.a c_code.a

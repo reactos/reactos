@@ -1,6 +1,6 @@
 ; FAT.ASM
 ; FAT12/16 Boot Sector
-; Copyright (c) 1998, 2001 Brian Palmer
+; Copyright (c) 1998, 2001, 2002 Brian Palmer
 
 
 
@@ -9,11 +9,27 @@
 ; for the file freeldr.sys and loads it into
 ; memory.
 ;
-; The stack is set to 0000:7C00 so that the first
-; DWORD pushed will be placed at 0000:7BFC
+; The stack is set to 0000:7BF2 so that the first
+; WORD pushed will be placed at 0000:7BF0
+;
+; The DWORD at 0000:7BFC or BP-04h is the logical
+; sector number of the start of the data area.
+;
+; The DWORD at 0000:7BF8 or BP-08h is the total
+; sector count of the boot drive as reported by
+; the computers bios.
+;
+; The WORD at 0000:7BF6 or BP-0ah is the offset
+; of the ReadSectors function in the boot sector.
+;
+; The WORD at 0000:7BF4 or BP-0ch is the offset
+; of the ReadCluster function in the boot sector.
+;
+; The WORD at 0000:7BF2 or BP-0eh is the offset
+; of the PutChars function in the boot sector.
 ;
 ; When it locates freeldr.sys on the disk it will
-; load the first sector of the file to 0000:7E00
+; load the first sector of the file to 0000:8000
 ; With the help of this sector we should be able
 ; to load the entire file off the disk, no matter
 ; how fragmented it is.
@@ -22,6 +38,16 @@
 ; 7000:0000. This improves the speed of floppy disk
 ; boots dramatically.
 
+
+BootSectorStackTop		equ		0x7bf2
+DataAreaStartHigh		equ		0x2
+DataAreaStartLow		equ		0x4
+BiosCHSDriveSize		equ		0x6
+BiosCHSDriveSizeHigh	equ		0x6
+BiosCHSDriveSizeLow		equ		0x8
+ReadSectorsOffset		equ		0xa
+ReadClusterOffset		equ		0xc
+PutCharsOffset			equ		0xe
 
 
 org 7c00h
@@ -55,180 +81,150 @@ VolumeLabel     db 'NO NAME    '
 FileSystem      db 'FAT12   '
 
 main:
-        cli
-        cld
         xor ax,ax
         mov ss,ax
         mov bp,7c00h
-        mov sp,bp               ; Setup a stack
-        mov ax,cs               ; Setup segment registers
-        mov ds,ax               ; Make DS correct
-        mov es,ax               ; Make ES correct
+        mov sp,BootSectorStackTop				; Setup a stack
+        mov ds,ax								; Make DS correct
+        mov es,ax								; Make ES correct
 
 
-        sti                     ; Enable ints now
-        mov [BYTE bp+BootDrive],dl      ; Save the boot drive
-        xor ax,ax               ; Zero out AX
+        mov [BYTE bp+BootDrive],dl				; Save the boot drive
 
-        ; Reset disk controller
-        int 13h         
-        jnc Continue1           
-        jmp BadBoot             ; Reset failed...
 
-Continue1:
+GetDriveParameters:
+		mov  ah,08h
+		mov  dl,[BYTE bp+BootDrive]					; Get boot drive in dl
+		int  13h									; Request drive parameters from the bios
+		jnc  CalcDriveSize							; If the call succeeded then calculate the drive size
+
+		; If we get here then the call to the BIOS failed
+		; so just set CHS equal to the maximum addressable
+		; size
+		mov  cx,0ffffh
+		mov  dh,cl
+
+CalcDriveSize:
+		; Now that we have the drive geometry
+		; lets calculate the drive size
+		mov  bl,ch			; Put the low 8-bits of the cylinder count into BL
+		mov  bh,cl			; Put the high 2-bits in BH
+		shr  bh,6			; Shift them into position, now BX contains the cylinder count
+		and  cl,3fh			; Mask off cylinder bits from sector count
+		; CL now contains sectors per track and DH contains head count
+		movzx eax,dh		; Move the heads into EAX
+		movzx ebx,bx		; Move the cylinders into EBX
+		movzx ecx,cl		; Move the sectors per track into ECX
+		inc   eax			; Make it one based because the bios returns it zero based
+		inc   ebx			; Make the cylinder count one based also
+		mul   ecx			; Multiply heads with the sectors per track, result in edx:eax
+		mul   ebx			; Multiply the cylinders with (heads * sectors) [stored in edx:eax already]
+
+		; We now have the total number of sectors as reported
+		; by the bios in eax, so store it in our variable
+		mov   [BYTE bp-BiosCHSDriveSize],eax
+
+
         ; Now we must find our way to the first sector of the root directory
         xor ax,ax
-        xor dx,dx
-        mov al,[BYTE bp+NumberOfFats]    ; Number of fats
-        mul WORD [BYTE bp+SectorsPerFat] ; Times sectors per fat
+		xor cx,cx
+        mov al,[BYTE bp+NumberOfFats]			; Number of fats
+        mul WORD [BYTE bp+SectorsPerFat]		; Times sectors per fat
         add ax,WORD [BYTE bp+HiddenSectors] 
-        adc dx,WORD [BYTE bp+HiddenSectors+2] ; Add the number of hidden sectors 
-        add ax,WORD [BYTE bp+ReservedSectors] ; Add the number of reserved sectors
-        adc dx,byte 0           ; Add carry bit
-        push ax                 ; Store it on the stack
-        push dx                 ; Save 32-bit logical start sector
-        push ax
-        push dx                 ; Save it for later use also
+        adc dx,WORD [BYTE bp+HiddenSectors+2]	; Add the number of hidden sectors 
+        add ax,WORD [BYTE bp+ReservedSectors]	; Add the number of reserved sectors
+        adc dx,cx								; Add carry bit
+		mov WORD [BYTE bp-DataAreaStartLow],ax	; Save the starting sector of the root directory
+		mov WORD [BYTE bp-DataAreaStartHigh],dx	; Save it in the first 4 bytes before the boot sector
+		mov si,WORD [BYTE bp+MaxRootEntries]	; Get number of root dir entries in SI
+        pusha									; Save 32-bit logical start sector of root dir
         ; DX:AX now has the number of the starting sector of the root directory
 
         ; Now calculate the size of the root directory
-        mov ax,0020h            ; Size of dir entry
-        mul WORD [BYTE bp+MaxRootEntries] ; Times the number of entries
+        mov ax,0020h							; Size of dir entry
+        mul si									; Times the number of entries
         mov bx,[BYTE bp+BytesPerSector]
         add ax,bx
         dec ax
-        div bx                  ; Divided by the size of a sector
-        ; AX now has the number of root directory sectors
+        div bx									; Divided by the size of a sector
+		; AX now has the number of root directory sectors
 
-        xchg ax,cx              ; Now CX has number of sectors
-        pop  dx
-        pop  ax                 ; Restore logical sector start
-        push cx                 ; Save number of root dir sectors for later use
-        mov  bx,7c0h            ; We will load the root directory 
-        add  bx,byte 20h        ; Right after the boot sector in memory
-        mov  es,bx
-        xor  bx,bx              ; We will load it to [0000:7e00h]
-        call ReadSectors        ; Read the sectors
+		add [BYTE bp-DataAreaStartLow],ax		; Add the number of sectors of the root directory to our other value
+		adc [BYTE bp-DataAreaStartHigh],cx		; Now the first 4 bytes before the boot sector contain the starting sector of the data area
+        popa									; Restore root dir logical sector start to DX:AX
 
+LoadRootDirSector:
+        mov  bx,7e0h							; We will load the root directory sector
+        mov  es,bx								; Right after the boot sector in memory
+        xor  bx,bx								; We will load it to [0000:7e00h]
+		xor  cx,cx								; Zero out CX
+		inc  cx									; Now increment it to 1, we are reading one sector
+		xor  di,di								; Zero out di
+		push es									; Save ES because it will get incremented by 20h
+		call ReadSectors						; Read the first sector of the root directory
+		pop  es									; Restore ES (ES:DI = 07E0:0000)
 
-        ; Now we have to find our way through the root directory to
-        ; The OSLOADER.SYS file
-        mov  bx,[BYTE bp+MaxRootEntries]; Search entire root directory
-        mov  ax,7e0h            ; We loaded at 07e0:0000
-        mov  es,ax
-        xor  di,di
-        mov  si,filename
-        mov  cx,11
-        rep  cmpsb              ; Compare filenames
-        jz   FoundFile          ; If same we found it
-        dec  bx
-        jnz  FindFile
-        jmp  ErrBoot
+SearchRootDirSector:
+		cmp  [es:di],ch							; If the first byte of the directory entry is zero then we have
+		jz   ErrBoot							; reached the end of the directory and FREELDR.SYS is not here so reboot
+		pusha									; Save all registers
+		mov  cl,0xb								; Put 11 in cl (length of filename in directory entry)
+		mov  si,filename						; Put offset of filename string in DS:SI
+		repe cmpsb								; Compare this directory entry against 'FREELDR SYS'
+		popa									; Restore all the registers
+		jz   FoundFreeLoader					; If we found it then jump
+		dec  si									; SI holds MaxRootEntries, subtract one
+		jz   ErrBoot							; If we are out of root dir entries then reboot
+		add  di,BYTE +0x20						; Increment DI by the size of a directory entry
+		cmp  di,0200h							; Compare DI to 512 (DI has offset to next dir entry, make sure we haven't gone over one sector)
+		jc   SearchRootDirSector				; If DI is less than 512 loop again
+		jmp  LoadRootDirSector					; Didn't find FREELDR.SYS in this directory sector, try again
 
-FindFile:
-        mov  ax,es              ; We didn't find it in the previous dir entry
-        add  ax,byte 2          ; So lets move to the next one
-        mov  es,ax              ; And search again
-        xor  di,di
-        mov  si,filename        
-        mov  cx,11
-        rep  cmpsb              ; Compare filenames
-        jz   FoundFile          ; If same we found it
-        dec  bx                 ; Keep searching till we run out of dir entries
-        jnz  FindFile           ; Last entry?
-        jmp  ErrBoot
-
-FoundFile:
+FoundFreeLoader:
 		; We found freeldr.sys on the disk
 		; so we need to load the first 512
-		; bytes of it to 0000:7E00
-        xor  di,di              ; ES:DI has dir entry
-        xor  dx,dx
-        mov  ax,WORD [es:di+1ah]; Get start cluster
-        dec  ax					; Adjust start cluster by 2
-        dec  ax					; Because the data area starts on cluster 2
-        xor  ch,ch
-        mov  cl,BYTE [BYTE bp+SectsPerCluster] ; Times sectors per cluster
-        mul  cx
-        pop  cx                 ; Get number of sectors for root dir
-        add  ax,cx				; Add it to the start sector of freeldr.sys
-        adc  dx,byte 0
-        pop  cx                 ; Get logical start sector of
-        pop  bx                 ; Root directory
-        add  ax,bx              ; Now we have DX:AX with the logical start
-        adc  dx,cx              ; Sector of OSLOADER.SYS
-		mov  cx,1				; We will load 1 sector
-        push WORD [es:di+1ah]   ; Save start cluster
-        mov  bx,7e0h
-        mov  es,bx
-        xor  bx,bx
-        call ReadSectors        ; Load it
-		pop  ax					; Restore start cluster
-		jmp  LoadFile
+		; bytes of it to 0000:8000
+        ; ES:DI has dir entry (ES:DI == 07E0:XXXX)
+        mov  ax,WORD [es:di+1ah]				; Get start cluster
+		push ax									; Save start cluster
+		push WORD 800h							; Put 800h on the stack and load it
+		pop  es									; Into ES so that we load the cluster at 0000:8000
+		call ReadCluster						; Read the cluster
+		pop  ax									; Restore start cluster of FreeLoader
+
+		; Save the addresses of needed functions so
+		; the helper code will know where to call them.
+		mov  WORD [BYTE bp-ReadSectorsOffset],ReadSectors		; Save the address of ReadSectors
+		mov  WORD [BYTE bp-ReadClusterOffset],ReadCluster		; Save the address of ReadCluster
+		mov  WORD [BYTE bp-PutCharsOffset],PutChars				; Save the address of PutChars
+
+		; Now AX has start cluster of FreeLoader and we
+		; have loaded the helper code in the first 512 bytes
+		; of FreeLoader to 0000:8000. Now transfer control
+		; to the helper code. Skip the first three bytes
+		; because they contain a jump instruction to skip
+		; over the helper code in the FreeLoader image.
+		;jmp  0000:8003h
+		jmp  8003h
+
+
+; Reads cluster number in AX into [ES:0000]
+ReadCluster:
+		; StartSector = ((Cluster - 2) * SectorsPerCluster) + ReservedSectors + HiddenSectors;
+        dec   ax								; Adjust start cluster by 2
+        dec   ax								; Because the data area starts on cluster 2
+        xor   ch,ch
+        mov   cl,BYTE [BYTE bp+SectsPerCluster]
+        mul   cx								; Times sectors per cluster
+        add   ax,[BYTE bp-DataAreaStartLow]		; Add start of data area
+        adc   dx,[BYTE bp-DataAreaStartHigh]	; Now we have DX:AX with the logical start sector of OSLOADER.SYS
+        xor   bx,bx								; We will load it to [ES:0000], ES loaded before function call
+		mov   cl,BYTE [BYTE bp+SectsPerCluster]
+		call  ReadSectors
+		ret
 
 
 
-; Reads logical sectors into [ES:BX]
-; DX:AX has logical sector number to read
-; CX has number of sectors to read
-; CarryFlag set on error
-ReadSectors:
-        push ax
-        push dx
-        push cx
-        xchg ax,cx
-        xchg ax,dx
-        xor  dx,dx
-        div  WORD [BYTE bp+SectorsPerTrack]
-        xchg ax,cx                    
-        div  WORD [BYTE bp+SectorsPerTrack]    ; Divide logical by SectorsPerTrack
-        inc  dx                        ; Sectors numbering starts at 1 not 0
-        xchg cx,dx
-        div  WORD [BYTE bp+NumberOfHeads]      ; Number of heads
-        mov  dh,dl                     ; Head to DH, drive to DL
-        mov  dl,[BYTE bp+BootDrive]            ; Drive number
-        mov  ch,al                     ; Cylinder in CX
-        ror  ah,1                      ; Low 8 bits of cylinder in CH, high 2 bits
-        ror  ah,1                      ;  in CL shifted to bits 6 & 7
-        or   cl,ah                     ; Or with sector number
-        mov  ax,0201h
-        int  13h     ; DISK - READ SECTORS INTO MEMORY
-                     ; AL = number of sectors to read, CH = track, CL = sector
-                     ; DH = head, DL    = drive, ES:BX -> buffer to fill
-                     ; Return: CF set on error, AH =    status (see AH=01h), AL    = number of sectors read
-
-        jc   BadBoot
-
-        pop  cx
-        pop  dx
-        pop  ax
-        inc  ax       ;Increment Sector to Read
-        jnz  NoCarry
-        inc  dx
-
-
-NoCarry:
-        push bx
-        mov  bx,es
-        add  bx,byte 20h
-        mov  es,bx
-        pop  bx
-                                        ; Increment read buffer for next sector
-        loop ReadSectors                ; Read next sector
-
-        ret   
-
-
-
-; Displays a bad boot message
-; And reboots
-BadBoot:
-        mov  si,msgDiskError    ; Bad boot disk message
-        call PutChars           ; Display it
-        mov  si,msgAnyKey       ; Press any key message
-        call PutChars           ; Display it
-
-		jmp  Reboot
 
 ; Displays an error message
 ; And reboots
@@ -254,246 +250,131 @@ PutChars:
 Done:
         retn
 
+; Displays a bad boot message
+; And reboots
+BadBoot:
+        mov  si,msgDiskError    ; Bad boot disk message
+        call PutChars           ; Display it
+        mov  si,msgAnyKey       ; Press any key message
+        call PutChars           ; Display it
+
+		jmp  Reboot
+
+; Reads logical sectors into [ES:BX]
+; DX:AX has logical sector number to read
+; CX has number of sectors to read
+ReadSectors:
+		cmp dx,WORD [BYTE bp-BiosCHSDriveSizeHigh]; Check if they are reading a sector within CHS range
+		jb ReadSectorsCHS						; Yes - go to the old CHS routine
+		cmp ax,WORD [BYTE bp-BiosCHSDriveSizeLow]; Check if they are reading a sector within CHS range
+		jbe ReadSectorsCHS						; Yes - go to the old CHS routine
+
+ReadSectorsLBA:
+		pushad									; Save logical sector number & sector count
+
+		o32 push byte 0
+		push dx									; Put 64-bit logical
+		push ax									; block address on stack
+		push es									; Put transfer segment on stack
+		push bx									; Put transfer offset on stack
+		push byte 1								; Set transfer count to 1 sector
+		push byte 0x10							; Set size of packet to 10h
+		mov  si,sp								; Setup disk address packet on stack
+
+; We are so totally out of space here that I am forced to
+; comment out this very beautifully written piece of code
+; It would have been nice to have had this check...
+;CheckInt13hExtensions:							; Now make sure this computer supports extended reads
+;		mov  ah,0x41							; AH = 41h
+;		mov  bx,0x55aa							; BX = 55AAh
+;		mov  dl,[BYTE bp+BootDrive]				; DL = drive (80h-FFh)
+;		int  13h								; IBM/MS INT 13 Extensions - INSTALLATION CHECK
+;		jc   PrintDiskError						; CF set on error (extensions not supported)
+;		cmp  bx,0xaa55							; BX = AA55h if installed
+;		jne  PrintDiskError
+;		test cl,1								; CX = API subset support bitmap
+;		jz   PrintDiskError						; Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+
+
+												; Good, we're here so the computer supports LBA disk access
+												; So finish the extended read
+        mov  dl,[BYTE bp+BootDrive]				; Drive number
+		mov  ah,42h								; Int 13h, AH = 42h - Extended Read
+		int  13h								; Call BIOS
+		jc   BadBoot							; If the read failed then abort
+
+		add  sp,0x10							; Remove disk address packet from stack
+
+		popad									; Restore sector count & logical sector number
+
+        inc  ax									; Increment Sector to Read
+        jnz  NoCarry
+        inc  dx
+
+
+NoCarry:
+        mov  dx,es
+        add  dx,byte 20h						; Increment read buffer for next sector
+        mov  es,dx
+												
+        loop ReadSectorsLBA						; Read next sector
+
+        ret   
+
+
+; Reads logical sectors into [ES:BX]
+; DX:AX has logical sector number to read
+; CX has number of sectors to read
+; CarryFlag set on error
+ReadSectorsCHS:
+        pushad
+        xchg ax,cx
+        xchg ax,dx
+        xor  dx,dx
+        div  WORD [BYTE bp+SectorsPerTrack]
+        xchg ax,cx                    
+        div  WORD [BYTE bp+SectorsPerTrack]    ; Divide logical by SectorsPerTrack
+        inc  dx                        ; Sectors numbering starts at 1 not 0
+        xchg cx,dx
+        div  WORD [BYTE bp+NumberOfHeads]      ; Number of heads
+        mov  dh,dl                     ; Head to DH, drive to DL
+        mov  dl,[BYTE bp+BootDrive]            ; Drive number
+        mov  ch,al                     ; Cylinder in CX
+        ror  ah,1                      ; Low 8 bits of cylinder in CH, high 2 bits
+        ror  ah,1                      ;  in CL shifted to bits 6 & 7
+        or   cl,ah                     ; Or with sector number
+        mov  ax,0201h
+        int  13h     ; DISK - READ SECTORS INTO MEMORY
+                     ; AL = number of sectors to read, CH = track, CL = sector
+                     ; DH = head, DL    = drive, ES:BX -> buffer to fill
+                     ; Return: CF set on error, AH =    status (see AH=01h), AL    = number of sectors read
+
+        jc   BadBoot
+
+        popad
+        inc  ax       ;Increment Sector to Read
+        jnz  NoCarryCHS
+        inc  dx
+
+
+NoCarryCHS:
+        push bx
+        mov  bx,es
+        add  bx,byte 20h
+        mov  es,bx
+        pop  bx
+                                        ; Increment read buffer for next sector
+        loop ReadSectorsCHS             ; Read next sector
+
+        ret   
+
+
 msgDiskError db 'Disk error',0dh,0ah,0
 msgFreeLdr   db 'FREELDR.SYS not found',0dh,0ah,0
-msgAnyKey    db 'Press any key to restart',0dh,0ah,0
+; Sorry, need the space...
+;msgAnyKey    db 'Press any key to restart',0dh,0ah,0
+msgAnyKey    db 'Press any key',0dh,0ah,0
 filename     db 'FREELDR SYS'
 
         times 510-($-$$) db 0   ; Pad to 510 bytes
-        dw 0aa55h       ; BootSector signature
-        
-        
-
-; End of bootsector
-;
-; Now starts the extra boot code that we will store
-; in the first 512 bytes of freeldr.sys
-
-
-
-LoadFile:
-
-		push ax							; First save AX - the start cluster of freeldr.sys
-
-
-		; Display "Loading FreeLoader..." message
-        mov  si,msgLoading				; Loading message
-        call PutChars					; Display it
-
-
-		pop  ax							; Restore AX
-
-		; AX has start cluster of freeldr.sys
-		push ax
-		call ReadFatIntoMemory
-		pop  ax
-
-        mov  bx,7e0h
-        mov  es,bx
-
-LoadFile2:
-		push ax
-		call IsFat12
-		pop  ax
-		jnc  LoadFile3
-		cmp  ax,0ff8h		    ; Check to see if this is the last cluster in the chain
-		jmp  LoadFile4
-LoadFile3:
-		cmp  ax,0fff8h
-LoadFile4:
-		jae	 LoadFile_Done		; If so continue, if not then read then next one
-		push ax
-        xor  bx,bx              ; Load ROSLDR starting at 0000:8000h
-		push es
-		call ReadCluster
-		pop  es
-
-		xor  bx,bx
-        mov  bl,BYTE [BYTE bp+SectsPerCluster]
-		shl  bx,5				; BX = BX * 512 / 16
-		mov  ax,es				; Increment the load address by
-		add  ax,bx				; The size of a cluster
-		mov  es,ax
-
-		call IsFat12
-		pop  ax
-		push es
-		jnc  LoadFile5
-		call GetFatEntry12		; Get the next entry
-		jmp  LoadFile6
-LoadFile5:
-		call GetFatEntry16
-LoadFile6:
-		pop  es
-
-        jmp  LoadFile2			; Load the next cluster (if any)
-
-LoadFile_Done:
-        mov  dl,BYTE [BYTE bp+BootDrive]
-        xor  ax,ax
-        push ax
-        mov  ax,8000h
-        push ax                 ; We will do a far return to 0000:8000h
-        retf                    ; Transfer control to ROSLDR
-
-
-; Reads the entire FAT into memory at 7000:0000
-ReadFatIntoMemory:
-        mov   ax,WORD [BYTE bp+HiddenSectors] 
-        mov   dx,WORD [BYTE bp+HiddenSectors+2]
-		add   ax,WORD [BYTE bp+ReservedSectors]
-		adc   dx,byte 0
-		mov   cx,WORD [BYTE bp+SectorsPerFat]
-		mov   bx,7000h
-		mov   es,bx
-		xor   bx,bx
-		call  ReadSectors
-		ret
-
-
-; Returns the FAT entry for a given cluster number for 16-bit FAT
-; On entry AX has cluster number
-; On return AX has FAT entry for that cluster
-GetFatEntry16:
-
-		xor   dx,dx
-		mov   cx,2						; AX = AX * 2 (since FAT16 entries are 2 bytes)
-		mul   cx
-		shl   dx,0fh
-
-        mov   bx,7000h
-		add   bx,dx
-        mov   es,bx
-		mov   bx,ax						; Restore FAT entry offset
-		mov   ax,WORD [es:bx]	    	; Get FAT entry
-
-		ret
-
-
-; Returns the FAT entry for a given cluster number for 12-bit FAT
-; On entry AX has cluster number
-; On return AX has FAT entry for that cluster
-GetFatEntry12:
-
-		push  ax
-		mov   cx,ax
-		shr   ax,1
-		add   ax,cx						; AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
-
-        mov   bx,7000h
-        mov   es,bx
-		mov   bx,ax						; Put FAT entry offset into BX
-		mov   ax,WORD [es:bx]	    	; Get FAT entry
-		pop   cx						; Get cluster number from stack
-		and   cx,1
-		jz    UseLow12Bits
-		and   ax,0fff0h
-		shr   ax,4
-		jmp   GetFatEntry12_Done
-
-UseLow12Bits:
-		and   ax,0fffh
-
-GetFatEntry12_Done:
-
-		ret
-
-
-; Reads cluster number in AX into [ES:0000]
-ReadCluster:
-		; StartSector = ((Cluster - 2) * SectorsPerCluster) + + ReservedSectors + HiddenSectors;
-
-		dec   ax
-		dec   ax
-		xor   dx,dx
-		movzx bx,BYTE [BYTE bp+SectsPerCluster]
-		mul   bx
-		push  ax
-		push  dx
-        ; Now calculate the size of the root directory
-        mov   ax,0020h            ; Size of dir entry
-        mul   WORD [BYTE bp+MaxRootEntries] ; Times the number of entries
-        mov   bx,WORD [BYTE bp+BytesPerSector]
-        add   ax,bx
-        dec   ax
-        div   bx                  ; Divided by the size of a sector
-		mov   cx,ax
-        ; CX now has the number of root directory sectors
-		xor   dx,dx
-		movzx ax,BYTE [BYTE bp+NumberOfFats]
-		mul   WORD [BYTE bp+SectorsPerFat]
-		add   ax,WORD [BYTE bp+ReservedSectors]
-		adc   dx,byte 0
-		add   ax,WORD [BYTE bp+HiddenSectors]
-		adc   dx,WORD [BYTE bp+HiddenSectors+2]
-		add   ax,cx
-		adc   dx,byte 0
-		pop   cx
-		pop   bx
-		add   ax,bx
-		adc   dx,cx
-        xor   bx,bx				; We will load it to [ES:0000], ES loaded before function call
-		movzx cx,BYTE [BYTE bp+SectsPerCluster]
-		call  ReadSectors
-		ret
-
-; Returns CF = 1 if this is a FAT12 file system
-; Otherwise CF = 0 for FAT16
-IsFat12:
-
-        ; Now calculate the size of the root directory
-        mov   ax,0020h            ; Size of dir entry
-        mul   WORD [BYTE bp+MaxRootEntries] ; Times the number of entries
-        mov   bx,WORD [BYTE bp+BytesPerSector]
-        add   ax,bx				  ; Plus (BytesPerSector - 1)
-        dec   ax
-        div   bx                  ; Divided by the size of a sector
-        ; AX now has the number of root directory sectors
-
-		mov   bx,ax
-        ; Now we must find our way to the first sector of the root directory
-        xor   ax,ax
-        xor   dx,dx
-        mov   al,BYTE [BYTE bp+NumberOfFats]    ; Number of fats
-        mul   WORD [BYTE bp+SectorsPerFat] ; Times sectors per fat
-        add   ax,WORD [BYTE bp+HiddenSectors] 
-        adc   dx,WORD [BYTE bp+HiddenSectors+2] ; Add the number of hidden sectors 
-        add   ax,[BYTE bp+ReservedSectors]     ; Add the number of reserved sectors
-        adc   dx,byte 0               ; Add carry bit
-		add   ax,bx
-		adc   dx,byte 0				  ; Add carry bit
-        ; DX:AX now has the number of the starting sector of the data area
-
-		xor   cx,cx
-		mov   bx,WORD [BYTE bp+TotalSectors]
-		cmp   bx,byte 0
-		jnz   IsFat12_2
-		mov   bx,WORD [BYTE bp+TotalSectorsBig]
-		mov   cx,WORD [BYTE bp+TotalSectorsBig+2]
-
-		; CX:BX now contains the number of sectors on the volume
-IsFat12_2:
-		sub   bx,ax				; Subtract data area start sector
-		sub   cx,dx				; from total sectors of volume
-		mov   ax,bx
-		mov   dx,cx
-
-		; DX:AX now contains the number of data sectors on the volume
-		movzx bx,BYTE [BYTE bp+SectsPerCluster]
-		div   bx
-		; AX now has the number of clusters on the volume
-		stc
-		cmp   ax,4085
-		jb    IsFat12_Done
-		clc
-
-IsFat12_Done:
-		ret
-
-
-
-        times 998-($-$$) db 0   ; Pad to 998 bytes
-
-msgLoading   db 'Loading FreeLoader...',0dh,0ah,0
-
         dw 0aa55h       ; BootSector signature

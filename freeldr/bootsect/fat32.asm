@@ -1,9 +1,8 @@
 ; FAT32.ASM
 ; FAT32 Boot Sector
-; Copyright (c) 1998, 2000, 2001 Brian Palmer
+; Copyright (c) 1998, 2000, 2001, 2002 Brian Palmer
 
-;org 7c00h
-org 0
+org 7c00h
 
 segment .text
 
@@ -43,32 +42,12 @@ VolumeLabel			db 'NO NAME    '
 FileSystem			db 'FAT32   '
 
 main:
-        cli
-        cld
-
-		; Lets copy ourselves from 0000:7c00 to 9000:0000
-		; and transfer control to the new code
-		xor ax,ax
-		mov ds,ax
-		mov si,7c00h
-		mov ax,9000h
-		mov es,ax
-		xor di,di
-		mov cx,512
-		rep movsb
-		jmp 0x9000:RealMain
-
-		; Now we are executing at 9000:xxxx
-		; We are now free to load freeldr.sys at 0000:7e00
-RealMain:
-        xor ax,ax
-		mov bp,ax
-        mov sp,ax               ; Setup a stack
-        mov ax,cs               ; Setup segment registers
+        xor ax,ax               ; Setup segment registers
         mov ds,ax               ; Make DS correct
         mov es,ax               ; Make ES correct
         mov ss,ax				; Make SS correct
-        sti                     ; Enable ints now
+		mov bp,7c00h
+        mov sp,7c00h            ; Setup a stack
 
 
 
@@ -121,13 +100,13 @@ CalcDriveSize:
 
 LoadExtraBootCode:
 		; First we have to load our extra boot code at
-		; sector 14 into memory at [9000:0200h]
+		; sector 14 into memory at [0000:7e00h]
 		mov  eax,0eh
         add  eax,DWORD [BYTE bp+HiddenSectors]	; Add the number of hidden sectors 
 		mov  cx,1
-        mov  bx,9000h
-        mov  es,bx								; Read sector to [9000:0200h]
-		mov  bx,0200h
+        xor  bx,bx
+        mov  es,bx								; Read sector to [0000:7e00h]
+		mov  bx,7e00h
 		call ReadSectors
 		jmp  StartSearch
 
@@ -291,8 +270,8 @@ StartSearch:
 		jb	 ContinueSearch		; If not continue, if so then we didn't find freeldr.sys
 		jmp  PrintFileNotFound
 ContinueSearch:
-        mov  bx,7e0h
-        mov  es,bx				; Read cluster to [0000:7e00h]
+        mov  bx,800h
+        mov  es,bx				; Read cluster to [0000:8000h]
         call ReadCluster        ; Read the cluster
 
 
@@ -301,7 +280,7 @@ ContinueSearch:
 		xor  bx,bx
         mov  bl,[BYTE bp+SectsPerCluster]
 		shl  bx,4				; BX = BX * 512 / 32
-        mov  ax,7e0h            ; We loaded at 07e0:0000
+        mov  ax,800h            ; We loaded at 0800:0000
         mov  es,ax
         xor  di,di
         mov  si,filename
@@ -354,14 +333,14 @@ CheckEndCluster:
 		jmp  PrintFileSystemError		; If so exit with error
 
 InitializeLoadSegment:
-        mov  bx,7e0h
+        mov  bx,800h
         mov  es,bx
 
 LoadFile:
 		cmp  eax,0ffffff8h		; Check to see if this is the last cluster in the chain
 		jae	 LoadFileDone		; If so continue, if not then read the next one
 		push eax
-        xor  bx,bx              ; Load ROSLDR starting at 0000:7e00h
+        xor  bx,bx              ; Load ROSLDR starting at 0000:8000h
 		push es
 		call ReadCluster
 		pop  es
@@ -382,8 +361,8 @@ LoadFile:
 
 LoadFileDone:
         mov  dl,[BYTE bp+BootDrive]
-        xor  ax,ax				; We loaded at 0000:7e00 but the entry point is 0000:8000
-        push ax					; because the first 512 bytes is fat helper code
+        xor  ax,ax
+        push ax					; We loaded at 0000:8000
         push WORD 8000h			; We will do a far return to 0000:8000h
         retf                    ; Transfer control to ROSLDR
 

@@ -724,6 +724,11 @@ void ShowMessageBoxesInSection(PUCHAR SectionName)
 	UCHAR	SettingValue[80];
 	ULONG	SectionId;
 
+	//
+	// Zero out message line text
+	//
+	strcpy(szMessageBoxLineText, "");
+
 	if (!IniOpenSection(SectionName, &SectionId))
 	{
 		sprintf(SettingName, "Section %s not found in freeldr.ini.\n", SectionName);

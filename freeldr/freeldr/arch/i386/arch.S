@@ -24,7 +24,7 @@
 #include "arch.h"
 
 
-EXTERN(start)
+EXTERN(RealEntryPoint)
 
 	cli
 

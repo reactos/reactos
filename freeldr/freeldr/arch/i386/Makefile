@@ -19,7 +19,7 @@
 	
 include ../../rules.mk
 
-OBJS = arch.o boot.o mb.o mem.o disk.o
+OBJS = fathelp.o arch.o boot.o mb.o mem.o disk.o
 
 .PHONY : clean
 
@@ -29,6 +29,9 @@ arch.a:	$(OBJS)
 	$(LD) -r -o arch.a $(OBJS)
 	- $(RM) ..\arch.a
 	$(CP) arch.a ..\arch.a
+
+fathelp.o:	fathelp.asm
+	$(NASM_CMD) -o fathelp.o -f coff fathelp.asm
 
 arch.o:	arch.S
 	$(CC) $(FLAGS) -o arch.o -c arch.S

@@ -26,12 +26,10 @@ export NASM_CMD	= nasm
 
 .PHONY : clean
 
-all: fat.bin fat32.bin bin2c.exe split.exe stubit.exe
+all: fat.bin fat32.bin bin2c.exe
 
-fat.bin: fat.asm bin2c.exe split.exe
-	$(NASM_CMD) -o fat_tmp.bin -f bin fat.asm
-	split fat_tmp.bin fat.bin fatstub.bin 512
-	$(RM) fat_tmp.bin
+fat.bin: fat.asm bin2c.exe
+	$(NASM_CMD) -o fat.bin -f bin fat.asm
 	bin2c fat.bin fat.h fat_data
 
 
@@ -41,12 +39,6 @@ fat32.bin: fat32.asm bin2c.exe
 
 bin2c.exe: bin2c.c
 	$(CC) -o bin2c.exe bin2c.c
-
-split.exe: split.c
-	$(CC) -o split.exe split.c
-
-stubit.exe: stubit.c
-	$(CC) -o stubit.exe stubit.c
 
 clean:
 	$(RM) *.bin
