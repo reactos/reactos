@@ -85,8 +85,8 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 			{
 				/* input redirection */
 				*lpnFlags |= INPUT_REDIRECTION;
-				while (_istspace (*sp))
-					sp++;
+				do sp++;
+				while( _istspace (*sp) );
 
 				/* copy file name */
 				while (*sp && !IsRedirection (*sp) && !_istspace (*sp))
