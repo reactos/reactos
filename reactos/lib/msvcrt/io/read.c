@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.9 2002/11/24 18:42:22 robd Exp $
+/* $Id: read.c,v 1.10 2003/01/19 01:05:03 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -85,6 +85,9 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
             *(bufp - cr) = *bufp;
           }
 #endif
+      }
+      if (found_cr) {
+        cr++;
       }
       /* ignore the carriage returns */
       _rbyte -= cr;
