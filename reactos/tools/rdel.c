@@ -1,7 +1,7 @@
-/*  $Id: rdel.c,v 1.1 2001/08/21 20:13:17 chorns Exp $  
+/*  $Id: rdel.c,v 1.2 2003/11/10 19:29:24 mf Exp $  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
- * PURPOSE:               Platform independant delete command
+ * PURPOSE:               Platform independent delete command
  */
 
 #include <dirent.h>
@@ -24,6 +24,7 @@ convertPath (char * pathToConvert)
   }
 }
 
+#if 0
 void
 getDirectory (const char *filename, char * directorySpec)
 {
@@ -40,6 +41,7 @@ getDirectory (const char *filename, char * directorySpec)
     strcpy (directorySpec, ".");
   }
 }
+#endif
 
 void
 getFilename (const char *filename, char * fileSpec)
@@ -87,5 +89,3 @@ main (int argc, char* argv[])
 
   return  0;
 }
-
-

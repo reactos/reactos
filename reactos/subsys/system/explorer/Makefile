@@ -8,6 +8,8 @@ CC = gcc
 CXX = g++
 LINK = g++
 
+TOOLS_PATH = ../../../tools
+
 CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
 RCFLAGS	= -DWIN32 -D_ROS_
 LFLAGS	= -Wl,--subsystem,windows
@@ -91,5 +93,5 @@ explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
 	windres $(RCFLAGS) -o $@ $^
 
 clean:
-	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 

@@ -1,8 +1,8 @@
-/*  $Id: rrmdir.c,v 1.1 2001/08/21 20:13:17 chorns Exp $  
+/*  $Id: rrmdir.c,v 1.2 2003/11/10 19:29:24 mf Exp $  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  *                        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * PURPOSE:               Platform independant remove directory command
+ * PURPOSE:               Platform independent remove directory command
  */
 
 #include <dirent.h>
@@ -25,6 +25,7 @@ convertPath (char * pathToConvert)
   }
 }
 
+#if 0
 void
 getDirectory (const char *filename, char * directorySpec)
 {
@@ -54,6 +55,7 @@ getFilename (const char *filename, char * fileSpec)
     strcpy (fileSpec, filename);
   }
 }
+#endif
 
 int 
 main (int argc, char* argv[])
@@ -88,5 +90,3 @@ main (int argc, char* argv[])
 
   return  0;
 }
-
-
