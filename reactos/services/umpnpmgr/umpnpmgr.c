@@ -65,10 +65,12 @@ static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
   PPLUGPLAY_EVENT_BLOCK PnpEvent;
+  ULONG PnpEventSize;
   NTSTATUS Status;
   RPC_STATUS RpcStatus;
 
-  PnpEvent = HeapAlloc(GetProcessHeap(), 0, 1024);
+  PnpEventSize = 0x1000;
+  PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
   if (PnpEvent == NULL)
     return ERROR_OUTOFMEMORY;
 
@@ -76,10 +78,17 @@ PnpEventThread(LPVOID lpParameter)
   {
     DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-    ZeroMemory(PnpEvent, 1024);
-
     /* Wait for the next pnp event */
     Status = NtGetPlugPlayEvent(0, 0, PnpEvent, 1024);
+    /* Resize the buffer for the PnP event if it's too small. */
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+      PnpEventSize += 0x400;
+      PnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+      if (PnpEvent == NULL)
+        return ERROR_OUTOFMEMORY;
+      continue;
+    }
     if (!NT_SUCCESS(Status))
     {
       DPRINT("NtPlugPlayEvent() failed (Status %lx)\n", Status);
@@ -87,7 +96,7 @@ PnpEventThread(LPVOID lpParameter)
     }
 
     DPRINT("Received PnP Event\n");
-    if (UuidEqual((UUID*)&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+    if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
     {
       DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
     }
@@ -97,7 +106,6 @@ PnpEventThread(LPVOID lpParameter)
     }
 
     /* FIXME: Process the pnp event */
-
 
     /* Dequeue the current pnp event and signal the next one */
     NtPlugPlayControl(PLUGPLAY_USER_RESPONSE, NULL, 0);
