@@ -1,4 +1,4 @@
-/* $Id: resnotify.c,v 1.1 2004/09/21 19:17:26 weiden Exp $
+/* $Id: resnotify.c,v 1.2 2004/10/24 12:55:19 weiden Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -45,12 +45,11 @@ CreateMemoryResourceNotification(
         return NULL;
     }
 
-    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-    ObjectAttributes.RootDirectory = hBaseDir;
-    ObjectAttributes.ObjectName = &EventName;
-    ObjectAttributes.Attributes = 0;
-    ObjectAttributes.SecurityDescriptor = NULL;
-    ObjectAttributes.SecurityQualityOfService = NULL;
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &EventName,
+                               0,
+                               hBaseDir,
+                               NULL);
 
     Status = NtOpenEvent(&hEvent,
                          EVENT_QUERY_STATE | SYNCHRONIZE,
@@ -76,7 +75,6 @@ QueryMemoryResourceNotification(
     )
 {
     EVENT_BASIC_INFORMATION ebi;
-    ULONG RetLen;
     NTSTATUS Status;
     
     if(ResourceState != NULL)
@@ -85,7 +83,7 @@ QueryMemoryResourceNotification(
                             EventBasicInformation,
                             &ebi,
                             sizeof(ebi),
-                            &RetLen);
+                            NULL);
       if(NT_SUCCESS(Status))
       {
         *ResourceState = ebi.EventState;
