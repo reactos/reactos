@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.86 2004/07/03 17:40:22 navaraf Exp $
+/* $Id: create.c,v 1.87 2004/07/07 16:32:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -283,103 +283,44 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
 }
 
 
-/*
- * Private helper function to lookup the module name from a given address.
- * The address can point to anywhere within the module.
- */
-static const char*
-_module_name_from_addr(const void* addr, char* psz, size_t nChars)
+static EXCEPTION_DISPOSITION __cdecl
+_except_handler(EXCEPTION_RECORD *ExceptionRecord,
+		void * EstablisherFrame,
+		CONTEXT *ContextRecord,
+		void * DispatcherContext)
 {
-   MEMORY_BASIC_INFORMATION mbi;
-   if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
-       !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+   EXCEPTION_POINTERS ExceptionInfo;
+   EXCEPTION_DISPOSITION ExceptionDisposition;
+   ExceptionInfo.ExceptionRecord = ExceptionRecord;
+   ExceptionInfo.ContextRecord = ContextRecord;
+   ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
    {
-      psz[0] = '\0';
+      /* FIXME */
+#if 0
+      if (_BaseRunningInServerProcess)
+         ExitThread(ExceptionRecord->ExceptionCode);
+      else
+#endif
+         ExitProcess(ExceptionRecord->ExceptionCode);
    }
-   return psz;
+
+   return ExceptionDisposition;
 }
 
-static int _except_recursion_trap = 0;
-
-struct _CONTEXT;
-struct __EXCEPTION_RECORD;
-
-static
-EXCEPTION_DISPOSITION
-__cdecl
-_except_handler(
-    struct _EXCEPTION_RECORD *ExceptionRecord,
-    void * EstablisherFrame,
-    struct _CONTEXT *ContextRecord,
-    void * DispatcherContext )
-{
-#ifdef _X86_
- char szMod[128] = "";
-#endif
- DPRINT1("Thread terminated abnormally due to unhandled exception\n");
- DPRINT1("Address:\n");
- DPRINT1("%8x    %s\n",
-         ExceptionRecord->ExceptionAddress,
-         _module_name_from_addr(ExceptionRecord->ExceptionAddress, szMod, sizeof(szMod)));
-
-#ifdef _X86_
-  {
-    PULONG Frame;
-    DPRINT1("Frames:\n");
-    Frame = (PULONG)((CONTEXT *)ContextRecord)->Ebp;
-    while ((PVOID)Frame[1] != NULL && (PULONG)Frame[1] != (PULONG)0xdeadbeef)
-       {
-         _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
-         DPRINT1("%8x    %s\n", (PVOID)Frame[1], szMod);
-         Frame = (PULONG)Frame[0];
-       }
-  }
-#endif
-
- if (3 < ++_except_recursion_trap)
-    {
-      DPRINT1("_except_handler(...) appears to be recursing.\n");
-      DPRINT1("Process HALTED.\n");
-      for (;;)
-	{
-	}
-    }
-
-  if (/* FIXME: */ TRUE) /* Not a service */
-    {
-      DPRINT("  calling ExitProcess(0) no, lets try ExitThread . . .\n");
-      /* ExitProcess(0); */
-      ExitThread(0);
-    }
-  else
-    {
-    DPRINT("  calling ExitThread(0) . . .\n");
-    ExitThread(0);
-    }
-
-  DPRINT1("  We should not get to here !!!\n");
-  /* We should not get to here */
-  return ExceptionContinueSearch;
-}
 
 VOID STDCALL
 BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 		 DWORD lpParameter)
 {
-	UINT uExitCode = 0;
+   UINT uExitCode = 0;
 
-    DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
+   DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
 
-	__try1(_except_handler)
-	{
-		uExitCode = (lpStartAddress)((PVOID)lpParameter);
-	} __except1
-	{
-	}
-
-    DPRINT("BaseProcessStart(..) - cleaned up exception frame.\n");
-
-	ExitThread(uExitCode);
+   __try1(_except_handler)
+   {
+      uExitCode = (lpStartAddress)((PVOID)lpParameter);
+   } __except1
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.14 2004/06/13 20:04:55 navaraf Exp $
+/* $Id: except.c,v 1.15 2004/07/07 16:32:01 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,8 +12,11 @@
 
 #include <k32.h>
 
-UINT GlobalErrMode;
-LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
+#define NDEBUG
+#include "../include/debug.h"
+
+UINT GlobalErrMode = 0;
+LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
 
 UINT GetErrorMode(void)
 {
@@ -51,51 +54,106 @@ SetUnhandledExceptionFilter(
 
 
 /*
+ * Private helper function to lookup the module name from a given address.
+ * The address can point to anywhere within the module.
+ */
+static const char*
+_module_name_from_addr(const void* addr, char* psz, size_t nChars)
+{
+   MEMORY_BASIC_INFORMATION mbi;
+   if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
+       !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+   {
+      psz[0] = '\0';
+   }
+   return psz;
+}
+
+
+/*
  * @unimplemented
  */
-LONG
-STDCALL
+LONG STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
-	DWORD	dbgRet;
-	HANDLE DebugPort;
-	NTSTATUS errCode;
+   DWORD RetValue;
+   HANDLE DebugPort = NULL;
+   NTSTATUS ErrCode;
+   static int RescursionTrap = 3;
 
-	if(ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
-		// might check read only resource
-		// Is there a debugger running ?
-		errCode = NtQueryInformationProcess(NtCurrentProcess(),ProcessDebugPort,&DebugPort,sizeof(HANDLE),NULL);
-		if ( !NT_SUCCESS(errCode) ) {
-			SetLastErrorByStatus(errCode);
-			return EXCEPTION_EXECUTE_HANDLER;
-		}
-		if ( DebugPort ) {
-			//return EXCEPTION_CONTINUE_SEARCH;
-		}
-		if(GlobalTopLevelExceptionFilter != NULL) {
-		dbgRet = GlobalTopLevelExceptionFilter(ExceptionInfo);
-        	if(dbgRet == EXCEPTION_EXECUTE_HANDLER) 
-        		return EXCEPTION_EXECUTE_HANDLER;
-        	else if(dbgRet == EXCEPTION_CONTINUE_EXECUTION) 
-         		return EXCEPTION_CONTINUE_EXECUTION;
-		}
+#if 0
+   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+       ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
+   {
+      RetValue = _BasepCheckForReadOnlyResource(
+         ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+      if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
+         return EXCEPTION_CONTINUE_EXECUTION;
+   }
+#endif
 
-	}
+   if (--RescursionTrap > 0)
+   {
+      /* Is there a debugger running ? */
+      ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
+                                          &DebugPort, sizeof(HANDLE), NULL);
+      if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
+      {
+         SetLastErrorByStatus(ErrCode);
+         return EXCEPTION_EXECUTE_HANDLER;
+      }
 
-	//if ( GetErrorMode() & SEM_NOGPFAULTERRORBOX == SEM_NOGPFAULTERRORBOX ) {
-		// produce a stack trace or pop a message
-		//sprintf( message, "Unhandled exception 0x%08lx at address 0x%08lx.",
-             	//	ExceptionInfo->ExceptionRecord->ExceptionCode,
-             	//	(DWORD)ExceptionInfo->ExceptionRecord->ExceptionAddress );
-		//MessageBoxA( 0, message, "Error", MB_OK | MB_ICONHAND );
-	
-	//}
-	// Returning EXCEPTION_EXECUTE_HANDLER means that the code in 
-	// the __execept block will be executed. Normally this will end up in a
-	// Terminate process.
+      if (DebugPort)
+      {
+         /* Pass the exception to debugger. */
+         DPRINT("Passing exception to debugger\n");
+         return EXCEPTION_CONTINUE_SEARCH;
+      }
 
-	return EXCEPTION_EXECUTE_HANDLER;
-	
+      /* Run unhandled exception handler. */
+      if (GlobalTopLevelExceptionFilter != NULL)
+      {
+         RetValue = GlobalTopLevelExceptionFilter(ExceptionInfo);
+         if (RetValue == EXCEPTION_EXECUTE_HANDLER)
+            return EXCEPTION_EXECUTE_HANDLER;
+         if (RetValue == EXCEPTION_CONTINUE_EXECUTION) 
+            return EXCEPTION_CONTINUE_EXECUTION;
+      }
+   }
+
+   if (RescursionTrap >= 0 && (GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
+   {
+#ifdef _X86_
+      PULONG Frame;
+      CHAR szMod[128] = "";
+#endif
+
+      /* Print a stack trace. */
+      DPRINT1("Unhandled exception\n");
+      DPRINT1("Address:\n");
+      DPRINT1("   %8x   %s\n",
+         ExceptionInfo->ExceptionRecord->ExceptionAddress,
+         _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, szMod, sizeof(szMod)));
+
+#ifdef _X86_
+      DPRINT1("Frames:\n");
+      Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
+      while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
+      {
+         _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
+         DPRINT1("   %8x   %s\n", Frame[1], szMod);
+         Frame = (PULONG)Frame[0];
+      }
+#endif
+   }
+
+   /*
+    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in 
+    * the __except block will be executed. Normally this will end up in a
+    * Terminate process.
+    */
+
+   return EXCEPTION_EXECUTE_HANDLER;	
 }
 
 
