@@ -1,21 +1,13 @@
-/* $Id: conport.c,v 1.4 1999/07/04 22:04:31 ea Exp $
+/* $Id: creport.c,v 1.1 1999/07/04 22:04:31 ea Exp $
  *
- * reactos/apps/lpc/conport.c
+ * reactos/apps/lpc/creport.c
  *
- * To be run in a real WNT 4.0 system with
- * "\SmApiPort" as argument. Do not try to
- * connect to "\Windows\ApiPort" since that
- * reboots immeditely.
+ * To be run in a real WNT 4.0 system to
+ * create an LPC named port.
  * 
  * Use Russinovich' HandleEx to verify
- * conport.exe owns two unnamed LPC ports:
- * the one created by kernel32.dll connecting
- * to csrss.exe, and one connected to here.
- *
- * 19990627 (Emanuele Aliberti)
- * 	Initial implementation.
- * 19990704 (EA)
- * 	Dump object's attributes moved in dumpinfo.c.
+ * creport.exe owns the named LPC port
+ * you asked to create.
  */
 #include <windows.h>
 #include <stdio.h>
@@ -31,15 +23,13 @@
 #define LPC_CONNECT_FLAG5 0x00010000
 
 NTSTATUS
-(STDCALL * ConnectPort)(
-	OUT	PHANDLE			PortHandle,
-	IN	PUNICODE_STRING		PortName,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Unknown4,
-	IN	DWORD	Unknown5,
-	IN	DWORD	Unknown6,
-	IN	ULONG	Flags
+(STDCALL * CreatePort)(
+	/*OUT	PHANDLE			PortHandle,*/
+	PVOID	Buffer,
+	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,  
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	DWORD			Unknown3,
+	IN	ULONG			Flags
 	);
 
 NTSTATUS
@@ -55,11 +45,11 @@ NTSTATUS
 (STDCALL * YieldExecution)(VOID);
 
 #define BUF_SIZE 1024
-#define MAXARG   1000000
+#define MAXARG   5000000
 
 
 VOID
-TryConnectPort(char *port_name)
+TryCreatePort(char *port_name)
 {
 	DWORD			Status = 0;
 	HANDLE			Port = 0;
@@ -95,9 +85,9 @@ TryConnectPort(char *port_name)
 	ObjectAttributes.RootDirectory =
 		NULL;
 	ObjectAttributes.ObjectName =
-		NULL /*& PortName */;
+		& PortName;
 	ObjectAttributes.Attributes =
-		OBJ_CASE_INSENSITIVE;
+		0; //OBJ_CASE_INSENSITIVE --> STATUS_INVALID_PARAMETER ==> case sensitive!;
 	ObjectAttributes.SecurityDescriptor =
 		NULL;
 	ObjectAttributes.SecurityQualityOfService =
@@ -106,14 +96,11 @@ TryConnectPort(char *port_name)
 	 * Try to issue a connection request.
 	 */
 	Port = 0;
-	Status = ConnectPort(
+	Status = CreatePort(
 			& Port,
-			& PortName,
 			& ObjectAttributes,
-			0,
-			0,
-			0,
-			0,
+			0, /* ACCESS_MASK? */
+			0, /* Unknown3 */
 			LPC_CONNECT_FLAG5
 			);
 	if (Status == STATUS_SUCCESS)
@@ -121,7 +108,7 @@ TryConnectPort(char *port_name)
 		DumpInfo(
 			port_name_save,
 			Status,
-			"connected",
+			"created",
 			Port
 			);
 		/* Hot waiting */
@@ -139,7 +126,7 @@ TryConnectPort(char *port_name)
 		return;
 	}
 	printf(
-		"Connection to port \"%s\" failed (Status = %08X).\n",
+		"Creating port \"%s\" failed (Status = %08X).\n",
 		port_name_save,
 		Status
 		);
@@ -152,7 +139,7 @@ main( int argc, char * argv[] )
 
 	if (argc != 2)
 	{
-		printf("WNT LPC Port Connector\n");
+		printf("WNT LPC Port Creator\n");
 		printf("Usage: %s [port_name]\n",argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -163,15 +150,15 @@ main( int argc, char * argv[] )
 		printf("Could not load NTDLL\n");
 		return EXIT_FAILURE;
 	}
-	printf("GetProcAddress(NTDLL.NtConnectPort)\n");
-	ConnectPort = (VOID*) GetProcAddress(
+	printf("GetProcAddress(NTDLL.NtCreatePort)\n");
+	CreatePort = (VOID*) GetProcAddress(
 					ntdll,
-					"NtConnectPort"
+					"NtCreatePort"
 					);
-	if (ConnectPort == NULL)
+	if (CreatePort == NULL)
 	{
 		FreeLibrary(ntdll);
-		printf("Could not find NTDLL.NtConnectPort\n");
+		printf("Could not find NTDLL.NtCreatePort\n");
 		return EXIT_FAILURE;
 	}
 	printf("GetProcAddress(NTDLL.NtQueryObject)\n");
@@ -196,8 +183,8 @@ main( int argc, char * argv[] )
 		printf("Could not find NTDLL.NtYieldExecution\n");
 		return EXIT_FAILURE;
 	}
-	printf("TryConnectPort(%s)\n",argv[1]);
-	TryConnectPort(argv[1]);
+	printf("TryCreatePort(%s)\n",argv[1]);
+	TryCreatePort(argv[1]);
 	printf("Done\n");
 	return EXIT_SUCCESS;
 }
