@@ -30,25 +30,26 @@ RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
 OBJS =	about.o \
-        framewnd.o \
         childwnd.o \
         debug.o \
         dialogs.o \
         draw.o \
         entries.o \
-        run.o \
-        shell.o \
+        framewnd.o \
+        listview.o \
+        main.o \
         network.o \
         settings.o \
-        splitpath.o \
+        shell.o \
         sort.o \
-        utils.o \
-        treeview.o \
-        listview.o \
+        splitpath.o \
+        run.o \
         trace.o \
-        main.o
+        treeview.o \
+        utils.o \
+        worker.o
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
+LIBS = -lgdi32 -luser32 -lkernel32 -ladvapi32 -lcomctl32 -lcomdlg32 -lversion
 
 all:	$(TARGET).exe
 

@@ -47,13 +47,9 @@
 
 #include "trace.h"
 
-// Global Variables:
-extern HINSTANCE hInst;
-
 
 // Global variables and constants 
-// Image_Open, Image_Closed, and Image_Root - integer variables for 
-// indexes of the images. 
+// Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images. 
 // CX_BITMAP and CY_BITMAP - width and height of an icon. 
 // NUM_BITMAPS - number of bitmaps to add to the image list. 
 int Image_Open; 
@@ -315,6 +311,22 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     return TRUE; 
 } 
 
+BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
+{ 
+    static int expanding;
+
+    Entry* entry = (Entry*)pnmtv->itemNew.lParam;
+
+    if (expanding) return FALSE;
+    expanding = TRUE;
+    if (entry) {
+        insert_tree_entries(hwndTV, entry->down, 0);
+//		insert_tree_entries(hwndTV, entry, 0);
+    }
+    expanding = FALSE;
+    return TRUE;
+} 
+
 #ifndef _MSC_VER
 #define NMTVDISPINFO TV_DISPINFO
 #define NMTVDISPINFO TV_DISPINFO
@@ -342,27 +354,6 @@ static void OnGetDispInfo(NMTVDISPINFO* ptvdi)
         ptvdi->item.cchTextMax = lstrlen(entry->data.cFileName); 
     }
 } 
-/*
-typedef struct tagTVITEM{
-    UINT      mask;
-    HTREEITEM hItem;
-    UINT      state;
-    UINT      stateMask;
-    LPTSTR    pszText;
-    int       cchTextMax;
-    int       iImage;
-    int       iSelectedImage;
-    int       cChildren;
-    LPARAM    lParam;
-} TVITEM, FAR *LPTVITEM;
-
-TVITEM structure that identifies and contains information about the tree view item. The mask member of the TVITEM structure specifies which information is being set or retrieved. It can be one or more of the following values: TVIF_CHILDREN  The cChildren member specifies, or is to receive, a value that indicates whether the item has child items.  
-TVIF_IMAGE  The iImage member specifies, or is to receive, the index of the item's nonselected icon in the image list.  
-TVIF_SELECTEDIMAGE  The iSelectedImage member specifies, or is to receive, the index of the item's selected icon in the image list.  
-TVIF_TEXT  The pszText member specifies the new item text or the address of a buffer that is to receive the item text. 
-If the structure is receiving item text, you typically copy the text to the buffer pointed to by the pszText member of the TVITEM structure. However, you can return a string in the pszText member instead. If you do so, you cannot change or delete the string until the corresponding item text is deleted or until two additional TVN_GETDISPINFO notification messages have been sent. 
- 
- */
 
 // OnEndLabelEdit - processes the LVN_ENDLABELEDIT notification message. 
 // Returns TRUE if the label is changed, or FALSE otherwise. 
@@ -380,48 +371,6 @@ static BOOL OnEndLabelEdit(NMTVDISPINFO* ptvdi)
     // message to the edit control to prevent the user from entering too
     // many characters in the field. 
 } 
-
-
-static BOOL OnExpand(int flag, HTREEITEM* pti)
-{ 
-    TRACE(_T("TreeWndProc(...) OnExpand()\n"));
-//    pnmtv = (NMTREEVIEW) lParam 
-    //TRACE("OnExpand(...) entry name: %s\n", entry->data.cFileName);
-    /*
-TVE_COLLAPSE Collapses the list.  
-TVE_COLLAPSERESET Collapses the list and removes the child items. The TVIS_EXPANDEDONCE state flag is reset. This flag must be used with the TVE_COLLAPSE flag. 
-TVE_EXPAND Expands the list. 
-TVE_EXPANDPARTIAL Version 4.70. Partially expands the list. In this state, the child items are visible and the parent item's plus symbol is displayed. This flag must be used in combination with the TVE_EXPAND flag. 
-TVE_TOGGLE Collapses the list if it is expanded or expands it if it is collapsed. 
-     */
-    return TRUE;
-} 
-
-static BOOL OnExpanding(HWND hWnd, NMTREEVIEW* pnmtv)
-{ 
-    static int expanding;
-
-    Entry* entry = (Entry*)pnmtv->itemNew.lParam;
-
-    TRACE(_T("TreeWndProc(...) OnExpanding() entry: %p\n"), entry);
-
-    if (expanding) return FALSE;
-    expanding = TRUE;
-    if (entry) {
-        insert_tree_entries(hWnd, entry->down, 0);
-//		insert_tree_entries(hWnd, entry, 0);
-    }
-    expanding = FALSE;
-    return TRUE;
-} 
-/*
-static BOOL OnSelChanged(NMTREEVIEW* pnmtv)
-{ 
-    LPARAM parm = pnmtv->itemNew.lParam;
-    ChildWnd* child = (ChildWnd*)pnmtv->itemNew.lParam;
-    return TRUE;
-} 
- */
 
 void UpdateStatus(HWND hWnd, Entry* pEntry)
 {
@@ -478,15 +427,14 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 #endif
     case WM_NOTIFY:
         switch (((LPNMHDR)lParam)->code) { 
-        case TVM_EXPAND: 
-            //return OnExpand((int)wParam, (HTREEITEM*)lParam);
-            OnExpand((int)wParam, (HTREEITEM*)lParam);
-            break;
+//        case TVM_EXPAND: 
+//            OnTreeExpand((int)wParam, (HTREEITEM*)lParam);
+//            break;
         case TVN_GETDISPINFO: 
             OnGetDispInfo((NMTVDISPINFO*)lParam); 
             break; 
         case TVN_ITEMEXPANDING: 
-            return OnExpanding(hWnd, (NMTREEVIEW*)lParam);
+            return OnTreeExpanding(hWnd, (NMTREEVIEW*)lParam);
             break;
         case TVN_SELCHANGED:
 
@@ -528,20 +476,18 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 }
 
 // CreateTreeView - creates a tree view control. 
-// Returns the handle to the new control if successful,
-// or NULL otherwise. 
+// Returns the handle to the new control if successful, or NULL otherwise. 
 // hwndParent - handle to the control's parent window. 
 
 static HWND CreateTreeView(HWND hwndParent, int id) 
 { 
-    RECT rcClient;  // dimensions of client area 
-    HWND hwndTV;    // handle to tree view control 
+    RECT rcClient;
+    HWND hwndTV;
  
-    // Get the dimensions of the parent window's client area, and create 
-    // the tree view control. 
+    // Get the dimensions of the parent window's client area, and create the tree view control. 
     GetClientRect(hwndParent, &rcClient); 
     hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+        WS_VISIBLE | WS_CHILD | WS_BORDER | WS_EX_CLIENTEDGE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
     // Initialize the image list, and add items to the control. 

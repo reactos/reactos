@@ -95,10 +95,6 @@ TCHAR szChildClass[MAX_LOADSTRING];
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-//    char TCHAR[MAX_PATH];
-//    int nParts[4];
-//    ChildWnd* child;
-
 	WNDCLASSEX wcFrame = {
 		sizeof(WNDCLASSEX),
 		CS_HREDRAW | CS_VREDRAW/*style*/,
@@ -157,7 +153,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	Globals.hMainWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
 		            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-					0/*hWndParent*/, hMenuFrame, hInstance, 0/*lpParam*/);
+					0/*hWndParent*/, hMenuFrame, hInstance, NULL/*lpParam*/);
     if (!Globals.hMainWnd) {
         return FALSE;
     }
@@ -320,13 +316,6 @@ SetParent (hWndEdit, Globals.hToolBar);
 
     // Create the status bar panes
 	SetupStatusBar(FALSE);
-/*
-    nParts[0] = 250;
-    nParts[1] = 220;
-    nParts[2] = 100;
-    nParts[3] = 100;
-    SendMessage(Globals.hStatusBar, SB_SETPARTS, 4, (long)nParts);
- */
 #if 0
 	//Globals.hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, Globals.Globals.hMainWnd, IDW_STATUSBAR);
 	//CheckMenuItem(Globals.Globals.hMenuOptions, ID_OPTIONS_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
@@ -355,16 +344,7 @@ SetParent (hWndEdit, Globals.hToolBar);
     return TRUE;
 }
         
-/*
-	Globals.hMDIClient = CreateWindowEx(0, _T("MDICLIENT"), NULL,
-//	Globals.hMDIClient = CreateWindowEx(0, (LPCTSTR)(int)hChildClass, NULL,
-					WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
-					0, 0, 0, 0,
-					Globals.hMainWnd, 0, hInstance, &ccs);
-    if (!Globals.hMDIClient) {
-        return FALSE;
-    }
- */
+////////////////////////////////////////////////////////////////////////////////
 
 void SetupStatusBar(BOOL bResize)
 {

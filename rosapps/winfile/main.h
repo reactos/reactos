@@ -189,6 +189,19 @@ extern TCHAR szChildClass[];
 void SetupStatusBar(BOOL bResize);
 void UpdateStatusBar(void);
 
+#ifndef _MSC_VER
+typedef struct tagNMITEMACTIVATE{
+    NMHDR   hdr;
+    int     iItem;
+    int     iSubItem;
+    UINT    uNewState;
+    UINT    uOldState;
+    UINT    uChanged;
+    POINT   ptAction;
+    LPARAM  lParam;
+    UINT    uKeyFlags;
+} NMITEMACTIVATE, FAR *LPNMITEMACTIVATE;
+#endif
 
 #ifdef __cplusplus
 };

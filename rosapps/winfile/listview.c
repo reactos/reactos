@@ -35,9 +35,6 @@
 #endif
     
 #include <windowsx.h>
-//#include <assert.h>
-//#define ASSERT assert
-
 #include "main.h"
 #include "listview.h"
 #include "dialogs.h"
@@ -50,6 +47,10 @@
 //
 
 static WNDPROC g_orgListWndProc;
+
+#define MAX_LIST_COLUMNS 5
+static int default_column_widths[MAX_LIST_COLUMNS] = { 175, 100, 100, 100, 70 };
+static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_RIGHT, LVCFMT_RIGHT, LVCFMT_RIGHT, LVCFMT_LEFT };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +98,6 @@ static void InsertListEntries(HWND hWnd, Entry* entry, int idx)
     }
     ShowWindow(hWnd, SW_SHOW);
 }
-
-#define MAX_LIST_COLUMNS 5
-static int default_column_widths[MAX_LIST_COLUMNS] = { 175, 100, 100, 100, 70 };
-static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_RIGHT, LVCFMT_RIGHT, LVCFMT_RIGHT, LVCFMT_LEFT };
 
 static void CreateListColumns(HWND hWndListView)
 {
@@ -296,13 +293,9 @@ void RefreshList(HWND hWnd, Entry* entry)
 
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	UINT cmd = LOWORD(wParam);
-	//HWND hChildWnd;
-
-    if (1) {
-		switch (cmd) {
-        case ID_FILE_OPEN:
-            {
+	switch (LOWORD(wParam)) {
+    case ID_FILE_OPEN:
+        {
             LVITEM item;
             item.mask = LVIF_PARAM;
 //            UINT selected_count = ListView_GetSelectedCount(hWnd);
@@ -313,19 +306,18 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     OpenTarget(hWnd, entry->data.cFileName);
                 }
             }
-            }
-
-            break;
-        case ID_FILE_MOVE:
-            //OnFileMove(hWnd);
-            break;
-        case ID_FILE_COPY:
-        case ID_FILE_COPY_CLIPBOARD:
-        case ID_FILE_DELETE:
-        case ID_FILE_RENAME:
-            break;
-        case ID_FILE_PROPERTIES:
-            {
+        }
+        break;
+    case ID_FILE_MOVE:
+        //OnFileMove(hWnd);
+        break;
+    case ID_FILE_COPY:
+    case ID_FILE_COPY_CLIPBOARD:
+    case ID_FILE_DELETE:
+    case ID_FILE_RENAME:
+        break;
+    case ID_FILE_PROPERTIES:
+        {
             LVITEM item;
             item.mask = LVIF_PARAM;
             item.iItem = ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
@@ -337,36 +329,33 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                 }
             }
-            }
-            break;
+        }
+        break;
 
-        case ID_FILE_COMPRESS:
-        case ID_FILE_UNCOMPRESS:
-            break;
-        case ID_FILE_RUN:
-            OnFileRun();
-            break;
-        case ID_FILE_PRINT:
-        case ID_FILE_ASSOCIATE:
-        case ID_FILE_CREATE_DIRECTORY:
-            break;
-        case ID_VIEW_SORT_BY_NAME:
-        case ID_VIEW_SORT_BY_TYPE:
-        case ID_VIEW_SORT_BY_SIZE:
-        case ID_VIEW_SORT_BY_DATE:
-            CmdSortItems(hWnd, cmd);
-            break;
-        case ID_WINDOW_REFRESH:
-            RefreshList(hWnd, NULL/*entry*/);
-            break;
-		default:
-            return FALSE;
-		}
-	}
-	return TRUE;
+    case ID_FILE_COMPRESS:
+    case ID_FILE_UNCOMPRESS:
+        break;
+    case ID_FILE_RUN:
+        OnFileRun();
+        break;
+    case ID_FILE_PRINT:
+    case ID_FILE_ASSOCIATE:
+    case ID_FILE_CREATE_DIRECTORY:
+        break;
+    case ID_VIEW_SORT_BY_NAME:
+    case ID_VIEW_SORT_BY_TYPE:
+    case ID_VIEW_SORT_BY_SIZE:
+    case ID_VIEW_SORT_BY_DATE:
+        CmdSortItems(hWnd, LOWORD(wParam));
+        break;
+    case ID_WINDOW_REFRESH:
+        RefreshList(hWnd, NULL/*entry*/);
+        break;
+    default:
+        return FALSE;
+    }
+    return TRUE;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -395,6 +384,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             if (nmitem->hdr.hwndFrom != hWnd) break; 
 //            if (nmitem->hdr.idFrom != IDW_LISTVIEW) break; 
 //            if (nmitem->hdr.code != ???) break; 
+#ifdef _MSC_VER
             switch (nmitem->uKeyFlags) {
             case LVKF_ALT:     //  The ALT key is pressed.  
                 // properties dialog box ?
@@ -405,6 +395,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             case LVKF_SHIFT:   //  The SHIFT key is pressed.   
                 break;
             }
+#endif
             info.pt.x = nmitem->ptAction.x;
             info.pt.y = nmitem->ptAction.y;
             if (ListView_HitTest(hWnd, &info) != -1) {

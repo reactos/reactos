@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+//#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -51,12 +51,16 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Global Variables:
+// Global and Local Variables:
 //
 
 BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
 int  nOldWidth;                  // Holds the previous client area width
 int  nOldHeight;                 // Holds the previous client area height
+
+static HHOOK hcbthook;
+static ChildWnd* newchild = NULL;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
@@ -110,8 +114,6 @@ void resize_frame_client(HWND hWnd)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static HHOOK hcbthook;
-static ChildWnd* newchild = NULL;
 
 static LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
 {
@@ -486,7 +488,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT:
             if (Globals.Options & OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT) {
                 Globals.Options &= ~OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT;
-                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND);
             } else {
                 Globals.Options |= OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT;
                 CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
@@ -495,7 +497,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_OPTIONS_MINIMISE_ON_USE:
             if (Globals.Options & ID_OPTIONS_MINIMISE_ON_USE) {
                 Globals.Options &= ~ID_OPTIONS_MINIMISE_ON_USE;
-                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND);
             } else {
                 Globals.Options |= ID_OPTIONS_MINIMISE_ON_USE;
                 CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
@@ -504,7 +506,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_OPTIONS_SAVE_ON_EXIT:
             if (Globals.Options & OPTIONS_SAVE_ON_EXIT) {
                 Globals.Options &= ~OPTIONS_SAVE_ON_EXIT;
-                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND);
             } else {
                 Globals.Options |= OPTIONS_SAVE_ON_EXIT;
                 CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
@@ -716,7 +718,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HMENU hMenuWindow = GetSubMenu(Globals.hMenuFrame, GetMenuItemCount(Globals.hMenuFrame)-2);
         CLIENTCREATESTRUCT ccs = { hMenuWindow, IDW_FIRST_CHILD };
         Globals.hMDIClient = CreateWindowEx(0, _T("MDICLIENT"), NULL,
-                //WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
                 WS_EX_MDICHILD|WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE,
                 0, 0, 0, 0,
                 hWnd, (HMENU)0, hInst, &ccs);
@@ -732,6 +733,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         if (MsgNotify(hWnd, message, wParam, lParam)) return TRUE;
 //        return MsgNotify(hWnd, message, wParam, lParam);
         switch (((LPNMHDR)lParam)->code) { 
+#ifdef _MSC_VER
         case TTN_GETDISPINFO: 
             { 
             LPTOOLTIPTEXT lpttt; 
@@ -741,6 +743,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             lpttt->lpszText = MAKEINTRESOURCE(lpttt->hdr.idFrom); 
             } 
             break; 
+#endif
         default:
             break;
         }

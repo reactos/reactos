@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  framewnd.h
+ *  worker.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,26 +19,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-#ifndef __FRAMEWND_H__
-#define __FRAMEWND_H__
+    
+#ifndef __WORKER_H__
+#define __WORKER_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
+void StartWorkerThread(HWND hWnd);
+//void StopWorkerThread(HWND hWnd);
 
-LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
-HWND CreateChildWindow(int drv_id);
-void resize_frame_client(HWND hWnd);
+BOOL CreateMonitorThread(HWND hWnd);
+void SignalMonitorEvent(void);
+BOOL DestryMonitorThread(void);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __FRAMEWND_H__
+#endif // __WORKER_H__

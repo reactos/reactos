@@ -40,8 +40,8 @@
 #define ASSERT assert
 
 #include "main.h"
-#include "childwnd.h"
 #include "framewnd.h"
+#include "childwnd.h"
 #include "treeview.h"
 #include "listview.h"
 #include "dialogs.h"
@@ -65,87 +65,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
-/*
-#ifndef _NO_EXTENSIONS
-
-void set_header(Pane* pane)
-{
-	HD_ITEM item;
-	int scroll_pos = GetScrollPos(pane->hWnd, SB_HORZ);
-	int i=0, x=0;
-
-	item.mask = HDI_WIDTH;
-	item.cxy = 0;
-
-	for(; x+pane->widths[i]<scroll_pos && i<COLUMNS; i++) {
-		x += pane->widths[i];
-		Header_SetItem(pane->hwndHeader, i, &item);
-	}
-
-	if (i < COLUMNS) {
-		x += pane->widths[i];
-		item.cxy = x - scroll_pos;
-		Header_SetItem(pane->hwndHeader, i++, &item);
-
-		for(; i<COLUMNS; i++) {
-			item.cxy = pane->widths[i];
-			x += pane->widths[i];
-			Header_SetItem(pane->hwndHeader, i, &item);
-		}
-	}
-}
-
-static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
-{
-	switch(pnmh->code) {
-	case HDN_TRACK:
-	case HDN_ENDTRACK:
-		{
-		HD_NOTIFY* phdn = (HD_NOTIFY*) pnmh;
-		int idx = phdn->iItem;
-		int dx = phdn->pitem->cxy - pane->widths[idx];
-		int i;
-
-		RECT clnt;
-		GetClientRect(pane->hWnd, &clnt);
-		 // move immediate to simulate HDS_FULLDRAG (for now [04/2000] not realy needed with WINELIB)
-		Header_SetItem(pane->hwndHeader, idx, phdn->pitem);
-		pane->widths[idx] += dx;
-		for (i = idx; ++i <= COLUMNS; )
-			pane->positions[i] += dx;
-		{
-		int scroll_pos = GetScrollPos(pane->hWnd, SB_HORZ);
-		RECT rt_scr = {pane->positions[idx+1]-scroll_pos, 0, clnt.right, clnt.bottom};
-		RECT rt_clip = {pane->positions[idx]-scroll_pos, 0, clnt.right, clnt.bottom};
-		if (rt_scr.left < 0) rt_scr.left = 0;
-		if (rt_clip.left < 0) rt_clip.left = 0;
-		ScrollWindowEx(pane->hWnd, dx, 0, &rt_scr, &rt_clip, 0, 0, SW_INVALIDATE);
-		rt_clip.right = pane->positions[idx+1];
-		RedrawWindow(pane->hWnd, &rt_clip, 0, RDW_INVALIDATE|RDW_UPDATENOW);
-		if (pnmh->code == HDN_ENDTRACK) {
-			ListBox_SetHorizontalExtent(pane->hWnd, pane->positions[COLUMNS]);
-			if (GetScrollPos(pane->hWnd, SB_HORZ) != scroll_pos)
-				set_header(pane);
-		}
-		}
-		}
-		return FALSE;
-	case HDN_DIVIDERDBLCLICK:
-		{
-		HD_NOTIFY* phdn = (HD_NOTIFY*) pnmh;
-		HD_ITEM item;
-		calc_single_width(pane, phdn->iItem);
-		item.mask = HDI_WIDTH;
-		item.cxy = pane->widths[phdn->iItem];
-		Header_SetItem(pane->hwndHeader, phdn->iItem, &item);
-		InvalidateRect(pane->hWnd, 0, TRUE);
-		break;
-		}
-	}
-	return 0;
-}
-
-#endif
 
 static BOOL pane_command(Pane* pane, UINT cmd)
 {
@@ -168,22 +87,12 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 		if (pane->visible_cols != COL_ALL) {
 			pane->visible_cols = COL_ALL;
 			calc_widths(pane, TRUE);
-#ifndef _NO_EXTENSIONS
-			set_header(pane);
-#endif
 			InvalidateRect(pane->hWnd, 0, TRUE);
 			CheckMenuItem(Globals.hMenuView, ID_VIEW_NAME, MF_BYCOMMAND);
 //			CheckMenuItem(Globals.hMenuView, ID_VIEW_ALL_ATTRIBUTES, MF_BYCOMMAND|MF_CHECKED);
 //			CheckMenuItem(Globals.hMenuView, ID_VIEW_SELECTED_ATTRIBUTES, MF_BYCOMMAND);
 		}
 		break;
-#ifndef _NO_EXTENSIONS
-	case ID_PREFERED_SIZES: {
-		calc_widths(pane, TRUE);
-		set_header(pane);
-		InvalidateRect(pane->hWnd, 0, TRUE);
-		break;}
-#endif
 #endif
 		// TODO: more command ids...
 	default:
@@ -191,24 +100,6 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 	}
 	return TRUE;
 }
- */
-////////////////////////////////////////////////////////////////////////////////
-//
-//HWND hSplitWnd;                  // Splitter Bar Control Window
-//
-//    hSplitWnd = CreateWindow(szFrameClass, "splitter window", WS_VISIBLE|WS_CHILD,
-//                            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 
-//                            Globals.hMainWnd, (HMENU)SPLIT_WINDOW, hInstance, NULL);
-//    if (!hSplitWnd)
-//        return FALSE;
-//    hTreeWnd = CreateTreeView(Globals.hMDIClient, "c:\\foobar.txt");
-//    if (!hTreeWnd)
-//        return FALSE;
-//    hListWnd = CreateListView(Globals.hMDIClient, "");
-//    if (!hListWnd)
-//        return FALSE;
-//
-////////////////////////////////////////////////////////////////////////////////
 
 static void draw_splitbar(HWND hWnd, int x)
 {
@@ -222,72 +113,14 @@ static void draw_splitbar(HWND hWnd, int x)
 	ReleaseDC(hWnd, hdc);
 }
 
-#if 1
-static void OnPaint(HWND hWnd, ChildWnd* pChildWnd)
+static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
-    HBRUSH lastBrush;
-	PAINTSTRUCT ps;
-	RECT rt;
-
-	BeginPaint(hWnd, &ps);
-	GetClientRect(hWnd, &rt);
-    lastBrush = SelectObject(ps.hdc, (HBRUSH)GetStockObject(COLOR_SPLITBAR));
-    Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
-    SelectObject(ps.hdc, lastBrush);
-//    rt.top = rt.bottom - GetSystemMetrics(SM_CYHSCROLL);
-//    FillRect(ps.hdc, &rt, GetStockObject(BLACK_BRUSH));
-	EndPaint(hWnd, &ps);
-}
-#else
-static void OnPaint(HWND hWnd, ChildWnd* pChildWnd)
-{
-    HBRUSH lastBrush;
-	PAINTSTRUCT ps;
-	RECT rt;
-
-	GetClientRect(hWnd, &rt);
-	BeginPaint(hWnd, &ps);
-
-    lastBrush = SelectObject(ps.hdc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
-    SelectObject(ps.hdc, lastBrush);
-    rt.top = rt.bottom - GetSystemMetrics(SM_CYHSCROLL);
-    FillRect(ps.hdc, &rt, GetStockObject(BLACK_BRUSH));
-/*
-    rt.left = pChildWnd->nSplitPos-SPLIT_WIDTH/2;
-    rt.right = pChildWnd->nSplitPos+SPLIT_WIDTH/2+1;
-	lastBrush = SelectBrush(ps.hdc, (HBRUSH)GetStockObject(COLOR_SPLITBAR));
-	Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
-	SelectObject(ps.hdc, lastBrush);
-#ifdef _NO_EXTENSIONS
-	rt.top = rt.bottom - GetSystemMetrics(SM_CYHSCROLL);
-	FillRect(ps.hdc, &rt, GetStockObject(BLACK_BRUSH));
-#endif
- */
-	EndPaint(hWnd, &ps);
-}
-#endif
-
-//void ResizeWnd(ChildWnd* child, int cx, int cy);
-static void ResizeWnd(ChildWnd* child, int cx, int cy)
-{
-	HDWP hdwp = BeginDeferWindowPos(4);
+	HDWP hdwp = BeginDeferWindowPos(2);
 	RECT rt = {0, 0, cx, cy};
 
-	cx = child->nSplitPos + SPLIT_WIDTH/2;
-#ifndef _NO_EXTENSIONS
-	{
-		WINDOWPOS wp;
-		HD_LAYOUT hdl = {&rt, &wp};
-		Header_Layout(child->left.hwndHeader, &hdl);
-		DeferWindowPos(hdwp, child->left.hwndHeader, wp.hwndInsertAfter,
-						wp.x-1, wp.y, child->nSplitPos-SPLIT_WIDTH/2+1, wp.cy, wp.flags);
-		DeferWindowPos(hdwp, child->right.hwndHeader, wp.hwndInsertAfter,
-						rt.left+cx+1, wp.y, wp.cx-cx+2, wp.cy, wp.flags);
-	}
-#endif
-	DeferWindowPos(hdwp, child->left.hWnd, 0, rt.left, rt.top, child->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-	DeferWindowPos(hdwp, child->right.hWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
+	DeferWindowPos(hdwp, pChildWnd->left.hWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->right.hWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	EndDeferWindowPos(hdwp);
 }
 
@@ -305,6 +138,22 @@ void OnFileMove(HWND hWnd)
 	}
 }
 
+static void OnPaint(HWND hWnd, ChildWnd* pChildWnd)
+{
+    HBRUSH lastBrush;
+	PAINTSTRUCT ps;
+	RECT rt;
+
+	BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &rt);
+    lastBrush = SelectObject(ps.hdc, (HBRUSH)GetStockObject(COLOR_SPLITBAR));
+    Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
+    SelectObject(ps.hdc, lastBrush);
+//    rt.top = rt.bottom - GetSystemMetrics(SM_CYHSCROLL);
+//    FillRect(ps.hdc, &rt, GetStockObject(BLACK_BRUSH));
+	EndPaint(hWnd, &ps);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
@@ -315,11 +164,11 @@ void OnFileMove(HWND hWnd)
 
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	UINT cmd = LOWORD(wParam);
+	//UINT cmd = LOWORD(wParam);
 	//HWND hChildWnd;
 
-    if (1) {
-		switch (cmd) {
+	switch (LOWORD(wParam)) {
+    // Parse the menu selections:
 /*
 //        case ID_FILE_MOVE:
 //            OnFileMove(hWnd);
@@ -397,12 +246,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //  			return DefMDIChildProc(hWnd, message, wParam, lParam);
             return FALSE;
             break;
-		}
 	}
 	return TRUE;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
 //
@@ -421,139 +269,94 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	ASSERT(pChildWnd);
 
 	switch(message) {
-		case WM_CREATE:
-	        CreateTreeWnd(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT);
-            CreateListWnd(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, pChildWnd->szPath);
-            //create_tree_window(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, pChildWnd->szPath);
-            //create_list_window(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
-            return 0;
-			break;
-
-		case WM_PAINT:
-            OnPaint(hWnd, pChildWnd);
-			break;
-
-		case WM_NCDESTROY:
-//			free_child_window(pChildWnd);
-			SetWindowLong(hWnd, GWL_USERDATA, 0);
-			break;
-
-		case WM_SETCURSOR:
-			if (LOWORD(lParam) == HTCLIENT) {
-				POINT pt;
-				GetCursorPos(&pt);
-				ScreenToClient(hWnd, &pt);
-				if (pt.x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && pt.x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
-					SetCursor(LoadCursor(0, IDC_SIZEWE));
-					return TRUE;
-				}
+	case WM_CREATE:
+        CreateTreeWnd(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT);
+        CreateListWnd(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, pChildWnd->szPath);
+        //create_tree_window(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, pChildWnd->szPath);
+        //create_list_window(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
+        return 0;
+		break;
+    case WM_PAINT:
+        OnPaint(hWnd, pChildWnd);
+        return 0;
+	case WM_NCDESTROY:
+//		free_child_window(pChildWnd);
+		SetWindowLong(hWnd, GWL_USERDATA, 0);
+		break;
+	case WM_SETCURSOR:
+		if (LOWORD(lParam) == HTCLIENT) {
+			POINT pt;
+			GetCursorPos(&pt);
+			ScreenToClient(hWnd, &pt);
+			if (pt.x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && pt.x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
+				SetCursor(LoadCursor(0, IDC_SIZEWE));
+				return TRUE;
 			}
-			goto def;
+		}
+		goto def;
+	case WM_LBUTTONDOWN: {
+		RECT rt;
+		int x = LOWORD(lParam);
+		GetClientRect(hWnd, &rt);
+		if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
+			last_split = pChildWnd->nSplitPos;
+			draw_splitbar(hWnd, last_split);
+			SetCapture(hWnd);
+		}
+		break;}
 
-		case WM_LBUTTONDOWN: {
+	case WM_LBUTTONUP:
+		if (GetCapture() == hWnd) {
 			RECT rt;
 			int x = LOWORD(lParam);
-
+			draw_splitbar(hWnd, last_split);
+			last_split = -1;
 			GetClientRect(hWnd, &rt);
-			if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
-				last_split = pChildWnd->nSplitPos;
-#ifdef _NO_EXTENSIONS
-				draw_splitbar(hWnd, last_split);
-#endif
-				SetCapture(hWnd);
-			}
-			break;}
+			pChildWnd->nSplitPos = x;
+			ResizeWnd(pChildWnd, rt.right, rt.bottom);
+			ReleaseCapture();
+		}
+		break;
 
-		case WM_LBUTTONUP:
+	case WM_CAPTURECHANGED:
+		if (GetCapture()==hWnd && last_split>=0)
+			draw_splitbar(hWnd, last_split);
+		break;
+
+    case WM_KEYDOWN:
+		if (wParam == VK_ESCAPE)
 			if (GetCapture() == hWnd) {
-#ifdef _NO_EXTENSIONS
 				RECT rt;
-				int x = LOWORD(lParam);
 				draw_splitbar(hWnd, last_split);
+				GetClientRect(hWnd, &rt);
+                ResizeWnd(pChildWnd, rt.right, rt.bottom);
 				last_split = -1;
-				GetClientRect(hWnd, &rt);
-				pChildWnd->nSplitPos = x;
-				ResizeWnd(pChildWnd, rt.right, rt.bottom);
-#endif
 				ReleaseCapture();
+				SetCursor(LoadCursor(0, IDC_ARROW));
 			}
-			break;
+		break;
 
-#ifdef _NO_EXTENSIONS
-		case WM_CAPTURECHANGED:
-			if (GetCapture()==hWnd && last_split>=0)
-				draw_splitbar(hWnd, last_split);
-			break;
-#endif
+	case WM_MOUSEMOVE:
+		if (GetCapture() == hWnd) {
+			RECT rt;
+			int x = LOWORD(lParam);
+			HDC hdc = GetDC(hWnd);
+			GetClientRect(hWnd, &rt);
+			rt.left = last_split-SPLIT_WIDTH/2;
+			rt.right = last_split+SPLIT_WIDTH/2+1;
+			InvertRect(hdc, &rt);
+			last_split = x;
+			rt.left = x-SPLIT_WIDTH/2;
+			rt.right = x+SPLIT_WIDTH/2+1;
+			InvertRect(hdc, &rt);
+			ReleaseDC(hWnd, hdc);
+		}
+		break;
 
-		case WM_KEYDOWN:
-			if (wParam == VK_ESCAPE)
-				if (GetCapture() == hWnd) {
-					RECT rt;
-#ifdef _NO_EXTENSIONS
-					draw_splitbar(hWnd, last_split);
-#else
-					pChildWnd->nSplitPos = last_split;
-#endif
-					GetClientRect(hWnd, &rt);
-					ResizeWnd(pChildWnd, rt.right, rt.bottom);
-					last_split = -1;
-					ReleaseCapture();
-					SetCursor(LoadCursor(0, IDC_ARROW));
-				}
-			break;
-
-		case WM_MOUSEMOVE:
-			if (GetCapture() == hWnd) {
-				RECT rt;
-				int x = LOWORD(lParam);
-
-#ifdef _NO_EXTENSIONS
-				HDC hdc = GetDC(hWnd);
-				GetClientRect(hWnd, &rt);
-
-				rt.left = last_split-SPLIT_WIDTH/2;
-				rt.right = last_split+SPLIT_WIDTH/2+1;
-				InvertRect(hdc, &rt);
-
-				last_split = x;
-				rt.left = x-SPLIT_WIDTH/2;
-				rt.right = x+SPLIT_WIDTH/2+1;
-				InvertRect(hdc, &rt);
-
-				ReleaseDC(hWnd, hdc);
-#else
-				GetClientRect(hWnd, &rt);
-
-				if (x>=0 && x<rt.right) {
-					pChildWnd->nSplitPos = x;
-					ResizeWnd(pChildWnd, rt.right, rt.bottom);
-					rt.left = x-SPLIT_WIDTH/2;
-					rt.right = x+SPLIT_WIDTH/2+1;
-					InvalidateRect(hWnd, &rt, FALSE);
-					UpdateWindow(pChildWnd->left.hWnd);
-					UpdateWindow(hWnd);
-					UpdateWindow(pChildWnd->right.hWnd);
-				}
-#endif
-			}
-			break;
-
-#ifndef _NO_EXTENSIONS
-		case WM_GETMINMAXINFO:
-			DefMDIChildProc(hWnd, message, wParam, lParam);
-
-			{LPMINMAXINFO lpmmi = (LPMINMAXINFO)lParam;
-
-			lpmmi->ptMaxTrackSize.x <<= 1;//2*GetSystemMetrics(SM_CXSCREEN) / SM_CXVIRTUALSCREEN
-			lpmmi->ptMaxTrackSize.y <<= 1;//2*GetSystemMetrics(SM_CYSCREEN) / SM_CYVIRTUALSCREEN
-			break;}
-#endif
-
-		case WM_SETFOCUS:
-			SetCurrentDirectory(pChildWnd->szPath);
-			SetFocus(pChildWnd->nFocusPanel? pChildWnd->right.hWnd: pChildWnd->left.hWnd);
-			break;
+	case WM_SETFOCUS:
+		SetCurrentDirectory(pChildWnd->szPath);
+		SetFocus(pChildWnd->nFocusPanel? pChildWnd->right.hWnd: pChildWnd->left.hWnd);
+		break;
 
 	case WM_DISPATCH_COMMAND:
         if (_CmdWndProc(hWnd, message, wParam, lParam)) break;
@@ -565,15 +368,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_COMMAND:
-/*
-        if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
-            return DefMDIChildProc(hWnd, message, wParam, lParam);
-        } else {
-    		return _CmdWndProc(hWnd, message, wParam, lParam);
-//  		return DefMDIChildProc(hWnd, message, wParam, lParam);
-        }
-		break;
- */
         if (_CmdWndProc(hWnd, message, wParam, lParam)) break;
 			return DefMDIChildProc(hWnd, message, wParam, lParam);
 
@@ -585,102 +379,39 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 //    		return _CmdWndProc(hWnd, message, wParam, lParam);
 //        }
 		break;
-/*
-		case WM_COMMAND:
-            {
-			Pane* pane = GetFocus()==pChildWnd->left.hWnd? &pChildWnd->left: &pChildWnd->right;
-
-			switch(HIWORD(wParam)) {
-				case LBN_SELCHANGE: {
-					int idx = ListBox_GetCurSel(pane->hWnd);
-					Entry* entry = (Entry*) ListBox_GetItemData(pane->hWnd, idx);
-
-					if (pane == &pChildWnd->left)
-						set_curdir(pChildWnd, entry);
-					else
-						pane->cur = entry;
-					break;}
-
-				case LBN_DBLCLK:
-					activate_entry(pChildWnd, pane);
-					break;
-			}
-			}
-			break;
-
-		case WM_DISPATCH_COMMAND: {
-			Pane* pane = GetFocus()==pChildWnd->left.hWnd? &pChildWnd->left: &pChildWnd->right;
-
-			switch(LOWORD(wParam)) {
-				case ID_WINDOW_NEW_WINDOW:
-                    //CreateChildWindow(pChildWnd->szPath);
-                    CreateChildWindow(-1);
-//                    {
-//					ChildWnd* new_child = alloc_child_window(pChildWnd->szPath);
-//					if (!create_child_window(new_child))
-//						free(new_child);
-//                    }
-					break;
-#if 0
-				case ID_REFRESH:
-					scan_entry(pChildWnd, pane->cur);
-					break;
-				case ID_ACTIVATE:
-					activate_entry(pChildWnd, pane);
-					break;
-#endif
-				case ID_WINDOW_CASCADE:
-					SendMessage(Globals.hMDIClient, WM_MDICASCADE, 0, 0);
-					break;
-				case ID_WINDOW_TILE_HORZ:
-					SendMessage(Globals.hMDIClient, WM_MDITILE, MDITILE_HORIZONTAL, 0);
-					break;
-				case ID_WINDOW_TILE_VERT:
-					SendMessage(Globals.hMDIClient, WM_MDITILE, MDITILE_VERTICAL, 0);
-					break;
-				case ID_WINDOW_ARRANGE_ICONS:
-					SendMessage(Globals.hMDIClient, WM_MDIICONARRANGE, 0, 0);
-					break;
-				default:
-					return pane_command(pane, LOWORD(wParam));
-			}
-
-			return TRUE;}
- */
-//#ifndef _NO_EXTENSIONS
-		case WM_NOTIFY: {
-            int idCtrl = (int)wParam; 
-			//NMHDR* pnmh = (NMHDR*)lParam;
-			//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
-            if (idCtrl == IDW_TREE_LEFT) {
-                if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
-                    Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
-                    if (entry != NULL) {
-                        //RefreshList(pChildWnd->right.hWnd, entry);
-                        //void set_curdir(ChildWnd* child, Entry* entry)
-                        set_curdir(pChildWnd, entry);
-                    }
-                }
-                if (!SendMessage(pChildWnd->left.hWnd, message, wParam, lParam)) {
-                    return DefMDIChildProc(hWnd, message, wParam, lParam);
+	case WM_NOTIFY:
+        {
+        int idCtrl = (int)wParam; 
+		//NMHDR* pnmh = (NMHDR*)lParam;
+		//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
+        if ((int)wParam == IDW_TREE_LEFT) {
+            if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
+                Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
+                if (entry != NULL) {
+                    //RefreshList(pChildWnd->right.hWnd, entry);
+                    //void set_curdir(ChildWnd* child, Entry* entry)
+                    set_curdir(pChildWnd, entry);
                 }
             }
-            if (idCtrl == IDW_TREE_RIGHT) {
-                if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
-                    return DefMDIChildProc(hWnd, message, wParam, lParam);
-                }
+            if (!SendMessage(pChildWnd->left.hWnd, message, wParam, lParam)) {
+                return DefMDIChildProc(hWnd, message, wParam, lParam);
             }
-                        }
-//#endif
-            break;
+        } else
+        if ((int)wParam == IDW_TREE_RIGHT) {
+            if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+                return DefMDIChildProc(hWnd, message, wParam, lParam);
+            }
+        }
+        }
+        break;
 
-		case WM_SIZE:
-            if (wParam != SIZE_MINIMIZED) {
-                OnSize(pChildWnd, wParam, lParam);
-            }
-            // fall through
-		default: def:
-			return DefMDIChildProc(hWnd, message, wParam, lParam);
+	case WM_SIZE:
+        if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
+	    	ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
+        }
+        // fall through
+    default: def:
+		return DefMDIChildProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
 }
