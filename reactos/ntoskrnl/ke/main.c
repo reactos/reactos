@@ -132,7 +132,7 @@ asmlinkage void _main(boot_param* _bp)
    DbgPrint("Starting ReactOS "KERNEL_VERSION"\n");
    
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-   if (start <= ((int)&end))
+   if (start < ((int)&end))
      {
 	DbgPrint("Kernel booted incorrectly, aborting\n");
 	for(;;);
