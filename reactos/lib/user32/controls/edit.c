@@ -1191,7 +1191,8 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		else
 			rc.bottom = line_index * es->line_height;
 		rc.bottom -= (es->y_offset * es->line_height); /* Adjust for vertical scrollbar */
-		tmphrgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+		tmphrgn = CreateRectRgn(min(rc.left, rc.right), min(rc.top, rc.bottom),
+			max(rc.left, rc.right), max(rc.top, rc.bottom));
 		CombineRgn(hrgn, hrgn, tmphrgn, RGN_OR);
 		DeleteObject(tmphrgn);
 	}

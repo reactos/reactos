@@ -364,17 +364,17 @@ ExtTextOutA(
 BOOL  
 STDCALL 
 ExtTextOutW(
-	HDC		hDC, 
+	HDC		hdc, 
 	int		X, 
 	int		Y, 
-	UINT		Options,	 
-	CONST RECT	*Rect,
-	LPCWSTR		String, 
-	UINT		Count, 
-	CONST INT	*Spacings
+	UINT		fuOptions,	 
+	CONST RECT	*lpRect,
+	LPCWSTR		lpString, 
+	UINT		cbCount, 
+	CONST INT	*lpDx
 	)
 {
-	return NtGdiTextOut(hDC, X, Y, String, Count);
+  return NtGdiExtTextOut(hdc, X, Y, fuOptions, lpRect, lpString, cbCount, lpDx);
 }
 
 

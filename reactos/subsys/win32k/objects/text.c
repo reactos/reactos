@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.54 2003/11/30 20:33:45 gdalsnes Exp $ */
+/* $Id: text.c,v 1.55 2003/12/08 20:58:44 chorns Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -402,16 +402,17 @@ NtGdiEnumFonts(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiExtTextOut(HDC  hDC,
+NtGdiExtTextOut(HDC  hdc,
                      int  X,
                      int  Y,
-                     UINT  Options,
-                     CONST LPRECT  rc,
-                     LPCWSTR  String,
-                     UINT  Count,
-                     CONST LPINT  Dx)
+                     UINT  fuOptions,
+                     CONST RECT  *lprc,
+                     LPCWSTR  lpString,
+                     UINT  cbCount,
+                     CONST INT  *lpDx)
 {
-  UNIMPLEMENTED;
+  /* FIXME: Implement */
+  return NtGdiTextOut(hdc, X, Y, lpString, cbCount);
 }
 
 BOOL

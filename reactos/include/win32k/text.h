@@ -76,14 +76,14 @@ NtGdiEnumFonts(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiExtTextOut(HDC  hDC,
+NtGdiExtTextOut(HDC  hdc,
                      int  X,
                      int  Y,
-                     UINT  Options,
-                     CONST LPRECT  rc,
-                     LPCWSTR  String,
-                     UINT  Count,
-                     CONST LPINT  Dx);
+                     UINT  fuOptions,
+                     CONST RECT  *lprc,
+                     LPCWSTR  lpString,
+                     UINT  cbCount,
+                     CONST INT  *lpDx);
 
 BOOL
 STDCALL

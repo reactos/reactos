@@ -1,3 +1,15 @@
+2003-12-08  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/win32k/text.h (NtGdiExtTextOut): Follow ExtTextOut prototype.
+	* lib/gdi32/objects/text.c (ExtTextOutW): Call NtGdiExtTextOut().
+	* lib/user32/controls/edit.c (EDIT_BuildLineDefs_ML): Order parameters to
+	CreateRectRgn().
+	* lib/user32/windows/draw.c (TabbedTextOutA): Implement.
+	(TEXT_TabbedTextOut): New function.
+	(TabbedTextOutW): Implement.
+	* subsys/win32k/objects/text.c (NtGdiExtTextOut): Call NtGdiTextOut() for
+	now.
+
 2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/user32/windows/accel.c (U32IsValidAccelMessage): Translate WM_KEYUP

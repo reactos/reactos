@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.29 2003/10/22 14:02:54 navaraf Exp $
+/* $Id: draw.c,v 1.30 2003/12/08 20:58:44 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -24,6 +24,25 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
+ */
+
+/*
+ * Copyright 1993, 1994 Alexandre Julliard
+ * Copyright 2002 Bill Medland
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 /* INCLUDES ******************************************************************/
@@ -1554,7 +1573,7 @@ InvertRect(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG
 STDCALL
@@ -1568,13 +1587,98 @@ TabbedTextOutA(
   CONST LPINT lpnTabStopPositions,
   int nTabOrigin)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LONG ret;
+  DWORD len;
+  LPWSTR strW;
+
+  len = MultiByteToWideChar(CP_ACP, 0, lpString, nCount, NULL, 0);
+  strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+  if (!strW)
+    {
+	  return 0;
+    }
+  MultiByteToWideChar(CP_ACP, 0, lpString, nCount, strW, len);
+  ret = TabbedTextOutW(hDC, X, Y, strW, len, nTabPositions, lpnTabStopPositions, nTabOrigin);
+  HeapFree(GetProcessHeap(), 0, strW);
+  return ret;
+}
+
+
+/***********************************************************************
+ *           TEXT_TabbedTextOut
+ *
+ * Helper function for TabbedTextOut() and GetTabbedTextExtent().
+ * Note: this doesn't work too well for text-alignment modes other
+ *       than TA_LEFT|TA_TOP. But we want bug-for-bug compatibility :-)
+ */
+static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
+                                INT count, INT cTabStops, const INT *lpTabPos, INT nTabOrg,
+                                BOOL fDisplayText )
+{
+    INT defWidth;
+    SIZE extent;
+    int i, tabPos = x;
+    int start = x;
+
+    extent.cx = 0;
+    extent.cy = 0;
+
+    if (!lpTabPos)
+        cTabStops=0;
+
+    if (cTabStops == 1 && *lpTabPos >= /* sic */ 0)
+    {
+        defWidth = *lpTabPos;
+        cTabStops = 0;
+    }
+    else
+    {
+        TEXTMETRICA tm;
+        GetTextMetricsA( hdc, &tm );
+        defWidth = 8 * tm.tmAveCharWidth;
+        if (cTabStops == 1)
+            cTabStops = 0; /* on negative *lpTabPos */
+    }
+
+    while (count > 0)
+    {
+        for (i = 0; i < count; i++)
+            if (lpstr[i] == '\t') break;
+        GetTextExtentPointW( hdc, lpstr, i, &extent );
+        while ((cTabStops > 0) &&
+               (nTabOrg + *lpTabPos <= x + extent.cx))
+        {
+            lpTabPos++;
+            cTabStops--;
+        }
+        if (i == count)
+            tabPos = x + extent.cx;
+        else if (cTabStops > 0)
+            tabPos = nTabOrg + *lpTabPos;
+        else if (defWidth <= 0)
+            tabPos = x + extent.cx;
+        else
+            tabPos = nTabOrg + ((x + extent.cx - nTabOrg) / defWidth + 1) * defWidth;
+        if (fDisplayText)
+        {
+            RECT r;
+            r.left   = x;
+            r.top    = y;
+            r.right  = tabPos;
+            r.bottom = y + extent.cy;
+            ExtTextOutW( hdc, x, y, GetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
+                         &r, lpstr, i, NULL );
+        }
+        x = tabPos;
+        count -= i+1;
+        lpstr += i+1;
+    }
+    return MAKELONG(tabPos - start, extent.cy);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG
 STDCALL
@@ -1588,9 +1692,9 @@ TabbedTextOutW(
   CONST LPINT lpnTabStopPositions,
   int nTabOrigin)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return TEXT_TabbedTextOut(hDC, X, Y, lpString, nCount, nTabPositions, lpnTabStopPositions, nTabOrigin, TRUE);
 }
+
 
 /*
  * @implemented
