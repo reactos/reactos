@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.30 2002/04/01 22:06:51 hbirr Exp $
+/* $Id: file.c,v 1.31 2002/04/27 19:15:00 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -636,28 +636,39 @@ GetTempFileNameA(LPCSTR lpPathName,
 {
    HANDLE hFile;
    UINT unique = uUnique;
+   UINT len;
+   const char *format = "%.*s\\~%.3s%4.4x.TMP";
+
+   DPRINT("GetTempFileNameA(lpPathName %s, lpPrefixString %.*s, "
+	  "uUnique %x, lpTempFileName %x)\n", lpPathName, 4, 
+	  lpPrefixString, uUnique, lpTempFileName);
   
    if (lpPathName == NULL)
      return 0;
-   
+
+   len = strlen(lpPathName);
+   if (len > 0 && (lpPathName[len-1] == '\\' || lpPathName[len-1] == '/'))
+     len--;
+
    if (uUnique == 0)
      uUnique = GetCurrentTime();
-   /*
-    * sprintf(lpTempFileName,"%s\\%c%.3s%4.4x%s",
-    *	    lpPathName,'~',lpPrefixString,uUnique,".tmp");
-    */
+   
+   sprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,uUnique);
+   
    if (unique)
      return uUnique;
    
    while ((hFile = CreateFileA(lpTempFileName, GENERIC_WRITE, 0, NULL,
 			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			       0)) == INVALID_HANDLE_VALUE)
-     {
-	//  		wsprintfA(lpTempFileName,"%s\\%c%.3s%4.4x%s",
-	//	  	lpPathName,'~',lpPrefixString,++uUnique,".tmp");
-     }
-   
-   CloseHandle((HANDLE)hFile);
+   {
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         return 0;
+      }
+      sprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,++uUnique);
+   }
+   CloseHandle(hFile);
    return uUnique;
 }
 
@@ -670,15 +681,24 @@ GetTempFileNameW(LPCWSTR lpPathName,
 {
    HANDLE hFile;
    UINT unique = uUnique;
+   UINT len;
+   const WCHAR *format = L"%.*S\\~%.3S%4.4x.TMP";
    
+   DPRINT("GetTempFileNameW(lpPathName %S, lpPrefixString %.*S, "
+	  "uUnique %x, lpTempFileName %x)\n", lpPathName, 4, 
+	  lpPrefixString, uUnique, lpTempFileName);
+
    if (lpPathName == NULL)
      return 0;
+
+   len = wcslen(lpPathName);
+   if (len > 0 && (lpPathName[len-1] == L'\\' || lpPathName[len-1] == L'/'))
+     len--;
    
    if (uUnique == 0)
      uUnique = GetCurrentTime();
    
-   //	swprintf(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
-   //	  lpPathName,'~',lpPrefixString,uUnique,L".tmp");
+   swprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,uUnique);
    
    if (unique)
      return uUnique;
@@ -686,12 +706,14 @@ GetTempFileNameW(LPCWSTR lpPathName,
    while ((hFile = CreateFileW(lpTempFileName, GENERIC_WRITE, 0, NULL,
 			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			       0)) == INVALID_HANDLE_VALUE)
-     {
-	//	wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
-	//	  lpPathName,'~',lpPrefixString,++uUnique,L".tmp");
-     }
-   
-   CloseHandle((HANDLE)hFile);
+   {
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         return 0;
+      }
+      swprintf(lpTempFileName,format,len,lpPathName,lpPrefixString,++uUnique);
+   }
+   CloseHandle(hFile);
    return uUnique;
 }
 
