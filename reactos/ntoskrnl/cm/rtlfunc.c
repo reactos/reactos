@@ -6,6 +6,9 @@
  * UPDATE HISTORY:
 */
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -18,6 +21,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 NTSTATUS STDCALL
 RtlCheckRegistryKey(IN ULONG RelativeTo,
@@ -145,6 +149,10 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR StringPtr;
 
   DPRINT("RtlQueryRegistryValues() called\n");
+#ifdef WIN32_REGDBG
+  BaseKeyHandle = NULL;
+  CurrentKeyHandle = NULL;
+#endif
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 Path,
@@ -241,7 +249,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      Status = STATUS_NO_MEMORY;
 	      break;
 	    }
-
+#ifdef WIN32_REGDBG
+      memset(ValueInfo, 0, BufferSize);
+#endif
 	  Status = ZwQueryValueKey(CurrentKeyHandle,
 				   &KeyName,
 				   KeyValuePartialInformation,
@@ -466,7 +476,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
+#ifdef WIN32_REGDBG
+		      StringPtr = (PWSTR)(FullValueInfo + FullValueInfo->DataOffset);
+#else
 		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
+#endif
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -485,7 +499,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
 							FullValueInfo->Type,
+#ifdef WIN32_REGDBG
+							FullValueInfo + FullValueInfo->DataOffset,
+#else
 							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
+#endif
 							FullValueInfo->DataLength,
 							Context,
 							QueryEntry->EntryContext);
