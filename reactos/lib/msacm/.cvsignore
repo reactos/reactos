@@ -7,3 +7,5 @@
 *.map
 *.tmp
 temp.exp
+msacm32.spec.def
+Makefile.ros
