@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.20 2003/09/25 20:04:59 ekohl Exp $
+/* $Id: connect.c,v 1.21 2003/11/20 11:06:35 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -266,7 +266,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
    */
   if (UnsafeWriteMap != NULL)
     {
-      Status = MmCopyFromCaller(&WriteMap, UnsafeWriteMap, 
+      Status = MmCopyFromCaller(&WriteMap,
+				UnsafeWriteMap,
 				sizeof(LPC_SECTION_WRITE));
       if (!NT_SUCCESS(Status))
 	{
@@ -314,7 +315,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 	    }
 	  Status = MmCopyFromCaller(ConnectData,
 				    UnsafeConnectData,
-				    ConnectDataLength);	
+				    ConnectDataLength);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      ExFreePool(ConnectData);
@@ -391,11 +392,13 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 	{
 	  if (ExGetPreviousMode() != KernelMode)
 	    {
-	      MmCopyToCaller(UnsafeConnectData, ConnectData,
+	      MmCopyToCaller(UnsafeConnectData,
+			     ConnectData,
 			     ConnectDataLength);
 	      ExFreePool(ConnectData);
 	    }
-	  MmCopyToCaller(UnsafeConnectDataLength, &ConnectDataLength,
+	  MmCopyToCaller(UnsafeConnectDataLength,
+			 &ConnectDataLength,
 			 sizeof(ULONG));
 	}
       return(Status);
@@ -421,7 +424,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 	{
 	  if (ExGetPreviousMode() != KernelMode)
 	    {
-	      Status = MmCopyToCaller(UnsafeConnectData, ConnectData,
+	      Status = MmCopyToCaller(UnsafeConnectData,
+				      ConnectData,
 				      ConnectDataLength);
 	      ExFreePool(ConnectData);
 	      if (!NT_SUCCESS(Status))
@@ -429,7 +433,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 		  return(Status);
 		}
 	    }
-	  Status = MmCopyToCaller(UnsafeConnectDataLength, &ConnectDataLength,
+	  Status = MmCopyToCaller(UnsafeConnectDataLength,
+				  &ConnectDataLength,
 				  sizeof(ULONG));
 	  if (!NT_SUCCESS(Status))
 	    {
@@ -447,7 +452,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     {
       return(Status);
     }
-  Status = MmCopyToCaller(UnsafeConnectedPortHandle, &ConnectedPortHandle,
+  Status = MmCopyToCaller(UnsafeConnectedPortHandle,
+			  &ConnectedPortHandle,
 			  sizeof(HANDLE));
   if (!NT_SUCCESS(Status))
     {
@@ -455,7 +461,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     }
   if (UnsafeWriteMap != NULL)
     {
-      Status = MmCopyToCaller(UnsafeWriteMap, &WriteMap, 
+      Status = MmCopyToCaller(UnsafeWriteMap,
+			      &WriteMap,
 			      sizeof(LPC_SECTION_WRITE));
       if (!NT_SUCCESS(Status))
 	{
@@ -464,7 +471,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     }
   if (UnsafeReadMap != NULL)
     {
-      Status = MmCopyToCaller(UnsafeReadMap, &ReadMap,
+      Status = MmCopyToCaller(UnsafeReadMap,
+			      &ReadMap,
 			      sizeof(LPC_SECTION_READ));
       if (!NT_SUCCESS(Status))
 	{
@@ -473,9 +481,9 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     }
   if (UnsafeMaximumMessageSize != NULL)
     {
-      Status = MmCopyToCaller(UnsafeMaximumMessageSize, 
+      Status = MmCopyToCaller(UnsafeMaximumMessageSize,
 			      &MaximumMessageSize,
-			      sizeof(LPC_SECTION_WRITE));
+			      sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
