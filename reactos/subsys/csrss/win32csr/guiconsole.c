@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.5 2003/12/27 18:25:31 gvg Exp $
+/* $Id: guiconsole.c,v 1.6 2003/12/31 20:16:39 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -483,7 +483,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   NULL,
                                   (HINSTANCE) GetModuleHandleW(NULL),
                                   (PVOID) Console);
-Console->hWindow = NewWindow;
+        Console->hWindow = NewWindow;
         if (NULL != NewWindow)
           {
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
@@ -501,6 +501,7 @@ Console->hWindow = NewWindow;
             NotifyWnd = NULL;
             DestroyWindow(hWnd);
             PrivateCsrssManualGuiCheck(-1);
+            PostQuitMessage(0);
           }
         return 0;
       default:
@@ -511,45 +512,10 @@ Console->hWindow = NewWindow;
 static DWORD STDCALL
 GuiConsoleGuiThread(PVOID Data)
 {
-  WNDCLASSW wc;
   MSG msg;
   PHANDLE GraphicsStartupEvent = (PHANDLE) Data;
 
   PrivateCsrssManualGuiCheck(+1);
-
-  wc.lpszClassName = L"Win32CsrCreateNotify";
-  wc.lpfnWndProc = GuiConsoleNotifyWndProc;
-  wc.style = 0;
-  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  wc.hIcon = NULL;
-  wc.hCursor = NULL;
-  wc.hbrBackground = NULL;
-  wc.lpszMenuName = NULL;
-  wc.cbClsExtra = 0;
-  wc.cbWndExtra = 0;
-  if (RegisterClassW(&wc) == 0)
-    {
-      PrivateCsrssManualGuiCheck(-1);
-      NtSetEvent(*GraphicsStartupEvent, 0);
-      return 1;
-    }
-
-  wc.lpszClassName = L"Win32CsrConsole";
-  wc.lpfnWndProc = GuiConsoleWndProc;
-  wc.style = 0;
-  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  wc.hIcon = LoadIconW(NULL, (LPCWSTR) IDI_APPLICATION);
-  wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
-  wc.hbrBackground = NULL;
-  wc.lpszMenuName = NULL;
-  wc.cbClsExtra = 0;
-  wc.cbWndExtra = 0;
-  if (RegisterClassW(&wc) == 0)
-    {
-      PrivateCsrssManualGuiCheck(-1);
-      NtSetEvent(*GraphicsStartupEvent, 0);
-      return 1;
-    }
 
   NotifyWnd = CreateWindowW(L"Win32CsrCreateNotify",
                             L"",
@@ -565,11 +531,11 @@ GuiConsoleGuiThread(PVOID Data)
   if (NULL == NotifyWnd)
     {
       PrivateCsrssManualGuiCheck(-1);
-      NtSetEvent(*GraphicsStartupEvent, 0);
+      SetEvent(*GraphicsStartupEvent);
       return 1;
     }
 
-  NtSetEvent(*GraphicsStartupEvent, 0);
+  SetEvent(*GraphicsStartupEvent);
 
   while(GetMessageW(&msg, NULL, 0, 0))
     {
@@ -583,11 +549,9 @@ GuiConsoleGuiThread(PVOID Data)
 VOID FASTCALL
 GuiConsoleInitConsoleSupport(VOID)
 {
-  NTSTATUS Status;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE GraphicsStartupEvent;
   HDESK Desktop;
-  HANDLE ThreadHandle;
+  NTSTATUS Status;
+  WNDCLASSW wc;
 
   Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
@@ -610,34 +574,33 @@ GuiConsoleInitConsoleSupport(VOID)
       return;
     }
 
-  InitializeObjectAttributes(&ObjectAttributes, NULL, OBJ_INHERIT, NULL, NULL);
-
-  Status = NtCreateEvent(&GraphicsStartupEvent, STANDARD_RIGHTS_ALL, &ObjectAttributes, FALSE, FALSE);
-  if( !NT_SUCCESS(Status))
+  wc.lpszClassName = L"Win32CsrCreateNotify";
+  wc.lpfnWndProc = GuiConsoleNotifyWndProc;
+  wc.style = 0;
+  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
+  wc.hIcon = NULL;
+  wc.hCursor = NULL;
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName = NULL;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  if (RegisterClassW(&wc) == 0)
     {
       return;
     }
 
-  ThreadHandle = CreateThread(NULL,
-                              0,
-                              GuiConsoleGuiThread,
-                              (PVOID) &GraphicsStartupEvent,
-                              0,
-                              NULL);
-  if (NULL == ThreadHandle)
+  wc.lpszClassName = L"Win32CsrConsole";
+  wc.lpfnWndProc = GuiConsoleWndProc;
+  wc.style = 0;
+  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
+  wc.hIcon = LoadIconW(NULL, (LPCWSTR) IDI_APPLICATION);
+  wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName = NULL;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  if (RegisterClassW(&wc) == 0)
     {
-      NtClose(GraphicsStartupEvent);
-      DbgPrint("Win32Csr: Failed to create graphics console thread. Expect problems\n");
-      return;
-    }
-  CloseHandle(ThreadHandle);
-
-  NtWaitForSingleObject(GraphicsStartupEvent, FALSE, NULL);
-  NtClose(GraphicsStartupEvent);
-
-  if (NULL == NotifyWnd)
-    {
-      DbgPrint("Win32Csr: Failed to create notification window.\n");
       return;
     }
 }
@@ -645,17 +608,46 @@ GuiConsoleInitConsoleSupport(VOID)
 BOOL STDCALL
 GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
 {
+  HANDLE GraphicsStartupEvent;
+  HANDLE ThreadHandle;
+
   Console->Size.X = 80;
   Console->Size.Y = 25;
-#ifdef TODO
-  Console->hWindow = (HWND) SendMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+  if (NULL == NotifyWnd)
+    {
+      GraphicsStartupEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+      if (NULL == GraphicsStartupEvent)
+        {
+          return FALSE;
+        }
 
-  return NULL != Console->hWindow;
-#else
+      ThreadHandle = CreateThread(NULL,
+                                  0,
+                                  GuiConsoleGuiThread,
+                                  (PVOID) &GraphicsStartupEvent,
+                                  0,
+                                  NULL);
+      if (NULL == ThreadHandle)
+        {
+          NtClose(GraphicsStartupEvent);
+          DbgPrint("Win32Csr: Failed to create graphics console thread. Expect problems\n");
+          return FALSE;
+        }
+      CloseHandle(ThreadHandle);
+
+      WaitForSingleObject(GraphicsStartupEvent, INFINITE);
+      CloseHandle(GraphicsStartupEvent);
+
+      if (NULL == NotifyWnd)
+        {
+          DbgPrint("Win32Csr: Failed to create notification window.\n");
+          return FALSE;
+        }
+    }
+
   PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
 
   return TRUE;
-#endif
 }
 
 VOID STDCALL
