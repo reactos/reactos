@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.6 2001/07/20 08:00:20 ekohl Exp $
+/* $Id: fcb.c,v 1.7 2001/07/25 17:39:34 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -291,7 +291,8 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
   if (pVCB->FatType == FAT32)
     {
-      FCB->entry.FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster;
+      FCB->entry.FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster & 0xffff;
+      FCB->entry.FirstClusterHigh = ((struct _BootSector32*)(pVCB->Boot))->RootCluster >> 16;
     }
   else
     {
