@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.62 2004/01/17 15:18:25 navaraf Exp $
+ *  $Id: painting.c,v 1.63 2004/01/18 08:29:31 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -270,8 +270,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
  */
 
 VOID FASTCALL
-IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
-   BOOL ValidateParent)
+IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 {
    INT RgnType;
    BOOL HadPaintMessage, HadNCPaintMessage;
@@ -365,15 +364,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
    }
 
    /*
-    * Validate parent covered by region
-    */
-
-   if (ValidateParent)
-   {
-      IntValidateParent(Window, Window->UpdateRegion);
-   }
-
-   /*
     * Split the nonclient update region.
     */
 
@@ -418,7 +408,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
                NtGdiOffsetRgn(hRgnTemp,
                   Window->WindowRect.left - Child->WindowRect.left,
                   Window->WindowRect.top - Child->WindowRect.top);
-               IntInvalidateWindows(Child, hRgnTemp, Flags, FALSE);
+               IntInvalidateWindows(Child, hRgnTemp, Flags);
                NtGdiDeleteObject(hRgnTemp);
             }
             IntReleaseWindowObject(Child);
@@ -546,13 +536,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
 
    if (Flags & (RDW_INVALIDATE | RDW_VALIDATE | RDW_INTERNALPAINT | RDW_NOINTERNALPAINT))
    {
-      IntInvalidateWindows(Window, hRgn, Flags, TRUE);
-   } else
-   if (Window->UpdateRegion != NULL && (Flags & (RDW_ERASENOW | RDW_UPDATENOW)))
-   {
-      /* Validate parent covered by region. */
-      IntValidateParent(Window, Window->UpdateRegion);
-      IntValidateParent(Window, Window->NCUpdateRegion);
+      IntInvalidateWindows(Window, hRgn, Flags);
    }
 
    /*

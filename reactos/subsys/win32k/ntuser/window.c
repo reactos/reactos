@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.176 2004/01/17 15:18:25 navaraf Exp $
+/* $Id: window.c,v 1.177 2004/01/18 08:29:31 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1555,7 +1555,6 @@ NtUserDestroyWindow(HWND Wnd)
     }
 
   /* Recursively destroy owned windows */
-#if 0 /* FIXME */
   if (! isChild)
     {
       for (;;)
@@ -1573,6 +1572,10 @@ NtUserDestroyWindow(HWND Wnd)
 	      for (ChildHandle = Children; *ChildHandle; ++ChildHandle)
 		{
 		  Child = IntGetWindowObject(*ChildHandle);
+		  if (Child == NULL)
+		    {
+		      continue;
+		    }
 		  if (Child->Owner != Window)
 		    {
 		      continue;
@@ -1599,7 +1602,6 @@ NtUserDestroyWindow(HWND Wnd)
 	    }
 	}
     }
-#endif
 
   if (!IntIsWindow(Wnd))
     {
@@ -3112,23 +3114,6 @@ NtUserSetWindowPos(
     int cy,
     UINT uFlags)
 {
-   PWINDOW_OBJECT WindowObject;
-
-   WindowObject = IntGetWindowObject(hWnd);
-   if (WindowObject == NULL)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-   }
-
-   if (WindowObject->Style & WS_CHILD)
-   {
-      X += WindowObject->Parent->ClientRect.left;
-      Y += WindowObject->Parent->ClientRect.top;
-   }
-
-   IntReleaseWindowObject(WindowObject);
-
    return WinPosSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 

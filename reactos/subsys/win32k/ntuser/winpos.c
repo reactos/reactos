@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.81 2004/01/17 15:18:25 navaraf Exp $
+/* $Id: winpos.c,v 1.82 2004/01/18 08:29:31 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,6 +268,8 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	  {
 	    WinPosGetMinMaxInfo(WindowObject, &Size, &InternalPos->MaxPos, 
 				NULL, NULL);
+	    DPRINT1("Maximize: %d,%d %dx%d\n",
+	       InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
 	    if (WindowObject->Style & WS_MINIMIZE)
 	      {
 		WindowObject->Style &= ~WS_MINIMIZE;
@@ -757,11 +759,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    WinPos.cx = cx;
    WinPos.cy = cy;
    WinPos.flags = flags;
-   if (Window->Style & WS_CHILD)
-   {
-      WinPos.x -= Window->Parent->ClientRect.left;
-      WinPos.y -= Window->Parent->ClientRect.top;
-   }
 
    WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 

@@ -9,6 +9,8 @@
 
 VOID FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
+VOID FASTCALL
+IntValidateSiblings(PWINDOW_OBJECT Child, HRGN ValidRegion);
 BOOL FASTCALL
 IntRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
 BOOL FASTCALL
