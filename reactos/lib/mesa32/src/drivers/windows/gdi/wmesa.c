@@ -472,7 +472,7 @@ static void clear(GLcontext* ctx, GLbitfield mask,
    mask &= ~DD_BACK_LEFT_BIT; 
 #endif // DDRAW 
 #else 
-   DWORD   dwColor; 
+   DWORD   dwColor = 0; 
    WORD    wColor; 
    BYTE    bColor; 
    LPDWORD lpdw = (LPDWORD)Current->pbPixels; 
@@ -523,8 +523,6 @@ static void clear(GLcontext* ctx, GLbitfield mask,
          GetGValue(Current->clearpixel), 
          GetBValue(Current->clearpixel)); 
    }
-   else
-       dwColor = 0;
 
    if (nBypp != 3) 
    { 
