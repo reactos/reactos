@@ -70,7 +70,7 @@ ResString::ResString(UINT nid)
 
 	int len = LoadString(g_Globals._hInstance, nid, buffer, sizeof(buffer)/sizeof(TCHAR));
 
-	assign(buffer, len);
+	super::assign(buffer, len);
 }
 
 

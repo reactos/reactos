@@ -94,30 +94,6 @@ protected:
 #endif
 
 
-struct Context
-{
-	Context(LPCTSTR ctx)
-	 :	_ctx(ctx)
-	{
-		_last = s_current;
-		s_current = this;
-	}
-
-	~Context()
-	{
-		s_current = _last;
-	}
-
-	LPCTSTR	_ctx;
-	Context* _last;
-
-	static Context*	s_current;
-	static Context	s_main;
-};
-
-#define	CONTEXT(x) Context __ctx__(TEXT(x))
-
-
  /// COM Exception with context information
 
 struct COMException : public COMExceptionBase
@@ -125,30 +101,54 @@ struct COMException : public COMExceptionBase
 	typedef COMExceptionBase super;
 
 	COMException(HRESULT hr)
-	 :	super(hr)
+	 :	super(hr),
+		_ctx(Context::current()._ctx),
+		_obj(Context::current()._obj),
+		_file(NULL), _line(0)
 	{
-		_ctx = Context::s_current->_ctx;
+	}
+
+	COMException(HRESULT hr, const char* file, int line)
+	 :	super(hr),
+		_ctx(Context::current()._ctx),
+		_obj(Context::current()._obj),
+		_file(file), _line(line)
+	{
 	}
 
 	COMException(HRESULT hr, const String& obj)
 	 :	super(hr),
-		_obj(obj)
+		_ctx(Context::current()._ctx),
+		_obj(obj),
+		_file(NULL), _line(0)
 	{
-		_ctx = Context::s_current->_ctx;
+		_ctx = Context::current()._ctx;
+	}
+
+	COMException(HRESULT hr, const String& obj, const char* file, int line)
+	 :	super(hr),
+		_ctx(Context::current()._ctx),
+		_obj(obj),
+		_file(file), _line(line)
+	{
 	}
 
 	LPCTSTR _ctx;
 	String	_obj;
+
+	const char* _file;
+	int _line;
 };
+
+#define	CHECKERROR(hr) ((void)(FAILED(hr)? throw COMException(hr, __FILE__, __LINE__): 0))
 
 
 #ifdef _NO_COMUTIL
 
 inline void CheckError(HRESULT hr)
 {
-	if (FAILED(hr)) {
+	if (FAILED(hr))
 		throw COMException(hr);
-	}
 }
 
 #endif
@@ -160,13 +160,13 @@ struct ComInit
 {
 	ComInit()
 	{
-		CheckError(CoInitialize(0));
+		CHECKERROR(CoInitialize(0));
 	}
 
 #if (_WIN32_WINNT>=0x0400) || defined(_WIN32_DCOM)
 	ComInit(DWORD flag)
 	{
-		CheckError(CoInitializeEx(0, flag));
+		CHECKERROR(CoInitializeEx(0, flag));
 	}
 #endif
 
@@ -183,7 +183,7 @@ struct OleInit
 {
 	OleInit()
 	{
-		CheckError(OleInitialize(0));
+		CHECKERROR(OleInitialize(0));
 	}
 
 	~OleInit()
@@ -210,7 +210,7 @@ struct CommonShellMalloc
 	void init()
 	{
 		if (!_p)
-			CheckError(SHGetMalloc(&_p));
+			CHECKERROR(SHGetMalloc(&_p));
 	}
 
 	~CommonShellMalloc()
@@ -542,18 +542,18 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			ULONG l;
-			CheckError(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+			CHECKERROR(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
 		} else
 			_p = NULL;
 	}
 
 	ShellPath(LPCWSTR path)
 	{
-		CONTEXT("ShellPath::ShellPath(LPCWSTR)");
+		OBJ_CONTEXT("ShellPath::ShellPath(LPCWSTR)", path);
 
 		if (path) {
 			ULONG l;
-			CheckError(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+			CHECKERROR(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
 		} else
 			_p = NULL;
 	}
@@ -567,7 +567,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CheckError(folder->ParseDisplayName(0, 0, b, &l, &_p, 0));
+			CHECKERROR(folder->ParseDisplayName(0, 0, b, &l, &_p, 0));
 		} else
 			_p = NULL;
 	}
@@ -581,7 +581,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CheckError(Desktop()->ParseDisplayName(0, 0, b, &l, &_p, 0));
+			CHECKERROR(Desktop()->ParseDisplayName(0, 0, b, &l, &_p, 0));
 		} else
 			_p = NULL;
 	}
@@ -854,7 +854,7 @@ struct SpecialFolderPath : public ShellPath
 	SpecialFolderPath(int folder, HWND hwnd)
 	{
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
-		CheckError(hr);
+		CHECKERROR(hr);
 	}
 };
 
@@ -913,7 +913,7 @@ struct SpecialFolderFSPath : public FileSysShellPath
 		CONTEXT("SpecialFolderFSPath::SpecialFolderFSPath()");
 
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
-		CheckError(hr);
+		CHECKERROR(hr);
 	}
 };
 
@@ -928,6 +928,6 @@ struct ShellItemEnumerator : public SIfacePtr<IEnumIDList>
 	{
 		CONTEXT("ShellItemEnumerator::ShellItemEnumerator()");
 
-		CheckError(folder->EnumObjects(0, flags, &_p));
+		CHECKERROR(folder->EnumObjects(0, flags, &_p));
 	}
 };

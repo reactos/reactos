@@ -145,6 +145,8 @@ void ShellDirectory::get_path(PTSTR path) const
 
 BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 {
+	CONTEXT("ShellEntry::launch_entry()");
+
 	SHELLEXECUTEINFO shexinfo;
 
 	shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);

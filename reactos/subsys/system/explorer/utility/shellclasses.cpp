@@ -70,21 +70,25 @@ Context* Context::s_current = &Context::s_main;
 
 void HandleException(COMException& e, HWND hwnd)
 {
+	TCHAR msg[4*BUFFER_LEN];
+	LPTSTR p = msg;
+
+	p += _stprintf(TEXT("%s"), e.ErrorMessage());
+
+	if (e._ctx)
+		p += _stprintf(p, TEXT("\nContext: %s"), e._ctx);
+
+	if (!e._obj.empty())
+		p += _stprintf(p, TEXT("\nObject: %s"), (LPCTSTR)e._obj);
+
+	if (e._file)
+#ifdef UNICODE
+		p += _stprintf(p, TEXT("\nLocation: %hs(%d)"), e._file, e._line);
+#else
+		p += _stprintf(p, TEXT("\nLocation: %s(%d)"), e._file, e._line);
+#endif
+
 	SetLastError(0);
-
-	String msg = e.ErrorMessage();
-
-	if (e._ctx) {
-		TCHAR buffer[BUFFER_LEN];
-		_stprintf(buffer, TEXT("%s\nContext: %s"), (LPCTSTR)msg, e._ctx);
-		msg = buffer;
-	}
-
-	if (!e._obj.empty()) {
-		TCHAR buffer[BUFFER_LEN];
-		_stprintf(buffer, TEXT("%s\nObject: %s"), (LPCTSTR)msg, (LPCTSTR)e._obj);
-		msg = buffer;
-	}
 
 	MessageBox(hwnd, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
 
@@ -182,7 +186,7 @@ ShellFolder::ShellFolder()
 
 	IShellFolder* desktop;
 
-	CheckError(SHGetDesktopFolder(&desktop));
+	CHECKERROR(SHGetDesktopFolder(&desktop));
 
 	super::Attach(desktop);
 	desktop->AddRef();
@@ -203,10 +207,10 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 	IShellFolder* ptr;
 
 	if (!pidl)
-		CheckError(E_INVALIDARG);
+		CHECKERROR(E_INVALIDARG);
 
 	if (pidl && pidl->mkid.cb)
-		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
+		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
 
@@ -222,7 +226,7 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	IShellFolder* parent = Desktop();
 
 	if (pidl && pidl->mkid.cb)
-		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
+		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
 
@@ -237,7 +241,7 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 	IShellFolder* ptr;
 
 	if (pidl && pidl->mkid.cb)
-		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
+		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else
 		ptr = parent;
 
@@ -251,7 +255,7 @@ ShellFolder::ShellFolder()
 {
 	CONTEXT("ShellFolder::ShellFolder()");
 
-	CheckError(SHGetDesktopFolder(&_p));
+	CHECKERROR(SHGetDesktopFolder(&_p));
 
 	_p->AddRef();
 }
@@ -269,7 +273,7 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 	CONTEXT("ShellFolder::ShellFolder(IShellFolder*, LPCITEMIDLIST)");
 
 	if (pidl && pidl->mkid.cb)
-		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+		CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
 		_p = Desktop();
 
@@ -281,7 +285,7 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	CONTEXT("ShellFolder::ShellFolder(LPCITEMIDLIST)");
 
 	if (pidl && pidl->mkid.cb)
-		CheckError(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+		CHECKERROR(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
 		_p = Desktop();
 
@@ -294,7 +298,7 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 	IShellFolder* h = _p;
 
-	CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+	CHECKERROR(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 
 	_p->AddRef();
 	h->Release();
@@ -314,7 +318,7 @@ String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 	if (hr == S_OK)
 		strret.GetString(pidl->mkid, buffer, MAX_PATH);
 	else {
-		CheckError(hr);
+		CHECKERROR(hr);
 		*buffer = TEXT('\0');
 	}
 
@@ -356,9 +360,9 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
 
 	if (parent && parent->mkid.cb)
 		 // use the IShellFolder of the parent
-		CheckError(ShellFolder((IShellFolder*)sf,parent)->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
+		CHECKERROR(ShellFolder((IShellFolder*)sf,parent)->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
 	else // else use desktop folder
-		CheckError(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
+		CHECKERROR(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
 }
 
 #ifndef __MINGW32__	// ILCombine() is currently missing in MinGW.

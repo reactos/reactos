@@ -493,8 +493,18 @@ struct String
 	String(const super& other) : super(other) {}
 	String(const String& other) : super(other) {}
 
-	String& operator=(LPCTSTR s) {assign(s); return *this;}
-	String& operator=(const super& s) {assign(s); return *this;}
+#ifdef UNICODE
+	String(LPCSTR s) {assign(s);}
+	String& operator=(LPCSTR s) {assign(s); return *this;}
+	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN); super::assign(b);}
+#else
+	String(LPCWSTR s) {assign(s);}
+	String& operator=(LPCWSTR s) {assign(s); return *this;}
+	void assign(LPCWSTR s) {char b[BUFFER_LEN]; WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0); super::assign(b);}
+#endif
+
+	String& operator=(LPCTSTR s) {super::assign(s); return *this;}
+	String& operator=(const super& s) {super::assign(s); return *this;}
 
 	operator LPCTSTR() const {return c_str();}
 };
@@ -554,6 +564,54 @@ protected:
 	HMODULE _hModule;
 	FCT	_fct;
 };
+
+
+struct Context
+{
+	Context(LPCTSTR ctx)
+	 :	_ctx(ctx)
+	{
+		_last = s_current;
+		s_current = this;
+	}
+
+	Context(LPCTSTR ctx, LPCSTR obj)
+	 :	_ctx(ctx),
+		_obj(obj)
+	{
+		_last = s_current;
+		s_current = this;
+	}
+
+	Context(LPCTSTR ctx, LPCWSTR obj)
+	 :	_ctx(ctx),
+		_obj(obj)
+	{
+		_last = s_current;
+		s_current = this;
+	}
+
+	~Context()
+	{
+		s_current = _last;
+	}
+
+	LPCTSTR	_ctx;
+	String	_obj;
+
+	static Context current() {return *s_current;}
+
+protected:
+	Context* _last;
+
+	static Context*	s_current;
+	static Context	s_main;
+};
+
+#define	CONTEXT_OBJ __ctx__._obj
+#define	CONTEXT(c) Context __ctx__(TEXT(c))
+#define	OBJ_CONTEXT(c, o) Context __ctx__(TEXT(c), o);
+
 
 #endif // __cplusplus
 

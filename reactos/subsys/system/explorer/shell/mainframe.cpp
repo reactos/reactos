@@ -340,6 +340,8 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int MainFrame::Command(int id, int code)
 {
+	CONTEXT("MainFrame::Command()");
+
 #ifndef _NO_MDI
 	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
 
@@ -426,6 +428,8 @@ int MainFrame::Command(int id, int code)
 		ExecuteDialog dlg = {{0}, 0};
 
 		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProc, (LPARAM)&dlg) == IDOK) {
+			CONTEXT("ShellExecute()");
+
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
 			if ((int)hinst <= 32)

@@ -93,15 +93,15 @@ void MoveVisible(HWND hwnd)
 }
 
 
-void display_error(HWND hwnd, DWORD error)
+void display_error(HWND hwnd, DWORD error)	//@@ CONTEXT mit ausgeben
 {
 	PTSTR msg;
 
 	if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
 		0, error, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (PTSTR)&msg, 0, NULL))
-		MessageBox(hwnd, msg, TEXT("Winefile"), MB_OK);
+		MessageBox(hwnd, msg, TEXT("ROS Explorer"), MB_OK);
 	else
-		MessageBox(hwnd, TEXT("Error"), TEXT("Winefile"), MB_OK);
+		MessageBox(hwnd, TEXT("Unknown Error"), TEXT("ROS Explorer"), MB_OK);
 
 	LocalFree(msg);
 }
@@ -129,6 +129,8 @@ BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 
 BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
 {
+	CONTEXT("launch_file()");
+
 	HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
 
 	if ((int)hinst <= 32) {
