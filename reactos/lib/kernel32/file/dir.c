@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.39 2003/10/19 19:51:48 navaraf Exp $
+/* $Id: dir.c,v 1.40 2003/12/09 10:38:05 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -572,7 +572,10 @@ SearchPathA (
 	             0,
 	             BufferU.Buffer);
 
-	*lpFilePart = strrchr (lpBuffer, '\\') + 1;
+	if (NULL != lpFilePart)
+	{
+		*lpFilePart = strrchr (lpBuffer, '\\') + 1;
+	}
 
 	return RetValue;
 }
