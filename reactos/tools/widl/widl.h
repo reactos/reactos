@@ -43,6 +43,7 @@ extern int do_typelib;
 extern int do_proxies;
 extern int do_client;
 extern int do_server;
+extern int old_names;
 
 extern char *input_name;
 extern char *header_name;

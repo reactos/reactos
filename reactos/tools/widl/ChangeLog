@@ -1,5 +1,16 @@
 ChangeLog
 
+2005-03-10 ekohl
+
+   tools/widl/client.c
+   tools/widl/header.c
+   tools/widl/server.c
+   tools/widl/widl.c
+   tools/widl/widl.h
+
+Implement '-o' option. This is equivalent to MIDLs '/oldnames' option.
+
+
 2005-03-06 ekohl
 
    tools/widl/client.c
@@ -20,13 +31,13 @@ Support pointers to simple types as input arguments.
   tools/widl/typelib.c
 
 Merge in Winehq changes to reduce noise.
-  
+
   tools/widl/server.h
   tools/widl/client.h
   tools/widl/proxy.h  
 
-Deleted unneeded headers.  
-    
+Deleted unneeded headers.
+
 2005-02-26 ekohl
   tools/widl/server.c
 

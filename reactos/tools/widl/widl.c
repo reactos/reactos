@@ -58,6 +58,7 @@ static char usage[] =
 "   -H file     Name of header file (default is infile.h)\n"
 "   -I path     Set include search dir to path (multiple -I allowed)\n"
 "   -N          Do not preprocess input\n"
+"   -o          Use old naming conventions\n"
 "   -p          Generate proxy\n"
 "   -P file     Name of proxy file (default is infile_p.c)\n"
 "   -s          Generate server stub\n"
@@ -90,6 +91,7 @@ int do_proxies = 0;
 int do_client = 0;
 int do_server = 0;
 int no_preprocess = 0;
+int old_names = 0;
 
 char *input_name;
 char *header_name;
@@ -142,8 +144,8 @@ int main(int argc,char *argv[])
 
   now = time(NULL);
 
-  while((optc = getopt(argc, argv, "cC:d:D:EhH:I:NpP:sS:tT:VW")) != EOF) {
-    switch(optc) {
+  while((optc = getopt(argc, argv, "cC:d:D:EhH:I:NopP:sS:tT:VW")) != EOF) {
+    switch (optc) {
     case 'c':
       do_everything = 0;
       do_client = 1;
@@ -173,6 +175,9 @@ int main(int argc,char *argv[])
       break;
     case 'N':
       no_preprocess = 1;
+      break;
+    case 'o':
+      old_names = 1;
       break;
     case 'p':
       do_everything = 0;
@@ -207,10 +212,10 @@ int main(int argc,char *argv[])
     }
   }
 
-  if(do_everything) {
+  if (do_everything) {
       do_header = do_typelib = do_proxies = do_client = do_server = 1;
   }
-  if(optind < argc) {
+  if (optind < argc) {
     input_name = xstrdup(argv[optind]);
   }
   else {
@@ -218,7 +223,7 @@ int main(int argc,char *argv[])
     return 1;
   }
 
-  if(debuglevel)
+  if (debuglevel)
   {
     setbuf(stdout,0);
     setbuf(stderr,0);
