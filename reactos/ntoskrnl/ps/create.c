@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67.14.2 2003/12/23 00:39:04 hyperion Exp $
+/* $Id: create.c,v 1.67.14.2.2.1 2003/12/28 01:45:32 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -700,6 +700,20 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
+VOID
+STDCALL
+PspRunCreateThreadNotifyRoutines
+(
+ PETHREAD CurrentThread,
+ BOOLEAN Create
+)
+{
+ ULONG i;
+ CLIENT_ID Cid = CurrentThread->Cid;
+
+ for(i = 0; i < PiThreadNotifyRoutineCount; ++ i)
+  PiThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+}
 
 /*
  * @implemented

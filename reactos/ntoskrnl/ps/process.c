@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.120.8.2 2003/12/23 00:39:04 hyperion Exp $
+/* $Id: process.c,v 1.120.8.2.2.1 2003/12/28 01:45:32 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1540,6 +1540,22 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
   return(STATUS_INVALID_PARAMETER);
 }
 
+VOID
+STDCALL
+PspRunCreateProcessNotifyRoutines
+(
+ PEPROCESS CurrentProcess,
+ BOOLEAN Create
+)
+{
+ ULONG i;
+ HANDLE ProcessId = (HANDLE)CurrentProcess->UniqueProcessId;
+ HANDLE ParentId = CurrentProcess->InheritedFromUniqueProcessId;
+ 
+ for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
+  if(PiProcessNotifyRoutine[i])
+   PiProcessNotifyRoutine[i](ParentId, ProcessId, Create);
+}
 
 /*
  * @implemented
