@@ -1,6 +1,6 @@
 ========================
-ReactOS Version 0.1.x
-Updated March 27th, 2003
+ReactOS Version 0.2.x
+Updated March 11th, 2004
 ========================
 
 1. What is ReactOS?
@@ -52,4 +52,3 @@ ReactOS - among other topics. Contributors to the project are always welcome.
 ---------
 
 This document was written by Jason Filby (jasonfilby@yahoo.com).
-
