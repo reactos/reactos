@@ -1,21 +1,11 @@
-/* $Id: buildno.c,v 1.3 2003/11/14 17:13:35 weiden Exp $
+/* $Id: buildno.c,v 1.4 2004/01/12 00:22:34 gvg Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
  * Copyright (c) 1999,2000 Emanuele Aliberti
  *
- * License: GNU GPL
- *
- * It assumes the last release date is defined in
- * <reactos/version.h> as a macro named
- *
- * KERNEL_RELEASE_DATE
- *
- * as a 32-bit unsigned long YYYYMMDD (UTC;
- * MM=01-12; DD=01-31).
- *
- * The build number is the number of full days
- * elapsed since the last release date (UTC).
+ * The build number is the day on which the build took
+ * place, as YYYYMMDD
  *
  * The build number is stored in the file
  * <reactos/buildno.h> as a set of macros:
@@ -100,22 +90,37 @@ write_h (int build)
   
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%d\"\n", build);
-  s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d.%d.%d\\0\"\n",
-		   KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR,
-		   KERNEL_VERSION_PATCH_LEVEL, build);
-  s = s + sprintf (s, "#define KERNEL_RELEASE_STR\t\"%d.%d.%d.%d\"\n",
+  s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d",
+		   KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define KERNEL_RELEASE_STR\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR,
-		   KERNEL_VERSION_MINOR,
-		   KERNEL_VERSION_PATCH_LEVEL,
-		   build);
-  s = s + sprintf (s, "#define KERNEL_VERSION_RC\t\"%d.%d.%d\\0\"\n",
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define KERNEL_VERSION_RC\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR,
-		   KERNEL_VERSION_MINOR,
-		   KERNEL_VERSION_PATCH_LEVEL);
-  s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d.%d\"\n", 
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d", 
 		   KERNEL_VERSION_MAJOR,
-		   KERNEL_VERSION_MINOR,
-		   KERNEL_VERSION_PATCH_LEVEL);
+		   KERNEL_VERSION_MINOR);
+  if (0 != KERNEL_VERSION_PATCH_LEVEL)
+    {
+      s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
+    }
+  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
   s = s + sprintf (s, "#endif\n/* EOF */\n");
 
   h = fopen (BUILDNO_INCLUDE_FILE, "rb");
@@ -170,13 +175,8 @@ main (int argc, char * argv [])
 	int		print_only = FALSE;
 	int		quiet = FALSE;
 
-	int		year = 0;
-	int		month = 0;
-	int		day = 0;
 	int		build = 0;
 
-	time_t		t0 = 0;
-	struct tm	t0_tm = {0};
 	time_t		t1 = 0;
 	struct tm	* t1_tm = NULL;
 
@@ -217,56 +217,9 @@ main (int argc, char * argv [])
 	/*
 	 * We are building TODAY!
 	 */
-	time (& t0);
-	/*
-	 * "Parse" the release date.
-	 */
-	day = KERNEL_RELEASE_DATE % 100;
-	month = (	(	KERNEL_RELEASE_DATE
-				% 10000
-				)
-				- day
-			)
-			/ 100;
-	year =
-		(	KERNEL_RELEASE_DATE
-			- (month * 100)
-			- day
-			)
-			/ 10000;
 	if (FALSE == quiet)
 	{
-		printf ( "\n\
-ReactOS Build Number Generator\n\n\
-Last release: %4d-%02d-%02d\n",
-			year,
-			month,
-			day
-			);
-	}
-#ifdef DBG
-	tm_dump ("t0", & t0_tm);
-#endif
-	t0_tm.tm_year = (year - 1900);
-	t0_tm.tm_mon = --month; /* 0-11 */
-	t0_tm.tm_mday = day;
-	t0_tm.tm_hour = 0;
-	t0_tm.tm_min = 0;
-	t0_tm.tm_sec = 1;
-	t0_tm.tm_isdst = -1;
-	
-#ifdef DBG
-	tm_dump ("t0", & t0_tm);
-#endif
-
-	if (-1 == (t0 = mktime (& t0_tm)))
-	{
-		fprintf (
-			stderr,
-			"%s: can not convert release date!\n",
-			argv[0]
-			);
-		return EXIT_FAILURE;
+		printf ( "\nReactOS Build Number Generator\n\n");
 	}
 
 	time (& t1); /* current build time */
@@ -275,10 +228,7 @@ Last release: %4d-%02d-%02d\n",
 #ifdef DBG
 	tm_dump ("t1", t1_tm);
 #endif
-	t1_tm->tm_year +=
-		(t1_tm->tm_year < 70)
-		? 2000
-		: 1900;
+	t1_tm->tm_year += 1900;
 #ifdef DBG
 	tm_dump ("t1", t1_tm);
 #endif
@@ -292,23 +242,22 @@ Last release: %4d-%02d-%02d\n",
 			);
 	}
 	/*
-	 * Compute delta days.
+	 * Compute build number.
 	 */
-	build =	elapsed_days (t1, t0);
+	build =	t1_tm->tm_year * 10000 + (t1_tm->tm_mon + 1) * 100 + t1_tm->tm_mday;
 
 	if (FALSE == quiet)
 	{
 		printf (
-			"Build number: %d (elapsed days since last release)\n",
-			build
-			);
-		printf (
-			"ROS Version : %d.%d.%d.%d\n",
+			"ROS Version : %d.%d",
 			KERNEL_VERSION_MAJOR,
-			KERNEL_VERSION_MINOR,
-			KERNEL_VERSION_PATCH_LEVEL,
-			build
+			KERNEL_VERSION_MINOR
 			);
+		if (0 != KERNEL_VERSION_PATCH_LEVEL)
+		{
+			printf(".%d", KERNEL_VERSION_PATCH_LEVEL);
+		}
+		printf("-%S (Build %d)\n\n", KERNEL_VERSION_BUILD_TYPE, build);
 	}
 	/*
 	 * (Over)write the include file, unless
