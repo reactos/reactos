@@ -37,6 +37,7 @@
 #include "filequeue.h"
 #include "progress.h"
 #include "bootsup.h"
+#include "registry.h"
 
 
 #define START_PAGE			0
@@ -139,36 +140,36 @@ PopupError(PCHAR Text,
   Lines = 0;
   pnext = Text;
   while (TRUE)
-  {
-    p = strchr(pnext, '\n');
-    if (p == NULL)
     {
-      Length = strlen(pnext);
-      LastLine = TRUE;
+      p = strchr(pnext, '\n');
+      if (p == NULL)
+	{
+	  Length = strlen(pnext);
+	  LastLine = TRUE;
+	}
+      else
+	{
+	  Length = (ULONG)(p - pnext);
+	  LastLine = FALSE;
+	}
+
+      Lines++;
+      if (Length > MaxLength)
+	MaxLength = Length;
+
+      if (LastLine == TRUE)
+	break;
+
+      pnext = p + 1;
     }
-    else
-    {
-      Length = (ULONG)(p - pnext);
-      LastLine = FALSE;
-    }
-
-    Lines++;
-    if (Length > MaxLength)
-      MaxLength = Length;
-
-    if (LastLine == TRUE)
-      break;
-
-    pnext = p + 1;
-  }
 
   /* Check length of status line */
   if (Status != NULL)
-  {
-    Length = strlen(Status);
-    if (Length > MaxLength)
-      MaxLength = Length;
-  }
+    {
+      Length = strlen(Status);
+      if (Length > MaxLength)
+	MaxLength = Length;
+    }
 
   GetScreenSize(&xScreen, &yScreen);
 
@@ -184,12 +185,12 @@ PopupError(PCHAR Text,
   /* Set screen attributes */
   coPos.X = xLeft;
   for (coPos.Y = yTop; coPos.Y < yTop + Height; coPos.Y++)
-  {
-    FillConsoleOutputAttribute(0x74,
-			       Width,
-			       coPos,
-			       &Written);
-  }
+    {
+      FillConsoleOutputAttribute(0x74,
+				 Width,
+				 coPos,
+				 &Written);
+    }
 
   /* draw upper left corner */
   coPos.X = xLeft;
@@ -217,25 +218,25 @@ PopupError(PCHAR Text,
 
   /* Draw right edge, inner space and left edge */
   for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
-  {
-    coPos.X = xLeft;
-    FillConsoleOutputCharacter(0xB3, // '|',
-			       1,
-			       coPos,
-			       &Written);
+    {
+      coPos.X = xLeft;
+      FillConsoleOutputCharacter(0xB3, // '|',
+				 1,
+				 coPos,
+				 &Written);
 
-    coPos.X = xLeft + 1;
-    FillConsoleOutputCharacter(' ',
-			       Width - 2,
-			       coPos,
-			       &Written);
+      coPos.X = xLeft + 1;
+      FillConsoleOutputCharacter(' ',
+				 Width - 2,
+				 coPos,
+				 &Written);
 
-    coPos.X = xLeft + Width - 1;
-    FillConsoleOutputCharacter(0xB3, // '|',
-			       1,
-			       coPos,
-			       &Written);
-  }
+      coPos.X = xLeft + Width - 1;
+      FillConsoleOutputCharacter(0xB3, // '|',
+				 1,
+				 coPos,
+				 &Written);
+    }
 
   /* draw lower left corner */
   coPos.X = xLeft;
@@ -265,62 +266,62 @@ PopupError(PCHAR Text,
   coPos.Y = yTop + 1;
   pnext = Text;
   while (TRUE)
-  {
-    p = strchr(pnext, '\n');
-    if (p == NULL)
     {
-      Length = strlen(pnext);
-      LastLine = TRUE;
-    }
-    else
-    {
-      Length = (ULONG)(p - pnext);
-      LastLine = FALSE;
-    }
+      p = strchr(pnext, '\n');
+      if (p == NULL)
+	{
+	  Length = strlen(pnext);
+	  LastLine = TRUE;
+	}
+      else
+	{
+	  Length = (ULONG)(p - pnext);
+	  LastLine = FALSE;
+	}
 
-    if (Length != 0)
-    {
-      coPos.X = xLeft + 2;
-      WriteConsoleOutputCharacters(pnext,
-				   Length,
-				   coPos);
+      if (Length != 0)
+	{
+	  coPos.X = xLeft + 2;
+	  WriteConsoleOutputCharacters(pnext,
+				       Length,
+				       coPos);
+	}
+
+      if (LastLine == TRUE)
+	break;
+
+      coPos.Y++;
+      pnext = p + 1;
     }
-
-    if (LastLine == TRUE)
-      break;
-
-    coPos.Y++;
-    pnext = p + 1;
-  }
 
   /* Print separator line and status text */
   if (Status != NULL)
-  {
-    coPos.Y = yTop + Height - 3;
-    coPos.X = xLeft;
-    FillConsoleOutputCharacter(0xC3, // '+',
-			       1,
-			       coPos,
-			       &Written);
+    {
+      coPos.Y = yTop + Height - 3;
+      coPos.X = xLeft;
+      FillConsoleOutputCharacter(0xC3, // '+',
+				 1,
+				 coPos,
+				 &Written);
 
-    coPos.X = xLeft + 1;
-    FillConsoleOutputCharacter(0xC4, // '-',
-			       Width - 2,
-			       coPos,
-			       &Written);
+      coPos.X = xLeft + 1;
+      FillConsoleOutputCharacter(0xC4, // '-',
+				 Width - 2,
+				 coPos,
+				 &Written);
 
-    coPos.X = xLeft + Width - 1;
-    FillConsoleOutputCharacter(0xB4, // '+',
-			       1,
-			       coPos,
-			       &Written);
+      coPos.X = xLeft + Width - 1;
+      FillConsoleOutputCharacter(0xB4, // '+',
+				 1,
+				 coPos,
+				 &Written);
 
-    coPos.Y++;
-    coPos.X = xLeft + 2;
-    WriteConsoleOutputCharacters(Status,
-				 min(strlen(Status), Width - 4),
-				 coPos);
-  }
+      coPos.Y++;
+      coPos.X = xLeft + 2;
+      WriteConsoleOutputCharacters(Status,
+				   min(strlen(Status), Width - 4),
+				   coPos);
+    }
 }
 
 
@@ -771,7 +772,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 8, "Setup will install ReactOS on");
 
-  PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s on",
+  PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
 	      PartData.PartNumber,
 	      PartSize,
 	      PartUnit,
@@ -1020,60 +1021,60 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   DirSection = IniCacheGetSection(IniCache,
 				  L"Directories");
   if (DirSection == NULL)
-  {
-    PopupError("Setup failed to find the 'Directories' section\n"
-	       "in TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup failed to find the 'Directories' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
   /* Open 'SourceFiles' section */
   FilesSection = IniCacheGetSection(IniCache,
 				    L"SourceFiles");
   if (FilesSection == NULL)
-  {
-    PopupError("Setup failed to find the 'SourceFiles' section\n"
-	       "in TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup failed to find the 'SourceFiles' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
 
   /* Create the file queue */
   SetupFileQueue = SetupOpenFileQueue();
   if (SetupFileQueue == NULL)
-  {
-    PopupError("Setup failed to open the copy file queue.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup failed to open the copy file queue.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
   /*
    * Enumerate the files in the 'SourceFiles' section
@@ -1083,45 +1084,40 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 				    &FileKeyName,
 				    &FileKeyValue);
   if (Iterator != NULL)
-  {
-    do
     {
-      DPRINT1("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
+      do
+	{
+	  DPRINT1("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
-      /* Lookup target directory */
-      Status = IniCacheGetKey(DirSection,
-			      FileKeyValue,
-			      &DirKeyValue);
-      if (!NT_SUCCESS(Status))
-      {
-	/* FIXME: Handle error! */
-	DPRINT1("IniCacheGetKey() failed (Status 0x%lX)\n", Status);
-      }
+	  /* Lookup target directory */
+	  Status = IniCacheGetKey(DirSection,
+				  FileKeyValue,
+				  &DirKeyValue);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      /* FIXME: Handle error! */
+	      DPRINT1("IniCacheGetKey() failed (Status 0x%lX)\n", Status);
+	    }
 
-      if (SetupQueueCopy(SetupFileQueue,
-			 SourceRootPath.Buffer,
-			 L"\\install",
-			 FileKeyName,
-			 DirKeyValue,
-			 NULL) == FALSE)
-      {
-	/* FIXME: Handle error! */
-	DPRINT1("SetupQueueCopy() failed\n");
-      }
+	  if (SetupQueueCopy(SetupFileQueue,
+			     SourceRootPath.Buffer,
+			     L"\\install",
+			     FileKeyName,
+			     DirKeyValue,
+			     NULL) == FALSE)
+	    {
+	      /* FIXME: Handle error! */
+	      DPRINT1("SetupQueueCopy() failed\n");
+	    }
+	}
+      while (IniCacheFindNextValue(Iterator, &FileKeyName, &FileKeyValue));
+
+      IniCacheFindClose(Iterator);
     }
-    while (IniCacheFindNextValue(Iterator, &FileKeyName, &FileKeyValue));
 
-    IniCacheFindClose(Iterator);
-  }
 
-  /* Report that the file queue has been built */
-//  SetTextXY(8, 12, "Build file copy list");
-//  SetHighlightedTextXY(50, 12, "Done");
-
-  /* create directories */
+  /* Create directories */
   SetStatusText("   Creating directories...");
-//  SetInvertedTextXY(8, 14, "Create directories");
-
 
   /*
    * FIXME:
@@ -1134,110 +1130,81 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   /* Remove trailing backslash */
   Length = wcslen(PathBuffer);
   if ((Length > 0) && (PathBuffer[Length - 1] == '\\'))
-    PathBuffer[Length - 1] = 0;
+    {
+      PathBuffer[Length - 1] = 0;
+    }
 
   /* Create the install directory */
   Status = CreateDirectory(PathBuffer);
   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
-  {
-    DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
-
-    PopupError("Setup could not create the install directory.",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+      PopupError("Setup could not create the install directory.",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
-
 
   /* Enumerate the directory values and create the subdirectories */
   Iterator = IniCacheFindFirstValue(DirSection,
 				    &KeyName,
 				    &KeyValue);
   if (Iterator != NULL)
-  {
-    do
     {
-      if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
-      {
-        DPRINT("Absolute Path: '%S'\n", KeyValue);
-
-	wcscpy(PathBuffer, DestinationRootPath.Buffer);
-	wcscat(PathBuffer, KeyValue);
-
-	DPRINT("FullPath: '%S'\n", PathBuffer);
-      }
-      else if (KeyValue[0] != L'\\')
-      {
-	DPRINT("RelativePath: '%S'\n", KeyValue);
-	wcscpy(PathBuffer, DestinationPath.Buffer);
-	wcscat(PathBuffer, L"\\");
-	wcscat(PathBuffer, KeyValue);
-
-	DPRINT("FullPath: '%S'\n", PathBuffer);
-
-	Status = CreateDirectory(PathBuffer);
-	if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
-	  {
-	    DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
-
-	    PopupError("Setup could not create install directories.",
-		       "ENTER = Reboot computer");
-
-	    while(TRUE)
+      do
+	{
+	  if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
 	    {
-	      ConInKey(Ir);
+	      DPRINT("Absolute Path: '%S'\n", KeyValue);
 
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	      {
-		IniCacheFindClose(Iterator);
-		return(QUIT_PAGE);
-	      }
+	      wcscpy(PathBuffer, DestinationRootPath.Buffer);
+	      wcscat(PathBuffer, KeyValue);
+
+	      DPRINT("FullPath: '%S'\n", PathBuffer);
 	    }
-	  }
-      }
+	  else if (KeyValue[0] != L'\\')
+	    {
+	      DPRINT("RelativePath: '%S'\n", KeyValue);
+	      wcscpy(PathBuffer, DestinationPath.Buffer);
+	      wcscat(PathBuffer, L"\\");
+	      wcscat(PathBuffer, KeyValue);
+
+	      DPRINT("FullPath: '%S'\n", PathBuffer);
+
+	      Status = CreateDirectory(PathBuffer);
+	      if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+		{
+		  DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+		  PopupError("Setup could not create install directories.",
+			     "ENTER = Reboot computer");
+
+		  while (TRUE)
+		    {
+		      ConInKey(Ir);
+
+		      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+			{
+			  IniCacheFindClose(Iterator);
+			  return(QUIT_PAGE);
+			}
+		    }
+		}
+	    }
+	}
+      while (IniCacheFindNextValue(Iterator, &KeyName, &KeyValue));
+
+      IniCacheFindClose(Iterator);
     }
-    while (IniCacheFindNextValue(Iterator, &KeyName, &KeyValue));
-
-    IniCacheFindClose(Iterator);
-  }
-
 
   return(FILE_COPY_PAGE);
-
-#if 0
-  SetTextXY(8, 14, "Create directories");
-  SetHighlightedTextXY(50, 14, "Done");
-
-
-  SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return(FILE_COPY_PAGE);
-	}
-    }
-
-  return(PREPARE_COPY_PAGE);
-#endif
 }
 
 
@@ -1252,28 +1219,27 @@ FileCopyCallback(PVOID Context,
   CopyContext = (PCOPYCONTEXT)Context;
 
   switch (Notification)
-  {
-    case SPFILENOTIFY_STARTSUBQUEUE:
-      CopyContext->TotalOperations = (ULONG)Param2;
-      ProgressSetStepCount(CopyContext->ProgressBar,
-			   CopyContext->TotalOperations);
-      break;
+    {
+      case SPFILENOTIFY_STARTSUBQUEUE:
+	CopyContext->TotalOperations = (ULONG)Param2;
+	ProgressSetStepCount(CopyContext->ProgressBar,
+			     CopyContext->TotalOperations);
+	break;
 
-    case SPFILENOTIFY_STARTCOPY:
-      /* Display copy message */
-      PrintTextXYN(6, 16, 60, "Copying file: %S", (PWSTR)Param1);
+      case SPFILENOTIFY_STARTCOPY:
+	/* Display copy message */
+	PrintTextXYN(6, 16, 60, "Copying file: %S", (PWSTR)Param1);
 
-      PrintTextXYN(6, 18, 60, "File %lu of %lu",
-		   CopyContext->CompletedOperations + 1,
-		   CopyContext->TotalOperations);
-      break;
+	PrintTextXYN(6, 18, 60, "File %lu of %lu",
+		     CopyContext->CompletedOperations + 1,
+		     CopyContext->TotalOperations);
+	break;
 
-
-    case SPFILENOTIFY_ENDCOPY:
-      CopyContext->CompletedOperations++;
-      ProgressNextStep(CopyContext->ProgressBar);
-      break;
-  }
+      case SPFILENOTIFY_ENDCOPY:
+	CopyContext->CompletedOperations++;
+	ProgressNextStep(CopyContext->ProgressBar);
+	break;
+    }
 
   return(0);
 }
@@ -1310,31 +1276,7 @@ FileCopyPage(PINPUT_RECORD Ir)
   DestroyProgressBar(CopyContext.ProgressBar);
 
   return(REGISTRY_PAGE);
-
-#if 0
-  SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return(REGISTRY_PAGE);
-	}
-    }
-
-  return(FILE_COPY_PAGE);
-#endif
 }
-
 
 
 static ULONG
@@ -1346,15 +1288,7 @@ RegistryPage(PINPUT_RECORD Ir)
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  SetTextXY(6, 8, "Setup initializes system settings");
-
-
-//  SetTextXY(6, 12, "Create registry hives");
-
-//  SetTextXY(6, 14, "Update registry hives");
-
-
-//  SetStatusText("   Please wait...");
+  SetTextXY(6, 8, "Setup updated the system configuration");
 
   SetStatusText("   Creating registry hives...");
 
@@ -1370,21 +1304,21 @@ RegistryPage(PINPUT_RECORD Ir)
 		      KEY_ALL_ACCESS,
 		      &ObjectAttributes);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-    PopupError("Setup failed to open the HARDWARE registry key.",
-	       "ENTER = Reboot computer");
+    {
+      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+      PopupError("Setup failed to open the HARDWARE registry key.",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
   RtlInitUnicodeStringFromLiteral(&ValueName,
 				  L"InstallPath");
@@ -1397,74 +1331,63 @@ RegistryPage(PINPUT_RECORD Ir)
 			 DestinationPath.Length);
   NtClose(KeyHandle);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-    PopupError("Setup failed to set the \'InstallPath\' registry value.",
-	       "ENTER = Reboot computer");
+    {
+      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+      PopupError("Setup failed to set the \'InstallPath\' registry value.",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
-	}
-      }
-  }
+	  ConInKey(Ir);
 
-  /* Create the standard hives */
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  /* Create the default hives */
   Status = NtInitializeRegistry(TRUE);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
-    PopupError("Setup failed to initialize the registry.",
-	       "ENTER = Reboot computer");
+    {
+      DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
+      PopupError("Setup failed to initialize the registry.",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
-	}
-      }
-  }
+	  ConInKey(Ir);
 
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
 
   /* Update registry */
   SetStatusText("   Updating registry hives...");
 
-  /* FIXME: Create key '\Registry\Machine\System\Setup' */
+  Status = SetupUpdateRegistry();
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("SetupUpdateRegistry() failed (Status %lx)\n", Status);
+      PopupError("Setup failed to update the registry.",
+		 "ENTER = Reboot computer");
 
-  /* FIXME: Create value 'SystemSetupInProgress' */
+      while(TRUE)
+	{
+	  ConInKey(Ir);
 
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
 
   return(BOOT_LOADER_PAGE);
-
-#if 0
-  SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  while(TRUE)
-  {
-    ConInKey(Ir);
-
-    if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	(Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-    {
-      if (ConfirmQuit(Ir) == TRUE)
-	return(QUIT_PAGE);
-      break;
-    }
-    else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-    {
-      return(BOOT_LOADER_PAGE);
-    }
-  }
-
-  return(REGISTRY_PAGE);
-#endif
 }
 
 
@@ -1482,93 +1405,93 @@ BootLoaderPage(PINPUT_RECORD Ir)
   SetStatusText("   Please wait...");
 
   if (ActivePartitionValid == FALSE)
-  {
-    DPRINT1("Error: no active partition found\n");
-    PopupError("Setup could not find an active partiton\n",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      DPRINT1("Error: no active partition found\n");
+      PopupError("Setup could not find an active partiton\n",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
 
   if (ActivePartition.PartType == PARTITION_ENTRY_UNUSED)
-  {
-    DPRINT1("Error: active partition invalid (unused)\n");
-    PopupError("The active partition is unused (invalid).\n",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      DPRINT1("Error: active partition invalid (unused)\n");
+      PopupError("The active partition is unused (invalid).\n",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
 
   if (ActivePartition.PartType == 0x0A)
-  {
-    /* OS/2 boot manager partition */
-    DPRINT1("Found OS/2 boot manager partition\n");
-    PopupError("Setup found an OS/2 boot manager partiton.\n"
-	       "The OS/2 boot manager is not supported yet!",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      /* OS/2 boot manager partition */
+      DPRINT1("Found OS/2 boot manager partition\n");
+      PopupError("Setup found an OS/2 boot manager partiton.\n"
+		 "The OS/2 boot manager is not supported yet!",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
   else if (ActivePartition.PartType == 0x83)
-  {
-    /* Linux ext2 partition */
-    DPRINT1("Found Linux ext2 partition\n");
-    PopupError("Setup found a Linux ext2 partiton.\n"
-	       "Linux ext2 partitions are not supported yet!",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      /* Linux ext2 partition */
+      DPRINT1("Found Linux ext2 partition\n");
+      PopupError("Setup found a Linux ext2 partiton.\n"
+		 "Linux ext2 partitions are not supported yet!",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
   else if (ActivePartition.PartType == PARTITION_IFS)
-  {
-      /* NTFS partition */
-    DPRINT1("Found NTFS partition\n");
-    PopupError("Setup found an NTFS partiton.\n"
-	       "NTFS partitions are not supported yet!",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      /* NTFS partition */
+      DPRINT1("Found NTFS partition\n");
+      PopupError("Setup found an NTFS partiton.\n"
+		 "NTFS partitions are not supported yet!",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
   else if ((ActivePartition.PartType == PARTITION_FAT_12) ||
 	   (ActivePartition.PartType == PARTITION_FAT_16) ||
 	   (ActivePartition.PartType == PARTITION_HUGE) ||
@@ -2075,48 +1998,25 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
   }
   else
-  {
-    /* Unknown partition */
-    DPRINT1("Unknown partition found\n");
-    PopupError("Setup found an unknown partiton type.\n"
-	       "This partition type is not supported!",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      /* Unknown partition */
+      DPRINT1("Unknown partition found\n");
+      PopupError("Setup found an unknown partiton type.\n"
+		 "This partition type is not supported!",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
 
   return(SUCCESS_PAGE);
-
-#if 0
-  SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  while(TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return(SUCCESS_PAGE);
-	}
-    }
-
-  return(BOOT_LOADER_PAGE);
-#endif
 }
 
 
