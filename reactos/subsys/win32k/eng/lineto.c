@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.35 2004/07/14 20:48:57 navaraf Exp $
+ * $Id: lineto.c,v 1.36 2004/12/14 04:30:58 royce Exp $
  */
 #include <w32k.h>
 
@@ -491,14 +491,20 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 	     MIX mix)
 {
   BOOLEAN ret;
-  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *DestSurf;
   PGDIBRUSHINST GdiBrush;
   RECTL b;
+
+  ASSERT(DestObj);
+  DestSurf = &DestObj->SurfObj;
+  ASSERT(DestSurf);
 
   GdiBrush = CONTAINING_RECORD(
      Brush,
      GDIBRUSHINST,
      BrushObject);
+  ASSERT(GdiBrush);
+  ASSERT(GdiBrush->GdiBrushObject);
 
   if (GdiBrush->GdiBrushObject->flAttrs & GDIBRUSH_IS_NULL)
     return TRUE;
