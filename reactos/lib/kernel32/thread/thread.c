@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.52 2004/09/19 12:45:55 weiden Exp $
+/* $Id: thread.c,v 1.53 2004/09/24 20:55:58 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -365,14 +365,13 @@ GetThreadTimes(HANDLE hThread,
 	       LPFILETIME lpUserTime)
 {
   KERNEL_USER_TIMES KernelUserTimes;
-  ULONG ReturnLength;
   NTSTATUS Status;
 
   Status = NtQueryInformationThread(hThread,
 				    ThreadTimes,
 				    &KernelUserTimes,
 				    sizeof(KERNEL_USER_TIMES),
-				    &ReturnLength);
+				    NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -445,14 +444,13 @@ GetExitCodeThread(HANDLE hThread,
 		  LPDWORD lpExitCode)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
-  ULONG DataWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationThread(hThread,
 				    ThreadBasicInformation,
 				    &ThreadBasic,
 				    sizeof(THREAD_BASIC_INFORMATION),
-				    &DataWritten);
+				    NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -543,7 +541,6 @@ SetThreadAffinityMask(HANDLE hThread,
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
   KAFFINITY AffinityMask;
-  ULONG DataWritten;
   NTSTATUS Status;
 
   AffinityMask = (KAFFINITY)dwThreadAffinityMask;
@@ -552,7 +549,7 @@ SetThreadAffinityMask(HANDLE hThread,
 				    ThreadBasicInformation,
 				    &ThreadBasic,
 				    sizeof(THREAD_BASIC_INFORMATION),
-				    &DataWritten);
+				    NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -602,14 +599,13 @@ int STDCALL
 GetThreadPriority(HANDLE hThread)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
-  ULONG DataWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationThread(hThread,
 				    ThreadBasicInformation,
 				    &ThreadBasic,
 				    sizeof(THREAD_BASIC_INFORMATION),
-				    &DataWritten);
+				    NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -628,14 +624,13 @@ GetThreadPriorityBoost(IN HANDLE hThread,
 		       OUT PBOOL pDisablePriorityBoost)
 {
   ULONG PriorityBoost;
-  ULONG DataWritten;
   NTSTATUS Status;
 
   Status = NtQueryInformationThread(hThread,
 				    ThreadPriorityBoost,
 				    &PriorityBoost,
 				    sizeof(ULONG),
-				    &DataWritten);
+				    NULL);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -682,8 +677,23 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
 		       OUT LPLDT_ENTRY lpSelectorEntry)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return(FALSE);
+  DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
+  NTSTATUS Status;
+  
+  DescriptionTableEntry.Selector = dwSelector;
+  Status = NtQueryInformationThread(hThread,
+                                    ThreadDescriptorTableEntry,
+                                    &DescriptionTableEntry,
+                                    sizeof(DESCRIPTOR_TABLE_ENTRY),
+                                    NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  *lpSelectorEntry = DescriptionTableEntry.Descriptor;
+  return TRUE;
 }
 
 
