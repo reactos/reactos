@@ -1,6 +1,9 @@
 /*
- * gditest
-   dec 26, 2001 -- gditest bug fix by Richard Campbell
+ * COPYRIGHT:         See COPYING in the top level directory
+ * AUTHOR:            See gditest-- (initial changes by Mark Tempel)
+ * shaptest
+ * This test application is for testing shape drawing GDI routines.
+ * Much code is taken from gditest (just look at the revision history).
  */
 
 #include <windows.h>
