@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.18 2004/03/10 16:10:13 navaraf Exp $
+ * $Id: videoprt.c,v 1.19 2004/03/11 00:05:00 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -428,7 +428,7 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
 {
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT1("VideoPortGetVgaStatus = %S \n", VgaStatus);
+  DPRINT("VideoPortGetVgaStatus = %x \n", VgaStatus);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      VIDEO_PORT_DEVICE_EXTENSION,
@@ -436,14 +436,14 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
 
  if(KeGetCurrentIrql() == PASSIVE_LEVEL)
  {
-  DPRINT1("VideoPortGetVgaStatus1 = %S \n", VgaStatus);
+  DPRINT("VideoPortGetVgaStatus1 = %x \n", VgaStatus);
 
   if ( PCIBus == DeviceExtension->AdapterInterfaceType)
 	{
 /*
   VgaStatus 0 == VGA not enabled, 1 == VGA enabled.
  */
-  DPRINT1("VideoPortGetVgaStatus2 = %S \n", VgaStatus);
+  DPRINT("VideoPortGetVgaStatus2 = %x \n", VgaStatus);
 	
 	/* Assumed for now */
 	
@@ -452,7 +452,7 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
  	return  STATUS_SUCCESS;
  	}
   } 	
-  DPRINT1("VideoPortGetVgaStatus3 = %S \n", VgaStatus);
+  DPRINT("VideoPortGetVgaStatus3 = %x \n", VgaStatus);
 
   return ERROR_INVALID_FUNCTION;    
 }
