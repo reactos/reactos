@@ -175,8 +175,8 @@ RtlCreateUserThread(HANDLE ProcessHandle,
         *StackCommit = CommitSize;
 
     /* return reserved stack size */
-    if (StackCommit)
-        *StackCommit = ReservedSize;
+    if (StackReserved)
+        *StackReserved = ReservedSize;
 
     /* return thread handle */
     if (ThreadHandle)
