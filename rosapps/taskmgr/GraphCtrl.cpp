@@ -649,6 +649,24 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 		return 0;
+
+	case WM_NCCALCSIZE:
+		return 0;
+
+	case WM_SIZE:
+//        pGraphCtrl = TGraphCtrl::LookupGraphCtrl(hWnd);
+//        if (pGraphCtrl) pGraphCtrl->Resize(wParam, HIWORD(lParam), LOWORD(lParam));
+        if (hWnd == hPerformancePageMemUsageHistoryGraph) {
+            PerformancePageMemUsageHistoryGraph.Resize();
+            PerformancePageMemUsageHistoryGraph.InvalidateCtrl();
+        }
+        if (hWnd == hPerformancePageCpuUsageHistoryGraph) {
+            PerformancePageCpuUsageHistoryGraph.Resize();
+            PerformancePageCpuUsageHistoryGraph.InvalidateCtrl();
+        }
+        return 0;
+        break;
+
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 //        pGraphCtrl = TGraphCtrl::LookupGraphCtrl(hWnd);
@@ -661,31 +679,6 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             PerformancePageCpuUsageHistoryGraph.Paint(hWnd, hdc);
         }
 		EndPaint(hWnd, &ps);
-		return 0;
-/*
-		WindowId = GetWindowLong(hWnd, GWL_ID);
-		switch (WindowId) {
-		case IDC_CPU_USAGE_GRAPH:
-			Graph_DrawCpuUsageGraph(hdc, hWnd);
-			break;
-		case IDC_MEM_USAGE_GRAPH:
-			Graph_DrawMemUsageGraph(hdc, hWnd);
-			break;
-		case IDC_MEM_USAGE_HISTORY_GRAPH:
-			Graph_DrawMemUsageHistoryGraph(hdc, hWnd);
-			break;
-		}
- */
-
-	case WM_SIZE:
-//        pGraphCtrl = TGraphCtrl::LookupGraphCtrl(hWnd);
-//        if (pGraphCtrl) pGraphCtrl->Resize(wParam, HIWORD(lParam), LOWORD(lParam));
-        if (hWnd == hPerformancePageMemUsageHistoryGraph) {
-            PerformancePageMemUsageHistoryGraph.Resize();
-        }
-        if (hWnd == hPerformancePageCpuUsageHistoryGraph) {
-            PerformancePageCpuUsageHistoryGraph.Resize();
-        }
 		return 0;
 	}
 	

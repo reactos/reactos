@@ -111,6 +111,7 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 			
+	case WM_NCCALCSIZE:
 		return 0;
 
 	case WM_PAINT:

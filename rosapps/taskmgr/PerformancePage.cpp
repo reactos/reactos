@@ -89,6 +89,7 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
 {
     RECT	rc;
 	int		cx, cy, sx, sy;
+
     GetClientRect(hCntrl, &rc);
     MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
     if (pos) {
@@ -102,11 +103,11 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
             cy += nYDifference / 2;
             break;
         case 3:
-            sx += nXDifference / 2;
+            sx += nXDifference;
             break;
         case 4:
             cy += nYDifference / 2;
-            sx += nXDifference / 2;
+            sx += nXDifference;
             break;
         }
         sy = rc.bottom - rc.top + nYDifference / 2;
@@ -214,13 +215,8 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		//
         OldGraphWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
         SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
-//        SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
-		
-//		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
-//		SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
 		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
 		SetWindowLong(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
-
 		return TRUE;
 
 	case WM_COMMAND:
@@ -228,23 +224,22 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 #if 0
     case WM_NCPAINT:
         hdc = GetDC(hDlg);
-        //GetClientRect(hDlg, &rc);
-        //Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+        GetClientRect(hDlg, &rc);
+        Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
         ReleaseDC(hDlg, hdc);
         break;
 
     case WM_PAINT:
         hdc = BeginPaint(hDlg, &ps);
-        
-        //GetClientRect(hDlg, &rc);
-        //Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+        GetClientRect(hDlg, &rc);
+        Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
         EndPaint(hDlg, &ps);
         break;
 #endif
 	case WM_SIZE:
 		int		cx, cy;
 
-		if (wParam == SIZE_MINIMIZED)
+ 		if (wParam == SIZE_MINIMIZED)
 			return 0;
 
 		cx = LOWORD(lParam);
@@ -253,8 +248,6 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		nYDifference = cy - nPerformancePageHeight;
 		nPerformancePageWidth = cx;
 		nPerformancePageHeight = cy;
-//		SetWindowPos(hPerformancePageMemUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-//		SetWindowPos(hPerformancePageCpuUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
 		// Reposition the performance page's controls
         AdjustFrameSize(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
@@ -287,42 +280,39 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, 0, nYDifference);
         AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, 0, nYDifference);
 
-    static int lastX, lastY;
+        static int lastX, lastY;
 
-    nXDifference += lastX; 
-    nYDifference += lastY; 
-    lastX = lastY = 0; 
-    if (nXDifference % 2) {
-        if (nXDifference > 0) {
-            nXDifference--;
-            lastX++;
-        } else {
-            nXDifference++;
-            lastX--;
-        }
-    }
-    if (nYDifference % 2) {
-        if (nYDifference > 0) {
-            nYDifference--;
-            lastY++;
-        } else {
-            nYDifference++;
-            lastY--;
-        }
-    }
+        nXDifference += lastX; 
+        nYDifference += lastY; 
+        lastX = lastY = 0; 
+        if (nXDifference % 2) {
+            if (nXDifference > 0) {
+                nXDifference--;
+                lastX++;
+			} else {
+                nXDifference++;
+                lastX--;
+			}
+		}
+        if (nYDifference % 2) {
+            if (nYDifference > 0) {
+                nYDifference--;
+                lastY++;
+			} else {
+                nYDifference++;
+                lastY--;
+			}
+		}
         AdjustFrameSize(hPerformancePageCpuUsageFrame, hDlg, nXDifference, nYDifference, 1);
         AdjustFrameSize(hPerformancePageMemUsageFrame, hDlg, nXDifference, nYDifference, 2);
         AdjustFrameSize(hPerformancePageCpuUsageHistoryFrame, hDlg, nXDifference, nYDifference, 3);
         AdjustFrameSize(hPerformancePageMemUsageHistoryFrame, hDlg, nXDifference, nYDifference, 4);
-/*
         AdjustFrameSize(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
         AdjustFrameSize(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
-        AdjustFrameSize(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
-        AdjustFrameSize(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
- */
+        AdjustFrameSize(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
+        AdjustFrameSize(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
 		break;
 	}
-
     return 0;
 }
 
