@@ -519,6 +519,18 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
      {
 	tmpLength = (ULONG)*BaseAddress + Length - PAGE_ROUND_DOWN((*BaseAddress));
 	(*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
+
+	if (AddressSpace->LowestAddress == KERNEL_BASE &&
+	    (*BaseAddress) < (PVOID)KERNEL_BASE)
+	  {
+	    return STATUS_ACCESS_VIOLATION;
+	  }
+
+        if (AddressSpace->LowestAddress < KERNEL_BASE && 
+	    (*BaseAddress) + tmpLength > (PVOID)KERNEL_BASE)
+	  {
+	    return STATUS_ACCESS_VIOLATION;
+	  }
 	if (MmOpenMemoryAreaByRegion(AddressSpace,
 				     *BaseAddress,
 				     tmpLength)!=NULL)
