@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.2 2000/01/12 19:05:32 ekohl Exp $
+/* $Id: create.c,v 1.3 2000/02/22 02:02:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -10,10 +10,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <wchar.h>
-#include <internal/string.h>
 #include <ddk/ntddk.h>
 #include <ddk/cctypes.h>
+#include <wchar.h>
+#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
