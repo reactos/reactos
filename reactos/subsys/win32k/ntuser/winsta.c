@@ -189,7 +189,7 @@ IntInitializeDesktopGraphics(VOID)
       return FALSE;
     }
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
-  ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
+  ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
   if (NULL == ScreenDeviceContext)
     {
       IntDestroyPrimarySurface();

@@ -1534,6 +1534,12 @@ NtGdiExtTextOut(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+   }
 
    if (NULL != UnsafeDx && Count > 0)
    {

@@ -130,7 +130,8 @@ HDC FASTCALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Device,
                PUNICODE_STRING Output,
-               CONST PDEVMODEW InitData);
+               CONST PDEVMODEW InitData,
+               BOOL CreateAsIC);
 
 COLORREF FASTCALL
 IntGetDCColor(HDC hDC, ULONG Object);

@@ -136,7 +136,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   if (hDC == NULL)
     {
       RtlInitUnicodeString(&DriverName, L"DISPLAY");
-      DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
+      DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, TRUE);
       if (NULL == DisplayDC)
         {
           return NULL;
@@ -169,6 +169,7 @@ NtGdiCreateCompatableDC(HDC hDC)
 
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = hNewDC;
+  NewDC->IsIC = FALSE;
 
   NewDC->PDev = OrigDC->PDev;
   NewDC->DMW = OrigDC->DMW;
@@ -454,19 +455,16 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
   return Valid;
 }
 
-BOOL FASTCALL
-IntCreatePrimarySurface()
+static BOOL FASTCALL
+IntPrepareDriver()
 {
    PGD_ENABLEDRIVER GDEnableDriver;
    DRVENABLEDATA DED;
-   SURFOBJ *SurfObj;
-   SIZEL SurfSize;
    UNICODE_STRING DriverFileNames;
    PWSTR CurrentName;
    BOOL GotDriver;
    BOOL DoDefault;
    ULONG DisplayNumber;
-   RECTL SurfaceRect;
 
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
@@ -488,7 +486,6 @@ IntCreatePrimarySurface()
       if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
       {
          DPRINT1("FindDriverFileNames failed\n");
-         /* return FALSE; */
          continue;
       }
 
@@ -543,7 +540,6 @@ IntCreatePrimarySurface()
       {
          ObDereferenceObject(PrimarySurface.VideoFileObject);
          DPRINT1("No suitable DDI driver found\n");
-         /* return FALSE; */
          continue;
       }
 
@@ -608,7 +604,6 @@ IntCreatePrimarySurface()
             ObDereferenceObject(PrimarySurface.VideoFileObject);
             DPRINT1("DrvEnablePDEV with default parameters failed\n");
             DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
-            /* return FALSE; */
             continue;
          }
       }
@@ -623,7 +618,7 @@ IntCreatePrimarySurface()
          DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
          PrimarySurface.GDIInfo.ulLogPixelsY = 96;
       }
-      
+
       PrimarySurface.Pointer.Exclude.right = -1;
 
       DPRINT("calling completePDev\n");
@@ -637,42 +632,65 @@ IntCreatePrimarySurface()
 
       DRIVER_ReferenceDriver(L"DISPLAY");
 
-      DPRINT("calling EnableSurface\n");
+      PrimarySurface.PreparedDriver = TRUE;
+      PrimarySurface.DisplayNumber = DisplayNumber;
 
-      /* Enable the drawing surface */
-      PrimarySurface.Handle =
-         PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
-      if (NULL == PrimarySurface.Handle)
-      {
-/*         PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);*/
-         PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
-         ObDereferenceObject(PrimarySurface.VideoFileObject);
-         DPRINT1("DrvEnableSurface failed\n");
-         /* return FALSE; */
-         continue;
-      }
-
-      /* attach monitor */
-      IntAttachMonitor(&PrimarySurface, DisplayNumber);
-
-      SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
-      SurfObj->dhpdev = PrimarySurface.PDev;
-      SurfSize = SurfObj->sizlBitmap;
-      SurfSize = SurfObj->sizlBitmap;
-      SurfaceRect.left = SurfaceRect.top = 0;
-      SurfaceRect.right = SurfObj->sizlBitmap.cx;
-      SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
-      /* FIXME - why does EngEraseSurface() sometimes crash?
-        EngEraseSurface(SurfObj, &SurfaceRect, 0); */
-
-      /* Put the pointer in the center of the screen */
-      GDIDEV(SurfObj)->Pointer.Pos.x = (SurfaceRect.right - SurfaceRect.left) / 2;
-      GDIDEV(SurfObj)->Pointer.Pos.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
-
-      EngUnlockSurface(SurfObj);
-      IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
-      break;
+      return TRUE;
    }
+
+   return FALSE;
+}
+
+static BOOL FASTCALL
+IntPrepareDriverIfNeeded()
+{
+   return (PrimarySurface.PreparedDriver ? TRUE : IntPrepareDriver());
+}
+
+BOOL FASTCALL
+IntCreatePrimarySurface()
+{
+   SIZEL SurfSize;
+   RECTL SurfaceRect;
+   SURFOBJ *SurfObj;
+
+   if (! IntPrepareDriverIfNeeded())
+   {
+      return FALSE;
+   }
+
+   DPRINT("calling EnableSurface\n");
+   /* Enable the drawing surface */
+   PrimarySurface.Handle =
+      PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
+   if (NULL == PrimarySurface.Handle)
+   {
+/*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);*/
+      PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
+      ObDereferenceObject(PrimarySurface.VideoFileObject);
+      DPRINT1("DrvEnableSurface failed\n");
+      return FALSE;
+   }
+
+   /* attach monitor */
+   IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
+
+   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+   SurfObj->dhpdev = PrimarySurface.PDev;
+   SurfSize = SurfObj->sizlBitmap;
+   SurfSize = SurfObj->sizlBitmap;
+   SurfaceRect.left = SurfaceRect.top = 0;
+   SurfaceRect.right = SurfObj->sizlBitmap.cx;
+   SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
+   /* FIXME - why does EngEraseSurface() sometimes crash?
+     EngEraseSurface(SurfObj, &SurfaceRect, 0); */
+
+   /* Put the pointer in the center of the screen */
+   GDIDEV(SurfObj)->Pointer.Pos.x = (SurfaceRect.right - SurfaceRect.left) / 2;
+   GDIDEV(SurfObj)->Pointer.Pos.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
+
+   EngUnlockSurface(SurfObj);
+   IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 
    return TRUE;
 }
@@ -694,6 +712,7 @@ IntDestroyPrimarySurface()
     PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
     PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
     PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
+    PrimarySurface.PreparedDriver = FALSE;
 
     DceEmptyCache();
 
@@ -704,7 +723,8 @@ HDC FASTCALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Device,
                PUNICODE_STRING Output,
-               CONST PDEVMODEW InitData)
+               CONST PDEVMODEW InitData,
+               BOOL CreateAsIC)
 {
   HDC      hNewDC;
   PDC      NewDC;
@@ -714,10 +734,18 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   UNICODE_STRING StdDriver;
   
   RtlInitUnicodeString(&StdDriver, L"DISPLAY");
-  
+
   if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
     {
-      if (! IntGraphicsCheck(TRUE))
+      if (CreateAsIC)
+        {
+          if (! IntPrepareDriverIfNeeded())
+            {
+              DPRINT1("Unable to prepare graphics driver, returning NULL ic\n");
+              return NULL;
+            }
+        }
+      else if (! IntGraphicsCheck(TRUE))
         {
           DPRINT1("Unable to initialize graphics, returning NULL dc\n");
           return NULL;
@@ -750,6 +778,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     return NULL;
   }
 
+  NewDC->IsIC = CreateAsIC;
   NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;
@@ -763,43 +792,46 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
   NewDC->DMW.dmFields = 0x000fc000;
 
-  /* FIXME: get mode selection information from somewhere  */
-
   NewDC->DMW.dmLogPixels = 96;
-  SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
-  if ( !SurfObj )
-  {
-	  DC_UnlockDc ( hNewDC );
-	  DC_FreeDC ( hNewDC) ;
-	  return NULL;
-  }
-  NewDC->DMW.dmBitsPerPel = BitsPerFormat(SurfObj->iBitmapFormat);
-  NewDC->DMW.dmPelsWidth = SurfObj->sizlBitmap.cx;
-  NewDC->DMW.dmPelsHeight = SurfObj->sizlBitmap.cy;
-  NewDC->DMW.dmDisplayFlags = 0;
-  NewDC->DMW.dmDisplayFrequency = 0;
-
   NewDC->w.bitsPerPixel = NewDC->DMW.dmBitsPerPel; // FIXME: set this here??
-  NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
-  NewDC->w.ROPmode = R2_COPYPEN;
-
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
+
+  if (! CreateAsIC)
+  {
+    SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+    if ( !SurfObj )
+    {
+      DC_UnlockDc ( hNewDC );
+      DC_FreeDC ( hNewDC) ;
+      return NULL;
+    }
+    ASSERT(NewDC->DMW.dmBitsPerPel == BitsPerFormat(SurfObj->iBitmapFormat));
+    ASSERT(NewDC->DMW.dmPelsWidth == SurfObj->sizlBitmap.cx);
+    ASSERT(NewDC->DMW.dmPelsHeight == SurfObj->sizlBitmap.cy);
+
+    NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
+    NewDC->w.ROPmode = R2_COPYPEN;
   
-  DC_UnlockDc( hNewDC );
+    DC_UnlockDc( hNewDC );
 
-  hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
-                              SurfObj->sizlBitmap.cy);
-  NtGdiSelectVisRgn(hNewDC, hVisRgn);
-  NtGdiDeleteObject(hVisRgn);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
+                                 SurfObj->sizlBitmap.cy);
+    NtGdiSelectVisRgn(hNewDC, hVisRgn);
+    NtGdiDeleteObject(hVisRgn);
 
-  /*  Initialize the DC state  */
-  DC_InitDC(hNewDC);
-  NtGdiSetTextColor(hNewDC, RGB(0, 0, 0));
-  NtGdiSetTextAlign(hNewDC, TA_TOP);
-  NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
-  NtGdiSetBkMode(hNewDC, OPAQUE);
+    /*  Initialize the DC state  */
+    DC_InitDC(hNewDC);
+    NtGdiSetTextColor(hNewDC, RGB(0, 0, 0));
+    NtGdiSetTextAlign(hNewDC, TA_TOP);
+    NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
+    NtGdiSetBkMode(hNewDC, OPAQUE);
 
-  EngUnlockSurface(SurfObj);
+    EngUnlockSurface(SurfObj);
+  }
+  else
+  {
+    DC_UnlockDc( hNewDC );
+  }
   
   return hNewDC;
 }
@@ -847,7 +879,7 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
     }
   }
   
-  Ret = IntGdiCreateDC(&SafeDriver, &SafeDevice, NULL, &SafeInitData);
+  Ret = IntGdiCreateDC(&SafeDriver, &SafeDevice, NULL, &SafeInitData, FALSE);
   
   return Ret;
 }
@@ -856,10 +888,50 @@ HDC STDCALL
 NtGdiCreateIC(PUNICODE_STRING Driver,
               PUNICODE_STRING Device,
               PUNICODE_STRING Output,
-              CONST PDEVMODEW DevMode)
+              CONST PDEVMODEW InitData)
 {
-  /* FIXME: this should probably do something else...  */
-  return  NtGdiCreateDC(Driver, Device, Output, DevMode);
+  UNICODE_STRING SafeDriver, SafeDevice;
+  DEVMODEW SafeInitData;
+  HDC Ret;
+  NTSTATUS Status;
+  
+  if(InitData)
+  {
+    Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+    /* FIXME - InitData can have some more bytes! */
+  }
+  
+  if(Driver)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDriver, Driver);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+  
+  if(Device)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
+    if(!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&SafeDriver);
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+  
+  Ret = IntGdiCreateDC(NULL == Driver ? NULL : &SafeDriver,
+                       NULL == Device ? NULL : &SafeDevice, NULL,
+                       NULL == InitData ? NULL : &SafeInitData, TRUE);
+  
+  return Ret;
 }
 
 BOOL STDCALL
@@ -1144,6 +1216,7 @@ NtGdiGetDCState(HDC  hDC)
 
   newdc->hSelf = hnewdc;
   newdc->saveLevel = 0;
+  newdc->IsIC = dc->IsIC;
 
 #if 0
   PATH_InitGdiPath( &newdc->w.path );

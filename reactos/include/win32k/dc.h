@@ -104,6 +104,7 @@ typedef struct _DC
   XLATEOBJ *XlatePen;
 
   INT  saveLevel;
+  BOOL IsIC;
 
   WIN_DC_INFO  w;
 } DC, *PDC;
@@ -136,6 +137,8 @@ typedef struct
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
+  BOOLEAN PreparedDriver;
+  ULONG DisplayNumber;
 
   GDIPOINTER Pointer;
 

@@ -42,7 +42,6 @@ NtUserGetSystemMetrics(ULONG Index)
 {
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
-  PWINDOW_OBJECT DesktopWindow;
   ULONG Width, Height, Result;
 
   Result = 0;
@@ -156,19 +155,26 @@ NtUserGetSystemMetrics(ULONG Index)
       return(27);
     case SM_CXSCREEN:
     case SM_CYSCREEN:
-      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
-      if (NULL != DesktopWindow)
-	  {
-	    Width = DesktopWindow->WindowRect.right;
-	    Height = DesktopWindow->WindowRect.bottom;
-	  }
-      else
-	  {
-	    Width = 640;
-	    Height = 480;
-	  }
-      IntReleaseWindowObject(DesktopWindow);
+    {
+      HDC ScreenDCHandle;
+      PDC ScreenDC;
+
+      Width = 640;
+      Height = 480;
+      ScreenDCHandle = IntGdiCreateDC(NULL, NULL, NULL, NULL, TRUE);
+      if (NULL != ScreenDCHandle)
+      {
+	ScreenDC = DC_LockDc(ScreenDCHandle);
+	if (NULL != ScreenDC)
+	{
+	  Width = ScreenDC->DMW.dmPelsWidth;
+	  Height = ScreenDC->DMW.dmPelsHeight;
+	  DC_UnlockDc(ScreenDCHandle);
+	}
+	NtGdiDeleteDC(ScreenDCHandle);
+      }
       return SM_CXSCREEN == Index ? Width : Height;
+    }
     case SM_CXSIZE:
     case SM_CYSIZE:
       return(18);

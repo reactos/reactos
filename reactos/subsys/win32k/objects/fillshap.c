@@ -237,6 +237,12 @@ NtGdiEllipse(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+   }
 
    FillBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
    if (NULL == FillBrush)
@@ -664,6 +670,12 @@ NtGdiPie(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+  if (dc->IsIC)
+    {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+    }
 
   FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   if (NULL == FillBrushObj)
@@ -844,6 +856,12 @@ NtGdiPolygon(HDC          hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
   else
   {
+    if (dc->IsIC)
+    {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+    }
     Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -882,6 +900,12 @@ NtGdiPolyPolygon(HDC           hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Count > 0)
@@ -1060,6 +1084,12 @@ NtGdiRectangle(HDC  hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
@@ -1358,6 +1388,12 @@ NtGdiRoundRect(
     DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
     SetLastWin32Error(ERROR_INVALID_HANDLE);
   }
+  else if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    ret = TRUE;
+  }
   else
   {
     ret = IntRoundRect ( dc, LeftRect, TopRect, RightRect, BottomRect, Width, Height );
@@ -1489,6 +1525,12 @@ NtGdiGradientFill(
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hdc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   if(!pVertex || !uVertex || !pMesh || !uMesh)
   {

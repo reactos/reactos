@@ -266,6 +266,12 @@ IntGdiPolyPatBlt(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+   }
 	
    for (r = pRects, i = 0; i < cRects; i++)
    {
@@ -465,6 +471,12 @@ NtGdiPatBlt(
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
+   }
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
    }
 
    BrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
