@@ -1,3 +1,10 @@
+Changes in v1.7.5 (8/21/2002) (brianp)
+
+- biosvid.S (BiosVideoDisableBlinkBit): Added code to
+  disable the blink bit in the text mode character
+  attribute byte so that the full range of
+  background colors can be used.
+
 Changes in v1.7.4 (8/20/2002) (brianp)
 
 - Boot sector code now reports to freeldr.sys the partition

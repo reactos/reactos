@@ -183,6 +183,7 @@ BOOL UiInitialize(VOID)
 
 	VideoClearScreen();
 	VideoHideTextCursor();
+	BiosVideoDisableBlinkBit();
 
 	// Draw the backdrop and title box
 	UiDrawBackdrop();

@@ -51,8 +51,9 @@ VOID	BiosSet350ScanLines(VOID);						// Implemented in biosvid.S, must be called
 VOID	BiosSet400ScanLines(VOID);						// Implemented in biosvid.S, must be called right before BiosSetVideoMode()
 VOID	BiosSet480ScanLines(VOID);						// Implemented in biosvid.S, must be called right after BiosSetVideoMode()
 VOID	BiosSetVideoDisplayEnd(VOID);					// Implemented in biosvid.S
+VOID	BiosVideoDisableBlinkBit(VOID);					// Implemented in biosvid.S
 
-VOID	VideoSetTextCursorPosition(U32 X, U32 Y);	// Implemented in biosvid.S
+VOID	VideoSetTextCursorPosition(U32 X, U32 Y);		// Implemented in biosvid.S
 VOID	VideoHideTextCursor(VOID);						// Implemented in biosvid.S
 VOID	VideoShowTextCursor(VOID);						// Implemented in biosvid.S
 U32		VideoGetTextCursorPositionX(VOID);				// Implemented in biosvid.S

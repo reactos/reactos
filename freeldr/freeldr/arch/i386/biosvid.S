@@ -586,3 +586,37 @@ EXTERN(_VideoGetTextCursorPositionY)
 
 
 
+/*
+ * VOID BiosVideoDisableBlinkBit(VOID);
+ */
+EXTERN(_BiosVideoDisableBlinkBit)
+	.code32
+
+	pushal
+
+	call	switch_to_real
+
+	.code16
+
+	/* Toggle Intensity/Blinking Bit */
+	/* AX = 1003h */
+	/* BL = new state */
+	/*   00h background intensity enabled */
+	/*   01h blink enabled */
+	/* Note: although there is no function to get */
+	/* the current status, bit 5 of 0040h:0065h */
+	/* indicates the state. */
+	movw	$0x1003,%ax
+	movb	$0x00,%bl
+	int		$0x10
+
+	call	switch_to_prot
+
+	.code32
+
+	popal
+
+	ret
+
+
+
