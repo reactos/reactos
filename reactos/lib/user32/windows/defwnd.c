@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.64 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: defwnd.c,v 1.65 2003/08/15 10:12:22 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -457,7 +457,7 @@ SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
 VOID
 DefWndDoPaintNC(HWND hWnd, HRGN clip)
 {
-  ULONG Active;
+  BOOL Active = FALSE;
   HDC hDC;
   RECT rect;
   ULONG Style;
@@ -466,6 +466,8 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
 
     // This won't work because it conflicts with BS_BITMAP :
 //  Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
+  if (GetActiveWindow() == hWnd) Active = TRUE;
+  DbgPrint("Window:\t%d\nActiveWindow:\t%d\n\n\n\n");
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
