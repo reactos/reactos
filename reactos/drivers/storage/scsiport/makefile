@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2001/07/23 06:13:48 ekohl Exp $
+# $Id: makefile,v 1.3 2001/07/26 12:36:33 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -32,8 +32,6 @@ $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
 
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
-
 $(TARGET).a: $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
@@ -41,6 +39,63 @@ $(TARGET).a: $(TARGET).def
 		--kill-at \
 		--output-lib $(TARGET).a
 
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
+	$(CC) \
+		-nostartfiles -nostdlib -e _DriverEntry@8\
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $^
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $@ \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).edf \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--subsystem,native \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
+		-mdll \
+		-o $@.unstripped \
+		$^
+	- $(RM) temp.exp
+	- $(NM) --numeric-sort $@.unstripped > $@.sym
+	$(STRIP) --strip-debug $<
+	$(CC) \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $^
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $@ \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).edf \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--subsystem,native \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
+		-mdll \
+		-o $@ \
+		$^
+	- $(RM) temp.exp
 
 WARNINGS_ARE_ERRORS = yes
 include $(PATH_TO_TOP)/rules.mak
