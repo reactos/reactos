@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.2 1999/12/26 17:22:18 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.3 2000/01/20 22:11:48 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -19,6 +19,51 @@ FsRtlAddMcbEntry (
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3
+	);
+DWORD
+STDCALL
+FsRtlAllocateResource (
+	VOID
+	);
+DWORD
+STDCALL
+FsRtlBalanceReads (
+	DWORD	Unknown0
+	);
+BOOLEAN
+STDCALL
+FsRtlCopyRead (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
+	);
+BOOLEAN
+STDCALL
+FsRtlCopyWrite (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
+	);
+VOID
+STDCALL
+FsRtlDeregisterUncProvider (
+	DWORD	Unknown0
+	);
+DWORD
+STDCALL
+FsRtlGetFileSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1
 	);
 VOID
 STDCALL
@@ -113,6 +158,27 @@ FsRtlNumberOfRunsInMcb (
 	);
 VOID
 STDCALL
+FsRtlPostPagingFileStackOverflow (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+VOID
+STDCALL
+FsRtlPostStackOverflow (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+DWORD
+STDCALL
+FsRtlRegisterUncProvider (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+VOID
+STDCALL
 FsRtlRemoveLargeMcbEntry (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -135,6 +201,13 @@ FsRtlSplitLargeMcb (
 	DWORD	Unknown2,
 	DWORD	Unknown3,
 	DWORD	Unknown4
+	);
+NTSTATUS
+STDCALL
+FsRtlSyncVolumes (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
 	);
 VOID
 STDCALL
