@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.10 2004/10/31 19:46:10 ekohl Exp $
+/* $Id: bthread.S,v 1.11 2004/11/20 23:46:36 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,18 +140,6 @@ _PsBeginThreadWithContextInternal:
 .L1:
 	addl	$24, %esp
 .L3:
-
-	/*
-	 * Load the floating point registers
-	 */
-	movl	(_HardwareMathSupport), %eax
-	testl	%eax,%eax
-	jz	.L2
-	testl	$(CONTEXT_FLOATING_POINT & ~CONTEXT_i386), %ebx
-	jz	.L2
-	frstor	(%esp)
-.L2:
-	addl	$112, %esp
 
 	/* Load the rest of the thread's user mode context. */
 	movl	$0, %eax

@@ -181,8 +181,6 @@ KeApplicationProcessorInit(VOID)
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
 
-  KiCheckFPU();
-
   /*
    * Initialize the GDT
    */
@@ -190,6 +188,9 @@ KeApplicationProcessorInit(VOID)
 
   /* Get processor information. */
   Ki386GetCpuId();
+
+  /* Check FPU/MMX/SSE support. */
+  KiCheckFPU();
 
   /*
    * It is now safe to process interrupts
@@ -220,14 +221,18 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    extern USHORT KiBootGdt[];
    extern KTSS KiBootTss;
 
+   /* Get processor information. */
+   Ki386GetCpuId();
+
+   /* Check FPU/MMX/SSE support. */
    KiCheckFPU();
-   
+
    KiInitializeGdt (NULL);
    Ki386BootInitializeTSS();
    KeInitExceptions ();
    KeInitInterrupts ();
 
-   /* 
+   /*
     * Initialize the initial PCR region. We can't allocate a page
     * with MmAllocPage() here because MmInit1() has not yet been
     * called, so we use a predefined page in low memory 
@@ -251,9 +256,6 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 
    Ki386InitializeLdt();
    
-   /* Get processor information. */
-   Ki386GetCpuId();
-
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {
       ULONG Flags;
@@ -348,6 +350,24 @@ KeInit2(VOID)
          DPRINT1("CPU doesn't run in PAE mode\n");
       }
    }
+   if ((Pcr->PrcbData.FeatureBits & (X86_FEATURE_FXSR | X86_FEATURE_MMX | X86_FEATURE_SSE | X86_FEATURE_SSE2)) ||
+       (Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3))
+      {
+         DPRINT1("CPU supports" "%s%s%s%s%s" ".\n",
+                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
+                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
+                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
+                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
+                 ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
+      }
+   if (Ke386GetCr4() & X86_CR4_OSFXSR)
+      {
+         DPRINT1("SSE enabled.\n");
+      }
+   if (Ke386GetCr4() & X86_CR4_OSXMMEXCPT)
+      {
+         DPRINT1("Unmasked SIMD exceptions enabled.\n");
+      }
    if (Pcr->PrcbData.VendorString[0])
    {
       DPRINT1("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);

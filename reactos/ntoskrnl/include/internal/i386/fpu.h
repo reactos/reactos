@@ -20,10 +20,11 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H
 
-extern ULONG HardwareMathSupport;
+#define SIZEOF_FX_SAVE_AREA    528
 
-VOID
-KiCheckFPU(VOID);
+#ifndef __ASM__
+
+#include <internal/i386/ke.h>
 
 typedef struct _FNSAVE_FORMAT {
 	ULONG ControlWord;
@@ -52,7 +53,7 @@ typedef struct _FXSAVE_FORMAT {
 	UCHAR Reserved4[224];
 	UCHAR Align16Byte[8];
 } FXSAVE_FORMAT, *PFXSAVE_FORMAT;
-   
+
 typedef struct _FX_SAVE_AREA {
 	union {
 		FNSAVE_FORMAT FnArea;
@@ -62,4 +63,22 @@ typedef struct _FX_SAVE_AREA {
 	ULONG Cr0NpxState;
 } FX_SAVE_AREA, *PFX_SAVE_AREA;
 
+
+extern ULONG HardwareMathSupport;
+
+VOID
+KiCheckFPU(VOID);
+
+NTSTATUS
+KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr);
+
+VOID
+KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_AREA *FloatingSaveArea);
+
+BOOL
+KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context);
+
+#endif /* !__ASM__ */
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H */
+

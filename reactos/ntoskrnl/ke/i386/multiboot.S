@@ -3,6 +3,7 @@
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/i386/mm.h>
+#include <internal/i386/fpu.h>
 
 #define MULTIBOOT_HEADER_MAGIC (0x1BADB002)
 
@@ -279,7 +280,7 @@ _multiboot_entry:
 	/*
 	 * Load the initial kernel stack
 	 */
-	movl	$_init_stack_top, %esp
+	movl	$(_init_stack_top - SIZEOF_FX_SAVE_AREA), %esp
 
 	/*
 	 * Initialize EFLAGS

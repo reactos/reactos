@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.84 2004/11/20 16:46:05 weiden Exp $
+/* $Id: kill.c,v 1.85 2004/11/20 23:46:37 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -136,10 +136,17 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
    KeCancelTimer(&CurrentThread->Tcb.Timer);
-   
+
+   /* If the ProcessoR Control Block's NpxThread points to the current thread
+    * unset it.
+    */
+   InterlockedCompareExchange((LONG *)&KeGetCurrentKPCR()->PrcbData.NpxThread,
+                              (LONG)NULL, (LONG)ETHREAD_TO_KTHREAD(CurrentThread));
+
    KeReleaseSpinLock(&PiThreadLock, oldIrql);
  
    PsLockProcess(CurrentProcess, FALSE);
+
    /* Remove the thread from the thread list of its process */
    RemoveEntryList(&CurrentThread->ThreadListEntry);
    Last = IsListEmpty(&CurrentProcess->ThreadListHead);

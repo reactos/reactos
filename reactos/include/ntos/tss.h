@@ -5,7 +5,8 @@
 #ifndef __INCLUDE_DDK_I386_TSS_H
 #define __INCLUDE_DDK_I386_TSS_H
 
-#define KTSS_ESP0 (0x4)
+#define KTSS_ESP0      (0x4)
+#define KTSS_EFLAGS    (0x24)
 #define KTSS_IOMAPBASE (0x66)
 
 #ifndef __ASM__

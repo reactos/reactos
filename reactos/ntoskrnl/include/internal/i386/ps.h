@@ -26,6 +26,7 @@
 #define KTHREAD_STACK_LIMIT       0x1C
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
+#define KTHREAD_NPX_STATE         0x31
 #define KTHREAD_APCSTATE_PROCESS  0x44
 #define KTHREAD_SERVICE_TABLE     0xDC
 #define KTHREAD_PREVIOUS_MODE     0x137
@@ -44,6 +45,7 @@
 #define KPCR_SELF                 0x1C
 #define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124	
+#define KPCR_NPX_THREAD           0x2A4
 
 #ifndef __ASM__
 
@@ -51,12 +53,12 @@
 
 #pragma pack(push,4)
 
-// Fixme: Use correct types?
+/* Fixme: Use correct types? */
 typedef struct _KPROCESSOR_STATE {
    PCONTEXT ContextFrame;
    PVOID SpecialRegisters;
 } KPROCESSOR_STATE;
-  
+
 /* ProcessoR Control Block */ 
 typedef struct _KPRCB {
 	USHORT MinorVersion;

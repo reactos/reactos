@@ -27,10 +27,9 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_TRAP_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_TRAP_H
 
-#define TF_SAVED_ORIG_STACK (0x8C)
-#define TF_REGS         (0x90)
-#define TF_ORIG_EBP     (0x94)
-
+#define TF_SAVED_EXCEPTION_STACK (0x8C)
+#define TF_REGS                  (0x90)
+#define TF_ORIG_EBP              (0x94)
 
 #ifndef __ASM__
 
@@ -40,7 +39,7 @@ typedef struct _KV86M_TRAP_FRAME
 {
   KTRAP_FRAME Tf;
   
-  ULONG SavedInitialStack;
+  ULONG SavedExceptionStack;
 
   /*
    * These are put on the top of the stack by the routine that entered

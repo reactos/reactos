@@ -134,7 +134,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   KeGetCurrentKPCR()->TSS = Tss;
 
   /* Initialize the boot TSS. */
-  Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id];
+  Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   Tss->Ss0 = KERNEL_DS;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   Tss->IoBitmap[8192] = 0xFF;   
@@ -154,9 +154,9 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 
   /* Initialize the TSS used for handling double faults. */
   TrapTss->Eflags = 0;
-  TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE);
+  TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
   TrapTss->Ss0 = KERNEL_DS;
-  TrapTss->Esp = ((ULONG)TrapStack + MM_STACK_SIZE);
+  TrapTss->Esp = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
   TrapTss->Cs = KERNEL_CS;
   TrapTss->Eip = (ULONG)KiTrap8;
   TrapTss->Ss = KERNEL_DS;
@@ -211,7 +211,7 @@ Ki386BootInitializeTSS(VOID)
   Ki386InitialStackArray[0] = (PVOID)&init_stack;
 
   /* Initialize the boot TSS. */
-  KiBootTss.Esp0 = (ULONG)&init_stack_top;
+  KiBootTss.Esp0 = (ULONG)&init_stack_top - sizeof(FX_SAVE_AREA);
   KiBootTss.Ss0 = KERNEL_DS;
   //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
@@ -232,9 +232,9 @@ Ki386BootInitializeTSS(VOID)
 
   /* Initialize the TSS used for handling double faults. */
   KiBootTrapTss.Eflags = 0;
-  KiBootTrapTss.Esp0 = (ULONG)&trap_stack_top;
+  KiBootTrapTss.Esp0 = (ULONG)&trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   KiBootTrapTss.Ss0 = KERNEL_DS;
-  KiBootTrapTss.Esp = (ULONG)&trap_stack_top;
+  KiBootTrapTss.Esp = (ULONG)&trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   KiBootTrapTss.Cs = KERNEL_CS;
   KiBootTrapTss.Eip = (ULONG)KiTrap8;
   KiBootTrapTss.Ss = KERNEL_DS;

@@ -71,25 +71,19 @@ _Ki386RetToV86Mode:
 	 * Since we are going to fiddle with the stack pointer this must be
 	 * a critical section for this processor
 	 */
-
-	/*
-	 * Save the old initial stack
-	 */
-	movl	%fs:KPCR_CURRENT_THREAD, %esi
-	movl	KTHREAD_INITIAL_STACK(%esi), %edi
-	pushl	%edi
-
-	/*
-	 * We also need to set the stack in the kthread structure
-	 */
-	movl	%esp, KTHREAD_INITIAL_STACK(%esi)
+	cli
+	
+        /*
+         * Save the exception handler stack from the TSS
+         */
+	movl	%fs:KPCR_TSS, %esi
+	pushl	KTSS_ESP0(%esi)
 
 	/*
 	 * The stack used for handling exceptions from v86 mode in this thread
 	 * will be the current stack adjusted so we don't overwrite the 
 	 * existing stack frames
 	 */
-	movl	%fs:KPCR_TSS, %esi
 	movl	%esp, KTSS_ESP0(%esi)
 
 	/*
@@ -180,18 +174,10 @@ _KiV86Complete:
 	cli
 
 	/*
-	 * Restore the initial stack
+	 * Restore the exception handler stack in the TSS
 	 */
-	popl	%eax
 	movl	%fs:KPCR_TSS, %esi
-	movl	%eax, KTSS_ESP0(%esi)
-
-	/*
-	 * We also need to set the stack in the kthread structure
-	 */
-	movl	%fs:KPCR_CURRENT_THREAD, %esi
-	movl	KTHREAD_INITIAL_STACK(%esi), %edi
-	movl	%eax, KTHREAD_INITIAL_STACK(%esi)	
+	popl	KTSS_ESP0(%esi)
 
 	/* Exit the critical section */
 	sti
@@ -207,3 +193,4 @@ _KiV86Complete:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
+

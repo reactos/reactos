@@ -24,6 +24,7 @@
 #include <ddk/kefuncs.h>
 #include <ddk/pnptypes.h>
 #include <ddk/pnpfuncs.h>
+#include <ntdll/ldr.h>
 #include <internal/ctype.h>
 #include <internal/ntoskrnl.h>
 #include <internal/id.h>
@@ -55,7 +56,6 @@
 #include <internal/trap.h>
 #include <internal/safe.h>
 #include <internal/test.h>
-#include <ntdll/ldr.h>
 #include <napi/core.h>
 #include <napi/dbg.h>
 #include <napi/teb.h>

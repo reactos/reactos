@@ -1,4 +1,4 @@
-/* $Id: continue.c,v 1.5 2004/08/15 16:39:11 chorns Exp $
+/* $Id: continue.c,v 1.6 2004/11/20 23:46:37 blight Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -32,6 +32,8 @@ NtContinue (
 {
 	PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
 	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+	PFX_SAVE_AREA FxSaveArea;
+	KIRQL oldIrql;
 
 	DPRINT("NtContinue: Context: Eip=0x%x, Esp=0x%x\n", Context->Eip, Context->Esp );
 	PULONG Frame = 0;
@@ -54,11 +56,31 @@ NtContinue (
 	}
 
 	/*
-	* Copy the supplied context over the register information that was saved
-	* on entry to kernel mode, it will then be restored on exit
-	* FIXME: Validate the context
-	*/
+	 * Copy the supplied context over the register information that was saved
+	 * on entry to kernel mode, it will then be restored on exit
+	 * FIXME: Validate the context
+	 */
 	KeContextToTrapFrame ( Context, TrapFrame );
+
+        /* Put the floating point context into the thread's FX_SAVE_AREA
+         * and make sure it is reloaded when needed.
+         */
+        FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)KeGetCurrentThread()->InitialStack - sizeof(FX_SAVE_AREA));
+        if (KiContextToFxSaveArea(FxSaveArea, Context))
+          {
+            KeGetCurrentThread()->NpxState = NPX_STATE_VALID;
+            KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
+            if (KeGetCurrentKPCR()->PrcbData.NpxThread == KeGetCurrentThread())
+              {
+                KeGetCurrentKPCR()->PrcbData.NpxThread = NULL;
+                Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
+              }
+            else
+              {
+                ASSERT((Ke386GetCr0() & X86_CR0_TS) == X86_CR0_TS);
+              }
+            KeLowerIrql(oldIrql);
+          }
 
 	KeRosTrapReturn ( TrapFrame, PrevTrapFrame );
 
