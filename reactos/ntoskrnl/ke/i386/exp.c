@@ -234,11 +234,13 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  }
      }
 
+#if 0
    if ((Tf->Cs & 0xFFFF) == USER_CS)
      {
        return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
-   
+#endif   
+
    /*
     * Print out the CPU registers
     */
