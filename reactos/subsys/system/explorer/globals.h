@@ -144,9 +144,12 @@ extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc
 
  /// desktop management
 
+typedef pair<HWND, DWORD> MinimizeStruct;
+
 struct Desktop
 {
 	set<HWND> _windows;
+	list<MinimizeStruct> _minimized;
 };
 typedef Desktop DesktopRef;
 
@@ -160,6 +163,7 @@ struct Desktops : public vector<DesktopRef>
 
 	void	init();
 	void	SwitchToDesktop(int idx);
+	void	ToggleMinimize();
 
 	int		_current_desktop;
 };

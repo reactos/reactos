@@ -238,7 +238,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_MINIMIZE_ALL:
-		;	///@todo minimize/restore all windows on the desktop
+		g_Globals._desktops.ToggleMinimize();
 		break;
 
 	  case ID_EXPLORE:

@@ -608,11 +608,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 {
 	CONTEXT("WinMain()");
 
+	BOOL any_desktop_running = IsAnyDesktopRunning();
+
 	 // create desktop window and task bar only, if there is no other shell and we are
 	 // the first explorer instance
-	BOOL startup_desktop = !IsAnyDesktopRunning();
+	BOOL startup_desktop = !any_desktop_running;
 
-	bool autostart = true;
+	bool autostart = !any_desktop_running;
 
 	 // disable autostart if the SHIFT key is pressed
 	if (GetAsyncKeyState(VK_SHIFT) < 0)
