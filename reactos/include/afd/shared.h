@@ -92,6 +92,7 @@ typedef struct _FILE_REQUEST_SENDTO {
   LPWSABUF Buffers;
   DWORD BufferCount;
   DWORD Flags;
+  DWORD ReplyErrno;
   SOCKADDR To;
   INT ToLen;
 } FILE_REQUEST_SENDTO, *PFILE_REQUEST_SENDTO;
@@ -174,6 +175,7 @@ typedef struct _FILE_REPLY_SEND {
 
 
 typedef struct _FILE_REQUEST_ACCEPT {
+  SOCKET Socket;
   LPSOCKADDR addr;
   INT addrlen;
   LPCONDITIONPROC lpfnCondition;
@@ -181,11 +183,10 @@ typedef struct _FILE_REQUEST_ACCEPT {
 } FILE_REQUEST_ACCEPT, *PFILE_REQUEST_ACCEPT;
 
 typedef struct _FILE_REPLY_ACCEPT {
+  SOCKET Socket;
   INT Status;
   INT addrlen;
-  SOCKET Socket;
 } FILE_REPLY_ACCEPT, *PFILE_REPLY_ACCEPT;
-
 
 typedef struct _FILE_REQUEST_CONNECT {
   LPSOCKADDR name;
