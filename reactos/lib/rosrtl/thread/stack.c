@@ -1,4 +1,4 @@
-/* $Id: stack.c,v 1.4 2003/12/30 05:10:32 hyperion Exp $
+/* $Id: stack.c,v 1.5 2003/12/30 13:06:54 hbirr Exp $
 */
 /*
 */
@@ -231,7 +231,7 @@ NTSTATUS NTAPI RtlRosFreeUserThreadStack
  }
 
  /* deallocate the stack */
- nErrCode = NtFreeVirtualMemory(ProcessHandle, pStackBase, &nSize, MEM_RELEASE);
+ nErrCode = NtFreeVirtualMemory(ProcessHandle, &pStackBase, &nSize, MEM_RELEASE);
 
  return nErrCode;
 }
