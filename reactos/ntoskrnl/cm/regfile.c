@@ -2714,18 +2714,20 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 		   IN PKEY_CELL KeyCell,
 		   IN PUNICODE_STRING ValueName,
 		   OUT PVALUE_CELL *ValueCell,
-		   OUT BLOCK_OFFSET *VBOffset)
+		   OUT BLOCK_OFFSET *ValueCellOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
   ULONG i;
 
   *ValueCell = NULL;
+  if (ValueCellOffset != NULL)
+    *ValueCellOffset = (BLOCK_OFFSET)-1;
 
   /* The key does not have any values */
   if (KeyCell->ValueListOffset == (BLOCK_OFFSET)-1)
     {
-      return STATUS_SUCCESS;
+      return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
   ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
@@ -2755,14 +2757,14 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 				(BOOLEAN)((CurValueCell->Flags & REG_VALUE_NAME_PACKED) ? TRUE : FALSE)))
 	{
 	  *ValueCell = CurValueCell;
-	  if (VBOffset)
-	    *VBOffset = ValueListCell->ValueOffset[i];
+	  if (ValueCellOffset != NULL)
+	    *ValueCellOffset = ValueListCell->ValueOffset[i];
 	  //DPRINT("Found value %s\n", ValueName);
-	  break;
+	  return STATUS_SUCCESS;
 	}
     }
 
-  return STATUS_SUCCESS;
+  return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 
