@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.48 2004/10/24 20:37:26 weiden Exp $
+/* $Id: init.c,v 1.49 2004/11/21 21:09:42 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -146,7 +146,7 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
   RtlCopyMemory(LocalPpb->ImagePathName.Buffer,
 		ImagePath->Buffer,
 		ImagePath->Length);
-  LocalPpb->ImagePathName.Buffer[ImagePath->Length / sizeof(WCHAR)] = (WCHAR)0;
+  LocalPpb->ImagePathName.Buffer[ImagePath->Length / sizeof(WCHAR)] = L'\0';
 
   /* Denormalize the process parameter block */
   DENORMALIZE(LocalPpb->ImagePathName.Buffer, LocalPpb);
@@ -194,17 +194,6 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
 		      (PVOID*)&LocalPpb,
 		      &RegionSize,
 		      MEM_RELEASE);
-
-  /* Set image file name */
-  Status = NtSetInformationProcess(ProcessHandle,
-				   ProcessImageFileName,
-				   "SMSS",
-				   5);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("NtSetInformationProcess() failed (Status %lx)\n", Status);
-      return(Status);
-    }
 
   /* Read image base address. */
   Offset = FIELD_OFFSET(PEB, ImageBaseAddress);

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.36 2004/11/19 01:30:35 weiden Exp $
+/* $Id: process.c,v 1.37 2004/11/21 21:09:42 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -49,19 +49,16 @@ static NTSTATUS RtlpCreateFirstThread
 }
 
 static NTSTATUS
-RtlpMapFile(PRTL_USER_PROCESS_PARAMETERS Ppb,
+RtlpMapFile(PUNICODE_STRING ImageFileName,
+            PRTL_USER_PROCESS_PARAMETERS Ppb,
 	    ULONG Attributes,
-	    PHANDLE Section,
-	    PCHAR ImageFileName)
+	    PHANDLE Section)
 {
    HANDLE hFile;
    IO_STATUS_BLOCK IoStatusBlock;
    OBJECT_ATTRIBUTES ObjectAttributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    NTSTATUS Status;
-   PWCHAR s;
-   PWCHAR e;
-   ULONG i;
    
    hFile = NULL;
 
@@ -70,40 +67,12 @@ RtlpMapFile(PRTL_USER_PROCESS_PARAMETERS Ppb,
 //   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
    
    InitializeObjectAttributes(&ObjectAttributes,
-			      &(Ppb->ImagePathName),
+			      ImageFileName,
 			      Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
 			      NULL,
 			      SecurityDescriptor);
 
    RtlNormalizeProcessParams (Ppb);
-   
-   /*
-    * 
-    */
-//   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
-//   DbgPrint("ImagePathName %S\n", Ppb->ImagePathName.Buffer);
-   s = wcsrchr(Ppb->ImagePathName.Buffer, '\\');
-   if (s == NULL)
-     {
-	s = Ppb->ImagePathName.Buffer;
-     }
-   else
-     {
-	s++;
-     }
-   e = wcschr(s, '.');
-   if (e != NULL)
-     {
-	*e = 0;
-     }
-   for (i = 0; i < 8; i++)
-     {
-	ImageFileName[i] = (CHAR)(s[i]);
-     }
-   if (e != NULL)
-     {
-	*e = '.';
-     }
    
    /*
     * Try to open the executable
@@ -264,17 +233,16 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
    NTSTATUS Status;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-   CHAR FileName[8];
    SECTION_IMAGE_INFORMATION Sii;
    ULONG ResultLength;
    PVOID ImageBaseAddress;
    
    DPRINT("RtlCreateUserProcess\n");
    
-   Status = RtlpMapFile(ProcessParameters,
+   Status = RtlpMapFile(ImageFileName,
+                        ProcessParameters,
 			Attributes,
-			&hSection,
-			FileName);
+			&hSection);
    if( !NT_SUCCESS( Status ) )
      return Status;
 
@@ -309,11 +277,6 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    ProcessInfo->ClientId.UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
-			  
-   Status = NtSetInformationProcess(ProcessInfo->ProcessHandle,
-				    ProcessImageFileName,
-				    FileName,
-				    8);
 
    /*
     * Create Process Environment Block
@@ -342,13 +305,15 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
 				  ImageBaseAddress + (ULONG)Sii.EntryPoint,
 				  &ProcessInfo->ClientId,
 				  &ProcessInfo->ThreadHandle);
+
+   NtClose(hSection);
+   
    if (!NT_SUCCESS(Status))
    {
 	DPRINT("Failed to create thread\n");
-	NtClose(hSection);
 	return(Status);
    }
-   NtClose(hSection);
+
    return(STATUS_SUCCESS);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.155 2004/11/21 13:18:19 weiden Exp $
+/* $Id: process.c,v 1.156 2004/11/21 21:09:43 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -849,6 +849,65 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	KEBUGCHECK(0);
      }
 
+   if (SectionHandle != NULL)
+     {
+        PSECTION_OBJECT SectionObject;
+        UNICODE_STRING FileName;
+        PWCHAR szSrc;
+        PCHAR szDest;
+        USHORT lnFName = 0;
+        
+        /*
+         * Determine the image file name and save it to the EPROCESS structure
+         */
+        Status = ObReferenceObjectByHandle(SectionHandle,
+                                           0,
+                                           MmSectionObjectType,
+                                           UserMode,
+                                           (PVOID*)&SectionObject,
+                                           NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("Failed to reference section object\n", Status);
+	     ObDereferenceObject(Process);
+	     ObDereferenceObject(pParentProcess);
+	     return(Status);
+	  }
+
+        FileName = SectionObject->FileObject->FileName;
+        szSrc = (PWCHAR)(FileName.Buffer + FileName.Length - 1);
+        while(szSrc >= FileName.Buffer)
+        {
+          if(*szSrc == L'\\')
+          {
+            szSrc++;
+            break;
+          }
+          else
+          {
+            szSrc--;
+            lnFName++;
+          }
+        }
+        
+        /* copy the image file name to the process and truncate it to 15 characters
+           if necessary */
+        szDest = Process->ImageFileName;
+        lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
+        while(lnFName-- > 0)
+        {
+          *(szDest++) = (UCHAR)*(szSrc++);
+        }
+        *szDest = '\0';
+        
+
+        ObDereferenceObject(SectionObject);
+     }
+   else
+     {
+        Process->ImageFileName[0] = '\0';
+     }
+
    /*
     * Map ntdll
     */
@@ -867,7 +926,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     */
    if (SectionHandle != NULL)
      {
-	DPRINT("Mapping process image\n");
+        DPRINT("Mapping process image\n");
 	Status = LdrpMapImage(*ProcessHandle,
 			      SectionHandle,
 			      &ImageBase);
@@ -1255,6 +1314,34 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	}
 	break;
 
+      case ProcessImageFileName:
+      {
+        /*
+         * We DO NOT return the file name stored in the EPROCESS structure.
+         * Propably if we can't find a PEB or ProcessParameters structure for the
+         * process!
+         */
+        PRTL_USER_PROCESS_PARAMETERS ProcParams;
+        ASSERT(Process->Peb);
+        ASSERT(Process->Peb->ProcessParameters);
+        ProcParams = Process->Peb->ProcessParameters;
+        if(ProcessInformationLength < sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
+          DstPath->Length = ProcParams->ImagePathName.Length;
+          DstPath->MaximumLength = DstPath->Length + sizeof(WCHAR);
+          DstPath->Buffer = (PWSTR)(DstPath + 1);
+          
+          RtlCopyMemory(DstPath->Buffer, ProcParams->ImagePathName.Buffer, ProcParams->ImagePathName.Length);
+          DstPath->Buffer[DstPath->Length / sizeof(WCHAR)] = L'\0';
+        }
+        break;
+      }
+
       /*
        * Note: The following 10 information classes are verified to not be
        * implemented on NT, and do indeed return STATUS_INVALID_INFO_CLASS;
@@ -1341,11 +1428,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessAccessToken:
 	ProcessAccessTokenP = (PHANDLE)ProcessInformation;
 	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
-	break;
-	
-      case ProcessImageFileName:
-	memcpy(Process->ImageFileName, ProcessInformation, 8);
-	Status = STATUS_SUCCESS;
 	break;
 	
       case ProcessLdtInformation:

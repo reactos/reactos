@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.88 2004/11/07 15:58:41 blight Exp $
+/* $Id: create.c,v 1.89 2004/11/21 21:09:42 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -765,7 +765,6 @@ CreateProcessW
    UNICODE_STRING CommandLine_U;
    CSRSS_API_REQUEST CsrRequest;
    CSRSS_API_REPLY CsrReply;
-   CHAR ImageFileName[8];
    PWCHAR s, e;
    ULONG i;
    UNICODE_STRING CurrentDirectory_U;
@@ -780,7 +779,11 @@ CreateProcessW
    WCHAR Name[MAX_PATH];
    WCHAR *TidyCmdLine;
    BOOL IsBatchFile = FALSE;
-
+   PROCESS_PRIORITY_CLASS PriorityClass;
+   OBJECT_ATTRIBUTES ProcObjectAttributes;
+   ULONG ProcAttributes = 0;
+   PVOID ProcSecurity = NULL;
+   
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
 
@@ -876,23 +879,6 @@ CreateProcessW
 	  return FALSE;
        }
    }
-
-   /*
-    * Store the image file name for the process
-    */
-   e = wcschr(s, L'.');
-   if (e != NULL)
-     {
-	*e = 0;
-     }
-   for (i = 0; i < 8; i++)
-     {
-	ImageFileName[i] = (CHAR)(s[i]);
-     }
-   if (e != NULL)
-     {
-	*e = '.';
-     }
    
    /*
     * Process the application name and command line
@@ -1013,16 +999,79 @@ CreateProcessW
    }
 /////////////////////////////////////////
    /*
+    * Initialize the process object attributes
+    */
+
+   if(lpProcessAttributes != NULL)
+   {
+     if(lpProcessAttributes->bInheritHandle)
+     {
+       ProcAttributes |= OBJ_INHERIT;
+     }
+     ProcSecurity = lpProcessAttributes->lpSecurityDescriptor;
+   }
+
+   InitializeObjectAttributes(&ProcObjectAttributes,
+			      NULL,
+			      ProcAttributes,
+			      NULL,
+			      ProcSecurity);
+   /*
+    * initialize the process priority class structure
+    */
+   PriorityClass.Foreground = FALSE;
+   
+   if(dwCreationFlags & IDLE_PRIORITY_CLASS)
+   {
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_IDLE;
+   }
+   else if(dwCreationFlags & BELOW_NORMAL_PRIORITY_CLASS)
+   {
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
+   }
+   else if(dwCreationFlags & NORMAL_PRIORITY_CLASS)
+   {
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
+   }
+   else if(dwCreationFlags & ABOVE_NORMAL_PRIORITY_CLASS)
+   {
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
+   }
+   else if(dwCreationFlags & HIGH_PRIORITY_CLASS)
+   {
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+   }
+   else if(dwCreationFlags & REALTIME_PRIORITY_CLASS)
+   {
+     /* FIXME - This is a privileged operation. If we don't have the privilege we should
+                rather use PROCESS_PRIORITY_CLASS_HIGH. */
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_REALTIME;
+   }
+   else
+   {
+     /* FIXME - what to do in this case? */
+     PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
+   }
+
+   /*
     * Create a new process
     */
    Status = NtCreateProcess(&hProcess,
 			    PROCESS_ALL_ACCESS,
-			    NULL,
+			    &ProcObjectAttributes,
 			    NtCurrentProcess(),
 			    bInheritHandles,
 			    hSection,
 			    NULL,
 			    NULL);
+   /* FIXME - handle failure!!!!! */
+   
+   Status = NtSetInformationProcess(hProcess,
+                                    ProcessPriorityClass,
+                                    &PriorityClass,
+                                    sizeof(PROCESS_PRIORITY_CLASS));
+   /* FIXME - handle failure!!!!! */
+   
    if (lpStartupInfo)
    {
       if (lpStartupInfo->lpReserved2)
@@ -1069,6 +1118,7 @@ CreateProcessW
 			 0,
 			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
+      /* FIXME - handle failure!!!!! */
    }
 
    /*
@@ -1079,6 +1129,8 @@ CreateProcessW
 			   &Sii,
 			   sizeof(Sii),
 			   &i);
+   /* FIXME - handle failure!!!!! */
+   
    /*
     * Close the section
     */
@@ -1316,11 +1368,7 @@ CreateProcessW
    KlInitPeb(hProcess, Ppb, &ImageBaseAddress, Sii.Subsystem);
 
    RtlDestroyProcessParameters (Ppb);
-
-   Status = NtSetInformationProcess(hProcess,
-				    ProcessImageFileName,
-				    ImageFileName,
-				    8);
+   
    /*
     * Create the thread for the kernel
     */

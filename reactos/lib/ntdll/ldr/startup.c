@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.58 2004/10/05 10:38:57 ekohl Exp $
+/* $Id: startup.c,v 1.59 2004/11/21 21:09:42 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -263,7 +263,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            PEDosHeader->e_lfanew == 0L ||
            *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
          {
-           DbgPrint("Image has bad header\n");
+           DPRINT1("Image has bad header\n");
            ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
          }
 
@@ -289,7 +289,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                                         NULL);
        if (Peb->ProcessHeap == 0)
          {
-           DbgPrint("Failed to create process heap\n");
+           DPRINT1("Failed to create process heap\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
 
@@ -322,7 +322,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                                                   sizeof(PEB_LDR_DATA));
        if (Peb->Ldr == NULL)
          {
-           DbgPrint("Failed to create loader data\n");
+           DPRINT1("Failed to create loader data\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
        Peb->Ldr->Length = sizeof(PEB_LDR_DATA);
@@ -348,7 +348,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                                                 sizeof(LDR_MODULE));
        if (NtModule == NULL)
          {
-           DbgPrint("Failed to create loader module entry (NTDLL)\n");
+           DPRINT1("Failed to create loader module entry (NTDLL)\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
 	 }
        memset(NtModule, 0, sizeof(LDR_MODULE));
@@ -387,7 +387,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                                                  sizeof(LDR_MODULE));
        if (ExeModule == NULL)
          {
-           DbgPrint("Failed to create loader module infomation\n");
+           DPRINT1("Failed to create loader module infomation\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
        ExeModule->BaseAddress = Peb->ImageBaseAddress;
@@ -395,7 +395,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        if ((Peb->ProcessParameters == NULL) ||
            (Peb->ProcessParameters->ImagePathName.Length == 0))
          {
-           DbgPrint("Failed to access the process parameter block\n");
+           DPRINT1("Failed to access the process parameter block\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
 
@@ -438,7 +438,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        /* Check before returning that we can run the image safely. */
        if (EntryPoint == NULL)
          {
-           DbgPrint("Failed to initialize image\n");
+           DPRINT1("Failed to initialize image\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
      }
