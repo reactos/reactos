@@ -1,10 +1,10 @@
-; $Id: vidport.edf,v 1.1 1999/10/28 23:35:34 rex Exp $
+; $Id: vidport.edf,v 1.2 2000/03/19 13:31:37 ekohl Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
 EXPORTS
 VideoPortCompareMemory=VideoPortCompareMemory@12
-VideoPortDebugPrint=VideoPortDebugPrint@0
+VideoPortDebugPrint
 VideoPortDisableInterrupt=VideoPortDisableInterrupt@4
 VideoPortEnableInterrupt=VideoPortEnableInterrupt@4
 VideoPortFreeDeviceBase=VideoPortFreeDeviceBase@8

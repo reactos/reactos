@@ -306,7 +306,7 @@ typedef struct _VIDEO_SHARE_MEMORY
 } VIDEO_SHARE_MEMORY, *PVIDEO_SHARE_MEMORY;
 
 ULONG STDCALL VideoPortCompareMemory(IN PVOID  Source1, IN PVOID  Source2, IN ULONG  Length);
-VOID STDCALL VideoPortDebugPrint(IN ULONG DebugPrintLevel, IN PCHAR DebugMessage, ...);
+VOID VideoPortDebugPrint(IN ULONG DebugPrintLevel, IN PCHAR DebugMessage, ...);
 VP_STATUS STDCALL VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension);
 VP_STATUS STDCALL VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension);
 VOID STDCALL VideoPortFreeDeviceBase(IN PVOID  HwDeviceExtension, IN PVOID  MappedAddress);

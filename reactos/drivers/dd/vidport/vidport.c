@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.12 2000/03/17 21:02:58 jfilby Exp $
+/* $Id: vidport.c,v 1.13 2000/03/19 13:31:36 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -53,12 +53,22 @@ VideoPortCompareMemory(IN PVOID  Source1,
   return RtlCompareMemory(Source1, Source2, Length);
 }
 
-VOID 
-STDCALL
-VideoPortDebugPrint(IN ULONG DebugPrintLevel, 
+VOID
+VideoPortDebugPrint(IN ULONG DebugPrintLevel,
                     IN PCHAR DebugMessage, ...)
 {
-  UNIMPLEMENTED;
+	char Buffer[256];
+	va_list ap;
+
+/*
+	if (DebugPrintLevel > InternalDebugLevel)
+		return;
+*/
+	va_start (ap, DebugMessage);
+	vsprintf (Buffer, DebugMessage, ap);
+	va_end (ap);
+
+	DbgPrint (Buffer);
 }
 
 VP_STATUS 
