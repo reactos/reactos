@@ -1,7 +1,0 @@
-#
-# This defines the kernel entry points used by ntdll
-#
-# They have the following format
-#          <name> <system call number> <size of the parameters in bytes>
-#
-NtAlertThread  4 14
