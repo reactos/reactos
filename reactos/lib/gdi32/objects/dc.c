@@ -7,6 +7,13 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+int STDCALL
+GetClipBox(HDC hDc, LPRECT Rect)
+{
+  return(W32kGetClipBox(hDc, Rect));
+}
+
+
 HDC
 STDCALL
 CreateDCA (

@@ -6,6 +6,7 @@
 #include <win32k/dc.h>
 #include <win32k/region.h>
 #include <win32k/cliprgn.h>
+#include <win32k/coord.h>
 
 // #define NDEBUG
 #include <win32k/debug1.h>

@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.6 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: callback.c,v 1.7 2002/08/31 23:18:46 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +19,7 @@
 #include <include/winsta.h>
 #include <include/msgqueue.h>
 #include <user32/callback.h>
+#include <include/callback.h>
 
 #define NDEBUG
 #include <debug.h>

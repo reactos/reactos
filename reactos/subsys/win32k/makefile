@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.47 2002/08/24 01:45:37 ekohl Exp $
+# $Id: makefile,v 1.48 2002/08/31 23:18:46 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -77,7 +77,7 @@ DEP_OBJECTS := $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER := main/svctabm.d
 include $(PATH_TO_TOP)/tools/depend.mk
 
-misc/svctabm.o: misc/svctab.c
+main/svctabm.o: main/svctab.c
 
 .dummy:
 

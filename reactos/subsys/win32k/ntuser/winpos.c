@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.3 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: winpos.c,v 1.4 2002/08/31 23:18:47 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -521,6 +521,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 LRESULT
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
+  *ClientRect = *WindowRect;
+  return(W32kSendNCCALCSIZEMessage(Wnd, FALSE, ClientRect, NULL));
 }
 
 BOOLEAN

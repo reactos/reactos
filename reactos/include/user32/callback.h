@@ -79,5 +79,7 @@ NTSTATUS STDCALL
 User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS STDCALL
 User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS STDCALL
+User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

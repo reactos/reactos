@@ -9,6 +9,8 @@ DWORD STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index);
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
+BOOL STDCALL
+NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
 
 NTSTATUS
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.3 2002/07/04 19:56:34 dwelch Exp $
+/* $Id: desktop.c,v 1.4 2002/08/31 23:18:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,6 +11,41 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+
+int STDCALL
+GetSystemMetrics(int nIndex)
+{
+  return(NtUserGetSystemMetrics(nIndex));
+}
+
+WINBOOL STDCALL
+SystemParametersInfoA(UINT uiAction,
+		      UINT uiParam,
+		      PVOID pvParam,
+		      UINT fWinIni)
+{
+  return(SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni));
+}
+
+WINBOOL STDCALL
+SystemParametersInfoW(UINT uiAction,
+		      UINT uiParam,
+		      PVOID pvParam,
+		      UINT fWinIni)
+{
+  switch (uiAction)
+    {
+    case SPI_GETWORKAREA:
+      {
+	((PRECT)pvParam)->left = 0;
+	((PRECT)pvParam)->top = 0;
+	((PRECT)pvParam)->right = 640;
+	((PRECT)pvParam)->bottom = 480;
+	return(TRUE);
+      }
+    }
+  return(FALSE);
+}
 
 
 WINBOOL

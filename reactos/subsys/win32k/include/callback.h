@@ -24,8 +24,8 @@ W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    ULONG_PTR CompletionCallbackContext,
 			    LRESULT Result);
 LRESULT STDCALL
-W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
-			  RECT Rect2, RECT Rect3, PWINDOWPOS Pos);
+W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
+			  NCCALCSIZE_PARAMS* Params);
 LRESULT STDCALL
 W32kSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
 

@@ -395,6 +395,7 @@ NtUserGetPriorityClipboardFormat        2
 NtUserGetProcessWindowStation           0
 NtUserGetScrollBarInfo                  3
 NtUserGetSystemMenu                     2
+NtUserGetSystemMetrics			1
 NtUserGetThreadDesktop                  2
 NtUserGetThreadState                    1
 NtUserGetTitleBarInfo                   2
@@ -403,6 +404,7 @@ NtUserGetUpdateRgn                      3
 NtUserGetWindowDC                       1
 NtUserGetWindowPlacement                2
 NtUserGetWindowLong			2
+NtUserGetWindowRect			2
 NtUserGetWOWClass                       2
 NtUserHideCaret                         1
 NtUserHiliteMenuItem                    4

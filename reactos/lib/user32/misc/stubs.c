@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.9 2002/07/04 19:56:34 dwelch Exp $
+/* $Id: stubs.c,v 1.10 2002/08/31 23:18:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -231,15 +231,6 @@ GetSysColorBrush(
   return (HBRUSH)0;
 }
 
-/* ReactOS extension */
-HPEN
-STDCALL
-GetSysColorPen(
-  int nIndex)
-{
-  return (HPEN)0;
-}
-
 HMENU
 STDCALL
 GetSystemMenu(
@@ -249,12 +240,6 @@ GetSystemMenu(
   return (HMENU)0;
 }
 
-int
-STDCALL
-GetSystemMetrics(
-  int nIndex)
-{
-}
 
 
 
@@ -562,29 +547,6 @@ SwapMouseButton(
 {
   return FALSE;
 }
-
-WINBOOL
-STDCALL
-SystemParametersInfoA(
-  UINT uiAction,
-  UINT uiParam,
-  PVOID pvParam,
-  UINT fWinIni)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-SystemParametersInfoW(
-  UINT uiAction,
-  UINT uiParam,
-  PVOID pvParam,
-  UINT fWinIni)
-{
-  return FALSE;
-}
-
 
 WINBOOL
 STDCALL

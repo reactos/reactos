@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.9 2002/08/30 02:47:36 dwelch Exp $
+/* $Id: window.c,v 1.10 2002/08/31 23:18:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,6 +18,41 @@
 #include <user32/callback.h>
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS STDCALL
+User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS CallbackArgs;
+  SENDNCCALCSIZEMESSAGE_CALLBACK_RESULT Result;
+  WNDPROC Proc;
+
+  DbgPrint("User32SendNCCALCSIZEMessageForKernel.\n");
+  CallbackArgs = (PSENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(SENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS))
+    {
+      DbgPrint("Wrong length.\n");
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  DbgPrint("Proc %X\n", Proc);
+  /* Call the window procedure; notice kernel messages are always unicode. */
+  if (CallbackArgs->Validate)
+    {
+      Result.Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCALCSIZE, 
+				      TRUE, 
+				      (LPARAM)&CallbackArgs->Params);
+      Result.Params = CallbackArgs->Params;
+    }
+  else
+    {
+      Result.Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCALCSIZE,
+				      FALSE, (LPARAM)&CallbackArgs->Rect);
+      Result.Rect = CallbackArgs->Rect;
+    }
+  DbgPrint("Returning result %d.\n", Result);
+  ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
+  /* Doesn't return. */
+}
 
 NTSTATUS STDCALL
 User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -652,7 +687,7 @@ WINBOOL STDCALL
 GetWindowRect(HWND hWnd,
 	      LPRECT lpRect)
 {
-  return FALSE;
+  return(NtUserGetWindowRect(hWnd, lpRect));
 }
 
 int STDCALL

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.4 2002/07/04 19:56:34 dwelch Exp $
+/* $Id: defwnd.c,v 1.5 2002/08/31 23:18:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -27,7 +27,48 @@ static HBITMAP hbitmapMaximizeD;
 static HBITMAP hbitmapRestore;
 static HBITMAP hbitmapRestoreD;
 
+static COLORREF SysColours[] =
+  {
+    RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
+    RGB(192, 192, 192) /* COLOR_BACKGROUND */,
+    RGB(0, 64, 128) /* COLOR_ACTIVECAPTION */,
+    RGB(255, 255, 255) /* COLOR_INACTIVECAPTION */,
+    RGB(255, 255, 255) /* COLOR_MENU */,
+    RGB(255, 255, 255) /* COLOR_WINDOW */,
+    RGB(0, 0, 0) /* COLOR_WINDOWFRAME */,
+    RGB(0, 0, 0) /* COLOR_MENUTEXT */,
+    RGB(0, 0, 0) /* COLOR_WINDOWTEXT */,
+    RGB(255, 255, 255) /* COLOR_CAPTIONTEXT */,
+    RGB(128, 128, 128) /* COLOR_ACTIVEBORDER */,
+    RGB(255, 255, 255) /* COLOR_INACTIVEBORDER */,
+    RGB(255, 255, 232) /* COLOR_APPWORKSPACE */,
+    RGB(224, 224, 224) /* COLOR_HILIGHT */,
+    RGB(0, 0, 0) /* COLOR_HILIGHTTEXT */,
+    RGB(192, 192, 192) /* COLOR_BTNFACE */,
+    RGB(128, 128, 128) /* COLOR_BTNSHADOW */,
+    RGB(192, 192, 192) /* COLOR_GRAYTEXT */,
+    RGB(0, 0, 0) /* COLOR_BTNTEXT */,
+    RGB(0, 0, 0) /* COLOR_INACTIVECAPTIONTEXT */,
+    RGB(255, 255, 255) /* COLOR_BTNHILIGHT */,
+    RGB(32, 32, 32) /* COLOR_3DDKSHADOW */,
+    RGB(192, 192, 192) /* COLOR_3DLIGHT */,
+    RGB(0, 0, 0) /* COLOR_INFOTEXT */,
+    RGB(255, 255, 192) /* COLOR_INFOBK */,
+    RGB(184, 180, 184) /* COLOR_ALTERNATEBTNFACE */,
+    RGB(0, 0, 255) /* COLOR_HOTLIGHT */,
+    RGB(16, 132, 208) /* COLOR_GRADIENTACTIVECAPTION */,
+    RGB(181, 181, 181) /* COLOR_GRADIENTINACTIVECAPTION */,
+  };
+
 /* FUNCTIONS *****************************************************************/
+
+/* ReactOS extension */
+HPEN STDCALL
+GetSysColorPen(int nIndex)
+{
+  return(CreatePen(PS_SOLID, 1, SysColours[nIndex]));
+}
+
 
 LRESULT STDCALL
 DefFrameProcA(HWND hWnd,

@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.4 2002/08/27 23:29:40 dwelch Exp $
+/* $Id: painting.c,v 1.5 2002/08/31 23:18:47 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -705,7 +705,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
   if (hClip == NULL && Flags & UNC_ENTIRE)
     {
       if (RtlCompareMemory(&Window->WindowRect, &Window->ClientRect,
-			   sizeof(RECT)) == sizeof(RECT))
+			   sizeof(RECT)) != sizeof(RECT))
 	{
 	  hClip = (HANDLE)1;
 	}

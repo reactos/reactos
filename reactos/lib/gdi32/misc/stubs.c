@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.8 2002/08/18 07:02:56 ei Exp $
+/* $Id: stubs.c,v 1.9 2002/08/31 23:18:45 dwelch Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -464,20 +464,6 @@ GetBrushOrgEx(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-int
-STDCALL
-GetClipBox(
-	HDC	a0,
-	LPRECT	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 
 int

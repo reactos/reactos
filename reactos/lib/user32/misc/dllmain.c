@@ -61,6 +61,8 @@ Init(VOID)
     (PVOID)User32SendCREATEMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDGETMINMAXINFO] =
     (PVOID)User32SendGETMINMAXINFOMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDNCCALCSIZE] =
+    (PVOID)User32SendNCCALCSIZEMessageForKernel;
 
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
