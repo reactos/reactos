@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.55 2003/08/28 19:37:00 gvg Exp $
+/* $Id: stubs.c,v 1.56 2003/08/29 09:34:52 gvg Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -3502,7 +3502,6 @@ RtlCaptureContext (
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
 }
 
 /*
