@@ -32,7 +32,10 @@ private:
 	void GenerateInitTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
 	void CheckAutomaticDependencies ();
+	void DetectPCHSupport();
+
 	FILE* fMakefile;
+	bool use_pch;
 };
 
 std::string FixupTargetFilename ( const std::string& targetFilename );

@@ -26,6 +26,8 @@ MingwBackend::MingwBackend ( Project& project )
 void
 MingwBackend::Process ()
 {
+	DetectPCHSupport();
+
 	CreateMakefile ();
 	GenerateHeader ();
 	GenerateGlobalVariables ();
@@ -322,4 +324,25 @@ string
 FixupTargetFilename ( const string& targetFilename )
 {
 	return string("$(ROS_INTERMEDIATE)") + NormalizeFilename ( targetFilename );
+}
+
+void
+MingwBackend::DetectPCHSupport()
+{
+	string path = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pch_detection.h";
+	system ( ssprintf("gcc -c %s", path.c_str()).c_str() );
+	path += ".gch";
+	{
+		FILE* f = fopen ( path.c_str(), "rb" );
+		if ( f )
+		{
+			use_pch = true;
+			fclose(f);
+			unlink ( path.c_str() );
+		}
+		else
+			use_pch = false;
+	}
+	// TODO FIXME - eventually check for ROS_USE_PCH env var and
+	// allow that to override use_pch if true
 }
