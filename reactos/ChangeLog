@@ -1,5 +1,12 @@
 2003-07-15  Royce Mitchell III <royce3@ev1.net>
 
+	* fixed references to errno in MSVCRT to use __set_errno() and
+	_errno() respectively.
+	* Fixed warning (args 3 & 6 in call to CreateThread) in
+	lib/msvcrt/process/threadx.c
+
+2003-07-15  Royce Mitchell III <royce3@ev1.net>
+
 	* modified crtdll to forward most of it's CTYPE, STRING
 	and WSTRING entries to NTDLL or MSVCRT.
 

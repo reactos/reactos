@@ -32,11 +32,11 @@ int fflush(FILE *f)
 
   if (f == NULL)
   {
-     int e = errno;
+     int e = *_errno();
 
      __set_errno(0);
     _fwalk((void (*)(FILE *))fflush);
-    if (errno)
+    if (*_errno())
       return EOF;
     __set_errno(e);
     return 0;

@@ -229,7 +229,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	  if (skip_space)
 	    {
 	      while (isspace (c))
-		if (inchar () == EOF && errno == EINTR)
+		if (inchar () == EOF && *_errno() == EINTR)
 		  conv_error ();
 	      skip_space = 0;
 	    }
@@ -344,7 +344,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	conv_error ();
 
       /* We must take care for EINTR errors.  */
-      if (c == EOF && errno == EINTR)
+      if (c == EOF && *_errno() == EINTR)
 	input_error ();
 
       /* Find the conversion specifier.  */
@@ -353,7 +353,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	{
 	  /* Eat whitespace.  */
 	  do
-	    if (inchar () == EOF && errno == EINTR)
+	    if (inchar () == EOF && *_errno() == EINTR)
 	      input_error ();
 	  while (isspace (c));
 	  ungetc (c, s);

@@ -1,4 +1,4 @@
-/* $Id: threadx.c,v 1.3 2003/07/11 21:58:09 royce Exp $
+/* $Id: threadx.c,v 1.4 2003/07/16 02:45:24 royce Exp $
  *
  */
 #include <windows.h>
@@ -23,11 +23,13 @@ unsigned long _beginthreadex(
    * Just call the API function. Any CRT specific processing is done in
    * DllMain DLL_THREAD_ATTACH
    */
-  NewThread = CreateThread(security, stack_size, start_address, arglist, initflag, thrdaddr);
+  NewThread = CreateThread ( security, stack_size,
+    (LPTHREAD_START_ROUTINE)start_address,
+    arglist, initflag, (PULONG)thrdaddr );
   if (NULL == NewThread)
     {
     /* FIXME map GetLastError() to errno */
-    errno = ENOSYS;
+    __set_errno ( ENOSYS );
     }
 
   return (unsigned long) NewThread;

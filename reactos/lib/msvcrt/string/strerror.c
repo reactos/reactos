@@ -108,7 +108,7 @@ char *strerror(int errnum)
 char *_strerror(const char *s)
 {
 	if ( s == NULL )
-		return strerror(errno);
+		return strerror(*_errno());
 
 	return strerror(atoi(s));
 }

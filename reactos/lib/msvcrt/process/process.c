@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.5 2003/07/11 21:58:09 royce Exp $ */
+/* $Id: process.c,v 1.6 2003/07/16 02:45:24 royce Exp $ */
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -176,18 +176,18 @@ do_spawn(int mode, const char* cmdname, const char* args, const char* envp)
 
     if (mode != _P_NOWAIT && mode != _P_NOWAITO && mode != _P_WAIT && mode != _P_DETACH && mode != _P_OVERLAY)
     {
-       errno = EINVAL;
+       __set_errno ( EINVAL );
        return -1;
     }
 
     if (0 != _access(cmdname, F_OK))
     {
-	errno = ENOENT;
+	__set_errno ( ENOENT );
 	return -1;
     }
     if (0 == _access(cmdname, D_OK))
     {
-	errno = EISDIR;
+	__set_errno ( EISDIR );
 	return -1;
     }
 
@@ -208,7 +208,7 @@ do_spawn(int mode, const char* cmdname, const char* args, const char* envp)
 	StartupInfo.lpReserved2 = malloc(StartupInfo.cbReserved2);
 	if (StartupInfo.lpReserved2 == NULL)
 	{
-	    errno = ENOMEM;
+	    __set_errno ( ENOMEM );
 	    return -1;
 	} 
 

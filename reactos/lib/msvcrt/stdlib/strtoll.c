@@ -74,7 +74,7 @@ strtoll(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = neg ? LLONG_MIN : LLONG_MAX;
-    errno = ERANGE;
+    __set_errno ( ERANGE );
   }
   else if (neg)
     acc *= -1;

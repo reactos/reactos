@@ -86,7 +86,7 @@ int _filbuf(FILE* f)
       f->_flag |= _IOERR;
     f->_cnt = 0;
 
-// should set errno 
+// FIXME should set errno 
 
     return EOF;
   }
