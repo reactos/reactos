@@ -21,11 +21,11 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"ReactOS Simple Shell\0"
+            VALUE "FileDescription",	"ReactOS GUI Startup\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
-            VALUE "InternalName",	"shell\0"
+            VALUE "InternalName",	"gstart\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"shell.exe\0"
+            VALUE "OriginalFilename",	"gstart.exe\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
         END
