@@ -1,8 +1,11 @@
+#include <windows.h>
+#include <commctrl.h>
 #include <defines.h>
-#include "resource.h"
-#include "windows.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#include "resource.h"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS time/date Control Panel\0"
@@ -10,8 +13,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 #define REACTOS_STR_ORIGINAL_FILENAME	"timedate.cpl\0"
 #include <reactos/version.rc>
 
-IDC_CPLICON ICON "resources/applet.ico"
 
+IDC_CPLICON ICON "resources/applet.ico"
 
 
 #include "En.rc"

@@ -5,9 +5,18 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Date && Time"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  GROUPBOX "&Date", -1, 4, 2, 122, 125
-  GROUPBOX "&Time", -1, 132, 2, 113, 125
-  LTEXT "Current time zone: %s", IDC_TIMEZONE, 4, 136, 241, 8
+    GROUPBOX "&Date", -1, 4, 2, 122, 125
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
+            DTS_SHORTDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 17, 108, 12
+    CONTROL "", IDC_MONTHCALENDAR, "SysMonthCal32",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 37, 108, 80
+    GROUPBOX "&Time", -1, 132, 2, 113, 125
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            144, 17, 90, 12
+    LTEXT "Current time zone: %s", IDC_TIMEZONE, 4, 136, 241, 8
 END
 
 
@@ -16,15 +25,15 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Time Zone"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
-           CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-  AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
-               IDC_AUTOADJUST, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
+                 IDC_AUTOADJUST, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "Date/Time"
-  IDS_CPLDESCRIPTION "Changes date, time and time zone information."
+    IDS_CPLNAME "Date/Time"
+    IDS_CPLDESCRIPTION "Changes date, time and time zone information."
 END

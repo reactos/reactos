@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timedate.c,v 1.1 2004/10/30 19:15:31 ekohl Exp $
+/* $Id: timedate.c,v 1.2 2004/11/07 16:03:51 ekohl Exp $
  *
  * PROJECT:         ReactOS Timedate Control Panel
  * FILE:            lib/cpl/timedate/timedate.c
@@ -32,6 +32,27 @@
 #include "timedate.h"
 
 
+typedef struct _TZ_INFO
+{
+  LONG Bias;
+  LONG StandardBias;
+  LONG DaylightBias;
+  SYSTEMTIME StandardDate;
+  SYSTEMTIME DaylightDate;
+} TZ_INFO, *PTZ_INFO;
+
+typedef struct _TIMEZONE_ENTRY
+{
+  struct _TIMEZONE_ENTRY *Prev;
+  struct _TIMEZONE_ENTRY *Next;
+  WCHAR Description[64];   /* 'Display' */
+  WCHAR StandardName[32];  /* 'Std' */
+  WCHAR DaylightName[32];  /* 'Dlt' */
+  TZ_INFO TimezoneInfo;    /* 'TZI' */
+  ULONG Index;             /* 'Index ' */
+} TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
+
+
 #define NUM_APPLETS	(1)
 
 LONG APIENTRY
@@ -39,6 +60,9 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 
 
 HINSTANCE hApplet = 0;
+
+PTIMEZONE_ENTRY TimeZoneListHead = NULL;
+PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
 
 /* Applets */
@@ -58,10 +82,240 @@ DateTimePageProc(HWND hwndDlg,
   switch (uMsg)
   {
     case WM_INITDIALOG:
+      {
+        TIME_ZONE_INFORMATION TimeZoneInfo;
+
+        GetTimeZoneInformation(&TimeZoneInfo);
+
+        SendDlgItemMessageW(hwndDlg, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneInfo.StandardName);
+      }
       break;
   }
 
   return FALSE;
+}
+
+
+static PTIMEZONE_ENTRY
+GetLargerTimeZoneEntry(DWORD Index)
+{
+  PTIMEZONE_ENTRY Entry;
+
+  Entry = TimeZoneListHead;
+  while (Entry != NULL)
+    {
+      if (Entry->Index >= Index)
+	return Entry;
+
+      Entry = Entry->Next;
+    }
+
+  return NULL;
+}
+
+
+static VOID
+CreateTimeZoneList(VOID)
+{
+  WCHAR szKeyName[256];
+  DWORD dwIndex;
+  DWORD dwNameSize;
+  DWORD dwValueSize;
+  LONG lError;
+  HKEY hZonesKey;
+  HKEY hZoneKey;
+
+  PTIMEZONE_ENTRY Entry;
+  PTIMEZONE_ENTRY Current;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hZonesKey))
+    return;
+
+  dwIndex = 0;
+  while (TRUE)
+    {
+      dwNameSize = 256;
+      lError = RegEnumKeyExW(hZonesKey,
+			     dwIndex,
+			     szKeyName,
+			     &dwNameSize,
+			     NULL,
+			     NULL,
+			     NULL,
+			     NULL);
+      if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
+	break;
+
+      if (RegOpenKeyExW(hZonesKey,
+			szKeyName,
+			0,
+			KEY_ALL_ACCESS,
+			&hZoneKey))
+	break;
+
+      Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
+      if (Entry == NULL)
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = 64 * sizeof(WCHAR);
+      if (RegQueryValueExW(hZoneKey,
+			   L"Display",
+			   NULL,
+			   NULL,
+			   (LPBYTE)&Entry->Description,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = 32 * sizeof(WCHAR);
+      if (RegQueryValueExW(hZoneKey,
+			   L"Std",
+			   NULL,
+			   NULL,
+			   (LPBYTE)&Entry->StandardName,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = 32 * sizeof(WCHAR);
+      if (RegQueryValueExW(hZoneKey,
+			   L"Dlt",
+			   NULL,
+			   NULL,
+			   (LPBYTE)&Entry->DaylightName,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = sizeof(DWORD);
+      if (RegQueryValueExW(hZoneKey,
+			   L"Index",
+			   NULL,
+			   NULL,
+			   (LPBYTE)&Entry->Index,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = sizeof(TZ_INFO);
+      if (RegQueryValueExW(hZoneKey,
+			   L"TZI",
+			   NULL,
+			   NULL,
+			   (LPBYTE)&Entry->TimezoneInfo,
+			   &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      RegCloseKey(hZoneKey);
+
+      if (TimeZoneListHead == NULL &&
+	  TimeZoneListTail == NULL)
+	{
+	  Entry->Prev = NULL;
+	  Entry->Next = NULL;
+	  TimeZoneListHead = Entry;
+	  TimeZoneListTail = Entry;
+	}
+      else
+	{
+	  Current = GetLargerTimeZoneEntry(Entry->Index);
+	  if (Current != NULL)
+	    {
+	      if (Current == TimeZoneListHead)
+		{
+		  /* Prepend to head */
+		  Entry->Prev = NULL;
+		  Entry->Next = TimeZoneListHead;
+		  TimeZoneListHead->Prev = Entry;
+		  TimeZoneListHead = Entry;
+		}
+	      else
+		{
+		  /* Insert before current */
+		  Entry->Prev = Current->Prev;
+		  Entry->Next = Current;
+		  Current->Prev->Next = Entry;
+		  Current->Prev = Entry;
+		}
+	    }
+	  else
+	    {
+	      /* Append to tail */
+	      Entry->Prev = TimeZoneListTail;
+	      Entry->Next = NULL;
+	      TimeZoneListTail->Next = Entry;
+	      TimeZoneListTail = Entry;
+	    }
+	}
+
+      dwIndex++;
+    }
+
+  RegCloseKey(hZonesKey);
+}
+
+
+static VOID
+DestroyTimeZoneList(VOID)
+{
+  PTIMEZONE_ENTRY Entry;
+
+  while (TimeZoneListHead != NULL)
+    {
+      Entry = TimeZoneListHead;
+
+      TimeZoneListHead = Entry->Next;
+      if (TimeZoneListHead != NULL)
+	{
+	  TimeZoneListHead->Prev = NULL;
+	}
+
+      HeapFree(GetProcessHeap(), 0, Entry);
+    }
+
+  TimeZoneListTail = NULL;
+}
+
+
+static VOID
+ShowTimeZoneList(HWND hwnd)
+{
+  PTIMEZONE_ENTRY Entry;
+
+  Entry = TimeZoneListHead;
+  while (Entry != NULL)
+    {
+      SendMessageW(hwnd,
+		   CB_ADDSTRING,
+		   0,
+		   (LPARAM)Entry->Description);
+
+
+      Entry = Entry->Next;
+    }
+
+  SendMessageW(hwnd,
+	       CB_SETCURSEL,
+	       (WPARAM)0, // index
+	       0);
 }
 
 
@@ -75,6 +329,21 @@ TimeZonePageProc(HWND hwndDlg,
   switch (uMsg)
   {
     case WM_INITDIALOG:
+      CreateTimeZoneList();
+      ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
+      break;
+
+    case WM_COMMAND:
+      if ((LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE) ||
+          (LOWORD(wParam) == IDC_AUTOADJUST && HIWORD(wParam) == BN_CLICKED))
+        {
+          /* Enable the 'Apply' button */
+          PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+        }
+      break;
+
+    case WM_DESTROY:
+      DestroyTimeZoneList();
       break;
   }
 
@@ -166,8 +435,15 @@ DllMain(HINSTANCE hinstDLL,
   switch (dwReason)
   {
     case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-      hApplet = hinstDLL;
+      {
+	INITCOMMONCONTROLSEX InitControls;
+
+	InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
+	InitCommonControlsEx(&InitControls);
+
+	hApplet = hinstDLL;
+      }
       break;
   }
 
