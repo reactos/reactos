@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-
+#include <crtdll/stddef.h>
 
 int _mbbtype(unsigned char c, int type);
 int _mbsbtype( const unsigned char *str, size_t n );
