@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.26 2003/10/22 14:02:54 navaraf Exp $ */
+/* $Id: color.c,v 1.27 2003/10/23 15:34:44 gvg Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -153,11 +153,6 @@ HPEN STDCALL NtGdiGetSysColorPen(int nIndex)
 
 HBRUSH STDCALL NtGdiGetSysColorBrush(int nIndex)
 {
-#if 0
-  COLORREF Col;
-  memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
-  return(NtGdiCreateSolidBrush(Col));
-#else
   static HBRUSH SysBrushes[sizeof(SysColours) / sizeof(SysColours[0])];
 
   if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
@@ -166,15 +161,17 @@ HBRUSH STDCALL NtGdiGetSysColorBrush(int nIndex)
       return NULL;
     }
 
-  /* FIXME should register this object with DeleteObject() so it
-     can't be deleted */
+  /* FIXME Should be changed when a new user logs in? */
   if (NULL == SysBrushes[nIndex])
     {
-      SysBrushes[nIndex] = (HBRUSH) ((DWORD)NtGdiCreateSolidBrush(SysColours[nIndex]) | 0x00800000);
+      SysBrushes[nIndex] = (HBRUSH) ((DWORD)NtGdiCreateSolidBrush(SysColours[nIndex]));
+      if (NULL != SysBrushes[nIndex])
+        {
+          GDIOBJ_MarkObjectGlobal(SysBrushes[nIndex]);
+        }
     }
 
   return SysBrushes[nIndex];
-#endif
 }
 
 
