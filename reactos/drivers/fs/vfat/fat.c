@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.30 2001/08/14 08:06:26 hbirr Exp $
+ * $Id: fat.c,v 1.31 2001/10/03 18:23:02 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -72,7 +72,7 @@ Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	}
     }
 
-  CurrentCluster = *(PULONG)(BaseAddress + (FATOffset % ChunkSize));
+  CurrentCluster = (*(PULONG)(BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
   CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
@@ -94,11 +94,11 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   ULONG FATOffset;
   ULONG ChunkSize;
-  
+
   ChunkSize = CACHEPAGESIZE(DeviceExt);
-  
+
   FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + (CurrentCluster * 2);
-  
+
   Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
 				 ROUND_DOWN(FATOffset, ChunkSize),
 				 &BaseAddress,
@@ -120,7 +120,7 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  return(Status);
 	}
     }
-  
+
   CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % ChunkSize)));
   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
     CurrentCluster = 0xffffffff;
@@ -380,7 +380,7 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 		}
 	    }
 	}
-      if (*((PULONG)(BaseAddress + ((FatStart + i) % ChunkSize))) == 0)
+      if (*((PULONG)(BaseAddress + ((FatStart + i) % ChunkSize))) & 0x0fffffff == 0)
 	{
 	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i / 4;
@@ -605,7 +605,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
 	forto=128;
       for (i = 0; i < forto; i++)
 	{
-	  if (Block[i] == 0)
+	  if (Block[i] & 0x0fffffff == 0)
 	    ulCount++;
 	}
     }
@@ -810,7 +810,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
 	     ClusterToWrite);
-      *((PULONG)(BaseAddress + (FATOffset % ChunkSize))) = NewValue;
+      *((PULONG)(BaseAddress + (FATOffset % ChunkSize))) = NewValue & 0x0fffffff;
       Status = VfatWriteSectors(DeviceExt->StorageDevice,
 				ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
 				ChunkSize / BLOCKSIZE,
@@ -922,7 +922,7 @@ VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
     {
       Sector = ClusterToSector(DeviceExt,
 			       Cluster);
-      
+
       Status = VfatWriteSectors(DeviceExt->StorageDevice,
 				Sector,
 				DeviceExt->Boot->SectorsPerCluster,
@@ -941,10 +941,10 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
  */
 {
   NTSTATUS Status;
-  
+
 //  DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 //	  DeviceExt, CurrentCluster);
-  
+
   if (Extend)
     {
       ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
@@ -953,7 +953,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
     {
       ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
     }
-  
+
   /*
    * If the file hasn't any clusters allocated then we need special
    * handling
