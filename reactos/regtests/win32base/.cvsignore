@@ -1,8 +1,0 @@
-*.o
-*.d
-*.dll
-*.coff
-*.sym
-*.map
-_regtests.c
-Makefile.tests
