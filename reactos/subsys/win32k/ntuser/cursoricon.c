@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.2 2004/12/12 17:56:52 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.3 2004/12/18 23:55:26 royce Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -81,8 +81,10 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       DC_UnlockDc(Screen);
       
       BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
-      /* FIXME - BitmapObj can be NULL!!!!! */
+      if ( !BitmapObj )
+        return (HCURSOR)0;
       SurfObj = &BitmapObj->SurfObj;
+      ASSERT(SurfObj);
    }
   
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
@@ -164,7 +166,12 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
               MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
               MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
               NULL);
-            ASSERT(hMask);
+            if ( !hMask )
+            {
+              BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+              BITMAPOBJ_UnlockBitmap(dcbmp);
+              return (HCURSOR)0;
+            }
             soMask = EngLockSurface((HSURF)hMask);
             EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
               &DestRect, &SourcePoint);
