@@ -52,7 +52,7 @@ Debugging kernel-mode code is tricky, these are some snippets
     easier to see where output is coming from. DbgPrint can be used at any
     point including in interrupt handlers.
     
-    There are options in ntoskrnl/dbg/print.c for copying DbgPrint output
+    There are options in ntoskrnl/kd/kdebug.c for copying DbgPrint output
     to a serial device or bochs logging port (parallel support should also
     be added). This can be useful if a lot of output is being generated.
     

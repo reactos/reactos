@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.33 1999/12/18 17:48:22 dwelch Exp $
+/* $Id: main.c,v 1.34 2000/01/17 21:01:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -160,7 +160,7 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Initialize the debug output
     */
-   DbgInit ();
+   KdInitSystem ();
 
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    if (start < ((int)&end))
