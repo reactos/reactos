@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.32 2000/02/29 23:57:44 ea Exp $
+/* $Id: shell.c,v 1.33 2000/03/12 23:24:51 ekohl Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -45,6 +45,14 @@ void ExecuteCd(char* cmdline)
    if (!SetCurrentDirectoryA(cmdline))
      {
 	debug_printf("Invalid directory\n");
+     }
+}
+
+void ExecuteMd (char *cmdline)
+{
+   if (!CreateDirectoryA (cmdline, NULL))
+     {
+	debug_printf("Create Directory failed!\n");
      }
 }
 
@@ -251,6 +259,7 @@ void ExecuteHelp (void * dummy)
 		"exit\t\t\tTerminate the shell\n"
 		"help\t\t\tPrint this help message\n"
 		"kill [pid]\t\tKill process which PID is pid\n"
+		"md [directory]\t\tCreate a new directory\n"
 		"reboot\t\t\tRestart the system\n"
 		"start [program.exe]\tDetach program.exe\n"
 		"type [file]\t\tPrint the file on console\n"
@@ -267,7 +276,6 @@ void ExecuteCommand(char* line)
 
    if (isalpha(line[0]) && line[1] == ':' && line[2] == 0)
      {
-//#if 0
 	char szPath[MAX_PATH];
 	char szVar[5];
 
@@ -293,14 +301,6 @@ void ExecuteCommand(char* line)
 	GetCurrentDirectory (MAX_PATH, szPath);
 	if (szPath[0] != (char)toupper (line[0]))
 	     debug_printf("Invalid drive\n");
-//#endif
-#if 0
-	line[0] = toupper (line[0]);
-	line[2] = '\\';
-	line[3] = 0;
-	if (SetCurrentDirectoryA(line) == FALSE)
-	     debug_printf("Invalid drive\n");
-#endif
 
 	return;
      }
@@ -337,6 +337,11 @@ void ExecuteCommand(char* line)
 	ExecuteKill(tail);
 	return;
      }
+   if (strcmp(cmd,"md")==0)
+     {
+	ExecuteMd(tail);
+	return;
+     }
    if (strcmp(cmd,"reboot")==0)
      {
 	ExecuteReboot(tail);
@@ -344,12 +349,12 @@ void ExecuteCommand(char* line)
      }
    if (strcmp(cmd,"type")==0)
      {
-	ExecuteType(tail);	
+	ExecuteType(tail);
 	return;
      }
    if (strcmp(cmd,"ver")==0)
      {
-	ExecuteVer(); 
+	ExecuteVer();
 	return;
      }
    if (strcmp(cmd,"validate")==0)
