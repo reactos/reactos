@@ -61,6 +61,7 @@ lib\lzexpand\lz32.dll                   1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
 lib\msvcrt\msvcrt.dll                   1
+lib\msvcrt\msvcrt20.dll                 1
 lib\ntdll\ntdll.dll                     1
 lib\secur32\secur32.dll                 1
 lib\syssetup\syssetup.dll               1
