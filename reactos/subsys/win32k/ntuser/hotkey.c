@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.5 2003/11/23 12:24:21 weiden Exp $
+/* $Id: hotkey.c,v 1.6 2004/01/26 23:29:23 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -238,6 +238,7 @@ NtUserRegisterHotKey(HWND hWnd,
   /* Check for existing hotkey */
   if (IsHotKey (WinStaObject, fsModifiers, vk))
   {
+    ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
     IntReleaseWindowObject(Window);
     return FALSE;
   }
