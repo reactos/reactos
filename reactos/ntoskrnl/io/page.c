@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.15 2002/04/07 18:36:13 phreak Exp $
+/* $Id: page.c,v 1.16 2002/04/27 19:22:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,7 +49,7 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
    DPRINT("Before IoCallDriver\n");
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
-   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	DPRINT("Waiting for io operation\n");
 	if (FileObject->Flags & FO_ALERTABLE_IO)
@@ -98,7 +98,7 @@ IoPageRead(PFILE_OBJECT FileObject,
    DPRINT("Before IoCallDriver\n");
    Status = IoCallDriver(FileObject->DeviceObject, Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	DPRINT("Waiting for io operation\n");
 	if (FileObject->Flags & FO_ALERTABLE_IO)

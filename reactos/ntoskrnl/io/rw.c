@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.36 2002/04/20 03:46:40 phreak Exp $
+/* $Id: rw.c,v 1.37 2002/04/27 19:22:09 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -118,7 +118,7 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
    if (EventHandle == NULL && Status == STATUS_PENDING && 
-       (FileObject->Flags & FO_SYNCHRONOUS_IO))
+       !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	BOOLEAN Alertable;
 	

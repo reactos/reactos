@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.12 2002/04/07 18:36:13 phreak Exp $
+/* $Id: dir.c,v 1.13 2002/04/27 19:22:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -145,7 +145,7 @@ NtQueryDirectoryFile(
    IoStack->Parameters.QueryDirectory.Length = Length;
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	if (FileObject->Flags & FO_ALERTABLE_IO)
 	  {
