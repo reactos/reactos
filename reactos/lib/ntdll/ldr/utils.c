@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.14 1999/11/14 12:59:53 ariadne Exp $
+/* $Id: utils.c,v 1.15 1999/11/17 21:32:57 ariadne Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,20 +82,39 @@ LdrLoadDll (
 	PDLLMAIN_FUNC		Entrypoint;
    
 
+	if ( Dll == NULL )
+		return -1;
+
+
+	if ( Name == NULL ) {
+		*Dll = &LdrDllListHead;
+		return STATUS_SUCCESS;
+	}
+
 	DPRINT("LdrLoadDll(Base %x, Name \"%s\")\n", Dll, Name);
 
-	if ( LdrFindDll(Dll,Name) == STATUS_SUCCESS )
-		return STATUS_SUCCESS;
+	
 
 	/*
 	 * Build the DLL's absolute name
 	 */
-	strcat(fqname, Name);
-   
+
+	if ( strncmp(Name,"\\??\\",3) != 0 ) {
+	
+		strcat(fqname, Name);
+   	}
+	else
+		strncpy(fqname, Name, 256);
+
 	DPRINT("fqname \"%s\"\n", fqname);
   	/*
 	 * Open the DLL's image file.
 	 */
+
+	if ( LdrFindDll(Dll,fqname) == STATUS_SUCCESS )
+		return STATUS_SUCCESS;
+
+
 	RtlInitAnsiString(
 		& AnsiString,
 		fqname
@@ -236,34 +255,37 @@ LdrLoadDll (
 	(*Dll)->ReferenceCount = 1;
 	LdrDllListHead.Next->Prev = (*Dll);
 	LdrDllListHead.Next = (*Dll);
+
+
+	if ( (*Dll)->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL == IMAGE_FILE_DLL ) {
    
-	Entrypoint =
+		Entrypoint =
 		(PDLLMAIN_FUNC) LdrPEStartup(
 					ImageBase,
 					SectionHandle
 					);
-	if (Entrypoint != NULL)
-	{
-		DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
-		if (FALSE == Entrypoint(
+		if (Entrypoint != NULL)
+		{
+			DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+			if (FALSE == Entrypoint(
 				Dll,
 				DLL_PROCESS_ATTACH,
 				NULL
 				))
-		{
-			DPRINT("NTDLL.LDR: DLL \"%s\" failed to initialize\n", fqname);
-			/* FIXME: should clean up and fail */
+			{
+				DPRINT("NTDLL.LDR: DLL \"%s\" failed to initialize\n", fqname);
+				/* FIXME: should clean up and fail */
+			}
+			else
+			{
+				DPRINT("NTDLL.LDR: DLL \"%s\" initialized successfully\n", fqname);
+			}
 		}
 		else
 		{
-			DPRINT("NTDLL.LDR: DLL \"%s\" initialized successfully\n", fqname);
+			DPRINT("NTDLL.LDR: Entrypoint is NULL for \"%s\"\n", fqname);
 		}
-	}
-	else
-	{
-		DPRINT("NTDLL.LDR: Entrypoint is NULL for \"%s\"\n", fqname);
-	}
-   
+   	}
 	return STATUS_SUCCESS;
 }
 
@@ -298,6 +320,14 @@ LdrFindDll (
 //	DPRINT("NTDLL.LdrFindDll(Name %s)\n", Name);
    
 	current = & LdrDllListHead;
+
+// NULL is the current process
+
+	if ( Name == NULL ) {
+		*Dll = current;
+		return STATUS_SUCCESS;
+	}
+
 	do
 	{
 		OptionalHeader = & current->Headers->OptionalHeader;
@@ -884,6 +914,9 @@ NTSTATUS LdrUnloadDll(PDLL Dll)
 
 	PDLLMAIN_FUNC		Entrypoint;
 	NTSTATUS		Status;
+	
+	if ( Dll == NULL || Dll == &LdrDllListHead )
+		return -1;
 
 
 	if ( Dll->ReferenceCount > 1 ) {
@@ -891,34 +924,36 @@ NTSTATUS LdrUnloadDll(PDLL Dll)
 		return STATUS_SUCCESS;
 	}
 
-	Entrypoint =
-		(PDLLMAIN_FUNC) LdrPEStartup(
+	if ( Dll->Headers->FileHeader.Characteristics & IMAGE_FILE_DLL == IMAGE_FILE_DLL ) {
+
+		Entrypoint =
+			(PDLLMAIN_FUNC) LdrPEStartup(
 					Dll->BaseAddress,
 					Dll->SectionHandle
 					);
-	if (Entrypoint != NULL)
-	{
-		DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
-		if (FALSE == Entrypoint(
+		if (Entrypoint != NULL)
+		{
+			DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+			if (FALSE == Entrypoint(
 				Dll,
 				DLL_PROCESS_DETACH,
 				NULL
 				))
-		{
-			DPRINT("NTDLL.LDR: DLL failed to detach\n");
-			return -1;
+			{
+				DPRINT("NTDLL.LDR: DLL failed to detach\n");
+				return -1;
+			}
+			else
+			{
+				DPRINT("NTDLL.LDR: DLL  detached successfully\n");
+			}
 		}
 		else
 		{
-			DPRINT("NTDLL.LDR: DLL  detached successfully\n");
+			DPRINT("NTDLL.LDR: Entrypoint is NULL for \n");
 		}
-	}
-	else
-	{
-		DPRINT("NTDLL.LDR: Entrypoint is NULL for \n");
-	}
 
-
+	}
 	Status = ZwUnmapViewOfSection(
 		NtCurrentProcess(),
 		Dll->BaseAddress
@@ -929,7 +964,7 @@ NTSTATUS LdrUnloadDll(PDLL Dll)
 	return Status;
 }
 
-static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPWSTR ResourceName, ULONG Offset)
+static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPCWSTR ResourceName, ULONG Offset)
 {
 
 
@@ -983,7 +1018,7 @@ static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY
 
 
 
-NTSTATUS LdrFindResource_U(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY **ResourceDataEntry,LPWSTR ResourceName, ULONG ResourceType,ULONG Language)
+NTSTATUS LdrFindResource_U(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY **ResourceDataEntry,LPCWSTR ResourceName, ULONG ResourceType,ULONG Language)
 {
 	IMAGE_RESOURCE_DIRECTORY *ResourceTypeDir;
 	IMAGE_RESOURCE_DIRECTORY *ResourceNameDir;
