@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.17 2004/02/01 20:48:06 ekohl Exp $
+/* $Id: swprintf.c,v 1.18 2004/06/15 08:53:53 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -320,10 +320,10 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'w') {
+		if (*fmt == L'h' || *fmt == L'l' || *fmt == L'L' || *fmt == L'w') {
 			qualifier = *fmt;
 			++fmt;
-		} else if (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4') {
+		} else if (*fmt == L'I' && *(fmt+1) == L'6' && *(fmt+2) == L'4') {
 			qualifier = *fmt;
 			fmt += 3;
 		}
@@ -485,11 +485,15 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			continue;
 		}
 
-		if (qualifier == 'I')
+		if (qualifier == L'I')
 			num = va_arg(args, unsigned long long);
-		else if (qualifier == 'l')
-			num = va_arg(args, unsigned long);
-		else if (qualifier == 'h') {
+		else if (qualifier == L'l') {
+			if (flags & SIGN)
+				num = va_arg(args, long);
+			else
+				num = va_arg(args, unsigned long);
+		}
+		else if (qualifier == L'h') {
 			if (flags & SIGN)
 				num = va_arg(args, int);
 			else

@@ -1071,8 +1071,12 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 
 		if (qualifier == 'I')
 			num = va_arg(args, ULONGLONG);
-		else if (qualifier == 'l')
-			num = va_arg(args, unsigned long);
+		else if (qualifier == 'l') {
+			if (flags & SIGN)
+				num = va_arg(args, long);
+			else
+				num = va_arg(args, unsigned long);
+		}
 		else if (qualifier == 'h') {
 			if (flags & SIGN)
 				num = va_arg(args, int);

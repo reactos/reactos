@@ -1048,8 +1048,12 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 
 		if (qualifier == L'I')
 			num = va_arg(args, ULONGLONG);
-		else if (qualifier == L'l')
-			num = va_arg(args, unsigned long);
+		else if (qualifier == L'l') {
+			if (flags & SIGN)
+				num = va_arg(args, long);
+			else
+				num = va_arg(args, unsigned long);
+		}
 		else if (qualifier == L'h') {
 			if (flags & SIGN)
 				num = va_arg(args, int);

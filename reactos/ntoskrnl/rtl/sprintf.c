@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.16 2004/01/10 14:22:14 hbirr Exp $
+/* $Id: sprintf.c,v 1.17 2004/06/15 08:53:53 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -523,8 +523,12 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 #else
       num = va_arg(args, unsigned __int64);
 #endif
-    else if (qualifier == 'l')
-      num = va_arg(args, unsigned long);
+    else if (qualifier == 'l') {
+      if (flags & SIGN)
+        num = va_arg(args, long);
+      else
+        num = va_arg(args, unsigned long);
+    }
     else if (qualifier == 'h') {
       if (flags & SIGN)
 	num = va_arg(args, int);

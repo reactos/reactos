@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.64 2004/05/29 21:24:43 hbirr Exp $
+# $Id: makefile,v 1.65 2004/06/15 08:53:52 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -356,9 +356,9 @@ STDIO_OBJECTS = \
 	$(PATH_TO_MSVCRT)/stdio/tmpfile.o \
 	$(PATH_TO_MSVCRT)/stdio/tmpnam.o \
 	$(PATH_TO_MSVCRT)/stdio/ungetc.o \
-	stdio/vfprintf.o \
+	$(PATH_TO_MSVCRT)/stdio/vfprintf.o \
 	$(PATH_TO_MSVCRT)/stdio/vfscanf.o \
-	stdio/vfwprint.o \
+	$(PATH_TO_MSVCRT)/stdio/vfwprint.o \
 	$(PATH_TO_MSVCRT)/stdio/vprintf.o \
 	$(PATH_TO_MSVCRT)/stdio/vscanf.o \
 	$(PATH_TO_MSVCRT)/stdio/vsprintf.o \
