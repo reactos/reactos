@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.13 2003/07/12 10:24:45 chorns Exp $
+/* $Id: zw.h,v 1.14 2003/07/20 22:09:46 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4274,7 +4274,9 @@ RtlOpenCurrentUser(
  * ARGUMENTS: 
  *	  SubsystemName = Specifies the name of the subsystem, can be "WIN32" or "DEBUG"
  *	  ObjectHandle =
- *	  ObjectAttributes =
+ *	  ObjectTypeName =
+ *	  ObjectName =
+ *	  SecurityDescriptor =
  *	  DesiredAcces = 
  *	  GenericMapping =
  *	  ObjectCreation = 
@@ -4290,12 +4292,14 @@ STDCALL
 NtAccessCheckAndAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
 	IN PHANDLE ObjectHandle,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN ACCESS_MASK DesiredAccess,
 	IN PGENERIC_MAPPING GenericMapping,
 	IN BOOLEAN ObjectCreation,
-	OUT PULONG GrantedAccess,
-	OUT PBOOLEAN AccessStatus,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PNTSTATUS AccessStatus,
 	OUT PBOOLEAN GenerateOnClose
 	);
 
@@ -4530,16 +4534,18 @@ NtLockVirtualMemory(
 NTSTATUS
 STDCALL
 NtOpenObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN HANDLE ClientToken,	
-	IN ULONG DesiredAccess,	
-	IN ULONG GrantedAccess,	
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAccess,
+	IN ULONG GrantedAccess,
 	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN ObjectCreation,	
-	IN BOOLEAN AccessGranted,	
-	OUT PBOOLEAN GenerateOnClose 	
+	IN BOOLEAN ObjectCreation,
+	IN BOOLEAN AccessGranted,
+	OUT PBOOLEAN GenerateOnClose
 	);
 
 /*
@@ -4890,7 +4896,9 @@ ZwDuplicateObject(
  * ARGUMENTS: 
  *	  SubsystemName = Specifies the name of the subsystem, can be "WIN32" or "DEBUG"
  *	  ObjectHandle =
- *	  ObjectAttributes =
+ *	  ObjectTypeName =
+ *	  ObjectName =
+ *	  SecurityDescriptor =
  *	  DesiredAcces = 
  *	  GenericMapping =
  *	  ObjectCreation = 
@@ -4906,12 +4914,14 @@ STDCALL
 ZwAccessCheckAndAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
 	IN PHANDLE ObjectHandle,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN ACCESS_MASK DesiredAccess,
 	IN PGENERIC_MAPPING GenericMapping,
 	IN BOOLEAN ObjectCreation,
-	OUT PULONG GrantedAccess,
-	OUT PBOOLEAN AccessStatus,
+	OUT PACCESS_MASK GrantedAccess,
+	OUT PNTSTATUS AccessStatus,
 	OUT PBOOLEAN GenerateOnClose
 	);
 
@@ -5141,16 +5151,18 @@ ZwLockVirtualMemory(
 NTSTATUS
 STDCALL
 ZwOpenObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN HANDLE ClientToken,	
-	IN ULONG DesiredAccess,	
-	IN ULONG GrantedAccess,	
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,
+	IN PUNICODE_STRING ObjectTypeName,
+	IN PUNICODE_STRING ObjectName,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAccess,
+	IN ULONG GrantedAccess,
 	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN ObjectCreation,	
-	IN BOOLEAN AccessGranted,	
-	OUT PBOOLEAN GenerateOnClose 	
+	IN BOOLEAN ObjectCreation,
+	IN BOOLEAN AccessGranted,
+	OUT PBOOLEAN GenerateOnClose
 	);
 
 /*

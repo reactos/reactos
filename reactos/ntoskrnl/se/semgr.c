@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.25 2003/07/11 01:23:16 royce Exp $
+/* $Id: semgr.c,v 1.26 2003/07/20 22:10:23 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -186,59 +186,6 @@ VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL
-NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			      IN PUNICODE_STRING ServiceName,
-			      IN HANDLE ClientToken,
-			      IN PPRIVILEGE_SET Privileges,
-			      IN BOOLEAN AccessGranted)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			    IN PVOID HandleId,
-			    IN HANDLE ClientToken,
-			    IN ULONG DesiredAccess,
-			    IN PPRIVILEGE_SET Privileges,
-			    IN BOOLEAN AccessGranted)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-		       IN PVOID HandleId,
-		       IN POBJECT_ATTRIBUTES ObjectAttributes,
-		       IN HANDLE ClientToken,
-		       IN ULONG DesiredAccess,
-		       IN ULONG GrantedAccess,
-		       IN PPRIVILEGE_SET Privileges,
-		       IN BOOLEAN ObjectCreation,
-		       IN BOOLEAN AccessGranted,
-		       OUT PBOOLEAN GenerateOnClose)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			   IN PHANDLE ObjectHandle,
-			   IN POBJECT_ATTRIBUTES ObjectAttributes,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN PGENERIC_MAPPING GenericMapping,
-			   IN BOOLEAN ObjectCreation,
-			   OUT PULONG GrantedAccess,
-			   OUT PBOOLEAN AccessStatus,
-			   OUT PBOOLEAN GenerateOnClose
-	)
-{
-  UNIMPLEMENTED;
-}
 
 
 /*
@@ -248,15 +195,6 @@ NTSTATUS STDCALL
 NtAllocateUuids(PULARGE_INTEGER Time,
 		PULONG Range,
 		PULONG Sequence)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			IN PVOID HandleId,
-			IN BOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
 }
@@ -274,16 +212,6 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 {
   UNIMPLEMENTED;
 }
-
-
-NTSTATUS STDCALL
-NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			 IN PVOID HandleId,
-			 IN BOOLEAN GenerateOnClose)
-{
-  UNIMPLEMENTED;
-}
-
 
 
 /*

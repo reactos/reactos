@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.101 2003/07/15 16:26:18 silverblade Exp $
+# $Id: Makefile,v 1.102 2003/07/20 22:10:38 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -269,6 +269,7 @@ OBJECTS_FS = \
 OBJECTS_SE = \
 	se/access.o \
 	se/acl.o \
+	se/audit.o \
 	se/lsa.o \
 	se/luid.o \
 	se/priv.o \
