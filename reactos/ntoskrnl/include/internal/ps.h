@@ -351,7 +351,7 @@ typedef struct _KPROCESS
 
 struct _WIN32PROCESSDATA;
 
-typedef struct _EPROCESS
+struct _EPROCESS
 {
   /* Microkernel specific process state. */
   KPROCESS              Pcb;                          /* 000 */
@@ -463,7 +463,7 @@ typedef struct _EPROCESS
     * Added by Philip Susi for list of threads in process
     */
    LIST_ENTRY           ThreadListHead;        
-} EPROCESS, *PEPROCESS;
+};
 
 #define PROCESS_STATE_TERMINATED (1)
 #define PROCESS_STATE_ACTIVE     (2)
