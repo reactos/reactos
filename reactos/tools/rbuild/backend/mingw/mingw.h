@@ -23,6 +23,7 @@ private:
 	                                         const std::vector<Define*>& defines,
 	                                         const std::vector<If*>& ifs );
 	std::string GenerateProjectLFLAGS ();
+        void GenerateDirectoryTargets ();
 	void GenerateGlobalVariables ();
 	void GenerateAllTarget ();
 	FILE* fMakefile;

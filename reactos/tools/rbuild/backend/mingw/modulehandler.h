@@ -16,9 +16,12 @@ public:
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
 	                                           ModuleType moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
+        void GenerateDirectoryTargets () const;
 
 protected:
+        const std::string &PassThruCacheDirectory ( const std::string &f ) const;
 	std::string GetWorkingDirectory () const;
+        std::string GetDirectory (const std::string& filename ) const;
 	std::string GetExtension ( const std::string& filename ) const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string ReplaceExtension ( const std::string& filename,
@@ -51,6 +54,7 @@ protected:
 	std::string GetDefinitionDependencies ( const Module& module ) const;
 	std::string GetLinkingDependencies ( const Module& module ) const;
 	static FILE* fMakefile;
+        static std::set<std::string> directory_set;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;

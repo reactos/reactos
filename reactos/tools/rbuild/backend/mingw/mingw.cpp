@@ -2,6 +2,7 @@
 #include "../../pch.h"
 
 #include "mingw.h"
+#include <assert.h>
 
 using std::string;
 using std::vector;
@@ -166,8 +167,10 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
+        fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "windres = windres\n" );
+        fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
@@ -188,7 +191,7 @@ MingwBackend::GenerateGlobalVariables ()
 void
 MingwBackend::GenerateAllTarget ()
 {
-	fprintf ( fMakefile, "all:" );
+        fprintf ( fMakefile, "all:" );
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -206,6 +209,7 @@ MingwBackend::ProcessModule ( Module& module )
 		module.node.location,
 		module.type );
 	h->Process ( module );
+        h->GenerateDirectoryTargets ();
 }
 
 string
