@@ -6,7 +6,8 @@ TOOLS = \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
   rmkdir$(EXE_POSTFIX) \
-  rrmdir$(EXE_POSTFIX)
+  rrmdir$(EXE_POSTFIX) \
+  wmc$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
@@ -50,15 +51,20 @@ rrmdir$(EXE_POSTFIX): rrmdir.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
 endif
 
+wmc$(EXE_POSTFIX):
+	make -C wmc wmc$(EXE_POSTFIX)
+
 ifeq ($(HOST),mingw32-linux)
 clean:
 	rm $(TOOLS)
 	rm mkconfig$(EXE_POSTFIX)
+	make -C wmc clean
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
 	del $(TOOLS)
 	del mkconfig$(EXE_POSTFIX)
+	make -C wmc clean
 endif
 
 .PHONY: all clean

@@ -74,6 +74,8 @@ CP = $(TOOLS_PATH)/rcopy
 RM = $(TOOLS_PATH)/rdel
 RMDIR = $(TOOLS_PATH)/rrmdir
 RMKDIR = $(TOOLS_PATH)/rmkdir
+MC = $(TOOLS_PATH)/wmc/wmc
+
 
 # Maybe we can delete these soon
 CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -m386
