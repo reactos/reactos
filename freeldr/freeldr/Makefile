@@ -112,7 +112,8 @@ else
 #############################################
 # COMPILER COMMAND LINE OPTIONS
 #
-COMPILER_OPTIONS = -Wall -nostdlib -fno-builtin -O1 -MD
+COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O1 -MD
+# FreeLoader does not use any of the standard libraries, includes, or built-in functions
 
 #############################################
 # COMPILER DEFINES
@@ -180,9 +181,10 @@ ARCH_OBJS	=	fathelp.o	\
 				linux.o		\
 				mb.o		\
 				mem.o		\
-				diskint13.o	\
+				biosdisk.o	\
 				rtlcode.o	\
-				biosvid.o
+				biosvid.o	\
+				drvmap.o
 
 RTL_OBJS	=	memory.o	\
 				print.o		\
@@ -234,6 +236,7 @@ FREELDR_OBJS=	freeldr.o	\
 				debug.o		\
 				oslist.o	\
 				bootmgr.o	\
+				drivemap.o	\
 				version.o
 
 #############################################

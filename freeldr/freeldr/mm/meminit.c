@@ -112,7 +112,7 @@ BOOL MmInitializeMemoryManager(VOID)
 	if (PageLookupTableAddress == 0)
 	{
 		// If we get here then we probably couldn't
-		// find a contigous chunk of memory big
+		// find a contiguous chunk of memory big
 		// enough to hold the page lookup table
 		printf("Error initializing memory manager!\n");
 		return FALSE;

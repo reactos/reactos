@@ -1,7 +1,10 @@
+Changes in v1.6 (7/21/2002) (brianp)
+
+- Added BIOS drive mapping functionality
+
 Changes in v1.5 (7/13/2002)
 
 - If symbols are available then pass them to the OS as multiboot modules
-- Added separate configuration for a SETUPLDR version
 
 Changes in v1.4 (6/27/2002)
 

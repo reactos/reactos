@@ -32,90 +32,110 @@ void print(char *str)
 
 /*
  * printf() - prints formatted text to stdout
- * from:
- *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 1996   Erich Boleyn  <erich@uruk.org>
+ * originally from GRUB
  */
 void printf(char *format, ... )
 {
-  int *dataptr = (int *) &format;
-  char c, *ptr, str[16];
+	int *dataptr = (int *) &format;
+	char c, *ptr, str[16];
 
-  dataptr++;
+	dataptr++;
 
-  while ((c = *(format++)))
-    {
-      if (c != '%')
-	putchar(c);
-      else
-	switch (c = *(format++))
-	  {
-	  case 'd': case 'u': case 'x':
-	    *convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+	while ((c = *(format++)))
+	{
+		if (c != '%')
+		{
+			putchar(c);
+		}
+		else
+		{
+			c = *(format++);
+			if (c == 'l')
+			{
+				c = *(format++);
+			}
 
-	    ptr = str;
+			switch (c)
+			{
+			case 'd': case 'u': case 'x':
+				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
 
-	    while (*ptr)
-	      putchar(*(ptr++));
-	    break;
+				ptr = str;
 
-	  case 'c': putchar((*(dataptr++))&0xff); break;
+				while (*ptr)
+				{
+					putchar(*(ptr++));
+				}
+				break;
 
-	  case 's':
-	    ptr = (char *)(*(dataptr++));
+			case 'c': putchar((*(dataptr++))&0xff); break;
 
-	    while ((c = *(ptr++)))
-	      putchar(c);
-	    break;
-	  }
-    }
+			case 's':
+				ptr = (char *)(*(dataptr++));
+
+				while ((c = *(ptr++)))
+				{
+					putchar(c);
+				}
+				break;
+			}
+		}
+	}
 }
 
 void sprintf(char *buffer, char *format, ... )
 {
-  int *dataptr = (int *) &format;
-  char c, *ptr, str[16];
-  char *p = buffer;
+	int *dataptr = (int *) &format;
+	char c, *ptr, str[16];
+	char *p = buffer;
 
-  dataptr++;
+	dataptr++;
 
-  while ((c = *(format++)))
-    {
-      if (c != '%')
-      {
-	*p = c;
-	p++;
-      }
-      else
-	switch (c = *(format++))
-	  {
-	  case 'd': case 'u': case 'x':
-	    *convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+	while ((c = *(format++)))
+	{
+		if (c != '%')
+		{
+			*p = c;
+			p++;
+		}
+		else
+		{
+			c = *(format++);
+			if (c == 'l')
+			{
+				c = *(format++);
+			}
 
-	    ptr = str;
+			switch (c)
+			{
+			case 'd': case 'u': case 'x':
+				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
 
-	    while (*ptr)
-	    {
-	      *p = *(ptr++);
-	      p++;
-	    }
-	    break;
+				ptr = str;
 
-	  case 'c':
-	    *p = (*(dataptr++))&0xff;
-	    p++;
-	    break;
+				while (*ptr)
+				{
+				*p = *(ptr++);
+				p++;
+				}
+				break;
 
-	  case 's':
-	    ptr = (char *)(*(dataptr++));
+			case 'c':
+				*p = (*(dataptr++))&0xff;
+				p++;
+				break;
 
-	    while ((c = *(ptr++)))
-	    {
-	      *p = c;
-	      p++;
-	    }
-	    break;
-	  }
-    }
-  *p=0;
+			case 's':
+				ptr = (char *)(*(dataptr++));
+
+				while ((c = *(ptr++)))
+				{
+				*p = c;
+				p++;
+				}
+				break;
+			}
+		}
+	}
+	*p=0;
 }

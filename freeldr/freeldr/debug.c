@@ -27,28 +27,20 @@
 //#define DEBUG_ULTRA
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
-//#define DEBUG_CUSTOM
-#define DEBUG_NONE
+#define DEBUG_CUSTOM
+//#define DEBUG_NONE
 
-#ifdef DEBUG_ULTRA
+#if defined (DEBUG_ULTRA)
 ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
-                       DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
-	                     DPRINT_LINUX;
-#endif
-
-#ifdef DEBUG_INIFILE
+						DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
+						DPRINT_LINUX;
+#elif defined (DEBUG_INIFILE)
 ULONG	DebugPrintMask = DPRINT_INIFILE;
-#endif
-
-#ifdef DEBUG_REACTOS
+#elif defined (DEBUG_REACTOS)
 ULONG	DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
-#endif
-
-#ifdef DEBUG_CUSTOM
-ULONG	DebugPrintMask = 0;
-#endif
-
-#ifdef DEBUG_NONE
+#elif defined (DEBUG_CUSTOM)
+ULONG	DebugPrintMask = DPRINT_WARNING;
+#else //#elif defined (DEBUG_NONE)
 ULONG	DebugPrintMask = 0;
 #endif
 
@@ -253,7 +245,13 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 		}
 		else
 		{
-			switch (c = *(format++))
+			c = *(format++);
+			if (c == 'l')
+			{
+				c = *(format++);
+			}
+
+			switch (c)
 			{
 			case 'd': case 'u': case 'x':
 				

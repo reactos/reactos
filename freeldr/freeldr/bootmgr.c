@@ -31,6 +31,7 @@
 #include <oslist.h>
 #include <video.h>
 #include <bootmgr.h>
+#include <drivemap.h>
 
 VOID RunBootManager(VOID)
 {
@@ -114,6 +115,9 @@ VOID RunBootManager(VOID)
 			UiMessageBox(SettingName);
 			continue;
 		}
+
+		// Install the drive mapper according to this sections drive mappings
+		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
 
 		if (stricmp(SettingValue, "ReactOS") == 0)
 		{

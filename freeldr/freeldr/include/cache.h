@@ -22,6 +22,7 @@
 #define __CACHE_H
 
 BOOL	CacheInitializeDrive(ULONG DriveNumber);
+VOID	CacheInvalidateCacheData(VOID);
 BOOL	CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer);
 BOOL	CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount);
 BOOL	CacheReleaseMemory(ULONG MinimumAmountToRelease);

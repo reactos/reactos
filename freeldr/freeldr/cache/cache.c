@@ -32,6 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 CACHE_DRIVE		CacheManagerDrive;
 BOOL			CacheManagerInitialized = FALSE;
+BOOL			CacheManagerDataInvalid = FALSE;
 ULONG			CacheBlockCount = 0;
 ULONG			CacheSizeLimit = 0;
 ULONG			CacheSizeCurrent = 0;
@@ -45,10 +46,13 @@ BOOL CacheInitializeDrive(ULONG DriveNumber)
 	// drive, in which case we'll invalidate the cache
 	if ((CacheManagerInitialized == TRUE) &&
 		(DriveNumber == CacheManagerDrive.DriveNumber) &&
-		(DriveNumber >= 0x80))
+		(DriveNumber >= 0x80) &&
+		(CacheManagerDataInvalid != TRUE))
 	{
 		return TRUE;
 	}
+
+	CacheManagerDataInvalid = FALSE;
 
 	//
 	// If we have already been initialized then free
@@ -118,6 +122,11 @@ BOOL CacheInitializeDrive(ULONG DriveNumber)
 	DbgPrint((DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit));
 
 	return TRUE;
+}
+
+VOID CacheInvalidateCacheData(VOID)
+{
+	CacheManagerDataInvalid = TRUE;
 }
 
 BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer)
