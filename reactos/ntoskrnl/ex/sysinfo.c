@@ -820,7 +820,6 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
-
         PSYSTEM_HANDLE_INFORMATION Shi = 
         	(PSYSTEM_HANDLE_INFORMATION) Buffer;
 
@@ -845,34 +844,30 @@ QSI_DEF(SystemHandleInformation)
         do
 	  {
             hCount = hCount + ObpGetHandleCountByHandleTable(&pr->HandleTable);
-
-            curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
-                        (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
-                           (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) ));
-
-            Shi->NumberOfHandles = hCount;
-
-           if (curSize > Size)
-             {
-               DPRINT1("SystemHandleInformation 2\n");
-               *ReqSize = curSize;
-               if (pr != NULL)
-	         {
-	            ObDereferenceObject(pr);
-	         }
-               return (STATUS_INFO_LENGTH_MISMATCH);
-             }
-
-	    pr = PsGetNextProcess(pr);
+            pr = PsGetNextProcess(pr);
 
 	    if ((pr == syspr) || (pr == NULL))
 		break;
         } while ((pr != syspr) && (pr != NULL));
 
+	DPRINT("SystemHandleInformation 2\n");
+
 	if (pr != NULL)
 	  {
 	    ObDereferenceObject(pr);
 	  }
+
+        curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
+                  (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
+                     (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) ));
+
+        Shi->NumberOfHandles = hCount;
+
+        if (curSize > Size)
+          {
+            *ReqSize = curSize;
+             return (STATUS_INFO_LENGTH_MISMATCH);
+          }
 
 	DPRINT("SystemHandleInformation 3\n");
 
