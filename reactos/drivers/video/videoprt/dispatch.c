@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.5 2004/03/15 17:02:14 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.6 2004/03/15 20:21:50 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -64,7 +64,7 @@ VideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
    ASSERT(DriverExtension->InitializationData.HwResetHw != NULL);
 
    if (!DriverExtension->InitializationData.HwResetHw(
-          ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+          &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
           Columns, Rows))
    {
       return FALSE;
@@ -546,7 +546,15 @@ VideoPortDispatchPnp(
    switch (IrpSp->MinorFunction)
    {
       case IRP_MN_START_DEVICE:
+
+      case IRP_MN_REMOVE_DEVICE:
+      case IRP_MN_QUERY_REMOVE_DEVICE:
+      case IRP_MN_CANCEL_REMOVE_DEVICE:
+      case IRP_MN_SURPRISE_REMOVAL:
+
       case IRP_MN_STOP_DEVICE:
+      case IRP_MN_QUERY_STOP_DEVICE:
+      case IRP_MN_CANCEL_STOP_DEVICE:
          return STATUS_SUCCESS;
    }
    
