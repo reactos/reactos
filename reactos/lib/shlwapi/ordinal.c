@@ -1549,16 +1549,17 @@ DWORD WINAPI IUnknown_SetSite(
         LPVOID *p2)       /* [out]  ptr for call results */
 {
     DWORD ret, aa;
+    IUnknown *iobjectwithsite;
 
     if (!p1) return E_FAIL;
 
     /* see if SetSite interface exists for IObjectWithSite object */
-    ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id1, (LPVOID *)&p1);
-    TRACE("first IU_QI ret=%08lx, p1=%p\n", ret, p1);
+    ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id1, (LPVOID *)&iobjectwithsite);
+    TRACE("first IU_QI ret=%08lx, iobjectwithsite=%p\n", ret, iobjectwithsite);
     if (ret) {
 
 	/* see if GetClassId interface exists for IPersistMoniker object */
-	ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id2, (LPVOID *)&aa);
+	ret = IUnknown_QueryInterface(p1, (REFIID)id2, (LPVOID *)&aa);
 	TRACE("second IU_QI ret=%08lx, aa=%08lx\n", ret, aa);
 	if (ret) return ret;
 
@@ -1570,10 +1571,10 @@ DWORD WINAPI IUnknown_SetSite(
     }
     else {
 	/* fake a SetSite call */
-	ret = IOleWindow_GetWindow((IOleWindow *)p1, (HWND*)p2);
+	ret = IOleWindow_GetWindow((IOleWindow *)iobjectwithsite, (HWND*)p2);
 	TRACE("first IU_QI doing 0x0c ret=%08lx, *p2=%08lx\n", ret,
 	      *(LPDWORD)p2);
-	IUnknown_Release((IUnknown *)p1);
+	IUnknown_Release((IUnknown *)iobjectwithsite);
     }
     return ret;
 }
@@ -3978,7 +3979,7 @@ VOID WINAPI FixSlashesAndColonW(LPWSTR lpwstr)
 /*************************************************************************
  *      @	[SHLWAPI.461]
  */
-DWORD WINAPI SHGetAppCompatFlags()
+DWORD WINAPI SHGetAppCompatFlags(DWORD Unknown)
 {
   FIXME("stub\n");
   return 0;
