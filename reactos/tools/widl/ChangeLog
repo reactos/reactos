@@ -1,6 +1,13 @@
 ChangeLog
 
-2005-03-12 ekohl
+2005-03-13 ekohl
+
+   tools/widl/client.c
+
+Fix gcc warnings in generated client stub.
+
+
+2005-03-13 ekohl
 
    tools/widl/client.c
    tools/widl/server.c

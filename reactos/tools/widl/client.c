@@ -273,6 +273,8 @@ static void print_message_buffer_size(func_t *func)
             {
                 size = 12;
                 alignment = 0;
+                if (last_size != -1)
+                    fprintf(client, " +");
                 fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
                 nothing_printed = 0;
             }
@@ -880,8 +882,11 @@ static void write_function_stubs(type_t *iface)
 
 static void write_bindinghandledecl(type_t *iface)
 {
-    print_client("static RPC_BINDING_HANDLE %s__MIDL_AutoBindHandle;\n", iface->name);
-    fprintf(client, "\n");
+    if (!get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE))
+    {
+        print_client("static RPC_BINDING_HANDLE %s__MIDL_AutoBindHandle;\n", iface->name);
+        fprintf(client, "\n");
+    }
 }
 
 
@@ -903,9 +908,9 @@ static void write_stubdescriptor(type_t *iface)
     print_client("MIDL_user_allocate,\n");
     print_client("MIDL_user_free,\n");
     if (implicit_handle)
-        print_client("&%s,\n", implicit_handle);
+        print_client("{&%s},\n", implicit_handle);
     else
-        print_client("&%s__MIDL_AutoBindHandle,\n", iface->name);
+        print_client("{&%s__MIDL_AutoBindHandle},\n", iface->name);
     print_client("0,\n");
     print_client("0,\n");
     print_client("0,\n");
