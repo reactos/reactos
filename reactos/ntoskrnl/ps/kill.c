@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.71 2004/04/28 23:46:26 tamlin Exp $
+/* $Id: kill.c,v 1.72 2004/05/25 22:03:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -137,6 +137,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    DPRINT("terminating %x\n",CurrentThread);
 
    CurrentThread->ExitStatus = ExitStatus;
+   KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->u1.ExitTime);
    KeCancelTimer(&CurrentThread->Tcb.Timer);
  
    /* Remove the thread from the thread list of its process */
