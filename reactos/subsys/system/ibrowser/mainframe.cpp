@@ -44,10 +44,8 @@ HWND MainFrameBase::Create(LPCTSTR url, UINT cmdshow)
 	//@@hMainFrame = MainFrame::Create(url);
 
 	if (hMainFrame) {
-		String sPath;
-
 		if (url) {
-			sPath = url;	// copy url to avoid accessing freed memory
+			static String sPath = url;	// copy url to avoid accessing freed memory
 			url = sPath;
 		}
 
