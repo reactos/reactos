@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.55 2003/01/02 23:37:28 chorns Exp $
+/* $Id: timer.c,v 1.56 2003/01/11 15:32:40 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -61,7 +61,7 @@ static KSPIN_LOCK TimerListLock;
 static KSPIN_LOCK TimerValueLock;
 static KDPC ExpireTimerDpc;
 
-/* must raise IRQL to HIGH_LEVEL and grab spin lock there, to sync with ISR */
+/* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
 
 extern ULONG PiNrRunnableThreads;
 

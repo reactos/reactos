@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.40 2002/09/08 10:23:26 chorns Exp $
+/* $Id: rw.c,v 1.41 2003/01/11 15:32:40 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -189,7 +189,7 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
   IO_STATUS_BLOCK Iosb;
   PIO_STATUS_BLOCK IoStatusBlock;
   
-  DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
+  DPRINT("NtWriteFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
 	 IoStatusBlock);
   
