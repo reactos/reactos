@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.20 2004/04/07 10:19:34 weiden Exp $ */
+/* $Id: dib1bpp.c,v 1.21 2004/04/07 15:37:50 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -357,7 +357,7 @@ DIB_1BPP_BitBlt(
    ULONG Dest, Source, Pattern = 0;
    PULONG DestBits;
    BOOL UsesSource;
-   BOOL UsesPattern, CalcPattern;
+   BOOL UsesPattern;
    ULONG RoundedRight;
    BYTE NoBits;
    /* Pattern brushes */
@@ -379,14 +379,10 @@ DIB_1BPP_BitBlt(
    }
 
    UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
-   UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
+   UsesPattern = (((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000)) && Brush;  
 
-   if ((CalcPattern = UsesPattern))
+   if (UsesPattern)
    {
-      if (Brush == NULL)
-      {
-         UsesPattern = CalcPattern = FALSE;
-      } else
       if (Brush->iSolidColor == 0xFFFFFFFF)
       {
          PBITMAPOBJ PatternBitmap;
@@ -404,11 +400,11 @@ DIB_1BPP_BitBlt(
          PatternWidth = PatternObj->sizlBitmap.cx;
          PatternHeight = PatternObj->sizlBitmap.cy;
          
-         CalcPattern = TRUE;
+         UsesPattern = TRUE;
       }
       else
       {
-         CalcPattern = FALSE;
+         UsesPattern = FALSE;
          Pattern = Brush->iSolidColor;
       }
    }
@@ -426,7 +422,7 @@ DIB_1BPP_BitBlt(
          (DestRect->left >> 3) +
          Y * DestSurf->lDelta);
 
-      if(CalcPattern)
+      if(UsesPattern)
         PatternY = Y % PatternHeight;
 
       X = DestRect->left;
@@ -444,7 +440,7 @@ DIB_1BPP_BitBlt(
                Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k, SourceY, ColorTranslation) << (31 - k));
          }
 
-         if (UsesPattern && (Brush->iSolidColor == 0xFFFFFFFF))
+         if (UsesPattern)
          {
             Pattern = 0;
             for (k = 31 - NoBits; k < NoBits; k++)
@@ -479,16 +475,13 @@ DIB_1BPP_BitBlt(
 
          if (UsesPattern)
          {
-            if (Brush->iSolidColor == 0xFFFFFFFF)
+            Pattern = 0;
+            for (k = 0; k < 8; k++)
             {
-               Pattern = 0;
-               for (k = 0; k < 8; k++)
-               {
-                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
-                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, Y % PatternHeight) << (8 + (7 - k)));
-                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, Y % PatternHeight) << (16 + (7 - k)));
-                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, Y % PatternHeight) << (24 + (7 - k)));
-               }
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, Y % PatternHeight) << (8 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, Y % PatternHeight) << (16 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, Y % PatternHeight) << (24 + (7 - k)));
             }
          }
 
@@ -508,7 +501,7 @@ DIB_1BPP_BitBlt(
                Source = DIB_GetSource(SourceSurf, SourceGDI, SourceX, SourceY, ColorTranslation);
             }
 
-            if (UsesPattern && (Brush->iSolidColor == 0xFFFFFFFF))
+            if (UsesPattern)
             {
                Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, Y % PatternHeight);
             }
