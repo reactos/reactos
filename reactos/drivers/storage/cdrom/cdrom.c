@@ -134,6 +134,10 @@ VOID STDCALL
 CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
 		  IN PVOID Context);
 
+VOID
+CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
+	      IN PVOID Context);
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1203,7 +1207,10 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 	  Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
 
 	  /* FIXME: Update drive capacity */
-
+	  IoCompleteRequest (Irp,
+			     IO_DISK_INCREMENT);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
 	  return;
 	}
     }
@@ -1614,11 +1621,68 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
 
 
 VOID STDCALL
-CdromTimerRoutine(PDEVICE_OBJECT DeviceObject,
-		  PVOID Context)
+CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
+		  IN PVOID Context)
 {
-  DPRINT ("CdromTimerRoutine() called\n");
+  PIO_WORKITEM WorkItem;
 
+  DPRINT ("CdromTimerRoutine() called\n");
+  WorkItem = IoAllocateWorkItem(DeviceObject);
+  if (!WorkItem)
+    {
+      return;
+    }
+
+  IoQueueWorkItem(WorkItem,
+		  CdromWorkItem,
+		  DelayedWorkQueue,
+		  WorkItem);
+}
+
+
+VOID
+CdromWorkItem(IN PDEVICE_OBJECT DeviceObject,
+	      IN PVOID Context)
+{
+  PIRP Irp;
+  KEVENT Event;
+  IO_STATUS_BLOCK IoStatus;
+  NTSTATUS Status;
+
+  DPRINT("CdromWorkItem() called\n");
+
+  IoFreeWorkItem((PIO_WORKITEM) Context);
+
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
+
+  Irp = IoBuildDeviceIoControlRequest(IOCTL_CDROM_CHECK_VERIFY,
+				      DeviceObject,
+				      NULL,
+				      0,
+				      NULL,
+				      0,
+				      FALSE,
+				      &Event,
+				      &IoStatus);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildDeviceIoControlRequest failed\n");
+      return;
+    }
+
+  Status = IoCallDriver(DeviceObject, Irp);
+  DPRINT("Status: %x\n", Status);
+
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Suspended,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+    }
 }
 
 /* EOF */

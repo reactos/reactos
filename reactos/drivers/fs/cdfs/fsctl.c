@@ -345,6 +345,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     goto ByeBye;
 
   NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
+  NewDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
   DeviceExt = (PVOID)NewDeviceObject->DeviceExtension;
   RtlZeroMemory(DeviceExt,
 		sizeof(DEVICE_EXTENSION));

@@ -140,28 +140,9 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 				0,
 				NULL,
 				0,
-				TRUE);
+				FALSE);
   DPRINT ("Status %lx\n", Status);
-  if (Status == STATUS_VERIFY_REQUIRED)
-    {
-      PDEVICE_OBJECT DeviceToVerify;
-
-      DPRINT1 ("Media change detected!\n");
-      DPRINT1 ("Device %p\n", DeviceExt->VolumeDevice);
-
-      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
-      IoSetDeviceToVerify (PsGetCurrentThread (),
-			   NULL);
-
-      Status = IoVerifyVolume (DeviceToVerify,
-			       FALSE);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("Status %lx\n", Status);
-	  return Status;
-	}
-    }
-  else if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("Status %lx\n", Status);
       return Status;
