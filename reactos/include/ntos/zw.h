@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.29 2004/08/20 21:23:49 navaraf Exp $
+/* $Id: zw.h,v 1.30 2004/08/21 13:20:25 tamlin Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,8 +56,13 @@ typedef struct _EVENT_BASIC_INFORMATION
 // wmi trace event data
 typedef struct _EVENT_TRACE_HEADER {
   USHORT           Size;
-  UCHAR            HeaderType;
-  UCHAR            MarkerFlags;
+  union {
+    USHORT FieldTypeFlags;
+    struct {
+      UCHAR            HeaderType;
+      UCHAR            MarkerFlags;
+    };
+  };
   union {
     ULONG         Version;
     struct {
@@ -66,11 +71,12 @@ typedef struct _EVENT_TRACE_HEADER {
       USHORT    Version;
     } Class;
   };
-  LARGE_INTEGER        ThreadId;
+  ULONG ThreadId;
+  ULONG ProcessId;
   LARGE_INTEGER    TimeStamp;
-    union {
-    GUID          Guid;
-    LARGE_INTEGER    GuidPtr;
+  union {
+    GUID      Guid;
+    ULONGLONG GuidPtr;
   };
  union {
     struct {
@@ -83,7 +89,6 @@ typedef struct _EVENT_TRACE_HEADER {
     };
     ULONG64 ProcessorTime;
   };
-  LARGE_INTEGER          ProcessorTime;
 } EVENT_TRACE_HEADER, *PEVENT_TRACE_HEADER;
 
 
