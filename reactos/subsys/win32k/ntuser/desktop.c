@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.4 2003/12/12 20:44:52 weiden Exp $
+ *  $Id: desktop.c,v 1.5 2003/12/13 18:40:34 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -46,6 +46,7 @@
 #include <include/mouse.h>
 #include <include/callback.h>
 #include <include/guicheck.h>
+#include <include/intgdi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -642,30 +643,20 @@ NtUserCloseDesktop(HDESK hDesktop)
 BOOL STDCALL
 NtUserPaintDesktop(HDC hDC)
 {
-   HWND hwnd = IntGetDesktopWindow();
+  RECT Rect;
+  HBRUSH PreviousBrush;
 
-   /*
-    * Check for an owning thread, otherwise don't paint anything
-    * (non-desktop mode)
-    */
+  IntGdiGetClipBox(hDC, &Rect);
 
-   if (NtUserGetWindowThreadProcessId(hwnd, NULL))
-   {
-      RECT Rect;
-      HBRUSH PreviousBrush;
+  /*
+   * Paint desktop background
+   */
 
-      NtUserGetClientRect(hwnd, &Rect);
+  PreviousBrush = NtGdiSelectObject(hDC, NtGdiGetSysColorBrush(COLOR_BACKGROUND));
+  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+  NtGdiSelectObject(hDC, PreviousBrush);
 
-      /*
-       * Paint desktop background
-       */
-
-      PreviousBrush = NtGdiSelectObject(hDC, NtGdiGetSysColorBrush(COLOR_BACKGROUND));
-      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-      NtGdiSelectObject(hDC, PreviousBrush);
-   }
-
-   return TRUE;
+  return TRUE;
 }
 
 /*
