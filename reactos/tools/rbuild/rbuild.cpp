@@ -234,7 +234,15 @@ bool
 XMLFile::get_token(string& token)
 {
 	const char* tokend;
-	if ( *_p == '<' )
+	if ( !strncmp ( _p, "<!--", 4 ) )
+	{
+		tokend = strstr ( _p, "-->" );
+		if ( !tokend )
+			tokend = _end;
+		else
+			tokend += 3;
+	}
+	else if ( *_p == '<' )
 	{
 		tokend = strchr ( _p, '>' );
 		if ( !tokend )
@@ -301,8 +309,17 @@ XMLElement::Parse(const string& token,
 {
 	const char* p = token.c_str();
 	assert ( *p == '<' );
-	p++;
+	++p;
 	p += strspn ( p, WS );
+
+	// check if this is a comment
+	if ( !strncmp ( p, "!--", 3 ) )
+	{
+		name = "!--";
+		end_tag = false;
+		return false; // never look for end tag to a comment
+	}
+
 	end_tag = ( *p == '/' );
 	if ( end_tag )
 	{
@@ -415,9 +432,16 @@ XMLParse(XMLFile& f,
 	string token;
 	if ( !f.get_token(token) )
 		return NULL;
-	XMLElement* e = new XMLElement;
 	bool end_tag;
 
+	while ( token[0] != '<' )
+	{
+		printf ( "syntax error: expecting xml tag, not '%s'\n", token.c_str() );
+		if ( !f.get_token(token) )
+			return NULL;
+	}
+
+	XMLElement* e = new XMLElement;
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
 	if ( e->name == "xi:include" )
@@ -458,6 +482,7 @@ XMLParse(XMLFile& f,
 		}
 		return e;
 	}
+	bool bThisMixingErrorReported = false;
 	while ( f.more_tokens() )
 	{
 		if ( f.next_is_text() )
@@ -467,8 +492,11 @@ XMLParse(XMLFile& f,
 				printf ( "internal tool error - get_token() failed when more_tokens() returned true\n" );
 				break;
 			}
-			if ( e->subElements.size() )
+			if ( e->subElements.size() && !bThisMixingErrorReported )
+			{
 				printf ( "syntax error: mixing of inner text with sub elements\n" );
+				bThisMixingErrorReported = true;
+			}
 			if ( e->value.size() )
 			{
 				printf ( "syntax error: multiple instances of inner text\n" );
@@ -486,6 +514,11 @@ XMLParse(XMLFile& f,
 					printf ( "end tag name mismatch\n" );
 				delete e2;
 				break;
+			}
+			if ( e->value.size() && !bThisMixingErrorReported )
+			{
+				printf ( "syntax error: mixing of inner text with sub elements\n" );
+				bThisMixingErrorReported = true;
 			}
 			e->AddSubElement ( e2 );
 		}
@@ -557,6 +590,9 @@ main ( int argc, char** argv )
 		XMLElement* head = XMLParse ( f, path );
 		if ( !head )
 			break; // end of file
+
+		if ( head->name == "!--" )
+			continue; // ignore comments
 
 		if ( head->name != "project" )
 		{
