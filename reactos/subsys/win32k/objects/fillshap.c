@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.42 2004/03/03 04:09:20 royce Exp $ */
+/* $Id: fillshap.c,v 1.43 2004/03/03 06:33:58 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -1079,13 +1079,14 @@ IntRoundRect(
 	int  top,
 	int  right,
 	int  bottom,
-	int  xradius,
-	int  yradius)
+	int  xCurveDiameter,
+	int  yCurveDiameter)
 {
   SURFOBJ   *SurfObj;
   BRUSHOBJ   PenBrush, *PenBrushObj, *FillBrushObj;
   RECTL      RectBounds;
   int i, col, row, width, height, x1, x1start, x2, x2start, y1, y2;
+  int xradius, yradius;
   //float aspect_square;
   long a_square, b_square,
     two_a_square, two_b_square,
@@ -1097,8 +1098,12 @@ IntRoundRect(
   ASSERT ( dc ); // caller's responsibility to set this up
 
   if ( PATH_IsPathOpen(dc->w.path) )
-    return PATH_RoundRect ( dc, left, top, right, bottom, xradius, yradius );
+    return PATH_RoundRect ( dc, left, top, right, bottom,
+                            xCurveDiameter, yCurveDiameter );
 
+  xradius = xCurveDiameter >> 1;
+  yradius = yCurveDiameter >> 1;
+  
   left += dc->w.DCOrgX;
   right += dc->w.DCOrgX;
   top += dc->w.DCOrgY;
