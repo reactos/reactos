@@ -1,35 +1,10 @@
-Index: filetitle.c
-===================================================================
-RCS file: /home/wine/wine/dlls/commdlg/filetitle.c,v
-retrieving revision 1.15
-diff -u -r1.15 filetitle.c
---- filetitle.c	5 Sep 2003 23:08:42 -0000	1.15
-+++ filetitle.c	11 Mar 2004 21:21:49 -0000
-@@ -40,7 +40,7 @@
-  *	GetFileTitleA		(COMDLG32.@)
-  *
-  */
--short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, UINT cbBuf)
-+short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, WORD cbBuf)
- {
-     int ret;
-     UNICODE_STRING strWFile;
-@@ -60,7 +60,7 @@
-  *	GetFileTitleW		(COMDLG32.@)
-  *
-  */
--short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, UINT cbBuf)
-+short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, WORD cbBuf)
- {
- 	int i, len;
-         static const WCHAR brkpoint[] = {'*','[',']',0};
 Index: printdlg.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/commdlg/printdlg.c,v
 retrieving revision 1.74
 diff -u -r1.74 printdlg.c
 --- printdlg.c	9 Jan 2004 05:10:35 -0000	1.74
-+++ printdlg.c	11 Mar 2004 21:21:50 -0000
++++ printdlg.c	15 Apr 2004 08:51:04 -0000
 @@ -341,7 +341,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);

@@ -2366,9 +2366,9 @@ static HRESULT FILEDLG95_LOOKIN_Init(HWND hwndCombo)
       }
       IEnumIDList_Release(lpeRoot);
     }
+    IShellFolder_Release(psfRoot);
   }
 
-  IShellFolder_Release(psfRoot);
   COMDLG32_SHFree(pidlDrives);
   return NOERROR;
 }
