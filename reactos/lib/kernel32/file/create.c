@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.38 2004/07/22 02:32:40 navaraf Exp $
+/* $Id: create.c,v 1.39 2004/09/25 21:44:02 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -91,10 +91,10 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
    DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
 
-   if(hTemplateFile != NULL)
+   if(hTemplateFile != NULL && hTemplateFile != INVALID_HANDLE_VALUE)
    {
     /* FIXME */
-    DPRINT("Template file feature not supported yet\n");
+    DPRINT1("Template file feature not supported yet\n");
     SetLastError(ERROR_NOT_SUPPORTED);
     return INVALID_HANDLE_VALUE;
    }
