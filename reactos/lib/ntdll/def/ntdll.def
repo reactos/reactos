@@ -321,7 +321,6 @@ RtlCharToInteger@12
 RtlCheckRegistryKey@8
 RtlClearAllBits@4
 RtlClearBits@12
-;RtlClosePropertySet
 RtlCompactHeap@8
 RtlCompareMemory@12
 RtlCompareMemoryUlong@12
@@ -350,7 +349,6 @@ RtlCreateAtomTable@8
 RtlCreateEnvironment@8
 RtlCreateHeap@24
 RtlCreateProcessParameters@40
-;RtlCreatePropertySet
 RtlCreateQueryDebugBuffer@8
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
@@ -404,7 +402,6 @@ RtlEnterCriticalSection@4
 RtlEnumProcessHeaps@8
 ;RtlEnumerateGenericTable
 ;RtlEnumerateGenericTableWithoutSplaying
-;RtlEnumerateProperties
 RtlEqualComputerName@8
 RtlEqualDomainName@8
 RtlEqualLuid@8
@@ -435,7 +432,6 @@ RtlFindRange@48
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 RtlFirstFreeAce@8
-;RtlFlushPropertySet
 RtlFormatCurrentUserKeyPath@4
 RtlFormatMessage@32
 RtlFreeAnsiString@4
@@ -468,7 +464,6 @@ RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
 RtlGetVersion@4
-;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData@16
 RtlImageNtHeader@4
@@ -559,7 +554,6 @@ RtlOpenCurrentUser@8
 RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
-;RtlPropertySetNameToGuid
 ;RtlProtectHeap
 RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U@12
@@ -568,9 +562,6 @@ RtlQueryInformationAcl@16
 RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessHeapInformation
 ;RtlQueryProcessLockInformation
-;RtlQueryProperties
-;RtlQueryPropertyNames
-;RtlQueryPropertySet
 RtlQueryRegistryValues@20
 ;RtlQuerySecurityObject
 ;RtlQueryTagHeap
@@ -594,6 +585,7 @@ RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
 RtlSetBits@12
+RtlSetControlSecurityDescriptor@12
 RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor@16
@@ -601,9 +593,6 @@ RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
 RtlSetInformationAcl@16
 RtlSetOwnerSecurityDescriptor@12
-;RtlSetProperties
-;RtlSetPropertyNames
-;RtlSetPropertySetClassId
 RtlSetSaclSecurityDescriptor@16
 ;RtlSetSecurityObject
 RtlSetTimeZoneInformation@4

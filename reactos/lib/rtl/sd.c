@@ -40,6 +40,7 @@ RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return STATUS_SUCCESS;
 }
 
+
 /*
  * @implemented
  */
@@ -278,8 +279,9 @@ RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       SecurityDescriptor->Control = SecurityDescriptor->Control | SE_OWNER_DEFAULTED;
    }
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
+
 
 /*
  * @implemented
@@ -319,6 +321,7 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return STATUS_SUCCESS;
 }
 
+
 /*
  * @implemented
  */
@@ -346,6 +349,7 @@ RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 
    return STATUS_SUCCESS;
 }
+
 
 /*
  * @implemented
@@ -578,8 +582,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
 NTSTATUS STDCALL
 RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
                             PSECURITY_DESCRIPTOR RelSD,
-                            PULONG BufferLength
-                           )
+                            PULONG BufferLength)
 {
    if (AbsSD->Control & SE_SELF_RELATIVE)
    {
@@ -608,6 +611,29 @@ RtlGetControlSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    *Control = SecurityDescriptor->Control;
 
    return STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlSetControlSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
+                                IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet)
+{
+  if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+  {
+    return STATUS_UNKNOWN_REVISION;
+  }
+
+  /* Zero the 'bits of interest' */
+  SecurityDescriptor->Control &= ~ControlBitsOfInterest;
+
+  /* Set the 'bits to set' */
+  SecurityDescriptor->Control |= (ControlBitsToSet & ControlBitsOfInterest);
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -657,6 +683,7 @@ RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return STATUS_SUCCESS;
 }
 
+
 /*
  * @implemented
  */
@@ -693,6 +720,7 @@ RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 
    return STATUS_SUCCESS;
 }
+
 
 /*
  * @implemented
@@ -759,6 +787,7 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
    return STATUS_SUCCESS;
 }
 
+
 /*
 * @unimplemented
 */
@@ -770,9 +799,10 @@ RtlSelfRelativeToAbsoluteSD2(PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor
    return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /*
-* @implemented
-*/
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
                                    IN ULONG SecurityDescriptorLength,

@@ -2295,6 +2295,11 @@ RtlSetBits (
 	);
 
 NTSTATUS STDCALL
+RtlSetControlSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+				IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
+				IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet);
+
+NTSTATUS STDCALL
 RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      BOOLEAN DaclPresent,
 			      PACL Dacl,
