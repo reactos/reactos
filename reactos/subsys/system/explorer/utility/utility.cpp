@@ -123,6 +123,7 @@ void display_error(HWND hwnd, DWORD error)	//@@ CONTEXT mit ausgeben -> display_
 }
 
 
+#ifndef _NO_CONTEXT
 Context Context::s_main("-NO-CONTEXT-");
 Context* Context::s_current = &Context::s_main;
 
@@ -153,6 +154,7 @@ String Context::getStackTrace() const
 
 	return str.str();
 }
+#endif
 
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)

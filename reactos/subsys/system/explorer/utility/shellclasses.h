@@ -102,43 +102,61 @@ struct COMException : public COMExceptionBase
 
 	COMException(HRESULT hr)
 	 :	super(hr),
+#ifndef _NO_CONTEXT
 		_context(CURRENT_CONTEXT),
+#endif
 		_file(NULL), _line(0)
 	{
 		LOG(toString());
+#ifndef _NO_CONTEXT
 		LOG(CURRENT_CONTEXT.getStackTrace());
+#endif
 	}
 
 	COMException(HRESULT hr, const char* file, int line)
 	 :	super(hr),
+#ifndef _NO_CONTEXT
 		_context(CURRENT_CONTEXT),
+#endif
 		_file(file), _line(line)
 	{
 		LOG(toString());
+#ifndef _NO_CONTEXT
 		LOG(CURRENT_CONTEXT.getStackTrace());
+#endif
 	}
 
 	COMException(HRESULT hr, const String& obj)
 	 :	super(hr),
+#ifndef _NO_CONTEXT
 		_context(CURRENT_CONTEXT),
+#endif
 		_file(NULL), _line(0)
 	{
 		LOG(toString());
+#ifndef _NO_CONTEXT
 		LOG(CURRENT_CONTEXT.getStackTrace());
+#endif
 	}
 
 	COMException(HRESULT hr, const String& obj, const char* file, int line)
 	 :	super(hr),
+#ifndef _NO_CONTEXT
 		_context(CURRENT_CONTEXT),
+#endif
 		_file(file), _line(line)
 	{
 		LOG(toString());
+#ifndef _NO_CONTEXT
 		LOG(CURRENT_CONTEXT.getStackTrace());
+#endif
 	}
 
 	String toString() const;
 
+#ifndef _NO_CONTEXT
 	Context _context;
+#endif
 
 	const char* _file;
 	int _line;

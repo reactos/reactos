@@ -67,7 +67,9 @@ String COMException::toString() const
 	TCHAR msg[4*BUFFER_LEN];
 	LPTSTR p = msg;
 
+#ifndef _NO_CONTEXT
 	p += _stprintf(p, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_context.toString());
+#endif
 
 	if (_file)
 		p += _stprintf(p, TEXT("\nLocation: %hs:%d"), _file, _line);

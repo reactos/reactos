@@ -831,6 +831,8 @@ protected:
 };
 
 
+#ifndef _NO_CONTEXT
+
 struct Context
 {
 	Context(const char* ctx)
@@ -890,6 +892,13 @@ protected:
 #define	CONTEXT(c) Context __ctx__(c)
 #define	CURRENT_CONTEXT Context::current()
 #define	OBJ_CONTEXT(c, o) Context __ctx__(c, o);
+
+#else
+
+#define	CONTEXT(c)
+#define	OBJ_CONTEXT(c, o) ;
+
+#endif
 
 
 #endif // __cplusplus

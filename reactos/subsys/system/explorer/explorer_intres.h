@@ -109,6 +109,7 @@
 #define ID_EXPLORE                      40011
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_TASKMGR                      40012
+#define	ID_BROWSE_UP                    40013
 #define ID_WINDOW_NEW                   0xE130
 #define ID_EDIT_PROPERTIES              57656
 #define ID_FILE_EXIT                    0xE141
@@ -121,7 +122,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        165
-#define _APS_NEXT_COMMAND_VALUE         40015
+#define _APS_NEXT_COMMAND_VALUE         40014
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
