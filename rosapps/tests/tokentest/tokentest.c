@@ -356,11 +356,7 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 
 	LARGE_INTEGER tkExpiration;
 
-#if 0 /* FIXME */
 	LUID authId = SYSTEM_LUID;
-#else
-	LUID authId = { 0x3E7, 0x0 };
-#endif
 
 	TOKEN_SOURCE source =
 	{
