@@ -29,10 +29,10 @@
  /// shell file/directory entry
 struct ShellEntry : public Entry
 {
-	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent), _pidl(shell_path) {}
-	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent), _pidl(shell_path) {}
+	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
+	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
 
-	virtual void get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path) const;
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 
 	IShellFolder* get_parent_folder() const;
@@ -44,6 +44,23 @@ protected:
 	ShellEntry(LPITEMIDLIST shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
 	ShellEntry(const ShellPath& shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
 };
+
+bool inline get_entry_pidl(Entry* entry, ShellPath& shell_path)
+{
+	if (entry->_etype == ET_SHELL) {
+		shell_path = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
+		return true;
+	} else {
+		TCHAR path[MAX_PATH];
+
+		if (!entry->get_path(path))
+			return false;
+
+		shell_path = path;
+
+		return true;
+	}
+}
 
 
  /// shell folder entry
@@ -97,11 +114,11 @@ struct ShellDirectory : public ShellEntry, public Directory
 		pFolder->Release();
 	}
 
-	virtual void read_directory(bool read_icons=true);
+	virtual void read_directory(int scan_flags=SCAN_ALL);
 	virtual const void* get_next_path_component(const void*);
 	virtual Entry* find_entry(const void* p);
 
-	virtual void get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path) const;
 
 	int	extract_icons();
 
@@ -120,3 +137,5 @@ inline IShellFolder* ShellEntry::get_parent_folder() const
 	else
 		return Desktop();
 }
+
+extern HICON extract_icon(const Entry* entry);

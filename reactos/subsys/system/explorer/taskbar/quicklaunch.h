@@ -45,7 +45,7 @@ struct QuickLaunchEntry
 
 	HBITMAP	_hbmp;
 	String	_title;
-	ShellEntry* _entry;
+	Entry*	_entry;
 };
 
  /// map for managing the task bar buttons

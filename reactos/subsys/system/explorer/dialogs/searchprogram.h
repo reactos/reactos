@@ -30,7 +30,7 @@
 #include <stack>
 
 
-typedef void (*COLLECT_CALLBACK)(ShellFolder& folder, ShellEntry* shell_entry, void* param);
+typedef void (*COLLECT_CALLBACK)(Entry* entry, void* param);
 typedef stack<ShellDirectory*> ShellDirectoryStack;
 
  /// Thread for collecting start menu entries
@@ -67,7 +67,7 @@ protected:
  /// entry for the list in "find program" dialogs
 struct FPDEntry
 {
-	ShellEntry* _shell_entry;
+	Entry*	_entry;
 	int		_idxIcon;
 	String	_menu_path;
 	String	_path;
@@ -106,6 +106,6 @@ protected:
 	void	add_entry(const FPDEntry& cache_entry);
 	void	LaunchSelected();
 
-	static void collect_programs_callback(ShellFolder& folder, ShellEntry* entry, void* param);
+	static void collect_programs_callback(Entry* entry, void* param);
 	static int CALLBACK CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort);
 };

@@ -28,6 +28,7 @@
 
 #define _LIGHT_STARTMENU
 #define _LAZY_ICONEXTRACT
+#define _SINGLE_ICONEXTRACT
 
 
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
@@ -69,7 +70,7 @@ struct StartMenuDirectory
 };
 
 typedef list<StartMenuDirectory> StartMenuShellDirs;
-typedef set<const ShellEntry*> ShellEntrySet;
+typedef set<const Entry*> ShellEntrySet;
 
  /// structure holding information about one start menu entry
 struct StartMenuEntry
@@ -253,8 +254,10 @@ protected:
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(LPCTSTR title, HICON hIcon=0, int id=-1);
+	StartMenuEntry& AddEntry(const String& title, HICON hIcon, const Entry* entry);
+	StartMenuEntry& AddEntry(const String& title, HICON hIcon=0, int id=-1);
 	StartMenuEntry& AddEntry(const ShellFolder folder, const ShellEntry* entry);
+	StartMenuEntry& AddEntry(const ShellFolder folder, const Entry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
@@ -270,13 +273,13 @@ protected:
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	void	CloseStartMenu(int id=0);
 
-	bool	GetButtonRect(int id, PRECT prect);
+	bool	GetButtonRect(int id, PRECT prect) const;
 
 	void	DrawFloatingButton(HDC hdc);
-	void	GetFloatingButonRect(LPRECT prect);
+	void	GetFloatingButtonRect(LPRECT prect);
 
 	void	Paint(PaintCanvas& canvas);
-	void	UpdateIcons();
+	void	UpdateIcons(int idx);
 };
 
 

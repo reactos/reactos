@@ -41,12 +41,21 @@ enum SORT_ORDER {
 	SORT_DATE
 };
 
+enum SCAN_FLAGS {
+	SCAN_EXTRACT_ICONS	= 1,
+	SCAN_DO_ACCESS		= 2,
+
+	SCAN_ALL			= 3,
+
+	SCAN_FILESYSTEM		= 4
+};
+
  /// base of all file and directory entries
 struct Entry
 {
 protected:
 	Entry(ENTRY_TYPE etype);
-	Entry(Entry* parent);
+	Entry(Entry* parent, ENTRY_TYPE etype);
 	Entry(const Entry&);
 
 public:
@@ -73,15 +82,15 @@ public:
 
 	void	free_subentries();
 
-	void	read_directory(SORT_ORDER sortOrder, bool read_icons=true);
+	void	read_directory(SORT_ORDER sortOrder, int scan_flags=SCAN_ALL);
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	sort_directory(SORT_ORDER sortOrder);
-	void	smart_scan(bool read_icons=true);
+	void	smart_scan(int scan_flags=SCAN_ALL);
 
-	virtual void read_directory(bool read_icons=true) {}
+	virtual void read_directory(int scan_flags=SCAN_ALL) {}
 	virtual const void* get_next_path_component(const void*) {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
-	virtual void get_path(PTSTR path) const = 0;
+	virtual bool get_path(PTSTR path) const = 0;
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 };
 

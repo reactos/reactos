@@ -48,9 +48,9 @@ Entry::Entry(ENTRY_TYPE etype)
 	_display_name = _data.cFileName;
 }
 
-Entry::Entry(Entry* parent)
+Entry::Entry(Entry* parent, ENTRY_TYPE etype)
  :	_up(parent),
-	_etype(parent->_etype)
+	_etype(etype)
 {
 	_next = NULL;
 	_down = NULL;
@@ -126,17 +126,17 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 }
 
 
-void Entry::read_directory(SORT_ORDER sortOrder, bool read_icons)
+void Entry::read_directory(SORT_ORDER sortOrder, int scan_flags)
 {
 	CONTEXT("Entry::read_directory(SORT_ORDER)");
 
 	 // call into subclass
-	read_directory(read_icons);
+	read_directory(scan_flags);
 
-	if (g_Globals._prescan_nodes) {	//@todo _prescan_nodes should not be used for filling the start menu.
+	if (g_Globals._prescan_nodes) {	//@todo _prescan_nodes should not be used for reading the start menu.
 		for(Entry*entry=_down; entry; entry=entry->_next)
 			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				entry->read_directory(read_icons);
+				entry->read_directory(scan_flags);
 				entry->sort_directory(sortOrder);
 			}
 	}
@@ -284,13 +284,13 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 }
 
 
-void Entry::smart_scan(bool read_icons)
+void Entry::smart_scan(int scan_flags)
 {
 	CONTEXT("Entry::smart_scan()");
 
 	if (!_scanned) {
 		free_subentries();
-		read_directory(SORT_NAME, read_icons);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
+		read_directory(SORT_NAME, scan_flags);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
 	}
 }
 
@@ -299,7 +299,8 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 {
 	TCHAR cmd[MAX_PATH];
 
-	get_path(cmd);
+	if (!get_path(cmd))
+		return FALSE;
 
 	  // start program, open document...
 	return launch_file(hwnd, cmd, nCmdShow);

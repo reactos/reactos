@@ -211,11 +211,13 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	if (itemData) {
 		Entry* entry = (Entry*)itemData;
 
-		ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
-		ShellFolder folder = dir? dir->_folder: Desktop();
-		LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
+		if (entry->_etype == ET_SHELL) {
+			ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
+			ShellFolder folder = dir? dir->_folder: Desktop();
+			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-		CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
+			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
+		}
 	}
 }
 
@@ -341,19 +343,21 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 
 	_last_sel = pnmtv->itemNew.hItem;
 
-	IShellFolder* folder;
+	if (entry->_etype == ET_SHELL) {
+		IShellFolder* folder;
 
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		folder = static_cast<ShellDirectory*>(entry)->_folder;
-	else
-		folder = entry->get_parent_folder();
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			folder = static_cast<ShellDirectory*>(entry)->_folder;
+		else
+			folder = entry->get_parent_folder();
 
-	if (!folder) {
-		assert(folder);
-		return;
+		if (!folder) {
+			assert(folder);
+			return;
+		}
+
+		UpdateFolderView(folder);
 	}
-
-	UpdateFolderView(folder);
 }
 
 void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
@@ -456,8 +460,9 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 					Entry* entry = parent->find_entry(pidl);
 
 					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-						if (expand_folder(static_cast<ShellDirectory*>(entry)))
-							return S_OK;
+						if (entry->_etype == ET_SHELL)
+							if (expand_folder(static_cast<ShellDirectory*>(entry)))
+								return S_OK;
 				}
 			}
 		} else { // no tree control

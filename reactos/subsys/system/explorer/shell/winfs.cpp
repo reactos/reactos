@@ -119,13 +119,15 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 }
 
 
-void WinDirectory::read_directory(bool read_icons)
+void WinDirectory::read_directory(int scan_flags)
 {
+	CONTEXT("WinDirectory::read_directory()");
+
+	int level = _level + 1;
+
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
 	Entry* entry;
-
-	int level = _level + 1;
 
 	LPCTSTR path = (LPCTSTR)_path;
 	TCHAR buffer[MAX_PATH], *p;
@@ -159,20 +161,22 @@ void WinDirectory::read_directory(bool read_icons)
 			entry->_level = level;
 			entry->_bhfi_valid = false;
 
-			HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-										0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+			if (scan_flags & SCAN_DO_ACCESS) {
+				HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+											0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
-			if (hFile != INVALID_HANDLE_VALUE) {
-				if (GetFileInformationByHandle(hFile, &entry->_bhfi))
-					entry->_bhfi_valid = true;
+				if (hFile != INVALID_HANDLE_VALUE) {
+					if (GetFileInformationByHandle(hFile, &entry->_bhfi))
+						entry->_bhfi_valid = true;
 
-				if (ScanNTFSStreams(entry, hFile))
-					entry->_scanned = true;	// There exist named NTFS sub-streams in this file.
+					if (ScanNTFSStreams(entry, hFile))
+						entry->_scanned = true;	// There exist named NTFS sub-streams in this file.
 
-				CloseHandle(hFile);
+					CloseHandle(hFile);
+				}
 			}
 
-			last = entry;
+			last = entry;	// There is always at least one entry, because FindFirstFile() succeeded and we don't filter the file entries.
 		} while(FindNextFile(hFind, &w32fd));
 
 		last->_next = NULL;
@@ -229,41 +233,68 @@ Entry* WinDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-void WinEntry::get_path(PTSTR path) const
+bool WinEntry::get_path(PTSTR path) const
 {
 	int level = 0;
 	int len = 0;
+	int l = 0;
+	LPCTSTR name = NULL;
+	TCHAR buffer[MAX_PATH];
 
-	for(const Entry* entry=this; entry; level++) {
-		LPCTSTR name = entry->_data.cFileName;
-		int l = 0;
+	const Entry* entry;
+	for(entry=this; entry; level++) {
+		l = 0;
 
-		for(LPCTSTR s=name; *s && *s!=TEXT('/') && *s!=TEXT('\\'); s++)
-			++l;
+		if (entry->_etype == ET_WINDOWS) {
+			name = entry->_data.cFileName;
 
-		if (entry->_up) {
-			if (l > 0) {
-				memmove(path+l+1, path, len*sizeof(TCHAR));
-				memcpy(path+1, name, l*sizeof(TCHAR));
-				len += l+1;
+			for(LPCTSTR s=name; *s && *s!=TEXT('/') && *s!=TEXT('\\'); s++)
+				++l;
 
-				if (entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
-					path[0] = TEXT(':');
-				else
-					path[0] = TEXT('\\');
+			if (!entry->_up)
+				break;
+		} else {
+			if (entry->get_path(buffer)) {
+				l = _tcslen(buffer);
+				name = buffer;
+
+				/* special handling of drive names */
+				if (l>0 && buffer[l-1]=='\\' && path[0]=='\\')
+					--l;
+
+				memmove(path+l, path, len*sizeof(TCHAR));
+				memcpy(path, name, l*sizeof(TCHAR));
+				len += l;
 			}
 
-			entry = entry->_up;
-		} else {
-			memmove(path+l, path, len*sizeof(TCHAR));
-			memcpy(path, name, l*sizeof(TCHAR));
-			len += l;
+			entry = NULL;
 			break;
 		}
+
+		if (l > 0) {
+			memmove(path+l+1, path, len*sizeof(TCHAR));
+			memcpy(path+1, name, l*sizeof(TCHAR));
+			len += l+1;
+
+			if (entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
+				path[0] = TEXT(':');
+			else
+				path[0] = TEXT('\\');
+		}
+
+		entry = entry->_up;
+	}
+
+	if (entry) {
+		memmove(path+l, path, len*sizeof(TCHAR));
+		memcpy(path, name, l*sizeof(TCHAR));
+		len += l;
 	}
 
 	if (!level)
 		path[len++] = TEXT('\\');
 
 	path[len] = TEXT('\0');
+
+	return true;
 }

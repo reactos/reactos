@@ -60,7 +60,7 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 	ShellDirectory* dir = new ShellDirectory(Desktop(), path, 0);
 	_dirs.push(dir);
 
-	dir->smart_scan();
+	dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 
 	for(Entry*entry=dir->_down; entry; entry=entry->_next) {
 		if (!_alive)
@@ -69,13 +69,14 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
 			continue;
 
-		ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			ShellPath shell_path;
 
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			collect_programs(shell_entry->create_absolute_pidl());
-		else if (entry->_shell_attribs & SFGAO_LINK)
+			if (get_entry_pidl(entry, shell_path))
+				collect_programs(shell_path);
+		} else if (entry->_shell_attribs & SFGAO_LINK)
 			if (_alive)
-				_callback(dir->_folder, shell_entry, _para);
+				_callback(entry, _para);
 	}
 }
 
@@ -172,56 +173,70 @@ void FindProgramDlg::Refresh(bool delete_cache)
 	}
 }
 
-void FindProgramDlg::collect_programs_callback(ShellFolder& folder, ShellEntry* shell_entry, void* param)
+void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 {
 	FindProgramDlg* pThis = (FindProgramDlg*) param;
-	LPCITEMIDLIST pidl = shell_entry->_pidl;
+	ShellPath shell_path;
+
+	if (!get_entry_pidl(entry, shell_path))
+		return;
 
 	IShellLink* pShellLink;
-	HRESULT hr = folder->GetUIObjectOf(NULL, 1, &pidl, IID_IShellLink, NULL, (LPVOID*)&pShellLink);
+	LPCITEMIDLIST pidl_last = NULL;
+	IShellFolder* pFolder;
+
+	HRESULT hr = SHBindToParent(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
+
 	if (SUCCEEDED(hr)) {
-		ShellLinkPtr shell_link(pShellLink);
+		hr = pFolder->GetUIObjectOf(pThis->_hwnd, 1, &pidl_last, IID_IShellLink, NULL, (LPVOID*)&pShellLink);
 
-		/*hr = pShellLink->Resolve(pThis->_hwnd, SLR_NO_UI);
-		if (SUCCEEDED(hr))*/ {
-			WIN32_FIND_DATA wfd;
-			TCHAR path[MAX_PATH];
+		if (SUCCEEDED(hr)) {
+			ShellLinkPtr shell_link(pShellLink);
 
-			hr = pShellLink->GetPath(path, MAX_PATH-1, &wfd, SLGP_UNCPRIORITY);
+			/*hr = pShellLink->Resolve(pThis->_hwnd, SLR_NO_UI);
+			if (SUCCEEDED(hr))*/ {
+				WIN32_FIND_DATA wfd;
+				TCHAR path[MAX_PATH];
 
-			if (SUCCEEDED(hr)) {
-				FileSysShellPath entry_path(shell_entry->create_absolute_pidl());
-				String menu_path;
+				hr = pShellLink->GetPath(path, MAX_PATH-1, &wfd, SLGP_UNCPRIORITY);
 
-				int len = pThis->_common_programs.size();
+				if (SUCCEEDED(hr)) {
+					TCHAR entry_path[MAX_PATH];
 
-				if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
-					menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
-				else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
-					menu_path = String(entry_path)+len;
+					entry->get_path(entry_path);
 
-				 // store info in cache
-				FPDEntry new_entry;
+					String menu_path;
 
-				new_entry._shell_entry = shell_entry;
-				new_entry._menu_path = menu_path;
-				new_entry._path = path;
+					int len = pThis->_common_programs.size();
 
-				if (shell_entry->_hIcon != (HICON)-1)
-					new_entry._idxIcon = ImageList_AddIcon(pThis->_himl, shell_entry->_hIcon);
-				else
-					new_entry._idxIcon = pThis->_idxNoIcon;
+					if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
+						menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
+					else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
+						menu_path = String(entry_path)+len;
 
-				pThis->_cache.push_front(new_entry);
-				FPDEntry& cache_entry = pThis->_cache.front();
+					 // store info in cache
+					FPDEntry new_entry;
 
-				Lock lock(pThis->_thread._crit_sect);
+					new_entry._entry = entry;
+					new_entry._menu_path = menu_path;
+					new_entry._path = path;
 
-				 // resolve deadlocks while executing Thread::Stop()
-				if (!pThis->_thread.is_alive())
-					return;
+					if (entry->_hIcon != (HICON)-1)
+						new_entry._idxIcon = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
+					else
+						new_entry._idxIcon = pThis->_idxNoIcon;
 
-				pThis->add_entry(cache_entry);
+					pThis->_cache.push_front(new_entry);
+					FPDEntry& cache_entry = pThis->_cache.front();
+
+					Lock lock(pThis->_thread._crit_sect);
+
+					 // resolve deadlocks while executing Thread::Stop()
+					if (!pThis->_thread.is_alive())
+						return;
+
+					pThis->add_entry(cache_entry);
+				}
 			}
 		}
 	}
@@ -230,7 +245,7 @@ void FindProgramDlg::collect_programs_callback(ShellFolder& folder, ShellEntry* 
 void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 {
 	String lwr_path = cache_entry._path;
-	String lwr_name = cache_entry._shell_entry->_display_name;
+	String lwr_name = cache_entry._entry->_display_name;
 
 #ifndef __WINE__ ///@todo
 	_tcslwr((LPTSTR)lwr_path.c_str());
@@ -246,7 +261,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 
 	LV_ITEM item = {LVIF_TEXT|LVIF_IMAGE|LVIF_PARAM, INT_MAX};
 
-	item.pszText = cache_entry._shell_entry->_display_name;
+	item.pszText = cache_entry._entry->_display_name;
 	item.iImage = cache_entry._idxIcon;
 	item.lParam = (LPARAM) &cache_entry;
 	item.iItem = ListView_InsertItem(_list_ctrl, &item);	// We could use the information in _sort to enable manual sorting while populating the list.
@@ -297,7 +312,7 @@ void FindProgramDlg::LaunchSelected()
 
 		if (lparam) {
 			FPDEntry& cache_entry = *(FPDEntry*)lparam;
-			cache_entry._shell_entry->launch_entry(_hwnd);
+			cache_entry._entry->launch_entry(_hwnd);
 		}
 	}
 }
@@ -334,7 +349,7 @@ int FindProgramDlg::Notify(int id, NMHDR* pnmh)
 
 			if (lparam) {
 				FPDEntry& cache_entry = *(FPDEntry*)lparam;
-				cache_entry._shell_entry->launch_entry(_hwnd);
+				cache_entry._entry->launch_entry(_hwnd);
 			}
 		}*/
 		break;
@@ -366,7 +381,7 @@ int CALLBACK FindProgramDlg::CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM 
 
 	switch(sort->_sort_crit) {
 	  case 0:
-		cmp = _tcsicoll(a._shell_entry->_display_name, b._shell_entry->_display_name);
+		cmp = _tcsicoll(a._entry->_display_name, b._entry->_display_name);
 		break;
 
 	  case 1:

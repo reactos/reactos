@@ -33,6 +33,9 @@
 
 #include "entries.h"
 #include "shellfs.h"
+#include "winfs.h"
+
+#include <shlwapi.h>
 
 
 bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi, bool do_access)
@@ -60,7 +63,7 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
 				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
-				 // fill out drive names "C:", ...
+				 // fill with drive names "C:", ...
 				_tcscpy(pw32fdata->cFileName, path);
 
 				if (GetFileAttributesEx(path, GetFileExInfoStandard, &fad)) {
@@ -111,41 +114,63 @@ ShellPath ShellEntry::create_absolute_pidl() const
 {
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
-	if (_up/* && _up->_etype==ET_SHELL*/) {
-		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
+	if (_up)
+		if (_up->_etype==ET_SHELL) {
+			ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
-		if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
-			return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
-	}
+			if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
+				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
+		} else {
+			ShellPath shell_path;
+
+			if (get_entry_pidl(_up, shell_path))
+				return _pidl.create_absolute_pidl(shell_path);
+		}
 
 	return _pidl;
 }
 
 
  // get full path of a shell entry
-void ShellEntry::get_path(PTSTR path) const
+bool ShellEntry::get_path(PTSTR path) const
 {
+/*
 	path[0] = TEXT('\0');
 
-	/*HRESULT hr = */path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
+	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH)))
+		return false;
+*/
+	FileSysShellPath fs_path(create_absolute_pidl());
+
+	if (!(LPCTSTR)fs_path)
+		return false;
+
+	_tcscpy(path, fs_path);
+
+	return true;
 }
 
 
  // get full path of a shell folder
-void ShellDirectory::get_path(PTSTR path) const
+bool ShellDirectory::get_path(PTSTR path) const
 {
 	CONTEXT("ShellDirectory::get_path()");
 
 	path[0] = TEXT('\0');
 
 	SFGAOF attribs = 0;
-	HRESULT hr = S_OK;
 
 	if (!_folder.empty())
-		hr = const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs);
+		if (FAILED(const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs)))
+			return false;
 
-	if (SUCCEEDED(hr) && (attribs&SFGAO_FILESYSTEM))
-		hr = path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
+	if (!(attribs & SFGAO_FILESYSTEM))
+		return false;
+
+	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH)))
+		return false;
+
+	return true;
 }
 
 
@@ -185,12 +210,12 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 	IExtractIcon* pExtract;
 
 	if (SUCCEEDED(folder->GetUIObjectOf(0, 1, (LPCITEMIDLIST*)&pidl, IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
-		TCHAR path[_MAX_PATH];
+		TCHAR path[MAX_PATH];
 		unsigned flags;
 		HICON hIcon;
 		int idx;
 
-		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, _MAX_PATH, &idx, &flags))) {
+		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
 			if (!(flags & GIL_NOTFILENAME)) {
 				if (idx == -1)
 					idx = 0;	// special case for some control panel applications
@@ -234,25 +259,48 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 	return 0;
 }
 
-static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl, ShellEntry* entry)
+static HICON extract_icon(IShellFolder* folder, const ShellEntry* entry)
 {
-	HICON hIcon = extract_icon(folder, pidl);
+	HICON hIcon = extract_icon(folder, entry->_pidl);
 
 	if (!hIcon) {
-		ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
-		LPCITEMIDLIST pidl = pidl_abs;
-
 		SHFILEINFO sfi;
 
+		ShellPath pidl_abs = entry->create_absolute_pidl();
+		LPCITEMIDLIST pidl = pidl_abs;
+
 		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
-			entry->_hIcon = sfi.hIcon;
+			hIcon = sfi.hIcon;
 	}
 
 	return hIcon;
 }
 
+HICON extract_icon(const Entry* entry)
+{
+	if (entry->_etype == ET_SHELL) {
+		const ShellEntry* shell_entry = static_cast<const ShellEntry*>(entry);
 
-void ShellDirectory::read_directory(bool read_icons)
+		return extract_icon(shell_entry->get_parent_folder(), shell_entry);
+	} else {
+		TCHAR path[MAX_PATH];
+
+		if (entry->get_path(path)) {
+			SHFILEINFO sfi;
+
+			ShellPath shell_path(path);
+			LPCITEMIDLIST pidl = shell_path;
+
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
+				return sfi.hIcon;
+		}
+	}
+
+	return 0;
+}
+
+
+void ShellDirectory::read_directory(int scan_flags)
 {
 	CONTEXT("ShellDirectory::read_directory()");
 
@@ -264,65 +312,37 @@ void ShellDirectory::read_directory(bool read_icons)
 	/*if (_folder.empty())
 		return;*/
 
-	ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
+	TCHAR buffer[MAX_PATH];
 
-	TCHAR name[MAX_PATH];
-	HRESULT hr_next = S_OK;
+	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer)) {
+		Entry* entry;
 
-	do {
-#define FETCH_ITEM_COUNT	32
-		LPITEMIDLIST pidls[FETCH_ITEM_COUNT];
-		ULONG cnt = 0;
-		ULONG n;
+		LPTSTR p = buffer + _tcslen(buffer);
 
-		memset(pidls, 0, sizeof(pidls));
+		lstrcpy(p, TEXT("\\*"));
 
-		hr_next = enumerator->Next(FETCH_ITEM_COUNT, pidls, &cnt);
+		WIN32_FIND_DATA w32fd;
+		HANDLE hFind = FindFirstFile(buffer, &w32fd);
 
-		/* don't break yet now: Registry Explorer Plugin returns E_FAIL!
-		if (!SUCCEEDED(hr_next))
-			break; */
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				 // ignore hidden files (usefull in the start menu)
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+					continue;
 
-		if (hr_next == S_FALSE)
-			break;
+				 // ignore directory entries "." and ".."
+				if ((w32fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&
+					w32fd.cFileName[0]==TEXT('.') &&
+					(w32fd.cFileName[1]==TEXT('\0') ||
+					(w32fd.cFileName[1]==TEXT('.') && w32fd.cFileName[2]==TEXT('\0'))))
+					continue;
 
-		for(n=0; n<cnt; ++n) {
-			WIN32_FIND_DATA w32fd;
-			BY_HANDLE_FILE_INFORMATION bhfi;
-			bool bhfi_valid = false;
-
-			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
-
-			SFGAOF attribs_before = ~SFGAO_READONLY & ~SFGAO_VALIDATE;
-			SFGAOF attribs = attribs_before;
-			HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
-			bool removeable = false;
-
-			if (SUCCEEDED(hr) && attribs!=attribs_before) {
-				 // avoid accessing floppy drives when browsing "My Computer"
-				if (attribs & SFGAO_REMOVABLE) {
-					attribs |= SFGAO_HASSUBFOLDER;
-					removeable = true;
-				} else {
-					DWORD attribs2 = SFGAO_READONLY;
-
-					HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
-
-					if (SUCCEEDED(hr))
-						attribs |= attribs2;
-				}
-			} else
-				attribs = 0;
-
-			bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi, !removeable);
-
-			try {
-				Entry* entry;
+				lstrcpy(p+1, w32fd.cFileName);
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					entry = new ShellDirectory(this, pidls[n], _hwnd);
+					entry = new WinDirectory(this, buffer);
 				else
-					entry = new ShellEntry(this, pidls[n]);
+					entry = new WinEntry(this);
 
 				if (!first_entry)
 					first_entry = entry;
@@ -332,21 +352,9 @@ void ShellDirectory::read_directory(bool read_icons)
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-				if (bhfi_valid)
-					memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
-
-				if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
-					if (!entry->_data.cFileName[0])
-						_tcscpy(entry->_data.cFileName, name);
-					else if (_tcscmp(entry->_display_name, name))
-						entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
-				}
-
-				 // get display icons for files and virtual objects
-				if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-					!(attribs & SFGAO_FILESYSTEM)) {
-					if (read_icons) {
-						entry->_hIcon = extract_icon(_folder, pidls[n], static_cast<ShellEntry*>(entry));
+				if (!(w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+					if (scan_flags & SCAN_EXTRACT_ICONS) {
+						entry->_hIcon = extract_icon(entry);
 
 						if (!entry->_hIcon)
 							entry->_hIcon = (HICON)-1;	// don't try again later
@@ -359,15 +367,166 @@ void ShellDirectory::read_directory(bool read_icons)
 				entry->_expanded = false;
 				entry->_scanned = false;
 				entry->_level = level;
+				entry->_bhfi_valid = false;
+
+				if (scan_flags & SCAN_DO_ACCESS) {
+					HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+												0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+
+					if (hFile != INVALID_HANDLE_VALUE) {
+						if (GetFileInformationByHandle(hFile, &entry->_bhfi))
+							entry->_bhfi_valid = true;
+
+						if (ScanNTFSStreams(entry, hFile))
+							entry->_scanned = true;	// There exist named NTFS sub-streams in this file.
+
+						CloseHandle(hFile);
+					}
+				}
+
+				LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
+
+				if (ext) {//@@
+					int len = ext - entry->_data.cFileName;
+
+					entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
+					_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
+					entry->_display_name[len] = TEXT('\0');
+				}
+
+				DWORD attribs = SFGAO_FILESYSTEM;
+
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+					attribs |= SFGAO_FOLDER;
+
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+					attribs |= SFGAO_READONLY;
+
+				//if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				//	attribs |= SFGAO_HIDDEN;
+
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
+					attribs |= SFGAO_COMPRESSED;
+
+				if (ext && !_tcsicmp(ext, _T(".lnk")))
+					attribs |= SFGAO_LINK;
+
 				entry->_shell_attribs = attribs;
-				entry->_bhfi_valid = bhfi_valid;
 
 				last = entry;
-			} catch(COMException& e) {
-				HandleException(e, _hwnd);
-			}
+			} while(FindNextFile(hFind, &w32fd));
+
+			FindClose(hFind);
 		}
-	} while(SUCCEEDED(hr_next));
+
+	} else { // !SCAN_FILESYSTEM
+
+		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
+
+		TCHAR name[MAX_PATH];
+		HRESULT hr_next = S_OK;
+
+		do {
+#define FETCH_ITEM_COUNT	32
+			LPITEMIDLIST pidls[FETCH_ITEM_COUNT];
+			ULONG cnt = 0;
+			ULONG n;
+
+			memset(pidls, 0, sizeof(pidls));
+
+			hr_next = enumerator->Next(FETCH_ITEM_COUNT, pidls, &cnt);
+
+			/* don't break yet now: Registry Explorer Plugin returns E_FAIL!
+			if (!SUCCEEDED(hr_next))
+				break; */
+
+			if (hr_next == S_FALSE)
+				break;
+
+			for(n=0; n<cnt; ++n) {
+				WIN32_FIND_DATA w32fd;
+				BY_HANDLE_FILE_INFORMATION bhfi;
+				bool bhfi_valid = false;
+
+				memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
+
+				SFGAOF attribs_before = ~SFGAO_READONLY & ~SFGAO_VALIDATE;
+				SFGAOF attribs = attribs_before;
+				HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
+				bool removeable = false;
+
+				if (SUCCEEDED(hr) && attribs!=attribs_before) {
+					 // avoid accessing floppy drives when browsing "My Computer"
+					if (attribs & SFGAO_REMOVABLE) {
+						attribs |= SFGAO_HASSUBFOLDER;
+						removeable = true;
+					} else if (scan_flags & SCAN_DO_ACCESS) {
+						DWORD attribs2 = SFGAO_READONLY;
+
+						HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
+
+						if (SUCCEEDED(hr))
+							attribs |= attribs2;
+					}
+				} else
+					attribs = 0;
+
+				bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
+												 (scan_flags&SCAN_DO_ACCESS) && !removeable);
+
+				try {
+					Entry* entry;
+
+					if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+						entry = new ShellDirectory(this, pidls[n], _hwnd);
+					else
+						entry = new ShellEntry(this, pidls[n]);
+
+					if (!first_entry)
+						first_entry = entry;
+
+					if (last)
+						last->_next = entry;
+
+					memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+
+					if (bhfi_valid)
+						memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
+
+					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
+						if (!entry->_data.cFileName[0])
+							_tcscpy(entry->_data.cFileName, name);
+						else if (_tcscmp(entry->_display_name, name))
+							entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
+					}
+
+					 // get icons for files and virtual objects
+					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+						!(attribs & SFGAO_FILESYSTEM)) {
+						if (scan_flags & SCAN_EXTRACT_ICONS) {
+							entry->_hIcon = extract_icon(_folder, static_cast<ShellEntry*>(entry));
+
+							if (!entry->_hIcon)
+								entry->_hIcon = (HICON)-1;	// don't try again later
+						} else
+							entry->_hIcon = 0;
+					} else
+						entry->_hIcon = (HICON)-1;	// don't try again later
+
+					entry->_down = NULL;
+					entry->_expanded = false;
+					entry->_scanned = false;
+					entry->_level = level;
+					entry->_shell_attribs = attribs;
+					entry->_bhfi_valid = bhfi_valid;
+
+					last = entry;
+				} catch(COMException& e) {
+					HandleException(e, _hwnd);
+				}
+			}
+		} while(SUCCEEDED(hr_next));
+	}
 
 	if (last)
 		last->_next = NULL;
@@ -393,12 +552,13 @@ Entry* ShellDirectory::find_entry(const void* p)
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
 
-	for(Entry*entry=_down; entry; entry=entry->_next) {
-		ShellEntry* se = static_cast<ShellEntry*>(entry);
+	for(Entry*entry=_down; entry; entry=entry->_next)
+		if (entry->_etype == ET_SHELL) {
+			ShellEntry* se = static_cast<ShellEntry*>(entry);
 
-		if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
-			return entry;
-	}
+			if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
+				return entry;
+		}
 
 	return NULL;
 }
@@ -407,18 +567,18 @@ int ShellDirectory::extract_icons()
 {
 	int cnt = 0;
 
-	for(Entry*entry=_down; entry; entry=entry->_next) {
-		ShellEntry* se = static_cast<ShellEntry*>(entry);
-
-		if (!se->_hIcon) {
-			se->_hIcon = extract_icon(_folder, se->_pidl, static_cast<ShellEntry*>(se));
+	for(Entry*entry=_down; entry; entry=entry->_next)
+		if (!entry->_hIcon) {
+			if (entry->_etype == ET_SHELL)
+				entry->_hIcon = extract_icon(_folder, static_cast<ShellEntry*>(entry));
+			else // !ET_SHELL
+				entry->_hIcon = extract_icon(entry);
 
 			if (entry->_hIcon)
 				++cnt;
 			else
 				entry->_hIcon = (HICON)-1;	// don't try again later
 		}
-	}
 
 	return cnt;
 }

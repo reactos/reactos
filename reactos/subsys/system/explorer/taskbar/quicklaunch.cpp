@@ -94,7 +94,7 @@ void QuickLaunchBar::AddShortcuts()
 	WaitCursor wait;
 
 	try {
-		TCHAR path[_MAX_PATH];
+		TCHAR path[MAX_PATH];
 
 		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);	// perhaps also look into CSIDL_COMMON_APPDATA ?
 
@@ -102,7 +102,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		_dir = new ShellDirectory(Desktop(), path, _hwnd);
 
-		_dir->smart_scan();
+		_dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 	} catch(COMException&) {
 		return;
 	}
@@ -120,10 +120,7 @@ void QuickLaunchBar::AddShortcuts()
 
 			 // hide subfolders
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-				ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
-
-				const String& entry_name = desktop_folder.get_name(shell_entry->_pidl);
-				HBITMAP hbmp = create_bitmap_from_icon(shell_entry->_hIcon, GetSysColorBrush(COLOR_BTNFACE), canvas);
+				HBITMAP hbmp = create_bitmap_from_icon(entry->_hIcon, GetSysColorBrush(COLOR_BTNFACE), canvas);
 
 				TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 				int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
@@ -133,8 +130,8 @@ void QuickLaunchBar::AddShortcuts()
 				int id = ++_next_id;
 
 				qle._hbmp = hbmp;
-				qle._title = entry_name;
-				qle._entry = shell_entry;
+				qle._title = entry->_display_name;	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name
+				qle._entry = entry;
 
 				_entries[id] = qle;
 

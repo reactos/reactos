@@ -188,9 +188,9 @@ void StartMenu::AddEntries()
 			WaitCursor wait;
 
 #ifdef _LAZY_ICONEXTRACT
-			dir.smart_scan(false);	// lazy icon extraction
+			dir.smart_scan(SCAN_FILESYSTEM);	// lazy icon extraction, try to read directly from filesystem
 #else
-			dir.smart_scan(true);
+			dir.smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 #endif
 		}
 
@@ -218,9 +218,10 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 		if (++cnt == max)
 			break;
 
-		const ShellEntry* shell_entry = static_cast<const ShellEntry*>(entry);
-
-		AddEntry(dir._folder, shell_entry);
+		if (entry->_etype == ET_SHELL)
+			AddEntry(dir._folder, static_cast<const ShellEntry*>(entry));
+		else
+			AddEntry(dir._folder, entry);
 	}
 }
 
@@ -268,7 +269,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		RECT rect;
 
 		 // check mouse cursor for coordinates of floating button
-		GetFloatingButonRect(&rect);
+		GetFloatingButtonRect(&rect);
 
 		if (PtInRect(&rect, Point(lparam))) {
 			 // create a floating copy of the current start menu
@@ -334,7 +335,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 #ifdef _LAZY_ICONEXTRACT
 	  case PM_UPDATE_ICONS:
-		UpdateIcons();
+		UpdateIcons(wparam);
 		break;
 #endif
 
@@ -441,7 +442,7 @@ void StartMenu::SelectButton(int id)
 #endif
 
 
-bool StartMenu::GetButtonRect(int id, PRECT prect)
+bool StartMenu::GetButtonRect(int id, PRECT prect) const
 {
 #ifdef _LIGHT_STARTMENU
 	ClientRect clnt(_hwnd);
@@ -452,7 +453,7 @@ bool StartMenu::GetButtonRect(int id, PRECT prect)
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
 
-		if (info._id == _selected_id) {
+		if (info._id == id) {
 			*prect = rect;
 			return true;
 		}
@@ -484,7 +485,7 @@ void StartMenu::DrawFloatingButton(HDC hdc)
 	DrawIconEx(hdc, clnt.right-12, 0, floatingIcon, 8, 4, 0, 0, DI_NORMAL);
 }
 
-void StartMenu::GetFloatingButonRect(LPRECT prect)
+void StartMenu::GetFloatingButtonRect(LPRECT prect)
 {
 	GetClientRect(_hwnd, prect);
 
@@ -509,12 +510,12 @@ void StartMenu::Paint(PaintCanvas& canvas)
 	BkMode bk_mode(canvas, TRANSPARENT);
 
 	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
-		const SMBtnInfo& info = *it;
+		const SMBtnInfo& btn = *it;
 
 		if (rect.top > canvas.rcPaint.bottom)
 			break;
 
-		if (info._id == -1) {	// a separator?
+		if (btn._id == -1) {	// a separator?
 			rect.bottom = rect.top + STARTMENU_SEP_HEIGHT;
 
 			BrushSelection brush_sel(canvas, GetSysColorBrush(COLOR_BTNSHADOW));
@@ -526,8 +527,8 @@ void StartMenu::Paint(PaintCanvas& canvas)
 			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
 
 			if (rect.top >= canvas.rcPaint.top)
-				DrawStartMenuButton(canvas, rect, info._title, info._hIcon,
-									info._hasSubmenu, info._enabled, info._id==_selected_id, false);
+				DrawStartMenuButton(canvas, rect, btn._title, btn._hIcon,
+									btn._hasSubmenu, btn._enabled, btn._id==_selected_id, false);
 		}
 
 		rect.top = rect.bottom;
@@ -536,12 +537,52 @@ void StartMenu::Paint(PaintCanvas& canvas)
 }
 
 #ifdef _LAZY_ICONEXTRACT
-void StartMenu::UpdateIcons()
+void StartMenu::UpdateIcons(int idx)
 {
 	UpdateWindow(_hwnd);
 
+#ifdef _SINGLE_ICONEXTRACT
+	 // extract only one icon per call to allow leaving the folder while the lazy extraction is running
+	if (idx >= 0) {
+		for(; idx<(int)_buttons.size(); ++idx) {
+			SMBtnInfo& btn = _buttons[idx];
+
+			if (!btn._hIcon && btn._id>0) {
+				StartMenuEntry& sme = _entries[btn._id];
+
+				btn._hIcon = (HICON)-1;
+
+				for(ShellEntrySet::const_iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
+					const Entry* entry = *it;
+
+					HICON hIcon = extract_icon(entry);
+
+					if (hIcon) {
+						btn._hIcon = hIcon;
+						break;
+					}
+				}
+
+				if (btn._hIcon != (HICON)-1) {
+					RECT rect;
+					GetButtonRect(btn._id, &rect);
+					WindowCanvas canvas(_hwnd);
+					DrawStartMenuButton(canvas, rect, NULL, btn._hIcon, btn._hasSubmenu, btn._enabled, btn._id==_selected_id, false);
+					//InvalidateRect(_hwnd, &rect, FALSE);
+					//UpdateWindow(_hwnd);
+					break;
+				}
+			}
+		}
+
+		if (++idx < (int)_buttons.size())
+			PostMessage(_hwnd, PM_UPDATE_ICONS, idx, 0);
+
+		return;
+	}
+#else
 	int icons_extracted = 0;
-	int icons_refreshed = 0;
+	int icons_updated = 0;
 
 	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
 		ShellDirectory& dir = it->_dir;
@@ -557,7 +598,7 @@ void StartMenu::UpdateIcons()
 				sme._hIcon = (HICON)-1;
 
 				for(ShellEntrySet::const_iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
-					const ShellEntry* sm_entry = *it2;
+					const Entry* sm_entry = *it2;
 
 					if (sm_entry->_hIcon) {
 						sme._hIcon = sm_entry->_hIcon;
@@ -572,15 +613,16 @@ void StartMenu::UpdateIcons()
 
 			if (info._id>0 && !info._hIcon) {
 				info._hIcon = _entries[info._id]._hIcon;
-				++icons_refreshed;
+				++icons_updated;
 			}
 		}
 	}
 
-	if (icons_refreshed) {
-		InvalidateRect(_hwnd, NULL, TRUE);
+	if (icons_updated) {
+		InvalidateRect(_hwnd, NULL, FALSE);
 		UpdateWindow(_hwnd);
 	}
+#endif
 }
 #endif
 
@@ -630,7 +672,31 @@ int StartMenu::Command(int id, int code)
 }
 
 
-StartMenuEntry& StartMenu::AddEntry(LPCTSTR title, HICON hIcon, int id)
+StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, const Entry* entry)
+{
+	 // search for an already existing subdirectory entry with the same name
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+			StartMenuEntry& sme = it->second;
+
+			if (sme._title == title)	///@todo speed up by using a map indexed by name
+				for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
+					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+						 // merge the new shell entry with the existing of the same name
+						sme._entries.insert(entry);
+						return sme;
+					}
+				}
+		}
+
+	StartMenuEntry& sme = AddEntry(title, hIcon);
+
+	sme._entries.insert(entry);
+
+	return sme;
+}
+
+StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, int id)
 {
 	if (id == -1)
 		id = ++_next_id;
@@ -648,32 +714,20 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 	HICON hIcon = entry->_hIcon;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		hIcon = SmallIcon(IDI_EXPLORER);
+		hIcon = SmallIcon(IDI_FOLDER);
 
-	const String& entry_name = folder.get_name(entry->_pidl);
-
-	 // search for an already existing subdirectory entry with the same name
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
-			StartMenuEntry& sme = it->second;
-
-			if (sme._title == entry_name)	///@todo speed up by using a map indexed by name
-				for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
-					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-						 // merge the new shell entry with the existing of the same name
-						sme._entries.insert(entry);
-						return sme;
-					}
-				}
-		}
-
-	StartMenuEntry& sme = AddEntry(entry_name, hIcon);
-
-	sme._entries.insert(entry);
-
-	return sme;
+	return AddEntry(folder.get_name(entry->_pidl), hIcon, entry);
 }
 
+StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const Entry* entry)
+{
+	HICON hIcon = entry->_hIcon;
+
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		hIcon = SmallIcon(IDI_FOLDER);
+
+	return AddEntry(entry->_display_name, hIcon, entry);
+}
 
 
 void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, int id, bool enabled)
@@ -743,8 +797,8 @@ bool StartMenu::CloseOtherSubmenus(int id)
 			if (_submenu_id == id)
 				return false;
 			else {
-				DestroyWindow(_submenu);
 				_submenu_id = 0;
+				DestroyWindow(_submenu);
 				// _submenu should be reset automatically by PM_STARTMENU_CLOSED, but safety first...
 			}
 		}
@@ -825,10 +879,20 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 	String title;
 
 	for(ShellEntrySet::const_iterator it=entries.begin(); it!=entries.end(); ++it) {
-		ShellEntry* entry = const_cast<ShellEntry*>(*it);
+		Entry* entry = const_cast<Entry*>(*it);
 
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			new_folders.push_back(entry->create_absolute_pidl());
+
+			///@todo If the user explicitely clicked on a submenu, display this folder as floating start menu.
+
+			if (entry->_etype == ET_SHELL)
+				new_folders.push_back(static_cast<const ShellEntry*>(entry)->create_absolute_pidl());
+			else {
+				TCHAR path[MAX_PATH];
+
+				if (entry->get_path(path))
+					new_folders.push_back(path);
+			}
 
 			if (title.empty())
 				title = entry->_display_name;
@@ -903,7 +967,9 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 
 	HBRUSH bk_brush = GetSysColorBrush(bk_color);
 
-	FillRect(hdc, &rect, bk_brush);
+	if (title)
+		FillRect(hdc, &rect, bk_brush);
+
 	DrawIconEx(hdc, iconPos.x, iconPos.y, hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
 
 	 // draw submenu arrow at the right
@@ -916,13 +982,15 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 					16, 16, 0, bk_brush, DI_NORMAL);
 	}
 
-	BkMode bk_mode(hdc, TRANSPARENT);
+	if (title) {
+		BkMode bk_mode(hdc, TRANSPARENT);
 
-	if (!enabled)	// dis->itemState & (ODS_DISABLED|ODS_GRAYED)
-		DrawGrayText(hdc, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
-	else {
-		TextColor lcColor(hdc, GetSysColor(text_color));
-		DrawText(hdc, title, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
+		if (!enabled)	// dis->itemState & (ODS_DISABLED|ODS_GRAYED)
+			DrawGrayText(hdc, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
+		else {
+			TextColor lcColor(hdc, GetSysColor(text_color));
+			DrawText(hdc, title, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
+		}
 	}
 }
 
@@ -1505,10 +1573,6 @@ void SearchMenu::AddEntries()
 
 void RecentStartMenu::AddEntries()
 {
-
-	///@todo A cache would really speed up processing of long recent doc lists.
-	///@todo Alternativelly we could also use direct file system access instead of iterating in shell namespace.
-
 	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
@@ -1517,9 +1581,9 @@ void RecentStartMenu::AddEntries()
 			WaitCursor wait;
 
 #ifdef _LAZY_ICONEXTRACT
-			dir.smart_scan(false);	// lazy icon extraction
+			dir.smart_scan(SCAN_FILESYSTEM);
 #else
-			dir.smart_scan(true);
+			dir.smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 #endif
 		}
 
