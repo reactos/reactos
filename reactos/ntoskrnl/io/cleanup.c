@@ -107,7 +107,7 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
    
    FileObject = IoStack->FileObject;
    
-   if (DeviceObject->Flags & DO_BUFFERED_IO)     
+   if (DeviceObject->Flags & DO_BUFFERED_IO)
      {
 	if (IoStack->MajorFunction == IRP_MJ_READ)
 	  {
@@ -235,7 +235,17 @@ IoSecondStageCompletion(
    
    if (Irp->UserIosb!=NULL)
    {
-      *Irp->UserIosb=Irp->IoStatus;
+      if (Irp->RequestorMode == KernelMode)
+      {
+	*Irp->UserIosb = Irp->IoStatus;
+      }
+      else
+      {
+	DPRINT("Irp->RequestorMode == UserMode\n");
+	MmSafeCopyToUser(Irp->UserIosb,
+			 &Irp->IoStatus,
+			 sizeof(IO_STATUS_BLOCK));
+      }
    }
 
    if (Irp->UserEvent)
@@ -248,19 +258,19 @@ IoSecondStageCompletion(
    {
       if (Irp->UserEvent == NULL)
       {
-         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);         
+         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);
       }
       else if (OriginalFileObject->Flags & FO_SYNCHRONOUS_IO && Irp->UserEvent != &OriginalFileObject->Event)
       {
-         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);         
+         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);
       }
    }
 
    //Windows NT File System Internals, page 154
    if (!(Irp->Flags & IRP_PAGING_IO) && OriginalFileObject)
    {
-      // if the event is not the one in the file object, it needs dereferenced  
-      if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)   
+      // if the event is not the one in the file object, it needs dereferenced
+      if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)
       {
          ObDereferenceObject(Irp->UserEvent);
       }
@@ -302,5 +312,4 @@ IoSecondStageCompletion(
    }
 
    IoFreeIrp(Irp);
-   
 }

@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.39 2003/11/27 00:50:05 gdalsnes Exp $
+/* $Id: fs.c,v 1.40 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -77,7 +77,7 @@ NtFsControlFile (
    PIRP Irp;
    PEXTENDED_IO_STACK_LOCATION StackPtr;
    PKEVENT ptrEvent;
-   IO_STATUS_BLOCK IoSB;
+   KPROCESSOR_MODE PreviousMode;
 
    DPRINT("NtFsControlFile(DeviceHandle %x EventHandle %x ApcRoutine %x "
           "ApcContext %x IoStatusBlock %x IoControlCode %x "
@@ -87,10 +87,12 @@ NtFsControlFile (
           IoControlCode,InputBuffer,InputBufferSize,OutputBuffer,
           OutputBufferSize);
 
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(DeviceHandle,
 				      FILE_READ_DATA | FILE_WRITE_DATA,
 				      NULL,
-				      KernelMode,
+				      PreviousMode,
 				      (PVOID *) &FileObject,
 				      NULL);
    
@@ -104,7 +106,7 @@ NtFsControlFile (
         Status = ObReferenceObjectByHandle (EventHandle,
                                             SYNCHRONIZE,
                                             ExEventObjectType,
-                                            UserMode,
+                                            PreviousMode,
                                             (PVOID*)&ptrEvent,
                                             NULL);
         if (!NT_SUCCESS(Status))
@@ -130,11 +132,12 @@ NtFsControlFile (
 				       OutputBufferSize,
 				       FALSE,
 				       ptrEvent,
-				       &IoSB);
+				       IoStatusBlock);
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   
+
+   Irp->RequestorMode = PreviousMode;
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
@@ -147,15 +150,16 @@ NtFsControlFile (
    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
    
    Status = IoCallDriver(DeviceObject,Irp);
-   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(ptrEvent,Executive,KernelMode,FALSE,NULL);
-	Status = IoSB.Status;
+	KeWaitForSingleObject(ptrEvent,
+			      Executive,
+			      PreviousMode,
+			      FileObject->Flags & FO_ALERTABLE_IO,
+			      NULL);
+	Status = IoStatusBlock->Status;
      }
-   if (IoStatusBlock)
-     {
-        *IoStatusBlock = IoSB;
-     }
+
    return(Status);
 }
 

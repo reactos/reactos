@@ -23,8 +23,8 @@ NTSTATUS
 STDCALL
 NtFlushWriteBuffer(VOID)
 {
-	KeFlushWriteBuffer();
-	return STATUS_SUCCESS;
+  KeFlushWriteBuffer();
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -48,12 +48,14 @@ NtFlushBuffersFile (
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
-   IO_STATUS_BLOCK IoSB;
-      
+   KPROCESSOR_MODE PreviousMode;
+
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_DATA,
 				      NULL,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&FileObject,
 				      NULL);
    if (Status != STATUS_SUCCESS)
@@ -67,23 +69,26 @@ NtFlushBuffersFile (
 				      0,
 				      NULL,
 				      &FileObject->Event,
-				      &IoSB);
+				      IoStatusBlock);
 
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
+   Irp->RequestorMode = PreviousMode;
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
 
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING)
+   if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
-	Status = IoSB.Status;
+	KeWaitForSingleObject(&FileObject->Event,
+			      Executive,
+			      PreviousMode,
+			      FileObject->Flags & FO_ALERTABLE_IO,
+			      NULL);
+	Status = IoStatusBlock->Status;
      }
-   if (IoStatusBlock)
-     {
-       *IoStatusBlock = IoSB;
-     }
+
    return(Status);
 }

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.27 2003/11/08 07:42:10 ekohl Exp $
+/* $Id: file.c,v 1.28 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,6 +42,7 @@ NtQueryInformationFile(HANDLE FileHandle,
    PDEVICE_OBJECT DeviceObject;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
+   KPROCESSOR_MODE PreviousMode;
    
    assert(IoStatusBlock != NULL);
    assert(FileInformation != NULL);
@@ -49,11 +50,13 @@ NtQueryInformationFile(HANDLE FileHandle,
    DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
 	  "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
 	  Length, FileInformationClass);
-   
+
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
 				      IoFileObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID *)&FileObject,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -84,7 +87,7 @@ NtQueryInformationFile(HANDLE FileHandle,
    
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-
+   Irp->RequestorMode = PreviousMode;
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
@@ -108,8 +111,8 @@ NtQueryInformationFile(HANDLE FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
-			      KernelMode,
-			      FALSE,
+			      PreviousMode,
+			      FileObject->Flags & FO_ALERTABLE_IO,
 			      NULL);
 	Status = IoStatusBlock->Status;
      }
@@ -169,7 +172,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   
+   Irp->RequestorMode = KernelMode;
    Irp->AssociatedIrp.SystemBuffer = FileInformation;
    Irp->UserIosb = &IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
@@ -194,7 +197,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
-			      FALSE,
+			      FileObject->Flags & FO_ALERTABLE_IO,
 			      NULL);
 	Status = IoStatusBlock.Status;
      }
@@ -225,6 +228,7 @@ NtSetInformationFile(HANDLE FileHandle,
    PIRP Irp;
    NTSTATUS Status;
    PVOID SystemBuffer;
+   KPROCESSOR_MODE PreviousMode;
    
    assert(IoStatusBlock != NULL)
    assert(FileInformation != NULL)
@@ -232,12 +236,14 @@ NtSetInformationFile(HANDLE FileHandle,
    DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
 	  "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
 	  Length, FileInformationClass);
-   
+
+   PreviousMode = ExGetPreviousMode();
+
    /*  Get the file object from the file handle  */
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_ATTRIBUTES,
 				      IoFileObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID *)&FileObject,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -261,7 +267,7 @@ NtSetInformationFile(HANDLE FileHandle,
          Status = ObReferenceObjectByHandle(((PFILE_COMPLETION_INFORMATION)FileInformation)->IoCompletionHandle,
                                             IO_COMPLETION_MODIFY_STATE,//???
                                             ExIoCompletionType,
-                                            UserMode,
+                                            PreviousMode,
                                             (PVOID*)&Queue,
                                             NULL);
          if (NT_SUCCESS(Status))
@@ -305,7 +311,7 @@ NtSetInformationFile(HANDLE FileHandle,
    
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-
+   Irp->RequestorMode = PreviousMode;
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
@@ -334,8 +340,8 @@ NtSetInformationFile(HANDLE FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
-			      KernelMode,
-			      FALSE,
+			      PreviousMode,
+			      FileObject->Flags & FO_ALERTABLE_IO,
 			      NULL);
 	Status = IoStatusBlock->Status;
      }

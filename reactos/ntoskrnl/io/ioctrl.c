@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.22 2003/11/28 17:17:44 ekohl Exp $
+/* $Id: ioctrl.c,v 1.23 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,13 +37,13 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 		       OUT PVOID OutputBuffer,
 		       IN ULONG OutputBufferLength OPTIONAL)
 {
-  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PDEVICE_OBJECT DeviceObject;
   PIRP Irp;
   PIO_STACK_LOCATION StackPtr;
   PKEVENT EventObject;
+  KPROCESSOR_MODE PreviousMode;
 
   DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
          "UserApcContext %x IoStatusBlock %x IoControlCode %x "
@@ -56,10 +56,12 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
   if (IoStatusBlock == NULL)
     return STATUS_ACCESS_VIOLATION;
 
+  PreviousMode = ExGetPreviousMode();
+
   Status = ObReferenceObjectByHandle (DeviceHandle,
 				      FILE_READ_DATA | FILE_WRITE_DATA,
 				      IoFileObjectType,
-				      KernelMode,
+				      PreviousMode,
 				      (PVOID *) &FileObject,
 				      NULL);
   if (!NT_SUCCESS(Status))
@@ -72,7 +74,7 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
       Status = ObReferenceObjectByHandle (Event,
                                           SYNCHRONIZE,
                                           ExEventObjectType,
-                                          UserMode,
+                                          PreviousMode,
                                           (PVOID*)&EventObject,
                                           NULL);
       if (!NT_SUCCESS(Status))
@@ -97,11 +99,12 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 				       OutputBufferLength,
 				       FALSE,
 				       EventObject,
-				       &SafeIoStatusBlock);
+				       IoStatusBlock);
 
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
+  Irp->RequestorMode = PreviousMode;
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
 
@@ -114,13 +117,10 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
   Status = IoCallDriver(DeviceObject,Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
-      BOOLEAN Alertable;
-
-      Alertable = (FileObject->Flags & FO_ALERTABLE_IO) ? TRUE : FALSE;
       Status = KeWaitForSingleObject (EventObject,
 				      Executive,
-				      UserMode,
-				      Alertable,
+				      PreviousMode,
+				      FileObject->Flags & FO_ALERTABLE_IO,
 				      NULL);
       if (Status != STATUS_WAIT_0)
 	{
@@ -128,11 +128,8 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 	  return Status;
 	}
 
-      Status = SafeIoStatusBlock.Status;
+      Status = IoStatusBlock->Status;
     }
-
-  IoStatusBlock->Status = SafeIoStatusBlock.Status;
-  IoStatusBlock->Information = SafeIoStatusBlock.Information;
 
   return Status;
 }

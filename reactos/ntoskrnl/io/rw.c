@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.51 2003/11/30 19:59:41 gdalsnes Exp $
+/* $Id: rw.c,v 1.52 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -43,13 +43,14 @@ NtReadFile (IN HANDLE FileHandle,
 	    OUT PIO_STATUS_BLOCK IoStatusBlock,
 	    OUT PVOID Buffer,
 	    IN ULONG Length,
-      IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
+	    IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
 	    IN PULONG Key OPTIONAL)
 {
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
   PIO_STACK_LOCATION StackPtr;
+  KPROCESSOR_MODE PreviousMode;
   PKEVENT EventObject = NULL;
 
   DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
@@ -59,10 +60,12 @@ NtReadFile (IN HANDLE FileHandle,
   if (IoStatusBlock == NULL)
     return STATUS_ACCESS_VIOLATION;
 
+  PreviousMode = ExGetPreviousMode();
+
   Status = ObReferenceObjectByHandle(FileHandle,
 				     FILE_READ_DATA,
 				     IoFileObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&FileObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -88,7 +91,7 @@ NtReadFile (IN HANDLE FileHandle,
       Status = ObReferenceObjectByHandle(Event,
 					 SYNCHRONIZE,
 					 ExEventObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&EventObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -107,10 +110,12 @@ NtReadFile (IN HANDLE FileHandle,
 				     Length,
 				     ByteOffset,
 				     EventObject,
-             IoStatusBlock);
+				     IoStatusBlock);
 
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
+  Irp->RequestorMode = PreviousMode;
 
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
@@ -121,19 +126,20 @@ NtReadFile (IN HANDLE FileHandle,
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-    {
+  {
       Status = KeWaitForSingleObject (&FileObject->Event,
 				      Executive,
-				      UserMode,
-              FileObject->Flags & FO_ALERTABLE_IO,
+				      PreviousMode,
+				      FileObject->Flags & FO_ALERTABLE_IO,
 				      NULL);
+
     if (Status != STATUS_WAIT_0)
     {
       /* Wait failed. */
       return(Status);
     }
 
-      Status = IoStatusBlock->Status;
+    Status = IoStatusBlock->Status;
   }
 
   return Status;
@@ -162,13 +168,14 @@ NtWriteFile (IN HANDLE FileHandle,
 	     OUT PIO_STATUS_BLOCK IoStatusBlock,
 	     IN PVOID Buffer,
 	     IN ULONG Length,
-       IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
+	     IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
 	     IN PULONG Key OPTIONAL)
 {
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
   PIO_STACK_LOCATION StackPtr;
+  KPROCESSOR_MODE PreviousMode;
   PKEVENT EventObject = NULL;
 
   DPRINT("NtWriteFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
@@ -178,10 +185,12 @@ NtWriteFile (IN HANDLE FileHandle,
   if (IoStatusBlock == NULL)
     return STATUS_ACCESS_VIOLATION;
 
+  PreviousMode = ExGetPreviousMode();
+
   Status = ObReferenceObjectByHandle(FileHandle,
 				     FILE_WRITE_DATA,
 				     IoFileObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&FileObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -207,7 +216,7 @@ NtWriteFile (IN HANDLE FileHandle,
       Status = ObReferenceObjectByHandle(Event,
 					 SYNCHRONIZE,
 					 ExEventObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&EventObject,
 					 NULL);
     
@@ -233,6 +242,8 @@ NtWriteFile (IN HANDLE FileHandle,
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
+  Irp->RequestorMode = PreviousMode;
+
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
@@ -245,8 +256,8 @@ NtWriteFile (IN HANDLE FileHandle,
     {
       Status = KeWaitForSingleObject (&FileObject->Event,
 				      Executive,
-				      UserMode,
-              FileObject->Flags & FO_ALERTABLE_IO,
+				      PreviousMode,
+				      FileObject->Flags & FO_ALERTABLE_IO,
 				      NULL);
       if (Status != STATUS_WAIT_0)
 	{

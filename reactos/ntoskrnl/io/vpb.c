@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.23 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: vpb.c,v 1.24 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,16 +66,6 @@ IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 
 
 /*
- * @implemented
- */
-NTSTATUS STDCALL
-NtQueryVolumeInformationFile(IN HANDLE FileHandle,
-			     OUT PIO_STATUS_BLOCK IoStatusBlock,
-			     OUT PVOID FsInformation,
-			     IN ULONG Length,
-			     IN FS_INFORMATION_CLASS FsInformationClass)
-
-/*
  * FUNCTION: Queries the volume information
  * ARGUMENTS: 
  *	  FileHandle  = Handle to a file object on the target volume
@@ -96,7 +86,16 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
  *		FileFsMaximumInformation	
  *
  * RETURNS: Status
+ *
+ * @implemented
  */
+
+NTSTATUS STDCALL
+NtQueryVolumeInformationFile(IN HANDLE FileHandle,
+			     OUT PIO_STATUS_BLOCK IoStatusBlock,
+			     OUT PVOID FsInformation,
+			     IN ULONG Length,
+			     IN FS_INFORMATION_CLASS FsInformationClass)
 {
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
@@ -104,17 +103,19 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
-   IO_STATUS_BLOCK IoSB;
+   KPROCESSOR_MODE PreviousMode;
    
    assert(IoStatusBlock != NULL);
    assert(FsInformation != NULL);
    
    DPRINT("FsInformation %p\n", FsInformation);
-   
+
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
 				      IoFileObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&FileObject,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -142,13 +143,14 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
+   Irp->RequestorMode = PreviousMode;
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    KeResetEvent( &FileObject->Event );
    Irp->UserEvent = &FileObject->Event;
-   Irp->UserIosb = &IoSB;
+   Irp->UserIosb = IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -168,10 +170,10 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      UserRequest,
-			      KernelMode,
+			      PreviousMode,
 			      FALSE,
 			      NULL);
-	Status = IoSB.Status;
+	Status = IoStatusBlock->Status;
      }
    DPRINT("Status %x\n", Status);
    
@@ -180,12 +182,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	DPRINT("Information %lu\n", IoStatusBlock->Information);
 	MmSafeCopyToUser(FsInformation,
 			 SystemBuffer,
-			 IoSB.Information);
+			 IoStatusBlock->Information);
      }
-   if (IoStatusBlock)
-     {
-       *IoStatusBlock = IoSB;
-     }
+
    ExFreePool(SystemBuffer);
    
    return(Status);
@@ -231,9 +230,9 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
 
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   
+   Irp->RequestorMode = KernelMode;
    Irp->AssociatedIrp.SystemBuffer = FsInformation;
    KeResetEvent( &FileObject->Event );
    Irp->UserEvent = &FileObject->Event;
@@ -289,12 +288,17 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PEXTENDED_IO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
-   IO_STATUS_BLOCK IoSB;
-   
+   KPROCESSOR_MODE PreviousMode;
+
+   assert(IoStatusBlock != NULL);
+   assert(FsInformation != NULL);
+
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_ATTRIBUTES,
 				      NULL,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&FileObject,
 				      NULL);
    if (Status != STATUS_SUCCESS)
@@ -325,13 +329,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 		      FsInformation,
 		      Length);
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-
+   Irp->RequestorMode = PreviousMode;
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    KeResetEvent( &FileObject->Event );
    Irp->UserEvent = &FileObject->Event;
-   Irp->UserIosb = &IoSB;
+   Irp->UserIosb = IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
@@ -350,15 +354,12 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      UserRequest,
-			      KernelMode,
+			      PreviousMode,
 			      FALSE,
 			      NULL);
-        Status = IoSB.Status;
+	Status = IoStatusBlock->Status;
      }
-   if (IoStatusBlock)
-   {
-     *IoStatusBlock = IoSB;
-   }
+
    ExFreePool(SystemBuffer);
    
    return(Status);

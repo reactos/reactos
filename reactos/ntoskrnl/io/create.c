@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.69 2003/11/06 18:05:54 ekohl Exp $
+/* $Id: create.c,v 1.70 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,6 +344,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
+   KPROCESSOR_MODE PreviousMode;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -357,10 +358,12 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 
    *FileHandle = 0;
 
-   Status = ObCreateObject(ExGetPreviousMode(),
+   PreviousMode = ExGetPreviousMode();
+
+   Status = ObCreateObject(PreviousMode,
 			   IoFileObjectType,
 			   ObjectAttributes,
-			   ExGetPreviousMode(),
+			   PreviousMode,
 			   NULL,
 			   sizeof(FILE_OBJECT),
 			   0,
@@ -421,7 +424,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 
    //trigger FileObject/Event dereferencing
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-     
+   Irp->RequestorMode = PreviousMode;
    Irp->UserIosb = IoStatusBlock;
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
@@ -476,7 +479,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
-			      KernelMode,
+			      PreviousMode,
 			      FALSE,
 			      NULL);
 	Status = IoStatusBlock->Status;

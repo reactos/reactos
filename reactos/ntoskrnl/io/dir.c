@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: dir.c,v 1.20 2003/12/13 14:36:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -92,14 +92,16 @@ NtQueryDirectoryFile(
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PEXTENDED_IO_STACK_LOCATION IoStack;
-   IO_STATUS_BLOCK IoSB;
+   KPROCESSOR_MODE PreviousMode;
    
    DPRINT("NtQueryDirectoryFile()\n");
-   
+
+   PreviousMode = ExGetPreviousMode();
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,
 				      IoFileObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID *)&FileObject,
 				      NULL);
    
@@ -117,10 +119,10 @@ NtQueryDirectoryFile(
 	return STATUS_UNSUCCESSFUL;
      }
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   
-   Irp->UserIosb = &IoSB;
+   Irp->RequestorMode = PreviousMode;
+   Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
    KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
@@ -155,20 +157,14 @@ NtQueryDirectoryFile(
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
-	  }
-	else
-	  {
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
-	  }
-	Status = IoSB.Status;
+	KeWaitForSingleObject(&FileObject->Event,
+			      Executive,
+			      PreviousMode,
+			      FileObject->Flags & FO_ALERTABLE_IO,
+			      NULL);
+	Status = IoStatusBlock->Status;
      }
-   if (IoStatusBlock)
-     {
-       *IoStatusBlock = IoSB;
-     }
+
    return(Status);
 }
 
