@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.42 2000/12/22 23:15:18 ea Exp $
+# $Id: makefile,v 1.43 2001/01/17 17:00:22 jean Exp $
 #
 # ReactOS Operating System
 #
@@ -149,8 +149,9 @@ ifeq ($(DOSCLI), yes)
 CLEAN_FILES = assert\*.o conio\*.o ctype\*.o direct\*.o dirent\*.o \
 	except\*.o float\*.o io\*.o libc\*.o locale\*.o malloc\*.o \
 	math\*.o mbstring\*.o misc\*.o process\*.o quad\*.o search\*.o \
-	setjmp\*.o stdio\*.o stdlib\*.o string\*.o sys_stat\*.o tchar\*.o \
-	time\*.o wchar\*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
+	setjmp\*.o signal\*.o stdio\*.o stdlib\*.o string\*.o sys_stat\*.o \
+	tchar\*.o time\*.o wchar\*.o \
+	$(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
 	$(TARGET).coff
 else
 CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \

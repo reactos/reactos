@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.56 2000/12/23 02:37:37 dwelch Exp $
+# $Id: makefile,v 1.57 2001/01/17 17:01:38 jean Exp $
 #
 # ReactOS Operating System
 #
@@ -49,7 +49,8 @@ OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
           stubs/stubs.o ldr/utils.o $(CSR_OBJECTS) $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \
+CLEAN_FILES = napi.o csr\*.o dbg\*.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o \
+	      string\*.o stubs\*.o \
               $(TARGET).a main\dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
               base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 else
