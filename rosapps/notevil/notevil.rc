@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.2 1999/10/03 22:10:15 ekohl Exp $ */
+/* $Id: notevil.rc,v 1.3 2000/01/23 22:52:57 ea Exp $ */
 #include "../../reactos/include/defines.h"
 #include "../../reactos/include/reactos/resource.h"
 
@@ -7,7 +7,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* Version information. */
 
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION		RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
 	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
 	FILEFLAGSMASK	0x3fL
 #ifdef _DEBUG
@@ -25,7 +25,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"ReactOS Coders Console Parade\0"
-            VALUE "FileVersion",	"1.0.0\0"
+            VALUE "FileVersion",	RES_STR_PRODUCT_VERSION
             VALUE "InternalName",	"notevil\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"notevil.exe\0"
@@ -64,6 +64,10 @@ BEGIN
  14, "Matt Pyne"
  15, "Jason Weiler"
  16, "David Welch"
+ 17, "Emanuele Aliberti"
+ 18, "Phillip Susi"
+ 19, "Paolo Pantaleo"
+ 20, "Hernan Ochoa"
 END
 
 /* EOF */
