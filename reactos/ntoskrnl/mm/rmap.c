@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.17 2003/05/19 15:58:09 hbirr Exp $
+/* $Id: rmap.c,v 1.18 2003/06/06 21:01:36 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -77,8 +77,8 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   PVOID Address;
   PEPROCESS Process;
   PMM_PAGEOP PageOp;
-  LARGE_INTEGER Offset;
-  NTSTATUS Status;
+  ULONG Offset;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   /*
    * Check that the address still has a valid rmap; then reference the
@@ -133,15 +133,14 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Offset.QuadPart = (ULONG)((Address - (ULONG)MemoryArea->BaseAddress) +
-	MemoryArea->Data.SectionData.ViewOffset);
+      Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
 
       /*
        * Get or create a pageop
        */
       PageOp = MmGetPageOp(MemoryArea, 0, 0, 
 			   MemoryArea->Data.SectionData.Segment, 
-			   Offset.u.LowPart, MM_PAGEOP_PAGEOUT);
+			   Offset, MM_PAGEOP_PAGEOUT);
       if (PageOp == NULL)
 	{
 	  DPRINT1("MmGetPageOp failed\n");
@@ -219,8 +218,8 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   PVOID Address;
   PEPROCESS Process;
   PMM_PAGEOP PageOp;
-  LARGE_INTEGER Offset;
-  NTSTATUS Status;
+  ULONG Offset;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   ExAcquireFastMutex(&RmapListLock);
   entry = MmGetRmapListHeadPage(PhysicalAddress);
@@ -257,15 +256,14 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Offset.QuadPart = (ULONG)((Address - (ULONG)MemoryArea->BaseAddress) +
-	MemoryArea->Data.SectionData.ViewOffset);
+      Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
 
       /*
        * Get or create a pageop
        */
       PageOp = MmGetPageOp(MemoryArea, 0, 0, 
 			   MemoryArea->Data.SectionData.Segment, 
-			   Offset.u.LowPart, MM_PAGEOP_PAGEOUT);
+			   Offset, MM_PAGEOP_PAGEOUT);
       if (PageOp == NULL)
 	{
 	  DPRINT1("MmGetPageOp failed\n");
