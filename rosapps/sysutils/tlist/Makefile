@@ -12,7 +12,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = tlist
 
-TARGET_SDKLIBS = epsapi.a kernel32.a user32.a ntdll.a
+TARGET_SDKLIBS = epsapi.a tgetopt.a kernel32.a user32.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

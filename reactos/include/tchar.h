@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.7 $
+ * $Revision: 1.8 $
  * $Author: hyperion $
- * $Date: 2003/02/09 21:15:29 $
+ * $Date: 2003/04/22 03:20:25 $
  *
  */
 
@@ -52,8 +52,8 @@
 #ifndef _TCHAR_DEFINED
 #ifndef RC_INVOKED
 typedef wchar_t _TCHAR;
-typedef signed wchar_t _TSCHAR;
-typedef unsigned wchar_t _TUCHAR;
+typedef wchar_t _TSCHAR;
+typedef wchar_t _TUCHAR;
 typedef wchar_t _TXCHAR;
 /* #if !__STDC__ */
 typedef wchar_t TCHAR;

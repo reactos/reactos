@@ -1,4 +1,4 @@
-/* $Id: tlist.c,v 1.4 2003/04/14 01:19:08 hyperion Exp $
+/* $Id: tlist.c,v 1.5 2003/04/22 03:20:25 hyperion Exp $
  *
  * ReactOS Project
  * TList
@@ -15,6 +15,7 @@
 #include <ctype.h>
 
 #include <epsapi.h>
+#include <getopt.h>
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -68,14 +69,14 @@ int STDCALL PrintBanner (VOID)
   return EXIT_SUCCESS;
 }
 
-int STDCALL PrintSynopsys (VOID)
+int STDCALL PrintSynopsys (int nRetVal)
 {
   PrintBanner ();
   printf ("Usage: tlist [-t | PID | -l]\n\n"
           "  -t   print the task list tree\n"
           "  PID  print module information for this ID\n"
           "  -l   print license information\n");
-  return EXIT_SUCCESS;
+  return nRetVal;
 }
 
 int STDCALL PrintLicense (VOID)
@@ -441,29 +442,24 @@ int STDCALL PrintProcess (char * PidStr)
 
 int main (int argc, char * argv [])
 {
-  if (1 == argc)
+ int c;
+
+ if(1 == argc) return PrintProcessList(FALSE);
+
+ while((c = getopt(argc, argv, "tl")) != -1)
+ {
+  switch(c)
   {
-    return PrintProcessList (FALSE);
+   case 't': return PrintProcessList(TRUE);
+   case 'l': return PrintLicense();
+   default: return PrintSynopsys(EXIT_FAILURE);
   }
-  if (2 == argc)
-  {
-    if (('-' == argv [1][0]) && ('\0' == argv [1][2]))
-    {
-      if ('t' == argv [1][1])
-      {
-        return PrintProcessList (TRUE);
-      }
-      if ('l' == argv [1][1])
-      {
-        return PrintLicense ();
-      }
-    }
-    if (isdigit(argv[1][0]))
-    {
-      return PrintProcess (argv[1]);
-    }
-  }
-  return PrintSynopsys ();
+ }
+
+ if(isdigit(argv[optind][0]))
+  return PrintProcess (argv[1]);
+
+ return PrintSynopsys(EXIT_SUCCESS);
 }
 
 /* EOF */
