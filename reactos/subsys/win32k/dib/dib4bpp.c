@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.13 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: dib4bpp.c,v 1.14 2003/07/14 17:34:52 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -116,7 +116,14 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
         for (i=DestRect->left; i<DestRect->right; i++)
         {
-          DIB_4BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy)));
+	  if (NULL != ColorTranslation)
+	  {
+	    DIB_4BPP_PutPixel(DestSurf, i, j, XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy)));
+	  }
+	  else
+	  {
+	    DIB_4BPP_PutPixel(DestSurf, i, j, DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+	  }
           sx++;
         }
         sy++;
