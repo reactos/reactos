@@ -119,39 +119,40 @@ UserHasMenu(HWND hWnd, ULONG Style)
    return (!(Style & WS_CHILD) && GetMenu(hWnd) != 0);
 }
 
-BOOL
-UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL down)
+HICON 
+UserGetWindowIcon(HWND hwnd)
 {
-   HDC hDcMem;
-   HBITMAP hSavedBitmap;
-   static HBITMAP hbSysMenu = NULL;
+  HICON Ret = 0;
+  
+  SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
+  if (!Ret)
+    SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
+  if (!Ret)
+    SendMessageTimeoutW(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
+  if (!Ret)
+    Ret = (HICON)GetClassLongW(hwnd, GCL_HICONSM);
+  if (!Ret)
+    Ret = (HICON)GetClassLongW(hwnd, GCL_HICON);
+  if (!Ret)
+    SendMessageTimeoutW(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&Ret);
+  if (!Ret)
+    Ret = LoadIconW(0, IDI_APPLICATION);
+  
+  return Ret;
+}
 
-   if (hbSysMenu == NULL)
-   {
-      hbSysMenu = (HBITMAP)LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE));
-   }
-
-   hDcMem = CreateCompatibleDC(hDC);
-   if (!hDcMem)
-   {
-      return FALSE;
-   }
-
-   hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
-   if (!hSavedBitmap)
-   {
-      DeleteDC(hDcMem);
-      return FALSE;
-   }
-
-   BitBlt(hDC, Rect->left + 2, Rect->top + 3, 16, 14, hDcMem,
-          (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ?
-          GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
-
-   SelectObject(hDcMem, hSavedBitmap);
-   DeleteDC(hDcMem);
-
-   return TRUE;
+BOOL
+UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect)
+{
+  HICON WindowIcon;
+  
+  if((WindowIcon = UserGetWindowIcon(hWnd)))
+  {
+    return DrawIconEx(hDC, Rect->left + 2, Rect->top + 2, WindowIcon,
+                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                      0, NULL, DI_NORMAL);
+  }
+  return FALSE;
 }
 
 /*
@@ -1100,7 +1101,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
             PatBlt(MemDC, 0, 0, xx, lprc->bottom - lprc->top, PATCOPY);
             // For some reason the icon isn't centered correctly...
             r.top --;
-            UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
+            UserDrawSysMenuButton(hWnd, MemDC, &r);
             r.top ++;
             r.left += xx;
           }          
@@ -1164,7 +1165,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     {
         // For some reason the icon isn't centered correctly...
         r.top --;
-        UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
+        UserDrawSysMenuButton(hWnd, MemDC, &r);
         r.top ++;
     }
     r.top ++;

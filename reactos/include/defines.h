@@ -973,6 +973,11 @@ extern "C" {
 #define DFCS_MONO	(32768)
 #define DFCS_PUSHED	(512)
 
+/* DrawIcon */
+#define ICON_SMALL	(0)
+#define ICON_BIG	(1)
+#define ICON_SMALL2	(2)
+
 /* DrawIconEx */
 #define DI_COMPAT	(4)
 #define DI_DEFAULTSIZE	(8)
