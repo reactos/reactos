@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.30 2000/09/12 10:12:10 jean Exp $
+/* $Id: registry.c,v 1.31 2000/09/12 10:43:28 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1182,7 +1182,11 @@ NtLoadKey (
 
 NTSTATUS
 STDCALL
-NtLoadKey2(VOID)
+NtLoadKey2 (
+	PHANDLE			KeyHandle,
+	OBJECT_ATTRIBUTES	ObjectAttributes,
+	ULONG			Unknown3
+	)
 {
 	UNIMPLEMENTED;
 }
