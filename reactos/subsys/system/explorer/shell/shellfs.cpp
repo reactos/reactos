@@ -190,6 +190,9 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 	ShellPath shell_path = create_absolute_pidl();
 	shexinfo.lpIDList = &*shell_path;
 
+	 // add PIDL to the recent file list
+	SHAddToRecentDocs(SHARD_PIDL, shexinfo.lpIDList);
+
 	BOOL ret = TRUE;
 
 	if (!ShellExecuteEx(&shexinfo)) {

@@ -404,7 +404,10 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 	if (!get_path(cmd))
 		return FALSE;
 
-	  // start program, open document...
+	 // add path to the recent file list
+	SHAddToRecentDocs(SHARD_PATH, cmd);
+
+	 // start program, open document...
 	return launch_file(hwnd, cmd, nCmdShow);
 }
 
