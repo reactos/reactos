@@ -4,6 +4,10 @@
  * FILE:        network/router.c
  * PURPOSE:     IP routing subsystem
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * NOTES:
+ *   This file holds authoritative routing information.
+ *   Information queries on the route table should be handled here.
+ *   This information should always override the route cache info.
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
@@ -50,7 +54,6 @@ VOID DestroyFIBE(
     DereferenceObject(FIBE->NetworkAddress);
     DereferenceObject(FIBE->Netmask);
     DereferenceObject(FIBE->Router);
-    DereferenceObject(FIBE->NTE);
 
 #ifdef DBG
     FIBE->RefCount--;
@@ -81,11 +84,48 @@ VOID DestroyFIBEs(
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
-	    Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
         /* Destroy the FIB entry */
         DestroyFIBE(Current);
         CurrentEntry = NextEntry;
     }
+}
+
+
+UINT CountFIBs() {
+    UINT FibCount = 0;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+
+    /* Search the list and remove every FIB entry we find */
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+        CurrentEntry = NextEntry;
+	FibCount++;
+    }
+
+    return FibCount;
+}
+
+
+UINT CopyFIBs( PFIB_ENTRY Target ) {
+    UINT FibCount = 0;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+
+    /* Search the list and remove every FIB entry we find */
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+	Target[FibCount] = *Current;
+        CurrentEntry = NextEntry;
+	FibCount++;
+    }
+
+    return FibCount;    
 }
 
 
@@ -273,7 +313,6 @@ PIP_INTERFACE RouterFindOnLinkInterface(
 PFIB_ENTRY RouterAddRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
-    PNET_TABLE_ENTRY NTE,
     PNEIGHBOR_CACHE_ENTRY Router,
     UINT Metric)
 /*
@@ -281,24 +320,23 @@ PFIB_ENTRY RouterAddRoute(
  * ARGUMENTS:
  *     NetworkAddress = Pointer to address of network
  *     Netmask        = Pointer to netmask of network
- *     NTE            = Pointer to NTE to use
  *     Router         = Pointer to NCE of router to use
  *     Metric         = Cost of this route
  * RETURNS:
  *     Pointer to FIB entry if the route was added, NULL if not
  * NOTES:
- *     The FIB entry references the NetworkAddress, Netmask, NTE and
+ *     The FIB entry references the NetworkAddress, Netmask and
  *     the NCE of the router. The caller is responsible for providing
  *     these references
  */
 {
     PFIB_ENTRY FIBE;
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. NetworkAddress (0x%X)  Netmask (0x%X)  NTE (0x%X)  "
-        "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, NTE, Router, Metric));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. NetworkAddress (0x%X)  Netmask (0x%X) "
+        "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, Router, Metric));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  NTE (%s)  Router (%s).\n",
-        A2S(NetworkAddress), A2S(Netmask), A2S(NTE->Address), A2S(Router->Address)));
+    TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  Router (%s).\n",
+			       A2S(NetworkAddress), A2S(Netmask), A2S(Router->Address)));
 
     FIBE = ExAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
@@ -306,13 +344,11 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
-   INIT_TAG(NTE, TAG('N','T','E',' '));
    INIT_TAG(Router, TAG('R','O','U','T'));
 
     FIBE->Free           = FreeFIB;
     FIBE->NetworkAddress = NetworkAddress;
     FIBE->Netmask        = Netmask;
-    FIBE->NTE            = NTE;
     FIBE->Router         = Router;
     FIBE->Metric         = Metric;
 
@@ -478,7 +514,7 @@ PFIB_ENTRY RouterCreateRouteIPv4(
 
     ReferenceObject(pNetworkAddress);
     ReferenceObject(pNetmask);
-    FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NTE, NCE, 1);
+    FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NCE, 1);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);

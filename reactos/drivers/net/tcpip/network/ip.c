@@ -792,13 +792,13 @@ BOOLEAN IPRegisterInterface(
         /* Reference objects for forward information base */
         ReferenceObject(Current->Address);
         ReferenceObject(Current->PLE->Prefix);
-        ReferenceObject(Current);
+	ReferenceObject(NCE);
+
         /* NCE is already referenced */
-        if (!RouterAddRoute(Current->Address, Current->PLE->Prefix, Current, NCE, 1)) {
+        if (!RouterAddRoute(Current->Address, Current->PLE->Prefix, NCE, 1)) {
             TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
             DereferenceObject(Current->Address);
             DereferenceObject(Current->PLE->Prefix);
-            DereferenceObject(Current);
             DereferenceObject(NCE);
         }
 

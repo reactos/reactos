@@ -6,6 +6,11 @@
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:       The route cache is implemented as a binary search
  *              tree to obtain fast searches
+ *
+ *   This data is not authoritative.  It is a searchable cache that allows
+ *   quick access to route information to selected hosts.  This information
+ *   should always defer to the FIB.
+ *
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
@@ -63,22 +68,6 @@ UINT CountRouteNodes( PROUTE_CACHE_NODE Node ) {
 	return 0;
 }
 
-UINT CopyRouteNodes( PROUTE_CACHE_NODE Node, PROUTE_CACHE_NODE Target ) {
-    UINT NodeCount, Result = 0;
-
-    if( !Node ) Node = RouteCache;
-
-    if( IsInternalRCN(Node) ) {
-	RtlCopyMemory(Target,Node,sizeof(*Target));
-	Target++;
-	NodeCount = CopyRouteNodes( Node->Left, Target );
-	Target += NodeCount; Result += NodeCount;
-	NodeCount = CopyRouteNodes( Node->Right, Target );
-	Target += NodeCount; Result += NodeCount;
-    }
-
-    return Result;
-}
 VOID FreeRCN(
     PVOID Object)
 /*

@@ -42,7 +42,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
 	    TI_DbgPrint(MAX_TRACE, ("Entity %d is an IF.  Found %d\n", 
 				    i, Count));
 	}
-
+    
     EntityList[EntityCount].tei_entity = IF_ENTITY;
     EntityList[EntityCount].tei_instance = Count;
     EntityList[EntityCount].context  = Interface;
