@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.21 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: rtl.h,v 1.22 2003/12/31 11:33:07 hbirr Exp $
  * 
  */
 
@@ -386,7 +386,7 @@ VOID InsertXcendingList(
     if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
         CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
     {\
-      InsertTailList(current, (NewEntry));\
+      InsertHeadList(current, (NewEntry));\
       Inserted = TRUE;\
       break;\
     }\
@@ -411,7 +411,7 @@ VOID InsertXcendingList(
     if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
         CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
     {\
-      InsertTailList(current, (NewEntry));\
+      InsertHeadList(current, (NewEntry));\
       Inserted = TRUE;\
       break;\
     }\
