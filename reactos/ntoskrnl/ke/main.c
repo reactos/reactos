@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.164 2003/06/19 19:01:01 gvg Exp $
+/* $Id: main.c,v 1.165 2003/07/06 10:25:15 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -644,8 +644,14 @@ ExpInitializeExecutive(VOID)
   /* Pass 4: free memory for all boot files, except ntoskrnl.exe and hal.dll */
   for (i = 2; i < KeLoaderBlock.ModsCount; i++)
     {
-       MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
-			      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+#ifdef KDBG
+       /* Do not free the memory from symbol files, if the kernel debugger is activ */
+       if (!RtlpCheckFileNameExtension(name, ".sym"))
+#endif
+         {
+           MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
+			          KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+	 }
     }
 
   if (BootDriverCount == 0)
