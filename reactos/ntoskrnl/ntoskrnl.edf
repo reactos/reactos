@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.15 1999/11/25 23:35:24 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.16 1999/11/27 03:29:46 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -74,7 +74,7 @@ ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 HalRegisterServiceTable
-InitializeObjectAttributes
+;InitializeObjectAttributes
 IoAllocateController
 IoAttachDeviceToDeviceStack
 IoBuildSynchronousFsdRequest
@@ -185,21 +185,21 @@ RtlCharToInteger=RtlCharToInteger@12
 RtlCompareMemory=RtlCompareMemory@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
-RtlConvertLongToLargeInteger
-RtlConvertUlongToLargeInteger
+RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
+RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyMemory
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
-RtlEnlargedIntegerMultiply
-RtlEnlargedUnsignedDivide
-RtlEnlargedUnsignedMultiply
+RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
+RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
+RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
-RtlExtendedIntegerMultiply
-RtlExtendedLargeIntegerDivide
-RtlExtendedMagicDivide
+RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
+RtlExtendedLargeIntegerDivide=RtlExtendedLargeIntegerDivide@16
+RtlExtendedMagicDivide=RtlExtendedMagicDivide@20
 RtlFillMemory=RtlFillMemory@12
 RtlFillMemoryUlong=RtlFillMemoryUlong@12
 RtlFreeAnsiString=RtlFreeAnsiString@4
@@ -211,13 +211,13 @@ RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
-RtlLargeIntegerAdd
-RtlLargeIntegerArithmeticShift
-RtlLargeIntegerDivide
-RtlLargeIntegerNegate
-RtlLargeIntegerShiftLeft
-RtlLargeIntegerShiftRight
-RtlLargeIntegerSubtract
+RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
+RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
+RtlLargeIntegerDivide=RtlLargeIntegerDivide@20
+RtlLargeIntegerNegate=RtlLargeIntegerNegate@8
+RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
+RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
+RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
@@ -357,8 +357,8 @@ _wcsnicmp
 _wcsnset
 _wcsrev
 _wcsupr
-;atoi
-;atol
+atoi
+atol
 isdigit
 islower
 isprint

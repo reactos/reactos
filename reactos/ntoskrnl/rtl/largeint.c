@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.8 1999/11/09 18:01:43 ekohl Exp $
+/* $Id: largeint.c,v 1.9 1999/11/27 03:31:20 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,275 +19,232 @@
 
 /* FUNCTIONS *****************************************************************/
 
-LARGE_INTEGER 
-RtlConvertLongToLargeInteger(LONG SignedInteger)
+LARGE_INTEGER
+STDCALL
+RtlConvertLongToLargeInteger (
+	LONG	SignedInteger
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  RC.QuadPart = SignedInteger;
+	RC.QuadPart = SignedInteger;
 
-  return RC;
+	return RC;
 }
 
-LARGE_INTEGER 
-RtlConvertUlongToLargeInteger(ULONG UnsignedInteger)
+LARGE_INTEGER
+STDCALL
+RtlConvertUlongToLargeInteger (
+	ULONG	UnsignedInteger
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  RC.QuadPart = UnsignedInteger;
+	RC.QuadPart = UnsignedInteger;
 
-  return RC;
+	return RC;
 }
 
-LARGE_INTEGER 
-RtlEnlargedIntegerMultiply(LONG Multiplicand,
-                           LONG Multiplier)
+LARGE_INTEGER
+STDCALL
+RtlEnlargedIntegerMultiply (
+	LONG	Multiplicand,
+	LONG	Multiplier
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  RC.QuadPart = (LONGLONG) Multiplicand * Multiplier;
+	RC.QuadPart = (LONGLONG) Multiplicand * Multiplier;
 
-  return RC;
+	return RC;
 }
 
 ULONG
-RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
-                          ULONG Divisor,
-                          PULONG Remainder)
+STDCALL
+RtlEnlargedUnsignedDivide (
+	ULARGE_INTEGER	Dividend,
+	ULONG		Divisor,
+	PULONG		Remainder
+	)
 {
-  if (Remainder)
-    *Remainder = Dividend.QuadPart % Divisor;
+	if (Remainder)
+		*Remainder = Dividend.QuadPart % Divisor;
 
-  return (ULONG)(Dividend.QuadPart / Divisor);
+	return (ULONG)(Dividend.QuadPart / Divisor);
 }
 
 LARGE_INTEGER
-RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
-                            ULONG Multiplier)
+STDCALL
+RtlEnlargedUnsignedMultiply (
+	ULONG	Multiplicand,
+	ULONG	Multiplier
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  RC.QuadPart = (ULONGLONG) Multiplicand * Multiplier;
+	RC.QuadPart = (ULONGLONG) Multiplicand * Multiplier;
 
-  return RC;
-}
-
-LARGE_INTEGER 
-RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
-                           LONG Multiplier)
-{
-  LARGE_INTEGER RC;
-
-  RC.QuadPart = Multiplicand.QuadPart * Multiplier;
-
-  return RC;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
-                              ULONG Divisor,
-                              PULONG Remainder)
+STDCALL
+RtlExtendedIntegerMultiply (
+	LARGE_INTEGER	Multiplicand,
+	LONG		Multiplier
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  if (Remainder)
-    *Remainder = Dividend.QuadPart % Divisor;
+	RC.QuadPart = Multiplicand.QuadPart * Multiplier;
 
-  RC.QuadPart = Dividend.QuadPart / Divisor;
-
-  return RC;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
-                       LARGE_INTEGER MagicDivisor,
-                       CCHAR ShiftCount)
+STDCALL
+RtlExtendedLargeIntegerDivide (
+	LARGE_INTEGER	Dividend,
+	ULONG		Divisor,
+	PULONG		Remainder
+	)
 {
-   UNIMPLEMENTED;
-}
+	LARGE_INTEGER RC;
 
-LARGE_INTEGER 
-RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
-                   LARGE_INTEGER Addend2)
-{
-  LARGE_INTEGER RC;
+	if (Remainder)
+		*Remainder = Dividend.QuadPart % Divisor;
 
-  RC.QuadPart = Addend1.QuadPart + Addend2.QuadPart;
+	RC.QuadPart = Dividend.QuadPart / Divisor;
 
-  return RC;
-}
-
-VOID
-RtlLargeIntegerAnd(PLARGE_INTEGER Result,
-                   LARGE_INTEGER Source,
-                   LARGE_INTEGER Mask)
-{
-  Result->QuadPart = Source.QuadPart & Mask.QuadPart;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
-                               CCHAR ShiftCount)
+STDCALL
+RtlExtendedMagicDivide (
+	LARGE_INTEGER	Dividend,
+	LARGE_INTEGER	MagicDivisor,
+	CCHAR		ShiftCount
+	)
 {
-  LARGE_INTEGER RC;
-  CHAR Shift;
-
-  Shift = ShiftCount % 64;
-
-  if (Shift < 32)
-  {
-    RC.QuadPart = LargeInteger.QuadPart >> Shift;
-  }
-  else
-  {
-    /* copy the sign bit */
-    RC.u.HighPart |= (LargeInteger.u.HighPart & 0x80000000);
-    RC.u.LowPart = LargeInteger.u.HighPart >> Shift;
-  }
-
-  return RC;
+	UNIMPLEMENTED;
 }
 
 LARGE_INTEGER
-RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
-                      LARGE_INTEGER Divisor,
-                      PLARGE_INTEGER Remainder)
+STDCALL
+RtlLargeIntegerAdd (
+	LARGE_INTEGER	Addend1,
+	LARGE_INTEGER	Addend2
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  if (Remainder)
-    Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
+	RC.QuadPart = Addend1.QuadPart + Addend2.QuadPart;
 
-  RC.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
-
-  return RC;
-}
-
-BOOLEAN 
-RtlLargeIntegerEqualTo(LARGE_INTEGER Operand1,
-                       LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart == Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerEqualToZero(LARGE_INTEGER Operand)
-{
-  return Operand.QuadPart == 0 ;
-}
-
-BOOLEAN 
-RtlLargeIntegerGreaterThan(LARGE_INTEGER Operand1,
-                           LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart > Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerGreaterThanOrEqualTo(LARGE_INTEGER Operand1,
-                                    LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart >= Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerGreaterThanOrEqualToZero(LARGE_INTEGER Operand1)
-{
-  return Operand1.QuadPart >= 0;
-}
-
-BOOLEAN 
-RtlLargeIntegerGreaterThanZero(LARGE_INTEGER Operand1)
-{
-  return Operand1.QuadPart > 0; 
-}
-
-BOOLEAN 
-RtlLargeIntegerLessThan(LARGE_INTEGER Operand1,
-                        LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart < Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerLessThanOrEqualTo(LARGE_INTEGER Operand1,
-                                 LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart <= Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerLessThanOrEqualToZero(LARGE_INTEGER Operand)
-{
-  return Operand.QuadPart <= 0;
-}
-
-BOOLEAN 
-RtlLargeIntegerLessThanZero(LARGE_INTEGER Operand)
-{
-  return Operand.QuadPart < 0;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend)
+STDCALL
+RtlLargeIntegerArithmeticShift (
+	LARGE_INTEGER	LargeInteger,
+	CCHAR		ShiftCount
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
+	CHAR Shift;
 
-  RC.QuadPart = - Subtrahend.QuadPart;
+	Shift = ShiftCount % 64;
 
-  return RC;
-}
+	if (Shift < 32)
+	{
+		RC.QuadPart = LargeInteger.QuadPart >> Shift;
+	}
+	else
+	{
+		/* copy the sign bit */
+		RC.u.HighPart |= (LargeInteger.u.HighPart & 0x80000000);
+		RC.u.LowPart = LargeInteger.u.HighPart >> Shift;
+	}
 
-BOOLEAN 
-RtlLargeIntegerNotEqualTo(LARGE_INTEGER Operand1,
-                          LARGE_INTEGER Operand2)
-{
-  return Operand1.QuadPart != Operand2.QuadPart;
-}
-
-BOOLEAN 
-RtlLargeIntegerNotEqualToZero(LARGE_INTEGER Operand)
-{
-  return Operand.QuadPart != 0;
-}
-
-LARGE_INTEGER
-RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
-                         CCHAR ShiftCount)
-{
-  LARGE_INTEGER RC;
-  CHAR Shift;
-
-  Shift = ShiftCount % 64;
-
-  RC.QuadPart = LargeInteger.QuadPart << Shift;
-
-  return RC;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
-                          CCHAR ShiftCount)
+STDCALL
+RtlLargeIntegerDivide (
+	LARGE_INTEGER	Dividend,
+	LARGE_INTEGER	Divisor,
+	PLARGE_INTEGER	Remainder
+	)
 {
-  LARGE_INTEGER RC;
-  CHAR Shift;
+	LARGE_INTEGER RC;
 
-  Shift = ShiftCount % 64;
+	if (Remainder)
+		Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
 
-  RC.QuadPart = LargeInteger.QuadPart >> ShiftCount;
+	RC.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
 
-  return RC;
+	return RC;
 }
 
 LARGE_INTEGER
-RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
-                        LARGE_INTEGER Subtrahend)
+STDCALL
+RtlLargeIntegerNegate (
+	LARGE_INTEGER	Subtrahend
+	)
 {
-  LARGE_INTEGER RC;
+	LARGE_INTEGER RC;
 
-  RC.QuadPart = Minuend.QuadPart - Subtrahend.QuadPart;
+	RC.QuadPart = - Subtrahend.QuadPart;
 
-  return RC;
+	return RC;
+}
+
+LARGE_INTEGER
+STDCALL
+RtlLargeIntegerShiftLeft (
+	LARGE_INTEGER	LargeInteger,
+	CCHAR		ShiftCount
+	)
+{
+	LARGE_INTEGER RC;
+	CHAR Shift;
+
+	Shift = ShiftCount % 64;
+	RC.QuadPart = LargeInteger.QuadPart << Shift;
+
+	return RC;
+}
+
+LARGE_INTEGER
+STDCALL
+RtlLargeIntegerShiftRight (
+	LARGE_INTEGER	LargeInteger,
+	CCHAR		ShiftCount
+	)
+{
+	LARGE_INTEGER RC;
+	CHAR Shift;
+
+	Shift = ShiftCount % 64;
+	RC.QuadPart = LargeInteger.QuadPart >> ShiftCount;
+
+	return RC;
+}
+
+LARGE_INTEGER
+STDCALL
+RtlLargeIntegerSubtract (
+	LARGE_INTEGER	Minuend,
+	LARGE_INTEGER	Subtrahend
+	)
+{
+	LARGE_INTEGER RC;
+
+	RC.QuadPart = Minuend.QuadPart - Subtrahend.QuadPart;
+
+	return RC;
 }
 
 /* EOF */

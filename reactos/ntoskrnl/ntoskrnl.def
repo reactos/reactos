@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.28 1999/11/25 23:35:24 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.29 1999/11/27 03:29:46 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -74,7 +74,7 @@ ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 HalRegisterServiceTable
-InitializeObjectAttributes
+;InitializeObjectAttributes
 IoAllocateController
 IoAttachDeviceToDeviceStack
 IoBuildSynchronousFsdRequest
@@ -185,21 +185,21 @@ RtlCharToInteger@12
 RtlCompareMemory@12
 RtlCompareString@12
 RtlCompareUnicodeString@12
-RtlConvertLongToLargeInteger
-RtlConvertUlongToLargeInteger
+RtlConvertLongToLargeInteger@4
+RtlConvertUlongToLargeInteger@4
 RtlCopyMemory
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlCreateUnicodeString@8
 RtlDowncaseUnicodeString@12
-RtlEnlargedIntegerMultiply
-RtlEnlargedUnsignedDivide
-RtlEnlargedUnsignedMultiply
+RtlEnlargedIntegerMultiply@8
+RtlEnlargedUnsignedDivide@16
+RtlEnlargedUnsignedMultiply@8
 RtlEqualString@12
 RtlEqualUnicodeString@12
-RtlExtendedIntegerMultiply
-RtlExtendedLargeIntegerDivide
-RtlExtendedMagicDivide
+RtlExtendedIntegerMultiply@12
+RtlExtendedLargeIntegerDivide@16
+RtlExtendedMagicDivide@20
 RtlFillMemory@12
 RtlFillMemoryUlong@12
 RtlFreeAnsiString@4
@@ -211,13 +211,13 @@ RtlInitString@8
 RtlInitUnicodeString@8
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
-RtlLargeIntegerAdd
-RtlLargeIntegerArithmeticShift
-RtlLargeIntegerDivide
-RtlLargeIntegerNegate
-RtlLargeIntegerShiftLeft
-RtlLargeIntegerShiftRight
-RtlLargeIntegerSubtract
+RtlLargeIntegerAdd@16
+RtlLargeIntegerArithmeticShift@12
+RtlLargeIntegerDivide@20
+RtlLargeIntegerNegate@8
+RtlLargeIntegerShiftLeft@12
+RtlLargeIntegerShiftRight@12
+RtlLargeIntegerSubtract@16
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
@@ -359,8 +359,8 @@ _wcsnicmp
 _wcsnset
 _wcsrev
 _wcsupr
-;atoi
-;atol
+atoi
+atol
 isdigit
 islower
 isprint

@@ -1,11 +1,10 @@
-; $Id: ntdll.def,v 1.24 1999/11/25 23:45:29 ekohl Exp $
+; $Id: ntdll.def,v 1.25 1999/11/27 03:32:17 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
-InitializeObjectAttributes
 NlsAnsiCodePage
 NlsMbCodePageTag
 NlsMbOemCodePageTag
@@ -446,21 +445,21 @@ RtlCreateUserThread@40
 RtlCompactHeap@8
 RtlCompareString@12
 RtlCompareUnicodeString@12
-RtlConvertLongToLargeInteger
-RtlConvertUlongToLargeInteger
+RtlConvertLongToLargeInteger@4
+RtlConvertUlongToLargeInteger@4
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlDestroyHeap@4
 RtlDowncaseUnicodeString@12
-RtlEnlargedIntegerMultiply
-RtlEnlargedUnsignedDivide
-RtlEnlargedUnsignedMultiply
+RtlEnlargedIntegerMultiply@8
+RtlEnlargedUnsignedDivide@16
+RtlEnlargedUnsignedMultiply@8
 RtlEqualString@12
 RtlEqualUnicodeString@12
 RtlEraseUnicodeString@4
-RtlExtendedIntegerMultiply
-RtlExtendedLargeIntegerDivide
-RtlExtendedMagicDivide
+RtlExtendedIntegerMultiply@12
+RtlExtendedLargeIntegerDivide@16
+RtlExtendedMagicDivide@20
 RtlFillMemory@12
 RtlFreeAnsiString@4
 RtlFreeHeap@12
@@ -473,13 +472,13 @@ RtlInitString@8
 RtlInitUnicodeString@8
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
-RtlLargeIntegerAdd
-RtlLargeIntegerArithmeticShift
-RtlLargeIntegerDivide
-RtlLargeIntegerNegate
-RtlLargeIntegerShiftLeft
-RtlLargeIntegerShiftRight
-RtlLargeIntegerSubtract
+RtlLargeIntegerAdd@16
+RtlLargeIntegerArithmeticShift@12
+RtlLargeIntegerDivide@20
+RtlLargeIntegerNegate@8
+RtlLargeIntegerShiftLeft@12
+RtlLargeIntegerShiftRight@12
+RtlLargeIntegerSubtract@16
 RtlLengthSecurityDescriptor
 RtlLockHeap@4
 RtlMoveMemory@12

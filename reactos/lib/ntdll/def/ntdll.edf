@@ -1,11 +1,10 @@
-; $Id: ntdll.edf,v 1.14 1999/11/25 23:45:30 ekohl Exp $
+; $Id: ntdll.edf,v 1.15 1999/11/27 03:32:17 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
-InitializeObjectAttributes
 NlsAnsiCodePage
 NlsMbCodePageTag
 NlsMbOemCodePageTag
@@ -444,21 +443,21 @@ RtlCreateUserThread=RtlCreateUserThread@40
 RtlCompactHeap=RtlCompactHeap@8
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
-RtlConvertLongToLargeInteger
-RtlConvertUlongToLargeInteger
+RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
+RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
-RtlEnlargedIntegerMultiply
-RtlEnlargedUnsignedDivide
-RtlEnlargedUnsignedMultiply
+RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
+RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
+RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlEraseUnicodeString=RtlEraseUnicodeString@4
-RtlExtendedIntegerMultiply
-RtlExtendedLargeIntegerDivide
-RtlExtendedMagicDivide
+RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
+RtlExtendedLargeIntegerDivide=RtlExtendedLargeIntegerDivide@16
+RtlExtendedMagicDivide=RtlExtendedMagicDivide@20
 RtlFillMemory=RtlFillMemory@12
 RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHeap=RtlFreeHeap@12
@@ -470,13 +469,13 @@ RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
-RtlLargeIntegerAdd
-RtlLargeIntegerArithmeticShift
-RtlLargeIntegerDivide
-RtlLargeIntegerNegate
-RtlLargeIntegerShiftLeft
-RtlLargeIntegerShiftRight
-RtlLargeIntegerSubtract
+RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
+RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
+RtlLargeIntegerDivide=RtlLargeIntegerDivide@20
+RtlLargeIntegerNegate=RtlLargeIntegerNegate@8
+RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
+RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
+RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
 RtlLengthSecurityDescriptor
 RtlLockHeap=RtlLockHeap@4
 RtlMoveMemory=RtlMoveMemory@12

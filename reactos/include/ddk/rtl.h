@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.18 1999/11/20 21:44:09 ekohl Exp $
+/* $Id: rtl.h,v 1.19 1999/11/27 03:29:20 ekohl Exp $
  * 
  */
 
@@ -122,6 +122,15 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 
 
 /*
+ * VOID
+ * InitializeObjectAttributes (
+ *      POBJECT_ATTRIBUTES   InitializedAttributes,
+ *      PUNICODE_STRING      ObjectName,
+ *      ULONG                Attributes,
+ *      HANDLE               RootDirectory,
+ *      PSECURITY_DESCRIPTOR SecurityDescriptor
+ *      );
+ *
  * FUNCTION: Sets up a parameter of type OBJECT_ATTRIBUTES for a 
  * subsequent call to ZwCreateXXX or ZwOpenXXX
  * ARGUMENTS:
@@ -132,14 +141,17 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
  *        RootDirectory = Where the object should be placed or NULL
  *        SecurityDescriptor = Ignored
  */
-VOID
-InitializeObjectAttributes (
-	POBJECT_ATTRIBUTES	InitializedAttributes,
-	PUNICODE_STRING		ObjectName,
-	ULONG			Attributes,
-	HANDLE			RootDirectory,
-	PSECURITY_DESCRIPTOR	SecurityDescriptor
-	);
+
+#define InitializeObjectAttributes(p,n,a,r,s) \
+{ \
+	(p)->Length = sizeof(OBJECT_ATTRIBUTES); \
+	(p)->ObjectName = n; \
+	(p)->Attributes = a; \
+	(p)->RootDirectory = r; \
+	(p)->SecurityDescriptor = s; \
+	(p)->SecurityQualityOfService = NULL; \
+}
+
 
 VOID
 InitializeListHead (
@@ -226,7 +238,7 @@ RtlAppendAsciizToString(
 
 NTSTATUS
 STDCALL
-RtlAppendStringToString(
+RtlAppendStringToString (
 	PSTRING	Destination,
 	PSTRING	Source
 	);
@@ -285,11 +297,13 @@ RtlCompareUnicodeString (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlConvertLongToLargeInteger (
 	LONG	SignedInteger
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlConvertUlongToLargeInteger (
 	ULONG	UnsignedInteger
 	);
@@ -366,12 +380,14 @@ RtlDowncaseUnicodeString (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlEnlargedIntegerMultiply (
 	LONG	Multiplicand,
 	LONG	Multiplier
 	);
 
 ULONG
+STDCALL
 RtlEnlargedUnsignedDivide (
 	ULARGE_INTEGER	Dividend,
 	ULONG		Divisor,
@@ -379,6 +395,7 @@ RtlEnlargedUnsignedDivide (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlEnlargedUnsignedMultiply (
 	ULONG	Multiplicand,
 	ULONG	Multiplier
@@ -408,12 +425,14 @@ RtlEraseUnicodeString (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlExtendedIntegerMultiply (
 	LARGE_INTEGER	Multiplicand,
 	LONG		Multiplier
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlExtendedLargeIntegerDivide (
 	LARGE_INTEGER	Dividend,
 	ULONG		Divisor,
@@ -421,6 +440,7 @@ RtlExtendedLargeIntegerDivide (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlExtendedMagicDivide (
 	LARGE_INTEGER	Dividend,
 	LARGE_INTEGER	MagicDivisor,
@@ -475,6 +495,16 @@ RtlInitAnsiString (
 	PCSZ		SourceString
 	);
 
+NTSTATUS
+STDCALL
+RtlInitializeContext (
+	IN	HANDLE			ProcessHandle,
+	IN	PCONTEXT		Context,
+	IN	PVOID			Parameter,
+	IN	PTHREAD_START_ROUTINE	StartAddress,
+	IN OUT	PINITIAL_TEB		InitialTeb
+	);
+
 VOID
 STDCALL
 RtlInitString (
@@ -507,115 +537,182 @@ RtlIntegerToUnicodeString (
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerAdd (
 	LARGE_INTEGER	Addend1,
 	LARGE_INTEGER	Addend2
 	);
 
+#define RtlLargeIntegerAnd(Result, Source, Mask) \
+{ \
+	Result.HighPart = Source.HighPart & Mask.HighPart; \
+	Result.LowPart = Source.LowPart & Mask.LowPart; \
+}
+/*
 VOID
 RtlLargeIntegerAnd (
 	PLARGE_INTEGER	Result,
 	LARGE_INTEGER	Source,
 	LARGE_INTEGER	Mask
 	);
+*/
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerArithmeticShift (
 	LARGE_INTEGER	LargeInteger,
 	CCHAR	ShiftCount
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerDivide (
 	LARGE_INTEGER	Dividend,
 	LARGE_INTEGER	Divisor,
 	PLARGE_INTEGER	Remainder
 	);
 
+#define RtlLargeIntegerEqualTo(X,Y) \
+	(!(((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)))
+/*
 BOOLEAN
 RtlLargeIntegerEqualTo (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerEqualToZero(X) \
+	(!((X).LowPart | (X).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerEqualToZero (
 	LARGE_INTEGER	Operand
 	);
+*/
 
+#define RtlLargeIntegerGreaterThan(X,Y) \
+	((((X).HighPart == (Y).HighPart) && ((X).LowPart > (Y).LowPart)) || \
+	  ((X).HighPart > (Y).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerGreaterThan (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerGreaterThanOrEqualTo(X,Y) \
+	((((X).HighPart == (Y).HighPart) && ((X).LowPart >= (Y).LowPart)) || \
+	  ((X).HighPart > (Y).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerGreaterThanOrEqualTo (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerGreaterOrEqualToZero(X) \
+	((X).HighPart >= 0)
+/*
 BOOLEAN
 RtlLargeIntegerGreaterThanOrEqualToZero (
 	LARGE_INTEGER	Operand1
 	);
+*/
 
+#define RtlLargeIntegerGreaterThanZero(X) \
+	((((X).HighPart == 0) && ((X).LowPart > 0)) || \
+	  ((X).HighPart > 0 ))
+/*
 BOOLEAN
 RtlLargeIntegerGreaterThanZero (
 	LARGE_INTEGER	Operand1
 	);
+*/
 
+#define RtlLargeIntegerLessThan(X,Y) \
+	((((X).HighPart == (Y).HighPart) && ((X).LowPart < (Y).LowPart)) || \
+	  ((X).HighPart < (Y).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerLessThan (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerLessThanOrEqualTo(X,Y) \
+	((((X).HighPart == (Y).HighPart) && ((X).LowPart <= (Y).LowPart)) || \
+	  ((X).HighPart < (Y).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerLessThanOrEqualTo (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerLessOrEqualToZero(X) \
+	(((X).HighPart < 0) || !((X).LowPart | (X).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerLessThanOrEqualToZero (
 	LARGE_INTEGER	Operand
 	);
+*/
 
+#define RtlLargeIntegerLessThanZero(X) \
+	(((X).HighPart < 0))
+/*
 BOOLEAN
 RtlLargeIntegerLessThanZero (
 	LARGE_INTEGER	Operand
 	);
+*/
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerNegate (
 	LARGE_INTEGER	Subtrahend
 	);
 
+#define RtlLargeIntegerNotEqualTo(X,Y) \
+	((((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)))
+/*
 BOOLEAN
 RtlLargeIntegerNotEqualTo (
 	LARGE_INTEGER	Operand1,
 	LARGE_INTEGER	Operand2
 	);
+*/
 
+#define RtlLargeIntegerNotEqualToZero(X) \
+	(((X).LowPart | (X).HighPart))
+/*
 BOOLEAN
 RtlLargeIntegerNotEqualToZero (
 	LARGE_INTEGER	Operand
 	);
+*/
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerShiftLeft (
 	LARGE_INTEGER	LargeInteger,
 	CCHAR		ShiftCount
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerShiftRight (
 	LARGE_INTEGER	LargeInteger,
 	CCHAR		ShiftCount
 	);
 
 LARGE_INTEGER
+STDCALL
 RtlLargeIntegerSubtract (
 	LARGE_INTEGER	Minuend,
 	LARGE_INTEGER	Subtrahend
@@ -934,7 +1031,7 @@ RtlNtStatusToDosError (
 
 
 BOOL
-WINAPI
+STDCALL
 RtlDestroyHeap (
 	HANDLE	hheap
 	);
@@ -949,11 +1046,11 @@ RtlReAllocateHeap (
 	);
 
 HANDLE
-WINAPI
+STDCALL
 RtlGetProcessHeap (VOID);
 
 BOOL
-WINAPI
+STDCALL
 RtlLockHeap (
 	HANDLE	hheap
 	);
@@ -987,6 +1084,31 @@ RtlValidateHeap (
 	PVOID	pmem
 	);
 
+ULONG
+STDCALL
+RtlxAnsiStringToUnicodeSize (
+	IN	PANSI_STRING 	AnsiString
+	);
+
+ULONG
+STDCALL
+RtlxOemStringToUnicodeSize (
+	IN	POEM_STRING	OemString
+	);
+
+ULONG
+STDCALL
+RtlxUnicodeStringToAnsiSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+
+ULONG
+STDCALL
+RtlxUnicodeStringToOemSize (
+	IN	PUNICODE_STRING	UnicodeString
+	);
+
+
 /* NtProcessStartup */
 
 VOID
@@ -1001,14 +1123,6 @@ RtlDenormalizeProcessParams (
 	);
 
 
-NTSTATUS STDCALL
-RtlInitializeContext(
-        IN      HANDLE                  ProcessHandle,
-        IN      PCONTEXT                Context,
-        IN      PVOID                   Parameter,
-        IN      PTHREAD_START_ROUTINE   StartAddress,
-        IN OUT  PINITIAL_TEB            InitialTeb
-        );
 
 
 NTSTATUS STDCALL

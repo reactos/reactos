@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.5 1999/08/29 06:59:10 ea Exp $
+/* $Id: dirobj.c,v 1.6 1999/11/27 03:31:08 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -57,9 +57,9 @@ NtOpenDirectoryObject (
 {
 	PVOID		Object;
 	NTSTATUS	Status;
-   
+
 	*DirectoryHandle = 0;
-   
+
 	Status = ObReferenceObjectByName(
 			ObjectAttributes->ObjectName,
 			ObjectAttributes->Attributes,
@@ -74,7 +74,7 @@ NtOpenDirectoryObject (
 	{
 		return Status;
 	}
-       
+
 	Status = ObCreateHandle(
 			PsGetCurrentProcess(),
 			Object,
@@ -152,9 +152,9 @@ NtQueryDirectoryObject (
 		dir,
 		HEADER_TO_BODY(&(namespc_root.hdr))
 		);
-   
+
 //	assert_irql(PASSIVE_LEVEL);
-   
+
 	Status = ObReferenceObjectByHandle(
 			DirObjHandle,
 			DIRECTORY_QUERY,
@@ -170,11 +170,11 @@ NtQueryDirectoryObject (
 
 	EntriesToRead = BufferLength / sizeof (OBJDIR_INFORMATION);
 	*DataWritten = 0;
-   
+
 	DPRINT("EntriesToRead %d\n",EntriesToRead);
-   
+
 	current_entry = dir->head.Flink;
-   
+
 	/*
 	 * Optionally, skip over some entries at the start of the directory
 	 */
@@ -188,9 +188,9 @@ NtQueryDirectoryObject (
 			current_entry = current_entry->Flink;
 		}
 	}
-   
+
 	DPRINT("DirObjInformation %x\n",DirObjInformation);
-   
+
 	/*
 	 * Read the maximum entries possible into the buffer
 	 */
@@ -232,7 +232,7 @@ NtQueryDirectoryObject (
 		CHECKPOINT;
 	}
 	CHECKPOINT;
-   
+
 	/*
 	 * Optionally, count the number of entries in the directory
 	 */
@@ -285,7 +285,7 @@ NtCreateDirectoryObject (
 	)
 {
 	PDIRECTORY_OBJECT dir;
-   
+
 	dir = ObCreateObject(
 		DirectoryHandle,
 		DesiredAccess,
@@ -294,66 +294,5 @@ NtCreateDirectoryObject (
 		);
 	return STATUS_SUCCESS;
 }
-
-
-/**********************************************************************
- * NAME						(MACRO in DDK)
- *	InitializeObjectAttributes
- *
- * DESCRIPTION
- *	Sets up a parameter of type OBJECT_ATTRIBUTES for a 
- *	subsequent call to ZwCreateXXX or ZwOpenXXX.
- *	
- * ARGUMENTS
- *	InitializedAttributes (OUT)
- *		Caller supplied storage for the object attributes.
- *		
- *	ObjectName
- *		Full path name for object.
- *		
- *	Attributes
- *		Attributes for the object.
- *		
- *	RootDirectory
- *		Where the object should be placed or NULL.
- *		
- *	SecurityDescriptor
- *		Ignored.
- * 
- * NOTE
- *	Either ObjectName is a fully qualified pathname or a path
- *	relative to RootDirectory.
- */
-VOID
-InitializeObjectAttributes (
-	POBJECT_ATTRIBUTES	InitializedAttributes,
-	PUNICODE_STRING		ObjectName,
-	ULONG			Attributes,
-	HANDLE			RootDirectory,
-	PSECURITY_DESCRIPTOR	SecurityDescriptor
-	)
-{
-	DPRINT(
-		"InitializeObjectAttributes(InitializedAttributes %x "
-		"ObjectName %x Attributes %x RootDirectory %x)\n",
-		InitializedAttributes,
-		ObjectName,
-		Attributes,
-		RootDirectory
-		);
-	InitializedAttributes->Length =
-		sizeof (OBJECT_ATTRIBUTES);
-	InitializedAttributes->RootDirectory =
-		RootDirectory;
-	InitializedAttributes->ObjectName =
-		ObjectName;
-	InitializedAttributes->Attributes =
-		Attributes;
-	InitializedAttributes->SecurityDescriptor =
-		SecurityDescriptor;
-	InitializedAttributes->SecurityQualityOfService =
-		NULL;
-}
-
 
 /* EOF */

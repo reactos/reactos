@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 1999/11/15 15:57:27 ekohl Exp $
+# $Id: makefile,v 1.27 1999/11/27 03:31:43 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -24,8 +24,8 @@ endif
 all: $(DLLTARGET)
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
-              rtl/mem.o rtl/namespc.o rtl/security.o rtl/unicode.o \
-              rtl/thread.o rtl/process.o rtl/nls.o
+              rtl/mem.o rtl/nls.o rtl/process.o rtl/security.o \
+              rtl/thread.o rtl/unicode.o
 
 STDLIB_OBJECTS = stdlib/atoi.o stdlib/atol.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o
