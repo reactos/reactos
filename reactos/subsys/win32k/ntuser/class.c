@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.16 2003/05/18 17:16:17 ea Exp $
+/* $Id: class.c,v 1.17 2003/06/16 13:56:09 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -184,7 +184,7 @@ NtUserGetWOWClass(DWORD Unknown0,
 }
 
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(LPWNDCLASSEX lpwcx,
+W32kCreateClass(LPWNDCLASSEXW lpwcx,
 		BOOL bUnicodeClass)
 {
   PWNDCLASS_OBJECT ClassObject;
@@ -215,7 +215,7 @@ W32kCreateClass(LPWNDCLASSEX lpwcx,
 }
 
 RTL_ATOM STDCALL
-NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
+NtUserRegisterClassExWOW(LPWNDCLASSEXW lpwcx,
 			 BOOL bUnicodeClass,
 			 DWORD Unknown2,
 			 DWORD Unknown3,
