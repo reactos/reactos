@@ -313,16 +313,85 @@ DuplicateToken (HANDLE ExistingTokenHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-CheckTokenMembership(HANDLE Token, PSID SidToCheck, PBOOL IsMember)
+CheckTokenMembership (HANDLE ExistingTokenHandle,
+                      PSID SidToCheck,
+                      PBOOL IsMember)
 {
-  DPRINT1("CheckTokenMembership not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
+  HANDLE AccessToken;
+  BOOL ReleaseToken = FALSE;
+  BOOL Result = FALSE;
+  DWORD dwSize;
+  DWORD i;
+  PTOKEN_GROUPS lpGroups = NULL;
+  TOKEN_TYPE TokenInformation;
+ 
+  if (IsMember == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+ 
+  if (ExistingTokenHandle == NULL)
+  {
+    /* Get impersonation token of the calling thread */
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &ExistingTokenHandle))
+      return FALSE;
+ 
+    if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
+    {
+      CloseHandle(ExistingTokenHandle);
+      goto ByeBye;
+    }
+    CloseHandle(ExistingTokenHandle);
+    ReleaseToken = TRUE; 
+  }
+  else
+  {
+    if (!GetTokenInformation(ExistingTokenHandle, TokenType, &TokenInformation, sizeof(TokenInformation), &dwSize))
+      goto ByeBye;
+    if (TokenInformation != TokenImpersonation)
+    {
+      /* Duplicate token to have a impersonation token */
+      if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
+        return FALSE;
+      ReleaseToken = TRUE;
+    }
+    else
+      AccessToken = ExistingTokenHandle;
+  }
+ 
+  *IsMember = FALSE;
+  /* Search in groups of the token */
+  if (!GetTokenInformation(AccessToken, TokenGroups, NULL, 0, &dwSize))
+    goto ByeBye;
+  lpGroups = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), 0, dwSize);
+  if (!lpGroups)
+    goto ByeBye;
+  if (!GetTokenInformation(AccessToken, TokenGroups, lpGroups, dwSize, &dwSize))
+    goto ByeBye;
+  for (i = 0; i < lpGroups->GroupCount; i++)
+  {
+    if (EqualSid(SidToCheck, &lpGroups->Groups[i].Sid))
+    {
+      Result = TRUE;
+      *IsMember = TRUE;
+      goto ByeBye;
+    }
+  }
+  /* FIXME: Search in users of the token? */
+  DPRINT1("CheckTokenMembership() partially implemented!\n");
+  Result = TRUE;
+ 
+ByeBye:
+  if (lpGroups != NULL)
+    HeapFree(GetProcessHeap(), 0, lpGroups);
+  if (ReleaseToken)
+    CloseHandle(AccessToken);
+ 
+  return Result;
 }
 
 /* EOF */
