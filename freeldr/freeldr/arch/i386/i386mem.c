@@ -136,7 +136,7 @@ U32 GetConventionalMemorySize(VOID)
 	return (U32)Regs.w.ax;
 }
 
-U32 GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32])
+U32 GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
 {
 	REGS	Regs;
 	U32		MapCount;
@@ -166,7 +166,7 @@ U32 GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32])
 	Regs.x.ecx = sizeof(BIOS_MEMORY_MAP);
 	Regs.w.es = BIOSCALLBUFSEGMENT;
 	Regs.w.di = BIOSCALLBUFOFFSET;
-	for (MapCount=0; MapCount<32; MapCount++)
+	for (MapCount=0; MapCount<MaxMemoryMapSize; MapCount++)
 	{
 		Int386(0x15, &Regs, &Regs);
 
@@ -202,10 +202,11 @@ U32 GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32])
 			DbgPrint((DPRINT_MEMORY, "End Of System Memory Map!\n\n"));
 			break;
 		}
-		// setup the register for the next call
+
+		// Setup the registers for the next call
 		Regs.x.eax = 0x0000E820;
 		Regs.x.edx = 0x534D4150; // ('SMAP')
-		Regs.x.ebx = 0x00000001;
+		//Regs.x.ebx = 0x00000001; // Continuation value already set by the BIOS
 		Regs.x.ecx = sizeof(BIOS_MEMORY_MAP);
 		Regs.w.es = BIOSCALLBUFSEGMENT;
 		Regs.w.di = BIOSCALLBUFOFFSET;

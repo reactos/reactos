@@ -41,7 +41,7 @@ U32		GetSystemMemorySize(VOID);								// Returns the amount of total memory in 
 // These functions are implemented in mem.S
 U32		GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
 U32		GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
-U32		GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32]);	// Fills structure with BIOS memory map and returns memory map item count
+U32		GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);	// Fills structure with BIOS memory map and returns memory map item count
 
 
 
