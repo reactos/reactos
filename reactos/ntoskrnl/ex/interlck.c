@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.2 1999/08/29 06:59:06 ea Exp $
+/* $Id: interlck.c,v 1.3 1999/11/09 18:00:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 
-#include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -23,7 +22,17 @@ ExInterlockedDecrementLong (
 	PKSPIN_LOCK	Lock
 	)
 {
-	UNIMPLEMENTED;
+        KIRQL oldlvl;
+        LONG  oldval;
+
+        KeAcquireSpinLock (Lock, &oldlvl);
+
+        oldval = *Addend;
+        (*Addend)--;
+
+        KeReleaseSpinLock (Lock, oldlvl);
+
+        return oldval;
 }
 
 
@@ -34,7 +43,17 @@ ExInterlockedExchangeUlong (
 	PKSPIN_LOCK	Lock
 	)
 {
-	UNIMPLEMENTED;
+        KIRQL oldlvl;
+        LONG  oldval;
+
+        KeAcquireSpinLock (Lock, &oldlvl);
+
+        oldval = *Target;
+        *Target = Value;
+
+        KeReleaseSpinLock (Lock, oldlvl);
+
+        return oldval;
 }
 
 
@@ -45,9 +64,40 @@ ExInterlockedAddUlong (
 	PKSPIN_LOCK	Lock
 	)
 {
-	UNIMPLEMENTED;
+        KIRQL oldlvl;
+        ULONG oldval;
+
+        KeAcquireSpinLock (Lock, &oldlvl);
+
+        oldval = *Addend;
+        *Addend += Increment;
+
+        KeReleaseSpinLock (Lock, oldlvl);
+
+        return oldval;
 }
 
+LARGE_INTEGER
+ExInterlockedAddLargeInteger (
+        PLARGE_INTEGER Addend,
+        LARGE_INTEGER Increment,
+        PKSPIN_LOCK Lock
+        )
+{
+        KIRQL oldlvl;
+        LARGE_INTEGER oldval;
+
+
+        KeAcquireSpinLock (Lock, &oldlvl);
+
+
+        oldval.QuadPart = Addend->QuadPart;
+        Addend->QuadPart += Increment.QuadPart;
+
+        KeReleaseSpinLock (Lock, oldlvl);
+
+        return oldval;
+}
 
 INTERLOCKED_RESULT
 ExInterlockedIncrementLong (
@@ -55,8 +105,17 @@ ExInterlockedIncrementLong (
 	PKSPIN_LOCK	Lock
 	)
 {
-	UNIMPLEMENTED;
-}
+        KIRQL oldlvl;
+        LONG  oldval;
 
+        KeAcquireSpinLock (Lock, &oldlvl);
+
+        oldval = *Addend;
+        (*Addend)++;
+
+        KeReleaseSpinLock (Lock, oldlvl);
+
+        return oldval;
+}
 
 /* EOF */
