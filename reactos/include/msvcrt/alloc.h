@@ -25,9 +25,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Revision: 1.2 $
+ * $Author: hbirr $
+ * $Date: 2002/06/05 19:32:20 $
  *
  */
 
@@ -56,9 +56,17 @@ typedef	struct _heapinfo
 } _HEAPINFO;
 
 int	_heapwalk (_HEAPINFO* pHeapinfo);
-void  * _alloca(size_t size);
-
-
+ 
+#ifdef __GNUC__
+#ifdef USE_C_ALLOCA
+void *	C_alloca(size_t size);
+#define	_alloca(x)	C_alloca(x)
+#else	/* USE_C_ALLOCA */
+#define _alloca(x)	__builtin_alloca(x)
+#endif	/* USE_C_ALLOCA */
+#else	/* __GNUC__ */
+void *	_alloca(size_t size);
+#endif	/* __GNUC__ */
 
 #ifndef	_NO_OLDNAMES
 #define heapwalk(x)	_heapwalk(x)
