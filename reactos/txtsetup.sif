@@ -1,39 +1,98 @@
 [Version]
-Signature = $ReactOS$
+Signature = "$ReactOS$"
 
 [Directories]
-1 = \
+1 = "\"
 2 = system32
 3 = system32\drivers
 4 = system32\config
+5 = media
+6 = media\fonts
+7 = bin
 
 [SourceFiles]
-advapi32.dll = 2
-atapi.sys    = 3
+ntoskrnl.exe = 2
+hal.dll      = 2
+
+acpi.sys     = 3
+isapnp.sys   = 3
+
 beep.sys     = 3
 blue.sys     = 3
+floppy.sys   = 3
+null.sys     = 3
+serial.sys   = 3
+vgaddi.dll   = 3
+vgamp.sys    = 3
+vidport.sys  = 3
+
 cdfs.sys     = 3
+fs_rec.sys   = 3
+msfs.sys     = 3
+mup.sys      = 3
+npfs.sys     = 3
+ntfs.sys     = 3
+vfatfs.sys   = 3
+
+keyboard.sys = 3
+mouclass.sys = 3
+psaux.sys    = 3
+
+unbzip2.sys  = 3
+
+afd.sys      = 3
+ne2000.sys   = 3
+ndis.sys     = 3
+npf.sys      = 3
+;packet.sys   = 3
+tcpip.sys    = 3
+tdi.sys      = 3
+
+atapi.sys    = 3
 cdrom.sys    = 3
 class2.sys   = 3
-csrss.exe    = 2
 disk.sys     = 3
-floppy.sys   = 3
-fs_rec.sys   = 3
-hal.dll      = 2
+scsiport.sys = 3
+
+advapi32.dll = 2
+crtdll.dll   = 2
+fmifs.dll    = 2
+gdi32.dll    = 2
 kernel32.dll = 2
+msafd.dll    = 2
 msvcrt.dll   = 2
 ntdll.dll    = 2
-ntfs.sys     = 3
-ntoskrnl.exe = 2
-null.sys     = 3
-psaux.sys    = 3
-scsiport.sys = 3
+;ole32.dll    = 2
+;oleaut32.dll = 2
+packet.dll   = 2
+secur32.dll  = 2
+;shell32.dll  = 2
+user32.dll   = 2
+version.dll  = 2
+winedbgc.dll = 2
+winmm.dll    = 2
+ws2_32.dll   = 2
+ws2help.dll  = 2
+wshirda.dll  = 2
+
+eventlog.exe = 2
+rpcss.exe    = 2
+csrss.exe    = 2
+ntvdm.exe    = 2
+smss.exe     = 2
+autochk.exe  = 2
+gstart.exe   = 2
+;lsass.exe    = 2
 services.exe = 2
 shell.exe    = 2
-smss.exe     = 2
-system.hiv   = 4
-vfatfs.sys   = 3
 winlogon.exe = 2
+
+win32k.sys   = 3
+
+helb____.ttf = 6
+timr____.ttf = 6
+
+system.hiv   = 4
 
 [SetupData]
 DefaultPath = \reactos
