@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.75 2003/12/27 15:09:51 navaraf Exp $
+/* $Id: winpos.c,v 1.76 2003/12/28 10:56:20 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -895,7 +895,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        * we don't have to crop (can't take anything away from an empty
        * region...)
        */
-      if (!(WinPos.flags & (SWP_NOSIZE | SWP_NOZORDER)) && RgnType != ERROR &&
+      if (!(WinPos.flags & SWP_NOSIZE) && RgnType != ERROR &&
           RgnType != NULLREGION)
       {
          RECT ORect = OldClientRect;
@@ -940,6 +940,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           * to create a copy of CopyRgn and pass that. We need CopyRgn later 
           */
          HRGN ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+
          NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
          Dc = NtUserGetDCEx(Wnd, ClipRgn, DCX_WINDOW | DCX_CACHE |
             DCX_INTERSECTRGN | DCX_CLIPSIBLINGS);
@@ -949,6 +950,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
             CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
          NtUserReleaseDC(Wnd, Dc);
+         IntValidateParent(Window, CopyRgn);
       }
    }
    else

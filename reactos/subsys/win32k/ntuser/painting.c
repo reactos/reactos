@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.54 2003/12/27 15:09:51 navaraf Exp $
+ *  $Id: painting.c,v 1.55 2003/12/28 10:56:20 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -59,7 +59,7 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID FASTCALL
-IntValidateParent(PWINDOW_OBJECT Child)
+IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 {
    HWND Parent;
    PWINDOW_OBJECT ParentWindow;
@@ -80,11 +80,11 @@ IntValidateParent(PWINDOW_OBJECT Child)
              */
             OffsetX = Child->WindowRect.left - ParentWindow->WindowRect.left;
             OffsetY = Child->WindowRect.top - ParentWindow->WindowRect.top;
-            NtGdiOffsetRgn(Child->UpdateRegion, OffsetX, OffsetY );
+            NtGdiOffsetRgn(ValidRegion, OffsetX, OffsetY );
             NtGdiCombineRgn(ParentWindow->UpdateRegion, ParentWindow->UpdateRegion,
-               Child->UpdateRegion, RGN_DIFF);
+               ValidRegion, RGN_DIFF);
             /* FIXME: If the resulting region is empty, remove fake posted paint message */
-            NtGdiOffsetRgn(Child->UpdateRegion, -OffsetX, -OffsetY);
+            NtGdiOffsetRgn(ValidRegion, -OffsetX, -OffsetY);
          }
       }
       IntReleaseWindowObject(ParentWindow);
@@ -361,7 +361,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 
    if (ValidateParent)
    {
-      IntValidateParent(Window);
+      IntValidateParent(Window, Window->UpdateRegion);
    }
 
    /*
@@ -562,7 +562,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
    if (Window->UpdateRegion != NULL && Flags & RDW_ERASENOW)
    {
       /* Validate parent covered by region. */
-      IntValidateParent(Window);
+      IntValidateParent(Window, Window->UpdateRegion);
    }
 
    /*
@@ -827,7 +827,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
-      IntValidateParent(Window);
+      IntValidateParent(Window, Window->UpdateRegion);
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
    }
