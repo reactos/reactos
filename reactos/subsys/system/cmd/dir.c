@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: dir.c,v 1.2 2003/05/09 21:58:05 ekohl Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -719,10 +719,10 @@ GetUserDiskFreeSpace(LPCTSTR lpRoot,
     }
 
   GetDiskFreeSpace(lpRoot,
-		  &dwSecPerCl,
-		  &dwBytPerSec,
-		  &dwFreeCl,
-		  &dwTotCl);
+		   &dwSecPerCl,
+		   &dwBytPerSec,
+		   &dwFreeCl,
+		   &dwTotCl);
 
   lpFreeSpace->QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 }
@@ -757,8 +757,6 @@ PrintSummary(LPTSTR szPath,
   ConvertULargeInteger (bytes, buffer, sizeof(buffer));
   ConOutPrintf (_T("  %15s byte%c\n"),
                 buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
-  ConOutPrintf (_T("  %I64u byte%c\n"),
-                bytes.QuadPart, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
 
   if (IncLine (pLine, dwFlags))
     return 1;
