@@ -660,10 +660,15 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
 
       /* 1-based sector number */
-      if( (DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1) < Length / DriveInfo->DiskGeometry.BytesPerSector)
+      if( (DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1) < 
+	  (Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector)
+	{
 	  CurrentTransferSectors = (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1;
+	}
       else
-	  CurrentTransferSectors = (UCHAR)(Length / DriveInfo->DiskGeometry.BytesPerSector);
+	{
+	  CurrentTransferSectors = (UCHAR)((Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector);
+	}
 
       KdPrint(("0x%x\n", CurrentTransferSectors));
 
