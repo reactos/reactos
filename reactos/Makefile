@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.234 2004/07/09 20:18:48 weiden Exp $
+# $Id: Makefile,v 1.235 2004/07/10 21:44:14 sedwards Exp $
 #
 # Global makefile
 #
@@ -45,7 +45,7 @@ DLLS_CPL = cpl
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 # imagehlp imm32
 DLLS = acledit advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype gdi32 \
-	imm32 iphlpapi kernel32 lzexpand mpr msafd msgina msimg32 msvcrt msvcrt20 mswsock \
+	imm32 iphlpapi kernel32 lzexpand mpr msafd msgina msimg32 msvcrt msvcrt20 msvideo mswsock \
 	netapi32 ntdll ole32 oleaut32 oledlg packet psapi richedit rpcrt4 samlib secur32 \
 	setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 userenv version wininet \
 	winmm winspool ws2help ws2_32 wsock32 wshirda imagehlp $(DLLS_KBD) $(DLLS_CPL)
@@ -92,7 +92,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
 # autochk cmd format services setup usetup welcome winlogon
-SYS_APPS = autochk cmd explorer format services setup taskmgr userinit usetup welcome vmwinst winlogon regedit
+SYS_APPS = autochk cmd explorer expand format services setup taskmgr userinit usetup welcome vmwinst winlogon regedit
 
 # System services
 # rpcss eventlog
