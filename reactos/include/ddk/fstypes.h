@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.13 2003/08/14 18:30:27 silverblade Exp $ */
+/* $Id: fstypes.h,v 1.14 2004/03/14 09:21:41 weiden Exp $ */
 
 #ifndef __USE_W32API
 
@@ -14,6 +14,12 @@ typedef struct _FILE_LOCK_INFO {
     LARGE_INTEGER   EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
 
+typedef struct _FILE_LINK_INFORMATION {
+    BOOLEAN ReplaceIfExists;
+    HANDLE  RootDirectory;
+    ULONG   FileNameLength;
+    WCHAR   FileName[1];
+} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
 typedef NTSTATUS (*PCOMPLETE_LOCK_IRP_ROUTINE) (
     IN PVOID    Context,

@@ -428,6 +428,8 @@ enum
 #define FILE_VALID_MAILSLOT_OPTION_FLAGS        0x00000032
 #define FILE_VALID_SET_FLAGS                    0x00001036
 
+#define FILE_OPEN_REPARSE_POINT                 0x00200000
+
 /*
  * special ByteOffset values
  */

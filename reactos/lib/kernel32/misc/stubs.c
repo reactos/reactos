@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.62 2004/02/15 07:03:56 arty Exp $
+/* $Id: stubs.c,v 1.63 2004/03/14 09:21:41 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1656,21 +1656,6 @@ CheckNameLegalDOS8Dot3W(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-CreateHardLinkW(
-    LPCWSTR lpFileName,
-    LPCWSTR lpExistingFileName,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 HANDLE
 STDCALL
 CreateJobObjectW(
@@ -2036,21 +2021,6 @@ CheckNameLegalDOS8Dot3A(
     DWORD OemNameSize OPTIONAL,
     PBOOL pbNameContainsSpaces OPTIONAL,
     PBOOL pbNameLegal
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-CreateHardLinkA(
-    LPCSTR lpFileName,
-    LPCSTR lpExistingFileName,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -18,6 +18,7 @@
 #include <napi/i386/segment.h>
 #include <napi/teb.h>
 #include <napi/npipe.h>
+#include <napi/types.h>
 #include <ntos/minmax.h>
 #include <csrss/csrss.h>
 #include <reactos/buildno.h>
