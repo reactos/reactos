@@ -394,6 +394,8 @@ _biosdisk_retval:
 	.long	0
 _biosdisk_retrycount:
 	.byte	0
+_biosdisk_error_code:
+	.byte	0
 EXTERN(_BiosInt13Read)
 	.code32
 
@@ -459,6 +461,8 @@ _biosdisk_read:
 
 
 _biosdisk_error:
+	movb	%ah,_biosdisk_error_code// Save the error code
+
 	cmpb	$0x11,%ah				// Check and see if it was a corrected ECC error
 	je		_biosdisk_done			// If so then the data is still good, if not fail
 
@@ -570,6 +574,8 @@ _int13_extended_read:
 
 
 _int13_extended_error:
+	movb	%ah,_biosdisk_error_code				// Save the error code
+
 	cmpb	$0x11,%ah								// Check and see if it was a corrected ECC error
 	je		_int13_extended_done					// If so then the data is still good, if not fail
 
@@ -664,6 +670,16 @@ _int13_extension_check_done:
 	pop		%edi
 	pop		%esi
 	pop		%ebp
+	ret
+
+/*
+ * ULONG BiosInt13GetLastErrorCode(VOID);
+ */
+EXTERN(_BiosInt13GetLastErrorCode)
+	.code32
+
+	movzbl	_biosdisk_error_code,%eax				// Get return value
+
 	ret
 
 /*

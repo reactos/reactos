@@ -32,15 +32,19 @@
 
 VOID DiskError(PUCHAR ErrorString)
 {
-	DbgPrint((DPRINT_DISK, "%s\n", ErrorString));
+	UCHAR	ErrorCodeString[80];
+
+	sprintf(ErrorCodeString, "%s\nError Code: 0x%x", ErrorString, BiosInt13GetLastErrorCode());
+
+	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
 
 	if (UserInterfaceUp)
 	{
-		MessageBox(ErrorString);
+		MessageBox(ErrorCodeString);
 	}
 	else
 	{
-		printf("%s", ErrorString);
+		printf("%s", ErrorCodeString);
 		printf("\nPress any key\n");
 		getch();
 	}

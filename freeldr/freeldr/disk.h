@@ -40,6 +40,7 @@ int		biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, v
 BOOL	BiosInt13Read(ULONG Drive, ULONG Head, ULONG Track, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
 BOOL	BiosInt13ReadExtended(ULONG Drive, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
 BOOL	BiosInt13ExtensionsSupported(ULONG Drive);
+ULONG	BiosInt13GetLastErrorCode(VOID);
 
 void	stop_floppy(void);			// Implemented in asmcode.S
 int		get_heads(int drive);		// Implemented in asmcode.S
