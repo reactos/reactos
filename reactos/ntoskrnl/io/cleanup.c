@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -109,7 +109,10 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 
    if (DeviceObject->Flags & DO_DIRECT_IO)
    {
-      IoFreeMdl(Irp->MdlAddress);
+      if (Irp->MdlAddress)
+      {
+         IoFreeMdl(Irp->MdlAddress);
+      }
    }
 }
 
