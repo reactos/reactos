@@ -1560,17 +1560,6 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 
 	if ( module.files.size () > 0 )
 	{
-		string killAt = module.mangledSymbols ? "" : "--kill-at";
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
-		          module.GetTargetName ().c_str (),
-		          (module.GetBasePath () + SSEP + module.importLibrary->definition).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str (),
-		          killAt.c_str () );
-	}
-
-	if (module.files.size () > 0)
-	{
 		GenerateMacrosAndTargetsTarget ( module );
 
 		fprintf ( fMakefile, "%s: %s %s\n",
@@ -1579,6 +1568,63 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
+		                                     module.entrypoint.c_str () );
+		GenerateLinkerCommand ( module,
+		                        "${gcc}",
+		                        linkerParameters,
+		                        objectFilenames );
+	}
+	else
+	{
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+	}
+}
+
+
+static MingwNativeCUIModuleHandler nativecui_handler;
+
+MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler ()
+	: MingwModuleHandler ( NativeCUI )
+{
+}
+
+void
+MingwNativeCUIModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateNativeCUIModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string objectFilenames = GetObjectFilenames ( module );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+	
+	GenerateImportLibraryTargetIfNeeded ( module );
+
+	if ( module.files.size () > 0 )
+	{
+		string* cflags = new string ( "-D__NTAPP__" );
+		GenerateMacrosAndTargetsTarget ( module,
+		                                 cflags,
+		                                 NULL );
+		delete cflags;
+
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
 		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",

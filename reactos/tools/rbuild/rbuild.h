@@ -91,6 +91,7 @@ enum ModuleType
 	KernelModeDLL,
 	KernelModeDriver,
 	NativeDLL,
+	NativeCUI,
 	Win32DLL,
 	Win32GUI,
 	BootLoader,

@@ -271,6 +271,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return KernelModeDriver;
 	if ( attribute.value == "nativedll" )
 		return NativeDLL;
+	if ( attribute.value == "nativecui" )
+		return NativeCUI;
 	if ( attribute.value == "win32dll" )
 		return Win32DLL;
 	if ( attribute.value == "win32gui" )
@@ -298,6 +300,7 @@ Module::GetDefaultModuleExtension () const
 		case ObjectLibrary:
 			return ".o";
 		case Kernel:
+		case NativeCUI:
 		case Win32GUI:
 			return ".exe";
 		case KernelModeDLL:
@@ -329,6 +332,8 @@ Module::GetDefaultModuleEntrypoint () const
 			return "_DriverEntry@8";
 		case NativeDLL:
 			return "_DllMainCRTStartup@12";
+		case NativeCUI:
+			return "_NtProcessStartup@4";
 		case Win32DLL:
 			return "_DllMain@12";
 		case KernelModeDriver:
