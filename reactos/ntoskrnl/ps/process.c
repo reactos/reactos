@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.141 2004/09/22 14:53:26 weiden Exp $
+/* $Id: process.c,v 1.142 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,7 +25,7 @@ POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
 LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
-static ULONG PiNextProcessUniqueId = 0;
+static ULONG PiNextProcessUniqueId = 0; /* TODO */
 
 static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 					   PROCESS_WRITE,
@@ -296,6 +296,7 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->Pcb.LdtDescriptor[0] = 0;
    PsInitialSystemProcess->Pcb.LdtDescriptor[1] = 0;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
+   InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),
@@ -318,7 +319,7 @@ PsInitProcessManagment(VOID)
 #endif
 
    PsInitialSystemProcess->UniqueProcessId = 
-     InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
+     InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    PsInitialSystemProcess->Win32Desktop = (HANDLE)0;
    
@@ -660,9 +661,10 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KProcess->IopmOffset = 0xffff;
    KProcess->LdtDescriptor[0] = 0;
    KProcess->LdtDescriptor[1] = 0;
+   InitializeListHead(&KProcess->ThreadListHead);
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
-   Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
+   Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
    Process->InheritedFromUniqueProcessId = 
      (HANDLE)ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
@@ -1501,7 +1503,7 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 			CurrentT = CONTAINING_RECORD(
 					CurrentEntryT,
 					KTHREAD, 
-					Tcb.ThreadListEntry
+					ThreadListEntry
 					);
 			/*
 			 * Write thread data.

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.52 2004/08/27 10:24:04 hbirr Exp $
+/* $Id: kthread.c,v 1.53 2004/09/28 15:02:29 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -76,7 +76,7 @@ KeQueryPriorityThread (
 }
 
 NTSTATUS 
-KeReleaseThread(PETHREAD Thread)
+KeReleaseThread(PKTHREAD Thread)
 /*
  * FUNCTION: Releases the resource allocated for a thread by
  * KeInitializeThread
@@ -85,20 +85,23 @@ KeReleaseThread(PETHREAD Thread)
 {
   extern unsigned int init_stack;
 
-  if (Thread->Tcb.StackLimit != (ULONG)&init_stack)
+  /* FIXME - lock the process */
+  RemoveEntryList(&Thread->ThreadListEntry);
+  
+  if (Thread->StackLimit != (ULONG)&init_stack)
     {       
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryArea(MmGetKernelAddressSpace(),
-		       (PVOID)Thread->Tcb.StackLimit,
+		       (PVOID)Thread->StackLimit,
 		       MM_STACK_SIZE,
 		       KeFreeStackPage,
 		       NULL);
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
     }
-  Thread->Tcb.StackLimit = 0;
-  Thread->Tcb.InitialStack = NULL;
-  Thread->Tcb.StackBase = NULL;
-  Thread->Tcb.KernelStack = NULL;
+  Thread->StackLimit = 0;
+  Thread->InitialStack = NULL;
+  Thread->StackBase = NULL;
+  Thread->KernelStack = NULL;
   return(STATUS_SUCCESS);
 }
 
@@ -274,7 +277,7 @@ crashes. I'm disabling it again, until we fix the APC implementation...
   Thread->KernelStackResident = 1;
   Thread->NextProcessor = 0;
   Thread->CallbackStack = NULL;
-  Thread->Win32Thread = 0;
+  Thread->Win32Thread = NULL;
   Thread->TrapFrame = NULL;
   Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
   Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
@@ -304,16 +307,10 @@ crashes. I'm disabling it again, until we fix the APC implementation...
 		  KernelMode,
 		  NULL);
   KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
-  Thread->ThreadListEntry.Flink = NULL;
-  Thread->ThreadListEntry.Blink = NULL;
+  InsertTailList(&Process->ThreadListHead,
+                 &Thread->ThreadListEntry);
   Thread->FreezeCount = 0;
   Thread->SuspendCount = 0;
-  
-  /*
-   * Initialize ReactOS specific members
-   */
-  Thread->ProcessThreadListEntry.Flink = NULL;
-  Thread->ProcessThreadListEntry.Blink = NULL;
    
    /*
     * Do x86 specific part

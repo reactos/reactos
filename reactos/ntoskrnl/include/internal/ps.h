@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.68 2004/09/22 22:31:46 weiden Exp $
+/* $Id: ps.h,v 1.69 2004/09/28 15:02:29 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -96,13 +96,13 @@ typedef struct _KTHREAD
    UCHAR             Alerted[2];          /* 2E */
    UCHAR             Iopl;                /* 30 */
    UCHAR             NpxState;            /* 31 */
-   UCHAR             Saturation;          /* 32 */
+   CHAR              Saturation;          /* 32 */
    CHAR              Priority;            /* 33 */
    KAPC_STATE        ApcState;            /* 34 */
    ULONG             ContextSwitches;     /* 4C */
-   ULONG             WaitStatus;          /* 50 */
+   LONG              WaitStatus;          /* 50 */
    KIRQL             WaitIrql;            /* 54 */
-   UCHAR             WaitMode;            /* 55 */
+   CHAR              WaitMode;            /* 55 */
    UCHAR             WaitNext;            /* 56 */
    UCHAR             WaitReason;          /* 57 */
    PKWAIT_BLOCK      WaitBlockList;       /* 58 */
@@ -114,12 +114,12 @@ typedef struct _KTHREAD
    UCHAR             Quantum;             /* 6B */
    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
    PVOID             LegoData;            /* CC */
-   LONG              KernelApcDisable;    /* D0 */
+   ULONG             KernelApcDisable;    /* D0 */
    KAFFINITY         UserAffinity;        /* D4 */
    UCHAR             SystemAffinityActive;/* D8 */
    UCHAR             PowerState;          /* D9 */
    UCHAR             NpxIrql;             /* DA */
-   UCHAR             Pad;                 /* DB */
+   UCHAR             Pad[1];              /* DB */
    SSDT_ENTRY        *ServiceTable;       /* DC */
    PKQUEUE           Queue;               /* E0 */
    KSPIN_LOCK        ApcQueueLock;        /* E4 */
@@ -131,8 +131,8 @@ typedef struct _KTHREAD
    UCHAR             KernelStackResident; /* 11E */
    UCHAR             NextProcessor;       /* 11F */
    PVOID             CallbackStack;       /* 120 */
-   BOOL              Win32Thread;         /* 124 */
-   struct _KTRAP_FRAME*      TrapFrame;   /* 128 */
+   struct _W32THREAD *Win32Thread;        /* 124 */
+   struct _KTRAP_FRAME *TrapFrame;        /* 128 */
    PKAPC_STATE       ApcStatePointer[2];  /* 12C */
    UCHAR             EnableStackSwap;     /* 134 */
    UCHAR             LargeStack;          /* 135 */
@@ -153,13 +153,6 @@ typedef struct _KTHREAD
    UCHAR             SuspendCount;        /* 1AD */
    UCHAR             IdealProcessor;      /* 1AE */
    UCHAR             DisableBoost;        /* 1AF */
-   
-   /*
-    * Below here are thread structure members that are specific to ReactOS
-    */
-   
-   /* Added by Phillip Susi for list of threads in a process */
-   LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
 } KTHREAD;
 
 #include <poppack.h>
@@ -171,63 +164,61 @@ typedef struct _KTHREAD
 #define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
 #define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
 
+#ifndef __USE_W32API
 typedef struct
 {
-  PACCESS_TOKEN Token;                              // 0x0
-  BOOLEAN CopyOnOpen;                               // 0x4
-  BOOLEAN EffectiveOnly;                            // 0x5
-  UCHAR Pad[2];                                     // 0x6
-  SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
-} PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
+  PACCESS_TOKEN Token;
+  BOOLEAN CopyOnOpen;
+  BOOLEAN EffectiveOnly;
+  SECURITY_IMPERSONATION_LEVEL Level;
+} PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
+#endif
 
 #include <pshpack1.h>
 
 typedef struct _ETHREAD
 {
-  KTHREAD Tcb;                                      /* 000 */
-  TIME CreateTime;                                  /* 1B0/1B8 */
-  union
-  {
-    TIME ExitTime;                                  /* 1B8/1E4 */
-    LIST_ENTRY LpcReplyChain;                       /* 1B8/1E4 */
-  } u1;
-  NTSTATUS ExitStatus;                              /* 1C0/1EC */
-  LIST_ENTRY PostBlockList;                         /* 1C4/1F0 */
-  LIST_ENTRY TerminationPortList;                   /* 1CC/1F8 */
-  KSPIN_LOCK ActiveTimerListLock;                   /* 1D4/200 */
-  LIST_ENTRY ActiveTimerListHead;                   /* 1D8/204 */
-  CLIENT_ID Cid;                                    /* 1E0/20C */
-  KSEMAPHORE LpcReplySemaphore;                     /* 1E8/214 */
-  PVOID LpcReplyMessage;                            /* 1FC/228 */
-  PLARGE_INTEGER LpcReplyMessageId;                 /* 200/22C */
-  ULONG PerformanceCounterLow;                      /* 204/230 */
-  PPS_IMPERSONATION_INFO ImpersonationInfo;         /* 208/234 */
-  LIST_ENTRY IrpList;                               /* 20C/238 */
-  PIRP TopLevelIrp;                                 /* 214/240 */
-  PDEVICE_OBJECT DeviceToVerify;                    /* 218/244 */
-  ULONG ReadClusterSize;                            /* 21C/248 */
-  UCHAR ForwardClusterOnly;                         /* 220/24C */
-  UCHAR DisablePageFaultClustering;                 /* 221/24D */
-  UCHAR DeadThread;                                 /* 222/24E */
-  UCHAR HasTerminated;                              /* 223/24F */
-  PVOID EventPair;                                  /* 224/250 */
-  ACCESS_MASK GrantedAccess;                        /* 228/254 */
-  struct _EPROCESS* ThreadsProcess;                 /* 22C/258 */
-  PKSTART_ROUTINE StartAddress;                     /* 230/25C */
-  union
-  {
-    LPTHREAD_START_ROUTINE Win32StartAddress;       /* 234/260 */
-    ULONG LpcReceiveMessageId;                      /* 234/260 */
-  } u2;
-  UCHAR LpcExitThreadCalled;                        /* 238/264 */
-  UCHAR HardErrorsAreDisabled;                      /* 239/265 */
-  UCHAR LpcReceivedMsgIdValid;                      /* 23A/266 */
-  BOOLEAN ActiveImpersonationInfo;                  /* 23B/267 */
-  ULONG PerformanceCountHigh;                       /* 23C/268 */
-
-
-  struct _W32THREAD* Win32Thread;
-  
+  KTHREAD Tcb;
+  TIME CreateTime;
+  USHORT NestedFaultCount;
+  UCHAR ApcNeeded;
+  TIME ExitTime;
+  LIST_ENTRY LpcReplyChain;
+  NTSTATUS ExitStatus;
+  PVOID OfsChain;
+  LIST_ENTRY PostBlockList;
+  LIST_ENTRY TerminationPortList;
+  KSPIN_LOCK ActiveTimerListLock;
+  LIST_ENTRY ActiveTimerListHead;
+  CLIENT_ID Cid;
+  KSEMAPHORE LpcReplySemaphore;
+  PVOID LpcReplyMessage;
+  ULONG LpcReplyMessageId;
+  ULONG PerformanceCountLow;
+  PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
+  LIST_ENTRY IrpList;
+  PIRP TopLevelIrp;
+  PDEVICE_OBJECT DeviceToVerify;
+  ULONG ReadClusterSize;
+  UCHAR ForwardClusterOnly;
+  UCHAR DisablePageFaultClustering;
+  UCHAR DeadThread;
+  UCHAR HideFromDebugger;
+  ULONG HasTerminated;
+#ifdef _ENABLE_THRDEVTPAIR
+  PVOID EventPair;
+#endif /* _ENABLE_THRDEVTPAIR */
+  ACCESS_MASK GrantedAccess;
+  struct _EPROCESS *ThreadsProcess;
+  PKSTART_ROUTINE StartAddress;
+  LPTHREAD_START_ROUTINE Win32StartAddress;
+  ULONG LpcReceivedMessageId;
+  UCHAR LpcExitThreadCalled;
+  UCHAR HardErrorsAreDisabled;
+  UCHAR LpcReceivedMsgIdValid;
+  UCHAR ActiveImpersonationInfo;
+  ULONG PerformanceCountHigh;
+  LIST_ENTRY ThreadListEntry;
 } ETHREAD;
 
 #include <poppack.h>
@@ -459,8 +450,10 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PiInitApcManagement(VOID);
 VOID STDCALL PiDeleteThread(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
+VOID PsInitializeThreadReaper(VOID);
+VOID PsQueueThreadReap(PETHREAD Thread);
 NTSTATUS 
-PsInitializeThread(HANDLE ProcessHandle,
+PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
 		   PHANDLE ThreadHandle,
 		   ACCESS_MASK DesiredAccess,
@@ -503,7 +496,7 @@ NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
 VOID 
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
-NTSTATUS KeReleaseThread(PETHREAD Thread);
+NTSTATUS KeReleaseThread(PKTHREAD Thread);
 
 VOID
 STDCALL
@@ -520,6 +513,8 @@ KeUnstackDetachProcess (
 
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
+VOID PsInitializeThreadReaper(VOID);
+VOID PsQueueThreadReap(PETHREAD Thread);
 VOID PsUnfreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
@@ -555,8 +550,7 @@ PsDispatchThread(ULONG NewThreadStatus);
 VOID
 PsInitialiseSuspendImplementation(VOID);
 
-extern ULONG PiNrThreadsAwaitingReaping;
-
+extern LONG PiNrThreadsAwaitingReaping;
 
 NTSTATUS
 PsInitWin32Thread (PETHREAD Thread);
@@ -642,6 +636,32 @@ typedef struct _EJOB
 #include <poppack.h>
 
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
+
+/* CID */
+
+typedef struct _CID_OBJECT
+{
+  LONG ref;
+  HANDLE Handle;
+  LIST_ENTRY Entry;
+  LONG Lock;
+  union
+  {
+    struct _EPROCESS *Process;
+    struct _ETHREAD *Thread;
+    PVOID Object;
+  } Obj;
+} CID_OBJECT, *PCID_OBJECT;
+
+NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);
+NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
+PCID_OBJECT PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
+VOID PsUnlockCidObject(PCID_OBJECT CidObject);
+
+#define ETHREAD_TO_KTHREAD(pEThread) (&(pEThread)->Tcb)
+#define KTHREAD_TO_ETHREAD(pKThread) (CONTAINING_RECORD((pKThread), ETHREAD, Tcb))
+#define EPROCESS_TO_KPROCESS(pEProcess) (&(pEProcess)->Pcb)
+#define KPROCESS_TO_EPROCESS(pKProcess) (CONTAINING_RECORD((pKProcess), EPROCESS, Pcb))
 
 #endif /* ASSEMBLER */
 

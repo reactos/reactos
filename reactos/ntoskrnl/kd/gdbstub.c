@@ -87,8 +87,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-extern LIST_ENTRY PiThreadListHead;
-
 
 /************************************************************************/
 /* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
@@ -107,6 +105,8 @@ static CONST CHAR HexChars[]="0123456789abcdef";
 static PETHREAD GspRunThread; /* NULL means run all threads */
 static PETHREAD GspDbgThread;
 static PETHREAD GspEnumThread;
+
+extern LIST_ENTRY PsProcessListHead;
 
 /* Number of Registers.  */
 #define NUMREGS	16
@@ -650,14 +650,6 @@ GspFindThread(PCHAR Data,
       /* All threads */
       ThreadInfo = NULL;
     }
-    else if (strcmp (Data, "0") == 0)
-    {
-       /* Pick any thread, pick the first thread,
-        * which is what most people are interested in
-        */
-       ThreadInfo = CONTAINING_RECORD (PiThreadListHead.Flink,
-         ETHREAD, Tcb.ThreadListEntry);
-    }
     else
     {
       ULONG ThreadId;
@@ -747,32 +739,89 @@ GspQuery(PCHAR Request)
   }
   else if (strncmp (Command, "fThreadInfo", 11) == 0)
   {
+    PEPROCESS Process;
+    PLIST_ENTRY AThread, AProcess;
     PCHAR ptr = &GspOutBuffer[1];
 
     /* Get first thread id */
-    GspOutBuffer[0] = 'm';
-    GspEnumThread = CONTAINING_RECORD (PiThreadListHead.Flink,
-      ETHREAD, Tcb.ThreadListEntry);
-    Value = (ULONG) GspEnumThread->Cid.UniqueThread;
-    GspLong2Hex (&ptr, Value);
+    GspEnumThread = NULL;
+    AProcess = PsProcessListHead.Flink;
+    while(AProcess != &PsProcessListHead)
+    {
+      Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
+      AThread = Process->ThreadListHead.Flink;
+      if(AThread != &Process->ThreadListHead)
+      {
+        GspEnumThread = CONTAINING_RECORD (Process->ThreadListHead.Flink,
+                                           ETHREAD, ThreadListEntry);
+        break;
+      }
+      AProcess = AProcess->Flink;
+    }
+    if(GspEnumThread != NULL)
+    {
+      GspOutBuffer[0] = 'm';
+      Value = (ULONG) GspEnumThread->Cid.UniqueThread;
+      GspLong2Hex (&ptr, Value);
+    }
+    else
+    {
+      /* FIXME - what to do here? This case should never happen though, there
+                 should always be at least one thread on the system... */
+      /* GspOutBuffer[0] = 'l'; */
+    }
   }
   else if (strncmp (Command, "sThreadInfo", 11) == 0)
   {
+    PEPROCESS Process;
+    PLIST_ENTRY AThread, AProcess;
     PCHAR ptr = &GspOutBuffer[1];
 
     /* Get next thread id */
-    if ((GspEnumThread) && (GspEnumThread->Tcb.ThreadListEntry.Flink != PiThreadListHead.Flink))
+    if (GspEnumThread != NULL)
     {
-      GspEnumThread = CONTAINING_RECORD (GspEnumThread->Tcb.ThreadListEntry.Flink,
-        ETHREAD, Tcb.ThreadListEntry);
-	    GspOutBuffer[0] = 'm';
-	    Value = (ULONG) GspEnumThread->Cid.UniqueThread;
-      GspLong2Hex (&ptr, Value);
+      /* find the next thread */
+      Process = GspEnumThread->ThreadsProcess;
+      if(GspEnumThread->ThreadListEntry.Flink != &Process->ThreadListHead)
+      {
+        GspEnumThread = CONTAINING_RECORD (GspEnumThread->ThreadListEntry.Flink,
+                                           ETHREAD, ThreadListEntry);
+      }
+      else
+      {
+        PETHREAD Thread = NULL;
+        AProcess = Process->ProcessListEntry.Flink;
+        while(AProcess != &PsProcessListHead)
+        {
+          Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
+          AThread = Process->ThreadListHead.Flink;
+          if(AThread != &Process->ThreadListHead)
+          {
+            Thread = CONTAINING_RECORD (Process->ThreadListHead.Flink,
+                                        ETHREAD, ThreadListEntry);
+            break;
+          }
+          AProcess = AProcess->Flink;
+        }
+        GspEnumThread = Thread;
+      }
+
+      if(GspEnumThread != NULL)
+      {
+        /* return the ID */
+        GspOutBuffer[0] = 'm';
+        Value = (ULONG) GspEnumThread->Cid.UniqueThread;
+        GspLong2Hex (&ptr, Value);
+      }
+      else
+      {
+        GspOutBuffer[0] = 'l';
+      }
     }
-		else
-		{
-	    GspOutBuffer[0] = 'l';
-		}
+    else
+    {
+      GspOutBuffer[0] = 'l';
+    }
   }
   else if (strncmp (Command, "ThreadExtraInfo", 15) == 0)
   {

@@ -36,7 +36,6 @@
 /* GLOBALS *******************************************************************/
 
 KSPIN_LOCK PiApcLock;
-extern KSPIN_LOCK PiThreadListLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 

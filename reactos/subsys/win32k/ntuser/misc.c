@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.85 2004/09/13 21:37:32 weiden Exp $
+/* $Id: misc.c,v 1.86 2004/09/28 15:02:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -108,7 +108,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
     
     case NOPARAM_ROUTINE_DESTROY_CARET:
-      Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Win32Thread);
+      Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
       break;
     
     case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
@@ -422,7 +422,7 @@ NtUserCallTwoParam(
     
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
     {
-      PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Win32Thread->MessageQueue;
+      PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Tcb.Win32Thread->MessageQueue;
       
       ASSERT(MsgQueue);
       return (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2);
@@ -1087,12 +1087,12 @@ NtUserGetGUIThreadInfo(
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
     }
-    Desktop = Thread->Win32Thread->Desktop;
+    Desktop = Thread->Tcb.Win32Thread->Desktop;
   }
   else
   {
     /* get the foreground thread */
-    PW32THREAD W32Thread = PsGetCurrentThread()->Win32Thread;
+    PW32THREAD W32Thread = PsGetCurrentThread()->Tcb.Win32Thread;
     Desktop = W32Thread->Desktop;
     if(Desktop)
     {

@@ -138,8 +138,8 @@ typedef struct _WINDOW_OBJECT
   ObmDereferenceObject(WndObj)
 
 #define IntWndBelongsToThread(WndObj, W32Thread) \
-  (((WndObj->OwnerThread && WndObj->OwnerThread->Win32Thread)) && \
-   (WndObj->OwnerThread->Win32Thread == W32Thread))
+  (((WndObj->OwnerThread && WndObj->OwnerThread->Tcb.Win32Thread)) && \
+   (WndObj->OwnerThread->Tcb.Win32Thread == W32Thread))
 
 #define IntGetWndThreadId(WndObj) \
   WndObj->OwnerThread->Cid.UniqueThread

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.8 2004/05/10 17:07:18 weiden Exp $
+/* $Id: hook.c,v 1.9 2004/09/28 15:02:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,7 +64,7 @@ STATIC FASTCALL PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
   PHOOK Hook;
-  PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(Thread->Win32Thread->MessageQueue);
+  PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(Thread->Tcb.Win32Thread->MessageQueue);
   HANDLE Handle;
 
   if (NULL == Table)
@@ -80,7 +80,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         }
       else
         {
-          MsqSetHooks(Thread->Win32Thread->MessageQueue, Table);
+          MsqSetHooks(Thread->Tcb.Win32Thread->MessageQueue, Table);
         }
     }
 
@@ -113,7 +113,7 @@ IntGetTable(PHOOK Hook)
       return GlobalHooks;
     }
 
-  return MsqGetHooks(Hook->Thread->Win32Thread->MessageQueue);
+  return MsqGetHooks(Hook->Thread->Tcb.Win32Thread->MessageQueue);
 }
 
 /* get the first hook in the chain */

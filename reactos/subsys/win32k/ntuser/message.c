@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.73 2004/09/12 19:29:22 gvg Exp $
+/* $Id: message.c,v 1.74 2004/09/28 15:02:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1154,7 +1154,7 @@ NtUserPostThreadMessage(DWORD idThread,
   Status = PsLookupThreadByThreadId((void *)idThread,&peThread);
   
   if( Status == STATUS_SUCCESS ) {
-    pThread = peThread->Win32Thread;
+    pThread = peThread->Tcb.Win32Thread;
     if( !pThread || !pThread->MessageQueue )
       {
 	ObDereferenceObject( peThread );
@@ -1606,18 +1606,18 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 BOOL STDCALL
 IntInitMessagePumpHook()
 {
-	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue++;
+	PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue++;
 	return TRUE;
 }
 
 BOOL STDCALL
 IntUninitMessagePumpHook()
 {
-	if (PsGetCurrentThread()->Win32Thread->MessagePumpHookValue <= 0)
+	if (PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue <= 0)
 	{
 		return FALSE;
 	}
-	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue--;
+	PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue--;
 	return TRUE;
 }
 

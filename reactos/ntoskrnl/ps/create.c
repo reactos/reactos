@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.80 2004/08/31 06:08:38 navaraf Exp $
+/* $Id: create.c,v 1.81 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -27,12 +27,7 @@
 
 /* GLOBAL *******************************************************************/
 
-static ULONG PiNextThreadUniqueId = 0;
-
-extern KSPIN_LOCK PiThreadListLock;
-extern ULONG PiNrThreads;
-
-extern LIST_ENTRY PiThreadListHead;
+extern KSPIN_LOCK PiThreadLock;
 
 #define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
 
@@ -138,7 +133,7 @@ PsImpersonateClient (IN PETHREAD Thread,
   if (Thread->ImpersonationInfo == NULL)
     {
       Thread->ImpersonationInfo = ExAllocatePool (NonPagedPool,
-						  sizeof(PS_IMPERSONATION_INFO));
+						  sizeof(PS_IMPERSONATION_INFORMATION));
     }
 
   Thread->ImpersonationInfo->Level = ImpersonationLevel;
@@ -380,28 +375,28 @@ PiBeforeBeginThread(CONTEXT c)
 VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
 {
-  KIRQL oldIrql;
   PETHREAD Thread;
+  PEPROCESS Process;
 
   Thread = (PETHREAD)ObjectBody;
 
   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 
-  ObDereferenceObject(Thread->ThreadsProcess);
+  Process = Thread->ThreadsProcess;
   Thread->ThreadsProcess = NULL;
 
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  PiNrThreads--;
-  RemoveEntryList(&Thread->Tcb.ThreadListEntry);
-  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+  PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
 
-  KeReleaseThread(Thread);
+  KeReleaseThread(ETHREAD_TO_KTHREAD(Thread));
+  
+  ObDereferenceObject(Process);
+  
   DPRINT("PiDeleteThread() finished\n");
 }
 
 
 NTSTATUS
-PsInitializeThread(HANDLE ProcessHandle,
+PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
 		   PHANDLE ThreadHandle,
 		   ACCESS_MASK	DesiredAccess,
@@ -411,34 +406,19 @@ PsInitializeThread(HANDLE ProcessHandle,
    PETHREAD Thread;
    NTSTATUS Status;
    KIRQL oldIrql;
-   PEPROCESS Process;
+
+   if (Process == NULL)
+     {
+	Process = PsInitialSystemProcess;
+     }
 
    /*
     * Reference process
     */
-   if (ProcessHandle != NULL)
-     {
-	Status = ObReferenceObjectByHandle(ProcessHandle,
-					   PROCESS_CREATE_THREAD,
-					   PsProcessType,
-					   UserMode,
-					   (PVOID*)&Process,
-					   NULL);
-	if (Status != STATUS_SUCCESS)
-	  {
-	     DPRINT("Failed at %s:%d\n",__FILE__,__LINE__);
-	     return(Status);
-	  }
-	DPRINT( "Creating thread in process %x\n", Process );
-     }
-   else
-     {
-	Process = PsInitialSystemProcess;
-	ObReferenceObjectByPointer(Process,
-				   PROCESS_CREATE_THREAD,
-				   PsProcessType,
-				   UserMode);
-     }
+   ObReferenceObjectByPointer(Process,
+                              PROCESS_CREATE_THREAD,
+                              PsProcessType,
+                              KernelMode);
    
    /*
     * Create and initialize thread
@@ -454,9 +434,21 @@ PsInitializeThread(HANDLE ProcessHandle,
 			   (PVOID*)&Thread);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+        ObDereferenceObject (Process);
+        return(Status);
      }
 
+  /* create a client id handle */
+  Status = PsCreateCidHandle(Thread, PsThreadType, &Thread->Cid.UniqueThread);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (Thread);
+      ObDereferenceObject (Process);
+      return Status;
+    }
+  Thread->ThreadsProcess = Process;
+  Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
+  
   Status = ObInsertObject ((PVOID)Thread,
 			   NULL,
 			   DesiredAccess,
@@ -466,27 +458,23 @@ PsInitializeThread(HANDLE ProcessHandle,
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (Thread);
+      ObDereferenceObject (Process);
       return Status;
     }
 
    DPRINT("Thread = %x\n",Thread);
-   
-   PiNrThreads++;
-   
+
    KeInitializeThread(&Process->Pcb, &Thread->Tcb, First);
-   Thread->ThreadsProcess = Process;
    InitializeListHead(&Thread->TerminationPortList);
    KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);
-   Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
-					      (LONG *)&PiNextThreadUniqueId);
-   Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
-   Thread->DeadThread = 0;
-   Thread->Win32Thread = 0;
+   Thread->DeadThread = FALSE;
+   Thread->HasTerminated = FALSE;
+   Thread->Tcb.Win32Thread = NULL;
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    
 
-   Thread->Tcb.BasePriority = (CHAR)Thread->ThreadsProcess->Pcb.BasePriority;
+   Thread->Tcb.BasePriority = (CHAR)Process->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
 
    /*
@@ -499,11 +487,10 @@ PsInitializeThread(HANDLE ProcessHandle,
    Thread->LpcExitThreadCalled = FALSE;
    Thread->LpcReceivedMsgIdValid = FALSE;
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   InsertTailList(&Thread->ThreadsProcess->ThreadListHead, 
-		  &Thread->Tcb.ProcessThreadListEntry);
-   InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   InsertTailList(&Process->ThreadListHead,
+		  &Thread->ThreadListEntry);
+   KeReleaseSpinLock(&PiThreadLock, oldIrql);
 
    *ThreadPtr = Thread;
 
@@ -661,6 +648,7 @@ NtCreateThread(PHANDLE ThreadHandle,
 	       PUSER_STACK UserStack,
 	       BOOLEAN CreateSuspended)
 {
+  PEPROCESS Process;
   PETHREAD Thread;
   PTEB TebBase;
   NTSTATUS Status;
@@ -669,12 +657,26 @@ NtCreateThread(PHANDLE ThreadHandle,
   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	 ThreadHandle,ThreadContext);
 
-  Status = PsInitializeThread(ProcessHandle,
+  Status = ObReferenceObjectByHandle(ProcessHandle,
+                                     PROCESS_CREATE_THREAD,
+                                     PsProcessType,
+                                     UserMode,
+                                     (PVOID*)&Process,
+                                     NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    return(Status);
+  }
+
+  Status = PsInitializeThread(Process,
 			      &Thread,
 			      ThreadHandle,
 			      DesiredAccess,
 			      ObjectAttributes,
 			      FALSE);
+
+  ObDereferenceObject(Process);
+
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -778,7 +780,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    DPRINT("PsCreateSystemThread(ThreadHandle %x, ProcessHandle %x)\n",
 	    ThreadHandle,ProcessHandle);
    
-   Status = PsInitializeThread(ProcessHandle,
+   Status = PsInitializeThread(NULL,
 			       &Thread,
 			       ThreadHandle,
 			       DesiredAccess,

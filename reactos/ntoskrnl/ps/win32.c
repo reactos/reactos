@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.8 2004/08/15 16:39:10 chorns Exp $
+/* $Id: win32.c,v 1.9 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -45,7 +45,7 @@ static ULONG PspWin32ThreadSize = 0;
 PW32THREAD STDCALL
 PsGetWin32Thread(VOID)
 {
-  return(PsGetCurrentThread()->Win32Thread);
+  return(PsGetCurrentThread()->Tcb.Win32Thread);
 }
 
 PW32PROCESS STDCALL
@@ -114,14 +114,14 @@ PsInitWin32Thread (PETHREAD Thread)
 	}
     }
 
-  if (Thread->Win32Thread == NULL)
+  if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Win32Thread = ExAllocatePool (NonPagedPool,
-					    PspWin32ThreadSize);
-      if (Thread->Win32Thread == NULL)
+      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool,
+						PspWin32ThreadSize);
+      if (Thread->Tcb.Win32Thread == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory (Thread->Win32Thread,
+      RtlZeroMemory (Thread->Tcb.Win32Thread,
 		     PspWin32ThreadSize);
 
       if (PspWin32ThreadCallback != NULL)
@@ -152,15 +152,15 @@ PsTerminateWin32Process (PEPROCESS Process)
 VOID
 PsTerminateWin32Thread (PETHREAD Thread)
 {
-  if (Thread->Win32Thread == NULL)
-    return;
-
-  if (PspWin32ThreadCallback != NULL)
+  if (Thread->Tcb.Win32Thread != NULL)
+  {
+    if (PspWin32ThreadCallback != NULL)
     {
       PspWin32ThreadCallback (Thread, FALSE);
     }
 
-  ExFreePool (Thread->Win32Thread);
+    ExFreePool (Thread->Tcb.Win32Thread);
+  }
 }
 
 /* EOF */

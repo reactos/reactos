@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.61 2004/09/24 16:18:28 weiden Exp $
+/* $Id: handle.c,v 1.62 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -414,11 +414,13 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 	       {
 		  POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
 		  
-		  if (Header->ObjectType == PsProcessType ||
+#if 0
+                  if (Header->ObjectType == PsProcessType ||
 		      Header->ObjectType == PsThreadType)
 		    {
 		       DPRINT("Deleting handle to %x\n", ObjectBody);
 		    }
+#endif
 		  
 		  ObReferenceObjectByPointer(ObjectBody,
 					     0,

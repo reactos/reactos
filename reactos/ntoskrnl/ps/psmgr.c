@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.22 2004/09/22 22:31:46 weiden Exp $
+/* $Id: psmgr.c,v 1.23 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+VOID INIT_FUNCTION PsInitClientIDManagment(VOID);
+
 /* FUNCTIONS ***************************************************************/
 
 VOID PiShutdownProcessManager(VOID)
@@ -25,6 +27,7 @@ VOID PiShutdownProcessManager(VOID)
 VOID INIT_FUNCTION
 PiInitProcessManager(VOID)
 {
+   PsInitClientIDManagment();
    PsInitJobManagment();
    PsInitProcessManagment();
    PsInitThreadManagment();

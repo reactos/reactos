@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.79 2004/08/08 17:57:34 weiden Exp $
+/* $Id: dllmain.c,v 1.80 2004/09/28 15:02:30 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -135,7 +135,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 #endif
 
   Process = Thread->ThreadsProcess;
-  Win32Thread = Thread->Win32Thread;
+  Win32Thread = Thread->Tcb.Win32Thread;
   if (Create)
     {
 #if 0

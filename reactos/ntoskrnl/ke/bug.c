@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.45 2004/08/15 16:39:05 chorns Exp $
+/* $Id: bug.c,v 1.46 2004/09/28 15:02:29 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -39,8 +39,6 @@
 
 static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
 static ULONG InBugCheck;
-
-VOID PsDumpThreads(VOID);
 
 /* FUNCTIONS *****************************************************************/
 

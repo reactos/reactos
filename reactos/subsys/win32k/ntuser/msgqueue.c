@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.106 2004/09/12 19:29:23 gvg Exp $
+/* $Id: msgqueue.c,v 1.107 2004/09/28 15:02:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -627,7 +627,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
   if (!NT_SUCCESS(Status))
     return;
 
-  Win32Thread = ((PETHREAD)Thread)->Win32Thread;
+  Win32Thread = ((PETHREAD)Thread)->Tcb.Win32Thread;
   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
     {
       ObDereferenceObject ((PETHREAD)Thread);

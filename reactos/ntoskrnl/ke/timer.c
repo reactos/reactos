@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.77 2004/08/21 21:19:06 tamlin Exp $
+/* $Id: timer.c,v 1.78 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -65,7 +65,6 @@ static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
 
-extern ULONG PiNrRunnableThreads;
 extern HANDLE PsIdleThreadHandle;
 
 #define MICROSECONDS_PER_TICK (10000)

@@ -17,6 +17,7 @@
 
 #include <internal/ob.h>
 #include <internal/safe.h>
+#include <internal/ps.h>
 
 #include <napi/win32.h>
 #include <ntos.h>

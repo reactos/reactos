@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.45 2004/08/18 20:41:03 navaraf Exp $
+/* $Id: sysinfo.c,v 1.46 2004/09/28 15:02:28 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -622,7 +622,7 @@ QSI_DEF(SystemProcessInformation)
           while (current_entry != &pr->ThreadListHead)
                {
                  current = CONTAINING_RECORD(current_entry, ETHREAD,
-                                               Tcb.ProcessThreadListEntry);
+                                             ThreadListEntry);
 
                  SpiCur->Threads[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
                  SpiCur->Threads[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;

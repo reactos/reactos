@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.22 2004/08/15 16:39:09 chorns Exp $
+/* $Id: evtpair.c,v 1.23 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -330,6 +330,8 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
    return(STATUS_SUCCESS);
 }
 
+#ifdef _ENABLE_THRDEVTPAIR
+
 /*
  * Author: Skywing (skywing@valhallalegends.com), 09/08/2003
  * Note that the eventpair spinlock must be acquired when setting the thread
@@ -464,5 +466,31 @@ ExpSwapThreadEventPair(
 
 	KeReleaseSpinLock(&ExThreadEventPairSpinLock, Irql);
 }
+
+#else /* !_ENABLE_THRDEVTPAIR */
+
+NTSTATUS
+NTSYSAPI
+NTAPI
+NtSetLowWaitHighThread(
+	VOID
+	)
+{
+        DPRINT1("NtSetLowWaitHighThread() not supported anymore (NT4 only)!\n");
+        return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTSYSAPI
+NTAPI
+NtSetHighWaitLowThread(
+	VOID
+	)
+{
+        DPRINT1("NtSetHighWaitLowThread() not supported anymore (NT4 only)!\n");
+        return STATUS_NOT_IMPLEMENTED;
+}
+
+#endif /* _ENABLE_THRDEVTPAIR */
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.28 2004/08/15 16:39:10 chorns Exp $
+/* $Id: tinfo.c,v 1.29 2004/09/28 15:02:29 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,8 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	/* Can only be queried */
 	Status = STATUS_INVALID_INFO_CLASS;
 	break;
-	
+
+#ifdef _ENABLE_THRDEVTPAIR
       case ThreadEventPair:
 	{
 	  PKEVENT_PAIR EventPair;
@@ -149,6 +150,13 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	  Status = STATUS_SUCCESS;
 	  break;
 	}
+#else /* !_ENABLE_THRDEVTPAIR */
+      case ThreadEventPair:
+	{
+          Status = STATUS_NOT_IMPLEMENTED;
+	  break;
+	}
+#endif /* _ENABLE_THRDEVTPAIR */
 	
       case ThreadQuerySetWin32StartAddress:
 	if (ThreadInformationLength != sizeof(ULONG))
@@ -156,7 +164,7 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	    Status = STATUS_INFO_LENGTH_MISMATCH;
 	    break;
 	  }
-	Thread->u2.Win32StartAddress = (PVOID)*((PULONG)ThreadInformation);
+	Thread->Win32StartAddress = (PVOID)*((PULONG)ThreadInformation);
 	Status = STATUS_SUCCESS;
 	break;
 
@@ -270,7 +278,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
             TTI->UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
             TTI->CreateTime = (TIME) Thread->CreateTime;
             /*This works*/
-	    TTI->ExitTime = (TIME) Thread->u1.ExitTime;
+	    TTI->ExitTime = (TIME) Thread->ExitTime;
 	 
             Status = STATUS_SUCCESS;
             break;
@@ -317,7 +325,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	   Status = STATUS_INFO_LENGTH_MISMATCH;
 	   break;
 	 }
-       *((PVOID*)ThreadInformation) = Thread->u2.Win32StartAddress;
+       *((PVOID*)ThreadInformation) = Thread->Win32StartAddress;
        Status = STATUS_SUCCESS;
        break;
 

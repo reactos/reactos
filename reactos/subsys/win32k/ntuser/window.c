@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.246 2004/07/26 14:58:35 jimtabor Exp $
+/* $Id: window.c,v 1.247 2004/09/28 15:02:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -267,10 +267,10 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 
   RemoveTimersWindow(Window->Self);
   
-  IntLockThreadWindows(Window->OwnerThread->Win32Thread);
+  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   if(Window->Status & WINDOWSTATUS_DESTROYING)
   {
-    IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+    IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
     DPRINT("Tried to call IntDestroyWindow() twice\n");
     return 0;
   }
@@ -279,7 +279,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
      don't get into trouble when destroying the thread windows while we're still
      in IntDestroyWindow() */
   RemoveEntryList(&Window->ThreadListEntry);
-  IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   
   BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
   
@@ -382,10 +382,10 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   IntDestroyScrollBars(Window);
   
-  IntLockThreadWindows(Window->OwnerThread->Win32Thread);
+  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   Window->Status |= WINDOWSTATUS_DESTROYED;
   /* don't remove the WINDOWSTATUS_DESTROYING bit */
-  IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   
   /* remove the window from the class object */
   IntLockClassWindows(Window->Class);
@@ -527,7 +527,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   PWINDOW_OBJECT *List, *pWnd;
   ULONG Cnt = 0;
 
-  Win32Thread = Thread->Win32Thread;
+  Win32Thread = Thread->Tcb.Win32Thread;
   Win32Process = Thread->ThreadsProcess->Win32Process;
   
   IntLockThreadWindows(Win32Thread);
@@ -1166,7 +1166,7 @@ NtUserBuildHwndList(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
     }
-    if(!(W32Thread = Thread->Win32Thread))
+    if(!(W32Thread = Thread->Tcb.Win32Thread))
     {
       ObDereferenceObject(Thread);
       DPRINT1("Thread is not a GUI Thread!\n");
@@ -1718,7 +1718,7 @@ IntCreateWindowEx(DWORD dwExStyle,
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     BOOL CalculatedDefPosSize = FALSE;
     
-    IntGetDesktopWorkArea(WindowObject->OwnerThread->Win32Thread->Desktop, &WorkArea);
+    IntGetDesktopWorkArea(WindowObject->OwnerThread->Tcb.Win32Thread->Desktop, &WorkArea);
     
     rc = WorkArea;
     ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;

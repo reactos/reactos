@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.143 2004/09/23 11:27:58 ekohl Exp $
+# $Id: Makefile,v 1.144 2004/09/28 15:02:28 weiden Exp $
 #
 # ReactOS Operating System
 #
@@ -60,6 +60,9 @@ CFLAGS += -D_DISABLE_TIDENTS
 
 # no native setjmp/longjmp in the kernel
 CFLAGS += -D_SEH_NO_NATIVE_NLG
+
+# enable thread event pair features (NT4 only!)
+# CFLAGS += -D_ENABLE_THRDEVTPAIR
 
 CFLAGS += $(STD_CFLAGS)
 ASFLAGS += $(STD_ASFLAGS)
@@ -249,6 +252,7 @@ OBJECTS_OB = \
 
 # Process Manager (Ps)
 OBJECTS_PS = \
+	ps/cid.o \
 	ps/create.o \
 	ps/debug.o \
 	ps/idle.o \

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.85 2004/09/24 15:07:38 navaraf Exp $
+ *  $Id: painting.c,v 1.86 2004/09/28 15:02:30 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -676,7 +676,7 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
    PTHRDCARETINFO CaretInfo;
    HWND hWndCaret;
 
-   Desktop = PsGetCurrentThread()->Win32Thread->Desktop;
+   Desktop = PsGetCurrentThread()->Tcb.Win32Thread->Desktop;
    CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
    if (hWndCaret == hWnd ||

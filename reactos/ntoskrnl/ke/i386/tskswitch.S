@@ -158,7 +158,7 @@ _Ki386ContextSwitch:
 	 */
 	sti
 	
-	push	$_PiThreadListLock
+	push	$_PiThreadLock
 	call	_KeReleaseSpinLockFromDpcLevel@4
 	
 	cmpl	$0, _PiNrThreadsAwaitingReaping

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.21 2004/09/15 20:53:43 mf Exp $
+ *  $Id: desktop.c,v 1.22 2004/09/28 15:02:30 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -954,14 +954,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
   {
     /* just return the handle, we queried the desktop handle of a thread running
        in the same context */
-    Ret = Thread->Win32Thread->hDesktop;
+    Ret = Thread->Tcb.Win32Thread->hDesktop;
     ObDereferenceObject(Thread);
     return Ret;
   }
   
   /* get the desktop handle and the desktop of the thread */
-  if(!(hThreadDesktop = Thread->Win32Thread->hDesktop) ||
-     !(DesktopObject = Thread->Win32Thread->Desktop))
+  if(!(hThreadDesktop = Thread->Tcb.Win32Thread->hDesktop) ||
+     !(DesktopObject = Thread->Tcb.Win32Thread->Desktop))
   {
     ObDereferenceObject(Thread);
     DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);
