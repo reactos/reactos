@@ -71,7 +71,10 @@ CsrCaptureParameterBuffer(PVOID ParameterBuffer,
     {
       return(STATUS_NO_MEMORY);
     }
-  memcpy(Block, ParameterBuffer, ParameterBufferSize);
+  if(ParameterBuffer != NULL)
+  {
+    memcpy(Block, ParameterBuffer, ParameterBufferSize);
+  }
   *ClientAddress = Block;
   *ServerAddress = Block - CsrSectionMapBase + CsrSectionMapServerBase;
   return(STATUS_SUCCESS);

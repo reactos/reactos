@@ -3163,4 +3163,51 @@ CSR_API(CsrSetConsoleOutputCodePage)
   return Reply->Status = STATUS_UNSUCCESSFUL;
 }
 
+CSR_API(CsrGetProcessList)
+{
+  PHANDLE Buffer;
+  PCSRSS_CONSOLE Console;
+  PCSRSS_PROCESS_DATA current;
+  PLIST_ENTRY current_entry;
+  ULONG nItems, nCopied;
+  NTSTATUS Status;
+
+  DPRINT("CsrGetProcessList\n");
+  
+  Buffer = Reply->Data.GetProcessListReply.ProcessId;
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = Reply->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  
+  nItems = nCopied = 0;
+  Reply->Data.GetProcessListReply.nProcessIdsCopied = 0;
+  Reply->Data.GetProcessListReply.nProcessIdsTotal = 0;
+  
+  Status = ConioConsoleFromProcessData(ProcessData, &Console);
+  if (! NT_SUCCESS(Status))
+  {
+    return Reply->Status = Status;
+  }
+
+  DPRINT1("Console_Api Ctrl-C\n");
+
+  for(current_entry = Console->ProcessList.Flink;
+      current_entry != &Console->ProcessList;
+      current_entry = current_entry->Flink)
+  {
+    current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+    if(nItems++ < Request->Data.GetProcessListRequest.nMaxIds)
+    {
+      *(Buffer++) = current->ProcessId;
+      nCopied++;
+    }
+  }
+
+  ConioUnlockConsole(Console);
+  
+  Reply->Data.GetProcessListReply.nProcessIdsCopied = nCopied;
+  Reply->Data.GetProcessListReply.nProcessIdsTotal = nItems;
+  
+  return Reply->Status = STATUS_SUCCESS;
+}
+
 /* EOF */

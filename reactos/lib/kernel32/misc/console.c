@@ -1569,7 +1569,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   
   Size = nLength * sizeof(INPUT_RECORD);
 
-  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer, Size, &BufferBase, &BufferTargetBase);
+  Status = CsrCaptureParameterBuffer(NULL, Size, &BufferBase, &BufferTargetBase);
   if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
@@ -1884,7 +1884,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   
   Size = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
 
-  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer, Size, &BufferBase, &BufferTargetBase);
+  Status = CsrCaptureParameterBuffer(NULL, Size, &BufferBase, &BufferTargetBase);
   if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
@@ -3327,15 +3327,63 @@ SetConsoleOutputCP(
 /*--------------------------------------------------------------
  * 	GetConsoleProcessList
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetConsoleProcessList(LPDWORD lpdwProcessList,
-                  DWORD dwProcessCount)
+                      DWORD dwProcessCount)
 {
-  DPRINT1("GetConsoleProcessList(0x%x, 0x%x) UNIMPLEMENTED!\n", lpdwProcessList, dwProcessCount);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSRSS_API_REQUEST Request;
+  PCSRSS_API_REPLY Reply;
+  ULONG BufferSize, nProcesses;
+  NTSTATUS Status;
+  
+  if(lpdwProcessList == NULL || dwProcessCount == 0)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+
+  BufferSize = sizeof(CSRSS_API_REQUEST) +
+               (dwProcessCount * sizeof(Reply->Data.GetProcessListReply.ProcessId[0]));
+
+  Reply = RtlAllocateHeap(GetProcessHeap(), 0, BufferSize);
+  if(Reply == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+
+  Reply->Status = STATUS_SUCCESS;
+  
+  Request.Type = CSRSS_GET_PROCESS_LIST;
+  Request.Data.GetProcessListRequest.nMaxIds = dwProcessCount;
+  
+  Status = CsrClientCallServer(&Request, Reply, sizeof(CSRSS_API_REQUEST),
+                               BufferSize);
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply->Status))
+  {
+    SetLastErrorByStatus (Status);
+    nProcesses = 0;
+  }
+  else
+  {
+    if(dwProcessCount >= Reply->Data.GetProcessListReply.nProcessIdsTotal)
+    {
+      nProcesses = Reply->Data.GetProcessListReply.nProcessIdsCopied;
+      for(nProcesses = 0; nProcesses < Reply->Data.GetProcessListReply.nProcessIdsCopied; nProcesses++)
+      {
+        *(lpdwProcessList++) = (DWORD)Reply->Data.GetProcessListReply.ProcessId[nProcesses];
+      }
+    }
+    else
+    {
+      nProcesses = Reply->Data.GetProcessListReply.nProcessIdsTotal;
+    }
+  }
+  
+  RtlFreeHeap(GetProcessHeap(), 0, Reply);
+  return nProcesses;
 }
 
 
