@@ -5921,4 +5921,236 @@ Language=English
 OLE_E_NOTRUNNING - Need to run the object to perform this operation
 .
 
+MessageId=0x0006
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_NOCACHE
+Language=English
+OLE_E_NOCACHE - There is no cache to operate on
+.
+
+MessageId=0x0007
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_BLANK
+Language=English
+OLE_E_BLANK - Uninitialized object
+.
+
+MessageId=0x0008
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_CLASSDIFF
+Language=English
+OLE_E_CLASSDIFF - Linked object's source class has changed
+.
+
+MessageId=0x0009
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_CANT_GETMONIKER
+Language=English
+OLE_E_CANT_GETMONIKER - Not able to get the moniker of the object
+.
+
+MessageId=0x000A
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_CANT_BINDTOSOURCE
+Language=English
+OLE_E_CANT_BINDTOSOURCE - Not able to bind to the source
+.
+
+MessageId=0x000B
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_STATIC
+Language=English
+OLE_E_STATIC - Object is static; operation not allowed
+.
+
+MessageId=0x000C
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_PROMPTSAVECANCELLED
+Language=English
+OLE_E_PROMPTSAVECANCELLED - User canceled out of save dialog
+.
+
+MessageId=0x000D
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_INVALIDRECT
+Language=English
+OLE_E_INVALIDRECT - Invalid rectangle
+.
+
+MessageId=0x000E
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_WRONGCOMPOBJ
+Language=English
+OLE_E_WRONGCOMPOBJ - compobj.dll is too old for the ole2.dll initialized
+.
+
+MessageId=0x000F
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_INVALIDHWND
+Language=English
+OLE_E_INVALIDHWND - Invalid window handle
+.
+
+MessageId=0x0010
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_NOT_INPLACEACTIVE
+Language=English
+OLE_E_NOT_INPLACEACTIVE - Object is not in any of the inplace active states
+.
+
+MessageId=0x0011
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_CANTCONVERT
+Language=English
+OLE_E_CANTCONVERT - Not able to convert object
+.
+
+MessageId=0x0012
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_NOSTORAGE
+Language=English
+OLE_E_NOSTORAGE - Not able to perform the operation because object is not given storage yet
+.
+
+MessageId=0x0064
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_FORMATETC
+Language=English
+DV_E_FORMATETC - Invalid FORMATETC structure
+.
+
+MessageId=0x0065
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_DVTARGETDEVICE
+Language=English
+DV_E_DVTARGETDEVICE - Invalid DVTARGETDEVICE structure
+.
+
+MessageId=0x0066
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_STGMEDIUM
+Language=English
+DV_E_STGMEDIUM - Invalid STDGMEDIUM structure
+.
+
+MessageId=0x0067
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_STATDATA
+Language=English
+DV_E_STATDATA - Invalid STATDATA structure
+.
+
+MessageId=0x0068
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_LINDEX
+Language=English
+DV_E_LINDEX - Invalid lindex
+.
+
+MessageId=0x0069
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_TYMED
+Language=English
+DV_E_TYMED - Invalid tymed
+.
+
+MessageId=0x006A
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_CLIPFORMAT
+Language=English
+DV_E_CLIPFORMAT - Invalid clipboard format
+.
+
+MessageId=0x006B
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_DVASPECT
+Language=English
+DV_E_DVASPECT - Invalid aspect(s)
+.
+
+MessageId=0x006C
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_DVTARGETDEVICE_SIZE
+Language=English
+DV_E_DVTARGETDEVICE_SIZE - tdSize parameter of the DVTARGETDEVICE structure is invalid
+.
+
+MessageId=0x006D
+Severity=Warning
+Facility=ITF
+SymbolicName=DV_E_NOIVIEWOBJECT
+Language=English
+DV_E_NOIVIEWOBJECT - Object doesn't support IViewObject interface
+.
+
+MessageId=0x0100
+Severity=Warning
+Facility=ITF
+SymbolicName=DRAGDROP_E_NOTREGISTERED
+Language=English
+DRAGDROP_E_NOTREGISTERED - Trying to revoke a drop target that has not been registered
+.
+
+MessageId=0x0101
+Severity=Warning
+Facility=ITF
+SymbolicName=DRAGDROP_E_ALREADYREGISTERED
+Language=English
+DRAGDROP_E_ALREADYREGISTERED - This window has already been registered as a drop target
+.
+
+MessageId=0x0102
+Severity=Warning
+Facility=ITF
+SymbolicName=DRAGDROP_E_INVALIDHWND
+Language=English
+DRAGDROP_E_INVALIDHWND - Invalid window handle
+.
+
+MessageId=0x0110
+Severity=Warning
+Facility=ITF
+SymbolicName=CLASS_E_NOAGGREGATION
+Language=English
+CLASS_E_NOAGGREGATION - Class does not support aggregation (or class object is remote)
+.
+
+MessageId=0x0111
+Severity=Warning
+Facility=ITF
+SymbolicName=CLASS_E_CLASSNOTAVAILABLE
+Language=English
+CLASS_E_CLASSNOTAVAILABLE - ClassFactory cannot supply requested class
+.
+
+MessageId=0x0112
+Severity=Warning
+Facility=ITF
+SymbolicName=CLASS_E_NOTLICENSED
+Language=English
+CLASS_E_NOTLICENSED - Class is not licensed for use
+.
+
 ; EOF
