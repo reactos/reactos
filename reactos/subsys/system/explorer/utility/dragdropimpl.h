@@ -181,6 +181,7 @@ protected:
 public:
 	IDropTargetImpl(HWND m_hTargetWnd);
 	virtual ~IDropTargetImpl();
+
 	void AddSuportedFormat(FORMATETC& ftetc) {m_formatetc.push_back(ftetc);}
 	
 	//return values: true - release the medium. false - don't release the medium

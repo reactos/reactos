@@ -115,6 +115,7 @@ STDMETHODIMP IDataObjectImpl::QueryGetData(
 	   else
 		  hr = DV_E_TYMED;
 	}
+
 	return hr;
 }
 
@@ -424,7 +425,7 @@ IDropTargetImpl::IDropTargetImpl(HWND hTargetWnd)
 {
 	assert(m_hTargetWnd != NULL);
 
-	if (FAILED(CoCreateInstance(CLSID_DragDropHelper,NULL,CLSCTX_INPROC_SERVER,
+	if (FAILED(CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
 					 IID_IDropTargetHelper,(LPVOID*)&m_pDropTargetHelper)))
 		m_pDropTargetHelper = NULL;
 }
@@ -441,15 +442,16 @@ IDropTargetImpl::~IDropTargetImpl()
 HRESULT STDMETHODCALLTYPE IDropTargetImpl::QueryInterface( /* [in] */ REFIID riid,
 						/* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
 {
-   *ppvObject = NULL;
-   if (IID_IUnknown==riid || IID_IDropTarget==riid)
-			 *ppvObject=this;
+	*ppvObject = NULL;
+	if (IID_IUnknown==riid || IID_IDropTarget==riid)
+		*ppvObject=this;
 
 	if (*ppvObject != NULL)
 	{
 		((LPUNKNOWN)*ppvObject)->AddRef();
 		return S_OK;
 	}
+
 	return E_NOINTERFACE;
 }
 
@@ -474,6 +476,7 @@ bool IDropTargetImpl::QueryDrop(DWORD grfKeyState, LPDWORD pdwEffect)
 	   *pdwEffect = DROPEFFECT_NONE;
 	   return false;
 	}
+
 	//CTRL+SHIFT  -- DROPEFFECT_LINK
 	//CTRL		  -- DROPEFFECT_COPY
 	//SHIFT 	  -- DROPEFFECT_MOVE
@@ -517,6 +520,7 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragEnter(
 
 	if (m_pDropTargetHelper)
 		m_pDropTargetHelper->DragEnter(m_hTargetWnd, pDataObj, (LPPOINT)&pt, *pdwEffect);
+
 	//IEnumFORMATETC* pEnum;
 	//pDataObj->EnumFormatEtc(DATADIR_GET,&pEnum);
 	//FORMATETC ftm;
@@ -537,6 +541,7 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragEnter(
 	}
 
 	QueryDrop(grfKeyState, pdwEffect);
+
 	return S_OK;
 }
 
@@ -547,7 +552,9 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragOver(
 {
 	if (m_pDropTargetHelper)
 		m_pDropTargetHelper->DragOver((LPPOINT)&pt, *pdwEffect);
+
 	QueryDrop(grfKeyState, pdwEffect);
+
 	return S_OK;
 }
 
@@ -558,6 +565,7 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragLeave()
 	
 	m_bAllowDrop = false;
 	m_pSupportedFrmt = NULL;
+
 	return S_OK;
 }
 

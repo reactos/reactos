@@ -242,9 +242,6 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, LPTSTR lpCmdLine, int c
 {
 	CONTEXT("explorer_main");
 
-	 // initialize COM and OLE
-	OleInit usingCOM;
-
 	 // initialize Common Controls library
 	CommonControlInit usingCmnCtrl;
 
@@ -368,6 +365,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	g_Globals._SHRestricted = (DWORD(STDAPICALLTYPE*)(RESTRICTIONS)) GetProcAddress(GetModuleHandle(TEXT("SHELL32")), "SHRestricted");
 #endif
+
+	 // initialize COM and OLE before creating the desktop window
+	OleInit usingCOM;
 
 	HWND hwndDesktop = 0;
 

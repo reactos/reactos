@@ -82,12 +82,87 @@ protected:
 };
 
 
+ /// OLE drop target for the desktop window
+class DesktopDropTarget : public IDropTargetImpl
+{
+	typedef IDropTargetImpl super;
+
+public:
+	DesktopDropTarget(HWND hTargetWnd) : super(hTargetWnd) {}
+
+	virtual bool OnDrop(FORMATETC* pFmtEtc, STGMEDIUM& medium, DWORD *pdwEffect)
+	{
+		if (pFmtEtc->cfFormat==CF_HDROP && medium.tymed==TYMED_HGLOBAL) {
+			HDROP hDrop = (HDROP)GlobalLock(medium.hGlobal);
+
+			if (hDrop) {
+				TCHAR szFileName[MAX_PATH];
+
+				UINT cFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+
+				for(UINT i=0; i<cFiles; ++i) {
+					DragQueryFile(hDrop, i, szFileName, sizeof(szFileName));
+
+					if (DROPEFFECT_COPY & *pdwEffect) {
+						 // copy the file or dir
+
+						///@todo Add the code to handle Copy
+
+					} else if (DROPEFFECT_MOVE & *pdwEffect) {
+						 // move the file or dir
+
+						///@todo Add the code to handle Move
+
+					}
+				}
+				//DragFinish(hDrop); // base class calls ReleaseStgMedium
+			}
+
+			GlobalUnlock(medium.hGlobal);
+		}
+
+		//@@TreeView_SelectDropTarget(m_hTargetWnd, NULL);
+
+		return true; //let base free the medium
+	}
+
+	virtual HRESULT STDMETHODCALLTYPE DragOver(
+        /* [in] */ DWORD grfKeyState,
+        /* [in] */ POINTL pt,
+        /* [out][in] */ DWORD __RPC_FAR *pdwEffect)
+	{
+		TVHITTESTINFO hit;
+		hit.pt = (POINT&)pt;
+		ScreenToClient(m_hTargetWnd, &hit.pt);
+		hit.flags = TVHT_ONITEM;
+
+		/*@@
+		HTREEITEM hItem = TreeView_HitTest(m_hTargetWnd,&hit);
+
+		if (hItem != NULL)
+			TreeView_SelectDropTarget(m_hTargetWnd, hItem);
+		*/
+
+		return super::DragOver(grfKeyState, pt, pdwEffect);
+	}
+
+	virtual HRESULT STDMETHODCALLTYPE DragLeave(void)
+	{
+		//@@ TreeView_SelectDropTarget(m_hTargetWnd, NULL);
+
+		return super::DragLeave();
+	}
+};
+
+
  /// subclassed ShellView window
 struct DesktopShellView : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
 
 	DesktopShellView(HWND hwnd, IShellView* pShellView);
+
+	bool	InitDragDrop();
 
 protected:
 	IShellView* _pShellView;
@@ -98,4 +173,6 @@ protected:
 
 	bool	DoContextMenu(int x, int y);
 	HRESULT DoDesktopContextMenu(int x, int y);
+
+	DesktopDropTarget* _pDropTarget;
 };

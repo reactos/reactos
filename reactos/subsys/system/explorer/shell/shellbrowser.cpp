@@ -369,7 +369,7 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
 		fs.ViewMode = _create_info._open_mode&OWM_DETAILS? FVM_DETAILS: FVM_ICON;
-		fs.fFlags = FWF_NOCLIENTEDGE;
+		fs.fFlags = FWF_NOCLIENTEDGE|FWF_BESTFITWINDOW;
 	}
 
 	HRESULT hr = folder->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);

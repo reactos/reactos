@@ -29,6 +29,7 @@
 #include "../utility/utility.h"
 #include "../utility/shellclasses.h"
 #include "../utility/shellbrowserimpl.h"
+#include "../utility/dragdropimpl.h"
 #include "../utility/window.h"
 
 #include "desktop.h"
@@ -173,7 +174,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 
 		if (SUCCEEDED(hr)) {
 			 // subclass shellview window
-			new DesktopShellView(hWndView, _pShellView);
+			DesktopShellView* pShellView = new DesktopShellView(hWndView, _pShellView);
 
 			_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 
@@ -284,6 +285,38 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
  :	super(hwnd),
 	_pShellView(pShellView)
 {
+	InitDragDrop();
+}
+
+bool DesktopShellView::InitDragDrop()
+{
+	CONTEXT("DesktopShellView::InitDragDrop()");
+
+	_pDropTarget = new DesktopDropTarget(_hwnd);
+
+	if (!_pDropTarget)
+		return false;
+
+	_pDropTarget->AddRef();
+
+	if (FAILED(RegisterDragDrop(_hwnd, _pDropTarget))) {
+		_pDropTarget->Release();
+		_pDropTarget = NULL;
+		return false;
+	}
+	else
+		_pDropTarget->Release();
+
+	FORMATETC ftetc;
+
+	ftetc.dwAspect = DVASPECT_CONTENT;
+	ftetc.lindex = -1;
+	ftetc.tymed = TYMED_HGLOBAL;
+	ftetc.cfFormat = CF_HDROP;
+
+	_pDropTarget->AddSuportedFormat(ftetc);
+
+	return true;
 }
 
 LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
