@@ -455,9 +455,11 @@ void Favorites::write(LPCTSTR path) const
 	super::write(pos);
 	pos.back();
 
-	xbel.write(path, XMLNode::FORMAT_SMART, XMLHeader("1.0", "UTF-8", "<!DOCTYPE xbel"
+	xbel._header._doctype = "<!DOCTYPE xbel"
 		" PUBLIC \"+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML\"\n"
-		" \"http://www.python.org/topics/xml/dtds/xbel-1.0.dtd\">"));
+		" \"http://www.python.org/topics/xml/dtds/xbel-1.0.dtd\">";
+
+	xbel.write(path);
 }
 
  /// import Internet Explorer bookmarks from Favorites folder
