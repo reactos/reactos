@@ -64,6 +64,7 @@ typedef struct _GDIOBJHDR
 typedef PVOID PGDIOBJ;
 
 PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic);
+BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic);
 HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic);
 PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic);
 BOOL  GDIOBJ_LockObject (HGDIOBJ Obj);

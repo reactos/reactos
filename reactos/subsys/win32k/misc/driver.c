@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.6 1999/12/09 02:45:05 rex Exp $
+/* $Id: driver.c,v 1.7 2000/03/01 03:23:42 ekohl Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -90,8 +90,16 @@ HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
     {
       lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR) + 
                              10 * sizeof(WCHAR));
-      wcscpy(lName, L"\\Devices\\");
-      wcscat(lName, Name);
+      wcscpy(lName, L"\\??\\");
+      if (!wcscmp (Name, L"DISPLAY"))
+        {
+           /* FIXME: Read this information from the registry ??? */
+           wcscat(lName, L"DISPLAY1");
+        }
+      else
+        {
+           wcscat(lName, Name);
+        }
     }
   else
     {

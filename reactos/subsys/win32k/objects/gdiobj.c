@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.4 1999/11/17 20:54:05 rex Exp $
+ * $Id: gdiobj.c,v 1.5 2000/03/01 03:23:57 ekohl Exp $
  *
  */
 
@@ -27,6 +27,19 @@ PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
 #endif
   
   return  (PGDIOBJ)(((PCHAR) NewObj) + sizeof (GDIOBJHDR));
+}
+
+BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic)
+{
+  PGDIOBJHDR  ObjHdr;
+
+  ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
+  if (ObjHdr->wMagic != Magic)
+    {
+       return FALSE;
+    }
+  ExFreePool (ObjHdr);
+  return TRUE;
 }
 
 HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)

@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.10 1999/12/29 01:37:30 ekohl Exp $
+/* $Id: vidport.c,v 1.11 2000/03/01 03:25:11 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -40,15 +40,7 @@ STDCALL NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, 
             IN PUNICODE_STRING RegistryPath) 
 {
-
   DbgPrint("VideoPort Driver %s\n", VERSION);
-
-    //  Export other driver entry points...
-  DriverObject->DriverStartIo = VidStartIo;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
-
   return  STATUS_SUCCESS;
 }
 
@@ -176,14 +168,16 @@ VideoPortInitialize(IN PVOID  Context1,
                     IN PVOID  HwContext)
 {
   UCHAR  Again;
-  WCHAR  UnicodeBuffer[18];
+  WCHAR  DeviceBuffer[20];
+  WCHAR  SymlinkBuffer[20];
   NTSTATUS  Status;
-  ANSI_STRING  AnsiName;
-  UNICODE_STRING  UnicodeName;
   PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
   PDEVICE_OBJECT  MPDeviceObject;
   VIDEO_PORT_CONFIG_INFO  ConfigInfo;
   PVIDEOPORT_EXTENSION_DATA  ExtensionData;
+  ULONG DeviceNumber = 0;
+  UNICODE_STRING DeviceName;
+  UNICODE_STRING SymlinkName;
 
   /*  Build Dispatch table from passed data  */
   MPDriverObject->DriverStartIo = (PDRIVER_STARTIO) HwInitializationData->HwStartIO;
@@ -192,17 +186,14 @@ VideoPortInitialize(IN PVOID  Context1,
   Again = FALSE;
   do
     {
-      /* FIXME: Need to add a device index for multiple adapters  */
-      RtlInitAnsiString(&AnsiName, "\\Device\\Display");
-      UnicodeName.MaximumLength = 18 * sizeof(WCHAR);
-      UnicodeName.Buffer = UnicodeBuffer;
-      RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, FALSE);
+      swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+      RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
       /*  Create the device  */
       Status = IoCreateDevice(MPDriverObject, 
                               HwInitializationData->HwDeviceExtensionSize +
                                 sizeof(VIDEOPORT_EXTENSION_DATA),
-                              &UnicodeName, 
+                              &DeviceName, 
                               FILE_DEVICE_VIDEO, 
                               0, 
                               TRUE, 
@@ -212,6 +203,19 @@ VideoPortInitialize(IN PVOID  Context1,
           DbgPrint("IoCreateDevice call failed\n",0);
           return Status;
         }
+
+      /* initialize the miniport drivers dispatch table */
+      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
+      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
+      MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
+
+      /* create symbolic link "\??\DISPLAYx" */
+      swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber+1);
+      RtlInitUnicodeString (&SymlinkName,
+                            SymlinkBuffer);
+      IoCreateSymbolicLink (&SymlinkName,
+                            &DeviceName);
+
       ExtensionData = 
         (PVIDEOPORT_EXTENSION_DATA) MPDeviceObject->DeviceExtension;
       ExtensionData->DeviceObject = MPDeviceObject;
@@ -271,8 +275,10 @@ VideoPortInitialize(IN PVOID  Context1,
             }
           
         }
+      DeviceNumber++;
     }
   while (Again);
+
 
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)

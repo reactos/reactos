@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.10 1999/12/09 02:45:06 rex Exp $
+/* $Id: dc.c,v 1.11 2000/03/01 03:23:57 ekohl Exp $
  *
  * DC.C - Device context functions
  * 
@@ -13,6 +13,7 @@
 #include <win32k/dc.h>
 #include <win32k/print.h>
 #include <win32k/region.h>
+#include <win32k/gdiobj.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -163,7 +164,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 {
   PGD_ENABLEDRIVER  GDEnableDriver;
   PDC  NewDC;
-  HDC  hDC;
+  HDC  hDC = NULL;
   DRVENABLEDATA  DED;
   
   /*  Check for existing DC object  */
@@ -866,7 +867,7 @@ PDC  DC_AllocDC(LPCWSTR  Driver)
   if (Driver != NULL)
     {
       NewDC->DriverName = ExAllocatePool(NonPagedPool, 
-                                         wcslen(Driver) * sizeof(WCHAR));
+                                         (wcslen(Driver) + 1) * sizeof(WCHAR));
       wcscpy(NewDC->DriverName, Driver);
     }
   
@@ -895,10 +896,11 @@ void  DC_InitDC(PDC  DCToInit)
 
 void  DC_FreeDC(PDC  DCToFree)
 {
-  PDC  Tmp;
-  
   ExFreePool(DCToFree->DriverName);
-  ExFreePool(DCToFree);
+  if (!GDIOBJ_FreeObject((PGDIOBJ)DCToFree, GO_DC_MAGIC))
+    {
+       DbgPrint("DC_FreeDC failed\n");
+    }
 }
 
 void 
