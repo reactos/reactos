@@ -312,7 +312,11 @@ rbuild_test: $(RBUILD_TEST_TARGET)
 	$(ECHO_TEST)
 	$(Q)$(RBUILD_TEST_TARGET)
 
+.PHONY: rbuild_test_clean
+rbuild_test_clean: $(RBUILD_TEST_TARGET) $(RBUILD_TESTS_INT)
+	-@$(rm) $(RBUILD_TEST_TARGET) $(RBUILD_TEST_SPECIAL_OBJECTS) 2>$(NUL)
+
 .PHONY: rbuild_clean
-rbuild_clean:
-	-@$(rm) $(RBUILD_TARGET) $(RBUILD_OBJECTS) $(RBUILD_TEST_TARGET) $(RBUILD_TEST_OBJECTS) 2>$(NUL)
+rbuild_clean: $(RBUILD_TARGET) $(RBUILD_OBJECTS) $(RBUILD_TESTS_INT)
+	-@$(rm) $(RBUILD_TARGET) $(RBUILD_OBJECTS) 2>$(NUL)
 clean: rbuild_clean

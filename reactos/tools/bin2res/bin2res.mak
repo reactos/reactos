@@ -24,7 +24,7 @@ BIN2RES_SOURCES = $(addprefix $(BIN2RES_BASE_), \
 	)
 
 BIN2RES_OBJECTS = \
-	$addprefix ( $(INTERMEDIATE_), $(BIN2RES_SOURCES:.c=.o) )
+	$(addprefix $(INTERMEDIATE_), $(BIN2RES_SOURCES:.c=.o))
 
 BIN2RES_HOST_CFLAGS = -Iinclude/wine -D__REACTOS__ -g -Werror -Wall
 
@@ -43,6 +43,6 @@ $(BIN2RES_INT_)mkstemps.o: $(BIN2RES_BASE_)mkstemps.c $(BIN2RES_INT)
 	${host_gcc} $(BIN2RES_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: bin2res_clean
-bin2res_clean:
+bin2res_clean: $(BIN2RES_TARGET)
 	-@$(rm) $(BIN2RES_TARGET) $(BIN2RES_OBJECTS) 2>$(NUL)
 clean: bin2res_clean
