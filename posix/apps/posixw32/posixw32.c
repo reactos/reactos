@@ -1,4 +1,4 @@
-/* $Id: posixw32.c,v 1.3 2002/10/29 04:44:59 rex Exp $
+/* $Id: posixw32.c,v 1.4 2003/08/28 20:01:23 ea Exp $
  *
  * PROJECT    : ReactOS Operating System / POSIX+ Environment Subsystem
  * DESCRIPTION: POSIXW32 - A DEC VT-100 terminal emulator for the PSX subsystem
@@ -431,7 +431,9 @@ TRACE;
  *	PsxCreateLeaderProcess/1				PRIVATE
  *
  * DESCRIPTION
- *	Create a new PSXSS process.
+ *	Create a new PSXSS process. We are running under Win32 server
+ *	and can not run directly a PSX image: we make SM run it for us.
+ *	
  */
 PRIVATE NTSTATUS STDCALL PsxCreateLeaderProcess (char * Command)
 {
@@ -442,8 +444,8 @@ TRACE;
 	{
 		Command = "sh";
 	}
-	/* TODO: request PSXSS to init the process slot */
-	vtprintf ("%s: %s: calling CSRSS not implemented!", MyName, __FUNCTION__);
+	/* TODO: request SM to create the process: LPC:SmExecPgm() */
+	vtprintf ("%s: %s: calling SMSS not implemented!", MyName, __FUNCTION__);
 	return STATUS_SUCCESS;
 }
 /**********************************************************************
