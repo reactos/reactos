@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.44 2004/05/13 20:32:18 navaraf Exp $
+/* $Id: find.c,v 1.45 2004/08/28 22:07:51 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -49,12 +49,6 @@ InternalFindNextFile (
 	NTSTATUS Status;
 
 	DPRINT("InternalFindNextFile(%lx)\n", hFindFile);
-
-	if (hFindFile == NULL)
-	{
-	    SetLastError (ERROR_INVALID_HANDLE);
-	    return FALSE;
-	}
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
@@ -424,12 +418,14 @@ FindNextFileA (
 	UNICODE_STRING FileNameU;
 	ANSI_STRING FileName;
 
-	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-	if (IData == NULL)
+	if (hFindFile == INVALID_HANDLE_VALUE)
 	{
+		SetLastError (ERROR_INVALID_HANDLE);
+		DPRINT("Failing request\n");
 		return FALSE;
 	}
 
+	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 	if (!InternalFindNextFile (hFindFile))
 	{
 		DPRINT("InternalFindNextFile() failed\n");
@@ -579,6 +575,13 @@ FindNextFileW (
 	)
 {
 	PKERNEL32_FIND_FILE_DATA IData;
+
+	if (hFindFile == INVALID_HANDLE_VALUE)
+	{
+		SetLastError (ERROR_INVALID_HANDLE);
+		DPRINT("Failing request\n");
+		return FALSE;
+	}
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 	if (!InternalFindNextFile(hFindFile))
