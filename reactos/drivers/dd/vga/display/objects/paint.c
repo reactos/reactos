@@ -1,7 +1,9 @@
+
 #include "../vgaddi.h"
 #include "../vgavideo/vgavideo.h"
 #include "brush.h"
 
+#include <debug.h>
 
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
@@ -12,7 +14,15 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   unsigned char *vp, *vpX;
   volatile unsigned char dummy;
   int byte_per_line;
-  int i;
+  int i, j;
+
+  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
+  //ei temporary kludge because code below doesn't seem to work
+  for( i=0; i<h; i++){
+	for( j=0; j<w; j++)
+	  vgaPutPixel(x+j, y+i, iColor);
+  }
+  return TRUE;
 
   ASSIGNVP4(x, y, vpX)
   get_masks(x, w);
@@ -70,6 +80,7 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
    RECT_ENUM RectEnum;
    BOOL EnumMore;
 
+   DPRINT("VGADDIPaintRgn: iMode: %d, iDComplexity: %d\n Color:%d\n", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
    switch(ClipRegion->iMode) {
 
       case TC_RECTANGLES:
@@ -80,19 +91,24 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
 
       if (ClipRegion->iDComplexity == DC_RECT)
       {
+		 DPRINT("VGADDIPaintRgn Rect:%d %d %d %d\n", ClipRegion->rclBounds.left, ClipRegion->rclBounds.top, ClipRegion->rclBounds.right, ClipRegion->rclBounds.bottom);
          VGADDIFillSolid(Surface, ClipRegion->rclBounds, iColor);
       } else {
          /* Enumerate all the rectangles and draw them */
 
-/*         CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY,
+         CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY,
                             ENUM_RECT_LIMIT);
 
          do {
+			int i;
             EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
+			DPRINT("EnumMore: %d, count: %d\n", EnumMore, RectEnum.c);
+			for( i=0; i<RectEnum.c; i++){
+		      DPRINT("VGADDI enum Rect:%d %d %d %d\n", RectEnum.arcl[i].left, RectEnum.arcl[i].top, RectEnum.arcl[i].right, RectEnum.arcl[i].bottom);
+              VGADDIFillSolid(Surface, RectEnum.arcl[i], iColor);
+			}
 
-            VGADDIFillSolid(Surface, &RectEnum.arcl[0], iColor);
-
-         } while (EnumMore); */
+         } while (EnumMore);
       }
 
       return(TRUE);

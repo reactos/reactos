@@ -143,4 +143,14 @@ GetRegionData(
 	return W32kGetRegionData(a0,a1,a2);
 }
 
+BOOL
+STDCALL
+PaintRgn(
+	HDC	a0,
+	HRGN	a1
+	)
+{
+	return W32kPaintRgn( a0, a1 );
+}
+
 

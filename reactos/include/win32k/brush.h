@@ -15,7 +15,7 @@
 #define  BRUSHOBJ_PtrToHandle(pBrushObj)  \
   ((HBRUSH) GDIOBJ_PtrToHandle ((PGDIOBJ) pBrushObj, GO_BRUSH_MAGIC))
 */
-#define  BRUSHOBJ_LockBrush(hBrush) GDIOBJ_LockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC)
+#define  BRUSHOBJ_LockBrush(hBrush) ((PBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC))
 #define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC)
 
 HBRUSH

@@ -21,7 +21,8 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
   PENGOBJ pObj;
   int i;
 
-  size = sizeof( ENGOBJ ) + InternalSize + UserSize;
+  //size = sizeof( ENGOBJ ) + InternalSize + UserSize;
+  size = InternalSize;      	//internal size includes header and user portions
   pObj = EngAllocMem( FL_ZERO_MEMORY, size, 0 );
 
   if( !pObj )

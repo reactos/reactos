@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.7 2002/07/22 07:55:48 ei Exp $
+/* $Id: stubs.c,v 1.8 2002/08/18 07:02:56 ei Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -192,20 +192,6 @@ CreatePalette(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
-HBRUSH
-STDCALL
-CreateSolidBrush(
-	COLORREF	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 BOOL
 STDCALL
@@ -1017,16 +1003,6 @@ PlayMetaFile(
 
 
 
-BOOL
-STDCALL
-PaintRgn(
-	HDC	a0,
-	HRGN	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 

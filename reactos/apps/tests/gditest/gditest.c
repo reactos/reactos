@@ -37,6 +37,8 @@ void gditest( void ){
   HFONT  hf, tf;
   BITMAPINFOHEADER BitInf;
   BITMAPINFO BitPalInf;
+  HRGN hRgn1, hRgn2, hRgn3;
+  HBRUSH BlueBrush, DefBrush;
 
   // Set up a DC called Desktop that accesses DISPLAY
   Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
@@ -47,6 +49,20 @@ void gditest( void ){
 
   // Background
   Background (Desktop);
+
+
+//ei
+  BlueBrush = CreateSolidBrush( RGB(0, 0, 0xff) );
+  DefBrush = SelectObject( Desktop, BlueBrush );
+
+  hRgn1 = CreateRectRgn( 1, 2, 100, 101 );
+  hRgn2 = CreateRectRgn( 10, 20, 150, 151 );
+  hRgn3 = CreateRectRgn( 1, 1, 1, 1);
+  CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR );
+
+  PaintRgn( Desktop, hRgn3 );
+  SelectObject( Desktop, DefBrush );
+  DeleteObject( BlueBrush );
 
   // Create a blue pen and select it into the DC
   BluePen = CreatePen(PS_SOLID, 8, RGB(0, 0, 0xff));

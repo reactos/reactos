@@ -14,16 +14,63 @@
 #include "clip.h"
 #include <include/object.h>
 
-VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
+#include <win32k/debug1.h>
+
+VOID IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
   HCLIP HClip      = AccessHandleFromUserObject(ClipObj);
-  CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObject(HClip);
-
-  EngFreeMem(ClipGDI);
-  EngFreeMem(ClipObj);
   FreeGDIHandle(HClip);
 }
 
+CLIPOBJ * IntEngCreateClipRegion( ULONG count, PRECTL pRect, RECTL rcBounds )
+{
+	HCLIP hClip;
+	CLIPGDI* clipInt;
+    CLIPOBJ* clipUser;
+	DPRINT("IntEngCreateClipRegion count: %d\n", count);
+	if( count > 1 ){
+		hClip = (HCLIP)CreateGDIHandle( sizeof( CLIPGDI ) + count*sizeof(RECTL),
+	                                       sizeof( CLIPOBJ ) );
+
+		if( hClip ){
+			clipInt = (CLIPGDI*)AccessInternalObject( hClip );
+			RtlCopyMemory( clipInt->EnumRects.arcl, pRect, count*sizeof(RECTL));
+			clipInt->EnumRects.c=count;
+
+			clipUser = (CLIPOBJ*)AccessUserObject( hClip );
+			ASSERT( clipUser );
+
+			clipUser->iDComplexity = DC_COMPLEX;
+			clipUser->iFComplexity = (count <= 4)? FC_RECT4: FC_COMPLEX;
+			clipUser->iMode 	   = TC_RECTANGLES;
+			RtlCopyMemory( &(clipUser->rclBounds), &rcBounds, sizeof( RECTL ) );
+
+			return clipUser;
+		}
+		return NULL;
+	}
+	else{
+		hClip = (HCLIP)CreateGDIHandle( sizeof( CLIPGDI ),
+	                                       sizeof( CLIPOBJ ) );
+		if( hClip ){
+			clipInt = (CLIPGDI*)AccessInternalObject( hClip );
+			RtlCopyMemory( clipInt->EnumRects.arcl, &rcBounds, sizeof( RECTL ));
+			clipInt->EnumRects.c = 1;
+
+			clipUser = (CLIPOBJ*)AccessUserObject( hClip );
+			ASSERT( clipUser );
+
+			clipUser->iDComplexity = ((rcBounds.top==rcBounds.bottom)&&(rcBounds.left==rcBounds.right))?
+										DC_TRIVIAL:DC_RECT;
+			clipUser->iFComplexity = FC_RECT;
+			clipUser->iMode 	   = TC_RECTANGLES;
+			DPRINT("IntEngCreateClipRegion: iDComplexity: %d\n", clipUser->iDComplexity);
+			RtlCopyMemory( &(clipUser->rclBounds), &rcBounds, sizeof( RECTL ) );
+			return clipUser;
+		}
+	}
+	return NULL;
+}
 
 CLIPOBJ * STDCALL
 EngCreateClip(VOID)
@@ -47,12 +94,17 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 
   ClipGDI->EnumPos     = 0;
-  ClipGDI->EnumRects.c = MaxRects;
+  ClipGDI->EnumMax = (MaxRects>0)? MaxRects : ClipGDI->EnumRects.c;
+
+  if( !((BuildOrder == CD_ANY) || (BuildOrder == CD_LEFTDOWN ))){
+  	UNIMPLEMENTED;
+  }
+  ClipGDI->EnumOrder = BuildOrder;
 
   // Return the number of rectangles enumerated
-  if(ClipGDI->EnumRects.c>MaxRects)
+  if( (MaxRects > 0) && (ClipGDI->EnumRects.c>MaxRects) )
   {
-    ClipGDI->EnumRects.c = 0xFFFFFFFF;
+    return 0xFFFFFFFF;
   }
 
   return ClipGDI->EnumRects.c;
@@ -64,12 +116,20 @@ CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
 	      OUT ULONG *EnumRects)
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
+  ULONG nCopy;
+  PENUMRECTS pERects = (PENUMRECTS)EnumRects;
 
-  ClipGDI->EnumPos++;
+  //calculate how many rectangles we should copy
+  nCopy = MIN( ClipGDI->EnumMax-ClipGDI->EnumPos,
+  				MIN( ClipGDI->EnumRects.c, (ObjSize-sizeof(ULONG))/sizeof(RECTL)));
+
+  RtlCopyMemory( &(pERects->arcl), &(ClipGDI->EnumRects.arcl), nCopy*sizeof(RECTL) );
+  pERects->c = nCopy;
+
+  ClipGDI->EnumPos+=nCopy;
 
   if(ClipGDI->EnumPos > ClipGDI->EnumRects.c)
-  {
     return FALSE;
-  } else
+  else
     return TRUE;
 }

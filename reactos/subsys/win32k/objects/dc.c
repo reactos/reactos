@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.33 2002/08/04 09:55:11 ei Exp $
+/* $Id: dc.c,v 1.34 2002/08/18 07:02:57 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -1155,9 +1155,10 @@ void  DC_InitDC(HDC  DCHandle)
 	  W32kSetTextColor(DCHandle, DCToInit->w.textColor);
 	  W32kSetBkColor(DCHandle, DCToInit->w.backgroundColor);
 	  W32kSelectObject(DCHandle, DCToInit->w.hPen);
-	  W32kSelectObject(DCHandle, DCToInit->w.hBrush);
+	  W32kSelectObject(DCHandle, W32kGetStockObject( GRAY_BRUSH )); //FIXME: default should be WHITE_BRUSH
 	  W32kSelectObject(DCHandle, DCToInit->w.hFont);
   }
+  else
   DPRINT("DC_InitDC: can't get dc for handle %d\n", DCHandle );
 //  CLIPPING_UpdateGCRegion(DCToInit);
 }

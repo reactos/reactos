@@ -7,11 +7,16 @@
 #include <win32k/bitmaps.h>
 #include <win32k/region.h>
 #include <win32k/cliprgn.h>
+#include <win32k/brush.h>
 #include <include/rect.h>
 
 
 // #define NDEBUG
 #include <win32k/debug1.h>
+
+BOOL STDCALL
+IntEngPaint(IN SURFOBJ *Surface,IN CLIPOBJ *ClipRegion,IN BRUSHOBJ *Brush,IN POINTL *BrushOrigin,
+	 IN MIX  Mix);
 
 // Internal Functions
 
@@ -1749,47 +1754,53 @@ W32kPaintRgn(HDC  hDC,
   RECT box;
   HRGN tmpVisRgn, prevVisRgn;
   DC *dc = DC_HandleToPtr(hDC);
+  PROSRGNDATA visrgn;
+  CLIPOBJ* ClipRegion;
+  BOOL bRet = FALSE;
+  PBRUSHOBJ pBrush;
+  POINTL BrushOrigin;
+  SURFOBJ	*SurfObj;
 
   if( !dc )
 	return FALSE;
+
   if(!(tmpVisRgn = W32kCreateRectRgn(0, 0, 0, 0))){
 	DC_ReleasePtr( hDC );
   	return FALSE;
   }
 
+/* ei enable later
   // Transform region into device co-ords
   if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || W32kOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
     W32kDeleteObject( tmpVisRgn );
 	DC_ReleasePtr( hDC );
     return FALSE;
   }
+*/
+  /* enable when clipping is implemented
+  W32kCombineRgn(tmpVisRgn, tmpVisRgn, dc->w.hGCClipRgn, RGN_AND);
+  */
 
-  // Modify visible region
-  if(!(prevVisRgn = SaveVisRgn(hDC))) {
-    W32kDeleteObject(tmpVisRgn);
-	DC_ReleasePtr( hDC );
-    return FALSE;
-  }
-  W32kCombineRgn(tmpVisRgn, prevVisRgn, tmpVisRgn, RGN_AND);
-  SelectVisRgn(hDC, tmpVisRgn);
-  W32kDeleteObject(tmpVisRgn);
+  //visrgn = RGNDATA_LockRgn(tmpVisRgn);
+  visrgn = RGNDATA_LockRgn(hRgn);
+
+  ClipRegion = IntEngCreateClipRegion( visrgn->rdh.nCount, visrgn->Buffer, visrgn->rdh.rcBound );
+  ASSERT( ClipRegion );
+  pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  ASSERT(pBrush);
+  BrushOrigin.x = dc->w.brushOrgX;
+  BrushOrigin.y = dc->w.brushOrgY;
+  SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+
+  bRet = IntEngPaint(SurfObj,
+	 ClipRegion,
+	 pBrush,
+	 &BrushOrigin,
+	 0xFFFF);//don't know what to put here
+
+  RGNDATA_UnlockRgn( tmpVisRgn );
 
   // Fill the region
-
-  W32kGetRgnBox(dc->w.hGCClipRgn, &box);
-//  if (X11DRV_SetupGCForBrush( physDev )) FIXME: Recode with ReactOS GDI calls
-//  {
-//    // Update the pixmap from the DIB section
-//    X11DRV_LockDIBSection(physDev, DIB_Status_GdiMod, FALSE);
-//
-//    TSXFillRectangle(gdi_display, physDev->drawable, physDev->gc,
-//                     box.left, box.top, box.right-box.left, box.bottom-box.top);
-//
-//    // Update the DIBSection from the pixmap
-//    X11DRV_UnlockDIBSection(physDev, TRUE);
-//  }
-
-  // Restore the visible region
   DC_ReleasePtr( hDC );
   return TRUE;
 }

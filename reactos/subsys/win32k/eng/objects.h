@@ -41,12 +41,15 @@ typedef struct _BRUSHGDI {
 typedef struct _CLIPGDI {
   ENGOBJ 		Header;
   CLIPOBJ		ClipObj;
+  /* ei what were these for?
   ULONG NumRegionRects;
   ULONG NumIntersectRects;
   RECTL *RegionRects;
   RECTL *IntersectRects;
-
+  */
   ULONG EnumPos;
+  ULONG EnumOrder;
+  ULONG EnumMax;
   ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
