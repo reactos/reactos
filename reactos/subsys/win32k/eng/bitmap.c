@@ -1,3 +1,5 @@
+THIS FILE IS DEPRECIATED AND MUST BE REMOVED FROM CVS (if i forget..)
+
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

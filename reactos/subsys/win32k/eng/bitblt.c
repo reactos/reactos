@@ -99,7 +99,6 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
    // Check for CopyBits or BitBlt hooks if one is not a GDI managed bitmap
    if((Dest->iType!=STYPE_BITMAP) || (Source->iType!=STYPE_BITMAP))
    {
-
       // Destination surface is device managed
       if(Dest->iType!=STYPE_BITMAP)
       {

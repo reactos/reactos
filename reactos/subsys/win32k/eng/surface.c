@@ -49,31 +49,21 @@ VOID InitializeHooks(SURFGDI *SurfGDI)
 {
    SurfGDI->BitBlt   = NULL;
    SurfGDI->CopyBits = NULL;
+   SurfGDI->CreateDeviceBitmap = NULL;
 }
 
 HBITMAP EngCreateDeviceBitmap(DHSURF dhsurf, SIZEL Size, ULONG Format)
 {
    HBITMAP NewBitmap;
    SURFOBJ *SurfObj;
-   SURFGDI *SurfGDI;
 
-   SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), NULL);
-   SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), NULL);
-
-   NewBitmap = CreateGDIHandle(SurfGDI, SurfObj);
-
-   InitializeHooks(SurfGDI);
-
-   SurfGDI->BytesPerPixel = bytesPerPixel(Format);
-
-   SurfObj->dhsurf = dhsurf;
-   SurfObj->hsurf  = dhsurf; // FIXME: Is this correct??
-   SurfObj->sizlBitmap = Size;
-   SurfObj->iBitmapFormat = Format;
-   SurfObj->lDelta = SurfGDI->BytesPerPixel * Size.cx;
-   SurfObj->iType = STYPE_DEVBITMAP;
+   NewBitmap = EngCreateBitmap(Size, bytesPerPixel(Format) * Size.cx, Format, 0, NULL);
+   SurfObj = AccessUserObject(NewBitmap);
+   SurfObj->dhpdev = dhsurf;
 
    return NewBitmap;
+
+   return 0;
 }
 
 HBITMAP EngCreateBitmap(IN SIZEL  Size,
@@ -82,14 +72,6 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
                         IN ULONG  Flags,
                         IN PVOID  Bits)
 {
-
-/* SHOULD CALL THIS */
-/* HBITMAP STDCALL W32kCreateBitmap(INT  Width,
-                          INT  Height,
-                          UINT  Planes,
-                          UINT  BitsPerPel,
-                          CONST VOID *Bits) */
-
    HBITMAP NewBitmap;
    SURFOBJ *SurfObj;
    SURFGDI *SurfGDI;
@@ -102,7 +84,8 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
    InitializeHooks(SurfGDI);
    SurfGDI->BytesPerPixel = bytesPerPixel(Format);
 
-   SurfObj->cjBits = Width * Size.cy;
+   SurfObj->lDelta = ((bytesPerPixel(Format) * Width) + 31) & ~31; // round up 4 bytes
+   SurfObj->cjBits = SurfObj->lDelta * Size.cy;
 
    if(Bits!=NULL)
    {
@@ -122,11 +105,10 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
       }
    }
 
-   SurfObj->dhsurf = 0;
+   SurfObj->dhsurf = 0; // device managed surface
    SurfObj->hsurf  = 0;
    SurfObj->sizlBitmap = Size;
    SurfObj->iBitmapFormat = Format;
-   SurfObj->lDelta = Width;
    SurfObj->iType = STYPE_BITMAP;
 
    // Use flags to determine bitmap type -- TOP_DOWN or whatever
@@ -139,8 +121,6 @@ HSURF EngCreateDeviceSurface(DHSURF dhsurf, SIZEL Size, ULONG Format)
    HSURF   NewSurface;
    SURFOBJ *SurfObj;
    SURFGDI *SurfGDI;
-
-   // DrvCreateDeviceSurface???
 
    SurfObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFOBJ), NULL);
    SurfGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFGDI), NULL);
@@ -180,7 +160,7 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
 
 // it looks like this Dev is actually a pointer to the DC!
    PDC Dc = (PDC)Dev;
-
+DbgPrint("Associate 1\n");
 //   DRVENABLEDATA *DED;
 
    SurfGDI = AccessInternalObject(Surface);
@@ -203,6 +183,8 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
    if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Dc->DriverFunctions.CopyBits;
    if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Dc->DriverFunctions.Synchronize;
    if(Hooks & HOOK_SYNCHRONIZEACCESS) SurfGDI->SynchronizeAccess = TRUE;
+
+   SurfGDI->CreateDeviceBitmap = Dc->DriverFunctions.CreateDeviceBitmap;
 
    return TRUE;
 }

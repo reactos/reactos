@@ -84,6 +84,10 @@ typedef BOOL (*PFN_CopyBits)(PSURFOBJ, PSURFOBJ, PCLIPOBJ,
 
 typedef VOID (*PFN_Synchronize)(DHPDEV, PRECTL);
 
+typedef VOID (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
+
+typedef HBITMAP (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
+
 typedef struct _SURFGDI {
    BYTE  BytesPerPixel;
 
@@ -98,6 +102,7 @@ typedef struct _SURFGDI {
    PFN_CopyBits CopyBits;
    PFN_Synchronize Synchronize;
    BOOL SynchronizeAccess;
+   PFN_CreateDeviceBitmap CreateDeviceBitmap;
 } SURFGDI, *PSURFGDI;
 
 typedef struct _XFORMGDI {
