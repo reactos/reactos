@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/12/15 11:00:53 ea Exp $
+# $Id: Makefile,v 1.2 2002/09/24 14:44:15 robd Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -8,6 +8,10 @@
 # LICENSE    : GNU GPL V2.0
 #
 PATH_TO_TOP=../..
+
+SHELL32_ALIAS  = roshel32
+COMCTL32_ALIAS = rosctl32
+
 
 include $(PATH_TO_TOP)/rules.mak
 
@@ -27,11 +31,18 @@ MODULES_ADVANCED=\
 	$(TARGET_FOLDER_LIB)/secur32.a
 
 MODULES_SHELL=\
+	$(TARGET_FOLDER_LIB)/comctl32.a\
 	$(TARGET_FOLDER_LIB)/shell32.a\
+	$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a\
+	$(TARGET_FOLDER_LIB)/$(SHELL32_ALIAS).a
 
 MODULES_NET=\
+	$(TARGET_FOLDER_LIB)/iphlpapi.a\
 	$(TARGET_FOLDER_LIB)/msafd.a\
-	$(TARGET_FOLDER_LIB)/ws2_32.a
+	$(TARGET_FOLDER_LIB)/snmpapi.a\
+	$(TARGET_FOLDER_LIB)/ws2_32.a\
+	$(TARGET_FOLDER_LIB)/wshirda.a\
+	$(TARGET_FOLDER_LIB)/wsock32.a
 
 MODULES_COM=\
 	$(TARGET_FOLDER_LIB)/ole32.a\
@@ -102,7 +113,35 @@ $(TARGET_FOLDER_LIB)/shell32.a: $(PATH_TO_TOP)/lib/shell32/shell32.def
 		-D shell32.dll\
 		-d $(PATH_TO_TOP)/lib/shell32/shell32.def
 
+$(TARGET_FOLDER_LIB)/comctl32.a: $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D comctl32.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+
+
+$(TARGET_FOLDER_LIB)/$(SHELL32_ALIAS).a: $(PATH_TO_TOP)/lib/shell32/shell32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D $(SHELL32_ALIAS).dll\
+		-d $(PATH_TO_TOP)/lib/shell32/shell32.def
+
+$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a: $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D $(COMCTL32_ALIAS).dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+
+#$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a: $(PATH_TO_TOP)/lib/comctl32/comctl32.def
+#		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.def
+
 # --- NET ---
+
+$(TARGET_FOLDER_LIB)/iphlpapi.a: $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D iphlpapi.dll\
+		-d $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.def
 
 $(TARGET_FOLDER_LIB)/msafd.a: $(PATH_TO_TOP)/lib/msafd/msafd.def
 	$(DLLTOOL) \
@@ -110,12 +149,29 @@ $(TARGET_FOLDER_LIB)/msafd.a: $(PATH_TO_TOP)/lib/msafd/msafd.def
 		-D msafd.dll\
 		-d $(PATH_TO_TOP)/lib/msafd/msafd.def
 
+$(TARGET_FOLDER_LIB)/snmpapi.a: $(PATH_TO_TOP)/lib/snmpapi/snmpapi.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D snmpapi.dll\
+		-d $(PATH_TO_TOP)/lib/snmpapi/snmpapi.def
 
 $(TARGET_FOLDER_LIB)/ws2_32.a: $(PATH_TO_TOP)/lib/ws2_32/ws2_32.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D ws2_32.dll\
 		-d $(PATH_TO_TOP)/lib/ws2_32/ws2_32.def
+
+$(TARGET_FOLDER_LIB)/wshirda.a: $(PATH_TO_TOP)/lib/wshirda/wshirda.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D wshirda.dll\
+		-d $(PATH_TO_TOP)/lib/wshirda/wshirda.def
+
+$(TARGET_FOLDER_LIB)/wsock32.a: $(PATH_TO_TOP)/lib/wsock32/wsock32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D wsock32.dll\
+		-d $(PATH_TO_TOP)/lib/wsock32/wsock32.def
 
 # --- COM ---
 
@@ -162,8 +218,10 @@ $(TARGET_FOLDER_LIB)/version.a: $(PATH_TO_TOP)/lib/version/version.def
 # --- Service rules ---
 
 clean:
-	- $(RM) $(TARGET_FOLDER_LIB)/*.a
-	- $(RM) $(TARGET_FOLDER_INC)/*.h
+	- $(RM) $(TARGET_FOLDER_LIB)/$(MODULES)
+
+#	- $(RM) $(TARGET_FOLDER_LIB)/*.a
+#	- $(RM) $(TARGET_FOLDER_INC)/*.h
 
 install:
 
