@@ -32,7 +32,7 @@ BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
     return FALSE;
 
   TimeFields.Milliseconds = 0;
-  TimeFields.Second = pdtime->Second;
+  TimeFields.Second = pdtime->Second * 2;
   TimeFields.Minute = pdtime->Minute;
   TimeFields.Hour = pdtime->Hour;
 
@@ -44,6 +44,37 @@ BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
 
   return TRUE;
 }
+
+
+// function like FileTimeToDosDateTime
+BOOL FsdFileTimeToDosDateTime(TIME *FileTime,WORD *pwDosDate,WORD *pwDosTime)
+{
+  PDOSTIME pdtime = (PDOSTIME)pwDosTime;
+  PDOSDATE pddate = (PDOSDATE)pwDosDate;
+  TIME_FIELDS TimeFields;
+
+  if (FileTime == NULL)
+    return FALSE;
+
+  RtlTimeToTimeFields((PLARGE_INTEGER)FileTime, &TimeFields);
+
+  if (pdtime)
+  {
+    pdtime->Second = TimeFields.Second / 2;
+    pdtime->Minute = TimeFields.Minute;
+    pdtime->Hour   = TimeFields.Hour;
+  }
+
+  if (pddate)
+  {
+    pddate->Day = TimeFields.Day;
+    pddate->Month = TimeFields.Month;
+    pddate->Year = TimeFields.Year - 1980;
+  }
+
+  return TRUE;
+}
+
 
 
 unsigned long vfat_wstrlen(PWSTR s)

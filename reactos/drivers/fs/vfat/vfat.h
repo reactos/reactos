@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.15 1999/12/11 21:14:49 dwelch Exp $ */
+/* $Id: vfat.h,v 1.16 1999/12/16 23:08:17 ekohl Exp $ */
 
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
@@ -171,6 +171,7 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 
 //internal functions in dir.c :
 BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime);
+BOOL FsdFileTimeToDosDateTime(TIME *FileTime,WORD *pwDosDate,WORD *pwDosTime);
 
 //internal functions in iface.c :
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
