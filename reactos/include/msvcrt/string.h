@@ -18,9 +18,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: sedwards $
- * $Date: 2003/08/25 01:37:47 $
+ * $Revision: 1.7 $
+ * $Author: navaraf $
+ * $Date: 2004/12/25 21:05:19 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -39,6 +39,7 @@
 #define __need_wchar_t
 #define __need_NULL
 #include <msvcrt/stddef.h>
+#include <_mingw.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,7 +167,11 @@ char*   strupr(char* szToConvert);
 
 /* NOTE: There is no _wcscmpi, but this is for compatibility. */
 int wcscmpi(const wchar_t* ws1, const wchar_t* ws2);
+#if __MINGW32_MAJOR_VERSION == 3 && __MINGW32_MINOR_VERSION == 5
+wchar_t* wcsdup(wchar_t* wsToDuplicate);
+#else
 wchar_t* wcsdup(const wchar_t* wsToDuplicate);
+#endif
 int wcsicmp(const wchar_t* ws1, const wchar_t* ws2);
 int wcsicoll(const wchar_t* ws1, const wchar_t* ws2);
 wchar_t* wcslwr(wchar_t* wsToConvert);
