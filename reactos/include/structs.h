@@ -2520,6 +2520,7 @@ typedef struct tagMENUITEMINFO {
   DWORD   dwItemData;
   LPTSTR   dwTypeData;
   UINT    cch;
+  HBITMAP  hbmpItem;
 } MENUITEMINFO, *LPMENUITEMINFO;
 typedef MENUITEMINFO CONST *LPCMENUITEMINFO;
 
@@ -2535,6 +2536,7 @@ typedef struct tagMENUITEMINFOA {
   DWORD   dwItemData;
   LPSTR   dwTypeData;
   UINT    cch;
+  HBITMAP  hbmpItem;
 } MENUITEMINFOA, *LPMENUITEMINFOA;
 typedef MENUITEMINFOA CONST *LPCMENUITEMINFOA;
 
@@ -2550,6 +2552,7 @@ typedef struct tagMENUITEMINFOW {
   DWORD   dwItemData;
   LPWSTR  dwTypeData;
   UINT    cch;
+  HBITMAP  hbmpItem;
 } MENUITEMINFOW, *LPMENUITEMINFOW;
 typedef MENUITEMINFOW CONST *LPCMENUITEMINFOW;
 

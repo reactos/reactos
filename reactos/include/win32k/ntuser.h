@@ -448,7 +448,7 @@ NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii);
+  LPMENUITEMINFOW lpmii);
 
 DWORD
 STDCALL
@@ -971,7 +971,7 @@ BOOL
 STDCALL
 NtUserMenuInfo(
  HMENU hmenu,
- LPCMENUINFO lpcmi,
+ LPMENUINFO lpmi,
  BOOL fsog
 );
 
@@ -989,7 +989,7 @@ NtUserMenuItemInfo(
  HMENU hMenu,
  UINT uItem,
  BOOL fByPosition,
- LPMENUITEMINFO lpmii,
+ LPMENUITEMINFOW lpmii,
  BOOL fsog
 );
 
@@ -1608,7 +1608,7 @@ NtUserThunkedMenuItemInfo(
   UINT uItem,
   BOOL fByPosition,
   BOOL bInsert,
-  LPMENUITEMINFO lpmii,
+  LPMENUITEMINFOW lpmii,
   PUNICODE_STRING lpszCaption);
 
 DWORD
