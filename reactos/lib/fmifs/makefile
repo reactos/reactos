@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 1999/06/18 22:11:01 ea Exp $
+# $Id: makefile,v 1.4 1999/06/25 04:35:47 rex Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -70,6 +70,15 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/dlls/fmifs.dll
+
+$(FLOPPY_DIR)/dlls/fmifs.dll: fmifs.dll
+ifeq ($(DOSCLI),yes)
+	$(CP) fmifs.dll $(FLOPPY_DIR)\dlls\fmifs.dll
+else
+	$(CP) fmifs.dll $(FLOPPY_DIR)/dlls/fmifs.dll
+endif
 
 include ../../rules.mak
 

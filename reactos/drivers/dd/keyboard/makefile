@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/keyboard.sys
+
+$(FLOPPY_DIR)/drivers/keyboard.sys: keyboard.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) keyboard.sys $(FLOPPY_DIR)\drivers\keyboard.sys
+else
+	$(CP) keyboard.sys $(FLOPPY_DIR)/drviers/keyboard.sys
+endif
+
 keyboard.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

@@ -1,18 +1,30 @@
 #
 #
 #
+TEST_PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
+            temptest test-fseek test_rdwr
 
-all: test-stdio.exe tst-printf.exe tstdiomisc.exe bug2.exe bug3.exe \
-     temptest.exe test-fseek.exe test_rdwr.exe
+all: $(TEST_PROGS:%=%.exe)
 
 .phony: all
 
-clean:
-	- $(RM) test-stdio.o
-	- $(RM) test-stdio.exe
-	- $(RM) test-stdio.sym
+$(TEST_PROGS:%=%_clean): %_clean:
+	- $(RM) $*.o
+	- $(RM) $*.exe
+	- $(RM) $*.sym
 
 .phony: clean
+
+floppy: # $(TEST_PROGS:%=%_floppy)
+
+$(TEST_PROGS:%=%_floppy): %_floppy: $(FLOPPY_DIR)/apps/%.exe
+
+$(TEST_PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
+ifeq ($(DOSCLI),yes)
+	$(CP) $*.exe $(FLOPPY_DIR)\apps\$*.exe
+else
+	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+endif
 
 bug2.exe: bug2.c
 	$(CC) bug2.c -lkernel32 -o bug2.exe

@@ -17,6 +17,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/blue.sys
+
+$(FLOPPY_DIR)/drivers/blue.sys: blue.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) blue.sys $(FLOPPY_DIR)\drivers\blue.sys
+else
+	$(CP) blue.sys $(FLOPPY_DIR)/drviers/blue.sys
+endif
+
 blue.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

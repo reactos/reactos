@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: # $(FLOPPY_DIR)/drivers/mouse.sys
+
+$(FLOPPY_DIR)/drivers/mouse.sys: mouse.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) mouse.sys $(FLOPPY_DIR)\drivers\mouse.sys
+else
+	$(CP) mouse.sys $(FLOPPY_DIR)/drviers/mouse.sys
+endif
+
 mouse.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

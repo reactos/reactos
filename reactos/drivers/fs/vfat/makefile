@@ -23,6 +23,15 @@ endif
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/vfatfsd.sys
+
+$(FLOPPY_DIR)/drivers/vfatfsd.sys: vfatfsd.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) vfatfsd.sys $(FLOPPY_DIR)\vfatfsd.sys
+else
+	$(CP) vfatfsd.sys $(FLOPPY_DIR)/vfatfsd.sys
+endif
+
 vfatfsd.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.25 1999/06/18 22:11:05 ea Exp $
+# $Id: makefile_rex,v 1.26 1999/06/25 04:35:52 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -184,6 +184,15 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/ntoskrnl.exe
+
+$(FLOPPY_DIR)/ntoskrnl.exe: ntoskrnl.exe
+ifeq ($(DOSCLI),yes)
+	$(CP) ntoskrnl.exe $(FLOPPY_DIR)\ntoskrnl.exe
+else
+	$(CP) ntoskrnl.exe $(FLOPPY_DIR)/ntoskrnl.exe
+endif
 
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 

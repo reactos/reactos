@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 1999/06/18 22:11:02 ea Exp $
+# $Id: makefile,v 1.5 1999/06/25 04:35:49 rex Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -73,6 +73,14 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
+floppy: $(FLOPPY_DIR)/dlls/gdi32.dll
+
+$(FLOPPY_DIR)/dlls/gdi32.dll: gdi32.dll
+ifeq ($(DOSCLI),yes)
+	$(CP) gdi32.dll $(FLOPPY_DIR)\dlls\gdi32.dll
+else
+	$(CP) gdi32.dll $(FLOPPY_DIR)/dlls/gdi32.dll
+endif
 
 include ../../rules.mak
 

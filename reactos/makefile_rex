@@ -5,7 +5,7 @@
 #
 # Select your host
 #
-HOST = mingw32-linux
+#HOST = mingw32-linux
 #HOST = djgpp-msdos
 #HOST = mingw32-windows
 
@@ -15,8 +15,8 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native ntoskrnl
-DLLS = ntdll kernel32 crtdll user32 fmifs gdi32
-#DLLS = advapi32 mingw32
+DLLS = ntdll kernel32 crtdll fmifs gdi32
+#DLLS = advapi32 mingw32 user32
 SUBSYS = win32k
 
 #
@@ -50,6 +50,13 @@ clean: $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
        $(KERNEL_SERVICES:%=%_clean) $(APPS:%=%_clean)
 .PHONY: clean
 
+floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
+        $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
+        $(KERNEL_SERVICES:%=%_floppy) $(APPS:%=%_floppy)
+
+dist: clean_dist_dir $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
+      $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(APPS:%=%_dist)
+
 #
 # Applications
 #
@@ -59,7 +66,13 @@ $(APPS): %:
 $(APPS:%=%_clean): %_clean:
 	make -C apps/$* clean
 
-.PHONY: $(APPS) $(APPS:%=%_clean)
+$(APPS:%=%_floppy): %_floppy:
+	make -C apps/$* floppy
+
+$(APPS:%=%_dist): %_dist:
+	make -C apps/$* dist
+
+.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_floppy) $(APPS:%=%_dist)
 
 #
 # Interfaces
@@ -70,7 +83,12 @@ iface_native:
 iface_native_clean:
 	make -C iface/native clean
 
-.PHONY: iface_native iface_native_clean
+iface_native_floppy:
+
+iface_native_dist:
+
+.PHONY: iface_native iface_native_clean iface_native_floppy \
+        iface_native_dist
 
 #
 # Device driver rules
@@ -81,7 +99,14 @@ $(DEVICE_DRIVERS): %:
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
 	make -C services/dd/$* clean
 
-.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_clean)
+$(DEVICE_DRIVERS:%=%_floppy): %_floppy:
+	make -C services/dd/$* floppy
+
+$(DEVICE_DRIVERS:%=%_dist): %_dist:
+	make -C services/dd/$* dist
+
+.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_clean) \
+        $(DEVICE_DRIVERS:%=%_floppy) $(DEVICE_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
 	make -C services/fs/$*
@@ -89,7 +114,14 @@ $(FS_DRIVERS): %:
 $(FS_DRIVERS:%=%_clean): %_clean:
 	make -C services/fs/$* clean
 
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean)
+$(FS_DRIVERS:%=%_floppy): %_floppy:
+	make -C services/fs/$* floppy
+
+$(FS_DRIVERS:%=%_dist): %_dist:
+	make -C services/fs/$* dist
+
+.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_floppy) \
+        $(FS_DRIVERS:%=%_dist)
 
 #
 # Kernel loaders
@@ -101,7 +133,14 @@ $(LOADERS): %:
 $(LOADERS:%=%_clean): %_clean:
 	make -C loaders/$* clean
 
-.PHONY: $(LOADERS) $(LOADERS:%=%_clean)
+$(LOADERS:%=%_floppy): %_floppy:
+	make -C loaders/$* floppy
+
+$(LOADERS:%=%_dist): %_dist:
+	make -C loaders/$* dist
+
+.PHONY: $(LOADERS) $(LOADERS:%=%_clean) $(LOADERS:%=%_floppy) \
+        $(LOADERS:%=%_dist)
 
 #
 # Required system components
@@ -113,7 +152,13 @@ ntoskrnl:
 ntoskrnl_clean:
 	make -C ntoskrnl clean
 
-.PHONY: ntoskrnl ntoskrnl_clean
+ntoskrnl_floppy:
+	make -C ntoskrnl floppy
+
+ntoskrnl_dist:
+	make -C ntoskrnl dist
+
+.PHONY: ntoskrnl ntoskrnl_clean ntoskrnl_floppy ntoskrnl_dist
 
 #
 # Required DLLs
@@ -125,7 +170,13 @@ $(DLLS): %:
 $(DLLS:%=%_clean): %_clean:
 	make -C lib/$* clean
 
-.PHONY: $(DLLS) $(DLLS:%=%_clean)
+$(DLLS:%=%_floppy): %_floppy: 
+	make -C lib/$* floppy
+
+$(DLLS:%=%_dist): %_dist: 
+	make -C lib/$* dist
+
+.PHONY: $(DLLS) $(DLLS:%=%_clean) $(DLLS:%=%_floppy) $(DLLS:%=%_dist)
 
 #
 # Kernel Subsystems
@@ -136,6 +187,67 @@ $(SUBSYS): %:
 $(SUBSYS:%=%_clean): %_clean:
 	make -C lib/$* clean
 
-.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean)
+$(SUBSYS:%=%_floppy): %_floppy:
+	make -C lib/$* floppy
+
+$(SUBSYS:%=%_dist): %_dist:
+	make -C lib/$* dist
+
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_floppy) \
+        $(SUBSYS:%=%_dist)
+
+#
+# Make an install floppy
+#
+
+make_floppy_dirs:
+ifeq ($(DOSCLI),yes)
+	mkdir $(FLOPPY_DIR)\dlls 
+	mkdir $(FLOPPY_DIR)\apps 
+	mkdir $(FLOPPY_DIR)\drivers
+else
+	mkdir $(FLOPPY_DIR)/dlls $(FLOPPY_DIR)/apps $(FLOPPY_DIR)/drivers
+endif
+
+.PHONY: make_floppy_dirs
+
+autoexec_floppy: $(FLOPPY_DIR)/autoexec.bat
+
+$(FLOPPY_DIR)/autoexec.bat: bootflop.bat
+ifeq ($(DOSCLI),yes)
+	$(CP) bootflop.bat $(FLOPPY_DIR)\autoexec.bat
+else
+	$(CP) bootflop.bat $(FLOPPY_DIR)/autoexec.bat
+endif
+
+#
+# Make a distribution saveset
+#
+
+clean_dist_dirs:
+ifeq ($(DOSCLI),yes)
+	$(RM) $(DIST_DIR)\dlls\*.*
+	$(RM) $(DIST_DIR)\apps\*.*
+	$(RM) $(DIST_DIR)\drivers\*.*
+	$(RMDIR) $(DIST_DIR)\dlls
+	$(RMDIR) $(DIST_DIR)\apps
+	$(RMDIR) $(DIST_DIR)\drivers
+	$(RMDIR) $(DIST_DIR)
+else
+	$(RM) -r $(DIST_DIR)
+endif
+
+make_dist_dirs:
+ifeq ($(DOSCLI),yes)
+	mkdir $(DIST_DIR) 
+	mkdir $(DIST_DIR)\dlls 
+	mkdir $(DIST_DIR)\apps 
+	mkdir $(DIST_DIR)\drivers
+else
+	mkdir $(DIST_DIR) $(DIST_DIR)/dlls $(DIST_DIR)/apps $(DIST_DIR)/drivers
+endif
+
+.PHONY: clean_dist_dirs make_dist_dirs
+
 
 

@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/null.sys
+
+$(FLOPPY_DIR)/drivers/null.sys: null.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) null.sys $(FLOPPY_DIR)\drivers\null.sys
+else
+	$(CP) null.sys $(FLOPPY_DIR)/drviers/null.sys
+endif
+
 null.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

@@ -14,6 +14,15 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .phony: clean $(CLEAN_FILES:%=%_clean)
 
+floppy: $(FLOPPY_DIR)/apps/shell.exe
+
+$(FLOPPY_DIR)/apps/shell.exe: shell.exe
+ifeq ($(DOSCLI),yes)
+	$(CP) shell.exe $(FLOPPY_DIR)\apps\shell.exe
+else
+	$(CP) shell.exe $(FLOPPY_DIR)/apps/shell.exe
+endif
+
 shell.exe: $(OBJECTS) $(LIBS)
 	$(CC) -specs=../../specs $(OBJECTS) $(LIBS) -lgcc -o shell.exe
 	$(NM) --numeric-sort shell.exe > shell.sym

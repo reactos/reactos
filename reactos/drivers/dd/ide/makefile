@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/ide.sys
+
+$(FLOPPY_DIR)/ide.sys: ide.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) ide.sys $(FLOPPY_DIR)\ide.sys
+else
+	$(CP) ide.sys $(FLOPPY_DIR)/ide.sys
+endif
+
 ide.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

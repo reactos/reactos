@@ -14,6 +14,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/apps/args.exe
+
+$(FLOPPY_DIR)/apps/args.exe: args.exe
+ifeq ($(DOSCLI),yes)
+	$(CP) args.exe $(FLOPPY_DIR)\apps\args.exe
+else
+	$(CP) args.exe $(FLOPPY_DIR)/apps\args.exe
+endif
+
 args.exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) -o args.exe
 	$(NM) --numeric-sort args.exe > args.sym

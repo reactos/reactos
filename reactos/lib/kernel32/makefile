@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 1999/06/18 22:11:03 ea Exp $
+# $Id: makefile,v 1.21 1999/06/25 04:35:49 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -133,6 +133,15 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/dlls/kernel32.dll
+
+$(FLOPPY_DIR)/dlls/kernel32.dll: kernel32.dll
+ifeq ($(DOSCLI),yes)
+	$(CP) kernel32.dll $(FLOPPY_DIR)\dlls\kernel32.dll
+else
+	$(CP) kernel32.dll $(FLOPPY_DIR)/dlls/kernel32.dll
+endif
 
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

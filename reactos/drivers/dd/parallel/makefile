@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/parallel.sys
+
+$(FLOPPY_DIR)/drivers/parallel.sys: parallel.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) parallel.sys $(FLOPPY_DIR)\drivers\parallel.sys
+else
+	$(CP) parallel.sys $(FLOPPY_DIR)/drviers/parallel.sys
+endif
+
 parallel.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

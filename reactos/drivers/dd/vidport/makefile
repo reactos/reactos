@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/vidport.sys
+
+$(FLOPPY_DIR)/drivers/vidport.sys: vidport.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) vidport.sys $(FLOPPY_DIR)\drivers\vidport.sys
+else
+	$(CP) vidport.sys $(FLOPPY_DIR)/drviers/vidport.sys
+endif
+
 vidport.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

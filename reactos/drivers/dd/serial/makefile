@@ -16,6 +16,15 @@ clean:
 
 .phony: clean
 
+floppy: $(FLOPPY_DIR)/drivers/serial.sys
+
+$(FLOPPY_DIR)/drivers/serial.sys: serial.sys
+ifeq ($(DOSCLI),yes)
+	$(CP) serial.sys $(FLOPPY_DIR)\drivers\serial.sys
+else
+	$(CP) serial.sys $(FLOPPY_DIR)/drviers/serial.sys
+endif
+
 serial.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 1999/06/18 22:11:03 ea Exp $
+# $Id: makefile,v 1.17 1999/06/25 04:35:50 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -97,6 +97,15 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/dlls/ntdll.dll
+
+$(FLOPPY_DIR)/dlls/ntdll.dll: ntdll.dll
+ifeq ($(DOSCLI),yes)
+	$(CP) ntdll.dll $(FLOPPY_DIR)\dlls\ntdll.dll
+else
+	$(CP) ntdll.dll $(FLOPPY_DIR)/dlls/ntdll.dll
+endif
 
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

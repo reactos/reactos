@@ -9,10 +9,10 @@ COPY /Y A:\APPS\*.EXE C:\reactos\system > NUL:
 :
 : present a menu to the booter...
 :
-ECHO 1) IDE,VFatFSD
-ECHO 2) No Drivers
-CHOICE /C:123 /T:1,3 "Select kernel boot config"
-IF ERRORLEVEL 2 GOTO :L2
+: ECHO 1) IDE,VFatFSD
+: ECHO 2) No Drivers
+: CHOICE /C:123 /T:1,3 "Select kernel boot config"
+: IF ERRORLEVEL 2 GOTO :L2
 
 :L1
 CLS

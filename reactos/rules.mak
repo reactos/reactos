@@ -18,6 +18,8 @@ CP = cp
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 KM_SPECS = $(TOPDIR)/specs
+FLOPPY_DIR = /a
+DIST_DIR = $(TOPDIR)/dist
 endif
 
 ifeq ($(HOST),mingw32-windows)
@@ -30,8 +32,8 @@ NASM_CMD = nasm
 RM = del
 KM_SPECS = specs
 DOSCLI = yes
-FLOPPY_DIR=A:
-DIST_DIR=dist
+FLOPPY_DIR = A:
+DIST_DIR = $(TEMP)\dist
 endif
 
 #
