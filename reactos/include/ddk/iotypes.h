@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.45 2002/11/24 18:26:40 robd Exp $
+/* $Id: iotypes.h,v 1.46 2003/03/19 23:14:29 gdalsnes Exp $
  *
  */
 
@@ -465,6 +465,12 @@ typedef struct _IO_STATUS_BLOCK
   ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
+typedef struct _IO_COMPLETION_PACKET{
+   ULONG             Key;
+   ULONG             Overlapped;
+   IO_STATUS_BLOCK   IoStatus;
+   LIST_ENTRY        ListEntry;
+} IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
 typedef struct _IO_PIPE_CREATE_BUFFER
 {

@@ -135,6 +135,9 @@ VOID STDCALL
 KeInitializeQueue(IN PKQUEUE Queue,
 		  IN ULONG Count);
 
+PLIST_ENTRY STDCALL
+KeRundownQueue(IN PKQUEUE Queue);
+
 VOID STDCALL KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
 				    LONG		Count,
 				    LONG		Limit);

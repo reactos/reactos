@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.12 2002/11/24 18:26:40 robd Exp $ */
+/* $Id: extypes.h,v 1.13 2003/03/19 23:14:11 gdalsnes Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -7,10 +7,12 @@
 extern POBJECT_TYPE EXPORTED ExDesktopObjectType;
 extern POBJECT_TYPE EXPORTED ExEventObjectType;
 extern POBJECT_TYPE EXPORTED ExWindowStationObjectType;
+extern POBJECT_TYPE EXPORTED ExIoCompletionType;
 #else
 extern POBJECT_TYPE IMPORTED ExDesktopObjectType;
 extern POBJECT_TYPE IMPORTED ExEventObjectType;
 extern POBJECT_TYPE IMPORTED ExWindowStationObjectType;
+extern POBJECT_TYPE IMPORTED ExIoCompletionType;
 #endif
 
 typedef ULONG INTERLOCKED_RESULT;

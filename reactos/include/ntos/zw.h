@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.8 2003/02/27 22:49:06 ekohl Exp $
+/* $Id: zw.h,v 1.9 2003/03/19 23:16:00 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -497,21 +497,20 @@ ZwCreateFile(
 NTSTATUS
 STDCALL
 NtCreateIoCompletion(
-	OUT PHANDLE CompletionPort,
-	IN ACCESS_MASK DesiredAccess,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfConcurrentThreads
-	);
+   OUT PHANDLE             IoCompletionHandle,
+   IN  ACCESS_MASK         DesiredAccess,
+   IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+   IN  ULONG               NumberOfConcurrentThreads
+   );
 
 NTSTATUS
 STDCALL
 ZwCreateIoCompletion(
-	OUT PHANDLE CompletionPort,
-	IN ACCESS_MASK DesiredAccess,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfConcurrentThreads
-	);
-
+   OUT PHANDLE             IoCompletionHandle,
+   IN  ACCESS_MASK         DesiredAccess,
+   IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+   IN  ULONG               NumberOfConcurrentThreads
+   );
 
 /*
  * FUNCTION: Creates a registry key
@@ -2357,20 +2356,22 @@ ZwQueryInformationToken(
 NTSTATUS
 STDCALL
 NtQueryIoCompletion(
-	IN HANDLE CompletionPort,
-	IN ULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PULONG NumberOfBytesTransferred
-	);
+   IN  HANDLE                          IoCompletionHandle,
+   IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
+   OUT PVOID                           IoCompletionInformation,
+   IN  ULONG                           IoCompletionInformationLength,
+   OUT PULONG                          ResultLength OPTIONAL
+   );
+
 NTSTATUS
 STDCALL
 ZwQueryIoCompletion(
-	IN HANDLE CompletionPort,
-	IN ULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PULONG NumberOfBytesTransferred
-	);
-
+   IN  HANDLE                          IoCompletionHandle,
+   IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
+   OUT PVOID                           IoCompletionInformation,
+   IN  ULONG                           IoCompletionInformationLength,
+   OUT PULONG                          ResultLength OPTIONAL
+   );
 
 /*
  * FUNCTION: Queries the information of a registry key object.
@@ -2990,22 +2991,23 @@ ZwReleaseSemaphore(
 NTSTATUS
 STDCALL
 NtRemoveIoCompletion(
-	IN HANDLE CompletionPort,
-	OUT PULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PULONG CompletionStatus,
-	IN PLARGE_INTEGER WaitTime 
-	);
+   IN  HANDLE           IoCompletionHandle,
+   OUT PULONG           CompletionKey,
+   OUT PULONG           CompletionValue,
+   OUT PIO_STATUS_BLOCK IoStatusBlock,
+   IN  PLARGE_INTEGER   Timeout OPTIONAL
+   );
 
 NTSTATUS
 STDCALL
 ZwRemoveIoCompletion(
-	IN HANDLE CompletionPort,
-	OUT PULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PULONG CompletionStatus,
-	IN PLARGE_INTEGER WaitTime 
-	);
+   IN  HANDLE           IoCompletionHandle,
+   OUT PULONG           CompletionKey,
+   OUT PULONG           CompletionValue,
+   OUT PIO_STATUS_BLOCK IoStatusBlock,
+   IN  PLARGE_INTEGER   Timeout OPTIONAL
+   );
+
 /*
  * FUNCTION: Replaces one registry key with another
  * ARGUMENTS: 
@@ -3392,21 +3394,22 @@ ZwSetInformationToken(
 NTSTATUS
 STDCALL
 NtSetIoCompletion(
-	IN HANDLE CompletionPort,
-	IN ULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfBytesToTransfer, 
-	OUT PULONG NumberOfBytesTransferred
-	);
+   IN HANDLE   IoCompletionPortHandle,
+   IN ULONG    CompletionKey,
+   IN ULONG    CompletionValue,
+   IN NTSTATUS CompletionStatus,
+   IN ULONG    CompletionInformation
+   );
+
 NTSTATUS
 STDCALL
 ZwSetIoCompletion(
-	IN HANDLE CompletionPort,
-	IN ULONG CompletionKey,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG NumberOfBytesToTransfer, 
-	OUT PULONG NumberOfBytesTransferred
-	);
+   IN HANDLE   IoCompletionPortHandle,
+   IN ULONG    CompletionKey,
+   IN ULONG    CompletionValue,
+   IN NTSTATUS CompletionStatus,
+   IN ULONG    CompletionInformation
+   );
 
 /*
  * FUNCTION: Set properties for profiling

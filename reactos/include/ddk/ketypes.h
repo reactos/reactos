@@ -122,9 +122,9 @@ typedef struct _KQUEUE
 {
    DISPATCHER_HEADER Header;
    LIST_ENTRY        EntryListHead;
-   ULONG             CurrentCount;
-   ULONG             MaximumCount;
-   LIST_ENTRY        ThreadListEntry;
+   ULONG             RunningThreads;
+   ULONG             MaximumThreads;
+   LIST_ENTRY        ThreadListHead;
 } KQUEUE, *PKQUEUE;
 
 struct _KDPC;

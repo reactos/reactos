@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.21 2002/09/08 10:23:24 chorns Exp $
+/* $Id: file.c,v 1.22 2003/03/19 23:11:23 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -236,7 +236,39 @@ NtSetInformationFile(HANDLE FileHandle,
      }
    
    DPRINT("FileObject %x\n", FileObject);
-   
+
+   //io completion port?
+   if (FileInformationClass == FileCompletionInformation)
+   {
+      PKQUEUE Queue;
+
+      if (Length < sizeof(FILE_COMPLETION_INFORMATION))
+      {
+         Status = STATUS_INFO_LENGTH_MISMATCH;
+      }
+      else
+      {
+         Status = ObReferenceObjectByHandle(((PFILE_COMPLETION_INFORMATION)FileInformation)->IoCompletionHandle,
+                                            IO_COMPLETION_MODIFY_STATE,//???
+                                            ExIoCompletionType,
+                                            UserMode,
+                                            (PVOID*)&Queue,
+                                            NULL);
+         if (NT_SUCCESS(Status))
+         {   
+            //FIXME: maybe use lookaside list
+            FileObject->CompletionContext = ExAllocatePool(NonPagedPool, sizeof(IO_COMPLETION_CONTEXT));
+            FileObject->CompletionContext->Key = ((PFILE_COMPLETION_INFORMATION)FileInformation)->CompletionKey;
+            FileObject->CompletionContext->Port = Queue;
+
+            ObDereferenceObject(Queue);
+         }
+      }
+
+      ObDereferenceObject(FileObject);
+      return Status;
+   }
+
    DeviceObject = FileObject->DeviceObject;
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,

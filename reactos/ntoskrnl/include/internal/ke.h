@@ -58,6 +58,8 @@ VOID
 KiDeliverNormalApc(VOID);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
+PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
+
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
