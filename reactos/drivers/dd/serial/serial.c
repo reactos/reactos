@@ -145,7 +145,7 @@ void testserial(void)
         };
 };
 
-STDCALL NTSTATUS
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
         DbgPrint("Serial Driver 0.0.2\n");

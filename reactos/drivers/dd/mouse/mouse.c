@@ -258,7 +258,8 @@ void test_mouse(void)
   };
 };
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
         DbgPrint("Mouse Driver 0.0.3\n");
         InitializeMouse();

@@ -69,7 +69,7 @@
 #define LPGETSTATUS 0x060b  /* return LP_S(minor) */
 #define LPRESET     0x060c  /* reset printer */
 
-/* timeout for printk'ing a timeout, in jiffies (100ths of a second).
+/* timeout for print'ing a timeout, in jiffies (100ths of a second).
    This is also used for re-checking error conditions if LP_ABORT is
    not set.  This is the default behavior. */
 

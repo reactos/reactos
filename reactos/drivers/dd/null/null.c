@@ -67,7 +67,8 @@ NTSTATUS NullUnload(PDRIVER_OBJECT DriverObject)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -81,7 +82,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    ANSI_STRING ansi_device_name;
    UNICODE_STRING device_name;
    
-   DbgPrint("Null Device Driver 0.0.1\n");
+   DbgPrint("Null Device Driver 0.0.2\n");
    
    RtlInitAnsiString(&ansi_device_name,"\\Device\\NUL");
    RtlAnsiStringToUnicodeString(&device_name,&ansi_device_name,TRUE);

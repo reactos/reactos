@@ -115,7 +115,7 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(status);
 }
 
-STDCALL NTSTATUS
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
