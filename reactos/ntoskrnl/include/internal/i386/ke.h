@@ -88,6 +88,7 @@
 #define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
 #define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
+#define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
 #define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
 #define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
 #define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */

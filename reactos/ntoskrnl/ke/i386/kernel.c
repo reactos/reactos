@@ -43,6 +43,7 @@ BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386PaeEnabled = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
+ULONG KiFastSystemCallDisable = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -323,6 +324,18 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       MiEnablePAE((PVOID*)LastKernelAddress);
       Ke386PaeEnabled = TRUE;
    }
+
+   if (KPCR->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
+   {
+      extern void KiFastCallEntry(void);
+
+      /* CS Selector of the target segment. */
+      Ke386Wrmsr(0x174, KERNEL_CS, 0);
+      /* Target ESP. */
+      Ke386Wrmsr(0x175, 0, 0);
+      /* Target EIP. */
+      Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
+   }
 }
 
 VOID INIT_FUNCTION
@@ -391,23 +404,89 @@ KeInit2(VOID)
 VOID INIT_FUNCTION
 Ki386SetProcessorFeatures(VOID)
 {
-  PKPCR Pcr = KeGetCurrentKPCR();
+   PKPCR Pcr = KeGetCurrentKPCR();
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING KeyName;
+   UNICODE_STRING ValueName;
+   HANDLE KeyHandle;
+   ULONG ResultLength;
+   KEY_VALUE_PARTIAL_INFORMATION ValueData;
+   NTSTATUS Status;
 
-  SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
-  SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
-  SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-    (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8);
-  SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-    (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX);
-  SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
-  SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
-  SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] = 
-    (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE);
-  SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
-    (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
-  SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-    (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC);
-  SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386PaeEnabled;
-  SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-    (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
+   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
+   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
+   SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
+      (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8);
+   SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
+      (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX);
+   SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
+   SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
+   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] = 
+      (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE);
+   SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
+      (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
+   SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
+      (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC);
+   SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386PaeEnabled;
+   SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
+      (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
+
+   /* Does the CPU Support Fast System Call? */
+   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
+   
+        /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
+       
+        /* Make sure it's not disabled in registry */
+        RtlRosInitUnicodeStringFromLiteral(&KeyName, 
+                                           L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
+        RtlRosInitUnicodeStringFromLiteral(&ValueName, 
+                                           L"FastSystemCallDisable");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+        
+        if (NT_SUCCESS(Status)) {
+        
+            /* Read the Value then Close the Key */
+            Status = NtQueryValueKey(KeyHandle,
+                                     &ValueName,
+                                     KeyValuePartialInformation,
+                                     &ValueData,
+                                     sizeof(ValueData),
+                                     &ResultLength);
+            RtlMoveMemory(&KiFastSystemCallDisable, ValueData.Data, sizeof(ULONG));
+            
+            NtClose(KeyHandle);
+        }
+        
+    } else {
+    
+        /* Disable SYSENTER/SYSEXIT, because the CPU doesn't support it */
+        KiFastSystemCallDisable = 1;
+        
+    }
+    
+    if (!KiFastSystemCallDisable) {
+        
+        /* Use SYSENTER */
+        SharedUserData->SystemCall[0] = 0x8B;
+        SharedUserData->SystemCall[1] = 0xD4;
+        SharedUserData->SystemCall[2] = 0x0F;
+        SharedUserData->SystemCall[3] = 0x34;
+        SharedUserData->SystemCall[4] = 0xC3;    
+                  
+    } else {
+    
+        /* Use INT2E */   
+        SharedUserData->SystemCall[0] = 0x8D;
+        SharedUserData->SystemCall[1] = 0x54;
+        SharedUserData->SystemCall[2] = 0x24;
+        SharedUserData->SystemCall[3] = 0x08;
+        SharedUserData->SystemCall[4] = 0xCD;
+        SharedUserData->SystemCall[5] = 0x2E;
+        SharedUserData->SystemCall[6] = 0xC3;
+    }
 }

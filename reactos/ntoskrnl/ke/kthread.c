@@ -33,6 +33,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+KiServiceCheck (VOID)
+{
+  PETHREAD Thread;
+
+  Thread = PsGetCurrentThread();
+
+  if (Thread->Tcb.ServiceTable != KeServiceDescriptorTableShadow)
+    {
+      PsInitWin32Thread (Thread);
+
+      Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
+    }
+}
+
 /*
  * @unimplemented
  */

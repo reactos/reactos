@@ -78,5 +78,5 @@ _KePushAndStackSwitchAndSysRet@8:
 	push	$0
 	call	_KeLowerIrql@4
 
-	jmp	KeReturnFromSystemCall
+	jmp _KiServiceExit
 

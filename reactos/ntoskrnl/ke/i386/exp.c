@@ -45,7 +45,7 @@
 # define ARRAY_SIZE(x) (sizeof (x) / sizeof (x[0]))
 #endif
 
-extern void interrupt_handler2e(void);
+extern void KiSystemService(void);
 extern void interrupt_handler2d(void);
 
 extern VOID KiTrap0(VOID);
@@ -850,7 +850,7 @@ KeInitExceptions(VOID)
      }
 
    set_system_call_gate(0x2d,(int)interrupt_handler2d);
-   set_system_call_gate(0x2e,(int)interrupt_handler2e);
+   set_system_call_gate(0x2e,(int)KiSystemService);
 }
 
 /*
@@ -873,30 +873,32 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
    return((NTSTATUS)OldEip);
 }
 
-VOID
-FASTCALL
-KeRosTrapReturn ( PKTRAP_FRAME TrapFrame, PKTRAP_FRAME PrevTrapFrame );
-
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 NtRaiseException (
-	IN PEXCEPTION_RECORD ExceptionRecord,
-	IN PCONTEXT Context,
-	IN BOOLEAN SearchFrames)
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN BOOLEAN SearchFrames)
 {
-	PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
-	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PKTRAP_FRAME TrapFrame = Thread->TrapFrame;
+    PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
 
-	KeGetCurrentKPCR()->Tib.ExceptionList = TrapFrame->ExceptionList;
+    KeGetCurrentKPCR()->Tib.ExceptionList = TrapFrame->ExceptionList;
 
-	KiDispatchException(ExceptionRecord,
-		Context,
-		PsGetCurrentThread()->Tcb.TrapFrame,
-		(KPROCESSOR_MODE)ExGetPreviousMode(),
-		SearchFrames);
+    KiDispatchException(ExceptionRecord,
+                        Context,
+                        TrapFrame,
+                        KeGetPreviousMode(),
+                        SearchFrames);
 
-	KeRosTrapReturn ( TrapFrame, PrevTrapFrame );
-	return(STATUS_SUCCESS);
+    /* Restore the user context */
+    Thread->TrapFrame = PrevTrapFrame;
+    __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
+    
+    /* We never get here */
+    return(STATUS_SUCCESS);
 }

@@ -280,6 +280,8 @@ IsVmwSVGAEnabled(VOID)
   return (Value == 1);
 }
 
+
+
 BOOL
 SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 {
@@ -311,6 +313,43 @@ SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
   
   RegCloseKey(hReg);
   return TRUE;
+}
+
+BOOL
+DisableFastSystemCall(VOID)
+{
+    DWORD Value = 1;
+    HKEY hReg;
+    
+    /* Open or Create the Kernel Settings Key */    
+    if(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Kernel", 
+                      0,
+                      NULL,
+                      REG_OPTION_NON_VOLATILE,
+                      KEY_SET_VALUE, 
+                      NULL,
+                      &hReg,
+                      NULL) != ERROR_SUCCESS) {
+        DbgPrint("Failed to Disable Sysenter\n");
+        return FALSE;
+    }
+    
+    /* Disable Fast System Call */
+    if(RegSetValueEx(hReg, 
+                     L"FastSystemCallDisable", 
+                     0, 
+                     REG_DWORD, 
+                     (BYTE*)&Value, 
+                     sizeof(DWORD)) != ERROR_SUCCESS) {
+        RegCloseKey(hReg);
+        DbgPrint("Failed to Disable Sysenter\n");
+        return FALSE;
+    }
+  
+    /* Return Success */  
+    RegCloseKey(hReg);
+    return TRUE;
 }
 
 BOOL
@@ -1021,6 +1060,9 @@ WinMain(HINSTANCE hInstance,
 
   /* restore the exception handler */
   SetUnhandledExceptionFilter(OldHandler);
+  
+  /* Disable Fast System Call no matter what */
+  DisableFastSystemCall();
   
   lc = DestinationPath;
   lc += GetSystemDirectory(DestinationPath, MAX_PATH) - 1;

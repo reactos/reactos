@@ -270,4 +270,46 @@ KeUnstackDetachProcess (
 	KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
+// This function should be used by win32k.sys to add its own user32/gdi32 services
+// TableIndex is 0 based
+// ServiceCountTable its not used at the moment
+/*
+ * @implemented
+ */
+BOOLEAN STDCALL
+KeAddSystemServiceTable (
+	PSSDT	SSDT,
+	PULONG	ServiceCounterTable,
+	ULONG	NumberOfServices,
+	PSSPT	SSPT,
+	ULONG	TableIndex
+	)
+{
+    /* check if descriptor table entry is free */
+    if ((TableIndex > SSDT_MAX_ENTRIES - 1) ||    
+        (KeServiceDescriptorTable[TableIndex].SSDT != NULL) ||
+        (KeServiceDescriptorTableShadow[TableIndex].SSDT != NULL))
+        return FALSE;
+
+    /* initialize the shadow service descriptor table */
+    KeServiceDescriptorTableShadow[TableIndex].SSDT = SSDT;
+    KeServiceDescriptorTableShadow[TableIndex].SSPT = SSPT;
+    KeServiceDescriptorTableShadow[TableIndex].NumberOfServices = NumberOfServices;
+    KeServiceDescriptorTableShadow[TableIndex].ServiceCounterTable = ServiceCounterTable;
+    
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+KeRemoveSystemServiceTable(
+    IN PUCHAR Number
+)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 /* EOF */

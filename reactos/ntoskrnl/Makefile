@@ -550,7 +550,7 @@ TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
   $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc 
 
-ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
+ex/napi.o: ex/zw.S $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 

@@ -130,7 +130,7 @@ REGTESTS = regtests
 all: bootstrap $(BOOT_LOADERS) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) \
      $(DLLS) $(SUBSYS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(APPS) $(EXT_MODULES)
 
-bootstrap: dk implib iface_native iface_additional
+bootstrap: dk implib iface_native
 
 depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLLS:%=%_depends) \
          $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
@@ -147,7 +147,7 @@ test: $(BOOT_LOADERS:%=%_test) $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%
 	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
 	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
-clean: tools dk_clean iface_native_clean iface_additional_clean hallib_clean \
+clean: tools dk_clean iface_native_clean hallib_clean \
        $(BOOT_LOADERS:%=%_clean) $(HALS:%=%_clean) $(COMPONENTS:%=%_clean) \
        $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) \
        msvcrt_clean $(DLLS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
@@ -462,37 +462,21 @@ dk_install:
 # Interfaces
 #
 iface_native:
-	$(MAKE) --silent -C iface/native
+	$(MAKE) --silent -C tools/nci
 
 iface_native_implib:
 	
 iface_native_test:
 	
 iface_native_clean:
-	$(MAKE) --silent -C iface/native clean
+	$(MAKE) --silent -C tools/nci clean
 
 iface_native_install:
 
 iface_native_bootcd:
 
-iface_additional:
-	$(MAKE) --silent -C iface/addsys
-
-iface_additional_implib:
-	
-iface_additional_test:
-	
-iface_additional_clean:
-	$(MAKE) --silent -C iface/addsys clean
-
-iface_additional_install:
-
-iface_additional_bootcd:
-
 .PHONY: iface_native iface_native_implib iface_native_test iface_native_clean \
-        iface_native_install iface_native_bootcd iface_additional \
-        iface_additional_implib iface_additional_test iface_additional_clean \
-        iface_additional_install iface_additional_bootcd
+        iface_native_install iface_native_bootcd
 
 
 #

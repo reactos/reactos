@@ -25,7 +25,7 @@ KDBG := 0
 #
 # Whether to compile for debugging
 #
-DBG := 0 
+DBG := 0
 
 #
 # Whether to compile with optimizations
