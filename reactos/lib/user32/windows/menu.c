@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.46 2004/02/01 20:45:02 weiden Exp $
+/* $Id: menu.c,v 1.47 2004/02/01 20:50:10 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -455,7 +455,7 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
           mii = (MENUITEMINFOW*)(*(--mih));
           mir = (LPRECT)(mii + 1);
           
-          if(omii && ((mir->right >= x) || (omii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK))))
+          if(omii && ((mir->right > x) || (omii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK))))
           {
             x = Rect->right;
           }
