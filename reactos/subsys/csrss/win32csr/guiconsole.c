@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.24 2004/12/05 01:13:29 navaraf Exp $
+/* $Id: guiconsole.c,v 1.25 2004/12/18 19:23:05 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -793,6 +793,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   HWND NewWindow;
   LONG WindowCount;
+  MSG Msg;
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) lParam;
 
   switch(msg)
@@ -820,6 +821,14 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         return (LRESULT) NewWindow;
       case PM_DESTROY_CONSOLE:
+        /* Window creation is done using a PostMessage(), so it's possible that the
+         * window that we want to destroy doesn't exist yet. So first empty the message
+         * queue */
+        while(PeekMessageW(&Msg, NULL, 0, 0, PM_REMOVE))
+          {
+            TranslateMessage(&Msg);
+            DispatchMessageW(&Msg);
+          }
         DestroyWindow(Console->hWindow);
         Console->hWindow = NULL;
         WindowCount = GetWindowLongW(hWnd, GWL_USERDATA);

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.17 2004/11/14 18:47:10 hbirr Exp $
+/* $Id: conio.c,v 1.18 2004/12/18 19:23:05 gvg Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -219,6 +219,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   NewBuffer = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
   if (NULL == NewBuffer)
     {
+      ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
       RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
@@ -227,6 +228,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Status = CsrInitConsoleScreenBuffer(Console, NewBuffer);
   if (! NT_SUCCESS(Status))
     {
+      ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
       RtlDeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);

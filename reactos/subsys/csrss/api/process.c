@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.36 2004/11/14 18:47:10 hbirr Exp $
+/* $Id: process.c,v 1.37 2004/12/18 19:23:05 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -204,6 +204,7 @@ CSR_API(CsrCreateProcess)
         Reply->Status = ApiReply.Status;
         if (! NT_SUCCESS(Reply->Status))
           {
+            CsrFreeProcessData(Request->Data.CreateProcessRequest.NewProcessId);
             return Reply->Status;
           }
         Reply->Data.CreateProcessReply.InputHandle = ApiReply.Data.AllocConsoleReply.InputHandle;
