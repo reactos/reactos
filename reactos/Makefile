@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.201 2004/01/10 14:39:20 navaraf Exp $
+# $Id: Makefile,v 1.202 2004/01/12 23:47:51 sedwards Exp $
 #
 # Global makefile
 #
@@ -38,13 +38,13 @@ LIB_STATIC = string rosrtl epsapi uuid zlib
 DLLS_KBD = kbdus kbdgr kbdfr kbduk
 
 # User mode libraries
-# advapi32 cards crtdll fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
+# advapi32 cards crtdll comdlg32 fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
-# imagehlp
-DLLS =	libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand \
+# imagehlp imm32
+DLLS =	libwine advapi32 cards crtdll comdlg32 fmifs freetype gdi32 kernel32 packet lzexpand \
 	msafd msvcrt msvcrt20 ntdll ole32 psapi richedit rpcrt4 secur32 shell32 shlwapi \
 	syssetup twain unicode user32 userenv version winspool ws2help ws2_32 wsock32 \
-	wshirda iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
+	wshirda imm32 iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
 
 SUBSYS = smss win32k csrss ntvdm
 
