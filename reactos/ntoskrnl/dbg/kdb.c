@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.23 2004/07/19 19:40:01 blight Exp $
+/* $Id: kdb.c,v 1.24 2004/08/01 11:40:37 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -165,7 +165,7 @@ volatile DWORD x_dr0 = 0, x_dr1 = 0, x_dr2 = 0, x_dr3 = 0, x_dr7 = 0;
 
 extern LONG KdbDisassemble(ULONG Address);
 extern LONG KdbGetInstLength(ULONG Address);
-extern NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait);
+extern PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -412,12 +412,11 @@ KdbOverwriteInst(ULONG Address, PUCHAR PreviousInst, UCHAR NewInst)
   ULONG SavedPte;
   NTSTATUS Status;
   /* Get the pte for the page containing the address. */
-  Status =
-    MmGetPageEntry2((PVOID)PAGE_ROUND_DOWN(Address), &BreakPtePtr, FALSE);
+  BreakPtePtr = MmGetPageEntry((PVOID)PAGE_ROUND_DOWN(Address), FALSE);
   /* Return if that page isn't present. */
-  if (!NT_SUCCESS(Status))
+  if (BreakPtePtr == NULL)
     {
-      return(Status);
+      return(STATUS_UNSUCCESSFUL);
     }
   if (!((*BreakPtePtr) & (1 << 0)))
     {
