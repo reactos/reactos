@@ -66,6 +66,8 @@ extern "C" {
 #define    IDE_CMD_READ_RETRY       0x21
 #define    IDE_CMD_WRITE            0x30
 #define    IDE_CMD_WRITE_RETRY      0x31
+#define    IDE_CMD_READ_MULTIPLE    0xC4
+#define	   IDE_CMD_WRITE_MULTIPLE   0xC5
 #define    IDE_CMD_IDENT_ATA_DRV    0xEC
 #define    IDE_CMD_IDENT_ATAPI_DRV  0xA1
 //
@@ -110,6 +112,10 @@ extern "C" {
 #define IDEWriteBlock(Address, Buffer, Count) \
   (ScsiPortWritePortBufferUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
+#define IDEReadBlock32(Address, Buffer, Count) \
+  (ScsiPortReadPortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
+#define IDEWriteBlock32(Address, Buffer, Count) \
+  (ScsiPortWritePortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 //
 //  Access macros for control registers
 //  Each macro takes an address of the control port blank and data
@@ -160,7 +166,7 @@ typedef struct _IDE_DRIVE_IDENTIFY
   WORD  TMSectorsPerTrk;     /*56*/
   WORD  TMCapacityLo;        /*57*/
   WORD  TMCapacityHi;        /*58*/
-  WORD  Reserved59;          /*59*/
+  WORD  RWMultCurrent;       /*59*/
   WORD  TMSectorCountLo;     /*60*/
   WORD  TMSectorCountHi;     /*61*/
   WORD  Reserved62[193];     /*62*/

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.29 2002/09/19 16:17:35 ekohl Exp $
+/* $Id: atapi.c,v 1.30 2002/11/11 21:51:33 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -42,6 +42,8 @@
 
 #define ENABLE_PCI
 #define ENABLE_ISA
+#define ENABLE_MULTIMODE    // enables multiple sector commands 
+#define ENABLE_32BIT	    // enables 32Bit I/O for disk transfer (not for ATAPI)
 
 //  -------------------------------------------------------------------------
 
@@ -552,7 +554,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 
       ConfigInfo->AtdiskPrimaryClaimed = TRUE;
       ChannelFound = TRUE;
-      *Again = FALSE/*TRUE*/;
+      *Again = TRUE;
     }
   else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
     {
@@ -700,7 +702,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   BOOLEAN IsAtapi;
   ULONG Retries;
   PUCHAR TargetAddress;
-  ULONG SectorSize;
   ULONG TransferSize;
 
   DPRINT("AtapiInterrupt() called!\n");
@@ -770,6 +771,12 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  else
 	    {
 	      TransferSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
+#ifdef ENABLE_MULTIMODE
+	      if (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff)
+	      {
+		  TransferSize *= (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff);
+	      }
+#endif
 	    }
 
 	  DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
@@ -777,6 +784,12 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 	  if (Srb->DataTransferLength <= TransferSize)
 	    {
+#ifdef ENABLE_MULTIMODE
+	      if (!IsAtapi)
+	      {
+	         TransferSize = Srb->DataTransferLength;
+	      }
+#endif
 	      Srb->DataTransferLength = 0;
 	      IsLastBlock = TRUE;
 	    }
@@ -797,10 +810,24 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	    }
 
 	  /* Copy the block of data */
+#ifdef ENABLE_32BIT
+	  if (IsAtapi)
+	  {
+	     IDEReadBlock(CommandPortBase,
+		          TargetAddress,
+		          TransferSize);
+	  }
+	  else
+	  {
+	     IDEReadBlock32(CommandPortBase,
+		            TargetAddress,
+		            TransferSize);
+	  }
+#else
 	  IDEReadBlock(CommandPortBase,
 		       TargetAddress,
 		       TransferSize);
-
+#endif
 	  /* check DRQ */
 	  if (IsLastBlock)
 	    {
@@ -848,16 +875,32 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  else
 	    {
 	      /* Update SRB data */
-	      SectorSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
-
+	      TransferSize = DevExt->DeviceParams[Srb->TargetId].BytesPerSector;
+#ifdef ENABLE_MULTIMODE
+	      if (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff)
+	      {
+		  TransferSize *= (DevExt->DeviceParams[Srb->TargetId].RWMultCurrent & 0xff);
+	      }
+#endif
+	      if (Srb->DataTransferLength <= TransferSize)
+	      {
+		 TransferSize = Srb->DataTransferLength;
+	      }
+		 
 	      TargetAddress = Srb->DataBuffer;
-	      Srb->DataBuffer += SectorSize;
-	      Srb->DataTransferLength -= SectorSize;
+	      Srb->DataBuffer += TransferSize;
+	      Srb->DataTransferLength -= TransferSize;
 
 	      /* Write the sector */
+#ifdef ENABLE_32BIT
+	      IDEWriteBlock32(CommandPortBase,
+			      TargetAddress,
+			      TransferSize);
+#else
 	      IDEWriteBlock(CommandPortBase,
 			    TargetAddress,
-			    SectorSize);
+			    TransferSize);
+#endif
 	    }
 
 	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -1152,8 +1195,9 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
          DrvParms->ECCByteCnt,
          DrvParms->FirmwareRev);
   DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
+  DPRINT("RWMultMax?:%02x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
          (DrvParms->RWMultImplemented) & 0xff,
+	 (DrvParms->RWMultCurrent) & 0xff,
          (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
          (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
          DrvParms->MinPIOTransTime,
@@ -1827,11 +1871,19 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   if (Srb->SrbFlags & SRB_FLAGS_DATA_IN)
     {
+#ifdef ENABLE_MULTIMODE
+      Command = DeviceParams->RWMultCurrent & 0xff ? IDE_CMD_READ_MULTIPLE : IDE_CMD_READ;
+#else
       Command = IDE_CMD_READ;
+#endif
     }
   else
     {
+#ifdef ENABLE_MULTIMODE
+      Command = DeviceParams->RWMultCurrent & 0xff ? IDE_CMD_WRITE_MULTIPLE : IDE_CMD_WRITE;
+#else
       Command = IDE_CMD_WRITE;
+#endif
     }
 
   if (DrvHead & IDE_DH_LBA)
@@ -1960,7 +2012,11 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteCommand(DeviceExtension->CommandPortBase, Command);
 
   /* Write data block */
+#ifdef ENABLE_MULTIMODE
+  if (Command == IDE_CMD_WRITE || Command == IDE_CMD_WRITE_MULTIPLE)
+#else
   if (Command == IDE_CMD_WRITE)
+#endif
     {
       PUCHAR TargetAddress;
       ULONG SectorSize;
@@ -1998,15 +2054,32 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
 
       /* Update SRB data */
-      SectorSize = DeviceExtension->DeviceParams[Srb->TargetId].BytesPerSector;
+      SectorSize = DeviceParams->BytesPerSector;
+#ifdef ENABLE_MULTIMODE
+      if (DeviceParams->RWMultCurrent & 0xff)
+      {
+         SectorSize *= (DeviceParams->RWMultCurrent & 0xff);
+      }
+      if (Srb->DataTransferLength < SectorSize)
+      {
+	 SectorSize = Srb->DataTransferLength;
+      }
+#endif
+
       TargetAddress = Srb->DataBuffer;
       Srb->DataBuffer += SectorSize;
       Srb->DataTransferLength -= SectorSize;
 
       /* Write data block */
+#ifdef ENABLE_32BIT
+      IDEWriteBlock32(DeviceExtension->CommandPortBase,
+		      TargetAddress,
+		      SectorSize);
+#else
       IDEWriteBlock(DeviceExtension->CommandPortBase,
 		    TargetAddress,
 		    SectorSize);
+#endif
     }
 
 
