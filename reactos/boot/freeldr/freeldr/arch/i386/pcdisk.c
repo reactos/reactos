@@ -146,7 +146,9 @@ static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 S
 	//
 	// Get the drive geometry
 	//
-	if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry))
+	if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry) ||
+	    DriveGeometry.Sectors == 0 ||
+	    DriveGeometry.Heads == 0)
 	{
 		return FALSE;
 	}
