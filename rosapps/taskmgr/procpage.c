@@ -27,8 +27,8 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <process.h>
 #include <stdio.h>
+#include <winnt.h>
 	
 #include "taskmgr.h"
 #include "procpage.h"
@@ -52,7 +52,7 @@ static HANDLE	hProcessPageEvent = NULL;	/* When this event becomes signaled then
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
 void CommaSeparateNumberString(LPTSTR strNumber, int nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
-void ProcessPageRefreshThread(void *lpParameter);
+DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 
 LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -96,7 +96,7 @@ LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 		OldProcessListWndProc = SetWindowLong(hProcessPageListCtrl, GWL_WNDPROC, (LONG)ProcessListWndProc);
 
 		/* Start our refresh thread */
-		_beginthread(ProcessPageRefreshThread, 0, NULL);
+ 		CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, NULL);
 
 		return TRUE;
 
@@ -491,7 +491,7 @@ void RefreshProcessPage(void)
 	SetEvent(hProcessPageEvent);
 }
 
-void ProcessPageRefreshThread(void *lpParameter)
+DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 {
 	ULONG	OldProcessorUsage = 0;
 	ULONG	OldProcessCount = 0;
@@ -501,7 +501,7 @@ void ProcessPageRefreshThread(void *lpParameter)
 
 	/* If we couldn't create the event then exit the thread */
 	if (!hProcessPageEvent)
-		return;
+		return 0;
 
 	while (1) {
 		DWORD	dwWaitVal;
@@ -512,7 +512,7 @@ void ProcessPageRefreshThread(void *lpParameter)
 		/* If the wait failed then the event object must have been */
 		/* closed and the task manager is exiting so exit this thread */
 		if (dwWaitVal == WAIT_FAILED)
-			return;
+			return 0;
 
 		if (dwWaitVal == WAIT_OBJECT_0) {
 			TCHAR	text[260];
@@ -538,4 +538,5 @@ void ProcessPageRefreshThread(void *lpParameter)
 			}
 		}
 	}
+        return 0;
 }

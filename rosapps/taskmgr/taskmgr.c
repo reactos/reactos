@@ -27,8 +27,8 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <process.h>
 #include <stdio.h>
+#include <winnt.h>
 
 #include "resource.h"
 #include "taskmgr.h"

@@ -27,8 +27,8 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <process.h>
 #include <stdio.h>
+#include <winnt.h>
 	
 #include "taskmgr.h"
 #include "graph.h"
@@ -51,7 +51,6 @@ LRESULT CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	switch (message)
 	{
 	case WM_ERASEBKGND:
-
 		return TRUE;
 
 	/*
@@ -330,7 +329,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	ULONGLONG		CommitChargeTotal;
 	ULONGLONG		CommitChargeLimit;
 	int				nBars;
-	int				nBarsUsed; 
+	int				nBarsUsed = 0; 
 /* Bottom bars that are "used", i.e. are bright green, representing used memory */
 	int				nBarsFree; 
 /* Top bars that are "unused", i.e. are dark green, representing free memory */
@@ -365,6 +364,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	 * So first find out how many bars we can fit
 	 */
 	nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
+        if (CommitChargeLimit)
 	nBarsUsed = (nBars * (int)((CommitChargeTotal * 100) / CommitChargeLimit)) / 100;
 	nBarsFree = nBars - nBarsUsed;
 

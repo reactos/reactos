@@ -27,7 +27,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <process.h>
 #include <stdio.h>
 
 #include "taskmgr.h"
@@ -51,7 +50,7 @@ static int      nApplicationPageWidth;
 static int      nApplicationPageHeight;
 static HANDLE   hApplicationPageEvent = NULL;   /* When this event becomes signaled then we refresh the app list */
 static BOOL     bSortAscending = TRUE;
-void            ApplicationPageRefreshThread(void *lpParameter);
+DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
 BOOL CALLBACK   EnumWindowsProc(HWND hWnd, LPARAM lParam);
 void            AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung);
 void            ApplicationPageUpdate(void);
@@ -113,7 +112,7 @@ LRESULT CALLBACK ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         UpdateApplicationListControlViewSetting();
 
         /* Start our refresh thread */
-        _beginthread(ApplicationPageRefreshThread, 0, NULL);
+        CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, NULL);
 
         return TRUE;
 
@@ -219,14 +218,14 @@ void UpdateApplicationListControlViewSetting(void)
     RefreshApplicationPage();
 }
 
-void ApplicationPageRefreshThread(void *lpParameter)
+DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 {
     /* Create the event */
     hApplicationPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Application Page Event"));
 
     /* If we couldn't create the event then exit the thread */
     if (!hApplicationPageEvent)
-        return;
+        return 0;
 
     while (1)
     {
@@ -238,7 +237,7 @@ void ApplicationPageRefreshThread(void *lpParameter)
         /* If the wait failed then the event object must have been */
         /* closed and the task manager is exiting so exit this thread */
         if (dwWaitVal == WAIT_FAILED)
-            return;
+            return 0;
 
         if (dwWaitVal == WAIT_OBJECT_0)
         {
