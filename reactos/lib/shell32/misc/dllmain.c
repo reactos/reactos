@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.2 2002/09/24 15:06:10 robd Exp $
+/* $Id: dllmain.c,v 1.3 2003/10/07 16:40:12 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,7 +31,7 @@
 //#include <ddk/ntddk.h>
 #include <windows.h>
 #include <cpl.h>
-#include "..\control\control.h"
+#include "../control/control.h"
 
 //#define NDEBUG
 //#include <debug.h>
