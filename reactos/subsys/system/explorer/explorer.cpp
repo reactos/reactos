@@ -290,7 +290,12 @@ int main(int argc, char* argv[])
 	if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
 		nShowCmd = startupinfo.wShowWindow;
 
-	return wWinMain(GetModuleHandle(NULL), 0, GetCommandLine(), nShowCmd);
+	LPWSTR cmdline = GetCommandLineW();
+
+	while(*cmdline && !_istspace(*cmdline))
+		++cmdline;
+
+	return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
 }
 
 #endif	// __MINGW && UNICODE
