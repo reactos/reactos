@@ -191,6 +191,23 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "TDI", \
  "Extended Base"
 
+; Group order, the first DWORD is the count of entries, 
+; the following dwords are the tag entries for the load order.
+HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Boot Bus Extender", 0x00000001, \
+  0x01, 0x00, 0x00, 0x00, \
+  0x02, 0x00, 0x00, 0x00
+HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","SCSI Miniport", 0x00000001, \
+  0x09, 0x00, 0x00, 0x00, \
+  0x10, 0x00, 0x00, 0x00, \
+  0x20, 0x00, 0x00, 0x00, \
+  0x30, 0x00, 0x00, 0x00, \
+  0x40, 0x00, 0x00, 0x00, \
+  0x50, 0x00, 0x00, 0x00, \
+  0x60, 0x00, 0x00, 0x00, \
+  0x70, 0x00, 0x00, 0x00, \
+  0x80, 0x00, 0x00, 0x00, \
+  0x90, 0x00, 0x00, 0x00
+
 ; Session Manager stuff
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute", 0x00010000, \
  "autocheck autochk *"
@@ -266,6 +283,71 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Group",0x00000000,"SCSI Miniport
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ImagePath",0x00020000,"system32\drivers\atapi.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
+
+; Promise Ultra100TX miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","ImagePath",0x00020000,"system32\drivers\ultra.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Tag",0x00010001,0x00000020
+
+; Initio A100 U2W Controller
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","ImagePath",0x00020000,"system32\drivers\inia100.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Start",0x00010001,0x0000004
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Tag",0x00010001,0x00000030
+
+; Initio INI 910
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","ImagePath",0x00020000,"system32\drivers\ini910u.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Start",0x00010001,0x0000004
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Tag",0x00010001,0x00000040
+
+; Adaptec SCSI Controller 2940UW miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","ImagePath",0x00020000,"system32\drivers\aic78xx.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Tag",0x00010001,0x00000050
+
+; LSI Logic SCSI Controller 53C8xx miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","ImagePath",0x00020000,"system32\drivers\symc8xx.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Tag",0x00010001,0x00000060
+
+; Diamond Multimedia Fireport 40
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","ImagePath",0x00020000,"system32\drivers\fireport.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Tag",0x00010001,0x00000070
+
+; Tekram DC-390F SCSI Controller miniport driver (based on 53C857)
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","ImagePath",0x00020000,"system32\drivers\trm390w.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Start",0x00010001,0x0000004
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Tag",0x00010001,0x00000080
+
+; HighPoint HPT3xx miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","ImagePath",0x00020000,"system32\drivers\hpt3xx.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Tag",0x00010001,0x00000090
 
 ; Beep device driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
