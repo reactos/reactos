@@ -88,10 +88,9 @@ void PolygonTest ( HDC hdc )
   SetPolyFillMode(hdc, WINDING);
   Polygon(hdc,PointsWinding,sizeof(PointsWinding)/sizeof(PointsWinding[0]));
 
+  Rectangle ( hdc, 1, 1, 10, 10 );
   Polygon(hdc,Tri1,sizeof(Tri1)/sizeof(Tri1[0]));
   Polygon(hdc,Tri2,sizeof(Tri2)/sizeof(Tri2[0]));
-
-  Rectangle ( hdc, 3, 15, 7, 20 );
 
   //cleanup
   SetPolyFillMode(hdc, Mode);

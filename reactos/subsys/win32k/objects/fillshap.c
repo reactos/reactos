@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.23 2003/08/16 04:47:41 royce Exp $ */
+/* $Id: fillshap.c,v 1.24 2003/08/16 05:00:14 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -268,9 +268,9 @@ W32kRectangle(HDC  hDC,
     GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
 
     LeftRect += dc->w.DCOrgX;
-    RightRect += dc->w.DCOrgX;
+    RightRect += dc->w.DCOrgX - 1;
     TopRect += dc->w.DCOrgY;
-    BottomRect += dc->w.DCOrgY;
+    BottomRect += dc->w.DCOrgY - 1;
 
     ret = IntEngLineTo(SurfObj,
                        dc->CombinedClip,
@@ -289,14 +289,14 @@ W32kRectangle(HDC  hDC,
     ret = IntEngLineTo(SurfObj,
                        dc->CombinedClip,
                        BrushObj,
-                       LeftRect, BottomRect, RightRect, BottomRect,
+                       RightRect, BottomRect, LeftRect, BottomRect,
                        RectBounds, // Bounding rectangle
                        dc->w.ROPmode); // MIX
 
     ret = IntEngLineTo(SurfObj,
                        dc->CombinedClip,
                        BrushObj,
-                       LeftRect, TopRect, LeftRect, BottomRect,
+                       LeftRect, BottomRect, LeftRect, TopRect,
                        RectBounds, // Bounding rectangle
                        dc->w.ROPmode); // MIX */
 
@@ -308,10 +308,10 @@ W32kRectangle(HDC  hDC,
       if (BrushObj->logbrush.lbStyle != BS_NULL)
         {
           DestRect.left = LeftRect + 1;
-          DestRect.right = RightRect - 1;
+          DestRect.right = RightRect;
           DestRect.top = TopRect + 1;
-          DestRect.bottom = BottomRect - 1;
-          ret = EngBitBlt(SurfObj,
+          DestRect.bottom = BottomRect;
+          ret = IntEngBitBlt(SurfObj,
                           NULL,
                           NULL,
                           NULL,
