@@ -215,16 +215,11 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	static TCHAR pszDefaultPathExt[] = _T(".COM;.EXE;.BAT;.CMD");
 	LPTSTR pszBuffer = NULL;
 	LPTSTR pCh;
+	LPTSTR pExt;
 	DWORD  dwBuffer;
 #ifdef _DEBUG
 	DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
 #endif
-	/* check the filename directly */
-	if (SearchForExecutableSingle(pFileName, pFullName, NULL))
-	{
-		return TRUE;
-	}
-
 	/* load environment varable PATHEXT */
 	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, ENV_BUFFER_SIZE);
@@ -242,7 +237,29 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	DebugPrintf (_T("SearchForExecutable(): Loaded PATHEXT: %s\n"), pszBuffer);
 #endif
 
-	pCh = _tcstok(pszBuffer, ";");
+    	pExt = _tcsrchr(pFileName, _T('.'));
+	if (pExt != NULL)
+	{
+	   	LPTSTR pszBuffer2;
+       		pszBuffer2 = _tcsdup(pszBuffer);
+	   	if (pszBuffer2)
+	   	{
+	      		pCh = _tcstok(pszBuffer2, _T(";"));
+	      		while (pCh)
+		  	{
+             			if (0 == _tcsicmp(pCh, pExt))
+			 	{
+					free(pszBuffer);
+					free(pszBuffer2);
+			    		return SearchForExecutableSingle(pFileName, pFullName, NULL);
+			 	}
+		     		pCh = _tcstok(NULL, _T(";"));
+		  	}
+		  	free(pszBuffer2);
+	   	}
+	}
+
+    	pCh = _tcstok(pszBuffer, _T(";"));
 	while (pCh)
 	{
 		if (SearchForExecutableSingle(pFileName, pFullName, pCh))
@@ -250,7 +267,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 			free(pszBuffer);
 			return TRUE;
 		}
-		pCh = _tcstok(NULL, ";");
+		pCh = _tcstok(NULL, _T(";"));
 	}
 
 	free(pszBuffer);
