@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.101 2003/06/07 11:32:42 ekohl Exp $
+; $Id: ntdll.def,v 1.102 2003/06/09 13:44:11 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -52,7 +52,7 @@ LdrQueryProcessModuleInformation@12
 LdrShutdownProcess@0
 LdrShutdownThread@0
 LdrUnloadDll@4
-;LdrVerifyImageMatchesChecksum@16
+LdrVerifyImageMatchesChecksum@16
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA

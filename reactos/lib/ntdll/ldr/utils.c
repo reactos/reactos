@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.65 2003/05/12 19:47:53 ekohl Exp $
+/* $Id: utils.c,v 1.66 2003/06/09 13:43:42 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1877,6 +1877,168 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
   DPRINT("LdrQueryProcessModuleInformation() done\n");
 
   return(Status);
+}
+
+
+static BOOLEAN
+LdrpCheckImageChecksum (IN PVOID BaseAddress,
+			IN ULONG ImageSize)
+{
+  PIMAGE_NT_HEADERS Header;
+  PUSHORT Ptr;
+  ULONG Sum;
+  ULONG CalcSum;
+  ULONG HeaderSum;
+  ULONG i;
+
+  Header = RtlImageNtHeader (BaseAddress);
+  if (Header == NULL)
+    return FALSE;
+
+  HeaderSum = Header->OptionalHeader.CheckSum;
+  if (HeaderSum == 0)
+    return TRUE;
+
+   Sum = 0;
+   Ptr = (PUSHORT) BaseAddress;
+   for (i = 0; i < ImageSize / sizeof (USHORT); i++)
+     {
+      Sum += (ULONG)*Ptr;
+      if (HIWORD(Sum) != 0)
+	{
+	  Sum = LOWORD(Sum) + HIWORD(Sum);
+	}
+      Ptr++;
+     }
+
+  if (ImageSize & 1)
+    {
+      Sum += (ULONG)*((PUCHAR)Ptr);
+      if (HIWORD(Sum) != 0)
+	{
+	  Sum = LOWORD(Sum) + HIWORD(Sum);
+	}
+    }
+
+  CalcSum = (USHORT)(LOWORD(Sum) + HIWORD(Sum));
+
+  /* Subtract image checksum from calculated checksum. */
+  /* fix low word of checksum */
+  if (LOWORD(CalcSum) >= LOWORD(HeaderSum))
+    {
+      CalcSum -= LOWORD(HeaderSum);
+    }
+  else
+    {
+      CalcSum = ((LOWORD(CalcSum) - LOWORD(HeaderSum)) & 0xFFFF) - 1;
+    }
+
+   /* fix high word of checksum */
+  if (LOWORD(CalcSum) >= HIWORD(HeaderSum))
+    {
+      CalcSum -= HIWORD(HeaderSum);
+    }
+  else
+    {
+      CalcSum = ((LOWORD(CalcSum) - HIWORD(HeaderSum)) & 0xFFFF) - 1;
+    }
+
+  /* add file length */
+  CalcSum += ImageSize;
+
+  return (BOOLEAN)(CalcSum == HeaderSum);
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      LdrVerifyImageMatchesChecksum
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ */
+NTSTATUS STDCALL
+LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
+			       ULONG Unknown1,
+			       ULONG Unknown2,
+			       ULONG Unknown3)
+{
+  FILE_STANDARD_INFORMATION FileInfo;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE SectionHandle;
+  ULONG ViewSize;
+  PVOID BaseAddress;
+  BOOLEAN Result;
+  NTSTATUS Status;
+
+  DPRINT ("LdrVerifyImageMatchesChecksum() called\n");
+
+  Status = NtCreateSection (&SectionHandle,
+			    SECTION_MAP_EXECUTE,
+			    NULL,
+			    NULL,
+			    PAGE_EXECUTE,
+			    SEC_COMMIT,
+			    FileHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtCreateSection() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  ViewSize = 0;
+  BaseAddress = NULL;
+  Status = NtMapViewOfSection (SectionHandle,
+			       NtCurrentProcess (),
+			       &BaseAddress,
+			       0,
+			       0,
+			       NULL,
+			       &ViewSize,
+			       ViewShare,
+			       0,
+			       PAGE_EXECUTE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);
+      NtClose (SectionHandle);
+      return Status;
+    }
+
+  Status = NtQueryInformationFile (FileHandle,
+				   &IoStatusBlock,
+				   &FileInfo,
+				   sizeof (FILE_STANDARD_INFORMATION),
+				   FileStandardInformation);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);
+      NtUnmapViewOfSection (NtCurrentProcess (),
+			    BaseAddress);
+      NtClose (SectionHandle);
+      return Status;
+    }
+
+  Result = LdrpCheckImageChecksum (BaseAddress,
+				   FileInfo.EndOfFile.u.LowPart);
+  if (Result == FALSE)
+    {
+      Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+    }
+
+  NtUnmapViewOfSection (NtCurrentProcess (),
+			BaseAddress);
+
+  NtClose (SectionHandle);
+
+  return Status;
 }
 
 /* EOF */

@@ -96,8 +96,8 @@ LdrGetDllHandle(IN ULONG Unknown1,
 		OUT PVOID *BaseAddress);
 
 NTSTATUS STDCALL
-LdrFindEntryForAddress(PVOID Address,
-		       PLDR_MODULE *Module);
+LdrFindEntryForAddress(IN PVOID Address,
+		       OUT PLDR_MODULE *Module);
 
 NTSTATUS STDCALL
 LdrGetProcedureAddress(IN PVOID BaseAddress,
@@ -130,6 +130,12 @@ LdrShutdownThread(VOID);
 
 NTSTATUS STDCALL
 LdrUnloadDll(IN PVOID BaseAddress);
+
+NTSTATUS STDCALL
+LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
+			       ULONG Unknown1,
+			       ULONG Unknown2,
+			       ULONG Unknown3);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_LDR_H */
 
