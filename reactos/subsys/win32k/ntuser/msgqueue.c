@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.74 2004/02/28 00:44:28 weiden Exp $
+/* $Id: msgqueue.c,v 1.75 2004/03/11 14:47:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -889,16 +889,17 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   IntUnLockMessageQueue(MessageQueue);
 }
 
-LRESULT FASTCALL
+NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
+               UINT uTimeout, BOOL Block, ULONG_PTR *uResult)
 {
   PUSER_SENT_MESSAGE Message;
   KEVENT CompletionEvent;
-  PVOID WaitObjects[2];
   NTSTATUS WaitStatus;
   LRESULT Result;
   PUSER_MESSAGE_QUEUE ThreadQueue;
+  LARGE_INTEGER Timeout;
 
   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
@@ -914,24 +915,44 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
   IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
-  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   IntUnLockMessageQueue(MessageQueue);
-
+  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  
+  Timeout.QuadPart = uTimeout * -10000;
+  
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
-  WaitObjects[1] = &ThreadQueue->NewMessages;
-  WaitObjects[0] = &CompletionEvent;
-  do
-    {
-      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
-                                            UserMode, TRUE, NULL, NULL);
-      while (MsqDispatchOneSentMessage(ThreadQueue))
-        {
-          ;
-        }
-    }
-  while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
-
-  return (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+  if(Block)
+  {
+    /* don't process messages sent to the thread */
+    WaitStatus = KeWaitForSingleObject(&CompletionEvent, UserRequest, UserMode, 
+                                       FALSE, (uTimeout ? &Timeout : NULL));
+  }
+  else
+  {
+    PVOID WaitObjects[2];
+    
+    WaitObjects[0] = &CompletionEvent;
+    WaitObjects[1] = &ThreadQueue->NewMessages;
+    do
+      {
+        WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+                                              UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
+        if(WaitStatus == STATUS_TIMEOUT)
+          {DbgPrint("MsqSendMessage timed out\n");
+            break;
+          }
+        while (MsqDispatchOneSentMessage(ThreadQueue))
+          {
+            ;
+          }
+      }
+    while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+  }
+  
+  if(WaitStatus != STATUS_TIMEOUT)
+    *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+  
+  return WaitStatus;
 }
 
 VOID FASTCALL
@@ -1014,9 +1035,20 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				  NULL));
 }
 
+BOOL FASTCALL
+MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+  LARGE_INTEGER LargeTickCount;
+  
+  KeQueryTickCount(&LargeTickCount);
+  return ((LargeTickCount.u.LowPart - MessageQueue->LastMsgRead) > MSQ_HUNG);
+}
+
 VOID FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
 {
+  LARGE_INTEGER LargeTickCount;
+  
   MessageQueue->Thread = Thread;
   MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
@@ -1027,7 +1059,8 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;
   KeInitializeEvent(&MessageQueue->NewMessages, SynchronizationEvent, FALSE);
-  MessageQueue->QueueStatus = 0;
+  KeQueryTickCount(&LargeTickCount);
+  MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
   MessageQueue->FocusWindow = NULL;
   MessageQueue->PaintPosted = FALSE;
   MessageQueue->PaintCount = 0;

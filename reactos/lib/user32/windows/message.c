@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.35 2004/01/28 20:54:30 gvg Exp $
+/* $Id: message.c,v 1.36 2004/03/11 14:47:43 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -54,6 +54,8 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
+  /* return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND); */
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -66,6 +68,7 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
+  /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
   UNIMPLEMENTED;
   return 0;
 }
@@ -834,8 +837,64 @@ SendMessageTimeoutA(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
-  UNIMPLEMENTED;
-  return (LRESULT)0;
+  MSG AnsiMsg;
+  MSG UcMsg;
+  LRESULT Result;
+  NTUSERSENDMESSAGEINFO Info;
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+    {
+      return FALSE;
+    }
+
+  Info.Ansi = TRUE;
+  Result = NtUserSendMessageTimeout(UcMsg.hwnd, UcMsg.message,
+                                    UcMsg.wParam, UcMsg.lParam,
+                                    fuFlags, uTimeout, (ULONG_PTR*)lpdwResult, &Info);
+  if(!Result)
+  {
+      return FALSE;
+  }
+  if (! Info.HandledByKernel)
+    {
+      /* We need to send the message ourselves */
+      if (Info.Ansi)
+        {
+          /* Ansi message and Ansi window proc, that's easy. Clean up
+             the Unicode message though */
+          MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
+        }
+      else
+        {
+          /* Unicode winproc. Although we started out with an Ansi message we
+             already converted it to Unicode for the kernel call. Reuse that
+             message to avoid another conversion */
+          Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UcMsg.hwnd,
+                                      UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+          if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
+            {
+              return FALSE;
+            }
+        }
+      if(lpdwResult)
+        *lpdwResult = Result;
+      Result = TRUE;
+    }
+  else
+    {
+      /* Message sent by kernel. Convert back to Ansi */
+      if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
+        {
+          return FALSE;
+        }
+    }
+
+  return Result;
 }
 
 
@@ -853,8 +912,22 @@ SendMessageTimeoutW(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
-  UNIMPLEMENTED;
-  return (LRESULT)0;
+  NTUSERSENDMESSAGEINFO Info;
+  LRESULT Result;
+
+  Info.Ansi = FALSE;
+  Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout, 
+                                    lpdwResult, &Info);
+  if (! Info.HandledByKernel)
+    {
+      /* We need to send the message ourselves */
+      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
+      if(lpdwResult)
+        *lpdwResult = Result;
+      return TRUE;
+    }
+
+  return Result;
 }
 
 

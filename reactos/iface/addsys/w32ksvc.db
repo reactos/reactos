@@ -473,6 +473,7 @@ NtUserScrollWindowEx                    8
 NtUserSendInput                         3
 NtUserSendMessage                       5
 NtUserSendMessageCallback               6
+NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4
 NtUserSetActiveWindow                   1
 NtUserSetCapture                        1

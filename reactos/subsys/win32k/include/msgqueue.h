@@ -6,6 +6,8 @@
 #include "caret.h"
 #include "hook.h"
 
+#define MSQ_HUNG        5000
+
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
@@ -59,8 +61,8 @@ typedef struct _USER_MESSAGE_QUEUE
   ULONG QuitExitCode;
   /* Set if there are new messages in any of the queues. */
   KEVENT NewMessages;  
-  /* FIXME: Unknown. */
-  ULONG QueueStatus;
+  /* Last time PeekMessage() was called. */
+  ULONG LastMsgRead;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   HWND FocusWindow;
   /* True if a window needs painting. */
@@ -94,9 +96,12 @@ typedef struct _USER_MESSAGE_QUEUE
 
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
-LRESULT FASTCALL
+BOOL FASTCALL
+MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
+               UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
 VOID FASTCALL
 MsqInitializeMessage(PUSER_MESSAGE Message,
 		     LPMSG Msg);
@@ -147,6 +152,14 @@ IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam);
+LRESULT STDCALL
+IntSendMessageTimeout(HWND hWnd,
+                      UINT Msg,
+                      WPARAM wParam,
+                      LPARAM lParam,
+                      UINT uFlags,
+                      UINT uTimeout,
+                      ULONG_PTR *uResult);
 LRESULT FASTCALL
 IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL

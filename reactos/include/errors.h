@@ -570,6 +570,8 @@ extern "C" {
 #define ERROR_PAGEFILE_QUOTA             1454L
 #define ERROR_COMMITMENT_LIMIT           1455L
 #define ERROR_MENU_ITEM_NOT_FOUND        1456L
+#define ERROR_TIMEOUT                    1460L
+#define ERROR_INVALID_MONITOR_HANDLE     1461L
 #define ERROR_EVENTLOG_FILE_CORRUPT      1500L
 #define ERROR_EVENTLOG_CANT_START        1501L
 #define ERROR_LOG_FILE_FULL              1502L

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.52 2004/02/24 13:27:03 weiden Exp $
+/* $Id: message.c,v 1.53 2004/03/11 14:47:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,13 @@
 
 #define NDEBUG
 #include <debug.h>
+
+typedef struct
+{
+  UINT uFlags;
+  UINT uTimeout;
+  ULONG_PTR uResult;
+} DOSENDMESSAGE, *PDOSENDMESSAGE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -235,6 +242,7 @@ IntPeekMessage(LPMSG Msg,
                 UINT MsgFilterMax,
                 UINT RemoveMsg)
 {
+  LARGE_INTEGER LargeTickCount;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   BOOLEAN Present;
   PUSER_MESSAGE Message;
@@ -244,6 +252,9 @@ IntPeekMessage(LPMSG Msg,
      article on GetMessage() */
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+  
+  KeQueryTickCount(&LargeTickCount);
+  ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
 
   /* Inspect RemoveMsg flags */
   /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
@@ -706,11 +717,29 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 LRESULT STDCALL
 IntSendMessage(HWND hWnd,
-		UINT Msg,
-		WPARAM wParam,
-		LPARAM lParam)
+               UINT Msg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+  LRESULT Result = 0;
+  if(IntSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
+  {
+    return Result;
+  }
+  return 0;
+}
+
+LRESULT STDCALL
+IntSendMessageTimeout(HWND hWnd,
+                      UINT Msg,
+                      WPARAM wParam,
+                      LPARAM lParam,
+                      UINT uFlags,
+                      UINT uTimeout,
+                      ULONG_PTR *uResult)
 {
   LRESULT Result;
+  NTSTATUS Status;
   PWINDOW_OBJECT Window;
   PMSGMEMORY MsgMemoryEntry;
   INT lParamBufferSize;
@@ -724,7 +753,7 @@ IntSendMessage(HWND hWnd,
   if (!Window)
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
+      return FALSE;
     }
 
   Win32Thread = PsGetWin32Thread();
@@ -736,7 +765,7 @@ IntSendMessage(HWND hWnd,
         {
           /* Never send messages to exiting threads */
           IntReleaseWindowObject(Window);
-          return 0;
+          return FALSE;
         }
 
       /* See if this message type is present in the table */
@@ -754,7 +783,7 @@ IntSendMessage(HWND hWnd,
         {
           IntReleaseWindowObject(Window);
           DPRINT1("Failed to pack message parameters\n");
-          return -1;
+          return FALSE;
         }
       if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
         {
@@ -770,17 +799,37 @@ IntSendMessage(HWND hWnd,
         {
           IntReleaseWindowObject(Window);
           DPRINT1("Failed to unpack message parameters\n");
-          return Result;
+          if(uResult)
+            *uResult = Result;
+          return TRUE;
         }
 
       IntReleaseWindowObject(Window);
-      return Result;
+      if(uResult)
+        *uResult = Result;
+      return TRUE;
     }
   
-  Result = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam);
+  if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
+  {
+    IntReleaseWindowObject(Window);
+    /* FIXME - Set a LastError? */
+    return FALSE;
+  }
+  
+  Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam, 
+                          (uFlags & SMTO_BLOCK), uTimeout, &Result);
+  if(Status == STATUS_TIMEOUT)
+  {
+    IntReleaseWindowObject(Window);
+    SetLastWin32Error(ERROR_TIMEOUT);
+    return FALSE;
+  }
 
   IntReleaseWindowObject(Window);
-  return Result;
+  if(uResult)
+    *uResult = Result;
+  return TRUE;
 }
 
 static NTSTATUS FASTCALL
@@ -878,12 +927,13 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
   return STATUS_SUCCESS;
 }
 
-LRESULT STDCALL
-NtUserSendMessage(HWND Wnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-                  PNTUSERSENDMESSAGEINFO UnsafeInfo)
+LRESULT FASTCALL
+IntDoSendMessage(HWND Wnd,
+		 UINT Msg,
+		 WPARAM wParam,
+		 LPARAM lParam,
+		 PDOSENDMESSAGE dsm,
+	         PNTUSERSENDMESSAGEINFO UnsafeInfo)
 {
   LRESULT Result;
   NTSTATUS Status;
@@ -957,16 +1007,25 @@ NtUserSendMessage(HWND Wnd,
         {
           MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return -1;
+          return (dsm ? 0 : -1);
         }
-      Result = IntSendMessage(KernelModeMsg.hwnd, KernelModeMsg.message,
-                              KernelModeMsg.wParam, KernelModeMsg.lParam);
+      if(!dsm)
+      {
+        Result = IntSendMessage(KernelModeMsg.hwnd, KernelModeMsg.message,
+                                KernelModeMsg.wParam, KernelModeMsg.lParam);
+      }
+      else
+      {
+        Result = IntSendMessageTimeout(KernelModeMsg.hwnd, KernelModeMsg.message,
+                                       KernelModeMsg.wParam, KernelModeMsg.lParam,
+                                       dsm->uFlags, dsm->uTimeout, &dsm->uResult);
+      }
       Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
       if (! NT_SUCCESS(Status))
         {
           MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return -1;
+          return(dsm ? 0 : -1);
         }
     }
 
@@ -977,6 +1036,46 @@ NtUserSendMessage(HWND Wnd,
     }
 
   return Result;
+}
+
+LRESULT STDCALL
+NtUserSendMessageTimeout(HWND hWnd,
+			 UINT Msg,
+			 WPARAM wParam,
+			 LPARAM lParam,
+			 UINT uFlags,
+			 UINT uTimeout,
+			 ULONG_PTR *uResult,
+	                 PNTUSERSENDMESSAGEINFO UnsafeInfo)
+{
+  DOSENDMESSAGE dsm;
+  LRESULT Result;
+  
+  dsm.uFlags = uFlags;
+  dsm.uTimeout = uTimeout;
+  Result = IntDoSendMessage(hWnd, Msg, wParam, lParam, &dsm, UnsafeInfo);
+  if(uResult)
+  {
+    NTSTATUS Status;
+    
+    Status = MmCopyToCaller(uResult, &dsm.uResult, sizeof(ULONG_PTR));
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  }
+  return Result;
+}
+
+LRESULT STDCALL
+NtUserSendMessage(HWND Wnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam,
+                  PNTUSERSENDMESSAGEINFO UnsafeInfo)
+{
+  return IntDoSendMessage(Wnd, Msg, wParam, lParam, NULL, UnsafeInfo);
 }
 
 BOOL STDCALL

@@ -783,10 +783,12 @@ NtUserGetThreadDesktop(
   DWORD dwThreadId,
   DWORD Unknown1);
 
+#define THREADSTATE_FOCUSWINDOW (1)
+#define THREADSTATE_INSENDMESSAGE       (2)
 DWORD
 STDCALL
 NtUserGetThreadState(
-  DWORD Unknown0);
+  DWORD Routine);
 
 DWORD
 STDCALL
@@ -1166,6 +1168,16 @@ NtUserSendMessageCallback(
   LPARAM lParam,
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData);
+
+LRESULT STDCALL
+NtUserSendMessageTimeout(HWND hWnd,
+			 UINT Msg,
+			 WPARAM wParam,
+			 LPARAM lParam,
+			 UINT uFlags,
+			 UINT uTimeout,
+			 ULONG_PTR *uResult,
+	                 PNTUSERSENDMESSAGEINFO Info);
 
 BOOL
 STDCALL

@@ -2084,6 +2084,13 @@ extern "C" {
 /* InitializeSecurityDescriptor */
 #define SECURITY_DESCRIPTOR_REVISION	(1)
 
+/* InSendMessageEx */
+#define ISMEX_NOSEND	(0)
+#define ISMEX_SEND	(1)
+#define ISMEX_NOTIFY	(2)
+#define ISMEX_CALLBACK	(4)
+#define ISMEX_REPLIED	(8)
+
 /* JournalPlaybackProc, KeyboardProc */
 #define HC_GETNEXT	(1)
 #define HC_SKIP	(2)
