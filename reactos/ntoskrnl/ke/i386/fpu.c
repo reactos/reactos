@@ -37,7 +37,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static ULONG HardwareMathSupport;
+ULONG HardwareMathSupport;
 
 /* FUNCTIONS *****************************************************************/
 

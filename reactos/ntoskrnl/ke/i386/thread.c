@@ -103,8 +103,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   /*
    * Setup a stack frame for exit from the task switching routine
    */
-  
-  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) + 
+
+  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) +
     sizeof(FLOATING_SAVE_AREA) + sizeof(KTRAP_FRAME);
   KernelStack = (PULONG)(Thread->KernelStack - InitSize);
 
@@ -124,12 +124,10 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   KernelStack[10] = Context->Dr7;
 
   /* Set up the initial floating point state. */
-  memcpy((PVOID)&KernelStack[11], (PVOID)&Context->FloatSave,
-	 sizeof(FLOATING_SAVE_AREA));
+  KernelStack[11] = (ULONG)&Context->FloatSave;
 
   /* Set up a trap frame from the context. */
-  TrapFrame = (PKTRAP_FRAME)
-    ((PBYTE)KernelStack + 11 * sizeof(DWORD) + sizeof(FLOATING_SAVE_AREA));
+  TrapFrame = (PKTRAP_FRAME)((PBYTE)KernelStack + 12 * sizeof(DWORD));
   TrapFrame->DebugEbp = (PVOID)Context->Ebp;
   TrapFrame->DebugEip = (PVOID)Context->Eip;
   TrapFrame->DebugArgMark = 0;
@@ -163,8 +161,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 }
 
 NTSTATUS
-Ke386InitThread(PKTHREAD Thread, 
-		PKSTART_ROUTINE StartRoutine, 
+Ke386InitThread(PKTHREAD Thread,
+		PKSTART_ROUTINE StartRoutine,
 		PVOID StartContext)
      /*
       * Initialize a thread
@@ -177,8 +175,6 @@ Ke386InitThread(PKTHREAD Thread,
    */
   
   KernelStack = (PULONG)(Thread->KernelStack - (8*4));
-  /* FIXME: Add initial floating point information */
-  /* FIXME: Add initial debugging information */
   KernelStack[0] = 0;      /* EDI */
   KernelStack[1] = 0;      /* ESI */
   KernelStack[2] = 0;      /* EBX */

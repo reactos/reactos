@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.5 2002/09/08 10:23:29 chorns Exp $
+/* $Id: bthread.S,v 1.6 2002/09/15 13:49:57 guido Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,10 +38,10 @@
  *
  */
 
- .globl _PsBeginThreadWithContextInternal
+.globl _PsBeginThreadWithContextInternal
 .globl _PsBeginThread
 
-_PsBeginThread:	
+_PsBeginThread:
 	/*
 	 * This isn't really a function, we are called as the return address
 	 * of the context switch function
@@ -51,6 +51,25 @@ _PsBeginThread:
 	 * Do the necessary prolog after a context switch
 	 */
 	call	_PiBeforeBeginThread
+
+	/*
+	 * Initialize debugging registers
+	 */
+	movl	$0, %eax                     /* set to 0 */
+	movl	%eax, %dr0
+	movl	%eax, %dr1
+	movl	%eax, %dr2
+	movl	%eax, %dr3
+	movl	%eax, %dr6
+	movl	%eax, %dr7
+
+	/*
+	 * Initialize floating point registers
+	 */
+	movl	(_HardwareMathSupport), %eax
+	jz	nofpu
+	fninit
+nofpu:
 
 	/*
 	 * Call the actual start of the thread
@@ -74,41 +93,51 @@ _PsBeginThread:
 	pushl	$0
 	call	_KeBugCheck@4
 	addl    $4, %esp
-	
+
 	/*
 	 * And if that fails then loop
 	 */
 .1:
 	jmp	.1
-	
-	
+
+
 _PsBeginThreadWithContextInternal:
 	/*
 	 * This isn't really a function, we are called as the return
 	 * address of a context switch
 	 */
-	
+
 	/*
 	 * Do the necessary prolog before the context switch
-	 */	
+	 */
 	call	_PiBeforeBeginThread
-	
-	/* FIXME: Don't ignore the debugging registers. */
-	popl	%eax		/* Dr0 */
-	popl	%eax		/* Dr1 */
-	popl	%eax		/* Dr2 */
-	popl	%eax		/* Dr3 */
-	popl	%eax		/* Dr6 */
-	popl	%eax		/* Dr7 */
 
-	/* FIXME: Don't ignore the floating point registers. */
-	addl	$112,%esp	/* FloatSave */
+	/*
+	 * Load the debugging registers
+	 */
+	popl	%eax		/* Dr0 */
+	movl	%eax, %dr0
+	popl	%eax		/* Dr1 */
+	movl	%eax, %dr1
+	popl	%eax		/* Dr2 */
+	movl	%eax, %dr2
+	popl	%eax		/* Dr3 */
+	movl	%eax, %dr3
+	popl	%eax		/* Dr6 */
+	movl	%eax, %dr6
+	popl	%eax		/* Dr7 */
+	movl	%eax, %dr7
+
+	/*
+	 * Load the floating point registers
+	 */
+	movl	(_HardwareMathSupport), %eax
+	jz	nofpu2
+	frstor	0(%esp)
+nofpu2:
+	addl	$4, %esp
 
 	/* Load the rest of the thread's user mode context. */
-	movl	$0,%eax
+	movl	$0, %eax
 	jmp	KeReturnFromSystemCallWithHook
-
-
-
-
 
