@@ -1,5 +1,14 @@
 2003-04-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/helper.mk (TARGET_ASFLAGS): Add -march and define MK_ARCH_ID.
+	* lib/ntdll/makefile (TARGET_ASFLAGS): Define as
+	"-I $(PATH_TO_TOP)/include".
+	(TARGET_OBJECTS): Add ldr/entry.o.
+	* lib/ntdll/ldr/startup.c: Move inline assembly code...
+	* lib/ntdll/ldr/entry.S: ...here. New file.
+
+2003-04-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/kernel32/kernel32.h (assert): Define.
 	* tools/mkhive/.cvsignore: New file.
 

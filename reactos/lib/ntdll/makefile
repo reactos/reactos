@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.81 2003/04/23 22:58:02 gvg Exp $
+# $Id: makefile,v 1.82 2003/04/27 14:45:52 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,8 @@ TARGET_TYPE = dynlink
 TARGET_NAME = ntdll
 
 TARGET_CFLAGS = -g -D__NTDLL__
+
+TARGET_ASFLAGS = -I $(PATH_TO_TOP)/include
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
@@ -64,6 +66,7 @@ ARCH_OBJECTS = \
 
 TARGET_OBJECTS = \
   napi.o \
+  ldr/entry.o \
   ldr/startup.o \
   $(ARCH_OBJECTS) \
   $(DBG_OBJECTS) \

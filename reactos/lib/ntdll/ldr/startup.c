@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.49 2003/04/26 23:13:29 hyperion Exp $
+/* $Id: startup.c,v 1.50 2003/04/27 14:45:52 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,43 +38,6 @@ ULONG NtGlobalFlag = 0;
 
 
 /* FUNCTIONS *****************************************************************/
-#if 0
-/* FIXME: why doesn't gcc recognize __declspec(naked)? */
-__declspec(naked) VOID STDCALL LdrInitializeThunk
-(
- ULONG Unknown1,
- ULONG Unknown2,
- ULONG Unknown3,
- ULONG Unknown4
-)
-{
- __asm__
- (
-#else
- __asm__
- (
-  "\n"
-  ".global _LdrInitializeThunk@16\n"
-  "_LdrInitializeThunk@16:\n"
-#endif
-
-#if defined(_M_IX86)
-  "nop\n" /* breakin overwrites this with "int 3" */
-  "jmp"
-#elif defined(_M_ALPHA)
-  "nop\n" /* breakin overwrites this with "call_pal bpt" */
-  "br"
-#elif defined(_M_MIPS)
-  "nop\n" /* breakin overwrites this with "break" */
-  "j"
-#else
-#error Unsupported architecture.
-#endif
-  " ___true_LdrInitializeThunk@16\n"
- );
-#if 0
-}
-#endif
 
 VOID STDCALL
 __true_LdrInitializeThunk (ULONG Unknown1,
