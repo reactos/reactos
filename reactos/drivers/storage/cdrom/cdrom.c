@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.20 2003/07/13 12:40:15 ekohl Exp $
+/* $Id: cdrom.c,v 1.21 2003/07/16 11:51:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,19 +47,19 @@
 #define SCSI_CDROM_TIMEOUT 10		/* Default timeout: 10 seconds */
 
 
-typedef struct _ERROR_RECOVERY_DATA
+typedef struct _ERROR_RECOVERY_DATA6
 {
   MODE_PARAMETER_HEADER Header;
   MODE_PARAMETER_BLOCK BlockDescriptor;
   MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
-} ERROR_RECOVERY_DATA, *PERROR_RECOVERY_DATA;
+} ERROR_RECOVERY_DATA6, *PERROR_RECOVERY_DATA6;
 
 
 typedef struct _ERROR_RECOVERY_DATA10
 {
-  MODE_PARAMETER_HEADER10 Header10;
-  MODE_PARAMETER_BLOCK BlockDescriptor10;
-  MODE_READ_RECOVERY_PAGE ReadRecoveryPage10;
+  MODE_PARAMETER_HEADER10 Header;
+  MODE_PARAMETER_BLOCK BlockDescriptor;
+  MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
 } ERROR_RECOVERY_DATA10, *PERROR_RECOVERY_DATA10;
 
 
@@ -71,9 +71,9 @@ typedef struct _CDROM_DATA
 
   union
     {
-      ERROR_RECOVERY_DATA;
-      ERROR_RECOVERY_DATA10;
-    };
+      ERROR_RECOVERY_DATA6 Data6;
+      ERROR_RECOVERY_DATA10 Data10;
+    } RecoveryData;
 
 } CDROM_DATA, *PCDROM_DATA;
 
@@ -648,10 +648,11 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       else if (NT_SUCCESS (Status))
 	{
 	  DPRINT("Use 10 byte commands\n");
-	  RtlCopyMemory (&CdromData->Header,
+	  RtlCopyMemory (&CdromData->RecoveryData.Data10.Header,
 			 Buffer,
 			 sizeof (ERROR_RECOVERY_DATA10));
-	  CdromData->Header.ModeDataLength = 0;
+	  CdromData->RecoveryData.Data10.Header.ModeDataLength[0] = 0;
+	  CdromData->RecoveryData.Data10.Header.ModeDataLength[1] = 0;
 
 	  CdromData->XaFlags &= XA_USE_6_BYTE;
 	  CdromData->XaFlags |= XA_USE_10_BYTE;
@@ -665,10 +666,10 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   else
     {
       DPRINT("Use 6 byte commands\n");
-      RtlCopyMemory (&CdromData->Header,
+      RtlCopyMemory (&CdromData->RecoveryData.Data6.Header,
 		     Buffer,
-		     sizeof (ERROR_RECOVERY_DATA));
-      CdromData->Header.ModeDataLength = 0;
+		     sizeof (ERROR_RECOVERY_DATA6));
+      CdromData->RecoveryData.Data6.Header.ModeDataLength = 0;
     }
   ExFreePool (Buffer);
 
