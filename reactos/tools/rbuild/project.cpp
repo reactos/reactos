@@ -182,7 +182,8 @@ Project::ReadXml ()
 		if ( head->subElements[i]->name == "project" )
 		{
 			node = head->subElements[i];
-			this->ProcessXML ( "." );
+			string path;
+			this->ProcessXML ( path );
 			return;
 		}
 	}
@@ -254,7 +255,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		assert(att);
-		subpath = path + CSEP + att->value;
+		subpath = GetSubPath ( e.location, path, att->value );
 	}
 	else if ( e.name == "include" )
 	{

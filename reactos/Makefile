@@ -100,14 +100,18 @@ else # mingw32-windows
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
-$(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
-	${nmkdir} $(ROS_INTERMEDIATE)tools
-endif
-
-ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE):
 	${nmkdir} $(ROS_INTERMEDIATE)
+$(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
+	${nmkdir} $@
+$(ROS_INTERMEDIATE)dk: $(ROS_INTERMEDIATE)
+	${nkmdir} $@
+$(ROS_INTERMEDIATE)dk$(SEP)nkm: $(ROS_INTERMEDIATE)dk
+	${nkmdir} $@
 endif
+
+$(ROS_INTERMEDIATE)dk$(SEP)nkm$(SEP)lib: $(ROS_INTERMEDIATE)dk$(SEP)nkm
+	${nmkdir} $@
 
 NTOSKRNL_MC = .$(SEP)ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = .$(SEP)lib$(SEP)kernel32$(SEP)kernel32.mc

@@ -179,8 +179,8 @@ Path::RelativeFromWorkingDirectory ( const string& path )
 		vout.push_back ( vpath[i++] );
 
 	// now merge vout into a string again
-	string out = ".";
-	for ( i = 0; i < vout.size(); i++ )
+	string out = vout[0];
+	for ( i = 1; i < vout.size(); i++ )
 	{
 		out += "/" + vout[i];
 	}

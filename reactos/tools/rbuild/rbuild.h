@@ -6,15 +6,17 @@
 #ifdef WIN32
 #include <direct.h>
 #include <io.h>
-#endif
+#endif/*WIN32*/
 #include <sys/stat.h>
 #include <time.h>
 #ifdef _MSC_VER
 #include <sys/utime.h>
-#else
+#else/*_MSC_VER*/
 #include <utime.h>
+#ifdef WIN32
 #include <process.h>
-#endif
+#endif/*WIN32*/
+#endif/*_MSC_VER*/
 
 #include "ssprintf.h"
 #include "exception.h"
@@ -524,9 +526,14 @@ public:
 	void ProcessXML();
 };
 
-
 extern std::string
 FixSeparator ( const std::string& s );
+
+extern std::string
+GetSubPath (
+	const std::string& location,
+	const std::string& path,
+	const std::string& att_value );
 
 extern std::string
 GetExtension ( const std::string& filename );

@@ -20,6 +20,25 @@ FixSeparator ( const string& s )
 }
 
 string
+GetSubPath (
+	const string& location,
+	const string& path,
+	const string& att_value )
+{
+	if ( !att_value.size() )
+		throw InvalidBuildFileException (
+			location,
+			"<directory> tag has empty 'name' attribute" );
+	if ( strpbrk ( att_value.c_str (), "/\\?*:<>|" ) )
+		throw InvalidBuildFileException (
+			location,
+			"<directory> tag has invalid characters in 'name' attribute" );
+	if ( !path.size() )
+		return att_value;
+	return FixSeparator(path + CSEP + att_value);
+}
+
+string
 GetExtension ( const string& filename )
 {
 	size_t index = filename.find_last_of ( '/' );
@@ -252,7 +271,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		assert(att);
-		subpath = FixSeparator ( path + CSEP + att->value );
+		subpath = GetSubPath ( e.location, path, att->value );
 	}
 	else if ( e.name == "include" )
 	{
@@ -508,10 +527,10 @@ Module::GetDependencyPath () const
 {
 	if ( HasImportLibrary () )
 	{
-		return ssprintf ( "dk%snkm%slib%slib%s.a",
-		                  SSEP,
-		                  SSEP,
-		                  SSEP,
+		return ssprintf ( "dk%cnkm%clib%clib%s.a",
+		                  CSEP,
+		                  CSEP,
+		                  CSEP,
 		                  name.c_str () );
 	}
 	else
