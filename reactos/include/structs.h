@@ -3529,10 +3529,6 @@ typedef struct _SESSION_HEADER {
   UCHAR rcv_any_outstanding; 
 } SESSION_HEADER; 
  
-typedef struct _SET_PARTITION_INFORMATION { 
-  BYTE PartitionType; 
-} SET_PARTITION_INFORMATION ; 
- 
 typedef enum tagSHCONTF { 
   SHCONTF_FOLDERS = 32,         
   SHCONTF_NONFOLDERS = 64,      
