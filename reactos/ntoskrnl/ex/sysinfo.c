@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.51 2004/10/12 00:56:46 ion Exp $
+/* $Id: sysinfo.c,v 1.52 2004/10/16 18:45:03 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,12 +54,15 @@ ExGetCurrentProcessorCpuUsage (
 {
 	PKPCR Pcr;
 	ULONG TotalTime;
-	ULONG PercentTime;
+	ULONG PercentTime = 0;
+	ULONGLONG ScaledIdle;
 
 	Pcr = KeGetCurrentKPCR();
 
-	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
-	PercentTime = 100 - (TotalTime / Pcr->PrcbData.CurrentThread->KernelTime * 100);
+	/* FIXME: Needs Idle Thread to be implented properly */
+	ScaledIdle = Pcr->PrcbData.IdleThread->KernelTime * 100;
+	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime
+	if (TotalTime) PercentTime = 100 - (ScaledIdle / TotalTime);
 	CpuUsage = &PercentTime;
 }
 
