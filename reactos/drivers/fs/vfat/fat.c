@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.6 2000/06/29 23:35:50 dwelch Exp $
+ * $Id: fat.c,v 1.7 2000/12/07 16:58:42 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -356,7 +356,7 @@ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 	VFATWriteSectors(DeviceExt->StorageDevice,
 	                 Start,
 	                 1,
-	                 (UCHAR *)Block);
+                   ((UCHAR *)Block)+FATsector*512);
 	Start += DeviceExt->Boot->FATSectors;
      }
 }
@@ -370,6 +370,9 @@ void  FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
  ULONG FATsector;
  ULONG FATeis;
  PUSHORT Block;
+ ULONG Start;
+ int i;
+ struct _BootSector32 *pBoot;
 DbgPrint("FAT32WriteCluster %u : %u\n",ClusterToWrite,NewValue);
    Block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
    FATsector=ClusterToWrite/128;
@@ -380,10 +383,17 @@ DbgPrint("FAT32WriteCluster %u : %u\n",ClusterToWrite,NewValue);
                     1,
 	            (UCHAR *)Block);
    Block[FATeis] = NewValue;
-   VFATWriteSectors(DeviceExt->StorageDevice,
- 	            DeviceExt->FATStart+FATsector,
+   /* Write the changed FAT sector to disk (all FAT's) */
+   Start = DeviceExt->FATStart + FATsector;
+   pBoot = (struct _BootSector32*) DeviceExt->Boot;
+   for (i = 0; i < pBoot->FATCount; i++)
+     {
+       VFATWriteSectors(DeviceExt->StorageDevice,
+ 	            Start,
                     1,
 	            (UCHAR *)Block);
+	Start += pBoot->FATSectors;
+     }
    ExFreePool(Block);
 }
 
@@ -412,9 +422,10 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  * FUNCTION: Determines the next cluster to be written
  */
 {
-   ULONG LastCluster, NewCluster;
+ ULONG LastCluster, NewCluster;
+ UCHAR *Buffer2;
    
-   DPRINT1("GetNextWriteCluster(DeviceExt %x, CurrentCluster %x)\n",
+   DPRINT("GetNextWriteCluster(DeviceExt %x, CurrentCluster %x)\n",
 	   DeviceExt,CurrentCluster);
 
    /* Find out what was happening in the last cluster's AU */
@@ -448,6 +459,11 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 	  {
 	     WriteCluster(DeviceExt, CurrentCluster, NewCluster);
 	  }
+        // fill cluster with zero 
+        Buffer2=ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
+        memset(Buffer2,0,DeviceExt->BytesPerCluster);
+        VFATWriteCluster(DeviceExt,Buffer2,NewCluster);
+        ExFreePool(Buffer2);
         /* Return NewCluster as CurrentCluster */
         return NewCluster;
    }
