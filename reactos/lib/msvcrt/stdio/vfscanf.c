@@ -150,8 +150,8 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
   /* Integral holding variables.  */
   union
     {
-      LONGLONG int q;
-      ULONGLONG int uq;
+      LONGLONG q;
+      ULONGLONG uq;
       long int l;
       unsigned long int ul;
     } num;
@@ -782,19 +782,19 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    if (! number_signed)
 		{
 			if (flags & LONGDBL) {
-		    		*ARG (ULONGLONG int *) = num.uq;
+		    		*ARG (ULONGLONG*) = num.uq;
 			}
 			else if (flags & LONG)
-				*ARG (unsigned long int *) = num.ul;
+				*ARG (unsigned long int*) = num.ul;
 			else if (flags & SHORT)
-				*ARG (unsigned short int *) = (unsigned short int) num.ul;
+				*ARG (unsigned short int*) = (unsigned short int) num.ul;
 			else
-				*ARG (unsigned int *) = (unsigned int) num.ul;
+				*ARG (unsigned int*) = (unsigned int) num.ul;
 		}
 	    else
 		{
 			if (flags & LONGDBL) {
-			    *ARG (LONGLONG int *) = num.q;
+			    *ARG (LONGLONG *) = num.q;
 			}
 			else if (flags & LONG)
 				*ARG (long int *) = num.l;

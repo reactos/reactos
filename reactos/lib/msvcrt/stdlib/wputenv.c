@@ -8,24 +8,24 @@
 
 extern int BlockEnvToEnviron(); // defined in misc/dllmain.c
 
-int _putenv(const char* val)
+int _wputenv(const wchar_t* val)
 {
-    char* buffer;
-    char* epos;
+    wchar_t* buffer;
+    wchar_t* epos;
     int res;
 
-    DPRINT("_putenv('%s')\n", val);
-    epos = strchr(val, '=');
-    if ( epos == NULL )
+    DPRINT("_wputenv('%S')\n", val);
+    epos = wcsrchr(val, L'=');
+    if (epos == NULL)
         return -1;
-    buffer = (char*)malloc(epos - val + 1);
+    buffer = (char*)malloc((epos - val + 1) * sizeof(wchar_t));
     if (buffer == NULL)
         return -1;
-    strncpy(buffer, val, epos - val);
+    wcsncpy(buffer, val, epos - val);
     buffer[epos - val] = 0;
-    res = SetEnvironmentVariableA(buffer, epos+1);
+    res = SetEnvironmentVariableW(buffer, epos+1);
     free(buffer);
     if (BlockEnvToEnviron())
         return 0;
-    return res;
+    return  res;
 }

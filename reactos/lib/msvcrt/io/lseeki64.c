@@ -3,18 +3,14 @@
 #include <msvcrt/internal/file.h>
 
 
-BOOL STDCALL SetFilePointerEx(
-  HANDLE hFile,                    // handle to file
-  LARGE_INTEGER liDistanceToMove,  // bytes to move pointer
-  PLARGE_INTEGER lpNewFilePointer, // new file pointer
-  DWORD dwMoveMethod               // starting point
-);
+//#define SETFILEPOINTEREX_AVAILABLE
 
 __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
 {
-#if 0
-    __int64 new_pos;
-    LARGE_INTEGER offset = _offset;
+#ifdef SETFILEPOINTEREX_AVAILABLE
+    LARGE_INTEGER new_pos;
+    LARGE_INTEGER offset;
+    offset.QuadPart = _offset;
 
 //    if (invalid_filehnd(_fildes)) {
 //        errno = EBADF;
@@ -25,29 +21,19 @@ __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
         //errno = EINVAL;
         return -1L;
     }
-    return new_pos;
+    return new_pos.QuadPart;
 #else
-    ULONG lo_pos, hi_pos;
-    //DWORD lo_pos;
+    //ULONG lo_pos;
+    //DWORD hi_pos = 0;  // must equal 0 or -1 if supplied, -1 for negative 32 seek value
+    //lo_pos = SetFilePointer((HANDLE)filehnd(_fildes), _offset, &hi_pos, _whence);
+    //return((((__int64)hi_pos) << 32) + lo_pos);
 
-    lo_pos = SetFilePointer((HANDLE)filehnd(_fildes), _offset, &hi_pos, _whence);
-    return((((__int64)hi_pos) << 32) + lo_pos);
-#endif
+    LARGE_INTEGER offset;
+    offset.QuadPart = _offset;
+
+    offset.u.LowPart = SetFilePointer((HANDLE)filehnd(_fildes), 
+                          offset.u.LowPart, &offset.u.HighPart, _whence);
+    return ((((__int64)offset.u.HighPart) << 32) + offset.u.LowPart);
+
+#endif /*SETFILEPOINTEREX_AVAILABLE*/
 }
-/*
-long    _lseek   ( int handle,    long offset, int origin );
-__int64 _lseeki64( int handle, __int64 offset, int origin );
-
-BOOL SetFilePointerEx(
-  HANDLE hFile,                    // handle to file
-  LARGE_INTEGER liDistanceToMove,  // bytes to move pointer
-  PLARGE_INTEGER lpNewFilePointer, // new file pointer
-  DWORD dwMoveMethod               // starting point
-);
-DWORD SetFilePointer(
-  HANDLE hFile,                // handle to file
-  LONG lDistanceToMove,        // bytes to move pointer
-  PLONG lpDistanceToMoveHigh,  // bytes to move pointer
-  DWORD dwMoveMethod           // starting point
-);
- */

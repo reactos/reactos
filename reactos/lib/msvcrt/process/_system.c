@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.5 2002/11/24 18:42:23 robd Exp $
+/* $Id: _system.c,v 1.6 2002/11/25 17:41:39 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -13,6 +13,7 @@
 #include <msvcrt/string.h>
 #include <msvcrt/process.h>
 #include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 int system(const char *command)
 {

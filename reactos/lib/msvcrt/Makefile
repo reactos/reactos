@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2002/11/24 18:42:20 robd Exp $
+# $Id: Makefile,v 1.27 2002/11/25 17:41:39 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -391,6 +391,7 @@ STDLIB_OBJECTS = \
 	stdlib/wfulpath.o \
 	stdlib/witoa.o \
 	stdlib/witow.o \
+	stdlib/wputenv.o \
 	stdlib/wsenv.o \
 	stdlib/wsplitp.o \
 	stdlib/wmakpath.o \

@@ -33,7 +33,7 @@ int fflush(FILE *f)
 
      __set_errno(0);
     _fwalk((void (*)(FILE *))fflush);
-    if (_errno)
+    if (errno)
       return EOF;
     __set_errno(e);
     return 0;
