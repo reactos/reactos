@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.77 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: stubs.c,v 1.78 2004/06/20 23:42:07 gdalsnes Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1364,19 +1364,6 @@ RestoreLastError(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetCriticalSectionSpinCount(
-    LPCRITICAL_SECTION lpCriticalSection,
-    DWORD dwSpinCount
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
 /*
  * @unimplemented
