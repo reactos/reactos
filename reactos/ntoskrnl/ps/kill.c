@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.76 2004/09/28 15:02:29 weiden Exp $
+/* $Id: kill.c,v 1.77 2004/10/01 20:29:58 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -113,6 +113,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    BOOLEAN Last;
    PEPROCESS CurrentProcess;
    SIZE_T Length = PAGE_SIZE;
+   PVOID TebBlock;
 
    KeLowerIrql(PASSIVE_LEVEL);
 
@@ -149,10 +150,22 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    /* Free the TEB */
    if(CurrentThread->Tcb.Teb)
    {
+     DPRINT("Decommit teb at %p\n", CurrentThread->Tcb.Teb);
+     ExAcquireFastMutex(&CurrentProcess->TebLock);
+     TebBlock = MM_ROUND_DOWN(CurrentThread->Tcb.Teb, MM_VIRTMEM_GRANULARITY);
      ZwFreeVirtualMemory(NtCurrentProcess(),
                          (PVOID *)&CurrentThread->Tcb.Teb,
                          &Length,
-                         MEM_RELEASE);
+                         MEM_DECOMMIT);
+     DPRINT("teb %p, TebBlock %p\n", CurrentThread->Tcb.Teb, TebBlock);
+     if (TebBlock != CurrentProcess->TebBlock ||
+         CurrentProcess->TebBlock == CurrentProcess->TebLastAllocated)
+       {
+         MmLockAddressSpace(&CurrentProcess->AddressSpace);
+         MmReleaseMemoryAreaIfDecommitted(CurrentProcess, &CurrentProcess->AddressSpace, TebBlock);
+         MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
+       }
+     ExReleaseFastMutex(&CurrentProcess->TebLock);
    }
 
    /* abandon all owned mutants */
