@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/utils.c,v $
- * $Id: utils.c,v 1.1 2004/01/10 20:38:18 arty Exp $
+ * $Id: utils.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
  */
 
 #include "jsint.h"
@@ -354,7 +354,7 @@ js_vm_to_object (JSVirtualMachine *vm, const JSNode *n, JSNode *result_return)
       break;
 
     case JS_STRING:
-      js_vm_make_string (vm, result_return, n->u.vstring->data,
+      js_vm_make_string (vm, result_return, (char*)n->u.vstring->data,
 			 n->u.vstring->len);
       break;
 

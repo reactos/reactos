@@ -317,7 +317,7 @@ typedef enum
    private to the regex routines.  */
 
 #ifndef RE_TRANSLATE_TYPE
-# define RE_TRANSLATE_TYPE char *
+# define RE_TRANSLATE_TYPE unsigned char *
 #endif
 
 struct re_pattern_buffer

@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/vm.c,v $
- * $Id: vm.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id: vm.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
  */
 
 #include "jsint.h"
@@ -296,7 +296,7 @@ js_vm_execute (JSVirtualMachine *vm, JSByteCode *bc)
 {
   int i, sect;
   unsigned int ui;
-  unsigned char *cp;
+  char *cp;
   unsigned int consts_offset;
   char buf[256];
   JSSymtabEntry *symtab = NULL;

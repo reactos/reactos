@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/b_core.c,v $
- * $Id: b_core.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id: b_core.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
  */
 
 /*
@@ -185,7 +185,7 @@ escape_global_method (JSVirtualMachine *vm, JSBuiltinInfo *builtin_info,
 	EMIT_TO_RESULT (c);
       else if (c > 0xFF)
 	{
-	  unsigned char buf[6];
+	  char buf[6];
 
 	  sprintf (buf, "%04x", c);
 	  EMIT_TO_RESULT ('%');
@@ -197,7 +197,7 @@ escape_global_method (JSVirtualMachine *vm, JSBuiltinInfo *builtin_info,
       }
     else
       {
-	unsigned char buf[4];
+	char buf[4];
 	sprintf (buf, "%02x", c);
 
 	EMIT_TO_RESULT ('%');

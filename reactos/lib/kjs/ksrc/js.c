@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/js.c,v $
- * $Id: js.c,v 1.2 2004/05/07 05:12:10 royce Exp $
+ * $Id: js.c,v 1.3 2004/12/24 23:01:35 navaraf Exp $
  */
 
 #include "js.h"
@@ -160,7 +160,7 @@ static JSIOStream *iostream_iofunc (JSIOFunc func, void *context,
  * Global functions.
  */
 
-const JSCharPtr
+JSCharPtr
 js_version ()
 {
   return VERSION;
@@ -278,7 +278,7 @@ js_destroy_interp (JSInterpPtr interp)
 }
 
 
-const JSCharPtr
+JSCharPtr
 js_error_message (JSInterpPtr interp)
 {
   return interp->vm->error;
@@ -792,7 +792,7 @@ js_instantiate_class (JSInterpPtr interp, JSClassPtr cls, void *ictx,
 }
 
 
-const JSClassPtr
+JSClassPtr
 js_lookup_class (JSInterpPtr interp, char *name)
 {
   JSNode *n;
@@ -840,7 +840,7 @@ js_type_make_string (JSInterpPtr interp, JSType *type, unsigned char *data,
 {
   JSNode *n = (JSNode *) type;
 
-  js_vm_make_string (interp->vm, n, data, length);
+  js_vm_make_string (interp->vm, n, (char*)data, length);
 }
 
 

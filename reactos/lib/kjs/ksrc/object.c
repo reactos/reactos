@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/object.c,v $
- * $Id: object.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id: object.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
  */
 
 #include "ddk/ntddk.h"
@@ -431,7 +431,7 @@ js_vm_object_nth (JSVirtualMachine *vm, JSObject *obj, int nth,
       abort ();
     }
 
-  js_vm_make_string (vm, value_return, b->data, b->len);
+  js_vm_make_string (vm, value_return, (char*)b->data, b->len);
 
   return 1;
 }

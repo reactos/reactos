@@ -550,7 +550,7 @@ case 27:
       else if (JS_SP1->type == JS_STRING)
 	{
 	  /* Intern the string. */
-	  j = js_vm_intern_with_len (vm, JS_SP1->u.vstring->data,
+	  j = js_vm_intern_with_len (vm, (char*)JS_SP1->u.vstring->data,
 				     JS_SP1->u.vstring->len);
 
 	  /* The code below must be in sync with operand `load_property'. */
@@ -670,7 +670,7 @@ case 28:
       else if (JS_SP1->type == JS_STRING)
 	{
 	  /* Intern the string. */
-	  j = js_vm_intern_with_len (vm, JS_SP1->u.vstring->data,
+	  j = js_vm_intern_with_len (vm, (char*)JS_SP1->u.vstring->data,
 				     JS_SP1->u.vstring->len);
 
 	  /* The code below msut be in sync with operand `store_property'. */
@@ -967,7 +967,7 @@ case 39:
       memcpy (ndata, d2, d2_len);
       memcpy (ndata + d2_len, d1, d1_len);
 
-      js_vm_make_static_string (vm, JS_SP2, ndata, nlen);
+      js_vm_make_static_string (vm, JS_SP2, (char*)ndata, nlen);
       JS_SP2->u.vstring->staticp = 0;
       JS_POP ();
       JS_MAYBE_GC ();

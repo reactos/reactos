@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/include/js.h,v $
- * $Id: js.h,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id: js.h,v 1.2 2004/12/24 23:01:35 navaraf Exp $
  */
 
 #ifndef JS_H
@@ -261,7 +261,7 @@ typedef JSMethodResult (*JSConstructor) (JSClassPtr cls, JSInterpPtr interp,
  * number.  The returned string is in format "MAJOR.MINOR.PATCH",
  * where MAJOR, MINOR, and PATCH are integer numbers.
  */
-const JSCharPtr JS_DLLEXPORT js_version ();
+JSCharPtr JS_DLLEXPORT js_version ();
 
 /* Initialize interpreter options to system's default values. */
 void JS_DLLEXPORT js_init_default_options (JSInterpOptions *options);
@@ -275,7 +275,7 @@ JSInterpPtr JS_DLLEXPORT js_create_interp (JSInterpOptions *options,
 void JS_DLLEXPORT js_destroy_interp (JSInterpPtr interp);
 
 /* Return error message from the latest error. */
-const JSCharPtr JS_DLLEXPORT js_error_message (JSInterpPtr interp);
+JSCharPtr JS_DLLEXPORT js_error_message (JSInterpPtr interp);
 
 /*
  * Get the result of the latest evaluation or execution in interpreter
@@ -456,8 +456,8 @@ int JS_DLLEXPORT js_instantiate_class (JSInterpPtr interp, JSClassPtr cls,
 				       void *ictx, JSFreeProc ictx_destructor,
 				       JSType *result_return);
 
-const JSClassPtr JS_DLLEXPORT js_lookup_class (JSInterpPtr interp,
-					       char *name);
+JSClassPtr JS_DLLEXPORT js_lookup_class (JSInterpPtr interp,
+					 char *name);
 
 /*
  * Check if object <object> is an instance of class <cls>.  The
