@@ -48,11 +48,6 @@ ACPI := 0
 3GB := 1
 
 #
-# Whether to use Structured Exception Handling
-#
-SEH := 0
-
-#
 # Which version of NDIS do we support up to?
 #
 #NDISVERSION=NDIS50

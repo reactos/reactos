@@ -6,13 +6,14 @@
  * UPDATE HISTORY:
  *      06-07-2003  CSH  Created
  */
-#include <roscfg.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
+#include <pseh.h>
 #include "regtests.h"
 
 #define NDEBUG
@@ -22,20 +23,6 @@ int _Result;
 char *_Buffer;
 
 static LIST_ENTRY AllTests;
-
-void *_alloca(size_t size)
-{
-  void *ret;
-
-  asm ("movl %1, %%eax\n"
-       "addl $3, %%eax\n"
-       "andl $-4, %%eax\n"
-       "subl %%eax, %%esp\n"
-       "movl %%esp, %0\n"
-       : "=m" (ret) : "m" (size) : "eax");
-
-  return ret;
-}
 
 VOID
 InitializeTests()
@@ -73,18 +60,14 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
         }
     }
 
-#ifdef SEH
-  __try {
-#endif
+  _SEH_TRY {
     _Result = TS_OK;
     _Buffer = Buffer;
     (Test->Routine)(TESTCMD_RUN);
-#ifdef SEH
-  } __except(EXCEPTION_EXECUTE_HANDLER) {
+  } _SEH_HANDLE {
     _Result = TS_FAILED;
-    strcpy(Buffer, "Failed due to exception");
-  }
-#endif
+    sprintf(Buffer, "due to exception 0x%lx", _SEH_GetExceptionCode());
+  } _SEH_END;
 
   if (_Result != TS_OK)
     {
