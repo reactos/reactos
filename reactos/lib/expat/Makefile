@@ -8,7 +8,7 @@ TARGET_NAME = expat
 
 TARGET_TYPE = library
 
-TARGET_CFLAGS = -D__USE_W32API -DHAVE_EXPAT_CONFIG_H -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions
+TARGET_CFLAGS = -D__USE_W32API -DHAVE_EXPAT_CONFIG_H -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions -Ilib
 TARGET_LFLAGS = -nostartfiles
 
 LIB_OBJECTS = \
