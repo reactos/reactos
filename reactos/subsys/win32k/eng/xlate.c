@@ -107,14 +107,8 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
   NewXlate = CreateGDIHandle(XlateGDI, XlateObj);
 
-  if(SourcePalType == PAL_INDEXED)
-  {
-    SourcePalGDI = AccessInternalObject(PaletteSource);
-  } else
-  if(DestPalType == PAL_INDEXED)
-  {
-    DestPalGDI   = AccessInternalObject(PaletteDest);
-  }
+  if(SourcePalType == PAL_INDEXED) SourcePalGDI = AccessInternalObject(PaletteSource);
+  if(DestPalType == PAL_INDEXED) DestPalGDI = AccessInternalObject(PaletteDest);
 
   XlateObj->iSrcType = SourcePalType;
   XlateObj->iDstType = DestPalType;
@@ -138,10 +132,8 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   if( (SourcePalType == PAL_INDEXED) || (SourcePalType == PAL_RGB) )
   {
     XlateObj->flXlate |= XO_TABLE;
-
     if (SourcePalType == PAL_INDEXED) IndexedColors = SourcePalGDI->NumColors;
     if (DestPalType   == PAL_INDEXED) IndexedColors = DestPalGDI->NumColors;
-
     XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, NULL);
   }
 
