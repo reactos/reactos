@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.6 2002/02/27 22:50:31 ekohl Exp $
+/* $Id: scsiport.c,v 1.7 2002/03/03 19:39:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -908,7 +908,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	{
 	  PIO_SCSI_CAPABILITIES Capabilities;
 
-	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
+	  DPRINT1("  IOCTL_SCSI_GET_CAPABILITIES\n");
 
 	  Capabilities = (PIO_SCSI_CAPABILITIES)Irp->AssociatedIrp.SystemBuffer;
 	  Capabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
@@ -983,7 +983,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IrpStack;
   KIRQL OldIrql;
 
-  DPRINT("ScsiPortStartIo() called!\n");
+  DPRINT1("ScsiPortStartIo() called!\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1022,23 +1022,29 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 				  FALSE);
 	    }
 	  if (DeviceExtension->IrpFlags | IRP_FLAG_COMPLETE)
+	    {
+		DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	    }
 
 	  if (DeviceExtension->IrpFlags | IRP_FLAG_NEXT)
+	    {
+		DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
 		IoStartNextPacket(DeviceObject, FALSE);
+	    }
 	}
 	break;
 
       default:
 	Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 	Irp->IoStatus.Information = 0;
-	IoStartNextPacket(DeviceObject,
-			  FALSE);
 	IoCompleteRequest(Irp,
 			  IO_NO_INCREMENT);
+	IoStartNextPacket(DeviceObject,
+			  FALSE);
 	break;
     }
-  DPRINT("ScsiPortStartIo() done\n");
+  DPRINT1("ScsiPortStartIo() done\n");
 }
 
 
@@ -1353,19 +1359,29 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT1("ScsiPortDpcForIsr()\n");
+  DPRINT1("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
+	  Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
   DeviceExtension->CurrentIrp = NULL;
 
-  DpcIrp->IoStatus.Information = 0;
-  DpcIrp->IoStatus.Status = STATUS_SUCCESS;
+//  DpcIrp->IoStatus.Information = 0;
+//  DpcIrp->IoStatus.Status = STATUS_SUCCESS;
 
-  IoCompleteRequest(DpcIrp,
-		    IO_NO_INCREMENT);
-  IoStartNextPacket(DpcDeviceObject,
-		    FALSE);
+  if (DeviceExtension->IrpFlags | IRP_FLAG_COMPLETE)
+    {
+      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
+      IoCompleteRequest(DpcIrp, IO_NO_INCREMENT);
+    }
+
+  if (DeviceExtension->IrpFlags | IRP_FLAG_NEXT)
+    {
+      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+//      IoStartNextPacket(DpcDeviceObject, FALSE);
+    }
+
+  DPRINT1("ScsiPortDpcForIsr() done\n");
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.7 2002/02/04 01:21:03 ekohl Exp $
+/* $Id: atapi.c,v 1.8 2002/03/03 19:37:41 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -571,16 +571,20 @@ AtapiStartIo(IN PVOID DeviceExtension,
     {
       DevExt->CurrentSrb = NULL;
       Srb->SrbStatus = (UCHAR)Result;
-#if 0
+
       ScsiPortNotification(RequestComplete,
 			   DeviceExtension,
 			   Srb);
-
       ScsiPortNotification(NextRequest,
 			   DeviceExtension,
 			   NULL);
-#endif
     }
+  else
+    {
+      DPRINT1("SrbStatus = SRB_STATUS_PENDING\n");
+    }
+
+  DPRINT1("AtapiStartIo() done\n");
 
   return(TRUE);
 }
@@ -603,12 +607,19 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 
 
-  DPRINT1("AtapiInterrupt() called!\n");
+  DPRINT("AtapiInterrupt() called!\n");
 
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+  if (DevExt->ExpectingInterrupt == FALSE)
+    {
+      return(FALSE);
+    }
+
+  DevExt->ExpectingInterrupt = FALSE;
+
   Srb = DevExt->CurrentSrb;
 
-  DPRINT1("Srb: %p\n", Srb);
+  DPRINT("Srb: %p\n", Srb);
 
   CommandPortBase = DevExt->CommandPortBase;
   ControlPortBase = DevExt->ControlPortBase;
@@ -774,7 +785,16 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 #endif
     }
 
-  DPRINT1("AtapiInterrupt() done!\n");
+  ScsiPortNotification(RequestComplete,
+		       DeviceExtension,
+		       Srb);
+
+  ScsiPortNotification(NextRequest,
+		       DeviceExtension,
+		       NULL);
+
+
+  DPRINT("AtapiInterrupt() done!\n");
 
   return(TRUE);
 }
@@ -811,7 +831,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
     {
       /* disable interrupts */
-      IDEWriteDriveControl(CommandPortBase,
+      IDEWriteDriveControl(ControlPortBase,
 			   IDE_DC_nIEN);
 
       /* select drive */
@@ -945,23 +965,31 @@ AtapiResetController(IN WORD CommandPort,
   return(IDEReadError(CommandPort) == 1);
 }
 
-
-//    AtapiIdentifyDevice
-//
-//  DESCRIPTION:
-//    Get the identification block from the drive
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN   int                  CommandPort  Address of the command port
-//    IN   int                  DriveNum     The drive index (0,1)
-//    OUT  PIDE_DRIVE_IDENTIFY  DrvParms     Address to write drive ident block
-//
-//  RETURNS:
-//    TRUE  The drive identification block was retrieved successfully
-//
+/*
+ *  AtapiIdentifyDevice
+ *
+ *  DESCRIPTION:
+ *	Get the identification block from the drive
+ *
+ *  RUN LEVEL:
+ *	PASSIVE_LEVEL
+ *
+ *  ARGUMENTS:
+ *	CommandPort
+ *		Address of the command port
+ *	ControlPort
+ *		Address of the control port
+ *	DriveNum
+ *		The drive index (0,1)
+ *	Atapi
+ *		Send an ATA(FALSE) or an ATAPI(TRUE) identify comand
+ *	DrvParms
+ *		Address to write drive ident block
+ *
+ *  RETURNS:
+ *	TRUE: The drive identification block was retrieved successfully
+ *	FALSE: an error ocurred
+ */
 
 static BOOLEAN
 AtapiIdentifyDevice(IN ULONG CommandPort,
@@ -1241,7 +1269,7 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 {
   ULONG SrbStatus = SRB_STATUS_SUCCESS;
 
-  DPRINT("AtapiSendIdeCommand() called!\n");
+  DPRINT1("AtapiSendIdeCommand() called!\n");
 
   DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n",
 	 Srb->PathId,
@@ -1280,7 +1308,7 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	break;
     }
 
-  DPRINT("AtapiSendIdeCommand() done!\n");
+  DPRINT1("AtapiSendIdeCommand() done!\n");
 
   return(SrbStatus);
 }
@@ -1294,7 +1322,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PINQUIRYDATA InquiryData;
   ULONG i;
 
-  DPRINT("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
+  DPRINT1("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1366,7 +1394,7 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PIDE_DRIVE_IDENTIFY DeviceParams;
   ULONG LastSector;
 
-  DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
+  DPRINT1("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1427,7 +1455,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Status;
 
 
-  DPRINT("AtapiReadWrite() called!\n");
+  DPRINT1("AtapiReadWrite() called!\n");
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1437,8 +1465,8 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_SELECTION_TIMEOUT);
     }
 
-    DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
-	   Srb->TargetId);
+  DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
+	 Srb->TargetId);
 
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
 
@@ -1620,7 +1648,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   /* FIXME: Write data here! */
 
 
-  DPRINT("AtapiReadWrite() done!\n");
+  DPRINT1("AtapiReadWrite() done!\n");
 
   /* Wait for interrupt. */
   return(SRB_STATUS_PENDING);
