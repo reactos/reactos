@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include "porting.h"
-#include "trace.h"
+//#include "trace.h"
 
 /* ---------------------------------------------------------------------- */
 
