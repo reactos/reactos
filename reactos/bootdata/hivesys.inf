@@ -562,7 +562,7 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","Count",0x00010001,0x00000001
