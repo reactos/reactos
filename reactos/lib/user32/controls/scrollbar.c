@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.11 2003/08/07 04:03:23 royce Exp $
+/* $Id: scrollbar.c,v 1.12 2003/09/07 09:55:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,6 +14,8 @@
 #include <user32.h>
 #include <debug.h>
 #include <draw.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* GLOBAL VARIABLES **********************************************************/
 /*
@@ -51,16 +53,13 @@ static HBITMAP hRgArrowI;
 #define SA_SSI_REFRESH		0x0004
 #define SA_SSI_REPAINT_ARROWS	0x0008
 
-  /* Scroll-bar hit testing */
-enum SCROLL_HITTEST
-{
-  SCROLL_NOWHERE,		/* Outside the scroll bar */
-  SCROLL_TOP_ARROW,		/* Top or left arrow */
-  SCROLL_TOP_RECT,		/* Rectangle between the top arrow and the thumb */
-  SCROLL_THUMB,			/* Thumb rectangle */
-  SCROLL_BOTTOM_RECT,		/* Rectangle between the thumb and the bottom arrow */
-  SCROLL_BOTTOM_ARROW		/* Bottom or right arrow */
-};
+/* Scroll-bar hit testing */
+#define SCROLL_NOWHERE  0x01    /* Outside the scroll bar */
+#define SCROLL_TOP_ARROW    0x02    /* Top or left arrow */
+#define SCROLL_TOP_RECT 0x04    /* Rectangle between the top arrow and the thumb */
+#define SCROLL_THUMB    0x08    /* Thumb rectangle */
+#define SCROLL_BOTTOM_RECT  0x10    /* Rectangle between the thumb and the bottom arrow */
+#define SCROLL_BOTTOM_ARROW 0x20    /* Bottom or right arrow */
 
 static BOOL SCROLL_MovingThumb = FALSE; /* Is the moving thumb being displayed? */
 
@@ -69,22 +68,26 @@ static HWND SCROLL_TrackingWin = 0;
 static INT SCROLL_TrackingBar = 0;
 static INT SCROLL_TrackingPos = 0;
 /* static INT  SCROLL_TrackingVal = 0; */
-static enum SCROLL_HITTEST SCROLL_trackHitTest; /* Hit test code of the last button-down event */
+static DWORD SCROLL_trackHitTest; /* Hit test code of the last button-down event */
 static BOOL SCROLL_trackVertical;
 
-/* FUNCTIONS
-*****************************************************************/
+/* INTERNAL FUNCTIONS *********************************************************/
 
 HBRUSH DefWndControlColor (HDC hDC, UINT ctlType);
 
 
-
-WINBOOL STDCALL
-GetScrollBarInfo (HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
+DWORD FASTCALL
+SCROLL_HitTest(HWND hwnd, LONG idObject, POINT Point)
 {
-  int ret = NtUserGetScrollBarInfo (hwnd, idObject, psbi);
-
-  return ret;
+  RECT WindowRect;
+  
+  GetWindowRect(hwnd, &WindowRect);
+  if (!PtInRect(&WindowRect, Point))
+  {      
+    return(SCROLL_NOWHERE);
+  }
+  
+  return SCROLL_NOWHERE;
 }
 
 /* Ported from WINE20020904 */
@@ -114,6 +117,8 @@ DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
   if ( nBar == SB_CTL )
   {
     hBrush = (HBRUSH) NtUserSendMessage (GetParent (hwnd), WM_CTLCOLORSCROLLBAR, (WPARAM) hdc, (LPARAM) hwnd);
+    if(!hBrush)
+      hBrush = GetSysColorBrush(COLOR_SCROLLBAR);
   }
   else
   {
@@ -269,7 +274,7 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
   BOOL vertical;
 
   info.cbSize = sizeof(SCROLLBARINFO);
-  GetScrollBarInfo (hwnd, nBar, &info);
+  NtUserGetScrollBarInfo (hwnd, nBar, &info);
 
   thumbSize = info.xyThumbBottom - info.xyThumbTop;
 
@@ -343,6 +348,48 @@ END:;
 /*    WIN_ReleaseWndPtr(wndPtr); */
 }
 
+
+/* FUNCTIONS ******************************************************************/
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+GetScrollBarInfo(HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
+{
+  SCROLLBARINFO sbi;
+  WINBOOL ret;
+  
+  if(!psbi)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  RtlCopyMemory(&sbi, psbi, sizeof(SCROLLBARINFO));
+  ret = NtUserGetScrollBarInfo (hwnd, idObject, psbi);
+  if(ret)
+    RtlCopyMemory(psbi, &sbi, sizeof(SCROLLBARINFO));
+
+  return ret;
+}
+
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetScrollInfo (HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
@@ -350,6 +397,10 @@ GetScrollInfo (HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 GetScrollPos (HWND hWnd, int nBar)
 {
@@ -357,6 +408,10 @@ GetScrollPos (HWND hWnd, int nBar)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
 {
@@ -364,6 +419,10 @@ GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 {
@@ -371,6 +430,10 @@ SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 int STDCALL
 SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
 {
@@ -378,6 +441,10 @@ SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetScrollRange (HWND hWnd,
 		int nBar, int nMinPos, int nMaxPos, WINBOOL bRedraw)
@@ -386,10 +453,12 @@ SetScrollRange (HWND hWnd,
   return FALSE;
 }
 
-/* Ported from WINE20020904 */
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ShowScrollBar (HWND hWnd, int wBar, WINBOOL bShow)
 {
-  NtUserShowScrollBar (hWnd, wBar, bShow);
-  return TRUE;
+  return (WINBOOL)NtUserShowScrollBar (hWnd, wBar, bShow);
 }

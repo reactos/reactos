@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.106 2003/08/29 09:29:11 gvg Exp $
+/* $Id: window.c,v 1.107 2003/09/07 09:55:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -248,6 +248,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   ExAcquireFastMutexUnsafe (&ThreadData->WindowListLock);
   RemoveEntryList(&Window->ThreadListEntry);
   ExReleaseFastMutexUnsafe (&ThreadData->WindowListLock);
+  
+  IntDestroyScrollBar(Window, SB_VERT);
+  IntDestroyScrollBar(Window, SB_HORZ);
 
   Window->Class = NULL;
   ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
@@ -1272,9 +1275,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   /* Initialize the window's scrollbars */
   if (dwStyle & WS_VSCROLL)
-      SCROLL_CreateScrollBar(WindowObject, SB_VERT);
+      IntCreateScrollBar(WindowObject, SB_VERT);
   if (dwStyle & WS_HSCROLL)
-      SCROLL_CreateScrollBar(WindowObject, SB_HORZ);
+      IntCreateScrollBar(WindowObject, SB_HORZ);
 
   /* Send a NCCREATE message. */
   Cs.lpCreateParams = lpParam;

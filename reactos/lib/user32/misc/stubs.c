@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.40 2003/08/28 19:37:00 gvg Exp $
+/* $Id: stubs.c,v 1.41 2003/09/07 09:55:52 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -123,23 +123,6 @@ CopyImage(
 {
   UNIMPLEMENTED;
   return (HANDLE)0;
-}
-
-
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-EnableScrollBar(
-  HWND hWnd,
-  UINT wSBflags,
-  UINT wArrows)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

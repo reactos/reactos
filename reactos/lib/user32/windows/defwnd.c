@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.78 2003/09/06 16:59:30 weiden Exp $
+/* $Id: defwnd.c,v 1.79 2003/09/07 09:55:52 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -862,7 +862,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 }
 
 VOID STATIC
-DefWndDoButtonHandle(HWND hWnd, WPARAM wParam)
+DefWndDoButton(HWND hWnd, WPARAM wParam)
 {
   MSG Msg;
   BOOL InBtn = TRUE, HasBtn = FALSE;
@@ -929,6 +929,16 @@ done:
   return;
 }
 
+VOID STATIC
+DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  POINT Point;
+  Point.x = SLOWORD(lParam);
+  Point.y = SHIWORD(lParam);
+  
+  SendMessageA(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
+}
+
 LRESULT
 DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -965,19 +975,21 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTHSCROLL:
         {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
+            DefWndDoScrollBarDown(hWnd, SC_HSCROLL, HTHSCROLL, lParam);
+            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
             break;
         }
         case HTVSCROLL:
         {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
+            DefWndDoScrollBarDown(hWnd, SC_VSCROLL, HTVSCROLL, lParam);
+            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
             break;
         }
         case HTMINBUTTON:
         case HTMAXBUTTON:
         case HTCLOSE:
         {
-          DefWndDoButtonHandle(hWnd, wParam);
+          DefWndDoButton(hWnd, wParam);
           break;
         }
         case HTLEFT:

@@ -471,9 +471,9 @@ NtUserInsertMenuItem(
 DWORD
 STDCALL
 NtUserEnableScrollBar(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  UINT wSBflags,
+  UINT wArrows);
 
 DWORD
 STDCALL
@@ -1220,13 +1220,13 @@ NtUserSBGetParms(
 DWORD
 STDCALL
 NtUserScrollDC(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+  HDC hDC,
+  int dx,
+  int dy,
+  CONST RECT *lprcScroll,
+  CONST RECT *lprcClip ,
+  HRGN hrgnUpdate,
+  LPRECT lprcUpdate);
 
 DWORD
 STDCALL
@@ -1441,10 +1441,10 @@ NtUserSetRipFlags(
 DWORD
 STDCALL
 NtUserSetScrollInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd, 
+  int fnBar, 
+  LPCSCROLLINFO lpsi, 
+  WINBOOL fRedraw);
 
 DWORD
 STDCALL
