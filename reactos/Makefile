@@ -38,7 +38,7 @@ LIB_STATIC = string rosrtl epsapi zlib
 # epsapi psapi rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
        psapi secur32 syssetup user32 version winspool ws2help ws2_32 \
-       wsock32 wshirda
+       wsock32 wshirda iphlpapi
 
 SUBSYS = smss win32k csrss ntvdm
 
