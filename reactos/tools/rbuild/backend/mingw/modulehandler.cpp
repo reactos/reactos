@@ -139,15 +139,20 @@ MingwModuleHandler::GetAllDependencies ( const Module& module ) const
 string
 MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 {
-	if ( module.files.size () == 0 )
-		return "";
-	
+	size_t i;
+
 	string sourceFilenames ( "" );
-	for ( size_t i = 0; i < module.files.size (); i++ )
+	for ( i = 0; i < module.files.size (); i++ )
+		sourceFilenames += " " + module.files[i]->name;
+	vector<If*> ifs = module.ifs;
+	for ( i = 0; i < ifs.size(); i++ )
 	{
-		if ( sourceFilenames.size () > 0 )
-			sourceFilenames += " ";
-		sourceFilenames += module.files[i]->name;
+		size_t j;
+		If& rIf = *ifs[i];
+		for ( j = 0; j < rIf.ifs.size(); j++ )
+			ifs.push_back ( rIf.ifs[j] );
+		for ( j = 0; j < rIf.files.size(); j++ )
+			sourceFilenames += " " + rIf.files[j]->name;
 	}
 	return sourceFilenames;
 }
@@ -484,12 +489,25 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 }
 
 void
+MingwModuleHandler::GetCleanTargets ( vector<string>& out,
+                                      const vector<File*>& files,
+                                      const vector<If*>& ifs ) const
+{
+	size_t i;
+
+	for ( i = 0; i < files.size(); i++ )
+		out.push_back ( GetObjectFilename(files[i]->name) );
+
+	for ( i = 0; i < ifs.size(); i++ )
+		GetCleanTargets ( out, ifs[i]->files, ifs[i]->ifs );
+}
+
+string
 MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
                                             const string& ar,
                                             const string& objs_macro ) const
 {
 	string archiveFilename = GetModuleArchiveFilename ( module );
-	string sourceFilenames = GetSourceFilenames ( module );
 	
 	fprintf ( fMakefile,
 	          "%s: %s\n",
@@ -501,6 +519,8 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 	          ar.c_str (),
 	          archiveFilename.c_str (),
 	          objs_macro.c_str ());
+
+	return archiveFilename;
 }
 
 void
@@ -527,8 +547,21 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	nasmflagsMacro = ssprintf("$(%s)",nasmflagsMacro.c_str());
 	objectsMacro = ssprintf("$(%s)",objectsMacro.c_str());
 
-	GenerateArchiveTarget ( module, ar, objectsMacro );
+	string ar_target = GenerateArchiveTarget ( module, ar, objectsMacro );
 	GenerateObjectFileTargets ( module, cc, cflagsMacro, nasmflagsMacro );
+
+	vector<string> clean_files;
+	clean_files.push_back ( ar_target );
+	GetCleanTargets ( clean_files, module.files, module.ifs );
+
+	fprintf ( fMakefile, "clean::\n\t-@$(rm)" );
+	for ( size_t i = 0; i < clean_files.size(); i++ )
+	{
+		if ( 9==(i%10) )
+			fprintf ( fMakefile, " 2>NUL\n\t-@$(rm)" );
+		fprintf ( fMakefile, " %s", clean_files[i].c_str() );
+	}
+	fprintf ( fMakefile, " 2>NUL\n\n" );
 }
 
 void

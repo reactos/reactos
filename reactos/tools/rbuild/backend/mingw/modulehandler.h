@@ -88,9 +88,12 @@ private:
 	                                 const std::string& cc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro ) const;
-	void GenerateArchiveTarget ( const Module& module,
-	                             const std::string& ar,
-	                             const std::string& objs_macro ) const;
+	void GetCleanTargets ( std::vector<std::string>& out,
+	                       const std::vector<File*>& files,
+	                       const std::vector<If*>& ifs ) const;
+	std::string GenerateArchiveTarget ( const Module& module,
+	                                    const std::string& ar,
+	                                    const std::string& objs_macro ) const;
 	void GenerateMacrosAndTargets ( const Module& module,
 	                                const std::string& cc,
 	                                const std::string& ar ) const;

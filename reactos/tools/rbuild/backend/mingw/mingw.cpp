@@ -147,6 +147,9 @@ MingwBackend::GenerateGlobalVariables ()
 		ProjectNode.defines,
 		ProjectNode.ifs );
 	fprintf ( fMakefile, "\n" );
+
+	fprintf ( fMakefile, ".PHONY: clean\n\n" );
+	//fprintf ( fMakefile, "clean:\n\t-@${rm} $(PROJECT_CLEAN)\n\n" );
 }
 
 void
