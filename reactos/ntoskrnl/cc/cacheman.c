@@ -33,7 +33,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CcInit(VOID)
+NTSTATUS 
+CcInit(VOID)
 {
    /* Nothing in here at the moment */
    

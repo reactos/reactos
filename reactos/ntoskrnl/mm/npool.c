@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.40 2001/03/13 21:46:43 dwelch Exp $
+/* $Id: npool.c,v 1.41 2001/03/14 00:21:22 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -163,7 +163,8 @@ MiAddToTagHashTable(BLOCK_HDR* block)
     }
 }
 
-VOID ExInitNonPagedPool(ULONG BaseAddress)
+VOID 
+ExInitNonPagedPool(ULONG BaseAddress)
 {
    kernel_pool_base = BaseAddress;
    KeInitializeSpinLock(&MmNpoolLock);
@@ -546,7 +547,7 @@ add_to_free_list(BLOCK_HDR* blk)
  * FUNCTION: add the block to the free list (internal)
  */
 {
-#if 0
+#if 1
   PLIST_ENTRY current_entry;
   PLIST_ENTRY next_entry;
   BLOCK_HDR* current;

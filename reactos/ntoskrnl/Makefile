@@ -1,8 +1,13 @@
-# $Id: Makefile,v 1.17 2001/03/12 19:23:48 dwelch Exp $
+# $Id: Makefile,v 1.18 2001/03/14 00:21:21 dwelch Exp $
 #
 # ReactOS Operating System
 #
 PATH_TO_TOP = ..
+
+#
+# Architecture to build for
+#
+ARCH := i386
 
 TARGETNAME = ntoskrnl
 
@@ -19,10 +24,17 @@ all: \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe
 
+#
 # Hardware Abstraction Layer (Hal)
 # Defines $(OBJECTS_HAL)
 #
 include hal/x86/sources
+
+#
+# Architecture specific Makefile
+# Defines $(OBJECTS_ARCH)
+#
+include Makefile.$(ARCH)
 
 # System API (Nt/Zw)
 OBJECTS_NT = \
@@ -68,7 +80,6 @@ OBJECTS_RTL = \
 # Kernel (Ke)
 # Note: head.o MUST be the first file!!!
 OBJECTS_KE = \
-	ke/multiboot.o \
 	ke/apc.o \
 	ke/bug.o \
 	ke/catch.o \
@@ -76,11 +87,8 @@ OBJECTS_KE = \
 	ke/dpc.o \
 	ke/error.o \
 	ke/event.o \
-	ke/gdt.o \
-	ke/idt.o \
 	ke/kernel.o \
 	ke/kqueue.o \
-	ke/ldt.o \
 	ke/main.o \
 	ke/mutex.o \
 	ke/process.o \
@@ -90,21 +98,6 @@ OBJECTS_KE = \
 	ke/wait.o \
 	ke/kthread.o
 
-OBJECTS_KE_I386 = \
-	ke/i386/exp.o \
-	ke/i386/irq.o \
-	ke/i386/irqhand.o \
-	ke/i386/thread.o \
-	ke/i386/usercall.o \
-	ke/i386/trap.o \
-	ke/i386/bthread.o \
-	ke/i386/syscall.o \
-	ke/i386/tskswitch.o \
-	ke/i386/v86m.o \
-	ke/i386/v86m_sup.o \
-	ke/i386/bios.o \
-        ke/i386/i386-mcount.o
- 
 # Memory Manager (Mm)
 OBJECTS_MM = \
 	mm/aspace.o \
@@ -286,8 +279,8 @@ OBJECTS_KD = \
 	kd/service.o \
 	kd/dlog.o
 
-C_OBJECTS := $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_MM_I386) \
-	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_KE_I386) $(OBJECTS_OB) \
+C_OBJECTS := $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_ARCH) \
+	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL)
@@ -316,18 +309,20 @@ $(OBJECTS_PATH)/hal.o: $(OBJECTS_HAL)
 		-o $(OBJECTS_PATH)/hal.o \
 		$(OBJECTS_HAL)
 
+$(OBJECTS_PATH)/arch.o: $(OBJECTS_ARCH)
+	$(LD) -r -o $(OBJECTS_PATH)/arch.o $(OBJECTS_ARCH)
+
 $(OBJECTS_PATH)/io.o: $(OBJECTS_IO)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/io.o \
 		$(OBJECTS_IO)
 
-$(OBJECTS_PATH)/ke.o: $(OBJECTS_KE) $(OBJECTS_KE_I386)
+$(OBJECTS_PATH)/ke.o: $(OBJECTS_KE)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/ke.o \
-		$(OBJECTS_KE) \
-		$(OBJECTS_KE_I386) 
+		$(OBJECTS_KE) 
 
 $(OBJECTS_PATH)/rtl.o: $(OBJECTS_RTL)
 	$(LD) \
@@ -335,12 +330,11 @@ $(OBJECTS_PATH)/rtl.o: $(OBJECTS_RTL)
 		-o $(OBJECTS_PATH)/rtl.o \
 		$(OBJECTS_RTL)
 
-$(OBJECTS_PATH)/mm.o: $(OBJECTS_MM) $(OBJECTS_MM_I386)
+$(OBJECTS_PATH)/mm.o: $(OBJECTS_MM)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/mm.o \
-		$(OBJECTS_MM) \
-		$(OBJECTS_MM_I386)
+		$(OBJECTS_MM) 
 
 $(OBJECTS_PATH)/ob.o: $(OBJECTS_OB)
 	$(LD) \
@@ -430,7 +424,8 @@ $(TARGETNAME).coff: $(TARGETNAME).rc ../include/reactos/resource.h
 
 
 # Note: ke.o MUST be the first file!!!
-OBJECTS = \
+OBJECTS := \
+	$(OBJECTS_PATH)/arch.o \
 	$(OBJECTS_PATH)/ke.o \
 	$(OBJECTS_PATH)/hal.o \
 	$(OBJECTS_PATH)/cc.o \

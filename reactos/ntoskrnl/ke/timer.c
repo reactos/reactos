@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.39 2001/02/18 19:43:15 phreak Exp $
+/* $Id: timer.c,v 1.40 2001/03/14 00:21:22 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -379,10 +379,10 @@ static void HandleExpiredTimer(PKTIMER current)
 			 NULL);
 	DPRINT("Finished dpc routine\n");
      }
-   KeAcquireDispatcherDatabaseLock( FALSE );
+   KeAcquireDispatcherDatabaseLock(FALSE);
    current->Header.SignalState = TRUE;
-   KeDispatcherObjectWake( &current->Header );
-   KeReleaseDispatcherDatabaseLock( FALSE );
+   KeDispatcherObjectWake(&current->Header);
+   KeReleaseDispatcherDatabaseLock(FALSE);
    if (current->Period != 0)
      {
 	current->DueTime.QuadPart += 
@@ -395,10 +395,11 @@ static void HandleExpiredTimer(PKTIMER current)
      }
 }
 
-VOID KeExpireTimers( PKDPC Dpc,
-		     PVOID Context1,
-		     PVOID Arg1,
-		     PVOID Arg2 )
+VOID 
+KeExpireTimers(PKDPC Dpc,
+	       PVOID Context1,
+	       PVOID Arg1,
+	       PVOID Arg2)
 {
    PLIST_ENTRY current_entry = NULL;
    PKTIMER current = NULL;
@@ -409,36 +410,29 @@ VOID KeExpireTimers( PKDPC Dpc,
    
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
-   while (current_entry!=(&TimerListHead))
+   while (current_entry != &TimerListHead)
      {
-	current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
+       current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
 	
-	current_entry = current_entry->Flink;
-	
-	if (system_time >= current->DueTime.QuadPart)
-	  {
-	     HandleExpiredTimer(current);
-	  }      
+       current_entry = current_entry->Flink;
+       
+       if (system_time >= current->DueTime.QuadPart)
+	 {
+	   HandleExpiredTimer(current);
+	 }      
      }
    
-   KeReleaseSpinLockFromDpcLevel( &TimerListLock );
+   KeReleaseSpinLockFromDpcLevel(&TimerListLock);
 }
 
 
-VOID KiUpdateSystemTime (VOID)
+VOID 
+KiUpdateSystemTime (VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */
 {
-   char str[36];
-   char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
-   int i;
-   int x,y;
-//   extern ULONG EiNrUsedBlocks;
-   extern unsigned int EiFreeNonPagedPool;
-   extern unsigned int EiUsedNonPagedPool;
-   //   extern ULONG PiNrThreads;
-//   extern ULONG MiNrFreePages;
+   char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 2);
    
    KiRawTicks++;
    
@@ -456,40 +450,35 @@ VOID KiUpdateSystemTime (VOID)
     * Display the tick count in the top left of the screen as a debugging
     * aid
     */
-//   sprintf(str,"%.8u %.8u",nr_used_blocks,ticks);
-   if ((EiFreeNonPagedPool + EiUsedNonPagedPool) == 0)
+   switch (KiTimerTicks % 4)
      {
-	x = y = 0;
-     }
-   else
-     {
-	x = (EiFreeNonPagedPool * 100) / 
-	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
-	y = (EiUsedNonPagedPool * 100) / 
-	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
-     }
-   memset(str, 0, sizeof(str));
-//   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
-//	   (unsigned int)EiFreeNonPagedPool);
-//   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-//   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,
-//	   (unsigned int)PiNrThreads);
-//   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
-//	   (unsigned int)MiNrFreePages);
-   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,(unsigned int)KiTimerTicks);
+     case 0:
+       vidmem[0] = '|';
+       break;
+       
+     case 1:
+       vidmem[0] = '/';
+       break;
 
-   for (i=0;i<17;i++)
-     {
-	*vidmem=str[i];
-	vidmem++;
-	*vidmem=0x7;
-	vidmem++;
+     case 2:
+       vidmem[0] = '-';
+       break;
+
+     case 3:
+       vidmem[0] = '\\';
+       break;
      }
-   KeInsertQueueDpc( &ExpireTimerDpc, 0, 0 );
+   vidmem[1] = 0x7;
+
+   /*
+    * Queue a DPC that will expire timers
+    */
+   KeInsertQueueDpc(&ExpireTimerDpc, 0, 0);
 }
 
 
-VOID KeInitializeTimerImpl(VOID)
+VOID 
+KeInitializeTimerImpl(VOID)
 /*
  * FUNCTION: Initializes timer irq handling
  * NOTE: This is only called once from main()
@@ -505,7 +494,7 @@ VOID KeInitializeTimerImpl(VOID)
    
    InitializeListHead(&TimerListHead);
    KeInitializeSpinLock(&TimerListLock);
-   KeInitializeDpc( &ExpireTimerDpc, KeExpireTimers, 0 );
+   KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    TimerInitDone = TRUE;
    
    /*
