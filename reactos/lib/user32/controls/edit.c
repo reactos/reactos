@@ -11,6 +11,8 @@
  *	please read EDIT.TODO (and update it when you change things)
  */
 
+#include <ntos/minmax.h>
+
 #include <windows.h>
 #include <user32/win.h>
 #include <user32/class.h>
@@ -820,7 +822,7 @@ static void EDIT_BuildLineDefs_ML(WND *wnd, EDITSTATE *es)
 			current_def->length = current_def->net_length;
 			break;
 		}
-		es->text_width = MAX(es->text_width, current_def->width);
+		es->text_width = max(es->text_width, current_def->width);
 		start += current_def->length;
 		*previous_next = current_def;
 		previous_next = &current_def->next;
@@ -973,8 +975,8 @@ static INT EDIT_CharFromPos(WND *wnd, EDITSTATE *es, INT x, INT y, LPBOOL after_
  */
 static void EDIT_ConfinePoint(WND *wnd, EDITSTATE *es, LPINT x, LPINT y)
 {
-	*x = MIN(MAX(*x, es->format_rect.left), es->format_rect.right - 1);
-	*y = MIN(MAX(*y, es->format_rect.top), es->format_rect.bottom - 1);
+	*x = min(max(*x, es->format_rect.left), es->format_rect.right - 1);
+	*y = min(max(*y, es->format_rect.top), es->format_rect.bottom - 1);
 }
 
 
@@ -1183,14 +1185,14 @@ static BOOL EDIT_MakeFit(WND *wnd, EDITSTATE *es, INT size)
 	EDIT_UnlockBuffer(wnd, es, TRUE);
 	if (es->text) {
 		if ((es->text = HeapReAlloc(es->heap, 0, es->text, size + 1)))
-			es->buffer_size = MIN(HeapSize(es->heap, 0, es->text) - 1, es->buffer_limit);
+			es->buffer_size = min(HeapSize(es->heap, 0, es->text) - 1, es->buffer_limit);
 		else
 			es->buffer_size = 0;
 	} else if (es->hloc) {
 		if ((hNew = LocalReAlloc(es->hloc, size + 1, 0))) {
 			DPRINT( "Old  bit handle %08x, new handle %08x\n", es->hloc, hNew);
 			es->hloc = hNew;
-			es->buffer_size = MIN(LocalSize(es->hloc) - 1, es->buffer_limit);
+			es->buffer_size = min(LocalSize(es->hloc) - 1, es->buffer_limit);
 		}
 	}
 	if (es->buffer_size < size) {
@@ -1522,8 +1524,8 @@ static void EDIT_PaintLine(WND *wnd, EDITSTATE *es, HDC dc, INT line, BOOL rev)
 	s = es->selection_start;
 	e = es->selection_end;
 	ORDER_INT(s, e);
-	s = MIN(li + ll, MAX(li, s));
-	e = MIN(li + ll, MAX(li, e));
+	s = min(li + ll, max(li, s));
+	e = min(li + ll, max(li, e));
 	if (rev && (s != e) &&
 			((es->flags & EF_FOCUSED) || (es->style & ES_NOHIDESEL))) {
 		x += EDIT_PaintText(wnd, es, dc, x, y, line, 0, s - li, FALSE);
@@ -1622,10 +1624,10 @@ static void EDIT_SetRectNP(WND *wnd, EDITSTATE *es, LPRECT rc)
 	}
 	es->format_rect.left += es->left_margin;
 	es->format_rect.right -= es->right_margin;
-	es->format_rect.right = MAX(es->format_rect.right, es->format_rect.left + es->char_width);
+	es->format_rect.right = max(es->format_rect.right, es->format_rect.left + es->char_width);
 	if (es->style & ES_MULTILINE)
 		es->format_rect.bottom = es->format_rect.top +
-			MAX(1, (es->format_rect.bottom - es->format_rect.top) / es->line_height) * es->line_height;
+			max(1, (es->format_rect.bottom - es->format_rect.top) / es->line_height) * es->line_height;
 	else
 		es->format_rect.bottom = es->format_rect.top + es->line_height;
 	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL))
@@ -1808,7 +1810,7 @@ static HLOCAL EDIT_EM_GetHandle(WND *wnd, EDITSTATE *es)
 		DPRINT( "could not allocate new  bit buffer\n");
 		return 0;
 	}
-	newSize = MIN(LocalSize(newBuf) - 1, es->buffer_limit);
+	newSize = min(LocalSize(newBuf) - 1, es->buffer_limit);
 	if (!(newText = LocalLock(newBuf))) {
 		DPRINT( "could not lock new  bit buffer\n");
 		LocalFree(newBuf);
@@ -1848,7 +1850,7 @@ static INT EDIT_EM_GetLine(WND *wnd, EDITSTATE *es, INT line, LPSTR lpch)
 		line = 0;
 	i = EDIT_EM_LineIndex(wnd, es, line);
 	src = es->text + i;
-	len = MIN(*(WORD *)lpch, EDIT_EM_LineLength(wnd, es, i));
+	len = min(*(WORD *)lpch, EDIT_EM_LineLength(wnd, es, i));
 	for (i = 0 ; i < len ; i++) {
 		*lpch = *src;
 		src++;
@@ -1912,7 +1914,7 @@ static INT EDIT_EM_LineFromChar(WND *wnd, EDITSTATE *es, INT index)
 	if (index > lstrlenA(es->text))
 		return es->line_count - 1;
 	if (index == -1)
-		index = MIN(es->selection_start, es->selection_end);
+		index = min(es->selection_start, es->selection_end);
 
 	line = 0;
 	line_def = es->first_line_def;
@@ -2013,7 +2015,7 @@ static BOOL EDIT_EM_LineScroll(WND *wnd, EDITSTATE *es, INT dx, INT dy)
 		dx = -es->x_offset;
 	if (dx > es->text_width - es->x_offset)
 		dx = es->text_width - es->x_offset;
-	nyoff = MAX(0, es->y_offset + dy);
+	nyoff = max(0, es->y_offset + dy);
 	if (nyoff >= es->line_count)
 		nyoff = es->line_count - 1;
 	dy = (es->y_offset - nyoff) * es->line_height;
@@ -2051,7 +2053,7 @@ static LRESULT EDIT_EM_PosFromChar(WND *wnd, EDITSTATE *es, INT index, BOOL afte
 	HFONT old_font = 0;
 	SIZE size;
 
-	index = MIN(index, len);
+	index = min(index, len);
 	dc = GetDC(wnd->hwndSelf);
 	if (es->font)
 		old_font = SelectObject(dc, es->font);
@@ -2368,12 +2370,12 @@ static void EDIT_EM_SetLimitText(WND *wnd, EDITSTATE *es, INT limit)
 {
 	if (es->style & ES_MULTILINE) {
 		if (limit)
-			es->buffer_limit = MIN(limit, BUFLIMIT_MULTI);
+			es->buffer_limit = min(limit, BUFLIMIT_MULTI);
 		else
 			es->buffer_limit = BUFLIMIT_MULTI;
 	} else {
 		if (limit)
-			es->buffer_limit = MIN(limit, BUFLIMIT_SINGLE);
+			es->buffer_limit = min(limit, BUFLIMIT_SINGLE);
 		else
 			es->buffer_limit = BUFLIMIT_SINGLE;
 	}
@@ -2459,8 +2461,8 @@ static void EDIT_EM_SetSel(WND *wnd, EDITSTATE *es, UINT start, UINT end, BOOL a
 		start = es->selection_end;
 		end = es->selection_end;
 	} else {
-		start = MIN(start, len);
-		end = MIN(end, len);
+		start = min(start, len);
+		end = min(end, len);
 	}
 	es->selection_start = start;
 	es->selection_end = end;
@@ -3347,7 +3349,7 @@ static void EDIT_WM_Paint(WND *wnd, EDITSTATE *es)
 	GetClipBox(dc, &rcRgn);
 	if (es->style & ES_MULTILINE) {
 		INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
-		for (i = es->y_offset ; i <= MIN(es->y_offset + vlc, es->y_offset + es->line_count - 1) ; i++) {
+		for (i = es->y_offset ; i <= min(es->y_offset + vlc, es->y_offset + es->line_count - 1) ; i++) {
 			EDIT_GetLineRect(wnd, es, i, 0, -1, &rcLine);
 			if (IntersectRect(&rc, &rcRgn, &rcLine))
 				EDIT_PaintLine(wnd, es, dc, i, rev);

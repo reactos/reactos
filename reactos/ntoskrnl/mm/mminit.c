@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.6 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: mminit.c,v 1.7 2000/08/30 19:33:28 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -145,7 +145,6 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 		      0,
 		      &kernel_pool_desc);
    
-   DPRINT1("Creating shared data page\n");
    BaseAddress = (PVOID)KERNEL_SHARED_DATA_BASE;
    Length = PAGESIZE;
    MmCreateMemoryArea(NULL,
@@ -166,7 +165,6 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 	KeBugCheck(0);
      }
    ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
-   DPRINT1("Finished creating shared data page\n");
    
 //   MmDumpMemoryAreas();
    DPRINT("MmInitVirtualMemory() done\n");

@@ -1,3 +1,7 @@
+#include <ntos/minmax.h>
+#define MAX max
+#define MIN min
+
 #include <windows.h>
 #include <stdlib.h>
 #include <user32/nc.h>

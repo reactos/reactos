@@ -34,7 +34,7 @@ org 100h
 ;
 BITS 16
 
-;%define NDEBUG 1
+%define NDEBUG 1
 
 %macro	DPRINT	1+
 %ifndef	NDEBUG
@@ -123,14 +123,40 @@ entry:
         ; Set the address of the start of kernel code
         ;
         mov     [_start_kernel],ebx
-
+	
+	;
+        ; Setup various variables
+        ;
+        mov     bx,ds
+        movzx   eax,bx
+        shl     eax,4
+        add     [gdt_base],eax
+	
+	;
+	; Make the argument list into a c string
+	;
+	mov     di,081h
+	mov     si,_kernel_parameters
+l21:
+        mov     al,[di]
+	mov     [si],al 
+        cmp     byte [di],0dh
+	je      l22
+	inc     di
+	inc     si
+	jmp     l21
+l22:
+        mov     byte [di], 0
+	mov     byte [si], 0
+	mov     [end_cmd_line], di
+	
         ;
         ; Make the argument list into a c string
         ;
         mov     di,081h
 l1:
-        cmp     byte [di],0dh
-        je      l2
+        cmp     byte [di], 0
+	je      l2
         cmp     byte [di],' '
         jne      l12
         mov     byte [di],0
@@ -138,18 +164,31 @@ l12:
         inc     di
         jmp     l1
 l2:
-        mov     byte [di],0
-        mov     [end_cmd_line],di
-
+ 
+        ;
+	; Check if we want to skip the first character
+	;
+	cmp     byte [081h],0
+	jne      l32
         mov     dx,082h
-l14:
+	jmp     l14
+l32:
+        mov     dx,081h
+
+        ;
+	; Check if we have reached the end of the string
+	;
+l14:	
         mov     bx,dx
         cmp     byte [bx],0
         je      l16
 
         ;
-        ; Process the arguments
+        ; Process the arguments	
         ;
+	cmp     byte [di], '/'
+	je      l15
+	
         mov     di,loading_msg
         call    print_string
         mov     di,dx
@@ -770,6 +809,58 @@ DPRINT	'next load base %A', 13, 10, 0
         call    print_string
         jmp     exit
 
+        ;
+	; copy 'ecx' bytes from 'es:esi' to logical address 'edi'
+	; 'eax' is destroyed
+	;
+himem_copy:
+        push    ds
+
+        ;
+        ; load gdt
+        ;
+        lgdt    [gdt_descr]
+
+        ;       
+        ; Enter pmode and clear prefetch queue
+        ;
+        mov     eax,cr0
+        or      eax,0x1
+        mov     cr0,eax
+        jmp     himem_copy_next
+himem_copy_next:
+
+        ;
+	; Load the ds register with a segment suitable for accessing
+	; logical addresses
+	;
+        mov     ax, KERNEL_DS
+	mov     ds, ax
+
+        ;
+	; Copy the data
+	;
+himem_copy_l1:
+        mov     al, [es:si]
+	mov     [ds:edi], al
+	dec     ecx
+	jnz     himem_copy_l1
+	
+	;
+	; Exit protected mode
+	;
+	mov     eax,cr0
+	and     eax,0xfffffffe
+	mov     cr0,eax
+	jmp     himem_copy_next1
+himem_copy_next1:	
+	
+	;
+	; Restore ds
+	;
+        pop     ds	
+	ret
+
 ;
 ; Handle of the currently open file
 ;
@@ -1006,14 +1097,6 @@ l8:
         mov     cr3,eax
 
         ;
-        ; Setup various variables
-        ;
-        mov     bx,ds
-        movzx   eax,bx
-        shl     eax,4
-        add     [gdt_base],eax
-
-        ;
         ; Enable the A20 address line (to allow access to over 1mb)
         ;
 	call	empty_8042
@@ -1127,21 +1210,6 @@ gdt:
         dw 0
         dw 0
                                 
-        ;dw 00000h          ; User code descriptor
-        ;dw 00000h          ; base: 0h limit: 3gb
-        ;dw 0fa00h
-        ;dw 000cch
-                               
-        ;dw 00000h          ; User data descriptor
-        ;dw 00000h          ; base: 0h limit: 3gb
-        ;dw 0f200h
-        ;dw 000cch
-                            
-        ;dw 00000h          
-        ;dw 00000h         
-        ;dw 00000h
-        ;dw 00000h
-
         dw 0ffffh          ; Kernel code descriptor 
         dw 00000h          ; 
         dw 09a00h          ; base 0h limit 4gb
@@ -1151,9 +1219,6 @@ gdt:
         dw 00000h          ; 
         dw 09200h          ; base 0h limit 4gb
         dw 000cfh
-
-                                
-        ;times NR_TASKS*8 db 0
 
 _end:
 

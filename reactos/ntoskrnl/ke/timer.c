@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.33 2000/07/19 14:23:37 dwelch Exp $
+/* $Id: timer.c,v 1.34 2000/08/30 19:33:28 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -61,6 +61,7 @@ static unsigned long long system_time = 0;
  * Number of timer interrupts since initialisation
  */
 volatile ULONGLONG KiTimerTicks;
+volatile ULONG KiRawTicks = 0;
 
 /*
  * The increment in the system clock every timer tick (in system time units)
@@ -443,6 +444,8 @@ VOID KiUpdateSystemTime (VOID)
    //   extern ULONG PiNrThreads;
 //   extern ULONG MiNrFreePages;
    
+   KiRawTicks++;
+   
    if (TimerInitDone == FALSE)
      {
 	return;
@@ -498,8 +501,11 @@ VOID KeInitializeTimerImpl(VOID)
 {
    TIME_FIELDS TimeFields;
    LARGE_INTEGER SystemBootTime;
+   extern VOID HalpCalibrateStallExecution (VOID);
    
    DPRINT("KeInitializeTimerImpl()\n");
+   
+   HalpCalibrateStallExecution ();
    
    InitializeListHead(&TimerListHead);
    KeInitializeSpinLock(&TimerListLock);

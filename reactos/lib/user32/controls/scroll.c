@@ -5,6 +5,10 @@
  * Copyright 1994, 1996 Alexandre Julliard
  */
 
+#include <ntos/minmax.h>
+#define MAX max
+#define MIN min
+
 #include <windows.h>
 #include <user32/sysmetr.h>
 #include <user32/scroll.h>

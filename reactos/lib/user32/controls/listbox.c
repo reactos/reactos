@@ -4,6 +4,10 @@
  * Copyright 1996 Alexandre Julliard
  */
 
+#include <ntos/minmax.h>
+#define MIN min
+#define MAX max
+
 #include <string.h>
 #include <windows.h>
 #include <user32/win.h>

@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.14 2000/07/24 23:50:13 ekohl Exp $
+/* $Id: halinit.c,v 1.15 2000/08/30 19:33:28 dwelch Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -21,17 +21,13 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
-STDCALL
-HalInitSystem (
-	ULONG			BootPhase,
-	PLOADER_PARAMETER_BLOCK	LoaderBlock
-	)
+BOOLEAN STDCALL
+HalInitSystem (ULONG			BootPhase,
+	       PLOADER_PARAMETER_BLOCK	LoaderBlock)
 {
    if (BootPhase == 0)
    {
       HalInitializeDisplay (LoaderBlock);
-      HalpCalibrateStallExecution ();
       HalpInitPICs ();
    }
    else

@@ -81,9 +81,9 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
      {
 	unsigned int current_mask = 0;
 	
-	for (i=(CurrentIrql-DISPATCH_LEVEL);i>DISPATCH_LEVEL;i--)
+	for (i=CurrentIrql; i>DISPATCH_LEVEL; i--)
 	  {
-	     set_bit(NR_DEVICE_SPECIFIC_LEVELS - i,&current_mask);
+	     current_mask = current_mask | (1 << (HIGH_LEVEL - i));
 	  }
 	
 	HiSetCurrentPICMask(current_mask);

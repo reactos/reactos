@@ -12,6 +12,7 @@
  * This is probably not the meaning this style has in MS-Windows.
  */
 
+#include <ntos/minmax.h>
 
 #include <ctype.h>
 #include <stdlib.h>

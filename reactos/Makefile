@@ -47,7 +47,8 @@ NET_DEVICE_DRIVERS = ne2000
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest wstest
+       pteb consume dump_shared_data vmtest 
+#       wstest
 #       objdir
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)

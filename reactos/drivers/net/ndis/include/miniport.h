@@ -32,7 +32,7 @@ typedef struct _MINIPORT_DRIVER {
 
 /* Information about a logical adapter */
 typedef struct _LOGICAL_ADAPTER {
-    NDIS_MINIPORT_BLOCK;                                /* NDIS defined fields */
+    NDIS_MINIPORT_BLOCK NdisMiniportBlock;                                /* NDIS defined fields */
 
     KDPC                        MiniportDpc;            /* DPC routine for adapter */
     BOOLEAN                     MiniportBusy;           /* A MiniportXxx routine is executing */

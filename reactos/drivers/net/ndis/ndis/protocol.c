@@ -42,7 +42,7 @@ ProIndicatePacket(
 
     NdisQueryPacket(Packet, NULL, NULL, NULL, &Total);
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
     Adapter->LoopPacket = Packet;
 
@@ -52,7 +52,7 @@ ProIndicatePacket(
         0,
         Adapter->CurLookaheadLength);
 
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
     if (Length > Adapter->MediumHeaderSize) {
         MiniIndicateData(Adapter,
@@ -72,11 +72,11 @@ ProIndicatePacket(
                          0);
     }
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
     Adapter->LoopPacket = NULL;
 
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
     return STATUS_SUCCESS;
 }
@@ -103,7 +103,7 @@ ProRequest(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     Queue = Adapter->MiniportBusy;
     if (Queue) {
         MiniQueueWorkItem(Adapter,
@@ -113,16 +113,16 @@ ProRequest(
     } else {
         Adapter->MiniportBusy = TRUE;
     }
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
     if (!Queue) {
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         NdisStatus = MiniDoRequest(Adapter, NdisRequest);
-        KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+        KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
         Adapter->MiniportBusy = FALSE;
         if (Adapter->WorkQueueHead)
             KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+        KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
         KeLowerIrql(OldIrql);
     } else {
         NdisStatus = NDIS_STATUS_PENDING;
@@ -164,11 +164,11 @@ ProSend(
 
     Packet->Reserved[0] = (ULONG_PTR)MacBindingHandle;
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     Queue = Adapter->MiniportBusy;
 
     /* We may have to loop this packet if miniport cannot */
-    if (Adapter->MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) {
+    if (Adapter->NdisMiniportBlock.MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) {
         if (MiniAdapterHasAddress(Adapter, Packet)) {
             /* Do software loopback because miniport does not support it */
 
@@ -185,16 +185,16 @@ ProSend(
             } else {
                 Adapter->MiniportBusy = TRUE;
             }
-            KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
             if (!Queue) {
                 KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
                 NdisStatus = ProIndicatePacket(Adapter, Packet);
-                KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+                KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
                 Adapter->MiniportBusy = FALSE;
                 if (Adapter->WorkQueueHead)
                     KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-                KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+                KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
                 KeLowerIrql(OldIrql);
                 return NdisStatus;
             } else {
@@ -214,19 +214,19 @@ ProSend(
     } else {
         Adapter->MiniportBusy = TRUE;
     }
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
     if (!Queue) {
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(
-            Adapter->MiniportAdapterContext,
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             Packet,
             0);
-        KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+        KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
         Adapter->MiniportBusy = FALSE;
         if (Adapter->WorkQueueHead)
             KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+        KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
         KeLowerIrql(OldIrql);
     } else {
         NdisStatus = NDIS_STATUS_PENDING;
@@ -285,7 +285,7 @@ ProTransferData(
     return (*Adapter->Miniport->Chars.u2.TransferDataHandler)(
         Packet,
         BytesTransferred,
-        Adapter->MiniportAdapterContext,
+        Adapter->NdisMiniportBlock.MiniportAdapterContext,
         MacReceiveContext,
         ByteOffset,
         BytesToTransfer);
@@ -316,9 +316,9 @@ NdisCloseAdapter(
     KeReleaseSpinLock(&AdapterBinding->ProtocolBinding->Lock, OldIrql);
 
     /* Remove protocol from adapter's bound protocols list */
-    KeAcquireSpinLock(&AdapterBinding->Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&AdapterBinding->Adapter->NdisMiniportBlock.Lock, &OldIrql);
     RemoveEntryList(&AdapterBinding->AdapterListEntry);
-    KeReleaseSpinLock(&AdapterBinding->Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&AdapterBinding->Adapter->NdisMiniportBlock.Lock, OldIrql);
 
     ExFreePool(AdapterBinding);
 
@@ -404,7 +404,7 @@ NdisOpenAdapter(
     /* Find the media type in the list provided by the protocol driver */
     Found = FALSE;
     for (i = 0; i < MediumArraySize; i++) {
-        if (Adapter->MediaType == MediumArray[i]) {
+        if (Adapter->NdisMiniportBlock.MediaType == MediumArray[i]) {
             *SelectedMediumIndex = i;
             Found = TRUE;
             break;
@@ -428,18 +428,18 @@ NdisOpenAdapter(
 
     AdapterBinding->ProtocolBinding        = Protocol;
     AdapterBinding->Adapter                = Adapter;
-    AdapterBinding->ProtocolBindingContext = ProtocolBindingContext;
+    AdapterBinding->NdisOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
 
     /* Set fields required by some NDIS macros */
-    AdapterBinding->MacBindingHandle = (NDIS_HANDLE)AdapterBinding;
+    AdapterBinding->NdisOpenBlock.MacBindingHandle = (NDIS_HANDLE)AdapterBinding;
     
     /* Set handlers (some NDIS macros require these) */
 
-    AdapterBinding->RequestHandler      = ProRequest;
-    AdapterBinding->ResetHandler        = ProReset;
-    AdapterBinding->u1.SendHandler      = ProSend;
-    AdapterBinding->SendPacketsHandler  = ProSendPackets;
-    AdapterBinding->TransferDataHandler = ProTransferData;
+    AdapterBinding->NdisOpenBlock.RequestHandler      = ProRequest;
+    AdapterBinding->NdisOpenBlock.ResetHandler        = ProReset;
+    AdapterBinding->NdisOpenBlock.u1.SendHandler      = ProSend;
+    AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
+    AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
 
     /* Put on protocol's bound adapters list */
     ExInterlockedInsertTailList(&Protocol->AdapterListHead,
@@ -449,7 +449,7 @@ NdisOpenAdapter(
     /* Put protocol on adapter's bound protocols list */
     ExInterlockedInsertTailList(&Adapter->ProtocolListHead,
                                 &AdapterBinding->AdapterListEntry,
-                                &Adapter->Lock);
+                                &Adapter->NdisMiniportBlock.Lock);
 
     *NdisBindingHandle = (NDIS_HANDLE)AdapterBinding;
 

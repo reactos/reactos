@@ -1,4 +1,4 @@
-/* $Id: fmutex.c,v 1.1 2000/06/09 20:05:00 ekohl Exp $
+/* $Id: fmutex.c,v 1.2 2000/08/30 19:33:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,12 +18,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-FASTCALL
-EXPORTED
-ExAcquireFastMutex (
-	PFAST_MUTEX	FastMutex
-	)
+VOID FASTCALL EXPORTED
+ExAcquireFastMutex (PFAST_MUTEX	FastMutex)
 {
    KeEnterCriticalRegion();
    if (InterlockedDecrement(&(FastMutex->Count))==0)
@@ -40,12 +36,8 @@ ExAcquireFastMutex (
 }
 
 
-VOID
-FASTCALL
-EXPORTED
-ExReleaseFastMutex (
-	PFAST_MUTEX	FastMutex
-	)
+VOID FASTCALL EXPORTED
+ExReleaseFastMutex (PFAST_MUTEX	FastMutex)
 {
    assert(FastMutex->Owner == KeGetCurrentThread());
    FastMutex->Owner=NULL;
@@ -59,12 +51,8 @@ ExReleaseFastMutex (
 }
 
 
-BOOLEAN
-FASTCALL
-EXPORTED
-ExTryToAcquireFastMutex (
-	PFAST_MUTEX	FastMutex
-	)
+BOOLEAN FASTCALL EXPORTED
+ExTryToAcquireFastMutex (PFAST_MUTEX	FastMutex)
 {
    UNIMPLEMENTED;
 }

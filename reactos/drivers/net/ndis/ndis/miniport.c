@@ -128,17 +128,17 @@ MiniIndicateData(
     }
 #endif /* DBG */
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     CurrentEntry = Adapter->ProtocolListHead.Flink;
     while (CurrentEntry != &Adapter->ProtocolListHead) {
 	    AdapterBinding = CONTAINING_RECORD(CurrentEntry,
                                            ADAPTER_BINDING,
                                            AdapterListEntry);
 
-        KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
         (*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler)(
-            AdapterBinding->ProtocolBindingContext,
+            AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
             MacReceiveContext,
             HeaderBuffer,
             HeaderBufferSize,
@@ -146,11 +146,11 @@ MiniIndicateData(
             LookaheadBufferSize,
             PacketSize);
 
-        KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+        KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
         CurrentEntry = CurrentEntry->Flink;
     }
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -172,23 +172,23 @@ MiniEthReceiveComplete(
 
     Adapter = (PLOGICAL_ADAPTER)Filter->Miniport;
 
-    KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     CurrentEntry = Adapter->ProtocolListHead.Flink;
     while (CurrentEntry != &Adapter->ProtocolListHead) {
 	    AdapterBinding = CONTAINING_RECORD(CurrentEntry,
                                            ADAPTER_BINDING,
                                            AdapterListEntry);
 
-        KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
         (*AdapterBinding->ProtocolBinding->Chars.ReceiveCompleteHandler)(
-            AdapterBinding->ProtocolBindingContext);
+            AdapterBinding->NdisOpenBlock.ProtocolBindingContext);
 
-        KeAcquireSpinLock(&Adapter->Lock, &OldIrql);
+        KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
         CurrentEntry = CurrentEntry->Flink;
     }
-    KeReleaseSpinLock(&Adapter->Lock, OldIrql);
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -256,7 +256,7 @@ MiniSendComplete(
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
     (*AdapterBinding->ProtocolBinding->Chars.u2.SendCompleteHandler)(
-        AdapterBinding->ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
 }
@@ -283,7 +283,7 @@ MiniTransferDataComplete(
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     (*AdapterBinding->ProtocolBinding->Chars.u3.TransferDataCompleteHandler)(
-        AdapterBinding->ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status,
         BytesTransferred);
@@ -320,14 +320,14 @@ MiniAdapterHasAddress(
 
     /* FIXME: Should handle fragmented packets */
 
-    switch (Adapter->MediaType) {
+    switch (Adapter->NdisMiniportBlock.MediaType) {
     case NdisMedium802_3:
         Length = ETH_LENGTH_OF_ADDRESS;
         /* Destination address is the first field */
         break;
 
     default:
-        NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n", Adapter->MediaType));
+        NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n", Adapter->NdisMiniportBlock.MediaType));
         return FALSE;
     }
 
@@ -420,7 +420,7 @@ MiniQueryInformation(
     BytesNeeded = (Size == 0)? Adapter->QueryBufferLength : Size;
 
     NdisStatus = (*Adapter->Miniport->Chars.QueryInformationHandler)(
-        Adapter->MiniportAdapterContext,
+        Adapter->NdisMiniportBlock.MiniportAdapterContext,
         Oid,
         Adapter->QueryBuffer,
         BytesNeeded,
@@ -445,7 +445,7 @@ MiniQueryInformation(
         }
 
         NdisStatus = (*Adapter->Miniport->Chars.QueryInformationHandler)(
-            Adapter->MiniportAdapterContext,
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             Oid,
             Adapter->QueryBuffer,
             Size,
@@ -578,12 +578,12 @@ MiniDoRequest(
  *     Status of operation
  */
 {
-    Adapter->MediaRequest = NdisRequest;
+    Adapter->NdisMiniportBlock.MediaRequest = NdisRequest;
 
     switch (NdisRequest->RequestType) {
     case NdisRequestQueryInformation:
         return (*Adapter->Miniport->Chars.QueryInformationHandler)(
-            Adapter->MiniportAdapterContext,
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.QUERY_INFORMATION.Oid,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength,
@@ -593,7 +593,7 @@ MiniDoRequest(
 
     case NdisRequestSetInformation:
         return (*Adapter->Miniport->Chars.SetInformationHandler)(
-            Adapter->MiniportAdapterContext,
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.SET_INFORMATION.Oid,
             NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
             NdisRequest->DATA.SET_INFORMATION.InformationBufferLength,
@@ -641,7 +641,7 @@ VOID MiniportDpc(
             MiniDisplayPacket((PNDIS_PACKET)WorkItemContext);
 #endif
             NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(
-                Adapter->MiniportAdapterContext,
+                Adapter->NdisMiniportBlock.MiniportAdapterContext,
                 (PNDIS_PACKET)WorkItemContext,
                 0);
             if (NdisStatus != NDIS_STATUS_PENDING) {
@@ -822,8 +822,8 @@ NdisMQueryInformationComplete(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
-        AdapterBinding->ProtocolBindingContext,
-        Adapter->MediaRequest,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+        Adapter->NdisMiniportBlock.MediaRequest,
         Status);
 }
 
@@ -867,9 +867,9 @@ DoQueries(
         return NdisStatus;
     }
 
-    RtlCopyMemory(&Adapter->MacOptions, Adapter->QueryBuffer, sizeof(UINT));
+    RtlCopyMemory(&Adapter->NdisMiniportBlock.MacOptions, Adapter->QueryBuffer, sizeof(UINT));
 
-    NDIS_DbgPrint(DEBUG_MINIPORT, ("MacOptions (0x%X).\n", Adapter->MacOptions));
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("MacOptions (0x%X).\n", Adapter->NdisMiniportBlock.MacOptions));
 
     /* Get current hardware address of adapter */
     NdisStatus = MiniQueryInformation(Adapter,
@@ -1031,7 +1031,7 @@ NdisMRegisterMiniport(
                             FILE_DEVICE_PHYSICAL_NETCARD,
                             0,
                             FALSE,
-                            &Adapter->DeviceObject);
+                            &Adapter->NdisMiniportBlock.DeviceObject);
     if (!NT_SUCCESS(Status)) {
         NDIS_DbgPrint(MIN_TRACE, ("Could not create device object.\n"));
         ExFreePool(Adapter);
@@ -1040,7 +1040,7 @@ NdisMRegisterMiniport(
 
     /* Initialize adapter object */
 
-    KeInitializeSpinLock(&Adapter->Lock);
+    KeInitializeSpinLock(&Adapter->NdisMiniportBlock.Lock);
 
     InitializeListHead(&Adapter->ProtocolListHead);
 
@@ -1050,13 +1050,13 @@ NdisMRegisterMiniport(
 
     /* Set handlers (some NDIS macros require these) */
 
-    Adapter->EthRxCompleteHandler = MiniEthReceiveComplete;
-    Adapter->EthRxIndicateHandler = MiniEthReceiveIndication;
+    Adapter->NdisMiniportBlock.EthRxCompleteHandler = MiniEthReceiveComplete;
+    Adapter->NdisMiniportBlock.EthRxIndicateHandler = MiniEthReceiveIndication;
 
-    Adapter->SendCompleteHandler  = MiniSendComplete;
-    Adapter->SendResourcesHandler = MiniSendResourcesAvailable;
-    Adapter->ResetCompleteHandler = MiniResetComplete;
-    Adapter->TDCompleteHandler    = MiniTransferDataComplete;
+    Adapter->NdisMiniportBlock.SendCompleteHandler  = MiniSendComplete;
+    Adapter->NdisMiniportBlock.SendResourcesHandler = MiniSendResourcesAvailable;
+    Adapter->NdisMiniportBlock.ResetCompleteHandler = MiniResetComplete;
+    Adapter->NdisMiniportBlock.TDCompleteHandler    = MiniTransferDataComplete;
 
 
     KeInitializeDpc(&Adapter->MiniportDpc, MiniportDpc, (PVOID)Adapter);
@@ -1083,19 +1083,19 @@ NdisMRegisterMiniport(
     if ((NdisStatus == NDIS_STATUS_SUCCESS) &&
         (SelectedMediumIndex < MEDIA_ARRAY_SIZE)) {
         
-        Adapter->MediaType = MediaArray[SelectedMediumIndex];
+        Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
 
-        switch (Adapter->MediaType) {
+        switch (Adapter->NdisMiniportBlock.MediaType) {
         case NdisMedium802_3:
             Adapter->MediumHeaderSize = 14;
             AddressOID = OID_802_3_CURRENT_ADDRESS;
             Adapter->AddressLength = ETH_LENGTH_OF_ADDRESS;
 
-            Adapter->FilterDbs.u.EthDB = ExAllocatePool(NonPagedPool,
+            Adapter->NdisMiniportBlock.FilterDbs.u.EthDB = ExAllocatePool(NonPagedPool,
                                                         sizeof(ETH_FILTER));
-            if (Adapter->FilterDbs.u.EthDB) {
-                RtlZeroMemory(Adapter->FilterDbs.u.EthDB, sizeof(ETH_FILTER));
-                Adapter->FilterDbs.u.EthDB->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
+            if (Adapter->NdisMiniportBlock.FilterDbs.u.EthDB) {
+                RtlZeroMemory(Adapter->NdisMiniportBlock.FilterDbs.u.EthDB, sizeof(ETH_FILTER));
+                Adapter->NdisMiniportBlock.FilterDbs.u.EthDB->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
             } else
                 MemError = TRUE;
             break;
@@ -1126,7 +1126,7 @@ NdisMRegisterMiniport(
         if (Adapter->LookaheadBuffer)
             ExFreePool(Adapter->LookaheadBuffer);
 
-        IoDeleteDevice(Adapter->DeviceObject);
+        IoDeleteDevice(Adapter->NdisMiniportBlock.DeviceObject);
         ExFreePool(Adapter);
         return NDIS_STATUS_FAILURE;
     }
@@ -1205,8 +1205,8 @@ NdisMSetInformationComplete(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
-        AdapterBinding->ProtocolBindingContext,
-        Adapter->MediaRequest,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+        Adapter->NdisMiniportBlock.MediaRequest,
         Status);
 }
 
@@ -1231,9 +1231,9 @@ NdisMSetAttributes(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    Adapter->MiniportAdapterContext = MiniportAdapterContext;
+    Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
     Adapter->Attributes    = BusMaster? NDIS_ATTRIBUTE_BUS_MASTER : 0;
-    Adapter->AdapterType   = AdapterType;
+    Adapter->NdisMiniportBlock.AdapterType   = AdapterType;
     Adapter->AttributesSet = TRUE;
 }
 

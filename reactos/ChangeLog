@@ -1,16 +1,45 @@
-27/5/00:       Fixed issue with closing non-existent or already closed handle
+2000-08-30     David Welch <welch@cwcom.net>
 
-26/1/99:       ZwCreateProcess now maps ntdll rather than the user-mode code
+               * Added calibration of KeStallExecutionProcessor timing
+	       (code from linux 2.2.16).
+	       
+	       * Corrected compilation bugs in user32 library.
 
-9/6/99:        Implemented ZwOpenProcess
-               Partially implemented killing other threads (possible memory
-                                                            leaks)
-	       Made a start on a proper implemention of APCs (based on 
-	       article in NT insider)
+	       * Corrected compilation bugs related to anonymous structs
+	       in ndis code.
+	       
+	       * Pass command line to kernel from loadros.
+	       
+	       * Corrected PIC mask calculation.
+	       
+2000-05-27     David Welch <welch@cwcom.net>
 
-8/12/98:       Corrected bug in shell (Read two keypresses and assumed they
-               where the key going up and down respectively)
-	       Corrected race in dpc handling
-	       Took out cleanup sections in ZwReadFile (now handled by the APC)
-	       Disabled broken code in kernel32
+               * Fixed issue with closing non-existent or already closed
+               handle.
+
+2000-01-26     David Welch <welch@cwcom.net>
+
+               * ZwCreateProcess now maps ntdll rather than the user-mode
+               code.
+
+1999-09-06     David Welch <welch@cwcom.net>
+
+               * Implemented ZwOpenProcess.
                
+	       * Partially implemented killing other threads (possible memory
+               leaks).
+	       
+	       * Made a start on a proper implemention of APCs (based on 
+	       article in NT insider).
+
+1998-12-08     David Welch <welch@cwcom.net>
+
+               * Corrected bug in shell (Read two keypresses and assumed they
+               where the key going up and down respectively).
+	       
+	       * Corrected race in dpc handling.
+	       
+	       * Took out cleanup sections in ZwReadFile (now handled by the 
+	       APC).
+	       
+	       * Disabled broken code in kernel32.

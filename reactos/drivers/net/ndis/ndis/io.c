@@ -30,26 +30,26 @@ VOID HandleDeferredProcessing(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     WasBusy = Adapter->MiniportBusy;
     Adapter->MiniportBusy = TRUE;
-    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
     NDIS_DbgPrint(MAX_TRACE, ("Before HandleInterruptHandler.\n"));
 
     /* Call the deferred interrupt service handler for this adapter */
     (*Adapter->Miniport->Chars.HandleInterruptHandler)(
-        Adapter->MiniportAdapterContext);
+        Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
     NDIS_DbgPrint(MAX_TRACE, ("After HandleInterruptHandler.\n"));
 
-    KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     if ((!WasBusy) && (Adapter->WorkQueueHead)) {
         KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
     } else {
         Adapter->MiniportBusy = WasBusy;
     }
-    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
     NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -75,11 +75,11 @@ BOOLEAN ServiceRoutine(
 
     (*Adapter->Miniport->Chars.ISRHandler)(&InterruptRecognized,
                                            &QueueMiniportHandleInterrupt,
-                                           Adapter->MiniportAdapterContext);
+                                           Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
     if (QueueMiniportHandleInterrupt) {
         NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
-        KeInsertQueueDpc(&Adapter->Interrupt->InterruptDpc, NULL, NULL);
+        KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
     }
 
     NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
@@ -361,7 +361,7 @@ NdisMRegisterInterrupt(
 
     Interrupt->SharedInterrupt = SharedInterrupt;
 
-    Adapter->Interrupt = Interrupt;
+    Adapter->NdisMiniportBlock.Interrupt = Interrupt;
 
     MappedIRQ = HalGetInterruptVector(Internal, /* Adapter->AdapterType, */
                                       0,

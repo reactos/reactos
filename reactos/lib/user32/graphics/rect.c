@@ -5,6 +5,10 @@
  *
  */
 
+#include <ntos/minmax.h>
+#define MIN min
+#define MAX max
+
 #include <windows.h>
 #include <user32/win.h>
 

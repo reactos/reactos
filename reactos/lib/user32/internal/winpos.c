@@ -4,6 +4,11 @@
  * Copyright 1993, 1994, 1995 Alexandre Julliard
  *                       1995, 1996 Alex Korobka
  */
+
+#include <ntos/minmax.h>
+#define MIN min
+#define MAX max
+
 #include <windows.h>
 #include <string.h>
 #include <user32/sysmetr.h>

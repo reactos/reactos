@@ -19,7 +19,6 @@
 /* GLOBALS *******************************************************************/
 
 static ULONG HardwareMathSupport;
-static ULONG x;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -43,11 +42,8 @@ VOID KiCheckFPU(VOID)
 	return;
      }
    /* FIXME: Do fsetpm */
-   DbgPrint("Detected FPU\n");
    HardwareMathSupport = 1;
    
-   DbgPrint("Testing FPU\n");
-   x = x * 6.789456;   
 }
 
 VOID KeInit1(VOID)
