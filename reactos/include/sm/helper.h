@@ -1,6 +1,6 @@
-#ifndef INCLUDE_SM_HELPER_H
+#if !defined(INCLUDE_SM_HELPER_H)
 #define INCLUDE_SM_HELPER_H
-#define _SM_HELPER_H
+
 /* $Id$ */
 
 /* smdll/connect.c */
