@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.17 2004/01/30 17:32:17 navaraf Exp $
+/* $Id: critical.c,v 1.18 2004/02/01 14:05:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,7 @@
 #include <ntdll/rtl.h>
 #include <ntos/synch.h>
 
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -46,37 +47,18 @@ RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 	     return;
 	  }
 	
-//	DbgPrint("Entering wait for critical section\n");
+	DPRINT("Entering wait for critical section\n");
 	Status = NtWaitForSingleObject(CriticalSection->LockSemaphore, 
 				       0, FALSE);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("RtlEnterCriticalSection: Failed to wait (Status %x)\n", 
-		      Status);
+	     DPRINT1("RtlEnterCriticalSection: Failed to wait (Status %x)\n", 
+		     Status);
 	  }
-//	DbgPrint("Left wait for critical section\n");
+	DPRINT("Left wait for critical section\n");
      }
    CriticalSection->OwningThread = Thread;
    CriticalSection->RecursionCount = 1;
-   
-#if 0
-   if ((ret = InterlockedIncrement(&(CriticalSection->LockCount) )) != 1)
-     {
-	if (CriticalSection->OwningThread != Thread)
-	  {
-	     NtWaitForSingleObject(CriticalSection->LockSemaphore, 
-				   0, 
-				   FALSE);
-	     CriticalSection->OwningThread = Thread;
-	  }
-     }
-   else
-     {
-	CriticalSection->OwningThread = Thread;
-     }
-   
-   CriticalSection->RecursionCount++;
-#endif
 }
 
 /*
@@ -110,8 +92,7 @@ RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
    
    if (CriticalSection->OwningThread != Thread)
      {
-	DbgPrint("Freeing critical section not owned\n");
-	return;
+	DPRINT1("Freeing critical section not owned\n");
      }
    
    CriticalSection->RecursionCount--;
@@ -128,29 +109,10 @@ RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 	Status = NtReleaseSemaphore(CriticalSection->LockSemaphore, 1, NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("Failed to release semaphore (Status %x)\n",
-		      Status);
+	     DPRINT1("Failed to release semaphore (Status %x)\n",
+		     Status);
 	  }
      }
-   
-#if 0
-   CriticalSection->RecursionCount--;
-   if (CriticalSection->RecursionCount == 0)
-     {
-	CriticalSection->OwningThread = (HANDLE)-1;
-	// if LockCount > 0 and RecursionCount == 0 there
-	// is a waiting thread 
-	// ReleaseSemaphore will fire up a waiting thread
-	if (InterlockedDecrement(&CriticalSection->LockCount) > 0)
-	  {
-	     NtReleaseSemaphore(CriticalSection->LockSemaphore,1,NULL);
-	  }
-     }
-   else
-     {
-	InterlockedDecrement(&CriticalSection->LockCount);
-     }
-#endif
 }
 
 /*
