@@ -33,6 +33,7 @@ int __getmainargs(int *argc,char ***argv,char ***env,int flag)
 	     __argc++;
 	     _acmdln[i]='\0';
 	     __argv[__argc-1] = strdup(_acmdln + afterlastspace);
+       _acmdln[i]=' ';
 	     i++;
 	     while (_acmdln[i]==' ')
 	       i++;

@@ -94,6 +94,7 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
 	     __argc++;
 	     _acmdln_dll[i]='\0';
 	     __argv[__argc-1] = strdup(_acmdln_dll + afterlastspace);
+	     _acmdln_dll[i]=' ';
 	     i++;
 	     while (_acmdln_dll[i]==' ')
 	       i++;
