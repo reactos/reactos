@@ -1232,15 +1232,7 @@ struct XMLReader
 		return out.str();
 	}
 
-	std::string get_error_string() const
-	{
-		XML_Error error = XML_GetErrorCode(_parser);
-
-		std::ostringstream out;
-		out << get_position() << " XML parser error #" << error << "\n";
-
-		return out.str();
-	}
+	std::string get_error_string() const;
 
 protected:
 	XMLPos		_pos;
@@ -1298,11 +1290,16 @@ struct XMLDoc : public XMLNode
 	{
 		XMLReader reader(this);
 
-		/*XML_Status status = */reader.read(in);
-/*
-		if (status == XML_STATUS_ERROR)
-			cerr << reader.get_error_string();
-*/
+		XML_Status status = reader.read(in);
+
+		if (status == XML_STATUS_ERROR) {
+			std::ostringstream out;
+
+			out << reader.get_position() << " " << reader.get_error_string();
+
+			_last_error = out.str();
+		}
+
 		return in;
 	}
 
@@ -1312,10 +1309,15 @@ struct XMLDoc : public XMLNode
 		XMLReader reader(this);
 
 		XML_Status status = reader.read(in);
-/*
-		if (status == XML_STATUS_ERROR)
-			cerr << path << reader.get_error_string();
-*/
+
+		if (status == XML_STATUS_ERROR) {
+			std::ostringstream out;
+
+			out << path << reader.get_position() << " " << reader.get_error_string();
+
+			_last_error = out.str();
+		}
+
 		return status != XML_STATUS_ERROR;
 	}
 
@@ -1349,6 +1351,8 @@ struct XMLDoc : public XMLNode
 
 		write_formating(out);
 	}
+
+	std::string	_last_error;
 };
 
 

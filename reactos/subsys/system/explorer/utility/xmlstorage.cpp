@@ -36,9 +36,8 @@
 
 */
 
-#include "precomp.h"
-
 //#include "xmlstorage.h"
+#include "precomp.h"
 
 
 namespace XMLStorage {
@@ -69,11 +68,6 @@ XML_Status XMLReader::read(std::istream& in)
 
 	if (status != XML_STATUS_ERROR)
 		status = XML_ParseBuffer(_parser, 0, true);
-
-/*
-	if (status == XML_STATUS_ERROR)
-		cerr << get_error_string();
-*/
 
 	if (_pos->_children.empty())
 		_pos->_trailing.append(_content);
@@ -185,6 +179,54 @@ void XMLCALL XMLReader::XML_DefaultHandler(void* userData, const XML_Char* s, in
 	XMLReader* pReader = (XMLReader*) userData;
 
 	pReader->_content.append(s, len);
+}
+
+
+std::string XMLReader::get_error_string() const
+{
+	XML_Error error = XML_GetErrorCode(_parser);
+
+	switch(error) {
+	  case XML_ERROR_NONE:								return "XML_ERROR_NONE";
+	  case XML_ERROR_NO_MEMORY:							return "XML_ERROR_NO_MEMORY";
+	  case XML_ERROR_SYNTAX:							return "XML_ERROR_SYNTAX";
+	  case XML_ERROR_NO_ELEMENTS:						return "XML_ERROR_NO_ELEMENTS";
+	  case XML_ERROR_INVALID_TOKEN:						return "XML_ERROR_INVALID_TOKEN";
+	  case XML_ERROR_UNCLOSED_TOKEN:					return "XML_ERROR_UNCLOSED_TOKEN";
+	  case XML_ERROR_PARTIAL_CHAR:						return "XML_ERROR_PARTIAL_CHAR";
+	  case XML_ERROR_TAG_MISMATCH:						return "XML_ERROR_TAG_MISMATCH";
+	  case XML_ERROR_DUPLICATE_ATTRIBUTE:				return "XML_ERROR_DUPLICATE_ATTRIBUTE";
+	  case XML_ERROR_JUNK_AFTER_DOC_ELEMENT:			return "XML_ERROR_JUNK_AFTER_DOC_ELEMENT";
+	  case XML_ERROR_PARAM_ENTITY_REF:					return "XML_ERROR_PARAM_ENTITY_REF";
+	  case XML_ERROR_UNDEFINED_ENTITY:					return "XML_ERROR_UNDEFINED_ENTITY";
+	  case XML_ERROR_RECURSIVE_ENTITY_REF:				return "XML_ERROR_RECURSIVE_ENTITY_REF";
+	  case XML_ERROR_ASYNC_ENTITY:						return "XML_ERROR_ASYNC_ENTITY";
+	  case XML_ERROR_BAD_CHAR_REF:						return "XML_ERROR_BAD_CHAR_REF";
+	  case XML_ERROR_BINARY_ENTITY_REF:					return "XML_ERROR_BINARY_ENTITY_REF";
+	  case XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF:		return "XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF";
+	  case XML_ERROR_MISPLACED_XML_PI:					return "XML_ERROR_MISPLACED_XML_PI";
+	  case XML_ERROR_UNKNOWN_ENCODING:					return "XML_ERROR_UNKNOWN_ENCODING";
+	  case XML_ERROR_INCORRECT_ENCODING:				return "XML_ERROR_INCORRECT_ENCODING";
+	  case XML_ERROR_UNCLOSED_CDATA_SECTION:			return "XML_ERROR_UNCLOSED_CDATA_SECTION";
+	  case XML_ERROR_EXTERNAL_ENTITY_HANDLING:			return "XML_ERROR_EXTERNAL_ENTITY_HANDLING";
+	  case XML_ERROR_NOT_STANDALONE:					return "XML_ERROR_NOT_STANDALONE";
+	  case XML_ERROR_UNEXPECTED_STATE:					return "XML_ERROR_UNEXPECTED_STATE";
+	  case XML_ERROR_ENTITY_DECLARED_IN_PE:				return "XML_ERROR_ENTITY_DECLARED_IN_PE";
+	  case XML_ERROR_FEATURE_REQUIRES_XML_DTD:			return "XML_ERROR_FEATURE_REQUIRES_XML_DTD";
+	  case XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING:	return "XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING";
+	  case XML_ERROR_UNBOUND_PREFIX:					return "XML_ERROR_UNBOUND_PREFIX";
+	  case XML_ERROR_SUSPENDED:							return "XML_ERROR_SUSPENDED";
+	  case XML_ERROR_NOT_SUSPENDED:						return "XML_ERROR_NOT_SUSPENDED";
+	  case XML_ERROR_ABORTED:							return "XML_ERROR_ABORTED";
+	  case XML_ERROR_FINISHED:							return "XML_ERROR_FINISHED";
+	  case XML_ERROR_SUSPEND_PE:						return "XML_ERROR_SUSPEND_PE";
+	}
+
+	std::ostringstream out;
+
+	out << "XML parser error #" << error;
+
+	return out.str();
 }
 
 
