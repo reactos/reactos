@@ -23,7 +23,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"Serial Mouse Device Driver\0"
-            VALUE "FileVersion",	"0.0.1\0"
+            VALUE "FileVersion",	"0.0.8\0"
             VALUE "InternalName",	"sermouse\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"sermouse.sys\0"

@@ -140,7 +140,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\Device\\Mouse");
+   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\Device\\PointerClass0");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;

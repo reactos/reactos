@@ -147,6 +147,80 @@ VOID PS2MouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Cont
    DeviceExtension->InputDataCount[Queue] = 0;
 }
 
+/* Maximum value plus one for \Device\PointerClass* device name */
+#define POINTER_PORTS_MAXIMUM	8
+/* Letter count for POINTER_PORTS_MAXIMUM variable * sizeof(WCHAR) */
+#define SUFFIX_MAXIMUM_SIZE		(1 * sizeof(WCHAR))
+
+/* This is almost the same routine as in sermouse.c. */
+STATIC PDEVICE_OBJECT
+AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
+{
+	PDEVICE_OBJECT DeviceObject;
+	UNICODE_STRING DeviceName;
+	UNICODE_STRING SuffixString;
+	UNICODE_STRING SymlinkName;
+	PDEVICE_EXTENSION DeviceExtension;
+	ULONG Suffix;
+	NTSTATUS Status;
+
+	/* Allocate buffer for full device name */   
+	RtlInitUnicodeString(&DeviceName, NULL);
+	DeviceName.MaximumLength = sizeof(DD_MOUSE_DEVICE_NAME_U) + SUFFIX_MAXIMUM_SIZE + sizeof(UNICODE_NULL);
+	DeviceName.Buffer = ExAllocatePool(PagedPool, DeviceName.MaximumLength);
+	RtlAppendUnicodeToString(&DeviceName, DD_MOUSE_DEVICE_NAME_U);
+
+	/* Allocate buffer for device name suffix */
+	RtlInitUnicodeString(&SuffixString, NULL);
+	SuffixString.MaximumLength = SUFFIX_MAXIMUM_SIZE + sizeof(UNICODE_NULL);
+	SuffixString.Buffer = ExAllocatePool(PagedPool, SuffixString.MaximumLength);
+
+	/* Generate full qualified name with suffix */
+	for (Suffix = 0; Suffix < POINTER_PORTS_MAXIMUM; ++Suffix)
+	{
+		ANSI_STRING DebugString;
+
+		RtlIntegerToUnicodeString(Suffix, 10, &SuffixString);
+		RtlAppendUnicodeToString(&DeviceName, SuffixString.Buffer);
+		// FIXME: this isn't really a serial mouse port driver
+		Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION),
+			&DeviceName, FILE_DEVICE_SERIAL_MOUSE_PORT, 0, TRUE, &DeviceObject);
+		RtlUnicodeStringToAnsiString(&DebugString, &DeviceName, TRUE);
+		DbgPrint(DebugString.Buffer);
+		DbgPrint("\n");
+		RtlFreeAnsiString(&DebugString);
+		/* Device successfully created, leave the cyclus */
+		if (NT_SUCCESS(Status))
+			break;
+		DeviceName.Length -= SuffixString.Length;
+	}
+ 
+	ExFreePool(DeviceName.Buffer);
+
+	/* Couldn't create device */
+	if (!NT_SUCCESS(Status))
+	{
+		ExFreePool(SuffixString.Buffer);
+		return NULL;
+	}
+
+	DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
+
+	/* Create symlink */
+	RtlInitUnicodeString(&SymlinkName, NULL);
+	SymlinkName.MaximumLength = sizeof(L"\\??\\Mouse") + SUFFIX_MAXIMUM_SIZE + sizeof(UNICODE_NULL);
+	SymlinkName.Buffer = ExAllocatePool(PagedPool, SymlinkName.MaximumLength);
+	RtlAppendUnicodeToString(&SymlinkName, L"\\??\\Mouse");
+	RtlAppendUnicodeToString(&DeviceName, SuffixString.Buffer);
+	IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+	ExFreePool(SuffixString.Buffer);
+
+	DeviceExtension = DeviceObject->DeviceExtension;
+	KeInitializeDpc(&DeviceExtension->IsrDpc, (PKDEFERRED_ROUTINE)PS2MouseIsrDpc, DeviceObject);
+
+	return DeviceObject;
+}
+
 NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
@@ -162,28 +236,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
      return STATUS_UNSUCCESSFUL;
    }
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = PS2MouseDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = PS2MouseDispatch;
-   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = PS2MouseInternalDeviceControl;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)PS2MouseDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH)PS2MouseDispatch;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)PS2MouseInternalDeviceControl;
    DriverObject->DriverStartIo                = PS2MouseStartIo;
 
-   RtlInitUnicodeStringFromLiteral(&DeviceName,
-                                   L"\\Device\\Mouse"); // FIXME: find correct device name
-   IoCreateDevice(DriverObject,
-		  sizeof(DEVICE_EXTENSION),
-		  &DeviceName,
-		  FILE_DEVICE_SERIAL_MOUSE_PORT, // FIXME: this isn't really a serial mouse port driver
-		  0,
-		  TRUE,
-		  &DeviceObject);
-   DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
-
-   RtlInitUnicodeStringFromLiteral(&SymlinkName,
-                                   L"\\??\\Mouse"); // FIXME: find correct device name
-   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-
-   DeviceExtension = DeviceObject->DeviceExtension;
-   KeInitializeDpc(&DeviceExtension->IsrDpc, (PKDEFERRED_ROUTINE)PS2MouseIsrDpc, DeviceObject);
+   DeviceObject = AllocatePointerDevice(DriverObject);
 
    mouse_init(DeviceObject);
 
