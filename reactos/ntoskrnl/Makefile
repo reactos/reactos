@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.100 2003/07/11 20:55:43 gvg Exp $
+# $Id: Makefile,v 1.101 2003/07/15 16:26:18 silverblade Exp $
 #
 # ReactOS Operating System
 #
@@ -39,6 +39,9 @@ else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
 CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
 endif
+
+# ASFLAGS += -D__USE_W32API -D_NTOSKRNL_
+# CFLAGS += -D__USE_W32API -D_NTOSKRNL_
 
 #
 # Build configuration

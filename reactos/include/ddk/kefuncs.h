@@ -4,7 +4,9 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+#ifndef KeFlushIoBuffers
 #define KeFlushIoBuffers(Mdl, ReadOperation, DmaOperation)
+#endif
 
 VOID STDCALL KeAttachProcess (struct _EPROCESS*	Process);
 
@@ -21,8 +23,24 @@ struct _KPROCESS* KeGetCurrentProcess(VOID);
 VOID STDCALL KeAcquireSpinLock (PKSPIN_LOCK	SpinLock,
 				PKIRQL		OldIrql);
 
-VOID STDCALL KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock);
+//VOID STDCALL KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock);
 
+//NTOSAPI
+//DDKFASTAPI
+STDCALL
+VOID
+KeAcquireSpinLockAtDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+  
+#define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
+
+//NTOSAPI
+//DDKFASTAPI
+STDCALL
+VOID
+KeReleaseSpinLockFromDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+  
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -77,13 +95,13 @@ VOID STDCALL KeFlushWriteBuffer (VOID);
 
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
+#ifndef __USE_W32API
 ULONG KeGetCurrentProcessorNumber(VOID);
+ULONG KeGetDcacheFillSize(VOID);
+ULONG STDCALL KeGetPreviousMode (VOID);
+#endif
 
 struct _KTHREAD* STDCALL KeGetCurrentThread (VOID);
-
-ULONG KeGetDcacheFillSize(VOID);
-
-ULONG STDCALL KeGetPreviousMode (VOID);
 
 VOID STDCALL KeInitializeApc (IN PKAPC  Apc,
 	IN PKTHREAD  Thread,
@@ -101,8 +119,10 @@ VOID STDCALL KeInitializeApc (IN PKAPC  Apc,
  *      PKBUGCHECK_CALLBACK_RECORD CallbackRecord
  *      );
  */
+#ifndef KeInitializeCallbackRecord
 #define KeInitializeCallbackRecord(CallbackRecord) \
 	(CallbackRecord)->State = BufferEmpty
+#endif
 
 VOID STDCALL KeInitializeDeviceQueue (PKDEVICE_QUEUE	DeviceQueue);
 
@@ -298,11 +318,13 @@ KeReleaseSpinLock (
 	KIRQL		NewIrql
 	);
 
+#ifndef __USE_W32API
 VOID
 STDCALL
 KeReleaseSpinLockFromDpcLevel (
 	PKSPIN_LOCK	Spinlock
 	);
+#endif
 
 PKDEVICE_QUEUE_ENTRY
 STDCALL

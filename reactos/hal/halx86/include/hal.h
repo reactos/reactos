@@ -50,4 +50,12 @@ HalpQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 			   OUT PULONG ReturnedLength);
 
 
+/* Non-standard functions */
+VOID STDCALL
+HalReleaseDisplayOwnership();
+
+BOOLEAN STDCALL
+HalQueryDisplayOwnership();
+
+
 #endif /* __INTERNAL_HAL_HAL_H */

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.16 2003/07/12 10:24:45 chorns Exp $ */
+/* $Id: extypes.h,v 1.17 2003/07/15 16:26:18 silverblade Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -27,7 +27,7 @@ typedef struct _OWNER_ENTRY
      {
 	LONG OwnerCount;
 	ULONG TableSize;
-     } a;
+     } u;
 } OWNER_ENTRY, *POWNER_ENTRY;
 
 typedef struct _ERESOURCE
@@ -46,7 +46,7 @@ typedef struct _ERESOURCE
      {
 	PVOID Address;
 	ULONG CreatorBackTraceIndex;
-     } a;
+     } u;
    KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.33 2003/07/12 10:24:45 chorns Exp $
+/* $Id: bug.c,v 1.34 2003/07/15 16:26:18 silverblade Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -36,6 +36,8 @@
 #include <internal/ps.h>
 
 #include <internal/debug.h>
+
+#include "../../hal/halx86/include/hal.h"
 
 /* GLOBALS ******************************************************************/
 

@@ -211,7 +211,9 @@ NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmInitSectionImplementation(VOID);
 
+#ifndef __USE_W32API
 #define MM_LOWEST_USER_ADDRESS (4096)
+#endif
 
 PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
 			       PMADDRESS_SPACE AddressSpace,
