@@ -135,6 +135,7 @@ void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLO
 void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight);
 void LoadSettings(void);
 void SaveSettings(void);
+void TaskManager_OnRestoreMainWindow(void);
 void TaskManager_OnEnterMenuLoop(HWND hWnd);
 void TaskManager_OnExitMenuLoop(HWND hWnd);
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);

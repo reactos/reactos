@@ -23,6 +23,8 @@
 #ifndef __TRAYICON_H
 #define __TRAYICON_H
 
+#define WM_ONTRAYICON   WM_USER + 5
+
 HICON	TrayIcon_GetProcessorUsageIcon(void);
 BOOL	TrayIcon_ShellAddTrayIcon(void);
 BOOL	TrayIcon_ShellRemoveTrayIcon(void);

@@ -84,7 +84,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
     CloseHandle(hProcess);
 
-    /* Now lets get the SE_DEBUG_NAME priviledge
+    /* Now lets get the SE_DEBUG_NAME privilege
      * so that we can debug processes 
      */
 
@@ -154,6 +154,9 @@ LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
             break;
         case ID_OPTIONS_SHOW16BITTASKS:
             TaskManager_OnOptionsShow16BitTasks();
+            break;
+        case ID_RESTORE:
+            TaskManager_OnRestoreMainWindow();
             break;
         case ID_VIEW_LARGE:
             ApplicationPage_OnViewLargeIcons();
@@ -258,6 +261,48 @@ LRESULT CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
             DestroyWindow(hDlg);
             break;
         }     
+        break;
+
+    case WM_ONTRAYICON:
+        switch(lParam)
+        {
+        case WM_RBUTTONDOWN:
+            {
+            POINT pt;
+            BOOL OnTop;
+            HMENU hMenu, hPopupMenu;
+            
+            GetCursorPos(&pt);
+            
+            OnTop = ((GetWindowLong(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+            
+            hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_TRAY_POPUP));
+            hPopupMenu = GetSubMenu(hMenu, 0);
+            
+            if(IsWindowVisible(hMainWnd))
+            {
+              DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
+            }
+            else
+            {
+              SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
+            }
+            
+            if(OnTop)
+            {
+              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
+            }
+            
+            SetForegroundWindow(hMainWnd);
+            TrackPopupMenuEx(hPopupMenu, 0, pt.x, pt.y, hMainWnd, NULL);
+            
+            DestroyMenu(hMenu);
+            break;
+            }
+        case WM_LBUTTONDBLCLK:
+            TaskManager_OnRestoreMainWindow();
+            break;
+        }
         break;
 
     case WM_NOTIFY:
@@ -606,7 +651,13 @@ void OnSize( UINT nType, int cx, int cy )
     RECT    rc;
 
     if (nType == SIZE_MINIMIZED)
+    {
+        if(TaskManagerSettings.HideWhenMinimized)
+        {
+          ShowWindow(hMainWnd, SW_HIDE);
+        }
         return;
+    }
 
     nXDifference = cx - nOldWidth;
     nYDifference = cy - nOldHeight;
@@ -775,6 +826,20 @@ void SaveSettings(void)
     RegSetValueEx(hKey, _T("Preferences"), 0, REG_BINARY, (LPBYTE)&TaskManagerSettings, sizeof(TASKMANAGER_SETTINGS));
     /* Close the key */
     RegCloseKey(hKey);
+}
+
+void TaskManager_OnRestoreMainWindow(void)
+{
+  HMENU hMenu, hOptionsMenu;
+  BOOL OnTop;
+
+  hMenu = GetMenu(hMainWnd);
+  hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
+  OnTop = ((GetWindowLong(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+  
+  OpenIcon(hMainWnd);
+  SetForegroundWindow(hMainWnd);
+  SetWindowPos(hMainWnd, (OnTop ? HWND_TOPMOST : HWND_TOP), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
 }
 
 void TaskManager_OnEnterMenuLoop(HWND hWnd)

@@ -133,11 +133,13 @@ END
 
 IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
-    MENUITEM "&Restaurar",                   ID_RESTORE
-    MENUITEM "&Cerrar",                      ID_FILE_EXIT
-    MENUITEM SEPARATOR
-    MENUITEM "&Siempre Visible",             ID_OPTIONS_ALWAYSONTOP, 
-CHECKED
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Restaurar",                   ID_RESTORE
+        MENUITEM "&Cerrar",                      ID_FILE_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Siempre Visible",             ID_OPTIONS_ALWAYSONTOP
+    END
 END
 
 IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
