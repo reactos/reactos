@@ -1,0 +1,3 @@
+SDK Contains the include files necessary for building User-Mode Applications on ReactOS.
+DDK Contains the include files necessary for building Kernel-Mode Drivers on ReactOS.
+NDK Contains the include files necessary for building ReactOS Private Components that need access to the Undocumented Native API.

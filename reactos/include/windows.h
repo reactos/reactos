@@ -1,180 +1,128 @@
 /*
-   windows.h
+	windows.h - main header file for the Win32 API
 
-   Include this file if you wish to use the Windows32 API Library
+	Written by Anders Norlander <anorland@hem2.passagen.se>
 
-   Copyright (C) 1996 Free Software Foundation
+	This file is part of a free library for the Win32 API.
 
-   Author:  Scott Christley <scottc@net-community.com>
-   Date: 1996
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   This file is part of the Windows32 API Library.
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version.
-
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
-
-   If you are interested in a warranty or support for this source code,
-   contact Scott Christley <scottc@net-community.com> for more information.
-
-   You should have received a copy of the GNU Library General Public
-   License along with this library; see the file COPYING.LIB.
-   If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-
-#ifndef _GNU_H_WINDOWS_H
-#define _GNU_H_WINDOWS_H
-
-#ifdef __USE_W32API
-
-#include_next <windows.h>
-
-#else /* __USE_W32API */
-
-#ifndef max
-#define max(a,b)   (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef min
-#define min(a,b)   (((a) < (b)) ? (a) : (b))
+#ifndef _WINDOWS_H
+#define _WINDOWS_H
+#if __GNUC__ >=3
+#pragma GCC system_header
 #endif
 
-#ifndef MAX
-#define MAX max
+/* translate GCC target defines to MS equivalents. Keep this synchronized
+   with winnt.h. */
+#if defined(__i686__) && !defined(_M_IX86)
+#define _M_IX86 600
+#elif defined(__i586__) && !defined(_M_IX86)
+#define _M_IX86 500
+#elif defined(__i486__) && !defined(_M_IX86)
+#define _M_IX86 400
+#elif defined(__i386__) && !defined(_M_IX86)
+#define _M_IX86 300
 #endif
-#ifndef MIN
-#define MIN min
+#if defined(_M_IX86) && !defined(_X86_)
+#define _X86_
+#elif defined(_M_ALPHA) && !defined(_ALPHA_)
+#define _ALPHA_
+#elif defined(_M_PPC) && !defined(_PPC_)
+#define _PPC_
+#elif defined(_M_MRX000) && !defined(_MIPS_)
+#define _MIPS_
+#elif defined(_M_M68K) && !defined(_68K_)
+#define _68K_
 #endif
 
-#ifndef RC_INVOKED
-#include <limits.h>
+#ifdef RC_INVOKED
+/* winresrc.h includes the necessary headers */
+#include <winresrc.h>
+#else
+
 #include <stdarg.h>
+#include <windef.h>
+#include <wincon.h>
+#include <winbase.h>
+#if !(defined NOGDI || defined  _WINGDI_H)
+#include <wingdi.h>
+#endif
+#ifndef _WINUSER_H
+#include <winuser.h>
+#endif
+#ifndef _WINNLS_H
+#include <winnls.h>
+#endif
+#ifndef _WINVER_H
+#include <winver.h>
+#endif
+#ifndef _WINNETWK_H
+#include <winnetwk.h>
+#endif
+#ifndef _WINREG_H
+#include <winreg.h>
+#endif
+#ifndef _WINSVC_H
+#include <winsvc.h>
 #endif
 
-/* Base definitions */
-#include <base.h>
-
-/* WIN32 messages */
 #ifndef WIN32_LEAN_AND_MEAN
-#include <messages.h>
+#include <cderr.h>
+#include <dde.h>
+#include <ddeml.h>
+#include <dlgs.h>
+#include <imm.h>
+#include <lzexpand.h>
+#include <mmsystem.h>
+#include <nb30.h>
+#include <rpc.h>
+#include <shellapi.h>
+#include <winperf.h>
+#ifndef NOGDI
+#include <commdlg.h>
+#include <winspool.h>
 #endif
-
-/* WIN32 definitions */
-#include <defines.h>
-
-#ifndef RC_INVOKED
-
-/* WIN32 structures */
-#include <structs.h>
-
-/* WIN32 functions */
-#ifndef WIN32_LEAN_AND_MEAN
-#include <funcs.h>
-#endif
-
-/* WIN32 PE file format */
-#include <pe.h>
-
-#endif /* ! defined (RC_INVOKED) */
-
-/* WIN32 error codes */
-#ifndef WIN32_LEAN_AND_MEAN
-#include <errors.h>
-#endif
-
-#ifndef RC_INVOKED
-
-/* Windows sockets specification version 1.1 */
-#ifdef Win32_Winsock
-#ifndef WIN32_LEAN_AND_MEAN
-#include <sockets.h>
+#if defined(Win32_Winsock)
+#warning "The  Win32_Winsock macro name is deprecated.\
+    Please use __USE_W32_SOCKETS instead"
+#ifndef __USE_W32_SOCKETS
+#define __USE_W32_SOCKETS
 #endif
 #endif
+#if defined(__USE_W32_SOCKETS) || !(defined(__CYGWIN__) || defined(__MSYS__) || defined(_UWIN))
+#if (_WIN32_WINNT >= 0x0400)
+#include <winsock2.h>
+/*
+ * MS likes to include mswsock.h here as well,
+ * but that can cause undefined symbols if
+ * winsock2.h is included before windows.h
+ */
+#else
+#include <winsock.h>
+#endif /*  (_WIN32_WINNT >= 0x0400) */
+#endif
+#ifndef NOGDI
+#if !defined (__OBJC__)
+#if (__GNUC__ >= 3) || defined (__WATCOMC__)
+#include <ole2.h>
+#endif
+#endif /* __OBJC__ */
+#endif
 
-/* There is a conflict with BOOL between Objective-C and Win32,
-   so the Windows32 API Library defines and uses WINBOOL.
-   However, if we are not using Objective-C then define the normal
-   windows BOOL so Win32 programs compile normally.  If you are
-   using Objective-C then you must use WINBOOL for Win32 operations.
+#endif /* WIN32_LEAN_AND_MEAN */
+
+#endif /* RC_INVOKED */
+
+#ifdef __OBJC__
+/* FIXME: Not undefining BOOL here causes all BOOLs to be WINBOOL (int),
+   but undefining it causes trouble as well if a file is included after
+   windows.h
 */
-#ifndef __OBJC__
-/* typedef WINBOOL BOOL; */
-#endif /* !__OBJC__ */
-
-/* How do we get the VM page size on NT? */
-#ifndef vm_page_size
-#define vm_page_size 4096
+#undef BOOL
 #endif
 
-#endif /* ! defined (RC_INVOKED) */
-
-#ifdef __GNUC__
-#ifndef NONAMELESSUNION
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
-#define _ANONYMOUS_UNION __extension__
-#define _ANONYMOUS_STRUCT __extension__
-#else
-#if defined(__cplusplus)
-#define _ANONYMOUS_UNION __extension__
 #endif
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
-#endif /* NONAMELESSUNION */
-#else
-#define _ANONYMOUS_UNION
-#define _ANONYMOUS_STRUCT
-#endif /* __GNUC__ */
-
-#ifndef _ANONYMOUS_UNION
-#define _ANONYMOUS_UNION
-#define _UNION_NAME(x) x
-#define DUMMYUNIONNAME	u
-#define DUMMYUNIONNAME2	u2
-#define DUMMYUNIONNAME3	u3
-#define DUMMYUNIONNAME4	u4
-#define DUMMYUNIONNAME5	u5
-#define DUMMYUNIONNAME6	u6
-#define DUMMYUNIONNAME7	u7
-#define DUMMYUNIONNAME8	u8
-#else
-#define _UNION_NAME(x)
-#define DUMMYUNIONNAME
-#define DUMMYUNIONNAME2
-#define DUMMYUNIONNAME3
-#define DUMMYUNIONNAME4
-#define DUMMYUNIONNAME5
-#define DUMMYUNIONNAME6
-#define DUMMYUNIONNAME7
-#define DUMMYUNIONNAME8
-#endif
-#ifndef _ANONYMOUS_STRUCT
-#define _ANONYMOUS_STRUCT
-#define _STRUCT_NAME(x) x
-#define DUMMYSTRUCTNAME	s
-#define DUMMYSTRUCTNAME2 s2
-#define DUMMYSTRUCTNAME3 s3
-#else
-#define _STRUCT_NAME(x)
-#define DUMMYSTRUCTNAME
-#define DUMMYSTRUCTNAME2
-#define DUMMYSTRUCTNAME3
-#endif
-
-#ifndef DECLARE_STDCALL_P
-#define DECLARE_STDCALL_P( type ) __stdcall type
-#endif
-
-#ifndef NO_STRICT
-#ifndef STRICT
-#define STRICT 1
-#endif
-#endif
-
-#endif /* !__USE_W32API */
-
-#endif /* _GNU_H_WINDOWS_H */
