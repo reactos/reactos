@@ -394,59 +394,64 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
             UserDrawCaptionButton(&TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMAX);
          }
       }
-
-      /* Line under caption */
-      PreviousPen = SelectObject(hDC, GetSysColorPen(
-         ((ExStyle & (WS_EX_STATICEDGE | WS_EX_CLIENTEDGE |
-                      WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE) ?
-         COLOR_WINDOWFRAME : COLOR_3DFACE));
-      MoveToEx(hDC, TempRect.left, TempRect.bottom, NULL);
-      LineTo(hDC, TempRect.right, TempRect.bottom);
-      SelectObject(hDC, PreviousPen);
-   }
-
-   /* Draw menu bar */
-   if (UserHasMenu(hWnd, Style))
-   {
-      TempRect = CurrentRect;
-      TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYMENU);
-      CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
-   }
-    
-   if (ExStyle & WS_EX_CLIENTEDGE)
-   {
-      DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-   }
-
-   /* Draw the scrollbars */
-   if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
-       (CurrentRect.bottom - CurrentRect.top) > GetSystemMetrics(SM_CYHSCROLL))
-   {
-      TempRect = CurrentRect;
-      if (ExStyle & WS_EX_LEFTSCROLLBAR)
-         TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
-      else
-         TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
-      TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
-      FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
-      /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
-      if (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD))
+      if(!(Style & WS_MINIMIZE))
       {
-         TempRect.top--;
-         TempRect.bottom++;
-         TempRect.left--;
-         TempRect.right++;
-         DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+        /* Line under caption */
+        PreviousPen = SelectObject(hDC, GetSysColorPen(
+           ((ExStyle & (WS_EX_STATICEDGE | WS_EX_CLIENTEDGE |
+                        WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE) ?
+           COLOR_WINDOWFRAME : COLOR_3DFACE));
+        MoveToEx(hDC, TempRect.left, TempRect.bottom, NULL);
+        LineTo(hDC, TempRect.right, TempRect.bottom);
+        SelectObject(hDC, PreviousPen);
       }
-      IntDrawScrollBar(hWnd, hDC, SB_VERT);
-      IntDrawScrollBar(hWnd, hDC, SB_HORZ);
    }
-   else
+   
+   if(!(Style & WS_MINIMIZE))
    {
-      if (Style & WS_VSCROLL)
-         IntDrawScrollBar(hWnd, hDC, SB_VERT);
-      else if (Style & WS_HSCROLL)
-         IntDrawScrollBar(hWnd, hDC, SB_HORZ);
+     /* Draw menu bar */
+     if (UserHasMenu(hWnd, Style))
+     {
+        TempRect = CurrentRect;
+        TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYMENU);
+        CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
+     }
+     
+     if (ExStyle & WS_EX_CLIENTEDGE)
+     {
+        DrawEdge(hDC, &CurrentRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+     }
+     
+     /* Draw the scrollbars */
+     if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
+         (CurrentRect.bottom - CurrentRect.top) > GetSystemMetrics(SM_CYHSCROLL))
+     {
+        TempRect = CurrentRect;
+        if (ExStyle & WS_EX_LEFTSCROLLBAR)
+           TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+        TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
+        FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
+        /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
+        if (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD))
+        {
+           TempRect.top--;
+           TempRect.bottom++;
+           TempRect.left--;
+           TempRect.right++;
+           DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+        }
+        IntDrawScrollBar(hWnd, hDC, SB_VERT);
+        IntDrawScrollBar(hWnd, hDC, SB_HORZ);
+     }
+     else
+     {
+        if (Style & WS_VSCROLL)
+           IntDrawScrollBar(hWnd, hDC, SB_VERT);
+        else if (Style & WS_HSCROLL)
+           IntDrawScrollBar(hWnd, hDC, SB_HORZ);
+     }
    }
 
    ReleaseDC(hWnd, hDC);
