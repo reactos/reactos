@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.7 2002/06/18 07:11:44 ekohl Exp $
+/* $Id: driver.c,v 1.8 2002/06/27 17:49:34 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -196,6 +196,12 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     {
       DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
       return(Status);
+    }
+
+  ModuleObject = LdrGetModuleObject(DriverServiceName);
+  if (ModuleObject != NULL)
+    {
+      return(STATUS_IMAGE_ALREADY_LOADED);
     }
 
   Status = LdrLoadModule(&FullImagePath, &ModuleObject);

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.113 2002/06/16 11:44:34 ekohl Exp $
+/* $Id: loader.c,v 1.114 2002/06/27 17:52:32 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -736,10 +736,14 @@ LdrpLoadImage(PUNICODE_STRING DriverName,
   PMODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
-  Status = LdrLoadModule(DriverName, &ModuleObject);
-  if (!NT_SUCCESS(Status))
+  ModuleObject = LdrGetModuleObject(DriverName);
+  if (ModuleObject == NULL)
     {
-      return(Status);
+      Status = LdrLoadModule(DriverName, &ModuleObject);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
     }
 
   if (ModuleBase)
@@ -772,6 +776,12 @@ LdrpLoadAndCallImage(PUNICODE_STRING ModuleName)
   PMODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
+  ModuleObject = LdrGetModuleObject(ModuleName);
+  if (ModuleObject != NULL)
+    {
+      return(STATUS_IMAGE_ALREADY_LOADED);
+    }
+
   Status = LdrLoadModule(ModuleName, &ModuleObject);
   if (!NT_SUCCESS(Status))
     {
@@ -803,14 +813,6 @@ LdrLoadModule(PUNICODE_STRING Filename,
   IO_STATUS_BLOCK IoStatusBlock;
 
   *ModuleObject = NULL;
-
-  /*  Check for module already loaded  */
-  Module = LdrGetModuleObject(Filename);
-  if (Module != NULL)
-    {
-      *ModuleObject = Module;
-      return(STATUS_SUCCESS);
-    }
 
   DPRINT("Loading Module %wZ...\n", Filename);
 
@@ -1329,7 +1331,7 @@ LdrGetModuleObject(PUNICODE_STRING ModuleName)
 
   KeReleaseSpinLock(&ModuleListLock, Irql);
 
-  CPRINT("LdrpGetModuleObject: Failed to find module %wZ\n", ModuleName);
+  DPRINT("Could not find module '%wZ'\n", ModuleName);
 
   return(NULL);
 }
@@ -1558,7 +1560,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           LibraryModuleObject = LdrGetModuleObject(&ModuleName);
           if (LibraryModuleObject == NULL)
             {
-              DPRINT("Module '%wZ' not loaded\n", &ModuleName);
+              CPRINT("Module '%wZ' not loaded yet\n", &ModuleName);
               wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
               wcscat(NameBuffer, ModuleName.Buffer);
               RtlInitUnicodeString(&NameString, NameBuffer);
@@ -1997,7 +1999,7 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
         FunctionList[Hint - ExportDir->Base]);
     }
 
-  if (ExportAddress == 0)
+  if (ExportAddress == NULL)
     {
       CPRINT("Export not found for %d:%s\n",
 	     Hint,
