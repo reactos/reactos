@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.4 2004/01/23 10:39:22 ekohl Exp $
+/* $Id: profile.c,v 1.5 2004/02/28 11:30:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -90,6 +90,7 @@ CreateUserProfileW (PSID Sid,
   HKEY hKey;
   NTSTATUS Status;
 
+  DPRINT ("CreateUserProfileW() called\n");
 
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -268,6 +269,8 @@ CreateUserProfileW (PSID Sid,
 		 SidString.Buffer);
 
   RtlFreeUnicodeString (&SidString);
+
+  DPRINT ("CreateUserProfileW() done\n");
 
   return TRUE;
 }
@@ -505,6 +508,26 @@ GetUserProfileDirectoryW (HANDLE hToken,
 {
   /* FIXME */
   return GetDefaultUserProfileDirectoryW (lpProfileDir, lpcchSize);
+}
+
+
+BOOL WINAPI
+LoadUserProfileW (HANDLE hToken,
+		  LPPROFILEINFOW lpProfileInfo)
+{
+
+  /* Check profile info */
+  if (lpProfileInfo->dwSize != sizeof(PROFILEINFOW) ||
+      lpProfileInfo->lpUserName == NULL ||
+      lpProfileInfo->lpUserName[0] == 0)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  /* FIXME: load the profile */
+
+  return TRUE;
 }
 
 /* EOF */
