@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.12 2002/03/27 00:35:52 ekohl Exp $
+/* $Id: scsiport.c,v 1.13 2002/05/07 23:13:24 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -710,7 +710,6 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
-  DeviceExtension->IrpFlags = 0;
 
   switch(Stack->Parameters.DeviceIoControl.IoControlCode)
     {
