@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.37 2004/10/13 01:42:14 ion Exp $
+/* $Id: dpc.c,v 1.38 2004/10/17 15:39:29 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,21 +43,6 @@
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
-
-static LIST_ENTRY DpcQueueHead; /* Head of the list of pending DPCs */
-static KSPIN_LOCK DpcQueueLock; /* Lock for the above list */
-
-/*
- * Number of pending DPCs. This is inspected by
- * the idle thread to determine if the queue needs to
- * be run down
- */
-ULONG DpcQueueSize = 0;
-
-/*
- * Number of DPC's Processed.
- */
-ULONG DpcCount = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -95,39 +80,46 @@ KiDispatchInterrupt(VOID)
    PLIST_ENTRY current_entry;
    PKDPC current;
    KIRQL oldlvl;
+   PKPCR Pcr;
 
    assert_irql(DISPATCH_LEVEL);
 
-   if (DpcQueueSize == 0)
+   Pcr = KeGetCurrentKPCR();
+
+   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
      {
 	return;
      }
 
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KiAcquireSpinLock(&DpcQueueLock);
+   KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 
-   DpcCount = DpcCount + DpcQueueSize;
-   
-   while (!IsListEmpty(&DpcQueueHead))
+   while (!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead))
    {
-      current_entry = RemoveHeadList(&DpcQueueHead);
-      DpcQueueSize--;
+      assert(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
 
-      assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
+      current_entry = RemoveHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead);
+      Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
+      Pcr->PrcbData.DpcData[0].DpcCount++;
+
+      assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+             (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
 
       current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
       current->Lock=FALSE;
-      KiReleaseSpinLock(&DpcQueueLock);
+      Pcr->PrcbData.DpcRoutineActive = 1;
+      KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
       KeLowerIrql(oldlvl);
       current->DeferredRoutine(current,current->DeferredContext,
 			       current->SystemArgument1,
 			       current->SystemArgument2);
 
       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-      KiAcquireSpinLock(&DpcQueueLock);
+      KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+      Pcr->PrcbData.DpcRoutineActive = 0;
    }
 
-   KiReleaseSpinLock(&DpcQueueLock);
+   KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    KeLowerIrql(oldlvl);
 }
 
@@ -170,20 +162,24 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 {
    KIRQL oldIrql;
    BOOLEAN WasInQueue;
+   PKPCR Pcr;
+
+   Pcr = KeGetCurrentKPCR();
 
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-   KiAcquireSpinLock(&DpcQueueLock);
+   KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    WasInQueue = Dpc->Lock ? TRUE : FALSE;
    if (WasInQueue)
      {
 	RemoveEntryList(&Dpc->DpcListEntry);
-	DpcQueueSize--;
+	Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
 	Dpc->Lock=0;
      }
 
-   assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
+   assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+          (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
 
-   KiReleaseSpinLock(&DpcQueueLock);
+   KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    KeLowerIrql(oldIrql);
 
    return WasInQueue;
@@ -207,6 +203,8 @@ KeInsertQueueDpc (PKDPC	Dpc,
  */
 {
    KIRQL oldlvl;
+   PKPCR Pcr;
+
    DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
 	  Dpc, SystemArgument1, SystemArgument2);
 
@@ -220,14 +218,21 @@ KeInsertQueueDpc (PKDPC	Dpc,
      {
 	return(FALSE);
      }
+
+   Pcr = KeGetCurrentKPCR();
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KiAcquireSpinLock(&DpcQueueLock);
-   assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
-   InsertHeadList(&DpcQueueHead,&Dpc->DpcListEntry);
+   KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+   assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+          (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
+   InsertHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
-   DpcQueueSize++;
+   Pcr->PrcbData.DpcData[0].DpcQueueDepth++;
    Dpc->Lock=(PULONG)1;
-   KiReleaseSpinLock(&DpcQueueLock);
+   if (Pcr->PrcbData.MaximumDpcQueueDepth < Pcr->PrcbData.DpcData[0].DpcQueueDepth)
+     {
+       Pcr->PrcbData.MaximumDpcQueueDepth = Pcr->PrcbData.DpcData[0].DpcQueueDepth;    
+     }
+   KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    KeLowerIrql(oldlvl);
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
@@ -272,8 +277,12 @@ KeInitDpc(VOID)
  * FUNCTION: Initialize DPC handling
  */
 {
-   InitializeListHead(&DpcQueueHead);
-   KeInitializeSpinLock(&DpcQueueLock);
+   PKPCR Pcr;
+   Pcr = KeGetCurrentKPCR();
+   InitializeListHead(&Pcr->PrcbData.DpcData[0].DpcListHead);
+   KeInitializeSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+   Pcr->PrcbData.MaximumDpcQueueDepth = 0;
+   Pcr->PrcbData.DpcData[0].DpcQueueDepth = 0;    
 }
 
 /* EOF */

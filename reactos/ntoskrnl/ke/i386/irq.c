@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.46 2004/10/01 20:09:57 hbirr Exp $
+/* $Id: irq.c,v 1.47 2004/10/17 15:39:29 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -443,7 +443,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * the PIC.
     */
     
-   KiInterruptCount++;
+   KeGetCurrentKPCR()->PrcbData.InterruptCount++;
 
    /*
     * Notify the rest of the kernel of the raised irq level. For the

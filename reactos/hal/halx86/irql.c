@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.15 2004/07/20 21:25:36 hbirr Exp $
+/* $Id: irql.c,v 1.16 2004/10/17 15:39:27 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,6 @@
 /*
  * PURPOSE: Current irq level
  */
-static KIRQL CurrentIrql = HIGH_LEVEL;
 static BOOLEAN ApcRequested = FALSE;
 static BOOLEAN DpcRequested = FALSE;
 
@@ -60,8 +59,6 @@ static PIC_MASK pic_mask_intr = {.both = 0x0000};
 static PIC_MASK pic_mask_intr = { 0 };
 #endif
 
-extern IMPORTED ULONG DpcQueueSize;
-
 static ULONG HalpPendingInterruptCount[NR_IRQS];
 
 #define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
@@ -78,7 +75,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
  * RETURNS: The current irq level
  */
 {
-  return(CurrentIrql);
+  return(KeGetCurrentKPCR()->Irql);
 }
 
 VOID HalpInitPICs(VOID)
@@ -147,7 +144,7 @@ HalpExecuteIrqs(KIRQL NewIrql)
     {
       if (HalpPendingInterruptCount[i] > 0)
 	{
-	   CurrentIrql = (KIRQL)IRQ_TO_DIRQL(i);
+	   KeGetCurrentKPCR()->Irql = (KIRQL)IRQ_TO_DIRQL(i);
 
            while (HalpPendingInterruptCount[i] > 0)
 	     {
@@ -157,8 +154,8 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	       HalpPendingInterruptCount[i]--;
 	       KiInterruptDispatch2(i, NewIrql);
 	     }
-	   CurrentIrql--;
-	   HalpEndSystemInterrupt(CurrentIrql);
+	   KeGetCurrentKPCR()->Irql--;
+	   HalpEndSystemInterrupt(KeGetCurrentKPCR()->Irql);
 	}
     }
 
@@ -169,21 +166,18 @@ HalpLowerIrql(KIRQL NewIrql)
 {
   if (NewIrql >= PROFILE_LEVEL)
     {
-      CurrentIrql = NewIrql;
+      KeGetCurrentKPCR()->Irql = NewIrql;
       return;
     }
   HalpExecuteIrqs(NewIrql);
   if (NewIrql >= DISPATCH_LEVEL)
     {
-      CurrentIrql = NewIrql;
+      KeGetCurrentKPCR()->Irql = NewIrql;
       return;
     }
-  CurrentIrql = DISPATCH_LEVEL;
-  if (DpcQueueSize > 0)
-    {
-      KiDispatchInterrupt();
-    }
-  CurrentIrql = APC_LEVEL;
+  KeGetCurrentKPCR()->Irql = DISPATCH_LEVEL;
+  KiDispatchInterrupt();
+  KeGetCurrentKPCR()->Irql = APC_LEVEL;
   if (NewIrql == APC_LEVEL)
     {
       return;
@@ -193,7 +187,7 @@ HalpLowerIrql(KIRQL NewIrql)
     {
       KiDeliverApc(0, 0, 0);
     }
-  CurrentIrql = PASSIVE_LEVEL;
+  KeGetCurrentKPCR()->Irql = PASSIVE_LEVEL;
 }
 
 /**********************************************************************
@@ -217,10 +211,10 @@ KfLowerIrql (KIRQL	NewIrql)
 {
   DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
   
-  if (NewIrql > CurrentIrql)
+  if (NewIrql > KeGetCurrentKPCR()->Irql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
-		__FILE__, __LINE__, NewIrql, CurrentIrql);
+		__FILE__, __LINE__, NewIrql, KeGetCurrentKPCR()->Irql);
       KEBUGCHECK(0);
       for(;;);
     }
@@ -276,16 +270,16 @@ KfRaiseIrql (KIRQL	NewIrql)
   
   DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
   
-  if (NewIrql < CurrentIrql)
+  if (NewIrql < KeGetCurrentKPCR()->Irql)
     {
       DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
-		__FILE__,__LINE__,CurrentIrql,NewIrql);
+		__FILE__,__LINE__,KeGetCurrentKPCR()->Irql,NewIrql);
       KEBUGCHECK (0);
       for(;;);
     }
   
-  OldIrql = CurrentIrql;
-  CurrentIrql = NewIrql;
+  OldIrql = KeGetCurrentKPCR()->Irql;
+  KeGetCurrentKPCR()->Irql = NewIrql;
   return OldIrql;
 }
 
@@ -389,13 +383,13 @@ HalBeginSystemInterrupt (ULONG Vector,
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
   }
   
-  if (CurrentIrql >= Irql)
+  if (KeGetCurrentKPCR()->Irql >= Irql)
     {
       HalpPendingInterruptCount[irq]++;
       return(FALSE);
     }
-  *OldIrql = CurrentIrql;
-  CurrentIrql = Irql;
+  *OldIrql = KeGetCurrentKPCR()->Irql;
+  KeGetCurrentKPCR()->Irql = Irql;
 
   return(TRUE);
 }

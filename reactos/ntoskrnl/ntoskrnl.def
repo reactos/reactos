@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.194 2004/10/17 13:08:26 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.195 2004/10/17 15:39:30 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -62,7 +62,6 @@ DbgPrintEx
 DbgPrintReturnControlC
 DbgQueryDebugFilterState@8
 DbgSetDebugFilterState@12
-DpcQueueSize DATA
 @ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8

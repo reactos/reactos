@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.80 2004/10/13 22:27:03 ion Exp $
+/* $Id: timer.c,v 1.81 2004/10/17 15:39:29 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -34,11 +34,6 @@ LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
 CHAR KiTimerSystemAuditing = 0;
-volatile ULONGLONG KiKernelTime;
-volatile ULONGLONG KiUserTime;
-volatile ULONGLONG KiDpcTime;
-volatile ULONGLONG KiInterruptTime;
-volatile ULONG KiInterruptCount;
 
 /*
  * Number of timer interrupts since initialisation
@@ -723,27 +718,29 @@ KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
 {
    PKTHREAD CurrentThread;
    PEPROCESS ThreadsProcess;
+   PKPCR Pcr;
 
+   Pcr = KeGetCurrentKPCR();
 
 /*
  *  Make sure no counting can take place until Processes and Threads are
  *  running!
  */
-   if ((PsInitialSystemProcess == NULL) || (PsIdleThreadHandle == NULL) || 
+   if ((PsInitialSystemProcess == NULL) || (Pcr->PrcbData.IdleThread == NULL) || 
         (KiTimerSystemAuditing == 0))
      {
        return;
      }
-   	
-   DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
+
+   DPRINT("KernelTime  %u, UserTime %u \n", Kpcr->PrcbData.KernelTime, Kpcr->PrcbData.UserTime);
 
    if (oldIrql > DISPATCH_LEVEL)
    {
-      KiInterruptTime++;
+      Pcr->PrcbData.InterruptTime++;
    }
    else if (oldIrql == DISPATCH_LEVEL)
    {
-      KiDpcTime++;
+      Pcr->PrcbData.DpcTime++;
    }
    else
    {
@@ -762,7 +759,7 @@ KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
          ThreadsProcess->Pcb.UserTime++;
 #endif
          CurrentThread->UserTime++;
-         KiUserTime++;
+         Pcr->PrcbData.UserTime++;
       }
       else
       {
@@ -772,7 +769,7 @@ KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
          ThreadsProcess->Pcb.KernelTime++;  
 #endif
          CurrentThread->KernelTime++;
-         KiKernelTime++;
+         Pcr->PrcbData.KernelTime++;
       }  	
    }
 } 
@@ -791,7 +788,7 @@ KeSetTimeUpdateNotifyRoutine(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -799,14 +796,14 @@ KeUpdateRunTime(
 	IN PKTRAP_FRAME	TrapFrame
 )
 {
-	KIRQL OldIrql;
+	KIRQL OldIrql = PASSIVE_LEVEL;
 	
 	/* These are equivalent... we should just remove the Ki and stick it here... */
 	KiUpdateProcessThreadTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID 
 STDCALL
@@ -815,7 +812,7 @@ KeUpdateSystemTime(
 	IN ULONG        Increment
 )
 {
-	KIRQL OldIrql;
+	KIRQL OldIrql = PASSIVE_LEVEL;
 	
 	/* These are equivalent... we should just remove the Ki and stick it here... */
 	KiUpdateSystemTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);

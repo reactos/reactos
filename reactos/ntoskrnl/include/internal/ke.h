@@ -100,12 +100,6 @@ BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
 
 extern LARGE_INTEGER SystemBootTime;
-extern volatile ULONGLONG KiKernelTime;
-extern volatile ULONGLONG KiUserTime;
-extern volatile ULONGLONG KiDpcTime;
-extern volatile ULONGLONG KiInterruptTime;
-extern volatile ULONG KiInterruptCount;
-
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.135 2004/10/03 03:03:54 ion Exp $
+/* $Id: thread.c,v 1.136 2004/10/17 15:39:29 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -41,7 +41,6 @@ LONG PiNrThreadsAwaitingReaping = 0;
 static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
 static BOOLEAN DoneInitYet = FALSE;
-static PETHREAD IdleThreads[MAXIMUM_PROCESSORS];
 static KEVENT PiReaperThreadEvent;
 static BOOLEAN PiReaperThreadShouldTerminate = FALSE;
 
@@ -630,8 +629,7 @@ PsSetThreadWin32Thread(
 VOID
 PsApplicationProcessorInit(VOID)
 {
-  KeGetCurrentKPCR()->PrcbData.CurrentThread =
-    (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
+  KeGetCurrentKPCR()->PrcbData.CurrentThread = KeGetCurrentKPCR()->PrcbData.IdleThread;
 }
 
 VOID INIT_FUNCTION
@@ -639,6 +637,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
 {
   PETHREAD IdleThread;
   HANDLE IdleThreadHandle;
+  PKPCR Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
 
   PsInitializeThread(NULL,
 		     &IdleThread,
@@ -650,7 +649,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.FreezeCount = 0;
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
-  IdleThreads[Id] = IdleThread;
+  Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
 
   NtClose(IdleThreadHandle);
   DPRINT("IdleThread for Processor %d has PID %d\n",

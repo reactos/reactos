@@ -137,6 +137,18 @@ KeApplicationProcessorInit(VOID)
   PKPCR KPCR;
   ULONG Offset;
 
+  if (Ke386CpuidFlags & X86_FEATURE_PGE)
+  {
+     /* Enable global pages */
+     Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
+  }
+  
+  /* Enable PAE mode */
+  if (Ke386CpuidFlags & X86_FEATURE_PAE)
+  {
+     MiEnablePAE(NULL);
+  }
+
   /*
    * Create a PCR for this processor
    */
@@ -149,6 +161,7 @@ KeApplicationProcessorInit(VOID)
   memset(KPCR, 0, PAGE_SIZE);
   KPCR->ProcessorNumber = (UCHAR)Offset;
   KPCR->Tib.Self = &KPCR->Tib;
+  KPCR->Self = KPCR;
   KPCR->Irql = HIGH_LEVEL;
 
   /* Mark the end of the exception handler list */
@@ -159,6 +172,8 @@ KeApplicationProcessorInit(VOID)
    */
   KiInitializeGdt(KPCR);
   
+  KeInitDpc();
+
   /*
    * It is now safe to process interrupts
    */
@@ -173,18 +188,6 @@ KeApplicationProcessorInit(VOID)
    * Initialize a default LDT
    */
   Ki386InitializeLdt();
-
-  if (Ke386CpuidFlags & X86_FEATURE_PGE)
-  {
-     /* Enable global pages */
-     Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
-  }
-  
-  /* Enable PAE mode */
-  if (Ke386CpuidFlags & X86_FEATURE_PAE)
-  {
-     MiEnablePAE(NULL);
-  }
 
   /* Now we can enable interrupts. */
   Ke386EnableInterrupts();
@@ -214,7 +217,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
     */
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
-   KPCR->Self = (PKPCR)KPCR_BASE;
+   KPCR->Self = KPCR;
    KPCR->Irql = HIGH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;

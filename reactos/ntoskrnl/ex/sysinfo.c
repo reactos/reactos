@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.53 2004/10/16 18:56:54 ion Exp $
+/* $Id: sysinfo.c,v 1.54 2004/10/17 15:39:29 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -727,32 +727,35 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	PSYSTEM_PROCESSORTIME_INFO Spi
 		= (PSYSTEM_PROCESSORTIME_INFO) Buffer;
 
-        PEPROCESS TheIdleProcess;
+        ULONG i;
 	TIME CurrentTime;
+	PKPCR Pcr;
 
-	*ReqSize = sizeof (SYSTEM_PROCESSORTIME_INFO);
+	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSORTIME_INFO);
 	/*
 	 * Check user buffer's size 
 	 */
-	if (Size < sizeof (SYSTEM_PROCESSORTIME_INFO))
+	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSORTIME_INFO))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-        PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
-
 	CurrentTime.QuadPart = KeQueryInterruptTime();
+	Pcr = (PKPCR)KPCR_BASE;   
+	for (i = 0; i < KeNumberProcessors; i++)
+	{
 
-        Spi->TotalProcessorRunTime.QuadPart = 
-		TheIdleProcess->Pcb.KernelTime * 100000LL; // IdleTime
-        Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000LL; // KernelTime
-        Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000LL;
-        Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000LL;
-        Spi->TotalInterruptTime.QuadPart = KiInterruptTime * 100000LL;
-        Spi->TotalInterrupts = KiInterruptCount; // Interrupt Count
-
-	ObDereferenceObject(TheIdleProcess);
-        
+	   Spi->TotalProcessorRunTime.QuadPart = (Pcr->PrcbData.IdleThread->KernelTime + Pcr->PrcbData.IdleThread->UserTime) * 100000LL; // IdleTime
+           Spi->TotalProcessorTime.QuadPart =  Pcr->PrcbData.KernelTime * 100000LL; // KernelTime
+           Spi->TotalProcessorUserTime.QuadPart = Pcr->PrcbData.UserTime * 100000LL;
+           Spi->TotalDPCTime.QuadPart = Pcr->PrcbData.DpcTime * 100000LL;
+           Spi->TotalInterruptTime.QuadPart = Pcr->PrcbData.InterruptTime * 100000LL;
+           Spi->TotalInterrupts = Pcr->PrcbData.InterruptCount; // Interrupt Count
+	   Spi++;
+//	   Pcr++;
+	   Pcr = (PKPCR)((ULONG_PTR)Pcr + PAGE_SIZE);
+	}
+     
 	return (STATUS_SUCCESS);
 }
 
