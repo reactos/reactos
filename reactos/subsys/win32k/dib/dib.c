@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.4 2003/09/27 09:27:45 navaraf Exp $ */
+/* $Id: dib.c,v 1.5 2003/11/09 23:13:56 gvg Exp $ */
 
 #include <windows.h>
 #include <ddk/winddi.h>
@@ -39,11 +39,11 @@ DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATE
     case 1:
       if (DIB_1BPP_GetPixel(SourceSurf, sx, sy))
 	{
-	  return(XLATEOBJ_iXlate(ColorTranslation, 0));
+	  return(XLATEOBJ_iXlate(ColorTranslation, 1));
 	}
       else
 	{
-	  return(XLATEOBJ_iXlate(ColorTranslation, 1));
+	  return(XLATEOBJ_iXlate(ColorTranslation, 0));
 	}
     case 4:
       if (ColorTranslation != NULL)
