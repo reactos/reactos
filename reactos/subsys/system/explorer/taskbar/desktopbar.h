@@ -65,6 +65,7 @@ struct DesktopBar : public OwnerDrawParent<Window>
 
 protected:
 	int		WM_TASKBARCREATED;
+	RECT	_work_area_org;
 
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

@@ -220,7 +220,7 @@ void NotifyArea::Refresh()
 
 void NotifyArea::Paint()
 {
-	BufferedPaintCanvas canvas(_hwnd);
+	PaintCanvas canvas(_hwnd);
 
 	 // first fill with the background color
 	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
@@ -324,7 +324,7 @@ bool ClockWindow::FormatTime()
 
 	if (_tcscmp(buffer, _time)) {
 		_tcscpy(_time, buffer);
-		return true;
+		return true;	// The text to display has changed.
 	}
 
 	return false;	// no change
@@ -335,7 +335,7 @@ void ClockWindow::Paint()
 	PaintCanvas canvas(_hwnd);
 
 	BkMode bkmode(canvas, TRANSPARENT);
-	SelectedFont font(canvas, GetStockFont(ANSI_VAR_FONT));
+	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
 
 	DrawText(canvas, _time, -1, ClientRect(_hwnd), DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX);
 }

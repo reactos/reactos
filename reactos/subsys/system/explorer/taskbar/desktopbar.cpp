@@ -64,10 +64,15 @@ DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
 	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
 {
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &_work_area_org, 0);
 }
 
 DesktopBar::~DesktopBar()
 {
+	 // restore work area to the previous size
+	SystemParametersInfo(SPI_SETWORKAREA, 0, &_work_area_org, 0);
+	PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
+
 	 // exit application after destroying desktop window
 	PostQuitMessage(0);
 }
@@ -166,7 +171,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		WindowRect rect(_hwnd);
 		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), rect.top};
-		SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);
+		SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);	// don't use SPIF_SENDCHANGE because then we have to wait for any message being delivered
 		PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
 		break;}
 

@@ -197,9 +197,8 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_PAINT: {
-		PAINTSTRUCT ps;
-		draw_desktop_background(_hwnd, BeginPaint(_hwnd, &ps));
-		EndPaint(_hwnd, &ps);
+		PaintCanvas canvas(_hwnd);
+		draw_desktop_background(_hwnd, canvas);
 		break;}
 
 	  case WM_LBUTTONDBLCLK:

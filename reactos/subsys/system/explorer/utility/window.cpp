@@ -264,16 +264,13 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_PAINT: {
-		PAINTSTRUCT ps;
-		HBRUSH lastBrush;
+		PaintCanvas canvas(_hwnd);
 		ClientRect rt(_hwnd);
-		BeginPaint(_hwnd, &ps);
 		rt.left = _split_pos-SPLIT_WIDTH/2;
 		rt.right = _split_pos+SPLIT_WIDTH/2+1;
-		lastBrush = SelectBrush(ps.hdc, GetStockBrush(COLOR_SPLITBAR));
-		Rectangle(ps.hdc, rt.left, rt.top-1, rt.right, rt.bottom+1);
-		SelectObject(ps.hdc, lastBrush);
-		EndPaint(_hwnd, &ps);
+		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
+		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
+		SelectObject(canvas, lastBrush);
 		break;}
 
 	  case WM_SETCURSOR:

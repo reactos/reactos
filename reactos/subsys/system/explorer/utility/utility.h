@@ -175,7 +175,7 @@ struct PaintCanvas : public PAINTSTRUCT
 		BeginPaint(hwnd, this);
 	}
 
-	PaintCanvas()
+	~PaintCanvas()
 	{
 		EndPaint(_hwnd, this);
 	}
@@ -212,7 +212,7 @@ struct SelectedBitmap
 	SelectedBitmap(HDC hdc, HBITMAP hbmp)
 	 :	_hdc(hdc), _old_hbmp(SelectBitmap(hdc, hbmp)) {}
 
-	~SelectedBitmap() {SelectBitmap(_hdc, _old_hbmp);}
+	~SelectedBitmap() {DeleteObject(SelectBitmap(_hdc, _old_hbmp));}
 
 protected:
 	HDC		_hdc;
@@ -253,7 +253,10 @@ struct BufferedCanvas : public BufferCanvas
 struct BufferedPaintCanvas : public PaintCanvas, public BufferedCanvas
 {
 	BufferedPaintCanvas(HWND hwnd)
-	 :	PaintCanvas(hwnd), BufferedCanvas(hdc, 0, 0, rcPaint.right, rcPaint.bottom) {}
+	 :	PaintCanvas(hwnd),
+		BufferedCanvas(PAINTSTRUCT::hdc, 0, 0, rcPaint.right, rcPaint.bottom)
+	{
+	}
 
 	operator HDC() {return BufferedCanvas::_hdc;}
 };
@@ -283,12 +286,12 @@ protected:
 	COLORREF _old_bkmode;
 };
 
-struct SelectedFont
+struct FontSelection
 {
-	SelectedFont(HDC hdc, HFONT hFont)
+	FontSelection(HDC hdc, HFONT hFont)
 	 : _hdc(hdc), _old_hFont(SelectFont(hdc, hFont)) {}
 
-	~SelectedFont() {SelectFont(_hdc, _old_hFont);}
+	~FontSelection() {SelectFont(_hdc, _old_hFont);}
 
 protected:
 	HDC		_hdc;
