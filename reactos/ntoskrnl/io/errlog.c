@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.5 2000/04/03 21:54:38 dwelch Exp $
+/* $Id: errlog.c,v 1.6 2001/01/17 19:04:15 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,10 @@
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
+
+#define  LOG_FILE_APPLICATION	L"\\SystemRoot\\System32\\Config\\AppEvent.Evt"
+#define  LOG_FILE_SECURITY	L"\\SystemRoot\\System32\\Config\\SecEvent.Evt"
+#define  LOG_FILE_SYSTEM	L"\\SystemRoot\\System32\\Config\\SysEvent.Evt"
 
 typedef struct _IO_ERROR_LOG_PACKET
 {
