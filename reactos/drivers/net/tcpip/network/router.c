@@ -304,6 +304,9 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
+   INIT_TAG(NTE, TAG('N','T','E',' '));
+   INIT_TAG(Router, TAG('R','O','U','T'));
+
     FIBE->Free           = FreeFIB;
     FIBE->NetworkAddress = NetworkAddress;
     FIBE->Netmask        = Netmask;
