@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.2 1999/10/15 15:18:39 ekohl Exp $
+/* $Id: display.c,v 1.3 1999/10/16 21:08:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,63 +11,20 @@
 
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
+
+/* only needed for screen synchronization */
 #include <internal/halio.h>
 
 
-//#define BOCHS_DEBUGGING
-//#define SERIAL_DEBUGGING
-#define SCREEN_DEBUGGING
+#define SCREEN_SYNCHRONIZATION
 
 
-#define SERIAL_PORT 0x03f8
-#define SERIAL_BAUD_RATE 19200
-#define SERIAL_LINE_CONTROL (SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO)
-
-
-
-
-
-#ifdef BOCHS_DEBUGGING
-#define BOCHS_LOGGER_PORT (0x3ed)
-#endif
-
-#ifdef SERIAL_DEBUGGING
-#define   SER_RBR   SERIAL_PORT + 0
-#define   SER_THR   SERIAL_PORT + 0
-#define   SER_DLL   SERIAL_PORT + 0
-#define   SER_IER   SERIAL_PORT + 1
-#define   SER_DLM   SERIAL_PORT + 1
-#define   SER_IIR   SERIAL_PORT + 2
-#define   SER_LCR   SERIAL_PORT + 3
-#define     SR_LCR_CS5 0x00
-#define     SR_LCR_CS6 0x01
-#define     SR_LCR_CS7 0x02
-#define     SR_LCR_CS8 0x03
-#define     SR_LCR_ST1 0x00
-#define     SR_LCR_ST2 0x04
-#define     SR_LCR_PNO 0x00
-#define     SR_LCR_POD 0x08
-#define     SR_LCR_PEV 0x18
-#define     SR_LCR_PMK 0x28
-#define     SR_LCR_PSP 0x38
-#define     SR_LCR_BRK 0x40
-#define     SR_LCR_DLAB 0x80
-#define   SER_MCR   SERIAL_PORT + 4
-#define     SR_MCR_DTR 0x01
-#define     SR_MCR_RTS 0x02
-#define   SER_LSR   SERIAL_PORT + 5
-#define     SR_LSR_TBE 0x20
-#define   SER_MSR   SERIAL_PORT + 6
-#endif
-
-#ifdef SCREEN_DEBUGGING
+#ifdef SCREEN_SYNCHRONIZATION
 #define CRTC_COMMAND 0x3d4
 #define CRTC_DATA 0x3d5
 #define CRTC_CURLO 0x0f
 #define CRTC_CURHI 0x0e
 #endif
-
-
 
 
 #define CHAR_ATTRIBUTE 0x17  /* grey on blue */
@@ -145,16 +102,6 @@ HalInitializeDisplay (boot_param *bp)
 {
     if (DisplayInitialized == FALSE)
     {
-#ifdef SERIAL_DEBUGGING
-        /*  turn on DTR and RTS  */
-        outb_p(SER_MCR, SR_MCR_DTR | SR_MCR_RTS);
-        /*  set baud rate, line control  */
-        outb_p(SER_LCR, SERIAL_LINE_CONTROL | SR_LCR_DLAB);
-        outb_p(SER_DLL, (115200 / SERIAL_BAUD_RATE) & 0xff);
-        outb_p(SER_DLM, ((115200 / SERIAL_BAUD_RATE) >> 8) & 0xff);
-        outb_p(SER_LCR, SERIAL_LINE_CONTROL);
-#endif
-
         VideoBuffer = (WORD *)(0xd0000000 + 0xb8000);
 //        VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
 
@@ -195,7 +142,6 @@ HalResetDisplay (VOID)
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-
 VOID
 HalAcquireDisplayOwnership (
         IN  PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters
@@ -224,7 +170,7 @@ HalDisplayString(PCH String)
  */
 {
     PCH pch;
-#ifdef SCREEN_DEBUGGING
+#ifdef SCREEN_SYNCHRONIZATION
     int offset;
 #endif
 
@@ -235,18 +181,7 @@ HalDisplayString(PCH String)
         HalResetDisplay ();
     }
 
-#ifdef BOCHS_DEBUGGING
-    outb_p(BOCHS_LOGGER_PORT,c);
-#endif
-
-#ifdef SERIAL_DEBUGGING
-    while ((inb_p(SER_LSR) & SR_LSR_TBE) == 0)
-        ;
-
-    outb_p(SER_THR, c);
-#endif
-
-#ifdef SCREEN_DEBUGGING
+#ifdef SCREEN_SYNCHRONIZATION
     outb_p(CRTC_COMMAND, CRTC_CURHI);
     offset = inb_p(CRTC_DATA)<<8;
     outb_p(CRTC_COMMAND, CRTC_CURLO);
@@ -284,7 +219,7 @@ HalDisplayString(PCH String)
         pch++;
     }
 
-#ifdef SCREEN_DEBUGGING   
+#ifdef SCREEN_SYNCHRONIZATION
     offset = (CursorY * SizeX) + CursorX;
 
     outb_p(CRTC_COMMAND, CRTC_CURLO);
@@ -294,7 +229,6 @@ HalDisplayString(PCH String)
     outb_p(CRTC_DATA, offset);
 #endif
 }
-
 
 
 VOID

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.25 1999/10/15 15:21:03 ekohl Exp $
+/* $Id: main.c,v 1.26 1999/10/16 21:08:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -149,6 +149,11 @@ asmlinkage void _main(boot_param* _bp)
    HalInitSystem (0, &bp);
    
    HalDisplayString("Starting ReactOS "KERNEL_VERSION" (Build "__DATE__", "__TIME__")\n");
+
+   /*
+    * Initialize the debug output
+    */
+   DbgInit ();
 
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    if (start < ((int)&end))
