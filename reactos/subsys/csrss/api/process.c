@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.34 2004/06/27 10:16:59 weiden Exp $
+/* $Id: process.c,v 1.35 2004/06/27 12:21:31 weiden Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -411,11 +411,6 @@ CSR_API(CsrDuplicateHandle)
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
-  if (ProcessData == NULL)
-    {
-      DPRINT1("CsrGetProcessData() failed for process 0x%x, unable to dublicate handle\n", Request->Data.DuplicateHandleRequest.ProcessId);
-      return STATUS_INVALID_HANDLE;
-    }
   Reply->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
   if (! NT_SUCCESS(Reply->Status))
     {
