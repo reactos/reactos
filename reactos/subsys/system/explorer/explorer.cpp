@@ -696,6 +696,9 @@ int main(int argc, char* argv[])
 	while(*cmdline && !_istspace(*cmdline))
 		++cmdline;
 
+	while(_istspace(*cmdline))
+		++cmdline;
+
 	return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
 }
 
