@@ -1051,10 +1051,8 @@ ShowPartitionSizeInputBox(SHORT Left,
 static PAGE_NUMBER
 CreatePartitionPage (PINPUT_RECORD Ir)
 {
-  WCHAR PathBuffer[MAX_PATH];
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  BOOLEAN Valid;
   SHORT xScreen;
   SHORT yScreen;
   BOOLEAN Quit;
@@ -1062,7 +1060,6 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   CHAR InputBuffer[50];
   ULONG MaxSize;
   ULONGLONG PartSize;
-
   ULONGLONG DiskSize;
   PCHAR Unit;
 
@@ -1135,7 +1132,6 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   PartEntry = PartitionList->CurrentPartition;
   while (TRUE)
     {
-//      MaxSize = PartEntry->UnpartitionedLength / (1024 * 1024); /* in MBytes */
       MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
       ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
 				 MaxSize, InputBuffer, &Quit, &Cancel);
@@ -1152,7 +1148,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 	}
       else
 	{
-	  PartSize = atoi(InputBuffer);
+	  PartSize = atoi (InputBuffer);
 	  if (PartSize < 1)
 	    {
 	      /* Too small */
@@ -1182,93 +1178,11 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 		PartSize = PartEntry->UnpartitionedLength;
 	    }
 
-	  if (PartSize == PartEntry->UnpartitionedLength)
-	    {
-	      /* FIXME: Convert current entry to 'new (unformatted)' */
-	      PartEntry->PartInfo[0].StartingOffset.QuadPart =
-		PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
-	      PartEntry->PartInfo[0].PartitionLength.QuadPart =
-		PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
-	      PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
-	      PartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
-	      PartEntry->PartInfo[0].RewritePartition = TRUE;
+	  DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
-	      /* FIXME: Update extended partition entries */
+	  CreateNewPartition (PartitionList,
+			      PartSize);
 
-
-	      PartEntry->New = TRUE;
-	      PartEntry->Unpartitioned = FALSE;
-	      PartEntry->UnpartitionedOffset = 0ULL;
-	      PartEntry->UnpartitionedLength = 0ULL;
-	    }
-	  else
-	    {
-	      /*
-	       * FIXME:
-	       *  Insert new 'new (unformatted)' entry before the
-	       *  current entry and adjust offsets and sizes.
-	       */
-	    }
-
-	  DPRINT1 ("Partition size: %I64u bytes\n", PartSize);
-
-	  PopupError ("Entered valid partition size!\n"
-		      "\n"
-		      "  * Press any key to continue.",
-		      NULL);
-	  ConInKey (Ir);
-
-
-#if 0
-          PartEntry->PartType = PARTITION_ENTRY_UNUSED;
-          PartEntry->Used = TRUE;
-
-      	  PartDataValid = GetSelectedPartition(PartList,
-      					       &PartData);
-          if (PartDataValid)
-            {
-              PartData.CreatePartition = TRUE;
-              PartData.NewPartSize = PartSize;
-
-          	  ActivePartitionValid = GetActiveBootPartition(PartList,
-          							&ActivePartition);
-
-          	  RtlFreeUnicodeString(&DestinationRootPath);
-          	  swprintf(PathBuffer,
-          		   L"\\Device\\Harddisk%lu\\Partition%lu",
-          		   DiskEntry->DiskNumber,
-          		   PartData.PartNumber);
-          	  RtlCreateUnicodeString(&DestinationRootPath,
-          				 PathBuffer);
-
-          	  RtlFreeUnicodeString(&SystemRootPath);
-
-              if (ActivePartitionValid)
-                {
-          	      swprintf(PathBuffer,
-            		    L"\\Device\\Harddisk%lu\\Partition%lu",
-            		    ActivePartition.DiskNumber,
-            		    ActivePartition.PartNumber);
-                }
-              else
-                {
-                  /* We mark the selected partition as bootable */
-          	      swprintf(PathBuffer,
-            		    L"\\Device\\Harddisk%lu\\Partition%lu",
-            		    DiskEntry->DiskNumber,
-            		    PartData.PartNumber);
-                }
-          	  RtlCreateUnicodeString(&SystemRootPath,
-          				 PathBuffer);
-
-          	  return(SELECT_FILE_SYSTEM_PAGE);
-            }
-          else
-            {
-              /* FIXME: show an error dialog */
-              return(SELECT_PARTITION_PAGE);
-            }
-#endif
 	  return SELECT_PARTITION_PAGE;
 	}
     }
@@ -1298,7 +1212,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
   DiskEntry = PartitionList->CurrentDisk;
   PartEntry = PartitionList->CurrentPartition;
 
-  SetTextXY(6, 8, "You have chosen to delete the partition");
+  SetTextXY (6, 8, "You have chosen to delete the partition");
 
   /* Determine partition type */
   PartType = NULL;
@@ -1348,7 +1262,6 @@ DeletePartitionPage (PINPUT_RECORD Ir)
   if (PartType == NULL)
     {
       PrintTextXY (6, 10,
-//		   "   %c%c  Type %-3lu                        %6I64u %s",
 		   "   %c%c  Type %lu    %I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -1359,7 +1272,6 @@ DeletePartitionPage (PINPUT_RECORD Ir)
   else
     {
       PrintTextXY (6, 10,
-//		   "   %c%c  %-8s                         %6I64u %s",
 		   "   %c%c  %s    %I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -1407,21 +1319,21 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 		   DiskEntry->Id);
     }
 
-  SetTextXY(8, 18, "\x07  Press D to delete the partition.");
-  SetTextXY(11, 19, "WARNING: All data on this partition will be lost!");
+  SetTextXY (8, 18, "\x07  Press D to delete the partition.");
+  SetTextXY (11, 19, "WARNING: All data on this partition will be lost!");
 
-  SetTextXY(8, 21, "\x07  Press ESC to cancel.");
+  SetTextXY (8, 21, "\x07  Press ESC to cancel.");
 
-  SetStatusText("   D = Delete Partition   ESC = Cancel   F3 = Quit");
+  SetStatusText ("   D = Delete Partition   ESC = Cancel   F3 = Quit");
 
-  while(TRUE)
+  while (TRUE)
     {
-      ConInKey(Ir);
+      ConInKey (Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
-	  if (ConfirmQuit(Ir) == TRUE)
+	  if (ConfirmQuit (Ir) == TRUE)
 	    {
 	      return QUIT_PAGE;
 	    }
@@ -1433,11 +1345,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
 	{
-	  /* FIXME: delete partition here! */
-
-#if 0
-	  DeleteSelectedPartition(CurrentPartitionList);
-#endif
+	  DeleteCurrentPartition (PartitionList);
 
 	  return SELECT_PARTITION_PAGE;
 	}
@@ -1578,7 +1486,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
       PartitionList->CurrentPartition == NULL)
     {
       /* FIXME: show an error dialog */
-      return(QUIT_PAGE);
+      return QUIT_PAGE;
     }
 
   DiskEntry = PartitionList->CurrentDisk;
@@ -1674,44 +1582,46 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
       DrawFileSystemList (FileSystemList);
     }
 
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
-  while(TRUE)
+  while (TRUE)
     {
-      ConInKey(Ir);
+      ConInKey (Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
+	    {
+	      return QUIT_PAGE;
+	    }
 	  break;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
-    DestroyFileSystemList(FileSystemList);
-	  return(SELECT_PARTITION_PAGE);
+	  DestroyFileSystemList (FileSystemList);
+	  return SELECT_PARTITION_PAGE;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-	  ScrollDownFileSystemList(FileSystemList);
+	  ScrollDownFileSystemList (FileSystemList);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
-	  ScrollUpFileSystemList(FileSystemList);
+	  ScrollUpFileSystemList (FileSystemList);
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
 	  if (FileSystemList->CurrentFileSystem == FsKeep)
 	    {
-	      return(CHECK_FILE_SYSTEM_PAGE);
+	      return CHECK_FILE_SYSTEM_PAGE;
 	    }
 	  else
 	    {
-	      return(FORMAT_PARTITION_PAGE);
+	      return FORMAT_PARTITION_PAGE;
 	    }
 	}
     }

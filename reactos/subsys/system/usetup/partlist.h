@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.14 2003/08/05 20:39:24 ekohl Exp $
+/* $Id: partlist.h,v 1.15 2003/08/06 16:37:46 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -72,6 +72,9 @@ typedef struct _DISKENTRY
   USHORT Bus;
   USHORT Id;
 
+  /* Has the partition list been modified? */
+  BOOLEAN Modified;
+
   UNICODE_STRING DriverName;
 
   LIST_ENTRY PartListHead;
@@ -107,42 +110,34 @@ typedef struct _PARTLIST
 
 
 PPARTLIST
-CreatePartitionList(SHORT Left,
-		    SHORT Top,
-		    SHORT Right,
-		    SHORT Bottom);
+CreatePartitionList (SHORT Left,
+		     SHORT Top,
+		     SHORT Right,
+		     SHORT Bottom);
 
 VOID
-DestroyPartitionList(PPARTLIST List);
+DestroyPartitionList (PPARTLIST List);
 
 VOID
-DrawPartitionList(PPARTLIST List);
+DrawPartitionList (PPARTLIST List);
 
 VOID
-ScrollDownPartitionList(PPARTLIST List);
+ScrollDownPartitionList (PPARTLIST List);
 
 VOID
-ScrollUpPartitionList(PPARTLIST List);
+ScrollUpPartitionList (PPARTLIST List);
 
 VOID
 GetActiveBootPartition(PPARTLIST List,
 		       PDISKENTRY *DiskEntry,
 		       PPARTENTRY *PartEntry);
 
-BOOLEAN
-CreateSelectedPartition(PPARTLIST List,
-			ULONG PartType,
-			ULONGLONG NewPartSize);
+VOID
+CreateNewPartition (PPARTLIST List,
+		    ULONGLONG PartitionSize);
 
-BOOLEAN
-DeleteSelectedPartition(PPARTLIST List);
-
-#if 0
-BOOLEAN
-MarkPartitionActive(ULONG DiskNumber,
-		    ULONG PartitionNumber,
-		    PPARTDATA ActivePartition);
-#endif
+VOID
+DeleteCurrentPartition (PPARTLIST List);
 
 #endif /* __PARTLIST_H__ */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.14 2003/08/05 20:39:24 ekohl Exp $
+/* $Id: partlist.c,v 1.15 2003/08/06 16:37:46 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -688,7 +688,7 @@ PrintPartitionData(PPARTLIST List,
       if (PartType == NULL)
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  Type %-3lu                        %6I64u %s",
+		   "%c%c  Type %-3lu                         %6I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartEntry->PartInfo[0].PartitionType,
@@ -1092,348 +1092,221 @@ GetActiveBootPartition(PPARTLIST List,
 }
 
 
-BOOLEAN
-CreateSelectedPartition(PPARTLIST List,
-  ULONG PartType,
-  ULONGLONG NewPartSize)
+VOID
+CreateNewPartition (PPARTLIST List,
+		    ULONGLONG PartitionSize)
 {
-#if 0
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  ULONG PartEntryNumber;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-  WCHAR Buffer[MAX_PATH];
-  UNICODE_STRING Name;
-  HANDLE FileHandle;
-  LARGE_INTEGER li;
+  PPARTENTRY PrevPartEntry;
+  PPARTENTRY NextPartEntry;
+  PPARTENTRY NewPartEntry;
+
+  if (List == NULL ||
+      List->CurrentDisk == NULL ||
+      List->CurrentPartition == NULL ||
+      List->CurrentPartition->Unpartitioned == FALSE)
+    {
+      return;
+    }
 
   DiskEntry = List->CurrentDisk;
   PartEntry = List->CurrentPartition;
 
-  PartEntry->PartType = PartType;
-  PartEntryNumber = List->CurrentPartition;
-
-  DPRINT("NewPartSize %d (%d MB)\n", NewPartSize, NewPartSize / (1024 * 1024));
-  DPRINT("PartEntry->StartingOffset %d\n", PartEntry->StartingOffset);
-  DPRINT("PartEntry->PartSize %d\n", PartEntry->PartSize);
-  DPRINT("PartEntry->PartNumber %d\n", PartEntry->PartNumber);
-  DPRINT("PartEntry->PartType 0x%x\n", PartEntry->PartType);
-  DPRINT("PartEntry->FileSystemName %s\n", PartEntry->FileSystemName);
-
-  swprintf(Buffer,
-    L"\\Device\\Harddisk%d\\Partition0",
-    DiskEntry->DiskNumber);
-  RtlInitUnicodeString(&Name, Buffer);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-    &Name,
-    0,
-    NULL,
-    NULL);
-
-  Status = NtOpenFile(&FileHandle,
-    0x10001,
-    &ObjectAttributes,
-    &Iosb,
-    1,
-    FILE_SYNCHRONOUS_IO_NONALERT);
-  if (NT_SUCCESS(Status))
+  if (PartitionSize == PartEntry->UnpartitionedLength)
     {
-	  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
+      /* Convert current entry to 'new (unformatted)' */
+      PartEntry->PartInfo[0].StartingOffset.QuadPart =
+	PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
+      PartEntry->PartInfo[0].PartitionLength.QuadPart =
+	PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
+      PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
+      PartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
+      PartEntry->PartInfo[0].RewritePartition = TRUE;
 
-	  Status = NtDeviceIoControlFile(FileHandle,
-  		NULL,
-  		NULL,
-  		NULL,
-  		&Iosb,
-  		IOCTL_DISK_GET_DRIVE_LAYOUT,
-  		NULL,
-  		0,
-  		LayoutBuffer,
-  		8192);
-	  if (!NT_SUCCESS(Status))
-	    {
-          DPRINT("IOCTL_DISK_GET_DRIVE_LAYOUT failed() 0x%.08x\n", Status);
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          return FALSE;
-        }
+      /* Check for previous partition entry */
+      if (PartEntry->ListEntry.Blink != &DiskEntry->PartListHead)
+	{
+	  PrevPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Blink,
+					     PARTENTRY,
+					     ListEntry);
 
-      li.QuadPart = PartEntry->StartingOffset;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].StartingOffset = li;
-      /* FIXME: Adjust PartitionLength so the partition will end on the last sector of a track */
-      li.QuadPart = NewPartSize;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionLength = li;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].HiddenSectors =
-        PartEntry->StartingOffset / DiskEntry->BytesPerSector;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionType = PartType;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].RecognizedPartition = TRUE;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].RewritePartition = TRUE;
 
-      Status = NtDeviceIoControlFile(FileHandle,
-        NULL,
-        NULL,
-        NULL,
-        &Iosb,
-        IOCTL_DISK_SET_DRIVE_LAYOUT,
-        LayoutBuffer,
-        8192,
-        NULL,
-        0);
-      if (!NT_SUCCESS(Status))
-        {
-          DPRINT("IOCTL_DISK_SET_DRIVE_LAYOUT failed() 0x%.08x\n", Status);
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          return FALSE;
-        }
+	  /* FIXME: Update extended partition entries */
+
+
+	}
+
+      PartEntry->New = TRUE;
+      PartEntry->Unpartitioned = FALSE;
+      PartEntry->UnpartitionedOffset = 0ULL;
+      PartEntry->UnpartitionedLength = 0ULL;
     }
   else
     {
-      DPRINT("NtOpenFile failed() 0x%.08x\n", Status);
-      NtClose(FileHandle);
-      RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-      return FALSE;
+      /* Insert an initialize a new partition entry */
+      NewPartEntry = (PPARTENTRY)RtlAllocateHeap (ProcessHeap,
+						  0,
+						  sizeof(PARTENTRY));
+      if (NewPartEntry == NULL)
+	return;
+
+      RtlZeroMemory (NewPartEntry,
+		     sizeof(PARTENTRY));
+
+      /* Insert the new entry into the list */
+      InsertTailList (&PartEntry->ListEntry,
+		      &NewPartEntry->ListEntry);
+
+      NewPartEntry->New = TRUE;
+
+      NewPartEntry->PartInfo[0].StartingOffset.QuadPart =
+	PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
+      NewPartEntry->PartInfo[0].PartitionLength.QuadPart =
+	PartitionSize - DiskEntry->TrackSize;
+      NewPartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
+      NewPartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
+      NewPartEntry->PartInfo[0].RewritePartition = TRUE;
+
+      /* FIXME: Update extended partition entries */
+
+      /* Update offset and size of the remaining unpartitioned disk space */
+      PartEntry->UnpartitionedOffset += PartitionSize;
+      PartEntry->UnpartitionedLength -= PartitionSize;
     }
 
-  NtClose(FileHandle);
-  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-#endif
+  DiskEntry->Modified = TRUE;
 
-  return TRUE;
+  /* FIXME: Update partition numbers and drive letters */
+
 }
 
 
-BOOLEAN
-DeleteSelectedPartition(PPARTLIST List)
+VOID
+DeleteCurrentPartition (PPARTLIST List)
 {
-#if 0
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-//  ULONG PartEntryNumber;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-  WCHAR Buffer[MAX_PATH];
-  UNICODE_STRING Name;
-  HANDLE FileHandle;
-  LARGE_INTEGER li;
+  PPARTENTRY PrevPartEntry;
+  PPARTENTRY NextPartEntry;
+
+  if (List == NULL ||
+      List->CurrentDisk == NULL ||
+      List->CurrentPartition == NULL ||
+      List->CurrentPartition->Unpartitioned == TRUE)
+    {
+      return;
+    }
 
   DiskEntry = List->CurrentDisk;
   PartEntry = List->CurrentPartition;
-  PartEntry->PartType = PARTITION_ENTRY_UNUSED;
 
-//  PartEntryNumber = List->CurrentPartition;
-
-  DPRINT1("DeleteSelectedPartition(PartEntryNumber = %d)\n", PartEntryNumber);
-  DPRINT1("PartEntry->StartingOffset %d\n", PartEntry->StartingOffset);
-  DPRINT1("PartEntry->PartSize %d\n", PartEntry->PartSize);
-  DPRINT1("PartEntry->PartNumber %d\n", PartEntry->PartNumber);
-  DPRINT1("PartEntry->PartType 0x%x\n", PartEntry->PartType);
-  DPRINT1("PartEntry->FileSystemName %s\n", PartEntry->FileSystemName);
-
-  swprintf(Buffer,
-    L"\\Device\\Harddisk%d\\Partition0",
-    DiskEntry->DiskNumber);
-  RtlInitUnicodeString(&Name, Buffer);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-    &Name,
-    0,
-    NULL,
-    NULL);
-
-  Status = NtOpenFile(&FileHandle,
-    0x10001,
-    &ObjectAttributes,
-    &Iosb,
-    1,
-    FILE_SYNCHRONOUS_IO_NONALERT);
-  if (NT_SUCCESS(Status))
+  /* Get pointer to previous partition entry */
+  PrevPartEntry = NULL;
+  if (PartEntry->ListEntry.Blink != &DiskEntry->PartListHead)
     {
-	  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
+      PrevPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Blink,
+					 PARTENTRY,
+					 ListEntry);
+    }
 
-	  Status = NtDeviceIoControlFile(FileHandle,
-		NULL,
-		NULL,
-		NULL,
-		&Iosb,
-		IOCTL_DISK_GET_DRIVE_LAYOUT,
-		NULL,
-		0,
-		LayoutBuffer,
-		8192);
-	  if (!NT_SUCCESS(Status))
-	    {
-          DPRINT("IOCTL_DISK_GET_DRIVE_LAYOUT failed() 0x%.08x\n", Status);
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          return FALSE;
-        }
+  /* Get pointer to previous partition entry */
+  NextPartEntry = NULL;
+  if (PartEntry->ListEntry.Flink != &DiskEntry->PartListHead)
+    {
+      NextPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Flink,
+					 PARTENTRY,
+					 ListEntry);
+    }
 
-      li.QuadPart = 0;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].StartingOffset = li;
-      li.QuadPart = 0;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionLength = li;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].HiddenSectors = 0;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionType = 0;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].RecognizedPartition = FALSE;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].RewritePartition = TRUE;
+  if ((PrevPartEntry != NULL && PrevPartEntry->Unpartitioned == TRUE) &&
+      (NextPartEntry != NULL && NextPartEntry->Unpartitioned == TRUE))
+    {
+      /* Merge previous, current and next entry */
 
-      Status = NtDeviceIoControlFile(FileHandle,
-        NULL,
-        NULL,
-        NULL,
-        &Iosb,
-        IOCTL_DISK_SET_DRIVE_LAYOUT,
-        LayoutBuffer,
-        8192,
-        NULL,
-        0);
-      if (!NT_SUCCESS(Status))
-        {
-          DPRINT("IOCTL_DISK_SET_DRIVE_LAYOUT failed() 0x%.08x\n", Status);
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          return FALSE;
-        }
+      /* Adjust the previous entries length */
+      PrevPartEntry->UnpartitionedLength += 
+	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize +
+	 NextPartEntry->UnpartitionedLength);
+
+      /* FIXME: Container entries ?? */
+
+      /* Remove the current entry */
+      RemoveEntryList (&PartEntry->ListEntry);
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   PartEntry);
+
+      /* Remove the next entry */
+      RemoveEntryList (&NextPartEntry->ListEntry);
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   NextPartEntry);
+
+      /* Update current partition */
+      List->CurrentPartition = PrevPartEntry;
+    }
+  else if (PrevPartEntry != NULL && PrevPartEntry->Unpartitioned == TRUE)
+    {
+      /* Merge current and previous entry */
+
+      /* Adjust the previous entries length */
+      PrevPartEntry->UnpartitionedLength += 
+	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
+
+      /* FIXME: Container entries ?? */
+
+      /* Remove the current entry */
+      RemoveEntryList (&PartEntry->ListEntry);
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   PartEntry);
+
+      /* Update current partition */
+      List->CurrentPartition = PrevPartEntry;
+    }
+  else if (NextPartEntry != NULL && NextPartEntry->Unpartitioned == TRUE)
+    {
+      /* Merge current and next entry */
+
+      /* Adjust the next entries offset and length */
+      NextPartEntry->UnpartitionedOffset = 
+	PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      NextPartEntry->UnpartitionedLength += 
+	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
+
+      /* FIXME: Container entries ?? */
+
+      /* Remove the current entry */
+      RemoveEntryList (&PartEntry->ListEntry);
+      RtlFreeHeap (ProcessHeap,
+		   0,
+		   PartEntry);
+
+      /* Update current partition */
+      List->CurrentPartition = NextPartEntry;
     }
   else
     {
-      DPRINT("NtOpenFile failed() 0x%.08x\n", Status);
-      NtClose(FileHandle);
-      RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-      return FALSE;
+      /* Nothing to merge but change current entry */
+      PartEntry->New = FALSE;
+      PartEntry->Unpartitioned = TRUE;
+      PartEntry->UnpartitionedOffset = 
+	PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      PartEntry->UnpartitionedLength = 
+	PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
+
+      /* FIXME: Container entries ?? */
+
+      /* Wipe the partition table */
+      RtlZeroMemory (&PartEntry->PartInfo,
+		     sizeof(PartEntry->PartInfo));
     }
 
-  NtClose(FileHandle);
-  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-#endif
+  DiskEntry->Modified = TRUE;
 
-  return TRUE;
+  /* FIXME: Update partition numbers and drive letters */
+
 }
-
-#if 0
-BOOLEAN
-MarkPartitionActive (ULONG DiskNumber,
-		     ULONG PartitionNumber,
-		     PPARTDATA ActivePartition)
-{
-  PPARTLIST List;
-  PPARTENTRY PartEntry;
-  ULONG PartEntryNumber;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-  WCHAR Buffer[MAX_PATH];
-  UNICODE_STRING Name;
-  HANDLE FileHandle;
-
-  List = InitializePartitionList ();
-  if (List == NULL)
-    {
-      return(FALSE);
-    }
-
-  PartEntry = GetPartitionInformation(List,
-			DiskNumber,
-			PartitionNumber,
-			&PartEntryNumber);
-  if (List == NULL)
-    {
-      DestroyPartitionList(List);
-      return(FALSE);
-    }
-
-
-  swprintf(Buffer,
-    L"\\Device\\Harddisk%d\\Partition0",
-    DiskNumber);
-  RtlInitUnicodeString(&Name, Buffer);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-    &Name,
-    0,
-    NULL,
-    NULL);
-
-  Status = NtOpenFile(&FileHandle,
-    0x10001,
-    &ObjectAttributes,
-    &Iosb,
-    1,
-    FILE_SYNCHRONOUS_IO_NONALERT);
-  if (NT_SUCCESS(Status))
-    {
-	  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
-
-	  Status = NtDeviceIoControlFile(FileHandle,
-		NULL,
-		NULL,
-		NULL,
-		&Iosb,
-		IOCTL_DISK_GET_DRIVE_LAYOUT,
-		NULL,
-		0,
-		LayoutBuffer,
-		8192);
-	  if (!NT_SUCCESS(Status))
-	    {
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          DestroyPartitionList(List);
-          return FALSE;
-        }
-
-
-      LayoutBuffer->PartitionEntry[PartEntryNumber].BootIndicator = TRUE;
-
-      Status = NtDeviceIoControlFile(FileHandle,
-        NULL,
-        NULL,
-        NULL,
-        &Iosb,
-        IOCTL_DISK_SET_DRIVE_LAYOUT,
-        LayoutBuffer,
-        8192,
-        NULL,
-        0);
-      if (!NT_SUCCESS(Status))
-        {
-          NtClose(FileHandle);
-          RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-          DestroyPartitionList(List);
-          return FALSE;
-        }
-    }
-  else
-    {
-      NtClose(FileHandle);
-      RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-      DestroyPartitionList(List);
-      return FALSE;
-    }
-
-  NtClose(FileHandle);
-  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-
-  PartEntry->Active = TRUE;
-  if (!GetActiveBootPartition(List, ActivePartition))
-  {
-    DestroyPartitionList(List);
-    DPRINT("GetActiveBootPartition() failed\n");
-    return FALSE;
-  }
-
-  DestroyPartitionList(List);
-
-  return TRUE;
-}
-#endif
 
 /* EOF */
