@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.16 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: arcname.c,v 1.17 2004/05/02 22:49:24 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,8 +52,11 @@ IoCreateArcNames(VOID)
   WCHAR ArcNameBuffer[80];
   UNICODE_STRING DeviceName;
   UNICODE_STRING ArcName;
-  ULONG i, j;
+  ULONG i, j, k;
   NTSTATUS Status;
+  PFILE_OBJECT FileObject;
+  PDEVICE_OBJECT DeviceObject;
+  BOOL IsRemovableMedia;
 
   DPRINT("IoCreateArcNames() called\n");
 
@@ -86,7 +89,7 @@ IoCreateArcNames(VOID)
 
   /* create ARC names for hard disk drives */
   DPRINT("Disk drives: %lu\n", ConfigInfo->DiskCount);
-  for (i = 0; i < ConfigInfo->DiskCount; i++)
+  for (i = 0, k = 0; i < ConfigInfo->DiskCount; i++)
     {
       swprintf(DeviceNameBuffer,
 	       L"\\Device\\Harddisk%lu\\Partition0",
@@ -94,9 +97,25 @@ IoCreateArcNames(VOID)
       RtlInitUnicodeString(&DeviceName,
 			   DeviceNameBuffer);
 
+
+      Status = IoGetDeviceObjectPointer(&DeviceName,
+				        FILE_READ_DATA,
+				        &FileObject,
+				        &DeviceObject);
+      if (!NT_SUCCESS(Status))
+        {
+	  continue;
+	}
+      IsRemovableMedia = DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA ? TRUE : FALSE;
+      ObDereferenceObject(FileObject);
+      if (IsRemovableMedia)
+        {
+          continue;
+	}
+
       swprintf(ArcNameBuffer,
 	       L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(0)",
-	       i);
+	       k);
       RtlInitUnicodeString(&ArcName,
 			   ArcNameBuffer);
       DPRINT("%wZ ==> %wZ\n",
@@ -126,7 +145,7 @@ IoCreateArcNames(VOID)
 
 	  swprintf(ArcNameBuffer,
 		   L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(%lu)",
-		   i,
+		   k,
 		   j + 1);
 	  RtlInitUnicodeString(&ArcName,
 			       ArcNameBuffer);
@@ -142,6 +161,7 @@ IoCreateArcNames(VOID)
 
       ExFreePool(LayoutInfo);
       LayoutInfo = NULL;
+      k++;
     }
 
   /* create ARC names for cdrom drives */
