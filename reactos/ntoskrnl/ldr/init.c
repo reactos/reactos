@@ -116,7 +116,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
     * Locate and open NTDLL to determine ImageBase
     * and LdrStartup
     */
-   GetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
+   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
    wcscat(TmpNameBuffer, L"\\ntdll.dll");
    RtlInitUnicodeString(&DllPathname, TmpNameBuffer); 
    InitializeObjectAttributes(&FileObjectAttributes,
@@ -540,7 +540,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     * Get the system directory's name (a DOS device
     * alias name which is in \\??\\).
     */
-   GetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
+   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
 //   wcscat(TmpNameBuffer, L"\\shell.exe");
    wcscat(TmpNameBuffer, L"\\smss.exe");
    RtlInitUnicodeString(&ProcessName, TmpNameBuffer);

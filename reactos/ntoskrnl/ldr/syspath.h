@@ -1,5 +1,5 @@
 LPWSTR
-GetSystemDirectory (
+LdrGetSystemDirectory (
 	LPWSTR	SystemDirectoryName,
 	DWORD	Size
 	);

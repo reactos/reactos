@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.32 1999/10/07 23:36:24 ekohl Exp $
+/* $Id: loader.c,v 1.33 1999/10/20 23:09:26 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -171,7 +171,7 @@ LdrLoadAutoConfigDriver (
 	NTSTATUS	Status;
 	UNICODE_STRING	DriverName;
 
-	GetSystemDirectory(
+	LdrGetSystemDirectory(
 		TmpFileName,
 		(MAX_PATH * sizeof(WCHAR))
 		);

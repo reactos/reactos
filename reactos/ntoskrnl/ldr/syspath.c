@@ -1,4 +1,4 @@
-/* $Id: syspath.c,v 1.2 1999/10/07 23:36:25 ekohl Exp $
+/* $Id: syspath.c,v 1.3 1999/10/20 23:09:26 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,7 +32,7 @@
  * 	19990717 (EA)
  */
 LPWSTR
-GetSystemDirectory (
+LdrGetSystemDirectory (
 	LPWSTR	SystemDirectoryName,
 	DWORD	Size
 	)
@@ -53,7 +53,7 @@ GetSystemDirectory (
 			)
 		)
 	{
-		DbgPrint("GetSystemDirectory() failed\n");
+		DbgPrint("LdrGetSystemDirectory() failed\n");
 		return NULL;
 	}
 	/*
