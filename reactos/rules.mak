@@ -28,7 +28,7 @@ PREFIX = mingw32-
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM_CMD = nasm
+NASM = nasm
 DOSCLI =
 FLOPPY_DIR = /mnt/floppy
 SEP := /
@@ -41,7 +41,7 @@ PREFIX =
 EXE_PREFIX :=
 EXE_POSTFIX := .exe
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM_CMD = nasmw
+NASM = nasmw
 DOSCLI = yes
 FLOPPY_DIR = A:
 SEP := \$(EMPTY_VAR)
@@ -103,6 +103,7 @@ STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=i386
 STD_CPPFLAGS = $(STD_CFLAGS)
 STD_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -D__ASM__ -D_M_IX86
 STD_RCFLAGS = --include-dir $(PATH_TO_TOP)/include --include-dir $(W32API_PATH)/include
+STD_NFLAGS = -f win32
 
 # Developer Kits
 DK_PATH=$(PATH_TO_TOP)/dk

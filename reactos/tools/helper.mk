@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.64 2004/05/29 21:24:48 hbirr Exp $
+# $Id: helper.mk,v 1.65 2004/06/02 18:24:09 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -619,7 +619,7 @@ TARGET_RCFLAGS += $(MK_RCFLAGS) $(STD_RCFLAGS)
 
 TARGET_ASFLAGS += $(MK_ASFLAGS) $(STD_ASFLAGS)
 
-TARGET_NFLAGS += $(MK_NFLAGS)
+TARGET_NFLAGS += $(MK_NFLAGS) $(STD_NFLAGS)
 
 
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
@@ -1057,7 +1057,7 @@ endif # ROS_USE_PCH
 %.o: %.s
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.asm
-	$(NASM_CMD) $(NFLAGS) $(TARGET_NFLAGS) $< -o $@
+	$(NASM) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $< -o $@
 %.spec.def: %.spec
@@ -1071,5 +1071,6 @@ endif # ROS_USE_PCH
 
 # Compatibility
 CFLAGS := $(TARGET_CFLAGS)
+NFLAGS := $(TARGET_NFLAGS)
 
 # EOF
