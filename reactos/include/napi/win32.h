@@ -19,6 +19,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;
+  FAST_MUTEX CursorIconListLock;
+  LIST_ENTRY CursorIconListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _WINSTATION_OBJECT* WindowStation;
   WORD GDIObjects;

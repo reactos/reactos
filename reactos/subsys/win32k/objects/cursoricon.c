@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.37 2003/12/13 19:53:17 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.38 2003/12/13 22:38:29 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -108,7 +108,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   OldCursor = CurInfo->CurrentCursorObject;
   if(OldCursor)
   {
-    Ret = (HCURSOR)OldCursor->Handle;
+    Ret = (HCURSOR)OldCursor->Self;
   }
   
   if(!ForceChange && (OldCursor == NewCursor))
@@ -288,6 +288,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   PUSER_HANDLE_TABLE HandleTable;
   PCURICON_OBJECT Object;
   HANDLE Handle;
+  PW32PROCESS Win32Process;
   
   HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
   
@@ -299,14 +300,20 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
     return FALSE;
   }
   
-  Object->Handle = Handle;
+  Win32Process = PsGetWin32Process();
+  
+  ExAcquireFastMutex(&Win32Process->CursorIconListLock);
+  InsertTailList(&Win32Process->CursorIconListHead, &Object->ListEntry);
+  ExReleaseFastMutex(&Win32Process->CursorIconListLock);
+  
+  Object->Self = Handle;
   Object->Process = PsGetWin32Process();
   
   return Object;
 }
 
 BOOL FASTCALL
-IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
+IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL RemoveFromProcess)
 {
   PUSER_HANDLE_TABLE HandleTable;
   PCURICON_OBJECT Object;
@@ -324,12 +331,20 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
   
   if(WinStaObject->SystemCursor.CurrentCursorObject == Object)
   {
-    ObmDereferenceObject(Object);
-    return FALSE;
+    /* Hide the cursor if we're destroying the current cursor */
+    IntSetCursor(WinStaObject, NULL, TRUE);
   }
   
   bmpMask = Object->IconInfo.hbmMask;
   bmpColor = Object->IconInfo.hbmColor;
+  
+  
+  if(Object->Process && RemoveFromProcess)
+  {
+    ExAcquireFastMutex(&Object->Process->CursorIconListLock);
+    RemoveEntryList(&Object->ListEntry);
+    ExReleaseFastMutex(&Object->Process->CursorIconListLock);
+  }
   
   ObmDereferenceObject(Object);
   
@@ -342,6 +357,29 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
     NtGdiDeleteObject(bmpColor);
   
   return Ret;
+}
+
+VOID FASTCALL
+IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
+{
+  PWINSTATION_OBJECT WinStaObject;
+  PCURICON_OBJECT Current;
+  PLIST_ENTRY CurrentEntry, NextEntry;
+  
+  if(!(WinStaObject = Win32Process->WindowStation))
+    return;
+  
+  ExAcquireFastMutex(&Win32Process->CursorIconListLock);
+  CurrentEntry = Win32Process->CursorIconListHead.Flink;
+  while(CurrentEntry != &Win32Process->CursorIconListHead)
+  {
+    NextEntry = CurrentEntry->Flink;
+    Current = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
+    RemoveEntryList(&Current->ListEntry);
+    IntDestroyCurIconObject(WinStaObject, Current->Self, FALSE);
+    CurrentEntry = NextEntry;
+  }
+  ExReleaseFastMutex(&Win32Process->CursorIconListLock);
 }
 
 /*
@@ -371,7 +409,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
   CurIconObject = IntCreateCurIconHandle(WinStaObject);
   if(CurIconObject)
   {
-    Ret = CurIconObject->Handle;
+    Ret = CurIconObject->Self;
     
     if(IconInfo)
     {
@@ -598,7 +636,7 @@ NtUserGetCursorInfo(
   CursorObject = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
   
   SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
-  SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Handle : (HCURSOR)0);
+  SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Self : (HCURSOR)0);
   SafeCi.ptScreenPos.x = CurInfo->x;
   SafeCi.ptScreenPos.y = CurInfo->y;
   
@@ -697,7 +735,7 @@ NtUserDestroyCursorIcon(
     return FALSE;
   }
   
-  if(IntDestroyCurIconObject(WinStaObject, Handle))
+  if(IntDestroyCurIconObject(WinStaObject, Handle, TRUE))
   {
     ObDereferenceObject(WinStaObject);
     return TRUE;
@@ -739,7 +777,7 @@ NtUserFindExistingCursorIcon(
   CurIconObject = IntFindExistingCurIconObject(WinStaObject, hModule, hRsrc, cx, cy);
   if(CurIconObject)
   {
-    Ret = CurIconObject->Handle;
+    Ret = CurIconObject->Self;
     
     IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);

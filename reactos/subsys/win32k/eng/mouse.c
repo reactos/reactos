@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.47 2003/12/07 19:29:33 weiden Exp $
+/* $Id: mouse.c,v 1.48 2003/12/13 22:38:29 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -600,12 +600,13 @@ EnableMouse(HDC hDisplayDC)
        InputWindowStation->SystemCursor.Enabled = FALSE;
        return;
     }
-    IntSetCursor(InputWindowStation, NULL, TRUE);
     
     dc = DC_LockDc(hDisplayDC);
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
+    
+    IntSetCursor(InputWindowStation, NULL, TRUE);
     
     InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
                                                 SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);

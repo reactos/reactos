@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.61 2003/12/12 23:49:48 weiden Exp $
+/* $Id: dllmain.c,v 1.62 2003/12/13 22:38:29 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -42,6 +42,7 @@
 #include <include/caret.h>
 #include <include/hotkey.h>
 #include <include/accelerator.h>
+#include <include/cursoricon.h>
 #include <include/guicheck.h>
 #include <include/hook.h>
 
@@ -78,6 +79,9 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
+      
+      InitializeListHead(&Win32Process->CursorIconListHead);
+      ExInitializeFastMutex(&Win32Process->CursorIconListLock);
 
       Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Process->WindowStation = NULL;
@@ -106,6 +110,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 #endif
 	  IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
       IntCleanupMenus(Process, Win32Process);
+      IntCleanupCurIcons(Process, Win32Process);
 
       CleanupForProcess(Process, Process->UniqueProcessId);
 
