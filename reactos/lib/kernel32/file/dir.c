@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.45 2004/06/02 18:26:57 gvg Exp $
+/* $Id: dir.c,v 1.46 2004/06/28 19:46:17 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -433,43 +433,157 @@ GetFullPathNameW (
 
 
 /*
- * @unimplemented
+ * NOTE: Copied from Wine.
+ * @implemented
  */
 DWORD
 STDCALL
 GetShortPathNameA (
-        LPCSTR  lpszLongPath,
-        LPSTR   lpszShortPath,
-        DWORD   cchBuffer
+        LPCSTR  longpath,
+        LPSTR   shortpath,
+        DWORD   shortlen
         )
 {
-        //1 remove unicode chars and spaces
-        //2 remove preceding and trailing periods.
-        //3 remove embedded periods except the last one
+    UNICODE_STRING longpathW;
+    WCHAR shortpathW[MAX_PATH];
+    DWORD ret, retW;
 
-        //4 Split the string in two parts before and after the period
-        //      truncate the part before the period to 6 chars and add ~1
-        //      truncate the part after the period to 3 chars
-        //3 Put the new name in uppercase
-
-        //4 Increment the ~1 string if the resulting name allready exists
-
+    if (!longpath)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
+    }
+
+    if (!RtlCreateUnicodeStringFromAsciiz(&longpathW, longpath))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    retW = GetShortPathNameW(longpathW.Buffer, shortpathW, MAX_PATH);
+
+    if (!retW)
+        ret = 0;
+    else if (retW > PATH_MAX)
+    {
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
+        ret = 0;
+    }
+    else
+    {
+        ret = WideCharToMultiByte(CP_ACP, 0, shortpathW, -1, NULL, 0, NULL, NULL);
+        if (ret <= shortlen)
+        {
+            WideCharToMultiByte(CP_ACP, 0, shortpathW, -1, shortpath, shortlen, NULL, NULL);
+            ret--; /* length without 0 */
+        }
+    }
+
+    RtlFreeUnicodeString(&longpathW);
+    return ret;
 }
 
 
 /*
- * @unimplemented
+ * NOTE: Copied from Wine.
+ * @implemented
  */
 DWORD
 STDCALL
 GetShortPathNameW (
-        LPCWSTR lpszLongPath,
-        LPWSTR  lpszShortPath,
-        DWORD   cchBuffer
+        LPCWSTR longpath,
+        LPWSTR  shortpath,
+        DWORD   shortlen
         )
 {
+    WCHAR               tmpshortpath[PATH_MAX];
+    LPCWSTR             p;
+    DWORD               sp = 0, lp = 0;
+    DWORD               tmplen;
+    WIN32_FIND_DATAW    wfd;
+    HANDLE              goit;
+    UNICODE_STRING      ustr;
+    WCHAR               ustr_buf[8+1+3+1];
+
+    if (!longpath)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
+    }
+    if (!longpath[0])
+    {
+        SetLastError(ERROR_BAD_PATHNAME);
+        return 0;
+    }
+
+    /* check for drive letter */
+    if (longpath[1] == ':' )
+    {
+        tmpshortpath[0] = longpath[0];
+        tmpshortpath[1] = ':';
+        sp = lp = 2;
+    }
+
+    ustr.Buffer = ustr_buf;
+    ustr.Length = 0;
+    ustr.MaximumLength = sizeof(ustr_buf);
+
+    while (longpath[lp])
+    {
+        /* check for path delimiters and reproduce them */
+        if (longpath[lp] == '\\' || longpath[lp] == '/')
+        {
+            if (!sp || tmpshortpath[sp-1] != '\\')
+            {
+                /* strip double "\\" */
+                tmpshortpath[sp] = '\\';
+                sp++;
+            }
+            tmpshortpath[sp] = 0; /* terminate string */
+            lp++;
+            continue;
+        }
+
+        for (p = longpath + lp; *p && *p != '/' && *p != '\\'; p++);
+        tmplen = p - (longpath + lp);
+        lstrcpynW(tmpshortpath + sp, longpath + lp, tmplen + 1);
+        /* Check, if the current element is a valid dos name */
+        if (tmplen <= 8+1+3+1)
+        {
+            BOOLEAN spaces;
+            memcpy(ustr_buf, longpath + lp, tmplen * sizeof(WCHAR));
+            ustr_buf[tmplen] = '\0';
+            ustr.Length = tmplen * sizeof(WCHAR);
+            if (RtlIsNameLegalDOS8Dot3(&ustr, NULL, &spaces) && !spaces)
+            {
+                sp += tmplen;
+                lp += tmplen;
+                continue;
+            }
+        }
+
+        /* Check if the file exists and use the existing short file name */
+        goit = FindFirstFileW(tmpshortpath, &wfd);
+        if (goit == INVALID_HANDLE_VALUE) goto notfound;
+        FindClose(goit);
+        lstrcpyW(tmpshortpath + sp, wfd.cAlternateFileName);
+        sp += lstrlenW(tmpshortpath + sp);
+        lp += tmplen;
+    }
+    tmpshortpath[sp] = 0;
+
+    tmplen = lstrlenW(tmpshortpath) + 1;
+    if (tmplen <= shortlen)
+    {
+        lstrcpyW(shortpath, tmpshortpath);
+        tmplen--; /* length without 0 */
+    }
+
+    return tmplen;
+
+ notfound:
+    SetLastError ( ERROR_FILE_NOT_FOUND );
+    return 0;
 }
 
 
