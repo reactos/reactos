@@ -124,7 +124,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.cyMinChild = 0;
 	rbBand.cyChild = 0;
 	rbBand.cyMaxChild = 0;
-	rbBand.cyIntegral = DESKTOPBARBAR_HEIGHT;
+	rbBand.cyIntegral = DESKTOPBARBAR_HEIGHT;	//@@ OK?
 
 	rbBand.lpText = TEXT("Quicklaunch");
 	rbBand.hwndChild = _hwndQuickLaunch;

@@ -82,8 +82,11 @@ MainFrame::MainFrame(HWND hwnd)
 		{12, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 	};
 
-	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
-		IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
+	_htoolbar = CreateToolbarEx(hwnd, 
+#ifndef _NO_REBAR
+		CCS_NOPARENTALIGN|CCS_NORESIZE|
+#endif
+		WS_CHILD|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
 		sizeof(toolbarBtns)/sizeof(TBBUTTON), 16, 15, 16, 15, sizeof(TBBUTTON));
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
@@ -93,7 +96,11 @@ MainFrame::MainFrame(HWND hwnd)
 	int btn = 1;
 	PTSTR p;
 
-	_hdrivebar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+	_hdrivebar = CreateToolbarEx(hwnd,
+#ifndef _NO_REBAR
+				CCS_NOPARENTALIGN|CCS_NORESIZE|
+#endif
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn,
 				1, 16, 13, 16, 13, sizeof(TBBUTTON));
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
@@ -183,6 +190,47 @@ MainFrame::MainFrame(HWND hwnd)
 
 		while(*p++);
 	}
+
+
+	 // create rebar window to manage toolbar and drivebar
+#ifndef _NO_REBAR
+	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
+					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
+					RBS_VARHEIGHT|RBS_AUTOSIZE|RBS_DBLCLKTOGGLE|
+					CCS_NODIVIDER|CCS_NOPARENTALIGN,
+					0, 0, 0, 0, _hwnd, 0, g_Globals._hInstance, 0);
+
+	int btn_hgt = HIWORD(SendMessage(_htoolbar, TB_GETBUTTONSIZE, 0, 0));
+
+	REBARBANDINFO rbBand;
+
+	rbBand.cbSize = sizeof(REBARBANDINFO);
+	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE;
+#ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
+#define RBBS_HIDETITLE	0x400
+#endif
+	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE; //|RBBS_BREAK
+
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = 0;
+	rbBand.cyChild = 0;
+	rbBand.cyMaxChild = 0;
+	rbBand.cyIntegral = btn_hgt;
+
+	rbBand.lpText = NULL;//TEXT("Toolbar");
+	rbBand.hwndChild = _htoolbar;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cx = 280;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+
+	rbBand.lpText = NULL;//TEXT("Drivebar");
+	rbBand.hwndChild = _hdrivebar;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cx = 400;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+#endif
 
 
 #ifdef _DEBUG
@@ -342,6 +390,11 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		return FALSE;}
 
+	  case WM_SHOWWINDOW:
+		if (wparam)	// trigger child resizing after window creation - now we can succesfully call IsWindowVisible()
+			resize_frame_rect(ClientRect(_hwnd));
+		goto def;
+
 	  case WM_CLOSE:
 		DestroyWindow(_hwnd);
 		g_Globals._hMainWnd = 0;
@@ -426,7 +479,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
 		break;
 
-	  default:
+	  default: def:
 #ifndef _NO_MDI
 		return DefFrameProc(_hwnd, _hmdiclient, nmsg, wparam, lparam);
 #else
@@ -667,22 +720,37 @@ int MainFrame::Command(int id, int code)
 }
 
 
+int MainFrame::Notify(int id, NMHDR* pnmh)
+{
+	if (pnmh->code == RBN_AUTOSIZE)
+		resize_frame_rect(ClientRect(_hwnd));
+
+	return 0;
+}
+
+
 void MainFrame::resize_frame_rect(PRECT prect)
 {
-	if (IsWindowVisible(_htoolbar)) {
-		SendMessage(_htoolbar, WM_SIZE, 0, 0);
-		ClientRect rt(_htoolbar);
-		prect->top = rt.bottom+3;
-//		prect->bottom -= rt.bottom+3;
-	}
+	if (_hwndrebar) {
+		int height = ClientRect(_hwndrebar).bottom;
+		MoveWindow(_hwndrebar, prect->left, prect->top, prect->right-prect->left, height, TRUE);
+		prect->top += height;
+	} else {
+		if (IsWindowVisible(_htoolbar)) {
+			SendMessage(_htoolbar, WM_SIZE, 0, 0);
+			ClientRect rt(_htoolbar);
+			prect->top = rt.bottom+3;
+		//	prect->bottom -= rt.bottom+3;
+		}
 
-	if (IsWindowVisible(_hdrivebar)) {
-		SendMessage(_hdrivebar, WM_SIZE, 0, 0);
-		ClientRect rt(_hdrivebar);
-		int new_top = --prect->top + rt.bottom+3;
-		MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
-		prect->top = new_top;
-//		prect->bottom -= rt.bottom+2;
+		if (IsWindowVisible(_hdrivebar)) {
+			SendMessage(_hdrivebar, WM_SIZE, 0, 0);
+			ClientRect rt(_hdrivebar);
+			int new_top = --prect->top + rt.bottom+3;
+			MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
+			prect->top = new_top;
+		//	prect->bottom -= rt.bottom+2;
+		}
 	}
 
 	if (IsWindowVisible(_hstatusbar)) {
@@ -704,7 +772,7 @@ void MainFrame::resize_frame_rect(PRECT prect)
 	}
 
 #ifndef _NO_MDI
-	MoveWindow(_hmdiclient, prect->left-1,prect->top-1,prect->right-prect->left+2,prect->bottom-prect->top+1, TRUE);
+	MoveWindow(_hmdiclient, prect->left-1, prect->top-1, prect->right-prect->left+2, prect->bottom-prect->top+1, TRUE);
 #endif
 }
 

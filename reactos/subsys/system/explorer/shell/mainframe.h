@@ -54,6 +54,7 @@ protected:
 #endif
 
 	WindowHandle _hstatusbar;
+	WindowHandle _hwndrebar;
 	WindowHandle _htoolbar;
 	WindowHandle _hdrivebar;
 	WindowHandle _haddressedit;
@@ -67,6 +68,7 @@ protected:
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
+	int		Notify(int id, NMHDR* pnmh);
 
 	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild);
 	bool	activate_drive_window(LPCTSTR path);
