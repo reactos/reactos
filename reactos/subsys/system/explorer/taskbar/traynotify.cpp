@@ -92,10 +92,15 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 	if (super::Init(pcs))
 		return 1;
 
-	 // create clock window
-	_hwndClock = ClockWindow::Create(_hwnd);
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_HIDECLOCK))
+#endif
+	{
+		 // create clock window
+		_hwndClock = ClockWindow::Create(_hwnd);
 
-	SetTimer(_hwnd, 0, 1000, NULL);
+		SetTimer(_hwnd, 0, 1000, NULL);
+	}
 
 	return 0;
 }

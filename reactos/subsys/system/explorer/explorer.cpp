@@ -58,6 +58,9 @@ ExplorerGlobals::ExplorerGlobals()
 	_prescan_nodes = false;
 	_desktop_mode = false;
 	_log = NULL;
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	_SHRestricted = 0;
+#endif
 }
 
 
@@ -237,6 +240,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 	g_Globals._hInstance = hInstance;
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	g_Globals._SHRestricted = (DWORD(STDAPICALLTYPE*)(RESTRICTIONS)) GetProcAddress(GetModuleHandle(TEXT("SHELL32")), "SHRestricted");
+#endif
 
 	HWND hwndDesktop = 0;
 

@@ -168,7 +168,15 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 				//TaskBarEntry& entry = it->second;
 
 				ActivateApp(it, false);
-				ShowAppSystemMenu(it);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+				static DynamicFct<DWORD(STDAPICALLTYPE*)(RESTRICTIONS)> pSHRestricted(TEXT("SHELL32"), "SHRestricted");
+#endif
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+				if (!(*pSHRestricted)(REST_NOTRAYCONTEXTMENU))
+#endif
+					ShowAppSystemMenu(it);
 			}
 			break;}
 

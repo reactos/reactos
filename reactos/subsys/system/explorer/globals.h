@@ -38,6 +38,10 @@ extern struct ExplorerGlobals
 	bool		_desktop_mode;
 
 	FILE*		_log;
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	DWORD(STDAPICALLTYPE* _SHRestricted)(RESTRICTIONS);
+#endif
 } g_Globals;
 
 #define	LOG(x) if (g_Globals._log) _ftprintf(g_Globals._log, TEXT("%s\n"), (LPCTSTR)(x));

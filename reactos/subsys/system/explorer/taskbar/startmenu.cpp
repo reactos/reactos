@@ -676,13 +676,16 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 StartMenuRoot::StartMenuRoot(HWND hwnd)
  :	super(hwnd)
 {
-	try {
-		 // insert directory "All Users\Start Menu"
-		ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-		_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
-	} catch(COMException&) {
-		// ignore exception and don't show additional shortcuts
-	}
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCOMMONGROUPS))
+#endif
+		try {
+			 // insert directory "All Users\Start Menu"
+			ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+			_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
+		} catch(COMException&) {
+			// ignore exception and don't show additional shortcuts
+		}
 
 	try {
 		 // insert directory "<user name>\Start Menu"
@@ -769,17 +772,23 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddSeparator();
 
 
-	HKEY hkey;
+#ifdef __MINGW32__
+	HKEY hkey, hkeyAdv;
 	DWORD value, len;
 
 	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"), &hkey))
 		hkey = 0;
 
-#define	IS_VALUE_ZERO(name) \
-	(!hkey || (len=sizeof(value),RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)&value, &len) || !value))
+	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"), &hkeyAdv))
+		hkeyAdv = 0;
 
-#define	IS_VALUE_NOT_ZERO(name) \
-	(!hkey || (len=sizeof(value),RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)&value, &len) || value>0))
+#define	IS_VALUE_ZERO(hk, name) \
+	(!hk || (len=sizeof(value),RegQueryValueEx(hk, name, NULL, NULL, (LPBYTE)&value, &len) || !value))
+
+#define	IS_VALUE_NOT_ZERO(hk, name) \
+	(!hk || (len=sizeof(value),RegQueryValueEx(hk, name, NULL, NULL, (LPBYTE)&value, &len) || value>0))
+#endif
+
 
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
@@ -788,7 +797,11 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 
-	if (IS_VALUE_ZERO(_T("NoRecentDocsMenu")))
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORECENTDOCSMENU))
+#else
+	if (IS_VALUE_ZERO(hkey, _T("NoRecentDocsMenu")))
+#endif
 		AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
 
 	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
@@ -797,33 +810,51 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	AddButton(ResString(IDS_BROWSE),		0, true, IDC_BROWSE);
 
-	if (IS_VALUE_ZERO(_T("NoFind"))) {
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOFIND))
+#else
+	if (IS_VALUE_ZERO(hkey, _T("NoFind")))
+#endif
 		AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
+#endif
 		AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
-	}
 
 	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
 
-	if (IS_VALUE_ZERO(_T("NoRun")))
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORUN))
+#else
+	if (IS_VALUE_ZERO(hkey, _T("NoRun")))
+#endif
 		AddButton(ResString(IDS_LAUNCH),	0, false, IDC_LAUNCH);
 
 
 	AddSeparator();
 
 
-	if (IS_VALUE_ZERO(_T("NoClose")))
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCLOSE))
+#else
+	if (IS_VALUE_NOT_ZERO(hkeyAdv, _T("StartMenuLogoff")))
+#endif
 		AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
 
-	RegCloseKey(hkey);
 
-
-	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"), &hkey))
-		hkey = 0;
-
-	if (IS_VALUE_NOT_ZERO(_T("StartMenuLogoff")))
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || SHRestricted(REST_STARTMENULOGOFF) != 1)
+#else
+	if (IS_VALUE_ZERO(hkey, _T("NoClose")))
+#endif
 		AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
 
+
+#ifdef __MINGW32__
+	RegCloseKey(hkeyAdv);
 	RegCloseKey(hkey);
+#endif
 
 	return 0;
 }
@@ -1014,11 +1045,19 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_CONTROL_PANEL),	0, false, IDC_CONTROL_PANEL);
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_CONTROL_PANEL),	0, false, IDC_CONTROL_PANEL);
+
 	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
 	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
 	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
-	AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
 }
 
 int SettingsMenu::Command(int id, int code)
@@ -1057,7 +1096,11 @@ void BrowseMenu::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
+#endif
+		AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
+
 	AddButton(ResString(IDS_DRIVES),	0, true, IDC_DRIVES);
 }
 
