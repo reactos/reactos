@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.77 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.78 2004/07/07 16:36:08 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -139,34 +139,17 @@ NtGdiBitBlt(
 		BrushObj = NULL;
 	}
 
-	if (DCDest->w.hPalette != 0)
-		DestPalette = DCDest->w.hPalette;
-
-	if (UsesSource && DCSrc->w.hPalette != 0)
-		SourcePalette = DCSrc->w.hPalette;
-
-	PalSourceGDI = PALETTE_LockPalette(SourcePalette);
-	if (NULL == PalSourceGDI)
+	/* Create the XLATEOBJ. */
+	if (UsesSource)
 	{
-		if (UsesSource && hDCSrc != hDCDest)
-		{
-			DC_UnlockDc(hDCSrc);
-		}
-		DC_UnlockDc(hDCDest);
-		SetLastWin32Error(ERROR_INVALID_HANDLE);
-		return FALSE;
-	}
-	SourceMode = PalSourceGDI->Mode;
-	PALETTE_UnlockPalette(SourcePalette);
+		if (DCDest->w.hPalette != 0)
+			DestPalette = DCDest->w.hPalette;
 
-	if (DestPalette == SourcePalette)
-	{
-		DestMode = SourceMode;
-	}
-	else
-	{
-		PalDestGDI = PALETTE_LockPalette(DestPalette);
-		if (NULL == PalDestGDI)
+		if (DCSrc->w.hPalette != 0)
+			SourcePalette = DCSrc->w.hPalette;
+
+		PalSourceGDI = PALETTE_LockPalette(SourcePalette);
+		if (NULL == PalSourceGDI)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
 			{
@@ -176,56 +159,78 @@ NtGdiBitBlt(
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
-		DestMode = PalDestGDI->Mode;
-		PALETTE_UnlockPalette(DestPalette);
-	}
+		SourceMode = PalSourceGDI->Mode;
+		PALETTE_UnlockPalette(SourcePalette);
 
-	/* KB41464 details how to convert between mono and color */
-	if (DCDest->w.bitsPerPixel == 1)
-	{
-		XlateObj = (XLATEOBJ*)IntEngCreateMonoXlate(SourceMode, DestPalette,
-			SourcePalette, DCSrc->w.backgroundColor);
-	}
-	else if (UsesSource && 1 == DCSrc->w.bitsPerPixel)
-	{
-		ULONG Colors[2];
-
-		Colors[0] = DCSrc->w.textColor;
-		Colors[1] = DCSrc->w.backgroundColor;
-		Mono = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)Colors);
-		if (NULL != Mono)
+		if (DestPalette == SourcePalette)
 		{
-			XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
+			DestMode = SourceMode;
 		}
 		else
 		{
-			XlateObj = NULL;
+			PalDestGDI = PALETTE_LockPalette(DestPalette);
+			if (NULL == PalDestGDI)
+			{
+				if (UsesSource && hDCSrc != hDCDest)
+				{
+					DC_UnlockDc(hDCSrc);
+				}
+				DC_UnlockDc(hDCDest);
+				SetLastWin32Error(ERROR_INVALID_HANDLE);
+				return FALSE;
+			}
+			DestMode = PalDestGDI->Mode;
+			PALETTE_UnlockPalette(DestPalette);
 		}
-	}
-	else
-	{
-		XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
-	}
-	if (NULL == XlateObj)
-	{
-		if (NULL != Mono)
+
+		/* KB41464 details how to convert between mono and color */
+		if (DCDest->w.bitsPerPixel == 1)
 		{
-			EngDeletePalette(Mono);
+			XlateObj = (XLATEOBJ*)IntEngCreateMonoXlate(SourceMode, DestPalette,
+				SourcePalette, DCSrc->w.backgroundColor);
 		}
-		if (UsesSource && hDCSrc != hDCDest)
+		else if (DCSrc->w.bitsPerPixel == 1)
 		{
-			DC_UnlockDc(hDCSrc);
+			ULONG Colors[2];
+
+			Colors[0] = DCSrc->w.textColor;
+			Colors[1] = DCSrc->w.backgroundColor;
+			Mono = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)Colors);
+			if (NULL != Mono)
+			{
+				XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
+			}
+			else
+			{
+				XlateObj = NULL;
+			}
 		}
-		DC_UnlockDc(hDCDest);
-		SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-		return FALSE;
+		else
+		{
+			XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+		}
+		if (NULL == XlateObj)
+		{
+			if (NULL != Mono)
+			{
+				EngDeletePalette(Mono);
+			}
+			if (UsesSource && hDCSrc != hDCDest)
+			{
+				DC_UnlockDc(hDCSrc);
+			}
+			DC_UnlockDc(hDCDest);
+			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+			return FALSE;
+		}
 	}
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip, XlateObj,
 		&DestRect, &SourcePoint, NULL, &BrushObj->BrushObject, &BrushOrigin, ROP);
 
-	EngDeleteXlate(XlateObj);
+	if (UsesSource)
+		EngDeleteXlate(XlateObj);
 	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
 	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
 	{
@@ -1140,34 +1145,17 @@ NtGdiStretchBlt(
 		BrushObj = NULL;
 	}
 
-	if (DCDest->w.hPalette != 0)
-		DestPalette = DCDest->w.hPalette;
-
-	if (UsesSource && DCSrc->w.hPalette != 0)
-		SourcePalette = DCSrc->w.hPalette;
-
-	PalSourceGDI = PALETTE_LockPalette(SourcePalette);
-	if (NULL == PalSourceGDI)
+	/* Create the XLATEOBJ. */
+	if (UsesSource)
 	{
-		if (UsesSource && hDCSrc != hDCDest)
-		{
-			DC_UnlockDc(hDCSrc);
-		}
-		DC_UnlockDc(hDCDest);
-		SetLastWin32Error(ERROR_INVALID_HANDLE);
-		return FALSE;
-	}
-	SourceMode = PalSourceGDI->Mode;
-	PALETTE_UnlockPalette(SourcePalette);
+		if (DCDest->w.hPalette != 0)
+			DestPalette = DCDest->w.hPalette;
 
-	if (DestPalette == SourcePalette)
-	{
-		DestMode = SourceMode;
-	}
-	else
-	{
-		PalDestGDI = PALETTE_LockPalette(DestPalette);
-		if (NULL == PalDestGDI)
+		if (DCSrc->w.hPalette != 0)
+			SourcePalette = DCSrc->w.hPalette;
+
+		PalSourceGDI = PALETTE_LockPalette(SourcePalette);
+		if (NULL == PalSourceGDI)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
 			{
@@ -1177,27 +1165,50 @@ NtGdiStretchBlt(
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
-		DestMode = PalDestGDI->Mode;
-		PALETTE_UnlockPalette(DestPalette);
-	}
+		SourceMode = PalSourceGDI->Mode;
+		PALETTE_UnlockPalette(SourcePalette);
 
-	XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
-	if (NULL == XlateObj)
-	{
-		if (UsesSource && hDCSrc != hDCDest)
+		if (DestPalette == SourcePalette)
 		{
-			DC_UnlockDc(hDCSrc);
+			DestMode = SourceMode;
 		}
-		DC_UnlockDc(hDCDest);
-		SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-		return FALSE;
+		else
+		{
+			PalDestGDI = PALETTE_LockPalette(DestPalette);
+			if (NULL == PalDestGDI)
+			{
+				if (UsesSource && hDCSrc != hDCDest)
+				{
+					DC_UnlockDc(hDCSrc);
+				}
+				DC_UnlockDc(hDCDest);
+				SetLastWin32Error(ERROR_INVALID_HANDLE);
+				return FALSE;
+			}
+			DestMode = PalDestGDI->Mode;
+			PALETTE_UnlockPalette(DestPalette);
+		}
+
+		/* FIXME: Use the same logic for create XLATEOBJ as in NtGdiBitBlt. */
+		XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+		if (NULL == XlateObj)
+		{
+			if (UsesSource && hDCSrc != hDCDest)
+			{
+				DC_UnlockDc(hDCSrc);
+			}
+			DC_UnlockDc(hDCDest);
+			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+			return FALSE;
+		}
 	}
 
 	/* Perform the bitblt operation */
 	Status = IntEngStretchBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip,
 		XlateObj, &DestRect, &SourceRect, NULL, NULL, NULL, COLORONCOLOR);
 
-	EngDeleteXlate(XlateObj);
+	if (UsesSource)
+		EngDeleteXlate(XlateObj);
 	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
 	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
 	{
