@@ -1,5 +1,5 @@
 
-POBJECT_TYPE ExEventType;
+extern POBJECT_TYPE ExEventType;
 
 typedef ULONG INTERLOCKED_RESULT;
 typedef ULONG WORK_QUEUE_TYPE;
