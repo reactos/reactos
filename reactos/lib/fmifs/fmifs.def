@@ -1,0 +1,23 @@
+; $Id£
+;
+; fmifs.def
+;
+; Project     : ReactOS
+; Description : fmifs.dll exported symbols
+; Contributors:
+;	Created by Emanuele Aliberti
+;
+;
+;  NOTE: Functions with trailing @0 are unknown.
+;
+LIBRARY fmifs
+EXPORTS
+	Chkdsk			= Chkdsk@36
+	DiskCopy		= DiskCopy@0
+	EnableVolumeCompression	= EnableVolumeCompression@8
+	Extend			= Extend@0
+	Format			= Format@0
+	FormatEx		= FormatEx@28
+	InitializeFmIfs		= InitializeFmIfs@0
+	QuerySupportedMedia	= QuerySupportedMedia@0
+	SetLabel		= SetLabel@0
