@@ -86,7 +86,11 @@ AS = $(PREFIX)gcc -c -x assembler-with-cpp -D__ASM__ $(AS_BASEFLAGS) $(AS_INCLUD
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
-RCINC = --include-dir ../include --include-dir ../../include --include-dir ../../../include
+RCINC = \
+	--include-dir ../include	\
+	--include-dir ../../include	\
+	--include-dir ../../../include	\
+	--include-dir ../../../../include
 
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@

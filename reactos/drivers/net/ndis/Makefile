@@ -8,7 +8,8 @@ RESOURCE_OBJECT = $(TARGETNAME).coff
 NDIS_OBJECTS    = ndis/main.o ndis/40gone.o ndis/50gone.o ndis/buffer.o ndis/cl.o \
                   ndis/cm.o ndis/co.o ndis/control.o ndis/hardware.o \
                   ndis/io.o ndis/memory.o ndis/miniport.o \
-				  ndis/protocol.o ndis/string.o ndis/stubs.o ndis/time.o
+		  ndis/protocol.o ndis/string.o ndis/stubs.o ndis/time.o \
+		  $(TARGETNAME).coff
 
 all: objects $(TARGETNAME).sys
 

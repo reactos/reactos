@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2000/08/27 16:35:04 chorns Exp $
+# $Id: Makefile,v 1.2 2000/09/10 20:00:13 ea Exp $
 #
 # NE2000.SYS build spec
 #
@@ -8,7 +8,7 @@ TARGETNAME=ne2000
 BASE_CFLAGS = -I./include -I../../../../include -DNDIS_MINIPORT_DRIVER
 
 RESOURCE_OBJECT  = $(TARGETNAME).coff
-NE2000_OBJECTS   = ne2000/main.o ne2000/8390.o
+NE2000_OBJECTS   = ne2000/main.o ne2000/8390.o $(RESOURCE_OBJECT)
 IMPORT_LIBS      = ../../ndis/ndis.a ../../../../ntoskrnl/ntoskrnl.a
 
 
@@ -22,7 +22,7 @@ objects/ne2000.o: $(NE2000_OBJECTS)
 
 OBJECTS = objects/ne2000.o
 
-$(TARGETNAME).coff: $(TARGETNAME).rc ../../../include/reactos/resource.h
+$(TARGETNAME).coff: $(TARGETNAME).rc ../../../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = \
