@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Anzeige"
-    IDS_CPLDESCRIPTION "Passt die Darstellung des Hintergrundbildes und des Bildschrimschoners an."
+    IDS_CPLDESCRIPTION "Passt die Darstellung des Hintergrundbildes und des Bildschirmschoners an."
 
     IDS_NONE "(Keine)"
     IDS_CENTER "Zentriert"
