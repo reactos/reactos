@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.17 2002/12/26 17:26:41 robd Exp $
+; $Id: msvcrt.def,v 1.18 2003/02/21 21:50:04 jfilby Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -22,8 +22,10 @@ EXPORTS
 ; ??1bad_typeid@@UAE@XZ
 ; ??1exception@@UAE@XZ
 ; ??1type_info@@UAE@XZ
-; ??2@YAPAXI@Z
-; ??3@YAXPAX@Z
+??2@YAPAXI@Z=MSVCRT_operator_new
+??_U@YAPAXI@Z=MSVCRT_operator_new
+??3@YAXPAX@Z=MSVCRT_operator_delete
+??_V@YAXPAX@Z=MSVCRT_operator_delete
 ; ??4__non_rtti_object@@QAEAAV0@ABV0@@Z
 ; ??4bad_cast@@QAEAAV0@ABV0@@Z
 ; ??4bad_typeid@@QAEAAV0@ABV0@@Z
