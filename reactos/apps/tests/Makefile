@@ -15,7 +15,7 @@ mktime mstest multithrdwin multiwin mutex nptest patblt primitives pteb \
 regtest sectest sertest shaptest shm statst statst2 stretchblt suspend \
 tcpsvr terminate txtscale thread thread_msg tokentest user32 vmtest \
 winhello wm_erasebkgnd wm_paint eventpair threadwait popupmenu \
-map_dup_inherit p_dup_handle apc2 enhmetafile dirdlg guithreadinfo
+map_dup_inherit p_dup_handle apc2 enhmetafile dirdlg guithreadinfo fiber
 # Build failure:
 # kernel32
 
