@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: autochk.c,v 1.5 2004/11/21 10:39:12 weiden Exp $
+/* $Id: autochk.c,v 1.6 2004/11/21 11:03:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -79,17 +79,19 @@ NtProcessStartup(PPEB Peb)
                                      &DeviceMap,
                                      sizeof(DeviceMap),
                                      NULL);
-
-  for (i = 0; i < 26; i++)
-    {
-      if ((DeviceMap.Query.DriveMap & (1 << i)) &&
-	  (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
-	{
-	  PrintString("  Checking drive %c:", 'A'+i);
-	  PrintString("      OK\n");
-	}
-    }
-  PrintString("\n");
+  if(NT_SUCCESS(Status))
+  {
+    for (i = 0; i < 26; i++)
+      {
+        if ((DeviceMap.Query.DriveMap & (1 << i)) &&
+  	  (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
+  	{
+  	  PrintString("  Checking drive %c:", 'A'+i);
+  	  PrintString("      OK\n");
+  	}
+      }
+    PrintString("\n");
+  }
 
   NtTerminateProcess(NtCurrentProcess(), 0);
 }
