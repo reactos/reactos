@@ -15,7 +15,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -444,7 +444,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongW( hwnd, 0 );
 	LRESULT result = 0;
 
-        DbgPrint("[edit]hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, msg, wParam, lParam);
+    DbgPrint("[edit]EditWndProc_common hwnd=0x%p msg=0x%x wparam=0x%x lparam=0x%lx\n", hwnd, msg, wParam, lParam);
 	
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
@@ -455,7 +455,6 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 
 
 	if (es) EDIT_LockBuffer(es);
-	
 	switch (msg) {
 	case EM_GETSEL:
 		result = EDIT_EM_GetSel(es, (PUINT)wParam, (PUINT)lParam);
@@ -832,6 +831,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 		 *		will _not_ be set by DefWindowProc() for edit controls in a
 		 *		modeless dialog box ???
 		 */
+        DbgPrint("[edit] Got a WM_MOUSEACTIVATE message\n");
 		SetFocus(hwnd);
 		result = MA_ACTIVATE;
 		break;
@@ -915,7 +915,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	}
 	
 	if (es) EDIT_UnlockBuffer(es, FALSE);
-	
+	DbgPrint("[edit]result from message %d is 0x%X\n", msg, result);
 	return result;
 }
 
@@ -2108,7 +2108,7 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
 static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 {
     //HINSTANCE16 hInstance = GetWindowLongW( es->hwndSelf, GWL_HINSTANCE );
-    DbgPrint("[edit] in EDIT_UnlockBuffer\n");
+    /*DbgPrint("[edit] in EDIT_UnlockBuffer. Force: %s\n", (force) ? ("TRUE"): ("FALSE"));*/
     /* Edit window might be already destroyed */
     if(!IsWindow(es->hwndSelf))
     {
@@ -2117,16 +2117,19 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
     }
 
     if (!es->lock_count) {
+        DbgPrint("lock_count == 0 ... please report\n");
         OutputDebugStringA("lock_count == 0 ... please report\n");
         return;
     }
     if (!es->text) {
+        DbgPrint("es->text == 0 ... please report\n");
         OutputDebugStringA("es->text == 0 ... please report\n");
         return;
     }
 
     if (force || (es->lock_count == 1)) 
     {
+        /*DbgPrint("[edit]force or lock_count == 1\n");*/
         if (es->hloc32W) {
             CHAR *textA = NULL;
             UINT countA = 0;
@@ -2320,6 +2323,7 @@ static LRESULT EDIT_EM_CharFromPos(EDITSTATE *es, INT x, INT y)
  */
 static BOOL EDIT_EM_FmtLines(EDITSTATE *es, BOOL add_eol)
 {
+    DbgPrint("[edit] In EDIT_EM_FmtLines\n");
 	es->flags &= ~EF_USE_SOFTBRK;
 	if (add_eol) {
 		es->flags |= EF_USE_SOFTBRK;
@@ -3497,12 +3501,13 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
 static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 {
 	LINEDEF *pc, *pp;
-    DbgPrint("[edit] In EDIT_WM_Destroy\n");
+   
 	if (es->hloc32W) {
 		while (LocalUnlock(es->hloc32W))
         {
              DbgPrint("[edit] spinning on LocalUnlock(es->hloc32W)\n");
         }
+        
 		LocalFree(es->hloc32W);
 	}
 	if (es->hloc32A) {
@@ -3510,21 +3515,24 @@ static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
         {
              DbgPrint("[edit] spinning on LocalUnlock(es->hloc32A)\n");
         }		
+        
         LocalFree(es->hloc32A);
 	}
 
 	pc = es->first_line_def;
 	while (pc)
 	{
-        DbgPrint("[edit] freeing line structures.\n");
+        
 		pp = pc->next;
 		HeapFree(GetProcessHeap(), 0, pc);
 		pc = pp;
 	}
 
+    
     SetWindowLongW( es->hwndSelf, 0, 0 );
+    
 	HeapFree(GetProcessHeap(), 0, es);
-
+    
 	return 0;
 }
 
@@ -3939,10 +3947,14 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
 {
 	INT e;
 	BOOL after_wrap;
-
+    DbgPrint("[edit] In EDIT_WM_LButtonDown at (%d, %d)\n", x, y);
 	if (!(es->flags & EF_FOCUSED))
+    {
+        DbgPrint("[edit] !es->flags and EF_FOCUSED\n");
 		return 0;
+    }
 
+    DbgPrint("[edit] setting scroll carat\n");
 	es->bCaptureState = TRUE;
 	SetCapture(es->hwndSelf);
 	EDIT_ConfinePoint(es, &x, &y);
@@ -3962,6 +3974,7 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
  */
 static LRESULT EDIT_WM_LButtonUp(EDITSTATE *es)
 {
+    DbgPrint("[edit] In EDIT_WM_LButtonUp\n");
 	if (es->bCaptureState) {
 		KillTimer(es->hwndSelf, 0);
 		if (GetCapture() == es->hwndSelf) ReleaseCapture();
@@ -4273,6 +4286,7 @@ static void EDIT_WM_Paste(EDITSTATE *es)
  */
 static void EDIT_WM_SetFocus(EDITSTATE *es)
 {
+    DbgPrint("[edit] In EDIT_WM_SetFocus\n");
 	es->flags |= EF_FOCUSED;
 	CreateCaret(es->hwndSelf, 0, 2, es->line_height);
 	EDIT_SetCaretPos(es, es->selection_end,
