@@ -1,16 +1,9 @@
 #include <windows.h>
 #include <io.h>
-//#include <libc/file.h>
 
-#undef lseek
-long lseek(int _fildes, long _offset, int _whence)
+off_t	_lseek(int _fd, off_t _offset, int _whence)
 {
-	return _lseek(_fildes,_offset,_whence);
-}
-
-long _lseek(int _fildes, long _offset, int _whence)
-{
-	//return _llseek(filehnd(_fildes),_offset,_whence);
+	return _llseek((HFILE)_get_osfhandle(_fd),_offset,_whence);
 }
 
 

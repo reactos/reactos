@@ -1,8 +1,10 @@
 #include <io.h>
 
-#undef isatty
 
-int isatty( int handle )
+
+int _isatty( int handle )
 {
-	return (handle & 3);
+	if ( handle < 5 )
+		return 1;
+	return 0;
 }
