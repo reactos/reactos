@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.32 2004/08/15 16:39:08 chorns Exp $
+/* $Id: pool.c,v 1.33 2004/08/21 20:05:35 tamlin Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -201,6 +201,7 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
         Process = PsGetCurrentProcess();
 
         /* PsChargePoolQuota returns an exception, so this needs SEH */
+#if defined(__GNUC__)
         _SEH_FILTER(FreeAndGoOn) {
             /* Couldn't charge, so free the pool and let the caller SEH manage */
             ExFreePool(Block);
@@ -212,6 +213,14 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         } _SEH_END;
+#else /* assuming all other Win32 compilers understand SEH */
+        __try {
+            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+        }
+        __except (ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH) {
+            KeBugCheck(STATUS_QUOTA_EXCEEDED);
+        }
+#endif
     }
 
     return Block;
