@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.2 2001/05/02 22:29:18 ekohl Exp $
+/* $Id: mailslot.c,v 1.3 2001/05/03 06:10:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -106,8 +106,40 @@ GetMailslotInfo(HANDLE hMailslot,
 		LPDWORD lpMessageCount,
 		LPDWORD lpReadTimeout)
 {
-   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-   return FALSE;
+   FILE_MAILSLOT_QUERY_INFORMATION Buffer;
+   IO_STATUS_BLOCK Iosb;
+   NTSTATUS Status;
+   
+   Status = NtQueryInformationFile(hMailslot,
+				   &Iosb,
+				   &Buffer,
+				   sizeof(FILE_MAILSLOT_QUERY_INFORMATION),
+				   FileMailslotQueryInformation);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NtQueryInformationFile failed (Status %x)!\n", Status);
+	SetLastErrorByStatus (Status);
+	return(FALSE);
+     }
+   
+   if (lpMaxMessageSize != NULL)
+     {
+	*lpMaxMessageSize = Buffer.MaxMessageSize;
+     }
+   if (lpNextSize != NULL)
+     {
+	*lpNextSize = Buffer.NextSize;
+     }
+   if (lpMessageCount != NULL)
+     {
+	*lpMessageCount = Buffer.MessageCount;
+     }
+   if (lpReadTimeout != NULL)
+     {
+	*lpReadTimeout = (DWORD)(Buffer.Timeout.QuadPart / 10000);
+     }
+   
+   return(TRUE);
 }
 
 
@@ -115,8 +147,25 @@ WINBOOL STDCALL
 SetMailslotInfo(HANDLE hMailslot,
 		DWORD lReadTimeout)
 {
-   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-   return FALSE;
+   FILE_MAILSLOT_SET_INFORMATION Buffer;
+   IO_STATUS_BLOCK Iosb;
+   NTSTATUS Status;
+   
+   Buffer.Timeout.QuadPart = lReadTimeout * 10000;
+   
+   Status = NtSetInformationFile(hMailslot,
+				 &Iosb,
+				 &Buffer,
+				 sizeof(FILE_MAILSLOT_SET_INFORMATION),
+				 FileMailslotSetInformation);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NtSetInformationFile failed (Status %x)!\n", Status);
+	SetLastErrorByStatus (Status);
+	return(FALSE);
+     }
+   
+   return(TRUE);
 }
 
 /* EOF */
