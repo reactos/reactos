@@ -35,7 +35,7 @@
  * SUCH DAMAGE.
  *
  *      @(#)quad.h      8.1 (Berkeley) 6/4/93
- *      $Id: quad.h,v 1.2 1999/04/23 18:43:00 ariadne Exp $
+ *      $Id: quad.h,v 1.3 1999/05/09 14:00:05 ariadne Exp $
  */
 
 /*
@@ -54,7 +54,7 @@
  * with 48-bit longs.
  */
 #include <windows.h>
-#include <ddk/li.h>
+//#include <ddk/li.h>
 
 
 typedef unsigned long long       u_quad_t;       /* quads */

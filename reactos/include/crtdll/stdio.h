@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.10 $
+ * $Revision: 1.11 $
  * $Author: ariadne $
- * $Date: 1999/04/27 06:16:04 $
+ * $Date: 1999/05/09 14:00:05 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -53,6 +53,7 @@ extern "C" {
 #define _IOEOF    0x000100
 #define _IOERR    0x000200
 #define _IOSTRG   0x000400
+
 #define _IOAPPEND 0x002000
 #define _IORMONCL 0x004000  /* remove on close, for temp files */
 /* if _flag & _IORMONCL, ._name_to_remove needs freeing */
