@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.17 2004/03/20 04:32:05 sedwards Exp $
+; $Id: advapi32.def,v 1.18 2004/05/13 20:42:27 navaraf Exp $
 ;
 ; advapi32.def
 ;
@@ -137,7 +137,7 @@ GetCurrentHwProfileA@4
 ;GetExplicitEntriesFromAclA@12
 ;GetExplicitEntriesFromAclW@12
 GetFileSecurityA@20
-;GetFileSecurityW@20
+GetFileSecurityW@20
 GetKernelObjectSecurity@20
 GetLengthSid@4
 ;GetMultipleTrusteeA@4

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.31 2003/12/17 01:46:08 hyperion Exp $
+; $Id: kernel32.edf,v 1.32 2004/05/13 20:42:28 navaraf Exp $
 ;
 ; kernel32.edf
 ;
@@ -52,15 +52,15 @@ BackupRead=BackupRead@28
 BackupSeek=BackupSeek@24
 BackupWrite=BackupWrite@28
 BaseAttachCompleteThunk=BaseAttachCompleteThunk@0
-;BaseCheckAppcompatCache
+BaseCheckAppcompatCache=BaseCheckAppcompatCache@16
 ;BaseCleanupAppcompatCache
 ;BaseCleanupAppcompatCacheSupport
-;BaseDumpAppcompatCache
-;BaseFlushAppcompatCache
+BaseDumpAppcompatCache=BaseDumpAppcompatCache@0
+BaseFlushAppcompatCache=BaseFlushAppcompatCache@0
 ;BaseInitAppcompatCache
 ;BaseInitAppcompatCacheSupport
 ;BaseProcessInitPostImport
-;BaseUpdateAppcompatCache
+BaseUpdateAppcompatCache=BaseUpdateAppcompatCache@12
 Beep=Beep@8
 BeginUpdateResourceA=BeginUpdateResourceA@8
 BeginUpdateResourceW=BeginUpdateResourceW@8

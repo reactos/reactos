@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.37 2004/03/20 04:32:06 sedwards Exp $
+; $Id: advapi32.edf,v 1.38 2004/05/13 20:42:27 navaraf Exp $
 ;
 ; advapi32.edf
 ;
@@ -133,7 +133,7 @@ GetCurrentHwProfileA=GetCurrentHwProfileA@4
 ;GetExplicitEntriesFromAclA=GetExplicitEntriesFromAclA@12
 ;GetExplicitEntriesFromAclW=GetExplicitEntriesFromAclW@12
 GetFileSecurityA=GetFileSecurityA@20
-;GetFileSecurityW=GetFileSecurityW@20
+GetFileSecurityW=GetFileSecurityW@20
 GetKernelObjectSecurity=GetKernelObjectSecurity@20
 GetLengthSid=GetLengthSid@4
 ;GetMultipleTrusteeA=GetMultipleTrusteeA@4

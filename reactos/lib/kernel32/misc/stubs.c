@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.75 2004/05/03 14:34:44 weiden Exp $
+/* $Id: stubs.c,v 1.76 2004/05/13 20:42:28 navaraf Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -23,6 +23,41 @@ BaseAttachCompleteThunk (VOID)
     return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+BaseDumpAppcompatCache(VOID)
+{
+    DPRINT1("BaseDumpAppcompatCache: stub\n");
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+BaseFlushAppcompatCache(VOID)
+{
+    DPRINT1("BaseFlushAppcompatCache: stub\n");
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+BaseCheckAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
+{
+    DPRINT1("BaseCheckAppcompatCache: stub\n");
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+BaseUpdateAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
+{
+    DPRINT1("BaseUpdateAppcompatCache: stub\n");
+}
 
 /*
  * @unimplemented
@@ -707,6 +742,7 @@ DeactivateActCtx(
     ULONG_PTR ulCookie
     )
 {
+    DbgPrint("DeactivateActCtx: stub\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.14 2004/04/12 15:22:52 navaraf Exp $
+/* $Id: misc.c,v 1.15 2004/05/13 20:42:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -67,10 +67,22 @@ GetFileSecurityA (LPCSTR lpFileName,
 		  DWORD nLength,
 		  LPDWORD lpnLengthNeeded)
 {
-  DPRINT("GetFileSecurityW : stub\n");
+  DPRINT("GetFileSecurityA: stub\n");
   return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL WINAPI
+GetFileSecurityW (LPCWSTR lpFileName,
+                  SECURITY_INFORMATION RequestedInformation,
+                  PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                  DWORD nLength, LPDWORD lpnLengthNeeded)
+{
+  DPRINT("GetFileSecurityW: stub\n");
+  return TRUE;
+}
 
 /*
  * @implemented
