@@ -49,8 +49,9 @@
 
 extern BOOL verbose_flagged;
 extern BOOL status_flagged;
-extern TCHAR test_buffer[TEST_BUFFER_SIZE];
+//extern TCHAR test_buffer[TEST_BUFFER_SIZE];
 
+static TCHAR test_buffer[TEST_BUFFER_SIZE];
 
 static TCHAR dos_data[] = _T("line1: this is a bunch of readable text.\r\n")\
                    _T("line2: some more printable text and punctuation !@#$%^&*()\r\n")\
@@ -111,31 +112,33 @@ static BOOL verify_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_d
         _tprintf(_T("ERROR: (%s) Can't open file for reading\n"), file_name);
         _tprintf(_T("ERROR: ferror returned %d\n"), ferror(file));
         return FALSE;
-    } else if (verbose_flagged) {
+    } else if (status_flagged) {
         _tprintf(_T("STATUS: (%s) opened file for reading\n"), file_name);
     }
 #ifndef _NO_NEW_DEPENDS_
     while (_fgetts(test_buffer, TEST_BUFFER_SIZE, file)) {
         int length = _tcslen(test_buffer);
+        int req_len = _tcschr(file_data+offset, _T('\n')) - (file_data+offset) + 1;
+
         ++line_num;
-        if (verbose_flagged) {
+        if (length > req_len) {
+            _tprintf(_T("ERROR: read excess bytes from line %d, length %d, but expected %d\n"), line_num, length, req_len);
+            error_flagged = TRUE;
+            break;
+        }
+        if (status_flagged) {
             _tprintf(_T("STATUS: Verifying %d bytes read from line %d\n"), length, line_num);
         }
-        if (_tcsncmp(test_buffer, file_data+offset, length) == 0) {
+        if (_tcsncmp(test_buffer, file_data+offset, length - 1) == 0) {
             result = TRUE;
         } else {
-            if (verbose_flagged) {
+            if (status_flagged) {
                 int i;
                 _tprintf(_T("WARNING: (%s) failed to verify file\n"), file_name);
-                //_tprintf(_T("expected: \"%s\"\n"), file_data+offset);
-                //_tprintf(_T("   found: \"%s\"\n"), test_buffer);
-                _tprintf(_T("expected: "));
-                for (i = 0; i < length, i < 10; i++) {
-                    _tprintf(_T("0x%02x "), file_data+offset+i);
-                }
-                _tprintf(_T("\n   found: "));
-                for (i = 0; i < length, i < 10; i++) {
-                    _tprintf(_T("0x%02x "), test_buffer+i);
+                for (i = 0; i < length; i++) {
+                    if (file_data[offset+i] != test_buffer[i]) {
+                        _tprintf(_T("line %d, offset %d expected: 0x%04x found: 0x%04x\n"), line_num, i, (int)file_data[offset+i], (int)test_buffer[i]);
+                    }
                 }
                 _tprintf(_T("\n"));
             } else {
@@ -196,7 +199,6 @@ static int check_file_size(TCHAR* file_name, TCHAR* file_mode, int expected)
         //_tprintf(_T("STATUS: (%s) checking for %d bytes in %s mode\n"), file_name, expected, _tcschr(file_mode, _T('b')) ? _T("binary") : _T("text"));
         _tprintf(_T("STATUS: (%s) checking for %d bytes with mode %s\n"), file_name, expected, file_mode);
     }
-
     file = _tfopen(file_name, file_mode);
     if (file == NULL) {
         _tprintf(_T("ERROR: (%s) failed to open file for reading\n"), file_name);

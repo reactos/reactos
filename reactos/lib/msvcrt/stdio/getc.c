@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.5 2002/11/24 18:42:24 robd Exp $
+/* $Id: getc.c,v 1.6 2002/12/05 15:30:44 robd Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -38,19 +38,17 @@
 int getc(FILE *fp)
 {
     int c = -1;
-// check for invalid stream
 
+    // check for invalid stream
 	if ( !__validfp (fp) ) {
 		__set_errno(EINVAL);
 		return EOF;
 	}
-// check for read access on stream
-
+    // check for read access on stream
 	if ( !OPEN4READING(fp) ) {
 		__set_errno(EINVAL);
 		return EOF;
 	}
-
 	if(fp->_cnt > 0) {
 		fp->_cnt--;
 		c =  (int)*fp->_ptr++;
@@ -69,25 +67,22 @@ wint_t getwc(FILE *fp)
         __set_errno(EINVAL);
         return WEOF;
     }
-
     // check for read access on stream
 //#define OPEN4READING(f) ((((f)->_flag & _IOREAD) == _IOREAD ) )
     if (!OPEN4READING(fp)) {
         __set_errno(EINVAL);
         return WEOF;
     }
-
     // might check on multi bytes if text mode
     if (fp->_flag & _IOBINARY) {
-
-        if (fp->_cnt > 0) {
+        if (fp->_cnt > 1) {
             fp->_cnt -= sizeof(wchar_t);
             c = (wint_t)*((wchar_t*)(fp->_ptr))++;
         } else {
             c = _filwbuf(fp);
         }
-
     } else {
+#if 0
         BOOL get_bytes = 0;
         int mb_cnt = 0;
         int found_cr = 0;
@@ -95,41 +90,19 @@ wint_t getwc(FILE *fp)
         char mbchar[MB_CUR_MAX];
 
         do {
-
             if (fp->_cnt > 0) {
                 fp->_cnt--;
                 mbchar[mb_cnt] = *fp->_ptr++;
             } else {
                 mbchar[mb_cnt] = _filbuf(fp);
             }
-/*
-            // convert cr/lf pairs into a single lf.
-            if (mbchar[mb_cnt] == '\r') {
-                //found_cr = 1;
-                if (fp->_cnt > 0) {
-                    fp->_cnt--;
-                    mbchar[mb_cnt+1] = *fp->_ptr++;
-                } else {
-                    mbchar[mb_cnt+1] = _filbuf(fp);
-                }
-                if (mbchar[mb_cnt+1] == '\n') {
-                    mbchar[mb_cnt] = '\n';
-                } else {
-                    ++mb_cnt;
-                }
-
-            }
- */
-
             if (isleadbyte(mbchar[mb_cnt])) {
                 get_bytes = 1;
             } else {
                 get_bytes = 0;
             }
-
             if (_ismbblead(mbchar[mb_cnt])) {
             }
-
             ++mb_cnt;
         //}
         } while (get_bytes);
@@ -140,9 +113,15 @@ wint_t getwc(FILE *fp)
             fp->_flag |= _IOERR;
             return WEOF;
         }
+#else
+        if (fp->_cnt > 0) {
+            fp->_cnt--;
+            c = *fp->_ptr++;
+        } else {
+            c = _filbuf(fp);
+        }
+#endif
     }
     return c;
 }
 
-// MultiByteToWideChar            
-// WideCharToMultiByte

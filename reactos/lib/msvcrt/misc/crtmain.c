@@ -1,4 +1,4 @@
-/* $Id: crtmain.c,v 1.2 2002/11/25 17:41:39 robd Exp $
+/* $Id: crtmain.c,v 1.3 2002/12/05 15:30:44 robd Exp $
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -17,9 +17,7 @@ int _fltused;
 
 /* FUNCTIONS **************************************************************/
 
-/*
- */
-int
+int 
 STDCALL
 _except_handler3(void)
 {

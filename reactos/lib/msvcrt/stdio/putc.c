@@ -1,4 +1,4 @@
-/* $Id: putc.c,v 1.5 2002/11/24 18:42:24 robd Exp $
+/* $Id: putc.c,v 1.6 2002/12/05 15:30:44 robd Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -38,7 +38,7 @@
 #define MB_CUR_MAX_CONST 10
 #endif
 
-int putc(int c, FILE *fp)
+int putc(int c, FILE* fp)
 {
     // valid stream macro should check that fp is dword aligned
     if (!__validfp(fp)) {
@@ -61,13 +61,9 @@ int putc(int c, FILE *fp)
     return EOF;
 }
 
-//wint_t putwc(wint_t c, FILE *fp)
-int putwc(wint_t c, FILE *fp)
+//wint_t putwc(wint_t c, FILE* fp)
+int putwc(wint_t c, FILE* fp)
 {
-    int i;
-    int mb_cnt;
-    char mbchar[MB_CUR_MAX_CONST];
-
     // valid stream macro should check that fp is dword aligned
     if (!__validfp(fp)) {
         __set_errno(EINVAL);
@@ -83,17 +79,33 @@ int putwc(wint_t c, FILE *fp)
     //if (1) {
 
         fp->_flag |= _IODIRTY;
-        if (fp->_cnt > 0 ) {
+        if (fp->_cnt > 0) {
             fp->_cnt -= sizeof(wchar_t);
             //*((wchar_t*)(fp->_ptr))++ = c;
             *((wchar_t*)(fp->_ptr)) = c;
             ++((wchar_t*)(fp->_ptr));
             return (wint_t)c;
         } else {
+#if 1
+            wint_t result;
+            result = _flsbuf((int)(c >> 8), fp);
+            if (result == EOF)
+                return WEOF;
+            result = _flsbuf(c, fp);
+            if (result == EOF)
+                return WEOF;
+            return result;
+#else
             return _flswbuf(c, fp);
+#endif
         }
 
     } else {
+#if 0
+        int i;
+        int mb_cnt;
+        char mbchar[MB_CUR_MAX_CONST];
+
         // Convert wide character to the corresponding multibyte character.
         mb_cnt = wctomb(mbchar, (wchar_t)c);
         if (mb_cnt == -1) {
@@ -105,19 +117,6 @@ int putwc(wint_t c, FILE *fp)
         }
         for (i = 0; i < mb_cnt; i++) {
             fp->_flag |= _IODIRTY;
-#if 0
-            // convert lf's into a cr/lf pair.
-            if (mbchar[i] == '\n') {
-                if (fp->_cnt > 0) {
-                    fp->_cnt--;
-                    *(fp)->_ptr++ = (unsigned char)'\r';
-                } else {
-                    if (_flsbuf((unsigned char)'\r', fp) == EOF) {
-                        return WEOF;
-                    }
-                }
-            }
-#endif
             if (fp->_cnt > 0) {
                 fp->_cnt--;
                 *(fp)->_ptr++ = (unsigned char)mbchar[i];
@@ -127,6 +126,17 @@ int putwc(wint_t c, FILE *fp)
                 }
             }
         }
+#else
+        fp->_flag |= _IODIRTY;
+        if (fp->_cnt > 0) {
+            fp->_cnt--;
+            *(fp)->_ptr++ = (unsigned char)c;
+        } else {
+            if (_flsbuf(c, fp) == EOF) {
+                return WEOF;
+            }
+        }
+#endif
         return c; 
     }
     return WEOF;

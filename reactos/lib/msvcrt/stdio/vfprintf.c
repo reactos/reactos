@@ -11,36 +11,34 @@ int _isinf(double x);
 
 
 
-int
-__vfprintf (FILE *fp, const char *fmt0, va_list args);
+int __vfprintf(FILE*, const char*, va_list);
 
-int
-vfprintf(FILE *f, const char *fmt, va_list ap)
+
+int vfprintf(FILE* f, const char* fmt, va_list ap)
 {
-  int len;
-  char localbuf[BUFSIZ];
+    int len;
+    char localbuf[BUFSIZ];
 
 #if 0
-  __fileno_lock(fileno(f));
+    __fileno_lock(fileno(f));
 #endif
-  if (f->_flag & _IONBF)
-  {
-    f->_flag &= ~_IONBF;
-    f->_ptr = f->_base = localbuf;
-    f->_bufsiz = BUFSIZ;
-    len = __vfprintf(f,fmt, ap);
-    (void)fflush(f);
-    f->_flag |= _IONBF;
-    f->_base = NULL;
-    f->_bufsiz = 0;
-    f->_cnt = 0;
-  }
-  else
-    len = __vfprintf(f,fmt, ap);
+    if (f->_flag & _IONBF) {
+        f->_flag &= ~_IONBF;
+        f->_ptr = f->_base = localbuf;
+        f->_bufsiz = BUFSIZ;
+        len = __vfprintf(f, fmt, ap);
+        (void)fflush(f);
+        f->_flag |= _IONBF;
+        f->_base = NULL;
+        f->_bufsiz = 0;
+        f->_cnt = 0;
+    } else {
+        len = __vfprintf(f,fmt, ap);
+    }
 #if 0
-  __fileno_unlock(fileno(f));
+    __fileno_unlock(fileno(f));
 #endif
-  return (ferror(f) ? EOF : len);
+    return (ferror(f) ? EOF : len);
 }
 
 

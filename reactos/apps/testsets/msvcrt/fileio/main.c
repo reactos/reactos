@@ -32,14 +32,10 @@
 
 #define VERSION 1
 
-#define TEST_BUFFER_SIZE 200
-
 #ifdef UNICODE
 #define TARGET  "UNICODE"
-w_char_t test_buffer[TEST_BUFFER_SIZE];
 #else
 #define TARGET  "MBCS"
-char test_buffer[TEST_BUFFER_SIZE*2];
 #endif
 
 BOOL verbose_flagged = 0;
@@ -145,10 +141,18 @@ int __cdecl main(int argc, char* argv[])
     printf("finished\n");
     return result;
 }
+/*
+ANSI:
+  all tests passing
 
+UNICODE:
+  writing binary files short one byte. ie. odd number file lengths.
+  reading text files returns one extra byte.
+
+ */
 #ifndef __GNUC__
 
-char* args[] = { "fileio.exe", "0", "ansi", "verbose"};
+char* args[] = { "fileio.exe", "0", "unicode", "verbose"};
 
 char* args1[] = { "fileio.exe", "1", "unicode" };
 char* args2[] = { "fileio.exe", "2", "unicode" };

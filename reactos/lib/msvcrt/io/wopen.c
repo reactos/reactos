@@ -1,4 +1,4 @@
-/* $Id: wopen.c,v 1.1 2002/11/24 18:42:22 robd Exp $
+/* $Id: wopen.c,v 1.2 2002/12/05 15:30:44 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -49,10 +49,10 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
 
 //    DPRINT("_wopen('%S', %x, (%x))\n", _path, _oflag, pmode);
 
-    if (( _oflag & S_IREAD ) == S_IREAD)
+    if ((_oflag & S_IREAD) == S_IREAD)
         dwShareMode = FILE_SHARE_READ;
-    else if ( ( _oflag & S_IWRITE) == S_IWRITE ) {
-         dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    else if ( ( _oflag & S_IWRITE) == S_IWRITE) {
+        dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
     }
 
    /*
@@ -62,48 +62,61 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
     * 
     * _O_APPEND   Moves file pointer to end of file before every write operation.
     */
-    if (( _oflag & _O_RDWR ) == _O_RDWR )
+#if 0
+    if ((_oflag & _O_RDWR) == _O_RDWR)
         dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ | FILE_READ_DATA |
                            FILE_WRITE_DATA | FILE_READ_ATTRIBUTES |
                            FILE_WRITE_ATTRIBUTES;
-    else if (( _oflag & O_RDONLY ) == O_RDONLY )
+    else if ((_oflag & O_RDONLY) == O_RDONLY)
         dwDesiredAccess |= GENERIC_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES |
                            FILE_WRITE_ATTRIBUTES;
-    else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
+    else if ((_oflag & _O_WRONLY) == _O_WRONLY)
         dwDesiredAccess |= GENERIC_WRITE | FILE_WRITE_DATA |
                            FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES;
+#else
+    if ((_oflag & _O_WRONLY) == _O_WRONLY)
+        dwDesiredAccess |= GENERIC_WRITE | FILE_WRITE_DATA |
+                           FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES;
+    else if ((_oflag & _O_RDWR) == _O_RDWR)
+        dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ | FILE_READ_DATA |
+                           FILE_WRITE_DATA | FILE_READ_ATTRIBUTES |
+                           FILE_WRITE_ATTRIBUTES;
+    else //if ((_oflag & O_RDONLY) == O_RDONLY)
+        dwDesiredAccess |= GENERIC_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES |
+                           FILE_WRITE_ATTRIBUTES;
+#endif
 
-    if (( _oflag & S_IREAD ) == S_IREAD )
+    if ((_oflag & S_IREAD) == S_IREAD)
         dwShareMode |= FILE_SHARE_READ;
 
-    if (( _oflag & S_IWRITE ) == S_IWRITE )
+    if ((_oflag & S_IWRITE) == S_IWRITE)
         dwShareMode |= FILE_SHARE_WRITE;
 
-    if (( _oflag & (_O_CREAT | _O_EXCL ) ) == (_O_CREAT | _O_EXCL) )
+    if ((_oflag & (_O_CREAT | _O_EXCL)) == (_O_CREAT | _O_EXCL))
         dwCreationDistribution |= CREATE_NEW;
 
-    else if (( _oflag &  O_TRUNC ) == O_TRUNC  ) {
-        if (( _oflag &  O_CREAT ) ==  O_CREAT )
+    else if ((_oflag &  O_TRUNC) == O_TRUNC) {
+        if ((_oflag &  O_CREAT) ==  O_CREAT)
             dwCreationDistribution |= CREATE_ALWAYS;
-        else if (( _oflag & O_RDONLY ) != O_RDONLY )
+        else if ((_oflag & O_RDONLY) != O_RDONLY)
             dwCreationDistribution |= TRUNCATE_EXISTING;
     }
-    else if (( _oflag & _O_APPEND ) == _O_APPEND )
+    else if ((_oflag & _O_APPEND) == _O_APPEND)
         dwCreationDistribution |= OPEN_EXISTING;
-    else if (( _oflag &  _O_CREAT ) == _O_CREAT )
+    else if ((_oflag &  _O_CREAT) == _O_CREAT)
         dwCreationDistribution |= OPEN_ALWAYS;
     else
         dwCreationDistribution |= OPEN_EXISTING;
 
-    if (( _oflag &  _O_RANDOM ) == _O_RANDOM )
+    if ((_oflag &  _O_RANDOM) == _O_RANDOM)
         dwFlagsAndAttributes |= FILE_FLAG_RANDOM_ACCESS;
-    if (( _oflag &  _O_SEQUENTIAL ) == _O_SEQUENTIAL )
+    if ((_oflag &  _O_SEQUENTIAL) == _O_SEQUENTIAL)
         dwFlagsAndAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
 
-    if (( _oflag &  _O_TEMPORARY ) == _O_TEMPORARY )
+    if ((_oflag &  _O_TEMPORARY) == _O_TEMPORARY)
         dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 
-    if (( _oflag &  _O_SHORT_LIVED ) == _O_SHORT_LIVED )
+    if ((_oflag &  _O_SHORT_LIVED) == _O_SHORT_LIVED)
         dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
 
     if (_oflag & _O_NOINHERIT)
@@ -121,7 +134,7 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
     return __fileno_alloc(hFile,_oflag);
 }
 
-int _wsopen(wchar_t *path, int access, int shflag, int mode)
+int _wsopen(wchar_t* path, int access, int shflag, int mode)
 {
-  return _wopen((path), (access)|(shflag), (mode));
+    return _wopen((path), (access)|(shflag), (mode));
 }

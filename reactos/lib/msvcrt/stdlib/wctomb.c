@@ -16,10 +16,42 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <windows.h>
 #include <msvcrt/stdlib.h>
+#include <msvcrt/ctype.h>
 #include <msvcrt/wchar.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>
+
+
+int
+STDCALL
+WideCharToMultiByte(
+    UINT     CodePage,
+    DWORD    dwFlags,
+    LPCWSTR  lpWideCharStr,
+    int      cchWideChar,
+    LPSTR    lpMultiByteStr,
+    int      cchMultiByte,
+    LPCSTR   lpDefaultChar,
+    LPBOOL   lpUsedDefaultChar);
+
+
+int wctomb(char* dst, wchar_t ch)
+{
+#if 0
+    return WideCharToMultiByte(CP_ACP, 0, &ch, 1, dst, 6, NULL, NULL);
+#else
+    if (dst == NULL) {
+        return 1;
+    }
+    *dst = ch;
+    return 1;
+#endif
+}
+
+
+#if 0
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL
@@ -110,3 +142,5 @@ size_t __wcrtomb(char *s, wchar_t wc)
     }
     return written;
 }
+
+#endif

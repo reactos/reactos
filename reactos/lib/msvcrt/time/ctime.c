@@ -245,8 +245,7 @@ settzname(void)
   }
 }
 
-static char *
-tzdir(void)
+static char* tzdir(void)
 {
   static char dir[80]={0}, *cp;
   if (dir[0] == 0)
@@ -266,8 +265,7 @@ tzdir(void)
   return dir;
 }
 
-static int
-tzload(const char *name, struct state * CPP_CONST sp)
+static int tzload(const char* name, struct state* CPP_CONST sp)
 {
   const char * p;
   int i;
@@ -407,8 +405,8 @@ DAYSPERNYEAR, DAYSPERLYEAR
 ** character.
 */
 
-static const char *
-getzname(const char *strp)
+static const char*
+getzname(const char* strp)
 {
   char c;
 
@@ -425,8 +423,8 @@ getzname(const char *strp)
 ** Otherwise, return a pointer to the first character not part of the number.
 */
 
-static const char *
-getnum(const char *strp, int * CPP_CONST nump, const int min, const int max)
+static const char*
+getnum(const char* strp, int* CPP_CONST nump, const int min, const int max)
 {
   char c;
   int num;

@@ -11,46 +11,36 @@
 #include <msvcrt/wchar.h>
 #include <msvcrt/errno.h>
 
-int _readcnv(int fn, void *buf, size_t siz  );
+int _readcnv(int fn, void* buf, size_t siz);
 
-int
-_filbuf(FILE *f)
+int _filbuf(FILE* f)
 {
   int size;
   char c;
-
  
   if ( !OPEN4READING(f)) {
 	__set_errno (EINVAL);
 	return EOF;
   }
-
-
   if (f->_flag&(_IOSTRG|_IOEOF))
     return EOF;
   f->_flag &= ~_IOUNGETC;
 
-  if (f->_base==NULL && (f->_flag&_IONBF)==0) {
+  if (f->_base == NULL && (f->_flag & _IONBF) == 0) {
     size = 4096;
-    if ((f->_base = malloc(size+1)) == NULL)
-    {
+    if ((f->_base = malloc(size+1)) == NULL) {
 	// error ENOMEM
       f->_flag |= _IONBF;
       f->_flag &= ~(_IOFBF|_IOLBF);
-    }
-    else
-    {
+    } else {
       f->_flag |= _IOMYBUF;
       f->_bufsiz = size;
     }
   }
-
-
   if (f->_flag&_IONBF)
     f->_base = &c;
 
-
-// fush stdout before reading from stdin 
+  // flush stdout before reading from stdin 
   if (f == stdin) {
     if (stdout->_flag&_IOLBF)
       fflush(stdout);
@@ -58,8 +48,8 @@ _filbuf(FILE *f)
       fflush(stderr);
   }
 
-// if we have a dirty stream we flush it
-  if ( (f->_flag &_IODIRTY) == _IODIRTY )
+  // if we have a dirty stream we flush it
+  if ((f->_flag &_IODIRTY) == _IODIRTY)
 	 fflush(f);
 
 
@@ -99,6 +89,7 @@ _filbuf(FILE *f)
   }
 
   f->_cnt--;
+
   return *f->_ptr++ & 0377;
 }
 

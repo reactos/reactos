@@ -1,4 +1,4 @@
-/* $Id: witow.c,v 1.1 2002/11/24 18:42:25 robd Exp $
+/* $Id: witow.c,v 1.2 2002/12/05 15:30:45 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -26,8 +26,7 @@ wchar_t* _i64tow(__int64 value, wchar_t* string, int radix)
   int sign;
   wchar_t* sp;
 
-  if (radix > 36 || radix <= 1)
-  {
+  if (radix > 36 || radix <= 1) {
     __set_errno(EDOM);
     return 0;
   }
@@ -37,8 +36,7 @@ wchar_t* _i64tow(__int64 value, wchar_t* string, int radix)
     v = -value;
   else
     v = (unsigned)value;
-  while (v || tp == tmp)
-  {
+  while (v || tp == tmp) {
     i = v % radix;
     v = v / radix;
     if (i < 10)
@@ -67,14 +65,12 @@ wchar_t* _ui64tow(unsigned __int64 value, wchar_t* string, int radix)
   unsigned long v = value;
   wchar_t* sp;
 
-  if (radix > 36 || radix <= 1)
-  {
+  if (radix > 36 || radix <= 1) {
     __set_errno(EDOM);
     return 0;
   }
 
-  while (v || tp == tmp)
-  {
+  while (v || tp == tmp) {
     i = v % radix;
     v = v / radix;
     if (i < 10)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.28 2002/11/29 15:59:02 robd Exp $
+# $Id: Makefile,v 1.29 2002/12/05 15:30:43 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -266,7 +266,8 @@ PROCESS_OBJECTS = \
 	process/process.o \
 	process/procid.o \
 	process/thread.o \
-	process/threadid.o
+	process/threadid.o \
+	process/threadx.o
 
 SEARCH_OBJECTS = \
 	search/lfind.o \

@@ -1,6 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/string.h>
 
+#pragma function(strlen)
 
 size_t strlen(const char* str)
 {

@@ -794,7 +794,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    else
 		{
 			if (flags & LONGDBL) {
-			    *ARG (LONGLONG *) = num.q;
+			    *ARG (LONGLONG*) = num.q;
 			}
 			else if (flags & LONG)
 				*ARG (long int *) = num.l;

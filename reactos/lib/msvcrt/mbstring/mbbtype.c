@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/mbbtype.c
+ * FILE:        lib/msvcrt/mbstring/mbbtype.c
  * PURPOSE:     Determines the type of a multibyte character
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -23,9 +23,7 @@ int _mbbtype(unsigned char c , int type)
 			 return _MBC_ILLEGAL;
 		else
 			return 0;
-		
-	}
-	else  {
+	} else  {
 		if (( c >= 0x20 && c <= 0x7E ) || ( c >= 0xA1  && c <= 0xDF )) {
 			return _MBC_SINGLE;
 		}
@@ -36,10 +34,7 @@ int _mbbtype(unsigned char c , int type)
 			 return _MBC_ILLEGAL;
 		else
 			return 0;
-		
 	}
-	
-	
 	return 0;	
 }
 

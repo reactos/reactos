@@ -1,5 +1,6 @@
 #include <msvcrt/string.h>
 
+#pragma function(memset)
 
 void* memset(void* src, int val, size_t count)
 {
