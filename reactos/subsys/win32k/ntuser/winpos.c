@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.79 2004/01/12 22:26:00 gvg Exp $
+/* $Id: winpos.c,v 1.80 2004/01/15 21:02:39 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -688,7 +688,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
           (WinPos->hwndInsertAfter != HWND_BOTTOM))
       {
          if (NtUserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
-             Window->Parent)
+             Window->Parent->Self)
          {
             return FALSE;
          }
@@ -817,7 +817,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          if (WinPos.hwndInsertAfter == HWND_TOP)
             InsertAfterWindow = NULL;
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
-            InsertAfterWindow = ParentWindow->LastChild;
+            InsertAfterWindow = IntGetWindowObject(ParentWindow->LastChild->Self);
          else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
          /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
