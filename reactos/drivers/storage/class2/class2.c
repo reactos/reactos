@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.26 2002/10/01 19:27:18 chorns Exp $
+/* $Id: class2.c,v 1.27 2002/11/18 22:40:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -420,7 +420,7 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
   ULONG IoControlCode;
   ULONG OutputBufferLength;
 
-  DPRINT1("ScsiClassDeviceControl() called\n");
+  DPRINT("ScsiClassDeviceControl() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
