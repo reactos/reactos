@@ -43,7 +43,7 @@ CDFParser::CDFParser()
     InfFileNameSet         = false;
 
     InfModeEnabled = false;
-    InfFileHandle == NULL;
+    InfFileHandle = NULL;
 }
 
 CDFParser::~CDFParser()
