@@ -34,9 +34,20 @@
 
 VOID ShortVersion (VOID)
 {
+	OSVERSIONINFO VersionInfo;
+
 	ConOutPuts (_T("\n"
-	               SHELLINFO "\n"
-	               SHELLVER "\n"));
+	               SHELLINFO));
+	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	if (GetVersionEx(&VersionInfo) && 0 == _tcsnicmp(VersionInfo.szCSDVersion, _T("ReactOS"), 7))
+	{
+		ConOutPrintf(_T("%s running on %s"), SHELLVER, VersionInfo.szCSDVersion);
+	}
+	else
+	{
+		ConOutPuts(SHELLVER);
+	}
+	ConOutPuts (_T("\n"));
 }
 
 
@@ -63,11 +74,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	ConOutPuts (_T("\n"
-	               SHELLINFO "\n"
-	               SHELLVER "\n"
-	               "\n"
-	               "Copyright (C) 1994-1998 Tim Norman and others."));
+	ShortVersion();
+	ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
 	ConOutPuts (_T("Copyright (C) 1998-2001 Eric Kohl and others."));
 
 	/* Basic copyright notice */
