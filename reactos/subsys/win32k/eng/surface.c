@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.33 2004/03/06 01:22:03 navaraf Exp $
+/* $Id: surface.c,v 1.34 2004/03/17 16:05:29 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -373,11 +373,14 @@ EngCreateBitmap(IN SIZEL Size,
 
   SurfObj->dhsurf = 0; // device managed surface
   SurfObj->hsurf  = 0;
+  SurfObj->dhpdev = NULL;
+  SurfObj->hdev = NULL;
   SurfObj->sizlBitmap = Size;
   SurfObj->iBitmapFormat = UncompressedFormat;
   SurfObj->iType = STYPE_BITMAP;
   SurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
   SurfObj->pvScan0 = SurfObj->pvBits;
+  SurfObj->iUniq = 0;
 
   InitializeFuncs(SurfGDI, UncompressedFormat);
 
@@ -414,6 +417,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   SurfObj->iBitmapFormat = Format;
   SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
   SurfObj->iType = STYPE_DEVICE;
+  SurfObj->iUniq = 0;
 
   InitializeFuncs(SurfGDI, Format);
 
@@ -451,6 +455,7 @@ EngAssociateSurface(IN HSURF Surface,
 
   // Associate the hdev
   SurfObj->hdev = Dev;
+  SurfObj->dhpdev = Device->PDev;
 
   // Hook up specified functions
   if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Device->DriverFunctions.BitBlt;
