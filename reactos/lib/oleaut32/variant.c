@@ -162,10 +162,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarI1FromUI1(V_UI1(ps), &V_I1(pd));
     case VT_UI2:      return VarI1FromUI2(V_UI2(ps), &V_I1(pd));
     case VT_UI4:      return VarI1FromUI4(V_UI4(ps), &V_I1(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarI1FromI8(V_I8(ps), &V_I1(pd));
     case VT_UI8:      return VarI1FromUI8(V_UI8(ps), &V_I1(pd));
-#endif
     case VT_R4:       return VarI1FromR4(V_R4(ps), &V_I1(pd));
     case VT_R8:       return VarI1FromR8(V_R8(ps), &V_I1(pd));
     case VT_DATE:     return VarI1FromDate(V_DATE(ps), &V_I1(pd));
@@ -188,10 +186,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarI2FromUI1(V_UI1(ps), &V_I2(pd));
     case VT_UI2:      return VarI2FromUI2(V_UI2(ps), &V_I2(pd));
     case VT_UI4:      return VarI2FromUI4(V_UI4(ps), &V_I2(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarI2FromI8(V_I8(ps), &V_I2(pd));
     case VT_UI8:      return VarI2FromUI8(V_UI8(ps), &V_I2(pd));
-#endif
     case VT_R4:       return VarI2FromR4(V_R4(ps), &V_I2(pd));
     case VT_R8:       return VarI2FromR8(V_R8(ps), &V_I2(pd));
     case VT_DATE:     return VarI2FromDate(V_DATE(ps), &V_I2(pd));
@@ -214,10 +210,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarI4FromUI1(V_UI1(ps), &V_I4(pd));
     case VT_UI2:      return VarI4FromUI2(V_UI2(ps), &V_I4(pd));
     case VT_UI4:      return VarI4FromUI4(V_UI4(ps), &V_I4(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarI4FromI8(V_I8(ps), &V_I4(pd));
     case VT_UI8:      return VarI4FromUI8(V_UI8(ps), &V_I4(pd));
-#endif
     case VT_R4:       return VarI4FromR4(V_R4(ps), &V_I4(pd));
     case VT_R8:       return VarI4FromR8(V_R8(ps), &V_I4(pd));
     case VT_DATE:     return VarI4FromDate(V_DATE(ps), &V_I4(pd));
@@ -240,10 +234,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I4:       return VarUI1FromI4(V_I4(ps), &V_UI1(pd));
     case VT_UI2:      return VarUI1FromUI2(V_UI2(ps), &V_UI1(pd));
     case VT_UI4:      return VarUI1FromUI4(V_UI4(ps), &V_UI1(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarUI1FromI8(V_I8(ps), &V_UI1(pd));
     case VT_UI8:      return VarUI1FromUI8(V_UI8(ps), &V_UI1(pd));
-#endif
     case VT_R4:       return VarUI1FromR4(V_R4(ps), &V_UI1(pd));
     case VT_R8:       return VarUI1FromR8(V_R8(ps), &V_UI1(pd));
     case VT_DATE:     return VarUI1FromDate(V_DATE(ps), &V_UI1(pd));
@@ -266,10 +258,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I4:       return VarUI2FromI4(V_I4(ps), &V_UI2(pd));
     case VT_UI1:      return VarUI2FromUI1(V_UI1(ps), &V_UI2(pd));
     case VT_UI4:      return VarUI2FromUI4(V_UI4(ps), &V_UI2(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarUI4FromI8(V_I8(ps), &V_UI4(pd));
     case VT_UI8:      return VarUI4FromUI8(V_UI8(ps), &V_UI4(pd));
-#endif
     case VT_R4:       return VarUI2FromR4(V_R4(ps), &V_UI2(pd));
     case VT_R8:       return VarUI2FromR8(V_R8(ps), &V_UI2(pd));
     case VT_DATE:     return VarUI2FromDate(V_DATE(ps), &V_UI2(pd));
@@ -292,10 +282,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I4:       return VarUI4FromI4(V_I4(ps), &V_UI4(pd));
     case VT_UI1:      return VarUI4FromUI1(V_UI1(ps), &V_UI4(pd));
     case VT_UI2:      return VarUI4FromUI2(V_UI2(ps), &V_UI4(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarUI4FromI8(V_I8(ps), &V_UI4(pd));
     case VT_UI8:      return VarUI4FromUI8(V_UI8(ps), &V_UI4(pd));
-#endif
     case VT_R4:       return VarUI4FromR4(V_R4(ps), &V_UI4(pd));
     case VT_R8:       return VarUI4FromR8(V_R8(ps), &V_UI4(pd));
     case VT_DATE:     return VarUI4FromDate(V_DATE(ps), &V_UI4(pd));
@@ -309,7 +297,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     }
     break;
 
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
   case VT_UI8:
     switch (vtFrom)
     {
@@ -357,7 +344,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_BSTR:     return VarI8FromStr(V_BSTR(ps), lcid, dwFlags, &V_I8(pd));
     }
     break;
-#endif
 
   case VT_R4:
     switch (vtFrom)
@@ -369,10 +355,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarR4FromUI1(V_UI1(ps), &V_R4(pd));
     case VT_UI2:      return VarR4FromUI2(V_UI2(ps), &V_R4(pd));
     case VT_UI4:      return VarR4FromUI4(V_UI4(ps), &V_R4(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarR4FromI8(V_I8(ps), &V_R4(pd));
     case VT_UI8:      return VarR4FromUI8(V_UI8(ps), &V_R4(pd));
-#endif
     case VT_R8:       return VarR4FromR8(V_R8(ps), &V_R4(pd));
     case VT_DATE:     return VarR4FromDate(V_DATE(ps), &V_R4(pd));
     case VT_BOOL:     return VarR4FromBool(V_BOOL(ps), &V_R4(pd));
@@ -395,10 +379,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarR8FromUI1(V_UI1(ps), &V_R8(pd));
     case VT_UI2:      return VarR8FromUI2(V_UI2(ps), &V_R8(pd));
     case VT_UI4:      return VarR8FromUI4(V_UI4(ps), &V_R8(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarR8FromI8(V_I8(ps), &V_R8(pd));
     case VT_UI8:      return VarR8FromUI8(V_UI8(ps), &V_R8(pd));
-#endif
     case VT_R4:       return VarR8FromR4(V_R4(ps), &V_R8(pd));
     case VT_DATE:     return VarR8FromDate(V_DATE(ps), &V_R8(pd));
     case VT_BOOL:     return VarR8FromBool(V_BOOL(ps), &V_R8(pd));
@@ -421,10 +403,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarDateFromUI1(V_UI1(ps), &V_DATE(pd));
     case VT_UI2:      return VarDateFromUI2(V_UI2(ps), &V_DATE(pd));
     case VT_UI4:      return VarDateFromUI4(V_UI4(ps), &V_DATE(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarDateFromI8(V_I8(ps), &V_DATE(pd));
     case VT_UI8:      return VarDateFromUI8(V_UI8(ps), &V_DATE(pd));
-#endif
     case VT_R4:       return VarDateFromR4(V_R4(ps), &V_DATE(pd));
     case VT_R8:       return VarDateFromR8(V_R8(ps), &V_DATE(pd));
     case VT_BOOL:     return VarDateFromBool(V_BOOL(ps), &V_DATE(pd));
@@ -449,10 +429,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarBoolFromUI1(V_UI1(ps), &V_BOOL(pd));
     case VT_UI2:      return VarBoolFromUI2(V_UI2(ps), &V_BOOL(pd));
     case VT_UI4:      return VarBoolFromUI4(V_UI4(ps), &V_BOOL(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarBoolFromI8(V_I8(ps), &V_BOOL(pd));
     case VT_UI8:      return VarBoolFromUI8(V_UI8(ps), &V_BOOL(pd));
-#endif
     case VT_R4:       return VarBoolFromR4(V_R4(ps), &V_BOOL(pd));
     case VT_R8:       return VarBoolFromR8(V_R8(ps), &V_BOOL(pd));
     case VT_DATE:     return VarBoolFromDate(V_DATE(ps), &V_BOOL(pd));
@@ -481,10 +459,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarBstrFromUI1(V_UI1(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_UI2:      return VarBstrFromUI2(V_UI2(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_UI4:      return VarBstrFromUI4(V_UI4(ps), lcid, dwFlags, &V_BSTR(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarBstrFromI8(V_I8(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_UI8:      return VarBstrFromUI8(V_UI8(ps), lcid, dwFlags, &V_BSTR(pd));
-#endif
     case VT_R4:       return VarBstrFromR4(V_R4(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_R8:       return VarBstrFromR8(V_R8(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_DATE:     return VarBstrFromDate(V_DATE(ps), lcid, dwFlags, &V_BSTR(pd));
@@ -506,10 +482,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarCyFromUI1(V_UI1(ps), &V_CY(pd));
     case VT_UI2:      return VarCyFromUI2(V_UI2(ps), &V_CY(pd));
     case VT_UI4:      return VarCyFromUI4(V_UI4(ps), &V_CY(pd));
-#ifndef __REACTOS__	/*FIXME: hVal and ullVal missing in VARIANT union of MinGW header of MinGW header */
     case VT_I8:       return VarCyFromI8(V_I8(ps), &V_CY(pd));
     case VT_UI8:      return VarCyFromUI8(V_UI8(ps), &V_CY(pd));
-#endif
     case VT_R4:       return VarCyFromR4(V_R4(ps), &V_CY(pd));
     case VT_R8:       return VarCyFromR8(V_R8(ps), &V_CY(pd));
     case VT_DATE:     return VarCyFromDate(V_DATE(ps), &V_CY(pd));
@@ -2111,14 +2085,12 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           V_I4(pVarDst) = -ul64;
           return S_OK;
         }
-#ifndef __REACTOS__	/*FIXME: hVal missing in VARIANT union of MinGW header */
         else if (dwVtBits & VTBIT_I8 && ul64 <= (ULONGLONG)I8_MAX + 1)
         {
           V_VT(pVarDst) = VT_I8;
           V_I8(pVarDst) = -ul64;
           return S_OK;
         }
-#endif
         else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
         {
           /* Decimal is only output choice left - fast path */
@@ -2169,14 +2141,12 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         V_UI4(pVarDst) = ul64;
         return S_OK;
       }
-#ifndef __REACTOS__	/*FIXME: hVal missing in VARIANT union of MinGW header */
       else if (dwVtBits & VTBIT_I8 && ul64 <= I8_MAX)
       {
         V_VT(pVarDst) = VT_I8;
         V_I8(pVarDst) = ul64;
         return S_OK;
       }
-#endif
       else if (dwVtBits & VTBIT_UI8)
       {
         V_VT(pVarDst) = VT_UI8;
