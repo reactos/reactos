@@ -108,6 +108,35 @@ PdoQueryId(
 
 
 static NTSTATUS
+PdoQueryResources(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PCM_RESOURCE_LIST ResourceList;
+  
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  
+  if (DeviceExtension->ResourceListSize == 0)
+  {
+    return Irp->IoStatus.Status;
+  }
+  
+  ResourceList = ExAllocatePool(PagedPool, DeviceExtension->ResourceListSize);
+  if (!ResourceList)
+  {
+    Irp->IoStatus.Information = 0;
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  
+  RtlCopyMemory(ResourceList, DeviceExtension->ResourceList, DeviceExtension->ResourceListSize);
+  Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+  return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
 PdoSetPower(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -201,6 +230,9 @@ PdoPnpControl(
     break;
 
   case IRP_MN_QUERY_RESOURCES:
+    Status = PdoQueryResources(DeviceObject,
+                               Irp,
+                               IrpSp);
     break;
 
   case IRP_MN_QUERY_STOP_DEVICE:
@@ -213,6 +245,7 @@ PdoPnpControl(
     break;
 
   case IRP_MN_START_DEVICE:
+    Status = STATUS_SUCCESS;
     break;
 
   case IRP_MN_STOP_DEVICE:

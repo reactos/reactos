@@ -4,6 +4,7 @@
  * FILE:            acpi/ospm/fdo.c
  * PURPOSE:         ACPI device object dispatch routines
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hervé Poussineau (hpoussin@reactos.com)
  * UPDATE HISTORY:
  *      08-08-2001  CSH  Created
  */
@@ -115,6 +116,149 @@ AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
 }
 
 
+static BOOLEAN
+AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
+                       PULONG ResourceListSize,
+                       RESOURCE* resources)
+{
+  BOOLEAN Done;
+  ULONG NumberOfResources = 0;
+  PCM_RESOURCE_LIST ResourceList;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+  RESOURCE* resource;
+  ULONG i;
+  KIRQL Dirql;
+  
+  /* Count number of resources */
+  Done = FALSE;
+  resource = resources;
+  while (!Done)
+  {
+    switch (resource->id)
+    {
+      case irq:
+      {
+        IRQ_RESOURCE *irq_data = (IRQ_RESOURCE*) &resource->data;
+        NumberOfResources += irq_data->number_of_interrupts;
+        break;
+      }
+      case dma:
+      {
+        DMA_RESOURCE *dma_data = (DMA_RESOURCE*) &resource->data;
+        NumberOfResources += dma_data->number_of_channels;
+        break;
+      }
+      case io:
+      {
+        NumberOfResources++;
+        break;
+      }
+      case end_tag:
+      {
+        Done = TRUE;
+        break;
+      }
+    }
+    resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
+  }
+  
+  /* Allocate memory */
+  *ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
+  ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, *ResourceListSize);
+  *pResourceList = ResourceList;
+  if (!ResourceList)
+    return FALSE;
+  ResourceList->Count = 1;
+  ResourceList->List[0].InterfaceType = Internal; /* FIXME */
+  ResourceList->List[0].BusNumber = 0; /* We're the only ACPI bus device in the system */
+  ResourceList->List[0].PartialResourceList.Version = 1;
+  ResourceList->List[0].PartialResourceList.Revision = 1;
+  ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
+  ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+  
+  /* Fill resources list structure */
+  Done = FALSE;
+  resource = resources;
+  while (!Done)
+  {
+    switch (resource->id)
+    {
+      case irq:
+      {
+        IRQ_RESOURCE *irq_data = (IRQ_RESOURCE*) &resource->data;
+        for (i = 0; i < irq_data->number_of_interrupts; i++)
+        {
+          ResourceDescriptor->Type = CmResourceTypeInterrupt;
+          
+          ResourceDescriptor->ShareDisposition =
+            (irq_data->shared_exclusive == SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+          ResourceDescriptor->Flags =
+            (irq_data->edge_level == LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
+          ResourceDescriptor->u.Interrupt.Vector = HalGetInterruptVector(
+            Internal, 0, 0, irq_data->interrupts[i],
+            &Dirql,
+            &ResourceDescriptor->u.Interrupt.Affinity);
+          ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+          ResourceDescriptor++;
+        }
+        break;
+      }
+      case dma:
+      {
+        DMA_RESOURCE *dma_data = (DMA_RESOURCE*) &resource->data;
+        for (i = 0; i < dma_data->number_of_channels; i++)
+        {
+          ResourceDescriptor->Type = CmResourceTypeDma;
+          ResourceDescriptor->Flags = 0;
+          switch (dma_data->type)
+          {
+            case TYPE_A: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+            case TYPE_B: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+            case TYPE_F: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+          }
+          if (dma_data->bus_master == BUS_MASTER)
+            ResourceDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+          switch (dma_data->transfer)
+          {
+            case TRANSFER_8: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
+            case TRANSFER_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
+            case TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+          }
+          ResourceDescriptor->u.Dma.Channel = dma_data->channels[i];
+          ResourceDescriptor++;
+        }
+        break;
+      }
+      case io:
+      {
+        IO_RESOURCE *io_data = (IO_RESOURCE*) &resource->data;
+        ResourceDescriptor->Type = CmResourceTypePort;
+        ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+        ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+        if (io_data->io_decode == DECODE_16)
+          ResourceDescriptor->Flags |= CM_RESOURCE_PORT_16_BIT_DECODE;
+        else
+          ResourceDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
+        ResourceDescriptor->u.Port.Start.u.HighPart = 0;
+        ResourceDescriptor->u.Port.Start.u.LowPart = io_data->min_base_address;
+        ResourceDescriptor->u.Port.Length = io_data->range_length;
+        ResourceDescriptor++;
+        break;
+      }
+      case end_tag:
+      {
+        Done = TRUE;
+        break;
+      }
+    }
+    resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
+  }
+  
+  acpi_rs_dump_resource_list(resource);
+  return TRUE;
+}
+
+
 static NTSTATUS
 FdoQueryBusRelations(
   IN PDEVICE_OBJECT DeviceObject,
@@ -149,6 +293,7 @@ FdoQueryBusRelations(
   CurrentEntry = DeviceExtension->DeviceListHead.Flink;
   while (CurrentEntry != &DeviceExtension->DeviceListHead)
   {
+    ACPI_BUFFER Buffer;
     Device = CONTAINING_RECORD(CurrentEntry, ACPI_DEVICE, DeviceListEntry);
 
     /* FIXME: For ACPI namespace devices on the motherboard create filter DOs
@@ -200,6 +345,34 @@ FdoQueryBusRelations(
       AcpiStatus = bm_get_node(Device->BmHandle, 0, &Node);
       if (ACPI_SUCCESS(AcpiStatus))
       {
+        /* Get current resources */
+        Buffer.length = 0;
+        Status = acpi_get_current_resources(Node->device.acpi_handle, &Buffer);
+        if ((Status & ACPI_OK) == 0)
+        {
+          ASSERT(FALSE);
+        }
+        if (Buffer.length > 0)
+        {
+          Buffer.pointer = ExAllocatePool(PagedPool, Buffer.length);
+          if (!Buffer.pointer)
+          {
+            ASSERT(FALSE);
+          }
+          Status = acpi_get_current_resources(Node->device.acpi_handle, &Buffer);
+          if (ACPI_FAILURE(Status))
+          {
+            ASSERT(FALSE);
+          }
+          if (!AcpiCreateResourceList(&PdoDeviceExtension->ResourceList,
+                                      &PdoDeviceExtension->ResourceListSize,
+                                      (RESOURCE*)Buffer.pointer))
+          {
+            ASSERT(FALSE);
+          }
+          ExFreePool(Buffer.pointer);
+        }
+
         /* Add Device ID string */
         if (!AcpiCreateDeviceIDString(&PdoDeviceExtension->DeviceID,
                                       Node))
