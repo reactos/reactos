@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.64 2004/04/10 22:36:07 gdalsnes Exp $
+/* $Id: page.c,v 1.65 2004/04/28 20:46:03 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1356,6 +1356,7 @@ MmGetPhysicalAddress(PVOID vaddr)
    if (Pte & PA_PRESENT)
    {
       p.QuadPart = PAGE_MASK(Pte);
+      p.u.LowPart |= (ULONG_PTR)vaddr & (PAGE_SIZE - 1);
    }
    else
    {
