@@ -1,6 +1,11 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+NTSTATUS
+STDCALL
+NtUserAcquireOrReleaseInputOwnership(
+  BOOLEAN Release);
+
 DWORD
 STDCALL
 NtUserActivateKeyboardLayout(
