@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.9 2001/08/14 12:57:16 ea Exp $
+/* $Id: handle.c,v 1.10 2002/05/07 22:45:40 hbirr Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -19,13 +19,14 @@
 
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
 {
+   ULONG h = (((ULONG)Handle) >> 2) - 1;
   //   DbgPrint( "CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData->HandleTableSize );
-   if( (((ULONG)Handle) >> 2) - 1 > ProcessData->HandleTableSize )
+   if( h >= ProcessData->HandleTableSize )
      {
        DbgPrint( "CsrGetObject returning invalid handle\n" );
        return STATUS_INVALID_HANDLE;
      }
-   *Object = ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1];
+   *Object = ProcessData->HandleTable[h];
    //   DbgPrint( "CsrGetObject returning\n" );
    return *Object ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
 }
@@ -35,10 +36,11 @@ NTSTATUS STDCALL CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 			  HANDLE Handle)
 {
    Object_t *Object;
-   if( (((ULONG)Handle) >> 2) - 1 > ProcessData->HandleTableSize || ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1] == 0 )
+   ULONG h = (((ULONG)Handle) >> 2) - 1;
+   if( h >= ProcessData->HandleTableSize || ProcessData->HandleTable[h] == 0 )
       return STATUS_INVALID_HANDLE;
    /* dec ref count */
-   Object = ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1];
+   Object = ProcessData->HandleTable[h];
    if( InterlockedDecrement( &Object->ReferenceCount ) == 0 )
       switch( Object->Type )
 	 {
@@ -48,7 +50,7 @@ NTSTATUS STDCALL CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 	    break;
 	 default: DbgPrint( "CSR: Error: releaseing unknown object type" );
 	 }
-   ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1] = 0;
+   ProcessData->HandleTable[h] = 0;
    return STATUS_SUCCESS;
 }
 
