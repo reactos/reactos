@@ -1,9 +1,10 @@
-; $Id: videoprt.edf,v 1.3 2004/03/06 01:22:02 navaraf Exp $
+; $Id: videoprt.edf,v 1.4 2004/03/06 08:39:06 jimtabor Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
 EXPORTS
 VideoPortCompareMemory=NTOSKRNL.RtlCompareMemory
+VideoPortAllocateBuffer=VideoPortAllocateBuffer@12
 VideoPortAllocatePool=VideoPortAllocatePool@16
 VideoPortDDCMonitorHelper=VideoPortDDCMonitorHelper@16
 VideoPortDebugPrint
@@ -12,6 +13,7 @@ VideoPortEnableInterrupt=VideoPortEnableInterrupt@4
 VideoPortFreeDeviceBase=VideoPortFreeDeviceBase@8
 VideoPortFreePool=VideoPortFreePool@8
 VideoPortGetBusData=VideoPortGetBusData@24
+VideoPortGetAgpServices=VideoPortGetAgpServices@8
 VideoPortGetCurrentIrql=VideoPortGetCurrentIrql@0
 VideoPortGetDeviceBase=VideoPortGetDeviceBase@20
 VideoPortGetDeviceData=VideoPortGetDeviceData@16
@@ -38,6 +40,7 @@ VideoPortReadRegisterUlong=NTOSKRNL.READ_REGISTER_ULONG
 VideoPortReadRegisterBufferUchar=NTOSKRNL.READ_REGISTER_BUFFER_UCHAR
 VideoPortReadRegisterBufferUshort=NTOSKRNL.READ_REGISTER_BUFFER_USHORT
 VideoPortReadRegisterBufferUlong=NTOSKRNL.READ_REGISTER_BUFFER_ULONG
+VideoPortReleaseBuffer=VideoPortReleaseBuffer@8
 VideoPortScanRom=VideoPortScanRom@16
 VideoPortSetBusData=VideoPortSetBusData@24
 VideoPortSetRegistryParameters=VideoPortSetRegistryParameters@16

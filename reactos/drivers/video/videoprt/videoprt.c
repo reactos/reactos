@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.6 2004/03/06 01:22:02 navaraf Exp $
+ * $Id: videoprt.c,v 1.7 2004/03/06 08:39:06 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -399,7 +399,7 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
 {
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT("VideoPortGetVgaStatus = %S \n", VgaStatus);
+  DPRINT1("VideoPortGetVgaStatus = %S \n", VgaStatus);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      VIDEO_PORT_DEVICE_EXTENSION,
@@ -407,11 +407,14 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
 
  if(KeGetCurrentIrql() == PASSIVE_LEVEL)
  {
+  DPRINT1("VideoPortGetVgaStatus1 = %S \n", VgaStatus);
+
   if ( PCIBus == DeviceExtension->AdapterInterfaceType)
 	{
 /*
   VgaStatus 0 == VGA not enabled, 1 == VGA enabled.
  */
+  DPRINT1("VideoPortGetVgaStatus2 = %S \n", VgaStatus);
 	
 	/* Assumed for now */
 	
@@ -420,6 +423,8 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
  	return  STATUS_SUCCESS;
  	}
   } 	
+  DPRINT1("VideoPortGetVgaStatus3 = %S \n", VgaStatus);
+
   return ERROR_INVALID_FUNCTION;    
 }
 
@@ -1345,3 +1350,29 @@ VideoPortDDCMonitorHelper(
 {
    return FALSE;
 }
+
+
+VP_STATUS
+STDCALL
+VideoPortAllocateBuffer(IN PVOID  HwDeviceExtension,
+			IN ULONG  Size,
+			OUT PVOID  *Buffer)
+{
+  DPRINT("VideoPortAllocateBuffer\n");
+  
+  Buffer = ExAllocatePool (PagedPool, Size) ;
+  return STATUS_SUCCESS;
+      
+}
+
+VOID
+STDCALL
+VideoPortReleaseBuffer( IN PVOID HwDeviceExtension,
+		        IN PVOID Ptr)
+{
+  DPRINT("VideoPortReleaseBuffer\n");
+
+	ExFreePool(Ptr);
+}         
+
+

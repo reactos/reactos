@@ -1,15 +1,17 @@
-; $Id: videoprt.def,v 1.3 2004/03/06 01:22:02 navaraf Exp $
+; $Id: videoprt.def,v 1.4 2004/03/06 08:39:06 jimtabor Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
 EXPORTS
 ReturnCsrssAddress
+VideoPortAllocateBuffer@12
 VideoPortCompareMemory@12
 VideoPortDDCMonitorHelper@16
 VideoPortDebugPrint
 VideoPortDisableInterrupt@4
 VideoPortEnableInterrupt@4
 VideoPortFreeDeviceBase@8
+VideoPortGetAgpServices@8
 VideoPortGetBusData@24
 VideoPortGetCurrentIrql@0
 VideoPortGetDeviceBase@20
@@ -35,6 +37,7 @@ VideoPortReadRegisterUlong@4
 VideoPortReadRegisterBufferUchar@12
 VideoPortReadRegisterBufferUshort@12
 VideoPortReadRegisterBufferUlong@12
+VideoPortReleaseBuffer@8
 VideoPortScanRom@16
 VideoPortSetBusData@24
 VideoPortSetRegistryParameters@16

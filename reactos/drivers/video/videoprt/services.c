@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: services.c,v 1.1 2004/01/19 15:56:53 navaraf Exp $
+ * $Id: services.c,v 1.2 2004/03/06 08:39:06 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -73,3 +73,17 @@ VideoPortQueryServices(
 
    return STATUS_UNSUCCESSFUL;
 }
+
+
+BOOLEAN
+STDCALL
+VideoPortGetAgpServices(IN  PVOID  HwDeviceExtension,
+			IN  PVIDEO_PORT_AGP_SERVICES  AgpServices)
+{
+
+  DPRINT("VideoPortGetAgpServices\n");
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
