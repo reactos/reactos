@@ -14,7 +14,7 @@ TOOLS = \
 
 CLEAN_FILES = $(TOOLS)
 
-all: $(TOOLS) wmc_directory_target cdmake_directory_target
+all: $(TOOLS) wmc_target cdmake_target mkhive_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -90,15 +90,20 @@ mkflpimg$(EXE_POSTFIX): mkflpimg.c
 endif
 
 
-wmc_directory_target:
+wmc_target:
 	$(MAKE) -C wmc wmc$(EXE_POSTFIX)
 
-cdmake_directory_target:
+cdmake_target:
 	$(MAKE) -C cdmake cdmake$(EXE_POSTFIX)
+
+mkhive_target:
+	$(MAKE) -C mkhive mkhive$(EXE_POSTFIX)
+
 
 ifeq ($(HOST),mingw32-linux)
 clean:
 	$(MAKE) -C cdmake clean
+	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	rm mkconfig
 	rm $(TOOLS)
@@ -106,6 +111,7 @@ endif
 ifeq ($(HOST),mingw32-windows)
 clean:
 	$(MAKE) -C cdmake clean
+	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	del *$(EXE_POSTFIX)
 endif
