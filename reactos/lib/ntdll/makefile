@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.84 2003/05/27 19:40:20 hbirr Exp $
+# $Id: makefile,v 1.85 2003/06/07 11:33:13 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -43,7 +43,7 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/registry.o rtl/exception.o rtl/intrlck.o rtl/resource.o \
               rtl/handle.o rtl/atom.o rtl/message.o rtl/timezone.o \
       	      rtl/propvar.o rtl/security.o rtl/dos8dot3.o rtl/compress.o \
-              rtl/encode.o
+              rtl/encode.o rtl/random.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 

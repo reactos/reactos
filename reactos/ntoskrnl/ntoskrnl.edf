@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.139 2003/06/02 10:04:28 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.140 2003/06/07 11:31:06 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -801,7 +801,7 @@ RtlQueryAtomInAtomTable=RtlQueryAtomInAtomTable@24
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
 RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
-;RtlRandom
+RtlRandom=RtlRandom@4
 ;RtlRemoveUnicodePrefix
 RtlReserveChunk=RtlReserveChunk@20
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.89 2003/05/31 11:08:08 ekohl Exp $
+; $Id: ntdll.edf,v 1.90 2003/06/07 11:32:42 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -518,7 +518,7 @@ RtlQueryRegistryValues=RtlQueryRegistryValues@20
 RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
 RtlRaiseStatus=RtlRaiseStatus@4
-;RtlRandom
+RtlRandom=RtlRandom@4
 RtlReAllocateHeap=RtlReAllocateHeap@16
 ;RtlRealPredecessor
 ;RtlRealSuccessor
@@ -574,7 +574,7 @@ RtlUnicodeToCustomCPN=RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN=RtlUnicodeToOemN@20
-;RtlUniform
+RtlUniform=RtlUniform@4
 RtlUnlockHeap=RtlUnlockHeap@4
 RtlUnwind=RtlUnwind@16
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.10 2003/05/28 18:09:09 chorns Exp $
+/* $Id: rtl.h,v 1.11 2003/06/07 11:29:30 ekohl Exp $
  * 
  */
 
@@ -2198,6 +2198,11 @@ BOOLEAN STDCALL RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK
 BOOLEAN STDCALL RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
 VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING GenericMapping);
 
+ULONG STDCALL
+RtlRandom (PULONG Seed);
+
+ULONG STDCALL
+RtlUniform (PULONG Seed);
 
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */
 
