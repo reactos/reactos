@@ -44,7 +44,10 @@ typedef struct __SEHFrame
 }
 _SEHFrame_t;
 
-static void __stdcall _SEHCompilerSpecificHandler(_SEHPortableFrame_t * frame)
+static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
+(
+ _SEHPortableFrame_t * frame
+)
 {
  _SEHFrame_t * myframe;
  myframe = (_SEHFrame_t *)(((char *)frame) - offsetof(_SEHFrame_t, SEH_Header));

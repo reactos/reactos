@@ -44,7 +44,7 @@ __SEHUnregisterFrame:
 global __SEHUnwind
 __SEHUnwind:
 
- extern RtlUnwind
+ extern _RtlUnwind@16
 
  mov ecx, [esp+4]
 
@@ -57,7 +57,7 @@ __SEHUnwind:
  push eax
  push eax
  push ecx
- call RtlUnwind
+ call _RtlUnwind@16
 
  pop ebx
  pop edi
