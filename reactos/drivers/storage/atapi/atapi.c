@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.22 2002/05/25 13:28:42 ekohl Exp $
+/* $Id: atapi.c,v 1.23 2002/05/26 20:20:39 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1977,67 +1977,67 @@ AtapiErrorToScsi(PVOID DeviceExtension,
       switch (ErrorReg >> 4)
 	{
 	  case SCSI_SENSE_NO_SENSE:
-	    DPRINT1("ATAPI error: SCSI_SENSE_NO_SENSE\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_NO_SENSE\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_RECOVERED_ERROR:
-	    DPRINT1("ATAPI error: SCSI_SENSE_RECOVERED_SENSE\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_RECOVERED_SENSE\n");
 	    ScsiStatus = 0;
 	    SrbStatus = SRB_STATUS_SUCCESS;
 	    break;
 
 	  case SCSI_SENSE_NOT_READY:
-	    DPRINT1("ATAPI error: SCSI_SENSE_NOT_READY\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_NOT_READY\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_MEDIUM_ERROR:
-	    DPRINT1("ATAPI error: SCSI_SENSE_MEDIUM_ERROR\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_MEDIUM_ERROR\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_HARDWARE_ERROR:
-	    DPRINT1("ATAPI error: SCSI_SENSE_HARDWARE_ERROR\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_HARDWARE_ERROR\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_ILLEGAL_REQUEST:
-	    DPRINT1("ATAPI error: SCSI_SENSE_ILLEGAL_REQUEST\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_ILLEGAL_REQUEST\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_UNIT_ATTENTION:
-	    DPRINT1("ATAPI error: SCSI_SENSE_UNIT_ATTENTION\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_UNIT_ATTENTION\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_DATA_PROTECT:
-	    DPRINT1("ATAPI error: SCSI_SENSE_DATA_PROTECT\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_DATA_PROTECT\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_BLANK_CHECK:
-	    DPRINT1("ATAPI error: SCSI_SENSE_BLANK_CHECK\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_BLANK_CHECK\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  case SCSI_SENSE_ABORTED_COMMAND:
-	    DPRINT1("ATAPI error: SCSI_SENSE_ABORTED_COMMAND\n");
+	    DPRINT("ATAPI error: SCSI_SENSE_ABORTED_COMMAND\n");
 	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
 
 	  default:
-	    DPRINT1("ATAPI error: Invalid sense key\n");
+	    DPRINT("ATAPI error: Invalid sense key\n");
 	    ScsiStatus = 0;
 	    SrbStatus = SRB_STATUS_ERROR;
 	    break;
