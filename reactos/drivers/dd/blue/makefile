@@ -1,6 +1,7 @@
 #
 #
 #
+
 OBJECTS = blue.o ../../../ntoskrnl/ntoskrnl.a
 
 all: blue.sys
@@ -22,7 +23,7 @@ blue.sys: $(OBJECTS)
 	      -Wl,--base-file,base.tmp $(OBJECTS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname blue.sys --base-file base.tmp \
-	           --output-exp temp.exp
+		   --output-exp temp.exp
 	- $(RM) base.tmp
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
 	      -specs=../../svc_specs -mdll -o blue.sys $(OBJECTS) -Wl,temp.exp

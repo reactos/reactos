@@ -1,7 +1,5 @@
 
-#include <internal/mmhal.h>
 #include <internal/halio.h>
-#include <internal/hal/page.h>
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/string.h>
@@ -11,22 +9,10 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-#define IDMAP_BASE         (0xd0000000)
+
+
+#define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
-
-/*
- * Return a linear address which can be used to access the physical memory
- * starting at x 
- */
-extern inline unsigned int physical_to_linear(unsigned int x)
-{
-        return(x+IDMAP_BASE);
-}
-
-extern inline unsigned int linear_to_physical(unsigned int x)
-{
-        return(x-IDMAP_BASE);
-}
 
 #define NR_ROWS            50
 #define NR_COLUMNS         80
@@ -39,6 +25,8 @@ extern inline unsigned int linear_to_physical(unsigned int x)
 #define CRTC_CURSORPOSLO   0x0f
 #define CRTC_CURSORPOSHI   0x0e
 
+#define ATTRC_WRITEREG     0x3c0
+#define ATTRC_READREG      0x3c1
 
 
 
@@ -79,19 +67,33 @@ NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     unsigned int offset;
+    BYTE data, value;
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
     /* initialize device extension */
     /* get pointer to video memory */
-    DeviceExtension->VideoMemory = (PBYTE)physical_to_linear (VIDMEM_BASE);
+    /* FIXME : use MmMapIoSpace() */
+    DeviceExtension->VideoMemory = (PBYTE)(IDMAP_BASE + VIDMEM_BASE);
+
+    __asm__("cli\n\t");
 
     /* get current output position */
-    __asm__("cli\n\t");
     outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
     offset = inb_p (CRTC_DATA);
     outb_p (CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset += (inb_p (CRTC_DATA) << 8);
+
+    /* switch blinking characters off */
+    inb_p (0x3da);
+    value = inb_p (0x3c0);
+    outb_p (0x3c0, 0x10);
+    data  = inb_p (0x3c1);
+    data  = data & ~0x08;
+    outb_p (0x3c0, data);
+    outb_p (0x3c0, value);
+    inb_p (0x3da);
+
     __asm__("sti\n\t");
 
     DeviceExtension->CursorX = (SHORT)(offset % NR_COLUMNS);
@@ -175,13 +177,12 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 {
                     vidmem[(cursorx * 2) + (cursory * NR_COLUMNS * 2)] = ' ';
                     cursorx++;
-/*
+
                     if (cursorx >= NR_COLUMNS)
                     {
                         cursory++;
                         cursorx = 0;
                     }
-*/
                 }
                 break;
 	
@@ -194,6 +195,7 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     cursory++;
                     cursorx = 0;
                 }
+                break;
         }
    
    
@@ -247,7 +249,6 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
-
     DeviceExtension = DeviceObject->DeviceExtension;
 
     switch (stk->Parameters.DeviceIoControl.IoControlCode)
@@ -264,11 +265,21 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 offset += (inb_p (CRTC_DATA) << 8);
                 __asm__("sti\n\t");
 
+                pcsbi->dwSize.X = NR_ROWS;
+                pcsbi->dwSize.Y = NR_COLUMNS;
+
                 pcsbi->dwCursorPosition.X = (SHORT)(offset % NR_COLUMNS);
                 pcsbi->dwCursorPosition.Y = (SHORT)(offset / NR_COLUMNS);
 
-                pcsbi->dwSize.X = NR_ROWS;
-                pcsbi->dwSize.Y = NR_COLUMNS;
+                pcsbi->wAttributes = DeviceExtension->CharAttribute;
+
+                pcsbi->srWindow.Left   = 0;
+                pcsbi->srWindow.Right  = NR_COLUMNS - 1;
+                pcsbi->srWindow.Top    = 0;
+                pcsbi->srWindow.Bottom = NR_ROWS - 1;
+
+                pcsbi->dwMaximumWindowSize.X = NR_COLUMNS;
+                pcsbi->dwMaximumWindowSize.Y = NR_ROWS;
 
                 Irp->IoStatus.Information = sizeof (CONSOLE_SCREEN_BUFFER_INFO);
                 Status = STATUS_SUCCESS;
@@ -282,6 +293,8 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
                 DeviceExtension->CursorX = pcsbi->dwCursorPosition.X;
                 DeviceExtension->CursorY = pcsbi->dwCursorPosition.Y;
+
+                DeviceExtension->CharAttribute = pcsbi->wAttributes;
 
                 offset = (pcsbi->dwCursorPosition.Y * NR_COLUMNS) +
                           pcsbi->dwCursorPosition.X;
@@ -300,14 +313,12 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
         case IOCTL_CONSOLE_GET_CURSOR_INFO:
             {
-//               PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
+                PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
 
-//               DPRINT("GetConsoleCursorInfo: pcci=%p\n", pcci);
-//               DPRINT("GetConsoleCursorInfo\n");
-//               pcci->dwSize = 10;
-//               pcci->bVisible = FALSE;
+                pcci->dwSize = DeviceExtension->CursorSize;
+                pcci->bVisible = DeviceExtension->CursorVisible;
 
-                Irp->IoStatus.Information = 0;
+                Irp->IoStatus.Information = sizeof (CONSOLE_CURSOR_INFO);
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -341,18 +352,38 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
             }
             break;
 
+        case IOCTL_CONSOLE_GET_MODE:
+            {
+                PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
 
+                pcm->dwMode = DeviceExtension->Mode;
+
+                Irp->IoStatus.Information = sizeof(CONSOLE_MODE);
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        case IOCTL_CONSOLE_SET_MODE:
+            {
+                PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
+
+                DeviceExtension->Mode = pcm->dwMode;
+
+                Irp->IoStatus.Information = 0;
+                Status = STATUS_SUCCESS;
+            }
+            break;
 
         case IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE:
             {
-                PFILL_OUTPUT_ATTRIBUTE Buf = (PFILL_OUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
+                POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
 
                 vidmem = DeviceExtension->VideoMemory;
-                offset = (DeviceExtension->CursorY * NR_COLUMNS * 2) +
-                         (DeviceExtension->CursorX * 2) + 1;
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2) + 1;
 
                 CHECKPOINT
 
@@ -360,20 +391,64 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 {
                     vidmem[offset + (dwCount * 2)] = (char) Buf->wAttribute;
                 }
+
+                Buf->dwTransfered = Buf->nLength;
                 
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_SUCCESS;
             }
             break;
 
-#if 0
         case IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE:
-        case IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE:
+            {
+                POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
+                LPWORD pAttr = (LPWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                char *vidmem;
+                int offset;
+                DWORD dwCount;
+
+                vidmem = DeviceExtension->VideoMemory;
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2) + 1;
+
+                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pAttr++)
+                {
+                    (char) *pAttr = vidmem[offset + (dwCount * 2)];
+                }
+
+                Buf->dwTransfered = dwCount;
+
+                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+                Status = STATUS_SUCCESS;
+            }
             break;
-#endif
+
+        case IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE:
+            {
+                POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
+                LPWORD pAttr = (LPWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                char *vidmem;
+                int offset;
+                DWORD dwCount;
+
+                vidmem = DeviceExtension->VideoMemory;
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2) + 1;
+
+                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pAttr++)
+                {
+                    vidmem[offset + (dwCount * 2)] = (char) *pAttr;
+                }
+
+                Buf->dwTransfered = dwCount;
+
+                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+                Status = STATUS_SUCCESS;
+            }
+            break;
 
         case IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE:
-            DeviceExtension->CharAttribute = (WORD)Irp->AssociatedIrp.SystemBuffer;
+            DeviceExtension->CharAttribute = (WORD)*(LPWORD)Irp->AssociatedIrp.SystemBuffer;
             Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;
             break;
@@ -381,27 +456,74 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
         case IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER:
             {
-                PFILL_OUTPUT_CHARACTER Buf = (PFILL_OUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
+                POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
 
                 vidmem = DeviceExtension->VideoMemory;
-                offset = (DeviceExtension->CursorY * NR_COLUMNS * 2) +
-                         (DeviceExtension->CursorX * 2);
-
-                CHECKPOINT
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2);
 
                 for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
                 {
                     vidmem[offset + (dwCount * 2)] = (char) Buf->cCharacter;
                 }
 
+                Buf->dwTransfered = Buf->nLength;
+
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_SUCCESS;
             }
             break;
 
+        case IOCTL_CONSOLE_READ_OUTPUT_CHARACTER:
+            {
+                POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
+                LPSTR pChar = (LPSTR)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                char *vidmem;
+                int offset;
+                DWORD dwCount;
+
+                vidmem = DeviceExtension->VideoMemory;
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2);
+
+                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pChar++)
+                {
+                    *pChar = vidmem[offset + (dwCount * 2)];
+                }
+
+                Buf->dwTransfered = dwCount;
+
+                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        case IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER:
+            {
+                POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
+                LPSTR pChar = (LPSTR)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                char *vidmem;
+                int offset;
+                DWORD dwCount;
+
+                vidmem = DeviceExtension->VideoMemory;
+                offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
+                         (Buf->dwCoord.X * 2) + 1;
+
+                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pChar++)
+                {
+                    vidmem[offset + (dwCount * 2)] = (char) *pChar;
+                }
+
+                Buf->dwTransfered = dwCount;
+
+                Irp->IoStatus.Information = sizeof(OUTPUT_ATTRIBUTE);
+                Status = STATUS_SUCCESS;
+            }
+            break;
 
 
         default:
@@ -462,7 +584,7 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     ANSI_STRING asymlink_name;
     UNICODE_STRING symlink_name;
    
-    DbgPrint ("Screen Driver 0.0.5\n");
+    DbgPrint ("Screen Driver 0.0.6\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]  = ScrDispatch;

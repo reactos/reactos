@@ -131,16 +131,16 @@ ReadConsoleA(HANDLE hConsoleInput,
 			     LPVOID lpReserved)
 {
    KEY_EVENT_RECORD KeyEventRecord;
-   int i,j;
-   BOOL stat;
+   BOOL  stat = TRUE;
    PCHAR Buffer = (PCHAR)lpBuffer;
    DWORD Result;
+   int   i;
    
    for (i=0; (stat && i<nNumberOfCharsToRead);)     
      {
 	stat = ReadFile(hConsoleInput,
 			&KeyEventRecord,
-			sizeof(KeyEventRecord),
+                        sizeof(KEY_EVENT_RECORD),
 			&Result,
 			NULL);
 	if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.AsciiChar != 0)
@@ -225,7 +225,7 @@ GetConsoleScreenBufferInfo(
 	
 	if ( !DeviceIoControl(
 		hConsoleOutput,
-        IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
+                IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
 		NULL,
 		0,
 		lpConsoleScreenBufferInfo,
@@ -292,13 +292,28 @@ FillConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsWritten
 	)
 {
-	return FillConsoleOutputCharacterW(
-			hConsoleOutput,
-			(WCHAR) cCharacter,
-			nLength,
-			dwWriteCoord,
-			lpNumberOfCharsWritten
-			);
+    DWORD dwBytesReturned;
+    OUTPUT_CHARACTER Buffer;
+
+    Buffer.cCharacter = cCharacter;
+    Buffer.nLength    = nLength;
+    Buffer.dwCoord    = dwWriteCoord;
+
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER,
+                         &Buffer,
+                         sizeof(OUTPUT_CHARACTER),
+                         &Buffer,
+                         sizeof(OUTPUT_CHARACTER),
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfCharsWritten = Buffer.dwTransfered;
+        return TRUE;
+    }
+
+    *lpNumberOfCharsWritten = 0;
+    return FALSE;
 }
 
 
@@ -369,8 +384,28 @@ ReadConsoleInputA(
 	LPDWORD			lpNumberOfEventsRead
 	)
 {
-/* TO DO */
-	return FALSE;
+   BOOL  stat = TRUE;
+   DWORD Result;
+   int i;
+   
+   for (i=0; (stat && i < nLength);)     
+     {
+	stat = ReadFile(hConsoleInput,
+                        &lpBuffer[i].Event.KeyEvent,
+                        sizeof(KEY_EVENT_RECORD),
+			&Result,
+			NULL);
+        if (stat)
+	  {
+             lpBuffer[i].EventType = KEY_EVENT;
+	     i++;
+	  }
+     }
+   if (lpNumberOfEventsRead != NULL)
+     {
+        *lpNumberOfEventsRead = i;
+     }
+   return(stat);
 }
 
 
@@ -517,8 +552,26 @@ ReadConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsRead
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+    OUTPUT_CHARACTER Buffer;
+
+    Buffer.dwCoord    = dwReadCoord;
+
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_READ_OUTPUT_CHARACTER,
+                         &Buffer,
+                         sizeof(OUTPUT_CHARACTER),
+                         lpCharacter,
+                         nLength,
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfCharsRead = Buffer.dwTransfered;
+        return TRUE;
+    }
+
+    *lpNumberOfCharsRead = 0;
+    return FALSE;
 }
 
 
@@ -555,8 +608,27 @@ ReadConsoleOutputAttribute(
 	LPDWORD		lpNumberOfAttrsRead
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+    OUTPUT_ATTRIBUTE Buffer;
+
+    Buffer.dwCoord = dwReadCoord;
+
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE,
+                         &Buffer,
+                         sizeof(OUTPUT_ATTRIBUTE),
+                         (PVOID)lpAttribute,
+                         nLength,
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfAttrsRead = Buffer.dwTransfered;
+        return TRUE;
+    }
+
+    *lpNumberOfAttrsRead = 0;
+
+    return FALSE;
 }
 
 
@@ -574,8 +646,26 @@ WriteConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsWritten
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+    OUTPUT_CHARACTER Buffer;
+
+    Buffer.dwCoord    = dwWriteCoord;
+
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+                         &Buffer,
+                         sizeof(OUTPUT_CHARACTER),
+                         (LPSTR)lpCharacter,
+                         nLength,
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfCharsWritten = Buffer.dwTransfered;
+        return TRUE;
+    }
+
+    *lpNumberOfCharsWritten = 0;
+    return FALSE;
 }
 
 
@@ -614,25 +704,26 @@ WriteConsoleOutputAttribute(
 	)
 {
     DWORD dwBytesReturned;
-    WRITE_OUTPUT_ATTRIBUTE Buffer;
+    OUTPUT_ATTRIBUTE Buffer;
 
-    Buffer.lpAttribute  = lpAttribute;
-    Buffer.nLength      = nLength;
-    Buffer.dwWriteCoord = dwWriteCoord;
+    Buffer.dwCoord = dwWriteCoord;
 
-    if (!DeviceIoControl (hConsoleOutput,
-                          IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-                          &Buffer,
-                          sizeof(WRITE_OUTPUT_ATTRIBUTE),
-                          lpNumberOfAttrsWritten,
-                          sizeof(DWORD),
-//                          NULL,
-//                          0,
-                          &dwBytesReturned,
-                          NULL))
-        return FALSE;
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
+                         &Buffer,
+                         sizeof(OUTPUT_ATTRIBUTE),
+                         (PVOID)lpAttribute,
+                         nLength,
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfAttrsWritten = Buffer.dwTransfered;
+        return TRUE;
+    }
 
-    return TRUE;
+    *lpNumberOfAttrsWritten = 0;
+
+    return FALSE;
 }
 
 
@@ -651,25 +742,28 @@ FillConsoleOutputAttribute(
 	)
 {
     DWORD dwBytesReturned;
-    FILL_OUTPUT_ATTRIBUTE Buffer;
+    OUTPUT_ATTRIBUTE Buffer;
 
-    Buffer.wAttribute   = wAttribute;
-    Buffer.nLength      = nLength;
-    Buffer.dwWriteCoord = dwWriteCoord;
+    Buffer.wAttribute = wAttribute;
+    Buffer.nLength    = nLength;
+    Buffer.dwCoord    = dwWriteCoord;
 
-    if (!DeviceIoControl (hConsoleOutput,
-                          IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
-                          &Buffer,
-                          sizeof(FILL_OUTPUT_ATTRIBUTE),
-//                          lpNumberOfAttrsWritten,
-//                          sizeof(DWORD),
-                          NULL,
-                          0,
-                          &dwBytesReturned,
-                          NULL))
-        return FALSE;
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
+                         &Buffer,
+                         sizeof(OUTPUT_ATTRIBUTE),
+                         &Buffer,
+                         sizeof(OUTPUT_ATTRIBUTE),
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpNumberOfAttrsWritten = Buffer.dwTransfered;
+        return TRUE;
+    }
 
-    return TRUE;
+    *lpNumberOfAttrsWritten = 0;
+
+    return FALSE;
 }
 
 
@@ -684,8 +778,25 @@ GetConsoleMode(
 	LPDWORD		lpMode
 	)
 {
-/* TO DO */
-	return FALSE;
+    CONSOLE_MODE Buffer;
+    DWORD   dwBytesReturned;
+	
+    if (DeviceIoControl (hConsoleHandle,
+                         IOCTL_CONSOLE_GET_MODE,
+                         NULL,
+                         0,
+                         &Buffer,
+                         sizeof(CONSOLE_MODE),
+                         &dwBytesReturned,
+                         NULL))
+    {
+        *lpMode = Buffer.dwMode;
+        SetLastError (ERROR_SUCCESS);
+        return TRUE;
+    }
+
+    SetLastError(0); /* FIXME: What error code? */
+    return FALSE;
 }
 
 
@@ -735,8 +846,19 @@ GetConsoleCursorInfo(
 	PCONSOLE_CURSOR_INFO	lpConsoleCursorInfo
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD   dwBytesReturned;
+	
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_GET_CURSOR_INFO,
+                         NULL,
+                         0,
+                         lpConsoleCursorInfo,
+                         sizeof(CONSOLE_CURSOR_INFO),
+                         &dwBytesReturned,
+                         NULL))
+        return TRUE;
+
+    return FALSE;
 }
 
 
@@ -766,8 +888,26 @@ SetConsoleMode(
 	DWORD		dwMode
 	)
 {
-/* TO DO */
-	return FALSE;
+    CONSOLE_MODE Buffer;
+    DWORD   dwBytesReturned;
+
+    Buffer.dwMode = dwMode;
+	
+    if (DeviceIoControl (hConsoleHandle,
+                         IOCTL_CONSOLE_SET_MODE,
+                         &Buffer,
+                         sizeof(CONSOLE_MODE),
+                         NULL,
+                         0,
+                         &dwBytesReturned,
+                         NULL))
+    {
+        SetLastError (ERROR_SUCCESS);
+        return TRUE;
+    }
+
+    SetLastError(0); /* FIXME: What error code? */
+    return FALSE;
 }
 
 
@@ -827,8 +967,19 @@ SetConsoleCursorInfo(
 	CONST CONSOLE_CURSOR_INFO	*lpConsoleCursorInfo
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD   dwBytesReturned;
+	
+    if (DeviceIoControl (hConsoleOutput,
+                         IOCTL_CONSOLE_SET_CURSOR_INFO,
+                         (PCONSOLE_CURSOR_INFO)lpConsoleCursorInfo,
+                         sizeof(CONSOLE_CURSOR_INFO),
+                         NULL,
+                         0,
+                         &dwBytesReturned,
+                         NULL))
+        return TRUE;
+
+    return FALSE;
 }
 
 
