@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.60 2004/02/19 21:12:10 weiden Exp $
+ * $Id: gdiobj.c,v 1.61 2004/02/28 21:16:55 weiden Exp $
  *
  */
 
@@ -42,6 +42,10 @@
 #include <include/tags.h>
 #define NDEBUG
 #include <win32k/debug1.h>
+
+
+/* enable/disable GDI object caching */
+#define GDI_CACHE_OBJECTS 0
 
 /*! Size of the GDI handle table
  * http://www.windevnet.com/documents/s=7290/wdj9902b/9902b.htm
@@ -85,8 +89,65 @@ typedef struct _GDI_HANDLE_TABLE
 {
   WORD wTableSize;
   WORD AllocationHint;
+  #if GDI_CACHE_OBJECTS
+  ULONG ObjHdrSize;
+  PGDIOBJHDR *CachedObjects;
+  #endif
   PGDIOBJHDR Handles[1];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
+
+#if GDI_CACHE_OBJECTS
+
+#define N_OBJ_TYPES 16
+
+typedef struct
+{
+  ULONG Type;
+  ULONG Size;
+} GDI_OBJ_SIZE;
+
+typedef struct _GDI_DONTCARE
+{
+  PVOID Data;
+} GDI_DONTCARE, *PGDI_DONTCARE;
+
+const
+GDI_OBJ_SIZE ObjSizes[N_OBJ_TYPES] =
+{
+  {GDI_OBJECT_TYPE_DC,          sizeof(DC)},
+  {GDI_OBJECT_TYPE_DCE,         sizeof(DCE)},
+  {GDI_OBJECT_TYPE_PALETTE,     sizeof(PALGDI)},
+  {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ)},
+  {GDI_OBJECT_TYPE_BRUSH,       sizeof(BRUSHOBJ)},
+  {GDI_OBJECT_TYPE_PEN,         sizeof(PENOBJ)},
+  {GDI_OBJECT_TYPE_REGION,      sizeof(ROSRGNDATA)},
+  {GDI_OBJECT_TYPE_BITMAP,      sizeof(BITMAPOBJ)},
+/*
+  {GDI_OBJECT_TYPE_DIRECTDRAW,  sizeof(DD_DIRECTDRAW)},
+  {GDI_OBJECT_TYPE_DD_SURFACE,  sizeof(DD_SURFACE)},
+*/
+  {GDI_OBJECT_TYPE_DONTCARE,    sizeof(GDI_DONTCARE)},
+  {GDI_OBJECT_TYPE_EXTPEN,      0},
+  {GDI_OBJECT_TYPE_METADC,      0},
+  {GDI_OBJECT_TYPE_METAFILE,    0},
+  {GDI_OBJECT_TYPE_ENHMETAFILE, 0},
+  {GDI_OBJECT_TYPE_ENHMETADC,   0},
+  {GDI_OBJECT_TYPE_MEMDC,       0},
+  {GDI_OBJECT_TYPE_EMF,         0}
+};
+
+ULONG FASTCALL
+GDI_MaxGdiObjHeaderSize(VOID)
+{
+  ULONG i, Size;
+  for(i = 0, Size = 0; i < N_OBJ_TYPES; i++)
+  {
+    Size = max(Size, ObjSizes[i].Size);
+  }
+  return Size;
+}
+
+#endif
 
 /*  GDI stock objects */
 
@@ -166,17 +227,24 @@ static PGDI_HANDLE_TABLE FASTCALL
 GDIOBJ_iAllocHandleTable (WORD Size)
 {
   PGDI_HANDLE_TABLE  handleTable;
+  ULONG MemSize;
+  
+#if GDI_CACHE_OBJECTS
+  MemSize = sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * (Size << 1);
+#else
+  MemSize = sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size;
+#endif
 
   /* prevent APC delivery for the *FastMutexUnsafe calls */
   const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
-  handleTable = ExAllocatePoolWithTag(PagedPool,
-	                              sizeof(GDI_HANDLE_TABLE) +
-        	                      sizeof(PGDIOBJ) * Size, TAG_GDIHNDTBLE);
+  handleTable = ExAllocatePoolWithTag(PagedPool, MemSize, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
-  memset (handleTable,
-          0,
-          sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size);
+  memset (handleTable, 0, MemSize);
+#if GDI_CACHE_OBJECTS
+  handleTable->CachedObjects = &handleTable->Handles[Size];
+  handleTable->ObjHdrSize = sizeof(GDIOBJHDR) + GDI_MaxGdiObjHeaderSize();
+#endif
   handleTable->wTableSize = Size;
   handleTable->AllocationHint = 1;
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
@@ -252,23 +320,63 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   PW32PROCESS W32Process;
   PGDIOBJHDR  newObject;
   WORD Index;
+#if GDI_CACHE_OBJECTS
+  PGDIOBJHDR *CachedObject;
+#endif
   
   ExAcquireFastMutex(&HandleTableMutex);
   Index = GDIOBJ_iGetNextOpenHandleIndex ();
   if (0 == Index)
     {
+      ExReleaseFastMutex(&HandleTableMutex);
       DPRINT1("Out of GDI handles\n");
       return NULL;
     }
 
+#if GDI_CACHE_OBJECTS
+  CachedObject = (PGDIOBJHDR*)(HandleTable->CachedObjects + Index);
+  if(!(newObject = *CachedObject))
+  {
+    /* allocate new gdi object */
+    newObject = ExAllocatePoolWithTag(PagedPool, HandleTable->ObjHdrSize, TAG_GDIOBJ);
+    if(!newObject)
+    {
+      ExReleaseFastMutex(&HandleTableMutex);
+      DPRINT1("GDIOBJ_AllocObj: failed\n");
+      return NULL;
+    }
+    RtlZeroMemory(newObject, HandleTable->ObjHdrSize);
+    *CachedObject = newObject;
+  }
+  /* Zero the memory when destroying the object */
+  if(ObjectType == GDI_OBJECT_TYPE_DONTCARE)
+  {
+    PVOID *Data;
+    PGDI_DONTCARE dc;
+    
+    Data = ExAllocatePoolWithTag(PagedPool, sizeof(PVOID) + Size, TAG_GDIOBJ);
+    if(!Data)
+    {
+      ExReleaseFastMutex(&HandleTableMutex);
+      DPRINT1("GDIOBJ_AllocObj failed: %d bytes for GDI_OBJECT_TYPE_DONTCARE\n", Size + sizeof(PVOID));
+      return NULL;
+    }
+    dc = (PGDI_DONTCARE)((PCHAR)newObject + sizeof(GDIOBJHDR));
+    RtlZeroMemory((PVOID)(Data + 1), Size);
+    ((PGDI_DONTCARE)((PCHAR)newObject + sizeof(GDIOBJHDR)))->Data = Data;
+    *Data = newObject;
+  }
+#else
   DPRINT("GDIOBJ_AllocObj: handle: %d, size: %d, type: 0x%08x\n", Index, Size, ObjectType);
   newObject = ExAllocatePoolWithTag(PagedPool, Size + sizeof (GDIOBJHDR), TAG_GDIOBJ);
   if (newObject == NULL)
   {
+    ExReleaseFastMutex(&HandleTableMutex);
     DPRINT1("GDIOBJ_AllocObj: failed\n");
     return NULL;
   }
   RtlZeroMemory (newObject, Size + sizeof(GDIOBJHDR));
+#endif
 
   newObject->wTableIndex = Index;
 
@@ -280,7 +388,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->lockline = 0;
   ExInitializeFastMutex(&newObject->Lock);
   HandleTable->Handles[Index] = newObject;
-  ExReleaseFastMutexUnsafe (&HandleTableMutex);
+  ExReleaseFastMutex(&HandleTableMutex);
   
   W32Process = PsGetCurrentProcess()->Win32Process;
   if(W32Process)
@@ -347,8 +455,19 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
       Obj = (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
       bRet = (*(objectHeader->CleanupProc))(Obj);
     }
-
+#if GDI_CACHE_OBJECTS
+  if(GDI_MAGIC_TO_TYPE(objectHeader->Magic) == GDI_OBJECT_TYPE_DONTCARE)
+  {
+    PGDI_DONTCARE dc = (PGDI_DONTCARE)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
+    if(dc->Data)
+    {
+      ExFreePool(dc->Data);
+    }
+    RtlZeroMemory(objectHeader, HandleTable->ObjHdrSize);
+  }
+#else
   ExFreePool(objectHeader);
+#endif
   HandleTable->Handles[GDI_HANDLE_GET_INDEX(hObj)] = NULL;
   
   W32Process = PsGetCurrentProcess()->Win32Process;
@@ -648,7 +767,15 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       ObjHdr->lockline = line;
     }
 
+#if GDI_CACHE_OBJECTS
+  if(GDI_MAGIC_TO_TYPE(ObjHdr->Magic) != GDI_OBJECT_TYPE_DONTCARE)
+  {
+    return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
+  }
+  return (PGDIOBJ)((PVOID)(((PGDI_DONTCARE)((PCHAR)ObjHdr + sizeof(GDIOBJHDR)))->Data) + 1);
+#else
   return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
+#endif
 }
 #endif//GDIOBJ_LockObj
 
