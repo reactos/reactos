@@ -25,6 +25,7 @@ typedef struct _SYSTEM_CURSORINFO
   LONG x, y;
   BOOL SafetySwitch;
   UINT SafetyRemoveCount;
+  RECTL PointerRect;
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   PVOID CurIconHandleTable;
