@@ -10,14 +10,20 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
    EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
+typedef struct _KSYSTEM_TIME
+{
+   ULONG LowPart;
+   LONG High1Part;
+   LONG High2Part;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 typedef struct _KUSER_SHARED_DATA
 {
    volatile ULONG TickCountLow;
    ULONG TickCountMultiplier;
-   volatile ULARGE_INTEGER InterruptTime;
-   volatile ULARGE_INTEGER SystemTime;
-   volatile ULARGE_INTEGER TimeZoneBias;
+   volatile KSYSTEM_TIME InterruptTime;
+   volatile KSYSTEM_TIME SystemTime;
+   volatile KSYSTEM_TIME TimeZoneBias;
    USHORT ImageNumberLow;
    USHORT ImageNumberHigh;
    WCHAR NtSystemRoot[260];

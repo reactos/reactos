@@ -220,14 +220,6 @@ struct _KINTERRUPT;
 typedef BOOLEAN STDCALL_FUNC
 (*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt,
 		     PVOID ServiceContext);
-
-typedef struct _KSYSTEM_TIME
-{
-   ULONG LowPart;
-   LONG High1Part;
-   LONG High2Part;
-} KSYSTEM_TIME, *PKSYSTEM_TIME;
-
 typedef struct _EPROCESS EPROCESS, *PEPROCESS;
 
 typedef HANDLE HSEMAPHORE;
