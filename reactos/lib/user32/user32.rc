@@ -1,6 +1,7 @@
 #include <defines.h>
 #include <reactos/resource.h>
 #include <messages.h>
+#include <resource.h>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

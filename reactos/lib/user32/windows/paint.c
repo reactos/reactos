@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.17 2003/08/18 09:59:29 silverblade Exp $
+/* $Id: paint.c,v 1.18 2003/08/22 07:51:32 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -29,11 +29,54 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include <resource.h>
 #include <user32.h>
 #define NDEBUG
 #include <debug.h>
 
+static HBRUSH FrameBrushes[13];
+static HBITMAP hHatch;
+
 /* FUNCTIONS *****************************************************************/
+
+static VOID 
+CreateFrameBrushes()
+{
+  FrameBrushes[0] = CreateSolidBrush(RGB(0,0,0));
+  FrameBrushes[1] = CreateSolidBrush(RGB(0,0,128));
+  FrameBrushes[2] = CreateSolidBrush(RGB(10,36,106));
+  FrameBrushes[3] = CreateSolidBrush(RGB(128,128,128));
+  FrameBrushes[4] = CreateSolidBrush(RGB(181,181,181));
+  FrameBrushes[5] = CreateSolidBrush(RGB(212,208,200));
+  FrameBrushes[6] = CreateSolidBrush(RGB(236,233,216));
+  FrameBrushes[7] = CreateSolidBrush(RGB(255,255,255));
+  FrameBrushes[8] = CreateSolidBrush(RGB(49,106,197));
+  FrameBrushes[9] = CreateSolidBrush(RGB(58,110,165));
+  FrameBrushes[10] = CreateSolidBrush(RGB(64,64,64));
+  FrameBrushes[11] = CreateSolidBrush(RGB(255,255,225));
+  hHatch = LoadBitmapW(NULL,MAKEINTRESOURCEW(DF_HATCH));
+  FrameBrushes[12] = CreatePatternBrush(hHatch);
+}
+
+VOID 
+DeleteFrameBrushes(VOID)
+{
+  unsigned Brush;
+
+  for (Brush = 0; Brush < sizeof(FrameBrushes) / sizeof(HBRUSH); Brush++)
+    {
+      if (NULL != FrameBrushes[Brush])
+	{
+	  DeleteObject(FrameBrushes[Brush]);
+	  FrameBrushes[Brush] = NULL;
+	}
+    }
+  if (NULL != hHatch)
+    {
+      DeleteObject(hHatch);
+      hHatch = NULL;
+    }
+}
 
 /*
  * @implemented
@@ -252,6 +295,10 @@ DrawFrame(
 	DWORD brush;
 	HBRUSH hbrFrame;
 	PATRECT p[4];
+	if (NULL == FrameBrushes[0])
+	{
+		CreateFrameBrushes();
+	}
 	if (type & 4)
 	{
 		rop = PATINVERT;

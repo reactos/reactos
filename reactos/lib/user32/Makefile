@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2003/08/15 10:51:51 rcampbell Exp $
+# $Id: Makefile,v 1.26 2003/08/22 07:51:32 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,6 +21,8 @@ TARGET_CFLAGS = \
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
+
+TARGET_RCFLAGS = --include-dir ./include
 
 CONTROLS_OBJECTS = \
 	controls/combo.o \

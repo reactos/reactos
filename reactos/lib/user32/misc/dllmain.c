@@ -20,8 +20,6 @@ static ULONG User32TlsIndex;
 VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 HWINSTA ProcessWindowStation;
-HBRUSH FrameBrushes[13];
-HBITMAP hHatch;
 
 PUSER32_THREAD_DATA
 User32GetThreadData()
@@ -47,42 +45,6 @@ CleanupThread(VOID)
   ThreadData = (PUSER32_THREAD_DATA)TlsGetValue(User32TlsIndex);
   HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, ThreadData);
   TlsSetValue(User32TlsIndex, 0);
-}
-VOID 
-CreateFrameBrushes(HINSTANCE hInstance)
-{
-	FrameBrushes[0] = CreateSolidBrush(RGB(0,0,0));
-	FrameBrushes[1] = CreateSolidBrush(RGB(0,0,128));
-	FrameBrushes[2] = CreateSolidBrush(RGB(10,36,106));
-	FrameBrushes[3] = CreateSolidBrush(RGB(128,128,128));
-	FrameBrushes[4] = CreateSolidBrush(RGB(181,181,181));
-	FrameBrushes[5] = CreateSolidBrush(RGB(212,208,200));
-	FrameBrushes[6] = CreateSolidBrush(RGB(236,233,216));
-	FrameBrushes[7] = CreateSolidBrush(RGB(255,255,255));
-	FrameBrushes[8] = CreateSolidBrush(RGB(49,106,197));
-	FrameBrushes[9] = CreateSolidBrush(RGB(58,110,165));
-	FrameBrushes[10] = CreateSolidBrush(RGB(64,64,64));
-	FrameBrushes[11] = CreateSolidBrush(RGB(255,255,225));
-	hHatch = LoadBitmapW(hInstance,MAKEINTRESOURCEW(DF_HATCH));
-	FrameBrushes[12] = CreatePatternBrush(hHatch);
-}
-VOID 
-DeleteFrameBrushes(VOID)
-{
-	DeleteObject(FrameBrushes[0]);
-	DeleteObject(FrameBrushes[1]);
-	DeleteObject(FrameBrushes[2]);
-	DeleteObject(FrameBrushes[3]);
-	DeleteObject(FrameBrushes[4]);
-	DeleteObject(FrameBrushes[5]);
-	DeleteObject(FrameBrushes[6]);
-	DeleteObject(FrameBrushes[7]);
-	DeleteObject(FrameBrushes[8]);
-	DeleteObject(FrameBrushes[9]);
-	DeleteObject(FrameBrushes[10]);
-	DeleteObject(FrameBrushes[11]);
-	DeleteObject(FrameBrushes[12]);
-	DeleteObject(hHatch);
 }
 
 DWORD
@@ -156,7 +118,6 @@ DllMain(
       hProcessHeap = RtlGetProcessHeap();
       Init();
       InitThread();
-	  CreateFrameBrushes(hinstDll);
       break;
     case DLL_THREAD_ATTACH:
       InitThread();
@@ -165,7 +126,7 @@ DllMain(
       CleanupThread();
       break;
     case DLL_PROCESS_DETACH:
-	  DeleteFrameBrushes();
+      DeleteFrameBrushes();
       CleanupThread();
       Cleanup();
       break;
