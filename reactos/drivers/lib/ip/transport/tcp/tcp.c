@@ -552,7 +552,7 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveFlags,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    PCHAR DataBuffer;
+    OSK_PCHAR DataBuffer;
     UINT DataLen, Received = 0;
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
@@ -623,7 +623,8 @@ NTSTATUS TCPSendData
 			   Connection->SocketContext));
 
     Status = OskitTCPSend( Connection->SocketContext, 
-			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
+			   (OSK_PCHAR)BufferData, PacketSize,
+			   (PUINT)DataUsed, 0 );
 
     TcpipRecursiveMutexLeave( &TCPLock );
 

@@ -105,13 +105,13 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 void *TCPMalloc( void *ClientData,
 		 OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
     void *v = PoolAllocateBuffer( Bytes );
-    if( v ) TrackWithTag( FOURCC('f','b','s','d'), v, File, Line );
+    if( v ) TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
     return v;
 }
 
 void TCPFree( void *ClientData,
 	      void *data, OSK_PCHAR File, OSK_UINT Line ) {
-    UntrackFL( File, Line, data );
+    UntrackFL( (PCHAR)File, Line, data );
     PoolFreeBuffer( data );
 }
 
