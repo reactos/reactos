@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.23 2003/04/26 00:25:01 hyperion Exp $
+; $Id: kernel32.edf,v 1.24 2003/05/29 00:36:41 hyperion Exp $
 ;
 ; kernel32.edf
 ;
@@ -175,6 +175,10 @@ FindResourceA=FindResourceA@12
 FindResourceExA=FindResourceExA@16
 FindResourceExW=FindResourceExW@16
 FindResourceW=FindResourceW@12
+FlsAlloc=FlsAlloc@4
+FlsFree=FlsFree@4
+FlsGetValue=FlsGetValue@4
+FlsSetValue=FlsSetValue@8
 FlushConsoleInputBuffer=FlushConsoleInputBuffer@4
 FlushFileBuffers=FlushFileBuffers@4
 FlushInstructionCache=FlushInstructionCache@12
@@ -243,7 +247,6 @@ GetCurrencyFormatW=GetCurrencyFormatW@24
 GetCurrentConsoleFont=GetCurrentConsoleFont@12
 GetCurrentDirectoryA=GetCurrentDirectoryA@8
 GetCurrentDirectoryW=GetCurrentDirectoryW@8
-GetCurrentFiber=GetCurrentFiber@0
 GetCurrentProcess=GetCurrentProcess@0
 GetCurrentProcessId=GetCurrentProcessId@0
 GetCurrentThread=GetCurrentThread@0
@@ -265,7 +268,6 @@ GetEnvironmentVariableA=GetEnvironmentVariableA@12
 GetEnvironmentVariableW=GetEnvironmentVariableW@12
 GetExitCodeProcess=GetExitCodeProcess@8
 GetExitCodeThread=GetExitCodeThread@8
-GetFiberData=GetFiberData@0
 GetFileAttributesA=GetFileAttributesA@4
 GetFileAttributesW=GetFileAttributesW@4
 GetFileAttributesExA=GetFileAttributesExA@12

@@ -1,4 +1,4 @@
-/* $Id: context.c,v 1.1 2003/04/29 02:17:01 hyperion Exp $
+/* $Id: context.c,v 1.2 2003/05/29 00:36:41 hyperion Exp $
 */
 /*
 */
@@ -16,8 +16,8 @@
 NTSTATUS NTAPI RtlRosInitializeContextEx
 (
  IN HANDLE ProcessHandle,
- IN PCONTEXT Context,
- IN PTHREAD_START_ROUTINE StartAddress,
+ OUT PCONTEXT Context,
+ IN PVOID StartAddress,
  IN PUSER_STACK UserStack,
  IN ULONG ParameterCount,
  IN ULONG_PTR * Parameters

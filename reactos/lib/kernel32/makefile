@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.65 2003/05/25 17:17:03 ekohl Exp $
+# $Id: makefile,v 1.66 2003/05/29 00:36:41 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -44,7 +44,11 @@ NLS_OBJECTS =
 THREAD_OBJECTS = \
 	thread/fiber.o	\
 	thread/thread.o	\
-	thread/tls.o
+	thread/tls.o \
+	thread/fls.o
+
+THREAD_I386_OBJECTS = \
+	thread/i386/fiber.o
 
 PROCESS_OBJECTS = \
 	process/proc.o \
@@ -58,9 +62,12 @@ EXCEPT_OBJECTS = except/except.o
 
 DEBUG_OBJECTS = debug/debugger.o debug/output.o debug/break.o
 
+ARCH_OBJECTS = $(THREAD_I386_OBJECTS)
+
 TARGET_OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           	$(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          	$(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(DEBUG_OBJECTS)
+          	$(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(DEBUG_OBJECTS) \
+		$(ARCH_OBJECTS)
 
 
 DEP_OBJECTS = $(TARGET_OBJECTS)

@@ -1515,6 +1515,7 @@ GetThreadTimes(
 	       );
 
 
+__declspec(noreturn)
 VOID
 STDCALL
 ExitThread(
@@ -2795,6 +2796,16 @@ STDCALL
 TlsFree(
 	DWORD dwTlsIndex
 	);
+
+typedef VOID WINAPI (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData);
+
+DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback);
+
+BOOL WINAPI FlsFree(DWORD dwFlsIndex);
+
+PVOID WINAPI FlsGetValue(DWORD dwFlsIndex);
+
+BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData);
 
 DWORD
 STDCALL
@@ -7569,45 +7580,38 @@ SHLoadInProc (REFCLSID);
 
 /* Win32 Fibers */
 
-typedef
-VOID (WINAPI *PFIBER_START_ROUTINE) (
-	IN LPVOID lpFiberArgument
-	);
+typedef VOID (WINAPI * PFIBER_START_ROUTINE) (IN LPVOID lpFiberArgument);
 typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
 
-LPVOID
-STDCALL
-ConvertThreadToFiber (
-	LPVOID lpArgument
-	);
-LPVOID
-STDCALL
-CreateFiber (
-	DWORD			dwStackSize,
-	LPFIBER_START_ROUTINE	lpStartAddress,
-	LPVOID			lpArgument
-	);
-VOID
-STDCALL
-DeleteFiber(
-	LPVOID	lpFiber
-	);
-PVOID
-STDCALL
-GetCurrentFiber (
-	VOID
-	);
-PVOID
-STDCALL
-GetFiberData (
-	VOID
-	);
-VOID
-STDCALL
-SwitchToFiber (
-	LPVOID	lpFiber
-	);
+#define FIBER_FLAG_FLOAT_SWITCH (1)
 
+BOOL WINAPI ConvertFiberToThread(void);
+
+LPVOID WINAPI ConvertThreadToFiber(LPVOID lpParameter);
+
+LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags);
+
+LPVOID WINAPI CreateFiber
+(
+ SIZE_T dwStackSize,
+ LPFIBER_START_ROUTINE lpStartAddress,
+ LPVOID lpParameter
+);
+
+LPVOID WINAPI CreateFiberEx
+(
+ SIZE_T dwStackCommitSize,
+ SIZE_T dwStackReserveSize,
+ DWORD dwFlags,
+ LPFIBER_START_ROUTINE lpStartAddress,
+ LPVOID lpParameter
+);
+
+void WINAPI DeleteFiber(LPVOID lpFiber);
+
+void WINAPI SwitchToFiber(LPVOID lpFiber);
+
+#define GetFiberData() *(LPVOID *)(((PNT_TIB)NtCurrentTeb())->Fib.FiberData)
 
 WINBOOL STDCALL
 RegisterServicesProcess(DWORD ServicesProcessId);

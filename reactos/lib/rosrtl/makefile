@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/04/29 02:17:01 hyperion Exp $
+# $Id: makefile,v 1.2 2003/05/29 00:36:41 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,8 @@ TARGET_NAME = rosrtl
 
 THREAD_OBJECTS = \
  thread/context.o \
- thread/create.o
+ thread/create.o \
+ thread/stack.o
 
 TARGET_OBJECTS = $(THREAD_OBJECTS)
  

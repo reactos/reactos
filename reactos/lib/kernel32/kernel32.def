@@ -171,6 +171,10 @@ FindResourceA@12
 FindResourceExA@16
 FindResourceExW@16
 FindResourceW@12
+FlsAlloc@4
+FlsFree@4
+FlsGetValue@4
+FlsSetValue@8
 FlushConsoleInputBuffer@4
 FlushFileBuffers@4
 FlushInstructionCache@12
@@ -239,7 +243,6 @@ GetCurrencyFormatW@24
 GetCurrentConsoleFont@12
 GetCurrentDirectoryA@8
 GetCurrentDirectoryW@8
-GetCurrentFiber@0
 GetCurrentProcess@0
 GetCurrentProcessId@0
 GetCurrentThread@0
@@ -260,7 +263,6 @@ GetEnvironmentVariableA@12
 GetEnvironmentVariableW@12
 GetExitCodeProcess@8
 GetExitCodeThread@8
-GetFiberData@0
 GetFileAttributesA@4
 GetFileAttributesW@4
 GetFileAttributesExA

@@ -179,7 +179,7 @@ typedef struct _TEB
    ULONG LastErrorValue;               // 34h
    ULONG CountOfOwnedCriticalSections; // 38h
    PVOID CsrClientThread;              // 3Ch
-   struct _W32THREAD* Win32ThreadInfo;         // 40h
+   struct _W32THREAD* Win32ThreadInfo; // 40h
    ULONG Win32ClientInfo[0x1F];        // 44h
    PVOID WOW32Reserved;                // C0h
    ULONG CurrentLocale;                // C4h
@@ -220,9 +220,11 @@ typedef struct _TEB
    PVOID Instrumentation[0x10];        // F2Ch
    PVOID WinSockData;                  // F6Ch
    ULONG GdiBatchCount;                // F70h
-   ULONG Spare2;                       // F74h // NOTE: RtlExitUserThread writes something here
-   ULONG Spare3;                       // F78h
-   ULONG Spare4;                       // F7Ch
+   USHORT Spare2;                      // F74h
+   BOOLEAN IsFiber;                    // F76h
+   UCHAR Spare3;                       // F77h
+   ULONG Spare4;                       // F78h
+   ULONG Spare5;                       // F7Ch
    PVOID ReservedForOle;               // F80h
    ULONG WaitingOnLoaderLock;          // F84h
    PVOID WineDebugInfo;                // Needed for WINE DLL's

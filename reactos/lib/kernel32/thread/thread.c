@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.39 2003/04/30 22:00:41 gvg Exp $
+/* $Id: thread.c,v 1.40 2003/05/29 00:36:41 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,9 +35,11 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 }
 
 
-static VOID STDCALL
-ThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
-	      LPVOID lpParameter)
+__declspec(noreturn) void STDCALL ThreadStartup
+(
+ LPTHREAD_START_ROUTINE lpStartAddress,
+ LPVOID lpParameter
+)
 {
   UINT uExitCode;
 

@@ -1136,6 +1136,9 @@ extern "C" {
 
 /* FindNextPrinterNotification */
 
+/* FlsAlloc */
+#define FLS_OUT_OF_INDEXES (0xFFFFFFFF)
+
 /* FMExtensionProc */
 
 /* FoldString */

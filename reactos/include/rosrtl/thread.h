@@ -1,4 +1,4 @@
-/* $Id: thread.h,v 1.1 2003/04/29 02:17:00 hyperion Exp $
+/* $Id: thread.h,v 1.2 2003/05/29 00:36:41 hyperion Exp $
  */
 
 #ifdef __cplusplus
@@ -14,7 +14,7 @@ NTSTATUS STDCALL RtlRosCreateUserThreadEx
  IN LONG StackZeroBits,
  IN OUT PULONG StackReserve OPTIONAL,
  IN OUT PULONG StackCommit OPTIONAL,
- IN PTHREAD_START_ROUTINE StartAddress,
+ IN PVOID StartAddress,
  OUT PHANDLE ThreadHandle OPTIONAL,
  OUT PCLIENT_ID ClientId OPTIONAL,
  IN ULONG ParameterCount,
@@ -29,7 +29,7 @@ NTSTATUS CDECL RtlRosCreateUserThreadVa
  IN LONG StackZeroBits,
  IN OUT PULONG StackReserve OPTIONAL,
  IN OUT PULONG StackCommit OPTIONAL,
- IN PTHREAD_START_ROUTINE StartAddress,
+ IN PVOID StartAddress,
  OUT PHANDLE ThreadHandle OPTIONAL,
  OUT PCLIENT_ID ClientId OPTIONAL,
  IN ULONG ParameterCount,
@@ -39,11 +39,26 @@ NTSTATUS CDECL RtlRosCreateUserThreadVa
 NTSTATUS NTAPI RtlRosInitializeContextEx
 (
  IN HANDLE ProcessHandle,
- IN PCONTEXT Context,
- IN PTHREAD_START_ROUTINE StartAddress,
+ OUT PCONTEXT Context,
+ IN PVOID StartAddress,
  IN PUSER_STACK UserStack,
  IN ULONG ParameterCount,
  IN ULONG_PTR * Parameters
+);
+
+NTSTATUS NTAPI RtlRosCreateStack
+(
+ IN HANDLE ProcessHandle,
+ OUT PUSER_STACK UserStack,
+ IN LONG StackZeroBits,
+ IN OUT PULONG StackReserve OPTIONAL,
+ IN OUT PULONG StackCommit OPTIONAL
+);
+
+NTSTATUS NTAPI RtlRosDeleteStack
+(
+ IN HANDLE ProcessHandle,
+ IN PUSER_STACK UserStack
 );
 
 #ifdef __cplusplus
