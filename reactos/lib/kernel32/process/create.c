@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.87 2004/07/07 16:32:02 navaraf Exp $
+/* $Id: create.c,v 1.88 2004/11/07 15:58:41 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -305,7 +305,13 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
          ExitProcess(ExceptionRecord->ExceptionCode);
    }
 
-   return ExceptionDisposition;
+   /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
+   if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
+     return ExceptionContinueExecution;
+   else if (ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH)
+     return ExceptionContinueSearch;
+
+   return -1; /* unknown return from UnhandledExceptionFilter */
 }
 
 
