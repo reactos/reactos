@@ -700,7 +700,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 			if (qualifier == L'w') {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
-				if (pus == NULL) {
+				if ((pus == NULL) || (pus->Buffer)) {
 					sw = L"<NULL>";
 					while ((*sw) != 0)
 						putwc(*sw++, f);
@@ -711,7 +711,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 			} else {
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
-				if (pus == NULL) {
+				if ((pus == NULL) || (pus->Buffer)) {
 					sw = L"<NULL>";
 					while ((*sw) != 0)
 						putwc(*sw++, f);

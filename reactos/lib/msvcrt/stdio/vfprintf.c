@@ -698,7 +698,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 			if (qualifier == 'w') {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
-				if (pus == NULL) {
+				if ((pus == NULL) || (pus->Buffer)) {
 					s = "<NULL>";
 					while ((*s) != 0)
 						putc(*s++, f);
@@ -709,7 +709,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 			} else {
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
-				if (pus == NULL) {
+				if ((pus == NULL) || (pus->Buffer)) {
 					s = "<NULL>";
 					while ((*s) != 0)
 						putc(*s++, f);
