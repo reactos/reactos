@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.42 2004/02/19 21:12:10 weiden Exp $
+ * $Id: dib.c,v 1.43 2004/03/15 22:06:55 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -87,9 +87,9 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
 }
 
 // Converts a DIB to a device-dependent bitmap
-INT STDCALL
-NtGdiSetDIBits(
-	HDC  hDC,
+static INT FASTCALL
+IntSetDIBits(
+	PDC   DC,
 	HBITMAP  hBitmap,
 	UINT  StartScan,
 	UINT  ScanLines,
@@ -97,7 +97,6 @@ NtGdiSetDIBits(
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-  DC         *dc;
   BITMAPOBJ  *bitmap;
   HBITMAP     SourceBitmap, DestBitmap;
   INT         result = 0;
@@ -116,12 +115,8 @@ NtGdiSetDIBits(
   INT         scanDirection = 1, DIBWidth;
 
   // Check parameters
-  if (!(dc = DC_LockDc(hDC)))
-     return 0;
-
   if (!(bitmap = BITMAPOBJ_LockBitmap(hBitmap)))
   {
-    DC_UnlockDc(hDC);
     return 0;
   }
 
@@ -132,7 +127,7 @@ NtGdiSetDIBits(
   //  lpRGB = &bmi->bmiColors[0];
 
   // Create a temporary surface for the destination bitmap
-  DestBitmap = BitmapToSurf(bitmap, dc->GDIDevice);
+  DestBitmap = BitmapToSurf(bitmap, DC->GDIDevice);
 
   DestSurf   = (PSURFOBJ) AccessUserObject( (ULONG)DestBitmap );
   DestGDI    = (PSURFGDI) AccessInternalObject( (ULONG)DestBitmap );
@@ -159,19 +154,18 @@ NtGdiSetDIBits(
   SourceSurf = (PSURFOBJ)AccessUserObject((ULONG)SourceBitmap);
 
   // Destination palette obtained from the hDC
-  hDCPalette = PALETTE_LockPalette(dc->DevInfo->hpalDefault);
+  hDCPalette = PALETTE_LockPalette(DC->DevInfo->hpalDefault);
   if (NULL == hDCPalette)
     {
       EngDeleteSurface(SourceBitmap);
       EngDeleteSurface(DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
-      DC_UnlockDc(hDC);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
   DDB_Palette_Type = hDCPalette->Mode;
-  DDB_Palette = dc->DevInfo->hpalDefault;
-  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
+  DDB_Palette = DC->DevInfo->hpalDefault;
+  PALETTE_UnlockPalette(DC->DevInfo->hpalDefault);
 
   // Source palette obtained from the BITMAPINFO
   DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
@@ -180,7 +174,6 @@ NtGdiSetDIBits(
       EngDeleteSurface(SourceBitmap);
       EngDeleteSurface(DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
-      DC_UnlockDc(hDC);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -193,7 +186,6 @@ NtGdiSetDIBits(
       EngDeleteSurface(SourceBitmap);
       EngDeleteSurface(DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
-      DC_UnlockDc(hDC);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -226,9 +218,36 @@ NtGdiSetDIBits(
 //    WinFree((LPSTR)lpRGB);
 
   BITMAPOBJ_UnlockBitmap(hBitmap);
-  DC_UnlockDc(hDC);
 
   return result;
+}
+
+// Converts a DIB to a device-dependent bitmap
+INT STDCALL
+NtGdiSetDIBits(
+	HDC  hDC,
+	HBITMAP  hBitmap,
+	UINT  StartScan,
+	UINT  ScanLines,
+	CONST VOID  *Bits,
+	CONST BITMAPINFO  *bmi,
+	UINT  ColorUse)
+{
+  PDC Dc;
+  INT Ret;
+
+  Dc = DC_LockDc(hDC);
+  if (NULL == Dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
+
+  DC_UnlockDc(hDC);
+
+  return Ret;
 }
 
 INT STDCALL
@@ -873,13 +892,13 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
   return  ret;
 }
 
-// The CreateDIBitmap function creates a device-dependent bitmap (DDB) from a DIB and, optionally, sets the bitmap bits
-// The DDB that is created will be whatever bit depth your reference DC is
-HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
-                               DWORD init, LPCVOID bits, const BITMAPINFO *data,
-                               UINT coloruse)
+static HBITMAP FASTCALL
+IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
+                  DWORD init, LPCVOID bits, const BITMAPINFO *data,
+                  UINT coloruse)
 {
   HBITMAP handle;
+  BOOL fColor;
   DWORD width;
   int height;
   WORD bpp;
@@ -891,22 +910,86 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
   // Check if we should create a monochrome or color bitmap. We create a monochrome bitmap only if it has exactly 2
   // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
 
-  // Now create the bitmap
-  if (init == CBM_INIT)
-    {
-      handle = NtGdiCreateCompatibleBitmap(hdc, width, height);
-      if (!handle)
-        { 
-          return 0;
-        }
-      NtGdiSetDIBits(hdc, handle, 0, height, bits, data, coloruse);
-    }
+  if (bpp != 1) fColor = TRUE;
+  else if ((coloruse != DIB_RGB_COLORS) ||
+           (init != CBM_INIT) || !data) fColor = FALSE;
   else
+  {
+    if (data->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
     {
-      handle = NtGdiCreateBitmap(width, height, 1, bpp, NULL);
+      RGBQUAD *rgb = data->bmiColors;
+      DWORD col = RGB( rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue );
+
+      // Check if the first color of the colormap is black
+      if ((col == RGB(0, 0, 0)))
+      {
+        rgb++;
+        col = RGB( rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue );
+
+        // If the second color is white, create a monochrome bitmap
+        fColor =  (col != RGB(0xff,0xff,0xff));
+      }
+    else fColor = TRUE;
+  }
+  else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+  {
+    RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
+     DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
+
+    if ((col == RGB(0,0,0)))
+    {
+      rgb++;
+      col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue );
+      fColor = (col != RGB(0xff,0xff,0xff));
     }
+    else fColor = TRUE;
+  }
+  else
+  {
+      DPRINT("(%ld): wrong size for data\n", data->bmiHeader.biSize );
+      return 0;
+    }
+  }
+
+  // Now create the bitmap
+  if (fColor)
+  {
+    handle = IntCreateCompatibleBitmap(Dc, width, height);
+  }
+  else
+  {
+    handle = NtGdiCreateBitmap( width, height, 1, 1, NULL);
+  }
+
+  if (NULL != handle && CBM_INIT == init)
+  {
+    IntSetDIBits(Dc, handle, 0, height, bits, data, coloruse);
+  }
 
   return handle;
+}
+
+// The CreateDIBitmap function creates a device-dependent bitmap (DDB) from a DIB and, optionally, sets the bitmap bits
+// The DDB that is created will be whatever bit depth your reference DC is
+HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
+                                    DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
+                                    UINT ColorUse)
+{
+  PDC Dc;
+  HBITMAP Bmp;
+
+  Dc = DC_LockDc(hDc);
+  if (NULL == Dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return NULL;
+    }
+
+  Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
+
+  DC_UnlockDc(hDc);
+
+  return Bmp;
 }
 
 HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
@@ -1036,7 +1119,7 @@ DIB_CreateDIBSection(
   // Create Device Dependent Bitmap and add DIB pointer
   if (dib)
   {
-    res = NtGdiCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
+    res = IntCreateDIBitmap(dc, bi, 0, NULL, bmi, usage);
     if (! res)
       {
 	return NULL;

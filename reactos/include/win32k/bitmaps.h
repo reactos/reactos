@@ -46,6 +46,8 @@ INT     STDCALL  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
 BOOL    FASTCALL Bitmap_InternalDelete( PBITMAPOBJ pBmp );
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
 
+HBITMAP FASTCALL IntCreateCompatibleBitmap(PDC Dc, INT Width, INT Height);
+
 /*  User Entry Points  */
 BOOL
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.61 2004/03/14 00:11:28 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.62 2004/03/15 22:06:55 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -363,41 +363,56 @@ BOOL FASTCALL Bitmap_InternalDelete( PBITMAPOBJ pBmp )
 }
 
 
-HBITMAP STDCALL NtGdiCreateCompatibleBitmap(HDC hDC,
-                                    INT  Width,
-                                    INT  Height)
+HBITMAP FASTCALL
+IntCreateCompatibleBitmap(PDC Dc,
+                          INT Width,
+                          INT Height)
 {
-  HBITMAP  hbmpRet;
-  PDC  dc;
+  HBITMAP Bmp;
 
-  hbmpRet = 0;
-  dc = DC_LockDc(hDC);
+  Bmp = NULL;
+
+  if ((Width >= 0x10000) || (Height >= 0x10000))
+    {
+      DPRINT1("got bad width %d or height %d, please look for reason\n", Width, Height);
+      return NULL;
+    }
+
+  /* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
+  if (0 == Width || 0 == Height)
+    {
+      Bmp = NtGdiCreateBitmap (1, 1, 1, 1, NULL);
+    }
+  else
+    {
+      Bmp = NtGdiCreateBitmap(Width, Height, 1, Dc->w.bitsPerPixel, NULL);
+    }
+
+  return Bmp;
+}
+
+HBITMAP STDCALL
+NtGdiCreateCompatibleBitmap(HDC hDC,
+                            INT Width,
+                            INT Height)
+{
+  HBITMAP Bmp;
+  PDC Dc;
+
+  Dc = DC_LockDc(hDC);
 
   DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
 
-  if (!dc)
-  {
-    return 0;
-  }
-  if ((Width >= 0x10000) || (Height >= 0x10000))
-  {
-    DPRINT("got bad width %d or height %d, please look for reason\n", Width, Height);
-  }
-  else
-  {
-    /* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
-    if (!Width || !Height)
+  if (NULL == Dc)
     {
-      hbmpRet = NtGdiCreateBitmap (1, 1, 1, 1, NULL);
+      return NULL;
     }
-    else
-    {
-      hbmpRet = NtGdiCreateBitmap(Width, Height, 1, dc->w.bitsPerPixel, NULL);
-    }
-  }
-  DPRINT ("\t\t%04x\n", hbmpRet);
-  DC_UnlockDc( hDC );
-  return hbmpRet;
+
+  Bmp = IntCreateCompatibleBitmap(Dc, Width, Height);
+
+  DPRINT ("\t\t%04x\n", Bmp);
+  DC_UnlockDc(hDC);
+  return Bmp;
 }
 
 HBITMAP STDCALL NtGdiCreateBitmapIndirect(CONST BITMAP  *BM)
