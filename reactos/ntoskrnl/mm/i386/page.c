@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.37 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: page.c,v 1.38 2002/06/10 21:34:38 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -124,7 +124,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
-   MmDereferencePage(Process->Pcb.DirectoryTableBase);
+   MmReleasePageMemoryConsumer(MC_NPPOOL, Process->Pcb.DirectoryTableBase);
    Process->Pcb.DirectoryTableBase.QuadPart = 0LL;
    
    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
@@ -216,7 +216,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
      {
        MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
      }
-   MmDereferencePage(PTE_TO_PAGE(npage));
+   MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(npage));
    FLUSH_TLB;
    if (Process != NULL && Process != CurrentProcess)
      {
@@ -474,7 +474,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
      }
    if (FreePage && WasValid)
      {
-        MmDereferencePage(PTE_TO_PAGE(Pte));
+        MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(Pte));
      }
 
    /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.26 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: kthread.c,v 1.27 2002/06/10 21:34:36 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -50,7 +50,7 @@ KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
   assert(SwapEntry == 0);
   if (PhysAddr.QuadPart  != 0)
     {
-      MmDereferencePage(PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
     }
 }
 

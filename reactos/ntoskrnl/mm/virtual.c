@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.59 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: virtual.c,v 1.60 2002/06/10 21:34:37 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -436,7 +436,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 		{
 		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
 			       BaseAddress + (i * PAGESIZE));
-		  MmDereferencePage(PhysicalAddr);
+		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
 		}
 	    }
 	}
@@ -1062,7 +1062,7 @@ MmFreeVirtualMemoryPage(PVOID Context,
   if (PhysicalAddr.QuadPart != 0)
     {
       MmDeleteRmap(PhysicalAddr, Process, Address);
-      MmDereferencePage(PhysicalAddr);
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
     }
   else if (SwapEntry != 0)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.9 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: balance.c,v 1.10 2002/06/10 21:34:37 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -67,6 +67,13 @@ static ULONG MiMinimumPagesPerRun = 1;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID MmPrintMemoryStatistic(VOID)
+{
+  DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d\n",
+           MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed, 
+           MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed); 
+}
+
 VOID
 MmInitializeBalancer(ULONG NrAvailablePages)
 {
@@ -105,16 +112,18 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
       KeBugCheck(0);
     }
 
-  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
-  InterlockedIncrement(&MiNrAvailablePages);
-  InterlockedDecrement(&MiPagesRequired);
   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
-  if (IsListEmpty(&AllocationListHead))
+  if (MmGetReferenceCountPage(Page) == 1)
+  {
+    InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
+    InterlockedIncrement(&MiNrAvailablePages);
+    InterlockedDecrement(&MiPagesRequired);
+    if (IsListEmpty(&AllocationListHead))
     {
       KeReleaseSpinLock(&AllocationListLock, oldIrql);
       MmDereferencePage(Page);
     }
-  else
+    else
     {
       Entry = RemoveHeadList(&AllocationListHead);
       Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
@@ -122,6 +131,13 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
       Request->Page = Page;
       KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
     }
+  }
+  else
+  {
+    KeReleaseSpinLock(&AllocationListLock, oldIrql);
+    MmDereferencePage(Page);
+  }
+
   return(STATUS_SUCCESS);
 }
 
@@ -129,6 +145,7 @@ VOID
 MiTrimMemoryConsumer(ULONG Consumer)
 {
   LONG Target;
+  ULONG NrFreedPages;
 
   Target = MiMemoryConsumers[Consumer].PagesUsed - 
     MiMemoryConsumers[Consumer].PagesTarget;
@@ -139,7 +156,7 @@ MiTrimMemoryConsumer(ULONG Consumer)
 
   if (MiMemoryConsumers[Consumer].Trim != NULL)
     {
-      MiMemoryConsumers[Consumer].Trim(Target, 0, NULL);
+      MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
     }
 }
 

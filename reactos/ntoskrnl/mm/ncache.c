@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.18 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: ncache.c,v 1.19 2002/06/10 21:34:37 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -93,7 +93,7 @@ MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
   assert(SwapEntry == 0);
   if (PhysAddr.QuadPart != 0)
     {
-      MmDereferencePage(PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
     }
 }
 

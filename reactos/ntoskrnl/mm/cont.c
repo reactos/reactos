@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.20 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: cont.c,v 1.21 2002/06/10 21:34:37 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,7 +27,7 @@ MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
   assert(SwapEntry == 0);
   if (PhysAddr.QuadPart != 0)
     {
-      MmDereferencePage(PhysAddr);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
     }
 }
 

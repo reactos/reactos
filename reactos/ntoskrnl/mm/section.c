@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.85 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: section.c,v 1.86 2002/06/10 21:34:37 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1115,7 +1115,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmUnsharePageEntrySectionSegment(Section, Segment, Offset.QuadPart, FALSE);
    MmDeleteRmap(OldPage, PsGetCurrentProcess(),
 		(PVOID)PAGE_ROUND_DOWN(Address));
-   MmDereferencePage(OldPage);
+   MmReleasePageMemoryConsumer(MC_USER, OldPage);
 
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -1147,7 +1147,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 				       PageOutContext->Offset.u.LowPart,
 				       PageOutContext->WasDirty);
     }
-  MmDereferencePage(PhysicalAddress);
+  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
 }
 
 NTSTATUS
@@ -1360,7 +1360,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   if (DirectMapped && !Private)
     {
       assert(SwapEntry == 0);
-      MmDereferencePage(PhysicalAddress);
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -1535,7 +1535,7 @@ MmpCreateSection(PVOID ObjectBody,
 		 PWSTR RemainingPath,
 		 POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+   DPRINT("MmpCreateSection(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath == NULL)
@@ -2588,7 +2588,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 	   * Just dereference private pages
 	   */
 	  MmDeleteRmap(PhysAddr, MArea->Process, Address);
-	  MmDereferencePage(PhysAddr);
+	  MmReleasePageMemoryConsumer(MC_USER, PhysAddr);
 	}
       else
 	{
@@ -2597,7 +2597,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 					   Offset,
 					   Dirty);
 	  MmDeleteRmap(PhysAddr, MArea->Process, Address);
-	  MmDereferencePage(PhysAddr);
+	  MmReleasePageMemoryConsumer(MC_USER, PhysAddr);
 	}
     }
 }
