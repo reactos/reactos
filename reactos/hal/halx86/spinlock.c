@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: spinlock.c,v 1.4 2003/08/12 21:19:50 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,8 @@ KeAcquireSpinLockRaiseToSynch (
 	PKSPIN_LOCK	SpinLock
 	)
 {
-   UNIMPLEMENTED;
+  ASSERT_IRQL(SYNCH_LEVEL);
+  KeAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
 VOID STDCALL
