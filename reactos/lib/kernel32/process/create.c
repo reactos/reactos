@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.37 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: create.c,v 1.38 2001/03/17 11:11:10 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -572,7 +572,8 @@ CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("Creating thread for process\n");
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
-				  Sii.StackReserve,
+				  //Sii.StackReserve,
+				  0x200000,
 				  lpStartAddress,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
