@@ -3,28 +3,31 @@
 #
 PATH_TO_TOP = ../../..
 
-OBJECTS= sound.o ../../../ntoskrnl/ntoskrnl.a
+TARGET = sound
 
-all: sound.sys
+OBJECTS = dsp.o mixer.o sb_waveout.o sound.o wave.o
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+
+all: $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: all
 
 clean:
-	- $(RM) sound.o junk.tmp base.tmp temp.exp sound.sys
+	- $(RM) *.o *.sym *.coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
-sound.sys: $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(OBJECTS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname sound.sys --base-file base.tmp \
-	           --output-exp temp.exp
-	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-	      -specs=../../svc_specs -mdll -o sound.sys $(OBJECTS) -Wl,temp.exp
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-sound.o: sound.c dsp.c mixer.c wave.h wave.c
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
+
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
+
+include $(PATH_TO_TOP)/rules.mak
