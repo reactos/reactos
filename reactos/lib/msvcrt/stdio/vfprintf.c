@@ -559,6 +559,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 		}
 
 		/* get the conversion qualifier */
+		qualifier = 0;
 		// %Z can be just stand alone or as size_t qualifier
 		if ( *fmt == 'Z' ) {
 			qualifier = *fmt;
