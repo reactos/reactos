@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.70 2003/08/20 00:41:04 silverblade Exp $
+/* $Id: defwnd.c,v 1.71 2003/08/20 01:41:01 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -446,7 +446,7 @@ DrawCaption(
     if (! OldBMP) goto cleanup;
 #else
     MemDC = hDC;
-    
+
     OffsetViewportOrgEx(MemDC, lprc->left, lprc->top, NULL);
 #endif
 
@@ -454,9 +454,19 @@ DrawCaption(
     // be painted. For now, that flag is ignored.
 
     // Draw the caption background
-    OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-    if (! OldBrush) goto cleanup;
-    PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY );
+    if (uFlags & DC_INBUTTON)
+    {
+        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_BTNFACE : COLOR_BTNSHADOW) );
+        if (! OldBrush) goto cleanup;
+        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+    }
+    else
+    {
+        // DC_GRADIENT check should go here somewhere
+        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+        if (! OldBrush) goto cleanup;
+        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+    }
 
     VCenter = (lprc->bottom - lprc->top) / 2;
     Padding = VCenter - (GetSystemMetrics(SM_CYCAPTION) / 2);
@@ -480,13 +490,19 @@ DrawCaption(
   if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
     r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
-    r.right = (lprc->right - lprc->left) - r.left;
+    r.right = (lprc->right - lprc->left);
 
     nclm.cbSize = sizeof(nclm);
     if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0)) goto cleanup;
-    SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
+
+    if (uFlags & DC_INBUTTON)
+        SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT]);
+    else
+        SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
+
     SetBkMode( MemDC, TRANSPARENT );
-    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+//    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+    if (uFlags & DC_SMALLCAP)
         hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
     else
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
@@ -550,7 +566,10 @@ UserDrawCaptionNC (
   UINT capflags = 0;
 
     capflags = DC_ICON | DC_TEXT;
-    capflags += active & DC_ACTIVE;
+    capflags |= (active & DC_ACTIVE);
+
+    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+        capflags |= DC_SMALLCAP;
 
 //  Old code:
 //  PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
