@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.35 2003/08/08 21:53:03 royce Exp $
+/* $Id: catch.c,v 1.36 2003/12/12 16:42:16 weiden Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -34,6 +34,7 @@
 #include <internal/ldr.h>
 #include <internal/ps.h>
 #include <internal/kd.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -97,6 +98,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      PULONG Stack;
 	      ULONG CDest;
+#define CATCH_CHECKING_DEST_ADDR
+#if defined(CATCH_CHECKING_DEST_ADDR)
+	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; // FIXME: HACKHACK
+	      NTSTATUS StatusOfCopy;
+#endif
 
 	      /* FIXME: Forward exception to user mode debugger */
 
@@ -105,23 +111,44 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      /*
 	       * Let usermode try and handle the exception
 	       */
+#if !defined(CATCH_CHECKING_DEST_ADDR)
 	      Tf->Esp = Tf->Esp - 
 	        (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
 	      Stack = (PULONG)Tf->Esp;
+#else
+	      Stack = (PULONG)temp_space;
+#endif
 	      CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
 	      /* Return address */
 	      Stack[0] = 0;    
 	      /* Pointer to EXCEPTION_RECORD structure */
-	      Stack[1] = (ULONG)&Stack[3];   
+	      Stack[1] = (ULONG)&Stack[3];
 	      /* Pointer to CONTEXT structure */
-	      Stack[2] = (ULONG)&Stack[CDest];     
+	      Stack[2] = (ULONG)&Stack[CDest];
 	      memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	      memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
+#if defined(CATCH_CHECKING_DEST_ADDR)
+	      StatusOfCopy = MmCopyToCaller((PVOID)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT))),
+	                                    temp_space,
+	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
+	      if (NT_SUCCESS(StatusOfCopy))
+	        {
+	          Tf->Esp = Tf->Esp - 
+	            (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
+	        }
+	      else
+	        {
+	          // Now it really hit the ventilation device. Sorry,
+	          // can do nothing but kill the sucker.
+	          ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
+	          DPRINT1("User-mode stack was invalid. Terminating target thread\nn");
+	        }
+#endif
 	      Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
 	      return;
 	    }
-      
+
 	  /* FIXME: Forward the exception to the debugger */
 
 	  /* FIXME: Forward the exception to the process exception port */
