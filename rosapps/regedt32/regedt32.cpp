@@ -20,16 +20,42 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef _MSC_VER
 #include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+	
 #include "resource.h"
 #include <shellapi.h>
 //#include <winspool.h>
 
+#define STATUS_WINDOW   2001
 #define MAX_LOADSTRING 100
 
 // Global Variables:
-HWND hMainWnd;
 HINSTANCE hInst;                            // current instance
+
+HWND hMainWnd;                   // Main Window
+HWND hStatusWnd;                 // Status Bar Window
+HWND hTabWnd;                    // Tab Control Window
+
+int  nMinimumWidth;              // Minimum width of the dialog (OnSize()'s cx)
+int  nMinimumHeight;             // Minimum height of the dialog (OnSize()'s cy)
+
+int  nOldWidth;                  // Holds the previous client area width
+int  nOldHeight;                 // Holds the previous client area height
+
+BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
+
 TCHAR szTitle[MAX_LOADSTRING];              // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];        // The title bar text
 TCHAR szFrameClass[MAX_LOADSTRING];         // The title bar text
@@ -47,7 +73,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      LPSTR     lpCmdLine,
                      int       nCmdShow)
 {
-    // TODO: Place code here.
     MSG msg;
     HACCEL hAccelTable;
 
@@ -60,23 +85,18 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     MyRegisterClass2(hInstance);
 
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow)) 
-    {
+    if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
-
     hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_REGEDT32);
 
     // Main message loop:
-    while (GetMessage(&msg, NULL, 0, 0)) 
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) 
-        {
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
-
     return msg.wParam;
 }
 
@@ -99,8 +119,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX); 
-
+    wcex.cbSize         = sizeof(WNDCLASSEX); 
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = (WNDPROC)WndProc;
     wcex.cbClsExtra     = 0;
@@ -121,8 +140,7 @@ ATOM MyRegisterClass2(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX); 
-
+    wcex.cbSize         = sizeof(WNDCLASSEX); 
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = (WNDPROC)FrameWndProc;
     wcex.cbClsExtra     = 0;
@@ -135,7 +153,6 @@ ATOM MyRegisterClass2(HINSTANCE hInstance)
 //  wcex.lpszMenuName   = (LPCSTR)IDR_REGEDT32_MENU;
     wcex.lpszClassName  = szFrameClass;
     wcex.hIconSm        = LoadIcon((HINSTANCE)wcex.hInstance, (LPCTSTR)IDI_SMALL);
-
     return RegisterClassEx(&wcex);
 }
 
@@ -152,23 +169,116 @@ ATOM MyRegisterClass2(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
+    int nParts[3];
 
-   hInst = hInstance; // Store instance handle in our global variable
+    // Initialize the Windows Common Controls DLL
+    InitCommonControls();
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    hInst = hInstance; // Store instance handle in our global variable
+    hMainWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+                            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    if (!hMainWnd) {
+        return FALSE;
+    }
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-   hMainWnd = hWnd;
+    // Get the minimum window sizes
+//    GetWindowRect(hMainWnd, &rc);
+//    nMinimumWidth = (rc.right - rc.left);
+//    nMinimumHeight = (rc.bottom - rc.top);
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    // Create the status bar
+    hStatusWnd = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
+		                            "", hMainWnd, STATUS_WINDOW);
+    if (!hStatusWnd)
+        return FALSE;
 
-   return TRUE;
+    // Create the status bar panes
+    nParts[0] = 100;
+    nParts[1] = 210;
+    nParts[2] = 400;
+    SendMessage(hStatusWnd, SB_SETPARTS, 3, (long)nParts);
+
+
+    ShowWindow(hMainWnd, nCmdShow);
+    UpdateWindow(hMainWnd);
+    return TRUE;
+}
+
+
+// OnSize()
+// This function handles all the sizing events for the application
+// It re-sizes every window, and child window that needs re-sizing
+void OnSize(UINT nType, int cx, int cy)
+{
+    int     nParts[3];
+    int     nXDifference;
+    int     nYDifference;
+    RECT    rc;
+
+    if (nType == SIZE_MINIMIZED)
+        return;
+
+    nXDifference = cx - nOldWidth;
+    nYDifference = cy - nOldHeight;
+    nOldWidth = cx;
+    nOldHeight = cy;
+
+    // Update the status bar size
+    GetWindowRect(hStatusWnd, &rc);
+    SendMessage(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx, cy + (rc.bottom - rc.top)));
+
+    // Update the status bar pane sizes
+    nParts[0] = bInMenuLoop ? -1 : 100;
+    nParts[1] = 210;
+    nParts[2] = cx;
+    SendMessage(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (long)nParts);
+}
+
+void OnEnterMenuLoop(HWND hWnd)
+{
+    int nParts;
+
+    // Update the status bar pane sizes
+    nParts = -1;
+    SendMessage(hStatusWnd, SB_SETPARTS, 1, (long)&nParts);
+    bInMenuLoop = TRUE;
+    SendMessage(hStatusWnd, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
+}
+
+void OnExitMenuLoop(HWND hWnd)
+{
+    RECT  rc;
+    int   nParts[3];
+    TCHAR text[260];
+
+    bInMenuLoop = FALSE;
+    // Update the status bar pane sizes
+    GetClientRect(hWnd, &rc);
+    nParts[0] = 100;
+    nParts[1] = 210;
+    nParts[2] = rc.right;
+    SendMessage(hStatusWnd, SB_SETPARTS, 3, (long)nParts);
+    SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)_T(""));
+//    wsprintf(text, _T("CPU Usage: %3d%%"), PerfDataGetProcessorUsage());
+//    SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
+//    wsprintf(text, _T("Processes: %d"), PerfDataGetProcessCount());
+//    SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
+}
+
+void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
+{
+    TCHAR str[100];
+
+    strcpy(str, TEXT(""));
+    if (LoadString(hInst, nItemID, str, 100)) {
+        // load appropriate string
+        LPTSTR lpsz = str;
+        // first newline terminates actual string
+        lpsz = _tcschr(lpsz, '\n');
+        if (lpsz != NULL)
+            *lpsz = '\0';
+    }
+    SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)str);
 }
 
 
@@ -180,44 +290,42 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     TCHAR szHello[MAX_LOADSTRING];
     LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
 
-    switch (message) 
-    {
-        case WM_COMMAND:
-            wmId    = LOWORD(wParam); 
-            wmEvent = HIWORD(wParam); 
-            // Parse the menu selections:
-            switch (wmId)
-            {
-                case IDM_ABOUT:
-//                 DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
-                   {
-                   HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
-                   ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
-                   //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
-                   }
-                   break;
-                case IDM_EXIT:
-                   DestroyWindow(hWnd);
-                   break;
-                default:
-                   return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+    switch (message) {
+    case WM_COMMAND:
+        wmId    = LOWORD(wParam); 
+        wmEvent = HIWORD(wParam); 
+        // Parse the menu selections:
+        switch (wmId) {
+            case IDM_ABOUT:
+//            DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
+				{
+                HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
+                ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
+                //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
+                }
             break;
-        case WM_PAINT:
-            hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            RECT rt;
-            GetClientRect(hWnd, &rt);
-            DrawText(hdc, szHello, strlen(szHello), &rt, DT_CENTER);
-            EndPaint(hWnd, &ps);
-            break;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
-   }
-   return 0;
+            case IDM_EXIT:
+                DestroyWindow(hWnd);
+                break;
+            default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        break;
+    case WM_PAINT:
+        hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code here...
+        RECT rt;
+        GetClientRect(hWnd, &rt);
+        DrawText(hdc, szHello, strlen(szHello), &rt, DT_CENTER);
+        EndPaint(hWnd, &ps);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
 }
 
 
@@ -239,61 +347,75 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     //TCHAR szHello[MAX_LOADSTRING];
     //LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
 
-    switch (message) 
-    {
-        case WM_COMMAND:
-            wmId    = LOWORD(wParam); 
-            wmEvent = HIWORD(wParam); 
-            // Parse the menu selections:
-            switch (wmId)
-            {
-                case ID_REGISTRY_PRINTERSETUP:
-                    //PRINTDLG pd;
-                    //PrintDlg(&pd);
-                    //PAGESETUPDLG psd;
-                    //PageSetupDlg(&psd);
-                    break;
-                case ID_REGISTRY_OPENLOCAL:
-                    {
-   HWND hChildWnd;
-//   hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
-//                       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hWnd, NULL, hInst, NULL);
-   hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
-                       0, 0, 150, 170, hWnd, NULL, hInst, NULL);
-   if (hChildWnd) {
-       ShowWindow(hChildWnd, 1);
-       UpdateWindow(hChildWnd);
-   }
-                    }
-                    break;
-                case IDM_ABOUT:
-//                 DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
-                   {
-                   HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
-                   ShellAbout(hWnd, szTitle, "", hIcon);
-                   //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
-                   }
-                   break;
-                case IDM_EXIT:
-                   DestroyWindow(hWnd);
-                   break;
-                default:
-                   return DefWindowProc(hWnd, message, wParam, lParam);
+    switch (message) {
+    case WM_COMMAND:
+        wmId    = LOWORD(wParam); 
+        wmEvent = HIWORD(wParam); 
+        // Parse the menu selections:
+        switch (wmId) {
+        case ID_REGISTRY_PRINTERSETUP:
+            //PRINTDLG pd;
+            //PrintDlg(&pd);
+            //PAGESETUPDLG psd;
+            //PageSetupDlg(&psd);
+            break;
+        case ID_REGISTRY_OPENLOCAL:
+			{
+            HWND hChildWnd;
+//            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
+//                                   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hWnd, NULL, hInst, NULL);
+            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
+                                     0, 0, 150, 170, hWnd, NULL, hInst, NULL);
+			if (hChildWnd) {
+				ShowWindow(hChildWnd, 1);
+				UpdateWindow(hChildWnd);
+			}
             }
             break;
-        case WM_PAINT:
-            hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            RECT rt;
-            GetClientRect(hWnd, &rt);
-            //DrawText(hdc, szHello, strlen(szHello), &rt, DT_CENTER);
-            EndPaint(hWnd, &ps);
+        case IDM_ABOUT:
+//            DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
+            {
+            HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
+            ShellAbout(hWnd, szTitle, "", hIcon);
+            //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
+            }
             break;
-        case WM_DESTROY:
-            PostQuitMessage(0);
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        break;
+    case WM_SIZE:
+        // Handle the window sizing in it's own function
+        OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
+        break;
+    case WM_PAINT:
+        hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code here...
+        RECT rt;
+        GetClientRect(hWnd, &rt);
+        //DrawText(hdc, szHello, strlen(szHello), &rt, DT_CENTER);
+        EndPaint(hWnd, &ps);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    case WM_TIMER:
+        break;
+
+    case WM_ENTERMENULOOP:
+        OnEnterMenuLoop(hWnd);
+        break;
+    case WM_EXITMENULOOP:
+        OnExitMenuLoop(hWnd);
+        break;
+    case WM_MENUSELECT:
+        OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
    }
    return 0;
 }
@@ -301,18 +423,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // Mesage handler for about box.
 LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
-        case WM_INITDIALOG:
-                return TRUE;
-
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) 
-            {
-                EndDialog(hDlg, LOWORD(wParam));
-                return TRUE;
-            }
-            break;
+    switch (message) {
+    case WM_INITDIALOG:
+        return TRUE;
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+        }
+        break;
     }
     return FALSE;
 }
