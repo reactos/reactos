@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.126 2003/07/26 12:47:51 hbirr Exp $
+/* $Id: section.c,v 1.127 2003/08/20 00:02:31 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2018,44 +2018,47 @@ MmpDeleteSection(PVOID ObjectBody)
     }
   else
     {
-      InterlockedDecrement((LONG *)&Section->Segment->ReferenceCount);
+      if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
+	{
+	  ULONG Offset;
+	  ULONG Length;
+	  ULONG Entry;
+	  PMM_SECTION_SEGMENT Segment;
+	  
+	  Segment = Section->Segment;
+	  Length = PAGE_ROUND_UP(Segment->Length);
+	  
+	  for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
+	    {
+	      Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+	      if (Entry)
+		{
+		  if (IS_SWAP_FROM_SSE(Entry))
+		    {
+		      MmFreeSwapPage(SWAPENTRY_FROM_SSE(Entry));
+		    }
+		  else
+		    {
+		      PHYSICAL_ADDRESS Page = (PHYSICAL_ADDRESS)(LONGLONG)PAGE_FROM_SSE(Entry);
+		      MmReleasePageMemoryConsumer(MC_USER, Page);
+		    }
+		}
+	    }
+	  MmFreePageTablesSectionSegment(Section->Segment);
+	  ExFreePool(Section->Segment);
+	  Section->Segment = NULL;
+	}
+      else
+	{
+	  InterlockedDecrement((LONG *)&Section->Segment->ReferenceCount);
+	}
     }
   if (Section->FileObject != NULL)
     {
       CcRosDereferenceCache(Section->FileObject);
       ObDereferenceObject(Section->FileObject);
       Section->FileObject = NULL;
-    }
-
-  if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
-  {
-     ULONG Offset;
-     ULONG Length;
-     ULONG Entry;
-     PMM_SECTION_SEGMENT Segment;
-
-     Segment = Section->Segment;
-     Length = PAGE_ROUND_UP(Segment->Length);
-
-     for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
-       {
-         Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-	 if (Entry)
-	   {
-	     if (IS_SWAP_FROM_SSE(Entry))
-	       {
-		 MmFreeSwapPage(SWAPENTRY_FROM_SSE(Entry));
-	       }
-	     else
-	       {
-	         PHYSICAL_ADDRESS Page = (PHYSICAL_ADDRESS)(LONGLONG)PAGE_FROM_SSE(Entry);
-                 MmReleasePageMemoryConsumer(MC_USER, Page);
-	       }
-	   }
-       }
-     MmFreePageTablesSectionSegment(Section->Segment);
-     ExFreePool(Section->Segment);
-  }
+    }  
 }
 
 VOID STDCALL
