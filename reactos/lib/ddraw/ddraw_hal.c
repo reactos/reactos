@@ -37,9 +37,9 @@ HRESULT HAL_DirectDraw_Construct(IDirectDrawImpl *This, BOOL ex)
 
     This->create_primary    = HAL_DirectDraw_create_primary;
     This->create_backbuffer = HAL_DirectDraw_create_backbuffer;
-    This->create_texture    = HAL_DirectDraw_create_texture;
+    This->create_texture    = HAL_DirectDraw_create_texture;    
 
-    ICOM_INIT_INTERFACE(This, IDirectDraw7, HAL_DirectDraw_VTable);
+   // ICOM_INIT_INTERFACE(This, IDirectDraw7, HAL_DirectDraw_VTable);
     return S_OK;
 }
 
@@ -290,7 +290,8 @@ HRESULT WINAPI HAL_DirectDraw_Create(const GUID* pGUID, LPDIRECTDRAW7* pIface,
 {
    
       HRESULT hr;
-    IDirectDrawImpl* This;    
+    IDirectDrawImpl* This;
+	HDC desktop;
 
 	/*
     This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -312,8 +313,14 @@ HRESULT WINAPI HAL_DirectDraw_Create(const GUID* pGUID, LPDIRECTDRAW7* pIface,
     hr = HAL_DirectDraw_Construct(This, ex);
     if (FAILED(hr))
 	HeapFree(GetProcessHeap(), 0, This);
-    else
-	*pIface = ICOM_INTERFACE(This, IDirectDraw7);
+    else *pIface = ICOM_INTERFACE(This, IDirectDraw7);
+
+	/* create a scaner that check which driver we should get the HDC from */
+	/* for now we always asume it is the active dirver that should be use. */
+	
+	desktop = GetWindowDC(GetDesktopWindow());
+	*pIface = OsThunkDdCreateDirectDrawObject(desktop);   
+	if (pIface == NULL) hr == DDERR_NODIRECTDRAWHW;	 
 
     return hr;
 }
