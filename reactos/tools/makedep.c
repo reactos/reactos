@@ -600,6 +600,7 @@ static void output_dependencies(void)
     FILE *file = NULL;
     char buffer[1024];
 
+#if 0
     if (Separator && ((file = fopen( OutputFileName, "r+" ))))
     {
         while (fgets( buffer, sizeof(buffer), file ))
@@ -619,6 +620,13 @@ static void output_dependencies(void)
             exit(1);
         }
     }
+#else
+    if (!(file = fopen( OutputFileName, "w" )))
+    {
+        perror( OutputFileName );
+        exit(1);
+    }
+#endif
     for( pFile = firstSrc; pFile; pFile = pFile->next)
     {
         column = 0;
