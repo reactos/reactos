@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.17 2000/12/29 13:48:30 ekohl Exp $
+/* $Id: unicode.c,v 1.18 2001/03/01 15:30:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1181,12 +1181,14 @@ RtlUnicodeStringToAnsiString (
 	return STATUS_SUCCESS;
 }
 
+
 NTSTATUS
 STDCALL
 RtlUnicodeStringToInteger (
 	IN	PUNICODE_STRING	String,
 	IN	ULONG		Base,
-	OUT	PULONG		Value)
+	OUT	PULONG		Value
+	)
 {
 	PWCHAR Str;
 	ULONG lenmin = 0;
@@ -1194,8 +1196,10 @@ RtlUnicodeStringToInteger (
 	ULONG Val;
 	BOOLEAN addneg = FALSE;
 
+	*Value = 0;
 	Str = String->Buffer;
-	for (i = 0; i < String->Length; i++)
+
+	for (i = 0; i < String->Length / sizeof(WCHAR); i++)
 	{
 		if (*Str == L'b')
 		{
@@ -1228,24 +1232,20 @@ RtlUnicodeStringToInteger (
 		}
 		else if ((*Str > L'1') && (Base == 2))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if ((((*Str > L'9') || (*Str < L'0')) ||
 		          ((towupper (*Str) > L'F') ||
 		           (towupper (*Str) < L'A'))) && (Base == 16))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else
