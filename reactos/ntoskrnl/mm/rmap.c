@@ -136,7 +136,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0,
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
                            MemoryArea->Data.SectionData.Segment,
                            Offset, MM_PAGEOP_PAGEOUT, TRUE);
 
@@ -163,7 +163,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
 
       if (PageOp == NULL)
@@ -260,7 +260,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0,
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
                            MemoryArea->Data.SectionData.Segment,
                            Offset, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
@@ -286,7 +286,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
       {

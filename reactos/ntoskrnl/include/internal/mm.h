@@ -296,7 +296,7 @@ typedef struct _MM_PAGEOP
    * These fields are used to identify the operation if it is against a
    * virtual memory area.
    */
-  ULONG Pid;
+  HANDLE Pid;
   PVOID Address;
   /*
    * These fields are used to identify the operation if it is against a
@@ -569,10 +569,10 @@ VOID
 MmReleasePageOp(PMM_PAGEOP PageOp);
 
 PMM_PAGEOP
-MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First);
 PMM_PAGEOP
-MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
 VOID
 MmInitializePageOp(VOID);

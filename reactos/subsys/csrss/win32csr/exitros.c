@@ -17,7 +17,7 @@
 #include <debug.h>
 
 static HWND LogonNotifyWindow = NULL;
-static DWORD LogonProcess = 0;
+static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
 {
@@ -35,7 +35,7 @@ CSR_API(CsrRegisterLogonProcess)
     }
   else
     {
-      if ((DWORD) Request->Header.ClientId.UniqueProcess != LogonProcess)
+      if (Request->Header.ClientId.UniqueProcess != LogonProcess)
         {
           DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
                   LogonProcess, Request->Header.ClientId.UniqueProcess);
@@ -64,7 +64,7 @@ CSR_API(CsrSetLogonNotifyWindow)
       Reply->Status = STATUS_INVALID_HANDLE;
       return Reply->Status;
     }
-  if (WindowCreator != LogonProcess)
+  if (WindowCreator != (DWORD)LogonProcess)
     {
       DPRINT1("Trying to register window not created by winlogon as notify window\n");
       Reply->Status = STATUS_ACCESS_DENIED;

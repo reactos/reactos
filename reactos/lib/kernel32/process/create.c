@@ -1157,9 +1157,9 @@ CreateProcessW
 			     &ProcessBasicInfo,
 			     sizeof(ProcessBasicInfo),
 			     &retlen);
-   DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
+   DPRINT("ProcessBasicInfo.UniqueProcessId 0x%x\n",
 	  ProcessBasicInfo.UniqueProcessId);
-   lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
+   lpProcessInformation->dwProcessId = (DWORD)ProcessBasicInfo.UniqueProcessId;
 
    /*
     * Tell the csrss server we are creating a new process

@@ -19,7 +19,7 @@ typedef struct
 
 typedef struct
 {
-   ULONG NewProcessId;
+   HANDLE NewProcessId;
    ULONG Flags;
    PCONTROLDISPATCHER CtrlDispatcher;
 } CSRSS_CREATE_PROCESS_REQUEST, *PCSRSS_CREATE_PROCESS_REQUEST;
@@ -359,7 +359,7 @@ typedef struct
 
 typedef struct
 {
-  DWORD ProcessId;
+  HANDLE ProcessId;
 } CSRSS_REGISTER_SERVICES_PROCESS_REQUEST, *PCSRSS_REGISTER_SERVICES_PROCESS_REQUEST;
 
 typedef struct
@@ -476,7 +476,7 @@ typedef struct
 typedef struct
 {
   HANDLE Handle;
-  DWORD ProcessId;
+  HANDLE ProcessId;
 } CSRSS_DUPLICATE_HANDLE_REQUEST, *PCSRSS_DUPLICATE_HANDLE_REQUEST;
 
 typedef struct
@@ -562,7 +562,7 @@ typedef struct
 
 typedef struct
 {
-  DWORD ProcessId;
+  HANDLE ProcessId;
   BOOL Register;
 } CSRSS_REGISTER_LOGON_PROCESS_REQUEST, *PCSRSS_REGISTER_LOGON_PROCESS_REQUEST;
 

@@ -80,10 +80,26 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 
   if (ProcessData->CtrlDispatcher)
     {
-      Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, ProcessData->ProcessId);
-      if (NULL == Process)
+      OBJECT_ATTRIBUTES ObjectAttributes;
+      CLIENT_ID ClientId;
+      NTSTATUS Status;
+      
+      ClientId.UniqueThread = NULL;
+      ClientId.UniqueProcess = ProcessData->ProcessId;
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+
+      /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+      Status = NtOpenProcess(&Process,
+                             PROCESS_DUP_HANDLE,
+                             &ObjectAttributes,
+                             &ClientId);
+      if (!NT_SUCCESS(Status))
         {
-          DPRINT1("Failed for handle duplication\n");
+          DPRINT1("Failed for handle duplication, Status: 0x%x\n", Status);
           return;
         }
 
@@ -248,6 +264,8 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 CSR_API(CsrAllocConsole)
 {
   PCSRSS_CONSOLE Console;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID ClientId;
   HANDLE Process;
   NTSTATUS Status;
 
@@ -301,10 +319,22 @@ CSR_API(CsrAllocConsole)
       return Reply->Status = Status;
     }
 
-  Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, ProcessData->ProcessId);
-  if (NULL == Process)
+  ClientId.UniqueThread = NULL;
+  ClientId.UniqueProcess = ProcessData->ProcessId;
+  InitializeObjectAttributes(&ObjectAttributes,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+
+  /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+  Status = NtOpenProcess(&Process,
+                         PROCESS_DUP_HANDLE,
+                         &ObjectAttributes,
+                         &ClientId);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT1("OpenProcess() failed for handle duplication\n");
+      DPRINT1("NtOpenProcess() failed for handle duplication, Status: 0x%x\n", Status);
       Console->Header.ReferenceCount--;
       ProcessData->Console = 0;
       Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
@@ -312,6 +342,7 @@ CSR_API(CsrAllocConsole)
       Reply->Status = Status;
       return Status;
     }
+
   if (! DuplicateHandle(GetCurrentProcess(), ProcessData->Console->ActiveEvent,
                         Process, &ProcessData->ConsoleEvent, EVENT_ALL_ACCESS, FALSE, 0))
     {

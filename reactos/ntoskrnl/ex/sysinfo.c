@@ -401,7 +401,7 @@ QSI_DEF(SystemPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
+	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
 	
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
@@ -505,8 +505,6 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->SecondLevelTbFills = 0; /* FIXME */
 	Spi->SystemCalls = 0; /* FIXME */
 
-	ObDereferenceObject(TheIdleProcess);
-
 	return (STATUS_SUCCESS);
 }
 
@@ -609,7 +607,7 @@ QSI_DEF(SystemProcessInformation)
 
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
-		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
+		SpiCur->InheritedFromProcessId = pr->InheritedFromUniqueProcessId;
 		SpiCur->HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
@@ -949,7 +947,7 @@ QSI_DEF(SystemFullMemoryInformation)
 	}
 	DPRINT("SystemFullMemoryInformation\n");
 
-	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
+	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
 
         DPRINT("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
                TheIdleProcess->UniqueProcessId,
@@ -962,8 +960,6 @@ QSI_DEF(SystemFullMemoryInformation)
 #endif
 	
 	*Spi = MiMemoryConsumers[MC_USER].PagesUsed;
-
-	ObDereferenceObject(TheIdleProcess);
 
 	return (STATUS_SUCCESS);
 }

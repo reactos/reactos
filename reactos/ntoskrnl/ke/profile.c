@@ -140,13 +140,13 @@ KiInsertProfile(PKPROFILE Profile)
     }
   else
     {
-      ULONG Pid;
+      HANDLE Pid;
       PKPROCESS_PROFILE current;
       PLIST_ENTRY current_entry;
       PLIST_ENTRY ListHead;
 
       Pid = Profile->Process->UniqueProcessId;
-      ListHead = &ProcessProfileListHashTable[Pid % PROFILE_HASH_TABLE_SIZE];
+      ListHead = &ProcessProfileListHashTable[(ULONG_PTR)Pid % PROFILE_HASH_TABLE_SIZE];
 
       current_entry = ListHead;
       while(current_entry != ListHead)
@@ -154,7 +154,7 @@ KiInsertProfile(PKPROFILE Profile)
 	  current = CONTAINING_RECORD(current_entry, KPROCESS_PROFILE, 
 				      ListEntry);
 
-	  if (current->Pid == (HANDLE)Pid)
+	  if (current->Pid == Pid)
 	    {
 	      KiInsertProfileIntoProcess(&current->ProfileListHead, Profile);
 	      KeReleaseSpinLock(&ProfileListLock, oldIrql);
@@ -166,7 +166,7 @@ KiInsertProfile(PKPROFILE Profile)
 
       current = ExAllocatePool(NonPagedPool, sizeof(KPROCESS_PROFILE));
 
-      current->Pid = (HANDLE)Pid;
+      current->Pid = Pid;
       InitializeListHead(&current->ProfileListHead);
       InsertTailList(ListHead, &current->ListEntry);
 
@@ -188,7 +188,7 @@ VOID KiRemoveProfile(PKPROFILE Profile)
     }
   else
     {
-      ULONG Pid;
+      HANDLE Pid;
       PLIST_ENTRY ListHead;
       PKPROCESS_PROFILE current;
       PLIST_ENTRY current_entry;
@@ -196,7 +196,7 @@ VOID KiRemoveProfile(PKPROFILE Profile)
       RemoveEntryList(&Profile->ListEntry);
 
       Pid = Profile->Process->UniqueProcessId;
-      ListHead = &ProcessProfileListHashTable[Pid % PROFILE_HASH_TABLE_SIZE];
+      ListHead = &ProcessProfileListHashTable[(ULONG_PTR)Pid % PROFILE_HASH_TABLE_SIZE];
 
       current_entry = ListHead;
       while(current_entry != ListHead)
@@ -204,7 +204,7 @@ VOID KiRemoveProfile(PKPROFILE Profile)
 	  current = CONTAINING_RECORD(current_entry, KPROCESS_PROFILE, 
 				      ListEntry);
 
-	  if (current->Pid == (HANDLE)Pid)
+	  if (current->Pid == Pid)
 	    {
 	      if (IsListEmpty(&current->ProfileListHead))
 		{

@@ -36,12 +36,12 @@ VOID STDCALL CsrInitProcessData(VOID)
    RtlInitializeCriticalSection( &ProcessDataLock );
 }
 
-PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
+PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
 
-   hash = ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
    
    LOCK;
 
@@ -55,12 +55,12 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
    return pProcessData;
 }
 
-PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId)
+PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
 
-   hash = ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
    
    LOCK;
 
@@ -94,13 +94,13 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId)
    return pProcessData;
 }
 
-NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
+NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
   int c;
   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
    
-  hash = Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
+  hash = (ULONG_PTR)Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
    
   LOCK;
 

@@ -37,14 +37,14 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
 }
 
 BOOL FASTCALL
-IntRegisterLogonProcess(DWORD ProcessId, BOOL Register)
+IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
   PEPROCESS Process;
   NTSTATUS Status;
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
 
-  Status = PsLookupProcessByProcessId((PVOID)ProcessId,
+  Status = PsLookupProcessByProcessId(ProcessId,
 				      &Process);
   if (!NT_SUCCESS(Status))
   {
@@ -519,7 +519,7 @@ NtUserCallTwoParam(
     }
     
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-      return (DWORD)IntRegisterLogonProcess(Param1, (BOOL)Param2);
+      return (DWORD)IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
 
     case TWOPARAM_ROUTINE_SETSYSCOLORS:
     {

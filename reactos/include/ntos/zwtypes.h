@@ -684,8 +684,8 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	PPEB PebBaseAddress;
 	KAFFINITY AffinityMask;
 	KPRIORITY BasePriority;
-	ULONG UniqueProcessId;
-	ULONG InheritedFromUniqueProcessId;
+	HANDLE UniqueProcessId;
+	HANDLE InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 // Information class 1
@@ -1332,8 +1332,8 @@ typedef struct _SYSTEM_PROCESSES_NT4
  LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
- ULONG          ProcessId;
- ULONG          InheritedFromProcessId;
+ HANDLE         ProcessId;
+ HANDLE         InheritedFromProcessId;
  ULONG          HandleCount;
  ULONG          Reserved2[2];
  VM_COUNTERS    VmCounters;
@@ -1350,8 +1350,8 @@ typedef struct _SYSTEM_PROCESSES_NT5
  LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
- ULONG          ProcessId;
- ULONG          InheritedFromProcessId;
+ HANDLE         ProcessId;
+ HANDLE         InheritedFromProcessId;
  ULONG          HandleCount;
  ULONG          Reserved2[2];
  VM_COUNTERS    VmCounters;

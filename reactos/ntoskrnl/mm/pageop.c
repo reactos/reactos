@@ -67,7 +67,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 }
 
 PMM_PAGEOP
-MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
                  PMM_SECTION_SEGMENT Segment, ULONG Offset)
 {
    ULONG_PTR Hash;
@@ -129,7 +129,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 }
 
 PMM_PAGEOP
-MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
             PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First)
 /*
  * FUNCTION: Get a page operation descriptor corresponding to

@@ -297,8 +297,8 @@ typedef struct _SYSTEM_PROCESSES {
 	LARGE_INTEGER  KernelTime;
 	UNICODE_STRING  ProcessName;
 	KPRIORITY  BasePriority;
-	ULONG  ProcessId;
-	ULONG  InheritedFromProcessId;
+	HANDLE  ProcessId;
+	HANDLE  InheritedFromProcessId;
 	ULONG  HandleCount;
 	ULONG  Reserved2[2];
 	VM_COUNTERS  VmCounters;
@@ -1461,8 +1461,8 @@ typedef struct _PROCESS_BASIC_INFORMATION {
 	PPEB  PebBaseAddress;
 	KAFFINITY  AffinityMask;
 	KPRIORITY  BasePriority;
-	ULONG  UniqueProcessId;
-	ULONG  InheritedFromUniqueProcessId;
+	HANDLE  UniqueProcessId;
+	HANDLE  InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_ACCESS_TOKEN {

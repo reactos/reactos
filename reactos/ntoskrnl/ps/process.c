@@ -23,7 +23,6 @@ POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
 LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
-static ULONG PiNextProcessUniqueId = 0; /* TODO */
 static LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 static GENERIC_MAPPING PiProcessMapping = {STANDARD_RIGHTS_READ | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -192,26 +191,54 @@ NtOpenProcessTokenEx(
 {
    PACCESS_TOKEN Token;
    HANDLE hToken;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(TokenHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = PsOpenTokenOfProcess(ProcessHandle,
 				 &Token);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Token,
-			   DesiredAccess,
-			   FALSE,
-			   &hToken);
-   ObDereferenceObject(Token);
-
    if(NT_SUCCESS(Status))
+   {
+     Status = ObCreateHandle(PsGetCurrentProcess(),
+			     Token,
+			     DesiredAccess,
+			     FALSE,
+			     &hToken);
+     ObDereferenceObject(Token);
+
+     _SEH_TRY
      {
-        Status = MmCopyToCaller(TokenHandle, &hToken, sizeof(HANDLE));
+       *TokenHandle = hToken;
      }
-   return(Status);
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   
+   return Status;
 }
 
 
@@ -224,7 +251,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
    ObReferenceObjectByPointer(Process->Token,
 			      TOKEN_ALL_ACCESS,
 			      SepTokenObjectType,
-			      UserMode);
+			      KernelMode);
    return(Process->Token);
 }
 
@@ -239,16 +266,16 @@ PsOpenTokenOfProcess(HANDLE ProcessHandle,
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_QUERY_INFORMATION,
 				      PsProcessType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID*)&Process,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   *Token = PsReferencePrimaryToken(Process);
-   ObDereferenceObject(Process);
-   return(STATUS_SUCCESS);
+   if(NT_SUCCESS(Status))
+   {
+     *Token = PsReferencePrimaryToken(Process);
+     ObDereferenceObject(Process);
+   }
+   
+   return Status;
 }
 
 
@@ -269,7 +296,7 @@ PiKillMostProcesses(VOID)
 	current_entry = current_entry->Flink;
 	
 	if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
-	    current->UniqueProcessId != (ULONG)PsGetCurrentProcessId())
+	    current->UniqueProcessId != PsGetCurrentProcessId())
 	  {
 	     PiTerminateProcessThreads(current, STATUS_SUCCESS);
 	  }
@@ -373,8 +400,17 @@ PsInitProcessManagment(VOID)
    }
 #endif
 
-   PsInitialSystemProcess->UniqueProcessId = 
-     InterlockedIncrementUL(&PiNextProcessUniqueId); /* TODO */
+   strcpy(PsInitialSystemProcess->ImageFileName, "System");
+   
+   Status = PsCreateCidHandle(PsInitialSystemProcess,
+                              PsProcessType,
+                              &PsInitialSystemProcess->UniqueProcessId);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
+     return;
+   }
+   
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
@@ -382,8 +418,6 @@ PsInitProcessManagment(VOID)
 		  &PsInitialSystemProcess->ProcessListEntry);
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-   
-   strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
 }
@@ -610,109 +644,112 @@ IoGetCurrentProcess(VOID)
      }
 }
 
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-PsCreateSystemProcess(PHANDLE ProcessHandle,
-		      ACCESS_MASK DesiredAccess,
-		      POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   HANDLE SystemProcessHandle;
-   NTSTATUS Status;
-   
-   /* FIXME - what about security? should there be any privilege checks or something
-              security related? */
-   
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-                           PsInitialSystemProcess,
-                           PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
-                           FALSE,
-                           &SystemProcessHandle);
-   if(!NT_SUCCESS(Status))
-   {
-      DPRINT1("Failed to create a handle for the system process!\n");
-      return Status;
-   }
-   
-   Status = NtCreateProcess(ProcessHandle,
-			    DesiredAccess,
-			    ObjectAttributes,
-			    SystemProcessHandle,
-			    FALSE,
-			    NULL,
-			    NULL,
-			    NULL);
-
-   NtClose(SystemProcessHandle);
-   
-   return Status;
-}
-
-NTSTATUS STDCALL
-NtCreateProcess(OUT PHANDLE ProcessHandle,
+NTSTATUS
+PspCreateProcess(OUT PHANDLE ProcessHandle,
 		IN ACCESS_MASK DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-		IN HANDLE ParentProcess,
+		IN HANDLE ParentProcess  OPTIONAL,
 		IN BOOLEAN InheritObjectTable,
 		IN HANDLE SectionHandle  OPTIONAL,
 		IN HANDLE DebugPort  OPTIONAL,
 		IN HANDLE ExceptionPort  OPTIONAL)
-/*
- * FUNCTION: Creates a process.
- * ARGUMENTS:
- *        ProcessHandle (OUT) = Caller supplied storage for the resulting 
- *                              handle
- *        DesiredAccess = Specifies the allowed or desired access to the 
- *                        process can be a combination of 
- *                        STANDARD_RIGHTS_REQUIRED| ..  
- *        ObjectAttribute = Initialized attributes for the object, contains 
- *                          the rootdirectory and the filename
- *        ParentProcess = Handle to the parent process.
- *        InheritObjectTable = Specifies to inherit the objects of the parent 
- *                             process if true.
- *        SectionHandle = Handle to a section object to back the image file
- *        DebugPort = Handle to a DebugPort if NULL the system default debug 
- *                    port will be used.
- *        ExceptionPort = Handle to a exception port. 
- * REMARKS:
- *        This function maps to the win32 CreateProcess. 
- * RETURNS: Status
- */
 {
+   HANDLE hProcess;
    PEPROCESS Process;
    PEPROCESS pParentProcess;
    PKPROCESS KProcess;
-   NTSTATUS Status;
    KIRQL oldIrql;
    PVOID LdrStartupAddr;
-   PVOID ImageBase;
-   PEPORT pDebugPort;
-   PEPORT pExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+   KPROCESSOR_MODE PreviousMode;
+   PVOID ImageBase = NULL;
+   PEPORT pDebugPort = NULL;
+   PEPORT pExceptionPort = NULL;
+   PSECTION_OBJECT SectionObject = NULL;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
+   DPRINT("PspCreateProcess(ObjectAttributes %x)\n", ObjectAttributes);
+   
+   PreviousMode = ExGetPreviousMode();
 
    BoundaryAddressMultiple.QuadPart = 0;
    
-   Status = ObReferenceObjectByHandle(ParentProcess,
-				      PROCESS_CREATE_PROCESS,
-				      PsProcessType,
-				      ExGetPreviousMode(),
-				      (PVOID*)&pParentProcess,
-				      NULL);
-   if (!NT_SUCCESS(Status))
+   if(ParentProcess != NULL)
+   {
+     Status = ObReferenceObjectByHandle(ParentProcess,
+				        PROCESS_CREATE_PROCESS,
+				        PsProcessType,
+				        PreviousMode,
+				        (PVOID*)&pParentProcess,
+				        NULL);
+     if (!NT_SUCCESS(Status))
+       {
+          DPRINT1("Failed to reference the parent process: Status: 0x%x\n", Status);
+	  return(Status);
+       }
+   }
+   else
+   {
+     pParentProcess = NULL;
+   }
+
+   /*
+    * Add the debug port
+    */
+   if (DebugPort != NULL)
      {
-	DPRINT("NtCreateProcess() = %x\n",Status);
-	return(Status);
+	Status = ObReferenceObjectByHandle(DebugPort,
+					   PORT_ALL_ACCESS,
+					   LpcPortObjectType,
+					   PreviousMode,
+					   (PVOID*)&pDebugPort,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+             DPRINT1("Failed to reference the debug port: Status: 0x%x\n", Status);
+             goto exitdereferenceobjects;
+	  }
      }
 
-   Status = ObCreateObject(ExGetPreviousMode(),
+   /*
+    * Add the exception port
+    */
+   if (ExceptionPort != NULL)
+     {
+	Status = ObReferenceObjectByHandle(ExceptionPort,
+					   PORT_ALL_ACCESS,
+					   LpcPortObjectType,
+					   PreviousMode,
+					   (PVOID*)&pExceptionPort,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+             DPRINT1("Failed to reference the exception port: Status: 0x%x\n", Status);
+             goto exitdereferenceobjects;
+	  }
+     }
+
+   if (SectionHandle != NULL)
+     {
+        Status = ObReferenceObjectByHandle(SectionHandle,
+                                           0,
+                                           MmSectionObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&SectionObject,
+                                           NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT1("Failed to reference process image section: Status: 0x%x\n", Status);
+             goto exitdereferenceobjects;
+	  }
+     }
+
+   Status = ObCreateObject(PreviousMode,
 			   PsProcessType,
 			   ObjectAttributes,
-			   ExGetPreviousMode(),
+			   PreviousMode,
 			   NULL,
 			   sizeof(EPROCESS),
 			   0,
@@ -720,32 +757,92 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			   (PVOID*)&Process);
    if (!NT_SUCCESS(Status))
      {
-	ObDereferenceObject(pParentProcess);
-	DPRINT("ObCreateObject() = %x\n",Status);
-	return(Status);
+        DPRINT1("Failed to create process object, Status: 0x%x\n", Status);
+        
+exitdereferenceobjects:
+        if(SectionObject != NULL)
+          ObDereferenceObject(SectionObject);
+        if(pExceptionPort != NULL)
+          ObDereferenceObject(pExceptionPort);
+        if(pDebugPort != NULL)
+          ObDereferenceObject(pDebugPort);
+        if(pParentProcess != NULL)
+          ObDereferenceObject(pParentProcess);
+	return Status;
      }
 
-  Status = ObInsertObject ((PVOID)Process,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   ProcessHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject (Process);
-      ObDereferenceObject (pParentProcess);
-      DPRINT("ObInsertObject() = %x\n",Status);
-      return Status;
-    }
+   KProcess = &Process->Pcb;
+   
+   RtlZeroMemory(Process, sizeof(EPROCESS));
+   
+   Status = PsCreateCidHandle(Process,
+                              PsProcessType,
+                              &Process->UniqueProcessId);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("Failed to create CID handle (unique process ID)! Status: 0x%x\n", Status);
+     ObDereferenceObject(Process);
+     goto exitdereferenceobjects;
+   }
 
-   KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
+   Process->DebugPort = pDebugPort;
+   Process->ExceptionPort = pExceptionPort;
+   
+   if(SectionObject != NULL)
+   {
+     UNICODE_STRING FileName;
+     PWCHAR szSrc;
+     PCHAR szDest;
+     USHORT lnFName = 0;
+
+     /*
+      * Determine the image file name and save it to the EPROCESS structure
+      */
+
+     FileName = SectionObject->FileObject->FileName;
+     szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
+     while(szSrc >= FileName.Buffer)
+     {
+       if(*szSrc == L'\\')
+       {
+         szSrc++;
+         break;
+       }
+       else
+       {
+         szSrc--;
+         lnFName++;
+       }
+     }
+
+     /* copy the image file name to the process and truncate it to 15 characters
+        if necessary */
+     szDest = Process->ImageFileName;
+     lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
+     while(lnFName-- > 0)
+     {
+       *(szDest++) = (UCHAR)*(szSrc++);
+     }
+     /* *szDest = '\0'; */
+   }
+
+   KeInitializeDispatcherHeader(&KProcess->DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),
 				FALSE);
-   KProcess = &Process->Pcb;
+
    /* Inherit parent process's affinity. */
-   KProcess->Affinity = pParentProcess->Pcb.Affinity;
+   if(pParentProcess != NULL)
+   {
+     KProcess->Affinity = pParentProcess->Pcb.Affinity;
+     Process->InheritedFromUniqueProcessId = pParentProcess->UniqueProcessId;
+     Process->SessionId = pParentProcess->SessionId;
+   }
+   else
+   {
+     KProcess->Affinity = KeActiveProcessors;
+   }
+   
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    KProcess->IopmOffset = 0xffff;
    KProcess->LdtDescriptor[0] = 0;
@@ -755,13 +852,11 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KProcess->AutoAlignment = 0;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
-   Process->UniqueProcessId = InterlockedIncrementUL(&PiNextProcessUniqueId); /* TODO */
-   Process->InheritedFromUniqueProcessId = 
-     (HANDLE)pParentProcess->UniqueProcessId;
+   
    ObCreateHandleTable(pParentProcess,
 		       InheritObjectTable,
 		       Process);
-   MmCopyMmInfo(ParentProcess, Process);
+   MmCopyMmInfo(pParentProcess ? pParentProcess : PsInitialSystemProcess, Process);
    
    KeInitializeEvent(&Process->LockEvent, SynchronizationEvent, FALSE);
    Process->LockCount = 0;
@@ -776,50 +871,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 
    ExInitializeFastMutex(&Process->TebLock);
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
-   
-   /*
-    * Add the debug port
-    */
-   if (DebugPort != NULL)
-     {
-	Status = ObReferenceObjectByHandle(DebugPort,
-					   PORT_ALL_ACCESS,
-					   LpcPortObjectType,
-					   UserMode,
-					   (PVOID*)&pDebugPort,
-					   NULL);   
-	if (!NT_SUCCESS(Status))
-	  {
-	     ObDereferenceObject(Process);
-	     ObDereferenceObject(pParentProcess);
-	     ZwClose(*ProcessHandle);
-	     *ProcessHandle = NULL;
-	     return(Status);
-	  }
-	Process->DebugPort = pDebugPort;
-     }
-	
-   /*
-    * Add the exception port
-    */
-   if (ExceptionPort != NULL)
-     {
-	Status = ObReferenceObjectByHandle(ExceptionPort,
-					   PORT_ALL_ACCESS,
-					   LpcPortObjectType,
-					   UserMode,
-					   (PVOID*)&pExceptionPort,
-					   NULL);   
-	if (!NT_SUCCESS(Status))
-	  {
-	     ObDereferenceObject(Process);
-	     ObDereferenceObject(pParentProcess);
-	     ZwClose(*ProcessHandle);
-	     *ProcessHandle = NULL;
-	     return(Status);
-	  }
-	Process->ExceptionPort = pExceptionPort;
-     }
    
    /*
     * Now we have created the process proper
@@ -843,7 +894,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the highest 64KB of the process address space\n");
-	KEBUGCHECK(0);
+	ObDereferenceObject(Process);
+        goto exitdereferenceobjects;
      }
 
    /* Protect the lowest 64KB of the process address space */
@@ -863,7 +915,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the lowest 64KB of the process address space\n");
-	KEBUGCHECK(0);
+	ObDereferenceObject(Process);
+        goto exitdereferenceobjects;
      }
 #endif
 
@@ -883,7 +936,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the memory above the shared user page\n");
-	KEBUGCHECK(0);
+	ObDereferenceObject(Process);
+        goto exitdereferenceobjects;
      }
 
    /* Create the shared data page */
@@ -901,131 +955,101 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT1("Failed to create shared data page\n");
-	KEBUGCHECK(0);
+        MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
+        DPRINT1("Failed to create shared data page\n");
+	ObDereferenceObject(Process);
+        goto exitdereferenceobjects;
      }
 
-   if (SectionHandle != NULL)
+#if 1
+   /*
+    * FIXME - the handle should be created after all things are initialized, NOT HERE!
+    */
+   Status = ObInsertObject ((PVOID)Process,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    &hProcess);
+   if (!NT_SUCCESS(Status))
      {
-        PSECTION_OBJECT SectionObject;
-        UNICODE_STRING FileName;
-        PWCHAR szSrc;
-        PCHAR szDest;
-        USHORT lnFName = 0;
-        
-        /*
-         * Determine the image file name and save it to the EPROCESS structure
-         */
-        Status = ObReferenceObjectByHandle(SectionHandle,
-                                           0,
-                                           MmSectionObjectType,
-                                           UserMode,
-                                           (PVOID*)&SectionObject,
-                                           NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Failed to reference section object\n", Status);
-	     ObDereferenceObject(Process);
-	     ObDereferenceObject(pParentProcess);
-	     return(Status);
-	  }
-
-        FileName = SectionObject->FileObject->FileName;
-        szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
-        while(szSrc >= FileName.Buffer)
-        {
-          if(*szSrc == L'\\')
-          {
-            szSrc++;
-            break;
-          }
-          else
-          {
-            szSrc--;
-            lnFName++;
-          }
-        }
-        
-        /* copy the image file name to the process and truncate it to 15 characters
-           if necessary */
-        szDest = Process->ImageFileName;
-        lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
-        while(lnFName-- > 0)
-        {
-          *(szDest++) = (UCHAR)*(szSrc++);
-        }
-        *szDest = '\0';
-        
-
-        ObDereferenceObject(SectionObject);
+        MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
+        DPRINT1("Failed to create a handle for the process\n");
+	ObDereferenceObject(Process);
+        goto exitdereferenceobjects;
      }
-   else
-     {
-        Process->ImageFileName[0] = '\0';
-     }
+#endif
 
    /*
-    * Map ntdll
+    * FIXME - Map ntdll
     */
-   Status = LdrpMapSystemDll(*ProcessHandle,
+   Status = LdrpMapSystemDll(hProcess, /* FIXME - hProcess shouldn't be available at this point! */
 			     &LdrStartupAddr);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("LdrpMapSystemDll failed (Status %x)\n", Status);
+	MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
 	ObDereferenceObject(Process);
-	ObDereferenceObject(pParentProcess);
-	return(Status);
+        goto exitdereferenceobjects;
      }
    
    /*
     * Map the process image
     */
-   if (SectionHandle != NULL)
+   if (SectionObject != NULL)
      {
+        ULONG ViewSize = 0;
         DPRINT("Mapping process image\n");
-	Status = LdrpMapImage(*ProcessHandle,
-			      SectionHandle,
-			      &ImageBase);
+	Status = MmMapViewOfSection(SectionObject,
+                                    Process,
+                                    (PVOID*)&ImageBase,
+                                    0,
+                                    ViewSize,
+                                    NULL,
+                                    &ViewSize,
+                                    0,
+                                    MEM_COMMIT,
+                                    PAGE_READWRITE);
+                                    
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("LdrpMapImage failed (Status %x)\n", Status);
+	     DbgPrint("Failed to map the process section (Status %x)\n", Status);
+	     MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
 	     ObDereferenceObject(Process);
-	     ObDereferenceObject(pParentProcess);
-	     return(Status);
+             goto exitdereferenceobjects;
 	  }
      }
-   else
-     {
-	ImageBase = NULL;
-     }
-   
-  /*
-   * Duplicate the token
-   */
-  Status = SepInitializeNewProcess(Process, pParentProcess);
-  if (!NT_SUCCESS(Status))
-    {
-       DbgPrint("SepInitializeNewProcess failed (Status %x)\n", Status);
-       ObDereferenceObject(Process);
-       ObDereferenceObject(pParentProcess);
-       return(Status);
-    }
+
+  if(pParentProcess != NULL)
+  {
+    /*
+     * Duplicate the token
+     */
+    Status = SepInitializeNewProcess(Process, pParentProcess);
+    if (!NT_SUCCESS(Status))
+      {
+         DbgPrint("SepInitializeNewProcess failed (Status %x)\n", Status);
+         ObDereferenceObject(Process);
+         goto exitdereferenceobjects;
+      }
+  }
+  else
+  {
+    /* FIXME */
+  }
 
    /*
-    * 
+    * FIXME - Create PEB
     */
    DPRINT("Creating PEB\n");
-   Status = PsCreatePeb(*ProcessHandle,
+   Status = PsCreatePeb(hProcess, /* FIXME - hProcess shouldn't be available at this point! */
 			Process,
 			ImageBase);
    if (!NT_SUCCESS(Status))
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
 	ObDereferenceObject(Process);
-	ObDereferenceObject(pParentProcess);
-	ZwClose(*ProcessHandle);
-	*ProcessHandle = NULL;
-	return(Status);
+	goto exitdereferenceobjects;
      }
    
    /*
@@ -1058,9 +1082,139 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 
    PspRunCreateProcessNotifyRoutines(Process, TRUE);
    
+   /*
+    * FIXME - the handle should be created not before this point!
+    */
+#if 0
+   Status = ObInsertObject ((PVOID)Process,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    &hProcess);
+#endif
+   if (NT_SUCCESS(Status))
+     {
+       _SEH_TRY
+       {
+         *ProcessHandle = hProcess;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+     }
+   
+   /*
+    * don't dereference the debug port, exception port and section object even
+    * if ObInsertObject() failed, the process is alive! We just couldn't return
+    * the handle to the caller!
+    */
+    
    ObDereferenceObject(Process);
-   ObDereferenceObject(pParentProcess);
-   return(STATUS_SUCCESS);
+   if(pParentProcess != NULL)
+     ObDereferenceObject(pParentProcess);
+
+   return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsCreateSystemProcess(PHANDLE ProcessHandle,
+		      ACCESS_MASK DesiredAccess,
+		      POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return PspCreateProcess(ProcessHandle,
+			   DesiredAccess,
+			   ObjectAttributes,
+			   NULL, /* no parent process */
+			   FALSE,
+			   NULL,
+			   NULL,
+			   NULL);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtCreateProcess(OUT PHANDLE ProcessHandle,
+		IN ACCESS_MASK DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+		IN HANDLE ParentProcess,
+		IN BOOLEAN InheritObjectTable,
+		IN HANDLE SectionHandle  OPTIONAL,
+		IN HANDLE DebugPort  OPTIONAL,
+		IN HANDLE ExceptionPort  OPTIONAL)
+/*
+ * FUNCTION: Creates a process.
+ * ARGUMENTS:
+ *        ProcessHandle (OUT) = Caller supplied storage for the resulting
+ *                              handle
+ *        DesiredAccess = Specifies the allowed or desired access to the
+ *                        process can be a combination of
+ *                        STANDARD_RIGHTS_REQUIRED| ..
+ *        ObjectAttribute = Initialized attributes for the object, contains
+ *                          the rootdirectory and the filename
+ *        ParentProcess = Handle to the parent process.
+ *        InheritObjectTable = Specifies to inherit the objects of the parent
+ *                             process if true.
+ *        SectionHandle = Handle to a section object to back the image file
+ *        DebugPort = Handle to a DebugPort if NULL the system default debug
+ *                    port will be used.
+ *        ExceptionPort = Handle to a exception port.
+ * REMARKS:
+ *        This function maps to the win32 CreateProcess.
+ * RETURNS: Status
+ */
+{
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+  
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(ProcessHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+   
+   if(ParentProcess == NULL)
+   {
+     Status = STATUS_INVALID_PARAMETER;
+   }
+   else
+   {
+     Status = PspCreateProcess(ProcessHandle,
+                               DesiredAccess,
+                               ObjectAttributes,
+                               ParentProcess,
+                               InheritObjectTable,
+                               SectionHandle,
+                               DebugPort,
+                               ExceptionPort);
+   }
+   
+   return Status;
 }
 
 
@@ -1123,7 +1277,7 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	  {
 	     current = CONTAINING_RECORD(current_entry, EPROCESS, 
 					 ProcessListEntry);
-	     if (current->UniqueProcessId == (ULONG)ClientId->UniqueProcess)
+	     if (current->UniqueProcessId == ClientId->UniqueProcess)
 	       {
 	          if (current->Pcb.State == PROCESS_STATE_TERMINATED)
 		    {
@@ -1220,7 +1374,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	  ProcessBasicInformationP->UniqueProcessId =
 	    Process->UniqueProcessId;
 	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
-	    (ULONG)Process->InheritedFromUniqueProcessId;
+	    Process->InheritedFromUniqueProcessId;
 	  ProcessBasicInformationP->BasePriority =
 	    Process->Pcb.BasePriority;
 
@@ -2418,7 +2572,7 @@ PsIsProcessBeingDebugged(
  * @implemented
  */
 NTSTATUS STDCALL
-PsLookupProcessByProcessId(IN PVOID ProcessId,
+PsLookupProcessByProcessId(IN HANDLE ProcessId,
 			   OUT PEPROCESS *Process)
 {
   KIRQL oldIrql;
@@ -2433,7 +2587,7 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
       current = CONTAINING_RECORD(current_entry,
 				  EPROCESS,
 				  ProcessListEntry);
-      if (current->UniqueProcessId == (ULONG)ProcessId)
+      if (current->UniqueProcessId == ProcessId)
 	{
 	  *Process = current;
           ObReferenceObject(current);

@@ -196,7 +196,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT1("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+  DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
   PreviousMode = ExGetPreviousMode();
 

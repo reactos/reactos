@@ -665,7 +665,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation descriptor
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset, MM_PAGEOP_PAGEIN, FALSE);
+   PageOp = MmGetPageOp(MemoryArea, NULL, 0, Segment, Offset, MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
    {
       DPRINT1("MmGetPageOp failed\n");
@@ -1187,7 +1187,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a pageop
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset,
+   PageOp = MmGetPageOp(MemoryArea, NULL, 0, Segment, Offset,
                         MM_PAGEOP_ACCESSFAULT, FALSE);
    if (PageOp == NULL)
    {
@@ -3589,7 +3589,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    Section = MArea->Data.SectionData.Section;
    Segment = MArea->Data.SectionData.Segment;
 
-   PageOp = MmCheckForPageOp(MArea, 0, NULL, Segment, Offset);
+   PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
 
    while (PageOp)
    {
@@ -3606,7 +3606,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       MmLockAddressSpace(&MArea->Process->AddressSpace);
       MmLockSectionSegment(Segment);
       MmspCompleteAndReleasePageOp(PageOp);
-      PageOp = MmCheckForPageOp(MArea, 0, NULL, Segment, Offset);
+      PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
    }
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);

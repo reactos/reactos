@@ -324,7 +324,7 @@ GetProcessId(HANDLE Process)
     return 0;
   }
 
-  return ProcessBasic.UniqueProcessId;
+  return (DWORD)ProcessBasic.UniqueProcessId;
 }
 
 

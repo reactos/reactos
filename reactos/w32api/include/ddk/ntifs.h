@@ -3287,7 +3287,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessByProcessId (
-    IN PVOID        ProcessId,
+    IN HANDLE       ProcessId,
     OUT PEPROCESS   *Process
 );
 

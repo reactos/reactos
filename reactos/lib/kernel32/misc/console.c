@@ -206,7 +206,7 @@ DuplicateConsoleHandle (HANDLE	hConsole,
   
   Request.Type = CSRSS_DUPLICATE_HANDLE;
   Request.Data.DuplicateHandleRequest.Handle = hConsole;
-  Request.Data.DuplicateHandleRequest.ProcessId = GetCurrentProcessId();
+  Request.Data.DuplicateHandleRequest.ProcessId = GetTeb()->Cid.UniqueProcess;
   Status = CsrClientCallServer(&Request,
 			       &Reply,
 			       sizeof(CSRSS_API_REQUEST),

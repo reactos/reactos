@@ -272,7 +272,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation
     */
-   PageOp = MmGetPageOp(MemoryArea, (ULONG)MemoryArea->Process->UniqueProcessId,
+   PageOp = MmGetPageOp(MemoryArea, MemoryArea->Process->UniqueProcessId,
                         (PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
                         MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)

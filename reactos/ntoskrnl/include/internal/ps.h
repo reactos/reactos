@@ -323,7 +323,7 @@ struct _EPROCESS
   /* Unknown. */
   PKTHREAD              LockOwner;                    /* 090 */
   /* Process id. */
-  ULONG                 UniqueProcessId;              /* 094 */
+  HANDLE                UniqueProcessId;              /* 094 */
   /* Unknown. */
   LIST_ENTRY            ActiveProcessLinks;           /* 098 */
   /* Unknown. */

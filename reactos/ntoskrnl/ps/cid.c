@@ -70,7 +70,7 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
     cido->Obj.Object = Object;
 
     KeAcquireSpinLock(&CidLock, &oldIrql);
-    cido->Handle = (HANDLE)(++CidCounter);
+    cido->Handle = (HANDLE)((ULONG_PTR)(++CidCounter) << 2);
     InsertTailList(&CidHead, &cido->Entry);
     KeReleaseSpinLock(&CidLock, oldIrql);
 
