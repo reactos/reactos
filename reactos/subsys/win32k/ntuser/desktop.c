@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.19 2004/08/17 21:47:36 weiden Exp $
+ *  $Id: desktop.c,v 1.20 2004/08/17 21:52:17 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -702,7 +702,7 @@ NtUserPaintDesktop(HDC hDC)
   if(WinSta->hbmWallpaper != NULL)
   {
     PWINDOW_OBJECT DeskWin;
-    DbgPrint("Paint 1\n");
+
     if((DeskWin = IntGetWindowObject(hWndDesktop)))
     {
       SIZE sz;
@@ -712,7 +712,7 @@ NtUserPaintDesktop(HDC hDC)
       sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
       sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
       IntReleaseWindowObject(DeskWin);
-      DbgPrint("Paint 2\n");
+
       x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
       y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
       
@@ -720,7 +720,7 @@ NtUserPaintDesktop(HDC hDC)
       if(hWallpaperDC != NULL)
       {
         HBITMAP hOldBitmap;
-        DbgPrint("Paint 3->%d, %d, %d, %d\n", x, y, sz.cx, sz.cy);
+
         if(x > 0 || y > 0)
         {
           /* FIXME - clip out the bitmap */
