@@ -156,7 +156,8 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
 
    if(status != STATUS_SUCCESS)
    {
-      DPRINT1("MOUCLASS: Could not connect to mouse port driver\n");
+      DPRINT("MOUCLASS: Could not connect to mouse port driver\n");
+      DPRINT("Status: %x\n", status);
       return status;
    }
 
