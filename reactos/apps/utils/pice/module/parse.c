@@ -1577,6 +1577,7 @@ COMMAND_PROTOTYPE(Unassemble)
     LPSTR pSrc,pFilename,pSrcStart,pSrcEnd;
     BOOLEAN bForceDisassembly = FALSE;
 
+	DPRINT((0,"Unassemble: CountSwitches: %u, count: %u\n", pArgs->CountSwitches, pArgs->Count));
     if(pArgs->CountSwitches>1)
         return TRUE;
 
@@ -1617,15 +1618,15 @@ COMMAND_PROTOTYPE(Unassemble)
         return TRUE;
 
 
-	DPRINT((0,"Unassemble(%0.4X:%0.8X)\n",segment,addr));
+	DPRINT((0,"Unassemble(%0.4X:%0.8X), lastst: %x, lastend:%x\n",segment,addr,ulLastDisassStartAddress,ulLastDisassEndAddress));
 
-    //
+ 	//
 	// unassemble
     //
     DisableScroll(SOURCE_WINDOW);
 
     // if we're inside last disassembly range we only need to move to highlight
-    if(addr>=ulLastDisassStartAddress &&
+    if(ulLastDisassStartAddress && ulLastDisassEndAddress && addr>=ulLastDisassStartAddress &&
        addr<ulLastDisassEndAddress )
 	{
 		addr=ulLastDisassStartAddress;
