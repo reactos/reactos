@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.30 2004/04/17 11:00:14 weiden Exp $
+/* $Id: scrollbar.c,v 1.31 2004/05/05 13:58:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -89,9 +89,17 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       break;
 
     case SB_VERT:
-      lprect->left = ClientRect.right - WindowRect.left;
+      if(Window->ExStyle & WS_EX_LEFTSCROLLBAR)
+      {
+        lprect->right = ClientRect.left - WindowRect.left;
+        lprect->left = lprect->right - NtUserGetSystemMetrics(SM_CXVSCROLL);
+      }
+      else
+      {
+        lprect->left = ClientRect.right - WindowRect.left;
+        lprect->right = lprect->left + NtUserGetSystemMetrics(SM_CXVSCROLL);
+      }
       lprect->top = ClientRect.top - WindowRect.top;
-      lprect->right = lprect->left + NtUserGetSystemMetrics(SM_CXVSCROLL);
       lprect->bottom = ClientRect.bottom - WindowRect.top;
       vertical = TRUE;
       break;
