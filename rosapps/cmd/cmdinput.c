@@ -302,7 +302,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				ClearCommandLine (str, maxlen, orgx, orgy);
 				current = charcount = 0;
 				break;
-
+			case VK_F3: 
 			case VK_UP:
 #ifdef FEATURE_HISTORY
 				/* get previous command from buffer */

@@ -18,6 +18,9 @@
  *
  *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection ready!
+ *
+ *    19-Jan-1999 (Paolo Pantaleo <paolopan@freemail.it>)
+ *        Added multiple file support (copied from y.c)
  */
 
 #include "config.h"
@@ -33,13 +36,18 @@
 
 INT cmd_type (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR  szBuffer[256];
-	HANDLE hFile;
-	DWORD  dwBytesRead;
-	DWORD  dwBytesWritten;
-	BOOL   bResult;
-	INT    args;
-	LPTSTR *arg;
+	TCHAR  buff[256];
+	HANDLE hFile, hConsoleOut, hFind;
+	DWORD  dwRead;
+	DWORD  dwWritten;
+	BOOL   bRet;
+	INT    argc,i;
+	LPTSTR *argv;
+	WIN32_FIND_DATA FindData;
+	
+	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
+
+
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -54,8 +62,50 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	arg = split (param, &args);
+	argv = split (param, &argc);
+	
+	for (i = 1; i < argc; i++)
+	{
+		hFind=FindFirstFile(argv[i],&FindData);
+		
+		if (hFind==INVALID_HANDLE_VALUE)
+		{
+			ConErrPrintf("File not found - %s\n",argv[i]);
+			continue;
+		}
 
+		do
+		{
+			hFile = CreateFile(FindData.cFileName,
+				GENERIC_READ,
+				FILE_SHARE_READ,NULL,
+				OPEN_EXISTING,
+				FILE_ATTRIBUTE_NORMAL,NULL);
+
+			if(hFile == INVALID_HANDLE_VALUE)
+			{
+				ConErrPrintf("File not found - %s\n",FindData.cFileName);
+				continue;
+			}
+
+			do
+			{
+				bRet = ReadFile(hFile,buff,sizeof(buff),&dwRead,NULL);
+
+				if (dwRead>0 && bRet)
+					WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
+			
+			} while(dwRead>0 && bRet);
+
+			CloseHandle(hFile);
+
+		}
+		while(FindNextFile(hFind,&FindData));
+
+		FindClose(hFile);
+	}	
+	
+/*
 	if (args > 1)
 	{
 		error_too_many_parameters (_T("\b \b"));
@@ -86,7 +136,8 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	while (bResult && dwBytesRead > 0);
 
 	CloseHandle (hFile);
-	freep (arg);
+	*/
+	freep (argv);
 
 	return 0;
 }
