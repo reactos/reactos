@@ -5,6 +5,8 @@
  *
  * 26 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
  *     started 
+ * Oct 2003 - Timothy Schepens <tischepe at fastmail dot fm>
+ *     use window size instead of buffer size.
  */
 
 #include <windows.h>
@@ -29,11 +31,9 @@ GetScreenSize (PSHORT maxx, PSHORT maxy)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	GetConsoleScreenBufferInfo (hStdOut, &csbi);
+		*maxx = csbi.srWindow.Right;
+		*maxy = csbi.srWindow.Bottom;
 
-	if (maxx)
-		*maxx = csbi.dwSize.X;
-	if (maxy)
-		*maxy = csbi.dwSize.Y;
 }
 
 
@@ -126,7 +126,7 @@ int main (int argc, char **argv)
 			{
 				ch_count=0;
 				line_count++;
-				if (line_count == maxy-1)
+				if (line_count == maxy)
 				{
 					line_count = 0;
 					WriteFile(hStdOut,&buff[last], i-last+1, &dwWritten, NULL);

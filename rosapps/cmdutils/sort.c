@@ -34,7 +34,7 @@ int             sortcol;	/* sort column */
 int             err = 0;	/* error counter */
 
 int
-cmpr(void *a, void *b)
+cmpr(const void *a, const void *b)
 {
     char           *A, *B;
 
