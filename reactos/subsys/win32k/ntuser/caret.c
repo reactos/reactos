@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.5 2003/11/22 01:51:05 rcampbell Exp $
+/* $Id: caret.c,v 1.6 2003/11/22 05:06:18 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,21 +50,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
 UINT FASTCALL
 IntGetCaretBlinkTime(VOID)
 {
-	HKEY hKey;
-	BYTE dwValue[4];
-	DWORD dwType;
-	DWORD dwLen;
-
-
-	if (RegOpenKeyEx( HKEY_CURRENT_USER, "Control Panel\\Desktop", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-	{
-	
-		if (RegQueryValueEx(hKey,"CursorBlinkRate",NULL,&dwType,dwValue,&dwLen) == ERROR_SUCCESS)
-		{
-			return atoi( (char *)dwValue );
-		}
-	}
-	return 0;
+  return 500;
 }
 
 BOOL FASTCALL
@@ -284,4 +270,3 @@ NtUserShowCaret(
   IntReleaseWindowObject(WindowObject);
   return TRUE;
 }
-
