@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.28 2003/08/20 07:45:02 gvg Exp $
+ * $Id: dib.c,v 1.29 2003/08/24 20:58:09 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -943,8 +943,7 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
     *paletteType = PAL_RGB; // Would it be BGR, considering the BGR nature of the DIB color table?
   }
 
-  if (bmi->bmiHeader.biClrUsed == 0 &&
-      bmi->bmiHeader.biBitCount <= 8)
+  if (bmi->bmiHeader.biClrUsed == 0)
     {
       ColorCount = 1 << bmi->bmiHeader.biBitCount;
     }
