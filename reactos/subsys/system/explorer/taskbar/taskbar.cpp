@@ -87,7 +87,7 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 								CCS_TOP|CCS_NODIVIDER | TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,
 								IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
-	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(TASKBUTTONWIDTH_MIN,TASKBUTTONWIDTH_MAX));
+	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(TASKBUTTONWIDTH_MAX,TASKBUTTONWIDTH_MAX));
 	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
 	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
@@ -321,6 +321,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			entry._btn_idx = SendMessage(pThis->_htoolbar, TB_BUTTONCOUNT, 0, 0);
 
 			SendMessage(pThis->_htoolbar, TB_INSERTBUTTON, entry._btn_idx, (LPARAM)&btn);
+
 			pThis->ResizeButtons();
 		} else {
 			 // refresh attributes of existing buttons
@@ -437,13 +438,15 @@ void TaskBar::ResizeButtons()
 	int btns = _map.size();
 
 	if (btns > 0) {
-		int width = ClientRect(_hwnd).right / btns;
-		if (width < TASKBUTTONWIDTH_MIN)
-			width = TASKBUTTONWIDTH_MIN;
-		else if (width > TASKBUTTONWIDTH_MAX)
-			width = TASKBUTTONWIDTH_MAX;
+		int bar_width = ClientRect(_hwnd).right;
+		int btn_width = bar_width / btns;
 
-		SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(TASKBUTTONWIDTH_MIN,width));
-//		SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);
+		if (btn_width < TASKBUTTONWIDTH_MIN)
+			btn_width = TASKBUTTONWIDTH_MIN;
+		else if (btn_width > TASKBUTTONWIDTH_MAX)
+			btn_width = TASKBUTTONWIDTH_MAX;
+
+		SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(btn_width,btn_width));
+		SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);
 	}
 }
