@@ -41,8 +41,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
    * If the client has just closed its handle then tell the server what
    * happened and disconnect this port.
    */
-  if (HandleCount == 0 && Port->State == EPORT_CONNECTED_CLIENT && 
-      ObGetObjectPointerCount(Port) == 2)
+  if (HandleCount == 1 && Port->State == EPORT_CONNECTED_CLIENT)
     {
       DPRINT("Informing server\n");
       Message.MessageSize = sizeof(LPC_MESSAGE);
@@ -64,8 +63,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
    * If the server has closed all of its handles then disconnect the port,
    * don't actually notify the client until it attempts an operation.
    */
-  if (HandleCount == 0 && Port->State == EPORT_CONNECTED_SERVER && 
-      ObGetObjectPointerCount(Port) == 1)
+  if (HandleCount == 1 && Port->State == EPORT_CONNECTED_SERVER)
     {
         DPRINT("Cleaning up server\n");
 	Port->OtherPort->OtherPort = NULL;

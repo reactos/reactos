@@ -376,7 +376,10 @@ PiDeleteThread(PVOID ObjectBody)
   Process = Thread->ThreadsProcess;
   Thread->ThreadsProcess = NULL;
 
-  PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+  if(Thread->Cid.UniqueThread != NULL)
+  {
+    PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+  }
   
   if(Thread->Tcb.Win32Thread != NULL)
   {
@@ -395,18 +398,38 @@ PiDeleteThread(PVOID ObjectBody)
 NTSTATUS
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
-		   PHANDLE ThreadHandle,
-		   ACCESS_MASK	DesiredAccess,
-		   POBJECT_ATTRIBUTES ThreadAttributes,
+		   POBJECT_ATTRIBUTES ObjectAttributes,
 		   BOOLEAN First)
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
    KIRQL oldIrql;
-
+   
+   PAGED_CODE();
+   
+   PreviousMode = ExGetPreviousMode();
+   
    if (Process == NULL)
      {
 	Process = PsInitialSystemProcess;
+     }
+   
+   /*
+    * Create and initialize thread
+    */
+   Status = ObCreateObject(PreviousMode,
+			   PsThreadType,
+			   ObjectAttributes,
+			   KernelMode,
+			   NULL,
+			   sizeof(ETHREAD),
+			   0,
+			   0,
+			   (PVOID*)&Thread);
+   if (!NT_SUCCESS(Status))
+     {
+        return(Status);
      }
 
    /*
@@ -416,35 +439,10 @@ PsInitializeThread(PEPROCESS Process,
                               PROCESS_CREATE_THREAD,
                               PsProcessType,
                               KernelMode);
-   
-   /*
-    * Create and initialize thread
-    */
-   Status = ObCreateObject(UserMode,
-			   PsThreadType,
-			   ThreadAttributes,
-			   KernelMode,
-			   NULL,
-			   sizeof(ETHREAD),
-			   0,
-			   0,
-			   (PVOID*)&Thread);
-   if (!NT_SUCCESS(Status))
-     {
-        ObDereferenceObject (Process);
-        return(Status);
-     }
 
-  /* create a client id handle */
-  Status = PsCreateCidHandle(Thread, PsThreadType, &Thread->Cid.UniqueThread);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject (Thread);
-      ObDereferenceObject (Process);
-      return Status;
-    }
-  Thread->ThreadsProcess = Process;
-  Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
+   Thread->ThreadsProcess = Process;
+   Thread->Cid.UniqueThread = NULL;
+   Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
 
    DPRINT("Thread = %x\n",Thread);
 
@@ -477,14 +475,8 @@ PsInitializeThread(PEPROCESS Process,
    KeReleaseDispatcherDatabaseLock(oldIrql);
 
    *ThreadPtr = Thread;
-   
-   Status = ObInsertObject((PVOID)Thread,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   ThreadHandle);
-   return(Status);
+
+   return STATUS_SUCCESS;
 }
 
 
@@ -737,21 +729,29 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 
   Status = PsInitializeThread(Process,
 			      &Thread,
-			      &hThread,
-			      DesiredAccess,
 			      ObjectAttributes,
 			      FALSE);
 
   ObDereferenceObject(Process);
-
+  
   if (!NT_SUCCESS(Status))
     {
       return(Status);
+    }
+  
+  /* create a client id handle */
+  Status = PsCreateCidHandle(Thread, PsThreadType, &Thread->Cid.UniqueThread);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(Thread);
+      return Status;
     }
 
   Status = KiArchInitThreadWithContext(&Thread->Tcb, ThreadContext);
   if (!NT_SUCCESS(Status))
     {
+      PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+      ObDereferenceObject(Thread);
       return(Status);
     }
 
@@ -761,6 +761,8 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 		       InitialTeb);
   if (!NT_SUCCESS(Status))
     {
+      PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+      ObDereferenceObject(Thread);
       return(Status);
     }
   Thread->Tcb.Teb = TebBase;
@@ -808,20 +810,29 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   PsUnblockThread(Thread, NULL, 0);
   KeReleaseDispatcherDatabaseLock(oldIrql);
 
-  _SEH_TRY
+  Status = ObInsertObject((PVOID)Thread,
+			  NULL,
+			  DesiredAccess,
+			  0,
+			  NULL,
+			  &hThread);
+  if(NT_SUCCESS(Status))
   {
-    if(ClientId != NULL)
+    _SEH_TRY
     {
-      *ClientId = Thread->Cid;
+      if(ClientId != NULL)
+      {
+        *ClientId = Thread->Cid;
+      }
+      *ThreadHandle = hThread;
     }
-    *ThreadHandle = hThread;
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
   }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
+  
   return Status;
 }
 
@@ -865,20 +876,28 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    
    Status = PsInitializeThread(NULL,
 			       &Thread,
-			       ThreadHandle,
-			       DesiredAccess,
 			       ObjectAttributes,
 			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
+
+   Status = PsCreateCidHandle(Thread,
+                              PsThreadType,
+                              &Thread->Cid.UniqueThread);
+   if(!NT_SUCCESS(Status))
+   {
+     ObDereferenceObject(Thread);
+     return Status;
+   }
    
    Thread->StartAddress = StartRoutine;
    Status = KiArchInitThread(&Thread->Tcb, StartRoutine, StartContext);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+        ObDereferenceObject(Thread);
+        return(Status);
      }
 
    if (ClientId != NULL)
@@ -890,7 +909,17 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    PsUnblockThread(Thread, NULL, 0);
    KeReleaseDispatcherDatabaseLock(oldIrql);
    
-   return(STATUS_SUCCESS);
+   Status = ObInsertObject((PVOID)Thread,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   ThreadHandle);
+   
+   /* don't dereference the thread, the initial reference serves as the keep-alive
+      reference which will be removed by the thread reaper */
+   
+   return Status;
 }
 
 

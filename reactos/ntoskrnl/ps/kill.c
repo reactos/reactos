@@ -218,6 +218,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
     
     PspRunCreateProcessNotifyRoutines(CurrentProcess, FALSE);
     PsTerminateWin32Process(CurrentProcess);
+    
     PiTerminateProcess(CurrentProcess, ExitStatus);
    }
 
@@ -315,19 +316,26 @@ PiTerminateProcess(PEPROCESS Process,
 	   ObGetObjectHandleCount(Process));
    
    ObReferenceObject(Process);
-   if (InterlockedExchangeUL(&Process->Pcb.State, 
-			     PROCESS_STATE_TERMINATED) == 
-       PROCESS_STATE_TERMINATED)
+   if (Process->Pcb.State == PROCESS_STATE_TERMINATED)
      {
         ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
      }
+
+   Process->Pcb.State = PROCESS_STATE_TERMINATED;
+   
    CurrentProcess = PsGetCurrentProcess();
    if (Process != CurrentProcess)
    {
       KeAttachProcess(&Process->Pcb);
    }
-   ObCloseAllHandles(Process);
+
+   ObDeleteHandleTable(Process);
+   if(Process->UniqueProcessId != NULL)
+   {
+     PsDeleteCidHandle(Process->UniqueProcessId, PsProcessType);
+   }
+
    if (Process != CurrentProcess)
    {
       KeDetachProcess();

@@ -34,10 +34,10 @@
 #define NDEBUG
 #include <debug.h>
 
-#define HEADER_TO_BODY(ObjectHeader) \
+#define USER_HEADER_TO_BODY(ObjectHeader) \
   ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
 
-#define BODY_TO_HEADER(ObjectBody) \
+#define USER_BODY_TO_HEADER(ObjectBody) \
   ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
 
 /* FUNCTIONS *****************************************************************/
@@ -125,7 +125,7 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
 	  
 	  if (ObjectBody != NULL)
 	    {
-	      PUSER_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+	      PUSER_OBJECT_HEADER ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
 	      
 	      ObmReferenceObjectByPointer(ObjectBody, otUnknown);
 	      ObjectHeader->HandleCount--;
@@ -191,7 +191,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
   
   if (ObjectBody != NULL)
     {
-      ObjectHeader = BODY_TO_HEADER(ObjectBody);
+      ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
       ObjectHeader->HandleCount--;
       ObmReferenceObjectByPointer(ObjectBody, otUnknown);
       Entry->ObjectBody = NULL;
@@ -219,7 +219,7 @@ ObmpInitializeObject(PUSER_HANDLE_TABLE HandleTable,
   if (Handle != NULL)
     {
       Status = ObmCreateHandle(HandleTable,
-			       HEADER_TO_BODY(ObjectHeader),
+			       USER_HEADER_TO_BODY(ObjectHeader),
 			       Handle);
     }
 
@@ -230,7 +230,7 @@ ObmpInitializeObject(PUSER_HANDLE_TABLE HandleTable,
 ULONG FASTCALL
 ObmGetReferenceCount(PVOID ObjectBody)
 {
-  PUSER_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  PUSER_OBJECT_HEADER ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
 
   return ObjectHeader->RefCount;
 }
@@ -238,7 +238,7 @@ ObmGetReferenceCount(PVOID ObjectBody)
 ULONG FASTCALL
 ObmGetHandleCount(PVOID ObjectBody)
 {
-  PUSER_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  PUSER_OBJECT_HEADER ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
 
   return ObjectHeader->HandleCount;
 }
@@ -260,7 +260,7 @@ ObmReferenceObject(PVOID ObjectBody)
       return;
     }
   
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
   
   ObjectHeader->RefCount++;
 
@@ -284,7 +284,7 @@ ObmDereferenceObject(PVOID ObjectBody)
       return;
     }
   
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
   
   ObjectHeader->RefCount--;
   ObmpPerformRetentionChecks(ObjectHeader);
@@ -303,7 +303,7 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
 {
   PUSER_OBJECT_HEADER ObjectHeader;
   
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
   
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
@@ -331,7 +331,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
       return NULL;
     }
   
-  ObjectBody = HEADER_TO_BODY(ObjectHeader);
+  ObjectBody = USER_HEADER_TO_BODY(ObjectHeader);
   
   RtlZeroMemory(ObjectBody, ObjectSize);
   
@@ -369,7 +369,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
 
   if (ObjectBody != NULL) 
     {
-      BODY_TO_HEADER(ObjectBody)->HandleCount++;
+      USER_BODY_TO_HEADER(ObjectBody)->HandleCount++;
     }
   
   ObmpLockHandleTable(HandleTable);
@@ -456,7 +456,7 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   
   ObmpUnlockHandleTable(HandleTable);
   
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
   
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {

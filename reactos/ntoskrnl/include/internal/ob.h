@@ -228,16 +228,21 @@ enum
    OBJTYP_MAX,
 };
 
+#define HEADER_TO_BODY(objhdr)                                                 \
+  (PVOID)((ULONG_PTR)objhdr + sizeof(OBJECT_HEADER) - sizeof(COMMON_BODY_HEADER))
+
+#define BODY_TO_HEADER(objbdy)                                                 \
+  CONTAINING_RECORD(&(((PCOMMON_BODY_HEADER)objbdy)->Type), OBJECT_HEADER, Type)
 
 #define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
 
+#define HANDLE_TO_EX_HANDLE(handle)                                            \
+  (LONG)(((LONG)(handle) >> 2) - 1)
+#define EX_HANDLE_TO_HANDLE(exhandle)                                          \
+  (HANDLE)(((exhandle) + 1) << 2)
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
-
-
-POBJECT_HEADER BODY_TO_HEADER(PVOID body);
-PVOID HEADER_TO_BODY(POBJECT_HEADER obj);
 
 VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			  POBJECT_HEADER Header,
@@ -260,13 +265,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
-VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
 
 NTSTATUS
 ObDeleteHandle(PEPROCESS Process,
-	       HANDLE Handle,
-	       PVOID *ObjectBody);
+	       HANDLE Handle);
 
 NTSTATUS
 ObpQueryHandleAttributes(HANDLE Handle,

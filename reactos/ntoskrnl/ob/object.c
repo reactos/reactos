@@ -25,18 +25,6 @@ typedef struct _RETENTION_CHECK_PARAMS
 
 /* FUNCTIONS ************************************************************/
 
-PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
-{
-  return(((char*)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
-}
-
-
-POBJECT_HEADER BODY_TO_HEADER(PVOID body)
-{
-  PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
-  return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
-}
-
 NTSTATUS
 ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                            IN KPROCESSOR_MODE AccessMode,
@@ -734,7 +722,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
 
   /* Initialize the object header */
-  DPRINT("Initalizing header\n");
+  DPRINT("Initalizing header 0x%x (%wZ)\n", Header, &Type->TypeName);
   Header->HandleCount = 0;
   Header->RefCount = 1;
   Header->ObjectType = Type;
@@ -1111,7 +1099,7 @@ ObfReferenceObject(IN PVOID Object)
       KEBUGCHECK(0);
     }
 
-  (VOID)InterlockedIncrement(&Header->RefCount);
+  InterlockedIncrement(&Header->RefCount);
 }
 
 
@@ -1137,25 +1125,23 @@ ObfDereferenceObject(IN PVOID Object)
   POBJECT_HEADER Header;
   LONG NewRefCount;
   BOOL Permanent;
-  ULONG HandleCount;
 
   ASSERT(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
   Permanent = Header->Permanent;
-  HandleCount = Header->HandleCount;
 
   /* 
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
   NewRefCount = InterlockedDecrement(&Header->RefCount);
+  DPRINT("ObfDereferenceObject(0x%x)==%d (%wZ)\n", Object, NewRefCount, &Header->ObjectType->TypeName);
   ASSERT(NewRefCount >= 0);
 
   /* Check whether the object can now be deleted. */
   if (NewRefCount == 0 &&
-      HandleCount == 0 &&
       !Permanent)
     {
       ObpDeleteObjectDpcLevel(Header, NewRefCount);

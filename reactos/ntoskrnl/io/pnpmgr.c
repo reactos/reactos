@@ -1740,10 +1740,13 @@ IopInvalidateDeviceRelations(
       &IoStatusBlock,
       0,
       0);
- 
-   BootDrivers = NT_SUCCESS(Status) ? FALSE : TRUE;
-
-   ZwClose(Handle);
+   if(NT_SUCCESS(Status))
+   {
+     BootDrivers = FALSE;
+     ZwClose(Handle);
+   }
+   else
+     BootDrivers = TRUE;
 
    /*
     * Initialize services for discovered children. Only boot drivers will

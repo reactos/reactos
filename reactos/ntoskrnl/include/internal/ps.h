@@ -345,7 +345,7 @@ struct _EPROCESS
   LIST_ENTRY            SessionProcessLinks;
   struct _EPORT         *DebugPort;
   struct _EPORT         *ExceptionPort;
-  HANDLE_TABLE          HandleTable;
+  PHANDLE_TABLE         ObjectTable;
   PVOID                 Token;
   FAST_MUTEX            WorkingSetLock;
   ULONG                 WorkingSetPage;
@@ -454,8 +454,6 @@ VOID PsQueueThreadReap(PETHREAD Thread);
 NTSTATUS 
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
-		   PHANDLE ThreadHandle,
-		   ACCESS_MASK DesiredAccess,
 		   POBJECT_ATTRIBUTES ObjectAttributes,
 		   BOOLEAN First);
 
@@ -641,26 +639,12 @@ typedef struct _EJOB
 
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
 
-/* CID */
-
-typedef struct _CID_OBJECT
-{
-  LONG ref;
-  HANDLE Handle;
-  LIST_ENTRY Entry;
-  FAST_MUTEX Lock;
-  union
-  {
-    struct _EPROCESS *Process;
-    struct _ETHREAD *Thread;
-    PVOID Object;
-  } Obj;
-} CID_OBJECT, *PCID_OBJECT;
+/* CLIENT ID */
 
 NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);
 NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-PCID_OBJECT PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-VOID PsUnlockCidObject(PCID_OBJECT CidObject);
+PHANDLE_TABLE_ENTRY PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object);
+VOID PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry);
 NTSTATUS PsLockProcess(PEPROCESS Process, BOOL Timeout);
 VOID PsUnlockProcess(PEPROCESS Process);
 

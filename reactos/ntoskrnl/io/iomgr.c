@@ -52,7 +52,7 @@ IopCloseFile(PVOID ObjectBody,
    
    DPRINT("IopCloseFile()\n");
    
-   if (HandleCount > 0 || FileObject->DeviceObject == NULL)
+   if (HandleCount > 1 || FileObject->DeviceObject == NULL)
      {
 	return;
      }

@@ -42,6 +42,15 @@ VOID STDCALL KeAcquireSpinLock (PKSPIN_LOCK	SpinLock,
 
 #ifndef __USE_W32API
 
+static __inline
+VOID
+KeMemoryBarrier(
+  VOID)
+{
+  volatile LONG Barrier;
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+}
+
 VOID STDCALL KeAcquireSpinLockAtDpcLevel (IN PKSPIN_LOCK	SpinLock);
 
 #define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel

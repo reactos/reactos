@@ -15,22 +15,22 @@ ARCH := i386
 # be optimized for. 
 #
 
-OARCH := i486
+OARCH := i586
 
 #
 # Whether to compile in the kernel debugger
 #
-KDBG := 0
+KDBG := 1
 
 #
 # Whether to compile for debugging
 #
-DBG := 0
+DBG := 1
 
 #
 # Whether to compile with optimizations
 #
-OPTIMIZED := 0
+OPTIMIZED := 1
 
 #
 # Whether to compile a multiprocessor or single processor version

@@ -412,15 +412,6 @@ PsInitProcessManagment(VOID)
 
    strcpy(PsInitialSystemProcess->ImageFileName, "System");
    
-   Status = PsCreateCidHandle(PsInitialSystemProcess,
-                              PsProcessType,
-                              &PsInitialSystemProcess->UniqueProcessId);
-   if(!NT_SUCCESS(Status))
-   {
-     DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
-     return;
-   }
-   
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
    InsertHeadList(&PsActiveProcessHead,
@@ -456,7 +447,6 @@ PiDeleteProcessWorker(PVOID pContext)
   KDB_DELETEPROCESS_HOOK(Process);
 
   ObDereferenceObject(Process->Token);
-  ObDeleteHandleTable(Process);
 
   if (CurrentProcess != Process)
     {
@@ -1458,7 +1448,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
       case ProcessHandleCount:
       {
-	ULONG HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
+	ULONG HandleCount = ObpGetHandleCountByHandleTable(Process->ObjectTable);
 	  
 	_SEH_TRY
 	{
@@ -2636,30 +2626,25 @@ NTSTATUS STDCALL
 PsLookupProcessByProcessId(IN HANDLE ProcessId,
 			   OUT PEPROCESS *Process)
 {
-  PLIST_ENTRY current_entry;
-  PEPROCESS current;
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PEPROCESS FoundProcess;
 
-  ExAcquireFastMutex(&PspActiveProcessMutex);
+  PAGED_CODE();
 
-  current_entry = PsActiveProcessHead.Flink;
-  while (current_entry != &PsActiveProcessHead)
-    {
-      current = CONTAINING_RECORD(current_entry,
-				  EPROCESS,
-				  ProcessListEntry);
-      if (current->UniqueProcessId == ProcessId)
-	{
-	  *Process = current;
-          ObReferenceObject(current);
-	  ExReleaseFastMutex(&PspActiveProcessMutex);
-	  return(STATUS_SUCCESS);
-	}
-      current_entry = current_entry->Flink;
-    }
+  ASSERT(Process);
 
-  ExReleaseFastMutex(&PspActiveProcessMutex);
+  CidEntry = PsLookupCidHandle(ProcessId, PsProcessType, (PVOID*)&FoundProcess);
+  if(CidEntry != NULL)
+  {
+    ObReferenceObject(FoundProcess);
 
-  return(STATUS_INVALID_PARAMETER);
+    PsUnlockCidHandle(CidEntry);
+
+    *Process = FoundProcess;
+    return STATUS_SUCCESS;
+  }
+
+  return STATUS_INVALID_PARAMETER;
 }
 
 VOID

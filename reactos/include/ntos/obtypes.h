@@ -87,17 +87,41 @@ typedef struct _OBJECT_ATTRIBUTES
    PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
+typedef struct _HANDLE_TABLE_ENTRY_INFO {
+    ULONG AuditMask;
+} HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _HANDLE_TABLE_ENTRY {
+    union {
+        PVOID Object;
+        ULONG_PTR ObAttributes;
+        PHANDLE_TABLE_ENTRY_INFO InfoTable;
+        ULONG_PTR Value;
+    } u1;
+    union {
+        ULONG GrantedAccess;
+        USHORT GrantedAccessIndex;
+        LONG NextFreeTableEntry;
+    } u2;
+} HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
+
 #endif /* __USE_W32API */
 
 typedef struct _HANDLE_TABLE
 {
-   LIST_ENTRY ListHead;
-   KSPIN_LOCK ListLock;
-} HANDLE_TABLE;
+    ULONG Flags;
+    LONG HandleCount;
+    PHANDLE_TABLE_ENTRY **Table;
+    PEPROCESS QuotaProcess;
+    HANDLE UniqueProcessId;
+    LONG FirstFreeTableEntry;
+    LONG NextIndexNeedingPool;
+    ERESOURCE HandleTableLock;
+    LIST_ENTRY HandleTableList;
+    KEVENT HandleContentionEvent;
+} HANDLE_TABLE, *PHANDLE_TABLE;
 
 #ifndef __USE_W32API
-
-typedef struct _HANDLE_TABLE *PHANDLE_TABLE;
 
 /*
  * FIXME: These will eventually become centerfold in the compliant Ob Manager

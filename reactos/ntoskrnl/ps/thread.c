@@ -222,7 +222,7 @@ PsIsThreadTerminating(IN PETHREAD Thread)
 
 /*
  * @unimplemented
- */             
+ */
 BOOLEAN
 STDCALL
 PsIsSystemThread(
@@ -235,7 +235,7 @@ PsIsSystemThread(
 
 /*
  * @implemented
- */                       
+ */
 BOOLEAN
 STDCALL
 PsIsThreadImpersonating(
@@ -251,7 +251,7 @@ KiRequestReschedule(CCHAR Processor)
    PKPCR Pcr;
 
    Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
-   Pcr->PrcbData.QuantumEnd = TRUE;
+   Pcr->Prcb->QuantumEnd = TRUE;
    KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
 }
 
@@ -641,7 +641,7 @@ PsEnumThreadsByProcess(PEPROCESS Process)
 
 /*
  * @unimplemented
- */                       
+ */
 NTSTATUS
 STDCALL
 PsRemoveCreateThreadNotifyRoutine (
@@ -704,13 +704,10 @@ VOID INIT_FUNCTION
 PsPrepareForApplicationProcessorInit(ULONG Id)
 {
   PETHREAD IdleThread;
-  HANDLE IdleThreadHandle;
-  PKPCR Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
+  PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
 
   PsInitializeThread(NULL,
 		     &IdleThread,
-		     &IdleThreadHandle,
-		     THREAD_ALL_ACCESS,
 		     NULL,
 		     FALSE);
   IdleThread->Tcb.State = THREAD_STATE_RUNNING;
@@ -719,12 +716,11 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
   IdleThread->Tcb.BasePriority = LOW_PRIORITY;
-  Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
-  Pcr->PrcbData.CurrentThread = &IdleThread->Tcb;
+  Prcb->IdleThread = &IdleThread->Tcb;
+  Prcb->CurrentThread = &IdleThread->Tcb;
 
   Ki386InitialStackArray[Id] = (PVOID)IdleThread->Tcb.StackLimit;
 
-  NtClose(IdleThreadHandle);
   DPRINT("IdleThread for Processor %d has PID %d\n",
 	   Id, IdleThread->Cid.UniqueThread);
 }
@@ -738,7 +734,6 @@ PsInitThreadManagment(VOID)
    HANDLE PiReaperThreadHandle;
    PETHREAD FirstThread;
    ULONG i;
-   HANDLE FirstThreadHandle;
    NTSTATUS Status;
 
    for (i=0; i < MAXIMUM_PRIORITY; i++)
@@ -771,14 +766,12 @@ PsInitThreadManagment(VOID)
 
    ObpCreateTypeObject(PsThreadType);
 
-   PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
-		      THREAD_ALL_ACCESS,NULL, TRUE);
+   PsInitializeThread(NULL, &FirstThread, NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
    FirstThread->Tcb.Affinity = (1 << 0);
    KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
-   NtClose(FirstThreadHandle);
 
    DPRINT("FirstThread %x\n",FirstThread);
 
@@ -895,8 +888,8 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 		     {
 		       for (i = 0; i < KeNumberProcessors; i++)
 		       {
-		          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-			  if (Pcr->PrcbData.CurrentThread == Thread)
+			  Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+			  if (Pcr->Prcb->CurrentThread == Thread)
 			  {
 			    KeReleaseDispatcherDatabaseLockFromDpcLevel();
                             KiRequestReschedule(i);
@@ -959,7 +952,7 @@ KeSetAffinityThread(PKTHREAD	Thread,
 	     for (i = 0; i < KeNumberProcessors; i++)
 	     {
 		Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-		if (Pcr->PrcbData.CurrentThread == Thread)
+		if (Pcr->Prcb->CurrentThread == Thread)
 		{
 		   if (!(Affinity & ProcessorMask))
 		   {
@@ -988,63 +981,95 @@ KeSetAffinityThread(PKTHREAD	Thread,
 NTSTATUS STDCALL
 NtOpenThread(OUT PHANDLE ThreadHandle,
 	     IN	ACCESS_MASK DesiredAccess,
-	     IN	POBJECT_ATTRIBUTES ObjectAttributes,
-	     IN	PCLIENT_ID ClientId)
+	     IN	POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	     IN	PCLIENT_ID ClientId  OPTIONAL)
 {
-   NTSTATUS Status = STATUS_INVALID_PARAMETER;
-   
+   KPROCESSOR_MODE PreviousMode;
+   CLIENT_ID SafeClientId;
+   HANDLE hThread;
+   NTSTATUS Status = STATUS_SUCCESS;
+
    PAGED_CODE();
 
-   if((NULL != ThreadHandle)&&(NULL != ObjectAttributes))
-   {
-      PETHREAD EThread = NULL;
+   PreviousMode = ExGetPreviousMode();
 
-      if((ClientId)
-	&& (ClientId->UniqueThread))
-      {
-         // It is an error to specify both
-	 // ObjectAttributes.ObjectName
-         // and ClientId.
-         if((ObjectAttributes)
-	   && (ObjectAttributes->ObjectName)
-	   && (0 < ObjectAttributes->ObjectName->Length))
-	 {
-            return(STATUS_INVALID_PARAMETER_MIX);
-	 }
-	 // Parameters mix OK
-         Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
-                     & EThread);
-      }
-      else if((ObjectAttributes)
-	     && (ObjectAttributes->ObjectName)
-	     && (0 < ObjectAttributes->ObjectName->Length))
-      {
-         // Three Ob attributes are forbidden
-         if(!(ObjectAttributes->Attributes &
-            (OBJ_PERMANENT | OBJ_EXCLUSIVE | OBJ_OPENIF)))
-	 {
-            Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-                        ObjectAttributes->Attributes,
-                        NULL,
-                        DesiredAccess,
-                        PsThreadType,
-                        UserMode,
-                        NULL,
-                        (PVOID*) & EThread);
-	 }
-      }
-      // EThread may be OK...
-      if(STATUS_SUCCESS == Status)
-      {
-         Status = ObCreateHandle(PsGetCurrentProcess(),
-                     EThread,
-                     DesiredAccess,
-                     FALSE,
-                     ThreadHandle);
-         ObDereferenceObject(EThread);
-      }
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(ThreadHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+       if(ClientId != NULL)
+       {
+         ProbeForRead(ClientId,
+                      sizeof(CLIENT_ID),
+                      sizeof(ULONG));
+         SafeClientId = *ClientId;
+         ClientId = &SafeClientId;
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
-   return(Status);
+
+   if(!((ObjectAttributes == NULL) ^ (ClientId == NULL)))
+   {
+     DPRINT("NtOpenThread should be called with either ObjectAttributes or ClientId!\n");
+     return STATUS_INVALID_PARAMETER;
+   }
+
+   if(ClientId != NULL)
+   {
+     PETHREAD Thread;
+
+     Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
+                                       &Thread);
+     if(NT_SUCCESS(Status))
+     {
+       Status = ObInsertObject(Thread,
+                               NULL,
+                               DesiredAccess,
+                               0,
+                               NULL,
+                               &hThread);
+
+       ObDereferenceObject(Thread);
+     }
+   }
+   else
+   {
+     Status = ObOpenObjectByName(ObjectAttributes,
+                                 PsThreadType,
+                                 NULL,
+                                 PreviousMode,
+                                 DesiredAccess,
+                                 NULL,
+                                 &hThread);
+   }
+
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *ThreadHandle = hThread;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
+   return Status;
 }
 
 NTSTATUS STDCALL
@@ -1074,22 +1099,26 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 			   OUT PEPROCESS *Process OPTIONAL,
 			   OUT PETHREAD *Thread)
 {
-  PCID_OBJECT CidObject;
+  PHANDLE_TABLE_ENTRY CidEntry;
   PETHREAD FoundThread;
 
-  CidObject = PsLockCidHandle((HANDLE)Cid->UniqueThread, PsThreadType);
-  if(CidObject != NULL)
+  PAGED_CODE();
+
+  ASSERT(Thread);
+  ASSERT(Cid);
+
+  CidEntry = PsLookupCidHandle(Cid->UniqueThread, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
   {
-    FoundThread = CidObject->Obj.Thread;
     ObReferenceObject(FoundThread);
-    
+
+    PsUnlockCidHandle(CidEntry);
+
     if(Process != NULL)
     {
       *Process = FoundThread->ThreadsProcess;
-      ObReferenceObject(FoundThread->ThreadsProcess);
     }
-
-    PsUnlockCidObject(CidObject);
+    *Thread = FoundThread;
     return STATUS_SUCCESS;
   }
 
@@ -1104,15 +1133,21 @@ NTSTATUS STDCALL
 PsLookupThreadByThreadId(IN HANDLE ThreadId,
 			 OUT PETHREAD *Thread)
 {
-  PCID_OBJECT CidObject;
-  
-  CidObject = PsLockCidHandle(ThreadId, PsThreadType);
-  if(CidObject != NULL)
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PETHREAD FoundThread;
+
+  PAGED_CODE();
+
+  ASSERT(Thread);
+
+  CidEntry = PsLookupCidHandle(ThreadId, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
   {
-    *Thread = CidObject->Obj.Thread;
-    ObReferenceObject(*Thread);
-    
-    PsUnlockCidObject(CidObject);
+    ObReferenceObject(FoundThread);
+
+    PsUnlockCidHandle(CidEntry);
+
+    *Thread = FoundThread;
     return STATUS_SUCCESS;
   }
 

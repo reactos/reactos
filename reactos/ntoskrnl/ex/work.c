@@ -85,32 +85,55 @@ ExWorkerThreadEntryPoint(IN PVOID context)
 static VOID ExInitializeWorkQueue(PKQUEUE WorkQueue,
 				  KPRIORITY Priority)
 {
-   ULONG i;
-   PETHREAD Thread;
-   HANDLE   hThread;
-   
-   
-   for (i=0; i<NUMBER_OF_WORKER_THREADS; i++)
-     {
-        
-   PsCreateSystemThread(&hThread,
-			     THREAD_ALL_ACCESS,
-			     NULL,
-			     NULL,
-			     NULL,
-			     ExWorkerThreadEntryPoint,
-              WorkQueue);
-   ObReferenceObjectByHandle(hThread,
-				  THREAD_ALL_ACCESS,
-				  PsThreadType,
-				  KernelMode,
-				  (PVOID*)&Thread,
-				  NULL);
-	KeSetPriorityThread(&Thread->Tcb,
-			    Priority);
-	ObDereferenceObject(Thread);
-   ZwClose(hThread);
-     }
+    ULONG i;
+    PETHREAD Thread;
+    HANDLE hThread;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    /* Loop through how many threads we need to create */
+    for (i = 0; i < NUMBER_OF_WORKER_THREADS; i++) {
+
+        /* Create the System Thread */
+        Status = PsCreateSystemThread(&hThread,
+                                      THREAD_ALL_ACCESS,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      ExWorkerThreadEntryPoint,
+                                      (PVOID)WorkQueue);
+        if(NT_SUCCESS(Status))
+        {
+          /* Get the Thread */
+          Status = ObReferenceObjectByHandle(hThread,
+                                             THREAD_SET_INFORMATION,
+                                             PsThreadType,
+                                             KernelMode,
+                                             (PVOID*)&Thread,
+                                             NULL);
+
+          if(NT_SUCCESS(Status))
+          {
+            /* Set the Priority */
+            KeSetPriorityThread(&Thread->Tcb, Priority);
+
+            /* Dereference and close handle */
+            ObDereferenceObject(Thread);
+            ZwClose(hThread);
+          }
+          else
+          {
+            DPRINT1("Unable to reference worker thread handle 0x%x, Status: 0x%x!\n", hThread, Status);
+            KEBUGCHECK(0);
+          }
+        }
+        else
+        {
+          DPRINT1("Unable to create worker thread, Status: 0x%x!\n", Status);
+          KEBUGCHECK(0);
+        }
+    }
 }
 
 VOID INIT_FUNCTION

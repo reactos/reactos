@@ -662,6 +662,7 @@ ExInit3 (VOID)
   ExpInitializeMutantImplementation();
   ExpInitializeSemaphoreImplementation();
   ExpInitializeTimerImplementation();
+  ExpInitializeHandleTables();
   LpcpInitSystem();
   ExpInitializeProfileImplementation();
   ExpWin32kInit();

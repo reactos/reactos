@@ -239,6 +239,7 @@ OBJECTS_EX = \
 	ex/event.o \
 	ex/evtpair.o \
 	ex/fmutex.o \
+	ex/handle.o \
 	ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
