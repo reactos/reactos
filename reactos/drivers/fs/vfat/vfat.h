@@ -1,5 +1,6 @@
-BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
+BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
+                        IN ULONG        SectorCount,
 			IN UCHAR*	Buffer);
 
 struct _BootSector { 

@@ -4,8 +4,15 @@
  * FILE:             services/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- * UPDATE HISTORY: 
- */
+ * UPDATE HISTORY:
+     ??           Created
+     24-10-1998   Fixed bugs in long filename support
+                  Fixed a bug that prevented unsuccessful file open requests being reported
+                  Now works with long filenames that span over a sector boundary
+     28-10-1998   Reads entire FAT into memory
+                  VFatReadSector modified to read in more than one sector at a time
+
+*/
 
 /* INCLUDES *****************************************************************/
 
@@ -29,6 +36,7 @@ typedef struct
    int FATEntriesPerSector, FATUnit;
    ULONG BytesPerCluster;
    ULONG FatType;
+   unsigned char* FAT;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct
@@ -55,22 +63,18 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    FATsector=CurrentCluster/(512/sizeof(USHORT));
    FATeis=CurrentCluster-(FATsector*256);
    
-   DPRINT("FATsector %d FATeis %d\n",FATsector,FATeis);
-   DPRINT("DeviceExt->FATStart %d\n",DeviceExt->FATStart);
    
-   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart+FATsector,
-		  Block);
+//   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart+FATsector,
+//		  Block);
 
-   DPRINT("offset %x\n",(&Block[FATeis])-Block);
+   memcpy(Block,&DeviceExt->FAT, BLOCKSIZE);
    
    CurrentCluster = Block[FATeis];
    
-   DPRINT("CurrentCluster %x\n",CurrentCluster);
-                                
-   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
+   if (CurrentCluster >= 0xfff8 || CurrentCluster <= 0xffff)
      {
 	CurrentCluster = 0;
-     }  
+     }	
    
    ExFreePool(Block);
 
@@ -90,12 +94,14 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    
    FATsector = (CurrentCluster * 12) / (512 * 8);
 	
-   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart
-		  +FATsector,CBlock);
+//   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart
+//		  +FATsector,CBlock);
+
+   memcpy(CBlock,&DeviceExt->FAT, BLOCKSIZE);
    
    FATOffset = (CurrentCluster * 12) % (512 * 8);
    
-//   DPRINT("FATSector %d FATOffset %d\n",FATsector,FATOffset);
+   DPRINT("FATSector %d FATOffset %d\n",FATsector,FATOffset);
    
    if ((CurrentCluster % 2) == 0)
      {
@@ -108,7 +114,7 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 	Entry |= (CBlock[((FATOffset / 24)*3) + 2] << 4);
      }
 	
-//   DPRINT("Entry %x\n",Entry);
+   DPRINT("Entry %x\n",Entry);
    
    if (Entry >= 0xff8 && Entry <= 0xfff)
      {
@@ -127,7 +133,7 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 {
    
-   DPRINT("GetNextCluster(DeviceExt %x, CurrentCluster %d)\n",
+   DPRINT("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 	    DeviceExt,CurrentCluster);
    if (DeviceExt->FatType == FAT16)
      {
@@ -171,39 +177,62 @@ void RtlCatAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length)
    Dest[i]=0;
 }
 
-wchar_t * wcsncat(wchar_t * dest,const wchar_t * src,size_t count)
+void vfat_initstr(wchar_t *wstr, ULONG wsize)
 {
-   int i,j;
-   
-   for (j=0;dest[j]!=0;j++);
-   for (i=0;i<count;i++)
-     {
-	dest[j+i] = src[i];
-	if (src[i] == ' ' || src[i] == 0)
-	  {
-	     return(dest);
-	  }
-     }
-   dest[j+i]=0;
-   return(dest);
+  int i;
+  wchar_t nc=0;
+  for(i=0; i<wsize; i++)
+  {
+    *wstr=nc;
+    wstr++;
+  }
+  wstr=wstr-wsize;
 }
 
-wchar_t * _wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
+wchar_t * vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount)
+{
+   int i;
+
+   dest+=wstart;
+   for(i=0; i<wcount; i++)
+   {
+     *dest=src[i];
+     dest++;
+   }
+   dest=dest-(wcount+wstart);
+
+   return dest;
+}
+
+wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount)
 {
    int i;
    
-   for (i=0;i<count;i++)
+   for (i=0;i<wcount;i++)
      {
-	dest[i] = src[i];
-	if (src[i] == ' ' || src[i] == 0)
-	  {
-	     return(dest);
-	  }
+	*dest=src[i];
+	dest++;
      }
-   dest[i]=0;
+   dest=dest-wcount;
+
    return(dest);
 }
 
+wchar_t * vfat_movstr(wchar_t * dest, const wchar_t *src, ULONG dpos,
+                      ULONG spos, ULONG len)
+{
+  int i;
+
+  dest+=dpos;
+  for(i=spos; i<spos+len; i++)
+  {
+    *dest=src[i];
+    dest++;
+  }
+  dest-=(dpos+len);
+
+  return(dest);
+}
 
 BOOLEAN IsLastEntry(PVOID Block, ULONG Offset)
 {
@@ -212,14 +241,22 @@ BOOLEAN IsLastEntry(PVOID Block, ULONG Offset)
 
 BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset)
 {
-   return(((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5);
+   /* Checks special character (short names) or attrib=0 (long names) */
+
+   return ((((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5) ||
+           (((FATDirEntry *)Block)[Offset].Attrib == 0x00));
 }
 
-BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name)
+BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
+  PDEVICE_EXTENSION DeviceExt, PULONG _StartingSector)
 {
    FATDirEntry* test;
    slot* test2;
    ULONG Offset = *_Offset;
+   ULONG StartingSector = *_StartingSector;
+   ULONG jloop = *_jloop;
+   ULONG cpos;
+   WCHAR tmp[256];
    
    test = (FATDirEntry *)Block;
    test2 = (slot *)Block;
@@ -231,37 +268,48 @@ BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name)
 	return(FALSE);
      }
    
-   DPRINT("Offset %d test2[Offset].attr %x\n",Offset,test2[Offset].attr);
    if(test2[Offset].attr == 0x0f) 
      {
-	DPRINT("Parsing long name record\n");
-	wcsncpy(Name,test2[Offset].name0_4,5);
-	DPRINT("Name %w\n",Name);
-	wcsncat(Name,test2[Offset].name5_10,6);
-	DPRINT("Name %w\n",Name);
-	wcsncat(Name,test2[Offset].name11_12,2);
-	DPRINT("Name %w\n",Name);
-	
-	while((test2[Offset].id!=0x41) && (test2[Offset].id!=0x01) &&
+        vfat_initstr(Name, 256);
+	vfat_wcsncpy(Name,test2[Offset].name0_4,5);
+	vfat_wcsncat(Name,test2[Offset].name5_10,5,6);
+	vfat_wcsncat(Name,test2[Offset].name11_12,11,2);
+
+        cpos=0;
+        while((test2[Offset].id!=0x41) && (test2[Offset].id!=0x01) &&
 	      (test2[Offset].attr>0)) 
 	  {
 	     Offset++;
-	     
-	     DPRINT("Reading next long name record\n");
-	     
-	     wcsncat(Name,test2[Offset].name0_4,5);
-	     wcsncat(Name,test2[Offset].name5_10,6);
-	     wcsncat(Name,test2[Offset].name11_12,2);	     
-	  }
-	
+             if(Offset==ENTRIES_PER_SECTOR) {
+               Offset=0;
+               StartingSector++;
+               jloop++;
+               VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,Block);
+               test2 = (slot *)Block;
+             }
+             cpos++;
+
+             vfat_initstr(tmp, 256);
+             vfat_movstr(tmp, Name, 13, 0, cpos*13);
+             vfat_wcsncpy(Name, tmp, 256);
+             vfat_wcsncpy(Name, test2[Offset].name0_4, 5);
+	     vfat_wcsncat(Name,test2[Offset].name5_10,5,6);
+             vfat_wcsncat(Name,test2[Offset].name11_12,11,2);
+
+          }
+
 	if (IsDeletedEntry(Block,Offset+1))
 	  {
 	     Offset++;
 	     *_Offset = Offset;
+             *_jloop = jloop;
+             *_StartingSector = StartingSector;
 	     return(FALSE);
 	  }
 	
 	*_Offset = Offset;
+        *_jloop = jloop;
+        *_StartingSector = StartingSector;
 	
 	return(TRUE);
      }   
@@ -297,10 +345,10 @@ BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2)
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
 		  PFCB Parent, PWSTR FileToFind)
 {
-   ULONG i, j, k;
+   ULONG i, j;
    ULONG Size;
    char* block;
-   WCHAR name[255];
+   WCHAR name[256];
    ULONG StartingSector;
    ULONG NextCluster;
    
@@ -321,35 +369,39 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
      }
    
    block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
-   
+
    for (j=0; j<Size; j++)
      {
-	VFATReadSector(DeviceExt->StorageDevice,StartingSector,block);
-
-	
-	DPRINT("%u\n", StartingSector+j);
+	VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,block);
 
 	for (i=0; i<ENTRIES_PER_SECTOR; i++)
 	  {
 	     if (IsLastEntry((PVOID)block,i))
 	       {
 		  ExFreePool(block);
-		  return(STATUS_SUCCESS);
+		  return(STATUS_UNSUCCESSFUL);
 	       }
-	     if (GetEntryName((PVOID)block,&i,name))
+	     if (GetEntryName((PVOID)block,&i,name,&j,DeviceExt,&StartingSector))
 	       {
 		  DPRINT("Scanning %w\n",name);
-		  
 		  DPRINT("Comparing %w %w\n",name,FileToFind);
 		  if (wstrcmpi(name,FileToFind))
 		    {
-		       DPRINT("Found match\n");
+
+                       /* In the case of a long filename, the firstcluster is stored in
+                          the next record -- where it's short name is */
+                       if(((FATDirEntry *)block)[i].FirstCluster==0) i++;
+
+                       DPRINT("Found it at cluster %u\n", ((FATDirEntry *)block)[i].FirstCluster);
+
 		       memcpy(&Fcb->entry,&((FATDirEntry *)block)[i],
 			      sizeof(FATDirEntry));
+
+       		       ExFreePool(block);
 		       return(STATUS_SUCCESS);
 		    }
 	       }
-	     
+
 	  }
 	if (Parent == NULL)
 	  {
@@ -360,6 +412,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
 	     NextCluster = GetNextCluster(DeviceExt,NextCluster);
 	     if (NextCluster == 0)
 	       {
+                  ExFreePool(block);
 		  return(STATUS_UNSUCCESSFUL);
 	       }
 	     StartingSector = ClusterToSector(DeviceExt,NextCluster);
@@ -409,7 +462,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	
         Status = FindFile(DeviceExt,Fcb,ParentFcb,current);
 	if (Status != STATUS_SUCCESS)
-	  {	     
+	  {
 	     return(Status);
 	  }
 	Temp = Fcb;
@@ -426,6 +479,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      }
    FileObject->FsContext = ParentFcb;
    DPRINT("ParentFcb->entry.FileSize %d\n",ParentFcb->entry.FileSize);
+
    return(STATUS_SUCCESS);
 }
 
@@ -438,8 +492,9 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
    BootSector* Boot;
    
    Boot = ExAllocatePool(NonPagedPool,512);
-   VFATReadSector(DeviceToMount, 0, (UCHAR *)Boot);
-   
+
+   VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)Boot);
+
    if (strncmp(Boot->SysType,"FAT12",5)==0 ||
        strncmp(Boot->SysType,"FAT16",5)==0)
      {
@@ -456,12 +511,13 @@ NTSTATUS FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Mounts the device
  */
 {
-   DPRINT("<VFAT> Mounting device...");
+   int i;
+
+   DPRINT("Mounting VFAT device...");
    DPRINT("DeviceExt %x\n",DeviceExt);
    
    DeviceExt->Boot = ExAllocatePool(NonPagedPool,512);
-   
-   VFATReadSector(DeviceToMount, 0, (UCHAR *)DeviceExt->Boot);
+   VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)DeviceExt->Boot);
    
    DPRINT("DeviceExt->Boot->BytesPerSector %x\n",
 	  DeviceExt->Boot->BytesPerSector);
@@ -484,6 +540,9 @@ NTSTATUS FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
      {
 	DeviceExt->FatType = FAT16;
      }
+
+   DeviceExt->FAT = ExAllocatePool(NonPagedPool, BLOCKSIZE*DeviceExt->Boot->FATSectors);
+   VFATReadSectors(DeviceToMount, DeviceExt->FATStart, DeviceExt->Boot->FATSectors, (UCHAR *)DeviceExt->FAT);
 }
 
 void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
@@ -494,14 +553,12 @@ void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 //   DPRINT("VFATLoadCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
 //	  DeviceExt,Buffer,Cluster);
    
-   Sector = ClusterToSector(DeviceExt, Cluster);
+  Sector = ClusterToSector(DeviceExt, Cluster);
    
-   for (i=0; i<DeviceExt->Boot->SectorsPerCluster; i++)
-     {
-	VFATReadSector(DeviceExt->StorageDevice,
-		       Sector+i,
-		       Buffer+(i*DeviceExt->Boot->BytesPerSector));
-     }
+  VFATReadSectors(DeviceExt->StorageDevice,
+ 	          Sector,
+                  DeviceExt->Boot->SectorsPerCluster,
+	          Buffer);
 }
 
 NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
@@ -512,7 +569,6 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 {
    ULONG CurrentCluster;
    ULONG FileOffset;
-   ULONG i;
    ULONG FirstCluster;
    PFCB Fcb;
    PVOID Temp;
@@ -527,19 +583,12 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    CurrentCluster = Fcb->entry.FirstCluster;
    
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
-   DPRINT("FirstCluster %d\n",FirstCluster);
-   DPRINT("CurrentCluster %d\n",CurrentCluster);
    
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
    
    for (FileOffset=0; FileOffset < FirstCluster; FileOffset++)
      {
 	CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
-        if (CurrentCluster == 0)
-        {
-                ExFreePool(Temp);
-                return(STATUS_UNSUCCESSFUL);
-        }
      }
    CHECKPOINT;
    if ((ReadOffset % DeviceExt->BytesPerCluster)!=0)
@@ -576,7 +625,6 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	VFATLoadCluster(DeviceExt, Temp, CurrentCluster);
 	memcpy(Buffer, Temp, Length);
      }
-   ExFreePool(Temp);
    return(STATUS_SUCCESS);
 }
 
@@ -604,7 +652,7 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    NTSTATUS Status;
    PDEVICE_EXTENSION DeviceExt;
 
-   DPRINT("<VFAT> FsdCreate...\n");
+   DPRINT("VFAT FsdCreate...\n");
 
    DeviceExt = DeviceObject->DeviceExtension;
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
@@ -647,6 +695,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = Length;
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
+
    return(Status);
 }
 
@@ -680,7 +729,7 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_OBJECT DeviceToMount = Stack->Parameters.Mount.DeviceObject;
    NTSTATUS Status;
    
-   DPRINT("<VFAT> FSC\n");
+   DPRINT("VFAT FSC\n");
 
    if (FsdHasFileSystem(DeviceToMount))
      {
@@ -688,9 +737,10 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      }
    else
      {
-        DPRINT("<VFAT> Unrecognized Volume\n");
+        DPRINT("VFAT: Unrecognized Volume\n");
 	Status = STATUS_UNRECOGNIZED_VOLUME;
      }
+   DPRINT("VFAT File system successfully mounted\n");
    
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
@@ -714,7 +764,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    UNICODE_STRING ustr;
    ANSI_STRING astr;
    
-   DbgPrint("VFAT 0.0.1\n");
+   DbgPrint("VFAT 0.0.3\n");
           
    DriverObject = _DriverObject;
    
