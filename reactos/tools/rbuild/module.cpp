@@ -55,7 +55,8 @@ Module::Module ( const Project& project,
                  const string& modulePath )
 	: project (project),
 	  node (moduleNode),
-	  importLibrary (NULL)
+	  importLibrary (NULL),
+	  bootstrap (NULL)
 {
 	if ( node.name != "module" )
 		throw Exception ( "internal tool error: Module created with non-<module> node" );
@@ -260,6 +261,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		throw InvalidBuildFileException (
 			e.location,
 			"<property> is not a valid sub-element of <module>" );
+	}
+	else if ( e.name == "bootstrap" )
+	{
+		bootstrap = new Bootstrap ( project, this, e );
+		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (

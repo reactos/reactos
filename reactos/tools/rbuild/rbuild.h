@@ -51,6 +51,7 @@ class CompilerFlag;
 class LinkerFlag;
 class Property;
 class AutomaticDependency;
+class Bootstrap;
 
 class SourceFileTest;
 
@@ -127,6 +128,7 @@ public:
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
+	Bootstrap* bootstrap;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;
@@ -447,6 +449,26 @@ private:
 	void ProcessFile ( Module& module,
 	                   const File& file );
 	std::map<std::string, SourceFile*> sourcefile_map;
+};
+
+
+class Bootstrap
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::string base;
+	std::string nameoncd;
+
+	Bootstrap ( const Project& project,
+	            const Module* module,
+	            const XMLElement& bootstrapNode );
+	~Bootstrap ();
+	void ProcessXML();
+private:
+	bool IsSupportedModuleType ( ModuleType type );
+	void Initialize();
 };
 
 

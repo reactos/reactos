@@ -30,14 +30,14 @@ LinkerFlag::~LinkerFlag ()
 }
 
 void
-LinkerFlag::Initialize()
+LinkerFlag::Initialize ()
 {
 }
 
 void
-LinkerFlag::ProcessXML()
+LinkerFlag::ProcessXML ()
 {
-	if (node.value.size () == 0)
+	if ( node.value.size () == 0 )
 	{
 		throw InvalidBuildFileException (
 			node.location,

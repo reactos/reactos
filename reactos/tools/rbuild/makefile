@@ -21,6 +21,7 @@ RBUILD_BACKEND_BASE_SOURCES = \
 RBUILD_BASE_SOURCES = \
 	$(RBUILD_BACKEND_BASE_SOURCES) \
 	automaticdependency.cpp \
+	bootstrap.cpp \
 	compilerflag.cpp \
 	define.cpp \
 	exception.cpp \

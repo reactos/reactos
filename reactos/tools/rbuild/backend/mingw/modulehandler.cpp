@@ -1873,7 +1873,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ( const Module& mod
 {
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string targetName ( module.GetTargetName () );
-	string target ( FixupTargetFilename (module.GetPath ()) );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ();
 	string junk_tmp = ros_junk + module.name + ".junk.tmp";
 	string objectsMacro = GetObjectsMacro ( module );
@@ -1952,6 +1952,44 @@ MingwIsoModuleHandler::Process ( const Module& module )
 }
 
 void
+MingwIsoModuleHandler::OutputBootstrapfileCopyCommands ( const string bootcdDirectory,
+	                                                     const Module& module ) const
+{
+	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	{
+		const Module& m = *module.project.modules[i];
+		if ( m.bootstrap != NULL )
+		{
+			string targetFilenameNoFixup = bootcdDirectory + SSEP + m.bootstrap->base + SSEP + m.bootstrap->nameoncd;
+			string targetFilename = PassThruCacheDirectory ( FixupTargetFilename ( targetFilenameNoFixup ) );
+			fprintf ( fMakefile,
+			          "\t${cp} %s %s\n",
+			          m.GetPath ().c_str (),
+			          targetFilename.c_str () );
+		}
+	}
+}
+
+string
+MingwIsoModuleHandler::GetCdDirectories ( const string bootcdDirectory,
+	                                      const Module& module ) const
+{
+	string directories;
+	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	{
+		const Module& m = *module.project.modules[i];
+		if ( m.bootstrap != NULL )
+		{
+			string targetDirecctory = bootcdDirectory + SSEP + m.bootstrap->base;
+			if ( directories.size () > 0 )
+				directories += " ";
+			directories += FixupTargetFilename ( targetDirecctory );
+		}
+	}
+	return directories;
+}
+
+void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 {
 	string bootcdDirectory = "cd";
@@ -1961,6 +1999,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	PassThruCacheDirectory ( bootcdReactos + SSEP );
 	string reactosInf = FixupTargetFilename ( bootcdReactosNoFixup + "/reactos.inf" );
 	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
+	string cdDirectories = bootcdReactos + " " + GetCdDirectories ( bootcdDirectory,
+	                                                                module );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 		      module.name.c_str ());
@@ -1968,7 +2008,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	          "%s: all %s %s\n",
 	          module.name.c_str (),
 	          isoboot.c_str (),
-	          bootcdReactos.c_str () );
+	          cdDirectories.c_str () );
 	fprintf ( fMakefile,
 	          "\t${cabman} /C %s /L %s /I\n",
 	          reactosDff.c_str (),
@@ -1981,6 +2021,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	fprintf ( fMakefile,
 	          "\t- ${rm} %s\n",
 	          reactosInf.c_str () );
+	OutputBootstrapfileCopyCommands ( bootcdDirectory,
+	                                  module );
 	fprintf ( fMakefile,
 	          "\t${cdmake} -v -m -b %s %s REACTOS ReactOS.iso\n",
 	          isoboot.c_str (),

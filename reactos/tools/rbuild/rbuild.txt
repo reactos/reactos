@@ -123,7 +123,7 @@ Value:
 	None.
 
 Elements:
-	define, dependency, directory, file, if, importlibrary, include, invoke, library, property.
+	bootstrap, define, dependency, directory, file, if, importlibrary, include, invoke, library, property.
 
 
 Module types
@@ -141,6 +141,24 @@ The module type determines the actions that is to be carried out to process the 
 	bootloader - Builds a bootloader. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	bootsector - Builds one or more bootsector binaries. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	iso - Builds a bootable CD. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+
+
+Bootstrap element
+-----------------
+A bootstrap element specifies that the generated file should be put on the bootable CD as a bootstrap file.
+
+Syntax:
+	<bootstrap base="reactos" nameoncd="halmp.dll" />
+
+Attributes:
+	base - Put file in this directory on the bootable CD. This attribute is optional.
+	nameoncd - Name of file on the bootable CD. This attribute is optional.
+
+Value:
+	None.
+
+Elements:
+	None.
 
 
 Define element
