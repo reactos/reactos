@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.15 2003/07/17 07:49:15 gvg Exp $
+/* $Id: windc.c,v 1.16 2003/07/17 21:25:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -188,13 +188,33 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	  dc->w.DCOrgX = WindowObject->ClientRect.left;
 	  dc->w.DCOrgY = WindowObject->ClientRect.top;
 	}
-      /* FIXME: Offset by parent's client rectangle. */
     }
   DC_ReleasePtr(hDC);
 }
 
+
+STATIC VOID FASTCALL
+DceDeleteClipRgn(DCE* Dce)
+{
+  Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN | DCX_WINDOWPAINT);
+
+  if (Dce->DCXFlags & DCX_KEEPCLIPRGN )
+    {
+      Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
+    }
+  else if (Dce->hClipRgn > (HRGN) 1)
+    {
+      W32kDeleteObject(Dce->hClipRgn);
+    }
+
+  Dce->hClipRgn = NULL;
+
+  /* make it dirty so that the vis rgn gets recomputed next time */
+  Dce->DCXFlags |= DCX_DCEDIRTY;
+}
+
 HDC STDCALL
-NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
+NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 {
   PWINDOW_OBJECT Window;
   ULONG DcxFlags;
@@ -332,6 +352,24 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
   Dce->hClipRgn = NULL;
   Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
+  if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
+    {
+      W32kDeleteObject(ClipRegion);
+      ClipRegion = NULL;
+    }
+
+  if (NULL != Dce->hClipRgn)
+    {
+      DceDeleteClipRgn(Dce);
+    }
+
+  if (NULL != ClipRegion)
+    {
+      Dce->hClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
+      W32kCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+      W32kDeleteObject(ClipRegion);
+    }
+
   DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
 
   if (UpdateVisRgn)
@@ -378,13 +416,18 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 	    }
 	}
 
+      if (0 != (Dce->DCXFlags & DCX_INTERSECTRGN))
+	{
+	  W32kCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+	}
+
+      if (0 != (Dce->DCXFlags & DCX_EXCLUDERGN))
+	{
+	  W32kCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
+	}
+
       Dce->DCXFlags &= ~DCX_DCEDIRTY;
       W32kSelectVisRgn(Dce->hDC, hRgnVisible);
-    }
-
-  if (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN))
-    {
-      DPRINT1("FIXME.\n");
     }
 
   if (hRgnVisible != NULL)
