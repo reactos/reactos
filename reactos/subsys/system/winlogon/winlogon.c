@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.27 2004/03/09 15:08:12 ekohl Exp $
+/* $Id: winlogon.c,v 1.28 2004/03/20 15:58:16 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
 #include <stdio.h>
 #include <ntsecapi.h>
 #include <wchar.h>
+#include <userenv.h>
 
 #include "setup.h"
 #include "winlogon.h"
@@ -285,7 +287,7 @@ static BOOL RestartShell(void)
 */
 
 #if SUPPORT_CONSOLESTART
-static BOOL StartIntoGUI(void)
+static BOOL StartIntoGUI(VOID)
 {
   HANDLE WinLogonKey;
   DWORD Type, Size, Value;
@@ -365,7 +367,9 @@ DoLogonUser (PWCHAR Name,
   WCHAR CommandLine[MAX_PATH];
   WCHAR CurrentDirectory[MAX_PATH];
   HANDLE hToken;
+  PROFILEINFOW ProfileInfo;
   BOOL Result;
+  LPVOID lpEnvironment = NULL;
 
   Result = LogonUserW (Name,
 		       NULL,
@@ -375,11 +379,39 @@ DoLogonUser (PWCHAR Name,
 		       &hToken);
   if (!Result)
     {
-      DbgPrint ("WL: LogonUserW failed\n");
+      DbgPrint ("WL: LogonUserW() failed\n");
+      RtlDestroyEnvironment (lpEnvironment);
       return FALSE;
     }
 
-  GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
+  /* Load the user profile */
+  ProfileInfo.dwSize = sizeof(PROFILEINFOW);
+  ProfileInfo.dwFlags = 0;
+  ProfileInfo.lpUserName = Name;
+  ProfileInfo.lpProfilePath = NULL;
+  ProfileInfo.lpDefaultPath = NULL;
+  ProfileInfo.lpServerName = NULL;
+  ProfileInfo.lpPolicyPath = NULL;
+  ProfileInfo.hProfile = NULL;
+
+  if (!LoadUserProfileW (hToken,
+			 &ProfileInfo))
+    {
+      DbgPrint ("WL: LoadUserProfileW() failed\n");
+      CloseHandle (hToken);
+      RtlDestroyEnvironment (lpEnvironment);
+      return FALSE;
+    }
+
+  if (!CreateEnvironmentBlock (&lpEnvironment,
+			       hToken,
+			       TRUE))
+    {
+      DbgPrint ("WL: CreateEnvironmentBlock() failed\n");
+      return FALSE;
+    }
+
+  GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
 
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpReserved = NULL;
@@ -395,23 +427,32 @@ DoLogonUser (PWCHAR Name,
 				 NULL,
 				 NULL,
 				 FALSE,
-				 CREATE_NEW_CONSOLE,
-				 NULL,
+				 CREATE_NEW_CONSOLE,// | CREATE_UNICODE_ENVIRONMENT,
+				 lpEnvironment, // NULL,
 				 CurrentDirectory,
 				 &StartupInfo,
 				 &ProcessInformation);
-   if (!Result)
-     {
-	DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
-	CloseHandle (hToken);
-	return FALSE;
-     }
+  if (!Result)
+    {
+      DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
+      UnloadUserProfile (hToken,
+			 ProfileInfo.hProfile);
+      CloseHandle (hToken);
+      DestroyEnvironmentBlock (lpEnvironment);
+      return FALSE;
+    }
 
-   WaitForSingleObject (ProcessInformation.hProcess, INFINITE);
-   CloseHandle (ProcessInformation.hProcess);
-   CloseHandle (ProcessInformation.hThread);
+  WaitForSingleObject (ProcessInformation.hProcess, INFINITE);
+  CloseHandle (ProcessInformation.hProcess);
+  CloseHandle (ProcessInformation.hThread);
+
+  /* Unload user profile */
+  UnloadUserProfile (hToken,
+		     ProfileInfo.hProfile);
 
   CloseHandle (hToken);
+
+  RtlDestroyEnvironment (lpEnvironment);
 
   return TRUE;
 }

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2003/12/01 18:21:04 weiden Exp $
+# $Id: makefile,v 1.9 2004/03/20 15:58:16 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,9 +10,9 @@ TARGET_NAME = winlogon
 
 TARGET_INSTALLDIR = system32
 
-TARGET_SDKLIBS = ntdll.a kernel32.a user32.a secur32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a advapi32.a userenv.a secur32.a
 
-TARGET_OBJECTS = $(TARGET_NAME).o setup.o wlx.o
+TARGET_OBJECTS = setup.o winlogon.o wlx.o
 
 TARGET_CFLAGS = -Wall -Werror -DUNICODE -I./ -I../../../include
 
