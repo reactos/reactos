@@ -694,23 +694,22 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 			}
 			continue;
 
-#if 0
 		case 'Z':
 			if (qualifier == 'w') {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
-				if ((pus == NULL) || (pus->Buffer)) {
+				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					s = "<NULL>";
 					while ((*s) != 0)
 						putc(*s++, f);
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
+					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++)
 						putc((unsigned char)(pus->Buffer[i]), f);
 				}
 			} else {
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
-				if ((pus == NULL) || (pus->Buffer)) {
+				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					s = "<NULL>";
 					while ((*s) != 0)
 						putc(*s++, f);
@@ -720,7 +719,6 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 				}
 			}
 			continue;
-#endif
 
 		case 'e':
 		case 'E':
