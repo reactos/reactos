@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: combobox.c,v 1.3 2002/09/08 10:23:09 chorns Exp $
+/* $Id: combobox.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/controls/combobox.c
@@ -38,5 +38,6 @@ WINBOOL STDCALL
 GetComboBoxInfo(HWND hwndCombo,
 		PCOMBOBOXINFO pcbi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

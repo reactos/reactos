@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.10 2003/03/04 00:40:37 rcampbell Exp $
+/* $Id: dc.c,v 1.11 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -64,6 +64,7 @@ ReleaseDC(
   HWND hWnd,
   HDC hDC)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 HWND
@@ -71,5 +72,6 @@ STDCALL
 WindowFromDC(
   HDC hDC)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }

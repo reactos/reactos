@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.5 2003/03/16 17:11:22 ea Exp $
+/* $Id: messagebox.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -54,6 +54,7 @@ MessageBoxExA(
   UINT uType,
   WORD wLanguageId)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -66,6 +67,7 @@ MessageBoxExW(
   UINT uType,
   WORD wLanguageId)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -74,6 +76,7 @@ STDCALL
 MessageBoxIndirectA(
   CONST LPMSGBOXPARAMS lpMsgBoxParams)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -82,6 +85,7 @@ STDCALL
 MessageBoxIndirectW(
   CONST LPMSGBOXPARAMS lpMsgBoxParams)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -100,6 +104,7 @@ DWORD
 STDCALL
 SoftModalMessageBox (DWORD Unknown0)
 {
-	return 0;
+  UNIMPLEMENTED;
+  return 0;
 }
 /* EOF */

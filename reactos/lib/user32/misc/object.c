@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.3 2002/09/08 10:23:10 chorns Exp $
+/* $Id: object.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -42,6 +42,7 @@ SetUserObjectInformationA(
   PVOID pvInfo,
   DWORD nLength)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -53,6 +54,7 @@ SetUserObjectInformationW(
   PVOID pvInfo,
   DWORD nLength)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 WINBOOL
@@ -62,6 +64,7 @@ UserHandleGrantAccess(
   HANDLE hJob,
   WINBOOL bGrant)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 WINBOOL
@@ -73,6 +76,7 @@ GetUserObjectInformationA(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -85,5 +89,6 @@ GetUserObjectInformationW(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

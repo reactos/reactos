@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mdi.c,v 1.3 2002/09/08 10:23:12 chorns Exp $
+/* $Id: mdi.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -48,6 +48,7 @@ CreateMDIWindowA(
   HINSTANCE hInstance,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -65,6 +66,7 @@ CreateMDIWindowW(
   HINSTANCE hInstance,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 LRESULT
@@ -75,6 +77,7 @@ DefMDIChildProcA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 
@@ -86,6 +89,7 @@ DefMDIChildProcW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 WINBOOL
@@ -94,5 +98,6 @@ TranslateMDISysAccel(
   HWND hWndClient,
   LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

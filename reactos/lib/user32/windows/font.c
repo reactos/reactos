@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: font.c,v 1.5 2003/05/11 15:18:01 chorns Exp $
+/* $Id: font.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -44,6 +44,7 @@ GetTabbedTextExtentA(
   int nTabPositions,
   CONST LPINT lpnTabStopPositions)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -56,6 +57,7 @@ GetTabbedTextExtentW(
   int nTabPositions,
   CONST LPINT lpnTabStopPositions)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 

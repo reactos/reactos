@@ -45,6 +45,7 @@
 WINBOOL STDCALL
 DrawFrameControl(HDC hDc, LPRECT Rect, UINT Type, UINT State)
 {
+  UNIMPLEMENTED;
 }
 
 /* Get the 'inside' rectangle of a window, i.e. the whole window rectangle

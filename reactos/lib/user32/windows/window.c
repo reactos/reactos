@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.28 2003/05/12 18:52:14 gvg Exp $
+/* $Id: window.c,v 1.29 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -251,6 +251,7 @@ AdjustWindowRectEx(LPRECT lpRect,
 WINBOOL STDCALL
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -259,24 +260,28 @@ AnimateWindow(HWND hwnd,
 	      DWORD dwTime,
 	      DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 UINT STDCALL
 ArrangeIconicWindows(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 HDWP STDCALL
 BeginDeferWindowPos(int nNumWindows)
 {
+  UNIMPLEMENTED;
   return (HDWP)0;
 }
 
 WINBOOL STDCALL
 BringWindowToTop(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -287,6 +292,7 @@ CascadeWindows(HWND hwndParent,
 	       UINT cKids,
 	       const HWND *lpKids)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -294,6 +300,7 @@ HWND STDCALL
 ChildWindowFromPoint(HWND hWndParent,
 		     POINT Point)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -302,6 +309,7 @@ ChildWindowFromPointEx(HWND hwndParent,
 		       POINT pt,
 		       UINT uFlags)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -310,7 +318,7 @@ CloseWindow(HWND hWnd)
 {
     SendMessageA(hWnd, WM_CLOSE, 0, 0);
     SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-    
+
     return (WINBOOL)(hWnd);
 }
 
@@ -333,24 +341,24 @@ CreateWindowExA(DWORD dwExStyle,
   HWND Handle;
   INT sw;
 
-OutputDebugStringA("CreateWindowEx\n");  
-  if (IS_ATOM(lpClassName)) 
+OutputDebugStringA("CreateWindowEx\n");
+  if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
       ClassName.Buffer = (LPWSTR)lpClassName;
-    } 
-  else 
+    }
+  else
     {
-      if (!RtlCreateUnicodeStringFromAsciiz(&(ClassName), (PCSZ)lpClassName)) 
+      if (!RtlCreateUnicodeStringFromAsciiz(&(ClassName), (PCSZ)lpClassName))
 	{
 	  SetLastError(ERROR_OUTOFMEMORY);
 	  return (HWND)0;
 	}
     }
 
-  if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName)) 
+  if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
     {
-      if (!IS_ATOM(lpClassName)) 
+      if (!IS_ATOM(lpClassName))
 	{
 	  RtlFreeUnicodeString(&ClassName);
 	}
@@ -540,6 +548,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 	       int cy,
 	       UINT uFlags)
 {
+  UNIMPLEMENTED;
   return (HDWP)0;
 }
 
@@ -555,6 +564,7 @@ DestroyWindow(HWND hWnd)
 WINBOOL STDCALL
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -563,6 +573,7 @@ EnumChildWindows(HWND hWndParent,
 		 ENUMWINDOWSPROC lpEnumFunc,
 		 LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -571,6 +582,7 @@ EnumThreadWindows(DWORD dwThreadId,
 		  ENUMWINDOWSPROC lpfn,
 		  LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -578,6 +590,7 @@ WINBOOL STDCALL
 EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
 	    LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -595,6 +608,7 @@ FindWindowExA(HWND hwndParent,
 	      LPCSTR lpszClass,
 	      LPCSTR lpszWindow)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -612,6 +626,7 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -622,6 +637,7 @@ GetAltTabInfo(HWND hwnd,
 	      LPTSTR pszItemText,
 	      UINT cchItemText)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -632,6 +648,7 @@ GetAltTabInfoA(HWND hwnd,
 	       LPSTR pszItemText,
 	       UINT cchItemText)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -642,6 +659,7 @@ GetAltTabInfoW(HWND hwnd,
 	       LPWSTR pszItemText,
 	       UINT cchItemText)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -660,12 +678,14 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 HWND STDCALL
 GetDesktopWindow(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
 HWND STDCALL
 GetForegroundWindow(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -673,12 +693,14 @@ WINBOOL STDCALL
 GetGUIThreadInfo(DWORD idThread,
 		 LPGUITHREADINFO lpgui)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -691,6 +713,7 @@ GetParent(HWND hWnd)
 WINBOOL STDCALL
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -698,12 +721,14 @@ WINBOOL STDCALL
 GetTitleBarInfo(HWND hwnd,
 		PTITLEBARINFO pti)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 HWND STDCALL
 GetTopWindow(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -711,6 +736,7 @@ HWND STDCALL
 GetWindow(HWND hWnd,
 	  UINT uCmd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -718,6 +744,7 @@ WINBOOL STDCALL
 GetWindowInfo(HWND hwnd,
 	      PWINDOWINFO pwi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -726,6 +753,7 @@ GetWindowModuleFileName(HWND hwnd,
 			LPSTR lpszFileName,
 			UINT cchFileNameMax)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -734,6 +762,7 @@ GetWindowModuleFileNameA(HWND hwnd,
 			 LPSTR lpszFileName,
 			 UINT cchFileNameMax)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -742,6 +771,7 @@ GetWindowModuleFileNameW(HWND hwnd,
 			 LPWSTR lpszFileName,
 			 UINT cchFileNameMax)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -749,6 +779,7 @@ WINBOOL STDCALL
 GetWindowPlacement(HWND hWnd,
 		   WINDOWPLACEMENT *lpwndpl)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -774,6 +805,7 @@ GetWindowTextLengthA(HWND hWnd)
 int STDCALL
 GetWindowTextLengthW(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -782,6 +814,7 @@ GetWindowTextW(HWND hWnd,
 	       LPWSTR lpString,
 	       int nMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -789,6 +822,7 @@ DWORD STDCALL
 GetWindowThreadProcessId(HWND hWnd,
 			 LPDWORD lpdwProcessId)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -796,12 +830,14 @@ WINBOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 IsIconic(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -816,6 +852,7 @@ IsWindow(HWND hWnd)
 WINBOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -844,6 +881,7 @@ IsZoomed(HWND hWnd)
 WINBOOL STDCALL
 LockSetForegroundWindow(UINT uLockCode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -855,12 +893,13 @@ MoveWindow(HWND hWnd,
 	   int nHeight,
 	   WINBOOL bRepaint)
 {
-    return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
+  return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
 }
 
 WINBOOL STDCALL
 OpenIcon(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -868,6 +907,7 @@ HWND STDCALL
 RealChildWindowFromPoint(HWND hwndParent,
 			 POINT ptParentClientCoords)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -876,12 +916,14 @@ RealGetWindowClass(HWND  hwnd,
 		   LPTSTR pszType,
 		   UINT  cchType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 SetForegroundWindow(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -891,6 +933,7 @@ SetLayeredWindowAttributes(HWND hwnd,
 			   BYTE bAlpha,
 			   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -898,12 +941,14 @@ HWND STDCALL
 SetParent(HWND hWndChild,
 	  HWND hWndNewParent)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
 WINBOOL STDCALL
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -911,6 +956,7 @@ WINBOOL STDCALL
 SetWindowPlacement(HWND hWnd,
 		   CONST WINDOWPLACEMENT *lpwndpl)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -923,6 +969,7 @@ SetWindowPos(HWND hWnd,
 	     int cy,
 	     UINT uFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -930,6 +977,7 @@ WINBOOL STDCALL
 SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -937,6 +985,7 @@ WINBOOL STDCALL
 SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -944,6 +993,7 @@ WINBOOL STDCALL
 ShowOwnedPopups(HWND hWnd,
 		WINBOOL fShow)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -958,6 +1008,7 @@ WINBOOL STDCALL
 ShowWindowAsync(HWND hWnd,
 		int nCmdShow)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -968,6 +1019,7 @@ TileWindows(HWND hwndParent,
 	    UINT cKids,
 	    const HWND *lpKids)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -982,12 +1034,14 @@ UpdateLayeredWindow(HWND hwnd,
 		    BLENDFUNCTION *pblend,
 		    DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 HWND STDCALL
 WindowFromPoint(POINT Point)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.10 2003/03/16 06:43:09 rcampbell Exp $
+/* $Id: draw.c,v 1.11 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1374,6 +1374,7 @@ GrayStringA(
   int nWidth,
   int nHeight)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1390,6 +1391,7 @@ GrayStringW(
   int nWidth,
   int nHeight)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 WINBOOL
@@ -1398,8 +1400,10 @@ InvertRect(
   HDC hDC,
   CONST RECT *lprc)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 LONG
 STDCALL
 TabbedTextOutA(
@@ -1412,6 +1416,7 @@ TabbedTextOutA(
   CONST LPINT lpnTabStopPositions,
   int nTabOrigin)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -1427,8 +1432,10 @@ TabbedTextOutW(
   CONST LPINT lpnTabStopPositions,
   int nTabOrigin)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 int
 STDCALL
 FrameRect(
@@ -1436,14 +1443,17 @@ FrameRect(
   CONST RECT *lprc,
   HBRUSH hbr)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 FlashWindow(
   HWND hWnd,
   WINBOOL bInvert)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1452,6 +1462,7 @@ STDCALL
 FlashWindowEx(
   PFLASHWINFO pfwi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1481,6 +1492,7 @@ DrawAnimatedRects(
   CONST RECT *lprcFrom,
   CONST RECT *lprcTo)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1492,6 +1504,7 @@ DrawCaption(
   LPRECT lprc,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1501,9 +1514,9 @@ DrawFocusRect(
   HDC hDC,
   CONST RECT *lprc)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
 
 WINBOOL
 STDCALL
@@ -1519,6 +1532,7 @@ DrawStateA(
   int cy,
   UINT fuFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -1536,5 +1550,6 @@ DrawStateW(
   int cy,
   UINT fuFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

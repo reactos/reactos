@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.16 2002/09/08 10:23:12 chorns Exp $
+/* $Id: class.c,v 1.17 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,6 +20,7 @@ GetClassInfoA(
   LPCSTR lpClassName,
   LPWNDCLASS lpWndClass)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -30,6 +31,7 @@ GetClassInfoExA(
   LPCSTR lpszClass,
   LPWNDCLASSEX lpwcx)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -40,6 +42,7 @@ GetClassInfoExW(
   LPCWSTR lpszClass,
   LPWNDCLASSEX lpwcx)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -50,6 +53,7 @@ GetClassInfoW(
   LPCWSTR lpClassName,
   LPWNDCLASS lpWndClass)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -82,6 +86,7 @@ GetClassNameA(
   LPSTR lpClassName,
   int nMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -92,6 +97,7 @@ GetClassNameW(
   LPWSTR lpClassName,
   int nMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -104,12 +110,14 @@ GetClassWord(
  * NOTE: Obsoleted in 32-bit windows
  */
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 LONG STDCALL
 GetWindowLongA(HWND hWnd, int nIndex)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -126,6 +134,7 @@ RealGetWindowClass(
   LPSTR pszType,
   UINT  cchType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -136,6 +145,7 @@ RealGetWindowClassA(
   LPSTR pszType,
   UINT  cchType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -146,6 +156,7 @@ RealGetWindowClassW(
   LPWSTR pszType,
   UINT  cchType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -174,14 +185,14 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return (ATOM)0;
   }
-  
+
   if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
     {
       RtlFreeUnicodeString(&ClassName);
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return (ATOM)0;
     }
-  
+
   RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEX));
   Class.lpszMenuName = (LPCTSTR)MenuName.Buffer;
   Class.lpszClassName = (LPCTSTR)ClassName.Buffer;
@@ -192,10 +203,10 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 				  0,
 				  0,
 				  0);
-  
+
   RtlFreeUnicodeString(&ClassName);
   RtlFreeUnicodeString(&MenuName);
-  
+
   return (ATOM)Atom;
 }
 
@@ -210,7 +221,7 @@ RegisterClassExW(CONST WNDCLASSEX *lpwcx)
 				  0,
 				  0,
 				  0);
-  
+
   return (ATOM)Atom;
 }
 
@@ -232,6 +243,7 @@ SetClassLongA(
   int nIndex,
   LONG dwNewLong)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -242,6 +254,7 @@ SetClassLongW(
   int nIndex,
   LONG dwNewLong)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -255,6 +268,7 @@ SetClassWord(
  * NOTE: Obsoleted in 32-bit windows
  */
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -265,6 +279,7 @@ SetWindowLongA(
   int nIndex,
   LONG dwNewLong)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -275,6 +290,7 @@ SetWindowLongW(
   int nIndex,
   LONG dwNewLong)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -284,6 +300,7 @@ UnregisterClassA(
   LPCSTR lpClassName,
   HINSTANCE hInstance)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -293,6 +310,7 @@ UnregisterClassW(
   LPCWSTR lpClassName,
   HINSTANCE hInstance)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 

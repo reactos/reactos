@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.4 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: cursor.c,v 1.5 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -40,6 +40,7 @@ CreateCaret(HWND hWnd,
 	    int nWidth,
 	    int nHeight)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -52,61 +53,71 @@ CreateCursor(HINSTANCE hInst,
 	     CONST VOID *pvANDPlane,
 	     CONST VOID *pvXORPlane)
 {
-  
+
+  UNIMPLEMENTED;
   return (HCURSOR)0;
 }
 
 WINBOOL STDCALL
 DestroyCaret(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 UINT STDCALL
 GetCaretBlinkTime(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 GetCaretPos(LPPOINT lpPoint)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 GetClipCursor(LPRECT lpRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 HCURSOR STDCALL
 GetCursor(VOID)
 {
+  UNIMPLEMENTED;
   return (HCURSOR)0;
 }
 
 WINBOOL STDCALL
 GetCursorInfo(PCURSORINFO pci)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 GetCursorPos(LPPOINT lpPoint)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 HideCaret(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -148,19 +159,22 @@ LoadCursorW(HINSTANCE hInstance,
 WINBOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
-WINBOOL STDCALL 
+WINBOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 HCURSOR STDCALL
 SetCursor(HCURSOR hCursor)
 {
+  UNIMPLEMENTED;
   return (HCURSOR)0;
 }
 
@@ -168,6 +182,7 @@ WINBOOL STDCALL
 SetCursorPos(int X,
 	     int Y)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -175,17 +190,20 @@ WINBOOL STDCALL
 SetSystemCursor(HCURSOR hcur,
 		DWORD id)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 ShowCaret(HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 int STDCALL
 ShowCursor(WINBOOL bShow)
 {
+  UNIMPLEMENTED;
   return 0;
 }

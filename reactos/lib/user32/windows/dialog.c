@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.7 2002/09/08 10:23:12 chorns Exp $
+/* $Id: dialog.c,v 1.8 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -43,6 +43,7 @@ CreateDialogIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -55,6 +56,7 @@ CreateDialogIndirectParamAorW(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -67,6 +69,7 @@ CreateDialogIndirectParamW(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -79,6 +82,7 @@ CreateDialogParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -91,6 +95,7 @@ CreateDialogParamW(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 LRESULT
@@ -101,6 +106,7 @@ DefDlgProcA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 
@@ -112,6 +118,7 @@ DefDlgProcW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 INT_PTR
@@ -123,6 +130,7 @@ DialogBoxIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (INT_PTR)NULL;
 }
 
@@ -135,6 +143,7 @@ DialogBoxIndirectParamAorW(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (INT_PTR)NULL;
 }
 
@@ -147,6 +156,7 @@ DialogBoxIndirectParamW(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (INT_PTR)NULL;
 }
 
@@ -159,6 +169,7 @@ DialogBoxParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (INT_PTR)0;
 }
 
@@ -171,6 +182,7 @@ DialogBoxParamW(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
+  UNIMPLEMENTED;
   return (INT_PTR)0;
 }
 
@@ -183,6 +195,7 @@ DlgDirListA(
   int nIDStaticPath,
   UINT uFileType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -195,6 +208,7 @@ DlgDirListComboBoxA(
   int nIDStaticPath,
   UINT uFiletype)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -207,6 +221,7 @@ DlgDirListComboBoxW(
   int nIDStaticPath,
   UINT uFiletype)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -219,6 +234,7 @@ DlgDirListW(
   int nIDStaticPath,
   UINT uFileType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -230,6 +246,7 @@ DlgDirSelectComboBoxExA(
   int nCount,
   int nIDComboBox)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -241,6 +258,7 @@ DlgDirSelectComboBoxExW(
   int nCount,
   int nIDComboBox)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -252,6 +270,7 @@ DlgDirSelectExA(
   int nCount,
   int nIDListBox)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -263,20 +282,24 @@ DlgDirSelectExW(
   int nCount,
   int nIDListBox)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 EndDialog(
   HWND hDlg,
   INT_PTR nResult)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 LONG
 STDCALL
 GetDialogBaseUnits(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -285,6 +308,7 @@ STDCALL
 GetDlgCtrlID(
   HWND hwndCtl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -294,6 +318,7 @@ GetDlgItem(
   HWND hDlg,
   int nIDDlgItem)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -305,6 +330,7 @@ GetDlgItemInt(
   WINBOOL *lpTranslated,
   WINBOOL bSigned)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -316,6 +342,7 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -327,6 +354,7 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 HWND
@@ -336,6 +364,7 @@ GetNextDlgGroupItem(
   HWND hCtl,
   WINBOOL bPrevious)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -346,6 +375,7 @@ GetNextDlgTabItem(
   HWND hCtl,
   WINBOOL bPrevious)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 #if 0
@@ -355,6 +385,7 @@ IsDialogMessage(
   HWND hDlg,
   LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 #endif
@@ -365,6 +396,7 @@ IsDialogMessageA(
   HWND hDlg,
   LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -374,6 +406,7 @@ IsDialogMessageW(
   HWND hDlg,
   LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -383,16 +416,20 @@ IsDlgButtonChecked(
   HWND hDlg,
   int nIDButton)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 MapDialogRect(
   HWND hDlg,
   LPRECT lpRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 LRESULT
 STDCALL
 SendDlgItemMessageA(
@@ -402,6 +439,7 @@ SendDlgItemMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 
@@ -414,8 +452,10 @@ SendDlgItemMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
+
 WINBOOL
 STDCALL
 SetDlgItemInt(
@@ -424,6 +464,7 @@ SetDlgItemInt(
   UINT uValue,
   WINBOOL bSigned)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -434,6 +475,7 @@ SetDlgItemTextA(
   int nIDDlgItem,
   LPCSTR lpString)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -444,8 +486,10 @@ SetDlgItemTextW(
   int nIDDlgItem,
   LPCWSTR lpString)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 CheckDlgButton(
@@ -453,6 +497,7 @@ CheckDlgButton(
   int nIDButton,
   UINT uCheck)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.13 2003/05/02 07:52:33 gvg Exp $
+/* $Id: message.c,v 1.14 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -17,6 +17,7 @@ LPARAM
 STDCALL
 GetMessageExtraInfo(VOID)
 {
+  UNIMPLEMENTED;
   return (LPARAM)0;
 }
 
@@ -24,6 +25,7 @@ DWORD
 STDCALL
 GetMessagePos(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -31,8 +33,10 @@ LONG
 STDCALL
 GetMessageTime(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 InSendMessage(VOID)
@@ -45,20 +49,25 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 ReplyMessage(
   LRESULT lResult)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 LPARAM
 STDCALL
 SetMessageExtraInfo(
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LPARAM)0;
 }
 
@@ -131,11 +140,13 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 VOID STATIC
 User32FreeUnicodeConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+  UNIMPLEMENTED;
 }
 
 VOID STATIC
 User32ConvertToUnicodeMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 {
+  UNIMPLEMENTED;
 }
 
 LRESULT STDCALL
@@ -417,6 +428,7 @@ SendMessageTimeoutA(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 
@@ -431,6 +443,7 @@ SendMessageTimeoutW(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }
 
@@ -444,6 +457,7 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -455,6 +469,7 @@ SendNotifyMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -468,6 +483,7 @@ WINBOOL
 STDCALL
 WaitMessage(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.5 2002/09/30 21:21:38 chorns Exp $
+/* $Id: accel.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,6 +39,7 @@ CopyAcceleratorTableA(HACCEL hAccelSrc,
 		      LPACCEL lpAccelDst,
 		      int cAccelEntries)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -47,6 +48,7 @@ CopyAcceleratorTableW(HACCEL hAccelSrc,
 		      LPACCEL lpAccelDst,
 		      int cAccelEntries)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -54,6 +56,7 @@ HACCEL STDCALL
 CreateAcceleratorTableA(LPACCEL lpaccl,
 			int cEntries)
 {
+  UNIMPLEMENTED;
   return (HACCEL)0;
 }
 
@@ -61,6 +64,7 @@ HACCEL STDCALL
 CreateAcceleratorTableW(LPACCEL lpaccl,
 			int cEntries)
 {
+  UNIMPLEMENTED;
   return (HACCEL)0;
 }
 
@@ -116,6 +120,7 @@ TranslateAcceleratorA(HWND hWnd,
 		      HACCEL hAccTable,
 		      LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -124,5 +129,6 @@ TranslateAcceleratorW(HWND hWnd,
 		      HACCEL hAccTable,
 		      LPMSG lpMsg)
 {
+  UNIMPLEMENTED;
   return 0;
 }

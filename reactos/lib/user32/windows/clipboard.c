@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.3 2002/09/08 10:23:12 chorns Exp $
+/* $Id: clipboard.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -38,18 +38,21 @@ WINBOOL
 STDCALL
 CloseClipboard(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 int
 STDCALL
 CountClipboardFormats(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 WINBOOL
 STDCALL
 EmptyClipboard(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 UINT
@@ -57,6 +60,7 @@ STDCALL
 EnumClipboardFormats(
   UINT format)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 HANDLE
@@ -64,6 +68,7 @@ STDCALL
 GetClipboardData(
   UINT uFormat)
 {
+  UNIMPLEMENTED;
   return (HANDLE)0;
 }
 
@@ -74,6 +79,7 @@ GetClipboardFormatNameA(
   LPSTR lpszFormatName,
   int cchMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -84,6 +90,7 @@ GetClipboardFormatNameW(
   LPWSTR lpszFormatName,
   int cchMaxCount)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -91,6 +98,7 @@ HWND
 STDCALL
 GetClipboardOwner(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -98,6 +106,7 @@ DWORD
 STDCALL
 GetClipboardSequenceNumber(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -105,12 +114,15 @@ HWND
 STDCALL
 GetClipboardViewer(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
+
 HWND
 STDCALL
 GetOpenClipboardWindow(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -120,6 +132,7 @@ GetPriorityClipboardFormat(
   UINT *paFormatPriorityList,
   int cFormats)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 WINBOOL
@@ -127,20 +140,25 @@ STDCALL
 IsClipboardFormatAvailable(
   UINT format)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 OpenClipboard(
   HWND hWndNewOwner)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 UINT
 STDCALL
 RegisterClipboardFormatA(
   LPCSTR lpszFormat)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -149,14 +167,17 @@ STDCALL
 RegisterClipboardFormatW(
   LPCWSTR lpszFormat)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 HANDLE
 STDCALL
 SetClipboardData(
   UINT uFormat,
   HANDLE hMem)
 {
+  UNIMPLEMENTED;
   return (HANDLE)0;
 }
 
@@ -165,13 +186,16 @@ STDCALL
 SetClipboardViewer(
   HWND hWndNewViewer)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
+
 WINBOOL
 STDCALL
 ChangeClipboardChain(
   HWND hWndRemove,
   HWND hWndNewNext)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

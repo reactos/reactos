@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.19 2003/04/30 22:03:00 gvg Exp $
+/* $Id: stubs.c,v 1.20 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,6 +16,7 @@ WINBOOL
 STDCALL
 AnyPopup(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -26,6 +27,7 @@ AttachThreadInput(
   DWORD idAttachTo,
   WINBOOL fAttach)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -38,6 +40,7 @@ BroadcastSystemMessage(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -50,6 +53,7 @@ BroadcastSystemMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -62,14 +66,9 @@ BroadcastSystemMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
-
-
-
-
-
 
 WINBOOL
 STDCALL
@@ -79,6 +78,7 @@ CheckRadioButton(
   int nIDLastButton,
   int nIDCheckButton)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -88,6 +88,7 @@ ClientToScreen(
   HWND hWnd,
   LPPOINT lpPoint)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -96,6 +97,7 @@ STDCALL
 ClipCursor(
   CONST RECT *lpRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -108,11 +110,9 @@ CopyImage(
   int cyDesired,
   UINT fuFlags)
 {
+  UNIMPLEMENTED;
   return (HANDLE)0;
 }
-
-
-
 
 WINBOOL
 STDCALL
@@ -120,6 +120,7 @@ DragDetect(
   HWND hwnd,
   POINT pt)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -130,6 +131,7 @@ EnableScrollBar(
   UINT wSBflags,
   UINT wArrows)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -137,6 +139,7 @@ HWND
 STDCALL
 GetActiveWindow(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -144,14 +147,15 @@ HWND
 STDCALL
 GetCapture(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
-
 
 UINT
 STDCALL
 GetDoubleClickTime(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -159,6 +163,7 @@ HWND
 STDCALL
 GetFocus(VOID)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -168,10 +173,9 @@ GetGuiResources(
   HANDLE hProcess,
   DWORD uiFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
-
 
 int
 STDCALL
@@ -182,26 +186,25 @@ GetMouseMovePointsEx(
   int nBufPoints,
   DWORD resolution)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
-
-
 
 DWORD
 STDCALL
 GetQueueStatus(
   UINT flags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
 
 DWORD
 STDCALL
 GetSysColor(
   int nIndex)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -211,43 +214,25 @@ GetSystemMenu(
   HWND hWnd,
   WINBOOL bRevert)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 WINBOOL
 STDCALL
 IsWindowEnabled(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
-
-
 
 WINBOOL
 STDCALL
 LockWindowUpdate(
   HWND hWndLock)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -255,6 +240,7 @@ WINBOOL
 STDCALL
 LockWorkStation(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -263,10 +249,9 @@ STDCALL
 MessageBeep(
   UINT uType)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
 
 HMONITOR
 STDCALL
@@ -274,6 +259,7 @@ MonitorFromPoint(
   POINT pt,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return (HMONITOR)0;
 }
 
@@ -283,6 +269,7 @@ MonitorFromRect(
   LPRECT lprc,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return (HMONITOR)0;
 }
 
@@ -292,6 +279,7 @@ MonitorFromWindow(
   HWND hwnd,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return (HMONITOR)0;
 }
 
@@ -304,6 +292,7 @@ MsgWaitForMultipleObjects(
   DWORD dwMilliseconds,
   DWORD dwWakeMask)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -316,14 +305,9 @@ MsgWaitForMultipleObjectsEx(
   DWORD dwWakeMask,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
-
-
-
-
-
 
 #if 0
 HDEVNOTIFY
@@ -333,6 +317,7 @@ RegisterDeviceNotificationA(
   LPVOID NotificationFilter,
   DWORD Flags)
 {
+  UNIMPLEMENTED;
   return (HDEVNOTIFY)0;
 }
 
@@ -343,6 +328,7 @@ RegisterDeviceNotificationW(
   LPVOID NotificationFilter,
   DWORD Flags)
 {
+  UNIMPLEMENTED;
   return (HDEVNOTIFY)0;
 }
 #endif
@@ -354,21 +340,17 @@ RegisterHotKey(
   UINT fsModifiers,
   UINT vk)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
 
 WINBOOL
 STDCALL
 ReleaseCapture(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
-
-
-
 
 WINBOOL
 STDCALL
@@ -379,6 +361,7 @@ ScrollWindow(
   CONST RECT *lpRect,
   CONST RECT *lpClipRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -394,16 +377,16 @@ ScrollWindowEx(
   LPRECT prcUpdate,
   UINT flags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
-
-
 
 HWND
 STDCALL
 SetActiveWindow(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
 
@@ -412,18 +395,16 @@ STDCALL
 SetCapture(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
-
-
-
-
 
 WINBOOL
 STDCALL
 SetDoubleClickTime(
   UINT uInterval)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -432,19 +413,18 @@ STDCALL
 SetFocus(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HWND)0;
 }
+
 VOID
 STDCALL
 SetLastErrorEx(
   DWORD dwErrCode,
   DWORD dwType)
 {
+  UNIMPLEMENTED;
 }
-
-
-
-
 
 WINBOOL
 STDCALL
@@ -453,21 +433,16 @@ SetSysColors(
   CONST INT *lpaElements,
   CONST COLORREF *lpaRgbValues)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
-
-
-
-
-
 
 WINBOOL
 STDCALL
 SwapMouseButton(
   WINBOOL fSwap)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -476,20 +451,16 @@ STDCALL
 TrackMouseEvent(
   LPTRACKMOUSEEVENT lpEventTrack)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
-
-
-
-
 
 WINBOOL
 STDCALL
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -499,12 +470,9 @@ UnregisterHotKey(
   HWND hWnd,
   int id)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-
-
-
-
 
 DWORD
 STDCALL
@@ -512,6 +480,7 @@ WaitForInputIdle(
   HANDLE hProcess,
   DWORD dwMilliseconds)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -525,6 +494,7 @@ SetWindowsHookExA(
     HINSTANCE hMod,
     DWORD dwThreadId)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -536,6 +506,7 @@ SetWindowsHookExW(
     HINSTANCE hMod,
     DWORD dwThreadId)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -547,7 +518,7 @@ keybd_event(
 	    DWORD dwFlags,
 	    DWORD dwExtraInfo)
 
- 
+
 {
   UNIMPLEMENTED
 }

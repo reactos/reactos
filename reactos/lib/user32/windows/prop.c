@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.6 2002/11/05 20:58:20 hbirr Exp $
+/* $Id: prop.c,v 1.7 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -38,24 +38,28 @@
 int STDCALL
 EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 int STDCALL
 EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 int STDCALL
 EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 int STDCALL
 EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 

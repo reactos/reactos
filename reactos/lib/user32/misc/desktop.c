@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.10 2003/03/01 09:05:34 rcampbell Exp $
+/* $Id: desktop.c,v 1.11 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -100,7 +100,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
 			    dwFlags,
 			    dwDesiredAccess,
 			    lpsa);
-  
+
   RtlFreeUnicodeString(&DesktopNameU);
   return(hDesktop);
 }
@@ -137,6 +137,7 @@ EnumDesktopWindows(
   ENUMWINDOWSPROC lpfn,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -147,6 +148,7 @@ EnumDesktopsA(
   DESKTOPENUMPROC lpEnumFunc,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -157,6 +159,7 @@ EnumDesktopsW(
   DESKTOPENUMPROC lpEnumFunc,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 

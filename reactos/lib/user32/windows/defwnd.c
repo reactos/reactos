@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.43 2003/05/04 15:41:40 gvg Exp $
+/* $Id: defwnd.c,v 1.44 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -94,7 +94,7 @@ BOOL IsMinBoxActive( HWND hWnd )
 INT UIGetFrameSizeX( HWND hWnd )
 {
     ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
-    
+
     if ( uStyle & WS_THICKFRAME )
         return GetSystemMetrics( SM_CXSIZEFRAME );
     else
@@ -104,7 +104,7 @@ INT UIGetFrameSizeX( HWND hWnd )
 INT UIGetFrameSizeY( HWND hWnd )
 {
     ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
-    
+
     if ( uStyle & WS_THICKFRAME )
         return GetSystemMetrics( SM_CYSIZEFRAME );
     else
@@ -138,6 +138,7 @@ DefFrameProcA( HWND hWnd,
 	      WPARAM wParam,
 	      LPARAM lParam )
 {
+  UNIMPLEMENTED;
   return((LRESULT)0);
 }
 /*
@@ -162,6 +163,7 @@ DefFrameProcW(HWND hWnd,
 	      WPARAM wParam,
 	      LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return((LRESULT)0);
 }
 
@@ -232,7 +234,7 @@ INT GetFrameSize(HWND hWnd)
 
     uStyle = GetWindowLong(hWnd, GWL_STYLE);
     uExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-    
+
     if (UserHasThinFrameStyle(uStyle, uExStyle))
     {
         return GetSystemMetrics( SM_CXBORDER );
@@ -294,12 +296,12 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
   RECT Rect;
   HDC hDcMem;
   HBITMAP hSavedBitmap;
-  
+
   hbSysMenu = LoadBitmap(0, MAKEINTRESOURCE(OBM_CLOSE));
   UserGetInsideRectNC(hWnd, &Rect);
   hDcMem = CreateCompatibleDC(hDC);
   hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
-  BitBlt(hDC, Rect.left + 2, Rect.top + 
+  BitBlt(hDC, Rect.left + 2, Rect.top +
          2, 16, 16, hDcMem,
          (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
@@ -309,11 +311,11 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 
 /* FIXME:  Cache bitmaps, then just bitblt instead of calling DFC() (and
            wasting precious CPU cycles) every time */
-           
+
 static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
 {
     RECT rect;
-    
+
     BOOL bToolWindow = GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW;
     INT iBmpWidth =  (bToolWindow ? GetSystemMetrics(SM_CXSMSIZE) :
                       GetSystemMetrics(SM_CXSIZE)) - 2;
@@ -355,7 +357,7 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
     INT OffsetY = UIGetFrameSizeY( hWnd );
     
     GetWindowRect( hWnd, &rect );
-    
+
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;    
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
@@ -368,7 +370,7 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
             rect.right - OffsetX - (iBmpWidth*2) - 5,
             OffsetY + 2,
             rect.right - iBmpWidth - OffsetX - 5,
-            rect.top + iBmpHeight + OffsetY + 2 );  
+            rect.top + iBmpHeight + OffsetY + 2 );
     
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
@@ -707,6 +709,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 VOID
 DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
 {
+  UNIMPLEMENTED;
 }
 
 LRESULT
@@ -787,7 +790,8 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    return(0);
+  UNIMPLEMENTED;
+  return(0);
 }
 
 LRESULT
@@ -821,13 +825,14 @@ DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleActiveNC(HWND hWnd, WPARAM wParam)
 {
-  /* FIXME: Implement this. */
+  UNIMPLEMENTED;
   return(0);
 }
 
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
+  UNIMPLEMENTED;
 }
 
 LRESULT
@@ -893,7 +898,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 {
-  /* FIXME: Implement system commands. */
+  UNIMPLEMENTED;
   return(0);
 }
 
@@ -981,6 +986,7 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 

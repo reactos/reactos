@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.6 2002/09/08 10:23:10 chorns Exp $
+/* $Id: winsta.c,v 1.7 2003/05/12 19:30:00 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -69,6 +69,7 @@ WINBOOL STDCALL
 EnumWindowStationsA(ENUMWINDOWSTATIONPROC lpEnumFunc,
 		    LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -76,6 +77,7 @@ WINBOOL STDCALL
 EnumWindowStationsW(ENUMWINDOWSTATIONPROC lpEnumFunc,
 		    LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -110,7 +112,7 @@ OpenWindowStationA(LPSTR lpszWinSta,
 			       dwDesiredAccess);
   
   RtlFreeUnicodeString(&WindowStationNameU);
-  
+
   return hWinSta;
 }
 

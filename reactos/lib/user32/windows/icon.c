@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.3 2002/09/08 10:23:12 chorns Exp $
+/* $Id: icon.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,6 +39,7 @@ STDCALL
 CopyIcon(
   HICON hIcon)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
 HICON
@@ -52,6 +53,7 @@ CreateIcon(
   CONST BYTE *lpbANDbits,
   CONST BYTE *lpbXORbits)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
 
@@ -63,6 +65,7 @@ CreateIconFromResource(
   WINBOOL fIcon,
   DWORD dwVer)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
 
@@ -77,6 +80,7 @@ CreateIconFromResourceEx(
   int cyDesired,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
 
@@ -85,15 +89,19 @@ STDCALL
 CreateIconIndirect(
   PICONINFO piconinfo)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
+
 WINBOOL
 STDCALL
 DestroyIcon(
   HICON hIcon)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 DrawIcon(
@@ -102,6 +110,7 @@ DrawIcon(
   int Y,
   HICON hIcon)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -118,22 +127,27 @@ DrawIconEx(
   HBRUSH hbrFlickerFreeDraw,
   UINT diFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 GetIconInfo(
   HICON hIcon,
   PICONINFO piconinfo)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 HICON
 STDCALL
 LoadIconA(
   HINSTANCE hInstance,
   LPCSTR lpIconName)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
 
@@ -143,14 +157,17 @@ LoadIconW(
   HINSTANCE hInstance,
   LPCWSTR lpIconName)
 {
+  UNIMPLEMENTED;
   return (HICON)0;
 }
+
 int
 STDCALL
 LookupIconIdFromDirectory(
   PBYTE presbits,
   WINBOOL fIcon)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -163,5 +180,6 @@ LookupIconIdFromDirectoryEx(
   int cyDesired,
   UINT Flags)
 {
+  UNIMPLEMENTED;
   return 0;
 }

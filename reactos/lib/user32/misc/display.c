@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.3 2002/09/08 10:23:10 chorns Exp $
+/* $Id: display.c,v 1.4 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -41,6 +41,7 @@ EnumDisplayDevicesA(
   PDISPLAY_DEVICE lpDisplayDevice,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -52,6 +53,7 @@ EnumDisplayDevicesW(
   PDISPLAY_DEVICE lpDisplayDevice,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -63,6 +65,7 @@ EnumDisplayMonitors(
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -73,6 +76,7 @@ EnumDisplaySettingsA(
   DWORD iModeNum,
   LPDEVMODEA lpDevMode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -84,6 +88,7 @@ EnumDisplaySettingsExA(
   LPDEVMODEW lpDevMode,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -95,6 +100,7 @@ EnumDisplaySettingsExW(
   LPDEVMODEA lpDevMode,
   DWORD dwFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -105,14 +111,17 @@ EnumDisplaySettingsW(
   DWORD iModeNum,
   LPDEVMODEW lpDevMode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 GetMonitorInfoA(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -122,14 +131,17 @@ GetMonitorInfoW(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 LONG
 STDCALL
 ChangeDisplaySettingsA(
   LPDEVMODEA lpDevMode,
   DWORD dwflags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -142,6 +154,7 @@ ChangeDisplaySettingsExA(
   DWORD dwflags,
   LPVOID lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -154,6 +167,7 @@ ChangeDisplaySettingsExW(
   DWORD dwflags,
   LPVOID lParam)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -163,5 +177,6 @@ ChangeDisplaySettingsW(
   LPDEVMODEW lpDevMode,
   DWORD dwflags)
 {
+  UNIMPLEMENTED;
   return 0;
 }

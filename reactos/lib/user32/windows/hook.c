@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.8 2002/09/08 10:23:12 chorns Exp $
+/* $Id: hook.c,v 1.9 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,6 +39,7 @@ STDCALL
 UnhookWindowsHookEx(
   HHOOK hhk)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 #if 0
@@ -48,6 +49,7 @@ CallMsgFilter(
   LPMSG lpMsg,
   int nCode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 #endif
@@ -58,6 +60,7 @@ CallMsgFilterA(
   LPMSG lpMsg,
   int nCode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -67,6 +70,7 @@ CallMsgFilterW(
   LPMSG lpMsg,
   int nCode)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -78,5 +82,6 @@ CallNextHookEx(
   WPARAM wParam,
   LPARAM lParam)
 {
+  UNIMPLEMENTED;
   return (LRESULT)0;
 }

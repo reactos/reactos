@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.6 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: menu.c,v 1.7 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -50,7 +50,7 @@ typedef struct _MENUITEM
   UINT XTab;
 } MENUITEM, *PMENUITEM;
 
-typedef struct _POPUP_MENU 
+typedef struct _POPUP_MENU
 {
   MENUITEM* Items;
   WORD NrItems;
@@ -168,12 +168,15 @@ CheckMenuRadioItem(
   UINT idCheck,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 HMENU
 STDCALL
 CreateMenu(VOID)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
 
@@ -181,8 +184,10 @@ HMENU
 STDCALL
 CreatePopupMenu(VOID)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
+
 WINBOOL
 STDCALL
 DeleteMenu(
@@ -190,22 +195,28 @@ DeleteMenu(
   UINT uPosition,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 DestroyMenu(
   HMENU hMenu)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 DrawMenuBar(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 EnableMenuItem(
@@ -213,19 +224,24 @@ EnableMenuItem(
   UINT uIDEnableItem,
   UINT uEnable)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 EndMenu(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 HMENU
 STDCALL
 GetMenu(
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
 
@@ -237,6 +253,7 @@ GetMenuBarInfo(
   LONG idItem,
   PMENUBARINFO pmbi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -244,6 +261,7 @@ LONG
 STDCALL
 GetMenuCheckMarkDimensions(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -254,6 +272,7 @@ GetMenuDefaultItem(
   UINT fByPos,
   UINT gmdiFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -263,6 +282,7 @@ GetMenuInfo(
   HMENU hmenu,
   LPCMENUINFO lpcmi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -271,6 +291,7 @@ STDCALL
 GetMenuItemCount(
   HMENU hMenu)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -280,6 +301,7 @@ GetMenuItemID(
   HMENU hMenu,
   int nPos)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -291,6 +313,7 @@ GetMenuItemInfoA(
   WINBOOL fByPosition,
   LPMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -302,6 +325,7 @@ GetMenuItemInfoW(
   WINBOOL fByPosition,
   LPMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -313,6 +337,7 @@ GetMenuItemRect(
   UINT uItem,
   LPRECT lprcItem)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -323,6 +348,7 @@ GetMenuState(
   UINT uId,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -335,6 +361,7 @@ GetMenuStringA(
   int nMaxCount,
   UINT uFlag)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -347,16 +374,20 @@ GetMenuStringW(
   int nMaxCount,
   UINT uFlag)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 HMENU
 STDCALL
 GetSubMenu(
   HMENU hMenu,
   int nPos)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
+
 WINBOOL
 STDCALL
 HiliteMenuItem(
@@ -365,8 +396,10 @@ HiliteMenuItem(
   UINT uItemHilite,
   UINT uHilite)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 InsertMenuA(
@@ -376,6 +409,7 @@ InsertMenuA(
   UINT_PTR uIDNewItem,
   LPCSTR lpNewItem)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -387,6 +421,7 @@ InsertMenuItemA(
   WINBOOL fByPosition,
   LPCMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -398,6 +433,7 @@ InsertMenuItemW(
   WINBOOL fByPosition,
   LPCMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -410,21 +446,26 @@ InsertMenuW(
   UINT_PTR uIDNewItem,
   LPCWSTR lpNewItem)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 IsMenu(
   HMENU hMenu)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 HMENU
 STDCALL
 LoadMenuA(
   HINSTANCE hInstance,
   LPCSTR lpMenuName)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
 
@@ -433,6 +474,7 @@ STDCALL
 LoadMenuIndirectA(
   CONST MENUTEMPLATE *lpMenuTemplate)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
 
@@ -441,6 +483,7 @@ STDCALL
 LoadMenuIndirectW(
   CONST MENUTEMPLATE *lpMenuTemplate)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
 
@@ -450,8 +493,10 @@ LoadMenuW(
   HINSTANCE hInstance,
   LPCWSTR lpMenuName)
 {
+  UNIMPLEMENTED;
   return (HMENU)0;
 }
+
 int
 STDCALL
 MenuItemFromPoint(
@@ -459,8 +504,10 @@ MenuItemFromPoint(
   HMENU hMenu,
   POINT ptScreen)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 ModifyMenuA(
@@ -470,6 +517,7 @@ ModifyMenuA(
   UINT_PTR uIDNewItem,
   LPCSTR lpNewItem)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -482,8 +530,10 @@ ModifyMenuW(
   UINT_PTR uIDNewItem,
   LPCWSTR lpNewItem)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 RemoveMenu(
@@ -491,14 +541,17 @@ RemoveMenu(
   UINT uPosition,
   UINT uFlags)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 SetMenu(
   HWND hWnd,
   HMENU hMenu)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -509,6 +562,7 @@ SetMenuDefaultItem(
   UINT uItem,
   UINT fByPos)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -518,6 +572,7 @@ SetMenuInfo(
   HMENU hmenu,
   LPCMENUINFO lpcmi)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -530,6 +585,7 @@ SetMenuItemBitmaps(
   HBITMAP hBitmapUnchecked,
   HBITMAP hBitmapChecked)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -541,6 +597,7 @@ SetMenuItemInfoA(
   WINBOOL fByPosition,
   LPMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -552,6 +609,7 @@ SetMenuItemInfoW(
   WINBOOL fByPosition,
   LPMENUITEMINFO lpmii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -566,6 +624,7 @@ TrackPopupMenu(
   HWND hWnd,
   CONST RECT *prcRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -579,5 +638,6 @@ TrackPopupMenuEx(
   HWND hwnd,
   LPTPMPARAMS lptpm)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }

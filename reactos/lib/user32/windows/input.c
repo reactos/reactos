@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.5 2002/09/08 10:23:12 chorns Exp $
+/* $Id: input.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -38,12 +38,14 @@ HKL STDCALL
 ActivateKeyboardLayout(HKL hkl,
 		       UINT Flags)
 {
+  UNIMPLEMENTED;
   return (HKL)0;
 }
 
 WINBOOL STDCALL
 BlockInput(WINBOOL fBlockIt)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -51,29 +53,34 @@ WINBOOL STDCALL
 EnableWindow(HWND hWnd,
 	     WINBOOL bEnable)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 SHORT STDCALL
 GetAsyncKeyState(int vKey)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 HKL STDCALL
 GetKeyboardLayout(DWORD idThread)
 {
+  UNIMPLEMENTED;
   return (HKL)0;
 }
 
 WINBOOL STDCALL GetInputState(VOID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 UINT STDCALL
 GetKBCodePage(VOID)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -82,6 +89,7 @@ GetKeyNameTextA(LONG lParam,
 		LPSTR lpString,
 		int nSize)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -90,12 +98,14 @@ GetKeyNameTextW(LONG lParam,
 		LPWSTR lpString,
 		int nSize)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 SHORT STDCALL
 GetKeyState(int nVirtKey)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -103,36 +113,42 @@ UINT STDCALL
 GetKeyboardLayoutList(int nBuff,
 		      HKL FAR *lpList)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 WINBOOL STDCALL
 GetKeyboardState(PBYTE lpKeyState)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 int STDCALL
 GetKeyboardType(int nTypeFlag)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -140,6 +156,7 @@ HKL STDCALL
 LoadKeyboardLayoutA(LPCSTR pwszKLID,
 		    UINT Flags)
 {
+  UNIMPLEMENTED;
   return (HKL)0;
 }
 
@@ -147,6 +164,7 @@ HKL STDCALL
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 		    UINT Flags)
 {
+  UNIMPLEMENTED;
   return (HKL)0;
 }
 
@@ -154,6 +172,7 @@ UINT STDCALL
 MapVirtualKeyA(UINT uCode,
 	       UINT uMapType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -162,6 +181,7 @@ MapVirtualKeyExA(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -170,6 +190,7 @@ MapVirtualKeyExW(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -177,18 +198,21 @@ UINT STDCALL
 MapVirtualKeyW(UINT uCode,
 	       UINT uMapType)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 DWORD STDCALL
 OemKeyScan(WORD wOemChar)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 SetKeyboardState(LPBYTE lpKeyState)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -199,6 +223,7 @@ ToAscii(UINT uVirtKey,
 	LPWORD lpChar,
 	UINT uFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -210,6 +235,7 @@ ToAsciiEx(UINT uVirtKey,
 	  UINT uFlags,
 	  HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -221,6 +247,7 @@ ToUnicode(UINT wVirtKey,
 	  int cchBuff,
 	  UINT wFlags)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -233,18 +260,21 @@ ToUnicodeEx(UINT wVirtKey,
 	    UINT wFlags,
 	    HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 WINBOOL STDCALL
 UnloadKeyboardLayout(HKL hkl)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
 SHORT STDCALL
 VkKeyScanA(CHAR ch)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -252,6 +282,7 @@ SHORT STDCALL
 VkKeyScanExA(CHAR ch,
 	     HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -259,12 +290,14 @@ SHORT STDCALL
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
 SHORT STDCALL
 VkKeyScanW(WCHAR ch)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 
@@ -275,5 +308,6 @@ SendInput(
   LPINPUT pInputs,
   int cbSize)
 {
+  UNIMPLEMENTED;
   return 0;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.12 2003/03/27 02:27:42 rcampbell Exp $
+/* $Id: paint.c,v 1.13 2003/05/12 19:30:00 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -57,6 +57,7 @@ ExcludeUpdateRgn(
   HDC hDC,
   HWND hWnd)
 {
+  UNIMPLEMENTED;
   return 0;
 }
 WINBOOL
@@ -66,6 +67,7 @@ GetUpdateRect(
   LPRECT lpRect,
   WINBOOL bErase)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 
@@ -76,8 +78,10 @@ GetUpdateRgn(
   HRGN hRgn,
   WINBOOL bErase)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 InvalidateRect(
@@ -128,6 +132,7 @@ ScrollDC(
   HRGN hrgnUpdate,
   LPRECT lprcUpdate)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
 int
@@ -137,8 +142,10 @@ SetWindowRgn(
   HRGN hRgn,
   WINBOOL bRedraw)
 {
+  UNIMPLEMENTED;
   return 0;
 }
+
 WINBOOL
 STDCALL
 UpdateWindow(
@@ -146,27 +153,33 @@ UpdateWindow(
 {
   return NtUserUpdateWindow( hWnd );
 }
+
 WINBOOL
 STDCALL
 ValidateRect(
   HWND hWnd,
   CONST RECT *lpRect)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 WINBOOL
 STDCALL
 ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
+
 int
 STDCALL
 GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
+  UNIMPLEMENTED;
   return 0;
 }
