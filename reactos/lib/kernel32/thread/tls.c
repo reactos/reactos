@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.5 2000/05/30 23:41:06 ea Exp $
+/* $Id: tls.c,v 1.6 2000/11/19 16:01:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,58 +13,85 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 #include <kernel32/thread.h>
-#include <string.h>
-#include <ntdll/rtl.h>
+#include <kernel32/error.h>
+
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
 DWORD STDCALL TlsAlloc(VOID)
 {
-   PULONG TlsBitmap = NtCurrentPeb()->TlsBitmapBits;
-   ULONG i, j;
-   
-   RtlAcquirePebLock();
-   
-   for (i = 0; i < 2; i++)
-     {	
-	for (j = 0; j < 32; j++)
-	  {
-	     if ((TlsBitmap[i] & (1 << j)) == 0)
-	       {
-		  TlsBitmap[i] = TlsBitmap[i] | (1 << j);
-		  RtlReleasePebLock();
-		  return((i * 32) + j);
-	       }
-	  }
-     }
+   ULONG Index;
 
+   RtlAcquirePebLock();
+   Index = RtlFindClearBitsAndSet (NtCurrentPeb()->TlsBitmap,
+				   1,
+				   0);
+   if (Index == (ULONG)-1)
+     {
+	SetLastErrorByStatus(STATUS_NO_MEMORY);
+     }
+   else
+     {
+	NtCurrentTeb()->TlsSlots[Index] = 0;
+     }
    RtlReleasePebLock();
-   return (0xFFFFFFFFUL);
+
+   return Index;
 }
 
-WINBOOL	STDCALL TlsFree(DWORD dwTlsIndex)
+WINBOOL STDCALL TlsFree(DWORD dwTlsIndex)
 {
-   PULONG TlsBitmap = NtCurrentPeb()->TlsBitmapBits;
-   
+   if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
+     {
+	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+	return(FALSE);
+     }
+
    RtlAcquirePebLock();
-   TlsBitmap[dwTlsIndex / 32] =
-     TlsBitmap[dwTlsIndex / 32] & ~(1 << (dwTlsIndex % 32));
+   if (RtlAreBitsSet(NtCurrentPeb()->TlsBitmap, dwTlsIndex, 1))
+     {
+	/*
+	 * clear the tls cells (slots) in all threads
+	 * of the current process
+	 */
+	NtSetInformationThread(NtCurrentThread(),
+			       ThreadZeroTlsCell,
+			       &dwTlsIndex,
+			       sizeof(DWORD));
+	RtlClearBits(NtCurrentPeb()->TlsBitmap,
+		     dwTlsIndex,
+		     1);
+     }
    RtlReleasePebLock();
+
    return(TRUE);
 }
 
 LPVOID STDCALL TlsGetValue(DWORD dwTlsIndex)
 {
+   if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
+     {
+	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+	return(NULL);
+     }
    return(NtCurrentTeb()->TlsSlots[dwTlsIndex]);
 }
 
-WINBOOL	STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
+WINBOOL STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
+   if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
+     {
+	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+	return(FALSE);
+     }
    NtCurrentTeb()->TlsSlots[dwTlsIndex] = lpTlsValue;
    return(TRUE);
 }
-
 
 /* EOF */
