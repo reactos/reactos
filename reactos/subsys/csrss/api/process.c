@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.15 2001/09/02 12:19:34 chorns Exp $
+/* $Id: process.c,v 1.16 2001/11/20 02:29:45 dwelch Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -179,7 +179,7 @@ CSR_API(CsrCreateProcess)
 	   Reply->Status = Status;
 	   return Status;
 	 }
-       Status = NtDuplicateObject( NtCurrentProcess(), &NewProcessData->Console->ActiveEvent, Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
+       Status = NtDuplicateObject( NtCurrentProcess(), NewProcessData->Console->ActiveEvent, Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
        if( !NT_SUCCESS( Status ) )
 	 {
 	   DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.32 2001/09/08 08:57:59 ekohl Exp $
+/* $Id: handle.c,v 1.33 2001/11/20 02:29:45 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -33,6 +33,7 @@
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -94,9 +95,9 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
 
 
 NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
-				    IN	PHANDLE		SourceHandle,
+				    IN	HANDLE		SourceHandle,
 				    IN	HANDLE		TargetProcessHandle,
-				    OUT	PHANDLE		TargetHandle,
+				    OUT	PHANDLE		UnsafeTargetHandle,
 				    IN	ACCESS_MASK	DesiredAccess,
 				    IN	BOOLEAN		InheritHandle,
 				    ULONG		Options)
@@ -130,6 +131,8 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    PHANDLE_REP SourceHandleRep;
    KIRQL oldIrql;
    PVOID ObjectBody;
+   HANDLE TargetHandle;
+   NTSTATUS Status;
    
    ASSERT_IRQL(PASSIVE_LEVEL);
    
@@ -148,7 +151,7 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    
    KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
    SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
-					  *SourceHandle);
+					  SourceHandle);
    if (SourceHandleRep == NULL)
      {
 	KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
@@ -173,17 +176,23 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 		  ObjectBody,
 		  DesiredAccess,
 		  InheritHandle,
-		  TargetHandle);
+		  &TargetHandle);
    
    if (Options & DUPLICATE_CLOSE_SOURCE)
      {
-	ZwClose(*SourceHandle);
+	ZwClose(SourceHandle);
      }
    
    ObDereferenceObject(TargetProcess);
    ObDereferenceObject(SourceProcess);
    ObDereferenceObject(ObjectBody);
    
+   Status = MmCopyToCaller(UnsafeTargetHandle, &TargetHandle, sizeof(HANDLE));
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
+
    return(STATUS_SUCCESS);
 }
 

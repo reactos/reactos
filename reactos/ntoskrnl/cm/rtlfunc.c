@@ -343,7 +343,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
      {
    Status = NtDuplicateObject(
       PsGetCurrentProcessId(),
-      (PHANDLE)&Path,
+      (HANDLE)Path,
       PsGetCurrentProcessId(),
       KeyHandle,
       0,

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.35 2001/09/01 15:36:43 chorns Exp $
+/* $Id: console.c,v 1.36 2001/11/20 02:29:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -966,78 +966,76 @@ PeekConsoleInputW(
 /*--------------------------------------------------------------
  * 	ReadConsoleInputA
  */
-WINBASEAPI
-BOOL
-WINAPI
-ReadConsoleInputA(
-	HANDLE			hConsoleInput,
-	PINPUT_RECORD		lpBuffer,
-	DWORD			nLength,
-	LPDWORD			lpNumberOfEventsRead
-	)
+WINBASEAPI BOOL WINAPI
+ReadConsoleInputA(HANDLE hConsoleInput,
+		  PINPUT_RECORD	lpBuffer,
+		  DWORD	nLength,
+		  LPDWORD lpNumberOfEventsRead)
 {
-   CSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
-   DWORD NumEventsRead;
-   NTSTATUS Status;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  DWORD NumEventsRead;
+  NTSTATUS Status;
 
-   Request.Type = CSRSS_READ_INPUT;
-   Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
-   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
-   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
-      {
-	 SetLastErrorByStatus ( Status );
-	 return FALSE;
-      }
-
-   while (Status == STATUS_PENDING)
-      {
-
-   Status = NtWaitForSingleObject( Reply.Data.ReadInputReply.Event, FALSE, 0 );
-	 if( !NT_SUCCESS( Status ) )
-	    {
-	       SetLastErrorByStatus ( Status );
-	       return FALSE;
-	    }
-
-   Request.Type = CSRSS_READ_INPUT;
-   Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
-   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
-   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
-      {
-	 SetLastErrorByStatus ( Status );
-	 return FALSE;
-      }
-      }
-
-   NumEventsRead = 0;
-   *lpBuffer = Reply.Data.ReadInputReply.Input;
-   lpBuffer++;
-   NumEventsRead++;
-
-   while( ( NumEventsRead < nLength ) && ( Reply.Data.ReadInputReply.MoreEvents ) )
-      {
-
-	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
-	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
-	    {
-	       SetLastErrorByStatus ( Status );
-	       return FALSE;
-	    }
-
-   if( Status == STATUS_PENDING )
-	    {
-         break;
-	    }
-
-   *lpBuffer = Reply.Data.ReadInputReply.Input;
-   lpBuffer++;
-   NumEventsRead++;
-
-      }
-   *lpNumberOfEventsRead = NumEventsRead;
-
-   return TRUE;
+  Request.Type = CSRSS_READ_INPUT;
+  Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+				sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  
+  while (Status == STATUS_PENDING)
+    {
+      Status = NtWaitForSingleObject(Reply.Data.ReadInputReply.Event, FALSE, 
+				     0);
+      if(!NT_SUCCESS(Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return FALSE;
+	}
+      
+      Request.Type = CSRSS_READ_INPUT;
+      Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+      Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+				   sizeof(CSRSS_API_REPLY));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+    }
+  
+  NumEventsRead = 0;
+  *lpBuffer = Reply.Data.ReadInputReply.Input;
+  lpBuffer++;
+  NumEventsRead++;
+  
+  while ((NumEventsRead < nLength) && (Reply.Data.ReadInputReply.MoreEvents))
+    {
+      Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+				   sizeof(CSRSS_API_REPLY));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+      
+      if (Status == STATUS_PENDING)
+	{
+	  break;
+	}
+      
+      *lpBuffer = Reply.Data.ReadInputReply.Input;
+      lpBuffer++;
+      NumEventsRead++;
+      
+    }
+  *lpNumberOfEventsRead = NumEventsRead;
+  
+  return TRUE;
 }
 
 

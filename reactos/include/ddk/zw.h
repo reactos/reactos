@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.47 2001/09/02 17:29:50 dwelch Exp $
+/* $Id: zw.h,v 1.48 2001/11/20 02:29:43 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1292,7 +1292,7 @@ NTSTATUS
 STDCALL
 NtDuplicateObject(
 	IN HANDLE SourceProcessHandle,
-	IN PHANDLE SourceHandle,
+	IN HANDLE SourceHandle,
 	IN HANDLE TargetProcessHandle,
 	OUT PHANDLE TargetHandle,
 	IN ACCESS_MASK DesiredAccess,

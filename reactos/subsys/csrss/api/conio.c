@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.25 2001/09/01 15:36:45 chorns Exp $
+/* $Id: conio.c,v 1.26 2001/11/20 02:29:45 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -92,7 +92,7 @@ CSR_API(CsrAllocConsole)
        Reply->Status = Status;
        return Status;
      }
-   Status = NtDuplicateObject( NtCurrentProcess(), &ProcessData->Console->ActiveEvent, Process, &ProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
+   Status = NtDuplicateObject( NtCurrentProcess(), ProcessData->Console->ActiveEvent, Process, &ProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
    if( !NT_SUCCESS( Status ) )
      {
        DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );

@@ -205,6 +205,8 @@ VOID
 KePrepareForApplicationProcessorInit(ULONG id);
 VOID
 Ki386InitializeLdt(VOID);
+ULONG
+KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2);
 
 #endif /* not __ASM__ */
 
