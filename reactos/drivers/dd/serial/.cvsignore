@@ -1,7 +1,8 @@
 base.tmp
 junk.tmp
 temp.exp
+*.o
 serial.coff
 serial.sys
-serial.sys.unstripped
-
+serial.sym
+serial.nostrip.sys
