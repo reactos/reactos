@@ -1,3 +1,7 @@
+Changes in v1.4 (6/27/2002)
+
+- Added separate configuration for a SETUPLDR version
+
 Changes in v1.3.1 (6/8/2002)
 
 - Implemented MmAllocateMemoryAtAddress()

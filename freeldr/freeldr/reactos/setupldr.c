@@ -1,5 +1,6 @@
 /*
  *  FreeLoader
+ *
  *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,29 +18,20 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#include <freeldr.h>
+#include <debug.h>
+#include <arch.h>
+#include <reactos.h>
+#include <rtl.h>
+#include <fs.h>
+#include <ui.h>
+#include <multiboot.h>
+#include <mm.h>
+#include <inifile.h>
 
+#include "registry.h"
+#include "hwdetect.h"
 
-/* just some stuff */
-#define VERSION			"FreeLoader v1.4"
-#define COPYRIGHT		"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
-#define AUTHOR_EMAIL	"<brianp@sginet.com>"
-#define BY_AUTHOR		"by Brian Palmer"
-
-// FreeLoader version defines
-//
-// NOTE:
-// If you fix bugs then you increment the patch version
-// If you add features then you increment the minor version and zero the patch version
-// If you add major functionality then you increment the major version and zero the minor & patch versions
-//
-#define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	4
-#define FREELOADER_PATCH_VERSION	0
-
-
-PUCHAR	GetFreeLoaderVersionString(VOID);
-
-
-#endif  // defined __VERSION_H
+VOID ReactOSRunSetupLoader(VOID)
+{
+}

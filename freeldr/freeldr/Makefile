@@ -69,7 +69,7 @@ MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
 			  -f ../../Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
 
 .PHONY: CHANGE_TO_TARGET
-CHANGE_TO_TARGET: BUILD_TOOLS $(OBJDIR) $(OBJDIR)/$(TARGET)
+CHANGE_TO_TARGET setupldr : BUILD_TOOLS $(OBJDIR) $(OBJDIR)/$(TARGET)
 	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
 
@@ -118,10 +118,18 @@ COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O1 -MD
 # COMPILER DEFINES
 #
 ifeq ($(DEBUG),yes)
-COMPILER_DEFINES = -DDEBUG
+COMPILER_DEBUG_DEFINES = -DDEBUG
 else
-COMPILER_DEFINES =
+COMPILER_DEBUG_DEFINES =
 endif
+
+ifeq ($(MAKECMDGOALS),setupldr)
+COMPILER_SETUPLDR_DEFINES = -D__SETUPLDR__
+else
+COMPILER_SETUPLDR_DEFINES =
+endif
+
+COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES) $(COMPILER_SETUPLDR_DEFINES)
 
 #############################################
 # INCLUDE DIRECTORY OPTIONS
@@ -195,7 +203,8 @@ REACTOS_OBJS=	reactos.o	\
 				arcname.o	\
 				hwdetect.o	\
 				reghive.o	\
-				registry.o
+				registry.o	\
+				setupldr.o
 
 COMM_OBJS	=	rs232.o		\
 				portio.o
@@ -224,6 +233,7 @@ FREELDR_OBJS=	freeldr.o	\
 				multiboot.o	\
 				debug.o		\
 				oslist.o	\
+				bootmgr.o	\
 				version.o
 
 #############################################
@@ -272,6 +282,20 @@ freeldr.sys : $(OBJS)
 	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(OBJS)
 	@$(NM) --numeric-sort freeldr.exe > freeldr.sym
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
+
+#############################################
+
+setupldr : setupldr.sys
+	@echo Make SETUPLDR done.
+
+#############################################
+
+setupldr.sys : $(OBJS)
+	@echo ===================================================== LINKING $@
+#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o setupldr.sys $(OBJS)
+	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(OBJS)
+	@$(NM) --numeric-sort setupldr.exe > setupldr.sym
+	@$(OBJCOPY) -O binary setupldr.exe setupldr.sys
 
 #############################################
 
