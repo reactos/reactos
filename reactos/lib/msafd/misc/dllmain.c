@@ -198,15 +198,30 @@ WSPSocket(
   SocketType    = lpProtocolInfo->iSocketType;
   Protocol      = lpProtocolInfo->iProtocol;
 
-  Status = HelperDLL->EntryTable.lpWSHOpenSocket2(
-    &AddressFamily,
-    &SocketType,
-    &Protocol,
-    0,
-    0,
-    &TdiDeviceName,
-    &HelperContext,
-    &NotificationEvents);
+  /* The OPTIONAL export WSHOpenSocket2 supersedes WSHOpenSocket */ 
+  if (HelperDLL->EntryTable.lpWSHOpenSocket2)
+  {
+    Status = HelperDLL->EntryTable.lpWSHOpenSocket2(
+      &AddressFamily,
+      &SocketType,
+      &Protocol,
+      0,
+      0,
+      &TdiDeviceName,
+      &HelperContext,
+      &NotificationEvents);
+  }
+  else
+  {
+    Status = HelperDLL->EntryTable.lpWSHOpenSocket(
+      &AddressFamily,
+      &SocketType,
+      &Protocol,
+      &TdiDeviceName,
+      &HelperContext,
+      &NotificationEvents);
+  }
+  
   if (Status != NO_ERROR) {
     AFD_DbgPrint(MAX_TRACE, ("WinSock Helper DLL failed (0x%X).\n", Status));
     *lpErrno = Status;
