@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.55 2001/03/13 16:25:53 dwelch Exp $
+/* $Id: registry.c,v 1.56 2001/04/07 15:06:17 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
  *                  Created 22/05/98
  */
 
+#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <limits.h>
@@ -61,7 +62,7 @@ typedef struct _HEADER_BLOCK
   ULONG  BlockId;		/* ="regf" */
   ULONG  Version;		/* file version ?*/
   ULONG  VersionOld;		/* file version ?*/
-  LARGE_INTEGER  DateModified;
+  FILETIME  DateModified;	/* please don't replace with LARGE_INTEGER !*/
   ULONG  Unused3;		/* registry format version ? */
   ULONG  Unused4;		/* registry format version ? */
   ULONG  Unused5;		/* registry format version ? */
@@ -80,7 +81,7 @@ typedef struct _HEAP_BLOCK
   BLOCK_OFFSET  BlockOffset;	/* block offset of this heap */
   ULONG  BlockSize;		/* size in bytes, 4k multiple */
   ULONG  Unused1;
-  LARGE_INTEGER  DateModified;
+  FILETIME  DateModified;	/* please don't replace with LARGE_INTEGER !*/
   ULONG  Unused2;
 } HEAP_BLOCK, *PHEAP_BLOCK;
 
@@ -96,7 +97,7 @@ typedef struct _KEY_BLOCK
   LONG  SubBlockSize;
   USHORT SubBlockId;
   USHORT Type;
-  LARGE_INTEGER  LastWriteTime;
+  FILETIME  LastWriteTime;	/* please don't replace with LARGE_INTEGER !*/
   ULONG  UnUsed1;
   BLOCK_OFFSET  ParentKeyOffset;
   ULONG  NumberOfSubKeys;
@@ -777,8 +778,8 @@ NtEnumerateKey (
         {
           /*  Fill buffer with requested info  */
           BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
-          BasicInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
+          BasicInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
+          BasicInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
           BasicInformation->TitleIndex = Index;
           BasicInformation->NameLength = (SubKeyBlock->NameSize ) * sizeof(WCHAR);
           mbstowcs(BasicInformation->Name, 
@@ -802,8 +803,8 @@ NtEnumerateKey (
         {
           /*  Fill buffer with requested info  */
           NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
-          NodeInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
+          NodeInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
+          NodeInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
           NodeInformation->TitleIndex = Index;
           NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
             SubKeyBlock->NameSize * sizeof(WCHAR);
@@ -839,8 +840,8 @@ NtEnumerateKey (
         {
           /* fill buffer with requested info  */
           FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
-          FullInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
+          FullInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
+          FullInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
           FullInformation->TitleIndex = Index;
           FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - 
             sizeof(WCHAR);
@@ -1127,12 +1128,12 @@ END FIXME*/
   fileOffset.u.HighPart = 0;
   for (i=0; i < RegistryFile->BlockListSize ; i++)
   {
-    if( RegistryFile->BlockList[i]->DateModified.u.HighPart
-	    > RegistryFile->HeaderBlock->DateModified.u.HighPart
-       ||(  RegistryFile->BlockList[i]->DateModified.u.HighPart
-	     == RegistryFile->HeaderBlock->DateModified.u.HighPart
-          && RegistryFile->BlockList[i]->DateModified.u.LowPart
-	      > RegistryFile->HeaderBlock->DateModified.u.LowPart)
+    if( RegistryFile->BlockList[i]->DateModified.dwHighDateTime
+	    > RegistryFile->HeaderBlock->DateModified.dwHighDateTime
+       ||(  RegistryFile->BlockList[i]->DateModified.dwHighDateTime
+	     == RegistryFile->HeaderBlock->DateModified.dwHighDateTime
+          && RegistryFile->BlockList[i]->DateModified.dwLowDateTime
+	      > RegistryFile->HeaderBlock->DateModified.dwLowDateTime)
        )
     {
       fileOffset.u.LowPart = RegistryFile->BlockList[i]->BlockOffset+4096;
@@ -1285,8 +1286,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
-          BasicInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
+          BasicInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
+          BasicInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
           BasicInformation->TitleIndex = 0;
           BasicInformation->NameLength = 
                 (KeyObject->NameSize ) * sizeof(WCHAR);
@@ -1310,8 +1311,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
-          NodeInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
+          NodeInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
+          NodeInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
           NodeInformation->TitleIndex = 0;
           NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
             KeyObject->NameSize * sizeof(WCHAR);
@@ -1347,8 +1348,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
-          FullInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
+          FullInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
+          FullInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
           FullInformation->TitleIndex = 0;
           FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - 
             sizeof(WCHAR);
@@ -2416,8 +2417,8 @@ CmiCreateRegistry(PWSTR  Filename)
         ExAllocatePool(NonPagedPool, sizeof(HEADER_BLOCK));
       RtlZeroMemory(RegistryFile->HeaderBlock, sizeof(HEADER_BLOCK));
       RegistryFile->HeaderBlock->BlockId = 0x66676572;
-      RegistryFile->HeaderBlock->DateModified.u.LowPart = 0;
-      RegistryFile->HeaderBlock->DateModified.u.HighPart = 0;
+      RegistryFile->HeaderBlock->DateModified.dwLowDateTime = 0;
+      RegistryFile->HeaderBlock->DateModified.dwHighDateTime = 0;
       RegistryFile->HeaderBlock->Version = 1;
       RegistryFile->HeaderBlock->Unused3 = 3;
       RegistryFile->HeaderBlock->Unused5 = 1;
