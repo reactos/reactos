@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.55 2003/07/13 14:36:32 dwelch Exp $
+/* $Id: page.c,v 1.56 2003/07/21 21:53:53 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -95,7 +95,7 @@ ProtectToPTE(ULONG flProtect)
   else
     {
       DPRINT1("Unknown main protection type.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (!(flProtect & PAGE_SYSTEM))
     {
@@ -173,7 +173,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    *(ADDR_TO_PDE(Address)) = 0;
    if (Address >= (PVOID)KERNEL_BASE)
      {
-         KeBugCheck(0);
+         KEBUGCHECK(0);
 //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
      }
    FLUSH_TLB;
@@ -202,7 +202,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
       {
          DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
 		  ((ULONG)Address / 4*1024*1024), i, PageTable[i]);
-	 KeBugCheck(0);
+	 KEBUGCHECK(0);
       }
    }
    npage = *(ADDR_TO_PDE(Address));
@@ -212,7 +212,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    if (Address >= (PVOID)KERNEL_BASE)
    {
 //    MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
    else
    {
@@ -255,7 +255,7 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
 	    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, &npage);
 	    if (!NT_SUCCESS(Status))
 	    {
-	       KeBugCheck(0);
+	       KEBUGCHECK(0);
 	    }
 	    oldIrql = KeRaiseIrqlToSynchLevel();
 	    /* An other thread can set this pde entry, we must check again */
@@ -405,7 +405,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
      }
    if ((*Pde) == 0)
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    /*
@@ -417,7 +417,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
    WasValid = (PAGE_MASK(Pte) != 0);
    if (!WasValid)
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    /*
@@ -783,7 +783,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
 	    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
             if (!NT_SUCCESS(Status))
 	    {
-	       KeBugCheck(0);
+	       KEBUGCHECK(0);
 	    }
 	    MiZeroPage(npage);
 	    oldIrql = KeRaiseIrqlToSynchLevel();
@@ -806,7 +806,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
 	 Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
          if (!NT_SUCCESS(Status))
 	 {
-	    KeBugCheck(0);
+	    KEBUGCHECK(0);
 	 }
 	 MiZeroPage(npage);
 	 *Pde = npage.u.LowPart | PA_PRESENT | PA_READWRITE | PA_USER;
@@ -846,7 +846,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
        if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
          {
            DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
-           KeBugCheck(0);
+           KEBUGCHECK(0);
 	 }
        CurrentProcess = NULL;
      }
@@ -884,7 +884,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
        if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
          {
            DPRINT1("MmSetCleanPage is called for user space without a process.\n");
-           KeBugCheck(0);
+           KEBUGCHECK(0);
 	 }
        CurrentProcess = NULL;
      }
@@ -915,7 +915,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
        if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
          {
            DPRINT1("MmSetDirtyPage is called for user space without a process.\n");
-           KeBugCheck(0);
+           KEBUGCHECK(0);
 	 }
        CurrentProcess = NULL;
      }
@@ -981,12 +981,12 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
        DPRINT1("No process\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
      {
        DPRINT1("Setting kernel address with process context\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    Attributes = ProtectToPTE(flProtect);
    
@@ -1006,7 +1006,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
      }
    if (PAGE_MASK((*Pte)) != 0 && !((*Pte) & PA_PRESENT))
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (PAGE_MASK((*Pte)) != 0)
      {
@@ -1053,16 +1053,16 @@ MmCreatePageFileMapping(PEPROCESS Process,
   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
     {
       DPRINT1("No process\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
      }
   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
     {
       DPRINT1("Setting kernel address with process context\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (SwapEntry & (1 << 31))
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   if (Process != NULL && Process != CurrentProcess)
@@ -1126,12 +1126,12 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
        DPRINT1("No process\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
      {
        DPRINT1("Setting kernel address with process context\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    MmMarkPageMapped(PhysicalAddress);
    
@@ -1141,7 +1141,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
        DPRINT1("Setting physical address but not allowing access at address "
 	       "0x%.8X with attributes %x/%x.\n", 
 	       Address, Attributes, flProtect);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    
    if (Process != NULL && Process != CurrentProcess)
@@ -1160,7 +1160,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
      }
    if (PAGE_MASK((*Pte)) != 0 && !((*Pte) & PA_PRESENT))
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (PAGE_MASK((*Pte)) != 0)
      {
@@ -1196,7 +1196,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
   if (!MmIsUsablePage(PhysicalAddress))
     {
       DPRINT1("Page at address %x not usable\n", PhysicalAddress);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   
   return(MmCreateVirtualMappingUnsafe(Process,

@@ -137,7 +137,7 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
             if (Thread == NULL)
             {
                DPRINT("Thread == NULL!\n");
-               KeBugCheck(0);
+               KEBUGCHECK(0);
             }
             Abandoned = Mutex->Abandoned;
             if (Thread != NULL)
@@ -150,7 +150,7 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
 
       default:
          DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n", __FILE__, __LINE__, hdr);
-         KeBugCheck(0);
+         KEBUGCHECK(0);
    }
 
    return Abandoned;
@@ -373,7 +373,7 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
        return(KeDispatcherObjectWakeOne(hdr));
      }
    DbgPrint("Dispatcher object %x has unknown type %d\n", hdr, hdr->Type);
-   KeBugCheck(0);
+   KEBUGCHECK(0);
    return(FALSE);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.25 2003/07/05 18:10:50 hbirr Exp $
+/* $Id: kmap.c,v 1.26 2003/07/21 21:53:52 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -119,7 +119,7 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
       if (!NT_SUCCESS(Status))
       {
           DbgPrint("Unable to create virtual mapping\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
       }
       return Addr;
    }
@@ -170,7 +170,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    if (Base == 0xFFFFFFFF)
    {
       DbgPrint("CRITICAL: Out of non-paged pool space\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
    if (AllocMapHint == Base)
    {

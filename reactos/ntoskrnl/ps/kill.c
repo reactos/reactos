@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.61 2003/07/11 01:23:15 royce Exp $
+/* $Id: kill.c,v 1.62 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,7 +123,7 @@ PsReapThreads(VOID)
 		  if (!NT_SUCCESS(Status))
 		  {
 		     DPRINT1("ObCreateHandle failed, status = %x\n", Status);
-		     KeBugCheck(0);
+		     KEBUGCHECK(0);
 		  }
 		  Offset = FIELD_OFFSET(TEB, DeallocationStack);
 		  Length = 0;
@@ -189,7 +189,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
 DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
-   KeBugCheck(0);
+   KEBUGCHECK(0);
 }
 
 VOID STDCALL

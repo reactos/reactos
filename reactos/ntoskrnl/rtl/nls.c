@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.17 2003/07/11 01:23:15 royce Exp $
+/* $Id: nls.c,v 1.18 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -98,7 +98,7 @@ RtlpCreateInitialNlsTables(VOID)
       NlsOemCodePageTable == NULL || NlsOemCodePageTableSize == 0 ||
       NlsUnicodeCasemapTable == NULL || NlsUnicodeCasemapTableSize == 0)
     {
-      KeBugCheckEx (0x32, STATUS_UNSUCCESSFUL, 1, 0, 0);
+      KEBUGCHECKEX (0x32, STATUS_UNSUCCESSFUL, 1, 0, 0);
     }
 
   RtlInitNlsTables (NlsAnsiCodePageTable,
@@ -139,7 +139,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtCreateSection() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 1, 0);
+      KEBUGCHECKEX(0x32, Status, 1, 1, 0);
     }
 
   Status = ObReferenceObjectByHandle(SectionHandle,
@@ -152,7 +152,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObReferenceObjectByHandle() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 2, 0);
+      KEBUGCHECKEX(0x32, Status, 1, 2, 0);
     }
 
   Status = MmMapViewInSystemSpace(NlsSectionObject,
@@ -162,7 +162,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MmMapViewInSystemSpace() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 3, 0);
+      KEBUGCHECKEX(0x32, Status, 1, 3, 0);
     }
 
   DPRINT("NlsSection: Base %p  Size %lx\n", 

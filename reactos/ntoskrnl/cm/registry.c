@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.106 2003/06/16 14:00:51 ekohl Exp $
+/* $Id: registry.c,v 1.107 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -367,7 +367,7 @@ CmInit2(PCHAR CommandLine)
   Status = CmiCreateCurrentControlSetLink();
   if (!NT_SUCCESS(Status))
     {
-      KeBugCheck(CONFIG_INITIALIZATION_FAILED);
+      KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
     }
 
   /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
@@ -400,7 +400,7 @@ CmInit2(PCHAR CommandLine)
 				 sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     {
-      KeBugCheck(CONFIG_INITIALIZATION_FAILED);
+      KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
     }
 }
 

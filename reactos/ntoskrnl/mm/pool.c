@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.18 2003/07/11 01:23:15 royce Exp $
+/* $Id: pool.c,v 1.19 2003/07/21 21:53:53 royce Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -62,7 +62,7 @@ EiAllocatePool(POOL_TYPE PoolType,
    if ((PoolType==NonPagedPoolMustSucceed || 
 	PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)     
      {
-	KeBugCheck(MUST_SUCCEED_POOL_EMPTY);
+	KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
      }
    return(Block);
 }

@@ -53,9 +53,12 @@ KeReleaseSpinLockFromDpcLevel(
  * ARGUMENTS:
  *           BugCheckCode = Specifies the reason for the bug check
  * RETURNS: Doesn't
+ *
+ * NOTES - please use the macro KEBUGCHECK with the same argument so the end-user
+ * knows what file/line number where the bug check occured
  */
 VOID STDCALL KeBugCheck (ULONG	BugCheckCode);
-
+#define KEBUGCHECK(a) DPRINT1("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
 
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
@@ -64,12 +67,16 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode);
  *           BugCheckCode = Specifies the reason for the bug check
  *           BugCheckParameter[1-4] = Additional information about bug
  * RETURNS: Doesn't
+ *
+ * NOTES - please use the macro KEBUGCHECKEX with the same arguments so the end-user
+ * knows what file/line number where the bug check occured
  */
 VOID STDCALL KeBugCheckEx (ULONG	BugCheckCode,
 			   ULONG	BugCheckParameter1,
 			   ULONG	BugCheckParameter2,
 			   ULONG	BugCheckParameter3,
 			   ULONG	BugCheckParameter4);
+#define KEBUGCHECKEX(a,b,c,d,e) DPRINT1("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 
 BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 

@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.17 2003/07/10 17:44:06 royce Exp $
+/* $Id: spinlock.c,v 1.18 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -92,14 +92,14 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
    if (*SpinLock >= 2)
      {
 	DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    
    while ((i = InterlockedExchange((LONG *)SpinLock, 1)) == 1)
      {
 #ifndef MP
        DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
 #else /* not MP */
        /* Avoid reading the value again too fast */
 #endif /* MP */
@@ -123,7 +123,7 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
    if (*SpinLock != 1)
      {
 	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    (void)InterlockedExchange((LONG *)SpinLock, 0);
 }

@@ -527,7 +527,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 	{
 	  /* There is no way to fix the hive without log file - BSOD! */
 	  DPRINT("Hive header inconsistent and no log file available!\n");
-	  KeBugCheck(CONFIG_LIST_FAILED);
+	  KEBUGCHECK(CONFIG_LIST_FAILED);
 	}
 
       Status = STATUS_SUCCESS;
@@ -570,7 +570,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 	      HiveHeader->UpdateCounter1 != HiveHeader->UpdateCounter2)
 	    {
 	      DPRINT("Hive file and log file are inconsistent!\n");
-	      KeBugCheck(CONFIG_LIST_FAILED);
+	      KEBUGCHECK(CONFIG_LIST_FAILED);
 	    }
 
 	  /* Log file damaged but hive is okay */

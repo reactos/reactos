@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.64 2003/07/10 21:34:29 royce Exp $
+/* $Id: object.c,v 1.65 2003/07/21 21:53:53 royce Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -597,13 +597,13 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
     {
       CPRINT("Object %x/%x has invalid reference count (%d)\n",
 	     Header, HEADER_TO_BODY(Header), Header->RefCount);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (Header->HandleCount < 0)
     {
       CPRINT("Object %x/%x has invalid handle count (%d)\n",
 	     Header, HEADER_TO_BODY(Header), Header->HandleCount);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   
   if (Header->RefCount == 0 &&
@@ -612,7 +612,7 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
     {
       if (Header->CloseInProcess)
       {
-	 KeBugCheck(0);
+	 KEBUGCHECK(0);
 	 return STATUS_UNSUCCESSFUL;
       }
       Header->CloseInProcess = TRUE;
@@ -660,7 +660,7 @@ ObfReferenceObject(IN PVOID Object)
 
   if (Header->CloseInProcess)
   {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
   }
   InterlockedIncrement(&Header->RefCount);
 

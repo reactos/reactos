@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.4 2002/10/01 19:27:18 chorns Exp $
+/* $Id: adapter.c,v 1.5 2003/07/21 21:53:50 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,7 +89,7 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
   if( AdapterObject->Inuse == FALSE )
     {
       DbgPrint( "Attempting to IoFreeAdapterChannel on a channel not in use\n" );
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   AdapterObject->Inuse = FALSE;
   if( AdapterObject->Buffer )

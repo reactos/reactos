@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.22 2003/07/19 08:02:51 hbirr Exp $
+/* $Id: rmap.c,v 1.23 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -95,7 +95,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Address = entry->Address;
   if ((((ULONG)Address) & 0xFFF) != 0)
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (Address < (PVOID)KERNEL_BASE)
     {
@@ -144,7 +144,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       if (PageOp == NULL)
 	{
 	  DPRINT1("MmGetPageOp failed\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
 
 
@@ -205,7 +205,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     }
   else
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }  
   if (Address < (PVOID)KERNEL_BASE)
     {
@@ -238,7 +238,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Address = entry->Address;
   if ((((ULONG)Address) & 0xFFF) != 0)
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   if (Address < (PVOID)KERNEL_BASE)
@@ -282,7 +282,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       if (PageOp == NULL)
 	{
 	  DPRINT1("MmGetPageOp failed\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
 
       if (PageOp->Thread != PsGetCurrentThread())
@@ -341,7 +341,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     }
   else
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (Address < (PVOID)KERNEL_BASE)
     {
@@ -360,7 +360,7 @@ MmSetCleanAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
   if (current_entry == NULL)
     {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   while (current_entry != NULL)
     {      
@@ -380,7 +380,7 @@ MmSetDirtyAllRmaps(PHYSICAL_ADDRESS PhysicalAddress)
   if (current_entry == NULL)
     {
       DPRINT1("MmIsDirtyRmap: No rmaps.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   while (current_entry != NULL)
     {      
@@ -427,7 +427,7 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
   new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
   if (new_entry == NULL)
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   new_entry->Address = Address;
   new_entry->Process = Process;
@@ -439,7 +439,7 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
 	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
 	      MmGetPhysicalAddressForProcess(Process, Address), 
 	      PhysicalAddress)
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   ExAcquireFastMutex(&RmapListLock);
@@ -462,7 +462,7 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
   if (current_entry == NULL)
     {
       DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   MmSetRmapListHeadPage(PhysicalAddress, NULL);
   while (current_entry != NULL)
@@ -508,5 +508,5 @@ MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
     }
-  KeBugCheck(0);
+  KEBUGCHECK(0);
 }

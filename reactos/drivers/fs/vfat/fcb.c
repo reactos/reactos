@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.29 2003/06/07 11:34:36 chorns Exp $
+/* $Id: fcb.c,v 1.30 2003/07/21 21:53:47 royce Exp $
  *
  *
  * FILE:             fcb.c
@@ -298,7 +298,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   if (!NT_SUCCESS (status))
   {
     DbgPrint ("CcRosInitializeFileCache failed\n");
-    KeBugCheck (0);
+    KEBUGCHECK (0);
   }
 
   fcb->Flags |= FCB_CACHE_INITIALIZED;

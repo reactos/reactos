@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.132 2003/07/20 05:15:34 royce Exp $
+/* $Id: loader.c,v 1.133 2003/07/21 21:53:52 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1559,7 +1559,7 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
       DbgPrint("Export not found for %d:%s\n",
 	     Hint,
 	     Name != NULL ? Name : "(Ordinal)");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   return(ExportAddress);
@@ -1621,7 +1621,7 @@ LdrSafePEGetExportAddress(PVOID ImportModuleBase,
       ps("Export not found for %d:%s\n",
 	 Hint,
 	 Name != NULL ? Name : "(Ordinal)");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   return ExportAddress;
 }

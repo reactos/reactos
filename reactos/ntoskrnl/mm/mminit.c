@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.53 2003/07/13 14:36:32 dwelch Exp $
+/* $Id: mminit.c,v 1.54 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -237,7 +237,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("Unable to create virtual mapping\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    RtlZeroMemory(BaseAddress, Length);
 

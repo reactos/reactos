@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.7 2003/04/06 10:45:15 chorns Exp $
+/* $Id: mp.c,v 1.8 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -277,7 +277,7 @@ IOAPICSetupIds(VOID)
     tmp = IOAPICRead(apic, 0);
     if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) {
       DPRINT1("Could not set I/O APIC ID!\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   }
 }
@@ -550,7 +550,7 @@ static VOID AddPinToIrq(
 		entry = irq_2_pin + entry->next;
 		if (++first_free_entry >= PIN_MAP_SIZE) {
       DPRINT1("Ohh no!");
-			KeBugCheck(0);
+			KEBUGCHECK(0);
      }
 	}
 	entry->apic = apic;
@@ -595,7 +595,7 @@ static ULONG AssignIrqVector(
 	  current_vector = FIRST_DEVICE_VECTOR + vector_offset;
   } else if (current_vector == FIRST_SYSTEM_VECTOR) {
      DPRINT1("Ran out of interrupt sources!");
-     KeBugCheck(0);
+     KEBUGCHECK(0);
   }
 
   vector = current_vector;
@@ -1559,7 +1559,7 @@ HaliInitBSP(
 		DPRINT("APIC found\n");
 	} else {
 		DPRINT1("No APIC found\n");
-		KeBugCheck(0);
+		KEBUGCHECK(0);
 	}
 
   CPUMap[BootCPU].MaxLVT = APICGetMaxLVT();
@@ -1970,7 +1970,7 @@ static VOID HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
     DPRINT("Max # of I/O APICs (%d) exceeded (found %d).\n",
       MAX_IOAPIC, IOAPICCount);
     DPRINT1("Recompile with bigger MAX_IOAPIC!.\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
   IOAPICMap[IOAPICCount].ApicId = m->ApicId;
   IOAPICMap[IOAPICCount].ApicVersion = m->ApicVersion;
@@ -1987,7 +1987,7 @@ static VOID HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
     m->SrcBusIrq, m->DstApicId, m->DstApicInt);
   if (IRQCount > MAX_IRQ_SOURCE) {
     DPRINT1("Max # of irq sources exceeded!!\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
 
   IRQMap[IRQCount] = *m;
@@ -2010,11 +2010,11 @@ static VOID HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
    */
   if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0)) {
     DPRINT1("Invalid MP table!\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
   if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1)) {
     DPRINT1("Invalid MP table!\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
 }
 
@@ -2036,14 +2036,14 @@ HaliReadMPConfigTable(
        
        DbgPrint("Bad MP configuration block signature: %c%c%c%c\n", 
 		pc[0], pc[1], pc[2], pc[3]);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
        return;
      }
 
    if (MPChecksum((PUCHAR)Table, Table->Length))
      {
        DbgPrint("Bad MP configuration block checksum\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
        return;
      }
 
@@ -2051,7 +2051,7 @@ HaliReadMPConfigTable(
      {
        DbgPrint("Bad MP configuration table version (%d)\n",
 		Table->Specification);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
        return;
      }
 
@@ -2060,7 +2060,7 @@ HaliReadMPConfigTable(
      {
        DbgPrint("APIC base address is at 0x%X. " \
 		"I cannot handle non-standard adresses\n", APICBase);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    Entry = (PUCHAR)((PVOID)Table + sizeof(MP_CONFIGURATION_TABLE));
@@ -2107,7 +2107,7 @@ HaliReadMPConfigTable(
 	 }
        default:
 	 DbgPrint("Unknown entry in MPC table\n");
-	 KeBugCheck(0);
+	 KEBUGCHECK(0);
        }
    }
 }
@@ -2378,7 +2378,7 @@ HalpInitMPS(
         EBDA <<= 4;
         if (!HaliScanForMPConfigTable((ULONG)EBDA, 0x1000)) {
           DbgPrint("No multiprocessor compliant system found.\n");
-          KeBugCheck(0);
+          KEBUGCHECK(0);
         }
       }
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.19 2003/07/13 14:36:32 dwelch Exp $
+/* $Id: balance.c,v 1.20 2003/07/21 21:53:52 royce Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -108,7 +108,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
   if (Page.QuadPart == 0LL)
     {
       DPRINT1("Tried to release page zero.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
@@ -176,7 +176,7 @@ MmRebalanceMemoryConsumers(VOID)
 	  Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      KeBugCheck(0);
+	      KEBUGCHECK(0);
 	    }
 	  Target = Target - NrFreedPages;
 	}
@@ -235,7 +235,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
 	  if (Page.QuadPart == 0LL)
 	    {
-	      KeBugCheck(0);
+	      KEBUGCHECK(0);
 	    }
 	  *AllocatedPage = Page;
 	  InterlockedDecrement((LONG *)&MiPagesRequired);
@@ -255,7 +255,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Page = Request.Page;
       if (Page.QuadPart == 0LL)
 	{
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
@@ -270,7 +270,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
   Page = MmAllocPage(Consumer, 0);
   if (Page.QuadPart == 0LL)
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   *AllocatedPage = Page;
 

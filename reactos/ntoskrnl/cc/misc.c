@@ -128,7 +128,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 	   else
 	   {
 	      DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
-	      KeBugCheck(0);
+	      KEBUGCHECK(0);
 	   }
 	}
      }
@@ -147,7 +147,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
         if (!NT_SUCCESS(Status))
         {
            DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
         }
      }
   }

@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.70 2003/07/11 01:23:15 royce Exp $
+/* $Id: npool.c,v 1.71 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -926,7 +926,7 @@ static void validate_free_list(void)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	     KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	
 	if (base_addr < MiNonPagedPoolStart ||
@@ -936,13 +936,13 @@ static void validate_free_list(void)
 	     DbgPrint("Size %d\n",current->Size);
 	     DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
 		      MiNonPagedPoolStart+MiCurrentNonPagedPoolLength);
-	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	     KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	blocks_seen++;
 	if (blocks_seen > MiNrFreeBlocks)
 	  {
 	     DbgPrint("Too many blocks on free list\n");
-	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	     KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	if (current->ListEntry.Flink != &MiFreeBlockListHead &&
 	    current->ListEntry.Flink->Blink != &current->ListEntry)
@@ -951,7 +951,7 @@ static void validate_free_list(void)
 		      "current->next->previous %x)\n",
 		      __FILE__,__LINE__,current, current->ListEntry.Flink,
 		      current->ListEntry.Flink->Blink);
-	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	     KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 
 	current_entry = current_entry->Flink;
@@ -979,7 +979,7 @@ static void validate_used_list(void)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	     KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	if (base_addr < MiNonPagedPoolStart ||
 	    (base_addr+current->Size) >
@@ -1028,7 +1028,7 @@ static void check_duplicates(BLOCK_HDR* blk)
 	 {
 	   DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		    current);
-	   KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+	   KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	 }
        
        if ( (int)current > base && (int)current < last ) 
@@ -1390,7 +1390,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    if (MiCurrentNonPagedPoolLength + nr_pages * PAGE_SIZE > MiNonPagedPoolLength)
      {
        DbgPrint("CRITICAL: Out of non-paged pool space\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    MiCurrentNonPagedPoolLength += nr_pages * PAGE_SIZE;
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
@@ -1405,7 +1405,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
        if (!NT_SUCCESS(Status))
 	 {
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	   return(NULL);
 	 }
        Status = MmCreateVirtualMapping(NULL,
@@ -1416,7 +1416,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
+	     KEBUGCHECK(0);
 	  }
      }
 
@@ -1510,7 +1510,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 	   DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n", 
 		    block, blk->Magic);
 	 }
-	KeBugCheck(0);
+	KEBUGCHECK(0);
 	return;
      }
    
@@ -1640,7 +1640,7 @@ ExAllocateWholePageBlock(ULONG UserSize)
       Page = MmAllocPage(MC_NPPOOL, 0);
       if (Page.QuadPart == 0LL)
 	{
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
       MmCreateVirtualMapping(NULL, 
 			     Address + (i * PAGE_SIZE),
@@ -1662,7 +1662,7 @@ ExFreeWholePageBlock(PVOID Addr)
       Addr >= (MiNonPagedPoolStart + MiCurrentNonPagedPoolLength))
     {
       DbgPrint("Block %x found outside pool area\n", Addr);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   NrPages = *(PULONG)((ULONG)Addr - sizeof(ULONG));
   MiFreeNonPagedPoolRegion((PVOID)PAGE_ROUND_DOWN((ULONG)Addr), NrPages, TRUE);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.32 2003/07/11 01:23:15 royce Exp $
+/* $Id: pagefile.c,v 1.33 2003/07/21 21:53:53 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -133,7 +133,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    
    if (SwapEntry == 0)
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -143,13 +143,13 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (i >= MAX_PAGING_FILES)
      {
        DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (PagingFileList[i]->FileObject == NULL ||
        PagingFileList[i]->FileObject->DeviceObject == NULL)
      {
        DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    
    file_offset.QuadPart = offset * PAGE_SIZE;
@@ -173,7 +173,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (j >= RetrievalPointers->NumberOfPairs)
      {
        CHECKPOINT1;
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -203,7 +203,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    
    if (SwapEntry == 0)
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -213,13 +213,13 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (i >= MAX_PAGING_FILES)
      {
        DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    if (PagingFileList[i]->FileObject == NULL ||
        PagingFileList[i]->FileObject->DeviceObject == NULL)
      {
        DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    
    file_offset.QuadPart = offset * PAGE_SIZE;
@@ -243,7 +243,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    if (j >= RetrievalPointers->NumberOfPairs)
      {
        CHECKPOINT1;
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Status = IoPageRead(PagingFileList[i]->FileObject,
@@ -364,7 +364,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
    
@@ -410,7 +410,7 @@ MmAllocSwapPage(VOID)
 	     off = MiAllocPageFromPagingFile(PagingFileList[i]);
 	     if (off == 0xFFFFFFFF)
 	       {
-		  KeBugCheck(0);
+		  KEBUGCHECK(0);
 		  KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 		  return(STATUS_UNSUCCESSFUL);
 	       }
@@ -424,7 +424,7 @@ MmAllocSwapPage(VOID)
      }
    
    KeReleaseSpinLock(&PagingFileListLock, oldIrql); 
-   KeBugCheck(0);
+   KEBUGCHECK(0);
    return(0);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.24 2003/07/15 16:26:18 silverblade Exp $
+/* $Id: resource.c,v 1.25 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,7 +258,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 				TAG_OWNER_TABLE);
 	if (Resource->OwnerTable == NULL)
 	  {
-	     KeBugCheck(0);
+	     KEBUGCHECK(0);
 	     return(FALSE);
 	  }
 	memset(Resource->OwnerTable,0,sizeof(OWNER_ENTRY)*3);
@@ -310,7 +310,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 				TAG_OWNER_TABLE);
 	if (freeEntry == NULL)
 	  {
-	     KeBugCheck(0);
+	     KEBUGCHECK(0);
 	     return(FALSE);
 	  }
 	memcpy(freeEntry,Resource->OwnerTable,
@@ -439,7 +439,7 @@ ExConvertExclusiveToSharedLite (
    if (!(Resource->Flag & ResourceOwnedExclusive))
      {
 	/* Might not be what the caller expects, better bug check */
-	KeBugCheck(0);
+	KEBUGCHECK(0);
 	KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 	return;
      }

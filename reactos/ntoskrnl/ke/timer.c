@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.60 2003/07/11 01:23:15 royce Exp $
+/* $Id: timer.c,v 1.61 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -451,7 +451,7 @@ KeExpireTimers(PKDPC Dpc,
    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
    {
        DPRINT1("-----------------------------\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
    }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.165 2003/07/06 10:25:15 hbirr Exp $
+/* $Id: main.c,v 1.166 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -203,7 +203,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n",
 	         Status);
 
-	KeBugCheck (0x0);
+	KEBUGCHECK (0x0);
      }
 
    Status = NtQuerySymbolicLinkObject (Handle,
@@ -217,7 +217,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
 		 Status);
 
-	KeBugCheck (0x0);
+	KEBUGCHECK (0x0);
      }
    DPRINT("Length: %lu ArcDeviceName: %wZ\n", Length, &ArcDeviceName);
 
@@ -282,7 +282,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    if (BootDriveFound == FALSE)
      {
 	DbgPrint("No system drive found!\n");
-	KeBugCheck (0x0);
+	KEBUGCHECK (0x0);
      }
 }
 
@@ -462,12 +462,12 @@ ExpInitializeExecutive(VOID)
   KeLowerIrql(PASSIVE_LEVEL);
 
   if (!SeInit1())
-    KeBugCheck(SECURITY_INITIALIZATION_FAILED);
+    KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
   ObInit();
 
   if (!SeInit2())
-    KeBugCheck(SECURITY1_INITIALIZATION_FAILED);
+    KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
   PiInitProcessManager();
 
@@ -657,7 +657,7 @@ ExpInitializeExecutive(VOID)
   if (BootDriverCount == 0)
     {
       DbgPrint("No boot drivers available.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   /* Create ARC names for boot devices */
@@ -667,7 +667,7 @@ ExpInitializeExecutive(VOID)
   CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
   Status = IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
   if (!NT_SUCCESS(Status))
-    KeBugCheck(INACCESSIBLE_BOOT_DEVICE);
+    KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
 
 #ifdef DBGPRINT_FILE_LOG
   /* On the assumption that we can now access disks start up the debug
@@ -721,7 +721,7 @@ ExpInitializeExecutive(VOID)
 				 &ThreadHandle);
   if (!NT_SUCCESS(Status))
     {
-      KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
+      KEBUGCHECKEX(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
   /*
@@ -733,7 +733,7 @@ ExpInitializeExecutive(VOID)
 				 &Timeout);
   if (Status != STATUS_TIMEOUT)
     {
-      KeBugCheckEx(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+      KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
   NtClose(ThreadHandle);
@@ -752,14 +752,14 @@ KiSystemStartup(BOOLEAN BootProcessor)
     {
       /* Never returns */
       ExpInitializeExecutive();
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   /* Do application processor initialization */
   KeApplicationProcessorInit();
   PsApplicationProcessorInit();
   KeLowerIrql(PASSIVE_LEVEL);
   PsIdleThreadMain(NULL);
-  KeBugCheck(0);
+  KEBUGCHECK(0);
   for(;;);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.33 2003/07/11 01:23:15 royce Exp $
+/* $Id: catch.c,v 1.34 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -132,7 +132,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
 	  /* If that fails then bugcheck */
 	  DPRINT1("Could not terminate thread\n");
-	  KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
+	  KEBUGCHECK(KMODE_EXCEPTION_NOT_HANDLED);
 	}
       else
 	{
@@ -147,7 +147,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	  if (Value != ExceptionContinueExecution ||
 	      0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
 	    {
-              KeBugCheckWithTf(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
+              KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
 	    }
 	}
     }

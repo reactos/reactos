@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.10 2002/09/08 10:23:18 chorns Exp $
+/* $Id: kdb.c,v 1.11 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -580,7 +580,7 @@ DbgRegsCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 ULONG
 DbgBugCheckCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
-  KeBugCheck(1);
+  KEBUGCHECK(1);
   return(1);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.13 2003/07/10 17:44:06 royce Exp $
+/* $Id: mutex.c,v 1.14 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -75,7 +75,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
   if (Mutex->OwnerThread != KeGetCurrentThread())
     {
       DbgPrint("THREAD_NOT_MUTEX_OWNER: Mutex %p\n", Mutex);
-      KeBugCheck(0); /* THREAD_NOT_MUTEX_OWNER */
+      KEBUGCHECK(0); /* THREAD_NOT_MUTEX_OWNER */
     }
   Mutex->Header.SignalState++;
   assert(Mutex->Header.SignalState <= 1);
@@ -161,7 +161,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
 	  DbgPrint("THREAD_NOT_MUTEX_OWNER: Mutant->OwnerThread %p CurrentThread %p\n",
 		   Mutant->OwnerThread,
 		   KeGetCurrentThread());
-	  KeBugCheck(0); /* THREAD_NOT_MUTEX_OWNER */
+	  KEBUGCHECK(0); /* THREAD_NOT_MUTEX_OWNER */
 	}
       Mutant->Header.SignalState++;
       assert(Mutant->Header.SignalState <= 1);

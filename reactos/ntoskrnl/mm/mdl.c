@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.52 2003/07/10 21:05:03 royce Exp $
+/* $Id: mdl.c,v 1.53 2003/07/21 21:53:52 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -56,7 +56,7 @@ MmInitializeMdlImplementation(VOID)
   if (!NT_SUCCESS(Status))
     {
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
@@ -153,7 +153,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    if (AccessMode == UserMode)
      {
        DPRINT1("MDL mapping to user-mode not yet handled.\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    /* Calculate the number of pages required. */
@@ -167,7 +167,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    if (StartingOffset == 0xffffffff)
    {
       DPRINT1("Out of MDL mapping space\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
 
    Base = MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
@@ -192,7 +192,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
        if (!NT_SUCCESS(Status))
 	 {
 	   DbgPrint("Unable to create virtual mapping\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
      }
 

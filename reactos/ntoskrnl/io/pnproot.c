@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.13 2003/07/11 01:23:14 royce Exp $
+/* $Id: pnproot.c,v 1.14 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -907,7 +907,7 @@ PnpRootAddDevice(
     &PnpRootDeviceObject);
   if (!NT_SUCCESS(Status)) {
     CPRINT("IoCreateDevice() failed with status 0x%X\n", Status);
-    KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+    KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
   }
 
   DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)PnpRootDeviceObject->DeviceExtension;
@@ -924,12 +924,12 @@ PnpRootAddDevice(
 
   if (!PnpRootDeviceObject) {
     CPRINT("PnpRootDeviceObject 0x%X\n", PnpRootDeviceObject);
-    KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+    KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
   }
 
   if (!PhysicalDeviceObject) {
     CPRINT("PhysicalDeviceObject 0x%X\n", PhysicalDeviceObject);
-    KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+    KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
   }
 
   InitializeListHead(&DeviceExtension->DeviceListHead);

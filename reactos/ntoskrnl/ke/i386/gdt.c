@@ -95,7 +95,7 @@ KiInitializeGdt(PKPCR Pcr)
   if (Gdt == NULL)
     {
       DbgPrint("No GDT (%d)\n", Pcr->ProcessorNumber);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   /*

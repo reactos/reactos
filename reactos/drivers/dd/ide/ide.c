@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.57 2002/12/09 19:57:56 hbirr Exp $
+/* $Id: ide.c,v 1.58 2003/07/21 21:53:46 royce Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -1578,7 +1578,7 @@ STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
     default:
       Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
       Irp->IoStatus.Information = 0;
-      KeBugCheck((ULONG)Irp);
+      KEBUGCHECK((ULONG)Irp);
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       IoStartNextPacket(DeviceObject, FALSE);
       break;

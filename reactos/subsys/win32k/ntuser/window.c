@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.64 2003/07/17 07:49:15 gvg Exp $
+/* $Id: window.c,v 1.65 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1241,7 +1241,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   if (Win32Thread->WindowListHead.Flink == LastHead)
     {
       /* Window at head of list was not removed, should never happen, infinite loop */
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
 }

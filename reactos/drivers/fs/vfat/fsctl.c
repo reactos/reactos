@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.17 2003/06/24 21:34:41 ekohl Exp $
+/* $Id: fsctl.c,v 1.18 2003/07/21 21:53:47 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -185,13 +185,13 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
       (DeviceExt->FatInfo.BytesPerCluster % PAGE_SIZE) != 0)
    {
       DbgPrint("(%s:%d) Invalid cluster size\n", __FILE__, __LINE__);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
    else if (DeviceExt->FatInfo.BytesPerCluster < PAGE_SIZE &&
       (PAGE_SIZE % DeviceExt->FatInfo.BytesPerCluster) != 0)
    {
       DbgPrint("(%s:%d) Invalid cluster size2\n", __FILE__, __LINE__);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
 
    return(STATUS_SUCCESS);

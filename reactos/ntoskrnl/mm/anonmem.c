@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.18 2003/07/12 01:52:10 dwelch Exp $
+/* $Id: anonmem.c,v 1.19 2003/07/21 21:53:52 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -157,7 +157,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
    if (PhysicalAddress.QuadPart == 0)
      {
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    /*
@@ -291,7 +291,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 
    /*
@@ -312,12 +312,12 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        if (Status != STATUS_SUCCESS)
 	 {
 	   DPRINT1("Failed to wait for page op\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
        if (PageOp->Status == STATUS_PENDING)
 	 {
 	   DPRINT1("Woke for page op before completion\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
        /*
 	* If this wasn't a pagein then we need to restart the handling
@@ -363,7 +363,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
    }
 
    /*
@@ -380,7 +380,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        Status = MmReadFromSwapPage(SwapEntry, Mdl);
        if (!NT_SUCCESS(Status))
 	 {
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
        MmSetSavedSwapEntryPage(Page, SwapEntry);
      }
@@ -407,7 +407,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
        return(Status);
      }
 
@@ -727,7 +727,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 	      if (Status != STATUS_SUCCESS)
 		{
 		  DPRINT1("Failed to wait for page op\n");
-		  KeBugCheck(0);
+		  KEBUGCHECK(0);
 		}
 	      MmLockAddressSpace(&Process->AddressSpace);
 	      MmReleasePageOp(PageOp);

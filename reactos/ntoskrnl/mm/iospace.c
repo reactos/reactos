@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.20 2003/07/10 21:05:03 royce Exp $
+/* $Id: iospace.c,v 1.21 2003/07/21 21:53:52 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -109,7 +109,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
+	     KEBUGCHECK(0);
 	  }
 	MmMarkPageMapped((PHYSICAL_ADDRESS) (PhysicalAddress.QuadPart + 
 	                                     (i * PAGE_SIZE)));

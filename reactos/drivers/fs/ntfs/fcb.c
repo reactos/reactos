@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.7 2003/07/17 13:31:39 chorns Exp $
+/* $Id: fcb.c,v 1.8 2003/07/21 21:53:47 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -247,7 +247,7 @@ NtfsFCBInitializeCache(PVCB Vcb,
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   ObDereferenceObject(FileObject);
@@ -419,7 +419,7 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("CcRosInitializeFileCache failed\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }

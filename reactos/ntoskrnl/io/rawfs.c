@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.5 2003/07/11 01:23:14 royce Exp $
+/* $Id: rawfs.c,v 1.6 2003/07/21 21:53:51 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -887,7 +887,7 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(Status))
     {
       CPRINT("IoCreateDevice() failed with status 0x%.08x\n", Status);
-      KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
       return(Status);
     }
   DeviceData = DiskDeviceObject->DeviceExtension;
@@ -907,7 +907,7 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(Status))
     {
       CPRINT("IoCreateDevice() failed with status 0x%.08x\n", Status);
-      KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
       return(Status);
     }
   DeviceData = CdromDeviceObject->DeviceExtension;
@@ -927,7 +927,7 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(Status))
     {
       CPRINT("IoCreateDevice() failed with status 0x%.08x\n", Status);
-      KeBugCheck(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
       return(Status);
     }
   DeviceData = TapeDeviceObject->DeviceExtension;

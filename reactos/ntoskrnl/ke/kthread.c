@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.41 2003/07/11 01:23:15 royce Exp $
+/* $Id: kthread.c,v 1.42 2003/07/21 21:53:51 royce Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -113,7 +113,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1("Failed to create thread stack\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	}
       for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++)
 	{
@@ -121,7 +121,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      KeBugCheck(0);
+	      KEBUGCHECK(0);
 	    }
 	  Status = MmCreateVirtualMapping(NULL,
 					  KernelStack + (i * PAGE_SIZE),

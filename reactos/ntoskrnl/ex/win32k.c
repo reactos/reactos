@@ -263,7 +263,7 @@ ExpWin32kInit(VOID)
   if (ExWindowStationObjectType == NULL)
   {
     CPRINT("Could not create window station object type\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
 
   ExWindowStationObjectType->Tag = TAG('W', 'I', 'N', 'S');
@@ -291,7 +291,7 @@ ExpWin32kInit(VOID)
   if (ExDesktopObjectType == NULL)
   {
     CPRINT("Could not create desktop object type\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
 
   ExDesktopObjectType->Tag = TAG('D', 'E', 'S', 'K');

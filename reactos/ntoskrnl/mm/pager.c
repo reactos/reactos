@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.14 2003/07/17 16:57:39 silverblade Exp $
+/* $Id: pager.c,v 1.15 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -69,7 +69,7 @@ MmPagerThreadMain(PVOID Ignored)
        if (!NT_SUCCESS(Status))
 	 {
 	   DbgPrint("PagerThread: Wait failed\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
        if (PagerThreadShouldTerminate)
 	 {

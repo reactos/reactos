@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.67 2003/07/15 19:30:33 hbirr Exp $
+/* $Id: view.c,v 1.68 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -398,7 +398,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
   if (CacheSeg == NULL)
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
   if (!CacheSeg->Dirty)
     {
@@ -569,7 +569,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   if (StartingOffset == 0xffffffff)
   {
      DPRINT1("Out of CacheSeg mapping space\n");
-     KeBugCheck(0);
+     KEBUGCHECK(0);
   }
 
   current->BaseAddress = CiCacheSegMappingRegionBase + StartingOffset * PAGE_SIZE;
@@ -595,7 +595,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
   {
-     KeBugCheck(0);
+     KEBUGCHECK(0);
   }
 #endif
   for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
@@ -605,7 +605,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
      if (!NT_SUCCESS(Status))
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
       
      Status = MmCreateVirtualMapping(NULL,
@@ -615,7 +615,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 				     TRUE);
      if (!NT_SUCCESS(Status))
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
   }
   return(STATUS_SUCCESS);
@@ -736,7 +736,7 @@ CcRosRequestCacheSegment(PBCB Bcb,
     {
       CPRINT("Bad fileoffset %x should be multiple of %x",
         FileOffset, Bcb->CacheSegmentSize);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   return(CcRosGetCacheSegment(Bcb,
@@ -1216,7 +1216,7 @@ CmLazyCloseThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
 	  DbgPrint("LazyCloseThread: Wait failed\n");
-	  KeBugCheck(0);
+	  KEBUGCHECK(0);
 	  break;
       }
       if (LazyCloseThreadShouldTerminate)
@@ -1274,7 +1274,7 @@ CcInitView(VOID)
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   Buffer = ExAllocatePool(NonPagedPool, CI_CACHESEG_MAPPING_REGION_SIZE / (PAGE_SIZE * 8));

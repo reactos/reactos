@@ -377,7 +377,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
 	return(STATUS_UNSUCCESSFUL);
      }
    if (AddressSpace->Process != NULL && 

@@ -328,7 +328,7 @@ VOID KiRemoveProfile(PKPROFILE Profile)
 
 	  current_entry = current_entry->Flink;
 	}
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   KeReleaseSpinLock(&ProfileListLock, oldIrql);

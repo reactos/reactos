@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.56 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: rw.c,v 1.57 2003/07/21 21:53:47 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,7 +82,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   if (FirstCluster == 0)
   {
     DbgPrint("OffsetToCluster is called with FirstCluster = 0!\n");
-    KeBugCheck(0);
+    KEBUGCHECK(0);
   }
 
   if (FirstCluster == 1)

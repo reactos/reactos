@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.6 2003/05/17 15:29:50 ekohl Exp $
+/* $Id: w32call.c,v 1.7 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -117,7 +117,7 @@ NtCallbackReturn (PVOID		Result,
   KeStackSwitchAndRet((PVOID)(OldStack + 1));
 
   /* Should never return. */
-  KeBugCheck(0);
+  KEBUGCHECK(0);
   return(STATUS_UNSUCCESSFUL);
 }
 

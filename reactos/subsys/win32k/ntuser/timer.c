@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.5 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: timer.c,v 1.6 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -331,7 +331,7 @@ TimerThreadMain(
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Error waiting in TimerThreadMain\n");
-         KeBugCheck(0);
+         KEBUGCHECK(0);
       }
 
       ExAcquireFastMutex(&Mutex);

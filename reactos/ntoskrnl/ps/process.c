@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.109 2003/07/11 01:23:15 royce Exp $
+/* $Id: process.c,v 1.110 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -92,7 +92,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
    if (!NT_SUCCESS(Status))
      {
 	CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    ObDereferenceObject(OldProcess);
    
@@ -561,7 +561,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 				  DUPLICATE_SAME_ACCESS);
        if (!NT_SUCCESS(Status))
 	 {
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
      }
    else
@@ -581,7 +581,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 				  DUPLICATE_SAME_ACCESS);
        if (!NT_SUCCESS(Status))
 	 {
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
      }
    else
@@ -677,7 +677,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the highest 64KB of the process address space\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
 
    /* Protect the lowest 64KB of the process address space */
@@ -696,7 +696,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the lowest 64KB of the process address space\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
 #endif
 
@@ -715,7 +715,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
 	DPRINT1("Failed to protect the memory above the shared user page\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
 
    /* Create the shared data page */
@@ -733,7 +733,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
 	DPRINT1("Failed to create shared data page\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
 
    /*

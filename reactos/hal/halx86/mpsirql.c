@@ -47,7 +47,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
   if (KeGetCurrentKPCR ()->Irql > HIGH_LEVEL)
     {
       DPRINT1 ("CurrentIrql %x\n", KeGetCurrentKPCR ()->Irql);
-      KeBugCheck (0);
+      KEBUGCHECK (0);
       for(;;);
     }
 
@@ -63,7 +63,7 @@ static VOID KeSetCurrentIrql (KIRQL NewIrql)
   if (NewIrql > HIGH_LEVEL)
     {
       DPRINT1 ("NewIrql %x\n", NewIrql);
-      KeBugCheck (0);
+      KEBUGCHECK (0);
       for(;;);
     }
 
@@ -174,7 +174,7 @@ KfLowerIrql (KIRQL	NewIrql)
   if (NewIrql > KeGetCurrentIrql ())
     {
       DPRINT1 ("NewIrql %x CurrentIrql %x\n", NewIrql, KeGetCurrentIrql ());
-      KeBugCheck (0);
+      KEBUGCHECK (0);
       for(;;);
     }
   
@@ -230,7 +230,7 @@ KfRaiseIrql (KIRQL	NewIrql)
   if (NewIrql < KeGetCurrentIrql ())
     {
       DPRINT1 ("CurrentIrql %x NewIrql %x\n", KeGetCurrentIrql (), NewIrql);
-      KeBugCheck (0);
+      KEBUGCHECK (0);
       for(;;);
     }
   

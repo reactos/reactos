@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: attrib.c,v 1.3 2003/07/17 13:31:39 chorns Exp $
+/* $Id: attrib.c,v 1.4 2003/07/21 21:53:47 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -215,7 +215,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 
 	      default:
 		DbgPrint("RunLength size of %hu not implemented!\n", RunHeader & 0x0F);
-		KeBugCheck(0);
+		KEBUGCHECK(0);
 	    }
 
 	  switch (RunHeader >> 4)
@@ -243,7 +243,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 
 	      default:
 		DbgPrint("RunStart size of %hu not implemented!\n", RunHeader >> 4);
-		KeBugCheck(0);
+		KEBUGCHECK(0);
 	    }
 
 	  DbgPrint("    AllocatedSize %I64d  DataSize %I64d\n", NresAttr->AllocatedSize, NresAttr->DataSize);

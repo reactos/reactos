@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.114 2003/07/17 16:57:39 silverblade Exp $
+/* $Id: thread.c,v 1.115 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -84,7 +84,7 @@ PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
    if (Priority >= MAXIMUM_PRIORITY || Priority < 0)
      {
 	DPRINT1("Invalid thread priority\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    InsertTailList(&PriorityListHead[Priority], &Thread->Tcb.QueueListEntry);
    PiNrReadyThreads++;
@@ -248,7 +248,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	  }
      }
    CPRINT("CRITICAL: No threads are ready\n");
-   KeBugCheck(0);
+   KEBUGCHECK(0);
 }
 
 VOID STDCALL
@@ -470,7 +470,7 @@ PsInitThreadManagment(VOID)
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("PS: Failed to create reaper thread.\n");
-       KeBugCheck(0);
+       KEBUGCHECK(0);
      }
 }
 
@@ -507,7 +507,7 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
    
    if (Priority < 0 || Priority >= MAXIMUM_PRIORITY)
      {
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    
    OldPriority = Thread->Priority;
@@ -596,7 +596,7 @@ NtContinue(IN PCONTEXT	Context,
    if (TrapFrame == NULL)
      {
 	CPRINT("NtContinue called but TrapFrame was NULL\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    KeContextToTrapFrame(Context, TrapFrame);
    return(STATUS_SUCCESS);

@@ -96,7 +96,7 @@ KiDeliverNormalApc(VOID)
        if (Apc->NormalRoutine == NULL)
 	 {
 	   DbgPrint("Exiting kernel with kernel APCs pending.\n");
-	   KeBugCheck(0);
+	   KEBUGCHECK(0);
 	 }
        Apc->Inserted = FALSE;
        Thread->Tcb.ApcState.KernelApcInProgress++;
@@ -322,7 +322,7 @@ KeInsertQueueApc (PKAPC	Apc,
    if (Apc->Inserted)
      {
 	DbgPrint("KeInsertQueueApc(): multiple APC insertations\n");
-	KeBugCheck(0);
+	KEBUGCHECK(0);
      }
    
    TargetThread = Apc->Thread;

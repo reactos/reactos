@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.3 2003/05/06 08:45:10 ekohl Exp $
+/* $Id: profile.c,v 1.4 2003/07/21 21:53:51 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -309,7 +309,7 @@ KdbProfilerAnalyzeSamples()
   if (!ExInitializeHashTable(&Hashtable, 17, KdbProfilerKeyCompare, TRUE))
     {
       DPRINT1("ExInitializeHashTable() failed.");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   InitializeListHead(&SamplesListHead);

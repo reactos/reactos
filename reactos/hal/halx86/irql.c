@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.9 2003/01/03 00:28:07 guido Exp $
+/* $Id: irql.c,v 1.10 2003/07/21 21:53:50 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -209,7 +209,7 @@ KfLowerIrql (KIRQL	NewIrql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
 		__FILE__, __LINE__, NewIrql, CurrentIrql);
-      KeBugCheck(0);
+      KEBUGCHECK(0);
       for(;;);
     }
   
@@ -268,7 +268,7 @@ KfRaiseIrql (KIRQL	NewIrql)
     {
       DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
 		__FILE__,__LINE__,CurrentIrql,NewIrql);
-      KeBugCheck (0);
+      KEBUGCHECK (0);
       for(;;);
     }
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.8 2002/10/01 19:27:24 chorns Exp $
+/* $Id: slab.c,v 1.9 2003/07/21 21:53:53 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -182,7 +182,7 @@ ExAllocateSlabCache(PSLAB_CACHE Slab, BOOLEAN MayWait)
   if (Page->FirstFreeBuffer == NULL)
     {
       DPRINT1("First free page had no free buffers.\n");
-      KeBugCheck(0);
+      KEBUGCHECK(0);
     }
 
   /*
@@ -284,7 +284,7 @@ ExFreeSlabCache(PSLAB_CACHE Slab, PVOID Object)
 	}
     }
   DPRINT1("Tried to free object not in cache.\n");
-  KeBugCheck(0);
+  KEBUGCHECK(0);
 }
 
 VOID
