@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.25 2004/03/18 16:43:56 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.26 2004/03/20 17:34:25 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -240,13 +240,16 @@ IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 {
   KIRQL OldIrql;
 
-  assert(PopSystemPowerDeviceNode);
+  if (PopSystemPowerDeviceNode)
+  {
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    *DeviceObject = PopSystemPowerDeviceNode->Pdo;
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
 
-  KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
-  *DeviceObject = PopSystemPowerDeviceNode->Pdo;
-  KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+    return STATUS_SUCCESS;
+  }
 
-  return STATUS_SUCCESS;
+  return STATUS_UNSUCCESSFUL;
 }
 
 /**********************************************************************
