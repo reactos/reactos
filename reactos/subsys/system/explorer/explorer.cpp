@@ -625,6 +625,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	bool autostart = true;
 
+	 // disable autostart if the SHIFT key is pressed
+	if (GetAsyncKeyState(VK_SHIFT) < 0)
+		autostart = false;
+
 #ifdef _DEBUG	//MF: disabled for debugging
 	autostart = false;
 #endif
