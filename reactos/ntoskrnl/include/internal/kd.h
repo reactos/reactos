@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.22 2004/01/17 17:13:13 arty Exp $
+/* $Id: kd.h,v 1.23 2004/02/24 21:25:41 weiden Exp $
  *
  * kernel debugger prototypes
  */
@@ -19,6 +19,7 @@
 #define KD_DEBUG_MDA            0x40
 #define KD_DEBUG_KDB            0x80
 #define KD_DEBUG_KDSERIAL       0x100
+#define KD_DEBUG_KDNOECHO       0x200
 
 extern ULONG KdDebugState;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.17 2004/01/17 17:13:13 arty Exp $
+/* $Id: kdb.c,v 1.18 2004/02/24 21:25:40 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -206,7 +206,9 @@ KdbGetCommand(PCH Buffer)
 {
   CHAR Key;
   PCH Orig = Buffer;
-
+  
+  KbdEchoOn = !((KdDebugState & KD_DEBUG_KDNOECHO) != 0);
+  
   for (;;)
     {
       if (KdDebugState & KD_DEBUG_KDSERIAL)
