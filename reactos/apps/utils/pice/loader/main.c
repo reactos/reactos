@@ -7,7 +7,7 @@ Module Name:
     main.c
 
 Abstract:
-	
+
     loader/translator for pIce LINUX
 
 Environment:
@@ -22,7 +22,7 @@ Revision History:
 
     04-Aug-1998:	created
     15-Nov-2000:    general cleanup of source files
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
@@ -33,13 +33,8 @@ Copyright notice:
 // includes
 #include "stdinc.h"
 
-#include <linux/errno.h>
-#include <asm/ioctl.h>
-#include <sys/stat.h>
-
-
 ///////////////////////////////////////////////////////////////////////////////////
-// constant defines                                                                   
+// constant defines
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +42,7 @@ Copyright notice:
 char SrcFileNames[2048][2048];
 ULONG ulCurrentSrcFile = 0;
 
-int debugger_file;
+HANDLE debugger_file;
 
 ULONG ulGlobalVerbose = 0;
 
@@ -59,10 +54,10 @@ ULONG ulGlobalVerbose = 0;
 void process_stabs(
 	char* pExeName,	// name of exe
 	int fileout,	// symbol file handle
-	Elf32_Shdr* pSHdr,
-	int	nSHdrSize,
+	PIMAGE_SECTION_HEADER section, //Elf32_Shdr* pSHdr,
+	int sectionHeadersSize, //int	nSHdrSize,
 	void* p,		// ptr to memory where whole exe was read
-	PSTAB_ENTRY pStab,	// ptr to stabs	
+	PSTAB_ENTRY pStab,	// ptr to stabs
 	int nStabLen,		// size of stabs
 	char* pStr,			// ptr to stabs strings
 	int nStrLen,		// sizeof stabs strings
@@ -71,7 +66,7 @@ void process_stabs(
 	char* pGlobalsStr,	// ptr to global strings
 	int nGlobalStrLen)	// size of global strings
 {
-    int i,strLen;
+    unsigned i,strLen;
     int nOffset=0,nNextOffset=0;
     PSTAB_ENTRY pStabCopy = pStab;
     char* pName,szCurrentPath[2048];
@@ -82,10 +77,11 @@ void process_stabs(
 
     //printf("LOADER: enter process_stabs()\n");
 
-    PICE_memset((void*)&SymbolFileHeader,0,sizeof(SymbolFileHeader));
+	//get the name of the executable file
+    memset((void*)&SymbolFileHeader,0,sizeof(SymbolFileHeader));
 	SymbolFileHeader.magic = PICE_MAGIC;
-	PICE_strcpy(temp,pExeName);
-	pSlash = strrchr(temp,'/');
+	strcpy(temp,pExeName);
+	pSlash = strrchr(temp,'\\');
 	pDot = strrchr(temp,'.');
 	if(pDot)
 	{
@@ -95,7 +91,7 @@ void process_stabs(
 	{
 		pCopyExeName = pSlash+1;
 	}
-	PICE_strcpy(SymbolFileHeader.name,pCopyExeName);
+	strcpy(SymbolFileHeader.name,pCopyExeName);
 
     for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
     {
@@ -119,27 +115,27 @@ void process_stabs(
                 //printf("LOADER: changing string offset %x %x\n",nOffset,nNextOffset);
                 break;
             case N_SO:
-                if((strLen = PICE_strlen(pName)))
+                if((strLen = strlen(pName)))
                 {
                     if(pName[strLen-1]!='/')
                     {
                         if(strlen(szCurrentPath))
                         {
                             //printf("LOADER: ###########################################################################\n");
-                            PICE_strcat(szCurrentPath,pName);
+                            strcat(szCurrentPath,pName);
                             //printf("LOADER: changing source file %s\n",szCurrentPath);
-                            PICE_strcpy(SrcFileNames[ulCurrentSrcFile++],szCurrentPath);
+                            strcpy(SrcFileNames[ulCurrentSrcFile++],szCurrentPath);
                             szCurrentPath[0]=0;
                         }
                         else
                         {
                             //printf("LOADER: ###########################################################################\n");
                             //printf("LOADER: changing source file %s\n",pName);
-                            PICE_strcpy(SrcFileNames[ulCurrentSrcFile++],pName);
+                            strcpy(SrcFileNames[ulCurrentSrcFile++],pName);
                         }
                     }
                     else
-                        PICE_strcpy(szCurrentPath,pName);
+                        strcpy(szCurrentPath,pName);
                 }
                 else
                 {
@@ -211,21 +207,20 @@ void process_stabs(
 	//printf("LOADER: SymbolFileHeader.ulSizeOfStabsStrings = %x (%x)\n",nStrLen,(LPSTR)pStr-(LPSTR)p);
 
 	SymbolFileHeader.ulOffsetToHeaders = sizeof(PICE_SYMBOLFILE_HEADER);
-	SymbolFileHeader.ulSizeOfHeader = nSHdrSize;
-	SymbolFileHeader.ulOffsetToGlobals = sizeof(PICE_SYMBOLFILE_HEADER)+nSHdrSize;
+	SymbolFileHeader.ulSizeOfHeader = sectionHeadersSize;
+	SymbolFileHeader.ulOffsetToGlobals = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize;
 	SymbolFileHeader.ulSizeOfGlobals = nGlobalLen;
-	SymbolFileHeader.ulOffsetToGlobalsStrings = sizeof(PICE_SYMBOLFILE_HEADER)+nSHdrSize+nGlobalLen;
+	SymbolFileHeader.ulOffsetToGlobalsStrings = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen;
 	SymbolFileHeader.ulSizeOfGlobalsStrings = nGlobalStrLen;
-	SymbolFileHeader.ulOffsetToStabs = sizeof(PICE_SYMBOLFILE_HEADER)+nSHdrSize+nGlobalLen+nGlobalStrLen;
+	SymbolFileHeader.ulOffsetToStabs = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen+nGlobalStrLen;
 	SymbolFileHeader.ulSizeOfStabs = nStabLen;
-	SymbolFileHeader.ulOffsetToStabsStrings = sizeof(PICE_SYMBOLFILE_HEADER)+nSHdrSize+nGlobalLen+nGlobalStrLen+nStabLen;
+	SymbolFileHeader.ulOffsetToStabsStrings = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen+nGlobalStrLen+nStabLen;
 	SymbolFileHeader.ulSizeOfStabsStrings = nStrLen;
-    SymbolFileHeader.ulOffsetToSrcFiles = sizeof(PICE_SYMBOLFILE_HEADER)+nSHdrSize+nGlobalLen+nGlobalStrLen+nStabLen+nStrLen;
+    SymbolFileHeader.ulOffsetToSrcFiles = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen+nGlobalStrLen+nStabLen+nStrLen;
     SymbolFileHeader.ulNumberOfSrcFiles = ulCurrentSrcFile;
 
 	write(fileout,&SymbolFileHeader,sizeof(SymbolFileHeader));
-
-	write(fileout,pSHdr,nSHdrSize);
+	write(fileout,section,sectionHeadersSize);
 	write(fileout,pGlobals,nGlobalLen);
 	write(fileout,pGlobalsStr,nGlobalStrLen);
 	write(fileout,pStab,nStabLen);
@@ -237,18 +232,31 @@ void process_stabs(
         int len;
         PVOID pFile;
         PICE_SYMBOLFILE_SOURCE pss;
-    
-        file = open(SrcFileNames[i],O_RDONLY);
+
+        file = _open(SrcFileNames[i],O_RDONLY);
+		if( file <= 0 ){
+			//let's try win format drive:/file
+			char srctmp[2048];
+			strcpy(srctmp, SrcFileNames[i] );
+			if(strncmp(srctmp,"//",2)==0){
+				*(srctmp) = *(srctmp+2);
+				*(srctmp+1) = ':';
+				*(srctmp+2) = '/';
+				file = _open(srctmp,O_RDONLY);
+				if( file <= 0 )
+					printf("Can't open file: %s\n", srctmp );
+			}
+		}
         if(file>0)
         {
             //printf("LOADER: [%u] opened %s as FD %x\n",i,SrcFileNames[i],file);
 
-            len = lseek(file,0,SEEK_END);
+            len = _lseek(file,0,SEEK_END);
             //printf("LOADER: length = %x\n",(int)len);
-        
-            lseek(file,0,SEEK_SET);
 
-            PICE_strcpy(pss.filename,SrcFileNames[i]);
+            _lseek(file,0,SEEK_SET);
+
+            strcpy(pss.filename,SrcFileNames[i]);
             pss.ulOffsetToNext = len+sizeof(PICE_SYMBOLFILE_SOURCE);
 
             pFile = malloc(len);
@@ -256,15 +264,15 @@ void process_stabs(
             if(pFile)
             {
                 //printf("LOADER: reading file...\n");
-                read(file,pFile,len);
-    
-                write(fileout,&pss,sizeof(PICE_SYMBOLFILE_SOURCE));
+                _read(file,pFile,len);
+
+                _write(fileout,&pss,sizeof(PICE_SYMBOLFILE_SOURCE));
                 //printf("LOADER: writing file...\n");
-                write(fileout,pFile,len);
+                _write(fileout,pFile,len);
                 free(pFile);
             }
 
-            close(file);
+            _close(file);
         }
 
     }
@@ -276,29 +284,28 @@ void process_stabs(
 // find_stab_sections()
 //
 ///////////////////////////////////////////////////////////////////////////////////
-void find_stab_sections(void* p,Elf32_Shdr* pSHdr,PSTAB_ENTRY* ppStab,int* pLen,char** ppStr,int* pnStabStrLen,int num,int index)
+void find_stab_sections(void* p,PIMAGE_SECTION_HEADER section, unsigned cSections,
+							  PSTAB_ENTRY* ppStab,int* pLen,char** ppStr,int* pnStabStrLen)
 {
-int i;
-char* pStr = (char*)((int)p + pSHdr[index].sh_offset);
-
+	unsigned i;
     //printf("LOADER: enter find_stab_sections()\n");
     *ppStab = 0;
     *ppStr = 0;
-    for(i=0;i<num;i++,pSHdr++)
+
+	for ( i=1; i <= cSections; i++, section++ )
     {
-        int sh_name = pSHdr->sh_name;
-        //printf("LOADER: [%u] %32s %8x %8x %8x %8x %8x\n",i,&pStr[sh_name],pSHdr->sh_offset,pSHdr->sh_size,pSHdr->sh_addr,pSHdr->sh_type,pSHdr->sh_link);
-        if(PICE_strcmp(&pStr[sh_name],".stab") == 0)
+
+		if(strcmp(section->Name,".stab") == 0)
         {
-            *ppStab = (PSTAB_ENTRY)((int)p + pSHdr->sh_offset);
-            *pLen = pSHdr->sh_size;
-            //printf("LOADER: .stab @ %x (offset %x) len = %x\n",*ppStab,pSHdr->sh_offset,pSHdr->sh_size);
+            *ppStab = (PSTAB_ENTRY)((int)p + section->PointerToRawData);
+            *pLen = section->SizeOfRawData;
+            printf("LOADER: .stab @ %x (offset %x) len = %x\n",*ppStab,section->PointerToRawData,section->SizeOfRawData);
         }
-        else if(PICE_strcmp(&pStr[sh_name],".stabstr") == 0)
+        else if(strncmp(section->Name,".stabstr",strlen(".stabstr")) == 0)
         {
-            *ppStr = (char*)((int)p + pSHdr->sh_offset);
-			*pnStabStrLen = pSHdr->sh_size;
-            //printf("LOADER: .stabstr @ %x (offset %x size=%u)\n",*ppStr,pSHdr->sh_offset,pSHdr->sh_size);
+            *ppStr = (char*)((int)p + section->PointerToRawData);
+			*pnStabStrLen = section->SizeOfRawData;
+            printf("LOADER: .stabstr @ %x (offset %x) len = %x\n",*ppStab,section->PointerToRawData,section->SizeOfRawData);
         }
     }
 
@@ -306,173 +313,114 @@ char* pStr = (char*)((int)p + pSHdr[index].sh_offset);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-// find_symtab()
+// process_pe()
 //
 ///////////////////////////////////////////////////////////////////////////////////
-Elf32_Sym* find_symtab(void* p,Elf32_Shdr* pSHdrOrig,int num,int index,int* pLen,LPSTR* ppStr,int *pnSymStrLen)
+int process_pe(char* filename,int file,void* p,int len)
 {
-    int i;
-    Elf32_Sym* pSym = NULL,*pSymOrig = NULL;
-//    char* pStr = (char*)((int)p + pSHdrOrig[index].sh_offset);
-    LPSTR pName;
-    ULONG ulSymTabEntries = 0,link=-1;
-    Elf32_Shdr* pSHdr;
 
-    //printf("LOADER: enter find_symtab()\n");
+	PIMAGE_DOS_HEADER pDosHeader;
+	PIMAGE_NT_HEADERS pNTHeaders;
 
-    // find global symbol table
-    pSHdr = pSHdrOrig;
-    for(i=0;i<num;i++,pSHdr++)
-    {
-        //int sh_name = pSHdr->sh_name;
-        //printf("LOADER: [%u] %32s %8x %8x %8x %8x %8x\n",i,pStr,pSHdr->sh_offset,pSHdr->sh_size,pSHdr->sh_addr,pSHdr->sh_type,pSHdr->sh_link);
-		if(pSHdr->sh_type == SHT_SYMTAB)
-		{
-			pSym = (Elf32_Sym*)((int)p+pSHdr->sh_offset);
-
-			//printf("LOADER: symbol table %u %x %u\n",i,pSHdr->sh_offset,pSHdr->sh_link);
-			ulSymTabEntries = pSHdr->sh_size;
-			link = pSHdr->sh_link;
-		}
-    }
-
-    if(link != (-1))
-    {
-        // find global string table
-        pSHdr = pSHdrOrig;
-        for(i=0;i<num;i++,pSHdr++)
-        {
-            //int sh_name = pSHdr->sh_name;
-            //printf("LOADER: [%u] %32s %8x %8x %8x %8x %8x\n",i,pStr,pSHdr->sh_offset,pSHdr->sh_size,pSHdr->sh_addr,pSHdr->sh_type,pSHdr->sh_link);
-		    if(pSHdr->sh_type == SHT_STRTAB && i==link)
-		    {
-			    *ppStr = (LPSTR)((int)p+pSHdr->sh_offset);
-				*pnSymStrLen = pSHdr->sh_size;
-		    }
-	    }
-
-	    if(*ppStr && pSym)
-	    {
-		    LPSTR pStr = *ppStr;
-
-			pSymOrig = pSym;
-		    for(i=0;i<ulSymTabEntries/sizeof(Elf32_Sym);i++)
-		    {
-			    pName = &pStr[pSym->st_name];
-			    //printf("LOADER: [%u] %32s %x %x %x %x\n",i,pName,pSym->st_name,pSym->st_value,pSym->st_info,pSym->st_other);
-			    pSym++;
-		    }
-	    }
-	    *pLen = ulSymTabEntries;
-    }
-    else
-    {
-        pSymOrig= NULL;
-    }
-
-    //printf("LOADER: leave find_symtab()\n");
-
-	return pSymOrig;
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-// process_elf()
-//
-///////////////////////////////////////////////////////////////////////////////////
-int process_elf(char* filename,int file,void* p,int len)
-{
-	Elf32_Ehdr* pEHdr =(Elf32_Ehdr*)p;
-	Elf32_Shdr* pSHdr;
 	char* pStr;
 	PSTAB_ENTRY pStab;
-	int nStabLen,nSym;
-	LPSTR pStrTab;
-	Elf32_Sym* pSymTab;
+	DWORD nStabLen,nSym;
+	char* pStrTab;
+	char* pSymTab;
+
 	char szSymName[2048];
 	int fileout;
 	int nSymStrLen,nStabStrLen;
     int iRetVal = 0;
 
-    //printf("LOADER: enter process_elf()\n");
-    if(strncmp(pEHdr->e_ident,"\177ELF",4) == 0) // is ELF binary magic
+	pDosHeader = (PIMAGE_DOS_HEADER)p;
+	pNTHeaders = (PIMAGE_NT_HEADERS)((DWORD)p + pDosHeader->e_lfanew);
+
+    if ((pDosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+       && (pDosHeader->e_lfanew != 0L)
+       && (pNTHeaders->Signature == IMAGE_NT_SIGNATURE))
     {
-        pSHdr = (Elf32_Shdr*)((int)p+pEHdr->e_shoff);
-        //printf("LOADER: Section header @ %x (offset %x)\n",pSHdr,pEHdr->e_shoff);
-        //printf("LOADER: %u entries\n",pEHdr->e_shnum);
-        //printf("LOADER: string table index %u\n",pEHdr->e_shstrndx);
-		if((pSymTab = find_symtab(p,pSHdr,pEHdr->e_shnum,pEHdr->e_shstrndx,&nSym,&pStrTab,&nSymStrLen)) != NULL )
-		{
-			find_stab_sections(p,pSHdr,&pStab,&nStabLen,&pStr,&nStabStrLen,pEHdr->e_shnum,pEHdr->e_shstrndx);
+		if( pNTHeaders->FileHeader.PointerToSymbolTable ){
+
+			pSymTab = (char*)((DWORD)p + pNTHeaders->FileHeader.PointerToSymbolTable);
+			nSym = pNTHeaders->FileHeader.NumberOfSymbols;
+			//string table follows immediately after symbol table. first 4 bytes give the length of the table
+			//references to string table include the first 4 bytes.
+			pStrTab = (PIMAGE_SYMBOL)pSymTab + nSym;
+			nSymStrLen = *((DWORD*)pStrTab);
+
+			find_stab_sections(p,IMAGE_FIRST_SECTION(pNTHeaders),pNTHeaders->FileHeader.NumberOfSections,
+					&pStab,&nStabLen,&pStr,&nStabStrLen);
+
 			if(pStab && nStabLen && pStr && nStabStrLen)
 			{
 				LPSTR pDot;
 
-				PICE_strcpy(szSymName,filename);
+				strcpy(szSymName,filename);
 				//printf("LOADER: file name = %s\n",szSymName);
 				if((pDot = strrchr(szSymName,'.')))
 				{
 					*pDot = 0;
-					PICE_strcat(pDot,".sym");
+					strcat(pDot,".pice");
 				}
 				else
 				{
-					PICE_strcat(szSymName,".sym");
+					strcat(szSymName,".pice");
 				}
 				//printf("LOADER: symbol file name = %s\n",szSymName);
-                printf("LOADER: creating symbol file %s for %s\n",szSymName,filename);
+	            printf("LOADER: creating symbol file %s for %s\n",szSymName,filename);
 
-                fileout = creat(szSymName,S_IRUSR|S_IWUSR);     // make r/w for owner
-                if(fileout != -1)				
+	            fileout = _creat(szSymName, _S_IREAD | _S_IWRITE );     // make r/w
+	            if(fileout != -1)
 				{
 					process_stabs(szSymName,
 								  fileout,
-								  pSHdr,
-								  pEHdr->e_shnum*sizeof(Elf32_Shdr),
+								  IMAGE_FIRST_SECTION(pNTHeaders),
+								  pNTHeaders->FileHeader.NumberOfSections*sizeof(PIMAGE_SECTION_HEADER),
 								  p,
 								  pStab,
 								  nStabLen,
 								  pStr,
 								  nStabStrLen,
-								  (LPSTR)pSymTab,
+								  (char*)pSymTab,
 								  nSym,
 								  pStrTab,
 								  nSymStrLen);
 
 					close(fileout);
 				}
-                else
-                {
-                    printf("LOADER: creation of symbol file %s failed\n",szSymName);
+	            else
+	            {
+	                printf("LOADER: creation of symbol file %s failed\n",szSymName);
 					iRetVal = 2;
-                }
+	            }
 
 			}
-            else                                                          
-            {                                                             
-                printf("LOADER: file %s has no data inside symbol tables\n",filename);
+	        else
+	        {
+	            printf("LOADER: file %s has no data inside symbol tables\n",filename);
 				if( ulGlobalVerbose )
 				{
-                    if( !pStab || !nStabLen )                             
-                        printf("LOADER: - symbol table is empty or not present\n");
-                    if( !pStr  || !nStabStrLen )                          
-                        printf("LOADER: - string table is empty or not present\n");
+	                if( !pStab || !nStabLen )
+	                    printf("LOADER: - symbol table is empty or not present\n");
+	                if( !pStr  || !nStabStrLen )
+	                    printf("LOADER: - string table is empty or not present\n");
 				}
-                iRetVal = 2;                                          
-            }                                                             
-        }                                                                     
-        else                                                                  
-        {                                                                     
-            printf("LOADER: file %s does not have a symbol table\n",filename);             
+	            iRetVal = 2;
+	        }
+		}
+		else{
+            printf("LOADER: file %s does not have a symbol table\n",filename);
             iRetVal = 2;
-        }
+		}
     }
-    else                                                                          
-    {                                                                             
-        printf("LOADER: file %s is not an ELF binary\n",filename);                    
-        iRetVal = 1;                                                          
+    else
+    {
+        printf("LOADER: file %s is not an ELF binary\n",filename);
+        iRetVal = 1;
     }
-	   
-    //printf("LOADER: leave process_elf()\n");
+
+    //printf("LOADER: leave process_pe()\n");
     return iRetVal;
 }
 
@@ -488,30 +436,29 @@ int process_file(char* filename)
 	int iRetVal=0;
 
     //printf("LOADER: enter process_file()\n");
-    file = open(filename,O_RDONLY);
+    file = _open(filename,O_RDONLY|_O_BINARY);
     if(file>0)
     {
         //printf("LOADER: opened %s as FD %x\n",filename,file);
 
-        len = lseek(file,0,SEEK_END);
+        len = _lseek(file,0,SEEK_END);
         printf("LOADER: file %s is %u bytes\n",filename,(int)len);
-        
-        lseek(file,0,SEEK_SET);
+
+        _lseek(file,0,SEEK_SET);
 
         p = malloc(len+16);
         if(p)
         {
+			long count;
             //printf("LOADER: malloc'd @ %x\n",p);
-            PICE_memset(p,0,len+16);
-
-            if(len == read(file,p,len))
+            memset(p,0,len+16);
+            if(len == (count = _read(file,p,len)))
             {
                 //printf("LOADER: trying ELF format\n");
-                iRetVal = process_elf(filename,file,p,len);
+                iRetVal = process_pe(filename,file,p,len);
             }
         }
-
-        close(file);
+        _close(file);
     }
     else
     {
@@ -527,12 +474,12 @@ int process_file(char* filename)
 // open_debugger()
 //
 ///////////////////////////////////////////////////////////////////////////////////
-int	open_debugger(void)
+HANDLE	open_debugger(void)
 {
-    debugger_file = open("/dev/pice0",O_RDONLY);
-	if(debugger_file<0)
+    debugger_file = CreateFile("\\Device\\Pice",GENERIC_READ,0,NULL,OPEN_EXISTING,NULL,NULL);
+	if(debugger_file == INVALID_HANDLE_VALUE)
 	{
-		printf("LOADER: debugger is not loaded\n");
+		printf("LOADER: debugger is not loaded. Last Error: %ld\n", GetLastError());
 	}
 
 	return debugger_file;
@@ -544,7 +491,24 @@ int	open_debugger(void)
 ///////////////////////////////////////////////////////////////////////////////////
 void close_debugger(void)
 {
-	close(debugger_file);
+	if( !CloseHandle(debugger_file) ){
+		printf("Error closing debugger handle: %ld\n", GetLastError());
+	}
+}
+
+int ioctl( HANDLE device, DWORD ioctrlcode, PDEBUGGER_STATUS_BLOCK psb)
+{
+	 DEBUGGER_STATUS_BLOCK tsb;
+	 DWORD bytesreturned;
+	 if( !DeviceIoControl( device, ioctrlcode, psb, sizeof(DEBUGGER_STATUS_BLOCK),
+			&tsb, sizeof(DEBUGGER_STATUS_BLOCK),&bytesreturned, NULL) ){
+		printf("Error in DeviceIoControl: %ld\n", GetLastError());
+		return -EINVAL;
+	 }
+	 else{
+		memcpy( psb, &tsb, sizeof(DEBUGGER_STATUS_BLOCK) );
+	 }
+	 return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -576,28 +540,31 @@ void banner(void)
 void change_symbols(int action,char* pfilename)
 {
     int iRetVal = 0;
-	
+	DEBUGGER_STATUS_BLOCK sb;
+
+	strcpy(sb.filename, pfilename);
+
 	switch(action)
 	{
 		case ACTION_LOAD:
 			printf("LOADER: loading symbols from %s\n",pfilename);
-			if(open_debugger()>=0)
+			if(open_debugger() != INVALID_HANDLE_VALUE)
 			{
-				iRetVal = ioctl(debugger_file,PICE_IOCTL_LOAD,pfilename);
+				iRetVal = ioctl(debugger_file,PICE_IOCTL_LOAD,&sb);
 				close_debugger();
 			}
 			break;
 		case ACTION_UNLOAD:
 			printf("LOADER: unloading symbols from %s\n",pfilename);
-			if(open_debugger()>=0)
+			if(open_debugger() != INVALID_HANDLE_VALUE)
 			{
-				iRetVal = ioctl(debugger_file,PICE_IOCTL_UNLOAD,pfilename);
+				iRetVal = ioctl(debugger_file,PICE_IOCTL_UNLOAD,&sb);
 				close_debugger();
 			}
 			break;
 		case ACTION_RELOAD:
 			printf("LOADER: reloading all symbols\n");
-			if(open_debugger()>=0)
+			if(open_debugger() != INVALID_HANDLE_VALUE)
 			{
 				ioctl(debugger_file,PICE_IOCTL_RELOAD,NULL);
 				close_debugger();
@@ -607,7 +574,7 @@ void change_symbols(int action,char* pfilename)
         default :
             printf("LOADER: an internal error has occurred at change_symbols\n");
 	}
-	
+
     switch( iRetVal )
 	{
 	    case -EINVAL :
@@ -621,6 +588,8 @@ void change_symbols(int action,char* pfilename)
 	}
 }
 
+// Dynamic install to be added later
+#if 0
 ///////////////////////////////////////////////////////////////////////////////////
 // tryinstall()
 //
@@ -630,11 +599,11 @@ int tryinstall(void)
     char *argv[]={"/sbin/insmod","pice.o",NULL};
     int err = 0;
     int pid,status;
-    
+
     banner();
     printf("LOADER: trying to install debugger...\n");
 
-    if(!(open_debugger() < 0) )
+    if( open_debugger() != INVALID_HANDLE_VALUE  )
     {
         printf("LOADER: debugger already installed...\n");
         close_debugger();
@@ -651,7 +620,7 @@ int tryinstall(void)
             printf("LOADER: fork failed for execution of '%s' (errno = %u).\n",argv[0],err);
             break;
         case 0:
-            // child process handler 
+            // child process handler
             execve(argv[0],argv,NULL);
             // returns only on error, with return value -1, errno is set
             printf("LOADER: couldn't execute '%s' (errno = %u)\n",argv[0],errno);
@@ -680,7 +649,7 @@ int tryinstall(void)
             }
             break;
     }
-    
+
     return err;
 }
 
@@ -693,12 +662,12 @@ int tryuninstall(void)
     char *argv[]={"/sbin/rmmod","pice",NULL};
     int err = 0;
     int pid,status;
-    
+
     banner();
     printf("LOADER: trying to remove debugger...\n");
-    
+
     // check for loaded debugger
-    if(open_debugger() < 0)
+    if(open_debugger() == INVALID_HANDLE_VALUE)
     {
         return -1;
     }
@@ -715,7 +684,7 @@ int tryuninstall(void)
             printf("LOADER: fork failed for execution of '%s' (errno=%u).\n",argv[0],err);
             break;
         case 0:
-            // child process handler 
+            // child process handler
             execve(argv[0],argv,NULL);
             // returns only on error, with return value -1, errno is set
             printf("LOADER: couldn't execute '%s' (errno = %u)\n",argv[0],errno);
@@ -725,7 +694,7 @@ int tryuninstall(void)
             // parent process handler
             printf("LOADER: waiting for debugger to unload...\n");
             pid = waitpid(pid, &status, 0); // suspend until child is done
-            
+
             if( (pid>0) && WIFEXITED(status) && (WEXITSTATUS(status) == 0) )
                 printf("LOADER: debugger removed!\n");
             else if( pid<=0 )
@@ -747,6 +716,7 @@ int tryuninstall(void)
     }
     return err;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 // showstatus()
@@ -757,12 +727,11 @@ void showstatus(void)
     DEBUGGER_STATUS_BLOCK sb;
     int iRetVal;
 
-	if(open_debugger()>=0)
+	if(open_debugger() != INVALID_HANDLE_VALUE)
 	{
-        sb.Test = 0;
 		iRetVal = ioctl(debugger_file,PICE_IOCTL_STATUS,&sb);
 
-        printf("LOADER: Test = %X\n",sb.Test);
+        //printf("LOADER: Test = %X\n",sb.Test);
 		close_debugger();
 	}
 }
@@ -775,10 +744,9 @@ void dobreak(void)
 {
     int iRetVal;
 
-	if(open_debugger()>=0)
+	if(open_debugger() != INVALID_HANDLE_VALUE)
 	{
 		iRetVal = ioctl(debugger_file,PICE_IOCTL_BREAK,NULL);
-
 		close_debugger();
 	}
 }
@@ -787,6 +755,7 @@ void dobreak(void)
 // doterminal()
 //
 ///////////////////////////////////////////////////////////////////////////////////
+#if 0
 void doterminal(void)
 {
     if(SetupSerial(2,B115200))
@@ -795,6 +764,7 @@ void doterminal(void)
         CloseSerial();
     }
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 // process_switches()
@@ -816,46 +786,46 @@ int process_switches(int argc,char* argv[])
 		if(*parg == '-')
 		{
 		    int new_action=ACTION_NONE;
-			
+
 			parg++;
-			if(PICE_strcmp(parg,"load")==0 || PICE_strcmp(parg,"l")==0)
+			if(strcmp(parg,"load")==0 || strcmp(parg,"l")==0)
 			{
 				new_action = ACTION_LOAD;
 			}
-			else if(PICE_strcmp(parg,"unload")==0 || PICE_strcmp(parg,"u")==0)
+			else if(strcmp(parg,"unload")==0 || strcmp(parg,"u")==0)
 			{
 				new_action = ACTION_UNLOAD;
 			}
-			else if(PICE_strcmp(parg,"trans")==0 || PICE_strcmp(parg,"t")==0)
+			else if(strcmp(parg,"trans")==0 || strcmp(parg,"t")==0)
             {
                 new_action = ACTION_TRANS;
             }
-			else if(PICE_strcmp(parg,"reload")==0 || PICE_strcmp(parg,"r")==0)
+			else if(strcmp(parg,"reload")==0 || strcmp(parg,"r")==0)
             {
                 new_action = ACTION_RELOAD;
             }
-			else if(PICE_strcmp(parg,"verbose")==0 || PICE_strcmp(parg,"v")==0)
+			else if(strcmp(parg,"verbose")==0 || strcmp(parg,"v")==0)
             {
 			    if( ulGlobalVerbose+1 > ulGlobalVerbose )
 				    ulGlobalVerbose++;
             }
-			else if(PICE_strcmp(parg,"install")==0 || PICE_strcmp(parg,"i")==0)
+			else if(strcmp(parg,"install")==0 || strcmp(parg,"i")==0)
             {
                 new_action = ACTION_INSTALL;
             }
-			else if(PICE_strcmp(parg,"uninstall")==0 || PICE_strcmp(parg,"x")==0)
+			else if(strcmp(parg,"uninstall")==0 || strcmp(parg,"x")==0)
             {
                 new_action = ACTION_UNINSTALL;
             }
-			else if(PICE_strcmp(parg,"status")==0 || PICE_strcmp(parg,"s")==0)
+			else if(strcmp(parg,"status")==0 || strcmp(parg,"s")==0)
             {
                 new_action = ACTION_STATUS;
             }
-			else if(PICE_strcmp(parg,"break")==0 || PICE_strcmp(parg,"b")==0)
+			else if(strcmp(parg,"break")==0 || strcmp(parg,"b")==0)
             {
                 new_action = ACTION_BREAK;
             }
-			else if(PICE_strcmp(parg,"serial")==0 || PICE_strcmp(parg,"ser")==0)
+			else if(strcmp(parg,"serial")==0 || strcmp(parg,"ser")==0)
             {
                 new_action = ACTION_TERMINAL;
             }
@@ -865,28 +835,28 @@ int process_switches(int argc,char* argv[])
 				error = 1;
 			}
 
-            if( new_action != ACTION_NONE )                               
-            {                                                             
-                if( action == ACTION_NONE )                           
-                    action = new_action;                          
-                else                                                  
-                if( action == new_action )                            
-                {                                                     
-                    // identical, just ignore                     
-                }                                                     
-                else                                                  
-                {                                                     
+            if( new_action != ACTION_NONE )
+            {
+                if( action == ACTION_NONE )
+                    action = new_action;
+                else
+                if( action == new_action )
+                {
+                    // identical, just ignore
+                }
+                else
+                {
                     printf("LOADER: error: conflicting switch %s", argv[i]);
-                    error = 1;                                    
-                }                                                     
+                    error = 1;
+                }
             }
 		}
 		else
 		{
-            if( pfilename )                                               
-            {                                                             
-                printf("LOADER: error: additional filename %s", parg);        
-                error = 1;                                            
+            if( pfilename )
+            {
+                printf("LOADER: error: additional filename %s", parg);
+                error = 1;
             }
 			pfilename = parg;
 		}
@@ -894,45 +864,49 @@ int process_switches(int argc,char* argv[])
 
     // check number of required parameters
     switch( action )
-    {                                                                              
-        case ACTION_TRANS :                                                    
-        case ACTION_LOAD :                                                     
-        case ACTION_UNLOAD :                                                   
-            if( !pfilename )                                               
-            {                                                              
-                printf("LOADER: error: missing filename\n");                   
-                error = 1;                                             
-            }                                                              
-            break;                                                         
-        case ACTION_RELOAD :                                                   
-            /* filename parameter is optional */     
+    {
+        case ACTION_TRANS :
+        case ACTION_LOAD :
+        case ACTION_UNLOAD :
+            if( !pfilename )
+            {
+                printf("LOADER: error: missing filename\n");
+                error = 1;
+            }
             break;
+        case ACTION_RELOAD :
+            /* filename parameter is optional */
+            break;
+#if 0
         case ACTION_UNINSTALL:
             close_debugger();
             tryuninstall();
-            break;                                                         
+            break;
         case ACTION_INSTALL:
             tryinstall();
-            break;           
+            break;
+#endif
         case ACTION_STATUS:
             showstatus();
             break;
         case ACTION_BREAK:
             dobreak();
             break;
+#if 0
         case ACTION_TERMINAL:
             doterminal();
             break;
-        case ACTION_NONE :                                                     
-            printf("LOADER: no action specified specifed on commandline\n");       
-            error = 1;                                                     
+#endif
+        case ACTION_NONE :
+            printf("LOADER: no action specified specifed on commandline\n");
+            error = 1;
 
             break;
         default :
             printf("LOADER: an internal error has occurred at commandline parsing\n");
             error = 1;
     }
-																																																																																																																					
+
     if( !error )    // commandline was fine, now start processing
     {
         switch( action )
@@ -941,16 +915,16 @@ int process_switches(int argc,char* argv[])
                 printf("LOADER: trying to translate file %s...\n",pfilename);
                 if( process_file(pfilename)==0 )
                     printf("LOADER: file %s has been translated\n",pfilename);
-                else                                                  
+                else
                     printf("LOADER: error while translating file %s\n",pfilename);
-                break;                                                
-            case ACTION_LOAD :                                            
-            case ACTION_UNLOAD :                                          
-            case ACTION_RELOAD :                                          
-                change_symbols(action,pfilename);                     
-                break;                                                
-        }                                                                            
-    }            
+                break;
+            case ACTION_LOAD :
+            case ACTION_UNLOAD :
+            case ACTION_RELOAD :
+                change_symbols(action,pfilename);
+                break;
+        }
+    }
 
     return error;
 }
@@ -993,26 +967,12 @@ void showpermission(void)
 ///////////////////////////////////////////////////////////////////////////////////
 int main(int argc,char* argv[])
 {
-    int uid;
-
-    // find out who's using us
-    // if it's not the superuser, bail!
-
     if(argc==1 || argc>3)
     {
 		showhelp();
 
 		return 1;
     }
-    else 
-    {
-        uid = getuid();
-        if(uid != 0)
-        {
-            showpermission();
-            return 0;
-        }
 
-        return process_switches(argc,argv);
-    }
+	return process_switches(argc,argv);
 }

@@ -7,7 +7,7 @@ Module Name:
     termínal.c
 
 Abstract:
-	
+
     serial terminal for pICE headless mode
 
 Environment:
@@ -21,12 +21,13 @@ Author:
 Revision History:
 
     23-Jan-2001:	created
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
 
 --*/
+#if 0 //ei not ready
 #include "stdinc.h"
 #include <curses.h>
 
@@ -106,7 +107,7 @@ PSERIAL_PACKET ReadPacket(void)
     for(i=0;i<sizeof(SERIAL_PACKET_HEADER);i++)
     {
 //        //printf("reading()\n");
-        if(! ReadByte(pHeaderRaw))          
+        if(! ReadByte(pHeaderRaw))
         {
   //          //printf("no header byte read!\n");
             return NULL;
@@ -142,7 +143,7 @@ PSERIAL_PACKET ReadPacket(void)
     pData = (PUCHAR)p + sizeof(header);
     for(i=0;i<header.packet_size;i++)
     {
-        if(! ReadByte(pData))          
+        if(! ReadByte(pData))
         {
             //printf("no data byte read!\n");
             return NULL;
@@ -189,8 +190,8 @@ BOOLEAN SetupSerial(ULONG port,ULONG baudrate)
 {
     struct termios newtio;
     char* ports[]={"/dev/ttyS0","/dev/ttyS1","/dev/ttyS2","/dev/ttyS3"};
-    
-    /* 
+
+    /*
     Open modem device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
     */
@@ -198,40 +199,40 @@ BOOLEAN SetupSerial(ULONG port,ULONG baudrate)
     fd_comm = open(ports[port-1], O_RDWR | O_NOCTTY);
     if (fd_comm <0)
     {
-        perror(ports[port-1]); 
-        exit(-1); 
+        perror(ports[port-1]);
+        exit(-1);
     }
-    
+
     //printf("tcgetattr()\n");
     tcgetattr(fd_comm,&oldtio); /* save current modem settings */
-    
-                           /* 
+
+                           /*
                            Set bps rate and hardware flow control and 8n1 (8bit,no parity,1 stopbit).
                            Also don't hangup automatically and ignore modem status.
                            Finally enable receiving characters.
     */
     newtio.c_cflag = baudrate | CS8 | CLOCAL | CREAD;
-    
+
     /*
     Ignore bytes with parity errors and make terminal raw and dumb.
     */
     newtio.c_iflag = IGNPAR;
-    
+
     /*
     Raw output.
     */
     newtio.c_oflag = 0;
-    
+
     /*
     Don't echo characters because if you connect to a host it or your
     modem will echo characters for you. Don't generate signals.
     */
     newtio.c_lflag = 0;
-    
+
     /* blocking read until 1 char arrives */
     newtio.c_cc[VMIN]=0;
     newtio.c_cc[VTIME]=0;
-    
+
     /* now clean the modem line and activate the settings for modem */
     //printf("tcflush()\n");
     tcflush(fd_comm, TCIFLUSH);
@@ -315,7 +316,7 @@ void Print(LPSTR p,USHORT x,USHORT y)
     {
         SetCursorPosition(x,y);
         refresh();
-    
+
         addstr(p);
         refresh();
         SetCursorPosition(usCurX,usCurY);
@@ -361,14 +362,14 @@ void ProcessPacket(PSERIAL_PACKET p)
         case PACKET_TYPE_INVERTLINE:
             {
                 PSERIAL_DATA_PACKET_INVERTLINE pDataInvertLine = (PSERIAL_DATA_PACKET_INVERTLINE)pData;
-                
+
                 InvertLine(pDataInvertLine->line);
             }
             break;
         case PACKET_TYPE_PRINT:
             {
                 PSERIAL_DATA_PACKET_PRINT pDataPrint = (PSERIAL_DATA_PACKET_PRINT)pData;
-                
+
                 Print(pDataPrint->string,pDataPrint->x,pDataPrint->y);
             }
             break;
@@ -426,3 +427,4 @@ void DebuggerShell(void)
          }
     }
 }
+#endif

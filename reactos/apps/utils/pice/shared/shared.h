@@ -15,10 +15,10 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
-	
+
 	reactos port by:
  			Eugene Ingerman
 
@@ -26,7 +26,7 @@ Revision History:
 
     13-Nov-1999:	created
     15-Nov-2000:    general cleanup of source files
-	
+
 	10/20/2001:		porting to reactos begins
 
 Copyright notice:
@@ -35,7 +35,24 @@ Copyright notice:
 
 --*/
 
-#include <ddk/ntddk.h>
+//#include <ddk/ntddk.h>
+#include <winnt.h>
+
+
+//temporary
+#ifndef CTL_CODE
+#define CTL_CODE(Dev, Func, Meth, Acc) ( ((Dev)<<16) | ((Acc)<<14) | ((Func)<<2) | (Meth))
+//  IOCTL Parameter buffering methods
+#define METHOD_BUFFERED    0
+#define METHOD_IN_DIRECT   1
+#define METHOD_OUT_DIRECT  2
+#define METHOD_NEITHER     3
+
+//  IOCTL File access type
+#define FILE_ANY_ACCESS    0
+#define FILE_READ_ACCESS   1
+#define FILE_WRITE_ACCESS  2
+#endif
 
 // define custom device type
 #define PICE_DEVICE_DEBUGGER	64787
@@ -49,7 +66,7 @@ Copyright notice:
 
 typedef struct _DEBUGGER_STATUS_BLOCK
 {
-    ULONG Test;
+    char filename[256];
 }DEBUGGER_STATUS_BLOCK,*PDEBUGGER_STATUS_BLOCK;
 
 #define MAGIC_ULONG( ch0, ch1, ch2, ch3 ) \
