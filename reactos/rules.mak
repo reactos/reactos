@@ -28,7 +28,7 @@ PREFIX = mingw32-
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM = nasm
+NASM_CMD = nasm
 DOSCLI =
 FLOPPY_DIR = /mnt/floppy
 SEP := /
@@ -41,7 +41,7 @@ PREFIX =
 EXE_PREFIX :=
 EXE_POSTFIX := .exe
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM = nasmw
+NASM_CMD = nasmw
 DOSCLI = yes
 FLOPPY_DIR = A:
 SEP := \$(EMPTY_VAR)

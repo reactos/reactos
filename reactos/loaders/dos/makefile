@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2004/06/02 18:24:08 hyperion Exp $
+# $Id: makefile,v 1.11 2004/06/05 09:47:36 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,7 +7,7 @@ include $(PATH_TO_TOP)/rules.mak
 all: loadros.com
 
 loadros.com: loadros.asm
-	$(NASM) -fbin -o loadros.com loadros.asm
+	$(NASM_CMD) -fbin -o loadros.com loadros.asm
 
 clean:
 	- $(RM) loadros.com

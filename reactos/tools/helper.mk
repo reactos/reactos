@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.66 2004/06/03 03:09:01 hyperion Exp $
+# $Id: helper.mk,v 1.67 2004/06/05 09:47:35 hbirr Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -1059,7 +1059,7 @@ endif # ROS_USE_PCH
 %.o: %.s
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.asm
-	$(NASM) $(TARGET_NFLAGS) $< -o $@
+	$(NASM_CMD) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $< -o $@
 %.spec.def: %.spec
