@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.2 2002/05/05 20:19:45 hbirr Exp $
+/* $Id: misc.c,v 1.3 2002/09/30 20:49:44 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -97,53 +97,6 @@ VOID VfatFreeIrpContext (PVFAT_IRP_CONTEXT IrpContext)
    ExFreePool(IrpContext);
 }
 
-// Copyed from ntoskrnl\io\irp.c and changed access to FileObject
-BOOLEAN
-STDCALL
-VfatIoIsOperationSynchronous (
-	IN	PIRP	Irp
-	)
-{
-	ULONG		Flags = 0;
-	PFILE_OBJECT	FileObject = NULL;
-	PIO_STACK_LOCATION Stack;
-	/*
-	 * Check the associated FILE_OBJECT's
-	 * flags first.
-	 */
-//	FileObject = Irp->Tail.Overlay.OriginalFileObject;
-        Stack = IoGetCurrentIrpStackLocation(Irp);
-        FileObject = Stack->FileObject;
-
-        assert (FileObject);
-	if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
-	{
-		/* Check IRP's flags. */
-		Flags = Irp->Flags;
-		if (!(	(IRP_SYNCHRONOUS_API | IRP_SYNCHRONOUS_PAGING_IO)
-			& Flags
-			))
-		{
-			return FALSE;
-		}
-	}
-	/*
-	 * Check more IRP's flags.
-	 */
-	Flags = Irp->Flags;
-	if (	!(IRP_MOUNT_COMPLETION & Flags)
-		|| (IRP_SYNCHRONOUS_PAGING_IO & Flags)
-		)
-	{
-		return TRUE;
-	}
-	/*
-	 * Otherwise, it is an
-	 * asynchronous operation.
-	 */
-	return FALSE;
-}
-
 PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PVFAT_IRP_CONTEXT IrpContext;
@@ -174,7 +127,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       }
       else if (MajorFunction != IRP_MJ_CLEANUP &&
                MajorFunction != IRP_MJ_CLOSE &&
-               VfatIoIsOperationSynchronous(Irp))
+               IoIsOperationSynchronous(Irp))
       {
          IrpContext->Flags |= IRPCONTEXT_CANWAIT;
       }
