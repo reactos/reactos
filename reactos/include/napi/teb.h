@@ -228,19 +228,72 @@ typedef struct _TEB
    PVOID WineDebugInfo;                // Needed for WINE DLL's
 } TEB, *PTEB;
 
-
-#define NtCurrentPeb() (NtCurrentTeb()->Peb)
-
-static inline PTEB NtCurrentTeb(VOID)
+static inline PTEB NtCurrentTeb(void)
 {
-   int x;
-   
-   __asm__ __volatile__("movl %%fs:0x18, %0\n\t"
-			: "=r" (x) /* can't have two memory operands */
-			: /* no inputs */
-			);
-   
-   return((PTEB)x);
+ PTEB pTeb;
+
+#if defined(_M_IX86)
+/* on the x86, the TEB is contained in the FS segment */
+/* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
+/* 
+ FIXME: GCC should allow defining a variable that directly maps to a register.
+ It could make for even faster code
+*/
+
+ __asm__ __volatile__
+ (
+  "movl %%fs:0x18, %0\n" /* fs:18h == Teb->Tib.Self */
+  : "=r" (pTeb) /* can't have two memory operands */
+  : /* no inputs */
+ );
+
+ return pTeb;
+
+#elif defined(_M_ALPHA)
+/* on the Alpha AXP, we call the rdteb PAL to retrieve the address of the TEB */
+/* FIXME: this is probably wrong */
+ __asm__ __volatile__("call_pal rdteb\n");
+ __asm__ __volatile__
+ (
+  "mov %0, $0\n"
+  : "=r" (pTeb)
+  :
+ );
+
+#elif defined(_M_MIPS)
+/* on the MIPS R4000, the TEB is loaded at a fixed address (?) */
+/* FIXME: again, not terribly sure about this */
+ __asm__ __volatile__
+ (
+  "lw %0, 0x7FFFF4A8\n"
+  : "=r" (pTeb)
+  :
+ );
+
+/* #elif defined(_M_PPC) */
+/* FIXME: sorry, I couldn't disassemble the PPC ntdll.dll */
+#else
+#error Unsupported architecture or no architecture specified.
+#endif
 }
+
+#ifdef _M_IX86
+static inline PPEB NtCurrentPeb(void)
+{
+ PPEB pPeb;
+
+ __asm__ __volatile__
+ (
+  "movl %%fs:0x30, %0\n" /* fs:30h == Teb->Peb */
+  : "=r" (pPeb) /* can't have two memory operands */
+  : /* no inputs */
+ );
+
+ return pPeb;
+}
+#else
+/* generic NtCurrentPeb() */
+static inline PPEB NtCurrentPeb(void) { return NtCurrentTeb()->Peb; }
+#endif
 
 #endif /* __INCLUDE_INTERNAL_TEB */

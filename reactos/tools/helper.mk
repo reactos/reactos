@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.28 2003/04/01 08:13:30 gvg Exp $
+# $Id: helper.mk,v 1.29 2003/04/02 21:55:16 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -52,6 +52,26 @@ ifeq ($(TARGET_PATH),)
 TARGET_PATH := .
 endif
 
+ifeq ($(ARCH),i386)
+ MK_ARCH_ID := _M_IX86
+endif
+
+ifeq ($(ARCH),alpha)
+ MK_ARCH_ID := _M_ALPHA
+endif
+
+ifeq ($(ARCH),mips)
+ MK_ARCH_ID := _M_MIPS
+endif
+
+ifeq ($(ARCH),powerpc)
+ MK_ARCH_ID := _M_PPC
+endif
+
+# unknown architecture
+ifeq ($(MK_ARCH_ID),)
+ MK_ARCH_ID := _M_UNKNOWN
+endif
 
 ifeq ($(TARGET_TYPE),program)
   MK_MODE := user
@@ -450,7 +470,7 @@ include $(PATH_TO_TOP)/config
 
 
 TARGET_CFLAGS += $(MK_CFLAGS)
-TARGET_CFLAGS += -pipe -march=$(ARCH)
+TARGET_CFLAGS += -pipe -march=$(ARCH) -D$(MK_ARCH_ID)
 ifeq ($(DBG),1)
 TARGET_ASFLAGS += -g
 TARGET_CFLAGS += -g
@@ -458,7 +478,7 @@ TARGET_LFLAGS += -g
 endif
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS)
-TARGET_CPPFLAGS += -pipe -march=$(ARCH)
+TARGET_CPPFLAGS += -pipe -march=$(ARCH) -D$(MK_ARCH_ID)
 
 TARGET_RCFLAGS += $(MK_RCFLAGS)
 

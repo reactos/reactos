@@ -89,11 +89,11 @@ MC = $(TOOLS_PATH)/wmc/wmc
 # Maybe we can delete these soon
 
 ifeq ($(HOST),mingw32-linux)
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386 -D_M_IX86
 endif
 
 ifeq ($(HOST),mingw32-windows)
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386 -D_M_IX86
 endif
 
 CXXFLAGS = $(CFLAGS)

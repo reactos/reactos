@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.3 2002/09/08 10:23:06 chorns Exp $
+/* $Id: resource.c,v 1.4 2003/04/02 21:55:15 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

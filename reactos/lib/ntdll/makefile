@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.78 2003/04/02 00:06:00 hyperion Exp $
+# $Id: makefile,v 1.79 2003/04/02 21:55:15 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -73,9 +73,14 @@ TARGET_OBJECTS = \
   ldr/utils.o \
   $(CSR_OBJECTS)
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
+DEP_EXCLUDE_FILTER = napi.%
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c
