@@ -1,7 +1,0 @@
-/* This file is generated with wmc version 1.0.0 (12-Jun-2000). Do not edit! */
-/* Source : kernel32.mc */
-/* Cmdline: wmc -H ../../include/reactos/errcodes.h -o errcodes.rc kernel32.mc */
-/* Date   : Tue Dec 10 02:07:21 2002 */
-
-LANGUAGE 0x9, 0x1
-1 MESSAGETABLE "MSG00409.bin"
