@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.27 2003/07/11 09:48:24 gvg Exp $ */
+/* $Id: region.c,v 1.28 2003/07/15 08:55:52 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1639,29 +1639,32 @@ W32kExtCreateRegion(CONST PXFORM  Xform,
 
 BOOL
 STDCALL
-W32kFillRgn(HDC  hDC,
-                  HRGN  hRgn,
-                  HBRUSH  hBrush)
+W32kFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 {
-HBRUSH oldhBrush;
-PROSRGNDATA rgn;
+  HBRUSH oldhBrush;
+  PROSRGNDATA rgn;
+  PRECTL r;
 
-        if( !(rgn = RGNDATA_LockRgn(hRgn)))
-                return FALSE;
+  if (NULL == (rgn = RGNDATA_LockRgn(hRgn)))
+    {
+      return FALSE;
+    }
 
-        if ((oldhBrush = W32kSelectObject(hDC, hBrush)) == NULL)
-        {
-                RGNDATA_UnlockRgn( hRgn );
-                return(FALSE);
-        }
-        W32kPatBlt(hDC, rgn->rdh.rcBound.left, rgn->rdh.rcBound.top,
-                        rgn->rdh.rcBound.right - rgn->rdh.rcBound.left,
-                        rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top, PATCOPY);
+  if (NULL == (oldhBrush = W32kSelectObject(hDC, hBrush)))
+    {
+      RGNDATA_UnlockRgn(hRgn);
+      return FALSE;
+    }
 
-        W32kSelectObject(hDC, oldhBrush);
-        RGNDATA_UnlockRgn( hRgn );
+  for (r = (PRECT) rgn->Buffer; r < ((PRECT) rgn->Buffer) + rgn->rdh.nCount; r++)
+    {
+      W32kPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
+    }
 
-        return(TRUE);
+  W32kSelectObject(hDC, oldhBrush);
+  RGNDATA_UnlockRgn( hRgn );
+
+  return TRUE;
 }
 
 BOOL
