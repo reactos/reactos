@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.4 2004/05/04 13:11:22 ekohl Exp $
+/* $Id: desktop.c,v 1.5 2004/05/05 15:29:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -153,6 +153,8 @@ AddDesktopItemW (BOOL bCommonDesktop,
   WCHAR szLinkPath[MAX_PATH];
   WCHAR szArguments[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
+  WIN32_FIND_DATA FindData;
+  HANDLE hFind;
   LPWSTR Ptr;
   DWORD dwLength;
   IShellLinkW* psl;
@@ -169,11 +171,26 @@ AddDesktopItemW (BOOL bCommonDesktop,
       DPRINT1 ("GetDesktopPath() failed\n");
       return FALSE;
     }
-
   DPRINT ("Desktop path: '%S'\n", szLinkPath);
 
-  /* FIXME: Make sure the path exists */
+  /* Make sure the path exists */
+  hFind = FindFirstFileW (szLinkPath,
+			  &FindData);
+  if (hFind == INVALID_HANDLE_VALUE)
+    {
+      DPRINT1 ("'%S' does not exist\n", szLinkPath);
 
+      /* FIXME: create directory path */
+      if (!CreateDirectoryW (szLinkPath, NULL))
+        return FALSE;
+    }
+  else
+    {
+      DPRINT1 ("'%S' exists\n", szLinkPath);
+      FindClose (hFind);
+    }
+
+  /* Append backslash, item name and ".lnk" extension */
   wcscat (szLinkPath, L"\\");
   wcscat (szLinkPath, lpItemName);
   wcscat (szLinkPath, L".lnk");
@@ -329,7 +346,7 @@ CreateGroupW (LPCWSTR lpGroupName,
   wcscat (szGroupPath, lpGroupName);
   DPRINT ("Group path: '%S'\n", szGroupPath);
 
-  /* FIXME: Create nested directories */
+  /* FIXME: Create directory path */
   if (!CreateDirectoryW (szGroupPath, NULL))
     return FALSE;
 
@@ -372,7 +389,7 @@ DeleteGroupW (LPCWSTR lpGroupName,
   wcscat (szGroupPath, lpGroupName);
   DPRINT ("Group path: '%S'\n", szGroupPath);
 
-  /* FIXME: Remove nested directories */
+  /* FIXME: Remove directory path */
   if (!RemoveDirectoryW (szGroupPath))
     return FALSE;
 
@@ -381,6 +398,171 @@ DeleteGroupW (LPCWSTR lpGroupName,
   DPRINT ("DeleteGroupW() done\n");
 
   return TRUE;
+}
+
+
+BOOL WINAPI
+AddItemA (LPCSTR lpGroupName,
+	  BOOL bCommonGroup,
+	  LPCSTR lpItemName,
+	  LPCSTR lpArguments,
+	  LPCSTR lpIconLocation,
+	  INT iIcon,
+	  LPCSTR lpWorkingDirectory,
+	  WORD wHotKey,
+	  INT iShowCmd)
+{
+  DPRINT1 ("AddItemA() not implemented!\n");
+  return FALSE;
+}
+
+
+BOOL WINAPI
+AddItemW (LPCWSTR lpGroupName,
+	  BOOL bCommonGroup,
+	  LPCWSTR lpItemName,
+	  LPCWSTR lpArguments,
+	  LPCWSTR lpIconLocation,
+	  INT iIcon,
+	  LPCWSTR lpWorkingDirectory,
+	  WORD wHotKey,
+	  INT iShowCmd)
+{
+  WCHAR szLinkPath[MAX_PATH];
+  WCHAR szArguments[MAX_PATH];
+  WCHAR szCommand[MAX_PATH];
+  WIN32_FIND_DATA FindData;
+  HANDLE hFind;
+  LPWSTR Ptr;
+  DWORD dwLength;
+  IShellLinkW* psl;
+  IPersistFile* ppf;
+  HRESULT hr;
+  BOOL bResult;
+
+  DPRINT ("AddDesktopItemW() called\n");
+
+  bResult = FALSE;
+
+  if (!GetProgramsPath (bCommonGroup, szLinkPath))
+    {
+      DPRINT1 ("GetProgramsPath() failed\n");
+      return FALSE;
+    }
+
+  DPRINT ("Programs path: '%S'\n", szLinkPath);
+
+  if (lpGroupName != NULL && *lpGroupName != 0)
+    {
+      wcscat (szLinkPath, L"\\");
+      wcscat (szLinkPath, lpGroupName);
+
+      /* Make sure the path exists */
+      hFind = FindFirstFileW (szLinkPath,
+			      &FindData);
+      if (hFind == INVALID_HANDLE_VALUE)
+	{
+	  DPRINT ("'%S' does not exist\n", szLinkPath);
+	  if (!CreateGroupW (lpGroupName,
+			     bCommonGroup))
+	    return FALSE;
+	}
+      else
+	{
+	  DPRINT ("'%S' exists\n", szLinkPath);
+	  FindClose (hFind);
+	}
+    }
+
+  wcscat (szLinkPath, L"\\");
+  wcscat (szLinkPath, lpItemName);
+  wcscat (szLinkPath, L".lnk");
+  DPRINT ("Link path: '%S'\n", szLinkPath);
+
+  /* Split 'lpArguments' string into command and arguments */
+  Ptr = wcschr (lpArguments, L' ');
+  DPRINT ("Ptr %p  lpArguments %p\n", Ptr, lpArguments);
+  if (Ptr != NULL)
+    {
+      dwLength = (DWORD)(Ptr - lpArguments);
+      DPRINT ("dwLength %lu\n", dwLength);
+      memcpy (szCommand, lpArguments, dwLength * sizeof(WCHAR));
+      szCommand[dwLength] = 0;
+      Ptr++;
+      wcscpy (szArguments, Ptr);
+    }
+  else
+    {
+      wcscpy (szCommand, lpArguments);
+      szArguments[0] = 0;
+    }
+  DPRINT ("szCommand: '%S'\n", szCommand);
+  DPRINT ("szArguments: '%S'\n", szArguments);
+
+  CoInitialize(NULL);
+
+  hr = CoCreateInstance(&CLSID_ShellLink,
+                        NULL,
+                        CLSCTX_INPROC_SERVER,
+                        &IID_IShellLinkW,
+                       (LPVOID*)&psl);
+  if (!SUCCEEDED(hr))
+    {
+      CoUninitialize();
+      return FALSE;
+    }
+
+  hr = psl->lpVtbl->QueryInterface(psl,
+                                   &IID_IPersistFile,
+                                   (LPVOID*)&ppf);
+  if (SUCCEEDED(hr))
+    {
+      psl->lpVtbl->SetDescription(psl,
+                                  lpItemName);
+
+      psl->lpVtbl->SetPath(psl,
+                           szCommand);
+
+      psl->lpVtbl->SetArguments(psl,
+                                szArguments);
+
+      psl->lpVtbl->SetIconLocation(psl,
+                                   lpIconLocation,
+                                   iIcon);
+
+      if (lpWorkingDirectory != NULL)
+        {
+          psl->lpVtbl->SetWorkingDirectory(psl,
+                                           lpWorkingDirectory);
+        }
+      else
+        {
+          psl->lpVtbl->SetWorkingDirectory(psl,
+                                           L"%HOMEDRIVE%%HOMEPATH%");
+        }
+
+      psl->lpVtbl->SetHotkey(psl,
+                             wHotKey);
+
+      psl->lpVtbl->SetShowCmd(psl,
+                              iShowCmd);
+
+      hr = ppf->lpVtbl->Save(ppf,
+                             szLinkPath,
+                             TRUE);
+      if (SUCCEEDED(hr))
+        bResult = TRUE;
+
+      ppf->lpVtbl->Release(ppf);
+    }
+
+  psl->lpVtbl->Release(psl);
+
+  CoUninitialize();
+
+  DPRINT ("AddDesktopItemW() done\n");
+
+  return bResult;
 }
 
 
@@ -436,6 +618,7 @@ DeleteItemW (LPCWSTR lpGroupName,
 	return TRUE;
 
       *Ptr = 0;
+      DPRINT ("Item path: '%S'\n", szItemPath);
       if (RemoveDirectoryW (szItemPath))
 	{
 	  /* FIXME: Notify the shell */
