@@ -8,7 +8,7 @@ TARGET_NAME = unicode
 
 TARGET_CFLAGS = -D__USE_W32API -DWINVER=0x501 -DWINE_UNICODE_API= \
                 -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
-                -I$(PATH_TO_TOP)/include/wine
+                -I$(PATH_TO_TOP)/include/wine -Wall -Werror
 
 CODEPAGES = \
 	037 \
