@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2004/11/26 07:41:25 arty Exp $
+# $Id: makefile,v 1.22 2004/12/26 14:43:00 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -27,7 +27,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a dnsapi.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a advapi32.a dnsapi.a
 
 TARGET_OBJECTS = misc/bsd.o misc/catalog.o misc/dllmain.o \
   misc/event.o misc/handle.o misc/ns.o \

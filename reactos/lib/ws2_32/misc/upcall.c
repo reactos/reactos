@@ -171,7 +171,7 @@ WPUOpenCurrentThread(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WSPAPI
@@ -181,9 +181,7 @@ WPUPostMessage(
     IN  WPARAM wParam,
     IN  LPARAM lParam)
 {
-    UNIMPLEMENTED
-
-    return FALSE;
+    return PostMessageW(hWnd, Msg, wParam, lParam);
 }
 
 
