@@ -555,6 +555,7 @@ SetHandleCount@4
 SetHandleInformation@12
 SetLastConsoleEventActive@0
 SetLastError@4
+SetLastErrorByStatus@4
 SetLocalTime@4
 SetLocaleInfoA@12
 SetLocaleInfoW@12

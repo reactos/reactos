@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.8 2000/08/14 14:33:23 ea Exp $
+; $Id: kernel32.edf,v 1.9 2001/01/05 05:39:18 phreak Exp $
 ;
 ; kernel32.edf
 ;
@@ -560,6 +560,7 @@ SetHandleCount=SetHandleCount@4
 SetHandleInformation=SetHandleInformation@12
 SetLastConsoleEventActive=SetLastConsoleEventActive@0
 SetLastError=SetLastError@4
+SetLastErrorByStatus=SetLastErrorByStatus@4
 SetLocalTime=SetLocalTime@4
 SetLocaleInfoA=SetLocaleInfoA@12
 SetLocaleInfoW=SetLocaleInfoW@12
