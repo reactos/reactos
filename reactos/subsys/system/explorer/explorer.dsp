@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=explorer - Win32 _NO_COMUTIL
+CFG=explorer - Win32
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=explorer - Win32 _NO_COMUTIL
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32 _NO_COMUTIL"
+!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -23,6 +23,7 @@ CFG=explorer - Win32 _NO_COMUTIL
 !MESSAGE "explorer - Win32 Unicode Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 _NO_COMUTIL" (based on "Win32 (x86) Console Application")
+!MESSAGE "explorer - Win32" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -79,15 +80,15 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.cmd
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib shell32.lib comctl32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "explorer___Win32_Debug_Release"
-# PROP BASE Intermediate_Dir "explorer___Win32_Debug_Release"
+# PROP BASE Output_Dir "DRelease"
+# PROP BASE Intermediate_Dir "DRelease"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
@@ -112,8 +113,8 @@ LINK32=link.cmd
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "explorer___Win32_Unicode_Release"
-# PROP BASE Intermediate_Dir "explorer___Win32_Unicode_Release"
+# PROP BASE Output_Dir "URelease"
+# PROP BASE Intermediate_Dir "URelease"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
@@ -138,8 +139,8 @@ LINK32=link.cmd
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "explorer___Win32_Unicode_Debug"
-# PROP BASE Intermediate_Dir "explorer___Win32_Unicode_Debug"
+# PROP BASE Output_Dir "UDebug"
+# PROP BASE Intermediate_Dir "UDebug"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
@@ -187,6 +188,33 @@ LINK32=link.cmd
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
+!ELSEIF  "$(CFG)" == "explorer - Win32"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Win32"
+# PROP BASE Intermediate_Dir "Win32"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Win32"
+# PROP Intermediate_Dir "Win32"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
+# ADD BASE RSC /l 0x407 /d "_DEBUG"
+# ADD RSC /l 0x407 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.cmd
+# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
+
 !ENDIF 
 
 # Begin Target
@@ -197,6 +225,7 @@ LINK32=link.cmd
 # Name "explorer - Win32 Unicode Release"
 # Name "explorer - Win32 Unicode Debug"
 # Name "explorer - Win32 _NO_COMUTIL"
+# Name "explorer - Win32"
 # Begin Group "utility"
 
 # PROP Default_Filter ""
@@ -291,6 +320,11 @@ SOURCE=.\de.rc
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "explorer - Win32"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -325,6 +359,11 @@ SOURCE=.\en.rc
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "explorer - Win32"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -395,6 +434,11 @@ SOURCE=.\resource.rc
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "explorer - Win32"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
