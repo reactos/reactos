@@ -114,7 +114,6 @@ extern void TREEVIEW_Unregister(void);
 extern void UPDOWN_Register(void);
 extern void UPDOWN_Unregister(void);
 
-static LRESULT WINAPI SubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 LPSTR    COMCTL32_aSubclass = NULL;
 HMODULE COMCTL32_hModule = 0;
@@ -1109,10 +1108,10 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
       /* set window procedure to our own and save the current one */
       if (IsWindowUnicode (hWnd))
          stack->origproc = (WNDPROC)SetWindowLongW (hWnd, GWL_WNDPROC,
-                                                   (LONG)SubclassWndProc);
+                                                   (LONG)DefSubclassProc);
       else
          stack->origproc = (WNDPROC)SetWindowLongA (hWnd, GWL_WNDPROC,
-                                                   (LONG)SubclassWndProc);
+                                                   (LONG)DefSubclassProc);
    } else {
       WNDPROC current;
       if (IsWindowUnicode (hWnd))
@@ -1120,7 +1119,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
       else
          current = (WNDPROC)GetWindowLongA (hWnd, GWL_WNDPROC);
 
-      if (current != SubclassWndProc) {
+      if (current != DefSubclassProc) {
          ERR ("Application has subclassed with our procedure, then manually, then with us again.  The current implementation can't handle this.\n");
          return FALSE;
       }
@@ -1260,33 +1259,6 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
       }
 
    return FALSE;
-}
-
-
-/***********************************************************************
- * SubclassWndProc (internal)
- *
- * Window procedure for all subclassed windows. 
- * Saves the current subclassing stack position to support nested messages
- */
-
-static LRESULT WINAPI SubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-   LPSUBCLASS_INFO stack;
-   int stackpos;
-   LRESULT ret;
-
-   /* retrieve our little stack from the Properties */
-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
-   if (!stack) {
-      ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
-      return 0;
-   }
-   stackpos = stack->stackpos;
-   stack->stackpos = stack->stacknum;
-   ret = DefSubclassProc(hWnd,uMsg,wParam,lParam);
-   stack->stackpos = stackpos;
-   return ret;
 }
 
 
