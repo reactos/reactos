@@ -93,19 +93,15 @@ NTSTATUS PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 VOID PS2MouseInitializeDataQueue(PVOID Context)
 {
-/*   PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)((PGET_DATA_POINTER_CONTEXT)Context)->DeviceExtension;
+  ;
+/*   PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceExtension;
 
-   ((PGET_DATA_POINTER_CONTEXT)Context)->DataIn = DeviceExtension->DataIn;
-   ((PGET_DATA_POINTER_CONTEXT)Context)->DataOut = DeviceExtension->DataOut;
-   ((PGET_DATA_POINTER_CONTEXT)Context)->InputCount = DeviceExtension->InputCount; */
-
-   DbgPrint("PS2MouseInitializeDataQueue UNIMPLEMENTED\n");
+   DeviceExtension->InputDataCount = 0;
+   DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE); */
 }
 
 NTSTATUS PS2MouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-   // Refer to \readableMouseDriver\port\sermcmn.c line 54
-
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS status;
@@ -161,12 +157,17 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING SymlinkName;
    PDEVICE_EXTENSION DeviceExtension;
 
-   DbgPrint("PS/2 Keyboard & Mouse Driver 0.0.1\n");
+   DbgPrint("PS/2 Keyboard & Mouse Driver 0.0.2\n");
+
+   if(detect_ps2_port() == TRUE)
+   {
+     DbgPrint("PS/2 Mouse Detected\n");
+   } else
+     return STATUS_UNSUCCESSFUL;
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = PS2MouseDispatch;
    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = PS2MouseDispatch;
    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = PS2MouseInternalDeviceControl;
-
    DriverObject->DriverStartIo                = PS2MouseStartIo;
 
    RtlInitUnicodeString(&DeviceName, L"\\Device\\Mouse"); // FIXME: find correct device name

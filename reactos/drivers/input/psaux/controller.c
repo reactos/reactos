@@ -59,18 +59,21 @@ unsigned handle_event(void)
 void controller_wait(void)
 {
   unsigned long timeout;
-  
+  LARGE_INTEGER Millisecond_Timeout;
+
+  Millisecond_Timeout.QuadPart = 1;
+
   for(timeout = 0; timeout < CONTROLLER_TIMEOUT; timeout++)
   {
     // "handle_keyboard_event()" will handle any incoming events
     // while we wait -- keypresses or mouse movement
-    
+
     unsigned char status = handle_event();
                 
     if((status & CONTROLLER_STATUS_INPUT_BUFFER_FULL) == 0) return;
     
     // Sleep for one millisecond
-    KeDelayExecutionThread (KernelMode, FALSE, 1);
+    KeDelayExecutionThread (KernelMode, FALSE, &Millisecond_Timeout);
   }
   
   DbgPrint("PSAUX: Keyboard timed out\n");
@@ -92,6 +95,7 @@ int controller_wait_for_input(void)
     KeDelayExecutionThread (KernelMode, FALSE, 1);
   }
 
+  DbgPrint("PSAUX: Timed out on waiting for input from controller\n");
   return -1;
 }
 
@@ -110,7 +114,6 @@ void controller_write_output_word(unsigned data)
   controller_wait();
   controller_write_output(data);
 }
-
 
 /* Empty the keyboard input buffer. */
 

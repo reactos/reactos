@@ -25,7 +25,11 @@ VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA Mous
    ULONG ReadSize;
    PIO_STACK_LOCATION Stack;
 
-   if(ClassDeviceExtension->ReadIsPending == TRUE)
+   // In classical NT, you would take the input data and pipe it through the IO system, for the GDI to read.
+   // In ReactOS, however, we use a GDI callback for increased mouse responsiveness. The reason we don't
+   // simply call from the port driver is so that our mouse class driver can support NT mouse port drivers.
+
+/*   if(ClassDeviceExtension->ReadIsPending == TRUE)
    {
       Irp = ClassDeviceObject->CurrentIrp;
       ClassDeviceObject->CurrentIrp = NULL;
@@ -44,8 +48,8 @@ VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA Mous
       IoStartNextPacket(ClassDeviceObject, FALSE);
       IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);      
       ClassDeviceExtension->ReadIsPending = FALSE;
-   }
-   if(InputCount>0)
+   } */
+   if(*InputCount>0)
    {
       // FIXME: If we exceed the buffer, mouse data gets thrown away.. better solution?
 
@@ -63,7 +67,16 @@ VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA Mous
       // Move the pointer and counter up
       ClassDeviceExtension->PortData += ReadSize;
       ClassDeviceExtension->InputCount += ReadSize;
-   }
+
+     // Throw data up to GDI callback
+     if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
+        (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
+          (ClassDeviceExtension->PortData - ReadSize, ReadSize);
+        ClassDeviceExtension->PortData -= ReadSize;
+        ClassDeviceExtension->InputCount -= ReadSize;
+        ClassDeviceExtension->ReadIsPending = FALSE;
+     }
+  }
 }
 
 NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
@@ -77,6 +90,8 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PIRP irp;
    CLASS_INFORMATION ClassInformation;
    PDEVICE_EXTENSION DeviceExtension = ClassDeviceObject->DeviceExtension;
+
+   DeviceExtension->GDIInformation.CallBack = NULL;
 
    // Get the port driver's DeviceObject
    // FIXME: The name might change.. find a way to be more dynamic?
@@ -197,6 +212,47 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    }
 }
 
+NTSTATUS MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+{
+   // Retrieve GDI's callback
+
+   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   NTSTATUS status;
+
+   switch(Stack->Parameters.DeviceIoControl.IoControlCode)
+   {
+      case IOCTL_INTERNAL_MOUSE_CONNECT:
+
+         DeviceExtension->GDIInformation =
+            *((PGDI_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
+
+         status = STATUS_SUCCESS;
+         break;
+
+      case IOCTL_INTERNAL_MOUSE_DISCONNECT:
+
+         DeviceExtension->GDIInformation.CallBack = NULL;
+
+         status = STATUS_SUCCESS;
+         break;
+
+      default:
+         status = STATUS_INVALID_DEVICE_REQUEST;
+         break;
+   }
+
+   Irp->IoStatus.Status = status;
+   if (status == STATUS_PENDING) {
+      IoMarkIrpPending(Irp);
+      IoStartPacket(DeviceObject, Irp, NULL, NULL);
+   } else {
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   }
+
+   return status;
+}
+
 NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
@@ -207,9 +263,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DbgPrint("Mouse Class Driver 0.0.1\n");
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
-   DriverObject->MajorFunction[IRP_MJ_READ]   = MouseClassDispatch;
-   DriverObject->DriverStartIo                = MouseClassStartIo;
+//   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
+//   DriverObject->MajorFunction[IRP_MJ_READ]   = MouseClassDispatch;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouseClassInternalDeviceControl; // to get GDI callback
+//   DriverObject->DriverStartIo                = MouseClassStartIo;
 
    RtlInitUnicodeString(&DeviceName, L"\\Device\\MouseClass");
    IoCreateDevice(DriverObject,

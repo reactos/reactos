@@ -89,7 +89,7 @@ BOOLEAN ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
                     mouse_buffer[2]);
     }
 
-      if (((state_dx!=0) || (state_dy!=0) /* || (state_buttons!=0) */ ))
+      if (((state_dx!=0) || (state_dy!=0) || (state_buttons!=0)))
       {
          // FIXME: Implement button state, see /include/ntddmous.h
 
@@ -101,6 +101,8 @@ BOOLEAN ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
             return TRUE;
          }
 
+         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].RawButtons = state_buttons;
+         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].ButtonData = state_buttons;
          DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].LastX = state_dx;
          DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].LastY = state_dy;
          DeviceExtension->InputDataCount++;
@@ -116,9 +118,9 @@ BOOLEAN ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
 
 static void mouse_write_command (int command)
 {
-  controller_wait ();
+  controller_wait();
   controller_write_command (CONTROLLER_COMMAND_WRITE_MODE);
-  controller_wait ();
+  controller_wait();
   controller_write_output (command);
 }
 
@@ -126,9 +128,9 @@ static void mouse_write_command (int command)
 
 static void mouse_write_ack (int value)
 {
-  controller_wait ();
+  controller_wait();
   controller_write_command (CONTROLLER_COMMAND_WRITE_MOUSE);
-  controller_wait ();
+  controller_wait();
   controller_write_output (value);
 
   /* We expect an ACK in response. */
@@ -144,7 +146,7 @@ BOOLEAN detect_ps2_port(void)
   int loops;
   BOOLEAN return_value = FALSE;
 
-   return TRUE; // The rest of this code fails under BOCHs
+  return TRUE; // The rest of this code fails under BOCHs
 
   /* Put the value 0x5A in the output buffer using the "WriteAuxiliary Device Output Buffer" command (0xD3).
      Poll the Status Register for a while to see if the value really turns up in the Data Register. If the
@@ -182,16 +184,17 @@ BOOLEAN detect_ps2_port(void)
 
 BOOLEAN mouse_init (PDEVICE_OBJECT DeviceObject)
 {
+  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
   ULONG MappedIrq;
   KIRQL Dirql;
   KAFFINITY Affinity;
-  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+  if (!detect_ps2_port ()) return FALSE;
+
+  has_mouse = TRUE;
 
   DeviceExtension->InputDataCount = 0;
   DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE);
-
-  if (!detect_ps2_port ()) return FALSE;
-  has_mouse = TRUE;
 
   // Enable the PS/2 mouse port
   controller_write_command_word (CONTROLLER_COMMAND_MOUSE_ENABLE);

@@ -29,6 +29,10 @@ typedef struct _CLASS_INFORMATION {
    PVOID CallBack;
 } CLASS_INFORMATION, *PCLASS_INFORMATION;
 
+typedef struct _GDI_INFORMATION {
+   PVOID CallBack;
+} GDI_INFORMATION, *PGDI_INFORMATION;
+
 typedef
 VOID
 (*PSERVICE_CALLBACK_ROUTINE) (
@@ -36,4 +40,11 @@ VOID
     IN PVOID SystemArgument1,
     IN PVOID SystemArgument2,
     IN OUT PVOID SystemArgument3
+    );
+
+typedef
+VOID
+(*PGDI_SERVICE_CALLBACK_ROUTINE) (
+    IN PVOID SystemArgument1,
+    IN ULONG SystemArgument2
     );
