@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <windows.h>
+
+#define _KERNEL32_INCLUDE_LANG_
 #include <kernel32/winnls.h>
 //#include "heap.h"
 //#include "ole.h"
@@ -18,6 +20,31 @@
 //#include "winerror.h"
 //#include "debug.h"
 //#include "main.h"
+
+#define BOOL16 BOOL
+#define BOOL32 BOOL
+#define ole 1
+#define win32 2
+#define string 3
+#define file 4
+
+typedef BOOL32 (*LOCALE_ENUMPROC32W)(WCHAR*);
+typedef BOOL16 (*LOCALE_ENUMPROC32A)(CHAR*);
+
+typedef BOOL32 (*DATEFMT_ENUMPROC32W)(WCHAR*);
+typedef BOOL16 (*DATEFMT_ENUMPROC32A)(CHAR*);
+
+typedef BOOL32 (*TIMEFMT_ENUMPROC32W)(WCHAR*);
+typedef BOOL16 (*TIMEFMT_ENUMPROC32A)(CHAR*);
+
+#define NUMBERFMT32W int
+#define NUMBERFMT32A int
+
+BOOL32 WINAPI GetStringTypeEx32A(LCID locale,DWORD dwInfoType,LPCSTR src,
+                                 ULONG cchSrc,LPWORD chartype);
+BOOL32 WINAPI GetStringTypeEx32W(LCID locale,DWORD dwInfoType,LPCWSTR src,
+                                 ULONG cchSrc,LPWORD chartype);
+
 
 struct NLS_langlocale {
 	const int lang;
@@ -352,7 +379,7 @@ static struct tagLOCALE_NAME2ID {
 const struct map_lcid2str {
 	LCID		langid;
 	const char	*langname;
-} languages[]={
+} static languages[]={
 	{0x0401,"Arabic (Saudi Arabia)"},
 	{0x0801,"Arabic (Iraq)"},
 	{0x0c01,"Arabic (Egypt)"},
@@ -749,11 +776,13 @@ BOOL16 WINAPI SetLocaleInfoA(DWORD lcid, DWORD lctype, LPCSTR data)
 /******************************************************************************
  *		IsValidLocale	[KERNEL32.489]
  */
+#if 0
 BOOL32 WINAPI IsValidLocale(LCID lcid,DWORD flags)
 {
 	/* we support ANY language. Well, at least say that...*/
 	return TRUE;
 }
+#endif
 
 /******************************************************************************
  *		EnumSystemLocales32W	[KERNEL32.209]
@@ -2226,6 +2255,7 @@ UINT16 WINAPI CompareString16(DWORD lcid,DWORD fdwStyle,
  * 
  * Quite inefficient.
  */
+#if 0
 ULONG WINAPI CompareStringA(
     DWORD lcid,     /* locale ID */
     DWORD fdwStyle, /* comparison-style options */
@@ -2312,6 +2342,7 @@ ULONG WINAPI CompareStringW(DWORD lcid, DWORD fdwStyle,
 	/* the longer one is lexically greater */
 	return (l1<l2)? 1 : 3;
 }
+#endif
 
 /******************************************************************************
  *		OLE_GetFormatA	[Internal]

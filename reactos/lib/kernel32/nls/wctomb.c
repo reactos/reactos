@@ -27,7 +27,9 @@ extern PLOCALE	__TebLocale;
 
 #define GetTebLocale() __TebLocale
  
-INT WideCharToMultiByte(UINT cpid, DWORD flags, LPCWSTR src, int srclen,
+INT 
+STDCALL
+WideCharToMultiByte(UINT cpid, DWORD flags, LPCWSTR src, int srclen,
                         LPSTR dest, int destlen, LPCSTR pdefchar,
                         LPBOOL pdefused )
 {

@@ -69,7 +69,9 @@ WINBOOL STDCALL IsValidCodePage(UINT codepage)
    }
 }
 
-WINBOOL GetCPInfo(UINT codepage, LPCPINFO pcpinfo)
+WINBOOL
+STDCALL
+GetCPInfo(UINT codepage, LPCPINFO pcpinfo)
 {
     PCODEPAGE pcp;
    

@@ -125,6 +125,8 @@ LANGID STDCALL GetUserDefaultLangID(void)
    return LANGIDFROMLCID(__UserLocale->Id);
 }
 
+#ifndef _OLE2NLS_IN_BUILD_
+
 LCID
 STDCALL
 GetUserDefaultLCID(void)
@@ -142,6 +144,8 @@ LCID STDCALL GetSystemDefaultLCID(void)
    return MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US), 
                    SORT_DEFAULT);
 }
+
+#endif /*_OLE2NLS_IN_BUILD_*/
 
 LCID STDCALL GetThreadLocale(void)
 {
@@ -1259,6 +1263,9 @@ GetDateFormatW(
  * - gg   era string
  *
  */
+
+#if 0
+
 int STDCALL GetDateFormatA(LCID locale,DWORD flags,
 			      CONST SYSTEMTIME *xtime,
 			      LPCSTR format, LPSTR date,int datelen) 
@@ -1278,3 +1285,6 @@ int STDCALL GetDateFormatA(LCID locale,DWORD flags,
   if (xtime == NULL) {
      GetSystemTime(&t);
      thisti
+
+
+#endif

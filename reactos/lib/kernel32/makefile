@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.54 2002/12/06 13:14:13 robd Exp $
+# $Id: makefile,v 1.55 2002/12/08 16:07:18 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -34,7 +34,7 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
 	       misc/dllmain.o misc/comm.o misc/errormsg.o \
 	       misc/console.o misc/time.o misc/stubs.o misc/ldr.o misc/res.o \
 	       misc/debug.o misc/sysinfo.o misc/profile.o \
-		misc/mbchars.o misc/muldiv.o misc/getname.o
+	       misc/mbchars.o misc/muldiv.o misc/getname.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
@@ -46,26 +46,43 @@ FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
 MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
               mem/procmem.o mem/section.o mem/virtual.o
 
-NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
- nls/cp37.o nls/cp437.o nls/cp500.o nls/cp737.o nls/cp775.o nls/cp850.o nls/cp852.o nls/cp855.o nls/cp857.o\
- nls/cp860.o nls/cp861.o nls/cp863.o nls/cp865.o nls/cp866.o nls/cp869.o nls/cp875.o nls/cp1026.o\
- nls/cp1250.o nls/cp1251.o nls/cp1252.o nls/cp1253.o nls/cp1254.o nls/cp1255.o nls/cp1256.o nls/cp1257.o\
- nls/cp10000.o nls/cp10006.o nls/cp10007.o nls/cp10029.o nls/cp10079.o nls/cp10081.o\
- nls/lctable.o\
- nls/lcAFK.o nls/lcBEL.o nls/lcBGR.o nls/lcCAT.o nls/lcCSY.o nls/lcDAN.o\
- nls/lcDEA.o nls/lcDEC.o nls/lcDEL.o nls/lcDES.o nls/lcDEU.o\
- nls/lcELL.o\
- nls/lcENA.o nls/lcENB.o nls/lcENC.o nls/lcENG.o nls/lcENI.o nls/lcENJ.o nls/lcENL.o nls/lcENS.o nls/lcENT.o\
- nls/lcENU.o nls/lcENZ.o\
- nls/lcESA.o nls/lcESB.o nls/lcESC.o nls/lcESD.o nls/lcESE.o nls/lcESF.o nls/lcESG.o nls/lcESH.o nls/lcESI.o\
- nls/lcESL.o nls/lcESM.o nls/lcESN.o nls/lcESO.o nls/lcESP.o nls/lcESR.o nls/lcESS.o nls/lcESU.o nls/lcESV.o\
- nls/lcESY.o nls/lcESZ.o\
- nls/lcETI.o nls/lcEUQ.o nls/lcFIN.o nls/lcFOS.o\
- nls/lcFRA.o nls/lcFRB.o nls/lcFRC.o nls/lcFRL.o nls/lcFRS.o\
- nls/lcHRV.o nls/lcHUN.o nls/lcIND.o nls/lcISL.o nls/lcITA.o nls/lcITS.o nls/lcLTH.o nls/lcLVI.o nls/lcNLB.o\
- nls/lcNLD.o nls/lcNON.o nls/lcNOR.o nls/lcPLK.o nls/lcPTB.o nls/lcPTG.o nls/lcROM.o nls/lcRUS.o nls/lcSKY.o\
- nls/lcSLV.o nls/lcSQI.o nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o nls/lcTRK.o nls/lcUKR.o\
- nls/locale.o nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
+
+NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o \
+ nls/cptable.o nls/lctable.o \
+ nls/lcAFK.o nls/lcBEL.o nls/lcBGR.o nls/lcCAT.o \
+ nls/lcCSY.o nls/lcDAN.o nls/lcDEA.o nls/lcDEC.o \
+ nls/lcDEL.o nls/lcDES.o nls/lcDEU.o nls/lcELL.o \
+ nls/lcENA.o nls/lcENB.o nls/lcENC.o nls/lcENG.o \
+ nls/lcENI.o nls/lcENJ.o nls/lcENL.o nls/lcENS.o \
+ nls/lcENT.o nls/lcENU.o nls/lcENZ.o nls/lcESA.o \
+ nls/lcESB.o nls/lcESC.o nls/lcESD.o nls/lcESE.o \
+ nls/lcESF.o nls/lcESG.o nls/lcESH.o nls/lcESI.o \
+ nls/lcESL.o nls/lcESM.o nls/lcESN.o nls/lcESO.o \
+ nls/lcESP.o nls/lcESR.o nls/lcESS.o nls/lcESU.o \
+ nls/lcESV.o nls/lcESY.o nls/lcESZ.o nls/lcETI.o \
+ nls/lcEUQ.o nls/lcFIN.o nls/lcFOS.o nls/lcFRA.o \
+ nls/lcFRB.o nls/lcFRC.o nls/lcFRL.o nls/lcFRS.o \
+ nls/lcHRV.o nls/lcHUN.o nls/lcIND.o nls/lcISL.o \
+ nls/lcITA.o nls/lcITS.o nls/lcLTH.o nls/lcLVI.o \
+ nls/lcNLB.o nls/lcNLD.o nls/lcNON.o nls/lcNOR.o \
+ nls/lcPLK.o nls/lcPTB.o nls/lcPTG.o nls/lcROM.o \
+ nls/lcRUS.o nls/lcSKY.o nls/lcSLV.o nls/lcSQI.o \
+ nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o \
+ nls/lcTRK.o nls/lcUKR.o\
+ nls/locale.o 
+
+NLS_UNUSED_OBJECTS =  nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
+
+NLS_CP_OBJECTS =  \
+ nls/cp37.o nls/cp437.o nls/cp500.o nls/cp737.o nls/cp775.o \
+ nls/cp850.o nls/cp852.o nls/cp855.o nls/cp857.o \
+ nls/cp860.o nls/cp861.o nls/cp863.o nls/cp865.o \
+ nls/cp866.o nls/cp869.o nls/cp875.o nls/cp1026.o \
+ nls/cp1250.o nls/cp1251.o nls/cp1252.o nls/cp1253.o \
+ nls/cp1254.o nls/cp1255.o nls/cp1256.o nls/cp1257.o \
+ nls/cp10000.o nls/cp10006.o nls/cp10007.o \
+ nls/cp10029.o nls/cp10079.o nls/cp10081.o
+
 
 THREAD_OBJECTS = \
 	thread/fiber.o	\
@@ -85,6 +102,9 @@ EXCEPT_OBJECTS = except/except.o
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
           $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
+
+#$(NLS_OBJECTS)
+
 
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o

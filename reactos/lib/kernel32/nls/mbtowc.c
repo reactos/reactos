@@ -26,7 +26,9 @@ extern PLOCALE	__TebLocale;
 
 #define GetTebLocale() __TebLocale
  
-INT MultiByteToWideChar(UINT cpid, DWORD flags, LPCSTR src, int srclen,
+INT 
+STDCALL
+MultiByteToWideChar(UINT cpid, DWORD flags, LPCSTR src, int srclen,
                         LPWSTR dest, int destlen)
 {
    PCODEPAGE pcodepage =__CPFirst;
@@ -80,4 +82,4 @@ INT MultiByteToWideChar(UINT cpid, DWORD flags, LPCSTR src, int srclen,
       retlen = strlen(src);
    }
    return retlen;
-}                         
+}
