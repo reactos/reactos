@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.12 2003/07/27 11:54:42 dwelch Exp $
+/* $Id: msgqueue.c,v 1.13 2003/08/02 16:53:08 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -59,6 +59,27 @@ static KEVENT HardwareMessageEvent;
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
 /* FUNCTIONS *****************************************************************/
+
+/* check the queue status */
+inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE Queue )
+{
+    return ((Queue->WakeBits & Queue->WakeMask) || (Queue->ChangedBits & Queue->ChangedMask));
+}
+
+/* set some queue bits */
+inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+{
+    Queue->WakeBits |= Bits;
+    Queue->ChangedBits |= Bits;
+    if (MsqIsSignaled( Queue )) KeSetEvent(&Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+}
+
+/* clear some queue bits */
+inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+{
+    Queue->WakeBits &= ~Bits;
+    Queue->ChangedBits &= ~Bits;
+}
 
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)

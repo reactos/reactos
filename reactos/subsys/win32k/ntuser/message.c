@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.25 2003/07/25 23:53:36 dwelch Exp $
+/* $Id: message.c,v 1.26 2003/08/02 16:53:08 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -590,6 +590,28 @@ NtUserWaitMessage(VOID)
 {
 
   return W32kWaitMessage(NULL, 0, 0);
+}
+
+
+DWORD STDCALL
+NtUserGetQueueStatus(BOOL ClearChanges)
+{
+   PUSER_MESSAGE_QUEUE Queue;
+   DWORD Result;
+
+   Queue = PsGetWin32Thread()->MessageQueue;
+
+   ExAcquireFastMutex(&Queue->Lock);
+
+   Result = MAKELONG(Queue->ChangedBits, Queue->WakeBits);
+   if (ClearChanges)
+   {
+      Queue->ChangedBits = 0;
+   }
+
+   ExReleaseFastMutex(&Queue->Lock);
+
+   return Result;
 }
 
 /* EOF */
