@@ -53,9 +53,9 @@ PFN_DIB_VLine DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c
 BOOLEAN DIB_To_1BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-        ULONG   Delta,     XLATEOBJ *ColorTranslation)
+        LONG    Delta,     XLATEOBJ *ColorTranslation)
 {
-  ULONG    i, j, sx, sy = SourcePoint->y;
+  LONG    i, j, sx, sy = SourcePoint->y;
 
   switch(SourceGDI->BitsPerPixel)
   {

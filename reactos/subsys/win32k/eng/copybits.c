@@ -19,9 +19,9 @@
 BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                      SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                      PRECTL  DestRect,  POINTL  *SourcePoint,
-                     ULONG   Delta,     XLATEOBJ *ColorTranslation)
+                     LONG    Delta,     XLATEOBJ *ColorTranslation)
 {
-  ULONG DestWidth, DestHeight, CurrentDestLine, CurrentSourceLine, CurrentDestCol, CurrentSourceCol, i, TranslationPixel;
+  LONG DestWidth, DestHeight, CurrentDestLine, CurrentSourceLine, CurrentDestCol, CurrentSourceCol, i, TranslationPixel;
 
   PFN_DIB_GetPixel Source_DIB_GetPixel;
   PFN_DIB_PutPixel Dest_DIB_PutPixel;

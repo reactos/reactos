@@ -53,9 +53,9 @@ PFN_DIB_VLine DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c
 BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-        ULONG   Delta,     XLATEOBJ *ColorTranslation)
+        LONG   Delta,      XLATEOBJ *ColorTranslation)
 {
-  ULONG    i, j, sx, sy, f1, f2, xColor;
+  LONG     i, j, sx, sy, f1, f2, xColor;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
   PBYTE    DestBits, DestLine, SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;

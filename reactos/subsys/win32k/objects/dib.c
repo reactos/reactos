@@ -65,7 +65,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   DC *dc;
   BITMAPOBJ *bitmap;
   HBITMAP SourceBitmap, DestBitmap;
-  INT result;
+  INT result = 0;
   BOOL copyBitsResult;
   PSURFOBJ DestSurf, SourceSurf;
   PSURFGDI DestGDI;
@@ -77,7 +77,8 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   RGBQUAD *lpRGB;
   HPALETTE DDB_Palette, DIB_Palette;
   ULONG DDB_Palette_Type, DIB_Palette_Type;
-
+  PBYTE vBits = Bits;
+  INT scanDirection = 1, DIBWidth;
 
   // Check parameters
   if (!(dc = DC_HandleToPtr(hDC)))
@@ -105,10 +106,23 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
 
   // Create source surface
   SourceSize.cx = bmi->bmiHeader.biWidth;
-  SourceSize.cy = bmi->bmiHeader.biHeight;
-  SourceBitmap = EngCreateBitmap(SourceSize, DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount),
+  SourceSize.cy = abs(bmi->bmiHeader.biHeight);
+
+  // Determine width of DIB
+  DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+
+  // Determine DIB Vertical Orientation
+  if(bmi->bmiHeader.biHeight > 0)
+  {
+    scanDirection = -1;
+    vBits += DIBWidth * bmi->bmiHeader.biHeight - DIBWidth;
+  }
+
+  SourceBitmap = EngCreateBitmap(SourceSize,
+                                 DIBWidth * scanDirection,
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
-                                 0, Bits);
+                                 0,
+                                 vBits);
   SourceSurf = (PSURFOBJ)AccessUserObject(SourceBitmap);
 
   // Destination palette obtained from the hDC
@@ -122,15 +136,23 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   // Determine XLATEOBJ for color translation
   XlateObj = EngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
 
-  // Determine destination rectangle and source point
+  // Zero point
   ZeroPoint.x = 0;
   ZeroPoint.y = 0;
+
+  // Determine destination rectangle
   DestRect.top	= 0;
   DestRect.left	= 0;
   DestRect.right	= SourceSize.cx;
   DestRect.bottom	= SourceSize.cy;
 
   copyBitsResult = EngCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
+
+  // If it succeeded, return number of scanlines copies
+  if(copyBitsResult == TRUE)
+  {
+    result = SourceSize.cy - 1;
+  }
 
   // Clean up
   EngDeleteSurface(SourceBitmap);

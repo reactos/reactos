@@ -14,7 +14,7 @@ PFN_DIB_VLine DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c
 BOOLEAN DIB_To_1BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-			     ULONG   Delta,     XLATEOBJ *ColorTranslation);
+			     LONG   Delta,     XLATEOBJ *ColorTranslation);
 
 PFN_DIB_PutPixel DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c);
 PFN_DIB_GetPixel DIB_4BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y);
@@ -23,7 +23,7 @@ PFN_DIB_VLine DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c
 BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-			     ULONG   Delta,     XLATEOBJ *ColorTranslation);
+			     LONG   Delta,     XLATEOBJ *ColorTranslation);
 
 PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c);
 PFN_DIB_GetPixel DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y);
@@ -32,4 +32,4 @@ PFN_DIB_VLine DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG 
 BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-			      ULONG   Delta,     XLATEOBJ *ColorTranslation);
+			     LONG   Delta,     XLATEOBJ *ColorTranslation);

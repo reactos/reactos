@@ -41,7 +41,7 @@ PFN_DIB_VLine DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG 
 {
   PBYTE byteaddr = SurfObj->pvBits + y1 * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
-  ULONG  lDelta = SurfObj->lDelta;
+  LONG lDelta = SurfObj->lDelta;
 
   byteaddr = (PBYTE)addr;
   while(y1++ <= y2) {
@@ -86,9 +86,9 @@ VOID DIB_24BPP_BltTo_24BPP(PSURFOBJ dstpsd, LONG dstx, LONG dsty, LONG w, LONG h
 BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
         PRECTL  DestRect,  POINTL  *SourcePoint,
-        ULONG   Delta,     XLATEOBJ *ColorTranslation)
+        LONG    Delta,     XLATEOBJ *ColorTranslation)
 {
-  ULONG    i, j, sx, sy, xColor, f1;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    DestBits, SourceBits_24BPP, DestLine, SourceLine_24BPP;
   PRGBTRIPLE  SPDestBits, SPSourceBits_24BPP, SPDestLine, SPSourceLine_24BPP; // specially for 24-to-24 blit
   PBYTE    SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
