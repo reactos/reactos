@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.31 2004/02/08 21:37:52 weiden Exp $
+/* $Id: surface.c,v 1.32 2004/02/14 22:24:54 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -351,15 +351,22 @@ EngCreateBitmap(IN SIZEL Size,
     SurfObj->pvBits = UncompressedBits;
   } else
   {
-    if(Flags & BMF_USERMEM)
+    if (SurfObj->cjBits == 0)
     {
-      SurfObj->pvBits = EngAllocUserMem(SurfObj->cjBits, 0);
-    } else {
-      if(Flags & BMF_NOZEROINIT)
+      SurfObj->pvBits = NULL;
+    }
+    else
+    {
+      if(Flags & BMF_USERMEM)
       {
-        SurfObj->pvBits = EngAllocMem(0, SurfObj->cjBits, 0);
+        SurfObj->pvBits = EngAllocUserMem(SurfObj->cjBits, 0);
       } else {
-        SurfObj->pvBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+        if(Flags & BMF_NOZEROINIT)
+        {
+          SurfObj->pvBits = EngAllocMem(0, SurfObj->cjBits, 0);
+        } else {
+          SurfObj->pvBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+        }
       }
     }
   }
