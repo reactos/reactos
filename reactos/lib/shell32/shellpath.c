@@ -521,8 +521,8 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
 	LPCWSTR lpszShortName,
 	LPCWSTR lpszLongName)
 {
-    FIXME("(%p, %p ,%p):stub.\n",
-     debugstr_w(lpszPathName), debugstr_w(lpszShortName), debugstr_w(lpszLongName));
+    FIXME("(%p, %s, %s ,%s):stub.\n",
+          lpszBuffer, debugstr_w(lpszPathName), debugstr_w(lpszShortName), debugstr_w(lpszLongName));
     return TRUE;
 }
 
