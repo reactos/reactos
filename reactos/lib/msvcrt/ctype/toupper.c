@@ -20,17 +20,13 @@ wchar_t towupper(wchar_t c)
 
 int _toupper(int c)
 {
-   if (_isctype (c, _LOWER))
-      return (c + ('A' - 'a'));
-   return(c);
+   return (c + ('A' - 'a'));
 }
 
 /*
 wchar_t _towupper(wchar_t c)
 {
-   if (iswctype (c, _LOWER))
-      return (c + (L'A' - L'a'));
-   return(c);
+   return (c + (L'A' - L'a'));
 }
 */
 

@@ -20,9 +20,7 @@ int towlower(wint_t c)
 
 int _tolower(int c)
 {
-   if (_isctype (c, _UPPER))
-       return (c - ('A' - 'a'));
-   return(c);
+   return (c - ('A' - 'a'));
 }
 
 /*
@@ -31,9 +29,7 @@ int towupper(wint_t);
 
 wchar_t _towlower(wchar_t c)
 {
-   if (iswctype (c, _UPPER))
-       return (c - (L'A' - L'a'));
-   return(c);
+   return (c - (L'A' - L'a'));
 }
 */
 
