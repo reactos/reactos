@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.7 2004/01/16 23:08:38 mf Exp $
+/* $Id: lang.c,v 1.8 2004/01/16 23:19:16 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1103,7 +1103,7 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 				}
 			case 's':
 				{
-					if(!(dwFlags & TIME_NOSECONDS) || !(dwFlags & TIME_NOMINUTESORSECONDS))
+					if(!(dwFlags & (TIME_NOSECONDS|TIME_NOMINUTESORSECONDS)))
 					{
 					    sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wSecond );
 						MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );				
