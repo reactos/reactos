@@ -22,6 +22,28 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/* FIXME: Added here temporarly until I fix this properly tomorrow */
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlAcquirePebLock(VOID)
+{
+   PPEB Peb = NtCurrentPeb ();
+   Peb->FastPebLockRoutine (Peb->FastPebLock);
+}
+
+/* FIXME: Added here temporarly until I fix this properly tomorrow */
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlReleasePebLock(VOID)
+{
+   PPEB Peb = NtCurrentPeb ();
+   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
+}
+
 /*
  * @implemented
  */
