@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.12 2004/08/22 20:52:28 navaraf Exp $
+/* $Id: conio.c,v 1.13 2004/08/24 17:25:17 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -170,8 +170,8 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   InitializeListHead(&Console->InputEvents);
   InitializeListHead(&Console->ProcessList);
 
-  Console->CodePage = CP_OEMCP;
-  Console->OutputCodePage = CP_OEMCP;
+  Console->CodePage = GetOEMCP();
+  Console->OutputCodePage = GetOEMCP();
 
   SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
   SecurityAttributes.lpSecurityDescriptor = NULL;
@@ -395,63 +395,66 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
 
   for (i = 0; i < Length; i++)
     {
-      switch(Buffer[i])
+      if (Buff->Mode & ENABLE_PROCESSED_OUTPUT)
         {
           /* --- LF --- */
-          case '\n':
-            Buff->CurrentX = 0;
-            ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
-            break;
-
+          if (Buffer[i] == '\n')
+            {
+              Buff->CurrentX = 0;
+              ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+              continue;
+            }
           /* --- BS --- */
-          case '\b':
-            /* Only handle BS if we're not on the first pos of the first line */
-            if (0 != Buff->CurrentX || Buff->ShowY != Buff->CurrentY)
-              {
-                if (0 == Buff->CurrentX)
-                  {
-                    /* slide virtual position up */
-                    Buff->CurrentX = Buff->MaxX - 1;
-                    if (0 == Buff->CurrentY)
-                      {
-                        Buff->CurrentY = Buff->MaxY;
-                      }
-                    else
-                      {
-                        Buff->CurrentY--;
-                      }
-                    if ((0 == UpdateRect.top && UpdateRect.bottom < Buff->CurrentY)
-                        || (0 != UpdateRect.top && Buff->CurrentY < UpdateRect.top))
-                      {
-                        UpdateRect.top = Buff->CurrentY;
-                      }
-                  }
-                else
-                  {
-                     Buff->CurrentX--;
-                  }
-                Offset = 2 * ((Buff->CurrentY * Buff->MaxX) + Buff->CurrentX);
-                SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
-                UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-                UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
-              }
-            break;
-
+          else if (Buffer[i] == '\n')
+            {
+              /* Only handle BS if we're not on the first pos of the first line */
+              if (0 != Buff->CurrentX || Buff->ShowY != Buff->CurrentY)
+                {
+                  if (0 == Buff->CurrentX)
+                    {
+                      /* slide virtual position up */
+                      Buff->CurrentX = Buff->MaxX - 1;
+                      if (0 == Buff->CurrentY)
+                        {
+                          Buff->CurrentY = Buff->MaxY;
+                        }
+                      else
+                        {
+                          Buff->CurrentY--;
+                        }
+                      if ((0 == UpdateRect.top && UpdateRect.bottom < Buff->CurrentY)
+                          || (0 != UpdateRect.top && Buff->CurrentY < UpdateRect.top))
+                        {
+                          UpdateRect.top = Buff->CurrentY;
+                        }
+                    }
+                  else
+                    {
+                       Buff->CurrentX--;
+                    }
+                  Offset = 2 * ((Buff->CurrentY * Buff->MaxX) + Buff->CurrentX);
+                  SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
+                  UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
+                  UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+                }
+                continue;
+            }
           /* --- CR --- */
-          case '\r':
-            Buff->CurrentX = 0;
-            UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-            UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
-            break;
-
+          else if (Buffer[i] == '\r')
+            {
+              Buff->CurrentX = 0;
+              UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
+              UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+              continue;
+            }
           /* --- TAB --- */
-          case '\t':
+          else if (Buffer[i] == '\t')
             {
               UINT EndX;
 
               UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-              EndX = 8 * ((Buff->CurrentX + 8) / 8);
-              if (Buff->MaxX < EndX)
+              EndX = (Buff->CurrentX + 8) & ~7;
+              if (EndX > Buff->MaxX)
                 {
                   EndX = Buff->MaxX;
                 }
@@ -465,29 +468,39 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
               UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX - 1);
               if (Buff->CurrentX == Buff->MaxX)
                 {
-                  Buff->CurrentX = 0;
-                  ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+                  if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
+                    {
+                      Buff->CurrentX = 0;
+                      ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+                    }
+                  else
+                    {
+                      Buff->CurrentX--;
+                    }
                 }
+              continue;
             }
-            break;
-
-          /* --- */
-          default:
-            UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
-            UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
-            Offset = 2 * (((Buff->CurrentY * Buff->MaxX)) + Buff->CurrentX);
-            Buff->Buffer[Offset++] = Buffer[i];
-            if (Attrib)
-              {
-                Buff->Buffer[Offset] = Buff->DefaultAttrib;
-              }
-            Buff->CurrentX++;
-            if (Buff->CurrentX == Buff->MaxX)
-              {
-                Buff->CurrentX = 0;
-                ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
-              }
-            break;
+        }
+      UpdateRect.left = RtlRosMin(UpdateRect.left, Buff->CurrentX);
+      UpdateRect.right = RtlRosMax(UpdateRect.right, (LONG) Buff->CurrentX);
+      Offset = 2 * (((Buff->CurrentY * Buff->MaxX)) + Buff->CurrentX);
+      Buff->Buffer[Offset++] = Buffer[i];
+      if (Attrib)
+        {
+          Buff->Buffer[Offset] = Buff->DefaultAttrib;
+        }
+      Buff->CurrentX++;
+      if (Buff->CurrentX == Buff->MaxX)
+        {
+          if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
+            {
+              Buff->CurrentX = 0;
+              ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+            }
+          else
+            {
+              Buff->CurrentX = CursorStartX;
+            }
         }
     }
 
@@ -1362,6 +1375,7 @@ CSR_API(CsrSetCursor)
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
   LONG OldCursorX, OldCursorY;
+  LONG NewCursorX, NewCursorY;
    
   DPRINT("CsrSetCursor\n");
 
@@ -1384,9 +1398,17 @@ CSR_API(CsrSetCursor)
       return Reply->Status = Status;
     }
 
+  NewCursorX = Request->Data.SetCursorRequest.Position.X;
+  NewCursorY = Request->Data.SetCursorRequest.Position.Y;
+  if (NewCursorX < 0 || NewCursorX >= Buff->MaxX ||
+      NewCursorY < 0 || NewCursorY >= Buff->MaxY)
+    {
+      ConioUnlockScreenBuffer(Buff);
+      return Reply->Status = STATUS_INVALID_PARAMETER;
+    }
   ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY, &OldCursorX, &OldCursorY);
-  Buff->CurrentX = Request->Data.SetCursorRequest.Position.X + Buff->ShowX;
-  Buff->CurrentY = (Request->Data.SetCursorRequest.Position.Y + Buff->ShowY) % Buff->MaxY;
+  Buff->CurrentX = NewCursorX + Buff->ShowX;
+  Buff->CurrentY = (NewCursorY + Buff->ShowY) % Buff->MaxY;
   if (NULL != Console && Buff == Console->ActiveBuffer)
     {
       if (! ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY))

@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.18 2004/07/29 13:54:45 weiden Exp $
+/* $Id: guiconsole.c,v 1.19 2004/08/24 17:25:17 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -81,9 +81,9 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->LineBuffer = (PWCHAR)(GuiData + 1);
 
   GuiData->Font = CreateFontW(12, 0, 0, TA_BASELINE, FW_NORMAL,
-                              FALSE, FALSE, FALSE, ANSI_CHARSET,
+                              FALSE, FALSE, FALSE, OEM_CHARSET,
                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                              DEFAULT_QUALITY, FIXED_PITCH | FF_DONTCARE,
+                              NONANTIALIASED_QUALITY, FIXED_PITCH | FF_DONTCARE,
                               L"Bitstream Vera Sans Mono");
   if (NULL == GuiData->Font)
     {
@@ -316,8 +316,7 @@ GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
                       LastAttribute = Attribute;
                     }
                 }  
-              *((PBYTE) To) = *From;
-              *(((PBYTE) To) + 1) = '\0';
+              MultiByteToWideChar(Console->OutputCodePage, 0, From, 1, To, 1);
               To++;
               From += 2;
             }
@@ -353,7 +352,6 @@ GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
       LeaveCriticalSection(&Buff->Header.Lock);
       InvalidateRect(hWnd, &rc, FALSE);
    }
-
 }
 
 VOID FASTCALL
