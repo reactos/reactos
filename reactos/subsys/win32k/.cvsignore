@@ -1,8 +1,9 @@
 base.tmp
 junk.tmp
 temp.exp
-win32k.coff
 win32k.sys
+win32k.nostrip.sys
+win32k.coff
+win32k.sym
 *.d
 *.o
-*.sym

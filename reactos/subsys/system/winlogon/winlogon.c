@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.12 2002/09/08 10:23:48 chorns Exp $
+/* $Id: winlogon.c,v 1.13 2002/12/27 13:54:28 robd Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 
 #include <wchar.h>
 
-#define NDEBUG
+#define DBG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -64,39 +64,51 @@ BOOLEAN StartServices(VOID)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
    
+   PrintString("WL: Creating new process - \"services.exe\".\n");
+
    Result = CreateProcess(CommandLine,
-			  NULL,
-			  NULL,
-			  NULL,
-			  FALSE,
-			  DETACHED_PROCESS,
-			  NULL,
-			  NULL,
-			  &StartupInfo,
-			  &ProcessInformation);
+                          NULL,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          DETACHED_PROCESS,
+                          NULL,
+                          NULL,
+                          &StartupInfo,
+                          &ProcessInformation);
    if (!Result)
      {
-	PrintString("WL: Failed to execute services\n");
-	return FALSE;
+        PrintString("WL: Failed to execute services\n");
+        return FALSE;
      }
    
    /* wait for event creation (by SCM) for max. 20 seconds */
    for (Count = 0; Count < 20; Count++)
      {
-	Sleep(1000);
+        Sleep(1000);
    
-	ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
-				      FALSE,
-				      "SvcctrlStartEvent_A3725DX");
-	if (ServicesInitEvent != NULL)
-	  {
-	     break;
-	  }
+        //DbgPrint("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
+        ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
+                                      FALSE,
+                                      "SvcctrlStartEvent_A3725DX");
+        if (ServicesInitEvent != NULL)
+          {
+             break;
+          }
      }
    
+   if (ServicesInitEvent == NULL)
+     {
+        DbgPrint("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
+        return FALSE;
+     }
+
    /* wait for event signalization */
+   //DbgPrint("WL: Waiting forever on event handle: %x\n", ServicesInitEvent);
    WaitForSingleObject(ServicesInitEvent, INFINITE);
+   //DbgPrint("WL: Closing event object \"SvcctrlStartEvent_A3725DX\"\n");
    CloseHandle(ServicesInitEvent);
+   DbgPrint("WL: StartServices() Done.\n");
       
    return TRUE;
 }
@@ -110,14 +122,14 @@ BOOLEAN StartLsass(VOID)
    CHAR CommandLine[MAX_PATH];
    
    LsassInitEvent = CreateEvent(NULL,
-				TRUE,
-				FALSE,
-				"\\LsassInitDone");
+                                TRUE,
+                                FALSE,
+                                "\\LsassInitDone");
    
    if (LsassInitEvent == NULL)
      {
-	DbgPrint("Failed to create lsass notification event\n");
-	return(FALSE);
+        DbgPrint("WL: Failed to create lsass notification event\n");
+        return(FALSE);
      }
    
    /* Start the local security authority subsystem (lsass.exe) */
@@ -134,19 +146,19 @@ BOOLEAN StartLsass(VOID)
    StartupInfo.lpReserved2 = 0;
    
    Result = CreateProcess(CommandLine,
-			  NULL,
-			  NULL,
-			  NULL,
-			  FALSE,
-			  DETACHED_PROCESS,
-			  NULL,
-			  NULL,
-			  &StartupInfo,
-			  &ProcessInformation);
+                          NULL,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          DETACHED_PROCESS,
+                          NULL,
+                          NULL,
+                          &StartupInfo,
+                          &ProcessInformation);
    if (!Result)
      {
-	DbgPrint("WL: Failed to execute lsass\n");
-	return(FALSE);
+        DbgPrint("WL: Failed to execute lsass\n");
+        return(FALSE);
      }
    
    DPRINT("WL: Waiting for lsass\n");
@@ -178,19 +190,19 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
    StartupInfo.lpReserved2 = 0;
    
    Result = CreateProcess(CommandLine,
-			  NULL,
-			  NULL,
-			  NULL,
-			  FALSE,
-			  DETACHED_PROCESS,
-			  NULL,
-			  CurrentDirectory,
-			  &StartupInfo,
-			  &ProcessInformation);
+                          NULL,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          DETACHED_PROCESS,
+                          NULL,
+                          CurrentDirectory,
+                          &StartupInfo,
+                          &ProcessInformation);
    if (!Result)
      {
-	DbgPrint("WL: Failed to execute user shell\n");
-	return;
+        DbgPrint("WL: Failed to execute user shell\n");
+        return;
      }
    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
    CloseHandle( ProcessInformation.hProcess );
@@ -199,9 +211,9 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
 
 int STDCALL
 WinMain(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine,
-	int nShowCmd)
+        HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine,
+        int nShowCmd)
 {
 #if 0
   LSA_STRING ProcessName;
@@ -230,7 +242,7 @@ WinMain(HINSTANCE hInstance,
      CreateWindowStationW(L"WinSta0", 0, GENERIC_ALL, NULL);
    if (InteractiveWindowStation == NULL)
      {
-       DbgPrint("Failed to create window station (0x%X)\n", GetLastError());
+       DbgPrint("WL: Failed to create window station (0x%X)\n", GetLastError());
        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
        ExitProcess(1);
      }
@@ -245,40 +257,40 @@ WinMain(HINSTANCE hInstance,
     */
    ApplicationDesktop = 
      CreateDesktopW(L"Default",
-		    NULL,
-		    NULL,
-		    0,      /* FIXME: Set some flags */
-		    GENERIC_ALL,
-		    NULL); 
+                    NULL,
+                    NULL,
+                    0,      /* FIXME: Set some flags */
+                    GENERIC_ALL,
+                    NULL); 
 
    /*
     * Create the winlogon desktop
     */
    WinlogonDesktop = CreateDesktopW(L"Winlogon",
-				    NULL,
-				    NULL,
-				    0,      /* FIXME: Set some flags */
-				    GENERIC_ALL,
-				    NULL);  
+                                    NULL,
+                                    NULL,
+                                    0,      /* FIXME: Set some flags */
+                                    GENERIC_ALL,
+                                    NULL);  
    
    /*
     * Create the screen saver desktop
     */
    ScreenSaverDesktop = CreateDesktopW(L"Screen-Saver",
-				       NULL,
-				       NULL,
-				       0,      /* FIXME: Set some flags */
-				       GENERIC_ALL,
-				       NULL);  
+                                       NULL,
+                                       NULL,
+                                       0,      /* FIXME: Set some flags */
+                                       GENERIC_ALL,
+                                       NULL);  
    
    /*
     * Switch to winlogon desktop
     */
    /* FIXME: Do start up in the application desktop for now. */
    Status = NtSetInformationProcess(NtCurrentProcess(),
-				    ProcessDesktop,
-				    &ApplicationDesktop,
-				    sizeof(ApplicationDesktop));
+                                    ProcessDesktop,
+                                    &ApplicationDesktop,
+                                    sizeof(ApplicationDesktop));
    if (!NT_SUCCESS(Status))
      {
        DbgPrint("WL: Cannot set default desktop for winlogon.\n");
@@ -287,15 +299,23 @@ WinMain(HINSTANCE hInstance,
    Success = SwitchDesktop(ApplicationDesktop);
    if (!Success)
      {
-       DbgPrint("Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
+       DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
      }
    
    AllocConsole();
    SetConsoleTitle( "Winlogon" );
    /* start system processes (services.exe & lsass.exe) */
-   StartServices();
+   Success = StartServices();
+   if (!Success)
+     {
+       DbgPrint("WL: Failed to Start Services (0x%X)\n", GetLastError());
+     }
 #if 0
-   StartLsass();
+   Success = StartLsass();
+   if (!Success)
+     {
+       DbgPrint("WL: Failed to Start Security System (0x%X)\n", GetLastError());
+     }
 #endif
    
    /* FIXME: What name does the real WinLogon use? */
@@ -304,8 +324,8 @@ WinMain(HINSTANCE hInstance,
    Status = LsaRegisterLogonProcess(&ProcessName, &LsaHandle, &Mode);
    if (!NT_SUCCESS(Status))
      {
-       DbgPrint("WL: Failed to connect to lsass\n");
-	return(1);
+        DbgPrint("WL: Failed to connect to lsass\n");
+        return(1);
      }
 #endif
    
@@ -321,38 +341,38 @@ WinMain(HINSTANCE hInstance,
 #if 0
        /* Display login prompt */
        WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-		    LoginPrompt,
-		    strlen(LoginPrompt),  // wcslen(LoginPrompt),
-		    &Result,
-		    NULL);
+                    LoginPrompt,
+                    strlen(LoginPrompt),  // wcslen(LoginPrompt),
+                    &Result,
+                    NULL);
        i = 0;
        do
-	 {
-	   ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-		       &LoginName[i],
-		       1,
-		       &Result,
-		       NULL);
-	   i++;
-	 } while (LoginName[i - 1] != '\n');
+         {
+           ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+                       &LoginName[i],
+                       1,
+                       &Result,
+                       NULL);
+           i++;
+         } while (LoginName[i - 1] != '\n');
        LoginName[i - 1] = 0;
        
-	/* Display password prompt */
+        /* Display password prompt */
        WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-		    PasswordPrompt,
-		    strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
-		    &Result,
-		    NULL);
+                    PasswordPrompt,
+                    strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
+                    &Result,
+                    NULL);
        i = 0;
        do
-	 {
-	   ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-		       &Password[i],
-		       1,
-		       &Result,
-		       NULL);
-	   i++;
-	 } while (Password[i - 1] != '\n');
+         {
+           ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+                       &Password[i],
+                       1,
+                       &Result,
+                       NULL);
+           i++;
+         } while (Password[i - 1] != '\n');
        Password[i - 1] =0;
 #endif
        DoLoginUser(LoginName, Password);
