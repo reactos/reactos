@@ -168,6 +168,12 @@ VBEStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket);
 
+BOOLEAN STDCALL
+VBEResetHw(
+   PVOID DeviceExtension,
+   ULONG Columns,
+   ULONG Rows);
+
 VP_STATUS STDCALL
 VBEGetPowerState(
    PVOID HwDeviceExtension,

@@ -38,6 +38,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
    InitData.HwFindAdapter = VBEFindAdapter;
    InitData.HwInitialize = VBEInitialize;
    InitData.HwStartIO = VBEStartIO;
+   InitData.HwResetHw = VBEResetHw;
    InitData.HwGetPowerState = VBEGetPowerState;
    InitData.HwSetPowerState = VBESetPowerState;
    InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
@@ -511,6 +512,21 @@ VBEStartIO(
 }
 
 /*
+ * VBEResetHw
+ *
+ * This function is called to reset the hardware to a known state.
+ */
+
+BOOLEAN STDCALL
+VBEResetHw(
+   PVOID DeviceExtension,
+   ULONG Columns,
+   ULONG Rows)
+{
+   return VBEResetDevice(DeviceExtension, NULL);
+}
+
+/*
  * VBEGetPowerState
  *
  * Queries whether the device can support the requested power state.
@@ -582,12 +598,13 @@ VBEResetDevice(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock)
 {
-   VIDEO_X86_BIOS_ARGUMENTS BiosRegisters;
+   KV86M_REGISTERS BiosRegisters;
 
+   InitializeVideoAddressSpace();
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = 0x4F02;
    BiosRegisters.Ebx = 0x3;
-   VideoPortInt10(NULL, &BiosRegisters);
+   Ke386CallBios(0x10, &BiosRegisters);
    return TRUE;
 }
 
