@@ -1,10 +1,11 @@
-/* $Id: unicode.c,v 1.31 2003/08/20 04:18:31 royce Exp $
+/* $Id: unicode.c,v 1.32 2003/09/04 06:41:35 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/unicode.c
  * PURPOSE:         String functions
- * PROGRAMMER:      Jason Filby (jasonfilby@yahoo.com)
+ * PROGRAMMERS:     Jason Filby (jasonfilby@yahoo.com)
+ *                  Vizzini (vizzini@plasmic.com)
  * UPDATE HISTORY:
  *                  Created 10/08/98
  */
@@ -1196,96 +1197,77 @@ RtlUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
  */
 NTSTATUS
 STDCALL
-RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
+RtlUnicodeStringToInteger(IN PUNICODE_STRING InString,
 			  IN ULONG Base,
 			  OUT PULONG Value)
 {
-	PWCHAR Str;
-	ULONG lenmin = 0;
-	ULONG i;
-	ULONG Val;
-	BOOLEAN addneg = FALSE;
+  BOOLEAN Negative = 0;
+  PWCHAR String = InString->Buffer;
+  ULONG MaxLen = InString->Length / sizeof(WCHAR);
 
-    *Value = 0;
-	Str = String->Buffer;
+  *Value = 0;
 
-	for (i = 0; i < String->Length / sizeof(WCHAR); i++)
-	{
-		if (*Str == L'b')
-		{
-			Base = 2;
-			lenmin++;
-		}
-		else if (*Str == L'o')
-		{
-			Base = 8;
-			lenmin++;
-		}
-		else if (*Str == L'd')
-		{
-			Base = 10;
-			lenmin++;
-		}
-		else if (*Str == L'x')
-		{
-			Base = 16;
-			lenmin++;
-		}
-		else if (*Str == L'+')
-		{
-			lenmin++;
-		}
-		else if (*Str == L'-')
-		{
-			addneg = TRUE;
-			lenmin++;
-		}
-		else if ((*Str > L'1') && (Base == 2))
-		{
-			return STATUS_INVALID_PARAMETER;
-		}
-		else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
-		{
-			return STATUS_INVALID_PARAMETER;
-		}
-		else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
-		{
-			return STATUS_INVALID_PARAMETER;
-		}
-		/*
-		else if ((((*Str > L'9') || (*Str < L'0')) ||
-		          ((towupper (*Str) > L'F') ||
-		           (towupper (*Str) < L'A'))) && (Base == 16))
-		*/
-		else if ((*Str < '0' || 
-				 (*Str > '9' && *Str < 'A') || 
-				 (*Str > 'F' && *Str < 'a') || 
-				 *Str > 'f') && 
-			  (Base == 16))
-		{
-			return STATUS_INVALID_PARAMETER;
-		}
-		else
-			Str++;
-	}
+  if(*String == L'-')
+    {
+      Negative++;
+      String++;
+    }
+  else if(*String == L'+')
+    {
+      Negative = 0;
+      String++;
+    }
 
-	Str = String->Buffer + lenmin;
+  if(!Base)
+    {
+      if(*String == L'b')
+        {
+          Base = 2;
+          String++;
+        }
+      else if(*String == L'o')
+        {
+          Base = 8;
+          String++;
+        }
+      else if(*String == L'x')
+        {
+          Base = 16;
+          String++;
+        }
+      else
+        Base = 10;
+    }
 
-	if (Base == 0)
-		Base = 10;
+  while(*String && MaxLen)
+    {
+      short c = *String;;
+      String++;
+      MaxLen--;
 
-	while (iswxdigit (*Str) &&
-	       (Val = iswdigit (*Str) ? *Str - L'0' : (iswlower (*Str)
-	        ? toupper (*Str) : *Str) - L'A' + 10) < Base)
-	{
-		*Value = *Value * Base + Val;
-		Str++;
-	}
+      if(c >= 'a' && c <= 'f')
+        c -= 'a' - 'A';
 
-	if (addneg == TRUE)
-		*Value *= -1;
+      /* validate chars for bases <= 10 */
+      if( Base <= 10  && (c < '0' || c > '9') )
+        return STATUS_INVALID_PARAMETER;
 
-	return STATUS_SUCCESS;
+      /* validate chars for base 16 */
+      else if( (c < '0' || c > '9') && (c < 'A' || c > 'F') )
+        return STATUS_INVALID_PARAMETER;
+
+      /* perhaps someday we'll validate additional bases */
+
+      if(c >= 'A' && c <= 'F')
+        *Value = *Value * Base + c - 'A' + 10;
+      else
+        *Value = *Value * Base + c - '0';
+    }
+
+  if(Negative)
+    *Value *= -1;
+
+  return STATUS_SUCCESS;
 }
 
 
