@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.15 2000/08/30 19:33:28 dwelch Exp $
+/* $Id: halinit.c,v 1.16 2000/10/22 13:27:34 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
 #include <internal/ntoskrnl.h>
-#include <internal/halio.h>
 
 #define NDEBUG
 #include <internal/debug.h>

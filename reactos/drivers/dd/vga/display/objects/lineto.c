@@ -1,7 +1,6 @@
 #include "../vgaddi.h"
 #include "../vgavideo/vgavideo.h"
 
-#include "../../../../ntoskrnl/include/internal/i386/io.h"
 
 BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
                   LONG x1, LONG y1, LONG x2, LONG y2,

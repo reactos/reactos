@@ -65,3 +65,4 @@ static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
 
+void get_masks(int x, int w);

@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.37 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: mm.c,v 1.38 2000/10/22 13:28:20 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/hal/io.h>
 #include <internal/i386/segment.h>
 #include <internal/stddef.h>
 #include <internal/mm.h>

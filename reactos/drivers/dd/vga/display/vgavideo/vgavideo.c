@@ -129,7 +129,7 @@ VOID vgaPreCalc()
    }
 }
 
-static void
+void
 get_masks(int x, int w)
 {
 	register int tmp;

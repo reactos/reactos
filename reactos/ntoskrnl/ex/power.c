@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/hal/io.h>
 #include <internal/ps.h>
 #include <internal/io.h>
 #include <internal/mm.h>
