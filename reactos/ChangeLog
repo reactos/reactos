@@ -15,7 +15,7 @@
 	* regtests/win32base/file-1.c: Move ...
 	* regtests/win32base/tests/file-1.c: ... here.
 
-2003-12-06	Martin Fuchs  <martin-fuchs@gmx.net>
+2003-12-06  Martin Fuchs  <martin-fuchs@gmx.net>
 	* Doxyfile, Makefile: initial doxygen configuration
 	* drivers/Doxyfile, drivers/Makefile: Ditto.
 	* ntoskrnl/Doxyfile, ntoskrnl/Makefile: Ditto.
