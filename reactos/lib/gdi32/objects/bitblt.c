@@ -1,3 +1,15 @@
+/* $Id: bitblt.c,v 1.17 2004/02/14 00:31:39 sedwards Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/gdi32/object/bitblt.c
+ * PURPOSE:         
+ * PROGRAMMER:
+ *
+ * GdiTransparentBlt Copyright Kevin Koltzau
+ * adapted from WINE 2-13-04
+ */
+
 #ifdef UNICODE
 #undef UNICODE
 #endif
@@ -370,6 +382,95 @@ PolyPatBlt(HDC hDC,DWORD dwRop,PPATRECT pRects,int cRects,ULONG Reserved)
 	return NtGdiPolyPatBlt(hDC,dwRop,pRects,cRects,Reserved);
 }
 
+/******************************************************************************
+ *           GdiTransparentBlt [GDI32.@]
+ *
+ * @implemented
+ */
+WINBOOL
+STDCALL
+GdiTransparentBlt( HDC hdcDst, int xDst, int yDst, int cxDst, int cyDst,
+                            HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,
+                            COLORREF TransColor )
+{
+    BOOL ret = FALSE;
+    HDC hdcWork;
+    HBITMAP bmpWork;
+    HGDIOBJ oldWork;
+    HDC hdcMask = NULL;
+    HBITMAP bmpMask = NULL;
+    HBITMAP oldMask = NULL;
+    COLORREF oldBackground;
+    COLORREF oldForeground;
+    int oldStretchMode;
+
+    if(cxDst < 0 || cyDst < 0 || cxSrc < 0 || cySrc < 0) {
+        DPRINT("Can not mirror\n");
+        return FALSE;
+    }
+
+    oldBackground = SetBkColor(hdcDst, RGB(255,255,255));
+    oldForeground = SetTextColor(hdcDst, RGB(0,0,0));
+
+    /* Stretch bitmap */
+    oldStretchMode = GetStretchBltMode(hdcSrc);
+    if(oldStretchMode == BLACKONWHITE || oldStretchMode == WHITEONBLACK)
+        SetStretchBltMode(hdcSrc, COLORONCOLOR);
+    hdcWork = CreateCompatibleDC(hdcDst);
+    bmpWork = CreateCompatibleBitmap(hdcDst, cxDst, cyDst);
+    oldWork = SelectObject(hdcWork, bmpWork);
+    if(!StretchBlt(hdcWork, 0, 0, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, SRCCOPY)) {
+        DPRINT("Failed to stretch\n");
+        goto error;
+    }
+    SetBkColor(hdcWork, TransColor);
+
+    /* Create mask */
+    hdcMask = CreateCompatibleDC(hdcDst);
+    bmpMask = CreateCompatibleBitmap(hdcMask, cxDst, cyDst);
+    oldMask = SelectObject(hdcMask, bmpMask);
+    if(!BitBlt(hdcMask, 0, 0, cxDst, cyDst, hdcWork, 0, 0, SRCCOPY)) {
+        DPRINT("Failed to create mask\n");
+        goto error;
+    }
+
+    /* Replace transparent color with black */
+    SetBkColor(hdcWork, RGB(0,0,0));
+    SetTextColor(hdcWork, RGB(255,255,255));
+    if(!BitBlt(hdcWork, 0, 0, cxDst, cyDst, hdcMask, 0, 0, SRCAND)) {
+        DPRINT("Failed to mask out background\n");
+        goto error;
+    }
+
+    /* Replace non-transparent area on destination with black */
+    if(!BitBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcMask, 0, 0, SRCAND)) {
+        DPRINT("Failed to clear destination area\n");
+        goto error;
+    }
+
+    /* Draw the image */
+    if(!BitBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcWork, 0, 0, SRCPAINT)) {
+        DPRINT("Failed to paint image\n");
+        goto error;
+    }
+
+    ret = TRUE;
+error:
+    SetStretchBltMode(hdcSrc, oldStretchMode);
+    SetBkColor(hdcDst, oldBackground);
+    SetTextColor(hdcDst, oldForeground);
+    if(hdcWork) {
+        SelectObject(hdcWork, oldWork);
+        DeleteDC(hdcWork);
+    }
+    if(bmpWork) DeleteObject(bmpWork);
+    if(hdcMask) {
+        SelectObject(hdcMask, oldMask);
+        DeleteDC(hdcMask);
+    }
+    if(bmpMask) DeleteObject(bmpMask);
+    return ret;
+}
 
 /*
 

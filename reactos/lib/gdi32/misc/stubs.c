@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.48 2004/02/08 21:37:52 weiden Exp $
+/* $Id: stubs.c,v 1.49 2004/02/14 00:31:38 sedwards Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2342,17 +2342,6 @@ GdiSetLastError(DWORD dwErrCode)
 BOOL
 STDCALL
 GdiSetPixelFormat(HDC hdc,int ipfd)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiTransparentBlt(HDC hdcDst, int xDst, int yDst, int cxDst, int cyDst,HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,COLORREF TransColor)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
