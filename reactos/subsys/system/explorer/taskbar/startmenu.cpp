@@ -1360,6 +1360,7 @@ void StartMenuRoot::TrackStartmenu()
 
 	 // show previously hidden start menu
 	ShowWindow(hwnd, SW_SHOW);
+	SetForegroundWindow(hwnd);
 
 	while(IsWindow(hwnd)) {
 		if (!GetMessage(&msg, 0, 0, 0)) {

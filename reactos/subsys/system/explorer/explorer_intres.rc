@@ -669,6 +669,7 @@ BEGIN
     BEGIN
         MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
         MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Task Manager...",            ID_TASKMGR
     END
 END
 
