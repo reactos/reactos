@@ -132,12 +132,6 @@ BOOL  FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
 
 PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
-/* objects/objconv.c */
-
-HBITMAP
-FASTCALL
-BitmapToSurf ( PBITMAPOBJ BitmapObj, HDEV GDIDevice );
-
 #endif /* _WIN32K_OBJECT_H */
 
 /* EOF */

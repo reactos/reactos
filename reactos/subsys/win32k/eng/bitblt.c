@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.55 2004/05/14 22:56:18 gvg Exp $
+/* $Id: bitblt.c,v 1.56 2004/07/03 13:55:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,9 +29,7 @@
 #include <w32k.h>
 
 typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
-                                        SURFGDI* OutputGDI,
                                         SURFOBJ* InputObj,
-                                        SURFGDI* InputGDI,
                                         SURFOBJ* Mask,
                                         XLATEOBJ* ColorTranslation,
                                         RECTL* OutputRect,
@@ -41,9 +39,7 @@ typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         POINTL* BrushOrigin,
                                         ROP4 Rop4);
 typedef BOOLEAN STDCALL (*PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
-                                            SURFGDI* OutputGDI,
                                             SURFOBJ* InputObj,
-                                            SURFGDI* InputGDI,
                                             SURFOBJ* Mask,
                                             CLIPOBJ* ClipRegion,
                                             XLATEOBJ* ColorTranslation,
@@ -78,9 +74,7 @@ BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 
 static BOOLEAN STDCALL
 BltMask(SURFOBJ* Dest,
-	SURFGDI* DestGDI,
 	SURFOBJ* Source,
-	SURFGDI* SourceGDI,
 	SURFOBJ* Mask, 
 	XLATEOBJ* ColorTranslation,
 	RECTL* DestRect,
@@ -116,11 +110,10 @@ BltMask(SURFOBJ* Dest,
          GDIBRUSHOBJ,
          BrushObject);
 
+      PatternSurface = GdiBrush->hbmPattern;
       PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->hbmPattern);
-      PatternSurface = BitmapToSurf(PatternBitmap, Dest->hdev);
-      BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
 
-      PatternObj = (SURFOBJ*)AccessUserObject((ULONG)PatternSurface);
+      PatternObj = &PatternBitmap->SurfObj;
       PatternWidth = PatternObj->sizlBitmap.cx;
       PatternHeight = PatternObj->sizlBitmap.cy;
    }
@@ -140,11 +133,13 @@ BltMask(SURFOBJ* Dest,
          {
             if (PatternSurface == NULL)
             {
-               DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+               DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+                  Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
             }
             else
             {
-               DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j,
+               DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+                  Dest, DestRect->left + i, DestRect->top + j,
                   DIB_1BPP_GetPixel(PatternObj, (DestRect->left + i) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack);
             }
          }
@@ -159,16 +154,14 @@ BltMask(SURFOBJ* Dest,
    }
 
    if (PatternSurface != NULL)
-      EngDeleteSurface((HSURF)PatternSurface);
+      BITMAPOBJ_UnlockBitmap(PatternSurface);
 
    return TRUE;
 }
 
 static BOOLEAN STDCALL
 BltPatCopy(SURFOBJ* Dest,
-	   SURFGDI* DestGDI,
 	   SURFOBJ* Source,
-	   SURFGDI* SourceGDI,
 	   SURFOBJ* Mask, 
 	   XLATEOBJ* ColorTranslation,
 	   RECTL* DestRect,
@@ -186,7 +179,8 @@ BltPatCopy(SURFOBJ* Dest,
   LineWidth  = DestRect->right - DestRect->left;
   for (y = DestRect->top; y < DestRect->bottom; y++)
   {
-    DestGDI->DIB_HLine(Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
+    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_HLine(
+      Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
   }
 
   return TRUE;
@@ -194,9 +188,7 @@ BltPatCopy(SURFOBJ* Dest,
 
 static BOOLEAN STDCALL
 CallDibBitBlt(SURFOBJ* OutputObj,
-              SURFGDI* OutputGDI,
               SURFOBJ* InputObj,
-              SURFGDI* InputGDI,
               SURFOBJ* Mask,
               XLATEOBJ* ColorTranslation,
               RECTL* OutputRect,
@@ -215,7 +207,9 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     {
       RealBrushOrigin = *BrushOrigin;
     }
-  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, Brush, RealBrushOrigin, ColorTranslation, Rop4);
+
+  return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(
+    OutputObj, InputObj, OutputRect, InputPoint, Brush, RealBrushOrigin, ColorTranslation, Rop4);
 }
 
 INT abs(INT nm);
@@ -240,8 +234,6 @@ EngBitBlt(SURFOBJ *DestObj,
   RECTL              CombinedRect;
   RECT_ENUM          RectEnum;
   BOOL               EnumMore;
-  SURFGDI*           OutputGDI;
-  SURFGDI*           InputGDI;
   POINTL             InputPoint;
   RECTL              InputRect;
   RECTL              OutputRect;
@@ -299,15 +291,6 @@ EngBitBlt(SURFOBJ *DestObj,
     InputPoint.y = 0;
     }
 
-  if (NULL != InputObj)
-    {
-    InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
-    }
-  else
-    {
-      InputGDI = NULL;
-    }
-
   OutputRect = *DestRect;
   if (NULL != ClipRegion)
     {
@@ -362,11 +345,6 @@ EngBitBlt(SURFOBJ *DestObj,
   else
     AdjustedBrushOrigin = Translate;
 
-  if (NULL != OutputObj)
-    {
-    OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
-    }
-
   // Determine clipping type
   if (ClipRegion == (CLIPOBJ *) NULL)
   {
@@ -399,7 +377,7 @@ EngBitBlt(SURFOBJ *DestObj,
   switch(clippingType)
   {
     case DC_TRIVIAL:
-      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                            &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
       break;
     case DC_RECT:
@@ -411,7 +389,7 @@ EngBitBlt(SURFOBJ *DestObj,
       EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
       break;
     case DC_COMPLEX:
@@ -445,7 +423,7 @@ EngBitBlt(SURFOBJ *DestObj,
 	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
 	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+	      Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
 	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4) &&
 	            Ret;
 	    }
@@ -462,9 +440,9 @@ EngBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngBitBlt(SURFOBJ *DestObj,
-             SURFOBJ *SourceObj,
-             SURFOBJ *Mask,
+IntEngBitBlt(BITMAPOBJ *DestObj,
+             BITMAPOBJ *SourceObj,
+             BITMAPOBJ *MaskObj,
              CLIPOBJ *ClipRegion,
              XLATEOBJ *ColorTranslation,
              RECTL *DestRect,
@@ -475,12 +453,13 @@ IntEngBitBlt(SURFOBJ *DestObj,
              ROP4 Rop4)
 {
   BOOLEAN ret;
-  SURFGDI *DestGDI;
-  SURFGDI *SourceGDI;
   RECTL InputClippedRect;
   RECTL OutputRect;
   POINTL InputPoint;
   BOOLEAN UsesSource;
+  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
+  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
 
   InputClippedRect = *DestRect;
   if (InputClippedRect.right < InputClippedRect.left)
@@ -501,7 +480,6 @@ IntEngBitBlt(SURFOBJ *DestObj,
           return FALSE;
         }
       InputPoint = *SourcePoint;
-      SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
 
       /* Make sure we don't try to copy anything outside the valid source region */
       if (InputPoint.x < 0)
@@ -514,13 +492,13 @@ IntEngBitBlt(SURFOBJ *DestObj,
           InputClippedRect.top -= InputPoint.y;
           InputPoint.y = 0;
         }
-      if (SourceObj->sizlBitmap.cx < InputPoint.x + InputClippedRect.right - InputClippedRect.left)
+      if (SourceSurf->sizlBitmap.cx < InputPoint.x + InputClippedRect.right - InputClippedRect.left)
         {
-          InputClippedRect.right = InputClippedRect.left + SourceObj->sizlBitmap.cx - InputPoint.x;
+          InputClippedRect.right = InputClippedRect.left + SourceSurf->sizlBitmap.cx - InputPoint.x;
         }
-      if (SourceObj->sizlBitmap.cy < InputPoint.y + InputClippedRect.bottom - InputClippedRect.top)
+      if (SourceSurf->sizlBitmap.cy < InputPoint.y + InputClippedRect.bottom - InputClippedRect.top)
         {
-          InputClippedRect.bottom = InputClippedRect.top + SourceObj->sizlBitmap.cy - InputPoint.y;
+          InputClippedRect.bottom = InputClippedRect.top + SourceSurf->sizlBitmap.cy - InputPoint.y;
         }
 
       if (InputClippedRect.right < InputClippedRect.left ||
@@ -549,40 +527,36 @@ IntEngBitBlt(SURFOBJ *DestObj,
 
   if (UsesSource)
     {
-    MouseSafetyOnDrawStart(SourceObj, SourceGDI, InputPoint.x, InputPoint.y,
+    MouseSafetyOnDrawStart(SourceSurf, InputPoint.x, InputPoint.y,
                            (InputPoint.x + abs(DestRect->right - DestRect->left)),
 			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
     }
 
   /* No success yet */
   ret = FALSE;
-  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  MouseSafetyOnDrawStart(DestObj, DestGDI, OutputRect.left, OutputRect.top,
+  MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
   /* Call the driver's DrvBitBlt if available */
-  if (NULL != DestGDI->BitBlt)
+  if (DestObj->flHooks & HOOK_BITBLT)
     {
-      IntLockGDIDriver(DestGDI);
-      ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+      ret = GDIDEVFUNCS(DestSurf).BitBlt(
+                            DestSurf, SourceSurf, MaskSurf, ClipRegion, ColorTranslation,
                             &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
                             Rop4);
-      IntUnLockGDIDriver(DestGDI);
     }
 
   if (! ret)
     {
-      IntLockGDIDriver(DestGDI);
-      ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+      ret = EngBitBlt(DestSurf, SourceSurf, MaskSurf, ClipRegion, ColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
                       Rop4);
-      IntUnLockGDIDriver(DestGDI);
     }
 
-  MouseSafetyOnDrawEnd(DestObj, DestGDI);
+  MouseSafetyOnDrawEnd(DestSurf);
   if (UsesSource)
     {
-    MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
+    MouseSafetyOnDrawEnd(SourceSurf);
     }
 
   return ret;
@@ -590,9 +564,7 @@ IntEngBitBlt(SURFOBJ *DestObj,
 
 static BOOLEAN STDCALL
 CallDibStretchBlt(SURFOBJ* OutputObj,
-                  SURFGDI* OutputGDI,
                   SURFOBJ* InputObj,
-                  SURFGDI* InputGDI,
                   SURFOBJ* Mask,
 	          CLIPOBJ* ClipRegion,
                   XLATEOBJ* ColorTranslation,
@@ -611,7 +583,8 @@ CallDibStretchBlt(SURFOBJ* OutputObj,
     {
       RealBrushOrigin = *BrushOrigin;
     }
-  return OutputGDI->DIB_StretchBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputRect, MaskOrigin, RealBrushOrigin, ClipRegion, ColorTranslation, Mode);
+  return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_StretchBlt(
+    OutputObj, InputObj, OutputRect, InputRect, MaskOrigin, RealBrushOrigin, ClipRegion, ColorTranslation, Mode);
 }
 
 
@@ -633,8 +606,6 @@ EngStretchBlt(
 {
   // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
   
-  SURFGDI*           OutputGDI;
-  SURFGDI*           InputGDI;
   POINTL             InputPoint;
   RECTL              InputRect;
   RECTL              OutputRect;
@@ -660,15 +631,6 @@ EngStretchBlt(
   InputPoint.x = InputRect.left + Translate.x;
   InputPoint.y = InputRect.top + Translate.y;
  
-  if (NULL != InputObj)
-    {
-      InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
-    }
-  else
-    {
-      InputGDI = NULL;
-    }
-
   OutputRect = *prclDest;
 
   /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
@@ -700,11 +662,6 @@ EngStretchBlt(
       AdjustedBrushOrigin = Translate;
     }
 
-  if (NULL != OutputObj)
-    {
-      OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
-    }
-
   if (Mask != NULL)
     {
       //BltRectFunc = BltMask;
@@ -720,7 +677,7 @@ EngStretchBlt(
     }
 
 
-  Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ClipRegion,
+  Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ClipRegion,
                        ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
                        &AdjustedBrushOrigin, Mode);
 
@@ -731,23 +688,24 @@ EngStretchBlt(
 }
 
 BOOL STDCALL
-IntEngStretchBlt(SURFOBJ *DestObj,
-             SURFOBJ *SourceObj,
-             SURFOBJ *Mask,
-             CLIPOBJ *ClipRegion,
-             XLATEOBJ *ColorTranslation,
-             RECTL *DestRect,
-             RECTL *SourceRect,
-             POINTL *pMaskOrigin,
-             BRUSHOBJ *Brush,
-             POINTL *BrushOrigin,
-             ULONG Mode)
+IntEngStretchBlt(BITMAPOBJ *DestObj,
+                 BITMAPOBJ *SourceObj,
+                 BITMAPOBJ *MaskObj,
+                 CLIPOBJ *ClipRegion,
+                 XLATEOBJ *ColorTranslation,
+                 RECTL *DestRect,
+                 RECTL *SourceRect,
+                 POINTL *pMaskOrigin,
+                 BRUSHOBJ *Brush,
+                 POINTL *BrushOrigin,
+                 ULONG Mode)
 {
   BOOLEAN ret;
-  SURFGDI *DestGDI;
-  SURFGDI *SourceGDI;
   COLORADJUSTMENT ca;
   POINT MaskOrigin;
+  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
+  SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
 
   if (pMaskOrigin != NULL)
     {
@@ -756,43 +714,40 @@ IntEngStretchBlt(SURFOBJ *DestObj,
 
   if (NULL != SourceObj)
     {
-    SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
-    MouseSafetyOnDrawStart(SourceObj, SourceGDI, SourceRect->left, SourceRect->top,
+    MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
                            (SourceRect->left + abs(SourceRect->right - SourceRect->left)),
 			   (SourceRect->top + abs(SourceRect->bottom - SourceRect->top)));
     }
 
   /* No success yet */
   ret = FALSE;
-  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  MouseSafetyOnDrawStart(DestObj, DestGDI, DestRect->left, DestRect->top,
+  MouseSafetyOnDrawStart(DestSurf, DestRect->left, DestRect->top,
                          DestRect->right, DestRect->bottom);
 
   /* Prepare color adjustment */
 
   /* Call the driver's DrvStretchBlt if available */
-  if (NULL != DestGDI->StretchBlt)
+  if (DestObj->flHooks & HOOK_STRETCHBLT)
     {
       /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
       SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC */
       // FIXME: MaskOrigin is always NULL !
-      IntLockGDIDriver(DestGDI);
-      ret = DestGDI->StretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+      ret = GDIDEVFUNCS(DestSurf).StretchBlt(
+                            DestSurf, SourceSurf, MaskSurf, ClipRegion, ColorTranslation,
                             &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
-      IntUnLockGDIDriver(DestGDI);
     }
 
   if (! ret)
     {
       // FIXME: see previous fixme
-      ret = EngStretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+      ret = EngStretchBlt(DestSurf, SourceSurf, MaskSurf, ClipRegion, ColorTranslation,
                           &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
     }
 
-  MouseSafetyOnDrawEnd(DestObj, DestGDI);
-  if (NULL != SourceObj)
+  MouseSafetyOnDrawEnd(DestSurf);
+  if (NULL != SourceSurf)
     {
-    MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
+    MouseSafetyOnDrawEnd(SourceSurf);
     }
 
   return ret;
@@ -803,9 +758,7 @@ IntEngStretchBlt(SURFOBJ *DestObj,
 /* renders the alpha mask bitmap */
 static BOOLEAN STDCALL
 AlphaBltMask(SURFOBJ* Dest,
-	SURFGDI* DestGDI,
 	SURFOBJ* Source,
-	SURFGDI* SourceGDI,
 	SURFOBJ* Mask, 
 	XLATEOBJ* ColorTranslation,
 	XLATEOBJ* SrcColorTranslation,
@@ -840,11 +793,12 @@ AlphaBltMask(SURFOBJ* Dest,
 		{
 			if(*lMask == 0xff)
 			{
-				DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+				DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+					Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
 			}
 			else
 			{
-				Background = DIB_GetSource(Dest, DestGDI, DestRect->left + i, DestRect->top + j, SrcColorTranslation);
+				Background = DIB_GetSource(Dest, DestRect->left + i, DestRect->top + j, SrcColorTranslation);
 
 				NewColor = 
 				     RGB((*lMask * (r - GetRValue(Background)) >> 8) + GetRValue(Background),
@@ -852,7 +806,8 @@ AlphaBltMask(SURFOBJ* Dest,
 				         (*lMask * (b - GetBValue(Background)) >> 8) + GetBValue(Background));
 				
 				Background = XLATEOBJ_iXlate(ColorTranslation, NewColor);
-				DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Background);
+				DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+					Dest, DestRect->left + i, DestRect->top + j, Background);
 			}
 		}
 		  lMask++;
@@ -883,8 +838,6 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   RECTL              CombinedRect;
   RECT_ENUM          RectEnum;
   BOOL               EnumMore;
-  SURFGDI*           OutputGDI;
-  SURFGDI*           InputGDI;
   POINTL             InputPoint;
   RECTL              InputRect;
   RECTL              OutputRect;
@@ -898,7 +851,6 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   unsigned           i;
   POINTL             Pt;
   ULONG              Direction;
-  SURFGDI*           DestGDI;
   POINTL             AdjustedBrushOrigin;
 
   if (NULL != SourcePoint)
@@ -916,11 +868,8 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
-  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  IntLockGDIDriver(DestGDI);
   if (! IntEngEnter(&EnterLeaveSource, NULL, &InputRect, TRUE, &Translate, &InputObj))
     {
-    IntUnLockGDIDriver(DestGDI);
     return FALSE;
     }
 
@@ -933,15 +882,6 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     {
     InputPoint.x = 0;
     InputPoint.y = 0;
-    }
-
-  if (NULL != InputObj)
-    {
-    InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
-    }
-  else
-    {
-      InputGDI = NULL;
     }
 
   OutputRect = *DestRect;
@@ -976,14 +916,12 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
     {
     IntEngLeave(&EnterLeaveSource);
-    IntUnLockGDIDriver(DestGDI);
     return TRUE;
     }
 
   if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
     {
     IntEngLeave(&EnterLeaveSource);
-    IntUnLockGDIDriver(DestGDI);
     return FALSE;
     }
 
@@ -1000,11 +938,6 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   else
     AdjustedBrushOrigin = Translate;
 
-  if (NULL != OutputObj)
-    {
-    OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
-    }
-
   // Determine clipping type
   if (ClipRegion == (CLIPOBJ *) NULL)
   {
@@ -1017,10 +950,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   {
     case DC_TRIVIAL:
       if(Mask->iBitmapFormat == BMF_8BPP)
-        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
                            &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
-        Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+        Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
                            &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
       break;
     case DC_RECT:
@@ -1033,10 +966,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       if(Mask->iBitmapFormat == BMF_8BPP)
-        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
-        Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+        Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
       break;
     case DC_COMPLEX:
@@ -1071,10 +1004,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
 	      if(Mask->iBitmapFormat == BMF_8BPP)
-	        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+	        Ret = AlphaBltMask(OutputObj, InputObj, Mask, DestColorTranslation, SourceColorTranslation,
 	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin) && Ret;
               else
-                Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+                Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
                                    &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC) && Ret;
 	    }
 	}
@@ -1086,11 +1019,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
 
-  IntUnLockGDIDriver(DestGDI);
-
   /* Dummy BitBlt to let driver know that something has changed.
      0x00AA0029 is the Rop for D (no-op) */
-  IntEngBitBlt(DestObj, NULL, Mask, ClipRegion, DestColorTranslation,
+  /* FIXME: Remove the typecast! */
+  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
                DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, ROP_NOOP);
 
   return Ret;
@@ -1109,7 +1041,6 @@ IntEngMaskBlt(SURFOBJ *DestObj,
              POINTL *BrushOrigin)
 {
   BOOLEAN ret;
-  SURFGDI *DestGDI;
   RECTL OutputRect;
   POINTL InputPoint;
 
@@ -1136,14 +1067,13 @@ IntEngMaskBlt(SURFOBJ *DestObj,
 
   /* No success yet */
   ret = FALSE;
-  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  MouseSafetyOnDrawStart(DestObj, DestGDI, OutputRect.left, OutputRect.top,
+  MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
   ret = EngMaskBitBlt(DestObj, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
 
-  MouseSafetyOnDrawEnd(DestObj, DestGDI);
+  MouseSafetyOnDrawEnd(DestObj);
 
   return ret;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.10 2004/05/10 17:07:16 weiden Exp $ */
+/* $Id: dib.c,v 1.11 2004/07/03 13:55:35 navaraf Exp $ */
 #include <w32k.h>
 
 /* Static data */
@@ -24,62 +24,107 @@
 unsigned char notmask[2] = { 0x0f, 0xf0 };
 unsigned char altnotmask[2] = { 0xf0, 0x0f };
 
-ULONG
-DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation)
+DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
 {
-  switch (SourceGDI->BitsPerPixel)
+   /* 0 */
+   {
+      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+      Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt
+   },
+   /* BMF_1BPP */
+   {
+      DIB_1BPP_PutPixel, DIB_1BPP_GetPixel, DIB_1BPP_HLine, DIB_1BPP_VLine,
+      DIB_1BPP_BitBlt, DIB_1BPP_StretchBlt, DIB_1BPP_TransparentBlt
+   },
+   /* BMF_4BPP */
+   {
+      DIB_4BPP_PutPixel, DIB_4BPP_GetPixel, DIB_4BPP_HLine, DIB_4BPP_VLine,
+      DIB_4BPP_BitBlt, DIB_4BPP_StretchBlt, DIB_4BPP_TransparentBlt
+   },
+   /* BMF_8BPP */
+   {
+      DIB_8BPP_PutPixel, DIB_8BPP_GetPixel, DIB_8BPP_HLine, DIB_8BPP_VLine,
+      DIB_8BPP_BitBlt, DIB_8BPP_StretchBlt, DIB_8BPP_TransparentBlt
+   },
+   /* BMF_16BPP */
+   {
+      DIB_16BPP_PutPixel, DIB_16BPP_GetPixel, DIB_16BPP_HLine, DIB_16BPP_VLine,
+      DIB_16BPP_BitBlt, DIB_16BPP_StretchBlt, DIB_16BPP_TransparentBlt
+   },
+   /* BMF_24BPP */
+   {
+      DIB_24BPP_PutPixel, DIB_24BPP_GetPixel, DIB_24BPP_HLine, DIB_24BPP_VLine,
+      DIB_24BPP_BitBlt, DIB_24BPP_StretchBlt, DIB_24BPP_TransparentBlt
+   },
+   /* BMF_32BPP */
+   {
+      DIB_32BPP_PutPixel, DIB_32BPP_GetPixel, DIB_32BPP_HLine, DIB_32BPP_VLine,
+      DIB_32BPP_BitBlt, DIB_32BPP_StretchBlt, DIB_32BPP_TransparentBlt
+   },
+   /* BMF_4RLE */
+   {
+      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+      Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt
+   },
+   /* BMF_8RLE */
+   {
+      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+      Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt
+   },
+   /* BMF_JPEG */
+   {
+      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+      Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt
+   },
+   /* BMF_PNG */
+   {
+      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+      Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt
+   }
+};
+
+ULONG
+DIB_GetSource(SURFOBJ* SourceSurf, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation)
+{
+  switch (SourceSurf->iBitmapFormat)
     {
-    case 1:
-      if (DIB_1BPP_GetPixel(SourceSurf, sx, sy))
-	{
-	  return(XLATEOBJ_iXlate(ColorTranslation, 1));
-	}
-      else
-	{
-	  return(XLATEOBJ_iXlate(ColorTranslation, 0));
-	}
-    case 4:
-      if (ColorTranslation != NULL)
-	{
-	  return(XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy)));
-	}
-      else
-	{
-	  return(DIB_4BPP_GetPixel(SourceSurf, sx, sy));
-	}
-    case 8:
+    case BMF_1BPP:
+      return(XLATEOBJ_iXlate(ColorTranslation, DIB_1BPP_GetPixel(SourceSurf, sx, sy)));
+    case BMF_4BPP:
+      return(XLATEOBJ_iXlate(ColorTranslation, DIB_4BPP_GetPixel(SourceSurf, sx, sy)));
+    case BMF_8BPP:
       return(XLATEOBJ_iXlate(ColorTranslation, DIB_8BPP_GetPixel(SourceSurf, sx, sy)));
-    case 16:
+    case BMF_16BPP:
       return(XLATEOBJ_iXlate(ColorTranslation, DIB_16BPP_GetPixel(SourceSurf, sx, sy)));
-    case 24:
+    case BMF_24BPP:
       return(XLATEOBJ_iXlate(ColorTranslation, DIB_24BPP_GetPixel(SourceSurf, sx, sy)));
-    case 32:
+    case BMF_32BPP:
       return(XLATEOBJ_iXlate(ColorTranslation, DIB_32BPP_GetPixel(SourceSurf, sx, sy)));
     default:
-      DPRINT1("DIB_GetSource: Unhandled number of bits per pixel in source (%d).\n", SourceGDI->BitsPerPixel);
+      DPRINT1("DIB_GetSource: Unhandled number of bits per pixel in source (%d).\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return(0);
     }
 }
 
 ULONG
-DIB_GetSourceIndex(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy)
+DIB_GetSourceIndex(SURFOBJ* SourceSurf, ULONG sx, ULONG sy)
 {
-  switch (SourceGDI->BitsPerPixel)
+  switch (SourceSurf->iBitmapFormat)
     {
-    case 1:
+    case BMF_1BPP:
       return DIB_1BPP_GetPixel(SourceSurf, sx, sy);
-    case 4:
+    case BMF_4BPP:
       return DIB_4BPP_GetPixel(SourceSurf, sx, sy);
-    case 8:
+    case BMF_8BPP:
       return DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-    case 16:
+    case BMF_16BPP:
       return DIB_16BPP_GetPixel(SourceSurf, sx, sy);
-    case 24:
+    case BMF_24BPP:
       return DIB_24BPP_GetPixel(SourceSurf, sx, sy);
-    case 32:
+    case BMF_32BPP:
       return DIB_32BPP_GetPixel(SourceSurf, sx, sy);
     default:
-      DPRINT1("DIB_GetOriginalSource: Unhandled number of bits per pixel in source (%d).\n", SourceGDI->BitsPerPixel);
+      DPRINT1("DIB_GetOriginalSource: Unhandled number of bits per pixel in source (%d).\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return(0);
     }
 }
@@ -182,6 +227,50 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
       Pattern >>= 4;
     }
   return(Result);
+}
+
+VOID Dummy_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
+{
+  return;
+}
+
+ULONG Dummy_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y)
+{
+  return 0;
+}
+
+VOID Dummy_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+{
+  return;
+}
+
+VOID Dummy_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+{
+  return;
+}
+
+BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                     RECTL*  DestRect,  POINTL  *SourcePoint,
+                     BRUSHOBJ* BrushObj, POINTL BrushOrign,
+                     XLATEOBJ *ColorTranslation, ULONG Rop4)
+{
+  return FALSE;
+}
+
+BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                         RECTL*  DestRect,  RECTL  *SourceRect,
+                         POINTL* MaskOrigin, POINTL BrushOrign,
+                         CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                         ULONG Mode)
+{
+  return FALSE;
+}
+
+BOOLEAN Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                             RECTL*  DestRect,  POINTL  *SourcePoint,
+                             XLATEOBJ *ColorTranslation, ULONG iTransColor)
+{
+  return FALSE;
 }
 
 /* EOF */

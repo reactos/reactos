@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.80 2004/06/24 09:44:06 weiden Exp $
+/* $Id: misc.c,v 1.81 2004/07/03 13:55:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -735,18 +735,12 @@ IntSystemParametersInfo(
     case SPI_GETGRADIENTCAPTIONS:
     {
       HDC hDC;
-      PDC dc;
-      SURFOBJ *SurfObj;
       BOOL Ret = GradientCaptions;
       
       hDC = IntGetScreenDC();
       if(hDC)
       {
-        dc = DC_LockDc(hDC);
-        SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-        if(SurfObj)
-          Ret = (SurfObj->iBitmapFormat > BMF_8BPP) && Ret;
-        DC_UnlockDc(hDC);
+        Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && Ret;
         
         ASSERT(pvParam);
         *((PBOOL)pvParam) = Ret;

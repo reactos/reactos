@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.31 2004/05/15 06:54:47 gvg Exp $
+/* $Id: objects.h,v 1.32 2004/07/03 13:55:35 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -49,14 +49,7 @@ typedef struct _ENGOBJ {
 	ULONG  hObj;
 	ULONG  InternalSize;
 	ULONG  UserSize;
-}ENGOBJ, *PENGOBJ;
-
-
-
-typedef struct _BRUSHGDI {
-  ENGOBJ 		Header;
-  BRUSHOBJ	BrushObj;
-} BRUSHGDI;
+} ENGOBJ, *PENGOBJ;
 
 typedef struct _CLIPGDI {
   ENGOBJ 		Header;
@@ -147,67 +140,6 @@ typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
 typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*, ULONG, PVOID, ULONG, RECTL*, POINTL*, ULONG);
 
-/* Forward declare (circular reference) */
-typedef struct _SURFGDI *PSURFGDI;
-
-typedef VOID    (*PFN_DIB_PutPixel)       (SURFOBJ *, LONG, LONG, ULONG);
-typedef ULONG   (*PFN_DIB_GetPixel)       (SURFOBJ *, LONG, LONG);
-typedef VOID    (*PFN_DIB_HLine)          (SURFOBJ *, LONG, LONG, LONG, ULONG);
-typedef VOID    (*PFN_DIB_VLine)          (SURFOBJ *, LONG, LONG, LONG, ULONG);
-typedef BOOLEAN (*PFN_DIB_BitBlt)         (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
-                                           PSURFGDI DestGDI,  PSURFGDI SourceGDI,
-                                           RECTL *  DestRect, POINTL *  SourcePoint,
-				           BRUSHOBJ *BrushObj, POINTL BrushOrigin,
-                                           XLATEOBJ *ColorTranslation, ULONG Rop4);
-typedef BOOLEAN (*PFN_DIB_StretchBlt)     (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
-                                           PSURFGDI DestGDI,  PSURFGDI SourceGDI,
-                                           RECTL *  DestRect, RECTL *  SourceRect,
-                                           POINTL *MaskOrigin, POINTL BrushOrigin,
-                                           CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                                           ULONG Mode);
-typedef BOOLEAN (*PFN_DIB_TransparentBlt) (SURFOBJ *, SURFOBJ *, PSURFGDI, PSURFGDI,
-                                           RECTL*  ,  POINTL  *, XLATEOBJ  *,ULONG);
-
-
-typedef struct _SURFGDI {
-  ENGOBJ 		Header;
-  SURFOBJ		SurfObj;
-
-  INT BitsPerPixel;
-
-  /* Driver functions */
-  PFN_BitBlt BitBlt;
-  PFN_TransparentBlt TransparentBlt;
-  PFN_StretchBlt StretchBlt;
-  PFN_TextOut TextOut;
-  PFN_Paint Paint;
-  PFN_StrokePath StrokePath;
-  PFN_FillPath FillPath;
-  PFN_StrokeAndFillPath StrokeAndFillPath;
-  PFN_LineTo LineTo;
-  PFN_CopyBits CopyBits;
-  PFN_Synchronize Synchronize;
-  BOOL SynchronizeAccess;
-  PFN_CreateDeviceBitmap CreateDeviceBitmap;
-  PFN_SetPalette SetPalette;
-  PFN_MovePointer MovePointer;
-  PFN_SetPointerShape SetPointerShape;
-  PFN_GradientFill GradientFill;
-
-  /* DIB functions */
-  PFN_DIB_PutPixel       DIB_PutPixel;
-  PFN_DIB_GetPixel       DIB_GetPixel;
-  PFN_DIB_HLine          DIB_HLine;
-  PFN_DIB_VLine          DIB_VLine;
-  PFN_DIB_BitBlt         DIB_BitBlt;
-  PFN_DIB_StretchBlt     DIB_StretchBlt;
-  PFN_DIB_TransparentBlt DIB_TransparentBlt;
-
-  /* misc */
-  ULONG       PointerStatus;
-  PFAST_MUTEX DriverLock;
-} SURFGDI;
-
 typedef struct _XFORMGDI {
   ENGOBJ 		Header;
   /* XFORMOBJ has no public members */
@@ -237,20 +169,5 @@ typedef struct _XLATEGDI {
 //    };
 //  };
 } XLATEGDI;
-
-// List of GDI objects
-// FIXME: Make more dynamic
-
-#define MAX_GDI_BRUSHES      255
-#define MAX_GDI_CLIPS        255
-#define MAX_GDI_DRVFUNCTIONS  16
-#define MAX_GDI_FLOATS       255
-#define MAX_GDI_FONTS        255
-#define MAX_GDI_PALS         255
-#define MAX_GDI_PATHS        255
-#define MAX_GDI_STRS         255
-#define MAX_GDI_SURFS        255
-#define MAX_GDI_XFORMS       255
-#define MAX_GDI_XLATES       255
 
 #endif //__ENG_OBJECTS_H

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.15 2004/05/28 21:33:41 gvg Exp $
+ *  $Id: desktop.c,v 1.16 2004/07/03 13:55:36 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -110,13 +110,14 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
   if((Ret->right == -1) && ScreenDeviceContext)
   {
     PDC dc;
-    SURFOBJ *SurfObj;
+    BITMAPOBJ *BitmapObj;
     dc = DC_LockDc(ScreenDeviceContext);
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    if(SurfObj)
+    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    if(BitmapObj)
     {
-      Ret->right = SurfObj->sizlBitmap.cx;
-      Ret->bottom = SurfObj->sizlBitmap.cy;
+      Ret->right = BitmapObj->SurfObj.sizlBitmap.cx;
+      Ret->bottom = BitmapObj->SurfObj.sizlBitmap.cy;
+      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
     }
     DC_UnlockDc(ScreenDeviceContext);
   }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.33 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: line.c,v 1.34 2004/07/03 13:55:37 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -51,18 +51,11 @@ IntGdiLineTo(DC  *dc,
              int XEnd,
              int YEnd)
 {
-  SURFOBJ *SurfObj;
-  BOOL     Ret;
+  BITMAPOBJ *BitmapObj;
+  BOOL      Ret;
   PGDIBRUSHOBJ PenBrushObj;
-  RECTL    Bounds;
-  POINT    Points[2];
-
-  SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
-  if (NULL == SurfObj)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
+  RECTL     Bounds;
+  POINT     Points[2];
 
   if (PATH_IsPathOpen(dc->w.path))
     {
@@ -77,6 +70,13 @@ IntGdiLineTo(DC  *dc,
     }
   else
     {
+      BitmapObj = BITMAPOBJ_LockBitmap ( dc->w.hBitmap );
+      if (NULL == BitmapObj)
+        {
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return FALSE;
+        }
+
       Points[0].x = dc->w.CursPosX;
       Points[0].y = dc->w.CursPosY;
       Points[1].x = XEnd;
@@ -101,7 +101,7 @@ IntGdiLineTo(DC  *dc,
 
       if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
-        Ret = IntEngLineTo(SurfObj,
+        Ret = IntEngLineTo(BitmapObj,
                            dc->CombinedClip,
                            &PenBrushObj->BrushObject,
                            Points[0].x, Points[0].y,
@@ -110,6 +110,7 @@ IntGdiLineTo(DC  *dc,
                            dc->w.ROPmode);
       }
 
+      BITMAPOBJ_UnlockBitmap ( dc->w.hBitmap );
       PENOBJ_UnlockPen( dc->w.hPen );
     }
 
@@ -187,17 +188,17 @@ IntGdiPolyline(DC      *dc,
                LPPOINT pt,
                int     Count)
 {
-  SURFOBJ     *SurfObj = NULL;
+  BITMAPOBJ    *BitmapObj;
   BOOL         ret = FALSE; // default to failure
   LONG         i;
   PGDIBRUSHOBJ PenBrushObj;
   POINT       *pts;
 
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  ASSERT(SurfObj);
-
   if ( PATH_IsPathOpen ( dc->w.path ) )
     return PATH_Polyline ( dc, pt, Count );
+
+  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  ASSERT(BitmapObj);
 
   //Allocate "Count" bytes of memory to hold a safe copy of pt
   pts = (POINT*)ExAllocatePoolWithTag ( PagedPool, sizeof(POINT)*Count, TAG_SHAPE );
@@ -220,7 +221,7 @@ IntGdiPolyline(DC      *dc,
       if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
       {
         //get IntEngPolyline to do the drawing.
-        ret = IntEngPolyline(SurfObj,
+        ret = IntEngPolyline(BitmapObj,
   			   dc->CombinedClip,
   			   &PenBrushObj->BrushObject,
   			   pts,
@@ -233,6 +234,8 @@ IntGdiPolyline(DC      *dc,
 
     ExFreePool ( pts );
   }
+
+  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
 
   return ret;
 }

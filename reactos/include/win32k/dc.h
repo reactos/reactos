@@ -83,7 +83,6 @@ typedef struct _DC
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO  GDIInfo;
   PDEVINFO  DevInfo;
-  HSURF  Surface;
   HDEV   GDIDevice;
 
   DRIVER_FUNCTIONS  DriverFunctions;
@@ -116,7 +115,6 @@ typedef struct
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
-  FAST_MUTEX DriverLock;
 
   struct {
      BOOL Enable;
@@ -130,6 +128,7 @@ typedef struct
   HSURF PointerMaskSurface;
   HSURF PointerSaveSurface;
   POINTL PointerHotSpot;
+  ULONG PointerStatus;
 } GDIDEVICE;
 
 /*  Internal functions  */

@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.37 2004/05/10 17:07:20 weiden Exp $
+ * $Id: brush.c,v 1.38 2004/07/03 13:55:36 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -127,12 +127,12 @@ IntPatBlt(
    PGDIBRUSHOBJ BrushObj)
 {
    RECTL DestRect;
-   SURFOBJ *SurfObj;
+   BITMAPOBJ *BitmapObj;
    POINTL BrushOrigin;
    BOOL ret;
 
-   SurfObj = (SURFOBJ *)AccessUserObject((ULONG)dc->Surface);
-   if (SurfObj == NULL)
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   if (BitmapObj == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
@@ -167,7 +167,7 @@ IntPatBlt(
       BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
 
       ret = IntEngBitBlt(
-         SurfObj,
+         BitmapObj,
          NULL,
          NULL,
          dc->CombinedClip,
@@ -179,6 +179,8 @@ IntPatBlt(
          &BrushOrigin,
          ROP);
    }
+
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
 
    return ret;
 }

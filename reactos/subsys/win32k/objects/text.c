@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.100 2004/06/27 11:23:57 navaraf Exp $ */
+/* $Id: text.c,v 1.101 2004/07/03 13:55:37 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -382,8 +382,8 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
    FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
 
-   DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
-   DPRINT("Num glyphs: %u\n", face->num_glyphs);
+   DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
+   DPRINT("Num glyphs: %u\n", Face->num_glyphs);
 
    /* Add this font resource to the font table */
 
@@ -412,21 +412,14 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
 {
-  BOOL Ret;
-  HDC hDC;
-  PDC dc;
-  SURFOBJ *SurfObj;
-  Ret = RenderingEnabled;
-  hDC = IntGetScreenDC();
-  if(hDC)
-  {
-    dc = DC_LockDc(hDC);
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    if(SurfObj)
-      Ret = (SurfObj->iBitmapFormat >= BMF_8BPP);
-    DC_UnlockDc(hDC);
-  }
-  return Ret;
+   BOOL Ret = RenderingEnabled;
+   HDC hDC;
+
+   hDC = IntGetScreenDC();
+   if (hDC)
+      Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && RenderingEnabled;
+
+   return Ret;
 }
 
 VOID FASTCALL
@@ -1522,6 +1515,7 @@ NtGdiExtTextOut(
 
    DC *dc;
    SURFOBJ *SurfObj;
+   BITMAPOBJ *BitmapObj;
    int error, glyph_index, n, i;
    FT_Face face;
    FT_GlyphSlot glyph;
@@ -1571,7 +1565,9 @@ NtGdiExtTextOut(
       }
    }
  
-   SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   ASSERT(BitmapObj);
+   SurfObj = &BitmapObj->SurfObj;
 
    Start.x = XStart; Start.y = YStart;
    IntLPtoDP(dc, &Start, 1);
@@ -1621,7 +1617,7 @@ NtGdiExtTextOut(
       DestRect.right += dc->w.DCOrgX;
       DestRect.bottom += dc->w.DCOrgY;
       IntEngBitBlt(
-         SurfObj,
+         BitmapObj,
          NULL,
          NULL,
          dc->CombinedClip,
@@ -1835,7 +1831,7 @@ NtGdiExtTextOut(
          DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
          DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
-            SurfObj,
+            BitmapObj,
             NULL,
             NULL,
             dc->CombinedClip,
@@ -1866,7 +1862,7 @@ NtGdiExtTextOut(
        */
 
       HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, BMF_TOPDOWN, glyph->bitmap.buffer);
-      SourceGlyphSurf = (SURFOBJ*)AccessUserObject((ULONG) HSourceGlyph);
+      SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
     
       /*
        * Use the font data as a mask to paint onto the DCs surface using a
@@ -1885,6 +1881,7 @@ NtGdiExtTextOut(
          &BrushFg->BrushObject,
          &BrushOrigin);
 
+      EngUnlockSurface(SourceGlyphSurf);
       EngDeleteSurface((HSURF)HSourceGlyph);
 
       if (NULL == Dx)
@@ -1902,6 +1899,7 @@ NtGdiExtTextOut(
 
    EngDeleteXlate(XlateObj);
    EngDeleteXlate(XlateObj2);
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
    TEXTOBJ_UnlockText(dc->w.hFont);
    if (hBrushBg != NULL)
    {
@@ -1920,6 +1918,7 @@ NtGdiExtTextOut(
 
 fail:
    TEXTOBJ_UnlockText(dc->w.hFont);
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
    if (hBrushBg != NULL)
    {
       BRUSHOBJ_UnlockBrush(hBrushBg);

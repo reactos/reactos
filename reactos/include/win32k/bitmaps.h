@@ -5,28 +5,23 @@
 #include <win32k/dc.h>
 #include <win32k/gdiobj.h>
 
-typedef struct _DDBITMAP
-{
-  const PDRIVER_FUNCTIONS  pDriverFunctions;
-/*  DHPDEV  PDev; */
-/*  HSURF  Surface; */
-} DDBITMAP;
-
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
-  BITMAP      bitmap;
+  SURFOBJ     SurfObj;
+  FLONG	      flHooks;
+  FLONG       flFlags;
   SIZE        dimension;   /* For SetBitmapDimension(), do NOT use
                               to get width/height of bitmap, use
                               bitmap.bmWidth/bitmap.bmHeight for
                               that */
 
-  DDBITMAP   *DDBitmap;
-
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
   RGBQUAD *ColorMap;
 } BITMAPOBJ, *PBITMAPOBJ;
+
+#define BITMAPOBJ_IS_APIBITMAP		0x1
 
 /*  Internal interface  */
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.100 2004/05/28 21:33:40 gvg Exp $
+# $Id: makefile,v 1.101 2004/07/03 13:55:36 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -44,7 +44,7 @@ TARGET_LFLAGS =\
 ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
     eng/clip.o eng/copybits.o eng/device.o eng/handle.o eng/lineto.o \
     eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
-    eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/nls.o eng/sort.o \
+    eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/sort.o \
     eng/gradient.o eng/event.o eng/float.o
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
@@ -67,9 +67,8 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
-                  objects/bezier.o objects/objconv.o objects/dib.o \
-                  objects/palette.o objects/rect.o objects/polyfill.o \
-                  objects/cursoricon.o
+                  objects/bezier.o objects/dib.o objects/palette.o \
+                  objects/rect.o objects/polyfill.o objects/cursoricon.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o

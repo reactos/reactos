@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.34 2004/05/25 15:52:45 navaraf Exp $
+/* $Id: input.c,v 1.35 2004/07/03 13:55:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -530,10 +530,13 @@ IntMouseInput(MOUSEINPUT *mi)
   PWINSTATION_OBJECT WinSta;
   BOOL DoMove, SwapButtons;
   MSG Msg;
+  HBITMAP hBitmap;
+  BITMAPOBJ *BitmapObj;
   SURFOBJ *SurfObj;
-  PSURFGDI SurfGDI;
   PDC dc;
   RECTL PointerRect;
+  PWINDOW_OBJECT DesktopWindow;
+  NTSTATUS Status;
   
 #if 1
   HDC hDC;
@@ -558,13 +561,6 @@ IntMouseInput(MOUSEINPUT *mi)
   
   CurInfo = IntGetSysCursorInfo(WinSta);
   
-  dc = DC_LockDc(hDC);
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-  DC_UnlockDc(hDC);
-  ASSERT(SurfObj);
-  ASSERT(SurfGDI);
-  
   if(!mi->time)
   {
     LARGE_INTEGER LargeTickCount;
@@ -574,6 +570,7 @@ IntMouseInput(MOUSEINPUT *mi)
   
   SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
+
   ExAcquireFastMutex(&CurInfo->CursorMutex);
   MousePos.x = CurInfo->x;
   MousePos.y = CurInfo->y;
@@ -590,14 +587,21 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
     
+    Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
+      WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
+    if (NT_SUCCESS(Status))
+    {
+      if(MousePos.x >= DesktopWindow->ClientRect.right)
+        MousePos.x = DesktopWindow->ClientRect.right - 1;
+      if(MousePos.y >= DesktopWindow->ClientRect.bottom)
+        MousePos.y = DesktopWindow->ClientRect.bottom - 1;
+    }
+    ObmDereferenceObject(DesktopWindow);
+
     if(MousePos.x < 0)
       MousePos.x = 0;
     if(MousePos.y < 0)
       MousePos.y = 0;
-    if(MousePos.x >= SurfObj->sizlBitmap.cx)
-      MousePos.x = SurfObj->sizlBitmap.cx - 1;
-    if(MousePos.y >= SurfObj->sizlBitmap.cy)
-      MousePos.y = SurfObj->sizlBitmap.cy - 1;
     
     if(CurInfo->CursorClipInfo.IsClipped)
     {
@@ -613,28 +617,48 @@ IntMouseInput(MOUSEINPUT *mi)
         MousePos.y = (LONG)CurInfo->CursorClipInfo.Top;
     }
     
-    if((DoMove = (MousePos.x != CurInfo->x || MousePos.y != CurInfo->y)))
+    DoMove = (MousePos.x != CurInfo->x || MousePos.y != CurInfo->y);
+    if(DoMove)
     {
       CurInfo->x = MousePos.x;
       CurInfo->y = MousePos.y;
-      if(SurfGDI->MovePointer)
-      {
-        IntLockGDIDriver(SurfGDI);
-        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-        IntUnLockGDIDriver(SurfGDI);
-      }
-      else
-      {
-        IntLockGDIDriver(SurfGDI);
-        EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-        IntUnLockGDIDriver(SurfGDI);
-      }
-      SetPointerRect(CurInfo, &PointerRect);
     }
   }
 
   ExReleaseFastMutex(&CurInfo->CursorMutex);
   
+  if (DoMove)
+  {
+    dc = DC_LockDc(hDC);
+    if (dc)
+    {
+      hBitmap = dc->w.hBitmap;
+      DC_UnlockDc(hDC);
+
+      BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
+      if (BitmapObj)
+      {
+        SurfObj = &BitmapObj->SurfObj;
+
+        if(GDIDEVFUNCS(SurfObj).MovePointer)
+        {
+          GDIDEVFUNCS(SurfObj).MovePointer(
+             SurfObj, MousePos.x, MousePos.y, &PointerRect);
+        }
+        else
+        {
+          EngMovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
+        }
+
+        BITMAPOBJ_UnlockBitmap(hBitmap);
+
+        ExAcquireFastMutex(&CurInfo->CursorMutex);
+        SetPointerRect(CurInfo, &PointerRect);
+        ExReleaseFastMutex(&CurInfo->CursorMutex);
+      }
+    }
+  }
+
   /*
    * Insert the messages into the system queue
    */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.141 2004/06/29 21:09:16 gvg Exp $
+/* $Id: dc.c,v 1.142 2004/07/03 13:55:36 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -129,7 +129,6 @@ NtGdiCreateCompatableDC(HDC hDC)
   HBITMAP  hBitmap;
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
-  BITMAPOBJ *pb;
   UNICODE_STRING DriverName;
 
   DisplayDC = NULL;
@@ -206,9 +205,6 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->GDIDevice      = OrigDC->GDIDevice;
-  pb = BITMAPOBJ_LockBitmap(hBitmap);
-  NewDC->Surface = (HSURF)BitmapToSurf(pb, NewDC->GDIDevice);
-  BITMAPOBJ_UnlockBitmap(hBitmap);
 
   NewDC->w.hPalette = OrigDC->w.hPalette;
   NewDC->w.textColor = OrigDC->w.textColor;
@@ -462,7 +458,7 @@ IntCreatePrimarySurface()
    PGD_ENABLEDRIVER GDEnableDriver;
    DRVENABLEDATA DED;
    SURFOBJ *SurfObj;
-   PSURFGDI SurfGDI;
+   SIZEL SurfSize;
    UNICODE_STRING DriverFileNames;
    PWSTR CurrentName;
    BOOL GotDriver;
@@ -474,7 +470,6 @@ IntCreatePrimarySurface()
       DPRINT("Trying to load display driver no. %d\n", DisplayNumber);
 
       RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
-      ExInitializeFastMutex(&PrimarySurface.DriverLock);
 
       PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 
@@ -650,13 +645,11 @@ IntCreatePrimarySurface()
          continue;
       }
 
-      SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
+      SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
-      SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
-      IntShowDesktop(
-         IntGetActiveDesktop(),
-         SurfGDI->SurfObj.sizlBitmap.cx,
-         SurfGDI->SurfObj.sizlBitmap.cy);
+      SurfSize = SurfObj->sizlBitmap;
+      EngUnlockSurface(SurfObj);
+      IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
       break;
    }
 
@@ -666,19 +659,13 @@ IntCreatePrimarySurface()
 VOID FASTCALL
 IntDestroyPrimarySurface()
   {
-#if 0
-    SURFOBJ *SurfObj;
-    PSURFGDI SurfGDI;
-#endif
-
     DRIVER_UnreferenceDriver(L"DISPLAY");
 
-#if 0
-    DPRINT("Hiding mouse pointer\n" );
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
-    SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
-    SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0);
-#endif
+    /*
+     * FIXME: Hide a mouse pointer there. Also because we have to prevent
+     * memory leaks with the Eng* mouse routines.
+     */
+
     DPRINT("Reseting display\n" );
     PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
     PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
@@ -698,7 +685,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   HDC      hNewDC;
   PDC      NewDC;
   HDC      hDC = NULL;
-  PSURFGDI SurfGDI;
+  SURFOBJ *SurfObj;
   HRGN     hVisRgn;
   UNICODE_STRING StdDriver;
   
@@ -740,9 +727,9 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
 	 sizeof(NewDC->FillPatternSurfaces));
   NewDC->PDev = PrimarySurface.PDev;
-  NewDC->Surface = PrimarySurface.Handle;
   NewDC->GDIDevice = (HDEV)&PrimarySurface;
   NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
+  NewDC->w.hBitmap = PrimarySurface.Handle;
 
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
   NewDC->DMW.dmFields = 0x000fc000;
@@ -750,14 +737,14 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   /* FIXME: get mode selection information from somewhere  */
 
   NewDC->DMW.dmLogPixels = 96;
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
-  NewDC->DMW.dmBitsPerPel = SurfGDI->BitsPerPixel;
-  NewDC->DMW.dmPelsWidth = SurfGDI->SurfObj.sizlBitmap.cx;
-  NewDC->DMW.dmPelsHeight = SurfGDI->SurfObj.sizlBitmap.cy;
+  SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+  NewDC->DMW.dmBitsPerPel = BitsPerFormat(SurfObj->iBitmapFormat);
+  NewDC->DMW.dmPelsWidth = SurfObj->sizlBitmap.cx;
+  NewDC->DMW.dmPelsHeight = SurfObj->sizlBitmap.cy;
   NewDC->DMW.dmDisplayFlags = 0;
   NewDC->DMW.dmDisplayFrequency = 0;
 
-  NewDC->w.bitsPerPixel = SurfGDI->BitsPerPixel; // FIXME: set this here??
+  NewDC->w.bitsPerPixel = NewDC->DMW.dmBitsPerPel; // FIXME: set this here??
 
   NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
 
@@ -765,8 +752,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   
   DC_UnlockDc( hNewDC );
 
-  hVisRgn = NtGdiCreateRectRgn(0, 0, SurfGDI->SurfObj.sizlBitmap.cx,
-                              SurfGDI->SurfObj.sizlBitmap.cy);
+  hVisRgn = NtGdiCreateRectRgn(0, 0, SurfObj->sizlBitmap.cx,
+                              SurfObj->sizlBitmap.cy);
   NtGdiSelectVisRgn(hNewDC, hVisRgn);
   NtGdiDeleteObject(hVisRgn);
 
@@ -776,6 +763,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NtGdiSetTextAlign(hNewDC, TA_TOP);
   NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
   NtGdiSetBkMode(hNewDC, OPAQUE);
+
+  EngUnlockSurface(SurfObj);
   
   return hNewDC;
 }
@@ -878,7 +867,6 @@ NtGdiDeleteDC(HDC  DCHandle)
     DC_LockDC (DCHandle); NtGdiSelectObject does not recognize stock objects yet  */
     if (DCToDelete->w.flags & DC_MEMORY)
     {
-      EngDeleteSurface (DCToDelete->Surface);
       NtGdiDeleteObject (DCToDelete->w.hFirstBitmap);
     }
   }
@@ -1644,7 +1632,10 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     SaveLevel = dc->saveLevel;
 
   if ((SaveLevel < 1) || (SaveLevel > dc->saveLevel))
+  {
+    DC_UnlockDc(hDC);
     return FALSE;
+  }
 
   success = TRUE;
   while (dc->saveLevel >= SaveLevel)
@@ -1654,6 +1645,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     dcs = DC_LockDc (hdcs);
     if (dcs == NULL)
     {
+      DC_UnlockDc(hDC);
       return FALSE;
     }
     DC_SetNextDC (dcs, DC_GetNextDC (dcs));
@@ -1888,9 +1880,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       objOrg = (HGDIOBJ)dc->w.hBitmap;
 
       /* Release the old bitmap, lock the new one and convert it to a SURF */
-      EngDeleteSurface(dc->Surface);
       dc->w.hBitmap = hGDIObj;
-      dc->Surface = (HSURF)BitmapToSurf(pb, dc->GDIDevice);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
       if(pb->dib)
@@ -1914,7 +1904,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
       else
       {
-        dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
+        dc->w.bitsPerPixel = BitsPerFormat(pb->SurfObj.iBitmapFormat);
         if (1 == dc->w.bitsPerPixel)
           {
             MonoColorMap[0] = RGB(0, 0, 0);
@@ -1928,7 +1918,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       DC_UnlockDc ( hDC );
-      hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->bitmap.bmWidth, pb->bitmap.bmHeight );
+      hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
       BITMAPOBJ_UnlockBitmap(hGDIObj);
@@ -2175,13 +2165,13 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 }
 
 BOOL FASTCALL
-IntIsPrimarySurface(PSURFGDI SurfGDI)
+IntIsPrimarySurface(SURFOBJ *SurfObj)
 {
    if (PrimarySurface.Handle == NULL)
      {
        return FALSE;
      }
-   return SurfGDI == (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle) ? TRUE : FALSE;
+   return SurfObj->hsurf == PrimarySurface.Handle;
 }
 
 /*

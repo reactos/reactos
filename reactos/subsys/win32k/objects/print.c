@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.18 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: print.c,v 1.19 2004/07/03 13:55:37 navaraf Exp $ */
 #include <w32k.h>
 
 INT
@@ -75,12 +75,13 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   SURFOBJ *Surface = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+   BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   INT Result;
 
    if ( NULL == dc->DriverFunctions.Escape )
    {
-      return IntEngExtEscape(
-         Surface,
+      Result = IntEngExtEscape(
+         &BitmapObj->SurfObj,
          Escape,
          InSize,
          (PVOID)InData,
@@ -89,14 +90,17 @@ IntGdiExtEscape(
    }
    else
    {
-      return dc->DriverFunctions.Escape(
-         Surface,
+      Result = dc->DriverFunctions.Escape(
+         &BitmapObj->SurfObj,
          Escape,
          InSize,
          (PVOID)InData,
          OutSize,
          (PVOID)OutData );
    }
+   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+
+   return Result;
 }
 
 INT

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.73 2004/06/24 19:43:48 gvg Exp $
+/* $Id: mouse.c,v 1.74 2004/07/03 13:55:35 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -31,14 +31,14 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
-IntIsPrimarySurface(PSURFGDI SurfGDI);
+IntIsPrimarySurface(SURFOBJ *SurfObj);
 
 VOID FASTCALL
 EnableMouse(HDC hDisplayDC)
 {
   PDC dc;
-  SURFOBJ *SurfObj;
-  PSURFGDI SurfGDI;
+  BITMAPOBJ *BitmapObj;
+  GDIDEVICE *GdiDev;
   PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo(InputWindowStation);
 
   if( hDisplayDC && InputWindowStation)
@@ -50,22 +50,25 @@ EnableMouse(HDC hDisplayDC)
     }
     
     dc = DC_LockDc(hDisplayDC);
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    DC_UnlockDc( hDisplayDC );
-    
-    ASSERT(SurfObj);
-    SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
+    ASSERT(dc);
+    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    ASSERT(BitmapObj);
     
     /* Move the cursor to the screen center */
     DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
     ExAcquireFastMutex(&CurInfo->CursorMutex);
-    CurInfo->x = SurfObj->sizlBitmap.cx / 2;
-    CurInfo->y = SurfObj->sizlBitmap.cy / 2;
+    CurInfo->x = BitmapObj->SurfObj.sizlBitmap.cx / 2;
+    CurInfo->y = BitmapObj->SurfObj.sizlBitmap.cy / 2;
     ExReleaseFastMutex(&CurInfo->CursorMutex);
+
+    GdiDev = GDIDEV(&BitmapObj->SurfObj);
+    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+    DC_UnlockDc( hDisplayDC );
+
     IntSetCursor(InputWindowStation, NULL, TRUE);
     
-    CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
-                        SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
+    CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == GdiDev->PointerStatus ||
+                        SPS_ACCEPT_NOEXCLUDE == GdiDev->PointerStatus);
 
     IntLoadDefaultCursors();
     
@@ -85,7 +88,7 @@ EnableMouse(HDC hDisplayDC)
 }
 
 INT FASTCALL
-MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
+MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
 /*
  * FUNCTION: Notify the mouse driver that drawing is about to begin in
@@ -114,13 +117,13 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
-  if (!IntIsPrimarySurface(SurfGDI) || MouseEnabled == FALSE)
+  if (!IntIsPrimarySurface(SurfObj) || MouseEnabled == FALSE)
     {
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
 
-  if (SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus)
+  if (SPS_ACCEPT_NOEXCLUDE == GDIDEV(SurfObj)->PointerStatus)
     {
       /* Hardware cursor, no need to remove it */
       ObDereferenceObject(InputWindowStation);
@@ -157,9 +160,10 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
           return FALSE;
         }
       CurInfo->SafetySwitch = TRUE;
-      IntLockGDIDriver(SurfGDI);
-      SurfGDI->MovePointer(SurfObj, -1, -1, NULL);
-      IntUnLockGDIDriver(SurfGDI);
+      if (GDIDEVFUNCS(SurfObj).MovePointer)
+         GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, -1, -1, NULL);
+      else
+         EngMovePointer(SurfObj, -1, -1, NULL);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
@@ -177,7 +181,7 @@ SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
 }
 
 INT FASTCALL
-MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
+MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 /*
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
@@ -202,14 +206,14 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
   }
   
   MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
-  if (!IntIsPrimarySurface(SurfGDI) || MouseEnabled == FALSE)
+  if (!IntIsPrimarySurface(SurfObj) || MouseEnabled == FALSE)
     {
       ExReleaseFastMutex(&CurInfo->CursorMutex);
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
 
-  if (SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus)
+  if (SPS_ACCEPT_NOEXCLUDE == GDIDEV(SurfObj)->PointerStatus)
     {
       /* Hardware cursor, it wasn't removed so need to restore it */
       ExReleaseFastMutex(&CurInfo->CursorMutex);
@@ -226,9 +230,10 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
           ObDereferenceObject(InputWindowStation);
           return FALSE;
         }
-      IntLockGDIDriver(SurfGDI);
-      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-      IntUnLockGDIDriver(SurfGDI);
+      if (GDIDEVFUNCS(SurfObj).MovePointer)
+         GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+      else
+         EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
       SetPointerRect(CurInfo, &PointerRect);
       CurInfo->SafetySwitch = FALSE;
     }
@@ -532,8 +537,8 @@ EngSetPointerShape(
 
    ppdev->PointerAttributes.Column = x - xHot;
    ppdev->PointerAttributes.Row = y - yHot;
-   ppdev->PointerAttributes.Width = psoMask->lDelta << 3;
-   ppdev->PointerAttributes.Height = (psoMask->cjBits / psoMask->lDelta) >> 1;
+   ppdev->PointerAttributes.Width = abs(psoMask->lDelta) << 3;
+   ppdev->PointerAttributes.Height = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
 
    if (prcl != NULL)
    {
@@ -554,7 +559,8 @@ EngSetPointerShape(
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
       ppdev->PointerColorSurface = (HSURF)EngCreateBitmap(Size,
-         psoColor->lDelta, psoColor->iBitmapFormat, BMF_TOPDOWN, Bits);
+         psoColor->lDelta, psoColor->iBitmapFormat,
+         psoColor->lDelta < 0 ? 0 : BMF_TOPDOWN, Bits);
    }
    else
    {
@@ -571,11 +577,12 @@ EngSetPointerShape(
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
       ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,
-         psoMask->lDelta, psoMask->iBitmapFormat, BMF_TOPDOWN, Bits);
+         psoMask->lDelta, psoMask->iBitmapFormat,
+         psoMask->lDelta < 0 ? 0 : BMF_TOPDOWN, Bits);
    }
 
    /*
-    * Create and XLATEOBJ that will be used for drawing masks.
+    * Create an XLATEOBJ that will be used for drawing masks.
     * FIXME: We should get this in pxlo parameter!
     */
 

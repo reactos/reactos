@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.24 2004/05/10 17:07:17 weiden Exp $
+/* $Id: copybits.c,v 1.25 2004/07/03 13:55:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,8 +40,6 @@ EngCopyBits(SURFOBJ *Dest,
 	    POINTL *SourcePoint)
 {
   BOOLEAN   ret;
-  PSURFGDI DestGDI  = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
-           SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   BYTE      clippingType;
   RECTL     rclTmp;
   POINTL    ptlTmp;
@@ -49,10 +47,10 @@ EngCopyBits(SURFOBJ *Dest,
   BOOL      EnumMore;
   POINTL BrushOrigin;
 
-  MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
+  MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
                          (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
-  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+  MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
   //        mark the copy block function to be DrvCopyBits instead of the
@@ -65,16 +63,15 @@ EngCopyBits(SURFOBJ *Dest,
     // Destination surface is device managed
     if(Dest->iType!=STYPE_BITMAP)
     {
-      DestGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
-
-      if (DestGDI->CopyBits!=NULL)
+      /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
+      /* FIXME: Remove typecast. */
+      if (((BITMAPOBJ*)Dest)->flHooks & HOOK_COPYBITS)
       {
-        IntLockGDIDriver(DestGDI);
-        ret = DestGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
-        IntUnLockGDIDriver(DestGDI);
+        ret = GDIDEVFUNCS(Dest).CopyBits(
+          Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(Dest, DestGDI);
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest);
+        MouseSafetyOnDrawEnd(Source);
 
         return ret;
       }
@@ -83,28 +80,28 @@ EngCopyBits(SURFOBJ *Dest,
     // Source surface is device managed
     if(Source->iType!=STYPE_BITMAP)
     {
-      SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
-
-      if (SourceGDI->CopyBits!=NULL)
+      /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
+      /* FIXME: Remove typecast. */
+      if (((BITMAPOBJ*)Source)->flHooks & HOOK_COPYBITS)
       {
-        IntLockGDIDriver(DestGDI);
-        ret = SourceGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
-        IntUnLockGDIDriver(DestGDI);
+        ret = GDIDEVFUNCS(Source).CopyBits(
+          Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(Dest, DestGDI);
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest);
+        MouseSafetyOnDrawEnd(Source);
 
         return ret;
       }
     }
 
     // If CopyBits wasn't hooked, BitBlt must be
-    ret = EngBitBlt(Dest, Source,
-                    NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                    NULL, NULL, NULL, 0);
+    /* FIXME: Remove the typecast! */
+    ret = IntEngBitBlt((BITMAPOBJ*)Dest, (BITMAPOBJ*)Source,
+                       NULL, Clip, ColorTranslation, DestRect, SourcePoint,
+                       NULL, NULL, NULL, 0);
 
-    MouseSafetyOnDrawEnd(Dest, DestGDI);
-    MouseSafetyOnDrawEnd(Source, SourceGDI);
+    MouseSafetyOnDrawEnd(Dest);
+    MouseSafetyOnDrawEnd(Source);
 
     return ret;
   }
@@ -117,18 +114,16 @@ EngCopyBits(SURFOBJ *Dest,
     clippingType = Clip->iDComplexity;
   }
 
-  SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
-  DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
-
   BrushOrigin.x = BrushOrigin.y = 0;
 
   switch(clippingType)
     {
       case DC_TRIVIAL:
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
+        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
+          Dest, Source, DestRect, SourcePoint, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
 
-        MouseSafetyOnDrawEnd(Dest, DestGDI);
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest);
+        MouseSafetyOnDrawEnd(Source);
 
         return(TRUE);
 
@@ -139,10 +134,11 @@ EngCopyBits(SURFOBJ *Dest,
         ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
         ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
 
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
+        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
+          Dest, Source, &rclTmp, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
 
-        MouseSafetyOnDrawEnd(Dest, DestGDI);
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest);
+        MouseSafetyOnDrawEnd(Source);
 
         return(TRUE);
 
@@ -164,8 +160,8 @@ EngCopyBits(SURFOBJ *Dest,
               ptlTmp.x = SourcePoint->x + prcl->left - DestRect->left;
               ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
 
-              if(!DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI,
-                                      prcl, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY)) return FALSE;
+              if(!DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBlt(
+                    Dest, Source, prcl, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY)) return FALSE;
 
               prcl++;
 
@@ -174,14 +170,14 @@ EngCopyBits(SURFOBJ *Dest,
 
           } while(EnumMore);
 
-          MouseSafetyOnDrawEnd(Dest, DestGDI);
-          MouseSafetyOnDrawEnd(Source, SourceGDI);
+          MouseSafetyOnDrawEnd(Dest);
+          MouseSafetyOnDrawEnd(Source);
 
           return(TRUE);
     }
 
-  MouseSafetyOnDrawEnd(Dest, DestGDI);
-  MouseSafetyOnDrawEnd(Source, SourceGDI);
+  MouseSafetyOnDrawEnd(Dest);
+  MouseSafetyOnDrawEnd(Source);
 
   return FALSE;
 }

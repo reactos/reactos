@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.7 2004/06/24 19:43:48 gvg Exp $ */
+/* $Id: misc.c,v 1.8 2004/07/03 13:55:35 navaraf Exp $ */
 #include <w32k.h>
 
 BOOL STDCALL
@@ -50,9 +50,9 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   if (NULL != DestObj && STYPE_BITMAP != DestObj->iType &&
       (NULL == DestObj->pvScan0 || 0 == DestObj->lDelta))
     {
-    EnterLeave->DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
     /* Driver needs to support DrvCopyBits, else we can't do anything */
-    if (NULL == EnterLeave->DestGDI->CopyBits)
+    /* FIXME: Remove typecast! */
+    if (!(((BITMAPOBJ*)DestObj)->flHooks & HOOK_COPYBITS))
       {
       return FALSE;
       }
@@ -64,7 +64,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
                                                DestObj->iBitmapFormat,
                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
-    *OutputObj = (SURFOBJ *) AccessUserObject((ULONG) EnterLeave->OutputBitmap);
+    *OutputObj = EngLockSurface((HSURF)EnterLeave->OutputBitmap);
 
     EnterLeave->DestRect.left = 0;
     EnterLeave->DestRect.top = 0;
@@ -99,7 +99,8 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
         ClippedDestRect.top <= (*OutputObj)->sizlBitmap.cy &&
         0 <= ClippedDestRect.bottom &&
         SrcPoint.y < DestObj->sizlBitmap.cy &&
-        ! EnterLeave->DestGDI->CopyBits(*OutputObj, DestObj,
+        ! GDIDEVFUNCS(DestObj).CopyBits(
+                                        *OutputObj, DestObj,
                                         EnterLeave->TrivialClipObj, NULL,
                                         &ClippedDestRect, &SrcPoint))
       {
@@ -166,7 +167,8 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
           EnterLeave->DestRect.top <= EnterLeave->DestRect.bottom &&
           EnterLeave->DestRect.top < EnterLeave->DestObj->sizlBitmap.cy)
         {
-          Result = EnterLeave->DestGDI->CopyBits(EnterLeave->DestObj,
+          Result = GDIDEVFUNCS(EnterLeave->DestObj).CopyBits(
+                                                 EnterLeave->DestObj,
                                                  EnterLeave->OutputObj,
                                                  EnterLeave->TrivialClipObj, NULL,
                                                  &EnterLeave->DestRect, &SrcPoint);
@@ -177,6 +179,7 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
         }
       }
     EngFreeMem(EnterLeave->OutputObj->pvBits);
+    EngUnlockSurface(EnterLeave->OutputObj);
     EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
     EngDeleteClip(EnterLeave->TrivialClipObj);
     }

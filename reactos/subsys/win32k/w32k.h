@@ -74,7 +74,6 @@
 #include <eng/misc.h>
 #include <eng/handle.h>
 #include <eng/clip.h>
-#include <eng/brush.h>
 
 #include <dib/dib.h>
 

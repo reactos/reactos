@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.14 2004/05/10 17:07:20 weiden Exp $
+/* $Id: polyfill.c,v 1.15 2004/07/03 13:55:37 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -396,7 +396,7 @@ POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
   FILL_EDGE* ActiveHead,
-  SURFOBJ *SurfObj,
+  BITMAPOBJ *BitmapObj,
   BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
@@ -422,7 +422,7 @@ POLYGONFILL_FillScanLineAlternate(
       BoundRect.right = x2;
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      IntEngLineTo( SurfObj,
+      IntEngLineTo( BitmapObj,
 			  dc->CombinedClip,
 			  BrushObj,
 			  x1,
@@ -444,7 +444,7 @@ POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
   FILL_EDGE* ActiveHead,
-  SURFOBJ *SurfObj,
+  BITMAPOBJ *BitmapObj,
   BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
@@ -495,7 +495,7 @@ POLYGONFILL_FillScanLineWinding(
 	BoundRect.right = x2;
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-	IntEngLineTo( SurfObj,
+	IntEngLineTo( BitmapObj,
 		      dc->CombinedClip,
 		      BrushObj,
 		      x1,
@@ -518,7 +518,7 @@ POLYGONFILL_FillScanLineWinding(
   BoundRect.right = x2;
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-  IntEngLineTo( SurfObj,
+  IntEngLineTo( BitmapObj,
 		dc->CombinedClip,
 		BrushObj,
 		x1,
@@ -542,7 +542,7 @@ BOOL
 STDCALL
 FillPolygon(
   PDC dc,
-  SURFOBJ *SurfObj,
+  BITMAPOBJ *BitmapObj,
   BRUSHOBJ *BrushObj,
   MIX RopMode,
   CONST PPOINT Points,
@@ -559,7 +559,7 @@ FillPolygon(
     PDC dc,
     int ScanLine,
     FILL_EDGE* ActiveHead,
-    SURFOBJ *SurfObj,
+    BITMAPOBJ *BitmapObj,
     BRUSHOBJ *BrushObj,
     MIX RopMode );
 
@@ -583,7 +583,7 @@ FillPolygon(
   {
     POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
     //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);
-    FillScanLine ( dc, ScanLine, ActiveHead, SurfObj, BrushObj, RopMode );
+    FillScanLine ( dc, ScanLine, ActiveHead, BitmapObj, BrushObj, RopMode );
   }
 
   /* Free Edge List. If any are left. */

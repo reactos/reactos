@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.22 2004/03/07 12:49:27 dwelch Exp $
+; $Id: win32k.edf,v 1.23 2004/07/03 13:55:36 navaraf Exp $
 ;
 ; win32k.def
 ;
@@ -52,7 +52,7 @@ EngFindResource=EngFindResource@16
 EngFreeMem=EngFreeMem@4
 EngFreeModule=EngFreeModule@4
 EngFreeUserMem=EngFreeUserMem@4
-EngGetCurrentCodePage=EngGetCurrentCodePage@8
+EngGetCurrentCodePage=ntoskrnl.RtlGetCurrentCodePage
 EngGetCurrentProcessId=EngGetCurrentProcessId@0
 EngGetCurrentThreadId=EngGetCurrentThreadId@0
 EngGetDriverName=EngGetDriverName@4
@@ -79,7 +79,7 @@ EngMarkBandingSurface=EngMarkBandingSurface@4
 EngModifySurface=EngModifySurface@32
 EngMovePointer=EngMovePointer@16
 EngMulDiv=EngMulDiv@12
-EngMultiByteToUnicodeN=EngMultiByteToUnicodeN@20
+EngMultiByteToUnicodeN=ntoskrnl.RtlMultiByteToUnicodeN
 EngMultiByteToWideChar=EngMultiByteToWideChar@20
 EngPaint=EngPaint@20
 EngProbeForRead=NTOSKRNL.ProbeForRead
@@ -104,7 +104,7 @@ EngStrokeAndFillPath=EngStrokeAndFillPath@40
 EngStrokePath=EngStrokePath@32
 EngTextOut=EngTextOut@40
 EngTransparentBlt=EngTransparentBlt@32
-EngUnicodeToMultiByteN=EngUnicodeToMultiByteN@20
+EngUnicodeToMultiByteN=ntoskrnl.RtlUnicodeToMultiByteN
 EngUnloadImage=EngUnloadImage@4
 EngUnlockDriverObj=EngUnlockDriverObj@4
 EngUnlockSurface=EngUnlockSurface@4

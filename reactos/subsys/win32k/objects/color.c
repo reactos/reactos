@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.46 2004/07/02 20:04:48 gvg Exp $ */
+/* $Id: color.c,v 1.47 2004/07/03 13:55:36 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -320,7 +320,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
-  PSURFGDI SurfGDI;
+  SURFOBJ *SurfObj;
   BOOLEAN success;
   USHORT sysMode, palMode;
 
@@ -328,7 +328,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   if (!dc)
   	return 0;
 
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG)dc->Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
   palPtr = (PALOBJ*) palGDI;
@@ -354,12 +354,11 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     // Memory managed DC
     DbgPrint("win32k: realizepalette unimplemented step 2 for DC_MEMORY");
   } else {
-    if(SurfGDI->SetPalette)
+    if(GDIDEVFUNCS(SurfObj).SetPalette)
     {
-      IntLockGDIDriver(SurfGDI);
       ASSERT(sysGDI->NumColors <= 256);
-      success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
-      IntUnLockGDIDriver(SurfGDI);
+      success = GDIDEVFUNCS(SurfObj).SetPalette(
+        dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
     }
   }
 

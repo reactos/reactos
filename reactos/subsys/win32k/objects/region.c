@@ -113,13 +113,9 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.59 2004/06/29 06:08:54 navaraf Exp $ */
+/* $Id: region.c,v 1.60 2004/07/03 13:55:37 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
-
-BOOL STDCALL
-IntEngPaint(IN SURFOBJ *Surface,IN CLIPOBJ *ClipRegion,IN BRUSHOBJ *Brush,IN POINTL *BrushOrigin,
-	 IN MIX  Mix);
 
 // Internal Functions
 
@@ -2407,7 +2403,7 @@ NtGdiPaintRgn(HDC  hDC,
   BOOL bRet = FALSE;
   PGDIBRUSHOBJ pBrush;
   POINTL BrushOrigin;
-  SURFOBJ	*SurfObj;
+  BITMAPOBJ *BitmapObj;
 
   if( !dc )
 	return FALSE;
@@ -2444,14 +2440,15 @@ NtGdiPaintRgn(HDC  hDC,
   ASSERT(pBrush);
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
 
-  bRet = IntEngPaint(SurfObj,
+  bRet = IntEngPaint(BitmapObj,
 	 ClipRegion,
 	 &pBrush->BrushObject,
 	 &BrushOrigin,
 	 0xFFFF);//FIXME:don't know what to put here
 
+  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
   RGNDATA_UnlockRgn( tmpVisRgn );
 
   // Fill the region

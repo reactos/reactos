@@ -16,8 +16,6 @@ DIB_GetDIBWidthBytes (INT width, INT depth);
 RGBQUAD * FASTCALL
 DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
 
-PPALETTEENTRY STDCALL
-DIBColorTableToPaletteEntries(PPALETTEENTRY palEntries, const RGBQUAD *DIBColorTable, ULONG ColorCount);
 HPALETTE FASTCALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType);
 

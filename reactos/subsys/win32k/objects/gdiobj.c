@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.68 2004/06/20 00:45:37 navaraf Exp $
+ * $Id: gdiobj.c,v 1.69 2004/07/03 13:55:36 navaraf Exp $
  *
  */
 #include <w32k.h>
@@ -710,10 +710,10 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
   if (! ExTryToAcquireFastMutex(&ObjHdr->Lock))
     {
       DPRINT1("Caution! GDIOBJ_LockObj trying to lock object 0x%x second time\n", hObj);
-      DPRINT1("  called from: %s:%i\n", file, line);
+      DPRINT1("  called from: %s:%i (thread %x)\n", file, line, KeGetCurrentThread());
       if (NULL != ObjHdr->lockfile)
         {
-          DPRINT1("  previously locked from: %s:%i\n", ObjHdr->lockfile, ObjHdr->lockline);
+          DPRINT1("  previously locked from: %s:%i (thread %x)\n", ObjHdr->lockfile, ObjHdr->lockline, ObjHdr->Lock.Owner);
         }
       ExAcquireFastMutex(&ObjHdr->Lock);
       DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.h,v 1.2 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: misc.h,v 1.3 2004/07/03 13:55:35 navaraf Exp $ */
 #ifndef __ENG_MISC_H
 #define __ENG_MISC_H
 
@@ -28,7 +28,6 @@ typedef struct INTENG_ENTER_LEAVE_TAG
   {
   /* Contents is private to EngEnter/EngLeave */
   SURFOBJ *DestObj;
-  SURFGDI *DestGDI;
   SURFOBJ *OutputObj;
   HBITMAP OutputBitmap;
   CLIPOBJ *TrivialClipObj;
