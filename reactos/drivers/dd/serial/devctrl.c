@@ -298,7 +298,7 @@ SerialDeviceControl(
 	ULONG IoControlCode;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	ULONG LengthIn, LengthOut;
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	PVOID BufferIn, BufferOut;
 	PUCHAR ComPortBase;
 	NTSTATUS Status;

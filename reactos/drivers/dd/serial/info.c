@@ -20,7 +20,7 @@ SerialQueryInformation(
 	PIO_STACK_LOCATION Stack;
 	PVOID SystemBuffer;
 	ULONG BufferLength;
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;

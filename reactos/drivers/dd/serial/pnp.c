@@ -298,7 +298,7 @@ SerialPnp(
 {
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 	
 	Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -308,6 +308,7 @@ SerialPnp(
 	{
 		case IRP_MN_START_DEVICE:
 		{
+			BOOLEAN ConflictDetected;
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			
 			/* FIXME: first HACK: PnP manager can send multiple
@@ -319,85 +320,19 @@ SerialPnp(
 				Status = STATUS_SUCCESS;
 				break;
 			}
-			/* FIXME: AllocatedResources MUST never be NULL ;
-			 * that's the second HACK because resource arbitration
-			 * doesn't exist in ReactOS yet...
+			/* FIXME: second HACK: verify that we don't have resource conflict,
+			 * because PnP manager doesn't do it automatically
 			 */
-			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
+			Status = IoReportResourceForDetection(
+				DeviceObject->DriverObject, Stack->Parameters.StartDevice.AllocatedResources, 0,
+				NULL, NULL, 0,
+				&ConflictDetected);
+			if (!NT_SUCCESS(Status))
 			{
-				ULONG ResourceListSize;
-				PCM_RESOURCE_LIST ResourceList;
-				PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
-				KIRQL Dirql;
-				ULONG ComPortBase;
-				ULONG Irq;
-				BOOLEAN ConflictDetected;
-				
-				DPRINT1("Serial: no allocated resources for this device! Creating fake list\n");
-				switch (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort)
-				{
-					case 1:
-						ComPortBase = 0x3f8;
-						Irq = 4;
-						break;
-					case 2:
-						ComPortBase = 0x2f8;
-						Irq = 3;
-						break;
-					default:
-						ComPortBase = Irq = 0;
-				}
-				
-				/* Create resource list */
-				ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-				ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
-				if (!ResourceList)
-				{
-					Irp->IoStatus.Information = 0;
-					Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-					IoCompleteRequest(Irp, IO_NO_INCREMENT);
-					return STATUS_INSUFFICIENT_RESOURCES;
-				}
-				ResourceList->Count = 1;
-				ResourceList->List[0].InterfaceType = InterfaceTypeUndefined;
-				ResourceList->List[0].BusNumber = -1; /* unknown */
-				ResourceList->List[0].PartialResourceList.Version = 1;
-				ResourceList->List[0].PartialResourceList.Revision = 1;
-				ResourceList->List[0].PartialResourceList.Count = 2;
-				ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
-				ResourceDescriptor->Type = CmResourceTypePort;
-				ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-				ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-				ResourceDescriptor->u.Port.Start.u.HighPart = 0;
-				ResourceDescriptor->u.Port.Start.u.LowPart = ComPortBase;
-				ResourceDescriptor->u.Port.Length = 8;
-				
-				ResourceDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
-				ResourceDescriptor->Type = CmResourceTypeInterrupt;
-				ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-				ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-				ResourceDescriptor->u.Interrupt.Vector = HalGetInterruptVector(
-					Internal, 0, 0, Irq,
-					&Dirql,
-					&ResourceDescriptor->u.Interrupt.Affinity);
-				ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
-				
-				/* Verify that this COM port is not the serial debug port */
-				Status = IoReportResourceForDetection(
-					DeviceObject->DriverObject, ResourceList, 0,
-					NULL, NULL, 0,
-					&ConflictDetected);
-				if (!NT_SUCCESS(Status))
-				{
-					Irp->IoStatus.Information = 0;
-					Irp->IoStatus.Status = Status;
-					IoCompleteRequest(Irp, IO_NO_INCREMENT);
-					return Status;
-				}
-				
-				Stack->Parameters.StartDevice.AllocatedResources =
-					Stack->Parameters.StartDevice.AllocatedResourcesTranslated =
-					ResourceList;
+				Irp->IoStatus.Information = 0;
+				Irp->IoStatus.Status = Status;
+				IoCompleteRequest(Irp, IO_NO_INCREMENT);
+				return Status;
 			}
 			
 			/* Call lower driver */

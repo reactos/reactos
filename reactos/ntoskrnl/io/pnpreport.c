@@ -83,13 +83,6 @@ IoReportResourceForDetection(
   *ConflictDetected = FALSE;
   DPRINT1("IoReportResourceForDetection unimplemented\n");
   
-  if (PopSystemPowerDeviceNode != NULL && DriverListSize > 0)
-  {
-    /* We hope serial ports will be enumerated by ACPI */
-    *ConflictDetected = TRUE;
-    return STATUS_CONFLICTING_ADDRESSES;
-  }
-  
   /* HACK: check if serial debug output is enabled. If yes,
    * prevent serial port driver to detect this serial port
    * by indicating a conflict
@@ -122,6 +115,13 @@ IoReportResourceForDetection(
         }
       }
     }
+  }
+  
+  if (PopSystemPowerDeviceNode != NULL && DriverListSize > 0)
+  {
+    /* We hope legacy devices will be enumerated by ACPI */
+    *ConflictDetected = TRUE;
+    return STATUS_CONFLICTING_ADDRESSES;
   }
   return STATUS_SUCCESS;
 }

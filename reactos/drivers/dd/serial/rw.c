@@ -34,7 +34,7 @@ ReadBytes(
 	KIRQL Irql;
 	ULONG ObjectCount;
 	PVOID ObjectsArray[2];
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -247,7 +247,7 @@ SerialWrite(
 	PIO_STACK_LOCATION Stack;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	ULONG Length;
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	PUCHAR Buffer;
 	PUCHAR ComPortBase;
 	KIRQL Irql;
