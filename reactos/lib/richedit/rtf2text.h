@@ -1,2 +1,0 @@
-void	WriterInit ();
-int	BeginFile ();
