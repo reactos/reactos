@@ -61,8 +61,8 @@ NTSTATUS UDPReceiveDatagram(
     PVOID Context);
 
 VOID UDPReceive(
-  PNET_TABLE_ENTRY NTE,
-  PIP_PACKET IPPacket);
+    PIP_INTERFACE Interface,
+    PIP_PACKET IPPacket);
 
 NTSTATUS UDPStartup(
   VOID);

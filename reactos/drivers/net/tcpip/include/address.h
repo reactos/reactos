@@ -55,14 +55,10 @@ BOOLEAN AddrIsEqualIPv4(
     PIP_ADDRESS Address1,
     IPv4_RAW_ADDRESS Address2);
 
-PIP_ADDRESS AddrBuildIPv4(
-    IPv4_RAW_ADDRESS Address);
+BOOLEAN AddrLocateADEv4(
+    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
 
-PIP_ADDRESS AddrCloneAddress(
-    PIP_ADDRESS Address);
-
-PADDRESS_ENTRY AddrLocateADEv4(
-    IPv4_RAW_ADDRESS Address);
+BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address );
 
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,

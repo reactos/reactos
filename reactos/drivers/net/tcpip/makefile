@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 2004/11/13 00:06:32 arty Exp $
+# $Id: makefile,v 1.32 2004/11/25 23:56:59 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,7 @@ TARGET_PCH = include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
+	-D_SEH_NO_NATIVE_NLG \
 	-DMEMTRACK \
 	-DNDIS40 \
 	-Wall -Werror \
@@ -25,6 +26,7 @@ TARGET_DDKLIBS = \
 	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
 	$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a \
 	$(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
+	$(PATH_TO_TOP)/dk/w32/lib/pseh.a \
 	ndis.a
 
 TARGET_CLEAN = tcpip/*.o datalink/*.o \

@@ -73,11 +73,10 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     return Status;
 }
 
-VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
+VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives and queues TCP data
  * ARGUMENTS:
- *     NTE      = Pointer to net table entry which the packet was received on
  *     IPPacket = Pointer to an IP packet that was received
  * NOTES:
  *     This is the low level interface for receiving TCP data
@@ -357,6 +356,19 @@ NTSTATUS TCPAccept
    return Status;
 }
 
+VOID TCPCancelReceiveRequest( PVOID Context ) {
+    PLIST_ENTRY ListEntry;
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)Context;
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    for( ListEntry = Connection->ReceiveRequest.Flink; 
+	 ListEntry != &Connection->ReceiveRequest;
+	 ListEntry = ListEntry->Flink ) {
+	
+    }
+    TcpipRecursiveMutexLeave( &TCPLock );
+}
+
 NTSTATUS TCPReceiveData
 ( PCONNECTION_ENDPOINT Connection,
   PNDIS_BUFFER Buffer,
@@ -404,6 +416,7 @@ NTSTATUS TCPReceiveData
 	Bucket->Request.RequestNotifyObject = Complete;
 	Bucket->Request.RequestContext = Context;
 	*BytesReceived = 0;
+
 	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
 	Status = STATUS_PENDING;
 	TI_DbgPrint(MID_TRACE,("Queued read irp\n"));

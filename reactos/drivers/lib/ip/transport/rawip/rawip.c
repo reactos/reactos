@@ -112,7 +112,7 @@ NTSTATUS RawIPSendDatagram(
     if( Status == NDIS_STATUS_SUCCESS )
 	Status = BuildRawIPPacket( &Packet,
 				   BufferLen,
-				   &AddrFile->ADE->Address,
+				   &AddrFile->Address,
 				   AddrFile->Port );
 
     if( Status == NDIS_STATUS_SUCCESS ) {
@@ -121,7 +121,7 @@ NTSTATUS RawIPSendDatagram(
 		       BufferData + FIELD_OFFSET(IPv4_HEADER, DstAddr),
 		       sizeof(IPv4_RAW_ADDRESS) );
 
-	Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+	Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
 	
 	if( !NT_SUCCESS(Status) ) {
 	    FreeNdisPacket( Packet.NdisPacket );
@@ -137,7 +137,7 @@ NTSTATUS RawIPSendDatagram(
 
 
 VOID RawIPReceive(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives and queues a raw IP datagram

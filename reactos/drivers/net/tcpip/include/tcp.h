@@ -84,6 +84,8 @@ typedef struct _SLEEPING_THREAD {
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
+VOID TCPCancelReceiveRequest( PVOID Context );
+
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection, 
 		    UINT Family, UINT Type, UINT Proto );
 

@@ -147,9 +147,10 @@ TDI_STATUS InfoTdiQueryInformationEx(
     {
 	if ((ID->toi_class != INFO_CLASS_GENERIC) ||
 	    (ID->toi_type != INFO_TYPE_PROVIDER) ||
-	    (ID->toi_id != ENTITY_LIST_ID))
+	    (ID->toi_id != ENTITY_LIST_ID)) {
+	    TI_DbgPrint(MAX_TRACE,("Invalid parameter\n"));
 	    Status = TDI_INVALID_PARAMETER;
-        else
+        } else
 	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
     } else {
 	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );

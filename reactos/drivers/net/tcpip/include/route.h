@@ -28,7 +28,6 @@ typedef struct ROUTE_CACHE_NODE {
     OBJECT_FREE_ROUTINE Free;        /* Routine used to free resources for the object */
     UCHAR State;                     /* RCN state (RCN_STATE_*) */
     IP_ADDRESS Destination;          /* Destination address */
-    PNET_TABLE_ENTRY NTE;            /* Preferred NTE */
     PNEIGHBOR_CACHE_ENTRY NCE;       /* Pointer to NCE for first hop (NULL if none) */
     UINT PathMTU;                    /* Path MTU to destination */
 } ROUTE_CACHE_NODE, *PROUTE_CACHE_NODE;
@@ -56,26 +55,18 @@ NTSTATUS RouteShutdown(
 
 UINT RouteGetRouteToDestination(
     PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE,
     PROUTE_CACHE_NODE *RCN);
 
 PROUTE_CACHE_NODE RouteAddRouteToDestination(
     PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE,
     PIP_INTERFACE IF,
     PNEIGHBOR_CACHE_ENTRY NCE);
 
-VOID RouteRemoveRouteToDestination(
-    PROUTE_CACHE_NODE RCN);
+VOID RouteRemoveRouteToDestination( PROUTE_CACHE_NODE RCN );
 
-VOID RouteInvalidateNTE(
-    PNET_TABLE_ENTRY NTE);
+VOID RouteInvalidateNCE( PNEIGHBOR_CACHE_ENTRY NCE );
 
-VOID RouteInvalidateNCE(
-    PNEIGHBOR_CACHE_ENTRY NCE);
-
-NTSTATUS
-RouteFriendlyAddRoute( PIPROUTE_ENTRY ire );
+NTSTATUS RouteFriendlyAddRoute( PIPROUTE_ENTRY ire );
 
 UINT CountRouteNodes( PROUTE_CACHE_NODE Node );
 

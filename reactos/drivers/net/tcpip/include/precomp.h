@@ -17,7 +17,6 @@
 #include <receive.h>
 #include <transmit.h>
 #include <router.h>
-#include <prefix.h>
 #include <pool.h>
 #include <rawip.h>
 #include <icmp.h>
@@ -36,3 +35,6 @@
 #include <oskittcp.h>
 #include <interface.h>
 #include <ports.h>
+#include <pseh.h>
+#define NTOS_MODE_USER
+#include <ntos.h>

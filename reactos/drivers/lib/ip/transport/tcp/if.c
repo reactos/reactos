@@ -86,7 +86,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 
     TI_DbgPrint(MID_TRACE,("Address is %x\n", addr_in->sin_addr.s_addr));
 
-    NCE = RouterGetRoute(&Destination, NULL);
+    NCE = RouterGetRoute(&Destination);
 
     if( !NCE || !NCE->Interface ) {
 	TI_DbgPrint(MID_TRACE,("no neighbor cache or no interface (%x %x)\n",

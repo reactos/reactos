@@ -218,7 +218,7 @@ NTSTATUS UDPSendDatagram(
     Status = BuildUDPPacket( &Packet,
 			     &RemoteAddress,
 			     RemotePort,
-			     &AddrFile->ADE->Address,
+			     &AddrFile->Address,
 			     AddrFile->Port,
 			     BufferData,
 			     DataSize );
@@ -226,7 +226,7 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) ) 
 	return Status;
 
-    Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+    Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
 
     if( !NT_SUCCESS(Status) )
 	return Status;
@@ -341,7 +341,7 @@ NTSTATUS UDPReceiveDatagram(
 }
 
 
-VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
+VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives and queues a UDP datagram
  * ARGUMENTS:

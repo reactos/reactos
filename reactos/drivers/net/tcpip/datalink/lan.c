@@ -200,7 +200,7 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
+    
     while( (ListEntry = 
 	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
 	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
@@ -251,7 +251,7 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
                 break;
         }
 
-	FreeNdisPacket( Packet );    
+	FreeNdisPacket( Packet );
     }
 }
 
@@ -600,7 +600,7 @@ OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
 
 static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
 					   PWCHAR RegistryValue,
-					   PIP_ADDRESS *Address ) {
+					   PIP_ADDRESS Address ) {
     UNICODE_STRING ValueName;
     UNICODE_STRING UnicodeAddress; 
     NTSTATUS Status;
@@ -646,13 +646,77 @@ static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
     }
     
     AnsiAddress.Buffer[AnsiAddress.Length] = 0;
-    *Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
-    if (!Address) {
-	exFreePool(AnsiAddress.Buffer);
-	return STATUS_UNSUCCESSFUL;
+    AddrInitIPv4(Address, inet_addr(AnsiAddress.Buffer));
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
+					PWCHAR RegistryValue,
+					PUNICODE_STRING String ) {
+    UNICODE_STRING ValueName;
+    UNICODE_STRING UnicodeString;
+    NTSTATUS Status;
+    ULONG ResultLength;
+    UCHAR buf[1024];
+    PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
+
+    RtlInitUnicodeString(&ValueName, RegistryValue);
+    Status = 
+	ZwQueryValueKey(RegHandle, 
+			&ValueName, 
+			KeyValuePartialInformation, 
+			Information, 
+			sizeof(buf), 
+			&ResultLength);
+
+    if (!NT_SUCCESS(Status))
+	return Status;
+    /* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
+    TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
+    
+    UnicodeString.Buffer = (PWCHAR)&Information->Data;
+    UnicodeString.Length = Information->DataLength;
+    UnicodeString.MaximumLength = Information->DataLength;
+ 
+    String->Buffer = 
+	(PWCHAR)exAllocatePool( NonPagedPool, 
+				UnicodeString.MaximumLength + sizeof(WCHAR) );
+
+    if( !String->Buffer ) return STATUS_NO_MEMORY;
+
+    String->MaximumLength = UnicodeString.MaximumLength;
+    RtlCopyUnicodeString( String, &UnicodeString );
+
+    return STATUS_SUCCESS;
+}
+
+static VOID GetSimpleAdapterNameFromRegistryPath
+( PUNICODE_STRING TargetString,
+  PUNICODE_STRING RegistryPath ) {
+    PWCHAR i, LastSlash = NULL;
+    UINT NewStringLength = 0;
+
+    for( i = RegistryPath->Buffer; 
+	 i < RegistryPath->Buffer + 
+	     (RegistryPath->Length / sizeof(WCHAR));
+	 i++ ) if( *i == '\\' ) LastSlash = i;
+
+    if( LastSlash ) LastSlash++; else LastSlash = RegistryPath->Buffer;
+
+    NewStringLength = RegistryPath->MaximumLength - 
+	((LastSlash - RegistryPath->Buffer) * sizeof(WCHAR));
+
+    TargetString->Buffer = 
+	(PWCHAR)exAllocatePool( NonPagedPool, NewStringLength );
+
+    if( !TargetString->Buffer ) {
+	TargetString->Length = TargetString->MaximumLength = 0;
+	return;
     }
 
-    return *Address ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    TargetString->Length = TargetString->MaximumLength = NewStringLength;
+    RtlCopyMemory( TargetString->Buffer, LastSlash, NewStringLength );
 }
 
 VOID BindAdapter(
@@ -668,8 +732,6 @@ VOID BindAdapter(
  */
 {
     PIP_INTERFACE IF;
-    PIP_ADDRESS Address = 0;
-    PIP_ADDRESS Netmask = 0;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
     ULONG Lookahead = LOOKAHEAD_SIZE;
@@ -719,12 +781,25 @@ VOID BindAdapter(
 	    
     if(NT_SUCCESS(Status))
 	Status = ReadIPAddressFromRegistry( RegHandle, L"IPAddress",
-					    &Address );
+					    &IF->Unicast );
     if(NT_SUCCESS(Status)) 
 	Status = ReadIPAddressFromRegistry( RegHandle, L"SubnetMask",
-					    &Netmask );
-    
-    if(!NT_SUCCESS(Status) || !Address || !Netmask)
+					    &IF->Netmask );
+    if(NT_SUCCESS(Status)) {
+	Status = ReadStringFromRegistry( RegHandle, L"DeviceDesc",
+					 &IF->Name );
+
+	RtlZeroMemory( &IF->Name, sizeof( IF->Name ) );
+
+	/* I think that not getting a devicedesc is not a fatal error */
+	if( !NT_SUCCESS(Status) ) {
+	    if( IF->Name.Buffer ) exFreePool( IF->Name.Buffer );
+	    GetSimpleAdapterNameFromRegistryPath( &IF->Name, RegistryPath );
+	}
+	Status = STATUS_SUCCESS;
+    }
+
+    if(!NT_SUCCESS(Status))
     {
 	TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
 	
@@ -738,19 +813,12 @@ VOID BindAdapter(
     TI_DbgPrint
 	(MID_TRACE, 
 	 ("--> Our IP address on this interface: '%s'\n", 
-	  A2S(Address)));
+	  A2S(&IF->Unicast)));
     
     TI_DbgPrint
 	(MID_TRACE, 
 	 ("--> Our net mask on this interface: '%s'\n", 
-	  A2S(Netmask)));
-
-    /* Create a net table entry for this interface */
-    if (!IPCreateNTE(IF, Address, AddrCountPrefixBits(Netmask))) {
-        TI_DbgPrint(MIN_TRACE, ("IPCreateNTE() failed.\n"));
-        IPDestroyInterface(IF);
-        return;
-    }
+	  A2S(&IF->Netmask)));
 
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
@@ -794,7 +862,7 @@ VOID UnbindAdapter(
 
 NDIS_STATUS LANRegisterAdapter(
     PNDIS_STRING AdapterName,
-		PNDIS_STRING RegistryPath)
+    PNDIS_STRING RegistryPath)
 /*
  * FUNCTION: Registers protocol with an NDIS adapter
  * ARGUMENTS:

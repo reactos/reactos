@@ -174,7 +174,7 @@ typedef struct _ADDRESS_FILE {
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
     USHORT Flags;                         /* Flags for address file (see below) */
-    PADDRESS_ENTRY ADE;                   /* Associated address entry */
+    IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */

@@ -37,7 +37,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 				 ADE_UNICAST,
 				 &IpAddress->Addr );
 	GetInterfaceIPv4Address( CurrentIF,
-				 ADE_MULTICAST,
+				 ADE_BROADCAST,
 				 &IpAddress->BcastAddr );
 	GetInterfaceIPv4Address( CurrentIF,
 				 ADE_ADDRMASK,
@@ -86,7 +86,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     while( RtCurrent < RouteEntries + RtCount ) {
 	/* Copy Desitnation */
 	if( RCacheCur->Router ) {
-	    TI_DbgPrint(MAX_TRACE, ("%d: NA %08x NM %08x GW %08x MT %d\n",
+	    TI_DbgPrint(MAX_TRACE, ("%d: NA %08x NM %08x GW %08x MT %x\n",
 				    RtCurrent - RouteEntries,
 				    &RCacheCur->NetworkAddress.Address,
 				    &RCacheCur->Netmask.Address,
@@ -108,11 +108,12 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 	    RtCurrent->Type = 2 /* PF_INET */;
 	    
 	    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
-	    for( RtCurrent->Index = EntityCount - 1; 
-		 RtCurrent->Index >= 0 &&
+	    for( RtCurrent->Index = EntityCount; 
+		 RtCurrent->Index > 0 &&
 		     RCacheCur->Router->Interface != 
-		     EntityList[RtCurrent->Index].context;
+		     EntityList[RtCurrent->Index - 1].context;
 		 RtCurrent->Index-- );
+
 	    RtCurrent->Index = EntityList[RtCurrent->Index].tei_instance;
 	    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
 	} else {
@@ -140,31 +141,17 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 		
 TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
-    KIRQL OldIrql;
-    IF_LIST_ITER(CurrentIF);
     IPSNMP_INFO SnmpInfo;
     UINT IfCount = CountInterfaces();
-    UINT AddrCount = 0;
     UINT RouteCount = CountRouteNodes( NULL );
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     RtlZeroMemory(&SnmpInfo, sizeof(IPSNMP_INFO));
-    
-    /* Count number of addresses */
-    AddrCount = 0;
-    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-    
-    ForEachInterface(CurrentIF) {
-	CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-	AddrCount += CountInterfaceAddresses( CurrentIF );
-    } EndFor(CurrentIF);
-    
-    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
-    
+
     SnmpInfo.NumIf = IfCount;
-    SnmpInfo.NumAddr = AddrCount;
+    SnmpInfo.NumAddr = 1;
     SnmpInfo.NumRoutes = RouteCount;
 
     Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo), 
@@ -227,6 +214,5 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 				     TDIEntityID *id,
 				     PCHAR Buffer,
 				     UINT BufferSize ) {
-    TDI_STATUS Status = TDI_INVALID_REQUEST;
-    return Status;
+    return STATUS_UNSUCCESSFUL;
 }

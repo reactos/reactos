@@ -180,7 +180,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	     LocalAddress.Address.IPv4Address,
 	     RemoteAddress.Address.IPv4Address);
     
-    Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+    Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
     
     if( !NT_SUCCESS(Status) || !RCN ) return OSK_EADDRNOTAVAIL;
 

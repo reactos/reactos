@@ -106,35 +106,15 @@ typedef struct _PACKET_CONTEXT {
 /* The ProtocolReserved field is structured as a PACKET_CONTEXT */
 #define PC(Packet) ((PPACKET_CONTEXT)(&Packet->ProtocolReserved))
 
-/* Address information a.k.a ADE */
-typedef struct _ADDRESS_ENTRY {
-    DEFINE_TAG
-    LIST_ENTRY              ListEntry;  /* Entry on list */
-    OBJECT_FREE_ROUTINE     Free;       /* Routine used to free resources for the object */
-    struct _NET_TABLE_ENTRY *NTE;       /* NTE associated with this address */
-    UCHAR                   Type;       /* Address type */
-    IP_ADDRESS              Address;    /* Pointer to address identifying this entry */
-} ADDRESS_ENTRY, *PADDRESS_ENTRY;
-
 /* Values for address type -- also the interface flags */
 /* These values are mean to overlap meaningfully with the BSD ones */
 #define ADE_UNICAST     0x01
-#define ADE_MULTICAST   0x02
+#define ADE_BROADCAST   0x02
 #define ADE_ADDRMASK    0x04
 #define ADE_POINTOPOINT 0x10
+#define ADE_MULTICAST   0x8000
 
 /* There is one NTE for each source (unicast) address assigned to an interface */
-typedef struct _NET_TABLE_ENTRY {
-    DEFINE_TAG
-    LIST_ENTRY                 IFListEntry; /* Entry on interface list */
-    LIST_ENTRY                 NTListEntry; /* Entry on net table list */
-    struct _IP_INTERFACE       *Interface;  /* Pointer to interface on this net */
-    struct _PREFIX_LIST_ENTRY  *PLE;        /* Pointer to prefix list entry for this net */
-    OBJECT_FREE_ROUTINE        Free;        /* Routine used to free resources for the object */
-    PIP_ADDRESS                Address;     /* Pointer to unicast address for this net */
-} NET_TABLE_ENTRY, *PNET_TABLE_ENTRY;
-
-
 /* Link layer transmit prototype */
 typedef VOID (*LL_TRANSMIT_ROUTINE)(
     PVOID Context,
@@ -158,8 +138,6 @@ typedef struct _LLIP_BIND_INFO {
 /* Information about an IP interface */
 typedef struct _IP_INTERFACE {
     DEFINE_TAG
-    LIST_ENTRY NTEListHead;       /* List of NTEs on this interface */
-    LIST_ENTRY ADEListHead;       /* List of ADEs on this interface */
     LIST_ENTRY ListEntry;         /* Entry on list */
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources used by the object */
     KSPIN_LOCK Lock;              /* Spin lock for this object */
@@ -167,10 +145,14 @@ typedef struct _IP_INTERFACE {
     UINT  HeaderSize;             /* Size of link level header */
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
     UINT  MTU;                    /* Maximum transmission unit */
+    IP_ADDRESS Unicast;           /* Unicast address */
+    IP_ADDRESS PointToPoint;      /* Point to point address */
+    IP_ADDRESS Netmask;           /* Netmask */
+    IP_ADDRESS Broadcast;         /* Broadcast */
+    UNICODE_STRING Name;          /* Adapter name */
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
     LL_TRANSMIT_ROUTINE Transmit; /* Pointer to transmit function */
-
     PVOID TCPContext;             /* TCP Content for this interface */
 } IP_INTERFACE, *PIP_INTERFACE;
 
@@ -178,7 +160,7 @@ typedef struct _IP_INTERFACE {
 #define IP_PROTOCOL_TABLE_SIZE 0x100
 
 typedef VOID (*IP_PROTOCOL_HANDLER)(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
 
 /* Loopback adapter address information (network byte order) */
@@ -214,11 +196,6 @@ PIP_PACKET IPInitializePacket(
     PIP_PACKET IPPacket,
     ULONG Type);
 
-PNET_TABLE_ENTRY IPCreateNTE(
-    PIP_INTERFACE IF,
-    PIP_ADDRESS Address,
-    UINT PrefixLength);
-
 PIP_INTERFACE IPCreateInterface(
     PLLIP_BIND_INFO BindInfo);
 
@@ -231,26 +208,10 @@ BOOLEAN IPRegisterInterface(
 VOID IPUnregisterInterface(
     PIP_INTERFACE IF);
 
-PNET_TABLE_ENTRY IPLocateNTEOnInterface(
-    PIP_INTERFACE IF,
-    PIP_ADDRESS Address,
-    PUINT AddressType);
-
-PNET_TABLE_ENTRY IPLocateNTE(
-    PIP_ADDRESS Address,
-    PUINT AddressType);
-
-PADDRESS_ENTRY IPLocateADE(
-    PIP_ADDRESS Address,
-    UINT AddressType);
-
-PADDRESS_ENTRY IPGetDefaultADE(
-    UINT AddressType);
-
 VOID STDCALL IPTimeout( PVOID Context );
 
 VOID IPDispatchProtocol(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
 
 VOID IPRegisterProtocol(

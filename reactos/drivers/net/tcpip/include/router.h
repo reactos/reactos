@@ -20,33 +20,22 @@ typedef struct _FIB_ENTRY {
     UINT Metric;                  /* Cost of this route */
 } FIB_ENTRY, *PFIB_ENTRY;
 
-
-PNET_TABLE_ENTRY RouterFindBestNTE(
-    PIP_INTERFACE Interface,
-    PIP_ADDRESS Destination);
-
-PIP_INTERFACE RouterFindOnLinkInterface(
-    PIP_ADDRESS Address,
-    PNET_TABLE_ENTRY NTE);
-
 PFIB_ENTRY RouterAddRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
     PNEIGHBOR_CACHE_ENTRY Router,
     UINT Metric);
 
-PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
-    PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE);
+PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination);
 
 VOID RouterRemoveRoute(
     PFIB_ENTRY FIBE);
 
-PFIB_ENTRY RouterCreateRouteIPv4(
-    IPv4_RAW_ADDRESS NetworkAddress,
-    IPv4_RAW_ADDRESS Netmask,
-    IPv4_RAW_ADDRESS RouterAddress,
-    PNET_TABLE_ENTRY NTE,
+PFIB_ENTRY RouterCreateRoute(
+    IP_ADDRESS NetworkAddress,
+    IP_ADDRESS Netmask,
+    IP_ADDRESS RouterAddress,
+    PIP_INTERFACE Interface,
     UINT Metric);
 
 NTSTATUS RouterStartup(

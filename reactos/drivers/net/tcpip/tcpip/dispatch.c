@@ -469,7 +469,7 @@ NTSTATUS DispTdiDisconnect(
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
         Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
         Address->Address[0].Address[0].sin_port = AddrFile->Port;
-        Address->Address[0].Address[0].in_addr = AddrFile->ADE->Address.Address.IPv4Address;        
+        Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;        
         RtlZeroMemory(
           &Address->Address[0].Address[0].sin_zero,
           sizeof(Address->Address[0].Address[0].sin_zero));
@@ -595,7 +595,7 @@ NTSTATUS DispTdiQueryInformation(
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
         Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
         Address->Address[0].Address[0].sin_port = AddrFile->Port;
-        Address->Address[0].Address[0].in_addr = AddrFile->ADE->Address.Address.IPv4Address;        
+        Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;        
         RtlZeroMemory(
           &Address->Address[0].Address[0].sin_zero,
           sizeof(Address->Address[0].Address[0].sin_zero));
@@ -643,10 +643,11 @@ NTSTATUS DispTdiReceive(
     }
 
   /* Initialize a receive request */
-  Status = DispPrepareIrpForCancel(
-    IrpSp->FileObject->FsContext,
-    Irp,
-    (PDRIVER_CANCEL)DispCancelRequest);
+  Status = DispPrepareIrpForCancel
+      (TranContext->Handle.ConnectionContext, 
+       Irp, 
+       (PDRIVER_CANCEL)TCPCancelReceiveRequest);
+
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
@@ -708,10 +709,12 @@ NTSTATUS DispTdiReceiveDatagram(
   Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
   Request.RequestNotifyObject  = DispDataRequestComplete;
   Request.RequestContext       = Irp;
+
   Status = DispPrepareIrpForCancel(
     IrpSp->FileObject->FsContext,
     Irp,
     (PDRIVER_CANCEL)DispCancelRequest);
+
   if (NT_SUCCESS(Status))
     {
 	PCHAR DataBuffer;
@@ -786,6 +789,7 @@ NTSTATUS DispTdiSend(
     IrpSp->FileObject->FsContext,
     Irp,
     (PDRIVER_CANCEL)DispCancelRequest);
+
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
@@ -849,6 +853,7 @@ NTSTATUS DispTdiSendDatagram(
         IrpSp->FileObject->FsContext,
         Irp,
         (PDRIVER_CANCEL)DispCancelRequest);
+
     if (NT_SUCCESS(Status)) {
 	PCHAR DataBuffer;
 	UINT BufferSize;
@@ -1092,8 +1097,10 @@ VOID DispTdiQueryInformationExComplete(
 
     MmUnlockPages(QueryContext->InputMdl);
     IoFreeMdl(QueryContext->InputMdl);
-    MmUnlockPages(QueryContext->OutputMdl);
-    IoFreeMdl(QueryContext->OutputMdl);
+    if( QueryContext->OutputMdl ) {
+	MmUnlockPages(QueryContext->OutputMdl);
+	IoFreeMdl(QueryContext->OutputMdl);
+    }
 
     QueryContext->Irp->IoStatus.Information = ByteCount;
     QueryContext->Irp->IoStatus.Status      = Status;
@@ -1163,9 +1170,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
         QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (QueryContext) {
-#ifdef _MSC_VER
-            try {
-#endif
+	    _SEH_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
                     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
                     FALSE, TRUE, NULL);
@@ -1187,14 +1192,12 @@ NTSTATUS DispTdiQueryInformationEx(
 
                     RtlCopyMemory(&QueryContext->QueryInfo,
                         InputBuffer, sizeof(TCP_REQUEST_QUERY_INFORMATION_EX));
-
                 } else
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-#ifdef _MSC_VER
-            } except(EXCEPTION_EXECUTE_HANDLER) {
-                Status = GetExceptionCode();
-            }
-#endif
+            } _SEH_HANDLE {
+                Status = _SEH_GetExceptionCode();
+            } _SEH_END;
+
             if (NT_SUCCESS(Status)) {
                 Size = MmGetMdlByteCount(OutputMdl);
 
@@ -1231,8 +1234,57 @@ NTSTATUS DispTdiQueryInformationEx(
             ExFreePool(QueryContext);
         } else
             Status = STATUS_INSUFFICIENT_RESOURCES;
-    } else
-        Status = STATUS_INVALID_PARAMETER;
+    } else if( InputBufferLength == 
+	       sizeof(TCP_REQUEST_QUERY_INFORMATION_EX) ) {
+	/* Handle the case where the user is probing the buffer for length */
+	TI_DbgPrint(MAX_TRACE, ("InputBufferLength %d OutputBufferLength %d\n",
+				InputBufferLength, OutputBufferLength));
+        InputBuffer = (PTCP_REQUEST_QUERY_INFORMATION_EX)
+            IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+
+	Size = 0;
+
+        QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
+
+	_SEH_TRY {
+	    InputMdl = IoAllocateMdl(InputBuffer,
+				     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
+				     FALSE, TRUE, NULL);
+
+	    MmProbeAndLockPages(InputMdl, Irp->RequestorMode,
+				IoModifyAccess);
+	    
+	    InputMdlLocked = TRUE;
+	    Status = STATUS_SUCCESS;
+	} _SEH_HANDLE {
+	    TI_DbgPrint(MAX_TRACE, ("Failed to acquire client buffer\n"));
+	    Status = _SEH_GetExceptionCode();
+	} _SEH_END;
+
+	if( !NT_SUCCESS(Status) || !InputMdl ) {
+	    if( InputMdl ) IoFreeMdl( InputMdl );
+	    ExFreePool(QueryContext);
+	    return Status;
+	}
+
+	RtlCopyMemory(&QueryContext->QueryInfo,
+		      InputBuffer, sizeof(TCP_REQUEST_QUERY_INFORMATION_EX));
+
+	QueryContext->Irp       = Irp;
+	QueryContext->InputMdl  = InputMdl;
+	QueryContext->OutputMdl = NULL;
+
+	Request.RequestNotifyObject = DispTdiQueryInformationExComplete;
+	Request.RequestContext      = QueryContext;
+	Status = InfoTdiQueryInformationEx(&Request,
+					   &QueryContext->QueryInfo.ID, 
+					   NULL,
+					   &Size, 
+					   &QueryContext->QueryInfo.Context);
+	DispTdiQueryInformationExComplete(QueryContext, Status, Size);
+	TI_DbgPrint(MAX_TRACE, ("Leaving. Status = (0x%X)\n", Status));
+    } else Status = STATUS_INVALID_PARAMETER;
 
     TI_DbgPrint(MIN_TRACE, ("Leaving. Status = (0x%X)\n", Status));
 

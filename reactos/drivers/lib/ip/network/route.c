@@ -293,34 +293,6 @@ VOID RemoveRouteToDestination(
 }
 
 
-VOID InvalidateNTEOnSubtree(
-    PNET_TABLE_ENTRY NTE,
-    PROUTE_CACHE_NODE Node)
-/*
- * FUNCTION: Removes all RCNs with references to an NTE on a subtree
- * ARGUMENNTS:
- *     NTE  = Pointer to NTE to invalidate
- *     Node = Pointer to RCN to start removing nodes at
- * NOTES:
- *     This function must be called with the route cache lock held.
- */
-{
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. NTE (0x%X)  Node (0x%X).\n", NTE, Node));
-
-    if (IsInternalRCN(Node)) {
-        /* Traverse left subtree */
-        InvalidateNTEOnSubtree(NTE, Node->Left);
-
-        /* Traverse right subtree */
-        InvalidateNTEOnSubtree(NTE, Node->Right);
-
-        /* Finally check the node itself */
-        if (Node->NTE == NTE)
-            RemoveRouteToDestination(Node);
-    }
-}
-
-
 VOID InvalidateNCEOnSubtree(
     PNEIGHBOR_CACHE_ENTRY NCE,
     PROUTE_CACHE_NODE Node)
@@ -446,16 +418,12 @@ NTSTATUS RouteShutdown(
 }
 
 
-UINT RouteGetRouteToDestination(
-    PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE,
-    PROUTE_CACHE_NODE *RCN)
+UINT RouteGetRouteToDestination
+(PIP_ADDRESS Destination, PROUTE_CACHE_NODE *RCN)
 /*
  * FUNCTION: Locates an RCN describing a route to a destination address
  * ARGUMENTS:
  *     Destination = Pointer to destination address to find route to
- *     NTE         = Pointer to NTE describing net to send on
- *                   (NULL means routing module choose NTE to send on)
  *     RCN         = Address of pointer to an RCN
  * RETURNS:
  *     Status of operation
@@ -469,11 +437,9 @@ UINT RouteGetRouteToDestination(
     PNEIGHBOR_CACHE_ENTRY NCE;
     PIP_INTERFACE Interface;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X).\n",
-        Destination, NTE));
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)\n", Destination));
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s).\n",
-			       A2S(Destination), NTE ? A2S(NTE->Address) : ""));
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)\n", A2S(Destination)));
 
     TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
@@ -488,17 +454,8 @@ UINT RouteGetRouteToDestination(
         /* No route was found in the cache */
 
         /* Check if the destination is on-link */
-        Interface = RouterFindOnLinkInterface(Destination, NTE);
+        Interface = FindOnLinkInterface(Destination);
         if (Interface) {
-            if (!NTE) {
-                NTE = RouterFindBestNTE(Interface, Destination);
-                if (!NTE) {
-                    /* We cannot get to the specified destination. Return error */
-                    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
-                    return IP_NO_ROUTE_TO_DESTINATION;
-                }
-            }
-
             /* The destination address is on-link. Check our neighbor cache */
             NCE = NBFindOrCreateNeighbor(Interface, Destination);
             if (!NCE) {
@@ -507,7 +464,7 @@ UINT RouteGetRouteToDestination(
             }
         } else {
             /* Destination is not on any subnets we're on. Find a router to use */
-            NCE = RouterGetRoute(Destination, NTE);
+            NCE = RouterGetRoute(Destination);
             if (!NCE) {
                 /* We cannot get to the specified destination. Return error */
                 TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
@@ -527,7 +484,6 @@ UINT RouteGetRouteToDestination(
         }
 
         RCN2->State       = RCN_STATE_COMPUTED;
-        RCN2->NTE         = NTE;
         RtlCopyMemory(&RCN2->Destination, Destination, sizeof(IP_ADDRESS));
         RCN2->PathMTU     = NCE->Interface->MTU;
         RCN2->NCE         = NCE;
@@ -549,14 +505,12 @@ UINT RouteGetRouteToDestination(
 
 PROUTE_CACHE_NODE RouteAddRouteToDestination(
     PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE,
     PIP_INTERFACE IF,
     PNEIGHBOR_CACHE_ENTRY NCE)
 /*
  * FUNCTION: Adds a (permanent) route to a destination
  * ARGUMENTS:
  *     Destination = Pointer to destination address
- *     NTE         = Pointer to net table entry
  *     IF          = Pointer to interface to use
  *     NCE         = Pointer to first hop to destination
  * RETURNS:
@@ -567,12 +521,11 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
     KIRQL OldIrql;
     PROUTE_CACHE_NODE RCN;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X)  IF (0x%X)  NCE (0x%X).\n",
-        Destination, NTE, IF, NCE));
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  IF (0x%X)  NCE (0x%X).\n",
+        Destination, IF, NCE));
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s)  NCE (%s).\n",
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NCE (%s).\n",
 			       A2S(Destination), 
-			       A2S(NTE->Address), 
 			       A2S(&NCE->Address)));
 
     TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
@@ -608,7 +561,6 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
 
     /* Reference once for beeing alive */
     RCN->State       = RCN_STATE_PERMANENT;
-    RCN->NTE         = NTE;
     RtlCopyMemory(&RCN->Destination, Destination, sizeof(IP_ADDRESS));
     RCN->PathMTU     = IF->MTU;
     RCN->NCE         = NCE;
@@ -637,25 +589,6 @@ VOID RouteRemoveRouteToDestination(
 
     TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
-
-
-VOID RouteInvalidateNTE(
-    PNET_TABLE_ENTRY NTE)
-/*
- * FUNCTION: Removes all RCNs with references to an NTE
- * ARGUMENTS:
- *     NTE = Pointer to net table entry to invalidate
- */
-{
-    KIRQL OldIrql;
- 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. NTE (0x%X).\n", NTE));
-
-    TcpipAcquireSpinLock(&RouteCacheLock, &OldIrql);
-    InvalidateNTEOnSubtree(NTE, RouteCache);
-    TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
-}
-
 
 VOID RouteInvalidateNCE(
     PNEIGHBOR_CACHE_ENTRY NCE)
