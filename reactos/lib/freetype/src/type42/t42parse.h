@@ -33,7 +33,7 @@ FT_BEGIN_HEADER
     FT_Byte*      base_dict;
     FT_Long       base_len;
 
-    FT_Byte       in_memory;
+    FT_Bool       in_memory;
 
   } T42_ParserRec, *T42_Parser;
 
@@ -42,13 +42,14 @@ FT_BEGIN_HEADER
   {
     T42_ParserRec  parser;          /* parser used to read the stream */
 
-    FT_Int         num_chars;       /* number of characters in encoding */
+    FT_UInt        num_chars;       /* number of characters in encoding */
     PS_TableRec    encoding_table;  /* PS_Table used to store the       */
                                     /* encoding character names         */
 
-    FT_Int         num_glyphs;
+    FT_UInt        num_glyphs;
     PS_TableRec    glyph_names;
     PS_TableRec    charstrings;
+    PS_TableRec    swap_table;      /* For moving .notdef glyph to index 0. */
 
   } T42_LoaderRec, *T42_Loader;
 

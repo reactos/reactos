@@ -5,7 +5,7 @@
 /*    General types and definitions for the auto-hint module               */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 Catharon Productions Inc.              */
+/*  Copyright 2000-2001, 2002, 2003, 2004 Catharon Productions Inc.        */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -492,8 +492,9 @@ FT_BEGIN_HEADER
     AH_Outline       glyph;
 
     AH_Loader        loader;
-    FT_Vector        pp1;
+    FT_Vector        pp1;               /* horizontal phantom points */
     FT_Vector        pp2;
+    /* we ignore vertical phantom points */
 
     FT_Bool          transformed;
     FT_Vector        trans_delta;

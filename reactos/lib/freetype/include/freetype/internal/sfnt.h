@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `sfnt' driver interface (specification).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -125,11 +125,6 @@ FT_BEGIN_HEADER
   (*TT_Done_Face_Func)( TT_Face  face );
 
 
-  typedef FT_Module_Interface
-  (*SFNT_Get_Interface_Func)( FT_Module    module,
-                              const char*  func_interface );
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
@@ -248,6 +243,76 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
+  /*    TT_Find_SBit_Image_Func                                            */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Checks whether an embedded bitmap (an `sbit') exists for a given   */
+  /*    glyph, at a given strike.                                          */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face          :: The target face object.                           */
+  /*                                                                       */
+  /*    glyph_index   :: The glyph index.                                  */
+  /*                                                                       */
+  /*    strike_index  :: The current strike index.                         */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    arange        :: The SBit range containing the glyph index.        */
+  /*                                                                       */
+  /*    astrike       :: The SBit strike containing the glyph index.       */
+  /*                                                                       */
+  /*    aglyph_offset :: The offset of the glyph data in `EBDT' table.     */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.  Returns                    */
+  /*    SFNT_Err_Invalid_Argument if no sbit exists for the requested      */
+  /*    glyph.                                                             */
+  /*                                                                       */
+  typedef FT_Error
+  (*TT_Find_SBit_Image_Func)( TT_Face          face,
+                              FT_UInt          glyph_index,
+                              FT_ULong         strike_index,
+                              TT_SBit_Range   *arange,
+                              TT_SBit_Strike  *astrike,
+                              FT_ULong        *aglyph_offset );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    TT_Load_SBit_Metrics_Func                                          */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Gets the big metrics for a given embedded bitmap.                  */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    stream      :: The input stream.                                   */
+  /*                                                                       */
+  /*    range       :: The SBit range containing the glyph.                */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    big_metrics :: A big SBit metrics structure for the glyph.         */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    The stream cursor must be positioned at the glyph's offset within  */
+  /*    the `EBDT' table before the call.                                  */
+  /*                                                                       */
+  /*    If the image format uses variable metrics, the stream cursor is    */
+  /*    positioned just after the metrics header in the `EBDT' table on    */
+  /*    function exit.                                                     */
+  /*                                                                       */
+  typedef FT_Error
+  (*TT_Load_SBit_Metrics_Func)( FT_Stream        stream,
+                                TT_SBit_Range    range,
+                                TT_SBit_Metrics  metrics );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
   /*    TT_Load_SBit_Image_Func                                            */
   /*                                                                       */
   /* <Description>                                                         */
@@ -255,20 +320,27 @@ FT_BEGIN_HEADER
   /*    returns its metrics.                                               */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    face        :: The target face object.                             */
+  /*    face ::                                                            */
+  /*      The target face object.                                          */
   /*                                                                       */
-  /*    x_ppem      :: The horizontal resolution in points per EM.         */
+  /*    strike_index ::                                                    */
+  /*      The strike index.                                                */
   /*                                                                       */
-  /*    y_ppem      :: The vertical resolution in points per EM.           */
+  /*    glyph_index ::                                                     */
+  /*      The current glyph index.                                         */
   /*                                                                       */
-  /*    glyph_index :: The current glyph index.                            */
+  /*    load_flags ::                                                      */
+  /*      The current load flags.                                          */
   /*                                                                       */
-  /*    stream      :: The input stream.                                   */
+  /*    stream ::                                                          */
+  /*      The input stream.                                                */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    amap        :: The target pixmap.                                  */
+  /*    amap ::                                                            */
+  /*      The target pixmap.                                               */
   /*                                                                       */
-  /*    ametrics    :: A big sbit metrics structure for the glyph image.   */
+  /*    ametrics ::                                                        */
+  /*      A big sbit metrics structure for the glyph image.                */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.  Returns an error if no     */
@@ -312,8 +384,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef FT_Error
   (*TT_Set_SBit_Strike_Func)( TT_Face    face,
-                              FT_Int     x_ppem,
-                              FT_Int     y_ppem,
+                              FT_UInt    x_ppem,
+                              FT_UInt    y_ppem,
                               FT_ULong  *astrike_index );
 
 
@@ -369,57 +441,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
-  /*    TT_CharMap_Load_Func                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads a given TrueType character map into memory.                  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face   :: A handle to the parent face object.                      */
-  /*                                                                       */
-  /*    stream :: A handle to the current stream object.                   */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    cmap   :: A pointer to a cmap object.                              */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The function assumes that the stream is already in use (i.e.,      */
-  /*    opened).  In case of error, all partially allocated tables are     */
-  /*    released.                                                          */
-  /*                                                                       */
-  typedef FT_Error
-  (*TT_CharMap_Load_Func)( TT_Face       face,
-                           TT_CMapTable  cmap,
-                           FT_Stream     input );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <FuncType>                                                            */
-  /*    TT_CharMap_Free_Func                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Destroys a character mapping table.                                */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face :: A handle to the parent face object.                        */
-  /*                                                                       */
-  /*    cmap :: A handle to a cmap object.                                 */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  typedef FT_Error
-  (*TT_CharMap_Free_Func)( TT_Face       face,
-                           TT_CMapTable  cmap );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <FuncType>                                                            */
   /*    TT_Load_Table_Func                                                 */
   /*                                                                       */
   /* <Description>                                                         */
@@ -459,22 +480,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* <FuncType>                                                            */
-  /*    SFNT_Load_Table_Func                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Loads a given SFNT table into memory.                              */
-  /*                                                                       */
-  typedef FT_Error
-  (*SFNT_Load_Table_Func)( FT_Face    face,
-                           FT_ULong   tag,
-                           FT_Long    offset,
-                           FT_Byte*   buffer,
-                           FT_ULong*  length );
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* <Struct>                                                              */
   /*    SFNT_Interface                                                     */
   /*                                                                       */
@@ -492,7 +497,7 @@ FT_BEGIN_HEADER
     TT_Init_Face_Func            init_face;
     TT_Load_Face_Func            load_face;
     TT_Done_Face_Func            done_face;
-    SFNT_Get_Interface_Func      get_interface;
+    FT_Module_Requester          get_interface;
 
     TT_Load_Any_Func             load_any;
     TT_Load_SFNT_HeaderRec_Func  load_sfnt_header;
@@ -524,16 +529,14 @@ FT_BEGIN_HEADER
     /* see `ttsbit.h' */
     TT_Set_SBit_Strike_Func      set_sbit_strike;
     TT_Load_Table_Func           load_sbits;
+    TT_Find_SBit_Image_Func      find_sbit_image;
+    TT_Load_SBit_Metrics_Func    load_sbit_metrics;
     TT_Load_SBit_Image_Func      load_sbit_image;
     TT_Free_Table_Func           free_sbits;
 
     /* see `ttpost.h' */
     TT_Get_PS_Name_Func          get_psname;
     TT_Free_Table_Func           free_psnames;
-
-    /* see `ttcmap.h' */
-    TT_CharMap_Load_Func         load_charmap;
-    TT_CharMap_Free_Func         free_charmap;
 
   } SFNT_Interface;
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (body).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -142,7 +142,7 @@
   /*    table  :: The target table.                                        */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    idx  :: The index of the object in the table.                      */
+  /*    idx    :: The index of the object in the table.                    */
   /*                                                                       */
   /*    object :: The address of the object to copy in memory.             */
   /*                                                                       */
@@ -181,7 +181,7 @@
         /* increase size by 25% and round up to the nearest multiple
            of 1024 */
         new_size += ( new_size >> 2 ) + 1;
-        new_size  = ( new_size + 1023 ) & -1024;
+        new_size  = FT_PAD_CEIL( new_size, 1024 );
       }
 
       error = reallocate_t1_table( table, new_size );
@@ -267,31 +267,76 @@
   /*************************************************************************/
 
   /* In the PostScript Language Reference Manual (PLRM) the following */
-  /* characters are called `white-space characters'.                  */
+  /* characters are called `whitespace characters'.                   */
 #define IS_T1_WHITESPACE( c )  ( (c) == ' '  || (c) == '\t' )
 #define IS_T1_LINESPACE( c )   ( (c) == '\r' || (c) == '\n' || (c) == '\f' )
 #define IS_T1_NULLSPACE( c )   ( (c) == '\0' )
 
-  /* According to the PLRM all white-space characters are equivalent, */
-  /* except in comments and strings.                                  */
+  /* According to the PLRM all whitespace characters are equivalent, */
+  /* except in comments and strings.                                 */
 #define IS_T1_SPACE( c )  ( IS_T1_WHITESPACE( c ) || \
                             IS_T1_LINESPACE( c )  || \
                             IS_T1_NULLSPACE( c )  )
 
 
-  static void
-  skip_spaces( FT_Byte**  acur,
-               FT_Byte*   limit )
+  /* The following array is used by various functions to quickly convert */
+  /* digits (both decimal and non-decimal) into numbers.                 */
+
+#if 'A' == 65
+  /* ASCII */
+
+  static const char ft_char_table[128] =
   {
-    FT_Byte* cur = *acur;
+    /* 0x00 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1,
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1,
+  };
+
+  /* no character >= 0x80 can represent a valid number */
+#define OP  >=
+
+#endif /* 'A' == 65 */
+
+#if 'A' == 193
+  /* EBCDIC */
+
+  static const char ft_char_table[128] =
+  {
+    /* 0x80 */
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, -1, -1, -1, -1, -1, -1,
+    -1, 19, 20, 21, 22, 23, 24, 25, 26, 27, -1, -1, -1, -1, -1, -1,
+    -1, -1, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, -1, -1, -1, -1, -1, -1,
+    -1, 19, 20, 21, 22, 23, 24, 25, 26, 27, -1, -1, -1, -1, -1, -1,
+    -1, -1, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1, -1,
+     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+  }
+
+  /* no character < 0x80 can represent a valid number */
+#define OP  <
+
+#endif /* 'A' == 193 */
+
+
+  /* first character must be already part of the comment */
+
+  static void
+  skip_comment( FT_Byte*  *acur,
+                FT_Byte*   limit )
+  {
+    FT_Byte*  cur = *acur;
 
 
     while ( cur < limit )
     {
-      FT_Byte  c = *cur;
-
-
-      if ( !IS_T1_SPACE( c ) )
+      if ( IS_T1_LINESPACE( *cur ) )
         break;
       cur++;
     }
@@ -301,23 +346,185 @@
 
 
   static void
-  skip_alpha( FT_Byte**  acur,
-              FT_Byte*   limit )
+  skip_spaces( FT_Byte*  *acur,
+               FT_Byte*   limit )
   {
     FT_Byte*  cur = *acur;
 
 
     while ( cur < limit )
     {
-      FT_Byte  c = *cur;
-
-
-      if ( IS_T1_SPACE( c ) )
-        break;
+      if ( !IS_T1_SPACE( *cur ) )
+      {
+        if ( *cur == '%' )
+          /* According to the PLRM, a comment is equal to a space. */
+          skip_comment( &cur, limit );
+        else
+          break;
+      }
       cur++;
     }
 
     *acur = cur;
+  }
+
+
+  /* first character must be `(' */
+
+  static void
+  skip_literal_string( FT_Byte*  *acur,
+                       FT_Byte*   limit )
+  {
+    FT_Byte*  cur   = *acur;
+    FT_Int    embed = 0;
+
+
+    while ( cur < limit )
+    {
+      if ( *cur == '\\' )
+        cur++;
+      else if ( *cur == '(' )
+        embed++;
+      else if ( *cur == ')' )
+      {
+        embed--;
+        if ( embed == 0 )
+        {
+          cur++;
+          break;
+        }
+      }
+      cur++;
+    }
+
+    *acur = cur;
+  }
+
+
+  /* first character must be `<' */
+
+  static void
+  skip_string( PS_Parser  parser )
+  {
+    FT_Byte*  cur   = parser->cursor;
+    FT_Byte*  limit = parser->limit;
+
+
+    while ( ++cur < limit )
+    {
+      int  d;
+
+
+      /* All whitespace characters are ignored. */
+      skip_spaces( &cur, limit );
+      if ( cur >= limit )
+        break;
+
+      if ( *cur OP 0x80 )
+        break;
+
+      d = ft_char_table[*cur & 0x7F];
+      if ( d < 0 || d >= 16 )
+        break;
+    }
+
+    if ( cur < limit && *cur != '>' )
+      parser->error = PSaux_Err_Invalid_File_Format;
+    else
+      cur++;
+
+    parser->cursor = cur;
+  }
+
+
+  /***********************************************************************/
+  /*                                                                     */
+  /* All exported parsing routines handle leading whitespace and stop at */
+  /* the first character which isn't part of the just handled token.     */
+  /*                                                                     */
+  /***********************************************************************/
+
+
+  FT_LOCAL_DEF( void )
+  ps_parser_skip_PS_token( PS_Parser  parser )
+  {
+    /* Note: PostScript allows any non-delimiting, non-whitespace        */
+    /*       character in a name (PS Ref Manual, 3rd ed, p31).           */
+    /*       PostScript delimiters are (, ), <, >, [, ], {, }, /, and %. */
+
+    FT_Byte*  cur   = parser->cursor;
+    FT_Byte*  limit = parser->limit;
+
+
+    skip_spaces( &cur, limit );             /* this also skips comments */
+    if ( cur >= limit )
+      goto Exit;
+
+    /* self-delimiting, single-character tokens */
+    if ( *cur == '[' || *cur == ']' ||
+         *cur == '{' || *cur == '}' )
+    {
+      cur++;
+      goto Exit;
+    }
+
+    if ( *cur == '(' )                              /* (...) */
+    {
+      skip_literal_string( &cur, limit );
+      goto Exit;
+    }
+
+    if ( *cur == '<' )                              /* <...> */
+    {
+      if ( cur + 1 < limit && *(cur + 1) == '<' )   /* << */
+      {
+        cur++;
+        cur++;
+        goto Exit;
+      }
+      parser->cursor = cur;
+      skip_string( parser );
+      return;
+    }
+
+    if ( *cur == '>' )
+    {
+      cur++;
+      if ( cur >= limit || *cur != '>' )             /* >> */
+      {
+        parser->error = PSaux_Err_Invalid_File_Format;
+        goto Exit;
+      }
+      cur++;
+      goto Exit;
+    }
+
+    if ( *cur == '/' )
+      cur++;
+
+    /* anything else */
+    while ( cur < limit )
+    {
+      if ( IS_T1_SPACE( *cur )        ||
+           *cur == '('                ||
+           *cur == '/'                ||
+           *cur == '%'                ||
+           *cur == '[' || *cur == ']' ||
+           *cur == '{' || *cur == '}' ||
+           *cur == '<' || *cur == '>' )
+        break;
+
+      if ( *cur == ')' )
+      {
+        parser->error = PSaux_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
+      cur++;
+    }
+
+  Exit:
+    parser->cursor = cur;
   }
 
 
@@ -328,12 +535,8 @@
   }
 
 
-  FT_LOCAL_DEF( void )
-  ps_parser_skip_alpha( PS_Parser  parser )
-  {
-    skip_alpha( &parser->cursor, parser->limit );
-  }
-
+  /* `token' here means either something between balanced delimiters */
+  /* or the next token; the delimiters are not removed.              */
 
   FT_LOCAL_DEF( void )
   ps_parser_to_token( PS_Parser  parser,
@@ -349,72 +552,87 @@
     token->start = 0;
     token->limit = 0;
 
-    /* first of all, skip space */
+    /* first of all, skip leading whitespace */
     ps_parser_skip_spaces( parser );
 
     cur   = parser->cursor;
     limit = parser->limit;
 
-    if ( cur < limit )
+    if ( cur >= limit )
+      return;
+
+    switch ( *cur )
     {
-      switch ( *cur )
-      {
-        /************* check for strings ***********************/
-      case '(':
-        token->type = T1_TOKEN_TYPE_STRING;
-        ender = ')';
-        goto Lookup_Ender;
-
-        /************* check for programs/array ****************/
-      case '{':
-        token->type = T1_TOKEN_TYPE_ARRAY;
-        ender = '}';
-        goto Lookup_Ender;
-
-        /************* check for table/array ******************/
-      case '[':
-        token->type = T1_TOKEN_TYPE_ARRAY;
-        ender = ']';
-
-      Lookup_Ender:
-        embed   = 1;
-        starter = *cur++;
-        token->start = cur;
-        while ( cur < limit )
-        {
-          if ( *cur == starter )
-            embed++;
-          else if ( *cur == ender )
-          {
-            embed--;
-            if ( embed <= 0 )
-            {
-              token->limit = cur++;
-              break;
-            }
-          }
-          cur++;
-        }
-        break;
-
-        /* **************** otherwise, it's any token **********/
-      default:
-        token->start = cur++;
-        token->type  = T1_TOKEN_TYPE_ANY;
-        while ( cur < limit && !IS_T1_SPACE( *cur ) )
-          cur++;
-
+      /************* check for literal string *****************/
+    case '(':
+      token->type  = T1_TOKEN_TYPE_STRING;
+      token->start = cur;
+      skip_literal_string( &cur, limit );
+      if ( cur < limit )
         token->limit = cur;
-      }
+      break;
 
-      if ( !token->limit )
-      {
-        token->start = 0;
-        token->type  = T1_TOKEN_TYPE_NONE;
-      }
+      /************* check for programs/array *****************/
+    case '{':
+      token->type = T1_TOKEN_TYPE_ARRAY;
+      ender = '}';
+      goto Lookup_Ender;
 
+      /************* check for table/array ********************/
+    case '[':
+      token->type = T1_TOKEN_TYPE_ARRAY;
+      ender = ']';
+      /* fall through */
+
+    Lookup_Ender:
+      embed        = 1;
+      starter      = *cur;
+      token->start = cur++;
+
+      /* we need this to catch `[ ]' */
       parser->cursor = cur;
+      ps_parser_skip_spaces( parser );
+      cur = parser->cursor;
+
+      while ( cur < limit && !parser->error )
+      {
+        if ( *cur == starter )
+          embed++;
+        else if ( *cur == ender )
+        {
+          embed--;
+          if ( embed <= 0 )
+          {
+            token->limit = ++cur;
+            break;
+          }
+        }
+
+        parser->cursor = cur;
+        ps_parser_skip_PS_token( parser );
+        /* we need this to catch `[XXX ]' */
+        ps_parser_skip_spaces  ( parser );
+        cur = parser->cursor;
+      }
+      break;
+
+      /* ************ otherwise, it is any token **************/
+    default:
+      token->start = cur;
+      token->type  = T1_TOKEN_TYPE_ANY;
+      ps_parser_skip_PS_token( parser );
+      cur = parser->cursor;
+      if ( !parser->error )
+        token->limit = cur;
     }
+
+    if ( !token->limit )
+    {
+      token->start = 0;
+      token->type  = T1_TOKEN_TYPE_NONE;
+    }
+
+    parser->cursor = cur;
   }
 
 
@@ -429,7 +647,9 @@
 
     *pnum_tokens = -1;
 
+    /* this also handles leading whitespace */
     ps_parser_to_token( parser, &master );
+
     if ( master.type == T1_TOKEN_TYPE_ARRAY )
     {
       FT_Byte*  old_cursor = parser->cursor;
@@ -438,8 +658,9 @@
       T1_Token  limit      = cur + max_tokens;
 
 
-      parser->cursor = master.start;
-      parser->limit  = master.limit;
+      /* don't include outermost delimiters */
+      parser->cursor = master.start + 1;
+      parser->limit  = master.limit - 1;
 
       while ( parser->cursor < parser->limit )
       {
@@ -464,150 +685,163 @@
   }
 
 
-  static FT_Long
-  T1Radix( FT_Long    radixBase,
-           FT_Byte**  cur,
-           FT_Byte*   limit )
-  {
-    FT_Long  result = 0;
-    FT_Byte  radixEndChar0 =
-               (FT_Byte)( radixBase > 10 ? '9' + 1 : '0' + radixBase );
-    FT_Byte  radixEndChar1 =
-               (FT_Byte)( 'A' + radixBase - 10 );
-    FT_Byte  radixEndChar2 =
-               (FT_Byte)( 'a' + radixBase - 10 );
-
-
-    while( *cur < limit )
-    {
-      if ( (*cur)[0] >= '0' && (*cur)[0] < radixEndChar0 )
-        result = result * radixBase + (*cur)[0] - '0';
-
-      else if ( radixBase > 10 &&
-                (*cur)[0] >= 'A' && (*cur)[0] < radixEndChar1 )
-        result = result * radixBase + ( (*cur)[0] - 'A' + 10 );
-
-      else if ( radixBase > 10 &&
-                (*cur)[0] >= 'a' && (*cur)[0] < radixEndChar2 )
-        result = result * radixBase + ( (*cur)[0] - 'a' + 10 );
-
-      else
-        return result;
-
-      (*cur)++;
-    }
-
-    return result;
-  }
-
+  /* first character must be already part of the number */
 
   static FT_Long
-  t1_toint( FT_Byte**  cursor,
+  ps_radix( FT_Long    radixBase,
+            FT_Byte*  *acur,
             FT_Byte*   limit )
   {
     FT_Long   result = 0;
-    FT_Byte*  cur    = *cursor;
-    FT_Byte   c      = '\0', d;
+    FT_Byte*  cur    = *acur;
 
 
-    for ( ; cur < limit; cur++ )
+    if ( radixBase < 2 || radixBase > 36 )
+      return 0;
+
+    while ( cur < limit )
     {
-      c = *cur;
-      d = (FT_Byte)( c - '0' );
-      if ( d < 10 )
+      int  d;
+
+
+      if ( *cur OP 0x80 )
         break;
 
-      if ( c == '-' )
-      {
-        cur++;
+      d = ft_char_table[*cur & 0x7F];
+      if ( d < 0 || d >= radixBase )
         break;
-      }
+
+      result = result * radixBase + d;
+
+      cur++;
     }
 
-    if ( cur < limit )
-    {
-      do
-      {
-        d = (FT_Byte)( cur[0] - '0' );
-        if ( d >= 10 )
-        {
-          if ( cur[0] == '#' )
-          {
-            cur++;
-            result = T1Radix( result, &cur, limit );
-          }
-          break;
-        }
+    *acur = cur;
 
-        result = result * 10 + d;
-        cur++;
-
-      } while ( cur < limit );
-
-      if ( c == '-' )
-        result = -result;
-    }
-
-    *cursor = cur;
     return result;
   }
 
 
-  /* <...>: hexadecimal string */
+  /* first character must be already part of the number */
+
+  static FT_Long
+  ps_toint( FT_Byte*  *acur,
+            FT_Byte*   limit )
+  {
+    FT_Long   result = 0;
+    FT_Byte*  cur    = *acur;
+    FT_Byte   c;
+
+
+    if ( cur >= limit )
+      goto Exit;
+
+    c = *cur;
+    if ( c == '-' )
+      cur++;
+
+    while ( cur < limit )
+    {
+      int  d;
+
+
+      if ( *cur == '#' )
+      {
+        cur++;
+        result = ps_radix( result, &cur, limit );
+        break;
+      }
+
+      if ( *cur OP 0x80 )
+        break;
+
+      d = ft_char_table[*cur & 0x7F];
+      if ( d < 0 || d >= 10 )
+        break;
+      result = result * 10 + d;
+
+      cur++;
+    };
+
+    if ( c == '-' )
+      result = -result;
+
+  Exit:
+    *acur = cur;
+    return result;
+  }
+
+
+  /* first character must be `<' if `delimiters' is non-zero */
+
   static FT_Error
-  ps_tobytes( FT_Byte**  cursor,
+  ps_tobytes( FT_Byte*  *acur,
               FT_Byte*   limit,
-              FT_Int     max_bytes,
+              FT_Long    max_bytes,
               FT_Byte*   bytes,
-              FT_Int*    pnum_bytes )
+              FT_Long*   pnum_bytes,
+              FT_Bool    delimiters )
   {
     FT_Error  error = PSaux_Err_Ok;
 
-    FT_Byte*  cur = *cursor;
-    FT_Int    n   = 0;
-    FT_Byte   b;
+    FT_Byte*  cur = *acur;
+    FT_Long   n   = 0;
 
 
-    skip_spaces( &cur, limit );
-
-    if ( *cur != '<' )
-    {
-      error = PSaux_Err_Invalid_File_Format;
+    if ( cur >= limit )
       goto Exit;
+
+    if ( delimiters )
+    {
+      if ( *cur != '<' )
+      {
+        error = PSaux_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
+      cur++;
     }
 
-    cur++;
+    max_bytes = max_bytes * 2;
 
-    for ( ; cur < limit; n++ )
+    for ( n = 0; cur < limit; n++, cur++ )
     {
-      FT_Byte*  cur2 = cur;
+      int  d;
 
 
-      if ( n + 1 > max_bytes * 2 )
+      if ( n >= max_bytes )
+        /* buffer is full */
         goto Exit;
 
-      /* All white-space charcters are ignored. */
+      /* All whitespace characters are ignored. */
       skip_spaces( &cur, limit );
+      if ( cur >= limit )
+        break;
 
-      b = T1Radix( 16, &cur, cur + 1 );
+      if ( *cur OP 0x80 )
+        break;
 
-      if ( cur == cur2 )
+      d = ft_char_table[*cur & 0x7F];
+      if ( d < 0 || d >= 16 )
         break;
 
       /* <f> == <f0> != <0f> */
-      bytes[n / 2] = ( n % 2 ) ? bytes[n / 2] + b
-                               : b * 16;
+      bytes[n / 2] = (FT_Byte)( ( n % 2 ) ? bytes[n / 2] + d
+                                          : d * 16 );
     }
 
-    skip_spaces( &cur, limit );
-
-    if ( *cur != '>' )
+    if ( delimiters )
     {
-      error = PSaux_Err_Invalid_File_Format;
-      goto Exit;
+      if ( cur < limit && *cur != '>' )
+      {
+        error = PSaux_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
+      cur++;
     }
 
-    *cursor = ++cur;
+    *acur = cur;
 
   Exit:
     *pnum_bytes = ( n + 1 ) / 2;
@@ -616,22 +850,23 @@
   }
 
 
+  /* first character must be already part of the number */
+
   static FT_Long
-  t1_tofixed( FT_Byte**  cursor,
+  ps_tofixed( FT_Byte*  *acur,
               FT_Byte*   limit,
               FT_Long    power_ten )
   {
-    FT_Byte*  cur  = *cursor;
+    FT_Byte*  cur  = *acur;
     FT_Long   num, divider, result;
     FT_Int    sign = 0;
-    FT_Byte   d;
 
 
     if ( cur >= limit )
       return 0;
 
     /* first of all, check the sign */
-    if ( *cur == '-' )
+    if ( *cur == '-' && cur + 1 < limit )
     {
       sign = 1;
       cur++;
@@ -639,7 +874,7 @@
 
     /* then, read the integer part, if any */
     if ( *cur != '.' )
-      result = t1_toint( &cur, limit ) << 16;
+      result = ps_toint( &cur, limit ) << 16;
     else
       result = 0;
 
@@ -656,8 +891,14 @@
 
       for (;;)
       {
-        d = (FT_Byte)( *cur - '0' );
-        if ( d >= 10 )
+        int  d;
+
+
+        if ( *cur OP 0x80 )
+          break;
+
+        d = ft_char_table[*cur & 0x7F];
+        if ( d < 0 || d >= 10 )
           break;
 
         if ( divider < 10000000L )
@@ -676,7 +917,7 @@
     if ( cur + 1 < limit && ( *cur == 'e' || *cur == 'E' ) )
     {
       cur++;
-      power_ten += t1_toint( &cur, limit );
+      power_ten += ps_toint( &cur, limit );
     }
 
   Exit:
@@ -701,18 +942,20 @@
     if ( sign )
       result = -result;
 
-    *cursor = cur;
+    *acur = cur;
     return result;
   }
 
 
+  /* first character must be a delimiter or a part of a number */
+
   static FT_Int
-  t1_tocoordarray( FT_Byte**  cursor,
+  ps_tocoordarray( FT_Byte*  *acur,
                    FT_Byte*   limit,
                    FT_Int     max_coords,
                    FT_Short*  coords )
   {
-    FT_Byte*  cur   = *cursor;
+    FT_Byte*  cur   = *acur;
     FT_Int    count = 0;
     FT_Byte   c, ender;
 
@@ -720,8 +963,8 @@
     if ( cur >= limit )
       goto Exit;
 
-    /* check for the beginning of an array; if not, only one number will */
-    /* be read                                                           */
+    /* check for the beginning of an array; otherwise, only one number */
+    /* will be read                                                    */
     c     = *cur;
     ender = 0;
 
@@ -735,24 +978,23 @@
       cur++;
 
     /* now, read the coordinates */
-    for ( ; cur < limit; )
+    while ( cur < limit )
     {
       /* skip whitespace in front of data */
-      for (;;)
-      {
-        c = *cur;
-        if ( c != ' ' && c != '\t' )
-          break;
+      skip_spaces( &cur, limit );
+      if ( cur >= limit )
+        goto Exit;
 
-        cur++;
-        if ( cur >= limit )
-          goto Exit;
-      }
-
-      if ( count >= max_coords || c == ender )
+      if ( count >= max_coords )
         break;
 
-      coords[count] = (FT_Short)( t1_tofixed( &cur, limit, 0 ) >> 16 );
+      if ( c == ender )
+      {
+        cur++;
+        break;
+      }
+
+      coords[count] = (FT_Short)( ps_tofixed( &cur, limit, 0 ) >> 16 );
       count++;
 
       if ( !ender )
@@ -760,27 +1002,30 @@
     }
 
   Exit:
-    *cursor = cur;
+    *acur = cur;
     return count;
   }
 
 
+  /* first character must be a delimiter or a part of a number */
+
   static FT_Int
-  t1_tofixedarray( FT_Byte**  cursor,
+  ps_tofixedarray( FT_Byte*  *acur,
                    FT_Byte*   limit,
                    FT_Int     max_values,
                    FT_Fixed*  values,
                    FT_Int     power_ten )
   {
-    FT_Byte*  cur   = *cursor;
+    FT_Byte*  cur   = *acur;
     FT_Int    count = 0;
     FT_Byte   c, ender;
 
 
-    if ( cur >= limit ) goto Exit;
+    if ( cur >= limit )
+      goto Exit;
 
-    /* check for the beginning of an array. If not, only one number will */
-    /* be read                                                           */
+    /* Check for the beginning of an array.  Otherwise, only one number */
+    /* will be read.                                                    */
     c     = *cur;
     ender = 0;
 
@@ -794,24 +1039,23 @@
       cur++;
 
     /* now, read the values */
-    for ( ; cur < limit; )
+    while ( cur < limit )
     {
       /* skip whitespace in front of data */
-      for (;;)
-      {
-        c = *cur;
-        if ( c != ' ' && c != '\t' )
-          break;
+      skip_spaces( &cur, limit );
+      if ( cur >= limit )
+        goto Exit;
 
-        cur++;
-        if ( cur >= limit )
-          goto Exit;
-      }
-
-      if ( count >= max_values || c == ender )
+      if ( count >= max_values )
         break;
 
-      values[count] = t1_tofixed( &cur, limit, power_ten );
+      if ( c == ender )
+      {
+        cur++;
+        break;
+      }
+
+      values[count] = ps_tofixed( &cur, limit, power_ten );
       count++;
 
       if ( !ender )
@@ -819,7 +1063,7 @@
     }
 
   Exit:
-    *cursor = cur;
+    *acur = cur;
     return count;
   }
 
@@ -827,7 +1071,7 @@
 #if 0
 
   static FT_String*
-  t1_tostring( FT_Byte**  cursor,
+  ps_tostring( FT_Byte**  cursor,
                FT_Byte*   limit,
                FT_Memory  memory )
   {
@@ -887,40 +1131,41 @@
 
 
   static int
-  t1_tobool( FT_Byte**  cursor,
+  ps_tobool( FT_Byte*  *acur,
              FT_Byte*   limit )
   {
-    FT_Byte*  cur    = *cursor;
+    FT_Byte*  cur    = *acur;
     FT_Bool   result = 0;
 
 
     /* return 1 if we find `true', 0 otherwise */
     if ( cur + 3 < limit &&
-         cur[0] == 't' &&
-         cur[1] == 'r' &&
-         cur[2] == 'u' &&
-         cur[3] == 'e' )
+         cur[0] == 't'   &&
+         cur[1] == 'r'   &&
+         cur[2] == 'u'   &&
+         cur[3] == 'e'   )
     {
       result = 1;
       cur   += 5;
     }
     else if ( cur + 4 < limit &&
-              cur[0] == 'f' &&
-              cur[1] == 'a' &&
-              cur[2] == 'l' &&
-              cur[3] == 's' &&
-              cur[4] == 'e' )
+              cur[0] == 'f'   &&
+              cur[1] == 'a'   &&
+              cur[2] == 'l'   &&
+              cur[3] == 's'   &&
+              cur[4] == 'e'   )
     {
       result = 0;
       cur   += 6;
     }
 
-    *cursor = cur;
+    *acur = cur;
     return result;
   }
 
 
-  /* Load a simple field (i.e. non-table) into the current list of objects */
+  /* load a simple field (i.e. non-table) into the current list of objects */
+
   FT_LOCAL_DEF( FT_Error )
   ps_parser_load_field( PS_Parser       parser,
                         const T1_Field  field,
@@ -936,6 +1181,7 @@
     FT_Error     error;
 
 
+    /* this also skips leading whitespace */
     ps_parser_to_token( parser, &token );
     if ( !token.type )
       goto Fail;
@@ -945,7 +1191,7 @@
     cur   = token.start;
     limit = token.limit;
 
-    /* we must detect arrays */
+    /* we must detect arrays in /FontBBox */
     if ( field->type == T1_FIELD_TYPE_BBOX )
     {
       T1_TokenRec  token2;
@@ -953,8 +1199,9 @@
       FT_Byte*     old_limit = parser->limit;
 
 
-      parser->cursor = token.start;
-      parser->limit  = token.limit;
+      /* don't include delimiters */
+      parser->cursor = token.start + 1;
+      parser->limit  = token.limit - 1;
 
       ps_parser_to_token( parser, &token2 );
       parser->cursor = old_cur;
@@ -966,12 +1213,16 @@
     else if ( token.type == T1_TOKEN_TYPE_ARRAY )
     {
     FieldArray:
-      /* if this is an array, and we have no blend, an error occurs */
+      /* if this is an array and we have no blend, an error occurs */
       if ( max_objects == 0 )
         goto Fail;
 
       count = max_objects;
-      idx = 1;
+      idx   = 1;
+
+      /* don't include delimiters */
+      cur++;
+      limit--;
     }
 
     for ( ; count > 0; count--, idx++ )
@@ -981,23 +1232,25 @@
       FT_String*  string;
 
 
+      skip_spaces( &cur, limit );
+
       switch ( field->type )
       {
       case T1_FIELD_TYPE_BOOL:
-        val = t1_tobool( &cur, limit );
+        val = ps_tobool( &cur, limit );
         goto Store_Integer;
 
       case T1_FIELD_TYPE_FIXED:
-        val = t1_tofixed( &cur, limit, 0 );
+        val = ps_tofixed( &cur, limit, 0 );
         goto Store_Integer;
 
       case T1_FIELD_TYPE_FIXED_1000:
-        val = t1_tofixed( &cur, limit, 3 );
+        val = ps_tofixed( &cur, limit, 3 );
         goto Store_Integer;
 
       case T1_FIELD_TYPE_INTEGER:
-        val = t1_toint( &cur, limit );
-        goto Store_Integer;
+        val = ps_toint( &cur, limit );
+        /* fall through */
 
       Store_Integer:
         switch ( field->size )
@@ -1026,14 +1279,20 @@
           FT_UInt    len    = (FT_UInt)( limit - cur );
 
 
-          /* with synthetic fonts, it's possible to find a field twice */
-          if ( *(FT_String**)q )
+          if ( cur >= limit )
             break;
 
           if ( field->type == T1_FIELD_TYPE_KEY )
           {
+            /* don't include leading `/' */
             len--;
             cur++;
+          }
+          else
+          {
+            /* don't include delimiting parentheses */
+            cur++;
+            len -= 2;
           }
 
           if ( FT_ALLOC( string, len + 1 ) )
@@ -1052,10 +1311,7 @@
           FT_BBox*  bbox = (FT_BBox*)q;
 
 
-          /* we need the '[' and ']' delimiters */
-          token.start--;
-          token.limit++;
-          (void)t1_tofixedarray( &token.start, token.limit, 4, temp, 0 );
+          (void)ps_tofixedarray( &token.start, token.limit, 4, temp, 0 );
 
           bbox->xMin = FT_RoundFix( temp[0] );
           bbox->yMin = FT_RoundFix( temp[1] );
@@ -1070,7 +1326,7 @@
       }
     }
 
-#if 0  /* obsolete - keep for reference */
+#if 0  /* obsolete -- keep for reference */
     if ( pflags )
       *pflags |= 1L << field->flag_bit;
 #else
@@ -1101,7 +1357,7 @@
     T1_TokenRec  elements[T1_MAX_TABLE_ELEMENTS];
     T1_Token     token;
     FT_Int       num_elements;
-    FT_Error     error = 0;
+    FT_Error     error = PSaux_Err_Ok;
     FT_Byte*     old_cursor;
     FT_Byte*     old_limit;
     T1_FieldRec  fieldrec = *(T1_Field)field;
@@ -1113,10 +1369,13 @@
       fieldrec.type = T1_FIELD_TYPE_FIXED;
 #endif
 
-    ps_parser_to_token_array( parser, elements, 32, &num_elements );
+    ps_parser_to_token_array( parser, elements,
+                              T1_MAX_TABLE_ELEMENTS, &num_elements );
     if ( num_elements < 0 )
-      goto Fail;
-
+    {
+      error = PSaux_Err_Ignore;
+      goto Exit;
+    }
     if ( num_elements > T1_MAX_TABLE_ELEMENTS )
       num_elements = T1_MAX_TABLE_ELEMENTS;
 
@@ -1149,31 +1408,31 @@
 
   Exit:
     return error;
-
-  Fail:
-    error = PSaux_Err_Invalid_File_Format;
-    goto Exit;
   }
 
 
   FT_LOCAL_DEF( FT_Long )
   ps_parser_to_int( PS_Parser  parser )
   {
-    return t1_toint( &parser->cursor, parser->limit );
+    ps_parser_skip_spaces( parser );
+    return ps_toint( &parser->cursor, parser->limit );
   }
 
 
   FT_LOCAL_DEF( FT_Error )
   ps_parser_to_bytes( PS_Parser  parser,
                       FT_Byte*   bytes,
-                      FT_Int     max_bytes,
-                      FT_Int*    pnum_bytes )
+                      FT_Long    max_bytes,
+                      FT_Long*   pnum_bytes,
+                      FT_Bool    delimiters )
   {
+    ps_parser_skip_spaces( parser );
     return ps_tobytes( &parser->cursor,
                        parser->limit,
                        max_bytes,
                        bytes,
-                       pnum_bytes );
+                       pnum_bytes,
+                       delimiters );
   }
 
 
@@ -1181,7 +1440,8 @@
   ps_parser_to_fixed( PS_Parser  parser,
                       FT_Int     power_ten )
   {
-    return t1_tofixed( &parser->cursor, parser->limit, power_ten );
+    ps_parser_skip_spaces( parser );
+    return ps_tofixed( &parser->cursor, parser->limit, power_ten );
   }
 
 
@@ -1190,7 +1450,8 @@
                             FT_Int     max_coords,
                             FT_Short*  coords )
   {
-    return t1_tocoordarray( &parser->cursor, parser->limit,
+    ps_parser_skip_spaces( parser );
+    return ps_tocoordarray( &parser->cursor, parser->limit,
                             max_coords, coords );
   }
 
@@ -1201,7 +1462,8 @@
                             FT_Fixed*  values,
                             FT_Int     power_ten )
   {
-    return t1_tofixedarray( &parser->cursor, parser->limit,
+    ps_parser_skip_spaces( parser );
+    return ps_tofixedarray( &parser->cursor, parser->limit,
                             max_values, values, power_ten );
   }
 
@@ -1211,14 +1473,14 @@
   FT_LOCAL_DEF( FT_String* )
   T1_ToString( PS_Parser  parser )
   {
-    return t1_tostring( &parser->cursor, parser->limit, parser->memory );
+    return ps_tostring( &parser->cursor, parser->limit, parser->memory );
   }
 
 
   FT_LOCAL_DEF( FT_Bool )
   T1_ToBool( PS_Parser  parser )
   {
-    return t1_tobool( &parser->cursor, parser->limit );
+    return ps_tobool( &parser->cursor, parser->limit );
   }
 
 #endif /* 0 */
@@ -1230,7 +1492,7 @@
                   FT_Byte*   limit,
                   FT_Memory  memory )
   {
-    parser->error  = 0;
+    parser->error  = PSaux_Err_Ok;
     parser->base   = base;
     parser->limit  = limit;
     parser->cursor = base;
@@ -1404,7 +1666,7 @@
   }
 
 
-  /* check room for a new contour, then add it */
+  /* check space for a new contour, then add it */
   FT_LOCAL_DEF( FT_Error )
   t1_builder_add_contour( T1_Builder  builder )
   {

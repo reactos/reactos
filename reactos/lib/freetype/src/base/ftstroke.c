@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,8 +19,31 @@
 #include <ft2build.h>
 #include FT_STROKER_H
 #include FT_TRIGONOMETRY_H
+#include FT_OUTLINE_H
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_INTERNAL_OBJECTS_H
+
+  FT_EXPORT_DEF( FT_StrokerBorder )
+  FT_Outline_GetInsideBorder( FT_Outline*  outline )
+  {
+    FT_Orientation  o = FT_Outline_Get_Orientation( outline );
+
+
+    return o == FT_ORIENTATION_TRUETYPE ? FT_STROKER_BORDER_RIGHT
+                                        : FT_STROKER_BORDER_LEFT ;
+  }
+
+
+  FT_EXPORT_DEF( FT_StrokerBorder )
+  FT_Outline_GetOutsideBorder( FT_Outline*  outline )
+  {
+    FT_Orientation  o = FT_Outline_Get_Orientation( outline );
+
+
+    return o == FT_ORIENTATION_TRUETYPE ? FT_STROKER_BORDER_LEFT
+                                        : FT_STROKER_BORDER_RIGHT ;
+  }
 
 
  /***************************************************************************/
@@ -221,6 +244,7 @@
     FT_Bool     movable;
     FT_Int      start;    /* index of current sub-path start point */
     FT_Memory   memory;
+    FT_Bool     valid;
 
   } FT_StrokeBorderRec, *FT_StrokeBorder;
 
@@ -468,6 +492,7 @@
     border->num_points = 0;
     border->max_points = 0;
     border->start      = -1;
+    border->valid      = 0;
   }
 
 
@@ -476,6 +501,7 @@
   {
     border->num_points = 0;
     border->start      = -1;
+    border->valid      = 0;
   }
 
 
@@ -491,6 +517,7 @@
     border->num_points = 0;
     border->max_points = 0;
     border->start      = -1;
+    border->valid      = 0;
   }
 
 
@@ -520,7 +547,7 @@
       }
       else if ( in_contour == 0 )
         goto Fail;
- 
+
       if ( tags[0] & FT_STROKE_TAG_END )
       {
         if ( in_contour == 0 )
@@ -533,6 +560,8 @@
 
     if ( in_contour != 0 )
       goto Fail;
+
+    border->valid = 1;
 
   Exit:
     *anum_points   = num_points;
@@ -551,9 +580,9 @@
                            FT_Outline*      outline )
   {
     /* copy point locations */
-    FT_MEM_COPY( outline->points + outline->n_points,
-                 border->points,
-                 border->num_points * sizeof ( FT_Vector ) );
+    FT_ARRAY_COPY( outline->points + outline->n_points,
+                   border->points,
+                   border->num_points );
 
     /* copy tags */
     {
@@ -661,10 +690,18 @@
     stroker->line_join   = line_join;
     stroker->miter_limit = miter_limit;
 
-    stroker->valid = 0;
+    FT_Stroker_Rewind( stroker );
+  }
 
-    ft_stroke_border_reset( &stroker->borders[0] );
-    ft_stroke_border_reset( &stroker->borders[1] );
+
+  FT_EXPORT_DEF( void )
+  FT_Stroker_Rewind( FT_Stroker  stroker )
+  {
+    if ( stroker )
+    {
+      ft_stroke_border_reset( &stroker->borders[0] );
+      ft_stroke_border_reset( &stroker->borders[1] );
+    }
   }
 
 
@@ -1347,7 +1384,6 @@
   {
     FT_Error  error  = 0;
 
-
     if ( stroker->subpath_open )
     {
       FT_StrokeBorder  right = stroker->borders;
@@ -1380,6 +1416,14 @@
       FT_Angle  turn;
       FT_Int    inside_side;
 
+      /* close the path if needed */
+      if ( stroker->center.x != stroker->subpath_start.x ||
+           stroker->center.y != stroker->subpath_start.y )
+      {
+        error = FT_Stroker_LineTo( stroker, &stroker->subpath_start );
+        if ( error )
+          goto Exit;
+      }
 
       /* process the corner */
       stroker->angle_out = stroker->subpath_angle;
@@ -1408,17 +1452,41 @@
           goto Exit;
       }
 
-      /* we will first end our two subpaths */
+      /* then end our two subpaths */
       ft_stroke_border_close( stroker->borders + 0 );
       ft_stroke_border_close( stroker->borders + 1 );
-
-      /* now, add the reversed left subpath to "right" */
-      error = ft_stroker_add_reverse_left( stroker, 0 );
-      if ( error )
-        goto Exit;
     }
 
   Exit:
+    return error;
+  }
+
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Stroker_GetBorderCounts( FT_Stroker        stroker,
+                              FT_StrokerBorder  border,
+                              FT_UInt          *anum_points,
+                              FT_UInt          *anum_contours )
+  {
+    FT_UInt   num_points = 0, num_contours = 0;
+    FT_Error  error;
+
+
+    if ( !stroker || border > 1 )
+    {
+      error = FT_Err_Invalid_Argument;
+      goto Exit;
+    }
+
+    error = ft_stroke_border_get_counts( stroker->borders + border,
+                                         &num_points, &num_contours );
+  Exit:
+    if ( anum_points )
+      *anum_points = num_points;
+
+    if ( anum_contours )
+      *anum_contours = num_contours;
+
     return error;
   }
 
@@ -1446,8 +1514,6 @@
     num_points   = count1 + count3;
     num_contours = count2 + count4;
 
-    stroker->valid = 1;
-
   Exit:
     *anum_points   = num_points;
     *anum_contours = num_contours;
@@ -1456,14 +1522,28 @@
 
 
   FT_EXPORT_DEF( void )
+  FT_Stroker_ExportBorder( FT_Stroker        stroker,
+                           FT_StrokerBorder  border,
+                           FT_Outline*       outline )
+  {
+    if ( border == FT_STROKER_BORDER_LEFT  ||
+         border == FT_STROKER_BORDER_RIGHT )
+    {
+      FT_StrokeBorder  sborder = & stroker->borders[border];
+
+
+      if ( sborder->valid )
+        ft_stroke_border_export( sborder, outline );
+    }
+  }
+
+
+  FT_EXPORT_DEF( void )
   FT_Stroker_Export( FT_Stroker   stroker,
                      FT_Outline*  outline )
   {
-    if ( stroker->valid )
-    {
-      ft_stroke_border_export( stroker->borders + 0, outline );
-      ft_stroke_border_export( stroker->borders + 1, outline );
-    }
+    FT_Stroker_ExportBorder( stroker, FT_STROKER_BORDER_LEFT, outline );
+    FT_Stroker_ExportBorder( stroker, FT_STROKER_BORDER_RIGHT, outline );
   }
 
 
@@ -1493,6 +1573,8 @@
 
     if ( !outline || !stroker )
       return FT_Err_Invalid_Argument;
+
+    FT_Stroker_Rewind( stroker );
 
     first = 0;
 
@@ -1661,6 +1743,163 @@
 
   Invalid_Outline:
     return FT_Err_Invalid_Outline;
+  }
+
+
+  extern const FT_Glyph_Class  ft_outline_glyph_class;
+
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Glyph_Stroke( FT_Glyph    *pglyph,
+                   FT_Stroker   stroker,
+                   FT_Bool      destroy )
+  {
+    FT_Error  error = FT_Err_Invalid_Argument;
+    FT_Glyph  glyph = NULL;
+
+
+    if ( pglyph == NULL )
+      goto Exit;
+
+    glyph = *pglyph;
+    if ( glyph == NULL || glyph->clazz != &ft_outline_glyph_class )
+      goto Exit;
+
+    {
+      FT_Glyph  copy;
+
+
+      error = FT_Glyph_Copy( glyph, &copy );
+      if ( error )
+        goto Exit;
+
+      glyph = copy;
+    }
+
+    {
+      FT_OutlineGlyph  oglyph  = (FT_OutlineGlyph) glyph;
+      FT_Outline*      outline = &oglyph->outline;
+      FT_UInt          num_points, num_contours;
+
+
+      error = FT_Stroker_ParseOutline( stroker, outline, 0 );
+      if ( error )
+        goto Fail;
+
+      (void)FT_Stroker_GetCounts( stroker, &num_points, &num_contours );
+
+      FT_Outline_Done( glyph->library, outline );
+
+      error = FT_Outline_New( glyph->library,
+                              num_points, num_contours, outline );
+      if ( error )
+        goto Fail;
+
+      outline->n_points   = 0;
+      outline->n_contours = 0;
+
+      FT_Stroker_Export( stroker, outline );
+    }
+
+    if ( destroy )
+      FT_Done_Glyph( *pglyph );
+
+    *pglyph = glyph;
+    goto Exit;
+
+  Fail:
+    FT_Done_Glyph( glyph );
+    glyph = NULL;
+
+    if ( !destroy )
+      *pglyph = NULL;
+
+  Exit:
+    return error;
+  }
+
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Glyph_StrokeBorder( FT_Glyph    *pglyph,
+                         FT_Stroker   stroker,
+                         FT_Bool      inside,
+                         FT_Bool      destroy )
+  {
+    FT_Error  error = FT_Err_Invalid_Argument;
+    FT_Glyph  glyph = NULL;
+
+
+    if ( pglyph == NULL )
+      goto Exit;
+
+    glyph = *pglyph;
+    if ( glyph == NULL || glyph->clazz != &ft_outline_glyph_class )
+      goto Exit;
+
+    {
+      FT_Glyph  copy;
+
+
+      error = FT_Glyph_Copy( glyph, &copy );
+      if ( error )
+        goto Exit;
+
+      glyph = copy;
+    }
+
+    {
+      FT_OutlineGlyph   oglyph  = (FT_OutlineGlyph) glyph;
+      FT_StrokerBorder  border;
+      FT_Outline*       outline = &oglyph->outline;
+      FT_UInt           num_points, num_contours;
+
+
+      border = FT_Outline_GetOutsideBorder( outline );
+      if ( inside )
+      {
+        if ( border == FT_STROKER_BORDER_LEFT )
+          border = FT_STROKER_BORDER_RIGHT;
+        else
+          border = FT_STROKER_BORDER_LEFT;
+      }
+
+      error = FT_Stroker_ParseOutline( stroker, outline, 0 );
+      if ( error )
+        goto Fail;
+
+      (void)FT_Stroker_GetBorderCounts( stroker, border,
+                                        &num_points, &num_contours );
+
+      FT_Outline_Done( glyph->library, outline );
+
+      error = FT_Outline_New( glyph->library,
+                              num_points,
+                              num_contours,
+                              outline );
+      if ( error )
+        goto Fail;
+
+      outline->n_points   = 0;
+      outline->n_contours = 0;
+
+      FT_Stroker_ExportBorder( stroker, border, outline );
+    }
+
+    if ( destroy )
+      FT_Done_Glyph( *pglyph );
+
+    *pglyph = glyph;
+    goto Exit;
+
+  Fail:
+    FT_Done_Glyph( glyph );
+    glyph = NULL;
+
+    if ( !destroy )
+      *pglyph = NULL;
+
+  Exit:
+    return error;
   }
 
 

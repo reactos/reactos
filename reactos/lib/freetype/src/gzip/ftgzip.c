@@ -4,11 +4,11 @@
 /*                                                                         */
 /*    FreeType support for .gz compressed files.                           */
 /*                                                                         */
-/*  this optional component relies on zlib. It should mainly be used to    */
+/*  This optional component relies on zlib.  It should mainly be used to   */
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -144,7 +144,7 @@
 /***************************************************************************/
 /***************************************************************************/
 
-#define  FT_GZIP_BUFFER_SIZE          4096
+#define FT_GZIP_BUFFER_SIZE  4096
 
   typedef struct  FT_GZipFileRec_
   {
@@ -154,7 +154,7 @@
     z_stream   zstream;        /* zlib input stream           */
 
     FT_ULong   start;          /* starting position, after .gz header */
-    FT_Byte    input[FT_GZIP_BUFFER_SIZE];  /* input read buffer */
+    FT_Byte    input[FT_GZIP_BUFFER_SIZE];   /* input read buffer  */
 
     FT_Byte    buffer[FT_GZIP_BUFFER_SIZE];  /* output buffer      */
     FT_ULong   pos;                          /* position in output */
@@ -173,7 +173,7 @@
 #define FT_GZIP_RESERVED     0xE0 /* bits 5..7: reserved */
 
 
-  /* check and skip .gz header - we don't support "transparent" compression */
+  /* check and skip .gz header - we don't support `transparent' compression */
   static FT_Error
   ft_gzip_check_header( FT_Stream  stream )
   {
@@ -254,7 +254,7 @@
                      FT_Stream    source )
   {
     z_stream*  zstream = &zip->zstream;
-    FT_Error   error   = 0;
+    FT_Error   error   = Gzip_Err_Ok;
 
 
     zip->stream = stream;
@@ -276,9 +276,9 @@
       zip->start = FT_STREAM_POS();
     }
 
-    /* initialize zlib - there is no zlib header in the compressed stream */
-    zstream->zalloc = (alloc_func) ft_gzip_alloc;
-    zstream->zfree  = (free_func)  ft_gzip_free;
+    /* initialize zlib -- there is no zlib header in the compressed stream */
+    zstream->zalloc = (alloc_func)ft_gzip_alloc;
+    zstream->zfree  = (free_func) ft_gzip_free;
     zstream->opaque = stream->memory;
 
     zstream->avail_in = 0;
@@ -286,10 +286,7 @@
 
     if ( inflateInit2( zstream, -MAX_WBITS ) != Z_OK ||
          zstream->next_in == NULL                     )
-    {
       error = Gzip_Err_Invalid_File_Format;
-      goto Exit;
-    }
 
   Exit:
     return error;
@@ -300,6 +297,7 @@
   ft_gzip_file_done( FT_GZipFile  zip )
   {
     z_stream*  zstream = &zip->zstream;
+
 
     inflateEnd( zstream );
 
@@ -341,7 +339,8 @@
       zip->cursor = zip->limit;
       zip->pos    = 0;
     }
-    return  error;
+
+    return error;
   }
 
 
@@ -376,7 +375,7 @@
     zstream->next_in  = zip->input;
     zstream->avail_in = size;
 
-    return 0;
+    return Gzip_Err_Ok;
   }
 
 
@@ -418,6 +417,7 @@
         break;
       }
     }
+
     return error;
   }
 
@@ -427,8 +427,8 @@
   ft_gzip_file_skip_output( FT_GZipFile  zip,
                             FT_ULong     count )
   {
-    FT_Error   error   = 0;
-    FT_ULong   delta;
+    FT_Error  error = Gzip_Err_Ok;
+    FT_ULong  delta;
 
 
     for (;;)

@@ -2,7 +2,7 @@
 /*                                                                         */
 /*  ftcimage.h                                                             */
 /*                                                                         */
-/*    FreeType Image cache (specification).                                */
+/*    FreeType Generic Image cache (specification)                         */
 /*                                                                         */
 /*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -15,6 +15,15 @@
 /*                                                                         */
 /***************************************************************************/
 
+
+ /*
+  *  FTC_ICache is an _abstract_ cache used to store a single FT_Glyph
+  *  image per cache node.
+  *
+  *  FTC_ICache extends FTC_GCache.  For an implementation example,
+  *  see FTC_ImageCache in `src/cache/ftbasic.c'.
+  */
+  
 
   /*************************************************************************/
   /*                                                                       */
@@ -29,283 +38,65 @@
 
 #include <ft2build.h>
 #include FT_CACHE_H
-
+#include FT_CACHE_INTERNAL_GLYPH_H
 
 FT_BEGIN_HEADER
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Section>                                                             */
-  /*    cache_subsystem                                                    */
-  /*                                                                       */
-  /*************************************************************************/
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                       IMAGE CACHE OBJECT                      *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
- /**************************************************************************
-  *
-  * @struct:
-  *   FTC_ImageTypeRec
-  *
-  * @description:
-  *   A simple structure used to describe the type of glyph image to be
-  *   loaded into the cache.
-  *
-  * @fields:
-  *   font  :: An @FTC_FontRec used to describe the glyph's face and size.
-  *
-  *   flags :: The load flags to be applied when loading the glyph; see
-  *            the @FT_LOAD_XXX constants for details.
-  *
-  * @note:
-  *   This type completely replaces the @FTC_Image_Desc structure which is
-  *   now obsolete.
-  */
-  typedef struct  FTC_ImageTypeRec_
+  /* the FT_Glyph image node type - we store only 1 glyph per node */
+  typedef struct  FTC_INodeRec_
   {
-    FTC_FontRec  font;
-    FT_Int32     flags;
+    FTC_GNodeRec  gnode;
+    FT_Glyph      glyph;
 
-  } FTC_ImageTypeRec;
+  } FTC_INodeRec, *FTC_INode;
 
-  typedef struct FTC_ImageTypeRec_*   FTC_ImageType;
+#define FTC_INODE( x )         ( (FTC_INode)( x ) )
+#define FTC_INODE_GINDEX( x )  FTC_GNODE(x)->gindex
+#define FTC_INODE_FAMILY( x )  FTC_GNODE(x)->family
 
- /* */
+  typedef FT_Error
+  (*FTC_IFamily_LoadGlyphFunc)( FTC_Family  family,
+                                FT_UInt     gindex,
+                                FTC_Cache   cache,
+                                FT_Glyph   *aglyph );
 
-#define FTC_IMAGE_TYPE_COMPARE( d1, d2 )                    \
-          ( FTC_FONT_COMPARE( &(d1)->font, &(d2)->font ) && \
-            (d1)->flags == (d2)->flags                   )
-
-#define FTC_IMAGE_TYPE_HASH( d )                    \
-          (FT_UFast)( FTC_FONT_HASH( &(d)->font ) ^ \
-                      ( (d)->flags << 4 )         )
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FTC_ImageCache                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to an glyph image cache object.  They are designed to     */
-  /*    hold many distinct glyph images while not exceeding a certain      */
-  /*    memory threshold.                                                  */
-  /*                                                                       */
-  typedef struct FTC_ImageCacheRec_*  FTC_ImageCache;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_ImageCache_New                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Creates a new glyph image cache.                                   */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    manager :: The parent manager for the image cache.                 */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    acache  :: A handle to the new glyph image cache object.           */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_ImageCache_New( FTC_Manager      manager,
-                      FTC_ImageCache  *acache );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_ImageCache_Lookup                                              */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Retrieves a given glyph image from a glyph image cache.            */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    cache  :: A handle to the source glyph image cache.                */
-  /*                                                                       */
-  /*    type   :: A pointer to a glyph image type descriptor.              */
-  /*                                                                       */
-  /*    gindex :: The glyph index to retrieve.                             */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    aglyph :: The corresponding @FT_Glyph object.  0 in case of        */
-  /*              failure.                                                 */
-  /*                                                                       */
-  /*    anode  :: Used to return the address of of the corresponding cache */
-  /*              node after incrementing its reference count (see note    */
-  /*              below).                                                  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The returned glyph is owned and managed by the glyph image cache.  */
-  /*    Never try to transform or discard it manually!  You can however    */
-  /*    create a copy with @FT_Glyph_Copy and modify the new one.          */
-  /*                                                                       */
-  /*    If "anode" is _not_ NULL, it receives the address of the cache     */
-  /*    node containing the glyph image, after increasing its reference    */
-  /*    count.  This ensures that the node (as well as the FT_Glyph) will  */
-  /*    always be kept in the cache until you call @FTC_Node_Unref to      */
-  /*    "release" it.                                                      */
-  /*                                                                       */
-  /*    If "anode" is NULL, the cache node is left unchanged, which means  */
-  /*    that the FT_Glyph could be flushed out of the cache on the next    */
-  /*    call to one of the caching sub-system APIs.  Don't assume that it  */
-  /*    is persistent!                                                     */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_ImageCache_Lookup( FTC_ImageCache  cache,
-                         FTC_ImageType   type,
-                         FT_UInt         gindex,
-                         FT_Glyph       *aglyph,
-                         FTC_Node       *anode );
-
-  /* */
-
-#define ftc_image_format( x )  ( (x) & 7 )
-
-
-#define ftc_image_format_bitmap    0x0000
-#define ftc_image_format_outline   0x0001
-
-#define ftc_image_format_mask      0x000F
-
-#define ftc_image_flag_monochrome  0x0010
-#define ftc_image_flag_unhinted    0x0020
-#define ftc_image_flag_autohinted  0x0040
-#define ftc_image_flag_unscaled    0x0080
-#define ftc_image_flag_no_sbits    0x0100
-
-  /* monochrome bitmap */
-#define ftc_image_mono             ftc_image_format_bitmap | \
-                                   ftc_image_flag_monochrome
-
-  /* anti-aliased bitmap */
-#define ftc_image_grays            ftc_image_format_bitmap
-
-  /* scaled outline */
-#define ftc_image_outline          ftc_image_format_outline
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    FTC_Image_Desc                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    THIS TYPE IS DEPRECATED.  Use @FTC_ImageTypeRec instead.           */
-  /*                                                                       */
-  /*    A simple structure used to describe a given glyph image category.  */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    font       :: An @FTC_FontRec used to describe the glyph's face    */
-  /*                  and size.                                            */
-  /*                                                                       */
-  /*    image_type :: The glyph image's type.                              */
-  /*                                                                       */
-  typedef struct  FTC_Image_Desc_
+  typedef struct  FTC_IFamilyClassRec_
   {
-    FTC_FontRec  font;
-    FT_UInt      image_type;
+    FTC_MruListClassRec        clazz;
+    FTC_IFamily_LoadGlyphFunc  family_load_glyph;
 
-  } FTC_Image_Desc;
+  } FTC_IFamilyClassRec;
 
+  typedef const FTC_IFamilyClassRec*  FTC_IFamilyClass;
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FTC_Image_Cache                                                    */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    THIS TYPE IS DEPRECATED.  Use @FTC_ImageCache instead.             */
-  /*                                                                       */
-  typedef FTC_ImageCache  FTC_Image_Cache;
+#define FTC_IFAMILY_CLASS( x )  ((FTC_IFamilyClass)(x))
+
+#define FTC_CACHE__IFAMILY_CLASS( x ) \
+          FTC_IFAMILY_CLASS( FTC_CACHE__GCACHE_CLASS(x)->family_class )
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_Image_Cache_New                                                */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    THIS FUNCTION IS DEPRECATED.  Use @FTC_ImageCache_New instead.     */
-  /*                                                                       */
-  /*    Creates a new glyph image cache.                                   */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    manager :: The parent manager for the image cache.                 */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    acache  :: A handle to the new glyph image cache object.           */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
+  /* can be used as a @FTC_Node_FreeFunc */
+  FT_EXPORT( void )
+  FTC_INode_Free( FTC_INode  inode,
+                  FTC_Cache  cache );
+
+  /* Can be used as @FTC_Node_NewFunc.  `gquery.index' and `gquery.family'
+   * must be set correctly.  This function will call the `family_load_glyph'
+   * method to load the FT_Glyph into the cache node.
+   */
   FT_EXPORT( FT_Error )
-  FTC_Image_Cache_New( FTC_Manager       manager,
-                       FTC_Image_Cache  *acache );
+  FTC_INode_New( FTC_INode   *pinode,
+                 FTC_GQuery   gquery,
+                 FTC_Cache    cache );
 
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_Image_Cache_Lookup                                             */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    THIS FUNCTION IS DEPRECATED.  Use @FTC_ImageCache_Lookup instead.  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    cache  :: A handle to the source glyph image cache.                */
-  /*                                                                       */
-  /*    desc   :: A pointer to a glyph image descriptor.                   */
-  /*                                                                       */
-  /*    gindex :: The glyph index to retrieve.                             */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    aglyph :: The corresponding @FT_Glyph object.  0 in case of        */
-  /*              failure.                                                 */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The returned glyph is owned and managed by the glyph image cache.  */
-  /*    Never try to transform or discard it manually!  You can however    */
-  /*    create a copy with @FT_Glyph_Copy and modify the new one.          */
-  /*                                                                       */
-  /*    Because the glyph image cache limits the total amount of memory    */
-  /*    taken by the glyphs it holds, the returned glyph might disappear   */
-  /*    on a later invocation of this function!  It is a cache after       */
-  /*    all...                                                             */
-  /*                                                                       */
-  /*    Use this function to "lock" the glyph as long as it is needed.     */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_Image_Cache_Lookup( FTC_Image_Cache  cache,
-                          FTC_Image_Desc*  desc,
-                          FT_UInt          gindex,
-                          FT_Glyph        *aglyph );
+  /* can be used as @FTC_Node_WeightFunc */
+  FT_EXPORT( FT_ULong )
+  FTC_INode_Weight( FTC_INode  inode );
 
  /* */
 
 FT_END_HEADER
-
 
 #endif /* __FTCIMAGE_H__ */
 

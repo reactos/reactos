@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,9 +22,9 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_CFF_TYPES_H
+#include "cfftypes.h"
 #include FT_INTERNAL_TRUETYPE_TYPES_H
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 
 FT_BEGIN_HEADER
@@ -51,7 +51,18 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    A handle to an OpenType size object.                               */
   /*                                                                       */
-  typedef FT_Size  CFF_Size;
+  typedef struct  CFF_SizeRec_
+  {
+    FT_SizeRec       root;
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+
+    FT_UInt          strike_index;    /* 0xFFFF to indicate invalid */
+    FT_Size_Metrics  strike_metrics;  /* current strike's metrics   */
+
+#endif
+
+  } CFF_SizeRec, *CFF_Size;
 
 
   /*************************************************************************/
@@ -87,15 +98,6 @@ FT_BEGIN_HEADER
     FT_F26Dot6  ox, oy;     /* offsets        */
 
   } CFF_Transform;
-
-
-  /* this is only used in the case of a pure CFF font with no charmap */
-  typedef struct  CFF_CharMapRec_
-  {
-    TT_CharMapRec  root;
-    PS_Unicodes    unicodes;
-
-  } CFF_CharMapRec, *CFF_CharMap;
 
 
   /***********************************************************************/

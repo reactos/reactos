@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003 by
+# Copyright 1996-2000, 2002, 2003, 2004 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -32,16 +32,17 @@ BASE_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(SRC_DIR)/base)
 #
 #   ftsystem, ftinit, and ftdebug are handled by freetype.mk
 #
-BASE_SRC := $(BASE_DIR)/ftcalc.c   \
-            $(BASE_DIR)/fttrigon.c \
-            $(BASE_DIR)/ftutil.c   \
-            $(BASE_DIR)/ftstream.c \
+BASE_SRC := $(BASE_DIR)/ftapi.c    \
+            $(BASE_DIR)/ftcalc.c   \
+            $(BASE_DIR)/ftdbgmem.c \
             $(BASE_DIR)/ftgloadr.c \
-            $(BASE_DIR)/ftoutln.c  \
-            $(BASE_DIR)/ftobjs.c   \
-            $(BASE_DIR)/ftapi.c    \
             $(BASE_DIR)/ftnames.c  \
-            $(BASE_DIR)/ftdbgmem.c
+            $(BASE_DIR)/ftobjs.c   \
+            $(BASE_DIR)/ftoutln.c  \
+            $(BASE_DIR)/ftrfork.c  \
+            $(BASE_DIR)/ftstream.c \
+            $(BASE_DIR)/fttrigon.c \
+            $(BASE_DIR)/ftutil.c
 
 # Base layer `extensions' sources
 #
@@ -49,15 +50,15 @@ BASE_SRC := $(BASE_DIR)/ftcalc.c   \
 # object.  It will then be linked to the final executable only if one of its
 # symbols is used by the application.
 #
-BASE_EXT_SRC := $(BASE_DIR)/ftglyph.c  \
-                $(BASE_DIR)/ftmm.c     \
+BASE_EXT_SRC := $(BASE_DIR)/ftbbox.c   \
                 $(BASE_DIR)/ftbdf.c    \
-                $(BASE_DIR)/fttype1.c  \
-                $(BASE_DIR)/ftxf86.c   \
+                $(BASE_DIR)/ftglyph.c  \
+                $(BASE_DIR)/ftmm.c     \
                 $(BASE_DIR)/ftpfr.c    \
                 $(BASE_DIR)/ftstroke.c \
+                $(BASE_DIR)/fttype1.c  \
                 $(BASE_DIR)/ftwinfnt.c \
-                $(BASE_DIR)/ftbbox.c
+                $(BASE_DIR)/ftxf86.c
 
 # Default extensions objects
 #

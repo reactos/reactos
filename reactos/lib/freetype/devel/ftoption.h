@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -97,16 +97,30 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* LZW-compressed file support.                                          */
+  /*                                                                       */
+  /*   FreeType now handles font files that have been compressed with the  */
+  /*   'compress' program.  This is mostly used to parse many of the PCF   */
+  /*   files that come with various X11 distributions.  The implementation */
+  /*   uses NetBSD's `zopen' to partially uncompress the file on the fly   */
+  /*   (see src/lzw/ftgzip.c).                                             */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+#define FT_CONFIG_OPTION_USE_LZW
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* Gzip-compressed file support.                                         */
   /*                                                                       */
   /*   FreeType now handles font files that have been compressed with the  */
   /*   'gzip' program.  This is mostly used to parse many of the PCF files */
   /*   that come with XFree86.  The implementation uses `zlib' to          */
-  /*   partially uncompress the file on the fly (see src/base/ftgzip.c).   */
+  /*   partially uncompress the file on the fly (see src/gzip/ftgzip.c).   */
   /*                                                                       */
-  /*   Define this macro if you want to enable this "feature".  Note that  */
-  /*   this will however force you to link the zlib to any program that    */
-  /*   also uses FreeType.                                                 */
+  /*   Define this macro if you want to enable this `feature'.  See also   */
+  /*   the macro FT_CONFIG_OPTION_SYSTEM_ZLIB below.                       */
   /*                                                                       */
 #define FT_CONFIG_OPTION_USE_ZLIB
 
@@ -116,7 +130,7 @@ FT_BEGIN_HEADER
   /* ZLib library selection                                                */
   /*                                                                       */
   /*   This macro is only used when FT_CONFIG_OPTION_USE_ZLIB is defined.  */
-  /*   It allows FreeType's "ftgzip" component to link to the system's     */
+  /*   It allows FreeType's `ftgzip' component to link to the system's     */
   /*   installation of the ZLib library.  This is useful on systems like   */
   /*   Unix or VMS where it generally is already available.                */
   /*                                                                       */
@@ -232,6 +246,29 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Guessing methods to access embedded resource forks                    */
+  /*                                                                       */
+  /*   Enable extra Mac fonts support on non-Mac platforms (e.g.           */
+  /*   GNU/Linux).                                                         */
+  /*                                                                       */
+  /*   Resource forks which include fonts data are stored sometimes in     */
+  /*   locations which users or developers don't expected.  In some cases, */
+  /*   resource forks start with some offset from the head of a file.  In  */
+  /*   other cases, the actual resource fork is stored in file different   */
+  /*   from what the user specifies.  If this option is activated,         */
+  /*   FreeType tries to guess whether such offsets or different file      */
+  /*   names must be used.                                                 */
+  /*                                                                       */
+  /*   Note that normal, direct access of resource forks is controlled via */
+  /*   the FT_CONFIG_OPTION_MAC_FONTS option.                              */
+  /*                                                                       */
+#ifdef FT_CONFIG_OPTION_MAC_FONTS
+#define FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
+#endif
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* Allow the use of FT_Incremental_Interface to load typefaces that      */
   /* contain no glyph data, but supply it via a callback function.         */
   /* This allows FreeType to be used with the PostScript language, using   */
@@ -296,7 +333,7 @@ FT_BEGIN_HEADER
   /*   Do not #undef this macro here since the build system might define   */
   /*   it for certain configurations only.                                 */
   /*                                                                       */
-/* #define FT_DEBUG_MEMORY */
+#define FT_DEBUG_MEMORY
 
 
   /*************************************************************************/

@@ -21,10 +21,12 @@
 #include "cidgload.h"
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 
 #include "ciderrs.h"
 
+#include FT_SERVICE_POSTSCRIPT_NAME_H
+#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_POSTSCRIPT_INFO_H
 
   /*************************************************************************/
   /*                                                                       */
@@ -35,6 +37,11 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_ciddriver
 
+
+ /*
+  *  POSTSCRIPT NAME SERVICE
+  *
+  */
 
   static const char*
   cid_get_postscript_name( CID_Face  face )
@@ -49,6 +56,47 @@
   }
 
 
+  static const FT_Service_PsFontNameRec  cid_service_ps_name =
+  {
+    (FT_PsName_GetFunc) cid_get_postscript_name
+  };
+
+
+ /*
+  *  POSTSCRIPT INFO SERVICE
+  *
+  */
+
+  static FT_Error
+  cid_ps_get_font_info( FT_Face          face,
+                        PS_FontInfoRec*  afont_info )
+  {
+    *afont_info = ((CID_Face)face)->cid.font_info;
+    return 0;
+  }
+
+
+  static const FT_Service_PsInfoRec  cid_service_ps_info =
+  {
+    (PS_GetFontInfoFunc)  cid_ps_get_font_info,
+    (PS_HasGlyphNamesFunc)NULL          /* unsupported with CID fonts */
+  };
+
+
+ /*
+  *  SERVICE LIST
+  *
+  */
+
+  static const FT_ServiceDescRec  cid_services[] =
+  {
+    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cid_service_ps_name },
+    { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CID },
+    { FT_SERVICE_ID_POSTSCRIPT_INFO,      &cid_service_ps_info },
+    { NULL, NULL }
+  };
+
+
   static FT_Module_Interface
   cid_get_interface( FT_Driver         driver,
                      const FT_String*  cid_interface )
@@ -56,10 +104,7 @@
     FT_UNUSED( driver );
     FT_UNUSED( cid_interface );
 
-    if ( ft_strcmp( (const char*)cid_interface, "postscript_name" ) == 0 )
-      return (FT_Module_Interface)cid_get_postscript_name;
-
-    return 0;
+    return ft_service_list_lookup( cid_services, cid_interface );
   }
 
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,7 +39,7 @@
 
   /* read a single offset */
   FT_LOCAL_DEF( FT_Long )
-  cid_get_offset( FT_Byte**  start,
+  cid_get_offset( FT_Byte*  *start,
                   FT_Byte    offsize )
   {
     FT_Long   result;
@@ -162,11 +162,11 @@
 
       (void)cid_parser_to_fixed_array( parser, 6, temp, 3 );
 
-      temp_scale = ABS( temp[3] );
+      temp_scale = FT_ABS( temp[3] );
 
-      /* Set Units per EM based on FontMatrix values.  We set the value to */
+      /* Set units per EM based on FontMatrix values.  We set the value to */
       /* `1000/temp_scale', because temp_scale was already multiplied by   */
-      /* 1000 (in t1_tofixed(), from psobjs.c).                            */
+      /* 1000 (in `t1_tofixed', from psobjs.c).                            */
       root->units_per_EM = (FT_UShort)( FT_DivFix( 0x10000L,
                                         FT_DivFix( temp_scale, 1000 ) ) );
 
@@ -191,7 +191,7 @@
       offset->y  = temp[5] >> 16;
     }
 
-    return CID_Err_Ok;       /* this is a callback function; */
+    return CID_Err_Ok;      /* this is a callback function; */
                             /* we must return an error code */
   }
 
@@ -258,42 +258,61 @@
 
     parser->root.cursor = base;
     parser->root.limit  = base + size;
-    parser->root.error  = 0;
+    parser->root.error  = CID_Err_Ok;
 
     {
       FT_Byte*  cur   = base;
       FT_Byte*  limit = cur + size;
 
 
-      for ( ;cur < limit; cur++ )
+      for (;;)
       {
-        /* look for `%ADOBeginFontDict' */
-        if ( *cur == '%' && cur + 20 < limit &&
-             ft_strncmp( (char*)cur, "%ADOBeginFontDict", 17 ) == 0 )
-        {
-          cur += 17;
+        FT_Byte*  newlimit;
 
-          /* if /FDArray was found, then cid->num_dicts is > 0, and */
-          /* we can start increasing parser->num_dict               */
-          if ( face->cid.num_dicts > 0 )
-            parser->num_dict++;
-        }
-        /* look for immediates */
-        else if ( *cur == '/' && cur + 2 < limit )
+
+        parser->root.cursor = cur;
+        cid_parser_skip_spaces( parser );
+
+        if ( parser->root.cursor >= limit )
+          newlimit = limit - 1 - 17;
+        else
+          newlimit = parser->root.cursor - 17;
+
+        /* look for `%ADOBeginFontDict' */
+        for ( ; cur < newlimit; cur++ )
         {
-          FT_Int  len;
+          if ( *cur == '%'                                            &&
+               ft_strncmp( (char*)cur, "%ADOBeginFontDict", 17 ) == 0 )
+          {
+            /* if /FDArray was found, then cid->num_dicts is > 0, and */
+            /* we can start increasing parser->num_dict               */
+            if ( face->cid.num_dicts > 0 )
+              parser->num_dict++;
+          }
+        }
+
+        cur = parser->root.cursor;
+        /* no error can occur in cid_parser_skip_spaces */
+        if ( cur >= limit )
+          break;
+
+        cid_parser_skip_PS_token( parser );
+        if ( parser->root.cursor >= limit || parser->root.error )
+          break;
+
+        /* look for immediates */
+        if ( *cur == '/' && cur + 2 < limit )
+        {
+          FT_PtrDist  len;
 
 
           cur++;
+          len = parser->root.cursor - cur;
 
-          parser->root.cursor = cur;
-          cid_parser_skip_alpha( parser );
-
-          len = (FT_Int)( parser->root.cursor - cur );
           if ( len > 0 && len < 22 )
           {
             /* now compare the immediate name to the keyword table */
-            T1_Field  keyword = (T1_Field) cid_field_records;
+            T1_Field  keyword = (T1_Field)cid_field_records;
 
 
             for (;;)
@@ -305,10 +324,10 @@
               if ( !name )
                 break;
 
-              if ( cur[0] == name[0]                          &&
-                   len == (FT_Int)ft_strlen( (const char*)name ) )
+              if ( cur[0] == name[0]                     &&
+                   len == ft_strlen( (const char*)name ) )
               {
-                FT_Int  n;
+                FT_PtrDist  n;
 
 
                 for ( n = 1; n < len; n++ )
@@ -318,14 +337,11 @@
                 if ( n >= len )
                 {
                   /* we found it - run the parsing callback */
-                  cid_parser_skip_spaces( parser );
                   parser->root.error = cid_load_keyword( face,
                                                          loader,
                                                          keyword );
                   if ( parser->root.error )
                     return parser->root.error;
-
-                  cur = parser->root.cursor;
                   break;
                 }
               }
@@ -333,6 +349,8 @@
             }
           }
         }
+
+        cur = parser->root.cursor;
       }
     }
     return parser->root.error;
@@ -345,7 +363,7 @@
   {
     CID_FaceInfo   cid    = &face->cid;
     FT_Memory      memory = face->root.memory;
-    FT_Stream      stream = face->root.stream;
+    FT_Stream      stream = face->cid_stream;
     FT_Error       error;
     FT_Int         n;
     CID_Subrs      subr;
@@ -370,7 +388,7 @@
       /* reallocate offsets array if needed */
       if ( num_subrs + 1 > max_offsets )
       {
-        FT_UInt  new_max = ( num_subrs + 1 + 3 ) & -4;
+        FT_UInt  new_max = FT_PAD_CEIL( num_subrs + 1, 4 );
 
 
         if ( FT_RENEW_ARRAY( offsets, max_offsets, new_max ) )
@@ -381,7 +399,7 @@
 
       /* read the subrmap's offsets */
       if ( FT_STREAM_SEEK( cid->data_offset + dict->subrmap_offset ) ||
-           FT_FRAME_ENTER( ( num_subrs + 1 ) * dict->sd_bytes )   )
+           FT_FRAME_ENTER( ( num_subrs + 1 ) * dict->sd_bytes )      )
         goto Fail;
 
       p = (FT_Byte*)stream->cursor;
@@ -469,11 +487,111 @@
   }
 
 
+  static FT_Error
+  cid_hex_to_binary( FT_Byte*  data,
+                     FT_Long   data_len,
+                     FT_ULong  offset,
+                     CID_Face  face )
+  {
+    FT_Stream  stream = face->root.stream;
+    FT_Error   error;
+
+    FT_Byte    buffer[256];
+    FT_Byte   *p, *plimit;
+    FT_Byte   *d, *dlimit;
+    FT_Byte    val;
+
+    FT_Bool    upper_nibble, done;
+
+
+    if ( FT_STREAM_SEEK( offset ) )
+      goto Exit;
+
+    d      = data;
+    dlimit = d + data_len;
+    p      = buffer;
+    plimit = p;
+
+    upper_nibble = 1;
+    done         = 0;
+
+    while ( d < dlimit )
+    {
+      if ( p >= plimit )
+      {
+        FT_ULong  oldpos = FT_STREAM_POS();
+        FT_ULong  size   = stream->size - oldpos;
+
+
+        if ( size == 0 )
+        {
+          error = CID_Err_Syntax_Error;
+          goto Exit;
+        }
+
+        if ( FT_STREAM_READ( buffer, 256 > size ? size : 256 ) )
+          goto Exit;
+        p      = buffer;
+        plimit = p + FT_STREAM_POS() - oldpos;
+      }
+
+      if ( ft_isdigit( *p ) )
+        val = *p - '0';
+      else if ( *p >= 'a' && *p <= 'f' )
+        val = *p - 'a';
+      else if ( *p >= 'A' && *p <= 'F' )
+        val = *p - 'A' + 10;
+      else if ( *p == ' '  ||
+                *p == '\t' ||
+                *p == '\r' ||
+                *p == '\n' ||
+                *p == '\f' ||
+                *p == '\0' )
+      {
+        p++;
+        continue;
+      }
+      else if ( *p == '>' )
+      {
+        val  = 0;
+        done = 1;
+      }
+      else
+      {
+        error = CID_Err_Syntax_Error;
+        goto Exit;
+      }
+
+      if ( upper_nibble )
+        *d = val << 4;
+      else
+      {
+        *d += val;
+        d++;
+      }
+
+      upper_nibble = 1 - upper_nibble;
+
+      if ( done )
+        break;
+
+      p++;
+    }
+
+    error = CID_Err_Ok;
+
+  Exit:
+    return error;
+  }
+
+
   FT_LOCAL_DEF( FT_Error )
-  cid_face_open( CID_Face  face )
+  cid_face_open( CID_Face  face,
+                 FT_Int    face_index )
   {
     CID_Loader   loader;
     CID_Parser*  parser;
+    FT_Memory    memory = face->root.memory;
     FT_Error     error;
 
 
@@ -491,7 +609,30 @@
     if ( error )
       goto Exit;
 
-    face->cid.data_offset = loader.parser.data_offset;
+    if ( face_index < 0 )
+      goto Exit;
+
+    if ( FT_NEW( face->cid_stream ) )
+      goto Exit;
+
+    if ( parser->binary_length )
+    {
+      /* we must convert the data section from hexadecimal to binary */
+      if ( FT_ALLOC( face->binary_data, parser->binary_length )         ||
+           cid_hex_to_binary( face->binary_data, parser->binary_length,
+                              parser->data_offset, face )               )
+        goto Exit;
+
+      FT_Stream_OpenMemory( face->cid_stream,
+                            face->binary_data, parser->binary_length );
+      face->cid.data_offset = 0;
+    }
+    else
+    {
+      *face->cid_stream     = *face->root.stream;
+      face->cid.data_offset = loader.parser.data_offset;
+    }
+
     error = cid_read_subrs( face );
 
   Exit:

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Routines used to compute global metrics automatically (body).        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 Catharon Productions Inc.              */
+/*  Copyright 2000-2001, 2002, 2003, 2004 Catharon Productions Inc.        */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -30,7 +30,7 @@
   /* cf. AH_BLUE_XXX constants in ahtypes.h */
 
   static
-  const char*  blue_chars[AH_BLUE_MAX] =
+  const char* const  blue_chars[AH_BLUE_MAX] =
   {
     "THEZOCQS",
     "HEZLOCUS",
@@ -95,7 +95,7 @@
       goto Exit;
 
     /* we compute the blues simply by loading each character from the */
-    /* 'blue_chars[blues]' string, then compute its top-most or       */
+    /* `blue_chars[blues]' string, then compute its top-most or       */
     /* bottom-most points (depending on `AH_IS_TOP_BLUE')             */
 
     AH_LOG(( "blue zones computation\n" ));

@@ -26,7 +26,6 @@ SFNT_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(SFNT_DIR))
 # SFNT driver sources (i.e., C files)
 #
 SFNT_DRV_SRC := $(SFNT_DIR)/ttload.c   \
-                $(SFNT_DIR)/ttcmap.c   \
                 $(SFNT_DIR)/ttcmap0.c  \
                 $(SFNT_DIR)/ttsbit.c   \
                 $(SFNT_DIR)/ttpost.c   \

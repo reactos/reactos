@@ -419,8 +419,9 @@
   {
     FT_Error      error    = PFR_Err_Ok;
     PFR_PhyFont   phy_font = &face->phy_font;
-    PFR_KernItem  item     = phy_font->kern_items;
+    PFR_KernPair  pairs    = phy_font->kern_pairs;
     FT_UInt32     idx      = PFR_KERN_INDEX( glyph1, glyph2 );
+    FT_UInt       min, max;
 
     FT_UNUSED( error ); /* just needed as syntactical sugar */
 
@@ -428,68 +429,26 @@
     kerning->x = 0;
     kerning->y = 0;
 
-    /* find the kerning item containing our pair */
-    while ( item )
+    min = 0;
+    max = phy_font->num_kern_pairs;
+    
+    while ( min < max )
     {
-      if ( item->pair1 <= idx && idx <= item->pair2 )
-        goto Found_Item;
+      FT_UInt       mid  = ( min + max ) >> 1;
+      PFR_KernPair  pair = pairs + mid;
+      FT_UInt32     pidx = PFR_KERN_PAIR_INDEX( pair );
+      
 
-      item = item->next;
-    }
-
-    /* not found */
-    return;
-
-  Found_Item:
-    {
-      /* perform simply binary search within the item */
-      FT_UInt    min, mid, max;
-      FT_Stream  stream = face->root.stream;
-      FT_Byte*   p;
-
-
-      if ( FT_STREAM_SEEK( item->offset )                       ||
-           FT_FRAME_ENTER( item->pair_count * item->pair_size ) )
-        return;
-
-      min = 0;
-      max = item->pair_count;
-      while ( min < max )
+      if ( pidx == idx )
       {
-        FT_UInt  char1, char2, charcode;
-
-
-        mid = ( min + max ) >> 1;
-        p   = stream->cursor + mid*item->pair_size;
-
-        if ( item->flags & PFR_KERN_2BYTE_CHAR )
-        {
-          char1 = FT_NEXT_USHORT( p );
-          char2 = FT_NEXT_USHORT( p );
-        }
-        else
-        {
-          char1 = FT_NEXT_USHORT( p );
-          char2 = FT_NEXT_USHORT( p );
-        }
-        charcode = PFR_KERN_INDEX( char1, char2 );
-
-        if ( idx == charcode )
-        {
-          if ( item->flags & PFR_KERN_2BYTE_ADJ )
-            kerning->x = item->base_adj + FT_NEXT_SHORT( p );
-          else
-            kerning->x = item->base_adj + FT_NEXT_CHAR( p );
-
-          break;
-        }
-        if ( idx > charcode )
-          min = mid + 1;
-        else
-          max = mid;
+        kerning->x = pair->kerning;
+        break;
       }
-
-      FT_FRAME_EXIT();
+      
+      if ( pidx < idx )
+        min = mid + 1;
+      else
+        max = mid;
     }
   }
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,7 +24,7 @@
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 #include "cffobjs.h"
 #include "cffload.h"
@@ -52,16 +52,81 @@
   /*************************************************************************/
 
 
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+
+  static FT_Error
+  sbit_size_reset( CFF_Size  size )
+  {
+    CFF_Face          face;
+    FT_Error          error = CFF_Err_Ok;
+
+    FT_ULong          strike_index;
+    FT_Size_Metrics*  metrics;
+    FT_Size_Metrics*  sbit_metrics;
+    SFNT_Service      sfnt;
+
+
+    metrics = &size->root.metrics;
+
+    face = (CFF_Face)size->root.face;
+    sfnt = (SFNT_Service)face->sfnt;
+
+    sbit_metrics = &size->strike_metrics;
+
+    error = sfnt->set_sbit_strike( face,
+                                   metrics->x_ppem, metrics->y_ppem,
+                                   &strike_index );
+
+    if ( !error )
+    {
+      TT_SBit_Strike  strike = face->sbit_strikes + strike_index;
+
+
+      sbit_metrics->x_ppem = metrics->x_ppem;
+      sbit_metrics->y_ppem = metrics->y_ppem;
+
+      sbit_metrics->ascender  = strike->hori.ascender << 6;
+      sbit_metrics->descender = strike->hori.descender << 6;
+
+      /* XXX: Is this correct? */
+      sbit_metrics->height = sbit_metrics->ascender -
+                             sbit_metrics->descender;
+
+      /* XXX: Is this correct? */
+      sbit_metrics->max_advance = ( strike->hori.min_origin_SB  +
+                                    strike->hori.max_width      +
+                                    strike->hori.min_advance_SB ) << 6;
+
+      size->strike_index = (FT_UInt)strike_index;
+    }
+    else
+    {
+      size->strike_index = 0xFFFFU;
+
+      sbit_metrics->x_ppem      = 0;
+      sbit_metrics->y_ppem      = 0;
+      sbit_metrics->ascender    = 0;
+      sbit_metrics->descender   = 0;
+      sbit_metrics->height      = 0;
+      sbit_metrics->max_advance = 0;
+    }
+
+    return error;
+  }
+
+#endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
+
+
   static PSH_Globals_Funcs
   cff_size_get_globals_funcs( CFF_Size  size )
   {
-    CFF_Face          face     = (CFF_Face)size->face;
+    CFF_Face          face     = (CFF_Face)size->root.face;
     CFF_Font          font     = (CFF_FontRec *)face->extra.data;
     PSHinter_Service  pshinter = (PSHinter_Service)font->pshinter;
     FT_Module         module;
 
 
-    module = FT_Get_Module( size->face->driver->root.library,
+    module = FT_Get_Module( size->root.face->driver->root.library,
                             "pshinter" );
     return ( module && pshinter && pshinter->get_globals_funcs )
            ? pshinter->get_globals_funcs( module )
@@ -72,16 +137,16 @@
   FT_LOCAL_DEF( void )
   cff_size_done( CFF_Size  size )
   {
-    if ( size->internal )
+    if ( size->root.internal )
     {
       PSH_Globals_Funcs  funcs;
 
 
       funcs = cff_size_get_globals_funcs( size );
       if ( funcs )
-        funcs->destroy( (PSH_Globals)size->internal );
+        funcs->destroy( (PSH_Globals)size->root.internal );
 
-      size->internal = 0;
+      size->root.internal = 0;
     }
   }
 
@@ -89,14 +154,14 @@
   FT_LOCAL_DEF( FT_Error )
   cff_size_init( CFF_Size  size )
   {
-    FT_Error           error = 0;
+    FT_Error           error = CFF_Err_Ok;
     PSH_Globals_Funcs  funcs = cff_size_get_globals_funcs( size );
 
 
     if ( funcs )
     {
       PSH_Globals    globals;
-      CFF_Face       face    = (CFF_Face)size->face;
+      CFF_Face       face    = (CFF_Face)size->root.face;
       CFF_Font       font    = (CFF_FontRec *)face->extra.data;
       CFF_SubFont    subfont = &font->top_font;
 
@@ -150,9 +215,9 @@
         priv.lenIV          = cpriv->lenIV;
       }
 
-      error = funcs->create( size->face->memory, &priv, &globals );
+      error = funcs->create( size->root.face->memory, &priv, &globals );
       if ( !error )
-        size->internal = (FT_Size_Internal)(void*)globals;
+        size->root.internal = (FT_Size_Internal)(void*)globals;
     }
 
     return error;
@@ -163,15 +228,32 @@
   cff_size_reset( CFF_Size  size )
   {
     PSH_Globals_Funcs  funcs = cff_size_get_globals_funcs( size );
-    FT_Error           error = 0;
+    FT_Error           error = CFF_Err_Ok;
+    FT_Face            face  = size->root.face;
 
 
     if ( funcs )
-      error = funcs->set_scale( (PSH_Globals)size->internal,
-                                 size->metrics.x_scale,
-                                 size->metrics.y_scale,
+      error = funcs->set_scale( (PSH_Globals)size->root.internal,
+                                 size->root.metrics.x_scale,
+                                 size->root.metrics.y_scale,
                                  0, 0 );
-    return error;
+
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+
+    if ( face->face_flags & FT_FACE_FLAG_FIXED_SIZES )
+    {
+      error = sbit_size_reset( size );
+
+      if ( !error && !( face->face_flags & FT_FACE_FLAG_SCALABLE ) )
+        size->root.metrics = size->strike_metrics;
+    }
+
+#endif
+
+    if ( face->face_flags & FT_FACE_FLAG_SCALABLE )
+      return CFF_Err_Ok;
+    else
+      return error;
   }
 
 
@@ -244,8 +326,6 @@
   }
 
 
-
-
   FT_LOCAL_DEF( FT_Error )
   cff_face_init( FT_Stream      stream,
                  CFF_Face       face,
@@ -253,30 +333,37 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    FT_Error          error;
-    SFNT_Service      sfnt;
-    PSNames_Service   psnames;
-    PSHinter_Service  pshinter;
-    FT_Bool           pure_cff    = 1;
-    FT_Bool           sfnt_format = 0;
+    FT_Error            error;
+    SFNT_Service        sfnt;
+    FT_Service_PsCMaps  psnames;
+    PSHinter_Service    pshinter;
+    FT_Bool             pure_cff    = 1;
+    FT_Bool             sfnt_format = 0;
 
+#if 0
+    FT_FACE_FIND_GLOBAL_SERVICE( face, sfnt,     SFNT );
+    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames,  POSTSCRIPT_NAMES );
+    FT_FACE_FIND_GLOBAL_SERVICE( face, pshinter, POSTSCRIPT_HINTER );
 
+    if ( !sfnt )
+      goto Bad_Format;
+#else
     sfnt = (SFNT_Service)FT_Get_Module_Interface(
              face->root.driver->root.library, "sfnt" );
     if ( !sfnt )
       goto Bad_Format;
 
-    psnames = (PSNames_Service)FT_Get_Module_Interface(
-                face->root.driver->root.library, "psnames" );
+    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
 
     pshinter = (PSHinter_Service)FT_Get_Module_Interface(
                  face->root.driver->root.library, "pshinter" );
+#endif
 
     /* create input stream from resource */
     if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
-    /* check that we have a valid OpenType file */
+    /* check whether we have a valid OpenType file */
     error = sfnt->init_face( stream, face, face_index, num_params, params );
     if ( !error )
     {
@@ -293,7 +380,7 @@
       sfnt_format = 1;
 
       /* now, the font can be either an OpenType/CFF font, or an SVG CEF */
-      /* font; in the later case it doesn't have a `head' table          */
+      /* font; in the latter case it doesn't have a `head' table         */
       error = face->goto_table( face, TTAG_head, stream, 0 );
       if ( !error )
       {
@@ -307,7 +394,7 @@
       }
       else
       {
-        /* load the `cmap' table by hand */
+        /* load the `cmap' table explicitly */
         error = sfnt->load_charmaps( face, stream );
         if ( error )
           goto Exit;
@@ -317,7 +404,7 @@
         /* FreeType 2                                                */
       }
 
-      /* now, load the CFF part of the file */
+      /* now load the CFF part of the file */
       error = face->goto_table( face, TTAG_CFF, stream, 0 );
       if ( error )
         goto Exit;
@@ -332,10 +419,11 @@
 
     /* now load and parse the CFF table in the file */
     {
-      CFF_Font   cff;
-      FT_Memory  memory = face->root.memory;
-      FT_Face    root;
-      FT_Int32   flags;
+      CFF_Font         cff;
+      CFF_FontRecDict  dict;
+      FT_Memory        memory = face->root.memory;
+      FT_Face          root;
+      FT_Int32         flags;
 
 
       if ( FT_NEW( cff ) )
@@ -347,7 +435,7 @@
         goto Exit;
 
       cff->pshinter = pshinter;
-      cff->psnames  = psnames;
+      cff->psnames  = (void*)psnames;
 
       /* Complement the root flags with some interesting information. */
       /* Note that this is only necessary for pure CFF and CEF fonts. */
@@ -355,26 +443,29 @@
       root             = &face->root;
       root->num_glyphs = cff->num_glyphs;
 
+      dict = &cff->top_font.font_dict;
+
+      /* we need the `PSNames' module for CFF and CEF formats */
+      /* which aren't CID-keyed                               */
+      if ( dict->cid_registry == 0xFFFFU && !psnames )
+      {
+        FT_ERROR(( "cff_face_init:" ));
+        FT_ERROR(( " cannot open CFF & CEF fonts\n" ));
+        FT_ERROR(( "              " ));
+        FT_ERROR(( " without the `PSNames' module\n" ));
+        goto Bad_Format;
+      }
+
       if ( pure_cff )
       {
-        CFF_FontRecDict  dict = &cff->top_font.font_dict;
+        char*  style_name = NULL;
 
-
-        /* we need the `PSNames' module for pure-CFF and CEF formats */
-        if ( !psnames )
-        {
-          FT_ERROR(( "cff_face_init:" ));
-          FT_ERROR(( " cannot open CFF & CEF fonts\n" ));
-          FT_ERROR(( "              " ));
-          FT_ERROR(( " without the `PSNames' module\n" ));
-          goto Bad_Format;
-        }
 
         /* Set up num_faces. */
         root->num_faces = cff->num_faces;
 
         /* compute number of glyphs */
-        if ( dict->cid_registry )
+        if ( dict->cid_registry != 0xFFFFU )
           root->num_glyphs = dict->cid_count;
         else
           root->num_glyphs = cff->charstrings_index.count;
@@ -384,7 +475,6 @@
         root->bbox.yMin =   dict->font_bbox.yMin             >> 16;
         root->bbox.xMax = ( dict->font_bbox.xMax + 0xFFFFU ) >> 16;
         root->bbox.yMax = ( dict->font_bbox.yMax + 0xFFFFU ) >> 16;
-
 
         root->ascender  = (FT_Short)( root->bbox.yMax );
         root->descender = (FT_Short)( root->bbox.yMin );
@@ -396,17 +486,87 @@
         else
           root->units_per_EM = 1000;
 
-        root->underline_position  = dict->underline_position >> 16;
-        root->underline_thickness = dict->underline_thickness >> 16;
+        root->underline_position  =
+          (FT_Short)( dict->underline_position >> 16 );
+        root->underline_thickness =
+          (FT_Short)( dict->underline_thickness >> 16 );
 
         /* retrieve font family & style name */
-        root->family_name  = cff_index_get_name( &cff->name_index, face_index );
-        if ( dict->cid_registry )
-          root->style_name = cff_strcpy( memory, "Regular" );  /* XXXX */
+        root->family_name = cff_index_get_name( &cff->name_index,
+                                                face_index );
+
+        if ( root->family_name )
+        {
+          char*  full   = cff_index_get_sid_string( &cff->string_index,
+                                                    dict->full_name,
+                                                    psnames );
+          char*  fullp  = full;
+          char*  family = root->family_name;
+
+         /* we're going to try to extract the style name from the
+          * full name. We need to ignore spaces and dashes during
+          * the search.
+          */
+          if ( full )
+          {
+            while ( *fullp )
+            {
+             /* skip common characters at the start of both strings
+              */
+              if ( *fullp == *family )
+              {
+                family++;
+                fullp++;
+                continue;
+              }
+
+             /* ignore spaces or dashes in full name during comparison
+              */
+              if ( *fullp == ' ' || *fullp == '-' )
+              {
+                fullp++;
+                continue;
+              }
+             /* ignore spaces and dashes in family name during comparison
+              */
+              if ( *family == ' ' || *family == '-' )
+              {
+                family++;
+                continue;
+              }
+
+              if ( !*family && *fullp )
+              {
+               /* the full name begins with the same characters than the
+                * family name, with spaces and dashes removed. In this
+                * case, the remaining string in "fullp" will be used
+                * as the style name
+                */
+                style_name = cff_strcpy( memory, fullp );
+              }
+              break;
+            }
+            FT_FREE( full );
+          }
+        }
         else
-          root->style_name = cff_index_get_sid_string( &cff->string_index,
-                                                       dict->weight,
-                                                       psnames );
+        {
+          char  *cid_font_name =
+                   cff_index_get_sid_string( &cff->string_index,
+                                             dict->cid_font_name,
+                                             psnames );
+
+
+          /* do we have a `/FontName' for a CID-keyed font? */
+          if ( cid_font_name )
+            root->family_name = cid_font_name;
+        }
+
+        if ( style_name )
+          root->style_name = style_name;
+        else
+          /* assume "Regular" style if we don't know better */
+          root->style_name = cff_strcpy( memory, (char *)"Regular" );
 
         /*******************************************************************/
         /*                                                                 */
@@ -429,10 +589,6 @@
           flags |= FT_FACE_FLAG_KERNING;
 #endif
 
-#ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
-        flags |= FT_FACE_FLAG_GLYPH_NAMES;
-#endif
-
         root->face_flags = flags;
 
         /*******************************************************************/
@@ -444,12 +600,28 @@
         if ( dict->italic_angle )
           flags |= FT_STYLE_FLAG_ITALIC;
 
-        /* XXX: may not be correct */
-        if ( cff->top_font.private_dict.force_bold )
-          flags |= FT_STYLE_FLAG_BOLD;
+        {
+          char  *weight = cff_index_get_sid_string( &cff->string_index,
+                                                    dict->weight,
+                                                    psnames );
+
+
+          if ( weight )
+            if ( !ft_strcmp( weight, "Bold"  ) ||
+                 !ft_strcmp( weight, "Black" ) )
+              flags |= FT_STYLE_FLAG_BOLD;
+          FT_FREE( weight );
+        }
 
         root->style_flags = flags;
       }
+
+#ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+      /* CID-keyed CFF fonts don't have glyph names -- the SFNT loader */
+      /* has unset this flag because of the 3.0 `post' table           */
+      if ( dict->cid_registry == 0xFFFFU )
+        root->face_flags |= FT_FACE_FLAG_GLYPH_NAMES;
+#endif
 
       /*******************************************************************/
       /*                                                                 */
@@ -479,7 +651,12 @@
             goto Skip_Unicode; /* Standard Unicode (deprecated) */
         }
 
-        /* we didn't find a Unicode charmap, synthetize one */
+        /* since CID-keyed fonts don't contain glyph names, we can't */
+        /* construct a cmap                                          */
+        if ( pure_cff && cff->top_font.font_dict.cid_registry != 0xFFFFU )
+          goto Exit;
+
+        /* we didn't find a Unicode charmap -- synthetize one */
         cmaprec.face        = root;
         cmaprec.platform_id = 3;
         cmaprec.encoding_id = 1;

@@ -39,7 +39,7 @@
     ps_parser_init,
     ps_parser_done,
     ps_parser_skip_spaces,
-    ps_parser_skip_alpha,
+    ps_parser_skip_PS_token,
     ps_parser_to_int,
     ps_parser_to_fixed,
     ps_parser_to_bytes,

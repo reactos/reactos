@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2003, 2004 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -163,7 +163,7 @@
     { (char *)"_MULE_RELATIVE_COMPOSE",  BDF_INTEGER,  1, { 0 } },
   };
 
-  static unsigned long
+  static const unsigned long
   _num_bdf_properties = sizeof ( _bdf_properties ) /
                         sizeof ( _bdf_properties[0] );
 
@@ -391,7 +391,7 @@
 
   /* An empty string for empty fields. */
 
-  static char  empty[1] = { 0 };   /* XXX eliminate this */
+  static const char  empty[1] = { 0 };      /* XXX eliminate this */
 
 
   /* Assume the line is NULL-terminated and that the `list' parameter */
@@ -468,7 +468,7 @@
       }
 
       /* Assign the field appropriately. */
-      list->field[list->used++] = ( ep > sp ) ? sp : empty;
+      list->field[list->used++] = ( ep > sp ) ? sp : (char*)empty;
 
       sp = ep;
 
@@ -511,7 +511,7 @@
     }
 
     if ( final_empty )
-      list->field[list->used++] = empty;
+      list->field[list->used++] = (char*)empty;
 
     if ( list->used == list->size )
     {
@@ -1770,14 +1770,14 @@
 
       /* Determine the overall font bounding box as the characters are */
       /* loaded so corrections can be done later if indicated.         */
-      p->maxas    = (short)MAX( glyph->bbx.ascent, p->maxas );
-      p->maxds    = (short)MAX( glyph->bbx.descent, p->maxds );
+      p->maxas    = (short)FT_MAX( glyph->bbx.ascent, p->maxas );
+      p->maxds    = (short)FT_MAX( glyph->bbx.descent, p->maxds );
 
       p->rbearing = (short)( glyph->bbx.width + glyph->bbx.x_offset );
 
-      p->maxrb    = (short)MAX( p->rbearing, p->maxrb );
-      p->minlb    = (short)MIN( glyph->bbx.x_offset, p->minlb );
-      p->maxlb    = (short)MAX( glyph->bbx.x_offset, p->maxlb );
+      p->maxrb    = (short)FT_MAX( p->rbearing, p->maxrb );
+      p->minlb    = (short)FT_MIN( glyph->bbx.x_offset, p->minlb );
+      p->maxlb    = (short)FT_MAX( glyph->bbx.x_offset, p->maxlb );
 
       if ( !( p->flags & _BDF_DWIDTH ) )
       {

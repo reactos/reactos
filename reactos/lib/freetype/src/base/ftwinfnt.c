@@ -18,38 +18,30 @@
 
 #include <ft2build.h>
 #include FT_WINFONTS_H
-#include FT_INTERNAL_FNT_TYPES_H
 #include FT_INTERNAL_OBJECTS_H
+#include FT_SERVICE_WINFNT_H
 
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_WinFNT_Header( FT_Face               face,
                         FT_WinFNT_HeaderRec  *header )
   {
-    FT_Error  error;
+    FT_Service_WinFnt  service;
+    FT_Error           error;
 
 
     error = FT_Err_Invalid_Argument;
 
-    if ( face != NULL && face->driver != NULL )
+    if ( face != NULL )
     {
-      FT_Module  driver = (FT_Module) face->driver;
+      FT_FACE_LOOKUP_SERVICE( face, service, WINFNT );
 
-
-      if ( driver->clazz && driver->clazz->module_name              &&
-           ft_strcmp( driver->clazz->module_name, "winfonts" ) == 0 )
+      if ( service != NULL )
       {
-        FNT_Face  fnt_face = (FNT_Face)face;
-        FNT_Font  font     = fnt_face->font;
-
-
-        if ( font )
-        {
-          FT_MEM_COPY( header, &font->header, sizeof ( *header ) );
-          error = FT_Err_Ok;
-        }
+        error = service->get_header( face, header );
       }
     }
+
     return error;
   }
 

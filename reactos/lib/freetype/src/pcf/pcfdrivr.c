@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000, 2001, 2002, 2003 by
+    Copyright (C) 2000, 2001, 2002, 2003, 2004 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,12 +31,12 @@ THE SOFTWARE.
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_GZIP_H
+#include FT_LZW_H
 #include FT_ERRORS_H
 #include FT_BDF_H
 
 #include "pcf.h"
 #include "pcfdrivr.h"
-#include "pcfutil.h"
 #include "pcfread.h"
 
 #include "pcferror.h"
@@ -44,6 +44,8 @@ THE SOFTWARE.
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pcfread
 
+#include FT_SERVICE_BDF_H
+#include FT_SERVICE_XFREE86_NAME_H
 
   typedef struct  PCF_CMapRec_
   {
@@ -212,7 +214,7 @@ THE SOFTWARE.
 
     FT_TRACE4(( "PCF_Face_Done: done face\n" ));
 
-    /* close gzip stream if any */
+    /* close gzip/LZW stream if any */
     if ( face->root.stream == &face->gzip_stream )
     {
       FT_Stream_Close( &face->gzip_stream );
@@ -245,21 +247,44 @@ THE SOFTWARE.
 
       /* this didn't work, try gzip support! */
       error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
-      if ( error2 == PCF_Err_Unimplemented_Feature )
+      if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
         goto Fail;
 
       error = error2;
       if ( error )
-        goto Fail;
+      {
+        FT_Error  error3;
 
-      face->gzip_source = stream;
-      face->root.stream = &face->gzip_stream;
 
-      stream = face->root.stream;
+        /* this didn't work, try LZW support! */
+        error3 = FT_Stream_OpenLZW( &face->gzip_stream, stream );
+        if ( FT_ERROR_BASE( error3 ) == FT_Err_Unimplemented_Feature )
+          goto Fail;
 
-      error = pcf_load_font( stream, face );
-      if ( error )
-        goto Fail;
+        error = error3;
+        if ( error )
+          goto Fail;
+
+        face->gzip_source = stream;
+        face->root.stream = &face->gzip_stream;
+
+        stream = face->root.stream;
+
+        error = pcf_load_font( stream, face );
+        if ( error )
+          goto Fail;
+      }
+      else
+      {
+        face->gzip_source = stream;
+        face->root.stream = &face->gzip_stream;
+
+        stream = face->root.stream;
+
+        error = pcf_load_font( stream, face );
+        if ( error )
+          goto Fail;
+      }
     }
 
     /* set-up charmap */
@@ -334,9 +359,9 @@ THE SOFTWARE.
 
 
     FT_TRACE4(( "rec %d - pres %d\n", size->metrics.y_ppem,
-                                      face->root.available_sizes->height ));
+                                      face->root.available_sizes->y_ppem >> 6 ));
 
-    if ( size->metrics.y_ppem == face->root.available_sizes->height )
+    if ( size->metrics.y_ppem == face->root.available_sizes->y_ppem >> 6 )
     {
       size->metrics.ascender    = face->accel.fontAscent << 6;
       size->metrics.descender   = face->accel.fontDescent * (-64);
@@ -471,6 +496,12 @@ THE SOFTWARE.
   }
 
 
+ /*
+  *
+  *  BDF SERVICE
+  *
+  */
+
   static FT_Error
   pcf_get_bdf_property( PCF_Face          face,
                         const char*       prop_name,
@@ -503,16 +534,46 @@ THE SOFTWARE.
   }
 
 
+  static FT_Error
+  pcf_get_charset_id( PCF_Face      face,
+                      const char*  *acharset_encoding,
+                      const char*  *acharset_registry )
+  {
+    *acharset_encoding = face->charset_encoding;
+    *acharset_registry = face->charset_registry;
+
+    return 0;
+  }
+
+
+  static const FT_Service_BDFRec  pcf_service_bdf =
+  {
+    (FT_BDF_GetCharsetIdFunc)pcf_get_charset_id,
+    (FT_BDF_GetPropertyFunc) pcf_get_bdf_property
+  };
+
+
+ /*
+  *
+  *  SERVICE LIST
+  *
+  */
+
+  static const FT_ServiceDescRec  pcf_services[] =
+  {
+    { FT_SERVICE_ID_BDF,       &pcf_service_bdf },
+    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_PCF },
+    { NULL, NULL }
+  };
+
+
   static FT_Module_Interface
   pcf_driver_requester( FT_Module    module,
                         const char*  name )
   {
     FT_UNUSED( module );
 
-    if ( name && ft_strcmp( name, "get_bdf_property" ) == 0 )
-      return (FT_Module_Interface) pcf_get_bdf_property;
-
-    return NULL;
+    return ft_service_list_lookup( pcf_services, name );
   }
 
 

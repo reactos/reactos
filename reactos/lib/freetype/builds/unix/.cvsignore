@@ -6,3 +6,4 @@ config.log
 libtool
 ftconfig.h
 freetype-config
+freetype2.pc

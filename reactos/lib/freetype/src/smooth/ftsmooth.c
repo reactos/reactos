@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 by                                     */
+/*  Copyright 2000-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -132,10 +132,10 @@
     /* compute the control box, and grid fit it */
     FT_Outline_Get_CBox( outline, &cbox );
 
-    cbox.xMin &= -64;
-    cbox.yMin &= -64;
-    cbox.xMax  = ( cbox.xMax + 63 ) & -64;
-    cbox.yMax  = ( cbox.yMax + 63 ) & -64;
+    cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
+    cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
+    cbox.xMax = FT_PIX_CEIL( cbox.xMax );
+    cbox.yMax = FT_PIX_CEIL( cbox.yMax );
 
     width  = (FT_UInt)( ( cbox.xMax - cbox.xMin ) >> 6 );
     height = (FT_UInt)( ( cbox.yMax - cbox.yMin ) >> 6 );
@@ -154,7 +154,7 @@
     if ( hmul )
     {
       width = width * hmul;
-      pitch = ( width + 3 ) & -4;
+      pitch = FT_PAD_CEIL( width, 4 );
     }
 
     if ( vmul )
@@ -236,6 +236,9 @@
                     FT_Render_Mode  mode,
                     FT_Vector*      origin )
   {
+    if ( mode == FT_RENDER_MODE_LIGHT )
+      mode = FT_RENDER_MODE_NORMAL;
+
     return ft_smooth_render_generic( render, slot, mode, origin,
                                      FT_RENDER_MODE_NORMAL,
                                      0, 0 );

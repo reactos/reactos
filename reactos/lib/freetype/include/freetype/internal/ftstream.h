@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Stream handling (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -314,6 +314,17 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM */
 
+
+  /* create a new (input) stream from an FT_Open_Args structure */
+  FT_BASE( FT_Error )
+  FT_Stream_New( FT_Library           library,
+                 const FT_Open_Args*  args,
+                 FT_Stream           *astream );
+
+  /* free a stream */
+  FT_BASE( void )
+  FT_Stream_Free( FT_Stream  stream,                    
+                  FT_Int     external );
 
   /* initialize a stream for reading in-memory data */
   FT_BASE( void )

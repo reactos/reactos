@@ -5,7 +5,7 @@
 /*    Load the basic TrueType tables, i.e., tables that can be either in   */
 /*    TTF or OTF fonts (body).                                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +22,6 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
 #include "ttload.h"
-#include "ttcmap.h"
 
 #include "sferrors.h"
 
@@ -254,7 +253,7 @@
   /*    stream     :: The input stream.                                    */
   /*                                                                       */
   /*    face_index :: If the font is a collection, the number of the font  */
-  /*                  in the collection, ignored otherwise.                */
+  /*                  in the collection.  Must be zero otherwise.          */
   /*                                                                       */
   /* <Output>                                                              */
   /*    sfnt       :: The SFNT header.                                     */
@@ -277,7 +276,7 @@
                             SFNT_Header  sfnt )
   {
     FT_Error   error;
-    FT_ULong   format_tag, offset;
+    FT_ULong   font_format_tag, format_tag, offset;
     FT_Memory  memory = stream->memory;
 
     static const FT_Frame_Field  sfnt_header_fields[] =
@@ -314,16 +313,17 @@
 
     face->num_tables = 0;
 
-    /* first of all, read the first 4 bytes.  If it is `ttcf', then the */
-    /* file is a TrueType collection, otherwise it can be any other     */
-    /* kind of font.                                                    */
-    /*                                                                  */
+    /* First of all, read the first 4 bytes.  If it is `ttcf', then the   */
+    /* file is a TrueType collection, otherwise it is a single-face font. */
+    /*                                                                    */
     offset = FT_STREAM_POS();
 
-    if ( FT_READ_ULONG( format_tag ) )
+    if ( FT_READ_ULONG( font_format_tag ) )
       goto Exit;
 
-    if ( format_tag == TTAG_ttcf )
+    format_tag = font_format_tag;
+
+    if ( font_format_tag == TTAG_ttcf )
     {
       FT_Int  n;
 
@@ -355,8 +355,8 @@
       /* seek to the appropriate TrueType file, then read tag */
       offset = face->ttc_header.offsets[face_index];
 
-      if ( FT_STREAM_SEEK( offset ) ||
-           FT_READ_LONG( format_tag )                             )
+      if ( FT_STREAM_SEEK( offset )   ||
+           FT_READ_LONG( format_tag ) )
         goto Exit;
     }
 
@@ -373,7 +373,12 @@
     {
       FT_TRACE2(( "tt_face_load_sfnt_header: file is not SFNT!\n" ));
       error = SFNT_Err_Unknown_File_Format;
+      goto Exit;
     }
+
+    /* disallow face index values > 0 for non-TTC files */
+    if ( font_format_tag != TTAG_ttcf && face_index > 0 )
+      error = SFNT_Err_Bad_Argument;
 
   Exit:
     return error;
@@ -741,12 +746,12 @@
       face->root.num_glyphs = maxProfile->numGlyphs;
 
       face->root.internal->max_points =
-        (FT_UShort)MAX( maxProfile->maxCompositePoints,
-                        maxProfile->maxPoints );
+        (FT_UShort)FT_MAX( maxProfile->maxCompositePoints,
+                           maxProfile->maxPoints );
 
       face->root.internal->max_contours =
-        (FT_Short)MAX( maxProfile->maxCompositeContours,
-                       maxProfile->maxContours );
+        (FT_Short)FT_MAX( maxProfile->maxCompositeContours,
+                          maxProfile->maxContours );
 
       face->max_components = (FT_ULong)maxProfile->maxComponentElements +
                              maxProfile->maxComponentDepth;
@@ -897,7 +902,8 @@
     /* do we have an inconsistent number of metric values? */
     {
       TT_ShortMetrics*  cur   = *shorts;
-      TT_ShortMetrics*  limit = cur + MIN( num_shorts, num_shorts_checked );
+      TT_ShortMetrics*  limit = cur +
+                                FT_MIN( num_shorts, num_shorts_checked );
 
 
       for ( ; cur < limit; cur++ )

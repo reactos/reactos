@@ -61,6 +61,7 @@ II. Custom builds of the library
 
 [2] make++, a  make tool written in Perl, has  sufficient support of GNU
     make       extensions       to       build      FreeType.        See
-    http://makepp.sourceforge.net for more information.
+    http://makepp.sourceforge.net for more information; you need version
+    1.19 or newer, and you must pass option `--norc-substitution'.
 
 --- end of INSTALL ---

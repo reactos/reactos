@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,7 @@
 #include FT_INTERNAL_GLYPH_LOADER_H
 #include FT_INTERNAL_DRIVER_H
 #include FT_INTERNAL_AUTOHINT_H
-#include FT_INTERNAL_OBJECT_H
+#include FT_INTERNAL_SERVICE_H
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 #include FT_INCREMENTAL_H
@@ -64,19 +64,21 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* The min and max functions missing in C.  As usual, be careful not to  */
-  /* write things like MIN( a++, b++ ) to avoid side effects.              */
+  /* write things like FT_MIN( a++, b++ ) to avoid side effects.           */
   /*                                                                       */
-#ifndef MIN
-#define MIN( a, b )  ( (a) < (b) ? (a) : (b) )
-#endif
+#define FT_MIN( a, b )  ( (a) < (b) ? (a) : (b) )
+#define FT_MAX( a, b )  ( (a) > (b) ? (a) : (b) )
 
-#ifndef MAX
-#define MAX( a, b )  ( (a) > (b) ? (a) : (b) )
-#endif
+#define FT_ABS( a )     ( (a) < 0 ? -(a) : (a) )
 
-#ifndef ABS
-#define ABS( a )     ( (a) < 0 ? -(a) : (a) )
-#endif
+
+#define FT_PAD_FLOOR( x, n )  ( (x) & ~((n)-1) )
+#define FT_PAD_ROUND( x, n )  FT_PAD_FLOOR( (x) + ((n)/2), n )
+#define FT_PAD_CEIL( x, n )   FT_PAD_FLOOR( (x) + ((n)-1), n )
+
+#define FT_PIX_FLOOR( x )     ( (x) & ~63 )
+#define FT_PIX_ROUND( x )     FT_PIX_FLOOR( (x) + 32 )
+#define FT_PIX_CEIL( x )      FT_PIX_FLOOR( (x) + 63 )
 
 
   /*************************************************************************/
@@ -271,51 +273,52 @@ FT_BEGIN_HEADER
   /*    FreeType.                                                          */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    max_points       :: The maximal number of points used to store the */
-  /*                        vectorial outline of any glyph in this face.   */
-  /*                        If this value cannot be known in advance, or   */
-  /*                        if the face isn't scalable, this should be set */
-  /*                        to 0.  Only relevant for scalable formats.     */
+  /*    max_points ::                                                      */
+  /*      The maximal number of points used to store the vectorial outline */
+  /*      of any glyph in this face.  If this value cannot be known in     */
+  /*      advance, or if the face isn't scalable, this should be set to 0. */
+  /*      Only relevant for scalable formats.                              */
   /*                                                                       */
-  /*    max_contours     :: The maximal number of contours used to store   */
-  /*                        the vectorial outline of any glyph in this     */
-  /*                        face.  If this value cannot be known in        */
-  /*                        advance, or if the face isn't scalable, this   */
-  /*                        should be set to 0.  Only relevant for         */
-  /*                        scalable formats.                              */
+  /*    max_contours ::                                                    */
+  /*      The maximal number of contours used to store the vectorial       */
+  /*      outline of any glyph in this face.  If this value cannot be      */
+  /*      known in advance, or if the face isn't scalable, this should be  */
+  /*      set to 0.  Only relevant for scalable formats.                   */
   /*                                                                       */
-  /*    transform_matrix :: A 2x2 matrix of 16.16 coefficients used to     */
-  /*                        transform glyph outlines after they are loaded */
-  /*                        from the font.  Only used by the convenience   */
-  /*                        functions.                                     */
+  /*    transform_matrix ::                                                */
+  /*      A 2x2 matrix of 16.16 coefficients used to transform glyph       */
+  /*      outlines after they are loaded from the font.  Only used by the  */
+  /*      convenience functions.                                           */
   /*                                                                       */
-  /*    transform_delta  :: A translation vector used to transform glyph   */
-  /*                        outlines after they are loaded from the font.  */
-  /*                        Only used by the convenience functions.        */
+  /*    transform_delta ::                                                 */
+  /*      A translation vector used to transform glyph outlines after they */
+  /*      are loaded from the font.  Only used by the convenience          */
+  /*      functions.                                                       */
   /*                                                                       */
-  /*    transform_flags  :: Some flags used to classify the transform.     */
-  /*                        Only used by the convenience functions.        */
+  /*    transform_flags ::                                                 */
+  /*      Some flags used to classify the transform.  Only used by the     */
+  /*      convenience functions.                                           */
   /*                                                                       */
-  /*    postscript_name  :: Postscript font name for this face.            */
+  /*    services ::                                                        */
+  /*      A cache for frequently used services.  It should be only         */
+  /*      accessed with the macro `FT_FACE_LOOKUP_SERVICE'.                */
   /*                                                                       */
   /*    incremental_interface ::                                           */
-  /*                        If non-null, the interface through             */
-  /*                        which glyph data and metrics are loaded        */
-  /*                        incrementally for faces that do not provide    */
-  /*                        all of this data when first opened.            */
-  /*                        This field exists only if                      */
-  /*                        @FT_CONFIG_OPTION_INCREMENTAL is defined.      */
+  /*      If non-null, the interface through which glyph data and metrics  */
+  /*      are loaded incrementally for faces that do not provide all of    */
+  /*      this data when first opened.  This field exists only if          */
+  /*      @FT_CONFIG_OPTION_INCREMENTAL is defined.                        */
   /*                                                                       */
   typedef struct  FT_Face_InternalRec_
   {
-    FT_UShort    max_points;
-    FT_Short     max_contours;
+    FT_UShort           max_points;
+    FT_Short            max_contours;
 
-    FT_Matrix    transform_matrix;
-    FT_Vector    transform_delta;
-    FT_Int       transform_flags;
+    FT_Matrix           transform_matrix;
+    FT_Vector           transform_delta;
+    FT_Int              transform_flags;
 
-    const char*  postscript_name;
+    FT_ServiceCacheRec  services;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     FT_Incremental_InterfaceRec*  incremental_interface;
@@ -465,6 +468,10 @@ FT_BEGIN_HEADER
   FT_BASE( const void* )
   FT_Get_Module_Interface( FT_Library   library,
                            const char*  mod_name );
+
+  FT_BASE( FT_Pointer )
+  ft_module_get_service( FT_Module    module,
+                         const char*  service_id );
 
  /* */
 
@@ -704,6 +711,12 @@ FT_BEGIN_HEADER
   /*    generic          :: Client data variable.  Used to extend the      */
   /*                        Library class by higher levels and clients.    */
   /*                                                                       */
+  /*    version_major    :: The major version number of the library.       */
+  /*                                                                       */
+  /*    version_minor    :: The minor version number of the library.       */
+  /*                                                                       */
+  /*    version_patch    :: The current patch level of the library.        */
+  /*                                                                       */
   /*    num_modules      :: The number of modules currently registered     */
   /*                        within this library.  This is set to 0 for new */
   /*                        libraries.  New modules are added through the  */
@@ -753,8 +766,6 @@ FT_BEGIN_HEADER
     FT_ULong           raster_pool_size; /* size of render pool in bytes */
 
     FT_DebugHook_Func  debug_hooks[4];
-
-    FT_MetaClassRec    meta_class;
 
   } FT_LibraryRec;
 

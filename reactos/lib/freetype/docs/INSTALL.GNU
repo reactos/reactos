@@ -23,7 +23,8 @@ the file INSTALL.UNX instead.
 
     Note  that make++,  a make  tool  written in  Perl, supports  enough
     features    of    GNU     make    to    compile    FreeType.     See
-    http://makepp.sourceforge.net for more information.
+    http://makepp.sourceforge.net for more information; you need version
+    1.19 or newer, and you must pass option `--norc-substitution'.
 
     Make sure that  you are invoking GNU Make from  the command line, by
     typing something like:

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -14,6 +14,15 @@
 /*  understand and accept it fully.                                        */
 /*                                                                         */
 /***************************************************************************/
+
+
+#ifndef FT_FREETYPE_H
+#error "`ft2build.h' hasn't been included yet!"
+#error "Please always use macros to include FreeType header files."
+#error "Example:"
+#error "  #include <ft2build.h>"
+#error "  #include FT_FREETYPE_H"
+#endif
 
 
 #ifndef __FREETYPE_H__
@@ -35,7 +44,7 @@
   /*                                                                       */
 #define FREETYPE_MAJOR 2
 #define FREETYPE_MINOR 1
-#define FREETYPE_PATCH 5
+#define FREETYPE_PATCH 8
 
 
 #include <ft2build.h>
@@ -460,7 +469,7 @@ FT_BEGIN_HEADER
   /*    should redefine this macro in case of problems to something like   */
   /*    this:                                                              */
   /*                                                                       */
-  /*      #define FT_ENC_TAG( value, a, b, c, d )  (value)                 */
+  /*      #define FT_ENC_TAG( value, a, b, c, d )  value                   */
   /*                                                                       */
   /*    to get a simple enumeration without assigning special numbers.     */
   /*                                                                       */
@@ -580,6 +589,37 @@ FT_BEGIN_HEADER
   /*   However, it will also report the encodings defined explicitly in    */
   /*   the font file, for the cases when they are needed, with the Adobe   */
   /*   values as well.                                                     */
+  /*                                                                       */
+  /*   FT_ENCODING_NONE is set by the BDF and PCF drivers if the charmap   */
+  /*   is neither Unicode nor ISO-8859-1 (otherwise it is set to           */
+  /*   FT_ENCODING_UNICODE).  Use `FT_Get_BDF_Charset_ID' to find out      */
+  /*   which encoding is really present.  If, for example, the             */
+  /*   `cs_registry' field is `KOI8' and the `cs_encoding' field is `R',   */
+  /*   the font is encoded in KOI8-R.                                      */
+  /*                                                                       */
+  /*   FT_ENCODING_NONE is always set (with a single exception) by the     */
+  /*   winfonts driver.  Use `FT_Get_WinFNT_Header' and examine the        */
+  /*   `charset' field of the `FT_WinFNT_HeaderRec' structure to find out  */
+  /*   which encoding is really present.  For example, FT_WinFNT_ID_CP1251 */
+  /*   (204) means Windows code page 1251 (for Russian).                   */
+  /*                                                                       */
+  /*   FT_ENCODING_NONE is set if `platform_id' is `TT_PLATFORM_MACINTOSH' */
+  /*   and `encoding_id' is not `TT_MAC_ID_ROMAN' (otherwise it is set to  */
+  /*   FT_ENCODING_APPLE_ROMAN).                                           */
+  /*                                                                       */
+  /*   If `platform_id' is `TT_PLATFORM_MACINTOSH', use the function       */
+  /*   `FT_Get_CMap_Language_ID' to query the Mac language ID which may be */
+  /*   needed to be able to distinguish Apple encoding variants.  See      */
+  /*                                                                       */
+  /*     http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/README.TXT   */
+  /*                                                                       */
+  /*   to get an idea how to do that.  Basically, if the language ID is 0, */
+  /*   dont use it, otherwise subtract 1 from the language ID.  Then       */
+  /*   examine `encoding_id'.  If, for example, `encoding_id' is           */
+  /*   `TT_MAC_ID_ROMAN' and the language ID (minus 1) is                  */
+  /*   `TT_MAC_LANGID_GREEK', it is the Greek encoding, not Roman.         */
+  /*   `TT_MAC_ID_ARABIC' with `TT_MAC_LANGID_FARSI' means the Farsi       */
+  /*   variant the Arabic encoding.                                        */
   /*                                                                       */
   typedef enum  FT_Encoding_
   {
@@ -728,10 +768,12 @@ FT_BEGIN_HEADER
   /*                           collection (i.e., a file which embeds       */
   /*                           several faces), this is the total number of */
   /*                           faces found in the resource.  1 by default. */
+  /*                           Accessing non-existent face indices causes  */
+  /*                           an error.                                   */
   /*                                                                       */
   /*    face_index          :: The index of the face in its font file.     */
   /*                           Usually, this is 0 for all normal font      */
-  /*                           formats.  It can be more in the case of     */
+  /*                           formats.  It can be > 0 in the case of      */
   /*                           collections (which embed several fonts in a */
   /*                           single resource/file).                      */
   /*                                                                       */
@@ -932,7 +974,7 @@ FT_BEGIN_HEADER
   /*    FT_FACE_FLAG_XXX                                                   */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A list of bit flags used in the 'face_flags' field of the          */
+  /*    A list of bit flags used in the `face_flags' field of the          */
   /*    @FT_FaceRec structure.  They inform client applications of         */
   /*    properties of the corresponding face.                              */
   /*                                                                       */
@@ -1709,6 +1751,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    face_index :: The index of the face within the resource.  The      */
   /*                  first face has index 0.                              */
+  /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.                       */
   /*                                                                       */
@@ -1722,9 +1765,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    @FT_New_Face can be used to determine and/or check the font format */
   /*    of a given font resource.  If the `face_index' field is negative,  */
-  /*    the function will _not_ return any face handle in `aface'.  Its    */
-  /*    return value should be 0 if the font format is recognized, or      */
-  /*    non-zero otherwise.                                                */
+  /*    the function will _not_ return any face handle in `aface';  the    */
+  /*    return value is 0 if the font format is recognized, or non-zero    */
+  /*    otherwise.                                                         */
   /*                                                                       */
   /*    Each new face object created with this function also owns a        */
   /*    default @FT_Size object, accessible as `face->size'.               */
@@ -1755,6 +1798,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    face_index :: The index of the face within the resource.  The      */
   /*                  first face has index 0.                              */
+  /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.                       */
   /*                                                                       */
@@ -1774,8 +1818,8 @@ FT_BEGIN_HEADER
   /*    @FT_New_Memory_Face can be used to determine and/or check the font */
   /*    format of a given font resource.  If the `face_index' field is     */
   /*    negative, the function will _not_ return any face handle in        */
-  /*    `aface'.  Its return value should be 0 if the font format is       */
-  /*    recognized, or non-zero otherwise.                                 */
+  /*    `aface'; the return value is 0 if the font format is recognized,   */
+  /*    or non-zero otherwise.                                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_New_Memory_Face( FT_Library      library,
@@ -1804,6 +1848,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    face_index :: The index of the face within the resource.  The      */
   /*                  first face has index 0.                              */
+  /*                                                                       */
   /* <Output>                                                              */
   /*    aface      :: A handle to a new face object.                       */
   /*                                                                       */
@@ -1815,11 +1860,11 @@ FT_BEGIN_HEADER
   /*    slot for the face object which can be accessed directly through    */
   /*    `face->glyph'.                                                     */
   /*                                                                       */
-  /*    @FT_Open_Face can be used to determine and/or check the font      */
+  /*    @FT_Open_Face can be used to determine and/or check the font       */
   /*    format of a given font resource.  If the `face_index' field is     */
   /*    negative, the function will _not_ return any face handle in        */
-  /*    `*face'.  Its return value should be 0 if the font format is       */
-  /*    recognized, or non-zero otherwise.                                 */
+  /*    `*face'; the return value is 0 if the font format is recognized,   */
+  /*    or non-zero otherwise.                                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Open_Face( FT_Library           library,
@@ -2021,7 +2066,9 @@ FT_BEGIN_HEADER
   /*                   will be loaded.                                     */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    glyph_index :: The index of the glyph in the font file.            */
+  /*    glyph_index :: The index of the glyph in the font file.  For       */
+  /*                   CID-keyed fonts (either in PS or in CFF format)     */
+  /*                   this argument specifies the CID value.              */
   /*                                                                       */
   /*    load_flags  :: A flag indicating what to load for this glyph.  The */
   /*                   @FT_LOAD_XXX constants can be used to control the   */
@@ -2212,6 +2259,21 @@ FT_BEGIN_HEADER
   *     outlines.  This doesn't prevent native format-specific hinters from
   *     being used.  This can be important for certain fonts where unhinted
   *     output is better than auto-hinted one.
+  *
+  *   FT_LOAD_TARGET_NORMAL ::
+  *     Use hinting for @FT_RENDER_MODE_NORMAL.
+  *
+  *   FT_LOAD_TARGET_LIGHT ::
+  *     Use hinting for @FT_RENDER_MODE_LIGHT.
+  *
+  *   FT_LOAD_TARGET_MONO ::
+  *     Use hinting for @FT_RENDER_MODE_MONO.
+  *
+  *   FT_LOAD_TARGET_LCD ::
+  *     Use hinting for @FT_RENDER_MODE_LCD.
+  *
+  *   FT_LOAD_TARGET_LCD_V ::
+  *     Use hinting for @FT_RENDER_MODE_LCD_V.
   */
 #define FT_LOAD_DEFAULT                      0x0
 #define FT_LOAD_NO_SCALE                     0x1
@@ -2234,35 +2296,8 @@ FT_BEGIN_HEADER
 
   /* */
 
-
 #define FT_LOAD_TARGET_( x )      ( (FT_Int32)( (x) & 15 ) << 16 )
 #define FT_LOAD_TARGET_MODE( x )  ( (FT_Render_Mode)( ( (x) >> 16 ) & 15 ) )
-
-
- /***************************************************************************
-  *
-  * @enum:
-  *   FT_LOAD_TARGET_XXX
-  *
-  * @description:
-  *   A list of load targets.  XXX
-  *
-  * @values:
-  *   FT_LOAD_TARGET_NORMAL ::
-  *     XXX
-  *
-  *   FT_LOAD_TARGET_LIGHT ::
-  *     XXX
-  *
-  *   FT_LOAD_TARGET_MONO ::
-  *     XXX
-  *
-  *   FT_LOAD_TARGET_LCD ::
-  *     XXX
-  *
-  *   FT_LOAD_TARGET_LCD_V ::
-  *     XXX
-  */
 
 #define FT_LOAD_TARGET_NORMAL     FT_LOAD_TARGET_( FT_RENDER_MODE_NORMAL )
 #define FT_LOAD_TARGET_LIGHT      FT_LOAD_TARGET_( FT_RENDER_MODE_LIGHT  )
@@ -2325,11 +2360,14 @@ FT_BEGIN_HEADER
   /*      anti-aliased bitmaps, using 256 levels of opacity.               */
   /*                                                                       */
   /*    FT_RENDER_MODE_LIGHT ::                                            */
-  /*      This is similar to @FT_RENDER_MODE_NORMAL, except that this      */
-  /*      changes the hinting to prevent stem width quantization.  This    */
-  /*      results in glyph shapes that are more similar to the original,   */
-  /*      while being a bit more fuzzy ("better shapes", instead of        */
-  /*      "better contrast" if you want :-).                               */
+  /*      This is similar to @FT_RENDER_MODE_NORMAL -- you have to use     */
+  /*      @FT_LOAD_TARGET_LIGHT in calls to @FT_Load_Glyph to get any      */
+  /*      effect since the rendering process no longer influences the      */
+  /*      positioning of glyph outlines.                                   */
+  /*                                                                       */
+  /*      The resulting glyph shapes are more similar to the original,     */
+  /*      while being a bit more fuzzy (`better shapes' instead of `better */
+  /*      contrast', so to say.                                            */
   /*                                                                       */
   /*    FT_RENDER_MODE_MONO ::                                             */
   /*      This mode corresponds to 1-bit bitmaps.                          */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (specification).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,8 @@
 FT_BEGIN_HEADER
 
 
-  FT_EXPORT( FT_Int32 )  FT_SqrtFixed( FT_Int32  x );
+  FT_EXPORT( FT_Int32 )
+  FT_SqrtFixed( FT_Int32  x );
 
 
 #define SQRT_32( x )  FT_Sqrt32( x )
@@ -57,6 +58,39 @@ FT_BEGIN_HEADER
   /* FT_MulDiv() and FT_MulFix() are declared in freetype.h.               */
   /*                                                                       */
   /*************************************************************************/
+
+
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_MulDiv_No_Round                                                 */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A very simple function used to perform the computation `(a*b)/c'   */
+  /*    (without rounding) with maximal accuracy (it uses a 64-bit         */
+  /*    intermediate integer whenever necessary).                          */
+  /*                                                                       */
+  /*    This function isn't necessarily as fast as some processor specific */
+  /*    operations, but is at least completely portable.                   */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    a :: The first multiplier.                                         */
+  /*    b :: The second multiplier.                                        */
+  /*    c :: The divisor.                                                  */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    The result of `(a*b)/c'.  This function never traps when trying to */
+  /*    divide by zero; it simply returns `MaxInt' or `MinInt' depending   */
+  /*    on the signs of `a' and `b'.                                       */
+  /*                                                                       */
+  FT_BASE( FT_Long )
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c );
+
+#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
 
 
 #define INT_TO_F26DOT6( x )    ( (FT_Long)(x) << 6  )

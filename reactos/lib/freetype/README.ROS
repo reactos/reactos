@@ -1,7 +1,7 @@
 CREDITS
 
 The code in this tree is based (it is actually an exact copy with some
-ReactOS specific extra files) on the FreeType library, version 2.1.5.
+ReactOS specific extra files) on the FreeType library, version 2.1.8.
 It was written and is being maintained by the FreeType team. The projects
 website is http://www.freetype.org.
 
@@ -66,4 +66,4 @@ file, so it is obvious to everyone which FreeType version we're using.
 After testing, you can commit the new/changed files to CVS. ALthough files
 config.mk and freetype.def are generated, they should be included in CVS.
 
-$Id: README.ROS,v 1.4 2004/01/21 19:23:45 gvg Exp $
+$Id: README.ROS,v 1.5 2004/05/10 17:48:22 gvg Exp $

@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  ftmodule.h                                                             */
+/*  ftmodapi.h                                                             */
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
@@ -16,12 +16,18 @@
 /***************************************************************************/
 
 
-#ifndef __FTMODULE_H__
-#define __FTMODULE_H__
+#ifndef __FTMODAPI_H__
+#define __FTMODAPI_H__
 
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#ifdef FREETYPE_H
+#error "freetype.h of FreeType 1 has been loaded!"
+#error "Please fix the directory search order for header files"
+#error "so that freetype.h of FreeType 2 is found first."
+#endif
 
 
 FT_BEGIN_HEADER
@@ -70,8 +76,7 @@ FT_BEGIN_HEADER
 #define ft_module_driver_has_hinter   FT_MODULE_DRIVER_HAS_HINTER
 
 
-  typedef void
-  (*FT_Module_Interface)( void );
+  typedef FT_Pointer  FT_Module_Interface;
 
   typedef FT_Error
   (*FT_Module_Constructor)( FT_Module  module );
@@ -79,7 +84,7 @@ FT_BEGIN_HEADER
   typedef void
   (*FT_Module_Destructor)( FT_Module  module );
 
-  typedef FT_Module_Interface
+  typedef FT_Module_Interface 
   (*FT_Module_Requester)( FT_Module    module,
                           const char*  name );
 
@@ -308,7 +313,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTMODULE_H__ */
+#endif /* __FTMODAPI_H__ */
 
 
 /* END */

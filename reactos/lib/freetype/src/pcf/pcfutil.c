@@ -25,6 +25,8 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Keith Packard, MIT X Consortium
  */
 
+/* Modified for use with FreeType */
+
 
 #include <ft2build.h>
 #include "pcfutil.h"
@@ -72,7 +74,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert bit order within each BYTE of an array.
    */
 
-  void
+  static void
   BitOrderInvert( unsigned char*  buf,
                   int             nbytes )
   {
@@ -88,7 +90,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert byte order within each 16-bits of an array.
    */
 
-  void
+  static void
   TwoByteSwap( unsigned char*  buf,
                int             nbytes )
   {
@@ -107,7 +109,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert byte order within each 32-bits of an array.
    */
 
-  void
+  static void
   FourByteSwap( unsigned char*  buf,
                 int             nbytes )
   {
@@ -124,91 +126,6 @@ in this Software without prior written authorization from The Open Group.
       buf[1] = buf[2];
       buf[2] = c;
     }
-  }
-
-
-  /*
-   *  Repad a bitmap.
-   */
-
-  int
-  RepadBitmap( char*         pSrc,
-               char*         pDst,
-               unsigned int  srcPad,
-               unsigned int  dstPad,
-               int           width,
-               int           height )
-  {
-    int   srcWidthBytes, dstWidthBytes;
-    int   row, col;
-    char  *pTmpSrc, *pTmpDst;
-
-
-    switch ( srcPad )
-    {
-    case 1:
-      srcWidthBytes = ( width + 7 ) >> 3;
-      break;
-
-    case 2:
-      srcWidthBytes = ( ( width + 15 ) >> 4 ) << 1;
-      break;
-
-    case 4:
-      srcWidthBytes = ( ( width + 31 ) >> 5 ) << 2;
-      break;
-
-    case 8:
-      srcWidthBytes = ( ( width + 63 ) >> 6 ) << 3;
-      break;
-
-    default:
-      return 0;
-    }
-
-    switch ( dstPad )
-    {
-    case 1:
-      dstWidthBytes = ( width + 7 ) >> 3;
-      break;
-
-    case 2:
-      dstWidthBytes = ( ( width + 15 ) >> 4 ) << 1;
-      break;
-
-    case 4:
-      dstWidthBytes = ( ( width + 31 ) >> 5 ) << 2;
-      break;
-
-    case 8:
-      dstWidthBytes = ( ( width + 63 ) >> 6 ) << 3;
-      break;
-
-    default:
-      return 0;
-    }
-
-    width = srcWidthBytes;
-    if ( width > dstWidthBytes )
-      width = dstWidthBytes;
-
-    pTmpSrc= pSrc;
-    pTmpDst= pDst;
-
-    for ( row = 0; row < height; row++ )
-    {
-      for ( col = 0; col < width; col++ )
-        *pTmpDst++ = *pTmpSrc++;
-
-      while ( col < dstWidthBytes )
-      {
-        *pTmpDst++ = '\0';
-        col++;
-      }
-      pTmpSrc += srcWidthBytes - width;
-    }
-
-    return dstWidthBytes * height;
   }
 
 

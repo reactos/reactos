@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    VMS-specific configuration file (specification only).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,14 +34,15 @@
   /*************************************************************************/
 
 
-#ifndef FTCONFIG_H
-#define FTCONFIG_H
+#ifndef __FTCONFIG_H__
+#define __FTCONFIG_H__
 
 
   /* Include the header file containing all developer build options */
 #include <ft2build.h>
 #include FT_CONFIG_OPTIONS_H
 #include FT_CONFIG_STANDARD_LIBRARY_H
+
 
 FT_BEGIN_HEADER
 
@@ -65,6 +66,8 @@ FT_BEGIN_HEADER
 
 #define FT_SIZEOF_INT   4
 #define FT_SIZEOF_LONG  4
+
+#define FT_CHAR_BIT  8
 
 
   /* Preferred alignment of data */
@@ -91,6 +94,19 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Mac support                                                           */
+  /*                                                                       */
+  /*   This is the only necessary change, so it is defined here instead    */
+  /*   providing a new configuration file.                                 */
+  /*                                                                       */
+#if ( defined( __APPLE__ ) && !defined( DARWIN_NO_CARBON ) ) || \
+    ( defined( __MWERKS__ ) && defined( macintosh )        )
+#define FT_MACINTOSH 1
+#endif
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* IntN types                                                            */
   /*                                                                       */
   /*   Used to guarantee the size of some specific integers.               */
@@ -112,32 +128,84 @@ FT_BEGIN_HEADER
 #error "no 32bit type found -- please check your configuration files"
 #endif
 
+  /* look up an integer type that is at least 32 bits */
+#if FT_SIZEOF_INT >= 4
+
+  typedef int            FT_Fast;
+  typedef unsigned int   FT_UFast;
+
+#elif FT_SIZEOF_LONG >= 4
+
+  typedef long           FT_Fast;
+  typedef unsigned long  FT_UFast;
+
+#endif
+
+
+  /* determine whether we have a 64-bit int type for platforms without */
+  /* Autoconf                                                          */
 #if FT_SIZEOF_LONG == 8
 
   /* FT_LONG64 must be defined if a 64-bit type is available */
 #define FT_LONG64
-#define FT_INT64   long
+#define FT_INT64  long
 
-#else
+#elif defined( _MSC_VER ) && _MSC_VER >= 900  /* Visual C++ (and Intel C++) */
+
+  /* this compiler provides the __int64 type */
+#define FT_LONG64
+#define FT_INT64  __int64
+
+#elif defined( __BORLANDC__ )  /* Borland C++ */
+
+  /* XXXX: We should probably check the value of __BORLANDC__ in order */
+  /*       to test the compiler version.                               */
+
+  /* this compiler provides the __int64 type */
+#define FT_LONG64
+#define FT_INT64  __int64
+
+#elif defined( __WATCOMC__ )   /* Watcom C++ */
+
+  /* Watcom doesn't provide 64-bit data types */
+
+#elif defined( __MWERKS__ )    /* Metrowerks CodeWarrior */
+
+#define FT_LONG64
+#define FT_INT64  long long int
+
+#elif defined( __GNUC__ )
+
+  /* GCC provides the "long long" type */
+#define FT_LONG64
+#define FT_INT64  long long int
+
+#endif /* FT_SIZEOF_LONG == 8 */
+
+
+#define FT_BEGIN_STMNT  do {
+#define FT_END_STMNT    } while ( 0 )
+#define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
+
 
   /*************************************************************************/
   /*                                                                       */
-  /* Many compilers provide the non-ANSI `long long' 64-bit type.  You can */
-  /* activate it by defining the FTCALC_USE_LONG_LONG macro in             */
-  /* `ftoption.h'.                                                         */
+  /* A 64-bit data type will create compilation problems if you compile    */
+  /* in strict ANSI mode.  To avoid them, we disable their use if          */
+  /* __STDC__ is defined.  You can however ignore this rule by             */
+  /* defining the FT_CONFIG_OPTION_FORCE_INT64 configuration macro.        */
   /*                                                                       */
-  /* Note that this will produce many -ansi warnings during library        */
-  /* compilation, and that in many cases,  the generated code will be      */
-  /* neither smaller nor faster!                                           */
-  /*                                                                       */
-#ifdef FTCALC_USE_LONG_LONG
+#if defined( FT_LONG64 ) && !defined( FT_CONFIG_OPTION_FORCE_INT64 )
 
-#define FT_LONG64
-#define FT_INT64   long long
+#ifdef __STDC__
 
-#endif /* FTCALC_USE_LONG_LONG */
+  /* undefine the 64-bit macros in strict ANSI compilation mode */
+#undef FT_LONG64
+#undef FT_INT64
 
-#endif /* FT_SIZEOF_LONG == 8 */
+#endif /* __STDC__ */
+
+#endif /* FT_LONG64 && !FT_CONFIG_OPTION_FORCE_INT64 */
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
@@ -157,6 +225,7 @@ FT_BEGIN_HEADER
 
 #endif /* FT_MAKE_OPTION_SINGLE_OBJECT */
 
+
 #ifndef FT_BASE
 
 #ifdef __cplusplus
@@ -167,15 +236,16 @@ FT_BEGIN_HEADER
 
 #endif /* !FT_BASE */
 
-#ifndef BASE_DEF
+
+#ifndef FT_BASE_DEF
 
 #ifdef __cplusplus
-#define BASE_DEF( x )  extern "C"  x
+#define FT_BASE_DEF( x )  extern "C"  x
 #else
-#define BASE_DEF( x )  extern  x
+#define FT_BASE_DEF( x )  extern  x
 #endif
 
-#endif /* !BASE_DEF */
+#endif /* !FT_BASE_DEF */
 
 
 #ifndef FT_EXPORT
@@ -187,6 +257,7 @@ FT_BEGIN_HEADER
 #endif
 
 #endif /* !FT_EXPORT */
+
 
 #ifndef FT_EXPORT_DEF
 
@@ -209,6 +280,9 @@ FT_BEGIN_HEADER
 
 #endif /* !FT_EXPORT_VAR */
 
+  /* The following macros are needed to compile the library with a   */
+  /* C++ compiler and with 16bit compilers.                          */
+  /*                                                                 */
 
   /* This is special.  Within C++, you must specify `extern "C"' for */
   /* functions which are used via function pointers, and you also    */
@@ -216,23 +290,42 @@ FT_BEGIN_HEADER
   /* assure C linkage -- it's not possible to have (local) anonymous */
   /* functions which are accessed by (global) function pointers.     */
   /*                                                                 */
+  /*                                                                 */
+  /* FT_CALLBACK_DEF is used to _define_ a callback function.        */
+  /*                                                                 */
+  /* FT_CALLBACK_TABLE is used to _declare_ a constant variable that */
+  /* contains pointers to callback functions.                        */
+  /*                                                                 */
+  /* FT_CALLBACK_TABLE_DEF is used to _define_ a constant variable   */
+  /* that contains pointers to callback functions.                   */
+  /*                                                                 */
+  /*                                                                 */
+  /* Some 16bit compilers have to redefine these macros to insert    */
+  /* the infamous `_cdecl' or `__fastcall' declarations.             */
+  /*                                                                 */
+#ifndef FT_CALLBACK_DEF
 #ifdef __cplusplus
-
-#define FT_CALLBACK_DEF( x )        extern "C"  x
-#define FT_CALLBACK_TABLE           extern "C"
-#define FT_CALLBACK_TABLE_DEF       extern "C"
-
+#define FT_CALLBACK_DEF( x )  extern "C"  x
 #else
+#define FT_CALLBACK_DEF( x )  static  x
+#endif
+#endif /* FT_CALLBACK_DEF */
 
-#define FT_CALLBACK_DEF( x )        static  x
-#define FT_CALLBACK_TABLE           extern
-#define FT_CALLBACK_TABLE_DEF
+#ifndef FT_CALLBACK_TABLE
+#ifdef __cplusplus
+#define FT_CALLBACK_TABLE      extern "C"
+#define FT_CALLBACK_TABLE_DEF  extern "C"
+#else
+#define FT_CALLBACK_TABLE      extern
+#define FT_CALLBACK_TABLE_DEF  /* nothing */
+#endif
+#endif /* FT_CALLBACK_TABLE */
 
-#endif /* __cplusplus */
 
 FT_END_HEADER
 
-#endif /* FTCONFIG_H */
+
+#endif /* __FTCONFIG_H__ */
 
 
 /* END */

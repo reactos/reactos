@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component (specification).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,6 +27,7 @@
 
 #include <ft2build.h>
 #include FT_CONFIG_CONFIG_H
+#include FT_FREETYPE_H
 
 
 FT_BEGIN_HEADER
@@ -94,6 +95,53 @@ FT_BEGIN_HEADER
 #define FT_TRACE( level, varformat )  do ; while ( 0 )      /* nothing */
 
 #endif /* !FT_DEBUG_LEVEL_TRACE */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Trace_Get_Count                                                 */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Return the number of available trace components.                   */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    The number of trace components.  0 if FreeType 2 is not built with */
+  /*    FT_DEBUG_LEVEL_TRACE definition.                                   */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    This function may be useful if you want to access elements of      */
+  /*    the internal `ft_trace_levels' array by an index.                  */
+  /*                                                                       */
+  FT_EXPORT( FT_Int )
+  FT_Trace_Get_Count( void );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Trace_Get_Name                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Return the name of a trace component.                              */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    The index of the trace component.                                  */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    The name of the trace component.  This is a statically allocated   */
+  /*    C string, so do not free it after use.  NULL if FreeType 2 is not  */
+  /*    built with FT_DEBUG_LEVEL_TRACE definition.                        */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    Use @FT_Trace_Get_Count to get the number of available trace       */
+  /*    components.                                                        */
+  /*                                                                       */
+  /*    This function may be useful if you want to control FreeType 2's    */
+  /*    debug level in your appliaciton.                                   */
+  /*                                                                       */
+  FT_EXPORT( const char * )
+  FT_Trace_Get_Name( FT_Int  idx );
 
 
   /*************************************************************************/

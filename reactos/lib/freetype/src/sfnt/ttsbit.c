@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -622,22 +622,22 @@
 
   FT_LOCAL_DEF( FT_Error )
   tt_face_set_sbit_strike( TT_Face    face,
-                           FT_Int     x_ppem,
-                           FT_Int     y_ppem,
+                           FT_UInt    x_ppem,
+                           FT_UInt    y_ppem,
                            FT_ULong  *astrike_index )
   {
     FT_ULong  i;
 
 
-    if ( x_ppem < 0 || x_ppem > 255 ||
+    if ( x_ppem > 255 ||
          y_ppem < 1 || y_ppem > 255 )
       return SFNT_Err_Invalid_PPem;
 
     for ( i = 0; i < face->num_sbit_strikes; i++ )
     {
-      if ( ( face->sbit_strikes[i].y_ppem == y_ppem )     &&
-           ( ( x_ppem == 0 )                            ||
-             ( face->sbit_strikes[i].x_ppem == x_ppem ) ) )
+      if ( ( (FT_UInt)face->sbit_strikes[i].y_ppem == y_ppem )     &&
+           ( ( x_ppem == 0 )                                     ||
+             ( (FT_UInt)face->sbit_strikes[i].x_ppem == x_ppem ) ) )
       {
         *astrike_index = i;
         return SFNT_Err_Ok;
@@ -754,7 +754,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    find_sbit_image                                                    */
+  /*    tt_find_sbit_image                                                 */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Checks whether an embedded bitmap (an `sbit') exists for a given   */
@@ -779,13 +779,13 @@
   /*    SFNT_Err_Invalid_Argument if no sbit exists for the requested      */
   /*    glyph.                                                             */
   /*                                                                       */
-  static FT_Error
-  find_sbit_image( TT_Face          face,
-                   FT_UInt          glyph_index,
-                   FT_ULong         strike_index,
-                   TT_SBit_Range   *arange,
-                   TT_SBit_Strike  *astrike,
-                   FT_ULong        *aglyph_offset )
+  FT_LOCAL( FT_Error )
+  tt_find_sbit_image( TT_Face          face,
+                      FT_UInt          glyph_index,
+                      FT_ULong         strike_index,
+                      TT_SBit_Range   *arange,
+                      TT_SBit_Strike  *astrike,
+                      FT_ULong        *aglyph_offset )
   {
     FT_Error        error;
     TT_SBit_Strike  strike;
@@ -819,7 +819,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    load_sbit_metrics                                                  */
+  /*    tt_load_sbit_metrics                                               */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Gets the big metrics for a given SBit.                             */
@@ -843,10 +843,10 @@
   /*    positioned just after the metrics header in the `EBDT' table on    */
   /*    function exit.                                                     */
   /*                                                                       */
-  static FT_Error
-  load_sbit_metrics( FT_Stream        stream,
-                     TT_SBit_Range    range,
-                     TT_SBit_Metrics  metrics )
+  FT_LOCAL( FT_Error )
+  tt_load_sbit_metrics( FT_Stream        stream,
+                        TT_SBit_Range    range,
+                        TT_SBit_Metrics  metrics )
   {
     FT_Error  error = SFNT_Err_Ok;
 
@@ -1228,7 +1228,7 @@
     if ( FT_STREAM_SEEK( ebdt_pos + glyph_offset ) )
       goto Exit;
 
-    error = load_sbit_metrics( stream, range, metrics );
+    error = tt_load_sbit_metrics( stream, range, metrics );
     if ( error )
       goto Exit;
 
@@ -1419,8 +1419,8 @@
 
 
     /* Check whether there is a glyph sbit for the current index */
-    error = find_sbit_image( face, glyph_index, strike_index,
-                             &range, &strike, &glyph_offset );
+    error = tt_find_sbit_image( face, glyph_index, strike_index,
+                                &range, &strike, &glyph_offset );
     if ( error )
       goto Exit;
 

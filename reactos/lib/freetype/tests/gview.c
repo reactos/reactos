@@ -745,7 +745,7 @@ ah_draw_edges( void )
           x  = (NV_Pos)( v1.x + 0.5 );
 
           nv_pixmap_fill_rect( target, x - 1, y2, 3,
-                               ABS( y1 - y2 ) + 1, SEGMENT_COLOR );
+                               FT_ABS( y1 - y2 ) + 1, SEGMENT_COLOR );
         }
       }
 
@@ -787,7 +787,7 @@ ah_draw_edges( void )
           x  = (NV_Pos)( v1.y + 0.5 );
 
           nv_pixmap_fill_rect( target, y1, x - 1,
-                               ABS( y1 - y2 ) + 1, 3, SEGMENT_COLOR );
+                               FT_ABS( y1 - y2 ) + 1, 3, SEGMENT_COLOR );
         }
       }
 

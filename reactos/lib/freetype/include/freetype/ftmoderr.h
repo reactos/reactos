@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType module error offsets (specification).                       */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003 by                                          */
+/*  Copyright 2001, 2002, 2003, 2004 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,8 +23,8 @@
   /* The lower byte gives the error code, the higher byte gives the        */
   /* module.  The base module has error offset 0.  For example, the error  */
   /* `FT_Err_Invalid_File_Format' has value 0x003, the error               */
-  /* `TT_Err_Invalid_File_Format' has value 0xF03, the error               */
-  /* `T1_Err_Invalid_File_Format' has value 0x1003, etc.                   */
+  /* `TT_Err_Invalid_File_Format' has value 0x1003, the error              */
+  /* `T1_Err_Invalid_File_Format' has value 0x1103, etc.                   */
   /*                                                                       */
   /* Undefine the macro FT_CONFIG_OPTION_USE_MODULE_ERRORS in ftoption.h   */
   /* to make the higher byte always zero (disabling the module error       */
@@ -109,18 +109,19 @@
   FT_MODERRDEF( CFF,       0x400, "CFF module" )
   FT_MODERRDEF( CID,       0x500, "CID module" )
   FT_MODERRDEF( Gzip,      0x600, "Gzip module" )
-  FT_MODERRDEF( PCF,       0x700, "PCF module" )
-  FT_MODERRDEF( PFR,       0x800, "PFR module" )
-  FT_MODERRDEF( PSaux,     0x900, "PS auxiliary module" )
-  FT_MODERRDEF( PShinter,  0xA00, "PS hinter module" )
-  FT_MODERRDEF( PSnames,   0xB00, "PS names module" )
-  FT_MODERRDEF( Raster,    0xC00, "raster module" )
-  FT_MODERRDEF( SFNT,      0xD00, "SFNT module" )
-  FT_MODERRDEF( Smooth,    0xE00, "smooth raster module" )
-  FT_MODERRDEF( TrueType,  0xF00, "TrueType module" )
-  FT_MODERRDEF( Type1,    0x1000, "Type 1 module" )
-  FT_MODERRDEF( Type42,   0x1100, "Type 42 module" )
-  FT_MODERRDEF( Winfonts, 0x1200, "Windows FON/FNT module" )
+  FT_MODERRDEF( LZW,       0x700, "LZW module" )
+  FT_MODERRDEF( PCF,       0x800, "PCF module" )
+  FT_MODERRDEF( PFR,       0x900, "PFR module" )
+  FT_MODERRDEF( PSaux,     0xA00, "PS auxiliary module" )
+  FT_MODERRDEF( PShinter,  0xB00, "PS hinter module" )
+  FT_MODERRDEF( PSnames,   0xC00, "PS names module" )
+  FT_MODERRDEF( Raster,    0xD00, "raster module" )
+  FT_MODERRDEF( SFNT,      0xE00, "SFNT module" )
+  FT_MODERRDEF( Smooth,    0xF00, "smooth raster module" )
+  FT_MODERRDEF( TrueType, 0x1000, "TrueType module" )
+  FT_MODERRDEF( Type1,    0x1100, "Type 1 module" )
+  FT_MODERRDEF( Type42,   0x1200, "Type 42 module" )
+  FT_MODERRDEF( Winfonts, 0x1300, "Windows FON/FNT module" )
 
 
 #ifdef FT_MODERR_END_LIST

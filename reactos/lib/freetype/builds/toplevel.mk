@@ -110,6 +110,7 @@ ifdef check_platform
 	  $(RM) builds/unix/config.status
 	  $(RM) builds/unix/unix-def.mk
 	  $(RM) builds/unix/unix-cc.mk
+	  $(RM) builds/unix/freetype2.pc
 	  $(RM) nul
 
   endif # test is_unix

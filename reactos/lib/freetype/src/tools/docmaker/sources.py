@@ -200,7 +200,7 @@ class SourceBlock:
         self.processor = processor
         self.filename  = filename
         self.lineno    = lineno
-        self.lines     = lines
+        self.lines     = lines[:]
         self.format    = processor.format
         self.content   = []
 
@@ -212,7 +212,7 @@ class SourceBlock:
         # extract comment lines
         lines = []
 
-        for line0 in self.lines[1:]:
+        for line0 in self.lines:
             m = self.format.column.match( line0 )
             if m:
                 lines.append( m.group(1) )
@@ -304,7 +304,7 @@ class SourceProcessor:
                 if self.format.end.match( line ):
                     # that's a normal block end, add it to lines and
                     # create a new block
-                    # self.lines.append( line )
+                    self.lines.append( line )
                     self.add_block_lines()
 
                 elif self.format.column.match( line ):

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003 by                                          */
+/*  Copyright 2001, 2002, 2003, 2004 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -68,7 +68,7 @@
     if ( new_max > old_max )
     {
       /* try to grow the table */
-      new_max = ( new_max + 7 ) & -8;
+      new_max = FT_PAD_CEIL( new_max, 8 );
       if ( !FT_RENEW_ARRAY( table->hints, old_max, new_max ) )
         table->max_hints = new_max;
     }
@@ -142,7 +142,7 @@
 
     if ( new_max > old_max )
     {
-      new_max = ( new_max + 7 ) & -8;
+      new_max = FT_PAD_CEIL( new_max, 8 );
       if ( !FT_RENEW_ARRAY( mask->bytes, old_max, new_max ) )
         mask->max_bits = new_max * 8;
     }
@@ -239,7 +239,7 @@
 
     if ( new_max > old_max )
     {
-      new_max = ( new_max + 7 ) & -8;
+      new_max = FT_PAD_CEIL( new_max, 8 );
       if ( !FT_RENEW_ARRAY( table->masks, old_max, new_max ) )
         table->max_masks = new_max;
     }
@@ -318,8 +318,7 @@
     PS_Mask   mask;
 
 
-    /* allocate new mask, and grow it to "bit_count" bits */
-    error = ps_mask_table_alloc( table, memory, &mask );
+    error = ps_mask_table_last( table, memory, &mask );
     if ( error )
       goto Exit;
 
@@ -1012,18 +1011,18 @@
         FT_ERROR(( "ps_hints_t2mask: "
                    "called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
-        
+
         /* simply ignore the operator */
         return;
       }
 
       /* set-up new horizontal and vertical hint mask now */
-      error = ps_dimension_set_mask_bits( &dim[0], bytes, 0, count1,
+      error = ps_dimension_set_mask_bits( &dim[0], bytes, count2, count1,
                                           end_point, memory );
       if ( error )
         goto Fail;
 
-      error = ps_dimension_set_mask_bits( &dim[1], bytes, count1, count2,
+      error = ps_dimension_set_mask_bits( &dim[1], bytes, 0, count2,
                                           end_point, memory );
       if ( error )
         goto Fail;
@@ -1057,7 +1056,7 @@
         FT_ERROR(( "ps_hints_t2counter: "
                    "called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
-                   
+
         /* simply ignore the operator */
         return;
       }

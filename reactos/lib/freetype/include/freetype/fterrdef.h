@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType error codes (specification).                                */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2004 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -207,6 +207,8 @@
                 "opcode syntax error" )
   FT_ERRORDEF_( Stack_Underflow,                             0xA1, \
                 "argument stack underflow" )
+  FT_ERRORDEF_( Ignore,                                      0xA2, \
+                "ignore" )
 
   /* BDF errors */
 

@@ -1,4 +1,4 @@
-# FreeType 2 top Jamfile (c) 2001, 2002, 2003 David Turner
+# FreeType 2 top Jamfile (c) 2001, 2002, 2003, 2004 David Turner
 #
 
 # The HDRMACRO is already defined in FTJam and is used to add
@@ -61,13 +61,15 @@ FT2_BUILD_INCLUDE ?= ;
 # IMPORTANT: You'll need to change the content of "ftmodule.h" as well
 #            if you modify this list or provide your own.
 #
-FT2_COMPONENTS ?= gzip       # support for gzip-compressed files
+FT2_COMPONENTS ?= autofit    # auto-fitter
                   autohint   # auto-hinter
                   base       # base component (public APIs)
                   bdf        # BDF font driver
                   cache      # cache sub-system
                   cff        # CFF/CEF font driver
                   cid        # PostScript CID-keyed font driver
+                  gzip       # support for gzip-compressed files
+                  lzw        # support for LZW-compressed files
                   pcf        # PCF font driver
                   pfr        # PFR/TrueDoc font driver
                   psaux      # common PostScript routines module
@@ -146,7 +148,7 @@ if $(DEBUG_HINTER)
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.5 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.8 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
 }
 
 RefDoc  refdoc ;

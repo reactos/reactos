@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,14 +22,19 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_TRUETYPE_IDS_H
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
+#include FT_SERVICE_POSTSCRIPT_INFO_H
+#include FT_SERVICE_TT_CMAP_H
 
 #include "cffdrivr.h"
 #include "cffgload.h"
 #include "cffload.h"
+#include "cffcmap.h"
 
 #include "cfferrs.h"
 
+#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_GLYPH_DICT_H
 
   /*************************************************************************/
   /*                                                                       */
@@ -196,7 +201,7 @@
     if ( size )
     {
       /* these two object must have the same parent */
-      if ( size->face != slot->root.face )
+      if ( size->root.face != slot->root.face )
         return CFF_Err_Invalid_Face_Handle;
     }
 
@@ -210,17 +215,10 @@
   }
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /****                                                                 ****/
-  /****                                                                 ****/
-  /****             C H A R A C T E R   M A P P I N G S                 ****/
-  /****                                                                 ****/
-  /****                                                                 ****/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
+ /*
+  *  GLYPH DICT SERVICE
+  *
+  */
 
   static FT_Error
   cff_get_glyph_name( CFF_Face    face,
@@ -228,21 +226,19 @@
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {
-    CFF_Font         font   = (CFF_Font)face->extra.data;
-    FT_Memory        memory = FT_FACE_MEMORY( face );
-    FT_String*       gname;
-    FT_UShort        sid;
-    PSNames_Service  psnames;
-    FT_Error         error;
+    CFF_Font            font   = (CFF_Font)face->extra.data;
+    FT_Memory           memory = FT_FACE_MEMORY( face );
+    FT_String*          gname;
+    FT_UShort           sid;
+    FT_Service_PsCMaps  psnames;
+    FT_Error            error;
 
 
-    psnames = (PSNames_Service)FT_Get_Module_Interface(
-                face->root.driver->root.library, "psnames" );
-
+    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
     if ( !psnames )
     {
       FT_ERROR(( "cff_get_glyph_name:" ));
-      FT_ERROR(( " cannot open CFF & CEF fonts\n" ));
+      FT_ERROR(( " cannot get glyph name from CFF & CEF fonts\n" ));
       FT_ERROR(( "                   " ));
       FT_ERROR(( " without the `PSNames' module\n" ));
       error = CFF_Err_Unknown_File_Format;
@@ -275,42 +271,26 @@
   }
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    cff_get_name_index                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Uses the psnames module and the CFF font's charset to to return a  */
-  /*    a given glyph name's glyph index.                                  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face       :: A handle to the source face object.                  */
-  /*                                                                       */
-  /*    glyph_name :: The glyph name.                                      */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    Glyph index.  0 means `undefined character code'.                  */
-  /*                                                                       */
   static FT_UInt
   cff_get_name_index( CFF_Face    face,
                       FT_String*  glyph_name )
   {
-    CFF_Font         cff;
-    CFF_Charset      charset;
-    PSNames_Service  psnames;
-    FT_Memory        memory = FT_FACE_MEMORY( face );
-    FT_String*       name;
-    FT_UShort        sid;
-    FT_UInt          i;
-    FT_Int           result;
+    CFF_Font            cff;
+    CFF_Charset         charset;
+    FT_Service_PsCMaps  psnames;
+    FT_Memory           memory = FT_FACE_MEMORY( face );
+    FT_String*          name;
+    FT_UShort           sid;
+    FT_UInt             i;
+    FT_Int              result;
 
 
     cff     = (CFF_FontRec *)face->extra.data;
     charset = &cff->charset;
 
-    psnames = (PSNames_Service)FT_Get_Module_Interface(
-                face->root.driver->root.library, "psnames" );
+    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
+    if ( !psnames )
+      return 0;
 
     for ( i = 0; i < cff->num_glyphs; i++ )
     {
@@ -334,6 +314,77 @@
   }
 
 
+  static const FT_Service_GlyphDictRec  cff_service_glyph_dict =
+  {
+    (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name,
+    (FT_GlyphDict_NameIndexFunc)cff_get_name_index,
+  };
+
+
+ /*
+  *  POSTSCRIPT INFO SERVICE
+  *
+  */
+
+  static FT_Int
+  cff_ps_has_glyph_names( FT_Face  face )
+  {
+    return ( face->face_flags & FT_FACE_FLAG_GLYPH_NAMES ) > 0;
+  }
+
+
+  static const FT_Service_PsInfoRec  cff_service_ps_info =
+  {
+    (PS_GetFontInfoFunc)  NULL,         /* unsupported with CFF fonts */
+    (PS_HasGlyphNamesFunc)cff_ps_has_glyph_names
+  };
+
+
+  /*
+   * TT CMAP INFO
+   *
+   * If the charmap is a synthetic Unicode encoding cmap or 
+   * a Type 1 standard (or expert) encoding cmap, hide TT CMAP INFO 
+   * service defined in SFNT module.
+   *
+   * Otherwise call the service function in the sfnt module.
+   *
+   */
+  static FT_Error
+  cff_get_cmap_info( FT_CharMap    charmap,
+                     TT_CMapInfo  *cmap_info )
+  {
+    FT_CMap   cmap  = FT_CMAP( charmap );
+    FT_Error  error = CFF_Err_Ok;
+
+
+    cmap_info->language = 0;
+
+    if ( cmap->clazz != &cff_cmap_encoding_class_rec && 
+         cmap->clazz != &cff_cmap_unicode_class_rec  )
+    {
+      FT_Face             face    = FT_CMAP_FACE( cmap );
+      FT_Library          library = FT_FACE_LIBRARY( face );
+      FT_Module           sfnt    = FT_Get_Module( library, "sfnt" );
+      FT_Service_TTCMaps  service =
+        (FT_Service_TTCMaps)ft_module_get_service( sfnt,
+                                                   FT_SERVICE_ID_TT_CMAP );
+
+
+      if ( service && service->get_cmap_info )
+        error = service->get_cmap_info( charmap, cmap_info );
+    }
+
+    return error;
+  }
+
+
+  static const FT_Service_TTCMapsRec  cff_service_get_cmap_info =
+  {
+    (TT_CMap_Info_GetFunc)cff_get_cmap_info
+  };
+
+
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
@@ -346,24 +397,31 @@
   /*************************************************************************/
   /*************************************************************************/
 
+  static const FT_ServiceDescRec  cff_services[] =
+  {
+    { FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_CFF },
+    { FT_SERVICE_ID_POSTSCRIPT_INFO, &cff_service_ps_info },
+#ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+    { FT_SERVICE_ID_GLYPH_DICT,      &cff_service_glyph_dict },
+#endif
+    { FT_SERVICE_ID_TT_CMAP,         &cff_service_get_cmap_info },
+    { NULL, NULL }
+  };
+
+
   static FT_Module_Interface
   cff_get_interface( CFF_Driver   driver,
                      const char*  module_interface )
   {
-    FT_Module  sfnt;
+    FT_Module            sfnt;
+    FT_Module_Interface  result;
 
 
-#ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+    result = ft_service_list_lookup( cff_services, module_interface );
+    if ( result != NULL )
+      return  result;
 
-    if ( ft_strcmp( (const char*)module_interface, "glyph_name" ) == 0 )
-      return (FT_Module_Interface)cff_get_glyph_name;
-
-    if ( ft_strcmp( (const char*)module_interface, "name_index" ) == 0 )
-      return (FT_Module_Interface)cff_get_name_index;
-
-#endif
-
-    /* we simply pass our request to the `sfnt' module */
+    /* we pass our request to the `sfnt' module */
     sfnt = FT_Get_Module( driver->root.root.library, "sfnt" );
 
     return sfnt ? sfnt->clazz->get_interface( sfnt, module_interface ) : 0;
@@ -395,7 +453,7 @@
 
     /* now the specific driver fields */
     sizeof( TT_FaceRec ),
-    sizeof( FT_SizeRec ),
+    sizeof( CFF_SizeRec ),
     sizeof( CFF_GlyphSlotRec ),
 
     (FT_Face_InitFunc)       cff_face_init,

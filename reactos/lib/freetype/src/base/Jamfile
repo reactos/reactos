@@ -1,4 +1,4 @@
-# FreeType 2 src/base Jamfile (c) 2001, 2002, 2003 David Turner
+# FreeType 2 src/base Jamfile (c) 2001, 2002, 2003, 2004 David Turner
 #
 
 SubDir  FT2_TOP $(FT2_SRC_DIR) base ;
@@ -10,7 +10,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) base ;
   if $(FT2_MULTI)
   {
     _sources = ftutil ftdbgmem ftstream ftcalc fttrigon ftgloadr ftoutln
-               ftobjs ftnames ;
+               ftobjs ftnames ftrfork ;
   }
   else
   {
@@ -24,8 +24,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) base ;
 #
 Library  $(FT2_LIB) : ftsystem.c   ftinit.c    ftglyph.c  ftmm.c     ftbdf.c
                       ftbbox.c     ftdebug.c   ftxf86.c   fttype1.c  ftpfr.c
-                      ftstroke.c   ftwinfnt.c
-                      ;
+                      ftstroke.c   ftwinfnt.c ;
 
 # Add Macintosh-specific file to the library when necessary.
 #

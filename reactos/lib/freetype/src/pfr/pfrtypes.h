@@ -209,11 +209,14 @@ FT_BEGIN_HEADER
 #define PFR_KERN_INDEX( g1, g2 ) \
   ( ( (FT_UInt32)(g1) << 16 ) | (FT_UInt16)(g2) )
 
+#define PFR_KERN_PAIR_INDEX( pair )  \
+          PFR_KERN_INDEX( (pair)->glyph1, (pair)->glyph2 )
+
   typedef struct  PFR_KernPairRec_
   {
     FT_UInt    glyph1;
     FT_UInt    glyph2;
-    FT_Vector  kerning;
+    FT_Int     kerning;
 
   } PFR_KernPairRec, *PFR_KernPair;
 
@@ -230,7 +233,7 @@ FT_BEGIN_HEADER
     FT_BBox            bbox;
     FT_UInt            flags;
     FT_UInt            standard_advance;
-    
+
     FT_Int             ascent;   /* optional, bbox.yMax if not present */
     FT_Int             descent;  /* optional, bbox.yMin if not present */
     FT_Int             leading;  /* optional, 0 if not present         */
@@ -258,6 +261,7 @@ FT_BEGIN_HEADER
     FT_UInt            num_kern_pairs;
     PFR_KernItem       kern_items;
     PFR_KernItem*      kern_items_tail;
+    PFR_KernPair       kern_pairs;
 
     /* not part of the spec, but used during load */
     FT_UInt32          bct_offset;
@@ -281,8 +285,8 @@ FT_BEGIN_HEADER
 
   typedef enum PFR_KernFlags_
   {
-    PFR_KERN_2BYTE_ADJ   = 0x01,
-    PFR_KERN_2BYTE_CHAR  = 0x02
+    PFR_KERN_2BYTE_CHAR  = 0x01,
+    PFR_KERN_2BYTE_ADJ   = 0x02
 
   } PFR_KernFlags;
 

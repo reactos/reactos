@@ -82,7 +82,8 @@ FT_BEGIN_HEADER
     FT_ULong    offset;
 
     FT_UShort*  sids;
-
+    FT_UShort*  cids;       /* the inverse mapping of `sids'; only needed */
+                            /* for CID-keyed fonts                        */
   } CFF_CharsetRec, *CFF_Charset;
 
 
@@ -113,8 +114,6 @@ FT_BEGIN_HEADER
     FT_ULong   private_size;
     FT_Long    synthetic_base;
     FT_UInt    embedded_postscript;
-    FT_UInt    base_font_name;
-    FT_UInt    postscript;
 
     /* these should only be used for the top-level font dictionary */
     FT_UInt    cid_registry;
@@ -124,7 +123,7 @@ FT_BEGIN_HEADER
     FT_Long    cid_font_version;
     FT_Long    cid_font_revision;
     FT_Long    cid_font_type;
-    FT_Long    cid_count;
+    FT_ULong   cid_count;
     FT_ULong   cid_uid_base;
     FT_ULong   cid_fd_array_offset;
     FT_ULong   cid_fd_select_offset;
@@ -200,7 +199,7 @@ FT_BEGIN_HEADER
 
 
   /* maximum number of sub-fonts in a CID-keyed file */
-#define CFF_MAX_CID_FONTS  16
+#define CFF_MAX_CID_FONTS  32
 
 
   typedef struct  CFF_FontRec_

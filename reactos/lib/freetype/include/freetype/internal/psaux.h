@@ -24,6 +24,7 @@
 #include <ft2build.h>
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_TYPE1_TYPES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 
 FT_BEGIN_HEADER
@@ -123,7 +124,7 @@ FT_BEGIN_HEADER
     FT_Int             max_elems;
     FT_Int             num_elems;
     FT_Byte**          elements;       /* addresses of table elements */
-    FT_Int*            lengths;        /* lengths of table elements   */
+    FT_PtrDist*        lengths;        /* lengths of table elements   */
 
     FT_Memory          memory;
     PS_Table_FuncsRec  funcs;
@@ -329,18 +330,20 @@ FT_BEGIN_HEADER
     void
     (*skip_spaces)( PS_Parser  parser );
     void
-    (*skip_alpha)( PS_Parser  parser );
+    (*skip_PS_token)( PS_Parser  parser );
 
     FT_Long
     (*to_int)( PS_Parser  parser );
     FT_Fixed
     (*to_fixed)( PS_Parser  parser,
                  FT_Int     power_ten );
+
     FT_Error
     (*to_bytes)( PS_Parser  parser,
                  FT_Byte*   bytes,
-                 FT_Int     max_bytes,
-                 FT_Int*    pnum_bytes );
+                 FT_Long    max_bytes,
+                 FT_Long*   pnum_bytes,
+                 FT_Bool    delimiters );
 
     FT_Int
     (*to_coord_array)( PS_Parser  parser,
@@ -648,14 +651,14 @@ FT_BEGIN_HEADER
     T1_Decoder_ZoneRec   zones[T1_MAX_SUBRS_CALLS + 1];
     T1_Decoder_Zone      zone;
 
-    PSNames_Service      psnames;      /* for seac */
+    FT_Service_PsCMaps   psnames;      /* for seac */
     FT_UInt              num_glyphs;
     FT_Byte**            glyph_names;
 
     FT_Int               lenIV;        /* internal for sub routine calls */
     FT_UInt              num_subrs;
     FT_Byte**            subrs;
-    FT_Int*              subrs_len;    /* array of subrs length (optional) */
+    FT_PtrDist*          subrs_len;    /* array of subrs length (optional) */
 
     FT_Matrix            font_matrix;
     FT_Vector            font_offset;

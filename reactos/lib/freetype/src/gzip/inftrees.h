@@ -56,8 +56,8 @@ local  int inflate_trees_dynamic OF((
 local  int inflate_trees_fixed OF((
     uIntf *,                    /* literal desired/actual bit depth */
     uIntf *,                    /* distance desired/actual bit depth */
-    inflate_huft * FAR *,       /* literal/length tree result */
-    inflate_huft * FAR *,       /* distance tree result */
+    const inflate_huft * FAR *, /* literal/length tree result */
+    const inflate_huft * FAR *, /* distance tree result */
     z_streamp));                /* for memory allocation */
 
 #endif /* _INFTREES_H */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -216,7 +216,8 @@ FT_BEGIN_HEADER
 
     TT_Transform     transform;    /* transformation matrix               */
 
-    FT_Vector        pp1, pp2;     /* phantom points                      */
+    FT_Vector        pp1, pp2;     /* phantom points (horizontal)         */
+    FT_Vector        pp3, pp4;     /* phantom points (vertical)           */
 
   } TT_SubGlyphRec, *TT_SubGlyph_Stack;
 

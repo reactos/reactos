@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,8 +74,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_RoundFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0x8000L ) & -0x10000L
-                      : -((-a + 0x8000L ) & -0x10000L );
+    return ( a >= 0 ) ?   ( a + 0x8000L ) & ~0xFFFFL
+                      : -((-a + 0x8000L ) & ~0xFFFFL );
   }
 
 
@@ -84,8 +84,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_CeilFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0xFFFFL ) & -0x10000L
-                      : -((-a + 0xFFFFL ) & -0x10000L );
+    return ( a >= 0 ) ?   ( a + 0xFFFFL ) & ~0xFFFFL
+                      : -((-a + 0xFFFFL ) & ~0xFFFFL );
   }
 
 
@@ -94,8 +94,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_FloorFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   a & -0x10000L
-                      : -((-a) & -0x10000L );
+    return ( a >= 0 ) ?   a & ~0xFFFFL
+                      : -((-a) & ~0xFFFFL );
   }
 
 
@@ -153,6 +153,33 @@
 
     return ( s > 0 ) ? d : -d;
   }
+
+
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+  /* documentation is in ftcalc.h */
+
+  FT_BASE_DEF( FT_Long )
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c )
+  {
+    FT_Int   s;
+    FT_Long  d;
+
+
+    s = 1;
+    if ( a < 0 ) { a = -a; s = -1; }
+    if ( b < 0 ) { b = -b; s = -s; }
+    if ( c < 0 ) { c = -c; s = -s; }
+
+    d = (FT_Long)( c > 0 ? (FT_Int64)a * b / c
+                         : 0x7FFFFFFFL );
+
+    return ( s > 0 ) ? d : -d;
+  }
+
+#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
 
 
   /* documentation is in freetype.h */
@@ -298,14 +325,13 @@
     if ( a == 0 || b == c )
       return a;
 
-    s  = a; a = ABS( a );
-    s ^= b; b = ABS( b );
-    s ^= c; c = ABS( c );
+    s  = a; a = FT_ABS( a );
+    s ^= b; b = FT_ABS( b );
+    s ^= c; c = FT_ABS( c );
 
     if ( a <= 46340L && b <= 46340L && c <= 176095L && c > 0 )
-    {
       a = ( a * b + ( c >> 1 ) ) / c;
-    }
+
     else if ( c > 0 )
     {
       FT_Int64  temp, temp2;
@@ -325,6 +351,43 @@
   }
 
 
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+  FT_BASE_DEF( FT_Long )
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c )
+  {
+    long  s;
+
+
+    if ( a == 0 || b == c )
+      return a;
+
+    s  = a; a = FT_ABS( a );
+    s ^= b; b = FT_ABS( b );
+    s ^= c; c = FT_ABS( c );
+
+    if ( a <= 46340L && b <= 46340L && c > 0 )
+      a = a * b / c;
+
+    else if ( c > 0 )
+    {
+      FT_Int64  temp;
+
+
+      ft_multo64( a, b, &temp );
+      a = ft_div64by32( temp.hi, temp.lo, c );
+    }
+    else
+      a = 0x7FFFFFFFL;
+
+    return ( s < 0 ? -a : a );
+  }
+
+#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+
+
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Long )
@@ -338,8 +401,8 @@
     if ( a == 0 || b == 0x10000L )
       return a;
 
-    s  = a; a = ABS(a);
-    s ^= b; b = ABS(b);
+    s  = a; a = FT_ABS(a);
+    s ^= b; b = FT_ABS(b);
 
     ua = (FT_ULong)a;
     ub = (FT_ULong)b;
@@ -371,8 +434,8 @@
     FT_UInt32  q;
 
 
-    s  = a; a = ABS(a);
-    s ^= b; b = ABS(b);
+    s  = a; a = FT_ABS(a);
+    s ^= b; b = FT_ABS(b);
 
     if ( b == 0 )
     {
@@ -411,8 +474,8 @@
     FT_Int32  s;
 
 
-    s  = x; x = ABS( x );
-    s ^= y; y = ABS( y );
+    s  = x; x = FT_ABS( x );
+    s ^= y; y = FT_ABS( y );
 
     ft_multo64( x, y, z );
 
@@ -445,7 +508,7 @@
       x->lo = (FT_UInt32)-(FT_Int32)x->lo;
       x->hi = ~x->hi + !x->lo;
     }
-    s ^= y;  y = ABS( y );
+    s ^= y;  y = FT_ABS( y );
 
     /* Shortcut */
     if ( x->hi == 0 )
@@ -499,7 +562,7 @@
       x->lo = (FT_UInt32)-(FT_Int32)x->lo;
       x->hi = ~x->hi + !x->lo;
     }
-    s ^= y;  y = ABS( y );
+    s ^= y;  y = FT_ABS( y );
 
     /* Shortcut */
     if ( x->hi == 0 )

@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,7 +50,7 @@
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
 
 
-#include FT_INTERNAL_POSTSCRIPT_NAMES_H
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 #define MAC_NAME( x )  ( (FT_String*)psnames->macintosh_name( x ) )
 
@@ -441,7 +441,7 @@
     FT_Fixed         format;
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    PSNames_Service  psnames;
+    FT_Service_PsCMaps  psnames;
 #endif
 
 
@@ -452,7 +452,7 @@
       return SFNT_Err_Invalid_Glyph_Index;
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    psnames = (PSNames_Service)face->psnames;
+    psnames = (FT_Service_PsCMaps)face->psnames;
     if ( !psnames )
       return SFNT_Err_Unimplemented_Feature;
 #endif
@@ -510,7 +510,7 @@
         *PSname = MAC_NAME( idx );
       }
     }
-    
+
     /* nothing to do for format == 0x00030000L */
 
   End:

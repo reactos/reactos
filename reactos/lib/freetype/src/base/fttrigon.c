@@ -17,6 +17,7 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_OBJECTS_H
 #include FT_TRIGONOMETRY_H
 
 
@@ -271,9 +272,9 @@
 
     /* round theta */
     if ( theta >= 0 )
-      theta = ( theta + 16 ) & -32;
+      theta = FT_PAD_ROUND( theta, 32 );
     else
-      theta = - (( -theta + 16 ) & -32);
+      theta = - FT_PAD_ROUND( -theta, 32 );
 
     vec->x = x;
     vec->y = theta;

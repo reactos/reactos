@@ -13,7 +13,8 @@ Win32:
     [Well, this is not  really correct.  Recently, a perl implementation
     of make called `makepp' has appeared which can also build FreeType 2
     successfully  on Unix platforms.   See http://makepp.sourceforge.net
-    for more details.]
+    for more details; you need version 1.19 or newer,  and you must pass
+    option `--norc-substitution'.]
 
     Trying to compile the library  with a different Make tool will print
     a message like:

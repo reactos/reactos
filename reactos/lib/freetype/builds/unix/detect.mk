@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003 by
+# Copyright 1996-2000, 2002, 2003, 2004 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -66,7 +66,7 @@ ifeq ($(PLATFORM),unix)
       # platform).
       #
       CONFIG_FILE := unix.mk
-      setup: unix-def.mk
+      setup: $(BUILD_DIR)/unix-def.mk
       unix: setup
       .PHONY: unix
     endif
@@ -77,10 +77,10 @@ ifeq ($(PLATFORM),unix)
   have_mk := $(strip $(wildcard $(OBJ_DIR)/Makefile))
   ifneq ($(have_mk),)
     # we are building FT2 not in the src tree
-    unix-def.mk: $(TOP_DIR)/builds/unix/unix-def.in
+    $(BUILD_DIR)/unix-def.mk: $(TOP_DIR)/builds/unix/unix-def.in
 	    $(TOP_DIR)/builds/unix/configure $(CFG)
   else
-    unix-def.mk: $(TOP_DIR)/builds/unix/unix-def.in
+    $(BUILD_DIR)/unix-def.mk: $(TOP_DIR)/builds/unix/unix-def.in
 	    cd builds/unix; ./configure $(CFG)
   endif
 
