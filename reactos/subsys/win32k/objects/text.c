@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.118 2004/12/18 09:39:14 gvg Exp $ */
+/* $Id: text.c,v 1.119 2004/12/18 11:05:03 hbirr Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -357,7 +357,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       return 0;
    }
 
-   FontGDI = EngAllocMem(0, sizeof(FONTGDI), TAG_FONTOBJ);
+   FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), TAG_FONTOBJ);
    if(FontGDI == NULL)
    {
       FT_Done_Face(Face);
@@ -1647,11 +1647,11 @@ NtGdiExtTextOut(
    IntLockFreeType;
    error = FT_Set_Pixel_Sizes(
       face,
+      TextObj->logfont.lfWidth,
       /* FIXME should set character height if neg */
       (TextObj->logfont.lfHeight < 0 ?
       - TextObj->logfont.lfHeight :
-      TextObj->logfont.lfHeight),
-      TextObj->logfont.lfWidth);
+      TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
    IntUnLockFreeType;
    if (error)
    {
@@ -2030,11 +2030,11 @@ NtGdiGetCharWidth32(HDC  hDC,
 
    IntLockFreeType;
    FT_Set_Pixel_Sizes(face,
+                      TextObj->logfont.lfWidth,
                       /* FIXME should set character height if neg */
                       (TextObj->logfont.lfHeight < 0 ?
                        - TextObj->logfont.lfHeight :
-                       TextObj->logfont.lfHeight),
-                      TextObj->logfont.lfWidth);
+                       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
 
    for (i = FirstChar; i <= LastChar; i++)
    {
@@ -2188,11 +2188,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
   IntLockFreeType;
   error = FT_Set_Pixel_Sizes(face,
+                             TextObj->logfont.lfWidth,
                              /* FIXME should set character height if neg */
                              (TextObj->logfont.lfHeight < 0 ?
                               - TextObj->logfont.lfHeight :
-                              TextObj->logfont.lfHeight),
-                             TextObj->logfont.lfWidth);
+                              TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
   IntUnLockFreeType;
   if (error)
     {
@@ -2543,11 +2543,11 @@ NtGdiGetTextMetrics(HDC hDC,
       Face = FontGDI->face;
       IntLockFreeType;
       Error = FT_Set_Pixel_Sizes(Face,
+	                         TextObj->logfont.lfWidth,
 	                         /* FIXME should set character height if neg */
-	                         (TextObj->logfont.lfHeight < 0 ?
-	                          - TextObj->logfont.lfHeight :
-	                          TextObj->logfont.lfHeight),
-	                         TextObj->logfont.lfWidth);
+                                 (TextObj->logfont.lfHeight < 0 ?
+                                  - TextObj->logfont.lfHeight :
+                                  TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
       IntUnLockFreeType;
       if (0 != Error)
 	{
