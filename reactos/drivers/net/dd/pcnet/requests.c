@@ -1,31 +1,32 @@
 /*
- *  ReactOS AMD PCNet Driver
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ * ReactOS AMD PCNet Driver
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Copyright (C) 2000 Casper Hornstroup <chorns@users.sourceforge.net>
+ * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
+ * Copyright (C) 2004 Filip Navara <navaraf@reactos.com>
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * PROJECT:         ReactOS AMD PCNet Driver
- * FILE:            drivers/net/dd/pcnet/pcnet.c
- * PURPOSE:         PCNet Device Driver
- * PROGRAMMERS:     Vizzini (vizzini@plasmic.com), 
- *                  borrowed very heavily from the ReactOS ne2000 driver by 
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * PROGRAMMERS:
+ *     Vizzini (vizzini@plasmic.com), 
+ *     borrowed very heavily from the ReactOS ne2000 driver by 
+ *     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
- *                  14-Sept-2003 vizzini - Created
- * NOTES:
+ *     14-Sept-2003 vizzini - Created
  */
+
 #include <ndis.h>
 #include "pcnethw.h"
 #include "pcnet.h"
@@ -124,12 +125,13 @@ MiniportQueryInformation(
     case OID_GEN_MEDIA_SUPPORTED:
     case OID_GEN_MEDIA_IN_USE:
         {
-          NDIS_MEDIUM Medium   = NdisMedium802_3;
+          static const NDIS_MEDIUM Medium = NdisMedium802_3;
           CopyFrom = (PVOID)&Medium;
           CopySize = sizeof(NDIS_MEDIUM);
           break;
         }
 
+    case OID_GEN_CURRENT_LOOKAHEAD:
     case OID_GEN_MAXIMUM_LOOKAHEAD:
         {
           GenericULONG = 1500;
@@ -199,13 +201,6 @@ MiniportQueryInformation(
     case OID_GEN_CURRENT_PACKET_FILTER:
         {
           GenericULONG = Adapter->CurrentPacketFilter;
-          break;
-        }
-
-    case OID_GEN_CURRENT_LOOKAHEAD:
-        {
-          /* XXX make me a constant */
-          GenericULONG = 1500;
           break;
         }
 
@@ -294,7 +289,7 @@ MiniportQueryInformation(
         {
           *BytesNeeded  = (CopySize - InformationBufferLength);
           *BytesWritten = 0;
-          Status        = NDIS_STATUS_INVALID_LENGTH;
+          Status        = NDIS_STATUS_BUFFER_TOO_SHORT;
         } 
       else 
         {
