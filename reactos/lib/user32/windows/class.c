@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.40 2003/12/07 10:31:21 navaraf Exp $
+/* $Id: class.c,v 1.41 2003/12/07 22:25:34 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -731,7 +731,7 @@ SetWindowLongW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -739,13 +739,33 @@ UnregisterClassA(
   LPCSTR lpClassName,
   HINSTANCE hInstance)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPWSTR ClassName;
+  NTSTATUS Status;
+  WINBOOL Result;
+  
+  if(!IS_ATOM(lpClassName))
+  {
+    Status = HEAP_strdupAtoW(&ClassName, lpClassName, NULL);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+  }
+  else
+    ClassName = (LPWSTR)lpClassName;
+  
+  Result = (WINBOOL)NtUserUnregisterClass((LPCWSTR)ClassName, hInstance, 0);
+  
+  if(ClassName && !IS_ATOM(lpClassName)) 
+    HEAP_free(ClassName);
+  
+  return Result;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -753,8 +773,7 @@ UnregisterClassW(
   LPCWSTR lpClassName,
   HINSTANCE hInstance)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserUnregisterClass(lpClassName, hInstance, 0);
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.152 2003/12/07 19:29:33 weiden Exp $
+/* $Id: window.c,v 1.153 2003/12/07 22:25:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -368,7 +368,8 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   IntDestroyScrollBar(Window, SB_VERT);
   IntDestroyScrollBar(Window, SB_HORZ);
-
+  
+  ObmDereferenceObject(Window->Class);
   Window->Class = NULL;
   ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
 
@@ -558,7 +559,12 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   PWSTR WindowName;
   HWND Handle;
   PWINDOW_OBJECT WindowObject;
-
+  
+  if(!DesktopClass)
+  {
+    return (HWND)0;
+  }
+  
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
 						 &Handle, 
@@ -572,6 +578,7 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   /*
    * Fill out the structure describing it.
    */
+  ObmReferenceObject(DesktopClass);
   WindowObject->Class = DesktopClass;
   WindowObject->ExStyle = 0;
   WindowObject->Style = WS_VISIBLE;

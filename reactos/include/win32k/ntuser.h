@@ -1714,12 +1714,12 @@ STDCALL
 NtUserUnlockWindowStation(
   HWINSTA hWindowStation);
 
-DWORD
+BOOL
 STDCALL
 NtUserUnregisterClass(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  LPCWSTR ClassNameOrAtom,
+  HINSTANCE hInstance,
+  DWORD Unknown);
 
 BOOL
 STDCALL

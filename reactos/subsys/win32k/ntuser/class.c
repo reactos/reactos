@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.42 2003/12/07 10:31:21 navaraf Exp $
+/* $Id: class.c,v 1.43 2003/12/07 22:25:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -157,6 +157,7 @@ NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName,
 {
    PWNDCLASS_OBJECT Class;
    NTSTATUS Status;
+   RTL_ATOM Atom;
 
    Status = ClassReferenceClassByNameOrAtom(&Class, lpClassName);
    if (!NT_SUCCESS(Status))
@@ -187,8 +188,11 @@ NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName,
       lpWndClassEx->lpszMenuName = (LPCWSTR)NULL;
    lpWndClassEx->lpszClassName = lpClassName;
    lpWndClassEx->hIconSm = Class->hIconSm;
+   Atom = Class->Atom;
+   
+   ObmDereferenceObject(Class);
 
-   return Class->Atom;
+   return Atom;
 }
 
 ULONG FASTCALL
@@ -288,7 +292,7 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 	{          
 		return(NULL);
 	}
-
+	
 	ClassObject->cbSize = lpwcx->cbSize;
 	ClassObject->style = lpwcx->style;
 	ClassObject->cbClsExtra = lpwcx->cbClsExtra;
@@ -606,13 +610,45 @@ NtUserSetClassWord(DWORD Unknown0,
   return(0);
 }
 
-DWORD STDCALL
-NtUserUnregisterClass(DWORD Unknown0,
-		      DWORD Unknown1,
-		      DWORD Unknown2)
+BOOL STDCALL
+NtUserUnregisterClass(LPCWSTR ClassNameOrAtom,
+		      HINSTANCE hInstance,
+		      DWORD Unknown)
 {
-  UNIMPLEMENTED;
-  return(0);
+  NTSTATUS Status;
+  PWNDCLASS_OBJECT Class;
+  
+  if(!ClassNameOrAtom)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Status = ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+    return FALSE;
+  }
+  
+  if(ObmGetReferenceCount(Class) > 2)
+  {
+    ObmDereferenceObject(Class);
+    SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
+    return FALSE;
+  }
+  
+  /* Dereference the ClassReferenceClassByNameOrAtom() call */
+  ObmDereferenceObject(Class);
+  
+  RemoveEntryList(&Class->ListEntry);
+  
+  /* FIXME - delete the atom? */
+  
+  /* Free the object */
+  ObmDereferenceObject(Class);
+  
+  return TRUE;
 }
 
 /* EOF */
