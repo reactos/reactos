@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.64 2003/07/17 07:49:15 gvg Exp $
+/* $Id: dc.c,v 1.65 2003/08/01 19:42:54 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -110,16 +110,19 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
 
 //  ---------------------------------------------------------  File Statics
 
-static VOID FASTCALL W32kSetDCState16(HDC  hDC, HDC  hDCSave);
+static VOID FASTCALL
+W32kSetDCState16(HDC  hDC, HDC  hDCSave);
 
 //  -----------------------------------------------------  Public Functions
 
-BOOL STDCALL  W32kCancelDC(HDC  hDC)
+BOOL STDCALL
+W32kCancelDC(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
+HDC STDCALL
+W32kCreateCompatableDC(HDC  hDC)
 {
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
@@ -206,7 +209,8 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   return  hNewDC;
 }
 
-static BOOL STDCALL FindDriverFileNames(PUNICODE_STRING DriverFileNames)
+static BOOL STDCALL
+FindDriverFileNames(PUNICODE_STRING DriverFileNames)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   UNICODE_STRING RegistryPath;
@@ -252,7 +256,8 @@ static BOOL STDCALL FindDriverFileNames(PUNICODE_STRING DriverFileNames)
 }
 
 
-BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
+BOOL STDCALL
+W32kCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
 {
   PGD_ENABLEDRIVER GDEnableDriver;
@@ -389,10 +394,11 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   return TRUE;
 }
 
-HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
-                  LPCWSTR  Device,
-                  LPCWSTR  Output,
-                  CONST PDEVMODEW  InitData)
+HDC STDCALL
+W32kCreateDC(LPCWSTR  Driver,
+             LPCWSTR  Device,
+             LPCWSTR  Output,
+             CONST PDEVMODEW  InitData)
 {
   HDC      hNewDC;
   PDC      NewDC;
@@ -472,16 +478,18 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   return hNewDC;
 }
 
-HDC STDCALL W32kCreateIC(LPCWSTR  Driver,
-                         LPCWSTR  Device,
-                         LPCWSTR  Output,
-                         CONST PDEVMODEW  DevMode)
+HDC STDCALL
+W32kCreateIC(LPCWSTR  Driver,
+             LPCWSTR  Device,
+             LPCWSTR  Output,
+             CONST PDEVMODEW  DevMode)
 {
   /* FIXME: this should probably do something else...  */
   return  W32kCreateDC(Driver, Device, Output, DevMode);
 }
 
-BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
+BOOL STDCALL
+W32kDeleteDC(HDC  DCHandle)
 {
   PDC  DCToDelete;
 
@@ -568,18 +576,20 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   return TRUE;
 }
 
-INT STDCALL W32kDrawEscape(HDC  hDC,
-                    INT  nEscape,
-                    INT  cbInput,
-                    LPCSTR  lpszInData)
+INT STDCALL
+W32kDrawEscape(HDC  hDC,
+               INT  nEscape,
+               INT  cbInput,
+               LPCSTR  lpszInData)
 {
   UNIMPLEMENTED;
 }
 
-INT STDCALL W32kEnumObjects(HDC  hDC,
-                     INT  ObjectType,
-                     GOBJENUMPROC  ObjectFunc,
-                     LPARAM  lParam)
+INT STDCALL
+W32kEnumObjects(HDC  hDC,
+                INT  ObjectType,
+                GOBJENUMPROC  ObjectFunc,
+                LPARAM  lParam)
 {
   UNIMPLEMENTED;
 }
@@ -589,16 +599,16 @@ DC_GET_VAL( INT, W32kGetBkMode, w.backgroundMode )
 DC_GET_VAL_EX( W32kGetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT )
 DC_GET_VAL( HRGN, W32kGetClipRgn, w.hClipRgn )
 
-HGDIOBJ STDCALL W32kGetCurrentObject(HDC  hDC,
-                              UINT  ObjectType)
+HGDIOBJ STDCALL
+W32kGetCurrentObject(HDC  hDC, UINT  ObjectType)
 {
   UNIMPLEMENTED;
 }
 
 DC_GET_VAL_EX( W32kGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 
-BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
-                     LPPOINT  Point)
+BOOL STDCALL
+W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point)
 {
   PDC dc;
 
@@ -620,7 +630,8 @@ BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
   return  TRUE;
 }
 
-HDC STDCALL W32kGetDCState16(HDC  hDC)
+HDC STDCALL
+W32kGetDCState16(HDC  hDC)
 {
   PDC  newdc, dc;
   HDC hnewdc;
@@ -717,8 +728,9 @@ HDC STDCALL W32kGetDCState16(HDC  hDC)
   return  hnewdc;
 }
 
-INT STDCALL W32kGetDeviceCaps(HDC  hDC,
-                       INT  Index)
+INT STDCALL
+W32kGetDeviceCaps(HDC  hDC,
+                  INT  Index)
 {
   PDC  dc;
   INT  ret;
@@ -925,7 +937,8 @@ INT STDCALL W32kGetDeviceCaps(HDC  hDC,
 DC_GET_VAL( INT, W32kGetMapMode, w.MapMode )
 DC_GET_VAL( INT, W32kGetPolyFillMode, w.polyFillMode )
 
-INT STDCALL W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
+INT STDCALL
+W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
 {
   PGDIOBJ  gdiObject;
   INT  result = 0;
@@ -980,7 +993,8 @@ INT STDCALL W32kGetObjectA(HANDLE handle, INT count, LPVOID buffer)
   return  result;
 }
 
-INT STDCALL W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
+INT STDCALL
+W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
 {
   PGDIOBJHDR  gdiObject;
   INT  result = 0;
@@ -1023,12 +1037,14 @@ INT STDCALL W32kGetObjectW(HANDLE handle, INT count, LPVOID buffer)
   return  result;
 }
 
-INT STDCALL W32kGetObject(HANDLE handle, INT count, LPVOID buffer)
+INT STDCALL
+W32kGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
   return W32kGetObjectW(handle, count, buffer);
 }
 
-DWORD STDCALL W32kGetObjectType(HANDLE handle)
+DWORD STDCALL
+W32kGetObjectType(HANDLE handle)
 {
   GDIOBJHDR * ptr;
   INT result = 0;
@@ -1095,12 +1111,14 @@ DC_GET_VAL_EX( W32kGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
 DC_GET_VAL_EX( W32kGetWindowExtEx, wndExtX, wndExtY, SIZE )
 DC_GET_VAL_EX( W32kGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
 
-HDC STDCALL W32kResetDC(HDC  hDC, CONST DEVMODEW *InitData)
+HDC STDCALL
+W32kResetDC(HDC  hDC, CONST DEVMODEW *InitData)
 {
   UNIMPLEMENTED;
 }
 
-BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
+BOOL STDCALL
+W32kRestoreDC(HDC  hDC, INT  SaveLevel)
 {
   PDC  dc, dcs;
   BOOL  success;
@@ -1151,7 +1169,8 @@ BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
   return  success;
 }
 
-INT STDCALL W32kSaveDC(HDC  hDC)
+INT STDCALL
+W32kSaveDC(HDC  hDC)
 {
   HDC  hdcs;
   PDC  dc, dcs;
@@ -1192,7 +1211,8 @@ INT STDCALL W32kSaveDC(HDC  hDC)
   return  ret;
 }
 
-HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
+HGDIOBJ STDCALL
+W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 {
   HGDIOBJ   objOrg;
   BITMAPOBJ *pb;
@@ -1214,18 +1234,21 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
   // FIXME: Get object handle from GDIObj and use it instead of GDIObj below?
 
-  switch(objectMagic) {
+  switch(objectMagic)
+  {
     case GO_PEN_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hPen;
       dc->w.hPen = hGDIObj;
 
       // Convert the color of the pen to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-      if( PalGDI ){
-      	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
-      	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-	if( pen ){
-      	  pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+      if( PalGDI )
+      {
+	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+	if( pen )
+	{
+	  pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
 	}
 	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
 	EngDeleteXlate(XlateObj);
@@ -1238,11 +1261,13 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // Convert the color of the brush to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-      if( PalGDI ){
-      	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
-      	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-	if( brush ){
-      	  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
+      if( PalGDI )
+      {
+	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	if( brush )
+	{
+	  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
 	}
 	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
 	EngDeleteXlate(XlateObj);
@@ -1300,20 +1325,21 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
       }
 
+      DC_ReleasePtr ( hDC );
       hVisRgn = W32kCreateRectRgn(0, 0, pb->size.cx, pb->size.cy);
       W32kSelectVisRgn(hDC, hVisRgn);
       W32kDeleteObject(hVisRgn);
 
-      break;
+      return objOrg;
 
 #if UPDATEREGIONS
     case GO_REGION_MAGIC:
-      /* objOrg = (HGDIOBJ)hDC->region; */
-      objOrg = NULL; /* FIXME? hDC->region is destroyed below */
+      DC_ReleasePtr ( hDC );
       SelectClipRgn(hDC, (HRGN)hGDIObj);
-      break;
+      return NULL;
 #endif
     default:
+      DC_ReleasePtr ( hDC );
       return NULL;
   }
   DC_ReleasePtr( hDC );
@@ -1326,7 +1352,8 @@ DC_SET_MODE( W32kSetPolyFillMode, w.polyFillMode, ALTERNATE, WINDING )
 DC_SET_MODE( W32kSetROP2, w.ROPmode, R2_BLACK, R2_WHITE )
 DC_SET_MODE( W32kSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
 
-COLORREF STDCALL W32kSetBkColor(HDC hDC, COLORREF color)
+COLORREF STDCALL
+W32kSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF  oldColor;
   PDC  dc = DC_HandleToPtr(hDC);
@@ -1342,7 +1369,8 @@ COLORREF STDCALL W32kSetBkColor(HDC hDC, COLORREF color)
   return  oldColor;
 }
 
-STATIC VOID FASTCALL W32kSetDCState16(HDC  hDC, HDC  hDCSave)
+STATIC VOID FASTCALL
+W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 {
   PDC  dc, dcs;
 
@@ -1457,7 +1485,8 @@ STATIC VOID FASTCALL W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 
 //  ----------------------------------------------------  Private Interface
 
-HDC FASTCALL DC_AllocDC(LPCWSTR  Driver)
+HDC FASTCALL
+DC_AllocDC(LPCWSTR  Driver)
 {
   	PDC  NewDC;
   	HDC  hDC;
@@ -1492,7 +1521,8 @@ HDC FASTCALL DC_AllocDC(LPCWSTR  Driver)
   	return  hDC;
 }
 
-HDC FASTCALL DC_FindOpenDC(LPCWSTR  Driver)
+HDC FASTCALL
+DC_FindOpenDC(LPCWSTR  Driver)
 {
   return NULL;
 }
@@ -1500,7 +1530,8 @@ HDC FASTCALL DC_FindOpenDC(LPCWSTR  Driver)
 /*!
  * Initialize some common fields in the Device Context structure.
 */
-VOID FASTCALL DC_InitDC(HDC  DCHandle)
+VOID FASTCALL
+DC_InitDC(HDC  DCHandle)
 {
 //  W32kRealizeDefaultPalette(DCHandle);
 
@@ -1512,7 +1543,8 @@ VOID FASTCALL DC_InitDC(HDC  DCHandle)
 
 }
 
-VOID FASTCALL DC_FreeDC(HDC  DCToFree)
+VOID FASTCALL
+DC_FreeDC(HDC  DCToFree)
 {
   if (!GDIOBJ_FreeObj(DCToFree, GO_DC_MAGIC, GDIOBJFLAG_DEFAULT))
   {
@@ -1520,19 +1552,22 @@ VOID FASTCALL DC_FreeDC(HDC  DCToFree)
   }
 }
 
-BOOL FASTCALL DC_InternalDeleteDC( PDC DCToDelete )
+BOOL FASTCALL
+DC_InternalDeleteDC( PDC DCToDelete )
 {
 	if( DCToDelete->DriverName )
 		ExFreePool(DCToDelete->DriverName);
 	return TRUE;
 }
 
-HDC FASTCALL DC_GetNextDC (PDC pDC)
+HDC FASTCALL
+DC_GetNextDC (PDC pDC)
 {
   return pDC->hNext;
 }
 
-VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC)
+VOID FASTCALL
+DC_SetNextDC (PDC pDC, HDC hNextDC)
 {
   pDC->hNext = hNextDC;
 }
