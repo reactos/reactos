@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2001/07/06 02:47:17 rex Exp $
+# $Id: makefile,v 1.2 2001/07/06 04:01:27 rex Exp $
 #
 # Makefile for ReactOS shell32.dll
 #
@@ -7,6 +7,8 @@ PATH_TO_TOP = ../..
 BASE_CFLAGS = -I../../include
 
 TARGETNAME=shell32
+
+IMAGE_BASE = 0x77260000
 
 DLLTARGET=$(TARGETNAME).dll
 
@@ -67,7 +69,7 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		-mdll \
 		-o $(TARGETNAME).dll \
 		-Wl,--entry=_DllMain@12\
-		-Wl,--image-base,0x77dc0000 \
+		-Wl,--image-base,$(IMAGE_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

@@ -1,291 +1,291 @@
 LIBRARY shell32
 EXPORTS
-SHChangeNotifyRegister@24 @ 2
-SHChangeNotifyDeregister@4 @ 4
-SHChangeNotifyUpdateEntryList@16 @ 5
-PifMgr_OpenProperties@16 @ 9
-PifMgr_GetProperties@20 @ 10
-PifMgr_SetProperties@20 @ 11
-PifMgr_CloseProperties@8 @ 13
-ILGetDisplayName@8 @ 15
-ILFindLastID@4 @ 16
-ILRemoveLastID@4 @   17
-ILClone@4 @   18
-ILCloneFirst@4 @   19
-ILGlobalClone@4 @   20
-ILIsEqual@8 @   21
-ILIsParent@12 @   23
-ILFindChild@8 @   24
-ILCombine@8 @   25
-ILLoadFromStream@8 @   26
-ILSaveToStream@8 @   27
-SHILCreateFromPath@12 @   28
-PathIsRoot@4 @   29
-PathBuildRoot@8 @   30
-PathFindExtension@4 @   31
-PathAddBackslash@4 @   32
-PathRemoveBlanks@4 @   33
-PathFindFileName@4 @   34
-PathRemoveFileSpec@4 @   35
-PathAppend@8 @   36
-PathCombine@12 @   37
-PathStripPath@4 @   38
-PathIsUNC@4 @   39
-PathIsRelative@4 @   40
-PathIsExe@4 @   43
-PathFileExists@4 @   45
-PathMatchSpec@8 @   46
-PathMakeUniqueName@20  @   47
-PathSetDlgItemPath@12 @   48
-PathQualify@4 @   49
-PathStripToRoot@4 @   50
-PathResolve@12 @   51
-PathGetArgs@4 @   52
-DoEnvironmentSubst@8 @   53
-DragAcceptFiles@8 @   54
-PathQuoteSpaces@4 @   55
-PathUnquoteSpaces@4 @   56
-PathGetDriveNumber@4 @   57
-ParseField@16 @   58
-RestartDialog@12 @   59
-ExitWindowsDialog@4 @   60
-RunFileDlg@24 @   61
-PickIconDlg@16 @   62
-GetFileNameFromBrowse@28 @   63
-DriveType@4 @   64
-InvalidateDriveType@0 @   65
-IsNetDrive@4 @   66
-Shell_MergeMenus@24 @   67
-SHGetSetSettings@12 @   68
-SHGetNetResource@0 @   69
-SHCreateDefClassObject@20 @   70
-Shell_GetImageList@8 @   71
-Shell_GetCachedImageIndex@12 @   72
-SHShellFolderView_Message@12 @   73
-SHCreateStdEnumFmtEtc@0 @   74
-PathYetAnotherMakeUniqueName@16 @   75
-DragQueryInfo@0 @   76
-SHMapPIDLToSystemImageListIndex@12 @   77
-OleStrToStrN@16 @   78
-StrToOleStrN@16 @   79
-DragFinish@4 @   80
-DragQueryFile@16 @   81
-DragQueryFileA@16 @   82
-CIDLData_CreateFromIDArray@0 @   83
-SHIsBadInterfacePtr@0 @   84
-OpenRegStream=shlwapi.SHOpenRegStreamA @   85
-SHRegisterDragDrop@8 @   86
-SHRevokeDragDrop@4 @   87
-SHDoDragDrop@20 @   88
-SHCloneSpecialIDList@12 @   89
-SHFindFiles@0 @   90
-SHFindComputer@0 @   91
-PathGetShortPath@4 @   92
-Win32CreateDirectory@0 @   93
-Win32RemoveDirectory@0 @   94
-SHLogILFromFSIL@4 @   95
-StrRetToStrN@16 @   96
-SHWaitForFileToOpen@12 @   97
-SHGetRealIDL@12 @   98
-SetAppStartingCursor@8 @   99
-SHRestricted@4 @  100
-SHCoCreateInstance@20 @  102
-SignalFileOpen@4 @  103
-FileMenu_DeleteAllItems@4 @  104
-FileMenu_DrawItem@8 @  105
-FileMenu_FindSubMenuByPidl@8 @  106
-FileMenu_GetLastSelectedItemPidls@12 @  107
-FileMenu_HandleMenuChar@8 @  108
-FileMenu_InitMenuPopup@4 @  109
-FileMenu_InsertUsingPidl@24 @  110
-FileMenu_Invalidate@4 @  111
-FileMenu_MeasureItem@8 @  112
-FileMenu_ReplaceUsingPidl@20 @  113
-FileMenu_Create@20 @  114
-FileMenu_AppendItem@24 @  115
-FileMenu_TrackPopupMenuEx@24 @  116
-FileMenu_DeleteItemByCmd@8 @  117
-FileMenu_Destroy@4 @  118
-IsLFNDrive@4 @  119
-FileMenu_AbortInitMenu@0 @  120
-SHFlushClipboard@0 @  121
-RunDLL_CallEntry16@20 @  122
-SHFreeUnusedLibraries@0 @  123
-FileMenu_AppendFilesForPidl@12 @  124
-FileMenu_AddFilesForPidl@28 @  125
-SHOutOfMemoryMessageBox@12 @  126
-SHWinHelp@16 @  127
-DllGetClassObject@12 @  128
-DAD_AutoScroll@0 @  129
-DAD_DragEnter@0 @  130
-DAD_DragEnterEx@0 @  131
-DAD_DragLeave@0 @  132
-DragQueryFileW@16 @  133
-DAD_DragMove@0 @  134
-DragQueryPoint@8 @  135
-DAD_SetDragImage@8 @  136
-DAD_ShowDragImage@4 @  137
-Desktop_UpdateBriefcaseOnEvent@0 @  139
-FileMenu_DeleteItemByIndex@8 @  140
-FileMenu_DeleteItemByFirstID@8 @  141
-FileMenu_DeleteSeparator@4 @  142
-FileMenu_EnableItemByCmd@12 @  143
-FileMenu_GetItemExtent@8 @  144
-PathFindOnPath@8 @  145
-RLBuildListOfPaths@0 @  146
-SHCLSIDFromString@8 @  147
-SHFind_InitMenuPopup@16 @  149
-SHLoadOLE@4 @  151
-ILGetSize@4 @  152
-ILGetNext@4 @  153
-ILAppend@12 @  154
-ILFree@4 @  155
-ILGlobalFree@4 @  156
-ILCreateFromPath@4 @  157
-PathGetExtension@4 @  158
-PathIsDirectory@4 @  159
-SHNetConnectionDialog@0 @  160
-SHRunControlPanel@8 @  161
-SHSimpleIDListFromPath@4 @  162
-StrToOleStr@8 @  163
-Win32DeleteFile@4 @  164
-SHCreateDirectory@8 @  165
-CallCPLEntry16@0 @  166
-SHAddFromPropSheetExtArray@12 @  167
-SHCreatePropSheetExtArray@12 @  168
-SHDestroyPropSheetExtArray@4 @  169
-SHReplaceFromPropSheetExtArray@16 @  170
-PathCleanupSpec@8 @  171
-SHCreateLinks@0 @  172
-SHValidateUNC@12 @  173
-SHCreateShellFolderViewEx@8 @  174
-SHGetSpecialFolderPath@16 @  175
-SHSetInstanceExplorer@4 @  176
-DAD_SetDragImageFromListView@0 @  177
-SHObjectProperties@0 @  178
-SHGetNewLinkInfoA@0 @  179
-SHGetNewLinkInfoW@0 @  180
-RegisterShellHook@8 @  181
-ShellMessageBoxW @  182
-ShellMessageBoxA @  183
-ArrangeWindows@20 @  184
-SHHandleDiskFull@0 @  185
-SHFree@4 @  195
-SHAlloc@4 @  196
-SHGlobalDefect@0 @  197
-SHAbortInvokeCommand@0 @  198
-SHGetFileIcon@0 @  199
-SHLocalAlloc@0 @  200
-SHLocalFree@0 @  201
-SHLocalReAlloc@0 @  202
-AddCommasW@0 @  203
-ShortSizeFormatW@0 @  204
-Printer_LoadIconsW@0 @  205
-Link_AddExtraDataSection@0 @  206
-Link_ReadExtraDataSection@0 @  207
-Link_RemoveExtraDataSection@0 @  208
-Int64ToString@0 @  209
-LargeIntegerToString@0 @  210
-Printers_GetPidl@0 @  211
-Printer_AddPrinterPropPages@0 @  212
-Printers_RegisterWindowW@0 @  213
-Printers_UnregisterWindow@0 @  214
-SHStartNetConnectionDialog@12 @  215
-shell32_243@8 @  243
-SHInitRestricted@8 @  244
-SHGetDataFromIDListA@20 @  247
-SHGetDataFromIDListW@20 @  248
-PathParseIconLocation@4 @  249
-PathRemoveExtension@4 @  250
-PathRemoveArgs@4 @  251
-SheChangeDirA@0 @  271
-SheChangeDirExA@0 @  272
-SheChangeDirExW@0 @  273
-SheChangeDirW@4 @  274
-SheConvertPathW@0 @  275
-SheFullPathA@0 @  276
-SheFullPathW@0 @  277
-SheGetCurDrive@0 @  278
-SheGetDirA@8 @  279
-SheGetDirExW@12 @  280
-SheGetDirW@8 @  281
-SheGetPathOffsetW@0 @  282
-SheRemoveQuotesA@0 @  283
-SheRemoveQuotesW@0 @  284
-SheSetCurDrive@0 @  285
-SheShortenPathA@0 @  286
-SheShortenPathW@0 @  287
-ShellAboutA@16 @  288
-ShellAboutW@16 @  289
-ShellExecuteA@24 @  290
-ShellExecuteEx@4 @  291
-ShellExecuteExA@4 @  292
-ShellExecuteExW@4 @  293
-ShellExecuteW@24 @  294
-Shell_NotifyIcon@8 @  296
-Shell_NotifyIconA@8 @  297
-Shell_NotifyIconW@8 @  298
-Shl1632_ThunkData32@0 @  299
-Shl3216_ThunkData32@0 @  300
-StrChrA=shlwapi.StrChrA @  301
-StrChrIA=shlwapi.StrChrIA @  302
-StrChrIW=shlwapi.StrChrIW @  303
-StrChrW=shlwapi.StrChrW @  304
-StrCmpNA=shlwapi.StrCmpNA @  305
-StrCmpNIA=shlwapi.StrCmpNIA @  306
-StrCmpNIW=shlwapi.StrCmpNIW @  307
-StrCmpNW=shlwapi.StrCmpNW @  308
-StrCpyNA@12 @  309
-StrCpyNW=shlwapi.StrCpyNW @  310
-StrNCmpA=shlwapi.StrCmpNA @  311
-StrNCmpIA=shlwapi.StrCmpNIA @  312
-StrNCmpIW=shlwapi.StrCmpNIW @  313
-StrNCmpW=shlwapi.StrCmpNW @  314
-StrNCpyA@12 @  315
-StrNCpyW=shlwapi.StrNCpyW @  316
-StrRChrA=shlwapi.StrRChrA @  317
-StrRChrIA=shlwapi.StrRChrIA @  318
-StrRChrIW=shlwapi.StrRChrIW @  319
-StrRChrW=shlwapi.StrRChrW @  320
-StrRStrA@0 @  321
-StrRStrIA=shlwapi.StrRStrIA @  322
-StrRStrIW=shlwapi.StrRStrIW @  323
-StrRStrW@0 @  324
-StrStrA=shlwapi.StrStrA @  325
-StrStrIA=shlwapi.StrStrIA @  326
-StrStrIW=shlwapi.StrStrIW @  327
-StrStrW=shlwapi.StrStrW @  328
-SHRegCloseKey@4 @  505
-SHRegOpenKeyA@12 @  506
-SHRegOpenKeyW@12 @  507
-SHRegQueryValueA@16 @  508
-SHRegQueryValueExA@24 @  509
-SHRegQueryValueW@16 @  510
-SHRegQueryValueExW@24 @  511
-SHRegDeleteKeyW@8 @  512
-SHAllocShared@12 @  520
-SHLockShared@8 @  521
-SHUnlockShared@4 @  522
-SHFreeShared@8 @  523
-RealDriveType@8 @  524
-RealDriveTypeFlags@8 @  525
-NTSHChangeNotifyRegister@24 @  640
-NTSHChangeNotifyDeregister@4 @  641
-SHChangeNotifyReceive@16 @  643
-SHChangeNotification_Lock@16 @  644
-SHChangeNotification_Unlock@4 @  645
-SHChangeRegistrationReceive@8 @  646
-ReceiveAddToRecentDocs@8 @  647
-SHWaitOp_Operate@8 @  648
-PathIsSameRoot@8 @  650
-ReadCabinetState@8 @  651
-WriteCabinetState@4 @  652
-PathProcessCommand@16 @  653
-shell32_654@8 @  654
-FileIconInit@4 @  660
-IsUserAdmin@0 @  680
-shell32_714@4 @  714
-FOOBAR1217@0 @ 1217
+SHChangeNotifyRegister@24 ; @ 2
+SHChangeNotifyDeregister@4 ; @ 4
+SHChangeNotifyUpdateEntryList@16 ; @ 5
+PifMgr_OpenProperties@16 ; @ 9
+PifMgr_GetProperties@20 ; @ 10
+PifMgr_SetProperties@20 ; @ 11
+PifMgr_CloseProperties@8 ; @ 13
+ILGetDisplayName@8 ; @ 15
+ILFindLastID@4 ; @ 16
+ILRemoveLastID@4 ; @   17
+ILClone@4 ; @   18
+ILCloneFirst@4 ; @   19
+ILGlobalClone@4 ; @   20
+ILIsEqual@8 ; @   21
+ILIsParent@12 ; @   23
+ILFindChild@8 ; @   24
+ILCombine@8 ; @   25
+ILLoadFromStream@8 ; @   26
+ILSaveToStream@8 ; @   27
+SHILCreateFromPath@12 ; @   28
+PathIsRoot@4 ; @   29
+PathBuildRoot@8 ; @   30
+PathFindExtension@4 ; @   31
+PathAddBackslash@4 ; @   32
+PathRemoveBlanks@4 ; @   33
+PathFindFileName@4 ; @   34
+PathRemoveFileSpec@4 ; @   35
+PathAppend@8 ; @   36
+PathCombine@12 ; @   37
+PathStripPath@4 ; @   38
+PathIsUNC@4 ; @   39
+PathIsRelative@4 ; @   40
+PathIsExe@4 ; @   43
+PathFileExists@4 ; @   45
+PathMatchSpec@8 ; @   46
+PathMakeUniqueName@20  ; @   47
+PathSetDlgItemPath@12 ; @   48
+PathQualify@4 ; @   49
+PathStripToRoot@4 ; @   50
+PathResolve@12 ; @   51
+PathGetArgs@4 ; @   52
+DoEnvironmentSubst@8 ; @   53
+DragAcceptFiles@8 ; @   54
+PathQuoteSpaces@4 ; @   55
+PathUnquoteSpaces@4 ; @   56
+PathGetDriveNumber@4 ; @   57
+ParseField@16 ; @   58
+RestartDialog@12 ; @   59
+ExitWindowsDialog@4 ; @   60
+RunFileDlg@24 ; @   61
+PickIconDlg@16 ; @   62
+GetFileNameFromBrowse@28 ; @   63
+DriveType@4 ; @   64
+InvalidateDriveType@0 ; @   65
+IsNetDrive@4 ; @   66
+Shell_MergeMenus@24 ; @   67
+SHGetSetSettings@12 ; @   68
+SHGetNetResource@0 ; @   69
+SHCreateDefClassObject@20 ; @   70
+Shell_GetImageList@8 ; @   71
+Shell_GetCachedImageIndex@12 ; @   72
+SHShellFolderView_Message@12 ; @   73
+SHCreateStdEnumFmtEtc@0 ; @   74
+PathYetAnotherMakeUniqueName@16 ; @   75
+DragQueryInfo@0 ; @   76
+SHMapPIDLToSystemImageListIndex@12 ; @   77
+OleStrToStrN@16 ; @   78
+StrToOleStrN@16 ; @   79
+DragFinish@4 ; @   80
+DragQueryFile@16 ; @   81
+DragQueryFileA@16 ; @   82
+CIDLData_CreateFromIDArray@0 ; @   83
+SHIsBadInterfacePtr@0 ; @   84
+; OpenRegStream=shlwapi.SHOpenRegStreamA ; @   85
+SHRegisterDragDrop@8 ; @   86
+SHRevokeDragDrop@4 ; @   87
+SHDoDragDrop@20 ; @   88
+SHCloneSpecialIDList@12 ; @   89
+SHFindFiles@0 ; @   90
+SHFindComputer@0 ; @   91
+PathGetShortPath@4 ; @   92
+Win32CreateDirectory@0 ; @   93
+Win32RemoveDirectory@0 ; @   94
+SHLogILFromFSIL@4 ; @   95
+StrRetToStrN@16 ; @   96
+SHWaitForFileToOpen@12 ; @   97
+SHGetRealIDL@12 ; @   98
+SetAppStartingCursor@8 ; @   99
+SHRestricted@4 ; @  100
+SHCoCreateInstance@20 ; @  102
+SignalFileOpen@4 ; @  103
+FileMenu_DeleteAllItems@4 ; @  104
+FileMenu_DrawItem@8 ; @  105
+FileMenu_FindSubMenuByPidl@8 ; @  106
+FileMenu_GetLastSelectedItemPidls@12 ; @  107
+FileMenu_HandleMenuChar@8 ; @  108
+FileMenu_InitMenuPopup@4 ; @  109
+FileMenu_InsertUsingPidl@24 ; @  110
+FileMenu_Invalidate@4 ; @  111
+FileMenu_MeasureItem@8 ; @  112
+FileMenu_ReplaceUsingPidl@20 ; @  113
+FileMenu_Create@20 ; @  114
+FileMenu_AppendItem@24 ; @  115
+FileMenu_TrackPopupMenuEx@24 ; @  116
+FileMenu_DeleteItemByCmd@8 ; @  117
+FileMenu_Destroy@4 ; @  118
+IsLFNDrive@4 ; @  119
+FileMenu_AbortInitMenu@0 ; @  120
+SHFlushClipboard@0 ; @  121
+RunDLL_CallEntry16@20 ; @  122
+SHFreeUnusedLibraries@0 ; @  123
+FileMenu_AppendFilesForPidl@12 ; @  124
+FileMenu_AddFilesForPidl@28 ; @  125
+SHOutOfMemoryMessageBox@12 ; @  126
+SHWinHelp@16 ; @  127
+DllGetClassObject@12 ; @  128
+DAD_AutoScroll@0 ; @  129
+DAD_DragEnter@0 ; @  130
+DAD_DragEnterEx@0 ; @  131
+DAD_DragLeave@0 ; @  132
+DragQueryFileW@16 ; @  133
+DAD_DragMove@0 ; @  134
+DragQueryPoint@8 ; @  135
+DAD_SetDragImage@8 ; @  136
+DAD_ShowDragImage@4 ; @  137
+Desktop_UpdateBriefcaseOnEvent@0 ; @  139
+FileMenu_DeleteItemByIndex@8 ; @  140
+FileMenu_DeleteItemByFirstID@8 ; @  141
+FileMenu_DeleteSeparator@4 ; @  142
+FileMenu_EnableItemByCmd@12 ; @  143
+FileMenu_GetItemExtent@8 ; @  144
+PathFindOnPath@8 ; @  145
+RLBuildListOfPaths@0 ; @  146
+SHCLSIDFromString@8 ; @  147
+SHFind_InitMenuPopup@16 ; @  149
+SHLoadOLE@4 ; @  151
+ILGetSize@4 ; @  152
+ILGetNext@4 ; @  153
+ILAppend@12 ; @  154
+ILFree@4 ; @  155
+ILGlobalFree@4 ; @  156
+ILCreateFromPath@4 ; @  157
+PathGetExtension@4 ; @  158
+PathIsDirectory@4 ; @  159
+SHNetConnectionDialog@0 ; @  160
+SHRunControlPanel@8 ; @  161
+SHSimpleIDListFromPath@4 ; @  162
+StrToOleStr@8 ; @  163
+Win32DeleteFile@4 ; @  164
+SHCreateDirectory@8 ; @  165
+CallCPLEntry16@0 ; @  166
+SHAddFromPropSheetExtArray@12 ; @  167
+SHCreatePropSheetExtArray@12 ; @  168
+SHDestroyPropSheetExtArray@4 ; @  169
+SHReplaceFromPropSheetExtArray@16 ; @  170
+PathCleanupSpec@8 ; @  171
+SHCreateLinks@0 ; @  172
+SHValidateUNC@12 ; @  173
+SHCreateShellFolderViewEx@8 ; @  174
+SHGetSpecialFolderPath@16 ; @  175
+SHSetInstanceExplorer@4 ; @  176
+DAD_SetDragImageFromListView@0 ; @  177
+SHObjectProperties@0 ; @  178
+SHGetNewLinkInfoA@0 ; @  179
+SHGetNewLinkInfoW@0 ; @  180
+RegisterShellHook@8 ; @  181
+ShellMessageBoxW ; @  182
+ShellMessageBoxA ; @  183
+ArrangeWindows@20 ; @  184
+SHHandleDiskFull@0 ; @  185
+SHFree@4 ; @  195
+SHAlloc@4 ; @  196
+SHGlobalDefect@0 ; @  197
+SHAbortInvokeCommand@0 ; @  198
+SHGetFileIcon@0 ; @  199
+SHLocalAlloc@0 ; @  200
+SHLocalFree@0 ; @  201
+SHLocalReAlloc@0 ; @  202
+AddCommasW@0 ; @  203
+ShortSizeFormatW@0 ; @  204
+Printer_LoadIconsW@0 ; @  205
+Link_AddExtraDataSection@0 ; @  206
+Link_ReadExtraDataSection@0 ; @  207
+Link_RemoveExtraDataSection@0 ; @  208
+Int64ToString@0 ; @  209
+LargeIntegerToString@0 ; @  210
+Printers_GetPidl@0 ; @  211
+Printer_AddPrinterPropPages@0 ; @  212
+Printers_RegisterWindowW@0 ; @  213
+Printers_UnregisterWindow@0 ; @  214
+SHStartNetConnectionDialog@12 ; @  215
+shell32_243@8 ; @  243
+SHInitRestricted@8 ; @  244
+SHGetDataFromIDListA@20 ; @  247
+SHGetDataFromIDListW@20 ; @  248
+PathParseIconLocation@4 ; @  249
+PathRemoveExtension@4 ; @  250
+PathRemoveArgs@4 ; @  251
+SheChangeDirA@0 ; @  271
+SheChangeDirExA@0 ; @  272
+SheChangeDirExW@0 ; @  273
+SheChangeDirW@4 ; @  274
+SheConvertPathW@0 ; @  275
+SheFullPathA@0 ; @  276
+SheFullPathW@0 ; @  277
+SheGetCurDrive@0 ; @  278
+SheGetDirA@8 ; @  279
+SheGetDirExW@12 ; @  280
+SheGetDirW@8 ; @  281
+SheGetPathOffsetW@0 ; @  282
+SheRemoveQuotesA@0 ; @  283
+SheRemoveQuotesW@0 ; @  284
+SheSetCurDrive@0 ; @  285
+SheShortenPathA@0 ; @  286
+SheShortenPathW@0 ; @  287
+ShellAboutA@16 ; @  288
+ShellAboutW@16 ; @  289
+ShellExecuteA@24 ; @  290
+ShellExecuteEx@4 ; @  291
+ShellExecuteExA@4 ; @  292
+ShellExecuteExW@4 ; @  293
+ShellExecuteW@24 ; @  294
+Shell_NotifyIcon@8 ; @  296
+Shell_NotifyIconA@8 ; @  297
+Shell_NotifyIconW@8 ; @  298
+Shl1632_ThunkData32@0 ; @  299
+Shl3216_ThunkData32@0 ; @  300
+; StrChrA=shlwapi.StrChrA ; @  301
+; StrChrIA=shlwapi.StrChrIA ; @  302
+; StrChrIW=shlwapi.StrChrIW ; @  303
+; StrChrW=shlwapi.StrChrW ; @  304
+; StrCmpNA=shlwapi.StrCmpNA ; @  305
+; StrCmpNIA=shlwapi.StrCmpNIA ; @  306
+; StrCmpNIW=shlwapi.StrCmpNIW ; @  307
+; StrCmpNW=shlwapi.StrCmpNW ; @  308
+StrCpyNA@12 ; @  309
+; StrCpyNW=shlwapi.StrCpyNW ; @  310
+; StrNCmpA=shlwapi.StrCmpNA ; @  311
+; StrNCmpIA=shlwapi.StrCmpNIA ; @  312
+; StrNCmpIW=shlwapi.StrCmpNIW ; @  313
+; StrNCmpW=shlwapi.StrCmpNW ; @  314
+StrNCpyA@12 ; @  315
+; StrNCpyW=shlwapi.StrNCpyW ; @  316
+; StrRChrA=shlwapi.StrRChrA ; @  317
+; StrRChrIA=shlwapi.StrRChrIA ; @  318
+; StrRChrIW=shlwapi.StrRChrIW ; @  319
+; StrRChrW=shlwapi.StrRChrW ; @  320
+StrRStrA@0 ; @  321
+; StrRStrIA=shlwapi.StrRStrIA ; @  322
+; StrRStrIW=shlwapi.StrRStrIW ; @  323
+StrRStrW@0 ; @  324
+; StrStrA=shlwapi.StrStrA ; @  325
+; StrStrIA=shlwapi.StrStrIA ; @  326
+; StrStrIW=shlwapi.StrStrIW ; @  327
+; StrStrW=shlwapi.StrStrW ; @  328
+SHRegCloseKey@4 ; @  505
+SHRegOpenKeyA@12 ; @  506
+SHRegOpenKeyW@12 ; @  507
+SHRegQueryValueA@16 ; @  508
+SHRegQueryValueExA@24 ; @  509
+SHRegQueryValueW@16 ; @  510
+SHRegQueryValueExW@24 ; @  511
+SHRegDeleteKeyW@8 ; @  512
+SHAllocShared@12 ; @  520
+SHLockShared@8 ; @  521
+SHUnlockShared@4 ; @  522
+SHFreeShared@8 ; @  523
+RealDriveType@8 ; @  524
+RealDriveTypeFlags@8 ; @  525
+NTSHChangeNotifyRegister@24 ; @  640
+NTSHChangeNotifyDeregister@4 ; @  641
+SHChangeNotifyReceive@16 ; @  643
+SHChangeNotification_Lock@16 ; @  644
+SHChangeNotification_Unlock@4 ; @  645
+SHChangeRegistrationReceive@8 ; @  646
+ReceiveAddToRecentDocs@8 ; @  647
+SHWaitOp_Operate@8 ; @  648
+PathIsSameRoot@8 ; @  650
+ReadCabinetState@8 ; @  651
+WriteCabinetState@4 ; @  652
+PathProcessCommand@16 ; @  653
+shell32_654@8 ; @  654
+FileIconInit@4 ; @  660
+IsUserAdmin@0 ; @  680
+shell32_714@4 ; @  714
+FOOBAR1217@0 ; @ 1217
 CheckEscapesA@0
 CheckEscapesW@0
 CommandLineToArgvW@8
@@ -303,7 +303,7 @@ DuplicateIcon@8
 ExtractAssociatedIconA@12
 ExtractAssociatedIconExA@0
 ExtractAssociatedIconExW@0
-ExtractAssociatedIconW@0
+ExtractAssociatedIconW@12
 ExtractIconA@12
 ExtractIconEx@20
 ExtractIconExA@20
@@ -350,11 +350,11 @@ SHGetFileInfoW@20
 SHGetInstanceExplorer@4
 SHGetMalloc@4
 SHGetNewLinkInfo@20
-SHGetPathFromIDList@8
-SHGetPathFromIDListA@8
-SHGetPathFromIDListW@8
+SHGetPathFromIDList=SHGetPathFromIDList@8
+SHGetPathFromIDListA=SHGetPathFromIDListA@8
+SHGetPathFromIDListW=SHGetPathFromIDListW@8
 SHGetSettings@8
-SHGetSpecialFolderLocation@12
+SHGetSpecialFolderLocation=SHGetSpecialFolderLocation@12
 SHHelpShortcuts_RunDLL@16
 SHHelpShortcuts_RunDLLA@16 
 SHHelpShortcuts_RunDLLW@16 

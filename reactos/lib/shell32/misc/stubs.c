@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2001/07/06 02:47:17 rex Exp $
+/* $Id: stubs.c,v 1.2 2001/07/06 04:01:27 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,10 +8,13 @@
  */
 
 #include <ddk/ntddk.h>
-/* #include <windows.h> */
+#include <windows.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#undef DragQueryFile
+#undef ShellExecute
 
 #define  STUB  \
   do  \
@@ -273,8 +276,8 @@ DoEnvironmentSubst(DWORD Unknown1, DWORD Unknown2)
   STUB;
 }
 
-VOID STDCALL
-DragAcceptFiles(DWORD Unknown1, DWORD Unknown2)
+void WINAPI
+DragAcceptFiles (HWND Unknown1, WINBOOL Unknown2)
 {
   STUB;
 }
@@ -429,20 +432,20 @@ StrToOleStrN(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
   STUB;
 }
 
-VOID STDCALL
-DragFinish(DWORD Unknown1)
+void WINAPI
+DragFinish (HDROP Unknown1)
 {
   STUB;
 }
 
-VOID STDCALL
-DragQueryFile(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+unsigned int WINAPI
+DragQueryFile(HDROP Unknown1, unsigned int Unknown2, char * Unknown3, unsigned int Unknown4)
 {
   STUB;
 }
 
-VOID STDCALL
-DragQueryFileA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+unsigned int WINAPI
+DragQueryFileA(HDROP Unknown1, unsigned int Unknown2, char * Unknown3, unsigned int Unknown4)
 {
   STUB;
 }
@@ -735,8 +738,8 @@ DAD_DragLeave(VOID)
   STUB;
 }
 
-VOID STDCALL
-DragQueryFileW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+unsigned int WINAPI
+DragQueryFileW(HDROP Unknown1, unsigned int Unknown2, LPCWSTR Unknown3, unsigned int Unknown4)
 {
   STUB;
 }
@@ -747,8 +750,8 @@ DAD_DragMove(VOID)
   STUB;
 }
 
-VOID STDCALL
-DragQueryPoint(DWORD Unknown1, DWORD Unknown2)
+WINBOOL WINAPI
+DragQueryPoint (HDROP Unknown1, LPPOINT Unknown2)
 {
   STUB;
 }
@@ -1305,20 +1308,20 @@ SheShortenPathW(VOID)
   STUB;
 }
 
-VOID STDCALL
-ShellAboutA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+int WINAPI
+ShellAboutA (HWND Unknown1, const char * Unknown2, const char * Unknown3, HICON Unknown4)
 {
   STUB;
 }
 
-VOID STDCALL
-ShellAboutW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+int WINAPI
+ShellAboutW (HWND Unknown1, const LPCWSTR Unknown2, const LPCWSTR Unknown3, HICON Unknown4)
 {
   STUB;
 }
 
-VOID STDCALL
-ShellExecuteA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, DWORD Unknown5, DWORD Unknown6)
+HINSTANCE WINAPI
+ShellExecuteA (HWND Unknown1, const char * Unknown2, const char * Unknown3, char * Unknown4, const char * Unknown5, int Unknown6)
 {
   STUB;
 }
@@ -1342,7 +1345,13 @@ ShellExecuteExW(DWORD Unknown1)
 }
 
 VOID STDCALL
-ShellExecuteW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, DWORD Unknown5, DWORD Unknown6)
+ShellExecute (DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, DWORD Unknown5, DWORD Unknown6)
+{
+  STUB;
+}
+
+HINSTANCE WINAPI
+ShellExecuteW (HWND Unknown1, const LPCWSTR Unknown2, const LPCWSTR Unknown3, LPCWSTR Unknown4, const LPCWSTR Unknown5, int Unknown6)
 {
   STUB;
 }
@@ -1665,14 +1674,14 @@ DragQueryFileAorW(VOID)
   STUB;
 }
 
-VOID STDCALL
-DuplicateIcon(DWORD Unknown1, DWORD Unknown2)
+HICON WINAPI
+DuplicateIcon (HINSTANCE Unknown1, HICON Unknown2)
 {
   STUB;
 }
 
-VOID STDCALL
-ExtractAssociatedIconA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HICON WINAPI
+ExtractAssociatedIconA (HINSTANCE Unknown1, char * Unknown2, WORD * Unknown3)
 {
   STUB;
 }
@@ -1689,14 +1698,14 @@ ExtractAssociatedIconExW(VOID)
   STUB;
 }
 
-VOID STDCALL
-ExtractAssociatedIconW(VOID)
+HICON WINAPI
+ExtractAssociatedIconW (HINSTANCE Unknown1, LPCWSTR Unknown2, WORD * Unknown3)
 {
   STUB;
 }
 
-VOID STDCALL
-ExtractIconA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HICON WINAPI
+ExtractIconA (HINSTANCE Unknown1, const char * Unknown2, unsigned int Unknown3)
 {
   STUB;
 }
@@ -1719,8 +1728,8 @@ ExtractIconExW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, D
   STUB;
 }
 
-VOID STDCALL
-ExtractIconW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HICON WINAPI
+ExtractIconW (HINSTANCE Unknown1, const LPCWSTR Unknown2, unsigned int Unknown3)
 {
   STUB;
 }
@@ -1749,14 +1758,14 @@ FindExeDlgProc(VOID)
   STUB;
 }
 
-VOID STDCALL
-FindExecutableA(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HINSTANCE WINAPI
+FindExecutableA (const char * Unknown1, const char * Unknown2, char * Unknown3)
 {
   STUB;
 }
 
-VOID STDCALL
-FindExecutableW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HINSTANCE WINAPI
+FindExecutableW (const LPCWSTR Unknown1, const LPCWSTR Unknown2, LPCWSTR Unknown3)
 {
   STUB;
 }
@@ -1845,8 +1854,8 @@ RegenerateUserEnvironment(VOID)
   STUB;
 }
 
-VOID STDCALL
-SHAddToRecentDocs(DWORD Unknown1, DWORD Unknown2) 
+void WINAPI
+SHAddToRecentDocs (UINT Unknown1, LPCVOID Unknown2)
 {
   STUB;
 }
@@ -1857,8 +1866,8 @@ SHAppBarMessage(DWORD Unknown1, DWORD Unknown2)
   STUB;
 }
 
-VOID STDCALL
-SHBrowseForFolder(DWORD Unknown1) 
+LPITEMIDLIST WINAPI
+SHBrowseForFolder (LPBROWSEINFO Unknown1)
 {
   STUB;
 }
@@ -1875,8 +1884,8 @@ SHBrowseForFolderW(DWORD Unknown1)
   STUB;
 }
 
-VOID STDCALL
-SHChangeNotify(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4) 
+void WINAPI
+SHChangeNotify (LONG Unknown1, UINT Unknown2, LPCVOID Unknown3, LPCVOID Unknown4)
 {
   STUB;
 }
@@ -1899,8 +1908,8 @@ SHEmptyRecycleBinW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
   STUB;
 }
 
-VOID STDCALL
-SHFileOperation(DWORD Unknown1) 
+int WINAPI
+SHFileOperation (LPSHFILEOPSTRUCT Unknown1)
 {
   STUB;
 }
@@ -1923,8 +1932,8 @@ SHFormatDrive(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
   STUB;
 }
 
-VOID STDCALL
-SHFreeNameMappings(DWORD Unknown1) 
+void WINAPI
+SHFreeNameMappings (HANDLE Unknown1)
 {
   STUB;
 }
@@ -1935,8 +1944,8 @@ SHGetDesktopFolder(DWORD Unknown1)
   STUB;
 }
 
-VOID STDCALL
-SHGetFileInfo(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, DWORD Unknown5)
+DWORD WINAPI
+SHGetFileInfo (LPCTSTR Unknown1, DWORD Unknown2, SHFILEINFO FAR * Unknown3, UINT Unknown4, UINT Unknown5)
 {
   STUB;
 }
@@ -1971,8 +1980,8 @@ SHGetNewLinkInfo(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4,
   STUB;
 }
 
-VOID STDCALL
-SHGetPathFromIDList(DWORD Unknown1, DWORD Unknown2)
+WINBOOL WINAPI
+SHGetPathFromIDList (LPCITEMIDLIST Unknown1, LPTSTR Unknown2)
 {
   STUB;
 }
@@ -1995,8 +2004,8 @@ SHGetSettings(DWORD Unknown1, DWORD Unknown2)
   STUB;
 }
 
-VOID STDCALL
-SHGetSpecialFolderLocation(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+HRESULT WINAPI
+SHGetSpecialFolderLocation (HWND Unknown1, int Unknown2, LPITEMIDLIST * Unknown3)
 {
   STUB;
 }
