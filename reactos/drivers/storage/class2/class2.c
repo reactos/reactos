@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.46 2003/11/13 14:18:53 ekohl Exp $
+/* $Id: class2.c,v 1.47 2004/02/07 21:36:56 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1971,6 +1971,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   PKEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
+  LARGE_INTEGER RetryWait;
 
   DPRINT("ScsiClassSendSrbSynchronous() called\n");
 
@@ -2075,7 +2076,11 @@ TryAgain:
 	  /* FIXME: Wait a little if we got a timeout error */
 
 	  if (RetryCount--)
-	    goto TryAgain;
+	    {
+	      RetryWait.QuadPart = - RETRY_WAIT;
+	      KeDelayExecutionThread(KernelMode, FALSE, &RetryWait);
+	      goto TryAgain;
+	    }
 	}
     }
   else

@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.4 2003/11/01 16:32:47 ekohl Exp $
+/* $Id: class2.h,v 1.5 2004/02/07 21:36:56 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,8 @@
 #include "ntddscsi.h"
 #include "srb.h"
 
-#define MAXIMUM_RETRIES    4
+#define MAXIMUM_RETRIES    15
+#define RETRY_WAIT         2000000 /* 200 ms in units of 100 ns */
 
 struct _CLASS_INIT_DATA;
 
