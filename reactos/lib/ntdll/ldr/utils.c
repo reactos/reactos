@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.81 2004/01/25 09:57:14 jfilby Exp $
+/* $Id: utils.c,v 1.82 2004/01/31 23:53:45 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -608,7 +608,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Dll open of %wZ failed: Status = 0x%08x\n", 
+      DPRINT1("Dll open of %wZ failed: Status = 0x%08x\n", 
                &FullNtFileName, Status);
       RtlFreeUnicodeString (&FullNtFileName);
       return Status;
@@ -1007,7 +1007,7 @@ LdrGetExportByOrdinal (
                         BaseAddress,
                         ExportDir->AddressOfFunctions
                         );
-        DbgPrint(
+        DPRINT(
                 "LdrGetExportByOrdinal(Ordinal %d) = %x\n",
                 Ordinal,
                 RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
@@ -1068,7 +1068,7 @@ LdrGetExportByName(PVOID BaseAddress,
                                   &ExportDirSize);
    if (ExportDir == NULL)
      {
-        DbgPrint("LdrGetExportByName(): no export directory!\n");
+        DPRINT1("LdrGetExportByName(): no export directory!\n");
         return NULL;
      }
 
@@ -1924,11 +1924,11 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
     */
    if (ImageBase != (PVOID) NTHeaders->OptionalHeader.ImageBase)
      {
-       DbgPrint("LDR: Performing relocations\n");
+       DPRINT("LDR: Performing relocations\n");
        Status = LdrPerformRelocations(NTHeaders, ImageBase);
        if (!NT_SUCCESS(Status))
          {
-           DbgPrint("LdrPerformRelocations() failed\n");
+           DPRINT1("LdrPerformRelocations() failed\n");
            return NULL;
          }
      }
