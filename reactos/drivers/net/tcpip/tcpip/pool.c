@@ -24,7 +24,7 @@ PVOID PoolAllocateBuffer(
 
     /* FIXME: Get buffer from a free buffer pool with enough room */
 
-    Buffer = ExAllocatePool(NonPagedPool, Size);
+    Buffer = exAllocatePool(NonPagedPool, Size);
 
     TI_DbgPrint(DEBUG_MEMORY, ("Allocated (%i) bytes at (0x%X).\n", Size, Buffer));
 
@@ -44,7 +44,7 @@ VOID PoolFreeBuffer(
 
     TI_DbgPrint(DEBUG_MEMORY, ("Freeing buffer at (0x%X).\n", Buffer));
 
-    ExFreePool(Buffer);
+    exFreePool(Buffer);
 }
 
 /* EOF */

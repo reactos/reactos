@@ -318,10 +318,9 @@ VOID DGDeliverData(
           TI_DbgPrint(MAX_TRACE, ("Suitable receive request found.\n"));
     
           /* Copy the data into buffer provided by the user */
-          CopyBufferToBufferChain(Current->Buffer,
-            0,
-            DataBuffer,
-            DataSize);
+	  RtlCopyMemory( Current->Buffer,
+			 DataBuffer,
+			 DataSize );
   
           /* Complete the receive request */
           (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
@@ -506,9 +505,12 @@ NTSTATUS DGTransmit(
   return STATUS_PENDING;
 }
 
-NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
-			 PTDI_CONNECTION_INFORMATION ConnInfo,
-			 PIP_PACKET Packet ) {
+NTSTATUS DGSendDatagram( 
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG DataSize,
+    PULONG DataUsed )
 /*
  * FUNCTION: Sends a datagram to a remote address
  * ARGUMENTS:
@@ -518,14 +520,14 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
  * RETURNS:
  *     Status of operation
  */
-    PADDRESS_FILE AddrFile;
+{
     KIRQL OldIrql;
     NTSTATUS Status;
     PDATAGRAM_SEND_REQUEST SendRequest;
     
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-    
-    AddrFile = Request->Handle.AddressHandle;
+
+    *DataUsed = DataSize;
     
     KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     
@@ -538,12 +540,12 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
 	    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 	    return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
-	SendRequest->Complete = Request->RequestNotifyObject;
-	SendRequest->Context = Request->RequestContext;
-	NdisQueryPacketLength( Packet->NdisPacket,
-			       &SendRequest->BufferSize );
-	SendRequest->Packet = *Packet;
+
+	SendRequest->Complete = NULL;
+	SendRequest->Context = NULL;
+	SendRequest->Packet.Header = BufferData + MaxLLHeaderSize;
+	SendRequest->Packet.ContigSize = DataSize;
+	SendRequest->Packet.TotalSize = DataSize;
 	
 	if (NT_SUCCESS(Status)) {
 	    Status = AddrGetAddress(ConnInfo->RemoteAddress,
@@ -578,13 +580,13 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
 
 
 NTSTATUS DGReceiveDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG ReceiveLength,
-  ULONG ReceiveFlags,
-  PTDI_CONNECTION_INFORMATION ReturnInfo,
-  PULONG BytesReceived)
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR Buffer,
+    ULONG ReceiveLength,
+    ULONG ReceiveFlags,
+    PTDI_CONNECTION_INFORMATION ReturnInfo,
+    PULONG BytesReceived)
 /*
  * FUNCTION: Attempts to receive a datagram from a remote address
  * ARGUMENTS:
@@ -601,14 +603,11 @@ NTSTATUS DGReceiveDatagram(
  *     This is the high level interface for receiving datagrams
  */
 {
-  PADDRESS_FILE AddrFile;
   KIRQL OldIrql;
   NTSTATUS Status;
   PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  AddrFile = Request->Handle.AddressHandle;
 
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
@@ -639,10 +638,9 @@ NTSTATUS DGReceiveDatagram(
           ReceiveRequest->ReturnInfo = ReturnInfo;
           ReceiveRequest->Buffer = Buffer;
           /* If ReceiveLength is 0, the whole buffer is available to us */
-          ReceiveRequest->BufferSize = (ReceiveLength == 0) ?
-            MmGetMdlByteCount(Buffer) : ReceiveLength;
-          ReceiveRequest->Complete = Request->RequestNotifyObject;
-          ReceiveRequest->Context = Request->RequestContext;
+          ReceiveRequest->BufferSize = ReceiveLength;
+          ReceiveRequest->Complete = NULL;
+          ReceiveRequest->Context = NULL;
     
           /* Queue receive request */
           InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);

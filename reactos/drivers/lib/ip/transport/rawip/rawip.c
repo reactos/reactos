@@ -76,10 +76,10 @@ NTSTATUS BuildRawIPPacket(
 
 
 NTSTATUS RawIPSendDatagram(
-    PTDI_REQUEST Request,
+    PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
-    PNDIS_BUFFER Buffer,
-    ULONG DataSize,
+    PCHAR BufferData,
+    ULONG BufferLen,
     PULONG DataUsed )
 /*
  * FUNCTION: Sends a raw IP datagram to a remote address
@@ -93,13 +93,8 @@ NTSTATUS RawIPSendDatagram(
  */
 {
     NDIS_STATUS Status;
-    PCHAR BufferData;
-    UINT BufferLen;
-    PADDRESS_FILE AddrFile = 
-	(PADDRESS_FILE)Request->Handle.AddressHandle;
     IP_PACKET Packet;
 
-    NdisQueryBuffer( Buffer, &BufferData, &BufferLen );
     Status = AllocatePacketWithBuffer( &Packet.NdisPacket,
 				       BufferData,
 				       BufferLen );
@@ -114,7 +109,8 @@ NTSTATUS RawIPSendDatagram(
 				   AddrFile->ADE->Address,
 				   AddrFile->Port );
     if( Status == NDIS_STATUS_SUCCESS ) 
-	Status = DGSendDatagram(Request, ConnInfo, &Packet);
+	Status = DGSendDatagram(AddrFile, ConnInfo, BufferData, BufferLen, 
+				DataUsed);
     else
 	FreeNdisPacket( Packet.NdisPacket );
 

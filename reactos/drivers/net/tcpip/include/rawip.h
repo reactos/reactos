@@ -8,9 +8,9 @@
 #define __RAWIP_H
 
 NTSTATUS RawIPSendDatagram(
-    PTDI_REQUEST Request,
+    PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
-    PNDIS_BUFFER Buffer,
+    PCHAR Buffer,
     ULONG DataSize,
     PULONG DataUsed);
 

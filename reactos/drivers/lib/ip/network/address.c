@@ -12,8 +12,6 @@
 
 extern int sprintf( char *out, const char *fmt, ... );
 
-#ifdef DBG
-
 CHAR A2SStr[128];
 
 PCHAR A2S(
@@ -54,8 +52,6 @@ PCHAR A2S(
     }
     return p;
 }
-
-#endif /* DBG */
 
 ULONG IPv4NToHl( ULONG Address ) {
     return 

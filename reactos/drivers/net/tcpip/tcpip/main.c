@@ -503,6 +503,7 @@ TiDispatchInternal(
 
   case TDI_RECEIVE_DATAGRAM:
     Status = DispTdiReceiveDatagram(Irp);
+    Complete = FALSE;
     break;
 
   case TDI_SEND:
@@ -512,6 +513,7 @@ TiDispatchInternal(
 
   case TDI_SEND_DATAGRAM:
     Status = DispTdiSendDatagram(Irp);
+    Complete = FALSE;
     break;
 
   case TDI_ACCEPT:

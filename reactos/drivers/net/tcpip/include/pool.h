@@ -14,6 +14,9 @@ PVOID PoolAllocateBuffer(
 VOID PoolFreeBuffer(
     PVOID Buffer);
 
+NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Len,
+			   BOOLEAN Copy );
+
 #endif /* __POOL_H */
 
 /* EOF */

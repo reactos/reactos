@@ -124,8 +124,7 @@ VOID ControlChannelFree(
 }
 
 
-VOID DeleteAddress(
-  PADDRESS_FILE AddrFile)
+VOID DeleteAddress(PADDRESS_FILE AddrFile)
 /*
  * FUNCTION: Deletes an address file object
  * ARGUMENTS:
@@ -514,8 +513,11 @@ NTSTATUS FileOpenConnection(
   PCONNECTION_ENDPOINT Connection;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
   
+  Connection = TCPAllocateConnectionEndpoint( ClientContext );
+  
+  if( !Connection ) return STATUS_NO_MEMORY;
+
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
   DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
 

@@ -91,15 +91,16 @@
 
 #include <ip.h>
 
+struct _ADDRESS_FILE;
 
 /***************************************************
 * Connection-less communication support structures *
 ***************************************************/
 
 typedef NTSTATUS (*DATAGRAM_SEND_ROUTINE)(
-    PTDI_REQUEST Request,
+    struct _ADDRESS_FILE *AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
-    PNDIS_BUFFER Buffer,
+    PCHAR Buffer,
     ULONG DataSize,
     PULONG DataUsed);
 
@@ -114,7 +115,7 @@ typedef struct _DATAGRAM_RECEIVE_REQUEST {
     IP_ADDRESS RemoteAddress;              /* Remote address we receive from (NULL means any) */
     USHORT RemotePort;                      /* Remote port we receive from (0 means any) */
     PTDI_CONNECTION_INFORMATION ReturnInfo; /* Return information */
-    PNDIS_BUFFER Buffer;                    /* Pointer to receive buffer */
+    PCHAR Buffer;                           /* Pointer to receive buffer */
     ULONG BufferSize;                       /* Size of Buffer */
     DATAGRAM_COMPLETION_ROUTINE Complete;   /* Completion routine */
     PVOID Context;                          /* Pointer to context information */

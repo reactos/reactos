@@ -112,22 +112,8 @@ NTSTATUS SendFragments(
     }
 
     /* Allocate NDIS packet */
-    NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        exFreePool(Data);
-        exFreePool(IFC);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Allocate NDIS buffer */
-    NdisAllocateBuffer(&NdisStatus, &IFC->NdisBuffer,
-        GlobalBufferPool, Data, MaxLLHeaderSize + PathMTU);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        FreeNdisPacket(IFC->NdisPacket);
-        exFreePool(Data);
-        exFreePool(IFC);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    NdisStatus = AllocatePacketWithBuffer
+	( &IFC->NdisPacket, Data, MaxLLHeaderSize + PathMTU );
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(IFC->NdisPacket, IFC->NdisBuffer);

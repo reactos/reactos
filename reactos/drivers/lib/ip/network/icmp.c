@@ -53,7 +53,6 @@ PIP_PACKET PrepareICMPPacket(
 {
     PIP_PACKET IPPacket;
     PNDIS_PACKET NdisPacket;
-    PNDIS_BUFFER NdisBuffer;
     NDIS_STATUS NdisStatus;
     PIPv4_HEADER IPHeader;
     PVOID DataBuffer;
@@ -75,38 +74,17 @@ PIP_PACKET PrepareICMPPacket(
         sizeof(ICMP_HEADER) + DataSize;
     DataBuffer = exAllocatePool(NonPagedPool, Size);
     if (!DataBuffer) {
+	exFreePool( IPPacket );
         return NULL;
     }
 
     TI_DbgPrint(DEBUG_ICMP, ("Size (%d). Data at (0x%X).\n", Size, DataBuffer));
-
-    /* Allocate NDIS packet */
-    NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        exFreePool(DataBuffer);
-        return NULL;
-    }
-
     TI_DbgPrint(MAX_TRACE, ("NdisPacket at (0x%X).\n", NdisPacket));
 
-    /* Allocate NDIS buffer for maximum link level header and ICMP packet */
-    NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
-        DataBuffer, Size);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        FreeNdisPacket(NdisPacket);
-        exFreePool(DataBuffer);
-        return NULL;
-    }
-    
-    TI_DbgPrint(MAX_TRACE, ("NdisBuffer at (0x%X).\n", NdisBuffer));
-
-    /* Link NDIS buffer into packet */
-    NdisChainBufferAtFront(NdisPacket, NdisBuffer);
-    IPPacket->NdisPacket = NdisPacket;
     IPPacket->Header     = (PVOID)((ULONG_PTR)DataBuffer + MaxLLHeaderSize);
-    IPPacket->Data       = (PVOID)((ULONG_PTR)DataBuffer + MaxLLHeaderSize + sizeof(IPv4_HEADER));
-
     IPPacket->HeaderSize = sizeof(IPv4_HEADER);
+    IPPacket->Data       = (PVOID)(((ULONG_PTR)IPPacket->Header) + 
+				   IPPacket->HeaderSize);
     IPPacket->TotalSize  = Size - MaxLLHeaderSize;
     RtlCopyMemory(&IPPacket->DstAddr, Destination, sizeof(IP_ADDRESS));
 
@@ -136,10 +114,17 @@ PIP_PACKET PrepareICMPPacket(
     /* Destination address */
     IPHeader->DstAddr = Destination->Address.IPv4Address;
 
-    /* Completion handler */
-    PC(NdisPacket)->Complete = SendICMPComplete;
-    PC(NdisPacket)->Context  = IPPacket;
+    TI_DbgPrint(MID_TRACE,("Allocating packet\n"));
+    /* Allocate NDIS packet */
+    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, DataBuffer, Size );
+    IPPacket->NdisPacket = NdisPacket;
 
+    GetDataPtr( IPPacket->NdisPacket, MaxLLHeaderSize, 
+		(PCHAR *)&IPPacket->Header, &IPPacket->ContigSize );
+    IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
+
+    TI_DbgPrint(MID_TRACE,("Leaving\n"));
+    
     return IPPacket;
 }
 
@@ -155,8 +140,6 @@ VOID ICMPReceive(
  */
 {
     PICMP_HEADER ICMPHeader;
-    PIP_PACKET NewPacket;
-    UINT DataSize;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
@@ -181,40 +164,22 @@ VOID ICMPReceive(
 
     switch (ICMPHeader->Type) {
     case ICMP_TYPE_ECHO_REQUEST:
-        /* Reply with an ICMP echo reply message */
-        DataSize  = IPPacket->TotalSize - IPPacket->HeaderSize - sizeof(ICMP_HEADER);
-        NewPacket = PrepareICMPPacket(NTE, &IPPacket->SrcAddr, DataSize);
-        if (!NewPacket)
-            return;
-
-        /* Copy ICMP header and data into new packet */
-        RtlCopyMemory(NewPacket->Data, IPPacket->Data, DataSize + sizeof(ICMP_HEADER));
-        ((PICMP_HEADER)NewPacket->Data)->Type     = ICMP_TYPE_ECHO_REPLY;
-        ((PICMP_HEADER)NewPacket->Data)->Code     = 0;
-        ((PICMP_HEADER)NewPacket->Data)->Checksum = 0;
-
-#ifdef DBG
-        DisplayIPPacket(IPPacket);
-        DisplayIPPacket(NewPacket);
-#endif
-
-        ICMPTransmit(NTE, NewPacket);
-
-        TI_DbgPrint(DEBUG_ICMP, ("Echo reply sent.\n"));
+	ICMPReply( NTE, IPPacket, ICMP_TYPE_ECHO_REPLY, 0 );
         return;
 
     case ICMP_TYPE_ECHO_REPLY:
         break;
 
     default:
-        TI_DbgPrint(DEBUG_ICMP, ("Discarded ICMP datagram of unknown type %d.\n",
-            ICMPHeader->Type));
+        TI_DbgPrint(DEBUG_ICMP, 
+		    ("Discarded ICMP datagram of unknown type %d.\n",
+		     ICMPHeader->Type));
         /* Discard packet */
         break;
     }
 
     /* Send datagram up the protocol stack */
-    RawIPReceive(NTE, IPPacket);
+    /*RawIPReceive(NTE, IPPacket);*/
 }
 
 
@@ -259,8 +224,8 @@ VOID ICMPTransmit(
 VOID ICMPReply(
     PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket,
-	  UCHAR Type,
- 	  UCHAR Code)
+    UCHAR Type,
+    UCHAR Code)
 /*
  * FUNCTION: Transmits an ICMP packet in response to an incoming packet
  * ARGUMENTS:
@@ -280,7 +245,8 @@ VOID ICMPReply(
 
     TI_DbgPrint(DEBUG_ICMP, ("Called. Type (%d)  Code (%d).\n", Type, Code));
 
-    DataSize = IPPacket->TotalSize;
+    DataSize = IPPacket->TotalSize - IPPacket->HeaderSize - 
+	sizeof(ICMP_HEADER);;
     if ((DataSize) > (576 - sizeof(IPv4_HEADER) - sizeof(ICMP_HEADER)))
         DataSize = 576;
 
@@ -288,11 +254,15 @@ VOID ICMPReply(
     if (!NewPacket)
         return;
 
-    RtlCopyMemory((PVOID)((ULONG_PTR)NewPacket->Data + sizeof(ICMP_HEADER)),
-        IPPacket->Header, DataSize);
+    RtlCopyMemory(NewPacket->Data, IPPacket->Data, 
+		  DataSize + sizeof(ICMP_HEADER));
+
     ((PICMP_HEADER)NewPacket->Data)->Type     = Type;
     ((PICMP_HEADER)NewPacket->Data)->Code     = Code;
     ((PICMP_HEADER)NewPacket->Data)->Checksum = 0;
+
+    PC(NewPacket->NdisPacket)->Complete = SendICMPComplete;
+    PC(NewPacket->NdisPacket)->Context = NewPacket;
 
     ICMPTransmit(NTE, NewPacket);
 }

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.24 2004/09/30 16:30:43 arty Exp $
+# $Id: makefile,v 1.25 2004/10/03 20:38:48 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -28,11 +28,12 @@ TARGET_DDKLIBS = \
 
 TARGET_CLEAN = tcpip/*.o datalink/*.o
 
-TCPIP_OBJECTS    = tcpip/main.o \
+TCPIP_OBJECTS    = tcpip/buffer.o \
 		   tcpip/dispatch.o \
 		   tcpip/fileobjs.o \
-                   tcpip/pool.o \
-		   tcpip/irp.o
+		   tcpip/irp.o \
+		   tcpip/main.o \
+                   tcpip/pool.o 
 INFO_OBJECTS     = tcpip/info.o tcpip/ninfo.o tcpip/tinfo.o tcpip/iinfo.o
 DATALINK_OBJECTS = datalink/lan.o datalink/loopback.o
 

@@ -10,9 +10,6 @@
 
 #include "precomp.h"
 
-VOID STDCALL KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql);
-VOID STDCALL KeLowerIrql(KIRQL NewIrql);
-
 extern ULONG TCP_IPIdentification;
 extern LIST_ENTRY SleepingThreadsList;
 extern FAST_MUTEX SleepingThreadsLock;
@@ -128,7 +125,6 @@ void TCPPacketSendComplete( PVOID Context,
 
 int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     NTSTATUS Status;
-    KIRQL OldIrql;
     NDIS_STATUS NdisStatus;
     ROUTE_CACHE_NODE *RCN;
     IP_PACKET Packet = { 0 };
@@ -164,14 +160,12 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     
     if( !NT_SUCCESS(Status) || !RCN ) return OSK_EADDRNOTAVAIL;
 
-    KeRaiseIrql( DISPATCH_LEVEL, &OldIrql );
-
     NdisStatus = 
 	AllocatePacketWithBuffer( &Packet.NdisPacket, data, len );
     
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
 	TI_DbgPrint(MAX_TRACE, ("Error from NDIS: %08x\n", NdisStatus));
-	goto end;
+	return STATUS_NO_MEMORY;
     }
 
     AdjustPacket( Packet.NdisPacket, 0, MaxLLHeaderSize );
@@ -186,9 +180,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     Packet.DstAddr = RemoteAddress;
 
     IPSendFragment( Packet.NdisPacket, RCN->NCE );
-
-end:
-    KeLowerIrql( OldIrql );
 
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;

@@ -54,6 +54,10 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto ) {
     NTSTATUS Status;
 
+    TI_DbgPrint(MID_TRACE,("Called: Connection %x, Family %d, Type %d, "
+			   "Proto %d\n",
+			   Connection, Family, Type, Proto));
+
     RecursiveMutexEnter( &TCPLock, TRUE );
     Status = TCPTranslateError( OskitTCPSocket( Connection,
 						&Connection->SocketContext,

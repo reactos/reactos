@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <roscfg.h>
+#include <basetsd.h>
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
 #include <rosrtl/recmutex.h>

@@ -15,10 +15,12 @@ BOOLEAN UDPInitialized = FALSE;
 
 
 NTSTATUS AddUDPHeaderIPv4(
-  PDATAGRAM_SEND_REQUEST SendRequest,
-  PIP_ADDRESS LocalAddress,
-  USHORT LocalPort,
-  PIP_PACKET IPPacket)
+    PIP_ADDRESS RemoteAddress,
+    USHORT RemotePort,
+    PIP_ADDRESS LocalAddress,
+    USHORT LocalPort,
+    PIP_PACKET IPPacket,
+    UINT DataLength) 
 /*
  * FUNCTION: Adds an IPv4 and UDP header to an IP packet
  * ARGUMENTS:
@@ -30,81 +32,77 @@ NTSTATUS AddUDPHeaderIPv4(
  *     Status of operation
  */
 {
-  PIPv4_HEADER IPHeader;
-  PUDP_HEADER UDPHeader;
-  PVOID Header;
-	ULONG BufferSize;
-  NDIS_STATUS NdisStatus;
-  PNDIS_BUFFER HeaderBuffer;
+    PIPv4_HEADER IPHeader;
+    PUDP_HEADER UDPHeader;
+    ULONG BufferSize;
+    
+    TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n", 
+			    IPPacket, IPPacket->NdisPacket));
+    
+    BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + sizeof(UDP_HEADER);
+    
+    GetDataPtr( IPPacket->NdisPacket, 
+		MaxLLHeaderSize, 
+		(PCHAR *)&IPPacket->Header, 
+		&IPPacket->ContigSize );
+    
+    IPPacket->HeaderSize = 20;
+    
+    TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", 
+			    BufferSize, IPPacket->Header));
+    
+    /* Build IPv4 header */
+    IPHeader = (PIPv4_HEADER)IPPacket->Header;
+    /* Version = 4, Length = 5 DWORDs */
+    IPHeader->VerIHL = 0x45;
+    /* Normal Type-of-Service */
+    IPHeader->Tos = 0;
+    /* Length of header and data */
+    IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
+    /* Identification */
+    IPHeader->Id = 0;
+    /* One fragment at offset 0 */
+    IPHeader->FlagsFragOfs = 0;
+    /* Time-to-Live is 128 */
+    IPHeader->Ttl = 128;
+    /* User Datagram Protocol */
+    IPHeader->Protocol = IPPROTO_UDP;
+    /* Checksum is 0 (for later calculation of this) */
+    IPHeader->Checksum = 0;
+    /* Source address */
+    IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
+    /* Destination address. FIXME: IPv4 only */
+    IPHeader->DstAddr = RemoteAddress->Address.IPv4Address;
+    
+    /* Build UDP header */
+    UDPHeader = (PUDP_HEADER)(((PCHAR)IPHeader) + sizeof(IPv4_HEADER));
+    /* Port values are already big-endian values */
+    UDPHeader->SourcePort = LocalPort;
+    UDPHeader->DestPort   = RemotePort;
+    /* FIXME: Calculate UDP checksum and put it in UDP header */
+    UDPHeader->Checksum   = 0;
+    /* Length of UDP header and data */
+    UDPHeader->Length     = WH2N(DataLength);
 
-	BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + sizeof(UDP_HEADER);
-  Header     = ExAllocatePool(NonPagedPool, BufferSize);
-  if (!Header) {
-    TI_DbgPrint(MIN_TRACE, ("Cannot allocate memory for packet headers.\n"));
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
+    IPPacket->Data        = ((PCHAR)UDPHeader) + sizeof(UDP_HEADER);
+    
+    TI_DbgPrint(MID_TRACE, ("Packet: %d ip %d udp %d payload\n",
+			    (PCHAR)UDPHeader - (PCHAR)IPHeader,
+			    (PCHAR)IPPacket->Data - (PCHAR)UDPHeader,
+			    DataLength));
 
-  TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", BufferSize, Header));
-
-  /* Allocate NDIS buffer for maximum Link level, IP and UDP header */
-  NdisAllocateBuffer(&NdisStatus,
-                     &HeaderBuffer,
-                     GlobalBufferPool,
-                     Header,
-                     BufferSize);
-  if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS buffer for packet headers. NdisStatus = (0x%X)\n", NdisStatus));
-    ExFreePool(Header);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  /* Chain header at front of NDIS packet */
-  NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
-  
-  IPPacket->Header     = (PVOID)((ULONG_PTR)Header + MaxLLHeaderSize);
-  IPPacket->HeaderSize = 20;
-
-  /* Build IPv4 header */
-  IPHeader = (PIPv4_HEADER)IPPacket->Header;
-  /* Version = 4, Length = 5 DWORDs */
-  IPHeader->VerIHL = 0x45;
-  /* Normal Type-of-Service */
-  IPHeader->Tos = 0;
-  /* Length of header and data */
-  IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
-  /* Identification */
-  IPHeader->Id = 0;
-  /* One fragment at offset 0 */
-  IPHeader->FlagsFragOfs = 0;
-  /* Time-to-Live is 128 */
-  IPHeader->Ttl = 128;
-  /* User Datagram Protocol */
-  IPHeader->Protocol = IPPROTO_UDP;
-  /* Checksum is 0 (for later calculation of this) */
-  IPHeader->Checksum = 0;
-  /* Source address */
-  IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
-  /* Destination address. FIXME: IPv4 only */
-  IPHeader->DstAddr = SendRequest->RemoteAddress.Address.IPv4Address;
-
-  /* Build UDP header */
-  UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPHeader + sizeof(IPv4_HEADER));
-  /* Port values are already big-endian values */
-  UDPHeader->SourcePort = LocalPort;
-  UDPHeader->DestPort   = SendRequest->RemotePort;
-  /* FIXME: Calculate UDP checksum and put it in UDP header */
-  UDPHeader->Checksum   = 0;
-  /* Length of UDP header and data */
-  UDPHeader->Length     = WH2N((USHORT)IPPacket->TotalSize - IPPacket->HeaderSize);
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS BuildUDPPacket(
-  PVOID Context,
-  PIP_ADDRESS LocalAddress,
-  USHORT LocalPort)
+    PIP_PACKET Packet,
+    PIP_ADDRESS RemoteAddress,
+    USHORT RemotePort,
+    PIP_ADDRESS LocalAddress,
+    USHORT LocalPort,
+    PCHAR DataBuffer,
+    UINT DataLen ) 
 /*
  * FUNCTION: Builds an UDP packet
  * ARGUMENTS:
@@ -116,52 +114,68 @@ NTSTATUS BuildUDPPacket(
  *     Status of operation
  */
 {
-  NTSTATUS Status;
-  PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
-  PIP_PACKET Packet = &SendRequest->Packet;
-
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  /* Prepare packet */
-
-  /* FIXME: Assumes IPv4 */
-  IPInitializePacket(&SendRequest->Packet, IP_ADDRESS_V4);
-  if (!Packet)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  Packet->TotalSize = sizeof(IPv4_HEADER) +
-                      sizeof(UDP_HEADER)  +
-                      SendRequest->BufferSize;
-
-  switch (SendRequest->RemoteAddress.Type) {
-  case IP_ADDRESS_V4:
-    Status = AddUDPHeaderIPv4(SendRequest, LocalAddress, LocalPort, Packet);
-    break;
-  case IP_ADDRESS_V6:
-    /* FIXME: Support IPv6 */
-    TI_DbgPrint(MIN_TRACE, ("IPv6 UDP datagrams are not supported.\n"));
-  default:
-    Status = STATUS_UNSUCCESSFUL;
-    break;
-  }
-  if (!NT_SUCCESS(Status)) {
-    TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n", Status));
-    FreeNdisPacket(Packet->NdisPacket);
-    return Status;
-  }
-
-  DISPLAY_IP_PACKET(Packet);
-
-  return STATUS_SUCCESS;
+    NTSTATUS Status;
+    
+    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    /* FIXME: Assumes IPv4 */
+    IPInitializePacket(Packet, IP_ADDRESS_V4);
+    if (!Packet)
+	return STATUS_INSUFFICIENT_RESOURCES;
+    
+    Packet->TotalSize = 
+	MaxLLHeaderSize + sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
+    
+    /* Prepare packet */
+    Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
+				       NULL,
+				       Packet->TotalSize );
+    
+    TI_DbgPrint(MID_TRACE, ("Allocated packet: %x\n", Packet->NdisPacket));
+    TI_DbgPrint(MID_TRACE, ("Local Addr : %s\n", A2S(LocalAddress)));
+    TI_DbgPrint(MID_TRACE, ("Remote Addr: %s\n", A2S(RemoteAddress)));
+    
+    switch (RemoteAddress->Type) {
+    case IP_ADDRESS_V4:
+	Status = AddUDPHeaderIPv4(RemoteAddress, RemotePort, 
+				  LocalAddress, LocalPort, Packet, DataLen);
+	break;
+    case IP_ADDRESS_V6:
+	/* FIXME: Support IPv6 */
+	TI_DbgPrint(MIN_TRACE, ("IPv6 UDP datagrams are not supported.\n"));
+    default:
+	Status = STATUS_UNSUCCESSFUL;
+	break;
+    }
+    if (!NT_SUCCESS(Status)) {
+	TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n", 
+				Status));
+	FreeNdisPacket(Packet->NdisPacket);
+	return Status;
+    }
+    
+    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n", 
+			    Packet->Header, Packet->Data, 
+			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));
+    
+    RtlCopyMemory( Packet->Data, DataBuffer, DataLen );
+    
+    TI_DbgPrint(MID_TRACE, ("Displaying packet\n"));
+    
+    DISPLAY_IP_PACKET(Packet);
+    
+    TI_DbgPrint(MID_TRACE, ("Leaving\n"));
+    
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS UDPSendDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG DataSize,
-  PULONG DataUsed ) 
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG DataSize,
+    PULONG DataUsed ) 
 /*
  * FUNCTION: Sends an UDP datagram to a remote address
  * ARGUMENTS:
@@ -173,31 +187,47 @@ NTSTATUS UDPSendDatagram(
  *     Status of operation
  */
 {
-    PDATAGRAM_SEND_REQUEST SendRequest;
-    PADDRESS_FILE AddrFile = 
-	(PADDRESS_FILE)Request->Handle.AddressHandle;
-    PCHAR BufferData;
-    UINT BufferLen;
+    IP_PACKET Packet;
+    PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
+    IP_ADDRESS RemoteAddress;
+    USHORT RemotePort;
 
-    NdisQueryBuffer( Buffer, &BufferData, &BufferLen );
+    TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
+			   AddrFile, ConnInfo, BufferData, DataSize));
+    TI_DbgPrint(MID_TRACE,("RemoteAddressTa: %x\n", RemoteAddressTa));
 
-    *DataUsed = BufferLen;
+    switch( RemoteAddressTa->Address[0].AddressType ) {
+    case TDI_ADDRESS_TYPE_IP:
+	RemoteAddress.Type = IP_ADDRESS_V4;
+	RemoteAddress.Address.IPv4Address = 
+	    RemoteAddressTa->Address[0].Address[0].in_addr;
+	RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
+	break;
+
+    default:
+	return STATUS_UNSUCCESSFUL;
+    }
     
-    BuildUDPPacket( SendRequest,
-		    (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
-		    IPv4Address,
-		    AddrFile->Port );
+    BuildUDPPacket( &Packet,
+		    &RemoteAddress,
+		    RemotePort,
+		    AddrFile->ADE->Address,
+		    AddrFile->Port,
+		    BufferData,
+		    DataSize );
 
-    return DGSendDatagram(Request,
+    return DGSendDatagram(AddrFile,
 			  ConnInfo,
-			  &SendRequest->Packet);
+			  Packet.Header,
+			  Packet.TotalSize,
+			  DataUsed);
 }
 
 
 NTSTATUS UDPReceiveDatagram(
-    PTDI_REQUEST Request,
+    PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
-    PNDIS_BUFFER Buffer,
+    PCHAR BufferData,
     ULONG ReceiveLength,
     ULONG ReceiveFlags,
     PTDI_CONNECTION_INFORMATION ReturnInfo,
@@ -218,9 +248,9 @@ NTSTATUS UDPReceiveDatagram(
  *     This is the high level interface for receiving UDP datagrams
  */
 {
-  return DGReceiveDatagram(Request,
-                           ConnInfo,
-                           Buffer,
+  return DGReceiveDatagram(AddrFile,
+			   ConnInfo,
+                           BufferData,
                            ReceiveLength,
                            ReceiveFlags,
                            ReturnInfo,

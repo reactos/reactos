@@ -754,14 +754,21 @@ NTSTATUS DispTdiReceiveDatagram(
     (PDRIVER_CANCEL)DispCancelRequest);
   if (NT_SUCCESS(Status))
     {
+	PCHAR DataBuffer;
+	UINT BufferSize;
+
+	NdisQueryBuffer( (PNDIS_BUFFER)Irp->MdlAddress,
+			 &DataBuffer,
+			 &BufferSize );
+
       Status = UDPReceiveDatagram(
-        &Request,
-        DgramInfo->ReceiveDatagramInformation,
-        (PNDIS_BUFFER)Irp->MdlAddress,
-        DgramInfo->ReceiveLength,
-        DgramInfo->ReceiveFlags,
-        DgramInfo->ReturnDatagramInformation,
-        &BytesReceived);
+	  Request.Handle.AddressHandle,
+	  DgramInfo->ReceiveDatagramInformation,
+	  DataBuffer,
+	  DgramInfo->ReceiveLength,
+	  DgramInfo->ReceiveFlags,
+	  DgramInfo->ReturnDatagramInformation,
+	  &BytesReceived);
       if (Status != STATUS_PENDING)
         {
           DispDataRequestComplete(Irp, Status, BytesReceived);
@@ -881,14 +888,28 @@ NTSTATUS DispTdiSendDatagram(
         Irp,
         (PDRIVER_CANCEL)DispCancelRequest);
     if (NT_SUCCESS(Status)) {
+	PCHAR DataBuffer;
+	UINT BufferSize;
+	
+	TI_DbgPrint(MID_TRACE,("About to query buffer %x\n", Irp->MdlAddress));
 
+	NdisQueryBuffer( (PNDIS_BUFFER)Irp->MdlAddress,
+			 &DataBuffer,
+			 &BufferSize );
+	
         /* FIXME: DgramInfo->SendDatagramInformation->RemoteAddress 
            must be of type PTDI_ADDRESS_IP */
-
+	TI_DbgPrint(MID_TRACE,
+		    ("About to call send routine %x\n", 
+		     (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)));
+	
         Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
-            &Request, DgramInfo->SendDatagramInformation,
-            (PNDIS_BUFFER)Irp->MdlAddress, DgramInfo->SendLength, 
+            Request.Handle.AddressHandle, 
+	    DgramInfo->SendDatagramInformation,
+	    DataBuffer,
+	    BufferSize,
 	    &Irp->IoStatus.Information);
+
         if (Status != STATUS_PENDING) {
             DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
             /* Return STATUS_PENDING because DispPrepareIrpForCancel
@@ -903,8 +924,7 @@ NTSTATUS DispTdiSendDatagram(
 }
 
 
-NTSTATUS DispTdiSetEventHandler(
-  PIRP Irp)
+NTSTATUS DispTdiSetEventHandler(PIRP Irp)
 /*
  * FUNCTION: TDI_SET_EVENT_HANDER handler
  * ARGUMENTS:

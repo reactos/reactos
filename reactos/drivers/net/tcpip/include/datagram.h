@@ -33,18 +33,20 @@ NTSTATUS DGTransmit(
   PDATAGRAM_SEND_REQUEST SendRequest);
 
 NTSTATUS DGSendDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PIP_PACKET Packet);
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG DataSize,
+    PULONG DataUsed );
 
 NTSTATUS DGReceiveDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG ReceiveLength,
-  ULONG ReceiveFlags,
-  PTDI_CONNECTION_INFORMATION ReturnInfo,
-  PULONG BytesReceived);
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR Buffer,
+    ULONG ReceiveLength,
+    ULONG ReceiveFlags,
+    PTDI_CONNECTION_INFORMATION ReturnInfo,
+    PULONG BytesReceived);
 
 NTSTATUS DGStartup(
   VOID);

@@ -39,20 +39,20 @@ VOID UDPSend(
   PDATAGRAM_SEND_REQUEST SendRequest);
 
 NTSTATUS UDPSendDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG DataSize,
-  PULONG DataUsed);
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG DataSize,
+    PULONG DataUsed );
 
 NTSTATUS UDPReceiveDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG ReceiveLength,
-  ULONG ReceiveFlags,
-  PTDI_CONNECTION_INFORMATION ReturnInfo,
-  PULONG BytesReceived);
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR Buffer,
+    ULONG ReceiveLength,
+    ULONG ReceiveFlags,
+    PTDI_CONNECTION_INFORMATION ReturnInfo,
+    PULONG BytesReceived);
 
 VOID UDPReceive(
   PNET_TABLE_ENTRY NTE,
