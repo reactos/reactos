@@ -1,4 +1,4 @@
-/* $Id: encode.c,v 1.1 2003/04/02 00:01:21 hyperion Exp $
+/* $Id: encode.c,v 1.2 2003/07/30 18:35:03 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,11 +18,12 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID NTAPI RtlRunDecodeUnicodeString
-(
- IN UCHAR hash,
- IN OUT PUNICODE_STRING uString
-)
+VOID
+NTAPI
+RtlRunDecodeUnicodeString(
+	IN UCHAR hash,
+	IN OUT PUNICODE_STRING uString
+	)
 {
    UCHAR *ptr;
    WORD   i;
@@ -39,11 +40,12 @@ VOID NTAPI RtlRunDecodeUnicodeString
    }
 }
 
-VOID NTAPI RtlRunEncodeUnicodeString
-(
- IN OUT PUCHAR hash,
- IN OUT PUNICODE_STRING uString
-)
+VOID
+NTAPI
+RtlRunEncodeUnicodeString(
+	IN OUT PUCHAR hash,
+	IN OUT PUNICODE_STRING uString
+	)
 {
    NTSTATUS ntS;
    UCHAR *ptr;
@@ -52,7 +54,7 @@ VOID NTAPI RtlRunEncodeUnicodeString
 
    ptr = (UCHAR *) uString->Buffer;   
    if (*hash == 0) {
-      ntS = NtQuerySystemTime(&CurrentTime);
+      ntS = NtQuerySystemTime((PLARGE_INTEGER)&CurrentTime);
       if (NT_SUCCESS(ntS)) {
          for (i=1; i<sizeof(TIME) && (*hash == 0); i++)
             *hash |= *(PUCHAR) (((PUCHAR) &CurrentTime)+i);
