@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.126 2004/06/23 21:03:43 ion Exp $
+# $Id: Makefile,v 1.127 2004/06/23 21:43:45 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -222,7 +222,8 @@ OBJECTS_IO = \
 	io/vpb.o \
 	io/wdm.o \
 	io/xhaldisp.o \
-	io/xhaldrv.o
+        io/xhaldrv.o \
+        io/wmi.o
 
 # Object Manager (Ob)
 OBJECTS_OB = \
