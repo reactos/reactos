@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.33 2004/05/02 04:40:24 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.34 2004/05/02 19:34:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <ntos.h>
 #include <ddk/halfuncs.h>
 #include <internal/ex.h>
+#include <internal/io.h>
 #include <internal/ldr.h>
 #include <internal/safe.h>
 #include <internal/ps.h>
@@ -361,14 +362,14 @@ QSI_DEF(SystemPerformanceInformation)
 	
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000;
 
-	Spi->ReadTransferCount.QuadPart = 0; /* FIXME */
-	Spi->WriteTransferCount.QuadPart = 0; /* FIXME */
-	Spi->OtherTransferCount.QuadPart = 0; /* FIXME */
-	Spi->ReadOperationCount = 0; /* FIXME */
-	Spi->WriteOperationCount = 0; /* FIXME */
-	Spi->OtherOperationCount = 0; /* FIXME */
+	Spi->ReadTransferCount.QuadPart = IoReadTransferCount;
+	Spi->WriteTransferCount.QuadPart = IoWriteTransferCount;
+	Spi->OtherTransferCount.QuadPart = IoOtherTransferCount;
+	Spi->ReadOperationCount = IoReadOperationCount;
+	Spi->WriteOperationCount = IoWriteOperationCount;
+	Spi->OtherOperationCount = IoOtherOperationCount;
 
-	Spi->AvailablePages = MiNrAvailablePages; 
+	Spi->AvailablePages = MiNrAvailablePages;
 	Spi->TotalCommittedPages = MiUsedSwapPages;
 	Spi->TotalCommitLimit = MiFreeSwapPages + MiUsedSwapPages; /* FIXME */
 

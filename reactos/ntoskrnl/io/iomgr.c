@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.46 2004/03/27 19:41:32 navaraf Exp $
+/* $Id: iomgr.c,v 1.47 2004/05/02 19:33:50 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -36,6 +36,8 @@ ULONG        EXPORTED IoReadOperationCount = 0;
 ULONGLONG    EXPORTED IoReadTransferCount = 0;
 ULONG        EXPORTED IoWriteOperationCount = 0;
 ULONGLONG    EXPORTED IoWriteTransferCount = 0;
+ULONG                 IoOtherOperationCount = 0;
+ULONGLONG             IoOtherTransferCount = 0;
 KSPIN_LOCK   EXPORTED IoStatisticsLock = 0;
 
 static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
