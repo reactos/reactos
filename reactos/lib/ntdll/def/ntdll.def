@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.71 2001/05/24 11:28:18 ekohl Exp $
+; $Id: ntdll.def,v 1.72 2001/05/26 16:49:09 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -277,13 +277,13 @@ RtlAddAccessAllowedAce@16
 RtlAddAccessDeniedAce@16
 RtlAddAce@20
 ;RtlAddActionToRXact
-;RtlAtomToAtomTable
+RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
 ;RtlAdjustPrivilege
 RtlAllocateAndInitializeSid@44
-;RtlAllocateHandle
+RtlAllocateHandle@8
 RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize@4
@@ -327,7 +327,7 @@ RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlCreateAcl@12
 ;RtlCreateAndSetSD
-;RtlCreateAtomTable
+RtlCreateAtomTable@8
 RtlCreateEnvironment@8
 RtlCreateHeap@24
 RtlCreateProcessParameters@40
@@ -348,16 +348,16 @@ RtlDeNormalizeProcessParams@4
 ;RtlDecompressFragment
 ;RtlDelete
 RtlDeleteAce@8
-;RtlDeleteAtomFromAtomTable
+RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue@12
 RtlDeleteResource@4
 ;RtlDeleteSecurityObject
-;RtlDestroyAtomTable
+RtlDestroyAtomTable@4
 RtlDestroyEnvironment@4
-;RtlDestroyHandleTable
+RtlDestroyHandleTable@4
 RtlDestroyHeap@4
 RtlDestroyProcessParameters@4
 ;RtlDestroyQueryDebugBuffer
@@ -367,7 +367,7 @@ RtlDosPathNameToNtPathName_U@16
 RtlDosSearchPath_U@24
 RtlDowncaseUnicodeString@12
 RtlDumpResource@4
-;RtlEmptyAtomTable
+RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
@@ -403,7 +403,7 @@ RtlFirstFreeAce@8
 RtlFormatCurrentUserKeyPath@4
 ;RtlFormatMessage@36
 RtlFreeAnsiString@4
-;RtlFreeHandle
+RtlFreeHandle@8
 RtlFreeHeap@12
 RtlFreeOemString@4
 RtlFreeSid@4
@@ -444,7 +444,7 @@ RtlInitializeBitMap@12
 RtlInitializeContext@20
 RtlInitializeCriticalSection@4
 ;RtlInitializeGenericTable
-;RtlInitializeHandleTable
+RtlInitializeHandleTable@12
 ;RtlInitializeRXact
 RtlInitializeResource@4
 RtlInitializeSid@12
@@ -455,8 +455,8 @@ RtlIsDosDeviceName_U@4
 ;RtlIsGenericTableEmpty
 RtlIsNameLegalDOS8Dot3@12
 ;RtlIsTextUnicode
-;RtlIsValidHandle
-;RtlIsValidIndexHandle
+RtlIsValidHandle@8
+RtlIsValidIndexHandle@12
 RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide@20
@@ -471,7 +471,7 @@ RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
 RtlLocalTimeToSystemTime@8
 RtlLockHeap@4
-;RtlLookupAtomInAtomTable
+RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMakeSelfRelativeSD@12
 RtlMapGenericMask@8
@@ -492,12 +492,12 @@ RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 ;RtlOpenCurrentUser
 ;RtlPcToFileHeader
-;RtlPinAtomInAtomTable
+RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
 ;RtlPropertySetNameToGuid
 ;RtlProtectHeap
-;RtlQueryAtomInAtomTable
+RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U@12
 RtlQueryInformationAcl@16
 ;RtlQueryProcessBackTraceInformation

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.49 2001/05/07 22:03:26 chorns Exp $
+/* $Id: rtl.h,v 1.50 2001/05/26 16:48:36 ekohl Exp $
  * 
  */
 
@@ -81,8 +81,10 @@ typedef USHORT RTL_ATOM, *PRTL_ATOM;
 
 typedef struct _RTL_ATOM_TABLE
 {
-	ULONG Dummy;
-
+	ULONG TableSize;
+	PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
+	PVOID HandleTable;
+	LIST_ENTRY Slot[0];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 struct _LB_RANGE
@@ -106,6 +108,21 @@ typedef struct _RTL_NLS_DATA
 	ULONG			unknown;
 	PCHAR			DbcsTags;
 } RTL_NLS_DATA, *PRTL_NLS_DATA;
+
+
+typedef struct _RTL_GENERIC_TABLE
+{
+   PVOID RootElement;
+   ULONG Unknown2;
+   ULONG Unknown3;
+   ULONG Unknown4;
+   ULONG Unknown5;
+   ULONG ElementCount;
+   PVOID CompareRoutine;
+   PVOID AllocateRoutine;
+   PVOID FreeRoutine;
+   ULONG UserParameter;
+} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
 
 
 /*
@@ -818,7 +835,7 @@ NTSTATUS
 STDCALL
 RtlEmptyAtomTable (
 	IN	PRTL_ATOM_TABLE	AtomTable,
-		ULONG		Unknown2
+	IN	BOOLEAN		DeletePinned
 	);
 
 LARGE_INTEGER
@@ -1074,6 +1091,25 @@ RtlInitializeContext (
 	IN OUT	PINITIAL_TEB		InitialTeb
 	);
 
+VOID
+STDCALL
+RtlInitializeGenericTable (
+	IN OUT	PRTL_GENERIC_TABLE	Table,
+	IN	PVOID			CompareRoutine,
+	IN	PVOID			AllocateRoutine,
+	IN	PVOID			FreeRoutine,
+	IN	ULONG			UserParameter
+	);
+
+PVOID
+STDCALL
+RtlInsertElementGenericTable (
+	IN OUT	PRTL_GENERIC_TABLE	Table,
+	IN	PVOID			Element,
+	IN	ULONG			ElementSize,
+	IN	ULONG			Unknown4
+	);
+
 NTSTATUS
 STDCALL
 RtlIntegerToChar (
@@ -1089,6 +1125,12 @@ RtlIntegerToUnicodeString (
 	IN	ULONG		Value,
 	IN	ULONG		Base,
 	IN OUT	PUNICODE_STRING	String
+	);
+
+BOOLEAN
+STDCALL
+RtlIsGenericTableEmpty (
+	IN	PRTL_GENERIC_TABLE	Table
 	);
 
 BOOLEAN
@@ -1297,7 +1339,7 @@ NTSTATUS
 STDCALL
 RtlLookupAtomInAtomTable (
 	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	PUNICODE_STRING	AtomName,
+	IN	PWSTR		AtomName,
 	OUT	PRTL_ATOM	Atom
 	);
 
@@ -1338,6 +1380,12 @@ int
 STDCALL
 RtlNtStatusToPsxErrno (
 	NTSTATUS	StatusCode
+	);
+
+ULONG
+STDCALL
+RtlNumberGenericTableElements (
+	IN	PRTL_GENERIC_TABLE	Table
 	);
 
 ULONG
@@ -1386,7 +1434,7 @@ RtlOpenCurrentUser (
 NTSTATUS STDCALL
 RtlPinAtomInAtomTable (
 	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	PRTL_ATOM	Atom
+	IN	RTL_ATOM	Atom
 	);
 
 BOOLEAN
@@ -1409,11 +1457,11 @@ NTSTATUS
 STDCALL
 RtlQueryAtomInAtomTable (
 	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	PRTL_ATOM	Atom,
-	IN	ULONG		Unknown3,
-	IN	ULONG		Unknown4,
-	IN OUT	PVOID		Buffer,
-	IN OUT	PULONG		ReturnLength
+	IN	RTL_ATOM	Atom,
+	IN OUT	PULONG		RefCount OPTIONAL,
+	IN OUT	PULONG		PinCount OPTIONAL,
+	IN OUT	PWSTR		AtomName OPTIONAL,
+	IN OUT	PULONG		NameLength OPTIONAL
 	);
 
 NTSTATUS

@@ -42,7 +42,7 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 #INPUT_DRIVERS = keyboard
 INPUT_DRIVERS = keyboard mouclass psaux
 
-#FS_DRIVERS = vfat minix ms np ext2 template
+#FS_DRIVERS = vfat minix ext2 template
 FS_DRIVERS = vfat ms np
 
 #NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
@@ -58,7 +58,8 @@ NET_DEVICE_DRIVERS = ne2000
 SYS_APPS = shell winlogon services
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest regtest alive mstest objdir
+       pteb consume dump_shared_data vmtest regtest alive mstest nptest \
+       objdir atomtest
 
 #NET_APPS = ping roshttpd
 NET_APPS = ping
@@ -268,6 +269,9 @@ $(FS_DRIVERS:%=%_dist): %_dist:
 .PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_install) \
         $(FS_DRIVERS:%=%_dist)
 
+#
+# Network driver rules
+#
 $(NET_DRIVERS): %:
 	make -C services/net/$*
 

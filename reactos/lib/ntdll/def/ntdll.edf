@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.60 2001/05/24 11:28:18 ekohl Exp $
+; $Id: ntdll.edf,v 1.61 2001/05/26 16:49:09 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -277,13 +277,13 @@ RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
 RtlAddAccessDeniedAce=RtlAddAccessDeniedAce@16
 RtlAddAce=RtlAddAce@20
 ;RtlAddActionToRXact
-;RtlAtomToAtomTable
+RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce=RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
 ;RtlAdjustPrivilege
 RtlAllocateAndInitializeSid=RtlAllocateAndInitializeSid@44
-;RtlAllocateHandle
+RtlAllocateHandle=RtlAllocateHandle@8
 RtlAllocateHeap=RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
@@ -327,7 +327,7 @@ RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateAcl=RtlCreateAcl@12
 ;RtlCreateAndSetSD
-;RtlCreateAtomTable
+RtlCreateAtomTable=RtlCreateAtomTable@8
 RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
 RtlCreateProcessParameters=RtlCreateProcessParameters@40
@@ -348,16 +348,16 @@ RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
 ;RtlDecompressFragment
 ;RtlDelete
 RtlDeleteAce=RtlDeleteAce@8
-;RtlDeleteAtomFromAtomTable
+RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 RtlDeleteResource=RtlDeleteResource@4
 ;RtlDeleteSecurityObject
-;RtlDestroyAtomTable
+RtlDestroyAtomTable=RtlDestroyAtomTable@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
-;RtlDestroyHandleTable
+RtlDestroyHandleTable=RtlDestroyHandleTable@4
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
 ;RtlDestroyQueryDebugBuffer
@@ -367,7 +367,7 @@ RtlDosPathNameToNtPathName_U=RtlDosPathNameToNtPathName_U@16
 RtlDosSearchPath_U=RtlDosSearchPath_U@24
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlDumpResource=RtlDumpResource@4
-;RtlEmptyAtomTable
+RtlEmptyAtomTable=RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
@@ -403,7 +403,7 @@ RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 ;RtlFormatMessage
 RtlFreeAnsiString=RtlFreeAnsiString@4
-;RtlFreeHandle
+RtlFreeHandle=RtlFreeHandle@8
 RtlFreeHeap=RtlFreeHeap@12
 RtlFreeSid=RtlFreeSid@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
@@ -443,7 +443,7 @@ RtlInitializeBitMap=RtlInitializeBitMap@12
 RtlInitializeContext=RtlInitializeContext@20
 RtlInitializeCriticalSection=RtlInitializeCriticalSection@4
 ;RtlInitializeGenericTable
-;RtlInitializeHandleTable
+RtlInitializeHandleTable=RtlInitializeHandleTable@12
 ;RtlInitializeRXact
 RtlInitializeResource=RtlInitializeResource@4
 RtlInitializeSid=RtlInitializeSid@12
@@ -454,8 +454,8 @@ RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
 ;RtlIsGenericTableEmpty
 RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
 ;RtlIsTextUnicode
-;RtlIsValidHandle
-;RtlIsValidIndexHandle
+RtlIsValidHandle=RtlIsValidHandle@8
+RtlIsValidIndexHandle=RtlIsValidIndexHandle@12
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide=RtlLargeIntegerDivide@20
@@ -470,7 +470,7 @@ RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLengthSid=RtlLengthSid@4
 RtlLocalTimeToSystemTime=RtlLocalTimeToSystemTime@8
 RtlLockHeap=RtlLockHeap@4
-;RtlLookupAtomInAtomTable
+RtlLookupAtomInAtomTable=RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMakeSelfRelativeSD=RtlMakeSelfRelativeSD@12
 RtlMapGenericMask=RtlMapGenericMask@8
@@ -491,12 +491,12 @@ RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN=RtlOemToUnicodeN@20
 ;RtlOpenCurrentUser
 ;RtlPcToFileHeader
-;RtlPinAtomInAtomTable
+RtlPinAtomInAtomTable=RtlPinAtomInAtomTable@8
 RtlPrefixString=RtlPrefixString@12
 RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 ;RtlPropertySetNameToGuid
 ;RtlProtectHeap
-;RtlQueryAtomInAtomTable
+RtlQueryAtomInAtomTable=RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlQueryInformationAcl=RtlQueryInformationAcl@16
 ;RtlQueryProcessBackTraceInformation

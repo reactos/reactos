@@ -21,6 +21,7 @@ copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%
 copy services\fs\vfat\vfatfs.sys %ROS_INSTALL%
 copy services\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
+copy services\fs\np\npfs.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\acpi\acpi.sys %ROS_INSTALL%
 copy services\bus\isapnp\isapnp.sys %ROS_INSTALL%
 copy services\dd\ide\ide.sys %ROS_INSTALL%
@@ -63,5 +64,8 @@ copy apps\vmtest\vmtest.exe %ROS_INSTALL%\bin
 copy apps\gditest\gditest.exe %ROS_INSTALL%\bin
 copy apps\mstest\msserver.exe %ROS_INSTALL%\bin
 copy apps\mstest\msclient.exe %ROS_INSTALL%\bin
+copy apps\nptest\npserver.exe %ROS_INSTALL%\bin
+copy apps\nptest\npclient.exe %ROS_INSTALL%\bin
+copy apps\atomtest\atomtest.exe %ROS_INSTALL%\bin
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
