@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.2 2003/06/22 19:18:17 sedwards Exp $
+/* $Id: regcontrol.h,v 1.3 2003/06/25 23:59:43 sedwards Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -10,11 +10,6 @@
  */
 #ifndef ROS_REGCONTROL_H
 #define ROS_REGCONTROL_H
-
-/* Missing from Winuser.h */
-#ifndef MAKEINTATOMA
-#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
-#endif
 
 /* Built-in class names (see _Undocumented_Windows_ p.418) */
 #define ICONTITLE_CLASS_ATOM MAKEINTATOMA(32772)  /* IconTitle */

@@ -30,10 +30,7 @@
 
 #include "windows.h"
 #include "user32/regcontrol.h"
-
-#ifndef WM_ISACTIVEICON /* Winuser.h */
-#define WM_ISACTIVEICON         0x0035
-#endif /* winuser.h */
+#include "controls.h"
 
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
