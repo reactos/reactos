@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.31 2003/10/14 18:18:27 navaraf Exp $
+/* $Id: reg.c,v 1.32 2003/11/16 10:41:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@
 #include <windows.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/
