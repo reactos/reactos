@@ -83,6 +83,18 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
     }
 }
 
+VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source, 
+		       PIP_ADDRESS Netmask ) {
+    if( Netmask->Type == IP_ADDRESS_V4 ) {
+	Network->Address.IPv4Address = 
+	    Source->Address.IPv4Address & Netmask->Address.IPv4Address;
+    } else {
+	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n", 
+				     Netmask->Type));
+	*Network = *Source;
+    }    
+}
+
 VOID IPAddressFree(
     PVOID Object)
 /*

@@ -274,30 +274,61 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 }
 
 
-VOID RouterRemoveRoute(
-    PFIB_ENTRY FIBE)
+NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 /*
  * FUNCTION: Removes a route from the Forward Information Base (FIB)
  * ARGUMENTS:
- *     FIBE = Pointer to FIB entry describing route
+ *     Target: The machine or network targeted by the route
+ *     Router: The router used to pass the packet to the destination
+ *
+ * Searches the FIB and removes a route matching the indicated parameters.
  */
 {
     KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+    BOOLEAN Found = FALSE;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. FIBE (0x%X).\n", FIBE));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called\n"));
     
-    TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(&FIBE->NetworkAddress)));
-
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
-    DestroyFIBE(FIBE);
+
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+	    Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+
+        NCE   = Current->Router;
+
+	if( AddrIsEqual( &Current->NetworkAddress, Target ) &&
+	    AddrIsEqual( &NCE->Address, Router ) ) {
+	    Found = TRUE;
+	    break;
+	}
+
+	Current = NULL;
+        CurrentEntry = NextEntry;
+    }
+
+    if( Found ) {
+	TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
+	DestroyFIBE( Current );
+    }
+
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
+    
+    TI_DbgPrint(DEBUG_ROUTER, ("Leaving\n"));
+
+    return Found ? STATUS_NO_SUCH_FILE : STATUS_SUCCESS;
 }
 
 
 PFIB_ENTRY RouterCreateRoute(
-    IP_ADDRESS NetworkAddress,
-    IP_ADDRESS Netmask,
-    IP_ADDRESS RouterAddress,
+    PIP_ADDRESS NetworkAddress,
+    PIP_ADDRESS Netmask,
+    PIP_ADDRESS RouterAddress,
     PIP_INTERFACE Interface,
     UINT Metric)
 /*
@@ -319,7 +350,7 @@ PFIB_ENTRY RouterCreateRoute(
 
     /* The NCE references RouterAddress. The NCE is referenced for us */
     NCE = NBAddNeighbor(Interface,
-                        &RouterAddress,
+                        RouterAddress,
                         NULL,
                         Interface->AddressLength,
                         NUD_PROBE);
@@ -328,7 +359,7 @@ PFIB_ENTRY RouterCreateRoute(
         return NULL;
     }
 
-    FIBE = RouterAddRoute(&NetworkAddress, &Netmask, NCE, 1);
+    FIBE = RouterAddRoute(NetworkAddress, Netmask, NCE, 1);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
@@ -352,13 +383,6 @@ NTSTATUS RouterStartup(
     InitializeListHead(&FIBListHead);
     TcpipInitializeSpinLock(&FIBLock);
 
-#if 0
-    /* TEST: Create a test route */
-    /* Network is 10.0.0.0  */
-    /* Netmask is 255.0.0.0 */
-    /* Router is 10.0.0.1   */
-    RouterCreateRouteIPv4(0x0000000A, 0x000000FF, 0x0100000A, NTE?, 1);
-#endif
     return STATUS_SUCCESS;
 }
 

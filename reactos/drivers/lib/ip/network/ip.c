@@ -237,6 +237,7 @@ BOOLEAN IPRegisterInterface(
  */
 {
     KIRQL OldIrql;
+    IP_ADDRESS NetworkAddress;
     PROUTE_CACHE_NODE RCN;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
@@ -254,12 +255,13 @@ BOOLEAN IPRegisterInterface(
 	return FALSE;
     }
     
-    /* NCE is already referenced */
-    if (!RouterAddRoute(&IF->Unicast, &IF->Netmask, NCE, 1)) {
+    AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
+
+    if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
     }
     
-    RCN = RouteAddRouteToDestination(&IF->Unicast, IF, NCE);
+    RCN = RouteAddRouteToDestination(&NetworkAddress, IF, NCE);
     if (!RCN) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create RCN.\n"));
 	TcpipReleaseSpinLock(&IF->Lock, OldIrql);

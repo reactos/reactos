@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+#define IP_ROUTE_TYPE_ADD 3
+#define IP_ROUTE_TYPE_DEL 2
+
 TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer, 
 				     PUINT BufferSize ) {
     
@@ -85,47 +88,42 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     
     while( RtCurrent < RouteEntries + RtCount ) {
 	/* Copy Desitnation */
-	if( RCacheCur->Router ) {
-	    TI_DbgPrint(MAX_TRACE, ("%d: NA %08x NM %08x GW %08x MT %x\n",
-				    RtCurrent - RouteEntries,
-				    &RCacheCur->NetworkAddress.Address,
-				    &RCacheCur->Netmask.Address,
-				    RCacheCur->Router->Address.Address,
-				    RCacheCur->Metric));
-	    
-	    RtlCopyMemory( &RtCurrent->Dest, 
-			   &RCacheCur->NetworkAddress.Address,
-			   sizeof(RtCurrent->Dest) );
-	    RtlCopyMemory( &RtCurrent->Mask,
-			   &RCacheCur->Netmask.Address,
-			   sizeof(RtCurrent->Mask) );
-	    /* Currently, this address is stuffed into the pointer.
-	     * That probably is not intended. */
+	RtlCopyMemory( &RtCurrent->Dest, 
+		       &RCacheCur->NetworkAddress.Address,
+		       sizeof(RtCurrent->Dest) );
+	RtlCopyMemory( &RtCurrent->Mask,
+		       &RCacheCur->Netmask.Address,
+		       sizeof(RtCurrent->Mask) );
+
+	if( RCacheCur->Router )
 	    RtlCopyMemory( &RtCurrent->Gw,
 			   &RCacheCur->Router->Address.Address,
 			   sizeof(RtCurrent->Gw) );
-	    RtCurrent->Metric1 = RCacheCur->Metric;
-	    RtCurrent->Type = 2 /* PF_INET */;
-	    
-	    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
-	    for( RtCurrent->Index = EntityCount; 
-		 RtCurrent->Index > 0 &&
-		     RCacheCur->Router->Interface != 
-		     EntityList[RtCurrent->Index - 1].context;
-		 RtCurrent->Index-- );
-
-	    RtCurrent->Index = EntityList[RtCurrent->Index].tei_instance;
-	    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
-	} else {
-	    TI_DbgPrint(MAX_TRACE, ("%d: BAD: NA %08x NM %08x GW %08x MT %d\n",
-				    RtCurrent - RouteEntries,
-				    RCacheCur->NetworkAddress,
-				    RCacheCur->Netmask,
-				    RCacheCur->Router,
-				    RCacheCur->Router ? 
-				    &RCacheCur->Router->Address : 0,
-				    RCacheCur->Metric));
-	}
+	else
+	    RtlZeroMemory( &RtCurrent->Gw, sizeof(RtCurrent->Gw) );
+			   
+	RtCurrent->Metric1 = RCacheCur->Metric;
+	RtCurrent->Type = TDI_ADDRESS_TYPE_IP;
+	
+	TI_DbgPrint
+	    (MAX_TRACE, 
+	     ("%d: NA %08x NM %08x GW %08x MT %x\n",
+	      RtCurrent - RouteEntries,
+	      RtCurrent->Dest, 
+	      RtCurrent->Mask,
+	      RtCurrent->Gw,
+	      RtCurrent->Metric1 ));
+	     
+	TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
+	for( RtCurrent->Index = EntityCount; 
+	     RtCurrent->Index > 0 &&
+		 RCacheCur->Router->Interface != 
+		 EntityList[RtCurrent->Index - 1].context;
+	     RtCurrent->Index-- );
+	
+	RtCurrent->Index = EntityList[RtCurrent->Index].tei_instance;
+	TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+	
 	RtCurrent++; RCacheCur++;
     }
 
@@ -143,7 +141,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
     IPSNMP_INFO SnmpInfo;
     UINT IfCount = CountInterfaces();
-    UINT RouteCount = CountRouteNodes( NULL );
+    UINT RouteCount = CountFIBs( NULL );
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -214,5 +212,43 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 				     TDIEntityID *id,
 				     PCHAR Buffer,
 				     UINT BufferSize ) {
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status = TDI_INVALID_REQUEST;
+    IP_ADDRESS Address;
+    IP_ADDRESS Netmask;
+    IP_ADDRESS Router;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+
+    TI_DbgPrint(MID_TRACE,("Called\n"));
+
+    OskitDumpBuffer( Buffer, BufferSize );
+
+    if( InfoClass == INFO_CLASS_PROTOCOL &&
+	InfoType == INFO_TYPE_PROVIDER &&
+	InfoId == IP_MIB_ROUTETABLE_ENTRY_ID &&
+	id->tei_entity == CL_NL_ENTITY ) { /* Add or delete a route */
+	PIPROUTE_ENTRY Route = (PIPROUTE_ENTRY)Buffer;
+	AddrInitIPv4( &Address, Route->Dest );
+	AddrInitIPv4( &Netmask, Route->Mask );
+	AddrInitIPv4( &Router,  Route->Gw );
+
+	if( Route->Type == IP_ROUTE_TYPE_ADD ) { /* Add the route */
+	    TI_DbgPrint(MID_TRACE,("Adding route (%s)\n", A2S(&Address)));
+	    /* Find the existing route this belongs to */
+	    NCE = RouterGetRoute( &Router );
+	    /* Really add the route */
+	    if( NCE && 
+		RouterCreateRoute( &Address, &Netmask, &Router, 
+				   NCE->Interface, Route->Metric1 ) ) 
+		Status = STATUS_SUCCESS;
+	    else
+		Status = STATUS_UNSUCCESSFUL;
+	} else if( Route->Type == IP_ROUTE_TYPE_DEL ) {
+	    TI_DbgPrint(MID_TRACE,("Removing route (%s)\n", A2S(&Address)));
+	    Status = RouterRemoveRoute( &Address, &Router );
+	} else Status = TDI_INVALID_REQUEST;
+    }
+
+    TI_DbgPrint(MID_TRACE,("Returning %x\n", Status));    
+
+    return Status;
 }

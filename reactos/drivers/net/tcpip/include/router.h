@@ -28,13 +28,12 @@ PFIB_ENTRY RouterAddRoute(
 
 PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination);
 
-VOID RouterRemoveRoute(
-    PFIB_ENTRY FIBE);
+NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router);
 
 PFIB_ENTRY RouterCreateRoute(
-    IP_ADDRESS NetworkAddress,
-    IP_ADDRESS Netmask,
-    IP_ADDRESS RouterAddress,
+    PIP_ADDRESS NetworkAddress,
+    PIP_ADDRESS Netmask,
+    PIP_ADDRESS RouterAddress,
     PIP_INTERFACE Interface,
     UINT Metric);
 

@@ -210,24 +210,18 @@ TDI_STATUS InfoTdiSetInformationEx
 	case INFO_TYPE_PROVIDER:
 	    switch( ID->toi_id ) {
 	    case IP_MIB_ROUTETABLE_ENTRY_ID:
-		if( ID->toi_entity.tei_entity == CL_NL_ENTITY &&
-		    ID->toi_entity.tei_instance == TL_INSTANCE &&
-		    BufferSize >= sizeof(IPROUTE_ENTRY) ) {
-		    /* Add route -- buffer is an IPRouteEntry */
-		    PIPROUTE_ENTRY ire = (PIPROUTE_ENTRY)Buffer;
-		    RouteFriendlyAddRoute( ire );
-		} else {
-		    return TDI_INVALID_PARAMETER; 
-		    /* In my experience, we are being over
-		       protective compared to windows */
-		}
-		break;
+		return InfoNetworkLayerTdiSetEx
+		    ( ID->toi_class,
+		      ID->toi_type,
+		      ID->toi_id,
+		      NULL,
+		      &ID->toi_entity,
+		      Buffer,
+		      BufferSize );
 	    }
-	    break;
 	}
 	break;
     }
     
     return TDI_INVALID_PARAMETER;
 }
-
