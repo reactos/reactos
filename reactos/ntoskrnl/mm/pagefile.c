@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.17 2002/02/08 02:57:07 chorns Exp $
+/* $Id: pagefile.c,v 1.18 2002/03/18 16:15:08 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -42,8 +42,8 @@ typedef struct _PAGINGFILE
 {
    LIST_ENTRY PagingFileListEntry;
    PFILE_OBJECT FileObject;
-   ULONG MaximumSize;
-   ULONG CurrentSize;
+   LARGE_INTEGER MaximumSize;
+   LARGE_INTEGER CurrentSize;
    ULONG FreePages;
    ULONG UsedPages;
    PULONG AllocMap;
@@ -60,6 +60,9 @@ static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
 
 /* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
+
+/* Number of paging files */
+static ULONG MiPagingFileCount;
 
 /* Number of pages that are available for swapping */
 static ULONG MiFreeSwapPages;
@@ -192,6 +195,7 @@ MmInitPagingFile(VOID)
      {
 	PagingFileList[i] = NULL;
      }
+   MiPagingFileCount = 0;
 }
 
 BOOLEAN
@@ -359,11 +363,11 @@ NTSTATUS STDCALL MmDumpToPagingFile(PCONTEXT Context,
 }
 #endif
 
-NTSTATUS STDCALL 
-NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
-		   IN	ULONG		MinimumSize,
-		   IN	ULONG		MaximumSize,
-		   OUT	PULONG		ActualSize)
+NTSTATUS STDCALL
+NtCreatePagingFile(IN PUNICODE_STRING FileName,
+		   IN PLARGE_INTEGER InitialSize,
+		   IN PLARGE_INTEGER MaximumSize,
+		   IN ULONG Reserved)
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -375,13 +379,17 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
    ULONG AllocMapSize;
    ULONG i;
    PVOID Buffer;
-   LARGE_INTEGER ByteOffset;
 
-   DPRINT("NtCreatePagingFile(PageFileName %wZ, MinimumSize %d)\n",
-	   PageFileName, MinimumSize);
+   DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
+	  FileName, InitialSize->QuadPart);
+   
+   if (MiPagingFileCount >= MAX_PAGING_FILES)
+     {
+       return(STATUS_TOO_MANY_PAGING_FILES);
+     }
    
    InitializeObjectAttributes(&ObjectAttributes,
-			      PageFileName,
+			      FileName,
 			      0,
 			      NULL,
 			      NULL);
@@ -407,7 +415,6 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 
    Buffer = ExAllocatePool(NonPagedPool, 4096);
    memset(Buffer, 0, 4096);
-   ByteOffset.QuadPart = MinimumSize * 4096;
    Status = NtWriteFile(FileHandle,
 			NULL,
 			NULL,
@@ -415,7 +422,7 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 			&IoStatus,
 			Buffer,
 			4096,
-			&ByteOffset,
+			InitialSize,
 			NULL);
    if (!NT_SUCCESS(Status))
      {
@@ -446,12 +453,13 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
      }
    
    PagingFile->FileObject = FileObject;
-   PagingFile->MaximumSize = PagingFile->CurrentSize = MinimumSize;
-   PagingFile->FreePages = MinimumSize;
+   PagingFile->MaximumSize.QuadPart = MaximumSize->QuadPart;
+   PagingFile->CurrentSize.QuadPart = InitialSize->QuadPart;
+   PagingFile->FreePages = InitialSize->QuadPart / PAGESIZE;
    PagingFile->UsedPages = 0;
    KeInitializeSpinLock(&PagingFile->AllocMapLock);
    
-   AllocMapSize = (MinimumSize / 32) + 1;
+   AllocMapSize = (PagingFile->FreePages / 32) + 1;
    PagingFile->AllocMap = ExAllocatePool(NonPagedPool, 
 					 AllocMapSize * sizeof(ULONG));
    PagingFile->AllocMapSize = AllocMapSize;
@@ -472,7 +480,8 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 	     break;
 	  }
      }
-   MiFreeSwapPages = MiFreeSwapPages + MinimumSize;
+   MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
+   MiPagingFileCount++;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
    
    return(STATUS_SUCCESS);

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.49 2002/02/06 01:22:32 ekohl Exp $
+/* $Id: zw.h,v 1.50 2002/03/18 16:14:45 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -728,29 +728,28 @@ ZwCreateMutant(
 /*
  * FUNCTION: Creates a paging file.
  * ARGUMENTS:
- *        PageFileName  = Name of the pagefile
- *        MinimumSize = Specifies the minimum size
- *        MaximumSize = Specifies the maximum size
- *        ActualSize(OUT)  = Specifies the actual size 
+ *        FileName  = Name of the pagefile
+ *        InitialSize = Specifies the initial size in bytes
+ *        MaximumSize = Specifies the maximum size in bytes
+ *        Reserved = Reserved for future use
  * RETURNS: Status
  */
-
 NTSTATUS
 STDCALL
 NtCreatePagingFile(
-	IN PUNICODE_STRING PageFileName,
-	IN ULONG MiniumSize,
-	IN ULONG MaxiumSize,
-	OUT PULONG ActualSize
+	IN PUNICODE_STRING FileName,
+	IN PLARGE_INTEGER InitialSize,
+	IN PLARGE_INTEGER MaxiumSize,
+	IN ULONG Reserved
 	);
 
 NTSTATUS
 STDCALL
 ZwCreatePagingFile(
-	IN PUNICODE_STRING PageFileName,
-	IN ULONG MiniumSize,
-	IN ULONG MaxiumSize,
-	OUT PULONG ActualSize
+	IN PUNICODE_STRING FileName,
+	IN PLARGE_INTEGER InitialSize,
+	IN PLARGE_INTEGER MaxiumSize,
+	IN ULONG Reserved
 	);
 
 /*
