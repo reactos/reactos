@@ -870,6 +870,13 @@ typedef struct _KDPC {
   PULONG_PTR  Lock;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
+typedef struct _KDPC_DATA {
+  LIST_ENTRY  DpcListHead;
+  ULONG  DpcLock;
+  ULONG  DpcQueueDepth;
+  ULONG  DpcCount;
+} KDPC_DATA, *PKDPC_DATA;
+
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
   struct _DRIVER_CONTROL  *DeviceRoutine;
@@ -3108,6 +3115,11 @@ typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE_S
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
+
+typedef struct _PP_LOOKASIDE_LIST {
+   struct _GENERAL_LOOKASIDE *P;
+   struct _GENERAL_LOOKASIDE *L;
+} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
