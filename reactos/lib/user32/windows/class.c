@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.33 2003/08/19 01:03:41 weiden Exp $
+/* $Id: class.c,v 1.34 2003/08/19 02:55:53 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -31,44 +31,48 @@ GetClassInfoExA(
   WNDCLASSEXW w;
   BOOL retval;
   NTSTATUS Status;
-  
-  if(!lpszClass || !lpwcx)
+
+  if ( !lpszClass || !lpwcx )
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   if(IS_ATOM(lpszClass))
     str = (LPWSTR)lpszClass;
   else
-    Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
-  if ( !NT_SUCCESS (Status) )
   {
-    SetLastError (RtlNtStatusToDosError(Status));
-    return FALSE;
+    Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
+    if ( !NT_SUCCESS (Status) )
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
   }
-  
+
   str2.Length = 0;
   str2.MaximumLength = 255;
-  str2.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, 
-                                       str2.MaximumLength * sizeof(WCHAR));
-  if(!str2.Buffer)
+  str2.Buffer = (PWSTR)HEAP_alloc ( str2.MaximumLength * sizeof(WCHAR) );
+  if ( !str2.Buffer )
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    if ( !IS_ATOM(str) )
+      HEAP_free ( str );
     return FALSE;
   }
 
-  w.lpszMenuName = (LPCWSTR)&str2;  
+  w.lpszMenuName = (LPCWSTR)&str2;
   retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
   if(!IS_ATOM(str))
     HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
-  if (!IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName)
+  if ( !IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName )
   {
-    lpwcx->lpszMenuName = heap_string_poolA (str2.Buffer, str2.Length);
+    lpwcx->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
   }
-  RtlFreeHeap(RtlGetProcessHeap(), 0, str2.Buffer);
+  HEAP_free ( str2.Buffer );
+
   return retval;
 }
 
@@ -87,40 +91,49 @@ GetClassInfoExW(
   UNICODE_STRING str2;
   WNDCLASSEXW w;
   WINBOOL retval;
-  
-  if(!lpszClass || !lpwcx)
+
+  if ( !lpszClass || !lpwcx )
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   if(IS_ATOM(lpszClass))
     str = (LPWSTR)lpszClass;
   else
-    str = HEAP_strdupW (lpszClass, wcslen(lpszClass) );
+  {
+    str = HEAP_strdupW ( lpszClass, wcslen(lpszClass) );
+    if ( !str )
+    {
+      SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+      return FALSE;
+    }
+  }
 
   str2.Length = 0;
   str2.MaximumLength = 255;
-  str2.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, 
-                                       str2.MaximumLength * sizeof(WCHAR));
-  if(!str2.Buffer)
+  str2.Buffer = (PWSTR)HEAP_alloc ( str2.MaximumLength * sizeof(WCHAR) );
+  if ( !str2.Buffer )
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    if ( !IS_ATOM(str) )
+      HEAP_free ( str );
     return FALSE;
   }
 
-  w.lpszMenuName = (LPCWSTR)&str2;  
+  w.lpszMenuName = (LPCWSTR)&str2;
   retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
-  if(!IS_ATOM(str))
+  if ( !IS_ATOM(str) )
     HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
-  if (!IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName)
+  if ( !IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName )
   {
-    lpwcx->lpszMenuName = heap_string_poolW (str2.Buffer, str2.Length);
+    lpwcx->lpszMenuName = heap_string_poolW ( str2.Buffer, str2.Length );
   }
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, str2.Buffer);
+  HEAP_free ( str2.Buffer );
+
   return retval;
 }
 
@@ -135,18 +148,18 @@ GetClassInfoA(
   LPCSTR lpClassName,
   LPWNDCLASSA lpWndClass)
 {
-	WNDCLASSEXA w;
-	WINBOOL retval;
-	
-	if(!lpClassName || !lpWndClass)
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-	
-	retval = GetClassInfoExA(hInstance,lpClassName,&w);
-    RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSA));
-	return retval;
+  WNDCLASSEXA w;
+  WINBOOL retval;
+
+  if ( !lpClassName || !lpWndClass )
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  retval = GetClassInfoExA(hInstance,lpClassName,&w);
+  RtlCopyMemory ( lpWndClass, &w.style, sizeof(WNDCLASSA) );
+  return retval;
 }
 
 /*
@@ -159,18 +172,18 @@ GetClassInfoW(
   LPCWSTR lpClassName,
   LPWNDCLASSW lpWndClass)
 {
-	WNDCLASSEXW w;
-	WINBOOL retval;
-	
-	if(!lpClassName || !lpWndClass)
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-	
-	retval = GetClassInfoExW(hInstance,lpClassName,&w);
-    RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSW));
-	return retval;
+  WNDCLASSEXW w;
+  WINBOOL retval;
+
+  if(!lpClassName || !lpWndClass)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  retval = GetClassInfoExW(hInstance,lpClassName,&w);
+  RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSW));
+  return retval;
 }
 
 
@@ -179,7 +192,7 @@ GetClassInfoW(
  */
 DWORD STDCALL
 GetClassLongA ( HWND hWnd, int nIndex )
-{ 
+{
   PUNICODE_STRING str;
 
   if ( nIndex != GCL_MENUNAME )
