@@ -1109,9 +1109,10 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s %s\n",
 	          archiveFilename.c_str (),
-	          objs_macro.c_str ());
+	          objs_macro.c_str (),
+	          GetDirectory(archiveFilename).c_str() );
 
 	fprintf ( fMakefile, "\t$(ECHO_AR)\n" );
 
@@ -1213,7 +1214,9 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	nasmflagsMacro = ssprintf ("$(%s)", nasmflagsMacro.c_str ());
 	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
 
-	string ar_target = GenerateArchiveTarget ( module, ar, objectsMacro );
+	string ar_target =
+		GenerateArchiveTarget ( module, ar, objectsMacro );
+
 	GenerateObjectFileTargets ( module,
 	                            cc,
 	                            cppc,
@@ -1366,8 +1369,8 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded (
 		string definitionDependencies = GetDefinitionDependencies ( module );
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          library_target.c_str (),
-		          library_target.c_str (),
-		          definitionDependencies.c_str () );
+		          definitionDependencies.c_str (),
+		          GetDirectory(library_target).c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
