@@ -83,7 +83,7 @@ MingwModuleHandler::ReplaceExtension ( const string& filename,
 string
 MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 {
-	return ReplaceExtension ( FixupTargetFilename ( module.GetPath () ).c_str (),
+	return ReplaceExtension ( FixupTargetFilename ( module.GetPath () ),
 	                          ".a" );
 }
 
