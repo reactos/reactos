@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.62 2004/12/11 21:19:40 weiden Exp $
+/* $Id: class.c,v 1.62.2.1 2004/12/24 17:43:23 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,22 +33,11 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: Just a bad hack for now... */
-LIST_ENTRY GlobalClassListHead;
-FAST_MUTEX GlobalClassListLock;
-#define IntLockGlobalClassList() \
-  ExAcquireFastMutex(&GlobalClassListLock)
-#define IntUnlockGlobalClassList() \
-  ExReleaseFastMutex(&GlobalClassListLock)
-
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
 InitClassImpl(VOID)
 {
-  ExInitializeFastMutex(&GlobalClassListLock);
-  InitializeListHead(&GlobalClassListHead);
   return(STATUS_SUCCESS);
 }
 
@@ -66,19 +55,19 @@ ClassReferenceClassByAtom(
 {
    PWNDCLASS_OBJECT Current, BestMatch = NULL;
    PLIST_ENTRY CurrentEntry;
-  
-   /* HACK!! */
-   IntLockGlobalClassList();
-   CurrentEntry = GlobalClassListHead.Flink;
-   while (CurrentEntry != &GlobalClassListHead)
+   PW32PROCESS Process = PsGetWin32Process();
+
+   IntLockProcessClasses(Process);
+   CurrentEntry = Process->ClassListHead.Flink;
+   while (CurrentEntry != &Process->ClassListHead)
    {
-      Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, GlobalListEntry);
-      
+      Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
+
       if (Current->Atom == Atom && (hInstance == NULL || Current->hInstance == hInstance))
       {
          *Class = Current;
          ObmReferenceObject(Current);
-         IntUnlockGlobalClassList();
+         IntUnLockProcessClasses(Process);
          return TRUE;
       }
 
@@ -87,7 +76,7 @@ ClassReferenceClassByAtom(
 
       CurrentEntry = CurrentEntry->Flink;
    }
-   IntUnlockGlobalClassList();
+   IntUnLockProcessClasses(Process);
 
    if (BestMatch != NULL)
    {
@@ -95,7 +84,7 @@ ClassReferenceClassByAtom(
       ObmReferenceObject(BestMatch);
       return TRUE;
    }
-  
+
    return FALSE;
 }
 
@@ -458,10 +447,6 @@ NtUserRegisterClassExWOW(
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   IntUnLockProcessClasses(PsGetWin32Process());
   
-  /* HACK!!! */
-  IntLockGlobalClassList();
-  InsertTailList(&GlobalClassListHead, &ClassObject->GlobalListEntry);
-  IntUnlockGlobalClassList();
   return(Atom);
 }
 
@@ -698,10 +683,6 @@ NtUserUnregisterClass(
    ClassDereferenceObject(Class);
   
    RemoveEntryList(&Class->ListEntry);
-   
-   IntLockGlobalClassList();
-   RemoveEntryList(&Class->GlobalListEntry);
-   IntUnlockGlobalClassList();
 
    RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
   
