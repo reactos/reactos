@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
- * PURPOSE:           GDI Driver Bitmap Functions
+ * PURPOSE:           GDI Palette Functions
  * FILE:              subsys/win32k/eng/palette.c
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
@@ -9,33 +9,68 @@
  */
 
 #include <ddk/winddi.h>
+#include "objects.h"
 
-HPALETTE EngCreatePalette(IN ULONG  Mode,
-                          IN ULONG  NumColors,
-                          IN PULONG  *Colors,
-                          IN ULONG  Red,
-                          IN ULONG  Green,
-                          IN ULONG  Blue)
+HPALETTE EngCreatePalette(ULONG  Mode,
+                          ULONG  NumColors,
+                          PULONG *Colors, // FIXME: This was implemented with ULONG *Colors!!
+                          ULONG  Red,
+                          ULONG  Green,
+                          ULONG  Blue)
 {
-  /* We need to take the colors given to us and generate a nice default color
-     model */
+   HPALETTE NewPalette;
+   PALOBJ *PalObj;
+   PALGDI *PalGDI;
 
-  if(Mode==PAL_INDEXED)
-  {
-    /* For now the ultimate color model is just colors.. */
-  }
+   PalObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALOBJ), NULL);
+   PalGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(PALGDI), NULL);
 
-  /* FIXME: Add support for other given palette types */
+   NewPalette = CreateGDIHandle(PalGDI, PalObj);
 
-  /* FIXME: Generate a handle for Colors */
+   PalGDI->Mode = Mode;
 
-  return Colors;
+   if(Mode==PAL_INDEXED)
+   {
+      PalGDI->NumColors     = NumColors;
+      PalGDI->IndexedColors = Colors;
+   } else
+   if(Mode==PAL_BITFIELDS)
+   {
+      PalGDI->RedMask   = Red;
+      PalGDI->GreenMask = Green;
+      PalGDI->BlueMask  = Blue;
+   }
+
+   return NewPalette;
 }
 
-BOOL EngDeletePalette(IN HPALETTE hpal)
+BOOL EngDeletePalette(IN HPALETTE Palette)
 {
-  /* Should actually get the pointer from this handle.. which for now IS
-     the pointer */
+   PALOBJ *PalObj;
+   PALGDI *PalGDI;
 
-  EngFreeMem(hpal);
+   PalGDI = AccessInternalObject(Palette);
+   PalObj = AccessInternalObject(Palette);
+
+   EngFreeMem(PalGDI);
+   EngFreeMem(PalObj);
+   FreeGDIHandle(Palette);
+
+   return TRUE;
+}
+
+ULONG PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors,
+                        ULONG  *PaletteEntry)
+{
+   ULONG i, entry;
+   PALGDI *PalGDI;
+
+   PalGDI = AccessInternalObjectFromUserObject(PalObj);
+
+   for(i=Start; i<Colors; i++)
+   {
+      PaletteEntry[i] = PalGDI->IndexedColors[i];
+   }
+
+   return Colors;
 }
