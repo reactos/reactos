@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.27 2004/12/13 19:06:27 weiden Exp $
+; $Id: advapi32.def,v 1.28 2004/12/15 12:29:36 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -35,8 +35,8 @@ BackupEventLogW@8
 ;BuildExplicitAccessWithNameW@20
 ;BuildImpersonateExplicitAccessWithNameA@24
 ;BuildImpersonateExplicitAccessWithNameW@24
-;BuildImpersonateTrusteeA@8
-;BuildImpersonateTrusteeW@8
+BuildImpersonateTrusteeA@8
+BuildImpersonateTrusteeW@8
 ;BuildSecurityDescriptorA@36
 ;BuildSecurityDescriptorW@36
 BuildTrusteeWithNameA@8
@@ -148,10 +148,10 @@ GetInheritanceSourceA@40
 GetInheritanceSourceW@40
 GetKernelObjectSecurity@20
 GetLengthSid@4
-;GetMultipleTrusteeA@4
-;GetMultipleTrusteeOperationA@4
-;GetMultipleTrusteeOperationW@4
-;GetMultipleTrusteeW@4
+GetMultipleTrusteeA@4
+GetMultipleTrusteeOperationA@4
+GetMultipleTrusteeOperationW@4
+GetMultipleTrusteeW@4
 GetNamedSecurityInfoA@32
 GetNamedSecurityInfoW@32
 GetNumberOfEventLogRecords@8
@@ -175,10 +175,12 @@ GetSidLengthRequired@4
 GetSidSubAuthority@8
 GetSidSubAuthorityCount@4
 GetTokenInformation@20
-;GetTrusteeNameA@4
-;GetTrusteeNameW@4
-;GetTrusteeTypeA@4
-;GetTrusteeTypeW@4
+GetTrusteeFormA@4
+GetTrusteeFormW@4
+GetTrusteeNameA@4
+GetTrusteeNameW@4
+GetTrusteeTypeA@4
+GetTrusteeTypeW@4
 GetUserNameA@8
 GetUserNameW@8
 ;GrantAccessRightsA@16
