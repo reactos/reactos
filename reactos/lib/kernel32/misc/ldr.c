@@ -21,6 +21,70 @@ typedef struct tagLOADPARMS32 {
 
 /* FUNCTIONS ****************************************************************/
 
+/**
+ * @name GetDllLoadPath
+ *
+ * Internal function to compute the load path to use for a given dll.
+ *
+ * @remarks Returned pointer must be freed by caller.
+ */
+
+LPWSTR STDCALL
+GetDllLoadPath(LPCWSTR lpModule)
+{
+        ULONG Pos = 0, Length = 0;
+        PWCHAR EnvironmentBufferW = NULL;
+        LPCWSTR lpModuleEnd = NULL;
+        UNICODE_STRING ModuleName;
+
+	if (lpModule != NULL)
+	{
+		lpModuleEnd = lpModule + wcslen(lpModule);
+	}
+	else
+	{
+	        ModuleName = NtCurrentTeb()->Peb->ProcessParameters->ImagePathName;
+	        lpModule = ModuleName.Buffer;
+	        lpModuleEnd = lpModule + (ModuleName.Length / sizeof(WCHAR));
+	}
+
+	if (lpModule != NULL)
+	{
+	        while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
+	               *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
+			--lpModuleEnd;
+		Length = (lpModuleEnd - lpModule) + 1;		
+	}
+
+	Length += GetCurrentDirectoryW(0, NULL) + 1;
+	Length += GetSystemDirectoryW(NULL, 0) + 1;
+	Length += GetWindowsDirectoryW(NULL, 0) + 1;
+	Length += GetEnvironmentVariableW(L"PATH", NULL, 0) + 1;
+
+	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                             Length * sizeof(WCHAR));
+	if (EnvironmentBufferW == NULL)
+		return NULL;
+
+	if (lpModule)
+	{
+		RtlCopyMemory(EnvironmentBufferW, lpModule,
+		              (lpModuleEnd - lpModule) * sizeof(WCHAR));
+		Pos += lpModuleEnd - lpModule;
+		EnvironmentBufferW[Pos++] = L';';
+	}
+	Pos += GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
+	EnvironmentBufferW[Pos++] = L';';
+	Pos += GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	EnvironmentBufferW[Pos++] = L';';
+	Pos += GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	EnvironmentBufferW[Pos++] = L';';
+	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
+	EnvironmentBufferW[Pos] = 0;
+
+	return EnvironmentBufferW;
+}
+
 /*
  * @implemented
  */
@@ -66,40 +130,12 @@ LoadLibraryExA (
 	DWORD	dwFlags
 	)
 {
-	UNICODE_STRING LibFileNameU;
-	ANSI_STRING LibFileName;
-	HINSTANCE hInst;
-	NTSTATUS Status;
+   PWCHAR FileNameW;
+   
+   if (!(FileNameW = FilenameA2W(lpLibFileName, FALSE)))
+      return FALSE;
 
-        (void)hFile;
-
-	RtlInitAnsiString (&LibFileName,
-	                   (LPSTR)lpLibFileName);
-
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&LibFileNameU,
-		                              &LibFileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&LibFileNameU,
-		                             &LibFileName,
-		                             TRUE);
-
-	Status = LdrLoadDll(NULL,
-			    dwFlags,
-			    &LibFileNameU,
-			    (PVOID*)&hInst);
-
-	RtlFreeUnicodeString (&LibFileNameU);
-
-	if ( !NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return NULL;
-	}
-
-	return hInst;
+   return LoadLibraryExW(FileNameW, hFile, dwFlags);
 }
 
 
@@ -130,6 +166,7 @@ LoadLibraryExW (
 	UNICODE_STRING DllName;
 	HINSTANCE hInst;
 	NTSTATUS Status;
+	PWSTR SearchPath;
 
         (void)hFile;
 
@@ -141,8 +178,11 @@ LoadLibraryExW (
 	  LOAD_LIBRARY_AS_DATAFILE |
 	  LOAD_WITH_ALTERED_SEARCH_PATH;
 
+	SearchPath = GetDllLoadPath(
+	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
+
 	RtlInitUnicodeString (&DllName, (LPWSTR)lpLibFileName);
-	Status = LdrLoadDll(NULL, dwFlags, &DllName, (PVOID*)&hInst);
+	Status = LdrLoadDll(SearchPath, dwFlags, &DllName, (PVOID*)&hInst);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
