@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.36 2003/12/20 15:42:47 weiden Exp $
+/* $Id: misc.c,v 1.37 2003/12/24 01:26:10 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -381,6 +381,7 @@ NtUserSystemParametersInfo(
   PVOID pvParam,
   UINT fWinIni)
 {
+  static BOOL GradientCaptions = TRUE;
   /* FIXME: This should be obtained from the registry */
   static LOGFONTW CaptionFont =
   { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -503,7 +504,26 @@ NtUserSystemParametersInfo(
         memcpy((LPVOID)&(pMetrics->lfMessageFont), &CaptionFont, sizeof(CaptionFont));
         return TRUE;
       }
-    
+    case SPI_GETGRADIENTCAPTIONS:
+      {
+        Status = MmCopyToCaller(pvParam, &GradientCaptions, sizeof(BOOL));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        return TRUE;
+      }
+    case SPI_SETGRADIENTCAPTIONS:
+      {
+        Status = MmCopyFromCaller(&GradientCaptions, pvParam, sizeof(BOOL));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        return TRUE;
+      }
   }
   return FALSE;
 }

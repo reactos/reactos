@@ -364,8 +364,14 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    /* Draw caption */
    if ((Style & WS_CAPTION) == WS_CAPTION)
    {
-      DWORD CaptionFlags = DC_ICON | DC_TEXT | DC_GRADIENT | DC_BUTTONS;
+      DWORD CaptionFlags = DC_ICON | DC_TEXT | DC_BUTTONS;
       HPEN PreviousPen;
+      BOOL Gradient = FALSE;
+      
+      if(SystemParametersInfoW(SPI_GETGRADIENTCAPTIONS, 0, &Gradient, 0) && Gradient)
+      {
+        CaptionFlags |= DC_GRADIENT;
+      }
 
       TempRect = CurrentRect;
 
@@ -996,8 +1002,7 @@ AdjustWindowRect(LPRECT lpRect,
 }
 
 // Enabling this will cause captions to draw smoother, but slower:
-// #define DOUBLE_BUFFER_CAPTION
-// NOTE: Double buffering appears to be broken for this at the moment
+#define DOUBLE_BUFFER_CAPTION
 
 /*
  * @implemented
@@ -1033,27 +1038,6 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     OffsetViewportOrgEx(MemDC, lprc->left, lprc->top, NULL);
 #endif
 
-    // If DC_GRADIENT is specified, a Win 98/2000 style caption gradient should
-    // be painted. For now, that flag is ignored:
-    // Windows 98/Me, Windows 2000/XP: When this flag is set, the function uses
-    // COLOR_GRADIENTACTIVECAPTION (if the DC_ACTIVE flag was set) or
-    // COLOR_GRADIENTINACTIVECAPTION for the title-bar color. 
-
-    // Draw the caption background
-    if (uFlags & DC_INBUTTON)
-    {
-        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_BTNFACE : COLOR_BTNSHADOW) );
-        if (! OldBrush) goto cleanup;
-        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
-    }
-    else
-    {
-        // DC_GRADIENT check should go here somewhere
-        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-        if (! OldBrush) goto cleanup;
-        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
-    }
-    
     Style = GetWindowLongW(hWnd, GWL_STYLE);
     
     /* Windows behaves like this */
@@ -1067,14 +1051,122 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     r.top = Padding;
     r.bottom = r.top + (Height / 2);
 
-    if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
+    // Draw the caption background
+    if (uFlags & DC_INBUTTON)
+    {
+        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_BTNFACE : COLOR_BTNSHADOW) );
+        if (! OldBrush) goto cleanup;
+        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+    }
+    else
+    {
+        if (uFlags & DC_GRADIENT)
+        {
+          COLORREF Colors[2];
+          BYTE cr[3], cg[3], cb[3];
+          LONG xx, wd, wdh;
+          POINT OldPoint;
+          HPEN Pen;
+          HGDIOBJ OldObj;
+          
+          r.right = (lprc->right - lprc->left);
+          if (uFlags & DC_SMALLCAP)
+            ButtonWidth = GetSystemMetrics(SM_CXSMSIZE) - 2;
+          else
+            ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+          
+          if (Style & WS_SYSMENU)
+          {
+            r.right -= 3 + ButtonWidth;
+            if (! (uFlags & DC_SMALLCAP))
+            {
+              if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+                r.right -= 2 + 2 * ButtonWidth;
+              else
+                r.right -= 2;
+              r.right -= 2;
+            }
+          }
+          
+          Colors[0] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
+          Colors[1] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
+          
+          if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
+          {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
+            if (!OldBrush) goto cleanup;
+            xx = GetSystemMetrics(SM_CXSIZE) + Padding;
+            /* draw icon background */
+            PatBlt(MemDC, 0, 0, xx, lprc->bottom - lprc->top, PATCOPY);
+            // For some reason the icon isn't centered correctly...
+            r.top --;
+            UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
+            r.top ++;
+            r.left += xx;
+          }          
+          
+          cr[1] = GetRValue(Colors[0]);
+          cg[1] = GetGValue(Colors[0]);
+          cb[1] = GetBValue(Colors[0]);
+          cr[2] = GetRValue(Colors[1]) - cr[1];
+          cg[2] = GetGValue(Colors[1]) - cg[1];
+          cb[2] = GetBValue(Colors[1]) - cb[1];
+          
+          wd = r.right - r.left;
+          wdh = wd / 2;
+          
+          if(wd > 0)
+          {
+            MoveToEx(MemDC, 0, 0, &OldPoint);
+            
+            for(xx = 0; xx < wd; xx++)
+            {
+              cr[0] = (cr[1] + ((cr[2] * xx) + wdh) / wd);
+              cg[0] = (cg[1] + ((cg[2] * xx) + wdh) / wd);
+              cb[0] = (cb[1] + ((cb[2] * xx) + wdh) / wd);
+              Pen = CreatePen(PS_SOLID, 0, RGB(cr[0], cg[0], cb[0]));
+              if(!Pen)
+              {
+                break;
+              }
+              OldObj = SelectObject(MemDC, Pen);
+              MoveToEx(MemDC, r.left + xx, 0, NULL);
+              LineTo(MemDC, r.left + xx, lprc->bottom - lprc->top);
+              if(OldObj)
+                SelectObject(MemDC, OldObj);
+              DeleteObject(Pen);
+            }
+            MoveToEx(MemDC, OldPoint.x, OldPoint.y, NULL);
+          }
+          
+          if(OldBrush)
+          {
+            SelectObject(MemDC, OldBrush);
+            OldBrush = NULL;
+          }
+          xx = lprc->right - lprc->left - r.right;
+          if(xx > 0)
+          {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION));
+            if (!OldBrush) goto cleanup;
+            PatBlt(MemDC, r.right, 0, xx, lprc->bottom - lprc->top, PATCOPY);
+          }
+        }
+        else
+        {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+            if (! OldBrush) goto cleanup;
+            if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+        }
+    }
+    
+    if ((uFlags & DC_ICON) && !(uFlags & DC_GRADIENT) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
     {
         // For some reason the icon isn't centered correctly...
         r.top --;
         UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
         r.top ++;
     }
-
     r.top ++;
     r.left += 2;
 
@@ -1082,6 +1174,8 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 
   if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
+    if(!(uFlags & DC_GRADIENT))
+    {
     if (!(uFlags & DC_SMALLCAP) && ((uFlags & DC_ICON) || (uFlags & DC_INBUTTON)))
         r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
 
@@ -1100,9 +1194,10 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 	      r.right -= 2 + 2 * ButtonWidth;
         else
 	      r.right -= 2;
+        r.right -= 2;
       }
     }
-    r.right -= 2;
+    }
 
     nclm.cbSize = sizeof(nclm);
     if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.114 2003/12/23 08:48:59 navaraf Exp $
+/* $Id: defwnd.c,v 1.115 2003/12/24 01:26:10 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -48,7 +48,7 @@ static HBITMAP hbScrRight;
 */
 
 
-static COLORREF SysColours[] =
+static COLORREF SysColors[] =
   {
     RGB(192, 192, 192) /* COLOR_SCROLLBAR */,
     RGB(58, 110, 165) /* COLOR_BACKGROUND */,
@@ -81,7 +81,7 @@ static COLORREF SysColours[] =
     RGB(181, 181, 181) /* COLOR_GRADIENTINACTIVECAPTION */,
   };
 
-#define NUM_SYSCOLORS (sizeof(SysColours) / sizeof(SysColours[0]))
+#define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
 
 ATOM AtomInternalPos;
 
@@ -103,7 +103,7 @@ UserSetupInternalPos(VOID)
 DWORD STDCALL
 GetSysColor(int nIndex)
 {
-    return SysColours[nIndex];
+    return SysColors[nIndex];
 }
 
 /*
@@ -124,7 +124,7 @@ GetSysColorPen(int nIndex)
      can't be deleted */
   if (NULL == SysPens[nIndex])
     {
-      SysPens[nIndex] = CreatePen(PS_SOLID, 1, SysColours[nIndex]);
+      SysPens[nIndex] = CreatePen(PS_SOLID, 1, SysColors[nIndex]);
     }
 
   return SysPens[nIndex];
@@ -148,7 +148,7 @@ GetSysColorBrush(int nIndex)
      can't be deleted */
   if (NULL == SysBrushes[nIndex])
     {
-      SysBrushes[nIndex] = (HBRUSH) ((DWORD) CreateSolidBrush(SysColours[nIndex]) | 0x00800000);
+      SysBrushes[nIndex] = (HBRUSH) ((DWORD) CreateSolidBrush(SysColors[nIndex]) | 0x00800000);
     }
 
   return SysBrushes[nIndex];
