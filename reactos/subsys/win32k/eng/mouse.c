@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.31 2003/08/24 18:52:18 weiden Exp $
+/* $Id: mouse.c,v 1.32 2003/08/24 23:52:29 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -263,6 +263,62 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   return(TRUE);
 }
 
+BOOL FASTCALL
+MouseMoveCursor(LONG X, LONG Y)
+{
+  HDC hDC;
+  PDC dc;
+  RECTL MouseRect;
+  BOOL res = FALSE;
+  PSURFOBJ SurfObj;
+  PSURFGDI SurfGDI;
+  PSYSTEM_CURSORINFO CurInfo;
+  MSG Msg;
+  LARGE_INTEGER LargeTickCount;
+  ULONG TickCount;
+  
+  hDC = IntGetScreenDC();
+  
+  if(!hDC || !InputWindowStation)
+    return FALSE;
+  
+  if(IntGetWindowStationObject(InputWindowStation))
+  {
+    dc = DC_LockDc(hDC);
+    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+    DC_UnlockDc( hDC );
+    CurInfo = &InputWindowStation->SystemCursor;
+    CheckClipCursor(&X, &X, CurInfo);
+    if((X != CurInfo->x) || (Y != CurInfo->y))
+    {
+      /* send MOUSEMOVE message */
+      KeQueryTickCount(&LargeTickCount);
+      TickCount = LargeTickCount.u.LowPart;
+      Msg.wParam = 0;
+      Msg.lParam = MAKELPARAM(X, Y);
+      Msg.message = WM_MOUSEMOVE;
+      Msg.time = TickCount;
+      Msg.pt.x = X;
+      Msg.pt.y = Y;
+      MsqInsertSystemMessage(&Msg);
+      /* move cursor */
+      CurInfo->x = X;
+      CurInfo->y = Y;
+      if(!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 && CurInfo->Enabled)
+      {
+        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+      }
+      res = TRUE;
+    }
+        
+    ObDereferenceObject(InputWindowStation);
+    return res;
+  }
+  else
+    return FALSE;
+}
+
 VOID /* STDCALL */
 MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 /*
@@ -380,7 +436,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     
     CheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
     
-    if (SysCursor->hCursor && !CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
+    if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
     {
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
@@ -404,7 +460,7 @@ EnableMouse(HDC hDisplayDC)
   PSYSCURSOR SysCursor;
 
   if( hDisplayDC && InputWindowStation)
-  {DbgPrint("EnableMouse(TRUE)\n");
+  {
     if(!IntGetWindowStationObject(InputWindowStation))
     {
        InputWindowStation->SystemCursor.Enabled = FALSE;
@@ -457,6 +513,7 @@ EnableMouse(HDC hDisplayDC)
     if(IntGetWindowStationObject(InputWindowStation))
     {
        InputWindowStation->SystemCursor.Enabled = FALSE;
+       InputWindowStation->SystemCursor.CursorClipInfo.IsClipped = FALSE;
 	   ObDereferenceObject(InputWindowStation);
        return;
     }

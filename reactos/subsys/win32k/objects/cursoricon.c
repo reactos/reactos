@@ -1,4 +1,6 @@
 #undef WIN32_LEAN_AND_MEAN
+#include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
 #include <windows.h>
 #include <stdlib.h>
@@ -6,6 +8,7 @@
 #include <win32k/bitmaps.h>
 #include <include/winsta.h>
 #include <include/error.h>
+#include <include/mouse.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -231,6 +234,8 @@ NtUserClipCursor(
   /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
   
   PWINSTATION_OBJECT WinStaObject;
+  PSYSTEM_CURSORINFO CurInfo;
+  LONG newx, newy;
 
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
@@ -243,15 +248,24 @@ NtUserClipCursor(
     SetLastWin32Error(Status);
     return FALSE;
   }
+  
+  CurInfo = &WinStaObject->SystemCursor;
   if(lpRect)
   {
-    WinStaObject->SystemCursor.CursorClipInfo.IsClipped = TRUE;
-    WinStaObject->SystemCursor.CursorClipInfo.Left = lpRect->left;
-    WinStaObject->SystemCursor.CursorClipInfo.Top = lpRect->top;
-    WinStaObject->SystemCursor.CursorClipInfo.Right = lpRect->right;
-    WinStaObject->SystemCursor.CursorClipInfo.Bottom = lpRect->bottom;
+    CurInfo->CursorClipInfo.IsClipped = TRUE;
+    CurInfo->CursorClipInfo.Left = lpRect->left;
+    CurInfo->CursorClipInfo.Top = lpRect->top;
+    CurInfo->CursorClipInfo.Right = lpRect->right;
+    CurInfo->CursorClipInfo.Bottom = lpRect->bottom;
     
-    /* FIXME - update cursor position in case the cursor is not within the rectangle */
+    newx = CurInfo->x;
+    newy = CurInfo->y;
+    CheckClipCursor(&newx, &newy, CurInfo);  
+    if((newx != CurInfo->x) || (newy != CurInfo->y))
+    {
+      MouseMoveCursor(newx, newy);
+    }
+    
   }
   else
     WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.10 2003/08/24 18:52:18 weiden Exp $
+/* $Id: misc.c,v 1.11 2003/08/24 23:52:29 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,11 +9,14 @@
  *       2003/05/22  Created
  */
 #include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
+#include <win32k/dc.h>
 #include <include/error.h>
 #include <include/window.h>
 #include <include/painting.h>
 #include <include/dce.h>
+#include <include/mouse.h>
 #include <include/winsta.h>
 
 #define NDEBUG
@@ -106,6 +109,7 @@ NtUserCallTwoParam(
 {
   NTSTATUS Status;
   PWINDOW_OBJECT WindowObject;
+  PSYSTEM_CURSORINFO CurInfo;
   PWINSTATION_OBJECT WinStaObject;
   PPOINT Pos;
   
@@ -158,11 +162,16 @@ NtUserCallTwoParam(
       if(Param2)
       {
         /* set cursor position */
-        /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
-        WinStaObject->SystemCursor.x = Pos->x;
-        WinStaObject->SystemCursor.y = Pos->y;
         
-        /* FIXME move cursor */
+        CurInfo = &WinStaObject->SystemCursor;
+        /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+        
+        CheckClipCursor(&Pos->x, &Pos->y, CurInfo);  
+        if((Pos->x != CurInfo->x) || (Pos->y != CurInfo->y))
+        {
+          MouseMoveCursor(Pos->x, Pos->y);
+        }
+
       }
       else
       {
