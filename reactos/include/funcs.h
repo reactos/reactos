@@ -2172,18 +2172,7 @@ NTSTATUS  STDCALL RtlpUnWaitCriticalSection(RTL_CRITICAL_SECTION *crit);
 NTSTATUS  STDCALL RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *crit);
 NTSTATUS STDCALL LdrLockLoaderLock(ULONG flags, ULONG *result, ULONG *magic);
 NTSTATUS STDCALL LdrUnlockLoaderLock(ULONG flags, ULONG magic);
-NTSTATUS  STDCALL RtlAddAccessAllowedAceEx(
-	IN OUT PACL pAcl,
-	IN DWORD dwAceRevision, 
-	IN DWORD AceFlags,
-	IN DWORD AccessMask,
-	IN PSID pSid);
-NTSTATUS  STDCALL RtlAddAccessDeniedAceEx(
-	IN OUT PACL pAcl,
-	IN DWORD dwAceRevision,
-	IN DWORD AceFlags,
-	IN DWORD AccessMask,
-	IN PSID pSid);
+
 NTSTATUS  STDCALL RtlDuplicateUnicodeString(
     int add_nul,
     const UNICODE_STRING *source,
@@ -2194,7 +2183,6 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
     const UNICODE_STRING *search_chars,
     USHORT *pos);
 NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source);
-NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str);
 
 ULONG
 __cdecl
@@ -2335,12 +2323,6 @@ NtUnloadKeyEx(
     );
 NTSTATUS
 STDCALL
-RtlGUIDFromString(
-    IN PUNICODE_STRING GuidString,
-    OUT GUID* Guid
-    );
-NTSTATUS
-STDCALL
 RtlGetVersion(
     OUT PRTL_OSVERSIONINFOW lpVersionInformation
     );
@@ -2351,21 +2333,6 @@ RtlHashUnicodeString(
     IN BOOL CaseInSensitive,
     IN ULONG HashAlgorithm,
     OUT PULONG HashValue
-    );
-USHORT
-FASTCALL
-RtlUshortByteSwap(
-    IN USHORT Source
-    );
-ULONG
-FASTCALL
-RtlUlongByteSwap(
-    IN ULONG Source
-    );
-ULONGLONG
-FASTCALL
-RtlUlonglongByteSwap(
-    IN ULONGLONG Source
     );
 BOOL
 STDCALL

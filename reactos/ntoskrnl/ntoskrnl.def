@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.173 2004/02/02 00:36:07 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.174 2004/02/03 14:23:29 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -840,6 +840,8 @@ RtlTimeFieldsToTime@8
 RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields@8
+@RtlUlongByteSwap@4
+@RtlUlonglongByteSwap@8
 RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString@12
@@ -861,6 +863,7 @@ RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4
 RtlUpperString@8
+@RtlUshortByteSwap@4
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
 RtlWriteRegistryValue@24

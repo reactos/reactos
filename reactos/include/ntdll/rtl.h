@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.42 2004/02/01 20:44:59 ekohl Exp $
+/* $Id: rtl.h,v 1.43 2004/02/03 14:19:56 ekohl Exp $
  *
  */
 
@@ -116,34 +116,47 @@ typedef struct _RTL_HANDLE_TABLE
 #define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
 #define PDI_LOCKS       0x20	/* The locks created by the process */
 
-VOID STDCALL
-RtlDeleteCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
-	);
-
-VOID STDCALL
-RtlEnterCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
-	);
 
 NTSTATUS STDCALL
-RtlInitializeCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
-	);
+RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
+			  IN ULONG Revision,
+			  IN ULONG Flags,
+			  IN ACCESS_MASK AccessMask,
+			  IN PSID Sid);
+
+NTSTATUS STDCALL
+RtlAddAccessDeniedAceEx (IN OUT PACL Acl,
+			 IN ULONG Revision,
+			 IN ULONG Flags,
+			 IN ACCESS_MASK AccessMask,
+			 IN PSID Sid);
+
+VOID STDCALL
+RtlDeleteCriticalSection (PCRITICAL_SECTION CriticalSection);
+
+WCHAR STDCALL
+RtlDowncaseUnicodeChar(IN WCHAR Source);
+
+VOID STDCALL
+RtlEnterCriticalSection (PCRITICAL_SECTION CriticalSection);
+
+NTSTATUS STDCALL
+RtlInitializeCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 NTSTATUS STDCALL
 RtlInitializeCriticalSectionAndSpinCount (PCRITICAL_SECTION CriticalSection,
 					  ULONG SpinCount);
 
+NTSTATUS STDCALL
+RtlInt64ToUnicodeString (IN ULONGLONG Value,
+			 IN ULONG Base,
+			 PUNICODE_STRING String);
+
 VOID STDCALL
-RtlLeaveCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
-	);
+RtlLeaveCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 BOOLEAN STDCALL
-RtlTryEnterCriticalSection (
-	PCRITICAL_SECTION	CriticalSection
-	);
+RtlTryEnterCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 DWORD STDCALL
 RtlCompactHeap (

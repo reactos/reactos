@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.26 2004/02/02 00:35:00 ekohl Exp $
+/* $Id: rtl.h,v 1.27 2004/02/03 14:19:29 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1243,6 +1243,10 @@ RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PACL* Sacl,
 			      PBOOLEAN SaclDefaulted);
 
+NTSTATUS STDCALL
+RtlGUIDFromString (IN PUNICODE_STRING GuidString,
+		   OUT GUID* Guid);
+
 PSID_IDENTIFIER_AUTHORITY STDCALL
 RtlIdentifierAuthoritySid (PSID Sid);
 
@@ -1965,6 +1969,12 @@ RtlTimeToTimeFields (
 	PTIME_FIELDS	TimeFields
 	);
 
+ULONG FASTCALL
+RtlUlongByteSwap (IN ULONG Source);
+
+ULONGLONG FASTCALL
+RtlUlonglongByteSwap (IN ULONGLONG Source);
+
 ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize (
@@ -2135,18 +2145,15 @@ RtlUpcaseUnicodeToOemN (
 	ULONG	UnicodeSize
 	);
 
-CHAR
-STDCALL
-RtlUpperChar (
-	CHAR	Source
-	);
+CHAR STDCALL
+RtlUpperChar (CHAR Source);
 
-VOID
-STDCALL
-RtlUpperString (
-	PSTRING	DestinationString,
-	PSTRING	SourceString
-	);
+VOID STDCALL
+RtlUpperString (PSTRING DestinationString,
+		PSTRING SourceString);
+
+USHORT FASTCALL
+RtlUshortByteSwap (IN USHORT Source);
 
 BOOLEAN STDCALL
 RtlValidAcl (PACL Acl);

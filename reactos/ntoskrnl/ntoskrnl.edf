@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.160 2004/02/02 00:36:07 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.161 2004/02/03 14:23:29 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -840,6 +840,8 @@ RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
 RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
 RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields=RtlTimeToTimeFields@8
+@RtlUlongByteSwap=@RtlUlongByteSwap@4
+@RtlUlonglongByteSwap=@RtlUlonglongByteSwap@8
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12
@@ -861,6 +863,7 @@ RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
+@RtlUshortByteSwap=@RtlUshortByteSwap@4
 RtlValidSecurityDescriptor=RtlValidSecurityDescriptor@4
 RtlValidSid=RtlValidSid@4
 RtlWriteRegistryValue=RtlWriteRegistryValue@24
