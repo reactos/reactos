@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2001/03/12 16:10:57 dwelch Exp $
+# $Id: Makefile,v 1.16 2001/03/12 17:32:54 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -579,13 +579,14 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 include $(D1_FILES)
 
 .%.d: %.c
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
 
 .%.d: %.s
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
 
 .%.d: %.S
-	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)$(DOT)o#$(@D)/$(*F).o#g -e s#$(DOT)$(*F)$(DOT)d#$(@D)/.$(*F).d#g > $@
+
 
 include $(PATH_TO_TOP)/rules.mak
 
