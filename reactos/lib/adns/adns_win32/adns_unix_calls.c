@@ -1,4 +1,3 @@
-
 /*
 * adns_unix_calls.c
 * - Simple implementation of requiered UNIX system calls and
@@ -73,7 +72,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 	if (!Adjustment)
 	{
 		SYSTEMTIME st = {1970,1,3,0,0,0,0};
-		SystemTimeToFileTime(&st, (LPFILETIME)Adjustment);
+		SystemTimeToFileTime(&st, (LPFILETIME)&Adjustment);
 	}
 	
 	if (tz)
