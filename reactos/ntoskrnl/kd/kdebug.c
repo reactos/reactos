@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.28 2001/08/30 20:38:19 dwelch Exp $
+/* $Id: kdebug.c,v 1.29 2001/09/09 09:47:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -204,7 +204,7 @@ KdInitSystem (
 ULONG KdpPrintString (PANSI_STRING String)
 {
    PCH pch = String->Buffer;
-   
+
    if (KdpDebugType & ScreenDebug)
      {
 	HalDisplayString (String->Buffer);
@@ -223,6 +223,7 @@ ULONG KdpPrintString (PANSI_STRING String)
 	}
    if (KdpDebugType & BochsDebug)
      {
+	pch = String->Buffer;
 	while (*pch != 0)
 	  {
 	     if (*pch == '\n')
