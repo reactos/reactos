@@ -215,7 +215,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
  PVfatCCB pCcb;
  PDEVICE_EXTENSION DeviceExt;
  WCHAR star[5],*pCharPattern;
- unsigned long OldEntry,OldSector;
+ unsigned long OldEntry;
   DeviceExt = DeviceObject->DeviceExtension;
   // Obtain the callers parameters
   BufferLength = Stack->Parameters.QueryDirectory.Length;
@@ -227,7 +227,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   pFcb = pCcb->pFcb;
   if(Stack->Flags & SL_RESTART_SCAN)
   {//FIXME : what is really use of RestartScan ?
-    pCcb->StartEntry=pCcb->StartSector=0;
+    pCcb->StartEntry=0;
   }
   // determine Buffer for result :
   if (Irp->MdlAddress) 
@@ -245,12 +245,11 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   tmpFcb.ObjectName=tmpFcb.PathName;
   while(RC==STATUS_SUCCESS && BufferLength >0)
   {
-    OldSector=pCcb->StartSector;
     OldEntry=pCcb->StartEntry;
-    if(OldSector)pCcb->StartEntry++;
-    RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartSector,&pCcb->StartEntry);
-DPRINT("Found %w,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
- ,pCcb->StartSector,pCcb->StartEntry);
+    RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartEntry);
+DPRINT("Found %w,RC=%x,entry %x\n",tmpFcb.ObjectName,RC
+ ,pCcb->StartEntry);
+    pCcb->StartEntry++;
     if (NT_SUCCESS(RC))
     {
       switch(FileInformationClass)
@@ -283,7 +282,6 @@ DPRINT("Found %w,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
     if(RC==STATUS_BUFFER_OVERFLOW)
     {
       if(Buffer0) Buffer0->NextEntryOffset=0;
-      pCcb->StartSector=OldSector;
       pCcb->StartEntry=OldEntry;
       break;
     }
