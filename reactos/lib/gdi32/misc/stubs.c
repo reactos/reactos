@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.26 2003/07/20 04:00:36 jimtabor Exp $
+/* $Id: stubs.c,v 1.27 2003/07/20 16:44:55 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -793,22 +793,6 @@ LineDDA(
 /*
  * @unimplemented
  */
-int
-STDCALL
-OffsetClipRgn(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 Pie(
@@ -1019,21 +1003,6 @@ SetMetaRgn(
 /*
  * @unimplemented
  */
-COLORREF
-STDCALL
-SetBkColor(
-	HDC		a0,
-	COLORREF	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 SetBoundsRect(
@@ -1150,21 +1119,6 @@ STDCALL
 SetTextCharacterExtra(
 	HDC	a0,
 	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-SetTextAlign(
-	HDC	a0,
-	UINT	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

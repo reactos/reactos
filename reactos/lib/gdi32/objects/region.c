@@ -7,6 +7,22 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+OffsetClipRgn(
+        HDC     a0,
+        int     a1,
+        int     a2
+        )
+{
+        return W32kOffsetClipRgn(a0, a1, a2);
+}
+
+
 /*
  * @implemented
  */

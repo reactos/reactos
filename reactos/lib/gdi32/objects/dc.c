@@ -11,6 +11,20 @@
 /*
  * @implemented
  */
+COLORREF
+STDCALL
+SetBkColor(
+        HDC             a0,
+        COLORREF        a1
+        )
+{
+        return W32kSetBkColor(a0, a1);
+}
+
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetGraphicsMode(

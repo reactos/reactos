@@ -10,6 +10,8 @@
 
 	* lib/gdi32/misc/stubs.c Implemented Unpluged DC code.
 	* lib/gdi32/objects/dc.c ditto
+	* lib/gdi32/objects/line.c ditto
+	* lib/gdi32/objects/text.c ditto
 	* lib/gdi32/objects/region.c ditto
 	* lib/user32/windows/draw.c Implemented FrameRect, InvertRect and
 	DrawFocusRect.

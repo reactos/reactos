@@ -8,6 +8,21 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+SetTextAlign(
+        HDC     a0,
+        UINT    a1
+        )
+{
+        return W32kSetTextAlign(a0, a1);
+}
+
+
 /*
  * @implemented
  */
