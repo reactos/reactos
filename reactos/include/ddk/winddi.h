@@ -38,7 +38,6 @@ typedef PVOID  PDD_SURFACECALLBACKS;
 typedef PVOID  PFONTINFO;
 typedef PVOID  PGAMMA_TABLES;
 typedef PVOID  PGLYPHDATA;
-typedef PVOID  PLINEATTRS;
 typedef DWORD  MIX;
 typedef DWORD  ROP4;
 typedef PVOID  PTTPOLYGONHEADER;
@@ -735,6 +734,92 @@ typedef struct _TYPE1_FONT
   HANDLE  hPFB;
   ULONG  ulIdentifier;
 } TYPE1_FONT;
+
+typedef struct _ENG_TIME_FIELDS
+{
+  USHORT  usYear;
+  USHORT  usMonth;
+  USHORT  usDay;
+  USHORT  usHour;
+  USHORT  usMinute;
+  USHORT  usSecond;
+  USHORT  usMilliseconds;
+  USHORT  usWeekday;
+} ENG_TIME_FIELDS, *PENG_TIME_FIELDS;
+
+typedef struct _LINEATTRS
+{
+  FLONG  fl;
+  ULONG  iJoin;
+  ULONG  iEndCap;
+  FLOAT_LONG  elWidth;
+  FLOATL  eMiterLimit;
+  ULONG  cstyle;
+  PFLOAT_LONG  pstyle;
+  FLOAT_LONG  elStyleState;
+} LINEATTRS, *PLINEATTRS;
+
+typedef struct _FLOATOBJ
+{
+  ULONG ul1,
+	ul2;
+} FLOATOBJ, *PFLOATOBJ;
+
+typedef struct _POINTFIX
+{
+  FIX x,
+      y;
+} POINTFIX;
+
+typedef struct _PATHDATA
+{
+  FLONG      flags;
+  ULONG      count;
+  POINTFIX  *pptfx;
+} PATHDATA, *PPATHDATA;
+
+typedef struct _RUN
+{
+  LONG  iStart;
+  LONG  iStop;
+} RUN, *PRUN;
+
+typedef struct _CLIPLINE
+{
+  POINTFIX  ptfxA;
+  POINTFIX  ptfxB;
+  LONG      lStyleState;
+  ULONG     c;
+  RUN       arun[1];
+} CLIPLINE, *PCLIPLINE;
+
+typedef struct _RECTFX
+{
+  FIX xLeft,
+      yTop,
+      xRight,
+      yBottom;
+} RECTFX, *PRECTFX;
+
+typedef struct
+{
+  FLOATOBJ  eM11,
+            eM12,
+            eM21,
+            eM22,
+            eDx,
+            eDy;
+} FLOATOBJ_XFORM, *PFLOATOBJ_XFORM, FAR *LPFLOATOBJ_XFORM;
+
+typedef struct _XFORML
+{
+  FLOATL  eM11,
+          eM12,
+          eM21,
+          eM22,
+          eDx,
+          eDy;
+} XFORML, *PXFORML;
 
 /*
  * Functions Prefixed with Drv are calls made from GDI to DDI, and

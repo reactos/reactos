@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.13 2003/08/12 22:16:44 gvg Exp $
+; $Id: win32k.edf,v 1.14 2003/08/13 16:32:55 royce Exp $
 ;
 ; win32k.def
 ;
@@ -87,7 +87,7 @@ EngReleaseSemaphore=EngReleaseSemaphore@4
 EngRestoreFloatingPointState
 EngSaveFloatingPointState
 EngSecureMem=EngSecureMem@8
-EngSetEvent
+EngSetEvent=EngSetEvent@4
 EngSetLastError=EngSetLastError@4
 EngSetPointerShape
 EngSetPointerTag
@@ -102,11 +102,11 @@ EngUnicodeToMultiByteN=EngUnicodeToMultiByteN@20
 EngUnloadImage
 EngUnlockDriverObj
 EngUnlockSurface=EngUnlockSurface@4
-EngUnmapEvent
-EngUnmapFontFile
+EngUnmapEvent=EngUnmapEvent@4
+EngUnmapFontFile=EngUnmapFontFile@4
 ; EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
 EngUnsecureMem=EngUnsecureMem@4
-EngWaitForSingleObject
+EngWaitForSingleObject=EngWaitForSingleObject@8
 EngWideCharToMultiByte
 EngWritePrinter
 FLOATOBJ_Add

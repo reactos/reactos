@@ -227,4 +227,10 @@ typedef HANDLE HSEMAPHORE;
 
 typedef HANDLE HDRVOBJ;
 
+typedef LONG FLOAT_LONG, *PFLOAT_LONG;
+
+typedef LONG FLOATL;
+
+typedef LONG FIX; // fixed-point number
+
 #endif /* __INCLUDE_DDK_KETYPES_H */

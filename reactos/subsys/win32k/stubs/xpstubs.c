@@ -49,3 +49,33 @@ EngMapEvent(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+LONG
+STDCALL
+EngSetEvent ( IN PEVENT pEvent )
+{
+  // www.osr.com/ddk/graphics/gdifncs_6p0n.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+EngUnmapEvent ( IN PEVENT pEvent )
+{
+  // www.osr.com/ddk/graphics/gdifncs_5m7b.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+EngWaitForSingleObject (
+	IN PEVENT          pEvent,
+	IN PLARGE_INTEGER  pTimeOut
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_4n53.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
