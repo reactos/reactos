@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.6 2003/03/01 06:05:36 rcampbell Exp $
+/* $Id: draw.c,v 1.7 2003/03/01 08:56:34 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -473,8 +473,8 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
 	 * otherwise.
 	 *                                          Dennis Björklund, 10 June, 99
 	 */
-/*	if( TWEAK_WineLook == WIN98_LOOK && LTInnerI != -1 )
-            LTInnerI = RBInnerI = COLOR_BTNFACE; */
+/*	if( TWEAK_WineLook == WIN98_LOOK && LTInnerI != -1 ) */
+            LTInnerI = RBInnerI = COLOR_BTNFACE;
     }
     else if(uFlags & BF_SOFT)
     {
@@ -894,7 +894,13 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     COLORREF clrsave;
     SIZE size;
 
-    UITOOLS95_DFC_ButtonPush(dc, r, uFlags & 0xff00);
+    //UITOOLS95_DFC_ButtonPush(dc, r, uFlags & 0xff00);
+    if(uFlags & DFCS_PUSHED)
+      UITOOLS95_DrawRectEdge(dc,r,BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT |
+                             BF_SOFT | BF_MIDDLE);
+    else
+      UITOOLS95_DrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
+                               BF_SOFT | BF_MIDDLE);
 
     switch(uFlags & 0xff)
     {
@@ -937,7 +943,6 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 			start.y++;
         }
 
-        /* now use the width of each line */
         width -= numLines - 1;
 
         for (i = 0; i < numLines; i++)
@@ -950,6 +955,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         }
 
         SelectObject(dc, hpsave);
+        
         return TRUE;
     }
 
@@ -1041,10 +1047,8 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         return FALSE;
     }
 
-    /* Here the drawing takes place */
     if(uFlags & DFCS_INACTIVE)
     {
-        /* If we have an inactive button, then you see a shadow */
         hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
         hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_BTNHIGHLIGHT));
         Polygon(dc, Line1, Line1N);
@@ -1054,7 +1058,6 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         SelectObject(dc, hbsave);
     }
 
-    /* Correct for the shadow shift */
     if (!(uFlags & DFCS_PUSHED))
     {
         for(i = 0; i < Line1N; i++)
@@ -1069,7 +1072,6 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         }
     }
 
-    /* Make the final picture */
     hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(colorIdx));
     hpsave = (HPEN)SelectObject(dc, GetSysColorPen(colorIdx));
 

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.22 2003/02/28 23:20:41 rcampbell Exp $
+/* $Id: defwnd.c,v 1.23 2003/03/01 08:56:34 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -219,54 +219,73 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 
 static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL down )
 {
+    /* ported from wine code */
     RECT rect;
-    HDC hDCMem;
+    BOOL bInactive = FALSE;
     
     UserGetInsideRectNC( hWnd, &rect );
-    hDCMem = CreateCompatibleDC( hDC );
-    
-    SelectObject( hDCMem, (hbitmapClose) );
-    
-    BitBlt( hDC,rect.right - GetSystemMetrics(SM_CXSMSIZE), rect.top + 1, 
-            GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), 
-            hDCMem,0,0,SRCCOPY );
-        
-    DeleteDC( hDCMem );
+
+    if (GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW)
+    {
+        INT iBmpHeight = 11; /* Windows does not use SM_CXSMSIZE and SM_CYSMSIZE   */
+        INT iBmpWidth = 11;  /* it uses 11x11 for  the close button in tool window */
+        INT iCaptionHeight = GetSystemMetrics(SM_CYSMCAPTION);
+
+        rect.top = rect.top + (iCaptionHeight - 1 - iBmpHeight) / 2;
+        rect.left = rect.right - (iCaptionHeight + 1 + iBmpWidth) / 2;
+        rect.bottom = rect.top + iBmpHeight;
+        rect.right = rect.left + iBmpWidth;
+    }
+    else
+    {
+     rect.top++;
+     rect.right--;
+     /* Standard close/min/max button sizes appear to be 16x14, though
+        these change with the caption size, I'll fix this soon */
+     rect.left = rect.right - 16;
+     rect.bottom = rect.top + 14;
+
+    }
+    DrawFrameControl( hDC, &rect, DFC_CAPTION,
+                      (DFCS_CAPTIONCLOSE |
+                       (down ? DFCS_PUSHED : 0) |
+                       (bInactive ? DFCS_INACTIVE : 0)) );
 }
 
 static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL down )
-{
+{ 
     RECT rect;
-    HDC hDCMem;
+    UINT flags = IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX;
 
     UserGetInsideRectNC( hWnd, &rect );
-    hDCMem = CreateCompatibleDC( hDC );
-    SelectObject( hDCMem,  (IsZoomed(hWnd)
-			    ? (down ? hbitmapRestoreD : hbitmapRestore)
-			    : (down ? hbitmapMaximizeD : hbitmapMaximize)) );
-    BitBlt( hDC, rect.right - (GetSystemMetrics(SM_CXSMSIZE) * 2) - 3, rect.top + 1,
-	    GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), hDCMem, 0, 0,
-	    SRCCOPY );
-    DeleteDC( hDCMem );
+    rect.top++;
+    rect.right--;
+    rect.left = rect.right - (GetSystemMetrics(SM_CXSIZE) - 1) * 2;
+    rect.right = rect.left + (GetSystemMetrics(SM_CXSIZE) - 2);
+    rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 4;
+
+    if (down) flags |= DFCS_PUSHED;
+    DrawFrameControl( hDC, &rect, DFC_CAPTION, flags );
 }
 
 static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL down)
 {
-  RECT rect;
-  HDC hDCMem;
 
-  UserGetInsideRectNC(hWnd, &rect);
-  hDCMem = CreateCompatibleDC(hDC);
-  SelectObject(hDCMem, (down ? hbitmapMinimizeD : hbitmapMinimize));
-  if (GetWindowLong(hWnd, GWL_STYLE) & WS_MAXIMIZEBOX)
-    {
-      rect.right -= GetSystemMetrics(SM_CXSMSIZE)+1;
-    }
-  BitBlt( hDC, rect.right - ( GetSystemMetrics(SM_CXSMSIZE) * 2 ) - 3, rect.top + 1,
-	  GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE),
-	  hDCMem, 0, 0,
-	  SRCCOPY );
-  DeleteDC( hDCMem );
+    RECT rect;
+    UINT flags = DFCS_CAPTIONMIN;
+    
+    BOOL bInactive = FALSE;
+    UserGetInsideRectNC( hWnd, &rect );
+    rect.top++;
+    rect.right--;
+    rect.left = rect.right - (GetSystemMetrics(SM_CXSIZE) - 2) * 3;
+    rect.right = rect.left + (GetSystemMetrics(SM_CXSIZE) - 2);
+    rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 4;
+    
+    if (down) flags |= DFCS_PUSHED;
+    if (bInactive) flags |= DFCS_INACTIVE;
+    DrawFrameControl( hDC, &rect, DFC_CAPTION, flags );
+    
 }
 
 static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
@@ -294,7 +313,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
     /* Fill the caption with COLOR_(IN)ACTIVECAPTION.
        In the future this will be GradientFill() */
        
-    SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+    SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_ACTIVECAPTION) );
     PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
     
   if (style & WS_SYSMENU)
@@ -377,7 +396,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   if (UserHasAnyFrameStyle(Style, ExStyle))
     {
       SelectObject(hDC, GetStockObject(NULL_BRUSH));
-      //Rectangle(hDC, 0, 0, rect.right, rect.bottom);
       InflateRect(&rect, -1, -1);
     }
 
