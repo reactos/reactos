@@ -41,6 +41,10 @@ static GENERIC_MAPPING ExpEventMapping = {
 	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | EVENT_QUERY_STATE,
 	EVENT_ALL_ACCESS};
 
+static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(EVENT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* EventBasicInformation */
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -92,6 +96,9 @@ ExpInitializeEventImplementation(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtClearEvent(IN HANDLE EventHandle)
 {
@@ -101,16 +108,16 @@ NtClearEvent(IN HANDLE EventHandle)
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
 				      ExEventObjectType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID*)&Event,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   KeClearEvent(Event);
-   ObDereferenceObject(Event);
-   return(STATUS_SUCCESS);
+   if(NT_SUCCESS(Status))
+   {
+     KeClearEvent(Event);
+     ObDereferenceObject(Event);
+   }
+   
+   return Status;
 }
 
 
@@ -188,68 +195,119 @@ NtCreateEvent(OUT PHANDLE EventHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtOpenEvent(OUT PHANDLE EventHandle,
 	    IN ACCESS_MASK DesiredAccess,
 	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
    HANDLE hEvent;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   DPRINT("NtOpenEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
 
-   DPRINT("ObjectName '%wZ'\n", ObjectAttributes->ObjectName);
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(EventHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExEventObjectType,
 			       NULL,
-			       UserMode,
+			       PreviousMode,
 			       DesiredAccess,
 			       NULL,
 			       &hEvent);
              
-  if (!NT_SUCCESS(Status))
-  {
-    return(Status);
-  }
-
-   Status = MmCopyToCaller(EventHandle, &hEvent, sizeof(HANDLE));
-   if (!NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
      {
-       ZwClose(EventHandle);
-       return(Status);
+       *EventHandle = hEvent;
      }
-     
-   return(Status);
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   
+   return Status;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtPulseEvent(IN HANDLE EventHandle,
 	     OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("NtPulseEvent(EventHandle %x PreviousState %x)\n",
+   DPRINT("NtPulseEvent(EventHandle 0%x PreviousState 0%x)\n",
 	  EventHandle, PreviousState);
+
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousState != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousState,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
 				      ExEventObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-       return(Status);
-     }
+   if(NT_SUCCESS(Status))
+   {
+     KePulseEvent(Event, EVENT_INCREMENT, FALSE);
+     ObDereferenceObject(Event);
+     
+     /* FIXME - Return the previous state! */
+   }
 
-   KePulseEvent(Event, EVENT_INCREMENT, FALSE);
-
-   ObDereferenceObject(Event);
-   return(STATUS_SUCCESS);
+   return Status;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryEvent(IN HANDLE EventHandle,
 	     IN EVENT_INFORMATION_CLASS EventInformationClass,
@@ -257,78 +315,129 @@ NtQueryEvent(IN HANDLE EventHandle,
 	     IN ULONG EventInformationLength,
 	     OUT PULONG ReturnLength  OPTIONAL)
 {
-   EVENT_BASIC_INFORMATION Info;
    PKEVENT Event;
-   NTSTATUS Status;
-   ULONG RetLen;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   if (EventInformationClass > EventBasicInformation)
-     return STATUS_INVALID_INFO_CLASS;
-
-   if (EventInformationLength < sizeof(EVENT_BASIC_INFORMATION))
-     return STATUS_INFO_LENGTH_MISMATCH;
+   PreviousMode = ExGetPreviousMode();
+   
+   DefaultQueryInfoBufferCheck(EventInformationClass,
+                               ExEventInfoClass,
+                               EventInformation,
+                               EventInformationLength,
+                               ReturnLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQueryEvent() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
 
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_QUERY_STATE,
 				      ExEventObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return Status;
-
-   if (Event->Header.Type == InternalNotificationEvent)
-     Info.EventType = NotificationEvent;
-   else
-     Info.EventType = SynchronizationEvent;
-   Info.EventState = KeReadStateEvent(Event);
-
-   Status = MmCopyToCaller(EventInformation, &Event,
-			   sizeof(EVENT_BASIC_INFORMATION));
-   if (!NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     switch(EventInformationClass)
      {
-       ObDereferenceObject(Event);
-       return(Status);
-     }
-
-   if (ReturnLength != NULL)
-     {
-       RetLen = sizeof(EVENT_BASIC_INFORMATION);
-       Status = MmCopyToCaller(ReturnLength, &RetLen, sizeof(ULONG));
-       if (!NT_SUCCESS(Status))
+       case EventBasicInformation:
+       {
+         PEVENT_BASIC_INFORMATION BasicInfo = (PEVENT_BASIC_INFORMATION)EventInformation;
+         
+         _SEH_TRY
          {
-           ObDereferenceObject(Event);
-           return(Status);
+           if (Event->Header.Type == InternalNotificationEvent)
+             BasicInfo->EventType = NotificationEvent;
+           else
+             BasicInfo->EventType = SynchronizationEvent;
+           BasicInfo->EventState = KeReadStateEvent(Event);
+
+           if(ReturnLength != NULL)
+           {
+             *ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
+           }
          }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+         break;
+       }
+
+       default:
+         Status = STATUS_NOT_IMPLEMENTED;
+         break;
      }
 
-   ObDereferenceObject(Event);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(Event);
+   }
+
+   return Status;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtResetEvent(IN HANDLE EventHandle,
 	     OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
-   NTSTATUS Status;
-   
-   DPRINT("NtResetEvent(EventHandle %x)\n", EventHandle);
-   
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   DPRINT("NtResetEvent(EventHandle 0%x PreviousState 0%x)\n",
+	  EventHandle, PreviousState);
+
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousState != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousState,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
 				      ExEventObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (!NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     LONG Prev = KeResetEvent(Event);
+     ObDereferenceObject(Event);
+     
+     if(PreviousState != NULL)
      {
-	return(Status);
+       _SEH_TRY
+       {
+         *PreviousState = Prev;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-   KeResetEvent(Event);
-   ObDereferenceObject(Event);
-   return(STATUS_SUCCESS);
+   }
+
+   return Status;
 }
 
 
@@ -340,24 +449,57 @@ NtSetEvent(IN HANDLE EventHandle,
 	   OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
-   NTSTATUS Status;
-   
-   DPRINT("NtSetEvent(EventHandle %x)\n", EventHandle);
-   
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   DPRINT("NtSetEvent(EventHandle 0%x PreviousState 0%x)\n",
+	  EventHandle, PreviousState);
+
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousState != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousState,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
 				      ExEventObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Event,
 				      NULL);
-   if (!NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     LONG Prev = KeSetEvent(Event, EVENT_INCREMENT, FALSE);
+     ObDereferenceObject(Event);
+
+     if(PreviousState != NULL)
      {
-	return(Status);
+       _SEH_TRY
+       {
+         *PreviousState = Prev;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-   KeSetEvent(Event,EVENT_INCREMENT,FALSE);
-   ObDereferenceObject(Event);
-   return(STATUS_SUCCESS);
+   }
+
+   return Status;
 }
+
 
 /*
  * @unimplemented

@@ -608,7 +608,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     {
       ProbeForRead(ObjectAttributes,
                    sizeof(OBJECT_ATTRIBUTES),
-                   sizeof(ULONG));
+                   sizeof(USHORT)); /*FIXME: HACK! kernel32/file/file.c:~734 is having a weird stack */
     }
     _SEH_HANDLE
     {

@@ -40,6 +40,11 @@ static GENERIC_MAPPING ExpMutantMapping = {
 	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | MUTANT_QUERY_STATE,
 	MUTANT_ALL_ACCESS};
 
+static const INFORMATION_CLASS_INFO ExMutantInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* MutantBasicInformation */
+};
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -103,105 +108,70 @@ ExpInitializeMutantImplementation(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtCreateMutant(OUT PHANDLE MutantHandle,
 	       IN ACCESS_MASK DesiredAccess,
 	       IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 	       IN BOOLEAN InitialOwner)
 {
+  KPROCESSOR_MODE PreviousMode;
+  HANDLE hMutant;
   PKMUTEX Mutant;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+   PreviousMode = ExGetPreviousMode();
 
-  Status = ObCreateObject(ExGetPreviousMode(),
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(MutantHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
+  Status = ObCreateObject(PreviousMode,
 			  ExMutantObjectType,
 			  ObjectAttributes,
-			  ExGetPreviousMode(),
+			  PreviousMode,
 			  NULL,
 			  sizeof(KMUTANT),
 			  0,
 			  0,
 			  (PVOID*)&Mutant);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  KeInitializeMutant(Mutant,
-		     InitialOwner);
-
-  Status = ObInsertObject ((PVOID)Mutant,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   MutantHandle);
-
-  ObDereferenceObject(Mutant);
-
-  return Status;
-}
-
-
-NTSTATUS STDCALL
-NtOpenMutant(OUT PHANDLE MutantHandle,
-	     IN ACCESS_MASK DesiredAccess,
-	     IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-  return(ObOpenObjectByName(ObjectAttributes,
-			    ExMutantObjectType,
-			    NULL,
-			    ExGetPreviousMode(),
-			    DesiredAccess,
-			    NULL,
-			    MutantHandle));
-}
-
-
-NTSTATUS STDCALL
-NtQueryMutant(IN HANDLE MutantHandle,
-	      IN MUTANT_INFORMATION_CLASS MutantInformationClass,
-	      OUT PVOID MutantInformation,
-	      IN ULONG MutantInformationLength,
-	      OUT PULONG ResultLength  OPTIONAL)
-{
-  MUTANT_BASIC_INFORMATION SafeMutantInformation;
-  PKMUTANT Mutant;
-  NTSTATUS Status;
-
-  if (MutantInformationClass > MutantBasicInformation)
-    return(STATUS_INVALID_INFO_CLASS);
-
-  if (MutantInformationLength < sizeof(MUTANT_BASIC_INFORMATION))
-    return(STATUS_INFO_LENGTH_MISMATCH);
-
-  Status = ObReferenceObjectByHandle(MutantHandle,
-				     MUTANT_QUERY_STATE,
-				     ExMutantObjectType,
-				     ExGetPreviousMode(),
-				     (PVOID*)&Mutant,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  SafeMutantInformation.Count = KeReadStateMutant(Mutant);
-  SafeMutantInformation.Owned = (Mutant->OwnerThread != NULL);
-  SafeMutantInformation.Abandoned = Mutant->Abandoned;
-
-  ObDereferenceObject(Mutant);
-  
-  Status = MmCopyToCaller(MutantInformation, &SafeMutantInformation, sizeof(MUTANT_BASIC_INFORMATION));
   if(NT_SUCCESS(Status))
   {
-    if(ResultLength != NULL)
+    KeInitializeMutant(Mutant,
+		       InitialOwner);
+
+    Status = ObInsertObject((PVOID)Mutant,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    &hMutant);
+    ObDereferenceObject(Mutant);
+    
+    if(NT_SUCCESS(Status))
     {
-      ULONG RetLen = sizeof(MUTANT_BASIC_INFORMATION);
-      Status = MmCopyToCaller(ResultLength, &RetLen, sizeof(ULONG));
-    }
-    else
-    {
-      Status = STATUS_SUCCESS;
+      _SEH_TRY
+      {
+        *MutantHandle = hMutant;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
   }
 
@@ -209,41 +179,198 @@ NtQueryMutant(IN HANDLE MutantHandle,
 }
 
 
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtOpenMutant(OUT PHANDLE MutantHandle,
+	     IN ACCESS_MASK DesiredAccess,
+	     IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+  HANDLE hMutant;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  DPRINT1("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+
+  PreviousMode = ExGetPreviousMode();
+
+  if(PreviousMode == UserMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(MutantHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+
+  Status = ObOpenObjectByName(ObjectAttributes,
+			      ExMutantObjectType,
+			      NULL,
+			      PreviousMode,
+			      DesiredAccess,
+			      NULL,
+			      &hMutant);
+
+  if(NT_SUCCESS(Status))
+  {
+    _SEH_TRY
+    {
+      *MutantHandle = hMutant;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+
+  return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtQueryMutant(IN HANDLE MutantHandle,
+	      IN MUTANT_INFORMATION_CLASS MutantInformationClass,
+	      OUT PVOID MutantInformation,
+	      IN ULONG MutantInformationLength,
+	      OUT PULONG ResultLength  OPTIONAL)
+{
+   PKMUTANT Mutant;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   PreviousMode = ExGetPreviousMode();
+
+   DefaultQueryInfoBufferCheck(MutantInformationClass,
+                               ExMutantInfoClass,
+                               MutantInformation,
+                               MutantInformationLength,
+                               ResultLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
+
+   Status = ObReferenceObjectByHandle(MutantHandle,
+				      MUTANT_QUERY_STATE,
+				      ExMutantObjectType,
+				      PreviousMode,
+				      (PVOID*)&Mutant,
+				      NULL);
+   if(NT_SUCCESS(Status))
+   {
+     switch(MutantInformationClass)
+     {
+       case MutantBasicInformation:
+       {
+         PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
+
+         _SEH_TRY
+         {
+           BasicInfo->Count = KeReadStateMutant(Mutant);
+           BasicInfo->Owned = (Mutant->OwnerThread != NULL);
+           BasicInfo->Abandoned = Mutant->Abandoned;
+
+           if(ResultLength != NULL)
+           {
+             *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
+           }
+         }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+         break;
+       }
+
+       default:
+         Status = STATUS_NOT_IMPLEMENTED;
+         break;
+     }
+
+     ObDereferenceObject(Mutant);
+   }
+
+   return Status;
+}
+
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtReleaseMutant(IN HANDLE MutantHandle,
 		IN PLONG PreviousCount  OPTIONAL)
 {
-  PKMUTANT Mutant;
-  NTSTATUS Status;
-  LONG Count;
+   PKMUTANT Mutant;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-  Status = ObReferenceObjectByHandle(MutantHandle,
-				     MUTANT_ALL_ACCESS,
-				     ExMutantObjectType,
-				     ExGetPreviousMode(),
-				     (PVOID*)&Mutant,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+   DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n",
+	  MutantHandle, PreviousCount);
 
-  Count = KeReleaseMutant(Mutant,
-			  MUTANT_INCREMENT,
-			  0,
-			  FALSE);
-  ObDereferenceObject(Mutant);
+   PreviousMode = ExGetPreviousMode();
 
-  if (PreviousCount != NULL)
-    {
-      Status = MmCopyToCaller(PreviousCount, &Count, sizeof(LONG));
-    }
-  else
-    {
-      Status = STATUS_SUCCESS;
-    }
+   if(PreviousCount != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousCount,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
-  return Status;
+   Status = ObReferenceObjectByHandle(MutantHandle,
+				      MUTANT_QUERY_STATE,
+				      ExMutantObjectType,
+				      PreviousMode,
+				      (PVOID*)&Mutant,
+				      NULL);
+   if(NT_SUCCESS(Status))
+   {
+     LONG Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, 0, FALSE);
+     ObDereferenceObject(Mutant);
+
+     if(PreviousCount != NULL)
+     {
+       _SEH_TRY
+       {
+         *PreviousCount = Prev;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+     }
+   }
+
+   return Status;
 }
 
 /* EOF */

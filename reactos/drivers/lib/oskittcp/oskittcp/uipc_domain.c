@@ -64,7 +64,7 @@ domaininit()
 	register struct domain *dp, **dpp;
 	register struct protosw *pr;
 
-	printf("domaininit starting\n");
+	//printf("domaininit starting\n");
 
 	/*
 	 * NB - local domain is always present.
@@ -73,7 +73,7 @@ domaininit()
 	ADDDOMAIN(inet);
 
 	for (dpp = (struct domain **)domain_set.ls_items; *dpp; dpp++) {
-	    printf("(1) Domain %s counting\n", (**dpp).dom_name);
+	    //printf("(1) Domain %s counting\n", (**dpp).dom_name);
 	    (**dpp).dom_next = domains;
 	    domains = *dpp;
 	}
@@ -84,11 +84,11 @@ domaininit()
 #endif
 */
 	for (dp = domains; dp; dp = dp->dom_next) {
-	    printf("(1) Domain %s initializing\n", dp->dom_name);
+	    //printf("(1) Domain %s initializing\n", dp->dom_name);
 	    if (dp->dom_init)
 		(*dp->dom_init)();
 	    for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++) {
-		printf("Registering protocols for %s\n", dp->dom_name);
+		//printf("Registering protocols for %s\n", dp->dom_name);
 		if (pr->pr_init)
 		    (*pr->pr_init)();
 	    }
@@ -103,7 +103,7 @@ domaininit()
 	timeout(pffasttimo, (void *)0, 1);
 	timeout(pfslowtimo, (void *)0, 1);
 
-	printf("Domaininit done\n");
+	//printf("Domaininit done\n");
 }
 
 struct protosw *

@@ -95,39 +95,66 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
 		  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    PKEVENT_PAIR EventPair;
-   NTSTATUS Status;
+   HANDLE hEventPair;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
 
-   DPRINT("NtCreateEventPair()\n");
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(EventPairHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
    Status = ObCreateObject(ExGetPreviousMode(),
 			   ExEventPairObjectType,
 			   ObjectAttributes,
-			   ExGetPreviousMode(),
+			   PreviousMode,
 			   NULL,
 			   sizeof(KEVENT_PAIR),
 			   0,
 			   0,
 			   (PVOID*)&EventPair);
-   if (!NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status))
+   {
+     KeInitializeEvent(&EventPair->LowEvent,
+		       SynchronizationEvent,
+		       FALSE);
+     KeInitializeEvent(&EventPair->HighEvent,
+		       SynchronizationEvent,
+		       FALSE);
+
+     Status = ObInsertObject ((PVOID)EventPair,
+			      NULL,
+			      DesiredAccess,
+			      0,
+			      NULL,
+			      &hEventPair);
+     ObDereferenceObject(EventPair);
+     
+     if(NT_SUCCESS(Status))
      {
-	return(Status);
+       _SEH_TRY
+       {
+         *EventPairHandle = hEventPair;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-
-   KeInitializeEvent(&EventPair->LowEvent,
-		     SynchronizationEvent,
-		     FALSE);
-   KeInitializeEvent(&EventPair->HighEvent,
-		     SynchronizationEvent,
-		     FALSE);
-
-   Status = ObInsertObject ((PVOID)EventPair,
-			    NULL,
-			    DesiredAccess,
-			    0,
-			    NULL,
-			    EventPairHandle);
-
-   ObDereferenceObject(EventPair);
-
+   }
    return Status;
 }
 
@@ -137,18 +164,47 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
 		IN ACCESS_MASK DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
+   HANDLE hEventPair;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("NtOpenEventPair()\n");
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(EventPairHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExEventPairObjectType,
 			       NULL,
-			       UserMode,
+			       PreviousMode,
 			       DesiredAccess,
 			       NULL,
-			       EventPairHandle);
-
+			       &hEventPair);
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *EventPairHandle = hEventPair;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   
    return Status;
 }
 
@@ -157,26 +213,30 @@ NTSTATUS STDCALL
 NtSetHighEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtSetHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeSetEvent(&EventPair->HighEvent,
+	        EVENT_INCREMENT,
+	        FALSE);
 
-   KeSetEvent(&EventPair->HighEvent,
-	      EVENT_INCREMENT,
-	      FALSE);
-
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(EventPair);
+   }
+   
+   return Status;
 }
 
 
@@ -184,32 +244,36 @@ NTSTATUS STDCALL
 NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeSetEvent(&EventPair->HighEvent,
+	        EVENT_INCREMENT,
+	        TRUE);
 
-   KeSetEvent(&EventPair->HighEvent,
-	      EVENT_INCREMENT,
-	      TRUE);
+     KeWaitForSingleObject(&EventPair->LowEvent,
+			   WrEventPair,
+			   PreviousMode,
+			   FALSE,
+			   NULL);
 
-   KeWaitForSingleObject(&EventPair->LowEvent,
-			 WrEventPair,
-			 UserMode,
-			 FALSE,
-			 NULL);
-
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(EventPair);
+   }
+   
+   return Status;
 }
 
 
@@ -217,26 +281,30 @@ NTSTATUS STDCALL
 NtSetLowEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtSetLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeSetEvent(&EventPair->LowEvent,
+	        EVENT_INCREMENT,
+	        FALSE);
 
-   KeSetEvent(&EventPair->LowEvent,
-	      EVENT_INCREMENT,
-	      FALSE);
-
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(EventPair);
+   }
+   
+   return Status;
 }
 
 
@@ -244,32 +312,36 @@ NTSTATUS STDCALL
 NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtSetLowWaitHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeSetEvent(&EventPair->LowEvent,
+	        EVENT_INCREMENT,
+	        TRUE);
 
-   KeSetEvent(&EventPair->LowEvent,
-	      EVENT_INCREMENT,
-	      TRUE);
+     KeWaitForSingleObject(&EventPair->HighEvent,
+			   WrEventPair,
+			   PreviousMode,
+			   FALSE,
+			   NULL);
 
-   KeWaitForSingleObject(&EventPair->HighEvent,
-			 WrEventPair,
-			 UserMode,
-			 FALSE,
-			 NULL);
-
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(EventPair);
+   }
+   
+   return Status;
 }
 
 
@@ -277,28 +349,32 @@ NTSTATUS STDCALL
 NtWaitLowEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtWaitLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeWaitForSingleObject(&EventPair->LowEvent,
+			   WrEventPair,
+			   PreviousMode,
+			   FALSE,
+			   NULL);
 
-   KeWaitForSingleObject(&EventPair->LowEvent,
-			 WrEventPair,
-			 UserMode,
-			 FALSE,
-			 NULL);
-
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+     ObDereferenceObject(EventPair);
+   }
+   
+   return Status;
 }
 
 
@@ -306,28 +382,32 @@ NTSTATUS STDCALL
 NtWaitHighEventPair(IN HANDLE EventPairHandle)
 {
    PKEVENT_PAIR EventPair;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtWaitHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
 
+   PreviousMode = ExGetPreviousMode();
+   
    Status = ObReferenceObjectByHandle(EventPairHandle,
-				      EVENT_PAIR_ALL_ACCESS,
+				      SYNCHRONIZE,
 				      ExEventPairObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&EventPair,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return(Status);
+   if(NT_SUCCESS(Status))
+   {
+     KeWaitForSingleObject(&EventPair->HighEvent,
+			   WrEventPair,
+			   PreviousMode,
+			   FALSE,
+			   NULL);
 
-   KeWaitForSingleObject(&EventPair->HighEvent,
-			 WrEventPair,
-			 UserMode,
-			 FALSE,
-			 NULL);
+     ObDereferenceObject(EventPair);
+   }
 
-   ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+   return Status;
 }
 
 #ifdef _ENABLE_THRDEVTPAIR
@@ -349,8 +429,8 @@ NtSetLowWaitHighThread(
 	PKEVENT_PAIR EventPair;
 	NTSTATUS Status;
 	KIRQL Irql;
-
-	Thread = PsGetCurrentThread();
+	
+	PreviousMode = ExGetPreviousMode();
 
 	if(!Thread->EventPair)
 		return STATUS_NO_EVENT_PAIR;
