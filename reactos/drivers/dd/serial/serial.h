@@ -11,7 +11,6 @@
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
     OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-  #define STATUS_ARRAY_BOUNDS_EXCEEDED 0xc000008c
   
 #elif defined(_MSC_VER)
   #include <ntddk.h>
